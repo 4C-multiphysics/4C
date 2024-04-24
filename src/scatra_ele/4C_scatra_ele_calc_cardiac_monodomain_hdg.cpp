@@ -330,7 +330,7 @@ void Discret::Elements::ScaTraEleCalcHDGCardiacMonodomain<distype, probdim>::mat
       deg = 3 * this->shapes_->degree_;
 
     std::shared_ptr<Core::FE::GaussPoints> quadrature_(
-        Core::FE::GaussPointCache::instance().create(distype, deg));
+        Core::FE::create_gauss_points(distype, deg));
     nqpoints = quadrature_->num_points();
 
     if (nqpoints != actmat->get_number_of_gp())

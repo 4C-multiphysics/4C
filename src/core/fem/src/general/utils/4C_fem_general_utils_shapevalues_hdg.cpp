@@ -21,7 +21,7 @@ template <Core::FE::CellType distype>
 Core::FE::ShapeValues<distype>::ShapeValues(
     const unsigned int degree, const bool completepoly, const unsigned int quadratureDegree)
     : degree_(degree),
-      quadrature_(Core::FE::GaussPointCache::instance().create(distype, quadratureDegree)),
+      quadrature_(Core::FE::create_gauss_points(distype, quadratureDegree)),
       usescompletepoly_(completepoly),
       nqpoints_(quadrature_->num_points())
 {
@@ -160,7 +160,7 @@ Core::FE::ShapeValuesFace<distype>::ShapeValuesFace(ShapeValuesFaceParams params
   polySpace_ = Core::FE::PolynomialSpaceCache<nsd_ - 1>::instance().create(polyparams);
 
   nfdofs_ = polySpace_->size();
-  quadrature_ = Core::FE::GaussPointCache::instance().create(
+  quadrature_ = Core::FE::create_gauss_points(
       Core::FE::DisTypeToFaceShapeType<distype>::shape, params.quadraturedegree_);
   nqpoints_ = quadrature_->num_points();
 
@@ -601,7 +601,7 @@ Core::FE::ShapeValuesInteriorOnFaceCache<distype>::create(ShapeValuesFaceParams 
   std::shared_ptr<PolynomialSpace<nsd>> polySpace =
       Core::FE::PolynomialSpaceCache<nsd>::instance().create(polyparams);
   Core::LinAlg::SerialDenseVector(polySpace->size());
-  std::shared_ptr<Core::FE::GaussPoints> quadrature = Core::FE::GaussPointCache::instance().create(
+  std::shared_ptr<Core::FE::GaussPoints> quadrature = Core::FE::create_gauss_points(
       Core::FE::get_ele_face_shape_type(distype, params.face_), params.quadraturedegree_);
 
   std::shared_ptr<ShapeValuesInteriorOnFace> container =
