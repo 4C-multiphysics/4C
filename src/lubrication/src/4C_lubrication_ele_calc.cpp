@@ -711,7 +711,8 @@ void Discret::Elements::LubricationEleCalc<distype, probdim>::materials(
       mat_lubrication(material, densn, densnp, densam, visc, dvisc, iquad);
       break;
     default:
-      FOUR_C_THROW("Material type %i is not supported", material->material_type());
+      FOUR_C_THROW("Material type %s is not supported",
+          Core::Materials::to_string(material->material_type()).data());
       break;
   }
   return;
