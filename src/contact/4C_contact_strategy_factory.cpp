@@ -1401,8 +1401,8 @@ void CONTACT::STRATEGY::Factory::set_poro_parent_element(
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 void CONTACT::STRATEGY::Factory::find_poro_interface_types(bool& poromaster, bool& poroslave,
-    bool& structmaster, bool& structslave, enum Mortar::Element::PhysicalType& slavetype,
-    enum Mortar::Element::PhysicalType& mastertype) const
+    bool& structmaster, bool& structslave, const enum Mortar::Element::PhysicalType slavetype,
+    const enum Mortar::Element::PhysicalType mastertype) const
 {
   // find poro and structure elements when a poro coupling condition is applied on an element
   // and restrict to pure poroelastic or pure structural interfaces' sides.
