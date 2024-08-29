@@ -165,6 +165,12 @@ namespace BeamInteraction
         return beam_interaction_conditions_ptr_;
       }
 
+      std::shared_ptr<Epetra_Map> get_lagrange_map() override;
+
+      void assemble_force(Epetra_Vector& f) override;
+
+      void assemble_stiff(Core::LinAlg::SparseOperator& jac) override;
+
       //! @}
 
      protected:

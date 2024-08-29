@@ -38,19 +38,20 @@ namespace Core::LinAlg
   void export_to(
       const Core::LinAlg::MultiVector<double>& source, Core::LinAlg::MultiVector<double>& target);
 
-  /*!
-   \brief Communicate a vector to a different map
 
-   Values of source are copied to target where maps don't have to match.
-   Prerequisite: Either the map of source OR the map of target has to be unique
-   (will be tested)
-   \warning When source is overlapping (and therefore target is unique), values
-   in the overlapping region are inserted into the target on a first come
-   first serve basis, meaning they should be equal in the source to
-   be deterministic
-   \param source (in) : source vector values are taken from
-   \param target (out): target vector values will be inserted in
-   */
+  /*!
+ \brief Communicate a vector to a different map
+
+ Values of source are copied to target where maps don't have to match.
+ Prerequisite: Either the map of source OR the map of target has to be unique
+ (will be tested)
+ \warning When source is overlapping (and therefore target is unique), values
+ in the overlapping region are inserted into the target on a first come
+ first serve basis, meaning they should be equal in the source to
+ be deterministic
+ \param source (in) : source vector values are taken from
+ \param target (out): target vector values will be inserted in
+ */
   void export_to(const Core::LinAlg::Vector<int>& source, Core::LinAlg::Vector<int>& target);
 
   /*! \brief Extract a partial Core::LinAlg::Vector<double> from a given source vector

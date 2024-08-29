@@ -12,6 +12,8 @@
 #include "4C_inpar_beaminteraction.hpp"
 #include "4C_io_input_spec_builders.hpp"
 #include "4C_utils_exceptions.hpp"
+#include "4C_utils_parameter_list.hpp"
+
 FOUR_C_NAMESPACE_OPEN
 
 
@@ -64,6 +66,11 @@ void Inpar::BeamToSolid::set_valid_parameters(std::map<std::string, Core::IO::In
       parameter<BeamToSolidMortarShapefunctions>("MORTAR_SHAPE_FUNCTION",
           {.description = "Shape function for the mortar Lagrange-multipliers",
               .default_value = BeamToSolidMortarShapefunctions::none}),
+
+    parameter<bool>("SADDLE_POINT_FORMULATION",
+          {.description = "Enable / disable saddle point formulation.",
+              .default_value = false}),
+
 
       parameter<int>("MORTAR_FOURIER_MODES",
           {.description = "Number of fourier modes to be used for cross-section mortar coupling",

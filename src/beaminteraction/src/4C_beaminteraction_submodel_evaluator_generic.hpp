@@ -13,6 +13,8 @@
 #include "4C_beaminteraction_str_model_evaluator.hpp"
 #include "4C_inpar_beaminteraction.hpp"
 
+#include <Epetra_Map.h>
+
 namespace NOX
 {
   namespace Solver
@@ -237,6 +239,12 @@ namespace BeamInteraction
       BeamInteraction::Utils::MapExtractor& ele_type_map_extractor();
       std::shared_ptr<BeamInteraction::Utils::MapExtractor>& ele_type_map_extractor_ptr();
       BeamInteraction::Utils::MapExtractor const& ele_type_map_extractor() const;
+
+      virtual std::shared_ptr<Epetra_Map> get_lagrange_map() { return nullptr; }
+
+      virtual void assemble_force(Epetra_Vector& f){};
+
+      virtual void assemble_stiff(Core::LinAlg::SparseOperator& jac){};
 
       //! @}
      protected:
