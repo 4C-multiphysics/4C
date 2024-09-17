@@ -89,6 +89,7 @@ void CONTACT::NitscheStrategyPoroScatra::set_state(
       auto scatra_dis = Global::Problem::instance()->get_dis("scatra");
       if (scatra_dis == Teuchos::null) FOUR_C_THROW("didn't get scatra discretization");
       set_parent_state(statename, vec, *scatra_dis);
+      curr_state_eval_ = false;
       break;
     }
     case Mortar::state_svelocity:
