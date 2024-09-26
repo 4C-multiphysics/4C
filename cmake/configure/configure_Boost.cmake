@@ -30,4 +30,15 @@ if(Boost_FOUND)
   target_link_libraries(
     four_c_all_enabled_external_dependencies INTERFACE Boost::system Boost::graph
     )
+
+  configure_file(
+    ${CMAKE_SOURCE_DIR}/cmake/templates/Boost.cmake.in
+    ${CMAKE_BINARY_DIR}/cmake/templates/Boost.cmake
+    @ONLY
+    )
+  include(GNUInstallDirs)
+  install(
+    FILES ${CMAKE_BINARY_DIR}/cmake/templates/Boost.cmake
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/4C
+    )
 endif()

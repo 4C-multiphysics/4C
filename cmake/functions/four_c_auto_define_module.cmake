@@ -6,9 +6,9 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
 # Automatically create a library for the sources and headers in the current directory. The target
-# will be named based on the folder name. If this function is called revursively inside an already
-# defined module, the sources are appended to the already defined module. The module name is returned in the variable
-# AUTO_DEFINED_MODULE_NAME which is set at the call site.
+# will be named based on the folder name. If this function is called recursively inside an already
+# defined module, the sources are appended to the already defined module. The module name is returned
+# in the variable AUTO_DEFINED_MODULE_NAME which is set at the call site.
 function(four_c_auto_define_module)
 
   if("${FOUR_C_CURRENTLY_DEFINED_PARENT_MODULE}" STREQUAL "")
@@ -75,23 +75,39 @@ function(four_c_auto_define_module)
     endif()
   endforeach()
 
-  # Add the headers as a file set to the interface library. This will automatically add the current directory as a search directory.
-  # Since we append sources to a target successively, we need to add multiple file sets with a unique name. Use
-  # the current directory name for this.
-  # Replace non-alphanumeric characters with underscores and make the name lowercase. Drop any leading digits and underscores.
-  string(REGEX REPLACE "[^a-zA-Z0-9]" "_" _file_set_name "${CMAKE_CURRENT_SOURCE_DIR}")
-  string(TOLOWER "${_file_set_name}" _file_set_name)
-  string(REGEX REPLACE "^[0-9_]+" "" _file_set_name "${_file_set_name}")
-
+  # We are not using the base directory feature in the way it is intended because we want to include files from
+  # directories that
   target_sources(
     ${_target}_deps
     INTERFACE FILE_SET
-              ${_file_set_name}
-              TYPE
               HEADERS
               FILES
               ${_headers}
+              BASE_DIRS
+              ${PROJECT_SOURCE_DIR}/src
     )
+  include(GNUInstallDirs)
+  file(RELATIVE_PATH _relative_path ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR})
+  if(NOT "${_relative_path}" STREQUAL "config")
+    target_include_directories(
+      ${_target}_deps
+      INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+                $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${_relative_path}>
+      )
+  else()
+    target_include_directories(
+      ${_target}_deps INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+      )
+  endif()
+
+  # On first call, add install rule for the target
+  if("${FOUR_C_CURRENTLY_DEFINED_PARENT_MODULE}" STREQUAL "")
+    install(
+      TARGETS ${_target}_deps
+      EXPORT 4CTargets
+      FILE_SET HEADERS
+      )
+  endif()
 
   # Add the compiled sources to the object library
   target_sources(${_target}_objs PRIVATE ${_sources})

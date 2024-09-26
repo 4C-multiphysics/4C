@@ -1,0 +1,67 @@
+@PACKAGE_INIT@
+
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_MODULE_PATH})
+
+include(CMakeFindDependencyMacro)
+
+include("${CMAKE_CURRENT_LIST_DIR}/4CTargets.cmake")
+check_required_components(4C)
+
+include("${CMAKE_CURRENT_LIST_DIR}/4CSettings.cmake")
+
+find_package(MPI REQUIRED)
+
+if(4C_WITH_TRILINOS MATCHES ON)
+  include("${CMAKE_CURRENT_LIST_DIR}/Trilinos.cmake")
+  find_package(Trilinos REQUIRED)
+  if(Trilinos_FOUND AND NOT TARGET Trilinos::all_selected_libs)
+    add_library(Trilinos::all_selected_libs IMPORTED INTERFACE)
+    target_include_directories(
+      Trilinos::all_selected_libs
+      SYSTEM
+      INTERFACE ${Trilinos_INCLUDE_DIRS}
+      INTERFACE ${Trilinos_TPL_INCLUDE_DIRS}
+      )
+    target_link_libraries(
+      Trilinos::all_selected_libs INTERFACE ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES}
+      )
+  endif()
+endif()
+
+if(4C_WITH_BOOST MATCHES ON)
+  include("${CMAKE_CURRENT_LIST_DIR}/Boost.cmake")
+  find_package(
+    Boost
+    COMPONENTS graph system
+    REQUIRED
+    )
+endif()
+
+if(4C_WITH_BACKTRACE MATCHES ON)
+  include("${CMAKE_CURRENT_LIST_DIR}/Backtrace.cmake")
+  find_package(Backtrace REQUIRED)
+endif()
+
+if(4C_WITH_HDF5 MATCHES ON)
+  include("${CMAKE_CURRENT_LIST_DIR}/HDF5.cmake")
+  find_package(
+    HDF5
+    COMPONENTS C HL
+    REQUIRED
+    )
+endif()
+
+if(4C_WITH_QHULL MATCHES ON)
+  include("${CMAKE_CURRENT_LIST_DIR}/Qhull.cmake")
+  find_package(Qhull REQUIRED)
+endif()
+
+if(4C_WITH_FFTW MATCHES ON)
+  include("${CMAKE_CURRENT_LIST_DIR}/FFTW.cmake")
+  find_package(FFTW REQUIRED)
+endif()
+
+if(4C_WITH_CLN MATCHES ON)
+  include("${CMAKE_CURRENT_LIST_DIR}/CLN.cmake")
+  find_package(CLN REQUIRED)
+endif()

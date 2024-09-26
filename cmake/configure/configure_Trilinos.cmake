@@ -40,3 +40,14 @@ endif()
 target_link_libraries(
   four_c_all_enabled_external_dependencies INTERFACE Trilinos::all_selected_libs
   )
+
+configure_file(
+  ${CMAKE_SOURCE_DIR}/cmake/templates/Trilinos.cmake.in
+  ${CMAKE_BINARY_DIR}/cmake/templates/Trilinos.cmake
+  @ONLY
+  )
+include(GNUInstallDirs)
+install(
+  FILES ${CMAKE_BINARY_DIR}/cmake/templates/Trilinos.cmake
+  DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/4C
+  )
