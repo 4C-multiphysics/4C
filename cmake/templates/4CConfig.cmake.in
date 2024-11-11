@@ -3,9 +3,7 @@
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_MODULE_PATH})
 
 include(CMakeFindDependencyMacro)
-
-include("${CMAKE_CURRENT_LIST_DIR}/4CTargets.cmake")
-check_required_components(4C)
+include(FetchContent)
 
 include("${CMAKE_CURRENT_LIST_DIR}/4CSettings.cmake")
 
@@ -65,3 +63,16 @@ if(4C_WITH_CLN MATCHES ON)
   include("${CMAKE_CURRENT_LIST_DIR}/CLN.cmake")
   find_package(CLN REQUIRED)
 endif()
+
+if(4C_WITH_MIRCO MATCHES ON)
+  include("${CMAKE_CURRENT_LIST_DIR}/MIRCO.cmake")
+  find_package(mirco_lib CONFIG HINTS ${4C_MIRCO_ROOT})
+endif()
+
+if(4C_WITH_ARBORX MATCHES ON)
+  include("${CMAKE_CURRENT_LIST_DIR}/ArborX.cmake")
+  find_package(ArborX CONFIG HINTS ${4C_ARBORX_ROOT})
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/4CTargets.cmake")
+check_required_components(4C)
