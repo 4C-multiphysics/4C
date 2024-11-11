@@ -28,3 +28,13 @@ if(NOT FOUR_C_MPI_LINKAGE_OK)
     message(FATAL_ERROR "Cannot build/link a program with MPI. Check your compiler settings.")
   endif()
 endif()
+
+configure_file(
+  ${CMAKE_SOURCE_DIR}/cmake/templates/MPI.cmake.in
+  ${CMAKE_BINARY_DIR}/cmake/templates/MPI.cmake
+  @ONLY
+  )
+include(GNUInstallDirs)
+install(
+  FILES ${CMAKE_BINARY_DIR}/cmake/templates/MPI.cmake DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/4C
+  )
