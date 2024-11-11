@@ -72,12 +72,14 @@ before_script:
   # build
   - time cmake --build . --target ${BUILD_TARGETS} -- -j `nproc` 2>&1 | tee ${CI_PROJECT_DIR}/build.log
 
-.build-and-test: &build-and-test
-  - *build-only
-  # test
+.test-only: &test-only
   - time ctest -VV -j `nproc` --output-junit ${CI_PROJECT_DIR}/junit_test_summary.xml | tee ${CI_PROJECT_DIR}/test.log
     | grep -e "\*\*\*Failed" -e "\.\.\.   Passed" -e " tests passed\,"
   - cd ${CI_PROJECT_DIR}
+
+.build-and-test: &build-and-test
+  - *build-only
+  - *test-only
 
 .post_process_log_files: &post_process_log_files
   # sort output of pipeline
@@ -90,6 +92,10 @@ before_script:
   - sed -n '/tests passed,/,//p' ${CI_PROJECT_DIR}/test.log
   # Move the log files to the source folder, so it can be found by artifacts.
   - cd ${CI_PROJECT_DIR}
+
+.build_test_install_project: &build_test_install_project
+  - cd ${CI_PROJECT_DIR}/../build
+  - sh test_install.sh
 
 # Generic job that builds and tests the project. Derived jobs may configure the details via variables.
 .buildtest_base:
@@ -373,6 +379,12 @@ gcc9:
   image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu20.04:$FOUR_C_DOCKER_DEPENDENCIES_HASH
   variables:
     CMAKE_PRESET: docker
+    BUILD_TARGETS: full;install
+  script:
+    - *clean-build-folder-for-nightly-pipelines
+    - *build-only
+    - *build_test_install_project
+    - *test-only
   tags:
     - buildtest
   needs:
