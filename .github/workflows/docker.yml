@@ -9,10 +9,11 @@ on:
       - 'dependencies/current/'
       - 'dependencies/testing/'
 
+# TODO find a way to share these variables across the workflows
 env:
   REGISTRY: ghcr.io
   IMAGE_SUFFIX: dependencies
-  FOUR_C_DOCKER_DEPENDENCIES_HASH: 7a6ad12e
+  FOUR_C_DOCKER_DEPENDENCIES_HASH: 4347de33
   IMAGE_PATH: ghcr.io/4c/4c-dependencies
 
 jobs:
@@ -28,11 +29,13 @@ jobs:
         run: |
           COMPUTED_DOCKER_DEPENDENCIES_HASH=`find dependencies docker -not -wholename '*/trilinos_develop/*' -not -name 'README.md' -type f -exec sha1sum {} \; | sort | sha1sum | cut -c -8`
           echo "dependencies_hash=$COMPUTED_DOCKER_DEPENDENCIES_HASH" >> $GITHUB_OUTPUT
+          echo "COMPUTED_DOCKER_DEPENDENCIES_HASH=$COMPUTED_DOCKER_DEPENDENCIES_HASH" >> $GITHUB_ENV
       - id: check-if-build-is-required
         name: Check if the docker image needs to be built
         run: |
           exit_code=0
           docker image inspect ${{ env.IMAGE_PATH }}:$COMPUTED_DOCKER_DEPENDENCIES_HASH > /dev/null || exit_code=$?
+          echo $exit_code
           case $exit_code in
             0)
               echo "Image exists"
@@ -47,6 +50,15 @@ jobs:
               exit 1
               ;;
           esac
+      - id: check-if-dependencies-hash-matches
+        name: Check if the dependencies hash matches
+        run: |
+          if [[ "$COMPUTED_DOCKER_DEPENDENCIES_HASH" == "$FOUR_C_DOCKER_DEPENDENCIES_HASH" ]]; then
+            echo "The hash is correct."
+          else
+            echo "The hashes differ. The computed hash is $COMPUTED_DOCKER_DEPENDENCIES_HASH while the specified hash is $FOUR_C_DOCKER_DEPENDENCIES_HASH. You probably need to adapt the FOUR_C_DOCKER_DEPENDENCIES_HASH in the workflow."
+            exit 1
+          fi
 
   build-and-push-image:
     runs-on: ubuntu-latest
