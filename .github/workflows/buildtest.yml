@@ -12,6 +12,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: 4c-dependencies
   FOUR_C_DOCKER_DEPENDENCIES_HASH: 7a6ad12e
+  IMAGE_PATH: ghcr.io/4c/4c-dependencies
 
 permissions:
   contents: read
@@ -20,7 +21,7 @@ jobs:
   gcc9_build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ppraegla/4c-dependencies:latest
+      image: $IMAGE_PATH:$FOUR_C_DOCKER_DEPENDENCIES_HASH
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
       credentials:
         username: ${{ github.actor }}
@@ -58,7 +59,7 @@ jobs:
     needs: gcc9_build
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ppraegla/4c-dependencies:latest
+      image: $IMAGE_PATH:$FOUR_C_DOCKER_DEPENDENCIES_HASH
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
       credentials:
         username: ${{ github.actor }}
