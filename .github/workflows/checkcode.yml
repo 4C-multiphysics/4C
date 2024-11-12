@@ -2,12 +2,16 @@
 name: checkcode
 
 on:
-  pull_request:
-    branches:
-      - 'main'
-  push:
-    branches:
-      - 'main'
+  workflow_run:
+    workflows: [Docker]
+    types: completed
+  schedule:
+    - cron: '4 2 * * *'
+
+# TODO find a way to share these variables across the workflows
+env:
+  FOUR_C_DOCKER_DEPENDENCIES_HASH: 4347de33
+  IMAGE_PATH: ghcr.io/4c/4c-dependencies
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -29,7 +33,7 @@ jobs:
   clang-tidy:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ppraegla/4c-dependencies:latest
+      image: $IMAGE_PATH:$FOUR_C_DOCKER_DEPENDENCIES_HASH
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
       credentials:
         username: ${{ github.actor }}
@@ -52,7 +56,7 @@ jobs:
   verify-headers:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ppraegla/4c-dependencies:latest
+      image: $IMAGE_PATH:$FOUR_C_DOCKER_DEPENDENCIES_HASH
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
       credentials:
         username: ${{ github.actor }}

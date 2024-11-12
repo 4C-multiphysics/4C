@@ -1,17 +1,18 @@
 name: buildtest
 
 on:
-  pull_request:
-    branches:
-      - 'main'
+  workflow_run:
+    workflows: [Docker]
+    types: completed
   push:
     branches:
       - 'main'
 
+# TODO find a way to share these variables across the workflows
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: 4c-dependencies
-  FOUR_C_DOCKER_DEPENDENCIES_HASH: 7a6ad12e
+  FOUR_C_DOCKER_DEPENDENCIES_HASH: 4347de33
   IMAGE_PATH: ghcr.io/4c/4c-dependencies
 
 permissions:
