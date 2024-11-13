@@ -34,6 +34,13 @@ jobs:
           COMPUTED_DOCKER_DEPENDENCIES_HASH=`find dependencies docker -not -wholename '*/trilinos_develop/*' -not -name 'README.md' -type f -exec sha1sum {} \; | sort | sha1sum | cut -c -8`
           echo "dependencies_hash=$COMPUTED_DOCKER_DEPENDENCIES_HASH" >> $GITHUB_OUTPUT
           echo "COMPUTED_DOCKER_DEPENDENCIES_HASH=$COMPUTED_DOCKER_DEPENDENCIES_HASH" >> $GITHUB_ENV
+      # TODO: temporary login because the pushed docker image is set to private in the package registry
+      - name: Log in to the Container registry
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - id: check-if-build-is-required
         name: Check if the docker image needs to be built
         run: |
