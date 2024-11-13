@@ -45,7 +45,7 @@ jobs:
         name: Check if the docker image needs to be built
         run: |
           exit_code=0
-          docker image inspect ${{ env.IMAGE_PATH }}:$COMPUTED_DOCKER_DEPENDENCIES_HASH > /dev/null || exit_code=$?
+          docker manifest inspect ${{ env.IMAGE_PATH }}:$COMPUTED_DOCKER_DEPENDENCIES_HASH > /dev/null || exit_code=$?
           echo $exit_code
           case $exit_code in
             0)
