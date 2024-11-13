@@ -12,7 +12,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: 4c-dependencies
-  FOUR_C_DOCKER_DEPENDENCIES_HASH: 4347de33
+  FOUR_C_DOCKER_DEPENDENCIES_HASH: 30e3f53d
   IMAGE_PATH: ghcr.io/4c/4c-dependencies
 
 permissions:
