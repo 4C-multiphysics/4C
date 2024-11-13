@@ -81,7 +81,7 @@ jobs:
       id-token: write
       #
     needs: check-if-docker-build-is-required
-    if: ${{ needs.check-if-docker-build-is-required.outputs.build_docker_image }}
+    if: ${{ needs.check-if-docker-build-is-required.outputs.build_docker_image == 'true' }}
     steps:
       # Hack to get the repository name as lower case as Github does not provide this function: https://github.com/orgs/community/discussions/25768
       - id: repository-to-lower-case
