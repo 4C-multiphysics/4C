@@ -13,7 +13,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: 4c-dependencies
   FOUR_C_DOCKER_DEPENDENCIES_HASH: 30e3f53d
-  IMAGE_PATH: ghcr.io/4c/4c-dependencies
+  IMAGE_PATH: ghcr.io/4c-multiphysics/4c-dependencies
 
 permissions:
   contents: read

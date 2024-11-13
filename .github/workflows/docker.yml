@@ -14,7 +14,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_SUFFIX: dependencies
   FOUR_C_DOCKER_DEPENDENCIES_HASH: 30e3f53d
-  IMAGE_PATH: ghcr.io/4c/4c-dependencies
+  IMAGE_PATH: ghcr.io/4c-multiphysics/4c-dependencies
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -74,6 +74,7 @@ jobs:
       id-token: write
       #
     needs: check-if-docker-build-is-required
+    if: ${{ needs.check-if-docker-build-is-required.outputs.build_docker_image }}
     steps:
       # Hack to get the repository name as lower case as Github does not provide this function: https://github.com/orgs/community/discussions/25768
       - id: repository-to-lower-case

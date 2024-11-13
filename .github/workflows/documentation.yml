@@ -1,9 +1,9 @@
 name: documentation
 
 on:
-  pull_request:
-    branches:
-      - 'main'
+  workflow_run:
+    workflows: [Docker]
+    types: completed
   push:
     branches:
       - 'main'
