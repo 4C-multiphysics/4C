@@ -28,7 +28,7 @@ jobs:
       CMAKE_PRESET: docker
     runs-on: ubuntu-latest
     container:
-      image: $IMAGE_PATH:$FOUR_C_DOCKER_DEPENDENCIES_HASH
+      image: ghcr.io/4c-multiphysics/4c-dependencies:30e3f53d
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
       credentials:
         username: ${{ github.actor }}
@@ -75,7 +75,7 @@ jobs:
     needs: gcc9_build
     runs-on: ubuntu-latest
     container:
-      image: $IMAGE_PATH:$FOUR_C_DOCKER_DEPENDENCIES_HASH
+      image: ghcr.io/4c-multiphysics/4c-dependencies:30e3f53d
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
       credentials:
         username: ${{ github.actor }}
