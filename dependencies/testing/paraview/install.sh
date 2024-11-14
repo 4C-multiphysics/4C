@@ -28,3 +28,4 @@ else
 fi
 
 tar -xzf paraview.tar.gz -C ${INSTALL_DIR}
+rm -rf paraview.tar.gz

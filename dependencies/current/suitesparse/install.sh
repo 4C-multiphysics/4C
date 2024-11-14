@@ -34,5 +34,5 @@ cd SuiteSparse-${VERSION}/
 make -j${NPROCS} library BLAS=-lblas
 make install INSTALL=${INSTALL_DIR} BLAS=-lblas
 cd ../
-rm -rf SuiteSparse*
+rm -rf SuiteSparse* v${VERSION}.tar.gz
 # Need to specify metis location?

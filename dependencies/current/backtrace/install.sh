@@ -34,4 +34,5 @@ unzip ${VERSION}.zip
 cd libbacktrace-${VERSION}
 ./configure --prefix=${INSTALL_DIR}
 make -j${NPROCS} && make install
-cd .. && rm -rf libbacktrace-${VERSION}
+cd ..
+rm -rf libbacktrace-${VERSION} ${VERSION}.zip

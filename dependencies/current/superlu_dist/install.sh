@@ -62,3 +62,4 @@ $CMAKE_COMMAND \
 
 make -j${NPROCS} install
 cd ..
+rm -rf $SUPERLU_TAR $SUPERLU_SRC $BUILD_DIR

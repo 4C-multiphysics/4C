@@ -28,3 +28,4 @@ else
 fi
 
 tar -xzf ${VERSION}.tar.gz -C ${INSTALL_DIR}
+rm -rf ${VERSION}.tar.gz

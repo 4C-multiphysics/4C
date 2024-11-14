@@ -34,4 +34,5 @@ tar -xzf ${VERSION}.tar.gz
 cd qhull-${VERSION}/build
 cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} ..
 make -j${NPROCS} && make install
-cd ../../ && rm -rf qhull*
+cd ../../
+rm -rf qhull* ${VERSION}.tar.gz
