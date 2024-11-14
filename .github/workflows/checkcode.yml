@@ -2,11 +2,12 @@
 name: checkcode
 
 on:
-  workflow_run:
-    workflows: [Docker]
-    types: completed
-  schedule:
-    - cron: '4 2 * * *'
+  pull_request:
+    branches:
+      - 'main'
+  push:
+    branches:
+      - 'main'
 
 # TODO find a way to share these variables across the workflows
 env:
@@ -30,6 +31,7 @@ jobs:
           source ./utilities/python-venv/bin/activate
           pre-commit clean
           pre-commit run --all-files --show-diff-on-failure
+
   clang-tidy:
     runs-on: ubuntu-latest
     container:
@@ -43,6 +45,9 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/compute-and-check-dependencies-hash
+        with:
+          docker_image_hash: $FOUR_C_DOCKER_DEPENDENCIES_HASH
       - uses: ./.github/actions/configure_4C
         with:
           cmake-preset: docker_codeclimate
@@ -53,6 +58,7 @@ jobs:
           mkdir -p clang-tidy-issues
           ESCAPED_PROJECT_DIR=$(echo "${GITHUB_WORKSPACE}" | sed 's/\//\\\//g')
           run-clang-tidy -j `nproc` -config-file ${GITHUB_WORKSPACE}/utilities/code_climate/clang-tidy-config -use-color -p . -export-fixes ./clang-tidy-issues/ -header-filter "${ESCAPED_PROJECT_DIR}\/.*" 2>&1 | python ${GITHUB_WORKSPACE}/utilities/code_climate/filter_clang_tidy_output.py
+
   verify-headers:
     runs-on: ubuntu-latest
     container:
@@ -66,6 +72,9 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/compute-and-check-dependencies-hash
+        with:
+          docker_image_hash: $FOUR_C_DOCKER_DEPENDENCIES_HASH
       - uses: ./.github/actions/configure_4C
         with:
           cmake-preset: docker

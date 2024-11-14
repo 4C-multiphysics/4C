@@ -1,9 +1,9 @@
 name: buildtest
 
 on:
-  workflow_run:
-    workflows: [Docker]
-    types: completed
+  pull_request:
+    branches:
+      - 'main'
   push:
     branches:
       - 'main'
@@ -42,6 +42,9 @@ jobs:
       # The repo gets cloned to `/__w/4C/4C` ($GITHUB_WORKSPACE) while ${{ github.workspace }} points to `/home/runner/work/4C/4C`.`
       # Use $GITHUB_WORKSPACE instead of ${{ github.workspace }}
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/compute-and-check-dependencies-hash
+        with:
+          docker_image_hash: $FOUR_C_DOCKER_DEPENDENCIES_HASH
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
@@ -67,6 +70,7 @@ jobs:
           path: |
             ${{ github.workspace }}/4C_build.tar
           retention-days: 1
+
   gcc9_test:
     needs: gcc9_build
     runs-on: ubuntu-latest

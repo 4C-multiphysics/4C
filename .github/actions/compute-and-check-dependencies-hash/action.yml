@@ -1,0 +1,31 @@
+name: dependencies hash
+description: Compute and check the docker dependencies hash
+inputs:
+  docker_image_hash:
+    description: 'The hash for the docker image'
+    required: true
+outputs:
+  computed_dependencies_hash:
+    description: 'The computed hash from the dependencies'
+    value: ${{ steps.compute-depencencies-hash.outputs.dependencies_hash }}
+runs:
+  using: composite
+  steps:
+    - id: compute-depencencies-hash
+      name: Compute the dependencies hash
+      run: |
+        cd $GITHUB_WORKSPACE
+        COMPUTED_DOCKER_DEPENDENCIES_HASH=`find dependencies docker -not -wholename '*/trilinos_develop/*' -not -name 'README.md' -type f -exec sha1sum {} \; | sort | sha1sum | cut -c -8`
+        echo "dependencies_hash=$COMPUTED_DOCKER_DEPENDENCIES_HASH" >> $GITHUB_OUTPUT
+        echo "COMPUTED_DOCKER_DEPENDENCIES_HASH=$COMPUTED_DOCKER_DEPENDENCIES_HASH" >> $GITHUB_ENV
+      shell: bash
+    - id: check-if-dependencies-hash-matches
+      name: Check if the dependencies hash matches
+      shell: bash
+      run: |
+        if [[ "$COMPUTED_DOCKER_DEPENDENCIES_HASH" == "${{ inputs.docker_image_hash }}" ]]; then
+          echo "The hash is correct."
+        else
+          echo "The hashes differ. The computed hash is $COMPUTED_DOCKER_DEPENDENCIES_HASH while the specified hash is ${{ inputs.docker_image_hash }}. You probably need to adapt the dependencies hash in the workflow."
+          exit 1
+        fi

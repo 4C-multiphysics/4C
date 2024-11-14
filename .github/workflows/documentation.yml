@@ -1,9 +1,9 @@
 name: documentation
 
 on:
-  workflow_run:
-    workflows: [Docker]
-    types: completed
+  pull_request:
+    branches:
+      - 'main'
   push:
     branches:
       - 'main'
@@ -34,6 +34,9 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/compute-and-check-dependencies-hash
+        with:
+          docker_image_hash: $FOUR_C_DOCKER_DEPENDENCIES_HASH
       - uses: ./.github/actions/configure_4C
         with:
           cmake-preset: docker
@@ -48,6 +51,7 @@ jobs:
           name: doxygen
           path: ${{ github.workspace }}/build/doc/doxygen/html/
           retention-days: 1
+
   readthedocs:
     runs-on: ubuntu-latest
     container:
@@ -61,6 +65,9 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/compute-and-check-dependencies-hash
+        with:
+          docker_image_hash: $FOUR_C_DOCKER_DEPENDENCIES_HASH
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
