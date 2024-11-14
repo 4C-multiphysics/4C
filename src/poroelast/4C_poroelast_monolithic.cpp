@@ -30,6 +30,7 @@
 #include "4C_linear_solver_method_parameters.hpp"
 #include "4C_mortar_manager_base.hpp"
 #include "4C_structure_aux.hpp"
+#include "4C_structure_new_model_evaluator_contact.hpp"
 
 #include <Teuchos_Time.hpp>
 #include <Teuchos_TimeMonitor.hpp>
@@ -278,11 +279,6 @@ void PoroElast::Monolithic::update_state_incrementally(
   // apply current velocity and pressures to structure
   set_fluid_solution();
 
-  // apply current velocity of fluid to ContactManager if contact problem
-  if (no_penetration_)
-    set_poro_contact_states();  // ATM svel is set in structure evaluate as the vel of the structure
-                                // is evaluated there ...
-
   // Monolithic Poroelasticity accesses the linearised structure problem:
   //   UpdaterIterIncrementally(sx),
   structure_field()->update_state_incrementally(s_iterinc);
@@ -293,6 +289,11 @@ void PoroElast::Monolithic::update_state_incrementally(
 
   // set structure displacements onto the fluid
   set_struct_solution();
+
+  // apply current velocity of fluid to ContactManager if contact problem
+  if (no_penetration_)
+    set_poro_contact_states();  // ATM svel is set in structure evaluate as the vel of the structure
+                                // is evaluated there ...
 }
 
 void PoroElast::Monolithic::evaluate(
@@ -394,6 +395,32 @@ void PoroElast::Monolithic::extract_field_vectors(
 
 void PoroElast::Monolithic::setup_system()
 {
+  // new timint with nitsche contact. For old timint this is in the constructor but for new it has
+  // to be after poroalgo->read_restart(restart);
+  if ((!oldstructimint_) && structure_field()->have_model(Inpar::Solid::model_contact))
+  {
+    auto& model_evaluator_contact = dynamic_cast<Solid::ModelEvaluator::Contact&>(
+        structure_field()->model_evaluator(Inpar::Solid::model_contact));
+
+    std::shared_ptr<CONTACT::NitscheStrategyPoro> contact_strategy_nitsche_poro =
+        std::dynamic_pointer_cast<CONTACT::NitscheStrategyPoro>(
+            model_evaluator_contact.strategy_ptr());
+
+    if (contact_strategy_nitsche_poro != nullptr)
+    {
+      nit_contact_ = true;
+      no_penetration_ = contact_strategy_nitsche_poro->has_poro_no_penetration();
+    }
+  }
+
+  if (no_penetration_ && not(strmethodname_ == Inpar::Solid::dyna_onesteptheta))
+  {
+    FOUR_C_THROW(
+        "Porous contact with no penetration is only implemented for OneStepTheta. Please set "
+        "DYNAMICTYPE to OneStepTheta.");
+  }
+
+
   {
     // -------------------------------------------------------------create combined map
     std::vector<std::shared_ptr<const Epetra_Map>> vecSpaces;
@@ -1828,6 +1855,32 @@ void PoroElast::Monolithic::set_poro_contact_states()
       }
     }
   }
+  else if (nit_contact_)  // new time integration with nitsche contact
+  {
+    auto& model_evaluator_contact = dynamic_cast<Solid::ModelEvaluator::Contact&>(
+        structure_field()->model_evaluator(Inpar::Solid::model_contact));
+
+    std::shared_ptr<CONTACT::NitscheStrategyPoro> contact_strategy_nitsche_poro =
+        std::dynamic_pointer_cast<CONTACT::NitscheStrategyPoro>(
+            model_evaluator_contact.strategy_ptr());
+
+    if (contact_strategy_nitsche_poro != nullptr)
+    {
+      std::shared_ptr<Core::FE::Discretization> poro_dis =
+          Global::Problem::instance()->get_dis("porofluid");
+      if (poro_dis == nullptr) FOUR_C_THROW("didn't get my poro discretization");
+
+      contact_strategy_nitsche_poro->set_parent_state(
+          Mortar::state_fvelocity, *fluid_field()->velnp(), *poro_dis);
+
+      std::shared_ptr<Core::FE::Discretization> struct_dis =
+          Global::Problem::instance()->get_dis("structure");
+      if (struct_dis == nullptr) FOUR_C_THROW("didn't get my structure discretization");
+
+      contact_strategy_nitsche_poro->set_parent_state(
+          Mortar::state_svelocity, *structure_field()->velnp(), *struct_dis);
+    }
+  }
 }
 
 void PoroElast::Monolithic::eval_poro_mortar()
@@ -1932,6 +1985,34 @@ void PoroElast::Monolithic::eval_poro_mortar()
         // Assign modified matrix
         systemmatrix_->assign(0, 1, Core::LinAlg::Copy, *k_sf);
       }
+    }
+  }
+  else if (nit_contact_)  // new time integration with nitsche contact
+  {
+    auto& model_evaluator_contact = dynamic_cast<Solid::ModelEvaluator::Contact&>(
+        structure_field()->model_evaluator(Inpar::Solid::model_contact));
+
+    std::shared_ptr<CONTACT::NitscheStrategyPoro> contact_strategy_nitsche_poro =
+        std::dynamic_pointer_cast<CONTACT::NitscheStrategyPoro>(
+            model_evaluator_contact.strategy_ptr());
+
+    if (contact_strategy_nitsche_poro != nullptr)
+    {
+      systemmatrix_->un_complete();
+      systemmatrix_->matrix(0, 1).add(*contact_strategy_nitsche_poro->get_matrix_block_ptr(
+                                          CONTACT::MatBlockType::displ_porofluid),
+          false, 1.0, 1.0);
+      systemmatrix_->matrix(1, 1).add(*contact_strategy_nitsche_poro->get_matrix_block_ptr(
+                                          CONTACT::MatBlockType::porofluid_porofluid),
+          false, 1.0, 1.0);
+      systemmatrix_->matrix(1, 0).add(*contact_strategy_nitsche_poro->get_matrix_block_ptr(
+                                          CONTACT::MatBlockType::porofluid_displ),
+          false, 1.0, 1.0);
+      systemmatrix_->complete();
+
+      extractor()->add_vector(
+          *contact_strategy_nitsche_poro->get_rhs_block_ptr(CONTACT::VecBlockType::porofluid), 1,
+          *rhs_);
     }
   }
 }

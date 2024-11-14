@@ -48,6 +48,16 @@ void CONTACT::NitscheStrategyPoro::apply_force_stiff_cmt(
   //    }
 }
 
+void CONTACT::NitscheStrategyPoro::integrate(const CONTACT::ParamsInterface& cparams)
+{
+  CONTACT::NitscheStrategy::integrate(cparams);
+
+  fp_ = create_rhs_block_ptr(CONTACT::VecBlockType::porofluid);
+  kpp_ = create_matrix_block_ptr(CONTACT::MatBlockType::porofluid_porofluid);
+  kpd_ = create_matrix_block_ptr(CONTACT::MatBlockType::porofluid_displ);
+  kdp_ = create_matrix_block_ptr(CONTACT::MatBlockType::displ_porofluid);
+}
+
 void CONTACT::NitscheStrategyPoro::set_state(
     const enum Mortar::StateType& statename, const Core::LinAlg::Vector<double>& vec)
 {

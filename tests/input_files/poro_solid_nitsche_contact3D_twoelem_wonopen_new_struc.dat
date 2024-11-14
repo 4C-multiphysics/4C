@@ -1,55 +1,29 @@
 -------------------------------------------------------------TITLE
-//Nitsche Based Porous Contact
+//Nitsche Based Porous Contact and new time integration
 //3D-Porous Contact Testcase! +
 //This basic testcase 1Element Poro / 1Element Structure
 //tests the implementation of the Poro nopenetration condition for
 //porous contact!!!
-//Twosided version
+//without nopenetration condition for porous fluid!!!
 ------------------------------------------------------PROBLEM SIZE
 DIM           3
-----------------------------------------------------DISCRETISATION
-NUMFLUIDDIS                     1
-NUMSTRUCDIS                     1
-NUMALEDIS                       1
-NUMARTNETDIS                    1
-NUMTHERMDIS                     1
-NUMAIRWAYSDIS                   1
--------------------------------------------------------PROBLEM TYPE
-PROBLEMTYPE                      Poroelasticity
+------------------------------------------------------PROBLEM TYPE
+PROBLEMTYPE                     Poroelasticity
 RESTART                         0
 SHAPEFCT                        Polynomial
-RANDSEED                        -1
 ----------------------------------------------------------------IO
 OUTPUT_BIN                      yes
 STRUCT_DISP                     Yes
-STRUCT_VEL_ACC                  No
 STRUCT_STRESS                   cauchy
 STRUCT_COUPLING_STRESS          Yes
-STRUCT_STRAIN                   No
-STRUCT_PLASTIC_STRAIN           No
-STRUCT_SURFACTANT               No
 FLUID_STRESS                    Yes
-FLUID_WALL_SHEAR_STRESS         No
-THERM_TEMPERATURE               No
-THERM_HEATFLUX                  None
-THERM_TEMPGRAD                  None
 FILESTEPS                       1000
-STDOUTEVERY                      1
+STDOUTEVERY                     1
 WRITE_TO_SCREEN                 Yes
-WRITE_TO_FILE                   No
-PREFIX_GROUP_ID                 No
-LIMIT_OUTP_TO_PROC              -1
 ------------------------------------------------STRUCTURAL DYNAMIC
-DYNAMICTYPE                      OneStepTheta
-RESULTSEVERY                     1
-RESEVERYERGY                     0
-RESTARTEVERY                     20
-NUMSTEP                         10
-MAXTIME                         5
+INT_STRATEGY                    Standard
+DYNAMICTYPE                     OneStepTheta
 DAMPING                         Material
-M_DAMP                          -1
-K_DAMP                          -1
-STC_SCALING                     no
 STC_LAYER                       1
 PTCDT                           0.1
 TOLCONSTR                       1e-08
@@ -58,10 +32,8 @@ MINITER                         0
 ITERNORM                        L2
 DIVERCONT                       stop
 NLNSOL                          fullnewton
-LOADLIN                         no
-MASSLIN                         no
 PREDICT                         ConstDis
-LINEAR_SOLVER                   2
+LINEAR_SOLVER                   1
 TIMESTEP                        0.5
 ---------------------------------------------------MORTAR COUPLING
 ALGORITHM                       gpts
@@ -79,47 +51,39 @@ MAX_BALANCE_EVAL_TIME           2
 MIN_ELEPROC                     0
 GHOSTING_STRATEGY               redundant_master
 ---------------------------------------------------CONTACT DYNAMIC
-LINEAR_SOLVER                   4
-ADHESION                        None
-FRICTION                        None
-FRLESS_FIRST                    No
-GP_SLIP_INCR                    No
+LINEAR_SOLVER                   1
 STRATEGY                        Nitsche
 SYSTEM                          Condensed
 PENALTYPARAM                    1
-CONTACTFORCE_ENDTIME            No
-VELOCITY_UPDATE                 No
-EMOUTPUT                        None
 NORMCOMBI_RESFCONTCONSTR        And
 NORMCOMBI_DISPLAGR              And
 TOLCONTCONSTR                   1e-06
-NITSCHE_WEIGHTING harmonic
+NITSCHE_WEIGHTING               harmonic
 TOLLAGR                         1e-06
 -----------------------------------STRUCTURAL DYNAMIC/ONESTEPTHETA
 THETA                           1
 --------------------------------------------POROELASTICITY DYNAMIC
 COUPALGO                        poro_monolithic
 PHYSICAL_TYPE                   Poro
-RESTARTEVERY                     1
+RESTARTEVERY                    5
 NUMSTEP                         10
-MAXTIME                         30
+MAXTIME                         5
 TIMESTEP                        0.5
 ITEMAX                          100
 ITEMIN                          1
-RESULTSEVERY                           1
-TOLRES_GLOBAL                   1e-6
-TOLINC_GLOBAL                   1e-6
+RESULTSEVERY                    5
+TOLRES_GLOBAL                   1e-8
+TOLINC_GLOBAL                   1e-8
 NORM_INC                        AbsGlobal
 NORM_RESF                       AbsGlobal
 NORMCOMBI_RESFINC               And
 SECONDORDER                     No
 CONTIPARTINT                    Yes
-CONTACTNOPEN                    Yes
+CONTACTNOPEN                    No
 LINEAR_SOLVER                   1
 -----------------------------------------------------FLUID DYNAMIC
 PHYSICAL_TYPE                   Incompressible
-LINEAR_SOLVER                   3
-SIMPLER_SOLVER                  -1
+LINEAR_SOLVER                   1
 TIMEINTEGR                      One_Step_Theta
 NONLINITER                      Newton
 PREDICTOR                       steady_state
@@ -130,13 +94,6 @@ MESHTYING                       no
 GRIDVEL                         OST
 ALLDOFCOUPLED                   Yes
 COMPUTE_DIVU                    No
-RESULTSEVERY                           1
-TIMESTEP                        0.5
-RESTARTEVERY                     20
-NUMSTEP                         1
-STEADYSTEP                      -1
-NUMSTASTEPS                     0
-STARTFUNCNO                     -1
 INITSTATITEMAX                  5
 GAMMA                           1
 THETA                           1
@@ -163,16 +120,6 @@ LOMA_CONTI_CROSS_STRESS         no_cross
 LOMA_CONTI_REYNOLDS_STRESS      no_reynolds
 ----------------------------------------------------------SOLVER 1
 SOLVER                          UMFPACK
-NAME                            Poro_monolithic
-----------------------------------------------------------SOLVER 2
-SOLVER                          UMFPACK
-NAME                            structural solver
-----------------------------------------------------------SOLVER 3
-SOLVER                          UMFPACK
-NAME                            FluidSolver
-----------------------------------------------------------SOLVER 4
-SOLVER                          UMFPACK
-NAME                            contact
 ---------------------------------------------------------MATERIALS
 MAT 1 MAT_StructPoro MATID 2 POROLAWID 10 INITPOROSITY 0.5
 MAT 10 MAT_PoroLawNeoHooke BULKMODULUS 2.0e8 PENALTYPARAMETER 0.001
@@ -180,49 +127,32 @@ MAT 2 MAT_ElastHyper NUMMAT 1 MATIDS 4 DENS 5.0
 MAT 4 ELAST_CoupNeoHooke YOUNG 2.0e4 NUE 0.0
 MAT 3 MAT_FluidPoro DYNVISCOSITY 1.0 DENSITY 10.0 PERMEABILITY 1.0e-2 TYPE Darcy
 MAT 5 MAT_ElastHyper NUMMAT 1 MATIDS 6 DENS 5.0
-MAT 6 ELAST_CoupNeoHooke YOUNG 2.0e6 NUE 0.0
+MAT 6 ELAST_CoupNeoHooke YOUNG 2.0e4 NUE 0.0
 ----------------------------------------------CLONING MATERIAL MAP
 SRC_FIELD structure SRC_MAT 1 TAR_FIELD porofluid TAR_MAT 3
 ------------------------------------------------------------FUNCT1
 COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME a
-VARIABLE 0 NAME a TYPE multifunction NUMPOINTS 4 TIMES 0.0 1 21 500000.0 DESCRIPTION 0.01+0.5*0.09*0.5*(1-cos((t*pi/1.0))) 0.01+0.09+0.21*0.5*(1-cos(((t-1.0)*pi/20.0))) 0.01+0.3
+VARIABLE 0 NAME a TYPE multifunction NUMPOINTS 4 TIMES 0.0 1 21 500000.0 DESCRIPTION 0.01+0.09*0.5*(1-cos((t*pi/1.0))) 0.01+0.09+0.21*0.5*(1-cos(((t-1.0)*pi/20.0))) 0.01+0.3
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 DSURF  2
 // struct_bottom
 E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
 // pusher_top
 E 4 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 -1.0 FUNCT 0 0 1
--------------------------------DESIGN SURF PORO NEUMANN CONDITIONS
-DSURF  1
-// struct_bottom
-E 4 - NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 -100 0 FUNCT 0 0 0 0
---------------------------------DESIGN SURF PORO DIRICH CONDITIONS
-DSURF  1
-// struct_bottom
-E 1 - NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 1 0 FUNCT 0 0 0 0
----------------------------------DESIGN VOL PORO DIRICH CONDITIONS
-DVOL  2
-E 1 - NUMDOF 4 ONOFF 1 1 0 0 VAL 0.0 0.0 0.0 0 FUNCT 0 0 0 0
-E 2 - NUMDOF 4 ONOFF 1 1 0 0 VAL 0.0 0.0 0.0 0 FUNCT 0 0 0 0
---------------------------------------DESIGN VOL DIRICH CONDITIONS
-DVOL  2
-E 1 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
-E 2 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
 ------------------------------DESIGN VOLUME POROCOUPLING CONDITION
-DVOL  2
+DVOL  1
 // poro_surface
 E 1 -
-E 2 -
+---------------------------DESIGN SURFACE PORO PARTIAL INTEGRATION
+DSURF  1
+// all
+E 5 -
 --------------------------DESIGN SURF MORTAR CONTACT CONDITIONS 3D
 DSURF  2
 // zp
-E 2 - InterfaceID 1 Side Master
+E 2 - InterfaceID 1 Side Slave
 // s_contact
-E 3 - InterfaceID 1 Side Slave
----------------------------DESIGN SURFACE PORO PARTIAL INTEGRATION
-DSURF 1
-// all
-E 5 -
+E 3 - InterfaceID 1 Side Master
 -----------------------------------------------DSURF-NODE TOPOLOGY
 NODE    1 DSURFACE 1
 NODE    2 DSURFACE 1
@@ -248,14 +178,6 @@ NODE    5 DSURFACE 5
 NODE    6 DSURFACE 5
 NODE    7 DSURFACE 5
 NODE    8 DSURFACE 5
-NODE    9 DSURFACE 5
-NODE    10 DSURFACE 5
-NODE    11 DSURFACE 5
-NODE    12 DSURFACE 5
-NODE    13 DSURFACE 5
-NODE    14 DSURFACE 5
-NODE    15 DSURFACE 5
-NODE    16 DSURFACE 5
 ------------------------------------------------DVOL-NODE TOPOLOGY
 NODE    1 DVOL 1
 NODE    2 DVOL 1
@@ -265,14 +187,6 @@ NODE    5 DVOL 1
 NODE    6 DVOL 1
 NODE    7 DVOL 1
 NODE    8 DVOL 1
-NODE    9 DVOL 2
-NODE    10 DVOL 2
-NODE    11 DVOL 2
-NODE    12 DVOL 2
-NODE    13 DVOL 2
-NODE    14 DVOL 2
-NODE    15 DVOL 2
-NODE    16 DVOL 2
 -------------------------------------------------------NODE COORDS
 NODE 1    COORD  0.0000000000000000e+00  0.0000000000000000e+00  0.0000000000000000e+00
 NODE 2    COORD  1.0000000000000000e+00  0.0000000000000000e+00  0.0000000000000000e+00
@@ -292,13 +206,13 @@ NODE 15    COORD  1.00000000000000e+00  1.00000000000000e+00  2.1000000000000000
 NODE 16    COORD  0.00000000000000e+00  1.00000000000000e+00  2.1000000000000000e+00
 ------------------------------------------------STRUCTURE ELEMENTS
 1 SOLIDH8PORO HEX8  1 2 3 4 5 6 7 8 MAT 1 KINEM nonlinear EAS none
-2 SOLIDH8PORO HEX8  9 10 11 12 13 14 15 16 MAT 1 KINEM nonlinear EAS none
+2 SOLID HEX8 9 10 11 12 13 14 15 16 MAT 5 KINEM nonlinear
 ------------------------------------------------RESULT DESCRIPTION
-STRUCTURE DIS structure NODE 8 QUANTITY dispx VALUE  0.00000000000000000e+00 TOLERANCE 1e-10
-STRUCTURE DIS structure NODE 8 QUANTITY dispy VALUE  0.00000000000000000e+00 TOLERANCE 1e-10
-STRUCTURE DIS structure NODE 8 QUANTITY dispz VALUE -8.78902282320796584e-03 TOLERANCE 1e-10
-STRUCTURE DIS structure NODE 8 QUANTITY velz VALUE -4.58955782087311533e-03 TOLERANCE 1e-10 //has to be equal to velz of fluid!!!
-FLUID DIS porofluid NODE 8 QUANTITY velx VALUE  0.00000000000000000e+00 TOLERANCE 1e-10
-FLUID DIS porofluid NODE 8 QUANTITY vely VALUE  0.00000000000000000e+00 TOLERANCE 1e-10
-FLUID DIS porofluid NODE 8 QUANTITY velz VALUE  1.00451943820897349e+00 TOLERANCE 1e-10 //has to be equal to velz of structure!!!
-FLUID DIS porofluid NODE 8 QUANTITY pressure VALUE  1.50267830946357918e+02 TOLERANCE 1e-10
+STRUCTURE DIS structure NODE 8 QUANTITY dispx VALUE -6.43780804852526608e-07 TOLERANCE 1e-10
+STRUCTURE DIS structure NODE 8 QUANTITY dispy VALUE  6.43780805068133021e-07 TOLERANCE 1e-10
+STRUCTURE DIS structure NODE 8 QUANTITY dispz VALUE -1.00258172432425626e-02 TOLERANCE 1e-10
+STRUCTURE DIS structure NODE 8 QUANTITY velz VALUE -4.58029707932279886e-03 TOLERANCE 1e-10
+FLUID DIS porofluid NODE 8 QUANTITY velx VALUE -1.51905626509464412e-03 TOLERANCE 1e-10
+FLUID DIS porofluid NODE 8 QUANTITY vely VALUE  1.51905626509473628e-03 TOLERANCE 1e-10
+FLUID DIS porofluid NODE 8 QUANTITY velz VALUE -2.84826928288361893e-03 TOLERANCE 1e-10
+FLUID DIS porofluid NODE 8 QUANTITY pressure VALUE  1.33686656217005071e-02 TOLERANCE 1e-10

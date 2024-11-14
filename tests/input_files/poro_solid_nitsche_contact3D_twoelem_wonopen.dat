@@ -80,7 +80,6 @@ MIN_ELEPROC                     0
 GHOSTING_STRATEGY               redundant_master
 ---------------------------------------------------CONTACT DYNAMIC
 LINEAR_SOLVER                   4
-RESTART_WITH_CONTACT            Yes
 ADHESION                        None
 FRICTION                        None
 FRLESS_FIRST                    No

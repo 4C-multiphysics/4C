@@ -14,6 +14,7 @@
 #include "4C_io_input_spec.hpp"
 #include "4C_io_value_parser.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <optional>
 #include <ostream>
