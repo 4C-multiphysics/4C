@@ -17,7 +17,7 @@ jobs:
   check-if-docker-build-is-required:
     runs-on: ubuntu-latest
     outputs:
-      dependencies_hash: ${{ steps.compute-dependencies-hash.outputs.dependencies_hash.value }}
+      dependencies_hash: ${{ steps.compute-dependencies-hash.outputs.dependencies_hash }}
       build_docker_image: ${{ steps.check-if-build-is-required.outputs.build }}
     steps:
       - uses: actions/checkout@v4
