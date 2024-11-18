@@ -65,6 +65,7 @@ jobs:
         uses: ./.github/actions/compute-and-check-dependencies-hash
         with:
           docker_image_hash: $FOUR_C_DOCKER_DEPENDENCIES_HASH
+      - run: apt update
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
