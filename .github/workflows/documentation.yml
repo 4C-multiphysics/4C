@@ -11,9 +11,6 @@ on:
 env:
   FOUR_C_DOCKER_DEPENDENCIES_HASH: 40d8b295
 
-permissions:
-  contents: read
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
