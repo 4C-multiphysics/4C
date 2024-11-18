@@ -6,7 +6,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_SUFFIX: dependencies
-  FOUR_C_DOCKER_DEPENDENCIES_HASH: 7a6ad12e
+  FOUR_C_DOCKER_DEPENDENCIES_HASH: 40d8b295
   IMAGE_PATH: ghcr.io/4c-multiphysics/4c-dependencies
 
 concurrency:

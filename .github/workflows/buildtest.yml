@@ -9,9 +9,7 @@ on:
       - 'main'
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: 4c-dependencies
-  FOUR_C_DOCKER_DEPENDENCIES_HASH: 7a6ad12e
+  FOUR_C_DOCKER_DEPENDENCIES_HASH: 40d8b295
 
 permissions:
   contents: read
@@ -26,7 +24,7 @@ jobs:
       CMAKE_PRESET: docker
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ppraegla/4c-dependencies:latest
+      image: ghcr.io/4c-multiphysics/4c-dependencies:40d8b295
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
       credentials:
         username: ${{ github.actor }}
@@ -40,6 +38,10 @@ jobs:
       # The repo gets cloned to `/__w/4C/4C` ($GITHUB_WORKSPACE) while ${{ github.workspace }} points to `/home/runner/work/4C/4C`.`
       # Use $GITHUB_WORKSPACE instead of ${{ github.workspace }}
       - uses: actions/checkout@v4
+      - name: Check docker hash
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+        with:
+          docker_image_hash: $FOUR_C_DOCKER_DEPENDENCIES_HASH
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
@@ -65,11 +67,12 @@ jobs:
           path: |
             ${{ github.workspace }}/4C_build.tar
           retention-days: 1
+
   gcc9_test:
     needs: gcc9_build
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ppraegla/4c-dependencies:latest
+      image: ghcr.io/4c-multiphysics/4c-dependencies:40d8b295
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
       credentials:
         username: ${{ github.actor }}
@@ -84,6 +87,10 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
+      - name: Check docker hash
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+        with:
+          docker_image_hash: $FOUR_C_DOCKER_DEPENDENCIES_HASH
       - name: Setup developer environment for testing
         run: |
           cd $GITHUB_WORKSPACE
@@ -110,6 +117,7 @@ jobs:
           path: |
             junit_test_summary-${{ matrix.test-chunk }}.xml
           retention-days: 1
+
   ensure_all_tests_pass:
     needs: [gcc9_test, gcc9_build]
     runs-on: ubuntu-latest

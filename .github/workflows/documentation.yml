@@ -9,9 +9,7 @@ on:
       - 'main'
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: 4c-dependencies
-  FOUR_C_DOCKER_DEPENDENCIES_HASH: 7a6ad12e
+  FOUR_C_DOCKER_DEPENDENCIES_HASH: 40d8b295
 
 permissions:
   contents: read
@@ -24,7 +22,7 @@ jobs:
   doxygen:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ppraegla/4c-dependencies:latest
+      image: ghcr.io/4c-multiphysics/4c-dependencies:40d8b295
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
       credentials:
         username: ${{ github.actor }}
@@ -34,6 +32,10 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
+      - name: Check docker hash
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+        with:
+          docker_image_hash: $FOUR_C_DOCKER_DEPENDENCIES_HASH
       - uses: ./.github/actions/configure_4C
         with:
           cmake-preset: docker
@@ -48,10 +50,11 @@ jobs:
           name: doxygen
           path: ${{ github.workspace }}/build/doc/doxygen/html/
           retention-days: 1
+
   readthedocs:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ppraegla/4c-dependencies:latest
+      image: ghcr.io/4c-multiphysics/4c-dependencies:40d8b295
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
       credentials:
         username: ${{ github.actor }}
@@ -61,6 +64,10 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
+      - name: Check docker hash
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+        with:
+          docker_image_hash: $FOUR_C_DOCKER_DEPENDENCIES_HASH
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:

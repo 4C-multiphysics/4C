@@ -9,6 +9,9 @@ on:
     branches:
       - 'main'
 
+env:
+  FOUR_C_DOCKER_DEPENDENCIES_HASH: 40d8b295
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -26,10 +29,11 @@ jobs:
           source ./utilities/python-venv/bin/activate
           pre-commit clean
           pre-commit run --all-files --show-diff-on-failure
+
   clang-tidy:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ppraegla/4c-dependencies:latest
+      image: ghcr.io/4c-multiphysics/4c-dependencies:40d8b295
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
       credentials:
         username: ${{ github.actor }}
@@ -39,6 +43,10 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
+      - name: Check docker hash
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+        with:
+          docker_image_hash: $FOUR_C_DOCKER_DEPENDENCIES_HASH
       - uses: ./.github/actions/configure_4C
         with:
           cmake-preset: docker_codeclimate
@@ -49,10 +57,11 @@ jobs:
           mkdir -p clang-tidy-issues
           ESCAPED_PROJECT_DIR=$(echo "${GITHUB_WORKSPACE}" | sed 's/\//\\\//g')
           run-clang-tidy -j `nproc` -config-file ${GITHUB_WORKSPACE}/utilities/code_climate/clang-tidy-config -use-color -p . -export-fixes ./clang-tidy-issues/ -header-filter "${ESCAPED_PROJECT_DIR}\/.*" 2>&1 | python ${GITHUB_WORKSPACE}/utilities/code_climate/filter_clang_tidy_output.py
+
   verify-headers:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ppraegla/4c-dependencies:latest
+      image: ghcr.io/4c-multiphysics/4c-dependencies:40d8b295
       options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
       credentials:
         username: ${{ github.actor }}
@@ -62,6 +71,10 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
+      - name: Check docker hash
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+        with:
+          docker_image_hash: $FOUR_C_DOCKER_DEPENDENCIES_HASH
       - uses: ./.github/actions/configure_4C
         with:
           cmake-preset: docker
