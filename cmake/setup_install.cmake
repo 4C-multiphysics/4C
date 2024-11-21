@@ -5,6 +5,25 @@
 #
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
+function(four_c_add_dependency_to_settings _package_name)
+  # Sanitize the package name: all upper case, no hyphens and dots.
+  string(TOUPPER ${_package_name} _package_name_SANITIZED)
+  string(REGEX REPLACE "[^A-Z0-9]" "_" _package_name_SANITIZED ${_package_name_SANITIZED})
+
+  # Append the dependency info to the target settings
+  if(FOUR_C_WITH_${_package_name_SANITIZED})
+    # Append a tab at the start of each line of content
+    file(READ ${CMAKE_BINARY_DIR}/cmake/templates/${_package_name}.cmake _content)
+    string(REPLACE "\n" "\n\t" _content_with_tab "${_content}")
+    file(
+      APPEND ${CMAKE_BINARY_DIR}/cmake/templates/4CSettings.cmake
+      "\nif(4C_WITH_${_package_name_SANITIZED})\n\t"
+      )
+    file(APPEND ${CMAKE_BINARY_DIR}/cmake/templates/4CSettings.cmake "${_content_with_tab}")
+    file(APPEND ${CMAKE_BINARY_DIR}/cmake/templates/4CSettings.cmake "\nendif()\n")
+  endif()
+endfunction()
+
 include(GNUInstallDirs)
 
 # install the 4C executable
@@ -49,6 +68,20 @@ configure_file(
   @ONLY
   )
 
+# add the dependency info to settings
+four_c_add_dependency_to_settings(HDF5)
+four_c_add_dependency_to_settings(MPI)
+four_c_add_dependency_to_settings(Qhull)
+four_c_add_dependency_to_settings(Trilinos)
+four_c_add_dependency_to_settings(Boost)
+four_c_add_dependency_to_settings(ArborX)
+four_c_add_dependency_to_settings(FFTW)
+four_c_add_dependency_to_settings(CLN)
+four_c_add_dependency_to_settings(MIRCO)
+four_c_add_dependency_to_settings(Backtrace)
+four_c_add_dependency_to_settings(yaml-cpp)
+
+# install
 install(
   FILES ${CMAKE_BINARY_DIR}/cmake/templates/4CSettings.cmake
   DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/4C

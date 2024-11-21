@@ -40,8 +40,3 @@ configure_file(
   ${CMAKE_BINARY_DIR}/cmake/templates/ArborX.cmake
   @ONLY
   )
-include(GNUInstallDirs)
-install(
-  FILES ${CMAKE_BINARY_DIR}/cmake/templates/ArborX.cmake
-  DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/4C
-  )

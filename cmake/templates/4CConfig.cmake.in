@@ -1,19 +1,17 @@
 @PACKAGE_INIT@
 
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_MODULE_PATH})
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/modules ${CMAKE_MODULE_PATH})
 
 include(CMakeFindDependencyMacro)
 include(FetchContent)
 
 include("${CMAKE_CURRENT_LIST_DIR}/4CSettings.cmake")
 
-if(4C_WITH_MPI MATCHES ON)
-  include("${CMAKE_CURRENT_LIST_DIR}/MPI.cmake")
+if(4C_WITH_MPI)
   find_package(MPI REQUIRED)
 endif()
 
-if(4C_WITH_TRILINOS MATCHES ON)
-  include("${CMAKE_CURRENT_LIST_DIR}/Trilinos.cmake")
+if(4C_WITH_TRILINOS)
   find_package(Trilinos REQUIRED)
   if(Trilinos_FOUND AND NOT TARGET Trilinos::all_selected_libs)
     add_library(Trilinos::all_selected_libs IMPORTED INTERFACE)
@@ -29,8 +27,7 @@ if(4C_WITH_TRILINOS MATCHES ON)
   endif()
 endif()
 
-if(4C_WITH_BOOST MATCHES ON)
-  include("${CMAKE_CURRENT_LIST_DIR}/Boost.cmake")
+if(4C_WITH_BOOST)
   find_package(
     Boost
     COMPONENTS graph system
@@ -38,13 +35,11 @@ if(4C_WITH_BOOST MATCHES ON)
     )
 endif()
 
-if(4C_WITH_BACKTRACE MATCHES ON)
-  include("${CMAKE_CURRENT_LIST_DIR}/Backtrace.cmake")
+if(4C_WITH_BACKTRACE)
   find_package(Backtrace REQUIRED)
 endif()
 
-if(4C_WITH_HDF5 MATCHES ON)
-  include("${CMAKE_CURRENT_LIST_DIR}/HDF5.cmake")
+if(4C_WITH_HDF5)
   find_package(
     HDF5
     COMPONENTS C HL
@@ -52,33 +47,27 @@ if(4C_WITH_HDF5 MATCHES ON)
     )
 endif()
 
-if(4C_WITH_QHULL MATCHES ON)
-  include("${CMAKE_CURRENT_LIST_DIR}/Qhull.cmake")
+if(4C_WITH_QHULL)
   find_package(Qhull REQUIRED)
 endif()
 
-if(4C_WITH_FFTW MATCHES ON)
-  include("${CMAKE_CURRENT_LIST_DIR}/FFTW.cmake")
+if(4C_WITH_FFTW)
   find_package(FFTW REQUIRED)
 endif()
 
-if(4C_WITH_CLN MATCHES ON)
-  include("${CMAKE_CURRENT_LIST_DIR}/CLN.cmake")
+if(4C_WITH_CLN)
   find_package(CLN REQUIRED)
 endif()
 
-if(4C_WITH_MIRCO MATCHES ON)
-  include("${CMAKE_CURRENT_LIST_DIR}/MIRCO.cmake")
+if(4C_WITH_MIRCO)
   find_package(mirco_lib CONFIG HINTS ${4C_MIRCO_ROOT})
 endif()
 
-if(4C_WITH_ARBORX MATCHES ON)
-  include("${CMAKE_CURRENT_LIST_DIR}/ArborX.cmake")
+if(4C_WITH_ARBORX)
   find_package(ArborX CONFIG HINTS ${4C_ARBORX_ROOT})
 endif()
 
-if(4C_WITH_YAML_CPP MATCHES ON)
-  include("${CMAKE_CURRENT_LIST_DIR}/yaml-cpp.cmake")
+if(4C_WITH_YAML_CPP)
   find_package(yaml-cpp CONFIG HINTS ${4C_YAML_CPP_ROOT})
 endif()
 

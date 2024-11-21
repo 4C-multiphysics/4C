@@ -25,9 +25,4 @@ if(HDF5_FOUND)
     ${CMAKE_BINARY_DIR}/cmake/templates/HDF5.cmake
     @ONLY
     )
-  include(GNUInstallDirs)
-  install(
-    FILES ${CMAKE_BINARY_DIR}/cmake/templates/HDF5.cmake
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/4C
-    )
 endif()

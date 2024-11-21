@@ -25,8 +25,3 @@ configure_file(
   ${CMAKE_BINARY_DIR}/cmake/templates/yaml-cpp.cmake
   @ONLY
   )
-include(GNUInstallDirs)
-install(
-  FILES ${CMAKE_BINARY_DIR}/cmake/templates/yaml-cpp.cmake
-  DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/4C
-  )
