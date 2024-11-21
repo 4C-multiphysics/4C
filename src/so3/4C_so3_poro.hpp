@@ -109,6 +109,9 @@ namespace Discret
       */
       Core::Elements::Element* clone() const override;
 
+      //! get global id of element
+      int id() const;
+
       /*!
       \brief Return unique ParObject id
 

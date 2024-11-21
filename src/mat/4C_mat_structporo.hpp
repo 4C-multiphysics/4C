@@ -311,6 +311,9 @@ namespace Mat
           d2_cauchyndir_dF_dT);
     }
 
+    void evaluate_linearization_od(const Core::LinAlg::Matrix<3, 3>& defgrd,
+        const double concentration, Core::LinAlg::Matrix<9, 1>* d_F_dx) override;
+
     //!@}
 
     //! Return material density (if provided by the specific material)

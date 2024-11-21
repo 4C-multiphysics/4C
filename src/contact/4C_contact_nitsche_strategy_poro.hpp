@@ -68,7 +68,6 @@ namespace CONTACT
     virtual std::shared_ptr<Core::LinAlg::SparseMatrix> get_matrix_block_ptr(
         const enum CONTACT::MatBlockType& bp) const;
 
-
     // Flag for Poro No Penetration Condition
     bool has_poro_no_penetration() const override { return no_penetration_; }
 

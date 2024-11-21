@@ -142,6 +142,48 @@ namespace Discret
 
       //!@}
 
+      /*!
+       * @brief Evaluate Cauchy stress at given point in parameter space and calculate
+       * linearizations
+       *
+       * @param[in] xi                   position in parameter space xi
+       * @param[in] disp_nodal_values    vector containing nodal values of displacements
+       * @param[in] scalar_nodal_values  vector containing nodal values of scalars
+       * @param[in] n                    vector (\f[\mathbf{n}\f])
+       * @param[in] dir                  direction vector (\f[\mathbf{v}\f]), can be either normal
+       * or tangential vector
+       * @param[out] cauchy_n_dir  cauchy stress tensor contracted using the vectors n and dir
+       *                           (\f[ \mathbf{\sigma} \cdot \mathbf{n} \cdot \mathbf{v} \f])
+       * @param[out] d_cauchyndir_dd  derivative of cauchy_n_dir w.r.t. displacements
+       *                         (\f[ \frac{ \mathrm{d} \mathbf{\sigma} \cdot \mathbf{n} \cdot
+       * \mathbf{v}} { \mathrm{d} \mathbf{d}} \f])
+       * @param d_cauchyndir_ds  derivative of cauchy_n_dir w.r.t. vector of scalars s
+       *                        (\f[ \frac{ \mathrm{d} \mathbf{\sigma} \cdot \mathbf{n} \cdot
+       * \mathbf{v}} { \mathrm{d} \mathbf{s}} \f])
+       * @param[out] d_cauchyndir_dn   derivative of cauchy_n_dir w.r.t. vector n
+       *                        (\f[ \frac{ \mathrm{d} \mathbf{\sigma} \cdot \mathbf{n} \cdot
+       * \mathbf{v}} { \mathrm{d} \mathbf{n}} \f])
+       * @param[out] d_cauchyndir_ddir  derivative of cauchy_n_dir w.r.t. direction vector v
+       *                        (\f[ \frac{ \mathrm{d} \mathbf{\sigma} \cdot \mathbf{n} \cdot
+       * \mathbf{v}} { \mathrm{d} \mathbf{v}} \f])
+       * @param[out] d_cauchyndir_dxi  derivative of cauchy_n_dir w.r.t. local parameter coord. xi
+       *                        (\f[ \frac{ \mathrm{d} \mathbf{\sigma} \cdot \mathbf{n} \cdot
+       * \mathbf{v}} { \mathrm{d} \mathbf{\xi}} \f])
+       *
+       * @note At the moment this method is only used for the nitsche contact formulation
+       */
+      void get_cauchy_n_dir_and_derivatives_at_xi(const Core::LinAlg::Matrix<3, 1>& xi,
+          const std::vector<double>& disp_nodal_values,
+          const std::vector<double>& pres_nodal_values,
+          const std::vector<double>& scalar_nodal_values, const Core::LinAlg::Matrix<3, 1>& n,
+          const Core::LinAlg::Matrix<3, 1>& dir, double& cauchy_n_dir,
+          Core::LinAlg::SerialDenseMatrix* d_cauchyndir_dd,
+          Core::LinAlg::SerialDenseMatrix* d_cauchyndir_dp,
+          Core::LinAlg::SerialDenseMatrix* d_cauchyndir_ds,
+          Core::LinAlg::Matrix<3, 1>* d_cauchyndir_dn,
+          Core::LinAlg::Matrix<3, 1>* d_cauchyndir_ddir,
+          Core::LinAlg::Matrix<3, 1>* d_cauchyndir_dxi);
+
       //! @name Input and Creation
       /*!
       \brief Read input for this element
