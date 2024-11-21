@@ -107,6 +107,13 @@ function(four_c_auto_define_module)
       EXPORT 4CTargets
       FILE_SET HEADERS
       )
+    if(NOT BUILD_SHARED_LIBS)
+      install(
+        TARGETS ${_target}_objs
+        EXPORT 4CTargets
+        FILE_SET HEADERS
+        )
+    endif()
   endif()
 
   # Add the compiled sources to the object library
