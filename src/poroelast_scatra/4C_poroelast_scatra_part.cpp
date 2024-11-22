@@ -58,8 +58,9 @@ void PoroElastScaTra::PoroScatraPart::setup_contact_strategy()
     // get the contact model evaluator and store a pointer to the strategy
     auto& model_evaluator_contact = dynamic_cast<Solid::ModelEvaluator::Contact&>(
         structure_field()->model_evaluator(Inpar::Solid::model_contact));
-    contact_strategy_nitsche_ = Teuchos::rcp_dynamic_cast<CONTACT::NitscheStrategySsi>(
-        model_evaluator_contact.strategy_ptr(), true);
+
+    contact_strategy_nitsche_ = std::dynamic_pointer_cast<CONTACT::NitscheStrategySsi>(
+        model_evaluator_contact.strategy_ptr());
   }
   else
     FOUR_C_THROW("Only Nitsche contact implemented for SSI problems at the moment!");
@@ -73,7 +74,7 @@ void PoroElastScaTra::PoroScatraPart::set_poro_solution()
   if (ssi_interface_contact())
   {
     // poro pressure and velocity
-    Teuchos::RCP<const Core::LinAlg::Vector<double>> velnp = Teuchos::null;
+    std::shared_ptr<const Core::LinAlg::Vector<double>> velnp = nullptr;
 
     if (matchinggrid_)
     {
@@ -87,7 +88,7 @@ void PoroElastScaTra::PoroScatraPart::set_poro_solution()
     contact_strategy_nitsche_->set_state(Mortar::state_fvelocity, *velnp);
 
     // structure velocity
-    Teuchos::RCP<const Core::LinAlg::Vector<double>> svel = poro_->structure_field()->velnp();
+    std::shared_ptr<const Core::LinAlg::Vector<double>> svel = poro_->structure_field()->velnp();
     contact_strategy_nitsche_->set_state(Mortar::state_svelocity, *svel);
   }
 }
@@ -96,7 +97,7 @@ void PoroElastScaTra::PoroScatraPart::set_scatra_solution()
 {
   PoroScatraBase::set_scatra_solution();
 
-  Teuchos::RCP<const Core::LinAlg::Vector<double>> phinp_s = Teuchos::null;
+  std::shared_ptr<const Core::LinAlg::Vector<double>> phinp_s = nullptr;
 
   if (matchinggrid_)
   {

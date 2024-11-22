@@ -531,11 +531,11 @@ void CONTACT::IntegratorNitschePoroScatra::get_poro_quantitiesat_gp(Mortar::Elem
   sJ = det_deformation_gradient(ele, dummy, xi, sJLin);
   Teuchos::ParameterList sparams;  // empty parameter list;
 
-  Teuchos::RCP<Mat::StructPoro> sstructmat =
-      Teuchos::rcp_dynamic_cast<Mat::StructPoro>(ele.parent_element()->material(0));
-  if (sstructmat == Teuchos::null)
-    sstructmat = Teuchos::rcp_dynamic_cast<Mat::StructPoro>(ele.parent_element()->material(1));
-  if (sstructmat == Teuchos::null) FOUR_C_THROW("Cast to StructPoro failed!");
+  std::shared_ptr<Mat::StructPoro> sstructmat =
+      std::dynamic_pointer_cast<Mat::StructPoro>(ele.parent_element()->material(0));
+  if (sstructmat == nullptr)
+    sstructmat = std::dynamic_pointer_cast<Mat::StructPoro>(ele.parent_element()->material(1));
+  if (sstructmat == nullptr) FOUR_C_THROW("Cast to StructPoro failed!");
   sstructmat->compute_surf_porosity(sparams, spresgp, sJ, ele.face_parent_number(), 1, sporosity,
       &sdphi_dp, &sdphi_dJ, nullptr, nullptr, nullptr, false);
 }

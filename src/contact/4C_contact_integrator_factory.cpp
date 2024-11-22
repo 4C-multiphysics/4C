@@ -64,7 +64,7 @@ std::shared_ptr<CONTACT::Integrator> CONTACT::INTEGRATOR::Factory::build_integra
         mortar_params.set<bool>(
             "CONTACTNOPEN", porodyn.get<bool>("CONTACTNOPEN"));  // used in the integrator
         integrator =
-            Teuchos::rcp(new CONTACT::IntegratorNitschePoroScatra(mortar_params, slave_type, comm));
+            std::make_shared<CONTACT::IntegratorNitschePoroScatra>(mortar_params, slave_type, comm);
       }
       else if (mortar_params.get<int>("PROBTYPE") == Inpar::CONTACT::fsi)
       {

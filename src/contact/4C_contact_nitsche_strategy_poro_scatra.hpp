@@ -35,18 +35,18 @@ namespace CONTACT
    public:
     //! Standard constructor
     NitscheStrategyPoroScatra(const Epetra_Map* dof_row_map, const Epetra_Map* NodeRowMap,
-        Teuchos::ParameterList params, std::vector<Teuchos::RCP<CONTACT::Interface>> interface,
-        int dim, Teuchos::RCP<Epetra_Comm> comm, double alphaf, int maxdof);
+        Teuchos::ParameterList params, std::vector<std::shared_ptr<CONTACT::Interface>> interface,
+        int dim, std::shared_ptr<Epetra_Comm> comm, double alphaf, int maxdof);
 
     //! Shared data constructor
-    NitscheStrategyPoroScatra(const Teuchos::RCP<CONTACT::AbstractStratDataContainer>& data_ptr,
+    NitscheStrategyPoroScatra(const std::shared_ptr<CONTACT::AbstractStratDataContainer>& data_ptr,
         const Epetra_Map* dof_row_map, const Epetra_Map* NodeRowMap, Teuchos::ParameterList params,
-        std::vector<Teuchos::RCP<CONTACT::Interface>> interface, int dim,
-        Teuchos::RCP<const Epetra_Comm> comm, double alphaf, int maxdof);
+        std::vector<std::shared_ptr<CONTACT::Interface>> interface, int dim,
+        std::shared_ptr<const Epetra_Comm> comm, double alphaf, int maxdof);
 
-    void apply_force_stiff_cmt(Teuchos::RCP<Core::LinAlg::Vector<double>> dis,
-        Teuchos::RCP<Core::LinAlg::SparseOperator>& kt,
-        Teuchos::RCP<Core::LinAlg::Vector<double>>& f, const int step, const int iter,
+    void apply_force_stiff_cmt(std::shared_ptr<Core::LinAlg::Vector<double>> dis,
+        std::shared_ptr<Core::LinAlg::SparseOperator>& kt,
+        std::shared_ptr<Core::LinAlg::Vector<double>>& f, const int step, const int iter,
         bool predictor) override;
 
     void evaluate_reference_state() override;
@@ -59,10 +59,10 @@ namespace CONTACT
     void set_parent_state(const enum Mortar::StateType& statename,
         const Core::LinAlg::Vector<double>& vec, const Core::FE::Discretization& dis) override;
 
-    Teuchos::RCP<const Core::LinAlg::Vector<double>> get_rhs_block_ptr(
+    std::shared_ptr<const Core::LinAlg::Vector<double>> get_rhs_block_ptr(
         const enum CONTACT::VecBlockType& bp) const override;
 
-    virtual Teuchos::RCP<Core::LinAlg::SparseMatrix> get_matrix_block_ptr(
+    virtual std::shared_ptr<Core::LinAlg::SparseMatrix> get_matrix_block_ptr(
         const enum CONTACT::MatBlockType& bp) const;
 
     // Flag for Poro No Penetration Condition
@@ -74,36 +74,36 @@ namespace CONTACT
 
    protected:
     // create an appropriate vector for the RHS
-    Teuchos::RCP<Epetra_FEVector> setup_rhs_block_vec(
+    std::shared_ptr<Epetra_FEVector> setup_rhs_block_vec(
         const enum CONTACT::VecBlockType& bt) const override;
 
     // create an appropriate matrix block
-    Teuchos::RCP<Core::LinAlg::SparseMatrix> setup_matrix_block_ptr(
+    std::shared_ptr<Core::LinAlg::SparseMatrix> setup_matrix_block_ptr(
         const enum CONTACT::MatBlockType& bt) override;
 
     // complete matrix block with correct maps
-    void complete_matrix_block_ptr(
-        const enum CONTACT::MatBlockType& bt, Teuchos::RCP<Core::LinAlg::SparseMatrix> kc) override;
+    void complete_matrix_block_ptr(const enum CONTACT::MatBlockType& bt,
+        std::shared_ptr<Core::LinAlg::SparseMatrix> kc) override;
 
     bool no_penetration_;
 
     //! Poro residual
-    Teuchos::RCP<Epetra_FEVector> fp_;
+    std::shared_ptr<Epetra_FEVector> fp_;
     //! linearization of Poro residual w.r.t Poro dofs
-    Teuchos::RCP<Core::LinAlg::SparseMatrix> kpp_;
+    std::shared_ptr<Core::LinAlg::SparseMatrix> kpp_;
     //! linearization of Poro residual w.r.t displacement dofs
-    Teuchos::RCP<Core::LinAlg::SparseMatrix> kpd_;
+    std::shared_ptr<Core::LinAlg::SparseMatrix> kpd_;
     //! linearization of displacement residual w.r.t Poro dofs
-    Teuchos::RCP<Core::LinAlg::SparseMatrix> kdp_;
+    std::shared_ptr<Core::LinAlg::SparseMatrix> kdp_;
 
     //! ScaTra residual
-    Teuchos::RCP<Epetra_FEVector> fs_;
+    std::shared_ptr<Epetra_FEVector> fs_;
     //! linearization of ScaTra residual w.r.t ScaTra dofs
-    Teuchos::RCP<Core::LinAlg::SparseMatrix> kss_;
+    std::shared_ptr<Core::LinAlg::SparseMatrix> kss_;
     //! linearization of ScaTra residual w.r.t displacement dofs
-    Teuchos::RCP<Core::LinAlg::SparseMatrix> ksd_;
+    std::shared_ptr<Core::LinAlg::SparseMatrix> ksd_;
     //! linearization of displacement residual w.r.t ScaTra dofs
-    Teuchos::RCP<Core::LinAlg::SparseMatrix> kds_;
+    std::shared_ptr<Core::LinAlg::SparseMatrix> kds_;
 
     // It is assumed that there is no interaction between Poro and Scatra in terms of contact.
     // Therefore, kps_ and ksp_ do not exist.

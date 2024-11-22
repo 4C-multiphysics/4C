@@ -24,8 +24,8 @@ FOUR_C_NAMESPACE_OPEN
 
 CONTACT::NitscheStrategyPoroScatra::NitscheStrategyPoroScatra(const Epetra_Map* dof_row_map,
     const Epetra_Map* NodeRowMap, Teuchos::ParameterList params,
-    std::vector<Teuchos::RCP<CONTACT::Interface>> interface, int dim,
-    Teuchos::RCP<Epetra_Comm> comm, double alphaf, int maxdof)
+    std::vector<std::shared_ptr<CONTACT::Interface>> interface, int dim,
+    std::shared_ptr<Epetra_Comm> comm, double alphaf, int maxdof)
     : CONTACT::NitscheStrategySsi(
           dof_row_map, NodeRowMap, params, std::move(interface), dim, comm, alphaf, maxdof),
       no_penetration_(
@@ -34,10 +34,10 @@ CONTACT::NitscheStrategyPoroScatra::NitscheStrategyPoroScatra(const Epetra_Map* 
 }
 
 CONTACT::NitscheStrategyPoroScatra::NitscheStrategyPoroScatra(
-    const Teuchos::RCP<CONTACT::AbstractStratDataContainer>& data_ptr,
+    const std::shared_ptr<CONTACT::AbstractStratDataContainer>& data_ptr,
     const Epetra_Map* dof_row_map, const Epetra_Map* NodeRowMap, Teuchos::ParameterList params,
-    std::vector<Teuchos::RCP<CONTACT::Interface>> interface, int dim,
-    Teuchos::RCP<const Epetra_Comm> comm, double alphaf, int maxdof)
+    std::vector<std::shared_ptr<CONTACT::Interface>> interface, int dim,
+    std::shared_ptr<const Epetra_Comm> comm, double alphaf, int maxdof)
     : CONTACT::NitscheStrategySsi(data_ptr, dof_row_map, NodeRowMap, params, std::move(interface),
           dim, comm, alphaf, maxdof),
       no_penetration_(
@@ -46,11 +46,13 @@ CONTACT::NitscheStrategyPoroScatra::NitscheStrategyPoroScatra(
 }
 
 void CONTACT::NitscheStrategyPoroScatra::apply_force_stiff_cmt(
-    Teuchos::RCP<Core::LinAlg::Vector<double>> dis, Teuchos::RCP<Core::LinAlg::SparseOperator>& kt,
-    Teuchos::RCP<Core::LinAlg::Vector<double>>& f, const int step, const int iter, bool predictor)
+    std::shared_ptr<Core::LinAlg::Vector<double>> dis,
+    std::shared_ptr<Core::LinAlg::SparseOperator>& kt,
+    std::shared_ptr<Core::LinAlg::Vector<double>>& f, const int step, const int iter,
+    bool predictor)
 {
   if (predictor) return;
-  if (kt != Teuchos::null && f != Teuchos::null)
+  if (kt != nullptr && f != nullptr)
   {
     CONTACT::NitscheStrategy::apply_force_stiff_cmt(dis, kt, f, step, iter, predictor);
   }
@@ -87,25 +89,25 @@ void CONTACT::NitscheStrategyPoroScatra::set_state(
     case Mortar::state_scalar:
     {
       auto scatra_dis = Global::Problem::instance()->get_dis("scatra");
-      if (scatra_dis == Teuchos::null) FOUR_C_THROW("didn't get scatra discretization");
+      if (scatra_dis == nullptr) FOUR_C_THROW("didn't get scatra discretization");
       set_parent_state(statename, vec, *scatra_dis);
       curr_state_eval_ = false;
       break;
     }
     case Mortar::state_svelocity:
     {
-      Teuchos::RCP<Core::FE::Discretization> dis =
+      std::shared_ptr<Core::FE::Discretization> dis =
           Global::Problem::instance()->get_dis("structure");
-      if (dis == Teuchos::null) FOUR_C_THROW("didn't get structure discretization");
+      if (dis == nullptr) FOUR_C_THROW("didn't get structure discretization");
       set_parent_state(statename, vec, *dis);
       break;
     }
     case Mortar::state_fvelocity:
     case Mortar::state_fpressure:
     {
-      Teuchos::RCP<Core::FE::Discretization> dis =
+      std::shared_ptr<Core::FE::Discretization> dis =
           Global::Problem::instance()->get_dis("porofluid");
-      if (dis == Teuchos::null) FOUR_C_THROW("didn't get my discretization");
+      if (dis == nullptr) FOUR_C_THROW("didn't get my discretization");
       set_parent_state(statename, vec, *dis);
       break;
     }
@@ -123,8 +125,8 @@ void CONTACT::NitscheStrategyPoroScatra::set_parent_state(const enum Mortar::Sta
   //
   if (statename == Mortar::state_fvelocity || statename == Mortar::state_fpressure)
   {
-    Teuchos::RCP<Core::LinAlg::Vector<double>> global =
-        Teuchos::rcp(new Core::LinAlg::Vector<double>(*dis.dof_col_map(), true));
+    std::shared_ptr<Core::LinAlg::Vector<double>> global =
+        std::make_shared<Core::LinAlg::Vector<double>>(*dis.dof_col_map(), true);
     Core::LinAlg::export_to(vec, *global);
 
     // set state on interfaces
@@ -172,7 +174,7 @@ void CONTACT::NitscheStrategyPoroScatra::set_parent_state(const enum Mortar::Sta
   else if (statename == Mortar::state_elch || statename == Mortar::state_scalar)
   {
     auto scatra_dofcolmap =
-        Teuchos::rcp(new Core::LinAlg::Vector<double>(*dis.dof_col_map(), true));
+        std::make_shared<Core::LinAlg::Vector<double>>(*dis.dof_col_map(), true);
     Core::LinAlg::export_to(vec, *scatra_dofcolmap);
 
     // set state on interfaces
@@ -213,27 +215,27 @@ void CONTACT::NitscheStrategyPoroScatra::set_parent_state(const enum Mortar::Sta
     CONTACT::NitscheStrategy::set_parent_state(statename, vec, dis);
 }
 
-Teuchos::RCP<Epetra_FEVector> CONTACT::NitscheStrategyPoroScatra::setup_rhs_block_vec(
+std::shared_ptr<Epetra_FEVector> CONTACT::NitscheStrategyPoroScatra::setup_rhs_block_vec(
     const enum CONTACT::VecBlockType& bt) const
 {
   switch (bt)
   {
     case CONTACT::VecBlockType::porofluid:
-      return Teuchos::rcp(
-          new Epetra_FEVector(*Global::Problem::instance()->get_dis("porofluid")->dof_row_map()));
+      return std::make_shared<Epetra_FEVector>(
+          *Global::Problem::instance()->get_dis("porofluid")->dof_row_map());
     case CONTACT::VecBlockType::elch:
     case CONTACT::VecBlockType::scatra:
-      return Teuchos::rcp(
-          new Epetra_FEVector(*Global::Problem::instance()->get_dis("scatra")->dof_row_map()));
+      return std::make_shared<Epetra_FEVector>(
+          *Global::Problem::instance()->get_dis("scatra")->dof_row_map());
     default:
       return CONTACT::NitscheStrategy::setup_rhs_block_vec(bt);
   }
 }
 
-Teuchos::RCP<const Core::LinAlg::Vector<double>>
+std::shared_ptr<const Core::LinAlg::Vector<double>>
 CONTACT::NitscheStrategyPoroScatra::get_rhs_block_ptr(const enum CONTACT::VecBlockType& bp) const
 {
-  if (bp == CONTACT::VecBlockType::constraint) return Teuchos::null;
+  if (bp == CONTACT::VecBlockType::constraint) return nullptr;
 
   if (!curr_state_eval_)
     FOUR_C_THROW("you didn't evaluate this contact state for %s first",
@@ -242,52 +244,48 @@ CONTACT::NitscheStrategyPoroScatra::get_rhs_block_ptr(const enum CONTACT::VecBlo
   switch (bp)
   {
     case CONTACT::VecBlockType::porofluid:
-      return Teuchos::make_rcp<Core::LinAlg::Vector<double>>(*(*fp_)(0));
+      return std::make_shared<Core::LinAlg::Vector<double>>(*(*fp_)(0));
     case CONTACT::VecBlockType::elch:
     case CONTACT::VecBlockType::scatra:
-      return Teuchos::make_rcp<Core::LinAlg::Vector<double>>(*(*fs_)(0));
+      return std::make_shared<Core::LinAlg::Vector<double>>(*(*fs_)(0));
     default:
       return CONTACT::NitscheStrategy::get_rhs_block_ptr(bp);
   }
 }
 
-Teuchos::RCP<Core::LinAlg::SparseMatrix> CONTACT::NitscheStrategyPoroScatra::setup_matrix_block_ptr(
-    const enum CONTACT::MatBlockType& bt)
+std::shared_ptr<Core::LinAlg::SparseMatrix>
+CONTACT::NitscheStrategyPoroScatra::setup_matrix_block_ptr(const enum CONTACT::MatBlockType& bt)
 {
   switch (bt)
   {
     case CONTACT::MatBlockType::displ_porofluid:
-      return Teuchos::rcp(new Core::LinAlg::SparseMatrix(
-          *Teuchos::rcpFromRef<const Epetra_Map>(
-              *Global::Problem::instance()->get_dis("structure")->dof_row_map()),
-          100, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX));
+      return std::make_shared<Core::LinAlg::SparseMatrix>(
+          *Global::Problem::instance()->get_dis("structure")->dof_row_map(), 100, true, false,
+          Core::LinAlg::SparseMatrix::FE_MATRIX);
     case CONTACT::MatBlockType::porofluid_displ:
     case CONTACT::MatBlockType::porofluid_porofluid:
-      return Teuchos::rcp(new Core::LinAlg::SparseMatrix(
-          *Teuchos::rcpFromRef<const Epetra_Map>(
-              *Global::Problem::instance()->get_dis("porofluid")->dof_row_map()),
-          100, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX));
+      return std::make_shared<Core::LinAlg::SparseMatrix>(
+          *Global::Problem::instance()->get_dis("porofluid")->dof_row_map(), 100, true, false,
+          Core::LinAlg::SparseMatrix::FE_MATRIX);
     case CONTACT::MatBlockType::displ_elch:
     case CONTACT::MatBlockType::displ_scatra:
-      return Teuchos::rcp(new Core::LinAlg::SparseMatrix(
-          *Teuchos::rcpFromRef<const Epetra_Map>(
-              *Global::Problem::instance()->get_dis("structure")->dof_row_map()),
-          100, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX));
+      return std::make_shared<Core::LinAlg::SparseMatrix>(
+          *Global::Problem::instance()->get_dis("structure")->dof_row_map(), 100, true, false,
+          Core::LinAlg::SparseMatrix::FE_MATRIX);
     case CONTACT::MatBlockType::elch_displ:
     case CONTACT::MatBlockType::elch_elch:
     case CONTACT::MatBlockType::scatra_displ:
     case CONTACT::MatBlockType::scatra_scatra:
-      return Teuchos::rcp(new Core::LinAlg::SparseMatrix(
-          *Teuchos::rcpFromRef<const Epetra_Map>(
-              *Global::Problem::instance()->get_dis("scatra")->dof_row_map()),
-          100, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX));
+      return std::make_shared<Core::LinAlg::SparseMatrix>(
+          *Global::Problem::instance()->get_dis("scatra")->dof_row_map(), 100, true, false,
+          Core::LinAlg::SparseMatrix::FE_MATRIX);
     default:
       return CONTACT::NitscheStrategy::setup_matrix_block_ptr(bt);
   }
 }
 
 void CONTACT::NitscheStrategyPoroScatra::complete_matrix_block_ptr(
-    const enum CONTACT::MatBlockType& bt, Teuchos::RCP<Core::LinAlg::SparseMatrix> kc)
+    const enum CONTACT::MatBlockType& bt, std::shared_ptr<Core::LinAlg::SparseMatrix> kc)
 {
   switch (bt)
   {
@@ -340,8 +338,8 @@ void CONTACT::NitscheStrategyPoroScatra::complete_matrix_block_ptr(
   }
 }
 
-Teuchos::RCP<Core::LinAlg::SparseMatrix> CONTACT::NitscheStrategyPoroScatra::get_matrix_block_ptr(
-    const enum CONTACT::MatBlockType& bp) const
+std::shared_ptr<Core::LinAlg::SparseMatrix>
+CONTACT::NitscheStrategyPoroScatra::get_matrix_block_ptr(const enum CONTACT::MatBlockType& bp) const
 {
   if (!curr_state_eval_) FOUR_C_THROW("you didn't evaluate this contact state first");
 

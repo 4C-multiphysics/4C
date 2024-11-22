@@ -64,7 +64,7 @@ namespace PoroElastScaTra
 
    protected:
     //! store contact nitsche strategy for ssi problems
-    Teuchos::RCP<CONTACT::NitscheStrategySsi> contact_strategy_nitsche_;
+    std::shared_ptr<CONTACT::NitscheStrategySsi> contact_strategy_nitsche_;
   };
 }  // namespace PoroElastScaTra
 

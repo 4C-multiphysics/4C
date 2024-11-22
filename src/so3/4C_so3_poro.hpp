@@ -692,9 +692,6 @@ namespace Discret
 
       //! get material of element
       std::shared_ptr<Core::Mat::Material> material() const;
-
-      //! get global id of element
-      int id() const;
     };
   }  // namespace Elements
 }  // namespace Discret
