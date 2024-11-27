@@ -77,6 +77,7 @@
 #include "4C_mat_fluidporo_singlephaseDof.hpp"
 #include "4C_mat_fluidporo_singlephaselaw.hpp"
 #include "4C_mat_fluidporo_viscosity_law.hpp"
+#include "4C_mat_fourieraniso.hpp"
 #include "4C_mat_fourieriso.hpp"
 #include "4C_mat_growthremodel_elasthyper.hpp"
 #include "4C_mat_herschelbulkley.hpp"
@@ -897,6 +898,10 @@ std::unique_ptr<Core::Mat::PAR::Parameter> Mat::make_parameter(
     case Core::Materials::m_0d_maxwell_acinus_ogden:
     {
       return make_parameter_impl<Mat::PAR::Maxwell0dAcinusOgden>(id, type, input_data);
+    }
+    case Core::Materials::m_th_fourier_aniso:
+    {
+      return make_parameter_impl<Mat::PAR::FourierAniso>(id, type, input_data);
     }
     case Core::Materials::m_th_fourier_iso:
     {
