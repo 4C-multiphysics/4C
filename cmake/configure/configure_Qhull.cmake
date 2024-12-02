@@ -12,4 +12,15 @@ if(QHULL_FOUND)
   message(STATUS "QHULL library directory: ${QHULL_LIBRARY}")
 
   target_link_libraries(four_c_all_enabled_external_dependencies INTERFACE qhull::qhull)
+
+  configure_file(
+    ${CMAKE_SOURCE_DIR}/cmake/templates/Qhull.cmake.in
+    ${CMAKE_BINARY_DIR}/cmake/templates/Qhull.cmake
+    @ONLY
+    )
+  include(GNUInstallDirs)
+  install(
+    FILES ${CMAKE_SOURCE_DIR}/cmake/modules/FindQhull.cmake
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/4C/modules
+    )
 endif()

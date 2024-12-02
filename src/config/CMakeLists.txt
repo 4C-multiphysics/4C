@@ -34,8 +34,8 @@ target_sources(
   ${AUTO_DEFINED_MODULE_NAME}_deps
   INTERFACE FILE_SET
             HEADERS
-            BASE_DIRS
-            ${CMAKE_CURRENT_BINARY_DIR}
             FILES
             ${_headers}
+            BASE_DIRS
+            ${CMAKE_CURRENT_BINARY_DIR}
   )

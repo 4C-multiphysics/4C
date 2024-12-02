@@ -1,0 +1,13 @@
+set(BOOST_INCLUDEDIR "@Boost_INCLUDE_DIRS@")
+
+set(BOOST_LIBRARYDIR "@Boost_LIBRARY_DIRS@")
+
+set(BOOST_ROOT "@Boost_ROOT@")
+
+# if BOOST_ROOT is empty, then infer it from BOOST_INCLUDEDIR
+# this is to circumvent a problem with FindBoost.cmake, that
+# it will find the system's Boost even when BOOST_INCLUDEDIR
+# is set
+if(BOOST_ROOT STREQUAL "")
+  get_filename_component(BOOST_ROOT "${BOOST_INCLUDEDIR}" PATH)
+endif()

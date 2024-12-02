@@ -9,6 +9,7 @@
         "CMAKE_BUILD_TYPE": "RELEASE",
         "CMAKE_CXX_COMPILER": "/usr/bin/mpic++",
         "CMAKE_C_COMPILER": "/usr/bin/mpicc",
+        "CMAKE_INSTALL_PREFIX": "/home/user/4C",
         "FOUR_C_CXX_FLAGS": "-msse3",
         "FOUR_C_ENABLE_WARNINGS_AS_ERRORS": "ON",
         "FOUR_C_TRILINOS_ROOT": "/opt/4C-dependencies",
