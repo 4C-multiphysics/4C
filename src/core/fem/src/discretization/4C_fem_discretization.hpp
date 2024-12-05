@@ -15,13 +15,13 @@
 #include "4C_linalg_vector.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
-#include "4C_utils_std_cxx20_ranges.hpp"
 
 #include <Epetra_CrsGraph.h>
 #include <Epetra_Map.h>
 #include <Epetra_MpiComm.h>
 
 #include <functional>
+#include <ranges>
 #include <set>
 #include <vector>
 
@@ -856,7 +856,7 @@ namespace Core::FE
     [[nodiscard]] auto my_row_element_range() const
     {
       FOUR_C_ASSERT(filled(), "Discretization %s not Filled()!", name_.c_str());
-      return std_20::ranges::views::all(elerowptr_);
+      return std::views::all(elerowptr_);
     }
 
     /**
@@ -865,7 +865,7 @@ namespace Core::FE
     [[nodiscard]] auto my_col_element_range() const
     {
       FOUR_C_ASSERT(filled(), "Discretization %s not Filled()!", name_.c_str());
-      return std_20::ranges::views::all(elecolptr_);
+      return std::views::all(elecolptr_);
     }
 
     /*!
@@ -923,14 +923,14 @@ namespace Core::FE
     [[nodiscard]] auto my_row_node_range() const
     {
       FOUR_C_ASSERT(filled(), "Discretization %s not Filled()!", name_.c_str());
-      return std_20::ranges::views::all(noderowptr_);
+      return std::views::all(noderowptr_);
     }
 
 
     [[nodiscard]] auto my_col_node_range() const
     {
       FOUR_C_ASSERT(filled(), "Discretization %s not Filled()!", name_.c_str());
-      return std_20::ranges::views::all(nodecolptr_);
+      return std::views::all(nodecolptr_);
     }
 
     unsigned int n_dim() const { return n_dim_; }
