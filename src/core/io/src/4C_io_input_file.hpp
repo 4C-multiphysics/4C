@@ -129,6 +129,9 @@ namespace Core::IO
       std::variant<StreamLineIterator, PreReadIterator> iterator_;
     };
 
+    static_assert(std::input_iterator<DatFileLineIterator>);
+    static_assert(std::sentinel_for<DatFileLineIterator, DatFileLineIterator>);
+
     //! Helper to store section positions in dat files.
     struct SectionPosition
     {
