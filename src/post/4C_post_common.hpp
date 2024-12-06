@@ -85,7 +85,7 @@ class PostProblem
   std::vector<MAP*>* result_groups() { return &result_group_; }
 
   //! returns the number of discretizations
-  int num_discr() { return static_cast<int>(fields_.size()); }
+  int num_discr();
 
   //! returns the number of dimensions the problem has
   int num_dim() const { return ndim_; }
