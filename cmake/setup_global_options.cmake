@@ -100,17 +100,20 @@ if(FOUR_C_ENABLE_ADDRESS_SANITIZER)
 endif()
 
 four_c_process_global_option(
-  FOUR_C_ENABLE_COVERAGE "Set up a build to gather coverage information" OFF
+  FOUR_C_ENABLE_COVERAGE
+  "Set up a build to gather coverage information with LLVM source based coverage"
+  OFF
   )
 if(FOUR_C_ENABLE_COVERAGE)
   four_c_check_compiles(
     FOUR_C_COMPILER_SUPPORT_COVERAGE
     COMPILE_OPTIONS
-    "-fprofile-arcs"
-    "-ftest-coverage"
+    "-fprofile-instr-generate"
+    "-fcoverage-mapping"
     LINK_OPTIONS
-    "-fprofile-arcs"
-    "-ftest-coverage"
+    "-fprofile-instr-generate"
+    "-fcoverage-mapping"
+    "-Wl,--build-id=sha1"
     APPEND_ON_SUCCESS
     )
 
