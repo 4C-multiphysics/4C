@@ -180,7 +180,7 @@ For SPH, the following phases may be defined to represent different physical beh
 - neumannphase
 - dirichletphase
 
-Note that with SPH the particles are allowed to change its phase during a simulation based on the input parameter `PHASECHANGETYPE` and `PHASECHANGEDEFINITION` in the section :ref:`PARTICLE DYNAMIC/SPH <SECparticledynamic_sph>`.
+Note that with SPH the particles are allowed to change its phase during a simulation based on the input parameter ``PHASECHANGETYPE`` and ``PHASECHANGEDEFINITION`` in the section :ref:`PARTICLE DYNAMIC/SPH <SECparticledynamic_sph>`.
 
 For SPH the radius corresponds to the cutoff radius of the smoothing kernel. Since the cutoff radius is assumed to be constant this is the only option available.
 
