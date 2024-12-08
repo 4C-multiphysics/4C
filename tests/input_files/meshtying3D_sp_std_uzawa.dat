@@ -86,11 +86,11 @@ SOLVER                          Superlu
 NAME                            Meshtying_Solver
 SOLVER                          Belos
 AZSOLVE                         GMRES
-AZPREC                          MueLu_contactSP
+AZPREC                          MueLu
 MUELU_XML_FILE                  meshtying3D_sp_uzawa.xml
 AZTOL                           1.0e-8
 AZCONV                          AZ_r0
-AZREUSE                         2
+AZREUSE                         1
 AZOUTPUT                        10
 ----------------------------------------------------------MATERIALS
 MAT 1 MAT_ElastHyper NUMMAT 1 MATIDS 10 DENS 1.0e-6
