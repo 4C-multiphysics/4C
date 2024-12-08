@@ -82,6 +82,7 @@
 #include "4C_mat_herschelbulkley.hpp"
 #include "4C_mat_inelastic_defgrad_factors.hpp"
 #include "4C_mat_ion.hpp"
+#include "4C_mat_iterative_prestress.hpp"
 #include "4C_mat_lin_elast_1D.hpp"
 #include "4C_mat_list.hpp"
 #include "4C_mat_list_chemoreac.hpp"
@@ -675,6 +676,10 @@ std::unique_ptr<Core::Mat::PAR::Parameter> Mat::make_parameter(
     {
       return make_parameter_impl<FourC::Mixture::PAR::ConstantPrestressStrategy>(
           id, type, input_data);
+    }
+    case Core::Materials::m_iterative_prestress:
+    {
+      return make_parameter_impl<Mat::PAR::IterativePrestressMaterial>(id, type, input_data);
     }
     case Core::Materials::mix_remodelfiber_material_exponential:
       return make_parameter_impl<FourC::Mixture::PAR::RemodelFiberMaterialExponential<double>>(

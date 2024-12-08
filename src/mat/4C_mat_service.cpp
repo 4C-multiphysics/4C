@@ -177,82 +177,138 @@ void Mat::stretches_modified(
   modstr.update(std::pow(detdefgrad, -1.0 / 3.0), prstr);
 }
 
-template <int dim>
-Core::LinAlg::Matrix<6, 6> Mat::pull_back_four_tensor(
-    const Core::LinAlg::Matrix<dim, dim>& defgrd, const Core::LinAlg::Matrix<6, 6>& cmat_voigt)
+Core::LinAlg::Matrix<6, 6> Mat::pull_back_four_tensor(const double det_F,
+    const Core::LinAlg::Matrix<3, 3>& F_inv, const Core::LinAlg::Matrix<6, 6>& cmat_voigt)
 {
-  static_assert(dim == 3, "Current implementation only valid for dim = 3.");
-
-  Core::LinAlg::FourTensor<dim> cmat_tensor(true);
+  Core::LinAlg::FourTensor<3> cmat_tensor(true);
   Core::LinAlg::Voigt::setup_four_tensor_from_6x6_voigt_matrix(cmat_tensor, cmat_voigt);
 
   // We can use the fact that cmat_result_voigt(i,j,k,l)=cmat_result_voigt(k,l,i,j) if we have a
   // hyper-elastic material
   Core::LinAlg::Matrix<6, 6> cmat_result_voigt(true);
 
-  cmat_result_voigt(0, 0) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 0, 0, 0, 0);
-  cmat_result_voigt(0, 1) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 0, 0, 1, 1);
-  cmat_result_voigt(0, 2) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 0, 0, 2, 2);
-  cmat_result_voigt(0, 3) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 0, 0, 0, 1);
-  cmat_result_voigt(0, 4) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 0, 0, 1, 2);
-  cmat_result_voigt(0, 5) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 0, 0, 0, 2);
+  cmat_result_voigt(0, 0) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 0, 0, 0, 0);
+  cmat_result_voigt(0, 1) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 0, 0, 1, 1);
+  cmat_result_voigt(0, 2) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 0, 0, 2, 2);
+  cmat_result_voigt(0, 3) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 0, 0, 0, 1);
+  cmat_result_voigt(0, 4) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 0, 0, 1, 2);
+  cmat_result_voigt(0, 5) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 0, 0, 0, 2);
   cmat_result_voigt(1, 0) = cmat_result_voigt(0, 1);
-  cmat_result_voigt(1, 1) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 1, 1, 1, 1);
-  cmat_result_voigt(1, 2) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 1, 1, 2, 2);
-  cmat_result_voigt(1, 3) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 1, 1, 0, 1);
-  cmat_result_voigt(1, 4) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 1, 1, 1, 2);
-  cmat_result_voigt(1, 5) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 1, 1, 0, 2);
+  cmat_result_voigt(1, 1) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 1, 1, 1, 1);
+  cmat_result_voigt(1, 2) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 1, 1, 2, 2);
+  cmat_result_voigt(1, 3) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 1, 1, 0, 1);
+  cmat_result_voigt(1, 4) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 1, 1, 1, 2);
+  cmat_result_voigt(1, 5) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 1, 1, 0, 2);
   cmat_result_voigt(2, 0) = cmat_result_voigt(0, 2);
   cmat_result_voigt(2, 1) = cmat_result_voigt(1, 2);
-  cmat_result_voigt(2, 2) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 2, 2, 2, 2);
-  cmat_result_voigt(2, 3) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 2, 2, 0, 1);
-  cmat_result_voigt(2, 4) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 2, 2, 1, 2);
-  cmat_result_voigt(2, 5) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 2, 2, 0, 2);
+  cmat_result_voigt(2, 2) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 2, 2, 2, 2);
+  cmat_result_voigt(2, 3) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 2, 2, 0, 1);
+  cmat_result_voigt(2, 4) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 2, 2, 1, 2);
+  cmat_result_voigt(2, 5) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 2, 2, 0, 2);
   cmat_result_voigt(3, 0) = cmat_result_voigt(0, 3);
   cmat_result_voigt(3, 1) = cmat_result_voigt(1, 3);
   cmat_result_voigt(3, 2) = cmat_result_voigt(2, 3);
-  cmat_result_voigt(3, 3) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 0, 1, 0, 1);
-  cmat_result_voigt(3, 4) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 0, 1, 1, 2);
-  cmat_result_voigt(3, 5) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 0, 1, 0, 2);
+  cmat_result_voigt(3, 3) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 0, 1, 0, 1);
+  cmat_result_voigt(3, 4) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 0, 1, 1, 2);
+  cmat_result_voigt(3, 5) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 0, 1, 0, 2);
   cmat_result_voigt(4, 0) = cmat_result_voigt(0, 4);
   cmat_result_voigt(4, 1) = cmat_result_voigt(1, 4);
   cmat_result_voigt(4, 2) = cmat_result_voigt(2, 4);
   cmat_result_voigt(4, 3) = cmat_result_voigt(3, 4);
-  cmat_result_voigt(4, 4) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 1, 2, 1, 2);
-  cmat_result_voigt(4, 5) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 1, 2, 0, 2);
+  cmat_result_voigt(4, 4) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 1, 2, 1, 2);
+  cmat_result_voigt(4, 5) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 1, 2, 0, 2);
   cmat_result_voigt(5, 0) = cmat_result_voigt(0, 5);
   cmat_result_voigt(5, 1) = cmat_result_voigt(1, 5);
   cmat_result_voigt(5, 2) = cmat_result_voigt(2, 5);
   cmat_result_voigt(5, 3) = cmat_result_voigt(3, 5);
   cmat_result_voigt(5, 4) = cmat_result_voigt(4, 5);
-  cmat_result_voigt(5, 5) = get_pull_back_four_tensor_entry<dim>(defgrd, cmat_tensor, 0, 2, 0, 2);
+  cmat_result_voigt(5, 5) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 0, 2, 0, 2);
 
   return cmat_result_voigt;
 }
 
-template <int dim>
-double Mat::get_pull_back_four_tensor_entry(const Core::LinAlg::Matrix<dim, dim>& defgrd,
-    const Core::LinAlg::FourTensor<dim>& four_tensor, const int i, const int j, const int k,
-    const int l)
+double Mat::get_pull_back_four_tensor_entry(const double det_F,
+    const Core::LinAlg::Matrix<3, 3>& F_inv, const Core::LinAlg::FourTensor<3>& four_tensor,
+    const int i, const int j, const int k, const int l)
 {
   double cMatResult_ijkl(0.0);
 
-  for (int A = 0; A < dim; ++A)
+  for (int A = 0; A < 3; ++A)
   {
-    for (int B = 0; B < dim; ++B)
+    for (int B = 0; B < 3; ++B)
     {
-      for (int C = 0; C < dim; ++C)
+      for (int C = 0; C < 3; ++C)
       {
-        for (int D = 0; D < dim; ++D)
+        for (int D = 0; D < 3; ++D)
         {
           cMatResult_ijkl +=
-              defgrd(i, A) * defgrd(j, B) * defgrd(k, C) * defgrd(l, D) * four_tensor(A, B, C, D);
+              F_inv(i, A) * F_inv(j, B) * F_inv(k, C) * F_inv(l, D) * four_tensor(A, B, C, D);
         }
       }
     }
   }
 
-  return cMatResult_ijkl;
+  return cMatResult_ijkl * det_F;
+}
+
+Core::LinAlg::Matrix<6, 6> Mat::push_forward_four_tensor(const double det_F,
+    const Core::LinAlg::Matrix<3, 3>& defgrd, const Core::LinAlg::Matrix<6, 6>& cmat_lagr_voigt)
+{
+  Core::LinAlg::Matrix<6, 6> cmatEul(true);
+  for (int p = 0; p < 6; p++)
+  {
+    for (int q = 0; q < 6; q++)
+    {
+      int i = Core::LinAlg::Voigt::IndexMappings::voigt6_to_matrix_row_index(p);
+      int j = Core::LinAlg::Voigt::IndexMappings::voigt6_to_matrix_column_index(p);
+      int k = Core::LinAlg::Voigt::IndexMappings::voigt6_to_matrix_row_index(q);
+      int l = Core::LinAlg::Voigt::IndexMappings::voigt6_to_matrix_column_index(q);
+
+      for (int A = 0; A < 3; A++)
+      {
+        for (int B = 0; B < 3; B++)
+        {
+          for (int C = 0; C < 3; C++)
+          {
+            for (int D = 0; D < 3; D++)
+            {
+              int M = Core::LinAlg::Voigt::IndexMappings::symmetric_tensor_to_voigt6_index(A, B);
+              int N = Core::LinAlg::Voigt::IndexMappings::symmetric_tensor_to_voigt6_index(C, D);
+
+              cmatEul(p, q) +=
+                  defgrd(i, A) * defgrd(j, B) * defgrd(k, C) * defgrd(l, D) * cmat_lagr_voigt(M, N);
+            }
+          }
+        }
+      }
+    }
+  }
+  cmatEul.scale(1.0 / det_F);
+
+  return cmatEul;
+}
+
+Core::LinAlg::Matrix<6, 1> Mat::push_forward_stress_tensor_voigt(
+    const Core::LinAlg::Matrix<6, 1>& stress_elastic,
+    const Core::LinAlg::Matrix<3, 3>& deformation_gradient)
+{
+  Core::LinAlg::Matrix<3, 3> GS_tilde(true);
+  Core::LinAlg::Matrix<3, 3> GS_tildeGT(true);
+  Core::LinAlg::Matrix<3, 3> S_elastic(true);
+
+  // convert original stress to stress like Voigt notation
+  Core::LinAlg::Voigt::Stresses::vector_to_matrix(stress_elastic, S_elastic);
+
+  // compute G*S_tilde*GT
+  GS_tilde.multiply_nn(deformation_gradient, S_elastic);
+  GS_tildeGT.multiply_nt(GS_tilde, deformation_gradient);
+
+  // compute pk2 in reference configuration
+  Core::LinAlg::Matrix<6, 1> stress(true);
+  Core::LinAlg::Voigt::Stresses::matrix_to_vector(GS_tildeGT, stress);
+  stress.scale(1.0 / deformation_gradient.determinant());
+
+  return stress;
 }
 
 
@@ -273,17 +329,6 @@ void Mat::setup_linear_isotropic_elastic_tensor(Core::LinAlg::FourTensor<3>& ela
           elasticity_tensor(i, j, k, l) =
               lambda * eye(i, j) * eye(k, l) + mu * (eye(i, k) * eye(j, l) + eye(i, l) * eye(j, k));
 }
-
-
-
-// explicit instantiation of template functions
-template Core::LinAlg::Matrix<6, 6> Mat::pull_back_four_tensor<3>(
-    const Core::LinAlg::Matrix<3, 3>& defgrd, const Core::LinAlg::Matrix<6, 6>& cmat_voigt);
-
-template double Mat::get_pull_back_four_tensor_entry<3>(const Core::LinAlg::Matrix<3, 3>& defgrd,
-    const Core::LinAlg::FourTensor<3>& four_tensor, const int i, const int j, const int k,
-    const int l);
-
 
 
 FOUR_C_NAMESPACE_CLOSE

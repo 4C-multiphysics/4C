@@ -3597,6 +3597,21 @@ std::shared_ptr<std::vector<std::shared_ptr<Mat::MaterialDefinition>>> Input::va
   }
 
   /*----------------------------------------------------------------------*/
+  // General material wrapper enabling iterative prestressing
+  {
+    auto m = std::make_shared<Mat::MaterialDefinition>("MAT_IterativePrestress",
+        "General material wrapper enabling iterative pretressing for any material",
+        Core::Materials::m_iterative_prestress);
+
+    add_named_int(m, "MATID", "Id of the material");
+    add_named_bool(m, "ACTIVE",
+        "Set to True during prestressing and to false afterwards using a restart of the "
+        "simulation.");
+
+    Mat::append_material_definition(matlist, m);
+  }
+
+  /*----------------------------------------------------------------------*/
   // Constant predefined prestretch
   {
     auto m = std::make_shared<Mat::MaterialDefinition>("MIX_Prestress_Strategy_Constant",

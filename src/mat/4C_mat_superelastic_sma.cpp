@@ -14,6 +14,7 @@
 #include "4C_linalg_utils_densematrix_communication.hpp"
 #include "4C_linalg_utils_densematrix_eigen.hpp"
 #include "4C_mat_par_bundle.hpp"
+#include "4C_mat_service.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -873,8 +874,8 @@ void Mat::SuperElasticSMA::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
     cmat_eul.update(1.0, cmat_eul_3, 1.0);
     cmat_eul.update(1.0, cmat_eul_4, 1.0);
 
-
-    pullback4th_tensor_voigt(cauchy_green_jacobian, deformation_gradient_invert, cmat_eul, cmat);
+    *cmat =
+        Mat::pull_back_four_tensor(defgrd->determinant(), deformation_gradient_invert, cmat_eul);
   }
   else
   {
@@ -1158,50 +1159,6 @@ double Mat::SuperElasticSMA::idev(int i, int j, int k, int l)
   // return kron(i,j) * ( kron(i,k) * kron(k,l)-1.0/3.0 * kron(k,l) )  + ( 1 - kron(i,j) ) *
   // kron(i,k) * kron(j,l);
 }  // Idev()
-
-/*---------------------------------------------------------------------*
- | Pullback of material tangent                          hemmler 09/16 |
- *---------------------------------------------------------------------*/
-void Mat::SuperElasticSMA::pullback4th_tensor_voigt(const double jacobian,
-    const Core::LinAlg::Matrix<3, 3>& defgrdinv, const Core::LinAlg::Matrix<6, 6>& cmatEul,
-    Core::LinAlg::Matrix<6, 6>* cmatLag)
-{
-  int i;
-  int j;
-  int k;
-  int l;
-  for (int p = 0; p < 6; p++)
-  {
-    for (int q = 0; q < 6; q++)
-    {
-      int M;
-      int N;
-      i = VoigtMapping::voigt6_to_matrix_row_index(p);
-      j = VoigtMapping::voigt6_to_matrix_column_index(p);
-      k = VoigtMapping::voigt6_to_matrix_row_index(q);
-      l = VoigtMapping::voigt6_to_matrix_column_index(q);
-
-      for (int A = 0; A < 3; A++)
-      {
-        for (int B = 0; B < 3; B++)
-        {
-          for (int C = 0; C < 3; C++)
-          {
-            for (int D = 0; D < 3; D++)
-            {
-              M = VoigtMapping::symmetric_tensor_to_voigt6_index(A, B);
-              N = VoigtMapping::symmetric_tensor_to_voigt6_index(C, D);
-
-              (*cmatLag)(p, q) += 1.0 / jacobian * defgrdinv(i, A) * defgrdinv(j, B) *
-                                  defgrdinv(k, C) * defgrdinv(l, D) * cmatEul(M, N);
-            }
-          }
-        }
-      }
-    }
-  }
-
-}  // pullback4thTensorVoigt()
 
 /*----------------------------------------------------------------------*/
 

@@ -148,18 +148,32 @@ namespace Mat
    * @brief Pull back of a symmetric elastic 4th order tensor (in matrix/voigt notation) via the 2nd
    * order deformation gradient (also in matrix notation)
    */
-  template <int dim>
-  Core::LinAlg::Matrix<6, 6> pull_back_four_tensor(
-      const Core::LinAlg::Matrix<dim, dim>& defgrd, const Core::LinAlg::Matrix<6, 6>& cmat_voigt);
+  Core::LinAlg::Matrix<6, 6> pull_back_four_tensor(const double det_F,
+      const Core::LinAlg::Matrix<3, 3>& F_inv, const Core::LinAlg::Matrix<6, 6>& cmat_voigt);
 
   /*!
    * @brief Pull back the ijkl-th entry of a symmetric elastic 4th order tensor (in matrix/voigt
    * notation) via the 2nd order deformation gradient (also in matrix notation)
    */
-  template <int dim>
-  double get_pull_back_four_tensor_entry(const Core::LinAlg::Matrix<dim, dim>& defgrd,
-      const Core::LinAlg::FourTensor<dim>& four_tensor, const int i, const int j, const int k,
-      const int l);
+  double get_pull_back_four_tensor_entry(const double det_F,
+      const Core::LinAlg::Matrix<3, 3>& F_inv, const Core::LinAlg::FourTensor<3>& four_tensor,
+      const int i, const int j, const int k, const int l);
+
+  /*!
+   * @brief Push forward operation on a stress-like voigt tensor with a deformation gradient
+   *
+   * @return Core::LinAlg::Matrix<6, 1>
+   */
+  Core::LinAlg::Matrix<6, 1> push_forward_stress_tensor_voigt(
+      const Core::LinAlg::Matrix<6, 1>& stress_elastic,
+      const Core::LinAlg::Matrix<3, 3>& deformation_gradient);
+
+  /*!
+   * @brief Push forward of a symmetric elastic 4th order tensor (in matrix/voigt notation) via
+   * the 2nd order deformation gradient (also in matrix notation)
+   */
+  Core::LinAlg::Matrix<6, 6> push_forward_four_tensor(const double det_F,
+      const Core::LinAlg::Matrix<3, 3>& defgrd, const Core::LinAlg::Matrix<6, 6>& cmat_lagr_voigt);
 
   /*!
    * @brief Compute the fourth order linear isotropic elastic tensor

@@ -67,6 +67,8 @@ std::string_view Core::Materials::to_string(Core::Materials::MaterialType materi
       return "MAT_sutherland";
     case m_ion:
       return "MAT_ion";
+    case m_iterative_prestress:
+      return "MAT_IterativePrestress";
     case m_newman:
       return "MAT_newman";
     case m_newman_multiscale:

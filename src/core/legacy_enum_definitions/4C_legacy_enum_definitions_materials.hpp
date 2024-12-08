@@ -147,13 +147,15 @@ namespace Core::Materials
     m_poro_law_density_dependent,    ///< porosity law for density dependence
     m_poro_densitylaw_constant,  ///< density law for constant density in porous multiphase medium
     m_poro_densitylaw_exp,       ///< density law for pressure dependent exponential function
-    m_scatra,                    ///< scalar transport material
-    m_scatra_multiporo_fluid,    ///< scalar transport material for multiphase porous flow (species
-                                 ///< in fluid)
-    m_scatra_multiporo_volfrac,  ///< scalar transport material for multiphase porous flow
-                                 ///< (species in volume fraction)
-    m_scatra_multiporo_solid,    ///< scalar transport material for multiphase porous flow
-                                 ///< (species in solid)
+    m_iterative_prestress,     ///< A general material wrapper adding iterative prestressing to any
+                               ///< material
+    m_scatra,                  ///< scalar transport material
+    m_scatra_multiporo_fluid,  ///< scalar transport material for multiphase porous flow (species
+                               ///< in fluid)
+    m_scatra_multiporo_volfrac,      ///< scalar transport material for multiphase porous flow
+                                     ///< (species in volume fraction)
+    m_scatra_multiporo_solid,        ///< scalar transport material for multiphase porous flow
+                                     ///< (species in solid)
     m_scatra_multiporo_temperature,  ///< scalar transport material for multiphase porous flow
                                      ///< (temperature)
     m_scatra_multiscale,             ///< scalar transport material for multi-scale approach

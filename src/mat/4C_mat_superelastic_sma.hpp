@@ -235,11 +235,6 @@ namespace Mat
     //! Calculates the kronecker delta. Returns 1 for i==j otherwise 0
     virtual int kron(int i, int j);
 
-    //! Returns the pullback of the 4th order tensor in voigt notation
-    virtual void pullback4th_tensor_voigt(const double jacobian,
-        const Core::LinAlg::Matrix<3, 3>& defgr, const Core::LinAlg::Matrix<6, 6>& cmatEul,
-        Core::LinAlg::Matrix<6, 6>* cmatLag);
-
     //! Returns the 4th order identity tensor in tensor notation
     virtual double idev(int i, int j, int k, int l);
 

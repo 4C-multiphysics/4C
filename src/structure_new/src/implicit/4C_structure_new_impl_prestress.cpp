@@ -77,12 +77,7 @@ void Solid::IMPLICIT::PreStress::update_step_state()
   // Compute norm of the displacements
   global_state().get_dis_np()->NormInf(&absolute_displacement_norm_);
 
-  if (!is_material_iterative_prestress_converged())
-  {
-    // Only update prestress if the material iterative prestress is not converged
-    // update model specific variables
-    model_eval().update_step_state(0.0);
-  }
+  model_eval().update_step_state(0.0);
 }
 
 void Solid::IMPLICIT::PreStress::update_step_element()
