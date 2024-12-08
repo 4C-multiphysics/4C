@@ -10,6 +10,8 @@
 
 #include "4C_config.hpp"
 
+#include "4C_utils_exceptions.hpp"
+
 #include <map>
 #include <string>
 
@@ -38,8 +40,47 @@ namespace Mat
                                    // failed
   };
 
-  /// map: error types to error messages in InelasticDefgradTransvIsotropElastViscoplast
-  extern std::map<Mat::ViscoplastErrorType, std::string> ViscoplastErrorMessages;
+  /// to_string: error types to error messages in InelasticDefgradTransvIsotropElastViscoplast
+  inline std::string to_string(Mat::ViscoplastErrorType err_type)
+  {
+    switch (err_type)
+    {
+      case Mat::ViscoplastErrorType::NegativePlasticStrain:
+        return "Error in InelasticDefgradTransvIsotropElastViscoplast: negative plastic strain!";
+        break;
+      case Mat::ViscoplastErrorType::OverflowError:
+        return "Error in InelasticDefgradTransvIsotropElastViscoplast: overflow error related to "
+               "the "
+               "evaluation of the plastic strain increment!";
+        break;
+      case Mat::ViscoplastErrorType::NoPlasticIncompressibility:
+        return "Error in InelasticDefgradTransvIsotropElastViscoplast: plastic incompressibility "
+               "not "
+               "satisfied!";
+        break;
+      case Mat::ViscoplastErrorType::FailedSolLinSystLNL:
+        return "Error in InelasticDefgradTransvIsotropElastViscoplast: solution of the linear "
+               "system "
+               "in the Local Newton Loop failed!";
+        break;
+      case Mat::ViscoplastErrorType::NoConvergenceLNL:
+        return "Error in InelasticDefgradTransvIsotropElastViscoplast: Local Newton Loop did not "
+               "converge for the given loop settings!";
+        break;
+      case Mat::ViscoplastErrorType::SingularJacobian:
+        return "Error in InelasticDefgradTransvIsotropElastViscoplast: singular Jacobian after "
+               "converged Local Newton Loop, which does not allow for the analytical evaluation of "
+               "the linearization!";
+        break;
+      case Mat::ViscoplastErrorType::FailedSolAnalytLinearization:
+        return "Error in InelasticDefgradTransvIsotropElastViscoplast: solution of the linear "
+               "system "
+               "in the analytical linearization failed";
+        break;
+      default:
+        FOUR_C_THROW("to_string(Mat::ViscoplastErrorType): You should not be here!");
+    }
+  }
 
 }  // namespace Mat
 
