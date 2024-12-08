@@ -159,20 +159,19 @@ Particle Discretization
 ------------------------
 
 Currently, two different particle methods are implemented: DEM (discrete element method) and SPH (smoothed particle hydrodynamics).
-For both methods, particles are simply defined by its position and optionally by its radius (only available for DEM),
-the particle number may not be entered.
+For both methods, particles are simply defined by its spatial position and optionally by its radius (only available for DEM).
+A unique global id is assigend to each particle automatically during runtime.
 Thus, the definition is very simple ::
 
     ------------------PARTICLE
     TYPE <typestring> POS <x> <y> <z> [RAD <radius>]
 
-The type provides a particle set, to which a material can be assigned in the section :ref:`PARTICLE DYNAMIC <SECparticledynamic>`,
+The type keyword provides a particle phase, to which a material can be assigned in the section :ref:`PARTICLE DYNAMIC <SECparticledynamic>`,
 see the keyword :ref:`PHASE_TO_MATERIAL_ID <particledynamic_phase_to_material_id>`.
 
-Note that particles can only have a single type and thus a single material for DEM,
-and the type must be declared as **phase1**.
+For DEM, the phases **phase1** and **phase2** may be defined.
 
-For SPH, the following different phases may be defined:
+For SPH, the following phases may be defined to represent different physical behavior:
 
 - phase1
 - phase2
@@ -181,16 +180,23 @@ For SPH, the following different phases may be defined:
 - neumannphase
 - dirichletphase
 
-The radius of the particles are by default defined in the material definition. For SPH, this is the only option available.
-For DEM, however, as mentioned above, they can also be defined per particle.
-For this definition option, one has to define the option :ref:`INITIAL_RADIUS <particledynamic_dem_initial_radius>` in :ref:`PARTICLE DYNAMIC <SECparticledynamic_dem>`::
+Note that with SPH the particles are allowed to change its phase during a simulation based on the input parameter `PHASECHANGETYPE` and `PHASECHANGEDEFINITION` in the section :ref:`PARTICLE DYNAMIC/SPH <SECparticledynamic_sph>`.
+
+For SPH the radius corresponds to the cutoff radius of the smoothing kernel. Since the cutoff radius is assumed to be constant this is the only option available.
+
+For the DEM, the particles are assumed to have a spherical shape with a given radius.
+
+By default, the radius of the particles are defined in the material definition for both DEM and SPH.
+
+However, as mentioned above, with DEM the radius can also be defined individually per particle.
+To do so one has to define the option :ref:`INITIAL_RADIUS <particledynamic_dem_initial_radius>` in :ref:`PARTICLE DYNAMIC/DEMi <SECparticledynamic_dem>`::
 
     ------------------PARTICLE DYNAMIC/DEM
     INITIAL_RADIUS    RadiusFromParticleInput
 
-Additionally, it is possible to define a normal or a log-normal distribution, defined by two parameters, :math:`\mu` and :math:`\sigma`.
-The parameter :math:`mu` is defined by the initial radius, i.e., in the material definition,
-while the parameter :math:`\sigma` is defined by the parameter :ref:`RADIUSDISTRIBUTION_SIGMA <particledynamic_dem_radiusdistribution_sigma>` in :ref:`PARTICLE DYNAMIC <SECparticledynamic_dem>`::
+Additionally, it is possible to define a normal or a log-normal distribution of the radius, defined by two parameters, :math:`\mu` and :math:`\sigma`.
+The parameter :math:`mu` is defined by the initial radius in the material definition,
+while the parameter :math:`\sigma` is defined by the parameter :ref:`RADIUSDISTRIBUTION_SIGMA <particledynamic_dem_radiusdistribution_sigma>` in :ref:`PARTICLE DYNAMIC/DEM <SECparticledynamic_dem>`::
 
 
     ------------------PARTICLE DYNAMIC/DEM
