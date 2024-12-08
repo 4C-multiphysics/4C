@@ -159,7 +159,7 @@ Particle Discretization
 ------------------------
 
 Currently, two different particle methods are implemented: DEM (discrete element method) and SPH (smoothed particle hydrodynamics).
-For both methods, particles are simply defined by its spatial position and optionally by its radius (only available for DEM).
+For both methods, particles are simply defined by their spatial position and optionally by their radius (only available for DEM).
 A unique global id is assigend to each particle automatically during runtime.
 Thus, the definition is very simple ::
 
