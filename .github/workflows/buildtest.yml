@@ -65,9 +65,26 @@ jobs:
       - name: Test
         run: |
           cd $GITHUB_WORKSPACE/build
-          ctest -I $TEST_CHUNK -j `nproc` --output-on-failure
+          ctest -I $TEST_CHUNK -j `nproc` --output-on-failure --output-junit $GITHUB_WORKSPACE/gcc13_assertions_test_report-$TEST_CHUNK.xml
         env:
           TEST_CHUNK: ${{ matrix.test-chunk }}
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcc13_assertions_test_report-${{ matrix.test-chunk }}.xml
+          path: |
+            ${{ github.workspace }}/gcc13_assertions_test_report-${{ matrix.test-chunk }}.xml
+          retention-days: 1
+
+  gcc13_assertions_test_report:
+    needs: gcc13_assertions_test
+    runs-on: ubuntu-latest
+    if: github.ref != 'refs/heads/main' && (success() || failure())
+    steps:
+      - uses: ./.github/actions/merge_junit_report_artifacts
+        with:
+          junit-report-base-name: gcc13_assertions_test_report
+          retention-days: 1
 
   gcc9_build:
     runs-on: ubuntu-latest
@@ -169,8 +186,8 @@ jobs:
           ctest -L minimal -j `nproc` --output-on-failure
 
   ensure_all_tests_pass:
-    needs: [gcc9_build, gcc9_test_minimal, gcc13_assertions_test, gcc13_assertions_build, clang18_build,
-      clang18_test_minimal]
+    needs: [gcc9_build, gcc9_test_minimal, gcc13_assertions_test, gcc13_assertions_test_report, gcc13_assertions_build,
+      clang18_build, clang18_test_minimal]
     runs-on: ubuntu-latest
     if: always()
     steps:

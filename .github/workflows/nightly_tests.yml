@@ -56,9 +56,26 @@ jobs:
       - name: Test
         run: |
           cd $GITHUB_WORKSPACE/build
-          time ctest -I $TEST_CHUNK -j `nproc` --output-on-failure
+          time ctest -I $TEST_CHUNK -j `nproc` --output-on-failure --output-junit $GITHUB_WORKSPACE/gcc13_assertions_test_report-$TEST_CHUNK.xml
         env:
           TEST_CHUNK: ${{ matrix.test-chunk }}
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcc13_assertions_test_report-${{ matrix.test-chunk }}.xml
+          path: |
+            ${{ github.workspace }}/gcc13_assertions_test_report-${{ matrix.test-chunk }}.xml
+          retention-days: 1
+
+  gcc13_assertions_test_report:
+    needs: gcc13_assertions_test
+    runs-on: ubuntu-latest
+    if: success() || failure()
+    steps:
+      - uses: ./.github/actions/merge_junit_report_artifacts
+        with:
+          junit-report-base-name: gcc13_assertions_test_report
+          retention-days: 2
 
   gcc9_build:
     runs-on: ubuntu-latest
@@ -111,9 +128,26 @@ jobs:
       - name: Test
         run: |
           cd $GITHUB_WORKSPACE/build
-          time ctest -I $TEST_CHUNK -j `nproc` --output-on-failure
+          time ctest -I $TEST_CHUNK -j `nproc` --output-on-failure --output-junit $GITHUB_WORKSPACE/gcc9_test_report-$TEST_CHUNK.xml
         env:
           TEST_CHUNK: ${{ matrix.test-chunk }}
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcc9_test_report-${{ matrix.test-chunk }}.xml
+          path: |
+            ${{ github.workspace }}/gcc9_test_report-${{ matrix.test-chunk }}.xml
+          retention-days: 1
+
+  gcc9_test_report:
+    needs: gcc9_test
+    runs-on: ubuntu-latest
+    if: success() || failure()
+    steps:
+      - uses: ./.github/actions/merge_junit_report_artifacts
+        with:
+          junit-report-base-name: gcc9_test_report
+          retention-days: 2
 
   clang18_build:
     runs-on: ubuntu-latest
@@ -166,9 +200,26 @@ jobs:
       - name: Test
         run: |
           cd $GITHUB_WORKSPACE/build
-          time ctest -I $TEST_CHUNK -j `nproc` --output-on-failure
+          time ctest -I $TEST_CHUNK -j `nproc` --output-on-failure --output-junit $GITHUB_WORKSPACE/clang18_test_report-$TEST_CHUNK.xml
         env:
           TEST_CHUNK: ${{ matrix.test-chunk }}
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: clang18_test_report-${{ matrix.test-chunk }}.xml
+          path: |
+            ${{ github.workspace }}/clang18_test_report-${{ matrix.test-chunk }}.xml
+          retention-days: 1
+
+  clang18_test_report:
+    needs: clang18_test
+    runs-on: ubuntu-latest
+    if: success() || failure()
+    steps:
+      - uses: ./.github/actions/merge_junit_report_artifacts
+        with:
+          junit-report-base-name: clang18_test_report
+          retention-days: 2
 
   gcc13_asan_build:
     runs-on: ubuntu-latest
@@ -221,6 +272,23 @@ jobs:
       - name: Test
         run: |
           cd $GITHUB_WORKSPACE/build
-          time ctest -I $TEST_CHUNK -j `nproc` --output-on-failure
+          time ctest -I $TEST_CHUNK -j `nproc` --output-on-failure --output-junit $GITHUB_WORKSPACE/gcc13_asan_test_report-$TEST_CHUNK.xml
         env:
           TEST_CHUNK: ${{ matrix.test-chunk }}
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcc13_asan_test_report-${{ matrix.test-chunk }}.xml
+          path: |
+            ${{ github.workspace }}/gcc13_asan_test_report-${{ matrix.test-chunk }}.xml
+          retention-days: 1
+
+  gcc13_asan_test_report:
+    needs: gcc13_asan_test
+    runs-on: ubuntu-latest
+    if: success() || failure()
+    steps:
+      - uses: ./.github/actions/merge_junit_report_artifacts
+        with:
+          junit-report-base-name: gcc13_asan_test_report
+          retention-days: 2

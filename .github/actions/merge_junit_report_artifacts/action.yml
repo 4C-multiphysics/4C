@@ -1,0 +1,33 @@
+name: Merge junit report artifacts
+description: Merge junit reports from artifacts to a single artifact
+inputs:
+  retention-days:
+    description: Number of days to retain the artifact
+    required: false
+    default: "1"
+  junit-report-base-name:
+    description: Base name of the artifacts with the junit reports
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Download reports
+      uses: actions/download-artifact@v4
+      with:
+        path: ${{ github.workspace }}
+        merge-multiple: true
+        pattern: ${{ inputs.junit-report-base-name }}-*.xml
+    - name: Merge test reports
+      shell: bash
+      run: |
+        pip install junitparser==3.2.0
+        junitparser merge --glob $JUNIT_REPORT_BASE_NAME-*.xml $JUNIT_REPORT_BASE_NAME.xml
+      env:
+        JUNIT_REPORT_BASE_NAME: ${{ inputs.junit-report-base-name }}
+    - name: Upload test summary
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.junit-report-base-name }}.xml
+        path: |
+          ${{ github.workspace }}/${{ inputs.junit-report-base-name }}.xml
+        retention-days: ${{ inputs.retention-days }}
