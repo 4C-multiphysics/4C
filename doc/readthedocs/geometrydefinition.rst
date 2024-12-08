@@ -166,7 +166,7 @@ Thus, the definition is very simple ::
     ------------------PARTICLE
     TYPE <typestring> POS <x> <y> <z> [RAD <radius>]
 
-The type keyword provides a particle phase, to which a material can be assigned in the section :ref:`PARTICLE DYNAMIC <SECparticledynamic>`,
+The ``TYPE`` keyword provides a particle phase, to which a material can be assigned in the section :ref:`PARTICLE DYNAMIC <SECparticledynamic>`,
 see the keyword :ref:`PHASE_TO_MATERIAL_ID <particledynamic_phase_to_material_id>`.
 
 For DEM, the phases **phase1** and **phase2** may be defined.
