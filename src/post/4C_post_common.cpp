@@ -672,6 +672,8 @@ int PostProblem::get_max_nodeid(const std::string& fieldname)
   return maxnodeid;
 }
 
+int PostProblem::num_discr() { return static_cast<int>(fields_.size()); }
+
 
 /*----------------------------------------------------------------------*
  * Constructor of PostField.

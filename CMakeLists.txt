@@ -29,7 +29,7 @@ project(4C CXX C)
 message(STATUS "Using CMake ${CMAKE_VERSION}")
 
 # Enforce the C++ standard we are using and turn off compiler-specific extensions
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_CXX_EXTENSIONS Off)
 
