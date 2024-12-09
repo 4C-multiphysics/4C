@@ -1,0 +1,51 @@
+name: Determine optimal test chunks
+description: Chunk test suite
+inputs:
+  build-directory:
+    description: Path to the build directory
+    required: true
+  source-directory:
+    description: Path to the source directory
+    required: true
+  number-of-chunks:
+    description: Number of chunks
+    required: true
+  junit-report-artifact-name:
+    description: Name of the job that reports the junit summary
+    required: true
+outputs:
+  chunk-array:
+    description: Array of chunks
+    value: ${{ steps.extract-chunks.outputs.chunk_array }}
+runs:
+  using: composite
+  steps:
+    - name: Download junit test reports
+      id: download-junit-reports
+      continue-on-error: true
+      uses: dawidd6/action-download-artifact@v6
+      with:
+        workflow: nightly_tests.yml
+        name: ${{ inputs.junit-report-artifact-name }}
+        path: ${{ github.workspace }}
+        branch: ${{ github.event.repository.default_branch }}
+        workflow_conclusion: success
+        if_no_artifact_found: fail
+    - name: Extract chunks from test-suite based on their timeouts and number of processors
+      id: extract-chunks
+      shell: bash
+      run: |
+        cd $BUILD_DIRECTORY
+        ctest --show-only=json-v1 > 4C_ctest_suite_summary.json
+        python -m venv venv
+        . venv/bin/activate
+        pip install junitparser==3.2.0
+        TEST_CHUNKS=`python $SOURCE_DIRECTORY/.github/actions/chunk_test_suite/chunk_test_suite.py -c $NUMBER_OF_CHUNKS $JUNIT_REPORT_FLAG 4C_ctest_suite_summary.json`
+        echo "Test chunks: $TEST_CHUNKS"
+        echo "chunk_array=$TEST_CHUNKS" >> $GITHUB_OUTPUT
+      env:
+        BUILD_DIRECTORY: ${{ inputs.build-directory }}
+        NUMBER_OF_CHUNKS: ${{ inputs.number-of-chunks }}
+        SOURCE_DIRECTORY: ${{ inputs.source-directory }}
+        JUNIT_REPORT_FLAG: ${{ steps.download-junit-reports.outcome == 'success' && format('--junit.report
+          {0}.xml', inputs.junit-report-artifact-name) || '' }}

@@ -21,6 +21,8 @@ jobs:
     defaults:
       run:
         shell: bash
+    outputs:
+      test-chunks: ${{ steps.set-matrix.outputs.chunk-array }}
     steps:
       - uses: actions/checkout@v4
       - name: Check docker hash
@@ -35,6 +37,13 @@ jobs:
         with:
           build-directory: ${{ github.workspace }}/build
           retention-days: 1
+      - uses: ./.github/actions/chunk_test_suite
+        id: set-matrix
+        with:
+          build-directory: ${{ github.workspace }}/build
+          source-directory: ${{ github.workspace }}
+          number-of-chunks: 15
+          junit-report-artifact-name: gcc13_assertions_test_report
 
   gcc13_assertions_test:
     needs: gcc13_assertions_build
@@ -46,8 +55,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-chunk: ["1,315", "316,443", "444,699", "700,804", "805,965", "966,1112", "1113,1502", "1503,1652",
-          "1653,2128", "2129,2429", "2430,2580", "2581,2696", "2697,2719", "2720,2737", "2738,"]
+        test-chunk: ${{fromJson(needs.gcc13_assertions_build.outputs.test-chunks)}}
     defaults:
       run:
         shell: bash
