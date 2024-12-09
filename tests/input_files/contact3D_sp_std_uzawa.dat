@@ -91,7 +91,7 @@ SOLVER                          Superlu
 NAME                            Contact_Solver
 SOLVER                          Belos
 AZSOLVE                         GMRES
-AZPREC                          MueLu_contactSP
+AZPREC                          MueLu
 MUELU_XML_FILE                  contact3D_sp_uzawa.xml
 AZTOL                           1.0e-8
 AZCONV                          AZ_r0
