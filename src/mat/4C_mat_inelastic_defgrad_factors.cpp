@@ -9,6 +9,7 @@
 
 #include "4C_global_data.hpp"
 #include "4C_legacy_enum_definitions_materials.hpp"
+#include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_fixedsizematrix_solver.hpp"
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
@@ -17,6 +18,7 @@
 #include "4C_mat_elast_couptransverselyisotropic.hpp"
 #include "4C_mat_elasthyper_service.hpp"
 #include "4C_mat_electrode.hpp"
+#include "4C_mat_inelastic_defgrad_factors_service.hpp"
 #include "4C_mat_multiplicative_split_defgrad_elasthyper.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_mat_vplast_law.hpp"
@@ -29,6 +31,7 @@
 #include <map>
 #include <memory>
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 FOUR_C_NAMESPACE_OPEN
@@ -1650,10 +1653,14 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::InelasticDefgradTransvIsotrop
   time_step_quantities_.current_plastic_strain_.resize(1, 0.0);  // value irrelevant at this point
   time_step_quantities_.last_substep_plastic_strain_.resize(1, 0.0);
 
-  // default values of the deformation gradient: unit tensor
+  // default values of the right CG tensor: unit tensor
   time_step_quantities_.last_rightCG_.resize(1, const_non_mat_tensors.id3x3_);
   time_step_quantities_.current_rightCG_.resize(
       1, const_non_mat_tensors.id3x3_);  // value irrelevant at this point
+
+  // default value for the current deformation gradient: zero tensor \f$ \boldsymbol{0} f$ (to make
+  // sure that the inverse inelastic deformation gradient is evaluated in the first method call)
+  time_step_quantities_.current_defgrad_.resize(1, Core::LinAlg::Matrix<3, 3>{true});
 }
 
 
@@ -2434,6 +2441,18 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_inverse_inelast
   Core::LinAlg::Matrix<3, 3> CredM(true);
   CredM.multiply_tn(1.0, FredM, FredM, 0.0);
 
+  // check whether we have already evaluated the inverse inelastic deformation gradient for the
+  // given reduced deformation gradient
+  Core::LinAlg::Matrix<3, 3> diff_defgrad{true};
+  diff_defgrad.update(1.0, FredM, -1.0, time_step_quantities_.current_defgrad_[gp_], 0.0);
+  if (diff_defgrad.norm2() == 0.0)
+  {
+    // return the already computed current_ value
+    iFinM = time_step_quantities_.current_plastic_defgrd_inverse_[gp_];
+    return;
+  }
+
+
   // set predictor: assume purely elastic behavior in this time step
   Core::LinAlg::Matrix<3, 3> iFinM_pred(true);
   iFinM_pred.update(1.0, time_step_quantities_.last_plastic_defgrd_inverse_[gp_], 0.0);
@@ -2455,6 +2474,7 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_inverse_inelast
       time_step_quantities_.current_plastic_defgrd_inverse_[gp_] = iFinM;
       time_step_quantities_.current_plastic_strain_[gp_] = plastic_strain_pred;
       time_step_quantities_.current_rightCG_[gp_] = CredM;
+      time_step_quantities_.current_defgrad_[gp_] = FredM;
     }
   }
   else  // predictor does not suffice
@@ -2466,8 +2486,7 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_inverse_inelast
 
     // throw error if the Local Newton Loop cannot be evaluated with the given substepping
     // settings
-    if (err_status != Mat::ViscoplastErrorType::NoErrors)
-      FOUR_C_THROW(ViscoplastErrorMessages[err_status]);
+    if (err_status != Mat::ViscoplastErrorType::NoErrors) FOUR_C_THROW(Mat::to_string(err_status));
 
     // extract the inverse inelastic defgrad from the LNL solution
     iFinM = extract_inverse_inelastic_defgrad(sol);
@@ -2478,6 +2497,7 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_inverse_inelast
       time_step_quantities_.current_plastic_defgrd_inverse_[gp_] = iFinM;
       time_step_quantities_.current_plastic_strain_[gp_] = sol(9);
       time_step_quantities_.current_rightCG_[gp_] = CredM;
+      time_step_quantities_.current_defgrad_[gp_] = FredM;
     }
   }
 }
@@ -2527,6 +2547,9 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::setup(
   time_step_quantities_.last_rightCG_.resize(numgp, time_step_quantities_.last_rightCG_[0]);
   time_step_quantities_.current_rightCG_.resize(
       numgp, time_step_quantities_.last_rightCG_[0]);  // value irrelevant at this point
+
+  // default values of the deformation gradient
+  time_step_quantities_.current_defgrad_.resize(numgp, time_step_quantities_.current_defgrad_[0]);
 
   // call corresponding method of the viscoplastic law
   viscoplastic_law_->setup(numgp, container);
@@ -2604,6 +2627,12 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::unpack_inelastic(
   time_step_quantities_.current_plastic_strain_.resize(
       time_step_quantities_.last_plastic_strain_.size(),
       time_step_quantities_.last_plastic_strain_[0]);  // value irrelevant
+
+  // set evaluated deformation gradient to 0, to make sure that the inverse inelastic deformation
+  // gradient is evaluated fully after the restart
+  time_step_quantities_.current_defgrad_.resize(
+      time_step_quantities_.last_substep_plastic_defgrd_inverse_.size(),
+      Core::LinAlg::Matrix<3, 3>{true});
 
 
   // now that the fiber direction is available, we set the material-dependent constant tensors
@@ -3131,31 +3160,6 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_additional_cmat
   // reset boolean for the history update
   update_hist_var_ = true;
 }
-
-/// map: error types to error messages in InelasticDefgradTransvIsotropElastViscoplast
-std::map<Mat::ViscoplastErrorType, std::string> Mat::ViscoplastErrorMessages = {
-    {ViscoplastErrorType::NegativePlasticStrain,
-        "Error in InelasticDefgradTransvIsotropElastViscoplast: negative plastic strain!"},
-    {ViscoplastErrorType::OverflowError,
-        "Error in InelasticDefgradTransvIsotropElastViscoplast: overflow error related to the "
-        "evaluation of the plastic strain increment!"},
-    {ViscoplastErrorType::NoPlasticIncompressibility,
-        "Error in InelasticDefgradTransvIsotropElastViscoplast: plastic incompressibility not "
-        "satisfied!"},
-    {ViscoplastErrorType::FailedSolLinSystLNL,
-        "Error in InelasticDefgradTransvIsotropElastViscoplast: solution of the linear system in "
-        "the Local Newton Loop failed!"},
-    {ViscoplastErrorType::NoConvergenceLNL,
-        "Error in InelasticDefgradTransvIsotropElastViscoplast: Local Newton Loop did not "
-        "converge for the given loop settings!"},
-    {ViscoplastErrorType::SingularJacobian,
-        "Error in InelasticDefgradTransvIsotropElastViscoplast: singular Jacobian after "
-        "converged Local Newton Loop, which does not allow for the analytical evaluation of the "
-        "linearization!"},
-    {ViscoplastErrorType::FailedSolAnalytLinearization,
-        "Error in InelasticDefgradTransvIsotropElastViscoplast: solution of the linear system in "
-        "the analytical linearization failed"},
-};
 
 
 
