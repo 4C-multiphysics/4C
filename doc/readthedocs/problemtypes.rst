@@ -161,14 +161,16 @@ Particle
 
 **General**
 
-This is a completely different problem type, which comes along without elements.
-Instead, the method is based on SPH, which means *smoothed particle hydrodynamics*,
-and the particles are defined by their coordinates.
+This is a completely different discretization type that comes along without elements but uses particles, i.e., spatial discretization points.
+
+Currently, two different particle interaction methods are implemented.
+The *discrete element method (DEM)* assumes spherical shaped particles that physically interact with each other.
+With *smoothed particle hydrodynamics (SPH)* particles are interpreted as discretization points that along with a smoothing kernel discretize a continuum.
 
 **Particles and Degrees of freedom**
 
-The particles are always given as positions in 3D space (without particle numbers), not as elements;
-the number of degrees of freedom depends on the value of ``KERNEL_SPACE_DIM``, which may have the value ``KERNEL1D, KERNEL2D, KERNEL3D``.
+Generally, particles are defined by their spatial coordinates in 3D space.
+Additionally, further states may be defined for the particles as degrees of freedom, e.g., temperature.
 
 
 Polymer_Network
