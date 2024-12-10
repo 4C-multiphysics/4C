@@ -22,6 +22,7 @@
 #include <Teuchos_ParameterList.hpp>
 
 #include <memory>
+#include <vector>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -1482,6 +1483,11 @@ namespace Mat
       //! evaluation (used in order to update last_rightCG_ once outer NR converges) (for all Gauss
       //! points)
       std::vector<Core::LinAlg::Matrix<3, 3>> current_rightCG_;
+
+      //! current (reduced) deformation gradient: used to check whether the inverse inelastic
+      //! deformation gradient has already been evaluated (to improve the computation performance)
+      std::vector<Core::LinAlg::Matrix<3, 3>> current_defgrad_;
+
 
       //! current inverse plastic deformation gradient (for all Gauss points)
       std::vector<Core::LinAlg::Matrix<3, 3>> current_plastic_defgrd_inverse_;
