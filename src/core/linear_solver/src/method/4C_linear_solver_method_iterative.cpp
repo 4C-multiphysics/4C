@@ -225,10 +225,6 @@ Core::LinearSolver::IterativeSolver<MatrixType, VectorType>::create_precondition
   {
     preconditioner = std::make_shared<Core::LinearSolver::MueLuPreconditioner>(params());
   }
-  else if (params().isSublist("MueLu (Contact) Parameters"))
-  {
-    preconditioner = std::make_shared<Core::LinearSolver::MueLuContactSpPreconditioner>(params());
-  }
   else if (params().isSublist("Teko Parameters"))
   {
     preconditioner = std::make_shared<Core::LinearSolver::TekoPreconditioner>(params());
