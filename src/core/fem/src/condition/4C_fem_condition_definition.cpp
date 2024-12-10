@@ -53,11 +53,8 @@ void Core::Conditions::ConditionDefinition::read(Core::IO::InputFile& input,
     std::multimap<int, std::shared_ptr<Core::Conditions::Condition>>& cmap)
 {
   // read the range into a vector
-  std::vector<std::string> section_vec;
-  {
-    const auto& section = input.lines_in_section(sectionname_);
-    for (const auto& line : section) section_vec.push_back(std::string{line});
-  }
+  std::vector<std::string_view> section_vec;
+  std::ranges::copy(input.lines_in_section(section_name()), std::back_inserter(section_vec));
 
   if (section_vec.empty()) return;
 
@@ -66,7 +63,7 @@ void Core::Conditions::ConditionDefinition::read(Core::IO::InputFile& input,
   //
   // ("DPOINT" | "DLINE" | "DSURF" | "DVOL" ) <number>
 
-  std::stringstream line(section_vec[0]);
+  std::stringstream line(std::string{section_vec[0]});
 
   Core::IO::ValueParser parser_header(
       line, "While reading header of condition section '" + sectionname_ + "': ");
@@ -100,7 +97,8 @@ void Core::Conditions::ConditionDefinition::read(Core::IO::InputFile& input,
 
   for (auto i = section_vec.begin() + 1; i != section_vec.end(); ++i)
   {
-    std::shared_ptr<std::stringstream> condline = std::make_shared<std::stringstream>(*i);
+    std::shared_ptr<std::stringstream> condline =
+        std::make_shared<std::stringstream>(std::string{*i});
 
     // add trailing white space to stringstream "condline" to avoid deletion of stringstream upon
     // reading the last entry inside This is required since the material parameters can be

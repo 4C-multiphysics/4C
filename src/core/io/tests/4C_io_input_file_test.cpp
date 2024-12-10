@@ -140,8 +140,11 @@ namespace
   {
     SCOPED_TRACE("Checking section " + section);
     ASSERT_TRUE(input.has_section(section));
-    const auto& section_lines = input.lines_in_section(section);
-    std::vector<std::string> section_lines_str(section_lines.begin(), section_lines.end());
+    auto section_lines = input.lines_in_section(section);
+    std::vector<std::string> section_lines_str;
+    std::ranges::copy(section_lines | std::views::transform([](const std::string_view& line)
+                                          { return std::string{line}; }),
+        std::back_inserter(section_lines_str));
     EXPECT_EQ(lines.size(), section_lines_str.size());
     for (std::size_t i = 0; i < lines.size(); ++i)
     {

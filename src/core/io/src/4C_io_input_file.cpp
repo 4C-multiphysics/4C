@@ -471,6 +471,13 @@ namespace Core::IO
       return *this;
     }
 
+    DatFileLineIterator DatFileLineIterator::operator++(int)
+    {
+      auto copy = *this;
+      ++(*this);
+      return copy;
+    }
+
 
     DatFileLineIterator::reference DatFileLineIterator::operator*() const
     {
@@ -497,6 +504,7 @@ namespace Core::IO
     {
       return !(*this == other);
     }
+
 
 
     void SectionPosition::pack(Communication::PackBuffer& data) const
@@ -541,8 +549,8 @@ namespace Core::IO
   /*----------------------------------------------------------------------*/
   bool InputFile::has_section(const std::string& section_name) const
   {
-    const auto range = line_range(section_name);
-    return range.begin() != range.end();
+    auto range = line_range(section_name);
+    return std::ranges::begin(range) != std::ranges::end(range);
   }
 
 
