@@ -173,17 +173,15 @@ namespace Core::Binstrategy::Utils
     // ---- pack data for sending -----
     std::map<int, std::vector<char>> sdata;
     std::vector<int> targetprocs(numproc, 0);
-    std::map<int, std::vector<std::pair<int, std::vector<int>>>>::const_iterator p;
-    for (p = toranktosendbinids.begin(); p != toranktosendbinids.end(); ++p)
+    for (const auto& [to_rank, to_send_binids] : toranktosendbinids)
     {
-      std::vector<std::pair<int, std::vector<int>>>::const_iterator iter;
-      for (iter = p->second.begin(); iter != p->second.end(); ++iter)
+      for (const auto& entry : to_send_binids)
       {
         Core::Communication::PackBuffer data;
-        add_to_pack(data, *iter);
-        sdata[p->first].insert(sdata[p->first].end(), data().begin(), data().end());
+        add_to_pack(data, entry);
+        sdata[to_rank].insert(sdata[to_rank].end(), data().begin(), data().end());
       }
-      targetprocs[p->first] = 1;
+      targetprocs[to_rank] = 1;
     }
 
     // ---- send ----
