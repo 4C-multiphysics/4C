@@ -242,6 +242,54 @@ void Mat::MicroMaterial::prepare_output()
     actmicromatgp->prepare_output();
   }
 }
+// prepare output for all procs
+void Mat::MicroMaterial::prepare_runtime_output() const
+{
+  // get sub communicator including the supporting procs
+  MPI_Comm subcomm = Global::Problem::instance(0)->get_communicators()->sub_comm();
+  if (Core::Communication::my_mpi_rank(subcomm) == 0)
+  {
+    // tell the supporting procs that the micro material will be prepared for output
+    int eleID = matgp_.begin()->second->ele_id();
+    int task[2] = {
+        static_cast<int>(MultiScale::MicromaterialNestedParallelismAction::prepare_output), eleID};
+    Core::Communication::broadcast(task, 2, 0, subcomm);
+  }
+
+  for (const auto& micromatgp : matgp_)
+  {
+    std::shared_ptr<MicroMaterialGP> actmicromatgp = micromatgp.second;
+    actmicromatgp->prepare_output();
+
+    if (params_->RuntimeOutputOption == PAR::MicroMaterial::runtime_output_option::gp1) break;
+  }
+}
+
+void Mat::MicroMaterial::runtime_output_step_state(
+    std::pair<double, int> output_time_and_step) const
+{
+  // get sub communicator including the supporting procs
+  MPI_Comm subcomm = Global::Problem::instance(0)->get_communicators()->sub_comm();
+  if (Core::Communication::my_mpi_rank(subcomm) == 0)
+  {
+    // tell the supporting procs that the micro material will be output
+    int eleID = matgp_.begin()->second->ele_id();
+    int task[2] = {
+        static_cast<int>(MultiScale::MicromaterialNestedParallelismAction::output_step_state),
+        eleID};
+    Core::Communication::broadcast(task, 2, 0, subcomm);
+  }
+
+  for (const auto& micromatgp : matgp_)
+  {
+    std::string section_name = "rve_elem_" + std::to_string(micromatgp.second->ele_id()) + "_gp_ " +
+                               std::to_string(micromatgp.first);
+    std::shared_ptr<MicroMaterialGP> actmicromatgp = micromatgp.second;
+    actmicromatgp->runtime_output_step_state_microscale(output_time_and_step, section_name);
+
+    if (params_->RuntimeOutputOption == PAR::MicroMaterial::runtime_output_option::gp1) break;
+  }
+}
 
 // output for all procs
 void Mat::MicroMaterial::output_step_state()

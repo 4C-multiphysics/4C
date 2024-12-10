@@ -44,12 +44,15 @@ namespace Core::IO
      * @param element_filter (in)  An optional function that returns true for all elements that
      *   should be included in the visualization. By default, all elements in the discretization are
      *   included.
+     * @param filename (in)  An optional filename. By default, the name of the discretization
+     *   is used.
      */
     DiscretizationVisualizationWriterMesh(
         const std::shared_ptr<const Core::FE::Discretization>& discretization,
         VisualizationParameters parameters,
         std::function<bool(const Core::Elements::Element* element)> element_filter =
-            [](const Core::Elements::Element*) { return true; });
+            [](const Core::Elements::Element*) { return true; },
+        const std::optional<std::string>& filename = std::nullopt);
 
     /**
      * @brief Reset state depending if the maps changed or not
@@ -164,6 +167,9 @@ namespace Core::IO
     //! Write the material id for each element to the output
     void append_element_material_id();
 
+    //! Return the pointer to the VisualizationManager
+    std::shared_ptr<VisualizationManager>& visualization_manager_ptr();
+
     /**
      * \brief Write the 4C internal node GIDs for each node
      *
@@ -191,11 +197,11 @@ namespace Core::IO
     //! discretization containing elements of which geometry and result data shall be visualized
     std::shared_ptr<const Core::FE::Discretization> discretization_;
 
-    //! The actual visualization writer object that additionally stores the geometry and result data
-    std::shared_ptr<VisualizationManager> visualization_manager_;
-
     //! A filter function that returns true for all elements that should be visualized.
     std::function<bool(const Core::Elements::Element* element)> element_filter_;
+
+    //! The actual visualization writer object that additionally stores the geometry and result data
+    std::shared_ptr<VisualizationManager> visualization_manager_;
 
     //! Node row and col maps the geometry of visualization writer is based on
     std::shared_ptr<Epetra_Map> noderowmap_last_geometry_set_;

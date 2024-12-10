@@ -1316,6 +1316,9 @@ std::shared_ptr<std::vector<std::shared_ptr<Mat::MaterialDefinition>>> Input::va
     add_named_string(m, "MICROFILE", "inputfile for microstructure", "filename.dat");
     add_named_int(m, "MICRODIS_NUM", "Number of microscale discretization");
     add_named_real(m, "INITVOL", "Initial volume of RVE", 0.0, true);
+    add_named_string(m, "RUNTIMEOUTPUT_GP",
+        "Specify the Gauss Points of this element for which runtime output is generated", "all",
+        true);
 
     Mat::append_material_definition(matlist, m);
   }

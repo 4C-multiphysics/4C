@@ -22,7 +22,6 @@
 #include <Epetra_FEVector.h>
 
 #include <utility>
-
 FOUR_C_NAMESPACE_OPEN
 
 
@@ -33,11 +32,12 @@ namespace Core::IO
   DiscretizationVisualizationWriterMesh::DiscretizationVisualizationWriterMesh(
       const std::shared_ptr<const Core::FE::Discretization>& discretization,
       VisualizationParameters parameters,
-      std::function<bool(const Core::Elements::Element* element)> element_filter)
+      std::function<bool(const Core::Elements::Element* element)> element_filter,
+      const std::optional<std::string>& filename)
       : discretization_(discretization),
-        visualization_manager_(std::make_shared<VisualizationManager>(
-            std::move(parameters), discretization->get_comm(), discretization->name())),
-        element_filter_(std::move(element_filter))
+        element_filter_(std::move(element_filter)),
+        visualization_manager_(std::make_shared<VisualizationManager>(std::move(parameters),
+            discretization->get_comm(), filename.value_or(discretization->name())))
   {
     set_geometry_from_discretization();
   }
@@ -428,6 +428,11 @@ namespace Core::IO
     // Pass data to the output writer.
     visualization_manager_->get_visualization_data().set_cell_data_vector(
         "material_id", material_id_of_row_elements, 1);
+  }
+  std::shared_ptr<VisualizationManager>&
+  DiscretizationVisualizationWriterMesh::visualization_manager_ptr()
+  {
+    return visualization_manager_;
   }
 
   /*-----------------------------------------------------------------------------------------------*

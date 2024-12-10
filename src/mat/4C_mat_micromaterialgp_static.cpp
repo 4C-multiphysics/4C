@@ -21,6 +21,7 @@
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
 #include <filesystem>
+#include <utility>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -348,7 +349,6 @@ void Mat::MicroMaterialGP::prepare_output()
   microstatic->prepare_output();
 }
 
-
 void Mat::MicroMaterialGP::output_step_state_microscale()
 {
   // select corresponding "time integration class" for this microstructure
@@ -360,6 +360,22 @@ void Mat::MicroMaterialGP::output_step_state_microscale()
   microstatic->output(*micro_output_, time_, step_, dt_);
 
   // we don't need these containers anymore
+  stress_ = nullptr;
+  strain_ = nullptr;
+  plstrain_ = nullptr;
+}
+
+void Mat::MicroMaterialGP::runtime_output_step_state_microscale(
+    const std::pair<double, int>& output_time_and_step, const std::string& section_name)
+{
+  // select corresponding "time integration class" for this microstructure
+  const std::shared_ptr<MultiScale::MicroStatic> microstatic = microstaticmap_[microdisnum_];
+
+  // set displacements and EAS data of last step
+  microstatic->set_state(dis_, disn_, stress_, strain_, plstrain_, lastalpha_, oldalpha_, oldfeas_,
+      old_kaainv_, old_kda_);
+  microstatic->runtime_output(output_time_and_step, section_name);
+
   stress_ = nullptr;
   strain_ = nullptr;
   plstrain_ = nullptr;

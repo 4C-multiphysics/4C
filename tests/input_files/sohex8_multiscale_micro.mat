@@ -15,15 +15,20 @@ NUMSTRUCDIS                     2
 NUMALEDIS                       0
 NUMTHERMDIS                     0
 --------------------------------------------------------------------------IO
-OUTPUT_BIN                      Yes
-STRUCT_DISP                     Yes
-STRUCT_STRESS                   No
-FLUID_STRESS                    No
+OUTPUT_BIN                      No
+STRUCT_DISP                     No
 VERBOSITY                       Minimal
+-----------------------------------------------------------IO/RUNTIME VTK OUTPUT
+OUTPUT_DATA_FORMAT              binary
+INTERVAL_STEPS                  1
+EVERY_ITERATION                 No
+----------------------------------------------------------IO/RUNTIME VTK OUTPUT/STRUCTURE
+OUTPUT_STRUCTURE                Yes
+DISPLACEMENT                    Yes
 ----------------------------------------------------------STRUCTURAL DYNAMIC
 INT_STRATEGY                    Standard
 LINEAR_SOLVER                   1
-DYNAMICTYPE                      GenAlpha
+DYNAMICTYPE                     GenAlpha
 RESULTSEVRY                     1
 RESTARTEVRY                     1
 NLNSOL                          fullnewton                    // fullnewton modnewton matfreenewton nlncg ptc

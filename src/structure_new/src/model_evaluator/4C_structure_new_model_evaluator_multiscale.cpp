@@ -12,6 +12,8 @@
 #include "4C_mat_micromaterial.hpp"
 #include "4C_solid_3D_ele.hpp"
 #include "4C_stru_multi_microstatic.hpp"
+#include "4C_structure_new_model_evaluator_data.hpp"
+#include "4C_structure_new_timint_basedataglobalstate.hpp"
 
 #include <Teuchos_ParameterList.hpp>
 
@@ -22,6 +24,22 @@ FOUR_C_NAMESPACE_OPEN
 void Solid::ModelEvaluator::Multiscale::setup()
 {
   check_init();
+
+  // ------------------------ Runtime output writer
+  // auto visualization_params_ = Core::IO::visualization_parameters_factory(
+  //   Global::Problem::instance(0)->io_params().sublist("RUNTIME VTK OUTPUT"),
+  //   *Global::Problem::instance()->output_control_file(), time_);
+
+  macro_visualization_params_ = Core::IO::visualization_parameters_factory(
+      Global::Problem::instance()->io_params().sublist("RUNTIME VTK OUTPUT"),
+      *Global::Problem::instance()->output_control_file(), global_state().get_time_n());
+
+  vtu_writer_ptr_ = std::make_shared<Core::IO::DiscretizationVisualizationWriterMesh>(
+      discret_ptr(), macro_visualization_params_);
+
+  auto visualization_manager_ptr_ = vtu_writer_ptr_->visualization_manager_ptr();
+  auto& visualization_data = visualization_manager_ptr_->get_visualization_data();
+  visualization_data.register_field_data<double>("tangent_stiffness_tensor_cmat", 36);
 
   // set flag
   issetup_ = true;
@@ -94,6 +112,54 @@ void Solid::ModelEvaluator::Multiscale::determine_optional_quantity()
     {
       Mat::MicroMaterial* micro = static_cast<Mat::MicroMaterial*>(mat.get());
       micro->prepare_output();
+    }
+  }
+}
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::ModelEvaluator::Multiscale::runtime_pre_output_step_state()
+{
+  for (const auto& actele : discret().my_row_element_range())
+  {
+    std::shared_ptr<Core::Mat::Material> mat = actele->material();
+    if (mat->material_type() == Core::Materials::m_struct_multiscale)
+    {
+      if (auto* micro_mat = static_cast<Mat::MicroMaterial*>(mat.get());
+          Mat::PAR::MicroMaterial::runtime_output_option::none !=
+          micro_mat->runtime_output_option())
+        micro_mat->prepare_runtime_output();
+    }
+  }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void Solid::ModelEvaluator::Multiscale::runtime_output_step_state() const
+{
+  std::pair<double, int> output_macro_time_and_step;
+  if (macro_visualization_params_.every_iteration_ == true)
+  {
+    output_macro_time_and_step =
+        Core::IO::get_time_and_time_step_index_for_output(macro_visualization_params_,
+            global_state().get_time_n(), global_state().get_step_n(), eval_data().get_nln_iter());
+  }
+  else
+  {
+    output_macro_time_and_step = Core::IO::get_time_and_time_step_index_for_output(
+        macro_visualization_params_, global_state().get_time_n(), global_state().get_step_n());
+  }
+
+  for (const auto& actele : discret().my_row_element_range())
+  {
+    std::shared_ptr<Core::Mat::Material> mat = actele->material();
+    if (mat->material_type() == Core::Materials::m_struct_multiscale)
+    {
+      if (auto* micro_mat = static_cast<Mat::MicroMaterial*>(mat.get());
+          Mat::PAR::MicroMaterial::runtime_output_option::none !=
+          micro_mat->runtime_output_option())
+      {
+        micro_mat->runtime_output_step_state(output_macro_time_and_step);
+      }
     }
   }
 }

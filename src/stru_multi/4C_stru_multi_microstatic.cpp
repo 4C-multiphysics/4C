@@ -265,6 +265,19 @@ MultiScale::MicroStatic::MicroStatic(const int microdisnum, const double V0)
 
   FOUR_C_ASSERT_ALWAYS(
       density_ > 0, "Density determined from homogenization procedure must be larger than zero!");
+
+  // ------------------------ Runtime output writer
+  visualization_params_ = Core::IO::visualization_parameters_factory(
+      Global::Problem::instance(microdisnum_)->io_params().sublist("RUNTIME VTK OUTPUT"),
+      *Global::Problem::instance()->output_control_file(), time_);
+
+  micro_vtu_writer_ptr_ = std::make_shared<Core::IO::DiscretizationVisualizationWriterMesh>(
+      discret_, visualization_params_, [](const Core::Elements::Element*) { return true; },
+      "micro_model_" + std::to_string(microdisnum_));
+
+  auto const visualization_manager_ptr_ = micro_vtu_writer_ptr_->visualization_manager_ptr();
+  auto& visualization_data = visualization_manager_ptr_->get_visualization_data();
+  visualization_data.register_field_data<double>("tangent_stiffness_tensor_cmat", 36);
 }  // MultiScale::MicroStatic::MicroStatic
 
 
@@ -718,9 +731,43 @@ void MultiScale::MicroStatic::output(
 }  // MultiScale::MicroStatic::output()
 
 /*----------------------------------------------------------------------*
+ |  write runtime output (public)
+ *----------------------------------------------------------------------*/
+void MultiScale::MicroStatic::runtime_output(
+    const std::pair<double, int>& output_time_and_step, const std::string& section_name) const
+{
+  const auto visualization_manager_ptr_ = micro_vtu_writer_ptr_->visualization_manager_ptr();
+  auto& visualization_data = visualization_manager_ptr_->get_visualization_data();
+
+  std::vector<double>& out_cmat =
+      visualization_data.get_field_data<double>("tangent_stiffness_tensor_cmat");
+  out_cmat.clear();
+
+  for (int i = 0; i < 6; i++)
+  {
+    for (int j = 0; j < 6; j++)
+    {
+      const auto a = macro_cmat_(i, j);
+      out_cmat.push_back(a);
+    }
+  }
+  micro_vtu_writer_ptr_->reset();
+  micro_vtu_writer_ptr_->append_element_material_id();
+
+  //----------------------------------------------------- output results
+  if (iodisp_ && resevrydisp_ && output_time_and_step.second % resevrydisp_ == 0)
+  {
+    std::vector<std::optional<std::string>> context(3, section_name + "_displacement");
+    micro_vtu_writer_ptr_->append_result_data_vector_with_context(
+        *dis_, Core::IO::OutputEntity::dof, context);
+
+    micro_vtu_writer_ptr_->write_to_disk(output_time_and_step.first, output_time_and_step.second);
+  }
+}
+/*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void MultiScale::MicroStatic::write_restart(std::shared_ptr<Core::IO::DiscretizationWriter> output,
-    const double time, const int step, const double dt)
+    const double time, const int step, const double dt) const
 {
   output->write_mesh(step, time);
   output->new_step(step, time);
@@ -1109,6 +1156,8 @@ void MultiScale::MicroStatic::static_homogenization(Core::LinAlg::Matrix<6, 1>* 
       // Piola-Kirchhoff stresses to Green-Lagrange strains.
 
       convert_mat(cmatpf, F_inv, *stress, *cmat);
+
+      macro_cmat_ = Core::LinAlg::Matrix(*cmat);
     }
 
     // after having constructed the stiffness matrix, this need not be
