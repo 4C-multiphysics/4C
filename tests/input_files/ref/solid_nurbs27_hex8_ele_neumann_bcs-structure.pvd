@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!--
+# vtk DataFile Version 3.0
+-->
+<VTKFile type="Collection" version="0.1" ByteOrder="LittleEndian">
+  <Collection>
+    <DataSet timestep="0.00000000000000e+00" group="" part="0" file="solid_nurbs27_hex8_ele_neumann_bcs-vtk-files/structure-00000.pvtu"/>
+    <DataSet timestep="1.00000000000000e+00" group="" part="0" file="solid_nurbs27_hex8_ele_neumann_bcs-vtk-files/structure-00001.pvtu"/>
+  </Collection>
+</VTKFile>

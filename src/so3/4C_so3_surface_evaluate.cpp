@@ -189,11 +189,7 @@ int Discret::Elements::StructuralSurface::evaluate_neumann(Teuchos::ParameterLis
 
   // --------------------------------------------------
   // Now do the nurbs specific stuff
-  bool nurbsele = false;
-
-  auto* nurbsdis = dynamic_cast<Core::FE::Nurbs::NurbsDiscretization*>(&(discretization));
-
-  if (nurbsdis != nullptr) nurbsele = true;
+  bool is_nurbs_element = Core::FE::is_nurbs_celltype(shape());
 
   // factor for surface orientation
   double normalfac = 1.0;
@@ -208,11 +204,12 @@ int Discret::Elements::StructuralSurface::evaluate_neumann(Teuchos::ParameterLis
   // NURBS control point weights for all nodes, ie. CPs
   Core::LinAlg::SerialDenseVector weights(numnode);
 
-  if (nurbsele)
+  if (is_nurbs_element)
   {
     // --------------------------------------------------
     // get knotvector
-    std::shared_ptr<Core::FE::Nurbs::Knotvector> knots = (*nurbsdis).get_knot_vector();
+    auto& nurbsdis = dynamic_cast<Core::FE::Nurbs::NurbsDiscretization&>(discretization);
+    std::shared_ptr<Core::FE::Nurbs::Knotvector> knots = (nurbsdis).get_knot_vector();
     bool zero_size = knots->get_boundary_ele_and_parent_knots(
         mypknots, myknots, normalfac, parent_element()->id(), surfaceid);
     // elements that have zero size in knotspan are skipped
@@ -247,7 +244,7 @@ int Discret::Elements::StructuralSurface::evaluate_neumann(Teuchos::ParameterLis
     e(1) = intpoints.qxg[gp][1];
 
     // get shape functions and derivatives in the plane of the element
-    if (!nurbsele)
+    if (!is_nurbs_element)
     {
       Core::FE::shape_function_2d(funct, e(0), e(1), shape());
       Core::FE::shape_function_2d_deriv1(deriv, e(0), e(1), shape());
