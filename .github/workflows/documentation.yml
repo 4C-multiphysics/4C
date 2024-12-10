@@ -7,6 +7,8 @@ on:
   push:
     branches:
       - 'main'
+  schedule:
+    - cron: '0 22 * * *'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -37,7 +39,7 @@ jobs:
         with:
           name: doxygen
           path: ${{ github.workspace }}/build/doc/doxygen/html/
-          retention-days: 1
+          retention-days: 2
 
   readthedocs:
     runs-on: ubuntu-latest
@@ -62,4 +64,4 @@ jobs:
         with:
           name: readthedocs
           path: ${{ github.workspace }}/build/doc/readthedocs/html/
-          retention-days: 1
+          retention-days: 2

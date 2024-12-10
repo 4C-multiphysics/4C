@@ -93,9 +93,10 @@
         ".docker_base"
       ],
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "DEBUG",
         "FOUR_C_ENABLE_COVERAGE": "ON",
-        "FOUR_C_TEST_TIMEOUT_SCALE": "50"
+        "FOUR_C_TEST_TIMEOUT_SCALE": "4",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_C_COMPILER": "clang"
       }
     }
   ]

@@ -1,0 +1,148 @@
+name: coverage
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+
+jobs:
+  gcc13_coverage_build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:28cfb9d0
+      options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check docker hash
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+      - uses: ./.github/actions/build_4C
+        with:
+          cmake-preset: docker_coverage
+          build-targets: full
+          build-directory: ${{ github.workspace }}/build
+          use-ccache: "false"
+      - uses: ./.github/actions/upload_4C_build
+        with:
+          build-directory: ${{ github.workspace }}/build
+          retention-days: 1
+
+  gcc13_coverage_test:
+    needs: gcc13_coverage_build
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:28cfb9d0
+      options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    strategy:
+      matrix:
+        # we need to make very fine grained chunks to avoid running out of storage
+        test-chunk: ['1,20', '21,40', '41,60', '61,80', '81,100', '101,120', '121,140', '141,160', '161,180',
+          '181,200', '201,220', '221,240', '241,260', '261,280', '281,300', '301,320', '321,340', '341,360',
+          '361,380', '381,400', '401,420', '421,440', '441,460', '461,480', '481,500', '501,520', '521,540',
+          '541,560', '561,580', '581,600', '601,620', '621,640', '641,660', '661,680', '681,700', '701,720',
+          '721,740', '741,760', '761,780', '781,800', '801,820', '821,840', '841,860', '861,880', '881,900',
+          '901,920', '921,940', '941,960', '961,980', '981,1000', '1001,1020', '1021,1040', '1041,1060',
+          '1061,1080', '1081,1100', '1101,1120', '1121,1140', '1141,1160', '1161,1180', '1181,1200', '1201,1220',
+          '1221,1240', '1241,1260', '1261,1280', '1281,1300', '1301,1320', '1321,1340', '1341,1360', '1361,1380',
+          '1381,1400', '1401,1420', '1421,1440', '1441,1460', '1461,1480', '1481,1500', '1501,1520', '1521,1540',
+          '1541,1560', '1561,1580', '1581,1600', '1601,1620', '1621,1640', '1641,1660', '1661,1680', '1681,1700',
+          '1701,1720', '1721,1740', '1741,1760', '1761,1780', '1781,1800', '1801,1820', '1821,1840', '1841,1860',
+          '1861,1880', '1881,1900', '1901,1920', '1921,1940', '1941,1960', '1961,1980', '1981,2000', '2001,2020',
+          '2021,2040', '2041,2060', '2061,2080', '2081,2100', '2101,2120', '2121,2140', '2141,2160', '2161,2180',
+          '2181,2200', '2201,2220', '2221,2240', '2241,2260', '2261,2280', '2281,2300', '2301,2320', '2321,2340',
+          '2341,2360', '2361,2380', '2381,2400', '2401,2420', '2421,2440', '2441,2460', '2461,2480', '2481,2500',
+          '2501,2520', '2521,2540', '2541,2560', '2561,2580', '2581,2600', '2601,2620', '2621,2640', '2641,2660',
+          '2661,2680', '2681,2700', '2701,2720', '2721,2740', '2741,2760', '2761,2780', '2781,2800', '2801,2820',
+          '2821,2840', '2841,2860', '2861,2880', '2881,2900', '2901,2920', '2921,']
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get upgrade -y
+          apt-get install -y llvm
+      - uses: actions/checkout@v4
+      - name: Check docker hash
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+      - uses: ./.github/actions/download_4C_build
+        with:
+          build-job: gcc13_coverage_build
+      - name: Setup developer environment for testing
+        run: |
+          cd $GITHUB_WORKSPACE
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+      - name: Run all tests and collect raw coverage data
+        run: | # Note: Collect raw coverage data in a file distict for each process
+          cd $GITHUB_WORKSPACE/build
+          export LLVM_PROFILE_FILE="$GITHUB_WORKSPACE/4C-coverage-%m-%p.profraw"
+          time ctest -I $TEST_CHUNK -j `nproc` --output-on-failure
+        env:
+          TEST_CHUNK: ${{ matrix.test-chunk }}
+      - name: Collect coverage data
+        run: |
+          cd $GITHUB_WORKSPACE/build
+          llvm-profdata merge -sparse $GITHUB_WORKSPACE/*.profraw -o $GITHUB_WORKSPACE/4C-coverage-data-$TEST_CHUNK.profdata
+        env:
+          TEST_CHUNK: ${{ matrix.test-chunk }}
+      - name: Upload merged coverage data
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.job }}-4C-coverage-data-${{ matrix.test-chunk }}.profdata
+          path: |
+            ${{ github.workspace }}/4C-coverage-data-${{ matrix.test-chunk }}.profdata
+          retention-days: 1
+
+  report:
+    needs: [gcc13_coverage_test, gcc13_coverage_build]
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:28cfb9d0
+      options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    if: success() || failure()
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check docker hash
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+      - name: Setup developer environment for testing
+        run: |
+          cd $GITHUB_WORKSPACE
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+      - uses: ./.github/actions/download_4C_build
+        with:
+          build-job: gcc13_coverage_build
+      - name: Setup developer environment for testing
+        run: |
+          cd $GITHUB_WORKSPACE
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+          ./utilities/set_up_dev_env.sh
+      - name: Download reports
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ github.workspace }}
+          merge-multiple: true
+          pattern: gcc13_coverage_test-4C-coverage-data-*.profdata
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y llvm
+      - name: Merge coverage data
+        run: |
+          cd $GITHUB_WORKSPACE
+          llvm-profdata merge -sparse *.profdata -o 4C-coverage-data.profdata
+      - name: Print of coverage report summary
+        run: 'cd $GITHUB_WORKSPACE\nllvm-cov report --object ./build/lib4C.so --color --format=text --instr-profile=4C-coverage-data.profdata
+          --show-branch-summary --show-instantiation-summary --show-region-summary --ignore-filename-regex=".*/build/.*"'
+      - name: Generate coverage report
+        run: 'cd $GITHUB_WORKSPACE\nllvm-cov show --object ./build/lib4C.so --use-color --output-dir=coverage_report
+          --format=html --instr-profile=4C-coverage-data.profdata --show-branches=percent -show-directory-coverage
+          -show-line-counts-or-regions -Xdemangler c++filt --project-title=4C --show-expansions --show-instantiations
+          --ignore-filename-regex=".*/build/.*"'
+      - name: Upload coverage html report
+        uses: actions/upload-artifact@v4
+        with:
+          name: 4C_coverage_report
+          path: ${{ github.workspace }}/coverage_report
+          retention-days: 2

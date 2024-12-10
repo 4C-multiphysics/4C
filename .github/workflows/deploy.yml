@@ -2,7 +2,7 @@ name: deploy
 
 on:
   workflow_run:
-    workflows: [documentation]
+    workflows: [documentation, coverage]
     types: [completed]
     branches: [main]
 
@@ -26,11 +26,19 @@ jobs:
           workflow: documentation.yml
           name: doxygen
           path: ${{ github.workspace }}/doxygen
+          branch: ${{ github.event.repository.default_branch }}
       - uses: dawidd6/action-download-artifact@v6
         with:
           workflow: documentation.yml
           name: readthedocs
           path: ${{ github.workspace }}/readthedocs
+          branch: ${{ github.event.repository.default_branch }}
+      - uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: coverage.yml
+          name: 4C_coverage_report
+          path: ${{ github.workspace }}/coverage_report
+          branch: ${{ github.event.repository.default_branch }}
       - uses: actions/upload-pages-artifact@v3
         id: deployment
         with:
