@@ -1,0 +1,17 @@
+<ParameterList name="Ifpack">
+  <!-- General settings for Ifpack preconditioners -->
+  <Parameter name="Prec Type" type="string" value="ILU"/>
+  <Parameter name="Overlap" type="int" value="0"/>
+  <!-- Level-of-fill setting for Ifpack ILU preconditioner -->
+  <ParameterList name="Ifpack Settings">
+    <Parameter name="fact: level-of-fill" type="int" value="0"/>
+  </ParameterList>
+  <!-- Combine mode for Ifpack Additive Schwarz -->
+  <Parameter name="Combine Mode" type="string" value="Add">
+    <AllowedValues>
+      <Value>Add</Value>
+      <Value>Insert</Value>
+      <Value>Zero</Value>
+    </AllowedValues>
+  </Parameter>
+</ParameterList>
