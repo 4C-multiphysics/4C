@@ -60,6 +60,11 @@ namespace Inpar::SOLVER
 
     // Ifpack options
     {
+      Core::Utils::string_parameter(
+          "IFPACK_XML_FILE", "none", "xml file defining any IFPACK options", &list);
+    }
+
+    /*{
       Core::Utils::int_parameter("IFPACKOVERLAP", 0,
           "The amount of overlap used for the ifpack \"ilu\" preconditioner.", &list);
 
@@ -69,7 +74,7 @@ namespace Inpar::SOLVER
       std::vector<std::string> ifpack_combine_valid_input = {"Add", "Insert", "Zero"};
       Core::Utils::string_parameter("IFPACKCOMBINE", "Add",
           "Combine mode for Ifpack Additive Schwarz", &list, ifpack_combine_valid_input);
-    }
+    }*/
 
     // Iterative solver options
     {

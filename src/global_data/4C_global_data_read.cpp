@@ -1928,7 +1928,7 @@ void Global::read_parameter(Global::Problem& problem, Core::IO::InputFile& input
     // adapt path of XML file if necessary
     Teuchos::ParameterList& sublist = list->sublist(ss.str());
     std::vector<std::string> listOfFileNameParameters = {
-        "AMGNXN_XML_FILE", "MUELU_XML_FILE", "TEKO_XML_FILE", "SOLVER_XML_FILE"};
+        "AMGNXN_XML_FILE", "MUELU_XML_FILE", "TEKO_XML_FILE", "SOLVER_XML_FILE", "IFPACK_XML_FILE"};
 
     for (auto& filenameParameter : listOfFileNameParameters)
     {
