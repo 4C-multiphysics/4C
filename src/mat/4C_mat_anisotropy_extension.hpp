@@ -18,6 +18,7 @@
 #include "4C_mat_anisotropy_fiber_provider.hpp"
 #include "4C_utils_exceptions.hpp"
 
+#include <cstdint>
 #include <functional>
 #include <utility>
 

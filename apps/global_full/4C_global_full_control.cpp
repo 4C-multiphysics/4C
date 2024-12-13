@@ -12,6 +12,7 @@
 #include "4C_global_full_inp_control.hpp"
 #include "4C_io_pstream.hpp"
 
+#include <chrono>
 
 namespace
 {

@@ -265,55 +265,6 @@ namespace
     EXPECT_TRUE(line_definition.read(input));
   }
 
-  TEST(LineDefinitionTest, PathEmpty)
-  {
-    std::istringstream input("PATH");
-    auto line_definition = Input::LineDefinition::Builder().add_named_path("PATH").build();
-    auto container = line_definition.read(input);
-    EXPECT_FALSE(container.has_value());
-  }
-
-  TEST(LineDefinitionTest, PathNoContext)
-  {
-    std::istringstream input("PATH file.txt");
-    auto line_definition = Input::LineDefinition::Builder().add_named_path("PATH").build();
-    auto container = line_definition.read(input);
-    ASSERT_TRUE(container.has_value());
-    EXPECT_EQ(std::filesystem::path("file.txt"), container->get<std::filesystem::path>("PATH"));
-  }
-
-  TEST(LineDefinitionTest, PathAbsolute)
-  {
-    std::istringstream input("PATH /home/my/file.txt");
-    auto line_definition = Input::LineDefinition::Builder().add_named_path("PATH").build();
-    auto container = line_definition.read(
-        input, Input::LineDefinition::ReadContext{.input_file = {"/data/dummy/input.txt"}});
-    ASSERT_TRUE(container.has_value());
-    EXPECT_EQ(
-        std::filesystem::path("/home/my/file.txt"), container->get<std::filesystem::path>("PATH"));
-  }
-
-  TEST(LineDefinitionTest, PathRelativeWithContext)
-  {
-    std::istringstream input("PATH my/file.txt");
-    auto line_definition = Input::LineDefinition::Builder().add_named_path("PATH").build();
-    auto container = line_definition.read(
-        input, Input::LineDefinition::ReadContext{.input_file = {"/data/dummy/input.txt"}});
-    ASSERT_TRUE(container.has_value());
-    EXPECT_EQ(std::filesystem::path("/data/dummy/my/file.txt"),
-        container->get<std::filesystem::path>("PATH"));
-  }
-
-  TEST(LineDefinitionTest, PathRelativeWithSingleFileNameContext)
-  {
-    std::istringstream input("PATH my/file.txt");
-    auto line_definition = Input::LineDefinition::Builder().add_named_path("PATH").build();
-    auto container = line_definition.read(
-        input, Input::LineDefinition::ReadContext{.input_file = {"input.txt"}});
-    ASSERT_TRUE(container.has_value());
-    EXPECT_EQ(std::filesystem::path("my/file.txt"), container->get<std::filesystem::path>("PATH"));
-  }
-
   TEST(LineDefinitionPrinting, Empty)
   {
     std::ostringstream out;

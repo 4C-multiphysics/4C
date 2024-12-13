@@ -172,11 +172,11 @@ namespace Input::Internal
 
       virtual void print(std::ostream& stream) const = 0;
 
-      virtual bool read_required(Core::IO::InputParameterContainer& container, std::istream& stream,
-          const Input::LineDefinition::ReadContext& context) = 0;
+      virtual bool read_required(
+          Core::IO::InputParameterContainer& container, std::istream& stream) = 0;
 
       virtual bool read_optional(Core::IO::InputParameterContainer& container, std::string& name,
-          std::istream& stream, const Input::LineDefinition::ReadContext& context) = 0;
+          std::istream& stream) = 0;
 
       [[nodiscard]] virtual bool is_named(const std::string& name) const = 0;
 
@@ -204,16 +204,16 @@ namespace Input::Internal
 
       void print(std::ostream& stream) const override { component_.print(stream); }
 
-      bool read_required(Core::IO::InputParameterContainer& container, std::istream& stream,
-          const Input::LineDefinition::ReadContext& context) override
+      bool read_required(
+          Core::IO::InputParameterContainer& container, std::istream& stream) override
       {
-        return component_.read_required(container, stream, context);
+        return component_.read_required(container, stream);
       }
 
       bool read_optional(Core::IO::InputParameterContainer& container, std::string& name,
-          std::istream& stream, const Input::LineDefinition::ReadContext& context) override
+          std::istream& stream) override
       {
-        return component_.read_optional(container, name, stream, context);
+        return component_.read_optional(container, name, stream);
       }
 
       [[nodiscard]] bool is_named(const std::string& name) const override
@@ -265,18 +265,17 @@ namespace Input::Internal
 
     /// Try to read component from input line
     /// This function is called for required components.
-    bool read_required(Core::IO::InputParameterContainer& container, std::istream& stream,
-        const Input::LineDefinition::ReadContext& context)
+    bool read_required(Core::IO::InputParameterContainer& container, std::istream& stream)
     {
-      return pimpl_->read_required(container, stream, context);
+      return pimpl_->read_required(container, stream);
     }
 
     /// Try to read component from input line
     /// This function is called for optional components.
-    bool read_optional(Core::IO::InputParameterContainer& container, std::string& name,
-        std::istream& stream, const Input::LineDefinition::ReadContext& context)
+    bool read_optional(
+        Core::IO::InputParameterContainer& container, std::string& name, std::istream& stream)
     {
-      return pimpl_->read_optional(container, name, stream, context);
+      return pimpl_->read_optional(container, name, stream);
     }
 
     /// tell if the component has the specified name tag
@@ -321,8 +320,8 @@ namespace Input::Internal
         PrintComponent{stream, behavior_, name_}(default_value_);
     }
 
-    bool read_optional(Core::IO::InputParameterContainer& container, std::string& name,
-        std::istream& stream, const Input::LineDefinition::ReadContext& context)
+    bool read_optional(
+        Core::IO::InputParameterContainer& container, std::string& name, std::istream& stream)
     {
       if (name != name_) return false;
 
@@ -337,8 +336,7 @@ namespace Input::Internal
       return read_succeeded;
     }
 
-    bool read_required(Core::IO::InputParameterContainer& container, std::istream& stream,
-        const Input::LineDefinition::ReadContext& context)
+    bool read_required(Core::IO::InputParameterContainer& container, std::istream& stream)
     {
       if (behavior_ == Behavior::read_print_name)
       {
@@ -346,7 +344,7 @@ namespace Input::Internal
         stream >> name;
         if (name != name_) return false;
       }
-      return read_optional(container, name_, stream, context);
+      return read_optional(container, name_, stream);
     }
 
     [[nodiscard]] bool is_named(const std::string& name) const { return name == name_; }
@@ -383,8 +381,8 @@ namespace Input::Internal
 
     void print(std::ostream& stream) const { stream << name_; }
 
-    bool read_optional(Core::IO::InputParameterContainer& container, std::string& name,
-        std::istream& stream, const Input::LineDefinition::ReadContext& context)
+    bool read_optional(
+        Core::IO::InputParameterContainer& container, std::string& name, std::istream& stream)
     {
       if (name != name_) return false;
 
@@ -394,13 +392,12 @@ namespace Input::Internal
       return true;
     }
 
-    bool read_required(Core::IO::InputParameterContainer& container, std::istream& stream,
-        const Input::LineDefinition::ReadContext& context)
+    bool read_required(Core::IO::InputParameterContainer& container, std::istream& stream)
     {
       std::string name;
       stream >> name;
       if (name != name_) return false;
-      return read_optional(container, name_, stream, context);
+      return read_optional(container, name_, stream);
     }
 
     [[nodiscard]] bool is_named(const std::string& name) const { return name == name_; }
@@ -416,56 +413,6 @@ namespace Input::Internal
     std::string name_;
   };
 
-
-  /**
-   * Special component that reads a file path.
-   */
-  class PathComponent
-  {
-   public:
-    PathComponent(std::string name) : name_(std::move(name)) {}
-
-    void print(std::ostream& stream) const { stream << name_ << " " << path_; }
-
-    bool read_optional(Core::IO::InputParameterContainer& container, std::string& name,
-        std::istream& stream, const Input::LineDefinition::ReadContext& context)
-    {
-      if (name != name_) return false;
-
-      std::string value;
-      const auto read_ok = ReadValue{stream, name}(value);
-      if (read_ok)
-      {
-        std::filesystem::path read_path{value};
-        if (read_path.is_absolute())
-          container.add(name_, read_path);
-        else
-          container.add(name_, context.input_file.parent_path() / read_path);
-      }
-
-      return read_ok;
-    }
-
-    bool read_required(Core::IO::InputParameterContainer& container, std::istream& stream,
-        const Input::LineDefinition::ReadContext& context)
-    {
-      std::string name;
-      stream >> name;
-      if (name != name_) return false;
-      return read_optional(container, name_, stream, context);
-    }
-
-    [[nodiscard]] bool is_named(const std::string& name) const { return name == name_; }
-
-    void store_default(Core::IO::InputParameterContainer& container) const
-    {
-      // Don't store any default. It is an error to not encounter a path.
-    }
-
-   private:
-    std::string name_;
-    std::filesystem::path path_;
-  };
 }  // namespace Input::Internal
 
 
@@ -647,14 +594,6 @@ namespace Input
 
 
 
-  LineDefinition::Builder& LineDefinition::Builder::add_named_path(std::string name)
-  {
-    pimpl_->components_.emplace_back(Internal::PathComponent(name));
-    return *this;
-  }
-
-
-
   LineDefinition::Builder& LineDefinition::Builder::add_optional_tag(const std::string& name)
   {
     if (pimpl_->optionaltail_.find(name) != pimpl_->optionaltail_.end())
@@ -817,15 +756,14 @@ namespace Input
 
 
 
-  std::optional<Core::IO::InputParameterContainer> LineDefinition::read(
-      std::istream& stream, const ReadContext& context)
+  std::optional<Core::IO::InputParameterContainer> LineDefinition::read(std::istream& stream)
   {
     pimpl_->container_ = Core::IO::InputParameterContainer();
 
     pimpl_->readtailcomponents_.clear();
     for (auto& component : pimpl_->components_)
     {
-      if (not component.read_required(pimpl_->container_, stream, context))
+      if (not component.read_required(pimpl_->container_, stream))
       {
         return std::nullopt;
       }
@@ -844,8 +782,7 @@ namespace Input
       }
       auto i = pimpl_->optionaltail_.find(name);
       if (i == pimpl_->optionaltail_.end()) return std::nullopt;
-      if (not i->second.read_optional(pimpl_->container_, name, stream, context))
-        return std::nullopt;
+      if (not i->second.read_optional(pimpl_->container_, name, stream)) return std::nullopt;
       pimpl_->readtailcomponents_.insert(name);
     }
 

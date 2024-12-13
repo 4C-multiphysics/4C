@@ -41,13 +41,13 @@ namespace
     }
     else if (function_lin_def.container().get_or<bool>("CUBIC_SPLINE_FROM_CSV", false))
     {
-      const auto csv_file = function_lin_def.container().get<std::filesystem::path>("CSV");
+      const auto csv_file = function_lin_def.container().get<std::string>("CSV");
 
       // safety check
       if (csv_file.empty())
         FOUR_C_THROW("You forgot to specify the *.csv file for cubic spline interpolation!");
 
-      return std::make_shared<Core::Utils::CubicSplineFromCSV>(csv_file.string());
+      return std::make_shared<Core::Utils::CubicSplineFromCSV>(csv_file);
     }
     else
       return {nullptr};

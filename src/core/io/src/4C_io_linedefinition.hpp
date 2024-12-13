@@ -12,7 +12,6 @@
 
 #include "4C_io_input_parameter_container.hpp"
 
-#include <filesystem>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -177,13 +176,6 @@ namespace Input
        */
       Builder& add_named_double_vector(std::string name, LengthDefinition length_definition);
 
-      /**
-       * Add a name followed by a file path. If the path is absolute, the path is not changed. If
-       * the path is relative, it is taken relative to the path passed in the context to the read()
-       * function.
-       */
-      Builder& add_named_path(std::string name);
-
       /// Add a name followed by a variable string
       Builder& add_optional_named_string(const std::string& name);
 
@@ -242,22 +234,9 @@ namespace Input
     void print(std::ostream& stream) const;
 
     /**
-     * Context information that may be passed to the read function of a LineDefinition.
+     * If reading succeeds, returns the data. Otherwise, returns an empty std::optional.
      */
-    struct ReadContext
-    {
-      /**
-       * The path of the input file that an input line belongs to.
-       */
-      std::filesystem::path input_file;
-    };
-
-    /**
-     * If reading succeeds, returns the data. Otherwise, returns an empty std::optional. The read
-     * may use additional @p context containing information such as the name of the input file.
-     */
-    std::optional<Core::IO::InputParameterContainer> read(
-        std::istream& stream, const ReadContext& context = {});
+    std::optional<Core::IO::InputParameterContainer> read(std::istream& stream);
 
     [[nodiscard]] const Core::IO::InputParameterContainer& container() const;
 
