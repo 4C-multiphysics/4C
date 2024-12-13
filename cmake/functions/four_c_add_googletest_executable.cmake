@@ -136,7 +136,8 @@ function(four_c_add_google_test_executable TESTNAME)
       "Copying support file ${support_file} to ${FOUR_C_TEST_SUPPORT_FILE_DIR}/${support_file}"
       )
 
-    configure_file(${support_file} ${FOUR_C_TEST_SUPPORT_FILE_DIR}/${support_file})
+    # Only substitute CMake variables with @ syntax. The $ style variables we use internally are not substituted.
+    configure_file(${support_file} ${FOUR_C_TEST_SUPPORT_FILE_DIR}/${support_file} @ONLY)
   endforeach()
   target_compile_definitions(
     ${TESTNAME} PRIVATE -DFOUR_C_TEST_SUPPORT_FILE_DIR="${FOUR_C_TEST_SUPPORT_FILE_DIR}"

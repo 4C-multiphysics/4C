@@ -1,3 +1,5 @@
 -------INCLUDED SECTION 3
 line
 line
+-------INCLUDES
+${FILE_DIR}/../folder4/include4.dat

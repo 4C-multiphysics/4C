@@ -1,0 +1,5 @@
+--VARIABLE SUBSTITUTION
+${FILE_PATH}
+// Check that multiple variable can be substituted. The result of the substitution does not make sense here.
+${FILE_DIR} + ${FILE_DIR}
+${FILE_DIR} + ${FILE_PATH}

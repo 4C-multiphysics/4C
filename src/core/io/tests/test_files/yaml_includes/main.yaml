@@ -1,3 +1,5 @@
 INCLUDES: included.dat
 MAIN SECTION:
   - something
+  # a variable to substitute
+  - ${FILE_DIR}

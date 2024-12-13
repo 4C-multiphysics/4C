@@ -162,6 +162,9 @@ namespace Core::IO
     std::filesystem::path get_include_path(
         const std::string& include_line, const std::filesystem::path& current_file)
     {
+      FOUR_C_ASSERT(
+          current_file.is_absolute(), "Implementation error: current file path is not absolute.");
+
       // Interpret the path as relative to the currently read file, if is not absolute
       std::filesystem::path included_file(include_line);
       if (!included_file.is_absolute())
@@ -174,9 +177,33 @@ namespace Core::IO
       return included_file;
     }
 
+
+    void substitute_variables(
+        const std::vector<std::pair<std::string, std::string>>& variables, std::string& line)
+    {
+      // early return if there is no variable in this line (the default)
+      if (line.find("${") == std::string::npos) return;
+
+      for (const auto& [key, value] : variables)
+      {
+        const std::string pattern = "${" + key + "}";
+        std::size_t pos = line.find(pattern);
+        while (pos != std::string::npos)
+        {
+          line.replace(pos, pattern.size(), value);
+          // Check if this variable appears again in the line
+          pos = line.find(pattern, pos);
+        }
+      }
+
+      FOUR_C_ASSERT_ALWAYS(line.find("${") == std::string::npos,
+          "Line '%s' contains unsubstituted variables.", line.c_str());
+    }
+
     std::vector<std::filesystem::path> read_dat_content(const std::filesystem::path& file_path,
         std::list<std::string>& content,
-        std::map<std::string, Internal::SectionPosition>& exclude_information)
+        std::map<std::string, Internal::SectionPosition>& exclude_information,
+        const std::vector<std::pair<std::string, std::string>>& variables)
     {
       std::vector<std::string> exclude;
 
@@ -284,6 +311,8 @@ namespace Core::IO
           line = Core::Utils::strip_comment(line);
         }
 
+        substitute_variables(variables, line);
+
         // line is now empty
         if (line.size() == 0) continue;
 
@@ -322,8 +351,9 @@ namespace Core::IO
       return included_files;
     }
 
-    std::vector<std::filesystem::path> read_yaml_content(
-        const std::filesystem::path& file_path, std::list<std::string>& content)
+    std::vector<std::filesystem::path> read_yaml_content(const std::filesystem::path& file_path,
+        std::list<std::string>& content,
+        const std::vector<std::pair<std::string, std::string>>& variables)
     {
       std::vector<std::filesystem::path> included_files;
 
@@ -345,15 +375,20 @@ namespace Core::IO
           if (entries.IsScalar())
             included_files.emplace_back(get_include_path(entries.as<std::string>(), file_path));
           else if (entries.IsSequence())
+          {
             for (const auto& entry : entries)
             {
               FOUR_C_ASSERT_ALWAYS(
                   entry.IsScalar(), "Only scalar entries are supported in the INCLUDES section.");
-              const auto line = entry.as<std::string>();
+              auto line = entry.as<std::string>();
+              substitute_variables(variables, line);
               included_files.emplace_back(get_include_path(line, file_path));
             }
+          }
           else
+          {
             FOUR_C_THROW("INCLUDES section must contain a single file or a sequence.");
+          }
 
           continue;
         }
@@ -368,7 +403,8 @@ namespace Core::IO
                 "While reading section '%s': "
                 "only scalar entries are supported in sequences.",
                 section_name.c_str());
-            const auto line = entry.as<std::string>();
+            auto line = entry.as<std::string>();
+            substitute_variables(variables, line);
             content.emplace_back(line);
           }
         };
@@ -381,8 +417,8 @@ namespace Core::IO
                 "While reading section '%s': "
                 "only scalar key-value pairs are supported in maps.",
                 section_name.c_str());
-            const auto line =
-                entry.first.as<std::string>() + " = " + entry.second.as<std::string>();
+            auto line = entry.first.as<std::string>() + " = " + entry.second.as<std::string>();
+            substitute_variables(variables, line);
             content.emplace_back(line);
           }
         };
@@ -521,7 +557,7 @@ namespace Core::IO
   /*----------------------------------------------------------------------*/
   /*----------------------------------------------------------------------*/
   InputFile::InputFile(std::string filename, MPI_Comm comm)
-      : top_level_file_(std::move(filename)), comm_(std::move(comm))
+      : top_level_file_(std::filesystem::absolute(std::move(filename))), comm_(std::move(comm))
   {
     read_generic();
   }
@@ -1101,6 +1137,18 @@ namespace Core::IO
       // continuously re-evaluate where the end of the list is.
       for (auto file_it = included_files.begin(); file_it != included_files.end(); ++file_it)
       {
+        // In the future, we might want to support variables that are specified externally.
+        // For now, we only support two input file related cases.
+        std::vector<std::pair<std::string, std::string>> variables_for_file;
+        variables_for_file.emplace_back("FILE_PATH", file_it->string());
+        variables_for_file.emplace_back("FILE_DIR", file_it->parent_path().string());
+
+        std::cout << "Current variables: " << std::endl;
+        for (const auto& [key, value] : variables_for_file)
+        {
+          std::cout << key << " = " << value << std::endl;
+        }
+
         std::vector<std::filesystem::path> new_include_files = std::invoke(
             [&]
             {
@@ -1109,11 +1157,11 @@ namespace Core::IO
               if (file_extension == ".yaml" || file_extension == ".yml" ||
                   file_extension == ".json")
               {
-                return read_yaml_content(*file_it, content);
+                return read_yaml_content(*file_it, content, variables_for_file);
               }
               else
               {
-                return read_dat_content(*file_it, content, excludepositions_);
+                return read_dat_content(*file_it, content, excludepositions_, variables_for_file);
               }
             });
 

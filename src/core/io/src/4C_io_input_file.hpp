@@ -147,6 +147,13 @@ namespace Core::IO
    * and each section name must be unique. An exception is the special section named "INCLUDES"
    * which can contain a list of other files that should be read in addition to the current file.
    *
+   * The input file supports a few special variables which are substituted during reading of the
+   * file. Variables need to be surrounded by braces with a dollar sign prepended, e.g.,
+   * `${FILE_PATH}`. The following variables are supported:
+   *
+   *   - FILE_PATH: The absolute path to the input file containing this variable.
+   *   - FILE_DIR: The absolute path to the directory containing the file with this variable.
+   *
    * Three file formats are supported: the custom .dat file format and the standard .yaml (or .yml)
    * and .json formats. The format of a file is detected based on its ending. If the ending is not
    * one of the above mentioned, the file is assumed to be in the .dat format.
