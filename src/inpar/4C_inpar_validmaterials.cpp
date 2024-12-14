@@ -2431,6 +2431,10 @@ std::shared_ptr<std::vector<std::shared_ptr<Mat::MaterialDefinition>>> Input::va
         "standard substepping (False)?");
     add_named_int(m, "MAX_HALVE_NUM_SUBSTEP",
         "maximum number of times the global time step can be halved in the substepping procedure");
+    add_named_bool(m, "BENCHMARK_TIMINT",
+        "boolean: benchmark time integration using a csv runtime output writer (True) or "
+        "not (False)?");
+
 
     Mat::append_material_definition(matlist, m);
   }

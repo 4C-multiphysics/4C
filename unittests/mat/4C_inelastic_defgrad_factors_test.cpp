@@ -287,6 +287,7 @@ namespace
           "ANISOTROPY", std::string("transvisotrop"));
       inelastic_defgrad_transv_isotrop_elast_viscoplast_data.add("LOG_SUBSTEP", true);
       inelastic_defgrad_transv_isotrop_elast_viscoplast_data.add("MAX_HALVE_NUM_SUBSTEP", 10);
+      inelastic_defgrad_transv_isotrop_elast_viscoplast_data.add("BENCHMARK_TIMINT", false);
 
       // get pointer to parameter class
       params_transv_isotrop_elast_viscoplast_ =
@@ -305,6 +306,7 @@ namespace
       inelastic_defgrad_isotrop_elast_viscoplast_data.add("ANISOTROPY", std::string("isotrop"));
       inelastic_defgrad_isotrop_elast_viscoplast_data.add("LOG_SUBSTEP", true);
       inelastic_defgrad_isotrop_elast_viscoplast_data.add("MAX_HALVE_NUM_SUBSTEP", 10);
+      inelastic_defgrad_isotrop_elast_viscoplast_data.add("BENCHMARK_TIMINT", false);
       params_isotrop_elast_viscoplast_ =
           std::dynamic_pointer_cast<Mat::PAR::InelasticDefgradTransvIsotropElastViscoplast>(
               std::shared_ptr(Mat::make_parameter(1,
