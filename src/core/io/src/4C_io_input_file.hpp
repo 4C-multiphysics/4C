@@ -13,7 +13,6 @@
 #include "4C_comm_pack_buffer.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
-#include "4C_utils_std_cxx20_ranges.hpp"
 #include "4C_utils_string.hpp"
 
 #include <algorithm>
@@ -23,6 +22,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <ranges>
 #include <set>
 #include <string>
 #include <variant>
@@ -109,10 +109,14 @@ namespace Core::IO
       using reference = StreamLineIterator::reference;
       using difference_type = StreamLineIterator::difference_type;
 
+      DatFileLineIterator() = default;
+
       //! Construct an iterator that reads from the given stream.
       explicit DatFileLineIterator(std::variant<StreamLineIterator, PreReadIterator> iterator);
 
       DatFileLineIterator& operator++();
+
+      DatFileLineIterator operator++(int);
 
       reference operator*() const;
 
@@ -124,6 +128,9 @@ namespace Core::IO
       //! The two ways to iterate over dat file content are handled by the iterator variants.
       std::variant<StreamLineIterator, PreReadIterator> iterator_;
     };
+
+    static_assert(std::input_iterator<DatFileLineIterator>);
+    static_assert(std::sentinel_for<DatFileLineIterator, DatFileLineIterator>);
 
     //! Helper to store section positions in dat files.
     struct SectionPosition
@@ -226,7 +233,7 @@ namespace Core::IO
      *
      * @return A range of string_views to the lines in this section.
      */
-    auto lines_in_section(const std::string& section_name);
+    std::ranges::view auto lines_in_section(const std::string& section_name);
 
     /**
      * Returns whether a section with the given name exists in the input file and contains any
@@ -264,7 +271,7 @@ namespace Core::IO
 
     //! Internal helper to get the range of lines in a section.
     //! Does not record the section as used.
-    [[nodiscard]] auto line_range(const std::string& section_name) const;
+    [[nodiscard]] std::ranges::view auto line_range(const std::string& section_name) const;
 
     /// The communicator associated with this object.
     MPI_Comm comm_;
@@ -335,7 +342,7 @@ namespace Core::IO
 
   /// -- template and inline functions --- //
 
-  inline auto InputFile::line_range(const std::string& section_name) const
+  inline std::ranges::view auto InputFile::line_range(const std::string& section_name) const
   {
     auto filter = [](std::string_view line)
     { return !Core::Utils::strip_comment(std::string(line)).empty(); };
@@ -347,8 +354,8 @@ namespace Core::IO
       auto file = std::make_shared<std::ifstream>(path);
       file->seekg(start_pos);
 
-      return std_20::ranges::views::filter(
-          std_20::ranges::views::Internal::IteratorRange(
+      return std::views::filter(
+          std::ranges::subrange<Internal::DatFileLineIterator>(
               Internal::DatFileLineIterator(Internal::StreamLineIterator(std::move(file), length)),
               Internal::DatFileLineIterator(Internal::StreamLineIterator())),
           filter);
@@ -362,14 +369,13 @@ namespace Core::IO
           return entry_it->second;
         });
 
-    return std_20::ranges::views::filter(
-        std_20::ranges::views::Internal::IteratorRange(
-            Internal::DatFileLineIterator(lines_.begin() + start_line),
+    return std::views::filter(
+        std::ranges::subrange(Internal::DatFileLineIterator(lines_.begin() + start_line),
             Internal::DatFileLineIterator(lines_.begin() + end_line)),
         filter);
   }
 
-  inline auto InputFile::lines_in_section(const std::string& section_name)
+  inline std::ranges::view auto InputFile::lines_in_section(const std::string& section_name)
   {
     record_section_used(section_name);
     return line_range(section_name);

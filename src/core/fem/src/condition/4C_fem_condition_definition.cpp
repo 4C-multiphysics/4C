@@ -53,11 +53,8 @@ void Core::Conditions::ConditionDefinition::read(Core::IO::InputFile& input,
     std::multimap<int, std::shared_ptr<Core::Conditions::Condition>>& cmap)
 {
   // read the range into a vector
-  std::vector<std::string> section_vec;
-  {
-    const auto& section = input.lines_in_section(sectionname_);
-    for (const auto& line : section) section_vec.push_back(std::string{line});
-  }
+  std::vector<std::string_view> section_vec;
+  std::ranges::copy(input.lines_in_section(section_name()), std::back_inserter(section_vec));
 
   if (section_vec.empty()) return;
 

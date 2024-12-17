@@ -16,11 +16,11 @@
 #include "4C_utils_function_manager.hpp"
 #include "4C_utils_random.hpp"
 #include "4C_utils_result_test.hpp"
-#include "4C_utils_std_cxx20_ranges.hpp"
 
 #include <Teuchos_ParameterListAcceptorDefaultBase.hpp>
 
 #include <memory>
+#include <ranges>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
@@ -456,9 +456,9 @@ namespace Global
     /// get access to a particular discretization
     std::shared_ptr<Core::FE::Discretization> get_dis(const std::string& name) const;
 
-    auto discretization_range() { return std_20::ranges::views::all(discretizationmap_); }
+    auto discretization_range() { return std::views::all(discretizationmap_); }
 
-    auto discretization_range() const { return std_20::ranges::views::all(discretizationmap_); }
+    auto discretization_range() const { return std::views::all(discretizationmap_); }
 
     const std::map<std::string, std::shared_ptr<Core::FE::Discretization>>& discretization_map()
         const

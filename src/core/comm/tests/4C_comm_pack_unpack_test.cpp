@@ -11,31 +11,80 @@
 
 using namespace FourC;
 
-TEST(PackUnpackTest, Strings)
+namespace
 {
-  std::string data = "Hello, World!";
-  Core::Communication::PackBuffer pack_buffer;
-  Core::Communication::add_to_pack(pack_buffer, data);
+  void fill_data(int& data) { data = 42; }
 
-  std::string unpacked_data;
-  Core::Communication::UnpackBuffer unpack_buffer(pack_buffer());
-  Core::Communication::extract_from_pack(unpack_buffer, unpacked_data);
+  void fill_data(double& data) { data = 3.14; }
 
-  EXPECT_EQ(data, unpacked_data);
-}
+  void fill_data(bool& data) { data = true; }
+
+  void fill_data(char& data) { data = 'a'; }
+
+  void fill_data(std::string& data) { data = "Hello, World!"; }
+
+  template <typename T>
+  void fill_data(std::vector<T>& data)
+  {
+    data.resize(2);
+    fill_data(data[0]);
+    fill_data(data[1]);
+  }
+
+  template <typename K, typename V>
+  void fill_data(std::map<K, V>& data)
+  {
+    K k;
+    fill_data(k);
+    fill_data(data[k]);
+  }
+
+  template <typename First, typename Second>
+  void fill_data(std::pair<First, Second>& data)
+  {
+    fill_data(data.first);
+    fill_data(data.second);
+  }
 
 
-TEST(PackUnpackTest, Map)
-{
-  using MapType = std::map<std::string, bool>;
-  const MapType data{{"1", true}, {"key", false}};
+  /**
+   * A test fixture to test that basic types can round-trip through the pack/unpack mechanism.
+   */
+  template <typename T>
+  class PackUnpackStandardTypes : public ::testing::Test
+  {
+  };
 
-  Core::Communication::PackBuffer pack_buffer;
-  Core::Communication::add_to_pack(pack_buffer, data);
+  using MyTypes = ::testing::Types<int, double, char, std::string, std::vector<int>,
+      std::vector<std::vector<std::vector<int>>>, std::map<std::string, bool>>;
 
-  MapType unpacked_data;
-  Core::Communication::UnpackBuffer unpack_buffer(pack_buffer());
-  Core::Communication::extract_from_pack(unpack_buffer, unpacked_data);
+  TYPED_TEST_SUITE(PackUnpackStandardTypes, MyTypes);
 
-  EXPECT_EQ(data, unpacked_data);
-}
+  TYPED_TEST(PackUnpackStandardTypes, Empty)
+  {
+    TypeParam data{};
+    Core::Communication::PackBuffer pack_buffer;
+    Core::Communication::add_to_pack(pack_buffer, data);
+
+    TypeParam unpacked_data;
+    Core::Communication::UnpackBuffer unpack_buffer(pack_buffer());
+    Core::Communication::extract_from_pack(unpack_buffer, unpacked_data);
+
+    EXPECT_EQ(data, unpacked_data);
+  }
+
+  TYPED_TEST(PackUnpackStandardTypes, NonEmpty)
+  {
+    TypeParam data;
+    fill_data(data);
+    Core::Communication::PackBuffer pack_buffer;
+    Core::Communication::add_to_pack(pack_buffer, data);
+
+    TypeParam unpacked_data;
+    Core::Communication::UnpackBuffer unpack_buffer(pack_buffer());
+    Core::Communication::extract_from_pack(unpack_buffer, unpacked_data);
+
+    EXPECT_EQ(data, unpacked_data);
+  }
+
+}  // namespace

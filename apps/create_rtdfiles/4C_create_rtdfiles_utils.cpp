@@ -13,12 +13,11 @@
 #include "4C_io_input_file_utils.hpp"
 #include "4C_io_linedefinition.hpp"
 #include "4C_utils_exceptions.hpp"
-#include "4C_utils_result_test.hpp"
 #include "4C_utils_string.hpp"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
-#include <unistd.h>
+
+#include <format>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -210,8 +209,9 @@ namespace RTD
     // We run the loop over the cell types four times to sort the cell types after their dimension
     for (unsigned outputdim = 0; outputdim < 4; ++outputdim)
     {
-      write_linktarget(stream, boost::str(boost::format("%1dD_cell_types") % outputdim));
-      write_header(stream, 2, boost::str(boost::format("%1dD cell types") % outputdim));
+      ;
+      write_linktarget(stream, std::format("{}D_cell_types", outputdim));
+      write_header(stream, 2, std::format("{}D cell types", outputdim));
 
       for (auto celltype : Core::FE::celltype_array<Core::FE::all_physical_celltypes>)
       {
@@ -420,9 +420,9 @@ namespace RTD
           write_linktarget(stream, linktarget);
 
           const Teuchos::any &v = entry.getAny(false);
-          boost::format parstring = boost::format{"**%s** | *default:* %s |break| %s"} % name %
-                                    Teuchos::toString(v) % doc;
-          std::string s = parstring.str();
+
+          std::string s =
+              std::format("**{}** | *default:* {} |break| {}", name, Teuchos::toString(v), doc);
           write_paragraph(stream, s);
           if (validator != Teuchos::null)  // it can only take specific values
           {
@@ -757,7 +757,7 @@ namespace RTD
         for (int indx = 0; indx < coordmap.numRows(); ++indx)
         {
           if (indx > 0) yamlcelltypestring += ",";
-          yamlcelltypestring += boost::str(boost::format("%6.2f") % coordmap(indx, node));
+          yamlcelltypestring += std::format("{:6.2f}", coordmap(indx, node));
         }
         yamlcelltypestring += "]\n";
       }
@@ -780,7 +780,7 @@ namespace RTD
         for (size_t indx = 0; indx < line.size(); ++indx)
         {
           if (indx > 0) yamlcelltypestring += ",";
-          yamlcelltypestring += boost::str(boost::format("%3d") % line[indx]);
+          yamlcelltypestring += std::format("{:3d}", line[indx]);
           if ((unsigned int)line[indx] >= num_nodes) nodes_exist = false;
         }
         yamlcelltypestring += "]\n";
@@ -810,7 +810,7 @@ namespace RTD
           for (size_t indx = 0; indx < surface.size(); ++indx)
           {
             if (indx > 0) yamlcelltypestring += ",";
-            yamlcelltypestring += boost::str(boost::format("%3d") % surface[indx]);
+            yamlcelltypestring += std::format("{:3d}", surface[indx]);
             if ((unsigned)surface[indx] >= num_nodes) nodes_exist = false;
           }
           yamlcelltypestring += "]\n";
@@ -835,7 +835,7 @@ namespace RTD
         for (size_t indx = 0; indx < surfacecorners.size(); ++indx)
         {
           if (indx > 0) yamlcelltypestring += ",";
-          yamlcelltypestring += boost::str(boost::format("%3d") % surfacecorners[indx]);
+          yamlcelltypestring += std::format("{:3d}", surfacecorners[indx]);
         }
         yamlcelltypestring += "]\n";
       }

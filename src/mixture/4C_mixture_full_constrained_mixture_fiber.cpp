@@ -497,7 +497,7 @@ Mixture::FullConstrainedMixtureFiber<Number>::get_local_newton_evaluator() const
               *fiber_material_, lambda_pre_ * current_state_.lambda_f) +
       integrate_over_deposition_history<Number>(history_, current_scaled_cauchy_stress_integrand);
 
-  return [=](const Core::LinAlg::Matrix<2, 1, Number>& growth_scalar_and_cauchy_stress)
+  return [=, this](const Core::LinAlg::Matrix<2, 1, Number>& growth_scalar_and_cauchy_stress)
   {
     const Number growth_scalar = growth_scalar_and_cauchy_stress(0);
     const Number cauchy_stress = growth_scalar_and_cauchy_stress(1);

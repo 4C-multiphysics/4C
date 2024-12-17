@@ -29,9 +29,14 @@ project(4C CXX C)
 message(STATUS "Using CMake ${CMAKE_VERSION}")
 
 # Enforce the C++ standard we are using and turn off compiler-specific extensions
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED On)
-set(CMAKE_CXX_EXTENSIONS Off)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# We do not use C++ modules (yet). Turn off scanning to avoid issues with clang-tidy.
+# If you want to add module support, this problem needs to be revisited. Our hope
+# is that CMake and/or clang-tidy will be updated to handle modules better.
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 # The version number.
 set(FOUR_C_VERSION_MAJOR 1)
