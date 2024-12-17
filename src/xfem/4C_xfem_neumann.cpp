@@ -184,7 +184,7 @@ void XFEM::evaluate_neumann_standard(
             elematrix.putScalar(0.0);
           curr->second->evaluate_neumann(params, discret, cond, lm, elevector, &elematrix);
           Core::LinAlg::assemble(systemvector, elevector, lm, lmowner);
-          systemmatrix->assemble(curr->second->id(), lmstride, elematrix, lm, lmowner);
+          systemmatrix->assemble(lmstride, elematrix, lm, lmowner);
         }
       }
     }

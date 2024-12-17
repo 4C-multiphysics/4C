@@ -429,7 +429,7 @@ void CONSTRAINTS::MPConstraint3Penalty::evaluate_constraint(
         for (int j = 0; j < eledim; j++) elematrix1(i, j) += elevector1(i) * elevector1(j);
       elematrix1.scale(2 * scStiff * penalties_[condID]);
 
-      systemmatrix1->assemble(eid, lmstride, elematrix1, lm, lmowner);
+      systemmatrix1->assemble(lmstride, elematrix1, lm, lmowner);
       elevector1.scale(2. * penalties_[condID] * diff);
       Core::LinAlg::assemble(*systemvector1, elevector1, lm, lmowner);
     }

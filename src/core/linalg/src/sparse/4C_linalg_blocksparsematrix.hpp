@@ -305,13 +305,13 @@ namespace Core::LinAlg
         const std::vector<unsigned>& row_block_ids, const std::vector<unsigned>& col_block_ids);
 
     /// just a dummy that switches from strided assembly to standard assembly
-    void assemble(int eid, const std::vector<int>& lmstride,
-        const Core::LinAlg::SerialDenseMatrix& Aele, const std::vector<int>& lmrow,
-        const std::vector<int>& lmrowowner, const std::vector<int>& lmcol) override
+    void assemble(const std::vector<int>& lmstride, const Core::LinAlg::SerialDenseMatrix& Aele,
+        const std::vector<int>& lmrow, const std::vector<int>& lmrowowner,
+        const std::vector<int>& lmcol) override
     {
       const int myrank =
           Core::Communication::my_mpi_rank(Core::Communication::unpack_epetra_comm(Comm()));
-      Strategy::assemble(eid, myrank, lmstride, Aele, lmrow, lmrowowner, lmcol);
+      Strategy::assemble(myrank, lmstride, Aele, lmrow, lmrowowner, lmcol);
     }
 
     /// single value assemble
@@ -370,7 +370,7 @@ namespace Core::LinAlg
     explicit DefaultBlockMatrixStrategy(BlockSparseMatrixBase& mat);
 
     /// assemble into the given block using nodal strides
-    void assemble(int eid, int myrank, const std::vector<int>& lmstride,
+    void assemble(int myrank, const std::vector<int>& lmstride,
         const Core::LinAlg::SerialDenseMatrix& Aele, const std::vector<int>& lmrow,
         const std::vector<int>& lmrowowner, const std::vector<int>& lmcol);
 
@@ -573,7 +573,7 @@ inline int Core::LinAlg::DefaultBlockMatrixStrategy::col_block(int rblock, int c
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-inline void Core::LinAlg::DefaultBlockMatrixStrategy::assemble(int eid, int myrank,
+inline void Core::LinAlg::DefaultBlockMatrixStrategy::assemble(int myrank,
     const std::vector<int>& lmstride, const Core::LinAlg::SerialDenseMatrix& Aele,
     const std::vector<int>& lmrow, const std::vector<int>& lmrowowner,
     const std::vector<int>& lmcol)

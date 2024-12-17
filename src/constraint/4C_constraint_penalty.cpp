@@ -271,8 +271,6 @@ void CONSTRAINTS::ConstraintPenalty::evaluate_constraint(Teuchos::ParameterList&
         elevector2 = elevector1;
 
         // assembly
-        int eid = curr->second->id();
-
         // scale with time integrator dependent value
         elematrix1.scale(diff);
         for (int i = 0; i < eledim; i++)
@@ -282,8 +280,8 @@ void CONSTRAINTS::ConstraintPenalty::evaluate_constraint(Teuchos::ParameterList&
         {
           elematrix1.scale(scStiff * penalties_[condID]);
           elematrix2.scale((*lagrvalues_)[condID - 1] * scStiff);
-          systemmatrix1->assemble(eid, lmstride, elematrix1, lm, lmowner);
-          systemmatrix1->assemble(eid, lmstride, elematrix2, lm, lmowner);
+          systemmatrix1->assemble(lmstride, elematrix1, lm, lmowner);
+          systemmatrix1->assemble(lmstride, elematrix2, lm, lmowner);
         }
 
         if (assemblevec1)

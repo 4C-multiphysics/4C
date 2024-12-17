@@ -223,8 +223,6 @@ void Utils::Cardiovascular0D4ElementWindkessel::evaluate(Teuchos::ParameterList&
 
 
       // assembly
-      int eid = curr->second->id();
-
       if (assmat2)
       {
         // assemble the offdiagonal stiffness block (1,0 block) arising from dR_cardvasc0d/dd
@@ -232,7 +230,7 @@ void Utils::Cardiovascular0D4ElementWindkessel::evaluate(Teuchos::ParameterList&
         std::vector<int> colvec(1);
         colvec[0] = gindex[1];
         elevector2.scale(-1. / ts_size);
-        sysmat2->assemble(eid, lmstride, elevector2, lm, lmowner, colvec);
+        sysmat2->assemble(lmstride, elevector2, lm, lmowner, colvec);
       }
 
       if (assvec3)

@@ -91,7 +91,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::evaluate_and_solve_
     }
 
     // mass matrix assembling into node map
-    massmatrix.assemble(actele->id(), elematrix1, lm, lmowner);
+    massmatrix.assemble(elematrix1, lm, lmowner);
 
     // assemble numvec entries sequentially
     for (int n = 0; n < numvec; ++n)

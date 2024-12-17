@@ -1224,7 +1224,7 @@ void FLD::XWall::l2_project_vector(Core::LinAlg::Vector<double>& veln,
     }
 
     // assembling into node maps
-    massmatrix_->assemble(actele->id(), elematrix1, lmassemble, lmownerassemble);
+    massmatrix_->assemble(elematrix1, lmassemble, lmownerassemble);
 
     // assembling into node maps
     // assemble numberofrhs entries in rhs vector sequentially

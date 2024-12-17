@@ -4868,7 +4868,7 @@ void ScaTra::MortarCellAssemblyStrategy::assemble_cell_matrix(
   {
     case Inpar::S2I::side_slave:
     {
-      systemmatrix->assemble(-1, la_cols[nds_cols_].stride_, cellmatrix, la_slave[nds_rows_].lm_,
+      systemmatrix->assemble(la_cols[nds_cols_].stride_, cellmatrix, la_slave[nds_rows_].lm_,
           la_slave[nds_rows_].lmowner_, la_cols[nds_cols_].lm_);
       break;
     }

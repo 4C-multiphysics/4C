@@ -432,14 +432,14 @@ void CONSTRAINTS::MPConstraint3::evaluate_constraint(std::shared_ptr<Core::FE::D
       {
         // scale with time integrator dependent value
         elematrix1.scale(scStiff * lagraval);
-        systemmatrix1->assemble(eid, lmstride, elematrix1, lm, lmowner);
+        systemmatrix1->assemble(lmstride, elematrix1, lm, lmowner);
       }
       if (assemblemat2)
       {
         std::vector<int> colvec(1);
         colvec[0] = gindex;
         elevector2.scale(scConMat);
-        systemmatrix2->assemble(eid, lmstride, elevector2, lm, lmowner, colvec);
+        systemmatrix2->assemble(lmstride, elevector2, lm, lmowner, colvec);
       }
       if (assemblevec1)
       {

@@ -272,7 +272,7 @@ void Core::FE::Discretization::evaluate_neumann(Teuchos::ParameterList& params,
             elematrix.putScalar(0.0);
           ele->evaluate_neumann(params, *this, *cond, lm, elevector, &elematrix);
           Core::LinAlg::assemble(systemvector, elevector, lm, lmowner);
-          systemmatrix->assemble(ele->id(), lmstride, elematrix, lm, lmowner);
+          systemmatrix->assemble(lmstride, elematrix, lm, lmowner);
         }
       }
     }
@@ -329,7 +329,7 @@ void Core::FE::Discretization::evaluate_neumann(Teuchos::ParameterList& params,
           elematrix.putScalar(0.0);
         // evaluate linearized point moment conditions and assemble matrices
         currele->evaluate_neumann(params, *this, *cond, lm, elevector, &elematrix);
-        systemmatrix->assemble(currele->id(), lmstride, elematrix, lm, lmowner);
+        systemmatrix->assemble(lmstride, elematrix, lm, lmowner);
       }
       //-----if no stiffness matrix was given in-------
       else

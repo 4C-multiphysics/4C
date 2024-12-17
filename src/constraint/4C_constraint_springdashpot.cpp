@@ -181,7 +181,7 @@ void CONSTRAINTS::SpringDashpot::evaluate_robin(std::shared_ptr<Core::LinAlg::Sp
         if (err) FOUR_C_THROW("error while evaluating elements");
 
         if (assvec) Core::LinAlg::assemble(*fint, elevector1, lm, lmowner);
-        if (assmat) stiff->assemble(curr.second->id(), lmstride, elematrix1, lm, lmowner);
+        if (assmat) stiff->assemble(lmstride, elematrix1, lm, lmowner);
 
         // save spring stress for postprocessing
         const int numdim = 3;

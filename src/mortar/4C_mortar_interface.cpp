@@ -3603,7 +3603,7 @@ void Mortar::Interface::assemble_m(Core::LinAlg::SparseMatrix& mglobal)
         }
       }
 
-      mglobal.assemble(-1, Mnode, lmrow, lmrowowner, lmcol);
+      mglobal.assemble(Mnode, lmrow, lmrowowner, lmcol);
     }
   }
 }

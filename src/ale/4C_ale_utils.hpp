@@ -35,23 +35,23 @@ namespace ALE
       }
 
       /// assemble into the given block
-      void assemble(int eid, int myrank, const std::vector<int>& lmstride,
+      void assemble(int myrank, const std::vector<int>& lmstride,
           const Core::LinAlg::SerialDenseMatrix& Aele, const std::vector<int>& lmrow,
           const std::vector<int>& lmrowowner, const std::vector<int>& lmcol)
       {
-        if (condelements_->find(eid) != condelements_->end())
+        if (condelements_->size() > 0)
         {
           // if we have an element with conditioned nodes, we have to do the
           // default assembling
           Core::LinAlg::DefaultBlockMatrixStrategy::assemble(
-              eid, myrank, lmstride, Aele, lmrow, lmrowowner, lmcol);
+              myrank, lmstride, Aele, lmrow, lmrowowner, lmcol);
         }
         else
         {
           // if there are no conditioned nodes we can simply assemble to the
           // internal matrix
           Core::LinAlg::SparseMatrix& matrix = mat().matrix(0, 0);
-          matrix.assemble(eid, lmstride, Aele, lmrow, lmrowowner, lmcol);
+          matrix.assemble(lmstride, Aele, lmrow, lmrowowner, lmcol);
         }
       }
 

@@ -505,8 +505,7 @@ namespace
           }
         }
 
-        int eid = actele->id();
-        if (assemblemat) massmatrix->assemble(eid, elemass, lm, lmowner);
+        if (assemblemat) massmatrix->assemble(elemass, lm, lmowner);
         if (assemblevec) Core::LinAlg::assemble(*rhs, elerhs, lm, lmowner);
       }  // for (int i=0; i<numcolele; ++i)
     }

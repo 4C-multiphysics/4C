@@ -2735,7 +2735,7 @@ void ScaTra::ScaTraTimIntElch::evaluate_electrode_boundary_kinetics_point_condit
             element->id(), error, Core::Communication::my_mpi_rank(discret_->get_comm()));
 
       // assemble element matrix and right-hand side vector into global system of equations
-      sysmat_->assemble(element->id(), la[0].stride_, elematrix, la[0].lm_, la[0].lmowner_);
+      sysmat_->assemble(la[0].stride_, elematrix, la[0].lm_, la[0].lmowner_);
       Core::LinAlg::assemble(*residual_, elevector, la[0].lm_, la[0].lmowner_);
     }
   }

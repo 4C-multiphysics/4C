@@ -26,7 +26,7 @@ void FBI::Utils::FBIBlockAssemblyStrategy::assemble_fluid_matrix(
     const Core::LinAlg::SerialDenseMatrix& elemat, const std::vector<int>& lmrow,
     const std::vector<int>& lmrowowner, const std::vector<int>& lmcol)
 {
-  cff->assemble(elegid, lmstride, elemat, lmrow, lmrowowner, lmcol);
+  cff->assemble(lmstride, elemat, lmrow, lmrowowner, lmcol);
 }
 
 FOUR_C_NAMESPACE_CLOSE

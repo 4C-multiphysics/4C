@@ -463,10 +463,9 @@ void FLD::XFluidFluid::prepare_shape_derivatives(
   // REMARK: the shape derivatives matrix results from linearization w.r.t. ALE-displacements
   // and therefore solely knows ALE-dof - here we use "extended shapederivatives" including
   // background fluid entries, that are set to zero
-  std::shared_ptr<Core::LinAlg::BlockSparseMatrix<FLD::Utils::InterfaceSplitStrategy>> mat =
-      std::make_shared<Core::LinAlg::BlockSparseMatrix<FLD::Utils::InterfaceSplitStrategy>>(
+  std::shared_ptr<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>> mat =
+      std::make_shared<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
           fsiextractor, fsiextractor, 108, false, true);
-  mat->set_cond_elements(condelements);
   extended_shapederivatives_ = mat;
 }
 
