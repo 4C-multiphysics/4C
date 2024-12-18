@@ -312,6 +312,9 @@ namespace Mat
       [[nodiscard]] bool bool_transv_isotropy() const { return bool_transv_isotropy_; };
       //! get boolean: logarithmic substepping? (true: yes, false: standard substepping)
       [[nodiscard]] bool bool_log_substepping() const { return bool_log_substepping_; };
+      //! get boolean: benchmark time integration using a csv runtime output writer? (true: yes,
+      //! false: no)
+      [[nodiscard]] bool bool_benchmark_timint() const { return bool_benchmark_timint_; };
       //! get maximum number of times a time step can be halved into smaller and smaller substeps
       [[nodiscard]] unsigned int max_halve_number() const
       {
@@ -370,6 +373,11 @@ namespace Mat
       //! maximum number of times the given time step can be halved before reaching the minimum
       //! allowed substep length
       const int max_halve_number_;
+
+      //! boolean variable: do you want to benchmark the computation by using a csv runtime writer
+      //! for the various error types which may arise during time integration? (true: yes, false:
+      //! no)
+      const bool bool_benchmark_timint_;
     };
   }  // namespace PAR
 
