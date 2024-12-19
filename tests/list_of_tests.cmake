@@ -2143,5 +2143,6 @@ four_c_test_vtk(ssi_mono_3D_2hex8_elch_s2i_butlervolmer_vtk_scatra.dat ssi_mono_
 four_c_test_vtk(ssi_mono_3D_2hex8_elch_s2i_butlervolmer_vtk_structure.dat ssi_mono_3D_2hex8_elch_s2i_butlervolmer.dat 3 xxx-structure.pvd ref/ssi_mono_3D_2hex8_elch_s2i_butlervolmer-structure.pvd 1e-08)
 four_c_test_vtk(structure_solid_beam_element_gid_runtime_output-vtk-beam.dat structure_solid_beam_element_gid_runtime_output.dat 2 xxx-structure-beams.pvd ref/structure_solid_beam_element_gid_runtime_output-vtk/structure-beams.pvd 1e-08 1e-08 1.0)
 four_c_test_vtk(structure_solid_beam_element_gid_runtime_output-vtk-solid.dat structure_solid_beam_element_gid_runtime_output.dat 2 xxx-structure.pvd ref/structure_solid_beam_element_gid_runtime_output-vtk/structure.pvd 1e-08 1e-08 1.0)
+four_c_test_vtk(sohex8_multiscale_macro-vtk.dat sohex8_multiscale_macro.dat 2 xxx-micro_model_3.pvd ref/sohex8_multiscale_macro/xxx-micro_model_3.pvd 1e-08)
 
 # cmake-format: on

@@ -34,13 +34,17 @@ NUMFLUIDDIS                     0
 NUMSTRUCDIS                     2
 NUMALEDIS                       0
 NUMTHERMDIS                     0
---------------------------------------------------------------------------IO
-OUTPUT_BIN                      Yes
-STRUCT_DISP                     Yes
-STRUCT_STRESS                   No
-FLUID_STRESS                    No
-VERBOSITY                       Minimal
-WRITE_INITIAL_STATE             No
+----------------------------------------------------------------IO
+OUTPUT_BIN             Yes
+STRUCT_DISP            Yes
+FILESTEPS              1000000
+----------------------------------------------------------IO/RUNTIME VTK OUTPUT
+OUTPUT_DATA_FORMAT              binary
+INTERVAL_STEPS                  1
+EVERY_ITERATION                 No
+----------------------------------------------------------IO/RUNTIME VTK OUTPUT/STRUCTURE
+OUTPUT_STRUCTURE                Yes
+DISPLACEMENT                    Yes
 ----------------------------------------------------------STRUCTURAL DYNAMIC
 INT_STRATEGY                    Standard
 LINEAR_SOLVER                   1
@@ -230,15 +234,17 @@ NODE 26 COORD 1.000000000000000e+00 1.000000000000000e+00 0.000000000000000e+00
 NODE 27 COORD 1.000000000000000e+00 1.000000000000000e+00 1.000000000000000e+00
 ----------------------------------------------------------STRUCTURE ELEMENTS
 1 SOLID HEX8 8 7 2 6 5 3 1 4 MAT 1 KINEM nonlinear
-2 SOLID HEX8 19 8 6 14 15 5 4 11 MAT 1 KINEM nonlinear
-3 SOLID HEX8 18 13 7 8 17 10 3 5 MAT 1 KINEM nonlinear
+2 SOLID HEX8 19 8 6 14 15 5 4 11 MAT 2 KINEM nonlinear
+3 SOLID HEX8 18 13 7 8 17 10 3 5 MAT 3 KINEM nonlinear
 4 SOLID HEX8 25 18 8 19 23 17 5 15 MAT 1 KINEM nonlinear
-5 SOLID HEX8 20 12 9 16 8 7 2 6 MAT 1 KINEM nonlinear
-6 SOLID HEX8 24 20 16 22 19 8 6 14 MAT 1 KINEM nonlinear
+5 SOLID HEX8 20 12 9 16 8 7 2 6 MAT 2 KINEM nonlinear
+6 SOLID HEX8 24 20 16 22 19 8 6 14 MAT 3 KINEM nonlinear
 7 SOLID HEX8 26 21 12 20 18 13 7 8 MAT 1 KINEM nonlinear
-8 SOLID HEX8 27 26 20 24 25 18 8 19 MAT 1 KINEM nonlinear
+8 SOLID HEX8 27 26 20 24 25 18 8 19 MAT 2 KINEM nonlinear
 -------------------------------------------------------------------MATERIALS
-MAT 1 MAT_Struct_Multiscale MICROFILE sohex8_multiscale_micro.mat MICRODIS_NUM 1
+MAT 1 MAT_Struct_Multiscale MICROFILE sohex8_multiscale_micro.mat MICRODIS_NUM 1 RUNTIMEOUTPUT_GP all
+MAT 2 MAT_Struct_Multiscale MICROFILE sohex8_multiscale_micro.mat MICRODIS_NUM 2 RUNTIMEOUTPUT_GP none
+MAT 3 MAT_Struct_Multiscale MICROFILE sohex8_multiscale_micro.mat MICRODIS_NUM 3 RUNTIMEOUTPUT_GP gp1
 -------------------------------------------------------------FUNCT1
 SYMBOLIC_FUNCTION_OF_SPACE_TIME t/1.5
 ----------------------------------------------------------RESULT DESCRIPTION

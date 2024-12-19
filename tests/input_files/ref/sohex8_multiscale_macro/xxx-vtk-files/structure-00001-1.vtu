@@ -1,0 +1,43 @@
+<?xml version="1.0" ?> 
+<!-- 
+# vtk DataFile Version 3.0
+-->
+<VTKFile type="UnstructuredGrid" version="0.1" compressor="vtkZLibDataCompressor" byte_order="LittleEndian">
+  <UnstructuredGrid>
+    <FieldData>
+      <DataArray type="Float64" Name="TIME" NumberOfTuples="1" format="ascii">
+5.000000000000000e-01 
+      </DataArray>
+    </FieldData>
+
+    <Piece NumberOfPoints="40" NumberOfCells="5" >
+      <Points>
+        <DataArray type="Float64" NumberOfComponents="3" format="binary">
+AQAAAMADAADAAwAAjQAAAA==eNpjYEAGH+xh9H8QsNi2B8ZnAlETFkP4Mxbu4QczEmzA6voXwcVRaIR5+9HNxy4Od8d+mP0o9sLV43SvDZp6DHNx2I9DHAoI+9cGh/v2o/kHro6AO4n0F87wQPUPrnjB4i/87sQZjvaE/EEovnH5F286xOVvXPGCKx5x+gO3v4hMb4TileL8BQBxcOYb
+        </DataArray>
+      </Points>
+
+      <Cells>
+        <DataArray type="Int32" Name="connectivity" format="binary">
+AQAAAKAAAACgAAAASgAAAA==eNoNwwsSgVAAAMAnKfqoUEIiSve/od2ZDSGEjZFbY3cmpu49mJlbWHq0srbx5NmLrZ1Xe2/efTj4dPTl28mPX2cXf67+AacwAw0=
+
+        </DataArray>
+        <DataArray type="Int32" Name="offsets" format="binary">
+AQAAABQAAAAUAAAAFgAAAA==eNrjYGBgEABiCSBWAGINIAYABHQAeQ==
+
+        </DataArray>
+        <DataArray type="UInt8" Name="types" format="binary">
+AQAAAAUAAAAFAAAACwAAAA==eNrj4QECAAC5AD0=
+
+        </DataArray>
+      </Cells>
+
+  <PointData>
+        <DataArray type="Float64" Name="displacement" NumberOfComponents="3" format="binary">
+AQAAAMADAADAAwAAjgEAAA==eNr7+U1140LrJps70v+ksj9n7l8kfNkw4MpU++LJUiZ/7s61eSsFEf+tdO6oXkmvjXqWXIkvT5lNRklB8JL75TZ+iW+6j2TU7YmT/palKDfFJlBjb1Lruaw9LVBzFGTA+u3/Qs1vgopHSULEOaDirKGBIU3PW2w8IHz7GmdDm2ktE2wu3VhzPtKs2cYLKu7SvanJaUWyTS3UHHOI+fs/JHKIcE2Ot1miOD2333cG3D+ehqwv9a2m7WmHqN+/FSqeKQsxbw5UXAEq/hBqz43mBRk8D2fsweXfS8px29cFVNiI/HFf8yy2ZM90qDkbjdimKO6fvcdVBtX89R/Pp8fPmrjnISQ87e+/dN6uLjXF5gTUXs33sQvWfim0KSTgL1zuFIKK34faexhqDq54weUvXO40OKGeHP93ks16qL0zoeb4Qu11hoTn/obdr0VmTbOy4YO6XwYqvwcaDrjiBZd/caVDg7+z+3mrptqcgZq3EGoOrnjB5d8NUHvjoPRGAv7C5U5c8fiTxvkLAPuqz0g=
+        </DataArray>
+      </PointData>
+
+    </Piece>
+  </UnstructuredGrid>
+</VTKFile>

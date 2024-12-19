@@ -12,6 +12,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_io_discretization_visualization_writer_mesh.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_vector.hpp"
 
@@ -68,6 +69,11 @@ namespace Mat
     void prepare_output();
 
     /// Calculate stresses and strains on the micro-scale
+    void prepare_runtime_output();
+
+    void runtime_output_step_state_microscale(
+        const std::pair<double, int>& output_time_and_step, const std::string& section_name);
+
     void output_step_state_microscale();
 
     /// write restart on the micro-scale
