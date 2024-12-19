@@ -33,6 +33,11 @@ void Inpar::Rebalance::set_valid_parameters(Teuchos::ParameterList& list)
       "Tolerance for relative imbalance of subdomain sizes for graph partitioning of unstructured "
       "meshes read from input files.",
       &meshpartitioning);
+
+  Core::Utils::int_parameter("MIN_ELE_PER_PROC", 0,
+      "This parameter defines the minimum number of elements to be assigned to any MPI rank during "
+      "redistribution. Use 0 to not interfere with the minimal size of a subdomain.",
+      &meshpartitioning);
 }
 
 FOUR_C_NAMESPACE_CLOSE

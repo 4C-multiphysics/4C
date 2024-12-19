@@ -18,7 +18,10 @@ NUMSTRUCDIS                     1
 NUMALEDIS                       1
 NUMTHERMDIS                     0
 --------------------------------------------------------------------------IO
-VERBOSITY                       standard
+VERBOSITY                       verbose
+-----------------------------------------------------------MESH PARTITIONING
+METHOD                          hypergraph
+MIN_ELE_PER_PROC                800
 ----------------------------------------------------------STRUCTURAL DYNAMIC
 LINEAR_SOLVER                   1
 DYNAMICTYPE                      GenAlpha
