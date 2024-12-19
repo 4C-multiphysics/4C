@@ -70,7 +70,7 @@ bool Discret::Elements::Beam3k::read_element(const std::string& eletype, const s
   this->set_up_initial_rotations(nodal_thetas);
 
   // read whether automatic differentiation via Sacado::Fad package shall be used
-  use_fad_ = container.get<bool>("FAD");
+  use_fad_ = container.get_or<bool>("FAD", false);
 
   return true;
 }

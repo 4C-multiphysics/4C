@@ -274,7 +274,7 @@ Core::Utils::try_create_symbolic_function_of_space_time(
           // read periodicity data
           Periodicstruct periodicdata{};
 
-          periodicdata.periodic = line.container().get<bool>("PERIODIC");
+          periodicdata.periodic = line.container().get_or<bool>("PERIODIC", false);
           if (periodicdata.periodic)
           {
             periodicdata.t1 = line.container().get<double>("T1");

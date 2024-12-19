@@ -46,16 +46,13 @@ namespace Core::IO
     }
   }  // namespace Internal
 
-  /*!
-  \brief A data storage container
-
-  You can store various types of data in this container and access the data by keys.
-
-  The intention of this class is to store rather 'small' units of data. Though possible,
-  it is not meant to be used at the system level to store huge data sets such as sparse matrices or
-  vectors of system length. It does therefore not support any Core::LinAlg::Vector<double>
-  or Epetra_CrsMatrix objects and is not supposed to in the future either.
-  */
+  /**
+   * A container to store dynamic input parameters. The container can store arbitrary types of
+   * parameters. Parameters can be grouped in sub-containers.
+   *
+   * This class is a core part of the input mechanism, as it contains the parsed data from the input
+   * file and grants access to it.
+   */
   class InputParameterContainer
   {
    public:
@@ -101,6 +98,15 @@ namespace Core::IO
         anydata_[name] = data;
     }
 
+    /**
+     * Access group @p name. If the group does not exist, it will be created.
+     */
+    InputParameterContainer& group(const std::string& name);
+
+    /**
+     * Access group @p name. This function throws an error if the group does not exist.
+     */
+    [[nodiscard]] const InputParameterContainer& group(const std::string& name) const;
 
     /*!
      * Get a const reference to the data stored at the key @p name from the container. An error
@@ -210,6 +216,9 @@ namespace Core::IO
 
     //! a map to store anything
     std::map<std::string, std::any> anydata_;
+
+    //! Groups present in this container
+    std::map<std::string, InputParameterContainer> groups_;
   };  // class InputParameterContainer
 }  // namespace Core::IO
 

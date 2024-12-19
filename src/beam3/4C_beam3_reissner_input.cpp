@@ -54,7 +54,7 @@ bool Discret::Elements::Beam3r::read_element(const std::string& eletype, const s
     centerline_hermite_ = false;
 
   // read whether automatic differentiation via Sacado::Fad package shall be used
-  use_fad_ = container.get<bool>("FAD");
+  use_fad_ = container.get_or<bool>("FAD", false);
 
 
   // store nodal triads according to input file

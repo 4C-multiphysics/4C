@@ -64,7 +64,7 @@ void BeamInteraction::BeamPotentialParams::init(const double restart_time)
         Teuchos::getNumericStringParameter(beam_potential_params_list, "POT_LAW_EXPONENT");
 
     Core::IO::ValueParser pot_law_exponents_parser(
-        pot_law_exponents_in, "While reading potential law exponents: ");
+        pot_law_exponents_in, {.user_scope_message = "While reading potential law exponents: "});
 
     while (!pot_law_exponents_parser.at_end())
     {
@@ -76,7 +76,7 @@ void BeamInteraction::BeamPotentialParams::init(const double restart_time)
         Teuchos::getNumericStringParameter(beam_potential_params_list, "POT_LAW_PREFACTOR");
 
     Core::IO::ValueParser pot_law_prefactors_parser(
-        pot_law_prefactors_in, "While reading potential law prefactors: ");
+        pot_law_prefactors_in, {.user_scope_message = "While reading potential law prefactors: "});
 
     while (!pot_law_prefactors_parser.at_end())
     {

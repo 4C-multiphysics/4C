@@ -73,4 +73,18 @@ void Core::IO::InputParameterContainer::print(std::ostream& os) const
 }
 
 
+Core::IO::InputParameterContainer& Core::IO::InputParameterContainer::group(const std::string& name)
+{
+  return groups_[name];
+}
+
+
+const Core::IO::InputParameterContainer& Core::IO::InputParameterContainer::group(
+    const std::string& name) const
+{
+  FOUR_C_ASSERT_ALWAYS(groups_.count(name) > 0, "Group '%s' not found in container.", name.c_str());
+  return groups_.at(name);
+}
+
+
 FOUR_C_NAMESPACE_CLOSE

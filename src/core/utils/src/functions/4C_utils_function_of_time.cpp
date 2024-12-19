@@ -166,7 +166,7 @@ std::shared_ptr<Core::Utils::FunctionOfTime> Core::Utils::try_create_function_of
           // read periodicity data
           Periodicstruct periodicdata{};
 
-          periodicdata.periodic = line.container().get<bool>("PERIODIC");
+          periodicdata.periodic = line.container().get_or<bool>("PERIODIC", false);
           if (periodicdata.periodic)
           {
             periodicdata.t1 = line.container().get<double>("T1");

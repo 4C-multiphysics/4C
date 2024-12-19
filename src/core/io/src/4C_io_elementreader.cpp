@@ -180,7 +180,7 @@ void Core::IO::ElementReader::get_and_distribute_elements(const int nblock, cons
 
     for (const auto& element_line : input_.lines_in_section(sectionname_))
     {
-      ValueParser parser{element_line, "While reading element line: "};
+      ValueParser parser{element_line, {.user_scope_message = "While reading element line: "}};
       const int elenumber = parser.read<int>() - 1;
       gidlist.push_back(elenumber);
 
@@ -209,7 +209,7 @@ void Core::IO::ElementReader::get_and_distribute_elements(const int nblock, cons
 
           if (not linedef->read(element_specific_remainder))
           {
-            std::cout << "\n" << elenumber << " " << eletype << " " << distype << " ";
+            std::cout << "\n" << elenumber << " " << eletype << " ";
             linedef->print(std::cout);
             std::cout << "\n";
             std::cout << element_line << "\n";

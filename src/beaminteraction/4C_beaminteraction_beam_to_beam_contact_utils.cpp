@@ -310,7 +310,7 @@ double BeamInteraction::determine_searchbox_inc(Teuchos::ParameterList& beamcont
       Teuchos::getNumericStringParameter(beamcontactparams, "BEAMS_EXTVAL"));
 
   Core::IO::ValueParser extrusionvalue_parser(
-      extrusion_value_in, "While reading extrusion values: ");
+      extrusion_value_in, {.user_scope_message = "While reading extrusion values: "});
 
   while (!extrusionvalue_parser.at_end())
   {

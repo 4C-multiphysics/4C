@@ -66,11 +66,10 @@ void Solid::ModelEvaluator::BrownianDynData::init(
         browndyn_params_list, "BEAMS_DAMPING_COEFF_PER_UNITLENGTH"));
 
     Core::IO::ValueParser beam_dampening_coefficients_parser(input_file_linecontent,
-        "While reading beam damping "
-        "coefficient values: ");
+        {.user_scope_message = "While reading beam damping coefficient values: "});
 
     beams_damping_coefficient_prefactors_perunitlength_ =
-        beam_dampening_coefficients_parser.read_array<double, 3>();
+        beam_dampening_coefficients_parser.read<std::array<double, 3>>();
 
     if (!beam_dampening_coefficients_parser.at_end())
     {
