@@ -12,8 +12,10 @@
 #include "4C_contact_nitsche_integrator_fpi.hpp"
 #include "4C_contact_nitsche_integrator_fsi.hpp"
 #include "4C_contact_nitsche_integrator_poro.hpp"
+#include "4C_contact_nitsche_integrator_poro_scatra.hpp"
 #include "4C_contact_nitsche_integrator_ssi.hpp"
 #include "4C_contact_nitsche_integrator_ssi_elch.hpp"
+#include "4C_global_data.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -38,11 +40,25 @@ std::shared_ptr<CONTACT::Integrator> CONTACT::INTEGRATOR::Factory::build_integra
         integrator =
             std::make_shared<CONTACT::IntegratorNitscheSsiElch>(mortar_params, slave_type, comm);
       }
-      else if (mortar_params.get<int>("PROBTYPE") == Inpar::CONTACT::poroelast ||
-               mortar_params.get<int>("PROBTYPE") == Inpar::CONTACT::poroscatra)
+      else if (mortar_params.get<int>("PROBTYPE") == Inpar::CONTACT::poroelast)
       {
         integrator =
             std::make_shared<CONTACT::IntegratorNitschePoro>(mortar_params, slave_type, comm);
+      }
+      else if (mortar_params.get<int>("PROBTYPE") == Inpar::CONTACT::poroscatra)
+      {
+        const Teuchos::ParameterList& stru =
+            Global::Problem::instance()->structural_dynamic_params();
+        const Teuchos::ParameterList& porodyn =
+            Global::Problem::instance()->poroelast_dynamic_params();
+        // porotimefac = 1/(theta*dt) --- required for derivation of structural displacements!
+        double porotimefac =
+            1 / (stru.sublist("ONESTEPTHETA").get<double>("THETA") * stru.get<double>("TIMESTEP"));
+        mortar_params.set<double>("porotimefac", porotimefac);
+        mortar_params.set<bool>(
+            "CONTACTNOPEN", porodyn.get<bool>("CONTACTNOPEN"));  // used in the integrator
+        integrator =
+            std::make_shared<CONTACT::IntegratorNitschePoroScatra>(mortar_params, slave_type, comm);
       }
       else if (mortar_params.get<int>("PROBTYPE") == Inpar::CONTACT::fsi)
       {
