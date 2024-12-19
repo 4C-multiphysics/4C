@@ -1,16 +1,13 @@
 -------------------------------------------------------------TITLE
-Test for porofluid material with constant material transversely isotropic permeability in 2D (standard poro framework)
+2D poro-structure interaction
+- quad4 elements
+- switched order of poro elements and standard structure elements in discr. (used to cause problems)
 ------------------------------------------------------PROBLEM SIZE
-ELEMENTS                        4
-NODES                           9
+//ELEMENTS                      4
+//NODES                         9
 DIM                             2
 ----------------------------------------------------DISCRETISATION
-NUMAIRWAYSDIS                   0
-NUMALEDIS                       0
-NUMARTNETDIS                    0
-NUMFLUIDDIS                     0
 NUMSTRUCDIS                     1
-NUMTHERMDIS                     0
 -----------------------------------------------------FLUID DYNAMIC
 CONVFORM                        convective
 GRIDVEL                         BE
@@ -35,34 +32,21 @@ TRANSIENT                       no_transient
 VSTAB                           no_vstab
 ----------------------------------------------------------SOLVER 3
 SOLVER                          UMFPACK
-----------------------------------------------------------------IO
-FILESTEPS                       1000
-FLUID_STRESS                    No
-FLUID_WALL_SHEAR_STRESS         No
-OUTPUT_BIN                      Yes
-STRUCT_DISP                     Yes
-STRUCT_STRAIN                   No
-STRUCT_STRESS                   Cauchy
-STRUCT_COUPLING_STRESS          No
-STRUCT_SURFACTANT               No
-THERM_HEATFLUX                  None
-THERM_TEMPERATURE               No
-THERM_TEMPGRAD                  None
 --------------------------------------------POROELASTICITY DYNAMIC
 COUPALGO                        poro_monolithic
 PHYSICAL_TYPE                   Poro
 ITEMAX                          20
 ITEMIN                          1
-MAXTIME                         0.5
+MAXTIME                         8
 NORMCOMBI_RESFINC               Or
 NORM_INC                        AbsGlobal
 NORM_RESF                       AbsGlobal
 NUMSTEP                         50
-RESTARTEVRY                     10
+RESTARTEVRY                     40
 TOLRES_GLOBAL                   1e-08
-TOLINC_GLOBAL                   1e-08
+TOLINC_GLOBAL                   1e-06
 VECTORNORM_RESF                 L2
-VECTORNORM_INC                  Inf
+VECTORNORM_INC                  L2
 TIMESTEP                        0.01
 RESULTSEVRY                     10
 LINEAR_SOLVER                   1
@@ -70,15 +54,17 @@ SECONDORDER                     no
 CONTIPARTINT                    yes
 ----------------------------------------------------------SOLVER 1
 SOLVER                          UMFPACK
--------------------------------------------------------PROBLEM TYPE
-PROBLEMTYPE                      Poroelasticity
+------------------------------------------------------PROBLEM TYPE
+PROBLEMTYPE                     Poroelasticity
 RESTART                         0
 SHAPEFCT                        Polynomial
 ----------------------------------------------------------SOLVER 2
 SOLVER                          UMFPACK
 ------------------------------------------------STRUCTURAL DYNAMIC
+INT_STRATEGY                    Standard
 DAMPING                         Material
-DYNAMICTYPE                      OneStepTheta
+DIVERCONT                       stop
+DYNAMICTYPE                     OneStepTheta
 PREDICT                         ConstDis
 LINEAR_SOLVER                   1
 ----------------------------------------------CLONING MATERIAL MAP
@@ -90,46 +76,69 @@ MAT 1 MAT_StructPoro MATID 2 POROLAWID 10 INITPOROSITY 0.4
 MAT 10 MAT_PoroLawNeoHooke BULKMODULUS 2.0e8 PENALTYPARAMETER 0.001
 MAT 2 MAT_ElastHyper NUMMAT 1 MATIDS 4 DENS 0.5
 MAT 4 ELAST_CoupNeoHooke YOUNG 2.0e4 NUE 0.3
-MAT 3 MAT_FluidPoro DYNVISCOSITY 0.01 DENSITY 1.0 PERMEABILITY 1.0e-2 TYPE Darcy PERMEABILITYFUNCTION Const_Material_Transverse AXIALPERMEABILITY 2.0e-2
+MAT 3 MAT_FluidPoro DYNVISCOSITY 0.01 DENSITY 1.0 PERMEABILITY 1.0e-2 TYPE Darcy
 ------------------------------------------------------------FUNCT1
 COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME a
 VARIABLE 0 NAME a TYPE multifunction NUMPOINTS 3 TIMES 0.0 2 500000.0 DESCRIPTION -1.0*0.5*(1-cos((t*pi/2.0))) -1.0*0.5*(1-cos((2*pi/2.0)))
 ------------------------------------------------RESULT DESCRIPTION
-FLUID DIS porofluid NODE 4 QUANTITY velx VALUE  4.45757823861585911e-01 TOLERANCE 1e-7
-FLUID DIS porofluid NODE 8 QUANTITY pressure VALUE  1.26516173922667940e+00 TOLERANCE 1e-6
-STRUCTURE DIS structure NODE 2 QUANTITY dispy VALUE -1.46446609406726325e-01 TOLERANCE 1e-7
-STRUCTURE DIS structure NODE 3 QUANTITY dispy VALUE -7.31862850935549869e-02 TOLERANCE 1e-7
+FLUID DIS porofluid NODE 4 QUANTITY velx VALUE  4.35828776865022971e-01 TOLERANCE 1e-7
+FLUID DIS porofluid NODE 1 QUANTITY pressure VALUE  1.33240632268599435e+00 TOLERANCE 1e-6
+STRUCTURE DIS structure NODE 7 QUANTITY dispy VALUE  1.46446609406726325e-01 TOLERANCE 1e-7
+STRUCTURE DIS structure NODE 3 QUANTITY dispy VALUE  7.31766132527795626e-02 TOLERANCE 1e-7
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 DPOINT                          4
 // Point x+y+
-E 1 - NUMDOF 2 ONOFF 1 1 VAL 0.0 1.0 FUNCT 0 1
+E 1 - NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
 // Point x-y+
-E 2 - NUMDOF 2 ONOFF 1 1 VAL 0.0 1.0 FUNCT 0 1
+E 2 - NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
 // Point x-y-
-E 3 - NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 3 - NUMDOF 2 ONOFF 1 1 VAL 0.0 -1.0 FUNCT 0 1
 // Point x+y-
-E 4 - NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 4 - NUMDOF 2 ONOFF 1 1 VAL 0.0 -1.0 FUNCT 0 1
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 DLINE                           4
-// Line_x+
+//                              Line_x+
 E 1 - NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
-// Line_x-
+//                              Line_x-
 E 2 - NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
-// Line_y+
-E 3 - NUMDOF 2 ONOFF 1 1 VAL 0.0 1.0 FUNCT 0 1
-// Line_y-
-E 4 - NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+//                              Line_y+
+E 3 - NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+//                              Line_y-
+E 4 - NUMDOF 2 ONOFF 1 1 VAL 0.0 -1.0 FUNCT 0 1
 -----------------------DESIGN LINE NORMAL NO PENETRATION CONDITION
 DLINE                           1
+//                              Line_x+
+//E 1 -
+//                              Line_x-
+//E 2 -
+//                              Line_y+
+//E 3 -
+//                              Line_y-
+//E 4 -
+//interface
 E 5 -
 ------------------------------DESIGN LINE PORO PARTIAL INTEGRATION
 DLINE                           3
-// Line_y-
-E 4 -
-// rightporo
+//                              Line_x+
+//E 1 -
+//                              Line_x-
+//E 2 -
+//                              Line_y+
+//E 3 -
+//                              Line_y+
+E 3 -
+//rightporo
 E 6 -
-// leftporo
+//leftporo
 E 7 -
+-------------------------------------DESIGN SURF DIRICH CONDITIONS
+DSURF                           0
+//                              Surface
+//E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+--------------------------------DESIGN SURF PORO DIRICH CONDITIONS
+DSURF                           0
+//                              Surface
+//E 1 - NUMDOF 6 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
 -----------------------------DESIGN SURFACE POROCOUPLING CONDITION
 DSURF                           1
 E 2 -
@@ -154,10 +163,10 @@ NODE 9 DLINE 4
 NODE 3 DLINE 5
 NODE 4 DLINE 5
 NODE 6 DLINE 5
+NODE 1 DLINE 6
 NODE 4 DLINE 6
-NODE 8 DLINE 6
+NODE 5 DLINE 7
 NODE 6 DLINE 7
-NODE 9 DLINE 7
 -----------------------------------------------DSURF-NODE TOPOLOGY
 NODE 1 DSURFACE 1
 NODE 2 DSURFACE 1
@@ -168,12 +177,12 @@ NODE 6 DSURFACE 1
 NODE 7 DSURFACE 1
 NODE 8 DSURFACE 1
 NODE 9 DSURFACE 1
+NODE 1 DSURFACE 2
+NODE 2 DSURFACE 2
 NODE 3 DSURFACE 2
 NODE 4 DSURFACE 2
+NODE 5 DSURFACE 2
 NODE 6 DSURFACE 2
-NODE 7 DSURFACE 2
-NODE 8 DSURFACE 2
-NODE 9 DSURFACE 2
 -------------------------------------------------------NODE COORDS
 NODE 1 COORD 5.0000000000000000e+00 5.0000000000000000e+00 0.0000000000000000e+00
 NODE 2 COORD 0.0000000000000000e+00 5.0000000000000000e+00 0.0000000000000000e+00
@@ -185,7 +194,7 @@ NODE 7 COORD 0.0000000000000000e+00 -5.0000000000000000e+00 0.0000000000000000e+
 NODE 8 COORD 5.0000000000000000e+00 -5.0000000000000000e+00 0.0000000000000000e+00
 NODE 9 COORD -5.0000000000000000e+00 -5.0000000000000000e+00 0.0000000000000000e+00
 ------------------------------------------------STRUCTURE ELEMENTS
-1 WALL QUAD4 1 2 3 4 MAT 2 KINEM nonlinear EAS none THICK 0.1 STRESS_STRAIN plane_strain GP 2 2
-2 WALL QUAD4 2 5 6 3 MAT 2 KINEM nonlinear EAS none THICK 0.1 STRESS_STRAIN plane_strain GP 2 2
-3 WALLQ4PORO QUAD4 4 3 7 8 MAT 1 KINEM nonlinear EAS none THICK 0.1 STRESS_STRAIN plane_strain GP 2 2 POROANISODIR1 1.0 0.0
-4 WALLQ4PORO QUAD4 3 6 9 7 MAT 1 KINEM nonlinear EAS none THICK 0.1 STRESS_STRAIN plane_strain GP 2 2 POROANISODIR1 1.0 0.0
+1 WALLQ4PORO QUAD4 1 2 3 4 MAT 1 KINEM nonlinear EAS none THICK 0.1 STRESS_STRAIN plane_strain GP 2 2
+2 WALLQ4PORO QUAD4 2 5 6 3 MAT 1 KINEM nonlinear EAS none THICK 0.1 STRESS_STRAIN plane_strain GP 2 2
+3 WALL QUAD4 4 3 7 8 MAT 2 KINEM nonlinear EAS none THICK 0.1 STRESS_STRAIN plane_strain GP 2 2
+4 WALL QUAD4 3 6 9 7 MAT 2 KINEM nonlinear EAS none THICK 0.1 STRESS_STRAIN plane_strain GP 2 2

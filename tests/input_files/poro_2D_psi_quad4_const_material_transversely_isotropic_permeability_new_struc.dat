@@ -70,15 +70,16 @@ SECONDORDER                     no
 CONTIPARTINT                    yes
 ----------------------------------------------------------SOLVER 1
 SOLVER                          UMFPACK
--------------------------------------------------------PROBLEM TYPE
-PROBLEMTYPE                      Poroelasticity
+------------------------------------------------------PROBLEM TYPE
+PROBLEMTYPE                     Poroelasticity
 RESTART                         0
 SHAPEFCT                        Polynomial
 ----------------------------------------------------------SOLVER 2
 SOLVER                          UMFPACK
 ------------------------------------------------STRUCTURAL DYNAMIC
+INT_STRATEGY                    Standard
 DAMPING                         Material
-DYNAMICTYPE                      OneStepTheta
+DYNAMICTYPE                     OneStepTheta
 PREDICT                         ConstDis
 LINEAR_SOLVER                   1
 ----------------------------------------------CLONING MATERIAL MAP

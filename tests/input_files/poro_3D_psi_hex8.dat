@@ -34,7 +34,7 @@ GRIDVEL                         BE
 INITIALFIELD                    zero_field
 THETA                           0.66
 TIMEINTEGR                      One_Step_Theta
-RESULTSEVRY                           1
+RESULTSEVRY                     5
 LINEAR_SOLVER                   3
 ---------------------------FLUID DYNAMIC/POROUS-FLOW STABILIZATION
 CROSS-STRESS                    no_cross
@@ -55,7 +55,7 @@ COUPALGO                        poro_monolithic
 PHYSICAL_TYPE                   Poro
 ITEMAX                          20
 ITEMIN                          1
-MAXTIME                         1.0
+MAXTIME                         0.1
 NORMCOMBI_RESFINC               And
 NORM_INC                        AbsSingleFields
 NORM_RESF                       AbsSingleFields
@@ -72,7 +72,7 @@ TOLRES_PORO                     1e-04
 VECTORNORM_RESF                 L1
 VECTORNORM_INC                  Rms
 TIMESTEP                        0.01
-RESULTSEVRY                           1
+RESULTSEVRY                     5
 LINEAR_SOLVER                   1
 SECONDORDER                     no
 CONTIPARTINT                    no
@@ -122,14 +122,6 @@ DSURF                           2
 E 4 - NUMDOF 3 ONOFF 1 1 1 VAL 1.0 0.0 0.0 FUNCT 3 0 0
 // Surface x+
 E 6 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
-// Surface y+
-//E 5 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
-// Surface y-
-//E 3 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
-// Surface z+
-//E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
-// Surface z-
-//E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
 ------------------------------DESIGN VOLUME POROCOUPLING CONDITION
 DVOL                            1
 E 1 -

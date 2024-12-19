@@ -64,7 +64,7 @@ TOLINC_GLOBAL                   1e-08
 VECTORNORM_RESF                 L2
 VECTORNORM_INC                  Inf
 TIMESTEP                        0.01
-RESULTSEVRY                           1
+RESULTSEVRY                     10
 LINEAR_SOLVER                   1
 SECONDORDER                     no
 CONTIPARTINT                    yes
