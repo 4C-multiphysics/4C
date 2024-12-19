@@ -38,7 +38,9 @@
 #include "4C_structure_aux.hpp"
 #include "4C_structure_timint.hpp"
 
+#include <MueLu_UseDefaultTypes.hpp>
 #include <Teuchos_RCPStdSharedPtrConversions.hpp>
+#include <Xpetra_MatrixUtils.hpp>
 
 #include <sstream>
 #ifdef FOUR_C_ENABLE_FE_TRAPPING
@@ -3174,9 +3176,64 @@ void Solid::TimIntImpl::cmt_linear_solve()
       cmtbridge_->get_strategy().build_saddle_point_system(
           stiff_, fres_, disi_, dbcmaps_, blockMat, blocksol, blockrhs);
 
+      // compute the nullspace vectors for the Lagrange multiplier field
+      {
+        using EpetraCrsMatrix = Xpetra::EpetraCrsMatrixT<int, Xpetra::EpetraNode>;
+        using SC = Scalar;
+        using LO = LocalOrdinal;
+        using GO = GlobalOrdinal;
+        using NO = Node;
+
+        const int dim_nullspace = contactsolver_->params()
+                                      .sublist("Inverse2")
+                                      .sublist("MueLu Parameters")
+                                      .get<int>("PDE equations", -1);
+
+        Epetra_Operator* raw_block_mat = blockMat.get();
+        Teuchos::RCP<Core::LinAlg::BlockSparseMatrixBase> block_mat_blocked_operator =
+            Teuchos::rcp_dynamic_cast<Core::LinAlg::BlockSparseMatrixBase>(
+                Teuchos::RCP(raw_block_mat, false));
+        if (block_mat_blocked_operator == Teuchos::null)
+          FOUR_C_THROW("Matrix is not a BlockSparseMatrix");
+        Teuchos::RCP<Xpetra::CrsMatrix<SC, LO, GO, NO>> block_mat_x_crs_A22 =
+            Teuchos::make_rcp<EpetraCrsMatrix>(
+                Teuchos::rcp(block_mat_blocked_operator->matrix(1, 1).epetra_matrix()));
+
+        std::vector<size_t> striding_info_dual;
+        striding_info_dual.push_back(dim_nullspace);
+        Teuchos::RCP<Xpetra::StridedMap<LO, GO, NO>> strided_range_map_dual =
+            Teuchos::make_rcp<Xpetra::StridedMap<LO, GO, NO>>(block_mat_x_crs_A22->getRowMap(),
+                striding_info_dual, block_mat_x_crs_A22->getRowMap()->getIndexBase(), -1, 0);
+
+        Teuchos::RCP<Xpetra::MultiVector<SC, LO, GO, NO>> nullspace = Teuchos::null;
+        nullspace = Xpetra::MultiVectorFactory<SC, LO, GO, NO>::Build(
+            strided_range_map_dual, dim_nullspace);
+        for (int i = 0; i < dim_nullspace; ++i)
+        {
+          Teuchos::ArrayRCP<SC> nullspace_values = nullspace->getDataNonConst(i);
+          int num_blocks = nullspace_values.size() / dim_nullspace;
+          for (int j = 0; j < num_blocks; ++j)
+          {
+            nullspace_values[j * dim_nullspace + i] = 1.0;
+          }
+        }
+
+        auto nullspace_x_epetra =
+            Teuchos::rcp_dynamic_cast<Xpetra::EpetraMultiVectorT<GO, NO>>(nullspace, true);
+        Teuchos::RCP<Epetra_MultiVector> nullspace_epetra =
+            nullspace_x_epetra->getEpetra_MultiVector();
+        Epetra_MultiVector& nullspace_raw = *nullspace_epetra;
+        std::shared_ptr<Core::LinAlg::MultiVector<double>> nullspace_core =
+            std::make_shared<Core::LinAlg::MultiVector<double>>(nullspace_raw);
+
+        contactsolver_->params()
+            .sublist("Inverse2")
+            .sublist("MueLu Parameters")
+            .set("nullspace", nullspace_core);
+      }
+
       // solve the linear system
       contactsolver_->solve(blockMat, blocksol, blockrhs, solver_params);
-
       // split vector and update internal displacement and Lagrange multipliers
       cmtbridge_->get_strategy().update_displacements_and_l_mincrements(disi_, blocksol);
     }

@@ -227,12 +227,12 @@ std::shared_ptr<Core::LinAlg::Solver> Solid::SOLVER::Factory::build_meshtying_co
           sol != Core::LinearSolver::SolverType::superlu)
       {
         // if an iterative solver is chosen we need a block preconditioner like CheapSIMPLE
-        if (prec != Core::LinearSolver::PreconditionerType::multigrid_muelu_contactsp &&
+        if (prec != Core::LinearSolver::PreconditionerType::multigrid_muelu &&
             prec != Core::LinearSolver::PreconditionerType::block_teko)
           FOUR_C_THROW(
               "You have chosen an iterative linear solver. For mortar/Contact in saddlepoint "
               "formulation you have to choose a block preconditioner such as SIMPLE. Choose "
-              "CheapSIMPLE or MueLu_contactSP (if MueLu is available) in the SOLVER %i block in "
+              "CheapSIMPLE or MueLu (if MueLu is available) in the SOLVER %i block in "
               "your dat file.",
               lin_solver_id);
       }
@@ -259,8 +259,9 @@ std::shared_ptr<Core::LinAlg::Solver> Solid::SOLVER::Factory::build_meshtying_co
       if (sol_type == Inpar::CONTACT::solution_lagmult)
       {
         // provide null space information
-        if (prec == Core::LinearSolver::PreconditionerType::multigrid_muelu_contactsp)
-        { /* do nothing here */
+        if (prec == Core::LinearSolver::PreconditionerType::multigrid_muelu)
+        {
+          // do nothing
         }
         else if (prec == Core::LinearSolver::PreconditionerType::block_teko)
         {
