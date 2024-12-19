@@ -38,7 +38,8 @@ void CONTACT::CONSTITUTIVELAW::LawDefinition::read(const Global::Problem& proble
 {
   for (const auto& i : input.lines_in_section("CONTACT CONSTITUTIVE LAWS"))
   {
-    Core::IO::ValueParser parser(i, "While reading 'CONTACT CONSTITUTIVE LAWS' section: ");
+    Core::IO::ValueParser parser(
+        i, {.user_scope_message = "While reading 'CONTACT CONSTITUTIVE LAWS' section: "});
 
     parser.consume("LAW");
     const int id = parser.read<int>();
@@ -58,8 +59,9 @@ void CONTACT::CONSTITUTIVELAW::LawDefinition::read(const Global::Problem& proble
               id, coconstlawtype_, coconstlawname_);
       // fill the latter
 
+      // insert leading whitespace for legacy implementation
       std::shared_ptr<std::stringstream> condline =
-          std::make_shared<std::stringstream>(std::string{parser.get_unparsed_remainder()});
+          std::make_shared<std::stringstream>(" " + std::string{parser.get_unparsed_remainder()});
 
       // add trailing white space to stringstream "condline" to avoid deletion of stringstream upon
       // reading the last entry inside This is required since the material parameters can be

@@ -281,7 +281,7 @@ CONTACT::Beam3cmanager::Beam3cmanager(Core::FE::Discretization& discret, double 
           Teuchos::getNumericStringParameter(sbeampotential_, "POT_LAW_EXPONENT"));
 
       Core::IO::ValueParser pot_law_exponents_parser(
-          pot_law_exponents_in, "While reading potential law exponents: ");
+          pot_law_exponents_in, {.user_scope_message = "While reading potential law exponents: "});
 
       while (!pot_law_exponents_parser.at_end())
       {
@@ -292,8 +292,8 @@ CONTACT::Beam3cmanager::Beam3cmanager(Core::FE::Discretization& discret, double 
       std::string pot_law_prefactors_in(
           Teuchos::getNumericStringParameter(sbeampotential_, "POT_LAW_PREFACTOR"));
 
-      Core::IO::ValueParser pot_law_prefactors_parser(
-          pot_law_prefactors_in, "While reading potential law prefactors: ");
+      Core::IO::ValueParser pot_law_prefactors_parser(pot_law_prefactors_in,
+          {.user_scope_message = "While reading potential law prefactors: "});
 
       while (!pot_law_prefactors_parser.at_end())
       {

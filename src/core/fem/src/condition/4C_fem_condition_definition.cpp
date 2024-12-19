@@ -66,8 +66,8 @@ void Core::Conditions::ConditionDefinition::read(Core::IO::InputFile& input,
   //
   // ("DPOINT" | "DLINE" | "DSURF" | "DVOL" ) <number>
 
-  Core::IO::ValueParser parser_header(
-      section_vec[0], "While reading header of condition section '" + sectionname_ + "': ");
+  Core::IO::ValueParser parser_header(section_vec[0],
+      {.user_scope_message = "While reading header of condition section '" + sectionname_ + "': "});
 
   const std::string expected_geometry_type = std::invoke(
       [this]()
@@ -99,7 +99,8 @@ void Core::Conditions::ConditionDefinition::read(Core::IO::InputFile& input,
   for (auto i = section_vec.begin() + 1; i != section_vec.end(); ++i)
   {
     Core::IO::ValueParser parser_content(
-        *i, "While reading content of condition section '" + sectionname_ + "': ");
+        *i, {.user_scope_message =
+                    "While reading content of condition section '" + sectionname_ + "': "});
 
     parser_content.consume("E");
     // Read a one-based condition number but convert it to zero-based for internal use.
@@ -109,8 +110,9 @@ void Core::Conditions::ConditionDefinition::read(Core::IO::InputFile& input,
     std::shared_ptr<Core::Conditions::Condition> condition =
         std::make_shared<Core::Conditions::Condition>(dobjid, condtype_, buildgeometry_, gtype_);
 
-    std::shared_ptr<std::stringstream> condline =
-        std::make_shared<std::stringstream>(std::string(parser_content.get_unparsed_remainder()));
+    // insert leading whitespace for legacy implementation
+    std::shared_ptr<std::stringstream> condline = std::make_shared<std::stringstream>(
+        " " + std::string(parser_content.get_unparsed_remainder()));
     // add trailing white space to stringstream "condline" to avoid deletion of stringstream upon
     // reading the last entry inside This is required since the material parameters can be
     // specified in an arbitrary order in the input file. So it might happen that the last entry

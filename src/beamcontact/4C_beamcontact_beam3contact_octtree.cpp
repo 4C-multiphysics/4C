@@ -77,7 +77,7 @@ Beam3ContactOctTree::Beam3ContactOctTree(Teuchos::ParameterList& params,
     std::string extrusion_value_in(Teuchos::getNumericStringParameter(params, "BEAMS_EXTVAL"));
 
     Core::IO::ValueParser extrusionvalue_parser(
-        extrusion_value_in, "While reading extrusion values: ");
+        extrusion_value_in, {.user_scope_message = "While reading extrusion values: "});
 
     while (!extrusionvalue_parser.at_end())
     {

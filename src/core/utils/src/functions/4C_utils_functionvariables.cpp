@@ -534,7 +534,7 @@ std::vector<double> Core::Utils::Internal::extract_time_vector(const Input::Line
   int numpoints = timevar.container().get<int>("NUMPOINTS");
 
   // read whether times are defined by number of points or by vector
-  bool bynum = timevar.container().get<bool>("BYNUM");
+  bool bynum = timevar.container().get_or<bool>("BYNUM", false);
 
   // read respectively create times vector
   std::vector<double> times = std::invoke(

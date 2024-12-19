@@ -38,11 +38,12 @@ void PARTICLEENGINE::read_particles(Core::IO::InputFile& input, const std::strin
       PARTICLEENGINE::TypeEnum particletype;
       PARTICLEENGINE::ParticleStates particlestates;
 
-      Core::IO::ValueParser parser{particle_line, "While reading particle data: "};
+      Core::IO::ValueParser parser{
+          particle_line, {.user_scope_message = "While reading particle data: "}};
       parser.consume("TYPE");
       auto type = parser.read<std::string>();
       parser.consume("POS");
-      auto pos = parser.read_array<double, 3>();
+      auto pos = parser.read<std::array<double, 3>>();
 
       // get enum of particle type
       particletype = PARTICLEENGINE::enum_from_type_name(type);

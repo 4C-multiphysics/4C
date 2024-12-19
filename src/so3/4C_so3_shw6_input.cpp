@@ -70,7 +70,7 @@ bool Discret::Elements::SoShw6::read_element(const std::string& eletype, const s
 
   // check for automatically align material space optimally with parameter space
   nodes_rearranged_ = false;
-  optimal_parameterspace_map_ = container.get<bool>("OPTORDER");
+  optimal_parameterspace_map_ = container.get_or<bool>("OPTORDER", false);
 
   return true;
 }

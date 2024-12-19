@@ -49,7 +49,8 @@ std::vector<std::pair<int, Core::IO::InputParameterContainer>> Mat::MaterialDefi
   std::vector<std::pair<int, Core::IO::InputParameterContainer>> found_materials;
   for (const auto& line : input.lines_in_section(name))
   {
-    Core::IO::ValueParser parser(line, "While reading 'MATERIALS' section: ");
+    Core::IO::ValueParser parser(
+        line, {.user_scope_message = "While reading 'MATERIALS' section: "});
 
     parser.consume("MAT");
     const int matid = parser.read<int>();
@@ -59,8 +60,9 @@ std::vector<std::pair<int, Core::IO::InputParameterContainer>> Mat::MaterialDefi
     {
       if (matid <= -1) FOUR_C_THROW("Illegal negative ID provided");
 
+      // insert leading whitespace for legacy implementation
       std::shared_ptr<std::stringstream> condline =
-          std::make_shared<std::stringstream>(std::string(parser.get_unparsed_remainder()));
+          std::make_shared<std::stringstream>(" " + std::string(parser.get_unparsed_remainder()));
 
       // add trailing white space to stringstream "condline" to avoid deletion of stringstream upon
       // reading the last entry inside This is required since the material parameters can be

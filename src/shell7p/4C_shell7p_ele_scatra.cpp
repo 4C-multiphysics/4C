@@ -370,7 +370,7 @@ bool Discret::Elements::Shell7pScatra::read_element(const std::string& eletype,
   if (distype_ == Core::FE::CellType::quad4 or distype_ == Core::FE::CellType::quad6 or
       distype_ == Core::FE::CellType::quad9)
   {
-    if (container.get<bool>("ANS"))
+    if (container.get_or<bool>("ANS", false))
     {
       shell_data.num_ans = Solid::Utils::Shell::ReadElement::read_and_set_num_ans(distype_);
     }
