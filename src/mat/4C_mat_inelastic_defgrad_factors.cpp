@@ -7,7 +7,11 @@
 
 #include "4C_mat_inelastic_defgrad_factors.hpp"
 
+#include "4C_comm_mpi_utils.hpp"
+#include "4C_comm_utils.hpp"
+#include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
+#include "4C_io_runtime_csv_writer.hpp"
 #include "4C_legacy_enum_definitions_materials.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_fixedsizematrix_solver.hpp"
@@ -27,6 +31,7 @@
 
 #include <Teuchos_ParameterList.hpp>
 #include <Teuchos_StandardParameterEntryValidators.hpp>
+#include <Teuchos_Time.hpp>
 
 #include <map>
 #include <memory>
@@ -446,6 +451,161 @@ namespace
 
     return iFinM;
   }
+
+  //! struct containing utilities for benchmarking the material evaluation (time integration,
+  //! error types, ...) of InelastDefgradTransvIsotropElastViscoplast
+  struct BenchmarkUtils
+  {
+    // number of substeps for the current evaluation (LNL)
+    unsigned int eval_num_of_substeps_ = 0;
+
+    // total number of substeps
+    unsigned int total_num_of_substeps_ = 0;
+
+    // number of LNL iterations for the current evaluation (LNL)
+    unsigned int eval_num_of_iters_ = 0;
+
+    // total number of LNL iterations
+    unsigned int total_num_of_iters_ = 0;
+
+    // timer for the current evaluation, from the start of preevaluate to the end of update
+    Teuchos::Time eval_teuchos_timer_{
+        "InelasticDefgradTransvIsotropElastViscoplast::from_preevaluate_to_update"};
+
+    // evaluation time
+    double eval_time_;
+
+    // total time
+    double total_time_;
+
+    // error map of the current evaluation, from the first preevaluate of this time step to the
+    // first preevaluate of the next
+    std::map<Mat::ViscoplastErrorType, unsigned int> eval_error_map_ = {
+        {Mat::ViscoplastErrorType::NegativePlasticStrain, 0},
+        {Mat::ViscoplastErrorType::OverflowError, 0},
+        {Mat::ViscoplastErrorType::NoPlasticIncompressibility, 0},
+        {Mat::ViscoplastErrorType::FailedSolLinSystLNL, 0},
+        {Mat::ViscoplastErrorType::NoConvergenceLNL, 0},
+        {Mat::ViscoplastErrorType::SingularJacobian, 0},
+        {Mat::ViscoplastErrorType::FailedSolAnalytLinearization, 0}};
+
+    // error map of the total evaluation
+    std::map<Mat::ViscoplastErrorType, unsigned int> total_error_map_ = {
+        {Mat::ViscoplastErrorType::NegativePlasticStrain, 0},
+        {Mat::ViscoplastErrorType::OverflowError, 0},
+        {Mat::ViscoplastErrorType::NoPlasticIncompressibility, 0},
+        {Mat::ViscoplastErrorType::FailedSolLinSystLNL, 0},
+        {Mat::ViscoplastErrorType::NoConvergenceLNL, 0},
+        {Mat::ViscoplastErrorType::SingularJacobian, 0},
+        {Mat::ViscoplastErrorType::FailedSolAnalytLinearization, 0}};
+
+
+    // runtime csv writer
+    std::optional<Core::IO::RuntimeCsvWriter> csv_writer_;
+
+    // simulation time instant and time step
+    double sim_time_ = 0.0;
+    int sim_timestep_ = 0.0;
+
+    // was the pre_evaluate method of the first element called?
+    bool pre_eval_called_ = false;
+
+    // how often was the update method called? (max. num_of_global_elements if one processor is
+    // considered)
+    int num_update_calls_ = 0;
+
+    // reset method
+    void reset()
+    {
+      eval_num_of_substeps_ = 0;
+      eval_num_of_iters_ = 0;
+      eval_teuchos_timer_.reset();
+      eval_time_ = 0;
+      eval_error_map_ = {{Mat::ViscoplastErrorType::NegativePlasticStrain, 0},
+          {Mat::ViscoplastErrorType::OverflowError, 0},
+          {Mat::ViscoplastErrorType::NoPlasticIncompressibility, 0},
+          {Mat::ViscoplastErrorType::FailedSolLinSystLNL, 0},
+          {Mat::ViscoplastErrorType::NoConvergenceLNL, 0},
+          {Mat::ViscoplastErrorType::SingularJacobian, 0},
+          {Mat::ViscoplastErrorType::FailedSolAnalytLinearization, 0}};
+    }
+
+    // initialize csv_writer only if required
+    void init_csv_writer()
+    {
+      // get structure discretization
+      std::shared_ptr<Core::FE::Discretization> structure_dis =
+          Global::Problem::instance()->get_dis("structure");
+
+      // check whether we are using a single processor! (no implementation for multiple processors
+      // yet, and also not really required)
+      int my_rank = Core::Communication::my_mpi_rank(structure_dis->get_comm());
+      FOUR_C_ASSERT_ALWAYS(my_rank == 0,
+          "InelasticDefgradTransvIsotropElastViscoplast: No implementation of benchmarking output "
+          "for multiple processors");
+
+      // create csv_writer and register its columns
+      csv_writer_.emplace(
+          my_rank, *Global::Problem::instance()->output_control_file(), "benchmark_output");
+      csv_writer_->register_data_vector("Evaluated substeps", 1, 16);
+      csv_writer_->register_data_vector("Evaluated iterations", 1, 16);
+      csv_writer_->register_data_vector("Evaluation time", 1, 16);
+      csv_writer_->register_data_vector("Total substeps", 1, 16);
+      csv_writer_->register_data_vector("Total iterations", 1, 16);
+      csv_writer_->register_data_vector("Total time", 1, 16);
+      for (const auto &[key, value] : Mat::ViscoplastErrorNames)
+      {
+        csv_writer_->register_data_vector(
+            "Evaluated Error " + std::to_string(static_cast<int>(key)) + ": " + value, 1, 16);
+        csv_writer_->register_data_vector(
+            "Total Error " + std::to_string(static_cast<int>(key)) + ": " + value, 1, 16);
+      }
+    }
+
+    // update total values
+    void update_total()
+    {
+      total_num_of_substeps_ += eval_num_of_substeps_;
+      total_num_of_iters_ += eval_num_of_iters_;
+      total_time_ += eval_time_;
+      for (const auto &[error_type, error_count] : eval_error_map_)
+      {
+        total_error_map_[error_type] += error_count;
+      }
+    }
+
+    // write to csv after each timestep
+    void write_to_csv()
+    {
+      // output data
+      std::map<std::string, std::vector<double>> output_data;
+      output_data["Evaluated substeps"] = {static_cast<double>(eval_num_of_substeps_)};
+      output_data["Total substeps"] = {static_cast<double>(total_num_of_substeps_)};
+      output_data["Evaluated iterations"] = {static_cast<double>(eval_num_of_iters_)};
+      output_data["Total iterations"] = {static_cast<double>(total_num_of_iters_)};
+      output_data["Evaluation time"] = {static_cast<double>(eval_time_)};
+      output_data["Total time"] = {static_cast<double>(total_time_)};
+
+      for (const auto &[key, value] : Mat::ViscoplastErrorNames)
+      {
+        output_data["Evaluated Error " + std::to_string(static_cast<int>(key)) + ": " + value] = {
+            static_cast<double>(eval_error_map_[key])};
+        output_data["Total Error " + std::to_string(static_cast<int>(key)) + ": " + value] = {
+            static_cast<double>(total_error_map_[key])};
+      }
+
+      // write output data to csv
+      csv_writer_->write_data_to_file(sim_time_, sim_timestep_, output_data);
+    }
+  };
+
+
+  //! instance of BenchmarkUtils utilized for this specific processor (afterwards we want to sum up
+  //! the values of all processors)
+  static BenchmarkUtils benchmark_utils;
+
+
+
 }  // namespace
 
 
@@ -627,7 +787,8 @@ Mat::PAR::InelasticDefgradTransvIsotropElastViscoplast::
       bool_transv_isotropy_(
           read_anisotropy_type(matdata.parameters.get<std::string>("ANISOTROPY"))),
       bool_log_substepping_(matdata.parameters.get<bool>("LOG_SUBSTEP")),
-      max_halve_number_(matdata.parameters.get<int>("MAX_HALVE_NUM_SUBSTEP"))
+      max_halve_number_(matdata.parameters.get<int>("MAX_HALVE_NUM_SUBSTEP")),
+      bool_benchmark_timint_(matdata.parameters.get<bool>("BENCHMARK_TIMINT"))
 {
   if (max_halve_number_ < 0) FOUR_C_THROW("Parameter MAX_HALVE_NUM_SUBSTEP must be >= 0!");
 }
@@ -1661,6 +1822,9 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::InelasticDefgradTransvIsotrop
   // default value for the current deformation gradient: zero tensor \f$ \boldsymbol{0} f$ (to make
   // sure that the inverse inelastic deformation gradient is evaluated in the first method call)
   time_step_quantities_.current_defgrad_.resize(1, Core::LinAlg::Matrix<3, 3>{true});
+
+  // benchmarking: initialize csv writer
+  if (parameter()->bool_benchmark_timint()) benchmark_utils.init_csv_writer();
 }
 
 
@@ -1691,6 +1855,16 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::pre_evaluate(
 
   // call preevaluate method of the viscoplastic law
   viscoplastic_law_->pre_evaluate(gp);
+
+  // benchmarking: start evaluation if it has not already started
+  if (parameter()->bool_benchmark_timint() && !(benchmark_utils.pre_eval_called_))
+  {
+    benchmark_utils.pre_eval_called_ = true;
+    benchmark_utils.reset();
+    benchmark_utils.eval_teuchos_timer_.start(true);
+    ++benchmark_utils.sim_timestep_;
+    benchmark_utils.sim_time_ += time_step_settings_.dt_;
+  }
 }
 
 /*--------------------------------------------------------------------*
@@ -2431,6 +2605,9 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_inverse_inelast
     const Core::LinAlg::Matrix<3, 3> *defgrad, const Core::LinAlg::Matrix<3, 3> &iFin_other,
     Core::LinAlg::Matrix<3, 3> &iFinM)
 {
+  // benchmarking: we only benchmark time integration (and linearization, but no predictor
+  // evaluation)!
+
   // reduced deformation gradient FredM, taking into account all the already computed inelastic
   // factors
   //    \f$ \boldsymbol{F_{\text{red}}} = \boldsymbol{F} \boldsymbol{F_{\text{in,other}}^{-1}} \f$
@@ -2486,7 +2663,22 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_inverse_inelast
 
     // throw error if the Local Newton Loop cannot be evaluated with the given substepping
     // settings
-    if (err_status != Mat::ViscoplastErrorType::NoErrors) FOUR_C_THROW(Mat::to_string(err_status));
+    if (err_status != Mat::ViscoplastErrorType::NoErrors)
+    {
+      // benchmarking actions
+      if (parameter()->bool_benchmark_timint())
+      {
+        // benchmarking: stop timer
+        benchmark_utils.eval_time_ = benchmark_utils.eval_teuchos_timer_.stop();
+        // benchmarking: update_total_values
+        benchmark_utils.update_total();
+        // benchmarking: write data to csv
+        benchmark_utils.write_to_csv();
+      }
+
+
+      FOUR_C_THROW(Mat::to_string(err_status));
+    }
 
     // extract the inverse inelastic defgrad from the LNL solution
     iFinM = extract_inverse_inelastic_defgrad(sol);
@@ -2515,6 +2707,29 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::update()
 
   // call update method of the viscoplastic law
   viscoplastic_law_->update();
+
+  // benchmarking: perform update
+  if (parameter()->bool_benchmark_timint())
+  {
+    if (benchmark_utils.num_update_calls_ ==
+        Global::Problem::instance()->get_dis("structure")->num_global_elements() - 1)
+    {
+      // benchmarking: stop timer
+      benchmark_utils.eval_time_ = benchmark_utils.eval_teuchos_timer_.stop();
+      // benchmarking: update_total_values
+      benchmark_utils.update_total();
+      // benchmarking: write data to csv
+      benchmark_utils.write_to_csv();
+
+      // reset control flow variables
+      benchmark_utils.pre_eval_called_ = false;
+      benchmark_utils.num_update_calls_ = 0;
+    }
+    else
+    {
+      ++benchmark_utils.num_update_calls_;
+    }
+  }
 }
 
 
@@ -2888,6 +3103,9 @@ Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::l
       // increment iteration counter
       ++substep_params.iter;
 
+      // benchmarking: increment iterations
+      if (parameter()->bool_benchmark_timint()) ++benchmark_utils.eval_num_of_iters_;
+
       // set minimum substep length to use for overflow error checks
       check_dt = substep_params.curr_dt;
 
@@ -2897,7 +3115,21 @@ Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::l
       {
         err_status = ViscoplastErrorType::NoPlasticIncompressibility;
         new_substep_status = prepare_new_substep(substep_params, sol, curr_CM);
-        if (!new_substep_status) return sol;  // return with error
+
+        // benchmarking: add error
+        if (parameter()->bool_benchmark_timint())
+          ++benchmark_utils.eval_error_map_[static_cast<Mat::ViscoplastErrorType>(err_status)];
+
+
+        if (!new_substep_status)
+        {
+          // benchmarking: add number of substeps
+          if (parameter()->bool_benchmark_timint())
+            benchmark_utils.eval_num_of_substeps_ += substep_params.substep_counter;
+
+
+          return sol;  // return with error
+        }
         continue;
       }
 
@@ -2909,7 +3141,19 @@ Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::l
       if (err_status != Mat::ViscoplastErrorType::NoErrors)
       {
         new_substep_status = prepare_new_substep(substep_params, sol, curr_CM);
-        if (!new_substep_status) return sol;  // return with error
+
+        // benchmarking: add error
+        if (parameter()->bool_benchmark_timint())
+          ++benchmark_utils.eval_error_map_[static_cast<Mat::ViscoplastErrorType>(err_status)];
+
+        if (!new_substep_status)
+        {
+          // benchmarking: add number of substeps
+          if (parameter()->bool_benchmark_timint())
+            benchmark_utils.eval_num_of_substeps_ += substep_params.substep_counter;
+
+          return sol;  // return with error
+        }
         continue;
       }
 
@@ -2948,10 +3192,20 @@ Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::l
       if (substep_params.iter > max_iter)
       {
         new_substep_status = prepare_new_substep(substep_params, sol, curr_CM);
+
+        // benchmarking: add error
+        if (parameter()->bool_benchmark_timint())
+          ++benchmark_utils.eval_error_map_[static_cast<Mat::ViscoplastErrorType>(err_status)];
+
         // if the halving number was exceeded --> return with error
         if (!new_substep_status)
         {
           err_status = ViscoplastErrorType::NoConvergenceLNL;
+
+          // benchmarking: add number of substeps
+          if (parameter()->bool_benchmark_timint())
+            benchmark_utils.eval_num_of_substeps_ += substep_params.substep_counter;
+
           return sol;  // return with error
         }
         continue;
@@ -2965,7 +3219,19 @@ Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::l
       if (err_status != Mat::ViscoplastErrorType::NoErrors)
       {
         new_substep_status = prepare_new_substep(substep_params, sol, curr_CM);
-        if (!new_substep_status) return sol;  // return with error
+
+        // benchmarking: add error
+        if (parameter()->bool_benchmark_timint())
+          ++benchmark_utils.eval_error_map_[static_cast<Mat::ViscoplastErrorType>(err_status)];
+
+        if (!new_substep_status)
+        {
+          // benchmarking: add number of substeps
+          if (parameter()->bool_benchmark_timint())
+            benchmark_utils.eval_num_of_substeps_ += substep_params.substep_counter;
+
+          return sol;  // return with error
+        }
         continue;
       }
 
@@ -2982,8 +3248,19 @@ Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::l
       if ((err != 0) || (err2 != 0))
       {
         err_status = ViscoplastErrorType::FailedSolLinSystLNL;
+
+        // benchmarking: add error
+        if (parameter()->bool_benchmark_timint())
+          ++benchmark_utils.eval_error_map_[static_cast<Mat::ViscoplastErrorType>(err_status)];
+
         new_substep_status = prepare_new_substep(substep_params, sol, curr_CM);
-        if (!new_substep_status) return sol;  // return with error
+        if (!new_substep_status)
+        {
+          // benchmarking: add number of substeps
+          if (parameter()->bool_benchmark_timint())
+            benchmark_utils.eval_num_of_substeps_ += substep_params.substep_counter;
+          return sol;  // return with error
+        }
         continue;
       }
 
@@ -2992,6 +3269,9 @@ Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::l
     }
   }
 
+  // benchmarking: add number of substeps to benchmark_utils
+  if (parameter()->bool_benchmark_timint())
+    benchmark_utils.eval_num_of_substeps_ += substep_params.substep_counter - 1;
 
   // return the obtained solution
   return sol;
