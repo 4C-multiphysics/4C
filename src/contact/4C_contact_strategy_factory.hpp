@@ -134,8 +134,8 @@ namespace CONTACT
        *
        *  \author Ager */
       void find_poro_interface_types(bool& poromaster, bool& poroslave, bool& structmaster,
-          bool& structslave, enum Mortar::Element::PhysicalType& slavetype,
-          enum Mortar::Element::PhysicalType& mastertype) const;
+          bool& structslave, const enum Mortar::Element::PhysicalType slavetype,
+          const enum Mortar::Element::PhysicalType mastertype) const;
 
       //!@}
 
