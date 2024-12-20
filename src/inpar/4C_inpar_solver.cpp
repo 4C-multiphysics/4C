@@ -48,11 +48,10 @@ namespace Inpar::SOLVER
           "Note! this preconditioner will only be used if the input operator\n"
           "supports the Epetra_RowMatrix interface and the client does not pass\n"
           "in an external preconditioner!",
-          Teuchos::tuple<std::string>("ILU", "MueLu", "MueLu_contactSP", "AMGnxn", "Teko"),
+          Teuchos::tuple<std::string>("ILU", "MueLu", "AMGnxn", "Teko"),
           Teuchos::tuple<Core::LinearSolver::PreconditionerType>(
               Core::LinearSolver::PreconditionerType::ilu,
               Core::LinearSolver::PreconditionerType::multigrid_muelu,
-              Core::LinearSolver::PreconditionerType::multigrid_muelu_contactsp,
               Core::LinearSolver::PreconditionerType::multigrid_nxn,
               Core::LinearSolver::PreconditionerType::block_teko),
           &list);

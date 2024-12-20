@@ -358,9 +358,6 @@ Teuchos::ParameterList translate_four_c_to_belos(const Teuchos::ParameterList &i
     case Core::LinearSolver::PreconditionerType::multigrid_muelu:
       beloslist.set("Preconditioner Type", "ML");
       break;
-    case Core::LinearSolver::PreconditionerType::multigrid_muelu_contactsp:
-      beloslist.set("Preconditioner Type", "ContactSP");
-      break;
     case Core::LinearSolver::PreconditionerType::multigrid_nxn:
       beloslist.set("Preconditioner Type", "AMGnxn");
       break;
@@ -383,11 +380,6 @@ Teuchos::ParameterList translate_four_c_to_belos(const Teuchos::ParameterList &i
   if (azprectype == Core::LinearSolver::PreconditionerType::multigrid_muelu)
   {
     Teuchos::ParameterList &muelulist = outparams.sublist("MueLu Parameters");
-    muelulist = translate_four_c_to_muelu(inparams, &beloslist);
-  }
-  if (azprectype == Core::LinearSolver::PreconditionerType::multigrid_muelu_contactsp)
-  {
-    Teuchos::ParameterList &muelulist = outparams.sublist("MueLu (Contact) Parameters");
     muelulist = translate_four_c_to_muelu(inparams, &beloslist);
   }
   if (azprectype == Core::LinearSolver::PreconditionerType::block_teko)
