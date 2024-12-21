@@ -1,0 +1,49 @@
+#include "4C_config.hpp"
+#include "4C_fem_discretization.hpp"
+#include "4C_fem_general_element.hpp"
+#include "4C_fem_general_node.hpp"
+#include "4C_solid_3D_ele.hpp"
+
+int main(int argc, char** argv)
+{
+    MPI_Init(&argc, &argv);
+
+    // create the MPI communicator
+    auto comm = MPI_COMM_WORLD;
+    int rank = FourC::Core::Communication::my_mpi_rank(comm);
+
+    // create several discretization
+    const int dim = 3;
+    auto dis1 = std::make_shared<FourC::Core::FE::Discretization>("dis 1", comm, dim);
+    auto dis2 = std::make_shared<FourC::Core::FE::Discretization>("dis 2", comm, dim);
+    auto dis3 = std::make_shared<FourC::Core::FE::Discretization>("dis 3", comm, dim);
+
+    // add some nodes to discretization 1
+    auto node1 = std::make_shared<FourC::Core::Nodes::Node>(1, std::vector<double>{0.0, 0.0, 0.0}, rank);
+    auto node2 = std::make_shared<FourC::Core::Nodes::Node>(2, std::vector<double>{1.0, 0.0, 0.0}, rank);
+    auto node3 = std::make_shared<FourC::Core::Nodes::Node>(3, std::vector<double>{1.0, 1.0, 0.0}, rank);
+    auto node4 = std::make_shared<FourC::Core::Nodes::Node>(4, std::vector<double>{0.0, 1.0, 0.0}, rank);
+    auto node5 = std::make_shared<FourC::Core::Nodes::Node>(5, std::vector<double>{0.0, 0.0, 1.0}, rank);
+    auto node6 = std::make_shared<FourC::Core::Nodes::Node>(6, std::vector<double>{1.0, 0.0, 1.0}, rank);
+    auto node7 = std::make_shared<FourC::Core::Nodes::Node>(7, std::vector<double>{1.0, 1.0, 1.0}, rank);
+    auto node8 = std::make_shared<FourC::Core::Nodes::Node>(8, std::vector<double>{0.0, 1.0, 1.0}, rank);
+    dis1->add_node(node1);
+    dis1->add_node(node2);
+    dis1->add_node(node3);
+    dis1->add_node(node4);
+    dis1->add_node(node5);
+    dis1->add_node(node6);
+    dis1->add_node(node7);
+    dis1->add_node(node8);
+
+    // add a solid element to discretization 1
+    auto element1 = std::make_shared<FourC::Discret::Elements::Solid>(1, rank);
+    std::vector<int> nodes = {1, 2, 3, 4, 5, 6, 7, 8};
+    element1->set_node_ids(nodes.size(), nodes.data());
+    dis1->add_element(element1);
+
+    MPI_Finalize();
+    std::cout << "Test passed" << std::endl;
+
+    return 0;
+}

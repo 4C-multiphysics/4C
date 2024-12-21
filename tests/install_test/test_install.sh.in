@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# This file is part of 4C multiphysics licensed under the
+# GNU Lesser General Public License v3.0 or later.
+#
+# See the LICENSE.md file in the top-level for license information.
+#
+# SPDX-License-Identifier: LGPL-3.0-or-later
+
+# Exit the script at the first failure
+set -e
+
+# configure
+@CMAKE_COMMAND@ . -DCMAKE_PREFIX_PATH="@FOURC_INSTALL_PREFIX@" -DCMAKE_BUILD_TYPE=@CMAKE_BUILD_TYPE@
+if [ $? -ne 0 ]; then
+    exit 1
+fi
+# build
+@CMAKE_COMMAND@ --build .
+if [ $? -ne 0 ]; then
+    exit 2
+fi
+# run
+. ./4Csetvars.sh; ./main
+if [ $? -ne 0 ]; then
+    exit 3
+fi
+# success
+echo "4C linking test passed."
+exit 0

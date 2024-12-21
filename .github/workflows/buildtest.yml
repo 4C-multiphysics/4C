@@ -146,6 +146,37 @@ jobs:
           cd $GITHUB_WORKSPACE/build
           ctest -L minimal -j `nproc` --output-on-failure
 
+  gcc9_test_install:
+    needs: gcc9_build
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu20.04:28cfb9d0
+      options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check docker hash
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+      - name: Test the 4C installation
+        run: |
+          cd $GITHUB_WORKSPACE
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+      - uses: ./.github/actions/download_4C_build
+        with:
+          build-job: gcc9_build
+      - uses: ./.github/actions/build_4C
+        with:
+          cmake-preset: docker
+          build-targets: install
+          build-directory: ${{ github.workspace }}/build
+          use-ccache: "true"
+      - name: Test
+        run: |
+          cd $GITHUB_WORKSPACE/build/tests/install_test
+          sh test_install.sh
+
   clang18_build:
     runs-on: ubuntu-latest
     container:
