@@ -73,4 +73,43 @@ void Core::IO::InputParameterContainer::print(std::ostream& os) const
 }
 
 
+Core::IO::InputParameterContainer& Core::IO::InputParameterContainer::group(const std::string& name)
+{
+  return groups_[name];
+}
+
+
+const Core::IO::InputParameterContainer& Core::IO::InputParameterContainer::group(
+    const std::string& name) const
+{
+  FOUR_C_ASSERT_ALWAYS(groups_.count(name) > 0, "Group '%s' not found in container.", name.c_str());
+  return groups_.at(name);
+}
+
+void Core::IO::InputParameterContainer::merge(const Core::IO::InputParameterContainer& other)
+{
+  const auto combine_maps = [](auto& map1, const auto& map2)
+  {
+    for (const auto& [key, value] : map2)
+    {
+      if (map1.count(key) > 0)
+      {
+        FOUR_C_THROW("Key %s already exists in the container!", key.c_str());
+      }
+      map1[key] = value;
+    }
+  };
+
+  combine_maps(intdata_, other.intdata_);
+  combine_maps(doubledata_, other.doubledata_);
+  combine_maps(booldata_, other.booldata_);
+  combine_maps(vecintdata_, other.vecintdata_);
+  combine_maps(vecdoubledata_, other.vecdoubledata_);
+  combine_maps(mapdata_, other.mapdata_);
+  combine_maps(stringdata_, other.stringdata_);
+  combine_maps(anydata_, other.anydata_);
+  combine_maps(groups_, other.groups_);
+}
+
+
 FOUR_C_NAMESPACE_CLOSE

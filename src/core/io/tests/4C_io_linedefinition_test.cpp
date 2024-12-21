@@ -106,7 +106,7 @@ namespace
   {
     std::istringstream input("OMEGA 1.23");
     auto line_definition = Input::LineDefinition::Builder().add_named_int("OMEGA").build();
-    EXPECT_ANY_THROW(line_definition.read(input));
+    EXPECT_FALSE(line_definition.read(input));
   }
 
   TEST(LineDefinitionTest, ReadFalseWhenNamedIntRequiredButNoNameGiven)
@@ -162,7 +162,7 @@ namespace
     std::istringstream input("OMEGA 1.23 2.34 3.45");
     auto line_definition =
         Input::LineDefinition::Builder().add_named_int_vector("OMEGA", 3).build();
-    EXPECT_ANY_THROW(line_definition.read(input));
+    EXPECT_FALSE(line_definition.read(input));
   }
 
   TEST(LineDefinitionTest, ReadFalseWhenNamedIntVectorRequiredButNoNameGiven)
@@ -192,7 +192,7 @@ namespace
   {
     std::istringstream input("OMEGA 123.45*893");
     auto line_definition = Input::LineDefinition::Builder().add_named_double("OMEGA").build();
-    EXPECT_ANY_THROW(line_definition.read(input));
+    EXPECT_FALSE(line_definition.read(input));
   }
 
   TEST(LineDefinitionTest, ReadFalseWhenNamedDoubleRequiredButNoNameGiven)
@@ -334,6 +334,8 @@ namespace
         .build()
         .print(out);
 
-    EXPECT_EQ(out.str(), "abc d 0 iv 0 0 0  [ pairs [...] s '' ''  ] ");
+    EXPECT_EQ(out.str(),
+        "abc d <double> iv <vector<int>> [s <vector<string>>] [pairs <vector<pair<string, "
+        "double>>>] ");
   }
 }  // namespace
