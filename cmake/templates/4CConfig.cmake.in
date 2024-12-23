@@ -1,0 +1,122 @@
+@PACKAGE_INIT@
+
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/modules ${CMAKE_MODULE_PATH})
+
+include(CMakeFindDependencyMacro)
+include(FetchContent)
+
+include("${CMAKE_CURRENT_LIST_DIR}/4CSettings.cmake")
+
+if(FOUR_C_WITH_MPI)
+  find_package(MPI REQUIRED)
+endif()
+
+if(FOUR_C_WITH_TRILINOS)
+  find_package(Trilinos REQUIRED)
+  if(Trilinos_FOUND AND NOT TARGET Trilinos::all_selected_libs)
+    add_library(Trilinos::all_selected_libs IMPORTED INTERFACE)
+    target_include_directories(
+      Trilinos::all_selected_libs
+      SYSTEM
+      INTERFACE ${Trilinos_INCLUDE_DIRS}
+      INTERFACE ${Trilinos_TPL_INCLUDE_DIRS}
+      )
+    target_link_libraries(
+      Trilinos::all_selected_libs INTERFACE ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES}
+      )
+  endif()
+endif()
+
+if(FOUR_C_WITH_BOOST)
+  find_package(
+    Boost
+    COMPONENTS graph system
+    REQUIRED
+    )
+endif()
+
+if(FOUR_C_WITH_BACKTRACE)
+  find_package(Backtrace REQUIRED)
+endif()
+
+if(FOUR_C_WITH_HDF5)
+  find_package(
+    HDF5
+    COMPONENTS C HL
+    REQUIRED
+    )
+endif()
+
+if(FOUR_C_WITH_QHULL)
+  find_package(Qhull REQUIRED)
+endif()
+
+if(FOUR_C_WITH_FFTW)
+  find_package(FFTW REQUIRED)
+endif()
+
+if(FOUR_C_WITH_CLN)
+  find_package(CLN REQUIRED)
+endif()
+
+if(FOUR_C_WITH_MIRCO)
+  find_package(mirco_lib CONFIG HINTS ${FOUR_C_MIRCO_ROOT})
+endif()
+
+if(FOUR_C_WITH_ARBORX)
+  find_package(ArborX CONFIG HINTS ${FOUR_C_ARBORX_ROOT})
+endif()
+
+if(FOUR_C_WITH_YAML_CPP)
+  find_package(yaml-cpp CONFIG HINTS ${FOUR_C_YAML_CPP_ROOT})
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/4CTargets.cmake")
+check_required_components(4C)
+
+# extract all the library directory to FOUR_C_LIBRARY_PATH. This can be appended to
+# LD_LIBRARY_PATH for system to search for dependent shared libraries
+
+string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_UPPER)
+set(IMPORTED_LOCATION_STRING "IMPORTED_LOCATION_${CMAKE_BUILD_TYPE_UPPER}")
+get_target_property(FOUR_C_LIBRARY 4C::lib4C ${IMPORTED_LOCATION_STRING})
+get_filename_component(FOUR_C_LIBRARY_PATH "${FOUR_C_LIBRARY}" DIRECTORY)
+
+get_target_property(
+  FOUR_C_LINKED_LIBS 4C::four_c_all_enabled_external_dependencies INTERFACE_LINK_LIBRARIES
+  )
+message(
+  STATUS "Linked libraries for 4C::four_c_all_enabled_external_dependencies: ${FOUR_C_LINKED_LIBS}"
+  )
+
+foreach(LINKED_LIB ${FOUR_C_LINKED_LIBS})
+  # Check if the linked item is a target (i.e., defined in the project or imported)
+  if(TARGET ${LINKED_LIB})
+    # Try to get the library path (for imported or non-interface targets)
+    get_target_property(LIB_PATH ${LINKED_LIB} IMPORTED_LOCATION)
+    if(NOT LIB_PATH)
+      get_target_property(LIB_PATH ${LINKED_LIB} LOCATION)
+    endif()
+
+    # Extract the directory if a path was found
+    if(LIB_PATH)
+      get_filename_component(LIB_DIR "${LIB_PATH}" DIRECTORY)
+      message(STATUS "Directory for ${LINKED_LIB}: ${LIB_DIR}")
+      list(APPEND FOUR_C_LIBRARY_PATH "${LIB_DIR}")
+    else()
+      message(
+        STATUS "${LINKED_LIB} does not have a physical location (might be an interface target)."
+        )
+    endif()
+  else()
+    message(STATUS "${LINKED_LIB} is not a target (possibly a system library or not found).")
+  endif()
+endforeach()
+
+# write to a setvars file. This can be source'd in the terminal to avoid setting LD_LIBRARY_PATH manually
+list(JOIN FOUR_C_LIBRARY_PATH ";" FOUR_C_LIBRARY_PATH_STRING)
+string(REPLACE ";" ":" FOUR_C_LIBRARY_PATH_STRING "${FOUR_C_LIBRARY_PATH_STRING}")
+file(
+  WRITE "${CMAKE_CURRENT_BINARY_DIR}/4Csetvars.sh"
+  "export LD_LIBRARY_PATH=${FOUR_C_LIBRARY_PATH_STRING}:$LD_LIBRARY_PATH"
+  )

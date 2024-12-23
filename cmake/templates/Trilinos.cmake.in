@@ -1,0 +1,13 @@
+set(Trilinos_ROOT "@Trilinos_ROOT@")
+
+set(Kokkos_ROOT "@Kokkos_ROOT@")
+
+set(Kokkos_FIND_QUIETLY @Kokkos_FIND_QUIETLY@)
+
+set(Trilinos_INCLUDE_DIRS "@Trilinos_INCLUDE_DIRS@")
+
+set(Trilinos_TPL_INCLUDE_DIRS "@Trilinos_TPL_INCLUDE_DIRS@")
+
+set(Trilinos_LIBRARIES "@Trilinos_LIBRARIES@")
+
+set(Trilinos_TPL_LIBRARIES "@Trilinos_TPL_LIBRARIES@")
