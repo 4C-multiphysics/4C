@@ -19,7 +19,7 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------*
  | main control routine for (in)stationary heat conduction              |
  *----------------------------------------------------------------------*/
-void thr_dyn_drt()
+void thermo_dyn_drt()
 {
   // access the discretization
   std::shared_ptr<Core::FE::Discretization> thermodis = nullptr;
@@ -50,8 +50,7 @@ void thr_dyn_drt()
 
   // done
   return;
-
-}  // thr_dyn_drt()
+}
 
 
 /*----------------------------------------------------------------------*/

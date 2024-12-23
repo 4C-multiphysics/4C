@@ -13,7 +13,7 @@
 FOUR_C_NAMESPACE_OPEN
 
 /*! entry point for the solution of temperature problems */
-void thr_dyn_drt();
+void thermo_dyn_drt();
 
 /*----------------------------------------------------------------------*/
 FOUR_C_NAMESPACE_CLOSE

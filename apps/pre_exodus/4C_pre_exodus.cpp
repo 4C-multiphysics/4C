@@ -197,7 +197,7 @@ int main(int argc, char** argv)
     My_CLP.setOption("head", &headfile, "4C header file to open");
     My_CLP.setOption("dat", &datfile, "output .dat file name [defaults to exodus file name]");
 
-    // switch for genarating a 2d .dat - file
+    // switch for generating a 2d .dat - file
     My_CLP.setOption("d2", "d3", &twodim, "space dimensions in .dat-file: d2: 2D, d3: 3D");
 
     // check for quad->tri conversion

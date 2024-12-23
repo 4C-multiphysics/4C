@@ -1,0 +1,8 @@
+[default.extend-words]
+thr = "thermo"
+
+# Special abbreviations we would like to keep as is.
+ele = "ele" # "element"
+eles = "eles" # "elements"
+nd = "nd"  # "number of dimensions"
+mor = "mor" # "model order reduction"

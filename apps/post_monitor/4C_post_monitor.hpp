@@ -86,18 +86,19 @@ class MonWriter
     FOUR_C_THROW("Not impl.");
   }
 
-  void write_mon_thr_file(const std::string& filename, PostProblem& problem,
+  void write_mon_thermo_file(const std::string& filename, PostProblem& problem,
       std::string& infieldtype, const std::string thrname, const std::string thrtype,
       std::vector<std::string> groupnames, int node);
 
-  virtual void write_thr_table_head(
+  virtual void write_thermo_table_head(
       std::ofstream& outfile, const std::string thrname, const std::string thrtype, const int dim)
   {
     FOUR_C_THROW("Not impl.");
   }
 
-  virtual void write_thr_results(std::ofstream& outfile, PostProblem& problem, PostResult& result,
-      std::vector<int>& gdof, int dim, std::string thrtype, std::string groupname, const int node)
+  virtual void write_thermo_results(std::ofstream& outfile, PostProblem& problem,
+      PostResult& result, std::vector<int>& gdof, int dim, std::string thrtype,
+      std::string groupname, const int node)
   {
     FOUR_C_THROW("Not impl.");
   }
@@ -312,14 +313,14 @@ class ThermoMonWriter : public FieldMonWriter
   void write_result(
       std::ofstream& outfile, PostResult& result, std::vector<int>& gdof, int dim) override;
 
-  void write_thr_table_head(std::ofstream& outfile, const std::string thrname,
+  void write_thermo_table_head(std::ofstream& outfile, const std::string thrname,
       const std::string thrtype, const int dim) override;
 
-  void write_thr_results(std::ofstream& outfile, PostProblem& problem, PostResult& result,
+  void write_thermo_results(std::ofstream& outfile, PostProblem& problem, PostResult& result,
       std::vector<int>& gdof, int dim, std::string thrtype, std::string groupname,
       const int node) override;
 
-  void write_thr_result(std::ofstream& file, PostField*& field, PostResult& result,
+  void write_thermo_result(std::ofstream& file, PostField*& field, PostResult& result,
       const std::string groupname, const std::string name, const int dim, const int node) const;
 
  private:

@@ -69,11 +69,11 @@ int main(int argc, char** argv)
     rotmatrix(i, 2) = vector3(i);
   }
 
-  // Compute rotation angle via quaterion
-  Core::LinAlg::Matrix<4, 1> quaterion;
-  Core::LargeRotations::triadtoquaternion(rotmatrix, quaterion);
+  // Compute rotation angle via quaternion
+  Core::LinAlg::Matrix<4, 1> quaternion;
+  Core::LargeRotations::triadtoquaternion(rotmatrix, quaternion);
   Core::LinAlg::Matrix<3, 1> rotangle;
-  Core::LargeRotations::quaterniontoangle(quaterion, rotangle);
+  Core::LargeRotations::quaterniontoangle(quaternion, rotangle);
 
   std::cout << std::endl << std::setprecision(10) << "Rotation vector: " << rotangle << std::endl;
 

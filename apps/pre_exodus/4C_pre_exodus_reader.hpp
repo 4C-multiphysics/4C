@@ -55,7 +55,7 @@ namespace EXODUS
     //! Print Nodes and Coords
     void print_nodes(std::ostream& os, bool storeid = false) const;
 
-    //! Get numer of nodes in mesh
+    //! Get number of nodes in mesh
     int get_num_nodes() const { return nodes_->size(); }
 
     //! Get number of elements in mesh
@@ -114,7 +114,7 @@ namespace EXODUS
     std::vector<int> outside_oriented_side(
         const std::vector<int> parentele, const std::vector<int> sidemap) const;
 
-    //! Get egde Normal at node
+    //! Get edge Normal at node
     std::vector<double> normal(const int head1, const int origin, const int head2) const;
 
     //! Get normalized Vector between 2 nodes
@@ -289,7 +289,7 @@ namespace EXODUS
    private:
     std::set<int> nodeids_;  // nodids in NodeSet
     std::string name_;       // NodeSet name
-    std::string propname_;   // Icem assignes part names as property names
+    std::string propname_;   // Icem assigns part names as property names
   };
 
   class SideSet

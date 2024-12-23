@@ -46,8 +46,8 @@ namespace EXODUS
   //! this is what fully defines a 4C element
   struct ElemDef
   {
-    int id;             ///< refering to mesh_entity id of eb,ns,ss
-    MeshEntity me;      ///< refering to underlying mesh entity
+    int id;             ///< referring to mesh_entity id of eb,ns,ss
+    MeshEntity me;      ///< referring to underlying mesh entity
     std::string sec;    ///< FLUID,STRUCTURE,ALE,etc.
     std::string desc;   ///< like "MAT 1 EAS full"
     std::string ename;  ///< FLUID,SOLIDSH8,etc
@@ -56,8 +56,8 @@ namespace EXODUS
   //! this is what fully defines a 4C condition
   struct CondDef
   {
-    int id;            ///< refering to mesh_entity id of eb,ns,ss
-    MeshEntity me;     ///< refering to underlying mesh entity
+    int id;            ///< referring to mesh_entity id of eb,ns,ss
+    MeshEntity me;     ///< referring to underlying mesh entity
     std::string sec;   ///< see valid_condition 'sectionname'
     std::string desc;  ///< see valid_condition 'description'
     int e_id;          ///< refers to datfile 'E num -'

@@ -72,6 +72,15 @@ repos:
           # Allow the first line to be a shebang separated by a newline.
           - --detect-license-in-X-top-lines=3
 
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.28.4
+    hooks:
+      - id: typos
+        name: Check for typos
+        types_or: [c++, c]
+        files: '^apps/'
+        exclude: 'mm$'
+
   - repo: local
     hooks:
       - id: check-venv-up-to-date

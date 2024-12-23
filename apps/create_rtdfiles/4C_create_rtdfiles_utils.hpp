@@ -193,7 +193,7 @@ namespace RTD
    *  \brief write all parameters of the header sections for readthedocs
    *
    *  \param[in] stream: stream for the restructuredText file
-   *  \param[in] list: vector containing all paramters in the current section
+   *  \param[in] list: vector containing all parameters in the current section
    *  \param[in] parentname: name of the parent section (initially empty string)
    */
   /// print flag sections of dat file with given list

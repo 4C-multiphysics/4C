@@ -123,7 +123,7 @@ void EXODUS::read_bc_file(const std::string& bcfile, std::vector<EXODUS::ElemDef
 
     if (mesh_entity.compare(ebmarker) == 0)
     {
-      // in case of eb we differntiate between 'element' or 'condition'
+      // in case of eb we differentiate between 'element' or 'condition'
       if (type.compare("ELEMENT") == 0)
       {
         EXODUS::ElemDef edef = EXODUS::read_edef(mesh_entity, id, actcond);

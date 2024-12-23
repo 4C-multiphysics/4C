@@ -105,7 +105,7 @@ void ntacal()
       break;
 
     case Core::ProblemType::thermo:
-      thr_dyn_drt();
+      thermo_dyn_drt();
       break;
 
     case Core::ProblemType::tsi:

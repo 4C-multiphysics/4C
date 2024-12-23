@@ -397,7 +397,7 @@ void ThermoFilter::write_all_results(PostField* field)
   // write displacement field
   writer_->write_result("displacement", "displacement", nodebased, field->problem()->num_dim());
 
-  // special infomation for SLM
+  // special information for SLM
   writer_->write_result("phase", "phase", dofbased, numdofpernode);
   writer_->write_result("conductivity", "conductivity", dofbased, numdofpernode);
   writer_->write_result("capacity", "capacity", dofbased, numdofpernode);

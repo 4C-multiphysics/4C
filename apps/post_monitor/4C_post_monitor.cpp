@@ -313,7 +313,7 @@ void MonWriter::write_mon_str_file(const std::string& filename, PostProblem& pro
   // The call is handed to _all_ processors, because the extrapolation of the
   // stresses/strains from Gauss points to nodes is done by Core::FE::Discretization
   // utilising an assembly call. The assembly is parallel and thus all processors
-  // have to be incoporated --- at least I think so.
+  // have to be incorporated --- at least I think so.
   // (culpit: bborn, 07/09)
   for (std::vector<std::string>::iterator gn = groupnames.begin(); gn != groupnames.end(); ++gn)
     write_str_results(outfile, problem, result, gdof, dim, strtype, *gn, node);
@@ -342,7 +342,8 @@ void MonWriter::write_mon_heatflux_file(
     groupnames.push_back("gauss_initial_heatfluxes_xyz");
 
     // write it, now
-    write_mon_thr_file(filename, problem, infieldtype, "heatflux", heatfluxtype, groupnames, node);
+    write_mon_thermo_file(
+        filename, problem, infieldtype, "heatflux", heatfluxtype, groupnames, node);
   }
 
   return;
@@ -369,7 +370,8 @@ void MonWriter::write_mon_tempgrad_file(
     groupnames.push_back("gauss_current_tempgrad_xyz");
 
     // write, now
-    write_mon_thr_file(filename, problem, infieldtype, "tempgrad", tempgradtype, groupnames, node);
+    write_mon_thermo_file(
+        filename, problem, infieldtype, "tempgrad", tempgradtype, groupnames, node);
   }
 
   return;
@@ -377,7 +379,7 @@ void MonWriter::write_mon_tempgrad_file(
 
 
 /*----------------------------------------------------------------------*/
-void MonWriter::write_mon_thr_file(const std::string& filename, PostProblem& problem,
+void MonWriter::write_mon_thermo_file(const std::string& filename, PostProblem& problem,
     std::string& infieldtype, const std::string thrname, const std::string thrtype,
     std::vector<std::string> groupnames, int node)
 {
@@ -444,7 +446,7 @@ void MonWriter::write_mon_thr_file(const std::string& filename, PostProblem& pro
     outfile << "\n";
     outfile << "#\n";
 
-    write_thr_table_head(outfile, thrname, thrtype, dim);
+    write_thermo_table_head(outfile, thrname, thrtype, dim);
   }
   else  // this proc is not the node owner
   {
@@ -459,13 +461,13 @@ void MonWriter::write_mon_thr_file(const std::string& filename, PostProblem& pro
   // (called groupnames).The call is handed to _all_ processors, because the
   // extrapolation of the heatfluxes/temperature gradients from Gauss points to
   // nodes is done by Core::FE::Discretization utilising an assembly call. The
-  // assembly is parallel and thus all processors have to be incoporated
+  // assembly is parallel and thus all processors have to be incorporated
   // --- at least I think so. (culpit: bborn, 07/09)
   for (std::vector<std::string>::iterator gn = groupnames.begin(); gn != groupnames.end(); ++gn)
-    write_thr_results(outfile, problem, result, gdof, dim, thrtype, *gn, node);
+    write_thermo_results(outfile, problem, result, gdof, dim, thrtype, *gn, node);
 
   if (outfile.is_open()) outfile.close();
-}  // write_mon_thr_file()
+}  // write_mon_thermo_file()
 
 
 /*----------------------------------------------------------------------*/
@@ -1437,7 +1439,7 @@ void ThermoMonWriter::write_result(
 }
 
 /*----------------------------------------------------------------------*/
-void ThermoMonWriter::write_thr_table_head(
+void ThermoMonWriter::write_thermo_table_head(
     std::ofstream& outfile, const std::string thrname, const std::string thrtype, const int dim)
 {
   switch (dim)
@@ -1466,7 +1468,7 @@ void ThermoMonWriter::write_thr_table_head(
 }
 
 /*----------------------------------------------------------------------*/
-void ThermoMonWriter::write_thr_results(std::ofstream& outfile, PostProblem& problem,
+void ThermoMonWriter::write_thermo_results(std::ofstream& outfile, PostProblem& problem,
     PostResult& result, std::vector<int>& gdof, int dim, std::string thrtype, std::string groupname,
     const int node)
 {
@@ -1512,7 +1514,7 @@ void ThermoMonWriter::write_thr_results(std::ofstream& outfile, PostProblem& pro
     // bottom control here, because first set has been read already
     do
     {
-      write_thr_result(outfile, field, result, groupname, name, dim, node);
+      write_thermo_result(outfile, field, result, groupname, name, dim, node);
     } while (result.next_result());
   }
 
@@ -1520,7 +1522,7 @@ void ThermoMonWriter::write_thr_results(std::ofstream& outfile, PostProblem& pro
 }
 
 /*----------------------------------------------------------------------*/
-void ThermoMonWriter::write_thr_result(std::ofstream& outfile, PostField*& field,
+void ThermoMonWriter::write_thermo_result(std::ofstream& outfile, PostField*& field,
     PostResult& result, const std::string groupname, const std::string name, const int dim,
     const int node) const
 {

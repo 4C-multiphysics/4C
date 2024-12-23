@@ -219,7 +219,7 @@ int main(int argc, char *argv[])
     ~CleanUpMPI() { MPI_Finalize(); }
   } cleanup_mpi;
 
-  // Kokkos should be initilized right after MPI.
+  // Kokkos should be initialized right after MPI.
   Kokkos::ScopeGuard kokkos_guard{};
 
   // Initialize our own singleton registry to ensure we clean up all singletons properly.
