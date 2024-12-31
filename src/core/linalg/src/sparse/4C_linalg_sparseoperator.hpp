@@ -130,16 +130,15 @@ namespace Core::LinAlg
     might gain considerable performance advantages from knowing the element
     id.
 
-    \param eid (in) : element gid
     \param Aele (in) : dense matrix to be assembled
     \param lm (in) : vector with gids
     \param lmowner (in) : vector with owner procs of gids
     */
-    virtual void assemble(int eid, const std::vector<int>& lmstride,
+    virtual void assemble(const std::vector<int>& lmstride,
         const Core::LinAlg::SerialDenseMatrix& Aele, const std::vector<int>& lm,
         const std::vector<int>& lmowner)
     {
-      assemble(eid, lmstride, Aele, lm, lmowner, lm);
+      assemble(lmstride, Aele, lm, lmowner, lm);
     }
 
     /// Assemble a Core::LinAlg::SerialDenseMatrix into a matrix with striding
@@ -171,13 +170,12 @@ namespace Core::LinAlg
       strategies might gain considerable performance advantages from knowing
       the element id.
 
-      \param eid (in) : element gid
       \param Aele (in)       : dense matrix to be assembled
       \param lmrow (in)      : vector with row gids
       \param lmrowowner (in) : vector with owner procs of row gids
       \param lmcol (in)      : vector with column gids
     */
-    virtual void assemble(int eid, const std::vector<int>& lmstride,
+    virtual void assemble(const std::vector<int>& lmstride,
         const Core::LinAlg::SerialDenseMatrix& Aele, const std::vector<int>& lmrow,
         const std::vector<int>& lmrowowner, const std::vector<int>& lmcol) = 0;
 

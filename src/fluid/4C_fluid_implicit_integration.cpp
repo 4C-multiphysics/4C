@@ -5174,7 +5174,7 @@ void FLD::FluidImplicitTimeInt::use_block_matrix(std::shared_ptr<std::set<int>> 
   }
   else
   {
-    std::shared_ptr<Core::LinAlg::BlockSparseMatrix<FLD::Utils::InterfaceSplitStrategy>> mat;
+    std::shared_ptr<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>> mat;
 
     if (splitmatrix)
     {
@@ -5186,9 +5186,10 @@ void FLD::FluidImplicitTimeInt::use_block_matrix(std::shared_ptr<std::set<int>> 
       }
 
       // (re)allocate system matrix
-      mat = std::make_shared<Core::LinAlg::BlockSparseMatrix<FLD::Utils::InterfaceSplitStrategy>>(
+      mat = std::make_shared<
+          Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
           domainmaps, rangemaps, 108, false, true);
-      mat->set_cond_elements(condelements);
+
       sysmat_ = mat;
 
       if (nonlinearbc_)
@@ -5204,9 +5205,9 @@ void FLD::FluidImplicitTimeInt::use_block_matrix(std::shared_ptr<std::set<int>> 
     if (params_->get<bool>("shape derivatives"))
     {
       // allocate special mesh moving matrix
-      mat = std::make_shared<Core::LinAlg::BlockSparseMatrix<FLD::Utils::InterfaceSplitStrategy>>(
+      mat = std::make_shared<
+          Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
           domainmaps_shape, rangemaps_shape, 108, false, true);
-      mat->set_cond_elements(condelements_shape);
       shapederivatives_ = mat;
     }
   }

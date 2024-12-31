@@ -1510,8 +1510,8 @@ void CONTACT::Beam3tosolidcontact<numnodessol, numnodes, numnodalvalues>::
       stiffcontact2(i, j) = -Core::FADUtils::cast_to_double(stiffc2(i, j));
   }
 
-  stiffmatrix.assemble(0, stiffcontact1, lmrow1, lmrowowner1, lmcol1);
-  stiffmatrix.assemble(0, stiffcontact2, lmrow2, lmrowowner2, lmcol2);
+  stiffmatrix.assemble(stiffcontact1, lmrow1, lmrowowner1, lmcol1);
+  stiffmatrix.assemble(stiffcontact2, lmrow2, lmrowowner2, lmcol2);
 
   // ----------------------------------------------------------------
   // End: Assemble contact stiffness for beam and solid

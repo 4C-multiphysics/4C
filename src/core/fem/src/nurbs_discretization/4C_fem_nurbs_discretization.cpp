@@ -456,8 +456,7 @@ void Core::FE::Utils::DbcNurbs::do_dirichlet_condition(const Teuchos::ParameterL
             break;
         }
 
-      int eid = actele->id();
-      if (assemblemat) massmatrix->assemble(eid, elemass, lm, lmowner);
+      if (assemblemat) massmatrix->assemble(elemass, lm, lmowner);
       if (assemblevec) Core::LinAlg::assemble(*rhs, elerhs[0], lm, lmowner);
       if (assemblevecd) Core::LinAlg::assemble(*rhsd, elerhs[1], lm, lmowner);
       if (assemblevecdd) Core::LinAlg::assemble(*rhsdd, elerhs[2], lm, lmowner);
