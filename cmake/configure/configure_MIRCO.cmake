@@ -25,10 +25,22 @@ else() # Fetch MIRCO from GIT repository
   set(GTEST_IN_MIRCO "OFF")
   set(TRILINOS_IN_MIRCO "OFF")
 
+  set(MIRCO_GIT_REPO "https://github.com/imcs-compsim/MIRCO.git")
+  set(MIRCO_GIT_TAG "8a8ae9c703a762459995d56d36292b77ff6c1985")
+
   fetchcontent_declare(
     mirco
-    GIT_REPOSITORY https://github.com/imcs-compsim/MIRCO.git
-    GIT_TAG 8a8ae9c703a762459995d56d36292b77ff6c1985
+    GIT_REPOSITORY ${MIRCO_GIT_REPO}
+    GIT_TAG ${MIRCO_GIT_TAG}
     )
   fetchcontent_makeavailable(mirco)
+  set(FOUR_C_MIRCO_ROOT "${CMAKE_INSTALL_PREFIX}/lib/cmake/mirco")
+
+  four_c_add_external_dependency(four_c_all_enabled_external_dependencies mirco::mirco_lib)
 endif()
+
+configure_file(
+  ${CMAKE_SOURCE_DIR}/cmake/templates/MIRCO.cmake.in
+  ${CMAKE_BINARY_DIR}/cmake/templates/MIRCO.cmake
+  @ONLY
+  )

@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.19)
+project(4C_linking_test)
+find_package(4C CONFIG REQUIRED)
+add_executable(main main.cpp)
+target_link_libraries(main PRIVATE 4C::lib4C)
+target_link_libraries(main INTERFACE 4C::four_c_all_enabled_external_dependencies)
