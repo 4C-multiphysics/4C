@@ -71,6 +71,19 @@ namespace Mat
     }
   }
 
+  // names of the various error types
+  inline std::map<ViscoplastErrorType, std::string> ViscoplastErrorNames = {
+      {ViscoplastErrorType::NegativePlasticStrain, "NegativePlasticStrain"},
+      {ViscoplastErrorType::OverflowError, "OverflowError"},
+      {ViscoplastErrorType::NoPlasticIncompressibility, "NoPlasticIncompressibility"},
+      {ViscoplastErrorType::FailedSolLinSystLNL, "FailedSolLinSystLNL"},
+      {ViscoplastErrorType::NoConvergenceLNL, "NoConvergenceLNL"},
+      {ViscoplastErrorType::SingularJacobian, "SingularJacobian"},
+      {ViscoplastErrorType::FailedSolAnalytLinearization, "FailedSolAnalytLinearization"},
+  };
+
+
+
 }  // namespace Mat
 
 
