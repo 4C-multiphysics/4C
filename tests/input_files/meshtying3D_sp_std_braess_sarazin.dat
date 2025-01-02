@@ -86,7 +86,7 @@ SOLVER                          Superlu
 NAME                            Meshtying_Solver
 SOLVER                          Belos
 AZSOLVE                         GMRES
-AZPREC                          MueLu_contactSP
+AZPREC                          MueLu
 MUELU_XML_FILE                  meshtying3D_sp_braess_sarazin.xml
 AZTOL                           1.0e-8
 AZCONV                          AZ_r0

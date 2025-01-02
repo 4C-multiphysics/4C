@@ -3174,9 +3174,39 @@ void Solid::TimIntImpl::cmt_linear_solve()
       cmtbridge_->get_strategy().build_saddle_point_system(
           stiff_, fres_, disi_, dbcmaps_, blockMat, blocksol, blockrhs);
 
+      // compute the nullspace vectors for the Lagrange multiplier field
+      {
+        int dim_nullspace = contactsolver_->params()
+                                .sublist("Inverse2")
+                                .sublist("MueLu Parameters")
+                                .get<int>("PDE equations", -1);
+
+        // get the degree of freedom map from the block matrix
+        Epetra_Operator* raw_block_mat = blockMat.get();
+        std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> block_mat_blocked_operator =
+            std::dynamic_pointer_cast<Core::LinAlg::BlockSparseMatrixBase>(
+                std::shared_ptr<Epetra_Operator>(raw_block_mat, [](Epetra_Operator*) {}));
+        auto mat11 = block_mat_blocked_operator->matrix(1, 1);
+        std::shared_ptr<Epetra_Map> nullspace_map = std::make_shared<Epetra_Map>(mat11.range_map());
+        const Epetra_Map& dofmap = *nullspace_map;
+
+        // set the nullspace
+        std::shared_ptr<Core::LinAlg::MultiVector<double>> nullspace =
+            std::make_shared<Core::LinAlg::MultiVector<double>>(dofmap, dim_nullspace, true);
+        for (int ldof = 0; ldof < dofmap.NumMyElements() - 2; ++ldof)
+        {
+          nullspace->ReplaceMyValue(ldof, ldof % dim_nullspace, 1.0);
+        }
+
+        // add the nullspace to the parameter list
+        contactsolver_->params()
+            .sublist("Inverse2")
+            .sublist("MueLu Parameters")
+            .set("nullspace", nullspace);
+      }
+
       // solve the linear system
       contactsolver_->solve(blockMat, blocksol, blockrhs, solver_params);
-
       // split vector and update internal displacement and Lagrange multipliers
       cmtbridge_->get_strategy().update_displacements_and_l_mincrements(disi_, blocksol);
     }
