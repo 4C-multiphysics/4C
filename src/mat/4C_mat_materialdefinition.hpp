@@ -12,6 +12,7 @@
 /* headers */
 #include "4C_config.hpp"
 
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_io_linecomponent.hpp"
 #include "4C_mat_par_bundle.hpp"
 
@@ -71,12 +72,7 @@ namespace Mat
     /// add a concrete component to the material line definition
     ///
     /// Add new components to the input line. One at a time.
-    void add_component(const std::shared_ptr<Input::LineComponent>& c);
-
-    /// Try to read all lines that fit the current material definition.
-    std::vector<std::pair<int, Core::IO::InputParameterContainer>> read(
-        Core::IO::InputFile& input  ///< the actual dat file reader that has access to the dat file
-    );
+    void add_component(Core::IO::InputSpec&& c);
 
     /// print my DAT file section and possible materials from the discretization
     std::ostream& print(std::ostream& stream,  ///< the output stream
@@ -91,8 +87,10 @@ namespace Mat
     /// my material description
     std::string description() const { return description_; }
 
-    /// my material inputline
-    std::vector<std::shared_ptr<Input::LineComponent>> inputline() const { return inputline_; }
+    /// Read access to the InputSpecs that make up the material definition.
+    ///
+    /// Legacy: only used for rtd emitter.
+    const std::vector<Core::IO::InputSpec>& specs() const { return components_; }
 
    private:
     /// name of material
@@ -103,7 +101,7 @@ namespace Mat
     Core::Materials::MaterialType mattype_;
 
     /// the list of valid components
-    std::vector<std::shared_ptr<Input::LineComponent>> inputline_;
+    std::vector<Core::IO::InputSpec> components_;
   };
 
 

@@ -33,60 +33,9 @@ Mat::MaterialDefinition::MaterialDefinition(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void Mat::MaterialDefinition::add_component(const std::shared_ptr<Input::LineComponent>& c)
+void Mat::MaterialDefinition::add_component(Core::IO::InputSpec&& c)
 {
-  inputline_.push_back(c);
-}
-
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-std::vector<std::pair<int, Core::IO::InputParameterContainer>> Mat::MaterialDefinition::read(
-    Core::IO::InputFile& input)
-{
-  std::string name = "MATERIALS";
-
-  std::vector<std::pair<int, Core::IO::InputParameterContainer>> found_materials;
-  for (const auto& line : input.lines_in_section(name))
-  {
-    Core::IO::ValueParser parser(
-        line, {.user_scope_message = "While reading 'MATERIALS' section: "});
-
-    parser.consume("MAT");
-    const int matid = parser.read<int>();
-    const std::string name = parser.read<std::string>();
-
-    if (name == materialname_)
-    {
-      if (matid <= -1) FOUR_C_THROW("Illegal negative ID provided");
-
-      // insert leading whitespace for legacy implementation
-      std::shared_ptr<std::stringstream> condline =
-          std::make_shared<std::stringstream>(" " + std::string(parser.get_unparsed_remainder()));
-
-      // add trailing white space to stringstream "condline" to avoid deletion of stringstream upon
-      // reading the last entry inside This is required since the material parameters can be
-      // specified in an arbitrary order in the input file. So it might happen that the last entry
-      // is extracted before all of the previous ones are.
-      condline->seekp(0, condline->end);
-      *condline << " ";
-
-      Core::IO::InputParameterContainer input_data;
-      for (auto& j : inputline_)
-        condline = j->read(MaterialDefinition::name(), condline, input_data);
-
-      // current material input line contains bad elements
-      if (condline->str().find_first_not_of(' ') != std::string::npos)
-        FOUR_C_THROW(
-            "Specification of material '%s' contains the following unknown, redundant, or "
-            "incorrect elements: '%s'",
-            materialname_.c_str(), condline->str().c_str());
-
-      found_materials.emplace_back(matid, std::move(input_data));
-    }
-  }
-
-  return found_materials;
+  components_.emplace_back(std::move(c));
 }
 
 
@@ -99,24 +48,23 @@ std::ostream& Mat::MaterialDefinition::print(
   const std::string comment = "//";
 
   // the descriptive lines (comments)
-  stream << comment << std::endl;
-  stream << comment << " " << description_ << std::endl;
-  for (auto& i : inputline_)
+  stream << comment << '\n';
+  stream << comment << " " << description_ << '\n';
+  for (const auto& c : components_)
   {
-    std::ostringstream desc;
-    i->describe(desc);
-    if (!desc.str().empty()) stream << comment << desc.str() << std::endl;
+    stream << comment << " " << c.name() << (c.required() ? " " : " (optional) ") << c.description()
+           << '\n';
   }
 
   // the default line
   stream << comment << "MAT 0   " << materialname_ << "   ";
-  for (auto& i : inputline_)
-  {
-    i->default_line(stream);
-    stream << " ";
-  }
+  auto input_line = Core::IO::InputSpecBuilders::group(components_);
 
-  stream << "\n";
+  Core::IO::InputParameterContainer container;
+  input_line.set_default_value(container);
+  input_line.print(stream, container);
+
+  stream << '\n';
 
   return stream;
 }

@@ -255,7 +255,8 @@ Mat::PAR::FluidPoroSingleVolFrac::FluidPoroSingleVolFrac(
       scalardependentflux_(matdata.parameters.get<bool>("AddScalarDependentFlux")),
       numscal_(matdata.parameters.get<int>("NUMSCAL")),
       scalardiffs_((matdata.parameters.get<std::vector<double>>("SCALARDIFFS"))),
-      omega_half_((matdata.parameters.get<std::vector<double>>("OMEGA_HALF"))),
+      omega_half_((matdata.parameters.get_or<std::vector<double>>(
+          "OMEGA_HALF", std::vector<double>(numscal_, 1e13)))),
       isinit_(false)
 {
   // retrieve problem instance to read from

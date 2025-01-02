@@ -104,8 +104,7 @@ Mat::PAR::MuscleCombo::MuscleCombo(const Core::Mat::PAR::Parameter::Data& matdat
       Popt_(matdata.parameters.get<double>("POPT")),
       lambdaMin_(matdata.parameters.get<double>("LAMBDAMIN")),
       lambdaOpt_(matdata.parameters.get<double>("LAMBDAOPT")),
-      activationType_(
-          static_cast<Inpar::Mat::ActivationType>(matdata.parameters.get<int>("ACTEVALTYPE"))),
+      activationType_(matdata.parameters.get<Inpar::Mat::ActivationType>("ACTEVALTYPE")),
       activationParams_(get_activation_params(matdata, activationType_)),
       density_(matdata.parameters.get<double>("DENS"))
 {

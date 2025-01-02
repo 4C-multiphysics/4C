@@ -24,7 +24,8 @@ Mat::PAR::Electrode::Electrode(const Core::Mat::PAR::Parameter::Data& matdata)
       chimax_(matdata.parameters.get<double>("CHI_MAX")),
       ocpmodel_(string_to_ocp_model(matdata.parameters.get<std::string>("OCP_MODEL"))),
       ocpparanum_(matdata.parameters.get<int>("OCP_PARA_NUM")),
-      ocppara_(matdata.parameters.get<std::vector<double>>("OCP_PARA")),
+      ocppara_(matdata.parameters.get_or<std::vector<double>>(
+          "OCP_PARA", std::vector<double>(ocpparanum_, 0.0))),
       X_(0, 0.0),
       b_(0, 0.0),
       a_(0, 0.0),

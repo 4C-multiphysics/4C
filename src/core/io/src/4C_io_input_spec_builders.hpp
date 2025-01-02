@@ -485,6 +485,12 @@ namespace Core::IO
         GroupData data;
         std::vector<InputSpec> specs;
 
+        //! This callback may be used to perform additional actions after parsing one of the specs.
+        //! The index of the parsed spec as given inside #specs is passed as an argument.
+        std::function<void(
+            ValueParser& parser, InputParameterContainer& container, std::size_t index)>
+            on_parse_callback;
+
         void parse(ValueParser& parser, InputParameterContainer& container) const;
 
         void set_default_value(InputParameterContainer& container) const;
@@ -737,8 +743,20 @@ namespace Core::IO
      *
      * This InputSpecs requires either the "OneStepTheta" group or the "GenAlpha" group to be
      * present in the input. If both or none of them are present, an exception is thrown.
+     *
+     * The optional @p on_parse_callback may be used to perform additional actions after parsing one
+     * of the specs. The index of the parsed spec inside the @p specs vector is passed as an
+     * argument. An exemplary use case is to map the index to an enum value and store it in the
+     * container. This let's you perform a switch on the enum value to easily obtain the correct
+     * parsed data from the container.
+     *
+     * @note The one_of() function is not intended to be used for selecting from a fixed set of
+     * different values of the same type. Use the selection() function for this purpose.
      */
-    [[nodiscard]] InputSpec one_of(std::vector<InputSpec> specs);
+    [[nodiscard]] InputSpec one_of(
+        std::vector<InputSpec> specs, std::function<void(ValueParser& parser,
+                                          InputParameterContainer& container, std::size_t index)>
+                                          on_parse_callback = nullptr);
   }  // namespace InputSpecBuilders
 }  // namespace Core::IO
 
@@ -764,7 +782,6 @@ void Core::IO::InputSpecBuilders::Internal::BasicSpec<DataType>::parse(
     };
 
     std::size_t size = std::visit(SizeVisitor{container}, data.size);
-    FOUR_C_ASSERT(size > 0, "Size must be greater than 0.");
     auto parsed = parser.read<typename DataType::StoredType>(size);
     container.add(name, parsed);
   }

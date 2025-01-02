@@ -250,6 +250,9 @@ void Core::IO::InputSpecBuilders::Internal::OneOfSpec::parse(
       }
 
       // If we reach this point, we have successfully parsed the input.
+      std::size_t index = std::distance(specs.begin(), component);
+      if (on_parse_callback) on_parse_callback(parser, container, index);
+
       return;
     }
   }
@@ -296,8 +299,6 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::tag(std::string name, ScalarDat
 Core::IO::InputSpec Core::IO::InputSpecBuilders::group(
     std::string name, std::vector<InputSpec> specs, Core::IO::InputSpecBuilders::GroupData data)
 {
-  FOUR_C_ASSERT_ALWAYS(!specs.empty(), "A group must contain at least one entry.");
-
   assert_unique_or_empty_names(specs);
 
   InputSpec::CommonData common_data{
@@ -334,7 +335,9 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::group(std::vector<InputSpec> sp
 }
 
 
-Core::IO::InputSpec Core::IO::InputSpecBuilders::one_of(std::vector<InputSpec> specs)
+Core::IO::InputSpec Core::IO::InputSpecBuilders::one_of(std::vector<InputSpec> specs,
+    std::function<void(ValueParser& parser, InputParameterContainer& container, std::size_t index)>
+        on_parse_callback)
 {
   FOUR_C_ASSERT_ALWAYS(!specs.empty(), "`one_of` must contain at least one entry.");
 
@@ -353,7 +356,9 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::one_of(std::vector<InputSpec> s
       .required = true,
   };
 
-  return InputSpec(Internal::OneOfSpec{.data = std::move(group_data), .specs = std::move(specs)},
+  return InputSpec(Internal::OneOfSpec{.data = std::move(group_data),
+                       .specs = std::move(specs),
+                       .on_parse_callback = on_parse_callback},
       std::move(common_data));
 }
 

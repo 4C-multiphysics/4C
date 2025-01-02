@@ -2040,29 +2040,44 @@ void Global::read_materials(Global::Problem& problem, Core::IO::InputFile& input
       Input::valid_materials();
   std::vector<std::shared_ptr<Mat::MaterialDefinition>>& matlist = *vm;
 
-  // test for each material definition (input file --MATERIALS section)
-  // and store in #matmap_
-  auto mmap = problem.materials();
+  std::vector<Core::IO::InputSpec> all_specs;
+  std::vector<Core::Materials::MaterialType> all_types;
   for (auto& mat : matlist)
   {
-    std::vector<std::pair<int, Core::IO::InputParameterContainer>> read_materials =
-        mat->read(input);
+    all_specs.emplace_back(Core::IO::InputSpecBuilders::group(mat->name(), mat->specs()));
+    all_types.push_back(mat->type());
+  }
 
-    for (const auto& [id, data] : read_materials)
-    {
-      if (mmap->id_exists(id)) FOUR_C_THROW("More than one material with 'MAT %d'", id);
+  // Whenever one of the materials is read, the lambda function will update this index to the
+  // current material index. This lets us access the correct subcontainer for the current material
+  // without searching through all of them.
+  std::size_t current_index = 0;
 
-      // Here we call out to the factory code to create materials from generic input data.
-      // We do this via a lambda function which is wrapped inside the LazyPtr. This allows to defer
-      // the actual creation of the material until needed. Any other material parameters that are
-      // needed during creation, are constructed automatically, when querying them from the list
-      // of parameters.
-      // Also, this line shows a design flaw where the parameter object needs to know the material
-      // id that was chosen in the input file.
-      mmap->insert(id, Core::Utils::LazyPtr<Core::Mat::PAR::Parameter>(
-                           [i = id, mat_type = mat->type(), d = data]()
-                           { return Mat::make_parameter(i, mat_type, d); }));
-    }
+  auto all_materials = Core::IO::InputSpecBuilders::one_of(all_specs,
+      [&current_index](Core::IO::ValueParser& parser, Core::IO::InputParameterContainer& container,
+          std::size_t index) { current_index = index; });
+
+  for (const auto& line : input.lines_in_section("MATERIALS"))
+  {
+    Core::IO::InputParameterContainer container;
+    Core::IO::ValueParser parser(
+        line, {.user_scope_message = "While reading 'MATERIALS' section: ",
+                  .base_path = input.file_for_section("MATERIALS").parent_path()});
+
+    parser.consume("MAT");
+    const int mat_id = parser.read<int>();
+    FOUR_C_ASSERT_ALWAYS(mat_id >= 0, "Material ID must be non-negative. Found: %d", mat_id);
+
+    if (problem.materials()->id_exists(mat_id))
+      FOUR_C_THROW("More than one material with 'MAT %d'", mat_id);
+
+    Core::IO::fully_parse(parser, all_materials, container);
+
+    problem.materials()->insert(
+        mat_id, Core::Utils::LazyPtr<Core::Mat::PAR::Parameter>(
+                    [mat_id, mat_type = all_types[current_index],
+                        container = container.group(all_specs[current_index].name())]()
+                    { return Mat::make_parameter(mat_id, mat_type, container); }));
   }
 
   // We have read in all the materials and now we force construction of them all. The LazyPtr
@@ -2070,38 +2085,11 @@ void Global::read_materials(Global::Problem& problem, Core::IO::InputFile& input
   // construction, because materials might later be used in code sections that only run on proc 0.
   // Doing anything MPI-parallel inside the material constructors would then fail. Unfortunately,
   // such operations happen in the code base, thus we construct the materials here.
-  for (const auto& [id, mat] : mmap->map())
+  for (const auto& [id, mat] : problem.materials()->map())
   {
     // This is the point where the material is actually constructed via the side effect that we try
     // to access the material.
     (void)mat.get();
-  }
-
-
-  // check if every material was identified
-  const std::string material_section = "MATERIALS";
-  for (const auto& section_i : input.lines_in_section(material_section))
-  {
-    std::stringstream condline{std::string{section_i}};
-
-    std::string mat;
-    std::string number;
-    std::string name;
-    (condline) >> mat >> number >> name;
-    if ((not(condline)) or (mat != "MAT"))
-      FOUR_C_THROW("invalid material line in '%s'", name.c_str());
-
-    // extract material ID
-    int matid = -1;
-    {
-      char* ptr;
-      matid = static_cast<int>(strtol(number.c_str(), &ptr, 10));
-      if (ptr == number.c_str())
-        FOUR_C_THROW("failed to read material object number '%s'", number.c_str());
-    }
-
-    FOUR_C_ASSERT_ALWAYS(problem.materials()->id_exists(matid),
-        "Material 'MAT %d' with name '%s' could not be identified", matid, name.c_str());
   }
 }
 

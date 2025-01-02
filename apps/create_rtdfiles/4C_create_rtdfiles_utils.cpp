@@ -325,23 +325,29 @@ namespace RTD
     tablerow = {"Parameter", "optional", "Description"};
     parametertable.add_row(tablerow);
 
-    for (auto &parameterterm : material->inputline())
-    {
-      if (auto *separator = dynamic_cast<Input::SeparatorComponent *>(parameterterm.get()))
-      {
-        parametertable.add_row(separator->write_read_the_docs_table_row());
 
-        if (parameter.length() > 60)
-        {
-          parameter += " \\";
-          materialcode.push_back(parameter);
-          parameter = "   ";
-        }
+    for (const auto &spec : material->specs())
+    {
+      std::vector<std::string> table_row;
+      table_row.push_back(spec.name());
+      table_row.emplace_back((spec.required() ? "" : "yes"));
+      table_row.push_back(spec.description());
+
+      parametertable.add_row(table_row);
+
+      if (parameter.length() > 60)
+      {
+        parameter += " \\";
+        materialcode.push_back(parameter);
+        parameter = "   ";
       }
+
       std::ostringstream parameterstream;
-      parameterterm->default_line(parameterstream);
+      Core::IO::InputParameterContainer container;
+      spec.print(parameterstream, container);
       parameter += " " + parameterstream.str();
     }
+
     materialcode.push_back(parameter);
     write_code(stream, materialcode);
     //
