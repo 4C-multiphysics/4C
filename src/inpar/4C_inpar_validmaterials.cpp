@@ -2159,13 +2159,29 @@ std::shared_ptr<std::vector<std::shared_ptr<Mat::MaterialDefinition>>> Input::va
   }
 
   /*--------------------------------------------------------------------*/
-  // Fourier's law
+  // isotropic Fourier's law
   {
     auto m = std::make_shared<Mat::MaterialDefinition>("THERM_FourierIso",
         "isotropic (linear) Fourier's law of heat conduction", Core::Materials::m_th_fourier_iso);
 
     add_named_real(m, "CAPA", "volumetric heat capacity");
     add_named_real(m, "CONDUCT", "thermal conductivity");
+
+    Mat::append_material_definition(matlist, m);
+  }
+
+  /*--------------------------------------------------------------------*/
+  // anisotropic Fourier's law
+  {
+    auto m = std::make_shared<Mat::MaterialDefinition>("THERM_FourierAniso",
+        "anisotropic (linear) Fourier's law of heat conduction",
+        Core::Materials::m_th_fourier_aniso);
+
+    add_named_real(m, "CAPA", "volumetric heat capacity");
+    add_named_int(m, "NUMSPACEDIM", "Number of space dimension");
+    add_named_real_vector(m, "CONDUCT",
+        "Diagonal tensor values defining the thermal conductivity in each space direction",
+        "NUMSPACEDIM");
 
     Mat::append_material_definition(matlist, m);
   }

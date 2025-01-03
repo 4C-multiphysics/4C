@@ -223,6 +223,8 @@ std::string_view Core::Materials::to_string(Core::Materials::MaterialType materi
       return "MAT_CNST_ART";
     case m_th_fourier_iso:
       return "THERM_FourierIso";
+    case m_th_fourier_aniso:
+      return "THERM_FourierAniso";
     case m_soret:
       return "MAT_soret";
     case m_membrane_elasthyper:
