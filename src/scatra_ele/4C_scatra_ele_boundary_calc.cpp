@@ -1312,8 +1312,8 @@ double Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::calculate_pse
     // if tensile stress, i.e. normal stress component > 0 return 0.0, otherwise return 1.0
     return normal_stress_comp_gp(0) > 0.0 ? 0.0 : 1.0;
   }
-  else
-    return 1.0;
+
+  return 1.0;
 }
 
 /*----------------------------------------------------------------------*

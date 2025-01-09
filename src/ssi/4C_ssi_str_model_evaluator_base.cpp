@@ -9,8 +9,6 @@
 
 #include "4C_adapter_str_ssiwrapper.hpp"
 #include "4C_comm_exporter.hpp"
-#include "4C_comm_utils_gid_vector.hpp"
-#include "4C_coupling_adapter.hpp"
 #include "4C_fem_general_utils_gauss_point_postprocess.hpp"
 #include "4C_io.hpp"
 #include "4C_linalg_vector.hpp"
@@ -71,15 +69,15 @@ void Solid::ModelEvaluator::BaseSSI::determine_stress_strain()
 
     // extract dof lid of first degree of freedom associated with current node in second nodeset
     const int dofgid_epetra = discret().dof(2, node, 0);
-    const int doflid_epetra = mechanical_stress_state_->get_block_map().LID(dofgid_epetra);
+    const int doflid_epetra = mechanical_stress_state_np_->get_block_map().LID(dofgid_epetra);
     if (doflid_epetra < 0) FOUR_C_THROW("Local ID not found in epetra vector!");
 
-    (*mechanical_stress_state_)[doflid_epetra] = (nodal_stresses_source(0))[nodelid];
-    (*mechanical_stress_state_)[doflid_epetra + 1] = (nodal_stresses_source(1))[nodelid];
-    (*mechanical_stress_state_)[doflid_epetra + 2] = (nodal_stresses_source(2))[nodelid];
-    (*mechanical_stress_state_)[doflid_epetra + 3] = (nodal_stresses_source(3))[nodelid];
-    (*mechanical_stress_state_)[doflid_epetra + 4] = (nodal_stresses_source(4))[nodelid];
-    (*mechanical_stress_state_)[doflid_epetra + 5] = (nodal_stresses_source(5))[nodelid];
+    (*mechanical_stress_state_np_)[doflid_epetra] = (nodal_stresses_source(0))[nodelid];
+    (*mechanical_stress_state_np_)[doflid_epetra + 1] = (nodal_stresses_source(1))[nodelid];
+    (*mechanical_stress_state_np_)[doflid_epetra + 2] = (nodal_stresses_source(2))[nodelid];
+    (*mechanical_stress_state_np_)[doflid_epetra + 3] = (nodal_stresses_source(3))[nodelid];
+    (*mechanical_stress_state_np_)[doflid_epetra + 4] = (nodal_stresses_source(4))[nodelid];
+    (*mechanical_stress_state_np_)[doflid_epetra + 5] = (nodal_stresses_source(5))[nodelid];
   }
 }
 
@@ -94,16 +92,40 @@ std::shared_ptr<const Core::LinAlg::Map> Solid::ModelEvaluator::BaseSSI::get_blo
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
+void Solid::ModelEvaluator::BaseSSI::read_restart(Core::IO::DiscretizationReader& ioreader)
+{
+  if (mechanical_stress_state_n_ != nullptr)
+    ioreader.read_vector(mechanical_stress_state_n_, "stress_n");
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
 void Solid::ModelEvaluator::BaseSSI::setup()
 {
   // check initialization
   check_init();
 
   if (discret().num_dof_sets() - 1 == 2)
-    mechanical_stress_state_ =
+  {
+    mechanical_stress_state_n_ =
         std::make_shared<Core::LinAlg::Vector<double>>(*discret().dof_row_map(2), true);
+    mechanical_stress_state_np_ =
+        std::make_shared<Core::LinAlg::Vector<double>>(*discret().dof_row_map(2), true);
+  }
 
   // set flag
   issetup_ = true;
 }
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void Solid::ModelEvaluator::BaseSSI::write_restart(
+    Core::IO::DiscretizationWriter& iowriter, const bool& forced_writerestart) const
+{
+  if (mechanical_stress_state_n_ != nullptr)
+    iowriter.write_vector("stress_n", mechanical_stress_state_n_);
+}
+
+
+
 FOUR_C_NAMESPACE_CLOSE

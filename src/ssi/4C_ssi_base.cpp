@@ -517,7 +517,7 @@ void SSI::SSIBase::set_struct_solution(std::shared_ptr<const Core::LinAlg::Vecto
   set_velocity_fields(vel);
 
   if (set_mechanical_stress)
-    set_mechanical_stress_state(modelevaluator_ssi_base_->get_mechanical_stress_state());
+    set_mechanical_stress_state(modelevaluator_ssi_base_->get_mechanical_stress_state_n());
 }
 
 /*----------------------------------------------------------------------*/

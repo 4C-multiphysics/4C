@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_linalg_vector.hpp"
 #include "4C_structure_new_model_evaluator_generic.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -49,20 +50,24 @@ namespace Solid::ModelEvaluator
         const override
     {
       FOUR_C_THROW("Not implemented!");
-      return nullptr;
     }
 
     [[nodiscard]] std::shared_ptr<const Core::LinAlg::Vector<double>>
     get_last_time_step_solution_ptr() const override
     {
       FOUR_C_THROW("Not implemented!");
-      return nullptr;
     }
 
-    [[nodiscard]] std::shared_ptr<const Core::LinAlg::Vector<double>> get_mechanical_stress_state()
-        const override
+    [[nodiscard]] std::shared_ptr<const Core::LinAlg::Vector<double>>
+    get_mechanical_stress_state_n() const override
     {
-      return mechanical_stress_state_;
+      return mechanical_stress_state_n_;
+    }
+
+    [[nodiscard]] std::shared_ptr<const Core::LinAlg::Vector<double>>
+    get_mechanical_stress_state_np() const override
+    {
+      return mechanical_stress_state_np_;
     }
 
     void output_step_state(Core::IO::DiscretizationWriter& iowriter) const override {}
@@ -75,7 +80,7 @@ namespace Solid::ModelEvaluator
 
     void pre_evaluate() override {}
 
-    void read_restart(Core::IO::DiscretizationReader& ioreader) override {}
+    void read_restart(Core::IO::DiscretizationReader& ioreader) override;
 
     void reset(const Core::LinAlg::Vector<double>& x) override {}
 
@@ -102,16 +107,20 @@ namespace Solid::ModelEvaluator
 
     void update_step_element() override {}
 
-    void update_step_state(const double& timefac_n) override {}
-
-    void write_restart(
-        Core::IO::DiscretizationWriter& iowriter, const bool& forced_writerestart) const override
+    void update_step_state(const double& timefac_n) override
     {
+      if (mechanical_stress_state_n_ != nullptr)
+        mechanical_stress_state_n_->update(1.0, *mechanical_stress_state_np_, 0.0);
     }
 
+    void write_restart(
+        Core::IO::DiscretizationWriter& iowriter, const bool& forced_writerestart) const override;
+
    private:
-    //! mechanical stress state
-    std::shared_ptr<Core::LinAlg::Vector<double>> mechanical_stress_state_;
+    //! mechanical stress state at time n
+    std::shared_ptr<Core::LinAlg::Vector<double>> mechanical_stress_state_n_;
+    //! mechanical stress state at time np
+    std::shared_ptr<Core::LinAlg::Vector<double>> mechanical_stress_state_np_;
   };
 }  // namespace Solid::ModelEvaluator
 FOUR_C_NAMESPACE_CLOSE
