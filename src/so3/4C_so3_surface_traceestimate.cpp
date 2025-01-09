@@ -15,7 +15,7 @@
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
 #include "4C_linalg_utils_densematrix_determinant.hpp"
 #include "4C_linalg_utils_densematrix_eigen.hpp"
-#include "4C_mat_fourieriso.hpp"
+#include "4C_mat_fourier.hpp"
 #include "4C_mat_so3_material.hpp"
 #include "4C_so3_element_service.hpp"
 #include "4C_so3_surface.hpp"
@@ -510,9 +510,11 @@ void Discret::Elements::StructuralSurface::trace_estimate_vol_matrix_tsi(
   Core::FE::IntPointsAndWeights<dim> ip(Discret::Elements::DisTypeToOptGaussRule<dt_vol>::rule);
 
   if (parent_element()->num_material() < 2) FOUR_C_THROW("where's my second material");
-  std::shared_ptr<Mat::FourierIso> mat_thr =
-      std::dynamic_pointer_cast<Mat::FourierIso>(parent_element()->material(1));
-  const double k0 = mat_thr->conductivity();
+  std::shared_ptr<Mat::Fourier> mat_thr =
+      std::dynamic_pointer_cast<Mat::Fourier>(parent_element()->material(1));
+
+  std::vector<double> k = mat_thr->conductivity();
+  FOUR_C_ASSERT(k.size() != 1, "Conductivity value is a vector quantity, but has to be a scalar.");
 
   for (int gp = 0; gp < ip.ip().nquad; ++gp)
   {
@@ -524,7 +526,7 @@ void Discret::Elements::StructuralSurface::trace_estimate_vol_matrix_tsi(
     iC.invert();
 
     iC_N_XYZ.multiply(iC, N_XYZ);
-    iC_N_XYZ.scale(k0);
+    iC_N_XYZ.scale(k[0]);
 
     vol.multiply_tn(ip.ip().qwgt[gp] * jac, N_XYZ, iC_N_XYZ, 1.);
   }
@@ -561,9 +563,11 @@ void Discret::Elements::StructuralSurface::trace_estimate_surf_matrix_tsi(
   Core::LinAlg::SerialDenseMatrix deriv_surf(2, Core::FE::num_nodes<dt_surf>);
 
   if (parent_element()->num_material() < 2) FOUR_C_THROW("where's my second material");
-  std::shared_ptr<Mat::FourierIso> mat_thr =
-      std::dynamic_pointer_cast<Mat::FourierIso>(parent_element()->material(1));
-  const double k0 = mat_thr->conductivity();
+  std::shared_ptr<Mat::Fourier> mat_thr =
+      std::dynamic_pointer_cast<Mat::Fourier>(parent_element()->material(1));
+
+  std::vector<double> k = mat_thr->conductivity();
+  FOUR_C_ASSERT(k.size() != 1, "Conductivity value is a vector quantity, but has to be a scalar.");
 
   for (int gp = 0; gp < ip.ip().nquad; ++gp)
   {
@@ -593,7 +597,7 @@ void Discret::Elements::StructuralSurface::trace_estimate_surf_matrix_tsi(
     iCn.multiply(iC, n_v);
 
     iCn_N_XYZ.multiply_tn(iCn, N_XYZ);
-    iCn_N_XYZ.scale(k0);
+    iCn_N_XYZ.scale(k[0]);
 
     surf.multiply_tn(detA * ip.ip().qwgt[gp], iCn_N_XYZ, iCn_N_XYZ, 1.);
   }

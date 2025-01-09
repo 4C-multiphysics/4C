@@ -49,7 +49,7 @@ void ScaTra::ScatraFluidCloneStrategy::check_material_type(const int matid)
   Core::Materials::MaterialType mtype =
       Global::Problem::instance()->materials()->parameter_by_id(matid)->type();
   if ((mtype != Core::Materials::m_scatra) && (mtype != Core::Materials::m_sutherland) &&
-      (mtype != Core::Materials::m_ion) && (mtype != Core::Materials::m_th_fourier_iso) &&
+      (mtype != Core::Materials::m_ion) && (mtype != Core::Materials::m_thermo_fourier) &&
       (mtype != Core::Materials::m_thermostvenant) && (mtype != Core::Materials::m_matlist) &&
       (mtype != Core::Materials::m_matlist_reactions) && (mtype != Core::Materials::m_myocard) &&
       (mtype != Core::Materials::m_scatra_multiporo_fluid) &&

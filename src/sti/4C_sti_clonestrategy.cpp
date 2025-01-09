@@ -21,7 +21,7 @@ void STI::ScatraThermoCloneStrategy::check_material_type(const int matid)
   switch (Global::Problem::instance()->materials()->parameter_by_id(matid)->type())
   {
     case Core::Materials::m_soret:
-    case Core::Materials::m_th_fourier_iso:
+    case Core::Materials::m_thermo_fourier:
       // do nothing in case of compatible material
       break;
 

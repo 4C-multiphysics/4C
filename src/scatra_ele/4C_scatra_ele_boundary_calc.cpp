@@ -13,7 +13,7 @@
 #include "4C_fluid_rotsym_periodicbc.hpp"
 #include "4C_global_data.hpp"
 #include "4C_linalg_fixedsizematrix_solver.hpp"
-#include "4C_mat_fourieriso.hpp"
+#include "4C_mat_fourier.hpp"
 #include "4C_mat_list.hpp"
 #include "4C_mat_scatra.hpp"
 #include "4C_mat_thermostvenantkirchhoff.hpp"
@@ -858,9 +858,9 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::convective_heat
 
       // get specific heat capacity at constant volume
       double shc = 0.0;
-      if (material->material_type() == Core::Materials::m_th_fourier_iso)
+      if (material->material_type() == Core::Materials::m_thermo_fourier)
       {
-        const auto* actmat = static_cast<const Mat::FourierIso*>(material.get());
+        const auto* actmat = static_cast<const Mat::Fourier*>(material.get());
 
         shc = actmat->capacity();
       }

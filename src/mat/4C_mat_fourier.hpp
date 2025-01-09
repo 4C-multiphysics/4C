@@ -5,12 +5,9 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#ifndef FOUR_C_MAT_FOURIERISO_HPP
-#define FOUR_C_MAT_FOURIERISO_HPP
+#ifndef FOUR_C_MAT_FOURIER_HPP
+#define FOUR_C_MAT_FOURIER_HPP
 
-/*----------------------------------------------------------------------*
- |  headers                                                  dano 09/09 |
- *----------------------------------------------------------------------*/
 #include "4C_config.hpp"
 
 #include "4C_comm_parobjectfactory.hpp"
@@ -19,74 +16,58 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-/*----------------------------------------------------------------------*
- |                                                           dano 09/09 |
- *----------------------------------------------------------------------*/
 namespace Mat
 {
   namespace PAR
   {
-    /*----------------------------------------------------------------------*/
-    /// material parameters for FourierIso material
+    /// material parameters for Fourier material
     ///
     /// <h3>Input line</h3>
-    /// MAT 1 THERM_FourierIsoIso CAPA 1.0 COND 1.0
-    class FourierIso : public Core::Mat::PAR::Parameter
+    /// MAT 1 MAT_Fourier CAPA 1.0 NUMSPACEDIM 3 CONDUCT 1.0 0.1 10.0
+    class Fourier : public Core::Mat::PAR::Parameter
     {
      public:
       /// standard constructor
-      FourierIso(const Core::Mat::PAR::Parameter::Data& matdata);
+      Fourier(const Core::Mat::PAR::Parameter::Data& matdata);
 
       /// @name material parameters
       //@{
 
       /// volumetric heat capacity
       const double capa_;
+
       /// heat conductivity
-      const double conduct_;
+      const std::vector<double> conduct_;
+
+      /// number of conductivity components
+      const int conduct_para_num_;
 
       //@}
 
       /// create material instance of matching type with my parameters
       std::shared_ptr<Core::Mat::Material> create_material() override;
-
-    };  // class FourierIso
-
+    };
   }  // namespace PAR
 
-  class FourierIsoType : public Core::Communication::ParObjectType
+  class FourierType : public Core::Communication::ParObjectType
   {
    public:
-    std::string name() const override { return "FourierIsoType"; }
+    std::string name() const override { return "FourierAnisoType"; }
 
-    static FourierIsoType& instance() { return instance_; };
+    static FourierType& instance() { return instance_; };
 
     Core::Communication::ParObject* create(Core::Communication::UnpackBuffer& buffer) override;
 
    private:
-    static FourierIsoType instance_;
+    static FourierType instance_;
   };
 
-  /*----------------------------------------------------------------------*/
-  /// FourierIso material according to [1]
-  ///
-  /// This is a FourierIso's law of isotropic, instationary heat conduction
-  ///
-  /// <h3>References</h3>
-  /// <ul>
-  /// <li> [1] GA Holzapfel, "Nonlinear solid mechanics", Wiley, 2000.
-  /// </ul>
-  ///
-  /// \author dano
-  /// \date 09/09
-  class FourierIso : public ThermoMaterial
+  class Fourier : public ThermoMaterial
   {
    public:
-    /// empty constructor
-    FourierIso();
+    Fourier();
 
-    /// constructor with given material parameters
-    FourierIso(Mat::PAR::FourierIso* params);
+    explicit Fourier(Mat::PAR::Fourier* params);
 
     /// @name Packing and Unpacking
     //@{
@@ -97,7 +78,7 @@ namespace Mat
     ///  top of parobject.H (this file) and should return it in this method.
     int unique_par_object_id() const override
     {
-      return FourierIsoType::instance().unique_par_object_id();
+      return FourierType::instance().unique_par_object_id();
     }
 
     /// Pack this class so it can be communicated
@@ -126,7 +107,7 @@ namespace Mat
     //@{
 
     /// conductivity
-    double conductivity() const { return params_->conduct_; }
+    std::vector<double> conductivity() const { return params_->conduct_; }
 
     /// volumetric heat capacity
     double capacity() const override { return params_->capa_; }
@@ -134,13 +115,13 @@ namespace Mat
     /// material type
     Core::Materials::MaterialType material_type() const override
     {
-      return Core::Materials::m_th_fourier_iso;
+      return Core::Materials::m_thermo_fourier;
     }
 
     /// return copy of this material object
     std::shared_ptr<Core::Mat::Material> clone() const override
     {
-      return std::make_shared<FourierIso>(*this);
+      return std::make_shared<Fourier>(*this);
     }
 
     //@}
@@ -186,18 +167,13 @@ namespace Mat
       // do nothing
     }
 
-    /// Return quick accessible material parameter data
     Core::Mat::PAR::Parameter* parameter() const override { return params_; }
 
    private:
-    /// my material parameters
-    Mat::PAR::FourierIso* params_;
-
-  };  // FourierIso
-
+    Mat::PAR::Fourier* params_;
+  };
 }  // namespace Mat
 
-/*----------------------------------------------------------------------*/
 FOUR_C_NAMESPACE_CLOSE
 
 #endif

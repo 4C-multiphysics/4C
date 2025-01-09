@@ -323,7 +323,7 @@ void Discret::Elements::Transport::set_material(
       mat->material_type() == Core::Materials::m_myocard or
       mat->material_type() == Core::Materials::m_sutherland or
       mat->material_type() == Core::Materials::m_ion or
-      mat->material_type() == Core::Materials::m_th_fourier_iso or
+      mat->material_type() == Core::Materials::m_thermo_fourier or
       mat->material_type() == Core::Materials::m_thermostvenant or
       mat->material_type() == Core::Materials::m_soret or
       mat->material_type() == Core::Materials::m_scatra_multiporo_fluid or

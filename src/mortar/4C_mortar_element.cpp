@@ -1657,7 +1657,7 @@ void Mortar::Element::estimate_nitsche_trace_max_eigenvalue()
                          mo_data().parent_disp(), mo_data().parent_scalar());
 
   if (parent_element()->num_material() > 1)
-    if (parent_element()->material(1)->material_type() == Core::Materials::m_th_fourier_iso)
+    if (parent_element()->material(1)->material_type() == Core::Materials::m_thermo_fourier)
       traceHCond_ = 1.0 / surf->estimate_nitsche_trace_max_eigenvalue_tsi(mo_data().parent_disp());
 }
 

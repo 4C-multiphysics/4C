@@ -18,7 +18,6 @@
 #include "4C_inpar_structure.hpp"
 #include "4C_inpar_thermo.hpp"
 #include "4C_linalg_fixedsizematrix_solver.hpp"
-#include "4C_mat_fourieriso.hpp"
 #include "4C_mat_plasticelasthyper.hpp"
 #include "4C_mat_thermoplastichyperelast.hpp"
 #include "4C_mat_thermoplasticlinelast.hpp"

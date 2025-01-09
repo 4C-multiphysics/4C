@@ -12,6 +12,7 @@
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
 #include "4C_inpar_s2i.hpp"
 #include "4C_mat_electrode.hpp"
+#include "4C_mat_fourier.hpp"
 #include "4C_mat_soret.hpp"
 #include "4C_scatra_ele_boundary_calc_elch_electrode_utils.hpp"
 #include "4C_scatra_ele_parameter_boundary.hpp"
@@ -68,8 +69,8 @@ void Discret::Elements::ScaTraEleBoundaryCalcSTIElectrode<distype, probdim>::eva
   // access primary and secondary materials of parent element
   std::shared_ptr<const Mat::Soret> matsoret =
       std::dynamic_pointer_cast<const Mat::Soret>(ele->parent_element()->material());
-  std::shared_ptr<const Mat::FourierIso> matfourier =
-      std::dynamic_pointer_cast<const Mat::FourierIso>(ele->parent_element()->material());
+  std::shared_ptr<const Mat::Fourier> matfourier =
+      std::dynamic_pointer_cast<const Mat::Fourier>(ele->parent_element()->material());
   std::shared_ptr<const Mat::Electrode> matelectrode =
       std::dynamic_pointer_cast<const Mat::Electrode>(ele->parent_element()->material(1));
   if ((matsoret == nullptr and matfourier == nullptr) or matelectrode == nullptr)
@@ -317,8 +318,8 @@ void Discret::Elements::ScaTraEleBoundaryCalcSTIElectrode<distype,
   // access primary and secondary materials of parent element
   std::shared_ptr<const Mat::Soret> matsoret =
       std::dynamic_pointer_cast<const Mat::Soret>(ele->parent_element()->material());
-  std::shared_ptr<const Mat::FourierIso> matfourier =
-      std::dynamic_pointer_cast<const Mat::FourierIso>(ele->parent_element()->material());
+  std::shared_ptr<const Mat::Fourier> matfourier =
+      std::dynamic_pointer_cast<const Mat::Fourier>(ele->parent_element()->material());
   std::shared_ptr<const Mat::Electrode> matelectrode =
       std::dynamic_pointer_cast<const Mat::Electrode>(ele->parent_element()->material(1));
   if ((matsoret == nullptr and matfourier == nullptr) or matelectrode == nullptr)

@@ -17,7 +17,7 @@ FOUR_C_NAMESPACE_OPEN
  | constructor                                               fang 06/15 |
  *----------------------------------------------------------------------*/
 Mat::PAR::Soret::Soret(const Core::Mat::PAR::Parameter::Data& matdata)
-    : FourierIso(matdata), soretcoefficient_(matdata.parameters.get<double>("SORET"))
+    : Fourier(matdata), soretcoefficient_(matdata.parameters.get<double>("SORET"))
 {
   return;
 }
@@ -50,7 +50,7 @@ Mat::Soret::Soret() : params_(nullptr) { return; }
 /*-------------------------------------------------------------------------*
  | construct Soret material with specific material parameters   fang 06/15 |
  *-------------------------------------------------------------------------*/
-Mat::Soret::Soret(Mat::PAR::Soret* params) : FourierIso(params), params_(params) { return; }
+Mat::Soret::Soret(Mat::PAR::Soret* params) : Fourier(params), params_(params) { return; }
 
 
 /*----------------------------------------------------------------------*
@@ -67,9 +67,7 @@ void Mat::Soret::pack(Core::Communication::PackBuffer& data) const
   add_to_pack(data, matid);
 
   // pack base class material
-  FourierIso::pack(data);
-
-  return;
+  Fourier::pack(data);
 }
 
 
@@ -98,7 +96,7 @@ void Mat::Soret::unpack(Core::Communication::UnpackBuffer& buffer)
     }
 
   // extract base class material
-  FourierIso::unpack(buffer);
+  Fourier::unpack(buffer);
 }
 
 FOUR_C_NAMESPACE_CLOSE

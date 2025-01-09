@@ -126,7 +126,7 @@ TEKO_XML_FILE                   xml/block_preconditioner/thermo_solid.xml
 AZREUSE                         10
 -------------------------------------------------------------------MATERIALS
 MAT 1 MAT_Struct_ThrStVenantK YOUNGNUM 1 YOUNG 2.2e3 NUE 0.0 DENS 7.6e-3 THEXPANS 1.0e-4 CAPA 3.4715e-2 CONDUCT 48.9e-04 INITTEMP 273.0
-MAT 2 THERM_FourierIso CAPA 3.4715e-2 CONDUCT 48.9e-04
+MAT 2 MAT_Fourier CONDUCT_PARA_NUM 1 CAPA 3.4715e-2 CONDUCT 48.9e-04
 --------------------------------------------------------CLONING MATERIAL MAP
 SRC_FIELD structure SRC_MAT 1 TAR_FIELD thermo TAR_MAT 2
 ----------------------------------------------------------------------FUNCT1

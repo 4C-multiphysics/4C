@@ -96,7 +96,7 @@ SOLVER                          UMFPACK
 //parameters for steel [N,m,s,K]
 MAT 1 MAT_Struct_ThrStVenantK YOUNGNUM 1 YOUNG 2.1e11 NUE 0.0 DENS 7850.0 THEXPANS 1.2e-05 CAPA 3297000.0 CONDUCT 52.0 INITTEMP 300.0
 // CAPA = C_V* rho = 420*7850 = 3297000
-MAT 2 THERM_FourierIso CAPA 3297000.0 CONDUCT 52.0
+MAT 2 MAT_Fourier CONDUCT_PARA_NUM 1 CAPA 3297000.0 CONDUCT 52.0
 --------------------------------------------------------CLONING MATERIAL MAP
 SRC_FIELD structure SRC_MAT 1 TAR_FIELD thermo TAR_MAT 2
 ----------------------------------------------------------------------FUNCT1

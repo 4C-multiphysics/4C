@@ -116,7 +116,7 @@ AZREUSE                         10
 -------------------------------------------------------------------MATERIALS
 //MAT 1 MAT_Struct_ThrStVenantK YOUNGNUM 1 YOUNG 2.1e08 NUE 0.3 DENS 7.85e-06 THEXPANS 1.1e-05 CAPA 6.445 CONDUCT 1031.2 INITTEMP 273.15
 MAT 1 MAT_Struct_ThrPlasticLinElast YOUNG 2.1e08 NUE 0.3 DENS 7.85e-06 THEXPANS 1.1e-05 INITTEMP 273.15 YIELD 2.1e4 ISOHARD 0.12 KINHARD 2.1e2  SAMPLENUM 0 SIGMA_Y EPSBAR_P  TOL 1.0e-4 THERMOMAT 2
-MAT 2 THERM_FourierIso CAPA 6.445 CONDUCT 1031.2
+MAT 2 MAT_Fourier CONDUCT_PARA_NUM 1 CAPA 6.445 CONDUCT 1031.2
 --------------------------------------------------------CLONING MATERIAL MAP
 SRC_FIELD structure SRC_MAT 1 TAR_FIELD thermo TAR_MAT 2
 ----------------------------------------------------------------------FUNCT1

@@ -13,7 +13,6 @@
 #include "4C_fem_general_element.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io_linedefinition.hpp"
-#include "4C_mat_fourieriso.hpp"
 #include "4C_mat_thermostvenantkirchhoff.hpp"
 #include "4C_utils_exceptions.hpp"
 

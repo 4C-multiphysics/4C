@@ -93,7 +93,7 @@ MERGE_TSI_BLOCK_MATRIX          yes
 SOLVER                          UMFPACK
 ----------------------------------------------------------MATERIALS
 MAT 1 MAT_Struct_ThrStVenantK YOUNGNUM 1 YOUNG 4000 NUE 0.0 DENS 0.0 THEXPANS 0.0 INITTEMP 20 CAPA 0 CONDUCT 52
-MAT 2 THERM_FourierIso   CAPA 0 CONDUCT 52
+MAT 2 MAT_Fourier CONDUCT_PARA_NUM 1   CAPA 0 CONDUCT 52
 --------------------------------------------------------CLONING MATERIAL MAP
 SRC_FIELD structure SRC_MAT 1 TAR_FIELD thermo TAR_MAT 2
 ------------------------------------------------------------FUNCT1

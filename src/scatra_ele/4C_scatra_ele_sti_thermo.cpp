@@ -158,7 +158,12 @@ void Discret::Elements::ScaTraEleSTIThermo<distype>::mat_soret(
   // extract material parameters from Soret material
   const std::shared_ptr<const Mat::Soret> matsoret =
       std::static_pointer_cast<const Mat::Soret>(material);
-  diffmanagerstithermo_->set_isotropic_diff(matsoret->conductivity(), 0);
+
+  std::vector<double> k = matsoret->conductivity();
+  FOUR_C_ASSERT(k.size() != 1, "Conductivity value is a vector quantity, but has to be a scalar.");
+
+  diffmanagerstithermo_->set_isotropic_diff(k[0], 0);
+
   diffmanagerstithermo_->set_soret(matsoret->soret_coefficient());
 }
 

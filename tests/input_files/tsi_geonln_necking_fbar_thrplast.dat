@@ -108,7 +108,7 @@ SRC_FIELD structure SRC_MAT 1 TAR_FIELD thermo TAR_MAT 2
 COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME 293.0
 -------------------------------------------------------------------MATERIALS
 MAT 1 MAT_Struct_ThrPlasticHyperElast YOUNG 206.9 NUE 0.29 DENS 7.80e-06 CTE 1e-5 INITTEMP 293 YIELD 0.45e15 ISOHARD 0.12924 SATHARDENING 0.715e15 HARDEXPO 16.93 YIELDSOFT 0.0 HARDSOFT 0.0 TOL 1.0e-06
-MAT 2 THERM_FourierIso CAPA 3.588e-3 CONDUCT 4.5e-5
+MAT 2 MAT_Fourier CONDUCT_PARA_NUM 1 CAPA 3.588e-3 CONDUCT 4.5e-5
 -------------------------------------------------------------FUNCT2
 SYMBOLIC_FUNCTION_OF_SPACE_TIME t*8/8000
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS

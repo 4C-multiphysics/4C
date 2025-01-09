@@ -174,7 +174,7 @@ namespace Core::Materials
     m_superelast,             ///< Superelastic material behaviour of shape memory alloys
     m_stvenant,               ///< St.Venant Kirchhoff material
     m_sutherland,             ///< material with temperature dependence according to Sutherland law
-    m_th_fourier_iso,         ///< isotropic (linear) Fourier's law of heat conduction
+    m_thermo_fourier,         ///< generic (linear) Fourier's law of heat conduction
     m_thermoplhyperelast,     ///< Temperature-dependent hyperelasticity and von Mises plasticity
     m_thermopllinelast,       ///< Temperature-dependent Hooke elasticity and von Mises plasticity
     m_thermostvenant,         ///< St.Venant Kirchhoff material with temperature

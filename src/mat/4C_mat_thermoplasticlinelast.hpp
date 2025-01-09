@@ -261,7 +261,7 @@ namespace Mat
     //@{
 
     //! main 3D material call to determine stress and constitutive tensor ctemp
-    //  originally method of fourieriso with const!!!
+    //  originally method of fourier with const!!!
     void evaluate(const Core::LinAlg::Matrix<1, 1>& Ntemp,  //!< temperature of element
         Core::LinAlg::Matrix<NUM_STRESS_3D, 1>& ctemp,  //!< temperature dependent material tangent
         Core::LinAlg::Matrix<NUM_STRESS_3D, 1>& stresstemp  //!< temperature dependent stress term

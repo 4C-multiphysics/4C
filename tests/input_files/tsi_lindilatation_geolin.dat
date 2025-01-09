@@ -87,7 +87,7 @@ SOLVER                          UMFPACK
 -------------------------------------------------------------------MATERIALS
 //parameters in [N,m,s,K]
 MAT 1 MAT_Struct_ThrStVenantK YOUNGNUM 1 YOUNG 10 NUE 0.0 DENS 0 THEXPANS 1.0e-05 CAPA 420 CONDUCT 52 INITTEMP 293
-MAT 2 THERM_FourierIso CAPA 420 CONDUCT 52
+MAT 2 MAT_Fourier CONDUCT_PARA_NUM 1 CAPA 420 CONDUCT 52
 --------------------------------------------------------CLONING MATERIAL MAP
 SRC_FIELD structure SRC_MAT 1 TAR_FIELD thermo TAR_MAT 2
 ----------------------------------------------------------------------FUNCT1

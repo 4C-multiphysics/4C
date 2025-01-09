@@ -60,7 +60,7 @@ THETA                           0.5
 NAME                            Thermal_Solver
 SOLVER                          UMFPACK
 -------------------------------------------------------------------MATERIALS
-MAT 1 THERM_FourierIso CAPA 1 CONDUCT 1
+MAT 1 MAT_Fourier CONDUCT_PARA_NUM 1 CAPA 1 CONDUCT 1
 ----------------------------------------------------------------------FUNCT1
 COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME 0.0
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS

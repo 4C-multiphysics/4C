@@ -10,7 +10,7 @@
 
 #include "4C_config.hpp"
 
-#include "4C_mat_fourieriso.hpp"
+#include "4C_mat_fourier.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -19,7 +19,7 @@ namespace Mat
   namespace PAR
   {
     //! parameters for Soret material
-    class Soret : public FourierIso
+    class Soret : public Fourier
     {
      public:
       //! constructor
@@ -59,7 +59,7 @@ namespace Mat
 
   /*----------------------------------------------------------------------*/
   //! wrapper for Soret material
-  class Soret : public FourierIso
+  class Soret : public Fourier
   {
    public:
     //! construct empty Soret material

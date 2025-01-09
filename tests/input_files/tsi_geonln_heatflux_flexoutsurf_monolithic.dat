@@ -121,7 +121,7 @@ AZREUSE                         10
 ----------------------------------------------------------MATERIALS
 // CAPA = rho * C_V
 MAT 1 MAT_Struct_ThrStVenantK YOUNGNUM 1 YOUNG 2.1e5 NUE 0.3 DENS 7850 THEXPANS 1.2e-05 CAPA 3297000 CONDUCT 52.0 INITTEMP 0.0
-MAT 2 THERM_FourierIso CAPA 3297000 CONDUCT 52
+MAT 2 MAT_Fourier CONDUCT_PARA_NUM 1 CAPA 3297000 CONDUCT 52
 --------------------------------------------------------CLONING MATERIAL MAP
 SRC_FIELD structure SRC_MAT 1 TAR_FIELD thermo TAR_MAT 2
 ----------------------------------------------------------------------FUNCT1

@@ -7,6 +7,7 @@
 
 #include "4C_scatra_ele_calc_sti_diffcond.hpp"
 
+#include "4C_mat_fourier.hpp"
 #include "4C_mat_soret.hpp"
 #include "4C_scatra_ele_calc_elch_diffcond.hpp"
 #include "4C_scatra_ele_parameter_std.hpp"
@@ -111,7 +112,7 @@ void Discret::Elements::ScaTraEleCalcSTIDiffCond<distype>::sysmat(
     // matrix and vector contributions arising from source terms
     if (ele->material()->material_type() == Core::Materials::m_soret)
       mystielch::calc_mat_and_rhs_source(emat, erhs, timefacfac, rhsfac);
-    else if (ele->material()->material_type() == Core::Materials::m_th_fourier_iso)
+    else if (ele->material()->material_type() == Core::Materials::m_thermo_fourier)
       calc_mat_and_rhs_joule_solid(emat, erhs, timefacfac, rhsfac);
   }  // loop over integration points
 }
@@ -390,7 +391,7 @@ void Discret::Elements::ScaTraEleCalcSTIDiffCond<distype>::sysmat_od_thermo_scat
     // w.r.t. scatra dofs
     if (ele->material()->material_type() == Core::Materials::m_soret)
       mystielch::calc_mat_source_od(emat, my::scatraparatimint_->time_fac() * fac);
-    else if (ele->material()->material_type() == Core::Materials::m_th_fourier_iso)
+    else if (ele->material()->material_type() == Core::Materials::m_thermo_fourier)
       calc_mat_joule_solid_od(emat, my::scatraparatimint_->time_fac() * fac);
   }
 }
@@ -661,7 +662,7 @@ void Discret::Elements::ScaTraEleCalcSTIDiffCond<distype>::get_material_params(
   std::shared_ptr<const Core::Mat::Material> material = ele->material();
   if (material->material_type() == Core::Materials::m_soret)
     mat_soret(material, densn[0], densnp[0], densam[0]);
-  else if (material->material_type() == Core::Materials::m_th_fourier_iso)
+  else if (material->material_type() == Core::Materials::m_thermo_fourier)
     mat_fourier(material, densn[0], densnp[0], densam[0]);
   else
     FOUR_C_THROW("Invalid thermal material!");
@@ -701,9 +702,14 @@ void Discret::Elements::ScaTraEleCalcSTIDiffCond<distype>::mat_soret(
   const std::shared_ptr<const Mat::Soret> matsoret =
       std::static_pointer_cast<const Mat::Soret>(material);
   densn = densnp = densam = matsoret->capacity();
-  diff_manager()->set_isotropic_diff(matsoret->conductivity(), 0);
+
+  std::vector<double> k = matsoret->conductivity();
+  FOUR_C_ASSERT(k.size() != 1, "Conductivity value is a vector quantity, but has to be a scalar.");
+
+  diff_manager()->set_isotropic_diff(k[0], 0);
+
   diff_manager()->set_soret(matsoret->soret_coefficient());
-}  // Discret::Elements::ScaTraEleCalcSTIDiffCond<distype>::mat_soret
+}
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
@@ -716,11 +722,16 @@ void Discret::Elements::ScaTraEleCalcSTIDiffCond<distype>::mat_fourier(
 )
 {
   // extract material parameters from Soret material
-  const std::shared_ptr<const Mat::FourierIso> matfourier =
-      std::static_pointer_cast<const Mat::FourierIso>(material);
+  const std::shared_ptr<const Mat::Fourier> matfourier =
+      std::static_pointer_cast<const Mat::Fourier>(material);
+
   densn = densnp = densam = matfourier->capacity();
-  diff_manager()->set_isotropic_diff(matfourier->conductivity(), 0);
-}  // Discret::Elements::ScaTraEleCalcSTIDiffCond<distype>::mat_soret
+
+  std::vector<double> k = matfourier->conductivity();
+  FOUR_C_ASSERT(k.size() != 1, "Conductivity value is a vector quantity, but has to be a scalar.");
+
+  diff_manager()->set_isotropic_diff(k[0], 0);
+}
 
 
 /*------------------------------------------------------------------------------*

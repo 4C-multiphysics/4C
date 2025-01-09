@@ -50,7 +50,7 @@ TOLTEMP                         1e-10
 ----------------------------------------------------------SOLVER 1
 SOLVER                          UMFPACK
 ---------------------------------------------------------MATERIALS
-MAT 1 THERM_FourierIso CAPA 0 CONDUCT 52
+MAT 1 MAT_Fourier CONDUCT_PARA_NUM 1 CAPA 0 CONDUCT 52
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 DSURF                           1
 E 11 - NUMDOF 1 ONOFF 1 VAL 0 FUNCT 0
