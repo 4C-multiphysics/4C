@@ -34,7 +34,7 @@ CONTACT::LagrangeStrategyPoro::LagrangeStrategyPoro(
     double alphaf, int maxdof, bool poroslave, bool poromaster)
     : MonoCoupledLagrangeStrategy(
           data_ptr, dof_row_map, NodeRowMap, params, interface, dim, comm, alphaf, maxdof),
-      no_penetration_(params.get<bool>("CONTACTNOPEN")),
+      no_penetration_(params.get<bool>("CONTACT_NO_PENETRATION")),
       nopenalpha_(0.0),
       poroslave_(poroslave),
       poromaster_(poromaster)

@@ -117,7 +117,7 @@ NORM_RESF                       AbsGlobal
 NORMCOMBI_RESFINC               And
 SECONDORDER                     Yes
 CONTIPARTINT                    Yes
-CONTACTNOPEN                    No
+CONTACT_NO_PENETRATION          No
 LINEAR_SOLVER                   1
 -----------------------------------------------------FLUID DYNAMIC
 PHYSICAL_TYPE                   Incompressible

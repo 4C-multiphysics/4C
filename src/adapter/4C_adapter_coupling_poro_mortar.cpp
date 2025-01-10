@@ -73,10 +73,10 @@ void Adapter::CouplingPoroMortar::read_mortar_condition(
       1 / (stru.sublist("ONESTEPTHETA").get<double>("THETA") * stru.get<double>("TIMESTEP"));
   input.set<double>("porotimefac", porotimefac);
   const Teuchos::ParameterList& porodyn = Global::Problem::instance()->poroelast_dynamic_params();
-  input.set<bool>("CONTACTNOPEN",
-      porodyn.get<bool>("CONTACTNOPEN"));  // used in the integrator
-  if (!porodyn.get<bool>("CONTACTNOPEN"))
-    FOUR_C_THROW("Set CONTACTNOPEN for Poroelastic meshtying!");
+  input.set<bool>("CONTACT_NO_PENETRATION",
+      porodyn.get<bool>("CONTACT_NO_PENETRATION"));  // used in the integrator
+  if (!porodyn.get<bool>("CONTACT_NO_PENETRATION"))
+    FOUR_C_THROW("Set CONTACT_NO_PENETRATION for Poroelastic meshtying!");
 }
 
 /*----------------------------------------------------------------------*

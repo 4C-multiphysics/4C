@@ -29,7 +29,7 @@ FOUR_C_NAMESPACE_OPEN
 CONTACT::IntegratorNitschePoro::IntegratorNitschePoro(
     Teuchos::ParameterList& params, Core::FE::CellType eletype, MPI_Comm comm)
     : IntegratorNitsche(params, eletype, comm),
-      no_penetration_(params.get<bool>("CONTACTNOPEN")),
+      no_penetration_(params.get<bool>("CONTACT_NO_PENETRATION")),
       dv_dd_(params.get<double>("porotimefac"))
 {
   if (fabs(theta_) > 1e-16) FOUR_C_THROW("Poro Contact just implemented Adjoint free ...");

@@ -442,7 +442,7 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
     {
       const Teuchos::ParameterList& porodyn =
           Global::Problem::instance()->poroelast_dynamic_params();
-      if (porodyn.get<bool>("CONTACTNOPEN"))
+      if (porodyn.get<bool>("CONTACT_NO_PENETRATION"))
         FOUR_C_THROW("POROCONTACT: PoroContact with no penetration just tested for 3d (and 2d)!");
     }
 
@@ -549,8 +549,8 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
       double porotimefac =
           1 / (stru.sublist("ONESTEPTHETA").get<double>("THETA") * stru.get<double>("TIMESTEP"));
       params.set<double>("porotimefac", porotimefac);
-      params.set<bool>(
-          "CONTACTNOPEN", porodyn.get<bool>("CONTACTNOPEN"));  // used in the integrator
+      params.set<bool>("CONTACT_NO_PENETRATION",
+          porodyn.get<bool>("CONTACT_NO_PENETRATION"));  // used in the integrator
       break;
     }
     default:
@@ -616,7 +616,8 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
     //    //porotimefac = 1/(theta*dt) --- required for derivation of structural displacements!
     //    double porotimefac = 1/(stru.sublist("ONESTEPTHETA").get<double>("THETA") *
     //    stru.get<double>("TIMESTEP")); params.set<double> ("porotimefac", porotimefac);
-    params.set<bool>("CONTACTNOPEN", porodyn.get<bool>("CONTACTNOPEN"));  // used in the integrator
+    params.set<bool>("CONTACT_NO_PENETRATION",
+        porodyn.get<bool>("CONTACT_NO_PENETRATION"));  // used in the integrator
   }
   else
   {

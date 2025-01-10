@@ -35,7 +35,7 @@ namespace CONTACT
         int dim, MPI_Comm comm, double alphaf, int maxdof)
         : NitscheStrategy(
               dof_row_map, NodeRowMap, params, std::move(interface), dim, comm, alphaf, maxdof),
-          no_penetration_(params.get<bool>("CONTACTNOPEN"))
+          no_penetration_(params.get<bool>("CONTACT_NO_PENETRATION"))
     {
     }
 
@@ -46,7 +46,7 @@ namespace CONTACT
         double alphaf, int maxdof)
         : NitscheStrategy(data_ptr, dof_row_map, NodeRowMap, params, std::move(interface), dim,
               comm, alphaf, maxdof),
-          no_penetration_(params.get<bool>("CONTACTNOPEN"))
+          no_penetration_(params.get<bool>("CONTACT_NO_PENETRATION"))
     {
     }
 
