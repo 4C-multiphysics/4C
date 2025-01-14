@@ -10,6 +10,7 @@
 #include "4C_adapter_str_pasiwrapper.hpp"
 #include "4C_beaminteraction_str_model_evaluator.hpp"
 #include "4C_comm_utils.hpp"
+#include "4C_constraint_framework_model_evaluator.hpp"
 #include "4C_contact_input.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
@@ -360,6 +361,18 @@ void Solid::TimeInt::Base::select_energy_types_to_be_written()
           evaldata.insert_energy_type_to_be_considered(Solid::beam_to_sphere_link_kinetic_energy);
         }
         break;
+      }
+      case Inpar::Solid::model_constraints:
+      {
+        Solid::ModelEvaluator::Constraint const constraints_evaluator =
+            dynamic_cast<Solid::ModelEvaluator::Constraint const&>(
+                int_ptr_->model_eval_ptr()->evaluator(Inpar::Solid::model_constraints));
+
+        if (constraints_evaluator.have_sub_model_type(
+                Inpar::Constraints::SubModelType::submodel_embeddedmesh))
+        {
+          evaldata.insert_energy_type_to_be_considered(Solid::embedded_mesh_penalty_potential);
+        }
       }
       default:
       {

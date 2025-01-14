@@ -96,4 +96,20 @@ void Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::runtime_outp
   mortar_manager_->write_output(output_time_and_step.first, output_time_and_step.second);
 }
 
+std::map<Solid::EnergyType, double>
+Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::get_energy() const
+{
+  std::map<Solid::EnergyType, double> embedded_mesh_energy;
+  double mortar_manager_energy = mortar_manager_->get_energy();
+
+  // The value we returned here is summed up over all processors. Since we already have the global
+  // energy here, we only return it on rank 0.
+  if (mortar_manager_->get_my_rank() == 0)
+  {
+    embedded_mesh_energy[Solid::embedded_mesh_penalty_potential] = mortar_manager_energy;
+  }
+
+  return embedded_mesh_energy;
+}
+
 FOUR_C_NAMESPACE_CLOSE

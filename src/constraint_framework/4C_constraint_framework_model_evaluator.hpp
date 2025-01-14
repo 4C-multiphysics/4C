@@ -54,6 +54,9 @@ namespace Solid
       //! @{
       Inpar::Solid::ModelType type() const override { return Inpar::Solid::model_constraints; }
 
+      /// check if the given model type is active.
+      bool have_sub_model_type(Inpar::Constraints::SubModelType const& submodeltype) const;
+
       void reset(const Core::LinAlg::Vector<double>& x) override;
 
       bool evaluate_force() override;
