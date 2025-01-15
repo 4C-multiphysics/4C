@@ -33,8 +33,8 @@ MAT 2 MAT_0D_MAXWELL_ACINUS_OGDEN Stiffness1 1.0e-1 Stiffness2 1.0e-1 Viscosity1
 SYMBOLIC_FUNCTION_OF_TIME 500*(1-cos(pi*t))
 -------------------------DESIGN NODE Reduced D AIRWAYS PRESCRIBED CONDITIONS
 DPOINT                          2
-E 1 - boundarycond pressure VAL 1.0 curve 1 none funct none
-E 2 - boundarycond pressure VAL 0.0000 curve 1 none funct none
+E 1 - boundarycond pressure VAL 1.0 curve 1 -1 funct -1
+E 2 - boundarycond pressure VAL 0.0000 curve 1 -1 funct -1
 --------------------------------------------------REDUCED D AIRWAYS ELEMENTS
 1 RED_AIRWAY LINE2  1  2 MAT 1 ElemSolvingType NonLinear TYPE Resistive Resistance Poiseuille PowerOfVelocityProfile 2 WallElasticity 0.0 PoissonsRatio 0.0 ViscousTs 0.0 ViscousPhaseShift 0.0 WallThickness 0.0 Area 1.0 Generation 0
 2 RED_ACINUS LINE2  2  3 MAT 2 TYPE VolumetricOgden AcinusVolume 523.6 AlveolarDuctVolume 0.0372 KAPPA 2000.0 BETA -6.0 Area 1.0

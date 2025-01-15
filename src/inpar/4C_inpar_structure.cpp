@@ -425,7 +425,7 @@ namespace Inpar
         add_named_selection_component(cond, "DIRECTION", "", "xyz",
             Teuchos::tuple<std::string>("xyz", "refsurfnormal", "cursurfnormal"),
             Teuchos::tuple<std::string>("xyz", "refsurfnormal", "cursurfnormal"), false);
-        add_named_int(cond, "COUPLING", "", 0, false, true);
+        add_named_int(cond, "COUPLING", "", 0, false);
         condlist.emplace_back(cond);
       }
 

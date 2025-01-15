@@ -134,29 +134,29 @@ E 6 - NUMDOF 2 ONOFF 0 1 VAL 0.0 5.318885943e-3 FUNCT 0 4 TYPE Live
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 DPOINT 2
 // vertices_at_the_anode_side_cc
-E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // vertices_at_the_cathode_side_cc
-E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 DLINE  3
 // curves_at_the_anode_side_cc
-E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // curves_at_the_battery_edges_in_x
-E 2 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 2 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // curves_at_the_cathode_side_cc
-E 3 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 3 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 DSURF  5
 // anode_side_current_collector
-E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // battery_surface_cathode_side_cc
-E 7 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 7 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // battery_surface_normal_to_y_axis
-E 8 - NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 8 - NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // battery_surface_normal_to_z_axis
-E 9 - NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 9 - NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // battery_surface_normal_to_(0_1_1
-E 10 - NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 10 - NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 ---------------------------DESIGN SURF TRANSPORT DIRICH CONDITIONS
 DSURF  1
 // anode_side_current_collector

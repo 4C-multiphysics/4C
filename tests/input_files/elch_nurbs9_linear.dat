@@ -64,9 +64,9 @@ SOLVER                          UMFPACK
 ---------------------------------ELECTRODE BOUNDARY KINETICS LINE CONDITIONS
 DLINE                           2
 // anodic reaction
-E 1 - ID 0 POT  0.0 FUNCT none NUMSCAL 3 STOICH -1 0 0  E- 2 EPSILON -1 ZERO_CUR 0 linear ALPHA 1.5 I0 4.0 GAMMA 0.0 REFCON 0.1 DL_SPEC_CAP 0.0
+E 1 - ID 0 POT  0.0 FUNCT -1 NUMSCAL 3 STOICH -1 0 0  E- 2 EPSILON -1 ZERO_CUR 0 linear ALPHA 1.5 I0 4.0 GAMMA 0.0 REFCON 0.1 DL_SPEC_CAP 0.0
 // cathodic reaction
-E 2 - ID 1 POT -0.0125 FUNCT none NUMSCAL 3 STOICH -1 0 0  E- 2 EPSILON -1 ZERO_CUR 0 linear ALPHA 0.5 I0 4.0 GAMMA 0.0 REFCON 0.1 DL_SPEC_CAP 0.0
+E 2 - ID 1 POT -0.0125 FUNCT -1 NUMSCAL 3 STOICH -1 0 0  E- 2 EPSILON -1 ZERO_CUR 0 linear ALPHA 0.5 I0 4.0 GAMMA 0.0 REFCON 0.1 DL_SPEC_CAP 0.0
 -------------------------------------------------------TRANSPORT KNOTVECTORS
 NURBS_DIMENSION                       2
 BEGIN                           NURBSPATCH

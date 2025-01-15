@@ -403,7 +403,7 @@ E 7 - NUMSCAL 1 ONOFF 1 COUPID 1 PERMCOEF 0.0 CONDUCT 0.0 FILTR 0.0 WSSON false 
 -----------------DESIGN SURFACE FLOW-DEPENDENT PRESSURE CONDITIONS
 DSURF  1
 // outflow
-E 5 - TYPE_OF_FLOW_DEPENDENCE fixed_pressure ConstCoeff 0.0 LinCoeff 0.0 InitialVolume 0.0 ReferencePressure 0.0 AdiabaticExponent 0.0 curve none
+E 5 - TYPE_OF_FLOW_DEPENDENCE fixed_pressure ConstCoeff 0.0 LinCoeff 0.0 InitialVolume 0.0 ReferencePressure 0.0 AdiabaticExponent 0.0 curve -1
 -------------------------------DESIGN FSI COUPLING SURF CONDITIONS
 DSURF  2
 // interface_fluid
@@ -413,7 +413,7 @@ E 7 - coupling_id 1
 -----------------------TRANSPORT THERMO CONVECTION SURF CONDITIONS
 DSURF  1
 // ConvectionSurface
-E 1 - temperature_state Tempnp coeff -10.0 surtemp 273.0 surtempfunct none funct none
+E 1 - temperature_state Tempnp coeff -10.0 surtemp 273.0 surtempfunct -1 funct -1
 -----------------------------------------------DNODE-NODE TOPOLOGY
 NODE    523 DNODE 1
 NODE    2263 DNODE 1

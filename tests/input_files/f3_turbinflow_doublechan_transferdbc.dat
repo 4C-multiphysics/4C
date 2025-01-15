@@ -129,9 +129,9 @@ E 12 - ID 2 MASTER_OR_SLAVE Slave PLANE yz LAYER 1 ANGLE 0.0 ABSTREETOL 1e-9
 ---------------------------------------DESIGN SURF TURBULENT INFLOW TRANSFER
 DSURF                           2
 // turbulent inflow
-E 1 - ID 1 toggle slave DIRECTION x curve none
+E 1 - ID 1 toggle slave DIRECTION x curve -1
 // streamwise periodic boundary
-E 12 - ID 1 toggle master DIRECTION x curve none
+E 12 - ID 1 toggle master DIRECTION x curve -1
 ----------------------------------------FLUID NEUMANN INFLOW SURF CONDITIONS
 DSURF                           1
 //                              outflow

@@ -143,7 +143,7 @@ E 1 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
 ----------------------------------------DESIGN SURF THERMO DIRICH CONDITIONS
 DSURF 0
 // THR left surf heat convection
-//E 8 - 1 1 373.15 none 0
+//E 8 - 1 1 373.15 -1 0
 ------------------------------------DESIGN THERMO CONVECTION SURF CONDITIONS
 DSURF                           1
 // THR left surf heat convection

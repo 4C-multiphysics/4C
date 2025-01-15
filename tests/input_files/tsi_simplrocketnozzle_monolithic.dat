@@ -157,7 +157,7 @@ DSURF 1
 // thr convection hot gas --> cycle is applied via CURVE2
 E 6 - temperature_state Tempnp coeff -28000 surtemp 1.0 surtempfunct 3 funct 0
 // thr top surrounding temp
-//E 7 - temperature_state Tempnp coeff 28000 surtemp 293.15 surtempcurve none curve none
+//E 7 - temperature_state Tempnp coeff 28000 surtemp 293.15 surtempcurve -1 curve -1
 ---------------------------------------------------------DSURF-NODE TOPOLOGY
 NODE 41 DSURFACE 1
 NODE 42 DSURFACE 1

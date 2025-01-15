@@ -73,9 +73,9 @@ DVOL   1
 E 1 - NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT 1
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 DPOINT 3
-E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
-E 2 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
-E 3 - NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
+E 2 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
+E 3 - NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 -----------------------------------------------DNODE-NODE TOPOLOGY
 NODE    7 DNODE 1
 NODE    21 DNODE 2

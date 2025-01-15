@@ -232,7 +232,7 @@ E 9 - InterfaceID 1 Side Slave
 -----------------DESIGN SURFACE FLOW-DEPENDENT PRESSURE CONDITIONS
 DSURF  1
 // outflow
-E 2 - TYPE_OF_FLOW_DEPENDENCE flow_rate ConstCoeff 0.0 LinCoeff 343.0 InitialVolume 0.0 ReferencePressure 0.0 AdiabaticExponent 0.0 curve none
+E 2 - TYPE_OF_FLOW_DEPENDENCE flow_rate ConstCoeff 0.0 LinCoeff 343.0 InitialVolume 0.0 ReferencePressure 0.0 AdiabaticExponent 0.0 curve -1
 -------------------------------DESIGN FSI COUPLING SURF CONDITIONS
 DSURF  2
 // fluid-bag_surface

@@ -35,15 +35,15 @@ STRUCTURE DIS structure NODE 25 QUANTITY dispx VALUE  8.40337143920441704e-02 TO
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 DSURF                           1
 //                              side_x_clamped
-E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.1 0.0 0.0 FUNCT 1 none none
+E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.1 0.0 0.0 FUNCT 1 -1 -1
 --------------------------------------DESIGN VOL DIRICH CONDITIONS
 DVOL                            1
 //                              cube
-E 1 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 -----------------------DESIGN SURF ROBIN SPRING DASHPOT CONDITIONS
 DSURF                           1
 //                              side_x_free
-E 2 - NUMDOF 3 ONOFF 1 0 0 STIFF 0 0.0 0.0 TIMEFUNCTSTIFF 0 0 0 VISCO 0.0 0.0 0.0 TIMEFUNCTVISCO 0 0 0 DISPLOFFSET 0.0 0.0 0.0 TIMEFUNCTDISPLOFFSET 0 0 0 FUNCTNONLINSTIFF 2 0 0 DIRECTION xyz COUPLING none
+E 2 - NUMDOF 3 ONOFF 1 0 0 STIFF 0 0.0 0.0 TIMEFUNCTSTIFF 0 0 0 VISCO 0.0 0.0 0.0 TIMEFUNCTVISCO 0 0 0 DISPLOFFSET 0.0 0.0 0.0 TIMEFUNCTDISPLOFFSET 0 0 0 FUNCTNONLINSTIFF 2 0 0 DIRECTION xyz COUPLING -1
 -----------------------------------------------DSURF-NODE TOPOLOGY
 NODE 1 DSURFACE 1
 NODE 2 DSURFACE 1

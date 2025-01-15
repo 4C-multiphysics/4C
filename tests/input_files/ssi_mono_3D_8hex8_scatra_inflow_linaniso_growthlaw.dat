@@ -71,7 +71,7 @@ DSURF  1
 E 1 - NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT 2
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 DSURF 1
-E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 -----------------------------------------------DSURF-NODE TOPOLOGY
 NODE    1 DSURF 1
 NODE    2 DSURF 1

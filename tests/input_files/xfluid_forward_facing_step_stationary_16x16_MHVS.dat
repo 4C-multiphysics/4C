@@ -142,7 +142,7 @@ DVOL 1
 // xfluid
 E 1 - NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 TYPE Live
 // embedded
-//E 2 - none 0 0 0 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 TYPE Live 0 0 0 0 0 0
+//E 2 - -1 0 0 0 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 TYPE Live 0 0 0 0 0 0
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 DPOINT 8
 // bottom_south_west

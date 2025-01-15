@@ -205,7 +205,7 @@ void Inpar::Mortar::set_valid_conditions(
     add_named_real(cond, "TwoHalfPass", "optional two half pass approach", 0.0, true);
     add_named_real(cond, "RefConfCheckNonSmoothSelfContactSurface",
         "optional reference configuration check for non-smooth self contact surfaces", 0.0, true);
-    add_named_int(cond, "ConstitutiveLawID", "material id of the constitutive law", 0, true, true);
+    add_named_int(cond, "ConstitutiveLawID", "material id of the constitutive law", 0, true);
 
     condlist.push_back(cond);
   }

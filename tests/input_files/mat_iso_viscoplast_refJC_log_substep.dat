@@ -61,30 +61,30 @@ STRUCTURE DIS structure NODE 8 QUANTITY stress_zz VALUE  9.78458600965331243e+02
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 DPOINT 2
 // bottom_vertex_full
-E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
-E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 1.0 FUNCT none none 1
+E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
+E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 1.0 FUNCT -1 -1 1
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 DLINE 5
 // top_back
-E 1 - NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 1.0 FUNCT none none 1
+E 1 - NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 1.0 FUNCT -1 -1 1
 // top_left
-E 2 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 1.0 FUNCT none none 1
+E 2 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 1.0 FUNCT -1 -1 1
 // top_bottom
-E 3 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 3 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // bottom_back
-E 4 - NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 4 - NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // bottom_left
-E 5 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 5 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 DSURF 4
 // z_top
-E 1 - NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 1.0 FUNCT none none 1
+E 1 - NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 1.0 FUNCT -1 -1 1
 // z_bottom
-E 2 - NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 2 - NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // z_back
-E 3 - NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 3 - NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // z_left
-E 4 - NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 4 - NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 -----------------------------------------------DNODE-NODE TOPOLOGY
 NODE    2 DNODE 1
 NODE    1 DNODE 2

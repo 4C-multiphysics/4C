@@ -200,9 +200,9 @@ VARIABLE 0 NAME a TYPE multifunction NUMPOINTS 3 TIMES 0.0 1.0 500.0 DESCRIPTION
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
 DSURF 0
 // Fluid_left
-//E 1 - none 0 0 0 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 TYPE Live 0 0 0 0 0 0
+//E 1 - -1 0 0 0 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 TYPE Live 0 0 0 0 0 0
 // Fluid_right
-//E 2 - none 0 0 0 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 TYPE Live 0 0 0 0 0 0
+//E 2 - -1 0 0 0 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 TYPE Live 0 0 0 0 0 0
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 DSURF 3
 // Fluid_front_and_back
@@ -227,7 +227,7 @@ E 6 - COUPLINGID 1
 ---------------------------------DESIGN XFEM LEVELSET NEUMANN VOL CONDITIONS
 DVOL 1
 // fluid_volume
-E 1 - COUPLINGID 1 LEVELSETFIELDNO 3 BOOLEANTYPE none COMPLEMENTARY false NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 TYPE Live
+E 1 - COUPLINGID 1 LEVELSETFIELDNO 3 BOOLEANTYPE -1 COMPLEMENTARY false NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 TYPE Live
 ---------------------------------------------------------DSURF-NODE TOPOLOGY
 NODE 1 DSURFACE 1
 NODE 2 DSURFACE 1

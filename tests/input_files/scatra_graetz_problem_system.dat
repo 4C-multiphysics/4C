@@ -165,7 +165,7 @@ DSURF                           2
 //                              inflow
 E 8 - NUMDOF 3 ONOFF 1 1 1 VAL 1.0 1.0 1.0  FUNCT 0 0 0
 //                              anode
-//E 9 - 6 1 1 1 0 0 0 1.0 1.0 1.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 9 - 6 1 1 1 0 0 0 1.0 1.0 1.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 //                              cathode
 E 10 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
 ---------------------------------------------------------DSURF-NODE TOPOLOGY

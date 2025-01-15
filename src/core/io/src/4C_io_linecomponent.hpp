@@ -197,7 +197,6 @@ namespace Input
   struct IntComponentData
   {
     int default_value{0};
-    bool none_allowed{false};
     bool optional{false};
   };
 
@@ -443,14 +442,13 @@ namespace Input
   template <typename DefinitionType>
   inline void add_named_int(const std::shared_ptr<DefinitionType>& definition,
       const std::string& name, const std::string& description = {}, const int defaultvalue = 0,
-      const bool optional = false, const bool none_allowed = false)
+      const bool optional = false)
   {
     definition->add_component(
         std::make_shared<Input::SeparatorComponent>(name, description, optional));
     IntComponentData data{};
     data.default_value = defaultvalue;
     data.optional = optional;
-    data.none_allowed = none_allowed;
     definition->add_component(std::make_shared<Input::IntComponent>(name, data));
   }
 
@@ -461,14 +459,13 @@ namespace Input
   template <typename DefinitionType>
   inline void add_named_int_vector(const std::shared_ptr<DefinitionType>& definition,
       const std::string& name, const std::string& description, const int size,
-      const int defaultvalue = 0, const bool optional = false, const bool none_allowed = false)
+      const int defaultvalue = 0, const bool optional = false)
   {
     definition->add_component(
         std::make_shared<Input::SeparatorComponent>(name, description, optional));
     IntComponentData data{};
     data.default_value = defaultvalue;
     data.optional = optional;
-    data.none_allowed = none_allowed;
     definition->add_component(std::make_shared<Input::IntVectorComponent>(name, size, data));
   }
 
@@ -479,14 +476,13 @@ namespace Input
   template <typename DefinitionType>
   inline void add_named_int_vector(const std::shared_ptr<DefinitionType>& definition,
       const std::string& name, const std::string& description, const std::string& sizename,
-      const int defaultvalue = 0, const bool optional = false, const bool none_allowed = false)
+      const int defaultvalue = 0, const bool optional = false)
   {
     definition->add_component(
         std::make_shared<Input::SeparatorComponent>(name, description, optional));
     IntComponentData data{};
     data.default_value = defaultvalue;
     data.optional = optional;
-    data.none_allowed = none_allowed;
     definition->add_component(
         std::make_shared<Input::IntVectorComponent>(name, LengthFromInt(sizename), data));
   }

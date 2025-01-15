@@ -59,8 +59,8 @@ SCATRA DIS scatra NODE 800 QUANTITY phi2 VALUE 3.42469037990923930e-01 TOLERANCE
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 DPOINT 2
 // set electrical potential at one side to 0 and at the other side to 2
-E 1 - NUMDOF 3 ONOFF 0 1 0 VAL 0.0 2.0 0.0 FUNCT none none none
-E 2 - NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 0 1 0 VAL 0.0 2.0 0.0 FUNCT -1 -1 -1
+E 2 - NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 -----------------------------------------------DNODE-NODE TOPOLOGY
 NODE 1 DNODE 1
 NODE 997 DNODE 2

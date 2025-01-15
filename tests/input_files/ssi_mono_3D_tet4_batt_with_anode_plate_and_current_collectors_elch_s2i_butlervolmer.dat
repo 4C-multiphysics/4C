@@ -144,27 +144,27 @@ E 12 - NUMDOF 2 ONOFF 0 1 VAL 0.0  8.878927606e-6 FUNCT 0 0
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 DPOINT 2
 // vertices_an_cc
-E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // vertices_cat_cc
-E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 DLINE  3
 // battery_curves_in_y-direction
-E 1 - NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // battery_curves_in_z-direction
-E 2 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 2 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // battery_curves_in_x-direction
-E 3 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 3 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 DSURF  4
 // an-side_cc
-E 1 - NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // cat-side_cc
-E 12 - NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 12 - NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // battery_surface_normal_to_y
-E 13 - NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 13 - NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // battery_surface_normal_to_z
-E 14 - NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 14 - NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 ---------------------------DESIGN SURF TRANSPORT DIRICH CONDITIONS
 DSURF  1
 // an-side_cc

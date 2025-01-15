@@ -174,11 +174,11 @@ void Inpar::BeamPotential::set_valid_conditions(
 
   add_named_int(rigidsphere_potential_charge, "POTLAW");
   add_named_real(rigidsphere_potential_charge, "VAL");
-  add_named_int(rigidsphere_potential_charge, "FUNCT", "", 0, true, true);
+  add_named_int(rigidsphere_potential_charge, "FUNCT", "", 0, true);
 
   add_named_int(beam_potential_line_charge, "POTLAW");
   add_named_real(beam_potential_line_charge, "VAL");
-  add_named_int(beam_potential_line_charge, "FUNCT", "", 0, true, true);
+  add_named_int(beam_potential_line_charge, "FUNCT", "", 0, true);
 
   condlist.push_back(rigidsphere_potential_charge);
   condlist.push_back(beam_potential_line_charge);

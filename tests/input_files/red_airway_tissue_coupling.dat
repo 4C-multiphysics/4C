@@ -80,7 +80,7 @@ DSURF                           1
 E 3 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
 -------------------------DESIGN NODE Reduced D AIRWAYS PRESCRIBED CONDITIONS
 DPOINT                          1
-E 1 - boundarycond pressure VAL 5.0 curve 1 none funct none
+E 1 - boundarycond pressure VAL 5.0 curve 1 -1 funct -1
 -------------------------------------DESIGN SURF TISSUE REDAIRWAY CONDITIONS
 DSURF                           2
 E 1 - coupling_id 1

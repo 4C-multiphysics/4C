@@ -321,18 +321,9 @@ namespace Input
   {
   }
 
-  void IntComponent::default_line(std::ostream& stream)
-  {
-    if (data_.none_allowed)
-      stream << "none";
-    else
-      stream << data_.default_value;
-  }
+  void IntComponent::default_line(std::ostream& stream) { stream << data_.default_value; }
 
-  std::string IntComponent::write_read_the_docs()
-  {
-    return data_.none_allowed ? "none" : std::to_string(data_.default_value);
-  }
+  std::string IntComponent::write_read_the_docs() { return std::to_string(data_.default_value); }
 
   void IntComponent::describe(std::ostream& stream) {}
 
@@ -354,17 +345,8 @@ namespace Input
       *condline >> snumber;
       if (!optional_ or !snumber.empty())
       {
-        // in case 'none' is allowed as an input value
-        if ((data_.none_allowed and snumber == "none"))
-        {
-          number = -1;
-        }
-        // all other cases
-        else
-        {
-          number = convert_and_validate_string_to_number<int>(
-              snumber, name(), section_name, 1, optional_);
-        }
+        number =
+            convert_and_validate_string_to_number<int>(snumber, name(), section_name, 1, optional_);
       }
 
       // remove parameter value from stringstream "condline"
@@ -408,14 +390,8 @@ namespace Input
   {
     using namespace std::string_literals;
     const int default_length = std::visit(DefaultLengthVisitor{}, length_);
-    const std::string default_value = std::invoke(
-        [&]()
-        {
-          if (data_.none_allowed)
-            return "none "s;
-          else
-            return std::to_string(data_.default_value) + " ";
-        });
+    const std::string default_value =
+        std::invoke([&]() { return std::to_string(data_.default_value) + " "; });
 
     for (int i = 0; i < default_length; ++i) stream << default_value;
   }
@@ -423,7 +399,6 @@ namespace Input
   std::string IntVectorComponent::write_read_the_docs()
   {
     std::string parameterstring = "<int vec";
-    if (data_.none_allowed) parameterstring += " [incl none]";
     parameterstring += ":" + name() + "> ";
     return parameterstring;
   }
@@ -461,13 +436,7 @@ namespace Input
         std::string snumber;
         *condline >> snumber;
 
-        // in case 'none' is allowed as an input value
-        if (data_.none_allowed and snumber == "none")
-        {
-          current_number = -1;
-        }
-        // in case the parameter is optional and no value is given
-        else if (optional_ and snumber.empty())
+        if (optional_ and snumber.empty())
         {
           break;
         }

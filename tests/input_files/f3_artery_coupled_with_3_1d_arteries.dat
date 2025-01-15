@@ -119,9 +119,9 @@ E 24 - boundarycond flow type forced VAL 0.0 0.0 curve 1 1
 ---------------------------------DESIGN NODE 1D ARTERY REFLECTIVE CONDITIONS
 DPOINT                          3
 // DOBJECT - RFVAL RFCURVE
-E 21 - VAL 0.0 curve none
-E 23 - VAL 0.0 curve none
-E 25 - VAL 0.0 curve none
+E 21 - VAL 0.0 curve -1
+E 23 - VAL 0.0 curve -1
+E 25 - VAL 0.0 curve -1
 ----------------------------------------FLUID NEUMANN INFLOW SURF CONDITIONS
 DSURF                           1
 E 3 -

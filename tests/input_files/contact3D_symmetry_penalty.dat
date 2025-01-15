@@ -64,27 +64,27 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME 4*t
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 DPOINT 2
 // d8xyz
-E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT -1 -1 -1
 // d9xyz_move_z
 E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 0 0 -1 FUNCT 0 0 1
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 DLINE  3
 // d5xy
-E 1 - NUMDOF 3 ONOFF 1 1 0 VAL 0 0 0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 1 1 0 VAL 0 0 0 FUNCT -1 -1 -1
 // d6xyz
-E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT none none none
+E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT -1 -1 -1
 // d7xyz_move_z
 E 3 - NUMDOF 3 ONOFF 1 1 1 VAL 0 0 -1 FUNCT 0 0 1
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 DSURF  4
 // d1xyz
-E 3 - NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT none none none
+E 3 - NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT -1 -1 -1
 // d2xyz_move_z
 E 4 - NUMDOF 3 ONOFF 1 1 1 VAL 0 0 -1 FUNCT 0 0 1
 // d3x
-E 5 - NUMDOF 3 ONOFF 1 0 0 VAL 0 0 0 FUNCT none none none
+E 5 - NUMDOF 3 ONOFF 1 0 0 VAL 0 0 0 FUNCT -1 -1 -1
 // d4y
-E 6 - NUMDOF 3 ONOFF 0 1 0 VAL 0 0 0 FUNCT none none none
+E 6 - NUMDOF 3 ONOFF 0 1 0 VAL 0 0 0 FUNCT -1 -1 -1
 -------------------------DESIGN SURF MORTAR CONTACT CONDITIONS 3D
 DSURF  2
 // slave

@@ -68,9 +68,9 @@ E 4 - NUMDOF 2 ONOFF 1 1 VAL 10 10 FUNCT 3 2
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 DLINE  2
 // sym_y
-E 1 - NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT none none
+E 1 - NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT -1 -1
 // sym_x
-E 2 - NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
+E 2 - NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT -1 -1
 -------------------------DESIGN LINE MORTAR COUPLING CONDITIONS 2D
 DLINE  2
 // mrtr_1

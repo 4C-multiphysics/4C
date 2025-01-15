@@ -140,13 +140,13 @@ E 6 - NUMDOF 2 ONOFF 0 1 VAL 0.0 1.0e-2 FUNCT 0 7
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 DSURF  2
 // pot_zero
-E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // inflow
-E 6 - NUMDOF 3 ONOFF 1 1 1 VAL -6.0e-4 0.0 0.0 FUNCT 8 none none
+E 6 - NUMDOF 3 ONOFF 1 1 1 VAL -6.0e-4 0.0 0.0 FUNCT 8 -1 -1
 --------------------------------------DESIGN VOL DIRICH CONDITIONS
 DVOL   1
 // volume
-E 4 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 4 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 ---------------------------DESIGN SURF TRANSPORT DIRICH CONDITIONS
 DSURF  1
 // pot_zero

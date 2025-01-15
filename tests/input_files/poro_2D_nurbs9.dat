@@ -73,13 +73,13 @@ DPOINT                          0
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 DLINE                           2
 E 3 - NUMDOF 2 ONOFF 1 0 VAL -0.1 0.0 FUNCT 1 0
-// E 2 - NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 CURVE 1 none none
+// E 2 - NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 CURVE 1 -1 -1
 // E 3 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0
 E 4 - NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
 --------------------------------DESIGN LINE PORO DIRICH CONDITIONS
 DLINE                           1
 //E 3 - NUMDOF 2 ONOFF 1 0 VAL -0.1 0.0 FUNCT 0 0
-// E 2 - NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 CURVE 1 none none
+// E 2 - NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 CURVE 1 -1 -1
 // E 3 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0
 E 4 - NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
 ------------------------------DESIGN LINE PORO PARTIAL INTEGRATION

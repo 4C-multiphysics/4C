@@ -134,7 +134,7 @@ void Inpar::EleMag::set_valid_conditions(
   {
     add_named_int(cond, "NUMDOF");
     add_named_int_vector(cond, "ONOFF", "", "NUMDOF");
-    add_named_int_vector(cond, "FUNCT", "", "NUMDOF", 0, true, true);
+    add_named_int_vector(cond, "FUNCT", "", "NUMDOF", 0, true);
     add_named_real_vector(cond, "VAL", "", "NUMDOF");
 
     condlist.push_back(cond);

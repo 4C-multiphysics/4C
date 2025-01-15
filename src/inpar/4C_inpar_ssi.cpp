@@ -459,7 +459,7 @@ void Inpar::SSI::set_valid_conditions(
     add_named_int(definition, "NUMDOF");
     add_named_int_vector(definition, "ONOFF", "", "NUMDOF");
     add_named_real_vector(definition, "VAL", "", "NUMDOF");
-    add_named_int_vector(definition, "FUNCT", "", "NUMDOF", 0, false, true);
+    add_named_int_vector(definition, "FUNCT", "", "NUMDOF", 0, false);
   };
 
   {

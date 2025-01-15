@@ -66,21 +66,21 @@ STRUCTURE DIS structure NODE 84 QUANTITY dispz VALUE -2.33285012091805205e-05 TO
 ------------------------------------DESIGN SURF NEUMANN CONDITIONS
 DSURF  1
 // right_block_normal_x
-E 4 - NUMDOF 3 ONOFF 1 0 0 VAL 1.0 0.0 0.0 FUNCT 3 none none
+E 4 - NUMDOF 3 ONOFF 1 0 0 VAL 1.0 0.0 0.0 FUNCT 3 -1 -1
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 DPOINT 1
 // vertices_left_block
-E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 DLINE  2
 // curves_left_block_normal_y
-E 1 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // curves_left_block_normal_z
-E 2 - NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 2 - NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 DSURF  1
 // left_block_normal_x
-E 1 - NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 -------------------------------DESIGN VOL INITIAL FIELD CONDITIONS
 DVOL   2
 // left_block

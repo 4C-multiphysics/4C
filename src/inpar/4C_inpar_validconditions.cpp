@@ -187,7 +187,7 @@ Input::valid_conditions()
     add_named_int(cond, "NUMDOF");
     add_named_int_vector(cond, "ONOFF", "onoff", "NUMDOF");
     add_named_real_vector(cond, "VAL", "values", "NUMDOF");
-    add_named_int_vector(cond, "FUNCT", "function ids", "NUMDOF", 0, false, true);
+    add_named_int_vector(cond, "FUNCT", "function ids", "NUMDOF", 0, false);
     add_named_selection_component(cond, "TYPE", "type", "Live",
         Teuchos::tuple<std::string>(
             "Live", "Dead", "pseudo_orthopressure", "orthopressure", "PressureGrad"),
@@ -318,7 +318,7 @@ Input::valid_conditions()
     add_named_int(cond, "NUMDOF");
     add_named_int_vector(cond, "ONOFF", "", "NUMDOF");
     add_named_real_vector(cond, "VAL", "", "NUMDOF");
-    add_named_int_vector(cond, "FUNCT", "", "NUMDOF", 0, false, true);
+    add_named_int_vector(cond, "FUNCT", "", "NUMDOF", 0, false);
 
     // optional
     add_named_selection_component(cond, "TAG", "", "none",
@@ -536,14 +536,14 @@ Input::valid_conditions()
 
   for (const auto& cond : {lineperiodic, surfperiodic})
   {
-    add_named_int(cond, "ID", "periodic boundary condition id", 0, false, false);
+    add_named_int(cond, "ID", "periodic boundary condition id", 0, false);
     add_named_selection_component(cond, "MASTER_OR_SLAVE", "master-slave toggle", "Master",
         Teuchos::tuple<std::string>("Master", "Slave"),
         Teuchos::tuple<std::string>("Master", "Slave"));
     add_named_selection_component(cond, "PLANE", "degrees of freedom for the pbc plane", "xy",
         Teuchos::tuple<std::string>("xy", "yx", "yz", "zy", "xz", "zx", "xyz"),
         Teuchos::tuple<std::string>("xy", "xy", "yz", "yz", "xz", "xz", "xyz"));
-    add_named_int(cond, "LAYER", "layer of periodic boundary condition", 0, false, false);
+    add_named_int(cond, "LAYER", "layer of periodic boundary condition", 0, false);
     add_named_real(cond, "ANGLE", "angle of rotation");
     add_named_real(cond, "ABSTREETOL", "tolerance for nodematching in octree");
 
@@ -602,7 +602,7 @@ Input::valid_conditions()
     add_named_real_vector(cond, "VAL", "values", 3);
 
     // and optional spatial functions
-    add_named_int_vector(cond, "FUNCT", "function ids", 3, 0, true, false);
+    add_named_int_vector(cond, "FUNCT", "function ids", 3, 0, true);
     // append the condition to the list of all conditions
     condlist.push_back(cond);
   }
@@ -631,7 +631,7 @@ Input::valid_conditions()
           true, Core::Conditions::geometry_type_surface);
 
   add_named_int(volumeconstraint, "ConditionID");
-  add_named_int(volumeconstraint, "curve", "id of the curve", 0, false, true);
+  add_named_int(volumeconstraint, "curve", "id of the curve", 0, false);
   add_named_real(volumeconstraint, "activeTime");
   add_named_selection_component(volumeconstraint, "projection", "projection", "none",
       Teuchos::tuple<std::string>("none", "xy", "yz", "xz"),
@@ -650,7 +650,7 @@ Input::valid_conditions()
           Core::Conditions::geometry_type_surface);
 
   add_named_int(volumeconstraintpen, "ConditionID");
-  add_named_int(volumeconstraintpen, "curve", "id of the curve", 0, false, true);
+  add_named_int(volumeconstraintpen, "curve", "id of the curve", 0, false);
   add_named_real(volumeconstraintpen, "activeTime");
   add_named_real(volumeconstraintpen, "penalty");
   add_named_real(volumeconstraintpen, "rho");
@@ -669,7 +669,7 @@ Input::valid_conditions()
           Core::Conditions::geometry_type_surface);
 
   add_named_int(areaconstraint, "ConditionID");
-  add_named_int(areaconstraint, "curve", "id of the curve", 0, false, true);
+  add_named_int(areaconstraint, "curve", "id of the curve", 0, false);
   add_named_real(areaconstraint, "activeTime");
 
   condlist.push_back(areaconstraint);
@@ -711,7 +711,7 @@ Input::valid_conditions()
           Core::Conditions::geometry_type_line);
 
   add_named_int(areaconstraint2D, "ConditionID");
-  add_named_int(areaconstraint2D, "curve", {}, 0, false, true);
+  add_named_int(areaconstraint2D, "curve", {}, 0, false);
   add_named_real(areaconstraint2D, "activeTime");
 
   condlist.push_back(areaconstraint2D);
@@ -738,7 +738,7 @@ Input::valid_conditions()
 
   add_named_int(nodeonplaneconst3D, "ConditionID");
   add_named_real(nodeonplaneconst3D, "amplitude");
-  add_named_int(nodeonplaneconst3D, "curve", {}, 0, false, true);
+  add_named_int(nodeonplaneconst3D, "curve", {}, 0, false);
   add_named_real(nodeonplaneconst3D, "activeTime");
   add_named_int_vector(nodeonplaneconst3D, "planeNodes", "ids of the nodes spanning the plane", 3);
   add_named_selection_component(nodeonplaneconst3D, "control", "relative or absolute control",
@@ -758,7 +758,7 @@ Input::valid_conditions()
 
   add_named_int(nodemasterconst3D, "ConditionID");
   add_named_real(nodemasterconst3D, "amplitude");
-  add_named_int(nodemasterconst3D, "curve", {}, 0, false, true);
+  add_named_int(nodemasterconst3D, "curve", {}, 0, false);
   add_named_real(nodemasterconst3D, "activeTime");
   add_named_int(nodemasterconst3D, "masterNode");
   add_named_real_vector(nodemasterconst3D, "direction", "direction", 3);
@@ -781,7 +781,7 @@ Input::valid_conditions()
 
   add_named_int(nodemasterconst3Dpen, "ConditionID");
   add_named_real(nodemasterconst3Dpen, "amplitude");
-  add_named_int(nodemasterconst3Dpen, "curve", {}, 0, false, true);
+  add_named_int(nodemasterconst3Dpen, "curve", {}, 0, false);
   add_named_real(nodemasterconst3Dpen, "activeTime");
   add_named_real(nodemasterconst3Dpen, "penalty");
   add_named_int(nodemasterconst3Dpen, "masterNode");
@@ -802,7 +802,7 @@ Input::valid_conditions()
 
   add_named_int(nodeonlineconst2D, "ConditionID");
   add_named_real(nodeonlineconst2D, "amplitude");
-  add_named_int(nodeonlineconst2D, "curve", {}, 0, false, true);
+  add_named_int(nodeonlineconst2D, "curve", {}, 0, false);
   add_named_int(nodeonlineconst2D, "constrNode1");
   add_named_int(nodeonlineconst2D, "constrNode2");
   add_named_int(nodeonlineconst2D, "constrNode3");

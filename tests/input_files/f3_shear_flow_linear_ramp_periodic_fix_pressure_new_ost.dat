@@ -122,7 +122,7 @@ E 6 - ID 1 MASTER_OR_SLAVE Master PLANE yz LAYER 1 ANGLE 0.0 ABSTREETOL 1e-9
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
 DSURF                           0
 // surface outflow
-//E 4 - none 1 1 1 0 0 0 3.0 1.0 0.0 0.0 0.0 0.0 TYPE Live 0 2 0 0 0 0
+//E 4 - -1 1 1 1 0 0 0 3.0 1.0 0.0 0.0 0.0 0.0 TYPE Live 0 2 0 0 0 0
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 DPOINT 4
 // bottom_south_east_point

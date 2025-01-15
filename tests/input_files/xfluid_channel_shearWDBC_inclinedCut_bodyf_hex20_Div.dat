@@ -86,7 +86,7 @@ COMPONENT 3 SYMBOLIC_FUNCTION_OF_SPACE_TIME 3.0 // pressure
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
 DSURF 1
 // surface outflow
-//E 4 - none 1 1 1 0 0 0 -3.0 0.0 0.0 0.0 0.0 0.0 TYPE Live 0 0 0 0 0 0
+//E 4 - -1 1 1 1 0 0 0 -3.0 0.0 0.0 0.0 0.0 0.0 TYPE Live 0 0 0 0 0 0
 // surface inflow
 E 3 - NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL +3.0 -3.0 -6.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 TYPE Live
 -----------------------------------------------DESIGN VOL NEUMANN CONDITIONS
@@ -96,23 +96,23 @@ E 1 - NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 10.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 DPOINT 0
 // inflow points
-//E 1 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 1 0 0 0 0 0
+//E 1 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 1 0 0 0 0 0
 // outflow points
-//E 2 - 6 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 2 - 6 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
 DLINE 1
 // line inflow top
-//E 1 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 1 0 0 0 0 0
+//E 1 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 1 0 0 0 0 0
 // line inflow front
-//E 2 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 1 0 0 0 0 0
+//E 2 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 1 0 0 0 0 0
 // line inflow bottom
-//E 3 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 1 0 0 0 0 0
+//E 3 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 1 0 0 0 0 0
 // line inflow back
-//E 4 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 1 0 0 0 0 0
+//E 4 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 1 0 0 0 0 0
 // inflow lines
-//E 5 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 5 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // outflow lines
-//E 6 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 6 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // edges side walls
 E 11 - NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 0 0 0 0 0
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
@@ -122,31 +122,31 @@ E 1 - NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 0 0 0 0 0
 // surface bottom
 E 2 - NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 0 0 0 0 0
 // surface inflow
-//E 3 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 1 0 0 0 0 0
+//E 3 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 1 0 0 0 0 0
 // surface outflow
-//E 4 - 6 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 4 - 6 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // surface front
 E 5 - NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 0 0 0 0 0
 // surface back
 E 6 - NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 0 0 0 0 0
 // surface top structure
-//E 7 - 6 0 1 0 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 7 - 6 0 1 0 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // surface bottom structure
-//E 8 - 6 0 1 0 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 8 - 6 0 1 0 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // surface inflow structure
-//E 9 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 9 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // surface outflow structure
-//E 10 - 6 0 0 0 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 10 - 6 0 0 0 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // surface front structure
-//E 11 - 6 0 0 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 11 - 6 0 0 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // surface back structure
-//E 12 - 6 0 0 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 12 - 6 0 0 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 ------------------------------------------------DESIGN VOL DIRICH CONDITIONS
 DVOL 0
 // volume fluid
-//E 1 - 6 0 0 0 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 1 - 6 0 0 0 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // volume structure
-//E 2 - 6 0 0 0 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 2 - 6 0 0 0 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 ----------------------------------DESIGN XFEM WEAK DIRICHLET SURF CONDITIONS
 // DOBJECT COUPLINGID EVALTYPE
 DSURF 6

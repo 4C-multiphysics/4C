@@ -112,27 +112,27 @@ SSI SPECIAL QUANTITY numiterlastnonlinearsolve VALUE  3.00000000000000000e+00 TO
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 DPOINT 2
 // clamping on both sides of the truss
-E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
-E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
+E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 DLINE 3
 // allow displacement only in x
-E 4 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
-E 2 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
-E 3 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 4 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
+E 2 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
+E 3 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 ---------------------------DESIGN LINE TRANSPORT DIRICH CONDITIONS
 DLINE 2
 // fix concentration in electrolyte
-E 2 - NUMDOF 2 ONOFF 1 0 VAL 1.2e3 0.0 FUNCT none none
-E 3 - NUMDOF 3 ONOFF 1 0 0 VAL 1.2e3 0.0 0.0 FUNCT none none none
+E 2 - NUMDOF 2 ONOFF 1 0 VAL 1.2e3 0.0 FUNCT -1 -1
+E 3 - NUMDOF 3 ONOFF 1 0 0 VAL 1.2e3 0.0 0.0 FUNCT -1 -1 -1
 --------------------------DESIGN POINT TRANSPORT DIRICH CONDITIONS
 DPOINT 1
 // set electrical potential at anode side to 0
-E 1 - NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT none none
+E 1 - NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT -1 -1
 -------------------------DESIGN POINT TRANSPORT NEUMANN CONDITIONS
 DPOINT 1
 // apply flux to cathode
-E 2 - NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 -1.0e-3 FUNCT none none 5
+E 2 - NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 -1.0e-3 FUNCT -1 -1 5
 -------------------DESIGN SSI INTERFACE MESHTYING POINT CONDITIONS
 DPOINT  2
 // anode_side_of_an-el_interface

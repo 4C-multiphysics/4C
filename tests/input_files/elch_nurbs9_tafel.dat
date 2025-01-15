@@ -68,9 +68,9 @@ E 2 -
 ---------------------------------ELECTRODE BOUNDARY KINETICS LINE CONDITIONS
 DLINE                           2
 // anodic reaction: i_0 < 0 and alpha < 0 -> i_n = i_0
-E 1 - ID 0 POT 0.0  FUNCT none NUMSCAL 3 STOICH -1 0 0  E- 2 EPSILON -1 ZERO_CUR 0 Tafel ALPHA -0.75 I0 -4.0 GAMMA 0.5 REFCON 0.1 DL_SPEC_CAP 0.0
+E 1 - ID 0 POT 0.0  FUNCT -1 NUMSCAL 3 STOICH -1 0 0  E- 2 EPSILON -1 ZERO_CUR 0 Tafel ALPHA -0.75 I0 -4.0 GAMMA 0.5 REFCON 0.1 DL_SPEC_CAP 0.0
 // cathodic reaction: i_0 > 0 and alpha > 0 -> i_n = i_0
-E 2 - ID 1 POT -0.0125 FUNCT none NUMSCAL 3 STOICH -1 0 0  E- 2 EPSILON -1 ZERO_CUR 0 Tafel ALPHA +0.25 I0  4.0 GAMMA 0.5 REFCON 0.1 DL_SPEC_CAP 0.0
+E 2 - ID 1 POT -0.0125 FUNCT -1 NUMSCAL 3 STOICH -1 0 0  E- 2 EPSILON -1 ZERO_CUR 0 Tafel ALPHA +0.25 I0  4.0 GAMMA 0.5 REFCON 0.1 DL_SPEC_CAP 0.0
 -------------------------------------------------------TRANSPORT KNOTVECTORS
 NURBS_DIMENSION                       2
 BEGIN                           NURBSPATCH

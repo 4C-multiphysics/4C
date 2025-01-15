@@ -76,8 +76,8 @@ FORCES                          yes
 MOMENTS                         yes
 --------------------------------DESIGN LINE BEAM POTENTIAL CHARGE CONDITIONS
 DLINE 2
-E 1 - POTLAW 1 VAL 1.0 FUNCT none
-E 2 - POTLAW 1 VAL 1.0 FUNCT none
+E 1 - POTLAW 1 VAL 1.0 FUNCT -1
+E 2 - POTLAW 1 VAL 1.0 FUNCT -1
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 DPOINT 1
 E 1 - NUMDOF 9 ONOFF 1 1 1 1 1 0 0 0 1 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0 0

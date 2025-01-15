@@ -362,7 +362,7 @@ void Inpar::ElCh::set_valid_conditions(
       cond->add_component(std::make_shared<Input::SeparatorComponent>("ID"));
       cond->add_component(std::make_shared<Input::IntComponent>("ConditionID"));
       add_named_real(cond, "POT");
-      add_named_int(cond, "FUNCT", "", 0, false, true);
+      add_named_int(cond, "FUNCT", "", 0, false);
       add_named_int(cond, "NUMSCAL");
       add_named_int_vector(cond, "STOICH", "", "NUMSCAL");
       add_named_int(cond, "E-");
@@ -408,7 +408,7 @@ void Inpar::ElCh::set_valid_conditions(
       electrodedomainkineticscomponents.emplace_back(
           std::make_shared<Input::SeparatorComponent>("FUNCT"));
       electrodedomainkineticscomponents.emplace_back(
-          std::make_shared<Input::IntComponent>("FUNCT", IntComponentData{0, true, false}));
+          std::make_shared<Input::IntComponent>("FUNCT", IntComponentData{0, false}));
       electrodedomainkineticscomponents.emplace_back(
           std::make_shared<Input::SeparatorComponent>("NUMSCAL"));
 
@@ -494,12 +494,12 @@ void Inpar::ElCh::set_valid_conditions(
       add_named_int(cond, "NUMBER_OF_HALF_CYCLES");
       add_named_int(
           cond, "BEGIN_WITH_CHARGING");  // Boolean parameter represented by integer parameter
-      add_named_int(cond, "CONDITION_ID_FOR_CHARGE", "", 0, false, true);
-      add_named_int(cond, "CONDITION_ID_FOR_DISCHARGE", "", 0, false, true);
+      add_named_int(cond, "CONDITION_ID_FOR_CHARGE", "", 0, false);
+      add_named_int(cond, "CONDITION_ID_FOR_DISCHARGE", "", 0, false);
       add_named_real(cond, "INIT_RELAX_TIME");
       add_named_int(cond, "ADAPTIVE_TIME_STEPPING_INIT_RELAX");
-      add_named_int(cond, "NUM_ADD_ADAPT_TIME_STEPS", "", 0, false, true);
-      add_named_int(cond, "MIN_TIME_STEPS_DURING_INIT_RELAX", "", 0, false, true);
+      add_named_int(cond, "NUM_ADD_ADAPT_TIME_STEPS", "", 0, false);
+      add_named_int(cond, "MIN_TIME_STEPS_DURING_INIT_RELAX", "", 0, false);
 
       // insert condition definitions into global list of valid condition definitions
       condlist.emplace_back(cond);

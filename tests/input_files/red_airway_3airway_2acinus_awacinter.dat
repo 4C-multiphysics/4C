@@ -35,9 +35,9 @@ MAT 2 MAT_0D_MAXWELL_ACINUS_EXPONENTIAL Stiffness1 1.0e-3 Stiffness2 1.0e-3 Visc
 SYMBOLIC_FUNCTION_OF_TIME 15*(sin(pi*t/50-pi/2)+1)
 -------------------------DESIGN NODE Reduced D AIRWAYS PRESCRIBED CONDITIONS
 DPOINT                          3
-E 1 - boundarycond pressure VAL 1.0 curve 1 none funct none
-E 2 - boundarycond pressure VAL 0.1 curve 1 none funct none
-E 3 - boundarycond pressure VAL 0.2 curve 1 none funct none
+E 1 - boundarycond pressure VAL 1.0 curve 1 -1 funct -1
+E 2 - boundarycond pressure VAL 0.1 curve 1 -1 funct -1
+E 3 - boundarycond pressure VAL 0.2 curve 1 -1 funct -1
 --------------------------------------------------REDUCED D AIRWAYS ELEMENTS
 1 RED_AIRWAY LINE2  1  2 MAT 1 ElemSolvingType NonLinear TYPE ConvectiveViscoElasticRLC Resistance Poiseuille PowerOfVelocityProfile 2 WallElasticity 500.0 PoissonsRatio 0.4 ViscousTs 2.0 ViscousPhaseShift 0.13 WallThickness 0.1 Area 1.0 Generation 0
 2 RED_AIRWAY LINE2  2  3 MAT 1 ElemSolvingType NonLinear TYPE ConvectiveViscoElasticRLC Resistance Poiseuille PowerOfVelocityProfile 2 WallElasticity 500.0 PoissonsRatio 0.4 ViscousTs 2.0 ViscousPhaseShift 0.13 WallThickness 0.1 Area 1.0 Generation 1

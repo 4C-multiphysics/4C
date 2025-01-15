@@ -86,7 +86,7 @@ E 1 - NUMDOF 4 ONOFF 1 1 1 1 VAL 0.348 2.408 4.12 0.0 FUNCT 0 0 0 0
 ---------------------------------ELECTRODE BOUNDARY KINETICS SURF CONDITIONS
 DSURF                           1
 //                              cathode
-E 2 - ID 0 POT -0.0 FUNCT none NUMSCAL 3 STOICH -1 0 0  E- 2 EPSILON -1 ZERO_CUR 0 Butler-Volmer ALPHA_A 1.0 ALPHA_C 0.4 I0 51.0 GAMMA 0.75 REFCON 0.348 DL_SPEC_CAP 0.25
+E 2 - ID 0 POT -0.0 FUNCT -1 NUMSCAL 3 STOICH -1 0 0  E- 2 EPSILON -1 ZERO_CUR 0 Butler-Volmer ALPHA_A 1.0 ALPHA_C 0.4 I0 51.0 GAMMA 0.75 REFCON 0.348 DL_SPEC_CAP 0.25
 --------------------------------------------SCATRA FLUX CALC SURF CONDITIONS
 DSURF                           1
 E 2 -

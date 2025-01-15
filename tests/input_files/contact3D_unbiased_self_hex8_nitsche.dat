@@ -62,31 +62,31 @@ STRUCTURE DIS structure NODE 592 QUANTITY dispy VALUE -1.01301972981593116e-01 T
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 DPOINT 2
 // points_left_side
-E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // points_right_side
-E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 1.0 0.0 0.0 FUNCT 1 none none
+E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 1.0 0.0 0.0 FUNCT 1 -1 -1
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 DLINE  5
 // lines_left_side_y_dir
-E 1 - NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // lines_left_side_z_dir
-E 2 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 2 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // lines_in_x_direction
-E 3 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 3 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // lines_right_side_y_dir
-E 4 - NUMDOF 3 ONOFF 1 0 1 VAL 1.0 0.0 0.0 FUNCT 1 none none
+E 4 - NUMDOF 3 ONOFF 1 0 1 VAL 1.0 0.0 0.0 FUNCT 1 -1 -1
 // lines_right_side_z_dir
-E 5 - NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1 none none
+E 5 - NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1 -1 -1
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 DSURF  4
 // surface_normal_x_left
-E 1 - NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // surface_normal_x_right
-E 2 - NUMDOF 3 ONOFF 1 0 0 VAL 1.0 0.0 0.0 FUNCT 1 none none
+E 2 - NUMDOF 3 ONOFF 1 0 0 VAL 1.0 0.0 0.0 FUNCT 1 -1 -1
 // surface_normal_y
-E 3 - NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 3 - NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // surface_normal_z
-E 4 - NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 4 - NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 --------------------------DESIGN SURF MORTAR CONTACT CONDITIONS 3D
 DSURF  2
 // cyl_side_of_cyl-bl_interface

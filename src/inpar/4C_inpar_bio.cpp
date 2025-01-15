@@ -114,7 +114,7 @@ void Inpar::ArteryNetwork::set_valid_conditions(
       Teuchos::tuple<std::string>("forced", "absorbing"), true);
 
   add_named_real_vector(art_in_bc, "VAL", "values", 2);
-  add_named_int_vector(art_in_bc, "curve", "curve ids", 2, 0.0, false, true);
+  add_named_int_vector(art_in_bc, "curve", "curve ids", 2, 0.0, false);
 
   condlist.push_back(art_in_bc);
 
@@ -126,7 +126,7 @@ void Inpar::ArteryNetwork::set_valid_conditions(
           Core::Conditions::ArtRfCond, true, Core::Conditions::geometry_type_point);
 
   add_named_real_vector(art_rf_bc, "VAL", "value", 1);
-  add_named_int_vector(art_rf_bc, "curve", "curve", 1, 0, false, true);
+  add_named_int_vector(art_rf_bc, "curve", "curve", 1, 0, false);
   condlist.push_back(art_rf_bc);
 
 
@@ -395,8 +395,8 @@ void Inpar::ReducedLung::set_valid_conditions(
 
   // reduced airway inlet components
   add_named_real_vector(raw_in_bc, "VAL", "value", 1);
-  add_named_int_vector(raw_in_bc, "curve", "curve", 2, 0, false, true);
-  add_named_int_vector(raw_in_bc, "funct", "function id", 1, 0, true, true);
+  add_named_int_vector(raw_in_bc, "curve", "curve", 2, 0, false);
+  add_named_int_vector(raw_in_bc, "funct", "function id", 1, 0, true);
 
   condlist.push_back(raw_in_bc);
 
@@ -446,7 +446,7 @@ void Inpar::ReducedLung::set_valid_conditions(
 
   // raw_volPpl_bc_components
   Input::add_named_real_vector(raw_volPpl_bc, "VAL", "value", 1);
-  Input::add_named_int_vector(raw_volPpl_bc, "curve", "curve", 1, 0, false, true);
+  Input::add_named_int_vector(raw_volPpl_bc, "curve", "curve", 1, 0, false);
 
   condlist.push_back(raw_volPpl_bc);
 

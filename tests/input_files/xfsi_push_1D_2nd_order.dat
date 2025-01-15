@@ -167,31 +167,31 @@ E 3 - NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 T
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 DPOINT 0
 // top inflow points
-//E 1 - NUMDOF 6 ONOFF 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 1 0 0 0 0 0
+//E 1 - NUMDOF 6 ONOFF 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 1 0 0 0 0 0
 // bottom inflow points
-//E 2 - NUMDOF 6 ONOFF 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 1 0 0 0 0 0
+//E 2 - NUMDOF 6 ONOFF 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 1 0 0 0 0 0
 // top outflow points
-//E 3 - NUMDOF 6 ONOFF 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 3 - NUMDOF 6 ONOFF 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // bottom outflow points
-//E 4 - NUMDOF 6 ONOFF 0 1 1 0 0 0 7.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 4 - NUMDOF 6 ONOFF 0 1 1 0 0 0 7.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
 DLINE 0
 // line inflow top
-//E 1 - NUMDOF 6 ONOFF 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 1 - NUMDOF 6 ONOFF 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // line inflow front
-//E 2 - NUMDOF 6 ONOFF 1 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 2 - NUMDOF 6 ONOFF 1 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // line inflow bottom
-//E 3 - NUMDOF 6 ONOFF 1 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 3 - NUMDOF 6 ONOFF 1 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // line inflow back
-//E 4 - NUMDOF 6 ONOFF 1 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 4 - NUMDOF 6 ONOFF 1 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // line outflow top
-//E 5 - NUMDOF 6 ONOFF 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 5 - NUMDOF 6 ONOFF 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // line outflow front
-//E 6 - NUMDOF 6 ONOFF 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 6 - NUMDOF 6 ONOFF 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // line outflow bottom
-//E 7 - NUMDOF 6 ONOFF 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 7 - NUMDOF 6 ONOFF 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // line outflow back
-//E 8 - NUMDOF 6 ONOFF 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 8 - NUMDOF 6 ONOFF 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // top edges side walls
 //E 9 - NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 0 0 0 0 0
 // bottom edges side walls
@@ -200,21 +200,21 @@ DLINE 0
 DSURF 5
 // surface top
 E 1 - NUMDOF 6 ONOFF 0 1 1 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
-//E 1 - 6 0 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 1 - 6 0 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // surface bottom
 E 2 - NUMDOF 6 ONOFF 0 1 1 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
-//E 2 - 6 1 0 0 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 2 - 6 1 0 0 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // surface inflow
-//E 3 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 1 0 0 0 0 0
+//E 3 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 1 0 0 0 0 0
 // surface outflow
-//E 4 - 6 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
-//E 4 - 6 1 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 4 - 6 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
+//E 4 - 6 1 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // surface front
 E 5 - NUMDOF 6 ONOFF 0 1 1 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
-//E 5 - 6 1 0 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 5 - 6 1 0 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // surface back
 E 6 - NUMDOF 6 ONOFF 0 1 1 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
-//E 6 - 6 1 0 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 6 - 6 1 0 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // right side of structure
 E 9 - NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 4 0 0 0 0 0
 ------------------------------------------------DESIGN VOL DIRICH CONDITIONS

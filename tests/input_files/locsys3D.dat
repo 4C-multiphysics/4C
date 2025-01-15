@@ -51,7 +51,7 @@ STRUCTURE DIS structure NODE 100 QUANTITY dispz VALUE  0.0 TOLERANCE 1.0e-16
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 DPOINT 2
 // bottom_vertex
-E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // top_vertex
 E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 1.0 1.0 0.0 FUNCT 1 2 none
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
@@ -59,23 +59,23 @@ DLINE  5
 // inner_line
 E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 1.0 1.0 0.0 FUNCT 1 2 none
 // bottom_inner_line
-E 2 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 2 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // top_inner_line
 E 3 - NUMDOF 3 ONOFF 1 1 1 VAL 1.0 1.0 0.0 FUNCT 1 2 none
 // bottom_symm_line
-E 4 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 4 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // top_symm_line
-E 5 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 1.0 0.0 FUNCT none 4 none
+E 5 - NUMDOF 3 ONOFF 0 1 1 VAL 0.0 1.0 0.0 FUNCT -1 4 none
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 DSURF  4
 // inner_surf
 E 1 - NUMDOF 3 ONOFF 1 1 0 VAL 1.0 1.0 0.0 FUNCT 1 2 none
 // symmetry_surf
-E 2 - NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 2 - NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // bottom_surf
-E 3 - NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 3 - NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT -1 -1 -1
 // top_surf
-E 4 - NUMDOF 3 ONOFF 0 1 0 VAL 0.0 1.0 0.0 FUNCT none 4 none
+E 4 - NUMDOF 3 ONOFF 0 1 0 VAL 0.0 1.0 0.0 FUNCT -1 4 none
 -------------------------------------DESIGN LINE LOCSYS CONDITIONS
 DLINE  2
 // top_inner_line

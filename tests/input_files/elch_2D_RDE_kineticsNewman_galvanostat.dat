@@ -104,7 +104,7 @@ E 2 - NUMDOF 5 ONOFF 1 1 1 1 1 VAL 0.00995 0.0001 0.990 1.010 0.0 FUNCT 0 0 0 0 
 ---------------------------------ELECTRODE BOUNDARY KINETICS LINE CONDITIONS
 DLINE                           1
 //                              left_electrode
-E 1 - ID 0 POT -0.45 FUNCT none NUMSCAL 4 STOICH -1 1 0 0  E- 1 EPSILON -1 ZERO_CUR 0 Butler-Volmer-Newman K_A 1.0312e-4 K_C 1.0364e-6 BETA 0.5 DL_SPEC_CAP 0.0
+E 1 - ID 0 POT -0.45 FUNCT -1 NUMSCAL 4 STOICH -1 1 0 0  E- 1 EPSILON -1 ZERO_CUR 0 Butler-Volmer-Newman K_A 1.0312e-4 K_C 1.0364e-6 BETA 0.5 DL_SPEC_CAP 0.0
 ---------------------------------------------------------DLINE-NODE TOPOLOGY
 NODE 1 DLINE 1
 NODE 4 DLINE 1

@@ -102,44 +102,44 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME -1.0*(x+y-0.42)
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
 DSURF 0
 // surface outflow
-//E 4 - none 1 1 1 0 0 0 -4.0 3.0 6.0 0.0 0.0 0.0 TYPE Live 0 0 0 0 0 0
+//E 4 - -1 1 1 1 0 0 0 -4.0 3.0 6.0 0.0 0.0 0.0 TYPE Live 0 0 0 0 0 0
 -----------------------------------------------DESIGN VOL NEUMANN CONDITIONS
 DVOL 0
-//E 1 - none 1 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 TYPE Live 0 0 0 0 0 0
+//E 1 - -1 1 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 TYPE Live 0 0 0 0 0 0
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 DPOINT 0
 // top inflow points
-//E 1 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 1 0 0 0 0 0
-//E 1 - 6 1 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 1 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 1 0 0 0 0 0
+//E 1 - 6 1 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // bottom inflow points
-//E 2 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 1 0 0 0 0 0
-//E 2 - 6 1 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 2 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 1 0 0 0 0 0
+//E 2 - 6 1 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // top outflow points
-//E 3 - 6 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 3 - 6 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // bottom outflow points
-//E 4 - 6 0 1 1 0 0 0 7.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 4 - 6 0 1 1 0 0 0 7.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
 DLINE 2
 // line inflow top
-//E 1 - 6 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
-//E 1 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 1 0 0 0 0 0
+//E 1 - 6 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
+//E 1 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 1 0 0 0 0 0
 // line inflow front
-//E 2 - 6 1 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
-//E 2 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 1 0 0 0 0 0
+//E 2 - 6 1 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
+//E 2 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 1 0 0 0 0 0
 // line inflow bottom
-//E 3 - 6 1 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
-//E 3 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 1 0 0 0 0 0
+//E 3 - 6 1 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
+//E 3 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 1 0 0 0 0 0
 // line inflow back
-//E 4 - 6 1 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
-//E 4 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 1 0 0 0 0 0
+//E 4 - 6 1 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
+//E 4 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 1 0 0 0 0 0
 // line outflow top
-//E 5 - 6 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 5 - 6 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // line outflow front
-//E 6 - 6 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 6 - 6 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // line outflow bottom
-//E 7 - 6 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 7 - 6 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // line outflow back
-//E 8 - 6 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 8 - 6 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // top edges side walls
 E 9 - NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 0 0 0 0 0
 // bottom edges side walls
@@ -148,21 +148,21 @@ E 10 - NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 0 0 0 0 0
 DSURF 4
 // surface top
 E 1 - NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 0 0 0 0 0
-//E 1 - 6 0 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 1 - 6 0 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // surface bottom
 E 2 - NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 0 0 0 0 0
-//E 2 - 6 1 0 0 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 2 - 6 1 0 0 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // surface inflow
-//E 3 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 1 0 0 0 0 0
+//E 3 - 6 1 1 1 0 0 0 1.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 1 0 0 0 0 0
 // surface outflow
-//E 4 - 6 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
-//E 4 - 6 1 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 4 - 6 0 1 1 0 0 0 0.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
+//E 4 - 6 1 1 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // surface front
 E 5 - NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 0 0 0 0 0
-//E 5 - 6 1 0 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 5 - 6 1 0 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 // surface back
 E 6 - NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 0 0 0 0 0
-//E 6 - 6 1 0 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 none none none none none none 0 0 0 0 0 0
+//E 6 - 6 1 0 1 0 0 0 2.0 0.0 0.0 0.0 0.0 0.0 -1 -1 -1 -1 -1 -1 0 0 0 0 0 0
 ----------------------------------DESIGN XFEM WEAK DIRICHLET SURF CONDITIONS
 // DOBJECT COUPLINGID EVALTYPE
 DSURF 6
@@ -184,7 +184,7 @@ E 12 - COUPLINGID 1 EVALTYPE funct NUMDOF 3 ONOFF 1 1 1 VAL 1.0 1.0 1.0 FUNCT 3 
 ---------------------------------DESIGN XFEM LEVELSET NEUMANN VOL CONDITIONS
 DVOL 1
 // fluid_volume
-E 1 - COUPLINGID 1 LEVELSETFIELDNO 4 BOOLEANTYPE none COMPLEMENTARY false NUMDOF 3 ONOFF 1 1 1 VAL 1.0 1.0 1.0 FUNCT 5 5 5 TYPE Live
+E 1 - COUPLINGID 1 LEVELSETFIELDNO 4 BOOLEANTYPE -1 COMPLEMENTARY false NUMDOF 3 ONOFF 1 1 1 VAL 1.0 1.0 1.0 FUNCT 5 5 5 TYPE Live
 ---------------------------------------------------------DNODE-NODE TOPOLOGY
 NODE 26 DNODE 1
 NODE 31 DNODE 1
