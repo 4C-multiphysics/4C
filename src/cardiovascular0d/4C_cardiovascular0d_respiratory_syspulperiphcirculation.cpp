@@ -989,8 +989,6 @@ void Utils::CardiovascularRespiratory0DSysPulPeriphCirculation::evaluate(
 
 
       // assembly
-      int eid = curr->second->id();
-
       if (assmat2 and conditiontype != "dummy")
       {
         // assemble the offdiagonal stiffness block (1,0 block) arising from dR_cardvasc0d/dd
@@ -1011,7 +1009,7 @@ void Utils::CardiovascularRespiratory0DSysPulPeriphCirculation::evaluate(
             if (conditiontype == "atrium_left") colvec[0] = gindex[0];
             if (conditiontype == "atrium_right") colvec[0] = gindex[24];
             elevector2.scale(-1. / ts_size);
-            sysmat2->assemble(eid, lmstride, elevector2, lm, lmowner, colvec);
+            sysmat2->assemble(lmstride, elevector2, lm, lmowner, colvec);
           }
           break;
           case Inpar::Cardiovascular0D::resp_standard:
@@ -1020,49 +1018,49 @@ void Utils::CardiovascularRespiratory0DSysPulPeriphCirculation::evaluate(
             {
               colvec[0] = gindex[2];
               elevector2.scale(-1. / ts_size);
-              sysmat2->assemble(eid, lmstride, elevector2, lm, lmowner, colvec);
+              sysmat2->assemble(lmstride, elevector2, lm, lmowner, colvec);
               colvec_a[0] = gindex[56];
               elevector2a.scale(-f_np[56] / V_v_l_np);
-              sysmat2->assemble(eid, lmstride, elevector2a, lm, lmowner, colvec_a);
+              sysmat2->assemble(lmstride, elevector2a, lm, lmowner, colvec_a);
               colvec_b[0] = gindex[57];
               elevector2b.scale(-f_np[57] / V_v_l_np);
-              sysmat2->assemble(eid, lmstride, elevector2b, lm, lmowner, colvec_b);
+              sysmat2->assemble(lmstride, elevector2b, lm, lmowner, colvec_b);
             }
             if (conditiontype == "ventricle_right")
             {
               colvec[0] = gindex[26];
               elevector2.scale(-1. / ts_size);
-              sysmat2->assemble(eid, lmstride, elevector2, lm, lmowner, colvec);
+              sysmat2->assemble(lmstride, elevector2, lm, lmowner, colvec);
               colvec_a[0] = gindex[46];
               elevector2a.scale(-f_np[46] / V_v_r_np);
-              sysmat2->assemble(eid, lmstride, elevector2a, lm, lmowner, colvec_a);
+              sysmat2->assemble(lmstride, elevector2a, lm, lmowner, colvec_a);
               colvec_b[0] = gindex[47];
               elevector2b.scale(-f_np[47] / V_v_r_np);
-              sysmat2->assemble(eid, lmstride, elevector2b, lm, lmowner, colvec_b);
+              sysmat2->assemble(lmstride, elevector2b, lm, lmowner, colvec_b);
             }
             if (conditiontype == "atrium_left")
             {
               colvec[0] = gindex[0];
               elevector2.scale(-1. / ts_size);
-              sysmat2->assemble(eid, lmstride, elevector2, lm, lmowner, colvec);
+              sysmat2->assemble(lmstride, elevector2, lm, lmowner, colvec);
               colvec_a[0] = gindex[54];
               elevector2a.scale(-f_np[54] / V_at_l_np);
-              sysmat2->assemble(eid, lmstride, elevector2a, lm, lmowner, colvec_a);
+              sysmat2->assemble(lmstride, elevector2a, lm, lmowner, colvec_a);
               colvec_b[0] = gindex[55];
               elevector2b.scale(-f_np[55] / V_at_l_np);
-              sysmat2->assemble(eid, lmstride, elevector2b, lm, lmowner, colvec_b);
+              sysmat2->assemble(lmstride, elevector2b, lm, lmowner, colvec_b);
             }
             if (conditiontype == "atrium_right")
             {
               colvec[0] = gindex[24];
               elevector2.scale(-1. / ts_size);
-              sysmat2->assemble(eid, lmstride, elevector2, lm, lmowner, colvec);
+              sysmat2->assemble(lmstride, elevector2, lm, lmowner, colvec);
               colvec_a[0] = gindex[44];
               elevector2a.scale(-f_np[44] / V_at_r_np);
-              sysmat2->assemble(eid, lmstride, elevector2a, lm, lmowner, colvec_a);
+              sysmat2->assemble(lmstride, elevector2a, lm, lmowner, colvec_a);
               colvec_b[0] = gindex[45];
               elevector2b.scale(-f_np[45] / V_at_r_np);
-              sysmat2->assemble(eid, lmstride, elevector2b, lm, lmowner, colvec_b);
+              sysmat2->assemble(lmstride, elevector2b, lm, lmowner, colvec_b);
             }
           }
           break;

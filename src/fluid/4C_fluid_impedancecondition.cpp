@@ -255,14 +255,15 @@ void FLD::Utils::FluidImpedanceBc::use_block_matrix(std::shared_ptr<std::set<int
     const Core::LinAlg::MultiMapExtractor& domainmaps,
     const Core::LinAlg::MultiMapExtractor& rangemaps, bool splitmatrix)
 {
-  std::shared_ptr<Core::LinAlg::BlockSparseMatrix<FLD::Utils::InterfaceSplitStrategy>> mat;
+  std::shared_ptr<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>> mat;
 
   if (splitmatrix)
   {
     // (re)allocate system matrix
-    mat = std::make_shared<Core::LinAlg::BlockSparseMatrix<FLD::Utils::InterfaceSplitStrategy>>(
-        domainmaps, rangemaps, 108, false, true);
-    mat->set_cond_elements(condelements);
+    mat =
+        std::make_shared<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
+            domainmaps, rangemaps, 108, false, true);
+
     impedancetbcsysmat_ = mat;
   }
 

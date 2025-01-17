@@ -653,8 +653,6 @@ void Utils::Cardiovascular0DSysPulCirculation::evaluate(Teuchos::ParameterList& 
       if (err) FOUR_C_THROW("error while evaluating elements");
 
       // assembly
-      int eid = curr->second->id();
-
       if (assmat2 and *conditiontype != "dummy")
       {
         // assemble the offdiagonal stiffness block (1,0 block) arising from dR_cardvasc0d/dd
@@ -665,7 +663,7 @@ void Utils::Cardiovascular0DSysPulCirculation::evaluate(Teuchos::ParameterList& 
         if (*conditiontype == "atrium_left") colvec[0] = gindex[0];
         if (*conditiontype == "atrium_right") colvec[0] = gindex[8];
         elevector2.scale(-1. / ts_size);
-        sysmat2->assemble(eid, lmstride, elevector2, lm, lmowner, colvec);
+        sysmat2->assemble(lmstride, elevector2, lm, lmowner, colvec);
       }
 
       if (assvec3 and *conditiontype != "dummy")

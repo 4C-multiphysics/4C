@@ -305,12 +305,11 @@ void CONSTRAINTS::Constraint::evaluate_constraint(Teuchos::ParameterList& params
         if (err) FOUR_C_THROW("error while evaluating elements");
 
         // assembly
-        int eid = curr->second->id();
         if (assemblemat1)
         {
           // scale with time integrator dependent value
           elematrix1.scale(scStiff * lagraval);
-          systemmatrix1->assemble(eid, lmstride, elematrix1, lm, lmowner);
+          systemmatrix1->assemble(lmstride, elematrix1, lm, lmowner);
         }
         if (assemblemat2)
         {
@@ -319,7 +318,7 @@ void CONSTRAINTS::Constraint::evaluate_constraint(Teuchos::ParameterList& params
           std::vector<int> colvec(1);
           colvec[0] = gindex;
           elevector2.scale(scConMat);
-          systemmatrix2->assemble(eid, lmstride, elevector2, lm, lmowner, colvec);
+          systemmatrix2->assemble(lmstride, elevector2, lm, lmowner, colvec);
         }
         if (assemblevec1)
         {

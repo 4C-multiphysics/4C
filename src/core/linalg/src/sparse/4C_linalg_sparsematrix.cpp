@@ -354,7 +354,7 @@ void Core::LinAlg::SparseMatrix::reset()
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void Core::LinAlg::SparseMatrix::assemble(int eid, const std::vector<int>& lmstride,
+void Core::LinAlg::SparseMatrix::assemble(const std::vector<int>& lmstride,
     const Core::LinAlg::SerialDenseMatrix& Aele, const std::vector<int>& lmrow,
     const std::vector<int>& lmrowowner, const std::vector<int>& lmcol)
 {
@@ -544,7 +544,7 @@ void Core::LinAlg::SparseMatrix::assemble(int eid, const std::vector<int>& lmstr
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void Core::LinAlg::SparseMatrix::assemble(int eid, const Core::LinAlg::SerialDenseMatrix& Aele,
+void Core::LinAlg::SparseMatrix::assemble(const Core::LinAlg::SerialDenseMatrix& Aele,
     const std::vector<int>& lmrow, const std::vector<int>& lmrowowner,
     const std::vector<int>& lmcol)
 {

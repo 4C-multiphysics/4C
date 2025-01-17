@@ -1006,7 +1006,7 @@ void CONTACT::Interface::assemble_tn(std::shared_ptr<Core::LinAlg::SparseMatrix>
               Tnode(i, j) = cnode->data().txi()[i] * cnode->data().txi()[j];
             }
           }
-          tglobal->assemble(-1, Tnode, lmrowT, lmrowownerT, lmcol);
+          tglobal->assemble(Tnode, lmrowT, lmrowownerT, lmcol);
         }
         else if (Interface::n_dim() == 3)
         {
@@ -1027,7 +1027,7 @@ void CONTACT::Interface::assemble_tn(std::shared_ptr<Core::LinAlg::SparseMatrix>
                             cnode->data().teta()[i] * cnode->data().teta()[j];
             }
           }
-          tglobal->assemble(-1, Tnode, lmrowT, lmrowownerT, lmcol);
+          tglobal->assemble(Tnode, lmrowT, lmrowownerT, lmcol);
         }
         else
           FOUR_C_THROW("Dim() must be either 2D or 3D");
@@ -1055,7 +1055,7 @@ void CONTACT::Interface::assemble_tn(std::shared_ptr<Core::LinAlg::SparseMatrix>
           }
 
           // assemble into matrix of normal vectors T
-          tglobal->assemble(-1, Tnode, lmrowT, lmrowownerT, lmcol);
+          tglobal->assemble(Tnode, lmrowT, lmrowownerT, lmcol);
         }
 
         else if (Interface::n_dim() == 3)
@@ -1082,7 +1082,7 @@ void CONTACT::Interface::assemble_tn(std::shared_ptr<Core::LinAlg::SparseMatrix>
           }
 
           // assemble into matrix of normal vectors T
-          tglobal->assemble(-1, Tnode, lmrowT, lmrowownerT, lmcol);
+          tglobal->assemble(Tnode, lmrowT, lmrowownerT, lmcol);
         }
         else
           FOUR_C_THROW("Dim() must be either 2D or 3D");
