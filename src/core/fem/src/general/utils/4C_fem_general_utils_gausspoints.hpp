@@ -180,18 +180,15 @@ namespace Core::FE
     std::vector<std::shared_ptr<GaussPoints>> gp_;
   };
 
-  /// remember calculated gauss points so we do not need to calculate again
-  class GaussPointCache
-  {
-   public:
-    static GaussPointCache& instance();
+  /**
+   * Create GaussPoints object for a given element type and degree.
+   */
+  std::shared_ptr<GaussPoints> create_gauss_points(Core::FE::CellType distype, int degree);
 
-    std::shared_ptr<GaussPoints> create(Core::FE::CellType distype, int degree);
-
-   private:
-    /// cache of already created gauss rules
-    std::map<std::pair<Core::FE::CellType, int>, std::shared_ptr<GaussPoints>> gp_cache_;
-  };
+  /**
+   * Create GaussPoints object for a given element type with a default degree.
+   */
+  std::shared_ptr<GaussPoints> create_gauss_points_default(Core::FE::CellType distype);
 
   /// gauss integration interface
   class GaussIntegration
@@ -243,7 +240,7 @@ namespace Core::FE
     typedef GaussPointIterator const_iterator;
 
     /// construct the optimal (normal) rule for a given element shape
-    GaussIntegration(Core::FE::CellType distype);
+    explicit GaussIntegration(Core::FE::CellType distype);
 
     /// construct rule for a given element shape
     GaussIntegration(Core::FE::CellType distype, int degree);
@@ -286,9 +283,8 @@ namespace Core::FE
         const Core::LinAlg::Matrix<Core::FE::dim<distype>, Core::FE::num_nodes<distype>>& xie,
         int degree)
     {
-      std::shared_ptr<GaussPoints> gp = GaussPointCache::instance().create(distype, degree);
-      std::shared_ptr<CollectedGaussPoints> cgp =
-          std::make_shared<CollectedGaussPoints>(gp->num_points());
+      std::shared_ptr<GaussPoints> gp = create_gauss_points(distype, degree);
+      std::shared_ptr<CollectedGaussPoints> cgp = std::make_shared<CollectedGaussPoints>(gp->num_points());
 
       GaussIntegration intpoints(gp);
 

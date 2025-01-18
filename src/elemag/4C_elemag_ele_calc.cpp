@@ -599,7 +599,7 @@ void Discret::Elements::ElemagEleCalc<distype>::LocalSolver::compute_error(
   const double time = params.get<double>("time");
   // for the calculation of the error, we use a higher integration rule
   std::shared_ptr<Core::FE::GaussPoints> highquad =
-      Core::FE::GaussPointCache::instance().create(distype, (ele->degree() + 2) * 2);
+      Core::FE::create_gauss_points(distype, (ele->degree() + 2) * 2);
   Core::LinAlg::Matrix<nsd_, 1> xsi;
   Core::LinAlg::SerialDenseVector values(shapes_.ndofs_);
   Core::LinAlg::Matrix<nsd_, nen_> deriv;

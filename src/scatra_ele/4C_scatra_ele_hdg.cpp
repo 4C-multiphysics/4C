@@ -321,7 +321,7 @@ int Discret::Elements::ScaTraHDG::initialize()
     else
     {
       std::shared_ptr<Core::FE::GaussPoints> quadrature_(
-          Core::FE::GaussPointCache::instance().create(this->shape(), deg));
+          Core::FE::create_gauss_points(this->shape(), deg));
       gp = quadrature_->num_points();
     }
     if (actmat->parameter() != nullptr and

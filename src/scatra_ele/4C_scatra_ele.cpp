@@ -689,7 +689,7 @@ int Discret::Elements::Transport::initialize()
     else
       deg = 3 * this->degree();
     std::shared_ptr<Core::FE::GaussPoints> quadrature(
-        Core::FE::GaussPointCache::instance().create(this->shape(), deg));
+        Core::FE::create_gauss_points(this->shape(), deg));
     int gp = quadrature->num_points();
     if (actmat->parameter() != nullptr and
         !actmat->myocard_mat())  // in case we are not in post-process mode
