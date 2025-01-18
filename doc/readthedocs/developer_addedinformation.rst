@@ -12,3 +12,4 @@ Additional information
     coverage_report
     developer_ccache
     developer_cluster
+    developer_release
