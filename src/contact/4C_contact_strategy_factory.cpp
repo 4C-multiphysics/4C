@@ -16,6 +16,7 @@
 #include "4C_contact_lagrange_strategy_tsi.hpp"
 #include "4C_contact_lagrange_strategy_wear.hpp"
 #include "4C_contact_nitsche_strategy.hpp"
+#include "4C_contact_nitsche_strategy_poro.hpp"
 #include "4C_contact_nitsche_strategy_ssi.hpp"
 #include "4C_contact_nitsche_strategy_ssi_elch.hpp"
 #include "4C_contact_paramsinterface.hpp"
@@ -441,7 +442,7 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
     {
       const Teuchos::ParameterList& porodyn =
           Global::Problem::instance()->poroelast_dynamic_params();
-      if (porodyn.get<bool>("CONTACTNOPEN"))
+      if (porodyn.get<bool>("CONTACT_NO_PENETRATION"))
         FOUR_C_THROW("POROCONTACT: PoroContact with no penetration just tested for 3d (and 2d)!");
     }
 
@@ -538,6 +539,20 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
           Global::Problem::instance()->structural_dynamic_params().get<double>("TIMESTEP"));
       break;
     }
+    case Core::ProblemType::poroelast:
+    case Core::ProblemType::poroscatra:
+    {
+      const Teuchos::ParameterList& stru = Global::Problem::instance()->structural_dynamic_params();
+      const Teuchos::ParameterList& porodyn =
+          Global::Problem::instance()->poroelast_dynamic_params();
+      // porotimefac = 1/(theta*dt) --- required for derivation of structural displacements!
+      double porotimefac =
+          1 / (stru.sublist("ONESTEPTHETA").get<double>("THETA") * stru.get<double>("TIMESTEP"));
+      params.set<double>("porotimefac", porotimefac);
+      params.set<bool>("CONTACT_NO_PENETRATION",
+          porodyn.get<bool>("CONTACT_NO_PENETRATION"));  // used in the integrator
+      break;
+    }
     default:
       /* Do nothing, all the time integration related stuff is supposed to be handled outside
        * of the contact strategy. */
@@ -585,15 +600,7 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
   else if (problemtype == Core::ProblemType::poroelast or problemtype == Core::ProblemType::fpsi or
            problemtype == Core::ProblemType::fpsi_xfem)
   {
-    FOUR_C_THROW(
-        "Everything which is related to a special time integration scheme has to be moved to the"
-        " related scheme. Don't do it here! -- hiermeier 02/2016");
-    const Teuchos::ParameterList& porodyn = Global::Problem::instance()->poroelast_dynamic_params();
     params.set<int>("PROBTYPE", Inpar::CONTACT::poroelast);
-    //    //porotimefac = 1/(theta*dt) --- required for derivation of structural displacements!
-    //    double porotimefac = 1/(stru.sublist("ONESTEPTHETA").get<double>("THETA") *
-    //    stru.get<double>("TIMESTEP")); params.set<double> ("porotimefac", porotimefac);
-    params.set<bool>("CONTACTNOPEN", porodyn.get<bool>("CONTACTNOPEN"));  // used in the integrator
   }
   else if (problemtype == Core::ProblemType::fsi_xfem)
   {
@@ -609,7 +616,8 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
     //    //porotimefac = 1/(theta*dt) --- required for derivation of structural displacements!
     //    double porotimefac = 1/(stru.sublist("ONESTEPTHETA").get<double>("THETA") *
     //    stru.get<double>("TIMESTEP")); params.set<double> ("porotimefac", porotimefac);
-    params.set<bool>("CONTACTNOPEN", porodyn.get<bool>("CONTACTNOPEN"));  // used in the integrator
+    params.set<bool>("CONTACT_NO_PENETRATION",
+        porodyn.get<bool>("CONTACT_NO_PENETRATION"));  // used in the integrator
   }
   else
   {
@@ -1618,6 +1626,12 @@ std::shared_ptr<CONTACT::AbstractStrategy> CONTACT::STRATEGY::Factory::build_str
     {
       data_ptr = std::make_shared<CONTACT::AbstractStrategyDataContainer>();
       strategy_ptr = std::make_shared<NitscheStrategySsiElch>(
+          data_ptr, dof_row_map, node_row_map, params, interfaces, dim, comm_ptr, 0, dof_offset);
+    }
+    else if (params.get<int>("PROBTYPE") == Inpar::CONTACT::poroelast)
+    {
+      data_ptr = std::make_shared<CONTACT::AbstractStrategyDataContainer>();
+      strategy_ptr = std::make_shared<NitscheStrategyPoro>(
           data_ptr, dof_row_map, node_row_map, params, interfaces, dim, comm_ptr, 0, dof_offset);
     }
     else

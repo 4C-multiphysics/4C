@@ -15,6 +15,7 @@
 #include "4C_io_value_parser.hpp"
 #include "4C_io_yaml_emitter.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <optional>
 #include <ostream>

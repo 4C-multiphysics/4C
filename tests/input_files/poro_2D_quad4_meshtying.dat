@@ -40,7 +40,7 @@ CONTIPARTINT                    yes
 LINEAR_SOLVER                   1
 PHYSICAL_TYPE                   Poro
 MATCHINGGRID                    yes
-CONTACTNOPEN                    yes
+CONTACT_NO_PENETRATION          yes
 TRANSIENT_TERMS                 none
 ------------------------------------------------------FLUID DYNAMIC
 LINEAR_SOLVER                   1

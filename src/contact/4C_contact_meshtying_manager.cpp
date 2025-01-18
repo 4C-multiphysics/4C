@@ -614,7 +614,7 @@ bool CONTACT::MtManager::read_and_check_input(
       (spatialDim != 3) && (spatialDim != 2))
   {
     const Teuchos::ParameterList& porodyn = Global::Problem::instance()->poroelast_dynamic_params();
-    if (porodyn.get<bool>("CONTACTNOPEN"))
+    if (porodyn.get<bool>("CONTACT_NO_PENETRATION"))
       FOUR_C_THROW("POROCONTACT: PoroMeshtying with no penetration just tested for 3d (and 2d)!");
   }
 

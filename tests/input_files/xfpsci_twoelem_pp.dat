@@ -60,7 +60,7 @@ MAXTIME                         5
 TIMESTEP                        0.5
 SECONDORDER                     No
 CONTIPARTINT                    No
-CONTACTNOPEN                    Yes
+CONTACT_NO_PENETRATION          Yes
 LINEAR_SOLVER                   5
 ------------------------------------------------------FLUID DYNAMIC
 PHYSICAL_TYPE                   Incompressible

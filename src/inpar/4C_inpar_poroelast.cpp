@@ -121,7 +121,7 @@ void Inpar::PoroElast::set_valid_parameters(Teuchos::ParameterList& list)
   Core::Utils::bool_parameter("CONTIPARTINT", "No",
       "Partial integration of porosity gradient in continuity equation", &poroelastdyn);
 
-  Core::Utils::bool_parameter("CONTACTNOPEN", "No",
+  Core::Utils::bool_parameter("CONTACT_NO_PENETRATION", "No",
       "No-Penetration Condition on active contact surface in case of poro contact problem!",
       &poroelastdyn);
 
