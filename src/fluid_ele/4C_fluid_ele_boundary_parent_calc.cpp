@@ -523,15 +523,14 @@ void Discret::Elements::FluidBoundaryParent<distype>::flow_dep_pressure_bc(
   // (time curve at n+1 applied for all time-integration schemes, but
   //  variable time_ in fluid3_parameter is n+alpha_F in case of
   //  generalized-alpha time-integration scheme -> reset to time n+1)
-  bool usetime = true;
   const double time =
       fldparatimint_->time() + (1 - fldparatimint_->alpha_f()) * fldparatimint_->dt();
-  if (time < 0.0) usetime = false;
-  const int curvenum = fdp_cond->parameters().get<int>("curve");
+  const auto curvenum = fdp_cond->parameters().get<Core::IO::Noneable<int>>("curve");
+
   double curvefac = 1.0;
-  if (curvenum > 0 and usetime)
+  if (curvenum.has_value() && curvenum.value() > 0 && time >= 0)
     curvefac = Global::Problem::instance()
-                   ->function_by_id<Core::Utils::FunctionOfTime>(curvenum - 1)
+                   ->function_by_id<Core::Utils::FunctionOfTime>(curvenum.value() - 1)
                    .evaluate(time);
 
   // (temporarily) switch off any flow-dependent pressure condition in case of zero

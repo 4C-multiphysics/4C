@@ -685,7 +685,8 @@ void CONTACT::STRATEGY::Factory::build_interfaces(const Teuchos::ParameterList& 
     const auto groupid1 = currentgroup[0]->parameters().get<int>("InterfaceID");
 
     // In case of MultiScale contact this is the id of the interface's constitutive contact law
-    int contactconstitutivelaw_id = currentgroup[0]->parameters().get<int>("ConstitutiveLawID");
+    auto contactconstitutivelaw_id =
+        currentgroup[0]->parameters().get<Core::IO::Noneable<int>>("ConstitutiveLawID");
 
     // Initialize a flag to check for MIRCO contact consitutive law
     bool mircolaw = false;
@@ -698,12 +699,12 @@ void CONTACT::STRATEGY::Factory::build_interfaces(const Teuchos::ParameterList& 
     int hurstexponentfunction = 0;
     int initialtopologystddeviationfunction = 0;
 
-    if (contactconstitutivelaw_id != 0)
+    if (contactconstitutivelaw_id.has_value() && contactconstitutivelaw_id.value() > 0)
     {
       const int probinst =
           Global::Problem::instance()->contact_constitutive_laws()->get_read_from_problem();
       auto coconstlaw = Global::Problem::instance(probinst)->contact_constitutive_laws()->by_id(
-          contactconstitutivelaw_id);
+          contactconstitutivelaw_id.value());
       // Set the variables if MIRCO contact constitutive law is found
       if (coconstlaw.get<Inpar::CONTACT::ConstitutiveLawType>("LAW_TYPE") ==
           Inpar::CONTACT::ConstitutiveLawType::colaw_mirco)
@@ -820,8 +821,8 @@ void CONTACT::STRATEGY::Factory::build_interfaces(const Teuchos::ParameterList& 
     // ------------------------------------------------------------------------
     const auto& non_owning_discret = Core::Utils::shared_ptr_from_ref(discret());
 
-    std::shared_ptr<CONTACT::Interface> newinterface = create_interface(
-        groupid1, get_comm(), n_dim(), icparams, isself[0], nullptr, contactconstitutivelaw_id);
+    std::shared_ptr<CONTACT::Interface> newinterface = create_interface(groupid1, get_comm(),
+        n_dim(), icparams, isself[0], nullptr, contactconstitutivelaw_id.value_or(-1));
     interfaces.push_back(newinterface);
 
     // get it again

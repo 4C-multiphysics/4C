@@ -240,13 +240,13 @@ void CONSTRAINTS::Constraint::evaluate_constraint(Teuchos::ParameterList& params
       }
 
       // Evaluate loadcurve if defined. Put current load factor in parameterlist
-      const int curvenum = cond->parameters().get_or<int>("curve", -1);
+      const auto curvenum = cond->parameters().get<Core::IO::Noneable<int>>("curve");
       double curvefac = 1.0;
-      if (curvenum > 0)
+      if (curvenum.has_value() && curvenum.value() > 0)
       {
         // function_by_id takes a zero-based index
         curvefac = Global::Problem::instance()
-                       ->function_by_id<Core::Utils::FunctionOfTime>(curvenum - 1)
+                       ->function_by_id<Core::Utils::FunctionOfTime>(curvenum.value() - 1)
                        .evaluate(time);
       }
 

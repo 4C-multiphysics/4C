@@ -64,20 +64,20 @@ namespace XFEM
       setup_projection_matrix(proj_matrix, normal);
 
       // help variable
-      int robin_id_dirch;
+      int robin_id;
 
       if (eval_dirich_at_gp)
       {
         // evaluate interface velocity (given by weak Dirichlet condition)
-        robin_id_dirch = cond->parameters().get<int>("ROBIN_DIRICHLET_ID") - 1;
-        // Check if int is negative (signbit(x) -> x<0 true, x=>0 false)
-        if (!std::signbit(static_cast<double>(robin_id_dirch)))
+        const auto maybe_id = cond->parameters().get<Core::IO::Noneable<int>>("ROBIN_DIRICHLET_ID");
+        robin_id = maybe_id.value_or(-1) - 1;
+        if (robin_id >= 0)
           evaluate_dirichlet_function(
-              ivel, x, conditionsmap_robin_dirch_.find(robin_id_dirch)->second, time_);
+              ivel, x, conditionsmap_robin_dirch_.find(robin_id)->second, time_);
 
         // Safety checks
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-        if ((conditionsmap_robin_dirch_.find(robin_id_dirch)) == conditionsmap_robin_dirch_.end())
+        if ((conditionsmap_robin_dirch_.find(robin_id)) == conditionsmap_robin_dirch_.end())
         {
           FOUR_C_THROW(
               "Key was not found in this instance!! Fatal error! (conditionsmap_robin_dirch_)");
@@ -86,8 +86,10 @@ namespace XFEM
       }
 
       // evaluate interface traction (given by Neumann condition)
-      robin_id_dirch = cond->parameters().get<int>("ROBIN_NEUMANN_ID") - 1;
-      if (!std::signbit(static_cast<double>(robin_id_dirch)))
+      const auto maybe_id = cond->parameters().get<Core::IO::Noneable<int>>("ROBIN_NEUMANN_ID");
+      robin_id = maybe_id.value_or(-1) - 1;
+
+      if (robin_id >= 0)
       {
         // This is maybe not the most efficient implementation as we evaluate dynvisc as well as the
         // sliplenght twice (also done in update_configuration_map_gp ... as soon as this gets
@@ -103,7 +105,7 @@ namespace XFEM
         if (sliplength != 0.0)
         {
           evaluate_neumann_function(
-              itraction, x, conditionsmap_robin_neumann_.find(robin_id_dirch)->second, time_);
+              itraction, x, conditionsmap_robin_neumann_.find(robin_id)->second, time_);
 
           double sl_visc_fac = sliplength / (kappa_m * visc_m + (1.0 - kappa_m) * visc_s);
           Core::LinAlg::Matrix<3, 1> tmp_itraction(true);
@@ -126,10 +128,9 @@ namespace XFEM
 
 // Safety checks
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-      if (!std::signbit(static_cast<double>(robin_id_dirch)))
+      if (robin_id >= 0)
       {
-        if ((conditionsmap_robin_neumann_.find(robin_id_dirch)) ==
-            conditionsmap_robin_neumann_.end())
+        if ((conditionsmap_robin_neumann_.find(robin_id)) == conditionsmap_robin_neumann_.end())
         {
           FOUR_C_THROW(
               "Key was not found in this instance!! Fatal error! (conditionsmap_robin_neumann_)");

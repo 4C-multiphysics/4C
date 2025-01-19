@@ -12,6 +12,7 @@
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
 #include "4C_fem_general_utils_nurbs_shapefunctions.hpp"
 #include "4C_global_data.hpp"
+#include "4C_io_input_parameter_container.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
@@ -63,18 +64,9 @@ void Utils::Cardiovascular0DArterialProxDist::evaluate(Teuchos::ParameterList& p
   // get time-integrator dependent values
   double theta = params.get("scale_theta", 1.0);
   double ts_size = params.get("time_step_size", 1.0);
-
-  bool usetime = true;
-  const double tim = params.get("total time", -1.0);
-  if (tim < 0.0) usetime = false;
-
+  const double time = params.get("total time", -1.0);
   const int numdof_per_cond = 4;
-
-  std::vector<bool> havegid(numdof_per_cond);
-  for (int j = 0; j < numdof_per_cond; j++)
-  {
-    havegid[j] = false;
-  }
+  std::vector<bool> havegid(numdof_per_cond, false);
 
   const bool assmat1 = sysmat1 != nullptr;
   const bool assmat2 = sysmat2 != nullptr;
@@ -111,15 +103,16 @@ void Utils::Cardiovascular0DArterialProxDist::evaluate(Teuchos::ParameterList& p
     double p_at_fac = cardiovascular0dcond_[condID]->parameters().get<double>("p_at_fac");
 
     // find out whether we will use a time curve and get the factor
-    const int curvenum = cardiovascular0dcond_[condID]->parameters().get<int>("p_at_crv");
+    const auto curvenum =
+        cardiovascular0dcond_[condID]->parameters().get<Core::IO::Noneable<int>>("p_at_crv");
     double curvefac_np = 1.0;
 
-    if (curvenum > 0 && usetime)
+    if (curvenum.has_value() && curvenum.value() > 0 && time >= 0)
     {
       // function_by_id takes a zero based index
       curvefac_np = Global::Problem::instance()
-                        ->function_by_id<Core::Utils::FunctionOfTime>(curvenum - 1)
-                        .evaluate(tim);
+                        ->function_by_id<Core::Utils::FunctionOfTime>(curvenum.value() - 1)
+                        .evaluate(time);
     }
 
     // Cardiovascular0D stiffness

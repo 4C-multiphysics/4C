@@ -358,7 +358,7 @@ namespace XFEM
       eval_projection_matrix<distype>(projection_matrix, eid, funct, derxy, normal);
       evaluate_coupling_conditions(ivel, itraction, x, cond);
 
-      if (has_neumann_jump_)
+      if (robin_neumann_id_ >= 0)
       {
         // This is maybe not the most efficient implementation as we evaluate dynvisc as well as the
         // sliplenght twice evaluate interface traction (given by Neumann condition) Add this to the
@@ -525,7 +525,6 @@ namespace XFEM
    private:
     bool forcetangvel_;
     bool is_constant_sliplength_;
-    bool has_neumann_jump_;
     double sliplength_;
 
     // ID given the Robin Dirichlet/-Neumann conditions

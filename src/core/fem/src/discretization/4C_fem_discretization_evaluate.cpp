@@ -12,6 +12,7 @@
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_elements_paramsinterface.hpp"
 #include "4C_fem_general_node.hpp"
+#include "4C_io_input_parameter_container.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_sparsematrix.hpp"
@@ -404,16 +405,19 @@ void Core::FE::Discretization::evaluate_condition(Teuchos::ParameterList& params
         // to the condition geometry
 
         // Evaluate Loadcurve if defined. Put current load factor in parameter list
-        const auto* curve = cond->parameters().get_if<int>("curve");
-        int curvenum = -1;
-        if (curve) curvenum = *curve;
+        const auto* curve = cond->parameters().get_if<Core::IO::Noneable<int>>("curve");
+
         double curvefac = 1.0;
-        if (curvenum >= 0)
+        if (curve)
         {
-          const auto& function_manager =
-              params.get<const Core::Utils::FunctionManager*>("function_manager");
-          curvefac = function_manager->function_by_id<Core::Utils::FunctionOfTime>(curvenum - 1)
-                         .evaluate(time);
+          if (curve->has_value() && curve->value() > 0)
+          {
+            const auto& function_manager =
+                params.get<const Core::Utils::FunctionManager*>("function_manager");
+            curvefac =
+                function_manager->function_by_id<Core::Utils::FunctionOfTime>(curve->value() - 1)
+                    .evaluate(time);
+          }
         }
 
         // Get ConditionID of current condition if defined and write value in parameter list

@@ -19,6 +19,7 @@
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
 #include "4C_io_gmsh.hpp"
+#include "4C_io_input_parameter_container.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_utils_densematrix_communication.hpp"
@@ -1244,20 +1245,21 @@ void XFEM::MeshCouplingNavierSlip::evaluate_coupling_conditions(Core::LinAlg::Ma
   setup_projection_matrix(proj_matrix, normal);
 
   // help variable
-  int robin_id_dirch;
+  int robin_id;
 
   if (eval_dirich_at_gp)
   {
     // evaluate interface velocity (given by weak Dirichlet condition)
-    robin_id_dirch = cond->parameters().get<int>("ROBIN_DIRICHLET_ID") - 1;
-    // Check if int is negative (signbit(x) -> x<0 true, x=>0 false)
-    if (!std::signbit(static_cast<double>(robin_id_dirch)))
+    const auto maybe_id = cond->parameters().get<Core::IO::Noneable<int>>("ROBIN_DIRICHLET_ID");
+    robin_id = maybe_id.value_or(-1) - 1;
+
+    if (robin_id >= 0)
       evaluate_dirichlet_function(
-          ivel, x, conditionsmap_robin_dirch_.find(robin_id_dirch)->second, time_);
+          ivel, x, conditionsmap_robin_dirch_.find(robin_id)->second, time_);
 
 // Safety checks
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-    if ((conditionsmap_robin_dirch_.find(robin_id_dirch)) == conditionsmap_robin_dirch_.end())
+    if ((conditionsmap_robin_dirch_.find(robin_id)) == conditionsmap_robin_dirch_.end())
     {
       FOUR_C_THROW(
           "Key was not found in this instance!! Fatal error! (conditionsmap_robin_dirch_)");
@@ -1266,8 +1268,10 @@ void XFEM::MeshCouplingNavierSlip::evaluate_coupling_conditions(Core::LinAlg::Ma
   }
 
   // evaluate interface traction (given by Neumann condition)
-  robin_id_dirch = cond->parameters().get<int>("ROBIN_NEUMANN_ID") - 1;
-  if (!std::signbit(static_cast<double>(robin_id_dirch)))
+  const auto maybe_id = cond->parameters().get<Core::IO::Noneable<int>>("ROBIN_NEUMANN_ID");
+  robin_id = maybe_id.value_or(-1) - 1;
+
+  if (robin_id >= 0)
   {
     // This is maybe not the most efficient implementation as we evaluate dynvisc as well as the
     // sliplenght twice (also done in update_configuration_map_gp ... as soon as this gets relevant
@@ -1283,7 +1287,7 @@ void XFEM::MeshCouplingNavierSlip::evaluate_coupling_conditions(Core::LinAlg::Ma
     if (sliplength != 0.0)
     {
       evaluate_neumann_function(
-          itraction, x, conditionsmap_robin_neumann_.find(robin_id_dirch)->second, time_);
+          itraction, x, conditionsmap_robin_neumann_.find(robin_id)->second, time_);
 
       double sl_visc_fac = sliplength / (kappa_m * visc_m + (1.0 - kappa_m) * visc_s);
       Core::LinAlg::Matrix<3, 1> tmp_itraction(true);
@@ -1305,9 +1309,9 @@ void XFEM::MeshCouplingNavierSlip::evaluate_coupling_conditions(Core::LinAlg::Ma
 
 // Safety checks
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-  if (!std::signbit(static_cast<double>(robin_id_dirch)))
+  if (robin_id >= 0)
   {
-    if ((conditionsmap_robin_neumann_.find(robin_id_dirch)) == conditionsmap_robin_neumann_.end())
+    if ((conditionsmap_robin_neumann_.find(robin_id)) == conditionsmap_robin_neumann_.end())
     {
       FOUR_C_THROW(
           "Key was not found in this instance!! Fatal error! (conditionsmap_robin_neumann_)");
@@ -1339,17 +1343,20 @@ void XFEM::MeshCouplingNavierSlip::evaluate_coupling_conditions_old_state(
   //  }
 
   // evaluate interface velocity (given by weak Dirichlet condition)
-  int robin_id_dirch = cond->parameters().get<int>("ROBIN_DIRICHLET_ID") - 1;
-  // Check if int is negative (signbit(x) -> x<0 true, x=>0 false)
-  if (!std::signbit(static_cast<double>(robin_id_dirch)))
+  auto maybe_id = cond->parameters().get<Core::IO::Noneable<int>>("ROBIN_DIRICHLET_ID");
+  int robin_id = maybe_id.value_or(-1) - 1;
+
+  if (robin_id >= 0)
     evaluate_dirichlet_function(
-        ivel, x, conditionsmap_robin_dirch_.find(robin_id_dirch)->second, time_ - dt_);
+        ivel, x, conditionsmap_robin_dirch_.find(robin_id)->second, time_ - dt_);
 
   // evaluate interface traction (given by Neumann condition)
-  robin_id_dirch = cond->parameters().get<int>("ROBIN_NEUMANN_ID") - 1;
-  if (!std::signbit(static_cast<double>(robin_id_dirch)))
+  maybe_id = cond->parameters().get<Core::IO::Noneable<int>>("ROBIN_NEUMANN_ID");
+  robin_id = maybe_id.value_or(-1) - 1;
+
+  if (robin_id >= 0)
     evaluate_neumann_function(
-        itraction, x, conditionsmap_robin_neumann_.find(robin_id_dirch)->second, time_ - dt_);
+        itraction, x, conditionsmap_robin_neumann_.find(robin_id)->second, time_ - dt_);
 }
 
 void XFEM::MeshCouplingNavierSlip::prepare_solve()
@@ -1385,7 +1392,9 @@ void XFEM::MeshCouplingNavierSlip::create_robin_id_map(
   for (unsigned i = 0; i < conditions_NS.size(); ++i)
   {
     // Extract its robin id (either dirichlet or neumann)
-    const int tmp_robin_id = conditions_NS[i]->parameters().get<int>(robin_id_name) - 1;
+    const auto maybe_robin_id =
+        conditions_NS[i]->parameters().get<Core::IO::Noneable<int>>(robin_id_name);
+    const int tmp_robin_id = maybe_robin_id.value_or(-1) - 1;
 
     // Is this robin id active? I.e. is it not 0 or negative?
     if (tmp_robin_id >= 0)
@@ -1480,8 +1489,11 @@ void XFEM::MeshCouplingNavierSlip::set_condition_specific_parameters()
   //       Robin Dirichlet section (Safety check! (not beautiful structure but could be worse..))
   for (auto* tmp_cond : conditions_NS)
   {
-    const int tmp_robin_id = tmp_cond->parameters().get<int>("ROBIN_DIRICHLET_ID") - 1;
-    if (!std::signbit(static_cast<double>(tmp_robin_id)))
+    const auto maybe_robin_id =
+        tmp_cond->parameters().get<Core::IO::Noneable<int>>("ROBIN_DIRICHLET_ID");
+    const auto tmp_robin_id = maybe_robin_id.value_or(-1) - 1;
+
+    if (tmp_robin_id >= 0)
     {
       if ((conditionsmap_robin_dirch_.find(tmp_robin_id)
                   ->second->parameters()
@@ -1501,7 +1513,8 @@ void XFEM::MeshCouplingNavierSlip::get_condition_by_robin_id(
   // select the conditions with specified "ROBIN_ID"
   for (auto* cond : mycond)
   {
-    const int id_zero_based = cond->parameters().get<int>("ROBIN_ID") - 1;
+    const auto maybe_robin_id = cond->parameters().get<Core::IO::Noneable<int>>("ROBIN_ID");
+    const int id_zero_based = maybe_robin_id.value_or(-1) - 1;
 
     if (id_zero_based == coupling_id) mynewcond.push_back(cond);
   }

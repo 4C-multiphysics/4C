@@ -14,6 +14,7 @@
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
 #include "4C_global_data.hpp"
 #include "4C_inpar_beampotential.hpp"
+#include "4C_io_input_parameter_container.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
@@ -248,18 +249,18 @@ void BeamInteraction::BeamToSpherePotentialPair<numnodes,
 
   // evaluate function in time if specified in line charge conditions
   // TODO allow for functions in space, i.e. varying charge along beam centerline
-  int function_number = chargeconds_[0]->parameters().get<int>("FUNCT");
+  auto function_number = chargeconds_[0]->parameters().get<Core::IO::Noneable<int>>("FUNCT");
 
-  if (function_number != -1)
+  if (function_number.has_value() && function_number.value() > 0)
     q1 *= Global::Problem::instance()
-              ->function_by_id<Core::Utils::FunctionOfTime>(function_number - 1)
+              ->function_by_id<Core::Utils::FunctionOfTime>(function_number.value() - 1)
               .evaluate(time_);
 
-  function_number = chargeconds_[1]->parameters().get<int>("FUNCT");
+  function_number = chargeconds_[1]->parameters().get<Core::IO::Noneable<int>>("FUNCT");
 
-  if (function_number != -1)
+  if (function_number.has_value() and function_number.value() > 0)
     q2 *= Global::Problem::instance()
-              ->function_by_id<Core::Utils::FunctionOfTime>(function_number - 1)
+              ->function_by_id<Core::Utils::FunctionOfTime>(function_number.value() - 1)
               .evaluate(time_);
 
 
@@ -300,38 +301,6 @@ void BeamInteraction::BeamToSpherePotentialPair<numnodes,
     // check cutoff criterion: if specified, contributions are neglected at larger separation
     if (cutoff_radius != -1.0 and Core::FADUtils::cast_to_double(norm_dist) > cutoff_radius)
       continue;
-
-
-    // temporary hacks for cell-ecm interaction
-    //    // get radius of rigid sphere element
-    //    double radius = 4.0;//sphere_element_->Radius();
-    //    double deltaradius = radius/10.0;
-    //    if(
-    //        norm_dist < (radius-2.0*deltaradius)
-    //        or
-    //        norm_dist > (radius +2.0* deltaradius)
-    //        )
-    //    {
-    //      fpot1_.PutScalar(0.0);
-    //      fpot2_.PutScalar(0.0);
-    //      stiffpot1_.PutScalar(0.0);
-    //      stiffpot2_.PutScalar(0.0);;
-    //      return;
-    //    }
-    //    else if (
-    //        norm_dist > ( radius - 2.0 * deltaradius)
-    //        and
-    //        norm_dist < ( radius + 2.0 * deltaradius)
-    //        )
-    //    if( norm_dist < sphere_element_->Radius() )
-    //    {
-    //      dist.Scale( sphere_element_->Radius() / norm_dist );
-    //      norm_dist = Core::FADUtils::vector_norm<3>(dist);
-    //    }
-    //
-    //    if(norm_dist > 0.5)
-    //      dist.Scale(10.0/norm_dist);
-    //    norm_dist = Core::FADUtils::vector_norm<3>(dist);
 
     // auxiliary variables to store pre-calculated common terms
     TYPE norm_dist_exp1 = 0.0;

@@ -11,6 +11,7 @@
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
+#include "4C_io_input_parameter_container.hpp"
 #include "4C_linalg_equilibrate.hpp"
 #include "4C_linalg_krylov_projector.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
@@ -306,8 +307,12 @@ void ScaTra::ScaTraTimIntElch::setup()
             "Found constant-current constant-voltage (CCCV) cell cycling boundary condition, but "
             "no CCCV half-cycle boundary conditions!");
       }
-      if (cccvcyclingcondition.parameters().get<int>("CONDITION_ID_FOR_CHARGE") < 0 or
-          cccvcyclingcondition.parameters().get<int>("CONDITION_ID_FOR_DISCHARGE") < 0)
+      if (!cccvcyclingcondition.parameters()
+              .get<Core::IO::Noneable<int>>("CONDITION_ID_FOR_CHARGE")
+              .has_value() or
+          !cccvcyclingcondition.parameters()
+              .get<Core::IO::Noneable<int>>("CONDITION_ID_FOR_DISCHARGE")
+              .has_value())
       {
         FOUR_C_THROW(
             "Invalid ID of constant-current constant-voltage (CCCV) half-cycle boundary condition "

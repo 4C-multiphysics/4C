@@ -31,6 +31,7 @@
 #include "4C_inpar_wear.hpp"
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
+#include "4C_io_input_parameter_container.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_mortar_utils.hpp"
 
@@ -140,7 +141,9 @@ CONTACT::Manager::Manager(Core::FE::Discretization& discret, double alphaf)
     const int groupid1 = currentgroup[0]->parameters().get<int>("InterfaceID");
 
     // In case of MultiScale contact this is the id of the interface's constitutive contact law
-    int contactconstitutivelawid = currentgroup[0]->parameters().get<int>("ConstitutiveLawID");
+    auto maybe_contactconstitutivelawid =
+        currentgroup[0]->parameters().get<Core::IO::Noneable<int>>("ConstitutiveLawID");
+    auto contactconstitutivelawid = maybe_contactconstitutivelawid.value_or(-1);
 
     bool foundit = false;
 

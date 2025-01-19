@@ -398,9 +398,7 @@ void Immersed::ImmersedBase::evaluate_interpolation_condition(Core::FE::Discreti
   int col = strategy.second_dof_set();
 
   // get the current time
-  bool usetime = true;
   const double time = params.get("total time", -1.0);
-  if (time < 0.0) usetime = false;
 
   params.set<int>("dummy_call", 0);
 
@@ -426,12 +424,12 @@ void Immersed::ImmersedBase::evaluate_interpolation_condition(Core::FE::Discreti
       std::map<int, std::shared_ptr<Core::Elements::Element>>::iterator curr;
 
       // Evaluate Loadcurve if defined. Put current load factor in parameterlist
-      const int curvenum = cond.parameters().get_or<int>("curve", -1);
+      const auto curvenum = cond.parameters().get<Core::IO::Noneable<int>>("curve");
       double curvefac = 1.0;
-      if (curvenum >= 0 && usetime)
+      if (curvenum.has_value() && curvenum.value() > 0 && time >= 0)
       {
         curvefac = Global::Problem::instance()
-                       ->function_by_id<Core::Utils::FunctionOfTime>(curvenum - 1)
+                       ->function_by_id<Core::Utils::FunctionOfTime>(curvenum.value() - 1)
                        .evaluate(time);
       }
 

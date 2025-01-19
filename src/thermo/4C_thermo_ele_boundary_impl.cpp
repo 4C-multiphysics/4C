@@ -145,21 +145,21 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate(const FaceElement* ele,
     // access parameters of the condition
     const std::string* tempstate = &cond->parameters().get<std::string>("temperature_state");
     double coeff = cond->parameters().get<double>("coeff");
-    const int curvenum = cond->parameters().get<int>("funct");
+    const auto curvenum = cond->parameters().get<Core::IO::Noneable<int>>("funct");
     const double time = params.get<double>("total time");
 
     // get surrounding temperature T_infty from input file
     double surtemp = cond->parameters().get<double>("surtemp");
     // increase the surrounding temperature T_infty step by step
     // can be scaled with a time curve, get time curve number from input file
-    const int surtempcurvenum = cond->parameters().get<int>("surtempfunct");
+    const auto surtempcurvenum = cond->parameters().get<Core::IO::Noneable<int>>("surtempfunct");
 
     // find out whether we shall use a time curve for q^_c and get the factor
     double curvefac = 1.0;
-    if (curvenum > 0)
+    if (curvenum.has_value() && curvenum.value() > 0)
     {
       curvefac = Global::Problem::instance()
-                     ->function_by_id<Core::Utils::FunctionOfTime>(curvenum - 1)
+                     ->function_by_id<Core::Utils::FunctionOfTime>(curvenum.value() - 1)
                      .evaluate(time);
     }
     // multiply heat convection coefficient with the timecurve factor
@@ -169,11 +169,12 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate(const FaceElement* ele,
     // enabling for instance a load cycle due to combustion of a fluid
     double surtempcurvefac = 1.0;
     // find out whether we shall use a time curve for T_oo and get the factor
-    if (surtempcurvenum > 0)
+    if (surtempcurvenum.has_value() and surtempcurvenum.value() > 0)
     {
-      surtempcurvefac = Global::Problem::instance()
-                            ->function_by_id<Core::Utils::FunctionOfTime>(surtempcurvenum - 1)
-                            .evaluate(time);
+      surtempcurvefac =
+          Global::Problem::instance()
+              ->function_by_id<Core::Utils::FunctionOfTime>(surtempcurvenum.value() - 1)
+              .evaluate(time);
     }
     // complete surrounding temperatures T_oo: multiply with the timecurve factor
     surtemp *= surtempcurvefac;
@@ -364,21 +365,22 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate(const FaceElement* ele,
         // access parameters of the condition
         const std::string* tempstate = &cond->parameters().get<std::string>("temperature_state");
         double coeff = cond->parameters().get<double>("coeff");
-        const int curvenum = cond->parameters().get<int>("funct");
+        const auto curvenum = cond->parameters().get<Core::IO::Noneable<int>>("funct");
         const double time = params.get<double>("total time");
 
         // get surrounding temperature T_infty from input file
         double surtemp = cond->parameters().get<double>("surtemp");
         // increase the surrounding temperature T_infty step by step
         // can be scaled with a time curve, get time curve number from input file
-        const int surtempcurvenum = cond->parameters().get<int>("surtempfunct");
+        const auto surtempcurvenum =
+            cond->parameters().get<Core::IO::Noneable<int>>("surtempfunct");
 
         // find out whether we shall use a time curve for q^_c and get the factor
         double curvefac = 1.0;
-        if (curvenum > 0)
+        if (curvenum.has_value() && curvenum.value() > 0)
         {
           curvefac = Global::Problem::instance()
-                         ->function_by_id<Core::Utils::FunctionOfTime>(curvenum - 1)
+                         ->function_by_id<Core::Utils::FunctionOfTime>(curvenum.value() - 1)
                          .evaluate(time);
         }
         // multiply heat convection coefficient with the timecurve factor
@@ -388,11 +390,12 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate(const FaceElement* ele,
         // enabling for instance a load cycle due to combustion of a fluid
         double surtempcurvefac = 1.0;
         // find out whether we shall use a time curve for T_oo and get the factor
-        if (surtempcurvenum > 0)
+        if (surtempcurvenum.has_value() && surtempcurvenum.value() > 0)
         {
-          surtempcurvefac = Global::Problem::instance()
-                                ->function_by_id<Core::Utils::FunctionOfTime>(surtempcurvenum - 1)
-                                .evaluate(time);
+          surtempcurvefac =
+              Global::Problem::instance()
+                  ->function_by_id<Core::Utils::FunctionOfTime>(surtempcurvenum.value() - 1)
+                  .evaluate(time);
         }
         // complete surrounding temperatures T_oo: multiply with the timecurve factor
         surtemp *= surtempcurvefac;
