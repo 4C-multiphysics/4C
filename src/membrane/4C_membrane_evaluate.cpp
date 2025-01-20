@@ -526,8 +526,8 @@ int Discret::Elements::Membrane<distype>::evaluate_neumann(Teuchos::ParameterLis
   set_params_interface_ptr(params);
 
   // get values and switches from the condition
-  const auto* onoff = &condition.parameters().get<std::vector<int>>("ONOFF");
-  const auto* val = &condition.parameters().get<std::vector<double>>("VAL");
+  const auto onoff = condition.parameters().get<std::vector<int>>("ONOFF");
+  const auto val = condition.parameters().get<std::vector<double>>("VAL");
 
   // find out whether we will use a time curve
   double time = -1.0;
@@ -538,31 +538,30 @@ int Discret::Elements::Membrane<distype>::evaluate_neumann(Teuchos::ParameterLis
     time = params.get("total time", -1.0);
 
   // ensure that at least as many curves/functs as dofs are available
-  if (int(onoff->size()) < noddof_)
+  if (int(onoff.size()) < noddof_)
     FOUR_C_THROW("Fewer functions or curves defined than the element has dofs.");
 
   // check membrane pressure input
-  for (int checkdof = 1; checkdof < int(onoff->size()); ++checkdof)
-    if ((*onoff)[checkdof] != 0) FOUR_C_THROW("membrane pressure on 1st dof only!");
+  for (int checkdof = 1; checkdof < int(onoff.size()); ++checkdof)
+    if (onoff[checkdof] != 0) FOUR_C_THROW("membrane pressure on 1st dof only!");
 
   // find out whether we will use time curves and get the factors
-  const auto* tmp_funct = &condition.parameters().get<std::vector<int>>("FUNCT");
+  const auto tmp_funct = condition.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
   std::vector<double> functfacs(noddof_, 1.0);
   for (int i = 0; i < noddof_; ++i)
   {
-    const int functnum = (tmp_funct) ? (*tmp_funct)[i] : -1;
-    if (functnum > 0)
+    if (tmp_funct[i].has_value() && tmp_funct[i].value() > 0)
     {
       functfacs[i] = Global::Problem::instance()
-                         ->function_by_id<Core::Utils::FunctionOfTime>(functnum - 1)
+                         ->function_by_id<Core::Utils::FunctionOfTime>(tmp_funct[i].value() - 1)
                          .evaluate(time);
     }
   }
 
   // determine current pressure
   double pressure;
-  if ((*onoff)[0])
-    pressure = (*val)[0] * functfacs[0];
+  if (onoff[0])
+    pressure = val[0] * functfacs[0];
   else
     pressure = 0.0;
 

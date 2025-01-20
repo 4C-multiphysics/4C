@@ -11,6 +11,7 @@
 #include "4C_utils_exceptions.hpp"
 
 #include <iterator>
+#include <optional>
 #include <utility>
 
 FOUR_C_NAMESPACE_OPEN
@@ -339,44 +340,77 @@ namespace Input
   std::shared_ptr<std::stringstream> IntComponent::read(const std::string& section_name,
       std::shared_ptr<std::stringstream> condline, Core::IO::InputParameterContainer& container)
   {
-    // initialize integer parameter value to be read
-    int number = data_.default_value;
-
     // get current position in stringstream "condline"
     std::streampos position = condline->tellg();
 
-    // only try to read integer parameter value in case the associated parameter label appears in
-    // line line of input file
-    if ((size_t)position != condline->str().size())
+    // consider two cases: either the data is noneable or not
+    if (data_.none_allowed)
     {
-      // extract integer vector component as string
-      std::string snumber;
-      *condline >> snumber;
-      if (!optional_ or !snumber.empty())
+      // initialize integer parameter value to be read
+      Core::IO::Noneable<int> noneable_number = data_.default_value;
+
+      // only try to read integer parameter value in case the associated parameter label appears in
+      // line line of input file
+      if ((size_t)position != condline->str().size())
       {
-        // in case 'none' is allowed as an input value
-        if ((data_.none_allowed and snumber == "none"))
+        // extract integer component as string
+        std::string snumber;
+        *condline >> snumber;
+        if (!optional_ or !snumber.empty())
         {
-          number = -1;
+          if (snumber == "none")
+          {
+            noneable_number = Core::IO::none<int>;
+          }
+          else
+          {
+            noneable_number = convert_and_validate_string_to_number<int>(
+                snumber, name(), section_name, 1, optional_);
+          }
         }
-        // all other cases
-        else
+
+        // remove parameter value from stringstream "condline"
+        condline->str(
+            condline->str().erase((size_t)condline->tellg() - snumber.size(), snumber.size()));
+
+        // reset current position in stringstream "condline"
+        condline->seekg(position);
+      }
+
+      // add a nonable int parameter value to line parameter list
+      container.add(name(), noneable_number);
+    }
+    else
+    {
+      // initialize integer parameter value to be read
+      int number = data_.default_value;
+
+      // only try to read integer parameter value in case the associated parameter label appears in
+      // line line of input file
+      if ((size_t)position != condline->str().size())
+      {
+        // extract integer vector component as string
+        std::string snumber;
+        *condline >> snumber;
+
+        // if the value is required or the value is not empty
+        if (!optional_ or !snumber.empty())
         {
           number = convert_and_validate_string_to_number<int>(
               snumber, name(), section_name, 1, optional_);
         }
+
+        // remove parameter value from stringstream "condline"
+        condline->str(
+            condline->str().erase((size_t)condline->tellg() - snumber.size(), snumber.size()));
+
+        // reset current position in stringstream "condline"
+        condline->seekg(position);
       }
 
-      // remove parameter value from stringstream "condline"
-      condline->str(
-          condline->str().erase((size_t)condline->tellg() - snumber.size(), snumber.size()));
-
-      // reset current position in stringstream "condline"
-      condline->seekg(position);
+      // add int parameter value to line parameter list
+      container.add(name(), number);
     }
-
-    // add int parameter value to line parameter list
-    container.add(name(), number);
 
     return condline;
   }
@@ -444,52 +478,95 @@ namespace Input
   {
     const int initialize_value = data_.default_value;
     const int dynamic_length = std::visit(LengthVisitor{container}, length_);
-    // initialize integer parameter vector to be read
-    std::vector<int> nnumbers(dynamic_length, initialize_value);
 
     // get current position in stringstream "condline"
     std::streampos position = condline->tellg();
 
-    // only try to read integer parameter vector in case the associated parameter label appears in
-    // line line of input file
-    if ((size_t)position != condline->str().size())
+    if (data_.none_allowed)
     {
-      // extract integer parameter vector from stringstream "condline"
-      for (auto& current_number : nnumbers)
+      // initialize integer parameter vector to be read
+      std::vector<Core::IO::Noneable<int>> nnumbers(dynamic_length, initialize_value);
+
+      // only try to read integer parameter vector in case the associated parameter label appears in
+      // line line of input file
+      if ((size_t)position != condline->str().size())
       {
-        // extract integer vector component as string
-        std::string snumber;
-        *condline >> snumber;
-
-        // in case 'none' is allowed as an input value
-        if (data_.none_allowed and snumber == "none")
+        // extract integer parameter vector from stringstream "condline"
+        for (auto& current_number : nnumbers)
         {
-          current_number = -1;
-        }
-        // in case the parameter is optional and no value is given
-        else if (optional_ and snumber.empty())
-        {
-          break;
-        }
-        // all other cases
-        else
-        {
-          current_number = convert_and_validate_string_to_number<int>(
-              snumber, name(), section_name, dynamic_length, optional_);
-        }
+          // extract integer vector component as string
+          std::string snumber;
+          *condline >> snumber;
 
-        // remove parameter value from stringstream "condline"
-        condline->str(
-            condline->str().erase((size_t)condline->tellg() - snumber.size(), snumber.size()));
+          // if the input is none
+          if (snumber == "none")
+          {
+            current_number = Core::IO::none<int>;
+          }
+          // in case the parameter is optional and no value is given
+          else if (optional_ and snumber.empty())
+          {
+            break;
+          }
+          // all other cases
+          else
+          {
+            current_number = convert_and_validate_string_to_number<int>(
+                snumber, name(), section_name, dynamic_length, optional_);
+          }
 
-        // reset current position in stringstream "condline"
-        condline->seekg(position);
+          // remove parameter value from stringstream "condline"
+          condline->str(
+              condline->str().erase((size_t)condline->tellg() - snumber.size(), snumber.size()));
+
+          // reset current position in stringstream "condline"
+          condline->seekg(position);
+        }
       }
+
+      // add Noneable int parameter vector to line parameter list
+      container.add(name(), nnumbers);
     }
+    else
+    {
+      // initialize integer parameter vector to be read
+      std::vector<int> nnumbers(dynamic_length, initialize_value);
 
-    // add int parameter vector to line parameter list
-    container.add(name(), nnumbers);
+      // only try to read integer parameter vector in case the associated parameter label appears in
+      // line line of input file
+      if ((size_t)position != condline->str().size())
+      {
+        // extract integer parameter vector from stringstream "condline"
+        for (auto& current_number : nnumbers)
+        {
+          // extract integer vector component as string
+          std::string snumber;
+          *condline >> snumber;
 
+          // in case the parameter is optional and no value is given
+          if (optional_ and snumber.empty())
+          {
+            break;
+          }
+          // all other cases
+          else
+          {
+            current_number = convert_and_validate_string_to_number<int>(
+                snumber, name(), section_name, dynamic_length, optional_);
+          }
+
+          // remove parameter value from stringstream "condline"
+          condline->str(
+              condline->str().erase((size_t)condline->tellg() - snumber.size(), snumber.size()));
+
+          // reset current position in stringstream "condline"
+          condline->seekg(position);
+        }
+      }
+
+      // add int parameter vector to line parameter list
+      container.add(name(), nnumbers);
+    }
     return condline;
   }
 

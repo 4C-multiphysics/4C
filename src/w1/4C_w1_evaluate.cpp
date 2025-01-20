@@ -583,9 +583,9 @@ int Discret::Elements::Wall1::evaluate_neumann(Teuchos::ParameterList& params,
 {
   set_params_interface_ptr(params);
   // get values and switches from the condition
-  const auto* onoff = &condition.parameters().get<std::vector<int>>("ONOFF");
-  const auto* val = &condition.parameters().get<std::vector<double>>("VAL");
-  const auto* funct = &condition.parameters().get<std::vector<int>>("FUNCT");
+  const auto onoff = condition.parameters().get<std::vector<int>>("ONOFF");
+  const auto val = condition.parameters().get<std::vector<double>>("VAL");
+  const auto funct = condition.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
   // check total time
   double time = -1.0;
@@ -595,7 +595,7 @@ int Discret::Elements::Wall1::evaluate_neumann(Teuchos::ParameterList& params,
     time = params.get("total time", -1.0);
 
   // ensure that at least as many curves/functs as dofs are available
-  if (int(onoff->size()) < noddof_)
+  if (int(onoff.size()) < noddof_)
     FOUR_C_THROW("Fewer functions or curves defined than the element has dofs.");
 
   // no. of nodes on this surface
@@ -688,9 +688,8 @@ int Discret::Elements::Wall1::evaluate_neumann(Teuchos::ParameterList& params,
     for (int i = 0; i < noddof_; ++i)
     {
       // factor given by spatial function
-      const int functnum = (funct) ? (*funct)[i] : -1;
       double functfac = 1.0;
-      if (functnum > 0)
+      if (funct[i].has_value() && funct[i].value() > 0)
       {
         // calculate reference position of GP
         Core::LinAlg::SerialDenseMatrix gp_coord(1, numdim_);
@@ -705,11 +704,11 @@ int Discret::Elements::Wall1::evaluate_neumann(Teuchos::ParameterList& params,
 
         // evaluate function at current gauss point
         functfac = Global::Problem::instance()
-                       ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
+                       ->function_by_id<Core::Utils::FunctionOfSpaceTime>(funct[i].value() - 1)
                        .evaluate(coordgpref, time, i);
       }
 
-      ar[i] = fac * (*onoff)[i] * (*val)[i] * functfac;
+      ar[i] = fac * onoff[i] * val[i] * functfac;
     }
 
     // add load components

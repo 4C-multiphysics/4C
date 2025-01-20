@@ -145,21 +145,21 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate(const FaceElement* ele,
     // access parameters of the condition
     const std::string* tempstate = &cond->parameters().get<std::string>("temperature_state");
     double coeff = cond->parameters().get<double>("coeff");
-    const int curvenum = cond->parameters().get<int>("funct");
+    const auto curvenum = cond->parameters().get<Core::IO::Noneable<int>>("funct");
     const double time = params.get<double>("total time");
 
     // get surrounding temperature T_infty from input file
     double surtemp = cond->parameters().get<double>("surtemp");
     // increase the surrounding temperature T_infty step by step
     // can be scaled with a time curve, get time curve number from input file
-    const int surtempcurvenum = cond->parameters().get<int>("surtempfunct");
+    const auto surtempcurvenum = cond->parameters().get<Core::IO::Noneable<int>>("surtempfunct");
 
     // find out whether we shall use a time curve for q^_c and get the factor
     double curvefac = 1.0;
-    if (curvenum > 0)
+    if (curvenum.has_value() && curvenum.value() > 0)
     {
       curvefac = Global::Problem::instance()
-                     ->function_by_id<Core::Utils::FunctionOfTime>(curvenum - 1)
+                     ->function_by_id<Core::Utils::FunctionOfTime>(curvenum.value() - 1)
                      .evaluate(time);
     }
     // multiply heat convection coefficient with the timecurve factor
@@ -169,11 +169,12 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate(const FaceElement* ele,
     // enabling for instance a load cycle due to combustion of a fluid
     double surtempcurvefac = 1.0;
     // find out whether we shall use a time curve for T_oo and get the factor
-    if (surtempcurvenum > 0)
+    if (surtempcurvenum.has_value() and surtempcurvenum.value() > 0)
     {
-      surtempcurvefac = Global::Problem::instance()
-                            ->function_by_id<Core::Utils::FunctionOfTime>(surtempcurvenum - 1)
-                            .evaluate(time);
+      surtempcurvefac =
+          Global::Problem::instance()
+              ->function_by_id<Core::Utils::FunctionOfTime>(surtempcurvenum.value() - 1)
+              .evaluate(time);
     }
     // complete surrounding temperatures T_oo: multiply with the timecurve factor
     surtemp *= surtempcurvefac;
@@ -364,21 +365,22 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate(const FaceElement* ele,
         // access parameters of the condition
         const std::string* tempstate = &cond->parameters().get<std::string>("temperature_state");
         double coeff = cond->parameters().get<double>("coeff");
-        const int curvenum = cond->parameters().get<int>("funct");
+        const auto curvenum = cond->parameters().get<Core::IO::Noneable<int>>("funct");
         const double time = params.get<double>("total time");
 
         // get surrounding temperature T_infty from input file
         double surtemp = cond->parameters().get<double>("surtemp");
         // increase the surrounding temperature T_infty step by step
         // can be scaled with a time curve, get time curve number from input file
-        const int surtempcurvenum = cond->parameters().get<int>("surtempfunct");
+        const auto surtempcurvenum =
+            cond->parameters().get<Core::IO::Noneable<int>>("surtempfunct");
 
         // find out whether we shall use a time curve for q^_c and get the factor
         double curvefac = 1.0;
-        if (curvenum > 0)
+        if (curvenum.has_value() && curvenum.value() > 0)
         {
           curvefac = Global::Problem::instance()
-                         ->function_by_id<Core::Utils::FunctionOfTime>(curvenum - 1)
+                         ->function_by_id<Core::Utils::FunctionOfTime>(curvenum.value() - 1)
                          .evaluate(time);
         }
         // multiply heat convection coefficient with the timecurve factor
@@ -388,11 +390,12 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate(const FaceElement* ele,
         // enabling for instance a load cycle due to combustion of a fluid
         double surtempcurvefac = 1.0;
         // find out whether we shall use a time curve for T_oo and get the factor
-        if (surtempcurvenum > 0)
+        if (surtempcurvenum.has_value() && surtempcurvenum.value() > 0)
         {
-          surtempcurvefac = Global::Problem::instance()
-                                ->function_by_id<Core::Utils::FunctionOfTime>(surtempcurvenum - 1)
-                                .evaluate(time);
+          surtempcurvefac =
+              Global::Problem::instance()
+                  ->function_by_id<Core::Utils::FunctionOfTime>(surtempcurvenum.value() - 1)
+                  .evaluate(time);
         }
         // complete surrounding temperatures T_oo: multiply with the timecurve factor
         surtemp *= surtempcurvefac;
@@ -548,9 +551,9 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate_neumann(const Core::Elements::
 
   // get values, switches and spatial functions from the condition
   // (assumed to be constant on element boundary)
-  const auto* onoff = &condition.parameters().get<std::vector<int>>("ONOFF");
-  const auto* val = &condition.parameters().get<std::vector<double>>("VAL");
-  const auto* func = &condition.parameters().get<std::vector<int>>("FUNCT");
+  const auto onoff = condition.parameters().get<std::vector<int>>("ONOFF");
+  const auto val = condition.parameters().get<std::vector<double>>("VAL");
+  const auto func = condition.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
   // integration loop
   for (int iquad = 0; iquad < intpoints.ip().nquad; ++iquad)
@@ -566,30 +569,26 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate_neumann(const Core::Elements::
     Core::LinAlg::Matrix<nsd_vol_ele, 1> coordgp;  // coordinate has always to be given in 3D!
     coordgp.multiply_nn(xyze_, funct_);
 
-    int functnum = -1;
     const double* coordgpref = &coordgp(0);
 
     for (int dof = 0; dof < numdofpernode_; dof++)
     {
-      if ((*onoff)[dof])  // is this dof activated?
+      if (onoff[dof])  // is this dof activated?
       {
         // factor given by spatial function
-        if (func) functnum = (*func)[dof];
+        if (func[dof].has_value() && func[dof].value() > 0)
         {
-          if (functnum > 0)
-          {
-            // evaluate function at current gauss point
-            functfac = Global::Problem::instance()
-                           ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                           .evaluate(coordgpref, time, dof);
-          }
-          else
-            functfac = 1.0;
+          // evaluate function at current gauss point
+          functfac = Global::Problem::instance()
+                         ->function_by_id<Core::Utils::FunctionOfSpaceTime>(func[dof].value() - 1)
+                         .evaluate(coordgpref, time, dof);
         }
+        else
+          functfac = 1.0;
 
         // q * detJ * w(gp) * spatial_fac * timecurve_fac
         // val = q; fac_ = detJ * w(gp) * timecurve; funcfac =  spatial_fac
-        const double val_fac_funct_curve_fac = (*val)[dof] * fac_ * functfac;
+        const double val_fac_funct_curve_fac = val[dof] * fac_ * functfac;
 
         for (int node = 0; node < nen_; ++node)
         {
@@ -597,7 +596,7 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate_neumann(const Core::Elements::
           // with scalar-valued q
           elevec1[node * numdofpernode_ + dof] += funct_(node) * val_fac_funct_curve_fac;
         }
-      }  // if ((*onoff)[dof])
+      }  // if (onoff[dof])
     }
   }  // end of loop over integration points
 

@@ -2102,15 +2102,15 @@ int Discret::Elements::Beam3k::evaluate_neumann(Teuchos::ParameterList& params,
   // get values and switches from the condition:
   // onoff is related to the first 6 flags of a line Neumann condition in the input file;
   // value 1 for flag i says that condition is active for i-th degree of freedom
-  const auto* onoff = &condition.parameters().get<std::vector<int>>("ONOFF");
+  const auto onoff = condition.parameters().get<std::vector<int>>("ONOFF");
 
   // val is related to the 6 "VAL" fields after the onoff flags of the Neumann condition
   // in the input file; val gives the values of the force as a multiple of the prescribed load curve
-  const auto* val = &condition.parameters().get<std::vector<double>>("VAL");
+  const auto val = condition.parameters().get<std::vector<double>>("VAL");
 
   // compute the load vector based on value, scaling factor and whether condition is active
   Core::LinAlg::Matrix<6, 1, double> load_vector_neumann(true);
-  for (unsigned int i = 0; i < 6; ++i) load_vector_neumann(i) = (*onoff)[i] * (*val)[i];
+  for (unsigned int i = 0; i < 6; ++i) load_vector_neumann(i) = onoff[i] * val[i];
 
   /***********************************************************************************************/
 
@@ -2118,19 +2118,16 @@ int Discret::Elements::Beam3k::evaluate_neumann(Teuchos::ParameterList& params,
   if (condition.type() == Core::Conditions::PointNeumannEB)
   {
     // find out whether we will use a time curve and get the factor
-    const auto* funct = &condition.parameters().get<std::vector<int>>("FUNCT");
+    const auto funct = condition.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
     // amplitude of load curve at current time called
     std::vector<double> functtimefac(6, 1.0);
 
     for (unsigned int i = 0; i < 6; ++i)
     {
-      int functnum = -1;
       // number of the load curve related with a specific line Neumann condition called
-      if (funct) functnum = (*funct)[i];
-
-      if (functnum > 0)
+      if (funct[i].has_value() && funct[i].value() > 0)
         functtimefac[i] = Global::Problem::instance()
-                              ->function_by_id<Core::Utils::FunctionOfTime>(functnum - 1)
+                              ->function_by_id<Core::Utils::FunctionOfTime>(funct[i].value() - 1)
                               .evaluate(time);
 
       load_vector_neumann(i) *= functtimefac[i];
@@ -2165,20 +2162,17 @@ int Discret::Elements::Beam3k::evaluate_neumann(Teuchos::ParameterList& params,
   {
     // funct is related to the 6 "FUNCT" fields after the val field of the Neumann condition
     // in the input file; funct gives the number of the function defined in the section FUNCT
-    const auto* function_numbers = &condition.parameters().get<std::vector<int>>("FUNCT");
+    const auto function_numbers =
+        condition.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
     // Check if distributed moment load is applied and throw error
-    if (function_numbers != nullptr)
+    for (unsigned int idof = 3; idof < 6; ++idof)
     {
-      for (unsigned int idof = 3; idof < 6; ++idof)
-      {
-        if ((*function_numbers)[idof] > 0)
-          FOUR_C_THROW(
-              "Line Neumann conditions for distributed moments are not implemented for beam3k"
-              " so far! Only the function flag 1, 2 and 3 can be set!");
-      }
+      if (function_numbers[idof].has_value() && function_numbers[idof].value() > 0)
+        FOUR_C_THROW(
+            "Line Neumann conditions for distributed moments are not implemented for beam3k"
+            " so far! Only the function flag 1, 2 and 3 can be set!");
     }
-
 
     evaluate_line_neumann<nnodecl>(
         elevec1, elemat1, disp_totlag, load_vector_neumann, function_numbers, time);
@@ -2447,7 +2441,7 @@ void Discret::Elements::Beam3k::evaluate_line_neumann(Core::LinAlg::SerialDenseV
     Core::LinAlg::SerialDenseMatrix* stiffmat,
     const Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS, 1, double>& disp_totlag,
     const Core::LinAlg::Matrix<6, 1, double>& load_vector_neumann,
-    const std::vector<int>* function_numbers, double time) const
+    const std::vector<Core::IO::Noneable<int>>& function_numbers, double time) const
 {
   if (not use_fad_)
   {
@@ -2537,7 +2531,7 @@ template <unsigned int nnodecl, typename T>
 void Discret::Elements::Beam3k::evaluate_line_neumann_forces(
     Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS, 1, T>& force_ext,
     const Core::LinAlg::Matrix<6, 1, double>& load_vector_neumann,
-    const std::vector<int>* function_numbers, double time) const
+    const std::vector<Core::IO::Noneable<int>>& function_numbers, double time) const
 {
   std::vector<Core::LinAlg::Matrix<3, 3>> Gref(2);
 
@@ -2588,12 +2582,12 @@ void Discret::Elements::Beam3k::evaluate_line_neumann_forces(
     // sum up load components
     for (unsigned int idof = 0; idof < 3; ++idof)
     {
-      if (function_numbers != nullptr and (*function_numbers)[idof] > 0)
+      if (function_numbers[idof].has_value() && function_numbers[idof].value() > 0)
       {
-        functionfac =
-            Global::Problem::instance()
-                ->function_by_id<Core::Utils::FunctionOfSpaceTime>((*function_numbers)[idof] - 1)
-                .evaluate(X_ref.data(), time, idof);
+        functionfac = Global::Problem::instance()
+                          ->function_by_id<Core::Utils::FunctionOfSpaceTime>(
+                              function_numbers[idof].value() - 1)
+                          .evaluate(X_ref.data(), time, idof);
       }
       else
         functionfac = 1.0;
@@ -3942,14 +3936,17 @@ Discret::Elements::Beam3k::evaluate_stiff_matrix_analytic_from_point_neumann_mom
 template void Discret::Elements::Beam3k::evaluate_line_neumann<2>(Core::LinAlg::SerialDenseVector&,
     Core::LinAlg::SerialDenseMatrix*,
     const Core::LinAlg::Matrix<6 * 2 + BEAM3K_COLLOCATION_POINTS, 1, double>&,
-    const Core::LinAlg::Matrix<6, 1, double>&, const std::vector<int>*, double) const;
+    const Core::LinAlg::Matrix<6, 1, double>&, const std::vector<Core::IO::Noneable<int>>&,
+    double) const;
 
 template void Discret::Elements::Beam3k::evaluate_line_neumann_forces<2, double>(
     Core::LinAlg::Matrix<6 * 2 + BEAM3K_COLLOCATION_POINTS, 1, double>&,
-    const Core::LinAlg::Matrix<6, 1, double>&, const std::vector<int>*, double) const;
+    const Core::LinAlg::Matrix<6, 1, double>&, const std::vector<Core::IO::Noneable<int>>&,
+    double) const;
 template void Discret::Elements::Beam3k::evaluate_line_neumann_forces<2, FAD>(
     Core::LinAlg::Matrix<6 * 2 + BEAM3K_COLLOCATION_POINTS, 1, FAD>&,
-    const Core::LinAlg::Matrix<6, 1, double>&, const std::vector<int>*, double) const;
+    const Core::LinAlg::Matrix<6, 1, double>&, const std::vector<Core::IO::Noneable<int>>&,
+    double) const;
 
 template void Discret::Elements::Beam3k::evaluate_translational_damping<double, 2, 2, 3>(
     Teuchos::ParameterList&, const Core::LinAlg::Matrix<3 * 2 * 2, 1, double>&,

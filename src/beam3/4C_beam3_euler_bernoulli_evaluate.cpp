@@ -271,17 +271,17 @@ int Discret::Elements::Beam3eb::evaluate_neumann(Teuchos::ParameterList& params,
     time = params.get("total time", -1.0);
 
   // find out whether we will use a time curve and get the factor
-  const auto* tmp_funct = &condition.parameters().get<std::vector<int>>("FUNCT");
+  const auto tmp_funct = condition.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
   // get values and switches from the condition
   // "ONOFF" is related to the first 6 flags of a line Neumann condition in the input file;
   // value 1 for flag i says that condition is active for i-th degree of freedom
-  const auto* onoff = &condition.parameters().get<std::vector<int>>("ONOFF");
+  const auto onoff = condition.parameters().get<std::vector<int>>("ONOFF");
 
   // val is related to the 6 "VAL" fields after the "ONOFF" flags of the Neumann condition
   // in the input file; "VAL" gives the values of the force as a multiple of the prescribed load
   // curve
-  const auto* val = &condition.parameters().get<std::vector<double>>("VAL");
+  const auto val = condition.parameters().get<std::vector<double>>("VAL");
 
 #ifndef BEAM3EBDISCRETELINENEUMANN
 // funct is related to the 6 "FUNCT" fields after the val field of the Neumann condition
@@ -312,14 +312,11 @@ int Discret::Elements::Beam3eb::evaluate_neumann(Teuchos::ParameterList& params,
 
     for (int i = 0; i < 6; ++i)
     {
-      if ((*onoff)[i] == 0) continue;
-      int functnum = -1;
+      if (onoff[i] == 0) continue;
       // number of the load curve related with a specific line Neumann condition called
-      if (tmp_funct) functnum = (*tmp_funct)[i];
-
-      if (functnum >= 0)
+      if (tmp_funct[i].has_value() && tmp_funct[i].value() > 0)
         functfac[i] = Global::Problem::instance()
-                          ->function_by_id<Core::Utils::FunctionOfTime>(functnum - 1)
+                          ->function_by_id<Core::Utils::FunctionOfTime>(tmp_funct[i].value() - 1)
                           .evaluate(time);
     }
 
@@ -327,7 +324,7 @@ int Discret::Elements::Beam3eb::evaluate_neumann(Teuchos::ParameterList& params,
     // multiplied by (-1) in 4C
     for (int i = 0; i < 3; i++)
     {
-      elevec1(insert * dofpn + i) += (*onoff)[i] * (*val)[i] * functfac[i];
+      elevec1(insert * dofpn + i) += onoff[i] * val[i] * functfac[i];
     }
 
     // matrix for current tangent, moment at node and crossproduct
@@ -347,7 +344,7 @@ int Discret::Elements::Beam3eb::evaluate_neumann(Teuchos::ParameterList& params,
     {
       // get current tangent at nodes
       tangent(dof - 3) = Tref_[insert](dof - 3) + mydisp[insert * dofpn + dof];
-      moment(dof - 3) = (*onoff)[dof] * (*val)[dof] * functfac[dof];
+      moment(dof - 3) = onoff[dof] * val[dof] * functfac[dof];
     }
 
     double abs_tangent = 0.0;
@@ -416,7 +413,7 @@ int Discret::Elements::Beam3eb::evaluate_neumann(Teuchos::ParameterList& params,
     // Check if MOMENT line Neumann conditions are applied accidentally and throw error
     for (int dof = 3; dof < 6; ++dof)
     {
-      if (tmp_funct and (*tmp_funct)[dof] > 0)
+      if (tmp_funct[dof].has_value() and tmp_funct[dof].value() > 0)
         FOUR_C_THROW(
             "Line Neumann conditions for distributed moments are not implemented for beam3eb so "
             "far! Only the function first three function flags (i.e. related to forces) can be "
@@ -492,24 +489,19 @@ int Discret::Elements::Beam3eb::evaluate_neumann(Teuchos::ParameterList& params,
       double ar[6];
 
       // loop the dofs of a node
-      for (int dof = 0; dof < 6; ++dof) ar[dof] = fac * (*onoff)[dof] * (*val)[dof];
+      for (int dof = 0; dof < 6; ++dof) ar[dof] = fac * onoff[dof] * val[dof];
 
       // sum up load components
       double functionfac = 1.0;
-      int functnum = -1;
       for (int dof = 0; dof < 3; ++dof)
       {
-        if (tmp_funct)
-          functnum = (*tmp_funct)[dof];
-        else
-          functnum = -1;
-
-        if (functnum > 0)
+        if (tmp_funct[dof].has_value() && tmp_funct[dof].value() > 0)
         {
           // evaluate function at the position of the current node       --> dof here correct?
-          functionfac = Global::Problem::instance()
-                            ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                            .evaluate(X_ref.data(), time, dof);
+          functionfac =
+              Global::Problem::instance()
+                  ->function_by_id<Core::Utils::FunctionOfSpaceTime>(tmp_funct[dof].value() - 1)
+                  .evaluate(X_ref.data(), time, dof);
         }
         else
           functionfac = 1.0;
@@ -556,7 +548,7 @@ int Discret::Elements::Beam3eb::evaluate_neumann(Teuchos::ParameterList& params,
       double ar[6];
 
       // loop the dofs of a node
-      for (int dof = 0; dof < 6; ++dof) ar[dof] = (*onoff)[dof] * (*val)[dof] * curvefac[dof];
+      for (int dof = 0; dof < 6; ++dof) ar[dof] = onoff[dof] * val[dof] * curvefac[dof];
 
       for (int dof = 0; dof < 3; ++dof)
       {

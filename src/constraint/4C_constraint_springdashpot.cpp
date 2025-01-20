@@ -36,7 +36,7 @@ CONSTRAINTS::SpringDashpot::SpringDashpot(std::shared_ptr<Core::FE::Discretizati
       stiff_comp_((spring_->parameters().get<std::vector<double>>("STIFF"))[0]),
       offset_((spring_->parameters().get<std::vector<double>>("DISPLOFFSET"))[0]),
       viscosity_((spring_->parameters().get<std::vector<double>>("VISCO"))[0]),
-      coupling_(spring_->parameters().get<int>("COUPLING")),
+      coupling_(spring_->parameters().get<Core::IO::Noneable<int>>("COUPLING").value_or(-1)),
       nodes_(spring_->get_nodes()),
       area_(),
       gap0_(),
@@ -115,7 +115,7 @@ void CONSTRAINTS::SpringDashpot::evaluate_robin(std::shared_ptr<Core::LinAlg::Sp
   actdisc_->set_state("offset_prestress", offset_prestr_new_);
 
   // get values and switches from the condition
-  const auto* onoff = &spring_->parameters().get<std::vector<int>>("ONOFF");
+  const auto onoff = spring_->parameters().get<std::vector<int>>("ONOFF");
   const auto* springstiff = &spring_->parameters().get<std::vector<double>>("STIFF");
   const auto* numfuncstiff = &spring_->parameters().get<std::vector<int>>("TIMEFUNCTSTIFF");
   const auto* dashpotvisc = &spring_->parameters().get<std::vector<double>>("VISCO");
@@ -227,9 +227,9 @@ void CONSTRAINTS::SpringDashpot::evaluate_robin(std::shared_ptr<Core::LinAlg::Sp
         // get cross section for integration of this element
         const double cross_section = truss_ele->cross_section();
 
-        for (size_t dof = 0; dof < onoff->size(); ++dof)
+        for (size_t dof = 0; dof < onoff.size(); ++dof)
         {
-          const int dof_onoff = (*onoff)[dof];
+          const int dof_onoff = onoff[dof];
           if (dof_onoff == 0) continue;
 
           const int dof_gid = dofs_gid[dof];

@@ -569,7 +569,7 @@ void Inpar::XFEM::set_valid_conditions(
       Teuchos::tuple<int>(Inpar::XFEM::Proj_normal, Inpar::XFEM::Proj_smoothed,
           Inpar::XFEM::Proj_normal_smoothed_comb, Inpar::XFEM::Proj_normal_phi),
       true);
-  add_named_int(xfem_levelset_navier_slip, "L2_PROJECTION_SOLVER", "", 0, false, true);
+  add_named_int(xfem_levelset_navier_slip, "L2_PROJECTION_SOLVER", "", 0, false, false);
   add_named_int(xfem_levelset_navier_slip, "ROBIN_DIRICHLET_ID", "", 0, false, true);
   add_named_int(xfem_levelset_navier_slip, "ROBIN_NEUMANN_ID", "", 0, false, true);
   add_named_real(xfem_levelset_navier_slip, "SLIPCOEFFICIENT");

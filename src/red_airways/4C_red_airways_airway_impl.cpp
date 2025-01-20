@@ -12,6 +12,7 @@
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
 #include "4C_global_data.hpp"
+#include "4C_io_input_parameter_container.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_mat_newtonianfluid.hpp"
 #include "4C_mat_par_bundle.hpp"
@@ -81,7 +82,8 @@ namespace
       std::string Bc = (condition->parameters().get<std::string>(optionName));
       if (Bc == condType)
       {
-        const auto* curve = condition->parameters().get_if<std::vector<int>>("curve");
+        const auto curve =
+            condition->parameters().get<std::vector<Core::IO::Noneable<int>>>("curve");
         double curvefac = 1.0;
         const auto vals = condition->parameters().get<std::vector<double>>("VAL");
 
@@ -90,11 +92,9 @@ namespace
         //  Val = curve1*val1 + curve2*func
         // -----------------------------------------------------------------
         // get curve1 and val1
-        int curvenum = -1;
-        if (curve) curvenum = (*curve)[0];
-        if (curvenum > 0)
+        if (curve[0].has_value() && curve[0].value() > 0)
           curvefac = Global::Problem::instance()
-                         ->function_by_id<Core::Utils::FunctionOfTime>(curvenum - 1)
+                         ->function_by_id<Core::Utils::FunctionOfTime>(curve[0].value() - 1)
                          .evaluate(time);
 
         bcVal = vals[0] * curvefac;
@@ -109,12 +109,10 @@ namespace
                             .evaluate(node->x().data(), time, 0);
         }
         // get curve2
-        int curve2num = -1;
         double curve2fac = 1.0;
-        if (curve) curve2num = (*curve)[1];
-        if (curve2num > 0)
+        if (curve[1].has_value() && curve[1].value() > 0)
           curve2fac = Global::Problem::instance()
-                          ->function_by_id<Core::Utils::FunctionOfTime>(curve2num - 1)
+                          ->function_by_id<Core::Utils::FunctionOfTime>(curve[1].value() - 1)
                           .evaluate(time);
 
         bcVal += functionfac * curve2fac;
@@ -954,22 +952,17 @@ void Discret::Elements::AirwayImpl<distype>::evaluate_terminal_bc(RedAirway* ele
             // Read in the value of the applied BC
             //  Val = curve1*val1 + curve2*func
             // -----------------------------------------------------------------
-            const auto* curve = condition->parameters().get_if<std::vector<int>>("curve");
+            const auto curve =
+                condition->parameters().get<std::vector<Core::IO::Noneable<int>>>("curve");
             const auto vals = condition->parameters().get<std::vector<double>>("VAL");
 
             // get factor of curve1 or curve2
             const auto curvefac = [&](unsigned id)
             {
-              int curvenum = -1;
-              if (curve)
-              {
-                if ((curvenum = (*curve)[id]) > 0)
-                  return Global::Problem::instance()
-                      ->function_by_id<Core::Utils::FunctionOfTime>(curvenum - 1)
-                      .evaluate(time);
-                else
-                  return 1.0;
-              }
+              if (curve[id].has_value() && curve[id].value() > 0)
+                return Global::Problem::instance()
+                    ->function_by_id<Core::Utils::FunctionOfTime>(curve[id].value() - 1)
+                    .evaluate(time);
               else
                 return 1.0;
             };
@@ -978,16 +971,13 @@ void Discret::Elements::AirwayImpl<distype>::evaluate_terminal_bc(RedAirway* ele
             const double functfac = std::invoke(
                 [&]()
                 {
-                  int functnum = -1;
-                  const std::vector<int>* functions =
-                      condition->parameters().get_if<std::vector<int>>("funct");
-                  if (functions)
-                    if ((functnum = (*functions)[0]) > 0)
-                      return Global::Problem::instance()
-                          ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                          .evaluate((ele->nodes()[i])->x().data(), time, 0);
-                    else
-                      return 0.0;
+                  const auto functions =
+                      condition->parameters().get<std::vector<Core::IO::Noneable<int>>>("funct");
+
+                  if (functions[0].has_value() && functions[0].value() > 0)
+                    return Global::Problem::instance()
+                        ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functions[0].value() - 1)
+                        .evaluate((ele->nodes()[i])->x().data(), time, 0);
                   else
                     return 0.0;
                 });

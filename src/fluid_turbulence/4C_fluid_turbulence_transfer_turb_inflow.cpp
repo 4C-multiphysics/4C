@@ -12,6 +12,7 @@
 #include "4C_fem_general_node.hpp"
 #include "4C_fem_geometric_search_matchingoctree.hpp"
 #include "4C_global_data.hpp"
+#include "4C_io_input_parameter_container.hpp"
 #include "4C_utils_function_of_time.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -338,10 +339,10 @@ void FLD::TransferTurbulentInflowCondition::get_data(
   // find out whether we will use a time curve
   if (curve_ == -1)
   {
-    const auto curve = cond->parameters().get<int>("curve");
+    const auto curve = cond->parameters().get<Core::IO::Noneable<int>>("curve");
 
     // set zero based curve number
-    curve_ = curve - 1;
+    curve_ = curve.value_or(-1) - 1;
   }
 }
 

@@ -266,7 +266,7 @@ void ScaTra::ScaTraTimIntElchOST::compute_time_deriv_pot0(const bool init)
   for (int icond = 0; icond < numcond; icond++)
   {
     auto pot0np = cond[icond]->parameters().get<double>("POT");
-    const auto functnum = cond[icond]->parameters().get<int>("FUNCT");
+    const auto functnum = cond[icond]->parameters().get<Core::IO::Noneable<int>>("FUNCT");
     auto dlcap = cond[icond]->parameters().get<double>("DL_SPEC_CAP");
 
     if (init)
@@ -283,11 +283,12 @@ void ScaTra::ScaTraTimIntElchOST::compute_time_deriv_pot0(const bool init)
     else
     {
       // compute time derivative of applied potential
-      if (functnum > 0)
+      if (functnum.has_value() && functnum.value() > 0)
       {
         // function_by_id takes a zero-based index
         const double functfac =
-            problem_->function_by_id<Core::Utils::FunctionOfTime>(functnum - 1).evaluate(time_);
+            problem_->function_by_id<Core::Utils::FunctionOfTime>(functnum.value() - 1)
+                .evaluate(time_);
 
         // adjust potential at metal side accordingly
         pot0np *= functfac;
@@ -827,7 +828,7 @@ void ScaTra::ScaTraTimIntElchGenAlpha::compute_time_deriv_pot0(const bool init)
   for (int icond = 0; icond < numcond; icond++)
   {
     double pot0np = cond[icond]->parameters().get<double>("POT");
-    const int functnum = cond[icond]->parameters().get<int>("FUNCT");
+    const auto functnum = cond[icond]->parameters().get<Core::IO::Noneable<int>>("FUNCT");
     double dlcap = cond[icond]->parameters().get<double>("DL_SPEC_CAP");
 
     if (init)
@@ -853,11 +854,12 @@ void ScaTra::ScaTraTimIntElchGenAlpha::compute_time_deriv_pot0(const bool init)
     {
       // these values are not used without double layer charging
       // compute time derivative of applied potential
-      if (functnum > 0)
+      if (functnum.has_value() && functnum.value() > 0)
       {
         // function_by_id takes a zero-based index
         const double functfac =
-            problem_->function_by_id<Core::Utils::FunctionOfTime>(functnum - 1).evaluate(time_);
+            problem_->function_by_id<Core::Utils::FunctionOfTime>(functnum.value() - 1)
+                .evaluate(time_);
         // adjust potential at metal side accordingly
 
         pot0np *= functfac;

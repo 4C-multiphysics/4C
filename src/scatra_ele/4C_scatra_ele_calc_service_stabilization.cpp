@@ -962,31 +962,22 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::calc_subgr_velocity(
     const std::string* condtype = &myfluidneumcond[0]->parameters().get<std::string>("TYPE");
 
     // get values and switches from the condition
-    const std::vector<int>* onoff =
-        &myfluidneumcond[0]->parameters().get<std::vector<int>>("ONOFF");
-    const std::vector<double>* val =
-        &myfluidneumcond[0]->parameters().get<std::vector<double>>("VAL");
-    const std::vector<int>* funct =
-        &myfluidneumcond[0]->parameters().get<std::vector<int>>("FUNCT");
+    const auto onoff = myfluidneumcond[0]->parameters().get<std::vector<int>>("ONOFF");
+    const auto val = myfluidneumcond[0]->parameters().get<std::vector<double>>("VAL");
+    const auto funct =
+        myfluidneumcond[0]->parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
     // factor given by spatial function
     double functfac = 1.0;
-    int functnum = -1;
 
     // set this condition to the body-force array
     for (unsigned isd = 0; isd < nsd_; isd++)
     {
-      // get factor given by spatial function
-      if (funct)
-        functnum = (*funct)[isd];
-      else
-        functnum = -1;
-
-      double num = (*onoff)[isd] * (*val)[isd];
+      double num = onoff[isd] * val[isd];
 
       for (unsigned jnode = 0; jnode < nen_; ++jnode)
       {
-        if (functnum > 0)
+        if (funct[isd].has_value() && funct[isd].value() > 0)
         {
           // time factor for the intermediate step
           // (negative time value indicates error)
@@ -1000,7 +991,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::calc_subgr_velocity(
             // in some fancy turbulance stuff.
             functfac =
                 Global::Problem::instance()
-                    ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
+                    ->function_by_id<Core::Utils::FunctionOfSpaceTime>(funct[isd].value() - 1)
                     .evaluate((ele->nodes()[jnode])->x().data(), scatraparatimint_->time(), isd);
           }
           else

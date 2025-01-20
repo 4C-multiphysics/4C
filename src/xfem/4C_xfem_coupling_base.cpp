@@ -559,9 +559,9 @@ void XFEM::CouplingBase::evaluate_function(std::vector<double>& final_values, co
 
   //---------------------------------------
   // get values and switches from the condition
-  const auto* onoff = &cond->parameters().get<std::vector<int>>("ONOFF");
-  const auto* val = &cond->parameters().get<std::vector<double>>("VAL");
-  const auto* functions = cond->parameters().get_if<std::vector<int>>("FUNCT");
+  const auto onoff = cond->parameters().get<std::vector<int>>("ONOFF");
+  const auto val = cond->parameters().get<std::vector<double>>("VAL");
+  const auto functions = cond->parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
   // uniformly distributed random noise
   auto& secondary = const_cast<Core::Conditions::Condition&>(*cond);
@@ -574,20 +574,18 @@ void XFEM::CouplingBase::evaluate_function(std::vector<double>& final_values, co
   //---------------------------------------
   for (int dof = 0; dof < numdof; ++dof)
   {
-    // get factor given by spatial function
-    int functnum = -1;
-    if (functions) functnum = (*functions)[dof];
-
     // initialization of time-curve factor and function factor
     double functionfac = 1.0;
 
-    double num = (*onoff)[dof] * (*val)[dof];
+    double num = onoff[dof] * val[dof];
 
-    if (functnum > 0)
+    // get factor given by spatial function
+    if (functions[dof].has_value() && functions[dof].value() > 0)
     {
-      functionfac = Global::Problem::instance()
-                        ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                        .evaluate(x, time, dof % numdof);
+      functionfac =
+          Global::Problem::instance()
+              ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functions[dof].value() - 1)
+              .evaluate(x, time, dof % numdof);
     }
 
     // uniformly distributed noise

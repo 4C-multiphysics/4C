@@ -11,6 +11,7 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_dofset_transparent.hpp"
 #include "4C_global_data.hpp"
+#include "4C_io_input_parameter_container.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_rebalance_binning_based.hpp"
 #include "4C_utils_function_of_time.hpp"
@@ -369,15 +370,13 @@ void CONSTRAINTS::MPConstraint2::evaluate_constraint(std::shared_ptr<Core::FE::D
       }
 
       // Load curve business
-      const int curvenum = cond.parameters().get_or<int>("curve", -1);
+      const auto curvenum = cond.parameters().get<Core::IO::Noneable<int>>("curve");
       double curvefac = 1.0;
-      bool usetime = true;
-      if (time < 0.0) usetime = false;
-      if (curvenum > 0 && usetime)
+      if (curvenum.has_value() && curvenum.value() > 0 && time >= 0.0)
       {
         // function_by_id takes a zero-based index
         curvefac = Global::Problem::instance()
-                       ->function_by_id<Core::Utils::FunctionOfTime>(curvenum - 1)
+                       ->function_by_id<Core::Utils::FunctionOfTime>(curvenum.value() - 1)
                        .evaluate(time);
       }
 

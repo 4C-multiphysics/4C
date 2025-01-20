@@ -508,9 +508,9 @@ int Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_neumann
   // get values, switches and spatial functions from the  condition
   // (assumed to be constant on element boundary)
   const int numdof = condition.parameters().get<int>("NUMDOF");
-  const auto* onoff = &condition.parameters().get<std::vector<int>>("ONOFF");
-  const auto* val = &condition.parameters().get<std::vector<double>>("VAL");
-  const auto* func = condition.parameters().get_if<std::vector<int>>("FUNCT");
+  const auto onoff = condition.parameters().get<std::vector<int>>("ONOFF");
+  const auto val = condition.parameters().get<std::vector<double>>("VAL");
+  const auto func = condition.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
   if (numdofpernode_ != numdof)
   {
@@ -531,32 +531,29 @@ int Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_neumann
     Core::LinAlg::Matrix<nsd_, 1> coordgp;  // coordinate has always to be given in 3D!
     coordgp.multiply_nn(xyze_, funct_);
 
-    int functnum = -1;
     const double* coordgpref = &coordgp(0);  // needed for function evaluation
 
     for (int dof = 0; dof < numdofpernode_; ++dof)
     {
-      if ((*onoff)[dof])  // is this dof activated?
+      if (onoff[dof])  // is this dof activated?
       {
         // factor given by spatial function
-        if (func) functnum = (*func)[dof];
-
-        if (functnum > 0)
+        if (func[dof].has_value() && func[dof].value() > 0)
         {
           // evaluate function at current Gauss point (provide always 3D coordinates!)
           functfac = Global::Problem::instance()
-                         ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
+                         ->function_by_id<Core::Utils::FunctionOfSpaceTime>(func[dof].value() - 1)
                          .evaluate(coordgpref, time, dof);
         }
         else
           functfac = 1.;
 
-        const double val_fac_funct_fac = (*val)[dof] * fac * functfac;
+        const double val_fac_funct_fac = val[dof] * fac * functfac;
 
         for (int node = 0; node < nen_; ++node)
           // TODO: with or without eps_
           elevec1[node * numdofpernode_ + dof] += scalar * funct_(node) * val_fac_funct_fac;
-      }  // if ((*onoff)[dof])
+      }  // if (onoff[dof])
     }  // loop over dofs
   }  // loop over integration points
 
@@ -1640,15 +1637,15 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::calc_robin_boun
   if (cond == nullptr) FOUR_C_THROW("Cannot access condition 'TransportRobin'");
 
   // get on/off flags
-  const auto* onoff = &cond->parameters().get<std::vector<int>>("ONOFF");
+  const auto onoff = cond->parameters().get<std::vector<int>>("ONOFF");
 
   // safety check
-  if ((int)(onoff->size()) != numscal_)
+  if ((int)(onoff.size()) != numscal_)
   {
     FOUR_C_THROW(
         "Mismatch in size for Robin boundary conditions, onoff has length %i, but you have %i "
         "scalars",
-        onoff->size(), numscal_);
+        onoff.size(), numscal_);
   }
 
   // extract prefactor and reference value from condition
@@ -1683,7 +1680,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::calc_robin_boun
   for (int k = 0; k < numscal_; ++k)
   {
     // flag for dofs to be considered by robin conditions
-    if ((*onoff)[k] == 1)
+    if (onoff[k] == 1)
     {
       for (int gpid = 0; gpid < intpoints.ip().nquad; gpid++)
       {
@@ -1733,7 +1730,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::calc_robin_boun
           }
         }
       }  // loop over integration points
-    }  // if((*onoff)[k]==1)
+    }  // if(onoff[k]==1)
     // else //in the case of "OFF", a no flux condition is automatically applied
 
   }  // loop over scalars
@@ -1804,7 +1801,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_surfac
       params.get<std::shared_ptr<Core::Conditions::Condition>>("condition");
   if (cond == nullptr) FOUR_C_THROW("Cannot access condition 'SurfacePermeability'");
 
-  const auto* onoff = &cond->parameters().get<std::vector<int>>("ONOFF");
+  const auto onoff = cond->parameters().get<std::vector<int>>("ONOFF");
 
   const auto perm = cond->parameters().get<double>("PERMCOEF");
 
@@ -1829,7 +1826,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_surfac
     for (int k = 0; k < numdofpernode_; ++k)
     {
       // flag for dofs to be considered by membrane equations of Kedem and Katchalsky
-      if ((*onoff)[k] == 1)
+      if (onoff[k] == 1)
       {
         // loop over all integration points
         for (int iquad = 0; iquad < intpoints.ip().nquad; ++iquad)
@@ -1873,7 +1870,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_surfac
             elevec1[fvi] -= vrhs * funct_(vi);
           }
         }
-      }  // if((*onoff)[k]==1)
+      }  // if(onoff[k]==1)
       // else //in the case of "OFF", a no flux condition is automatically applied
     }
   }
@@ -1960,7 +1957,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_kedem_
   if (cond == nullptr)
     FOUR_C_THROW("Cannot access condition 'DESIGN SCATRA COUPLING SURF CONDITIONS'");
 
-  const auto* onoff = &cond->parameters().get<std::vector<int>>("ONOFF");
+  const auto onoff = cond->parameters().get<std::vector<int>>("ONOFF");
 
   // get the standard permeability of the interface
   const auto perm = cond->parameters().get<double>("PERMCOEF");
@@ -1988,7 +1985,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_kedem_
   for (int k = 0; k < numdofpernode_; ++k)  // numdofpernode_//1
   {
     // flag for dofs to be considered by membrane equations of Kedem and Katchalsky
-    if ((*onoff)[k] == 1)
+    if (onoff[k] == 1)
     {
       // loop over all integration points
       for (int iquad = 0; iquad < intpoints.ip().nquad; ++iquad)
@@ -2048,7 +2045,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_kedem_
           elevec1[fvi] -= vrhs * funct_(vi);
         }
       }
-    }  // if((*onoff)[k]==1)
+    }  // if(onoff[k]==1)
     // else //in the case of "OFF", a no flux condition is automatically applied
   }
 }
@@ -2132,13 +2129,10 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::weak_dirichlet(
   // get values and spatial functions from condition
   // (assumed to be constant on element boundary)
   const auto& val = (*dbc).parameters().get<std::vector<double>>("VAL");
-  const auto& func = (*dbc).parameters().get<std::vector<int>>("FUNCT");
+  const auto& func = (*dbc).parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
   // assign boundary value multiplied by time-curve factor
   double dirichval = val[0];
-
-  // spatial function number
-  const int funcnum = func[0];
 
   //------------------------------------------------------------------------
   // preliminary definitions for (boundary) and parent element and
@@ -2567,7 +2561,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::weak_dirichlet(
     // factor for Dirichlet boundary condition given by spatial function
     //--------------------------------------------------------------------
     double functfac = 1.0;
-    if (funcnum > 0)
+    if (func[0].has_value() && func[0].value() > 0)
     {
       // evaluate function at current integration point (important: a 3D position vector is
       // required)
@@ -2578,7 +2572,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::weak_dirichlet(
       for (int i = 0; i < pnsd; i++) coordgp3D[i] = coordgp(i);
 
       functfac = Global::Problem::instance()
-                     ->function_by_id<Core::Utils::FunctionOfSpaceTime>(funcnum - 1)
+                     ->function_by_id<Core::Utils::FunctionOfSpaceTime>(func[0].value() - 1)
                      .evaluate(coordgp3D.data(), time, 0);
     }
     else

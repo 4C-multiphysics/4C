@@ -128,7 +128,8 @@ void Discret::Elements::Shell::evaluate_neumann(Core::Elements::Element& ele,
     }
   }
   // get ids of functions of space and time
-  const auto* function_ids = &condition.parameters().get<std::vector<int>>("FUNCT");
+  const auto function_ids =
+      condition.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
   // integration loops
   std::array<double, 2> xi_gp;
@@ -219,13 +220,13 @@ void Discret::Elements::Shell::evaluate_neumann(Core::Elements::Element& ele,
       if (onoff[dim])
       {
         // function evaluation
-        const int function_number = (function_ids != nullptr) ? (*function_ids)[dim] : -1;
-        function_scale_factors[dim] =
-            (function_number > 0)
-                ? Global::Problem::instance()
-                      ->function_by_id<Core::Utils::FunctionOfSpaceTime>(function_number - 1)
-                      .evaluate(gauss_point_reference_coordinates.data(), total_time, dim)
-                : 1.0;
+        if (function_ids[dim].has_value() && function_ids[dim].value() > 0)
+        {
+          function_scale_factors[dim] =
+              Global::Problem::instance()
+                  ->function_by_id<Core::Utils::FunctionOfSpaceTime>(function_ids[dim].value() - 1)
+                  .evaluate(gauss_point_reference_coordinates.data(), total_time, dim);
+        }
       }
     }
 

@@ -552,8 +552,8 @@ int Discret::Elements::Nurbs::SoNurbs27::evaluate_neumann(Teuchos::ParameterList
 {
   set_params_interface_ptr(params);
   // get values and switches from the condition
-  const auto* onoff = &condition.parameters().get<std::vector<int>>("ONOFF");
-  const auto* val = &condition.parameters().get<std::vector<double>>("VAL");
+  const auto onoff = condition.parameters().get<std::vector<int>>("ONOFF");
+  const auto val = condition.parameters().get<std::vector<double>>("VAL");
 
   /*
    **    TIME CURVE BUSINESS
@@ -566,23 +566,19 @@ int Discret::Elements::Nurbs::SoNurbs27::evaluate_neumann(Teuchos::ParameterList
     time = params.get("total time", -1.0);
 
   // ensure that at least as many curves/functs as dofs are available
-  if (int(onoff->size()) < NUMDIM_SONURBS27)
+  if (int(onoff.size()) < NUMDIM_SONURBS27)
     FOUR_C_THROW("Fewer functions or curves defined than the element has dofs.");
 
-  for (int checkdof = NUMDIM_SONURBS27; checkdof < int(onoff->size()); ++checkdof)
+  for (int checkdof = NUMDIM_SONURBS27; checkdof < int(onoff.size()); ++checkdof)
   {
-    if ((*onoff)[checkdof] != 0)
+    if (onoff[checkdof] != 0)
       FOUR_C_THROW(
           "Number of Dimensions in Neumann_Evaluation is 3. Further DoFs are not considered.");
   }
 
   // (SPATIAL) FUNCTION BUSINESS
-  const auto* funct = &condition.parameters().get<std::vector<int>>("FUNCT");
+  const auto funct = condition.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
   Core::LinAlg::Matrix<NUMDIM_SONURBS27, 1> xrefegp(false);
-  bool havefunct = false;
-  if (funct)
-    for (int dim = 0; dim < NUMDIM_SONURBS27; dim++)
-      if ((*funct)[dim] > 0) havefunct = havefunct or true;
 
   // --------------------------------------------------
   // Initialisation of nurbs specific stuff
@@ -645,14 +641,11 @@ int Discret::Elements::Nurbs::SoNurbs27::evaluate_neumann(Teuchos::ParameterList
       FOUR_C_THROW("NEGATIVE JACOBIAN DETERMINANT");
 
     // material/reference co-ordinates of Gauss point
-    if (havefunct)
+    for (int dim = 0; dim < NUMDIM_SONURBS27; dim++)
     {
-      for (int dim = 0; dim < NUMDIM_SONURBS27; dim++)
-      {
-        xrefegp(dim) = 0.0;
-        for (int nodid = 0; nodid < NUMNOD_SONURBS27; ++nodid)
-          xrefegp(dim) += shape(nodid) * xrefe(nodid, dim);
-      }
+      xrefegp(dim) = 0.0;
+      for (int nodid = 0; nodid < NUMNOD_SONURBS27; ++nodid)
+        xrefegp(dim) += shape(nodid) * xrefe(nodid, dim);
     }
 
     // integration factor
@@ -660,16 +653,18 @@ int Discret::Elements::Nurbs::SoNurbs27::evaluate_neumann(Teuchos::ParameterList
     // distribute/add over element load vector
     for (int dim = 0; dim < NUMDIM_SONURBS27; dim++)
     {
-      if ((*onoff)[dim])
+      if (onoff[dim])
       {
-        // function evaluation
-        const int functnum = (funct) ? (*funct)[dim] : -1;
-        const double functfac =
-            (functnum > 0) ? Global::Problem::instance()
-                                 ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                                 .evaluate(xrefegp.data(), time, dim)
-                           : 1.0;
-        const double dim_fac = (*val)[dim] * fac * functfac;
+        double functfac = 1.0;
+        if (funct[dim].has_value() && funct[dim].value() > 0)
+        {
+          // function evaluation
+          functfac = Global::Problem::instance()
+                         ->function_by_id<Core::Utils::FunctionOfSpaceTime>(funct[dim].value() - 1)
+                         .evaluate(xrefegp.data(), time, dim);
+        }
+
+        const double dim_fac = val[dim] * fac * functfac;
         for (int nodid = 0; nodid < NUMNOD_SONURBS27; ++nodid)
         {
           elevec1[nodid * NUMDIM_SONURBS27 + dim] += shape(nodid) * dim_fac;

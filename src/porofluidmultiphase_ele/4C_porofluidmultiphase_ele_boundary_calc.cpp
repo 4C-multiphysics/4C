@@ -192,9 +192,9 @@ int Discret::Elements::PoroFluidMultiPhaseEleBoundaryCalc<distype>::evaluate_neu
   // get values, switches and spatial functions from the condition
   // (assumed to be constant on element boundary)
   const int numdof = condition.parameters().get<int>("NUMDOF");
-  const auto* onoff = &condition.parameters().get<std::vector<int>>("ONOFF");
-  const auto* val = &condition.parameters().get<std::vector<double>>("VAL");
-  const auto* func = &condition.parameters().get<std::vector<int>>("FUNCT");
+  const auto onoff = condition.parameters().get<std::vector<int>>("ONOFF");
+  const auto val = condition.parameters().get<std::vector<double>>("VAL");
+  const auto func = condition.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
   if (numdofpernode_ != numdof)
     FOUR_C_THROW(
@@ -214,31 +214,28 @@ int Discret::Elements::PoroFluidMultiPhaseEleBoundaryCalc<distype>::evaluate_neu
     Core::LinAlg::Matrix<nsd_vol_ele, 1> coordgp;  // coordinate has always to be given in 3D!
     coordgp.multiply_nn(xyze_, funct_);
 
-    int functnum = -1;
     const double* coordgpref = &coordgp(0);  // needed for function evaluation
 
     for (int dof = 0; dof < numdofpernode_; ++dof)
     {
-      if ((*onoff)[dof])  // is this dof activated?
+      if (onoff[dof])  // is this dof activated?
       {
         // factor given by spatial function
-        if (func) functnum = (*func)[dof];
-
-        if (functnum > 0)
+        if (func[dof].has_value() && func[dof].value() > 0)
         {
           // evaluate function at current Gauss point (provide always 3D coordinates!)
           functfac = Global::Problem::instance()
-                         ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
+                         ->function_by_id<Core::Utils::FunctionOfSpaceTime>(func[dof].value() - 1)
                          .evaluate(coordgpref, time, dof);
         }
         else
           functfac = 1.;
 
-        const double val_fac_funct_fac = (*val)[dof] * fac * functfac;
+        const double val_fac_funct_fac = val[dof] * fac * functfac;
 
         for (int node = 0; node < nen_; ++node)
           elevec1[node * numdofpernode_ + dof] += funct_(node) * val_fac_funct_fac;
-      }  // if ((*onoff)[dof])
+      }  // if (onoff[dof])
     }  // loop over dofs
   }  // loop over integration points
 

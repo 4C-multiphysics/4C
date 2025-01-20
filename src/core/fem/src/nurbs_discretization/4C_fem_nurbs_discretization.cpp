@@ -12,6 +12,7 @@
 #include "4C_fem_general_utils_nurbs_shapefunctions.hpp"
 #include "4C_fem_nurbs_discretization_utils.hpp"
 #include "4C_io_control.hpp"
+#include "4C_io_input_parameter_container.hpp"
 #include "4C_linalg_mapextractor.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_sparsematrix.hpp"
@@ -218,8 +219,8 @@ void Core::FE::Utils::DbcNurbs::do_dirichlet_condition(const Teuchos::ParameterL
   const std::vector<int>* nodeids = cond.get_nodes();
   if (!nodeids) FOUR_C_THROW("Dirichlet condition does not have nodal cloud");
 
-  const auto* funct = &cond.parameters().get<std::vector<int>>("FUNCT");
-  const auto* val = &cond.parameters().get<std::vector<double>>("VAL");
+  const auto funct = cond.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
+  const auto val = cond.parameters().get<std::vector<double>>("VAL");
 
 
   // determine highest degree of time derivative
@@ -513,9 +514,9 @@ void Core::FE::Utils::DbcNurbs::do_dirichlet_condition(const Teuchos::ParameterL
 template <Core::FE::CellType distype>
 void Core::FE::Utils::DbcNurbs::fill_matrix_and_rhs_for_ls_dirichlet_boundary(
     Core::Elements::Element& actele, const std::vector<Core::LinAlg::SerialDenseVector>* knots,
-    const std::vector<int>& lm, const std::vector<int>* funct, const std::vector<double>* val,
-    const unsigned deg, const double time, Core::LinAlg::SerialDenseMatrix& elemass,
-    std::vector<Core::LinAlg::SerialDenseVector>& elerhs,
+    const std::vector<int>& lm, const std::vector<Core::IO::Noneable<int>>& funct,
+    const std::vector<double>& val, const unsigned deg, const double time,
+    Core::LinAlg::SerialDenseMatrix& elemass, std::vector<Core::LinAlg::SerialDenseVector>& elerhs,
     const Core::Utils::FunctionManager& function_manager) const
 {
   if (deg + 1 != elerhs.size())
@@ -607,19 +608,18 @@ void Core::FE::Utils::DbcNurbs::fill_matrix_and_rhs_for_ls_dirichlet_boundary(
       std::vector<double> functimederivfac(deg + 1, 1.0);
       for (unsigned i = 1; i < (deg + 1); ++i) functimederivfac[i] = 0.0;
 
-      const int funct_num = (*funct)[rr];
-      if (funct_num > 0)
+      if (funct[rr].has_value() && funct[rr].value() > 0)
       {
         // important: position has to have always three components!!
         functimederivfac =
-            function_manager.function_by_id<Core::Utils::FunctionOfSpaceTime>((*funct)[rr] - 1)
+            function_manager.function_by_id<Core::Utils::FunctionOfSpaceTime>(funct[rr].value() - 1)
                 .evaluate_time_derivative(position.values(), time, deg, rr);
       }
 
       // apply factors to Dirichlet value
       for (unsigned i = 0; i < deg + 1; ++i)
       {
-        value[i](rr) = (*val)[rr] * functimederivfac[i];
+        value[i](rr) = val[rr] * functimederivfac[i];
       }
     }
 
@@ -655,9 +655,9 @@ void Core::FE::Utils::DbcNurbs::fill_matrix_and_rhs_for_ls_dirichlet_boundary(
 template <Core::FE::CellType distype>
 void Core::FE::Utils::DbcNurbs::fill_matrix_and_rhs_for_ls_dirichlet_domain(
     Core::Elements::Element& actele, const std::vector<Core::LinAlg::SerialDenseVector>* knots,
-    const std::vector<int>& lm, const std::vector<int>* funct, const std::vector<double>* val,
-    const unsigned deg, const double time, Core::LinAlg::SerialDenseMatrix& elemass,
-    std::vector<Core::LinAlg::SerialDenseVector>& elerhs,
+    const std::vector<int>& lm, const std::vector<Core::IO::Noneable<int>>& funct,
+    const std::vector<double>& val, const unsigned deg, const double time,
+    Core::LinAlg::SerialDenseMatrix& elemass, std::vector<Core::LinAlg::SerialDenseVector>& elerhs,
     const Core::Utils::FunctionManager& function_manager) const
 {
   if (deg + 1 != elerhs.size())
@@ -758,24 +758,22 @@ void Core::FE::Utils::DbcNurbs::fill_matrix_and_rhs_for_ls_dirichlet_domain(
       // factor given by FUNCTS
       std::vector<double> functimederivfac(deg + 1, 1.0);
       double functfac = 1.0;
-
-      const int funct_num = (*funct)[rr];
-      if (funct_num > 0)
+      if (funct[rr].has_value() && funct[rr].value() > 0)
       {
         // important: position has to have always three components!!
         functimederivfac =
-            function_manager.function_by_id<Core::Utils::FunctionOfSpaceTime>((*funct)[rr] - 1)
+            function_manager.function_by_id<Core::Utils::FunctionOfSpaceTime>(funct[rr].value() - 1)
                 .evaluate_time_derivative(position.values(), time, deg, rr);
 
         functfac =
-            function_manager.function_by_id<Core::Utils::FunctionOfSpaceTime>((*funct)[rr] - 1)
+            function_manager.function_by_id<Core::Utils::FunctionOfSpaceTime>(funct[rr].value() - 1)
                 .evaluate(position.values(), time, rr);
       }
 
       // apply factors to Dirichlet value
       for (unsigned i = 0; i < deg + 1; ++i)
       {
-        value[i](rr) = (*val)[rr] * functfac * functimederivfac[i];
+        value[i](rr) = val[rr] * functfac * functimederivfac[i];
       }
     }
 

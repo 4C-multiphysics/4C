@@ -46,9 +46,9 @@ int Discret::Elements::MembraneLine<distype>::evaluate_neumann(Teuchos::Paramete
     FOUR_C_THROW("Unknown type of LineNeumann condition");
 
   // get values and switches from the condition
-  const auto* onoff = &condition.parameters().get<std::vector<int>>("ONOFF");
-  const auto* val = &condition.parameters().get<std::vector<double>>("VAL");
-  const auto* spa_func = &condition.parameters().get<std::vector<int>>("FUNCT");
+  const auto onoff = condition.parameters().get<std::vector<int>>("ONOFF");
+  const auto val = condition.parameters().get<std::vector<double>>("VAL");
+  const auto spa_func = condition.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
   /*
   **    TIME CURVE BUSINESS
@@ -61,12 +61,12 @@ int Discret::Elements::MembraneLine<distype>::evaluate_neumann(Teuchos::Paramete
     time = params.get("total time", -1.0);
 
   // ensure that at least as many curves/functs as dofs are available
-  if (int(onoff->size()) < noddof_)
+  if (int(onoff.size()) < noddof_)
     FOUR_C_THROW("Fewer functions or curves defined than the element has dofs.");
 
-  for (int checkdof = noddof_; checkdof < int(onoff->size()); ++checkdof)
+  for (int checkdof = noddof_; checkdof < int(onoff.size()); ++checkdof)
   {
-    if ((*onoff)[checkdof] != 0)
+    if (onoff[checkdof] != 0)
       FOUR_C_THROW(
           "Number of Dimensions in Neumann_Evaluation is 3. Further DoFs are not considered.");
   }
@@ -118,13 +118,12 @@ int Discret::Elements::MembraneLine<distype>::evaluate_neumann(Teuchos::Paramete
         // loop the dofs of a node
         for (int i = 0; i < noddof_; ++i)
         {
-          if ((*onoff)[i])  // is this dof activated?
+          if (onoff[i])  // is this dof activated?
           {
             // factor given by spatial function
-            const int functnum = (spa_func) ? (*spa_func)[i] : -1;
             double functfac = 1.0;
 
-            if (functnum > 0)
+            if (spa_func[i].has_value() && spa_func[i].value() > 0)
             {
               // calculate reference position of GP
               Core::LinAlg::Matrix<noddof_, 1> gp_coord(true);
@@ -136,12 +135,13 @@ int Discret::Elements::MembraneLine<distype>::evaluate_neumann(Teuchos::Paramete
               const double* coordgpref = gp_coord2;  // needed for function evaluation
 
               // evaluate function at current gauss point
-              functfac = Global::Problem::instance()
-                             ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                             .evaluate(coordgpref, time, i);
+              functfac =
+                  Global::Problem::instance()
+                      ->function_by_id<Core::Utils::FunctionOfSpaceTime>(spa_func[i].value() - 1)
+                      .evaluate(coordgpref, time, i);
             }
 
-            const double fac = (*val)[i] * gpweight * dL * functfac;
+            const double fac = val[i] * gpweight * dL * functfac;
             for (int node = 0; node < numnod_line_; ++node)
             {
               elevec1[noddof_ * node + i] += shapefcts(node) * fac;

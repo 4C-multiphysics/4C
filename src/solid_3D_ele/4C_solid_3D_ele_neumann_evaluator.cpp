@@ -99,7 +99,8 @@ void Discret::Elements::evaluate_neumann(Core::Elements::Element& element,
   }
 
   // get ids of functions of space and time
-  const auto& function_ids = condition.parameters().get<std::vector<int>>("FUNCT");
+  const auto& function_ids =
+      condition.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
   const ElementNodes<celltype> nodal_coordinates =
       evaluate_element_nodes<celltype>(element, discretization, dof_index_array);
@@ -126,11 +127,11 @@ void Discret::Elements::evaluate_neumann(Core::Elements::Element& element,
           if (onoff[dim])
           {
             // function evaluation
-            const int function_number = function_ids[dim];
             const double function_scale_factor =
-                (function_number > 0)
+                (function_ids[dim].has_value() && function_ids[dim].value() > 0)
                     ? Global::Problem::instance()
-                          ->function_by_id<Core::Utils::FunctionOfSpaceTime>(function_number - 1)
+                          ->function_by_id<Core::Utils::FunctionOfSpaceTime>(
+                              function_ids[dim].value() - 1)
                           .evaluate(gauss_point_reference_coordinates.data(), total_time, dim)
                     : 1.0;
 

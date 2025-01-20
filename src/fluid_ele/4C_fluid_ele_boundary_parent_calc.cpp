@@ -523,15 +523,14 @@ void Discret::Elements::FluidBoundaryParent<distype>::flow_dep_pressure_bc(
   // (time curve at n+1 applied for all time-integration schemes, but
   //  variable time_ in fluid3_parameter is n+alpha_F in case of
   //  generalized-alpha time-integration scheme -> reset to time n+1)
-  bool usetime = true;
   const double time =
       fldparatimint_->time() + (1 - fldparatimint_->alpha_f()) * fldparatimint_->dt();
-  if (time < 0.0) usetime = false;
-  const int curvenum = fdp_cond->parameters().get<int>("curve");
+  const auto curvenum = fdp_cond->parameters().get<Core::IO::Noneable<int>>("curve");
+
   double curvefac = 1.0;
-  if (curvenum > 0 and usetime)
+  if (curvenum.has_value() && curvenum.value() > 0 && time >= 0)
     curvefac = Global::Problem::instance()
-                   ->function_by_id<Core::Utils::FunctionOfTime>(curvenum - 1)
+                   ->function_by_id<Core::Utils::FunctionOfTime>(curvenum.value() - 1)
                    .evaluate(time);
 
   // (temporarily) switch off any flow-dependent pressure condition in case of zero
@@ -1231,8 +1230,6 @@ void Discret::Elements::FluidBoundaryParent<distype>::flow_dep_pressure_bc(
     }  // end of integration loop
   }  // end of (temporarily) switching off of flow-dependent pressure boundary
      // conditions for zero time-curve factor
-
-  return;
 }  // Discret::Elements::FluidBoundaryParent<distype>::FlowDepPressureBC
 
 
@@ -1880,7 +1877,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::evaluate_weak_dbc(
 
   // get values and switches from condition
   // (assumed to be constant on element boundary)
-  const auto* functions = &wdbc_cond->parameters().get<std::vector<int>>("FUNCT");
+  const auto functions = wdbc_cond->parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
   // find out whether to apply weak DBC only in normal direction
   bool onlynormal = false;
@@ -2189,24 +2186,20 @@ void Discret::Elements::FluidBoundaryParent<distype>::evaluate_weak_dbc(
       }
     }
 
-    int functnum = -1;
     for (int idim = 0; idim < nsd; idim++)
     {
       // factor given by spatial function
-      if (functions)
+      if (functions[idim].has_value() && functions[idim].value() > 0)
       {
-        functnum = (*functions)[idim];
-        if (functnum > 0)
-        {
-          // evaluate function at current gauss point
-          // (important: requires 3D position vector)
-          functionfac(idim) = Global::Problem::instance()
-                                  ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                                  .evaluate(coordgp.data(), time, idim);
-        }
-        else
-          functionfac(idim) = 1.0;
+        // evaluate function at current gauss point
+        // (important: requires 3D position vector)
+        functionfac(idim) =
+            Global::Problem::instance()
+                ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functions[idim].value() - 1)
+                .evaluate(coordgp.data(), time, idim);
       }
+      else
+        functionfac(idim) = 1.0;
     }
 
     // compute global first derivates for parent element
@@ -4322,7 +4315,6 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
   // get value for boundary condition
   const auto& val = (*hixhybdbc_cond).parameters().get<std::vector<double>>("val");
 
-  //
   const int myid = (*((*hixhybdbc_cond).get_nodes()))[0];
 
   // TODO: which time (n+1) or (n+alphaF)
@@ -4336,7 +4328,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
   double u_C = hixhybdbc_cond->parameters().get<double>("u_C");
 
   // decide whether to use it or not
-  const std::string& deftauB = (*hixhybdbc_cond).parameters().get<std::string>("PENTYPE");
+  const std::string deftauB = hixhybdbc_cond->parameters().get<std::string>("PENTYPE");
 
   bool spalding = false;
 
@@ -4357,12 +4349,13 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
   }
 
   // flag for utau computation (viscous tangent or at wall (a la Michler))
-  const std::string* utau_computation =
-      &hixhybdbc_cond->parameters().get<std::string>("utau_computation");
+  const std::string utau_computation =
+      hixhybdbc_cond->parameters().get<std::string>("utau_computation");
 
   // get values and switches from the condition
   // (assumed to be constant on element boundary)
-  const auto* functions = &hixhybdbc_cond->parameters().get<std::vector<int>>("funct");
+  const auto functions =
+      hixhybdbc_cond->parameters().get<std::vector<Core::IO::Noneable<int>>>("funct");
 
   Core::LinAlg::Matrix<nsd, 1> u_dirich(true);
 
@@ -4859,26 +4852,20 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
           }
         }
 
-        int functnum = -1;
-
         for (int dim = 0; dim < nsd; ++dim)
         {
           // factor given by spatial function
-          if (functions)
+          if (functions[dim].has_value() && functions[dim].value() > 0)
           {
-            functnum = (*functions)[dim];
-            if (functnum > 0)
-            {
-              // evaluate function at current gauss point (important: requires 3D position vector)
-              functionfac(dim) =
-                  Global::Problem::instance()
-                      ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                      .evaluate(coordgp.data(), time, dim);
-            }
-            else
-            {
-              functionfac(dim) = 1.0;
-            }
+            // evaluate function at current gauss point (important: requires 3D position vector)
+            functionfac(dim) =
+                Global::Problem::instance()
+                    ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functions[dim].value() - 1)
+                    .evaluate(coordgp.data(), time, dim);
+          }
+          else
+          {
+            functionfac(dim) = 1.0;
           }
         }
 
@@ -5233,25 +5220,20 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
         }
       }
 
-      int functnum = -1;
-
       for (int dim = 0; dim < nsd; ++dim)
       {
         // factor given by spatial function
-        if (functions)
+        if (functions[dim].has_value() && functions[dim].value() > 0)
         {
-          functnum = (*functions)[dim];
-          if (functnum > 0)
-          {
-            // evaluate function at current gauss point (important: requires 3D position vector)
-            functionfac(dim) = Global::Problem::instance()
-                                   ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                                   .evaluate(coordgp.data(), time, dim);
-          }
-          else
-          {
-            functionfac(dim) = 1.0;
-          }
+          // evaluate function at current gauss point (important: requires 3D position vector)
+          functionfac(dim) =
+              Global::Problem::instance()
+                  ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functions[dim].value() - 1)
+                  .evaluate(coordgp.data(), time, dim);
+        }
+        else
+        {
+          functionfac(dim) = 1.0;
         }
       }
 
@@ -5398,11 +5380,11 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
             if (fabs(normtraction) > 0.001 * visc_ / y)
             {
               // based on viscous stresses
-              if (*utau_computation == "viscous_tangent")
+              if (utau_computation == "viscous_tangent")
               {
                 tau_tangential *= visc_dudy / normtraction;
               }
-              else if (*utau_computation == "at_wall")
+              else if (utau_computation == "at_wall")
               {
                 // a la Michler
                 tau_tangential *= utau * utau / normtraction;

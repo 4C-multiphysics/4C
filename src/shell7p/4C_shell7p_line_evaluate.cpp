@@ -33,9 +33,9 @@ int Discret::Elements::Shell7pLine::evaluate_neumann(Teuchos::ParameterList& par
   Core::FE::extract_my_values(*disp, displacements, dof_index_array);
 
   // get values and switches from the condition
-  const auto* onoff = &condition.parameters().get<std::vector<int>>("ONOFF");
-  const auto* val = &condition.parameters().get<std::vector<double>>("VAL");
-  const auto* spa_func = &condition.parameters().get<std::vector<int>>("FUNCT");
+  const auto onoff = condition.parameters().get<std::vector<int>>("ONOFF");
+  const auto val = condition.parameters().get<std::vector<double>>("VAL");
+  const auto spa_func = condition.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
   // time curve business
   // find out whether we will use a time curve
@@ -46,13 +46,13 @@ int Discret::Elements::Shell7pLine::evaluate_neumann(Teuchos::ParameterList& par
     time = params.get<double>("total time", -1.0);
 
   // ensure that at least as many curves/functs as dofs are available
-  if (int(onoff->size()) < node_dof_)
+  if (int(onoff.size()) < node_dof_)
     FOUR_C_THROW(
         "Fewer functions or curves defined than the element's nodal degree of freedoms (6).");
 
-  for (int checkdof = num_dim_; checkdof < int(onoff->size()); ++checkdof)
+  for (int checkdof = num_dim_; checkdof < int(onoff.size()); ++checkdof)
   {
-    if ((*onoff)[checkdof] != 0)
+    if (onoff[checkdof] != 0)
     {
       FOUR_C_THROW(
           "Number of Dimensions in Neumann_Evaluation is 3. Further DoFs are not considered.");
@@ -87,13 +87,12 @@ int Discret::Elements::Shell7pLine::evaluate_neumann(Teuchos::ParameterList& par
     for (int i = 0; i < num_dim_; ++i)
     {
       // check if this dof is activated
-      if ((*onoff)[i])
+      if (onoff[i])
       {
         // factor given by spatial function
-        const int functnum = (spa_func) ? (*spa_func)[i] : -1;
         double functfac = 1.0;
 
-        if (functnum > 0)
+        if (spa_func[i].has_value() && spa_func[i].value() > 0)
         {
           // calculate reference position of gaussian point
           Core::LinAlg::SerialDenseMatrix gp_coord(1, num_dim_);
@@ -106,11 +105,11 @@ int Discret::Elements::Shell7pLine::evaluate_neumann(Teuchos::ParameterList& par
 
           // evaluate function at current gauss point
           functfac = Global::Problem::instance()
-                         ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
+                         ->function_by_id<Core::Utils::FunctionOfSpaceTime>(spa_func[i].value() - 1)
                          .evaluate(coordgpref, time, i);
         }
 
-        const double fac = (*val)[i] * intpoints.qwgt[gp] * dL * functfac;
+        const double fac = val[i] * intpoints.qwgt[gp] * dL * functfac;
 
         for (int node = 0; node < numnode; ++node)
         {

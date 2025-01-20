@@ -143,7 +143,7 @@ int Discret::Elements::KirchhoffLoveShellNurbs::evaluate_neumann(Teuchos::Parame
   // get values and switches from the condition
   const auto& onoff = condition.parameters().get<std::vector<int>>("ONOFF");
   const auto& val = condition.parameters().get<std::vector<double>>("VAL");
-  const auto& funct_id = condition.parameters().get<std::vector<int>>("FUNCT");
+  const auto& funct_id = condition.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
   // ensure that the boundary condition has the correct size
   if (onoff.size() != n_nodal_dof)
@@ -153,11 +153,11 @@ int Discret::Elements::KirchhoffLoveShellNurbs::evaluate_neumann(Teuchos::Parame
   std::array<const Core::Utils::FunctionOfSpaceTime*, n_nodal_dof> functions;
   for (int i_dof = 0; i_dof < n_nodal_dof; ++i_dof)
   {
-    if (onoff[i_dof] == 1 and funct_id[i_dof] > 0)
+    if (onoff[i_dof] == 1 and funct_id[i_dof].has_value() and funct_id[i_dof].value() > 0)
     {
       functions[i_dof] =
           &(Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfSpaceTime>(
-              funct_id[i_dof] - 1));
+              funct_id[i_dof].value() - 1));
     }
   }
 

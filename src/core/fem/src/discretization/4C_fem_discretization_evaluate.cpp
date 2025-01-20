@@ -12,6 +12,7 @@
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_elements_paramsinterface.hpp"
 #include "4C_fem_general_node.hpp"
+#include "4C_io_input_parameter_container.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_sparsematrix.hpp"
@@ -194,7 +195,7 @@ void Core::FE::Discretization::evaluate_neumann(Teuchos::ParameterList& params,
     }
     const std::vector<int>* nodeids = cond->get_nodes();
     if (!nodeids) FOUR_C_THROW("PointNeumann condition does not have nodal cloud");
-    const auto* tmp_funct = cond->parameters().get_if<std::vector<int>>("FUNCT");
+    const auto& tmp_funct = cond->parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
     const auto& onoff = cond->parameters().get<std::vector<int>>("ONOFF");
     const auto& val = cond->parameters().get<std::vector<double>>("VAL");
 
@@ -216,15 +217,16 @@ void Core::FE::Discretization::evaluate_neumann(Teuchos::ParameterList& params,
         const double functfac = std::invoke(
             [&]()
             {
-              if (tmp_funct && (*tmp_funct)[j] > 0)
+              if (tmp_funct[j].has_value() && tmp_funct[j].value() > 0)
               {
                 const auto* function_manager =
                     params.isParameter("interface")
                         ? params.get<std::shared_ptr<Core::Elements::ParamsInterface>>("interface")
                               ->get_function_manager()
                         : params.get<const Core::Utils::FunctionManager*>("function_manager");
+
                 return function_manager
-                    ->function_by_id<Core::Utils::FunctionOfTime>((*tmp_funct)[j] - 1)
+                    ->function_by_id<Core::Utils::FunctionOfTime>((tmp_funct[j]).value() - 1)
                     .evaluate(time);
               }
               else
@@ -404,16 +406,19 @@ void Core::FE::Discretization::evaluate_condition(Teuchos::ParameterList& params
         // to the condition geometry
 
         // Evaluate Loadcurve if defined. Put current load factor in parameter list
-        const auto* curve = cond->parameters().get_if<int>("curve");
-        int curvenum = -1;
-        if (curve) curvenum = *curve;
+        const auto* curve = cond->parameters().get_if<Core::IO::Noneable<int>>("curve");
+
         double curvefac = 1.0;
-        if (curvenum >= 0)
+        if (curve)
         {
-          const auto& function_manager =
-              params.get<const Core::Utils::FunctionManager*>("function_manager");
-          curvefac = function_manager->function_by_id<Core::Utils::FunctionOfTime>(curvenum - 1)
-                         .evaluate(time);
+          if (curve->has_value() && curve->value() > 0)
+          {
+            const auto& function_manager =
+                params.get<const Core::Utils::FunctionManager*>("function_manager");
+            curvefac =
+                function_manager->function_by_id<Core::Utils::FunctionOfTime>(curve->value() - 1)
+                    .evaluate(time);
+          }
         }
 
         // Get ConditionID of current condition if defined and write value in parameter list
