@@ -63,9 +63,9 @@ int Discret::Elements::Wall1Line::evaluate_neumann(Teuchos::ParameterList& param
     FOUR_C_THROW("Unknown type of SurfaceNeumann condition");
 
   // get values and switches from the condition
-  const auto* onoff = &condition.parameters().get<std::vector<int>>("ONOFF");
-  const auto* val = &condition.parameters().get<std::vector<double>>("VAL");
-  const auto* funct = &condition.parameters().get<std::vector<int>>("FUNCT");
+  const auto onoff = condition.parameters().get<std::vector<int>>("ONOFF");
+  const auto val = condition.parameters().get<std::vector<double>>("VAL");
+  const auto funct = condition.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
   // check total time
   double time = -1.0;
@@ -78,7 +78,7 @@ int Discret::Elements::Wall1Line::evaluate_neumann(Teuchos::ParameterList& param
   const int noddof = num_dof_per_node(*nodes()[0]);
 
   // ensure that at least as many curves/functs as dofs are available
-  if (int(onoff->size()) < noddof)
+  if (int(onoff.size()) < noddof)
     FOUR_C_THROW("Fewer functions or curves defined than the element has dofs.");
 
   // set number of nodes
@@ -205,13 +205,13 @@ int Discret::Elements::Wall1Line::evaluate_neumann(Teuchos::ParameterList& param
         // loop the dofs of a node
         for (int i = 0; i < noddof; ++i)
         {
-          if ((*onoff)[i])  // is this dof activated?
+          if (onoff[i])  // is this dof activated?
           {
-            // factor given by spatial function
-            const int functnum = (funct) ? (*funct)[i] : -1;
-
-            if (functnum > 0)
+            if (funct[i].has_value() && funct[i].value() > 0)
             {
+              // factor given by spatial function
+              const int functnum = funct[i].value();
+
               // calculate reference position of GP
               Core::LinAlg::SerialDenseMatrix gp_coord(1, Wall1::numdim_);
               gp_coord.multiply(Teuchos::TRANS, Teuchos::TRANS, 1.0, shapefcts, xye, 0.0);
@@ -233,7 +233,7 @@ int Discret::Elements::Wall1Line::evaluate_neumann(Teuchos::ParameterList& param
             else
               functfac = 1.0;
 
-            const double fac = intpoints.qwgt[gpid] * dr * (*val)[i] * functfac;
+            const double fac = intpoints.qwgt[gpid] * dr * val[i] * functfac;
             for (int node = 0; node < numnod; ++node)
             {
               elevec1[node * noddof + i] += shapefcts[node] * fac;
@@ -249,12 +249,12 @@ int Discret::Elements::Wall1Line::evaluate_neumann(Teuchos::ParameterList& param
       {  // orthogonal pressure (nonlinear load) on current config.
 
         // check for correct input
-        if ((*onoff)[0] != 1) FOUR_C_THROW("orthopressure on 1st dof only!");
+        if (onoff[0] != 1) FOUR_C_THROW("orthopressure on 1st dof only!");
         for (int checkdof = 1; checkdof < noddof; ++checkdof)
         {
-          if ((*onoff)[checkdof] != 0) FOUR_C_THROW("orthopressure on 1st dof only!");
+          if (onoff[checkdof] != 0) FOUR_C_THROW("orthopressure on 1st dof only!");
         }
-        double ortho_value = (*val)[0];
+        double ortho_value = val[0];
         if (!ortho_value) FOUR_C_THROW("no orthopressure value given!");
 
         // outward normal vector (unit vector)
@@ -263,11 +263,12 @@ int Discret::Elements::Wall1Line::evaluate_neumann(Teuchos::ParameterList& param
         // compute infinitesimal line element dr for integration along the line
         const double dr = w1_substitution(xyecurr, deriv, &unrm, numnod);
 
-        // factor given by spatial function
-        const int functnum = (funct) ? (*funct)[0] : -1;
         double functfac = 1.0;
-        if (functnum > 0)
+        if (funct[0].has_value() && funct[0].value() > 0)
         {
+          // factor given by spatial function
+          const int functnum = funct[0].value();
+
           // calculate reference position of GP
           Core::LinAlg::SerialDenseMatrix gp_coord(1, Wall1::numdim_);
           gp_coord.multiply(Teuchos::TRANS, Teuchos::TRANS, 1.0, shapefcts, xye, 0.0);
@@ -340,82 +341,6 @@ int Discret::Elements::Wall1Line::evaluate_neumann(Teuchos::ParameterList& param
       }
     }
   }
-
-  /*// FD CHECK FOR ORTHOPRESSURE
-  switch (ltype)
-  {
-  case neum_orthopressure:
-  {
-    // prepare FD check
-    Core::LinAlg::SerialDenseMatrix fd_deriv(numnod*noddof,numnod*noddof);
-    Core::LinAlg::SerialDenseMatrix an_deriv = *elemat1;
-    Core::LinAlg::SerialDenseVector eleforce_ref = elevec1;
-    Core::LinAlg::SerialDenseVector eleforce_curr(numnod*noddof);
-    double eps = 1.0e-8;
-
-    // do FD step for all DOFs
-    for (int node=0;node<numnod;++node)
-      for (int dof=0;dof<noddof;++dof)
-      {
-        // move position
-        xyecurr(dof,node) += eps;
-
-        // actual FD evaluation
-        // loop over integration points //new
-        for (int gpid = 0; gpid < intpoints.nquad; gpid++)
-        {
-          const double e1 = intpoints.qxg[gpid][0];
-
-          // get shape functions and derivatives in the line
-          Core::FE::shape_function_1d(shapefcts, e1, distype);
-          Core::FE::shape_function_1d_deriv1(deriv, e1, distype);
-          double ortho_value = (*val)[0];
-
-          // outward normal vector (unit vector)
-          std::vector<double> unrm(Wall1::numdim_);
-
-          // compute infinitesimal line element dr for integration along the line
-          const double dr = w1_substitution(xyecurr, deriv, &unrm, numnod);
-
-          // constant factor for integration
-          const double fac = intpoints.qwgt[gpid] * dr * ortho_value * curvefac;
-
-          // add load components
-          for (int k = 0; k < numnod; ++k)
-            for (int j = 0; j < noddof; ++j)
-              eleforce_curr[k * noddof + j] += funct[k] * unrm[j] * fac;
-        }
-
-        // compute FD linearization
-        for (int idx=0;idx<numnod*noddof;++idx)
-          fd_deriv(idx,node*noddof+dof) = (eleforce_curr[idx]-eleforce_ref[idx])/eps;
-
-        // unmove position
-        xyecurr(dof,node) -= eps;
-
-        // reset eleforce_curr
-        for (int k = 0; k < numnod; ++k)
-          for (int j = 0; j < noddof; ++j)
-            eleforce_curr[k * noddof + j] = 0.0;
-      }
-
-    // analyze results
-    std::cout << "FD LINEARIZATION \n" << fd_deriv << std::endl;
-    std::cout << "ANALYTICAL LINEARIZATION \n" << an_deriv << std::endl;
-    //exit(0);
-
-    // overwrite results with FD derivative
-    for (int j = 0; j < numnod*noddof; ++j)
-      for (int k = 0; k < numnod*noddof; ++k)
-        (*elemat1)(j,k) = -fd_deriv(j,k);
-  break;
-  }
-  default:
-  {
-    // do nothing
-    break;
-  }
-  }*/
 
   return 0;
 }

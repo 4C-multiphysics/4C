@@ -9,6 +9,7 @@
 #include "4C_fem_discretization_hdg.hpp"
 #include "4C_fem_discretization_utils.hpp"
 #include "4C_fem_nurbs_discretization.hpp"
+#include "4C_io_input_parameter_container.hpp"
 #include "4C_linalg_mapextractor.hpp"
 #include "4C_utils_function.hpp"
 #include "4C_utils_function_manager.hpp"
@@ -230,11 +231,11 @@ void Core::FE::Utils::Dbc::read_dirichlet_condition(const Teuchos::ParameterList
   // determine number of conditioned nodes
   const unsigned nnode = (*nodeids).size();
   // get onoff toggles from condition
-  const auto* onoff = &cond.parameters().get<std::vector<int>>("ONOFF");
+  const auto onoff = cond.parameters().get<std::vector<int>>("ONOFF");
   // get val from condition
-  const auto* val = &cond.parameters().get<std::vector<double>>("VAL");
+  const auto val = cond.parameters().get<std::vector<double>>("VAL");
   // get funct from condition
-  const auto* funct = &cond.parameters().get<std::vector<int>>("FUNCT");
+  const auto funct = cond.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
   // loop nodes to identify spatial distributions of Dirichlet boundary conditions
   for (unsigned i = 0; i < nnode; ++i)
@@ -251,8 +252,7 @@ void Core::FE::Utils::Dbc::read_dirichlet_condition(const Teuchos::ParameterList
       // get a column node, if desired
       // NOTE: the following is not supported for discretization wrappers
       // ----------------------------------------------------------------------
-      const Core::FE::Discretization* dis_ptr =
-          dynamic_cast<const Core::FE::Discretization*>(&discret);
+      const auto* dis_ptr = dynamic_cast<const Core::FE::Discretization*>(&discret);
       if (not dis_ptr)
         FOUR_C_THROW(
             "Sorry! The given discretization is of wrong type. There is "
@@ -289,7 +289,7 @@ void Core::FE::Utils::Dbc::read_dirichlet_condition(const Teuchos::ParameterList
           actnode->id(), total_numdf, numdf);
 
     // is the number of degrees of freedom given in the constraint definition sufficient?
-    const int num_dbc_dofs = static_cast<int>((*onoff).size());
+    const int num_dbc_dofs = static_cast<int>(onoff.size());
     if (num_dbc_dofs < numdf)
       FOUR_C_THROW("%d DOFs given but %d expected in %s", num_dbc_dofs, numdf,
           Core::Conditions::to_string(cond.type()).data());
@@ -312,7 +312,7 @@ void Core::FE::Utils::Dbc::read_dirichlet_condition(const Teuchos::ParameterList
       // get the current hierarchical order this dof is currently applying to
       const int current_order = info.hierarchy[lid];
 
-      if ((*onoff)[onesetj] == 0)
+      if (onoff[onesetj] == 0)
       {
         // the dof at geometry of lower hierarchical order can reset the toggle value
         // Note: this check is crucial to avoid DBC at the same geometrical level to not override
@@ -332,22 +332,21 @@ void Core::FE::Utils::Dbc::read_dirichlet_condition(const Teuchos::ParameterList
           info.hierarchy[lid] = hierarchical_order;
         }
       }
-      else  // if ((*onoff)[onesetj]==1)
+      else  // if (onoff[onesetj]==1)
       {
         // evaluate the DBC prescribed value based on time curve
         // here we only compute based on time curve and not the derivative, hence degree = 0
-        int funct_num = -1;
         double functfac = 1.0;
-        if (funct)
+
+        if (funct[onesetj].has_value() && funct[onesetj].value() > 0)
         {
-          funct_num = (*funct)[onesetj];
-          if (funct_num > 0)
-            functfac = params.get<const Core::Utils::FunctionManager*>("function_manager")
-                           ->function_by_id<Core::Utils::FunctionOfSpaceTime>(funct_num - 1)
-                           .evaluate(actnode->x().data(), time, onesetj);
+          functfac =
+              params.get<const Core::Utils::FunctionManager*>("function_manager")
+                  ->function_by_id<Core::Utils::FunctionOfSpaceTime>(funct[onesetj].value() - 1)
+                  .evaluate(actnode->x().data(), time, onesetj);
         }
 
-        const double value = (*val)[onesetj] * functfac;
+        const double value = val[onesetj] * functfac;
 
         // check: if the dof has been fixed before and the DBC set it to a different value, then an
         // inconsistency is detected.
@@ -417,8 +416,6 @@ void Core::FE::Utils::Dbc::read_dirichlet_condition(const Teuchos::ParameterList
       }
     }  // loop over nodal DOFs
   }  // loop over nodes
-
-  return;
 }
 
 /*----------------------------------------------------------------------------*
@@ -475,9 +472,9 @@ void Core::FE::Utils::Dbc::do_dirichlet_condition(const Teuchos::ParameterList& 
   // determine number of conditioned nodes
   const unsigned nnode = (*nodeids).size();
   // get onoff, funct, and val from condition
-  const auto* onoff = &cond.parameters().get<std::vector<int>>("ONOFF");
-  const auto* funct = &cond.parameters().get<std::vector<int>>("FUNCT");
-  const auto* val = &cond.parameters().get<std::vector<double>>("VAL");
+  const auto onoff = cond.parameters().get<std::vector<int>>("ONOFF");
+  const auto funct = cond.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
+  const auto val = cond.parameters().get<std::vector<double>>("VAL");
 
   // determine highest degree of time derivative
   // and first existent system vector to apply DBC to
@@ -530,29 +527,24 @@ void Core::FE::Utils::Dbc::do_dirichlet_condition(const Teuchos::ParameterList& 
       const int onesetj = j % numdf;
 
       // check whether dof gid is a dbc gid and is prescribed only by the current condition
-      const bool dbc_on_dof_is_off =
-          ((*onoff)[onesetj] == 0);  // dof is not DBC by current condition
+      const bool dbc_on_dof_is_off = (onoff[onesetj] == 0);  // dof is not DBC by current condition
       const bool dbc_toggle_is_off =
           (toggle[lid] == 0);  // dof is not prescribed by current condition or
                                // is unprescribed by lower hierarchy condition
       if (dbc_on_dof_is_off || dbc_toggle_is_off) continue;
 
-      std::vector<double> value(deg + 1, (*val)[onesetj]);
+      std::vector<double> value(deg + 1, val[onesetj]);
 
       // factor given by temporal and spatial function
-      std::vector<double> functimederivfac(deg + 1, 1.0);
-      for (unsigned i = 1; i < (deg + 1); ++i) functimederivfac[i] = 0.0;
+      std::vector<double> functimederivfac(deg + 1, 0.0);
+      functimederivfac[0] = 1.0;
 
-      int funct_num = -1;
-      if (funct)
+      if (funct[onesetj].has_value() && funct[onesetj].value() > 0)
       {
-        funct_num = (*funct)[onesetj];
-        if (funct_num > 0)
-        {
-          functimederivfac = params.get<const Core::Utils::FunctionManager*>("function_manager")
-                                 ->function_by_id<Core::Utils::FunctionOfSpaceTime>(funct_num - 1)
-                                 .evaluate_time_derivative(actnode->x().data(), time, deg, onesetj);
-        }
+        functimederivfac =
+            params.get<const Core::Utils::FunctionManager*>("function_manager")
+                ->function_by_id<Core::Utils::FunctionOfSpaceTime>(funct[onesetj].value() - 1)
+                .evaluate_time_derivative(actnode->x().data(), time, deg, onesetj);
       }
 
       // apply factors to Dirichlet value
@@ -568,8 +560,6 @@ void Core::FE::Utils::Dbc::do_dirichlet_condition(const Teuchos::ParameterList& 
 
     }  // loop over nodal DOFs
   }  // loop over nodes
-
-  return;
 }
 
 /*----------------------------------------------------------------------*

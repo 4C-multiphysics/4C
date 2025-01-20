@@ -23,6 +23,7 @@
 #include "4C_fluid_rotsym_periodicbc.hpp"
 #include "4C_global_data.hpp"
 #include "4C_immersed_problem_immersed_base.hpp"
+#include "4C_io_input_parameter_container.hpp"
 #include "4C_mat_carreauyasuda.hpp"
 #include "4C_mat_fluid_linear_density_viscosity.hpp"
 #include "4C_mat_fluid_murnaghantait.hpp"
@@ -1429,25 +1430,18 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::body_force(Discret::Elem
     const auto condtype = myneumcond[0]->parameters().get<std::string>("TYPE");
 
     // get values and switches from the condition
-    const auto* onoff = &myneumcond[0]->parameters().get<std::vector<int>>("ONOFF");
-    const auto* val = &myneumcond[0]->parameters().get<std::vector<double>>("VAL");
-    const auto* functions = &myneumcond[0]->parameters().get<std::vector<int>>("FUNCT");
+    const auto onoff = myneumcond[0]->parameters().get<std::vector<int>>("ONOFF");
+    const auto val = myneumcond[0]->parameters().get<std::vector<double>>("VAL");
+    const auto functions =
+        myneumcond[0]->parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
     // factor given by spatial function
     double functionfac = 1.0;
-    int functnum = -1;
-
 
     // set this condition to the ebofoaf array
     for (int isd = 0; isd < nsd_; isd++)
     {
-      // get factor given by spatial function
-      if (functions)
-        functnum = (*functions)[isd];
-      else
-        functnum = -1;
-
-      double num = (*onoff)[isd] * (*val)[isd];
+      double num = onoff[isd] * val[isd];
 
       if (enrtype == Discret::Elements::Fluid::xwall)
       {
@@ -1456,17 +1450,18 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::body_force(Discret::Elem
         // included
         for (int jnode = 0; jnode < nen_; jnode += 2)
         {
-          if (functnum > 0)
+          if (functions[isd].has_value() && functions[isd].value() > 0)
           {
-            // evaluate function at the position of the current node
+            // evaluate function at the position of the current node if it is not none
             // ------------------------------------------------------
             // comment: this introduces an additional error compared to an
             // evaluation at the integration point. However, we need a node
             // based element bodyforce vector for prescribed pressure gradients
             // in some fancy turbulance stuff.
-            functionfac = Global::Problem::instance()
-                              ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                              .evaluate((ele->nodes()[jnode])->x().data(), time, isd);
+            functionfac =
+                Global::Problem::instance()
+                    ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functions[isd].value() - 1)
+                    .evaluate((ele->nodes()[jnode])->x().data(), time, isd);
           }
           else
             functionfac = 1.0;
@@ -1484,7 +1479,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::body_force(Discret::Elem
       else
         for (int jnode = 0; jnode < nen_; ++jnode)
         {
-          if (functnum > 0)
+          if (functions[isd].has_value() && functions[isd].value() > 0)
           {
             // evaluate function at the position of the current node
             // ------------------------------------------------------
@@ -1492,9 +1487,10 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::body_force(Discret::Elem
             // evaluation at the integration point. However, we need a node
             // based element bodyforce vector for prescribed pressure gradients
             // in some fancy turbulance stuff.
-            functionfac = Global::Problem::instance()
-                              ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                              .evaluate((ele->nodes()[jnode])->x().data(), time, isd);
+            functionfac =
+                Global::Problem::instance()
+                    ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functions[isd].value() - 1)
+                    .evaluate((ele->nodes()[jnode])->x().data(), time, isd);
           }
           else
             functionfac = 1.0;
@@ -1530,20 +1526,19 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::body_force(Discret::Elem
     if (myscatraneumcond.size() == 1)
     {
       // check for potential time curve
-      const auto* funct = &myscatraneumcond[0]->parameters().get<std::vector<int>>("FUNCT");
-      int functnum = -1;
-      if (funct) functnum = (*funct)[0];
+      const auto funct =
+          myscatraneumcond[0]->parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
       // initialization of time-curve factor
       double functfac = 0.0;
 
       // compute potential time curve or set time-curve factor to one
-      if (functnum >= 0)
+      if (funct[0].has_value() && funct[0] > 0)
       {
         // time factor (negative time indicating error)
         if (time >= 0.0)
           functfac = Global::Problem::instance()
-                         ->function_by_id<Core::Utils::FunctionOfTime>(functnum)
+                         ->function_by_id<Core::Utils::FunctionOfTime>(funct[0].value() - 1)
                          .evaluate(time);
         else
           FOUR_C_THROW("Negative time in bodyforce calculation: time = %f", time);
@@ -1552,13 +1547,13 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::body_force(Discret::Elem
         functfac = 1.0;
 
       // get values and switches from the condition
-      const auto* onoff = &myscatraneumcond[0]->parameters().get<std::vector<int>>("ONOFF");
-      const auto* val = &myscatraneumcond[0]->parameters().get<std::vector<double>>("VAL");
+      const auto onoff = myscatraneumcond[0]->parameters().get<std::vector<int>>("ONOFF");
+      const auto val = myscatraneumcond[0]->parameters().get<std::vector<double>>("VAL");
 
       // set this condition to the bodyforce array
       for (int jnode = 0; jnode < nen_; jnode++)
       {
-        escabofoaf(jnode) = (*onoff)[0] * (*val)[0] * functfac;
+        escabofoaf(jnode) = onoff[0] * val[0] * functfac;
       }
     }
   }

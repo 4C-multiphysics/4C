@@ -119,7 +119,8 @@ void Core::Conditions::LocsysManager::update(const double time,
         typelocsys_[i] = currlocsys->type();
 
         const auto rotangle = currlocsys->parameters().get<std::vector<double>>("ROTANGLE");
-        const auto funct = currlocsys->parameters().get<std::vector<int>>("FUNCT");
+        const auto funct =
+            currlocsys->parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
         const auto useUpdatedNodePos = currlocsys->parameters().get<int>("USEUPDATEDNODEPOS");
         const std::vector<int>* nodes = currlocsys->get_nodes();
         const auto useConsistentNodeNormal =
@@ -129,7 +130,9 @@ void Core::Conditions::LocsysManager::update(const double time,
             currlocsys->type() == Core::Conditions::LineLocsys)
         {
           // Check, if we have time dependent locsys conditions (through functions)
-          if (((funct)[0] > 0 or (funct)[1] > 0 or (funct)[2] > 0) or
+          if ((((funct)[0].has_value() && (funct)[0].value() > 0) or
+                  ((funct)[1].has_value() && (funct)[1].value() > 0) or
+                  ((funct)[2].has_value() && (funct)[2].value() > 0)) or
               ((useConsistentNodeNormal == 1) and (useUpdatedNodePos == 1)))
             locsysfunct_ = true;
         }
@@ -137,7 +140,10 @@ void Core::Conditions::LocsysManager::update(const double time,
                  currlocsys->type() == Core::Conditions::PointLocsys)
         {
           // Check, if we have time dependent locsys conditions (through functions)
-          if (((funct)[0] > 0 or (funct)[1] > 0 or (funct)[2] > 0)) locsysfunct_ = true;
+          if (((funct)[0].has_value() && (funct)[0].value() > 0) or
+              ((funct)[1].has_value() && (funct)[1].value() > 0) or
+              ((funct)[2].has_value() && (funct)[2].value() > 0))
+            locsysfunct_ = true;
         }
 
         // Here we have the convention that 2D problems "live" in the global xy-plane.
@@ -183,7 +189,7 @@ void Core::Conditions::LocsysManager::update(const double time,
             {
               // factor given by spatial function
               double functfac = 1.0;
-              if ((funct)[j] > 0)
+              if ((funct)[j].has_value())
               {
                 Core::Nodes::Node* node = discret().g_node(nodeGID);
 
@@ -209,14 +215,14 @@ void Core::Conditions::LocsysManager::update(const double time,
 
                   // Evaluate function with current node position
                   functfac = (function_manager.function_by_id<Core::Utils::FunctionOfSpaceTime>(
-                                  (funct)[j] - 1))
+                                  (funct)[j].value() - 1))
                                  .evaluate(currPos.data(), time, j);
                 }
                 else
                 {
                   // Evaluate function with reference node position
                   functfac = (function_manager.function_by_id<Core::Utils::FunctionOfSpaceTime>(
-                                  (funct)[j] - 1))
+                                  (funct)[j].value() - 1))
                                  .evaluate(node->x().data(), time, j);
                 }
               }

@@ -1323,9 +1323,9 @@ void Discret::Elements::ScaTraEleCalcHDG<distype, probdim>::LocalSolver::compute
 
   // get values, switches and spatial functions from the condition
   // (assumed to be constant on element boundary)
-  const auto* onoff = &condition->parameters().get<std::vector<int>>("ONOFF");
-  const auto* val = &condition->parameters().get<std::vector<double>>("VAL");
-  const auto* func = &condition->parameters().get<std::vector<int>>("FUNCT");
+  const auto onoff = condition->parameters().get<std::vector<int>>("ONOFF");
+  const auto val = condition->parameters().get<std::vector<double>>("VAL");
+  const auto func = condition->parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
 
   Core::FE::ShapeValuesFaceParams svfparams(
@@ -1346,33 +1346,27 @@ void Discret::Elements::ScaTraEleCalcHDG<distype, probdim>::LocalSolver::compute
     double coordgp[3];  // we always need three coordinates for function evaluation!
     for (int i = 0; i < 3; ++i) coordgp[i] = shapesface_->xyzreal(i, iquad);
 
-    int functnum = -1;
     const double* coordgpref = coordgp;  // needed for function evaluation
 
-    if ((*onoff)[0])  // is this dof activated?
+    if (onoff[0])  // is this dof activated?
     {
       // factor given by spatial function
-      if (func) functnum = (*func)[0];
-
-      if (functnum > 0)
+      if (func[0].has_value() && func[0].value() > 0)
       {
         // evaluate function at current Gauss point (provide always 3D coordinates!)
         functfac = Global::Problem::instance()
-                       ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
+                       ->function_by_id<Core::Utils::FunctionOfSpaceTime>(func[0].value() - 1)
                        .evaluate(coordgpref, time, 0);
       }
       else
         functfac = 1.;
 
-      const double val_fac_funct_fac = (*val)[0] * shapesface_->jfac(iquad) * functfac;
+      const double val_fac_funct_fac = val[0] * shapesface_->jfac(iquad) * functfac;
 
       for (unsigned int node = 0; node < shapesface_->nfdofs_; node++)
         elevec[indexstart + node] += shapesface_->shfunct(node, iquad) * val_fac_funct_fac;
-    }  // if ((*onoff)[dof])
+    }  // if (onoff[dof])
   }  // loop over integration points
-
-
-  return;
 }  // ComputeNeumannBC
 
 /*----------------------------------------------------------------------*

@@ -589,13 +589,13 @@ int Discret::Elements::Beam3r::evaluate_neumann(Teuchos::ParameterList& params,
 
   // onoff is related to the first numdf flags of a line Neumann condition in the input file;
   // value 1 for flag i says that condition is active for i-th degree of freedom
-  const auto* onoff = &condition.parameters().get<std::vector<int>>("ONOFF");
+  const auto onoff = condition.parameters().get<std::vector<int>>("ONOFF");
   // val is related to the numdf "VAL" fields after the onoff flags of the Neumann condition
   // in the input file; val gives the values of the force as a multiple of the prescribed load curve
-  const auto* val = &condition.parameters().get<std::vector<double>>("VAL");
+  const auto val = condition.parameters().get<std::vector<double>>("VAL");
   // funct is related to the numdf "FUNCT" fields after the val field of the Neumann condition
   // in the input file; funct gives the number of the function defined in the section FUNCT
-  const auto* functions = &condition.parameters().get<std::vector<int>>("FUNCT");
+  const auto functions = condition.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
   // integration points in parameter space and weights
   double xi = 0.0;
@@ -635,23 +635,18 @@ int Discret::Elements::Beam3r::evaluate_neumann(Teuchos::ParameterList& params,
     double ar[6];
 
     // loop the relevant dofs of a node
-    for (int dof = 0; dof < 6; ++dof) ar[dof] = fac * (*onoff)[dof] * (*val)[dof];
+    for (int dof = 0; dof < 6; ++dof) ar[dof] = fac * onoff[dof] * val[dof];
     double functionfac = 1.0;
-    int functnum = -1;
 
     // sum up load components
     for (unsigned int dof = 0; dof < 6; ++dof)
     {
-      if (functions)
-        functnum = (*functions)[dof];
-      else
-        functnum = -1;
-
-      // evaluate function at the position of the current GP
-      if (functnum > 0)
-        functionfac = Global::Problem::instance()
-                          ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                          .evaluate(X_ref.data(), time, dof);
+      // evaluate function at the position of the current GP if it is not none
+      if (functions[dof].has_value() && functions[dof].value() > 0)
+        functionfac =
+            Global::Problem::instance()
+                ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functions[dof].value() - 1)
+                .evaluate(X_ref.data(), time, dof);
       else
         functionfac = 1.0;
 

@@ -122,7 +122,7 @@ void FLD::Utils::DbcHdgFluid::read_dirichlet_condition(const Teuchos::ParameterL
           if (dbcgids[set_row] != nullptr) (*dbcgids[set_row]).erase(gid);
           continue;
         }
-        else  // if ((*onoff)[onesetj]==1)
+        else  // if (onoff[onesetj]==1)
         {
           // dof has DBC, set toggle vector one
           info.toggle[lid] = 1;
@@ -171,9 +171,9 @@ void FLD::Utils::DbcHdgFluid::do_dirichlet_condition(const Teuchos::ParameterLis
   if (!nodeids) FOUR_C_THROW("Dirichlet condition does not have nodal cloud");
 
   // get curves, functs, vals, and onoff toggles from the condition
-  const auto* funct = &cond.parameters().get<std::vector<int>>("FUNCT");
-  const auto* val = &cond.parameters().get<std::vector<double>>("VAL");
-  const auto* onoff = &cond.parameters().get<std::vector<int>>("ONOFF");
+  const auto funct = cond.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
+  const auto val = cond.parameters().get<std::vector<double>>("VAL");
+  const auto onoff = cond.parameters().get<std::vector<int>>("ONOFF");
 
   // determine highest degree of time derivative
   // and first existent system vector to apply DBC to
@@ -210,12 +210,21 @@ void FLD::Utils::DbcHdgFluid::do_dirichlet_condition(const Teuchos::ParameterLis
     else
       // TODO: Introduce a general action type that is valid for all problems
       initParams.set<FLD::Action>("action", FLD::project_fluid_field);
-    if (funct != nullptr)
+
+    // valid for all problems
+    std::vector<int> funct_without_nones(funct.size());
+    for (unsigned int i = 0; i < funct.size(); ++i)
     {
-      Teuchos::Array<int> functarray(*funct);
-      initParams.set("funct", functarray);
+      if (funct[i].has_value() && funct[i].value() > 0)
+        funct_without_nones[i] = funct[i].value();
+      else
+        funct_without_nones[i] = -1;
     }
-    Teuchos::Array<int> onoffarray(*onoff);
+
+    Teuchos::Array<int> functarray(funct_without_nones);
+    initParams.set("funct", functarray);
+
+    Teuchos::Array<int> onoffarray(onoff);
     initParams.set("onoff", onoffarray);
     initParams.set("time", time);
 
@@ -233,7 +242,7 @@ void FLD::Utils::DbcHdgFluid::do_dirichlet_condition(const Teuchos::ParameterLis
           faceele->parent_master_element()->num_dof_per_component(faceele->face_master_number());
       const unsigned int component = dofperface / dofpercomponent;
 
-      if (onoff->size() <= component || (*onoff)[component] == 0 ||
+      if (onoff.size() <= component || onoff[component] == 0 ||
           Global::Problem::instance(0)->get_problem_type() != Core::ProblemType::fluid)
         pressureDone = true;
       if (!pressureDone)
@@ -328,9 +337,8 @@ void FLD::Utils::DbcHdgFluid::do_dirichlet_condition(const Teuchos::ParameterLis
       std::vector<int> dofs = discret.dof(0, discret.l_row_face(i));
 
       bool do_evaluate = false;
-      if (funct != nullptr)
-        for (unsigned int i = 0; i < component; ++i)
-          if ((*funct)[i] > 0) do_evaluate = true;
+      for (unsigned int i = 0; i < component; ++i)
+        if (funct[i].has_value() && funct[i].value() > 0) do_evaluate = true;
 
       if (do_evaluate)
       {
@@ -359,7 +367,7 @@ void FLD::Utils::DbcHdgFluid::do_dirichlet_condition(const Teuchos::ParameterLis
         // check whether dof gid is a dbc gid
         if (toggle[lid] == 0) continue;
 
-        std::vector<double> value(deg + 1, (*val)[onesetj]);
+        std::vector<double> value(deg + 1, val[onesetj]);
 
         // assign value
         if (systemvectors[0] != nullptr) (*systemvectors[0])[lid] = value[0] * elevec1(j);

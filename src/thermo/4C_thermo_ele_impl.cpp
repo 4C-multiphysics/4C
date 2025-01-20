@@ -2758,40 +2758,35 @@ void Discret::Elements::TemperImpl<distype>::radiation(
     else if (detJ < 0.0)
       FOUR_C_THROW("NEGATIVE JACOBIAN DETERMINANT");
 
-    const auto* funct = &myneumcond[0]->parameters().get<std::vector<int>>("FUNCT");
-    const bool havefunct =
-        funct ? std::any_of(funct->begin(), funct->end(), [](int index) { return index > 0; })
-              : false;
+    const auto funct =
+        myneumcond[0]->parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
     Core::LinAlg::Matrix<nsd_, 1> xrefegp(false);
     // material/reference co-ordinates of Gauss point
-    if (havefunct)
+    for (int dim = 0; dim < nsd_; dim++)
     {
-      for (int dim = 0; dim < nsd_; dim++)
-      {
-        xrefegp(dim) = 0.0;
-        for (int nodid = 0; nodid < nen_; ++nodid)
-          xrefegp(dim) += funct_(nodid) * xrefe(nodid, dim);
-      }
+      xrefegp(dim) = 0.0;
+      for (int nodid = 0; nodid < nen_; ++nodid) xrefegp(dim) += funct_(nodid) * xrefe(nodid, dim);
     }
 
     // function evaluation
-    FOUR_C_ASSERT(funct->size() == 1, "Need exactly one function.");
-    const int functnum = (funct) ? (*funct)[0] : -1;
-    const double functfac =
-        (functnum > 0) ? Global::Problem::instance()
-                             ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                             .evaluate(xrefegp.data(), time, 0)
-                       : 1.0;
+    FOUR_C_ASSERT(funct.size() == 1, "Need exactly one function.");
+
+    double functfac = 1.0;
+    if (funct[0].has_value() && funct[0].value() > 0)
+      // evaluate function at current gauss point (3D position vector required!)
+      functfac = Global::Problem::instance()
+                     ->function_by_id<Core::Utils::FunctionOfSpaceTime>(funct[0].value() - 1)
+                     .evaluate(xrefegp.data(), time, 0);
 
     // get values and switches from the condition
-    const auto* onoff = &myneumcond[0]->parameters().get<std::vector<int>>("ONOFF");
-    const auto* val = &myneumcond[0]->parameters().get<std::vector<double>>("VAL");
+    const auto onoff = myneumcond[0]->parameters().get<std::vector<int>>("ONOFF");
+    const auto val = myneumcond[0]->parameters().get<std::vector<double>>("VAL");
 
     // set this condition to the radiation array
     for (int idof = 0; idof < numdofpernode_; idof++)
     {
-      radiation_(idof) = (*onoff)[idof] * (*val)[idof] * functfac;
+      radiation_(idof) = onoff[idof] * val[idof] * functfac;
     }
   }
   else

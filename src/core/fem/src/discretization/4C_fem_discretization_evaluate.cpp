@@ -195,7 +195,7 @@ void Core::FE::Discretization::evaluate_neumann(Teuchos::ParameterList& params,
     }
     const std::vector<int>* nodeids = cond->get_nodes();
     if (!nodeids) FOUR_C_THROW("PointNeumann condition does not have nodal cloud");
-    const auto* tmp_funct = cond->parameters().get_if<std::vector<int>>("FUNCT");
+    const auto& tmp_funct = cond->parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
     const auto& onoff = cond->parameters().get<std::vector<int>>("ONOFF");
     const auto& val = cond->parameters().get<std::vector<double>>("VAL");
 
@@ -217,15 +217,16 @@ void Core::FE::Discretization::evaluate_neumann(Teuchos::ParameterList& params,
         const double functfac = std::invoke(
             [&]()
             {
-              if (tmp_funct && (*tmp_funct)[j] > 0)
+              if (tmp_funct[j].has_value() && tmp_funct[j].value() > 0)
               {
                 const auto* function_manager =
                     params.isParameter("interface")
                         ? params.get<std::shared_ptr<Core::Elements::ParamsInterface>>("interface")
                               ->get_function_manager()
                         : params.get<const Core::Utils::FunctionManager*>("function_manager");
+
                 return function_manager
-                    ->function_by_id<Core::Utils::FunctionOfTime>((*tmp_funct)[j] - 1)
+                    ->function_by_id<Core::Utils::FunctionOfTime>((tmp_funct[j]).value() - 1)
                     .evaluate(time);
               }
               else

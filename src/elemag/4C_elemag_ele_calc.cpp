@@ -1418,7 +1418,7 @@ void Discret::Elements::ElemagEleCalc<distype>::LocalSolver::compute_absorbing_b
   {
     // Get the user defined functions
     auto* cond = params.getPtr<std::shared_ptr<Core::Conditions::Condition>>("condition");
-    const auto& funct = (*cond)->parameters().get<std::vector<int>>("FUNCT");
+    const auto& funct = (*cond)->parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
     const double time = params.get<double>("time");
 
     Core::LinAlg::SerialDenseVector tempVec1(shapesface_->nfdofs_ * nsd_);
@@ -1448,7 +1448,7 @@ void Discret::Elements::ElemagEleCalc<distype>::LocalSolver::compute_absorbing_b
         // magnetic field. If there is only one component all the components will
         // be initialized to the same value.
         Core::LinAlg::SerialDenseVector intVal(2 * nsd_);
-        evaluate_all(funct[0], time, xyz, intVal);
+        evaluate_all(funct[0].value_or(-1), time, xyz, intVal);
         // now fill the components in the one-sided mass matrix and the right hand side
         for (unsigned int i = 0; i < shapesface_->nfdofs_; ++i)
         {

@@ -94,7 +94,7 @@ int Discret::Elements::Bele3Line::evaluate_neumann(Teuchos::ParameterList& param
   // (assumed to be constant on element boundary)
   const auto& onoff = condition.parameters().get<std::vector<int>>("ONOFF");
   const auto& val = condition.parameters().get<std::vector<double>>("VAL");
-  const auto& functions = condition.parameters().get<std::vector<int>>("FUNCT");
+  const auto& functions = condition.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
   // set number of nodes
   const size_t iel = this->num_node();
@@ -152,24 +152,22 @@ int Discret::Elements::Bele3Line::evaluate_neumann(Teuchos::ParameterList& param
       coordgp[1] += xye(1, i) * funct[i];
     }
 
-    int functnum = -1;
     const double* coordgpref = coordgp;  // needed for function evaluation
 
     for (size_t node = 0; node < iel; ++node)
     {
       for (size_t dim = 0; dim < 3; dim++)
       {
-        // factor given by spatial function
-        functnum = functions[dim];
+        // evaluate function at current gauss point if it is not none
+        if (functions[dim].has_value() && functions[dim].value() > 0)
         {
-          if (functnum > 0)
-            // evaluate function at current gauss point (3D position vector required!)
-            functionfac = Global::Problem::instance()
-                              ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                              .evaluate(coordgpref, time, dim);
-          else
-            functionfac = 1.0;
+          functionfac =
+              Global::Problem::instance()
+                  ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functions[dim].value() - 1)
+                  .evaluate(coordgpref, time, dim);
         }
+        else
+          functionfac = 1.0;
 
         elevec1[node * numdf + dim] += funct[node] * onoff[dim] * val[dim] * fac * functionfac;
       }

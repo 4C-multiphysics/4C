@@ -891,7 +891,7 @@ namespace Discret
           const Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS, 1, double>&
               disp_totlag,
           const Core::LinAlg::Matrix<6, 1, double>& load_vector_neumann,
-          const std::vector<int>* function_numbers, double time) const;
+          const std::vector<Core::IO::Noneable<int>>& function_numbers, double time) const;
 
       /** \brief evaluate contributions to element residual vector from line Neumann condition
        *
@@ -901,7 +901,7 @@ namespace Discret
       void evaluate_line_neumann_forces(
           Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS, 1, T>& force_ext,
           const Core::LinAlg::Matrix<6, 1, double>& load_vector_neumann,
-          const std::vector<int>* function_numbers, double time) const;
+          const std::vector<Core::IO::Noneable<int>>& function_numbers, double time) const;
 
       /** \brief evaluate all contributions from brownian dynamics (thermal & viscous
        * forces/moments)

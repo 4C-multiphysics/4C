@@ -94,9 +94,10 @@ int Discret::Elements::StructuralSurface::evaluate_neumann(Teuchos::ParameterLis
   }
 
   // get values and switches from the condition
-  const auto* onoff = &condition.parameters().get<std::vector<int>>("ONOFF");
-  const auto* val = &condition.parameters().get<std::vector<double>>("VAL");
-  const auto* spa_func = condition.parameters().get_if<std::vector<int>>("FUNCT");
+  const auto onoff = condition.parameters().get<std::vector<int>>("ONOFF");
+  const auto val = condition.parameters().get<std::vector<double>>("VAL");
+  const auto* spa_func =
+      condition.parameters().get_if<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
   /*
   **    TIME CURVE BUSINESS
@@ -111,7 +112,7 @@ int Discret::Elements::StructuralSurface::evaluate_neumann(Teuchos::ParameterLis
   const int numdim = 3;
 
   // ensure that at least as many curves/functs as dofs are available
-  if (int(onoff->size()) < numdim)
+  if (int(onoff.size()) < numdim)
     FOUR_C_THROW("Fewer functions or curves defined than the element has dofs.");
 
   // element geometry update
@@ -257,9 +258,9 @@ int Discret::Elements::StructuralSurface::evaluate_neumann(Teuchos::ParameterLis
       case neum_live:
       {
         // check for correct input
-        for (int checkdof = numdim; checkdof < int(onoff->size()); ++checkdof)
+        for (int checkdof = numdim; checkdof < int(onoff.size()); ++checkdof)
         {
-          if ((*onoff)[checkdof] != 0)
+          if (onoff[checkdof] != 0)
             FOUR_C_THROW(
                 "Number of Dimensions in Neumann_Evaluation is 3. Further DoFs are not "
                 "considered.");
@@ -273,36 +274,37 @@ int Discret::Elements::StructuralSurface::evaluate_neumann(Teuchos::ParameterLis
             sqrt(metrictensor(0, 0) * metrictensor(1, 1) - metrictensor(0, 1) * metrictensor(1, 0));
 
         double functfac = 1.0;
-        int functnum = -1;
 
         for (int dof = 0; dof < numdim; dof++)
         {
-          if ((*onoff)[dof])  // is this dof activated?
+          if (onoff[dof])  // is this dof activated?
           {
             // factor given by spatial function
-            if (spa_func) functnum = (*spa_func)[dof];
-
-            if (functnum > 0)
+            if (spa_func)
             {
-              // Calculate reference position of GP
-              Core::LinAlg::multiply_tn(gp_coord, funct, x);
-              // write coordinates in another datatype
-              double gp_coord2[numdim];
-              for (int i = 0; i < numdim; i++)
+              if ((*spa_func)[dof].has_value() && (*spa_func)[dof].value() > 0)
               {
-                gp_coord2[i] = gp_coord(0, i);
-              }
-              const double* coordgpref = gp_coord2;  // needed for function evaluation
+                // Calculate reference position of GP
+                Core::LinAlg::multiply_tn(gp_coord, funct, x);
+                // write coordinates in another datatype
+                double gp_coord2[numdim];
+                for (int i = 0; i < numdim; i++)
+                {
+                  gp_coord2[i] = gp_coord(0, i);
+                }
+                const double* coordgpref = gp_coord2;  // needed for function evaluation
 
-              // evaluate function at current gauss point
-              functfac = Global::Problem::instance()
-                             ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                             .evaluate(coordgpref, time, dof);
+                // evaluate function at current gauss point
+                functfac = Global::Problem::instance()
+                               ->function_by_id<Core::Utils::FunctionOfSpaceTime>(
+                                   (*spa_func)[dof].value() - 1)
+                               .evaluate(coordgpref, time, dof);
+              }
             }
             else
               functfac = 1.0;
 
-            const double fac = intpoints.qwgt[gp] * detA * (*val)[dof] * functfac;
+            const double fac = intpoints.qwgt[gp] * detA * val[dof] * functfac;
             for (int node = 0; node < numnode; ++node)
             {
               elevec1[node * numdf + dof] += funct[node] * fac;
@@ -315,36 +317,37 @@ int Discret::Elements::StructuralSurface::evaluate_neumann(Teuchos::ParameterLis
       case neum_pseudo_orthopressure:
       case neum_orthopressure:
       {
-        if ((*onoff)[0] != 1) FOUR_C_THROW("orthopressure on 1st dof only!");
+        if (onoff[0] != 1) FOUR_C_THROW("orthopressure on 1st dof only!");
         for (int checkdof = 1; checkdof < 3; ++checkdof)
-          if ((*onoff)[checkdof] != 0) FOUR_C_THROW("orthopressure on 1st dof only!");
-        double ortho_value = (*val)[0];
+          if (onoff[checkdof] != 0) FOUR_C_THROW("orthopressure on 1st dof only!");
+        double ortho_value = val[0];
         // if (!ortho_value) FOUR_C_THROW("no orthopressure value given!"); // in case of coupling
         // with redairways, there is a zero orthoval in the beginning!!!!
         std::vector<double> normal(3);
         surface_integration(normal, xc, deriv);
         // Calculate spatial position of GP
         double functfac = 1.0;
-        int functnum = -1;
 
         // factor given by spatial function
-        if (spa_func) functnum = (*spa_func)[0];
-
-        if (functnum > 0)
+        if (spa_func)
         {
-          Core::LinAlg::multiply_tn(gp_coord, funct, xc);
-          // write coordinates in another datatype
-          double gp_coord2[numdim];
-          for (int i = 0; i < numdim; i++)
+          if ((*spa_func)[0].has_value() && (*spa_func)[0].value() > 0)
           {
-            gp_coord2[i] = gp_coord(0, i);
-          }
-          const double* coordgpref = gp_coord2;  // needed for function evaluation
+            Core::LinAlg::multiply_tn(gp_coord, funct, xc);
+            // write coordinates in another datatype
+            double gp_coord2[numdim];
+            for (int i = 0; i < numdim; i++)
+            {
+              gp_coord2[i] = gp_coord(0, i);
+            }
+            const double* coordgpref = gp_coord2;  // needed for function evaluation
 
-          // evaluate function at current gauss point
-          functfac = Global::Problem::instance()
-                         ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                         .evaluate(coordgpref, time, 0);
+            // evaluate function at current gauss point
+            functfac =
+                Global::Problem::instance()
+                    ->function_by_id<Core::Utils::FunctionOfSpaceTime>((*spa_func)[0].value() - 1)
+                    .evaluate(coordgpref, time, 0);
+          }
         }
 
         const double fac = intpoints.qwgt[gp] * functfac * ortho_value * normalfac;

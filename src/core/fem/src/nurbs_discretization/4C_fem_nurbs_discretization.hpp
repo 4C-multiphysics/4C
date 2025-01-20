@@ -15,6 +15,7 @@
 #include "4C_fem_general_cell_type.hpp"
 #include "4C_fem_nurbs_discretization_control_point.hpp"
 #include "4C_fem_nurbs_discretization_knotvector.hpp"
+#include "4C_io_input_parameter_container.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -196,8 +197,8 @@ namespace Core::FE
       template <Core::FE::CellType distype>
       void fill_matrix_and_rhs_for_ls_dirichlet_boundary(Core::Elements::Element& ele,
           const std::vector<Core::LinAlg::SerialDenseVector>* knots, const std::vector<int>& lm,
-          const std::vector<int>* funct, const std::vector<double>* val, const unsigned deg,
-          const double time, Core::LinAlg::SerialDenseMatrix& elemass,
+          const std::vector<Core::IO::Noneable<int>>& funct, const std::vector<double>& val,
+          const unsigned deg, const double time, Core::LinAlg::SerialDenseMatrix& elemass,
           std::vector<Core::LinAlg::SerialDenseVector>& elerhs,
           const Core::Utils::FunctionManager& function_manager) const;
 
@@ -218,8 +219,8 @@ namespace Core::FE
       template <Core::FE::CellType distype>
       void fill_matrix_and_rhs_for_ls_dirichlet_domain(Core::Elements::Element& ele,
           const std::vector<Core::LinAlg::SerialDenseVector>* knots, const std::vector<int>& lm,
-          const std::vector<int>* funct, const std::vector<double>* val, const unsigned deg,
-          const double time, Core::LinAlg::SerialDenseMatrix& elemass,
+          const std::vector<Core::IO::Noneable<int>>& funct, const std::vector<double>& val,
+          const unsigned deg, const double time, Core::LinAlg::SerialDenseMatrix& elemass,
           std::vector<Core::LinAlg::SerialDenseVector>& elerhs,
           const Core::Utils::FunctionManager& function_manager) const;
 

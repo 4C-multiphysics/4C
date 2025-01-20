@@ -26,6 +26,8 @@
 #include "4C_scatra_ele_parameter_turbulence.hpp"
 #include "4C_utils_function.hpp"
 
+#include <vector>
+
 FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*
@@ -858,26 +860,30 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::body_force(
   if (myneumcond.size() == 1)
   {
     // (SPATIAL) FUNCTION BUSINESS
-    const auto* funct = &myneumcond[0]->parameters().get<std::vector<int>>("FUNCT");
+    const auto funct =
+        myneumcond[0]->parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
     // get values and switches from the condition
-    const auto* onoff = &myneumcond[0]->parameters().get<std::vector<int>>("ONOFF");
-    const auto* val = &myneumcond[0]->parameters().get<std::vector<double>>("VAL");
+    const auto onoff = myneumcond[0]->parameters().get<std::vector<int>>("ONOFF");
+    const auto val = myneumcond[0]->parameters().get<std::vector<double>>("VAL");
 
     // set this condition to the bodyforce array
     for (int idof = 0; idof < numdofpernode_; idof++)
     {
       // function evaluation
-      const int functnum = (funct) ? (*funct)[idof] : -1;
       for (unsigned jnode = 0; jnode < nen_; jnode++)
       {
-        const double functfac =
-            (functnum > 0)
-                ? Global::Problem::instance()
-                      ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                      .evaluate((ele->nodes()[jnode])->x().data(), scatraparatimint_->time(), idof)
-                : 1.0;
-        (bodyforce_[idof])(jnode) = (*onoff)[idof] * (*val)[idof] * functfac;
+        double functfac = 1.0;
+
+        if (funct[idof].has_value() && funct[idof].value() > 0)
+        {
+          functfac =
+              Global::Problem::instance()
+                  ->function_by_id<Core::Utils::FunctionOfSpaceTime>(funct[idof].value() - 1)
+                  .evaluate((ele->nodes()[jnode])->x().data(), scatraparatimint_->time(), idof);
+        }
+
+        (bodyforce_[idof])(jnode) = onoff[idof] * val[idof] * functfac;
       }
     }
   }

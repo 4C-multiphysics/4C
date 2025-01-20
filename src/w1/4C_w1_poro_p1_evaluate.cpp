@@ -906,9 +906,9 @@ int Discret::Elements::Wall1PoroP1<distype>::evaluate_neumann(Teuchos::Parameter
 
 
   // get values and switches from the condition
-  const auto* onoff = &condition.parameters().get<std::vector<int>>("ONOFF");
-  const auto* val = &condition.parameters().get<std::vector<double>>("VAL");
-  const auto* funct = &condition.parameters().get<std::vector<int>>("FUNCT");
+  const auto onoff = condition.parameters().get<std::vector<int>>("ONOFF");
+  const auto val = condition.parameters().get<std::vector<double>>("VAL");
+  const auto funct = condition.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
 
 
   Core::LinAlg::Matrix<Base::numdim_, Base::numnod_> N_XYZ;
@@ -937,12 +937,12 @@ int Discret::Elements::Wall1PoroP1<distype>::evaluate_neumann(Teuchos::Parameter
     // loop the dofs of a node
     for (int i = 0; i < Base::numdim_; ++i)
     {
-      if ((*onoff)[i])
+      if (onoff[i])
       {
-        // factor given by spatial function
-        const int functnum = (funct) ? (*funct)[i] : -1;
         double functfac = 1.0;
-        if (functnum > 0)
+
+        // factor given by spatial function
+        if (funct[i].has_value() && funct[i].value() > 0)
         {
           // calculate reference position of GP
           Core::LinAlg::Matrix<1, Base::numdim_> gp_coord;
@@ -958,11 +958,11 @@ int Discret::Elements::Wall1PoroP1<distype>::evaluate_neumann(Teuchos::Parameter
 
           // evaluate function at current gauss point
           functfac = Global::Problem::instance()
-                         ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
+                         ->function_by_id<Core::Utils::FunctionOfSpaceTime>(funct[i].value() - 1)
                          .evaluate(coordgpref, time, i);
         }
 
-        ar[i] = fac * (*val)[i] * functfac;
+        ar[i] = fac * val[i] * functfac;
       }
     }
 

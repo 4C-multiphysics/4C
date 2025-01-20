@@ -327,16 +327,18 @@ void Discret::Elements::AcinusImpl<distype>::evaluate_terminal_bc(RedAcinus* ele
           Bc = (condition->parameters().get<std::string>("boundarycond"));
 
           const auto vals = condition->parameters().get<std::vector<double>>("VAL");
-          const auto curve = condition->parameters().get<std::vector<int>>("curve");
-          const auto functions = condition->parameters().get<std::vector<int>>("funct");
+          const auto curve =
+              condition->parameters().get<std::vector<Core::IO::Noneable<int>>>("curve");
+          const auto functions =
+              condition->parameters().get<std::vector<Core::IO::Noneable<int>>>("funct");
 
           // Read in the value of the applied BC
           // Get factor of first CURVE
           double curvefac = 1.0;
-          if (curve[0] > 0)
+          if (curve[0].has_value() && curve[0].value() > 0)
           {
             curvefac = Global::Problem::instance()
-                           ->function_by_id<Core::Utils::FunctionOfTime>(curve[0] - 1)
+                           ->function_by_id<Core::Utils::FunctionOfTime>(curve[0].value() - 1)
                            .evaluate(time);
             BCin = vals[0] * curvefac;
           }
@@ -347,23 +349,20 @@ void Discret::Elements::AcinusImpl<distype>::evaluate_terminal_bc(RedAcinus* ele
           }
 
           // Get factor of FUNCT
-          int functnum = functions[0];
-
           double functionfac = 0.0;
-          if (functnum > 0)
+          if (functions[0].has_value() && functions[0].value() > 0)
           {
-            functionfac = Global::Problem::instance()
-                              ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                              .evaluate((ele->nodes()[i])->x().data(), time, 0);
+            functionfac =
+                Global::Problem::instance()
+                    ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functions[0].value() - 1)
+                    .evaluate((ele->nodes()[i])->x().data(), time, 0);
           }
 
           // Get factor of second CURVE
-          int curve2num = -1;
           double curve2fac = 1.0;
-          curve2num = curve[1];
-          if (curve2num > 0)
+          if (curve[1].has_value() && curve[1].value() > 0)
             curve2fac = Global::Problem::instance()
-                            ->function_by_id<Core::Utils::FunctionOfTime>(curve2num - 1)
+                            ->function_by_id<Core::Utils::FunctionOfTime>(curve[1].value() - 1)
                             .evaluate(time);
 
           // Add first_CURVE + FUNCTION * second_CURVE

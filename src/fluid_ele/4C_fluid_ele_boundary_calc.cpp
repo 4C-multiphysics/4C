@@ -221,9 +221,9 @@ int Discret::Elements::FluidBoundaryImpl<distype>::evaluate_neumann(
 
   // get values, switches and spatial functions from the condition
   // (assumed to be constant on element boundary)
-  const auto* onoff = &condition.parameters().get<std::vector<int>>("ONOFF");
-  const auto* val = &condition.parameters().get<std::vector<double>>("VAL");
-  const auto* func = &condition.parameters().get<std::vector<int>>("FUNCT");
+  const auto onoff = condition.parameters().get<std::vector<int>>("ONOFF");
+  const auto val = condition.parameters().get<std::vector<double>>("VAL");
+  const auto func = condition.parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCT");
   const std::string* type = &condition.parameters().get<std::string>("TYPE");
 
   // get time factor for Neumann term
@@ -406,26 +406,26 @@ int Discret::Elements::FluidBoundaryImpl<distype>::evaluate_neumann(
     coordgp3D[2] = 0.0;
     for (int i = 0; i < nsd_; i++) coordgp3D[i] = coordgp(i);
 
-    int functnum = -1;
     const double* coordgpref = coordgp3D;  // needed for function evaluation
 
     for (int idim = 0; idim < (nsd_); ++idim)
     {
       if (*type == "neum_live")
       {
-        if ((*onoff)[idim])  // Is this dof activated
+        if (onoff[idim])  // Is this dof activated
         {
-          if (func) functnum = (*func)[idim];
-          if (functnum > 0)
+          if (func[idim].has_value() && func[idim].value() > 0)
           {
             // evaluate function at current gauss point
-            functfac = Global::Problem::instance()
-                           ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                           .evaluate(coordgpref, time, idim);
+            functfac =
+                Global::Problem::instance()
+                    ->function_by_id<Core::Utils::FunctionOfSpaceTime>(func[idim].value() - 1)
+                    .evaluate(coordgpref, time, idim);
             if (fldparatimint_->is_new_ost_implementation())
-              functfacn = Global::Problem::instance()
-                              ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                              .evaluate(coordgpref, time - fldparatimint_->dt(), idim);
+              functfacn =
+                  Global::Problem::instance()
+                      ->function_by_id<Core::Utils::FunctionOfSpaceTime>(func[idim].value() - 1)
+                      .evaluate(coordgpref, time - fldparatimint_->dt(), idim);
           }
           else
           {
@@ -433,38 +433,38 @@ int Discret::Elements::FluidBoundaryImpl<distype>::evaluate_neumann(
             functfacn = 1.0;
           }
 
-          const double valfac = (*val)[idim] * fac_time_dens * functfac;
+          const double valfac = val[idim] * fac_time_dens * functfac;
           for (int inode = 0; inode < bdrynen_; ++inode)
           {
             elevec1_epetra[inode * numdofpernode_ + idim] += funct_(inode) * valfac;
             if (fldparatimint_->is_new_ost_implementation())
             {
-              const double valfacn = (*val)[idim] * fac_time_densn * functfacn;
+              const double valfacn = val[idim] * fac_time_densn * functfacn;
               elevec1_epetra[inode * numdofpernode_ + idim] += funct_(inode) * valfacn;
             }
           }  // end is_new_ost_implementation
-        }  // if (*onoff)
+        }  // if onoff
       }
       else if (*type == "neum_pseudo_orthopressure")
       {
-        if (idim != 0 and (*onoff)[idim])
+        if (idim != 0 and onoff[idim])
           FOUR_C_THROW(
               "If you apply a pseudo_orthopressure load on the fluid, only a load in\n"
               "the first component (which corresponds to the normal direction) is valid!");
 
-        if ((*onoff)[0])  // Do we have a load in normal direction?
+        if (onoff[0])  // Do we have a load in normal direction?
         {
-          if (func) functnum = (*func)[0];
-          if (functnum > 0)
+          if (func[0].has_value() && func[0].value() > 0)
           {
             // evaluate function at current gauss point
             functfac = Global::Problem::instance()
-                           ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
+                           ->function_by_id<Core::Utils::FunctionOfSpaceTime>(func[0].value() - 1)
                            .evaluate(coordgpref, time, idim);
             if (fldparatimint_->is_new_ost_implementation())
-              functfacn = Global::Problem::instance()
-                              ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum - 1)
-                              .evaluate(coordgpref, time - fldparatimint_->dt(), idim);
+              functfacn =
+                  Global::Problem::instance()
+                      ->function_by_id<Core::Utils::FunctionOfSpaceTime>(func[0].value() - 1)
+                      .evaluate(coordgpref, time - fldparatimint_->dt(), idim);
           }
           else
           {
@@ -472,7 +472,7 @@ int Discret::Elements::FluidBoundaryImpl<distype>::evaluate_neumann(
             functfacn = 1.0;
           }
 
-          const double valfac = (*val)[0] * fac_time_dens * functfac;
+          const double valfac = val[0] * fac_time_dens * functfac;
           for (int inode = 0; inode < bdrynen_; ++inode)
           {
             elevec1_epetra[inode * numdofpernode_ + idim] +=
@@ -480,12 +480,12 @@ int Discret::Elements::FluidBoundaryImpl<distype>::evaluate_neumann(
 
             if (fldparatimint_->is_new_ost_implementation())
             {
-              const double valfacn = (*val)[0] * fac_time_densn * functfacn;
+              const double valfacn = val[0] * fac_time_densn * functfacn;
               elevec1_epetra[inode * numdofpernode_ + idim] +=
                   funct_(inode) * valfacn * (-unitnormal_(idim));
             }
           }  // end is_new_ost_implementation
-        }  // if (*onoff)
+        }  // if onoff
       }
       else
         FOUR_C_THROW(

@@ -186,11 +186,11 @@ void Solid::MonitorDbc::setup()
 void Solid::MonitorDbc::create_reaction_maps(const Core::FE::Discretization& discret,
     const Core::Conditions::Condition& rcond, std::shared_ptr<Epetra_Map>* react_maps) const
 {
-  const auto* onoff = &rcond.parameters().get<std::vector<int>>("ONOFF");
+  const auto onoff = rcond.parameters().get<std::vector<int>>("ONOFF");
   const auto* nids = rcond.get_nodes();
   std::vector<int> my_dofs[DIM];
   int ndof = 0;
-  for (int i : *onoff) ndof += i;
+  for (int i : onoff) ndof += i;
 
   for (auto& my_dof : my_dofs) my_dof.reserve(nids->size() * ndof);
 
@@ -203,7 +203,7 @@ void Solid::MonitorDbc::create_reaction_maps(const Core::FE::Discretization& dis
     const Core::Nodes::Node* node = discret.l_row_node(rlid);
 
     for (unsigned i = 0; i < DIM; ++i)
-      if ((*onoff)[i] == 1) my_dofs[i].push_back(discret.dof(node, i));
+      if (onoff[i] == 1) my_dofs[i].push_back(discret.dof(node, i));
   }
 
   for (unsigned i = 0; i < DIM; ++i)
@@ -543,11 +543,11 @@ double Solid::MonitorDbc::get_reaction_moment(Core::LinAlg::Matrix<DIM, 1>& rmom
   Core::LinAlg::Matrix<DIM, 1> node_reaction_moment(true);
   std::vector<int> node_gid(3);
 
-  const auto* onoff = &rcond->parameters().get<std::vector<int>>("ONOFF");
+  const auto onoff = rcond->parameters().get<std::vector<int>>("ONOFF");
   const std::vector<int>* nids = rcond->get_nodes();
   std::vector<int> my_dofs[DIM];
   int ndof = 0;
-  for (int i : *onoff) ndof += i;
+  for (int i : onoff) ndof += i;
 
   for (unsigned i = 0; i < DIM; ++i) my_dofs[i].reserve(nids->size() * ndof);
 
@@ -570,7 +570,7 @@ double Solid::MonitorDbc::get_reaction_moment(Core::LinAlg::Matrix<DIM, 1>& rmom
     node_reaction_force.put_scalar(0.0);
     for (unsigned i = 0; i < DIM; ++i)
     {
-      if ((*onoff)[i] == 1)
+      if (onoff[i] == 1)
       {
         const int lid = complete_freact.Map().LID(node_gid[i]);
         if (lid < 0)
