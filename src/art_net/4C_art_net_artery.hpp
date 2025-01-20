@@ -64,8 +64,7 @@ namespace Discret
       }
 
       void setup_element_definition(
-          std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
-          override;
+          std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions) override;
 
      private:
       static ArteryType instance_;

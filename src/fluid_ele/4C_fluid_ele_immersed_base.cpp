@@ -8,7 +8,6 @@
 #include "4C_fluid_ele_immersed_base.hpp"
 
 #include "4C_fluid_ele_immersed.hpp"
-#include "4C_io_linedefinition.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 

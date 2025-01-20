@@ -9,7 +9,7 @@
 
 #include "4C_fem_discretization.hpp"
 #include "4C_fluid_ele_nullspace.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_w1_poro_p1.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -54,14 +54,16 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::WallQuad4PoroP1Type:
 }
 
 void Discret::Elements::WallQuad4PoroP1Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_wallporo;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_wallporo;
   WallQuad4PoroType::setup_element_definition(definitions_wallporo);
 
-  std::map<std::string, Input::LineDefinition>& defs_wallporo = definitions_wallporo["WALLQ4PORO"];
+  auto& defs_wallporo = definitions_wallporo["WALLQ4PORO"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions["WALLQ4POROP1"];
+  auto& defs = definitions["WALLQ4POROP1"];
+
+  using namespace Core::IO::InputSpecBuilders;
 
   defs["QUAD4"] = defs_wallporo["QUAD4"];
 }
@@ -135,14 +137,16 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::WallQuad9PoroP1Type:
 }
 
 void Discret::Elements::WallQuad9PoroP1Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_wallporo;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_wallporo;
   WallQuad9PoroType::setup_element_definition(definitions_wallporo);
 
-  std::map<std::string, Input::LineDefinition>& defs_wallporo = definitions_wallporo["WALLQ9PORO"];
+  auto& defs_wallporo = definitions_wallporo["WALLQ9PORO"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions["WALLQ9POROP1"];
+  auto& defs = definitions["WALLQ9POROP1"];
+
+  using namespace Core::IO::InputSpecBuilders;
 
   defs["QUAD9"] = defs_wallporo["QUAD9"];
 }
@@ -217,14 +221,16 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::WallTri3PoroP1Type::
 }
 
 void Discret::Elements::WallTri3PoroP1Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_wallporo;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_wallporo;
   WallTri3PoroType::setup_element_definition(definitions_wallporo);
 
-  std::map<std::string, Input::LineDefinition>& defs_wallporo = definitions_wallporo["WALLT3PORO"];
+  auto& defs_wallporo = definitions_wallporo["WALLT3PORO"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions["WALLT3POROP1"];
+  auto& defs = definitions["WALLT3POROP1"];
+
+  using namespace Core::IO::InputSpecBuilders;
 
   defs["TRI3"] = defs_wallporo["TRI3"];
 }

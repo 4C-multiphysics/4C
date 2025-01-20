@@ -353,21 +353,40 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::group(
 
 Core::IO::InputSpec Core::IO::InputSpecBuilders::anonymous_group(std::vector<InputSpec> specs)
 {
-  assert_unique_or_empty_names(specs);
+  // Flatten any other anonymous groups.
+  std::vector<InputSpec> flattened_specs;
+  for (auto&& spec : specs)
+  {
+    if (auto* group = dynamic_cast<IO::Internal::InputSpecTypeErasedImplementation<
+            InputSpecBuilders::Internal::GroupSpec>*>(&spec.impl());
+        group && group->wrapped.name.empty())
+    {
+      for (auto&& sub_spec : group->wrapped.specs)
+      {
+        flattened_specs.emplace_back(std::move(sub_spec));
+      }
+    }
+    else
+    {
+      flattened_specs.emplace_back(std::move(spec));
+    }
+  }
+
+  assert_unique_or_empty_names(flattened_specs);
 
   // Generate a description of the form "group {a, b, c}".
-  std::string description = "anonymous_group " + describe(specs);
+  std::string description = "anonymous_group " + describe(flattened_specs);
 
   IO::Internal::InputSpecTypeErasedBase::CommonData common_data{
       .name = "",
       .description = description,
       .required = true,
-      .has_default_value = all_have_default_values(specs),
+      .has_default_value = all_have_default_values(flattened_specs),
   };
 
   return IO::Internal::make_spec(Internal::GroupSpec{.name = "",
                                      .data = {.description = description, .required = true},
-                                     .specs = std::move(specs)},
+                                     .specs = std::move(flattened_specs)},
       common_data);
 }
 

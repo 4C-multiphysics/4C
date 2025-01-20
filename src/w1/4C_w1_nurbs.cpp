@@ -8,7 +8,7 @@
 #include "4C_w1_nurbs.hpp"
 
 #include "4C_comm_utils_factory.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_so3_nullspace.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -64,29 +64,31 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::Nurbs::Wall1NurbsType::comput
 }
 
 void Discret::Elements::Nurbs::Wall1NurbsType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["WALLNURBS"];
+  auto& defs = definitions["WALLNURBS"];
 
-  defs["NURBS4"] = Input::LineDefinition::Builder()
-                       .add_named_int_vector("NURBS4", 4)
-                       .add_named_int("MAT")
-                       .add_named_string("KINEM")
-                       .add_named_string("EAS")
-                       .add_named_double("THICK")
-                       .add_named_string("STRESS_STRAIN")
-                       .add_named_int_vector("GP", 2)
-                       .build();
+  using namespace Core::IO::InputSpecBuilders;
 
-  defs["NURBS9"] = Input::LineDefinition::Builder()
-                       .add_named_int_vector("NURBS9", 9)
-                       .add_named_int("MAT")
-                       .add_named_string("KINEM")
-                       .add_named_string("EAS")
-                       .add_named_double("THICK")
-                       .add_named_string("STRESS_STRAIN")
-                       .add_named_int_vector("GP", 2)
-                       .build();
+  defs["NURBS4"] = anonymous_group({
+      entry<std::vector<int>>("NURBS4", {.size = 4}),
+      entry<int>("MAT"),
+      entry<std::string>("KINEM"),
+      entry<std::string>("EAS"),
+      entry<double>("THICK"),
+      entry<std::string>("STRESS_STRAIN"),
+      entry<std::vector<int>>("GP", {.size = 2}),
+  });
+
+  defs["NURBS9"] = anonymous_group({
+      entry<std::vector<int>>("NURBS9", {.size = 9}),
+      entry<int>("MAT"),
+      entry<std::string>("KINEM"),
+      entry<std::string>("EAS"),
+      entry<double>("THICK"),
+      entry<std::string>("STRESS_STRAIN"),
+      entry<std::vector<int>>("GP", {.size = 2}),
+  });
 }
 
 

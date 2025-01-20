@@ -7,10 +7,12 @@
 
 #include "4C_so3_poro_eletypes.hpp"
 
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_so3_poro.hpp"
 
 FOUR_C_NAMESPACE_OPEN
+
+using namespace Core::IO::InputSpecBuilders;
 
 /*----------------------------------------------------------------------*
  |  HEX 8 Element                                       |
@@ -56,23 +58,24 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::SoHex8PoroType::crea
 }
 
 void Discret::Elements::SoHex8PoroType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_hex8;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_hex8;
   SoHex8Type::setup_element_definition(definitions_hex8);
 
-  std::map<std::string, Input::LineDefinition>& defs_hex8 = definitions_hex8["SOLIDH8_DEPRECATED"];
+  auto& defs_hex8 = definitions_hex8["SOLIDH8_DEPRECATED"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions[get_element_type_string()];
+  auto& defs = definitions[get_element_type_string()];
 
-  defs["HEX8"] = Input::LineDefinition::Builder(defs_hex8["HEX8"])
-                     .add_optional_named_double_vector("POROANISODIR1", 3)
-                     .add_optional_named_double_vector("POROANISODIR2", 3)
-                     .add_optional_named_double_vector("POROANISODIR3", 3)
-                     .add_optional_named_double_vector("POROANISONODALCOEFFS1", 8)
-                     .add_optional_named_double_vector("POROANISONODALCOEFFS2", 8)
-                     .add_optional_named_double_vector("POROANISONODALCOEFFS3", 8)
-                     .build();
+  defs["HEX8"] = anonymous_group({
+      defs_hex8["HEX8"],
+      entry<std::vector<double>>("POROANISODIR1", {.required = false, .size = 3}),
+      entry<std::vector<double>>("POROANISODIR2", {.required = false, .size = 3}),
+      entry<std::vector<double>>("POROANISODIR3", {.required = false, .size = 3}),
+      entry<std::vector<double>>("POROANISONODALCOEFFS1", {.required = false, .size = 8}),
+      entry<std::vector<double>>("POROANISONODALCOEFFS2", {.required = false, .size = 8}),
+      entry<std::vector<double>>("POROANISONODALCOEFFS3", {.required = false, .size = 8}),
+  });
 }
 
 int Discret::Elements::SoHex8PoroType::initialize(Core::FE::Discretization& dis)
@@ -135,23 +138,24 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::SoTet4PoroType::crea
 }
 
 void Discret::Elements::SoTet4PoroType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_tet4;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_tet4;
   SoTet4Type::setup_element_definition(definitions_tet4);
 
-  std::map<std::string, Input::LineDefinition>& defs_tet4 = definitions_tet4["SOLIDT4_DEPRECATED"];
+  auto& defs_tet4 = definitions_tet4["SOLIDT4_DEPRECATED"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions[get_element_type_string()];
+  auto& defs = definitions[get_element_type_string()];
 
-  defs["TET4"] = Input::LineDefinition::Builder(defs_tet4["TET4"])
-                     .add_optional_named_double_vector("POROANISODIR1", 3)
-                     .add_optional_named_double_vector("POROANISODIR2", 3)
-                     .add_optional_named_double_vector("POROANISODIR3", 3)
-                     .add_optional_named_double_vector("POROANISONODALCOEFFS1", 4)
-                     .add_optional_named_double_vector("POROANISONODALCOEFFS2", 4)
-                     .add_optional_named_double_vector("POROANISONODALCOEFFS3", 4)
-                     .build();
+  defs["TET4"] = anonymous_group({
+      defs_tet4["TET4"],
+      entry<std::vector<double>>("POROANISODIR1", {.required = false, .size = 3}),
+      entry<std::vector<double>>("POROANISODIR2", {.required = false, .size = 3}),
+      entry<std::vector<double>>("POROANISODIR3", {.required = false, .size = 3}),
+      entry<std::vector<double>>("POROANISONODALCOEFFS1", {.required = false, .size = 4}),
+      entry<std::vector<double>>("POROANISONODALCOEFFS2", {.required = false, .size = 4}),
+      entry<std::vector<double>>("POROANISONODALCOEFFS3", {.required = false, .size = 4}),
+  });
 }
 
 int Discret::Elements::SoTet4PoroType::initialize(Core::FE::Discretization& dis)
@@ -213,21 +217,21 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::SoHex27PoroType::cre
 }
 
 void Discret::Elements::SoHex27PoroType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_hex27;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_hex27;
   SoHex27Type::setup_element_definition(definitions_hex27);
 
-  std::map<std::string, Input::LineDefinition>& defs_hex27 =
-      definitions_hex27["SOLIDH27_DEPRECATED"];
+  auto& defs_hex27 = definitions_hex27["SOLIDH27_DEPRECATED"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions[get_element_type_string()];
+  auto& defs = definitions[get_element_type_string()];
 
-  defs["HEX27"] = Input::LineDefinition::Builder(defs_hex27["HEX27"])
-                      .add_optional_named_double_vector("POROANISODIR1", 3)
-                      .add_optional_named_double_vector("POROANISODIR2", 3)
-                      .add_optional_named_double_vector("POROANISODIR3", 3)
-                      .build();
+  defs["HEX27"] = anonymous_group({
+      defs_hex27["HEX27"],
+      entry<std::vector<double>>("POROANISODIR1", {.required = false, .size = 3}),
+      entry<std::vector<double>>("POROANISODIR2", {.required = false, .size = 3}),
+      entry<std::vector<double>>("POROANISODIR3", {.required = false, .size = 3}),
+  });
 }
 
 int Discret::Elements::SoHex27PoroType::initialize(Core::FE::Discretization& dis)
@@ -289,21 +293,21 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::SoTet10PoroType::cre
 }
 
 void Discret::Elements::SoTet10PoroType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_tet10;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_tet10;
   SoTet10Type::setup_element_definition(definitions_tet10);
 
-  std::map<std::string, Input::LineDefinition>& defs_tet10 =
-      definitions_tet10["SOLIDT10_DEPRECATED"];
+  auto& defs_tet10 = definitions_tet10["SOLIDT10_DEPRECATED"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions[get_element_type_string()];
+  auto& defs = definitions[get_element_type_string()];
 
-  defs["TET10"] = Input::LineDefinition::Builder(defs_tet10["TET10"])
-                      .add_optional_named_double_vector("POROANISODIR1", 3)
-                      .add_optional_named_double_vector("POROANISODIR2", 3)
-                      .add_optional_named_double_vector("POROANISODIR3", 3)
-                      .build();
+  defs["TET10"] = anonymous_group({
+      defs_tet10["TET10"],
+      entry<std::vector<double>>("POROANISODIR1", {.required = false, .size = 3}),
+      entry<std::vector<double>>("POROANISODIR2", {.required = false, .size = 3}),
+      entry<std::vector<double>>("POROANISODIR3", {.required = false, .size = 3}),
+  });
 }
 
 int Discret::Elements::SoTet10PoroType::initialize(Core::FE::Discretization& dis)
@@ -363,20 +367,21 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::SoNurbs27PoroType::c
 }
 
 void Discret::Elements::SoNurbs27PoroType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_nurbs27;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_nurbs27;
   Nurbs::SoNurbs27Type::setup_element_definition(definitions_nurbs27);
 
-  std::map<std::string, Input::LineDefinition>& defs_nurbs27 = definitions_nurbs27["SONURBS27"];
+  auto& defs_nurbs27 = definitions_nurbs27["SONURBS27_DEPRECATED"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions[get_element_type_string()];
+  auto& defs = definitions[get_element_type_string()];
 
-  defs["NURBS27"] = Input::LineDefinition::Builder(defs_nurbs27["NURBS27"])
-                        .add_optional_named_double_vector("POROANISODIR1", 3)
-                        .add_optional_named_double_vector("POROANISODIR2", 3)
-                        .add_optional_named_double_vector("POROANISODIR3", 3)
-                        .build();
+  defs["NURBS27"] = anonymous_group({
+      defs_nurbs27["NURBS27"],
+      entry<std::vector<double>>("POROANISODIR1", {.required = false, .size = 3}),
+      entry<std::vector<double>>("POROANISODIR2", {.required = false, .size = 3}),
+      entry<std::vector<double>>("POROANISODIR3", {.required = false, .size = 3}),
+  });
 }
 
 int Discret::Elements::SoNurbs27PoroType::initialize(Core::FE::Discretization& dis)

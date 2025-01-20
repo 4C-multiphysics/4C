@@ -8,7 +8,6 @@
 #include "4C_w1_poro_p1_scatra.hpp"
 
 #include "4C_comm_pack_helpers.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_w1_poro_p1_scatra_eletypes.hpp"
 
 FOUR_C_NAMESPACE_OPEN

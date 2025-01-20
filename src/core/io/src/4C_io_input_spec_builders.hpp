@@ -182,6 +182,12 @@ namespace Core::IO
 
       CommonData data;
 
+     protected:
+      InputSpecTypeErasedBase(const InputSpecTypeErasedBase&) = default;
+      InputSpecTypeErasedBase& operator=(const InputSpecTypeErasedBase&) = default;
+      InputSpecTypeErasedBase(InputSpecTypeErasedBase&&) noexcept = default;
+      InputSpecTypeErasedBase& operator=(InputSpecTypeErasedBase&&) noexcept = default;
+
      private:
       virtual void do_print(
           std::ostream& stream, const InputParameterContainer& container) const = 0;

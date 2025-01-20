@@ -17,7 +17,7 @@
 #include "4C_global_data.hpp"
 #include "4C_inpar_browniandyn.hpp"
 #include "4C_inpar_validparameters.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_structure_new_elements_paramsinterface.hpp"
@@ -90,15 +90,17 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::RigidsphereType::compute_null
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Discret::Elements::RigidsphereType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["RIGIDSPHERE"];
+  auto& defs = definitions["RIGIDSPHERE"];
 
-  defs["POINT1"] = Input::LineDefinition::Builder()
-                       .add_named_int_vector("POINT1", 1)
-                       .add_named_double("RADIUS")
-                       .add_named_double("DENSITY")
-                       .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["POINT1"] = anonymous_group({
+      entry<std::vector<int>>("POINT1", {.size = 1}),
+      entry<double>("RADIUS"),
+      entry<double>("DENSITY"),
+  });
 }
 
 /*----------------------------------------------------------------------*

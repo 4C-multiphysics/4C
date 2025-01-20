@@ -11,7 +11,7 @@
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_comm_utils_factory.hpp"
 #include "4C_fem_discretization.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_so3_nullspace.hpp"
 #include "4C_utils_exceptions.hpp"
 
@@ -78,30 +78,36 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::Ale2Type::compute_null_space(
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
 void Discret::Elements::Ale2Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["ALE2"];
+  auto& defs = definitions["ALE2"];
 
-  defs["QUAD4"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("QUAD4", 4)
-                      .add_named_int("MAT")
-                      .build();
+  using namespace Core::IO::InputSpecBuilders;
 
-  defs["QUAD8"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("QUAD8", 8)
-                      .add_named_int("MAT")
-                      .build();
+  defs["QUAD4"] = anonymous_group({
+      entry<std::vector<int>>("QUAD4", {.size = 4}),
+      entry<int>("MAT"),
+  });
 
-  defs["QUAD9"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("QUAD9", 9)
-                      .add_named_int("MAT")
-                      .build();
+  defs["QUAD8"] = anonymous_group({
+      entry<std::vector<int>>("QUAD8", {.size = 8}),
+      entry<int>("MAT"),
+  });
 
-  defs["TRI3"] =
-      Input::LineDefinition::Builder().add_named_int_vector("TRI3", 3).add_named_int("MAT").build();
+  defs["QUAD9"] = anonymous_group({
+      entry<std::vector<int>>("QUAD9", {.size = 9}),
+      entry<int>("MAT"),
+  });
 
-  defs["TRI6"] =
-      Input::LineDefinition::Builder().add_named_int_vector("TRI6", 6).add_named_int("MAT").build();
+  defs["TRI3"] = anonymous_group({
+      entry<std::vector<int>>("TRI3", {.size = 3}),
+      entry<int>("MAT"),
+  });
+
+  defs["TRI6"] = anonymous_group({
+      entry<std::vector<int>>("TRI6", {.size = 6}),
+      entry<int>("MAT"),
+  });
 }
 
 /*----------------------------------------------------------------------------*/

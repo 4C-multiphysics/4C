@@ -11,7 +11,6 @@
 #include "4C_fluid_implicit_integration.hpp"
 #include "4C_fluid_utils.hpp"
 #include "4C_global_data.hpp"
-#include "4C_io_linedefinition.hpp"
 
 #include <string>
 

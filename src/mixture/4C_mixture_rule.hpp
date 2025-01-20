@@ -35,10 +35,7 @@ namespace LinAlg
 {
   class SerialDenseMatrix;
 }
-namespace Input
-{
-  class LineDefinition;
-}
+
 namespace Mat
 {
   class Anisotropy;

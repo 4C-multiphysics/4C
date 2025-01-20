@@ -11,7 +11,7 @@
 #include "4C_fem_condition.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_node.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_so3_nullspace.hpp"
 #include "4C_structure_new_elements_paramsinterface.hpp"
 #include "4C_utils_shared_ptr_from_ref.hpp"
@@ -68,16 +68,18 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::Truss3Type::compute_null_spac
 }
 
 void Discret::Elements::Truss3Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["TRUSS3"];
+  auto& defs = definitions["TRUSS3"];
 
-  defs["LINE2"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("LINE2", 2)
-                      .add_named_int("MAT")
-                      .add_named_double("CROSS")
-                      .add_named_string("KINEM")
-                      .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["LINE2"] = anonymous_group({
+      entry<std::vector<int>>("LINE2", {.size = 2}),
+      entry<int>("MAT"),
+      entry<double>("CROSS"),
+      entry<std::string>("KINEM"),
+  });
 }
 
 

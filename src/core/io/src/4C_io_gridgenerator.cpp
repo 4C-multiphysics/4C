@@ -14,6 +14,7 @@
 #include "4C_fem_general_element_definition.hpp"
 #include "4C_fem_general_node.hpp"
 #include "4C_io_pstream.hpp"
+#include "4C_io_value_parser.hpp"
 #include "4C_rebalance_binning_based.hpp"
 #include "4C_rebalance_graph_based.hpp"
 
@@ -176,24 +177,11 @@ namespace Core::IO::GridGenerator
       int eleid = elementRowMap->GID(lid);
       FOUR_C_ASSERT(eleid >= 0, "Missing gid");
 
-      // For the time being we support old and new input facilities. To
-      // smooth transition.
-      Input::LineDefinition* linedef = ed.element_lines(inputData.elementtype_, inputData.distype_);
-      if (linedef == nullptr)
-        FOUR_C_THROW("a matching line definition is needed for %s %s",
-            inputData.elementtype_.c_str(), inputData.distype_.c_str());
+      const auto& linedef = ed.element_lines(inputData.elementtype_, inputData.distype_);
 
-      std::istringstream eleargstream(argument_line);
-      auto ele_data = linedef->read(eleargstream);
-
-      if (!ele_data.has_value())
-      {
-        Core::IO::cout << "\n" << eleid << " " << inputData.elementtype_ << " ";
-        linedef->print(Core::IO::cout.cout_replacement());
-        Core::IO::cout << "\n";
-        FOUR_C_THROW("failed to read element %d %s %s", eleid, inputData.elementtype_.c_str(),
-            inputData.distype_.c_str());
-      }
+      Core::IO::InputParameterContainer ele_data;
+      Core::IO::ValueParser parser(argument_line, {.user_scope_message = "GridGenerator: "});
+      linedef.fully_parse(parser, ele_data);
 
       // Create specified elements
       switch (distype_enum)
@@ -203,7 +191,7 @@ namespace Core::IO::GridGenerator
         case Core::FE::CellType::hex27:
         {
           std::shared_ptr<Core::Elements::Element> ele =
-              create_hex_element(eleid, inputData.node_gid_of_first_new_node_, myrank, *ele_data,
+              create_hex_element(eleid, inputData.node_gid_of_first_new_node_, myrank, ele_data,
                   inputData.interval_, inputData.elementtype_, inputData.distype_);
           // add element to discretization
           dis.add_element(ele);
@@ -213,7 +201,7 @@ namespace Core::IO::GridGenerator
         case Core::FE::CellType::wedge15:
         {
           std::shared_ptr<Core::Elements::Element> ele = IO::GridGenerator::create_wedge_element(
-              eleid, inputData.node_gid_of_first_new_node_, myrank, *ele_data, inputData.interval_,
+              eleid, inputData.node_gid_of_first_new_node_, myrank, ele_data, inputData.interval_,
               inputData.elementtype_, inputData.distype_);
           dis.add_element(ele);
           break;

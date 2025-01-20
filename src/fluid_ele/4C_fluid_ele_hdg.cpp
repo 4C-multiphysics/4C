@@ -13,7 +13,7 @@
 #include "4C_fluid_ele_factory.hpp"
 #include "4C_fluid_ele_interface.hpp"
 #include "4C_inpar_fluid.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
@@ -120,22 +120,25 @@ void Discret::Elements::FluidHDGType::compute_null_space(
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Discret::Elements::FluidHDGType ::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
   // Get the the fluid line definitions and amend them with data for HDG elements
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_fluid;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_fluid;
   FluidType::setup_element_definition(definitions_fluid);
 
-  const std::map<std::string, Input::LineDefinition>& defs_fluid = definitions_fluid["FLUID"];
+  auto& defs_fluid = definitions_fluid["FLUID"];
 
-  std::map<std::string, Input::LineDefinition>& defs_hdg = definitions["FLUIDHDG"];
+  auto& defs_hdg = definitions["FLUIDHDG"];
+
+  using namespace Core::IO::InputSpecBuilders;
 
   for (const auto& [key, fluid_line_def] : defs_fluid)
   {
-    defs_hdg[key] = Input::LineDefinition::Builder(fluid_line_def)
-                        .add_named_int("DEG")
-                        .add_optional_named_int("SPC")
-                        .build();
+    defs_hdg[key] = anonymous_group({
+        fluid_line_def,
+        entry<int>("DEG"),
+        entry<int>("SPC", {.required = false}),
+    });
   }
 }
 

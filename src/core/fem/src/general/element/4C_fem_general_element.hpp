@@ -36,11 +36,6 @@ namespace Core::GeometricSearch
   class GeometricSearchParams;
 }  // namespace Core::GeometricSearch
 
-namespace Input
-{
-  class LineDefinition;
-}
-
 namespace Core::FE::MeshFree
 {
   template <typename>

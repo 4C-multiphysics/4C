@@ -6,7 +6,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "4C_global_data.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_mat_maxwell_0d_acinus.hpp"
 #include "4C_red_airways_elementbase.hpp"
 

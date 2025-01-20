@@ -8,7 +8,6 @@
 #include "4C_mat_elast_coupanisopow.hpp"
 
 #include "4C_comm_pack_helpers.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_mat_elast_aniso_structuraltensor_strategy.hpp"
 #include "4C_material_parameter_base.hpp"
 

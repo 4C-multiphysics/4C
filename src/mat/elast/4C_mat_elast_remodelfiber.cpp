@@ -8,7 +8,6 @@
 #include "4C_mat_elast_remodelfiber.hpp"
 
 #include "4C_comm_pack_helpers.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_linalg_FADmatrix_utils.hpp"
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"

@@ -49,8 +49,7 @@ namespace Discret
           Core::Nodes::Node& node, const double* x0, const int numdof, const int dimnsp) override;
 
       void setup_element_definition(
-          std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
-          override;
+          std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions) override;
 
      private:
       static SoHex8PoroP1Type instance_;
@@ -84,8 +83,7 @@ namespace Discret
           Core::Nodes::Node& node, const double* x0, const int numdof, const int dimnsp) override;
 
       void setup_element_definition(
-          std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
-          override;
+          std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions) override;
 
      private:
       static SoTet4PoroP1Type instance_;

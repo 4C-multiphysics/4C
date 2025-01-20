@@ -36,7 +36,7 @@ namespace Discret::Elements
   {
    public:
     void setup_element_definition(
-        std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions) override;
+        std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions) override;
 
     std::shared_ptr<Core::Elements::Element> create(const std::string eletype,
         const std::string elecelltype, const int id, const int owner) override;

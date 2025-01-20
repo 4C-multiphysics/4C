@@ -268,7 +268,7 @@ void Core::Communication::ParObjectFactory::pre_evaluate(Core::FE::Discretizatio
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void Core::Communication::ParObjectFactory::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
   finalize_registration();
 

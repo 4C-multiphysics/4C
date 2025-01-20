@@ -10,7 +10,6 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_node.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_red_airways_implicitintegration.hpp"
 
 FOUR_C_NAMESPACE_OPEN

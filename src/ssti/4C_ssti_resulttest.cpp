@@ -8,7 +8,6 @@
 #include "4C_ssti_resulttest.hpp"
 
 #include "4C_comm_mpi_utils.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_ssti_algorithm.hpp"
 #include "4C_utils_exceptions.hpp"
 

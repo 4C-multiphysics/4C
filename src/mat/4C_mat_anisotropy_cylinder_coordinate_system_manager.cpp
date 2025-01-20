@@ -9,7 +9,6 @@
 
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_comm_parobject.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_mat_anisotropy.hpp"
 #include "4C_mat_anisotropy_utils.hpp"
 #include "4C_utils_exceptions.hpp"

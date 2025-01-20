@@ -8,7 +8,7 @@
 #include "4C_w1_poro_eletypes.hpp"
 
 #include "4C_fem_discretization.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_w1_poro.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -53,21 +53,24 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::WallQuad4PoroType::c
 }
 
 void Discret::Elements::WallQuad4PoroType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_wall;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_wall;
   Wall1Type::setup_element_definition(definitions_wall);
 
-  std::map<std::string, Input::LineDefinition>& defs_wall = definitions_wall["WALL"];
+  auto& defs_wall = definitions_wall["WALL"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions["WALLQ4PORO"];
+  auto& defs = definitions["WALLQ4PORO"];
 
-  defs["QUAD4"] = Input::LineDefinition::Builder(defs_wall["QUAD4"])
-                      .add_optional_named_double_vector("POROANISODIR1", 2)
-                      .add_optional_named_double_vector("POROANISODIR2", 2)
-                      .add_optional_named_double_vector("POROANISONODALCOEFFS1", 4)
-                      .add_optional_named_double_vector("POROANISONODALCOEFFS2", 4)
-                      .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["QUAD4"] = anonymous_group({
+      defs_wall["QUAD4"],
+      entry<std::vector<double>>("POROANISODIR1", {.required = false, .size = 2}),
+      entry<std::vector<double>>("POROANISODIR2", {.required = false, .size = 2}),
+      entry<std::vector<double>>("POROANISONODALCOEFFS1", {.required = false, .size = 4}),
+      entry<std::vector<double>>("POROANISONODALCOEFFS2", {.required = false, .size = 4}),
+  });
 }
 
 int Discret::Elements::WallQuad4PoroType::initialize(Core::FE::Discretization& dis)
@@ -123,19 +126,22 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::WallQuad9PoroType::c
 }
 
 void Discret::Elements::WallQuad9PoroType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_wall;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_wall;
   Wall1Type::setup_element_definition(definitions_wall);
 
-  std::map<std::string, Input::LineDefinition>& defs_wall = definitions_wall["WALL"];
+  auto& defs_wall = definitions_wall["WALL"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions["WALLQ9PORO"];
+  auto& defs = definitions["WALLQ9PORO"];
 
-  defs["QUAD9"] = Input::LineDefinition::Builder(defs_wall["QUAD9"])
-                      .add_optional_named_double_vector("POROANISODIR1", 2)
-                      .add_optional_named_double_vector("POROANISODIR2", 2)
-                      .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["QUAD9"] = anonymous_group({
+      defs_wall["QUAD9"],
+      entry<std::vector<double>>("POROANISODIR1", {.required = false, .size = 2}),
+      entry<std::vector<double>>("POROANISODIR2", {.required = false, .size = 2}),
+  });
 }
 
 int Discret::Elements::WallQuad9PoroType::initialize(Core::FE::Discretization& dis)
@@ -192,19 +198,22 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::WallNurbs4PoroType::
 }
 
 void Discret::Elements::WallNurbs4PoroType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_wall;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_wall;
   Wall1Type::setup_element_definition(definitions_wall);
 
-  std::map<std::string, Input::LineDefinition>& defs_wall = definitions_wall["WALL"];
+  auto& defs_wall = definitions_wall["WALL"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions["WALLN4PORO"];
+  auto& defs = definitions["WALLN4PORO"];
 
-  defs["NURBS4"] = Input::LineDefinition::Builder(defs_wall["NURBS4"])
-                       .add_optional_named_double_vector("POROANISODIR1", 2)
-                       .add_optional_named_double_vector("POROANISODIR2", 2)
-                       .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["NURBS4"] = anonymous_group({
+      defs_wall["NURBS4"],
+      entry<std::vector<double>>("POROANISODIR1", {.required = false, .size = 2}),
+      entry<std::vector<double>>("POROANISODIR2", {.required = false, .size = 2}),
+  });
 }
 
 int Discret::Elements::WallNurbs4PoroType::initialize(Core::FE::Discretization& dis)
@@ -261,19 +270,22 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::WallNurbs9PoroType::
 }
 
 void Discret::Elements::WallNurbs9PoroType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_wall;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_wall;
   Wall1Type::setup_element_definition(definitions_wall);
 
-  std::map<std::string, Input::LineDefinition>& defs_wall = definitions_wall["WALL"];
+  auto& defs_wall = definitions_wall["WALL"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions["WALLN9PORO"];
+  auto& defs = definitions["WALLN9PORO"];
 
-  defs["NURBS9"] = Input::LineDefinition::Builder(defs_wall["NURBS9"])
-                       .add_optional_named_double_vector("POROANISODIR1", 2)
-                       .add_optional_named_double_vector("POROANISODIR2", 2)
-                       .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["NURBS9"] = anonymous_group({
+      defs_wall["NURBS9"],
+      entry<std::vector<double>>("POROANISODIR1", {.required = false, .size = 2}),
+      entry<std::vector<double>>("POROANISODIR2", {.required = false, .size = 2}),
+  });
 }
 
 int Discret::Elements::WallNurbs9PoroType::initialize(Core::FE::Discretization& dis)
@@ -330,21 +342,24 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::WallTri3PoroType::cr
 }
 
 void Discret::Elements::WallTri3PoroType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_wall;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_wall;
   Wall1Type::setup_element_definition(definitions_wall);
 
-  std::map<std::string, Input::LineDefinition>& defs_wall = definitions_wall["WALL"];
+  auto& defs_wall = definitions_wall["WALL"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions["WALLT3PORO"];
+  auto& defs = definitions["WALLT3PORO"];
 
-  defs["TRI3"] = Input::LineDefinition::Builder(defs_wall["TRI3"])
-                     .add_optional_named_double_vector("POROANISODIR1", 2)
-                     .add_optional_named_double_vector("POROANISODIR2", 2)
-                     .add_optional_named_double_vector("POROANISONODALCOEFFS1", 3)
-                     .add_optional_named_double_vector("POROANISONODALCOEFFS2", 3)
-                     .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["TRI3"] = anonymous_group({
+      defs_wall["TRI3"],
+      entry<std::vector<double>>("POROANISODIR1", {.required = false, .size = 2}),
+      entry<std::vector<double>>("POROANISODIR2", {.required = false, .size = 2}),
+      entry<std::vector<double>>("POROANISONODALCOEFFS1", {.required = false, .size = 3}),
+      entry<std::vector<double>>("POROANISONODALCOEFFS2", {.required = false, .size = 3}),
+  });
 }
 
 int Discret::Elements::WallTri3PoroType::initialize(Core::FE::Discretization& dis)

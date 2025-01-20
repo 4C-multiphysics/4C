@@ -25,11 +25,6 @@ namespace Core::Communication
   class PackBuffer;
 }
 
-namespace Input
-{
-  class LineDefinition;
-}
-
 namespace Mat
 {
   // forward declarations

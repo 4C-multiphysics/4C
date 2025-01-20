@@ -8,7 +8,6 @@
 #include "4C_mat_elast_summand.hpp"
 
 #include "4C_global_data.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_mat_elast_aniso_structuraltensor_strategy.hpp"
 #include "4C_mat_elast_anisoactivestress_evolution.hpp"
 #include "4C_mat_elast_coup13apow.hpp"

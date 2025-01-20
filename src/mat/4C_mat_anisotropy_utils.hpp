@@ -10,11 +10,11 @@
 
 #include "4C_config.hpp"
 
-#include "4C_io_linedefinition.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 
 #include <memory>
 #include <string>
+#include <vector>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -25,9 +25,9 @@ namespace Core::Communication
   class UnpackBuffer;
 }  // namespace Core::Communication
 
-namespace Input
+namespace Core::IO
 {
-  class LineDefinition;
+  class InputParameterContainer;
 }
 
 namespace Mat

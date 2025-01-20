@@ -27,11 +27,6 @@ namespace Core::Communication
 {
   class PackBuffer;
 }
-namespace Input
-{
-  class LineDefinition;
-}
-
 // Constructor of the material parameters
 Mixture::PAR::MixtureRule::MixtureRule(const Core::Mat::PAR::Parameter::Data& matdata)
     : Parameter(matdata)

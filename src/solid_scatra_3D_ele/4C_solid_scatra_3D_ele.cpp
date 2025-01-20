@@ -10,6 +10,7 @@
 #include "4C_fem_general_cell_type.hpp"
 #include "4C_fem_general_cell_type_traits.hpp"
 #include "4C_inpar_scatra.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_so3_line.hpp"
 #include "4C_so3_nullspace.hpp"
 #include "4C_so3_surface.hpp"
@@ -19,24 +20,28 @@
 
 FOUR_C_NAMESPACE_OPEN
 
+using namespace Core::IO::InputSpecBuilders;
+
 namespace
 {
   template <Core::FE::CellType celltype>
-  Input::LineDefinition::Builder get_default_line_definition_builder()
+  auto get_default_input_spec()
   {
-    return Input::LineDefinition::Builder()
-        .add_named_int_vector(
-            Core::FE::cell_type_to_string(celltype), Core::FE::num_nodes<celltype>)
-        .add_named_int("MAT")
-        .add_named_string("KINEM")
-        .add_named_string("TYPE")
-        .add_optional_named_string("PRESTRESS_TECH")
-        .add_optional_named_double_vector("RAD", 3)
-        .add_optional_named_double_vector("AXI", 3)
-        .add_optional_named_double_vector("CIR", 3)
-        .add_optional_named_double_vector("FIBER1", 3)
-        .add_optional_named_double_vector("FIBER2", 3)
-        .add_optional_named_double_vector("FIBER3", 3);
+    return anonymous_group({
+        entry<std::vector<int>>(
+            Core::FE::cell_type_to_string(celltype), {.size = Core::FE::num_nodes<celltype>}),
+        entry<int>("MAT"),
+        entry<std::string>("KINEM"),
+        entry<std::string>("TYPE"),
+        entry<std::string>("PRESTRESS_TECH", {.required = false}),
+        entry<std::vector<double>>("RAD", {.required = false, .size = 3}),
+        entry<std::vector<double>>("AXI", {.required = false, .size = 3}),
+        entry<std::vector<double>>("CIR", {.required = false, .size = 3}),
+        entry<std::vector<double>>("FIBER1", {.required = false, .size = 3}),
+        entry<std::vector<double>>("FIBER2", {.required = false, .size = 3}),
+        entry<std::vector<double>>("FIBER3", {.required = false, .size = 3}),
+
+    });
   }
 }  // namespace
 
@@ -48,26 +53,26 @@ Discret::Elements::SolidScatraType& Discret::Elements::SolidScatraType::instance
 }
 
 void Discret::Elements::SolidScatraType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defsgeneral = definitions["SOLIDSCATRA"];
+  auto& defsgeneral = definitions["SOLIDSCATRA"];
 
-  defsgeneral[Core::FE::cell_type_to_string(Core::FE::CellType::hex8)] =
-      get_default_line_definition_builder<Core::FE::CellType::hex8>()
-          .add_optional_named_string("TECH")
-          .build();
+  defsgeneral[Core::FE::cell_type_to_string(Core::FE::CellType::hex8)] = anonymous_group({
+      get_default_input_spec<Core::FE::CellType::hex8>(),
+      entry<std::string>("TECH", {.required = false}),
+  });
 
   defsgeneral[Core::FE::cell_type_to_string(Core::FE::CellType::hex27)] =
-      get_default_line_definition_builder<Core::FE::CellType::hex27>().build();
+      get_default_input_spec<Core::FE::CellType::hex27>();
 
   defsgeneral[Core::FE::cell_type_to_string(Core::FE::CellType::tet4)] =
-      get_default_line_definition_builder<Core::FE::CellType::tet4>().build();
+      get_default_input_spec<Core::FE::CellType::tet4>();
 
   defsgeneral[Core::FE::cell_type_to_string(Core::FE::CellType::tet10)] =
-      get_default_line_definition_builder<Core::FE::CellType::tet10>().build();
+      get_default_input_spec<Core::FE::CellType::tet10>();
 
   defsgeneral[Core::FE::cell_type_to_string(Core::FE::CellType::nurbs27)] =
-      get_default_line_definition_builder<Core::FE::CellType::nurbs27>().build();
+      get_default_input_spec<Core::FE::CellType::nurbs27>();
 }
 
 std::shared_ptr<Core::Elements::Element> Discret::Elements::SolidScatraType::create(

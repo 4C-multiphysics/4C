@@ -25,7 +25,6 @@ namespace Core::FE
 
 namespace Core::IO
 {
-  class LineDefinition;
   class InputFile;
 
   namespace GridGenerator

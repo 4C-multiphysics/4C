@@ -11,7 +11,7 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_geometry_periodic_boundingbox.hpp"
 #include "4C_global_data.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -205,14 +205,16 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::Beam3ebType::compute_null_spa
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Discret::Elements::Beam3ebType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["BEAM3EB"];
+  auto& defs = definitions["BEAM3EB"];
 
-  defs["LINE2"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("LINE2", 2)
-                      .add_named_int("MAT")
-                      .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["LINE2"] = anonymous_group({
+      entry<std::vector<int>>("LINE2", {.size = 2}),
+      entry<int>("MAT"),
+  });
 }
 
 /*----------------------------------------------------------------------*

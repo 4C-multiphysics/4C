@@ -7,7 +7,7 @@
 
 #include "4C_utils_function_of_time.hpp"
 
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_parameter_container.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_symbolic_expression.hpp"
 
@@ -91,29 +91,12 @@ double Core::Utils::SymbolicFunctionOfTime::evaluate_derivative(
 std::shared_ptr<Core::Utils::FunctionOfTime> Core::Utils::try_create_function_of_time(
     const std::vector<Core::IO::InputParameterContainer>& parameters)
 {
-  // Work around a design flaw in the input line for SymbolicFunctionOfTime.
-  // This line accepts optional components in the beginning although this is not directly supported
-  // by LineDefinition. Thus, we need to ignore read errors when reading these first line
-  // components.
-  const auto ignore_errors_in = [](const auto& call)
-  {
-    try
-    {
-      call();
-    }
-    catch (const Core::Exception& e)
-    {
-    }
-  };
-
   // evaluate the maximum component and the number of variables
   int maxcomp = 0;
-  int maxvar = -1;
   bool found_function_of_time(false);
   for (const auto& ith_function_lin_def : parameters)
   {
-    ignore_errors_in([&]() { maxcomp = ith_function_lin_def.get<int>("COMPONENT"); });
-    ignore_errors_in([&]() { maxvar = ith_function_lin_def.get<int>("VARIABLE"); });
+    maxcomp = ith_function_lin_def.get_or<int>("COMPONENT", 0);
     if (ith_function_lin_def.get_if<std::string>("SYMBOLIC_FUNCTION_OF_TIME") != nullptr)
       found_function_of_time = true;
   }
@@ -133,8 +116,7 @@ std::shared_ptr<Core::Utils::FunctionOfTime> Core::Utils::try_create_function_of
     const auto& functcomp = parameters[n];
 
     // check the validity of the n-th component
-    int compid = 0;
-    ignore_errors_in([&]() { compid = functcomp.get<int>("COMPONENT"); });
+    int compid = functcomp.get_or<int>("COMPONENT", 0);
     if (compid != n) FOUR_C_THROW("expected COMPONENT %d but got COMPONENT %d", n, compid);
 
     // read the expression of the n-th component of the i-th function
@@ -150,8 +132,7 @@ std::shared_ptr<Core::Utils::FunctionOfTime> Core::Utils::try_create_function_of
     const auto& line = parameters[maxcomp + j];
 
     // read the number of the variable
-    int varid;
-    ignore_errors_in([&]() { varid = line.get<int>("VARIABLE"); });
+    int varid = line.get<int>("VARIABLE");
 
     const auto variable = std::invoke(
         [&line]() -> std::shared_ptr<Core::Utils::FunctionVariable>

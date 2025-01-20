@@ -7,7 +7,6 @@
 
 #include "4C_fem_general_cell_type.hpp"
 #include "4C_fem_general_utils_integration.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_shell_kl_nurbs.hpp"
 

@@ -7,6 +7,7 @@
 
 #include "4C_solid_scatra_3D_ele_lib.hpp"
 
+#include "4C_io_input_parameter_container.hpp"
 #include "4C_utils_exceptions.hpp"
 
 FOUR_C_NAMESPACE_OPEN

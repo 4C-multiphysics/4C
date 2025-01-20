@@ -11,13 +11,13 @@
 #include "4C_config.hpp"
 
 #include "4C_comm_pack_buffer.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_mat_anisotropy.hpp"
 #include "4C_mat_anisotropy_extension_base.hpp"
 #include "4C_mat_anisotropy_fiber_provider.hpp"
 #include "4C_utils_exceptions.hpp"
 
+#include <cstdint>
 #include <functional>
 #include <utility>
 

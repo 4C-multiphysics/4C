@@ -10,7 +10,7 @@
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_comm_utils_factory.hpp"
 #include "4C_global_data.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -46,14 +46,16 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::FluidPoroEleType::cr
 }
 
 void Discret::Elements::FluidPoroEleType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_fluid;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_fluid;
   FluidType::setup_element_definition(definitions_fluid);
 
-  std::map<std::string, Input::LineDefinition>& defs_fluid = definitions_fluid["FLUID"];
+  auto& defs_fluid = definitions_fluid["FLUID"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions["FLUIDPORO"];
+  auto& defs = definitions["FLUIDPORO"];
+
+  using namespace Core::IO::InputSpecBuilders;
 
   // 3D
   defs["HEX8"] = defs_fluid["HEX8"];

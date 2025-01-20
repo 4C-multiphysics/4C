@@ -7,7 +7,7 @@
 
 #include "4C_membrane_scatra_eletypes.hpp"
 
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_membrane_scatra.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -52,17 +52,20 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::MembraneScatraTri3Ty
 }
 
 void Discret::Elements::MembraneScatraTri3Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_membrane;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_membrane;
   MembraneTri3Type::setup_element_definition(definitions_membrane);
 
-  std::map<std::string, Input::LineDefinition>& defs_membrane = definitions_membrane["MEMBRANE3"];
+  auto& defs_membrane = definitions_membrane["MEMBRANE3"];
+  auto& defs = definitions["MEMBRANESCATRA3"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions["MEMBRANESCATRA3"];
+  using namespace Core::IO::InputSpecBuilders;
 
-  defs["TRI3"] =
-      Input::LineDefinition::Builder(defs_membrane["TRI3"]).add_named_string("TYPE").build();
+  defs["TRI3"] = anonymous_group({
+      defs_membrane["TRI3"],
+      entry<std::string>("TYPE"),
+  });
 }
 
 /*----------------------------------------------------------------------*
@@ -105,17 +108,21 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::MembraneScatraTri6Ty
 }
 
 void Discret::Elements::MembraneScatraTri6Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_membrane;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_membrane;
   MembraneTri6Type::setup_element_definition(definitions_membrane);
 
-  std::map<std::string, Input::LineDefinition>& defs_membrane = definitions_membrane["MEMBRANE6"];
+  auto& defs_membrane = definitions_membrane["MEMBRANE6"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions["MEMBRANESCATRA6"];
+  auto& defs = definitions["MEMBRANESCATRA6"];
 
-  defs["TRI6"] =
-      Input::LineDefinition::Builder(defs_membrane["TRI6"]).add_named_string("TYPE").build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["TRI6"] = anonymous_group({
+      defs_membrane["TRI6"],
+      entry<std::string>("TYPE"),
+  });
 }
 
 /*----------------------------------------------------------------------*
@@ -158,17 +165,21 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::MembraneScatraQuad4T
 }
 
 void Discret::Elements::MembraneScatraQuad4Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_membrane;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_membrane;
   MembraneQuad4Type::setup_element_definition(definitions_membrane);
 
-  std::map<std::string, Input::LineDefinition>& defs_membrane = definitions_membrane["MEMBRANE4"];
+  auto& defs_membrane = definitions_membrane["MEMBRANE4"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions["MEMBRANESCATRA4"];
+  auto& defs = definitions["MEMBRANESCATRA4"];
 
-  defs["QUAD4"] =
-      Input::LineDefinition::Builder(defs_membrane["QUAD4"]).add_named_string("TYPE").build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["QUAD4"] = anonymous_group({
+      defs_membrane["QUAD4"],
+      entry<std::string>("TYPE"),
+  });
 }
 
 /*----------------------------------------------------------------------*
@@ -211,17 +222,21 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::MembraneScatraQuad9T
 }
 
 void Discret::Elements::MembraneScatraQuad9Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_membrane;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_membrane;
   MembraneQuad9Type::setup_element_definition(definitions_membrane);
 
-  std::map<std::string, Input::LineDefinition>& defs_membrane = definitions_membrane["MEMBRANE9"];
+  auto& defs_membrane = definitions_membrane["MEMBRANE9"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions["MEMBRANESCATRA9"];
+  auto& defs = definitions["MEMBRANESCATRA9"];
 
-  defs["QUAD9"] =
-      Input::LineDefinition::Builder(defs_membrane["QUAD9"]).add_named_string("TYPE").build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["QUAD9"] = anonymous_group({
+      defs_membrane["QUAD9"],
+      entry<std::string>("TYPE"),
+  });
 }
 
 FOUR_C_NAMESPACE_CLOSE

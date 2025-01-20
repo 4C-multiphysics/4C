@@ -12,7 +12,6 @@
 #include "4C_global_legacy_module.hpp"
 #include "4C_io_input_file_utils.hpp"
 #include "4C_io_input_spec_builders.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_string.hpp"
 

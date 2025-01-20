@@ -12,7 +12,7 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
 #include "4C_global_data.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_mat_so3_material.hpp"
 #include "4C_so3_line.hpp"
 #include "4C_so3_nullspace.hpp"
@@ -75,23 +75,25 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::SoHex27Type::compute_null_spa
 }
 
 void Discret::Elements::SoHex27Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions[get_element_type_string()];
+  auto& defs = definitions[get_element_type_string()];
 
-  defs["HEX27"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("HEX27", 27)
-                      .add_named_int("MAT")
-                      .add_named_string("KINEM")
-                      .add_optional_named_double_vector("RAD", 3)
-                      .add_optional_named_double_vector("AXI", 3)
-                      .add_optional_named_double_vector("CIR", 3)
-                      .add_optional_named_double_vector("FIBER1", 3)
-                      .add_optional_named_double_vector("FIBER2", 3)
-                      .add_optional_named_double_vector("FIBER3", 3)
-                      .add_optional_named_double("STRENGTH")
-                      .add_optional_named_double("GROWTHTRIG")
-                      .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["HEX27"] = anonymous_group({
+      entry<std::vector<int>>("HEX27", {.size = 27}),
+      entry<int>("MAT"),
+      entry<std::string>("KINEM"),
+      entry<std::vector<double>>("RAD", {.required = false, .size = 3}),
+      entry<std::vector<double>>("AXI", {.required = false, .size = 3}),
+      entry<std::vector<double>>("CIR", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER1", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER2", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER3", {.required = false, .size = 3}),
+      entry<double>("STRENGTH", {.required = false}),
+      entry<double>("GROWTHTRIG", {.required = false}),
+  });
 }
 
 

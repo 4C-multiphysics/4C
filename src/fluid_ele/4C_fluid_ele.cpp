@@ -13,7 +13,7 @@
 #include "4C_fluid_ele_nullspace.hpp"
 #include "4C_fluid_ele_tds.hpp"
 #include "4C_global_data.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -69,112 +69,114 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::FluidType::compute_null_space
 }
 
 void Discret::Elements::FluidType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defsgeneral = definitions["FLUID"];
+  auto& defsgeneral = definitions["FLUID"];
 
-  defsgeneral["HEX8"] = Input::LineDefinition::Builder()
-                            .add_named_int_vector("HEX8", 8)
-                            .add_named_int("MAT")
-                            .add_named_string("NA")
-                            .build();
+  using namespace Core::IO::InputSpecBuilders;
 
-  defsgeneral["HEX20"] = Input::LineDefinition::Builder()
-                             .add_named_int_vector("HEX20", 20)
-                             .add_named_int("MAT")
-                             .add_named_string("NA")
-                             .build();
+  defsgeneral["HEX8"] = anonymous_group({
+      entry<std::vector<int>>("HEX8", {.size = 8}),
+      entry<int>("MAT"),
+      entry<std::string>("NA"),
+  });
 
-  defsgeneral["HEX27"] = Input::LineDefinition::Builder()
-                             .add_named_int_vector("HEX27", 27)
-                             .add_named_int("MAT")
-                             .add_named_string("NA")
-                             .build();
+  defsgeneral["HEX20"] = anonymous_group({
+      entry<std::vector<int>>("HEX20", {.size = 20}),
+      entry<int>("MAT"),
+      entry<std::string>("NA"),
+  });
 
-  defsgeneral["TET4"] = Input::LineDefinition::Builder()
-                            .add_named_int_vector("TET4", 4)
-                            .add_named_int("MAT")
-                            .add_named_string("NA")
-                            .build();
+  defsgeneral["HEX27"] = anonymous_group({
+      entry<std::vector<int>>("HEX27", {.size = 27}),
+      entry<int>("MAT"),
+      entry<std::string>("NA"),
+  });
 
-  defsgeneral["TET10"] = Input::LineDefinition::Builder()
-                             .add_named_int_vector("TET10", 10)
-                             .add_named_int("MAT")
-                             .add_named_string("NA")
-                             .build();
+  defsgeneral["TET4"] = anonymous_group({
+      entry<std::vector<int>>("TET4", {.size = 4}),
+      entry<int>("MAT"),
+      entry<std::string>("NA"),
+  });
 
-  defsgeneral["WEDGE6"] = Input::LineDefinition::Builder()
-                              .add_named_int_vector("WEDGE6", 6)
-                              .add_named_int("MAT")
-                              .add_named_string("NA")
-                              .build();
+  defsgeneral["TET10"] = anonymous_group({
+      entry<std::vector<int>>("TET10", {.size = 10}),
+      entry<int>("MAT"),
+      entry<std::string>("NA"),
+  });
 
-  defsgeneral["WEDGE15"] = Input::LineDefinition::Builder()
-                               .add_named_int_vector("WEDGE15", 15)
-                               .add_named_int("MAT")
-                               .add_named_string("NA")
-                               .build();
+  defsgeneral["WEDGE6"] = anonymous_group({
+      entry<std::vector<int>>("WEDGE6", {.size = 6}),
+      entry<int>("MAT"),
+      entry<std::string>("NA"),
+  });
 
-  defsgeneral["PYRAMID5"] = Input::LineDefinition::Builder()
-                                .add_named_int_vector("PYRAMID5", 5)
-                                .add_named_int("MAT")
-                                .add_named_string("NA")
-                                .build();
+  defsgeneral["WEDGE15"] = anonymous_group({
+      entry<std::vector<int>>("WEDGE15", {.size = 15}),
+      entry<int>("MAT"),
+      entry<std::string>("NA"),
+  });
 
-  defsgeneral["NURBS8"] = Input::LineDefinition::Builder()
-                              .add_named_int_vector("NURBS8", 8)
-                              .add_named_int("MAT")
-                              .add_named_string("NA")
-                              .build();
+  defsgeneral["PYRAMID5"] = anonymous_group({
+      entry<std::vector<int>>("PYRAMID5", {.size = 5}),
+      entry<int>("MAT"),
+      entry<std::string>("NA"),
+  });
 
-  defsgeneral["NURBS27"] = Input::LineDefinition::Builder()
-                               .add_named_int_vector("NURBS27", 27)
-                               .add_named_int("MAT")
-                               .add_named_string("NA")
-                               .build();
+  defsgeneral["NURBS8"] = anonymous_group({
+      entry<std::vector<int>>("NURBS8", {.size = 8}),
+      entry<int>("MAT"),
+      entry<std::string>("NA"),
+  });
+
+  defsgeneral["NURBS27"] = anonymous_group({
+      entry<std::vector<int>>("NURBS27", {.size = 27}),
+      entry<int>("MAT"),
+      entry<std::string>("NA"),
+  });
 
   // 2D elements
-  defsgeneral["QUAD4"] = Input::LineDefinition::Builder()
-                             .add_named_int_vector("QUAD4", 4)
-                             .add_named_int("MAT")
-                             .add_named_string("NA")
-                             .build();
+  defsgeneral["QUAD4"] = anonymous_group({
+      entry<std::vector<int>>("QUAD4", {.size = 4}),
+      entry<int>("MAT"),
+      entry<std::string>("NA"),
+  });
 
-  defsgeneral["QUAD8"] = Input::LineDefinition::Builder()
-                             .add_named_int_vector("QUAD8", 8)
-                             .add_named_int("MAT")
-                             .add_named_string("NA")
-                             .build();
+  defsgeneral["QUAD8"] = anonymous_group({
+      entry<std::vector<int>>("QUAD8", {.size = 8}),
+      entry<int>("MAT"),
+      entry<std::string>("NA"),
+  });
 
-  defsgeneral["QUAD9"] = Input::LineDefinition::Builder()
-                             .add_named_int_vector("QUAD9", 9)
-                             .add_named_int("MAT")
-                             .add_named_string("NA")
-                             .build();
+  defsgeneral["QUAD9"] = anonymous_group({
+      entry<std::vector<int>>("QUAD9", {.size = 9}),
+      entry<int>("MAT"),
+      entry<std::string>("NA"),
+  });
 
-  defsgeneral["TRI3"] = Input::LineDefinition::Builder()
-                            .add_named_int_vector("TRI3", 3)
-                            .add_named_int("MAT")
-                            .add_named_string("NA")
-                            .build();
+  defsgeneral["TRI3"] = anonymous_group({
+      entry<std::vector<int>>("TRI3", {.size = 3}),
+      entry<int>("MAT"),
+      entry<std::string>("NA"),
+  });
 
-  defsgeneral["TRI6"] = Input::LineDefinition::Builder()
-                            .add_named_int_vector("TRI6", 6)
-                            .add_named_int("MAT")
-                            .add_named_string("NA")
-                            .build();
+  defsgeneral["TRI6"] = anonymous_group({
+      entry<std::vector<int>>("TRI6", {.size = 6}),
+      entry<int>("MAT"),
+      entry<std::string>("NA"),
+  });
 
-  defsgeneral["NURBS4"] = Input::LineDefinition::Builder()
-                              .add_named_int_vector("NURBS4", 4)
-                              .add_named_int("MAT")
-                              .add_named_string("NA")
-                              .build();
+  defsgeneral["NURBS4"] = anonymous_group({
+      entry<std::vector<int>>("NURBS4", {.size = 4}),
+      entry<int>("MAT"),
+      entry<std::string>("NA"),
+  });
 
-  defsgeneral["NURBS9"] = Input::LineDefinition::Builder()
-                              .add_named_int_vector("NURBS9", 9)
-                              .add_named_int("MAT")
-                              .add_named_string("NA")
-                              .build();
+  defsgeneral["NURBS9"] = anonymous_group({
+      entry<std::vector<int>>("NURBS9", {.size = 9}),
+      entry<int>("MAT"),
+      entry<std::string>("NA"),
+  });
 }
 
 

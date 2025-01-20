@@ -15,7 +15,6 @@
 #include "4C_fem_geometric_search_bounding_volume.hpp"
 #include "4C_fem_geometric_search_params.hpp"
 #include "4C_io_element_append_visualization.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_material_base.hpp"
 #include "4C_utils_exceptions.hpp"
 

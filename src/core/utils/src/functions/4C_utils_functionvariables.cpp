@@ -7,6 +7,7 @@
 
 #include "4C_utils_functionvariables.hpp"
 
+#include "4C_io_input_parameter_container.hpp"
 #include "4C_utils_symbolic_expression.hpp"
 
 #include <Sacado.hpp>

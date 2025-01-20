@@ -39,8 +39,7 @@ namespace Discret
       std::shared_ptr<Core::Elements::Element> create(const int id, const int owner) override;
 
       void setup_element_definition(
-          std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
-          override;
+          std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions) override;
 
      private:
       static Wall1ScatraType instance_;

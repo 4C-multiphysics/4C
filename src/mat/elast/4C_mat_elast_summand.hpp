@@ -25,12 +25,6 @@ namespace Core::Communication
   class PackBuffer;
 }
 
-namespace Input
-{
-  class LineDefinition;
-}
-
-
 namespace Mat
 {
   class Anisotropy;
@@ -108,7 +102,7 @@ namespace Mat
       /*!
        * @brief Dummy routine for setup of summand.
        *
-       * This method is called during Element input with the LineDefinition of the element.
+       * This method is called during Element input with the parameters of the element.
        *
        * @param numgp Number of Gauss points
        * @param linedef Input line of the element

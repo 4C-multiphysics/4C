@@ -5,7 +5,6 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "4C_io_linedefinition.hpp"
 #include "4C_mat_robinson.hpp"
 #include "4C_mat_so3_material.hpp"
 #include "4C_so3_hex8.hpp"

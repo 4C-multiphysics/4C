@@ -13,6 +13,7 @@
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_utils_function.hpp"
 
+#include <unordered_map>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN

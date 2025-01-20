@@ -11,6 +11,7 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_global_data.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_mat_lin_elast_1D.hpp"
 #include "4C_structure_new_elements_paramsinterface.hpp"
 
@@ -66,18 +67,22 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::Truss3ScatraType::cr
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Discret::Elements::Truss3ScatraType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["TRUSS3SCATRA"];
+  auto& defs = definitions["TRUSS3SCATRA"];
+
+  using namespace Core::IO::InputSpecBuilders;
 
   // get definitions from standard truss element
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_truss;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_truss;
   Truss3Type::setup_element_definition(definitions_truss);
-  std::map<std::string, Input::LineDefinition>& defs_truss = definitions_truss["TRUSS3"];
+  auto& defs_truss = definitions_truss["TRUSS3"];
 
   // copy definitions of standard truss element to truss element for scalar transport coupling
-  defs["LINE2"] =
-      Input::LineDefinition::Builder(defs_truss["LINE2"]).add_named_string("TYPE").build();
+  defs["LINE2"] = anonymous_group({
+      defs_truss["LINE2"],
+      entry<std::string>("TYPE"),
+  });
 }
 
 /*----------------------------------------------------------------------*

@@ -27,9 +27,9 @@ namespace Core::LinAlg
   class SparseOperator;
 }
 
-namespace Input
+namespace Core::IO
 {
-  class LineDefinition;
+  class InputSpec;
 }
 
 namespace Core::FE
@@ -126,7 +126,7 @@ namespace Core::Communication
 
     /// setup definition of element input file lines
     void setup_element_definition(
-        std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions);
+        std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions);
 
    private:
     void do_register(ParObjectType* object_type);

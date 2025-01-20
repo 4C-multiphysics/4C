@@ -7,7 +7,7 @@
 
 #include "4C_membrane_eletypes.hpp"
 
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_membrane.hpp"
 #include "4C_so3_nullspace.hpp"
 
@@ -67,23 +67,25 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::MembraneTri3Type::compute_nul
 }
 
 void Discret::Elements::MembraneTri3Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["MEMBRANE3"];
+  auto& defs = definitions["MEMBRANE3"];
 
-  defs["TRI3"] = Input::LineDefinition::Builder()
-                     .add_named_int_vector("TRI3", 3)
-                     .add_named_int("MAT")
-                     .add_named_string("KINEM")
-                     .add_named_double("THICK")
-                     .add_named_string("STRESS_STRAIN")
-                     .add_optional_named_double_vector("RAD", 3)
-                     .add_optional_named_double_vector("AXI", 3)
-                     .add_optional_named_double_vector("CIR", 3)
-                     .add_optional_named_double_vector("FIBER1", 3)
-                     .add_optional_named_double_vector("FIBER2", 3)
-                     .add_optional_named_double_vector("FIBER3", 3)
-                     .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["TRI3"] = anonymous_group({
+      entry<std::vector<int>>("TRI3", {.size = 3}),
+      entry<int>("MAT"),
+      entry<std::string>("KINEM"),
+      entry<double>("THICK"),
+      entry<std::string>("STRESS_STRAIN"),
+      entry<std::vector<double>>("RAD", {.required = false, .size = 3}),
+      entry<std::vector<double>>("AXI", {.required = false, .size = 3}),
+      entry<std::vector<double>>("CIR", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER1", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER2", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER3", {.required = false, .size = 3}),
+  });
 }
 
 /*----------------------------------------------------------------------*
@@ -140,23 +142,25 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::MembraneTri6Type::compute_nul
 }
 
 void Discret::Elements::MembraneTri6Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["MEMBRANE6"];
+  auto& defs = definitions["MEMBRANE6"];
 
-  defs["TRI6"] = Input::LineDefinition::Builder()
-                     .add_named_int_vector("TRI6", 6)
-                     .add_named_int("MAT")
-                     .add_named_string("KINEM")
-                     .add_named_double("THICK")
-                     .add_named_string("STRESS_STRAIN")
-                     .add_optional_named_double_vector("RAD", 3)
-                     .add_optional_named_double_vector("AXI", 3)
-                     .add_optional_named_double_vector("CIR", 3)
-                     .add_optional_named_double_vector("FIBER1", 3)
-                     .add_optional_named_double_vector("FIBER2", 3)
-                     .add_optional_named_double_vector("FIBER3", 3)
-                     .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["TRI6"] = anonymous_group({
+      entry<std::vector<int>>("TRI6", {.size = 6}),
+      entry<int>("MAT"),
+      entry<std::string>("KINEM"),
+      entry<double>("THICK"),
+      entry<std::string>("STRESS_STRAIN"),
+      entry<std::vector<double>>("RAD", {.required = false, .size = 3}),
+      entry<std::vector<double>>("AXI", {.required = false, .size = 3}),
+      entry<std::vector<double>>("CIR", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER1", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER2", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER3", {.required = false, .size = 3}),
+  });
 }
 
 /*----------------------------------------------------------------------*
@@ -213,23 +217,25 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::MembraneQuad4Type::compute_nu
 }
 
 void Discret::Elements::MembraneQuad4Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["MEMBRANE4"];
+  auto& defs = definitions["MEMBRANE4"];
 
-  defs["QUAD4"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("QUAD4", 4)
-                      .add_named_int("MAT")
-                      .add_named_string("KINEM")
-                      .add_named_double("THICK")
-                      .add_named_string("STRESS_STRAIN")
-                      .add_optional_named_double_vector("RAD", 3)
-                      .add_optional_named_double_vector("AXI", 3)
-                      .add_optional_named_double_vector("CIR", 3)
-                      .add_optional_named_double_vector("FIBER1", 3)
-                      .add_optional_named_double_vector("FIBER2", 3)
-                      .add_optional_named_double_vector("FIBER3", 3)
-                      .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["QUAD4"] = anonymous_group({
+      entry<std::vector<int>>("QUAD4", {.size = 4}),
+      entry<int>("MAT"),
+      entry<std::string>("KINEM"),
+      entry<double>("THICK"),
+      entry<std::string>("STRESS_STRAIN"),
+      entry<std::vector<double>>("RAD", {.required = false, .size = 3}),
+      entry<std::vector<double>>("AXI", {.required = false, .size = 3}),
+      entry<std::vector<double>>("CIR", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER1", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER2", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER3", {.required = false, .size = 3}),
+  });
 }
 
 /*----------------------------------------------------------------------*
@@ -286,23 +292,25 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::MembraneQuad9Type::compute_nu
 }
 
 void Discret::Elements::MembraneQuad9Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["MEMBRANE9"];
+  auto& defs = definitions["MEMBRANE9"];
 
-  defs["QUAD9"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("QUAD9", 9)
-                      .add_named_int("MAT")
-                      .add_named_string("KINEM")
-                      .add_named_double("THICK")
-                      .add_named_string("STRESS_STRAIN")
-                      .add_optional_named_double_vector("RAD", 3)
-                      .add_optional_named_double_vector("AXI", 3)
-                      .add_optional_named_double_vector("CIR", 3)
-                      .add_optional_named_double_vector("FIBER1", 3)
-                      .add_optional_named_double_vector("FIBER2", 3)
-                      .add_optional_named_double_vector("FIBER3", 3)
-                      .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["QUAD9"] = anonymous_group({
+      entry<std::vector<int>>("QUAD9", {.size = 9}),
+      entry<int>("MAT"),
+      entry<std::string>("KINEM"),
+      entry<double>("THICK"),
+      entry<std::string>("STRESS_STRAIN"),
+      entry<std::vector<double>>("RAD", {.required = false, .size = 3}),
+      entry<std::vector<double>>("AXI", {.required = false, .size = 3}),
+      entry<std::vector<double>>("CIR", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER1", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER2", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER3", {.required = false, .size = 3}),
+  });
 }
 
 FOUR_C_NAMESPACE_CLOSE

@@ -6,7 +6,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "4C_fem_general_utils_local_connectivity_matrices.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_thermo_element.hpp"
 

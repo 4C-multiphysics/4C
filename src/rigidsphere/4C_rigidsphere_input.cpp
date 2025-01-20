@@ -5,7 +5,6 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "4C_io_linedefinition.hpp"
 #include "4C_rigidsphere.hpp"
 
 FOUR_C_NAMESPACE_OPEN

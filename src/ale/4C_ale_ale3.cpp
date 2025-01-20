@@ -10,7 +10,7 @@
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_comm_utils_factory.hpp"
 #include "4C_fem_discretization.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_so3_nullspace.hpp"
 #include "4C_utils_exceptions.hpp"
 
@@ -77,45 +77,51 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::Ale3Type::compute_null_space(
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
 void Discret::Elements::Ale3Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["ALE3"];
+  auto& defs = definitions["ALE3"];
 
-  defs["HEX8"] =
-      Input::LineDefinition::Builder().add_named_int_vector("HEX8", 8).add_named_int("MAT").build();
+  using namespace Core::IO::InputSpecBuilders;
 
-  defs["HEX20"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("HEX20", 20)
-                      .add_named_int("MAT")
-                      .build();
+  defs["HEX8"] = anonymous_group({
+      entry<std::vector<int>>("HEX8", {.size = 8}),
+      entry<int>("MAT"),
+  });
 
-  defs["HEX27"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("HEX27", 27)
-                      .add_named_int("MAT")
-                      .build();
+  defs["HEX20"] = anonymous_group({
+      entry<std::vector<int>>("HEX20", {.size = 20}),
+      entry<int>("MAT"),
+  });
 
-  defs["TET4"] =
-      Input::LineDefinition::Builder().add_named_int_vector("TET4", 4).add_named_int("MAT").build();
+  defs["HEX27"] = anonymous_group({
+      entry<std::vector<int>>("HEX27", {.size = 27}),
+      entry<int>("MAT"),
+  });
 
-  defs["TET10"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("TET10", 10)
-                      .add_named_int("MAT")
-                      .build();
+  defs["TET4"] = anonymous_group({
+      entry<std::vector<int>>("TET4", {.size = 4}),
+      entry<int>("MAT"),
+  });
 
-  defs["WEDGE6"] = Input::LineDefinition::Builder()
-                       .add_named_int_vector("WEDGE6", 6)
-                       .add_named_int("MAT")
-                       .build();
+  defs["TET10"] = anonymous_group({
+      entry<std::vector<int>>("TET10", {.size = 10}),
+      entry<int>("MAT"),
+  });
 
-  defs["WEDGE15"] = Input::LineDefinition::Builder()
-                        .add_named_int_vector("WEDGE15", 15)
-                        .add_named_int("MAT")
-                        .build();
+  defs["WEDGE6"] = anonymous_group({
+      entry<std::vector<int>>("WEDGE6", {.size = 6}),
+      entry<int>("MAT"),
+  });
 
-  defs["PYRAMID5"] = Input::LineDefinition::Builder()
-                         .add_named_int_vector("PYRAMID5", 5)
-                         .add_named_int("MAT")
-                         .build();
+  defs["WEDGE15"] = anonymous_group({
+      entry<std::vector<int>>("WEDGE15", {.size = 15}),
+      entry<int>("MAT"),
+  });
+
+  defs["PYRAMID5"] = anonymous_group({
+      entry<std::vector<int>>("PYRAMID5", {.size = 5}),
+      entry<int>("MAT"),
+  });
 }
 
 /*----------------------------------------------------------------------------*/

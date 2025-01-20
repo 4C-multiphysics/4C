@@ -10,7 +10,6 @@
 #include "4C_adapter_scatra_base_algorithm.hpp"
 #include "4C_adapter_str_ssiwrapper.hpp"
 #include "4C_comm_mpi_utils.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_scatra_timint_implicit.hpp"
 #include "4C_ssi_monolithic.hpp"

@@ -47,8 +47,7 @@ namespace Discret
       int initialize(Core::FE::Discretization& dis) override;
 
       void setup_element_definition(
-          std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
-          override;
+          std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions) override;
 
      private:
       static SoHex8PoroType instance_;
@@ -76,8 +75,7 @@ namespace Discret
       int initialize(Core::FE::Discretization& dis) override;
 
       void setup_element_definition(
-          std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
-          override;
+          std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions) override;
 
      private:
       static SoTet4PoroType instance_;
@@ -106,8 +104,7 @@ namespace Discret
       int initialize(Core::FE::Discretization& dis) override;
 
       void setup_element_definition(
-          std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
-          override;
+          std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions) override;
 
      private:
       static SoHex27PoroType instance_;
@@ -135,8 +132,7 @@ namespace Discret
       int initialize(Core::FE::Discretization& dis) override;
 
       void setup_element_definition(
-          std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
-          override;
+          std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions) override;
 
      private:
       static SoTet10PoroType instance_;
@@ -164,8 +160,7 @@ namespace Discret
       int initialize(Core::FE::Discretization& dis) override;
 
       void setup_element_definition(
-          std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
-          override;
+          std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions) override;
 
      private:
       static SoNurbs27PoroType instance_;

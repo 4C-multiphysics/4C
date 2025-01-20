@@ -11,7 +11,7 @@
 #include "4C_comm_utils_factory.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_so3_line.hpp"
 #include "4C_so3_nullspace.hpp"
 #include "4C_so3_surface.hpp"
@@ -73,15 +73,17 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::Nurbs::SoNurbs27Type::compute
 }
 
 void Discret::Elements::Nurbs::SoNurbs27Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions[get_element_type_string()];
+  auto& defs = definitions[get_element_type_string()];
 
-  defs["NURBS27"] = Input::LineDefinition::Builder()
-                        .add_named_int_vector("NURBS27", 27)
-                        .add_named_int("MAT")
-                        .add_named_int_vector("GP", 3)
-                        .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["NURBS27"] = anonymous_group({
+      entry<std::vector<int>>("NURBS27", {.size = 27}),
+      entry<int>("MAT"),
+      entry<std::vector<int>>("GP", {.size = 3}),
+  });
 }
 
 

@@ -7,7 +7,7 @@
 
 #include "4C_w1_poro_scatra_eletypes.hpp"
 
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_w1_poro_scatra.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -62,17 +62,21 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::WallQuad4PoroScatraT
  |                                                        schmidt 09/17 |
  *----------------------------------------------------------------------*/
 void Discret::Elements::WallQuad4PoroScatraType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_wall;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_wall;
   WallQuad4PoroType::setup_element_definition(definitions_wall);
 
-  std::map<std::string, Input::LineDefinition>& defs_wall = definitions_wall["WALLQ4PORO"];
+  auto& defs_wall = definitions_wall["WALLQ4PORO"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions["WALLQ4POROSCATRA"];
+  auto& defs = definitions["WALLQ4POROSCATRA"];
 
-  defs["QUAD4"] =
-      Input::LineDefinition::Builder(defs_wall["QUAD4"]).add_named_string("TYPE").build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["QUAD4"] = anonymous_group({
+      defs_wall["QUAD4"],
+      entry<std::string>("TYPE"),
+  });
 }
 
 
@@ -125,17 +129,21 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::WallQuad9PoroScatraT
  |                                                        schmidt 09/17 |
  *----------------------------------------------------------------------*/
 void Discret::Elements::WallQuad9PoroScatraType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_wall;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_wall;
   WallQuad9PoroType::setup_element_definition(definitions_wall);
 
-  std::map<std::string, Input::LineDefinition>& defs_wall = definitions_wall["WALLQ9PORO"];
+  auto& defs_wall = definitions_wall["WALLQ9PORO"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions["WALLQ9POROSCATRA"];
+  auto& defs = definitions["WALLQ9POROSCATRA"];
 
-  defs["QUAD9"] =
-      Input::LineDefinition::Builder(defs_wall["QUAD9"]).add_named_string("TYPE").build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["QUAD9"] = anonymous_group({
+      defs_wall["QUAD9"],
+      entry<std::string>("TYPE"),
+  });
 }
 
 /*----------------------------------------------------------------------*
@@ -188,17 +196,21 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::WallNurbs4PoroScatra
  |                                                        schmidt 09/17 |
  *----------------------------------------------------------------------*/
 void Discret::Elements::WallNurbs4PoroScatraType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_wall;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_wall;
   WallNurbs4PoroType::setup_element_definition(definitions_wall);
 
-  std::map<std::string, Input::LineDefinition>& defs_wall = definitions_wall["WALLN4PORO"];
+  auto& defs_wall = definitions_wall["WALLN4PORO"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions["WALLN4POROSCATRA"];
+  auto& defs = definitions["WALLN4POROSCATRA"];
 
-  defs["NURBS4"] =
-      Input::LineDefinition::Builder(defs_wall["NURBS4"]).add_named_string("TYPE").build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["NURBS4"] = anonymous_group({
+      defs_wall["NURBS4"],
+      entry<std::string>("TYPE"),
+  });
 }
 
 /*----------------------------------------------------------------------*
@@ -251,17 +263,21 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::WallNurbs9PoroScatra
  |                                                        schmidt 09/17 |
  *----------------------------------------------------------------------*/
 void Discret::Elements::WallNurbs9PoroScatraType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_wall;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_wall;
   WallNurbs9PoroType::setup_element_definition(definitions_wall);
 
-  std::map<std::string, Input::LineDefinition>& defs_wall = definitions_wall["WALLN9PORO"];
+  auto& defs_wall = definitions_wall["WALLN9PORO"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions["WALLN9POROSCATRA"];
+  auto& defs = definitions["WALLN9POROSCATRA"];
 
-  defs["NURBS9"] =
-      Input::LineDefinition::Builder(defs_wall["NURBS9"]).add_named_string("TYPE").build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["NURBS9"] = anonymous_group({
+      defs_wall["NURBS9"],
+      entry<std::string>("TYPE"),
+  });
 }
 
 /*----------------------------------------------------------------------*
@@ -314,16 +330,21 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::WallTri3PoroScatraTy
  |                                                        schmidt 09/17 |
  *----------------------------------------------------------------------*/
 void Discret::Elements::WallTri3PoroScatraType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_wall;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_wall;
   WallTri3PoroType::setup_element_definition(definitions_wall);
 
-  std::map<std::string, Input::LineDefinition>& defs_wall = definitions_wall["WALLT3PORO"];
+  auto& defs_wall = definitions_wall["WALLT3PORO"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions["WALLT3POROSCATRA"];
+  auto& defs = definitions["WALLT3POROSCATRA"];
 
-  defs["TRI3"] = Input::LineDefinition::Builder(defs_wall["TRI3"]).add_named_string("TYPE").build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["TRI3"] = anonymous_group({
+      defs_wall["TRI3"],
+      entry<std::string>("TYPE"),
+  });
 }
 
 FOUR_C_NAMESPACE_CLOSE

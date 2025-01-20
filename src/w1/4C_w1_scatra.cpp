@@ -8,7 +8,7 @@
 #include "4C_w1_scatra.hpp"
 
 #include "4C_fem_discretization.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -48,18 +48,23 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::Wall1ScatraType::cre
 }
 
 void Discret::Elements::Wall1ScatraType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_wall;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_wall;
   Wall1Type::setup_element_definition(definitions_wall);
 
-  std::map<std::string, Input::LineDefinition>& defs_wall = definitions_wall["WALL"];
+  auto& defs_wall = definitions_wall["WALL"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions["WALLSCATRA"];
+  auto& defs = definitions["WALLSCATRA"];
+
+  using namespace Core::IO::InputSpecBuilders;
 
   for (const auto& [key, wall_line_def] : defs_wall)
   {
-    defs[key] = Input::LineDefinition::Builder(wall_line_def).add_named_string("TYPE").build();
+    defs[key] = anonymous_group({
+        wall_line_def,
+        entry<std::string>("TYPE"),
+    });
   }
 }
 

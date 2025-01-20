@@ -17,7 +17,7 @@
 #include "4C_global_data.hpp"
 #include "4C_inpar_structure.hpp"
 #include "4C_inpar_validparameters.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_so3_nullspace.hpp"
@@ -103,77 +103,79 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::Beam3rType::compute_null_spac
 /*------------------------------------------------------------------------------------------------*
  *------------------------------------------------------------------------------------------------*/
 void Discret::Elements::Beam3rType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["BEAM3R"];
+  auto& defs = definitions["BEAM3R"];
+
+  using namespace Core::IO::InputSpecBuilders;
 
   // note: LINE2 refers to linear Lagrange interpolation of centerline AND triad field
-  defs["LINE2"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("LINE2", 2)
-                      .add_named_int("MAT")
-                      .add_named_double_vector("TRIADS", 6)
-                      .add_optional_tag("FAD")
-                      .build();
+  defs["LINE2"] = anonymous_group({
+      entry<std::vector<int>>("LINE2", {.size = 2}),
+      entry<int>("MAT"),
+      entry<std::vector<double>>("TRIADS", {.size = 6}),
+      tag("FAD", {.default_value = false}),
+  });
 
   // note: LINE3 refers to quadratic Lagrange interpolation of centerline AND triad field
-  defs["LINE3"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("LINE3", 3)
-                      .add_named_int("MAT")
-                      .add_named_double_vector("TRIADS", 9)
-                      .add_optional_tag("FAD")
-                      .build();
+  defs["LINE3"] = anonymous_group({
+      entry<std::vector<int>>("LINE3", {.size = 3}),
+      entry<int>("MAT"),
+      entry<std::vector<double>>("TRIADS", {.size = 9}),
+      tag("FAD", {.default_value = false}),
+  });
 
   // note: LINE4 refers to cubic Lagrange interpolation of centerline AND triad field
-  defs["LINE4"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("LINE4", 4)
-                      .add_named_int("MAT")
-                      .add_named_double_vector("TRIADS", 12)
-                      .add_optional_tag("FAD")
-                      .build();
+  defs["LINE4"] = anonymous_group({
+      entry<std::vector<int>>("LINE4", {.size = 4}),
+      entry<int>("MAT"),
+      entry<std::vector<double>>("TRIADS", {.size = 12}),
+      tag("FAD", {.default_value = false}),
+  });
 
   // note: LINE5 refers to quartic Lagrange interpolation of centerline AND triad field
-  defs["LINE5"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("LINE5", 5)
-                      .add_named_int("MAT")
-                      .add_named_double_vector("TRIADS", 15)
-                      .add_optional_tag("FAD")
-                      .build();
+  defs["LINE5"] = anonymous_group({
+      entry<std::vector<int>>("LINE5", {.size = 5}),
+      entry<int>("MAT"),
+      entry<std::vector<double>>("TRIADS", {.size = 15}),
+      tag("FAD", {.default_value = false}),
+  });
 
   /* note: HERM2 refers to cubic Hermite interpolation of centerline (2 nodes)
    *       LINE2 refers to linear Lagrange interpolation of the triad field*/
-  defs["HERM2LINE2"] = Input::LineDefinition::Builder()
-                           .add_named_int_vector("HERM2LINE2", 2)
-                           .add_named_int("MAT")
-                           .add_named_double_vector("TRIADS", 6)
-                           .add_optional_tag("FAD")
-                           .build();
+  defs["HERM2LINE2"] = anonymous_group({
+      entry<std::vector<int>>("HERM2LINE2", {.size = 2}),
+      entry<int>("MAT"),
+      entry<std::vector<double>>("TRIADS", {.size = 6}),
+      tag("FAD", {.default_value = false}),
+  });
 
   /* note: HERM2 refers to cubic order Hermite interpolation of centerline (2 nodes)
    *       LINE3 refers to quadratic Lagrange interpolation of the triad field*/
-  defs["HERM2LINE3"] = Input::LineDefinition::Builder()
-                           .add_named_int_vector("HERM2LINE3", 3)
-                           .add_named_int("MAT")
-                           .add_named_double_vector("TRIADS", 9)
-                           .add_optional_tag("FAD")
-                           .build();
+  defs["HERM2LINE3"] = anonymous_group({
+      entry<std::vector<int>>("HERM2LINE3", {.size = 3}),
+      entry<int>("MAT"),
+      entry<std::vector<double>>("TRIADS", {.size = 9}),
+      tag("FAD", {.default_value = false}),
+  });
 
   /* note: HERM2 refers to cubic Hermite interpolation of centerline (2 nodes)
    *       LINE4 refers to cubic Lagrange interpolation of the triad field*/
-  defs["HERM2LINE4"] = Input::LineDefinition::Builder()
-                           .add_named_int_vector("HERM2LINE4", 4)
-                           .add_named_int("MAT")
-                           .add_named_double_vector("TRIADS", 12)
-                           .add_optional_tag("FAD")
-                           .build();
+  defs["HERM2LINE4"] = anonymous_group({
+      entry<std::vector<int>>("HERM2LINE4", {.size = 4}),
+      entry<int>("MAT"),
+      entry<std::vector<double>>("TRIADS", {.size = 12}),
+      tag("FAD", {.default_value = false}),
+  });
 
   /* note: HERM2 refers to cubic Hermite interpolation of centerline (2 nodes)
    *       LINE5 refers to quartic Lagrange interpolation of the triad field*/
-  defs["HERM2LINE5"] = Input::LineDefinition::Builder()
-                           .add_named_int_vector("HERM2LINE5", 5)
-                           .add_named_int("MAT")
-                           .add_named_double_vector("TRIADS", 15)
-                           .add_optional_tag("FAD")
-                           .build();
+  defs["HERM2LINE5"] = anonymous_group({
+      entry<std::vector<int>>("HERM2LINE5", {.size = 5}),
+      entry<int>("MAT"),
+      entry<std::vector<double>>("TRIADS", {.size = 15}),
+      tag("FAD", {.default_value = false}),
+  });
 }
 
 /*----------------------------------------------------------------------*

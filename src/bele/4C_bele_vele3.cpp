@@ -10,7 +10,7 @@
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_comm_utils_factory.hpp"
 #include "4C_fem_discretization.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_utils_exceptions.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -64,11 +64,15 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::Vele3Type::compute_null_space
 }
 
 void Discret::Elements::Vele3Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["VELE3"];
+  auto& defs = definitions["VELE3"];
 
-  defs["HEX8"] = Input::LineDefinition::Builder().add_named_int_vector("HEX8", 8).build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["HEX8"] = anonymous_group({
+      entry<std::vector<int>>("HEX8", {.size = 8}),
+  });
 }
 
 std::shared_ptr<Core::Elements::Element> Discret::Elements::Vele3SurfaceType::create(

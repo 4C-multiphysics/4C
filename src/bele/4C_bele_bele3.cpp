@@ -10,7 +10,7 @@
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_comm_utils_factory.hpp"
 #include "4C_fem_discretization.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_so3_nullspace.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -89,61 +89,36 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::Bele3Type::compute_null_space
 }
 
 void Discret::Elements::Bele3Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs3 = definitions["BELE3_3"];
+  auto& defs3 = definitions["BELE3_3"];
 
-  defs3["TRI3"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("TRI3", 3)
-                      .add_optional_named_int("MAT")
-                      .build();
+  using namespace Core::IO::InputSpecBuilders;
 
-  defs3["TRI6"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("TRI6", 6)
-                      .add_optional_named_int("MAT")
-                      .build();
+  defs3["TRI3"] = anonymous_group({
+      entry<std::vector<int>>("TRI3", {.size = 3}),
+      entry<int>("MAT", {.required = false}),
+  });
 
-  defs3["QUAD4"] = Input::LineDefinition::Builder()
-                       .add_named_int_vector("QUAD4", 4)
-                       .add_optional_named_int("MAT")
-                       .build();
+  defs3["TRI6"] = anonymous_group({
+      entry<std::vector<int>>("TRI6", {.size = 6}),
+      entry<int>("MAT", {.required = false}),
+  });
 
-  defs3["QUAD8"] = Input::LineDefinition::Builder()
-                       .add_named_int_vector("QUAD8", 8)
-                       .add_optional_named_int("MAT")
-                       .build();
+  defs3["QUAD4"] = anonymous_group({
+      entry<std::vector<int>>("QUAD4", {.size = 4}),
+      entry<int>("MAT", {.required = false}),
+  });
 
-  defs3["QUAD9"] = Input::LineDefinition::Builder()
-                       .add_named_int_vector("QUAD9", 9)
-                       .add_optional_named_int("MAT")
-                       .build();
+  defs3["QUAD8"] = anonymous_group({
+      entry<std::vector<int>>("QUAD8", {.size = 8}),
+      entry<int>("MAT", {.required = false}),
+  });
 
-  std::map<std::string, Input::LineDefinition>& defs4 = definitions["BELE3_4"];
-
-  defs4["TRI3"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("TRI3", 3)
-                      .add_optional_named_int("MAT")
-                      .build();
-
-  defs4["TRI6"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("TRI6", 6)
-                      .add_optional_named_int("MAT")
-                      .build();
-
-  defs4["QUAD4"] = Input::LineDefinition::Builder()
-                       .add_named_int_vector("QUAD4", 4)
-                       .add_optional_named_int("MAT")
-                       .build();
-
-  defs4["QUAD8"] = Input::LineDefinition::Builder()
-                       .add_named_int_vector("QUAD8", 8)
-                       .add_optional_named_int("MAT")
-                       .build();
-
-  defs4["QUAD9"] = Input::LineDefinition::Builder()
-                       .add_named_int_vector("QUAD9", 9)
-                       .add_optional_named_int("MAT")
-                       .build();
+  defs3["QUAD9"] = anonymous_group({
+      entry<std::vector<int>>("QUAD9", {.size = 9}),
+      entry<int>("MAT", {.required = false}),
+  });
 }
 
 

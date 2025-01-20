@@ -10,7 +10,6 @@
 
 #include "4C_config.hpp"
 
-#include "4C_io_linedefinition.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_functionvariables.hpp"
 

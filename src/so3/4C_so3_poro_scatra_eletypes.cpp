@@ -7,10 +7,12 @@
 
 #include "4C_so3_poro_scatra_eletypes.hpp"
 
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_so3_poro_scatra.hpp"
 
 FOUR_C_NAMESPACE_OPEN
+
+using namespace Core::IO::InputSpecBuilders;
 
 /*----------------------------------------------------------------------*
  |  HEX 8 Element                                         schmidt 09/17 |
@@ -57,16 +59,20 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::SoHex8PoroScatraType
 }
 
 void Discret::Elements::SoHex8PoroScatraType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_hex8;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_hex8;
   SoHex8PoroType::setup_element_definition(definitions_hex8);
 
-  std::map<std::string, Input::LineDefinition>& defs_hex8 = definitions_hex8["SOLIDH8PORO"];
+  auto& defs_hex8 = definitions_hex8["SOLIDH8PORO"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions[get_element_type_string()];
+  auto& defs = definitions[get_element_type_string()];
 
-  defs["HEX8"] = Input::LineDefinition::Builder(defs_hex8["HEX8"]).add_named_string("TYPE").build();
+
+  defs["HEX8"] = anonymous_group({
+      defs_hex8["HEX8"],
+      entry<std::string>("TYPE"),
+  });
 }
 
 /*----------------------------------------------------------------------*
@@ -116,16 +122,19 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::SoTet4PoroScatraType
 }
 
 void Discret::Elements::SoTet4PoroScatraType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_tet4;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_tet4;
   SoTet4PoroType::setup_element_definition(definitions_tet4);
 
-  std::map<std::string, Input::LineDefinition>& defs_tet4 = definitions_tet4["SOLIDT4PORO"];
+  auto& defs_tet4 = definitions_tet4["SOLIDT4PORO"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions[get_element_type_string()];
+  auto& defs = definitions[get_element_type_string()];
 
-  defs["TET4"] = Input::LineDefinition::Builder(defs_tet4["TET4"]).add_named_string("TYPE").build();
+  defs["TET4"] = anonymous_group({
+      defs_tet4["TET4"],
+      entry<std::string>("TYPE"),
+  });
 }
 
 /*----------------------------------------------------------------------*
@@ -175,17 +184,19 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::SoHex27PoroScatraTyp
 }
 
 void Discret::Elements::SoHex27PoroScatraType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_hex27;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_hex27;
   SoHex27PoroType::setup_element_definition(definitions_hex27);
 
-  std::map<std::string, Input::LineDefinition>& defs_hex27 = definitions_hex27["SOLIDH27PORO"];
+  auto& defs_hex27 = definitions_hex27["SOLIDH27PORO"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions[get_element_type_string()];
+  auto& defs = definitions[get_element_type_string()];
 
-  defs["HEX27"] =
-      Input::LineDefinition::Builder(defs_hex27["HEX27"]).add_named_string("TYPE").build();
+  defs["HEX27"] = anonymous_group({
+      defs_hex27["HEX27"],
+      entry<std::string>("TYPE"),
+  });
 }
 
 
@@ -236,17 +247,19 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::SoTet10PoroScatraTyp
 }
 
 void Discret::Elements::SoTet10PoroScatraType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_tet10;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_tet10;
   SoTet10PoroType::setup_element_definition(definitions_tet10);
 
-  std::map<std::string, Input::LineDefinition>& defs_tet10 = definitions_tet10["SOLIDT10PORO"];
+  auto& defs_tet10 = definitions_tet10["SOLIDT10PORO"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions[get_element_type_string()];
+  auto& defs = definitions[get_element_type_string()];
 
-  defs["TET10"] =
-      Input::LineDefinition::Builder(defs_tet10["TET10"]).add_named_string("TYPE").build();
+  defs["TET10"] = anonymous_group({
+      defs_tet10["TET10"],
+      entry<std::string>("TYPE"),
+  });
 }
 
 /*----------------------------------------------------------------------*
@@ -295,17 +308,19 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::SoNurbs27PoroScatraT
 }
 
 void Discret::Elements::SoNurbs27PoroScatraType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_nurbs27;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_nurbs27;
   SoNurbs27PoroType::setup_element_definition(definitions_nurbs27);
 
-  std::map<std::string, Input::LineDefinition>& defs_nurbs27 = definitions_nurbs27["SONURBS27PORO"];
+  auto& defs_nurbs27 = definitions_nurbs27["SONURBS27PORO"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions[get_element_type_string()];
+  auto& defs = definitions[get_element_type_string()];
 
-  defs["NURBS27"] =
-      Input::LineDefinition::Builder(defs_nurbs27["NURBS27"]).add_named_string("TYPE").build();
+  defs["NURBS27"] = anonymous_group({
+      defs_nurbs27["NURBS27"],
+      entry<std::string>("TYPE"),
+  });
 }
 
 FOUR_C_NAMESPACE_CLOSE

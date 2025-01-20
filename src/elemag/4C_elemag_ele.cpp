@@ -15,7 +15,7 @@
 #include "4C_fem_discretization_faces.hpp"
 #include "4C_fem_general_node.hpp"
 #include "4C_global_data.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_so3_nullspace.hpp"
 
@@ -86,46 +86,48 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::ElemagType::compute_null_spac
 
 
 void Discret::Elements::ElemagType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["ELECTROMAGNETIC"];
+  auto& defs = definitions["ELECTROMAGNETIC"];
+
+  using namespace Core::IO::InputSpecBuilders;
 
   // 3D elements
-  defs["HEX8"] = Input::LineDefinition::Builder()
-                     .add_named_int_vector("HEX8", 8)
-                     .add_named_int("MAT")
-                     .add_named_int("DEG")
-                     .add_named_int("SPC")
-                     .build();
+  defs["HEX8"] = anonymous_group({
+      entry<std::vector<int>>("HEX8", {.size = 8}),
+      entry<int>("MAT"),
+      entry<int>("DEG"),
+      entry<int>("SPC"),
+  });
 
-  defs["TET4"] = Input::LineDefinition::Builder()
-                     .add_named_int_vector("TET4", 4)
-                     .add_named_int("MAT")
-                     .add_named_int("DEG")
-                     .add_named_int("SPC")
-                     .build();
+  defs["TET4"] = anonymous_group({
+      entry<std::vector<int>>("TET4", {.size = 4}),
+      entry<int>("MAT"),
+      entry<int>("DEG"),
+      entry<int>("SPC"),
+  });
 
   // 2D elements
-  defs["QUAD4"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("QUAD4", 4)
-                      .add_named_int("MAT")
-                      .add_named_int("DEG")
-                      .add_named_int("SPC")
-                      .build();
+  defs["QUAD4"] = anonymous_group({
+      entry<std::vector<int>>("QUAD4", {.size = 4}),
+      entry<int>("MAT"),
+      entry<int>("DEG"),
+      entry<int>("SPC"),
+  });
 
-  defs["QUAD9"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("QUAD9", 9)
-                      .add_named_int("MAT")
-                      .add_named_int("DEG")
-                      .add_named_int("SPC")
-                      .build();
+  defs["QUAD9"] = anonymous_group({
+      entry<std::vector<int>>("QUAD9", {.size = 9}),
+      entry<int>("MAT"),
+      entry<int>("DEG"),
+      entry<int>("SPC"),
+  });
 
-  defs["TRI3"] = Input::LineDefinition::Builder()
-                     .add_named_int_vector("TRI3", 3)
-                     .add_named_int("MAT")
-                     .add_named_int("DEG")
-                     .add_named_int("SPC")
-                     .build();
+  defs["TRI3"] = anonymous_group({
+      entry<std::vector<int>>("TRI3", {.size = 3}),
+      entry<int>("MAT"),
+      entry<int>("DEG"),
+      entry<int>("SPC"),
+  });
 }
 
 

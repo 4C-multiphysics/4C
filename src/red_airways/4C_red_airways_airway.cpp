@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "4C_comm_pack_helpers.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_red_airways_elementbase.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -59,32 +59,34 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::RedAirwayType::creat
  |                                                           roth 10/14 |
  *----------------------------------------------------------------------*/
 void Discret::Elements::RedAirwayType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["RED_AIRWAY"];
+  auto& defs = definitions["RED_AIRWAY"];
 
-  defs["LINE2"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("LINE2", 2)
-                      .add_named_int("MAT")
-                      .add_named_string("ElemSolvingType")
-                      .add_named_string("TYPE")
-                      .add_named_string("Resistance")
-                      .add_named_double("PowerOfVelocityProfile")
-                      .add_named_double("WallElasticity")
-                      .add_named_double("PoissonsRatio")
-                      .add_named_double("ViscousTs")
-                      .add_named_double("ViscousPhaseShift")
-                      .add_named_double("WallThickness")
-                      .add_named_double("Area")
-                      .add_named_int("Generation")
-                      .add_optional_named_double("AirwayColl")
-                      .add_optional_named_double("S_Close")
-                      .add_optional_named_double("S_Open")
-                      .add_optional_named_double("Pcrit_Open")
-                      .add_optional_named_double("Pcrit_Close")
-                      .add_optional_named_double("Open_Init")
-                      .add_optional_named_double("BranchLength")
-                      .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["LINE2"] = anonymous_group({
+      entry<std::vector<int>>("LINE2", {.size = 2}),
+      entry<int>("MAT"),
+      entry<std::string>("ElemSolvingType"),
+      entry<std::string>("TYPE"),
+      entry<std::string>("Resistance"),
+      entry<double>("PowerOfVelocityProfile"),
+      entry<double>("WallElasticity"),
+      entry<double>("PoissonsRatio"),
+      entry<double>("ViscousTs"),
+      entry<double>("ViscousPhaseShift"),
+      entry<double>("WallThickness"),
+      entry<double>("Area"),
+      entry<int>("Generation"),
+      entry<double>("AirwayColl", {.required = false}),
+      entry<double>("S_Close", {.required = false}),
+      entry<double>("S_Open", {.required = false}),
+      entry<double>("Pcrit_Open", {.required = false}),
+      entry<double>("Pcrit_Close", {.required = false}),
+      entry<double>("Open_Init", {.required = false}),
+      entry<double>("BranchLength", {.required = false}),
+  });
 }
 
 

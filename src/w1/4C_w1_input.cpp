@@ -5,7 +5,6 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "4C_io_linedefinition.hpp"
 #include "4C_mat_elasthyper.hpp"
 #include "4C_w1.hpp"
 

@@ -12,7 +12,6 @@
 #include "4C_fluid_xfluid.hpp"
 #include "4C_fluid_xfluid_fluid.hpp"
 #include "4C_global_data.hpp"
-#include "4C_io_linedefinition.hpp"
 
 #include <string>
 

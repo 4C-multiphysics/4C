@@ -10,7 +10,7 @@
 
 #include "4C_config.hpp"
 
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec.hpp"
 
 #include <iostream>
 #include <map>
@@ -43,11 +43,11 @@ namespace Core::Elements
     void print_element_lines(std::ostream& stream, std::string name);
 
     /// return line definitions for given element type
-    Input::LineDefinition* element_lines(std::string name, std::string distype);
+    const Core::IO::InputSpec& element_lines(std::string name, std::string cell_type);
 
    private:
     /// input line definitions per element type
-    std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_;
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_;
   };
 
 }  // namespace Core::Elements

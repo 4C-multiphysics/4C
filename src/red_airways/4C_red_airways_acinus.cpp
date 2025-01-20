@@ -7,7 +7,7 @@
 
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_fem_discretization.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_mat_maxwell_0d_acinus.hpp"
 #include "4C_red_airways_elementbase.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -58,32 +58,34 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::RedAcinusType::creat
  |                                                           roth 10/14 |
  *----------------------------------------------------------------------*/
 void Discret::Elements::RedAcinusType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["RED_ACINUS"];
+  auto& defs = definitions["RED_ACINUS"];
 
-  defs["LINE2"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("LINE2", 2)
-                      .add_named_int("MAT")
-                      .add_named_string("TYPE")
-                      .add_named_double("AcinusVolume")
-                      .add_named_double("AlveolarDuctVolume")
-                      .add_optional_named_double("E1_0")
-                      .add_optional_named_double("E1_LIN")
-                      .add_optional_named_double("E1_EXP")
-                      .add_optional_named_double("TAU")
-                      .add_optional_named_double("E1_01")
-                      .add_optional_named_double("E1_LIN1")
-                      .add_optional_named_double("E1_EXP1")
-                      .add_optional_named_double("TAU1")
-                      .add_optional_named_double("E1_02")
-                      .add_optional_named_double("E1_LIN2")
-                      .add_optional_named_double("E1_EXP2")
-                      .add_optional_named_double("TAU2")
-                      .add_optional_named_double("KAPPA")
-                      .add_optional_named_double("BETA")
-                      .add_optional_named_double("Area")
-                      .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["LINE2"] = anonymous_group({
+      entry<std::vector<int>>("LINE2", {.size = 2}),
+      entry<int>("MAT"),
+      entry<std::string>("TYPE"),
+      entry<double>("AcinusVolume"),
+      entry<double>("AlveolarDuctVolume"),
+      entry<double>("E1_0", {.required = false}),
+      entry<double>("E1_LIN", {.required = false}),
+      entry<double>("E1_EXP", {.required = false}),
+      entry<double>("TAU", {.required = false}),
+      entry<double>("E1_01", {.required = false}),
+      entry<double>("E1_LIN1", {.required = false}),
+      entry<double>("E1_EXP1", {.required = false}),
+      entry<double>("TAU1", {.required = false}),
+      entry<double>("E1_02", {.required = false}),
+      entry<double>("E1_LIN2", {.required = false}),
+      entry<double>("E1_EXP2", {.required = false}),
+      entry<double>("TAU2", {.required = false}),
+      entry<double>("KAPPA", {.required = false}),
+      entry<double>("BETA", {.required = false}),
+      entry<double>("Area", {.required = false}),
+  });
 }
 
 

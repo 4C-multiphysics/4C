@@ -12,7 +12,7 @@
 #include "4C_fluid_ele_factory.hpp"
 #include "4C_fluid_ele_interface.hpp"
 #include "4C_io_input_parameter_container.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_utils_parameter_list.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -83,21 +83,24 @@ void Discret::Elements::FluidHDGWeakCompType::compute_null_space(
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Discret::Elements::FluidHDGWeakCompType ::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_fluid;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_fluid;
   FluidType::setup_element_definition(definitions_fluid);
 
-  std::map<std::string, Input::LineDefinition>& defs_fluid = definitions_fluid["FLUID"];
+  auto& defs_fluid = definitions_fluid["FLUID"];
 
-  std::map<std::string, Input::LineDefinition>& defs_hdg = definitions["FLUIDHDGWEAKCOMP"];
+  auto& defs_hdg = definitions["FLUIDHDGWEAKCOMP"];
+
+  using namespace Core::IO::InputSpecBuilders;
 
   for (const auto& [key, fluid_line_def] : defs_fluid)
   {
-    defs_hdg[key] = Input::LineDefinition::Builder(fluid_line_def)
-                        .add_named_int("DEG")
-                        .add_optional_named_int("SPC")
-                        .build();
+    defs_hdg[key] = anonymous_group({
+        fluid_line_def,
+        entry<int>("DEG"),
+        entry<int>("SPC", {.required = false}),
+    });
   }
 }
 

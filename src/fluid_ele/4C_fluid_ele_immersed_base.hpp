@@ -43,8 +43,8 @@ namespace Discret
       \brief Setup the definition line for this element
       */
       void setup_element_definition(
-          std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
-          override = 0;
+          std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions) override =
+          0;
 
 
     };  // class FluidTypeImmersed

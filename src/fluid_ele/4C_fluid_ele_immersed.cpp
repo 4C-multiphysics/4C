@@ -8,7 +8,7 @@
 #include "4C_fluid_ele_immersed.hpp"
 
 #include "4C_comm_pack_helpers.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -35,15 +35,17 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::FluidTypeImmersed::c
 }
 
 void Discret::Elements::FluidTypeImmersed::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defsimmersed = definitions["FLUIDIMMERSED"];
+  auto& defsimmersed = definitions["FLUIDIMMERSED"];
 
-  defsimmersed["HEX8"] = Input::LineDefinition::Builder()
-                             .add_named_int_vector("HEX8", 8)
-                             .add_named_int("MAT")
-                             .add_named_string("NA")
-                             .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defsimmersed["HEX8"] = anonymous_group({
+      entry<std::vector<int>>("HEX8", {.size = 8}),
+      entry<int>("MAT"),
+      entry<std::string>("NA"),
+  });
 }
 
 /*----------------------------------------------------------------------*

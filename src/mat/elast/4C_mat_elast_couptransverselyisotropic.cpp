@@ -8,7 +8,6 @@
 #include "4C_mat_elast_couptransverselyisotropic.hpp"
 
 #include "4C_comm_pack_helpers.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_mat_elast_aniso_structuraltensor_strategy.hpp"

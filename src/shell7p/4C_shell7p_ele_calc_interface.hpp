@@ -26,11 +26,6 @@ namespace Solid::ModelEvaluator
   class GaussPointDataOutputManager;
 }
 
-namespace Input
-{
-  class LineDefinition;
-}
-
 namespace Core::FE
 {
   class Discretization;

@@ -10,13 +10,19 @@
 
 #include "4C_config.hpp"
 
-#include "4C_io_input_spec.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_parameter_container.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
 #include <ostream>
+#include <vector>
 
 FOUR_C_NAMESPACE_OPEN
+
+namespace Core::IO
+{
+  class InputFile;
+  class InputSpec;
+}  // namespace Core::IO
 
 namespace Core::IO::InputFileUtils
 {
@@ -53,12 +59,6 @@ namespace Core::IO::InputFileUtils
    * thus '=' are inserted to distinguish them.
    */
   bool need_to_print_equal_sign(const Teuchos::ParameterList& list);
-
-  /**
-   * Print all @p possible_lines into a dat file section with given @p header.
-   */
-  void print_section(std::ostream& out, const std::string& header,
-      const std::vector<Input::LineDefinition>& possible_lines);
 
   /**
    * Print @p spec into a dat file section with given @p header.

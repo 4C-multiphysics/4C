@@ -11,7 +11,6 @@
 #include "4C_config.hpp"
 
 #include "4C_inpar_structure.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_material_base.hpp"
@@ -184,7 +183,7 @@ namespace Mat
      * @brief Post setup routine which will be called after all elements were read and set up
      *
      * This method will be called after the input phase to setup the material with
-     * input data that has not yet been read during the setup(int,Input::LineDefinition*) call.
+     * input data that has not yet been read during the setup() call.
      *
      * @param[in] params Container for additional information passed from the element
      * @param[in] eleGID Global element ID

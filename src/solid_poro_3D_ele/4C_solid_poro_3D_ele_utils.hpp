@@ -12,7 +12,7 @@
 
 #include "4C_inpar_poro.hpp"
 #include "4C_inpar_scatra.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_parameter_container.hpp"
 #include "4C_utils_exceptions.hpp"
 
 FOUR_C_NAMESPACE_OPEN

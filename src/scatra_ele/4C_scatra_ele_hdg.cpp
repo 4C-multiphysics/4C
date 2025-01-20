@@ -16,7 +16,7 @@
 #include "4C_fem_general_utils_polynomial.hpp"
 #include "4C_global_data.hpp"
 #include "4C_inpar_scatra.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_mat_list.hpp"
 #include "4C_mat_myocard.hpp"
 #include "4C_scatra_ele_action.hpp"
@@ -122,21 +122,24 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::ScaTraHDGType::compute_null_s
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Discret::Elements::ScaTraHDGType ::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_scatra;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_scatra;
   TransportType::setup_element_definition(definitions_scatra);
 
-  std::map<std::string, Input::LineDefinition>& defs_scatra = definitions_scatra["TRANSP"];
+  auto& defs_scatra = definitions_scatra["TRANSP"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions["TRANSPHDG"];
+  auto& defs = definitions["TRANSPHDG"];
+
+  using namespace Core::IO::InputSpecBuilders;
 
   for (const auto& [key, scatra_line_def] : defs_scatra)
   {
-    defs[key] = Input::LineDefinition::Builder(scatra_line_def)
-                    .add_named_int("DEG")
-                    .add_optional_named_int("SPC")
-                    .build();
+    defs[key] = anonymous_group({
+        scatra_line_def,
+        entry<int>("DEG"),
+        entry<int>("SPC", {.required = false}),
+    });
   }
 }
 

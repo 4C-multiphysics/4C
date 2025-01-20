@@ -9,6 +9,7 @@
 
 #include "4C_comm_utils_factory.hpp"
 #include "4C_fem_general_utils_local_connectivity_matrices.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_mat_fluidporo.hpp"
 #include "4C_mat_fluidporo_multiphase.hpp"
 #include "4C_mat_structporo.hpp"
@@ -25,19 +26,22 @@
 
 FOUR_C_NAMESPACE_OPEN
 
+using namespace Core::IO::InputSpecBuilders;
+
 namespace Discret::Elements::SolidPoroPressureBasedInternal
 {
   namespace
   {
     template <Core::FE::CellType celltype>
-    Input::LineDefinition::Builder get_default_line_definition_builder()
+    auto get_default_input_spec()
     {
-      return Input::LineDefinition::Builder()
-          .add_named_int_vector(
-              Core::FE::cell_type_to_string(celltype), Core::FE::num_nodes<celltype>)
-          .add_named_int("MAT")
-          .add_named_string("KINEM")
-          .add_optional_named_string("TYPE");
+      return anonymous_group({
+          entry<std::vector<int>>(
+              Core::FE::cell_type_to_string(celltype), {.size = Core::FE::num_nodes<celltype>}),
+          entry<int>("MAT"),
+          entry<std::string>("KINEM"),
+          entry<std::string>("TYPE", {.required = false}),
+      });
     }
   }  // namespace
 }  // namespace Discret::Elements::SolidPoroPressureBasedInternal
@@ -52,33 +56,28 @@ Discret::Elements::SolidPoroPressureBasedType::instance()
 }
 
 void Discret::Elements::SolidPoroPressureBasedType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defsgeneral =
-      definitions["SOLIDPORO_PRESSURE_BASED"];
+  auto& defsgeneral = definitions["SOLIDPORO_PRESSURE_BASED"];
 
-  defsgeneral[Core::FE::cell_type_to_string(Core::FE::CellType::hex8)] =
-      Discret::Elements::SolidPoroPressureBasedInternal::get_default_line_definition_builder<
-          Core::FE::CellType::hex8>()
-          .add_optional_named_string("EAS")
-          .add_optional_tag("FBAR")
-          .build();
+  defsgeneral[Core::FE::cell_type_to_string(Core::FE::CellType::hex8)] = anonymous_group({
+      Discret::Elements::SolidPoroPressureBasedInternal::get_default_input_spec<
+          Core::FE::CellType::hex8>(),
+      entry<std::string>("EAS", {.required = false}),
+  });
 
   defsgeneral[Core::FE::cell_type_to_string(Core::FE::CellType::hex27)] =
-      Discret::Elements::SolidPoroPressureBasedInternal::get_default_line_definition_builder<
-          Core::FE::CellType::hex27>()
-          .build();
+      Discret::Elements::SolidPoroPressureBasedInternal::get_default_input_spec<
+          Core::FE::CellType::hex27>();
 
 
   defsgeneral[Core::FE::cell_type_to_string(Core::FE::CellType::tet4)] =
-      Discret::Elements::SolidPoroPressureBasedInternal::get_default_line_definition_builder<
-          Core::FE::CellType::tet4>()
-          .build();
+      Discret::Elements::SolidPoroPressureBasedInternal::get_default_input_spec<
+          Core::FE::CellType::tet4>();
 
   defsgeneral[Core::FE::cell_type_to_string(Core::FE::CellType::tet10)] =
-      Discret::Elements::SolidPoroPressureBasedInternal::get_default_line_definition_builder<
-          Core::FE::CellType::tet10>()
-          .build();
+      Discret::Elements::SolidPoroPressureBasedInternal::get_default_input_spec<
+          Core::FE::CellType::tet10>();
 }
 
 std::shared_ptr<Core::Elements::Element> Discret::Elements::SolidPoroPressureBasedType::create(

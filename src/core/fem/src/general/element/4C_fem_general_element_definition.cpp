@@ -8,6 +8,8 @@
 #include "4C_fem_general_element_definition.hpp"
 
 #include "4C_comm_parobjectfactory.hpp"
+#include "4C_io_input_parameter_container.hpp"
+#include "4C_io_input_spec.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -29,12 +31,10 @@ void Core::Elements::ElementDefinition::print_element_dat_header_to_stream(std::
 
   print_section_header(stream, "STRUCTURE ELEMENTS");
 
-  //  PrintElementLines(stream,"ART");
-  print_element_lines(stream, "BEAM3");
   print_element_lines(stream, "BEAM3R");
   print_element_lines(stream, "BEAM3EB");
   print_element_lines(stream, "BEAM3K");
-  print_element_lines(stream, "BELE3");
+  print_element_lines(stream, "BELE3_3");
   print_element_lines(stream, "RIGIDSPHERE");
   print_element_lines(stream, "SHELL7P");
   print_element_lines(stream, "SHELL7PSCATRA");
@@ -45,10 +45,8 @@ void Core::Elements::ElementDefinition::print_element_dat_header_to_stream(std::
   print_element_lines(stream, "SOLIDSCATRA");
   print_element_lines(stream, "SOLIDH27_DEPRECATED");
   print_element_lines(stream, "SOLIDH27PORO");
-  print_element_lines(stream, "SONURBS27");
   print_element_lines(stream, "SOLIDH8_DEPRECATED");
-  print_element_lines(stream, "MEMBRANE");
-  print_element_lines(stream, "SOLIDH8FBAR_DEPRECATED");
+  print_element_lines(stream, "MEMBRANE3");
   print_element_lines(stream, "SOLIDH8PORO");
   print_element_lines(stream, "SOLIDH8POROSCATRA");
   print_element_lines(stream, "SOLIDH8POROP1");
@@ -76,7 +74,6 @@ void Core::Elements::ElementDefinition::print_element_dat_header_to_stream(std::
   print_element_lines(stream, "FLUIDHDG");
   print_element_lines(stream, "FLUIDHDGWEAKCOMP");
   print_element_lines(stream, "FLUIDIMMERSED");
-  print_element_lines(stream, "FLUIDPOROIMMERSED");
 
   print_section_header(stream, "LUBRICATION ELEMENTS");
   print_element_lines(stream, "LUBRICATION");
@@ -90,9 +87,6 @@ void Core::Elements::ElementDefinition::print_element_dat_header_to_stream(std::
   print_section_header(stream, "ALE ELEMENTS");
   print_element_lines(stream, "ALE2");
   print_element_lines(stream, "ALE3");
-
-  // PrintElementLines(stream,"BELE3_3");
-  // PrintElementLines(stream,"VELE3");
 
   print_section_header(stream, "THERMO ELEMENTS");
   print_element_lines(stream, "THERMO");
@@ -126,19 +120,16 @@ void Core::Elements::ElementDefinition::print_section_header(std::ostream& strea
 /*----------------------------------------------------------------------*/
 void Core::Elements::ElementDefinition::print_element_lines(std::ostream& stream, std::string name)
 {
-  if (definitions_.find(name) != definitions_.end())
+  FOUR_C_ASSERT(definitions_.contains(name), "Element type not found: " + name);
+  auto& defs = definitions_[name];
+
+  const Core::IO::InputParameterContainer container;
+  for (const auto& [cell_type, spec] : defs)
   {
-    std::map<std::string, Input::LineDefinition>& defs = definitions_[name];
-    for (std::map<std::string, Input::LineDefinition>::iterator i = defs.begin(); i != defs.end();
-        ++i)
-    {
-      stream << "// 0 " << name << " ";
-      i->second.print(stream);
-      stream << '\n';
-    }
+    stream << "// 0 " << name << " ";
+    spec.print_as_dat(stream, container);
+    stream << '\n';
   }
-  else
-    stream << "no element type '" << name << "' defined\n";
 }
 
 
@@ -152,22 +143,13 @@ void Core::Elements::ElementDefinition::setup_valid_element_lines()
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-Input::LineDefinition* Core::Elements::ElementDefinition::element_lines(
-    std::string name, std::string distype)
+const Core::IO::InputSpec& Core::Elements::ElementDefinition::element_lines(
+    std::string name, std::string cell_type)
 {
-  // This is ugly. But we want to access both maps just once.
-  std::map<std::string, std::map<std::string, Input::LineDefinition>>::iterator j =
-      definitions_.find(name);
-  if (j != definitions_.end())
-  {
-    std::map<std::string, Input::LineDefinition>& defs = j->second;
-    std::map<std::string, Input::LineDefinition>::iterator i = defs.find(distype);
-    if (i != defs.end())
-    {
-      return &i->second;
-    }
-  }
-  return nullptr;
+  FOUR_C_ASSERT(definitions_.contains(name), "Element type not found: " + name);
+  auto& defs = definitions_.at(name);
+  FOUR_C_ASSERT(defs.contains(cell_type), "Cell type not found: " + cell_type);
+  return defs.at(cell_type);
 }
 
 FOUR_C_NAMESPACE_CLOSE

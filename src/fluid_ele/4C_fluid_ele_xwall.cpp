@@ -11,7 +11,7 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fluid_ele_nullspace.hpp"
 #include "4C_global_data.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -64,20 +64,22 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::FluidXWallType::compute_null_
 }
 
 void Discret::Elements::FluidXWallType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defsxwall = definitions["FLUIDXW"];
+  auto& defsxwall = definitions["FLUIDXW"];
 
-  defsxwall["HEX8"] = Input::LineDefinition::Builder()
-                          .add_named_int_vector("HEX8", 8)
-                          .add_named_int("MAT")
-                          .add_named_string("NA")
-                          .build();
-  defsxwall["TET4"] = Input::LineDefinition::Builder()
-                          .add_named_int_vector("TET4", 4)
-                          .add_named_int("MAT")
-                          .add_named_string("NA")
-                          .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defsxwall["HEX8"] = anonymous_group({
+      entry<std::vector<int>>("HEX8", {.size = 8}),
+      entry<int>("MAT"),
+      entry<std::string>("NA"),
+  });
+  defsxwall["TET4"] = anonymous_group({
+      entry<std::vector<int>>("TET4", {.size = 4}),
+      entry<int>("MAT"),
+      entry<std::string>("NA"),
+  });
 }
 
 

@@ -43,8 +43,7 @@ namespace Discret
       int initialize(Core::FE::Discretization& dis) override;
 
       void setup_element_definition(
-          std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
-          override;
+          std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions) override;
 
      private:
       static WallQuad4PoroType instance_;
@@ -70,8 +69,7 @@ namespace Discret
       int initialize(Core::FE::Discretization& dis) override;
 
       void setup_element_definition(
-          std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
-          override;
+          std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions) override;
 
      private:
       static WallQuad9PoroType instance_;
@@ -97,8 +95,7 @@ namespace Discret
       int initialize(Core::FE::Discretization& dis) override;
 
       void setup_element_definition(
-          std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
-          override;
+          std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions) override;
 
      private:
       static WallNurbs4PoroType instance_;
@@ -124,8 +121,7 @@ namespace Discret
       int initialize(Core::FE::Discretization& dis) override;
 
       void setup_element_definition(
-          std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
-          override;
+          std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions) override;
 
      private:
       static WallNurbs9PoroType instance_;
@@ -151,8 +147,7 @@ namespace Discret
       int initialize(Core::FE::Discretization& dis) override;
 
       void setup_element_definition(
-          std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
-          override;
+          std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions) override;
 
      private:
       static WallTri3PoroType instance_;

@@ -201,31 +201,15 @@ void Core::IO::ElementReader::get_and_distribute_elements(const int nblock, cons
         // For the time being we support old and new input facilities. To
         // smooth transition.
 
-        Input::LineDefinition* linedef = ed.element_lines(eletype, distype);
-        if (linedef != nullptr)
-        {
-          std::istringstream element_specific_remainder{
-              std::string(parser.get_unparsed_remainder())};
-          auto data = linedef->read(element_specific_remainder);
+        const auto& linedef = ed.element_lines(eletype, distype);
 
-          if (!data.has_value())
-          {
-            std::cout << "\n" << elenumber << " " << eletype << " ";
-            linedef->print(std::cout);
-            std::cout << "\n";
-            std::cout << element_line << "\n";
-            FOUR_C_THROW(
-                "failed to read element %d %s %s", elenumber, eletype.c_str(), distype.c_str());
-          }
+        Core::IO::ValueParser element_parser{parser.get_unparsed_remainder(),
+            {.user_scope_message = "While reading element data: "}};
+        Core::IO::InputParameterContainer data;
+        linedef.fully_parse(element_parser, data);
 
-          ele->set_node_ids(distype, *data);
-          ele->read_element(eletype, distype, *data);
-        }
-        else
-        {
-          FOUR_C_THROW(
-              "a matching line definition is needed for %s %s", eletype.c_str(), distype.c_str());
-        }
+        ele->set_node_ids(distype, data);
+        ele->read_element(eletype, distype, data);
 
         // add element to discretization
         dis_->add_element(ele);

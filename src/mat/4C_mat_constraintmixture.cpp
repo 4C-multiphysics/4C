@@ -16,7 +16,6 @@
 #include "4C_inpar_structure.hpp"  // for pstime
 #include "4C_io_control.hpp"       // for debug plotting with gmsh
 #include "4C_io_gmsh.hpp"          // for debug plotting with gmsh
-#include "4C_io_linedefinition.hpp"
 #include "4C_linalg_fixedsizematrix_solver.hpp"
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
 #include "4C_linalg_utils_densematrix_multiply.hpp"

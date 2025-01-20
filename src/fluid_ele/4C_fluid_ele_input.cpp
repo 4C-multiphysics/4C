@@ -6,7 +6,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "4C_fluid_ele.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_mat_material_factory.hpp"
 
 FOUR_C_NAMESPACE_OPEN

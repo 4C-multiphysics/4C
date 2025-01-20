@@ -10,6 +10,8 @@
 #include "4C_io_input_file_utils.hpp"
 
 #include "4C_io_input_file.hpp"
+#include "4C_io_input_parameter_container.hpp"
+#include "4C_io_input_spec.hpp"
 #include "4C_io_value_parser.hpp"
 
 #include <ryml.hpp>
@@ -276,20 +278,6 @@ void Core::IO::InputFileUtils::print_section_header(std::ostream& out, const std
   out << header << '\n';
 }
 
-
-
-void Core::IO::InputFileUtils::print_section(std::ostream& out, const std::string& header,
-    const std::vector<Input::LineDefinition>& possible_lines)
-{
-  print_section_header(out, header);
-
-  for (const auto& line : possible_lines)
-  {
-    out << "// ";
-    line.print(out);
-    out << '\n';
-  }
-}
 
 
 void Core::IO::InputFileUtils::print_section(

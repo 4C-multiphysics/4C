@@ -10,7 +10,6 @@
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_node.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_particle_wall_datastate.hpp"
 #include "4C_particle_wall_interface.hpp"
 

@@ -8,7 +8,7 @@
 #include "4C_so3_poro_p1_eletypes.hpp"
 
 #include "4C_fluid_ele_nullspace.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_so3_poro_p1.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -57,14 +57,14 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::SoHex8PoroP1Type::cr
 }
 
 void Discret::Elements::SoHex8PoroP1Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_hex8poro;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_hex8poro;
   SoHex8PoroType::setup_element_definition(definitions_hex8poro);
 
-  std::map<std::string, Input::LineDefinition>& defs_hex8 = definitions_hex8poro["SOLIDH8PORO"];
+  auto& defs_hex8 = definitions_hex8poro["SOLIDH8PORO"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions[get_element_type_string()];
+  auto& defs = definitions[get_element_type_string()];
 
   defs["HEX8"] = defs_hex8["HEX8"];
 }
@@ -143,14 +143,14 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::SoTet4PoroP1Type::cr
 }
 
 void Discret::Elements::SoTet4PoroP1Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, std::map<std::string, Input::LineDefinition>> definitions_tet4;
+  std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_tet4;
   SoTet4PoroType::setup_element_definition(definitions_tet4);
 
-  std::map<std::string, Input::LineDefinition>& defs_tet4 = definitions_tet4["SOLIDT4PORO"];
+  auto& defs_tet4 = definitions_tet4["SOLIDT4PORO"];
 
-  std::map<std::string, Input::LineDefinition>& defs = definitions[get_element_type_string()];
+  auto& defs = definitions[get_element_type_string()];
 
   defs["TET4"] = defs_tet4["TET4"];
 }

@@ -18,7 +18,6 @@
 #include "4C_fem_general_node.hpp"
 #include "4C_fem_nurbs_discretization.hpp"
 #include "4C_io_input_spec.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_material_base.hpp"
 #include "4C_material_parameter_base.hpp"
@@ -26,11 +25,6 @@
 #include <Teuchos_Time.hpp>
 
 FOUR_C_NAMESPACE_OPEN
-
-namespace Input
-{
-  class LineDefinition;
-}
 
 namespace Core::FE
 {

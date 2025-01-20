@@ -22,11 +22,6 @@ namespace Core::Communication
   class UnpackBuffer;
 }  // namespace Core::Communication
 
-namespace Input
-{
-  class LineDefinition;
-}
-
 namespace Mat
 {
   /*!

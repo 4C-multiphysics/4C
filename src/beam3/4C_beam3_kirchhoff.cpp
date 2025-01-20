@@ -17,7 +17,7 @@
 #include "4C_fem_geometry_periodic_boundingbox.hpp"
 #include "4C_global_data.hpp"
 #include "4C_inpar_validparameters.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
@@ -92,36 +92,38 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::Beam3kType::compute_null_spac
 /*------------------------------------------------------------------------------------------------*
  *------------------------------------------------------------------------------------------------*/
 void Discret::Elements::Beam3kType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["BEAM3K"];
+  auto& defs = definitions["BEAM3K"];
 
-  defs["LINE2"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("LINE2", 2)
-                      .add_named_int("WK")
-                      .add_named_int("ROTVEC")
-                      .add_named_int("MAT")
-                      .add_named_double_vector("TRIADS", 6)
-                      .add_optional_tag("FAD")
-                      .build();
+  using namespace Core::IO::InputSpecBuilders;
 
-  defs["LINE3"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("LINE3", 3)
-                      .add_named_int("WK")
-                      .add_named_int("ROTVEC")
-                      .add_named_int("MAT")
-                      .add_named_double_vector("TRIADS", 9)
-                      .add_optional_tag("FAD")
-                      .build();
+  defs["LINE2"] = anonymous_group({
+      entry<std::vector<int>>("LINE2", {.size = 2}),
+      entry<int>("WK"),
+      entry<int>("ROTVEC"),
+      entry<int>("MAT"),
+      entry<std::vector<double>>("TRIADS", {.size = 6}),
+      tag("FAD", {.default_value = false}),
+  });
 
-  defs["LINE4"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("LINE4", 4)
-                      .add_named_int("WK")
-                      .add_named_int("ROTVEC")
-                      .add_named_int("MAT")
-                      .add_named_double_vector("TRIADS", 12)
-                      .add_optional_tag("FAD")
-                      .build();
+  defs["LINE3"] = anonymous_group({
+      entry<std::vector<int>>("LINE3", {.size = 3}),
+      entry<int>("WK"),
+      entry<int>("ROTVEC"),
+      entry<int>("MAT"),
+      entry<std::vector<double>>("TRIADS", {.size = 9}),
+      tag("FAD", {.default_value = false}),
+  });
+
+  defs["LINE4"] = anonymous_group({
+      entry<std::vector<int>>("LINE4", {.size = 4}),
+      entry<int>("WK"),
+      entry<int>("ROTVEC"),
+      entry<int>("MAT"),
+      entry<std::vector<double>>("TRIADS", {.size = 12}),
+      tag("FAD", {.default_value = false}),
+  });
 }
 
 /*----------------------------------------------------------------------*

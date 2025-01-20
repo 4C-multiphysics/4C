@@ -10,7 +10,7 @@
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_comm_utils_factory.hpp"
 #include "4C_fem_discretization.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_so3_nullspace.hpp"
 #include "4C_utils_exceptions.hpp"
 
@@ -90,15 +90,17 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::KirchhoffLoveShellNurbsType::
  *
  */
 void Discret::Elements::KirchhoffLoveShellNurbsType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["SHELL_KIRCHHOFF_LOVE_NURBS"];
+  auto& defs = definitions["SHELL_KIRCHHOFF_LOVE_NURBS"];
 
-  defs["NURBS9"] = Input::LineDefinition::Builder()
-                       .add_named_int_vector("NURBS9", 9)
-                       .add_named_int("MAT")
-                       .add_named_int_vector("GP", 2)
-                       .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["NURBS9"] = anonymous_group({
+      entry<std::vector<int>>("NURBS9", {.size = 9}),
+      entry<int>("MAT"),
+      entry<std::vector<int>>("GP", {.size = 2}),
+  });
 }
 
 

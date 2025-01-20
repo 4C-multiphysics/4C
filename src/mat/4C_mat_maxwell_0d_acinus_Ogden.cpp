@@ -9,7 +9,6 @@
 
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_global_data.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_red_airways_elem_params.hpp"
 #include "4C_red_airways_elementbase.hpp"

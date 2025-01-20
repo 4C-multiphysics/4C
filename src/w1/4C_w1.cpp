@@ -10,7 +10,7 @@
 #include "4C_comm_utils_factory.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_so3_nullspace.hpp"
 #include "4C_utils_exceptions.hpp"
 
@@ -65,79 +65,81 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::Wall1Type::compute_null_space
 }
 
 void Discret::Elements::Wall1Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["WALL"];
+  auto& defs = definitions["WALL"];
 
-  defs["QUAD4"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("QUAD4", 4)
-                      .add_named_int("MAT")
-                      .add_named_string("KINEM")
-                      .add_named_string("EAS")
-                      .add_named_double("THICK")
-                      .add_named_string("STRESS_STRAIN")
-                      .add_named_int_vector("GP", 2)
-                      .build();
+  using namespace Core::IO::InputSpecBuilders;
 
-  defs["QUAD8"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("QUAD8", 8)
-                      .add_named_int("MAT")
-                      .add_named_string("KINEM")
-                      .add_named_string("EAS")
-                      .add_named_double("THICK")
-                      .add_named_string("STRESS_STRAIN")
-                      .add_named_int_vector("GP", 2)
-                      .build();
+  defs["QUAD4"] = anonymous_group({
+      entry<std::vector<int>>("QUAD4", {.size = 4}),
+      entry<int>("MAT"),
+      entry<std::string>("KINEM"),
+      entry<std::string>("EAS"),
+      entry<double>("THICK"),
+      entry<std::string>("STRESS_STRAIN"),
+      entry<std::vector<int>>("GP", {.size = 2}),
+  });
 
-  defs["QUAD9"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("QUAD9", 9)
-                      .add_named_int("MAT")
-                      .add_named_string("KINEM")
-                      .add_named_string("EAS")
-                      .add_named_double("THICK")
-                      .add_named_string("STRESS_STRAIN")
-                      .add_named_int_vector("GP", 2)
-                      .build();
+  defs["QUAD8"] = anonymous_group({
+      entry<std::vector<int>>("QUAD8", {.size = 8}),
+      entry<int>("MAT"),
+      entry<std::string>("KINEM"),
+      entry<std::string>("EAS"),
+      entry<double>("THICK"),
+      entry<std::string>("STRESS_STRAIN"),
+      entry<std::vector<int>>("GP", {.size = 2}),
+  });
 
-  defs["TRI3"] = Input::LineDefinition::Builder()
-                     .add_named_int_vector("TRI3", 3)
-                     .add_named_int("MAT")
-                     .add_named_string("KINEM")
-                     .add_named_string("EAS")
-                     .add_named_double("THICK")
-                     .add_named_string("STRESS_STRAIN")
-                     .add_named_int_vector("GP", 2)
-                     .build();
+  defs["QUAD9"] = anonymous_group({
+      entry<std::vector<int>>("QUAD9", {.size = 9}),
+      entry<int>("MAT"),
+      entry<std::string>("KINEM"),
+      entry<std::string>("EAS"),
+      entry<double>("THICK"),
+      entry<std::string>("STRESS_STRAIN"),
+      entry<std::vector<int>>("GP", {.size = 2}),
+  });
 
-  defs["TRI6"] = Input::LineDefinition::Builder()
-                     .add_named_int_vector("TRI6", 6)
-                     .add_named_int("MAT")
-                     .add_named_string("KINEM")
-                     .add_named_string("EAS")
-                     .add_named_double("THICK")
-                     .add_named_string("STRESS_STRAIN")
-                     .add_named_int_vector("GP", 2)
-                     .build();
+  defs["TRI3"] = anonymous_group({
+      entry<std::vector<int>>("TRI3", {.size = 3}),
+      entry<int>("MAT"),
+      entry<std::string>("KINEM"),
+      entry<std::string>("EAS"),
+      entry<double>("THICK"),
+      entry<std::string>("STRESS_STRAIN"),
+      entry<std::vector<int>>("GP", {.size = 2}),
+  });
 
-  defs["NURBS4"] = Input::LineDefinition::Builder()
-                       .add_named_int_vector("NURBS4", 4)
-                       .add_named_int("MAT")
-                       .add_named_string("KINEM")
-                       .add_named_string("EAS")
-                       .add_named_double("THICK")
-                       .add_named_string("STRESS_STRAIN")
-                       .add_named_int_vector("GP", 2)
-                       .build();
+  defs["TRI6"] = anonymous_group({
+      entry<std::vector<int>>("TRI6", {.size = 6}),
+      entry<int>("MAT"),
+      entry<std::string>("KINEM"),
+      entry<std::string>("EAS"),
+      entry<double>("THICK"),
+      entry<std::string>("STRESS_STRAIN"),
+      entry<std::vector<int>>("GP", {.size = 2}),
+  });
 
-  defs["NURBS9"] = Input::LineDefinition::Builder()
-                       .add_named_int_vector("NURBS9", 9)
-                       .add_named_int("MAT")
-                       .add_named_string("KINEM")
-                       .add_named_string("EAS")
-                       .add_named_double("THICK")
-                       .add_named_string("STRESS_STRAIN")
-                       .add_named_int_vector("GP", 2)
-                       .build();
+  defs["NURBS4"] = anonymous_group({
+      entry<std::vector<int>>("NURBS4", {.size = 4}),
+      entry<int>("MAT"),
+      entry<std::string>("KINEM"),
+      entry<std::string>("EAS"),
+      entry<double>("THICK"),
+      entry<std::string>("STRESS_STRAIN"),
+      entry<std::vector<int>>("GP", {.size = 2}),
+  });
+
+  defs["NURBS9"] = anonymous_group({
+      entry<std::vector<int>>("NURBS9", {.size = 9}),
+      entry<int>("MAT"),
+      entry<std::string>("KINEM"),
+      entry<std::string>("EAS"),
+      entry<double>("THICK"),
+      entry<std::string>("STRESS_STRAIN"),
+      entry<std::vector<int>>("GP", {.size = 2}),
+  });
 }
 
 

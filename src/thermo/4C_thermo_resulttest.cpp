@@ -8,7 +8,6 @@
 #include "4C_thermo_resulttest.hpp"
 
 #include "4C_fem_general_node.hpp"
-#include "4C_io_linedefinition.hpp"
 
 #include <string>
 

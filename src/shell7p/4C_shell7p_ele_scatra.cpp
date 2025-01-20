@@ -11,7 +11,7 @@
 #include "4C_comm_utils_factory.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_cell_type.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_mat_so3_material.hpp"
 #include "4C_shell7p_ele_factory.hpp"
 #include "4C_shell7p_ele_interface_serializable.hpp"
@@ -72,85 +72,87 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::Shell7pScatraType::c
 }
 
 void Discret::Elements::Shell7pScatraType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defsgeneral = definitions["SHELL7PSCATRA"];
+  auto& defsgeneral = definitions["SHELL7PSCATRA"];
 
-  defsgeneral["QUAD4"] = Input::LineDefinition::Builder()
-                             .add_named_int_vector("QUAD4", 4)
-                             .add_named_int("MAT")
-                             .add_named_double("THICK")
-                             .add_named_string_vector("EAS", 5)
-                             .add_named_double("SDC")
-                             .add_optional_tag("ANS")
-                             .add_optional_named_double_vector("RAD", 3)
-                             .add_optional_named_double_vector("AXI", 3)
-                             .add_optional_named_double_vector("CIR", 3)
-                             .add_optional_named_double_vector("FIBER1", 3)
-                             .add_optional_named_double_vector("FIBER2", 3)
-                             .add_optional_named_double_vector("FIBER3", 3)
-                             .add_optional_named_string("TYPE")
-                             .build();
+  using namespace Core::IO::InputSpecBuilders;
 
-  defsgeneral["QUAD8"] = Input::LineDefinition::Builder()
-                             .add_named_int_vector("QUAD8", 8)
-                             .add_named_int("MAT")
-                             .add_named_double("THICK")
-                             .add_named_string_vector("EAS", 5)
-                             .add_named_double("SDC")
-                             .add_optional_tag("ANS")
-                             .add_optional_named_double_vector("RAD", 3)
-                             .add_optional_named_double_vector("AXI", 3)
-                             .add_optional_named_double_vector("CIR", 3)
-                             .add_optional_named_double_vector("FIBER1", 3)
-                             .add_optional_named_double_vector("FIBER2", 3)
-                             .add_optional_named_double_vector("FIBER3", 3)
-                             .add_optional_named_string("TYPE")
-                             .build();
+  defsgeneral["QUAD4"] = anonymous_group({
+      entry<std::vector<int>>("QUAD4", {.size = 4}),
+      entry<int>("MAT"),
+      entry<double>("THICK"),
+      entry<std::vector<std::string>>("EAS", {.size = 5}),
+      entry<double>("SDC"),
+      tag("ANS"),
+      entry<std::vector<double>>("RAD", {.required = false, .size = 3}),
+      entry<std::vector<double>>("AXI", {.required = false, .size = 3}),
+      entry<std::vector<double>>("CIR", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER1", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER2", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER3", {.required = false, .size = 3}),
+      entry<std::string>("TYPE", {.required = false}),
+  });
 
-  defsgeneral["QUAD9"] = Input::LineDefinition::Builder()
-                             .add_named_int_vector("QUAD9", 9)
-                             .add_named_int("MAT")
-                             .add_named_double("THICK")
-                             .add_named_string_vector("EAS", 5)
-                             .add_named_double("SDC")
-                             .add_optional_tag("ANS")
-                             .add_optional_named_double_vector("RAD", 3)
-                             .add_optional_named_double_vector("AXI", 3)
-                             .add_optional_named_double_vector("CIR", 3)
-                             .add_optional_named_double_vector("FIBER1", 3)
-                             .add_optional_named_double_vector("FIBER2", 3)
-                             .add_optional_named_double_vector("FIBER3", 3)
-                             .add_optional_named_string("TYPE")
-                             .build();
+  defsgeneral["QUAD8"] = anonymous_group({
+      entry<std::vector<int>>("QUAD8", {.size = 8}),
+      entry<int>("MAT"),
+      entry<double>("THICK"),
+      entry<std::vector<std::string>>("EAS", {.size = 5}),
+      entry<double>("SDC"),
+      tag("ANS"),
+      entry<std::vector<double>>("RAD", {.required = false, .size = 3}),
+      entry<std::vector<double>>("AXI", {.required = false, .size = 3}),
+      entry<std::vector<double>>("CIR", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER1", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER2", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER3", {.required = false, .size = 3}),
+      entry<std::string>("TYPE", {.required = false}),
+  });
 
-  defsgeneral["TRI3"] = Input::LineDefinition::Builder()
-                            .add_named_int_vector("TRI3", 3)
-                            .add_named_int("MAT")
-                            .add_named_double("THICK")
-                            .add_named_double("SDC")
-                            .add_optional_named_double_vector("RAD", 3)
-                            .add_optional_named_double_vector("AXI", 3)
-                            .add_optional_named_double_vector("CIR", 3)
-                            .add_optional_named_double_vector("FIBER1", 3)
-                            .add_optional_named_double_vector("FIBER2", 3)
-                            .add_optional_named_double_vector("FIBER3", 3)
-                            .add_optional_named_string("TYPE")
-                            .build();
+  defsgeneral["QUAD9"] = anonymous_group({
+      entry<std::vector<int>>("QUAD9", {.size = 9}),
+      entry<int>("MAT"),
+      entry<double>("THICK"),
+      entry<std::vector<std::string>>("EAS", {.size = 5}),
+      entry<double>("SDC"),
+      tag("ANS"),
+      entry<std::vector<double>>("RAD", {.required = false, .size = 3}),
+      entry<std::vector<double>>("AXI", {.required = false, .size = 3}),
+      entry<std::vector<double>>("CIR", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER1", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER2", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER3", {.required = false, .size = 3}),
+      entry<std::string>("TYPE", {.required = false}),
+  });
 
-  defsgeneral["TRI6"] = Input::LineDefinition::Builder()
-                            .add_named_int_vector("TRI6", 6)
-                            .add_named_int("MAT")
-                            .add_named_double("THICK")
-                            .add_named_double("SDC")
-                            .add_optional_named_double_vector("RAD", 3)
-                            .add_optional_named_double_vector("AXI", 3)
-                            .add_optional_named_double_vector("CIR", 3)
-                            .add_optional_named_double_vector("FIBER1", 3)
-                            .add_optional_named_double_vector("FIBER2", 3)
-                            .add_optional_named_double_vector("FIBER3", 3)
-                            .add_optional_named_string("TYPE")
-                            .build();
+  defsgeneral["TRI3"] = anonymous_group({
+      entry<std::vector<int>>("TRI3", {.size = 3}),
+      entry<int>("MAT"),
+      entry<double>("THICK"),
+      entry<double>("SDC"),
+      entry<std::vector<double>>("RAD", {.required = false, .size = 3}),
+      entry<std::vector<double>>("AXI", {.required = false, .size = 3}),
+      entry<std::vector<double>>("CIR", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER1", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER2", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER3", {.required = false, .size = 3}),
+      entry<std::string>("TYPE", {.required = false}),
+  });
+
+  defsgeneral["TRI6"] = anonymous_group({
+      entry<std::vector<int>>("TRI6", {.size = 6}),
+      entry<int>("MAT"),
+      entry<double>("THICK"),
+      entry<double>("SDC"),
+      entry<std::vector<double>>("RAD", {.required = false, .size = 3}),
+      entry<std::vector<double>>("AXI", {.required = false, .size = 3}),
+      entry<std::vector<double>>("CIR", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER1", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER2", {.required = false, .size = 3}),
+      entry<std::vector<double>>("FIBER3", {.required = false, .size = 3}),
+      entry<std::string>("TYPE", {.required = false}),
+  });
 }
 
 int Discret::Elements::Shell7pScatraType::initialize(Core::FE::Discretization& dis)

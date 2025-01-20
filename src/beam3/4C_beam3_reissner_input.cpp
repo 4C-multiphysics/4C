@@ -7,7 +7,6 @@
 
 #include "4C_beam3_reissner.hpp"
 #include "4C_fem_general_largerotations.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_legacy_enum_definitions_materials.hpp"
 #include "4C_mat_beam_material_generic.hpp"
 #include "4C_mat_material_factory.hpp"

@@ -12,6 +12,7 @@
 
 #include "4C_comm_parobjectfactory.hpp"
 #include "4C_fem_general_element.hpp"
+#include "4C_io_input_spec.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
@@ -55,7 +56,7 @@ namespace Core::Elements
    public:
     /// setup the dat file input line definitions for this type of element
     virtual void setup_element_definition(
-        std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+        std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
     {
     }
 

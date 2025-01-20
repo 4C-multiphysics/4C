@@ -9,7 +9,6 @@
 
 #include "4C_fem_dofset_transparent_independent.hpp"
 #include "4C_io_input_spec_builders.hpp"
-#include "4C_io_linedefinition.hpp"
 #include "4C_rebalance_binning_based.hpp"
 
 FOUR_C_NAMESPACE_OPEN

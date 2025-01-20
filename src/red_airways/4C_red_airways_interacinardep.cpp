@@ -7,7 +7,7 @@
 
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_fem_discretization.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_red_airways_elementbase.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_shared_ptr_from_ref.hpp"
@@ -66,14 +66,16 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::RedInterAcinarDepTyp
  |  setup_element_definition                                              |
  *----------------------------------------------------------------------*/
 void Discret::Elements::RedInterAcinarDepType::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["RED_ACINAR_INTER_DEP"];
+  auto& defs = definitions["RED_ACINAR_INTER_DEP"];
 
-  defs["LINE2"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("LINE2", 2)
-                      .add_named_int("MAT")
-                      .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["LINE2"] = anonymous_group({
+      entry<std::vector<int>>("LINE2", {.size = 2}),
+      entry<int>("MAT"),
+  });
 }
 
 

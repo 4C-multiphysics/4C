@@ -8,7 +8,7 @@
 #include "4C_torsion3.hpp"
 
 #include "4C_comm_pack_helpers.hpp"
-#include "4C_io_linedefinition.hpp"
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_so3_nullspace.hpp"
 #include "4C_structure_new_elements_paramsinterface.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -67,15 +67,17 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::Torsion3Type::compute_null_sp
 }
 
 void Discret::Elements::Torsion3Type::setup_element_definition(
-    std::map<std::string, std::map<std::string, Input::LineDefinition>>& definitions)
+    std::map<std::string, std::map<std::string, Core::IO::InputSpec>>& definitions)
 {
-  std::map<std::string, Input::LineDefinition>& defs = definitions["TORSION3"];
+  auto& defs = definitions["TORSION3"];
 
-  defs["LINE3"] = Input::LineDefinition::Builder()
-                      .add_named_int_vector("LINE3", 3)
-                      .add_named_int("MAT")
-                      .add_named_string("BENDINGPOTENTIAL")
-                      .build();
+  using namespace Core::IO::InputSpecBuilders;
+
+  defs["LINE3"] = anonymous_group({
+      entry<std::vector<int>>("LINE3", {.size = 3}),
+      entry<int>("MAT"),
+      entry<std::string>("BENDINGPOTENTIAL"),
+  });
 }
 
 

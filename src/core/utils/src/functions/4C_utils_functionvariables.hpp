@@ -10,21 +10,15 @@
 
 #include "4C_config.hpp"
 
-#include "4C_io_linedefinition.hpp"
-
 #include <memory>
+#include <vector>
 
 FOUR_C_NAMESPACE_OPEN
 
-// define periodicstruct
-struct Periodicstruct
+namespace Core::IO
 {
-  bool periodic;
-  double t1;
-  double t2;
-};
-
-
+  class InputParameterContainer;
+}
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
@@ -32,6 +26,13 @@ namespace Core::Utils
 {
   template <class T>
   class SymbolicExpression;
+
+  struct Periodicstruct
+  {
+    bool periodic;
+    double t1;
+    double t2;
+  };
 
   /// class that defines the main properties of a time dependent variable
   class FunctionVariable
