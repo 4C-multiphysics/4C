@@ -85,6 +85,8 @@ void Inpar::PoroElast::set_valid_parameters(Teuchos::ParameterList& list)
       "tolerance in the increment norm for the Newton iteration", &poroelastdyn);
   Core::Utils::double_parameter("TOLRES_NCOUP", 1e-8,
       "tolerance in the residual norm for the Newton iteration", &poroelastdyn);
+  Core::Utils::double_parameter(
+      "POROTIMEFAC", 1.0, "time factor for poroelasticity problem", &poroelastdyn);
 
   setStringToIntegralParameter<Inpar::PoroElast::ConvNorm>("NORM_INC", "AbsSingleFields",
       "type of norm for primary variables convergence check",

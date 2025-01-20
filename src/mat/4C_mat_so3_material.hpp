@@ -64,8 +64,8 @@ namespace Mat
         Core::LinAlg::Matrix<6, 1>* linmass_disp, Core::LinAlg::Matrix<6, 1>* linmass_vel, int gp,
         int eleGID)
     {
-      FOUR_C_THROW("Material of type %d does not support evaluation of nonlinear mass matrix",
-          this->material_type());
+      FOUR_C_THROW("Material of type %s does not support evaluation of nonlinear mass matrix",
+          Core::Materials::to_string(this->material_type()).data());
     }
 
     /*!
@@ -79,8 +79,8 @@ namespace Mat
     virtual void strain_energy(
         const Core::LinAlg::Matrix<6, 1>& glstrain, double& psi, int gp, int eleGID) const
     {
-      FOUR_C_THROW("Material of type %d does not support calculation of strain energy",
-          this->material_type());
+      FOUR_C_THROW("Material of type %s does not support calculation of strain energy",
+          Core::Materials::to_string(this->material_type()).data());
     }
 
     /*!
@@ -141,8 +141,8 @@ namespace Mat
         const double* concentration, const double* temp, double* d_cauchyndir_dT,
         Core::LinAlg::Matrix<9, 1>* d2_cauchyndir_dF_dT)
     {
-      FOUR_C_THROW("evaluate_cauchy_n_dir_and_derivatives not implemented for material of type %d",
-          this->material_type());
+      FOUR_C_THROW("evaluate_cauchy_n_dir_and_derivatives not implemented for material of type %s",
+          Core::Materials::to_string(this->material_type()).data());
     }
 
     /*!
@@ -155,8 +155,8 @@ namespace Mat
     virtual void evaluate_linearization_od(const Core::LinAlg::Matrix<3, 3>& defgrd,
         double concentration, Core::LinAlg::Matrix<9, 1>* d_F_dx)
     {
-      FOUR_C_THROW("evaluate_linearization_od not implemented for material of type %d",
-          this->material_type());
+      FOUR_C_THROW("evaluate_linearization_od not implemented for material of type %s",
+          Core::Materials::to_string(this->material_type()).data());
     }
     //@}
 
