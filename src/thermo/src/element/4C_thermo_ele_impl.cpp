@@ -2603,7 +2603,7 @@ void Discret::Elements::TemperImpl<distype>::materialize(
 
   auto thermoMaterial = std::dynamic_pointer_cast<Mat::Trait::Thermo>(material);
   thermoMaterial->reinit(temp(0), gp);
-  thermoMaterial->evaluate(gradtemp_, cmat_, heatflux_);
+  thermoMaterial->evaluate(gradtemp_, cmat_, heatflux_, ele->id());
   capacoeff_ = thermoMaterial->capacity();
   thermoMaterial->conductivity_deriv_t(dercmat_);
   dercapa_ = thermoMaterial->capacity_deriv_t();

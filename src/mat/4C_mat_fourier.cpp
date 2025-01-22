@@ -16,11 +16,74 @@ FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
+std::vector<double> get_validate_conductivity_tensor(
+    const Core::IO::InputField<std::vector<double>>& conductivity_field, const int ele_id_key,
+    const std::size_t conduct_para_num)
+{
+  std::vector<double> conductivity = conductivity_field.at(ele_id_key);
+
+  if (conductivity.size() != conduct_para_num)
+  {
+    FOUR_C_THROW(
+        "Number of conductivity tensor entries for element id %d does not match the number of "
+        "conductivity parameters given %d.",
+        ele_id_key, conduct_para_num);
+  }
+
+  return conductivity;
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+std::variant<std::monostate, const std::vector<double>,
+    const Core::IO::InputField<std::vector<double>>>
+get_activation_params(const Core::Mat::PAR::Parameter::Data& matdata,
+    const Inpar::Mat::ActivationType& activation_type)
+{
+  if (activation_type == Inpar::Mat::ActivationType::tensor)
+  {
+    return matdata.parameters.get<std::vector<double>>("TENSOR");
+  }
+  else if (activation_type == Inpar::Mat::ActivationType::map)
+  {
+    return matdata.parameters.get<Core::IO::InputField<std::vector<double>>>("MAPFILE_CONTENT");
+  }
+  else
+  {
+    return std::monostate{};
+  }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+struct ConductivityVisitor
+{
+  std::vector<double> operator()(const std::vector<double>& vector) const { return vector; }
+
+  std::vector<double> operator()(const Core::IO::InputField<std::vector<double>>& map) const
+  {
+    return get_validate_conductivity_tensor(map, eleGID_ + 1, conduct_para_num_);
+  }
+
+  std::vector<double> operator()(const std::monostate& /*unused*/) const
+  {
+    FOUR_C_THROW(
+        "Error in ActivationParamsVisitor. You're calling it with the default-constructed "
+        "state.");
+  }
+
+  const int& eleGID_;
+  const std::size_t& conduct_para_num_;
+};
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
 Mat::PAR::Fourier::Fourier(const Core::Mat::PAR::Parameter::Data& matdata)
     : Parameter(matdata),
       capa_(matdata.parameters.get<double>("CAPA")),
-      conduct_(matdata.parameters.get<std::vector<double>>("CONDUCT")),
-      conduct_para_num_(matdata.parameters.get<int>("CONDUCT_PARA_NUM"))
+      conduct_para_num_(matdata.parameters.get<int>("CONDUCT_PARA_NUM")),
+      conductivity_type_(matdata.parameters.get<Inpar::Mat::ActivationType>("CONDUCT")),
+      conductivityParams_(get_activation_params(matdata, conductivity_type_))
 {
 }
 
@@ -90,21 +153,36 @@ void Mat::Fourier::unpack(Core::Communication::UnpackBuffer& buffer)
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void Mat::Fourier::evaluate(const Core::LinAlg::Matrix<1, 1>& gradtemp,
-    Core::LinAlg::Matrix<1, 1>& cmat, Core::LinAlg::Matrix<1, 1>& heatflux) const
+std::vector<double> Mat::Fourier::conductivity(int eleGID) const
 {
-  // conductivity tensor in 1d is always a scalar quantity
-  cmat(0, 0) = params_->conduct_[0];
+  const std::size_t num_conduct = params_->conduct_para_num_;
+  return std::visit(ConductivityVisitor{eleGID, num_conduct}, params_->conductivityParams_);
+}
 
-  // heatflux
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void Mat::Fourier::evaluate(const Core::LinAlg::Matrix<1, 1>& gradtemp,
+    Core::LinAlg::Matrix<1, 1>& cmat, Core::LinAlg::Matrix<1, 1>& heatflux, const int eleGID) const
+{
+  const std::size_t num_conduct = params_->conduct_para_num_;
+  const std::vector<double> conduct =
+      std::visit(ConductivityVisitor{eleGID, num_conduct}, params_->conductivityParams_);
+
+  // conductivity tensor in 1d is always a scalar quantity
+  cmat(0, 0) = conduct[0];
+
   heatflux.multiply_nn(cmat, gradtemp);
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Mat::Fourier::evaluate(const Core::LinAlg::Matrix<2, 1>& gradtemp,
-    Core::LinAlg::Matrix<2, 2>& cmat, Core::LinAlg::Matrix<2, 1>& heatflux) const
+    Core::LinAlg::Matrix<2, 2>& cmat, Core::LinAlg::Matrix<2, 1>& heatflux, const int eleGID) const
 {
+  const std::size_t num_conduct = params_->conduct_para_num_;
+  const std::vector<double> conduct =
+      std::visit(ConductivityVisitor{eleGID, num_conduct}, params_->conductivityParams_);
+
   // conductivity tensor in 2d is a 2x2 matrix with either constant or variable values on the
   // diagonal or a full matrix.
   cmat.clear();
@@ -112,22 +190,22 @@ void Mat::Fourier::evaluate(const Core::LinAlg::Matrix<2, 1>& gradtemp,
   {
     case 1:  // scalar value is given
     {
-      cmat(0, 0) = params_->conduct_[0];
-      cmat(1, 1) = params_->conduct_[0];
+      cmat(0, 0) = conduct[0];
+      cmat(1, 1) = conduct[0];
       break;
     }
     case 2:  // diagonal values are given
     {
-      cmat(0, 0) = params_->conduct_[0];
-      cmat(1, 1) = params_->conduct_[1];
+      cmat(0, 0) = conduct[0];
+      cmat(1, 1) = conduct[1];
       break;
     }
     case 4:  // full tensor is given
     {
-      cmat(0, 0) = params_->conduct_[0];
-      cmat(0, 1) = params_->conduct_[1];
-      cmat(1, 0) = params_->conduct_[2];
-      cmat(1, 1) = params_->conduct_[3];
+      cmat(0, 0) = conduct[0];
+      cmat(0, 1) = conduct[1];
+      cmat(1, 0) = conduct[2];
+      cmat(1, 1) = conduct[3];
       break;
     }
     default:
@@ -138,15 +216,18 @@ void Mat::Fourier::evaluate(const Core::LinAlg::Matrix<2, 1>& gradtemp,
     }
   }
 
-  // heatflux
   heatflux.multiply_nn(cmat, gradtemp);
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Mat::Fourier::evaluate(const Core::LinAlg::Matrix<3, 1>& gradtemp,
-    Core::LinAlg::Matrix<3, 3>& cmat, Core::LinAlg::Matrix<3, 1>& heatflux) const
+    Core::LinAlg::Matrix<3, 3>& cmat, Core::LinAlg::Matrix<3, 1>& heatflux, const int eleGID) const
 {
+  const std::size_t num_conduct = params_->conduct_para_num_;
+  const std::vector<double> conduct =
+      std::visit(ConductivityVisitor{eleGID, num_conduct}, params_->conductivityParams_);
+
   // conductivity tensor in 3d is a 3x3 matrix with either constant or variable values on the
   // diagonal or a full matrix.
   cmat.clear();
@@ -154,29 +235,29 @@ void Mat::Fourier::evaluate(const Core::LinAlg::Matrix<3, 1>& gradtemp,
   {
     case 1:  // scalar value is given
     {
-      cmat(0, 0) = params_->conduct_[0];
-      cmat(1, 1) = params_->conduct_[0];
-      cmat(2, 2) = params_->conduct_[0];
+      cmat(0, 0) = conduct[0];
+      cmat(1, 1) = conduct[0];
+      cmat(2, 2) = conduct[0];
       break;
     }
     case 3:  // diagonal values are given
     {
-      cmat(0, 0) = params_->conduct_[0];
-      cmat(1, 1) = params_->conduct_[1];
-      cmat(2, 2) = params_->conduct_[2];
+      cmat(0, 0) = conduct[0];
+      cmat(1, 1) = conduct[1];
+      cmat(2, 2) = conduct[2];
       break;
     }
     case 9:  // full tensor is given
     {
-      cmat(0, 0) = params_->conduct_[0];
-      cmat(0, 1) = params_->conduct_[1];
-      cmat(0, 2) = params_->conduct_[2];
-      cmat(1, 0) = params_->conduct_[3];
-      cmat(1, 1) = params_->conduct_[4];
-      cmat(1, 2) = params_->conduct_[5];
-      cmat(2, 0) = params_->conduct_[6];
-      cmat(2, 1) = params_->conduct_[7];
-      cmat(2, 2) = params_->conduct_[8];
+      cmat(0, 0) = conduct[0];
+      cmat(0, 1) = conduct[1];
+      cmat(0, 2) = conduct[2];
+      cmat(1, 0) = conduct[3];
+      cmat(1, 1) = conduct[4];
+      cmat(1, 2) = conduct[5];
+      cmat(2, 0) = conduct[6];
+      cmat(2, 1) = conduct[7];
+      cmat(2, 2) = conduct[8];
       break;
     }
     default:
@@ -187,7 +268,6 @@ void Mat::Fourier::evaluate(const Core::LinAlg::Matrix<3, 1>& gradtemp,
     }
   }
 
-  // heatflux
   heatflux.multiply_nn(cmat, gradtemp);
 }
 

@@ -8,12 +8,18 @@
 #include "4C_thermo_timint_impl.hpp"
 
 #include "4C_coupling_adapter_mortar.hpp"
+#include "4C_fem_general_element.hpp"
+#include "4C_fem_general_node.hpp"
 #include "4C_io_pstream.hpp"
+#include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_linear_solver_method_parameters.hpp"
+#include "4C_mat_fourier.hpp"
 #include "4C_thermo_aux.hpp"
 #include "4C_thermo_ele_action.hpp"
 #include "4C_thermo_timint.hpp"
 #include "4C_utils_enum.hpp"
 
+#include <Epetra_FEVector.h>
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
 #include <sstream>
@@ -60,6 +66,54 @@ Thermo::TimIntImpl::TimIntImpl(const Teuchos::ParameterList& ioparams,
   // iterative temperature increments IncT_{n+1}
   // also known as residual temperatures
   tempi_ = Core::LinAlg::create_vector(*discret_->dof_row_map(), true);
+
+  // We assume the material is not time dependent, thus can be assembled here once and for all!
+  // Also assume the same bulk material at every element, we pre-initialize with the conductivity
+  // size.
+  /*
+  auto material = std::dynamic_pointer_cast<Mat::Fourier>(discret_->l_row_element(0)->material());
+  const size_t columns = material->conductivity().size();
+  Epetra_FEVector overlapping_element_material_vector =
+      Epetra_FEVector(discret_->element_col_map()->get_epetra_block_map(), columns, true);
+
+  auto get_element_material_vector = [&](Core::Elements::Element& ele)
+  {
+    auto thermo_material = std::dynamic_pointer_cast<Mat::Fourier>(ele.material());
+    std::vector<double> conductivity = thermo_material->conductivity(ele.id());
+
+    FOUR_C_ASSERT(columns == conductivity.size(),
+        "Number of material vectors has to be the same size as conductivity values given.");
+
+    for (size_t col = 0; col < conductivity.size(); col++)
+      overlapping_element_material_vector.ReplaceGlobalValue(ele.id(), col, conductivity[col]);
+  };
+  discret_->evaluate(get_element_material_vector);
+  overlapping_element_material_vector.GlobalAssemble();
+
+  conductivity_ = std::make_shared<Core::LinAlg::MultiVector<double>>(
+      Core::LinAlg::MultiVector<double>(*discret_->node_row_map(), columns, true));
+
+  for (const auto& node : discret_->my_row_node_range())
+  {
+    auto* adjacent_elements = node->elements();
+    const int num_elements = node->num_element();
+
+    for (size_t col = 0; col < columns; col++)
+    {
+      Epetra_Vector* element_material = overlapping_element_material_vector(col);
+      double nodal_material = 0.0;
+
+      for (int k = 0; k < num_elements; k++)
+      {
+        const int global_element_id = adjacent_elements[k]->id();
+        const int local_element_id = element_material->Map().LID(global_element_id);
+        nodal_material = 0.5 * (nodal_material + (*element_material)[local_element_id]);
+      }
+
+      conductivity_->ReplaceGlobalValue(node->id(), col, nodal_material);
+    }
+  }
+  */
 
   // setup mortar coupling
   if (Global::Problem::instance()->get_problem_type() == Core::ProblemType::thermo)
@@ -399,6 +453,11 @@ Thermo::ConvergenceStatus Thermo::TimIntImpl::newton_full()
 
     // Solve for tempi_
     // Solve K_Teffdyn . IncT = -R  ===>  IncT_{n+1}
+
+    Core::LinearSolver::Parameters::compute_solver_parameters(*discret_, solver_->params());
+    // solver_->params().set<std::shared_ptr<Core::LinAlg::MultiVector<double>>>(
+    //     "Material", conductivity_);
+
     Core::LinAlg::SolverParams solver_params;
     if (solveradapttol_ and (iter_ > 1))
     {
