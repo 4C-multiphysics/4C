@@ -17,7 +17,6 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-
 void poro_scatra_drt()
 {
   Global::Problem* problem = Global::Problem::instance();

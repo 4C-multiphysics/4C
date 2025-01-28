@@ -28,6 +28,11 @@ namespace Adapter
   class FPSIStructureWrapper;
 }  // namespace Adapter
 
+namespace CONTACT
+{
+  class NitscheStrategySsi;
+}
+
 // namespace PoroElast
 //{
 //  class PoroBase;
@@ -88,10 +93,10 @@ namespace PoroElastScaTra
     void test_results(MPI_Comm comm);
 
     //! apply solution of poro-problem to scatra
-    void set_poro_solution();
+    virtual void set_poro_solution();
 
     //! apply solution of scatra to poro
-    void set_scatra_solution();
+    virtual void set_scatra_solution();
 
     //! return pointer to porous medium problem
     const std::shared_ptr<PoroElast::PoroBase>& poro_field() { return poro_; };
@@ -113,6 +118,9 @@ namespace PoroElastScaTra
 
     //! setup solver (for monolithic only)
     virtual bool setup_solver() { return true; };
+
+    //! get bool indicating if we have at least one ssi interface contact condition
+    bool ssi_interface_contact() const { return ssiinterfacecontact_; }
 
    protected:
     //! setup up of dofsets for two way coupling
@@ -145,6 +153,9 @@ namespace PoroElastScaTra
     void set_mesh_disp();
     //! apply velocity fields to scatra
     void set_velocity_fields();
+
+    //! bool indicating if we have at least one ssi interface contact condition
+    const bool ssiinterfacecontact_;
   };
 }  // namespace PoroElastScaTra
 

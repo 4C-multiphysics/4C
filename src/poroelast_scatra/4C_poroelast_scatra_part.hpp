@@ -46,11 +46,24 @@ namespace PoroElastScaTra
 
     // Methods
 
+    void setup_system() override;
+
+    //! set up a pointer to the contact strategy of the structural field and store it
+    void setup_contact_strategy();
+
+    void set_poro_solution() override;
+
+    void set_scatra_solution() override;
+
     //! solve one time/incremental step of porous media problem (depending on coupling algorithm)
     virtual void do_poro_step() = 0;
     //! solve one time/incremental step of scalar transport problem (depending on coupling
     //! algorithm)
     virtual void do_scatra_step() = 0;
+
+   protected:
+    //! store contact nitsche strategy for ssi problems
+    std::shared_ptr<CONTACT::NitscheStrategySsi> contact_strategy_nitsche_;
   };
 }  // namespace PoroElastScaTra
 

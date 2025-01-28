@@ -35,7 +35,10 @@ PoroElastScaTra::PoroScatraBase::PoroScatraBase(
       matchinggrid_(
           Global::Problem::instance()->poro_scatra_control_params().get<bool>("MATCHINGGRID")),
       volcoupl_structurescatra_(nullptr),
-      volcoupl_fluidscatra_(nullptr)
+      volcoupl_fluidscatra_(nullptr),
+      ssiinterfacecontact_(
+          Global::Problem::instance()->get_dis("structure")->get_condition("SSIInterfaceContact") !=
+          nullptr)
 {
   Global::Problem* problem = Global::Problem::instance();
   const Teuchos::ParameterList& scatradyn = problem->scalar_transport_dynamic_params();

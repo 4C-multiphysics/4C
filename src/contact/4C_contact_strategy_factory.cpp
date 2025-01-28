@@ -16,6 +16,7 @@
 #include "4C_contact_lagrange_strategy_tsi.hpp"
 #include "4C_contact_lagrange_strategy_wear.hpp"
 #include "4C_contact_nitsche_strategy.hpp"
+#include "4C_contact_nitsche_strategy_poro_scatra.hpp"
 #include "4C_contact_nitsche_strategy_ssi.hpp"
 #include "4C_contact_nitsche_strategy_ssi_elch.hpp"
 #include "4C_contact_paramsinterface.hpp"
@@ -581,6 +582,10 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
     {
       params.set<int>("PROBTYPE", Inpar::CONTACT::ssi);
     }
+  }
+  else if (problemtype == Core::ProblemType::poroscatra)
+  {
+    params.set<int>("PROBTYPE", Inpar::CONTACT::poroscatra);
   }
   else if (problemtype == Core::ProblemType::poroelast or problemtype == Core::ProblemType::fpsi or
            problemtype == Core::ProblemType::fpsi_xfem)
@@ -1343,12 +1348,6 @@ void CONTACT::STRATEGY::Factory::set_poro_parent_element(
       {
         if (faceele->parent_element()->id() == eleitergeometry->second->id())
         {
-          if (mastertype == Mortar::Element::poro)
-          {
-            FOUR_C_THROW(
-                "struct and poro master elements on the same processor - no mixed interface "
-                "supported");
-          }
           cele.phys_type() = Mortar::Element::poro;
           mastertype = Mortar::Element::poro;
           break;
@@ -1403,8 +1402,8 @@ void CONTACT::STRATEGY::Factory::set_poro_parent_element(
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 void CONTACT::STRATEGY::Factory::find_poro_interface_types(bool& poromaster, bool& poroslave,
-    bool& structmaster, bool& structslave, enum Mortar::Element::PhysicalType& slavetype,
-    enum Mortar::Element::PhysicalType& mastertype) const
+    bool& structmaster, bool& structslave, const enum Mortar::Element::PhysicalType slavetype,
+    const enum Mortar::Element::PhysicalType mastertype) const
 {
   // find poro and structure elements when a poro coupling condition is applied on an element
   // and restrict to pure poroelastic or pure structural interfaces' sides.
@@ -1619,6 +1618,12 @@ std::shared_ptr<CONTACT::AbstractStrategy> CONTACT::STRATEGY::Factory::build_str
     {
       data_ptr = std::make_shared<CONTACT::AbstractStrategyDataContainer>();
       strategy_ptr = std::make_shared<NitscheStrategySsiElch>(
+          data_ptr, dof_row_map, node_row_map, params, interfaces, dim, comm_ptr, 0, dof_offset);
+    }
+    else if (params.get<int>("PROBTYPE") == Inpar::CONTACT::poroscatra)
+    {
+      data_ptr = std::make_shared<CONTACT::AbstractStratDataContainer>();
+      strategy_ptr = std::make_shared<NitscheStrategyPoroScatra>(
           data_ptr, dof_row_map, node_row_map, params, interfaces, dim, comm_ptr, 0, dof_offset);
     }
     else

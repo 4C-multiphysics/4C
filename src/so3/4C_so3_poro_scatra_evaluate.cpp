@@ -7,7 +7,11 @@
 
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_global_data.hpp"
+#include "4C_mat_fluidporo.hpp"
+#include "4C_mat_fluidporo_multiphase.hpp"
 #include "4C_mat_list.hpp"
+#include "4C_mat_structporo.hpp"
+#include "4C_so3_element_service.hpp"
 #include "4C_so3_poro_scatra.hpp"
 #include "4C_so3_poro_scatra_eletypes.hpp"
 #include "4C_utils_function.hpp"
@@ -126,6 +130,81 @@ int Discret::Elements::So3PoroScatra<So3Ele, distype>::evaluate(Teuchos::Paramet
   }
 
   return 0;
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <class So3Ele, Core::FE::CellType distype>
+void Discret::Elements::So3PoroScatra<So3Ele, distype>::get_cauchy_n_dir_and_derivatives_at_xi(
+    const Core::LinAlg::Matrix<3, 1>& xi, const std::vector<double>& disp_nodal_values,
+    const std::vector<double>& pres_nodal_values, const std::vector<double>& scalar_nodal_values,
+    const Core::LinAlg::Matrix<3, 1>& n, const Core::LinAlg::Matrix<3, 1>& dir,
+    double& cauchy_n_dir, Core::LinAlg::SerialDenseMatrix* d_cauchyndir_dd,
+    Core::LinAlg::SerialDenseMatrix* d_cauchyndir_dp,
+    Core::LinAlg::SerialDenseMatrix* d_cauchyndir_ds, Core::LinAlg::Matrix<3, 1>* d_cauchyndir_dn,
+    Core::LinAlg::Matrix<3, 1>* d_cauchyndir_ddir, Core::LinAlg::Matrix<3, 1>* d_cauchyndir_dxi)
+{
+  my::get_materials();
+  if (my::fluid_mat_->type() != Mat::PAR::darcy)
+    FOUR_C_THROW("GetCauchyAtXi just implemented for pure Darcy flow!");
+  if (distype != Core::FE::CellType::hex8)
+    FOUR_C_THROW("GetCauchyAtXi for Poro just implemented for hex8!");
+
+  double d_cauchyndir_ds_gp(0.0);
+  if (d_cauchyndir_ds != nullptr)
+  {
+    auto scalar_values_at_xi =
+        Discret::Elements::project_nodal_quantity_to_xi<distype>(xi, scalar_nodal_values);
+    So3Ele::get_cauchy_n_dir_and_derivatives_at_xi(xi, disp_nodal_values, n, dir, cauchy_n_dir,
+        d_cauchyndir_dd, nullptr, nullptr, nullptr, nullptr, d_cauchyndir_dn, d_cauchyndir_ddir,
+        d_cauchyndir_dxi, nullptr, nullptr, nullptr, scalar_values_at_xi.data(),
+        &d_cauchyndir_ds_gp);
+  }
+  else
+  {
+    So3Ele::get_cauchy_n_dir_and_derivatives_at_xi(xi, disp_nodal_values, n, dir, cauchy_n_dir,
+        d_cauchyndir_dd, nullptr, nullptr, nullptr, nullptr, d_cauchyndir_dn, d_cauchyndir_ddir,
+        d_cauchyndir_dxi, nullptr, nullptr, nullptr, nullptr, nullptr);
+  }
+
+  // Add pressure to sigma_nt
+  const double dot = n(0, 0) * dir(0, 0) + n(1, 0) * dir(1, 0) + n(2, 0) * dir(2, 0);
+  if (fabs(dot) > 1e-30)
+  {
+    if (d_cauchyndir_dp && d_cauchyndir_dn && d_cauchyndir_ddir && d_cauchyndir_dxi)
+    {
+      Core::LinAlg::Matrix<NUMNOD_SOH8, 1> shapefcts;
+      Core::FE::shape_function<Core::FE::CellType::hex8>(xi, shapefcts);
+      for (unsigned nlid = 0; nlid < NUMNOD_SOH8; ++nlid)
+        cauchy_n_dir -= pres_nodal_values[nlid] * shapefcts(nlid, 0) * dot;
+      Core::LinAlg::Matrix<NUMDIM_SOH8, NUMNOD_SOH8> deriv;
+      Core::FE::shape_function_deriv1<Core::FE::CellType::hex8>(xi, deriv);
+      d_cauchyndir_dp->reshape(NUMNOD_SOH8, 1);
+      Core::LinAlg::Matrix<NUMNOD_SOH8, 1> dsntdp_m(d_cauchyndir_dp->values(), true);
+
+      for (unsigned nlid = 0; nlid < NUMNOD_SOH8; ++nlid)
+      {
+        dsntdp_m(nlid, 0) = -dot * shapefcts(nlid, 0);
+        for (unsigned dim = 0; dim < 3; ++dim)
+        {
+          (*d_cauchyndir_dn)(dim, 0) -= pres_nodal_values[nlid] * shapefcts(nlid, 0) * dir(dim, 0);
+          (*d_cauchyndir_ddir)(dim, 0) -= pres_nodal_values[nlid] * shapefcts(nlid, 0) * n(dim, 0);
+          (*d_cauchyndir_dxi)(dim, 0) -= pres_nodal_values[nlid] * deriv(dim, nlid) * dot;
+        }
+      }
+    }
+  }
+
+  if (d_cauchyndir_ds != nullptr)
+  {
+    d_cauchyndir_ds->shape(numnod_, 1);
+    // get the shape functions
+    Core::LinAlg::Matrix<numnod_, 1> shapefunct(true);
+    Core::FE::shape_function<distype>(xi, shapefunct);
+    // calculate DsntDs
+    Core::LinAlg::Matrix<numnod_, 1>(d_cauchyndir_ds->values(), true)
+        .update(d_cauchyndir_ds_gp, shapefunct, 1.0);
+  }
 }
 
 FOUR_C_NAMESPACE_CLOSE

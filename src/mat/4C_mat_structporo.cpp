@@ -355,6 +355,12 @@ void Mat::StructPoro::constitutive_derivatives(Teuchos::ParameterList& params, d
       params, press, J, porosity, refporosity, dW_dp, dW_dphi, dW_dJ, dW_dphiref, W);
 }
 
+void Mat::StructPoro::evaluate_linearization_od(const Core::LinAlg::Matrix<3, 3>& defgrd,
+    const double concentration, Core::LinAlg::Matrix<9, 1>* d_F_dx)
+{
+  d_F_dx->clear();
+}
+
 void Mat::StructPoro::vis_names(std::map<std::string, int>& names) const
 {
   mat_->vis_names(names);
