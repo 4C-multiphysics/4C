@@ -44,9 +44,19 @@ void Core::LinearSolver::IFPACKPreconditioner::setup(bool create, Epetra_Operato
 
     pmatrix_ = std::make_shared<Epetra_CrsMatrix>(*A_crs);
 
+    Teuchos::ParameterList& inverseList = ifpacklist_.sublist("IFPACK Parameters");
+
+    std::string xmlFileName = inverseList.get<std::string>("IFPACK_XML_FILE");
+    if (xmlFileName == "none") FOUR_C_THROW("IFPACK_XML_FILE parameter not set!");
+
+    Teuchos::RCP<Teuchos::ParameterList> ifpack_params =
+        Teuchos::make_rcp<Teuchos::ParameterList>();
+    auto comm = pmatrix_->getRowMap()->getComm();
+    Teuchos::updateParametersFromXmlFileAndBroadcast(xmlFileName, ifpack_params.ptr(), *comm);
+
     // get the type of ifpack preconditioner from solver parameter list
-    std::string prectype = solverlist_.get("Preconditioner Type", "ILU");
-    const int overlap = ifpacklist_.get("IFPACKOVERLAP", 0);
+    /*std::string prectype = solverlist_.get("Preconditioner Type", "ILU");
+    const int overlap = ifpacklist_.get("IFPACKOVERLAP", 0);*/
 
     // create the preconditioner
     Ifpack Factory;
