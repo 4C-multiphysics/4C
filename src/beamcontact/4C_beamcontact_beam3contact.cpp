@@ -3682,8 +3682,8 @@ void CONTACT::Beam3contact<numnodes, numnodalvalues>::evaluate_stiffc_contact(
     }
 #endif
 
-    stiffmatrix.assemble(0, stiffcontact1, lmrow1, lmrowowner1, lmcol1);
-    stiffmatrix.assemble(0, stiffcontact2, lmrow2, lmrowowner2, lmcol2);
+    stiffmatrix.assemble(stiffcontact1, lmrow1, lmrowowner1, lmcol1);
+    stiffmatrix.assemble(stiffcontact2, lmrow2, lmrowowner2, lmcol2);
   }
 
   return;
@@ -3868,8 +3868,8 @@ void CONTACT::Beam3contact<numnodes, numnodalvalues>::evaluate_stiffc_contact_in
     }
 #endif
 
-    stiffmatrix.assemble(0, stiffcontact1, lmrow1, lmrowowner1, lmcol1);
-    stiffmatrix.assemble(0, stiffcontact2, lmrow2, lmrowowner2, lmcol2);
+    stiffmatrix.assemble(stiffcontact1, lmrow1, lmrowowner1, lmcol1);
+    stiffmatrix.assemble(stiffcontact2, lmrow2, lmrowowner2, lmcol2);
   }
 
   return;

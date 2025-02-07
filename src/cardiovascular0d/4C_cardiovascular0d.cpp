@@ -421,8 +421,6 @@ void Utils::Cardiovascular0D::evaluate_d_struct_dp(
             elevector[node * 3 + dim] += funct[node] * normal[dim] * fac;
       }
 
-      int eid = curr->second->id();
-
       // assemble the offdiagonal stiffness block (0,1 block) arising from dR_struct/dcvdof
       // assemble to rectangular matrix. The col corresponds to the Cardiovascular0D ID.
       std::vector<int> colvec(1);
@@ -485,7 +483,7 @@ void Utils::Cardiovascular0D::evaluate_d_struct_dp(
       }
 
       elevector.scale(sc_strtimint);
-      sysmat.assemble(eid, lmstride, elevector, lm, lmowner, colvec);
+      sysmat.assemble(lmstride, elevector, lm, lmowner, colvec);
     }
   }
 

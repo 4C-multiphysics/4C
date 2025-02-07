@@ -104,14 +104,9 @@ std::shared_ptr<Core::LinAlg::SparseOperator> ALE::Meshtying::setup(
   // | ksn | ksm | kss |
   // -------------------
 
-  std::shared_ptr<Core::LinAlg::BlockSparseMatrix<ALE::Utils::InterfaceSplitStrategy>> mat;
-  mat = std::make_shared<Core::LinAlg::BlockSparseMatrix<ALE::Utils::InterfaceSplitStrategy>>(
-      extractor, extractor, 108, false, true);
-  // nodes on the interface
-  std::shared_ptr<std::set<int>> condelements =
-      surfacesplitter_->conditioned_element_map(*discret_);
-
-  mat->set_cond_elements(condelements);
+  std::shared_ptr<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>> mat =
+      std::make_shared<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
+          extractor, extractor, 1, false, true);
 
   // Important: right way to do it (Tobias W.)
   // allocate 2x2 solution matrix with the default block matrix strategy in order to solve the
@@ -161,13 +156,9 @@ std::shared_ptr<Core::LinAlg::SparseOperator> ALE::Meshtying::msht_split()
   // | ksn | ksm | kss |
   // -------------------
 
-  std::shared_ptr<Core::LinAlg::BlockSparseMatrix<ALE::Utils::InterfaceSplitStrategy>> mat;
-  mat = std::make_shared<Core::LinAlg::BlockSparseMatrix<ALE::Utils::InterfaceSplitStrategy>>(
+  std::shared_ptr<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>> mat;
+  mat = std::make_shared<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
       extractor, extractor, 108, false, true);
-  // nodes on the interface
-  std::shared_ptr<std::set<int>> condelements =
-      surfacesplitter_->conditioned_element_map(*discret_);
-  mat->set_cond_elements(condelements);
 
   return mat;
 }
@@ -332,13 +323,10 @@ void ALE::Meshtying::msht_split(std::shared_ptr<Core::LinAlg::SparseOperator>& s
     // | ksn | ksm | kss |
     // -------------------
 
-    std::shared_ptr<Core::LinAlg::BlockSparseMatrix<ALE::Utils::InterfaceSplitStrategy>> mat;
-    mat = std::make_shared<Core::LinAlg::BlockSparseMatrix<ALE::Utils::InterfaceSplitStrategy>>(
-        extractor, extractor, 108, false, true);
-    // nodes on the interface
-    std::shared_ptr<std::set<int>> condelements =
-        surfacesplitter_->conditioned_element_map(*discret_);
-    mat->set_cond_elements(condelements);
+    std::shared_ptr<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>> mat;
+    mat =
+        std::make_shared<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
+            extractor, extractor, 108, false, true);
 
     sysmat = mat;
   }
@@ -384,8 +372,8 @@ void ALE::Meshtying::multifield_split(std::shared_ptr<Core::LinAlg::SparseOperat
     Core::LinAlg::MapExtractor extractor(
         *multifield_interface_.full_map(), multifield_interface_.Map(1));
 
-    std::shared_ptr<Core::LinAlg::BlockSparseMatrix<ALE::Utils::InterfaceSplitStrategy>> mat =
-        Core::LinAlg::split_matrix<ALE::Utils::InterfaceSplitStrategy>(
+    std::shared_ptr<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>> mat =
+        Core::LinAlg::split_matrix<Core::LinAlg::DefaultBlockMatrixStrategy>(
             *mergedmatrix, extractor, extractor);
 
     mat->complete();

@@ -58,7 +58,7 @@ namespace ScaTra
      * shows this drawback.
      * Effects: Faster assembly and a more sparse global matrix (and graph)
      */
-    void assemble(int eid, int myrank, const std::vector<int>& lmstride,
+    void assemble(int myrank, const std::vector<int>& lmstride,
         const Core::LinAlg::SerialDenseMatrix& Aele, const std::vector<int>& lmrow,
         const std::vector<int>& lmrowowner, const std::vector<int>& lmcol)
     {

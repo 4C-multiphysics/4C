@@ -681,7 +681,7 @@ void Utils::Cardiovascular0DManager::evaluate_neumann_cardiovascular0_d_coupling
       // plus sign here since evaluate_neumann already assumes that an fext vector enters, and thus
       // puts a minus infront of the load linearization matrix !!
       // elematrix.Scale(1.0);
-      if (assmat) systemmatrix->assemble(curr->second->id(), lmstride, elematrix, lm, lmowner);
+      if (assmat) systemmatrix->assemble(lmstride, elematrix, lm, lmowner);
     }
   }
 

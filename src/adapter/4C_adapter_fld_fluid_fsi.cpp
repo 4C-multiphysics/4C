@@ -447,7 +447,7 @@ void Adapter::FluidFSI::proj_vel_to_div_zero()
     // assembly
     std::vector<int> lmcol(1);
     lmcol[0] = actele->id() + dbcfsimap->MaxAllGID() + 1;
-    B->assemble(actele->id(), lmstride, elevector1, lm, lmowner, lmcol);
+    B->assemble(lmstride, elevector1, lm, lmowner, lmcol);
   }  // end of loop over all fluid elements
 
   discretization()->clear_state();

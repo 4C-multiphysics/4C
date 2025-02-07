@@ -176,29 +176,27 @@ namespace Core::LinAlg
     virtual bool destroy(bool throw_exception = true);
 
     /// assemble method for Epetra_CrsMatrices, if ONLY local values are assembled
-    void assemble(int eid, const std::vector<int>& lmstride,
-        const Core::LinAlg::SerialDenseMatrix& Aele, const std::vector<int>& lm,
-        const std::vector<int>& lmowner) override
+    void assemble(const std::vector<int>& lmstride, const Core::LinAlg::SerialDenseMatrix& Aele,
+        const std::vector<int>& lm, const std::vector<int>& lmowner) override
     {
-      assemble(eid, lmstride, Aele, lm, lmowner, lm);
+      assemble(lmstride, Aele, lm, lmowner, lm);
     }
 
     /// assemble method for Epetra_CrsMatrices, if ONLY local values are assembled
-    virtual void assemble(int eid, const Core::LinAlg::SerialDenseMatrix& Aele,
-        const std::vector<int>& lm, const std::vector<int>& lmowner)
+    virtual void assemble(const Core::LinAlg::SerialDenseMatrix& Aele, const std::vector<int>& lm,
+        const std::vector<int>& lmowner)
     {
-      assemble(eid, Aele, lm, lmowner, lm);
+      assemble(Aele, lm, lmowner, lm);
     }
 
     /// assemble method for Epetra_CrsMatrices, if ONLY local values are assembled
-    void assemble(int eid, const std::vector<int>& lmstride,
-        const Core::LinAlg::SerialDenseMatrix& Aele, const std::vector<int>& lmrow,
-        const std::vector<int>& lmrowowner, const std::vector<int>& lmcol) override;
-
-    /// assemble method for Epetra_CrsMatrices, if ONLY local values are assembled
-    void assemble(int eid, const Core::LinAlg::SerialDenseMatrix& Aele,
+    void assemble(const std::vector<int>& lmstride, const Core::LinAlg::SerialDenseMatrix& Aele,
         const std::vector<int>& lmrow, const std::vector<int>& lmrowowner,
-        const std::vector<int>& lmcol);
+        const std::vector<int>& lmcol) override;
+
+    /// assemble method for Epetra_CrsMatrices, if ONLY local values are assembled
+    void assemble(const Core::LinAlg::SerialDenseMatrix& Aele, const std::vector<int>& lmrow,
+        const std::vector<int>& lmrowowner, const std::vector<int>& lmcol);
 
     /// single value assemble used by BlockSparseMatrix
     void assemble(double val, int rgid, int cgid) override;

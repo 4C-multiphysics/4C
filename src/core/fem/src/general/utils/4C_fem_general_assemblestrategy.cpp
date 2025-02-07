@@ -117,7 +117,7 @@ void Core::FE::AssembleStrategy::assemble(LinAlg::SparseOperator& sysmat, int ei
     const std::vector<int>& lmstride, const LinAlg::SerialDenseMatrix& Aele,
     const std::vector<int>& lm, const std::vector<int>& lmowner)
 {
-  sysmat.assemble(eid, lmstride, Aele, lm, lmowner);
+  sysmat.assemble(lmstride, Aele, lm, lmowner);
 }
 
 
@@ -128,7 +128,7 @@ void Core::FE::AssembleStrategy::assemble(LinAlg::SparseOperator& sysmat, int ei
     const std::vector<int>& lmrow, const std::vector<int>& lmrowowner,
     const std::vector<int>& lmcol)
 {
-  sysmat.assemble(eid, lmstride, Aele, lmrow, lmrowowner, lmcol);
+  sysmat.assemble(lmstride, Aele, lmrow, lmrowowner, lmcol);
 }
 
 

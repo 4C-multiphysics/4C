@@ -293,13 +293,11 @@ std::shared_ptr<Core::LinAlg::SparseOperator> FLD::Meshtying::init_system_matrix
       // | ksn | ksm | kss |
       // -------------------
 
-      std::shared_ptr<Core::LinAlg::BlockSparseMatrix<FLD::Utils::InterfaceSplitStrategy>> mat;
-      mat = std::make_shared<Core::LinAlg::BlockSparseMatrix<FLD::Utils::InterfaceSplitStrategy>>(
+      std::shared_ptr<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>
+          mat;
+      mat = std::make_shared<
+          Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
           extractor, extractor, 108, false, true);
-      // nodes on the interface
-      std::shared_ptr<std::set<int>> condelements =
-          surfacesplitter_->conditioned_element_map(*discret_);
-      mat->set_cond_elements(condelements);
 
       return mat;
     }
@@ -1585,13 +1583,10 @@ void FLD::Meshtying::msht_split(std::shared_ptr<Core::LinAlg::SparseOperator>& s
     // | ksn | ksm | kss |
     // -------------------
 
-    std::shared_ptr<Core::LinAlg::BlockSparseMatrix<FLD::Utils::InterfaceSplitStrategy>> mat;
-    mat = std::make_shared<Core::LinAlg::BlockSparseMatrix<FLD::Utils::InterfaceSplitStrategy>>(
-        extractor, extractor, 108, false, true);
-    // nodes on the interface
-    std::shared_ptr<std::set<int>> condelements =
-        surfacesplitter_->conditioned_element_map(*discret_);
-    mat->set_cond_elements(condelements);
+    std::shared_ptr<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>> mat;
+    mat =
+        std::make_shared<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
+            extractor, extractor, 108, false, true);
 
     sysmat = mat;
 
@@ -1628,13 +1623,9 @@ void FLD::Meshtying::msht_split_shape(
   // | ksn | ksm | kss |
   // -------------------
 
-  std::shared_ptr<Core::LinAlg::BlockSparseMatrix<FLD::Utils::InterfaceSplitStrategy>> mat;
-  mat = std::make_shared<Core::LinAlg::BlockSparseMatrix<FLD::Utils::InterfaceSplitStrategy>>(
+  std::shared_ptr<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>> mat;
+  mat = std::make_shared<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
       extractor, extractor, 108, false, true);
-  // nodes on the interface
-  std::shared_ptr<std::set<int>> condelements =
-      surfacesplitter_->conditioned_element_map(*discret_);
-  mat->set_cond_elements(condelements);
 
   shapederivatives = mat;
 }
@@ -1679,10 +1670,10 @@ void FLD::Meshtying::multifield_split(std::shared_ptr<Core::LinAlg::SparseOperat
     {
       Core::LinAlg::MapExtractor extractor(
           *multifield_domainmaps_.full_map(), multifield_domainmaps_.Map(1));
-      std::shared_ptr<Core::LinAlg::BlockSparseMatrix<FLD::Utils::InterfaceSplitStrategy>> mat =
-          Core::LinAlg::split_matrix<FLD::Utils::InterfaceSplitStrategy>(
+      std::shared_ptr<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>
+          mat = Core::LinAlg::split_matrix<Core::LinAlg::DefaultBlockMatrixStrategy>(
               *mergedmatrix, extractor, extractor);
-      mat->set_cond_elements(multifield_condelements_);
+
       mat->complete();
 
       sysmat = mat;
@@ -1730,10 +1721,9 @@ void FLD::Meshtying::multifield_split_shape(
 
     Core::LinAlg::MapExtractor extractor(
         *multifield_domainmaps_shape_.full_map(), multifield_domainmaps_shape_.Map(1));
-    std::shared_ptr<Core::LinAlg::BlockSparseMatrix<FLD::Utils::InterfaceSplitStrategy>>
-        matshapederivatives = Core::LinAlg::split_matrix<FLD::Utils::InterfaceSplitStrategy>(
+    std::shared_ptr<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>
+        matshapederivatives = Core::LinAlg::split_matrix<Core::LinAlg::DefaultBlockMatrixStrategy>(
             *mergedshapederivatives, extractor, extractor);
-    matshapederivatives->set_cond_elements(multifield_condelements_shape_);
     matshapederivatives->complete();
     shapederivatives = matshapederivatives;
   }
