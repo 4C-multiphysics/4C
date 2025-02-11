@@ -184,21 +184,6 @@ class ThermoFilter : public PostFilterBase
   std::string tempgradtype_;  ///< type of spatial temperature gradient output
 };
 
-/*!
- \brief Writer for electromagnetic problems
-
- \author gravemeier
- \date 06/17
- */
-class ElemagFilter : public PostFilterBase
-{
- public:
-  ElemagFilter(PostField* field, std::string name) : PostFilterBase(field, name) {}
-
- protected:
-  void write_all_results(PostField* field) override;
-};
-
 /// Writer for undefined problem types
 /*
   Just write all the vectors we have.

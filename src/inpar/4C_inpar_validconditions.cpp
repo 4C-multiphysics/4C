@@ -16,7 +16,6 @@
 #include "4C_inpar_cardiovascular0d.hpp"
 #include "4C_inpar_ehl.hpp"
 #include "4C_inpar_elch.hpp"
-#include "4C_inpar_elemag.hpp"
 #include "4C_inpar_fluid.hpp"
 #include "4C_inpar_fpsi.hpp"
 #include "4C_inpar_fsi.hpp"
@@ -848,7 +847,6 @@ std::vector<Core::Conditions::ConditionDefinition> Input::valid_conditions()
   Inpar::SSTI::set_valid_conditions(condlist);
   Inpar::PARTICLE::set_valid_conditions(condlist);
   Inpar::LevelSet::set_valid_conditions(condlist);
-  Inpar::EleMag::set_valid_conditions(condlist);
   Inpar::BeamPotential::set_valid_conditions(condlist);
   Inpar::RveMpc::set_valid_conditions(condlist);
   Inpar::BeamInteraction::set_valid_conditions(condlist);

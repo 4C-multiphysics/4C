@@ -9,7 +9,6 @@
 #include "4C_art_net_dyn_drt.hpp"
 #include "4C_ehl_dyn.hpp"
 #include "4C_elch_dyn.hpp"
-#include "4C_elemag_dyn.hpp"
 #include "4C_fluid_dyn_nln_drt.hpp"
 #include "4C_fpsi_dyn.hpp"
 #include "4C_fs3i_dyn.hpp"
@@ -174,10 +173,6 @@ void ntacal()
 
     case Core::ProblemType::np_support:
       MultiScale::np_support_drt();
-      break;
-
-    case Core::ProblemType::elemag:
-      electromagnetics_drt();
       break;
 
     default:

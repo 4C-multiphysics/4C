@@ -203,8 +203,7 @@ void FLD::Utils::DbcHdgFluid::do_dirichlet_condition(const Teuchos::ParameterLis
     Core::LinAlg::SerialDenseMatrix elemat1, elemat2;
     Core::Elements::LocationArray dummy(1);
     Teuchos::ParameterList initParams;
-    if (Global::Problem::instance(0)->get_problem_type() == Core::ProblemType::elemag or
-        Global::Problem::instance(0)->get_problem_type() == Core::ProblemType::scatra)
+    if (Global::Problem::instance(0)->get_problem_type() == Core::ProblemType::scatra)
       Core::Utils::add_enum_class_to_parameter_list<Core::FE::HDGAction>(
           "action", Core::FE::HDGAction::project_dirich_field, initParams);
     else

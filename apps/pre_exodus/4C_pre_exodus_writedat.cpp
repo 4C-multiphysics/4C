@@ -445,7 +445,6 @@ void EXODUS::write_dat_eles(
   std::vector<EXODUS::ElemDef> thermo_elements;
   std::vector<EXODUS::ElemDef> cell_elements;
   std::vector<EXODUS::ElemDef> cellscatra_elements;
-  std::vector<EXODUS::ElemDef> elemag_elements;
   std::vector<EXODUS::ElemDef> artery_elements;
 
   for (const auto& element_definition : eledefs)
@@ -468,8 +467,6 @@ void EXODUS::write_dat_eles(
       cell_elements.push_back(element_definition);
     else if (element_definition.sec == "CELLSCATRA")
       cellscatra_elements.push_back(element_definition);
-    else if (element_definition.sec == "ELECTROMAGNETIC")
-      elemag_elements.push_back(element_definition);
     else if (element_definition.sec == "ARTERY")
       artery_elements.push_back(element_definition);
     else if (element_definition.sec == "")
@@ -535,9 +532,6 @@ void EXODUS::write_dat_eles(
 
   // print cellscatra elements
   if (!cellscatra_elements.empty()) printElementSection(cellscatra_elements, "CELLSCATRA ELEMENTS");
-
-  // print electromagnetic elements
-  if (!elemag_elements.empty()) printElementSection(elemag_elements, "ELECTROMAGNETIC ELEMENTS");
 
   // print artery elements
   if (!artery_elements.empty()) printElementSection(artery_elements, "ARTERY ELEMENTS");

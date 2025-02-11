@@ -26,7 +26,6 @@ namespace Core
     cardiac_monodomain,  // Cardiac electrophsiology problem
     ehl,        // elastohydrodynamic lubrication problem (or lubrication structure interaction)
     elch,       // electrochemical problem
-    elemag,     // electromagnetic problem
     fluid,      // fluid problem
     fluid_ale,  // fluid on an ale mesh (no structure)
     fbi,        // 3D fluid interacting with a 1D beam

@@ -21,7 +21,6 @@
 #include "4C_inpar_contact.hpp"
 #include "4C_inpar_ehl.hpp"
 #include "4C_inpar_elch.hpp"
-#include "4C_inpar_elemag.hpp"
 #include "4C_inpar_fbi.hpp"
 #include "4C_inpar_fluid.hpp"
 #include "4C_inpar_fpsi.hpp"
@@ -284,8 +283,6 @@ std::map<std::string, Core::IO::InputSpec> Input::valid_parameters()
   Inpar::FBI::set_valid_parameters(list);
 
   Inpar::PARTICLE::set_valid_parameters(list);
-
-  Inpar::EleMag::set_valid_parameters(list);
 
   Inpar::Geo::set_valid_parameters(list);
   Inpar::BINSTRATEGY::set_valid_parameters(list);

@@ -409,20 +409,6 @@ void ThermoFilter::write_all_results(PostField* field)
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void ElemagFilter::write_all_results(PostField* field)
-{
-  writer_->write_result("electric", "electric", nodebased, 3);
-  writer_->write_result("electric_post", "electric_post", nodebased, 3);
-  writer_->write_result("magnetic", "magnetic", nodebased, 3);
-  writer_->write_result("trace", "trace", nodebased, 3);
-  writer_->write_result("dft", "dft", nodebased, 3);
-  writer_->write_result("conductivity", "conductivity", elementbased, 1);
-  writer_->write_result("permittivity", "permittivity", elementbased, 1);
-  writer_->write_result("permeability", "permeability", elementbased, 1);
-}
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
 void AnyFilter::write_all_results(PostField* field)
 {
   write_dof_results(field);

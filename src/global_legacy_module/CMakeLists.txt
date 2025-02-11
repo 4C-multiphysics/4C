@@ -18,7 +18,6 @@ set(_dependencies
     constraint
     contact
     core
-    elemag
     fluid
     fluid_ele
     fluid_xfluid

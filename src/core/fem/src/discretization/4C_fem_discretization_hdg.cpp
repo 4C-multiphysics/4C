@@ -473,7 +473,7 @@ void Core::FE::Utils::DbcHDG::do_dirichlet_condition(const Teuchos::ParameterLis
     Teuchos::ParameterList initParams;
 
     const auto problem_type = *params.get<const Core::ProblemType*>("problem_type");
-    if (problem_type == Core::ProblemType::elemag or problem_type == Core::ProblemType::scatra)
+    if (problem_type == Core::ProblemType::scatra)
     {
       initParams.set("hdg_action", true);
       Core::Utils::add_enum_class_to_parameter_list<Core::FE::HDGAction>(

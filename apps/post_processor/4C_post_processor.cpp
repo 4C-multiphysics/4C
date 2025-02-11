@@ -646,13 +646,6 @@ namespace
 
         break;
       }
-      case Core::ProblemType::elemag:
-      {
-        PostField* field = problem.get_discretization(0);
-        ElemagFilter writer(field, problem.outname());
-        writer.write_files();
-        break;
-      }
       case Core::ProblemType::none:
       {
         // Special problem type that contains one discretization and any number

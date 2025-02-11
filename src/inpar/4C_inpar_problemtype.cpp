@@ -73,7 +73,6 @@ std::map<std::string, Core::ProblemType> Inpar::PROBLEMTYPE::string_to_problem_t
     string2prbtype["Cardiac_Monodomain"] = Core::ProblemType::cardiac_monodomain;
     string2prbtype["Elastohydrodynamic_Lubrication"] = Core::ProblemType::ehl;
     string2prbtype["Electrochemistry"] = Core::ProblemType::elch;
-    string2prbtype["Electromagnetics"] = Core::ProblemType::elemag;
     string2prbtype["Fluid"] = Core::ProblemType::fluid;
     string2prbtype["Fluid_Ale"] = Core::ProblemType::fluid_ale;
     string2prbtype["Fluid_Beam_Interaction"] = Core::ProblemType::fbi;
