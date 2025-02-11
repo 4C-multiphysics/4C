@@ -1,5 +1,11 @@
 List of major features that were removed from 4C, including date and revision where code was removed
 
+Electromagnetism (elemag)
+- Removal of elemag
+- reasons: unused in current research, implementation on top of structure
+- removed in commit 6f35ec47beb75cdd5857d6353149731ed29b8d8e
+- removed by David Rudlstorfer
+
 Immersed FSI
 - Removal of immersed solids in fluids
 - reasons: unused in current research, block removal of old solid elements
