@@ -1,0 +1,71 @@
+// Simulation of tensile test with elastic-plastic material model
+------------------------------------------------------PROBLEM SIZE
+DIM           3
+-----------------------------------------------------DISCRETISATION
+NUMSTRUCDIS                     1
+--------------------------------------------------------PROBLEM TYPE
+PROBLEMTYPE                      Structure
+-----------------------------------------------------------------IO
+OUTPUT_BIN                      yes
+STRUCT_DISP                     Yes
+STRUCT_STRESS                   Cauchy
+STRUCT_STRAIN                   GL
+FILESTEPS                       1000
+STDOUTEVERY                      1
+WRITE_TO_SCREEN                 Yes
+WRITE_TO_FILE                   No
+---------------------------------------------IO/RUNTIME VTK OUTPUT
+INTERVAL_STEPS                  1
+OUTPUT_DATA_FORMAT              binary
+------------------------------------IO/RUNTIME VTK OUTPUT/STRUCTURE
+OUTPUT_STRUCTURE                Yes
+DISPLACEMENT                    Yes
+STRESS_STRAIN                   Yes
+GAUSS_POINT_DATA_OUTPUT_TYPE    nodes
+-------------------------------------------IO/MONITOR STRUCTURE DBC
+PRECISION_FILE 16
+PRECISION_SCREEN 5
+FILE_TYPE csv
+INTERVAL_STEPS 1
+-------------------------------------------------STRUCTURAL DYNAMIC
+LINEAR_SOLVER                   1
+INT_STRATEGY                    Standard
+DYNAMICTYPE                     Statics
+RESULTSEVERY                    1
+RESTARTEVERY                    1000
+TIMESTEP                        0.05
+NUMSTEP                         10
+MAXTIME                         10.0
+TOLDISP                         1e-04
+NORM_DISP                       Abs
+TOLRES                          1e-04
+NORM_RESF                       Rel
+NORMCOMBI_RESFDISP              And
+MAXITER                         50
+ITERNORM                        L2
+DIVERCONT                       stop
+NLNSOL                          fullnewton
+PREDICT                         TangDis
+-----------------------------------------------------------SOLVER 1
+NAME                            Direct_Solver
+SOLVER                          Superlu
+-----------------------------------------------------------SOLVER 2
+NAME                            Iterative_Solver
+SOLVER                          Belos
+AZSOLVE                         GMRES
+AZPREC                          MueLu
+MUELU_XML_FILE                  elasticity_template.xml
+AZREUSE                         0
+AZOUTPUT                        1000
+AZSUB                           100
+AZTOL                           1.0E-5
+AZCONV                          AZ_r0
+AZITER                          1000
+----------------------------------------------------------MATERIALS
+MAT 1  MAT_Struct_PlasticNlnLogNeoHooke YOUNG 70000 NUE 0.33 DENS 1 YIELD 330.0 ISOHARD 0.0 SATHARDENING 1000.0 HARDEXPO 5.0 VISC 0.010 RATE_DEPENDENCY 1.0
+-------------------------------------------------------------FUNCT1
+COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME pull
+VARIABLE 0 NAME pull TYPE linearinterpolation NUMPOINTS 2 TIMES 0.0 20.0 VALUES 0.0 20.0
+----------------------------------------------------------RESULT DESCRIPTION
+STRUCTURE DIS structure NODE 2477 QUANTITY dispy VALUE 4.56123591074363621e-01 TOLERANCE 1.0e-12 NAME elongation
+STRUCTURE DIS structure NODE 6 QUANTITY dispx VALUE -4.25664885567924312e-02 TOLERANCE 1.0e-12 NAME necking

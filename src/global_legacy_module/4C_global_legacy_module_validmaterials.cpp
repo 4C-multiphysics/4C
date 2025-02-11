@@ -1380,6 +1380,8 @@ std::shared_ptr<std::vector<std::shared_ptr<Mat::MaterialDefinition>>> Global::v
     m->add_component(entry<double>("VISC", {.description = "VISCOSITY", .default_value = 0.}));
     m->add_component(
         entry<double>("RATE_DEPENDENCY", {.description = "rate dependency", .default_value = 0.}));
+    m->add_component(entry<double>("TOL",
+        {.description = "Tolerance for local Newton-Raphson iteration", .default_value = 1.e-08}));
     m->add_component(entry<int>("HARDENING_FUNC",
         {.description = "Function number for isotropic hardening", .default_value = 0}));
 
@@ -2923,20 +2925,22 @@ std::shared_ptr<std::vector<std::shared_ptr<Mat::MaterialDefinition>>> Global::v
   /*----------------------------------------------------------------------*/
   {
     auto m = std::make_shared<Mat::MaterialDefinition>("MAT_ViscoplasticLawReformulatedJohnsonCook",
-        "Reformulation of the Johnson-Cook viscoplastic law (comprising flow rule and hardening "
+        "Reformulation of the Johnson-Cook viscoplastic law (comprising flow rule \f$\\dot{P} = "
+        "\\dot{P}_0 \\exp \\left( \\frac{ \\Sigma_{eq}}{C \\Sigma_y} - \\frac{1}{C} \\right) - "
+        "\\dot{P}_0\f$ and hardening "
         "law), as shown in Mareau et al. (Mechanics of Materials 143, 2020)",
         Core::Materials::mvl_reformulated_Johnson_Cook);
 
     m->add_component(entry<double>(
-        "STRAIN_RATE_PREFAC", {.description = "plastic strain rate prefactor $\\dot{P}_0$"}));
-    m->add_component(entry<double>(
-        "STRAIN_RATE_EXP_FAC", {.description = "exponential factor of plastic strain rate $C$"}));
-    m->add_component(entry<double>(
-        "INIT_YIELD_STRENGTH", {.description = "initial yield strength of the material $A_0$"}));
+        "STRAIN_RATE_PREFAC", {.description = "reference plastic strain rate \f$\\dot{P}_0\f$ "}));
+    m->add_component(entry<double>("STRAIN_RATE_EXP_FAC",
+        {.description = "exponential factor of plastic strain rate \f$C\f$"}));
+    m->add_component(entry<double>("INIT_YIELD_STRENGTH",
+        {.description = "initial yield strength of the material \f$A_0\f$"}));
     m->add_component(entry<double>("ISOTROP_HARDEN_PREFAC",
-        {.description = "prefactor of the isotropic hardening stress $B_0$"}));
-    m->add_component(entry<double>(
-        "ISOTROP_HARDEN_EXP", {.description = "exponent of the isotropic hardening stress $n$"}));
+        {.description = "prefactor of the isotropic hardening stress \f$B_0\f$"}));
+    m->add_component(entry<double>("ISOTROP_HARDEN_EXP",
+        {.description = "exponent of the isotropic hardening stress \f$n\f$"}));
 
     Mat::append_material_definition(matlist, m);
   }

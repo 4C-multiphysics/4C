@@ -14,49 +14,16 @@ For further details and references we refer the reader to [Wall99]_
 
    The driven cavity example in 2d
 
-.. note::
-
-    In case you want or need to see a sample solution for this tutorial
-    you will find corresponding files in the |FOURC| subfolder `<4C-sourcedir>/tests/framework-tests/*`!
-    However, it is highly recommended to look at these files only in case
-    you encounter severe problems while stepping through the tutorial.
-
-Creating the Geometry with Cubit
---------------------------------
-
-Besides meshing cubit also has several geometry creation methods. We
-refer to the provided manual and tutorials. It supports scripting (also
-Python), therefore we provide a *Journal*-file containing the necessary
-geometry commands as well as mesh and definitions for elements and
-boundary conditions, respectively.
-
-You can find this journal file within you |FOURC| distribution. It is
-located in `<4C-sourcedir>/tests/framework-test/tutorial_fsi.jou`.
+You can find the complete journal file within your |FOURC| distribution.
+It is located in `<4C-sourcedir>/tests/framework-test/tutorial_fsi.jou`.
 
 Within Cubit, open the Journal-Editor (*Tools*\ :math:`\to`\ *Journal
-Editor*), paste the text from the journal file and press *play*. For
-later usage it is convenient to save the current content of the
-Journal-Editor into a *\*.jou* file. Export now the created geometry and
-mesh to an exodus-file (filename: dc2d.exo) via
+Editor*), paste the text from the journal file and press *play*.
+
+Export now the created geometry and mesh to an exodus-file (filename: dc2d.exo) via
 *File*\ :math:`\to`\ *Export...*. During export, set the dimension
 explicitly to 2d.
 
-Working with *pre_exodus* and |FOURC|
--------------------------------------
-
-*pre_exodus* is a C++ code embedded into the |FOURC| environment. It is
-meant to transfer a given mesh into a |FOURC|-readable input file.
-
-Preliminaries
-~~~~~~~~~~~~~
-
-If not already done, compile *pre_exodus* via
-
-::
-
-   make pre_exodus
-
-after configuring |FOURC| in the usual way.
 
 General Procedure of Creating a Valid |FOURC| Input File
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -100,7 +67,7 @@ To start the solver use the call
 The results are then written to the result directory with the prefix you chose.
 
 The FSI problem with a partitioned solver
------------------------------------------
+-------------------------------------------
 
 Here, we create the |FOURC| input file for the FSI problem, that is solved
 using a partitioned scheme, which means that the fluid and the solid problem are solved sequentially.
@@ -201,9 +168,35 @@ Safe the file under a different name, e.g. ’dc2d_fsi.head’.
 *bc-file*
 ~~~~~~~~~~~
 
+The main section of the `default.bc` file contains the element set and boundary condition information:
+
+::
+
+    --------------------------BCSPECS
+
+    Element Block, named:
+    of Shape: HEX8
+    has <xxx> Elements
+    *eb1="ELEMENT"
+    sectionname=""
+    description=""
+    elementname=""
+
+    [further element sections]
+
+    Node Set, named: <bc_name>
+    Property Name: none
+    has <xx> Nodes
+    *ns1="CONDITION"
+    sectionname=""
+    description=""
+
+    [further node set definitions to be used for conditions]
+
+
 Edit the ’default.bc’ file as follows:
 
-For the element definitions:
+For the element definitions, which are consecutively enumerated as ``eb<number>``:
 
 -  ``*eb1="ELEMENT"`` the structure elements with their material
 
@@ -225,7 +218,7 @@ For the element definitions:
                description="MAT 1 NA ALE"
                elementname="FLUID"
 
-For Dirichlet boundary conditions for structure, fluid and ALE:
+For Dirichlet boundary conditions for structure, fluid and ALE, which are defined by a node set number, ``ns<number>``, but also by its name:
 
 -  ``*ns1="CONDITION"`` Fixing the structure at left and right side
 

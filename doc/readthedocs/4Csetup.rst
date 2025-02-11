@@ -641,6 +641,8 @@ The command to build |FOURC| these specific targets is:
 
 where ``<numProcs>`` denotes the number of processors and ``<customTarget>`` the target you want to build (see below).
 
+.. _custom_target_specifiers:
+
 Custom target specifiers
 ~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -60,12 +60,12 @@ namespace Mat
       const double visc_;
       //! rate dependency
       const double rate_dependency_;
+      //! newton Raphson tolerance
+      const double tolerance_nr_;
       //! function ID for evaluation of saturation
       const int functionID_hardening_;
       //! maximum number of Newton Raphson iterations
       const int max_iterations_;
-      //! newton Raphson tolerance
-      const double tolerance_nr_;
 
 
       //@}
