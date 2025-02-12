@@ -1,8 +1,8 @@
 
-Creating a Geometry with Cubit
-===============================
+Creating a Geometry with Coreform Cubit\ |reg|
+===================================================
 
-Cubit is a finite element preprocessor that may not only do the meshing on an existing geometry,
+Coreform Cubit\ |reg|  is a finite element preprocessor that may not only do the meshing on an existing geometry,
 but aldo create geometries by many different procedures, and it can also read in and modify CAD files for further treatment.
 It supports scripting (also Python), therefore we provide a *Journal*-file containing the necessary geometry commands as well as mesh and definitions for elements and boundary conditions, respectively.
 

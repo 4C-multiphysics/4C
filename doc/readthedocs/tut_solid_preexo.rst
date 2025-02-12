@@ -1,16 +1,16 @@
 .. _3dsolidtutorial:
 
-3D Solid Tutorial with Cubit and *pre_exodus*
-=======================================================
+3D Solid Tutorial with Coreform Cubit\ |reg|\  and *pre_exodus*
+=================================================================
 
 Introduction
 ----------------
 
 This tutorial gives an introduction to the usage of |FOURC| for simulating plastic material behaviour.
 It is assumed that |FOURC| including the pre-processing tool `pre_exodus` has been built on your machine according to the instructions and has passed the tests without error messages.
-In addition, the pre-processing of the finite element model is built with Coreform Cubit, but the input file can also built without this software.
+In addition, the pre-processing of the finite element model is built with Coreform Cubit, but the input file can also be generated without this software.
 
-The structure to be analyzed is a simple round tensile bar,
+The analyzed structure is a simple round tensile bar,
 which is commonly used to identify the material's stress-strain curve by comparing the simulation with the respective experiment.
 The geometry, which has a cross sectional diameter of 10 mm and a length of constant diameter of 50 mm is shown in the following figure:
 
@@ -22,7 +22,7 @@ The geometry, which has a cross sectional diameter of 10 mm and a length of cons
    Problem definition and geometrical setup
 
 
-The material under consideration is an Aluminum with a yield strength of 330 MPa and a mild isotropic hardening.
+The material under consideration is an Aluminum alloy with a yield strength of 330 MPa and a mild isotropic hardening.
 During the test, a force *F* acts on the top of the rod such that it elongates.
 
 For elasto-plastic simulations |FOURC| provides mainly the following seven material models:
@@ -34,6 +34,7 @@ For elasto-plastic simulations |FOURC| provides mainly the following seven mater
     MAT_Struct_ThermoPlasticHyperElast
     MAT_Struct_ThermoPlasticLinElast
     MAT_Struct_Damage
+    MAT_Struct_PlasticGTN
     MAT_Struct_DruckerPrager
 
 The following flow chart depicts for which cases these seven models are applicable:
@@ -64,13 +65,13 @@ The final FE model is shown here.
 
 
 Symmetry boundary conditions are applied to the three symmetry planes, denoted with ``XSYMM, YSYMM, ZSYMM`` in the above figure.
-The top surface is exposed with a Dirichlet boundary condition with linearly increasing displacement in y-direction.
+The top surface is subject to a Dirichlet boundary condition with linearly increasing displacement in y-direction.
 
 To this end, we model 200 time steps spanning from :math:`t_0 = 0` s to :math:`t_1 = 1` s with a time step of :math:`\Delta t = 0.005` s.
 Assuming nonlinear kinematics (large strain theory) and plasticity with isotropic hardening following an exponential curve,
-we choose the model ``MAT_Struct_Struct_PlasticNlnLogNeoHooke`` to accomplish this task.
+we choose the model ``MAT_Struct_PlasticNlnLogNeoHooke`` to accomplish this task.
 
-The geometry, finite element mesh and node sets for the boundary conditions are created using Cubit.
+The geometry, finite element mesh and node sets for the boundary conditions are created using Coreform Cubit\ |reg|\ .
 The mesh is rather fine and 27-node brick elements have been used herein.
 The corresponding journal file can be run to reproduce this mesh and output a binary exodus mesh information file ``tutorial_solid.e``.
 The geometry dimensions (actually mainly the radius, all other dimensions depend on it) and element size can be varied, since they are parametrized in the journal file.
@@ -106,17 +107,17 @@ The tag is for an extra output of the total forces, which are printed in a csv f
 
 
 All control parameters for the material, solvers, loading function, output information are contained in ``tutorial_solid.head``.
-Particularly, the output of the forces is requested by a particular section, ``--IO/MONITOR STRUCTURE DBC``, which controls accuracy and frequency of the output.
-This and all other output information is given in section ``--IO`` and its subsections.
+Particularly, the output of the forces is requested by a particular section, ``IO/MONITOR STRUCTURE DBC``, which controls accuracy and frequency of the output.
+This and all other output information is given in section ``IO`` and its subsections.
 
 .. literalinclude::  tutorial_solid.head
    :lines: 17-29
    :lineno-start: 17
 
-You'll find two solver sections in there. In the original header file, which are selected in the section ``--STRUCTURAL DYNAMIC`` by the parameter ``LINEAR_SOLVER``.
-The value of this parameter refers to the section ``--SOLVER x``, in which ``x`` is the number of the selected solver.
-In the section ``--SOLVER 1``, the direct solver is defined, it does not have any parameters (except an optional name).
-The iterative solver in section ``--SOLVER 2`` has some parameters, namely an xml file, which contains more parameters.
+You'll find two solver sections in there. In the original header file, which are selected in the section ``STRUCTURAL DYNAMIC`` by the parameter ``LINEAR_SOLVER``.
+The value of this parameter refers to the section ``SOLVER x``, in which ``x`` is the number of the selected solver.
+In the section ``SOLVER 1``, the direct solver is defined, it does not have any parameters (except an optional name).
+The iterative solver in section ``SOLVER 2`` has some parameters, namely an xml file, which contains more parameters.
 The given xml file as well as some other examples for different multiphysics problems are given in the folder ``<source-root>/tests/input-files/xml/*/*.xml``.
 
 .. literalinclude::  tutorial_solid.head
@@ -159,7 +160,7 @@ Post processing
 
 The VTK results are collected in the directory ``tutorial_solid-vtk-files/``.
 If they shall be opened by Paraview, the data file ``tutorial_solid-structure.pvd`` contains the complete collection of files, so only this file is to be opened, all other files are then read automatically.
-Using the filter ``Warp by vector`` and setting the last time step, one may get a picture like this one:
+Using the filter ``Warp by vector`` with Coloring defined by the scalar ``accumulated_plastic_strain``, one may obtain a contour plot on the deformed geometry:
 
 
 .. figure:: figures/tut_solid-deformed.jpg

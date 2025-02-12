@@ -11,10 +11,10 @@ Tutorials
 
 Most of the tutorials use Cubit to generate the finite element geometry, so we will introduce one possible pre-processing method here for the general case.
 The output format used here is Exodus II, which is a binary format. This cannot be read by |FOURC| directly,
-but a converter within the |FOURC| framework, ``pre_exodus`` is used to generate a valid ASCII formatted input file.
+but a converter within the |FOURC| framework, ``pre_exodus`` is used to generate a valid input file.
 You'll find more information about this converter in the :ref:`Preprocessing section <preprocessing>`.
 
-At this time, six tutorials are available to show different features of |FOURC|.
+The following tutorials are available to show different features of |FOURC|.
 
 .. toctree::
    :maxdepth: 2

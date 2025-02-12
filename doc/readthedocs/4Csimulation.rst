@@ -47,7 +47,7 @@ Restarting an analysis
 -----------------------
 
 For restarting an analysis one has to provide restart information in the first simulation by including the parameter
-``RESTARTEVERY  <numsteps>`` in the ``--STRUCTURAL DYNAMICS`` section,
+``RESTARTEVERY  <numsteps>`` in the ``STRUCTURAL DYNAMICS`` section,
 so that the information is written every *numsteps* step.
 
 In the second simulation, no additional parameters have be included. The information that it is a restart, is
