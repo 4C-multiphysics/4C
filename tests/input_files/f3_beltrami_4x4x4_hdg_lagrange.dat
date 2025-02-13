@@ -53,7 +53,7 @@ TOL_PRES_INC	  1e-04
 SOLVER                          Belos
 AZSOLVE                         GMRES
 AZPREC                          ILU
-IFPACKOVERLAP                   0
+IFPACK_XML_FILE                 xml/ifpack.xml
 IFPACKGFILL                     0
 IFPACKCOMBINE                   Add
 AZSUB                           100

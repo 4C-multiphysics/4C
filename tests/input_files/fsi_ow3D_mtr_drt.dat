@@ -110,7 +110,7 @@ AZCONV                          AZ_r0
 IFPACKGFILL                     0
 AZITER                          1000
 AZOUTPUT                        0
-IFPACKOVERLAP                   0
+IFPACK_XML_FILE                 xml/ifpack.xml
 AZPREC                          ILU
 AZREUSE                         0
 AZSOLVE                         GMRES
@@ -123,7 +123,7 @@ AZCONV                          AZ_r0
 IFPACKGFILL                     0
 AZITER                          1000
 AZOUTPUT                        0
-IFPACKOVERLAP                   0
+IFPACK_XML_FILE                 xml/ifpack.xml
 AZPREC                          ILU
 AZREUSE                         0
 AZSOLVE                         GMRES
@@ -136,7 +136,7 @@ AZCONV                          AZ_r0
 IFPACKGFILL                     0
 AZITER                          1000
 AZOUTPUT                        0
-IFPACKOVERLAP                   0
+IFPACK_XML_FILE                 xml/ifpack.xml
 AZPREC                          ILU
 AZREUSE                         0
 AZSOLVE                         GMRES

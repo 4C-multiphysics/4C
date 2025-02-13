@@ -91,7 +91,7 @@ IFPACKGFILL                     0
 AZTOL                           1.0E-7
 AZITER                          1000
 AZSUB                           25
-IFPACKOVERLAP                   0
+IFPACK_XML_FILE                 xml/ifpack.xml
 AZCONV                          AZ_r0
 --------------------------------------------------------------------SOLVER 2
 NAME                            Fluid_Solver
@@ -105,7 +105,7 @@ AZTOL                           1.0E-7
 AZCONV                          AZ_r0
 AZITER                          1000
 AZSUB                           25
-IFPACKOVERLAP                   0
+IFPACK_XML_FILE                 xml/ifpack.xml
 -------------------------------------------------------------------MATERIALS
 MAT 1 MAT_fluid DYNVISCOSITY 0.001 DENSITY 1.0
 MAT 2 MAT_scatra DIFFUSIVITY 0.001
