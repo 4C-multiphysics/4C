@@ -63,10 +63,6 @@ PostProblem::PostProblem(Teuchos::CommandLineProcessor& CLP, int argc, char** ar
   CLP.setOption("strain", &straintype_,
       "strain output type [cxyz, ndxyz, cxyz_ndxyz, c123, nd123, c123_nd123]");
   CLP.setOption("mortar", &mortar_string, "Do post-processing of mortar interfaces [yes]");
-  CLP.setOption("optquantitytype", &optquantitytype_,
-      "optional quantity output type [cxyz, ndxyz, cxyz_ndxyz]");
-  CLP.setOption(
-      "optquantity", &optquantitytype_, "optional quantity output type [cxyz, ndxyz, cxyz_ndxyz]");
   CLP.setOption("heatfluxtype", &heatfluxtype_,
       "heatflux output type [cxyz, ndxyz, cxyz_ndxyz, c123, nd123, c123_nd123]");
   CLP.setOption("heatflux", &heatfluxtype_,
@@ -110,11 +106,6 @@ PostProblem::PostProblem(Teuchos::CommandLineProcessor& CLP, int argc, char** ar
   if (straintype_ == "")
   {
     straintype_ = "none";
-  }
-
-  if (optquantitytype_ == "")
-  {
-    optquantitytype_ = "none";
   }
 
   if (heatfluxtype_ == "")

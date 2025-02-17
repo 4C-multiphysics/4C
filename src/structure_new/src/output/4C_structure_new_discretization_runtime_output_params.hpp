@@ -85,6 +85,12 @@ namespace Discret
         return output_element_ghosting_;
       }
 
+      /// which optional solid output to write default: none
+      [[nodiscard]] Inpar::Solid::OptQuantityType output_optional_quantity() const
+      {
+        return output_optional_quantity_;
+      }
+
       /// whether to write the GIDs of the nodes
       [[nodiscard]] bool output_node_gid() const
       {
@@ -147,6 +153,9 @@ namespace Discret
 
       /// whether to write the element ghosting information
       bool output_element_ghosting_;
+
+      /// whether to write an optional quantity
+      Inpar::Solid::OptQuantityType output_optional_quantity_ = Inpar::Solid::optquantity_none;
 
       /// whether to write the node GIDs
       bool output_node_gid_;

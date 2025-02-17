@@ -25,11 +25,8 @@ class StructureFilter : public PostFilterBase
 {
  public:
   StructureFilter(PostField* field, std::string name, std::string stresstype = "none",
-      std::string straintype = "none", std::string optquantitytype = "none")
-      : PostFilterBase(field, name),
-        stresstype_(stresstype),
-        straintype_(straintype),
-        optquantitytype_(optquantitytype)
+      std::string straintype = "none")
+      : PostFilterBase(field, name), stresstype_(stresstype), straintype_(straintype)
   {
   }
 
@@ -49,7 +46,6 @@ class StructureFilter : public PostFilterBase
 
   std::string stresstype_;
   std::string straintype_;
-  std::string optquantitytype_;
 };
 
 /*!

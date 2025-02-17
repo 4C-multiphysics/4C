@@ -280,11 +280,13 @@ int Discret::Elements::Membrane<distype>::evaluate(Teuchos::ParameterList& param
 
         Core::LinAlg::Matrix<numgpt_post_, 1> thickness;
         for (int i = 0; i < numgpt_post_; ++i) thickness(i) = cur_thickness_[i];
+        Core::LinAlg::SerialDenseMatrix thickness_view(
+            Teuchos::View, thickness.values(), numgpt_post_, numgpt_post_, 1);
 
         // add data to pack
         {
           Core::Communication::PackBuffer data;
-          add_to_pack(data, thickness);
+          add_to_pack(data, thickness_view);
           std::copy(data().begin(), data().end(), std::back_inserter(*thickdata));
         }
       }

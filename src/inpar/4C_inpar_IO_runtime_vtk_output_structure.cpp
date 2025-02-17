@@ -86,6 +86,13 @@ namespace Inpar
                 Inpar::Solid::GaussPointDataOutputType::gauss_points),
             sublist_IO_VTK_structure);
 
+        Core::Utils::string_to_integral_parameter<Inpar::Solid::OptQuantityType>(
+            "OPTIONAL_QUANTITY", "No", "Output of an optional quantity",
+            tuple<std::string>("No", "membranethickness"),
+            tuple<Inpar::Solid::OptQuantityType>(
+                Inpar::Solid::optquantity_none, Inpar::Solid::optquantity_membranethickness),
+            sublist_IO_VTK_structure);
+
         sublist_IO_VTK_structure.move_into_collection(list);
       }
 

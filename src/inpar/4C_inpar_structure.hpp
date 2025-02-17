@@ -598,7 +598,7 @@ namespace Inpar
     };
 
     /// Type of structural optional quantity output
-    /// (this enum represents the input file parameter STRUCT_OPTIONAL_QUANTITY)
+    /// (this enum represents the input file parameter OPTIONAL_QUANTITY)
     enum OptQuantityType
     {
       optquantity_none,              ///< no optional output

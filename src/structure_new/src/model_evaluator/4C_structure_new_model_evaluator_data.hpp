@@ -615,10 +615,31 @@ namespace Solid
       }
 
       //! set optional quantity data vector
-      inline void set_opt_quantity_data(const std::shared_ptr<std::vector<char>>& optquantitydata)
+      inline void set_opt_quantity_data(std::shared_ptr<std::vector<char>> opt_quantity_data)
       {
-        optquantitydata_ptr_ = optquantitydata;
+        opt_quantity_data_ptr_ = opt_quantity_data;
       }
+
+      //! get stress data vector
+      inline const std::shared_ptr<std::vector<char>>& get_opt_quantity_data() const
+      {
+        return opt_quantity_data_ptr_;
+      }
+
+      //! get nodal post processed optional quantity data vector
+      inline const std::shared_ptr<Core::LinAlg::MultiVector<double>>&
+      get_opt_quantity_data_node_postprocessed() const
+      {
+        return opt_quantity_data_postprocessed_nodal_ptr_;
+      }
+
+      //! get nodal post processed optional quantity data vector
+      inline std::shared_ptr<Core::LinAlg::MultiVector<double>>&
+      get_opt_quantity_data_node_postprocessed()
+      {
+        return opt_quantity_data_postprocessed_nodal_ptr_;
+      }
+
 
       //! set model evaluator ptr
       inline void set_model_evaluator(Generic* model_ptr) { model_ptr_ = model_ptr; }
@@ -639,7 +660,7 @@ namespace Solid
       const std::vector<char>& coupling_stress_data() const;
 
       //! return the optional quantity data (read-only)
-      const std::vector<char>& opt_quantity_data() const;
+      [[nodiscard]] const std::vector<char>& opt_quantity_data() const;
 
       //!@}
 
@@ -901,7 +922,10 @@ namespace Solid
       std::shared_ptr<std::vector<char>> couplstressdata_ptr_;
 
       //! optional quantity data vector
-      std::shared_ptr<std::vector<char>> optquantitydata_ptr_;
+      std::shared_ptr<std::vector<char>> opt_quantity_data_ptr_;
+
+      //! post processed nodal optional quantity data vector
+      std::shared_ptr<Core::LinAlg::MultiVector<double>> opt_quantity_data_postprocessed_nodal_ptr_;
 
       //! system energy, stored separately by type
       std::map<enum Solid::EnergyType, double> energy_data_;

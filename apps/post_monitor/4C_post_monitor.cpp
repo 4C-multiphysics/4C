@@ -1611,15 +1611,6 @@ void PoroFluidMultiMonWriter::write_result(
     outfile << std::right << std::setw(20) << std::setprecision(10) << std::scientific
             << (*resvec_press)[lid];
   }
-  // do output for porosity
-  if (output_porosity_)
-  {
-    std::shared_ptr<Core::LinAlg::Vector<double>> resvec_poro = result.read_result("porosity");
-    const Epetra_BlockMap& poromap = resvec_poro->get_map();
-    const int lid = poromap.LID(poro_dof_);
-    outfile << std::right << std::setw(20) << std::setprecision(10) << std::scientific
-            << (*resvec_poro)[lid];
-  }
   outfile << "\n";
 }
 

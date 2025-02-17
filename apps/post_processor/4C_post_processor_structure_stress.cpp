@@ -213,53 +213,6 @@ struct WriteElementCenterRotation : public SpecialFieldInterface
   StructureFilter& filter_;
 };
 
-
-
-//--------------------------------------------------------------------
-// calculate nodal membrane thickness from gauss point membrane thickness
-//--------------------------------------------------------------------
-struct WriteNodalMembraneThicknessStep : public SpecialFieldInterface
-{
-  WriteNodalMembraneThicknessStep(StructureFilter& filter) : filter_(filter) {}
-
-  std::vector<int> num_df_map() override { return std::vector<int>(1, 1); }
-
-  void operator()(std::vector<std::shared_ptr<std::ofstream>>& files, PostResult& result,
-      std::map<std::string, std::vector<std::ofstream::pos_type>>& resultfilepos,
-      const std::string& groupname, const std::vector<std::string>& name) override
-  {
-    using namespace FourC;
-
-    FOUR_C_ASSERT(name.size() == 1, "Unexpected number of names");
-
-    const std::shared_ptr<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>> data =
-        result.read_result_serialdensematrix(groupname);
-
-    const std::shared_ptr<Core::FE::Discretization> dis = result.field()->discretization();
-    const Epetra_Map* noderowmap = dis->node_row_map();
-
-    Teuchos::ParameterList p;
-    p.set("action", "postprocess_thickness");
-    p.set("optquantitytype", "ndxyz");
-    p.set("gpthickmap", data);
-    std::shared_ptr<Core::LinAlg::MultiVector<double>> nodal_thickness =
-        std::make_shared<Core::LinAlg::MultiVector<double>>(*noderowmap, 1, true);
-    p.set("postthick", nodal_thickness);
-    dis->evaluate(p, nullptr, nullptr, nullptr, nullptr, nullptr);
-    if (nodal_thickness == nullptr)
-    {
-      FOUR_C_THROW("vector containing nodal thickness not available");
-    }
-
-    filter_.get_writer().write_nodal_result_step(
-        *files[0], nodal_thickness, resultfilepos, groupname, name[0], 1);
-  }
-
-  StructureFilter& filter_;
-};
-
-
-
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void StructureFilter::write_stress(
@@ -313,11 +266,6 @@ void StructureFilter::write_stress(
     name = "pl_EA_strains_xyz";
     out = "Plastic Euler-Almansi strains";
   }
-  else if (groupname == "gauss_membrane_thickness")
-  {
-    name = "membrane_thickness";
-    out = "membrane thickness";
-  }
   else if (groupname == "rotation")
   {
     name = "rotation";
@@ -326,7 +274,6 @@ void StructureFilter::write_stress(
   else
   {
     FOUR_C_THROW("trying to write something that is not a stress or a strain");
-    exit(1);
   }
 
   if (groupname == "rotation")
@@ -336,23 +283,7 @@ void StructureFilter::write_stress(
     writer_->write_special_field(
         stresses, result, elementbased, groupname, std::vector<std::string>(1, name), out);
   }
-  if (groupname == "gauss_membrane_thickness")
-  {
-    if (stresskind == nodebased)
-    {
-      name = "nodal_" + name;
-      WriteNodalMembraneThicknessStep thickness(*this);
-      writer_->write_special_field(
-          thickness, result, nodebased, groupname, std::vector<std::string>(1, name), out);
-    }
-    else if (stresskind == elementbased)
-    {
-      FOUR_C_THROW("element based membrane thickness postprocessed anyway!");
-    }
-    else
-      FOUR_C_THROW("Unknown stress type");
-  }
-  else
+
   {
     if (stresskind == nodebased)
     {
