@@ -69,7 +69,23 @@ The top surface is subject to a Dirichlet boundary condition with linearly incre
 
 To this end, we model 200 time steps spanning from :math:`t_0 = 0` s to :math:`t_1 = 1` s with a time step of :math:`\Delta t = 0.005` s.
 Assuming nonlinear kinematics (large strain theory) and plasticity with isotropic hardening following an exponential curve,
-we choose the model ``MAT_Struct_PlasticNlnLogNeoHooke`` to accomplish this task.
+namely :math:`\sigma_Y = \sigma_{Y,0} + (\sigma_{Y,\infty} - \sigma_{Y_0}) \left[ 1 - \exp \left( - k \, \varepsilon_p \right) \right]` with :math:`\sigma_{Y,0}=330, \sigma_{Y,\infty} = 1000, k=5` .
+
+We choose the model ``MAT_Struct_PlasticNlnLogNeoHooke`` to accomplish this task, which is a plasticity model that uses von Mises yield criterion
+
+.. math::
+
+    \Phi = \tilde{\mathbf{\tau}} - \sqrt{\frac{2}{3}} \sigma_Y
+
+with :math:`\tilde{\mathbf{\tau}}` being the deviatoric Kirchhoff stress.
+Additionally, a compressible Neo-Hooke elasticity model expressed by the free energy potential
+
+.. math::
+
+    \rho_0 \Psi(\mathbf{B}^e) =  \frac{K}{2} \left[ \frac{1}{2} (J^2 - 1) - \ln J \right] + \frac{1}{2} \mu \left[ \text{tr} \mathbf{\tilde{B}}^e - 3 \right]
+
+Here, :math:`J` is the determinant of the deformation gradient :math:`\mathbf{F}`,
+:math:`\mathbf{B}^e = \mathbf{F}^e {\mathbf{F}^e}^T` is the elastic part of the left Cauchy Green tensor, and :math:`K, \mu` are elastic constants.
 
 The geometry, finite element mesh and node sets for the boundary conditions are created using Coreform Cubit\ |reg|\ .
 The mesh is rather fine and 27-node brick elements have been used herein.
@@ -153,7 +169,7 @@ After the file ``tutorial_solid.dat`` has been created successfully using the ``
     <build-dir>/4C tutorial_solid.dat tutorial_solid
 
 Since the solver output is quite lengthy, one might want to redirect it into a file.
-For running the simulation on several processors, the ``mpirun -np <n_cpu>`` is used, on a cluster one probably has to use a batch script for running the simulation.
+For running the simulation with several processes, use ``mpirun -np <n_cpu> <build-dir>/4C [further parameters]``.
 
 Post processing
 ----------------
