@@ -111,3 +111,4 @@ $CMAKE_COMMAND \
 
 make -j${NPROCS} install
 cd ..
+rm -rf Trilinos trilinos_build
