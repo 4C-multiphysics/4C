@@ -44,12 +44,15 @@ namespace Core::IO
      * @param element_filter (in)  An optional function that returns true for all elements that
      *   should be included in the visualization. By default, all elements in the discretization are
      *   included.
+     * @param filename (in)  An optional filename. By default, the name of the discretization
+     *   is used.
      */
     DiscretizationVisualizationWriterMesh(
         const std::shared_ptr<const Core::FE::Discretization>& discretization,
         VisualizationParameters parameters,
         std::function<bool(const Core::Elements::Element* element)> element_filter =
-            [](const Core::Elements::Element*) { return true; });
+            [](const Core::Elements::Element*) { return true; },
+        const std::optional<std::string>& filename = std::nullopt);
 
     /**
      * @brief Reset state depending if the maps changed or not
@@ -80,6 +83,18 @@ namespace Core::IO
     void append_result_data_vector_with_context(
         const Core::LinAlg::MultiVector<double>& result_data, const OutputEntity output_entity,
         const std::vector<std::optional<std::string>>& context);
+
+    /*!
+     * @brief Appends a field data vector for output with the given name.
+     *
+     * The field data vector represents a single quantity in vector form, valid for the entire
+     * field, e.g., an averaged stress.
+     *
+     * @param result_data (in)  field data vector
+     * @param data_name (in)    name assigned to the output quantity
+     */
+    void append_field_data_vector(
+        const std::vector<double>& result_data, const std::string& data_name) const;
 
    private:
     /**

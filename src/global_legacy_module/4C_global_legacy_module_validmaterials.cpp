@@ -14,6 +14,7 @@
 #include "4C_io_input_spec_builders.hpp"
 #include "4C_mat_electrode.hpp"
 #include "4C_mat_materialdefinition.hpp"
+#include "4C_mat_micromaterial.hpp"
 
 #include <filesystem>
 #include <string>
@@ -1586,6 +1587,14 @@ std::shared_ptr<std::vector<std::shared_ptr<Mat::MaterialDefinition>>> Global::v
         entry<int>("MICRODIS_NUM", {.description = "Number of microscale discretization"}));
     m->add_component(
         entry<double>("INITVOL", {.description = "Initial volume of RVE", .default_value = 0.0}));
+
+    m->add_component(selection<int>("RUNTIMEOUTPUT_GP",
+        {{"none", Mat::PAR::MicroMaterial::RuntimeOutputOption::none},
+            {"gp1", Mat::PAR::MicroMaterial::RuntimeOutputOption::gp1},
+            {"all", Mat::PAR::MicroMaterial::RuntimeOutputOption::all}},
+        {.description = "implementation type",
+            .default_value = Mat::PAR::MicroMaterial::RuntimeOutputOption::all}));
+
 
     Mat::append_material_definition(matlist, m);
   }

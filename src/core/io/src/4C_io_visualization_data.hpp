@@ -409,7 +409,7 @@ namespace Core::IO
           FOUR_C_THROW(
               "The field array \"%s\" is registered with %d components, you are trying to set it "
               "to %d components, this is not supported.",
-              data_name, vector.size(), result.size());
+              data_name.c_str(), vector.size(), result.size());
         }
       }
 
