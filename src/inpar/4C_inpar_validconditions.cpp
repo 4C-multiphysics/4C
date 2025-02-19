@@ -33,7 +33,7 @@
 #include "4C_inpar_structure.hpp"
 #include "4C_inpar_xfem.hpp"
 #include "4C_io_input_spec_builders.hpp"
-#include "4C_thermo_inpar.hpp"
+#include "4C_thermo_input.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 

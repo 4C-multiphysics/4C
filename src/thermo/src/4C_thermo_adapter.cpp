@@ -9,7 +9,7 @@
 
 #include "4C_global_data.hpp"
 #include "4C_io_pstream.hpp"
-#include "4C_thermo_inpar.hpp"
+#include "4C_thermo_input.hpp"
 #include "4C_thermo_timint_genalpha.hpp"
 #include "4C_thermo_timint_ost.hpp"
 #include "4C_thermo_timint_statics.hpp"

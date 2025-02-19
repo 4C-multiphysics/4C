@@ -21,7 +21,7 @@
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_mortar_utils.hpp"
-#include "4C_thermo_inpar.hpp"
+#include "4C_thermo_input.hpp"
 
 
 FOUR_C_NAMESPACE_OPEN

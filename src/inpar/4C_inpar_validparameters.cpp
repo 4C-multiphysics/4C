@@ -64,7 +64,7 @@
 #include "4C_io_input_file_utils.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_lubrication_input.hpp"
-#include "4C_thermo_inpar.hpp"
+#include "4C_thermo_input.hpp"
 #include "4C_utils_parameter_list.hpp"
 
 #include <Teuchos_any.hpp>

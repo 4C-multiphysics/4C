@@ -5,8 +5,8 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#ifndef FOUR_C_THERMO_INPAR_HPP
-#define FOUR_C_THERMO_INPAR_HPP
+#ifndef FOUR_C_THERMO_INPUT_HPP
+#define FOUR_C_THERMO_INPUT_HPP
 
 #include "4C_config.hpp"
 

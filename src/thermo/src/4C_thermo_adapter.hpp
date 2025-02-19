@@ -11,7 +11,7 @@
 #include "4C_config.hpp"
 
 #include "4C_linalg_vector.hpp"
-#include "4C_thermo_inpar.hpp"
+#include "4C_thermo_input.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 #include "4C_utils_result_test.hpp"
 

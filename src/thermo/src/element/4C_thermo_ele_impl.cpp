@@ -24,7 +24,7 @@
 #include "4C_mat_trait_thermo_solid.hpp"
 #include "4C_thermo_ele_action.hpp"
 #include "4C_thermo_element.hpp"  // only for visualization of element data
-#include "4C_thermo_inpar.hpp"
+#include "4C_thermo_input.hpp"
 #include "4C_utils_function.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>

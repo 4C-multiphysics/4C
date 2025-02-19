@@ -16,7 +16,7 @@
 
 #include "4C_inpar_structure.hpp"
 #include "4C_inpar_tsi.hpp"
-#include "4C_thermo_inpar.hpp"
+#include "4C_thermo_input.hpp"
 #include "4C_tsi_algorithm.hpp"
 
 #include <Teuchos_Time.hpp>
