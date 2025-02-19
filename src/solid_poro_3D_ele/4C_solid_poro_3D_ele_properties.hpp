@@ -13,6 +13,8 @@
 #include "4C_inpar_poro.hpp"
 #include "4C_inpar_scatra.hpp"
 
+#include <optional>
+
 FOUR_C_NAMESPACE_OPEN
 
 
@@ -24,7 +26,7 @@ namespace Discret::Elements
   struct SolidPoroElementProperties
   {
     //! scalar transport implementation type (physics)
-    Inpar::ScaTra::ImplType impltype{Inpar::ScaTra::ImplType ::impltype_undefined};
+    Inpar::ScaTra::ImplType impltype = Inpar::ScaTra::ImplType::impltype_undefined;
   };
 
 

@@ -11,8 +11,10 @@
 #include "4C_config.hpp"
 
 #include "4C_io_input_spec.hpp"
+#include "4C_io_input_spec_builders.hpp"
 
 #include <map>
+#include <utility>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
@@ -202,7 +204,6 @@ namespace Inpar
       impltype_pororeac,
       impltype_pororeacECM,
       impltype_aniso,
-      impltype_std_meshfree,
       impltype_cardiac_monodomain,
       impltype_chemo,
       impltype_chemoreac,
@@ -259,6 +260,7 @@ namespace Inpar
     /// set additional scatra conditions
     void set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition>& condlist);
 
+    std::string impltype_to_string(ImplType impltype);
   }  // namespace ScaTra
 }  // namespace Inpar
 

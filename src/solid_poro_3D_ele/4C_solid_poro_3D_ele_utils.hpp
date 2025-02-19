@@ -10,51 +10,39 @@
 
 #include "4C_config.hpp"
 
-#include "4C_inpar_poro.hpp"
 #include "4C_inpar_scatra.hpp"
-#include "4C_io_input_parameter_container.hpp"
-#include "4C_utils_exceptions.hpp"
+
+#include <algorithm>
 
 FOUR_C_NAMESPACE_OPEN
 
-namespace Solid::Utils::ReadElement
+namespace Discret::Elements
 {
-  inline Inpar::ScaTra::ImplType read_type(const Core::IO::InputParameterContainer& container)
+  constexpr auto get_supported_impl_types()
   {
-    auto impltype = container.get_or<std::string>("TYPE", "Undefined");
-
-    if (impltype == "Undefined")
-      return Inpar::ScaTra::impltype_undefined;
-    else if (impltype == "AdvReac")
-      return Inpar::ScaTra::impltype_advreac;
-    else if (impltype == "CardMono")
-      return Inpar::ScaTra::impltype_cardiac_monodomain;
-    else if (impltype == "Chemo")
-      return Inpar::ScaTra::impltype_chemo;
-    else if (impltype == "ChemoReac")
-      return Inpar::ScaTra::impltype_chemoreac;
-    else if (impltype == "Loma")
-      return Inpar::ScaTra::impltype_loma;
-    else if (impltype == "Poro")
-      return Inpar::ScaTra::impltype_poro;
-    else if (impltype == "PoroReac")
-      return Inpar::ScaTra::impltype_pororeac;
-    else if (impltype == "PoroReacECM")
-      return Inpar::ScaTra::impltype_pororeacECM;
-    else if (impltype == "PoroMultiReac")
-      return Inpar::ScaTra::impltype_multipororeac;
-    else if (impltype == "RefConcReac")
-      return Inpar::ScaTra::impltype_refconcreac;
-    else if (impltype == "Std")
-      return Inpar::ScaTra::impltype_std;
-    else
-    {
-      FOUR_C_THROW("Invalid TYPE for SOLIDPORO_PRESSURE_BASED elements!");
-      return Inpar::ScaTra::impltype_undefined;
-    }
+    return std::array{Inpar::ScaTra::ImplType::impltype_advreac,
+        Inpar::ScaTra::ImplType::impltype_cardiac_monodomain,
+        Inpar::ScaTra::ImplType::impltype_chemo, Inpar::ScaTra::ImplType::impltype_chemoreac,
+        Inpar::ScaTra::ImplType::impltype_loma, Inpar::ScaTra::ImplType::impltype_poro,
+        Inpar::ScaTra::ImplType::impltype_pororeac, Inpar::ScaTra::ImplType::impltype_pororeacECM,
+        Inpar::ScaTra::ImplType::impltype_multipororeac,
+        Inpar::ScaTra::ImplType::impltype_refconcreac, Inpar::ScaTra::ImplType::impltype_std,
+        Inpar::ScaTra::ImplType::impltype_undefined};
   }
 
-}  // namespace Solid::Utils::ReadElement
+  inline std::vector<std::pair<std::string, Inpar::ScaTra::ImplType>> get_impltype_inpar_pairs()
+  {
+    constexpr auto supported_impl_types = get_supported_impl_types();
+    std::vector<std::pair<std::string, Inpar::ScaTra::ImplType>> impltype_map(
+        supported_impl_types.size());
+
+    std::ranges::transform(supported_impl_types, impltype_map.begin(),
+        [](auto type) { return std::make_pair(Inpar::ScaTra::impltype_to_string(type), type); });
+
+    return impltype_map;
+  }
+
+}  // namespace Discret::Elements
 
 FOUR_C_NAMESPACE_CLOSE
 

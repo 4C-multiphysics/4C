@@ -223,6 +223,8 @@ namespace Discret::Elements
 
     bool vis_data(const std::string& name, std::vector<double>& data) override;
 
+    Inpar::ScaTra::ImplType get_impl_type() { return poro_ele_property_.impltype; }
+
    private:
     //! cell type
     Core::FE::CellType celltype_{Core::FE::CellType::dis_none};
@@ -243,7 +245,7 @@ namespace Discret::Elements
     std::shared_ptr<FourC::Solid::Elements::ParamsInterface> solid_interface_ptr_;
 
     //! element calculation holding one of the implemented variants
-    SolidCalcVariant solid_calc_variant_;
+    SolidAndSolidScatraCalcVariant solid_calc_variant_;
 
     //! poro element calculation holding one of the implemented variants
     SolidPoroPressureVelocityBasedCalcVariant solidporo_press_vel_based_calc_variant_;

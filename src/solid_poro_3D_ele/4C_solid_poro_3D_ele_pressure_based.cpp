@@ -9,6 +9,7 @@
 
 #include "4C_comm_utils_factory.hpp"
 #include "4C_fem_general_utils_local_connectivity_matrices.hpp"
+#include "4C_inpar_scatra.hpp"
 #include "4C_io_input_spec_builders.hpp"
 #include "4C_mat_fluidporo.hpp"
 #include "4C_mat_fluidporo_multiphase.hpp"
@@ -40,7 +41,9 @@ namespace Discret::Elements::SolidPoroPressureBasedInternal
               Core::FE::cell_type_to_string(celltype), {.size = Core::FE::num_nodes<celltype>}),
           entry<int>("MAT"),
           entry<std::string>("KINEM"),
-          entry<std::string>("TYPE", {.required = false}),
+          selection<Inpar::ScaTra::ImplType>("TYPE", Discret::Elements::get_impltype_inpar_pairs(),
+              {.description = "Scalar transport implementation type",
+                  .default_value = Inpar::ScaTra::ImplType::impltype_undefined}),
       });
     }
   }  // namespace
@@ -187,7 +190,8 @@ bool Discret::Elements::SolidPoroPressureBased::read_element(const std::string& 
     FOUR_C_THROW("SOLIDPORO elements do not support any element technology!");
 
   // read scalar transport implementation type
-  poro_ele_property_.impltype = FourC::Solid::Utils::ReadElement::read_type(container);
+  poro_ele_property_.impltype = container.get<Inpar::ScaTra::ImplType>("TYPE");
+
 
   solid_calc_variant_ = create_solid_calculation_interface(celltype_, solid_ele_property_);
   solidporo_press_based_calc_variant_ =

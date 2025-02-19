@@ -10,10 +10,15 @@
 #include "4C_fem_condition_definition.hpp"
 #include "4C_inpar_bio.hpp"
 #include "4C_inpar_fluid.hpp"
+#include "4C_io_input_spec.hpp"
 #include "4C_io_input_spec_builders.hpp"
 #include "4C_linalg_equilibrate.hpp"
 #include "4C_linalg_sparseoperator.hpp"
+#include "4C_utils_exceptions.hpp"
 #include "4C_utils_parameter_list.hpp"
+
+#include <utility>
+#include <vector>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -689,6 +694,73 @@ void Inpar::ScaTra::set_valid_conditions(
     condlist.emplace_back(scatrasurfpartitioning);
     condlist.emplace_back(scatravolpartitioning);
   }
+}
+
+std::string Inpar::ScaTra::impltype_to_string(ImplType impltype)
+{
+  switch (impltype)
+  {
+    case Inpar::ScaTra::impltype_undefined:
+      return "Undefined";
+    case Inpar::ScaTra::impltype_std:
+      return "Std";
+    case Inpar::ScaTra::impltype_loma:
+      return "Loma";
+    case Inpar::ScaTra::impltype_elch_NP:
+      return "ElchNP";
+    case Inpar::ScaTra::impltype_elch_electrode:
+      return "ElchElectrode";
+    case Inpar::ScaTra::impltype_elch_electrode_growth:
+      return "ElchElectrodeGrowth";
+    case Inpar::ScaTra::impltype_elch_electrode_thermo:
+      return "ElchElectrodeThermo";
+    case Inpar::ScaTra::impltype_elch_diffcond:
+      return "ElchDiffCond";
+    case Inpar::ScaTra::impltype_elch_diffcond_multiscale:
+      return "ElchDiffCondMultiScale";
+    case Inpar::ScaTra::impltype_elch_diffcond_thermo:
+      return "ElchDiffCondThermo";
+    case Inpar::ScaTra::impltype_elch_scl:
+      return "ElchScl";
+    case Inpar::ScaTra::impltype_thermo_elch_electrode:
+      return "ThermoElchElectrode";
+    case Inpar::ScaTra::impltype_thermo_elch_diffcond:
+      return "ThermoElchDiffCond";
+    case Inpar::ScaTra::impltype_lsreinit:
+      return "LsReinit";
+    case Inpar::ScaTra::impltype_levelset:
+      return "Ls";
+    case Inpar::ScaTra::impltype_poro:
+      return "Poro";
+    case Inpar::ScaTra::impltype_advreac:
+      return "Advanced_Reaction";
+    case Inpar::ScaTra::impltype_refconcreac:
+      return "RefConcReac";
+    case Inpar::ScaTra::impltype_multipororeac:
+      return "PoroMultiReac";
+    case Inpar::ScaTra::impltype_pororeac:
+      return "PoroReac";
+    case Inpar::ScaTra::impltype_pororeacECM:
+      return "PoroReacECM";
+    case Inpar::ScaTra::impltype_aniso:
+      return "Aniso";
+    case Inpar::ScaTra::impltype_cardiac_monodomain:
+      return "CardMono";
+    case Inpar::ScaTra::impltype_chemo:
+      return "Chemotaxis";
+    case Inpar::ScaTra::impltype_chemoreac:
+      return "Chemo_Reac";
+    case Inpar::ScaTra::impltype_std_hdg:
+      return "Hdg";
+    case Inpar::ScaTra::impltype_cardiac_monodomain_hdg:
+      return "HdgCardMono";
+    case Inpar::ScaTra::impltype_one_d_artery:
+      return "OneDArtery";
+    case Inpar::ScaTra::impltype_no_physics:
+      return "NoPhysics";
+  }
+
+  FOUR_C_THROW("Unknown implementation type given: %d", impltype);
 }
 
 FOUR_C_NAMESPACE_CLOSE

@@ -9,6 +9,8 @@
 
 #include "4C_comm_utils_factory.hpp"
 #include "4C_fem_general_utils_local_connectivity_matrices.hpp"
+#include "4C_inpar_scatra.hpp"
+#include "4C_io_input_parameter_container.hpp"
 #include "4C_io_input_spec_builders.hpp"
 #include "4C_mat_fluidporo.hpp"
 #include "4C_mat_structporo.hpp"
@@ -22,6 +24,7 @@
 #include "4C_solid_poro_3D_ele_utils.hpp"
 
 #include <memory>
+#include <optional>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -42,6 +45,9 @@ namespace Discret::Elements::SolidPoroPressureVelocityBasedInternal
           entry<std::vector<double>>("POROANISODIR1", {.required = false, .size = 3}),
           entry<std::vector<double>>("POROANISODIR2", {.required = false, .size = 3}),
           entry<std::vector<double>>("POROANISODIR3", {.required = false, .size = 3}),
+          selection<Inpar::ScaTra::ImplType>("TYPE", Discret::Elements::get_impltype_inpar_pairs(),
+              {.description = "Scalar transport implementation type",
+                  .default_value = Inpar::ScaTra::ImplType::impltype_undefined}),
       });
     }
   }  // namespace
@@ -204,12 +210,16 @@ bool Discret::Elements::SolidPoroPressureVelocityBased::read_element(const std::
     FOUR_C_THROW("SOLIDPORO elements do not support any element technology!");
 
   // read scalar transport implementation type
-  poro_ele_property_.impltype = FourC::Solid::Utils::ReadElement::read_type(container);
+  poro_ele_property_.impltype = container.get<Inpar::ScaTra::ImplType>("TYPE");
+
 
   read_anisotropic_permeability_directions_from_element_line_definition(container);
   read_anisotropic_permeability_nodal_coeffs_from_element_line_definition(container);
 
-  solid_calc_variant_ = create_solid_calculation_interface(celltype_, solid_ele_property_);
+  const bool with_scatra =
+      poro_ele_property_.impltype != Inpar::ScaTra::ImplType::impltype_undefined;
+  solid_calc_variant_ = create_solid_or_solid_scatra_calculation_interface(
+      celltype_, solid_ele_property_, with_scatra);
   solidporo_press_vel_based_calc_variant_ =
       create_solid_poro_pressure_velocity_based_calculation_interface(celltype_);
 
@@ -267,6 +277,7 @@ void Discret::Elements::SolidPoroPressureVelocityBased::pack(
   add_to_pack(data, celltype_);
 
   Discret::Elements::add_to_pack(data, solid_ele_property_);
+  Core::Communication::add_to_pack(data, poro_ele_property_.impltype);
 
   data.add_to_pack(material_post_setup_);
 
@@ -298,6 +309,7 @@ void Discret::Elements::SolidPoroPressureVelocityBased::unpack(
   extract_from_pack(buffer, celltype_);
 
   Discret::Elements::extract_from_pack(buffer, solid_ele_property_);
+  Core::Communication::extract_from_pack(buffer, poro_ele_property_.impltype);
 
   extract_from_pack(buffer, material_post_setup_);
 
@@ -316,10 +328,11 @@ void Discret::Elements::SolidPoroPressureVelocityBased::unpack(
   for (int i = 0; i < size; ++i)
     extract_from_pack(buffer, anisotropic_permeability_property_.nodal_coeffs_[i]);
 
-
-
   // reset solid and poro interfaces
-  solid_calc_variant_ = create_solid_calculation_interface(celltype_, solid_ele_property_);
+  const bool with_scatra =
+      poro_ele_property_.impltype != Inpar::ScaTra::ImplType::impltype_undefined;
+  solid_calc_variant_ = create_solid_or_solid_scatra_calculation_interface(
+      celltype_, solid_ele_property_, with_scatra);
   solidporo_press_vel_based_calc_variant_ =
       create_solid_poro_pressure_velocity_based_calculation_interface(celltype_);
 

@@ -7,13 +7,53 @@
 
 #include "4C_fem_general_cell_type.hpp"
 #include "4C_fem_general_cell_type_traits.hpp"
+#include "4C_fem_general_element.hpp"
 #include "4C_fem_general_utils_interpolation.hpp"
 #include "4C_mat_structporo.hpp"
 #include "4C_solid_3D_ele_calc_lib.hpp"
+#include "4C_solid_3D_ele_factory.hpp"
 #include "4C_solid_poro_3D_ele_pressure_velocity_based.hpp"
+#include "4C_solid_scatra_3D_ele_factory.hpp"
+#include "4C_utils_exceptions.hpp"
+
+#include <type_traits>
+#include <variant>
 
 FOUR_C_NAMESPACE_OPEN
 
+namespace
+{
+  template <typename T, typename Variant>
+  struct IsMemberOfVariant;
+
+  template <typename T, typename... Types>
+  struct IsMemberOfVariant<T, std::variant<Types...>>
+      : public std::disjunction<std::is_same<T, Types>...>
+  {
+  };
+
+  template <typename T>
+  concept IsSolidInterface =
+      IsMemberOfVariant<std::remove_cvref_t<T>, Discret::Elements::SolidCalcVariant>::value;
+
+  template <typename T>
+  concept IsSolidScatraInterface =
+      IsMemberOfVariant<std::remove_cvref_t<T>, Discret::Elements::SolidScatraCalcVariant>::value;
+
+  template <IsSolidScatraInterface SolidInterface>
+  const auto& get_location_array(const Core::Elements::LocationArray& la)
+  {
+    // The solid-scatra interface expects all location arrays!
+    return la;
+  }
+
+  template <IsSolidInterface SolidInterface>
+  const auto& get_location_array(const Core::Elements::LocationArray& la)
+  {
+    // The solid interface only expects the first location array!
+    return la[0].lm_;
+  }
+}  // namespace
 
 int Discret::Elements::SolidPoroPressureVelocityBased::evaluate(Teuchos::ParameterList& params,
     Core::FE::Discretization& discretization, Core::Elements::LocationArray& la,
@@ -48,7 +88,8 @@ int Discret::Elements::SolidPoroPressureVelocityBased::evaluate(Teuchos::Paramet
           [&](auto& interface)
           {
             interface->evaluate_nonlinear_force_stiffness_mass(*this, this->struct_poro_material(),
-                discretization, la[0].lm_, params, &elevec1, &elemat1, nullptr);
+                discretization, get_location_array<decltype(interface)>(la), params, &elevec1,
+                &elemat1, nullptr);
           },
           solid_calc_variant_);
 
@@ -75,7 +116,8 @@ int Discret::Elements::SolidPoroPressureVelocityBased::evaluate(Teuchos::Paramet
           [&](auto& interface)
           {
             interface->evaluate_nonlinear_force_stiffness_mass(*this, this->struct_poro_material(),
-                discretization, la[0].lm_, params, &elevec1, nullptr, nullptr);
+                discretization, get_location_array<decltype(interface)>(la), params, &elevec1,
+                nullptr, nullptr);
           },
           solid_calc_variant_);
 
@@ -101,7 +143,8 @@ int Discret::Elements::SolidPoroPressureVelocityBased::evaluate(Teuchos::Paramet
           [&](auto& interface)
           {
             interface->evaluate_nonlinear_force_stiffness_mass(*this, this->struct_poro_material(),
-                discretization, la[0].lm_, params, &elevec1, &elemat1, &elemat2);
+                discretization, get_location_array<decltype(interface)>(la), params, &elevec1,
+                &elemat1, &elemat2);
           },
           solid_calc_variant_);
 
@@ -128,7 +171,8 @@ int Discret::Elements::SolidPoroPressureVelocityBased::evaluate(Teuchos::Paramet
           [&](auto& interface)
           {
             interface->evaluate_nonlinear_force_stiffness_mass(*this, this->struct_poro_material(),
-                discretization, la[0].lm_, params, &elevec1, &elemat1, &elemat2);
+                discretization, get_location_array<decltype(interface)>(la), params, &elevec1,
+                &elemat1, &elemat2);
           },
           solid_calc_variant_);
       Discret::Elements::lump_matrix(elemat2);
@@ -156,15 +200,24 @@ int Discret::Elements::SolidPoroPressureVelocityBased::evaluate(Teuchos::Paramet
     }
     case Core::Elements::struct_calc_update_istep:
     {
-      std::visit([&](auto& interface)
-          { interface->update(*this, solid_poro_material(), discretization, la[0].lm_, params); },
+      std::visit(
+          [&](auto& interface)
+          {
+            interface->update(*this, solid_poro_material(), discretization,
+                get_location_array<decltype(interface)>(la), params);
+          },
           solid_calc_variant_);
       return 0;
     }
     case Core::Elements::struct_calc_recover:
     {
-      std::visit([&](auto& interface)
-          { interface->recover(*this, discretization, la[0].lm_, params); }, solid_calc_variant_);
+      std::visit(
+          [&](auto& interface)
+          {
+            interface->recover(
+                *this, discretization, get_location_array<decltype(interface)>(la), params);
+          },
+          solid_calc_variant_);
       return 0;
     }
     case Core::Elements::struct_calc_stress:
@@ -173,9 +226,11 @@ int Discret::Elements::SolidPoroPressureVelocityBased::evaluate(Teuchos::Paramet
           [&](auto& interface)
           {
             interface->calculate_stress(*this, this->struct_poro_material(),
-                StressIO{get_io_stress_type(*this, params), get_stress_data(*this, params)},
-                StrainIO{get_io_strain_type(*this, params), get_strain_data(*this, params)},
-                discretization, la[0].lm_, params);
+                StressIO{.type = get_io_stress_type(*this, params),
+                    .mutable_data = get_stress_data(*this, params)},
+                StrainIO{.type = get_io_strain_type(*this, params),
+                    .mutable_data = get_strain_data(*this, params)},
+                discretization, get_location_array<decltype(interface)>(la), params);
           },
           solid_calc_variant_);
 
@@ -242,10 +297,14 @@ double Discret::Elements::SolidPoroPressureVelocityBased::get_normal_cauchy_stre
     const Core::LinAlg::Matrix<3, 1>& dir, SolidPoroCauchyNDirLinearizations<3>& linearizations)
 {
   double cauchy_stress_n_dir = std::visit(
-      [&](auto& solid)
+      [&]<typename Interface>(Interface& solid) -> double
       {
-        return solid->get_normal_cauchy_stress_at_xi(
-            *this, this->struct_poro_material(), disp, xi, n, dir, linearizations.solid);
+        if constexpr (IsSolidInterface<Interface>)
+        {
+          return solid->get_normal_cauchy_stress_at_xi(
+              *this, this->struct_poro_material(), disp, xi, n, dir, linearizations.solid);
+        }
+        FOUR_C_THROW("Not yet implemented");
       },
       solid_calc_variant_);
 
