@@ -71,10 +71,7 @@ namespace Thermo
     //@{
 
     //! Return name
-    enum Inpar::Thermo::DynamicType method_name() const override
-    {
-      return Inpar::Thermo::dyna_genalpha;
-    }
+    enum Thermo::DynamicType method_name() const override { return Thermo::dyna_genalpha; }
 
     //! Consistent predictor with constant temperatures
     //! and consistent temperature rates and temperatures
@@ -177,7 +174,7 @@ namespace Thermo
     //! @name set-up
     //@{
     //! mid-average type more at #MidAverageEnum
-    enum Inpar::Thermo::MidAverageEnum midavg_;
+    enum Thermo::MidAverageEnum midavg_;
     //@}
 
     //! @name Key coefficients

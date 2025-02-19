@@ -137,20 +137,20 @@ namespace Thermo
     //! Solve dynamic equilibrium
     //!
     //! This is a general wrapper around the specific techniques.
-    Inpar::Thermo::ConvergenceStatus solve() override;
+    Thermo::ConvergenceStatus solve() override;
 
     //! Do full Newton-Raphson iteration
     //!
     //! This routines expects a prepared negative reisdual force #fres_
     //! and associated effective tangent matrix #tang_
-    virtual Inpar::Thermo::ConvergenceStatus newton_full();
+    virtual Thermo::ConvergenceStatus newton_full();
 
     //! Blank Dirichlet dofs form residual and reactions
     //! calculate norms for convergence checks
     void blank_dirichlet_and_calc_norms();
 
     // check for success of nonlinear solve
-    Inpar::Thermo::ConvergenceStatus newton_full_error_check();
+    Thermo::ConvergenceStatus newton_full_error_check();
 
     //! Do (so-called) modified Newton-Raphson iteration in which
     //! the initial tangent is kept and not adapted to the current
@@ -252,7 +252,7 @@ namespace Thermo
     //@{
 
     //! Return time integrator name
-    enum Inpar::Thermo::DynamicType method_name() const override = 0;
+    enum Thermo::DynamicType method_name() const override = 0;
 
     //@}
 
@@ -315,24 +315,23 @@ namespace Thermo
 
     //! @name General purpose algorithm parameters
     //@{
-    enum Inpar::Thermo::PredEnum pred_;  //!< predictor
+    enum Thermo::PredEnum pred_;  //!< predictor
     //@}
 
     //! @name Iterative solution technique
     //@{
-    enum Inpar::Thermo::NonlinSolTech itertype_;  //!< kind of iteration technique
-                                                  //!< or non-linear solution technique
-    enum Inpar::Thermo::ConvNorm normtypetempi_;  //!< convergence check for residual temperatures
-    enum Inpar::Thermo::ConvNorm normtypefres_;   //!< convergence check for residual forces
+    enum Thermo::NonlinSolTech itertype_;  //!< kind of iteration technique
+                                           //!< or non-linear solution technique
+    enum Thermo::ConvNorm normtypetempi_;  //!< convergence check for residual temperatures
+    enum Thermo::ConvNorm normtypefres_;   //!< convergence check for residual forces
 
-    enum Inpar::Thermo::BinaryOp
-        combtempifres_;  //!< binary operator to combine temperatures and forces
+    enum Thermo::BinaryOp combtempifres_;  //!< binary operator to combine temperatures and forces
 
-    enum Inpar::Thermo::VectorNorm iternorm_;    //!< vector norm to check with
-    int itermax_;                                //!< maximally permitted iterations
-    int itermin_;                                //!< minimally requested iterations
-    enum Inpar::Thermo::DivContAct divcontype_;  // what to do when nonlinear solution fails
-    int divcontrefinelevel_;                     //!< refinement level of adaptive time stepping
+    enum Thermo::VectorNorm iternorm_;    //!< vector norm to check with
+    int itermax_;                         //!< maximally permitted iterations
+    int itermin_;                         //!< minimally requested iterations
+    enum Thermo::DivContAct divcontype_;  // what to do when nonlinear solution fails
+    int divcontrefinelevel_;              //!< refinement level of adaptive time stepping
     int divcontfinesteps_;  //!< number of time steps already performed at current refinement level
     double toltempi_;       //!< tolerance residual temperatures
     double tolfres_;        //!< tolerance force residual

@@ -31,9 +31,9 @@
 #include "4C_inpar_ssti.hpp"
 #include "4C_inpar_sti.hpp"
 #include "4C_inpar_structure.hpp"
-#include "4C_inpar_thermo.hpp"
 #include "4C_inpar_xfem.hpp"
 #include "4C_io_input_spec_builders.hpp"
+#include "4C_thermo_input.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -843,7 +843,7 @@ std::vector<Core::Conditions::ConditionDefinition> Input::valid_conditions()
   Inpar::ReducedLung::set_valid_conditions(condlist);
   Inpar::Cardiovascular0D::set_valid_conditions(condlist);
   Inpar::Solid::set_valid_conditions(condlist);
-  Inpar::Thermo::set_valid_conditions(condlist);
+  Thermo::set_valid_conditions(condlist);
   Inpar::SSI::set_valid_conditions(condlist);
   Inpar::SSTI::set_valid_conditions(condlist);
   Inpar::PARTICLE::set_valid_conditions(condlist);

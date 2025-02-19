@@ -59,10 +59,7 @@ namespace Thermo
     //@{
 
     //! Return name
-    enum Inpar::Thermo::DynamicType method_name() const override
-    {
-      return Inpar::Thermo::dyna_statics;
-    }
+    enum Thermo::DynamicType method_name() const override { return Thermo::dyna_statics; }
 
     //! Consistent predictor with constant temperatures
     //! and consistent temperature rates and temperatures

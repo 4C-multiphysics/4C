@@ -14,8 +14,8 @@
  *----------------------------------------------------------------------*/
 #include "4C_config.hpp"
 
-#include "4C_inpar_thermo.hpp"
 #include "4C_linalg_vector.hpp"
+#include "4C_thermo_input.hpp"
 
 #include <memory>
 
@@ -31,8 +31,8 @@ namespace Thermo
   namespace Aux
   {
     //! Determine norm of force residual
-    double calculate_vector_norm(const enum Inpar::Thermo::VectorNorm norm,  //!< norm to use
-        Core::LinAlg::Vector<double>& vect  //!< the vector of interest
+    double calculate_vector_norm(const enum Thermo::VectorNorm norm,  //!< norm to use
+        Core::LinAlg::Vector<double>& vect                            //!< the vector of interest
     );
 
   }  // namespace Aux

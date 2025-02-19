@@ -8,8 +8,8 @@
 #include "4C_thermo_adapter.hpp"
 
 #include "4C_global_data.hpp"
-#include "4C_inpar_thermo.hpp"
 #include "4C_io_pstream.hpp"
+#include "4C_thermo_input.hpp"
 #include "4C_thermo_timint_genalpha.hpp"
 #include "4C_thermo_timint_ost.hpp"
 #include "4C_thermo_timint_statics.hpp"
@@ -59,24 +59,23 @@ Thermo::BaseAlgorithm::BaseAlgorithm(
   actdis->compute_null_space_if_necessary(solver->params());
 
   // create marching time integrator
-  auto timinttype =
-      Teuchos::getIntegralValue<Inpar::Thermo::DynamicType>(parameters, "DYNAMICTYPE");
+  auto timinttype = Teuchos::getIntegralValue<Thermo::DynamicType>(parameters, "DYNAMICTYPE");
 
   switch (timinttype)
   {
-    case Inpar::Thermo::dyna_statics:
+    case Thermo::dyna_statics:
     {
       thermo_ = std::make_shared<Thermo::TimIntStatics>(
           ioflags, parameters, xparams, actdis, solver, output);
       break;
     }
-    case Inpar::Thermo::dyna_onesteptheta:
+    case Thermo::dyna_onesteptheta:
     {
       thermo_ = std::make_shared<Thermo::TimIntOneStepTheta>(
           ioflags, parameters, xparams, actdis, solver, output);
       break;
     }
-    case Inpar::Thermo::dyna_genalpha:
+    case Thermo::dyna_genalpha:
     {
       thermo_ = std::make_shared<Thermo::TimIntGenAlpha>(
           ioflags, parameters, xparams, actdis, solver, output);
@@ -96,16 +95,16 @@ void Thermo::Adapter::integrate()
   {
     prepare_time_step();
 
-    Inpar::Thermo::ConvergenceStatus convStatus = solve();
+    Thermo::ConvergenceStatus convStatus = solve();
 
     switch (convStatus)
     {
-      case Inpar::Thermo::conv_success:
+      case Thermo::conv_success:
         update();
         print_step();
         output();
         break;
-      case Inpar::Thermo::conv_fail_repeat:
+      case Thermo::conv_fail_repeat:
         continue;
       default:
         FOUR_C_THROW("Solver failed.");

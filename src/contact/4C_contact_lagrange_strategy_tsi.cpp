@@ -15,13 +15,13 @@
 #include "4C_coupling_adapter_converter.hpp"
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_inpar_contact.hpp"
-#include "4C_inpar_thermo.hpp"
 #include "4C_io.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_mortar_utils.hpp"
+#include "4C_thermo_input.hpp"
 
 
 FOUR_C_NAMESPACE_OPEN
@@ -1003,16 +1003,16 @@ void CONTACT::LagrangeStrategyTsi::update(std::shared_ptr<const Core::LinAlg::Ve
 
 void CONTACT::LagrangeStrategyTsi::set_alphaf_thermo(const Teuchos::ParameterList& tdyn)
 {
-  auto dyn_type = Teuchos::getIntegralValue<Inpar::Thermo::DynamicType>(tdyn, "DYNAMICTYPE");
+  auto dyn_type = Teuchos::getIntegralValue<Thermo::DynamicType>(tdyn, "DYNAMICTYPE");
   switch (dyn_type)
   {
-    case Inpar::Thermo::dyna_genalpha:
+    case Thermo::dyna_genalpha:
       tsi_alpha_ = tdyn.sublist("GENALPHA").get<double>("ALPHA_F");
       break;
-    case Inpar::Thermo::dyna_onesteptheta:
+    case Thermo::dyna_onesteptheta:
       tsi_alpha_ = tdyn.sublist("ONESTEPTHETA").get<double>("THETA");
       break;
-    case Inpar::Thermo::dyna_statics:
+    case Thermo::dyna_statics:
       tsi_alpha_ = 1.;
       break;
     default:

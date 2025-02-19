@@ -51,7 +51,7 @@ void Thermo::TimIntGenAlpha::verify_coeff()
   // are exclusively(!) carried out at the end-point t_{n+1} of each time interval, but
   // never explicitly at some generalised midpoint, such as t_{n+1-\alpha_f}. Thus, any
   // cumbersome extrapolation of history variables, etc. becomes obsolete.
-  if (midavg_ != Inpar::Thermo::midavg_trlike)
+  if (midavg_ != Thermo::midavg_trlike)
     FOUR_C_THROW("mid-averaging of internal forces only implemented TR-like");
 
   // done
@@ -68,7 +68,7 @@ Thermo::TimIntGenAlpha::TimIntGenAlpha(const Teuchos::ParameterList& ioparams,
     std::shared_ptr<Core::FE::Discretization> actdis, std::shared_ptr<Core::LinAlg::Solver> solver,
     std::shared_ptr<Core::IO::DiscretizationWriter> output)
     : TimIntImpl(ioparams, tdynparams, xparams, actdis, solver, output),
-      midavg_(Teuchos::getIntegralValue<Inpar::Thermo::MidAverageEnum>(
+      midavg_(Teuchos::getIntegralValue<Thermo::MidAverageEnum>(
           tdynparams.sublist("GENALPHA"), "GENAVG")),
       /* iterupditer_(false), */
       gamma_(tdynparams.sublist("GENALPHA").get<double>("GAMMA")),
@@ -101,7 +101,7 @@ Thermo::TimIntGenAlpha::TimIntGenAlpha(const Teuchos::ParameterList& ioparams,
               << "   alpha_f = " << alphaf_ << std::endl
               << "   alpha_m = " << alpham_ << std::endl
               << "   gamma = " << gamma_ << std::endl
-              << "   midavg = " << Inpar::Thermo::mid_average_string(midavg_) << std::endl;
+              << "   midavg = " << Thermo::mid_average_string(midavg_) << std::endl;
   }
 
   // determine capacity and initial temperature rates

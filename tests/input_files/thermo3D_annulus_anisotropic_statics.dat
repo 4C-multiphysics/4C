@@ -4,12 +4,6 @@ PROBLEMTYPE                     Thermo
 VERBOSITY                       standard
 ----------------------------------------------IO/RUNTIME VTK OUTPUT
 OUTPUT_DATA_FORMAT              ascii
----------------------------------------IO/RUNTIME VTK OUTPUT/THERMO
-OUTPUT_THERMO                   Yes
-TEMPERATURE                     Yes
-ELEMENT_OWNER                   Yes
-ELEMENT_GID                     Yes
-NODE_GID                        Yes
 ----------------------------------------------------THERMAL DYNAMIC
 DIVERCONT                       stop
 DYNAMICTYPE                     Statics
@@ -28,6 +22,12 @@ NORM_TEMP                       Abs
 PREDICT                         ConstTemp
 TOLRES                          1e-08
 TOLTEMP                         1e-08
+---------------------------------THERMAL DYNAMIC/RUNTIME VTK OUTPUT
+OUTPUT_THERMO                   Yes
+TEMPERATURE                     Yes
+ELEMENT_OWNER                   Yes
+ELEMENT_GID                     Yes
+NODE_GID                        Yes
 ---------------------------------THERMAL DYNAMIC/RUNTIME CSV OUTPUT
 OUTPUT_THERMO                   Yes
 ENERGY                          Yes

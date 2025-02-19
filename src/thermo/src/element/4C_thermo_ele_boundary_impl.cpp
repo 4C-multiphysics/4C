@@ -15,8 +15,8 @@
 #include "4C_fem_geometry_position_array.hpp"
 #include "4C_fem_nurbs_discretization.hpp"
 #include "4C_global_data.hpp"
-#include "4C_inpar_thermo.hpp"
 #include "4C_thermo_ele_action.hpp"
+#include "4C_thermo_input.hpp"
 #include "4C_utils_function.hpp"
 #include "4C_utils_function_of_time.hpp"
 
@@ -286,18 +286,17 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate(const FaceElement* ele,
 
     // BUILD EFFECTIVE TANGENT AND RESIDUAL ACC TO TIME INTEGRATOR
     // check the time integrator
-    const auto timint =
-        params.get<Inpar::Thermo::DynamicType>("time integrator", Inpar::Thermo::dyna_undefined);
+    const auto timint = params.get<Thermo::DynamicType>("time integrator", Thermo::dyna_undefined);
     switch (timint)
     {
-      case Inpar::Thermo::dyna_statics:
+      case Thermo::dyna_statics:
       {
         if (*tempstate == "Tempn")
           FOUR_C_THROW("Old temperature T_n is not allowed with static time integrator");
         // continue
         break;
       }
-      case Inpar::Thermo::dyna_onesteptheta:
+      case Thermo::dyna_onesteptheta:
       {
         // Note: efext is scaled with theta in thrtimint_ost.cpp. Because the
         // convective boundary condition is nonlinear and produces a term in the
@@ -307,14 +306,14 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate(const FaceElement* ele,
         etang.scale(theta);
         break;
       }
-      case Inpar::Thermo::dyna_genalpha:
+      case Thermo::dyna_genalpha:
       {
         const double alphaf = params.get<double>("alphaf");
         // combined tangent and conductivity matrix to one global matrix
         etang.scale(alphaf);
         break;
       }
-      case Inpar::Thermo::dyna_undefined:
+      case Thermo::dyna_undefined:
       default:
       {
         FOUR_C_THROW("Don't know what to do...");
@@ -472,18 +471,18 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate(const FaceElement* ele,
 
         // BUILD EFFECTIVE TANGENT AND RESIDUAL ACC TO TIME INTEGRATOR
         // check the time integrator
-        const auto timint = params.get<Inpar::Thermo::DynamicType>(
-            "time integrator", Inpar::Thermo::dyna_undefined);
+        const auto timint =
+            params.get<Thermo::DynamicType>("time integrator", Thermo::dyna_undefined);
         switch (timint)
         {
-          case Inpar::Thermo::dyna_statics:
+          case Thermo::dyna_statics:
           {
             if (*tempstate == "Tempn")
               FOUR_C_THROW("Old temperature T_n is not allowed with static time integrator");
             // continue
             break;
           }
-          case Inpar::Thermo::dyna_onesteptheta:
+          case Thermo::dyna_onesteptheta:
           {
             // Note: efext is scaled with theta in thrtimint_ost.cpp. Because the
             // convective boundary condition is nonlinear and produces a term in the
@@ -493,7 +492,7 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate(const FaceElement* ele,
             etangcoupl.scale(theta);
             break;
           }
-          case Inpar::Thermo::dyna_genalpha:
+          case Thermo::dyna_genalpha:
           {
             // Note: efext is scaled with theta in thrtimint_ost.cpp. Because the
             // convective boundary condition is nonlinear and produces a term in the
@@ -503,7 +502,7 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate(const FaceElement* ele,
             etangcoupl.scale(alphaf);
             break;
           }
-          case Inpar::Thermo::dyna_undefined:
+          case Thermo::dyna_undefined:
           default:
           {
             FOUR_C_THROW("Don't know what to do...");

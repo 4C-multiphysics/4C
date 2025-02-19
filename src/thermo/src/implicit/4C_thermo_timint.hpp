@@ -97,7 +97,7 @@ namespace Thermo
     //! Do the nonlinear solve, i.e. (multiple) corrector,
     //! for the time step. All boundary conditions have
     //! been set.
-    Inpar::Thermo::ConvergenceStatus solve() override = 0;
+    Thermo::ConvergenceStatus solve() override = 0;
 
     //! build linear system tangent matrix, rhs/force residual
     //! Monolithic TSI accesses the linearised thermo problem
@@ -133,8 +133,8 @@ namespace Thermo
     void reset_step() override;
 
     //! set the initial thermal field
-    void set_initial_field(const Inpar::Thermo::InitialField,  //!< type of initial field
-        const int startfuncno                                  //!< number of spatial function
+    void set_initial_field(const Thermo::InitialField,  //!< type of initial field
+        const int startfuncno                           //!< number of spatial function
     );
 
     //@}
@@ -263,7 +263,7 @@ namespace Thermo
     //@{
 
     //! Provide Name
-    virtual enum Inpar::Thermo::DynamicType method_name() const = 0;
+    virtual enum Thermo::DynamicType method_name() const = 0;
 
     //@}
 
@@ -423,10 +423,10 @@ namespace Thermo
                              //!< if 0, restart is not written
     bool writeglob_;         //!< write state on/off
     int writeglobevery_;     //!< write state every given step
-    Inpar::Thermo::HeatFluxType writeheatflux_;
-    Inpar::Thermo::TempGradType writetempgrad_;
-    Inpar::Thermo::CalcError calcerror_;  //!< evaluate error compared to analytical solution
-    int errorfunctno_;  //!< function number of analytical solution for error evaluation
+    Thermo::HeatFluxType writeheatflux_;
+    Thermo::TempGradType writetempgrad_;
+    Thermo::CalcError calcerror_;  //!< evaluate error compared to analytical solution
+    int errorfunctno_;             //!< function number of analytical solution for error evaluation
     //@}
 
     //! @name General time integration control parameters

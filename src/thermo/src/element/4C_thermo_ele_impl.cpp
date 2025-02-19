@@ -16,7 +16,6 @@
 #include "4C_fem_nurbs_discretization.hpp"
 #include "4C_global_data.hpp"
 #include "4C_inpar_structure.hpp"
-#include "4C_inpar_thermo.hpp"
 #include "4C_linalg_fixedsizematrix_solver.hpp"
 #include "4C_mat_plasticelasthyper.hpp"
 #include "4C_mat_thermoplastichyperelast.hpp"
@@ -25,6 +24,7 @@
 #include "4C_mat_trait_thermo_solid.hpp"
 #include "4C_thermo_ele_action.hpp"
 #include "4C_thermo_element.hpp"  // only for visualization of element data
+#include "4C_thermo_input.hpp"
 #include "4C_utils_function.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
@@ -254,22 +254,22 @@ int Discret::Elements::TemperImpl<distype>::evaluate(
     if (params.get<bool>("lump capa matrix", false))
     {
       const auto timint =
-          params.get<Inpar::Thermo::DynamicType>("time integrator", Inpar::Thermo::dyna_undefined);
+          params.get<Thermo::DynamicType>("time integrator", Thermo::dyna_undefined);
       switch (timint)
       {
-        case Inpar::Thermo::dyna_onesteptheta:
+        case Thermo::dyna_onesteptheta:
         {
           calculate_lump_matrix(&ecapa);
 
           break;
         }
-        case Inpar::Thermo::dyna_genalpha:
-        case Inpar::Thermo::dyna_statics:
+        case Thermo::dyna_genalpha:
+        case Thermo::dyna_statics:
         {
           FOUR_C_THROW("Lumped capacity matrix has not yet been tested");
           break;
         }
-        case Inpar::Thermo::dyna_undefined:
+        case Thermo::dyna_undefined:
         default:
         {
           FOUR_C_THROW("Undefined time integration scheme for thermal problem!");
@@ -330,16 +330,15 @@ int Discret::Elements::TemperImpl<distype>::evaluate(
     // combine capacity and conductivity matrix to one global tangent matrix
     // check the time integrator
     // K_T = fac_capa . C + fac_cond . K
-    const auto timint =
-        params.get<Inpar::Thermo::DynamicType>("time integrator", Inpar::Thermo::dyna_undefined);
+    const auto timint = params.get<Thermo::DynamicType>("time integrator", Thermo::dyna_undefined);
     switch (timint)
     {
-      case Inpar::Thermo::dyna_statics:
+      case Thermo::dyna_statics:
       {
         // continue
         break;
       }
-      case Inpar::Thermo::dyna_onesteptheta:
+      case Thermo::dyna_onesteptheta:
       {
         // extract time values from parameter list
         const double theta = params.get<double>("theta");
@@ -363,7 +362,7 @@ int Discret::Elements::TemperImpl<distype>::evaluate(
         break;
       }  // ost
 
-      case Inpar::Thermo::dyna_genalpha:
+      case Thermo::dyna_genalpha:
       {
         // extract time values from parameter list
         const double alphaf = params.get<double>("alphaf");
@@ -397,7 +396,7 @@ int Discret::Elements::TemperImpl<distype>::evaluate(
         break;
 
       }  // genalpha
-      case Inpar::Thermo::dyna_undefined:
+      case Thermo::dyna_undefined:
       default:
       {
         FOUR_C_THROW("Don't know what to do...");
@@ -1171,10 +1170,10 @@ void Discret::Elements::TemperImpl<distype>::linear_coupled_tang(
 
   // --------------------------------------------------- time integration
   // check the time integrator and add correct time factor
-  Inpar::Thermo::DynamicType timint = Inpar::Thermo::dyna_undefined;
+  Thermo::DynamicType timint = Thermo::dyna_undefined;
   if (params.isParameter("time integrator"))
   {
-    timint = Teuchos::getIntegralValue<Inpar::Thermo::DynamicType>(params, "time integrator");
+    timint = Teuchos::getIntegralValue<Thermo::DynamicType>(params, "time integrator");
   }
   // get step size dt
   const double stepsize = params.get<double>("delta time");
@@ -1185,7 +1184,7 @@ void Discret::Elements::TemperImpl<distype>::linear_coupled_tang(
   // consider linearisation of velocities due to displacements
   switch (timint)
   {
-    case Inpar::Thermo::dyna_statics:
+    case Thermo::dyna_statics:
     {
       // k_Td = k_Td^e . time_fac_d'
       timefac = 1.0;
@@ -1194,7 +1193,7 @@ void Discret::Elements::TemperImpl<distype>::linear_coupled_tang(
       timefac_d = 1.0 / stepsize;
       break;
     }
-    case Inpar::Thermo::dyna_onesteptheta:
+    case Thermo::dyna_onesteptheta:
     {
       // k_Td = theta . k_Td^e . time_fac_d'
       timefac = params.get<double>("theta");
@@ -1204,7 +1203,7 @@ void Discret::Elements::TemperImpl<distype>::linear_coupled_tang(
       timefac_d = 1.0 / (str_theta * stepsize);
       break;
     }
-    case Inpar::Thermo::dyna_genalpha:
+    case Thermo::dyna_genalpha:
     {
       // k_Td = alphaf . k_Td^e . time_fac_d'
       timefac = params.get<double>("alphaf");
@@ -1215,7 +1214,7 @@ void Discret::Elements::TemperImpl<distype>::linear_coupled_tang(
       timefac_d = str_gamma / (str_beta * stepsize);
       break;
     }
-    case Inpar::Thermo::dyna_undefined:
+    case Thermo::dyna_undefined:
     default:
     {
       FOUR_C_THROW("Add correct temporal coefficient here!");
@@ -1635,16 +1634,15 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_coupled_tang(
   double timefac_d = 0.0;
   double timefac = 0.0;
   // check the time integrator and add correct time factor
-  const auto timint =
-      params.get<Inpar::Thermo::DynamicType>("time integrator", Inpar::Thermo::dyna_undefined);
+  const auto timint = params.get<Thermo::DynamicType>("time integrator", Thermo::dyna_undefined);
   switch (timint)
   {
-    case Inpar::Thermo::dyna_statics:
+    case Thermo::dyna_statics:
     {
       timefac = 1.0;
       break;
     }
-    case Inpar::Thermo::dyna_onesteptheta:
+    case Thermo::dyna_onesteptheta:
     {
       // k^e_Td += + theta . N_T^T . (-C_T) . 1/2 dC'/dd . N_T . T . detJ . w(gp) -
       //           - theta . ( B_T^T . C_mat . dC^{-1}/dd . B_T . T . detJ . w(gp) )
@@ -1654,12 +1652,12 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_coupled_tang(
       timefac = theta;
       break;
     }
-    case Inpar::Thermo::dyna_genalpha:
+    case Thermo::dyna_genalpha:
     {
       timefac = params.get<double>("alphaf");
       break;
     }
-    case Inpar::Thermo::dyna_undefined:
+    case Thermo::dyna_undefined:
     default:
     {
       FOUR_C_THROW("Add correct temporal coefficient here!");
@@ -2134,34 +2132,33 @@ void Discret::Elements::TemperImpl<distype>::linear_dissipation_coupled_tang(
   const double stepsize = params.get<double>("delta time");
 
   // check the time integrator and add correct time factor
-  const auto timint =
-      params.get<Inpar::Thermo::DynamicType>("time integrator", Inpar::Thermo::dyna_undefined);
+  const auto timint = params.get<Thermo::DynamicType>("time integrator", Thermo::dyna_undefined);
   // initialise time_fac of velocity discretisation w.r.t. displacements
   double timefac = 0.0;
   switch (timint)
   {
-    case Inpar::Thermo::dyna_statics:
+    case Thermo::dyna_statics:
     {
       // evolution equation of plastic material use implicit Euler
       // put str_timefac = 1.0
       timefac = 1.0;
       break;
     }
-    case Inpar::Thermo::dyna_onesteptheta:
+    case Thermo::dyna_onesteptheta:
     {
       // k_Td = theta . k_Td^e . timefac_Dgamma = theta . k_Td / Dt
       double theta = params.get<double>("theta");
       timefac = theta;
       break;
     }
-    case Inpar::Thermo::dyna_genalpha:
+    case Thermo::dyna_genalpha:
     {
       // k_Td = alphaf . k_Td^e . timefac_Dgamma = alphaf . k_Td / Dt
       double alphaf = params.get<double>("alphaf");
       timefac = alphaf;
       break;
     }
-    case Inpar::Thermo::dyna_undefined:
+    case Thermo::dyna_undefined:
     default:
     {
       FOUR_C_THROW("Add correct temporal coefficient here!");
@@ -2412,34 +2409,33 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_dissipation_coupled_tang(
   const double stepsize = params.get<double>("delta time");
 
   // check the time integrator and add correct time factor
-  const auto timint =
-      params.get<Inpar::Thermo::DynamicType>("time integrator", Inpar::Thermo::dyna_undefined);
+  const auto timint = params.get<Thermo::DynamicType>("time integrator", Thermo::dyna_undefined);
   // initialise time_fac of velocity discretisation w.r.t. displacements
   double timefac = 0.0;
   switch (timint)
   {
-    case Inpar::Thermo::dyna_statics:
+    case Thermo::dyna_statics:
     {
       // evolution equation of plastic material use implicit Euler
       // put str_timefac = 1.0
       timefac = 1.0;
       break;
     }
-    case Inpar::Thermo::dyna_onesteptheta:
+    case Thermo::dyna_onesteptheta:
     {
       // k_Td = theta . k_Td^e . timefac_Dgamma = theta . k_Td / Dt
       double theta = params.get<double>("theta");
       timefac = theta;
       break;
     }
-    case Inpar::Thermo::dyna_genalpha:
+    case Thermo::dyna_genalpha:
     {
       // k_Td = alphaf . k_Td^e . timefac_Dgamma = alphaf . k_Td / Dt
       double alphaf = params.get<double>("alphaf");
       timefac = alphaf;
       break;
     }
-    case Inpar::Thermo::dyna_undefined:
+    case Thermo::dyna_undefined:
     default:
     {
       FOUR_C_THROW("Add correct temporal coefficient here!");
@@ -2541,10 +2537,8 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_heatflux_tempgrad(
     Teuchos::ParameterList& params)
 {
   // specific choice of heat flux / temperature gradient
-  const auto ioheatflux =
-      params.get<Inpar::Thermo::HeatFluxType>("ioheatflux", Inpar::Thermo::heatflux_none);
-  const auto iotempgrad =
-      params.get<Inpar::Thermo::TempGradType>("iotempgrad", Inpar::Thermo::tempgrad_none);
+  const auto ioheatflux = params.get<Thermo::HeatFluxType>("ioheatflux", Thermo::heatflux_none);
+  const auto iotempgrad = params.get<Thermo::TempGradType>("iotempgrad", Thermo::tempgrad_none);
 
   // update element geometry
   Core::LinAlg::Matrix<nen_, nsd_> xcurr;      // current  coord. of element
@@ -2590,14 +2584,14 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_heatflux_tempgrad(
 
     switch (iotempgrad)
     {
-      case Inpar::Thermo::tempgrad_initial:
+      case Thermo::tempgrad_initial:
       {
         if (etempgrad == nullptr) FOUR_C_THROW("tempgrad data not available");
         // etempgrad = Grad T
         for (int idim = 0; idim < nsd_; ++idim) (*etempgrad)(iquad, idim) = gradtemp_(idim);
         break;
       }
-      case Inpar::Thermo::tempgrad_current:
+      case Thermo::tempgrad_current:
       {
         if (etempgrad == nullptr) FOUR_C_THROW("tempgrad data not available");
         // etempgrad = grad T = Grad T . F^{-1} =  F^{-T} . Grad T
@@ -2608,7 +2602,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_heatflux_tempgrad(
         for (int idim = 0; idim < nsd_; ++idim) (*etempgrad)(iquad, idim) = currentgradT(idim);
         break;
       }
-      case Inpar::Thermo::tempgrad_none:
+      case Thermo::tempgrad_none:
       {
         // no postprocessing of temperature gradients
         break;
@@ -2620,7 +2614,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_heatflux_tempgrad(
 
     switch (ioheatflux)
     {
-      case Inpar::Thermo::heatflux_initial:
+      case Thermo::heatflux_initial:
       {
         if (eheatflux == nullptr) FOUR_C_THROW("heat flux data not available");
         Core::LinAlg::Matrix<nsd_, 1> initialheatflux(false);
@@ -2629,7 +2623,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_heatflux_tempgrad(
         for (int idim = 0; idim < nsd_; ++idim) (*eheatflux)(iquad, idim) = -initialheatflux(idim);
         break;
       }
-      case Inpar::Thermo::heatflux_current:
+      case Thermo::heatflux_current:
       {
         if (eheatflux == nullptr) FOUR_C_THROW("heat flux data not available");
         // eheatflux := q = - k_0 . 1/(detF) . F^{-T} . Grad T
@@ -2640,7 +2634,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_heatflux_tempgrad(
         for (int idim = 0; idim < nsd_; ++idim) (*eheatflux)(iquad, idim) = -spatialq(idim);
         break;
       }
-      case Inpar::Thermo::heatflux_none:
+      case Thermo::heatflux_none:
       {
         // no postprocessing of heat fluxes, continue!
         break;
@@ -3296,8 +3290,7 @@ void Discret::Elements::TemperImpl<distype>::compute_error(
   //  if (intpoints.ip().nquad != nquad_)
   //    FOUR_C_THROW("Trouble with number of Gauss points");
 
-  const auto calcerr =
-      Teuchos::getIntegralValue<Inpar::Thermo::CalcError>(params, "calculate error");
+  const auto calcerr = Teuchos::getIntegralValue<Thermo::CalcError>(params, "calculate error");
   const int errorfunctno = params.get<int>("error function number");
   const double t = params.get<double>("total time");
 
@@ -3325,7 +3318,7 @@ void Discret::Elements::TemperImpl<distype>::compute_error(
     // Compute analytical solution
     switch (calcerr)
     {
-      case Inpar::Thermo::calcerror_byfunct:
+      case Thermo::calcerror_byfunct:
       {
         // get coordinates at integration point
         // gp reference coordinates

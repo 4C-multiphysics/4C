@@ -8,8 +8,8 @@
 #include "4C_inpar_io.hpp"
 
 #include "4C_inpar_structure.hpp"
-#include "4C_inpar_thermo.hpp"
 #include "4C_io_pstream.hpp"
+#include "4C_thermo_input.hpp"
 #include "4C_utils_parameter_list.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -94,17 +94,17 @@ void Inpar::IO::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>&
   Core::Utils::bool_parameter("FLUID_ELEDATA_EVERY_STEP", "No", "", io);
   Core::Utils::bool_parameter("FLUID_NODEDATA_FIRST_STEP", "No", "", io);
   Core::Utils::bool_parameter("THERM_TEMPERATURE", "No", "", io);
-  Core::Utils::string_to_integral_parameter<Inpar::Thermo::HeatFluxType>("THERM_HEATFLUX", "None",
-      "", tuple<std::string>("None", "No", "NO", "no", "Current", "Initial"),
-      tuple<Inpar::Thermo::HeatFluxType>(Inpar::Thermo::heatflux_none, Inpar::Thermo::heatflux_none,
-          Inpar::Thermo::heatflux_none, Inpar::Thermo::heatflux_none,
-          Inpar::Thermo::heatflux_current, Inpar::Thermo::heatflux_initial),
+  Core::Utils::string_to_integral_parameter<Thermo::HeatFluxType>("THERM_HEATFLUX", "None", "",
+      tuple<std::string>("None", "No", "NO", "no", "Current", "Initial"),
+      tuple<Thermo::HeatFluxType>(Thermo::heatflux_none, Thermo::heatflux_none,
+          Thermo::heatflux_none, Thermo::heatflux_none, Thermo::heatflux_current,
+          Thermo::heatflux_initial),
       io);
-  Core::Utils::string_to_integral_parameter<Inpar::Thermo::TempGradType>("THERM_TEMPGRAD", "None",
-      "", tuple<std::string>("None", "No", "NO", "no", "Current", "Initial"),
-      tuple<Inpar::Thermo::TempGradType>(Inpar::Thermo::tempgrad_none, Inpar::Thermo::tempgrad_none,
-          Inpar::Thermo::tempgrad_none, Inpar::Thermo::tempgrad_none,
-          Inpar::Thermo::tempgrad_current, Inpar::Thermo::tempgrad_initial),
+  Core::Utils::string_to_integral_parameter<Thermo::TempGradType>("THERM_TEMPGRAD", "None", "",
+      tuple<std::string>("None", "No", "NO", "no", "Current", "Initial"),
+      tuple<Thermo::TempGradType>(Thermo::tempgrad_none, Thermo::tempgrad_none,
+          Thermo::tempgrad_none, Thermo::tempgrad_none, Thermo::tempgrad_current,
+          Thermo::tempgrad_initial),
       io);
 
   Core::Utils::int_parameter(

@@ -41,11 +41,9 @@ Thermo::TimInt::TimInt(const Teuchos::ParameterList& ioparams,
       writerestartevery_(tdynparams.get<int>("RESTARTEVERY")),
       writeglob_(ioparams.get<bool>("THERM_TEMPERATURE")),
       writeglobevery_(tdynparams.get<int>("RESULTSEVERY")),
-      writeheatflux_(
-          Teuchos::getIntegralValue<Inpar::Thermo::HeatFluxType>(ioparams, "THERM_HEATFLUX")),
-      writetempgrad_(
-          Teuchos::getIntegralValue<Inpar::Thermo::TempGradType>(ioparams, "THERM_TEMPGRAD")),
-      calcerror_(Teuchos::getIntegralValue<Inpar::Thermo::CalcError>(tdynparams, "CALCERROR")),
+      writeheatflux_(Teuchos::getIntegralValue<Thermo::HeatFluxType>(ioparams, "THERM_HEATFLUX")),
+      writetempgrad_(Teuchos::getIntegralValue<Thermo::TempGradType>(ioparams, "THERM_TEMPGRAD")),
+      calcerror_(Teuchos::getIntegralValue<Thermo::CalcError>(tdynparams, "CALCERROR")),
       errorfunctno_(tdynparams.get<int>("CALCERRORFUNCNO")),
       time_(nullptr),
       timen_(0.0),
@@ -120,13 +118,12 @@ Thermo::TimInt::TimInt(const Teuchos::ParameterList& ioparams,
   // -------------------------------------------------------------------
   const int startfuncno = tdynparams.get<int>("INITFUNCNO");
   set_initial_field(
-      Teuchos::getIntegralValue<Inpar::Thermo::InitialField>(tdynparams, "INITIALFIELD"),
-      startfuncno);
+      Teuchos::getIntegralValue<Thermo::InitialField>(tdynparams, "INITIALFIELD"), startfuncno);
 
   // check for special thermo vtk output which is to be handled by an own writer object
   {
     const Teuchos::ParameterList thermo_vtk_runtime_output_list(
-        Global::Problem::instance()->io_params().sublist("RUNTIME VTK OUTPUT").sublist("THERMO"));
+        tdynparams.sublist("RUNTIME VTK OUTPUT"));
 
     auto vtk_output_thermo = thermo_vtk_runtime_output_list.get<bool>("OUTPUT_THERMO");
 
@@ -204,7 +201,7 @@ void Thermo::TimInt::determine_capa_consist_temp_rate()
     // action for elements
     p.set<Thermo::Action>("action", Thermo::calc_thermo_fintcapa);
     // type of calling time integrator
-    p.set<Inpar::Thermo::DynamicType>("time integrator", method_name());
+    p.set<Thermo::DynamicType>("time integrator", method_name());
     p.set<bool>("lump capa matrix", lumpcapa_);
     // other parameters that might be needed by the elements
     p.set("total time", (*time_)[0]);
@@ -480,8 +477,7 @@ void Thermo::TimInt::output_step(bool forced_writerestart)
 
   // output heatflux & tempgrad
   if (writeglobevery_ and (step_ % writeglobevery_ == 0) and
-      ((writeheatflux_ != Inpar::Thermo::heatflux_none) or
-          (writetempgrad_ != Inpar::Thermo::tempgrad_none)))
+      ((writeheatflux_ != Thermo::heatflux_none) or (writetempgrad_ != Thermo::tempgrad_none)))
   {
     output_heatflux_tempgrad(datawritten);
   }
@@ -586,11 +582,11 @@ void Thermo::TimInt::output_heatflux_tempgrad(bool& datawritten)
 
   std::shared_ptr<std::vector<char>> heatfluxdata = std::make_shared<std::vector<char>>();
   p.set("heatflux", heatfluxdata);
-  p.set<Inpar::Thermo::HeatFluxType>("ioheatflux", writeheatflux_);
+  p.set<Thermo::HeatFluxType>("ioheatflux", writeheatflux_);
 
   std::shared_ptr<std::vector<char>> tempgraddata = std::make_shared<std::vector<char>>();
   p.set("tempgrad", tempgraddata);
-  p.set<Inpar::Thermo::TempGradType>("iotempgrad", writetempgrad_);
+  p.set<Thermo::TempGradType>("iotempgrad", writetempgrad_);
 
   // set vector values needed by elements
   discret_->clear_state();
@@ -611,14 +607,14 @@ void Thermo::TimInt::output_heatflux_tempgrad(bool& datawritten)
   datawritten = true;
 
   // write heatflux
-  if (writeheatflux_ != Inpar::Thermo::heatflux_none)
+  if (writeheatflux_ != Thermo::heatflux_none)
   {
     std::string heatfluxtext = "";
-    if (writeheatflux_ == Inpar::Thermo::heatflux_current)
+    if (writeheatflux_ == Thermo::heatflux_current)
     {
       heatfluxtext = "gauss_current_heatfluxes_xyz";
     }
-    else if (writeheatflux_ == Inpar::Thermo::heatflux_initial)
+    else if (writeheatflux_ == Thermo::heatflux_initial)
     {
       heatfluxtext = "gauss_initial_heatfluxes_xyz";
     }
@@ -630,14 +626,14 @@ void Thermo::TimInt::output_heatflux_tempgrad(bool& datawritten)
   }
 
   // write temperature gradient
-  if (writetempgrad_ != Inpar::Thermo::tempgrad_none)
+  if (writetempgrad_ != Thermo::tempgrad_none)
   {
     std::string tempgradtext = "";
-    if (writetempgrad_ == Inpar::Thermo::tempgrad_current)
+    if (writetempgrad_ == Thermo::tempgrad_current)
     {
       tempgradtext = "gauss_current_tempgrad_xyz";
     }
-    else if (writetempgrad_ == Inpar::Thermo::tempgrad_initial)
+    else if (writetempgrad_ == Thermo::tempgrad_initial)
     {
       tempgradtext = "gauss_initial_tempgrad_xyz";
     }
@@ -677,7 +673,7 @@ void Thermo::TimInt::apply_force_external(const double time,   //!< evaluation t
   const Thermo::Action action = Thermo::calc_thermo_fext;
   p.set<Thermo::Action>("action", action);
   // type of calling time integrator
-  p.set<Inpar::Thermo::DynamicType>("time integrator", method_name());
+  p.set<Thermo::DynamicType>("time integrator", method_name());
   // other parameters needed by the elements
   p.set("total time", time);
 
@@ -719,7 +715,7 @@ void Thermo::TimInt::apply_force_external_conv(Teuchos::ParameterList& p,
   const Thermo::BoundaryAction boundaryAction = Thermo::calc_thermo_fextconvection;
   p.set<Thermo::BoundaryAction>("action", boundaryAction);
   // type of calling time integrator
-  p.set<Inpar::Thermo::DynamicType>("time integrator", method_name());
+  p.set<Thermo::DynamicType>("time integrator", method_name());
   // other parameters needed by the elements
   p.set("total time", time);
 
@@ -752,7 +748,7 @@ void Thermo::TimInt::apply_force_tang_internal(
 )
 {
   // type of calling time integrator
-  p.set<Inpar::Thermo::DynamicType>("time integrator", method_name());
+  p.set<Thermo::DynamicType>("time integrator", method_name());
   // action for elements
   const Thermo::Action action = Thermo::calc_thermo_fintcond;
   p.set<Thermo::Action>("action", action);
@@ -789,7 +785,7 @@ void Thermo::TimInt::apply_force_tang_internal(
 )
 {
   // type of calling time integrator
-  p.set<Inpar::Thermo::DynamicType>("time integrator", method_name());
+  p.set<Thermo::DynamicType>("time integrator", method_name());
   // action for elements
   const Thermo::Action action = Thermo::calc_thermo_finttang;
   p.set<Thermo::Action>("action", action);
@@ -806,7 +802,7 @@ void Thermo::TimInt::apply_force_tang_internal(
 
   // in case of genalpha extract midpoint temperature rate R_{n+alpha_m}
   // extract it after ClearState() is called.
-  if (method_name() == Inpar::Thermo::dyna_genalpha)
+  if (method_name() == Thermo::dyna_genalpha)
   {
     std::shared_ptr<const Core::LinAlg::Vector<double>> ratem =
         p.get<std::shared_ptr<const Core::LinAlg::Vector<double>>>("mid-temprate");
@@ -835,7 +831,7 @@ void Thermo::TimInt::apply_force_internal(
 )
 {
   // type of calling time integrator
-  p.set<Inpar::Thermo::DynamicType>("time integrator", method_name());
+  p.set<Thermo::DynamicType>("time integrator", method_name());
   // action for elements
   Thermo::Action action = Thermo::calc_thermo_fint;
   p.set<Thermo::Action>("action", action);
@@ -857,12 +853,11 @@ void Thermo::TimInt::apply_force_internal(
 /*----------------------------------------------------------------------*
  | set initial field for temperature (according to ScaTra)   dano 06/10 |
  *----------------------------------------------------------------------*/
-void Thermo::TimInt::set_initial_field(
-    const Inpar::Thermo::InitialField init, const int startfuncno)
+void Thermo::TimInt::set_initial_field(const Thermo::InitialField init, const int startfuncno)
 {
   switch (init)
   {
-    case Inpar::Thermo::initfield_zero_field:
+    case Thermo::initfield_zero_field:
     {
       // extract temperature vector at time t_n (temp_ contains various vectors of
       // old(er) temperatures and is of type TimIntMStep<Core::LinAlg::Vector<double>>)
@@ -871,7 +866,7 @@ void Thermo::TimInt::set_initial_field(
       break;
     }  // initfield_zero_field
 
-    case Inpar::Thermo::initfield_field_by_function:
+    case Thermo::initfield_field_by_function:
     {
       const Epetra_Map* dofrowmap = discret_->dof_row_map();
 
@@ -906,7 +901,7 @@ void Thermo::TimInt::set_initial_field(
       break;
     }  // initfield_field_by_function
 
-    case Inpar::Thermo::initfield_field_by_condition:
+    case Thermo::initfield_field_by_condition:
     {
       std::vector<int> localdofs;
       localdofs.push_back(0);
@@ -935,13 +930,13 @@ std::shared_ptr<std::vector<double>> Thermo::TimInt::evaluate_error_compared_to_
 {
   switch (calcerror_)
   {
-    case Inpar::Thermo::no_error_calculation:
+    case Thermo::no_error_calculation:
     {
       // do nothing --- no analytical solution available
       return nullptr;
       break;
     }
-    case Inpar::Thermo::calcerror_byfunct:
+    case Thermo::calcerror_byfunct:
     {
       // std::vector containing
       // [0]: relative L2 temperature error
@@ -954,7 +949,7 @@ std::shared_ptr<std::vector<double>> Thermo::TimInt::evaluate_error_compared_to_
       // action for elements
       eleparams.set("total time", timen_);
       eleparams.set<Thermo::Action>("action", Thermo::calc_thermo_error);
-      eleparams.set<Inpar::Thermo::CalcError>("calculate error", calcerror_);
+      eleparams.set<Thermo::CalcError>("calculate error", calcerror_);
       eleparams.set<int>("error function number", errorfunctno_);
 
       discret_->set_state("temperature", tempn_);

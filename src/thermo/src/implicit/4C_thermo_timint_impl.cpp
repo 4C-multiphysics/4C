@@ -26,16 +26,15 @@ Thermo::TimIntImpl::TimIntImpl(const Teuchos::ParameterList& ioparams,
     std::shared_ptr<Core::FE::Discretization> actdis, std::shared_ptr<Core::LinAlg::Solver> solver,
     std::shared_ptr<Core::IO::DiscretizationWriter> output)
     : TimInt(ioparams, tdynparams, xparams, actdis, solver, output),
-      pred_(Teuchos::getIntegralValue<Inpar::Thermo::PredEnum>(tdynparams, "PREDICT")),
-      itertype_(Teuchos::getIntegralValue<Inpar::Thermo::NonlinSolTech>(tdynparams, "NLNSOL")),
-      normtypetempi_(Teuchos::getIntegralValue<Inpar::Thermo::ConvNorm>(tdynparams, "NORM_TEMP")),
-      normtypefres_(Teuchos::getIntegralValue<Inpar::Thermo::ConvNorm>(tdynparams, "NORM_RESF")),
-      combtempifres_(
-          Teuchos::getIntegralValue<Inpar::Thermo::BinaryOp>(tdynparams, "NORMCOMBI_RESFTEMP")),
-      iternorm_(Teuchos::getIntegralValue<Inpar::Thermo::VectorNorm>(tdynparams, "ITERNORM")),
+      pred_(Teuchos::getIntegralValue<Thermo::PredEnum>(tdynparams, "PREDICT")),
+      itertype_(Teuchos::getIntegralValue<Thermo::NonlinSolTech>(tdynparams, "NLNSOL")),
+      normtypetempi_(Teuchos::getIntegralValue<Thermo::ConvNorm>(tdynparams, "NORM_TEMP")),
+      normtypefres_(Teuchos::getIntegralValue<Thermo::ConvNorm>(tdynparams, "NORM_RESF")),
+      combtempifres_(Teuchos::getIntegralValue<Thermo::BinaryOp>(tdynparams, "NORMCOMBI_RESFTEMP")),
+      iternorm_(Teuchos::getIntegralValue<Thermo::VectorNorm>(tdynparams, "ITERNORM")),
       itermax_(tdynparams.get<int>("MAXITER")),
       itermin_(tdynparams.get<int>("MINITER")),
-      divcontype_(Teuchos::getIntegralValue<Inpar::Thermo::DivContAct>(tdynparams, "DIVERCONT")),
+      divcontype_(Teuchos::getIntegralValue<Thermo::DivContAct>(tdynparams, "DIVERCONT")),
       divcontrefinelevel_(0),
       divcontfinesteps_(0),
       toltempi_(tdynparams.get<double>("TOLTEMP")),
@@ -112,17 +111,17 @@ void Thermo::TimIntImpl::predict_step()
 {
   switch (pred_)
   {
-    case Inpar::Thermo::pred_consttemp:
+    case Thermo::pred_consttemp:
     {
       predict_const_temp_consist_rate();
       break;
     }
-    case Inpar::Thermo::pred_consttemprate:
+    case Thermo::pred_consttemprate:
     {
       predict_const_temp_rate();
       break;
     }
-    case Inpar::Thermo::pred_tangtemp:
+    case Thermo::pred_tangtemp:
     {
       predict_tang_temp_consist_rate();
       break;
@@ -299,13 +298,13 @@ bool Thermo::TimIntImpl::converged()
   // residual forces
   switch (normtypefres_)
   {
-    case Inpar::Thermo::convnorm_abs:
+    case Thermo::convnorm_abs:
       convfres = normfres_ < tolfres_;
       break;
-    case Inpar::Thermo::convnorm_rel:
+    case Thermo::convnorm_rel:
       convfres = normfres_ < std::max(normcharforce_ * tolfres_, 1e-15);
       break;
-    case Inpar::Thermo::convnorm_mix:
+    case Thermo::convnorm_mix:
       convfres =
           ((normfres_ < tolfres_) or (normfres_ < std::max(normcharforce_ * tolfres_, 1e-15)));
       break;
@@ -317,13 +316,13 @@ bool Thermo::TimIntImpl::converged()
   // residual temperature
   switch (normtypetempi_)
   {
-    case Inpar::Thermo::convnorm_abs:
+    case Thermo::convnorm_abs:
       convtemp = normtempi_ < toltempi_;
       break;
-    case Inpar::Thermo::convnorm_rel:
+    case Thermo::convnorm_rel:
       convtemp = normtempi_ < std::max(normchartemp_ * toltempi_, 1e-15);
       break;
-    case Inpar::Thermo::convnorm_mix:
+    case Thermo::convnorm_mix:
       convtemp =
           ((normtempi_ < toltempi_) or (normtempi_ < std::max(normchartemp_ * toltempi_, 1e-15)));
       break;
@@ -334,9 +333,9 @@ bool Thermo::TimIntImpl::converged()
 
   // combine temperature-like and force-like residuals
   bool conv = false;
-  if (combtempifres_ == Inpar::Thermo::bop_and)
+  if (combtempifres_ == Thermo::bop_and)
     conv = convtemp and convfres;
-  else if (combtempifres_ == Inpar::Thermo::bop_or)
+  else if (combtempifres_ == Thermo::bop_or)
     conv = convtemp or convfres;
   else
     FOUR_C_THROW("Something went terribly wrong with binary operator!");
@@ -348,25 +347,25 @@ bool Thermo::TimIntImpl::converged()
 /*----------------------------------------------------------------------*
  | solve equilibrium                                        bborn 08/09 |
  *----------------------------------------------------------------------*/
-Inpar::Thermo::ConvergenceStatus Thermo::TimIntImpl::solve()
+Thermo::ConvergenceStatus Thermo::TimIntImpl::solve()
 {
   // choose solution technique in accordance with user's will
   switch (itertype_)
   {
-    case Inpar::Thermo::soltech_newtonfull:
+    case Thermo::soltech_newtonfull:
       return newton_full();
     // catch problems
     default:
       FOUR_C_THROW("Solution technique \"%s\" is not implemented",
-          Inpar::Thermo::nonlin_sol_tech_string(itertype_).c_str());
-      return Inpar::Thermo::conv_nonlin_fail;  // compiler happiness
+          Thermo::nonlin_sol_tech_string(itertype_).c_str());
+      return Thermo::conv_nonlin_fail;  // compiler happiness
   }
 }
 
 /*----------------------------------------------------------------------*
  | solution with full Newton-Raphson iteration              bborn 08/09 |
  *----------------------------------------------------------------------*/
-Inpar::Thermo::ConvergenceStatus Thermo::TimIntImpl::newton_full()
+Thermo::ConvergenceStatus Thermo::TimIntImpl::newton_full()
 {
   // we do a Newton-Raphson iteration here.
   // the specific time integration has set the following
@@ -466,46 +465,46 @@ void Thermo::TimIntImpl::blank_dirichlet_and_calc_norms()
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-Inpar::Thermo::ConvergenceStatus Thermo::TimIntImpl::newton_full_error_check()
+Thermo::ConvergenceStatus Thermo::TimIntImpl::newton_full_error_check()
 {
   // do some error checks
-  if ((iter_ >= itermax_) and (divcontype_ == Inpar::Thermo::divcont_stop))
+  if ((iter_ >= itermax_) and (divcontype_ == Thermo::divcont_stop))
   {
     // write restart output of last converged step before stopping
     output(true);
 
     FOUR_C_THROW("Newton unconverged in %d iterations", iter_);
-    return Inpar::Thermo::conv_nonlin_fail;
+    return Thermo::conv_nonlin_fail;
   }
-  else if ((iter_ >= itermax_) and (divcontype_ == Inpar::Thermo::divcont_continue))
+  else if ((iter_ >= itermax_) and (divcontype_ == Thermo::divcont_continue))
   {
     if (Core::Communication::my_mpi_rank(discret_->get_comm()) == 0)
       Core::IO::cout << "Newton unconverged in " << iter_ << " iterations, continuing"
                      << Core::IO::endl;
-    return Inpar::Thermo::conv_success;
+    return Thermo::conv_success;
   }
-  else if ((iter_ >= itermax_) and divcontype_ == Inpar::Thermo::divcont_halve_step)
+  else if ((iter_ >= itermax_) and divcontype_ == Thermo::divcont_halve_step)
   {
     halve_time_step();
-    return Inpar::Thermo::conv_fail_repeat;
+    return Thermo::conv_fail_repeat;
   }
-  else if (divcontype_ == Inpar::Thermo::divcont_repeat_step or
-           divcontype_ == Inpar::Thermo::divcont_repeat_simulation)
+  else if (divcontype_ == Thermo::divcont_repeat_step or
+           divcontype_ == Thermo::divcont_repeat_simulation)
   {
     if (Core::Communication::my_mpi_rank(discret_->get_comm()) == 0)
       FOUR_C_THROW(
           "Fatal failure in newton_full_error_check()! divcont_repeat_step and "
           "divcont_repeat_simulation not implemented for Thermo");
-    return Inpar::Thermo::conv_nonlin_fail;
+    return Thermo::conv_nonlin_fail;
   }
   // if everything is fine print to screen and return
   if (converged())
   {
     check_for_time_step_increase();
-    return Inpar::Thermo::conv_success;
+    return Thermo::conv_success;
   }
   else
-    return Inpar::Thermo::conv_nonlin_fail;
+    return Thermo::conv_nonlin_fail;
 
 }  // NewtonFull()
 
@@ -544,7 +543,7 @@ void Thermo::TimIntImpl::check_for_time_step_increase()
 {
   const int maxnumfinestep = 4;
 
-  if (divcontype_ != Inpar::Thermo::divcont_halve_step)
+  if (divcontype_ != Thermo::divcont_halve_step)
     return;
   else if (divcontrefinelevel_ != 0)
   {
@@ -694,17 +693,17 @@ void Thermo::TimIntImpl::print_predictor()
       (step_old() % printscreen_ == 0))
   {
     // relative check of force residual
-    if (normtypefres_ == Inpar::Thermo::convnorm_rel)
+    if (normtypefres_ == Thermo::convnorm_rel)
     {
       std::cout << "Predictor thermo scaled res-norm " << normfres_ / normcharforce_ << std::endl;
     }
     // absolute check of force residual
-    else if (normtypefres_ == Inpar::Thermo::convnorm_abs)
+    else if (normtypefres_ == Thermo::convnorm_abs)
     {
       std::cout << "Predictor thermo absolute res-norm " << normfres_ << std::endl;
     }
     // mixed absolute-relative check of force residual
-    else if (normtypefres_ == Inpar::Thermo::convnorm_mix)
+    else if (normtypefres_ == Thermo::convnorm_mix)
     {
       std::cout << "Predictor thermo mixed res-norm "
                 << std::min(normfres_, normfres_ / normcharforce_) << std::endl;
@@ -756,13 +755,13 @@ void Thermo::TimIntImpl::print_newton_iter_header(FILE* ofile)
   // temperature
   switch (normtypefres_)
   {
-    case Inpar::Thermo::convnorm_rel:
+    case Thermo::convnorm_rel:
       oss << std::setw(18) << "rel-res-norm";
       break;
-    case Inpar::Thermo::convnorm_abs:
+    case Thermo::convnorm_abs:
       oss << std::setw(18) << "abs-res-norm";
       break;
-    case Inpar::Thermo::convnorm_mix:
+    case Thermo::convnorm_mix:
       oss << std::setw(18) << "mix-res-norm";
       break;
     default:
@@ -772,13 +771,13 @@ void Thermo::TimIntImpl::print_newton_iter_header(FILE* ofile)
 
   switch (normtypetempi_)
   {
-    case Inpar::Thermo::convnorm_rel:
+    case Thermo::convnorm_rel:
       oss << std::setw(18) << "rel-temp-norm";
       break;
-    case Inpar::Thermo::convnorm_abs:
+    case Thermo::convnorm_abs:
       oss << std::setw(18) << "abs-temp-norm";
       break;
-    case Inpar::Thermo::convnorm_mix:
+    case Thermo::convnorm_mix:
       oss << std::setw(18) << "mix-temp-norm";
       break;
     default:
@@ -819,13 +818,13 @@ void Thermo::TimIntImpl::print_newton_iter_text(FILE* ofile)
   // temperature
   switch (normtypefres_)
   {
-    case Inpar::Thermo::convnorm_rel:
+    case Thermo::convnorm_rel:
       oss << std::setw(18) << std::setprecision(5) << std::scientific << normfres_ / normcharforce_;
       break;
-    case Inpar::Thermo::convnorm_abs:
+    case Thermo::convnorm_abs:
       oss << std::setw(18) << std::setprecision(5) << std::scientific << normfres_;
       break;
-    case Inpar::Thermo::convnorm_mix:
+    case Thermo::convnorm_mix:
       oss << std::setw(18) << std::setprecision(5) << std::scientific
           << std::min(normfres_, normfres_ / normcharforce_);
       break;
@@ -836,13 +835,13 @@ void Thermo::TimIntImpl::print_newton_iter_text(FILE* ofile)
 
   switch (normtypetempi_)
   {
-    case Inpar::Thermo::convnorm_rel:
+    case Thermo::convnorm_rel:
       oss << std::setw(18) << std::setprecision(5) << std::scientific << normtempi_ / normchartemp_;
       break;
-    case Inpar::Thermo::convnorm_abs:
+    case Thermo::convnorm_abs:
       oss << std::setw(18) << std::setprecision(5) << std::scientific << normtempi_;
       break;
-    case Inpar::Thermo::convnorm_mix:
+    case Thermo::convnorm_mix:
       oss << std::setw(18) << std::setprecision(5) << std::scientific
           << std::min(normtempi_, normtempi_ / normchartemp_);
       break;

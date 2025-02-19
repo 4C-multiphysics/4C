@@ -15,8 +15,8 @@
 #include "4C_config.hpp"
 
 #include "4C_inpar_structure.hpp"
-#include "4C_inpar_thermo.hpp"
 #include "4C_inpar_tsi.hpp"
+#include "4C_thermo_input.hpp"
 #include "4C_tsi_algorithm.hpp"
 
 #include <Teuchos_Time.hpp>
@@ -333,9 +333,8 @@ namespace TSI
     enum Inpar::TSI::ConvNorm normtyperhs_;       //!< convergence check for residual forces
     enum Inpar::Solid::ConvNorm normtypedisi_;    //!< convergence check for residual displacements
     enum Inpar::Solid::ConvNorm normtypestrrhs_;  //!< convergence check for residual forces
-    enum Inpar::Thermo::ConvNorm normtypetempi_;  //!< convergence check for residual temperatures
-    enum Inpar::Thermo::ConvNorm
-        normtypethrrhs_;  //!< convergence check for residual thermal forces
+    enum Thermo::ConvNorm normtypetempi_;         //!< convergence check for residual temperatures
+    enum Thermo::ConvNorm normtypethrrhs_;        //!< convergence check for residual thermal forces
 
     enum Inpar::TSI::BinaryOp combincrhs_;  //!< binary operator to combine increments and forces
 
