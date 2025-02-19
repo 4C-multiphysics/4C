@@ -107,10 +107,6 @@ bool CONTACT::Coupling3d::integrate_cells(
     // integrate cell only if it has a non-zero area
     if (cells()[i]->area() < MORTARINTLIM * slave_element_area()) continue;
 
-    // debug output of integration cells in GMSH
-#ifdef MORTARGMSHCELLS
-    GmshOutputCells(i);
-#endif
     // set segmentation status of all slave nodes
     // (hassegment_ of a slave node is true if ANY segment/cell
     // is integrated that contributes to this slave node)

@@ -1348,12 +1348,6 @@ namespace Mortar
     //! @name Visualization and Debugging methods
 
     /*!
-    \brief Visualize mortar stuff with gmsh (may be overloaded)
-    */
-    virtual void visualize_gmsh(
-        const int step, const int iter, const std::string& file_name_only_prefix) const;
-
-    /*!
     \brief Print shape function type (enum)
     */
     void print_shape_fcn() const { std::cout << shapefcn_ << std::endl; };
@@ -1531,12 +1525,6 @@ namespace Mortar
     */
     virtual void evaluate_coupling(const Epetra_Map& selecolmap, const Epetra_Map* snoderowmap,
         const std::shared_ptr<Mortar::ParamsInterface>& mparams_ptr);
-
-    /*!
-    \brief do scaling and other operations after real coupling
-
-    */
-    virtual void post_evaluate(const int step = 0, const int iter = 0);
 
     /*!
     \brief find master nodes for one snode

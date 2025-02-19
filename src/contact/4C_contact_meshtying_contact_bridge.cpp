@@ -177,17 +177,6 @@ void CONTACT::MeshtyingContactBridge::update(std::shared_ptr<Core::LinAlg::Vecto
   if (have_meshtying()) mt_manager()->get_strategy().update(dis);
 }
 
-/*----------------------------------------------------------------------*
- |  Write restart                                             popp 11/14|
- *----------------------------------------------------------------------*/
-void CONTACT::MeshtyingContactBridge::visualize_gmsh(const int istep, const int iter)
-{
-  // contact
-  if (have_contact()) contact_manager()->get_strategy().visualize_gmsh(istep, iter);
-
-  // meshtying
-  if (have_meshtying()) mt_manager()->get_strategy().visualize_gmsh(istep, iter);
-}
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
