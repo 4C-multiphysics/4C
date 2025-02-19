@@ -324,7 +324,7 @@ Discret::Elements::FluidInternalSurfaceStab<distype, pdistype, ndistype>::FluidI
 
   // creating a singleton instance ensures that the object will be deleted at the end
   // create intpoints with computed degree
-  intpoints_ = Core::FE::GaussPointCache::instance().create(distype, patch_degree);
+  intpoints_ = Core::FE::create_gauss_points(distype, patch_degree);
 
   numgp_ = intpoints_->num_points();
 
