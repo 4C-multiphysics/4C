@@ -146,6 +146,37 @@ void Thermo::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& li
 
   tonesteptheta.move_into_collection(list);
 
+  // vtk runtime output
+  {
+    Core::Utils::SectionSpecs sublist_vtk_output{tdyn, "RUNTIME VTK OUTPUT"};
+
+    // whether to write output for thermo
+    Core::Utils::bool_parameter("OUTPUT_THERMO", "No", "write thermo output", sublist_vtk_output);
+
+    // whether to write temperature state
+    Core::Utils::bool_parameter(
+        "TEMPERATURE", "No", "write temperature output", sublist_vtk_output);
+
+    // whether to write heatflux state
+    Core::Utils::bool_parameter("HEATFLUX", "No", "write heatflux output", sublist_vtk_output);
+
+    // whether to write temperature gradient state
+    Core::Utils::bool_parameter(
+        "TEMPGRAD", "No", "write temperature gradient output", sublist_vtk_output);
+
+    // whether to write element owner
+    Core::Utils::bool_parameter("ELEMENT_OWNER", "No", "write element owner", sublist_vtk_output);
+
+    // whether to write element GIDs
+    Core::Utils::bool_parameter(
+        "ELEMENT_GID", "No", "write 4C internal element GIDs", sublist_vtk_output);
+
+    // whether to write node GIDs
+    Core::Utils::bool_parameter(
+        "NODE_GID", "No", "write 4C internal node GIDs", sublist_vtk_output);
+
+    sublist_vtk_output.move_into_collection(list);
+  }
 
   // csv runtime output
   {

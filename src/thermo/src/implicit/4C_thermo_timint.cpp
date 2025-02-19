@@ -123,7 +123,7 @@ Thermo::TimInt::TimInt(const Teuchos::ParameterList& ioparams,
   // check for special thermo vtk output which is to be handled by an own writer object
   {
     const Teuchos::ParameterList thermo_vtk_runtime_output_list(
-        Global::Problem::instance()->io_params().sublist("RUNTIME VTK OUTPUT").sublist("THERMO"));
+        tdynparams.sublist("RUNTIME VTK OUTPUT"));
 
     auto vtk_output_thermo = thermo_vtk_runtime_output_list.get<bool>("OUTPUT_THERMO");
 

@@ -33,7 +33,6 @@
 #include "4C_inpar_IO_runtime_output.hpp"
 #include "4C_inpar_IO_runtime_output_fluid.hpp"
 #include "4C_inpar_IO_runtime_output_structure_beams.hpp"
-#include "4C_inpar_IO_runtime_output_thermo.hpp"
 #include "4C_inpar_IO_runtime_vtk_output_structure.hpp"
 #include "4C_inpar_IO_runtime_vtp_output_structure.hpp"
 #include "4C_inpar_levelset.hpp"
