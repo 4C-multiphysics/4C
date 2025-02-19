@@ -22,8 +22,6 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-// #define WRITE_GMSH
-
 namespace Mortar
 {
   class Element;
@@ -224,11 +222,8 @@ namespace XFEM
       return (higher_contact_elements_comm_.find(cid) != higher_contact_elements_comm_.end());
     }
 
-    /// Initialize Gmsh files
-    void create_new_gmsh_files();
-
-    /// Write Gmsh files
-    void gmsh_write(Core::LinAlg::Matrix<3, 1> x, double val, int section);
+    /// Print a summary of contact GPs
+    void print_summary_contact_gps();
 
     /// Increment gausspoint counter
     void inc_gp(int state) { ++sum_gps_[state]; }
@@ -367,9 +362,6 @@ namespace XFEM
     std::set<int> higher_contact_elements_;
     /// Contact Elements with increased number of GPs synchronized
     std::set<int> higher_contact_elements_comm_;
-
-    /// For Gmsh Output
-    std::vector<std::vector<std::pair<Core::LinAlg::Matrix<3, 1>, double>>> plot_data_;
 
     /// Summarized Contact gps
     /// 0 ... Contact, 1 ... Contact_NoContactNoFSI, 2 ... Contact_NoContactFSI, 3 ...

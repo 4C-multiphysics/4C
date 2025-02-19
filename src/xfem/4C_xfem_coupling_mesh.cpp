@@ -2272,14 +2272,6 @@ void XFEM::MeshCouplingFSI::update_configuration_map_gp_contact(
   XFEM::Utils::get_navier_slip_stabilization_parameters(
       visc_stab_tang, dynvisc, sliplength, stabnit, stabadj);  // sliplength is input for this
 
-#ifdef WRITE_GMSH
-  {
-    xf_c_comm_->Gmsh_Write(x, *fulltraction, 1);
-    xf_c_comm_->Gmsh_Write(x, (double)pure_fsi, 3);
-    xf_c_comm_->Gmsh_Write(x, sliplength, 6);
-  }
-#endif
-
   if (pure_fsi)  // standard FSI with general Navier-slip --> Case I
   {
     xf_c_comm_->inc_gp(3);

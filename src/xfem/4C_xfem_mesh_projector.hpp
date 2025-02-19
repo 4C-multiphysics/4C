@@ -71,10 +71,6 @@ namespace XFEM
         std::vector<std::shared_ptr<Core::LinAlg::Vector<double>>> target_statevecs,
         std::shared_ptr<const Core::LinAlg::Vector<double>> targetdisp = nullptr);
 
-    //! write gmsh output for projection details
-    void gmsh_output(
-        int step = 0, std::shared_ptr<const Core::LinAlg::Vector<double>> targetdisp = nullptr);
-
    private:
     /// determine the search radius for the search tree
     template <Core::FE::CellType distype>

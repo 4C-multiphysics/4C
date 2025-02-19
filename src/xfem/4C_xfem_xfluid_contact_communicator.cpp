@@ -117,7 +117,7 @@ void XFEM::XFluidContactComm::initialize_fluid_state(std::shared_ptr<Cut::CutWiz
 
   last_ele_h_ = std::pair<int, double>(-1, -1);
 
-  create_new_gmsh_files();
+  print_summary_contact_gps();
 }
 
 double XFEM::XFluidContactComm::get_fsi_traction(Mortar::Element* ele,
@@ -358,18 +358,7 @@ void XFEM::XFluidContactComm::get_states(const int fluidele_id, const std::vecto
           Cut::PositionFactory::build_position<3, Core::FE::CellType::hex8>(xyze, x);
       if (!pos->compute(1e-1))  // if we are a little bit outside of the element we don't care ...
       {
-        pos->local_coordinates(fluidele_xsi);
-        std::cout << "fluidele_xsi: " << fluidele_xsi << std::endl;
-        std::ofstream file("DEBUG_OUT_D007.pos");
-        Cut::Output::gmsh_new_section(file, "The point");
-        Cut::Output::gmsh_coord_dump(file, x, -1);
-        Cut::Output::gmsh_new_section(file, "The Element", true);
-        file << "SH(";
-        for (int i = 0; i < 7; ++i)
-          for (int j = 0; j < 3; ++j) file << xyze(j, i) << ", ";
-        file << xyze(0, 7) << ", " << xyze(1, 7) << ", " << xyze(2, 7) << "){1,2,3,4,5,6,7,8};";
-        Cut::Output::gmsh_end_section(file, true);
-        FOUR_C_THROW("Couldn'd compute local coordinate for fluid element (DEBUG_OUT_D007.pos)!");
+        FOUR_C_THROW("Couldn't compute local coordinate for fluid element!");
       }
       pos->local_coordinates(fluidele_xsi);
 
@@ -720,12 +709,7 @@ bool XFEM::XFluidContactComm::get_volumecell(Discret::Elements::StructuralSurfac
   }
   if (found_side == -1)
   {
-    std::ofstream file("DEBUG_OUT_D001.pos");
-    Cut::Output::gmsh_new_section(file, "The point to identity");
-    Cut::Output::gmsh_coord_dump(file, x, -1);
-    Cut::Output::gmsh_end_section(file);
-    Cut::Output::gmsh_write_section(file, "All subsides", subsides, true);
-    FOUR_C_THROW("Coundn't identify side (DEBUG_OUT_D001.pos)!");
+    FOUR_C_THROW("Couldn't identify side!");
   }
   else
   {
@@ -793,15 +777,8 @@ bool XFEM::XFluidContactComm::get_volumecell(Discret::Elements::StructuralSurfac
             triangulation.push_back(afacet->points());
           else
           {
-            std::ofstream file("DEBUG_OUT_D003.pos");
-            Cut::Output::gmsh_new_section(file, "The point to identity");
-            Cut::Output::gmsh_coord_dump(file, x, -1);
-            Cut::Output::gmsh_new_section(file, "facet", true);
-            Cut::Output::gmsh_facet_dump(file, afacet, "sides", true);
-            Cut::Output::gmsh_end_section(file);
-            Cut::Output::gmsh_write_section(file, "ALLFACETS", facets, true);
             std::cout << "==| Warning from of your friendly XFluidContactComm: I have untriagled "
-                         "faces (DEBUG_OUT_D003.pos)! |=="
+                         "faces |=="
                       << std::endl;
           }
 
@@ -838,25 +815,7 @@ bool XFEM::XFluidContactComm::get_volumecell(Discret::Elements::StructuralSurfac
         }
         else if (!facet)
         {
-          std::ofstream file("DEBUG_OUT_D004.pos");
-          Cut::Output::gmsh_new_section(file, "The point to identity");
-          Cut::Output::gmsh_coord_dump(file, x, -1);
-          Cut::Output::gmsh_new_section(file, "The selected subside", true);
-          Cut::Output::gmsh_side_dump(file, subsides[found_side]);
-          Cut::Output::gmsh_end_section(file);
-          Cut::Output::gmsh_write_section(file, "All facets", facets);
-          for (std::size_t f = 0; f < facets.size(); ++f)
-          {
-            std::stringstream strf;
-            strf << "Facet (" << f << ")";
-            std::stringstream strv;
-            strv << "Volumecell of facet (" << f << ")";
-            Cut::Output::gmsh_write_section(file, strf.str(), facets[f]);
-            Cut::Output::gmsh_write_section(file, strv.str(), facets[f]->cells());
-          }
-          file.close();
-
-          FOUR_C_THROW("Couldn't identify facet (DEBUG_OUT_D004.pos)!");
+          FOUR_C_THROW("Couldn't identify facet!");
         }
       }
     }
@@ -866,14 +825,7 @@ bool XFEM::XFluidContactComm::get_volumecell(Discret::Elements::StructuralSurfac
       {
         return false;  // in parallel this is ok
       }
-
-      std::ofstream file("DEBUG_OUT_D005.pos");
-      Cut::Output::gmsh_new_section(file, "The point to identity");
-      Cut::Output::gmsh_coord_dump(file, x, -1);
-      Cut::Output::gmsh_new_section(file, "The selected subside", true);
-      Cut::Output::gmsh_side_dump(file, side);
-      Cut::Output::gmsh_end_section(file, true);
-      FOUR_C_THROW("Side has no facets but is physical (DEBUG_OUT_D005.pos)!");
+      FOUR_C_THROW("Side has no facets but is physical!");
     }
   }
 
@@ -886,18 +838,7 @@ bool XFEM::XFluidContactComm::get_volumecell(Discret::Elements::StructuralSurfac
       {
         if (volumecell)
         {
-          std::ofstream file("DEBUG_OUT_D006.pos");
-          Cut::Output::gmsh_new_section(file, "The point to identity");
-          Cut::Output::gmsh_coord_dump(file, x, -1);
-          Cut::Output::gmsh_new_section(file, "The selected subside", true);
-          Cut::Output::gmsh_side_dump(file, subsides[found_side]);
-          Cut::Output::gmsh_new_section(file, "VC1", true);
-          Cut::Output::gmsh_volumecell_dump(file, volumecell, "sides", true);
-          Cut::Output::gmsh_new_section(file, "VC2", true);
-          Cut::Output::gmsh_volumecell_dump(file, facet->cells()[vc], "sides", true);
-          file.close();
-          FOUR_C_THROW(
-              "Facet has at least two volumecells which are outside (DEBUG_OUT_D006.pos)!");
+          FOUR_C_THROW("Facet has at least two volumecells which are outside!");
         }
         volumecell = facet->cells()[vc];
         if (parallel_)
@@ -952,11 +893,6 @@ Cut::Side* XFEM::XFluidContactComm::findnext_physical_side(Core::LinAlg::Matrix<
 
   if (!newSide)
   {
-    std::stringstream str;
-    str << "CINS_" << Core::Communication::my_mpi_rank(fluiddis_->get_comm()) << ".pos";
-    std::ofstream file(str.str().c_str());
-    Cut::Output::gmsh_write_section(file, "InitSide", initSide);
-    Cut::Output::gmsh_write_section(file, "PerFormedSides", performed_sides, true);
     FOUR_C_THROW("Couldn't identify a new side (number of identified physical sides: %d)!",
         physical_sides.size());
   }
@@ -1434,48 +1370,8 @@ double XFEM::XFluidContactComm::get_fpi_pcontact_fullfraction()
   return mcfpi_ps_pf_->get_fpi_pcontact_fullfraction();
 }
 
-void XFEM::XFluidContactComm::create_new_gmsh_files()
+void XFEM::XFluidContactComm::print_summary_contact_gps()
 {
-#ifdef WRITE_GMSH
-  std::vector<std::string> sections;
-  sections.push_back("Contact_Traction");           // 0
-  sections.push_back("FSI_Traction");               // 1
-  sections.push_back("Contact_Active");             // 2
-  sections.push_back("FSI_Active");                 // 3
-  sections.push_back("Contact_Traction_Solid");     // 4
-  sections.push_back("Contact_Traction_Fluid");     // 5
-  sections.push_back("FSI_sliplenth");              // 6
-  sections.push_back("All_GPs_Contact");            // 7
-  sections.push_back("Contact_PoroFlow_Active");    // 8
-  sections.push_back("Contact_PoroFlow_Inactive");  // 9
-  sections.push_back("FPI_PoroFlow_Ffac");          // 10
-
-  static int counter = 0;
-  if (counter)
-  {
-    std::stringstream str;
-    str << "FSCI_" << counter << "_" << Core::Communication::my_mpi_rank(fluiddis_->Comm())
-        << ".pos";
-    std::ofstream file(str.str().c_str());
-    for (std::size_t section = 0; section < sections.size(); ++section)
-    {
-      Cut::Output::gmsh_new_section(file, sections[section], false);
-      for (std::size_t entry = 0; entry < (plot_data_[section]).size(); ++entry)
-      {
-        Cut::Output::gmsh_coord_dump(
-            file, (plot_data_[section])[entry].first, (plot_data_[section])[entry].second);
-      }
-      Cut::Output::gmsh_end_section(file, false);
-    }
-    file.close();
-  }
-  ++counter;
-  if (counter > 100) counter = 1;
-
-  plot_data_.clear();
-  plot_data_.resize(sections.size());
-#endif
-
   sum_gps_.resize(5);
   std::vector<int> g_sum_gps(5);
   Core::Communication::sum_all(sum_gps_.data(), g_sum_gps.data(), 5, fluiddis_->get_comm());
@@ -1495,13 +1391,6 @@ void XFEM::XFluidContactComm::create_new_gmsh_files()
   }
   sum_gps_.clear();
   sum_gps_.resize(5);
-}
-
-void XFEM::XFluidContactComm::gmsh_write(Core::LinAlg::Matrix<3, 1> x, double val, int section)
-{
-#ifdef WRITE_GMSH
-  plot_data_[section].push_back(std::pair<Core::LinAlg::Matrix<3, 1>, double>(x, val));
-#endif
 }
 
 FOUR_C_NAMESPACE_CLOSE

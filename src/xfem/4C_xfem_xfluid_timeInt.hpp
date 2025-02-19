@@ -125,9 +125,6 @@ namespace XFEM
     /// get permutation map for ghost dofs
     std::shared_ptr<std::map<int, int>> get_permutation_map() { return permutation_map_; };
 
-    /// timint output for reconstruction methods
-    void output();
-
    private:
     /// transfer standard and ghost dofs to new map as far as possible and mark dofs for
     /// reconstruction for a given node gid

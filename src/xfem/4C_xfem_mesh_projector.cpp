@@ -15,7 +15,6 @@
 #include "4C_fem_geometry_searchtree_service.hpp"
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
-#include "4C_io_gmsh.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
@@ -592,54 +591,6 @@ void XFEM::MeshProjector::pack_values(std::vector<Core::LinAlg::Matrix<3, 1>>& t
   add_to_pack(data, projection_targetnodes);
   add_to_pack(data, have_values);
   swap(sblock, data());
-}
-
-void XFEM::MeshProjector::gmsh_output(
-    int step, std::shared_ptr<const Core::LinAlg::Vector<double>> targetdisp)
-{
-  // output of source discretization with element numbers and target nodes together with element id
-  // of source element for value projection
-  const std::string filename = Core::IO::Gmsh::get_new_file_name_and_delete_old_files(
-      "tarnode_to_src_ele", targetdis_->writer()->output()->file_name(), step, 30, 0,
-      Core::Communication::my_mpi_rank(targetdis_->get_comm()));
-  std::ofstream gmshfilecontent(filename.c_str());
-  {
-    XFEM::Utils::print_discretization_to_stream(
-        std::const_pointer_cast<Core::FE::Discretization>(sourcedis_), sourcedis_->name(), true,
-        false, false, false, false, false, gmshfilecontent, &src_nodepositions_n_);
-
-    gmshfilecontent << "View \" "
-                    << "nodeToEle n\" {\n";
-
-    std::vector<int> tar_dofs(3);
-    std::vector<double> mydisp(3, 0.0);
-    for (int i = 0; i < targetdis_->num_my_col_nodes(); ++i)
-    {
-      const Core::Nodes::Node* actnode = targetdis_->l_col_node(i);
-      Core::LinAlg::Matrix<3, 1> pos(actnode->x().data(), false);
-      if (targetdisp != nullptr)
-      {
-        // get the current displacement
-        targetdis_->dof(actnode, 0, tar_dofs);
-        mydisp = Core::FE::extract_values(*targetdisp, tar_dofs);
-        for (unsigned isd = 0; isd < 3; ++isd)
-        {
-          pos(isd, 0) += mydisp[isd];
-        }
-        mydisp.clear();
-      }
-      tar_dofs.clear();
-
-      std::map<int, int>::const_iterator iter = targetnode_to_parent_.find(actnode->id());
-
-      if (iter != targetnode_to_parent_.end())
-      {
-        int id = iter->second;
-        Core::IO::Gmsh::scalar_to_stream(pos, id, gmshfilecontent);
-      }
-    }
-    gmshfilecontent << "};\n";
-  }
 }
 
 FOUR_C_NAMESPACE_CLOSE

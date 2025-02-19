@@ -13,7 +13,6 @@
 #include "4C_fluid_ele_parameter_xfem.hpp"
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
-#include "4C_io_gmsh.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_linalg_utils_densematrix_communication.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
@@ -456,15 +455,6 @@ void XFEM::MeshCouplingFPI::update_configuration_map_gp_contact(
   XFEM::Utils::get_navier_slip_stabilization_parameters(
       visc_stab_tang, dynvisc, sliplength, stabnit, stabadj);
 
-#ifdef WRITE_GMSH
-  if (coupled_field_ == MeshCouplingFPI::ps_ps)
-  {
-    xf_c_comm_->Gmsh_Write(x, *fulltraction, 1);
-    xf_c_comm_->Gmsh_Write(x, (double)pure_fsi, 3);
-    xf_c_comm_->Gmsh_Write(x, sliplength, 6);
-  }
-#endif
-
   // Overall there are 9 coupling blocks to evaluate for fpi:
   // 1 - ps_ps --> ff,fps,psf,psps
   // 2 - ps_pf --> fpf,pspf
@@ -534,10 +524,6 @@ void XFEM::MeshCouplingFPI::update_configuration_map_gp_contact(
           get_fpi_pcontact_exchange_dist() > 1e-16)
         ffac = gap / (get_fpi_pcontact_exchange_dist())-get_fpi_pcontact_fullfraction();
       if (ffac < 0) ffac = 0;
-
-#ifdef WRITE_GMSH
-      xf_c_comm_->Gmsh_Write(x, ffac, 10);
-#endif
 
       configuration_map_[Inpar::XFEM::X_Con_n_Row].second = ffac;
 
@@ -620,77 +606,6 @@ void XFEM::MeshCouplingFPI::read_restart(const int step)
     FOUR_C_THROW("Global dof numbering in maps does not match");
 }
 
-/*--------------------------------------------------------------------------*
- *--------------------------------------------------------------------------*/
-void XFEM::MeshCouplingFPI::gmsh_output(const std::string& filename_base, const int step,
-    const int gmsh_step_diff, const bool gmsh_debug_out_screen)
-{
-  std::ostringstream filename_base_fsi;
-  filename_base_fsi << filename_base << "_force";
-
-  // compute the current boundary position
-  std::map<int, Core::LinAlg::Matrix<3, 1>> currinterfacepositions;
-  XFEM::Utils::extract_node_vectors(*cutter_dis_, currinterfacepositions, idispnp_);
-
-
-  const std::string filename = Core::IO::Gmsh::get_new_file_name_and_delete_old_files(
-      filename_base_fsi.str(), cutter_dis_->writer()->output()->file_name(), step, gmsh_step_diff,
-      gmsh_debug_out_screen, myrank_);
-
-  std::ofstream gmshfilecontent(filename.c_str());
-
-  {
-    // add 'View' to Gmsh postprocessing file
-    gmshfilecontent << "View \" "
-                    << "iforce \" {" << std::endl;
-    // draw vector field 'force' for every node
-    Core::IO::Gmsh::surface_vector_field_dof_based_to_gmsh(
-        *cutter_dis_, itrueresidual_, currinterfacepositions, gmshfilecontent, 3, 3);
-    gmshfilecontent << "};" << std::endl;
-  }
-
-  {
-    // add 'View' to Gmsh postprocessing file
-    gmshfilecontent << "View \" "
-                    << "idispnp \" {" << std::endl;
-    // draw vector field 'idispnp' for every node
-    Core::IO::Gmsh::surface_vector_field_dof_based_to_gmsh(
-        *cutter_dis_, idispnp_, currinterfacepositions, gmshfilecontent, 3, 3);
-    gmshfilecontent << "};" << std::endl;
-  }
-
-  {
-    // add 'View' to Gmsh postprocessing file
-    gmshfilecontent << "View \" "
-                    << "ivelnp \" {" << std::endl;
-    // draw vector field 'ivelnp' for every node
-    Core::IO::Gmsh::surface_vector_field_dof_based_to_gmsh(
-        *cutter_dis_, ivelnp_, currinterfacepositions, gmshfilecontent, 3, 3);
-    gmshfilecontent << "};" << std::endl;
-  }
-
-  gmshfilecontent.close();
-}
-
-/*--------------------------------------------------------------------------*
- *--------------------------------------------------------------------------*/
-void XFEM::MeshCouplingFPI::gmsh_output_discretization(std::ostream& gmshfilecontent)
-{
-  // print surface discretization
-  XFEM::MeshCoupling::gmsh_output_discretization(gmshfilecontent);
-
-  // compute the current solid and boundary position
-  std::map<int, Core::LinAlg::Matrix<3, 1>> currsolidpositions;
-
-  // write dis with zero solid displacements here!
-  std::shared_ptr<Core::LinAlg::Vector<double>> solid_dispnp =
-      Core::LinAlg::create_vector(*cond_dis_->dof_row_map(), true);
-
-  XFEM::Utils::extract_node_vectors(*cond_dis_, currsolidpositions, solid_dispnp);
-
-  XFEM::Utils::print_discretization_to_stream(cond_dis_, cond_dis_->name(), true, false, true,
-      false, false, false, gmshfilecontent, &currsolidpositions);
-}
 
 void XFEM::MeshCouplingFPI::output(const int step, const double time, const bool write_restart_data)
 {

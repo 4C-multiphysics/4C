@@ -3946,8 +3946,6 @@ void FLD::XFluid::x_timint_transfer_vectors_between_steps(
         dbcgids,  /// set of dof gids that must not be changed by ghost penalty reconstruction
     bool fill_permutation_map, bool screen_out)
 {
-  const bool reconstruct_method_output = false;
-
   xfluid_timeint->transfer_dofs_to_new_map(oldRowStateVectors, newRowStateVectors, dbcgids);
 
   if (fill_permutation_map) permutation_map_ = xfluid_timeint->get_permutation_map();
@@ -3955,8 +3953,6 @@ void FLD::XFluid::x_timint_transfer_vectors_between_steps(
   if (myrank_ == 0 and screen_out) std::cout << " done\n" << std::flush;
 
   xfluid_timeint->set_and_print_status(screen_out);
-
-  if (reconstruct_method_output) xfluid_timeint->output();
 }
 
 /*----------------------------------------------------------------------*

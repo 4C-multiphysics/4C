@@ -111,11 +111,6 @@ namespace XFEM
 
     virtual void zero_state_vectors_fpi();
 
-    void gmsh_output(const std::string& filename_base, const int step, const int gmsh_step_diff,
-        const bool gmsh_debug_out_screen) override;
-
-    void gmsh_output_discretization(std::ostream& gmshfilecontent) override;
-
     void lift_drag(const int step, const double time) const override;
 
     void read_restart(const int step) override;

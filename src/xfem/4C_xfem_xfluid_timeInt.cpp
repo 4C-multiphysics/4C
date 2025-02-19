@@ -25,7 +25,6 @@
 #include "4C_inpar_xfem.hpp"
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
-#include "4C_io_gmsh.hpp"
 #include "4C_xfem_condition_manager.hpp"
 #include "4C_xfem_dofset.hpp"
 
@@ -2231,56 +2230,5 @@ void XFEM::XFluidTimeInt::send_data(Core::Communication::PackBuffer& dataSend, i
             << source << std::endl;
 #endif
 }  // end send_data
-
-
-
-// -------------------------------------------------------------------
-// timint output for reconstruction methods
-// -------------------------------------------------------------------
-void XFEM::XFluidTimeInt::output()
-{
-  int step_diff = 500;
-
-  // output for all dofsets of nodes
-  const std::string filename = Core::IO::Gmsh::get_new_file_name_and_delete_old_files(
-      "TIMINT_Method", dis_->writer()->output()->file_name(), step_, step_diff, true,
-      Core::Communication::my_mpi_rank(dis_->get_comm()));
-  std::ofstream gmshfilecontent(filename.c_str());
-  gmshfilecontent.setf(std::ios::scientific, std::ios::floatfield);
-  gmshfilecontent.precision(16);
-  {
-    gmshfilecontent << "View \" "
-                    << "Reconstr-Method \" {\n";
-
-    for (int i = 0; i < dis_->num_my_row_nodes(); ++i)
-    {
-      const Core::Nodes::Node* actnode = dis_->l_row_node(i);
-      const Core::LinAlg::Matrix<3, 1> pos(actnode->x().data());
-
-      std::map<int, std::vector<Inpar::XFEM::XFluidTimeInt>>::const_iterator it =
-          node_to_reconstr_method_.find(actnode->id());
-
-      if (it == node_to_reconstr_method_.end())
-      {
-        continue;
-        // this is a node in the void domain
-      }
-
-      // time integration reconstruction methods for the node's different dofsets
-      const std::vector<Inpar::XFEM::XFluidTimeInt>& nds_methods = it->second;
-
-      for (size_t j = 0; j < nds_methods.size(); j++)
-      {
-        Core::IO::Gmsh::cell_with_scalar_to_stream(
-            Core::FE::CellType::point1, (int)nds_methods[j], pos, gmshfilecontent);
-      }
-    }
-    gmshfilecontent << "};\n";
-  }
-
-  gmshfilecontent.close();
-
-  if (myrank_ == 0) Core::IO::cout << Core::IO::endl;
-}
 
 FOUR_C_NAMESPACE_CLOSE
