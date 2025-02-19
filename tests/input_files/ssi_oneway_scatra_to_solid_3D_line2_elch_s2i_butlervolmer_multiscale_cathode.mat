@@ -2,6 +2,8 @@
 //ELEMENTS    10
 //NODES       11
 DIM           1
+-------------------------------------------------------PROBLEM TYPE
+PROBLEMTYPE                     Scalar_Transport
 ------------------------------------------SCALAR TRANSPORT DYNAMIC
 SOLVERTYPE                      nonlinear
 NUMSTEP                         1000
