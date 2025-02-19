@@ -38,7 +38,6 @@ ScaTra::LevelSetTimIntOneStepTheta::LevelSetTimIntOneStepTheta(
 }
 
 
-
 /*----------------------------------------------------------------------*
  |  initialize time integration                             rauch 09/16 |
  *----------------------------------------------------------------------*/
@@ -229,7 +228,7 @@ void ScaTra::LevelSetTimIntOneStepTheta::update_reinit()
  | Redistribute the scatra discretization and vectors according to nodegraph  rasthofer 07/11 |
  |                                                                            DA wichmann     |
  *--------------------------------------------------------------------------------------------*/
-void ScaTra::LevelSetTimIntOneStepTheta::redistribute(Epetra_CrsGraph& nodegraph)
+void ScaTra::LevelSetTimIntOneStepTheta::redistribute(Core::LinAlg::Graph& nodegraph)
 {
   // let the base class do the basic redistribution and transfer of the base class members
   LevelSetAlgorithm::redistribute(nodegraph);

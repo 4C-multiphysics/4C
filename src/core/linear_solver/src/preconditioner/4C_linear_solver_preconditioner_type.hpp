@@ -10,10 +10,10 @@
 
 #include "4C_config.hpp"
 
+#include "4C_linalg_graph.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
-#include <Epetra_CrsGraph.h>
 #include <Epetra_CrsMatrix.h>
 #include <Epetra_LinearProblem.h>
 #include <Epetra_Map.h>

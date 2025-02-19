@@ -32,7 +32,7 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 std::pair<std::shared_ptr<Epetra_Map>, std::shared_ptr<Epetra_Map>>
-Core::Rebalance::rebalance_node_maps(const Epetra_CrsGraph& initialGraph,
+Core::Rebalance::rebalance_node_maps(const Core::LinAlg::Graph& initialGraph,
     const Teuchos::ParameterList& rebalanceParams,
     const std::shared_ptr<Core::LinAlg::Vector<double>>& initialNodeWeights,
     const std::shared_ptr<Epetra_CrsMatrix>& initialEdgeWeights,
@@ -41,8 +41,8 @@ Core::Rebalance::rebalance_node_maps(const Epetra_CrsGraph& initialGraph,
   TEUCHOS_FUNC_TIME_MONITOR("Rebalance::rebalance_node_maps");
 
   // Compute rebalanced graph
-  Teuchos::RCP<Epetra_CrsGraph> balanced_graph = Rebalance::rebalance_graph(initialGraph,
-      rebalanceParams, initialNodeWeights, initialEdgeWeights, initialNodeCoordinates);
+  auto balanced_graph = Rebalance::rebalance_graph(initialGraph, rebalanceParams,
+      initialNodeWeights, initialEdgeWeights, initialNodeCoordinates);
 
   // extract repartitioned maps
   std::shared_ptr<Epetra_Map> rownodes =
@@ -57,8 +57,8 @@ Core::Rebalance::rebalance_node_maps(const Epetra_CrsGraph& initialGraph,
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-Teuchos::RCP<Epetra_CrsGraph> Core::Rebalance::rebalance_graph(const Epetra_CrsGraph& initialGraph,
-    const Teuchos::ParameterList& rebalanceParams,
+std::shared_ptr<Core::LinAlg::Graph> Core::Rebalance::rebalance_graph(
+    const Core::LinAlg::Graph& initialGraph, const Teuchos::ParameterList& rebalanceParams,
     const std::shared_ptr<Core::LinAlg::Vector<double>>& initialNodeWeights,
     const std::shared_ptr<Epetra_CrsMatrix>& initialEdgeWeights,
     const std::shared_ptr<Core::LinAlg::MultiVector<double>>& initialNodeCoordinates)
@@ -74,17 +74,19 @@ Teuchos::RCP<Epetra_CrsGraph> Core::Rebalance::rebalance_graph(const Epetra_CrsG
   Teuchos::RCP<Isorropia::Epetra::Partitioner> partitioner;
   if (initialNodeCoordinates)
   {
-    partitioner = Teuchos::make_rcp<Isorropia::Epetra::Partitioner>(&initialGraph, &costs,
+    partitioner = Teuchos::make_rcp<Isorropia::Epetra::Partitioner>(
+        &initialGraph.get_ref_of_Epetra_CrsGraph(), &costs,
         initialNodeCoordinates->get_ptr_of_Epetra_MultiVector().get(), nullptr, rebalanceParams);
   }
   else
   {
-    partitioner =
-        Teuchos::make_rcp<Isorropia::Epetra::Partitioner>(&initialGraph, &costs, rebalanceParams);
+    partitioner = Teuchos::make_rcp<Isorropia::Epetra::Partitioner>(
+        &initialGraph.get_ref_of_Epetra_CrsGraph(), &costs, rebalanceParams);
   }
 
   Isorropia::Epetra::Redistributor rd(partitioner);
-  Teuchos::RCP<Epetra_CrsGraph> balancedGraph = rd.redistribute(initialGraph, true);
+  auto balancedGraph = std::make_shared<Core::LinAlg::Graph>(
+      *rd.redistribute(initialGraph.get_ref_of_Epetra_CrsGraph(), true));
 
   balancedGraph->FillComplete();
   balancedGraph->OptimizeStorage();
@@ -155,7 +157,7 @@ Core::Rebalance::build_weights(const Core::FE::Discretization& dis)
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-std::shared_ptr<const Epetra_CrsGraph> Core::Rebalance::build_graph(
+std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_graph(
     Core::FE::Discretization& dis, const Epetra_Map& roweles)
 {
   const int myrank = Core::Communication::my_mpi_rank(dis.get_comm());
@@ -256,8 +258,8 @@ std::shared_ptr<const Epetra_CrsGraph> Core::Rebalance::build_graph(
     Core::Communication::max_all(&smaxband, &maxband, 1, dis.get_comm());
   }
 
-  std::shared_ptr<Epetra_CrsGraph> graph =
-      std::make_shared<Epetra_CrsGraph>(Copy, *rownodes, maxband, false);
+  std::shared_ptr<Core::LinAlg::Graph> graph =
+      std::make_shared<Core::LinAlg::Graph>(Copy, *rownodes, maxband, false);
   Core::Communication::barrier(dis.get_comm());
 
   // fill all local entries into the graph
@@ -272,7 +274,7 @@ std::shared_ptr<const Epetra_CrsGraph> Core::Rebalance::build_graph(
       int err = graph->InsertGlobalIndices(grid, (int)cols.size(), &cols[0]);
       if (err < 0)
         FOUR_C_THROW(
-            "Epetra_CrsGraph::InsertGlobalIndices returned %d for global row %d", err, grid);
+            "Core::LinAlg::Graph::InsertGlobalIndices returned %d for global row %d", err, grid);
     }
     locals.clear();
   }
@@ -312,7 +314,7 @@ std::shared_ptr<const Epetra_CrsGraph> Core::Rebalance::build_graph(
         if (rownodes->LID(grid) != -1)  // I have it, put stuff in my graph
         {
           int err = graph->InsertGlobalIndices(grid, num - 1, (ptr + 2));
-          if (err < 0) FOUR_C_THROW("Epetra_CrsGraph::InsertGlobalIndices returned %d", err);
+          if (err < 0) FOUR_C_THROW("Core::LinAlg::Graph::InsertGlobalIndices returned %d", err);
           ptr += (num + 1);
         }
         else  // I don't have it so I don't care for entries of this row, goto next row
@@ -336,7 +338,7 @@ std::shared_ptr<const Epetra_CrsGraph> Core::Rebalance::build_graph(
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-std::shared_ptr<const Epetra_CrsGraph> Core::Rebalance::build_monolithic_node_graph(
+std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_monolithic_node_graph(
     const Core::FE::Discretization& dis, const Core::GeometricSearch::GeometricSearchParams& params)
 {
   // 1. Do a global geometric search
@@ -356,7 +358,7 @@ std::shared_ptr<const Epetra_CrsGraph> Core::Rebalance::build_monolithic_node_gr
   // 2. Get nodal connectivity of each element
   const int n_nodes_per_element_max = 27;  // element with highest node count is hex27
   int err;
-  Epetra_CrsGraph element_connectivity(
+  Core::LinAlg::Graph element_connectivity(
       Copy, *dis.element_row_map(), n_nodes_per_element_max, false);
   for (int rowele_i = 0; rowele_i < dis.num_my_row_elements(); ++rowele_i)
   {
@@ -368,7 +370,7 @@ std::shared_ptr<const Epetra_CrsGraph> Core::Rebalance::build_monolithic_node_gr
     }
     err = element_connectivity.InsertGlobalIndices(
         element->id(), element_node_ids.size(), element_node_ids.data());
-    if (err != 0) FOUR_C_THROW("Epetra_CrsGraph::InsertGlobalIndices returned %d", err);
+    if (err != 0) FOUR_C_THROW("Core::LinAlg::Graph::InsertGlobalIndices returned %d", err);
   }
   element_connectivity.FillComplete();
 
@@ -383,10 +385,11 @@ std::shared_ptr<const Epetra_CrsGraph> Core::Rebalance::build_monolithic_node_gr
   Epetra_Map my_colliding_primitives_map(-1, my_colliding_primitives_vec.size(),
       my_colliding_primitives_vec.data(), 0, Core::Communication::as_epetra_comm(dis.get_comm()));
   Epetra_Import importer(my_colliding_primitives_map, *dis.element_row_map());
-  Epetra_CrsGraph my_colliding_primitives_connectivity(
+  Core::LinAlg::Graph my_colliding_primitives_connectivity(
       Copy, my_colliding_primitives_map, n_nodes_per_element_max, false);
-  err = my_colliding_primitives_connectivity.Import(element_connectivity, importer, Insert);
-  if (err != 0) FOUR_C_THROW("Epetra_CrsGraph::Import returned %d", err);
+  err = my_colliding_primitives_connectivity.Import(
+      *element_connectivity.get_ptr_of_Epetra_CrsGraph(), importer, Insert);
+  if (err != 0) FOUR_C_THROW("Core::LinAlg::Graph::Import returned %d", err);
 
   // 4. Build and fill the graph with element internal connectivities
   auto my_graph = std::make_shared<Epetra_FECrsGraph>(Copy, *(dis.node_row_map()), 40, false);
@@ -404,8 +407,8 @@ std::shared_ptr<const Epetra_CrsGraph> Core::Rebalance::build_monolithic_node_gr
 
         int err = my_graph->InsertGlobalIndices(1, &index_main, 1, &index);
         if (err != 0)
-          FOUR_C_THROW("Epetra_CrsGraph::InsertGlobalIndices returned %d for global row %d", err,
-              node_main->id());
+          FOUR_C_THROW("Core::LinAlg::Graph::InsertGlobalIndices returned %d for global row %d",
+              err, node_main->id());
       }
     }
   }
@@ -434,19 +437,19 @@ std::shared_ptr<const Epetra_CrsGraph> Core::Rebalance::build_monolithic_node_gr
       int* primitive_node_indices;
       err = my_colliding_primitives_connectivity.ExtractGlobalRowView(
           primitive_gid, primitive_num_nodes, primitive_node_indices);
-      if (err != 0) FOUR_C_THROW("Epetra_CrsGraph::ExtractGlobalRowView returned %d", err);
+      if (err != 0) FOUR_C_THROW("Core::LinAlg::Graph::ExtractGlobalRowView returned %d", err);
 
       int err = my_graph->InsertGlobalIndices(
           1, &index_main, primitive_num_nodes, primitive_node_indices);
       if (err != 0)
-        FOUR_C_THROW("Epetra_CrsGraph::InsertGlobalIndices returned %d for global row %d", err,
+        FOUR_C_THROW("Core::LinAlg::Graph::InsertGlobalIndices returned %d for global row %d", err,
             node_main->id());
     }
   }
 
   my_graph->GlobalAssemble(true);
   my_graph->OptimizeStorage();
-
-  return my_graph;
+  // cast graph
+  return std::make_shared<const Core::LinAlg::Graph>(static_cast<Epetra_CrsGraph>(*my_graph));
 }
 FOUR_C_NAMESPACE_CLOSE

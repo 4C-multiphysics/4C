@@ -101,7 +101,7 @@ namespace
     Core::LinAlg::SparseMatrix A_sparse(A_crs, Core::LinAlg::Copy);
 
     const double tol = 1e-5;
-    std::shared_ptr<Epetra_CrsGraph> G = Core::LinAlg::threshold_matrix_graph(A_sparse, tol);
+    std::shared_ptr<Core::LinAlg::Graph> G = Core::LinAlg::threshold_matrix_graph(A_sparse, tol);
 
     // Check for global entries
     const int A_thresh_nnz = G->NumGlobalNonzeros();
@@ -127,7 +127,7 @@ namespace
 
     {
       const int power = 0;
-      std::shared_ptr<Epetra_CrsGraph> graph_enriched =
+      std::shared_ptr<Core::LinAlg::Graph> graph_enriched =
           Core::LinAlg::enrich_matrix_graph(A_sparse, power);
 
       // Check for global entries
@@ -136,7 +136,7 @@ namespace
 
     {
       const int power = -3;
-      std::shared_ptr<Epetra_CrsGraph> graph_enriched =
+      std::shared_ptr<Core::LinAlg::Graph> graph_enriched =
           Core::LinAlg::enrich_matrix_graph(A_sparse, power);
 
       // Check for global entries
@@ -145,7 +145,7 @@ namespace
 
     {
       const int power = 1;
-      std::shared_ptr<Epetra_CrsGraph> graph_enriched =
+      std::shared_ptr<Core::LinAlg::Graph> graph_enriched =
           Core::LinAlg::enrich_matrix_graph(A_sparse, power);
 
       // Check for global entries
@@ -154,7 +154,7 @@ namespace
 
     {
       const int power = 2;
-      std::shared_ptr<Epetra_CrsGraph> graph_enriched =
+      std::shared_ptr<Core::LinAlg::Graph> graph_enriched =
           Core::LinAlg::enrich_matrix_graph(A_sparse, power);
 
       // Check for global entries
@@ -163,7 +163,7 @@ namespace
 
     {
       const int power = 3;
-      std::shared_ptr<Epetra_CrsGraph> graph_enriched =
+      std::shared_ptr<Core::LinAlg::Graph> graph_enriched =
           Core::LinAlg::enrich_matrix_graph(A_sparse, power);
 
       // Check for global entries
@@ -172,7 +172,7 @@ namespace
 
     {
       const int power = 4;
-      std::shared_ptr<Epetra_CrsGraph> graph_enriched =
+      std::shared_ptr<Core::LinAlg::Graph> graph_enriched =
           Core::LinAlg::enrich_matrix_graph(A_sparse, power);
 
       // Check for global entries
@@ -193,7 +193,7 @@ namespace
 
     {
       const int power = 3;
-      std::shared_ptr<Epetra_CrsGraph> graph_enriched =
+      std::shared_ptr<Core::LinAlg::Graph> graph_enriched =
           Core::LinAlg::enrich_matrix_graph(A_sparse, power);
 
       // Check for global entries

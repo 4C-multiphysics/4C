@@ -185,6 +185,7 @@ namespace Core::LinAlg
     void add_other(Core::LinAlg::BlockSparseMatrixBase& B, const bool transposeA,
         const double scalarA, const double scalarB) const override;
 
+
    protected:
     /// internal epetra matrix (Epetra_CrsMatrix or Epetra_FECrsMatrix)
     std::shared_ptr<Epetra_CrsMatrix> sysmat_;

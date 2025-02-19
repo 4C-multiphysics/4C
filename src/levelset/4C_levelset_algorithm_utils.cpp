@@ -278,7 +278,7 @@ void ScaTra::LevelSetAlgorithm::evaluate_error_compared_to_analytical_sol()
         discret_->clear_state();
 
         double errL1 = (*errors)[0] / (*errors)[1];  // division by thickness of element layer for
-                                                     // 2D problems with domain size 1
+        // 2D problems with domain size 1
         Core::LinAlg::Vector<double> phidiff(*phinp_);
         phidiff.Update(-1.0, *phiref, 1.0);
         double errLinf = 0.0;
@@ -984,7 +984,7 @@ void ScaTra::LevelSetAlgorithm::mass_center_using_smoothing()
  | redistribute the scatra discretization and vectors         rasthofer 07/11 |
  | according to nodegraph according to nodegraph              DA wichmann     |
  *----------------------------------------------------------------------------*/
-void ScaTra::LevelSetAlgorithm::redistribute(Epetra_CrsGraph& nodegraph)
+void ScaTra::LevelSetAlgorithm::redistribute(Core::LinAlg::Graph& nodegraph)
 {
   // TODO: works if and only if discretization has already been redistributed
   //      change this and use unused nodegraph

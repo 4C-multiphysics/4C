@@ -11,10 +11,10 @@
 #include "4C_config.hpp"
 
 #include "4C_linalg_blocksparsematrix.hpp"
+#include "4C_linalg_graph.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_vector.hpp"
 
-#include <Epetra_CrsGraph.h>
 #include <Epetra_CrsMatrix.h>
 #include <Epetra_Export.h>
 #include <Epetra_Import.h>
@@ -104,7 +104,7 @@ namespace Core::LinAlg
    *
    *  \return Returned the filtered sparse matrix graph.
    */
-  std::shared_ptr<Epetra_CrsGraph> threshold_matrix_graph(
+  std::shared_ptr<Core::LinAlg::Graph> threshold_matrix_graph(
       const Core::LinAlg::SparseMatrix& A, const double threshold);
 
   /*! \brief Enrich a matrix graph based on it's powers.
@@ -114,7 +114,7 @@ namespace Core::LinAlg
    *
    *  \return Returned the enriched graph G(A^(power))
    */
-  std::shared_ptr<Epetra_CrsGraph> enrich_matrix_graph(const SparseMatrix& A, int power);
+  std::shared_ptr<Core::LinAlg::Graph> enrich_matrix_graph(const SparseMatrix& A, int power);
 
   /*!
    \brief split a matrix into a 2x2 block system where the rowmap of one of the blocks is given
@@ -336,7 +336,6 @@ namespace Core::LinAlg
    */
   void epetra_multi_vector_to_std_vector(const Core::LinAlg::MultiVector<double>& epetraMultiVector,
       std::vector<double>& stdVector, const int blockSize);
-
 
 
 }  // namespace Core::LinAlg

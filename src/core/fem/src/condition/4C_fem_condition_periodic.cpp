@@ -1069,7 +1069,6 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
     }
 
 
-
     {
       int mymax = 0;
       int max = 0;
@@ -1127,14 +1126,14 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
             nodesonthisproc.data(), 0, Core::Communication::as_epetra_comm(discret_->get_comm()));
 
     // create nodal graph of problem, according to old RowNodeMap
-    std::shared_ptr<Epetra_CrsGraph> oldnodegraph = discret_->build_node_graph();
+    std::shared_ptr<Core::LinAlg::Graph> oldnodegraph = discret_->build_node_graph();
 
     // export the graph to newrownodemap
-    Epetra_CrsGraph nodegraph(Copy, *newrownodemap, 108, false);
+    Core::LinAlg::Graph nodegraph(Copy, *newrownodemap, 108, false);
 
     {
       Epetra_Export exporter(*discret_->node_row_map(), *newrownodemap);
-      int err = nodegraph.Export(*oldnodegraph, exporter, Add);
+      int err = nodegraph.Export(*oldnodegraph->get_ptr_of_Epetra_CrsGraph(), exporter, Add);
       if (err < 0) FOUR_C_THROW("Graph export returned err=%d", err);
     }
     nodegraph.FillComplete();
@@ -1399,7 +1398,7 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
     }
 
     // allocate graph
-    auto nodegraph = std::make_shared<Epetra_CrsGraph>(Copy, *noderowmap, 108, false);
+    auto nodegraph = std::make_shared<Core::LinAlg::Graph>(Copy, *noderowmap, 108, false);
 
     // -------------------------------------------------------------
     // iterate all elements on this proc including ghosted ones
@@ -1564,7 +1563,7 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
       sublist.set("GRAPH_PACKAGE", "ParMETIS");
       sublist.set("LB_APPROACH", "PARTITION");
 
-      std::shared_ptr<const Epetra_CrsGraph> const_nodegraph(nodegraph);
+      std::shared_ptr<const Core::LinAlg::Graph> const_nodegraph(nodegraph);
 
       auto newnodegraph =
           Core::Rebalance::rebalance_graph(*const_nodegraph, paramlist, node_weights, edge_weights);

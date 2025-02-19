@@ -324,7 +324,7 @@ namespace Adapter
       FOUR_C_THROW("not implemented!");
       return 0.0;
     }
-    void redistribute(const std::shared_ptr<Epetra_CrsGraph> nodegraph) override
+    void redistribute(const std::shared_ptr<Core::LinAlg::Graph> nodegraph) override
     {
       FOUR_C_THROW("not implemented!");
       return;

@@ -242,15 +242,15 @@ void Mortar::Interface::create_interface_discretization(
     idiscret_ = std::make_shared<Core::FE::Nurbs::NurbsDiscretization>(dis_name.str(), comm, dim_);
 
     /*
-    Note: The NurbsDiscretization needs a Knotvector to be able to write output. This is probably
-    the place, where the Knotvector of the mortar coupling surface needs to be inserted into the
-    NurbsDiscretization. However, it's not clear how to compute that Knotvector, so we can't do it
-    right now. In the end, it should be sufficient to extract the portion from the underlying volume
-    discretization's knot vector that corresponds to the mortar interface.
+Note: The NurbsDiscretization needs a Knotvector to be able to write output. This is probably
+the place, where the Knotvector of the mortar coupling surface needs to be inserted into the
+NurbsDiscretization. However, it's not clear how to compute that Knotvector, so we can't do it
+right now. In the end, it should be sufficient to extract the portion from the underlying volume
+discretization's knot vector that corresponds to the mortar interface.
 
-    As a NurbsDiscretization can't write output for now, we don't do it and rather use the 'old'
-    output style, where interface output is written by the underlying volume discretization.
-    */
+As a NurbsDiscretization can't write output for now, we don't do it and rather use the 'old'
+output style, where interface output is written by the underlying volume discretization.
+*/
   }
   else
   {
@@ -817,7 +817,6 @@ void Mortar::Interface::initialize_lag_mult_lin()
 }
 
 
-
 /*----------------------------------------------------------------------*
  |  Check and initialize for const lagmult interpolation     seitz 09/17|
  *----------------------------------------------------------------------*/
@@ -1165,7 +1164,7 @@ void Mortar::Interface::redistribute()
     ss_slave << "Mortar::Interface::redistribute of '" << discret().name() << "' (slave)";
     TEUCHOS_FUNC_TIME_MONITOR(ss_slave.str());
 
-    std::shared_ptr<const Epetra_CrsGraph> snodegraph =
+    std::shared_ptr<const Core::LinAlg::Graph> snodegraph =
         Core::Rebalance::build_graph(*idiscret_, sroweles);
 
     Teuchos::ParameterList rebalanceParams;
@@ -1226,7 +1225,7 @@ void Mortar::Interface::redistribute_master_side(std::shared_ptr<Epetra_Map>& ro
     const double imbalance) const
 {
   // call parallel redistribution
-  std::shared_ptr<const Epetra_CrsGraph> nodegraph =
+  std::shared_ptr<const Core::LinAlg::Graph> nodegraph =
       Core::Rebalance::build_graph(*idiscret_, roweles);
 
   Teuchos::ParameterList rebalanceParams;
@@ -2331,9 +2330,9 @@ void Mortar::Interface::evaluate_coupling(const Epetra_Map& selecolmap,
       Mortar::Interface::evaluate_sts(selecolmap, mparams_ptr);
       break;
     }
-    //*********************************
-    // Segment-to-Line Coupling (3D)
-    //*********************************
+      //*********************************
+      // Segment-to-Line Coupling (3D)
+      //*********************************
     case Inpar::Mortar::algorithm_stl:
     {
       //********************************************************************
@@ -2345,9 +2344,9 @@ void Mortar::Interface::evaluate_coupling(const Epetra_Map& selecolmap,
       evaluate_stl();
       break;
     }
-    //*********************************
-    // Line-to-Segment Coupling (3D)
-    //*********************************
+      //*********************************
+      // Line-to-Segment Coupling (3D)
+      //*********************************
     case Inpar::Mortar::algorithm_lts:
     {
       //********************************************************************
@@ -2359,9 +2358,9 @@ void Mortar::Interface::evaluate_coupling(const Epetra_Map& selecolmap,
       evaluate_lts();
       break;
     }
-    //*********************************
-    // line-to-line Coupling (3D)
-    //*********************************
+      //*********************************
+      // line-to-line Coupling (3D)
+      //*********************************
     case Inpar::Mortar::algorithm_ltl:
     {
       //********************************************************************
@@ -2373,9 +2372,9 @@ void Mortar::Interface::evaluate_coupling(const Epetra_Map& selecolmap,
       evaluate_ltl();
       break;
     }
-    //*********************************
-    // Node-to-Segment Coupling (2D/3D)
-    //*********************************
+      //*********************************
+      // Node-to-Segment Coupling (2D/3D)
+      //*********************************
     case Inpar::Mortar::algorithm_nts:
     {
       //********************************************************************
@@ -2387,17 +2386,17 @@ void Mortar::Interface::evaluate_coupling(const Epetra_Map& selecolmap,
       evaluate_nts();
       break;
     }
-    //*********************************
-    // Node-to-Line Coupling (3D)
-    //*********************************
+      //*********************************
+      // Node-to-Line Coupling (3D)
+      //*********************************
     case Inpar::Mortar::algorithm_ntl:
     {
       FOUR_C_THROW("not yet implemented!");
       break;
     }
-    //*********************************
-    // Default case
-    //*********************************
+      //*********************************
+      // Default case
+      //*********************************
     default:
     {
       FOUR_C_THROW("Unknown discretization type for constraints!");
@@ -3724,7 +3723,7 @@ void Mortar::Interface::assemble_trafo(Core::LinAlg::SparseMatrix& trafo,
         break;
       }
 
-      // tri6 contact elements (= tet10 discretizations)
+        // tri6 contact elements (= tet10 discretizations)
       case Core::FE::CellType::tri6:
       {
         // modification factor
@@ -3954,7 +3953,7 @@ void Mortar::Interface::assemble_trafo(Core::LinAlg::SparseMatrix& trafo,
             break;
           }
 
-          // tri6 contact elements (= tet10 discretizations)
+            // tri6 contact elements (= tet10 discretizations)
           case Core::FE::CellType::tri6:
           {
             // edge nodes
@@ -3966,7 +3965,7 @@ void Mortar::Interface::assemble_trafo(Core::LinAlg::SparseMatrix& trafo,
             break;
           }
 
-          // quad8 contact elements (= hex20 discretizations)
+            // quad8 contact elements (= hex20 discretizations)
           case Core::FE::CellType::quad8:
           {
             // edge nodes
@@ -3979,7 +3978,7 @@ void Mortar::Interface::assemble_trafo(Core::LinAlg::SparseMatrix& trafo,
             break;
           }
 
-          // quad9 contact elements (= hex27 discretizations)
+            // quad9 contact elements (= hex27 discretizations)
           case Core::FE::CellType::quad9:
           {
             // edge nodes
@@ -3998,7 +3997,7 @@ void Mortar::Interface::assemble_trafo(Core::LinAlg::SparseMatrix& trafo,
             break;
           }
 
-          // other cases
+            // other cases
           default:
           {
             FOUR_C_THROW("Trafo matrix only for line3/tri6/quad8/quad9 contact elements");

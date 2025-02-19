@@ -245,11 +245,11 @@ std::unique_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::threshold_matrix(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-std::shared_ptr<Epetra_CrsGraph> Core::LinAlg::threshold_matrix_graph(
+std::shared_ptr<Core::LinAlg::Graph> Core::LinAlg::threshold_matrix_graph(
     const Core::LinAlg::SparseMatrix& A, const double threshold)
 {
-  std::shared_ptr<Epetra_CrsGraph> sparsity_pattern =
-      std::make_shared<Epetra_CrsGraph>(Epetra_DataAccess::Copy, A.row_map(), A.max_num_entries());
+  std::shared_ptr<Core::LinAlg::Graph> sparsity_pattern = std::make_shared<Core::LinAlg::Graph>(
+      Epetra_DataAccess::Copy, A.row_map(), A.max_num_entries());
 
   Core::LinAlg::Vector<double> diagonal(A.row_map(), true);
   A.extract_diagonal_copy(diagonal);
@@ -291,7 +291,8 @@ std::shared_ptr<Epetra_CrsGraph> Core::LinAlg::threshold_matrix_graph(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-std::shared_ptr<Epetra_CrsGraph> Core::LinAlg::enrich_matrix_graph(const SparseMatrix& A, int power)
+std::shared_ptr<Core::LinAlg::Graph> Core::LinAlg::enrich_matrix_graph(
+    const SparseMatrix& A, int power)
 {
   SparseMatrix A_copy(A, Core::LinAlg::Copy);
   A_copy.complete();
@@ -304,7 +305,7 @@ std::shared_ptr<Epetra_CrsGraph> Core::LinAlg::enrich_matrix_graph(const SparseM
     A_copy = *A_power;
   }
 
-  return std::make_shared<Epetra_CrsGraph>(A_copy.epetra_matrix()->Graph());
+  return std::make_shared<Core::LinAlg::Graph>(A_copy.epetra_matrix()->Graph());
 }
 
 /*----------------------------------------------------------------------*

@@ -640,7 +640,7 @@ void FLD::XWall::setup_x_wall_dis()
     Epetra_Map elemap(*xwdiscret_->element_row_map());
     MPI_Comm comm(discret_->get_comm());
 
-    std::shared_ptr<const Epetra_CrsGraph> nodegraph =
+    std::shared_ptr<const Core::LinAlg::Graph> nodegraph =
         Core::Rebalance::build_graph(*xwdiscret_, elemap);
 
     Teuchos::ParameterList rebalanceParams;
@@ -1441,7 +1441,6 @@ void FLD::XWall::read_restart(Core::IO::DiscretizationReader& reader)
 }
 
 
-
 /*----------------------------------------------------------------------*
  |  treat Dirichlet inflow                                     bk 04/15 |
  *----------------------------------------------------------------------*/
@@ -1592,7 +1591,6 @@ std::shared_ptr<Core::LinAlg::Vector<double>> FLD::XWall::fix_dirichlet_inflow(
   }
   return fixedtrueresidual;
 }
-
 
 
 /*----------------------------------------------------------------------*

@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_linalg_graph.hpp"
 #include "4C_linalg_mapextractor.hpp"
 #include "4C_linalg_sparsematrixbase.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -24,6 +25,7 @@ namespace Core::LinAlg
 {
   // forward declarations:
   class BlockSparseMatrixBase;
+
   template <class Strategy>
   class BlockSparseMatrix;
 
@@ -91,8 +93,9 @@ namespace Core::LinAlg
     /// with exactly the types matching one of the constructors
     template <typename... T>
     SparseMatrix(T...) = delete;
+
     /// construction of sparse matrix
-    SparseMatrix(std::shared_ptr<Epetra_CrsGraph> crsgraph,
+    SparseMatrix(std::shared_ptr<Core::LinAlg::Graph> crsgraph,
         std::shared_ptr<Core::LinAlg::MultiMapExtractor> dbcmaps);
 
     /// construction of sparse matrix
@@ -358,6 +361,7 @@ namespace Core::LinAlg
     \param scalarB    (in)     : scaling factor for B
     */
     using SparseMatrixBase::add;
+
     void add(const SparseMatrixBase& A, const bool transposeA, const double scalarA,
         const double scalarB);
 
@@ -365,7 +369,7 @@ namespace Core::LinAlg
 
    private:
     /// saved graph (if any)
-    std::shared_ptr<Epetra_CrsGraph> graph_;
+    std::shared_ptr<Core::LinAlg::Graph> graph_;
 
     /// Dirichlet row map (if known)
     std::shared_ptr<Core::LinAlg::MultiMapExtractor> dbcmaps_;

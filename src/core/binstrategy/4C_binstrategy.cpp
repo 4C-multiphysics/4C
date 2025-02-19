@@ -1140,7 +1140,7 @@ Core::Binstrategy::BinningStrategy::weighted_distribution_of_bins_to_procs(
 
   // row bin distribution
   std::shared_ptr<Epetra_Map> rowbins = nullptr;
-  std::shared_ptr<Epetra_CrsGraph> bingraph;
+  std::shared_ptr<Core::LinAlg::Graph> bingraph;
   if (repartition)
   {
     // use old bin distribution
@@ -1148,7 +1148,7 @@ Core::Binstrategy::BinningStrategy::weighted_distribution_of_bins_to_procs(
     const Epetra_Map* oldrowmap = bindis_->element_row_map();
 
     const int maxband = 26;
-    bingraph = std::make_shared<Epetra_CrsGraph>(Copy, *oldrowmap, maxband, false);
+    bingraph = std::make_shared<Core::LinAlg::Graph>(Copy, *oldrowmap, maxband, false);
 
     // fill all local entries into the graph
     for (int lid = 0; lid < oldrowmap->NumMyElements(); ++lid)
@@ -1161,7 +1161,7 @@ Core::Binstrategy::BinningStrategy::weighted_distribution_of_bins_to_procs(
       int err = bingraph->InsertGlobalIndices(binId, (int)neighbors.size(), neighbors.data());
       if (err < 0)
         FOUR_C_THROW(
-            "Epetra_CrsGraph::InsertGlobalIndices returned %d for global row %d", err, binId);
+            "Core::LinAlg::Graph::InsertGlobalIndices returned %d for global row %d", err, binId);
     }
   }
   else
@@ -1170,7 +1170,7 @@ Core::Binstrategy::BinningStrategy::weighted_distribution_of_bins_to_procs(
     // weighting done so far)
     rowbins = create_linear_map_for_numbin(discret[0]->get_comm());
     // create nodal graph
-    bingraph = std::make_shared<Epetra_CrsGraph>(Copy, *rowbins, 108, false);
+    bingraph = std::make_shared<Core::LinAlg::Graph>(Copy, *rowbins, 108, false);
   }
 
   // Now we're going to create a Core::LinAlg::Vector<double> with vertex/node weights to be
@@ -1227,7 +1227,7 @@ Core::Binstrategy::BinningStrategy::weighted_distribution_of_bins_to_procs(
         rowbinid, static_cast<int>(neighbors.size()), neighbors.data());
     if (err < 0)
       FOUR_C_THROW(
-          "Epetra_CrsGraph::InsertGlobalIndices returned %d for global row %d", err, rowbinid);
+          "Core::LinAlg::Graph::InsertGlobalIndices returned %d for global row %d", err, rowbinid);
   }
 
   // complete graph
@@ -1244,8 +1244,7 @@ Core::Binstrategy::BinningStrategy::weighted_distribution_of_bins_to_procs(
   else
     sublist.set("LB_APPROACH", "PARTITION");
 
-  Teuchos::RCP<Epetra_CrsGraph> balanced_bingraph =
-      Core::Rebalance::rebalance_graph(*bingraph, paramlist, vweights);
+  auto balanced_bingraph = Core::Rebalance::rebalance_graph(*bingraph, paramlist, vweights);
 
   // extract repartitioned bin row map
   const Epetra_BlockMap& rbinstmp = balanced_bingraph->RowMap();
@@ -1396,7 +1395,7 @@ void Core::Binstrategy::BinningStrategy::standard_discretization_ghosting(
   // each owner of a bin gets owner of the nodes this bin contains
   // all other nodes of elements, of which proc is owner of at least one
   // node, are ghosted
-  std::shared_ptr<Epetra_CrsGraph> initgraph = discret->build_node_graph();
+  std::shared_ptr<Core::LinAlg::Graph> initgraph = discret->build_node_graph();
 
   // Todo introduced this export to column map due to special handling of
   //      beam nodes without own position DoFs in Utils::GetCurrentNodePos()
@@ -1435,11 +1434,11 @@ void Core::Binstrategy::BinningStrategy::standard_discretization_ghosting(
       mynewrownodes.data(), 0, Core::Communication::as_epetra_comm(discret->get_comm()));
 
   // create the new graph and export to it
-  std::shared_ptr<Epetra_CrsGraph> newnodegraph;
+  std::shared_ptr<Core::LinAlg::Graph> newnodegraph;
 
-  newnodegraph = std::make_shared<Epetra_CrsGraph>(Copy, *newnoderowmap, 108, false);
+  newnodegraph = std::make_shared<Core::LinAlg::Graph>(Copy, *newnoderowmap, 108, false);
   Epetra_Export exporter(initgraph->RowMap(), *newnoderowmap);
-  int err = newnodegraph->Export(*initgraph, exporter, Add);
+  int err = newnodegraph->Export(*initgraph->get_ptr_of_Epetra_CrsGraph(), exporter, Add);
   if (err < 0) FOUR_C_THROW("Graph export returned err=%d", err);
   newnodegraph->FillComplete();
   newnodegraph->OptimizeStorage();
@@ -1857,7 +1856,6 @@ void Core::Binstrategy::BinningStrategy::transfer_nodes_and_elements(
   Utils::communicate_distribution_of_transferred_elements_to_bins(
       discret, toranktosendbinids, bintorowelemap);
 }
-
 
 
 FOUR_C_NAMESPACE_CLOSE

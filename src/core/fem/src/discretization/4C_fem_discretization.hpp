@@ -12,11 +12,11 @@
 
 #include "4C_fem_dofset_interface.hpp"
 #include "4C_fem_general_shape_function_type.hpp"
+#include "4C_linalg_graph.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
-#include <Epetra_CrsGraph.h>
 #include <Epetra_Map.h>
 #include <Epetra_MpiComm.h>
 
@@ -37,8 +37,11 @@ namespace Core::Communication
 namespace Core::LinAlg
 {
   class SparseOperator;
+
   class MapExtractor;
+
   class SerialDenseVector;
+
   class SerialDenseMatrix;
 }  // namespace Core::LinAlg
 
@@ -55,6 +58,7 @@ namespace Core::Conditions
 namespace Core::Elements
 {
   class Element;
+
   class LocationArray;
 }  // namespace Core::Elements
 
@@ -81,15 +85,15 @@ namespace Core::FE
   struct OptionsRedistribution
   {
     bool assign_degrees_of_freedom = true;  //  if true, resets existing dofsets and performs
-                                            // assigning of degrees of freedoms
-                                            //  to nodes and elements.
-    bool init_elements = true;              // if true, build element register classes and call
-                                            // initialize() on each type of finite element present
-    bool do_boundary_conditions = true;     // if true, build geometry of boundary conditions
-                                            // present.
-    bool kill_dofs = true;                  // if true, reset existing dofsets in discretization
-    bool kill_cond = true;                  // if true, reset existing conditions in discretization
-    bool do_extended_ghosting = false;      // if true, extended ghosting is applied
+    // assigning of degrees of freedoms
+    //  to nodes and elements.
+    bool init_elements = true;  // if true, build element register classes and call
+    // initialize() on each type of finite element present
+    bool do_boundary_conditions = true;  // if true, build geometry of boundary conditions
+    // present.
+    bool kill_dofs = true;              // if true, reset existing dofsets in discretization
+    bool kill_cond = true;              // if true, reset existing conditions in discretization
+    bool do_extended_ghosting = false;  // if true, extended ghosting is applied
   };
 
   /*!
@@ -731,6 +735,7 @@ namespace Core::FE
     \return nullptr if Filled() is false. A call to fill_complete() is a prerequisite.
     */
     virtual const Epetra_Map* node_col_map() const;
+
     /*!
     \brief Get map associated with the distribution of the ownership of elements
            (Filled()==true prerequisite)
@@ -741,6 +746,7 @@ namespace Core::FE
     \return nullptr if Filled() is false. A call to fill_complete() is a prerequisite.
     */
     [[nodiscard]] virtual const Epetra_Map* element_row_map() const;
+
     /*!
     \brief Get map associated with the distribution of elements including ghosted elements
            (Filled()==true prerequisite)
@@ -1473,7 +1479,7 @@ namespace Core::FE
     \return Graph of discretization distributed across processors according to
             the discretization distribution
     */
-    virtual std::shared_ptr<Epetra_CrsGraph> build_node_graph() const;
+    virtual std::shared_ptr<Core::LinAlg::Graph> build_node_graph() const;
 
     /*!
     \brief Build nodal coordinate vector of this discretization based on a nodal rowmap
@@ -2152,6 +2158,7 @@ namespace Core::FE
     // set protected to be accessible from derived class Discret::MeshFree::MeshfreeDiscretization
     // (nis) Jan12
     virtual void reset(bool killdofs, bool killcond);
+
     virtual void reset() { this->reset(true, true); }
 
     /*!

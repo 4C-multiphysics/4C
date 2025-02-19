@@ -336,7 +336,7 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_transpose(const
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_sparse_inverse(
-    const SparseMatrix& A, std::shared_ptr<Epetra_CrsGraph> sparsity_pattern)
+    const SparseMatrix& A, std::shared_ptr<Core::LinAlg::Graph> sparsity_pattern)
 {
   // construct the inverse matrix with the given sparsity pattern
   std::shared_ptr<Core::LinAlg::MultiMapExtractor> dbc_map = nullptr;

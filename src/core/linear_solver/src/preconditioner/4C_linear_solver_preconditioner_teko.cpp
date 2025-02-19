@@ -228,7 +228,7 @@ void Core::LinearSolver::LU2x2SpaiStrategy::initialize_state(
     // sparse inverse calculation
     std::shared_ptr<Core::LinAlg::SparseMatrix> A_thresh =
         Core::LinAlg::threshold_matrix(A_sparse, drop_tol_);
-    std::shared_ptr<Epetra_CrsGraph> sparsity_pattern_enriched =
+    std::shared_ptr<Core::LinAlg::Graph> sparsity_pattern_enriched =
         Core::LinAlg::enrich_matrix_graph(*A_thresh, fill_level_);
     std::shared_ptr<Core::LinAlg::SparseMatrix> A_inverse =
         Core::LinAlg::matrix_sparse_inverse(A_sparse, sparsity_pattern_enriched);

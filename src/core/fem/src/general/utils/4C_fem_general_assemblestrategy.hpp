@@ -10,11 +10,10 @@
 
 #include "4C_config.hpp"
 
+#include "4C_linalg_graph.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_vector.hpp"
-
-#include <Epetra_CrsGraph.h>
 
 #include <memory>
 #include <vector>
@@ -59,25 +58,37 @@ namespace Core::FE
     /// Tell which matrix and vector is available to be assembled.
 
     bool assemblemat1() { return systemmatrix1_ != nullptr; }
+
     bool assemblemat2() { return systemmatrix2_ != nullptr; }
+
     bool assemblevec1() { return systemvector1_ != nullptr; }
+
     bool assemblevec2() { return systemvector2_ != nullptr; }
+
     bool assemblevec3() { return systemvector3_ != nullptr; }
     //@}
 
     //! @name Access Methods to Global Object
     std::shared_ptr<LinAlg::SparseOperator> systemmatrix1() { return systemmatrix1_; }
+
     std::shared_ptr<LinAlg::SparseOperator> systemmatrix2() { return systemmatrix2_; }
+
     std::shared_ptr<Core::LinAlg::Vector<double>> systemvector1() { return systemvector1_; }
+
     std::shared_ptr<Core::LinAlg::Vector<double>> systemvector2() { return systemvector2_; }
+
     std::shared_ptr<Core::LinAlg::Vector<double>> systemvector3() { return systemvector3_; }
     //@}
 
     //! @name Access Methods to Element Local Object
     LinAlg::SerialDenseMatrix& elematrix1() { return elematrix1_; }
+
     LinAlg::SerialDenseMatrix& elematrix2() { return elematrix2_; }
+
     LinAlg::SerialDenseVector& elevector1() { return elevector1_; }
+
     LinAlg::SerialDenseVector& elevector2() { return elevector2_; }
+
     LinAlg::SerialDenseVector& elevector3() { return elevector3_; }
     //@}
 

@@ -217,7 +217,7 @@ namespace Core::IO::GridGenerator
     // redistribute the elements
     if (inputData.autopartition_)
     {
-      std::shared_ptr<const Epetra_CrsGraph> nodeGraph =
+      std::shared_ptr<const Core::LinAlg::Graph> nodeGraph =
           Core::Rebalance::build_graph(dis, *elementRowMap);
 
       Teuchos::ParameterList rebalanceParams;
@@ -229,7 +229,7 @@ namespace Core::IO::GridGenerator
     }
     else  // do not destroy our manual partitioning
     {
-      std::shared_ptr<const Epetra_CrsGraph> graph =
+      std::shared_ptr<const Core::LinAlg::Graph> graph =
           Core::Rebalance::build_graph(dis, *elementRowMap);
       nodeRowMap = std::make_shared<Epetra_Map>(-1, graph->RowMap().NumMyElements(),
           graph->RowMap().MyGlobalElements(), 0, Core::Communication::as_epetra_comm(comm));

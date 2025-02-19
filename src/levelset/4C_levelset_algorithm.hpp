@@ -81,7 +81,7 @@ namespace ScaTra
     void mass_center_using_smoothing();
 
     /// redistribute the scatra discretization and vectors according to nodegraph
-    void redistribute(Epetra_CrsGraph& nodegraph);
+    void redistribute(Core::LinAlg::Graph& nodegraph);
 
     void test_results() override;
 
@@ -145,6 +145,7 @@ namespace ScaTra
     {
       return nb_grad_val_;
     }
+
     inline std::shared_ptr<const Core::LinAlg::MultiVector<double>> nodal_grad_based_value() const
     {
       return nb_grad_val_;

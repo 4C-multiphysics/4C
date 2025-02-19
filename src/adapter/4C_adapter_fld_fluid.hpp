@@ -13,12 +13,12 @@
 #include "4C_inpar_fluid.hpp"
 #include "4C_inpar_poroelast.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_linalg_graph.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 #include "4C_utils_result_test.hpp"
 
-#include <Epetra_CrsGraph.h>
 #include <Epetra_Map.h>
 #include <Epetra_Operator.h>
 
@@ -30,8 +30,11 @@ FOUR_C_NAMESPACE_OPEN
 namespace Core::LinAlg
 {
   class SparseMatrix;
+
   class BlockSparseMatrixBase;
+
   class MapExtractor;
+
   class Solver;
 }  // namespace Core::LinAlg
 
@@ -58,7 +61,9 @@ namespace Core::IO
 namespace FLD
 {
   class TurbulenceStatisticManager;
+
   class DynSmagFilter;
+
   class Vreman;
   namespace Utils
   {
@@ -262,8 +267,10 @@ namespace Adapter
 
     /// provide access to the turbulence statistic manager
     virtual std::shared_ptr<FLD::TurbulenceStatisticManager> turbulence_statistic_manager() = 0;
+
     /// provide access to the box filter class for dynamic Smaorinsky model
     virtual std::shared_ptr<FLD::DynSmagFilter> dyn_smag_filter() = 0;
+
     virtual std::shared_ptr<FLD::Vreman> vreman() = 0;
 
     /// reset state vectors (needed for biofilm simulations)
@@ -419,7 +426,7 @@ namespace Adapter
     virtual double eval_time() const = 0;
 
     /// redistribute the fluid discretization and vectors according to nodegraph in std. mode
-    virtual void redistribute(const std::shared_ptr<Epetra_CrsGraph> nodegraph) = 0;
+    virtual void redistribute(const std::shared_ptr<Core::LinAlg::Graph> nodegraph) = 0;
 
 
     //@}
@@ -571,6 +578,7 @@ namespace Adapter
 
     /// return maximum for iteration steps
     virtual int itemax() const = 0;
+
     /// set maximum for iteration steps
     virtual void set_itemax(int itemax) = 0;
 

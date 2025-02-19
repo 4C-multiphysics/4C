@@ -101,7 +101,7 @@ void FSI::Partitioned::setup_coupling(const Teuchos::ParameterList& fsidyn, MPI_
            (Global::Problem::instance()->get_problem_type() != Core::ProblemType::fbi))
   {
     matchingnodes_ = true;  // matching between structure and boundary dis! non-matching between
-                            // boundary dis and fluid is handled bei XFluid itself
+    // boundary dis and fluid is handled bei XFluid itself
     const int ndim = Global::Problem::instance()->n_dim();
 
     std::shared_ptr<Adapter::FluidXFEM> x_movingboundary =
@@ -630,14 +630,13 @@ Teuchos::RCP<::NOX::Epetra::LinearSystem> FSI::Partitioned::create_linear_system
     else
       FOUR_C_THROW("unsupported difference type '%s'", dt.c_str());
 
-    FD = Teuchos::make_rcp<::NOX::Epetra::FiniteDifference>(
-        printParams, interface, noxSoln, Teuchos::rcpFromRef(*raw_graph_), beta, alpha);
+    FD = Teuchos::make_rcp<::NOX::Epetra::FiniteDifference>(printParams, interface, noxSoln,
+        Teuchos::rcpFromRef(raw_graph_->get_ref_of_Epetra_CrsGraph()), beta, alpha);
     FD->setDifferenceMethod(dtype);
 
     iJac = FD;
     J = FD;
   }
-
   else
   {
     FOUR_C_THROW("unsupported Jacobian '%s'", jacobian.c_str());
@@ -667,7 +666,6 @@ Teuchos::RCP<::NOX::Epetra::LinearSystem> FSI::Partitioned::create_linear_system
           printParams, lsParams, interface, iJac, J, noxSoln);
     }
   }
-
   else if (preconditioner == "Dump Finite Difference")
   {
     if (lsParams.get("Preconditioner", "None") == "None")
@@ -682,15 +680,14 @@ Teuchos::RCP<::NOX::Epetra::LinearSystem> FSI::Partitioned::create_linear_system
     double beta = fdParams.get("beta", 1.0e-6);
 
     Teuchos::RCP<::NOX::Epetra::FiniteDifference> precFD =
-        Teuchos::make_rcp<::NOX::Epetra::FiniteDifference>(
-            printParams, interface, noxSoln, Teuchos::rcpFromRef(*raw_graph_), beta, alpha);
+        Teuchos::make_rcp<::NOX::Epetra::FiniteDifference>(printParams, interface, noxSoln,
+            Teuchos::rcpFromRef(raw_graph_->get_ref_of_Epetra_CrsGraph()), beta, alpha);
     iPrec = precFD;
     M = precFD;
 
     linSys = Teuchos::make_rcp<::NOX::Epetra::LinearSystemAztecOO>(
         printParams, lsParams, iJac, J, iPrec, M, noxSoln);
   }
-
   else
   {
     FOUR_C_THROW("unsupported preconditioner '%s'", preconditioner.c_str());

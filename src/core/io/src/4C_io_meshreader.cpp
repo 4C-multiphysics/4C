@@ -226,7 +226,7 @@ void Core::IO::MeshReader::rebalance()
 
           discret->redistribute(*rowmap, *colmap, {.do_boundary_conditions = false});
 
-          std::shared_ptr<const Epetra_CrsGraph> enriched_graph =
+          std::shared_ptr<const Core::LinAlg::Graph> enriched_graph =
               Core::Rebalance::build_monolithic_node_graph(*discret,
                   Core::GeometricSearch::GeometricSearchParams(
                       parameters_.geometric_search_parameters, parameters_.io_parameters));

@@ -362,7 +362,7 @@ void Core::FE::Discretization::export_column_elements(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-std::shared_ptr<Epetra_CrsGraph> Core::FE::Discretization::build_node_graph() const
+std::shared_ptr<Core::LinAlg::Graph> Core::FE::Discretization::build_node_graph() const
 {
   if (!filled()) FOUR_C_THROW("fill_complete() was not called on this discretization");
 
@@ -370,8 +370,8 @@ std::shared_ptr<Epetra_CrsGraph> Core::FE::Discretization::build_node_graph() co
   const Epetra_Map* noderowmap = node_row_map();
 
   // allocate graph
-  std::shared_ptr<Epetra_CrsGraph> graph =
-      std::make_shared<Epetra_CrsGraph>(Copy, *noderowmap, 108, false);
+  std::shared_ptr<Core::LinAlg::Graph> graph =
+      std::make_shared<Core::LinAlg::Graph>(Copy, *noderowmap, 108, false);
 
   // iterate all elements on this proc including ghosted ones
   // Note:

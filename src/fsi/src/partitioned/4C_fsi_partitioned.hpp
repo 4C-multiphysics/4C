@@ -13,9 +13,9 @@
 #include "4C_coupling_adapter_mortar.hpp"
 #include "4C_fsi_algorithm.hpp"
 #include "4C_io.hpp"
+#include "4C_linalg_graph.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
-#include <Epetra_CrsGraph.h>
 #include <NOX.H>
 #include <NOX_Epetra.H>
 #include <NOX_Epetra_Interface_Required.H>
@@ -122,6 +122,7 @@ namespace FSI
 
     std::shared_ptr<Core::LinAlg::Vector<double>> struct_to_fluid(
         std::shared_ptr<Core::LinAlg::Vector<double>> iv) override;
+
     std::shared_ptr<Core::LinAlg::Vector<double>> fluid_to_struct(
         std::shared_ptr<Core::LinAlg::Vector<double>> iv) override;
 
@@ -228,7 +229,7 @@ namespace FSI
         Teuchos::ParameterList& nlParams, Teuchos::RCP<::NOX::Epetra::Group> grp);
 
     //! connection of interface dofs for finite differences
-    std::shared_ptr<Epetra_CrsGraph> raw_graph_;
+    std::shared_ptr<Core::LinAlg::Graph> raw_graph_;
 
     //! counters on how many times the residuum was called in a time step
     /*!

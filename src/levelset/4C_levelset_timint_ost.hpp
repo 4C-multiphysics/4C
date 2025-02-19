@@ -41,7 +41,7 @@ namespace ScaTra
         const int step, std::shared_ptr<Core::IO::InputControl> input = nullptr) override;
 
     /// redistribute the scatra discretization and vectors according to nodegraph
-    void redistribute(Epetra_CrsGraph& nodegraph);
+    void redistribute(Core::LinAlg::Graph& nodegraph);
 
     /// interpolate phi to intermediate time n+theta with 0<theta<1
     std::shared_ptr<Core::LinAlg::Vector<double>> phinptheta(const double theta_inter);

@@ -21,11 +21,11 @@ FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-Core::LinAlg::SparseMatrix::SparseMatrix(std::shared_ptr<Epetra_CrsGraph> crsgraph,
+Core::LinAlg::SparseMatrix::SparseMatrix(std::shared_ptr<Core::LinAlg::Graph> crsgraph,
     std::shared_ptr<Core::LinAlg::MultiMapExtractor> dbcmaps)
     : explicitdirichlet_(true), savegraph_(true), matrixtype_(CRS_MATRIX)
 {
-  sysmat_ = std::make_shared<Epetra_CrsMatrix>(::Copy, *crsgraph);
+  sysmat_ = std::make_shared<Epetra_CrsMatrix>(::Copy, *crsgraph->get_ptr_of_Epetra_CrsGraph());
   graph_ = crsgraph;
   dbcmaps_ = dbcmaps;
 }
@@ -75,7 +75,6 @@ Core::LinAlg::SparseMatrix::SparseMatrix(const Epetra_Map& rowmap, std::vector<i
 }
 
 
-
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 Core::LinAlg::SparseMatrix::SparseMatrix(std::shared_ptr<Epetra_CrsMatrix> matrix,
@@ -110,7 +109,7 @@ Core::LinAlg::SparseMatrix::SparseMatrix(std::shared_ptr<Epetra_CrsMatrix> matri
 
   if (sysmat_->Filled() and savegraph_)
   {
-    graph_ = std::make_shared<Epetra_CrsGraph>(sysmat_->Graph());
+    graph_ = std::make_shared<Core::LinAlg::Graph>(sysmat_->Graph());
   }
 }
 
@@ -136,7 +135,6 @@ Core::LinAlg::SparseMatrix::SparseMatrix(const SparseMatrix& mat, DataAccess acc
     dbcmaps_ = mat.dbcmaps_;
   }
 }
-
 
 
 /*----------------------------------------------------------------------*
@@ -190,7 +188,7 @@ bool Core::LinAlg::SparseMatrix::destroy(bool throw_exception)
   if (throw_exception and graph_.use_count() > 1)
   {
     std::stringstream msg;
-    msg << "Epetra_CrsGraph cannot be finally deleted: The strong counter is "
+    msg << "Graph cannot be finally deleted: The strong counter is "
            "still larger than 1. ( use_count() = "
         << graph_.use_count() << " )";
     FOUR_C_THROW(msg.str());
@@ -252,7 +250,7 @@ Core::LinAlg::SparseMatrix& Core::LinAlg::SparseMatrix::operator=(const SparseMa
   }
 
   if (mat.graph_ != nullptr)
-    graph_ = std::make_shared<Epetra_CrsGraph>(*mat.graph_);
+    graph_ = std::make_shared<Core::LinAlg::Graph>(*mat.graph_);
   else
     graph_ = nullptr;
 
@@ -300,9 +298,9 @@ void Core::LinAlg::SparseMatrix::zero()
     // new matrix in memory at the same time!
     sysmat_ = nullptr;
     if (matrixtype_ == CRS_MATRIX)
-      sysmat_ = std::make_shared<Epetra_CrsMatrix>(::Copy, *graph_);
+      sysmat_ = std::make_shared<Epetra_CrsMatrix>(::Copy, *graph_->get_ptr_of_Epetra_CrsGraph());
     else if (matrixtype_ == FE_MATRIX)
-      sysmat_ = std::make_shared<Epetra_FECrsMatrix>(::Copy, *graph_);
+      sysmat_ = std::make_shared<Epetra_FECrsMatrix>(::Copy, *graph_->get_ptr_of_Epetra_CrsGraph());
     else
       FOUR_C_THROW("matrix type is not correct");
 
@@ -318,14 +316,14 @@ void Core::LinAlg::SparseMatrix::reset()
   const Epetra_Map rowmap = sysmat_->RowMap();
   std::vector<int> numentries(rowmap.NumMyElements());
 
-  const Epetra_CrsGraph& graph = sysmat_->Graph();
+  auto graph = std::make_shared<Core::LinAlg::Graph>(sysmat_->Graph());
 
   if (filled())
   {
     for (std::size_t i = 0; i < numentries.size(); ++i)
     {
       int* indices;
-      int err = graph.ExtractMyRowView(i, numentries[i], indices);
+      int err = graph->ExtractMyRowView(i, numentries[i], indices);
       if (err != 0) FOUR_C_THROW("ExtractMyRowView failed");
     }
   }
@@ -335,7 +333,7 @@ void Core::LinAlg::SparseMatrix::reset()
     // otherwise assembly would be extremely expensive!
     for (std::size_t i = 0; i < numentries.size(); ++i)
     {
-      numentries[i] = graph.NumAllocatedMyIndices(i);
+      numentries[i] = graph->NumAllocatedMyIndices(i);
     }
   }
   // Remove old matrix before creating a new one so we do not have old and
@@ -791,7 +789,7 @@ void Core::LinAlg::SparseMatrix::complete(bool enforce_complete)
   // keep mask for further use
   if (savegraph_ and graph_ == nullptr)
   {
-    graph_ = std::make_shared<Epetra_CrsGraph>(sysmat_->Graph());
+    graph_ = std::make_shared<Core::LinAlg::Graph>(sysmat_->Graph());
   }
 }
 
@@ -826,10 +824,9 @@ void Core::LinAlg::SparseMatrix::complete(
   // keep mask for further use
   if (savegraph_ and graph_ == nullptr)
   {
-    graph_ = std::make_shared<Epetra_CrsGraph>(sysmat_->Graph());
+    graph_ = std::make_shared<Core::LinAlg::Graph>(sysmat_->Graph());
   }
 }
-
 
 
 /*----------------------------------------------------------------------*
@@ -840,11 +837,12 @@ void Core::LinAlg::SparseMatrix::un_complete()
 
   if (not filled()) return;
 
-  const Epetra_CrsGraph& graph = sysmat_->Graph();
-  std::vector<int> nonzeros(graph.NumMyRows());
+  auto graph = std::make_shared<Core::LinAlg::Graph>(sysmat_->Graph());
+
+  std::vector<int> nonzeros(graph->NumMyRows());
   for (std::size_t i = 0; i < nonzeros.size(); ++i)
   {
-    nonzeros[i] = graph.NumMyIndices(i);
+    nonzeros[i] = graph->NumMyIndices(i);
   }
 
   const Epetra_Map& rowmap = sysmat_->RowMap();
@@ -906,7 +904,7 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet(
     // make the code more explicit...
     if (savegraph_ and graph_ == nullptr)
     {
-      graph_ = std::make_shared<Epetra_CrsGraph>(sysmat_->Graph());
+      graph_ = std::make_shared<Core::LinAlg::Graph>(sysmat_->Graph());
       if (not graph_->Filled()) FOUR_C_THROW("got unfilled graph from filled matrix");
     }
 
@@ -1038,7 +1036,7 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet(const Epetra_Map& dbctoggle, bo
     // make the code more explicit...
     if (savegraph_ and graph_ == nullptr)
     {
-      graph_ = std::make_shared<Epetra_CrsGraph>(sysmat_->Graph());
+      graph_ = std::make_shared<Core::LinAlg::Graph>(sysmat_->Graph());
       if (not graph_->Filled()) FOUR_C_THROW("got unfilled graph from filled matrix");
     }
 
@@ -1158,7 +1156,7 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet_with_trafo(const Core::LinAlg::
     // make the code more explicit...
     if (savegraph_ and graph_ == nullptr)
     {
-      graph_ = std::make_shared<Epetra_CrsGraph>(sysmat_->Graph());
+      graph_ = std::make_shared<Core::LinAlg::Graph>(sysmat_->Graph());
       if (not graph_->Filled()) FOUR_C_THROW("got unfilled graph from filled matrix");
     }
 

@@ -18,7 +18,6 @@
 FOUR_C_NAMESPACE_OPEN
 
 
-
 /*----------------------------------------------------------------------*
  | Constructor (public)                                  rasthofer 05/11|
  *----------------------------------------------------------------------*/
@@ -376,7 +375,7 @@ FLD::FluidDiscretExtractor::FluidDiscretExtractor(std::shared_ptr<Core::FE::Disc
 
     // Starting from the current partitioning of the discretization, compute nodal maps with a
     // hopefully better partitioning
-    std::shared_ptr<const Epetra_CrsGraph> sepcondnodemap =
+    std::shared_ptr<const Core::LinAlg::Graph> sepcondnodemap =
         Core::Rebalance::build_graph(*childdiscret_, sepcondelenodesmap);
 
     Teuchos::ParameterList rebalanceParams;

@@ -47,7 +47,7 @@ namespace
     Core::LinAlg::SparseMatrix A_sparse(A_crs, Core::LinAlg::Copy);
 
     std::shared_ptr<Core::LinAlg::SparseMatrix> A_inverse = Core::LinAlg::matrix_sparse_inverse(
-        A_sparse, std::make_shared<Epetra_CrsGraph>(A->Graph()));
+        A_sparse, std::make_shared<Core::LinAlg::Graph>(A->Graph()));
 
     // Check for global entries
     const int A_sparse_nnz = A_sparse.epetra_matrix()->NumGlobalNonzeros();
@@ -86,7 +86,7 @@ namespace
     Core::LinAlg::SparseMatrix A_sparse(A_crs, Core::LinAlg::Copy);
 
     std::shared_ptr<Core::LinAlg::SparseMatrix> A_inverse = Core::LinAlg::matrix_sparse_inverse(
-        A_sparse, std::make_shared<Epetra_CrsGraph>(A->Graph()));
+        A_sparse, std::make_shared<Core::LinAlg::Graph>(A->Graph()));
 
     // Check for global entries
     const int A_sparse_nnz = A_sparse.epetra_matrix()->NumGlobalNonzeros();
@@ -138,7 +138,7 @@ namespace
 
     {
       const double tol = 1e-8;
-      std::shared_ptr<Epetra_CrsGraph> sparsity_pattern =
+      std::shared_ptr<Core::LinAlg::Graph> sparsity_pattern =
           Core::LinAlg::threshold_matrix_graph(A_sparse, tol);
       std::shared_ptr<Core::LinAlg::SparseMatrix> A_inverse =
           Core::LinAlg::matrix_sparse_inverse(A_sparse, sparsity_pattern);
@@ -160,12 +160,12 @@ namespace
       const double tol = 1e-10;
       const int power = 3;
 
-      std::shared_ptr<Epetra_CrsGraph> sparsity_pattern =
-          std::make_shared<Epetra_CrsGraph>(A->Graph());
+      std::shared_ptr<Core::LinAlg::Graph> sparsity_pattern =
+          std::make_shared<Core::LinAlg::Graph>(A->Graph());
 
       std::shared_ptr<Core::LinAlg::SparseMatrix> A_thresh =
           Core::LinAlg::threshold_matrix(A_sparse, tol);
-      std::shared_ptr<Epetra_CrsGraph> sparsity_pattern_enriched =
+      std::shared_ptr<Core::LinAlg::Graph> sparsity_pattern_enriched =
           Core::LinAlg::enrich_matrix_graph(*A_thresh, power);
       std::shared_ptr<Core::LinAlg::SparseMatrix> A_inverse =
           Core::LinAlg::matrix_sparse_inverse(A_sparse, sparsity_pattern_enriched);

@@ -1486,7 +1486,7 @@ void Global::read_micro_fields(Global::Problem& problem, const std::filesystem::
   {
     // do weighted repartitioning to obtain new row/column maps
     const Teuchos::ParameterList rebalanceParams;
-    std::shared_ptr<const Epetra_CrsGraph> nodeGraph = macro_dis->build_node_graph();
+    std::shared_ptr<const Core::LinAlg::Graph> nodeGraph = macro_dis->build_node_graph();
     const auto& [nodeWeights, edgeWeights] = Core::Rebalance::build_weights(*macro_dis);
     const auto& [rownodes, colnodes] =
         Core::Rebalance::rebalance_node_maps(*nodeGraph, rebalanceParams, nodeWeights, edgeWeights);

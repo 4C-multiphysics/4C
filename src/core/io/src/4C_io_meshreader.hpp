@@ -13,8 +13,8 @@
 #include "4C_io_domainreader.hpp"
 #include "4C_io_elementreader.hpp"
 #include "4C_io_geometry_type.hpp"
+#include "4C_linalg_graph.hpp"
 
-#include <Epetra_CrsGraph.h>
 #include <Teuchos_ParameterList.hpp>
 
 FOUR_C_NAMESPACE_OPEN
@@ -137,7 +137,7 @@ namespace Core::IO
     MPI_Comm comm_;
 
     //! graphs of each discretization
-    std::vector<std::shared_ptr<const Epetra_CrsGraph>> graph_;
+    std::vector<std::shared_ptr<const Core::LinAlg::Graph>> graph_;
 
     /// my element readers
     std::vector<ElementReader> element_readers_;

@@ -12,11 +12,11 @@
 
 #include "4C_linalg_blocksparsematrix.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_linalg_graph.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_vector.hpp"
 
-#include <Epetra_CrsGraph.h>
 #include <Epetra_Map.h>
 
 #include <memory>
