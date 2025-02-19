@@ -233,6 +233,14 @@ namespace RTD
    *  @param[in] stream restructuredText file for functions.
    */
   void write_various_reference(std::ostream& stream);
+  /*!
+   * replace control chars with restructuredText control commands
+   * at this time, only equations are considered
+   *
+   *  @param[inout] documentation_string string to be modified.
+   */
+  void replace_restructuredtext_keys(std::string& documentation_string);
+
 }  // namespace RTD
 
 std::ostream& operator<<(std::ostream& os, const RTD::Table& table);

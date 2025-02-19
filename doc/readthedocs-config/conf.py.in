@@ -74,6 +74,10 @@ rst_prolog = """
 
 .. |FOURC| replace:: 4C
 
+.. |reg| unicode:: U+000AE .. REGISTERED SIGN
+
+.. |copyright| unicode:: U+000A9 .. COPYRIGHT SIGN
+
 .. role:: red
 .. role:: green
 .. role:: underline

@@ -155,11 +155,11 @@ namespace RTD
   /*----------------------------------------------------------------------*/
   void write_paragraph(std::ostream& stream, std::string paragraph, size_t indent)
   {
-    size_t mathstartpos = paragraph.find("\f$");
+    size_t mathstartpos = paragraph.find("$");
     size_t mathendpos = 0;
     while (mathstartpos != paragraph.npos)
     {
-      mathendpos = paragraph.find("\f$", mathstartpos + 1);
+      mathendpos = paragraph.find("$", mathstartpos + 1);
       if (mathendpos == paragraph.npos)
       {
         FOUR_C_THROW(
@@ -167,9 +167,9 @@ namespace RTD
             "Error found in: \n" +
             paragraph);
       }
-      paragraph.replace(mathendpos, 2, "`");
-      paragraph.replace(mathstartpos, 2, ":math:`");
-      mathstartpos = paragraph.find("\f$");
+      paragraph.replace(mathendpos, 1, "`");
+      paragraph.replace(mathstartpos, 1, ":math:`");
+      mathstartpos = paragraph.find("$");
     }
     stream << std::string(" ", indent) << paragraph << "\n\n";
   }
@@ -327,7 +327,9 @@ namespace RTD
       std::vector<std::string> table_row;
       table_row.push_back(spec.impl().name());
       table_row.emplace_back((spec.impl().required() ? "" : "yes"));
-      table_row.push_back(spec.impl().description());
+      std::string description_string = spec.impl().description();
+      replace_restructuredtext_keys(description_string);
+      table_row.push_back(description_string);
 
       parametertable.add_row(table_row);
     }
@@ -665,5 +667,25 @@ namespace RTD
       yamlfile << yamlcelltypestring;
     }
   }
+  void replace_restructuredtext_keys(std::string& documentation_string)
+  {
+    size_t mathstartpos = documentation_string.find("$");
+    size_t mathendpos = 0;
+    while (mathstartpos != documentation_string.npos)
+    {
+      mathendpos = documentation_string.find("$", mathstartpos + 1);
+      if (mathendpos == documentation_string.npos)
+      {
+        FOUR_C_THROW(
+            "Math tags in a ReadTheDocs paragraph must occur pairwise. "
+            "Error found in: \n" +
+            documentation_string);
+      }
+      documentation_string.replace(mathendpos, 1, "`");
+      documentation_string.replace(mathstartpos, 1, ":math:`");
+      mathstartpos = documentation_string.find("$");
+    }
+  }
+
 }  // namespace RTD
 FOUR_C_NAMESPACE_CLOSE

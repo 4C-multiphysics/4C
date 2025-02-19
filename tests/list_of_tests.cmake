@@ -2032,6 +2032,7 @@ four_c_test_framework(tutorial_contact_3d 2 "")
 four_c_test_framework(tutorial_fluid 2 "")
 four_c_test_framework(tutorial_fsi 2 "")
 four_c_test_framework(tutorial_fsi_3d 2 fsi_part_struct_solver.xml)
+four_c_test_framework(tutorial_solid 3 xml/multigrid/elasticity_template.xml)
 
 # four_c_test_post_processing
 four_c_test_post_processing(constr3D_MPC_direct.dat 2 2 ndxyz ndxyz 25)

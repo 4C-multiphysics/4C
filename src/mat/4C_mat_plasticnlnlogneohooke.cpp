@@ -160,9 +160,9 @@ Mat::PAR::PlasticNlnLogNeoHooke::PlasticNlnLogNeoHooke(
       hardexp_(matdata.parameters.get<double>("HARDEXPO")),
       visc_(matdata.parameters.get<double>("VISC")),
       rate_dependency_(matdata.parameters.get<double>("RATE_DEPENDENCY")),
+      tolerance_nr_(matdata.parameters.get<double>("TOL")),
       functionID_hardening_(matdata.parameters.get<int>("HARDENING_FUNC")),
-      max_iterations_(10),
-      tolerance_nr_(1.e-12)
+      max_iterations_(50)
 {
   if (yield_ == 0 && functionID_hardening_ == 0)
     FOUR_C_THROW(
@@ -399,6 +399,11 @@ void Mat::PlasticNlnLogNeoHooke::evaluate(const Core::LinAlg::Matrix<3, 3>* defg
   const double eps = params_->rate_dependency_;  // rate dependency
 
   const double detF = defgrd->determinant();
+  if (detF < 0.0)
+  {
+    params.set<bool>("eval_error", true);
+    return;
+  }
 
   const double dt = params.get<double>("delta time");
   // check, if errors are tolerated or should throw a FOUR_C_THROW

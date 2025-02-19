@@ -1,0 +1,43 @@
+----------- Mesh contents -----------
+
+Mesh consists of 1598 Nodes, 1155 Elements, organized in
+1 ElementBlocks, 4 NodeSets, 0 SideSets
+
+------------------------------------------------BCSPECS
+
+Element Block, named:
+of Shape: HEX27
+has 1155 Elements
+*eb1="ELEMENT"
+sectionname="STRUCTURE"
+description="MAT 1 KINEM nonlinear"
+elementname="SOLID"
+
+Node Set, named: centerplane
+Property Name: none
+has 47 Nodes
+*ns1="CONDITION"
+sectionname="DESIGN SURF DIRICH CONDITIONS"
+description="NUMDOF 3 ONOFF 0 1 0  VAL 0 0 0 FUNCT 0 0 0  TAG none "
+
+Node Set, named: zsymm
+Property Name: none
+has 238 Nodes
+*ns2="CONDITION"
+sectionname="DESIGN SURF DIRICH CONDITIONS"
+description="NUMDOF 3 ONOFF 0 0 1  VAL 0 0 0 FUNCT 0 0 0  TAG none "
+
+Node Set, named: xsymm
+Property Name: none
+has 238 Nodes
+*ns3="CONDITION"
+sectionname="DESIGN SURF DIRICH CONDITIONS"
+description="NUMDOF 3 ONOFF 1 0 0  VAL 0 0 0 FUNCT 0 0 0  TAG none "
+
+Node Set, named: top
+Property Name: none
+has 47 Nodes
+*ns4="CONDITION"
+sectionname="DESIGN SURF DIRICH CONDITIONS"
+description="NUMDOF 3 ONOFF 0 1 0  VAL 0 1 0 FUNCT 0 1 0  TAG monitor_reaction "
+

@@ -130,15 +130,15 @@ following entries as shown below.
 
 -  ``MATERIALS``
 
-   insert the following line after ``------MATERIALS`` in order to
+   insert the following line in the section ``MATERIALS`` in order to
    define your material parameters:
    ``MAT 1 MAT_fluid DYNVISCOSITY 0.004 DENSITY 1.0``
 
--  ``CURVE 1``
+-  ``FUNCT1``
 
-   | insert the following line after ``------CURVE 1`` in order to
+   | insert the following line in the section ``FUNCT1`` in order to
      define a time curve:
-   | ``CURVE 1 on EXPR FUNC 0.5*(sin((t*pi/0.1)-(pi/2)))+0.5  t1 0.0 t2 0.1``
+   | ``SYMBOLIC_FUNCTION_OF_SPACE_TIME 0.5*(sin((t*pi/0.1)-(pi/2)))+0.5``
 
 Save the file under a different name of your choice.
 

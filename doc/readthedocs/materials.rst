@@ -6,7 +6,7 @@ Materials
 General information
 --------------------
 
-The definition of materials happens in the section ``-----MATERIALS``.
+The definition of materials happens in the section ``MATERIALS``.
 A material model defines its constitutive behavior, which may consist of several terms;
 however, there is always *one* material assigned to each element.
 This material can be an explicit material definition on its own,
