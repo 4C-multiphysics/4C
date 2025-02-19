@@ -223,7 +223,6 @@ SOLVER                          UMFPACK
 AZSOLVE                         GMRES
 AZPREC                          ILU
 IFPACK_XML_FILE                 xml/ifpack.xml
-IFPACKGFILL                     0
 IFPACKCOMBINE                   Add
 AZSUB                           50
 AZCONV                          AZ_r0

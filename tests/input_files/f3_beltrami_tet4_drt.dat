@@ -55,7 +55,6 @@ SOLVER                          Belos
 AZSOLVE                         BiCGSTAB
 AZPREC                          ILU
 AZREUSE                         0
-IFPACKGFILL                     0
 AZCONV                          AZ_r0
 AZTOL                           1.0E-12
 AZITER                          2500

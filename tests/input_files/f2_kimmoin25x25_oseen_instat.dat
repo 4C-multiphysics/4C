@@ -61,7 +61,6 @@ AZOUTPUT                        50
 AZSOLVE                         GMRES
 AZPREC                          ILU
 AZREUSE                         1
-IFPACKGFILL                     3
 AZTOL                           1.0E-14
 AZCONV                          AZ_r0
 AZITER                          1000

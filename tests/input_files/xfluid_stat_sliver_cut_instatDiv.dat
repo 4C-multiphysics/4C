@@ -83,7 +83,6 @@ GHOST_PENALTY_FAC               0.001
 NAME                            Fluid_Solver
 SOLVER                          Belos
 AZCONV                          AZ_r0
-IFPACKGFILL                     0
 AZITER                          1000
 AZOUTPUT                        1
 IFPACK_XML_FILE                 xml/ifpack.xml

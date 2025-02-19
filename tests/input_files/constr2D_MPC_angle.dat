@@ -25,7 +25,6 @@ PROBLEMTYPE                      Structure
 RESTART                         0
 --------------------------------------------------------------------SOLVER 1
 AZCONV                          AZ_r0
-IFPACKGFILL                     0
 AZITER                          1000
 AZOUTPUT                        0
 IFPACK_XML_FILE                 xml/ifpack.xml

@@ -111,7 +111,6 @@ NAME                            Fluid_Solver
 SOLVER                          Belos
 AZSOLVE                         GMRES
 AZPREC                          ILU
-IFPACKGFILL                     3
 AZTOL                           1.0E-13
 AZCONV                          AZ_r0
 AZREUSE                         1

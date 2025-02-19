@@ -46,7 +46,6 @@ AZOUTPUT                        0
 AZSOLVE                         CG
 AZPREC                          ILU
 AZREUSE                         0
-IFPACKGFILL                     0
 AZTOL                           1.0E-8
 AZCONV                          AZ_noscaled
 AZITER                          1000

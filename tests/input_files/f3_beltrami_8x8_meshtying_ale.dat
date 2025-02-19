@@ -87,7 +87,6 @@ AZOUTPUT       0
 AZSOLVE        GMRES
 AZPREC         ILU
 AZREUSE        0
-IFPACKGFILL    0
 IFPACK_XML_FILE                 xml/ifpack.xml
 AZTOL          1.0E-9
 AZCONV         AZ_r0

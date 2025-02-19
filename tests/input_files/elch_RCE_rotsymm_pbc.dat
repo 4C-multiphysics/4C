@@ -74,7 +74,6 @@ AZOUTPUT                        20
 AZSOLVE                         GMRES
 AZPREC                          ILU
 AZREUSE                         0
-IFPACKGFILL                     0
 AZTOL                           1.0E-10
 AZCONV                          AZ_r0
 AZITER                          100

@@ -94,7 +94,6 @@ SOLVER                          Belos
 AZOUTPUT                        100
 AZSOLVE                         GMRES
 AZPREC                        ILU
-IFPACKGFILL                   0
 --------------------------------------------------------------------SOLVER 2
 NAME                            ALE_Solver
 SOLVER                          Belos
