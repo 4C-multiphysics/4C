@@ -849,7 +849,7 @@ void Solid::ModelEvaluator::BeamInteraction::run_pre_compute_x(
     const Core::LinAlg::Vector<double>& xold, Core::LinAlg::Vector<double>& dir_mutable,
     const NOX::Nln::Group& curr_grp)
 {
-  Core::LinAlg::VectorView a_view_const(*ia_state_ptr_->get_lambda());
+  Core::LinAlg::View a_view_const(*ia_state_ptr_->get_lambda());
   Core::LinAlg::export_to(dir_mutable, a_view_const);
 };
 

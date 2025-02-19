@@ -374,6 +374,9 @@ namespace BeamInteraction
 
     //! Vector with all contact pairs to be evaluated by this mortar manager.
     std::vector<std::shared_ptr<BeamInteraction::BeamContactPair>> contact_pairs_;
+
+   private:
+    std::shared_ptr<const Epetra_FEVector> global_lambda_container_;
   };
 }  // namespace BeamInteraction
 

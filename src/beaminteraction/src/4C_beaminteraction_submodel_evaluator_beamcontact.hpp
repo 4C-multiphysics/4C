@@ -165,7 +165,7 @@ namespace BeamInteraction
         return beam_interaction_conditions_ptr_;
       }
 
-      std::shared_ptr<Epetra_Map> get_lagrange_map() override;
+      std::shared_ptr<const FourC::Core::LinAlg::Map> get_lagrange_map() override;
 
       void assemble_force(Epetra_Vector& f) override;
 

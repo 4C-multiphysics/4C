@@ -240,11 +240,11 @@ namespace BeamInteraction
       std::shared_ptr<BeamInteraction::Utils::MapExtractor>& ele_type_map_extractor_ptr();
       BeamInteraction::Utils::MapExtractor const& ele_type_map_extractor() const;
 
-      virtual std::shared_ptr<Epetra_Map> get_lagrange_map() { return nullptr; }
+      virtual std::shared_ptr<const FourC::Core::LinAlg::Map> get_lagrange_map() { return nullptr; }
 
-      virtual void assemble_force(Epetra_Vector& f){};
+      virtual void assemble_force(Epetra_Vector& f) {};
 
-      virtual void assemble_stiff(Core::LinAlg::SparseOperator& jac){};
+      virtual void assemble_stiff(Core::LinAlg::SparseOperator& jac) {};
 
       //! @}
      protected:
