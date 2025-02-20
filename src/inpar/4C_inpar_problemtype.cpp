@@ -24,17 +24,11 @@ void Inpar::PROBLEMTYPE::set_valid_parameters(std::map<std::string, Core::IO::In
 
   {
     using IntegerType = Core::ProblemType;
-    Teuchos::Array<std::string> name;
-    Teuchos::Array<IntegerType> label;
+    std::vector<std::pair<std::string, IntegerType>> name_label;
 
-    for (const auto& [prb_name, prb_enum] : string_to_problem_type_map())
-    {
-      name.push_back(prb_name);
-      label.push_back(prb_enum);
-    }
-
-    Core::Utils::string_to_integral_parameter<IntegerType>(
-        "PROBLEMTYPE", "Fluid_Structure_Interaction", "", name, label, type);
+    type.specs.emplace_back(Core::IO::InputSpecBuilders::selection<IntegerType>("PROBLEMTYPE",
+        string_to_problem_type_map(),
+        {.description = "Selects the problem type that will be solved."}));
   }
 
   {

@@ -768,7 +768,7 @@ namespace Core::IO
         using DataType = std::decay_t<DataTypeIn>;
         using StoredType = typename DataType::StoredType;
         DataType data;
-        std::vector<std::pair<std::string, StoredType>> choices;
+        std::map<std::string, StoredType> choices;
         void parse(ValueParser& parser, InputParameterContainer& container) const;
         bool match(ConstYamlNodeRef node, InputParameterContainer& container,
             IO::Internal::MatchEntry& match_entry) const;
@@ -858,7 +858,7 @@ namespace Core::IO
       //! Helper to create selection() specs.
       template <typename T, typename DataType = Internal::DataFor<T>>
       [[nodiscard]] InputSpec selection_internal(
-          std::string name, std::vector<std::pair<std::string, T>> choices, DataType data = {});
+          std::string name, std::map<std::string, T> choices, DataType data = {});
     }  // namespace Internal
 
     /**
@@ -997,10 +997,10 @@ namespace Core::IO
      * selection<int>("my_selection", {{"a", 1}, {"b", 2}, {"c", 3}});
      * @endcode
      *
-     * The choices are given as a vector of pairs. The first element of the pair is the string
-     * that is expected in the input file. The second element is the value that is stored and may be
-     * any type. This function is for convenience, as you do not need to convert parsed string
-     * values to another type yourself. A frequent use case is to map strings to enum constants.
+     * The choices are given as a map from the string that is expected in the input file to the
+     * value that is stored. The latter may be any type. This function is for convenience, as you do
+     * not need to convert parsed string values to another type yourself. A frequent use case is to
+     * map strings to enum constants.
      *
      * The remaining parameterization options follow the same rules as for the entry() function.
      *
@@ -1012,7 +1012,7 @@ namespace Core::IO
     template <typename T, typename DataType = Internal::DataFor<T>>
       requires(!std::same_as<T, std::string>)
     [[nodiscard]] InputSpec selection(
-        std::string name, std::vector<std::pair<std::string, T>> choices, DataType data = {});
+        std::string name, std::map<std::string, T> choices, DataType data = {});
 
 
     /**
@@ -1431,15 +1431,14 @@ void Core::IO::InputSpecBuilders::Internal::SelectionSpec<DataTypeIn>::parse(
   }
 
   auto value = parser.read<std::string>();
-  for (const auto& choice : choices)
+  if (choices.contains(value))
   {
-    if (choice.first == value)
-    {
-      container.add(name, choice.second);
-      return;
-    }
+    container.add(name, choices.at(value));
   }
-  FOUR_C_THROW("Invalid value '%s'", value.c_str());
+  else
+  {
+    FOUR_C_THROW("Invalid value '%s'", value.c_str());
+  }
 }
 
 
@@ -1476,16 +1475,13 @@ bool Core::IO::InputSpecBuilders::Internal::SelectionSpec<DataTypeIn>::match(Con
     std::string value;
     read_value_from_yaml(entry_node, value);
 
-    for (const auto& choice : choices)
+    if (choices.contains(value))
     {
-      if (choice.first == value)
-      {
-        container.add(name, choice.second);
-        match_entry.state = IO::Internal::MatchEntry::State::matched;
-        match_entry.matched_node = entry_node.node.id();
-        if (data.on_parse_callback) data.on_parse_callback(container);
-        return true;
-      }
+      container.add(name, choices.at(value));
+      match_entry.state = IO::Internal::MatchEntry::State::matched;
+      match_entry.matched_node = entry_node.node.id();
+      if (data.on_parse_callback) data.on_parse_callback(container);
+      return true;
     }
   }
   catch (const std::exception& e)
@@ -1639,7 +1635,7 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::entry(std::string name, DataTyp
 
 template <typename T, typename DataType>
 Core::IO::InputSpec Core::IO::InputSpecBuilders::Internal::selection_internal(
-    std::string name, std::vector<std::pair<std::string, T>> choices, DataType data)
+    std::string name, std::map<std::string, T> choices, DataType data)
 {
   FOUR_C_ASSERT_ALWAYS(!choices.empty(), "Selection must have at least one choice.");
   Internal::sanitize_required_default(data);
@@ -1672,7 +1668,7 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::Internal::selection_internal(
   }
 
   return IO::Internal::make_spec(
-      Internal::SelectionSpec<DataType>{.name = name, .data = data, .choices = choices},
+      Internal::SelectionSpec<DataType>{.name = name, .data = data, .choices = std::move(choices)},
       {
           .name = name,
           .description = data.description,
@@ -1686,7 +1682,7 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::Internal::selection_internal(
 template <typename T, typename DataType>
   requires(!std::same_as<T, std::string>)
 Core::IO::InputSpec Core::IO::InputSpecBuilders::selection(
-    std::string name, std::vector<std::pair<std::string, T>> choices, DataType data)
+    std::string name, std::map<std::string, T> choices, DataType data)
 {
   return Internal::selection_internal(name, choices, data);
 }
@@ -1696,10 +1692,10 @@ template <std::same_as<std::string> T, typename DataType>
 Core::IO::InputSpec Core::IO::InputSpecBuilders::selection(
     std::string name, std::vector<std::string> choices, DataType data)
 {
-  std::vector<std::pair<std::string, std::string>> choices_with_strings;
+  std::map<std::string, std::string> choices_with_strings;
   for (const auto& choice : choices)
   {
-    choices_with_strings.emplace_back(choice, choice);
+    choices_with_strings.emplace(choice, choice);
   }
   return Internal::selection_internal(name, choices_with_strings, data);
 }

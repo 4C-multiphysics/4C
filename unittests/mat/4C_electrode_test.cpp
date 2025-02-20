@@ -436,6 +436,8 @@ namespace
       std::ofstream dat_file{dat_file_name};
 
       // This is just a dummy dat file filled with the data necessary for the unit tests
+      dat_file << "------------------------------------------------------PROBLEM TYPE" << '\n';
+      dat_file << "PROBLEMTYPE Electrochemistry" << '\n';
       dat_file << "------------------------------------------------------ELCH CONTROL" << '\n';
       dat_file << "GAS_CONSTANT                    " << std::to_string(gasconstant_) << '\n';
       dat_file << "------------------------------------------------------------FUNCT1" << '\n';
