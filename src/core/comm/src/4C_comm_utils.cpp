@@ -295,7 +295,7 @@ namespace Core::Communication
         lpidgpid_(lpidgpid),
         lcomm_(lcomm),
         gcomm_(gcomm),
-        subcomm_(nullptr),
+        subcomm_(MPI_COMM_NULL),
         np_type_(npType)
   {
     return;

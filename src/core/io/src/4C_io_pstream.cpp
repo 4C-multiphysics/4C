@@ -9,6 +9,7 @@
 
 #include "4C_comm_mpi_utils.hpp"
 
+#include <mpi.h>
 #include <Teuchos_oblackholestream.hpp>
 
 FOUR_C_NAMESPACE_OPEN
@@ -25,7 +26,7 @@ namespace Core::IO
  *----------------------------------------------------------------------*/
 Core::IO::Pstream::Pstream()
     : is_initialized_(false),
-      comm_(nullptr),
+      comm_(MPI_COMM_NULL),
       targetpid_(-2),
       writetoscreen_(false),
       writetofile_(false),
@@ -124,7 +125,7 @@ void Core::IO::Pstream::close()
   if (not is_initialized_) return;
 
   is_initialized_ = false;
-  comm_ = nullptr;
+  comm_ = MPI_COMM_NULL;
   targetpid_ = -2;
   writetoscreen_ = false;
   writetofile_ = false;

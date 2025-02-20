@@ -26,7 +26,7 @@ XFEM::MultiFieldMapExtractor::MultiFieldMapExtractor()
     : isinit_(false),
       issetup_(false),
       max_num_reserved_dofs_per_node_(0),
-      comm_(nullptr),
+      comm_(MPI_COMM_NULL),
       slave_discret_vec_(0),
       element_map_extractor_(nullptr),
       idiscret_(nullptr),

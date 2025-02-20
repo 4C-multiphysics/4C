@@ -967,7 +967,7 @@ namespace Solid
       std::shared_ptr<const Solid::TimeInt::Base> timint_ptr_;
 
       //! read-only access to the epetra communicator
-      MPI_Comm comm_ptr_;
+      MPI_Comm comm_;
 
       //! beam data container pointer
       std::shared_ptr<BeamData> beam_data_ptr_;

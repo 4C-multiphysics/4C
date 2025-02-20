@@ -158,7 +158,7 @@ namespace Mortar
 
       //!@}
       //! pointer to a COPY of the structural communicator
-      MPI_Comm comm_ptr_;
+      MPI_Comm comm_;
 
       int dim_;
     };  // namespace STRATEGY

@@ -18,6 +18,8 @@
 #include "4C_geometry_pair_utility_classes.hpp"
 #include "4C_unittest_utils_assertions_test.hpp"
 
+#include <mpi.h>
+
 
 namespace
 {
@@ -310,7 +312,7 @@ namespace
 
     // Add the relevant nurbs information to the discretization.
     std::shared_ptr<Core::FE::Nurbs::NurbsDiscretization> structdis =
-        std::make_shared<Core::FE::Nurbs::NurbsDiscretization>("structure", nullptr, 3);
+        std::make_shared<Core::FE::Nurbs::NurbsDiscretization>("structure", MPI_COMM_NULL, 3);
     Global::Problem::instance()->add_dis("structure", structdis);
 
     // Get the geometry.

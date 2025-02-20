@@ -21,7 +21,7 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 Mortar::STRATEGY::Factory::Factory()
-    : discret_ptr_(nullptr), isinit_(false), issetup_(false), comm_ptr_(nullptr), dim_(-1)
+    : discret_ptr_(nullptr), isinit_(false), issetup_(false), comm_(MPI_COMM_NULL), dim_(-1)
 {
   // empty
 }
@@ -45,7 +45,7 @@ void Mortar::STRATEGY::Factory::setup(const int dim)
   check_init();
 
   // get a copy of the underlying structural communicator
-  comm_ptr_ = discret_ptr_->get_comm();
+  comm_ = discret_ptr_->get_comm();
 
   // get the problem dimension
   dim_ = dim;
@@ -90,7 +90,7 @@ const Core::FE::Discretization& Mortar::STRATEGY::Factory::discret() const
 MPI_Comm Mortar::STRATEGY::Factory::get_comm() const
 {
   check_init_setup();
-  return comm_ptr_;
+  return comm_;
 }
 
 /*----------------------------------------------------------------------*
