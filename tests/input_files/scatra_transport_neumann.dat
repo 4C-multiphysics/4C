@@ -79,8 +79,7 @@ AZREUSE                         0
 AZSOLVE                         GMRES
 AZSUB                           300
 AZTOL                           1e-08
-IFPACKGFILL                     0
-IFPACKOVERLAP                   0
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 IFPACKCOMBINE                   Add
 SOLVER                          UMFPACK
 -------------------------------------------------------------------MATERIALS

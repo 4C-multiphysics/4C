@@ -69,11 +69,10 @@ AZOUTPUT                        50
 AZSOLVE                         GMRES
 AZPREC                          ILU
 AZREUSE                         0
-IFPACKGFILL                     5
 AZTOL                           1.0E-17
 AZITER                          1500
 AZSUB                           100
-IFPACKOVERLAP                   0
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 AZCONV                          AZ_r0
 --------------------------------------------------------------------SOLVER 2
 NAME                            L2_Fluid_Solver
