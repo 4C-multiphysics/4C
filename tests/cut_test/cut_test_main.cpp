@@ -443,6 +443,9 @@ int main(int argc, char** argv)
 
   std::map<std::string, testfunct> functable;
 
+  Core::IO::cout.setup(
+      false, false, false, Core::IO::standard, MPI_COMM_WORLD, 0, 0, "dummyFilePrefix");
+
   // these tests were generated from the real computation
   // all of then expreience the same problem:
   // "Could not find reference plane with all gausspoints inside!" in

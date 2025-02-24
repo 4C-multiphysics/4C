@@ -46,7 +46,7 @@ FOUR_C_NAMESPACE_OPEN
  *----------------------------------------------------------------------------*/
 Mortar::InterfaceDataContainer::InterfaceDataContainer()
     : id_(-1),
-      comm_(nullptr),
+      comm_(MPI_COMM_NULL),
       redistributed_(false),
       idiscret_(nullptr),
       dim_(-1),

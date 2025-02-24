@@ -26,7 +26,7 @@ FOUR_C_NAMESPACE_OPEN
 Mortar::StrategyDataContainer::StrategyDataContainer()
     : probdofs_(nullptr),
       probnodes_(nullptr),
-      comm_(nullptr),
+      comm_(MPI_COMM_NULL),
       scontact_(),
       dim_(0),
       alphaf_(0.0),

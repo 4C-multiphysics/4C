@@ -12,7 +12,8 @@
 
 #include "4C_cut_levelsetintersection.hpp"
 #include "4C_cut_meshintersection.hpp"
-#include "4C_cut_parentintersection.hpp"
+
+#include <mpi.h>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -37,7 +38,7 @@ namespace Cut
   {
    public:
     /// constructor for LevelSetIntersection class
-    CombIntersection(int myrank);
+    CombIntersection(MPI_Comm comm);
 
     void cut(bool screenoutput);
 

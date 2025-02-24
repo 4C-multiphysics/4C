@@ -16,7 +16,7 @@
 
 void test_ls_hex8_florian1()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -76,7 +76,7 @@ void test_ls_hex8_florian1()
 
 void test_ls_hex8_florian2()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -136,7 +136,7 @@ void test_ls_hex8_florian2()
 
 void test_ls_hex8_florian3()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -196,7 +196,7 @@ void test_ls_hex8_florian3()
 
 void test_ls_hex8_florian4()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -256,7 +256,7 @@ void test_ls_hex8_florian4()
 
 void test_ls_hex8_florian5()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -316,7 +316,7 @@ void test_ls_hex8_florian5()
 
 void test_ls_hex8_florian6()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -376,7 +376,7 @@ void test_ls_hex8_florian6()
 
 void test_ls_hex8_florian7()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -436,7 +436,7 @@ void test_ls_hex8_florian7()
 
 void test_ls_hex8_florian8()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -496,7 +496,7 @@ void test_ls_hex8_florian8()
 
 void test_ls_hex8_florian9()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -556,7 +556,7 @@ void test_ls_hex8_florian9()
 
 void test_ls_hex8_florian10()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -616,7 +616,7 @@ void test_ls_hex8_florian10()
 
 void test_ls_hex8_florian11()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -676,7 +676,7 @@ void test_ls_hex8_florian11()
 
 void test_ls_hex8_florian12()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -736,7 +736,7 @@ void test_ls_hex8_florian12()
 
 void test_ls_hex8_florian13()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -796,7 +796,7 @@ void test_ls_hex8_florian13()
 
 void test_ls_hex8_ursula1()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -856,7 +856,7 @@ void test_ls_hex8_ursula1()
 
 void test_ls_hex8_ursula2()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -916,7 +916,7 @@ void test_ls_hex8_ursula2()
 
 void test_ls_hex8_ursula3()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -976,7 +976,7 @@ void test_ls_hex8_ursula3()
 
 void test_ls_hex8_ursula4()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -1036,7 +1036,7 @@ void test_ls_hex8_ursula4()
 
 void test_ls_hex8_ursula5()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -1096,7 +1096,7 @@ void test_ls_hex8_ursula5()
 
 void test_ls_hex8_ursula6()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -1156,7 +1156,7 @@ void test_ls_hex8_ursula6()
 
 void test_ls_hex8_simple()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -1210,7 +1210,7 @@ void test_ls_hex8_simple()
 
 void test_ls_hex8_simple2()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -1264,7 +1264,7 @@ void test_ls_hex8_simple2()
 
 void test_ls_hex8_simple3()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -1318,7 +1318,7 @@ void test_ls_hex8_simple3()
 
 void test_ls_hex8_simple4()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -1372,7 +1372,7 @@ void test_ls_hex8_simple4()
 
 void test_ls_hex8_simple5()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -1427,7 +1427,7 @@ void test_ls_hex8_simple5()
 
 void test_ls_hex8_simple6()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -1489,7 +1489,7 @@ void test_ls_hex8_simple7()
   {
     double dy = 0.1 * a;
 
-    Cut::LevelSetIntersection lsi;
+    Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
     lsi.get_options().init_for_cuttests();
 
     // simple hex8 element
@@ -1550,7 +1550,7 @@ void test_ls_hex8_simple7()
 
 void test_ls_hex8_touch()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   // simple hex8 element
@@ -1625,7 +1625,7 @@ void test_ls_hex8_between()
 {
   for (int e = 0; e < 2; ++e)
   {
-    Cut::LevelSetIntersection lsi;
+    Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
     lsi.get_options().init_for_cuttests();
 
     // simple hex8 element
@@ -1648,7 +1648,7 @@ void test_ls_hex8_between()
 
 void test_ls_hex8_experiment()
 {
-  Cut::LevelSetIntersection lsi;
+  Cut::LevelSetIntersection lsi(MPI_COMM_WORLD);
   lsi.get_options().init_for_cuttests();
 
   Cut::Options options;

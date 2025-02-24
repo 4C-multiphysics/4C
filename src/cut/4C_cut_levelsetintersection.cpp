@@ -8,7 +8,6 @@
 #include "4C_cut_levelsetintersection.hpp"
 
 #include "4C_comm_mpi_utils.hpp"
-#include "4C_cut_levelsetside.hpp"
 #include "4C_cut_side.hpp"
 
 #include <Teuchos_TimeMonitor.hpp>
@@ -19,14 +18,6 @@ FOUR_C_NAMESPACE_OPEN
  *----------------------------------------------------------------------------*/
 Cut::LevelSetIntersection::LevelSetIntersection(MPI_Comm comm, bool create_side)
     : ParentIntersection(Core::Communication::my_mpi_rank(comm)), side_(nullptr), comm_(comm)
-{
-  if (create_side) add_cut_side(1);
-}
-
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
-Cut::LevelSetIntersection::LevelSetIntersection(int myrank, bool create_side)
-    : ParentIntersection(myrank), side_(nullptr), comm_(nullptr)
 {
   if (create_side) add_cut_side(1);
 }
@@ -99,11 +90,11 @@ void Cut::LevelSetIntersection::cut_mesh(bool screenoutput)
 
     m.cut(*side_);
 
+    Core::Communication::barrier(comm_);
+    t_diff = Teuchos::Time::wallTime() - t_start;
+
     if (myrank_ == 0 and screenoutput)
     {
-      if (comm_) Core::Communication::barrier(comm_);
-      t_diff = Teuchos::Time::wallTime() - t_start;
-
       printf("success! ( %10.4e secs )", t_diff);
     }
   }
@@ -115,11 +106,11 @@ void Cut::LevelSetIntersection::cut_mesh(bool screenoutput)
 
     m.make_cut_lines();
 
+    Core::Communication::barrier(comm_);
+    t_diff = Teuchos::Time::wallTime() - t_start;
+
     if (myrank_ == 0 and screenoutput)
     {
-      if (comm_) Core::Communication::barrier(comm_);
-      t_diff = Teuchos::Time::wallTime() - t_start;
-
       printf("success! ( %10.4e secs )", t_diff);
     }
   }
@@ -131,11 +122,11 @@ void Cut::LevelSetIntersection::cut_mesh(bool screenoutput)
 
     m.make_facets();
 
+    Core::Communication::barrier(comm_);
+    t_diff = Teuchos::Time::wallTime() - t_start;
+
     if (myrank_ == 0 and screenoutput)
     {
-      if (comm_) Core::Communication::barrier(comm_);
-      t_diff = Teuchos::Time::wallTime() - t_start;
-
       printf("success! ( %10.4e secs )", t_diff);
     }
   }
@@ -147,11 +138,11 @@ void Cut::LevelSetIntersection::cut_mesh(bool screenoutput)
 
     m.make_volume_cells();
 
+    Core::Communication::barrier(comm_);
+    t_diff = Teuchos::Time::wallTime() - t_start;
+
     if (myrank_ == 0 and screenoutput)
     {
-      if (comm_) Core::Communication::barrier(comm_);
-      t_diff = Teuchos::Time::wallTime() - t_start;
-
       printf("success! ( %10.4e secs )", t_diff);
     }
   }
@@ -197,11 +188,11 @@ void Cut::LevelSetIntersection::cut(bool include_inner, bool screenoutput, VCell
     else
       m.direct_divergence_gauss_rule(true, BCellGaussPts_Tessellation);
 
+    Core::Communication::barrier(comm_);
+    t_diff = Teuchos::Time::wallTime() - t_start;
+
     if (myrank_ == 0 and screenoutput)
     {
-      if (comm_) Core::Communication::barrier(comm_);
-      t_diff = Teuchos::Time::wallTime() - t_start;
-
       printf("success! ( %10.4e secs )", t_diff);
     }
   }
@@ -213,11 +204,11 @@ void Cut::LevelSetIntersection::cut(bool include_inner, bool screenoutput, VCell
 
     m.test_element_volume(true, VCellGP);
 
+    Core::Communication::barrier(comm_);
+    t_diff = Teuchos::Time::wallTime() - t_start;
+
     if (myrank_ == 0 and screenoutput)
     {
-      if (comm_) Core::Communication::barrier(comm_);
-      t_diff = Teuchos::Time::wallTime() - t_start;
-
       printf("success! ( %10.4e secs )\n\n", t_diff);
     }
   }

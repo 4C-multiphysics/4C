@@ -21,6 +21,7 @@
 #include <iterator>
 
 #include "cut_test_utils.hpp"
+#include "mpi.h"
 
 #define PRECISION24
 // #define GMSH_OUTPUT_LSNOLOC_CUT_TEST
@@ -69,7 +70,7 @@ Cut::CombIntersection cut_with_tesselation(std::vector<int> nids, std::vector<do
     Core::LinAlg::SerialDenseMatrix xyze, std::string testname)
 {
   // non-planar cut surface
-  Cut::CombIntersection ci(-1);
+  Cut::CombIntersection ci(MPI_COMM_WORLD);
   ci.get_options().init_for_cuttests();
   ci.add_level_set_side(1);
 
@@ -98,7 +99,7 @@ Cut::CombIntersection cut_with_direct_divergence(std::vector<int> nids, std::vec
     Core::LinAlg::SerialDenseMatrix xyze, std::string testname)
 {
   // non-planar cut surface
-  Cut::CombIntersection ci(-1);
+  Cut::CombIntersection ci(MPI_COMM_WORLD);
   ci.get_options().init_for_cuttests();
   ci.add_level_set_side(1);
 
@@ -128,9 +129,9 @@ void test_level_set_cut_tesselation_and_dd(std::vector<int> nids, std::vector<do
     Core::LinAlg::SerialDenseMatrix xyze, std::string testname)
 {
   // non-planar cut surface
-  Cut::CombIntersection ci(-1);
+  Cut::CombIntersection ci(MPI_COMM_WORLD);
   ci.get_options().init_for_cuttests();
-  Cut::CombIntersection cidd(-1);
+  Cut::CombIntersection cidd(MPI_COMM_WORLD);
   cidd.get_options().init_for_cuttests();
   ci.add_level_set_side(1);
   cidd.add_level_set_side(1);
@@ -1319,7 +1320,7 @@ void test_ls_mesh_hex8_simple()
 // See what happens
 void test_ls_hex8_experiment_magnus()
 {
-  Cut::CombIntersection ci(-1);
+  Cut::CombIntersection ci(MPI_COMM_WORLD);
   ci.get_options().init_for_cuttests();
   ci.add_level_set_side(1);
 

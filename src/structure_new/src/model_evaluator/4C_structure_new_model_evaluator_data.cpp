@@ -185,7 +185,7 @@ Solid::ModelEvaluator::Data::Data()
       io_ptr_(nullptr),
       gstate_ptr_(nullptr),
       timint_ptr_(nullptr),
-      comm_ptr_(nullptr),
+      comm_(MPI_COMM_NULL),
       beam_data_ptr_(nullptr),
       contact_data_ptr_(nullptr),
       model_ptr_(nullptr)
@@ -202,7 +202,7 @@ void Solid::ModelEvaluator::Data::init(
   io_ptr_ = timint_ptr->get_data_io_ptr();
   gstate_ptr_ = timint_ptr->get_data_global_state_ptr();
   timint_ptr_ = timint_ptr;
-  comm_ptr_ = timint_ptr->get_data_global_state().get_comm_ptr();
+  comm_ = timint_ptr->get_data_global_state().get_comm_ptr();
   isinit_ = true;
 }
 
@@ -333,7 +333,7 @@ void Solid::ModelEvaluator::Data::collect_norm_types_over_all_procs(
 
   const quantity_norm_type_map mynormtypes(normtypes);
   quantity_norm_type_map& gnormtypes = const_cast<quantity_norm_type_map&>(normtypes);
-  collect_data(comm_ptr_, mynormtypes, gnormtypes);
+  collect_data(comm_, mynormtypes, gnormtypes);
 }
 
 /*----------------------------------------------------------------------------*
@@ -382,7 +382,7 @@ void Solid::ModelEvaluator::Data::sum_into_my_update_norm(
     const double* my_update_values, const double* my_new_sol_values, const double& step_length,
     const int& owner)
 {
-  if (owner != Core::Communication::my_mpi_rank(comm_ptr_)) return;
+  if (owner != Core::Communication::my_mpi_rank(comm_)) return;
   // --- standard update norms
   enum ::NOX::Abstract::Vector::NormType normtype = ::NOX::Abstract::Vector::TwoNorm;
   if (get_update_norm_type(qtype, normtype))
@@ -404,7 +404,7 @@ void Solid::ModelEvaluator::Data::sum_into_my_previous_sol_norm(
     const enum NOX::Nln::StatusTest::QuantityType& qtype, const int& numentries,
     const double* my_old_sol_values, const int& owner)
 {
-  if (owner != Core::Communication::my_mpi_rank(comm_ptr_)) return;
+  if (owner != Core::Communication::my_mpi_rank(comm_)) return;
 
   enum ::NOX::Abstract::Vector::NormType normtype = ::NOX::Abstract::Vector::TwoNorm;
   if (not get_update_norm_type(qtype, normtype)) return;

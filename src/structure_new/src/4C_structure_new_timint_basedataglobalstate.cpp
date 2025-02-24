@@ -40,7 +40,7 @@ Solid::TimeInt::BaseDataGlobalState::BaseDataGlobalState()
       datasdyn_(nullptr),
       dim_(Global::Problem::instance()->n_dim()),
       discret_(nullptr),
-      comm_(nullptr),
+      comm_(MPI_COMM_NULL),
       my_rank_(-1),
       timenp_(0.0),
       timen_(nullptr),

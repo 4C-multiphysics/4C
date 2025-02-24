@@ -7,11 +7,13 @@
 
 #include "4C_cut_combintersection.hpp"
 
+#include "4C_comm_mpi_utils.hpp"
 #include "4C_cut_levelsetintersection.hpp"
 #include "4C_cut_levelsetside.hpp"
 #include "4C_cut_meshintersection.hpp"
 #include "4C_cut_tolerance.hpp"  // for EXTENDED_CUT_DEBUG_OUTPUT
 
+#include <mpi.h>
 #include <Teuchos_TimeMonitor.hpp>
 
 FOUR_C_NAMESPACE_OPEN
@@ -20,8 +22,10 @@ FOUR_C_NAMESPACE_OPEN
  * constructor for Combined intersection class (Levelset and Mesh intersection in one class)
  *-----------------------------------------------------------------------------------------*/
 
-Cut::CombIntersection::CombIntersection(int myrank)
-    : ParentIntersection(myrank), LevelSetIntersection(myrank, false), MeshIntersection(1, myrank)
+Cut::CombIntersection::CombIntersection(MPI_Comm comm)
+    : ParentIntersection(Core::Communication::my_mpi_rank(comm)),
+      LevelSetIntersection(comm, false),
+      MeshIntersection(1, Core::Communication::my_mpi_rank(comm))
 {
   // call also the ParentIntersection-constructor first, otherwise according to the public virtual
   // inheritance of diamond shape the standard constructor of ParentIntersection() with default
