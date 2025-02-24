@@ -36,6 +36,15 @@ namespace Core::IO
   template <typename T>
   inline constexpr auto none = Noneable<T>{std::nullopt};
 
+  /**
+   * Concept to check if a type is a Noneable type.
+   */
+  template <typename T>
+  concept IsNoneable = requires(T t) {
+    { t.has_value() } -> std::convertible_to<bool>;
+    { t.value() } -> std::convertible_to<typename T::value_type>;
+  };
+
   namespace Internal
   {
     template <typename T>
@@ -91,6 +100,19 @@ namespace Core::IO
       typename T::value_type;
       std::tuple_size<T>::value;
     };
+
+    template <typename T>
+    struct RemoveNoneableHelper
+    {
+      using type = T;
+    };
+
+    template <typename T>
+      requires IsNoneable<T>
+    struct RemoveNoneableHelper<T>
+    {
+      using type = typename T::value_type;
+    };
   }  // namespace Internal
 
   /**
@@ -124,6 +146,13 @@ namespace Core::IO
   {
     return Internal::RankHelper<T>::value;
   }
+
+  /**
+   * Remove the Noneable wrapper from a type if it is a Noneable type. Otherwise, return the type
+   * itself.
+   */
+  template <typename T>
+  using RemoveNoneable = typename Internal::RemoveNoneableHelper<T>::type;
 
 }  // namespace Core::IO
 

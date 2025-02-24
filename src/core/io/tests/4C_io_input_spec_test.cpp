@@ -327,18 +327,29 @@ namespace
         entry<int>("a"),
         selection<int>("b", {{"b1", 1}, {"b2", 2}}, {.default_value = 1}),
         selection<std::string>("c", {"c1", "c2"}, {.default_value = "c2"}),
-        entry<std::string>("d"),
+        selection<Noneable<int>>("d", {{"d1", 1}, {"d2", 2}}, {.default_value = none<int>}),
     });
 
     {
       InputParameterContainer container;
-      std::string stream("a 1 b b2 d string c c1");
+      std::string stream("a 1 b b2 d d1 c c1");
       ValueParser parser(stream);
       spec.fully_parse(parser, container);
       EXPECT_EQ(container.get<int>("a"), 1);
       EXPECT_EQ(container.get<int>("b"), 2);
       EXPECT_EQ(container.get<std::string>("c"), "c1");
-      EXPECT_EQ(container.get<std::string>("d"), "string");
+      EXPECT_EQ(container.get<Noneable<int>>("d").value(), 1);
+    }
+
+    {
+      InputParameterContainer container;
+      std::string stream("a 1");
+      ValueParser parser(stream);
+      spec.fully_parse(parser, container);
+      EXPECT_EQ(container.get<int>("a"), 1);
+      EXPECT_EQ(container.get<int>("b"), 1);
+      EXPECT_EQ(container.get<std::string>("c"), "c2");
+      EXPECT_EQ(container.get<Noneable<int>>("d").has_value(), false);
     }
 
     {
@@ -346,7 +357,7 @@ namespace
       std::string stream("a 1 b b4 c string");
       ValueParser parser(stream);
       FOUR_C_EXPECT_THROW_WITH_MESSAGE(spec.fully_parse(parser, container), Core::Exception,
-          "Could not parse parameter 'b': invalid value 'b4'");
+          "Could not parse parameter 'b': invalid value 'b4'. Valid options are: b1|b2");
     }
   }
 
@@ -683,7 +694,7 @@ specs:
       spec.print_as_dat(out);
       EXPECT_EQ(out.str(), R"(// g:
 //   a <int> "An integer"
-//   c (default: c1) (choices: c1|c2|) "Selection"
+//   c (default: c1) (choices: c1|c2) "Selection"
 //   d <int> (optional) (default: 42) "Another integer"
 )");
     }
@@ -712,6 +723,8 @@ specs:
                 {.description = "A group"}),
         }),
         selection<int>("e", {{"e1", 1}, {"e2", 2}}, {.default_value = 1}),
+        selection<Noneable<double>>(
+            "f", {{"f1", 1.0}, {"f2", 2.0}}, {.default_value = none<double>}),
         group("group2",
             {
                 entry<int>("g"),
@@ -735,7 +748,7 @@ specs:
       out << tree;
 
       std::string expected = R"(type: all_of
-description: 'all_of {a, b, one_of {all_of {b, c}, triple_vector, group}, e, group2, list}'
+description: 'all_of {a, b, one_of {all_of {b, c}, triple_vector, group}, e, f, group2, list}'
 required: true
 specs:
   - name: a
@@ -798,6 +811,15 @@ specs:
     choices:
       - name: "e1"
       - name: "e2"
+  - name: f
+    noneable: true
+    type: selection
+    required: false
+    default: null
+    choices:
+      - name: null
+      - name: "f1"
+      - name: "f2"
   - name: group2
     type: group
     required: false
@@ -942,7 +964,7 @@ specs:
     auto spec = all_of({
         entry<int>("a"),
         entry<std::vector<std::string>>("b"),
-        selection<int>("c", {{"c1", 1}, {"c2", 2}}, {.default_value = 1}),
+        selection<Noneable<int>>("c", {{"c1", 1}, {"c2", 2}}, {.default_value = 1}),
         group("group",
             {
                 entry<int>("d"),
@@ -973,7 +995,7 @@ specs:
       EXPECT_EQ(b.size(), 2);
       EXPECT_EQ(b[0], "b1");
       EXPECT_EQ(b[1], "b2");
-      EXPECT_EQ(container.get<int>("c"), 2);
+      EXPECT_EQ(container.get<Noneable<int>>("c").value(), 2);
       EXPECT_EQ(container.group("group").get<int>("d"), 42);
     }
 
@@ -982,17 +1004,40 @@ specs:
       ryml::Tree tree = init_yaml_tree_with_exceptions();
       ryml::NodeRef root = tree.rootref();
 
-      root |= ryml::MAP;
-      root["a"] << 1;
-      root["b"] |= ryml::SEQ;
-      root["b"].append_child() << "b1";
-      root["b"].append_child() << "b2";
+      ryml::parse_in_arena(R"(a: 1
+b:
+    - b1
+    - b2
+)",
+          root);
       ConstYamlNodeRef node(root, "");
 
       InputParameterContainer container;
       spec.match(node, container);
-      EXPECT_EQ(container.get<int>("c"), 1);
+      EXPECT_EQ(container.get<Noneable<int>>("c").value(), 1);
       EXPECT_FALSE(container.has_group("group"));
+    }
+
+    {
+      SCOPED_TRACE("Explicit null in selection");
+      ryml::Tree tree = init_yaml_tree_with_exceptions();
+      ryml::NodeRef root = tree.rootref();
+
+      ryml::parse_in_arena(R"(a: 1
+b:
+    - b1
+    - b2
+c: null
+group:
+    d: 42
+)",
+          root);
+      ConstYamlNodeRef node(root, "");
+
+      InputParameterContainer container;
+      spec.match(node, container);
+      EXPECT_FALSE(container.get<Noneable<int>>("c").has_value());
+      EXPECT_EQ(container.group("group").get<int>("d"), 42);
     }
 
     // too little input

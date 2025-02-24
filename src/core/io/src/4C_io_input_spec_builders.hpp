@@ -37,6 +37,12 @@ namespace Core::IO
       template <typename T>
       void operator()(std::ostream& out, const T& val) const
       {
+        out << "<unprintable>";
+      }
+
+      template <SupportedType T>
+      void operator()(std::ostream& out, const T& val) const
+      {
         out << val;
       }
 
@@ -707,8 +713,13 @@ namespace Core::IO
       {
         std::string name;
         using StoredType = T;
+        //! The type that is used in the input file.
+        using InputType = std::conditional_t<IsNoneable<T>, Noneable<std::string>, std::string>;
+        using ChoiceMap = std::map<InputType, StoredType>;
         EntryData<T> data;
-        std::vector<std::pair<std::string, StoredType>> choices;
+        ChoiceMap choices;
+        //! The string representation of the choices.
+        std::string choices_string;
         void parse(ValueParser& parser, InputParameterContainer& container) const;
         bool match(ConstYamlNodeRef node, InputParameterContainer& container,
             IO::Internal::MatchEntry& match_entry) const;
@@ -798,8 +809,8 @@ namespace Core::IO
       //! Helper to create selection() specs.
       //! Note that the type can be anything since we never read or write values of this type.
       template <typename T>
-      [[nodiscard]] InputSpec selection_internal(
-          std::string name, std::vector<std::pair<std::string, T>> choices, EntryData<T> data = {});
+      [[nodiscard]] InputSpec selection_internal(std::string name,
+          std::map<std::string, RemoveNoneable<T>> choices, EntryData<T> data = {});
 
 
       struct SizeChecker
@@ -960,10 +971,9 @@ namespace Core::IO
      * selection<int>("my_selection", {{"a", 1}, {"b", 2}, {"c", 3}});
      * @endcode
      *
-     * The choices are given as a vector of pairs. The first element of the pair is the string
-     * that is expected in the input file. The second element is the value that is stored and may be
-     * any type. This function is for convenience, as you do not need to convert parsed string
-     * values to another type yourself. A frequent use case is to map strings to enum constants.
+     * The choices are given as a map from string to stored type T. This function is for
+     * convenience, as you do not need to convert parsed string values to another type yourself. A
+     * frequent use case is to map strings to enum constants.
      *
      * The remaining parameterization options follow the same rules as for the entry() function.
      *
@@ -975,7 +985,7 @@ namespace Core::IO
     template <typename T>
       requires(!std::same_as<T, std::string>)
     [[nodiscard]] InputSpec selection(
-        std::string name, std::vector<std::pair<std::string, T>> choices, EntryData<T> data = {});
+        std::string name, std::map<std::string, RemoveNoneable<T>> choices, EntryData<T> data = {});
 
 
     /**
@@ -1461,7 +1471,7 @@ void Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::parse(
     return;
   }
 
-  auto value = parser.read<std::string>();
+  auto value = parser.read<InputType>();
   for (const auto& choice : choices)
   {
     if (choice.first == value)
@@ -1470,7 +1480,11 @@ void Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::parse(
       return;
     }
   }
-  FOUR_C_THROW("Could not parse parameter '%s': invalid value '%s'", name.c_str(), value.c_str());
+  std::stringstream parsed_value_str;
+  IO::Internal::DatPrinter{}(parsed_value_str, value);
+
+  FOUR_C_THROW("Could not parse parameter '%s': invalid value '%s'. Valid options are: %s",
+      name.c_str(), parsed_value_str.str().c_str(), choices_string.c_str());
 }
 
 
@@ -1504,7 +1518,7 @@ bool Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::match(ConstYamlNod
 
   try
   {
-    std::string value;
+    InputType value;
     read_value_from_yaml(entry_node, value);
 
     for (const auto& choice : choices)
@@ -1546,15 +1560,12 @@ void Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::print(
         default_value_it != choices.end(), "Internal error: default value not found in choices.");
 
     stream << " (default: ";
-    stream << default_value_it->first;
+    IO::Internal::DatPrinter{}(stream, default_value_it->first);
     stream << ")";
   }
   {
     stream << " (choices: ";
-    for (const auto& choice : choices)
-    {
-      stream << choice.first << "|";
-    }
+    stream << choices_string;
     stream << ")";
   }
   if (!data.description.empty())
@@ -1571,7 +1582,9 @@ void Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::emit_metadata(
   node |= ryml::MAP;
   node["name"] << name;
 
+  if constexpr (IsNoneable<T>) emit_value_as_yaml(node["noneable"], true);
   node["type"] = "selection";
+
   if (!data.description.empty())
   {
     emit_value_as_yaml(node["description"], data.description);
@@ -1671,40 +1684,49 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::entry(std::string name, EntryDa
 
 template <typename T>
 Core::IO::InputSpec Core::IO::InputSpecBuilders::Internal::selection_internal(
-    std::string name, std::vector<std::pair<std::string, T>> choices, EntryData<T> data)
+    std::string name, std::map<std::string, RemoveNoneable<T>> choices, EntryData<T> data)
 {
   FOUR_C_ASSERT_ALWAYS(!choices.empty(), "Selection must have at least one choice.");
   Internal::sanitize_required_default(data);
 
+  // If we have a Noneable type, we need to convert the choices.
+  typename SelectionSpec<T>::ChoiceMap modified_choices;
+  std::string choices_string;
+  for (auto&& [key, value] : choices)
+  {
+    modified_choices.emplace(std::move(key), std::move(value));
+    choices_string += key + "|";
+  }
+  choices_string.pop_back();
+
+  if constexpr (IsNoneable<T>)
+  {
+    modified_choices[none<std::string>] = T{};
+    choices_string += "|none";
+  }
+
+  // Check that we have a default value that is in the choices.
   if (data.default_value.has_value())
   {
-    auto default_value_it = std::find_if(choices.begin(), choices.end(),
+    auto default_value_it = std::find_if(modified_choices.begin(), modified_choices.end(),
         [&](const auto& choice) { return choice.second == data.default_value.value(); });
 
-    if (default_value_it == choices.end())
+    if (default_value_it == modified_choices.end())
     {
-      std::string error_message;
-      for (const auto& choice : choices)
-      {
-        error_message += choice.first + "|";
-      }
-
       std::stringstream default_value_stream;
-      if constexpr (Core::IO::Internal::CustomDatPrintable<T>)
-      {
-        Core::IO::Internal::DatPrinter{}(default_value_stream, data.default_value.value());
-      }
-      else
-      {
-        default_value_stream << "<unprintable>";
-      }
+      Core::IO::Internal::DatPrinter{}(default_value_stream, data.default_value.value());
       FOUR_C_THROW("Default value '%s' of selection not found in choices '%s'.",
-          default_value_stream.str().c_str(), error_message.c_str());
+          default_value_stream.str().c_str(), choices_string.c_str());
     }
   }
 
   return IO::Internal::make_spec(
-      Internal::SelectionSpec<T>{.name = name, .data = data, .choices = choices},
+      Internal::SelectionSpec<T>{
+          .name = name,
+          .data = data,
+          .choices = modified_choices,
+          .choices_string = choices_string,
+      },
       {
           .name = name,
           .description = data.description,
@@ -1718,7 +1740,7 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::Internal::selection_internal(
 template <typename T>
   requires(!std::same_as<T, std::string>)
 Core::IO::InputSpec Core::IO::InputSpecBuilders::selection(
-    std::string name, std::vector<std::pair<std::string, T>> choices, EntryData<T> data)
+    std::string name, std::map<std::string, RemoveNoneable<T>> choices, EntryData<T> data)
 {
   return Internal::selection_internal(name, choices, data);
 }
@@ -1728,10 +1750,10 @@ template <std::same_as<std::string> T>
 Core::IO::InputSpec Core::IO::InputSpecBuilders::selection(
     std::string name, std::vector<std::string> choices, EntryData<T> data)
 {
-  std::vector<std::pair<std::string, std::string>> choices_with_strings;
+  std::map<std::string, std::string> choices_with_strings;
   for (const auto& choice : choices)
   {
-    choices_with_strings.emplace_back(choice, choice);
+    choices_with_strings.emplace(choice, choice);
   }
   return Internal::selection_internal(name, choices_with_strings, data);
 }
