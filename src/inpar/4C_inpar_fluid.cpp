@@ -1516,41 +1516,47 @@ void Inpar::FLUID::set_valid_conditions(
   volumetric_surface_flow_cond.add_component(parameter<int>("ConditionID"));
 
   volumetric_surface_flow_cond.add_component(
-      selection<std::string>("ConditionType", {"POLYNOMIAL", "WOMERSLEY"},
-          {.description = "condition type", .default_value = "POLYNOMIAL"}));
+      selection<std::string>("CONDITIONTYPE", {"polynomial", "womersley"},
+          {.description = "condition type", .default_value = "polynomial"}));
 
   volumetric_surface_flow_cond.add_component(
-      selection<std::string>("prebiased", {"NOTPREBIASED", "PREBIASED", "FORCED"},
-          {.description = "prebiased", .default_value = "NOTPREBIASED"}));
+      selection<std::string>("PREBIAS", {"not_prebiased", "prebiased", "forced"},
+          {.description = "prebias type", .default_value = "not_prebiased"}));
 
   volumetric_surface_flow_cond.add_component(selection<std::string>(
-      "FlowType", {"InFlow", "OutFlow"}, {.description = "flow type", .default_value = "InFlow"}));
+      "FLOWTYPE", {"inflow", "outflow"}, {.description = "flow type", .default_value = "inflow"}));
   volumetric_surface_flow_cond.add_component(
-      selection<std::string>("CorrectionFlag", {"WithOutCorrection", "WithCorrection"},
-          {.description = "correction flag", .default_value = "WithOutCorrection"}));
+      parameter<bool>("CORRECTPROFILE", {.description = "correction flag", .default_value = false}));
 
-  volumetric_surface_flow_cond.add_component(parameter<double>("Period"));
-  volumetric_surface_flow_cond.add_component(parameter<int>("Order"));
-  volumetric_surface_flow_cond.add_component(parameter<int>("Harmonics"));
-  volumetric_surface_flow_cond.add_component(parameter<double>("Val"));
-  volumetric_surface_flow_cond.add_component(parameter<int>("Funct"));
+  volumetric_surface_flow_cond.add_component(parameter<double>("PERIOD"));
+  volumetric_surface_flow_cond.add_component(parameter<int>("ORDER"));
+  volumetric_surface_flow_cond.add_component(parameter<int>("HARMONICS"));
+  volumetric_surface_flow_cond.add_component(parameter<double>("VAL"));
+  volumetric_surface_flow_cond.add_component(parameter<int>("FUNCT"));
 
   volumetric_surface_flow_cond.add_component(
-      selection<std::string>("NORMAL", {"SelfEvaluateNormal", "UsePrescribedNormal"},
-          {.description = "normal", .default_value = "SelfEvaluateNormal"}));
-  volumetric_surface_flow_cond.add_component(parameter<double>("n1"));
-  volumetric_surface_flow_cond.add_component(parameter<double>("n2"));
-  volumetric_surface_flow_cond.add_component(parameter<double>("n3"));
+      one_of({all_of({
+                  selection<std::string>(
+                      "NORMAL", {"self_evaluate"}, {.description = "type of normal evaluation"}),
+              }),
+          all_of({
+              selection<std::string>(
+                  "NORMAL", {"use_prescribed"}, {.description = "type of normal evaluation"}),
+              parameter<std::vector<double>>("n", {.size = 3}),
+          })}));
 
-  volumetric_surface_flow_cond.add_component(selection<std::string>("CenterOfMass",
-      {"SelfEvaluateCenterOfMass", "UsePrescribedCenterOfMass"},
-      {.description = "center of mass", .default_value = "SelfEvaluateCenterOfMass"}));
-  volumetric_surface_flow_cond.add_component(parameter<double>("c1"));
-  volumetric_surface_flow_cond.add_component(parameter<double>("c2"));
-  volumetric_surface_flow_cond.add_component(parameter<double>("c3"));
+  volumetric_surface_flow_cond.add_component(
+      one_of({all_of({
+                  selection<std::string>("CENTEROFMASS", {"self_evaluate"},
+                      {.description = "type of center of mass evaluation"}),
+              }),
+          all_of({
+              selection<std::string>("CENTEROFMASS", {"use_prescribed"},
+                  {.description = "type of center of mass evaluation"}),
+              parameter<std::vector<double>>("c", {.size = 3}),
+          })}));
 
   condlist.push_back(volumetric_surface_flow_cond);
-
 
 
   /*--------------------------------------------------------------------*/
@@ -1574,38 +1580,45 @@ void Inpar::FLUID::set_valid_conditions(
 
   total_traction_correction_cond.add_component(parameter<int>("ConditionID"));
   total_traction_correction_cond.add_component(
-      selection<std::string>("ConditionType", {"POLYNOMIAL", "WOMERSLEY"},
-          {.description = "condition type", .default_value = "POLYNOMIAL"}));
+      selection<std::string>("CONDITIONTYPE", {"polynomial", "womersley"},
+          {.description = "condition type", .default_value = "polynomial"}));
 
   total_traction_correction_cond.add_component(
-      selection<std::string>("prebiased", {"NOTPREBIASED", "PREBIASED", "FORCED"},
-          {.description = "prebiased", .default_value = "NOTPREBIASED"}));
+      selection<std::string>("PREBIAS", {"not_prebiased", "prebiased", "forced"},
+          {.description = "prebias type", .default_value = "not_prebiased"}));
 
   total_traction_correction_cond.add_component(selection<std::string>(
-      "FlowType", {"InFlow", "OutFlow"}, {.description = "flow type", .default_value = "InFlow"}));
+      "FLOWTYPE", {"inflow", "outflow"}, {.description = "flow type", .default_value = "inflow"}));
   total_traction_correction_cond.add_component(
-      selection<std::string>("CorrectionFlag", {"WithOutCorrection", "WithCorrection"},
-          {.description = "correction flag", .default_value = "WithOutCorrection"}));
+      parameter<bool>("CORRECTPROFILE", {.description = "correction flag", .default_value = false}));
 
-  total_traction_correction_cond.add_component(parameter<double>("Period"));
-  total_traction_correction_cond.add_component(parameter<int>("Order"));
-  total_traction_correction_cond.add_component(parameter<int>("Harmonics"));
-  total_traction_correction_cond.add_component(parameter<double>("Val"));
-  total_traction_correction_cond.add_component(parameter<int>("Funct"));
+  total_traction_correction_cond.add_component(parameter<double>("PERIOD"));
+  total_traction_correction_cond.add_component(parameter<int>("ORDER"));
+  total_traction_correction_cond.add_component(parameter<int>("HARMONICS"));
+  total_traction_correction_cond.add_component(parameter<double>("VAL"));
+  total_traction_correction_cond.add_component(parameter<int>("FUNCT"));
 
   total_traction_correction_cond.add_component(
-      selection<std::string>("NORMAL", {"SelfEvaluateNormal", "UsePrescribedNormal"},
-          {.description = "normal", .default_value = "SelfEvaluateNormal"}));
-  total_traction_correction_cond.add_component(parameter<double>("n1"));
-  total_traction_correction_cond.add_component(parameter<double>("n2"));
-  total_traction_correction_cond.add_component(parameter<double>("n3"));
+      one_of({all_of({
+                  selection<std::string>(
+                      "NORMAL", {"self_evaluate"}, {.description = "type of normal evaluation"}),
+              }),
+          all_of({
+              selection<std::string>(
+                  "NORMAL", {"use_prescribed"}, {.description = "type of normal evaluation"}),
+              parameter<std::vector<double>>("NVECTOR", {.size = 3}),
+          })}));
 
-  total_traction_correction_cond.add_component(selection<std::string>("CenterOfMass",
-      {"SelfEvaluateCenterOfMass", "UsePrescribedCenterOfMass"},
-      {.description = "center of mass", .default_value = "SelfEvaluateCenterOfMass"}));
-  total_traction_correction_cond.add_component(parameter<double>("c1"));
-  total_traction_correction_cond.add_component(parameter<double>("c2"));
-  total_traction_correction_cond.add_component(parameter<double>("c3"));
+  total_traction_correction_cond.add_component(
+      one_of({all_of({
+                  selection<std::string>("CENTEROFMASS", {"self_evaluate"},
+                      {.description = "type of center of mass evaluation"}),
+              }),
+          all_of({
+              selection<std::string>("CENTEROFMASS", {"use_prescribed"},
+                  {.description = "type of center of mass evaluation"}),
+              parameter<std::vector<double>>("CVECTOR", {.size = 3}),
+          })}));
 
   condlist.push_back(total_traction_correction_cond);
 

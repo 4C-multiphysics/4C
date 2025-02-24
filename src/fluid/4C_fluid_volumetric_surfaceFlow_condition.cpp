@@ -190,19 +190,19 @@ FLD::Utils::FluidVolumetricSurfaceFlowBc::FluidVolumetricSurfaceFlowBc(
   dta_ = dta;
 
   // get the cycle period size
-  period_ = conditions[surf_numcond]->parameters().get<double>("Period");
+  period_ = conditions[surf_numcond]->parameters().get<double>("PERIOD");
 
   // get the polynomial order of the profile
-  order_ = conditions[surf_numcond]->parameters().get<int>("Order");
+  order_ = conditions[surf_numcond]->parameters().get<int>("ORDER");
 
   // get the number of harmonics
-  n_harmonics_ = conditions[surf_numcond]->parameters().get<int>("Harmonics");
+  n_harmonics_ = conditions[surf_numcond]->parameters().get<int>("HARMONICS");
 
   // get the profile type
-  flowprofile_type_ = ((conditions[surf_numcond])->parameters().get<std::string>("ConditionType"));
+  flowprofile_type_ = ((conditions[surf_numcond])->parameters().get<std::string>("CONDITIONTYPE"));
 
   // get the prebiasing flag
-  prebiasing_flag_ = ((conditions[surf_numcond])->parameters().get<std::string>("prebiased"));
+  prebiasing_flag_ = ((conditions[surf_numcond])->parameters().get<std::string>("PREBIAS"));
 
   // -------------------------------------------------------------------
   // calculate the center of mass and varage normal of the surface
@@ -215,7 +215,7 @@ FLD::Utils::FluidVolumetricSurfaceFlowBc::FluidVolumetricSurfaceFlowBc(
   // get the normal
   normal_ = std::make_shared<std::vector<double>>(*normal);
   std::string normal_info = (conditions[surf_numcond])->parameters().get<std::string>("NORMAL");
-  if (normal_info == "SelfEvaluateNormal")
+  if (normal_info == "self_evaluate")
   {
     if (!myrank_)
     {
@@ -223,16 +223,14 @@ FLD::Utils::FluidVolumetricSurfaceFlowBc::FluidVolumetricSurfaceFlowBc(
     }
     vnormal_ = std::make_shared<std::vector<double>>(*normal);
   }
-  else if (normal_info == "UsePrescribedNormal")
+  else if (normal_info == "use_prescribed")
   {
     if (!myrank_)
     {
       std::cout << "Normal is manually setup" << std::endl;
     }
-    vnormal_ = std::make_shared<std::vector<double>>();
-    (*vnormal_)[0] = conditions[surf_numcond]->parameters().get<double>("n1");
-    (*vnormal_)[1] = conditions[surf_numcond]->parameters().get<double>("n2");
-    (*vnormal_)[2] = conditions[surf_numcond]->parameters().get<double>("n3");
+    auto vnormal = conditions[surf_numcond]->parameters().get<std::vector<double>>("NVECTOR");
+    vnormal_ = std::make_shared<std::vector<double>>(vnormal);
   }
   else
   {
@@ -242,8 +240,8 @@ FLD::Utils::FluidVolumetricSurfaceFlowBc::FluidVolumetricSurfaceFlowBc(
 
   // get the center of mass
   std::string c_mass_info =
-      (conditions[surf_numcond])->parameters().get<std::string>("CenterOfMass");
-  if (c_mass_info == "SelfEvaluateCenterOfMass")
+      (conditions[surf_numcond])->parameters().get<std::string>("CENTEROFMASS");
+  if (c_mass_info == "self_evaluate")
   {
     if (!myrank_)
     {
@@ -251,16 +249,14 @@ FLD::Utils::FluidVolumetricSurfaceFlowBc::FluidVolumetricSurfaceFlowBc(
     }
     cmass_ = std::make_shared<std::vector<double>>(*cmass);
   }
-  else if (c_mass_info == "UsePrescribedCenterOfMass")
+  else if (c_mass_info == "use_prescribed")
   {
     if (!myrank_)
     {
       std::cout << "Center of mass is manually setup" << std::endl;
     }
-    normal_ = std::make_shared<std::vector<double>>();
-    (*cmass_)[0] = conditions[surf_numcond]->parameters().get<double>("c1");
-    (*cmass_)[1] = conditions[surf_numcond]->parameters().get<double>("c2");
-    (*cmass_)[2] = conditions[surf_numcond]->parameters().get<double>("c3");
+    auto normal = conditions[surf_numcond]->parameters().get<std::vector<double>>("CVECTOR");
+    normal_ = std::make_shared<std::vector<double>>(normal);
   }
   else
   {
@@ -270,12 +266,12 @@ FLD::Utils::FluidVolumetricSurfaceFlowBc::FluidVolumetricSurfaceFlowBc(
 
 
   // check if the condition surface is a inlet or outlet
-  std::string flow_dir = (conditions[surf_numcond])->parameters().get<std::string>("FlowType");
-  if (flow_dir == "InFlow")
+  std::string flow_dir = (conditions[surf_numcond])->parameters().get<std::string>("FLOWTYPE");
+  if (flow_dir == "inflow")
   {
     flow_dir_ = -1.0;
   }
-  else if (flow_dir == "OutFlow")
+  else if (flow_dir == "outflow")
   {
     flow_dir_ = 1.0;
   }
@@ -286,9 +282,7 @@ FLD::Utils::FluidVolumetricSurfaceFlowBc::FluidVolumetricSurfaceFlowBc(
   }
 
   // check if the flow is with correction
-  std::string corr_flag =
-      (conditions[surf_numcond])->parameters().get<std::string>("CorrectionFlag");
-  correct_flow_ = (corr_flag == "WithCorrection");
+  correct_flow_ = (conditions[surf_numcond])->parameters().get<bool>("CORRECTPROFILE");
 
   // -------------------------------------------------------------------
   // create the flow rates vector
@@ -297,7 +291,7 @@ FLD::Utils::FluidVolumetricSurfaceFlowBc::FluidVolumetricSurfaceFlowBc(
 
   flowrates_ = std::make_shared<std::vector<double>>(num_steps, 0.0);
 
-  if (prebiasing_flag_ == "PREBIASED" || prebiasing_flag_ == "FORCED")
+  if (prebiasing_flag_ == "prebiased" || prebiasing_flag_ == "forced")
   {
     for (unsigned int i = 0; i < flowrates_->size(); i++)
     {
@@ -511,7 +505,7 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::eval_local_normalized_radii(
 
   // -------------------------------------------------------------------
   // loop over each node and compare its distance to the
-  // [CenterOfMass BorderNodes)
+  // [CENTEROFMASS BorderNodes)
   // -------------------------------------------------------------------
 
   // get the dimension of the node
@@ -962,8 +956,8 @@ double FLD::Utils::FluidVolumetricSurfaceFlowBc::evaluate_flowrate(
   Core::Conditions::Condition* condition = conditions[condnum_s_];
 
   // get curve and curve_factor
-  const int functnum = condition->parameters().get<int>("Funct");
-  const double val = condition->parameters().get<double>("Val");
+  const int functnum = condition->parameters().get<int>("FUNCT");
+  const double val = condition->parameters().get<double>("VAL");
 
   //  if ( val < 1e-14 )
   //    FOUR_C_THROW("Val must be positive!");
@@ -1047,7 +1041,7 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::velocities(Core::FE::Discretizati
     (*velocities)[i] /= area * flow_dir_;
   }
 
-  if (flowType == "WOMERSLEY")
+  if (flowType == "womersley")
   {
     if (n_harmonics < 1)
     {
@@ -1100,7 +1094,7 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::velocities(Core::FE::Discretizati
         //------------------------------------------------------------
 
         // check for the polynomial type
-        if (flowType == "POLYNOMIAL")
+        if (flowType == "polynomial")
         {
           if (order != 0)
           {
@@ -1113,7 +1107,7 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::velocities(Core::FE::Discretizati
           }
         }
         // else check for Womersley type
-        else if (flowType == "WOMERSLEY")
+        else if (flowType == "womersley")
         {
           double R = (border_radii)[cond_noderowmap.LID(gid)];
 
@@ -1236,7 +1230,7 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::correct_flow_rate(
   // the velocity position
   params->set<int>("Velocity Position", 0);
   // the flow type
-  params->set<std::string>("flowrate type", "POLYNOMIAL");
+  params->set<std::string>("flowrate type", "polynomial");
   // time
   params->set<double>("time", time_in_a_period);
   // period of a cycle
@@ -1862,7 +1856,7 @@ void FLD::Utils::TotalTractionCorrector::evaluate_velocities(
   {
     double flowrate = 0.0;
 
-    if (mapiter->second->prebiasing_flag() == "FORCED")
+    if (mapiter->second->prebiasing_flag() == "forced")
     {
       flowrate = mapiter->second->evaluate_flowrate("TotalTractionCorrectionCond", time);
     }

@@ -113,7 +113,7 @@ E 3
 --------------------------------------------DESIGN SURF IMPEDANCE CONDITIONS
 E 3 ConditionID 1 TYPE windkessel R1 0.11 R2 2.2 C 0.6 TIMEPERIOD 1.0 FUNCT none
 --------------------------------------DESIGN SURF VOLUMETRIC FLOW CONDITIONS
-E 1 ConditionID 1 ConditionType POLYNOMIAL prebiased PREBIASED FlowType InFlow CorrectionFlag WithCorrection Period 1.0 Order 2 Harmonics 16 Val -8261.0 Funct 1 NORMAL SelfEvaluateNormal n1 0.0 n2 0.0 n3 0.0 CenterOfMass SelfEvaluateCenterOfMass c1 0.0 c2 0.0 c3 0.0
+E 1 ConditionID 1 CONDITIONTYPE polynomial PREBIAS prebiased FLOWTYPE inflow CORRECTPROFILE true PERIOD 1.0 ORDER 2 HARMONICS 16 VAL -8261.0 FUNCT 1 NORMAL self_evaluate CENTEROFMASS self_evaluate
 ------------------------------------DESIGN LINE VOLUMETRIC FLOW BORDER NODES
 E 1 ConditionID 1
 ---------------------------------------------------------DLINE-NODE TOPOLOGY
