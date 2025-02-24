@@ -406,17 +406,17 @@ namespace Inpar
             "ONOFF", {.description = "", .size = from_parameter<int>("NUMDOF")}));
         cond.add_component(parameter<std::vector<double>>(
             "STIFF", {.description = "", .size = from_parameter<int>("NUMDOF")}));
-        cond.add_component(parameter<std::vector<int>>(
+        cond.add_component(parameter<std::vector<Noneable<int>>>(
             "TIMEFUNCTSTIFF", {.description = "", .size = from_parameter<int>("NUMDOF")}));
         cond.add_component(parameter<std::vector<double>>(
             "VISCO", {.description = "", .size = from_parameter<int>("NUMDOF")}));
-        cond.add_component(parameter<std::vector<int>>(
+        cond.add_component(parameter<std::vector<Noneable<int>>>(
             "TIMEFUNCTVISCO", {.description = "", .size = from_parameter<int>("NUMDOF")}));
         cond.add_component(parameter<std::vector<double>>(
             "DISPLOFFSET", {.description = "", .size = from_parameter<int>("NUMDOF")}));
-        cond.add_component(parameter<std::vector<int>>(
+        cond.add_component(parameter<std::vector<Noneable<int>>>(
             "TIMEFUNCTDISPLOFFSET", {.description = "", .size = from_parameter<int>("NUMDOF")}));
-        cond.add_component(parameter<std::vector<int>>(
+        cond.add_component(parameter<std::vector<Noneable<int>>>(
             "FUNCTNONLINSTIFF", {.description = "", .size = from_parameter<int>("NUMDOF")}));
         cond.add_component(
             selection<CONSTRAINTS::SpringDashpot::RobinSpringDashpotType>("DIRECTION",

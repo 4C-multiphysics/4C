@@ -43,13 +43,20 @@ namespace
       Core::FE::CelltypeSequence<Core::FE::CellType::quad4, Core::FE::CellType::quad8,
           Core::FE::CellType::quad9, Core::FE::CellType::tri3, Core::FE::CellType::tri6>;
 
-  double scale_by_optional_function(double baseline_value, int num_func, double total_time)
+  double scale_by_optional_function(
+      double baseline_value, Core::IO::Noneable<int> funct_id, double total_time)
   {
-    return num_func ? Global::Problem::instance()
-                              ->function_by_id<Core::Utils::FunctionOfTime>(num_func)
-                              .evaluate(total_time) *
-                          baseline_value
-                    : baseline_value;
+    if (funct_id.has_value() && funct_id.value() > 0)
+    {
+      return Global::Problem::instance()
+                 ->function_by_id<Core::Utils::FunctionOfTime>(funct_id.value())
+                 .evaluate(total_time) *
+             baseline_value;
+    }
+    else
+    {
+      return baseline_value;
+    }
   }
 
   template <typename T>
@@ -260,12 +267,17 @@ CONSTRAINTS::SpringDashpot::SpringDashpot(std::shared_ptr<Core::FE::Discretizati
 
   // safety checks of input
   const auto* springstiff = &spring_->parameters().get<std::vector<double>>("STIFF");
-  const auto* numfuncstiff = &spring_->parameters().get<std::vector<int>>("TIMEFUNCTSTIFF");
-  const auto* numfuncnonlinstiff = &spring_->parameters().get<std::vector<int>>("FUNCTNONLINSTIFF");
+  const auto* function_id_stiffness =
+      &spring_->parameters().get<std::vector<Core::IO::Noneable<int>>>("TIMEFUNCTSTIFF");
+  const auto* function_id_nonlinear_stiffness =
+      &spring_->parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCTNONLINSTIFF");
 
-  for (unsigned i = 0; i < (*numfuncnonlinstiff).size(); ++i)
+  for (unsigned i = 0; i < (*function_id_nonlinear_stiffness).size(); ++i)
   {
-    if ((*numfuncnonlinstiff)[i] != 0 and ((*springstiff)[i] != 0 or (*numfuncstiff)[i] != 0))
+    if (((*function_id_nonlinear_stiffness)[i].has_value() &&
+            (*function_id_nonlinear_stiffness)[i].value() > 0) and
+        (((*springstiff)[i] != 0) or
+            ((*function_id_stiffness)[i].has_value() && (*function_id_stiffness)[i].value() > 0)))
       FOUR_C_THROW("Must not apply nonlinear stiffness and linear stiffness");
   }
 
@@ -318,13 +330,16 @@ void CONSTRAINTS::SpringDashpot::evaluate_robin(std::shared_ptr<Core::LinAlg::Sp
   // get values and switches from the condition
   const auto& onoff = spring_->parameters().get<std::vector<int>>("ONOFF");
   const auto& springstiff = spring_->parameters().get<std::vector<double>>("STIFF");
-  const auto& numfuncstiff = spring_->parameters().get<std::vector<int>>("TIMEFUNCTSTIFF");
+  const auto& function_id_stiffness =
+      spring_->parameters().get<std::vector<Core::IO::Noneable<int>>>("TIMEFUNCTSTIFF");
   const auto& dashpotvisc = spring_->parameters().get<std::vector<double>>("VISCO");
-  const auto& numfuncvisco = spring_->parameters().get<std::vector<int>>("TIMEFUNCTVISCO");
+  const auto& function_id_viscosity =
+      spring_->parameters().get<std::vector<Core::IO::Noneable<int>>>("TIMEFUNCTVISCO");
   const auto& constant_offset = spring_->parameters().get<std::vector<double>>("DISPLOFFSET");
-  const auto& numfuncdisploffset =
-      spring_->parameters().get<std::vector<int>>("TIMEFUNCTDISPLOFFSET");
-  const auto& numfuncnonlinstiff = spring_->parameters().get<std::vector<int>>("FUNCTNONLINSTIFF");
+  const auto& function_id_displacement_offset =
+      spring_->parameters().get<std::vector<Core::IO::Noneable<int>>>("TIMEFUNCTDISPLOFFSET");
+  const auto& function_id_nonlinear_stiffness =
+      spring_->parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCTNONLINSTIFF");
   const auto& direction = spring_->parameters().get<RobinSpringDashpotType>("DIRECTION");
 
   // time-integration factor for stiffness contribution of dashpot, d(v_{n+1})/d(d_{n+1})
@@ -361,14 +376,15 @@ void CONSTRAINTS::SpringDashpot::evaluate_robin(std::shared_ptr<Core::LinAlg::Sp
           if (!onoff_bool[i]) continue;
 
           const double dashpot_viscosity =
-              scale_by_optional_function(dashpotvisc[i], numfuncvisco[i], total_time);
+              scale_by_optional_function(dashpotvisc[i], function_id_viscosity[i], total_time);
 
-          if (numfuncnonlinstiff[i] > 0)
+          if (function_id_nonlinear_stiffness[i].has_value() &&
+              function_id_nonlinear_stiffness[i].value() > 0)
           {
             // function is nonlinear
             const auto& nonlinear_spring =
                 Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfSpaceTime>(
-                    numfuncnonlinstiff[i]);
+                    function_id_nonlinear_stiffness[i].value());
 
             spring_dashpot_evaluators[i] =
                 [=, &nonlinear_spring](double delta_displacement,
@@ -391,7 +407,7 @@ void CONSTRAINTS::SpringDashpot::evaluate_robin(std::shared_ptr<Core::LinAlg::Sp
           {
             // function is linear but might depend on time
             const double spring_stiffness =
-                scale_by_optional_function(springstiff[i], numfuncstiff[i], total_time);
+                scale_by_optional_function(springstiff[i], function_id_stiffness[i], total_time);
 
             spring_dashpot_evaluators[i] =
                 [=](double delta_displacement,
@@ -457,7 +473,7 @@ void CONSTRAINTS::SpringDashpot::evaluate_robin(std::shared_ptr<Core::LinAlg::Sp
               {
                 scaled_constant_offset[axis_direction] =
                     scale_by_optional_function(constant_offset[axis_direction],
-                        numfuncdisploffset[axis_direction], total_time);
+                        function_id_displacement_offset[axis_direction], total_time);
               }
 
 
@@ -557,47 +573,49 @@ void CONSTRAINTS::SpringDashpot::evaluate_robin(std::shared_ptr<Core::LinAlg::Sp
 
           // compute stiffness, viscosity, and initial offset from functions
           const double dof_stiffness =
-              (numfuncstiff)[dof] != 0
-                  ? springstiff[dof] *
-                        Global::Problem::instance()
-                            ->function_by_id<Core::Utils::FunctionOfTime>(numfuncstiff[dof])
-                            .evaluate(total_time)
+              function_id_stiffness[dof].has_value() && function_id_stiffness[dof] > 0
+                  ? springstiff[dof] * Global::Problem::instance()
+                                           ->function_by_id<Core::Utils::FunctionOfTime>(
+                                               function_id_stiffness[dof].value())
+                                           .evaluate(total_time)
                   : springstiff[dof];
           const double dof_viscosity =
-              numfuncvisco[dof] != 0
-                  ? dashpotvisc[dof] *
-                        Global::Problem::instance()
-                            ->function_by_id<Core::Utils::FunctionOfTime>(numfuncvisco[dof])
-                            .evaluate(total_time)
+              function_id_viscosity[dof].has_value() && function_id_viscosity[dof] > 0
+                  ? dashpotvisc[dof] * Global::Problem::instance()
+                                           ->function_by_id<Core::Utils::FunctionOfTime>(
+                                               function_id_viscosity[dof].value())
+                                           .evaluate(total_time)
                   : dashpotvisc[dof];
           const double dof_disploffset =
-              numfuncdisploffset[dof] != 0
-                  ? constant_offset[dof] *
-                        Global::Problem::instance()
-                            ->function_by_id<Core::Utils::FunctionOfTime>(numfuncdisploffset[dof])
-                            .evaluate(total_time)
+              function_id_displacement_offset[dof].has_value() &&
+                      function_id_displacement_offset[dof] > 0
+                  ? constant_offset[dof] * Global::Problem::instance()
+                                               ->function_by_id<Core::Utils::FunctionOfTime>(
+                                                   function_id_displacement_offset[dof].value())
+                                               .evaluate(total_time)
                   : constant_offset[dof];
 
           // displacement related forces and derivatives
           double force_disp = 0.0;
           double force_disp_deriv = 0.0;
-          if ((numfuncnonlinstiff)[dof] == 0)
-          {
-            force_disp = dof_stiffness * (dof_disp - dof_disploffset);
-            force_disp_deriv = dof_stiffness;
-          }
-          else
+          if (function_id_nonlinear_stiffness[dof].has_value() &&
+              function_id_nonlinear_stiffness[dof].value() > 0)
           {
             std::array<double, 3> displ = {(*disp)[0], (*disp)[1], (*disp)[2]};
             force_disp = Global::Problem::instance()
                              ->function_by_id<Core::Utils::FunctionOfSpaceTime>(
-                                 (numfuncnonlinstiff)[dof] - 1)
+                                 function_id_nonlinear_stiffness[dof].value() - 1)
                              .evaluate(displ.data(), total_time, 0);
 
             force_disp_deriv = (Global::Problem::instance()
                     ->function_by_id<Core::Utils::FunctionOfSpaceTime>(
-                        (numfuncnonlinstiff)[dof] - 1)
+                        function_id_nonlinear_stiffness[dof].value() - 1)
                     .evaluate_spatial_derivative(displ.data(), total_time, 0))[dof];
+          }
+          else
+          {
+            force_disp = dof_stiffness * (dof_disp - dof_disploffset);
+            force_disp_deriv = dof_stiffness;
           }
 
           // velocity related forces and derivatives
@@ -677,36 +695,41 @@ void CONSTRAINTS::SpringDashpot::evaluate_force(Core::LinAlg::Vector<double>& fi
         case RobinSpringDashpotType::cursurfnormal:  // spring dashpot acts in curnormal direction
 
           // safety checks
-          const auto* numfuncstiff = &spring_->parameters().get<std::vector<int>>("TIMEFUNCTSTIFF");
-          const auto* numfuncvisco = &spring_->parameters().get<std::vector<int>>("TIMEFUNCTVISCO");
-          const auto* numfuncdisploffset =
-              &spring_->parameters().get<std::vector<int>>("TIMEFUNCTDISPLOFFSET");
-          const auto* numfuncnonlinstiff =
-              &spring_->parameters().get<std::vector<int>>("FUNCTNONLINSTIFF");
-          for (int dof_numfuncstiff : *numfuncstiff)
+          const auto* function_id_stiffness =
+              &spring_->parameters().get<std::vector<Core::IO::Noneable<int>>>("TIMEFUNCTSTIFF");
+          const auto* function_id_viscosity =
+              &spring_->parameters().get<std::vector<Core::IO::Noneable<int>>>("TIMEFUNCTVISCO");
+          const auto* function_id_displacement_offset =
+              &spring_->parameters().get<std::vector<Core::IO::Noneable<int>>>(
+                  "TIMEFUNCTDISPLOFFSET");
+          const auto* function_id_nonlinear_stiffness =
+              &spring_->parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCTNONLINSTIFF");
+          for (auto dof_function_id_stiffness : *function_id_stiffness)
           {
-            if (dof_numfuncstiff != 0)
+            if (dof_function_id_stiffness.has_value() && dof_function_id_stiffness.value() > 0)
             {
               FOUR_C_THROW(
                   "temporal dependence of stiffness not implemented for current surface "
                   "evaluation");
             }
           }
-          for (int dof_numfuncvisco : *numfuncvisco)
+          for (auto dof_function_id_viscosity : *function_id_viscosity)
           {
-            if (dof_numfuncvisco != 0)
+            if (dof_function_id_viscosity.has_value() && dof_function_id_viscosity.value() > 0)
               FOUR_C_THROW(
                   "temporal dependence of damping not implemented for current surface evaluation");
           }
-          for (int dof_numfuncdisploffset : *numfuncdisploffset)
+          for (auto dof_function_id_displacement_offset : *function_id_displacement_offset)
           {
-            if (dof_numfuncdisploffset != 0)
+            if (dof_function_id_displacement_offset.has_value() &&
+                dof_function_id_displacement_offset.value() > 0)
               FOUR_C_THROW(
                   "temporal dependence of offset not implemented for current surface evaluation");
           }
-          for (int dof_numfuncnonlinstiff : *numfuncnonlinstiff)
+          for (auto dof_function_id_nonlinear_stiffness : *function_id_nonlinear_stiffness)
           {
-            if (dof_numfuncnonlinstiff != 0)
+            if (dof_function_id_nonlinear_stiffness.has_value() &&
+                dof_function_id_nonlinear_stiffness.value() > 0)
               FOUR_C_THROW("Nonlinear spring not implemented for current surface evaluation");
           }
 
@@ -800,36 +823,41 @@ void CONSTRAINTS::SpringDashpot::evaluate_force_stiff(Core::LinAlg::SparseMatrix
         case RobinSpringDashpotType::cursurfnormal:  // spring dashpot acts in curnormal direction
 
           // safety checks
-          const auto* numfuncstiff = &spring_->parameters().get<std::vector<int>>("TIMEFUNCTSTIFF");
-          const auto* numfuncvisco = &spring_->parameters().get<std::vector<int>>("TIMEFUNCTVISCO");
-          const auto* numfuncdisploffset =
-              &spring_->parameters().get<std::vector<int>>("TIMEFUNCTDISPLOFFSET");
-          const auto* numfuncnonlinstiff =
-              &spring_->parameters().get<std::vector<int>>("FUNCTNONLINSTIFF");
-          for (int dof_numfuncstiff : *numfuncstiff)
+          const auto* function_id_stiffness =
+              &spring_->parameters().get<std::vector<Core::IO::Noneable<int>>>("TIMEFUNCTSTIFF");
+          const auto* function_id_viscosity =
+              &spring_->parameters().get<std::vector<Core::IO::Noneable<int>>>("TIMEFUNCTVISCO");
+          const auto* function_id_displacement_offset =
+              &spring_->parameters().get<std::vector<Core::IO::Noneable<int>>>(
+                  "TIMEFUNCTDISPLOFFSET");
+          const auto* function_id_nonlinear_stiffness =
+              &spring_->parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCTNONLINSTIFF");
+          for (auto dof_function_id_stiffness : *function_id_stiffness)
           {
-            if (dof_numfuncstiff != 0)
+            if (dof_function_id_stiffness.has_value() && dof_function_id_stiffness.value() > 0)
             {
               FOUR_C_THROW(
                   "temporal dependence of stiffness not implemented for current surface "
                   "evaluation");
             }
           }
-          for (int dof_numfuncvisco : *numfuncvisco)
+          for (auto dof_function_id_viscosity : *function_id_viscosity)
           {
-            if (dof_numfuncvisco != 0)
+            if (dof_function_id_viscosity.has_value() && dof_function_id_viscosity.value() > 0)
               FOUR_C_THROW(
                   "temporal dependence of damping not implemented for current surface evaluation");
           }
-          for (int dof_numfuncdisploffset : *numfuncdisploffset)
+          for (auto dof_function_id_displacement_offset : *function_id_displacement_offset)
           {
-            if (dof_numfuncdisploffset != 0)
+            if (dof_function_id_displacement_offset.has_value() &&
+                dof_function_id_displacement_offset.value() > 0)
               FOUR_C_THROW(
                   "temporal dependence of offset not implemented for current surface evaluation");
           }
-          for (int dof_numfuncnonlinstiff : *numfuncnonlinstiff)
+          for (auto dof_function_id_nonlinear_stiffness : *function_id_nonlinear_stiffness)
           {
-            if (dof_numfuncnonlinstiff != 0)
+            if (dof_function_id_nonlinear_stiffness.has_value() &&
+                dof_function_id_nonlinear_stiffness.value() > 0)
               FOUR_C_THROW("Nonlinear spring not implemented for current surface evaluation");
           }
 

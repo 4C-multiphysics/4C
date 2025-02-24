@@ -56,7 +56,7 @@ LINEAR_SOLVER                   1
 --------------------------------------------------------------------SOLVER 1
 SOLVER                          UMFPACK
 ---------------------------------DESIGN SURF ROBIN SPRING DASHPOT CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 STIFF 10.0 10.0 10.0 TIMEFUNCTSTIFF 0 0 0 VISCO 0.0 0.0 0.0 TIMEFUNCTVISCO 0 0 0 DISPLOFFSET 0.0 0.0 0.0 TIMEFUNCTDISPLOFFSET 0 0 0 FUNCTNONLINSTIFF 0 0 0 DIRECTION xyz COUPLING none
+E 1 NUMDOF 3 ONOFF 1 1 1 STIFF 10.0 10.0 10.0 TIMEFUNCTSTIFF none none none VISCO 0.0 0.0 0.0 TIMEFUNCTVISCO none none none DISPLOFFSET 0.0 0.0 0.0 TIMEFUNCTDISPLOFFSET none none none FUNCTNONLINSTIFF none none none DIRECTION xyz COUPLING none
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
 E 2 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 1.0 1.0 0.0 0.0 0.0 FUNCT 1 2 3 1 1 1 TYPE Live
 -------------------------------------------------------------------MATERIALS
