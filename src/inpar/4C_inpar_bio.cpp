@@ -455,7 +455,7 @@ void Inpar::ReducedLung::set_valid_conditions(
   impedancebc.add_component(parameter<double>("R2"));
   impedancebc.add_component(parameter<double>("C"));
   impedancebc.add_component(parameter<double>("TIMEPERIOD"));
-  impedancebc.add_component(parameter<int>("FUNCT"));
+  impedancebc.add_component(parameter<Noneable<int>>("FUNCT"));
 
   condlist.push_back(impedancebc);
 }

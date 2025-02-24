@@ -111,7 +111,7 @@ E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
 ----------------------------------------FLUID NEUMANN INFLOW SURF CONDITIONS
 E 3
 --------------------------------------------DESIGN SURF IMPEDANCE CONDITIONS
-E 3 ConditionID 1 TYPE windkessel R1 0.11 R2 2.2 C 0.6 TIMEPERIOD 1.0 FUNCT -1
+E 3 ConditionID 1 TYPE windkessel R1 0.11 R2 2.2 C 0.6 TIMEPERIOD 1.0 FUNCT none
 --------------------------------------DESIGN SURF VOLUMETRIC FLOW CONDITIONS
 E 1 ConditionID 1 ConditionType POLYNOMIAL prebiased PREBIASED FlowType InFlow CorrectionFlag WithCorrection Period 1.0 Order 2 Harmonics 16 Val -8261.0 Funct 1 NORMAL SelfEvaluateNormal n1 0.0 n2 0.0 n3 0.0 CenterOfMass SelfEvaluateCenterOfMass c1 0.0 c2 0.0 c3 0.0
 ------------------------------------DESIGN LINE VOLUMETRIC FLOW BORDER NODES

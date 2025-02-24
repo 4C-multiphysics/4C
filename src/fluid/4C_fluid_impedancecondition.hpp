@@ -192,8 +192,8 @@ namespace FLD
       //! 'material' parameters required for artery tree
       const double r1_, r2_, c_;
 
-      //! curve number
-      const int functnum_;
+      //! function number
+      const Core::IO::Noneable<int> functnum_;
 
       //! traction vector for impedance bc
       std::shared_ptr<Core::LinAlg::Vector<double>> impedancetbc_;
