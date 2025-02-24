@@ -103,10 +103,10 @@ namespace Core
     {
       FOUR_C_ASSERT(
           strings.size() == integrals.size(), "The number of strings and integrals must match.");
-      std::vector<std::pair<std::string, T>> choices;
+      std::map<std::string, T> choices;
       for (int i = 0; i < strings.size(); ++i)
       {
-        choices.emplace_back(strings[i], integrals[i]);
+        choices.emplace(strings[i], integrals[i]);
       }
 
       auto default_it = std::find(strings.begin(), strings.end(), defaultValue);

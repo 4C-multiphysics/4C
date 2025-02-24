@@ -34,14 +34,15 @@ namespace Discret::Elements
         Inpar::ScaTra::ImplType::impltype_undefined};
   }
 
-  inline std::vector<std::pair<std::string, Inpar::ScaTra::ImplType>> get_impltype_inpar_pairs()
+  inline std::map<std::string, Inpar::ScaTra::ImplType> get_impltype_inpar_map()
   {
     constexpr auto supported_impl_types = get_supported_impl_types();
-    std::vector<std::pair<std::string, Inpar::ScaTra::ImplType>> impltype_map(
-        supported_impl_types.size());
+    std::map<std::string, Inpar::ScaTra::ImplType> impltype_map;
 
-    std::ranges::transform(supported_impl_types, impltype_map.begin(),
-        [](auto type) { return std::make_pair(Inpar::ScaTra::impltype_to_string(type), type); });
+    for (const auto& impltype : supported_impl_types)
+    {
+      impltype_map[Inpar::ScaTra::impltype_to_string(impltype)] = impltype;
+    }
 
     return impltype_map;
   }

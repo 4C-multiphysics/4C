@@ -50,7 +50,7 @@ namespace Discret::Elements::SolidPoroPressureBasedInternal
               },
               {.description = "Whether to use linear kinematics (small displacements) or nonlinear "
                               "kinematics (large displacements)"}),
-          selection<Inpar::ScaTra::ImplType>("TYPE", Discret::Elements::get_impltype_inpar_pairs(),
+          selection<Inpar::ScaTra::ImplType>("TYPE", Discret::Elements::get_impltype_inpar_map(),
               {.description = "Scalar transport implementation type",
                   .default_value = Inpar::ScaTra::ImplType::impltype_undefined}),
       });

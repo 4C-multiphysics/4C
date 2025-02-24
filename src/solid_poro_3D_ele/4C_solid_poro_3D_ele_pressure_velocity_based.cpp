@@ -54,7 +54,7 @@ namespace Discret::Elements::SolidPoroPressureVelocityBasedInternal
           entry<std::vector<double>>("POROANISODIR1", {.required = false, .size = 3}),
           entry<std::vector<double>>("POROANISODIR2", {.required = false, .size = 3}),
           entry<std::vector<double>>("POROANISODIR3", {.required = false, .size = 3}),
-          selection<Inpar::ScaTra::ImplType>("TYPE", Discret::Elements::get_impltype_inpar_pairs(),
+          selection<Inpar::ScaTra::ImplType>("TYPE", Discret::Elements::get_impltype_inpar_map(),
               {.description = "Scalar transport implementation type",
                   .default_value = Inpar::ScaTra::ImplType::impltype_undefined}),
       });
