@@ -1,7 +1,6 @@
 References
 ===========
 
-.. [Gee07] M. Gee, C.M. Siefert, J.J. Hu, R.S. Tuminaro, M.G. Sala: ML 5.0 Smoothed Aggregation User's Guide, SAND2006-2649, Sandia Nat. Lab, 2007.
 
 .. [Wall99] W.A. Wall, PhD thesis, 1999 (available under ``/lnm/literature/1999/``)
 
