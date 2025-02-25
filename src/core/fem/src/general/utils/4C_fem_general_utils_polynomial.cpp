@@ -10,8 +10,8 @@
 #include "4C_fem_general_utils_integration.hpp"
 #include "4C_utils_singleton_owner.hpp"
 
-#include <Intrepid_FieldContainer.hpp>
-#include <Intrepid_PointTools.hpp>
+#include <Intrepid2_PointTools.hpp>
+#include <Kokkos_DynRankView.hpp>
 #include <Shards_CellTopology.hpp>
 
 FOUR_C_NAMESPACE_OPEN
@@ -591,12 +591,12 @@ namespace Core::FE
     }
     else
     {
-      Intrepid::FieldContainer<double> wb_points(size(degree), 2);
+      Kokkos::DynRankView<double, Kokkos::HostSpace> wb_points("fekete_points", size(degree), 2);
 
       //  CellTopologyData
       shards::CellTopology myTri(shards::getCellTopologyData<shards::Triangle<3>>());
-      Intrepid::PointTools::getLattice<double, Intrepid::FieldContainer<double>>(
-          wb_points, myTri, degree, 0, Intrepid::POINTTYPE_WARPBLEND);
+      Intrepid2::PointTools::getLattice(
+          wb_points, myTri, degree, 0, Intrepid2::POINTTYPE_WARPBLEND);
 
       for (unsigned int i = 0; i < size(degree); ++i)
         for (int j = 0; j < 2; ++j) fekete_points_(j, i) = wb_points(i, j);
@@ -629,12 +629,12 @@ namespace Core::FE
     }
     else
     {
-      Intrepid::FieldContainer<double> wb_points(size(degree), 3);
+      Kokkos::DynRankView<double, Kokkos::HostSpace> wb_points("fekete_points", size(degree), 3);
 
       //  CellTopologyData
       shards::CellTopology myTet(shards::getCellTopologyData<shards::Tetrahedron<4>>());
-      Intrepid::PointTools::getLattice<double, Intrepid::FieldContainer<double>>(
-          wb_points, myTet, degree, 0, Intrepid::POINTTYPE_WARPBLEND);
+      Intrepid2::PointTools::getLattice(
+          wb_points, myTet, degree, 0, Intrepid2::POINTTYPE_WARPBLEND);
 
       for (unsigned int i = 0; i < size(degree); ++i)
         for (int j = 0; j < 3; ++j) fekete_points_(j, i) = wb_points(i, j);
