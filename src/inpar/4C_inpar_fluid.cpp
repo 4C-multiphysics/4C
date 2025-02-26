@@ -1525,8 +1525,8 @@ void Inpar::FLUID::set_valid_conditions(
 
   volumetric_surface_flow_cond.add_component(selection<std::string>(
       "FLOWTYPE", {"inflow", "outflow"}, {.description = "flow type", .default_value = "inflow"}));
-  volumetric_surface_flow_cond.add_component(
-      parameter<bool>("CORRECTPROFILE", {.description = "correction flag", .default_value = false}));
+  volumetric_surface_flow_cond.add_component(parameter<bool>(
+      "CORRECTPROFILE", {.description = "correction flag", .default_value = false}));
 
   volumetric_surface_flow_cond.add_component(parameter<double>("PERIOD"));
   volumetric_surface_flow_cond.add_component(parameter<int>("ORDER"));
@@ -1534,27 +1534,25 @@ void Inpar::FLUID::set_valid_conditions(
   volumetric_surface_flow_cond.add_component(parameter<double>("VAL"));
   volumetric_surface_flow_cond.add_component(parameter<int>("FUNCT"));
 
-  volumetric_surface_flow_cond.add_component(
-      one_of({all_of({
-                  selection<std::string>(
-                      "NORMAL", {"self_evaluate"}, {.description = "type of normal evaluation"}),
-              }),
-          all_of({
-              selection<std::string>(
-                  "NORMAL", {"use_prescribed"}, {.description = "type of normal evaluation"}),
-              parameter<std::vector<double>>("n", {.size = 3}),
-          })}));
+  volumetric_surface_flow_cond.add_component(one_of({
+      selection<std::string>(
+          "NORMAL", {"self_evaluate"}, {.description = "type of normal evaluation"}),
+      all_of({
+          selection<std::string>(
+              "NORMAL", {"use_prescribed"}, {.description = "type of normal evaluation"}),
+          parameter<std::vector<double>>("NVECTOR", {.size = 3}),
+      }),
+  }));
 
-  volumetric_surface_flow_cond.add_component(
-      one_of({all_of({
-                  selection<std::string>("CENTEROFMASS", {"self_evaluate"},
-                      {.description = "type of center of mass evaluation"}),
-              }),
-          all_of({
-              selection<std::string>("CENTEROFMASS", {"use_prescribed"},
-                  {.description = "type of center of mass evaluation"}),
-              parameter<std::vector<double>>("c", {.size = 3}),
-          })}));
+  volumetric_surface_flow_cond.add_component(one_of({
+      selection<std::string>(
+          "CENTEROFMASS", {"self_evaluate"}, {.description = "type of center of mass evaluation"}),
+      all_of({
+          selection<std::string>("CENTEROFMASS", {"use_prescribed"},
+              {.description = "type of center of mass evaluation"}),
+          parameter<std::vector<double>>("CVECTOR", {.size = 3}),
+      }),
+  }));
 
   condlist.push_back(volumetric_surface_flow_cond);
 
@@ -1589,8 +1587,8 @@ void Inpar::FLUID::set_valid_conditions(
 
   total_traction_correction_cond.add_component(selection<std::string>(
       "FLOWTYPE", {"inflow", "outflow"}, {.description = "flow type", .default_value = "inflow"}));
-  total_traction_correction_cond.add_component(
-      parameter<bool>("CORRECTPROFILE", {.description = "correction flag", .default_value = false}));
+  total_traction_correction_cond.add_component(parameter<bool>(
+      "CORRECTPROFILE", {.description = "correction flag", .default_value = false}));
 
   total_traction_correction_cond.add_component(parameter<double>("PERIOD"));
   total_traction_correction_cond.add_component(parameter<int>("ORDER"));
@@ -1599,10 +1597,8 @@ void Inpar::FLUID::set_valid_conditions(
   total_traction_correction_cond.add_component(parameter<int>("FUNCT"));
 
   total_traction_correction_cond.add_component(
-      one_of({all_of({
-                  selection<std::string>(
-                      "NORMAL", {"self_evaluate"}, {.description = "type of normal evaluation"}),
-              }),
+      one_of({selection<std::string>(
+                  "NORMAL", {"self_evaluate"}, {.description = "type of normal evaluation"}),
           all_of({
               selection<std::string>(
                   "NORMAL", {"use_prescribed"}, {.description = "type of normal evaluation"}),
@@ -1610,10 +1606,8 @@ void Inpar::FLUID::set_valid_conditions(
           })}));
 
   total_traction_correction_cond.add_component(
-      one_of({all_of({
-                  selection<std::string>("CENTEROFMASS", {"self_evaluate"},
-                      {.description = "type of center of mass evaluation"}),
-              }),
+      one_of({selection<std::string>("CENTEROFMASS", {"self_evaluate"},
+                  {.description = "type of center of mass evaluation"}),
           all_of({
               selection<std::string>("CENTEROFMASS", {"use_prescribed"},
                   {.description = "type of center of mass evaluation"}),
