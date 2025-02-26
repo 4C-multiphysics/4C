@@ -12,6 +12,7 @@
 #include "4C_config.hpp"
 
 #include "4C_fem_general_element.hpp"
+#include "4C_fem_general_element_dof_matrix.hpp"
 #include "4C_fem_general_element_integration_select.hpp"
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_linalg_vector.hpp"
@@ -70,75 +71,6 @@ namespace Discret::Elements
     return Discret::Elements::DisTypeToOptGaussRule<celltype>::rule;
   }
 
-  //! extract element data from global vector
-  template <Core::FE::CellType celltype>
-  inline void extract_values_from_global_vector(const Core::FE::Discretization& discretization,
-      const int& dofset, const std::vector<int>& lm,
-      Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_nodes<celltype>>*
-          matrixtofill,
-      Core::LinAlg::Matrix<Internal::num_nodes<celltype>, 1>* vectortofill,
-      const std::string& state, const Core::Elements::Element& ele)
-  {
-    // get state of the global vector
-    std::shared_ptr<const Core::LinAlg::Vector<double>> matrix_state =
-        discretization.get_state(dofset, state);
-    if (matrix_state == nullptr) FOUR_C_THROW("Cannot get state vector %s", state.c_str());
-
-    // ask for the number of dofs of dofset
-    const int numdofpernode = discretization.num_dof(dofset, ele.nodes()[0]);
-
-    // extract local values of the global vectors
-    const std::vector<double> mymatrix = Core::FE::extract_values(*matrix_state, lm);
-
-    if (numdofpernode == Internal::num_dim<celltype> + 1)
-    {
-      for (int inode = 0; inode < Internal::num_nodes<celltype>; ++inode)  // number of nodes
-      {
-        // fill a vector field via a pointer
-        if (matrixtofill != nullptr)
-        {
-          for (int idim = 0; idim < Internal::num_dim<celltype>; ++idim)  // number of dimensions
-          {
-            (*matrixtofill)(idim, inode) = mymatrix[idim + (inode * numdofpernode)];
-          }
-        }
-        // fill a scalar field via a pointer
-        if (vectortofill != nullptr)
-          (*vectortofill)(inode, 0) =
-              mymatrix[Internal::num_dim<celltype> + (inode * numdofpernode)];
-      }
-    }
-    else if (numdofpernode == Internal::num_dim<celltype>)
-    {
-      for (int inode = 0; inode < Internal::num_nodes<celltype>; ++inode)  // number of nodes
-      {
-        // fill a vector field via a pointer
-        if (matrixtofill != nullptr)
-        {
-          for (int idim = 0; idim < Internal::num_dim<celltype>; ++idim)  // number of dimensions
-          {
-            (*matrixtofill)(idim, inode) = mymatrix[idim + (inode * numdofpernode)];
-          }
-        }
-      }
-    }
-    else if (numdofpernode == 1)
-    {
-      for (std::size_t inode = 0; inode < Internal::num_nodes<celltype>;
-          ++inode)  // number of nodes
-      {
-        if (vectortofill != nullptr) (*vectortofill)(inode, 0) = mymatrix[inode * numdofpernode];
-      }
-    }
-    else
-    {
-      FOUR_C_THROW(
-          "Unknown degrees of freedom per node. Currently, only dim+1, dim and 1 are supported. "
-          "You have %d dofs per node.",
-          numdofpernode);
-    }
-  }
-
   /*!
    * @brief Calculate volume change
    *
@@ -164,14 +96,16 @@ namespace Discret::Elements
     if (kinematictype == Inpar::Solid::KinemType::linear)
     {
       // for linear kinematics the volume change is the trace of the linearized strains
+      const Core::LinAlg::Vector<double>& displacements = *discretization.get_state("displacement");
 
-      // gradient of displacements
-      Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_nodes<celltype>> mydisp(true);
-      extract_values_from_global_vector<celltype>(
-          discretization, 0, lm, &mydisp, nullptr, "displacement", ele);
+      constexpr unsigned num_dofs = Core::FE::num_nodes<celltype> * Core::FE::dim<celltype>;
+      std::array<double, num_dofs> mydisp_arr =
+          Core::FE::extract_values_as_array<num_dofs>(displacements, lm);
 
-      Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> dispgrad;
-      dispgrad.clear();
+      Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::num_nodes<celltype>> mydisp =
+          Core::FE::get_element_dof_matrix_view<celltype, Core::FE::dim<celltype>>(mydisp_arr);
+
+      Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> dispgrad(true);
       // gradient of displacements
       dispgrad.multiply_nt(mydisp, jacobian_mapping.N_XYZ_);
 
