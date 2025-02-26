@@ -28,26 +28,43 @@ Anyway, the decision on which solver to use is illustrated in the following flow
 
 At this point, the linear algebra library *Trilinos* is heavily used, which provides a number of packages on different levels:
 
-**Epetra/TPetra**:
-   Sparse Linear Algebra
+**Sparse linear algebra: Epetra/TPetra**
 
-**Amesos/Amesos2**:
-   Direct Solvers (internal solver KLU/KLU2, external solvers UMFPACK, Superlu)
+  - Graph, matrix and vector data structures
+  - Ready for parallel computing on distributed memory clusters
 
-**Belos**:
-   Iterative Solvers (CG, GMRES)
+**Direct solvers: Amesos/Amesos2**
 
-**Ifpack**:
-   Preconditioner (ILU)
+  - Internal solver implementation (KLU/KLU2)
+  - Interfaces to external solvers (e.g., UMFPACK or Superlu_dist)
 
-**MueLu**:
-   Algebraic Multigrid-Preconditioner
+**Iterative solvers: Belos**
 
-**Teko**:
-    Block Preconditioner
+  - Krylov methods (e.g., Conjugate Gradient, GMRES, BiCGStab, and others)
+  - Least squares solvers
 
-The solvers are called in the solver sections.
-For all file snippets in this section, we use the yaml input file format; if you still use the old format, you may easily convert it into yaml by the 4C command flag ``--to-yaml``:
+**One-level domain decompositoin and basic iterative methods: Ifpack**
+
+  - Incomplete factorization methods (e.g., ILU, ILUT)
+  - Point relaxation methods (e.g., Jacobi, Gauss-Seidel)
+  - Polynomial methods (e.g., Chebyshev iteration)
+
+**Algebraic multigrid methods: MueLu**
+
+  - Construction of algebraic multigrid (AMG) hierarchies
+  - AMG applicable as solver or preconditioner
+  - AMG for single- and multiphysics problems
+
+**Block preconditioners: Teko**
+
+  - Block relaxation methods (e.g., block Jacobi, block Gauss-Seidel)
+  - Block factorization methods (e.g., block LU, SIMPLE)
+
+The linear solvers are defined in the solver sections.
+
+.. note::
+  All file snippets in this section are preented in the yaml input file format.
+  Consult the documentation for further information, e.g. on converting other input formats to the yaml format.
 
 .. code-block:: yaml
 
@@ -60,18 +77,46 @@ in which all details for a specific solver are defined; up to 9 solvers can be d
 The parameter ``SOLVER`` defines the solver to be used.
 Most of the solvers require additional parameters. These are explained in the following.
 
+Solvers for single-field problems
+---------------------------------
+
+When dealing with a single physical field, e.g. solid mechanics, incompressibel fluid flow, or heat conduction,
+the arising linear system matrix can be tackled by a single linear solver.
+In this case, it is sufficient to define a single ``SOLVER`` section in the input file.
+
+As an example, consider a solid problem governed by the equations of elasto-dynamcis.
+To select UMFPACK as direct solver for such a problem,
+one has to
+
+1. **Define the linear solver:** Define the linear solver by adding a ``SOLVER`` section to the input file and set the ``SOLVER`` parameter to ``"UMFPACK"
+2. **Assign linear solver to the solid field:** Set the ``LINEAR_SOLVER`` parameter in the ``STRUCTURAL DYNAMIC`` section to the ID of the desired linear solver.
+
+An input file could read as follows:
+
+.. code-block:: yaml
+
+    PROBLEM TYPE:
+      PROBLEMTYPE: "Structure"
+    STRUCTURAL DYNAMIC:
+      LINEAR_SOLVER: 1
+      # further parameters
+    SOLVER 1:
+      SOLVER: "UMFPACK"
+
 Solvers for coupled problems (aka multiphysics)
 -------------------------------------------------
 
-Sequential solution:
-^^^^^^^^^^^^^^^^^^^^^
+Partitioned solution using a staggered or iterative coupling scheme:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If a :ref:`multiphysics problem <multifieldproblems>` is to be solved,
-each physics involved can be solved one after the other, and the interaction then leads to an iterative procedure,
-where the influence of one field to the other hopefully converges to a common solution.
-From a solver's point of view, the solution is achieved by running the solver of each single field problem independent of others.
-Therefore, those problems are solved like *single physics* problems using the input file definitions given below.
-One solver has to be defined for each *physics*, but the definition in the input file can be one for several solvers.
+If a :ref:`multiphysics problem <multifieldproblems>` is to be solved using a partitioned approach,
+the interaction between the fields is resolved by an iteration between the individual fields.
+The solution of each individual field is computed by running a nonlinear solver of each single field problem independent of others,
+which naturally results in linear solvers of each field being independent of each other.
+Hence, the arising linear systems are always restricted to a single physical field.
+Each individual physical field of the multiphysics problem is solved like a *single physics* problems.
+To this end, one solver has to be assigned to each *physics*.
+For convenience, the same definition of a linear solver can be used in multiple physical fields.
 
 For example, a structural analysis sequentially coupled with scalar transport needs two solvers, handling the respective physics:
 
@@ -90,20 +135,17 @@ For example, a structural analysis sequentially coupled with scalar transport ne
     SOLVER 2:
       SOLVER: "UMFPACK"
 
-For the case above, actually, one could also use ``LINEAR_SOLVER 1`` in the section ``SCALAR TRANSPORT DYNAMIC``; two solvers of the same kind would then still be used.
+For the case above, actually, one could also use ``LINEAR_SOLVER 1`` in the section ``SCALAR TRANSPORT DYNAMIC`` (and drop the definition of ``SOLVER 2`` entirely.
 
 
 Monolithic solution:
 ^^^^^^^^^^^^^^^^^^^^^
 
-If, on the other hand, the interaction of the physical fields is strong, the iterative procedure may converge only slowly (if at all),
-thus a so-called *monolithic solution*, solving all degrees of freedom simultaneously is beneficial.
-This solution type will be described in the following.
-
-The degrees of freedom of all physics appear in one linear system.
-Since the stiffness factors of the different physics may be different by several orders of magnitude,
-and the coupling between the physics may again have a different magnitude,
-the linear system may be particularly ill-conditioned.
+If a monolithic solution scheme is used,
+the degrees of freedom of all physical fields are collected in a single vector of unknowns
+and, thus, result in a single linear system of equations.
+Given the different nature of the individual fields in a monolithic system,
+it is not uncommon that the linear system is particularly ill-conditioned.
 
 For the monolithic solution of the multiphysics problem, an additional solver is needed for the monolithic approach,
 e.g., again for the SSI problem:
@@ -138,11 +180,16 @@ The solver settings are explained in detail below.
 Special case: Contact
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Even though contact does not involve several physics directly, they can be treated as a coupled problem:
+Even though contact does not involve several physics directly,
+the arising linear system may exhibit similar propertoes due to the presence of Lagrange multiplier unknowns to enforce the contact constraints.
+
+The following scenarios are covered by 4C:
 
 - Contact with penalty: basically still a solid mechanics problem, probably just a bit more ill-conditioned
-- Contact with lagrange multipliers: There is a block structure in the system.
-  If an iterative solver is used, the preconditioner needs to know about it.
+- Contact with lagrange multipliers:
+
+   - If Lagrange multipliers are kept as unknowns in the linear system, it exhibits a block structure. It is beneficial to tailor the preconditioner to this block structure.
+   - If Lagrange multipliers have been removed from the system through static condensation, the layout of the system does not differ very much from a regular solid mechanics problem. Knowledge about the contact interface might still be beneficial for designing a good preconditioner.
 
 
 Solver Interfaces
@@ -151,12 +198,12 @@ Solver Interfaces
 Direct solver
 ^^^^^^^^^^^^^^
 
-In principle, the direct solver identifies :math:`x` by calculating the inverse of :math:`\mathbf{A}`: :math:`x = \mathbf{A}^{-1} b`.
+Direct solvers identify the unknown solution :math:`x` of the linear system :math:`Ax=b` by calculating :math:`x` in one step. In modern direct solvers, this usually involves a factorization :math:`A=LU` of the system matrix :math:`A`.
 
-In |FOURC|, we have three different direct solvers included:
+In |FOURC|, we have the following direct solvers available:
 
    * UMFPACK, using a multifront approach, thus a sequential solver (can only use a single core)
-   * SuperLU, an MPI based solver, which may run on many cores and compute nodes.
+   * Superlu_dist, an MPI based solver, which may run on many cores and compute nodes.
 
 Compared to iterative solvers, these solvers do not scale well with the numbers of equations,
 and are therefore not well suited for large systems.
@@ -172,6 +219,12 @@ since the direct solver does not care about the underlying physics. The definiti
     SOLVER 1:
       SOLVER: "UMFPACK"
 
+or
+
+.. code-block:: yaml
+
+    SOLVER 1:
+      SOLVER: "Superlu"
 
 Iterative solver
 ^^^^^^^^^^^^^^^^^^
@@ -182,7 +235,7 @@ either with respect to time or to the number of cores on which the system is sol
 
 The main drawback is that one has to provide a number of parameters, which are crucial for a fast and correct solution.
 
-Contrary to the direct solver, the matrix inverse is not needed.
+Contrary to the direct solver, the matrix must not be factorized.
 Instead, this solution method solves the equation :math:`\mathbf{A} x_k = b`  with an initial guess :math:`x_0 (k=0)` and an iteration
 
 .. math::
@@ -196,12 +249,12 @@ Ideally :math:`\mathbf{P}^{-1} = \mathbf{A}` (gives the solution for *x*),
 but :math:`\mathbf{P}` should be cheap to calculate.
 The larger the problem is, the higher is the benefit of iterative solvers.
 
-The current solver is based on Trilinos' **Belos** package, which is the successor of AztecOO.
-This package provides a bunch of KRYLOV solvers, e.g.
+4C's iterative solvers are based on Trilinos' **Belos** package.
+This package provides a bunch of Krylov solvers, e.g.
 
    - CG (conjugate gradient method) for symmetric problems,
    - GMRES (Generalised Minimal Residual Method), also for unsymmetric problems
-   - BICGSTAB (Biconjugate gradient stabilized method)
+   - BICGSTAB (Biconjugate gradient stabilized method), also for unsymmetric problems
 
 Whether a problem is symmetric or not, depends on the physics involved. The following table gives a few hints:
 
@@ -217,10 +270,8 @@ Whether a problem is symmetric or not, depends on the physics involved. The foll
    * - Contact
      - unsymmetric
 
-Originally, the parameters for the solver have been defined in the solver sections; however, this is deprecated now.
-In order to narrow down the size of the input file, all parameters for the iterative solver are now given in an extra xml File, which is included by the parameter
-``SOLVER_XML_FILE``.
-Thus, the solver section should consist of
+Iterative solvers are defined via an xml file.
+The solver section then reads:
 
 .. code-block:: yaml
 
@@ -233,20 +284,22 @@ Note that the solver itself is always defined as ``SOLVER: "Belos"``.
 One can find a number of template solver xml files in ``<source-dir>/tests/input-files/xml/linear_solver/*.xml``.
 Further parameters are necessary for the preconditioner, where a number of choices are available, see below.
 
+.. note:: Historically, the parameters for the solver have been defined in the solver sections directly; however, this is deprecated now and we actively migrate to xml-based input of solver parameters.
+
 Preconditioners
 ^^^^^^^^^^^^^^^^
 
 The choice and design of the preconditioner highly affect performance.
-Within Belos one can choose between the following four preconditioners:
+In |FOURC|, one can choose between the following four preconditioners:
 
 -	ILU
 -	MueLu
--   Teko
--   AMGnxn
+- Teko
+- AMGnxn
 
-**ILU** is the easiest one to use with very few parameters; however, perfect scalability is not achieved with this method.
-For better performance use **MueLu** for single physics and **Teko** or **AMGnxn** for multiphysics problems.
-You'll find templates of parameter files for various problems in the subdirectories of ``<>source-dir>/tests/input-files/xml/...``.
+**ILU** is the easiest one to use with very few parameters; however, scalability cannot be achieved with this method.
+For better performance, especially on large systems, use **MueLu** for single physics and **Teko** or **MueLu** (or **AMGnxn**) for multiphysics problems.
+You'll find templates of parameter files for various problems in the subdirectories of ``<source-dir>/tests/input-files/xml/...``.
 
 The preconditioner is chosen by the parameter ``AZPREC`` within the ``SOLVER n`` section.
 Note that the parameter to define the xml-file for further preconditioner-parameters is different for each preconditioner.
@@ -289,7 +342,7 @@ It is highly recommended to first use these defaults before tweaking the paramet
 
 
 ILU (incomplete LU method) comes with a single parameter, therefore only a single xml file is contained in the respective directory:
-``<>source-dir>/tests/input-files/xml/preconditioner/ifpack.xml``.
+``<source-dir>/tests/input-files/xml/preconditioner/ifpack.xml``.
 In this file, the so-called fill level is set up by ``fact: level-of-fill``, and it contains the default value 0 there.
 With lower values, the setup will be faster, but the approximation is worse.
 The higher the more elements are included, sparcity decreases (a level of 12 might be a full matrix, like a direct solver).
