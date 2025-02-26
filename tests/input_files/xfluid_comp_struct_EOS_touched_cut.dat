@@ -70,12 +70,11 @@ AZOUTPUT                        50
 AZSOLVE                         GMRES
 AZPREC                          ILU
 AZREUSE                         5
-IFPACKGFILL                     4
 AZTOL                           1.0E-013
 AZCONV                          AZ_r0
 AZITER                          1000
 AZSUB                           1000
-IFPACKOVERLAP                   0
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 ----------------------------------------------------------------XFEM GENERAL
 GMSH_DEBUG_OUT                  no
 GMSH_SOL_OUT                    no
