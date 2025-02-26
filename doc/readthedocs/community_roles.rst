@@ -7,7 +7,7 @@ There are different managing roles in the |FOURC| project.
 They have different responsibilities as summarized in the following.
 
 4C Open Source community
------------------------
+------------------------
 
 Everyone is warmly invited to download, use, and contribute to |FOURC|.
 If you come across any inconsistency, please let us know by opening an issue and describe your findings.
@@ -20,7 +20,7 @@ We also welcome contributions to both the code and documentation - just follow o
 
 Members of this group actively contribute to |FOURC| by writing and improving both code and documentation.
 They also play a key role in reviewing pull requests and engaging in ongoing development discussions.
-Developer have the privilege to approve and merge pull requests.
+Developers have the privilege to approve and merge pull requests.
 To foster collaboration, a developer meeting is held every four weeks (currently on the last Wednesday of each month), providing an opportunity for broader discussions.
 
 4C Maintainer
@@ -33,5 +33,4 @@ Coordination with other software projects such as `QUEENS <https://www.queens-py
 
 Maintainers meet bi-weekly to stay aligned on critical and strategic topics related to software development.
 These discussions help shape the project's long-term direction and decision-making processes.
-Another key responsibility is preparing for the project's yearly workshop, which serves as a dedicated space for deeper discussions, roadmap planning, and strengthening community engagement.
 

@@ -35,7 +35,7 @@ This guide to |FOURC| is structured as follows:
 :ref:`Part I — About 4C<about>`
    Learn about the capabilities and history of |FOURC|.
 
-:ref:`Part II - The 4C Community`
+:ref:`Part II - The 4C Community<4Ccommunity>`
    A brief summary of the roles and responsibilities within the |FOURC| community.
 
 :ref:`Part III — Tutorials<tutorials>`
