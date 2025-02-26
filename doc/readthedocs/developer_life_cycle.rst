@@ -16,7 +16,7 @@ Inactivity and removal
 
 Open-source projects evolve, and contributor activity may fluctuate. If a developer has not been actively contributing for a significant period of time (e.g., 12 months), they may be removed from the developer group. This ensures that active community members are overseeing the approval and merging process.
 
-Rejoining the developer Group
+Rejoining the developer group
 -----------------------------
 
 Being removed from the developer group due to inactivity is not a permanent status. If a previous developer resumes regular contributions, they may be re-added to the group following the same criteria used for initial inclusion.
