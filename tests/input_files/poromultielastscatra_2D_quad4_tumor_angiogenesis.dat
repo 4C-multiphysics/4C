@@ -133,7 +133,7 @@ MAT 301 MAT_PoroLawDensityDependent DENSITYLAWID 302
 MAT 302 MAT_PoroDensityLawExp BULKMODULUS 1e15
 
 
-MAT 5 MAT_matlist_reactions LOCAL No NUMMAT 4 MATIDS 501 502 503 504 NUMREAC 9 REACIDS 505 506 507 508 509 510 511 512 513
+MAT 5 MAT_matlist_reactions LOCAL No NUMMAT 4 MATIDS 501 502 503 504 NUMREAC 10 REACIDS 505 506 507 508 509 510 511 512 513 514
 MAT 501 MAT_scatra_multiporo_fluid PHASEID 2 DIFFUSIVITY 3.2e-3 DELTA 2.0 // oxygen --> belongs to IF
 MAT 502 MAT_scatra_multiporo_fluid PHASEID 1 DIFFUSIVITY 0.0 DELTA 0.0 MIN_SAT 1.0e-3 // necrotic tumor cells --> belong to tumor cells
 MAT 503 MAT_scatra_multiporo_fluid PHASEID 2 DIFFUSIVITY 3.5e+2 DELTA 0.0 // TAF --> belong to IF
@@ -144,9 +144,10 @@ MAT 507 MAT_scatra_reaction NUMSCAL 4 STOICH 1 0 0 0 REACCOEFF 1.0 COUPLING by_f
 MAT 508 MAT_scatra_reaction NUMSCAL 4 STOICH 0 -1 0 0 REACCOEFF 1.0 COUPLING by_function ROLE 0 18 0 0 // - w^Nt * M^l->t_growth
 MAT 509 MAT_scatra_reaction NUMSCAL 4 STOICH 0 0 1 0 REACCOEFF 1.0 COUPLING by_function ROLE 0 0 10 0  // M^TAFt->TAFl
 MAT 510 MAT_scatra_reaction NUMSCAL 4 STOICH 0 0 1 0 REACCOEFF 1.0 COUPLING by_function ROLE 0 0 11 0  // + w^TAF * M^l->t_growth
-MAT 511 MAT_scatra_reaction NUMSCAL 4 STOICH 1 0 0 0 REACCOEFF 1.0 COUPLING by_function ROLE 6 0 0 0   // M^nv->nl-w^nl*M^v->l_leak
-MAT 512 MAT_scatra_reaction NUMSCAL 4 STOICH 0 0 -1 0 REACCOEFF 1.0 COUPLING by_function ROLE 0 0 4 0  // - w^TAF * M^v->l_leak
-MAT 513 MAT_scatra_reaction NUMSCAL 4 STOICH 0 0 0 -1 REACCOEFF 1.0 COUPLING by_function ROLE 0 0 0 21  // diffusive part of M^nv->nl
+MAT 511 MAT_scatra_reaction NUMSCAL 4 STOICH 1 0 0 0 REACCOEFF 1.0 COUPLING by_function ROLE 5 0 0 0   // M^nv->nl
+MAT 512 MAT_scatra_reaction NUMSCAL 4 STOICH 1 0 0 0 REACCOEFF 1.0 COUPLING by_function ROLE 6 0 0 0   // -w^nl*M^v->l_leak
+MAT 513 MAT_scatra_reaction NUMSCAL 4 STOICH 0 0 -1 0 REACCOEFF 1.0 COUPLING by_function ROLE 0 0 4 0  // - w^TAF * M^v->l_leak
+MAT 514 MAT_scatra_reaction NUMSCAL 4 STOICH 0 0 0 -1 REACCOEFF 1.0 COUPLING by_function ROLE 0 0 0 21  // -M^nv->nl
 --------------------------------------------------------CLONING MATERIAL MAP
 SRC_FIELD structure SRC_MAT 4 TAR_FIELD porofluid TAR_MAT 2
 SRC_FIELD structure SRC_MAT 4 TAR_FIELD scatra TAR_MAT 5
@@ -168,10 +169,10 @@ COMPONENT 2 SYMBOLIC_FUNCTION_OF_SPACE_TIME 0.0
 COMPONENT 3 SYMBOLIC_FUNCTION_OF_SPACE_TIME 0.0
 ----------------------------------------------------------------------FUNCT4 // - w^TAF * M^v->l_leak
 VARFUNCTION phi3*4.2e-10*(VFP1-p3-1333.0)*VF1
-----------------------------------------------------------------------FUNCT5  // production of necrotic cells
-VARFUNCTION (-1e-8*(phi1-1.0e-6)/(4.2e-6-1.0e-6)*heaviside(-(phi1-1.0e-6)/(4.2e-6-1.0e-6)))*(1-phi2)
-----------------------------------------------------------------------FUNCT6 // transcapillary exchange of oxygen
-VARFUNCTION ((phi4-phi1)*4.2e-10*(VFP1-p3-1333.0)+2.0e-4*heaviside(-(phi1-phi4))*(phi4-phi1))*VF1
+----------------------------------------------------------------------FUNCT5  // transcapillary exchange of oxygen
+POROMULTIPHASESCATRA_FUNCTION OXYGEN_TRANSVASCULAR_EXCHANGE_LAW_CONT NUMPARAMS 9 PARAMS n 2.7 Pb50 37.0 CaO2_max 0.225 alpha_bl_eff 3.1e-05 gamma_rho_SV 4.084082e-10 rho_oxy 1.429e-06 rho_IF 0.001 rho_bl 0.001 alpha_IF 3e-05
+----------------------------------------------------------------------FUNCT6 // - w^nl*M^v->l_leak
+VARFUNCTION (phi4-phi1)*4.2e-10*(VFP1-p3-1333.0)*VF1
 ----------------------------------------------------------------------FUNCT7  // phi_necro*(tumor cells <--> IF)
 VARFUNCTION ((1e-8*(phi1-1.0e-6)/(4.2e-6-1.0e-6)*heaviside((phi1-1.0e-6)/(4.2e-6-1.0e-6)))*(1-phi2))*phi2
 ----------------------------------------------------------------------FUNCT8
@@ -196,21 +197,21 @@ COMPONENT 1 SYMBOLIC_FUNCTION_OF_SPACE_TIME 0.0
 COMPONENT 2 SYMBOLIC_FUNCTION_OF_SPACE_TIME 0.0
 COMPONENT 3 SYMBOLIC_FUNCTION_OF_SPACE_TIME 4.2e-6
 ----------------------------------------------------------------------FUNCT14
-POROMULTIPHASESCATRA_FUNCTION TUMOR_GROWTH_LAW_HEAVISIDE NUMPARAMS 5 PARAMS gamma_T_growth 4.0e-8 w_nl_crit 1.0e-6 w_nl_env 4.2e-6 lambda 0.0 p_t_crit 1.0e9
+POROMULTIPHASESCATRA_FUNCTION TUMOR_GROWTH_LAW_HEAVISIDE NUMPARAMS 5 PARAMS gamma_T_growth 4.0e-8 w_nl_crit 1.0e-6 w_nl_env 4.2e-6
 ----------------------------------------------------------------------FUNCT15
-POROMULTIPHASESCATRA_FUNCTION NECROSIS_LAW_HEAVISIDE NUMPARAMS 5 PARAMS gamma_t_necr 1.0e-8 w_nl_crit 1.0e-6 w_nl_env 4.2e-6 delta_a_t 0.0 p_t_crit 1.0e9
+POROMULTIPHASESCATRA_FUNCTION NECROSIS_LAW_HEAVISIDE NUMPARAMS 5 PARAMS gamma_t_necr 1.0e-8 w_nl_crit 1.0e-6 w_nl_env 4.2e-6
 ----------------------------------------------------------------------FUNCT16
-POROMULTIPHASESCATRA_FUNCTION OXYGEN_CONSUMPTION_LAW_HEAVISIDE NUMPARAMS 5 PARAMS gamma_nl_growth 2e-10 gamma_0_nl 3e-10 w_nl_crit 1.0e-6 w_nl_env 4.2e-6 p_t_crit 1.0e9
+POROMULTIPHASESCATRA_FUNCTION OXYGEN_CONSUMPTION_LAW_HEAVISIDE NUMPARAMS 5 PARAMS gamma_nl_growth 2e-10 gamma_0_nl 3e-10 w_nl_crit 1.0e-6 w_nl_env 4.2e-6
 ----------------------------------------------------------------------FUNCT17
-POROMULTIPHASESCATRA_FUNCTION TUMOR_GROWTH_LAW_HEAVISIDE_OXY NUMPARAMS 5 PARAMS gamma_T_growth 4.0e-8 w_nl_crit 1.0e-6 w_nl_env 4.2e-6 lambda 0.0 p_t_crit 1.0e9
+POROMULTIPHASESCATRA_FUNCTION TUMOR_GROWTH_LAW_HEAVISIDE_OXY NUMPARAMS 5 PARAMS gamma_T_growth 4.0e-8 w_nl_crit 1.0e-6 w_nl_env 4.2e-6
 ----------------------------------------------------------------------FUNCT18
-POROMULTIPHASESCATRA_FUNCTION TUMOR_GROWTH_LAW_HEAVISIDE_NECRO NUMPARAMS 5 PARAMS gamma_T_growth 4.0e-8 w_nl_crit 1.0e-6 w_nl_env 4.2e-6 lambda 0.0 p_t_crit 1.0e9
+POROMULTIPHASESCATRA_FUNCTION TUMOR_GROWTH_LAW_HEAVISIDE_NECRO NUMPARAMS 5 PARAMS gamma_T_growth 4.0e-8 w_nl_crit 1.0e-6 w_nl_env 4.2e-6
 ----------------------------------------------------------------------FUNCT19 // 1st term: fluid extravasion and 2nd term: lymphatic drainage
 VARFUNCTION 4.2e-10*(VFP1-p3-1333.0)*VF1-2.0e-8*heaviside(p3)*p3*(1.0-p2/500.0)*heaviside(1.0-p2/500.0)
 ----------------------------------------------------------------------FUNCT20 // fluid extravasion
 VARFUNCTION 4.2e-10*(VFP1-p3-1333.0)*VF1
 ----------------------------------------------------------------------FUNCT21 // diffusive part of transcapillary exchange of oxygen -1 into balance of oxygen (species in volume fraction)
-VARFUNCTION 2.0e-4*heaviside(-(phi1-phi4))*(phi4-phi1)*VF1
+POROMULTIPHASESCATRA_FUNCTION OXYGEN_TRANSVASCULAR_EXCHANGE_LAW_CONT NUMPARAMS 9 PARAMS n 2.7 Pb50 37.0 CaO2_max 0.225 alpha_bl_eff 3.1e-05 gamma_rho_SV 4.084082e-10 rho_oxy 1.429e-06 rho_IF 0.001 rho_bl 0.001 alpha_IF 3e-05
 ----------------------------------------------------------------------FUNCT22 // mass of tumor
 VARFUNCTION porosity*S2*DENS2
 ----------------------------------------------------------------------FUNCT23 // oxygen
@@ -228,33 +229,33 @@ VARFUNCTION porosity*S2*DENS2*x
 ----------------------------------------------------------------------FUNCT29 // needed for calculation of y-coordinate center of mass of tumor
 VARFUNCTION porosity*S2*DENS2*y
 -------------------------------------------------RESULT DESCRIPTION
-STRUCTURE DIS structure NODE 28 QUANTITY dispx VALUE -5.71334195182968650e-03 TOLERANCE 1e-12
-STRUCTURE DIS structure NODE 310 QUANTITY dispx VALUE -3.08384131668321387e-03 TOLERANCE 1e-12
-STRUCTURE DIS structure NODE 278 QUANTITY dispx VALUE  4.26534572829011878e-05 TOLERANCE 1e-12
+STRUCTURE DIS structure NODE 28 QUANTITY dispx VALUE -5.70316967259708232e-03 TOLERANCE 1e-12
+STRUCTURE DIS structure NODE 310 QUANTITY dispx VALUE -3.08124663294980514e-03 TOLERANCE 1e-12
+STRUCTURE DIS structure NODE 278 QUANTITY dispx VALUE  4.62337149211284918e-05 TOLERANCE 1e-12
 POROFLUIDMULTIPHASE DIS porofluid NODE 40 QUANTITY pressure5 VALUE 0.0 TOLERANCE 1e-14 // Dirich Value directly left of developing angio
-POROFLUIDMULTIPHASE DIS porofluid NODE 34 QUANTITY pressure5 VALUE  2.65565792957528402e+03 TOLERANCE 1e-09
-POROFLUIDMULTIPHASE DIS porofluid NODE 34 QUANTITY phi4 VALUE  2.14785976794135093e-03 TOLERANCE 1e-12
-POROFLUIDMULTIPHASE DIS porofluid NODE 40 QUANTITY phi4 VALUE  6.08207798139990988e-04 TOLERANCE 1e-12 // Dirich Value directly left of developing angio
-POROFLUIDMULTIPHASE DIS porofluid NODE 282 QUANTITY saturation2 VALUE  3.27965588218138482e-01 TOLERANCE 1e-14
-POROFLUIDMULTIPHASE DIS porofluid NODE 282 QUANTITY pressure3 VALUE  4.51795427165836098e-03 TOLERANCE 1e-12
-POROFLUIDMULTIPHASE DIS porofluid NODE 16 QUANTITY pressure3 VALUE  4.30521015207832480e-01 TOLERANCE 1e-12
-POROFLUIDMULTIPHASE DIS porofluid NODE 272 QUANTITY pressure2 VALUE  4.69759482897600833e+02 TOLERANCE 1e-09
+POROFLUIDMULTIPHASE DIS porofluid NODE 34 QUANTITY pressure5 VALUE  2.65566990189600438e+03 TOLERANCE 1e-09
+POROFLUIDMULTIPHASE DIS porofluid NODE 34 QUANTITY phi4 VALUE  2.13973159872195198e-03 TOLERANCE 1e-12
+POROFLUIDMULTIPHASE DIS porofluid NODE 40 QUANTITY phi4 VALUE  6.05608543869393091e-04 TOLERANCE 1e-12 // Dirich Value directly left of developing angio
+POROFLUIDMULTIPHASE DIS porofluid NODE 282 QUANTITY saturation2 VALUE  3.27960147900278165e-01 TOLERANCE 1e-14
+POROFLUIDMULTIPHASE DIS porofluid NODE 282 QUANTITY pressure3 VALUE  4.33641601377220999e-03 TOLERANCE 1e-12
+POROFLUIDMULTIPHASE DIS porofluid NODE 16 QUANTITY pressure3 VALUE  4.29723173968243444e-01 TOLERANCE 1e-12
+POROFLUIDMULTIPHASE DIS porofluid NODE 272 QUANTITY pressure2 VALUE  4.69750435898544538e+02 TOLERANCE 1e-09
 POROFLUIDMULTIPHASE DIS porofluid ELEMENT 145 QUANTITY phasevelocity1x VALUE -6.7491269896111001e-09 TOLERANCE 1e-09
 POROFLUIDMULTIPHASE DIS porofluid ELEMENT 148 QUANTITY phasevelocity2y VALUE -2.83781387278026e-10 TOLERANCE 1e-09
 POROFLUIDMULTIPHASE DIS porofluid ELEMENT 148 QUANTITY phasevelocity5x VALUE -3.76885028749430875e-09 TOLERANCE 1e-09
-POROFLUIDMULTIPHASE DIS porofluid SPECIAL true QUANTITY domain_integral_value_0 VALUE 2.12453915379950618e-07 TOLERANCE 1.e-17 // FUNCT22: mass of tumor
-POROFLUIDMULTIPHASE DIS porofluid SPECIAL true QUANTITY domain_integral_value_1 VALUE 1.13076393605258099e-08 TOLERANCE 1.e-18 // FUNCT23: oxygen
-POROFLUIDMULTIPHASE DIS porofluid SPECIAL true QUANTITY domain_integral_value_2 VALUE 2.73824467944385803e-08 TOLERANCE 1.e-18 // FUNCT24: mass of necrotic core
-POROFLUIDMULTIPHASE DIS porofluid SPECIAL true QUANTITY domain_integral_value_3 VALUE 3.25050817987368798e-05 TOLERANCE 1.e-15 // FUNCT25: neovasculature
-POROFLUIDMULTIPHASE DIS porofluid SPECIAL true QUANTITY domain_integral_value_4 VALUE 1.85071468585512114e-07 TOLERANCE 1.e-17 // FUNCT26: mass of living tumor cells
+POROFLUIDMULTIPHASE DIS porofluid SPECIAL true QUANTITY domain_integral_value_0 VALUE 2.12453903801224687e-07 TOLERANCE 1.e-17 // FUNCT22: mass of tumor
+POROFLUIDMULTIPHASE DIS porofluid SPECIAL true QUANTITY domain_integral_value_1 VALUE 1.86130790285745842e-09 TOLERANCE 1.e-18 // FUNCT23: oxygen
+POROFLUIDMULTIPHASE DIS porofluid SPECIAL true QUANTITY domain_integral_value_2 VALUE 4.65405012475960844e-08 TOLERANCE 1.e-18 // FUNCT24: mass of necrotic core
+POROFLUIDMULTIPHASE DIS porofluid SPECIAL true QUANTITY domain_integral_value_3 VALUE 3.24512264536564840e-05 TOLERANCE 1.e-15 // FUNCT25: neovasculature
+POROFLUIDMULTIPHASE DIS porofluid SPECIAL true QUANTITY domain_integral_value_4 VALUE 1.65913402553628504e-07 TOLERANCE 1.e-17 // FUNCT26: mass of living tumor cells
 POROFLUIDMULTIPHASE DIS porofluid SPECIAL true QUANTITY domain_integral_value_5 VALUE 1e-05 TOLERANCE 1.e-15 // FUNCT27: area times density of volume fraction 1 (=1.0e-3)
-POROFLUIDMULTIPHASE DIS porofluid SPECIAL true QUANTITY domain_integral_value_6 VALUE -4.26322892441767854e-08 TOLERANCE 1.e-18 // FUNCT28: needed for calculation of x-coordinate center of mass of tumor
-POROFLUIDMULTIPHASE DIS porofluid SPECIAL true QUANTITY domain_integral_value_7 VALUE -1.05991221428117483e-09 TOLERANCE 1.e-19 // FUNCT29: needed for calculation of y-coordinate center of mass of tumor
-SCATRA DIS scatra NODE 58 QUANTITY phi1 VALUE  1.69469190199314148e-06 TOLERANCE 1e-12
-SCATRA DIS scatra NODE 282 QUANTITY phi2 VALUE  1.31125013420069436e-01 TOLERANCE 1e-12
-SCATRA DIS scatra NODE 272 QUANTITY phi3 VALUE  1.56953925067765294e-11 TOLERANCE 1e-15
+POROFLUIDMULTIPHASE DIS porofluid SPECIAL true QUANTITY domain_integral_value_6 VALUE -4.26315532789789111e-08 TOLERANCE 1.e-18 // FUNCT28: needed for calculation of x-coordinate center of mass of tumor
+POROFLUIDMULTIPHASE DIS porofluid SPECIAL true QUANTITY domain_integral_value_7 VALUE -1.05991216657839083e-09 TOLERANCE 1.e-19 // FUNCT29: needed for calculation of y-coordinate center of mass of tumor
+SCATRA DIS scatra NODE 58 QUANTITY phi1 VALUE  2.73445445168901173e-07 TOLERANCE 1e-12
+SCATRA DIS scatra NODE 282 QUANTITY phi2 VALUE  2.19867717229200232e-01 TOLERANCE 1e-12
+SCATRA DIS scatra NODE 272 QUANTITY phi3 VALUE  1.51695483453187753e-11 TOLERANCE 1e-15
 SCATRA DIS scatra NODE 40 QUANTITY phi4 VALUE  0.00000000000000000e+00 TOLERANCE 1e-15
-SCATRA DIS scatra NODE 22 QUANTITY phi4 VALUE  4.03123257089915240e-06 TOLERANCE 1e-12
+SCATRA DIS scatra NODE 22 QUANTITY phi4 VALUE  4.16458112131430124e-06 TOLERANCE 1e-12
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // curve_right
 E 2 NUMDOF 2 ONOFF 1 1  VAL 0.0 0.0 FUNCT 0 0

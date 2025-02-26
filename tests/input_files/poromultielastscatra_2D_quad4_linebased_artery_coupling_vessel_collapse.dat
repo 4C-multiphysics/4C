@@ -174,7 +174,7 @@ VARFUNCTION 1.04e-6*1.0e-3*heaviside(p3)*p3*(1.0-p2/500.0)*heaviside(1.0-p2/500.
 ----------------------------------------------------------------------FUNCT11 // fluid extravasion from arteries
 VARFUNCTION pi*D*2.7e-9*1.06e-3*(p_art-p3-1333.0)
 ----------------------------------------------------------------------FUNCT12 // diffusive exchange of oxygen from arteries
-POROMULTIPHASESCATRA_FUNCTION OXYGEN_TRANSVASCULAR_EXCHANGE_LAW_DISC NUMPARAMS 10 PARAMS n 2.7 Pb50 37.0 CaO2_max 0.225 alpha_bl_eff 3.1e-5 gamma*rho 2.31e-11 rho_oxy 1.429e-6 rho_IF 1.0e-3 rho_bl 1.06e-3 S2_max 1.5 alpha_IF 3.0e-5
+POROMULTIPHASESCATRA_FUNCTION OXYGEN_TRANSVASCULAR_EXCHANGE_LAW_DISC NUMPARAMS 10 PARAMS n 2.7 Pb50 37.0 CaO2_max 0.225 alpha_bl_eff 3.1e-5 gamma_rho 2.31e-11 rho_oxy 1.429e-6 rho_IF 1.0e-3 rho_bl 1.06e-3 S2_max 1.5 alpha_IF 3.0e-5
 ----------------------------------------------------------------------FUNCT13 // consumption by healthy cells
 VARFUNCTION porosity*S1*10e-10*sin(0.5*pi*phi1/4.2e-6)
 ----------------------------------------------------------------------FUNCT14 // diameter

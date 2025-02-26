@@ -88,7 +88,7 @@ namespace PoroMultiPhaseScaTra
      * \brief Constructor creating empty object. Add the function parameters (read from the
      * input file) to the function
      */
-    TumorGrowthLawHeaviside(const std::map<std::string, double>& funct_params);
+    TumorGrowthLawHeaviside(const TumorGrowthLawHeavisideParameters& parameters);
 
     double evaluate(const std::vector<std::pair<std::string, double>>& variables,
         const std::vector<std::pair<std::string, double>>& constants,
@@ -103,7 +103,7 @@ namespace PoroMultiPhaseScaTra
         const std::vector<std::pair<std::string, double>>& constants) const override;
 
    private:
-    const TumorGrowthLawHeavisideParameters parameter_;
+    const TumorGrowthLawHeavisideParameters parameters_;
   };
 
   /*!
@@ -129,7 +129,7 @@ namespace PoroMultiPhaseScaTra
      * \brief Constructor creating empty object. Add the function parameters (read from the
      * input file) to the function
      */
-    NecrosisLawHeaviside(const std::map<std::string, double>& funct_params);
+    NecrosisLawHeaviside(const NecrosisLawHeavisideParameters& parameters);
 
     double evaluate(const std::vector<std::pair<std::string, double>>& variables,
         const std::vector<std::pair<std::string, double>>& constants,
@@ -144,7 +144,7 @@ namespace PoroMultiPhaseScaTra
         const std::vector<std::pair<std::string, double>>& constants) const override;
 
    private:
-    const NecrosisLawHeavisideParameters parameter_;
+    const NecrosisLawHeavisideParameters parameters_;
   };
 
   /*!
@@ -170,8 +170,7 @@ namespace PoroMultiPhaseScaTra
      * \brief Constructor creating empty object. Add the function parameters (read from the
      * input file) to the function
      */
-    OxygenConsumptionLawHeaviside(const std::map<std::string, double>& funct_params);
-
+    OxygenConsumptionLawHeaviside(const OxygenConsumptionLawHeavisideParameters& parameters);
 
     double evaluate(const std::vector<std::pair<std::string, double>>& variables,
         const std::vector<std::pair<std::string, double>>& constants,
@@ -186,7 +185,7 @@ namespace PoroMultiPhaseScaTra
         const std::vector<std::pair<std::string, double>>& constants) const override;
 
    private:
-    const OxygenConsumptionLawHeavisideParameters parameter_;
+    const OxygenConsumptionLawHeavisideParameters parameters_;
   };
 
   /*!
@@ -213,7 +212,7 @@ namespace PoroMultiPhaseScaTra
      * \brief Constructor creating empty object. Add the function parameters (read from the
      * input file) to the function
      */
-    TumorGrowthLawHeavisideOxy(const std::map<std::string, double>& funct_params);
+    TumorGrowthLawHeavisideOxy(const TumorGrowthLawHeavisideNecroOxyParameters& parameters);
 
 
     double evaluate(const std::vector<std::pair<std::string, double>>& variables,
@@ -229,7 +228,7 @@ namespace PoroMultiPhaseScaTra
         const std::vector<std::pair<std::string, double>>& constants) const override;
 
    private:
-    const TumorGrowthLawHeavisideNecroOxyParameters parameter_;
+    const TumorGrowthLawHeavisideNecroOxyParameters parameters_;
   };
 
   /*!
@@ -255,7 +254,7 @@ namespace PoroMultiPhaseScaTra
      * \brief Constructor creating empty object. Add the function parameters (read from the
      * input file) to the function
      */
-    TumorGrowthLawHeavisideNecro(const std::map<std::string, double>& funct_params);
+    TumorGrowthLawHeavisideNecro(const TumorGrowthLawHeavisideNecroOxyParameters& parameters);
 
 
     double evaluate(const std::vector<std::pair<std::string, double>>& variables,
@@ -271,7 +270,7 @@ namespace PoroMultiPhaseScaTra
         const std::vector<std::pair<std::string, double>>& constants) const override;
 
    private:
-    const TumorGrowthLawHeavisideNecroOxyParameters parameter_;
+    const TumorGrowthLawHeavisideNecroOxyParameters parameters_;
   };
 
   /*!
@@ -293,7 +292,8 @@ namespace PoroMultiPhaseScaTra
      * \brief Constructor creating empty object. Add the function parameters (read from the
      * input file) to the function
      */
-    OxygenTransvascularExchangeLawCont(const std::map<std::string, double>& funct_params);
+    OxygenTransvascularExchangeLawCont(
+        const OxygenTransvascularExchangeLawContParameters& parameters);
 
     double evaluate(const std::vector<std::pair<std::string, double>>& variables,
         const std::vector<std::pair<std::string, double>>& constants,
@@ -308,7 +308,7 @@ namespace PoroMultiPhaseScaTra
         const std::vector<std::pair<std::string, double>>& constants) const override;
 
    private:
-    const OxygenTransvascularExchangeLawContParameters parameter_;
+    const OxygenTransvascularExchangeLawContParameters parameters_;
   };
 
   /*!
@@ -330,7 +330,8 @@ namespace PoroMultiPhaseScaTra
      * \brief Constructor creating empty object. Add the function parameters (read from the
      * input file) to the function
      */
-    OxygenTransvascularExchangeLawDisc(const std::map<std::string, double>& funct_params);
+    OxygenTransvascularExchangeLawDisc(
+        const OxygenTransvascularExchangeLawDiscParameters& parameters);
 
 
     double evaluate(const std::vector<std::pair<std::string, double>>& variables,
@@ -346,7 +347,7 @@ namespace PoroMultiPhaseScaTra
         const std::vector<std::pair<std::string, double>>& constants) const override;
 
    private:
-    const OxygenTransvascularExchangeLawDiscParameters parameter_;
+    const OxygenTransvascularExchangeLawDiscParameters parameters_;
     mutable int pos_oxy_art_;
     mutable int pos_diam_;
   };
@@ -372,7 +373,7 @@ namespace PoroMultiPhaseScaTra
      * \brief Constructor creating empty object. Add the function parameters (read from the
      * input file) to the function
      */
-    LungOxygenExchangeLaw(const std::map<std::string, double>& funct_params);
+    LungOxygenExchangeLaw(const LungOxygenExchangeLawParameters& parameters);
 
 
     double evaluate(const std::vector<std::pair<std::string, double>>& variables,
@@ -388,7 +389,7 @@ namespace PoroMultiPhaseScaTra
         const std::vector<std::pair<std::string, double>>& constants) const override;
 
    private:
-    const LungOxygenExchangeLawParameters parameter_;
+    const LungOxygenExchangeLawParameters parameters_;
   };
 
   /*!
@@ -417,7 +418,7 @@ namespace PoroMultiPhaseScaTra
      * \brief Constructor creating empty object. Add the function parameters (read from the
      * input file) to the function
      */
-    LungCarbonDioxideExchangeLaw(const std::map<std::string, double>& funct_params);
+    LungCarbonDioxideExchangeLaw(const LungCarbonDioxideExchangeLawParameters& parameters);
 
     /*!
      * \brief evaluate function for a given set of variables
@@ -461,7 +462,7 @@ namespace PoroMultiPhaseScaTra
 
 
    private:
-    const LungCarbonDioxideExchangeLawParameters parameter_;
+    const LungCarbonDioxideExchangeLawParameters parameters_;
   };
 
 }  // namespace PoroMultiPhaseScaTra
