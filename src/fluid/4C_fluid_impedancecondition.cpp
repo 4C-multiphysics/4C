@@ -189,7 +189,7 @@ FLD::Utils::FluidImpedanceBc::FluidImpedanceBc(
       r1_(impedancecond->parameters().get<double>("R1")),
       r2_(impedancecond->parameters().get<double>("R2")),
       c_(impedancecond->parameters().get<double>("C")),
-      functnum_(impedancecond->parameters().get<int>("FUNCT"))
+      functnum_(impedancecond->parameters().get<Core::IO::Noneable<int>>("FUNCT"))
 {
   if (myrank_ == 0)
   {
@@ -356,10 +356,17 @@ void FLD::Utils::FluidImpedanceBc::calculate_impedance_tractions_and_update_resi
   }
   else if (treetype_ == "pressure_by_funct")
   {
-    pressure = Global::Problem::instance()
-                   ->function_by_id<Core::Utils::FunctionOfTime>(functnum_)
-                   .evaluate(time);
-    Q_np_fac = 0.0;
+    if (functnum_.has_value() && functnum_.value() > 0)
+    {
+      pressure = Global::Problem::instance()
+                     ->function_by_id<Core::Utils::FunctionOfTime>(functnum_.value())
+                     .evaluate(time);
+      Q_np_fac = 0.0;
+    }
+    else
+    {
+      FOUR_C_THROW("Error with surface impendance condition: Need to define a positive FUNCT.");
+    }
   }
   else
   {

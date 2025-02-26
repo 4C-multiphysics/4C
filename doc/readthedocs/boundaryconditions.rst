@@ -213,9 +213,9 @@ The input looks like this:
 
    ------------------------------DESIGN SURF ROBIN SPRING DASHPOT CONDITIONS
    E <surfset> NUMDOF 3 ONOFF 0 0 0 \
-   STIFF <X_STIFF> <Y_STIFF> <Z_STIFF> TIMEFUNCTSTIFF 0 0 0 \
-   VISCO <X_VISCO> <Y_VISCO> <Z_VISCO> TIMEFUNCTVISCO 0 0 0 \
-   DISPLOFFSET 0.0 0.0 0.0 TIMEFUNCTDISPLOFFSET 0 0 0 FUNCTNONLINSTIFF 0 0 0 \
+   STIFF <X_STIFF> <Y_STIFF> <Z_STIFF> TIMEFUNCTSTIFF none none none \
+   VISCO <X_VISCO> <Y_VISCO> <Z_VISCO> TIMEFUNCTVISCO none none none \
+   DISPLOFFSET 0.0 0.0 0.0 TIMEFUNCTDISPLOFFSET none none none FUNCTNONLINSTIFF none none none \
    DIRECTION xyz|refsurfnormal|cursurfnormal COUPLING none
 
 - Commonly the Robin boundary condition couples the nodes at the surface to its original position.
@@ -236,9 +236,9 @@ The input looks like this:
 
    ------------------------------DESIGN SURF ROBIN SPRING DASHPOT CONDITIONS
    E <surfset> NUMDOF 3 ONOFF 0 0 0 \
-   STIFF <X_STIFF> <Y_STIFF> <Z_STIFF> TIMEFUNCTSTIFF 0 0 0 \
-   VISCO <X_VISCO> <Y_VISCO> <Z_VISCO> TIMEFUNCTVISCO 0 0 0 \
-   DISPLOFFSET 0.0 0.0 0.0 TIMEFUNCTDISPLOFFSET 0 0 0 FUNCTNONLINSTIFF 0 0 0 \
+   STIFF <X_STIFF> <Y_STIFF> <Z_STIFF> TIMEFUNCTSTIFF none none none \
+   VISCO <X_VISCO> <Y_VISCO> <Z_VISCO> TIMEFUNCTVISCO none none none \
+   DISPLOFFSET 0.0 0.0 0.0 TIMEFUNCTDISPLOFFSET none none none FUNCTNONLINSTIFF none none none \
    DIRECTION xyz|refsurfnormal|cursurfnormal COUPLING <couplingID>
    //
    ------------------------------DESIGN SURF ROBIN SPRING DASHPOT COUPLING CONDITIONS
