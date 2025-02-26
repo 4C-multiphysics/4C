@@ -604,12 +604,11 @@ void CONSTRAINTS::SpringDashpot::evaluate_robin(std::shared_ptr<Core::LinAlg::Sp
             std::array<double, 3> displ = {(*disp)[0], (*disp)[1], (*disp)[2]};
             force_disp = Global::Problem::instance()
                              ->function_by_id<Core::Utils::FunctionOfSpaceTime>(
-                                 function_id_nonlinear_stiffness[dof].value() - 1)
+                                 function_id_nonlinear_stiffness[dof].value())
                              .evaluate(displ.data(), total_time, 0);
-
             force_disp_deriv = (Global::Problem::instance()
                     ->function_by_id<Core::Utils::FunctionOfSpaceTime>(
-                        function_id_nonlinear_stiffness[dof].value() - 1)
+                        function_id_nonlinear_stiffness[dof].value())
                     .evaluate_spatial_derivative(displ.data(), total_time, 0))[dof];
           }
           else
