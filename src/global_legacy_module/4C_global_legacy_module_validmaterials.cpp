@@ -254,10 +254,10 @@ std::shared_ptr<std::vector<std::shared_ptr<Mat::MaterialDefinition>>> Global::v
     m->add_component(parameter<std::vector<double>>(
         "ROLE", {.description = "role in michaelis-menten like reactions",
                     .size = from_parameter<int>("NUMSCAL")}));
-    m->add_component(
-        parameter<std::vector<double>>("REACSTART", {.description = "starting point of reaction",
-                                                        .required = false,
-                                                        .size = from_parameter<int>("NUMSCAL")}));
+    m->add_component(parameter<std::optional<std::vector<double>>>(
+        "REACSTART", {.description = "starting point of reaction",
+                         .default_value = none<std::vector<double>>,
+                         .size = from_parameter<int>("NUMSCAL")}));
 
     Mat::append_material_definition(matlist, m);
   }
@@ -281,10 +281,10 @@ std::shared_ptr<std::vector<std::shared_ptr<Mat::MaterialDefinition>>> Global::v
     m->add_component(parameter<std::vector<double>>(
         "ROLE", {.description = "role in michaelis-menten like reactions",
                     .size = from_parameter<int>("NUMSCAL")}));
-    m->add_component(
-        parameter<std::vector<double>>("REACSTART", {.description = "starting point of reaction",
-                                                        .required = false,
-                                                        .size = from_parameter<int>("NUMSCAL")}));
+    m->add_component(parameter<std::optional<std::vector<double>>>(
+        "REACSTART", {.description = "starting point of reaction",
+                         .default_value = none<std::vector<double>>,
+                         .size = from_parameter<int>("NUMSCAL")}));
 
     Mat::append_material_definition(matlist, m);
   }
@@ -3399,9 +3399,9 @@ std::shared_ptr<std::vector<std::shared_ptr<Mat::MaterialDefinition>>> Global::v
         "SCALARDIFFS", {.description = "Diffusivities for additional scalar-dependent flux",
                            .default_value = std::vector<double>{},
                            .size = from_parameter<int>("NUMSCAL")}));
-    m->add_component(parameter<std::vector<double>>(
+    m->add_component(parameter<std::optional<std::vector<double>>>(
         "OMEGA_HALF", {.description = "Constant for receptor kinetic law",
-                          .required = false,
+                          .default_value = none<std::vector<double>>,
                           .size = from_parameter<int>("NUMSCAL")}));
 
     Mat::append_material_definition(matlist, m);
@@ -4556,7 +4556,6 @@ std::shared_ptr<std::vector<std::shared_ptr<Mat::MaterialDefinition>>> Global::v
         {
             .description =
                 "file path of pattern file defining the massfractions as discrete values",
-            .required = false,
             .on_parse_callback = on_parse,
         }));
 

@@ -29,8 +29,8 @@ Mat::PAR::ScatraReactionMat::ScatraReactionMat(const Core::Mat::PAR::Parameter::
       distrfunctreaccoeffid_(matdata.parameters.get<int>("DISTRFUNCT")),
       coupling_(set_coupling_type(matdata)),
       couprole_(matdata.parameters.get<std::vector<double>>("ROLE")),
-      reacstart_(matdata.parameters.get_or<std::vector<double>>(
-          "REACSTART", std::vector<double>(numscal_))),
+      reacstart_(matdata.parameters.get<std::optional<std::vector<double>>>("REACSTART")
+              .value_or(std::vector<double>(numscal_))),
       isdistrfunctreaccoeff_(distrfunctreaccoeffid_ != 0),
       isreacstart_(false),
       isinit_(false)

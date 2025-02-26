@@ -493,20 +493,16 @@ namespace Core::IO
       if (file_node.has_child("INCLUDES"))
       {
         ryml::ConstNodeRef node = file_node["INCLUDES"];
-        if (node.has_val())
-        {
-          included_files.emplace_back(get_include_path(to_string(node.val()), file_path));
-        }
-        else if (node.is_seq())
+        if (node.is_seq())
         {
           for (const auto& include_node : node)
           {
             included_files.emplace_back(get_include_path(to_string(include_node.val()), file_path));
           }
         }
-        else
+        else if (!(node.has_val() && node.val_is_null()))
         {
-          FOUR_C_THROW("INCLUDES section must contain a single file or a sequence.");
+          FOUR_C_THROW("INCLUDES section must contain a sequence of files.");
         }
 
         // Now we can drop the node containing the INCLUDES from the tree.
@@ -599,11 +595,11 @@ namespace Core::IO
         "Section 'INCLUDES' is a reserved section name with special meaning. Please choose a "
         "different name.");
     pimpl_->valid_sections_["INCLUDES"] =
-        InputSpecBuilders::parameter<std::vector<std::filesystem::path>>("INCLUDES",
+        InputSpecBuilders::parameter<Noneable<std::vector<std::filesystem::path>>>("INCLUDES",
             {
                 .description = "Path to files that should be included into this file. "
                                "The paths can be either absolute or relative to the file.",
-                .required = false,
+                .default_value = none<std::vector<std::filesystem::path>>,
             });
   }
 

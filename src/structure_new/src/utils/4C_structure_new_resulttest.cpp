@@ -422,16 +422,7 @@ void Solid::ResultTest::test_node_on_geometry(const Core::IO::InputParameterCont
 
   const std::vector<int>& nodes = nodeset[geometry_type][geometry_id];
 
-  TestOp op = TestOp::unknown;
-  std::string op_str = container.get<std::string>("OP");
-  if (op_str == "sum")
-    op = TestOp::sum;
-  else if (op_str == "max")
-    op = TestOp::max;
-  else if (op_str == "min")
-    op = TestOp::min;
-  else
-    FOUR_C_THROW("Invalid operation %s", op_str.c_str());
+  TestOp op = container.get<TestOp>("OP");
   std::string position = container.get<std::string>("QUANTITY");
 
   // collect the local result

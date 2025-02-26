@@ -58,8 +58,7 @@ int Core::Utils::ResultTest::compare_values(
   double tolerance = container.get<double>("TOLERANCE");
   // safety check
   if (tolerance <= 0.) FOUR_C_THROW("Tolerance for result test must be strictly positive!");
-  // name is an optional input argument!
-  auto name = container.get_or<std::string>("NAME", "");
+  auto name = container.get<IO::Noneable<std::string>>("NAME");
 
   // return value (0 if results are correct, 1 if results are not correct)
   int ret = 0;
@@ -75,7 +74,7 @@ int Core::Utils::ResultTest::compare_values(
 
   msghead << std::left << std::setw(8) << quantity.c_str();
 
-  if (name != "") msghead << "(" << name << ")";
+  if (name) msghead << "(" << *name << ")";
 
   if (type != "SPECIAL")
   {

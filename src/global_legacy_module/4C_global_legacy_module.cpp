@@ -136,6 +136,7 @@
 #include "4C_solid_scatra_3D_ele.hpp"
 #include "4C_stru_multi_microstatic.hpp"
 #include "4C_structure_new_functions.hpp"
+#include "4C_structure_new_resulttest.hpp"
 #include "4C_thermo_element.hpp"
 #include "4C_torsion3.hpp"
 #include "4C_truss3.hpp"
@@ -344,11 +345,16 @@ namespace
                     }),
                     parameter<bool>("SPECIAL"),
                 }),
-                parameter<std::string>("OP", {.required = false}),
+                selection<Solid::ResultTest::TestOp>("OP",
+                    {{"unknown", Solid::ResultTest::TestOp::unknown},
+                        {"sum", Solid::ResultTest::TestOp::sum},
+                        {"max", Solid::ResultTest::TestOp::max},
+                        {"min", Solid::ResultTest::TestOp::min}},
+                    {.default_value = Solid::ResultTest::TestOp::unknown}),
                 parameter<std::string>("QUANTITY"),
                 parameter<double>("VALUE"),
                 parameter<double>("TOLERANCE"),
-                parameter<std::string>("NAME", {.required = false}),
+                parameter<Noneable<std::string>>("NAME", {.default_value = none<std::string>}),
             }),
         group("FLUID",
             {
@@ -360,7 +366,7 @@ namespace
                 parameter<std::string>("QUANTITY"),
                 parameter<double>("VALUE"),
                 parameter<double>("TOLERANCE"),
-                parameter<std::string>("NAME", {.required = false}),
+                parameter<Noneable<std::string>>("NAME", {.default_value = none<std::string>}),
             }),
         group("XFLUID",
             {
@@ -369,7 +375,7 @@ namespace
                 parameter<std::string>("QUANTITY"),
                 parameter<double>("VALUE"),
                 parameter<double>("TOLERANCE"),
-                parameter<std::string>("NAME", {.required = false}),
+                parameter<Noneable<std::string>>("NAME", {.default_value = none<std::string>}),
             }),
         group("ALE",
             {
@@ -378,7 +384,7 @@ namespace
                 parameter<std::string>("QUANTITY"),
                 parameter<double>("VALUE"),
                 parameter<double>("TOLERANCE"),
-                parameter<std::string>("NAME", {.required = false}),
+                parameter<Noneable<std::string>>("NAME", {.default_value = none<std::string>}),
             }),
         group("THERMAL",
             {
@@ -387,7 +393,7 @@ namespace
                 parameter<std::string>("QUANTITY"),
                 parameter<double>("VALUE"),
                 parameter<double>("TOLERANCE"),
-                parameter<std::string>("NAME", {.required = false}),
+                parameter<Noneable<std::string>>("NAME", {.default_value = none<std::string>}),
             }),
         group("LUBRICATION",
             {
@@ -396,7 +402,7 @@ namespace
                 parameter<std::string>("QUANTITY"),
                 parameter<double>("VALUE"),
                 parameter<double>("TOLERANCE"),
-                parameter<std::string>("NAME", {.required = false}),
+                parameter<Noneable<std::string>>("NAME", {.default_value = none<std::string>}),
             }),
         group("POROFLUIDMULTIPHASE",
             {
@@ -409,7 +415,7 @@ namespace
                 parameter<std::string>("QUANTITY"),
                 parameter<double>("VALUE"),
                 parameter<double>("TOLERANCE"),
-                parameter<std::string>("NAME", {.required = false}),
+                parameter<Noneable<std::string>>("NAME", {.default_value = none<std::string>}),
             }),
         group("SCATRA",
             {
@@ -421,7 +427,7 @@ namespace
                 parameter<std::string>("QUANTITY"),
                 parameter<double>("VALUE"),
                 parameter<double>("TOLERANCE"),
-                parameter<std::string>("NAME", {.required = false}),
+                parameter<Noneable<std::string>>("NAME", {.default_value = none<std::string>}),
             }),
         group("SSI",
             {
@@ -435,7 +441,7 @@ namespace
                 parameter<std::string>("QUANTITY"),
                 parameter<double>("VALUE"),
                 parameter<double>("TOLERANCE"),
-                parameter<std::string>("NAME", {.required = false}),
+                parameter<Noneable<std::string>>("NAME", {.default_value = none<std::string>}),
             }),
         group("SSTI",
             {
@@ -443,6 +449,7 @@ namespace
                 parameter<std::string>("QUANTITY"),
                 parameter<double>("VALUE"),
                 parameter<double>("TOLERANCE"),
+                parameter<Noneable<std::string>>("NAME", {.default_value = none<std::string>}),
             }),
         group("STI",
             {
@@ -450,6 +457,7 @@ namespace
                 parameter<std::string>("QUANTITY"),
                 parameter<double>("VALUE"),
                 parameter<double>("TOLERANCE"),
+                parameter<Noneable<std::string>>("NAME", {.default_value = none<std::string>}),
             }),
         group("RED_AIRWAY",
             {
@@ -461,7 +469,7 @@ namespace
                 parameter<std::string>("QUANTITY"),
                 parameter<double>("VALUE"),
                 parameter<double>("TOLERANCE"),
-                parameter<std::string>("NAME", {.required = false}),
+                parameter<Noneable<std::string>>("NAME", {.default_value = none<std::string>}),
             }),
         group("ARTNET",
             {
@@ -473,7 +481,7 @@ namespace
                 parameter<std::string>("QUANTITY"),
                 parameter<double>("VALUE"),
                 parameter<double>("TOLERANCE"),
-                parameter<std::string>("NAME", {.required = false}),
+                parameter<Noneable<std::string>>("NAME", {.default_value = none<std::string>}),
             }),
         group("FSI",
             {
@@ -484,7 +492,7 @@ namespace
                 parameter<std::string>("QUANTITY"),
                 parameter<double>("VALUE"),
                 parameter<double>("TOLERANCE"),
-                parameter<std::string>("NAME", {.required = false}),
+                parameter<Noneable<std::string>>("NAME", {.default_value = none<std::string>}),
             }),
         group("PARTICLE",
             {
@@ -492,6 +500,7 @@ namespace
                 parameter<std::string>("QUANTITY"),
                 parameter<double>("VALUE"),
                 parameter<double>("TOLERANCE"),
+                parameter<Noneable<std::string>>("NAME", {.default_value = none<std::string>}),
             }),
         group("PARTICLEWALL",
             {
@@ -503,7 +512,7 @@ namespace
                 parameter<std::string>("QUANTITY"),
                 parameter<double>("VALUE"),
                 parameter<double>("TOLERANCE"),
-                parameter<std::string>("NAME", {.required = false}),
+                parameter<Noneable<std::string>>("NAME", {.default_value = none<std::string>}),
             }),
         group("RIGIDBODY",
             {
@@ -511,6 +520,7 @@ namespace
                 parameter<std::string>("QUANTITY"),
                 parameter<double>("VALUE"),
                 parameter<double>("TOLERANCE"),
+                parameter<Noneable<std::string>>("NAME", {.default_value = none<std::string>}),
             }),
         group("ELECTROMAGNETIC",
             {
@@ -519,7 +529,7 @@ namespace
                 parameter<std::string>("QUANTITY"),
                 parameter<double>("VALUE"),
                 parameter<double>("TOLERANCE"),
-                parameter<std::string>("NAME", {.required = false}),
+                parameter<Noneable<std::string>>("NAME", {.default_value = none<std::string>}),
             }),
         group("CARDIOVASCULAR0D",
             {
@@ -528,7 +538,7 @@ namespace
                 parameter<std::string>("QUANTITY"),
                 parameter<double>("VALUE"),
                 parameter<double>("TOLERANCE"),
-                parameter<std::string>("NAME", {.required = false}),
+                parameter<Noneable<std::string>>("NAME", {.default_value = none<std::string>}),
             }),
     });
   }

@@ -55,6 +55,8 @@ namespace Solid
       unevaluated
     };
 
+
+   public:
     /// possible value for test operation on geometry
     enum class TestOp : int
     {
@@ -64,7 +66,6 @@ namespace Solid
       unknown
     };
 
-   public:
     //! Constructor for time integrators of general kind
     //! \author bborn \date 06/08 (originally)
     ResultTest();

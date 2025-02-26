@@ -1,4 +1,5 @@
-INCLUDES: included.dat
+INCLUDES:
+  - included.dat
 MAIN SECTION:
   - something
 SECTION WITH SUBSTRUCTURE:
