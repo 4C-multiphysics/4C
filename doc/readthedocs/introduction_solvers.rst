@@ -46,15 +46,17 @@ At this point, the linear algebra library *Trilinos* is heavily used, which prov
 **Teko**:
     Block Preconditioner
 
-The solvers are called in the solver sections::
+The solvers are called in the solver sections.
+For all file snippets in this section, we use the yaml input file format; if you still use the old format, you may easily convert it into yaml by the 4C command flag ``--to-yaml``:
 
-   -----------SOLVER 1
-   NAME    <arbitrary_name>
-   SOLVER  <solver>
-   ...
-   -----------SOLVER 9
+.. code-block:: yaml
 
-in which all details for a specific solver are defined.
+    SOLVER 1:
+      SOLVER: "<solver_type>"
+      NAME: "<user-defined_solver_name>"
+      # further parameters
+
+in which all details for a specific solver are defined; up to 9 solvers can be defined here.
 The parameter ``SOLVER`` defines the solver to be used.
 Most of the solvers require additional parameters. These are explained in the following.
 
@@ -68,27 +70,27 @@ If a :ref:`multiphysics problem <multifieldproblems>` is to be solved,
 each physics involved can be solved one after the other, and the interaction then leads to an iterative procedure,
 where the influence of one field to the other hopefully converges to a common solution.
 From a solver's point of view, the solution is achieved by running the solver of each single field problem independent of others.
-Therefore, those problems are solved like single *physics* problems using the methods given below.
+Therefore, those problems are solved like *single physics* problems using the input file definitions given below.
 One solver has to be defined for each *physics*, but the definition in the input file can be one for several solvers.
 
 For example, a structural analysis sequentially coupled with scalar transport needs two solvers, handling the respective physics:
 
-::
+.. code-block:: yaml
 
-    ------------------------------------------------------PROBLEM TYPE
-    PROBLEMTYPE                      Structure_Scalar_Interaction
-    ------------------------------------------------STRUCTURAL DYNAMIC
-    LINEAR_SOLVER                   1
-    ...
-    ------------------------------------------SCALAR TRANSPORT DYNAMIC
-    LINEAR_SOLVER                   2
-    ...
-    ----------------------------------------------------------SOLVER 1
-    SOLVER                          UMFPACK
-    ----------------------------------------------------------SOLVER 2
-    SOLVER                          UMFPACK
+    PROBLEM TYPE:
+      PROBLEMTYPE: "Structure_Scalar_Interaction"
+    STRUCTURAL DYNAMIC:
+      LINEAR_SOLVER: 1
+      # further parameters
+    SCALAR TRANSPORT DYNAMIC:
+      LINEAR_SOLVER: 2
+      # further parameters
+    SOLVER 1:
+      SOLVER: "UMFPACK"
+    SOLVER 2:
+      SOLVER: "UMFPACK"
 
-For the case above, actually, one could also use ``SOLVER 1`` for both physics, two solvers of the same kind would then still be used.
+For the case above, actually, one could also use ``LINEAR_SOLVER 1`` in the section ``SCALAR TRANSPORT DYNAMIC``; two solvers of the same kind would then still be used.
 
 
 Monolithic solution:
@@ -96,37 +98,39 @@ Monolithic solution:
 
 If, on the other hand, the interaction of the physical fields is strong, the iterative procedure may converge only slowly (if at all),
 thus a so-called *monolithic solution*, solving all degrees of freedom simultaneously is beneficial.
-This solution type will be described in the following:
+This solution type will be described in the following.
 
-The degrees of freedom of all physics appear in the linear system.
-Since the stiffness factors of the different physics may be different by orders of magnitude,
+The degrees of freedom of all physics appear in one linear system.
+Since the stiffness factors of the different physics may be different by several orders of magnitude,
 and the coupling between the physics may again have a different magnitude,
 the linear system may be particularly ill-conditioned.
 
 For the monolithic solution of the multiphysics problem, an additional solver is needed for the monolithic approach,
 e.g., again for the SSI problem:
 
-::
+.. code-block:: yaml
 
-     ------------------------------------------------------PROBLEM TYPE
-     PROBLEMTYPE                      Structure_Scalar_Interaction
-     ------------------------------------------------STRUCTURAL DYNAMIC
-     LINEAR_SOLVER                   1
-     ...
-     ------------------------------------------SCALAR TRANSPORT DYNAMIC
-     LINEAR_SOLVER                   1
-     ...
-     --------------------------------------------SSI CONTROL/MONOLITHIC
-     LINEAR_SOLVER                   2
-     ----------------------------------------------------------SOLVER 1
-     SOLVER                          UMFPACK
-     ----------------------------------------------------------SOLVER 2
-     SOLVER                          Belos
-     AZPREC                          AMGnxn
-     AMGNXN_TYPE                     XML
-     AMGNXN_XML_FILE                 ssi_mono_3D_27hex8_scatra_BGS-AMG_2x2.xml
+    PROBLEM TYPE:
+      PROBLEMTYPE: "Structure_Scalar_Interaction"
+    STRUCTURAL DYNAMIC:
+      LINEAR_SOLVER: 1
+      # further parameters
+    SCALAR TRANSPORT DYNAMIC:
+      LINEAR_SOLVER: 1
+      # further parameters
+    SSI CONTROL/MONOLITHIC:
+      LINEAR_SOLVER: 2
+      # further parameters
+    SOLVER 1:
+      SOLVER: "UMFPACK"
+    SOLVER 2:
+      SOLVER: "Belos"
+      SOLVER_XML_FILE: "gmres_template.xml"
+      AZPREC: "AMGnxn"
+      AMGNXN_TYPE: "XML"
+      AMGNXN_XML_FILE: "ssi_mono_3D_27hex8_scatra_BGS-AMG_2x2.xml"
 
-Here, we have used the same solver type (a direct solver) for each physics, and for the coupling we used an iterative solver (Belos).
+Here, we have used the same solver type (a direct solver) for each physics (structure and scalar transport), and for the coupling we used an iterative solver (Belos).
 The situation is similar, when fluid-structure or thermo-structure coupling is employed.
 The iterative solver used for the coupling is particularly suited for this kind of mathematics, where the coupled degrees of freedom are given in a so-called block structure.
 The solver settings are explained in detail below.
@@ -136,7 +140,7 @@ Special case: Contact
 
 Even though contact does not involve several physics directly, they can be treated as a coupled problem:
 
-- Contact with penalty: basically still solid mechanics (probably a bit more ill-conditioned)
+- Contact with penalty: basically still a solid mechanics problem, probably just a bit more ill-conditioned
 - Contact with lagrange multipliers: There is a block structure in the system.
   If an iterative solver is used, the preconditioner needs to know about it.
 
@@ -163,10 +167,10 @@ In addition, the iterative solver is more memory efficient, so it can solve larg
 The benefit of the direct solver is that there are no parameters, which one has to provide,
 since the direct solver does not care about the underlying physics. The definition in the input file is simply
 
-::
+.. code-block:: yaml
 
-     ----------------------------------------------------------SOLVER 1
-     SOLVER                          UMFPACK
+    SOLVER 1:
+      SOLVER: "UMFPACK"
 
 
 Iterative solver
@@ -196,24 +200,38 @@ The current solver is based on Trilinos' **Belos** package, which is the success
 This package provides a bunch of KRYLOV solvers, e.g.
 
    - CG (conjugate gradient method) for symmetric problems,
-   - GMRES (Generalised Minimal Residual Method, also for unsymmetric problems)
+   - GMRES (Generalised Minimal Residual Method), also for unsymmetric problems
    - BICGSTAB (Biconjugate gradient stabilized method)
 
+Whether a problem is symmetric or not, depends on the physics involved. The following table gives a few hints:
 
-Originally, the parameters have been defined in the solver sections; however, this is deprecated now.
+.. list-table::
+   :header-rows: 1
+
+   * - Problem
+     - Symmetry
+   * - Convection dominated flow
+     - unsymmetric
+   * - elasticity
+     - symmetric
+   * - Contact
+     - unsymmetric
+
+Originally, the parameters for the solver have been defined in the solver sections; however, this is deprecated now.
 In order to narrow down the size of the input file, all parameters for the iterative solver are now given in an extra xml File, which is included by the parameter
 ``SOLVER_XML_FILE``.
-Thus, the solver section may also consist of
+Thus, the solver section should consist of
 
-::
+.. code-block:: yaml
 
-   -----------SOLVER 1
-   SOLVER           Belos
-   SOLVER_XML_FILE  gmres_template.xml
-   ...
+    SOLVER 2:
+      SOLVER: "Belos"
+      SOLVER_XML_FILE: "gmres_template.xml"
+      # further parameters
 
+Note that the solver itself is always defined as ``SOLVER: "Belos"``.
 One can find a number of template solver xml files in ``<source-dir>/tests/input-files/xml/linear_solver/*.xml``.
-Further parameter are necessary for the preconditioner, where a number of choices are available, see below.
+Further parameters are necessary for the preconditioner, where a number of choices are available, see below.
 
 Preconditioners
 ^^^^^^^^^^^^^^^^
@@ -226,7 +244,7 @@ Within Belos one can choose between the following four preconditioners:
 -   Teko
 -   AMGnxn
 
-ILU is the easiest one to use with very few parameters; however, perfect scalability is not achieved with this method.
+**ILU** is the easiest one to use with very few parameters; however, perfect scalability is not achieved with this method.
 For better performance use **MueLu** for single physics and **Teko** or **AMGnxn** for multiphysics problems.
 You'll find templates of parameter files for various problems in the subdirectories of ``<>source-dir>/tests/input-files/xml/...``.
 
@@ -234,34 +252,39 @@ The preconditioner is chosen by the parameter ``AZPREC`` within the ``SOLVER n``
 Note that the parameter to define the xml-file for further preconditioner-parameters is different for each preconditioner.
 The solver sections appear in the following way:
 
-::
+.. code-block:: yaml
 
-   -----------SOLVER 1
-   SOLVER           Belos
-   SOLVER_XML_FILE  gmres_template.xml
-   AZPREC           ILU
-   IFPACK_XML_FILE <path/to/your/ifpack_parameters.xml>
-   -----------SOLVER 2
-   SOLVER           Belos
-   NAME             algebraic_multigrid_solver
-   SOLVER_XML_FILE  gmres_template.xml
-   AZPREC           MueLu
-   MUELU_XML_FILE  <path/to/your/multigrid_parameters.xml>
-   -----------SOLVER 3
-   SOLVER           Belos
-   NAME             block_multigrid_solver
-   SOLVER_XML_FILE  gmres_template.xml
-   AZPREC           Teko
-   TEKO_XML_FILE   <path/to/your/block_preconditioner_parameters.xml>
-   -----------SOLVER 4
-   SOLVER           Belos
-   NAME             block_multigrid_solver
-   SOLVER_XML_FILE  gmres_template.xml
-   AZPREC           AMGnxn
-   AMGNXN_TYPE      XML
-   AMGNXN_XML_FILE  <source-dir>/tests/input-files/*_AMG_*.xml
+    SOLVER 1:
+      NAME: "iterative_solver_with_ILU"
+      SOLVER: "Belos"
+      SOLVER_XML_FILE: "gmres_template.xml"
+      AZPREC: "ILU"
+      IFPACK_XML_FILE: "<path/to/your/ifpack_parameters.xml>"
+      # template file is located in <source-root>/tests/input-files/xml/preconditioner/ifpack.xml
+    SOLVER 2:
+      NAME: "algebraic_multigrid_solver"
+      SOLVER: "Belos"
+      SOLVER_XML_FILE: "gmres_template.xml"
+      AZPREC: "MueLu"
+      MUELU_XML_FILE: "<path/to/your/muelu_parameters.xml>"
+      # template files for various problems are located in <source-root>/tests/input-files/xml/multigrid/*.xml
+    SOLVER 3:
+      NAME: "block_multigrid_solver"
+      SOLVER: "Belos"
+      SOLVER_XML_FILE: "gmres_template.xml"
+      AZPREC: "Teko"
+      TEKO_XML_FILE: "<path/to/your/teko_parameters.xml>"
+      # template files for various problems are located in <source-root>/tests/input-files/xml/block_preconditioner/*.xml
+    SOLVER 4:
+      SOLVER: "Belos"
+      AZPREC: "AMGnxn"
+      SOLVER_XML_FILE: "gmres_template.xml"
+      NAME: "block_multigrid_solver"
+      AMGNXN_TYPE: "XML"
+      AMGNXN_XML_FILE: "<path/to/your/amgnxn_parameters.xml>"
+      # template files for various problems are located in <source-root>/tests/input-files/*AMG*.xml
 
-The xml files are named after problem types for which they are most suited.
+The xml template files (see the comments in the respective solver sections) are named after problem types for which they are most suited.
 It is highly recommended to first use these defaults before tweaking the parameters.
 
 
@@ -329,16 +352,4 @@ A little bit of damping will probably improve convergence (also from the beginni
 
 For the multigrid preconditioner, one can also find a :download:`comprehensive documentation <https://trilinos.github.io/pdfs/mueluguide.pdf>`
 on the trilinos website, explaining all the parameters, their meaning and the default values.
-
-.. list-table::
-   :header-rows: 1
-
-   * - Problem
-     - Symmetry
-   * - Convection dominated flow
-     - nonsymm
-   * - elasticity
-     - symm
-   * - Contact
-     - unsymm
 
