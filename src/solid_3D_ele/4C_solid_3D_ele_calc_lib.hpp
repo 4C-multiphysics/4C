@@ -555,6 +555,11 @@ namespace Discret::Elements
       spatial_material_mapping.deformation_gradient_ =
           evaluate_deformation_gradient(jacobian_mapping, nodal_coordinates, scale_defgrd);
     }
+    else
+    {
+      spatial_material_mapping.deformation_gradient_ =
+          Core::LinAlg::identity_matrix<Core::FE::dim<celltype>>();
+    }
 
     spatial_material_mapping.inverse_deformation_gradient_.invert(
         spatial_material_mapping.deformation_gradient_);
