@@ -13,7 +13,7 @@ Everyone is warmly invited to download, use, and contribute to |FOURC|.
 If you come across any inconsistency, please let us know by opening an issue and describe your findings.
 We also welcome contributions to both the code and documentation - just follow our `CONTRIBUTING.md <https://github.com/4C-multiphysics/4C/blob/main/CONTRIBUTING.md>`_ guidelines.
 
-.. _developer:
+.. _developer_definition:
 
 4C Developer
 ------------
