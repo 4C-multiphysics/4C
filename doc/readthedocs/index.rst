@@ -35,10 +35,13 @@ This guide to |FOURC| is structured as follows:
 :ref:`Part I — About 4C<about>`
    Learn about the capabilities and history of |FOURC|.
 
-:ref:`Part II — Tutorials<tutorials>`
+:ref:`Part II - The 4C Community<4Ccommunity>`
+   A brief summary of the roles and responsibilities within the |FOURC| community.
+
+:ref:`Part III — Tutorials<tutorials>`
    A series of beginner-level tutorials showcases the setup procedure for specific application scenarios.
 
-:ref:`Part III - Analysis guide<analysisguide>`
+:ref:`Part IV - Analysis guide<analysisguide>`
    Detailed explanations on the whole tool chain from model generation (pre-processing)
    over running a simulation to the evaluation of results (post-processing) offers deep insight into using |FOURC|
    for advanced simulation scenarios.
@@ -46,16 +49,16 @@ This guide to |FOURC| is structured as follows:
    for the specification of elements, boundary conditions, constitutive laws
    as well as options for linear and nonlinear solvers.
 
-:ref:`Part IV - Developer guide<developerguide>`
+:ref:`Part V - Developer guide<developerguide>`
    This guide gets you started on actively developing and contributing to |FOURC|.
    It covers the build process, our CI/CD testing infrastructure,
    coding guidelines, and useful tools for the daily development of |FOURC|.
 
-:ref:`Part V - Input Parameter Reference<inputparameterreference>`
+:ref:`Part VI - Input Parameter Reference<inputparameterreference>`
    A comprehensive list of all input parameters, elements, materials, and boundary conditions
    with short descriptions for each option
 
-:ref:`Part VI - Tools and Scripts<toolsAndScripts>`
+:ref:`Part VII - Tools and Scripts<toolsAndScripts>`
    A collection of useful scripts for working with |FOURC|
 
 :ref:`Appendix<appendix>`
@@ -67,6 +70,7 @@ This guide to |FOURC| is structured as follows:
    :caption: Contents:
 
    about
+   4Ccommunity
    tutorials
    analysisguide
    developmentguide
