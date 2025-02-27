@@ -43,7 +43,7 @@ At this point, the linear algebra library *Trilinos* is heavily used, which prov
   - Krylov methods (e.g., Conjugate Gradient, GMRES, BiCGStab, and others)
   - Least squares solvers
 
-**One-level domain decompositoin and basic iterative methods: Ifpack**
+**One-level domain decomposition and basic iterative methods: Ifpack**
 
   - Incomplete factorization methods (e.g., ILU, ILUT)
   - Point relaxation methods (e.g., Jacobi, Gauss-Seidel)
@@ -63,7 +63,7 @@ At this point, the linear algebra library *Trilinos* is heavily used, which prov
 The linear solvers are defined in the solver sections.
 
 .. note::
-  All file snippets in this section are preented in the yaml input file format.
+  All file snippets in this section are presented in the yaml input file format.
   Consult the documentation for further information, e.g. on converting other input formats to the yaml format.
 
 .. code-block:: yaml
@@ -80,7 +80,7 @@ Most of the solvers require additional parameters. These are explained in the fo
 Solvers for single-field problems
 ---------------------------------
 
-When dealing with a single physical field, e.g. solid mechanics, incompressibel fluid flow, or heat conduction,
+When dealing with a single physical field, e.g. solid mechanics, incompressible fluid flow, or heat conduction,
 the arising linear system matrix can be tackled by a single linear solver.
 In this case, it is sufficient to define a single ``SOLVER`` section in the input file.
 
@@ -135,7 +135,7 @@ For example, a structural analysis sequentially coupled with scalar transport ne
     SOLVER 2:
       SOLVER: "UMFPACK"
 
-For the case above, actually, one could also use ``LINEAR_SOLVER 1`` in the section ``SCALAR TRANSPORT DYNAMIC`` (and drop the definition of ``SOLVER 2`` entirely.
+For the case above, actually, one could also use ``LINEAR_SOLVER 1`` in the section ``SCALAR TRANSPORT DYNAMIC`` (and drop the definition of ``SOLVER 2`` entirely).
 
 
 Monolithic solution:
@@ -181,7 +181,7 @@ Special case: Contact
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 Even though contact does not involve several physics directly,
-the arising linear system may exhibit similar propertoes due to the presence of Lagrange multiplier unknowns to enforce the contact constraints.
+the arising linear system may exhibit similar properties due to the presence of Lagrange multiplier unknowns to enforce the contact constraints.
 
 The following scenarios are covered by 4C:
 
@@ -292,8 +292,8 @@ Preconditioners
 The choice and design of the preconditioner highly affect performance.
 In |FOURC|, one can choose between the following four preconditioners:
 
--	ILU
--	MueLu
+- ILU
+- MueLu
 - Teko
 - AMGnxn
 
@@ -347,7 +347,7 @@ In this file, the so-called fill level is set up by ``fact: level-of-fill``, and
 With lower values, the setup will be faster, but the approximation is worse.
 The higher the more elements are included, sparcity decreases (a level of 12 might be a full matrix, like a direct solver).
 
-The current recommendation is to use one of the three more sophisticated preconditioners currently available.
+The current recommendation is to use one of the three more sophisticated preconditioners available.
 All these preconditioners have a number of parameters that can be chosen;
 however, a recommended set of parameters for various problems are given in respective xml files.
 

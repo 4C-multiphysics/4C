@@ -16,4 +16,4 @@ Analysis Guide
    contact
    materials
    struct_dynamics
-   introduction_solvers
+   linear_solvers
