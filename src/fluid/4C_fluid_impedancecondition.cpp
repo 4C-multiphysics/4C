@@ -356,7 +356,7 @@ void FLD::Utils::FluidImpedanceBc::calculate_impedance_tractions_and_update_resi
   }
   else if (treetype_ == "pressure_by_funct")
   {
-    if (functnum_.has_value() && functnum_.value() > 0)
+    if (functnum_.has_value())
     {
       pressure = Global::Problem::instance()
                      ->function_by_id<Core::Utils::FunctionOfTime>(functnum_.value())

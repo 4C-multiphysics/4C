@@ -965,14 +965,10 @@ double FLD::Utils::FluidVolumetricSurfaceFlowBc::evaluate_flowrate(
   // evaluate the current flowrate value
   double functfac = 0.0;
   double flowrate = 0.0;
-
-  if (functnum > 0)
-  {
-    functfac =
-        Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfTime>(functnum).evaluate(
-            time);
-    flowrate = val * functfac;
-  }
+  functfac =
+      Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfTime>(functnum).evaluate(
+          time);
+  flowrate = val * functfac;
 
   return flowrate;
 }

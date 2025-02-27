@@ -46,7 +46,7 @@ namespace
   double scale_by_optional_function(
       double baseline_value, Core::IO::Noneable<int> funct_id, double total_time)
   {
-    if (funct_id.has_value() && funct_id.value() > 0)
+    if (funct_id.has_value())
     {
       return Global::Problem::instance()
                  ->function_by_id<Core::Utils::FunctionOfTime>(funct_id.value())
@@ -274,10 +274,8 @@ CONSTRAINTS::SpringDashpot::SpringDashpot(std::shared_ptr<Core::FE::Discretizati
 
   for (unsigned i = 0; i < (*function_id_nonlinear_stiffness).size(); ++i)
   {
-    if (((*function_id_nonlinear_stiffness)[i].has_value() &&
-            (*function_id_nonlinear_stiffness)[i].value() > 0) and
-        (((*springstiff)[i] != 0) or
-            ((*function_id_stiffness)[i].has_value() && (*function_id_stiffness)[i].value() > 0)))
+    if ((*function_id_nonlinear_stiffness)[i].has_value() and
+        ((*springstiff)[i] != 0 or *function_id_stiffness)[i].has_value())
       FOUR_C_THROW("Must not apply nonlinear stiffness and linear stiffness");
   }
 
@@ -378,8 +376,7 @@ void CONSTRAINTS::SpringDashpot::evaluate_robin(std::shared_ptr<Core::LinAlg::Sp
           const double dashpot_viscosity =
               scale_by_optional_function(dashpotvisc[i], function_id_viscosity[i], total_time);
 
-          if (function_id_nonlinear_stiffness[i].has_value() &&
-              function_id_nonlinear_stiffness[i].value() > 0)
+          if (function_id_nonlinear_stiffness[i].has_value())
           {
             // function is nonlinear
             const auto& nonlinear_spring =
@@ -573,22 +570,21 @@ void CONSTRAINTS::SpringDashpot::evaluate_robin(std::shared_ptr<Core::LinAlg::Sp
 
           // compute stiffness, viscosity, and initial offset from functions
           const double dof_stiffness =
-              function_id_stiffness[dof].has_value() && function_id_stiffness[dof] > 0
+              function_id_stiffness[dof].has_value()
                   ? springstiff[dof] * Global::Problem::instance()
                                            ->function_by_id<Core::Utils::FunctionOfTime>(
                                                function_id_stiffness[dof].value())
                                            .evaluate(total_time)
                   : springstiff[dof];
           const double dof_viscosity =
-              function_id_viscosity[dof].has_value() && function_id_viscosity[dof] > 0
+              function_id_viscosity[dof].has_value()
                   ? dashpotvisc[dof] * Global::Problem::instance()
                                            ->function_by_id<Core::Utils::FunctionOfTime>(
                                                function_id_viscosity[dof].value())
                                            .evaluate(total_time)
                   : dashpotvisc[dof];
           const double dof_disploffset =
-              function_id_displacement_offset[dof].has_value() &&
-                      function_id_displacement_offset[dof] > 0
+              function_id_displacement_offset[dof].has_value()
                   ? constant_offset[dof] * Global::Problem::instance()
                                                ->function_by_id<Core::Utils::FunctionOfTime>(
                                                    function_id_displacement_offset[dof].value())
@@ -598,8 +594,7 @@ void CONSTRAINTS::SpringDashpot::evaluate_robin(std::shared_ptr<Core::LinAlg::Sp
           // displacement related forces and derivatives
           double force_disp = 0.0;
           double force_disp_deriv = 0.0;
-          if (function_id_nonlinear_stiffness[dof].has_value() &&
-              function_id_nonlinear_stiffness[dof].value() > 0)
+          if (function_id_nonlinear_stiffness[dof].has_value())
           {
             std::array<double, 3> displ = {(*disp)[0], (*disp)[1], (*disp)[2]};
             force_disp = Global::Problem::instance()
@@ -705,7 +700,7 @@ void CONSTRAINTS::SpringDashpot::evaluate_force(Core::LinAlg::Vector<double>& fi
               &spring_->parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCTNONLINSTIFF");
           for (auto dof_function_id_stiffness : *function_id_stiffness)
           {
-            if (dof_function_id_stiffness.has_value() && dof_function_id_stiffness.value() > 0)
+            if (dof_function_id_stiffness.has_value())
             {
               FOUR_C_THROW(
                   "temporal dependence of stiffness not implemented for current surface "
@@ -714,21 +709,19 @@ void CONSTRAINTS::SpringDashpot::evaluate_force(Core::LinAlg::Vector<double>& fi
           }
           for (auto dof_function_id_viscosity : *function_id_viscosity)
           {
-            if (dof_function_id_viscosity.has_value() && dof_function_id_viscosity.value() > 0)
+            if (dof_function_id_viscosity.has_value())
               FOUR_C_THROW(
                   "temporal dependence of damping not implemented for current surface evaluation");
           }
           for (auto dof_function_id_displacement_offset : *function_id_displacement_offset)
           {
-            if (dof_function_id_displacement_offset.has_value() &&
-                dof_function_id_displacement_offset.value() > 0)
+            if (dof_function_id_displacement_offset.has_value())
               FOUR_C_THROW(
                   "temporal dependence of offset not implemented for current surface evaluation");
           }
           for (auto dof_function_id_nonlinear_stiffness : *function_id_nonlinear_stiffness)
           {
-            if (dof_function_id_nonlinear_stiffness.has_value() &&
-                dof_function_id_nonlinear_stiffness.value() > 0)
+            if (dof_function_id_nonlinear_stiffness.has_value())
               FOUR_C_THROW("Nonlinear spring not implemented for current surface evaluation");
           }
 
@@ -833,7 +826,7 @@ void CONSTRAINTS::SpringDashpot::evaluate_force_stiff(Core::LinAlg::SparseMatrix
               &spring_->parameters().get<std::vector<Core::IO::Noneable<int>>>("FUNCTNONLINSTIFF");
           for (auto dof_function_id_stiffness : *function_id_stiffness)
           {
-            if (dof_function_id_stiffness.has_value() && dof_function_id_stiffness.value() > 0)
+            if (dof_function_id_stiffness.has_value())
             {
               FOUR_C_THROW(
                   "temporal dependence of stiffness not implemented for current surface "
@@ -842,21 +835,19 @@ void CONSTRAINTS::SpringDashpot::evaluate_force_stiff(Core::LinAlg::SparseMatrix
           }
           for (auto dof_function_id_viscosity : *function_id_viscosity)
           {
-            if (dof_function_id_viscosity.has_value() && dof_function_id_viscosity.value() > 0)
+            if (dof_function_id_viscosity.has_value())
               FOUR_C_THROW(
                   "temporal dependence of damping not implemented for current surface evaluation");
           }
           for (auto dof_function_id_displacement_offset : *function_id_displacement_offset)
           {
-            if (dof_function_id_displacement_offset.has_value() &&
-                dof_function_id_displacement_offset.value() > 0)
+            if (dof_function_id_displacement_offset.has_value())
               FOUR_C_THROW(
                   "temporal dependence of offset not implemented for current surface evaluation");
           }
           for (auto dof_function_id_nonlinear_stiffness : *function_id_nonlinear_stiffness)
           {
-            if (dof_function_id_nonlinear_stiffness.has_value() &&
-                dof_function_id_nonlinear_stiffness.value() > 0)
+            if (dof_function_id_nonlinear_stiffness.has_value())
               FOUR_C_THROW("Nonlinear spring not implemented for current surface evaluation");
           }
 
