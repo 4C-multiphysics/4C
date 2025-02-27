@@ -88,7 +88,7 @@ As an example, consider a solid problem governed by the equations of elasto-dyna
 To select UMFPACK as direct solver for such a problem,
 one has to
 
-1. **Define the linear solver:** Define the linear solver by adding a ``SOLVER`` section to the input file and set the ``SOLVER`` parameter to ``"UMFPACK"
+1. **Define the linear solver:** Define the linear solver by adding a ``SOLVER`` section to the input file and set the ``SOLVER`` parameter to ``"UMFPACK"``.
 2. **Assign linear solver to the solid field:** Set the ``LINEAR_SOLVER`` parameter in the ``STRUCTURAL DYNAMIC`` section to the ID of the desired linear solver.
 
 An input file could read as follows:
