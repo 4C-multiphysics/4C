@@ -168,7 +168,7 @@ E 1 ConditionID 1
 // exth4
 E 2 ConditionID 2
 -------------------------------------------DESIGN SURFACE AREA CONSTRAINT 3D
-E 7 ConditionID 1 curve 0 activeTime 0.0
+E 7 ConditionID 1 curve none activeTime 0.0
 --------------------------------------------DESIGN SURFACE VOLUME MONITOR 3D
 // base_nodes24
 E 7 ConditionID 3
