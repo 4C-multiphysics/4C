@@ -14,7 +14,7 @@
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_utils_gausspoints.hpp"
 #include "4C_solid_poro_3D_ele_calc_interface.hpp"
-#include "4C_solid_poro_3D_ele_calc_lib_io.hpp"
+#include "4C_solid_poro_3D_ele_calc_lib.hpp"
 #include "4C_solid_poro_3D_ele_properties.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -43,16 +43,18 @@ namespace Discret
       void evaluate_nonlinear_force_stiffness(const Core::Elements::Element& ele,
           Mat::StructPoro& porostructmat, Mat::FluidPoro& porofluidmat,
           AnisotropyProperties anisotropy_properties, const Inpar::Solid::KinemType& kinematictype,
-          const Core::FE::Discretization& discretization, Core::Elements::LocationArray& la,
-          Teuchos::ParameterList& params, Core::LinAlg::SerialDenseVector* force_vector,
+          const Core::FE::Discretization& discretization,
+          const SolidPoroPrimaryVariables& primary_variables, Teuchos::ParameterList& params,
+          Core::LinAlg::SerialDenseVector* force_vector,
           Core::LinAlg::SerialDenseMatrix* stiffness_matrix,
           Core::LinAlg::SerialDenseMatrix* reactive_matrix);
 
       void evaluate_nonlinear_force_stiffness_od(const Core::Elements::Element& ele,
           Mat::StructPoro& porostructmat, Mat::FluidPoro& porofluidmat,
           AnisotropyProperties anisotropy_properties, const Inpar::Solid::KinemType& kinematictype,
-          const Core::FE::Discretization& discretization, Core::Elements::LocationArray& la,
-          Teuchos::ParameterList& params, Core::LinAlg::SerialDenseMatrix* stiffness_matrix);
+          const Core::FE::Discretization& discretization,
+          const SolidPoroPrimaryVariables& primary_variables, Teuchos::ParameterList& params,
+          Core::LinAlg::SerialDenseMatrix* stiffness_matrix);
 
       void poro_setup(
           Mat::StructPoro& porostructmat, const Core::IO::InputParameterContainer& container);
@@ -62,7 +64,7 @@ namespace Discret
       void coupling_stress_poroelast(const Core::Elements::Element& ele,
           Mat::StructPoro& porostructmat, const Inpar::Solid::KinemType& kinematictype,
           const CouplStressIO& couplingstressIO, const Core::FE::Discretization& discretization,
-          Core::Elements::LocationArray& la, Teuchos::ParameterList& params);
+          const SolidPoroPrimaryVariables& primary_variables, Teuchos::ParameterList& params);
 
 
 

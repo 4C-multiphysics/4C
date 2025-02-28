@@ -9,9 +9,10 @@
 #include "4C_fem_general_cell_type_traits.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_utils_interpolation.hpp"
-#include "4C_mat_structporo.hpp"
+#include "4C_legacy_enum_definitions_element_actions.hpp"
 #include "4C_solid_3D_ele_calc_lib.hpp"
 #include "4C_solid_3D_ele_factory.hpp"
+#include "4C_solid_poro_3D_ele_calc_lib_io.hpp"
 #include "4C_solid_poro_3D_ele_pressure_velocity_based.hpp"
 #include "4C_solid_scatra_3D_ele_factory.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -97,13 +98,15 @@ int Discret::Elements::SolidPoroPressureVelocityBased::evaluate(Teuchos::Paramet
       {
         if (discretization.has_state(1, "fluidvel"))
         {
+          const SolidPoroPrimaryVariables primary_variables =
+              extract_solid_poro_primary_variables(discretization, la, shape());
           std::visit(
               [&](auto& interface)
               {
                 interface->evaluate_nonlinear_force_stiffness(*this, this->struct_poro_material(),
                     this->fluid_poro_material(), this->get_anisotropic_permeability_property(),
-                    this->kinematic_type(), discretization, la, params, &elevec1, &elemat1,
-                    &elemat2);
+                    this->kinematic_type(), discretization, primary_variables, params, &elevec1,
+                    &elemat1, &elemat2);
               },
               solidporo_press_vel_based_calc_variant_);
         }
@@ -125,12 +128,15 @@ int Discret::Elements::SolidPoroPressureVelocityBased::evaluate(Teuchos::Paramet
       {
         if (discretization.has_state(1, "fluidvel"))
         {
+          const SolidPoroPrimaryVariables primary_variables =
+              extract_solid_poro_primary_variables(discretization, la, shape());
           std::visit(
               [&](auto& interface)
               {
                 interface->evaluate_nonlinear_force_stiffness(*this, this->struct_poro_material(),
                     this->fluid_poro_material(), this->get_anisotropic_permeability_property(),
-                    this->kinematic_type(), discretization, la, params, &elevec1, nullptr, nullptr);
+                    this->kinematic_type(), discretization, primary_variables, params, &elevec1,
+                    nullptr, nullptr);
               },
               solidporo_press_vel_based_calc_variant_);
         }
@@ -152,13 +158,15 @@ int Discret::Elements::SolidPoroPressureVelocityBased::evaluate(Teuchos::Paramet
       {
         if (discretization.has_state(1, "fluidvel"))
         {
+          const SolidPoroPrimaryVariables primary_variables =
+              extract_solid_poro_primary_variables(discretization, la, shape());
           std::visit(
               [&](auto& interface)
               {
                 interface->evaluate_nonlinear_force_stiffness(*this, this->struct_poro_material(),
                     this->fluid_poro_material(), this->get_anisotropic_permeability_property(),
-                    this->kinematic_type(), discretization, la, params, &elevec1, &elemat1,
-                    nullptr);
+                    this->kinematic_type(), discretization, primary_variables, params, &elevec1,
+                    &elemat1, nullptr);
               },
               solidporo_press_vel_based_calc_variant_);
         }
@@ -187,12 +195,14 @@ int Discret::Elements::SolidPoroPressureVelocityBased::evaluate(Teuchos::Paramet
     {
       if (discretization.has_state(1, "fluidvel"))
       {
+        const SolidPoroPrimaryVariables primary_variables =
+            extract_solid_poro_primary_variables(discretization, la, shape());
         std::visit(
             [&](auto& interface)
             {
               interface->evaluate_nonlinear_force_stiffness_od(*this, this->struct_poro_material(),
                   this->fluid_poro_material(), this->get_anisotropic_permeability_property(),
-                  this->kinematic_type(), discretization, la, params, &elemat1);
+                  this->kinematic_type(), discretization, primary_variables, params, &elemat1);
             },
             solidporo_press_vel_based_calc_variant_);
       }
@@ -237,14 +247,16 @@ int Discret::Elements::SolidPoroPressureVelocityBased::evaluate(Teuchos::Paramet
 
       if (discretization.has_state(1, "fluidvel"))
       {
+        const SolidPoroPrimaryVariables primary_variables =
+            extract_solid_poro_primary_variables(discretization, la, shape());
         std::visit(
             [&](auto& interface)
             {
               interface->coupling_stress_poroelast(*this, this->struct_poro_material(),
                   this->kinematic_type(),
-                  CouplStressIO{
-                      get_io_couplstress_type(*this, params), get_couplstress_data(*this, params)},
-                  discretization, la, params);
+                  CouplStressIO{.type = get_io_couplstress_type(*this, params),
+                      .mutable_data = get_couplstress_data(*this, params)},
+                  discretization, primary_variables, params);
             },
             solidporo_press_vel_based_calc_variant_);
       }
