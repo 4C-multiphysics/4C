@@ -56,12 +56,11 @@ AZOUTPUT                        0
 AZSOLVE                         GMRES
 AZPREC                          ILU
 AZREUSE                         20
-IFPACKGFILL                     0
 AZTOL                           1.0E-10
 AZCONV                          AZ_r0
 AZITER                          500
 AZSUB                           200
-IFPACKOVERLAP                   0
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 -------------------------------------------------------------------MATERIALS
 MAT 1 MAT_ion DIFFUSIVITY 0.0006666666666 VALENCE +0.0
 MAT 2 MAT_ion DIFFUSIVITY 0.0005 VALENCE +1.0 DENSIFICATION 0.0 ELIM_DIFFUSIVITY 0.001 ELIM_VALENCE -1.0
