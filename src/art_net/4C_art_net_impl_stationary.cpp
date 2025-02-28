@@ -48,7 +48,20 @@ Arteries::ArtNetImplStationary::ArtNetImplStationary(
     Core::IO::DiscretizationWriter& output)
     : TimInt(actdis, linsolvernumber, probparams, artparams, output)
 {
-  //  exit(1);
+  const int restart_step = Global::Problem::instance()->restart();
+  if (restart_step > 0)
+  {
+    FourC::Core::IO::DiscretizationReader reader(
+        discret_, Global::Problem::instance()->input_control_file(), restart_step);
+
+    time_ = reader.read_double("time");
+  }
+
+  visualization_writer_ = std::make_unique<Core::IO::DiscretizationVisualizationWriterMesh>(
+      actdis, Core::IO::visualization_parameters_factory(
+                  Global::Problem::instance()->io_params().sublist("RUNTIME VTK OUTPUT"),
+                  *Global::Problem::instance()->output_control_file(), time_));
+
 
 }  // ArtNetImplStationary::ArtNetImplStationary
 
@@ -460,6 +473,42 @@ void Arteries::ArtNetImplStationary::prepare_time_loop()
   return;
 }
 
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void Arteries::ArtNetImplStationary::collect_runtime_output_data()
+{
+  // write domain decomposition for visualization (only once at step 0!)
+  if (step_ == upres_ or step_ == 0) visualization_writer_->append_element_owner("Owner");
+
+  // radius
+  get_radius();
+
+  visualization_writer_->append_result_data_vector_with_context(
+      *ele_radius_, Core::IO::OutputEntity::element, {"ele_radius"});
+
+  // "pressure in the arteries" vector
+  visualization_writer_->append_result_data_vector_with_context(
+      *pressurenp_, Core::IO::OutputEntity::dof, {"pressure"});
+
+  // flow
+  reconstruct_flow();
+
+  visualization_writer_->append_result_data_vector_with_context(
+      *ele_volflow_, Core::IO::OutputEntity::element, {"ele_volflow"});
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void Arteries::ArtNetImplStationary::output_restart()
+{
+  // step number and time (only after that data output is possible)
+  output_.new_step(step_, time_);
+
+  // solution
+  output_.write_vector("one_d_artery_pressure", pressurenp_);
+  output_.write_vector("ele_radius", ele_radius_, Core::IO::elementvector);
+}
+
 //<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
 //<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
 //<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
@@ -476,30 +525,18 @@ void Arteries::ArtNetImplStationary::output(
   TEUCHOS_FUNC_TIME_MONITOR("             + output of solution");
 
   // solution output and potentially restart data
-  if (do_output())
+  if (step_ % upres_ == 0)
   {
-    // step number and time (only after that data output is possible)
-    output_.new_step(step_, time_);
+    visualization_writer_->reset();
 
-    // write domain decomposition for visualization (only once at step "upres"!)
-    // and element radius
-    if (step_ == upres_ or step_ == 0)
-    {
-      output_.write_element_data(true);
-    }
-    // for variable radius, we need the output of the radius at every time step
-    output_radius();
+    collect_runtime_output_data();
 
-    // "pressure in the arteries" vector
-    output_.write_vector("one_d_artery_pressure", pressurenp_);
-
-    // output of flow
-    output_flow();
-
-    if (solvescatra_) scatra_->scatra_field()->check_and_write_output_and_restart();
+    visualization_writer_->write_to_disk(time_, step_);
   }
 
-  return;
+  if (solvescatra_) scatra_->scatra_field()->check_and_write_output_and_restart();
+
+  if (step_ % uprestart_ == 0 and step_ != 0) output_restart();
 }
 
 //<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
@@ -511,7 +548,7 @@ void Arteries::ArtNetImplStationary::output(
 //<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
 //<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
 //<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-void Arteries::ArtNetImplStationary::output_radius()
+void Arteries::ArtNetImplStationary::get_radius()
 {
   // loop over row elements
   const int numrowele = discret_->num_my_row_elements();
@@ -526,11 +563,6 @@ void Arteries::ArtNetImplStationary::output_radius()
     const double radius = arterymat->diam() / 2.0;
     ele_radius_->ReplaceGlobalValue(actele->id(), 0, radius);
   }
-
-  // write the output
-  output_.write_vector("ele_radius", ele_radius_, Core::IO::elementvector);
-
-  return;
 }
 
 //<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
@@ -542,7 +574,7 @@ void Arteries::ArtNetImplStationary::output_radius()
 //<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
 //<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
 //<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-void Arteries::ArtNetImplStationary::output_flow()
+void Arteries::ArtNetImplStationary::reconstruct_flow()
 {
   Core::LinAlg::SerialDenseMatrix dummyMat;
   Core::LinAlg::SerialDenseVector dummyVec;
@@ -570,11 +602,6 @@ void Arteries::ArtNetImplStationary::output_flow()
     int err = ele_volflow_->ReplaceMyValue(i, 0, flowVec(0));
     if (err != 0) FOUR_C_THROW("ReplaceMyValue failed with error code %d!", err);
   }
-
-  // write the output
-  output_.write_vector("ele_volflow", ele_volflow_, Core::IO::elementvector);
-
-  return;
 }
 
 //<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
