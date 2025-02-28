@@ -105,29 +105,29 @@ SRC_FIELD fluid SRC_MAT 2 TAR_FIELD ale TAR_MAT 1
 COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME -t*t
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 // fluid_inflow_nodes
-E 1 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // fluid_fsi_nodes
-E 2 NUMDOF 4 ONOFF 0 0 0 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 0 0 0 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // struct_dry_nodes
-E 3 NUMDOF 3 ONOFF 1 1 1 VAL 1.0 0.0 0.0 FUNCT 1 0 0
+E 3 NUMDOF 3 ONOFF 1 1 1 VAL 1.0 0.0 0.0 FUNCT 1 none none
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 // fluid_inflow_surf
-E 1 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // fluid_fsi_surf
-E 2 NUMDOF 4 ONOFF 0 0 0 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 0 0 0 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // struct_dry_surf
-E 3 NUMDOF 3 ONOFF 1 1 1 VAL 1.0 0.0 0.0 FUNCT 1 0 0
+E 3 NUMDOF 3 ONOFF 1 1 1 VAL 1.0 0.0 0.0 FUNCT 1 none none
 ------------------------------------------------DESIGN VOL DIRICH CONDITIONS
 // fluid_vol
-E 1 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // struct_vol
-E 2 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -------------------------------------------DESIGN SURF ALE DIRICH CONDITIONS
 // fluid_inflow_surf
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 --------------------------------------------DESIGN VOL ALE DIRICH CONDITIONS
 // fluid_vol
-E 1 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------DESIGN FSI COUPLING SURF CONDITIONS
 // fluid_fsi_surf
 E 2 coupling_id 1

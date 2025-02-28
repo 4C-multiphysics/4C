@@ -82,17 +82,17 @@ VARIABLE 0 NAME a TYPE linearinterpolation NUMPOINTS 4 TIMES 0 2 3 1000 VALUES 0
 E 2 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 1 1 1 1 1 TYPE Live
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 // d3_xyz
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // d6_px_yz
-E 2 NUMDOF 3 ONOFF 0 0 0 VAL 1.0 0.0 0.0 FUNCT 1 0 0
+E 2 NUMDOF 3 ONOFF 0 0 0 VAL 1.0 0.0 0.0 FUNCT 1 none none
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // d2_xz
-E 1 NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // d5_px_z
-E 2 NUMDOF 3 ONOFF 0 0 0 VAL 1.0 0.0 0.0  FUNCT 1 0 0
+E 2 NUMDOF 3 ONOFF 0 0 0 VAL 1.0 0.0 0.0  FUNCT 1 none none
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // d1_x
-E 1 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------------DNODE-NODE TOPOLOGY
 NODE    9 DNODE 1
 NODE    23 DNODE 2

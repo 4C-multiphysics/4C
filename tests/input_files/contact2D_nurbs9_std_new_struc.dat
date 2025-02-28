@@ -78,7 +78,7 @@ NAME                            Contact_Solver
 SOLVER                          UMFPACK
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
 E 6 NUMDOF 2 ONOFF 1 1 VAL -0.3 -0.31 FUNCT 2 1
-E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 -----------------------------------DESIGN LINE MORTAR CONTACT CONDITIONS 2D
 E 2 InterfaceID 1 Side Slave
 E 5 InterfaceID 1 Side Master

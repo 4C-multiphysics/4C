@@ -76,13 +76,13 @@ SOLVER                          UMFPACK
 NAME                            Contact_Solver
 SOLVER                          UMFPACK
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
-// E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
-// E 2 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
-// E 3 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
-// E 4 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+// E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+// E 2 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
+// E 3 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
+// E 4 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
-E 6 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.31 FUNCT 0 1
-E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 6 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.31 FUNCT none 1
+E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 -----------------------------------DESIGN LINE MORTAR COUPLING CONDITIONS 2D
 E 2 InterfaceID 1 Side Slave Initialization Active
 E 5 InterfaceID 1 Side Master Initialization Inactive

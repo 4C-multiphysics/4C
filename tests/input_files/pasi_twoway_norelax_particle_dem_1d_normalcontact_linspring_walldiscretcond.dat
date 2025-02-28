@@ -73,7 +73,7 @@ STRUCTURE DIS structure NODE 29 QUANTITY dispz VALUE -3.03504384541714587e-03 TO
 -------------------------------------------------------------------PARTICLES
 TYPE phase1 POS 0.0 0.0 0.5
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ------------------------------------------------DESIGN SURFACE PARTICLE WALL
 E 1 MAT -1
 ---------------------------------------------------------DNODE-NODE TOPOLOGY

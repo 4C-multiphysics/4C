@@ -72,18 +72,18 @@ COMPONENT 2 SYMBOLIC_FUNCTION_OF_SPACE_TIME atan(x/y)
 ----------------------------------------------------------------------FUNCT2
 COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME exp(-(t/(101*365.25)))-0.5*(1.0-exp(-(t/40.0)))*exp(-0.5*(100*(fabs(z)-0.09))^2)
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
-E 3 NUMDOF 3 ONOFF 1 0 0 VAL -13332.2668 0.0 0.0 FUNCT 0 0 0 TYPE orthopressure
+E 3 NUMDOF 3 ONOFF 1 0 0 VAL -13332.2668 0.0 0.0 FUNCT none none none TYPE orthopressure
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
-E 4 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
-E 6 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 4 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 6 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------------DESIGN SURF LOCSYS CONDITIONS
-E 4 ROTANGLE 0.0 0.0 -1.0 FUNCT 0 0 1 USEUPDATEDNODEPOS 0 USECONSISTENTNODENORMAL 0
+E 4 ROTANGLE 0.0 0.0 -1.0 FUNCT none none 1 USEUPDATEDNODEPOS 0 USECONSISTENTNODENORMAL 0
 -------------------------------------------------RESULT DESCRIPTION
 STRUCTURE DIS structure NODE 1261 QUANTITY dispy VALUE -1.81062707843393771e-04 TOLERANCE 1e-8
 ---------------------------------------------------------DNODE-NODE TOPOLOGY

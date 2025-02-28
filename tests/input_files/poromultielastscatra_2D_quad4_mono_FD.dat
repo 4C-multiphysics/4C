@@ -154,13 +154,13 @@ SCATRA DIS scatra NODE 3 QUANTITY phi2 VALUE 4.93380166615507598e-01 TOLERANCE 1
 E 1 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.1 0.2 0.3 0.7 FUNCT 4 4 4 4
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // curve_left
-E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 -------------------------------------DESIGN LINE TRANSPORT DIRICH CONDITIONS
 // curve_left
-E 1 NUMDOF 2 ONOFF 1 1  VAL 0.75 0.5 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 1  VAL 0.75 0.5 FUNCT none none
 --------------------------------DESIGN LINE PORO DIRICH CONDITIONS
 // curve_right
-E 2 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.1 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.1 0.0 0.0 0.0 FUNCT none none none none
 -----------------------------------------------DLINE-NODE TOPOLOGY
 NODE    5 DLINE 1
 NODE    6 DLINE 1

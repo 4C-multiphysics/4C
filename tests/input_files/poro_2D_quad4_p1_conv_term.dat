@@ -109,29 +109,29 @@ FLUID DIS porofluid NODE 56 QUANTITY pressure VALUE 5.21362051876208682e-02 TOLE
 FLUID DIS porofluid NODE 78 QUANTITY velx VALUE 3.43117476986037201e-02 TOLERANCE 1e-7
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // fluid_inlet
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 1.0 FUNCT 0 0 2
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 1.0 FUNCT none none 2
 // fluid_bot
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 1.0 FUNCT 0 0 2
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 1.0 FUNCT none none 2
 // fluid_outlet
-E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 1.0 FUNCT 0 0 2
+E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 1.0 FUNCT none none 2
 // fluid_top
-E 4 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 1.0 FUNCT 0 0 2
+E 4 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 1.0 FUNCT none none 2
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 1.0 FUNCT 0 0 2
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 1.0 FUNCT none none 2
 -------------------------------DESIGN POINT PORO DIRICH CONDITIONS
 // fluid_inlet_points
-E 1 NUMDOF 4 ONOFF 1 1 0 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 0 2 0
+E 1 NUMDOF 4 ONOFF 1 1 0 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 none 2 none
 // fluid_outlet_points
-E 2 NUMDOF 4 ONOFF 1 0 0 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 2 0
+E 2 NUMDOF 4 ONOFF 1 0 0 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none 2 none
 --------------------------------DESIGN LINE PORO DIRICH CONDITIONS
 // fluid_inlet
-E 1 NUMDOF 4 ONOFF 1 1 0 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 0 0 0
+E 1 NUMDOF 4 ONOFF 1 1 0 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 none none none
 // fluid_bot
-E 2 NUMDOF 4 ONOFF 1 1 0 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 0 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // fluid_top
-E 4 NUMDOF 4 ONOFF 1 1 0 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 4 NUMDOF 4 ONOFF 1 1 0 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // fluid_outlet
-E 3 NUMDOF 4 ONOFF  0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 3 NUMDOF 4 ONOFF  0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 ------------------------------DESIGN SURF INITIAL FIELD CONDITIONS
 E 1 FIELD Porosity FUNCT 2
 -----------------------------DESIGN SURFACE POROCOUPLING CONDITION

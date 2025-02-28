@@ -40,8 +40,8 @@ MAXITER                         25
 NAME                            Structure_Solver
 SOLVER                          UMFPACK
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
-E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ---------------------------------------------DESIGN POINT NEUMANN CONDITIONS
 E 2 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.05 0.0 0.0 0.0 FUNCT 1 1 1 1 1 1 TYPE Live
 ---------------------------------------------------------DNODE-NODE TOPOLOGY

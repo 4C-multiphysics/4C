@@ -34,13 +34,13 @@ VARIABLE 0 NAME a TYPE linearinterpolation NUMPOINTS 3 TIMES 0 1 1000 VALUES 0 1
 STRUCTURE DIS structure NODE 4 QUANTITY dispx VALUE 1.39666561801065792e-01 TOLERANCE 1e-8
 ------------------------------------DESIGN LINE NEUMANN CONDITIONS
 // curvex+_dirich
-E 2 NUMDOF 3 ONOFF 1 0 0 VAL 10.0 0.0 0.0 FUNCT 1 0 0
+E 2 NUMDOF 3 ONOFF 1 0 0 VAL 10.0 0.0 0.0 FUNCT 1 none none
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // curvex-_dirich
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // surfacexy
-E 1 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------------DLINE-NODE TOPOLOGY
 NODE    5 DLINE 1
 NODE    6 DLINE 1

@@ -194,9 +194,9 @@ SCATRA DIS scatra SPECIAL true QUANTITY numiterlastnewton VALUE 3 TOLERANCE 1.0e
 // SCATRA DIS scatra NODE 1 QUANTITY phi8 VALUE 1.353352832e+00 TOLERANCE 1e-9 //=c_0*exp(-2*T_end)
 // SCATRA DIS scatra NODE 1 QUANTITY phi9 VALUE 2.694040794e+00 TOLERANCE 1e-9 //=-3/2-3/2*ln(10/3)+5+c_0
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------DESIGN SURF PORO DIRICH CONDITIONS
-E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 ----------------------------------------DESIGN VOLUME POROCOUPLING CONDITION
 E 1
 -----------------------------------------------DSURF-NODE TOPOLOGY

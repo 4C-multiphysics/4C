@@ -77,7 +77,7 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME  t*t
 ------------------------------------------------------------------FUNCT6
 COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME 0.2*t
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
-E 1 NUMDOF 1 ONOFF 1 VAL 0 FUNCT 0
+E 1 NUMDOF 1 ONOFF 1 VAL 0 FUNCT none
 -----------------------------------------------DLINE-NODE TOPOLOGY
 NODE    1 DLINE 1
 NODE    4 DLINE 1

@@ -90,24 +90,24 @@ COMPONENT 3 SYMBOLIC_FUNCTION_OF_SPACE_TIME 0
 COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME -y
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
 //                              outflow
-E 2 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 0.0 2.0 0.0 0.0 0.0 0.0 FUNCT 0 2 0 0 0 0 TYPE Live
+E 2 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 0.0 2.0 0.0 0.0 0.0 0.0 FUNCT none 2 none none none none TYPE Live
 -----------------------------------------------DESIGN VOL NEUMANN CONDITIONS
 //                              inflow
-E 2 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 2.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 TYPE Dead
+E 2 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 2.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none TYPE Dead
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 // turbulent inflow
-E 1 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 // turbulent inflow
-E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // upper wall outflow
-E 3 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 3 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // lower wall outflow
-E 4 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 4 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // upper wall inflow
-E 7 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 7 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // lower wall inflow
-E 8 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 8 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 ------------------------------------DESIGN SURF PERIODIC BOUNDARY CONDITIONS
 // outflow periodic boundary
 E 5 ID 3 MASTER_OR_SLAVE Slave PLANE xy LAYER 1 ANGLE 0.0 ABSTREETOL 1e-9

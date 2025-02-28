@@ -102,13 +102,13 @@ MAT 2 MAT_BeamReissnerElastHyper YOUNG 100.0 POISSONRATIO 0.0 DENS 0.0 CROSSAREA
 SYMBOLIC_FUNCTION_OF_SPACE_TIME t
 --------------------------------------------------DESIGN POINT DIRICH CONDITIONS
 // point_fix
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT none none none
 ---------------------------------------------------DESIGN SURF DIRICH CONDITIONS
 // surf_fix
-E 1 NUMDOF 3 ONOFF 1 1 0 VAL 0 0 0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 0 VAL 0 0 0 FUNCT none none none
 ----------------------------------------------------DESIGN VOL DIRICH CONDITIONS
 // all_vol
-E 1 NUMDOF 3 ONOFF 1 0 0 VAL 0 0 0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 0 0 VAL 0 0 0 FUNCT none none none
 --------------------------------------------------DESIGN LINE NEUMANN CONDITIONS
 E 1 NUMDOF 9 ONOFF 0 0 0 1 0 0 0 0 0 VAL 0 0 0 0.01 0 0 0 0 0 FUNCT 1 1 1 1 1 1 1 1 1
 ----------------------------BEAM INTERACTION/BEAM TO SOLID VOLUME MESHTYING LINE

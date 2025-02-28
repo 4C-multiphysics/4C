@@ -50,12 +50,12 @@ MAXITER                          20
 NAME                             Structure_Solver
 SOLVER                           UMFPACK
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 6 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 1.0 FUNCT 0 0 3
-E 5 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
-E 4 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 1.0 0.0 FUNCT 0 2 0
-E 2 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
-E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
-E 3 NUMDOF 3 ONOFF 1 0 0 VAL 1.0 0.0 0.0 FUNCT 1 0 0
+E 6 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 1.0 FUNCT none none 3
+E 5 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 4 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 1.0 0.0 FUNCT none 2 none
+E 2 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 3 NUMDOF 3 ONOFF 1 0 0 VAL 1.0 0.0 0.0 FUNCT 1 none none
 ----------------------------------------------------------------------FUNCT1
 COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME a
 VARIABLE 0 NAME a TYPE linearinterpolation NUMPOINTS 2 TIMES 0 1.0 VALUES 0 -0.5

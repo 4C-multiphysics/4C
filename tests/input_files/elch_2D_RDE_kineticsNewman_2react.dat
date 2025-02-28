@@ -106,7 +106,7 @@ SCATRA DIS scatra SPECIAL true QUANTITY meaneta VALUE -2.36265020983621093e-01 T
 SCATRA DIS scatra SPECIAL true QUANTITY meancur VALUE -5.95032827797435313e-02 TOLERANCE 1e-11
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
 //                              right_electrode
-E 2 NUMDOF 7 ONOFF 1 1 1 1 1 1 1 VAL 9.95 0.1 5.0 5.0 1000 985 0.0 FUNCT 0 0 0 0 0 0 0
+E 2 NUMDOF 7 ONOFF 1 1 1 1 1 1 1 VAL 9.95 0.1 5.0 5.0 1000 985 0.0 FUNCT none none none none none none none
 ---------------------------------ELECTRODE BOUNDARY KINETICS LINE CONDITIONS
 //                              left_electrode
 E 1 ConditionID 0 POT -1.0 FUNCT 3 NUMSCAL 6 STOICH -1 1 0 0 0 0  E- 1 EPSILON -1 ZERO_CUR 0 KINETIC_MODEL Butler-Volmer-Newman K_A 1.0312e-1 K_C 1.0364e-3 BETA 0.5 DL_SPEC_CAP 0.0

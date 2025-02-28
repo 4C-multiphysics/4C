@@ -143,7 +143,7 @@ FLUID DIS fluid NODE 567 QUANTITY pressure VALUE -7.51606624356906394e-01 TOLERA
 E 1 NUMDOF 4 ONOFF 1 1 1 1 VAL 1.0 1.0 1.0 1.0 FUNCT 1 1 1 2
 ---------------------------------DESIGN SURF ALE DIRICH CONDITIONS
 // outer_domain_outer_boundary
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // inner_domain_inner_boundary
 E 2 NUMDOF 3 ONOFF 1 1 1 VAL 1.0 2.0 3.0 FUNCT 3 3 3
 -------------------------DESIGN SURF MORTAR COUPLING CONDITIONS 3D

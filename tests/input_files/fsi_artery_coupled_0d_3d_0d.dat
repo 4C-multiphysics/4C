@@ -74,18 +74,18 @@ SYMBOLIC_FUNCTION_OF_TIME a
 VARIABLE 0 NAME a TYPE multifunction NUMPOINTS 3 TIMES 0.0 1.0 100.0 DESCRIPTION  0.5*(1.0-cos(2.0*t*pi/2.0)) -1.0*cos(2.0*t*pi/2.0)
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // fluid_inflow_ring_NoDBC_slave
-E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // fluid_outflow_ring_NoDBC_slave
-E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // struct_inflow_inner_NoDBC_slave
-E 3 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // struct_outflow_inner_NoDBC_slave
-E 4 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 4 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // structure_inflow_surf
-E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // structure_outflow_surf
-E 4 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 4 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ------------------------------FLUID NEUMANN INFLOW SURF CONDITIONS
 // fluid_inflow_surf
 E 1
@@ -120,8 +120,8 @@ E 1 ConditionID 1 ReturnedVariable flow Tolerance 0.001 MaximumIterations 10
 // fluid_outflow_surf
 E 2 ConditionID 2 ReturnedVariable flow Tolerance 0.001 MaximumIterations 10
 -------------------------------------------DESIGN SURF ALE DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------------DNODE-NODE TOPOLOGY
 NODE 7931 DNODE 1
 NODE 7956 DNODE 2

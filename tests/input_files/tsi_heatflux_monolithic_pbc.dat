@@ -134,10 +134,10 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME 273.0
 COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME (2.0)*(z-4)+4 // some linear function in z-direction
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // inner_volume_nodes
-E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // clamping_surface_base
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 --------------------------DESIGN SURF PERIODIC BOUNDARY CONDITIONS
 // pbc_slave_side_neg_z
 E 3 ID 1 MASTER_OR_SLAVE Slave PLANE xy LAYER 1 ANGLE 0.0 ABSTREETOL 1e-9

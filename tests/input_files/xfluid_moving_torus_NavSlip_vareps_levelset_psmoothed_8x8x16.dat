@@ -152,26 +152,26 @@ XFLUID DIS fluid NODE 4157 QUANTITY velz VALUE  5.50400261322268256e-02 TOLERANC
 XFLUID DIS fluid NODE 4157 QUANTITY pressure VALUE  7.80961987147566622e-02 TOLERANCE 1e-9
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 // surface top
-E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // surface bottom
-E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // surface inflow
-E 3 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 3 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // surface outflow
-E 4 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 4 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // surface front
-//E 5 - NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+//E 5 - NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // surface back
-E 6 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 6 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 -----------------------------DESIGN XFEM LEVELSET NAVIER SLIP VOL CONDITIONS
 E 1 COUPLINGID 1 LEVELSETFIELDNO 1 BOOLEANTYPE none COMPLEMENTARY false SURFACE_PROJECTION proj_smoothed L2_PROJECTION_SOLVER 3 ROBIN_DIRICHLET_ID 1 ROBIN_NEUMANN_ID 0 SLIPCOEFFICIENT 1.0 FUNCT 3
 ------------------------------------DESIGN XFEM ROBIN NEUMANN VOL CONDITIONS
-E 1 ROBIN_ID 1 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 ROBIN_ID 1 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 ----------------------------------DESIGN XFEM ROBIN DIRICHLET VOL CONDITIONS
 //Corresponding velocity function
 E 1 ROBIN_ID 1 NUMDOF 3 ONOFF 1 1 1 VAL 1.0 1.0 1.0 FUNCT 2 2 2
 //Zero velocity (i.e. only testing cut and if XFEM-CFL condition)
-//E 1 - ROBIN_ID 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+//E 1 - ROBIN_ID 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ---------------------------------------------------------DNODE-NODE TOPOLOGY
 CORNER fluid x- y- z+ DNODE 1
 CORNER fluid x- y- z- DNODE 2

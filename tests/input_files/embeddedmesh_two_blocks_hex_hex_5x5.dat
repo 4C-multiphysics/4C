@@ -67,16 +67,16 @@ E 4 COUPLINGID 1
 ---------------------------------DESIGN EMBEDDED SOLID VOL BACKGROUND CONDITIONS
 E 1 COUPLINGID 1
 --------------------------------------------------DESIGN POINT DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT none none none
 ---------------------------------------------------DESIGN LINE DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 0 1 VAL 0 0 0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 0 1 VAL 0 0 0 FUNCT none none none
 ---------------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0 0 0 FUNCT 0 0 0
-E 2 NUMDOF 3 ONOFF 0 1 0 VAL 0 0 0 FUNCT 0 0 0
-E 3 NUMDOF 3 ONOFF 1 0 0 VAL 0 0 0 FUNCT 0 0 0
-E 5 NUMDOF 3 ONOFF 0 0 1 VAL 0 0 -0.1 FUNCT 0 0 0
-E 6 NUMDOF 3 ONOFF 0 1 0 VAL 0 0 0 FUNCT 0 0 0
-E 7 NUMDOF 3 ONOFF 1 0 0 VAL 0 0 0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0 0 0 FUNCT none none none
+E 2 NUMDOF 3 ONOFF 0 1 0 VAL 0 0 0 FUNCT none none none
+E 3 NUMDOF 3 ONOFF 1 0 0 VAL 0 0 0 FUNCT none none none
+E 5 NUMDOF 3 ONOFF 0 0 1 VAL 0 0 -0.1 FUNCT none none none
+E 6 NUMDOF 3 ONOFF 0 1 0 VAL 0 0 0 FUNCT none none none
+E 7 NUMDOF 3 ONOFF 1 0 0 VAL 0 0 0 FUNCT none none none
 -------------------------------------------------------------DNODE-NODE TOPOLOGY
 NODE    347 DNODE 1
 -------------------------------------------------------------DLINE-NODE TOPOLOGY

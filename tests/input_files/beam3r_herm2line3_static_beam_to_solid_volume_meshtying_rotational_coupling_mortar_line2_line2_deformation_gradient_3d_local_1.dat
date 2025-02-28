@@ -108,7 +108,7 @@ MAT 2 MAT_BeamReissnerElastHyper YOUNG 10.0 POISSONRATIO 0.0 DENS 0.0 CROSSAREA 
 SYMBOLIC_FUNCTION_OF_TIME t
 --------------------------------------------------DESIGN POINT DIRICH CONDITIONS
 // fix_surf
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT 0 0 0 TAG monitor_reaction
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT none none none TAG monitor_reaction
 -------------------------------------------------DESIGN POINT NEUMANN CONDITIONS
 E 2 NUMDOF 9 ONOFF 0 0 0 1 1 1 0 0 0 VAL 0 0 0 0.005 0.005 0.0075 0 0 0 FUNCT 1 1 1 1 1 1 1 1 1
 ----------------------------BEAM INTERACTION/BEAM TO SOLID VOLUME MESHTYING LINE

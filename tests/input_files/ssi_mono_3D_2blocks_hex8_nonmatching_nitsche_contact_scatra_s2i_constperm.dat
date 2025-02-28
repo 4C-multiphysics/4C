@@ -85,9 +85,9 @@ STRUCTURE DIS structure NODE 74 QUANTITY dispx VALUE -4.90983231022621355e-02 TO
 SSI SPECIAL true QUANTITY numiterlastnonlinearsolve VALUE  4.00000000000000000e+00 TOLERANCE 1.0e-16
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // left_block_normal_x
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // right_block_normal_x
-E 4 NUMDOF 3 ONOFF 1 1 1 VAL -1.0e-1 0.0 0.0 FUNCT 3 0 0
+E 4 NUMDOF 3 ONOFF 1 1 1 VAL -1.0e-1 0.0 0.0 FUNCT 3 none none
 -------------------------------DESIGN VOL INITIAL FIELD CONDITIONS
 // left_block
 E 1 FIELD ScaTra FUNCT 1

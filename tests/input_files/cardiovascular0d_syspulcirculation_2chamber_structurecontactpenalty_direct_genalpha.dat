@@ -197,9 +197,9 @@ STRUCTURE DIS structure NODE 77 QUANTITY dispx VALUE 6.48785530297677582e+00 TOL
 E 10 NUMDOF 3 ONOFF 1 0 0 VAL -1.0 0.0 0.0  FUNCT 4 4 4 TYPE orthopressure
 E 11 NUMDOF 3 ONOFF 1 0 0 VAL -1.0 0.0 0.0  FUNCT 5 5 5 TYPE orthopressure
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0  FUNCT 0 0 0
-E 10 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0  FUNCT 0 0 0
-E 11 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0  FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0  FUNCT none none none
+E 10 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0  FUNCT none none none
+E 11 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0  FUNCT none none none
 --------------------------DESIGN SURF MORTAR CONTACT CONDITIONS 3D
 E 12 InterfaceID 1 Side Master Initialization Inactive FrCoeffOrBound 0.0
 E 13 InterfaceID 1 Side Slave Initialization Inactive FrCoeffOrBound 0.0

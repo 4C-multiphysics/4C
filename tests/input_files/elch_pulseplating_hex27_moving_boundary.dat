@@ -130,18 +130,18 @@ ALE DIS ale NODE 1 QUANTITY dispy VALUE 2.07236784683175871e-05 TOLERANCE 1e-14
 ALE DIS ale NODE 1 QUANTITY dispz VALUE 0.00000000000000000e+00 TOLERANCE 1e-16
 ALE DIS ale NODE 28 QUANTITY dispy VALUE 2.02931945345120346e-05 TOLERANCE 1e-14
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 4 ONOFF 1 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 1 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 ------------------------------------------------DESIGN VOL DIRICH CONDITIONS
-E 1 NUMDOF 4 ONOFF 1 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 1 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // no velocity in x and z-direction at all nodes!!!
 -------------------------------------------DESIGN SURF ALE DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 --------------------------------------------DESIGN VOL ALE DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // no ALE-displacement in x and z-direction at all nodes!!!
 -------------------------------------DESIGN SURF TRANSPORT DIRICH CONDITIONS
 //                              anode
-E 1 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.348 2.408 4.12 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.348 2.408 4.12 0.0 FUNCT none none none none
 -----------------------------------------DESIGN FSI COUPLING SURF CONDITIONS
 E 2 coupling_id 1
 ---------------------------------ELECTRODE BOUNDARY KINETICS SURF CONDITIONS

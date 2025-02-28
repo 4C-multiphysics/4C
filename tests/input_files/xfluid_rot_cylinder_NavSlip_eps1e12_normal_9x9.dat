@@ -164,27 +164,27 @@ XFLUID DIS fluid NODE 143 QUANTITY velz VALUE 0.0e00 TOLERANCE 1e-13
 XFLUID DIS fluid NODE 143 QUANTITY pressure VALUE  3.06054348276977445e-02 TOLERANCE 1e-13
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 //                              corners
-E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 //                              pressure_corners
-E 2 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
 //                              left_side
-E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 //                              right_side
-E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 //                              top
-E 3 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 3 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 //                              bottom
-E 4 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 4 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 //                              front_back
-E 1 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 --------------------------DESIGN XFEM LEVELSET NAVIER SLIP VOL CONDITIONS
-E 1 COUPLINGID 1 LEVELSETFIELDNO 2 BOOLEANTYPE none COMPLEMENTARY false SURFACE_PROJECTION proj_normal L2_PROJECTION_SOLVER 3 ROBIN_DIRICHLET_ID 1 ROBIN_NEUMANN_ID 1 SLIPCOEFFICIENT 1e12 FUNCT 0
+E 1 COUPLINGID 1 LEVELSETFIELDNO 2 BOOLEANTYPE none COMPLEMENTARY false SURFACE_PROJECTION proj_normal L2_PROJECTION_SOLVER 3 ROBIN_DIRICHLET_ID 1 ROBIN_NEUMANN_ID 1 SLIPCOEFFICIENT 1e12 FUNCT none
 --------------------------DESIGN XFEM ROBIN NEUMANN VOL CONDITIONS
-E 1 ROBIN_ID 1 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 ROBIN_ID 1 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 --------------------------DESIGN XFEM ROBIN DIRICHLET VOL CONDITIONS
-E 1 ROBIN_ID 1 NUMDOF 3 ONOFF 1 1 1 VAL 1.0 1.0 0.0 FUNCT 4 3 0
+E 1 ROBIN_ID 1 NUMDOF 3 ONOFF 1 1 1 VAL 1.0 1.0 0.0 FUNCT 4 3 none
 ---------------------------------------------------------DNODE-NODE TOPOLOGY
 NODE 1 DNODE 1
 NODE 2 DNODE 1

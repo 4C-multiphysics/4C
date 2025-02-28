@@ -71,7 +71,7 @@ MAT 1 MAT_Fourier CONDUCT_PARA_NUM 1 CAPA 1 CONDUCT 1
 COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME 0.0
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 // left surf Dirich
-E 1 NUMDOF 1 ONOFF 1 VAL 0.0 FUNCT 0
+E 1 NUMDOF 1 ONOFF 1 VAL 0.0 FUNCT none
 ------------------------------------DESIGN THERMO CONVECTION SURF CONDITIONS
 // right surf Neumann convection
 E 3 temperature_state Tempnp coeff -1.0 surtemp 5.0 surtempfunct 0 funct 0

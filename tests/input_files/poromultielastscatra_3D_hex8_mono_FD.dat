@@ -140,13 +140,13 @@ SCATRA DIS scatra NODE 8 QUANTITY phi1 VALUE 7.54368656401847693e-01 TOLERANCE 1
 E 1 NUMDOF 3 ONOFF 1 1 1  VAL 0.1 0.2 0.3 FUNCT 4 4 4
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // leftsurf
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -------------------------------------DESIGN SURF TRANSPORT DIRICH CONDITIONS
 // leftsurf
-E 1 NUMDOF 2 ONOFF 1 1  VAL 0.75 0.5 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 1  VAL 0.75 0.5 FUNCT none none
 --------------------------------DESIGN SURF PORO DIRICH CONDITIONS
 // rightsurf
-E 2 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.1 0.0 0.0 0.0  FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.1 0.0 0.0 0.0  FUNCT none none none none
 -----------------------------------------------DSURF-NODE TOPOLOGY
 NODE    1 DSURFACE 1
 NODE    2 DSURFACE 1

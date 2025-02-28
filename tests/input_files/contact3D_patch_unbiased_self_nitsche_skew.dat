@@ -53,9 +53,9 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME a
 VARIABLE 0 NAME a TYPE linearinterpolation NUMPOINTS 3 TIMES 0.0 1.5 5.0 VALUES 0 0.015 0.015
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // top_dirichlet
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 -1.0 FUNCT 0 0 1
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 -1.0 FUNCT none none 1
 // bottom_dirichlet
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 --------------------------DESIGN SURF MORTAR CONTACT CONDITIONS 3D
 // top_contact
 E 3 InterfaceID 1 Side Selfcontact Initialization Inactive FrCoeffOrBound 0.0 AdhesionBound 0.0 Application Solidcontact DbcHandling DoNothing TwoHalfPass 1 RefConfCheckNonSmoothSelfContactSurface 0

@@ -48,9 +48,9 @@ SOLVER                           UMFPACK
 ----------------------------------------------------------------------FUNCT1
 SYMBOLIC_FUNCTION_OF_SPACE_TIME 0.1*t
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0 0.0 FUNCT none none none
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ---------------------------------------------------------DLINE-NODE TOPOLOGY
 NODE 41 DLINE 1
 NODE 43 DLINE 1

@@ -54,9 +54,9 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME -1.0/2.0*1.0*2.0*2.0/((x*x+y*y)*(x*x
 COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME 1.0*x*2.0*2.0/((x*x+y*y)*(x*x+y*y)*(x*x+y*y)*sqrt(x*x+y*y))*(-5.0*x*x*x*x-2.0*x*x*y*y+3.0*y*y*y*y+6.0*2.0*2.0*x*x-6.0*2.0*2.0*y*y)*sqrt(y*y/(x*x+y*y))
 ------------------------------------DESIGN LINE NEUMANN CONDITIONS
 // neumann_x
-E 3 NUMDOF 6 ONOFF 1 1 0 0 0 0 VAL 1 1 0  0 0 0 FUNCT 1 3 0 0 0 0 TYPE Live
+E 3 NUMDOF 6 ONOFF 1 1 0 0 0 0 VAL 1 1 0  0 0 0 FUNCT 1 3 none none none none TYPE Live
 // neumann_y
-E 4 NUMDOF 6 ONOFF 1 1 0 0 0 0 VAL 1 1 0  0 0 0 FUNCT 3 2 0 0 0 0 TYPE Live
+E 4 NUMDOF 6 ONOFF 1 1 0 0 0 0 VAL 1 1 0  0 0 0 FUNCT 3 2 none none none none TYPE Live
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // sym_y
 E 1 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT none none

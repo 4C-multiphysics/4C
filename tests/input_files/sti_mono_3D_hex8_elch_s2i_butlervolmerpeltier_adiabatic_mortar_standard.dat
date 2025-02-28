@@ -110,9 +110,9 @@ SCATRA DIS scatra SPECIAL true QUANTITY soc2 VALUE 9.58363910056923118e-01 TOLER
 SCATRA DIS scatra SPECIAL true QUANTITY cellvoltage VALUE 3.71638931948830864e+00 TOLERANCE 4.e-09          // cell voltage
 STI SPECIAL true QUANTITY numiterlastnonlinearsolve VALUE 5.0 TOLERANCE 1.e-20                              // number of Newton-Raphson iterations during last time step
 ------------------------------------DESIGN SURF NEUMANN CONDITIONS
-E 6 NUMDOF 2 ONOFF 0 1 VAL 0.0 -2.4586111111e-5 FUNCT 0 0 TYPE Live
+E 6 NUMDOF 2 ONOFF 0 1 VAL 0.0 -2.4586111111e-5 FUNCT none none TYPE Live
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT none none
 -------------------------------DESIGN VOL INITIAL FIELD CONDITIONS
 E 1 FIELD ScaTra FUNCT 1
 E 2 FIELD ScaTra FUNCT 2

@@ -88,13 +88,13 @@ SOLVER                          UMFPACK
 NAME                            Fluid_Solver
 SOLVER                          UMFPACK
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 2.5 0.0 FUNCT 0 0 0 0
-E 4 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 2.5 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 2.5 0.0 FUNCT none none none none
+E 4 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 2.5 0.0 FUNCT none none none none
 -------------------------------------DESIGN LINE TRANSPORT DIRICH CONDITIONS
-E 13 NUMDOF 3 ONOFF 1 1 1 VAL 1.0 1.0 1.0 FUNCT 0 0 3
-E 14 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 1.0 FUNCT 0 0 3
+E 13 NUMDOF 3 ONOFF 1 1 1 VAL 1.0 1.0 1.0 FUNCT none none 3
+E 14 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 1.0 FUNCT none none 3
 -------------------------------------DESIGN SURF TRANSPORT DIRICH CONDITIONS
-E 7 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 1.0 FUNCT 0 0 3
+E 7 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 1.0 FUNCT none none 3
 ---------------------------------------------------------DNODE-NODE TOPOLOGY
 NODE 643 DNODE 1
 NODE 1 DNODE 2

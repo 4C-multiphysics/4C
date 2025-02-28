@@ -109,13 +109,13 @@ POROFLUIDMULTIPHASE DIS porofluid NODE 2144 QUANTITY saturation2 VALUE  1.920961
 E 1 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.1 0.2 0.3 0.7 FUNCT 2 2 2 2
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // leftsurf
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 --------------------------------------DESIGN VOL DIRICH CONDITIONS
 // designvol
-E 1 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 --------------------------------DESIGN SURF PORO DIRICH CONDITIONS
 // rightsurf
-E 2 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.1 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.1 0.0 0.0 0.0 FUNCT none none none none
 -----------------------------------------------DSURF-NODE TOPOLOGY
 NODE 2479 DSURFACE 1
 NODE 2375 DSURFACE 1

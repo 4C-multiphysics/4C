@@ -74,21 +74,21 @@ COMPONENT 3 SYMBOLIC_FUNCTION_OF_SPACE_TIME 0.0 // pressure
 COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME -10.0*y*0.1
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
 // surface outflow
-E 4 NUMDOF 4 ONOFF 1 1 1 0 VAL 3.0 1.0 0.0 0.0 FUNCT 0 2 0 0 TYPE Live
+E 4 NUMDOF 4 ONOFF 1 1 1 0 VAL 3.0 1.0 0.0 0.0 FUNCT none 2 none none TYPE Live
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
 // top edges side walls
-E 9 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 0 0 0
+E 9 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 none none none
 // bottom edges side walls
-E 10 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 0 0 0
+E 10 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 none none none
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 // surface top
-E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 0 0 0
+E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 none none none
 // surface bottom
-E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 none none none
 // surface front
-E 5 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 5 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // surface back
-E 6 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 6 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 ----------------------------------------------------------RESULT DESCRIPTION
 FLUID DIS fluid NODE 11 QUANTITY velx VALUE 1.11111111111111116e+00 TOLERANCE 1e-12
 FLUID DIS fluid NODE 11 QUANTITY vely VALUE 0.00000000000000000e+00 TOLERANCE 1e-12

@@ -82,9 +82,9 @@ SCATRA DIS scatra SPECIAL true QUANTITY s2inumdof_int1_proc0 VALUE 56.0 TOLERANC
 SCATRA DIS scatra SPECIAL true QUANTITY s2inumdof_int1_proc1 VALUE 52.0 TOLERANCE 1.e-20             // number of degrees of freedom owned by first processor at first scatra-scatra coupling interface
 SCATRA DIS scatra SPECIAL true QUANTITY s2inumdof_int1_proc2 VALUE 58.0 TOLERANCE 1.e-20             // number of degrees of freedom owned by second processor at first scatra-scatra coupling interface
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
-E 6 NUMDOF 2 ONOFF 0 1 VAL 0.0 -5.297831088e-4 FUNCT 0 0 TYPE Live
+E 6 NUMDOF 2 ONOFF 0 1 VAL 0.0 -5.297831088e-4 FUNCT none none TYPE Live
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT none none
 -----------------------------------------DESIGN VOL INITIAL FIELD CONDITIONS
 //
 E 1 FIELD ScaTra FUNCT 1

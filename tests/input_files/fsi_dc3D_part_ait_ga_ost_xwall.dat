@@ -144,126 +144,126 @@ FLUID DIS fluid NODE 145 QUANTITY velz VALUE 3.85473682797438731e-08 TOLERANCE 1
 FLUID DIS fluid NODE 145 QUANTITY pressure VALUE -8.90044509439544794e-03 TOLERANCE 1e-9
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 // cavity_vertex_front_left_bottom
-E 1 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 1 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 // cavity_vertex_back_left_bottom
-E 2 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 2 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 // cavity_vertex_back_right_bottom
-E 3 NUMDOF 8 ONOFF 1 1 1 1 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 3 NUMDOF 8 ONOFF 1 1 1 1 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 // cavity_vertex_front_right_bottom
-E 4 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 4 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 // cavity-inflow_vertex_front_1
-E 5 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 5 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 // cavity-inflow_vertex_front_2
-E 6 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 6 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 // lid_vertex_front_left
-E 7 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 2 0 0 0 0 0 0 0
+E 7 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 2 none none none none none none none
 // lid_vertex_back_left
-E 8 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 2 0 0 0 0 0 0 0
+E 8 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 2 none none none none none none none
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // structure_edge_front_left
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // structure_edge_back_left
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // structure_edge_back_right
-E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // structure_edge_front_right
-E 4 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 4 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // cavity_edge_front_left
-E 5 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 5 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 // cavity_edge_back_left
-E 6 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 6 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 // cavity_edge_back_right
-E 7 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 7 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 // cavity_edge_front_right
-E 8 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 8 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 // cavity_edge_front_bottom
-E 9 NUMDOF 8 ONOFF 0 0 1 0 0 0 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 9 NUMDOF 8 ONOFF 0 0 1 0 0 0 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 // cavity_edge_back_bottom
-E 10 NUMDOF 8 ONOFF 0 0 1 0 0 0 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 10 NUMDOF 8 ONOFF 0 0 1 0 0 0 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 // cavity_edge_left_bottom
-E 11 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 11 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 // cavity_edge_right_bottom
-E 12 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 12 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 // cavity-inflow_edge
-E 13 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 13 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 // inflow_edge_front
-E 14 NUMDOF 8 ONOFF 0 0 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 0 0 0 0 0 0 0
+E 14 NUMDOF 8 ONOFF 0 0 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 none none none none none none none
 // inflow_edge_back
-E 15 NUMDOF 8 ONOFF 0 0 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 0 0 0 0 0 0 0
+E 15 NUMDOF 8 ONOFF 0 0 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 none none none none none none none
 // lid_edge_left
-E 16 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 2 0 0 0 0 0 0 0
+E 16 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 2 none none none none none none none
 // lid_edge_front
-E 17 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 2 0 0 0 0 0 0 0
+E 17 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 2 none none none none none none none
 // lid_edge_back
-E 18 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 2 0 0 0 0 0 0 0
+E 18 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 2 none none none none none none none
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // structure_surface_left
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // structure_surface_right
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // structure_surface_front
-E 3 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // structure_surface_back
-E 4 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 4 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // cavity_wall_left
-E 6 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 6 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 // cavity_wall_right
-E 7 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 7 NUMDOF 8 ONOFF 1 1 1 0 1 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 // fluid_wall_front
-E 8 NUMDOF 8 ONOFF 0 0 1 0 0 0 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 8 NUMDOF 8 ONOFF 0 0 1 0 0 0 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 // fluid_wall_back
-E 9 NUMDOF 8 ONOFF 0 0 1 0 0 0 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 9 NUMDOF 8 ONOFF 0 0 1 0 0 0 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 // lid
-E 11 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 2 0 0 0 0 0 0 0
+E 11 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 2 none none none none none none none
 // inflow
-//E 12 - NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 0 0 0 0 0 0 0
+//E 12 - NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 none none none none none none none
 --------------------------------DESIGN POINT ALE DIRICH CONDITIONS
 // cavity-inflow_vertex_front_1
-E 5 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 5 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // cavity-inflow_vertex_front_2
-E 6 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 6 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // lid_vertex_front_left
-E 7 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 7 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // lid_vertex_back_left
-E 8 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 8 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ---------------------------------DESIGN LINE ALE DIRICH CONDITIONS
 // cavity_edge_front_left
-E 5 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 5 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // cavity_edge_back_left
-E 6 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 6 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // cavity_edge_back_right
-E 7 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 7 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // cavity_edge_front_right
-E 8 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 8 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // cavity_edge_left_bottom
-E 11 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 11 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // cavity_edge_right_bottom
-E 12 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 12 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // cavity-inflow_edge
-E 13 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 13 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // inflow_edge_front
-E 14 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 14 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // inflow_edge_back
-E 15 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 15 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // lid_edge_left
-E 16 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 16 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // lid_edge_front
-E 17 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 17 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // lid_edge_back
-E 18 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 18 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ---------------------------------DESIGN SURF ALE DIRICH CONDITIONS
 // cavity_wall_left
-E 6 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 6 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // cavity_wall_right
-E 7 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 7 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // fluid_wall_front
-E 8 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 8 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // fluid_wall_back
-E 9 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 9 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // lid
-E 11 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 11 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // inflow
-E 12 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 12 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 --------------------------DESIGN SURF PERIODIC BOUNDARY CONDITIONS
 // master_stream
 E 12 ID 1 MASTER_OR_SLAVE Master PLANE yz LAYER 1 ANGLE 0.0 ABSTREETOL 1e-9

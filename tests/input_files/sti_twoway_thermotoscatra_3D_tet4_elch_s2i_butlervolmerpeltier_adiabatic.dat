@@ -83,9 +83,9 @@ SCATRA DIS thermo NODE 452 QUANTITY phi VALUE 3.00355565421319113e+02 TOLERANCE 
 SCATRA DIS thermo SPECIAL true QUANTITY omega1 VALUE 1.00000000000000000e+00 TOLERANCE 1.e-09
 STI SPECIAL true QUANTITY numiterlastnonlinearsolve VALUE 2.0 TOLERANCE 1.e-20                  // number of outer coupling iterations during last time step
 ------------------------------------DESIGN SURF NEUMANN CONDITIONS
-E 6 NUMDOF 2 ONOFF 0 1 VAL 0.0 -5.278302597e-4 FUNCT 0 0 TYPE Live
+E 6 NUMDOF 2 ONOFF 0 1 VAL 0.0 -5.278302597e-4 FUNCT none none TYPE Live
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT none none
 -------------------------------DESIGN VOL INITIAL FIELD CONDITIONS
 E 1 FIELD ScaTra FUNCT 1
 E 2 FIELD ScaTra FUNCT 2

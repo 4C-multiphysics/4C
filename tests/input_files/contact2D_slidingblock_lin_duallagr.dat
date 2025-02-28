@@ -74,10 +74,10 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME a
 VARIABLE 0 NAME a TYPE linearinterpolation NUMPOINTS 3 TIMES 0 0.1 1 VALUES 0 0 0.3
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 //                              support_xyz
-E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
 //                              support_yz
-E 1 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0  FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0  FUNCT none none
 //                              D_top
 E 4 NUMDOF 2 ONOFF 1 1 VAL 1.0 -1.0 FUNCT 3 2
 -----------------------------------DESIGN LINE MORTAR CONTACT CONDITIONS 2D

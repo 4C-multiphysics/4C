@@ -54,8 +54,8 @@ MAT 10   ELAST_CoupNeoHooke YOUNG 2 NUE 0.3
 MAT 2   MAT_ElastHyper   NUMMAT 1 MATIDS 20 DENS 0.1
 MAT 20   ELAST_CoupNeoHooke YOUNG 1 NUE 0.3
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 11 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT 0 0 0
-E 6 NUMDOF 3 ONOFF 1 1 1 VAL -0.65 -0.7 -0.5 FUNCT 0 0 0
+E 11 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT none none none
+E 6 NUMDOF 3 ONOFF 1 1 1 VAL -0.65 -0.7 -0.5 FUNCT none none none
 -----------------------------------------------DESIGN VOL NEUMANN CONDITIONS
 E 1 NUMDOF 3 ONOFF 1 1 1 VAL 1 1 1 FUNCT 1 2 3
 ----------------------------------------------------------------------FUNCT1

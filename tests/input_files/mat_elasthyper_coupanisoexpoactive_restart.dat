@@ -38,9 +38,9 @@ MAT 121 ELAST_IsoNeoHooke MUE 1.0
 MAT 122 ELAST_VolSussmanBathe KAPPA 100.0
 MAT 129 MIX_Prestress_Strategy_Constant PRESTRETCH 1.0 1.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -------------------------------------------DESIGN SURF NEUMANN CONDITIONS
-E 2 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 1000.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 2 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 1000.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 ----------------------------------------------------------RESULT DESCRIPTION
 STRUCTURE DIS structure NODE 9 QUANTITY dispx VALUE   1.29559839999697030e-01 TOLERANCE 1e-7
 STRUCTURE DIS structure NODE 9 QUANTITY dispy VALUE   2.11253080646221052e-02 TOLERANCE 1e-7

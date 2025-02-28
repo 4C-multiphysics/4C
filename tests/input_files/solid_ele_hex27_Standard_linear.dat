@@ -124,11 +124,11 @@ STRUCTURE DIS structure NODE 23 QUANTITY stress_xy VALUE  0.173026795230658 TOLE
 STRUCTURE DIS structure NODE 23 QUANTITY stress_yz VALUE -0.012714146198463 TOLERANCE 1e-10
 STRUCTURE DIS structure NODE 23 QUANTITY stress_yz VALUE -0.012714146198463 TOLERANCE 1e-10
 -------------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ------------------------------------------------DESIGN SURF NEUMANN CONDITIONS
-E 2 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 5 0.01 0.01 0 0 0 FUNCT 1 2 2 0 0 0 TYPE Live
+E 2 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 5 0.01 0.01 0 0 0 FUNCT 1 2 2 none none none TYPE Live
 -------------------------------------------------DESIGN VOL NEUMANN CONDITIONS
-E 1 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 5 0.01 0.01 0 0 0 FUNCT 1 2 2 0 0 0 TYPE Live
+E 1 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 5 0.01 0.01 0 0 0 FUNCT 1 2 2 none none none TYPE Live
 ------------------------------------------------------------------PROBLEM SIZE
 ELEMENTS                        1
 NODES                           27

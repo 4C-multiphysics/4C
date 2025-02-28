@@ -314,20 +314,20 @@ MAT 2 MAT_BeamKirchhoffTorsionFreeElastHyper YOUNG 1e+06 DENS 1e-01 CROSSAREA 0.
 SYMBOLIC_FUNCTION_OF_SPACE_TIME 0.1*a
 VARIABLE 0 NAME a TYPE expression DESCRIPTION heaviside(0.005-t)*0.5*(1-cos(pi*t*0.2e+03))+heaviside(t-0.005)
 --------------------------------------------------DESIGN SURF NEUMANN CONDITIONS
-E 3 NUMDOF 4 ONOFF 0 0 0 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 TYPE Live
+E 3 NUMDOF 4 ONOFF 0 0 0 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none TYPE Live
 --------------------------------------------------DESIGN POINT DIRICH CONDITIONS
 // beam
-E 1 NUMDOF 6 ONOFF 1 1 1 1 1 1 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 1 NUMDOF 6 ONOFF 1 1 1 1 1 1 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 ---------------------------------------------------DESIGN LINE DIRICH CONDITIONS
 // inflowedeges
-E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 0 0 0
+E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 none none none
 // outflowedges
-E 2 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 ---------------------------------------------------DESIGN SURF DIRICH CONDITIONS
 // canal
-E 1 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // inflow
-E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 none none none
 -------------------------------------------------------------DESIGN POINT COUPLING CONDITIONS
 E 2 NUMDOF 6 ONOFF 1 1 1 1 1 1
 E 3 NUMDOF 6 ONOFF 1 1 1 1 1 1

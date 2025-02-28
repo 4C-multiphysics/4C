@@ -109,9 +109,9 @@ VARIABLE 0 NAME a TYPE multifunction NUMPOINTS 3 TIMES 0 0.18 0.9001 DESCRIPTION
 ----------------------------------------------------------RESULT DESCRIPTION
 STRUCTURE DIS structure NODE 226 QUANTITY dispz VALUE 8.00901026463622223e+00 TOLERANCE 1e-6
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0  FUNCT 0 0 0
-E 2 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0  FUNCT 0 0 0
-E 3 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0  FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0  FUNCT none none none
+E 2 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0  FUNCT none none none
+E 3 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0  FUNCT none none none
 --------------------------------------------DESIGN SURFACE VOLUME MONITOR 3D
 E 6 ConditionID 0
 E 7 ConditionID 1

@@ -36,9 +36,9 @@ CHARELELENGTH_PC                root_of_volume
 NAME                            Fluid_Solver
 SOLVER                          UMFPACK
 ---------------------------------------DESIGN LINE WEAK DIRICHLET CONDITIONS
-E 4 GAMMATYPE adjoint-consistent DIR all_directions PENTYPE constant TauBscaling 1.0 LINEARISATION lin_all VAL 1.0 0.0 0.0 FUNCT 1 0 0
-E 1 GAMMATYPE adjoint-consistent DIR all_directions PENTYPE constant TauBscaling 1.0 LINEARISATION lin_all VAL 0.0 0.0 0.0 FUNCT 0 0 0
-E 3 GAMMATYPE adjoint-consistent DIR all_directions PENTYPE constant TauBscaling 1.0 LINEARISATION lin_all VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 4 GAMMATYPE adjoint-consistent DIR all_directions PENTYPE constant TauBscaling 1.0 LINEARISATION lin_all VAL 1.0 0.0 0.0 FUNCT 1 none none
+E 1 GAMMATYPE adjoint-consistent DIR all_directions PENTYPE constant TauBscaling 1.0 LINEARISATION lin_all VAL 0.0 0.0 0.0 FUNCT none none none
+E 3 GAMMATYPE adjoint-consistent DIR all_directions PENTYPE constant TauBscaling 1.0 LINEARISATION lin_all VAL 0.0 0.0 0.0 FUNCT none none none
 ---------------------------------------------------------DNODE-NODE TOPOLOGY
 NODE 332 DNODE 1
 NODE 1 DNODE 2

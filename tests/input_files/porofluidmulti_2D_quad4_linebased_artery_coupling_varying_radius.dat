@@ -88,12 +88,12 @@ SYMBOLIC_FUNCTION_OF_SPACE_TIME (-400*(y-0.05)*(y+0.05)+1)*t/0.2
 VARFUNCTION 0.0
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // top
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 1.0 FUNCT 0 0 3
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 1.0 FUNCT none none 3
 ---------------------------------------------DESIGN POINT DIRICH CONDITIONS
 //inflow
-E 1 NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT 0
+E 1 NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT none
 //outflow
-E 2 NUMDOF 1 ONOFF 1 VAL 0.5 FUNCT 0
+E 2 NUMDOF 1 ONOFF 1 VAL 0.5 FUNCT none
 ---------------------------------------------------------DNODE-NODE TOPOLOGY
 NODE 29 DNODE 1
 NODE 49 DNODE 2

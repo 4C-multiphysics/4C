@@ -167,23 +167,23 @@ SCATRA DIS scatra NODE 4 QUANTITY phi2 VALUE 5.01576640041953015e-01 TOLERANCE 1
 SCATRA DIS scatra NODE 3 QUANTITY phi2 VALUE 5.02454300313649238e-01 TOLERANCE 1e-12
 -------------------------------DESIGN LINE PORO NEUMANN CONDITIONS
 // curve_left
-E 1 NUMDOF 8 ONOFF 1 1 1 1 1 1 0 0 VAL 0.1 0.2 0.3 0.7 0.1 0.1 0.0 0.0 FUNCT 4 4 4 4 4 4 0 0
+E 1 NUMDOF 8 ONOFF 1 1 1 1 1 1 0 0 VAL 0.1 0.2 0.3 0.7 0.1 0.1 0.0 0.0 FUNCT 4 4 4 4 4 4 none none
 //-------------------------------------DESIGN SURF DIRICH CONDITIONS
 //DSURF  1
 // curve_left
-//E 1 - NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+//E 1 - NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // curve_left
-E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 -------------------------------------DESIGN LINE TRANSPORT DIRICH CONDITIONS
 // curve_left
-E 1 NUMDOF 2 ONOFF 1 1  VAL 0.75 0.5 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 1  VAL 0.75 0.5 FUNCT none none
 --------------------------------DESIGN LINE PORO DIRICH CONDITIONS
 // curve_right
-E 2 NUMDOF 8 ONOFF 1 1 1 1 1 1 1 1 VAL 0.1 0.0 0.0 0.0 0.0 0.0 0.1 0.3 FUNCT 0 0 0 0 0 0 0 0
+E 2 NUMDOF 8 ONOFF 1 1 1 1 1 1 1 1 VAL 0.1 0.0 0.0 0.0 0.0 0.0 0.1 0.3 FUNCT none none none none none none none none
 --------------------------------DESIGN SURF PORO DIRICH CONDITIONS
 // curve_right
-E 1 NUMDOF 8 ONOFF 0 0 0 0 0 0 1 1 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.1 0.3 FUNCT 0 0 0 0 0 0 0 0
+E 1 NUMDOF 8 ONOFF 0 0 0 0 0 0 1 1 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.1 0.3 FUNCT none none none none none none none none
 -----------------------------------------------DLINE-NODE TOPOLOGY
 NODE    5 DLINE 1
 NODE    6 DLINE 1

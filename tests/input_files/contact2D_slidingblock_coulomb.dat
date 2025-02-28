@@ -72,14 +72,14 @@ SOLVER                          UMFPACK
 NAME                            Contact_Solver
 SOLVER                          UMFPACK
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
-E 5 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
-E 6 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
-E 7 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
-E 8 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 5 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
+E 6 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
+E 7 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
+E 8 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 ----------------------------------------------DESIGN LINE NEUMANN CONDITIONS
-E 4 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 2.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1  0 0 0 0 0 TYPE Live
+E 4 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 2.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1  none none none none none TYPE Live
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
-E 1 NUMDOF 6 ONOFF 0 1 0 0 0 0 VAL 0.0 -10 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 TYPE Live
+E 1 NUMDOF 6 ONOFF 0 1 0 0 0 0 VAL 0.0 -10 0.0 0.0 0.0 0.0 FUNCT none none none none none none TYPE Live
 -----------------------------------DESIGN LINE MORTAR CONTACT CONDITIONS 2D
 E 1 InterfaceID 1 Side Slave Initialization Active FrCoeffOrBound 0.1
 E 7 InterfaceID 1 Side Master Initialization Inactive FrCoeffOrBound 0.1

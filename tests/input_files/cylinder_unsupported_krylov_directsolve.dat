@@ -61,14 +61,14 @@ E 1 DIS solid NUMMODES 6 ONOFF 1 1 1 1 1 1 WEIGHTVECDEF pointvalues
 E 1 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL -13.322E3 0.0 0.0 0.0 0.0 0.0 FUNCT 1 1 1 1 1 1 TYPE pseudo_orthopressure
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
 //                              topinner
-E 1 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0  FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0  FUNCT none none none
 //                              botinner
-E 2 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0  FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0  FUNCT none none none
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 //                              bottom
-E 2 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0  FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0  FUNCT none none none
 //                              top
-E 3 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0  FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0  FUNCT none none none
 ---------------------------------------------------------DLINE-NODE TOPOLOGY
 NODE 97 DLINE 1
 NODE 98 DLINE 1

@@ -104,7 +104,7 @@ POROFLUIDMULTIPHASE DIS porofluid ELEMENT 456 QUANTITY phasevelocity2x VALUE 2.4
 E 1 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.1 0.2 0.3 0.7 FUNCT 4 4 4 4
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // curve_right
-E 2 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.1 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.1 0.0 0.0 0.0 FUNCT none none none none
 -----------------------------------------------DLINE-NODE TOPOLOGY
 NODE    101 DLINE 1
 NODE    102 DLINE 1

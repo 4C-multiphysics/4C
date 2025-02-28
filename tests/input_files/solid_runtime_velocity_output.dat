@@ -37,7 +37,7 @@ SOLVER                                Superlu
 ------------------------------------------------------------------MATERIALS
 MAT 1 MAT_Struct_StVenantKirchhoff YOUNG 1.0 NUE 0.3 DENS 0.1
 ------------------------------------DESIGN SURF NEUMANN CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 0 VAL 0.1 0.2 0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 0 VAL 0.1 0.2 0 FUNCT none none none
 -----------------------------------------------DSURF-NODE TOPOLOGY
 NODE    1 DSURFACE 1
 NODE    4 DSURFACE 1

@@ -78,9 +78,9 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME a
 VARIABLE 0 NAME a TYPE linearinterpolation NUMPOINTS 3 TIMES 0 0.12 0.36 VALUES 0 0 0.44
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // dbc_xy_fixed_line
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // grav
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 1.0 0.0 -1.0 FUNCT 2 0 1
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 1.0 0.0 -1.0 FUNCT 2 none 1
 --------------------------DESIGN SURF MORTAR CONTACT CONDITIONS 3D
 // slave
 E 3 InterfaceID 1 Side Slave Initialization Inactive FrCoeffOrBound 0.2

@@ -320,33 +320,33 @@ STRUCTURE DIS structure NODE 4146 QUANTITY dispy VALUE 1.73205090192968814e-02 T
 STRUCTURE DIS structure NODE 4146 QUANTITY dispz VALUE 1.42287068236352163e-02 TOLERANCE 1e-6
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // fluid_inflow_all
-// E 1 - NUMDOF 4 ONOFF 1 1 1 0  VAL 80000.0 0.0 0.0 0.0 FUNCT 5 0 0 0
+// E 1 - NUMDOF 4 ONOFF 1 1 1 0  VAL 80000.0 0.0 0.0 0.0 FUNCT 5 none none none
 // fluid_inflow_no_line
-E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 300.0 0.0 FUNCT 0 0 1 0
+E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 300.0 0.0 FUNCT none none 1 none
 // structure_inflow_all
-E 7 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 7 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // structure_inflow_no_line
-//E 8 - NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+//E 8 - NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // structure_outflow_all
-E 9 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 9 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // structure_outflow_no_line
-//E 10 - NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+//E 10 - NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // structure_wall_all
-//E 13 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+//E 13 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -------------------------------------DESIGN SURF ALE DIRICH CONDITIONS
 // fluid_inflow_all
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // fluid_inflow_no_line
-//E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+//E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // fluid_outflow_all
-E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // fluid_outflow_no_line
-// E 4 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+// E 4 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // fluid_inflow_line
-E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // fluid_outflow_line
-E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 -----------------------DESIGN SURF ROBIN SPRING DASHPOT CONDITIONS
 // structure_wall_all
 E 13 NUMDOF 1 ONOFF 1 STIFF 50000.0 TIMEFUNCTSTIFF 0 VISCO 0.0 TIMEFUNCTVISCO 0 DISPLOFFSET 0.0 TIMEFUNCTDISPLOFFSET 0 FUNCTNONLINSTIFF 0 DIRECTION refsurfnormal COUPLING none
@@ -377,14 +377,14 @@ E 11 NUMSCAL 2 ONOFF 1 1 COUPID 1 PERMCOEF 30.10299957 CONDUCT 0.0 FILTR 0.0 WSS
 // E 12 - COUPID 1 FIELDNUM 2 PERMCOEF 1.0
 -------------------------------------DESIGN SURF TRANSPORT DIRICH CONDITIONS
 //fluid_inflow_no_line
-E 2 NUMDOF 2 ONOFF 1 1 VAL 50.0 0.0 FUNCT 3 0
+E 2 NUMDOF 2 ONOFF 1 1 VAL 50.0 0.0 FUNCT 3 none
 // structure_inflow_all
-E 7 NUMDOF 2 ONOFF 1 1 VAL 0.1 0.0 FUNCT 2 0
+E 7 NUMDOF 2 ONOFF 1 1 VAL 0.1 0.0 FUNCT 2 none
 -------------------------------------DESIGN LINE TRANSPORT DIRICH CONDITIONS
 // fluid_inflow_line
-E 1 NUMDOF 2 ONOFF 1 1 VAL 0.1 0.0 FUNCT 2 0
+E 1 NUMDOF 2 ONOFF 1 1 VAL 0.1 0.0 FUNCT 2 none
 // structure_inflow_line
-E 3 NUMDOF 2 ONOFF 1 1 VAL 0.1 0.0 FUNCT 2 0
+E 3 NUMDOF 2 ONOFF 1 1 VAL 0.1 0.0 FUNCT 2 none
 -----------------------------------------------DLINE-NODE TOPOLOGY
 NODE    5 DLINE 1
 NODE    6 DLINE 1

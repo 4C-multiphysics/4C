@@ -85,10 +85,10 @@ Linear Solver Details           = No
 Test Details                    = No
 Debug                           = No
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
-E 1 NUMDOF 6 ONOFF 1 1 1 1 1 1 VAL  0.5707 0.0 0.0 -1.0 0.0 1.0   FUNCT 0 0 0 0 0 0
-E 2 NUMDOF 6 ONOFF 1 1 1 1 1 1 VAL -0.5707 0.0 0.0 -1.0 0.0 -1.0   FUNCT 0 0 0 0 0 0
-E 3 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL  1.0    1.0 -0.3 0.0 0.0 0.0 FUNCT 3 2 1 0 0 0
-E 4 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL -1.0   -1.0 -0.3 0.0 0.0 0.0 FUNCT 3 2 1 0 0 0
+E 1 NUMDOF 6 ONOFF 1 1 1 1 1 1 VAL  0.5707 0.0 0.0 -1.0 0.0 1.0   FUNCT none none none none none none
+E 2 NUMDOF 6 ONOFF 1 1 1 1 1 1 VAL -0.5707 0.0 0.0 -1.0 0.0 -1.0   FUNCT none none none none none none
+E 3 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL  1.0    1.0 -0.3 0.0 0.0 0.0 FUNCT 3 2 1 none none none
+E 4 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL -1.0   -1.0 -0.3 0.0 0.0 0.0 FUNCT 3 2 1 none none none
 ---------------------------------------------------------DNODE-NODE TOPOLOGY
 NODE 1 DNODE 1
 NODE 2 DNODE 2

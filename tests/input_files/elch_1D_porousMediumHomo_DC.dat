@@ -80,8 +80,8 @@ SCATRA DIS scatra NODE 75 QUANTITY phi2 VALUE -1.96730499622743728e-02 TOLERANCE
 SCATRA DIS scatra NODE 98 QUANTITY phi1 VALUE 2.19551318167699794e+00 TOLERANCE 1e-09
 SCATRA DIS scatra NODE 98 QUANTITY phi2 VALUE -1.19164961265141910e-03 TOLERANCE 1e-12
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
-E 1 NUMDOF 2 ONOFF 1 0 VAL 1.0 0.0 FUNCT 5 0
-E 2 NUMDOF 2 ONOFF 1 1 VAL 1.0 0.0 FUNCT 6 0
+E 1 NUMDOF 2 ONOFF 1 0 VAL 1.0 0.0 FUNCT 5 none
+E 2 NUMDOF 2 ONOFF 1 1 VAL 1.0 0.0 FUNCT 6 none
 // In case of Dirichlet conditions only for the concentration (potential)
 // the current flow (fluxes) have to be considered for unconstrained dof's.
 // In the moment this is realized in the method CorrectionForFluxAccrosDC() by coping

@@ -81,7 +81,7 @@ SCATRA DIS scatra SPECIAL true QUANTITY meaneta VALUE 4.34875462913763416e-03 TO
 SCATRA DIS scatra SPECIAL true QUANTITY meancur VALUE 0.00000000000000000e+00 TOLERANCE 1.0e-16
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 //                              cathode
-E 1 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.348 2.408 4.12 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.348 2.408 4.12 0.0 FUNCT none none none none
 ---------------------------------ELECTRODE BOUNDARY KINETICS SURF CONDITIONS
 //                              cathode
 E 2 ConditionID 0 POT -0.0 FUNCT none NUMSCAL 3 STOICH -1 0 0  E- 2 EPSILON -1 ZERO_CUR 0 KINETIC_MODEL Butler-Volmer ALPHA_A 1.0 ALPHA_C 0.4 I0 51.0 GAMMA 0.75 REFCON 0.348 DL_SPEC_CAP 0.25

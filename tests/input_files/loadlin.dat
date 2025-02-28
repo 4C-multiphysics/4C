@@ -44,7 +44,7 @@ MAXITER                         50
 NAME                            Structure_Solver
 SOLVER                          UMFPACK
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 4 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 4 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
 E 6 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL -0.5 0.0 0.0 0.0 0.0 0.0 FUNCT 1 1 1 1 1 1 TYPE orthopressure
 ---------------------------------------------------------DNODE-NODE TOPOLOGY

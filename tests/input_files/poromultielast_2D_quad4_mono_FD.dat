@@ -88,10 +88,10 @@ POROFLUIDMULTIPHASE DIS porofluid NODE 6 QUANTITY saturation1 VALUE 4.8731050355
 E 1 NUMDOF 3 ONOFF 1 1 1  VAL 1.0 2.0 3.0 FUNCT 1 1 1
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // curve_left
-E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 --------------------------------DESIGN LINE PORO DIRICH CONDITIONS
 // curve_right
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.1 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.1 0.0 0.0 FUNCT none none none
 -----------------------------------------------DLINE-NODE TOPOLOGY
 NODE    5 DLINE 1
 NODE    6 DLINE 1

@@ -63,12 +63,12 @@ Debug                               = No
 MAT 1 MAT_Struct_StVenantKirchhoff YOUNG 1 NUE 0.0 DENS 1.0
 ------------------------------------DESIGN LINE NEUMANN CONDITIONS
 // out_top
-E 2 NUMDOF 2 ONOFF 0 1 VAL 0 -2 FUNCT 0 0
+E 2 NUMDOF 2 ONOFF 0 1 VAL 0 -2 FUNCT none none
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // out_bottom
-E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 // out_top
-E 2 NUMDOF 2 ONOFF 1 1 VAL 0.05 0.05 FUNCT 0 0
+E 2 NUMDOF 2 ONOFF 1 1 VAL 0.05 0.05 FUNCT none none
 -----------------------------------------------DLINE-NODE TOPOLOGY
 NODE    1 DLINE 1
 NODE    2 DLINE 1

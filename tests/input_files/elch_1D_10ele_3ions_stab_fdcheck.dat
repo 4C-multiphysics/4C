@@ -66,9 +66,9 @@ SCATRA DIS scatra NODE 10 QUANTITY phi5 VALUE -1.95193467972860184e-02 TOLERANCE
 SCATRA DIS scatra NODE 11 QUANTITY phi5 VALUE -2.15585649068619628e-02 TOLERANCE 1e-11
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 //                              inflow
-E 1 NUMDOF 5 ONOFF 1 1 1 1 1 VAL 1.0 2.0 2.0 1.0 0.0  FUNCT 0 0 0 0 0
+E 1 NUMDOF 5 ONOFF 1 1 1 1 1 VAL 1.0 2.0 2.0 1.0 0.0  FUNCT none none none none none
 //                              outflow
-E 2 NUMDOF 5 ONOFF 1 0 0 1 0 VAL 0.1 0.0 0.0 0.1 0.0  FUNCT 0 0 0 0 0
+E 2 NUMDOF 5 ONOFF 1 0 0 1 0 VAL 0.1 0.0 0.0 0.1 0.0  FUNCT none none none none none
 ---------------------------------------------------------DNODE-NODE TOPOLOGY
 NODE 1 DNODE 1
 NODE 11 DNODE 2

@@ -42,12 +42,12 @@ DEFINITION_TAU                  Franca_Valentin
 NAME                            Arterial_Network_Solver
 SOLVER                          UMFPACK
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
-E 2 NUMDOF 1 ONOFF 1 VAL 0.0 FUNCT 0
+E 2 NUMDOF 1 ONOFF 1 VAL 0.0 FUNCT none
 --------------------------------------------DESIGN POINT TRANSPORT DIRICH CONDITIONS
-E 1 NUMDOF 1 ONOFF 1  VAL 1.0  FUNCT 0
-E 2 NUMDOF 1 ONOFF 1  VAL 0.0  FUNCT 0
+E 1 NUMDOF 1 ONOFF 1  VAL 1.0  FUNCT none
+E 2 NUMDOF 1 ONOFF 1  VAL 0.0  FUNCT none
 ---------------------------------------------DESIGN POINT NEUMANN CONDITIONS
-E 1 NUMDOF 1 ONOFF 1 VAL 2.261946710584651e+03 FUNCT 0
+E 1 NUMDOF 1 ONOFF 1 VAL 2.261946710584651e+03 FUNCT none
 ---------------------------------------------------------DNODE-NODE TOPOLOGY
 NODE 1 DNODE 1
 NODE 11 DNODE 2

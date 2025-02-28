@@ -76,7 +76,7 @@ MAT 3 MAT_fluid DYNVISCOSITY 0.00001523 DENSITY 0.000001176 GAMMA 1.0
 -------------------------------------------------------------FUNCT1
 SYMBOLIC_FUNCTION_OF_TIME 1000*(1-cos(3*pi*t/3))
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -------------------------DESIGN NODE Reduced D AIRWAYS PRESCRIBED CONDITIONS
 E 1 boundarycond pressure VAL 5.0 curve 1 none funct none
 -------------------------------------DESIGN SURF TISSUE REDAIRWAY CONDITIONS

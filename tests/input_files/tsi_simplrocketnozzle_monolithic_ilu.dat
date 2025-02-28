@@ -140,16 +140,16 @@ VARIABLE 0 NAME a TYPE linearinterpolation NUMPOINTS 9 TIMES 0 1 2 3 15 16 17 18
 E 1 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL -1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 2 2 2 2 2 2 TYPE pseudo_orthopressure
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 // structure Cu surface left
-E 2 NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // structure Cu surface right
-E 3 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // structure Ni surface left
-E 4 NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 4 NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // structure Ni surface right
-E 5 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 5 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ------------------------------------------------DESIGN VOL DIRICH CONDITIONS
 // support total z
-E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ------------------------------------DESIGN THERMO CONVECTION SURF CONDITIONS
 // thr convection hot gas --> cycle is applied via CURVE2
 E 6 temperature_state Tempnp coeff -28000 surtemp 1.0 surtempfunct 3 funct 0

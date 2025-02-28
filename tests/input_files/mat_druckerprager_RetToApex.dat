@@ -65,13 +65,13 @@ STRUCTURE DIS structure NODE 61 QUANTITY stress_yy VALUE  -1060.2697148812663 TO
 STRUCTURE DIS structure NODE 33 QUANTITY stress_yy VALUE  -934.9367066687066 TOLERANCE 1e-10
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // fix_z
-E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0 0 0  FUNCT 0 0 0  TAG monitor_reaction
+E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0 0 0  FUNCT none none none  TAG monitor_reaction
 // fix_x
-E 2 NUMDOF 3 ONOFF 1 0 0  VAL 0 0 0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 0 0  VAL 0 0 0 FUNCT none none none
 // fix_y
-E 3 NUMDOF 3 ONOFF 0 1 0 VAL 0 0 0 FUNCT 0 0 0  TAG monitor_reaction
+E 3 NUMDOF 3 ONOFF 0 1 0 VAL 0 0 0 FUNCT none none none  TAG monitor_reaction
 // load
-E 4 NUMDOF 3 ONOFF 0 1 0  VAL 0 -2E-2 0  FUNCT 0 1 0  TAG monitor_reaction
+E 4 NUMDOF 3 ONOFF 0 1 0  VAL 0 -2E-2 0  FUNCT none 1 none  TAG monitor_reaction
 -----------------------------------------------DSURF-NODE TOPOLOGY
 NODE    1 DSURFACE 1
 NODE    2 DSURFACE 1

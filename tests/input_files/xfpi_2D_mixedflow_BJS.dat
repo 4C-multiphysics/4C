@@ -154,36 +154,36 @@ FLUID DIS porofluid NODE 50 QUANTITY vely VALUE -1.50919950817438226e-03 TOLERAN
 FLUID DIS porofluid NODE 50 QUANTITY pressure VALUE 3.59691419095167442e-01 TOLERANCE 1e-10
 --------------------------------------DESIGN VOL DIRICH CONDITIONS
 // fluid_volume
-E 1 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // poro_volume
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 --------------------------------------------DESIGN VOL ALE DIRICH CONDITIONS
 // fluid_volume
-E 1 NUMDOF 3 ONOFF  1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF  1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -------------------------------------------DESIGN VOL PORO DIRICH CONDITIONS
 // poro_volume
-E 2 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 ----------------------------------------DESIGN VOLUME POROCOUPLING CONDITION
 // poro_volume
 E 2
 ------------------------------------------------DESIGN SURF PORO NEUMANN CONDITIONS
 // poro_left
-E 5 NUMDOF 4 ONOFF 1 0 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 5 NUMDOF 4 ONOFF 1 0 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT none none none none
 ------------------------------------------------DESIGN SURF NEUMANN CONDITIONS
 //fluid_right
-E 2 NUMDOF 4 ONOFF 1 0 0 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 1 0 0 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // fluid_left
-E 1 NUMDOF 4 ONOFF 1 0 0 0 VAL 1.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 1 0 0 0 VAL 1.0 0.0 0.0 0.0 FUNCT none none none none
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // fluid_left
-E 1 NUMDOF 4 ONOFF 0 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 0 0 0
+E 1 NUMDOF 4 ONOFF 0 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 none none none
 // fluid_right
-E 2 NUMDOF 4 ONOFF 0 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 0 0 0
+E 2 NUMDOF 4 ONOFF 0 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 none none none
 // fluid_top
-E 3 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 1 0 0 0
+E 3 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 1 none none none
 -------------------------------------------DESIGN SURF PORO DIRICH CONDITIONS
 // poro_top
-E 7 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 7 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 -----------------------------------------DESIGN SURFACE PORO PARTIAL INTEGRATION
 // poro_left
 E 5

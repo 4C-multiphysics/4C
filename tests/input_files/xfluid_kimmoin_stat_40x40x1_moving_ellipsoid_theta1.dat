@@ -132,10 +132,10 @@ XFLUID DIS fluid NODE 9000 QUANTITY velz VALUE 0.0 TOLERANCE 1e-12
 XFLUID DIS fluid NODE 9000 QUANTITY pressure VALUE 2.4483554258846180e-01 TOLERANCE 1e-12
 -----------------------------------------------DESIGN VOL NEUMANN CONDITIONS
 // fluid_volume
-E 1 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 1.0 1.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 TYPE Live
+E 1 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 1.0 1.0 0.0 0.0 0.0 FUNCT none none none none none none TYPE Live
 ------------------------------------------------DESIGN VOL DIRICH CONDITIONS
 // fluid_volume
-E 1 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 1.0 1.0 1.0 0.0 0.0 0.0 FUNCT 2 2 2 0 0 0
+E 1 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 1.0 1.0 1.0 0.0 0.0 0.0 FUNCT 2 2 2 none none none
 ---------------------------------DESIGN VOL MODE FOR KRYLOV SPACE PROJECTION
 // fluid_volume
 E 1 DIS fluid NUMMODES 4 ONOFF 0 0 0 1 WEIGHTVECDEF integration

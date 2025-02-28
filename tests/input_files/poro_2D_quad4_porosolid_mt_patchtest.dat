@@ -104,42 +104,42 @@ STRUCTURE DIS structure NODE 87 QUANTITY dispy VALUE -3.33913556388275041e-03 TO
 STRUCTURE DIS structure NODE 100 QUANTITY dispy VALUE -1.11304518796215323e-03 TOLERANCE 1e-8
 ------------------------------------DESIGN LINE NEUMANN CONDITIONS
 // top_line
-E 1 NUMDOF 6 ONOFF 0 1 0 0 0 0 VAL 0.0 -4.0 0.0 0.0 0.0 0.0 FUNCT 0 1 0 0 0 0 TYPE Live
+E 1 NUMDOF 6 ONOFF 0 1 0 0 0 0 VAL 0.0 -4.0 0.0 0.0 0.0 0.0 FUNCT none 1 none none none none TYPE Live
 -------------------------------DESIGN LINE PORO NEUMANN CONDITIONS
 // left_line_bottom
-E 6 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 0 0 0 0 0 TYPE Live
+E 6 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 none none none none none TYPE Live
 // right_line_bottom
-E 7 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL -1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 0 0 0 0 0 TYPE Live
+E 7 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL -1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 none none none none none TYPE Live
 // bottom_line_bottom
-E 8 NUMDOF 6 ONOFF 0 1 0 0 0 0 VAL 0.0 1.0 0.0 0.0 0.0 0.0 FUNCT 0 1 0 0 0 0 TYPE Live
+E 8 NUMDOF 6 ONOFF 0 1 0 0 0 0 VAL 0.0 1.0 0.0 0.0 0.0 0.0 FUNCT none 1 none none none none TYPE Live
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 // top_right_point
-//E 1 - NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT 0 0
+//E 1 - NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT none none
 // top_left_point
-//E 2 - NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT 0 0
+//E 2 - NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT none none
 // bottom_right_point
-//E 3 - NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+//E 3 - NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 // bottom_left_point
-//E 4 - NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+//E 4 - NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 // top_right_point_bottom
-E 5 NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT 0 0
+E 5 NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT none none
 // top_left_point_bottom
-E 6 NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT 0 0
+E 6 NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT none none
 // bottom_right_point_bottom
-E 7 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 7 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 // bottom_left_point_bottom
-E 8 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 8 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // left_line
-E 2 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+E 2 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 // right_line
-E 3 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+E 3 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 // left_line_bottom
-E 6 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+E 6 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 // right_line_bottom
-E 7 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+E 7 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 // bottom_line_bottom
-E 8 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT 0 0
+E 8 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT none none
 -------------------------DESIGN LINE MORTAR COUPLING CONDITIONS 2D
 // bottom_line
 E 4 InterfaceID 1 Side Master

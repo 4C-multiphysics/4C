@@ -94,22 +94,22 @@ STRUCTURE DIS structure NODE 27 QUANTITY dispy VALUE 8.61403892453240953e-05 TOL
 
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // wall_edge_x+y+
-E 1 NUMDOF 3 ONOFF 1 1 0 VAL 0.0132 0.0132 0.0 FUNCT 2 2 0
+E 1 NUMDOF 3 ONOFF 1 1 0 VAL 0.0132 0.0132 0.0 FUNCT 2 2 none
 // wall_edge_x-y-
-E 2 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // wall_edge_x+y-
-E 3 NUMDOF 3 ONOFF 1 1 0 VAL 0.0132 0.0 0.0 FUNCT 2 0 0
+E 3 NUMDOF 3 ONOFF 1 1 0 VAL 0.0132 0.0 0.0 FUNCT 2 none none
 // wall_edge_x-y+
-E 4 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0132 0.0 FUNCT 0 2 0
+E 4 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0132 0.0 FUNCT none 2 none
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // wall_surface_x-
-E 1 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // wall_surface_x+
-E 2 NUMDOF 3 ONOFF 1 0 0 VAL 0.0132 0.0 0.0 FUNCT 2 0 0
+E 2 NUMDOF 3 ONOFF 1 0 0 VAL 0.0132 0.0 0.0 FUNCT 2 none none
 // wall_surface_y-
-E 3 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // wall_surface_y+
-E 4 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0132 0.0 FUNCT 0 2 0
+E 4 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0132 0.0 FUNCT none 2 none
 -----------------------------------------------DLINE-NODE TOPOLOGY
 NODE    766 DLINE 1
 NODE    767 DLINE 1

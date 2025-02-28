@@ -110,12 +110,12 @@ FLUID DIS fluid NODE 237 QUANTITY velz VALUE 4.68799687053904457e-01 TOLERANCE 1
 FLUID DIS fluid NODE 237 QUANTITY pressure VALUE -9.17003245868114248e-06 TOLERANCE 1e-9
 -------------------------------------DESIGN VOL NEUMANN CONDITIONS
 // volume1
-E 2 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 TYPE Dead
+E 2 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none TYPE Dead
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // wall_top
-E 1 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 1 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 // wall_bottom
-E 2 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0
+E 2 NUMDOF 8 ONOFF 1 1 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none
 -------------------------------------DESIGN FLUID STRESS CALC SURF CONDITIONS
 // wall_top
 E 1

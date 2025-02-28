@@ -62,13 +62,13 @@ MAT 1 MAT_Struct_Damage YOUNG 206.9 NUE 0.29 DENS 0.0 SAMPLENUM 2 SIGMA_Y 4.5 5.
 SYMBOLIC_FUNCTION_OF_SPACE_TIME t
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // d1_x
-E 1 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // d2_y
-E 2 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // d3_z
-E 3 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 TAG monitor_reaction
+E 3 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none TAG monitor_reaction
 // d8_z_disp
-E 4 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 1.0 FUNCT 0 0 1 TAG monitor_reaction
+E 4 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 1.0 FUNCT none none 1 TAG monitor_reaction
 -----------------------------------------------DNODE-NODE TOPOLOGY
 NODE    73 DNODE 1
 NODE    1 DNODE 2

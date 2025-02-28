@@ -125,20 +125,20 @@ VARIABLE 0 NAME a TYPE multifunction NUMPOINTS 3 TIMES 0.0 5 500000.0 DESCRIPTIO
 E 1 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL -2.517e4 0.0 0.0 0.0 0.0 0.0 FUNCT 2 2 2 2 2 2 TYPE pseudo_orthopressure
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
 //                              line_sym_edge__fix_yz_move_x
-E 1 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 //                              line_sym_edge_fix_xz_move_y
-E 2 NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 //                              surf_normal_x_and_fixed_in_x
-E 2 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 //                              surf_normal_y_and_fixed_in_y
-E 3 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 ------------------------------------------------DESIGN VOL DIRICH CONDITIONS
 //                              fixed_complete_body_in_z
-E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------DESIGN VOL THERMO DIRICH CONDITIONS
 //                              constant_temperature
-E 2 NUMDOF 1 ONOFF 1 VAL 699.81667 FUNCT 0
+E 2 NUMDOF 1 ONOFF 1 VAL 699.81667 FUNCT none
 ---------------------------------------------------------DLINE-NODE TOPOLOGY
 NODE 1 DLINE 1
 NODE 4 DLINE 1

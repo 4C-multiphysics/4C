@@ -114,22 +114,22 @@ COMPONENT 3 SYMBOLIC_FUNCTION_OF_SPACE_TIME (1/0.4)*(1/0.4)*(0.8-2*y)
 COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME (1/0.4)*(1/0.4)*(0.8-2*y)
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 // Fluid 1 inflow
-E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.01 0.0 0.0 0.0 FUNCT 1 0 0 0
+E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.01 0.0 0.0 0.0 FUNCT 1 none none none
 // Fluid 2 dirichlet
-E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 // xFluid upper surface
-E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // xFluid lower surface
-E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 ------------------------------------------------DESIGN VOL DIRICH CONDITIONS
 // bgFluid volume
-E 1 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // Fluid 2 volume
-E 2 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 --------------------------------------------DESIGN VOL ALE DIRICH CONDITIONS
 // Fluid 2 volume
-E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 --------------------------------------DESIGN XFEM FLUIDFLUID SURF CONDITIONS
 // Fluid 2 xfem
 E 3 COUPLINGID 1 COUPSTRATEGY xfluid

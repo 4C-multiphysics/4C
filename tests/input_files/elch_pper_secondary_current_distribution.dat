@@ -108,7 +108,7 @@ E 2 ConditionID 1 POT -1.0 FUNCT none NUMSCAL 2 STOICH -1 0  E- 1 EPSILON -1 ZER
 E 1
 E 2
 ------------------------------------------------DESIGN VOL DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 1.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 1.0 0.0 FUNCT none none none
 ---------------------------------------------------------DSURF-NODE TOPOLOGY
 NODE 241 DSURFACE 1
 NODE 242 DSURFACE 1

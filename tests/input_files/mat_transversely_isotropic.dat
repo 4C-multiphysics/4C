@@ -82,13 +82,13 @@ STRUCTURE DIS structure NODE 2 QUANTITY dispx VALUE -8.46047221558676732e-01 TOL
 STRUCTURE DIS structure NODE 2 QUANTITY dispy VALUE 7.96666795681926332e-01 TOLERANCE 1e-8
 ------------------------------------DESIGN SURF NEUMANN CONDITIONS
 // nbc_surfaces
-E 1 NUMDOF 3  ONOFF 1 0 0  VAL 100.0 0.0 0.0 FUNCT 1 0 0 TYPE pseudo_orthopressure
+E 1 NUMDOF 3  ONOFF 1 0 0  VAL 100.0 0.0 0.0 FUNCT 1 none none TYPE pseudo_orthopressure
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 // dbc_fixed
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // dbc_tangent
-E 2 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------------DNODE-NODE TOPOLOGY
 NODE    5 DNODE 1
 -----------------------------------------------DSURF-NODE TOPOLOGY

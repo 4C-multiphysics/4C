@@ -171,35 +171,35 @@ SCATRA DIS scatra NODE 180 QUANTITY phi2 VALUE 1.05752450059391245e+00 TOLERANCE
 SCATRA DIS scatra NODE 180 QUANTITY phi3 VALUE 1.01276964024078775e+00 TOLERANCE 1e-10
 ------------------------------------DESIGN SURF NEUMANN CONDITIONS
 // scatra_membrane
-E 2 NUMDOF 12 ONOFF 0 0 0 0 0 0 1 0 0 0 0 0 VAL  0 0 0 0 0 0 14.0 0 0 0 0 0 FUNCT 0 0 0 0 0 0 0 0 0 0 0 0
+E 2 NUMDOF 12 ONOFF 0 0 0 0 0 0 1 0 0 0 0 0 VAL  0 0 0 0 0 0 14.0 0 0 0 0 0 FUNCT none none none none none none none none none none none none
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // scatra_surface_of_volume_right
-E 3 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT 0 0 0 0 0 0 0 0 0 0 0 0
+E 3 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT none none none none none none none none none none none none
 // scatra_surface_of_volume_left
-E 4 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT 0 0 0 0 0 0 0 0 0 0 0 0
+E 4 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT none none none none none none none none none none none none
 // scatra_surface_of_volume_bottom
-E 5 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT 0 0 0 0 0 0 0 0 0 0 0 0
+E 5 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT none none none none none none none none none none none none
 // scatra_surface_of_volume_front
-E 6 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL 0 0 0 0 0 0 0 0 0 0 0 0 FUNCT 0 0 0 0 0 0 0 0 0 0 0 0
+E 6 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL 0 0 0 0 0 0 0 0 0 0 0 0 FUNCT none none none none none none none none none none none none
 // scatra_surface_of_volume_top
-E 7 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT 0 0 0 0 0 0 0 0 0 0 0 0
+E 7 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT none none none none none none none none none none none none
 // scatra_surface_of_volume_rear
-E 8 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT 0 0 0 0 0 0 0 0 0 0 0 0
+E 8 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT none none none none none none none none none none none none
 // scatra_membrane_right
-E 9 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT 0 0 0 0 0 0 0 0 0 0 0 0
+E 9 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT none none none none none none none none none none none none
 // scatra_membrane_left
-E 10 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT 0 0 0 0 0 0 0 0 0 0 0 0
+E 10 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT none none none none none none none none none none none none
 // scatra_membrane_bottom
-E 11 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT 0 0 0 0 0 0 0 0 0 0 0 0
+E 11 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT none none none none none none none none none none none none
 // scatra_membrane_front
-E 12 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT 0 0 0 0 0 0 0 0 0 0 0 0
+E 12 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT none none none none none none none none none none none none
 // scatra_membrane_top
-E 13 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT 0 0 0 0 0 0 0 0 0 0 0 0
+E 13 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT none none none none none none none none none none none none
 // scatra_membrane_rear
-E 14 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT 0 0 0 0 0 0 0 0 0 0 0 0
+E 14 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT none none none none none none none none none none none none
 --------------------------------------DESIGN VOL DIRICH CONDITIONS
 // scatra_cytosol
-E 1 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT 0 0 0 0 0 0 0 0 0 0 0 0
+E 1 NUMDOF 12 ONOFF 0 0 0 0 0 0 0 0 0 0 0 0 VAL  0 0 0 0 0 0 0 0 0 0 0 0 FUNCT none none none none none none none none none none none none
 ------------------------------DESIGN SURF INITIAL FIELD CONDITIONS
 // scatra_membrane
 E 2 FIELD ScaTra FUNCT 1

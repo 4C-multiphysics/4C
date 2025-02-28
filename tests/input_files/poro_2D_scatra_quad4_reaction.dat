@@ -131,8 +131,8 @@ STRUCTURE DIS structure NODE 95 QUANTITY dispy VALUE 1.36911459684854634e-06 TOL
 //                              porosurf
 E 3
 -------------------------------------DESIGN SURF TRANSPORT DIRICH CONDITIONS
-E 1 NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT 0
-E 2 NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT 0
+E 1 NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT none
+E 2 NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT none
 ---------------------------------------------------------DNODE-NODE TOPOLOGY
 //NODE 5 DNODE 1
 //NODE 27 DNODE 1

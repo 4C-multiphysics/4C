@@ -40,10 +40,10 @@ VARIABLE 0 NAME a TYPE multifunction NUMPOINTS 3 TIMES 0.0 10.0 500000.0 DESCRIP
 ----------------------------------------------------------RESULT DESCRIPTION
 STRUCTURE DIS structure NODE 1609 QUANTITY dispy VALUE -3.36250169344546430e-05 TOLERANCE 1e-8
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 0 0 VAL 13332.2668 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 0 0 VAL 13332.2668 0.0 0.0 FUNCT none none none
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ---------------------------------------------------------DLINE-NODE TOPOLOGY
 NODE 3201 DLINE 1
 NODE 3202 DLINE 1

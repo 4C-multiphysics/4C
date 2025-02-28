@@ -50,11 +50,11 @@ MAXITER                          20
 NAME                             Structure_Solver
 SOLVER                           UMFPACK
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 4 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0 TAG monitor_reaction
-E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 TAG monitor_reaction
-E 2 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0 TAG monitor_reaction
+E 4 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none TAG monitor_reaction
+E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none TAG monitor_reaction
+E 2 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none TAG monitor_reaction
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
-E 3 NUMDOF 3 ONOFF 1 1 1 VAL 1.0 0 0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 1 1 1 VAL 1.0 0 0 FUNCT none none none
 ---------------------------------------------------------DNODE-NODE TOPOLOGY
 NODE 21 DNODE 1
 ---------------------------------------------------------DLINE-NODE TOPOLOGY

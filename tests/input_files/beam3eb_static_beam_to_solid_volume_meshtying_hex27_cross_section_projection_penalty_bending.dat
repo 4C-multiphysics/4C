@@ -84,9 +84,9 @@ MAT 2 MAT_BeamKirchhoffTorsionFreeElastHyper YOUNG 1 DENS 0.0 CROSSAREA 0.031415
 SYMBOLIC_FUNCTION_OF_SPACE_TIME t
 ---------------------------------------------------DESIGN SURF DIRICH CONDITIONS
 // fix
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT none none none
 --------------------------------------------------DESIGN LINE NEUMANN CONDITIONS
-E 1 NUMDOF 6 ONOFF 0 1 0 0 0 0 VAL 0 0.025 0 0 0 0 FUNCT 0 1 0 0 0 0
+E 1 NUMDOF 6 ONOFF 0 1 0 0 0 0 VAL 0 0.025 0 0 0 0 FUNCT none 1 none none none none
 --------------------------BEAM INTERACTION/BEAM TO SOLID VOLUME MESHTYING VOLUME
 // Define the volumes for the beam-to-solid volume meshtying.
 E 1 COUPLING_ID 1

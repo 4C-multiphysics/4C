@@ -79,12 +79,12 @@ FLUID DIS fluid NODE 396 QUANTITY velx VALUE 6.67556708683035072e-01 TOLERANCE 1
 FLUID DIS fluid NODE 396 QUANTITY vely VALUE 5.17097288197739702e-01 TOLERANCE 1e-9
 FLUID DIS fluid NODE 396 QUANTITY velz VALUE -3.36073626765410438e+02 TOLERANCE 1e-9
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 ----------------------------------------FLUID NEUMANN INFLOW SURF CONDITIONS
 E 3
 -----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
-E 3 NUMDOF 3 ONOFF 1 0 0 VAL 100.0 0.0 0.0 FUNCT 1 0 0 TYPE pseudo_orthopressure
-//E 3 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 100.0 FUNCT 1 0 0 TYPE Live //does the same as the previous line, since in this case the normal direction is the z-direction
+E 3 NUMDOF 3 ONOFF 1 0 0 VAL 100.0 0.0 0.0 FUNCT 1 none none TYPE pseudo_orthopressure
+//E 3 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 100.0 FUNCT 1 none none TYPE Live //does the same as the previous line, since in this case the normal direction is the z-direction
 --------------------------------------DESIGN SURF VOLUMETRIC FLOW CONDITIONS
 E 1 ConditionID 1 ConditionType WOMERSLEY prebiased NOTPREBIASED FlowType InFlow CorrectionFlag WithCorrection Period 1.0 Order 2 Harmonics 16 Val -10000.0 Funct 2 NORMAL SelfEvaluateNormal n1 0.0 n2 0.0 n3 0.0 CenterOfMass SelfEvaluateCenterOfMass c1 0.0 c2 0.0 c3 0.0
 ------------------------------------DESIGN LINE VOLUMETRIC FLOW BORDER NODES

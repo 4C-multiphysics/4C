@@ -62,11 +62,11 @@ STRUCTURE DIS structure NODE 5 QUANTITY dispy VALUE -0.3368040628942226 TOLERANC
 STRUCTURE DIS structure NODE 5 QUANTITY dispz VALUE 0.11025546749410402 TOLERANCE 1e-12
 STRUCTURE DIS structure NODE 7 QUANTITY stress_xx VALUE 2.7658137673548984 TOLERANCE 1e-10
 -------------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ------------------------------------------------DESIGN SURF NEUMANN CONDITIONS
-E 2 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 5 0.01 0.01 0 0 0 FUNCT 1 2 2 0 0 0 TYPE Live
+E 2 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 5 0.01 0.01 0 0 0 FUNCT 1 2 2 none none none TYPE Live
 -------------------------------------------------DESIGN VOL NEUMANN CONDITIONS
-E 1 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 5 0.01 0.01 0 0 0 FUNCT 1 2 2 0 0 0 TYPE Live
+E 1 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 5 0.01 0.01 0 0 0 FUNCT 1 2 2 none none none TYPE Live
 ------------------------------------------------------------------PROBLEM SIZE
 DIM                             3
 -----------------------------------------------------------DSURF-NODE TOPOLOGY

@@ -103,7 +103,7 @@ SCATRA DIS scatra NODE 200 QUANTITY phi VALUE 9.10697451383487344e-01 TOLERANCE 
 SCATRA DIS scatra NODE 200 QUANTITY phi2 VALUE 4.55348725691743672e-01 TOLERANCE 1e-7
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
 // // left surface curve  x y z 0 0 0 Val1 Val2 Val3 0 0 0 TYPE Live/orthopreassure
-E 1 NUMDOF 2 ONOFF 1 1 VAL 1.0 0.5 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 1 VAL 1.0 0.5 FUNCT none none
 ---------------------------------------------------------DNODE-NODE TOPOLOGY
 NODE 181 DNODE 1
 NODE 1 DNODE 2

@@ -130,10 +130,10 @@ SCATRA DIS scatra NODE 300 QUANTITY phi5 VALUE   5.00000000000000111e-01 TOLERAN
 SCATRA DIS scatra SPECIAL true QUANTITY numiterlastnewton VALUE 3.0 TOLERANCE 1.e-20
 -------------------------------------DESIGN SURF NEUMANN CONDITIONS
 //inflow
-E 1 NUMDOF 5 ONOFF 1 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 FUNCT 3 0 0 0 0
+E 1 NUMDOF 5 ONOFF 1 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 FUNCT 3 none none none none
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 //inflow
-E 2 NUMDOF 5 ONOFF 0 1 1 1 1 VAL 0.0 1.0 1.0 1.0 1.0 FUNCT 0 0 0 0 0
+E 2 NUMDOF 5 ONOFF 0 1 1 1 1 VAL 0.0 1.0 1.0 1.0 1.0 FUNCT none none none none none
 ---------------------------------------------------------DSURF-NODE TOPOLOGY
 NODE 45 DSURFACE 1
 NODE 46 DSURFACE 1

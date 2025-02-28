@@ -69,19 +69,19 @@ MAT 2   ELAST_CoupNeoHooke YOUNG 2250 NUE 0.3
 COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME 2.5*t
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // dxz
-E 3 NUMDOF 3 ONOFF 1 0 1 VAL 0 0 0  FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 1 0 1 VAL 0 0 0  FUNCT none none none
 // dzy
-E 4 NUMDOF 3 ONOFF 0 1 1 VAL 0 -1 0 FUNCT 0 1 0
+E 4 NUMDOF 3 ONOFF 0 1 1 VAL 0 -1 0 FUNCT none 1 none
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // dz
-E 3 NUMDOF 3 ONOFF 0 0 1 VAL 0 0 0  FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 0 0 1 VAL 0 0 0  FUNCT none none none
 // dx
-E 4 NUMDOF 3 ONOFF 1 0 0 VAL 0 0 0  FUNCT 0 0 0
+E 4 NUMDOF 3 ONOFF 1 0 0 VAL 0 0 0  FUNCT none none none
 --------------------------------------DESIGN VOL DIRICH CONDITIONS
 // dxyz
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0  FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0  FUNCT none none none
 // push
-E 2 NUMDOF 3 ONOFF 0 1 0 VAL 0 -1 0 FUNCT 0 1 0
+E 2 NUMDOF 3 ONOFF 0 1 0 VAL 0 -1 0 FUNCT none 1 none
 --------------------------DESIGN SURF MORTAR CONTACT CONDITIONS 3D
 // master
 E 1 InterfaceID 1 Side Master Initialization Inactive FrCoeffOrBound 0.5

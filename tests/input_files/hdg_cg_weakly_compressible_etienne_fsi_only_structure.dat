@@ -56,7 +56,7 @@ E 3 NUMDOF 2  ONOFF 1 1  VAL 1.0 1.0  FUNCT 1 1
 E 4 NUMDOF 2  ONOFF 1 1  VAL 1.0 1.0  FUNCT 1 1
 ------------------------------------DESIGN SURF NEUMANN CONDITIONS
 // Surface
-E 1 NUMDOF 6  ONOFF 1 1 0 0 0 0  VAL 1.0 1.0 0 0 0 0  FUNCT 2 2 0 0 0 0  TYPE Live
+E 1 NUMDOF 6  ONOFF 1 1 0 0 0 0  VAL 1.0 1.0 0 0 0 0  FUNCT 2 2 none none none none  TYPE Live
 -----------------------------------------------DLINE-NODE TOPOLOGY
 NODE  1 DLINE 1
 NODE  4 DLINE 1

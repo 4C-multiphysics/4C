@@ -150,12 +150,12 @@ VARIABLE 0 NAME a TYPE multifunction NUMPOINTS 3 TIMES 0.0 500 500000.0 DESCRIPT
 E 3 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL -5.0e5 0.0 0.0 0.0 0.0 0.0 FUNCT 2 2 2 2 2 2 TYPE pseudo_orthopressure
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
 //                              bottom_line_fixed_xyz
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 //                              bottom_surf_fixed_xyz
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 //                              front__end_surf_normal_z_fixed
-E 2 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ------------------------------------DESIGN THERMO CONVECTION SURF CONDITIONS
 //                              inner_surf_temperature
 E 4 temperature_state Tempnp coeff -42700.0 surtemp 80.0  surtempfunct 0 funct 0

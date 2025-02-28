@@ -65,11 +65,11 @@ E 1 ConditionID 1 amplitude 0.01 curve 3 activeTime 0.0 planeNodes 2 3 4 control
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 // DOBJECT FLAG FLAG FLAG FLAG FLAG FLAG VAL VAL VAL VAL VAL VAL
 //connect2
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0  FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0  FUNCT none none none
 //connect3
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0  FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0  FUNCT none none none
 //connect4
-E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0  FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0  FUNCT none none none
 ---------------------------------------------------------DNODE-NODE TOPOLOGY
 NODE 217 DNODE 1
 NODE 242 DNODE 2
