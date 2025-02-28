@@ -138,7 +138,7 @@ E 3 ROTANGLE 2.01937681 2.406599614 0.0 FUNCT none none none USEUPDATEDNODEPOS 0
 //normal -0.176327 1.0 0.0 tangent 1.0 0.176327 0.0
 ------------------------------------DESIGN THERMO CONVECTION SURF CONDITIONS
 //  thr_conv_hot_gas
-E 4 temperature_state Tempnp coeff -280 surtemp 1.0 surtempfunct 2 funct 0
+E 4 temperature_state Tempnp coeff -280 surtemp 1.0 surtempfunct 2 funct none
 ---------------------------------------------------------DSURF-NODE TOPOLOGY
 NODE 1 DSURFACE 1
 NODE 2 DSURFACE 1

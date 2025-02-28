@@ -104,9 +104,9 @@ E 6 ID 1 MASTER_OR_SLAVE Master PLANE xy LAYER 1 ANGLE 0.0 ABSTREETOL 1e-9
 E 1 DIS fluid NUMMODES 4 ONOFF 0 0 0 1 WEIGHTVECDEF integration
 ----------------------------DESIGN SURFACE MIXED/HYBRID DIRICHLET CONDITIONS
 // wall top
-E 1 val 0.0 0.0 0.0 funct 0 0 0 u_C -0.5 PENTYPE Spalding hB_divided_by 4.0 utau_computation at_wall
+E 1 val 0.0 0.0 0.0 funct none none none u_C -0.5 PENTYPE Spalding hB_divided_by 4.0 utau_computation at_wall
 // wall bottom
-E 2 val 0.0 0.0 0.0 funct 0 0 0 u_C -0.5 PENTYPE Spalding hB_divided_by 4.0 utau_computation at_wall
+E 2 val 0.0 0.0 0.0 funct none none none u_C -0.5 PENTYPE Spalding hB_divided_by 4.0 utau_computation at_wall
 ---------------------------------------------------------DSURF-NODE TOPOLOGY
 NODE 1201 DSURFACE 1
 NODE 1202 DSURFACE 1

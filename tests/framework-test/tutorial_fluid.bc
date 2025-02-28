@@ -45,35 +45,35 @@ Property Name: none
 has 23 Nodes
 *ns1="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1 0 0"
+description="NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1 none none"
 
 Node Set, named: top
 Property Name: none
 has 68 Nodes
 *ns2="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0"
+description="NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none"
 
 Node Set, named: bottom
 Property Name: none
 has 68 Nodes
 *ns3="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0"
+description="NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none"
 
 Node Set, named: cylinder
 Property Name: none
 has 116 Nodes
 *ns4="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0"
+description="NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none"
 
 Node Set, named: edges
 Property Name: none
 has 2 Nodes
 *ns5="CONDITION"
 sectionname="DESIGN POINT DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 0 0 0"
+description="NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT none none none"
 
 -----------------------------------------VALIDCONDITIONS
 

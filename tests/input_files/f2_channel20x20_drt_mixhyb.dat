@@ -37,9 +37,9 @@ EVALUATION_TAU                  integration_point
 NAME                            Fluid_Solver
 SOLVER                          UMFPACK
 -------------------------------DESIGN LINE MIXED/HYBRID DIRICHLET CONDITIONS
-E 4 val 1.0 0.0 0.0 funct 1 0 0 u_C 0 PENTYPE constant hB_divided_by 0 utau_computation at_wall
-E 1 val 0.0 0.0 0.0 funct 0 0 0 u_C 0 PENTYPE constant hB_divided_by 0 utau_computation at_wall
-E 3 val 0.0 0.0 0.0 funct 0 0 0 u_C 0 PENTYPE constant hB_divided_by 0 utau_computation at_wall
+E 4 val 1.0 0.0 0.0 funct 1 none none u_C 0 PENTYPE constant hB_divided_by 0 utau_computation at_wall
+E 1 val 0.0 0.0 0.0 funct none none none u_C 0 PENTYPE constant hB_divided_by 0 utau_computation at_wall
+E 3 val 0.0 0.0 0.0 funct none none none u_C 0 PENTYPE constant hB_divided_by 0 utau_computation at_wall
 ---------------------------------------------------------DNODE-NODE TOPOLOGY
 NODE 332 DNODE 1
 NODE 1 DNODE 2

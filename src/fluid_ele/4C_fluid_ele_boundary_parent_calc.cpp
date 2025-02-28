@@ -1874,7 +1874,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::evaluate_weak_dbc(
 
   // get values and switches from condition
   // (assumed to be constant on element boundary)
-  const auto functions = wdbc_cond->parameters().get<std::vector<int>>("FUNCT");
+  const auto functions = wdbc_cond->parameters().get<std::vector<std::optional<int>>>("FUNCT");
 
   // find out whether to apply weak DBC only in normal direction
   bool onlynormal = false;
@@ -2185,13 +2185,14 @@ void Discret::Elements::FluidBoundaryParent<distype>::evaluate_weak_dbc(
     for (int idim = 0; idim < nsd; idim++)
     {
       // factor given by spatial function
-      if (functions[idim] > 0)
+      if (functions[idim].has_value())
       {
         // evaluate function at current gauss point
         // (important: requires 3D position vector)
-        functionfac(idim) = Global::Problem::instance()
-                                ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functions[idim])
-                                .evaluate(coordgp.data(), time, idim);
+        functionfac(idim) =
+            Global::Problem::instance()
+                ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functions[idim].value())
+                .evaluate(coordgp.data(), time, idim);
       }
       else
         functionfac(idim) = 1.0;

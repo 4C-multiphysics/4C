@@ -9,6 +9,8 @@
 
 #include "4C_utils_function.hpp"
 
+#include <optional>
+
 #ifndef FOUR_C_FLUID_XFLUID_FUNCTIONS_HPP
 #define FOUR_C_FLUID_XFLUID_FUNCTIONS_HPP
 
@@ -219,13 +221,14 @@ namespace Discret
       MovingLevelSetTorusSliplength(std::vector<double>* origin,
           std::vector<double>* orientationvec_torus, double radius, double radius_tube,
           std::vector<double>* direction, double distance, double maxspeed,
-          std::vector<double>* rotvector, double rotspeed, double rotramptime, int slipfunct);
+          std::vector<double>* rotvector, double rotspeed, double rotramptime,
+          std::optional<int> slipfunct);
 
       /// evaluate function at given position in space
       double evaluate(const double* x, double t, std::size_t component) const override;
 
      private:
-      int slipfunct_;
+      std::optional<int> slipfunct_;
     };
 
     /*!

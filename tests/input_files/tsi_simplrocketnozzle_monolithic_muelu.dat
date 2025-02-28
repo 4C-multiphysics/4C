@@ -151,7 +151,7 @@ E 5 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ------------------------------------DESIGN THERMO CONVECTION SURF CONDITIONS
 // thr convection hot gas --> cycle is applied via CURVE2
-E 6 temperature_state Tempnp coeff -28000 surtemp 1.0 surtempfunct 3 funct 0
+E 6 temperature_state Tempnp coeff -28000 surtemp 1.0 surtempfunct 3 funct none
 // thr top surrounding temp
 //E 7 - temperature_state Tempnp coeff 28000 surtemp 293.15 surtempcurve none funct none
 ---------------------------------------------------------DSURF-NODE TOPOLOGY

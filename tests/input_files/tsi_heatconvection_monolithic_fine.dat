@@ -6,7 +6,8 @@ benchmark for linear thermo-structure interaction
 -> validation of fully-coupled partitioned TSI-algorithm
 -> for comparison with literature use: tmax = 4.0, dt = 0.01
 30x12x12 elements, i.e., 4320 elements: for the given problem inefficient fine
-mesh, but to test a BGS(AMG) preconditioner necessary.
+mesh, but to test a BGS(AMG)
+preconditioner necessary.
 Be careful if you want to compare these results with Tanaka: coupling term in
 thermal equation depends only on initial temperature T_0, whereas in 4C the coupling term depends on current temperature T
 -> Switch on #define COUPLEINITTEMPERATURE in tsi_defines.H
@@ -149,7 +150,7 @@ E 1 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 //E 8 - 1 1 373.15 none 0
 ------------------------------------DESIGN THERMO CONVECTION SURF CONDITIONS
 // THR left surf heat convection
-E 8 temperature_state Tempnp coeff -6.444497425 surtemp 373.15 surtempfunct 0 funct 0
+E 8 temperature_state Tempnp coeff -6.444497425 surtemp 373.15 surtempfunct none funct none
 ---------------------------------------------------------DSURF-NODE TOPOLOGY
 NODE 121 DSURFACE 1
 NODE 122 DSURFACE 1

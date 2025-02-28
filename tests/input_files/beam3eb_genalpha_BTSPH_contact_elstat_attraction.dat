@@ -77,9 +77,9 @@ E 1 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none 
 E 2 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 -1.0 FUNCT none none 1
 ------------------------DESIGN POINT RIGIDSPHERE POTENTIAL CHARGE CONDITIONS
-E 3 POTLAW 1 VAL 1.0 FUNCT -1
+E 3 POTLAW 1 VAL 1.0 FUNCT none
 --------------------------------DESIGN LINE BEAM POTENTIAL CHARGE CONDITIONS
-E 1 POTLAW 1 VAL -1.0 FUNCT -1
+E 1 POTLAW 1 VAL -1.0 FUNCT none
 ---------------------------------------------------------DNODE-NODE TOPOLOGY
 NODE 1 DNODE 1
 NODE 5 DNODE 2

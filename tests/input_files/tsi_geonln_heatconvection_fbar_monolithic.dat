@@ -136,7 +136,7 @@ E 1 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 //E 8 - 1 1 373.15 none 0
 ------------------------------------DESIGN THERMO CONVECTION SURF CONDITIONS
 // THR left surf heat convection
-E 8 temperature_state Tempnp coeff -6.444497425 surtemp 373.15 surtempfunct 0 funct 0
+E 8 temperature_state Tempnp coeff -6.444497425 surtemp 373.15 surtempfunct none funct none
 ---------------------------------------------------------DSURF-NODE TOPOLOGY
 NODE 49 DSURFACE 1
 NODE 50 DSURFACE 1

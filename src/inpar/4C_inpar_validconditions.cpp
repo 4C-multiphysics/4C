@@ -33,6 +33,7 @@
 #include "4C_inpar_structure.hpp"
 #include "4C_inpar_xfem.hpp"
 #include "4C_io_input_spec_builders.hpp"
+#include "4C_io_input_types.hpp"
 #include "4C_thermo_input.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -579,8 +580,8 @@ std::vector<Core::Conditions::ConditionDefinition> Input::valid_conditions()
     cond.add_component(parameter<std::vector<double>>("VAL", {.description = "values", .size = 3}));
 
     // and optional spatial functions
-    cond.add_component(parameter<std::vector<int>>("FUNCT",
-        {.description = "function ids", .default_value = std::vector<int>{0, 0, 0}, .size = 3}));
+    cond.add_component(parameter<std::vector<std::optional<int>>>(
+        "FUNCT", {.description = "function ids", .size = 3}));
     // append the condition to the list of all conditions
     condlist.push_back(cond);
   };
