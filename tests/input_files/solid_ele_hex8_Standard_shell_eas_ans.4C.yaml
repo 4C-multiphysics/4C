@@ -260,13 +260,13 @@ DESIGN SURF DIRICH CONDITIONS:
     NUMDOF: 3
     ONOFF: [1, 1, 1]
     VAL: [0, 0, 0]
-    FUNCT: [0, 0, 0]
+    FUNCT: [null, null, null]
 DESIGN SURF NEUMANN CONDITIONS:
   - E: 2
     NUMDOF: 6
     ONOFF: [1, 1, 1, 0, 0, 0]
     VAL: [10, 0.01, 0.01, 0, 0, 0]
-    FUNCT: [1, 2, 2, 0, 0, 0]
+    FUNCT: [1, 2, 2, null, null, null]
 DSURF-NODE TOPOLOGY:
   - NODE 3 DSURFACE 1
   - NODE 1 DSURFACE 1
