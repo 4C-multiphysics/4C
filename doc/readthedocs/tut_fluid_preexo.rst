@@ -5,7 +5,7 @@ Fluid Tutorial with *pre_exodus* and Cubit
 
 For this as for all other tutorials you'll need a complete |FOURC| installation
 as well as access to the pre-processing tool *cubit* and the post-processing tool *paraview*.
-If you did not do so already, install |FOURC| based on the information given in the :ref:`Setup Guide <SetupGuideto4C>`.
+If you did not do so already, install |FOURC| based on the information given in the :ref:`Installation Guide <installation>`.
 
 Introduction
 ------------
@@ -241,4 +241,3 @@ Visualize your results in Paraview
    :align: center
 
    :math:`X`-velocity for a flow past a circular cylinder
-
