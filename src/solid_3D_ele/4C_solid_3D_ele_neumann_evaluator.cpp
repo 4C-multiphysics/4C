@@ -127,7 +127,7 @@ void Discret::Elements::evaluate_neumann(Core::Elements::Element& element,
           {
             // function evaluation
             const double function_scale_factor =
-                (function_ids[dim].has_value() && function_ids[dim].value() > 0)
+                (function_ids[dim].has_value())
                     ? Global::Problem::instance()
                           ->function_by_id<Core::Utils::FunctionOfSpaceTime>(
                               function_ids[dim].value())

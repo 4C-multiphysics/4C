@@ -121,7 +121,7 @@ void XFEM::evaluate_neumann_standard(
 
     // Neumann BCs for some historic reason only have one curve
     double functfac = 1.0;
-    if (funct[0].has_value() && funct[0].value() >= 0)
+    if (funct[0].has_value())
     {
       functfac = Global::Problem::instance()
                      ->function_by_id<Core::Utils::FunctionOfTime>(funct[0].value())

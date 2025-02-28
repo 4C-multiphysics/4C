@@ -221,7 +221,7 @@ int Discret::Elements::PoroFluidMultiPhaseEleBoundaryCalc<distype>::evaluate_neu
       if (onoff[dof])  // is this dof activated?
       {
         // factor given by spatial function
-        if (func[dof].has_value() && func[dof].value() > 0)
+        if (func[dof].has_value())
         {
           // evaluate function at current Gauss point (provide always 3D coordinates!)
           functfac = Global::Problem::instance()

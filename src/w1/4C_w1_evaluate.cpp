@@ -509,7 +509,7 @@ int Discret::Elements::Wall1::evaluate_neumann(Teuchos::ParameterList& params,
     {
       // factor given by spatial function
       double functfac = 1.0;
-      if (funct[i].has_value() && funct[i].value() > 0)
+      if (funct[i].has_value())
       {
         // calculate reference position of GP
         Core::LinAlg::SerialDenseMatrix gp_coord(1, numdim_);

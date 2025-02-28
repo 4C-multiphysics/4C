@@ -352,7 +352,7 @@ namespace Core::FE
        *  The corresponding condition, e.g.:
        *  ---------DESIGN LINE DIRICH CONDITIONS
        *  // example_line
-       *  E 1 - NUMDOF 6 ONOFF 0 1 1 VAL 0.0 1.0 1.0 FUNCT 1 0 0
+       *  E 1 - NUMDOF 6 ONOFF 0 1 1 VAL 0.0 1.0 1.0 FUNCT 1 none none
        *
        *  tells you which dofs are actually conditioned. In the example given
        *  above, the highest entity which contains a certain node is a LINE.
@@ -409,7 +409,7 @@ namespace Core::FE
        *  The corresponding condition, e.g.:
        *  ---------DESIGN LINE DIRICH CONDITIONS
        *  // example_line
-       *  E 1 - NUMDOF 6 ONOFF 0 1 1 VAL 0.0 1.0 1.0 FUNCT 1 0 0
+       *  E 1 - NUMDOF 6 ONOFF 0 1 1 VAL 0.0 1.0 1.0 FUNCT 1 none none
        *
        *  tells you which dofs are actually conditioned. In the example given
        *  above, the highest entity which contains a certain node is a LINE.

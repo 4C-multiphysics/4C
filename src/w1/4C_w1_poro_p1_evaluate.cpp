@@ -942,7 +942,7 @@ int Discret::Elements::Wall1PoroP1<distype>::evaluate_neumann(Teuchos::Parameter
         double functfac = 1.0;
 
         // factor given by spatial function
-        if (funct[i].has_value() && funct[i].value() > 0)
+        if (funct[i].has_value())
         {
           // calculate reference position of GP
           Core::LinAlg::Matrix<1, Base::numdim_> gp_coord;

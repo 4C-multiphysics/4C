@@ -91,7 +91,7 @@ namespace
         //  Val = curve1*val1 + curve2*func
         // -----------------------------------------------------------------
         // get curve1 and val1
-        if (curve[0].has_value() && curve[0].value() > 0)
+        if (curve[0].has_value())
           curvefac = Global::Problem::instance()
                          ->function_by_id<Core::Utils::FunctionOfTime>(curve[0].value())
                          .evaluate(time);
@@ -109,7 +109,7 @@ namespace
         }
         // get curve2
         double curve2fac = 1.0;
-        if (curve[1].has_value() && curve[1].value() > 0)
+        if (curve[1].has_value())
           curve2fac = Global::Problem::instance()
                           ->function_by_id<Core::Utils::FunctionOfTime>(curve[1].value())
                           .evaluate(time);
@@ -952,7 +952,7 @@ void Discret::Elements::AirwayImpl<distype>::evaluate_terminal_bc(RedAirway* ele
             {
               if (curve)
               {
-                if ((*curve)[id].has_value() && (*curve)[id].value() > 0)
+                if ((*curve)[id].has_value())
                   return Global::Problem::instance()
                       ->function_by_id<Core::Utils::FunctionOfTime>((*curve)[id].value())
                       .evaluate(time);
@@ -971,7 +971,7 @@ void Discret::Elements::AirwayImpl<distype>::evaluate_terminal_bc(RedAirway* ele
                       condition->parameters().get_if<std::vector<std::optional<int>>>("funct");
                   if (functions)
                   {
-                    if ((*functions)[0].has_value() && (*functions)[0].value() > 0)
+                    if ((*functions)[0].has_value())
                       return Global::Problem::instance()
                           ->function_by_id<Core::Utils::FunctionOfSpaceTime>(
                               (*functions)[0].value())

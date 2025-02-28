@@ -578,7 +578,7 @@ void XFEM::CouplingBase::evaluate_function(std::vector<double>& final_values, co
     double num = onoff[dof] * val[dof];
 
     // get factor given by spatial function
-    if (functions[dof].has_value() && functions[dof].value() > 0)
+    if (functions[dof].has_value())
     {
       functionfac = Global::Problem::instance()
                         ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functions[dof].value())

@@ -411,7 +411,7 @@ int Discret::Elements::FluidBoundaryImpl<distype>::evaluate_neumann(
       {
         if (onoff[idim])  // Is this dof activated
         {
-          if (func[idim].has_value() && func[idim].value() > 0)
+          if (func[idim].has_value())
           {
             // evaluate function at current gauss point
             functfac = Global::Problem::instance()
@@ -449,7 +449,7 @@ int Discret::Elements::FluidBoundaryImpl<distype>::evaluate_neumann(
 
         if (onoff[0])  // Do we have a load in normal direction?
         {
-          if (func[0].has_value() && func[0].value() > 0)
+          if (func[0].has_value())
           {
             // evaluate function at current gauss point
             functfac = Global::Problem::instance()

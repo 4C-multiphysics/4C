@@ -485,7 +485,7 @@ void Core::FE::Utils::DbcHDG::do_dirichlet_condition(const Teuchos::ParameterLis
     std::vector<int> funct_without_nones(funct.size());
     for (unsigned int i = 0; i < funct.size(); ++i)
     {
-      if (funct[i].has_value() && funct[i].value() > 0)
+      if (funct[i].has_value())
         funct_without_nones[i] = funct[i].value();
       else
         funct_without_nones[i] = -1;

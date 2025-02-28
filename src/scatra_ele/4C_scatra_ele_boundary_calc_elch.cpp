@@ -153,7 +153,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElch<distype, probdim>::calc_elch_b
   double rhsfac = 1.0;
   // find out whether we shell use a time curve and get the factor
   // this feature can be also used for stationary "pseudo time loops"
-  if (curvenum.has_value() && curvenum.value() > 0)
+  if (curvenum.has_value())
   {
     // function_by_id takes a zero-based index
     const double curvefac = Global::Problem::instance()
@@ -259,7 +259,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElch<distype, probdim>::calc_nernst
 
     const double time = my::scatraparamstimint_->time();
 
-    if (curvenum.has_value() && curvenum.value() > 0)
+    if (curvenum.has_value())
     {
       // function_by_id takes a zero-based index
       const double curvefac = Global::Problem::instance()

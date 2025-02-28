@@ -205,7 +205,7 @@ int Discret::Elements::Wall1Line::evaluate_neumann(Teuchos::ParameterList& param
         {
           if (onoff[i])  // is this dof activated?
           {
-            if (funct[i].has_value() && funct[i].value() > 0)
+            if (funct[i].has_value())
             {
               // factor given by spatial function
               const int functnum = funct[i].value();
@@ -262,7 +262,7 @@ int Discret::Elements::Wall1Line::evaluate_neumann(Teuchos::ParameterList& param
         const double dr = w1_substitution(xyecurr, deriv, &unrm, numnod);
 
         double functfac = 1.0;
-        if (funct[0].has_value() && funct[0].value() > 0)
+        if (funct[0].has_value())
         {
           // factor given by spatial function
           const int functnum = funct[0].value();

@@ -278,7 +278,7 @@ int Discret::Elements::StructuralSurface::evaluate_neumann(Teuchos::ParameterLis
             // factor given by spatial function
             if (spa_func)
             {
-              if ((*spa_func)[dof].has_value() && (*spa_func)[dof].value() > 0)
+              if ((*spa_func)[dof].has_value())
               {
                 // Calculate reference position of GP
                 Core::LinAlg::multiply_tn(gp_coord, funct, x);
@@ -327,7 +327,7 @@ int Discret::Elements::StructuralSurface::evaluate_neumann(Teuchos::ParameterLis
         // factor given by spatial function
         if (spa_func)
         {
-          if ((*spa_func)[0].has_value() && (*spa_func)[0].value() > 0)
+          if ((*spa_func)[0].has_value())
           {
             Core::LinAlg::multiply_tn(gp_coord, funct, xc);
             // write coordinates in another datatype

@@ -313,7 +313,7 @@ void Discret::Elements::ScaTraEleCalcElchDiffCond<distype, probdim>::calc_elch_d
   double rhsfac = 1.0;
   // find out whether we shell use a time curve and get the factor
   // this feature can be also used for stationary "pseudo time loops"
-  if (curvenum.has_value() && curvenum.value() > 0)
+  if (curvenum.has_value())
   {
     // function_by_id takes a zero-based index
     const double curvefac = Global::Problem::instance()

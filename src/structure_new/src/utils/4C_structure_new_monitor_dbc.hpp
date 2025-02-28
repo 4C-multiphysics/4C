@@ -41,7 +41,7 @@ namespace Solid
    *  change of a tagged Dirichlet condition during a simulation. To tag a Dirichlet
    *  condition just add the corresponding TAG, e.g. \"monitor_reaction\"
    *
-   *  E 1 - NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0 TAG monitor_reaction
+   *  E 1 - NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none TAG monitor_reaction
    *
    *  If the TAG can be found for any Dirichlet condition the reaction force as
    *  well as the reference and current area will be stored in a text file

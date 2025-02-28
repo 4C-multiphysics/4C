@@ -207,7 +207,7 @@ void Discret::Elements::InterAcinarDepImpl<distype>::evaluate_terminal_bc(RedInt
 
           // Read in the value of the applied BC
           // Get factor of first CURVE
-          if (curve[0].has_value() && curve[0].value() > 0)
+          if (curve[0].has_value())
           {
             curvefac = Global::Problem::instance()
                            ->function_by_id<Core::Utils::FunctionOfTime>(curve[0].value())
@@ -221,7 +221,7 @@ void Discret::Elements::InterAcinarDepImpl<distype>::evaluate_terminal_bc(RedInt
           }
           // Get factor of FUNCT
           double functionfac = 0.0;
-          if (functions[0].has_value() && functions[0].value() > 0)
+          if (functions[0].has_value())
           {
             functionfac =
                 Global::Problem::instance()
@@ -231,7 +231,7 @@ void Discret::Elements::InterAcinarDepImpl<distype>::evaluate_terminal_bc(RedInt
 
           // Get factor of second CURVE
           double curve2fac = 1.0;
-          if (curve[1].has_value() && curve[1].value() > 0)
+          if (curve[1].has_value())
             curve2fac = Global::Problem::instance()
                             ->function_by_id<Core::Utils::FunctionOfTime>(curve[1].value())
                             .evaluate(time);
@@ -269,7 +269,7 @@ void Discret::Elements::InterAcinarDepImpl<distype>::evaluate_terminal_bc(RedInt
               const auto vals = pplCond->parameters().get<std::vector<double>>("VAL");
 
               // Read in the value of the applied BC
-              if (curve[0].has_value() && curve[0].value() > 0)
+              if (curve[0].has_value())
               {
                 curvefac = Global::Problem::instance()
                                ->function_by_id<Core::Utils::FunctionOfTime>(curve[0].value())

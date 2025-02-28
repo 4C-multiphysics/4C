@@ -528,7 +528,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::flow_dep_pressure_bc(
   const auto curvenum = fdp_cond->parameters().get<std::optional<int>>("curve");
 
   double curvefac = 1.0;
-  if (curvenum.has_value() && curvenum.value() > 0 && time >= 0)
+  if (curvenum.has_value() && time >= 0)
     curvefac = Global::Problem::instance()
                    ->function_by_id<Core::Utils::FunctionOfTime>(curvenum.value())
                    .evaluate(time);
@@ -4847,7 +4847,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
         for (int dim = 0; dim < nsd; ++dim)
         {
           // factor given by spatial function
-          if (functions[dim].has_value() && functions[dim].value() > 0)
+          if (functions[dim].has_value())
           {
             // evaluate function at current gauss point (important: requires 3D position vector)
             functionfac(dim) =
@@ -4873,11 +4873,11 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
         // adjoint consistency term, tangential stress part (normalised)
 
         /*
-                     /                        \
+                    /                        \
                     |  h       /         \   h |
                   - | r o n , | 1 - n x n | u  |
                     |          \         /     |
-                     \                        / Gamma
+                    \                        / Gamma
         */
 
         for (int A = 0; A < piel; ++A)
@@ -5215,7 +5215,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
       for (int dim = 0; dim < nsd; ++dim)
       {
         // factor given by spatial function
-        if (functions[dim].has_value() && functions[dim].value() > 0)
+        if (functions[dim].has_value())
         {
           // evaluate function at current gauss point (important: requires 3D position vector)
           functionfac(dim) =

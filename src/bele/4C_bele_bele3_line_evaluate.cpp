@@ -158,7 +158,7 @@ int Discret::Elements::Bele3Line::evaluate_neumann(Teuchos::ParameterList& param
       for (size_t dim = 0; dim < 3; dim++)
       {
         // evaluate function at current gauss point if it is not none
-        if (functions[dim].has_value() && functions[dim].value() > 0)
+        if (functions[dim].has_value())
         {
           functionfac =
               Global::Problem::instance()
