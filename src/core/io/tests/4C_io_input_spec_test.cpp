@@ -952,6 +952,75 @@ specs:
   }
 
 
+  TEST(InputSpecTest, MatchYamlGroupWithSelection)
+  {
+    auto spec = selection<std::string>("model", based_on("type"),
+        from_choices({
+            {"linear", parameter<double>("coefficient")},
+            {"quadratic", one_of({
+                              all_of({
+                                  parameter<int>("a"),
+                                  parameter<double>("b"),
+                              }),
+                              parameter<double>("c"),
+                          })},
+        }));
+
+    {
+      SCOPED_TRACE("First selection");
+      ryml::Tree tree = init_yaml_tree_with_exceptions();
+      ryml::NodeRef root = tree.rootref();
+      ryml::parse_in_arena(R"(model:
+  type: linear
+  coefficient: 1.0
+)",
+          root);
+
+      ConstYamlNodeRef node(root, "");
+      InputParameterContainer container;
+      spec.match(node, container);
+      EXPECT_EQ(container.group("model").get<std::string>("type"), "linear");
+      EXPECT_EQ(container.group("model").get<double>("coefficient"), 1.0);
+    }
+
+    {
+      SCOPED_TRACE("Second selection");
+      ryml::Tree tree = init_yaml_tree_with_exceptions();
+      ryml::NodeRef root = tree.rootref();
+      ryml::parse_in_arena(R"(model:
+  type: quadratic
+  a: 1
+  b: 2.0
+)",
+          root);
+
+      ConstYamlNodeRef node(root, "");
+      InputParameterContainer container;
+      spec.match(node, container);
+      EXPECT_EQ(container.group("model").get<std::string>("type"), "quadratic");
+      EXPECT_EQ(container.group("model").get<int>("a"), 1);
+      EXPECT_EQ(container.group("model").get<double>("b"), 2.0);
+    }
+
+    {
+      SCOPED_TRACE("Second selection, other one_of");
+      ryml::Tree tree = init_yaml_tree_with_exceptions();
+      ryml::NodeRef root = tree.rootref();
+      ryml::parse_in_arena(R"(model:
+  type: quadratic
+  c: 3.0
+)",
+          root);
+
+      ConstYamlNodeRef node(root, "");
+      InputParameterContainer container;
+      spec.match(node, container);
+      EXPECT_EQ(container.group("model").get<std::string>("type"), "quadratic");
+      EXPECT_EQ(container.group("model").get<double>("c"), 3.0);
+    }
+  }
+
+
   TEST(InputSpecTest, MatchYamlAllOf)
   {
     auto spec = all_of({

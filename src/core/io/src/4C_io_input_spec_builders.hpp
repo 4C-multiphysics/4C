@@ -833,6 +833,19 @@ namespace Core::IO
                      [&](const auto& val) { return this->operator()(val.second, size_info + 1); });
         }
       };
+
+
+      //! Helper for selection().
+      struct BasedOn
+      {
+        std::string name;
+      };
+
+      //! Helper for selection().
+      struct FromChoices
+      {
+        std::map<std::string, InputSpec> choices;
+      };
     }  // namespace Internal
 
     /**
@@ -1034,6 +1047,50 @@ namespace Core::IO
         std::string name, std::vector<InputSpec> specs, GroupData data = {});
 
     /**
+     * This function is used to select one of multiple InputSpecs based on the value of the
+     * parameter @p selector. For every possible value of the selector, a different InputSpec is
+     * expected. The selector parameter and the selected InputSpec live inside a group with the @p
+     * name. For example:
+     *
+     * @code
+     * auto spec = selection<std::string>("Time integration", based_on("scheme"),
+     *     from_choices({
+     *         {"OST", parameter<double>("theta")},
+     *         {"GenAlpha", all_of({
+     *                               parameter<double>("alpha_f"),
+     *                               parameter<double>("alpha_m"),
+     *                           }),
+     *     }));
+     * @endcode
+     *
+     * will match the following input:
+     *
+     * @code
+     * Time integration:
+     *   scheme: OST
+     *   theta: 0.5
+     * @endcode
+     *
+     * or the following input:
+     *
+     * @code
+     * Time integration:
+     *   scheme: GenAlpha
+     *   alpha_f: 1
+     *   alpha_m: 0.5
+     * @endcode
+     *
+     * Note that the @p selector parameter is added automatically by this function.
+     *
+     * @note This function uses the fluent interface idiom and wraps the name of the @p selector
+     * with based_on() and the choices with from_choices().
+     */
+    template <typename T>
+      requires(std::is_same_v<T, std::string>)
+    [[nodiscard]] InputSpec selection(std::string name, Internal::BasedOn selector,
+        Internal::FromChoices choices, GroupData data = {});
+
+    /**
      * All of the given InputSpecs are expected, e.g.,
      *
      * @code
@@ -1190,6 +1247,17 @@ namespace Core::IO
      * InputSpec, you should rarely need the list() function.
      */
     [[nodiscard]] InputSpec list(std::string name, InputSpec spec, ListData data = {});
+
+    /**
+     * A fluent interface helper. Used for selection().
+     */
+    [[nodiscard]] inline Internal::BasedOn based_on(std::string name);
+
+    /**
+     * A fluent interface helper. Used for selection().
+     */
+    [[nodiscard]] inline Internal::FromChoices from_choices(
+        std::map<std::string, InputSpec> choices);
   }  // namespace InputSpecBuilders
 }  // namespace Core::IO
 
@@ -1655,6 +1723,24 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::parameter(
       });
 }
 
+template <typename T>
+  requires(std::is_same_v<T, std::string>)
+Core::IO::InputSpec Core::IO::InputSpecBuilders::selection(
+    std::string name, Internal::BasedOn selector, Internal::FromChoices choices, GroupData data)
+{
+  std::vector<InputSpec> specs;
+  specs.reserve(choices.choices.size());
+  for (auto&& [choice_name, choice_spec] : choices.choices)
+  {
+    specs.emplace_back(all_of({
+        selection<std::string>(selector.name, {choice_name},
+            {.description = "Selects which other parameters are allowed in this group."}),
+        std::move(choice_spec),
+    }));
+  }
+  return group(name, {one_of(specs)}, data);
+}
+
 
 template <typename T>
 Core::IO::InputSpec Core::IO::InputSpecBuilders::Internal::selection_internal(
@@ -1765,6 +1851,20 @@ auto Core::IO::InputSpecBuilders::store_index_as(std::string name, std::vector<T
     }
   };
 }
+
+
+Core::IO::InputSpecBuilders::Internal::BasedOn Core::IO::InputSpecBuilders::based_on(
+    std::string name)
+{
+  return Internal::BasedOn{name};
+}
+
+Core::IO::InputSpecBuilders::Internal::FromChoices Core::IO::InputSpecBuilders::from_choices(
+    std::map<std::string, InputSpec> choices)
+{
+  return Internal::FromChoices{std::move(choices)};
+}
+
 
 FOUR_C_NAMESPACE_CLOSE
 
