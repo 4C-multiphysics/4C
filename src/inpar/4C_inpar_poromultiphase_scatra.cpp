@@ -26,21 +26,21 @@ void Inpar::PoroMultiPhaseScaTra::set_valid_parameters(
   Core::Utils::SectionSpecs poromultiphasescatradyn{"POROMULTIPHASESCATRA DYNAMIC"};
 
   // Output type
-  Core::Utils::int_parameter("RESTARTEVERY", 1,
-      "write restart possibility every RESTARTEVERY steps", poromultiphasescatradyn);
+  poromultiphasescatradyn.specs.emplace_back(parameter<int>("RESTARTEVERY",
+      {.description = "write restart possibility every RESTARTEVERY steps", .default_value = 1}));
   // Time loop control
-  Core::Utils::int_parameter(
-      "NUMSTEP", 200, "maximum number of Timesteps", poromultiphasescatradyn);
+  poromultiphasescatradyn.specs.emplace_back(parameter<int>(
+      "NUMSTEP", {.description = "maximum number of Timesteps", .default_value = 200}));
   poromultiphasescatradyn.specs.emplace_back(parameter<double>(
       "MAXTIME", {.description = "total simulation time", .default_value = 1000.0}));
   poromultiphasescatradyn.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "time step size dt", .default_value = 0.05}));
-  Core::Utils::int_parameter(
-      "RESULTSEVERY", 1, "increment for writing solution", poromultiphasescatradyn);
-  Core::Utils::int_parameter(
-      "ITEMAX", 10, "maximum number of iterations over fields", poromultiphasescatradyn);
-  Core::Utils::int_parameter(
-      "ITEMIN", 1, "minimal number of iterations over fields", poromultiphasescatradyn);
+  poromultiphasescatradyn.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "increment for writing solution", .default_value = 1}));
+  poromultiphasescatradyn.specs.emplace_back(parameter<int>(
+      "ITEMAX", {.description = "maximum number of iterations over fields", .default_value = 10}));
+  poromultiphasescatradyn.specs.emplace_back(parameter<int>(
+      "ITEMIN", {.description = "minimal number of iterations over fields", .default_value = 1}));
 
   // Coupling strategy for poroscatra solvers
   Core::Utils::string_to_integral_parameter<SolutionSchemeOverFields>("COUPALGO",
@@ -102,9 +102,9 @@ void Inpar::PoroMultiPhaseScaTra::set_valid_parameters(
                            .default_value = 1e-8}));
 
   // number of linear solver used for poroelasticity
-  Core::Utils::int_parameter("LINEAR_SOLVER", -1,
-      "number of linear solver used for monolithic poroscatra problems",
-      poromultiphasescatradynmono);
+  poromultiphasescatradynmono.specs.emplace_back(parameter<int>("LINEAR_SOLVER",
+      {.description = "number of linear solver used for monolithic poroscatra problems",
+          .default_value = -1}));
 
   // parameters for finite difference check
   Core::Utils::string_to_integral_parameter<FdCheck>("FDCHECK", "none",

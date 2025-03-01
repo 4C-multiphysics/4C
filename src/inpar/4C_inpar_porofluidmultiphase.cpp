@@ -22,13 +22,14 @@ void Inpar::POROFLUIDMULTIPHASE::set_valid_parameters(
 
   porofluidmultiphasedyn.specs.emplace_back(parameter<double>(
       "MAXTIME", {.description = "Total simulation time", .default_value = 1000.0}));
-  Core::Utils::int_parameter("NUMSTEP", 20, "Total number of time steps", porofluidmultiphasedyn);
+  porofluidmultiphasedyn.specs.emplace_back(parameter<int>(
+      "NUMSTEP", {.description = "Total number of time steps", .default_value = 20}));
   porofluidmultiphasedyn.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "Time increment dt", .default_value = 0.1}));
-  Core::Utils::int_parameter(
-      "RESULTSEVERY", 1, "Increment for writing solution", porofluidmultiphasedyn);
-  Core::Utils::int_parameter(
-      "RESTARTEVERY", 1, "Increment for writing restart", porofluidmultiphasedyn);
+  porofluidmultiphasedyn.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "Increment for writing solution", .default_value = 1}));
+  porofluidmultiphasedyn.specs.emplace_back(parameter<int>(
+      "RESTARTEVERY", {.description = "Increment for writing restart", .default_value = 1}));
 
   porofluidmultiphasedyn.specs.emplace_back(parameter<double>(
       "THETA", {.description = "One-step-theta time integration factor", .default_value = 0.5}));
@@ -42,15 +43,16 @@ void Inpar::POROFLUIDMULTIPHASE::set_valid_parameters(
       tuple<std::string>("No", "error_by_function"),
       tuple<CalcError>(calcerror_no, calcerror_byfunction), porofluidmultiphasedyn);
 
-  Core::Utils::int_parameter("CALCERRORNO", -1,
-      "function number for porofluidmultiphase error computation", porofluidmultiphasedyn);
+  porofluidmultiphasedyn.specs.emplace_back(parameter<int>(
+      "CALCERRORNO", {.description = "function number for porofluidmultiphase error computation",
+                         .default_value = -1}));
 
   // linear solver id used for porofluidmultiphase problems
-  Core::Utils::int_parameter("LINEAR_SOLVER", -1,
-      "number of linear solver used for the porofluidmultiphase problem", porofluidmultiphasedyn);
-
-  Core::Utils::int_parameter(
-      "ITEMAX", 10, "max. number of nonlin. iterations", porofluidmultiphasedyn);
+  porofluidmultiphasedyn.specs.emplace_back(parameter<int>("LINEAR_SOLVER",
+      {.description = "number of linear solver used for the porofluidmultiphase problem",
+          .default_value = -1}));
+  porofluidmultiphasedyn.specs.emplace_back(parameter<int>(
+      "ITEMAX", {.description = "max. number of nonlin. iterations", .default_value = 10}));
   porofluidmultiphasedyn.specs.emplace_back(parameter<double>("ABSTOLRES",
       {.description =
               "Absolute tolerance for deciding if residual of nonlinear problem is already zero",
@@ -132,16 +134,16 @@ void Inpar::POROFLUIDMULTIPHASE::set_valid_parameters(
           initfield_zero_field, initfield_field_by_function, initfield_field_by_condition),
       porofluidmultiphasedyn);
 
-  Core::Utils::int_parameter("INITFUNCNO", -1, "function number for scalar transport initial field",
-      porofluidmultiphasedyn);
+  porofluidmultiphasedyn.specs.emplace_back(parameter<int>("INITFUNCNO",
+      {.description = "function number for scalar transport initial field", .default_value = -1}));
 
   Core::Utils::string_to_integral_parameter<DivContAct>("DIVERCONT", "stop",
       "What to do with time integration when Newton-Raphson iteration failed",
       tuple<std::string>("stop", "continue"), tuple<DivContAct>(divcont_stop, divcont_continue),
       porofluidmultiphasedyn);
 
-  Core::Utils::int_parameter("FLUX_PROJ_SOLVER", -1,
-      "Number of linear solver used for L2 projection", porofluidmultiphasedyn);
+  porofluidmultiphasedyn.specs.emplace_back(parameter<int>("FLUX_PROJ_SOLVER",
+      {.description = "Number of linear solver used for L2 projection", .default_value = -1}));
 
   Core::Utils::string_to_integral_parameter<FluxReconstructionMethod>("FLUX_PROJ_METHOD", "none",
       "Flag to (de)activate flux reconstruction.", tuple<std::string>("none", "L2_projection"),
@@ -175,9 +177,9 @@ void Inpar::POROFLUIDMULTIPHASE::set_valid_parameters(
   Core::Utils::SectionSpecs porofluidmultiphasemshtdyn{porofluidmultiphasedyn, "ARTERY COUPLING"};
 
   // maximum number of segments per artery element for 1D-3D artery coupling
-  Core::Utils::int_parameter("MAXNUMSEGPERARTELE", 5,
-      "maximum number of segments per artery element for 1D-3D artery coupling",
-      porofluidmultiphasemshtdyn);
+  porofluidmultiphasemshtdyn.specs.emplace_back(parameter<int>("MAXNUMSEGPERARTELE",
+      {.description = "maximum number of segments per artery element for 1D-3D artery coupling",
+          .default_value = 5}));
 
   // penalty parameter
   porofluidmultiphasemshtdyn.specs.emplace_back(parameter<double>("PENALTY",
@@ -234,17 +236,18 @@ void Inpar::POROFLUIDMULTIPHASE::set_valid_parameters(
                       "embedded artery elements",
           .default_value = false}));
 
+
   // Number of integration patches per 1D element in axial direction for lateral surface coupling
-  Core::Utils::int_parameter("NUMPATCH_AXI", 1,
-      "Number of integration patches per 1D element in axial direction for lateral surface "
-      "coupling",
-      porofluidmultiphasemshtdyn);
+  porofluidmultiphasemshtdyn.specs.emplace_back(parameter<int>("NUMPATCH_AXI",
+      {.description = "Number of integration patches per 1D element in axial direction for "
+                      "lateral surface coupling",
+          .default_value = 1}));
 
   // Number of integration patches per 1D element in radial direction for lateral surface coupling
-  Core::Utils::int_parameter("NUMPATCH_RAD", 1,
-      "Number of integration patches per 1D element in radial direction for lateral surface "
-      "coupling",
-      porofluidmultiphasemshtdyn);
+  porofluidmultiphasemshtdyn.specs.emplace_back(parameter<int>("NUMPATCH_RAD",
+      {.description = "Number of integration patches per 1D element in radial direction for "
+                      "lateral surface coupling",
+          .default_value = 1}));
 
   // Flag if blood vessel volume fraction should be output
   porofluidmultiphasemshtdyn.specs.emplace_back(parameter<bool>("OUTPUT_BLOODVESSELVOLFRAC",

@@ -77,15 +77,17 @@ void Cut::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
       {.description = "Do meshcorrection in the SelfCut?", .default_value = true}));
 
   // Selfcut meshcorrection multiplicator
-  Core::Utils::int_parameter("SELFCUT_MESHCORRECTION_MULTIPLICATOR", 30,
-      "ISLANDS with maximal size of the bounding box of h*multiplacator will be removed in the "
-      "meshcorrection",
-      cut_general);
+  cut_general.specs.emplace_back(parameter<int>("SELFCUT_MESHCORRECTION_MULTIPLICATOR",
+      {.description =
+              "ISLANDS with maximal size of the bounding box of h*multiplacator will be removed in "
+              "the meshcorrection",
+          .default_value = 30}));
 
   // Cubaturedegree utilized for the numerical integration on the CUT BoundaryCells.
-  Core::Utils::int_parameter("BOUNDARYCELL_CUBATURDEGREE", 20,
-      "Cubaturedegree utilized for the numerical integration on the CUT BoundaryCells.",
-      cut_general);
+  cut_general.specs.emplace_back(parameter<int>("BOUNDARYCELL_CUBATURDEGREE",
+      {.description =
+              "Cubaturedegree utilized for the numerical integration on the CUT BoundaryCells.",
+          .default_value = 20}));
 
   // Integrate inside volume cells
   cut_general.specs.emplace_back(parameter<bool>("INTEGRATE_INSIDE_CELLS",

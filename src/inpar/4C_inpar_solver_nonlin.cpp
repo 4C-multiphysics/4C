@@ -104,8 +104,8 @@ void Inpar::NlnSol::set_valid_parameters(std::map<std::string, Core::IO::InputSp
         ptc);
     ptc.specs.emplace_back(parameter<double>(
         "deltaMin", {.description = "Minimum step size.", .default_value = 1.0e-5}));
-    Core::Utils::int_parameter(
-        "Max Number of PTC Iterations", std::numeric_limits<int>::max(), "", ptc);
+    ptc.specs.emplace_back(parameter<int>("Max Number of PTC Iterations",
+        {.description = "", .default_value = std::numeric_limits<int>::max()}));
     ptc.specs.emplace_back(
         parameter<double>("SER_alpha", {.description = "Exponent of SET.", .default_value = 1.0}));
     ptc.specs.emplace_back(parameter<double>(
@@ -177,8 +177,8 @@ void Inpar::NlnSol::set_valid_parameters(std::map<std::string, Core::IO::InputSp
     Core::Utils::double_parameter("Recovery Step", 1.0,
         "step to take when the line search fails (defaults to value for \"Default Step\")",
         backtrack);
-    Core::Utils::int_parameter(
-        "Max Iters", 50, "maximum number of iterations (i.e., RHS computations)", backtrack);
+    backtrack.specs.emplace_back(parameter<int>(
+        "Max Iters", {.description = "maximum number of iterations", .default_value = 50}));
     backtrack.specs.emplace_back(parameter<double>(
         "Reduction Factor", {.description = "A multiplier between zero and one that reduces the "
                                             "step size between line search iterations",
@@ -196,10 +196,10 @@ void Inpar::NlnSol::set_valid_parameters(std::map<std::string, Core::IO::InputSp
   {
     polynomial.specs.emplace_back(parameter<double>(
         "Default Step", {.description = "Starting step length", .default_value = 1.0}));
-    Core::Utils::int_parameter("Max Iters", 100,
-        "Maximum number of line search iterations. "
-        "The search fails if the number of iterations exceeds this value",
-        polynomial);
+    polynomial.specs.emplace_back(parameter<int>(
+        "Max Iters", {.description = "Maximum number of line search iterations. The search "
+                                     "fails if the number of iterations exceeds this value",
+                         .default_value = 100}));
     polynomial.specs.emplace_back(parameter<double>(
         "Minimum Step", {.description = "Minimum acceptable step length. The search fails if the "
                                         "computed $\\lambda_k$ is less than this value",
@@ -249,9 +249,10 @@ void Inpar::NlnSol::set_valid_parameters(std::map<std::string, Core::IO::InputSp
         {.description = "Set to true if we should use counters and then output the result to the "
                         "parameter list as described in Output Parameters",
             .default_value = true}));
-    Core::Utils::int_parameter("Maximum Iteration for Increase", 0,
-        "Maximum index of the nonlinear iteration for which we allow a relative increase",
-        polynomial);
+    polynomial.specs.emplace_back(parameter<int>("Maximum Iteration for Increase",
+        {.description =
+                "Maximum index of the nonlinear iteration for which we allow a relative increase",
+            .default_value = 0}));
     polynomial.specs.emplace_back(parameter<double>(
         "Allowed Relative Increase", {.description = "", .default_value = 100.0}));
   }
@@ -273,8 +274,9 @@ void Inpar::NlnSol::set_valid_parameters(std::map<std::string, Core::IO::InputSp
         "Maximum Step", {.description = "maximum allowable step length", .default_value = 1.0e6}));
     morethuente.specs.emplace_back(parameter<double>("Minimum Step",
         {.description = "minimum allowable step length", .default_value = 1.0e-12}));
-    Core::Utils::int_parameter("Max Iters", 20,
-        "maximum number of right-hand-side and corresponding Jacobian evaluations", morethuente);
+    morethuente.specs.emplace_back(parameter<int>("Max Iters",
+        {.description = "maximum number of right-hand-side and corresponding Jacobian evaluations",
+            .default_value = 20}));
     morethuente.specs.emplace_back(parameter<double>(
         "Default Step", {.description = "starting step length", .default_value = 1.0}));
 

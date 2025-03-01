@@ -32,12 +32,12 @@ namespace Inpar
 
 
       // output interval regarding steps: write output every INTERVAL_STEPS steps
-      Core::Utils::int_parameter("INTERVAL_STEPS", -1,
-          "write VTP output at runtime every INTERVAL_STEPS steps", sublist_IO_VTP_structure);
-
-      Core::Utils::int_parameter("STEP_OFFSET", 0,
-          "An offset added to the current step to shift the steps to be written.",
-          sublist_IO_VTP_structure);
+      sublist_IO_VTP_structure.specs.emplace_back(parameter<int>("INTERVAL_STEPS",
+          {.description = "write VTP output at runtime every INTERVAL_STEPS steps",
+              .default_value = -1}));
+      sublist_IO_VTP_structure.specs.emplace_back(parameter<int>("STEP_OFFSET",
+          {.description = "An offset added to the current step to shift the steps to be written.",
+              .default_value = 0}));
 
       // whether to write output in every iteration of the nonlinear solver
       sublist_IO_VTP_structure.specs.emplace_back(parameter<bool>("EVERY_ITERATION",

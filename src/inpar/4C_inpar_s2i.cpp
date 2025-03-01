@@ -68,18 +68,17 @@ void Inpar::S2I::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
 
   // maximum number of local Newton-Raphson iterations for scatra-scatra interface coupling
   // involving interface layer growth
-  Core::Utils::int_parameter("INTLAYERGROWTH_ITEMAX", 5,
-      "maximum number of local Newton-Raphson iterations for scatra-scatra interface coupling "
-      "involving interface layer growth",
-      s2icoupling);
+  s2icoupling.specs.emplace_back(parameter<int>("INTLAYERGROWTH_ITEMAX",
+      {.description = "maximum number of local Newton-Raphson iterations for scatra-scatra "
+                      "interface coupling involving interface layer growth",
+          .default_value = 5}));
 
   // ID of linear solver for monolithic scatra-scatra interface coupling involving interface layer
   // growth
-  Core::Utils::int_parameter("INTLAYERGROWTH_LINEAR_SOLVER", -1,
-      "ID of linear solver for monolithic scatra-scatra interface coupling involving interface "
-      "layer growth",
-      s2icoupling);
-
+  s2icoupling.specs.emplace_back(parameter<int>("INTLAYERGROWTH_LINEAR_SOLVER",
+      {.description = "ID of linear solver for monolithic scatra-scatra interface coupling "
+                      "involving interface layer growth",
+          .default_value = -1}));
   // modified time step size for scatra-scatra interface coupling involving interface layer growth
   s2icoupling.specs.emplace_back(parameter<double>("INTLAYERGROWTH_TIMESTEP",
       {.description = "modified time step size for scatra-scatra interface coupling involving "

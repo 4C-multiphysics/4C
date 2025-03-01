@@ -69,11 +69,11 @@ void Inpar::BeamPotential::set_valid_parameters(std::map<std::string, Core::IO::
       {.description = "Use regularization of force law at separations smaller than this separation",
           .default_value = -1.0}));
 
-  Core::Utils::int_parameter("NUM_INTEGRATION_SEGMENTS", 1,
-      "Number of integration segments used per beam element", beampotential);
+  beampotential.specs.emplace_back(parameter<int>("NUM_INTEGRATION_SEGMENTS",
+      {.description = "Number of integration segments used per beam element", .default_value = 1}));
 
-  Core::Utils::int_parameter(
-      "NUM_GAUSSPOINTS", 10, "Number of Gauss points used per integration segment", beampotential);
+  beampotential.specs.emplace_back(parameter<int>("NUM_GAUSSPOINTS",
+      {.description = "Number of Gauss points used per integration segment", .default_value = 10}));
 
   beampotential.specs.emplace_back(parameter<bool>("AUTOMATIC_DIFFERENTIATION",
       {.description = "apply automatic differentiation via FAD?", .default_value = false}));
@@ -104,11 +104,13 @@ void Inpar::BeamPotential::set_valid_parameters(std::map<std::string, Core::IO::
       tuple<BeamContact::OctreeType>(BeamContact::boct_none, BeamContact::boct_none,
           BeamContact::boct_aabb, BeamContact::boct_cobb, BeamContact::boct_spbb),
       beampotential);
+  beampotential.specs.emplace_back(parameter<int>(
+      "BEAMPOT_TREEDEPTH", {.description = "max. tree depth of the octree", .default_value = 6}));
 
-  Core::Utils::int_parameter(
-      "BEAMPOT_TREEDEPTH", 6, "max, tree depth of the octree", beampotential);
-  Core::Utils::int_parameter(
-      "BEAMPOT_BOXESINOCT", 8, "max number of bounding boxes in any leaf octant", beampotential);
+  beampotential.specs.emplace_back(parameter<int>("BEAMPOT_BOXESINROOT",
+      {.description = "max number of bounding boxes in root octant", .default_value = 8}));
+  beampotential.specs.emplace_back(parameter<int>("BEAMPOT_BOXESINOCT",
+      {.description = "max number of bounding boxes in any leaf octant", .default_value = 8}));
 
   beampotential.specs.emplace_back(parameter<double>("POTENTIAL_REDUCTION_LENGTH",
       {.description = "Within this length of the master beam end point the potential is smoothly "
@@ -129,8 +131,8 @@ void Inpar::BeamPotential::set_valid_parameters(std::map<std::string, Core::IO::
           .default_value = false}));
 
   // output interval regarding steps: write output every INTERVAL_STEPS steps
-  Core::Utils::int_parameter("INTERVAL_STEPS", -1,
-      "write output at runtime every INTERVAL_STEPS steps", beampotential_output_sublist);
+  beampotential_output_sublist.specs.emplace_back(parameter<int>("INTERVAL_STEPS",
+      {.description = "write output at runtime every INTERVAL_STEPS steps", .default_value = -1}));
 
   // whether to write output in every iteration of the nonlinear solver
   beampotential_output_sublist.specs.emplace_back(parameter<bool>(

@@ -26,20 +26,23 @@ void Inpar::EleMag::set_valid_parameters(std::map<std::string, Core::IO::InputSp
       parameter<double>("TIMESTEP", {.description = "Time-step length dt", .default_value = 0.01}));
   electromagneticdyn.specs.emplace_back(
       parameter<double>("TAU", {.description = "Stabilization parameter", .default_value = 1.0}));
-  Core::Utils::int_parameter("NUMSTEP", 100, "Number of time steps", electromagneticdyn);
+  electromagneticdyn.specs.emplace_back(
+      parameter<int>("NUMSTEP", {.description = "Number of time steps", .default_value = 100}));
   electromagneticdyn.specs.emplace_back(
       parameter<double>("MAXTIME", {.description = "Total simulation time", .default_value = 1.0}));
 
   // additional parameters
-  Core::Utils::int_parameter(
-      "RESULTSEVERY", 1, "Increment for writing solution", electromagneticdyn);
-  Core::Utils::int_parameter(
-      "RESTARTEVERY", 1, "Increment for writing restart", electromagneticdyn);
-  Core::Utils::int_parameter("LINEAR_SOLVER", -1,
-      "Number of linear solver used for electromagnetic problem", electromagneticdyn);
-  Core::Utils::int_parameter("STARTFUNCNO", -1, "Function for initial field", electromagneticdyn);
-  Core::Utils::int_parameter(
-      "SOURCEFUNCNO", -1, "Function for source term in volume", electromagneticdyn);
+  electromagneticdyn.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "Increment for writing solution", .default_value = 1}));
+  electromagneticdyn.specs.emplace_back(parameter<int>(
+      "RESTARTEVERY", {.description = "Increment for writing restart", .default_value = 1}));
+  electromagneticdyn.specs.emplace_back(parameter<int>(
+      "LINEAR_SOLVER", {.description = "Number of linear solver used for electromagnetic problem",
+                           .default_value = -1}));
+  electromagneticdyn.specs.emplace_back(parameter<int>(
+      "STARTFUNCNO", {.description = "Function for initial field", .default_value = -1}));
+  electromagneticdyn.specs.emplace_back(parameter<int>(
+      "SOURCEFUNCNO", {.description = "Function for source term in volume", .default_value = -1}));
 
   {
     // time integration
@@ -92,8 +95,8 @@ void Inpar::EleMag::set_valid_parameters(std::map<std::string, Core::IO::InputSp
         {.description = "Postprocess solution? (very slow)", .default_value = false}));
   }
 
-  Core::Utils::int_parameter(
-      "ERRORFUNCNO", -1, "Function for error calculation", electromagneticdyn);
+  electromagneticdyn.specs.emplace_back(parameter<int>(
+      "ERRORFUNCNO", {.description = "Function for error calculation", .default_value = -1}));
 
   // flag for equilibration of global system of equations
   Core::Utils::string_to_integral_parameter<Core::LinAlg::EquilibrationMethod>("EQUILIBRATION",

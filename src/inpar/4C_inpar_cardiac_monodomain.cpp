@@ -21,10 +21,11 @@ void Inpar::ElectroPhysiology::set_valid_parameters(
   Core::Utils::SectionSpecs epcontrol{"CARDIAC MONODOMAIN CONTROL"};
 
   // Parameters for reaction-diffusion systems (for example cardiac electrophysiology)
-  Core::Utils::int_parameter("WRITEMAXINTSTATE", 0,
-      "number of maximal internal state variables to be postprocessed", epcontrol);
-  Core::Utils::int_parameter("WRITEMAXIONICCURRENTS", 0,
-      "number of maximal ionic currents to be postprocessed", epcontrol);
+  epcontrol.specs.emplace_back(parameter<int>("WRITEMAXINTSTATE",
+      {.description = "number of maximal internal state variables to be postprocessed",
+          .default_value = 0}));
+  epcontrol.specs.emplace_back(parameter<int>("WRITEMAXIONICCURRENTS",
+      {.description = "number of maximal ionic currents to be postprocessed", .default_value = 0}));
 
   epcontrol.specs.emplace_back(parameter<double>("ACTTHRES",
       {.description =

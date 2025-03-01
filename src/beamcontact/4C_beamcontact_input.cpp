@@ -106,8 +106,8 @@ void BeamContact::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
   beamcontact.specs.emplace_back(parameter<double>("BEAMS_SEGANGLE",
       {.description = "Maximal angle deviation allowed for contact search segmentation",
           .default_value = -1.0}));
-  Core::Utils::int_parameter("BEAMS_NUMINTEGRATIONINTERVAL", 1,
-      "Number of integration intervals per element", beamcontact);
+  beamcontact.specs.emplace_back(parameter<int>("BEAMS_NUMINTEGRATIONINTERVAL",
+      {.description = "Number of integration intervals per element", .default_value = 1}));
 
   Core::Utils::string_to_integral_parameter<BeamContact::PenaltyLaw>("BEAMS_PENALTYLAW", "LinPen",
       "Applied Penalty Law",
@@ -153,9 +153,10 @@ void BeamContact::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
                       "is either  additive or multiplicative. Give one or two values.",
           .default_value = "-1.0"}));
 
-  Core::Utils::int_parameter("BEAMS_TREEDEPTH", 6, "max, tree depth of the octree", beamcontact);
-  Core::Utils::int_parameter(
-      "BEAMS_BOXESINOCT", 8, "max number of bounding boxes in any leaf octant", beamcontact);
+  beamcontact.specs.emplace_back(parameter<int>(
+      "BEAMS_TREEDEPTH", {.description = "max. tree depth of the octree", .default_value = 6}));
+  beamcontact.specs.emplace_back(parameter<int>("BEAMS_BOXESINOCT",
+      {.description = "max number of bounding boxes in any leaf octant", .default_value = 8}));
 
   beamcontact.move_into_collection(list);
 
@@ -169,8 +170,9 @@ void BeamContact::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
       {.description = "write visualization output for beam contact", .default_value = false}));
 
   // output interval regarding steps: write output every INTERVAL_STEPS steps
-  Core::Utils::int_parameter("INTERVAL_STEPS", -1,
-      "write visualization output at runtime every INTERVAL_STEPS steps", beamcontact_vtk_sublist);
+  beamcontact_vtk_sublist.specs.emplace_back(parameter<int>("INTERVAL_STEPS",
+      {.description = "write visualization output at runtime every INTERVAL_STEPS steps",
+          .default_value = -1}));
 
   // whether to write output in every iteration of the nonlinear solver
   beamcontact_vtk_sublist.specs.emplace_back(parameter<bool>(

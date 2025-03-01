@@ -48,8 +48,8 @@ void Inpar::XFEM::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
   xfem_general.specs.emplace_back(parameter<bool>("PRINT_OUTPUT",
       {.description = "Is the output of the cut process desired?", .default_value = false}));
 
-  Core::Utils::int_parameter(
-      "MAX_NUM_DOFSETS", 3, "Maximum number of volumecells in the XFEM element", xfem_general);
+  xfem_general.specs.emplace_back(parameter<int>("MAX_NUM_DOFSETS",
+      {.description = "Maximum number of volumecells in the XFEM element", .default_value = 3}));
 
   Core::Utils::string_to_integral_parameter<Cut::NodalDofSetStrategy>("NODAL_DOFSET_STRATEGY",
       "full", "Strategy used for the nodal dofset management per node",
@@ -87,8 +87,8 @@ void Inpar::XFEM::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
       "XFLUIDFLUID", {.description = "Use an embedded fluid patch.", .default_value = false}));
 
   // How many monolithic steps we keep the fluidfluid-boundary fixed
-  Core::Utils::int_parameter(
-      "RELAXING_ALE_EVERY", 1, "Relaxing Ale after how many monolithic steps", xfluid_general);
+  xfluid_general.specs.emplace_back(parameter<int>("RELAXING_ALE_EVERY",
+      {.description = "Relaxing Ale after how many monolithic steps", .default_value = 1}));
 
   xfluid_general.specs.emplace_back(parameter<bool>("RELAXING_ALE",
       {.description = "switch on/off for relaxing Ale in monolithic fluid-fluid-fsi",
@@ -365,10 +365,10 @@ void Inpar::XFEM::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
   /*----------------------------------------------------------------------*/
   Core::Utils::SectionSpecs xfsi_monolithic{xfluid_dyn, "XFPSI MONOLITHIC"};
 
-  Core::Utils::int_parameter(
-      "ITEMIN", 1, "How many iterations are performed minimal", xfsi_monolithic);
-  Core::Utils::int_parameter(
-      "ITEMAX_OUTER", 5, "How many outer iterations are performed maximal", xfsi_monolithic);
+  xfsi_monolithic.specs.emplace_back(parameter<int>(
+      "ITEMIN", {.description = "How many iterations are performed minimal", .default_value = 1}));
+  xfsi_monolithic.specs.emplace_back(parameter<int>("ITEMAX_OUTER",
+      {.description = "How many outer iterations are performed maximal", .default_value = 5}));
   xfsi_monolithic.specs.emplace_back(parameter<bool>("ND_NEWTON_DAMPING",
       {.description = "Activate Newton damping based on residual and increment",
           .default_value = false}));
@@ -396,9 +396,6 @@ void Inpar::XFEM::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
       "CUT_EVALUATE_MINTOL", {.description = "Minimal value of the maximal structural displacement "
                                              "for which the CUT is evaluate in this iteration!",
                                  .default_value = 0.0}));
-  Core::Utils::int_parameter("CUT_EVALUATE_MINITER", 0,
-      "Minimal number of nonlinear iterations, before the CUT is potentially not evaluated",
-      xfsi_monolithic);
   xfsi_monolithic.specs.emplace_back(parameter<bool>(
       "EXTRAPOLATE_TO_ZERO", {.description = "the extrapolation of the fluid stress in the contact "
                                              "zone is relaxed to zero after a certain distance",

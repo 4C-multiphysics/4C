@@ -54,13 +54,14 @@ void Inpar::STI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
       stidyn);
 
   // function number for initial temperature field
-  Core::Utils::int_parameter("THERMO_INITFUNCNO", -1,
-      "function number for initial temperature field for scatra-thermo interaction problems",
-      stidyn);
+  stidyn.specs.emplace_back(parameter<int>(
+      "THERMO_INITFUNCNO", {.description = "function number for initial temperature field for "
+                                           "scatra-thermo interaction problems",
+                               .default_value = -1}));
 
   // ID of linear solver for temperature field
-  Core::Utils::int_parameter(
-      "THERMO_LINEAR_SOLVER", -1, "ID of linear solver for temperature field", stidyn);
+  stidyn.specs.emplace_back(parameter<int>("THERMO_LINEAR_SOLVER",
+      {.description = "ID of linear solver for temperature field", .default_value = -1}));
 
   // flag for double condensation of linear equations associated with temperature field
   stidyn.specs.emplace_back(parameter<bool>("THERMO_CONDENSATION",
@@ -75,8 +76,8 @@ void Inpar::STI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
   Core::Utils::SectionSpecs stidyn_monolithic{stidyn, "MONOLITHIC"};
 
   // ID of linear solver for global system of equations
-  Core::Utils::int_parameter(
-      "LINEAR_SOLVER", -1, "ID of linear solver for global system of equations", stidyn_monolithic);
+  stidyn_monolithic.specs.emplace_back(parameter<int>("LINEAR_SOLVER",
+      {.description = "ID of linear solver for global system of equations", .default_value = -1}));
 
   // type of global system matrix in global system of equations
   Core::Utils::string_to_integral_parameter<Core::LinAlg::MatrixType>("MATRIXTYPE", "block",
@@ -102,8 +103,6 @@ void Inpar::STI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
           .default_value = 0.}));
 
   stidyn_partitioned.move_into_collection(list);
-
-  return;
 }
 
 

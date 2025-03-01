@@ -34,10 +34,12 @@ void Inpar::Rebalance::set_valid_parameters(std::map<std::string, Core::IO::Inpu
                       "of unstructured meshes read from input files.",
           .default_value = 1.1}));
 
-  Core::Utils::int_parameter("MIN_ELE_PER_PROC", 0,
-      "This parameter defines the minimum number of elements to be assigned to any MPI rank during "
-      "redistribution. Use 0 to not interfere with the minimal size of a subdomain.",
-      meshpartitioning);
+  meshpartitioning.specs.emplace_back(parameter<int>("MIN_ELE_PER_PROC",
+      {.description =
+              "This parameter defines the minimum number of elements to be assigned to any "
+              "MPI rank during redistribution. Use 0 to not interfere with the minimal size "
+              "of a subdomain.",
+          .default_value = 0}));
 
   meshpartitioning.move_into_collection(list);
 }

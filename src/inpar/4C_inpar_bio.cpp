@@ -28,22 +28,26 @@ void Inpar::ArtDyn::set_valid_parameters(std::map<std::string, Core::IO::InputSp
 
   andyn.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "Time increment dt", .default_value = 0.01}));
-  Core::Utils::int_parameter("NUMSTEP", 0, "Number of Time Steps", andyn);
+  andyn.specs.emplace_back(
+      parameter<int>("NUMSTEP", {.description = "Number of Time Steps", .default_value = 0}));
   andyn.specs.emplace_back(parameter<double>(
       "MAXTIME", {.description = "total simulation time", .default_value = 1000.0}));
-  Core::Utils::int_parameter("RESTARTEVERY", 1, "Increment for writing restart", andyn);
-  Core::Utils::int_parameter("RESULTSEVERY", 1, "Increment for writing solution", andyn);
+  andyn.specs.emplace_back(parameter<int>(
+      "RESTARTEVERY", {.description = "Increment for writing restart", .default_value = 1}));
+  andyn.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "Increment for writing solution", .default_value = 1}));
 
   andyn.specs.emplace_back(parameter<bool>(
       "SOLVESCATRA", {.description = "Flag to (de)activate solving scalar transport in blood",
                          .default_value = false}));
 
   // number of linear solver used for arterial dynamics
-  Core::Utils::int_parameter(
-      "LINEAR_SOLVER", -1, "number of linear solver used for arterial dynamics", andyn);
+  andyn.specs.emplace_back(parameter<int>("LINEAR_SOLVER",
+      {.description = "number of linear solver used for arterial dynamics", .default_value = -1}));
 
   // initial function number
-  Core::Utils::int_parameter("INITFUNCNO", -1, "function number for artery initial field", andyn);
+  andyn.specs.emplace_back(parameter<int>("INITFUNCNO",
+      {.description = "function number for artery initial field", .default_value = -1}));
 
   // type of initial field
   Core::Utils::string_to_integral_parameter<InitialField>("INITIALFIELD", "zero_field",
@@ -70,14 +74,16 @@ void Inpar::ArteryNetwork::set_valid_parameters(std::map<std::string, Core::IO::
   redtisdyn.specs.emplace_back(parameter<double>(
       "CONVTOL_Q", {.description = "Coupled red_airway and tissue iteration convergence for flux",
                        .default_value = 1E-6}));
-  Core::Utils::int_parameter("MAXITER", 5, "Maximum coupling iterations", redtisdyn);
+  redtisdyn.specs.emplace_back(parameter<int>(
+      "MAXITER", {.description = "Maximum coupling iterations", .default_value = 5}));
   Core::Utils::string_to_integral_parameter<Relaxtype3D0D>("RELAXTYPE", "norelaxation",
       "Dynamic Relaxation Type",
       tuple<std::string>("norelaxation", "fixedrelaxation", "Aitken", "SD"),
       tuple<Relaxtype3D0D>(norelaxation, fixedrelaxation, Aitken, SD), redtisdyn);
   redtisdyn.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "Time increment dt", .default_value = 0.01}));
-  Core::Utils::int_parameter("NUMSTEP", 1, "Number of Time Steps", redtisdyn);
+  redtisdyn.specs.emplace_back(
+      parameter<int>("NUMSTEP", {.description = "Number of Time Steps", .default_value = 1}));
   redtisdyn.specs.emplace_back(
       parameter<double>("MAXTIME", {.description = "", .default_value = 4.0}));
   redtisdyn.specs.emplace_back(
@@ -244,8 +250,8 @@ void Inpar::BioFilm::set_valid_parameters(std::map<std::string, Core::IO::InputS
           .default_value = 0.0}));
   biofilmcontrol.specs.emplace_back(parameter<double>(
       "BIOTIMESTEP", {.description = "Time step size for biofilm growth", .default_value = 0.05}));
-  Core::Utils::int_parameter(
-      "BIONUMSTEP", 0, "Maximum number of steps for biofilm growth", biofilmcontrol);
+  biofilmcontrol.specs.emplace_back(parameter<int>("BIONUMSTEP",
+      {.description = "Maximum number of steps for biofilm growth", .default_value = 0}));
   biofilmcontrol.specs.emplace_back(parameter<bool>("OUTPUT_GMSH",
       {.description = "Do you want to write Gmsh postprocessing files?", .default_value = false}));
 
@@ -287,19 +293,24 @@ void Inpar::ReducedLung::set_valid_parameters(std::map<std::string, Core::IO::In
 
   redawdyn.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "Time increment dt", .default_value = 0.01}));
-  Core::Utils::int_parameter("NUMSTEP", 0, "Number of Time Steps", redawdyn);
-  Core::Utils::int_parameter("RESTARTEVERY", 1, "Increment for writing restart", redawdyn);
-  Core::Utils::int_parameter("RESULTSEVERY", 1, "Increment for writing solution", redawdyn);
+  redawdyn.specs.emplace_back(
+      parameter<int>("NUMSTEP", {.description = "Number of Time Steps", .default_value = 0}));
+  redawdyn.specs.emplace_back(parameter<int>(
+      "RESTARTEVERY", {.description = "Increment for writing restart", .default_value = 1}));
+  redawdyn.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "Increment for writing solution", .default_value = 1}));
   redawdyn.specs.emplace_back(parameter<double>(
       "THETA", {.description = "One-step-theta time integration factor", .default_value = 1.0}));
 
-  Core::Utils::int_parameter("MAXITERATIONS", 1, "maximum iteration steps", redawdyn);
+  redawdyn.specs.emplace_back(parameter<int>(
+      "MAXITERATIONS", {.description = "maximum iteration steps", .default_value = 1}));
   redawdyn.specs.emplace_back(
       parameter<double>("TOLERANCE", {.description = "tolerance", .default_value = 1.0E-6}));
 
   // number of linear solver used for reduced dimensional airways dynamic
-  Core::Utils::int_parameter("LINEAR_SOLVER", -1,
-      "number of linear solver used for reduced dim arterial dynamics", redawdyn);
+  redawdyn.specs.emplace_back(parameter<int>("LINEAR_SOLVER",
+      {.description = "number of linear solver used for reduced dim arterial dynamics",
+          .default_value = -1}));
 
   redawdyn.specs.emplace_back(parameter<bool>(
       "SOLVESCATRA", {.description = "Flag to (de)activate solving scalar transport in blood",

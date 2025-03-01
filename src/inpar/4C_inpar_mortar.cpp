@@ -98,8 +98,8 @@ void Inpar::Mortar::set_valid_parameters(std::map<std::string, Core::IO::InputSp
           inttype_elements, inttype_elements_BS, inttype_elements_BS),
       mortar);
 
-  Core::Utils::int_parameter(
-      "NUMGP_PER_DIM", 0, "Number of employed integration points per dimension", mortar);
+  mortar.specs.emplace_back(parameter<int>("NUMGP_PER_DIM",
+      {.description = "Number of employed integration points per dimension", .default_value = 0}));
 
   Core::Utils::string_to_integral_parameter<Inpar::Mortar::Triangulation>("TRIANGULATION",
       "Delaunay", "Type of triangulation for segment-based integration",
@@ -152,8 +152,9 @@ void Inpar::Mortar::set_valid_parameters(std::map<std::string, Core::IO::InputSp
                                                 "processor to trigger parallel redistribution",
                                     .default_value = 0.5}));
 
-  Core::Utils::int_parameter("MIN_ELEPROC", 0,
-      "Minimum no. of elements per processor for parallel redistribution", parallelRedist);
+  parallelRedist.specs.emplace_back(parameter<int>("MIN_ELEPROC",
+      {.description = "Minimum no. of elements per processor for parallel redistribution",
+          .default_value = 0}));
 
   Core::Utils::string_to_integral_parameter<ParallelRedist>("PARALLEL_REDIST", "Static",
       "Type of redistribution algorithm", tuple<std::string>("None", "Static", "Dynamic"),

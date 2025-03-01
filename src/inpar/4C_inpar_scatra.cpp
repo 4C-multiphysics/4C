@@ -50,7 +50,8 @@ void Inpar::ScaTra::set_valid_parameters(std::map<std::string, Core::IO::InputSp
 
   scatradyn.specs.emplace_back(parameter<double>(
       "MAXTIME", {.description = "Total simulation time", .default_value = 1000.0}));
-  Core::Utils::int_parameter("NUMSTEP", 20, "Total number of time steps", scatradyn);
+  scatradyn.specs.emplace_back(parameter<int>(
+      "NUMSTEP", {.description = "Total number of time steps", .default_value = 20}));
   scatradyn.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "Time increment dt", .default_value = 0.1}));
   scatradyn.specs.emplace_back(parameter<double>(
@@ -61,9 +62,12 @@ void Inpar::ScaTra::set_valid_parameters(std::map<std::string, Core::IO::InputSp
       {.description = "Generalized-alpha time integration factor", .default_value = 0.5}));
   scatradyn.specs.emplace_back(parameter<double>(
       "GAMMA", {.description = "Generalized-alpha time integration factor", .default_value = 0.5}));
-  Core::Utils::int_parameter("RESULTSEVERY", 1, "Increment for writing solution", scatradyn);
-  Core::Utils::int_parameter("RESTARTEVERY", 1, "Increment for writing restart", scatradyn);
-  Core::Utils::int_parameter("MATID", -1, "Material ID for automatic mesh generation", scatradyn);
+  scatradyn.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "Increment for writing solution", .default_value = 1}));
+  scatradyn.specs.emplace_back(parameter<int>(
+      "RESTARTEVERY", {.description = "Increment for writing restart", .default_value = 1}));
+  scatradyn.specs.emplace_back(parameter<int>(
+      "MATID", {.description = "Material ID for automatic mesh generation", .default_value = -1}));
 
   Core::Utils::string_to_integral_parameter<Inpar::ScaTra::VelocityField>("VELOCITYFIELD", "zero",
       "type of velocity field used for scalar transport problems",
@@ -71,8 +75,8 @@ void Inpar::ScaTra::set_valid_parameters(std::map<std::string, Core::IO::InputSp
       tuple<Inpar::ScaTra::VelocityField>(velocity_zero, velocity_function, velocity_Navier_Stokes),
       scatradyn);
 
-  Core::Utils::int_parameter(
-      "VELFUNCNO", -1, "function number for scalar transport velocity field", scatradyn);
+  scatradyn.specs.emplace_back(parameter<int>("VELFUNCNO",
+      {.description = "function number for scalar transport velocity field", .default_value = -1}));
 
   {
     // a standard Teuchos::tuple can have at maximum 10 entries! We have to circumvent this here.
@@ -109,8 +113,8 @@ void Inpar::ScaTra::set_valid_parameters(std::map<std::string, Core::IO::InputSp
         "zero_field", "Initial Field for scalar transport problem", name, label, scatradyn);
   }
 
-  Core::Utils::int_parameter(
-      "INITFUNCNO", -1, "function number for scalar transport initial field", scatradyn);
+  scatradyn.specs.emplace_back(parameter<int>("INITFUNCNO",
+      {.description = "function number for scalar transport initial field", .default_value = -1}));
 
   scatradyn.specs.emplace_back(parameter<bool>(
       "SPHERICALCOORDS", {.description = "use of spherical coordinates", .default_value = false}));
@@ -124,8 +128,9 @@ void Inpar::ScaTra::set_valid_parameters(std::map<std::string, Core::IO::InputSp
           calcerror_spherediffusion, calcerror_AnalyticSeries),
       scatradyn);
 
-  Core::Utils::int_parameter(
-      "CALCERRORNO", -1, "function number for scalar transport error computation", scatradyn);
+  scatradyn.specs.emplace_back(parameter<int>(
+      "CALCERRORNO", {.description = "function number for scalar transport error computation",
+                         .default_value = -1}));
 
   Core::Utils::string_to_integral_parameter<Inpar::ScaTra::FluxType>("CALCFLUX_DOMAIN", "No",
       "output of diffusive/total flux vectors inside domain",
@@ -197,7 +202,8 @@ void Inpar::ScaTra::set_valid_parameters(std::map<std::string, Core::IO::InputSp
           .default_value = false}));
 
   // Current density source function for EMD problems
-  Core::Utils::int_parameter("EMDSOURCE", -1, "Current density source", scatradyn);
+  scatradyn.specs.emplace_back(
+      parameter<int>("EMDSOURCE", {.description = "Current density source", .default_value = -1}));
 
   Core::Utils::string_to_integral_parameter<Inpar::FLUID::MeshTying>("MESHTYING", "no",
       "Flag to (de)activate mesh tying algorithm",
@@ -213,11 +219,13 @@ void Inpar::ScaTra::set_valid_parameters(std::map<std::string, Core::IO::InputSp
       tuple<Inpar::ScaTra::FieldCoupling>(coupling_match, coupling_volmortar), scatradyn);
 
   // linear solver id used for scalar transport/elch problems
-  Core::Utils::int_parameter(
-      "LINEAR_SOLVER", -1, "number of linear solver used for scalar transport/elch...", scatradyn);
+  scatradyn.specs.emplace_back(parameter<int>(
+      "LINEAR_SOLVER", {.description = "number of linear solver used for scalar transport/elch...",
+                           .default_value = -1}));
   // linear solver id used for l2 projection problems (e.g. gradient projections)
-  Core::Utils::int_parameter("L2_PROJ_LINEAR_SOLVER", -1,
-      "number of linear solver used for l2-projection sub-problems", scatradyn);
+  scatradyn.specs.emplace_back(parameter<int>("L2_PROJ_LINEAR_SOLVER",
+      {.description = "number of linear solver used for l2-projection sub-problems",
+          .default_value = -1}));
 
   // flag for equilibration of global system of equations
   Core::Utils::string_to_integral_parameter<Core::LinAlg::EquilibrationMethod>("EQUILIBRATION",
@@ -284,8 +292,8 @@ void Inpar::ScaTra::set_valid_parameters(std::map<std::string, Core::IO::InputSp
   scatradyn.specs.emplace_back(parameter<double>("PADAPTERRORBASE",
       {.description = "The error tolerance base to calculate the variation of the elemental degree",
           .default_value = 1.66}));
-  Core::Utils::int_parameter(
-      "PADAPTDEGREEMAX", 4, "The max. degree of the shape functions", scatradyn);
+  scatradyn.specs.emplace_back(parameter<int>("PADAPTDEGREEMAX",
+      {.description = "The max. degree of the shape functions", .default_value = 4}));
   scatradyn.specs.emplace_back(parameter<bool>("SEMIIMPLICIT",
       {.description = "Flag to (de)activate semi-implicit calculation of the reaction term",
           .default_value = false}));
@@ -315,13 +323,11 @@ void Inpar::ScaTra::set_valid_parameters(std::map<std::string, Core::IO::InputSp
   /*----------------------------------------------------------------------*/
   Core::Utils::SectionSpecs scatra_nonlin{scatradyn, "NONLINEAR"};
 
-  Core::Utils::int_parameter("ITEMAX", 10, "max. number of nonlin. iterations", scatra_nonlin);
+  scatra_nonlin.specs.emplace_back(parameter<int>(
+      "ITEMAX", {.description = "max. number of nonlin. iterations", .default_value = 10}));
   scatra_nonlin.specs.emplace_back(parameter<double>(
       "CONVTOL", {.description = "Tolerance for convergence check", .default_value = 1e-6}));
-  Core::Utils::int_parameter("ITEMAX_OUTER", 10,
-      "Maximum number of outer iterations in partitioned coupling schemes (natural convection, "
-      "multi-scale simulations etc.)",
-      scatra_nonlin);
+  scatra_nonlin.specs.emplace_back(parameter<int>("", {.description = " $3", .default_value = 0}));
   scatra_nonlin.specs.emplace_back(parameter<double>("CONVTOL_OUTER",
       {.description = "Convergence check tolerance for outer loop in partitioned coupling schemes "
                       "(natural convection, multi-scale simulations etc.)",
@@ -487,12 +493,12 @@ void Inpar::ScaTra::set_valid_parameters(std::map<std::string, Core::IO::InputSp
       {.description = "Flag to activate external force", .default_value = false}));
 
   // Function ID for external force
-  Core::Utils::int_parameter(
-      "FORCE_FUNCTION_ID", -1, "Function ID for external force", scatradyn_external_force);
+  scatradyn_external_force.specs.emplace_back(parameter<int>(
+      "FORCE_FUNCTION_ID", {.description = "Function ID for external force", .default_value = -1}));
 
   // Function ID for mobility of the scalar
-  Core::Utils::int_parameter("INTRINSIC_MOBILITY_FUNCTION_ID", -1,
-      "Function ID for intrinsic mobility", scatradyn_external_force);
+  scatradyn_external_force.specs.emplace_back(parameter<int>("INTRINSIC_MOBILITY_FUNCTION_ID",
+      {.description = "Function ID for intrinsic mobility", .default_value = -1}));
 
   scatradyn_external_force.move_into_collection(list);
 }

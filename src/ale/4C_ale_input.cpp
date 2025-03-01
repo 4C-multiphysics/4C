@@ -24,7 +24,8 @@ void ALE::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 
   adyn.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "time step size", .default_value = 0.1}));
-  Core::Utils::int_parameter("NUMSTEP", 41, "max number of time steps", adyn);
+  adyn.specs.emplace_back(
+      parameter<int>("NUMSTEP", {.description = "max number of time steps", .default_value = 41}));
   adyn.specs.emplace_back(
       parameter<double>("MAXTIME", {.description = "max simulation time", .default_value = 4.0}));
 
@@ -45,7 +46,8 @@ void ALE::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
               "Update stiffness matrix in every time step (only for linear/material strategies)",
           .default_value = false}));
 
-  Core::Utils::int_parameter("MAXITER", 1, "Maximum number of newton iterations.", adyn);
+  adyn.specs.emplace_back(parameter<int>(
+      "MAXITER", {.description = "Maximum number of newton iterations.", .default_value = 1}));
   adyn.specs.emplace_back(parameter<double>(
       "TOLRES", {.description = "Absolute tolerance for length scaled L2 residual norm ",
                     .default_value = 1.0e-06}));
@@ -53,10 +55,11 @@ void ALE::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
       "TOLDISP", {.description = "Absolute tolerance for length scaled L2 increment norm ",
                      .default_value = 1.0e-06}));
 
-  Core::Utils::int_parameter("NUM_INITSTEP", 0, "", adyn);
-  Core::Utils::int_parameter(
-      "RESTARTEVERY", 1, "write restart data every RESTARTEVERY steps", adyn);
-  Core::Utils::int_parameter("RESULTSEVERY", 0, "write results every RESULTSTEVERY steps", adyn);
+  adyn.specs.emplace_back(parameter<int>("NUM_INITSTEP", {.description = "", .default_value = 0}));
+  adyn.specs.emplace_back(parameter<int>("RESTARTEVERY",
+      {.description = "write restart data every RESTARTEVERY steps", .default_value = 1}));
+  adyn.specs.emplace_back(parameter<int>("RESULTSEVERY",
+      {.description = "write results every RESULTSTEVERY steps", .default_value = 0}));
   Core::Utils::string_to_integral_parameter<ALE::DivContAct>("DIVERCONT", "continue",
       "What to do if nonlinear solver does not converge?", tuple<std::string>("stop", "continue"),
       tuple<ALE::DivContAct>(divcont_stop, divcont_continue), adyn);
@@ -73,11 +76,12 @@ void ALE::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
       tuple<ALE::InitialDisp>(initdisp_zero_disp, initdisp_disp_by_function), adyn);
 
   // Function to evaluate initial displacement
-  Core::Utils::int_parameter("STARTFUNCNO", -1, "Function for Initial displacement", adyn);
+  adyn.specs.emplace_back(parameter<int>(
+      "STARTFUNCNO", {.description = "Function for Initial displacement", .default_value = -1}));
 
   // linear solver id used for scalar ale problems
-  Core::Utils::int_parameter(
-      "LINEAR_SOLVER", -1, "number of linear solver used for ale problems...", adyn);
+  adyn.specs.emplace_back(parameter<int>("LINEAR_SOLVER",
+      {.description = "number of linear solver used for ale problems...", .default_value = -1}));
 
   adyn.move_into_collection(list);
 }

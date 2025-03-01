@@ -26,11 +26,13 @@ void Thermo::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& li
       tuple<DynamicType>(dyna_statics, dyna_onesteptheta, dyna_genalpha), tdyn);
 
   // output type
-  Core::Utils::int_parameter("RESULTSEVERY", 1,
-      "save temperature and other global quantities every RESULTSEVERY steps", tdyn);
+  tdyn.specs.emplace_back(parameter<int>("RESULTSEVERY",
+      {.description = "save temperature and other global quantities every RESULTSEVERY steps",
+          .default_value = 1}));
 
-  Core::Utils::int_parameter(
-      "RESTARTEVERY", 1, "write restart possibility every RESTARTEVERY steps", tdyn);
+  tdyn.specs.emplace_back(parameter<int>("RESTARTEVERY",
+      {.description = "write restart possibility every RESTARTEVERY steps", .default_value = 1}));
+
 
   Core::Utils::string_to_integral_parameter<InitialField>("INITIALFIELD", "zero_field",
       "Initial Field for thermal problem",
@@ -39,12 +41,14 @@ void Thermo::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& li
           initfield_zero_field, initfield_field_by_function, initfield_field_by_condition),
       tdyn);
 
-  Core::Utils::int_parameter("INITFUNCNO", -1, "function number for thermal initial field", tdyn);
+  tdyn.specs.emplace_back(parameter<int>("INITFUNCNO",
+      {.description = "function number for thermal initial field", .default_value = -1}));
 
   // Time loop control
   tdyn.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "time step size", .default_value = 0.05}));
-  Core::Utils::int_parameter("NUMSTEP", 200, "maximum number of steps", tdyn);
+  tdyn.specs.emplace_back(
+      parameter<int>("NUMSTEP", {.description = "maximum number of steps", .default_value = 200}));
   tdyn.specs.emplace_back(
       parameter<double>("MAXTIME", {.description = "maximum time", .default_value = 5.0}));
 
@@ -69,11 +73,14 @@ void Thermo::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& li
       "binary operator to combine temperature and residual force values",
       tuple<std::string>("And", "Or"), tuple<BinaryOp>(bop_and, bop_or), tdyn);
 
-  Core::Utils::int_parameter("MAXITER", 50,
-      "maximum number of iterations allowed for Newton-Raphson iteration before failure", tdyn);
+  tdyn.specs.emplace_back(parameter<int>("MAXITER",
+      {.description =
+              "maximum number of iterations allowed for Newton-Raphson iteration before failure",
+          .default_value = 50}));
 
-  Core::Utils::int_parameter(
-      "MINITER", 0, "minimum number of iterations to be done within Newton-Raphson loop", tdyn);
+  tdyn.specs.emplace_back(parameter<int>("MINITER",
+      {.description = "minimum number of iterations to be done within Newton-Raphson loop",
+          .default_value = 0}));
 
   Core::Utils::string_to_integral_parameter<VectorNorm>("ITERNORM", "L2",
       "type of norm to be applied to residuals", tuple<std::string>("L1", "L2", "Rms", "Inf"),
@@ -86,8 +93,9 @@ void Thermo::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& li
           divcont_repeat_simulation),
       tdyn);
 
-  Core::Utils::int_parameter("MAXDIVCONREFINEMENTLEVEL", 10,
-      "number of times timestep is halved in case nonlinear solver diverges", tdyn);
+  tdyn.specs.emplace_back(parameter<int>("MAXDIVCONREFINEMENTLEVEL",
+      {.description = "number of times timestep is halved in case nonlinear solver diverges",
+          .default_value = 10}));
 
   Core::Utils::string_to_integral_parameter<NonlinSolTech>("NLNSOL", "fullnewton",
       "Nonlinear solution technique", tuple<std::string>("vague", "fullnewton"),
@@ -113,8 +121,8 @@ void Thermo::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& li
                       .default_value = false}));
 
   // number of linear solver used for thermal problems
-  Core::Utils::int_parameter(
-      "LINEAR_SOLVER", -1, "number of linear solver used for thermal problems", tdyn);
+  tdyn.specs.emplace_back(parameter<int>("LINEAR_SOLVER",
+      {.description = "number of linear solver used for thermal problems", .default_value = -1}));
 
   // where the geometry comes from
   Core::Utils::string_to_integral_parameter<Core::IO::GeometryType>("GEOMETRY", "full",
@@ -126,7 +134,8 @@ void Thermo::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& li
   Core::Utils::string_to_integral_parameter<CalcError>("CALCERROR", "No",
       "compute error compared to analytical solution", tuple<std::string>("No", "byfunct"),
       tuple<CalcError>(no_error_calculation, calcerror_byfunct), tdyn);
-  Core::Utils::int_parameter("CALCERRORFUNCNO", -1, "Function for Error Calculation", tdyn);
+  tdyn.specs.emplace_back(parameter<int>(
+      "CALCERRORFUNCNO", {.description = "Function for Error Calculation", .default_value = -1}));
 
   tdyn.move_into_collection(list);
 

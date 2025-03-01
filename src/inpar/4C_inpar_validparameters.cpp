@@ -95,30 +95,41 @@ std::map<std::string, Core::IO::InputSpec> Input::valid_parameters()
   /*----------------------------------------------------------------------*/
   Core::Utils::SectionSpecs discret{"DISCRETISATION"};
 
-  Core::Utils::int_parameter("NUMFLUIDDIS", 1, "Number of meshes in fluid field", discret);
-  Core::Utils::int_parameter("NUMSTRUCDIS", 1, "Number of meshes in structural field", discret);
-  Core::Utils::int_parameter("NUMALEDIS", 1, "Number of meshes in ale field", discret);
-  Core::Utils::int_parameter(
-      "NUMARTNETDIS", 1, "Number of meshes in arterial network field", discret);
-  Core::Utils::int_parameter("NUMTHERMDIS", 1, "Number of meshes in thermal field", discret);
-  Core::Utils::int_parameter(
-      "NUMAIRWAYSDIS", 1, "Number of meshes in reduced dimensional airways network field", discret);
+  discret.specs.emplace_back(parameter<int>(
+      "NUMFLUIDDIS", {.description = "Number of meshes in fluid field", .default_value = 1}));
+  discret.specs.emplace_back(parameter<int>(
+      "NUMSTRUCDIS", {.description = "Number of meshes in structural field", .default_value = 1}));
+  discret.specs.emplace_back(parameter<int>(
+      "NUMALEDIS", {.description = "Number of meshes in ale field", .default_value = 1}));
+  discret.specs.emplace_back(parameter<int>("NUMARTNETDIS",
+      {.description = "Number of meshes in arterial network field", .default_value = 1}));
+  discret.specs.emplace_back(parameter<int>(
+      "NUMTHERMDIS", {.description = "Number of meshes in thermal field", .default_value = 1}));
+  discret.specs.emplace_back(parameter<int>("NUMAIRWAYSDIS",
+      {.description = "Number of meshes in reduced dimensional airways network field",
+          .default_value = 1}));
 
   discret.move_into_collection(list);
 
   /*----------------------------------------------------------------------*/
   Core::Utils::SectionSpecs size{"PROBLEM SIZE"};
 
-  Core::Utils::int_parameter("DIM", 3, "2d or 3d problem", size);
+  size.specs.emplace_back(
+      parameter<int>("DIM", {.description = "2d or 3d problem", .default_value = 3}));
 
   // deactivate all the following (unused) parameters one day
   // they are nice as general info in the input file but should not
   // read into a parameter list. Misuse is possible
-  Core::Utils::int_parameter("ELEMENTS", 0, "Total number of elements", size);
-  Core::Utils::int_parameter("NODES", 0, "Total number of nodes", size);
-  Core::Utils::int_parameter("NPATCHES", 0, "number of nurbs patches", size);
-  Core::Utils::int_parameter("MATERIALS", 0, "number of materials", size);
-  Core::Utils::int_parameter("NUMDF", 3, "maximum number of degrees of freedom", size);
+  size.specs.emplace_back(
+      parameter<int>("ELEMENTS", {.description = "Total number of elements", .default_value = 0}));
+  size.specs.emplace_back(
+      parameter<int>("NODES", {.description = "Total number of nodes", .default_value = 0}));
+  size.specs.emplace_back(
+      parameter<int>("NPATCHES", {.description = "number of nurbs patches", .default_value = 0}));
+  size.specs.emplace_back(
+      parameter<int>("MATERIALS", {.description = "number of materials", .default_value = 0}));
+  size.specs.emplace_back(parameter<int>(
+      "NUMDF", {.description = "maximum number of degrees of freedom", .default_value = 3}));
 
   size.move_into_collection(list);
 
@@ -133,11 +144,10 @@ std::map<std::string, Core::IO::InputSpec> Input::valid_parameters()
                                               "square Dirichlet boundary conditions.",
                                   .default_value = false}));
 
-  Core::Utils::int_parameter("SOLVER_LS_DBC_PROJECTION", -1,
-      "Number of linear solver for the projection of least squares Dirichlet boundary conditions "
-      "for NURBS "
-      "discretizations",
-      nurbs_param);
+  nurbs_param.specs.emplace_back(parameter<int>("SOLVER_LS_DBC_PROJECTION",
+      {.description = "Number of linear solver for the projection of least squares "
+                      "Dirichlet boundary conditions for NURBS discretizations",
+          .default_value = -1}));
 
   nurbs_param.move_into_collection(list);
 

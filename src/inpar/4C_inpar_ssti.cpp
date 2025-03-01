@@ -26,17 +26,21 @@ void Inpar::SSTI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
 
   sstidyn.specs.emplace_back(parameter<double>("RESTARTEVERYTIME",
       {.description = "write restart possibility every RESTARTEVERY steps", .default_value = 0.0}));
-  Core::Utils::int_parameter(
-      "RESTARTEVERY", 1, "write restart possibility every RESTARTEVERY steps", sstidyn);
-  Core::Utils::int_parameter("NUMSTEP", 200, "maximum number of Timesteps", sstidyn);
+  sstidyn.specs.emplace_back(parameter<int>("RESTARTEVERY",
+      {.description = "write restart possibility every RESTARTEVERY steps", .default_value = 1}));
+  sstidyn.specs.emplace_back(parameter<int>(
+      "NUMSTEP", {.description = "maximum number of Timesteps", .default_value = 200}));
+
   sstidyn.specs.emplace_back(parameter<double>(
       "MAXTIME", {.description = "total simulation time", .default_value = 1000.0}));
   sstidyn.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "time step size dt", .default_value = -1.0}));
   sstidyn.specs.emplace_back(parameter<double>(
       "RESULTSEVERYTIME", {.description = "increment for writing solution", .default_value = 0.0}));
-  Core::Utils::int_parameter("RESULTSEVERY", 1, "increment for writing solution", sstidyn);
-  Core::Utils::int_parameter("ITEMAX", 10, "maximum number of iterations over fields", sstidyn);
+  sstidyn.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "increment for writing solution", .default_value = 1}));
+  sstidyn.specs.emplace_back(parameter<int>(
+      "ITEMAX", {.description = "maximum number of iterations over fields", .default_value = 10}));
   sstidyn.specs.emplace_back(parameter<bool>("SCATRA_FROM_RESTART_FILE",
       {.description = "read scatra result from restart files (use option 'restartfromfile' during "
                       "execution of 4C)",
@@ -68,8 +72,8 @@ void Inpar::SSTI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
       {.description =
               "tolerance for convergence check of Newton-Raphson iteration within monolithic SSI",
           .default_value = 1.0e-6}));
-  Core::Utils::int_parameter(
-      "LINEAR_SOLVER", -1, "ID of linear solver for global system of equations", sstidynmono);
+  sstidynmono.specs.emplace_back(parameter<int>("LINEAR_SOLVER",
+      {.description = "ID of linear solver for global system of equations", .default_value = -1}));
   Core::Utils::string_to_integral_parameter<Core::LinAlg::MatrixType>("MATRIXTYPE", "undefined",
       "type of global system matrix in global system of equations",
       tuple<std::string>("undefined", "block", "sparse"),
@@ -128,8 +132,10 @@ void Inpar::SSTI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
   /* parameters for thermo                                                */
   /*----------------------------------------------------------------------*/
   Core::Utils::SectionSpecs thermodyn{sstidyn, "THERMO"};
-  Core::Utils::int_parameter("INITTHERMOFUNCT", -1, "initial function for thermo field", thermodyn);
-  Core::Utils::int_parameter("LINEAR_SOLVER", -1, "linear solver for thermo field", thermodyn);
+  thermodyn.specs.emplace_back(parameter<int>("INITTHERMOFUNCT",
+      {.description = "initial function for thermo field", .default_value = -1}));
+  thermodyn.specs.emplace_back(parameter<int>(
+      "LINEAR_SOLVER", {.description = "linear solver for thermo field", .default_value = -1}));
   Core::Utils::string_to_integral_parameter<Inpar::ScaTra::InitialField>("INITIALFIELD",
       "field_by_function", "defines, how to set the initial field",
       tuple<std::string>("field_by_function", "field_by_condition"),

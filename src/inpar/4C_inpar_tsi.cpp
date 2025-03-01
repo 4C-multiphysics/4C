@@ -34,18 +34,22 @@ void Inpar::TSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
       parameter<bool>("MATCHINGGRID", {.description = "is matching grid", .default_value = true}));
 
   // output type
-  Core::Utils::int_parameter(
-      "RESTARTEVERY", 1, "write restart possibility every RESTARTEVERY steps", tsidyn);
+  tsidyn.specs.emplace_back(parameter<int>("RESTARTEVERY",
+      {.description = "write restart possibility every RESTARTEVERY steps", .default_value = 1}));
 
   // time loop control
-  Core::Utils::int_parameter("NUMSTEP", 200, "maximum number of Timesteps", tsidyn);
+  tsidyn.specs.emplace_back(parameter<int>(
+      "NUMSTEP", {.description = "maximum number of Timesteps", .default_value = 200}));
   tsidyn.specs.emplace_back(parameter<double>(
       "MAXTIME", {.description = "total simulation time", .default_value = 1000.0}));
   tsidyn.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "time step size dt", .default_value = 0.05}));
-  Core::Utils::int_parameter("ITEMAX", 10, "maximum number of iterations over fields", tsidyn);
-  Core::Utils::int_parameter("ITEMIN", 1, "minimal number of iterations over fields", tsidyn);
-  Core::Utils::int_parameter("RESULTSEVERY", 1, "increment for writing solution", tsidyn);
+  tsidyn.specs.emplace_back(parameter<int>(
+      "ITEMAX", {.description = "maximum number of iterations over fields", .default_value = 10}));
+  tsidyn.specs.emplace_back(parameter<int>(
+      "ITEMIN", {.description = "minimal number of iterations over fields", .default_value = 1}));
+  tsidyn.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "increment for writing solution", .default_value = 1}));
 
   Core::Utils::string_to_integral_parameter<ConvNorm>("NORM_INC", "Abs",
       "type of norm for convergence check of primary variables in TSI",
@@ -93,8 +97,9 @@ void Inpar::TSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
                                      .default_value = 0.1}));
 
   // number of linear solver used for monolithic TSI
-  Core::Utils::int_parameter(
-      "LINEAR_SOLVER", -1, "number of linear solver used for monolithic TSI problems", tsidynmono);
+  tsidynmono.specs.emplace_back(parameter<int>(
+      "LINEAR_SOLVER", {.description = "number of linear solver used for monolithic TSI problems",
+                           .default_value = -1}));
 
   // convergence criteria adaptivity of monolithic TSI solver
   tsidynmono.specs.emplace_back(parameter<bool>("ADAPTCONV",

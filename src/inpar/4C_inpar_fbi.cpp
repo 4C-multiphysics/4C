@@ -29,9 +29,10 @@ void Inpar::FBI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
           BeamToFluidCoupling::twoway, BeamToFluidCoupling::fluid, BeamToFluidCoupling::solid),
       fbi);
 
-  Core::Utils::int_parameter("STARTSTEP", 0,
-      "Time Step at which to begin the fluid beam coupling. Usually this will be the first step.",
-      fbi);
+  fbi.specs.emplace_back(parameter<int>(
+      "STARTSTEP", {.description = "Time Step at which to begin the fluid beam coupling. Usually "
+                                   "this will be the first step.",
+                       .default_value = 0}));
 
   Core::Utils::string_to_integral_parameter<BeamToFluidPreSortStrategy>("PRESORT_STRATEGY",
       "bruteforce", "Presort strategy for the beam elements",
@@ -124,8 +125,9 @@ void Inpar::FBI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
                                                   "Lagrange multipliers function along the beam.",
                                       .default_value = false}));
 
-  Core::Utils::int_parameter("MORTAR_LAMBDA_CONTINUOUS_SEGMENTS", 5,
-      "Number of segments for continuous mortar output", beam_to_fluid_meshtying_output);
+  beam_to_fluid_meshtying_output.specs.emplace_back(
+      parameter<int>("MORTAR_LAMBDA_CONTINUOUS_SEGMENTS",
+          {.description = "Number of segments for continuous mortar output", .default_value = 5}));
 
   beam_to_fluid_meshtying_output.move_into_collection(list);
 }

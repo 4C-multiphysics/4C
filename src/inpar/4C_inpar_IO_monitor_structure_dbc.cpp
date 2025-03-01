@@ -31,17 +31,17 @@ namespace Inpar
           sublist_IO, "MONITOR STRUCTURE DBC"};
 
       // output interval regarding steps: write output every INTERVAL_STEPS steps
-      Core::Utils::int_parameter("INTERVAL_STEPS", -1,
-          "write reaction force output every INTERVAL_STEPS steps",
-          sublist_IO_monitor_structure_dbc);
+      sublist_IO_monitor_structure_dbc.specs.emplace_back(parameter<int>("INTERVAL_STEPS",
+          {.description = "write reaction force output every INTERVAL_STEPS steps",
+              .default_value = -1}));
 
       // precision for file
-      Core::Utils::int_parameter(
-          "PRECISION_FILE", 16, "precision for written file", sublist_IO_monitor_structure_dbc);
+      sublist_IO_monitor_structure_dbc.specs.emplace_back(parameter<int>(
+          "PRECISION_FILE", {.description = "precision for written file", .default_value = 16}));
 
       // precision for screen
-      Core::Utils::int_parameter("PRECISION_SCREEN", 5, "precision for written screen output",
-          sublist_IO_monitor_structure_dbc);
+      sublist_IO_monitor_structure_dbc.specs.emplace_back(parameter<int>("PRECISION_SCREEN",
+          {.description = "precision for written screen output", .default_value = 5}));
 
       // type of written output file
       Core::Utils::string_to_integral_parameter<Inpar::IOMonitorStructureDBC::FileType>("FILE_TYPE",

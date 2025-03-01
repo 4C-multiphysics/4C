@@ -39,15 +39,16 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
       fdyn);
 
   // number of linear solver used for fluid problem
-  Core::Utils::int_parameter(
-      "LINEAR_SOLVER", -1, "number of linear solver used for fluid dynamics", fdyn);
+  fdyn.specs.emplace_back(parameter<int>("LINEAR_SOLVER",
+      {.description = "number of linear solver used for fluid dynamics", .default_value = -1}));
 
   // number of linear solver used for fluid problem (former fluid pressure solver for SIMPLER
   // preconditioning with fluid)
-  Core::Utils::int_parameter("SIMPLER_SOLVER", -1,
-      "number of linear solver used for fluid dynamics (ONLY NECESSARY FOR BlockGaussSeidel solver "
-      "block within fluid mehstying case any more!!!!)",
-      fdyn);
+  fdyn.specs.emplace_back(parameter<int>(
+      "SIMPLER_SOLVER", {.description = "number of linear solver used for fluid dynamic (ONLY "
+                                        "NECESSARY FOR BlockGaussSeidel solver block within fluid "
+                                        "mehstying case any more!!!!)",
+                            .default_value = -1}));
 
   // Flag to define the way of calculating stresses and wss
   Core::Utils::string_to_integral_parameter<Inpar::FLUID::WSSType>("WSS_TYPE", "Standard",
@@ -57,10 +58,10 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
 
   // Set ML-solver number for smoothing of residual-based calculated wallshearstress via plain
   // aggregation.
-  Core::Utils::int_parameter("WSS_ML_AGR_SOLVER", -1,
-      "Set ML-solver number for smoothing of residual-based calculated wallshearstress via plain "
-      "aggregation.",
-      fdyn);
+  fdyn.specs.emplace_back(parameter<int>("WSS_ML_AGR_SMOOTHER",
+      {.description = "Set ML-solver number for smoothing of residual-based calculated "
+                      "wallshearstress via plain aggregation.",
+          .default_value = -1}));
 
   Core::Utils::string_to_integral_parameter<Inpar::FLUID::TimeIntegrationScheme>("TIMEINTEGR",
       "One_Step_Theta", "Time Integration Scheme",
@@ -135,8 +136,8 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
         "INITIALFIELD", "zero_field", "Initial field for fluid problem", name, label, fdyn);
   }
 
-  Core::Utils::int_parameter(
-      "OSEENFIELDFUNCNO", -1, "function number of Oseen advective field", fdyn);
+  fdyn.specs.emplace_back(parameter<int>("OSEENFIELDFUNCNO",
+      {.description = "function number of Oseen advective field", .default_value = -1}));
 
   fdyn.specs.emplace_back(parameter<bool>(
       "LIFTDRAG", {.description = "Calculate lift and drag forces along specified boundary",
@@ -204,13 +205,18 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
     Core::Utils::string_to_integral_parameter<Inpar::FLUID::CalcError>(
         "CALCERROR", "no", "Flag to (de)activate error calculations", name, label, fdyn);
   }
-  Core::Utils::int_parameter("CALCERRORFUNCNO", -1, "Function for Error Calculation", fdyn);
+  fdyn.specs.emplace_back(parameter<int>(
+      "CALCERRORFUNCNO", {.description = "Function for Error Calculation", .default_value = -1}));
 
-  Core::Utils::int_parameter("CORRTERMFUNCNO", -1,
-      "Function for calculation of the correction term for the weakly compressible problem", fdyn);
+  fdyn.specs.emplace_back(parameter<int>("CORRTERMFUNCNO",
+      {.description =
+              "Function for calculation of the correction term for the weakly compressible problem",
+          .default_value = -1}));
 
-  Core::Utils::int_parameter("BODYFORCEFUNCNO", -1,
-      "Function for calculation of the body force for the weakly compressible problem", fdyn);
+  fdyn.specs.emplace_back(parameter<int>("BODYFORCEFUNCNO",
+      {.description =
+              "Function for calculation of the body force for the weakly compressible problem",
+          .default_value = -1}));
 
   fdyn.specs.emplace_back(parameter<double>(
       "STAB_DEN_REF", {.description = "Reference stabilization parameter for the density for the "
@@ -222,8 +228,10 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
                                       "HDG weakly compressible formulation",
                           .default_value = 0.0}));
 
-  Core::Utils::int_parameter("VARVISCFUNCNO", -1,
-      "Function for calculation of a variable viscosity for the weakly compressible problem", fdyn);
+  fdyn.specs.emplace_back(parameter<int>(
+      "VARVISCFUNCNO", {.description = "Function for calculation of a variable viscosity for the "
+                                       "weakly compressible problem",
+                           .default_value = -1}));
 
   fdyn.specs.emplace_back(parameter<bool>(
       "PRESSAVGBC", {.description = "Flag to (de)activate imposition of boundary condition for the "
@@ -261,15 +269,23 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
   fdyn.specs.emplace_back(parameter<bool>("NEW_OST",
       {.description = "Solve the Navier-Stokes equation with the new One Step Theta algorithm",
           .default_value = false}));  // TODO: To be removed.
-  Core::Utils::int_parameter("RESULTSEVERY", 1, "Increment for writing solution", fdyn);
-  Core::Utils::int_parameter("RESTARTEVERY", 20, "Increment for writing restart", fdyn);
-  Core::Utils::int_parameter("NUMSTEP", 1, "Total number of Timesteps", fdyn);
-  Core::Utils::int_parameter("STEADYSTEP", -1, "steady state check every step", fdyn);
-  Core::Utils::int_parameter("NUMSTASTEPS", 0, "Number of Steps for Starting Scheme", fdyn);
-  Core::Utils::int_parameter("STARTFUNCNO", -1, "Function for Initial Starting Field", fdyn);
-  Core::Utils::int_parameter("ITEMAX", 10, "max. number of nonlin. iterations", fdyn);
-  Core::Utils::int_parameter("INITSTATITEMAX", 5,
-      "max number of nonlinear iterations for initial stationary solution", fdyn);
+  fdyn.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "Increment for writing solution", .default_value = 1}));
+  fdyn.specs.emplace_back(parameter<int>(
+      "RESTARTEVERY", {.description = "Increment for writing restart", .default_value = 20}));
+  fdyn.specs.emplace_back(
+      parameter<int>("NUMSTEP", {.description = "Total number of Timesteps", .default_value = 1}));
+  fdyn.specs.emplace_back(parameter<int>(
+      "STEADYSTEP", {.description = "steady state check every step", .default_value = -1}));
+  fdyn.specs.emplace_back(parameter<int>(
+      "NUMSTASTEPS", {.description = "Number of Steps for Starting Scheme", .default_value = 0}));
+  fdyn.specs.emplace_back(parameter<int>(
+      "STARTFUNCNO", {.description = "Function for Initial Starting Field", .default_value = -1}));
+  fdyn.specs.emplace_back(parameter<int>(
+      "ITEMAX", {.description = "max. number of nonlin. iterations", .default_value = 10}));
+  fdyn.specs.emplace_back(parameter<int>("INITSTATITEMAX",
+      {.description = "max number of nonlinear iterations for initial stationary solution",
+          .default_value = 5}));
   fdyn.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "Time increment dt", .default_value = 0.01}));
   fdyn.specs.emplace_back(parameter<double>(
@@ -290,8 +306,8 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
       {.description = "Flag to (de)activate potential Strong 3D redD coupling",
           .default_value = false}));
 
-  Core::Utils::int_parameter(
-      "VELGRAD_PROJ_SOLVER", -1, "Number of linear solver used for L2 projection", fdyn);
+  fdyn.specs.emplace_back(parameter<int>("VELGRAD_PROJ_SOLVER",
+      {.description = "Number of linear solver used for L2 projection", .default_value = -1}));
 
   Core::Utils::string_to_integral_parameter<Inpar::FLUID::GradientReconstructionMethod>(
       "VELGRAD_PROJ_METHOD", "none", "Flag to (de)activate gradient reconstruction.",
@@ -830,12 +846,14 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
   // turbulence specific output and statistics
   //----------------------------------------------------------------------
 
-  Core::Utils::int_parameter(
-      "SAMPLING_START", 10000000, "Time step after when sampling shall be started", fdyn_turbu);
-  Core::Utils::int_parameter(
-      "SAMPLING_STOP", 1, "Time step when sampling shall be stopped", fdyn_turbu);
-  Core::Utils::int_parameter("DUMPING_PERIOD", 1,
-      "Period of time steps after which statistical data shall be dumped", fdyn_turbu);
+  fdyn_turbu.specs.emplace_back(parameter<int>(
+      "SAMPLING_START", {.description = "Time step after when sampling shall be started",
+                            .default_value = 10000000}));
+  fdyn_turbu.specs.emplace_back(parameter<int>("SAMPLING_STOP",
+      {.description = "Time step when sampling shall be stopped", .default_value = 1}));
+  fdyn_turbu.specs.emplace_back(parameter<int>("DUMPING_PERIOD",
+      {.description = "Period of time steps after which statistical data shall be dumped",
+          .default_value = 1}));
   fdyn_turbu.specs.emplace_back(parameter<bool>(
       "SUBGRID_DISSIPATION", {.description = "Flag to (de)activate estimation of subgrid-scale "
                                              "dissipation (only for seclected flows).",
@@ -948,16 +966,14 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
       tuple<ForcingType>(linear_compensation_from_intermediate_spectrum, fixed_power_input),
       fdyn_turbu);
 
-  Core::Utils::int_parameter(
-      "CHA_NUMSUBDIVISIONS", 5, "Number of homogeneous sampling planes in element", fdyn_turbu);
+  fdyn_turbu.specs.emplace_back(parameter<int>("CHA_NUMSUBDIVISIONS",
+      {.description = "Number of homogeneous sampling planes in element", .default_value = 5}));
 
   // HIT
   //--------------
 
-  Core::Utils::int_parameter("FORCING_TIME_STEPS", 0,
-      "Number of time steps during which forcing is applied. Decaying homogeneous isotropic "
-      "turbulence only.",
-      fdyn_turbu);
+  fdyn_turbu.specs.emplace_back(parameter<int>("FORCING_TIME_STEPS",
+      {.description = "Number of time steps during which forcing is applied", .default_value = 0}));
 
   fdyn_turbu.specs.emplace_back(parameter<double>(
       "THRESHOLD_WAVENUMBER", {.description = "Forcing is only applied to wave numbers lower or "
@@ -1062,8 +1078,8 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
           {.description = tauw_calc_type_doc, .default_value = "residual"}));
 
 
-  Core::Utils::int_parameter(
-      "Switch_Step", -1, "Switch from gradient to residual based tauw.", fdyn_wallmodel);
+  fdyn_wallmodel.specs.emplace_back(parameter<int>("Switch_Step",
+      {.description = "Switch from gradient to residual based tauw.", .default_value = -1}));
 
   std::vector<std::string> projection_valid_input = {
       "No", "onlyl2projection", "l2projectionwithcontinuityconstraint"};
@@ -1095,20 +1111,21 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
       blending_type_valid_input, {.description = blending_type_doc, .default_value = "none"}));
 
 
-  Core::Utils::int_parameter(
-      "GP_Wall_Normal", 3, "Gauss points in wall normal direction", fdyn_wallmodel);
-  Core::Utils::int_parameter("GP_Wall_Normal_Off_Wall", 3,
-      "Gauss points in wall normal direction, off-wall elements", fdyn_wallmodel);
-  Core::Utils::int_parameter(
-      "GP_Wall_Parallel", 3, "Gauss points in wall parallel direction", fdyn_wallmodel);
+  fdyn_wallmodel.specs.emplace_back(parameter<int>("GP_Wall_Normal",
+      {.description = "Gauss points in wall normal direction", .default_value = 3}));
+  fdyn_wallmodel.specs.emplace_back(parameter<int>("GP_Wall_Normal_Off_Wall",
+      {.description = "Gauss points in wall normal direction, off-wall elements",
+          .default_value = 3}));
+  fdyn_wallmodel.specs.emplace_back(parameter<int>("GP_Wall_Parallel",
+      {.description = "Gauss points in wall parallel direction", .default_value = 3}));
 
   fdyn_wallmodel.specs.emplace_back(parameter<bool>("Treat_Tauw_on_Dirichlet_Inflow",
       {.description = "Flag to treat residual on Dirichlet inflow nodes for calculation of wall "
                       "shear stress",
           .default_value = false}));
 
-  Core::Utils::int_parameter(
-      "PROJECTION_SOLVER", -1, "Set solver number for l2-projection.", fdyn_wallmodel);
+  fdyn_wallmodel.specs.emplace_back(parameter<int>("PROJECTION_SOLVER",
+      {.description = "Set solver number for l2-projection.", .default_value = -1}));
 
   fdyn_wallmodel.move_into_collection(list);
 
@@ -1131,10 +1148,11 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
           {.description = scale_separation_doc, .default_value = "no_scale_sep"}));
 
 
-  Core::Utils::int_parameter("ML_SOLVER", -1,
-      "Set solver number for scale separation via level set transfer operators from plain "
-      "aggregation.",
-      fdyn_turbmfs);
+  fdyn_turbmfs.specs.emplace_back(parameter<int>("ML_SOLVER",
+      {.description =
+              "Set solver number for scale separation via level set transfer operators from "
+              "plain aggregation.",
+          .default_value = -1}));
 
   fdyn_turbmfs.specs.emplace_back(parameter<bool>(
       "CALC_N", {.description = "Flag to (de)activate calculation of N from the Reynolds number.",
@@ -1241,16 +1259,18 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
           initfield_disturbed_field_from_function),
       fdyn_turbinf);
 
-  Core::Utils::int_parameter(
-      "INFLOWFUNC", -1, "Function number for initial flow field in inflow section", fdyn_turbinf);
+  fdyn_turbinf.specs.emplace_back(parameter<int>(
+      "INFLOWFUNC", {.description = "Function number for initial flow field in inflow section",
+                        .default_value = -1}));
 
   fdyn_turbinf.specs.emplace_back(parameter<double>(
       "INFLOW_INIT_DIST", {.description = "Max. amplitude of the random disturbance in percent of "
                                           "the initial value in mean flow direction.",
                               .default_value = 0.1}));
 
-  Core::Utils::int_parameter("NUMINFLOWSTEP", 1,
-      "Total number of time steps for development of turbulent flow", fdyn_turbinf);
+  fdyn_turbinf.specs.emplace_back(parameter<int>("NUMINFLOWSTEP",
+      {.description = "Total number of time steps for development of turbulent flow",
+          .default_value = 1}));
 
   std::vector<std::string> canonical_inflow_valid_input = {"no", "time_averaging",
       "channel_flow_of_height_2", "loma_channel_flow_of_height_2",
@@ -1293,12 +1313,14 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
       deprecated_selection<std::string>("INFLOW_HOMDIR", inflow_homdir_valid_input,
           {.description = inflow_homdir_doc, .default_value = "not_specified"}));
 
-  Core::Utils::int_parameter("INFLOW_SAMPLING_START", 10000000,
-      "Time step after when sampling shall be started", fdyn_turbinf);
-  Core::Utils::int_parameter(
-      "INFLOW_SAMPLING_STOP", 1, "Time step when sampling shall be stopped", fdyn_turbinf);
-  Core::Utils::int_parameter("INFLOW_DUMPING_PERIOD", 1,
-      "Period of time steps after which statistical data shall be dumped", fdyn_turbinf);
+  fdyn_turbinf.specs.emplace_back(parameter<int>(
+      "INFLOW_SAMPLING_START", {.description = "Time step after when sampling shall be started",
+                                   .default_value = 10000000}));
+  fdyn_turbinf.specs.emplace_back(parameter<int>("INFLOW_SAMPLING_STOP",
+      {.description = "Time step when sampling shall be stopped", .default_value = 1}));
+  fdyn_turbinf.specs.emplace_back(parameter<int>("INFLOW_DUMPING_PERIOD",
+      {.description = "Period of time steps after which statistical data shall be dumped",
+          .default_value = 1}));
 
   fdyn_turbinf.move_into_collection(list);
 
@@ -1313,10 +1335,10 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
 
   fdyn_timintada.specs.emplace_back(parameter<double>(
       "CFL_NUMBER", {.description = "CFL number for adaptive time step", .default_value = -1.0}));
-  Core::Utils::int_parameter("FREEZE_ADAPTIVE_DT_AT", 1000000,
-      "keep time step constant after this step, otherwise turbulence statistics sampling is not "
-      "consistent",
-      fdyn_timintada);
+  fdyn_timintada.specs.emplace_back(parameter<int>("FREEZE_ADAPTIVE_DT_AT",
+      {.description = "keep time step constant after this step, otherwise turbulence statistics "
+                      "sampling is not consistent",
+          .default_value = 1000000}));
   fdyn_timintada.specs.emplace_back(parameter<double>("ADAPTIVE_DT_INC",
       {.description = "Increment of whole step for adaptive dt via CFL", .default_value = 0.8}));
 
@@ -1334,18 +1356,24 @@ void Inpar::LowMach::set_valid_parameters(std::map<std::string, Core::IO::InputS
 
   lomacontrol.specs.emplace_back(
       parameter<bool>("MONOLITHIC", {.description = "monolithic solver", .default_value = false}));
-  Core::Utils::int_parameter("NUMSTEP", 24, "Total number of time steps", lomacontrol);
+  lomacontrol.specs.emplace_back(parameter<int>(
+      "NUMSTEP", {.description = "Total number of time steps", .default_value = 24}));
   lomacontrol.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "Time increment dt", .default_value = 0.1}));
   lomacontrol.specs.emplace_back(parameter<double>(
       "MAXTIME", {.description = "Total simulation time", .default_value = 1000.0}));
-  Core::Utils::int_parameter("ITEMAX", 10, "Maximum number of outer iterations", lomacontrol);
-  Core::Utils::int_parameter("ITEMAX_BEFORE_SAMPLING", 1,
-      "Maximum number of outer iterations before sampling (for turbulent flows only)", lomacontrol);
+  lomacontrol.specs.emplace_back(parameter<int>(
+      "ITEMAX", {.description = "Maximum number of outer iterations", .default_value = 10}));
+  lomacontrol.specs.emplace_back(parameter<int>("ITEMAX_BEFORE_SAMPLING",
+      {.description =
+              "Maximum number of outer iterations before sampling (for turbulent flows only)",
+          .default_value = 1}));
   lomacontrol.specs.emplace_back(parameter<double>(
       "CONVTOL", {.description = "Tolerance for convergence check", .default_value = 1e-6}));
-  Core::Utils::int_parameter("RESULTSEVERY", 1, "Increment for writing solution", lomacontrol);
-  Core::Utils::int_parameter("RESTARTEVERY", 1, "Increment for writing restart", lomacontrol);
+  lomacontrol.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "Increment for writing solution", .default_value = 1}));
+  lomacontrol.specs.emplace_back(parameter<int>(
+      "RESTARTEVERY", {.description = "Increment for writing restart", .default_value = 1}));
 
   std::vector<std::string> constthermpress_valid_input = {"No_energy", "No_mass", "Yes"};
   lomacontrol.specs.emplace_back(
@@ -1357,8 +1385,8 @@ void Inpar::LowMach::set_valid_parameters(std::map<std::string, Core::IO::InputS
                                  .default_value = false}));
 
   // number of linear solver used for LOMA solver
-  Core::Utils::int_parameter(
-      "LINEAR_SOLVER", -1, "number of linear solver used for LOMA problem", lomacontrol);
+  lomacontrol.specs.emplace_back(parameter<int>("LINEAR_SOLVER",
+      {.description = "number of linear solver used for LOMA problem", .default_value = -1}));
 
   lomacontrol.move_into_collection(list);
 }

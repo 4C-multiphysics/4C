@@ -21,13 +21,16 @@ void Inpar::LevelSet::set_valid_parameters(std::map<std::string, Core::IO::Input
 
   Core::Utils::SectionSpecs levelsetcontrol{"LEVEL-SET CONTROL"};
 
-  Core::Utils::int_parameter("NUMSTEP", 24, "Total number of time steps", levelsetcontrol);
+  levelsetcontrol.specs.emplace_back(parameter<int>(
+      "NUMSTEP", {.description = "Total number of time steps", .default_value = 24}));
   levelsetcontrol.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "Time increment dt", .default_value = 0.1}));
   levelsetcontrol.specs.emplace_back(parameter<double>(
       "MAXTIME", {.description = "Total simulation time", .default_value = 1000.0}));
-  Core::Utils::int_parameter("RESULTSEVERY", 1, "Increment for writing solution", levelsetcontrol);
-  Core::Utils::int_parameter("RESTARTEVERY", 1, "Increment for writing restart", levelsetcontrol);
+  levelsetcontrol.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "Increment for writing solution", .default_value = 1}));
+  levelsetcontrol.specs.emplace_back(parameter<int>(
+      "RESTARTEVERY", {.description = "Increment for writing restart", .default_value = 1}));
 
   Core::Utils::string_to_integral_parameter<Inpar::ScaTra::CalcErrorLevelSet>("CALCERROR", "No",
       "compute error compared to analytical solution", tuple<std::string>("No", "InitialField"),
@@ -39,9 +42,10 @@ void Inpar::LevelSet::set_valid_parameters(std::map<std::string, Core::IO::Input
       {.description = "replace computed velocity at nodes of given distance of interface by "
                       "approximated interface velocity",
           .default_value = false}));
-  Core::Utils::int_parameter("NUM_CONVEL_LAYERS", -1,
-      "number of layers around the interface which keep their computed convective velocity",
-      levelsetcontrol);
+  levelsetcontrol.specs.emplace_back(parameter<int>("NUM_CONVEL_LAYERS",
+      {.description =
+              "number of layers around the interface which keep their computed convective velocity",
+          .default_value = -1}));
 
   levelsetcontrol.move_into_collection(list);
 
@@ -60,7 +64,8 @@ void Inpar::LevelSet::set_valid_parameters(std::map<std::string, Core::IO::Input
   ls_reinit.specs.emplace_back(parameter<bool>("REINIT_INITIAL",
       {.description = "Has level set field to be reinitialized before first time step?",
           .default_value = false}));
-  Core::Utils::int_parameter("REINITINTERVAL", 1, "reinitialization interval", ls_reinit);
+  ls_reinit.specs.emplace_back(parameter<int>(
+      "REINITINTERVAL", {.description = "reinitialization interval", .default_value = 1}));
 
   // parameters for signed distance reinitialization
   ls_reinit.specs.emplace_back(parameter<bool>("REINITBAND",
@@ -71,8 +76,8 @@ void Inpar::LevelSet::set_valid_parameters(std::map<std::string, Core::IO::Input
                              .default_value = 1.0}));
 
   // parameters for reinitialization equation
-  Core::Utils::int_parameter(
-      "NUMSTEPSREINIT", 1, "(maximal) number of pseudo-time steps", ls_reinit);
+  ls_reinit.specs.emplace_back(parameter<int>("NUMSTEPSREINIT",
+      {.description = "(maximal) number of pseudo-time steps", .default_value = 1}));
   ls_reinit.specs.emplace_back(parameter<double>(
       "TIMESTEPREINIT", {.description = "pseudo-time step length (usually a * characteristic "
                                         "element length of discretization with a>0)",

@@ -27,10 +27,11 @@ void Inpar::SSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
   // Output type
   ssidyn.specs.emplace_back(parameter<double>("RESTARTEVERYTIME",
       {.description = "write restart possibility every RESTARTEVERY steps", .default_value = 0.0}));
-  Core::Utils::int_parameter(
-      "RESTARTEVERY", 1, "write restart possibility every RESTARTEVERY steps", ssidyn);
+  ssidyn.specs.emplace_back(parameter<int>("RESTARTEVERY",
+      {.description = "write restart possibility every RESTARTEVERY steps", .default_value = 1}));
   // Time loop control
-  Core::Utils::int_parameter("NUMSTEP", 200, "maximum number of Timesteps", ssidyn);
+  ssidyn.specs.emplace_back(parameter<int>(
+      "NUMSTEP", {.description = "maximum number of Timesteps", .default_value = 200}));
   ssidyn.specs.emplace_back(parameter<double>(
       "MAXTIME", {.description = "total simulation time", .default_value = 1000.0}));
   ssidyn.specs.emplace_back(
@@ -39,8 +40,10 @@ void Inpar::SSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
       {.description = "use different step size for scatra and solid", .default_value = false}));
   ssidyn.specs.emplace_back(parameter<double>(
       "RESULTSEVERYTIME", {.description = "increment for writing solution", .default_value = 0.0}));
-  Core::Utils::int_parameter("RESULTSEVERY", 1, "increment for writing solution", ssidyn);
-  Core::Utils::int_parameter("ITEMAX", 10, "maximum number of iterations over fields", ssidyn);
+  ssidyn.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "increment for writing solution", .default_value = 1}));
+  ssidyn.specs.emplace_back(parameter<int>(
+      "ITEMAX", {.description = "maximum number of iterations over fields", .default_value = 10}));
   ssidyn.specs.emplace_back(parameter<bool>("SCATRA_FROM_RESTART_FILE",
       {.description = "read scatra result from restart files (use option 'restartfromfile' during "
                       "execution of 4C)",
@@ -142,8 +145,8 @@ void Inpar::SSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
           .default_value = 1.e-6}));
 
   // ID of linear solver for global system of equations
-  Core::Utils::int_parameter(
-      "LINEAR_SOLVER", -1, "ID of linear solver for global system of equations", ssidynmono);
+  ssidynmono.specs.emplace_back(parameter<int>("LINEAR_SOLVER",
+      {.description = "ID of linear solver for global system of equations", .default_value = -1}));
 
   // type of global system matrix in global system of equations
   Core::Utils::string_to_integral_parameter<Core::LinAlg::MatrixType>("MATRIXTYPE", "undefined",
@@ -199,9 +202,10 @@ void Inpar::SSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
                       "by scaling the convergence tolerance with factor RELAX_LIN_SOLVER_TOLERANCE",
           .default_value = 1.0}));
 
-  Core::Utils::int_parameter("RELAX_LIN_SOLVER_STEP", -1,
-      "relax the tolerance of the linear solver within the first RELAX_LIN_SOLVER_STEP steps",
-      ssidynmono);
+  ssidynmono.specs.emplace_back(parameter<int>(
+      "RELAX_LIN_SOLVER_STEP", {.description = "relax the tolerance of the linear solver within "
+                                               "the first RELAX_LIN_SOLVER_STEP steps",
+                                   .default_value = -1}));
 
   ssidynmono.move_into_collection(list);
 
@@ -225,11 +229,11 @@ void Inpar::SSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
           Inpar::ScaTra::initfield_field_by_function, Inpar::ScaTra::initfield_field_by_condition),
       ssidynmanifold);
 
-  Core::Utils::int_parameter("INITFUNCNO", -1,
-      "function number for scalar transport on manifold initial field", ssidynmanifold);
-
-  Core::Utils::int_parameter(
-      "LINEAR_SOLVER", -1, "linear solver for scalar transport on manifold", ssidynmanifold);
+  ssidynmanifold.specs.emplace_back(parameter<int>("INITFUNCNO",
+      {.description = "function number for scalar transport on manifold initial field",
+          .default_value = -1}));
+  ssidynmanifold.specs.emplace_back(parameter<int>("LINEAR_SOLVER",
+      {.description = "linear solver for scalar transport on manifold", .default_value = -1}));
 
   ssidynmanifold.specs.emplace_back(parameter<bool>(
       "OUTPUT_INFLOW", {.description = "write output of inflow of scatra manifold - scatra "
