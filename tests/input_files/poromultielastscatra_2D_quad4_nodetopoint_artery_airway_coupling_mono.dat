@@ -9,6 +9,8 @@ DIM           2
 -----------------------------------------------------------------PROBLEM TYPE
 PROBLEMTYPE                      Multiphase_Poroelasticity_ScaTra
 RESTART                         0
+--------------------------------------------IO/RUNTIME VTK OUTPUT
+OUTPUT_DATA_FORMAT              ascii
 ----------------------------------------------------------POROMULTIPHASESCATRA DYNAMIC
 RESULTSEVERY                     2
 RESTARTEVERY                     3
