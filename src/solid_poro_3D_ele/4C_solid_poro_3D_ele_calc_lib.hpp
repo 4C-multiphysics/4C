@@ -11,10 +11,15 @@
 
 #include "4C_config.hpp"
 
+#include "4C_fem_discretization.hpp"
+#include "4C_fem_general_cell_type.hpp"
+#include "4C_fem_general_cell_type_traits.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_element_dof_matrix.hpp"
 #include "4C_fem_general_element_integration_select.hpp"
 #include "4C_fem_general_extract_values.hpp"
+#include "4C_fem_general_utils_local_connectivity_matrices.hpp"
+#include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_mat_fluidporo.hpp"
 #include "4C_mat_fluidporo_multiphase.hpp"
@@ -28,6 +33,7 @@
 
 #include <algorithm>
 #include <numeric>
+#include <ranges>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -66,6 +72,48 @@ namespace Discret::Elements::Internal
 
 namespace Discret::Elements
 {
+  struct SolidPoroPrimaryVariables
+  {
+    const std::vector<int>& solid_location_array;
+    std::vector<double> solid_displacements{};
+
+    const std::vector<int>& fluid_location_array;
+    std::vector<double> fluid_velocities{};
+    std::vector<double> fluid_pressures{};
+  };
+
+  inline SolidPoroPrimaryVariables extract_solid_poro_primary_variables(
+      const Core::FE::Discretization& discretization, const Core::Elements::LocationArray& la,
+      Core::FE::CellType celltype)
+  {
+    const Core::LinAlg::Vector<double>& fluidvel = *discretization.get_state(1, "fluidvel");
+
+    const int num_nodes = Core::FE::get_number_of_element_nodes(celltype);
+    const int num_dim = Core::FE::get_dimension(celltype);
+
+    auto velocity_dofs = [i = -1, num_dim](const auto&) mutable
+    {
+      i = (i + 1) % (num_dim + 1);
+      return i < num_dim;
+    };
+    auto pressure_dofs = [i = -1, num_dim](const auto&) mutable
+    {
+      i = (i + 1) % (num_dim + 1);
+      return i == num_dim;
+    };
+
+    return SolidPoroPrimaryVariables{
+        .solid_location_array = la[0].lm_,
+        .solid_displacements =
+            Core::FE::extract_values(*discretization.get_state(0, "displacement"), la[0].lm_),
+        .fluid_location_array = la[1].lm_,
+        .fluid_velocities = Core::FE::extract_values(
+            fluidvel, la[1].lm_ | std::views::filter(velocity_dofs), num_nodes * num_dim),
+
+        .fluid_pressures = Core::FE::extract_values(
+            fluidvel, la[1].lm_ | std::views::filter(pressure_dofs), num_nodes),
+    };
+  }
 
   template <Core::FE::CellType celltype>
   constexpr auto get_gauss_rule_stiffness_matrix_poro()
@@ -77,6 +125,7 @@ namespace Discret::Elements
    * @brief Calculate volume change
    *
    * @tparam celltype: Cell type
+   * @param displacements (in) : An object holding the displacements of the element nodes
    * @param spatial_material_mapping (in) : An object holding quantities of the spatial material
    * mapping (deformation_gradient, inverse_deformation_gradient,
    * determinant_deformation_gradient)
@@ -90,26 +139,17 @@ namespace Discret::Elements
    */
   template <Core::FE::CellType celltype>
   inline double compute_volume_change(
+      const Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::num_nodes<celltype>>&
+          displacements,
       const SpatialMaterialMapping<celltype>& spatial_material_mapping,
       const JacobianMapping<celltype>& jacobian_mapping, const Core::Elements::Element& ele,
-      const Core::FE::Discretization& discretization, const std::vector<int>& lm,
       const Inpar::Solid::KinemType& kinematictype)
   {
     if (kinematictype == Inpar::Solid::KinemType::linear)
     {
-      // for linear kinematics the volume change is the trace of the linearized strains
-      const Core::LinAlg::Vector<double>& displacements = *discretization.get_state("displacement");
-
-      constexpr unsigned num_dofs = Core::FE::num_nodes<celltype> * Core::FE::dim<celltype>;
-      std::array<double, num_dofs> mydisp_arr =
-          Core::FE::extract_values_as_array<num_dofs>(displacements, lm);
-
-      Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::num_nodes<celltype>> mydisp =
-          Core::FE::get_element_dof_matrix_view<celltype, Core::FE::dim<celltype>>(mydisp_arr);
-
       Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> dispgrad(true);
       // gradient of displacements
-      dispgrad.multiply_nt(mydisp, jacobian_mapping.N_XYZ_);
+      dispgrad.multiply_nt(displacements, jacobian_mapping.N_XYZ_);
 
       double volchange = 1.0;
       // volchange = 1 + trace of the linearized strains (= trace of displacement gradient)
@@ -320,25 +360,15 @@ namespace Discret::Elements
    * @return fluid_variables:  nodal primary fluid variables (pressure and velocity)
    */
   template <Core::FE::CellType celltype>
-  inline FluidVariables<celltype> get_fluid_variables(const Core::Elements::Element& ele,
-      const Core::FE::Discretization& discretization, const Core::Elements::LocationArray& la)
+  inline FluidVariables<celltype> get_fluid_variable_views(
+      const SolidPoroPrimaryVariables& primary_variables)
   {
-    const std::vector<double> fluid_ephi =
-        Core::FE::extract_values(*(discretization.get_state(1, "fluidvel")), la[1].lm_);
+    FluidVariables<celltype> fluid_variables{
+        .fluidpress_nodal = Core::LinAlg::Matrix<Core::FE::num_nodes<celltype>, 1>(
+            primary_variables.fluid_pressures.data(), true),
+        .fluidvel_nodal = Core::FE::get_element_dof_matrix_view<celltype, Core::FE::dim<celltype>>(
+            primary_variables.fluid_velocities)};
 
-    FluidVariables<celltype> fluid_variables{};
-    for (unsigned int inode = 0; inode < Internal::num_nodes<celltype>; ++inode)  // number of nodes
-    {
-      for (unsigned int idim = 0; idim < Internal::num_dim<celltype>;
-          ++idim)  // number of dimensions
-      {
-        (fluid_variables.fluidvel_nodal)(idim, inode) =
-            fluid_ephi[idim + (inode * discretization.num_dof(1, ele.nodes()[0]))];
-      }
-      (fluid_variables.fluidpress_nodal)(inode, 0) =
-          fluid_ephi[Internal::num_dim<celltype> +
-                     (inode * discretization.num_dof(1, ele.nodes()[0]))];
-    }
     return fluid_variables;
   }
 
@@ -361,15 +391,19 @@ namespace Discret::Elements
    * @return solid_variables:  nodal primary solid variables (displacement and velocity)
    */
   template <Core::FE::CellType celltype>
-  inline SolidVariables<celltype> get_solid_variables(
-      const Core::FE::Discretization& discretization, const Core::Elements::LocationArray& la)
+  inline SolidVariables<celltype> get_solid_variable_views(
+      const Core::FE::Discretization& dis, const SolidPoroPrimaryVariables& primary_variables)
   {
-    SolidVariables<celltype> solid_variables{};
+    SolidVariables<celltype> solid_variables{
+        .soliddisp_nodal = Core::FE::get_element_dof_matrix_view<celltype, Core::FE::dim<celltype>>(
+            primary_variables.solid_displacements),
 
-    Core::FE::extract_my_values(
-        *(discretization.get_state(0, "displacement")), solid_variables.soliddisp_nodal, la[0].lm_);
-    Core::FE::extract_my_values(
-        *(discretization.get_state(0, "velocity")), solid_variables.solidvel_nodal, la[0].lm_);
+        // Note: solid velocity is not a view since it is directly extracted from the global
+        // variables
+        .solidvel_nodal = Core::FE::get_element_dof_matrix<celltype, Core::FE::dim<celltype>>(
+            Core::FE::extract_values(
+                *dis.get_state(0, "velocity"), primary_variables.solid_location_array)),
+    };
 
     return solid_variables;
   }

@@ -149,8 +149,9 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<
     celltype>::evaluate_nonlinear_force_stiffness(const Core::Elements::Element& ele,
     Mat::StructPoro& porostructmat, Mat::FluidPoro& porofluidmat,
     AnisotropyProperties anisotropy_properties, const Inpar::Solid::KinemType& kinematictype,
-    const Core::FE::Discretization& discretization, Core::Elements::LocationArray& la,
-    Teuchos::ParameterList& params, Core::LinAlg::SerialDenseVector* force_vector,
+    const Core::FE::Discretization& discretization,
+    const SolidPoroPrimaryVariables& primary_variables, Teuchos::ParameterList& params,
+    Core::LinAlg::SerialDenseVector* force_vector,
     Core::LinAlg::SerialDenseMatrix* stiffness_matrix,
     Core::LinAlg::SerialDenseMatrix* reactive_matrix)
 {
@@ -171,15 +172,16 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<
   if (force_vector != nullptr) force.emplace(*force_vector, true);
 
   // get primary variables of porous medium flow
-  FluidVariables<celltype> fluid_variables = get_fluid_variables<celltype>(ele, discretization, la);
+  FluidVariables<celltype> fluid_variables = get_fluid_variable_views<celltype>(primary_variables);
 
   // get primary variables from structure field
-  SolidVariables<celltype> solid_variables = get_solid_variables<celltype>(discretization, la);
+  SolidVariables<celltype> solid_variables =
+      get_solid_variable_views<celltype>(discretization, primary_variables);
 
 
   // get nodal coordinates current and reference
   const ElementNodes<celltype> nodal_coordinates =
-      evaluate_element_nodes<celltype>(ele, discretization, la[0].lm_);
+      evaluate_element_nodes<celltype>(ele, primary_variables.solid_displacements);
 
   // Check for negative Jacobian determinants
   ensure_positive_jacobian_determinant_at_element_nodes(nodal_coordinates);
@@ -209,8 +211,8 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<
                 compute_linearization_of_deformation_gradient_transposed_wrt_disp<celltype>(
                     jacobian_mapping, spatial_material_mapping, kinematictype);
 
-        const double volchange = compute_volume_change<celltype>(spatial_material_mapping,
-            jacobian_mapping, ele, discretization, la[0].lm_, kinematictype);
+        const double volchange = compute_volume_change<celltype>(nodal_coordinates.displacements,
+            spatial_material_mapping, jacobian_mapping, ele, kinematictype);
 
         Core::LinAlg::Matrix<1, num_dof_per_ele_> dDetDefGrad_dDisp =
             compute_linearization_of_detdefgrad_wrt_disp<celltype>(
@@ -346,8 +348,9 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<
     celltype>::evaluate_nonlinear_force_stiffness_od(const Core::Elements::Element& ele,
     Mat::StructPoro& porostructmat, Mat::FluidPoro& porofluidmat,
     AnisotropyProperties anisotropy_properties, const Inpar::Solid::KinemType& kinematictype,
-    const Core::FE::Discretization& discretization, Core::Elements::LocationArray& la,
-    Teuchos::ParameterList& params, Core::LinAlg::SerialDenseMatrix* stiffness_matrix)
+    const Core::FE::Discretization& discretization,
+    const SolidPoroPrimaryVariables& primary_variables, Teuchos::ParameterList& params,
+    Core::LinAlg::SerialDenseMatrix* stiffness_matrix)
 {
   // Create views to SerialDenseMatrices
   std::optional<Core::LinAlg::Matrix<num_dim_ * num_nodes_, (num_dim_ + 1) * num_nodes_>> stiff =
@@ -358,14 +361,15 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<
   {
     // get primary variables of porous medium flow
     FluidVariables<celltype> fluid_variables =
-        get_fluid_variables<celltype>(ele, discretization, la);
+        get_fluid_variable_views<celltype>(primary_variables);
 
     // get primary variables from structure field
-    SolidVariables<celltype> solid_variables = get_solid_variables<celltype>(discretization, la);
+    SolidVariables<celltype> solid_variables =
+        get_solid_variable_views<celltype>(discretization, primary_variables);
 
     // get nodal coordinates current and reference
     const ElementNodes<celltype> nodal_coordinates =
-        evaluate_element_nodes<celltype>(ele, discretization, la[0].lm_);
+        evaluate_element_nodes<celltype>(ele, primary_variables.solid_displacements);
 
     // Loop over all Gauss points
     for_each_gauss_point(nodal_coordinates, gauss_integration_,
@@ -383,8 +387,8 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<
           Core::LinAlg::Matrix<num_str_, num_dof_per_ele_> Bop =
               evaluate_strain_gradient(jacobian_mapping, spatial_material_mapping);
 
-          const double volchange = compute_volume_change<celltype>(spatial_material_mapping,
-              jacobian_mapping, ele, discretization, la[0].lm_, kinematictype);
+          const double volchange = compute_volume_change<celltype>(nodal_coordinates.displacements,
+              spatial_material_mapping, jacobian_mapping, ele, kinematictype);
 
           // pressure at integration point
           double fluid_press =
@@ -465,8 +469,8 @@ template <Core::FE::CellType celltype>
 void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype>::coupling_stress_poroelast(
     const Core::Elements::Element& ele, Mat::StructPoro& porostructmat,
     const Inpar::Solid::KinemType& kinematictype, const CouplStressIO& couplingstressIO,
-    const Core::FE::Discretization& discretization, Core::Elements::LocationArray& la,
-    Teuchos::ParameterList& params)
+    const Core::FE::Discretization& discretization,
+    const SolidPoroPrimaryVariables& primary_variables, Teuchos::ParameterList& params)
 {
   // initialize the coupling stress
   std::vector<char>& serialized_stress_data = couplingstressIO.mutable_data;
@@ -478,11 +482,11 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype>::couplin
   }
 
   // get primary variables of porous medium flow
-  FluidVariables<celltype> fluid_variables = get_fluid_variables<celltype>(ele, discretization, la);
+  FluidVariables<celltype> fluid_variables = get_fluid_variable_views<celltype>(primary_variables);
 
   // get nodal coordinates current and reference
   const ElementNodes<celltype> nodal_coordinates =
-      evaluate_element_nodes<celltype>(ele, discretization, la[0].lm_);
+      evaluate_element_nodes<celltype>(ele, primary_variables.solid_displacements);
 
   // Loop over all Gauss points
   for_each_gauss_point(nodal_coordinates, gauss_integration_,

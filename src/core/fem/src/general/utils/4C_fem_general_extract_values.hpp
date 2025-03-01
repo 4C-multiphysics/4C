@@ -17,12 +17,29 @@
 #include "4C_utils_exceptions.hpp"
 
 #include <algorithm>
+#include <iterator>
+#include <ranges>
 
 
 FOUR_C_NAMESPACE_OPEN
 
 namespace Core::FE
 {
+  namespace Internal
+  {
+    template <typename T>
+    inline auto value_extractor(const Core::LinAlg::Vector<T>& global)
+    {
+      return [&](int global_id)
+      {
+        const int local_id = global.Map().LID(global_id);
+        FOUR_C_ASSERT_ALWAYS(local_id >= 0,
+            "Proc %d: Cannot find gid=%d in Core::LinAlg::Vector<double>",
+            Core::Communication::my_mpi_rank(global.Comm()), global_id);
+        return global[local_id];
+      };
+    }
+  }  // namespace Internal
 
   /*!
    * @brief Extract a subset of local values from Core::LinAlg::Vector<T>
@@ -33,22 +50,34 @@ namespace Core::FE
    * @param lm (in) : Global ids of the values to extract
    * @return std::array<T, num_entries> Extracted values from the global vector
    */
-  template <unsigned num_entries, typename T, std::ranges::sized_range Range>
+  template <unsigned num_entries, typename T, std::ranges::range Range>
   std::array<T, num_entries> extract_values_as_array(
-      const Core::LinAlg::Vector<T>& global, const Range& global_ids)
+      const Core::LinAlg::Vector<T>& global, Range global_ids)
   {
-    FOUR_C_ASSERT_ALWAYS(global_ids.size() == num_entries, "Number of entries does not match");
-
     std::array<T, num_entries> local;
-    std::transform(global_ids.begin(), global_ids.end(), local.begin(),
-        [&](int global_id)
-        {
-          const int local_id = global.Map().LID(global_id);
-          FOUR_C_ASSERT_ALWAYS(local_id >= 0,
-              "Proc %d: Cannot find gid=%d in Core::LinAlg::Vector<double>",
-              Core::Communication::my_mpi_rank(global.Comm()), global_id);
-          return global[local_id];
-        });
+    std::transform(
+        global_ids.begin(), global_ids.end(), local.begin(), Internal::value_extractor(global));
+
+    return local;
+  }
+
+  /*!
+   * @brief Extract a subset of local values from Core::LinAlg::Vector<T>
+   *
+   * @tparam T datatype
+   * @param global (in) : Global values
+   * @param lm (in) : Global ids of the values to extract
+   * @param expected_size (in): (Expected) size of the local vector
+   * @return std::vector<T> Extracted values from the global vector
+   */
+  template <typename T, std::ranges::range Range>
+  std::vector<T> extract_values(
+      const Core::LinAlg::Vector<T>& global, Range global_ids, std::size_t expected_size)
+  {
+    std::vector<T> local;
+    local.reserve(expected_size);
+    std::ranges::copy(global_ids | std::views::transform(Internal::value_extractor(global)),
+        std::back_inserter(local));
 
     return local;
   }
@@ -64,18 +93,7 @@ namespace Core::FE
   template <typename T, std::ranges::sized_range Range>
   std::vector<T> extract_values(const Core::LinAlg::Vector<T>& global, const Range& global_ids)
   {
-    std::vector<T> local(global_ids.size());
-    std::transform(global_ids.begin(), global_ids.end(), local.begin(),
-        [&](int global_id)
-        {
-          const int local_id = global.Map().LID(global_id);
-          FOUR_C_ASSERT_ALWAYS(local_id >= 0,
-              "Proc %d: Cannot find gid=%d in Core::LinAlg::Vector<double>",
-              Core::Communication::my_mpi_rank(global.Comm()), global_id);
-          return global[local_id];
-        });
-
-    return local;
+    return extract_values(global, global_ids, std::size(global_ids));
   }
 
   template <typename T, std::ranges::sized_range Range>
