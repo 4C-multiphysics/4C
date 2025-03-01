@@ -31,6 +31,16 @@ namespace
     fill_data(data[1]);
   }
 
+  void fill_data(std::optional<int>& data) { data.reset(); }
+
+  template <typename T>
+  void fill_data(std::optional<T>& data)
+  {
+    T d;
+    fill_data(d);
+    data.emplace(d);
+  }
+
   template <typename K, typename V>
   void fill_data(std::map<K, V>& data)
   {
@@ -56,7 +66,8 @@ namespace
   };
 
   using MyTypes = ::testing::Types<int, double, char, std::string, std::vector<int>,
-      std::vector<std::vector<std::vector<int>>>, std::map<std::string, bool>>;
+      std::vector<std::vector<std::vector<int>>>, std::map<std::string, bool>, std::optional<int>,
+      std::optional<std::vector<double>>>;
 
   TYPED_TEST_SUITE(PackUnpackStandardTypes, MyTypes);
 

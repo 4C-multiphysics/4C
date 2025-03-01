@@ -88,8 +88,8 @@ void Discret::Elements::SolidPoroPressureBasedEleCalc<celltype>::evaluate_nonlin
             evaluate_inverse_cauchy_green_linearization(
                 cauchygreen, jacobian_mapping, spatial_material_mapping);
 
-        const double volchange = compute_volume_change<celltype>(spatial_material_mapping,
-            jacobian_mapping, ele, discretization, la[0].lm_, kinematictype);
+        const double volchange = compute_volume_change<celltype>(nodal_coordinates.displacements,
+            spatial_material_mapping, jacobian_mapping, ele, kinematictype);
 
         Core::LinAlg::Matrix<1, num_dof_per_ele_> dDetDefGrad_dDisp =
             compute_linearization_of_detdefgrad_wrt_disp<celltype>(
@@ -206,8 +206,8 @@ void Discret::Elements::SolidPoroPressureBasedEleCalc<
             evaluate_strain_gradient(jacobian_mapping, spatial_material_mapping);
 
         // volume change (used for porosity law). Same as J in nonlinear theory.
-        const double volchange = compute_volume_change<celltype>(spatial_material_mapping,
-            jacobian_mapping, ele, discretization, la[0].lm_, kinematictype);
+        const double volchange = compute_volume_change<celltype>(nodal_coordinates.displacements,
+            spatial_material_mapping, jacobian_mapping, ele, kinematictype);
 
         std::vector<double> fluidmultiphase_phiAtGP =
             compute_fluid_multiphase_primary_variables_at_gp<celltype>(

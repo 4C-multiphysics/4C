@@ -11,7 +11,6 @@
 #include "4C_config.hpp"
 
 #include "4C_comm_pack_buffer.hpp"
-#include "4C_comm_parobject.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
@@ -19,6 +18,7 @@
 
 #include <array>
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
 #include <type_traits>
@@ -85,6 +85,24 @@ namespace Core::Communication
    * Add an object that implements a `pack()` method to the buffer.
    */
   void add_to_pack(PackBuffer& data, const Packable auto& obj) { obj.pack(data); }
+
+  /*!
+   * \brief Add stuff to the end of a char vector data
+   *
+   * This method is templated for std::optional<T>
+   * \param[in,out] data char string stuff shall be added to
+   * \param[in] stuff std::optional<T> that get's added to stuff
+   */
+  template <typename T>
+  void add_to_pack(PackBuffer& data, const std::optional<T>& stuff)
+  {
+    add_to_pack(data, stuff.has_value());
+
+    if (stuff.has_value())
+    {
+      add_to_pack(data, *stuff);
+    }
+  }
 
   /*!
    * \brief Add stuff to the end of a char vector data
@@ -328,6 +346,32 @@ namespace Core::Communication
    * Extract an object that implements an `unpack()` method from the buffer.
    */
   void extract_from_pack(UnpackBuffer& data, Unpackable auto& obj) { obj.unpack(data); }
+
+  /*!
+   * \brief Extract stuff from a char vector data and increment position
+   *
+   * This method is templated for stuff of type std::optional<T>
+   *
+   * \param[in,out] buffer the buffer to unpack from
+   * \param[out] stuff std::optional<T> to extract from data
+   */
+  template <typename T>
+  void extract_from_pack(UnpackBuffer& buffer, std::optional<T>& stuff)
+  {
+    bool has_value = false;
+    buffer.extract_from_pack(has_value);
+
+    if (has_value)
+    {
+      T value;
+      extract_from_pack(buffer, value);
+      stuff.emplace(value);
+    }
+    else
+    {
+      stuff.reset();
+    }
+  }
 
   /*!
    * \brief Extract stuff from a char vector data and increment position

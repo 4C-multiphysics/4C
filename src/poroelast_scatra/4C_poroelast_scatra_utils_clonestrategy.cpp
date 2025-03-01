@@ -22,6 +22,7 @@
 #include "4C_so3_tet4.hpp"
 #include "4C_solid_poro_3D_ele_pressure_based.hpp"
 #include "4C_solid_poro_3D_ele_pressure_velocity_based.hpp"
+#include "4C_solid_poro_3D_ele_pressure_velocity_based_p1.hpp"
 #include "4C_w1_poro_p1_scatra.hpp"
 #include "4C_w1_poro_scatra.hpp"
 
@@ -98,6 +99,11 @@ Inpar::ScaTra::ImplType PoroElastScaTra::Utils::PoroScatraCloneStrategy::get_imp
   else if (eletypename == "SolidPoroPressureVelocityBasedType")
   {
     return (dynamic_cast<Discret::Elements::SolidPoroPressureVelocityBased*>(ele))->get_impl_type();
+  }
+  else if (eletypename == "SolidPoroPressureVelocityBasedP1Type")
+  {
+    return (dynamic_cast<Discret::Elements::SolidPoroPressureVelocityBasedP1*>(ele))
+        ->get_impl_type();
   }
   // wall poro scatra elements
   // quad 4
