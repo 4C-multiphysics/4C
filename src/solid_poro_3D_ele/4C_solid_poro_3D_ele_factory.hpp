@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_fem_general_cell_type.hpp"
 #include "4C_fem_general_cell_type_traits.hpp"
 #include "4C_solid_3D_ele_factory.hpp"
 #include "4C_solid_3D_ele_factory_lib.hpp"
@@ -39,14 +40,30 @@ namespace Discret::Elements
         Core::FE::CelltypeSequence<Core::FE::CellType::hex8, Core::FE::CellType::hex27,
             Core::FE::CellType::tet4, Core::FE::CellType::tet10>;
 
+    template <Core::FE::CellType celltype>
+    using SolidPoroDefaultPressureVelocityBasedEleCalc =
+        SolidPoroPressureVelocityBasedEleCalc<celltype,
+            Discret::Elements::PorosityFormulation::implicit_porosity>;
 
     using PoroPressureVelocityBasedEvaluators =
-        Core::FE::apply_celltype_sequence<Discret::Elements::SolidPoroPressureVelocityBasedEleCalc,
+        Core::FE::apply_celltype_sequence<SolidPoroDefaultPressureVelocityBasedEleCalc,
+            ImplementedSolidPoroPressureVelocityBasedCellTypes>;
+
+
+    template <Core::FE::CellType celltype>
+    using SolidPoroPressureVelocityBasedP1EleCalc = SolidPoroPressureVelocityBasedEleCalc<celltype,
+        Discret::Elements::PorosityFormulation::explicit_porosity>;
+
+    using PoroPressureVelocityBasedP1Evaluators =
+        Core::FE::apply_celltype_sequence<SolidPoroPressureVelocityBasedP1EleCalc,
             ImplementedSolidPoroPressureVelocityBasedCellTypes>;
 
 
     using SolidPoroPressureVelocityBasedEvaluators =
         Core::FE::Join<PoroPressureVelocityBasedEvaluators>;
+
+    using SolidPoroPressureVelocityBasedP1Evaluators =
+        Core::FE::Join<PoroPressureVelocityBasedP1Evaluators>;
 
     // Solid-Poro simulations might also carry a scalar. The solid-interfance can, therefore, be a
     // Solid-Scalar or a pure Solid.
@@ -93,6 +110,9 @@ namespace Discret::Elements
   using SolidPoroPressureVelocityBasedCalcVariant =
       CreateVariantType<Internal::SolidPoroPressureVelocityBasedEvaluators>;
 
+  using SolidPoroPressureVelocityBasedP1CalcVariant =
+      CreateVariantType<Internal::SolidPoroPressureVelocityBasedP1Evaluators>;
+
 
   SolidPoroPressureVelocityBasedCalcVariant
   create_solid_poro_pressure_velocity_based_calculation_interface(Core::FE::CellType celltype);
@@ -100,6 +120,14 @@ namespace Discret::Elements
   template <Core::FE::CellType celltype>
   SolidPoroPressureVelocityBasedCalcVariant
   create_solid_poro_pressure_velocity_based_calculation_interface();
+
+
+  SolidPoroPressureVelocityBasedP1CalcVariant
+  create_solid_poro_pressure_velocity_based_p1_calculation_interface(Core::FE::CellType celltype);
+
+  template <Core::FE::CellType celltype>
+  SolidPoroPressureVelocityBasedP1CalcVariant
+  create_solid_poro_pressure_velocity_based_p1_calculation_interface();
 
 }  // namespace Discret::Elements
 

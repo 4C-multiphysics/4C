@@ -17,6 +17,7 @@
 #include "4C_so3_poro_p1_eletypes.hpp"
 #include "4C_solid_poro_3D_ele_pressure_based.hpp"
 #include "4C_solid_poro_3D_ele_pressure_velocity_based.hpp"
+#include "4C_solid_poro_3D_ele_pressure_velocity_based_p1.hpp"
 #include "4C_w1_poro.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -63,14 +64,20 @@ void PoroElast::Utils::PoroelastCloneStrategy::set_element_data(
             std::static_pointer_cast<Mat::StructPoro>(oldele->material())->init_porosity());
     fluid->set_dis_type(oldele->shape());  // set distype as well!
     fluid->set_is_ale(true);
-    auto* solid_poro_pressure_velocity_based =
-        dynamic_cast<Discret::Elements::SolidPoroPressureVelocityBased*>(oldele);
-    auto* so_base = dynamic_cast<Discret::Elements::SoBase*>(oldele);
-    if (solid_poro_pressure_velocity_based)
+
+    if (auto* solid_poro_pressure_velocity_based =
+            dynamic_cast<Discret::Elements::SolidPoroPressureVelocityBased*>(oldele);
+        solid_poro_pressure_velocity_based)
     {
       fluid->set_kinematic_type(solid_poro_pressure_velocity_based->kinematic_type());
     }
-    else if (so_base)
+    else if (auto* solid_poro_pressure_velocity_based_p1 =
+                 dynamic_cast<Discret::Elements::SolidPoroPressureVelocityBasedP1*>(oldele);
+        solid_poro_pressure_velocity_based_p1)
+    {
+      fluid->set_kinematic_type(solid_poro_pressure_velocity_based_p1->kinematic_type());
+    }
+    else if (auto* so_base = dynamic_cast<Discret::Elements::SoBase*>(oldele); so_base)
       fluid->set_kinematic_type(so_base->kinematic_type());
     else
       FOUR_C_THROW(

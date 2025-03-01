@@ -12,6 +12,7 @@
 #include "4C_legacy_enum_definitions_element_actions.hpp"
 #include "4C_solid_3D_ele_calc_lib.hpp"
 #include "4C_solid_3D_ele_factory.hpp"
+#include "4C_solid_poro_3D_ele_calc_lib.hpp"
 #include "4C_solid_poro_3D_ele_calc_lib_io.hpp"
 #include "4C_solid_poro_3D_ele_pressure_velocity_based.hpp"
 #include "4C_solid_scatra_3D_ele_factory.hpp"
@@ -99,7 +100,8 @@ int Discret::Elements::SolidPoroPressureVelocityBased::evaluate(Teuchos::Paramet
         if (discretization.has_state(1, "fluidvel"))
         {
           const SolidPoroPrimaryVariables primary_variables =
-              extract_solid_poro_primary_variables(discretization, la, shape());
+              extract_solid_poro_primary_variables<PorosityFormulation::implicit_porosity>(
+                  discretization, la, shape());
           std::visit(
               [&](auto& interface)
               {
@@ -129,7 +131,8 @@ int Discret::Elements::SolidPoroPressureVelocityBased::evaluate(Teuchos::Paramet
         if (discretization.has_state(1, "fluidvel"))
         {
           const SolidPoroPrimaryVariables primary_variables =
-              extract_solid_poro_primary_variables(discretization, la, shape());
+              extract_solid_poro_primary_variables<PorosityFormulation::implicit_porosity>(
+                  discretization, la, shape());
           std::visit(
               [&](auto& interface)
               {
@@ -159,7 +162,8 @@ int Discret::Elements::SolidPoroPressureVelocityBased::evaluate(Teuchos::Paramet
         if (discretization.has_state(1, "fluidvel"))
         {
           const SolidPoroPrimaryVariables primary_variables =
-              extract_solid_poro_primary_variables(discretization, la, shape());
+              extract_solid_poro_primary_variables<PorosityFormulation::implicit_porosity>(
+                  discretization, la, shape());
           std::visit(
               [&](auto& interface)
               {
@@ -196,7 +200,8 @@ int Discret::Elements::SolidPoroPressureVelocityBased::evaluate(Teuchos::Paramet
       if (discretization.has_state(1, "fluidvel"))
       {
         const SolidPoroPrimaryVariables primary_variables =
-            extract_solid_poro_primary_variables(discretization, la, shape());
+            extract_solid_poro_primary_variables<PorosityFormulation::implicit_porosity>(
+                discretization, la, shape());
         std::visit(
             [&](auto& interface)
             {
@@ -248,7 +253,8 @@ int Discret::Elements::SolidPoroPressureVelocityBased::evaluate(Teuchos::Paramet
       if (discretization.has_state(1, "fluidvel"))
       {
         const SolidPoroPrimaryVariables primary_variables =
-            extract_solid_poro_primary_variables(discretization, la, shape());
+            extract_solid_poro_primary_variables<PorosityFormulation::implicit_porosity>(
+                discretization, la, shape());
         std::visit(
             [&](auto& interface)
             {
