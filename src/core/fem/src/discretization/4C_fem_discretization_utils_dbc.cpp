@@ -338,7 +338,7 @@ void Core::FE::Utils::Dbc::read_dirichlet_condition(const Teuchos::ParameterList
         // here we only compute based on time curve and not the derivative, hence degree = 0
         double functfac = 1.0;
 
-        if (funct[onesetj].has_value() && funct[onesetj].value() > 0)
+        if (funct[onesetj].has_value())
         {
           functfac = params.get<const Core::Utils::FunctionManager*>("function_manager")
                          ->function_by_id<Core::Utils::FunctionOfSpaceTime>(funct[onesetj].value())
@@ -538,7 +538,7 @@ void Core::FE::Utils::Dbc::do_dirichlet_condition(const Teuchos::ParameterList& 
       std::vector<double> functimederivfac(deg + 1, 0.0);
       functimederivfac[0] = 1.0;
 
-      if (funct[onesetj].has_value() && funct[onesetj].value() > 0)
+      if (funct[onesetj].has_value())
       {
         functimederivfac =
             params.get<const Core::Utils::FunctionManager*>("function_manager")

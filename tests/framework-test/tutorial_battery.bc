@@ -26,7 +26,7 @@ Property Name: INFLOW
 has 45107 Nodes
 '*ns0="CONDITION"'
 sectionname="DESIGN SURF DIRICH CONDITIONS"
-description="NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 2.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 0 0 0 0 0"
+description="NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 2.0 0.0 0.0 0.0 0.0 0.0 FUNCT 1 none none none none none"
 
 MIND that you can specify a condition also on an ElementBlock, just replace 'ELEMENT' with 'CONDITION'
 The 'E num' in the dat-file depends on the order of the specification below
@@ -55,7 +55,7 @@ sectionname="DESIGN VOL INITIAL FIELD CONDITIONS"
 description="FIELD ScaTra FUNCT 2"
 *eb2="CONDITION"
 sectionname="DESIGN VOL TRANSPORT DIRICH CONDITIONS"
-description="NUMDOF 2 ONOFF 1 0 VAL 1.2e3 0.0 FUNCT 0 0"
+description="NUMDOF 2 ONOFF 1 0 VAL 1.2e3 0.0 FUNCT none none"
 
 Element Block, named: cathode
 of Shape: TET4
@@ -83,7 +83,7 @@ sectionname="DESIGN VOL INITIAL FIELD CONDITIONS"
 description="FIELD ScaTra FUNCT 4"
 *eb4="CONDITION"
 sectionname="DESIGN VOL TRANSPORT DIRICH CONDITIONS"
-description="NUMDOF 2 ONOFF 1 0 VAL 1.2e3 0.0 FUNCT 0 0"
+description="NUMDOF 2 ONOFF 1 0 VAL 1.2e3 0.0 FUNCT none none"
 
 Element Block, named: cathode_cc
 of Shape: TET4
@@ -97,7 +97,7 @@ sectionname="DESIGN VOL INITIAL FIELD CONDITIONS"
 description="FIELD ScaTra FUNCT 5"
 *eb5="CONDITION"
 sectionname="DESIGN VOL TRANSPORT DIRICH CONDITIONS"
-description="NUMDOF 2 ONOFF 1 0 VAL 1.2e3 0.0 FUNCT 0 0"
+description="NUMDOF 2 ONOFF 1 0 VAL 1.2e3 0.0 FUNCT none none"
 
 Node Set, named: an-side_cc
 Property Name: none
@@ -107,7 +107,7 @@ sectionname="DESIGN SURF DIRICH CONDITIONS"
 description="NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none"
 *ns1="CONDITION"
 sectionname="DESIGN SURF TRANSPORT DIRICH CONDITIONS"
-description="NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT 0 0"
+description="NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT none none"
 *ns1="CONDITION"
 sectionname="DESIGN CELL VOLTAGE SURF CONDITIONS"
 description="ConditionID 0"
@@ -220,7 +220,7 @@ sectionname="DESIGN SURF DIRICH CONDITIONS"
 description="NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none"
 *ns12="CONDITION"
 sectionname="DESIGN SURF TRANSPORT NEUMANN CONDITIONS"
-description="NUMDOF 2 ONOFF 0 1 VAL 0.0 5.839316572e-6 FUNCT 0 0"
+description="NUMDOF 2 ONOFF 0 1 VAL 0.0 5.839316572e-6 FUNCT none none"
 *ns12="CONDITION"
 sectionname="DESIGN CELL VOLTAGE SURF CONDITIONS"
 description="ConditionID 1"
@@ -244,7 +244,7 @@ Property Name: none
 has 248 Nodes
 *ns15="CONDITION"
 sectionname="DESIGN SURF LOCSYS CONDITIONS"
-description="ROTANGLE 0.7853981634 0.0 0.0 FUNCT 0 0 0 USEUPDATEDNODEPOS 0 USECONSISTENTNODENORMAL 0"
+description="ROTANGLE 0.7853981634 0.0 0.0 FUNCT none none none USEUPDATEDNODEPOS 0 USECONSISTENTNODENORMAL 0"
 *ns15="CONDITION"
 sectionname="DESIGN SURF DIRICH CONDITIONS"
 description="NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none"
@@ -268,7 +268,7 @@ Property Name: none
 has 19 Nodes
 *ns18="CONDITION"
 sectionname="DESIGN LINE LOCSYS CONDITIONS"
-description="ROTANGLE 0.7853981634 0.0 0.0 FUNCT 0 0 0 USEUPDATEDNODEPOS 0 USECONSISTENTNODENORMAL 0"
+description="ROTANGLE 0.7853981634 0.0 0.0 FUNCT none none none USEUPDATEDNODEPOS 0 USECONSISTENTNODENORMAL 0"
 *ns18="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
 description="NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none"

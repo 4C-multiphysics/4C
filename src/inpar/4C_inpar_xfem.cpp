@@ -10,6 +10,7 @@
 #include "4C_cut_enum.hpp"
 #include "4C_fem_condition_definition.hpp"
 #include "4C_io_input_spec_builders.hpp"
+#include "4C_io_input_types.hpp"
 #include "4C_utils_parameter_list.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -521,7 +522,7 @@ void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
       parameter<std::optional<int>>("ROBIN_NEUMANN_ID", {.description = ""}));
   xfem_levelset_navier_slip.add_component(parameter<double>("SLIPCOEFFICIENT"));
   xfem_levelset_navier_slip.add_component(
-      parameter<int>("FUNCT", {.description = "slip function id", .default_value = 0}));
+      parameter<std::optional<int>>("FUNCT", {.description = "slip function id"}));
   xfem_levelset_navier_slip.add_component(
       parameter<bool>("FORCE_ONLY_TANG_VEL", {.description = "", .default_value = false}));
 
@@ -598,7 +599,7 @@ void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
   xfem_surf_fsi_part.add_component(
       parameter<double>("SLIPCOEFFICIENT", {.description = "", .default_value = 0.0}));
   xfem_surf_fsi_part.add_component(
-      parameter<int>("SLIP_FUNCT", {.description = "slip function id", .default_value = 0}));
+      parameter<std::optional<int>>("FUNCT", {.description = "slip function id"}));
 
   condlist.push_back(xfem_surf_fsi_part);
 
@@ -622,7 +623,7 @@ void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
   xfem_surf_fsi_mono.add_component(
       parameter<double>("SLIPCOEFFICIENT", {.description = "", .default_value = 0.0}));
   xfem_surf_fsi_mono.add_component(
-      parameter<int>("SLIP_FUNCT", {.description = "slip function id", .default_value = 0}));
+      parameter<std::optional<int>>("FUNCT", {.description = "slip function id"}));
 
   condlist.push_back(xfem_surf_fsi_mono);
 
@@ -706,7 +707,7 @@ void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
       parameter<std::optional<int>>("ROBIN_NEUMANN_ID", {.description = ""}));
   xfem_surf_navier_slip.add_component(parameter<double>("SLIPCOEFFICIENT"));
   xfem_surf_navier_slip.add_component(
-      parameter<int>("FUNCT", {.description = "slip function id", .default_value = 0}));
+      parameter<std::optional<int>>("FUNCT", {.description = "slip function id"}));
   xfem_surf_navier_slip.add_component(
       parameter<bool>("FORCE_ONLY_TANG_VEL", {.description = "", .default_value = false}));
 

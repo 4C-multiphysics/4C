@@ -93,19 +93,19 @@ SYMBOLIC_FUNCTION_OF_SPACE_TIME 1.0*0.1/(0.1+1.0)*(1-0.25*log(sqrt(x*x+y*y)/0.25
 
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // 1D_curve
-E 1 NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT 0
+E 1 NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT none
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // leftsurf
-E 1 NUMDOF 2 ONOFF 1 1 VAL 1.0 1.0 FUNCT 0 7
+E 1 NUMDOF 2 ONOFF 1 1 VAL 1.0 1.0 FUNCT none 7
 // rightsurf
-E 2 NUMDOF 2 ONOFF 1 1 VAL 1.0 1.0 FUNCT 0 7
+E 2 NUMDOF 2 ONOFF 1 1 VAL 1.0 1.0 FUNCT none 7
 // topsurf
-E 3 NUMDOF 2 ONOFF 1 1 VAL 1.0 1.0 FUNCT 0 7
+E 3 NUMDOF 2 ONOFF 1 1 VAL 1.0 1.0 FUNCT none 7
 // bottomsurf
-E 4 NUMDOF 2 ONOFF 1 1 VAL 1.0 1.0 FUNCT 0 7
+E 4 NUMDOF 2 ONOFF 1 1 VAL 1.0 1.0 FUNCT none 7
 --------------------------------------DESIGN VOL DIRICH CONDITIONS
 // designvol
-E 1 NUMDOF 2 ONOFF 1 0 VAL 1.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 0 VAL 1.0 0.0 FUNCT none none
 -----------------------------------------------DLINE-NODE TOPOLOGY
 NODE    163 DLINE 1
 NODE    164 DLINE 1

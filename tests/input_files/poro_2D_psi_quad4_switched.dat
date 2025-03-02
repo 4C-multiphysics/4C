@@ -87,22 +87,22 @@ STRUCTURE DIS structure NODE 7 QUANTITY dispy VALUE  1.46446609406726325e-01 TOL
 STRUCTURE DIS structure NODE 3 QUANTITY dispy VALUE  7.31766132527795626e-02 TOLERANCE 1e-7
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 // Point x+y+
-E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 // Point x-y+
-E 2 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 2 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 // Point x-y-
-E 3 NUMDOF 2 ONOFF 1 1 VAL 0.0 -1.0 FUNCT 0 1
+E 3 NUMDOF 2 ONOFF 1 1 VAL 0.0 -1.0 FUNCT none 1
 // Point x+y-
-E 4 NUMDOF 2 ONOFF 1 1 VAL 0.0 -1.0 FUNCT 0 1
+E 4 NUMDOF 2 ONOFF 1 1 VAL 0.0 -1.0 FUNCT none 1
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 //                              Line_x+
-E 1 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 //                              Line_x-
-E 2 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+E 2 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 //                              Line_y+
-E 3 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 3 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 //                              Line_y-
-E 4 NUMDOF 2 ONOFF 1 1 VAL 0.0 -1.0 FUNCT 0 1
+E 4 NUMDOF 2 ONOFF 1 1 VAL 0.0 -1.0 FUNCT none 1
 -----------------------DESIGN LINE NORMAL NO PENETRATION CONDITION
 //                              Line_x+
 //E 1 -
@@ -129,10 +129,10 @@ E 6
 E 7
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 //                              Surface
-//E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+//E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 --------------------------------DESIGN SURF PORO DIRICH CONDITIONS
 //                              Surface
-//E 1 - NUMDOF 6 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+//E 1 - NUMDOF 6 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------DESIGN SURFACE POROCOUPLING CONDITION
 E 2
 -----------------------------------------------DNODE-NODE TOPOLOGY

@@ -65,9 +65,9 @@ SCATRA DIS scatra NODE 265 QUANTITY flux_domain_1_y VALUE -4.556919866e+00 TOLER
 SCATRA DIS scatra NODE 265 QUANTITY flux_domain_1_z VALUE 0.000000000e+00 TOLERANCE 1e-9
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 //                              anode
-E 1 NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT 0
+E 1 NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT none
 //                              cathode
-E 2 NUMDOF 1 ONOFF 1 VAL -1.0 FUNCT 0
+E 2 NUMDOF 1 ONOFF 1 VAL -1.0 FUNCT none
 ---------------------------------------------------------DSURF-NODE TOPOLOGY
 NODE 241 DSURFACE 1
 NODE 242 DSURFACE 1

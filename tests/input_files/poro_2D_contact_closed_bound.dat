@@ -155,10 +155,10 @@ STRUCTURE DIS structure NODE 117 QUANTITY velx VALUE -1.77604315363663612e-02 TO
 // solid_top
 E 3 NUMDOF 2 ONOFF 1 1 VAL 1.0 -1.0 FUNCT 2 1
 // poro_bottom
-E 4 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 4 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 --------------------------------DESIGN LINE PORO DIRICH CONDITIONS
 // poro_bottom
-E 4 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 4 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 --------------------------DESIGN LINE MORTAR CONTACT CONDITIONS 2D
 // solid_contact_interface
 E 1 InterfaceID 1 Side Slave Initialization Inactive FrCoeffOrBound 0.3

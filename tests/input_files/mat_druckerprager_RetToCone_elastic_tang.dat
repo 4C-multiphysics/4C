@@ -63,10 +63,10 @@ STRUCTURE DIS structure NODE 66 QUANTITY dispy VALUE  -6.18978522404731901e+00 T
 STRUCTURE DIS structure NODE 66 QUANTITY dispz VALUE  -9.69751569689839443e-01 TOLERANCE 1e-10
 -----------------------------------DESIGN POINT NEUMANN CONDITIONS
 // load
-E 1 NUMDOF 3 ONOFF 0 1 0 VAL 0 -1E-2 0 FUNCT 0 1 0
+E 1 NUMDOF 3 ONOFF 0 1 0 VAL 0 -1E-2 0 FUNCT none 1 none
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // fix
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT 0 0 0 TAG monitor_reaction
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT none none none TAG monitor_reaction
 -----------------------------------------------DNODE-NODE TOPOLOGY
 NODE    65 DNODE 1
 NODE    66 DNODE 1

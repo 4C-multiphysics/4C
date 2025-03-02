@@ -649,7 +649,7 @@ int Discret::Elements::Nurbs::SoNurbs27::evaluate_neumann(Teuchos::ParameterList
       if (onoff[dim])
       {
         double functfac = 1.0;
-        if (funct[dim].has_value() && funct[dim].value() > 0)
+        if (funct[dim].has_value())
         {
           // function evaluation
           functfac = Global::Problem::instance()

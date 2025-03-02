@@ -2764,7 +2764,7 @@ void Discret::Elements::TemperImpl<distype>::radiation(
     FOUR_C_ASSERT(funct.size() == 1, "Need exactly one function.");
 
     double functfac = 1.0;
-    if (funct[0].has_value() && funct[0].value() > 0)
+    if (funct[0].has_value())
       // evaluate function at current gauss point (3D position vector required!)
       functfac = Global::Problem::instance()
                      ->function_by_id<Core::Utils::FunctionOfSpaceTime>(funct[0].value())

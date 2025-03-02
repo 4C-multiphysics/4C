@@ -874,7 +874,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::body_force(
       {
         double functfac = 1.0;
 
-        if (funct[idof].has_value() && funct[idof].value() > 0)
+        if (funct[idof].has_value())
         {
           functfac =
               Global::Problem::instance()

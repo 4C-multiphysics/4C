@@ -52,9 +52,9 @@ LAW 1 CoConstLaw_power A 1.017e-06 B 3.32 Offset 2.0
 LAW 2 CoConstLaw_cubic A 9.463e-06 B 9.463e-06 C 1e-09 D 0.0 Offset 0.0
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // pushing
-E 5 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 1.0 0.0 FUNCT 0 1 0
+E 5 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 1.0 0.0 FUNCT none 1 none
 // ground
-E 6 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 6 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 --------------------------DESIGN SURF MORTAR CONTACT CONDITIONS 3D
 // master_left
 E 1 InterfaceID 0 Side Master Initialization Inactive FrCoeffOrBound 0.0 AdhesionBound 0.0 Application Solidcontact DbcHandling DoNothing TwoHalfPass 0 RefConfCheckNonSmoothSelfContactSurface 0.0 ConstitutiveLawID 1

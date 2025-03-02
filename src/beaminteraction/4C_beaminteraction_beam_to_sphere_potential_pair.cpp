@@ -251,14 +251,14 @@ void BeamInteraction::BeamToSpherePotentialPair<numnodes,
   // TODO allow for functions in space, i.e. varying charge along beam centerline
   auto function_number = chargeconds_[0]->parameters().get<std::optional<int>>("FUNCT");
 
-  if (function_number.has_value() && function_number.value() > 0)
+  if (function_number.has_value())
     q1 *= Global::Problem::instance()
               ->function_by_id<Core::Utils::FunctionOfTime>(function_number.value())
               .evaluate(time_);
 
   function_number = chargeconds_[1]->parameters().get<std::optional<int>>("FUNCT");
 
-  if (function_number.has_value() and function_number.value() > 0)
+  if (function_number.has_value())
     q2 *= Global::Problem::instance()
               ->function_by_id<Core::Utils::FunctionOfTime>(function_number.value())
               .evaluate(time_);

@@ -77,7 +77,7 @@ SCATRA DIS scatra SPECIAL true QUANTITY numiterlastnewton VALUE  3.0000000000000
 SCATRA DIS scatra NODE 1 QUANTITY s2ilayerthickness VALUE  1.13683666468329457e-06 TOLERANCE 1.1e-14 // local plating film thickness at anode-electrolyte interface (near separator)
 SCATRA DIS scatra SPECIAL true QUANTITY numstep VALUE  2.18100000000000000e+03 TOLERANCE 1.0e-16 // total number of time steps
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
-E 1 NUMDOF 2  ONOFF 0 1  VAL 0.0 0.0  FUNCT 0 0
+E 1 NUMDOF 2  ONOFF 0 1  VAL 0.0 0.0  FUNCT none none
 ------------------------------DESIGN SURF INITIAL FIELD CONDITIONS
 E 1 FIELD ScaTra FUNCT 1
 E 2 FIELD ScaTra FUNCT 2

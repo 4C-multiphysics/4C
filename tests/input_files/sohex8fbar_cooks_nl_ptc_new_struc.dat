@@ -95,12 +95,12 @@ SYMBOLIC_FUNCTION_OF_SPACE_TIME t
 //STRUCTURE DIS structure NODE 162 QUANTITY dispy VALUE 6.6362266201633888e+00 TOLERANCE 1e-8
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 //node_ns1
-E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 //node_ns3
-E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
 //node_ns2
-E 2 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0625 0.0 FUNCT 0 1 0 TYPE Live
+E 2 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0625 0.0 FUNCT none 1 none TYPE Live
 ---------------------------------------------------------DSURF-NODE TOPOLOGY
 NODE 8 DSURFACE 3
 NODE 40 DSURFACE 3

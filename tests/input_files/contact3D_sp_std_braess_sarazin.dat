@@ -115,9 +115,9 @@ STRUCTURE DIS structure NODE 6284 QUANTITY dispz VALUE 3.00076971309307133e-05 T
 STRUCTURE SPECIAL true QUANTITY lin_iters_contact VALUE 37 TOLERANCE 1.0e-13
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // dirichlet_surf_large
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // dirichlet_surf_small
-E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 --------------------------DESIGN SURF MORTAR CONTACT CONDITIONS 3D
 // contact_surf_large
 E 2 InterfaceID 0 Side Master Initialization Inactive FrCoeffOrBound 0.0 AdhesionBound 0.0 Application Solidcontact
