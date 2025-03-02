@@ -10,19 +10,25 @@
 # defined module, the sources are appended to the already defined module. The module name is returned
 # in the variable AUTO_DEFINED_MODULE_NAME which is set at the call site.
 function(four_c_auto_define_module)
+  set(options NO_CYCLES)
+  set(oneValueArgs "")
+  set(multiValueArgs "")
+  cmake_parse_arguments(
+    _parsed
+    "${options}"
+    "${oneValueArgs}"
+    "${multiValueArgs}"
+    ${ARGN}
+    )
+  if(DEFINED _parsed_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "There are unparsed arguments: ${_parsed_UNPARSED_ARGUMENTS}")
+  endif()
 
   if("${FOUR_C_CURRENTLY_DEFINED_PARENT_MODULE}" STREQUAL "")
     # No parent module is set, so this must be the first call in the hierarchy:
     # create the necessary targets with a name based on the current folder
     get_filename_component(_target ${CMAKE_CURRENT_SOURCE_DIR} NAME)
     message(VERBOSE "Defining module target: ${_target}")
-
-    # Define an interface library for usage requirements only
-    add_library(${_target}_deps INTERFACE)
-    # Link against all default external libraries
-    four_c_link_default_external_libraries(${_target}_deps INTERFACE)
-    # Always add the special config target as a dependency
-    four_c_add_dependency(${_target} config)
 
     # Define an object library containing the actual sources.
     # We need to add a dummy file to have at least one file in case a module does not have any compiled sources.
@@ -31,6 +37,24 @@ function(four_c_auto_define_module)
     # Add all global compile settings as PRIVATE. We only want to use them to compile our own files and not force
     # them on other users of the library.
     target_link_libraries(${_target}_objs PRIVATE four_c_private_compile_interface)
+
+    if(FOUR_C_ENABLE_DEVELOPER_MODE AND _parsed_NO_CYCLES)
+      # Define an additional library built from the sources. In developer mode, we link unit tests against this library which can
+      # be faster to build than lib4C.
+      add_library(4C_${_target})
+      target_link_libraries(4C_${_target} PUBLIC ${_target}_deps)
+      target_link_libraries(4C_${_target} PUBLIC ${_target}_objs)
+      add_library(${_target}_unit_test_deps ALIAS 4C_${_target})
+    else()
+      add_library(${_target}_unit_test_deps ALIAS ${FOUR_C_LIBRARY_NAME})
+    endif()
+
+    # Define an interface library for usage requirements only
+    add_library(${_target}_deps INTERFACE)
+    # Link against all default external libraries
+    four_c_link_default_external_libraries(${_target}_deps INTERFACE)
+    # Always add the special config target as a dependency
+    target_link_libraries(${_target}_deps INTERFACE config_deps)
 
     # Collect all modules in the global library
     target_link_libraries(${FOUR_C_LIBRARY_NAME} PUBLIC ${_target}_deps)

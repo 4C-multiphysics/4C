@@ -18,7 +18,6 @@ set(_dependencies
     global_data
     inpar
     solver_nonlin_nox
-    structure_new
     timestepping
     )
 

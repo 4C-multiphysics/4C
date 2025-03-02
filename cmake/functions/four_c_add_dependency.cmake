@@ -14,7 +14,20 @@ function(four_c_add_dependency target)
   # Internal target in the library
   if(TARGET ${target}_deps)
     foreach(_dep ${ARGN})
-      _four_c_internal_link_with_debug_message(${target}_deps INTERFACE ${_dep}_deps)
+      # Skip self-linking
+      if(NOT ${_dep} STREQUAL ${target})
+        _four_c_internal_link_with_debug_message(${target}_deps INTERFACE ${_dep}_deps)
+
+        if(TARGET 4C_${target})
+          if(NOT TARGET 4C_${_dep})
+            message(
+              FATAL_ERROR
+                "Trying to link 4C_${_dep} to 4C_${target} but module ${_dep} does not provide this library."
+              )
+          endif()
+          target_link_libraries(4C_${target} PUBLIC 4C_${_dep})
+        endif()
+      endif()
     endforeach()
     # Some other target
   else()

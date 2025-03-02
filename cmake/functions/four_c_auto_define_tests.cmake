@@ -5,7 +5,7 @@
 #
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
-function(_set_up_unit_test_target _target)
+function(_set_up_unit_test_target _module_under_test _target)
   set(options "")
   set(oneValueArgs NP THREADS)
   set(multiValueArgs "")
@@ -52,10 +52,7 @@ function(_set_up_unit_test_target _target)
   target_link_libraries(${_target} PRIVATE gtest gmock)
   target_link_libraries(${_target} PRIVATE unittests_common)
 
-  # Link the main library
-  # NOTE: We can think about linking a subset of classes under test here. The module object targets would be a good
-  # candidate for this. However, as long as the interdependencies between modules are high, this is not feasible.
-  target_link_libraries(${_target} PRIVATE ${FOUR_C_LIBRARY_NAME})
+  target_link_libraries(${_target} PRIVATE ${_module_under_test}_unit_test_deps)
 
   # the first process will write a unit test report
   separate_arguments(
@@ -96,8 +93,8 @@ endfunction()
 
 ##
 # Pickup all the source files in the current directory and add them to a unit test target.
-# Recursively add all subdirectories that contain CMakeLists.txt files. A base name for the test
-# may be supplied. If no base name is supplied, the name of the parent module is used.
+# Recursively add all subdirectories that contain CMakeLists.txt files. A module under test
+# may be supplied via MODULE. If no module name is supplied, the name of the parent module is used.
 #
 # A source file is analyzed for certain suffixes, to determine how the test should be run. The supported
 # suffixes are:
@@ -110,18 +107,41 @@ function(four_c_auto_define_tests)
     return()
   endif()
 
-  if(NOT "${ARGV0}" STREQUAL "")
-    set(_test_name_base "unittests_${ARGV0}")
+  set(options "")
+  set(oneValueArgs MODULE)
+  set(multiValueArgs "")
+  cmake_parse_arguments(
+    _parsed
+    "${options}"
+    "${oneValueArgs}"
+    "${multiValueArgs}"
+    ${ARGN}
+    )
+  if(DEFINED _parsed_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "There are unparsed arguments: ${_parsed_UNPARSED_ARGUMENTS}")
+  endif()
+
+  if(_parsed_MODULE)
+    set(_module_under_test ${_parsed_MODULE})
   else()
     if("${FOUR_C_CURRENTLY_DEFINED_PARENT_MODULE}" STREQUAL "")
       message(
         FATAL_ERROR
-          "No parent module is set. Either give a base name for the tests or call the functions inside a module."
+          "No parent module is set. Either give the module this test belongs to or call this functions inside a module."
         )
     endif()
 
-    set(_test_name_base "unittests_${FOUR_C_CURRENTLY_DEFINED_PARENT_MODULE}")
+    set(_module_under_test "${FOUR_C_CURRENTLY_DEFINED_PARENT_MODULE}")
   endif()
+
+  if(NOT TARGET "${_module_under_test}_objs")
+    message(
+      FATAL_ERROR
+        "Tried to add tests for a module named '${_module_under_test}' which is not a known module name."
+      )
+  endif()
+
+  set(_test_name_base "unittests_${_module_under_test}")
 
   file(GLOB_RECURSE _sources CONFIGURE_DEPENDS *.cpp)
 
@@ -149,6 +169,7 @@ function(four_c_auto_define_tests)
 
     if(NOT TARGET ${_current_test_name})
       _set_up_unit_test_target(
+        ${_module_under_test}
         ${_current_test_name}
         NP
         ${_np}

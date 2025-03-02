@@ -33,6 +33,12 @@ function(enable_linker_flag_if_supported _flag)
   four_c_check_compiles(FOUR_C_LINKER_HAS_FLAG_${_flag_var} LINK_OPTIONS ${_flag} APPEND_ON_SUCCESS)
 endfunction()
 
+four_c_process_global_option(
+  FOUR_C_ENABLE_DEVELOPER_MODE
+  "Enable developer mode (tries to optimize setup for iterative development cycles)"
+  OFF
+  )
+
 # Enable all warnings that are supported by the compiler
 enable_compiler_flag_if_supported("-Wall")
 enable_compiler_flag_if_supported("-Wextra")
