@@ -80,6 +80,7 @@ _add_dependency_to_settings(CLN)
 _add_dependency_to_settings(MIRCO)
 _add_dependency_to_settings(Backtrace)
 _add_dependency_to_settings(ryml)
+_add_dependency_to_settings(magic_enum)
 
 # install
 install(

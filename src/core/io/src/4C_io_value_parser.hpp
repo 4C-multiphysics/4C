@@ -14,8 +14,11 @@
 #include "4C_utils_demangle.hpp"
 #include "4C_utils_exceptions.hpp"
 
+#include <magic_enum/magic_enum.hpp>
+
 #include <array>
 #include <filesystem>
+#include <format>
 #include <map>
 #include <optional>
 #include <stack>
@@ -189,6 +192,24 @@ namespace Core::IO
     void read_internal(double& value);
     void read_internal(std::string& value);
     void read_internal(std::filesystem::path& value);
+
+    template <typename Enum>
+      requires(std::is_enum_v<Enum>)
+    void read_internal(Enum& value)
+    {
+      std::string string;
+      read_internal(string);
+      auto val = magic_enum::enum_cast<Enum>(string);
+      if (val)
+      {
+        value = *val;
+      }
+      else
+      {
+        FOUR_C_THROW(std::format("Could not parse value '{}' as an enum constant of type '{}'.",
+            string, magic_enum::enum_type_name<Enum>()));
+      }
+    }
 
     template <typename T, typename... SizeInfo>
     void read_internal(std::optional<T>& value)

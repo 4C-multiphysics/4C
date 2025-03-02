@@ -127,6 +127,7 @@ four_c_configure_dependency(CLN DEFAULT ON)
 four_c_configure_dependency(MIRCO DEFAULT OFF)
 four_c_configure_dependency(Backtrace DEFAULT OFF)
 four_c_configure_dependency(ryml DEFAULT ON)
+four_c_configure_dependency(magic_enum DEFAULT ON)
 
 # Generate the macro definition for all dependencies automatically
 get_property(FOUR_C_FLAGS_EXTERNAL_DEPENDENCIES GLOBAL PROPERTY FOUR_C_FLAGS_EXTERNAL_DEPENDENCIES)

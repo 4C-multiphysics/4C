@@ -31,7 +31,7 @@ namespace Core::IO
     template <typename T>
     concept SupportedTypePrimitives =
         std::same_as<T, int> || std::same_as<T, double> || std::same_as<T, bool> ||
-        std::same_as<T, std::string> || std::same_as<T, std::filesystem::path>;
+        std::same_as<T, std::string> || std::same_as<T, std::filesystem::path> || std::is_enum_v<T>;
 
     template <SupportedTypePrimitives T>
     struct SupportedTypeHelper<T> : std::true_type
@@ -124,6 +124,7 @@ namespace Core::IO
    * - `bool`
    * - `std::string`
    * - `std::filesystem::path`
+   * - any enum type
    * - `std::optional<T>`, where `T` is one of the supported types
    * - `std::vector<T>`, where `T` is one of the supported types
    * - `std::map<std::string, T>`, where `T` is one of the supported types

@@ -97,6 +97,55 @@ namespace
     }
   }
 
+  TEST(InputSpecTest, MagicEnumParameter)
+  {
+    enum class EnumClass
+    {
+      A,
+      B,
+      C,
+    };
+
+    auto spec = parameter<EnumClass>("enum");
+
+    {
+      SCOPED_TRACE("Valid enum constant");
+      InputParameterContainer container;
+      std::string stream("enum A");
+      ValueParser parser(stream);
+      spec.fully_parse(parser, container);
+      EXPECT_EQ(container.get<EnumClass>("enum"), EnumClass::A);
+    }
+
+    {
+      SCOPED_TRACE("Invalid enum constant");
+      InputParameterContainer container;
+      std::string stream("enum XYZ");
+      ValueParser parser(stream);
+      FOUR_C_EXPECT_THROW_WITH_MESSAGE(spec.fully_parse(parser, container), Core::Exception,
+          "Could not parse value 'XYZ' as an enum constant of type 'EnumClass'");
+    }
+
+    {
+      std::ostringstream out;
+      ryml::Tree tree = init_yaml_tree_with_exceptions();
+      ryml::NodeRef root = tree.rootref();
+      YamlNodeRef yaml(root, "");
+      spec.emit_metadata(yaml);
+      out << tree;
+
+      std::string expected = R"(name: enum
+type: enum
+choices:
+  - name: A
+  - name: B
+  - name: C
+required: true
+)";
+      EXPECT_EQ(out.str(), expected);
+    }
+  }
+
   TEST(InputSpecTest, ParseSingleDefaultedEntryDat)
   {
     // This used to be a bug where a single default dat parameter was not accepted.
@@ -798,7 +847,7 @@ specs:
             type: double
             required: true
   - name: e
-    type: selection
+    type: enum
     required: false
     default: "e1"
     choices:
@@ -806,7 +855,7 @@ specs:
       - name: "e2"
   - name: f
     noneable: true
-    type: selection
+    type: enum
     required: false
     default: null
     choices:
