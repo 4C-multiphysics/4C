@@ -101,9 +101,9 @@ E 1 boundarycond flow VAL 1.5E4 curve 1 0
 E 4 boundarycond pressure VAL 0.0 curve 1 0
 ------------------DESIGN SURF TOTAL TRACTION CORRECTION CONDITIONS
 // fluid_inflow_surf
-E 1 ConditionID 1 ConditionType POLYNOMIAL prebiased NOTPREBIASED FlowType InFlow CorrectionFlag WithOutCorrection Period 1.0 Order 2 Harmonics 32 Val 1.5E4 Funct 1 NORMAL SelfEvaluateNormal n1 0.0 n2 0.0 n3 1.0 CenterOfMass SelfEvaluateCenterOfMass c1 0.0 c2 0.0 c3 0.0
+E 1 ConditionID 1 CONDITIONTYPE polynomial PREBIAS not_prebiased FLOWTYPE inflow CORRECTPROFILE false PERIOD 1.0 ORDER 2 HARMONICS 32 VAL 1.5E4 FUNCT 1 NORMAL self_evaluate CENTEROFMASS self_evaluate
 // fluid_outflow_surf
-E 2 ConditionID 2 ConditionType POLYNOMIAL prebiased NOTPREBIASED FlowType OutFlow CorrectionFlag WithOutCorrection Period 1.0 Order 2 Harmonics 32 Val 1.5E4 Funct 1 NORMAL SelfEvaluateNormal n1 0.0 n2 0.0 n3 1.0 CenterOfMass SelfEvaluateCenterOfMass c1 0.0 c2 0.0 c3 0.0
+E 2 ConditionID 2 CONDITIONTYPE polynomial PREBIAS not_prebiased FLOWTYPE outflow CORRECTPROFILE false PERIOD 1.0 ORDER 2 HARMONICS 32 VAL 1.5E4 FUNCT 1 NORMAL self_evaluate CENTEROFMASS self_evaluate
 ----------------DESIGN LINE TOTAL TRACTION CORRECTION BORDER NODES
 // fluid_inflow_ring_NoDBC_slave
 E 1 ConditionID 1
