@@ -44,12 +44,20 @@ STRUCT_DISP                     Yes
 STRUCT_STRESS                   No
 FLUID_STRESS                    No
 VERBOSITY                       Minimal
-WRITE_INITIAL_STATE             No
+WRITE_INITIAL_STATE             Yes
+----------------------------------------------------------IO/RUNTIME VTK OUTPUT
+OUTPUT_DATA_FORMAT              binary
+INTERVAL_STEPS                  1
+EVERY_ITERATION                 No
+----------------------------------------------------------IO/RUNTIME VTK OUTPUT/STRUCTURE
+OUTPUT_STRUCTURE                Yes
+DISPLACEMENT                    Yes
 ----------------------------------------------------------STRUCTURAL DYNAMIC
 INT_STRATEGY                    Standard
 LINEAR_SOLVER                   1
 DYNAMICTYPE                      GenAlpha
 RESULTSEVERY                     1
+RESTARTEVERY                     1
 NLNSOL                          fullnewton
 TIMESTEP                        0.5
 NUMSTEP                         3
