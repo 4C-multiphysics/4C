@@ -7,6 +7,8 @@
 
 #include "4C_solid_poro_3D_ele_factory.hpp"
 
+#include "4C_solid_poro_3D_ele_calc_lib.hpp"
+
 FOUR_C_NAMESPACE_OPEN
 
 
@@ -42,7 +44,27 @@ template <Core::FE::CellType celltype>
 Discret::Elements::SolidPoroPressureVelocityBasedCalcVariant
 Discret::Elements::create_solid_poro_pressure_velocity_based_calculation_interface()
 {
-  return SolidPoroPressureVelocityBasedEleCalc<celltype>();
+  return SolidPoroPressureVelocityBasedEleCalc<celltype, PorosityFormulation::implicit_porosity>();
+}
+
+Discret::Elements::SolidPoroPressureVelocityBasedP1CalcVariant
+Discret::Elements::create_solid_poro_pressure_velocity_based_p1_calculation_interface(
+    Core::FE::CellType celltype)
+{
+  return Core::FE::cell_type_switch<
+      Discret::Elements::Internal::ImplementedSolidPoroPressureVelocityBasedCellTypes>(celltype,
+      [&](auto celltype_t)
+      {
+        return create_solid_poro_pressure_velocity_based_p1_calculation_interface<celltype_t()>();
+      });
+}
+
+
+template <Core::FE::CellType celltype>
+Discret::Elements::SolidPoroPressureVelocityBasedP1CalcVariant
+Discret::Elements::create_solid_poro_pressure_velocity_based_p1_calculation_interface()
+{
+  return SolidPoroPressureVelocityBasedEleCalc<celltype, PorosityFormulation::explicit_porosity>();
 }
 
 
