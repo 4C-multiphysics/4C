@@ -18,12 +18,15 @@ FOUR_C_NAMESPACE_OPEN
 void ALE::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs adyn{"ALE DYNAMIC"};
 
-  Core::Utils::double_parameter("TIMESTEP", 0.1, "time step size", adyn);
+  adyn.specs.emplace_back(
+      parameter<double>("TIMESTEP", {.description = "time step size", .default_value = 0.1}));
   Core::Utils::int_parameter("NUMSTEP", 41, "max number of time steps", adyn);
-  Core::Utils::double_parameter("MAXTIME", 4.0, "max simulation time", adyn);
+  adyn.specs.emplace_back(
+      parameter<double>("MAXTIME", {.description = "max simulation time", .default_value = 4.0}));
 
   Core::Utils::string_to_integral_parameter<ALE::AleDynamic>("ALE_TYPE", "solid",
       "ale mesh movement algorithm",
@@ -33,17 +36,22 @@ void ALE::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
           springs_material, springs_spatial),
       adyn);
 
-  Core::Utils::bool_parameter("ASSESSMESHQUALITY", false,
-      "Evaluate element quality measure according to [Oddy et al. 1988]", adyn);
+  adyn.specs.emplace_back(parameter<bool>("ASSESSMESHQUALITY",
+      {.description = "Evaluate element quality measure according to [Oddy et al. 1988]",
+          .default_value = false}));
 
-  Core::Utils::bool_parameter("UPDATEMATRIX", false,
-      "Update stiffness matrix in every time step (only for linear/material strategies)", adyn);
+  adyn.specs.emplace_back(parameter<bool>("UPDATEMATRIX",
+      {.description =
+              "Update stiffness matrix in every time step (only for linear/material strategies)",
+          .default_value = false}));
 
   Core::Utils::int_parameter("MAXITER", 1, "Maximum number of newton iterations.", adyn);
-  Core::Utils::double_parameter(
-      "TOLRES", 1.0e-06, "Absolute tolerance for length scaled L2 residual norm ", adyn);
-  Core::Utils::double_parameter(
-      "TOLDISP", 1.0e-06, "Absolute tolerance for length scaled L2 increment norm ", adyn);
+  adyn.specs.emplace_back(parameter<double>(
+      "TOLRES", {.description = "Absolute tolerance for length scaled L2 residual norm ",
+                    .default_value = 1.0e-06}));
+  adyn.specs.emplace_back(parameter<double>(
+      "TOLDISP", {.description = "Absolute tolerance for length scaled L2 increment norm ",
+                     .default_value = 1.0e-06}));
 
   Core::Utils::int_parameter("NUM_INITSTEP", 0, "", adyn);
   Core::Utils::int_parameter(

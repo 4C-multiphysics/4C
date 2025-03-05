@@ -120,8 +120,7 @@ CONTACT::Interface::Interface(const std::shared_ptr<CONTACT::InterfaceDataContai
       smpairs_(interface_data_->sm_int_pairs()),
       smintpairs_(interface_data_->sm_int_pairs()),
       intcells_(interface_data_->int_cells())
-{
-  /* do nothing */
+{ /* do nothing */
 }
 
 /*----------------------------------------------------------------------*

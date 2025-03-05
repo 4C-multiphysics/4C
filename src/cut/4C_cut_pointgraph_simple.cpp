@@ -191,8 +191,7 @@ void Cut::Impl::SimplePointGraph2D::Graph::split_main_cycles_into_line_cycles()
 Cut::Impl::SimplePointGraph2D::SimplePointGraph2D()
     : Cut::Impl::PointGraph(2),
       graph_2d_(std::dynamic_pointer_cast<SimplePointGraph2D::Graph>(graph_ptr()))
-{
-  /* intentionally left blank */
+{ /* intentionally left blank */
 }
 
 /*----------------------------------------------------------------------------*

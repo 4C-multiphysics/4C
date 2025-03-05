@@ -17,6 +17,7 @@ FOUR_C_NAMESPACE_OPEN
 void Inpar::TSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs tsidyn{"TSI DYNAMIC"};
 
@@ -29,7 +30,8 @@ void Inpar::TSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
           IterStaggAitkenIrons, IterStaggFixedRel, Monolithic),
       tsidyn);
 
-  Core::Utils::bool_parameter("MATCHINGGRID", true, "is matching grid", tsidyn);
+  tsidyn.specs.emplace_back(
+      parameter<bool>("MATCHINGGRID", {.description = "is matching grid", .default_value = true}));
 
   // output type
   Core::Utils::int_parameter(
@@ -37,8 +39,10 @@ void Inpar::TSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
 
   // time loop control
   Core::Utils::int_parameter("NUMSTEP", 200, "maximum number of Timesteps", tsidyn);
-  Core::Utils::double_parameter("MAXTIME", 1000.0, "total simulation time", tsidyn);
-  Core::Utils::double_parameter("TIMESTEP", 0.05, "time step size dt", tsidyn);
+  tsidyn.specs.emplace_back(parameter<double>(
+      "MAXTIME", {.description = "total simulation time", .default_value = 1000.0}));
+  tsidyn.specs.emplace_back(
+      parameter<double>("TIMESTEP", {.description = "time step size dt", .default_value = 0.05}));
   Core::Utils::int_parameter("ITEMAX", 10, "maximum number of iterations over fields", tsidyn);
   Core::Utils::int_parameter("ITEMIN", 1, "minimal number of iterations over fields", tsidyn);
   Core::Utils::int_parameter("RESULTSEVERY", 1, "increment for writing solution", tsidyn);
@@ -55,11 +59,12 @@ void Inpar::TSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
   Core::Utils::SectionSpecs tsidynmono{tsidyn, "MONOLITHIC"};
 
   // convergence tolerance of tsi residual
-  Core::Utils::double_parameter(
-      "CONVTOL", 1e-6, "tolerance for convergence check of TSI", tsidynmono);
+  tsidynmono.specs.emplace_back(parameter<double>(
+      "CONVTOL", {.description = "tolerance for convergence check of TSI", .default_value = 1e-6}));
   // Iterationparameters
-  Core::Utils::double_parameter("TOLINC", 1.0e-6,
-      "tolerance for convergence check of TSI-increment in monolithic TSI", tsidynmono);
+  tsidynmono.specs.emplace_back(parameter<double>("TOLINC",
+      {.description = "tolerance for convergence check of TSI-increment in monolithic TSI",
+          .default_value = 1.0e-6}));
 
   Core::Utils::string_to_integral_parameter<ConvNorm>("NORM_RESF", "Abs",
       "type of norm for residual convergence check", tuple<std::string>("Abs", "Rel", "Mix"),
@@ -82,35 +87,39 @@ void Inpar::TSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
       "Nonlinear solution technique", tuple<std::string>("fullnewton", "ptc"),
       tuple<NlnSolTech>(soltech_newtonfull, soltech_ptc), tsidynmono);
 
-  Core::Utils::double_parameter("PTCDT", 0.1,
-      "pseudo time step for pseudo-transient continuation (PTC) stabilised Newton procedure",
-      tsidynmono);
+  tsidynmono.specs.emplace_back(
+      parameter<double>("PTCDT", {.description = "pseudo time step for pseudo-transient "
+                                                 "continuation (PTC) stabilised Newton procedure",
+                                     .default_value = 0.1}));
 
   // number of linear solver used for monolithic TSI
   Core::Utils::int_parameter(
       "LINEAR_SOLVER", -1, "number of linear solver used for monolithic TSI problems", tsidynmono);
 
   // convergence criteria adaptivity of monolithic TSI solver
-  Core::Utils::bool_parameter("ADAPTCONV", false,
-      "Switch on adaptive control of linear solver tolerance for nonlinear solution", tsidynmono);
-  Core::Utils::double_parameter("ADAPTCONV_BETTER", 0.1,
-      "The linear solver shall be this much better than the current nonlinear residual in the "
-      "nonlinear convergence limit",
-      tsidynmono);
+  tsidynmono.specs.emplace_back(parameter<bool>("ADAPTCONV",
+      {.description =
+              "Switch on adaptive control of linear solver tolerance for nonlinear solution",
+          .default_value = false}));
+  tsidynmono.specs.emplace_back(parameter<double>("ADAPTCONV_BETTER",
+      {.description = "The linear solver shall be this much better than the current nonlinear "
+                      "residual in the nonlinear convergence limit",
+          .default_value = 0.1}));
 
-  Core::Utils::bool_parameter(
-      "INFNORMSCALING", true, "Scale blocks of matrix with row infnorm?", tsidynmono);
+  tsidynmono.specs.emplace_back(parameter<bool>("INFNORMSCALING",
+      {.description = "Scale blocks of matrix with row infnorm?", .default_value = true}));
 
   // merge TSI block matrix to enable use of direct solver in monolithic TSI
   // default: "No", i.e. use block matrix
-  Core::Utils::bool_parameter(
-      "MERGE_TSI_BLOCK_MATRIX", false, "Merge TSI block matrix", tsidynmono);
+  tsidynmono.specs.emplace_back(parameter<bool>(
+      "MERGE_TSI_BLOCK_MATRIX", {.description = "Merge TSI block matrix", .default_value = false}));
 
   // in case of monolithic TSI nodal values (displacements, temperatures and
   // reaction forces) at fix points of the body can be calculated
   // default: "No", i.e. nothing is calculated
-  Core::Utils::bool_parameter("CALC_NECKING_TSI_VALUES", false,
-      "Calculate nodal values for evaluation and validation of necking", tsidynmono);
+  tsidynmono.specs.emplace_back(parameter<bool>("CALC_NECKING_TSI_VALUES",
+      {.description = "Calculate nodal values for evaluation and validation of necking",
+          .default_value = false}));
 
   Core::Utils::string_to_integral_parameter<LineSearch>("TSI_LINE_SEARCH", "none",
       "line-search strategy", tuple<std::string>("none", "structure", "thermo", "and", "or"),
@@ -124,17 +133,21 @@ void Inpar::TSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
   Core::Utils::SectionSpecs tsidynpart{tsidyn, "PARTITIONED"};
 
   std::vector<std::string> couplvariable_valid_input = {"Displacement", "Temperature"};
-  Core::Utils::string_parameter(
-      "COUPVARIABLE", "Displacement", "Coupling variable", tsidynpart, couplvariable_valid_input);
+  tsidynpart.specs.emplace_back(selection<std::string>("COUPVARIABLE", couplvariable_valid_input,
+      {.description = "Coupling variable", .default_value = "Displacement"}));
+
 
   // Solver parameter for relaxation of iterative staggered partitioned TSI
-  Core::Utils::double_parameter("MAXOMEGA", 0.0,
-      "largest omega allowed for Aitken relaxation (0.0 means no constraint)", tsidynpart);
-  Core::Utils::double_parameter("FIXEDOMEGA", 1.0, "fixed relaxation parameter", tsidynpart);
+  tsidynpart.specs.emplace_back(parameter<double>("MAXOMEGA",
+      {.description = "largest omega allowed for Aitken relaxation (0.0 means no constraint)",
+          .default_value = 0.0}));
+  tsidynpart.specs.emplace_back(parameter<double>(
+      "FIXEDOMEGA", {.description = "fixed relaxation parameter", .default_value = 1.0}));
 
   // convergence tolerance of outer iteration loop
-  Core::Utils::double_parameter("CONVTOL", 1e-6,
-      "tolerance for convergence check of outer iteraiton within partitioned TSI", tsidynpart);
+  tsidynpart.specs.emplace_back(parameter<double>("CONVTOL",
+      {.description = "tolerance for convergence check of outer iteraiton within partitioned TSI",
+          .default_value = 1e-6}));
 
   tsidynpart.move_into_collection(list);
 
@@ -142,18 +155,23 @@ void Inpar::TSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
   /* parameters for tsi contact */
   Core::Utils::SectionSpecs tsic{"TSI CONTACT"};
 
-  Core::Utils::double_parameter(
-      "HEATTRANSSLAVE", 0.0, "Heat transfer parameter for slave side in thermal contact", tsic);
-  Core::Utils::double_parameter(
-      "HEATTRANSMASTER", 0.0, "Heat transfer parameter for master side in thermal contact", tsic);
-  Core::Utils::double_parameter("TEMP_DAMAGE", 1.0e12,
-      "damage temperature at contact interface: friction coefficient zero there", tsic);
-  Core::Utils::double_parameter("TEMP_REF", 0.0,
-      "reference temperature at contact interface: friction coefficient equals the given value",
-      tsic);
+  tsic.specs.emplace_back(parameter<double>(
+      "HEATTRANSSLAVE", {.description = "Heat transfer parameter for slave side in thermal contact",
+                            .default_value = 0.0}));
+  tsic.specs.emplace_back(parameter<double>("HEATTRANSMASTER",
+      {.description = "Heat transfer parameter for master side in thermal contact",
+          .default_value = 0.0}));
+  tsic.specs.emplace_back(parameter<double>("TEMP_DAMAGE",
+      {.description = "damage temperature at contact interface: friction coefficient zero there",
+          .default_value = 1.0e12}));
+  tsic.specs.emplace_back(
+      parameter<double>("TEMP_REF", {.description = "reference temperature at contact interface: "
+                                                    "friction coefficient equals the given value",
+                                        .default_value = 0.0}));
 
-  Core::Utils::double_parameter(
-      "NITSCHE_THETA_TSI", 0.0, "+1: symmetric, 0: non-symmetric, -1: skew-symmetric", tsic);
+  tsic.specs.emplace_back(parameter<double>(
+      "NITSCHE_THETA_TSI", {.description = "+1: symmetric, 0: non-symmetric, -1: skew-symmetric",
+                               .default_value = 0.0}));
 
   Core::Utils::string_to_integral_parameter<Inpar::CONTACT::NitscheWeighting>(
       "NITSCHE_WEIGHTING_TSI", "harmonic",
@@ -164,11 +182,12 @@ void Inpar::TSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
           Inpar::CONTACT::NitWgt_physical),
       tsic);
 
-  Core::Utils::bool_parameter("NITSCHE_PENALTY_ADAPTIVE_TSI", true,
-      "adapt penalty parameter after each converged time step", tsic);
+  tsic.specs.emplace_back(parameter<bool>("NITSCHE_PENALTY_ADAPTIVE_TSI",
+      {.description = "adapt penalty parameter after each converged time step",
+          .default_value = true}));
 
-  Core::Utils::double_parameter(
-      "PENALTYPARAM_THERMO", 0.0, "Penalty parameter for Nitsche solution strategy", tsic);
+  tsic.specs.emplace_back(parameter<double>("PENALTYPARAM_THERMO",
+      {.description = "Penalty parameter for Nitsche solution strategy", .default_value = 0.0}));
 
   Core::Utils::string_to_integral_parameter<Inpar::CONTACT::NitscheThermoMethod>(
       "NITSCHE_METHOD_TSI", "nitsche",

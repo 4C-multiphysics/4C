@@ -15,6 +15,7 @@ FOUR_C_NAMESPACE_OPEN
 void Inpar::Rebalance::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs meshpartitioning{"MESH PARTITIONING"};
 
@@ -28,10 +29,10 @@ void Inpar::Rebalance::set_valid_parameters(std::map<std::string, Core::IO::Inpu
           Core::Rebalance::RebalanceType::monolithic),
       meshpartitioning);
 
-  Core::Utils::double_parameter("IMBALANCE_TOL", 1.1,
-      "Tolerance for relative imbalance of subdomain sizes for graph partitioning of unstructured "
-      "meshes read from input files.",
-      meshpartitioning);
+  meshpartitioning.specs.emplace_back(parameter<double>("IMBALANCE_TOL",
+      {.description = "Tolerance for relative imbalance of subdomain sizes for graph partitioning "
+                      "of unstructured meshes read from input files.",
+          .default_value = 1.1}));
 
   Core::Utils::int_parameter("MIN_ELE_PER_PROC", 0,
       "This parameter defines the minimum number of elements to be assigned to any MPI rank during "

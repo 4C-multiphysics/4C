@@ -32,8 +32,7 @@ Core::IO::EveryIterationWriter::EveryIterationWriter()
       parent_writer_(nullptr),
       interface_(nullptr),
       every_iter_writer_(nullptr)
-{
-  /* empty */
+{ /* empty */
 }
 
 /*----------------------------------------------------------------------------*

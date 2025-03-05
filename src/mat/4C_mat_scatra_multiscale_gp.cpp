@@ -68,7 +68,6 @@ Mat::ScatraMultiScaleGP::ScatraMultiScaleGP(
       ddet_fdtn_(0.0),
       ddet_fdtnp_(0.0),
       is_ale_(is_ale)
-
 {
 }
 

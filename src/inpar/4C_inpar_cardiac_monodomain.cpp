@@ -16,6 +16,7 @@ void Inpar::ElectroPhysiology::set_valid_parameters(
     std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs epcontrol{"CARDIAC MONODOMAIN CONTROL"};
 
@@ -25,8 +26,10 @@ void Inpar::ElectroPhysiology::set_valid_parameters(
   Core::Utils::int_parameter("WRITEMAXIONICCURRENTS", 0,
       "number of maximal ionic currents to be postprocessed", epcontrol);
 
-  Core::Utils::double_parameter("ACTTHRES", 1.0,
-      "threshold for the potential for computing and postprocessing activation time ", epcontrol);
+  epcontrol.specs.emplace_back(parameter<double>("ACTTHRES",
+      {.description =
+              "threshold for the potential for computing and postprocessing activation time ",
+          .default_value = 1.0}));
 
   epcontrol.move_into_collection(list);
 }

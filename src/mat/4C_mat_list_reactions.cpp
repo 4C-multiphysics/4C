@@ -26,8 +26,6 @@ Mat::PAR::MatListReactions::MatListReactions(const Core::Mat::PAR::Parameter::Da
 {
   // check if sizes fit
   if (numreac_ != (int)reacids_.size())
-
-
     FOUR_C_THROW("number of materials %d does not fit to size of material vector %d", nummat_,
         reacids_.size());
 

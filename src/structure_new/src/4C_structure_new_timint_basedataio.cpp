@@ -279,8 +279,7 @@ void Solid::TimeInt::BaseDataIO::set_last_written_results(const int step)
 NOX::Nln::Solver::PrePostOp::TimeInt::WriteOutputEveryIteration::WriteOutputEveryIteration(
     Core::IO::EveryIterationWriter& every_iter_writer)
     : every_iter_writer_(every_iter_writer)
-{
-  /* empty */
+{ /* empty */
 }
 
 /*----------------------------------------------------------------------------*

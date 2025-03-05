@@ -17,6 +17,7 @@ FOUR_C_NAMESPACE_OPEN
 void Inpar::BINSTRATEGY::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs binningstrategy{"BINNING STRATEGY"};
 
@@ -27,18 +28,21 @@ void Inpar::BINSTRATEGY::set_valid_parameters(std::map<std::string, Core::IO::In
       "direction",
       binningstrategy);
 
-  Core::Utils::string_parameter("BIN_PER_DIR", "-1 -1 -1",
-      "Number of bins per direction (x, y, z) in particle simulations. Either Define this value or "
-      "BIN_SIZE_LOWER_BOUND",
-      binningstrategy);
+  binningstrategy.specs.emplace_back(parameter<std::string>("BIN_PER_DIR",
+      {.description = "Number of bins per direction (x, y, z) in particle simulations. Either "
+                      "Define this value or  BIN_SIZE_LOWER_BOUND",
+          .default_value = "-1 -1 -1"}));
 
-  Core::Utils::string_parameter("PERIODICONOFF", "0 0 0",
-      "Turn on/off periodic boundary conditions in each spatial direction", binningstrategy);
 
-  Core::Utils::string_parameter("DOMAINBOUNDINGBOX", "1e12 1e12 1e12 1e12 1e12 1e12",
-      "Bounding box for computational domain using binning strategy. Specify diagonal corner "
-      "points",
-      binningstrategy);
+  binningstrategy.specs.emplace_back(parameter<std::string>("PERIODICONOFF",
+      {.description = "Turn on/off periodic boundary conditions in each spatial direction",
+          .default_value = "0 0 0"}));
+
+  binningstrategy.specs.emplace_back(parameter<std::string>(
+      "DOMAINBOUNDINGBOX", {.description = "Bounding box for computational domain using binning "
+                                           "strategy. Specify diagonal corner  points",
+                               .default_value = "1e12 1e12 1e12 1e12 1e12 1e12"}));
+
 
   Core::Utils::string_to_integral_parameter<Core::Binstrategy::WriteBins>("WRITEBINS", "none",
       "Write none, row or column bins for visualization",

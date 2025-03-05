@@ -29,8 +29,7 @@ Mat::Elastic::PAR::CoupTransverselyIsotropic::CoupTransverselyIsotropic(
       angle_(matdata.parameters.get<double>("ANGLE")),
       fiber_gid_(matdata.parameters.get<int>("FIBER")),
       init_(matdata.parameters.get<int>("INIT"))
-{
-  /* empty */
+{ /* empty */
 }
 
 void Mat::Elastic::PAR::CoupTransverselyIsotropic::print() const
@@ -47,8 +46,7 @@ void Mat::Elastic::PAR::CoupTransverselyIsotropic::print() const
 
 Mat::Elastic::CoupTransverselyIsotropic::CoupTransverselyIsotropic(my_params* params)
     : params_(params)
-{
-  /* empty */
+{ /* empty */
 }
 
 void Mat::Elastic::CoupTransverselyIsotropic::setup(

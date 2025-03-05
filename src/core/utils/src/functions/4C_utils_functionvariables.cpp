@@ -24,7 +24,6 @@ Core::Utils::ParsedFunctionVariable::ParsedFunctionVariable(
     std::string name, const std::string& buf)
     : FunctionVariable(std::move(name)),
       timefunction_(std::make_shared<Core::Utils::SymbolicExpression<double>>(buf))
-
 {
 }
 

@@ -17,6 +17,7 @@ FOUR_C_NAMESPACE_OPEN
 void Inpar::POROMULTIPHASE::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   // ----------------------------------------------------------------------
   // (1) general control parameters
@@ -27,8 +28,10 @@ void Inpar::POROMULTIPHASE::set_valid_parameters(std::map<std::string, Core::IO:
       "RESTARTEVERY", 1, "write restart possibility every RESTARTEVERY steps", poromultiphasedyn);
   // Time loop control
   Core::Utils::int_parameter("NUMSTEP", 200, "maximum number of Timesteps", poromultiphasedyn);
-  Core::Utils::double_parameter("MAXTIME", 1000.0, "total simulation time", poromultiphasedyn);
-  Core::Utils::double_parameter("TIMESTEP", -1, "time step size dt", poromultiphasedyn);
+  poromultiphasedyn.specs.emplace_back(parameter<double>(
+      "MAXTIME", {.description = "total simulation time", .default_value = 1000.0}));
+  poromultiphasedyn.specs.emplace_back(
+      parameter<double>("TIMESTEP", {.description = "time step size dt", .default_value = -1.0}));
   Core::Utils::int_parameter(
       "RESULTSEVERY", 1, "increment for writing solution", poromultiphasedyn);
   Core::Utils::int_parameter(
@@ -36,8 +39,8 @@ void Inpar::POROMULTIPHASE::set_valid_parameters(std::map<std::string, Core::IO:
 
   // here the computation of the structure can be skipped, this is helpful if only fluid-scatra
   // coupling should be calculated
-  Core::Utils::bool_parameter(
-      "SOLVE_STRUCTURE", true, "Flag to skip computation of structural field", poromultiphasedyn);
+  poromultiphasedyn.specs.emplace_back(parameter<bool>("SOLVE_STRUCTURE",
+      {.description = "Flag to skip computation of structural field", .default_value = true}));
 
 
   // Coupling strategy for solvers
@@ -48,8 +51,8 @@ void Inpar::POROMULTIPHASE::set_valid_parameters(std::map<std::string, Core::IO:
       poromultiphasedyn);
 
   // coupling with 1D artery network active
-  Core::Utils::bool_parameter(
-      "ARTERY_COUPLING", false, "Coupling with 1D blood vessels.", poromultiphasedyn);
+  poromultiphasedyn.specs.emplace_back(parameter<bool>("ARTERY_COUPLING",
+      {.description = "Coupling with 1D blood vessels.", .default_value = false}));
 
   poromultiphasedyn.move_into_collection(list);
 
@@ -58,10 +61,12 @@ void Inpar::POROMULTIPHASE::set_valid_parameters(std::map<std::string, Core::IO:
   Core::Utils::SectionSpecs poromultiphasedynmono{poromultiphasedyn, "MONOLITHIC"};
 
   // convergence tolerances for monolithic coupling
-  Core::Utils::double_parameter("TOLRES_GLOBAL", 1e-8,
-      "tolerance in the residual norm for the Newton iteration", poromultiphasedynmono);
-  Core::Utils::double_parameter("TOLINC_GLOBAL", 1e-8,
-      "tolerance in the increment norm for the Newton iteration", poromultiphasedynmono);
+  poromultiphasedynmono.specs.emplace_back(parameter<double>(
+      "TOLRES_GLOBAL", {.description = "tolerance in the residual norm for the Newton iteration",
+                           .default_value = 1e-8}));
+  poromultiphasedynmono.specs.emplace_back(parameter<double>(
+      "TOLINC_GLOBAL", {.description = "tolerance in the increment norm for the Newton iteration",
+                           .default_value = 1e-8}));
 
   // number of linear solver used for poroelasticity
   Core::Utils::int_parameter("LINEAR_SOLVER", -1,
@@ -105,13 +110,14 @@ void Inpar::POROMULTIPHASE::set_valid_parameters(std::map<std::string, Core::IO:
       poromultiphasedynmono);
 
   // convergence criteria adaptivity --> note ADAPTCONV_BETTER set pretty small
-  Core::Utils::bool_parameter("ADAPTCONV", false,
-      "Switch on adaptive control of linear solver tolerance for nonlinear solution",
-      poromultiphasedynmono);
-  Core::Utils::double_parameter("ADAPTCONV_BETTER", 0.001,
-      "The linear solver shall be this much better "
-      "than the current nonlinear residual in the nonlinear convergence limit",
-      poromultiphasedynmono);
+  poromultiphasedynmono.specs.emplace_back(parameter<bool>("ADAPTCONV",
+      {.description =
+              "Switch on adaptive control of linear solver tolerance for nonlinear solution",
+          .default_value = false}));
+  poromultiphasedynmono.specs.emplace_back(parameter<double>("ADAPTCONV_BETTER",
+      {.description = "The linear solver shall be this much better than the current nonlinear "
+                      "residual in the nonlinear convergence limit",
+          .default_value = 0.001}));
 
   poromultiphasedynmono.move_into_collection(list);
 
@@ -120,8 +126,9 @@ void Inpar::POROMULTIPHASE::set_valid_parameters(std::map<std::string, Core::IO:
   Core::Utils::SectionSpecs poromultiphasedynpart{poromultiphasedyn, "PARTITIONED"};
 
   // convergence tolerance of outer iteration loop
-  Core::Utils::double_parameter(
-      "CONVTOL", 1e-6, "tolerance for convergence check of outer iteration", poromultiphasedynpart);
+  poromultiphasedynpart.specs.emplace_back(parameter<double>(
+      "CONVTOL", {.description = "tolerance for convergence check of outer iteration",
+                     .default_value = 1e-6}));
 
   // flag for relaxation of partitioned scheme
   Core::Utils::string_to_integral_parameter<RelaxationMethods>("RELAXATION", "none",
@@ -130,12 +137,12 @@ void Inpar::POROMULTIPHASE::set_valid_parameters(std::map<std::string, Core::IO:
       poromultiphasedynpart);
 
   // parameters for relaxation of partitioned coupling
-  Core::Utils::double_parameter(
-      "STARTOMEGA", 1.0, "fixed relaxation parameter", poromultiphasedynpart);
-  Core::Utils::double_parameter(
-      "MINOMEGA", 0.1, "smallest omega allowed for Aitken relaxation", poromultiphasedynpart);
-  Core::Utils::double_parameter(
-      "MAXOMEGA", 10.0, "largest omega allowed for Aitken relaxation", poromultiphasedynpart);
+  poromultiphasedynpart.specs.emplace_back(parameter<double>(
+      "STARTOMEGA", {.description = "fixed relaxation parameter", .default_value = 1.0}));
+  poromultiphasedynpart.specs.emplace_back(parameter<double>("MINOMEGA",
+      {.description = "smallest omega allowed for Aitken relaxation", .default_value = 0.1}));
+  poromultiphasedynpart.specs.emplace_back(parameter<double>("MAXOMEGA",
+      {.description = "largest omega allowed for Aitken relaxation", .default_value = 10.0}));
 
   poromultiphasedynpart.move_into_collection(list);
 }

@@ -17,12 +17,15 @@ FOUR_C_NAMESPACE_OPEN
 void Inpar::FS3I::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs fs3idyn{"FS3I DYNAMIC"};
 
-  Core::Utils::double_parameter("TIMESTEP", 0.1, "Time increment dt", fs3idyn);
+  fs3idyn.specs.emplace_back(
+      parameter<double>("TIMESTEP", {.description = "Time increment dt", .default_value = 0.1}));
   Core::Utils::int_parameter("NUMSTEP", 20, "Total number of time steps", fs3idyn);
-  Core::Utils::double_parameter("MAXTIME", 1000.0, "Total simulation time", fs3idyn);
+  fs3idyn.specs.emplace_back(parameter<double>(
+      "MAXTIME", {.description = "Total simulation time", .default_value = 1000.0}));
   Core::Utils::int_parameter("RESULTSEVERY", 1, "Increment for writing solution", fs3idyn);
   Core::Utils::int_parameter("RESTARTEVERY", 1, "Increment for writing restart", fs3idyn);
   Core::Utils::string_to_integral_parameter<Inpar::ScaTra::SolverType>("SCATRA_SOLVERTYPE",
@@ -30,10 +33,11 @@ void Inpar::FS3I::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
       tuple<Inpar::ScaTra::SolverType>(
           Inpar::ScaTra::solvertype_linear_incremental, Inpar::ScaTra::solvertype_nonlinear),
       fs3idyn);
-  Core::Utils::bool_parameter("INF_PERM", true, "Flag for infinite permeability", fs3idyn);
+  fs3idyn.specs.emplace_back(parameter<bool>(
+      "INF_PERM", {.description = "Flag for infinite permeability", .default_value = true}));
   std::vector<std::string> consthermpress_valid_input = {"No_energy", "No_mass", "Yes"};
-  Core::Utils::string_parameter("CONSTHERMPRESS", "Yes",
-      "treatment of thermodynamic pressure in time", fs3idyn, consthermpress_valid_input);
+  fs3idyn.specs.emplace_back(selection<std::string>("CONSTHERMPRESS", consthermpress_valid_input,
+      {.description = "treatment of thermodynamic pressure in time", .default_value = "Yes"}));
 
   // number of linear solver used for fs3i problems
   Core::Utils::int_parameter(
@@ -83,9 +87,10 @@ void Inpar::FS3I::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
       fs3idyn);
 
   // Restart from FSI instead of FS3I
-  Core::Utils::bool_parameter("RESTART_FROM_PART_FSI", false,
-      "restart from partitioned fsi problem (e.g. from prestress calculations) instead of fs3i",
-      fs3idyn);
+  fs3idyn.specs.emplace_back(parameter<bool>(
+      "RESTART_FROM_PART_FSI", {.description = "restart from partitioned fsi problem (e.g. from "
+                                               "prestress calculations) instead of fs3i",
+                                   .default_value = false}));
 
   fs3idyn.move_into_collection(list);
 
@@ -101,8 +106,9 @@ void Inpar::FS3I::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
       tuple<SolutionSchemeOverFields>(fs3i_SequStagg, fs3i_IterStagg), fs3idynpart);
 
   // convergence tolerance of outer iteration loop
-  Core::Utils::double_parameter("CONVTOL", 1e-6,
-      "tolerance for convergence check of outer iteration within partitioned FS3I", fs3idynpart);
+  fs3idynpart.specs.emplace_back(parameter<double>("CONVTOL",
+      {.description = "tolerance for convergence check of outer iteration within partitioned FS3I",
+          .default_value = 1e-6}));
 
   Core::Utils::int_parameter("ITEMAX", 10, "Maximum number of outer iterations", fs3idynpart);
 

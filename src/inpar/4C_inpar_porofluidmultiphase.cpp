@@ -16,19 +16,22 @@ void Inpar::POROFLUIDMULTIPHASE::set_valid_parameters(
     std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs porofluidmultiphasedyn{"POROFLUIDMULTIPHASE DYNAMIC"};
 
-  Core::Utils::double_parameter("MAXTIME", 1000.0, "Total simulation time", porofluidmultiphasedyn);
+  porofluidmultiphasedyn.specs.emplace_back(parameter<double>(
+      "MAXTIME", {.description = "Total simulation time", .default_value = 1000.0}));
   Core::Utils::int_parameter("NUMSTEP", 20, "Total number of time steps", porofluidmultiphasedyn);
-  Core::Utils::double_parameter("TIMESTEP", 0.1, "Time increment dt", porofluidmultiphasedyn);
+  porofluidmultiphasedyn.specs.emplace_back(
+      parameter<double>("TIMESTEP", {.description = "Time increment dt", .default_value = 0.1}));
   Core::Utils::int_parameter(
       "RESULTSEVERY", 1, "Increment for writing solution", porofluidmultiphasedyn);
   Core::Utils::int_parameter(
       "RESTARTEVERY", 1, "Increment for writing restart", porofluidmultiphasedyn);
 
-  Core::Utils::double_parameter(
-      "THETA", 0.5, "One-step-theta time integration factor", porofluidmultiphasedyn);
+  porofluidmultiphasedyn.specs.emplace_back(parameter<double>(
+      "THETA", {.description = "One-step-theta time integration factor", .default_value = 0.5}));
 
   Core::Utils::string_to_integral_parameter<TimeIntegrationScheme>("TIMEINTEGR", "One_Step_Theta",
       "Time Integration Scheme", tuple<std::string>("One_Step_Theta"),
@@ -48,18 +51,20 @@ void Inpar::POROFLUIDMULTIPHASE::set_valid_parameters(
 
   Core::Utils::int_parameter(
       "ITEMAX", 10, "max. number of nonlin. iterations", porofluidmultiphasedyn);
-  Core::Utils::double_parameter("ABSTOLRES", 1e-14,
-      "Absolute tolerance for deciding if residual of nonlinear problem is already zero",
-      porofluidmultiphasedyn);
+  porofluidmultiphasedyn.specs.emplace_back(parameter<double>("ABSTOLRES",
+      {.description =
+              "Absolute tolerance for deciding if residual of nonlinear problem is already zero",
+          .default_value = 1e-14}));
 
   // convergence criteria adaptivity
-  Core::Utils::bool_parameter("ADAPTCONV", false,
-      "Switch on adaptive control of linear solver tolerance for nonlinear solution",
-      porofluidmultiphasedyn);
-  Core::Utils::double_parameter("ADAPTCONV_BETTER", 0.1,
-      "The linear solver shall be this much better than the current nonlinear residual in the "
-      "nonlinear convergence limit",
-      porofluidmultiphasedyn);
+  porofluidmultiphasedyn.specs.emplace_back(parameter<bool>("ADAPTCONV",
+      {.description =
+              "Switch on adaptive control of linear solver tolerance for nonlinear solution",
+          .default_value = false}));
+  porofluidmultiphasedyn.specs.emplace_back(parameter<double>("ADAPTCONV_BETTER",
+      {.description = "The linear solver shall be this much better than the current nonlinear "
+                      "residual in the nonlinear convergence limit",
+          .default_value = 0.1}));
 
   // parameters for finite difference check
   Core::Utils::string_to_integral_parameter<FdCheck>("FDCHECK", "none",
@@ -67,29 +72,34 @@ void Inpar::POROFLUIDMULTIPHASE::set_valid_parameters(
       tuple<std::string>("none",
           "global"),  // perform finite difference check on time integrator level
       tuple<FdCheck>(fdcheck_none, fdcheck_global), porofluidmultiphasedyn);
-  Core::Utils::double_parameter("FDCHECKEPS", 1.e-6,
-      "dof perturbation magnitude for finite difference check (1.e-6 seems to work very well, "
-      "whereas smaller values don't)",
-      porofluidmultiphasedyn);
-  Core::Utils::double_parameter("FDCHECKTOL", 1.e-6,
-      "relative tolerance for finite difference check", porofluidmultiphasedyn);
-  Core::Utils::bool_parameter("SKIPINITDER", true,
-      "Flag to skip computation of initial time derivative", porofluidmultiphasedyn);
-  Core::Utils::bool_parameter("OUTPUT_SATANDPRESS", true,
-      "Flag if output of saturations and pressures should be calculated", porofluidmultiphasedyn);
-  Core::Utils::bool_parameter("OUTPUT_SOLIDPRESS", true,
-      "Flag if output of solid pressure should be calculated", porofluidmultiphasedyn);
-  Core::Utils::bool_parameter("OUTPUT_POROSITY", true,
-      "Flag if output of porosity should be calculated", porofluidmultiphasedyn);
-  Core::Utils::bool_parameter("OUTPUT_PHASE_VELOCITIES", true,
-      "Flag if output of phase velocities should be calculated", porofluidmultiphasedyn);
+  porofluidmultiphasedyn.specs.emplace_back(parameter<double>(
+      "FDCHECKEPS", {.description = "dof perturbation magnitude for finite difference check (1.e-6 "
+                                    "seems to work very well, whereas smaller values don't)",
+                        .default_value = 1.e-6}));
+  porofluidmultiphasedyn.specs.emplace_back(parameter<double>("FDCHECKTOL",
+      {.description = "relative tolerance for finite difference check", .default_value = 1.e-6}));
+  porofluidmultiphasedyn.specs.emplace_back(parameter<bool>(
+      "SKIPINITDER", {.description = "Flag to skip computation of initial time derivative",
+                         .default_value = true}));
+  porofluidmultiphasedyn.specs.emplace_back(parameter<bool>("OUTPUT_SATANDPRESS",
+      {.description = "Flag if output of saturations and pressures should be calculated",
+          .default_value = true}));
+  porofluidmultiphasedyn.specs.emplace_back(parameter<bool>(
+      "OUTPUT_SOLIDPRESS", {.description = "Flag if output of solid pressure should be calculated",
+                               .default_value = true}));
+  porofluidmultiphasedyn.specs.emplace_back(parameter<bool>("OUTPUT_POROSITY",
+      {.description = "Flag if output of porosity should be calculated", .default_value = true}));
+  porofluidmultiphasedyn.specs.emplace_back(parameter<bool>("OUTPUT_PHASE_VELOCITIES",
+      {.description = "Flag if output of phase velocities should be calculated",
+          .default_value = true}));
 
   // Biot stabilization
-  Core::Utils::bool_parameter(
-      "STAB_BIOT", false, "Flag to (de)activate BIOT stabilization.", porofluidmultiphasedyn);
-  Core::Utils::double_parameter("STAB_BIOT_SCALING", 1.0,
-      "Scaling factor for stabilization parameter for biot stabilization of porous flow.",
-      porofluidmultiphasedyn);
+  porofluidmultiphasedyn.specs.emplace_back(parameter<bool>("STAB_BIOT",
+      {.description = "Flag to (de)activate BIOT stabilization.", .default_value = false}));
+  porofluidmultiphasedyn.specs.emplace_back(parameter<double>("STAB_BIOT_SCALING",
+      {.description =
+              "Scaling factor for stabilization parameter for biot stabilization of porous flow.",
+          .default_value = 1.0}));
 
   Core::Utils::string_to_integral_parameter<VectorNorm>("VECTORNORM_RESF", "L2",
       "type of norm to be applied to residuals",
@@ -108,10 +118,12 @@ void Inpar::POROFLUIDMULTIPHASE::set_valid_parameters(
       porofluidmultiphasedyn);
 
   // Iterationparameters
-  Core::Utils::double_parameter("TOLRES", 1e-6,
-      "tolerance in the residual norm for the Newton iteration", porofluidmultiphasedyn);
-  Core::Utils::double_parameter("TOLINC", 1e-6,
-      "tolerance in the increment norm for the Newton iteration", porofluidmultiphasedyn);
+  porofluidmultiphasedyn.specs.emplace_back(parameter<double>(
+      "TOLRES", {.description = "tolerance in the residual norm for the Newton iteration",
+                    .default_value = 1e-6}));
+  porofluidmultiphasedyn.specs.emplace_back(parameter<double>(
+      "TOLINC", {.description = "tolerance in the increment norm for the Newton iteration",
+                    .default_value = 1e-6}));
 
   Core::Utils::string_to_integral_parameter<InitialField>("INITIALFIELD", "zero_field",
       "Initial Field for transport problem",
@@ -140,21 +152,21 @@ void Inpar::POROFLUIDMULTIPHASE::set_valid_parameters(
       porofluidmultiphasedyn);
 
   // functions used for domain integrals
-  Core::Utils::string_parameter(
-      "DOMAININT_FUNCT", "-1.0", "functions used for domain integrals", porofluidmultiphasedyn);
+  porofluidmultiphasedyn.specs.emplace_back(parameter<std::string>("DOMAININT_FUNCT",
+      {.description = "functions used for domain integrals", .default_value = "-1.0"}));
 
   // coupling with 1D artery network active
-  Core::Utils::bool_parameter(
-      "ARTERY_COUPLING", false, "Coupling with 1D blood vessels.", porofluidmultiphasedyn);
+  porofluidmultiphasedyn.specs.emplace_back(parameter<bool>("ARTERY_COUPLING",
+      {.description = "Coupling with 1D blood vessels.", .default_value = false}));
 
-  Core::Utils::double_parameter("STARTING_DBC_TIME_END", -1.0,
-      "End time for the starting Dirichlet BC.", porofluidmultiphasedyn);
+  porofluidmultiphasedyn.specs.emplace_back(parameter<double>("STARTING_DBC_TIME_END",
+      {.description = "End time for the starting Dirichlet BC.", .default_value = -1.0}));
 
-  Core::Utils::string_parameter("STARTING_DBC_ONOFF", "0",
-      "Switching the starting Dirichlet BC on or off.", porofluidmultiphasedyn);
+  porofluidmultiphasedyn.specs.emplace_back(parameter<std::string>("STARTING_DBC_ONOFF",
+      {.description = "Switching the starting Dirichlet BC on or off.", .default_value = "0"}));
 
-  Core::Utils::string_parameter("STARTING_DBC_FUNCT", "0",
-      "Function prescribing the starting Dirichlet BC.", porofluidmultiphasedyn);
+  porofluidmultiphasedyn.specs.emplace_back(parameter<std::string>("STARTING_DBC_FUNCT",
+      {.description = "Function prescribing the starting Dirichlet BC.", .default_value = "0"}));
 
   porofluidmultiphasedyn.move_into_collection(list);
 
@@ -168,8 +180,8 @@ void Inpar::POROFLUIDMULTIPHASE::set_valid_parameters(
       porofluidmultiphasemshtdyn);
 
   // penalty parameter
-  Core::Utils::double_parameter(
-      "PENALTY", 1000.0, "Penalty parameter for line-based coupling", porofluidmultiphasemshtdyn);
+  porofluidmultiphasemshtdyn.specs.emplace_back(parameter<double>("PENALTY",
+      {.description = "Penalty parameter for line-based coupling", .default_value = 1000.0}));
 
   Core::Utils::string_to_integral_parameter<
       Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod>("ARTERY_COUPLING_METHOD",
@@ -187,40 +199,40 @@ void Inpar::POROFLUIDMULTIPHASE::set_valid_parameters(
       porofluidmultiphasemshtdyn);
 
   // coupled artery dofs for mesh tying
-  Core::Utils::string_parameter(
-      "COUPLEDDOFS_ART", "-1.0", "coupled artery dofs for mesh tying", porofluidmultiphasemshtdyn);
+  porofluidmultiphasemshtdyn.specs.emplace_back(parameter<std::string>("COUPLEDDOFS_ART",
+      {.description = "coupled artery dofs for mesh tying", .default_value = "-1.0"}));
 
   // coupled porofluid dofs for mesh tying
-  Core::Utils::string_parameter("COUPLEDDOFS_PORO", "-1.0", "coupled porofluid dofs for mesh tying",
-      porofluidmultiphasemshtdyn);
+  porofluidmultiphasemshtdyn.specs.emplace_back(parameter<std::string>("COUPLEDDOFS_PORO",
+      {.description = "coupled porofluid dofs for mesh tying", .default_value = "-1.0"}));
 
   // functions for coupling (artery part)
-  Core::Utils::string_parameter(
-      "REACFUNCT_ART", "-1", "functions for coupling (artery part)", porofluidmultiphasemshtdyn);
+  porofluidmultiphasemshtdyn.specs.emplace_back(parameter<std::string>("REACFUNCT_ART",
+      {.description = "functions for coupling (artery part)", .default_value = "-1"}));
 
   // scale for coupling (artery part)
-  Core::Utils::string_parameter(
-      "SCALEREAC_ART", "0", "scale for coupling (artery part)", porofluidmultiphasemshtdyn);
+  porofluidmultiphasemshtdyn.specs.emplace_back(parameter<std::string>(
+      "SCALEREAC_ART", {.description = "scale for coupling (artery part)", .default_value = "0"}));
 
   // functions for coupling (porofluid part)
-  Core::Utils::string_parameter("REACFUNCT_CONT", "-1", "functions for coupling (porofluid part)",
-      porofluidmultiphasemshtdyn);
+  porofluidmultiphasemshtdyn.specs.emplace_back(parameter<std::string>("REACFUNCT_CONT",
+      {.description = "functions for coupling (porofluid part)", .default_value = "-1"}));
 
   // scale for coupling (porofluid part)
-  Core::Utils::string_parameter(
-      "SCALEREAC_CONT", "0", "scale for coupling (porofluid part)", porofluidmultiphasemshtdyn);
+  porofluidmultiphasemshtdyn.specs.emplace_back(parameter<std::string>("SCALEREAC_CONT",
+      {.description = "scale for coupling (porofluid part)", .default_value = "0"}));
 
   // Flag if artery elements are evaluated in reference or current configuration
-  Core::Utils::bool_parameter("EVALUATE_IN_REF_CONFIG", true,
-      "Flag if artery elements are evaluated in reference or current configuration",
-      porofluidmultiphasemshtdyn);
+  porofluidmultiphasemshtdyn.specs.emplace_back(parameter<bool>("EVALUATE_IN_REF_CONFIG",
+      {.description = "Flag if artery elements are evaluated in reference or current configuration",
+          .default_value = true}));
 
   // Flag if 1D-3D coupling should be evaluated on lateral (cylinder) surface of embedded artery
   // elements
-  Core::Utils::bool_parameter("LATERAL_SURFACE_COUPLING", false,
-      "Flag if 1D-3D coupling should be evaluated on lateral (cylinder) surface of embedded artery "
-      "elements",
-      porofluidmultiphasemshtdyn);
+  porofluidmultiphasemshtdyn.specs.emplace_back(parameter<bool>("LATERAL_SURFACE_COUPLING",
+      {.description = "Flag if 1D-3D coupling should be evaluated on lateral (cylinder) surface of "
+                      "embedded artery elements",
+          .default_value = false}));
 
   // Number of integration patches per 1D element in axial direction for lateral surface coupling
   Core::Utils::int_parameter("NUMPATCH_AXI", 1,
@@ -235,24 +247,27 @@ void Inpar::POROFLUIDMULTIPHASE::set_valid_parameters(
       porofluidmultiphasemshtdyn);
 
   // Flag if blood vessel volume fraction should be output
-  Core::Utils::bool_parameter("OUTPUT_BLOODVESSELVOLFRAC", false,
-      "Flag if output of blood vessel volume fraction should be calculated",
-      porofluidmultiphasemshtdyn);
+  porofluidmultiphasemshtdyn.specs.emplace_back(parameter<bool>("OUTPUT_BLOODVESSELVOLFRAC",
+      {.description = "Flag if output of blood vessel volume fraction should be calculated",
+          .default_value = false}));
 
   // Flag if summary of coupling-pairs should be printed
-  Core::Utils::bool_parameter("PRINT_OUT_SUMMARY_PAIRS", false,
-      "Flag if summary of coupling-pairs should be printed", porofluidmultiphasemshtdyn);
+  porofluidmultiphasemshtdyn.specs.emplace_back(parameter<bool>("PRINT_OUT_SUMMARY_PAIRS",
+      {.description = "Flag if summary of coupling-pairs should be printed",
+          .default_value = false}));
 
   // Flag if free-hanging elements (after blood vessel collapse) should be deleted
-  Core::Utils::bool_parameter("DELETE_FREE_HANGING_ELES", false,
-      "Flag if free-hanging elements (after blood vessel collapse) should be deleted",
-      porofluidmultiphasemshtdyn);
+  porofluidmultiphasemshtdyn.specs.emplace_back(parameter<bool>("DELETE_FREE_HANGING_ELES",
+      {.description =
+              "Flag if free-hanging elements (after blood vessel collapse) should be deleted",
+          .default_value = false}));
 
   // components whose size is smaller than this fraction of the total network size are also deleted
-  Core::Utils::double_parameter("DELETE_SMALL_FREE_HANGING_COMPS", -1.0,
-      "Small connected components whose size is smaller than this fraction of the overall network "
-      "size are additionally deleted (a valid choice of this parameter should lie between 0 and 1)",
-      porofluidmultiphasemshtdyn);
+  porofluidmultiphasemshtdyn.specs.emplace_back(parameter<double>("DELETE_SMALL_FREE_HANGING_COMPS",
+      {.description = "Small connected components whose size is smaller than this fraction of the "
+                      "overall network size are additionally deleted (a valid choice of this "
+                      "parameter should lie between 0 and 1)",
+          .default_value = -1.0}));
 
   porofluidmultiphasemshtdyn.move_into_collection(list);
 }

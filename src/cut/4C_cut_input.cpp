@@ -19,6 +19,7 @@ void Cut::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using namespace FourC::Cut;
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs cut_general{"CUT GENERAL"};
 
@@ -64,15 +65,16 @@ void Cut::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
       cut_general);
 
   // Specify is Cutsides are triangulated
-  Core::Utils::bool_parameter(
-      "SPLIT_CUTSIDES", true, "Split Quad4 CutSides into Tri3-Subtriangles?", cut_general);
+  cut_general.specs.emplace_back(parameter<bool>("SPLIT_CUTSIDES",
+      {.description = "Split Quad4 CutSides into Tri3-Subtriangles?", .default_value = true}));
 
   // Do the Selfcut before standard CUT
-  Core::Utils::bool_parameter("DO_SELFCUT", true, "Do the SelfCut?", cut_general);
+  cut_general.specs.emplace_back(
+      parameter<bool>("DO_SELFCUT", {.description = "Do the SelfCut?", .default_value = true}));
 
   // Do meshcorrection in Selfcut
-  Core::Utils::bool_parameter(
-      "SELFCUT_DO_MESHCORRECTION", true, "Do meshcorrection in the SelfCut?", cut_general);
+  cut_general.specs.emplace_back(parameter<bool>("SELFCUT_DO_MESHCORRECTION",
+      {.description = "Do meshcorrection in the SelfCut?", .default_value = true}));
 
   // Selfcut meshcorrection multiplicator
   Core::Utils::int_parameter("SELFCUT_MESHCORRECTION_MULTIPLICATOR", 30,
@@ -86,8 +88,8 @@ void Cut::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
       cut_general);
 
   // Integrate inside volume cells
-  Core::Utils::bool_parameter("INTEGRATE_INSIDE_CELLS", true,
-      "Should the integration be done on inside cells", cut_general);
+  cut_general.specs.emplace_back(parameter<bool>("INTEGRATE_INSIDE_CELLS",
+      {.description = "Should the integration be done on inside cells", .default_value = true}));
 
   cut_general.move_into_collection(list);
 }

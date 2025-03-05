@@ -18,6 +18,7 @@ FOUR_C_NAMESPACE_OPEN
 void Inpar::CONSTRAINTS::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs embeddedmeshcoupling{"EMBEDDED MESH COUPLING"};
   {
@@ -46,9 +47,10 @@ void Inpar::CONSTRAINTS::set_valid_parameters(std::map<std::string, Core::IO::In
             EmbeddedMeshConstraintEnforcement::none, EmbeddedMeshConstraintEnforcement::penalty),
         embeddedmeshcoupling);
 
-    Core::Utils::double_parameter("CONSTRAINT_ENFORCEMENT_PENALTYPARAM", 0.0,
-        "Penalty parameter for the constraint enforcement in embedded mesh coupling",
-        embeddedmeshcoupling);
+    embeddedmeshcoupling.specs.emplace_back(parameter<double>("CONSTRAINT_ENFORCEMENT_PENALTYPARAM",
+        {.description =
+                "Penalty parameter for the constraint enforcement in embedded mesh coupling",
+            .default_value = 0.0}));
 
     embeddedmeshcoupling.move_into_collection(list);
   }

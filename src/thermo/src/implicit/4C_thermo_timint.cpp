@@ -656,7 +656,6 @@ void Thermo::TimInt::output_heatflux_tempgrad(bool& datawritten)
 std::shared_ptr<Core::Utils::ResultTest> Thermo::TimInt::create_field_test()
 {
   return std::make_shared<Thermo::ResultTest>(*this);
-
 }  // CreateFieldTest()
 
 

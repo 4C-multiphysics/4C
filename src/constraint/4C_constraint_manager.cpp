@@ -41,7 +41,6 @@ CONSTRAINTS::ConstrManager::ConstrManager()
       uzawaparam_(0.0),
       issetup_(false),
       isinit_(false)
-
 {
 }
 

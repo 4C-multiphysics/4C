@@ -19,7 +19,6 @@ Mat::Elastic::PAR::GeneralizedGenMax::GeneralizedGenMax(
       numbranch_(matdata.parameters.get<int>("NUMBRANCH")),
       matids_(matdata.parameters.get<std::vector<int>>("MATIDS")),
       solve_(matdata.parameters.get<std::string>("SOLVE"))
-
 {
 }
 

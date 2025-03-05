@@ -17,15 +17,18 @@ FOUR_C_NAMESPACE_OPEN
 void Inpar::PaSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs pasidyn{"PASI DYNAMIC"};
 
   // time loop control
   Core::Utils::int_parameter("RESULTSEVERY", 1, "Increment for writing solution", pasidyn);
   Core::Utils::int_parameter("RESTARTEVERY", 1, "Increment for writing restart", pasidyn);
-  Core::Utils::double_parameter("TIMESTEP", 0.01, "Time increment dt", pasidyn);
+  pasidyn.specs.emplace_back(
+      parameter<double>("TIMESTEP", {.description = "Time increment dt", .default_value = 0.01}));
   Core::Utils::int_parameter("NUMSTEP", 100, "Total number of Timesteps", pasidyn);
-  Core::Utils::double_parameter("MAXTIME", 1.0, "Total simulation time", pasidyn);
+  pasidyn.specs.emplace_back(
+      parameter<double>("MAXTIME", {.description = "Total simulation time", .default_value = 1.0}));
 
   // type of partitioned coupling
   Core::Utils::string_to_integral_parameter<PartitionedCouplingType>("COUPLING",
@@ -41,29 +44,35 @@ void Inpar::PaSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
   Core::Utils::int_parameter(
       "ITEMAX", 10, "maximum number of partitioned iterations over fields", pasidyn);
 
-  Core::Utils::double_parameter("CONVTOLSCALEDDISP", -1.0,
-      "tolerance of dof and dt scaled interface displacement increments in partitioned iterations",
-      pasidyn);
+  pasidyn.specs.emplace_back(parameter<double>(
+      "CONVTOLSCALEDDISP", {.description = "tolerance of dof and dt scaled interface displacement "
+                                           "increments in partitioned iterations",
+                               .default_value = -1.0}));
 
-  Core::Utils::double_parameter("CONVTOLRELATIVEDISP", -1.0,
-      "tolerance of relative interface displacement increments in partitioned iterations", pasidyn);
+  pasidyn.specs.emplace_back(parameter<double>("CONVTOLRELATIVEDISP",
+      {.description =
+              "tolerance of relative interface displacement increments in partitioned iterations",
+          .default_value = -1.0}));
 
-  Core::Utils::double_parameter("CONVTOLSCALEDFORCE", -1.0,
-      "tolerance of dof and dt scaled interface force increments in partitioned iterations",
-      pasidyn);
+  pasidyn.specs.emplace_back(parameter<double>("CONVTOLSCALEDFORCE",
+      {.description =
+              "tolerance of dof and dt scaled interface force increments in partitioned iterations",
+          .default_value = -1.0}));
 
-  Core::Utils::double_parameter("CONVTOLRELATIVEFORCE", -1.0,
-      "tolerance of relative interface force increments in partitioned iterations", pasidyn);
+  pasidyn.specs.emplace_back(parameter<double>("CONVTOLRELATIVEFORCE",
+      {.description = "tolerance of relative interface force increments in partitioned iterations",
+          .default_value = -1.0}));
 
-  Core::Utils::bool_parameter(
-      "IGNORE_CONV_CHECK", false, "ignore convergence check and proceed simulation", pasidyn);
+  pasidyn.specs.emplace_back(parameter<bool>("IGNORE_CONV_CHECK",
+      {.description = "ignore convergence check and proceed simulation", .default_value = false}));
 
   // parameters for relaxation
-  Core::Utils::double_parameter("STARTOMEGA", 1.0, "fixed relaxation parameter", pasidyn);
-  Core::Utils::double_parameter(
-      "MAXOMEGA", 10.0, "largest omega allowed for Aitken relaxation", pasidyn);
-  Core::Utils::double_parameter(
-      "MINOMEGA", 0.1, "smallest omega allowed for Aitken relaxation", pasidyn);
+  pasidyn.specs.emplace_back(parameter<double>(
+      "STARTOMEGA", {.description = "fixed relaxation parameter", .default_value = 1.0}));
+  pasidyn.specs.emplace_back(parameter<double>("MAXOMEGA",
+      {.description = "largest omega allowed for Aitken relaxation", .default_value = 10.0}));
+  pasidyn.specs.emplace_back(parameter<double>("MINOMEGA",
+      {.description = "smallest omega allowed for Aitken relaxation", .default_value = 0.1}));
 
   pasidyn.move_into_collection(list);
 }

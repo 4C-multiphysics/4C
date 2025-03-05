@@ -43,8 +43,7 @@ NOX::Nln::Problem::Problem(const Teuchos::RCP<NOX::Nln::GlobalData>& noxNlnGloba
       xVector_(nullptr),
       jac_(nullptr),
       precMat_(Teuchos::null)
-{
-  /* intentionally left blank */
+{ /* intentionally left blank */
 }
 
 /*----------------------------------------------------------------------------*

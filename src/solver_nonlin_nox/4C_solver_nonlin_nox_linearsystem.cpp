@@ -267,8 +267,7 @@ void NOX::Nln::LinearSystem::set_linear_problem_for_solve(Epetra_LinearProblem& 
  *----------------------------------------------------------------------*/
 void NOX::Nln::LinearSystem::complete_solution_after_solve(
     const Epetra_LinearProblem& linProblem, Core::LinAlg::Vector<double>& lhs) const
-{
-  /* nothing to do in the default case */
+{ /* nothing to do in the default case */
 }
 
 /*----------------------------------------------------------------------*

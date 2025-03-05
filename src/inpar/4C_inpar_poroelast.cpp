@@ -17,6 +17,7 @@ FOUR_C_NAMESPACE_OPEN
 void Inpar::PoroElast::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs poroelastdyn{"POROELASTICITY DYNAMIC"};
 
@@ -52,36 +53,49 @@ void Inpar::PoroElast::set_valid_parameters(std::map<std::string, Core::IO::Inpu
 
   // Time loop control
   Core::Utils::int_parameter("NUMSTEP", 200, "maximum number of Timesteps", poroelastdyn);
-  Core::Utils::double_parameter("MAXTIME", 1000.0, "total simulation time", poroelastdyn);
-  Core::Utils::double_parameter("TIMESTEP", 0.05, "time step size dt", poroelastdyn);
+  poroelastdyn.specs.emplace_back(parameter<double>(
+      "MAXTIME", {.description = "total simulation time", .default_value = 1000.0}));
+  poroelastdyn.specs.emplace_back(
+      parameter<double>("TIMESTEP", {.description = "time step size dt", .default_value = 0.05}));
   Core::Utils::int_parameter(
       "ITEMAX", 10, "maximum number of iterations over fields", poroelastdyn);
   Core::Utils::int_parameter("ITEMIN", 1, "minimal number of iterations over fields", poroelastdyn);
   Core::Utils::int_parameter("RESULTSEVERY", 1, "increment for writing solution", poroelastdyn);
 
   // Iterationparameters
-  Core::Utils::double_parameter("TOLRES_GLOBAL", 1e-8,
-      "tolerance in the residual norm for the Newton iteration", poroelastdyn);
-  Core::Utils::double_parameter("TOLINC_GLOBAL", 1e-8,
-      "tolerance in the increment norm for the Newton iteration", poroelastdyn);
-  Core::Utils::double_parameter(
-      "TOLRES_DISP", 1e-8, "tolerance in the residual norm for the Newton iteration", poroelastdyn);
-  Core::Utils::double_parameter("TOLINC_DISP", 1e-8,
-      "tolerance in the increment norm for the Newton iteration", poroelastdyn);
-  Core::Utils::double_parameter(
-      "TOLRES_PORO", 1e-8, "tolerance in the residual norm for the Newton iteration", poroelastdyn);
-  Core::Utils::double_parameter("TOLINC_PORO", 1e-8,
-      "tolerance in the increment norm for the Newton iteration", poroelastdyn);
-  Core::Utils::double_parameter(
-      "TOLRES_VEL", 1e-8, "tolerance in the residual norm for the Newton iteration", poroelastdyn);
-  Core::Utils::double_parameter(
-      "TOLINC_VEL", 1e-8, "tolerance in the increment norm for the Newton iteration", poroelastdyn);
-  Core::Utils::double_parameter(
-      "TOLRES_PRES", 1e-8, "tolerance in the residual norm for the Newton iteration", poroelastdyn);
-  Core::Utils::double_parameter("TOLINC_PRES", 1e-8,
-      "tolerance in the increment norm for the Newton iteration", poroelastdyn);
-  Core::Utils::double_parameter("TOLRES_NCOUP", 1e-8,
-      "tolerance in the residual norm for the Newton iteration", poroelastdyn);
+  poroelastdyn.specs.emplace_back(parameter<double>(
+      "TOLRES_GLOBAL", {.description = "tolerance in the residual norm for the Newton iteration",
+                           .default_value = 1e-8}));
+  poroelastdyn.specs.emplace_back(parameter<double>(
+      "TOLINC_GLOBAL", {.description = "tolerance in the increment norm for the Newton iteration",
+                           .default_value = 1e-8}));
+  poroelastdyn.specs.emplace_back(parameter<double>(
+      "TOLRES_DISP", {.description = "tolerance in the residual norm for the Newton iteration",
+                         .default_value = 1e-8}));
+  poroelastdyn.specs.emplace_back(parameter<double>(
+      "TOLINC_DISP", {.description = "tolerance in the increment norm for the Newton iteration",
+                         .default_value = 1e-8}));
+  poroelastdyn.specs.emplace_back(parameter<double>(
+      "TOLRES_PORO", {.description = "tolerance in the residual norm for the Newton iteration",
+                         .default_value = 1e-8}));
+  poroelastdyn.specs.emplace_back(parameter<double>(
+      "TOLINC_PORO", {.description = "tolerance in the increment norm for the Newton iteration",
+                         .default_value = 1e-8}));
+  poroelastdyn.specs.emplace_back(parameter<double>(
+      "TOLRES_VEL", {.description = "tolerance in the residual norm for the Newton iteration",
+                        .default_value = 1e-8}));
+  poroelastdyn.specs.emplace_back(parameter<double>(
+      "TOLINC_VEL", {.description = "tolerance in the increment norm for the Newton iteration",
+                        .default_value = 1e-8}));
+  poroelastdyn.specs.emplace_back(parameter<double>(
+      "TOLRES_PRES", {.description = "tolerance in the residual norm for the Newton iteration",
+                         .default_value = 1e-8}));
+  poroelastdyn.specs.emplace_back(parameter<double>(
+      "TOLINC_PRES", {.description = "tolerance in the increment norm for the Newton iteration",
+                         .default_value = 1e-8}));
+  poroelastdyn.specs.emplace_back(parameter<double>(
+      "TOLRES_NCOUP", {.description = "tolerance in the residual norm for the Newton iteration",
+                          .default_value = 1e-8}));
 
   Core::Utils::string_to_integral_parameter<Inpar::PoroElast::ConvNorm>("NORM_INC",
       "AbsSingleFields", "type of norm for primary variables convergence check",
@@ -112,19 +126,23 @@ void Inpar::PoroElast::set_valid_parameters(std::map<std::string, Core::IO::Inpu
       tuple<Inpar::PoroElast::VectorNorm>(norm_l1, norm_l1_scaled, norm_l2, norm_rms, norm_inf),
       poroelastdyn);
 
-  Core::Utils::bool_parameter(
-      "SECONDORDER", true, "Second order coupling at the interface.", poroelastdyn);
+  poroelastdyn.specs.emplace_back(parameter<bool>("SECONDORDER",
+      {.description = "Second order coupling at the interface.", .default_value = true}));
 
-  Core::Utils::bool_parameter("CONTIPARTINT", false,
-      "Partial integration of porosity gradient in continuity equation", poroelastdyn);
+  poroelastdyn.specs.emplace_back(parameter<bool>("CONTIPARTINT",
+      {.description = "Partial integration of porosity gradient in continuity equation",
+          .default_value = false}));
 
-  Core::Utils::bool_parameter("CONTACT_NO_PENETRATION", false,
-      "No-Penetration Condition on active contact surface in case of poro contact problem!",
-      poroelastdyn);
+  poroelastdyn.specs.emplace_back(parameter<bool>("CONTACT_NO_PENETRATION",
+      {.description =
+              "No-Penetration Condition on active contact surface in case of poro contact problem!",
+          .default_value = false}));
 
-  Core::Utils::bool_parameter("MATCHINGGRID", true, "is matching grid", poroelastdyn);
+  poroelastdyn.specs.emplace_back(
+      parameter<bool>("MATCHINGGRID", {.description = "is matching grid", .default_value = true}));
 
-  Core::Utils::bool_parameter("CONVECTIVE_TERM", false, "convective term ", poroelastdyn);
+  poroelastdyn.specs.emplace_back(parameter<bool>(
+      "CONVECTIVE_TERM", {.description = "convective term ", .default_value = false}));
 
   // number of linear solver used for poroelasticity
   Core::Utils::int_parameter("LINEAR_SOLVER", -1,

@@ -79,7 +79,7 @@ void SSI::ScatraStructureOffDiagCoupling::evaluate_off_diag_block_scatra_structu
   // create strategy for assembly of scatra-structure matrix block
   Core::FE::AssembleStrategy strategyscatrastructure(
       0,  // row assembly based on number of dofset associated with scalar transport dofs on
-      // scalar transport discretization
+          // scalar transport discretization
       1,  // column assembly based on number of dofset associated with structural dofs on scalar
       // transport discretization
       scatrastructureblock,  // scatra-structure matrix block
@@ -117,7 +117,7 @@ void SSI::ScatraManifoldStructureOffDiagCoupling::
   // create strategy for assembly of scatra-structure matrix block
   Core::FE::AssembleStrategy strategyscatrastructure(
       0,  // row assembly based on number of dofset associated with scalar transport dofs on
-      // scalar transport discretization
+          // scalar transport discretization
       1,  // column assembly based on number of dofset associated with structural dofs on scalar
       // transport discretization
       scatramanifoldstructureblock,  // scatra-structure matrix block
@@ -209,7 +209,7 @@ void SSI::ScatraStructureOffDiagCoupling::evaluate_off_diag_block_structure_scat
   // create strategy for assembly of structure-scatra matrix block
   Core::FE::AssembleStrategy strategystructurescatra(
       0,  // row assembly based on number of dofset associated with structure dofs on structural
-      // discretization
+          // discretization
       1,  // column assembly based on number of dofset associated with scalar transport dofs on
       // structural discretization
       structurescatradomain,  // structure-scatra matrix block
@@ -378,7 +378,7 @@ void SSI::ScatraStructureOffDiagCoupling::
   // create strategy for assembly of auxiliary system matrix
   Core::FE::AssembleStrategy strategyscatras2istructure(
       0,  // row assembly based on number of dofset associated with scalar transport dofs on
-      // scalar transport discretization
+          // scalar transport discretization
       1,  // column assembly based on number of dofset associated with structural dofs on
       // structural discretization
       scatra_slave_flux_structure_slave_dofs_on_scatra_slave_matrix,

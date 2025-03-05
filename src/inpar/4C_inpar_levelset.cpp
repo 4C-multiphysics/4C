@@ -17,12 +17,15 @@ FOUR_C_NAMESPACE_OPEN
 void Inpar::LevelSet::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs levelsetcontrol{"LEVEL-SET CONTROL"};
 
   Core::Utils::int_parameter("NUMSTEP", 24, "Total number of time steps", levelsetcontrol);
-  Core::Utils::double_parameter("TIMESTEP", 0.1, "Time increment dt", levelsetcontrol);
-  Core::Utils::double_parameter("MAXTIME", 1000.0, "Total simulation time", levelsetcontrol);
+  levelsetcontrol.specs.emplace_back(
+      parameter<double>("TIMESTEP", {.description = "Time increment dt", .default_value = 0.1}));
+  levelsetcontrol.specs.emplace_back(parameter<double>(
+      "MAXTIME", {.description = "Total simulation time", .default_value = 1000.0}));
   Core::Utils::int_parameter("RESULTSEVERY", 1, "Increment for writing solution", levelsetcontrol);
   Core::Utils::int_parameter("RESTARTEVERY", 1, "Increment for writing restart", levelsetcontrol);
 
@@ -32,10 +35,10 @@ void Inpar::LevelSet::set_valid_parameters(std::map<std::string, Core::IO::Input
           Inpar::ScaTra::calcerror_no_ls, Inpar::ScaTra::calcerror_initial_field),
       levelsetcontrol);
 
-  Core::Utils::bool_parameter("EXTRACT_INTERFACE_VEL", false,
-      "replace computed velocity at nodes of given distance of interface by approximated interface "
-      "velocity",
-      levelsetcontrol);
+  levelsetcontrol.specs.emplace_back(parameter<bool>("EXTRACT_INTERFACE_VEL",
+      {.description = "replace computed velocity at nodes of given distance of interface by "
+                      "approximated interface velocity",
+          .default_value = false}));
   Core::Utils::int_parameter("NUM_CONVEL_LAYERS", -1,
       "number of layers around the interface which keep their computed convective velocity",
       levelsetcontrol);
@@ -54,25 +57,29 @@ void Inpar::LevelSet::set_valid_parameters(std::map<std::string, Core::IO::Input
           Inpar::ScaTra::reinitaction_ellipticeq),
       ls_reinit);
 
-  Core::Utils::bool_parameter("REINIT_INITIAL", false,
-      "Has level set field to be reinitialized before first time step?", ls_reinit);
+  ls_reinit.specs.emplace_back(parameter<bool>("REINIT_INITIAL",
+      {.description = "Has level set field to be reinitialized before first time step?",
+          .default_value = false}));
   Core::Utils::int_parameter("REINITINTERVAL", 1, "reinitialization interval", ls_reinit);
 
   // parameters for signed distance reinitialization
-  Core::Utils::bool_parameter("REINITBAND", false,
-      "reinitialization only within a band around the interface, or entire domain?", ls_reinit);
-  Core::Utils::double_parameter("REINITBANDWIDTH", 1.0,
-      "level-set value defining band width for reinitialization", ls_reinit);
+  ls_reinit.specs.emplace_back(parameter<bool>("REINITBAND",
+      {.description = "reinitialization only within a band around the interface, or entire domain?",
+          .default_value = false}));
+  ls_reinit.specs.emplace_back(parameter<double>(
+      "REINITBANDWIDTH", {.description = "level-set value defining band width for reinitialization",
+                             .default_value = 1.0}));
 
   // parameters for reinitialization equation
   Core::Utils::int_parameter(
       "NUMSTEPSREINIT", 1, "(maximal) number of pseudo-time steps", ls_reinit);
-  Core::Utils::double_parameter("TIMESTEPREINIT", 1.0,
-      "pseudo-time step length (usually a * characteristic element length of discretization with "
-      "a>0)",
-      ls_reinit);
-  Core::Utils::double_parameter(
-      "THETAREINIT", 1.0, "theta for time discretization of reinitialization equation", ls_reinit);
+  ls_reinit.specs.emplace_back(parameter<double>(
+      "TIMESTEPREINIT", {.description = "pseudo-time step length (usually a * characteristic "
+                                        "element length of discretization with a>0)",
+                            .default_value = 1.0}));
+  ls_reinit.specs.emplace_back(parameter<double>(
+      "THETAREINIT", {.description = "theta for time discretization of reinitialization equation",
+                         .default_value = 1.0}));
   Core::Utils::string_to_integral_parameter<Inpar::ScaTra::StabType>("STABTYPEREINIT", "SUPG",
       "Type of stabilization (if any). No stabilization is only reasonable for low-Peclet-number.",
       tuple<std::string>("no_stabilization", "SUPG", "GLS", "USFEM"),
@@ -128,8 +135,9 @@ void Inpar::LevelSet::set_valid_parameters(std::map<std::string, Core::IO::Input
       tuple<Inpar::ScaTra::CharEleLengthReinit>(
           Inpar::ScaTra::root_of_volume_reinit, Inpar::ScaTra::streamlength_reinit),
       ls_reinit);
-  Core::Utils::double_parameter("INTERFACE_THICKNESS", 1.0,
-      "factor for interface thickness (multiplied by element length)", ls_reinit);
+  ls_reinit.specs.emplace_back(parameter<double>("INTERFACE_THICKNESS",
+      {.description = "factor for interface thickness (multiplied by element length)",
+          .default_value = 1.0}));
   Core::Utils::string_to_integral_parameter<Inpar::ScaTra::VelReinit>("VELREINIT",
       "integration_point_based",
       "evaluate velocity at integration point or compute node-based velocity",
@@ -142,18 +150,20 @@ void Inpar::LevelSet::set_valid_parameters(std::map<std::string, Core::IO::Input
       tuple<std::string>("newton", "fixed_point"),
       tuple<Inpar::ScaTra::LinReinit>(Inpar::ScaTra::newton, Inpar::ScaTra::fixed_point),
       ls_reinit);
-  Core::Utils::bool_parameter("CORRECTOR_STEP", true,
-      "correction of interface position via volume constraint according to Sussman & Fatemi",
-      ls_reinit);
-  Core::Utils::double_parameter("CONVTOL_REINIT", -1.0,
-      "tolerance for convergence check according to Sussman et al. 1994 (turned off negative)",
-      ls_reinit);
+  ls_reinit.specs.emplace_back(parameter<bool>(
+      "CORRECTOR_STEP", {.description = "correction of interface position via volume constraint "
+                                        "according to Sussman & Fatemi",
+                            .default_value = true}));
+  ls_reinit.specs.emplace_back(parameter<double>(
+      "CONVTOL_REINIT", {.description = "tolerance for convergence check according to Sussman et "
+                                        "al. 1994 (turned off negative)",
+                            .default_value = -1.0}));
 
-  Core::Utils::bool_parameter(
-      "REINITVOLCORRECTION", false, "volume correction after reinitialization", ls_reinit);
+  ls_reinit.specs.emplace_back(parameter<bool>("REINITVOLCORRECTION",
+      {.description = "volume correction after reinitialization", .default_value = false}));
 
-  Core::Utils::double_parameter(
-      "PENALTY_PARA", -1.0, "penalty parameter for elliptic reinitialization", ls_reinit);
+  ls_reinit.specs.emplace_back(parameter<double>("PENALTY_PARA",
+      {.description = "penalty parameter for elliptic reinitialization", .default_value = -1.0}));
 
   Core::Utils::string_to_integral_parameter<Inpar::ScaTra::LSDim>("DIMENSION", "3D",
       "number of space dimensions for handling of quasi-2D problems with 3D elements",
@@ -162,12 +172,13 @@ void Inpar::LevelSet::set_valid_parameters(std::map<std::string, Core::IO::Input
           Inpar::ScaTra::ls_2Dy, Inpar::ScaTra::ls_2Dz),
       ls_reinit);
 
-  Core::Utils::bool_parameter(
-      "PROJECTION", true, "use L2-projection for grad phi and related quantities", ls_reinit);
-  Core::Utils::double_parameter(
-      "PROJECTION_DIFF", 0.0, "use diffusive term for L2-projection", ls_reinit);
-  Core::Utils::bool_parameter(
-      "LUMPING", false, "use lumped mass matrix for L2-projection", ls_reinit);
+  ls_reinit.specs.emplace_back(parameter<bool>(
+      "PROJECTION", {.description = "use L2-projection for grad phi and related quantities",
+                        .default_value = true}));
+  ls_reinit.specs.emplace_back(parameter<double>("PROJECTION_DIFF",
+      {.description = "use diffusive term for L2-projection", .default_value = 0.0}));
+  ls_reinit.specs.emplace_back(parameter<bool>("LUMPING",
+      {.description = "use lumped mass matrix for L2-projection", .default_value = false}));
 
   Core::Utils::string_to_integral_parameter<Inpar::ScaTra::DiffFunc>("DIFF_FUNC", "hyperbolic",
       "function for diffusivity",

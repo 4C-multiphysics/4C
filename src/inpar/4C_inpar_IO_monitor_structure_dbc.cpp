@@ -23,6 +23,7 @@ namespace Inpar
     void set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
     {
       using Teuchos::tuple;
+      using namespace Core::IO::InputSpecBuilders;
 
       // related sublist
       Core::Utils::SectionSpecs sublist_IO{"IO"};
@@ -53,9 +54,9 @@ namespace Inpar
           sublist_IO_monitor_structure_dbc);
 
       // whether to write output in every iteration of the nonlinear solver
-      Core::Utils::bool_parameter("WRITE_HEADER", false,
-          "write information about monitored boundary condition to output file",
-          sublist_IO_monitor_structure_dbc);
+      sublist_IO_monitor_structure_dbc.specs.emplace_back(parameter<bool>("WRITE_HEADER",
+          {.description = "write information about monitored boundary condition to output file",
+              .default_value = false}));
 
       sublist_IO_monitor_structure_dbc.move_into_collection(list);
     }

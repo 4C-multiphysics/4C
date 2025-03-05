@@ -17,26 +17,33 @@ FOUR_C_NAMESPACE_OPEN
 void Inpar::IO::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs io{"IO"};
 
-  Core::Utils::bool_parameter("OUTPUT_GMSH", false, "", io);
-  Core::Utils::bool_parameter("OUTPUT_ROT", false, "", io);
-  Core::Utils::bool_parameter("OUTPUT_SPRING", false, "", io);
-  Core::Utils::bool_parameter("OUTPUT_BIN", true, "Do you want to have binary output?", io);
+  io.specs.emplace_back(
+      parameter<bool>("OUTPUT_GMSH", {.description = "", .default_value = false}));
+  io.specs.emplace_back(parameter<bool>("OUTPUT_ROT", {.description = "", .default_value = false}));
+  io.specs.emplace_back(
+      parameter<bool>("OUTPUT_SPRING", {.description = "", .default_value = false}));
+  io.specs.emplace_back(parameter<bool>(
+      "OUTPUT_BIN", {.description = "Do you want to have binary output?", .default_value = true}));
 
   // Output every iteration (for debugging purposes)
-  Core::Utils::bool_parameter("OUTPUT_EVERY_ITER", false,
-      "Do you desire structural displ. output every Newton iteration", io);
+  io.specs.emplace_back(parameter<bool>("OUTPUT_EVERY_ITER",
+      {.description = "Do you desire structural displ. output every Newton iteration",
+          .default_value = false}));
   Core::Utils::int_parameter(
       "OEI_FILE_COUNTER", 0, "Add an output name affix by introducing a additional number", io);
 
-  Core::Utils::bool_parameter(
-      "ELEMENT_MAT_ID", false, "Output of the material id of each element", io);
+  io.specs.emplace_back(parameter<bool>("ELEMENT_MAT_ID",
+      {.description = "Output of the material id of each element", .default_value = false}));
 
   // Structural output
-  Core::Utils::bool_parameter("STRUCT_ELE", true, "Output of element properties", io);
-  Core::Utils::bool_parameter("STRUCT_DISP", true, "Output of displacements", io);
+  io.specs.emplace_back(parameter<bool>(
+      "STRUCT_ELE", {.description = "Output of element properties", .default_value = true}));
+  io.specs.emplace_back(parameter<bool>(
+      "STRUCT_DISP", {.description = "Output of displacements", .default_value = true}));
   Core::Utils::string_to_integral_parameter<Inpar::Solid::StressType>("STRUCT_STRESS", "No",
       "Output of stress",
       tuple<std::string>("No", "no", "NO", "Yes", "yes", "YES", "Cauchy", "cauchy", "2PK", "2pk"),
@@ -79,8 +86,10 @@ void Inpar::IO::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>&
           Inpar::Solid::optquantity_none, Inpar::Solid::optquantity_none,
           Inpar::Solid::optquantity_membranethickness),
       io);
-  Core::Utils::bool_parameter("STRUCT_SURFACTANT", false, "", io);
-  Core::Utils::bool_parameter("STRUCT_JACOBIAN_MATLAB", false, "", io);
+  io.specs.emplace_back(
+      parameter<bool>("STRUCT_SURFACTANT", {.description = "", .default_value = false}));
+  io.specs.emplace_back(
+      parameter<bool>("STRUCT_JACOBIAN_MATLAB", {.description = "", .default_value = false}));
   Core::Utils::string_to_integral_parameter<Inpar::Solid::ConditionNumber>(
       "STRUCT_CONDITION_NUMBER", "none",
       "Compute the condition number of the structural system matrix and write it to a text file.",
@@ -89,11 +98,16 @@ void Inpar::IO::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>&
           Inpar::Solid::ConditionNumber::max_min_ev_ratio, Inpar::Solid::ConditionNumber::one_norm,
           Inpar::Solid::ConditionNumber::inf_norm, Inpar::Solid::ConditionNumber::none),
       io);
-  Core::Utils::bool_parameter("FLUID_STRESS", false, "", io);
-  Core::Utils::bool_parameter("FLUID_WALL_SHEAR_STRESS", false, "", io);
-  Core::Utils::bool_parameter("FLUID_ELEDATA_EVERY_STEP", false, "", io);
-  Core::Utils::bool_parameter("FLUID_NODEDATA_FIRST_STEP", false, "", io);
-  Core::Utils::bool_parameter("THERM_TEMPERATURE", false, "", io);
+  io.specs.emplace_back(
+      parameter<bool>("FLUID_STRESS", {.description = "", .default_value = false}));
+  io.specs.emplace_back(
+      parameter<bool>("FLUID_WALL_SHEAR_STRESS", {.description = "", .default_value = false}));
+  io.specs.emplace_back(
+      parameter<bool>("FLUID_ELEDATA_EVERY_STEP", {.description = "", .default_value = false}));
+  io.specs.emplace_back(
+      parameter<bool>("FLUID_NODEDATA_FIRST_STEP", {.description = "", .default_value = false}));
+  io.specs.emplace_back(
+      parameter<bool>("THERM_TEMPERATURE", {.description = "", .default_value = false}));
   Core::Utils::string_to_integral_parameter<Thermo::HeatFluxType>("THERM_HEATFLUX", "None", "",
       tuple<std::string>("None", "No", "NO", "no", "Current", "Initial"),
       tuple<Thermo::HeatFluxType>(Thermo::heatflux_none, Thermo::heatflux_none,
@@ -111,18 +125,20 @@ void Inpar::IO::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>&
       "FILESTEPS", 1000, "Amount of timesteps written to a single result file", io);
   Core::Utils::int_parameter("STDOUTEVERY", 1, "Print to screen every n step", io);
 
-  Core::Utils::bool_parameter("WRITE_TO_SCREEN", true, "Write screen output", io);
-  Core::Utils::bool_parameter("WRITE_TO_FILE", false, "Write the output into a file", io);
+  io.specs.emplace_back(parameter<bool>(
+      "WRITE_TO_SCREEN", {.description = "Write screen output", .default_value = true}));
+  io.specs.emplace_back(parameter<bool>(
+      "WRITE_TO_FILE", {.description = "Write the output into a file", .default_value = false}));
 
-  Core::Utils::bool_parameter(
-      "WRITE_INITIAL_STATE", true, "Do you want to write output for initial state ?", io);
-  Core::Utils::bool_parameter("WRITE_FINAL_STATE", false,
-      "Enforce to write output/restart data at the final state regardless of the other "
-      "output/restart intervals",
-      io);
+  io.specs.emplace_back(parameter<bool>("WRITE_INITIAL_STATE",
+      {.description = "Do you want to write output for initial state ?", .default_value = true}));
+  io.specs.emplace_back(parameter<bool>(
+      "WRITE_FINAL_STATE", {.description = "Enforce to write output/restart data at the final "
+                                           "state regardless of the other output/restart intervals",
+                               .default_value = false}));
 
-  Core::Utils::bool_parameter(
-      "PREFIX_GROUP_ID", false, "Put a <GroupID>: in front of every line", io);
+  io.specs.emplace_back(parameter<bool>("PREFIX_GROUP_ID",
+      {.description = "Put a <GroupID>: in front of every line", .default_value = false}));
   Core::Utils::int_parameter(
       "LIMIT_OUTP_TO_PROC", -1, "Only the specified procs will write output", io);
   Core::Utils::string_to_integral_parameter<FourC::Core::IO::Verbositylevel>("VERBOSITY", "verbose",
@@ -134,8 +150,10 @@ void Inpar::IO::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>&
           FourC::Core::IO::verbose, FourC::Core::IO::debug, FourC::Core::IO::debug),
       io);
 
-  Core::Utils::double_parameter("RESTARTWALLTIMEINTERVAL", -1.0,
-      "Enforce restart after this walltime interval (in seconds), smaller zero to disable", io);
+  io.specs.emplace_back(parameter<double>("RESTARTWALLTIMEINTERVAL",
+      {.description =
+              "Enforce restart after this walltime interval (in seconds), smaller zero to disable",
+          .default_value = -1.0}));
   Core::Utils::int_parameter("RESTARTEVERY", -1, "write restart every RESTARTEVERY steps", io);
 
   io.move_into_collection(list);
@@ -144,8 +162,8 @@ void Inpar::IO::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>&
   Core::Utils::SectionSpecs io_every_iter{io, "EVERY ITERATION"};
 
   // Output every iteration (for debugging purposes)
-  Core::Utils::bool_parameter(
-      "OUTPUT_EVERY_ITER", false, "Do you wish output every Newton iteration?", io_every_iter);
+  io_every_iter.specs.emplace_back(parameter<bool>("OUTPUT_EVERY_ITER",
+      {.description = "Do you wish output every Newton iteration?", .default_value = false}));
 
   Core::Utils::int_parameter("RUN_NUMBER", -1,
       "Create a new folder for different runs of the same simulation. "
@@ -158,11 +176,10 @@ void Inpar::IO::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>&
       "be written.",
       io_every_iter);
 
-  Core::Utils::bool_parameter("WRITE_OWNER_EACH_NEWTON_ITER", false,
-      "If yes, the ownership "
-      "of elements and nodes are written each Newton step, instead of only once"
-      "per time/load step.",
-      io_every_iter);
+  io_every_iter.specs.emplace_back(parameter<bool>("WRITE_OWNER_EACH_NEWTON_ITER",
+      {.description = "If yes, the ownership of elements and nodes are written each Newton step, "
+                      "instead of only once per time/load step.",
+          .default_value = false}));
 
   io_every_iter.move_into_collection(list);
 }

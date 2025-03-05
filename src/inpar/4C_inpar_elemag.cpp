@@ -17,14 +17,18 @@ FOUR_C_NAMESPACE_OPEN
 void Inpar::EleMag::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs electromagneticdyn{"ELECTROMAGNETIC DYNAMIC"};
 
   // general settings for time-integration scheme
-  Core::Utils::double_parameter("TIMESTEP", 0.01, "Time-step length dt", electromagneticdyn);
-  Core::Utils::double_parameter("TAU", 1, "Stabilization parameter", electromagneticdyn);
+  electromagneticdyn.specs.emplace_back(
+      parameter<double>("TIMESTEP", {.description = "Time-step length dt", .default_value = 0.01}));
+  electromagneticdyn.specs.emplace_back(
+      parameter<double>("TAU", {.description = "Stabilization parameter", .default_value = 1.0}));
   Core::Utils::int_parameter("NUMSTEP", 100, "Number of time steps", electromagneticdyn);
-  Core::Utils::double_parameter("MAXTIME", 1.0, "Total simulation time", electromagneticdyn);
+  electromagneticdyn.specs.emplace_back(
+      parameter<double>("MAXTIME", {.description = "Total simulation time", .default_value = 1.0}));
 
   // additional parameters
   Core::Utils::int_parameter(
@@ -80,12 +84,12 @@ void Inpar::EleMag::set_valid_parameters(std::map<std::string, Core::IO::InputSp
         "zero_field", "Initial field for ele problem", name, label, electromagneticdyn);
 
     // Error calculation
-    Core::Utils::bool_parameter(
-        "CALCERR", false, "Calc the error wrt ERRORFUNCNO?", electromagneticdyn);
+    electromagneticdyn.specs.emplace_back(parameter<bool>(
+        "CALCERR", {.description = "Calc the error wrt ERRORFUNCNO?", .default_value = false}));
 
     // Post process solution?
-    Core::Utils::bool_parameter(
-        "POSTPROCESS", false, "Postprocess solution? (very slow)", electromagneticdyn);
+    electromagneticdyn.specs.emplace_back(parameter<bool>("POSTPROCESS",
+        {.description = "Postprocess solution? (very slow)", .default_value = false}));
   }
 
   Core::Utils::int_parameter(

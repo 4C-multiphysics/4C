@@ -85,8 +85,7 @@ Mortar::InterfaceDataContainer::InterfaceDataContainer()
       porotype_(Inpar::Mortar::other),
       ehl_(false),
       isinit_(false)
-{
-  /* empty */
+{ /* empty */
 }
 
 /*----------------------------------------------------------------------------*

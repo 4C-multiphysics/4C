@@ -20,25 +20,30 @@ FOUR_C_NAMESPACE_OPEN
 void Inpar::SSTI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs sstidyn{"SSTI CONTROL"};
 
-  Core::Utils::double_parameter(
-      "RESTARTEVERYTIME", 0, "write restart possibility every RESTARTEVERY steps", sstidyn);
+  sstidyn.specs.emplace_back(parameter<double>("RESTARTEVERYTIME",
+      {.description = "write restart possibility every RESTARTEVERY steps", .default_value = 0.0}));
   Core::Utils::int_parameter(
       "RESTARTEVERY", 1, "write restart possibility every RESTARTEVERY steps", sstidyn);
   Core::Utils::int_parameter("NUMSTEP", 200, "maximum number of Timesteps", sstidyn);
-  Core::Utils::double_parameter("MAXTIME", 1000.0, "total simulation time", sstidyn);
-  Core::Utils::double_parameter("TIMESTEP", -1, "time step size dt", sstidyn);
-  Core::Utils::double_parameter("RESULTSEVERYTIME", 0, "increment for writing solution", sstidyn);
+  sstidyn.specs.emplace_back(parameter<double>(
+      "MAXTIME", {.description = "total simulation time", .default_value = 1000.0}));
+  sstidyn.specs.emplace_back(
+      parameter<double>("TIMESTEP", {.description = "time step size dt", .default_value = -1.0}));
+  sstidyn.specs.emplace_back(parameter<double>(
+      "RESULTSEVERYTIME", {.description = "increment for writing solution", .default_value = 0.0}));
   Core::Utils::int_parameter("RESULTSEVERY", 1, "increment for writing solution", sstidyn);
   Core::Utils::int_parameter("ITEMAX", 10, "maximum number of iterations over fields", sstidyn);
-  Core::Utils::bool_parameter("SCATRA_FROM_RESTART_FILE", false,
-      "read scatra result from restart files (use option 'restartfromfile' during execution of "
-      "4C)",
-      sstidyn);
-  Core::Utils::string_parameter(
-      "SCATRA_FILENAME", "nil", "Control-file name for reading scatra results in SSTI", sstidyn);
+  sstidyn.specs.emplace_back(parameter<bool>("SCATRA_FROM_RESTART_FILE",
+      {.description = "read scatra result from restart files (use option 'restartfromfile' during "
+                      "execution of 4C)",
+          .default_value = false}));
+  sstidyn.specs.emplace_back(parameter<std::string>(
+      "SCATRA_FILENAME", {.description = "Control-file name for reading scatra results in SSTI",
+                             .default_value = "nil"}));
   Core::Utils::string_to_integral_parameter<SolutionScheme>("COUPALGO", "ssti_Monolithic",
       "Coupling strategies for SSTI solvers", tuple<std::string>("ssti_Monolithic"),
       tuple<Inpar::SSTI::SolutionScheme>(SolutionScheme::monolithic), sstidyn);
@@ -46,8 +51,8 @@ void Inpar::SSTI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
       "scalar transport time integration type is needed to instantiate correct scalar transport "
       "time integration scheme for ssi problems",
       tuple<std::string>("Elch"), tuple<ScaTraTimIntType>(ScaTraTimIntType::elch), sstidyn);
-  Core::Utils::bool_parameter(
-      "ADAPTIVE_TIMESTEPPING", false, "flag for adaptive time stepping", sstidyn);
+  sstidyn.specs.emplace_back(parameter<bool>("ADAPTIVE_TIMESTEPPING",
+      {.description = "flag for adaptive time stepping", .default_value = false}));
 
   sstidyn.move_into_collection(list);
 
@@ -55,12 +60,14 @@ void Inpar::SSTI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
   /* parameters for monolithic SSTI                                       */
   /*----------------------------------------------------------------------*/
   Core::Utils::SectionSpecs sstidynmono{sstidyn, "MONOLITHIC"};
-  Core::Utils::double_parameter("ABSTOLRES", 1.0e-14,
-      "absolute tolerance for deciding if global residual of nonlinear problem is already zero",
-      sstidynmono);
-  Core::Utils::double_parameter("CONVTOL", 1.0e-6,
-      "tolerance for convergence check of Newton-Raphson iteration within monolithic SSI",
-      sstidynmono);
+  sstidynmono.specs.emplace_back(parameter<double>(
+      "ABSTOLRES", {.description = "absolute tolerance for deciding if global residual of "
+                                   "nonlinear problem is already zero",
+                       .default_value = 1.0e-14}));
+  sstidynmono.specs.emplace_back(parameter<double>("CONVTOL",
+      {.description =
+              "tolerance for convergence check of Newton-Raphson iteration within monolithic SSI",
+          .default_value = 1.0e-6}));
   Core::Utils::int_parameter(
       "LINEAR_SOLVER", -1, "ID of linear solver for global system of equations", sstidynmono);
   Core::Utils::string_to_integral_parameter<Core::LinAlg::MatrixType>("MATRIXTYPE", "undefined",
@@ -110,9 +117,10 @@ void Inpar::SSTI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
           Core::LinAlg::EquilibrationMethod::rowsandcolumns_maindiag,
           Core::LinAlg::EquilibrationMethod::symmetry),
       sstidynmono);
-  Core::Utils::bool_parameter("EQUILIBRATION_INIT_SCATRA", false,
-      "use equilibration method of ScaTra to equilibrate initial calculation of potential",
-      sstidynmono);
+  sstidynmono.specs.emplace_back(parameter<bool>("EQUILIBRATION_INIT_SCATRA",
+      {.description =
+              "use equilibration method of ScaTra to equilibrate initial calculation of potential",
+          .default_value = false}));
 
   sstidynmono.move_into_collection(list);
 

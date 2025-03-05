@@ -25,6 +25,7 @@ namespace Inpar
       void set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
       {
         using Teuchos::tuple;
+        using namespace Core::IO::InputSpecBuilders;
 
         // related sublist
         Core::Utils::SectionSpecs sublist_IO{"IO"};
@@ -32,45 +33,45 @@ namespace Inpar
         Core::Utils::SectionSpecs sublist_IO_VTK_structure{sublist_IO_VTK, "STRUCTURE"};
 
         // whether to write output for structure
-        Core::Utils::bool_parameter(
-            "OUTPUT_STRUCTURE", false, "write structure output", sublist_IO_VTK_structure);
+        sublist_IO_VTK_structure.specs.emplace_back(parameter<bool>(
+            "OUTPUT_STRUCTURE", {.description = "write structure output", .default_value = false}));
 
         // whether to write displacement state
-        Core::Utils::bool_parameter(
-            "DISPLACEMENT", false, "write displacement output", sublist_IO_VTK_structure);
+        sublist_IO_VTK_structure.specs.emplace_back(parameter<bool>(
+            "DISPLACEMENT", {.description = "write displacement output", .default_value = false}));
 
         // whether to write velocity state
-        Core::Utils::bool_parameter(
-            "VELOCITY", false, "write velocity output", sublist_IO_VTK_structure);
+        sublist_IO_VTK_structure.specs.emplace_back(parameter<bool>(
+            "VELOCITY", {.description = "write velocity output", .default_value = false}));
 
-        Core::Utils::bool_parameter(
-            "ACCELERATION", false, "write acceleration output", sublist_IO_VTK_structure);
+        sublist_IO_VTK_structure.specs.emplace_back(parameter<bool>(
+            "ACCELERATION", {.description = "write acceleration output", .default_value = false}));
 
         // whether to write element owner
-        Core::Utils::bool_parameter(
-            "ELEMENT_OWNER", false, "write element owner", sublist_IO_VTK_structure);
+        sublist_IO_VTK_structure.specs.emplace_back(parameter<bool>(
+            "ELEMENT_OWNER", {.description = "write element owner", .default_value = false}));
 
         // whether to write element GIDs
-        Core::Utils::bool_parameter(
-            "ELEMENT_GID", false, "write 4C internal element GIDs", sublist_IO_VTK_structure);
+        sublist_IO_VTK_structure.specs.emplace_back(parameter<bool>("ELEMENT_GID",
+            {.description = "write 4C internal element GIDs", .default_value = false}));
 
         // write element ghosting information
-        Core::Utils::bool_parameter("ELEMENT_GHOSTING", false,
-            "write which processors ghost the elements", sublist_IO_VTK_structure);
+        sublist_IO_VTK_structure.specs.emplace_back(parameter<bool>("ELEMENT_GHOSTING",
+            {.description = "write which processors ghost the elements", .default_value = false}));
 
         // whether to write node GIDs
-        Core::Utils::bool_parameter(
-            "NODE_GID", false, "write 4C internal node GIDs", sublist_IO_VTK_structure);
+        sublist_IO_VTK_structure.specs.emplace_back(parameter<bool>(
+            "NODE_GID", {.description = "write 4C internal node GIDs", .default_value = false}));
 
         // write element material IDs
-        Core::Utils::bool_parameter("ELEMENT_MAT_ID", false,
-            "Output of the material id of each element", sublist_IO_VTK_structure);
+        sublist_IO_VTK_structure.specs.emplace_back(parameter<bool>("ELEMENT_MAT_ID",
+            {.description = "Output of the material id of each element", .default_value = false}));
 
         // whether to write stress and / or strain data
-        Core::Utils::bool_parameter("STRESS_STRAIN", false,
-            "Write element stress and / or strain  data. The type of stress / strain has to be "
-            "selected in the --IO input section",
-            sublist_IO_VTK_structure);
+        sublist_IO_VTK_structure.specs.emplace_back(parameter<bool>("STRESS_STRAIN",
+            {.description = "Write element stress and / or strain  data. The type of stress / "
+                            "strain has to be selected in the --IO input section",
+                .default_value = false}));
 
         // mode to write gauss point data
         Core::Utils::string_to_integral_parameter<Inpar::Solid::GaussPointDataOutputType>(

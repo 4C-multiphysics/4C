@@ -17,6 +17,7 @@ FOUR_C_NAMESPACE_OPEN
 // set the mpc specific parameters
 void Inpar::RveMpc::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
+  using namespace Core::IO::InputSpecBuilders;
   Core::Utils::SectionSpecs mpc{"MULTI POINT CONSTRAINTS"};
 
   Core::Utils::string_to_integral_parameter<Inpar::RveMpc::RveReferenceDeformationDefinition>(
@@ -29,7 +30,8 @@ void Inpar::RveMpc::set_valid_parameters(std::map<std::string, Core::IO::InputSp
       Teuchos::tuple<std::string>("penalty_method", "lagrange_multiplier_method"),
       Teuchos::tuple<Inpar::RveMpc::EnforcementStrategy>(penalty, lagrangeMultiplier), mpc);
 
-  Core::Utils::double_parameter("PENALTY_PARAM", 1e5, "Value of the penalty parameter", mpc);
+  mpc.specs.emplace_back(parameter<double>(
+      "PENALTY_PARAM", {.description = "Value of the penalty parameter", .default_value = 1e5}));
 
   mpc.move_into_collection(list);
 }

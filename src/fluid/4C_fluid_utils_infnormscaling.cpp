@@ -109,8 +109,9 @@ void FLD::Utils::FluidInfNormScaling::scale_system(
 
     if (A11->LeftScale(*prowsum_) or
         //      A->RightScale(*pcolsum_) or
-        mat.matrix(1, 0).epetra_matrix()->LeftScale(*prowsum_)  // or
-        // mat.Matrix(0,1).EpetraMatrix()->RightScale(*pcolsum_)
+        mat.matrix(1, 0).epetra_matrix()->LeftScale(
+            *prowsum_)  // or
+                        // mat.Matrix(0,1).EpetraMatrix()->RightScale(*pcolsum_)
     )
       FOUR_C_THROW("fluid scaling failed");
 

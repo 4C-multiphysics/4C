@@ -17,6 +17,7 @@ FOUR_C_NAMESPACE_OPEN
 void Thermo::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs tdyn{"THERMAL DYNAMIC"};
 
@@ -41,20 +42,24 @@ void Thermo::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& li
   Core::Utils::int_parameter("INITFUNCNO", -1, "function number for thermal initial field", tdyn);
 
   // Time loop control
-  Core::Utils::double_parameter("TIMESTEP", 0.05, "time step size", tdyn);
+  tdyn.specs.emplace_back(
+      parameter<double>("TIMESTEP", {.description = "time step size", .default_value = 0.05}));
   Core::Utils::int_parameter("NUMSTEP", 200, "maximum number of steps", tdyn);
-  Core::Utils::double_parameter("MAXTIME", 5.0, "maximum time", tdyn);
+  tdyn.specs.emplace_back(
+      parameter<double>("MAXTIME", {.description = "maximum time", .default_value = 5.0}));
 
   // Iterationparameters
-  Core::Utils::double_parameter(
-      "TOLTEMP", 1.0E-10, "tolerance in the temperature norm of the Newton iteration", tdyn);
+  tdyn.specs.emplace_back(parameter<double>(
+      "TOLTEMP", {.description = "tolerance in the temperature norm of the Newton iteration",
+                     .default_value = 1.0E-10}));
 
   Core::Utils::string_to_integral_parameter<ConvNorm>("NORM_TEMP", "Abs",
       "type of norm for temperature convergence check", tuple<std::string>("Abs", "Rel", "Mix"),
       tuple<ConvNorm>(convnorm_abs, convnorm_rel, convnorm_mix), tdyn);
 
-  Core::Utils::double_parameter(
-      "TOLRES", 1.0E-08, "tolerance in the residual norm for the Newton iteration", tdyn);
+  tdyn.specs.emplace_back(parameter<double>(
+      "TOLRES", {.description = "tolerance in the residual norm for the Newton iteration",
+                    .default_value = 1.0E-08}));
 
   Core::Utils::string_to_integral_parameter<ConvNorm>("NORM_RESF", "Abs",
       "type of norm for residual convergence check", tuple<std::string>("Abs", "Rel", "Mix"),
@@ -94,15 +99,18 @@ void Thermo::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& li
       tuple<PredEnum>(pred_vague, pred_consttemp, pred_consttemprate, pred_tangtemp), tdyn);
 
   // convergence criteria solver adaptivity
-  Core::Utils::bool_parameter("ADAPTCONV", false,
-      "Switch on adaptive control of linear solver tolerance for nonlinear solution", tdyn);
-  Core::Utils::double_parameter("ADAPTCONV_BETTER", 0.1,
-      "The linear solver shall be this much better than the current nonlinear residual in the "
-      "nonlinear convergence limit",
-      tdyn);
+  tdyn.specs.emplace_back(parameter<bool>("ADAPTCONV",
+      {.description =
+              "Switch on adaptive control of linear solver tolerance for nonlinear solution",
+          .default_value = false}));
+  tdyn.specs.emplace_back(parameter<double>("ADAPTCONV_BETTER",
+      {.description = "The linear solver shall be this much better than the current nonlinear "
+                      "residual in the nonlinear convergence limit",
+          .default_value = 0.1}));
 
-  Core::Utils::bool_parameter(
-      "LUMPCAPA", false, "Lump the capacity matrix for explicit time integration", tdyn);
+  tdyn.specs.emplace_back(parameter<bool>(
+      "LUMPCAPA", {.description = "Lump the capacity matrix for explicit time integration",
+                      .default_value = false}));
 
   // number of linear solver used for thermal problems
   Core::Utils::int_parameter(
@@ -131,10 +139,14 @@ void Thermo::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& li
       tuple<MidAverageEnum>(midavg_vague, midavg_imrlike, midavg_trlike), tgenalpha);
 
   // default values correspond to midpoint-rule
-  Core::Utils::double_parameter("GAMMA", 0.5, "Generalised-alpha factor in (0,1]", tgenalpha);
-  Core::Utils::double_parameter("ALPHA_M", 0.5, "Generalised-alpha factor in [0.5,1)", tgenalpha);
-  Core::Utils::double_parameter("ALPHA_F", 0.5, "Generalised-alpha factor in [0.5,1)", tgenalpha);
-  Core::Utils::double_parameter("RHO_INF", -1.0, "Generalised-alpha factor in [0,1]", tgenalpha);
+  tgenalpha.specs.emplace_back(parameter<double>(
+      "GAMMA", {.description = "Generalised-alpha factor in (0,1]", .default_value = 0.5}));
+  tgenalpha.specs.emplace_back(parameter<double>(
+      "ALPHA_M", {.description = "Generalised-alpha factor in [0.5,1)", .default_value = 0.5}));
+  tgenalpha.specs.emplace_back(parameter<double>(
+      "ALPHA_F", {.description = "Generalised-alpha factor in [0.5,1)", .default_value = 0.5}));
+  tgenalpha.specs.emplace_back(parameter<double>(
+      "RHO_INF", {.description = "Generalised-alpha factor in [0,1]", .default_value = -1.0}));
 
   tgenalpha.move_into_collection(list);
 
@@ -142,7 +154,8 @@ void Thermo::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& li
   /* parameters for one-step-theta thermal integrator */
   Core::Utils::SectionSpecs tonesteptheta{tdyn, "ONESTEPTHETA"};
 
-  Core::Utils::double_parameter("THETA", 0.5, "One-step-theta factor in (0,1]", tonesteptheta);
+  tonesteptheta.specs.emplace_back(parameter<double>(
+      "THETA", {.description = "One-step-theta factor in (0,1]", .default_value = 0.5}));
 
   tonesteptheta.move_into_collection(list);
 
@@ -151,29 +164,32 @@ void Thermo::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& li
     Core::Utils::SectionSpecs sublist_vtk_output{tdyn, "RUNTIME VTK OUTPUT"};
 
     // whether to write output for thermo
-    Core::Utils::bool_parameter("OUTPUT_THERMO", false, "write thermo output", sublist_vtk_output);
+    sublist_vtk_output.specs.emplace_back(parameter<bool>(
+        "OUTPUT_THERMO", {.description = "write thermo output", .default_value = false}));
 
     // whether to write temperature state
-    Core::Utils::bool_parameter(
-        "TEMPERATURE", false, "write temperature output", sublist_vtk_output);
+    sublist_vtk_output.specs.emplace_back(parameter<bool>(
+        "TEMPERATURE", {.description = "write temperature output", .default_value = false}));
 
     // whether to write heatflux state
-    Core::Utils::bool_parameter("HEATFLUX", false, "write heatflux output", sublist_vtk_output);
+    sublist_vtk_output.specs.emplace_back(parameter<bool>(
+        "HEATFLUX", {.description = "write heatflux output", .default_value = false}));
 
     // whether to write temperature gradient state
-    Core::Utils::bool_parameter(
-        "TEMPGRAD", false, "write temperature gradient output", sublist_vtk_output);
+    sublist_vtk_output.specs.emplace_back(parameter<bool>(
+        "TEMPGRAD", {.description = "write temperature gradient output", .default_value = false}));
 
     // whether to write element owner
-    Core::Utils::bool_parameter("ELEMENT_OWNER", false, "write element owner", sublist_vtk_output);
+    sublist_vtk_output.specs.emplace_back(parameter<bool>(
+        "ELEMENT_OWNER", {.description = "write element owner", .default_value = false}));
 
     // whether to write element GIDs
-    Core::Utils::bool_parameter(
-        "ELEMENT_GID", false, "write 4C internal element GIDs", sublist_vtk_output);
+    sublist_vtk_output.specs.emplace_back(parameter<bool>(
+        "ELEMENT_GID", {.description = "write 4C internal element GIDs", .default_value = false}));
 
     // whether to write node GIDs
-    Core::Utils::bool_parameter(
-        "NODE_GID", false, "write 4C internal node GIDs", sublist_vtk_output);
+    sublist_vtk_output.specs.emplace_back(parameter<bool>(
+        "NODE_GID", {.description = "write 4C internal node GIDs", .default_value = false}));
 
     sublist_vtk_output.move_into_collection(list);
   }
@@ -183,10 +199,12 @@ void Thermo::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& li
     Core::Utils::SectionSpecs sublist_csv_output{tdyn, "RUNTIME CSV OUTPUT"};
 
     // whether to write csv output for thermo
-    Core::Utils::bool_parameter("OUTPUT_THERMO", false, "write thermo output", sublist_csv_output);
+    sublist_csv_output.specs.emplace_back(parameter<bool>(
+        "OUTPUT_THERMO", {.description = "write thermo output", .default_value = false}));
 
     // whether to write energy state
-    Core::Utils::bool_parameter("ENERGY", false, "write energy output", sublist_csv_output);
+    sublist_csv_output.specs.emplace_back(
+        parameter<bool>("ENERGY", {.description = "write energy output", .default_value = false}));
 
     sublist_csv_output.move_into_collection(list);
   }

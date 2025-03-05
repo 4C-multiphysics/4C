@@ -20,29 +20,34 @@ FOUR_C_NAMESPACE_OPEN
 void Inpar::SSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs ssidyn{"SSI CONTROL"};
 
   // Output type
-  Core::Utils::double_parameter(
-      "RESTARTEVERYTIME", 0, "write restart possibility every RESTARTEVERY steps", ssidyn);
+  ssidyn.specs.emplace_back(parameter<double>("RESTARTEVERYTIME",
+      {.description = "write restart possibility every RESTARTEVERY steps", .default_value = 0.0}));
   Core::Utils::int_parameter(
       "RESTARTEVERY", 1, "write restart possibility every RESTARTEVERY steps", ssidyn);
   // Time loop control
   Core::Utils::int_parameter("NUMSTEP", 200, "maximum number of Timesteps", ssidyn);
-  Core::Utils::double_parameter("MAXTIME", 1000.0, "total simulation time", ssidyn);
-  Core::Utils::double_parameter("TIMESTEP", -1, "time step size dt", ssidyn);
-  Core::Utils::bool_parameter(
-      "DIFFTIMESTEPSIZE", false, "use different step size for scatra and solid", ssidyn);
-  Core::Utils::double_parameter("RESULTSEVERYTIME", 0, "increment for writing solution", ssidyn);
+  ssidyn.specs.emplace_back(parameter<double>(
+      "MAXTIME", {.description = "total simulation time", .default_value = 1000.0}));
+  ssidyn.specs.emplace_back(
+      parameter<double>("TIMESTEP", {.description = "time step size dt", .default_value = -1.0}));
+  ssidyn.specs.emplace_back(parameter<bool>("DIFFTIMESTEPSIZE",
+      {.description = "use different step size for scatra and solid", .default_value = false}));
+  ssidyn.specs.emplace_back(parameter<double>(
+      "RESULTSEVERYTIME", {.description = "increment for writing solution", .default_value = 0.0}));
   Core::Utils::int_parameter("RESULTSEVERY", 1, "increment for writing solution", ssidyn);
   Core::Utils::int_parameter("ITEMAX", 10, "maximum number of iterations over fields", ssidyn);
-  Core::Utils::bool_parameter("SCATRA_FROM_RESTART_FILE", false,
-      "read scatra result from restart files (use option 'restartfromfile' during execution of "
-      "4C)",
-      ssidyn);
-  Core::Utils::string_parameter(
-      "SCATRA_FILENAME", "nil", "Control-file name for reading scatra results in SSI", ssidyn);
+  ssidyn.specs.emplace_back(parameter<bool>("SCATRA_FROM_RESTART_FILE",
+      {.description = "read scatra result from restart files (use option 'restartfromfile' during "
+                      "execution of 4C)",
+          .default_value = false}));
+  ssidyn.specs.emplace_back(parameter<std::string>(
+      "SCATRA_FILENAME", {.description = "Control-file name for reading scatra results in SSI",
+                             .default_value = "nil"}));
 
   // Type of coupling strategy between the two fields
   Core::Utils::string_to_integral_parameter<FieldCoupling>("FIELDCOUPLING", "volume_matching",
@@ -84,17 +89,20 @@ void Inpar::SSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
       ssidyn);
 
   // Restart from Structure problem instead of SSI
-  Core::Utils::bool_parameter("RESTART_FROM_STRUCTURE", false,
-      "restart from structure problem (e.g. from prestress calculations) instead of ssi", ssidyn);
+  ssidyn.specs.emplace_back(parameter<bool>("RESTART_FROM_STRUCTURE",
+      {.description =
+              "restart from structure problem (e.g. from prestress calculations) instead of ssi",
+          .default_value = false}));
 
   // Adaptive time stepping
-  Core::Utils::bool_parameter(
-      "ADAPTIVE_TIMESTEPPING", false, "flag for adaptive time stepping", ssidyn);
+  ssidyn.specs.emplace_back(parameter<bool>("ADAPTIVE_TIMESTEPPING",
+      {.description = "flag for adaptive time stepping", .default_value = false}));
 
   // do redistribution by binning of solid mechanics discretization (scatra dis is cloned from solid
   // dis for volume_matching and volumeboundary_matching)
-  Core::Utils::bool_parameter("REDISTRIBUTE_SOLID", false,
-      "redistribution by binning of solid mechanics discretization", ssidyn);
+  ssidyn.specs.emplace_back(parameter<bool>("REDISTRIBUTE_SOLID",
+      {.description = "redistribution by binning of solid mechanics discretization",
+          .default_value = false}));
 
   ssidyn.move_into_collection(list);
 
@@ -104,15 +112,17 @@ void Inpar::SSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
   Core::Utils::SectionSpecs ssidynpart{ssidyn, "PARTITIONED"};
 
   // Solver parameter for relaxation of iterative staggered partitioned SSI
-  Core::Utils::double_parameter(
-      "MAXOMEGA", 10.0, "largest omega allowed for Aitken relaxation", ssidynpart);
-  Core::Utils::double_parameter(
-      "MINOMEGA", 0.1, "smallest omega allowed for Aitken relaxation", ssidynpart);
-  Core::Utils::double_parameter("STARTOMEGA", 1.0, "fixed relaxation parameter", ssidynpart);
+  ssidynpart.specs.emplace_back(parameter<double>("MAXOMEGA",
+      {.description = "largest omega allowed for Aitken relaxation", .default_value = 10.0}));
+  ssidynpart.specs.emplace_back(parameter<double>("MINOMEGA",
+      {.description = "smallest omega allowed for Aitken relaxation", .default_value = 0.1}));
+  ssidynpart.specs.emplace_back(parameter<double>(
+      "STARTOMEGA", {.description = "fixed relaxation parameter", .default_value = 1.0}));
 
   // convergence tolerance of outer iteration loop
-  Core::Utils::double_parameter("CONVTOL", 1e-6,
-      "tolerance for convergence check of outer iteration within partitioned SSI", ssidynpart);
+  ssidynpart.specs.emplace_back(parameter<double>("CONVTOL",
+      {.description = "tolerance for convergence check of outer iteration within partitioned SSI",
+          .default_value = 1e-6}));
 
   ssidynpart.move_into_collection(list);
 
@@ -122,12 +132,14 @@ void Inpar::SSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
   Core::Utils::SectionSpecs ssidynmono{ssidyn, "MONOLITHIC"};
 
   // convergence tolerances of Newton-Raphson iteration loop
-  Core::Utils::double_parameter("ABSTOLRES", 1.e-14,
-      "absolute tolerance for deciding if global residual of nonlinear problem is already zero",
-      ssidynmono);
-  Core::Utils::double_parameter("CONVTOL", 1.e-6,
-      "tolerance for convergence check of Newton-Raphson iteration within monolithic SSI",
-      ssidynmono);
+  ssidynmono.specs.emplace_back(parameter<double>(
+      "ABSTOLRES", {.description = "absolute tolerance for deciding if global residual of "
+                                   "nonlinear problem is already zero",
+                       .default_value = 1.e-14}));
+  ssidynmono.specs.emplace_back(parameter<double>("CONVTOL",
+      {.description =
+              "tolerance for convergence check of Newton-Raphson iteration within monolithic SSI",
+          .default_value = 1.e-6}));
 
   // ID of linear solver for global system of equations
   Core::Utils::int_parameter(
@@ -177,15 +189,15 @@ void Inpar::SSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
           Core::LinAlg::EquilibrationMethod::symmetry),
       ssidynmono);
 
-  Core::Utils::bool_parameter("PRINT_MAT_RHS_MAP_MATLAB", false,
-      "print system matrix, rhs vector, and full map to matlab readable file after solution of "
-      "time step",
-      ssidynmono);
+  ssidynmono.specs.emplace_back(parameter<bool>("PRINT_MAT_RHS_MAP_MATLAB",
+      {.description = "print system matrix, rhs vector, and full map to matlab readable file after "
+                      "solution of time step",
+          .default_value = false}));
 
-  Core::Utils::double_parameter("RELAX_LIN_SOLVER_TOLERANCE", 1.0,
-      "relax the tolerance of the linear solver in case it is an iterative solver by scaling the "
-      "convergence tolerance with factor RELAX_LIN_SOLVER_TOLERANCE",
-      ssidynmono);
+  ssidynmono.specs.emplace_back(parameter<double>("RELAX_LIN_SOLVER_TOLERANCE",
+      {.description = "relax the tolerance of the linear solver in case it is an iterative solver "
+                      "by scaling the convergence tolerance with factor RELAX_LIN_SOLVER_TOLERANCE",
+          .default_value = 1.0}));
 
   Core::Utils::int_parameter("RELAX_LIN_SOLVER_STEP", -1,
       "relax the tolerance of the linear solver within the first RELAX_LIN_SOLVER_STEP steps",
@@ -199,11 +211,12 @@ void Inpar::SSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
 
   Core::Utils::SectionSpecs ssidynmanifold{ssidyn, "MANIFOLD"};
 
-  Core::Utils::bool_parameter(
-      "ADD_MANIFOLD", false, "activate additional manifold?", ssidynmanifold);
+  ssidynmanifold.specs.emplace_back(parameter<bool>(
+      "ADD_MANIFOLD", {.description = "activate additional manifold?", .default_value = false}));
 
-  Core::Utils::bool_parameter("MESHTYING_MANIFOLD", false,
-      "activate meshtying between all manifold fields in case they intersect?", ssidynmanifold);
+  ssidynmanifold.specs.emplace_back(parameter<bool>("MESHTYING_MANIFOLD",
+      {.description = "activate meshtying between all manifold fields in case they intersect?",
+          .default_value = false}));
 
   Core::Utils::string_to_integral_parameter<Inpar::ScaTra::InitialField>("INITIALFIELD",
       "zero_field", "Initial field for scalar transport on manifold",
@@ -218,10 +231,10 @@ void Inpar::SSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
   Core::Utils::int_parameter(
       "LINEAR_SOLVER", -1, "linear solver for scalar transport on manifold", ssidynmanifold);
 
-  Core::Utils::bool_parameter("OUTPUT_INFLOW", false,
-      "write output of inflow of scatra manifold - scatra coupling into scatra manifold to csv "
-      "file",
-      ssidynmanifold);
+  ssidynmanifold.specs.emplace_back(parameter<bool>(
+      "OUTPUT_INFLOW", {.description = "write output of inflow of scatra manifold - scatra "
+                                       "coupling into scatra manifold to csv file",
+                           .default_value = false}));
 
   ssidynmanifold.move_into_collection(list);
 
@@ -229,8 +242,9 @@ void Inpar::SSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
   /* parameters for SSI with elch */
   /*----------------------------------------------------------------------*/
   Core::Utils::SectionSpecs ssidynelch{ssidyn, "ELCH"};
-  Core::Utils::bool_parameter("INITPOTCALC", false,
-      "Automatically calculate initial field for electric potential", ssidynelch);
+  ssidynelch.specs.emplace_back(parameter<bool>(
+      "INITPOTCALC", {.description = "Automatically calculate initial field for electric potential",
+                         .default_value = false}));
 
   ssidynelch.move_into_collection(list);
 }

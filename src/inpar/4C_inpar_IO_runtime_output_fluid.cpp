@@ -24,6 +24,7 @@ namespace Inpar
       void set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
       {
         using Teuchos::tuple;
+        using namespace Core::IO::InputSpecBuilders;
 
         // related sublist
         Core::Utils::SectionSpecs sublist_IO{"IO"};
@@ -31,40 +32,40 @@ namespace Inpar
         Core::Utils::SectionSpecs sublist_IO_output_fluid{sublist_IO_output, "FLUID"};
 
         // whether to write output for fluid
-        Core::Utils::bool_parameter(
-            "OUTPUT_FLUID", false, "write fluid output", sublist_IO_output_fluid);
+        sublist_IO_output_fluid.specs.emplace_back(parameter<bool>(
+            "OUTPUT_FLUID", {.description = "write fluid output", .default_value = false}));
 
         // whether to write velocity state
-        Core::Utils::bool_parameter(
-            "VELOCITY", false, "write velocity output", sublist_IO_output_fluid);
+        sublist_IO_output_fluid.specs.emplace_back(parameter<bool>(
+            "VELOCITY", {.description = "write velocity output", .default_value = false}));
 
         // whether to write pressure state
-        Core::Utils::bool_parameter(
-            "PRESSURE", false, "write pressure output", sublist_IO_output_fluid);
+        sublist_IO_output_fluid.specs.emplace_back(parameter<bool>(
+            "PRESSURE", {.description = "write pressure output", .default_value = false}));
 
         // whether to write acceleration state
-        Core::Utils::bool_parameter(
-            "ACCELERATION", false, "write acceleration output", sublist_IO_output_fluid);
+        sublist_IO_output_fluid.specs.emplace_back(parameter<bool>(
+            "ACCELERATION", {.description = "write acceleration output", .default_value = false}));
 
         // whether to write displacement state
-        Core::Utils::bool_parameter(
-            "DISPLACEMENT", false, "write displacement output", sublist_IO_output_fluid);
+        sublist_IO_output_fluid.specs.emplace_back(parameter<bool>(
+            "DISPLACEMENT", {.description = "write displacement output", .default_value = false}));
 
         // whether to write displacement state
-        Core::Utils::bool_parameter(
-            "GRIDVELOCITY", false, "write grid velocity output", sublist_IO_output_fluid);
+        sublist_IO_output_fluid.specs.emplace_back(parameter<bool>(
+            "GRIDVELOCITY", {.description = "write grid velocity output", .default_value = false}));
 
         // whether to write element owner
-        Core::Utils::bool_parameter(
-            "ELEMENT_OWNER", false, "write element owner", sublist_IO_output_fluid);
+        sublist_IO_output_fluid.specs.emplace_back(parameter<bool>(
+            "ELEMENT_OWNER", {.description = "write element owner", .default_value = false}));
 
         // whether to write element GIDs
-        Core::Utils::bool_parameter(
-            "ELEMENT_GID", false, "write 4C internal element GIDs", sublist_IO_output_fluid);
+        sublist_IO_output_fluid.specs.emplace_back(parameter<bool>("ELEMENT_GID",
+            {.description = "write 4C internal element GIDs", .default_value = false}));
 
         // whether to write node GIDs
-        Core::Utils::bool_parameter(
-            "NODE_GID", false, "write 4C internal node GIDs", sublist_IO_output_fluid);
+        sublist_IO_output_fluid.specs.emplace_back(parameter<bool>(
+            "NODE_GID", {.description = "write 4C internal node GIDs", .default_value = false}));
 
         sublist_IO_output_fluid.move_into_collection(list);
       }

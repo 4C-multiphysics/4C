@@ -99,8 +99,7 @@ Core::Geo::BoundaryIntCell& Core::Geo::BoundaryIntCell::operator=(
 
 Core::Geo::BoundaryIntCell::BoundaryIntCell(Core::FE::CellType distype, const int& surface_ele_gid)
     : IntCell(distype), surface_ele_gid_(surface_ele_gid), phys_center_(true)
-{
-  /* intentionally left blank */
+{ /* intentionally left blank */
 }
 
 FOUR_C_NAMESPACE_CLOSE

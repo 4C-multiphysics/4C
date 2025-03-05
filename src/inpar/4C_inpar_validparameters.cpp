@@ -128,9 +128,10 @@ std::map<std::string, Core::IO::InputSpec> Input::valid_parameters()
 
   Core::Utils::SectionSpecs nurbs_param{"NURBS"};
 
-  Core::Utils::bool_parameter("DO_LS_DBC_PROJECTION", false,
-      "Determines if a projection is needed for least square Dirichlet boundary conditions.",
-      nurbs_param);
+  nurbs_param.specs.emplace_back(parameter<bool>(
+      "DO_LS_DBC_PROJECTION", {.description = "Determines if a projection is needed for least "
+                                              "square Dirichlet boundary conditions.",
+                                  .default_value = false}));
 
   Core::Utils::int_parameter("SOLVER_LS_DBC_PROJECTION", -1,
       "Number of linear solver for the projection of least squares Dirichlet boundary conditions "

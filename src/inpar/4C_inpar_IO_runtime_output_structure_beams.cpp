@@ -25,6 +25,7 @@ namespace Inpar
       void set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
       {
         using Teuchos::tuple;
+        using namespace Core::IO::InputSpecBuilders;
 
         // related sublist
         Core::Utils::SectionSpecs sublist_IO{"IO"};
@@ -32,81 +33,86 @@ namespace Inpar
         Core::Utils::SectionSpecs sublist_IO_output_beams{sublist_IO_VTK_structure, "BEAMS"};
 
         // whether to write special output for beam elements
-        Core::Utils::bool_parameter("OUTPUT_BEAMS", false, "write special output for beam elements",
-            sublist_IO_output_beams);
+        sublist_IO_output_beams.specs.emplace_back(parameter<bool>("OUTPUT_BEAMS",
+            {.description = "write special output for beam elements", .default_value = false}));
 
         // whether to write displacement state
-        Core::Utils::bool_parameter(
-            "DISPLACEMENT", false, "write displacement output", sublist_IO_output_beams);
+        sublist_IO_output_beams.specs.emplace_back(parameter<bool>(
+            "DISPLACEMENT", {.description = "write displacement output", .default_value = false}));
 
         // use absolute positions or initial positions for vtu geometry (i.e. point coordinates)
         // 'absolute positions' requires writing geometry in every output step (default for now)
-        Core::Utils::bool_parameter("USE_ABSOLUTE_POSITIONS", true,
-            "use absolute positions or initial positions for vtu geometry (i.e. point coordinates)",
-            sublist_IO_output_beams);
+        sublist_IO_output_beams.specs.emplace_back(parameter<bool>(
+            "USE_ABSOLUTE_POSITIONS", {.description = "use absolute positions or initial positions "
+                                                      "for vtu geometry (i.e. point coordinates)",
+                                          .default_value = true}));
 
         // write internal (elastic) energy of element
-        Core::Utils::bool_parameter("INTERNAL_ENERGY_ELEMENT", false,
-            "write internal (elastic) energy for each element", sublist_IO_output_beams);
+        sublist_IO_output_beams.specs.emplace_back(parameter<bool>("INTERNAL_ENERGY_ELEMENT",
+            {.description = "write internal (elastic) energy for each element",
+                .default_value = false}));
 
         // write kinetic energy of element
-        Core::Utils::bool_parameter("KINETIC_ENERGY_ELEMENT", false,
-            "write kinetic energy for each element", sublist_IO_output_beams);
+        sublist_IO_output_beams.specs.emplace_back(parameter<bool>("KINETIC_ENERGY_ELEMENT",
+            {.description = "write kinetic energy for each element", .default_value = false}));
 
         // write triads as three orthonormal base vectors at every visualization point
-        Core::Utils::bool_parameter("TRIAD_VISUALIZATIONPOINT", false,
-            "write triads at every visualization point", sublist_IO_output_beams);
+        sublist_IO_output_beams.specs.emplace_back(parameter<bool>("TRIAD_VISUALIZATIONPOINT",
+            {.description = "write triads at every visualization point", .default_value = false}));
 
         // write material cross-section strains at the Gauss points:
         // axial & shear strains, twist & curvatures
-        Core::Utils::bool_parameter("STRAINS_GAUSSPOINT", false,
-            "write material cross-section strains at the Gauss points", sublist_IO_output_beams);
+        sublist_IO_output_beams.specs.emplace_back(parameter<bool>("STRAINS_GAUSSPOINT",
+            {.description = "write material cross-section strains at the Gauss points",
+                .default_value = false}));
 
         // write material cross-section strains at the visualization points:
         // axial & shear strains, twist & curvatures
-        Core::Utils::bool_parameter("STRAINS_CONTINUOUS", false,
-            "write material cross-section strains at the visualization points",
-            sublist_IO_output_beams);
+        sublist_IO_output_beams.specs.emplace_back(parameter<bool>("STRAINS_CONTINUOUS",
+            {.description = "write material cross-section strains at the visualization points",
+                .default_value = false}));
 
         // write material cross-section stresses at the Gauss points:
         // axial and shear forces, torque and bending moments
-        Core::Utils::bool_parameter("MATERIAL_FORCES_GAUSSPOINT", false,
-            "write material cross-section stresses at the Gauss points", sublist_IO_output_beams);
+        sublist_IO_output_beams.specs.emplace_back(parameter<bool>("MATERIAL_FORCES_GAUSSPOINT",
+            {.description = "write material cross-section stresses at the Gauss points",
+                .default_value = false}));
 
         // write material cross-section stresses at the visualization points:
         // axial and shear forces, torque and bending moments
-        Core::Utils::bool_parameter("MATERIAL_FORCES_CONTINUOUS", false,
-            "write material cross-section stresses at the visualization points",
-            sublist_IO_output_beams);
+        sublist_IO_output_beams.specs.emplace_back(parameter<bool>("MATERIAL_FORCES_CONTINUOUS",
+            {.description = "write material cross-section stresses at the visualization points",
+                .default_value = false}));
 
         // write spatial cross-section stresses at the Gauss points:
         // axial and shear forces, torque and bending moments
-        Core::Utils::bool_parameter("SPATIAL_FORCES_GAUSSPOINT", false,
-            "write material cross-section stresses at the Gauss points", sublist_IO_output_beams);
+        sublist_IO_output_beams.specs.emplace_back(parameter<bool>("SPATIAL_FORCES_GAUSSPOINT",
+            {.description = "write material cross-section stresses at the Gauss points",
+                .default_value = false}));
 
         // write element filament numbers and type
-        Core::Utils::bool_parameter("BEAMFILAMENTCONDITION", false,
-            "write element filament numbers", sublist_IO_output_beams);
+        sublist_IO_output_beams.specs.emplace_back(parameter<bool>("BEAMFILAMENTCONDITION",
+            {.description = "write element filament numbers", .default_value = false}));
 
         // write element and network orientation parameter
-        Core::Utils::bool_parameter("ORIENTATION_PARAMETER", false,
-            "write element filament numbers", sublist_IO_output_beams);
+        sublist_IO_output_beams.specs.emplace_back(parameter<bool>("ORIENTATION_PARAMETER",
+            {.description = "write element filament numbers", .default_value = false}));
 
         // write crossection forces of periodic RVE
-        Core::Utils::bool_parameter("RVE_CROSSSECTION_FORCES", false,
-            " get sum of all internal forces of  ", sublist_IO_output_beams);
+        sublist_IO_output_beams.specs.emplace_back(parameter<bool>("RVE_CROSSSECTION_FORCES",
+            {.description = " get sum of all internal forces of  ", .default_value = false}));
 
         // write reference length of beams
-        Core::Utils::bool_parameter(
-            "REF_LENGTH", false, "write reference length of all beams", sublist_IO_output_beams);
+        sublist_IO_output_beams.specs.emplace_back(parameter<bool>("REF_LENGTH",
+            {.description = "write reference length of all beams", .default_value = false}));
 
         // write element GIDs
-        Core::Utils::bool_parameter(
-            "ELEMENT_GID", false, "write the 4C internal element GIDs", sublist_IO_output_beams);
+        sublist_IO_output_beams.specs.emplace_back(parameter<bool>("ELEMENT_GID",
+            {.description = "write the 4C internal element GIDs", .default_value = false}));
 
         // write element ghosting information
-        Core::Utils::bool_parameter("ELEMENT_GHOSTING", false,
-            "write which processors ghost the elements", sublist_IO_output_beams);
+        sublist_IO_output_beams.specs.emplace_back(parameter<bool>("ELEMENT_GHOSTING",
+            {.description = "write which processors ghost the elements", .default_value = false}));
 
         // number of subsegments along a single beam element for visualization
         Core::Utils::int_parameter("NUMBER_SUBSEGMENTS", 5,

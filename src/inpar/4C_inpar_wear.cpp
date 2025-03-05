@@ -16,6 +16,7 @@ FOUR_C_NAMESPACE_OPEN
 void Inpar::Wear::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   /* parameters for wear */
   Core::Utils::SectionSpecs wear{"WEAR"};
@@ -24,7 +25,8 @@ void Inpar::Wear::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
       tuple<std::string>("None", "none", "Archard", "archard"),
       tuple<WearLaw>(wear_none, wear_none, wear_archard, wear_archard), wear);
 
-  Core::Utils::bool_parameter("MATCHINGGRID", true, "is matching grid", wear);
+  wear.specs.emplace_back(
+      parameter<bool>("MATCHINGGRID", {.description = "is matching grid", .default_value = true}));
 
   Core::Utils::string_to_integral_parameter<WearShape>("WEAR_SHAPEFCN", "std",
       "Type of employed set of shape functions for wear",
@@ -33,14 +35,18 @@ void Inpar::Wear::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
           wear_shape_standard),
       wear);
 
-  Core::Utils::double_parameter("WEARCOEFF", 0.0, "Wear coefficient for slave surface", wear);
-  Core::Utils::double_parameter(
-      "WEARCOEFF_MASTER", 0.0, "Wear coefficient for master surface", wear);
-  Core::Utils::double_parameter(
-      "WEAR_TIMERATIO", 1.0, "Time step ratio between wear and spatial time scale", wear);
-  Core::Utils::double_parameter("SSSLIP", 1.0, "Fixed slip for steady state wear", wear);
+  wear.specs.emplace_back(parameter<double>(
+      "WEARCOEFF", {.description = "Wear coefficient for slave surface", .default_value = 0.0}));
+  wear.specs.emplace_back(parameter<double>("WEARCOEFF_MASTER",
+      {.description = "Wear coefficient for master surface", .default_value = 0.0}));
+  wear.specs.emplace_back(parameter<double>(
+      "WEAR_TIMERATIO", {.description = "Time step ratio between wear and spatial time scale",
+                            .default_value = 1.0}));
+  wear.specs.emplace_back(parameter<double>(
+      "SSSLIP", {.description = "Fixed slip for steady state wear", .default_value = 1.0}));
 
-  Core::Utils::bool_parameter("SSWEAR", false, "flag for steady state wear", wear);
+  wear.specs.emplace_back(parameter<bool>(
+      "SSWEAR", {.description = "flag for steady state wear", .default_value = false}));
 
   Core::Utils::string_to_integral_parameter<WearSide>("WEAR_SIDE", "slave",
       "Definition of wear side",

@@ -52,6 +52,7 @@ void Inpar::BeamToSolid::beam_to_solid_interaction_get_string(
 void Inpar::BeamToSolid::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs beaminteraction{"BEAM INTERACTION"};
 
@@ -89,8 +90,9 @@ void Inpar::BeamToSolid::set_valid_parameters(std::map<std::string, Core::IO::In
         "Number of fourier modes to be used for cross-section mortar coupling",
         beam_to_solid_volume_mestying);
 
-    Core::Utils::double_parameter("PENALTY_PARAMETER", 0.0,
-        "Penalty parameter for beam-to-solid volume meshtying", beam_to_solid_volume_mestying);
+    beam_to_solid_volume_mestying.specs.emplace_back(parameter<double>(
+        "PENALTY_PARAMETER", {.description = "Penalty parameter for beam-to-solid volume meshtying",
+                                 .default_value = 0.0}));
 
     // Add the geometry pair input parameters.
     Inpar::GEOMETRYPAIR::set_valid_parameters_line_to3_d(beam_to_solid_volume_mestying);
@@ -101,9 +103,9 @@ void Inpar::BeamToSolid::set_valid_parameters(std::map<std::string, Core::IO::In
     //        coupled.
     // - Yes: The beam and solid states at the restart configuration are coupled. This allows to
     //        pre-deform the structures and then couple them.
-    Core::Utils::bool_parameter("COUPLE_RESTART_STATE", false,
-        "Enable / disable the coupling of the restart configuration.",
-        beam_to_solid_volume_mestying);
+    beam_to_solid_volume_mestying.specs.emplace_back(parameter<bool>("COUPLE_RESTART_STATE",
+        {.description = "Enable / disable the coupling of the restart configuration.",
+            .default_value = false}));
 
     Core::Utils::string_to_integral_parameter<BeamToSolidRotationCoupling>("ROTATION_COUPLING",
         "none", "Type of rotational coupling",
@@ -137,9 +139,11 @@ void Inpar::BeamToSolid::set_valid_parameters(std::map<std::string, Core::IO::In
             BeamToSolidMortarShapefunctions::line4),
         beam_to_solid_volume_mestying);
 
-    Core::Utils::double_parameter("ROTATION_COUPLING_PENALTY_PARAMETER", 0.0,
-        "Penalty parameter for rotational coupling in beam-to-solid volume mesh tying",
-        beam_to_solid_volume_mestying);
+    beam_to_solid_volume_mestying.specs.emplace_back(
+        parameter<double>("ROTATION_COUPLING_PENALTY_PARAMETER",
+            {.description =
+                    "Penalty parameter for rotational coupling in beam-to-solid volume mesh tying",
+                .default_value = 0.0}));
   }
 
   beam_to_solid_volume_mestying.move_into_collection(list);
@@ -149,22 +153,24 @@ void Inpar::BeamToSolid::set_valid_parameters(std::map<std::string, Core::IO::In
       beam_to_solid_volume_mestying, "RUNTIME VTK OUTPUT"};
   {
     // Whether to write visualization output at all for btsvmt.
-    Core::Utils::bool_parameter("WRITE_OUTPUT", false,
-        "Enable / disable beam-to-solid volume mesh tying output.",
-        beam_to_solid_volume_mestying_output);
+    beam_to_solid_volume_mestying_output.specs.emplace_back(parameter<bool>(
+        "WRITE_OUTPUT", {.description = "Enable / disable beam-to-solid volume mesh tying output.",
+                            .default_value = false}));
 
-    Core::Utils::bool_parameter("NODAL_FORCES", false,
-        "Enable / disable output of the resulting nodal forces due to beam to solid interaction.",
-        beam_to_solid_volume_mestying_output);
+    beam_to_solid_volume_mestying_output.specs.emplace_back(parameter<bool>(
+        "NODAL_FORCES", {.description = "Enable / disable output of the resulting nodal forces due "
+                                        "to beam to solid interaction.",
+                            .default_value = false}));
 
-    Core::Utils::bool_parameter("MORTAR_LAMBDA_DISCRET", false,
-        "Enable / disable output of the discrete Lagrange multipliers at the node of the Lagrange "
-        "multiplier shape functions.",
-        beam_to_solid_volume_mestying_output);
+    beam_to_solid_volume_mestying_output.specs.emplace_back(parameter<bool>("MORTAR_LAMBDA_DISCRET",
+        {.description = "Enable / disable output of the discrete Lagrange multipliers at the node "
+                        "of the Lagrange multiplier shape functions.",
+            .default_value = false}));
 
-    Core::Utils::bool_parameter("MORTAR_LAMBDA_CONTINUOUS", false,
-        "Enable / disable output of the continuous Lagrange multipliers function along the beam.",
-        beam_to_solid_volume_mestying_output);
+    beam_to_solid_volume_mestying_output.specs.emplace_back(parameter<bool>(
+        "MORTAR_LAMBDA_CONTINUOUS", {.description = "Enable / disable output of the continuous "
+                                                    "Lagrange multipliers function along the beam.",
+                                        .default_value = false}));
 
     Core::Utils::int_parameter("MORTAR_LAMBDA_CONTINUOUS_SEGMENTS", 5,
         "Number of segments for continuous mortar output", beam_to_solid_volume_mestying_output);
@@ -174,17 +180,19 @@ void Inpar::BeamToSolid::set_valid_parameters(std::map<std::string, Core::IO::In
         "circumference",
         beam_to_solid_volume_mestying_output);
 
-    Core::Utils::bool_parameter("SEGMENTATION", false,
-        "Enable / disable output of segmentation points.", beam_to_solid_volume_mestying_output);
+    beam_to_solid_volume_mestying_output.specs.emplace_back(parameter<bool>(
+        "SEGMENTATION", {.description = "Enable / disable output of segmentation points.",
+                            .default_value = false}));
 
-    Core::Utils::bool_parameter("INTEGRATION_POINTS", false,
-        "Enable / disable output of used integration points. If the contact method has 'forces' at "
-        "the integration point, they will also be output.",
-        beam_to_solid_volume_mestying_output);
+    beam_to_solid_volume_mestying_output.specs.emplace_back(parameter<bool>("INTEGRATION_POINTS",
+        {.description = "Enable / disable output of used integration points. If the contact method "
+                        "has 'forces' at the integration point, they will also be output.",
+            .default_value = false}));
 
-    Core::Utils::bool_parameter("UNIQUE_IDS", false,
-        "Enable / disable output of unique IDs (mainly for testing of created VTK files).",
-        beam_to_solid_volume_mestying_output);
+    beam_to_solid_volume_mestying_output.specs.emplace_back(parameter<bool>("UNIQUE_IDS",
+        {.description =
+                "Enable / disable output of unique IDs (mainly for testing of created VTK files).",
+            .default_value = false}));
   }
 
   beam_to_solid_volume_mestying_output.move_into_collection(list);
@@ -228,15 +236,17 @@ void Inpar::BeamToSolid::set_valid_parameters(std::map<std::string, Core::IO::In
             BeamToSolidMortarShapefunctions::line4),
         beam_to_solid_surface_mestying);
 
-    Core::Utils::double_parameter("PENALTY_PARAMETER", 0.0,
-        "Penalty parameter for beam-to-solid surface meshtying", beam_to_solid_surface_mestying);
+    beam_to_solid_surface_mestying.specs.emplace_back(parameter<double>("PENALTY_PARAMETER",
+        {.description = "Penalty parameter for beam-to-solid surface meshtying",
+            .default_value = 0.0}));
 
     // Parameters for rotational coupling.
-    Core::Utils::bool_parameter("ROTATIONAL_COUPLING", false,
-        "Enable / disable rotational coupling", beam_to_solid_surface_mestying);
-    Core::Utils::double_parameter("ROTATIONAL_COUPLING_PENALTY_PARAMETER", 0.0,
-        "Penalty parameter for beam-to-solid surface rotational meshtying",
-        beam_to_solid_surface_mestying);
+    beam_to_solid_surface_mestying.specs.emplace_back(parameter<bool>("ROTATIONAL_COUPLING",
+        {.description = "Enable / disable rotational coupling", .default_value = false}));
+    beam_to_solid_surface_mestying.specs.emplace_back(
+        parameter<double>("ROTATIONAL_COUPLING_PENALTY_PARAMETER",
+            {.description = "Penalty parameter for beam-to-solid surface rotational meshtying",
+                .default_value = 0.0}));
     Core::Utils::string_to_integral_parameter<BeamToSolidSurfaceRotationCoupling>(
         "ROTATIONAL_COUPLING_SURFACE_TRIAD", "none", "Construction method for surface triad",
         tuple<std::string>("none", "surface_cross_section_director", "averaged"),
@@ -273,8 +283,9 @@ void Inpar::BeamToSolid::set_valid_parameters(std::map<std::string, Core::IO::In
             BeamToSolidConstraintEnforcement::none, BeamToSolidConstraintEnforcement::penalty),
         beam_to_solid_surface_contact);
 
-    Core::Utils::double_parameter("PENALTY_PARAMETER", 0.0,
-        "Penalty parameter for beam-to-solid surface contact", beam_to_solid_surface_contact);
+    beam_to_solid_surface_contact.specs.emplace_back(parameter<double>(
+        "PENALTY_PARAMETER", {.description = "Penalty parameter for beam-to-solid surface contact",
+                                 .default_value = 0.0}));
 
     Core::Utils::string_to_integral_parameter<BeamToSolidSurfaceContact>("CONTACT_TYPE", "none",
         "How the contact constraints are formulated",
@@ -290,9 +301,10 @@ void Inpar::BeamToSolid::set_valid_parameters(std::map<std::string, Core::IO::In
             BeamToSolidSurfaceContactPenaltyLaw::linear_quadratic),
         beam_to_solid_surface_contact);
 
-    Core::Utils::double_parameter("PENALTY_PARAMETER_G0", 0.0,
-        "First penalty regularization parameter G0 >=0: For gap<G0 contact is active",
-        beam_to_solid_surface_contact);
+    beam_to_solid_surface_contact.specs.emplace_back(parameter<double>("PENALTY_PARAMETER_G0",
+        {.description =
+                "First penalty regularization parameter G0 >=0: For gap<G0 contact is active",
+            .default_value = 0.0}));
 
     Core::Utils::string_to_integral_parameter<BeamToSolidSurfaceContactMortarDefinedIn>(
         "MORTAR_CONTACT_DEFINED_IN", "none", "Configuration where the mortar contact is defined",
@@ -328,40 +340,45 @@ void Inpar::BeamToSolid::set_valid_parameters(std::map<std::string, Core::IO::In
       beam_to_solid_surface, "RUNTIME VTK OUTPUT"};
   {
     // Whether to write visualization output at all.
-    Core::Utils::bool_parameter("WRITE_OUTPUT", false,
-        "Enable / disable beam-to-solid volume mesh tying output.", beam_to_solid_surface_output);
+    beam_to_solid_surface_output.specs.emplace_back(parameter<bool>(
+        "WRITE_OUTPUT", {.description = "Enable / disable beam-to-solid volume mesh tying output.",
+                            .default_value = false}));
 
-    Core::Utils::bool_parameter("NODAL_FORCES", false,
-        "Enable / disable output of the resulting nodal forces due to beam to solid interaction.",
-        beam_to_solid_surface_output);
+    beam_to_solid_surface_output.specs.emplace_back(parameter<bool>(
+        "NODAL_FORCES", {.description = "Enable / disable output of the resulting nodal forces due "
+                                        "to beam to solid interaction.",
+                            .default_value = false}));
 
-    Core::Utils::bool_parameter("AVERAGED_NORMALS", false,
-        "Enable / disable output of averaged nodal normals on the surface.",
-        beam_to_solid_surface_output);
+    beam_to_solid_surface_output.specs.emplace_back(parameter<bool>("AVERAGED_NORMALS",
+        {.description = "Enable / disable output of averaged nodal normals on the surface.",
+            .default_value = false}));
 
-    Core::Utils::bool_parameter("MORTAR_LAMBDA_DISCRET", false,
-        "Enable / disable output of the discrete Lagrange multipliers at the node of the Lagrange "
-        "multiplier shape functions.",
-        beam_to_solid_surface_output);
+    beam_to_solid_surface_output.specs.emplace_back(parameter<bool>("MORTAR_LAMBDA_DISCRET",
+        {.description = "Enable / disable output of the discrete Lagrange multipliers at the node "
+                        "of the Lagrange multiplier shape functions.",
+            .default_value = false}));
 
-    Core::Utils::bool_parameter("MORTAR_LAMBDA_CONTINUOUS", false,
-        "Enable / disable output of the continuous Lagrange multipliers function along the beam.",
-        beam_to_solid_surface_output);
+    beam_to_solid_surface_output.specs.emplace_back(parameter<bool>(
+        "MORTAR_LAMBDA_CONTINUOUS", {.description = "Enable / disable output of the continuous "
+                                                    "Lagrange multipliers function along the beam.",
+                                        .default_value = false}));
 
     Core::Utils::int_parameter("MORTAR_LAMBDA_CONTINUOUS_SEGMENTS", 5,
         "Number of segments for continuous mortar output", beam_to_solid_surface_output);
 
-    Core::Utils::bool_parameter("SEGMENTATION", false,
-        "Enable / disable output of segmentation points.", beam_to_solid_surface_output);
+    beam_to_solid_surface_output.specs.emplace_back(parameter<bool>(
+        "SEGMENTATION", {.description = "Enable / disable output of segmentation points.",
+                            .default_value = false}));
 
-    Core::Utils::bool_parameter("INTEGRATION_POINTS", false,
-        "Enable / disable output of used integration points. If the contact method has 'forces' at "
-        "the integration point, they will also be output.",
-        beam_to_solid_surface_output);
+    beam_to_solid_surface_output.specs.emplace_back(parameter<bool>("INTEGRATION_POINTS",
+        {.description = "Enable / disable output of used integration points. If the contact method "
+                        "has 'forces' at the integration point, they will also be output.",
+            .default_value = false}));
 
-    Core::Utils::bool_parameter("UNIQUE_IDS", false,
-        "Enable / disable output of unique IDs (mainly for testing of created VTK files).",
-        beam_to_solid_surface_output);
+    beam_to_solid_surface_output.specs.emplace_back(parameter<bool>("UNIQUE_IDS",
+        {.description =
+                "Enable / disable output of unique IDs (mainly for testing of created VTK files).",
+            .default_value = false}));
   }
 
   beam_to_solid_surface_output.move_into_collection(list);

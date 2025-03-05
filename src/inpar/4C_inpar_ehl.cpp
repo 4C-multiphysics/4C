@@ -18,21 +18,26 @@ FOUR_C_NAMESPACE_OPEN
 void Inpar::EHL::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs ehldyn{"ELASTO HYDRO DYNAMIC"};
 
   // Output type
-  Core::Utils::double_parameter(
-      "RESTARTEVERYTIME", 0, "write restart possibility every RESTARTEVERY steps", ehldyn);
+  ehldyn.specs.emplace_back(parameter<double>("RESTARTEVERYTIME",
+      {.description = "write restart possibility every RESTARTEVERY steps", .default_value = 0.0}));
   Core::Utils::int_parameter(
       "RESTARTEVERY", 1, "write restart possibility every RESTARTEVERY steps", ehldyn);
   // Time loop control
   Core::Utils::int_parameter("NUMSTEP", 200, "maximum number of Timesteps", ehldyn);
-  Core::Utils::double_parameter("MAXTIME", 1000.0, "total simulation time", ehldyn);
-  Core::Utils::double_parameter("TIMESTEP", -1, "time step size dt", ehldyn);
-  Core::Utils::bool_parameter(
-      "DIFFTIMESTEPSIZE", false, "use different step size for lubrication and solid", ehldyn);
-  Core::Utils::double_parameter("RESULTSEVERYTIME", 0, "increment for writing solution", ehldyn);
+  ehldyn.specs.emplace_back(parameter<double>(
+      "MAXTIME", {.description = "total simulation time", .default_value = 1000.0}));
+  ehldyn.specs.emplace_back(
+      parameter<double>("TIMESTEP", {.description = "time step size dt", .default_value = -1.0}));
+  ehldyn.specs.emplace_back(parameter<bool>(
+      "DIFFTIMESTEPSIZE", {.description = "use different step size for lubrication and solid",
+                              .default_value = false}));
+  ehldyn.specs.emplace_back(parameter<double>(
+      "RESULTSEVERYTIME", {.description = "increment for writing solution", .default_value = 0.0}));
   Core::Utils::int_parameter("RESULTSEVERY", 1, "increment for writing solution", ehldyn);
   Core::Utils::int_parameter("ITEMAX", 10, "maximum number of iterations over fields", ehldyn);
   Core::Utils::int_parameter("ITEMIN", 1, "minimal number of iterations over fields", ehldyn);
@@ -48,12 +53,14 @@ void Inpar::EHL::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
       tuple<SolutionSchemeOverFields>(ehl_IterStagg, ehl_Monolithic), ehldyn);
 
   // set unprojectable nodes to zero pressure via Dirichlet condition
-  Core::Utils::bool_parameter("UNPROJ_ZERO_DBC", false,
-      "set unprojectable nodes to zero pressure via Dirichlet condition", ehldyn);
+  ehldyn.specs.emplace_back(parameter<bool>("UNPROJ_ZERO_DBC",
+      {.description = "set unprojectable nodes to zero pressure via Dirichlet condition",
+          .default_value = false}));
 
   // use dry contact model
-  Core::Utils::bool_parameter("DRY_CONTACT_MODEL", false,
-      "set unprojectable nodes to zero pressure via Dirichlet condition", ehldyn);
+  ehldyn.specs.emplace_back(parameter<bool>("DRY_CONTACT_MODEL",
+      {.description = "set unprojectable nodes to zero pressure via Dirichlet condition",
+          .default_value = false}));
 
 
   ehldyn.move_into_collection(list);
@@ -63,11 +70,12 @@ void Inpar::EHL::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
   Core::Utils::SectionSpecs ehldynmono{ehldyn, "MONOLITHIC"};
 
   // convergence tolerance of EHL residual
-  Core::Utils::double_parameter(
-      "CONVTOL", 1e-6, "tolerance for convergence check of EHL", ehldynmono);
+  ehldynmono.specs.emplace_back(parameter<double>(
+      "CONVTOL", {.description = "tolerance for convergence check of EHL", .default_value = 1e-6}));
   // Iterationparameters
-  Core::Utils::double_parameter("TOLINC", 1.0e-6,
-      "tolerance for convergence check of EHL-increment in monolithic EHL", ehldynmono);
+  ehldynmono.specs.emplace_back(parameter<double>("TOLINC",
+      {.description = "tolerance for convergence check of EHL-increment in monolithic EHL",
+          .default_value = 1.0e-6}));
 
   Core::Utils::string_to_integral_parameter<ConvNorm>("NORM_RESF", "Abs",
       "type of norm for residual convergence check", tuple<std::string>("Abs", "Rel", "Mix"),
@@ -92,24 +100,27 @@ void Inpar::EHL::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
       tuple<std::string>("L1", "L1_Scaled", "L2", "Rms", "Inf"),
       tuple<VectorNorm>(norm_l1, norm_l1_scaled, norm_l2, norm_rms, norm_inf), ehldynmono);
 
-  Core::Utils::double_parameter("PTCDT", 0.1,
-      "pseudo time step for pseudo-transient continuation (PTC) stabilised Newton procedure",
-      ehldynmono);
+  ehldynmono.specs.emplace_back(
+      parameter<double>("PTCDT", {.description = "pseudo time step for pseudo-transient "
+                                                 "continuation (PTC) stabilised Newton procedure",
+                                     .default_value = 0.1}));
 
   // number of linear solver used for monolithic EHL
   Core::Utils::int_parameter(
       "LINEAR_SOLVER", -1, "number of linear solver used for monolithic EHL problems", ehldynmono);
 
   // convergence criteria adaptivity of monolithic EHL solver
-  Core::Utils::bool_parameter("ADAPTCONV", false,
-      "Switch on adaptive control of linear solver tolerance for nonlinear solution", ehldynmono);
-  Core::Utils::double_parameter("ADAPTCONV_BETTER", 0.1,
-      "The linear solver shall be this much better than the current nonlinear residual in the "
-      "nonlinear convergence limit",
-      ehldynmono);
+  ehldynmono.specs.emplace_back(parameter<bool>("ADAPTCONV",
+      {.description =
+              "Switch on adaptive control of linear solver tolerance for nonlinear solution",
+          .default_value = false}));
+  ehldynmono.specs.emplace_back(parameter<double>("ADAPTCONV_BETTER",
+      {.description = "The linear solver shall be this much better than the current nonlinear "
+                      "residual in the nonlinear convergence limit",
+          .default_value = 0.1}));
 
-  Core::Utils::bool_parameter(
-      "INFNORMSCALING", true, "Scale blocks of matrix with row infnorm?", ehldynmono);
+  ehldynmono.specs.emplace_back(parameter<bool>("INFNORMSCALING",
+      {.description = "Scale blocks of matrix with row infnorm?", .default_value = true}));
 
   ehldynmono.move_into_collection(list);
 
@@ -119,15 +130,17 @@ void Inpar::EHL::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
   Core::Utils::SectionSpecs ehldynpart{ehldyn, "PARTITIONED"};
 
   // Solver parameter for relaxation of iterative staggered partitioned EHL
-  Core::Utils::double_parameter(
-      "MAXOMEGA", 10.0, "largest omega allowed for Aitken relaxation", ehldynpart);
-  Core::Utils::double_parameter(
-      "MINOMEGA", 0.1, "smallest omega allowed for Aitken relaxation", ehldynpart);
-  Core::Utils::double_parameter("STARTOMEGA", 1.0, "fixed relaxation parameter", ehldynpart);
+  ehldynpart.specs.emplace_back(parameter<double>("MAXOMEGA",
+      {.description = "largest omega allowed for Aitken relaxation", .default_value = 10.0}));
+  ehldynpart.specs.emplace_back(parameter<double>("MINOMEGA",
+      {.description = "smallest omega allowed for Aitken relaxation", .default_value = 0.1}));
+  ehldynpart.specs.emplace_back(parameter<double>(
+      "STARTOMEGA", {.description = "fixed relaxation parameter", .default_value = 1.0}));
 
   // convergence tolerance of outer iteration loop
-  Core::Utils::double_parameter("CONVTOL", 1e-6,
-      "tolerance for convergence check of outer iteration within partitioned EHL", ehldynpart);
+  ehldynpart.specs.emplace_back(parameter<double>("CONVTOL",
+      {.description = "tolerance for convergence check of outer iteration within partitioned EHL",
+          .default_value = 1e-6}));
 
   ehldynpart.move_into_collection(list);
 }

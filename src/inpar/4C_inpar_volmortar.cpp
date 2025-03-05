@@ -17,6 +17,7 @@ FOUR_C_NAMESPACE_OPEN
 void Inpar::VolMortar::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   /* parameters for volmortar */
   Core::Utils::SectionSpecs volmortar{"VOLMORTAR COUPLING"};
@@ -64,11 +65,13 @@ void Inpar::VolMortar::set_valid_parameters(std::map<std::string, Core::IO::Inpu
           Coupling::VolMortar::dualquad_quad_mod),
       volmortar);
 
-  Core::Utils::bool_parameter(
-      "MESH_INIT", false, "If chosen, mesh initialization procedure is performed", volmortar);
+  volmortar.specs.emplace_back(parameter<bool>(
+      "MESH_INIT", {.description = "If chosen, mesh initialization procedure is performed",
+                       .default_value = false}));
 
-  Core::Utils::bool_parameter("KEEP_EXTENDEDGHOSTING", true,
-      "If chosen, extended ghosting is kept for simulation", volmortar);
+  volmortar.specs.emplace_back(parameter<bool>("KEEP_EXTENDEDGHOSTING",
+      {.description = "If chosen, extended ghosting is kept for simulation",
+          .default_value = true}));
 
   volmortar.move_into_collection(list);
 }

@@ -170,7 +170,6 @@ void CONSTRAINTS::MPConstraint3Penalty::evaluate(Teuchos::ParameterList& params,
   acterror_->PutScalar(0.0);
   std::map<int, std::shared_ptr<Core::FE::Discretization>>::iterator discriter;
   for (discriter = constraintdis_.begin(); discriter != constraintdis_.end(); discriter++)
-
     evaluate_error(*discriter->second, params, *acterror_);
 
   //    std::cout << "current error "<< *acterror_<<std::endl;

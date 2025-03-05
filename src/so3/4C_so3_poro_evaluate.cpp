@@ -495,8 +495,9 @@ void Discret::Elements::So3Poro<So3Ele, distype>::nonlinear_stiffness_poroelast(
     Core::LinAlg::Matrix<numdof_, 1>* force,              // element internal force vector
     // Core::LinAlg::Matrix<numgptpar_, numstr_>* elestress, // stresses at GP
     // Core::LinAlg::Matrix<numgptpar_, numstr_>* elestrain, // strains at GP
-    Teuchos::ParameterList& params  // algorithmic parameters e.g. time
-    //   const Inpar::Solid::StressType       iostress     // stress output option
+    Teuchos::ParameterList&
+        params  // algorithmic parameters e.g. time
+                //   const Inpar::Solid::StressType       iostress     // stress output option
 )
 {
   get_materials();

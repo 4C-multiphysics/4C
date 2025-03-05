@@ -25,8 +25,7 @@ Mortar::MatrixRowColTransformer::MatrixRowColTransformer(const unsigned num_tran
       slave_col_(num_transformer),
       master_row_(num_transformer),
       master_col_(num_transformer)
-{
-  /* empty */
+{ /* empty */
 }
 
 /*----------------------------------------------------------------------------*

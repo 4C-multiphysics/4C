@@ -18,6 +18,7 @@ FOUR_C_NAMESPACE_OPEN
 void Inpar::PoroScaTra::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs poroscatradyn{"POROSCATRA CONTROL"};
 
@@ -26,8 +27,10 @@ void Inpar::PoroScaTra::set_valid_parameters(std::map<std::string, Core::IO::Inp
       "RESTARTEVERY", 1, "write restart possibility every RESTARTEVERY steps", poroscatradyn);
   // Time loop control
   Core::Utils::int_parameter("NUMSTEP", 200, "maximum number of Timesteps", poroscatradyn);
-  Core::Utils::double_parameter("MAXTIME", 1000.0, "total simulation time", poroscatradyn);
-  Core::Utils::double_parameter("TIMESTEP", 0.05, "time step size dt", poroscatradyn);
+  poroscatradyn.specs.emplace_back(parameter<double>(
+      "MAXTIME", {.description = "total simulation time", .default_value = 1000.0}));
+  poroscatradyn.specs.emplace_back(
+      parameter<double>("TIMESTEP", {.description = "time step size dt", .default_value = 0.05}));
   Core::Utils::int_parameter("RESULTSEVERY", 1, "increment for writing solution", poroscatradyn);
   Core::Utils::int_parameter(
       "ITEMAX", 10, "maximum number of iterations over fields", poroscatradyn);
@@ -35,26 +38,36 @@ void Inpar::PoroScaTra::set_valid_parameters(std::map<std::string, Core::IO::Inp
       "ITEMIN", 1, "minimal number of iterations over fields", poroscatradyn);
 
   // Iterationparameters
-  Core::Utils::double_parameter("TOLRES_GLOBAL", 1e-8,
-      "tolerance in the residual norm for the Newton iteration", poroscatradyn);
-  Core::Utils::double_parameter("TOLINC_GLOBAL", 1e-8,
-      "tolerance in the increment norm for the Newton iteration", poroscatradyn);
-  Core::Utils::double_parameter("TOLRES_DISP", 1e-8,
-      "tolerance in the residual norm for the Newton iteration", poroscatradyn);
-  Core::Utils::double_parameter("TOLINC_DISP", 1e-8,
-      "tolerance in the increment norm for the Newton iteration", poroscatradyn);
-  Core::Utils::double_parameter(
-      "TOLRES_VEL", 1e-8, "tolerance in the residual norm for the Newton iteration", poroscatradyn);
-  Core::Utils::double_parameter("TOLINC_VEL", 1e-8,
-      "tolerance in the increment norm for the Newton iteration", poroscatradyn);
-  Core::Utils::double_parameter("TOLRES_PRES", 1e-8,
-      "tolerance in the residual norm for the Newton iteration", poroscatradyn);
-  Core::Utils::double_parameter("TOLINC_PRES", 1e-8,
-      "tolerance in the increment norm for the Newton iteration", poroscatradyn);
-  Core::Utils::double_parameter("TOLRES_SCALAR", 1e-8,
-      "tolerance in the residual norm for the Newton iteration", poroscatradyn);
-  Core::Utils::double_parameter("TOLINC_SCALAR", 1e-8,
-      "tolerance in the increment norm for the Newton iteration", poroscatradyn);
+  poroscatradyn.specs.emplace_back(parameter<double>(
+      "TOLRES_GLOBAL", {.description = "tolerance in the residual norm for the Newton iteration",
+                           .default_value = 1e-8}));
+  poroscatradyn.specs.emplace_back(parameter<double>(
+      "TOLINC_GLOBAL", {.description = "tolerance in the increment norm for the Newton iteration",
+                           .default_value = 1e-8}));
+  poroscatradyn.specs.emplace_back(parameter<double>(
+      "TOLRES_DISP", {.description = "tolerance in the residual norm for the Newton iteration",
+                         .default_value = 1e-8}));
+  poroscatradyn.specs.emplace_back(parameter<double>(
+      "TOLINC_DISP", {.description = "tolerance in the increment norm for the Newton iteration",
+                         .default_value = 1e-8}));
+  poroscatradyn.specs.emplace_back(parameter<double>(
+      "TOLRES_VEL", {.description = "tolerance in the residual norm for the Newton iteration",
+                        .default_value = 1e-8}));
+  poroscatradyn.specs.emplace_back(parameter<double>(
+      "TOLINC_VEL", {.description = "tolerance in the increment norm for the Newton iteration",
+                        .default_value = 1e-8}));
+  poroscatradyn.specs.emplace_back(parameter<double>(
+      "TOLRES_PRES", {.description = "tolerance in the residual norm for the Newton iteration",
+                         .default_value = 1e-8}));
+  poroscatradyn.specs.emplace_back(parameter<double>(
+      "TOLINC_PRES", {.description = "tolerance in the increment norm for the Newton iteration",
+                         .default_value = 1e-8}));
+  poroscatradyn.specs.emplace_back(parameter<double>(
+      "TOLRES_SCALAR", {.description = "tolerance in the residual norm for the Newton iteration",
+                           .default_value = 1e-8}));
+  poroscatradyn.specs.emplace_back(parameter<double>(
+      "TOLINC_SCALAR", {.description = "tolerance in the increment norm for the Newton iteration",
+                           .default_value = 1e-8}));
 
   Core::Utils::string_to_integral_parameter<Inpar::PoroElast::ConvNorm>("NORM_INC",
       "AbsSingleFields", "type of norm for primary variables convergence check",
@@ -104,7 +117,8 @@ void Inpar::PoroScaTra::set_valid_parameters(std::map<std::string, Core::IO::Inp
           Monolithic, Part_ScatraToPoro, Part_PoroToScatra, Part_TwoWay),
       poroscatradyn);
 
-  Core::Utils::bool_parameter("MATCHINGGRID", true, "is matching grid", poroscatradyn);
+  poroscatradyn.specs.emplace_back(
+      parameter<bool>("MATCHINGGRID", {.description = "is matching grid", .default_value = true}));
 
   poroscatradyn.move_into_collection(list);
 }

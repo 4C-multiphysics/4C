@@ -47,7 +47,6 @@ ScaTra::TimIntHDG::TimIntHDG(const std::shared_ptr<Core::FE::Discretization>& ac
       padapterrorbase_(params->get<double>("PADAPTERRORBASE")),
       padaptdegreemax_(params->get<int>("PADAPTDEGREEMAX")),
       elementdegree_(nullptr)
-
 {
 }
 

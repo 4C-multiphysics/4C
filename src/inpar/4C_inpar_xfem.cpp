@@ -19,26 +19,34 @@ FOUR_C_NAMESPACE_OPEN
 void Inpar::XFEM::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
+  using namespace Core::IO::InputSpecBuilders;
 
   Core::Utils::SectionSpecs xfem_general{"XFEM GENERAL"};
 
   // OUTPUT options
-  Core::Utils::bool_parameter("GMSH_DEBUG_OUT", false,
-      "Do you want to write extended Gmsh output for each timestep?", xfem_general);
-  Core::Utils::bool_parameter("GMSH_DEBUG_OUT_SCREEN", false,
-      "Do you want to be informed, if Gmsh output is written?", xfem_general);
-  Core::Utils::bool_parameter("GMSH_SOL_OUT", false,
-      "Do you want to write extended Gmsh output for each timestep?", xfem_general);
-  Core::Utils::bool_parameter("GMSH_TIMINT_OUT", false,
-      "Do you want to write extended Gmsh output for each timestep?", xfem_general);
-  Core::Utils::bool_parameter("GMSH_EOS_OUT", false,
-      "Do you want to write extended Gmsh output for each timestep?", xfem_general);
-  Core::Utils::bool_parameter("GMSH_DISCRET_OUT", false,
-      "Do you want to write extended Gmsh output for each timestep?", xfem_general);
-  Core::Utils::bool_parameter("GMSH_CUT_OUT", false,
-      "Do you want to write extended Gmsh output for each timestep?", xfem_general);
-  Core::Utils::bool_parameter(
-      "PRINT_OUTPUT", false, "Is the output of the cut process desired?", xfem_general);
+  xfem_general.specs.emplace_back(parameter<bool>("GMSH_DEBUG_OUT",
+      {.description = "Do you want to write extended Gmsh output for each timestep?",
+          .default_value = false}));
+  xfem_general.specs.emplace_back(parameter<bool>("GMSH_DEBUG_OUT_SCREEN",
+      {.description = "Do you want to be informed, if Gmsh output is written?",
+          .default_value = false}));
+  xfem_general.specs.emplace_back(parameter<bool>("GMSH_SOL_OUT",
+      {.description = "Do you want to write extended Gmsh output for each timestep?",
+          .default_value = false}));
+  xfem_general.specs.emplace_back(parameter<bool>("GMSH_TIMINT_OUT",
+      {.description = "Do you want to write extended Gmsh output for each timestep?",
+          .default_value = false}));
+  xfem_general.specs.emplace_back(parameter<bool>("GMSH_EOS_OUT",
+      {.description = "Do you want to write extended Gmsh output for each timestep?",
+          .default_value = false}));
+  xfem_general.specs.emplace_back(parameter<bool>("GMSH_DISCRET_OUT",
+      {.description = "Do you want to write extended Gmsh output for each timestep?",
+          .default_value = false}));
+  xfem_general.specs.emplace_back(parameter<bool>("GMSH_CUT_OUT",
+      {.description = "Do you want to write extended Gmsh output for each timestep?",
+          .default_value = false}));
+  xfem_general.specs.emplace_back(parameter<bool>("PRINT_OUTPUT",
+      {.description = "Is the output of the cut process desired?", .default_value = false}));
 
   Core::Utils::int_parameter(
       "MAX_NUM_DOFSETS", 3, "Maximum number of volumecells in the XFEM element", xfem_general);
@@ -75,17 +83,19 @@ void Inpar::XFEM::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
   Core::Utils::SectionSpecs xfluid_general{xfluid_dyn, "GENERAL"};
 
   // Do we use more than one fluid discretization?
-  Core::Utils::bool_parameter("XFLUIDFLUID", false, "Use an embedded fluid patch.", xfluid_general);
+  xfluid_general.specs.emplace_back(parameter<bool>(
+      "XFLUIDFLUID", {.description = "Use an embedded fluid patch.", .default_value = false}));
 
   // How many monolithic steps we keep the fluidfluid-boundary fixed
   Core::Utils::int_parameter(
       "RELAXING_ALE_EVERY", 1, "Relaxing Ale after how many monolithic steps", xfluid_general);
 
-  Core::Utils::bool_parameter("RELAXING_ALE", true,
-      "switch on/off for relaxing Ale in monolithic fluid-fluid-fsi", xfluid_general);
+  xfluid_general.specs.emplace_back(parameter<bool>("RELAXING_ALE",
+      {.description = "switch on/off for relaxing Ale in monolithic fluid-fluid-fsi",
+          .default_value = true}));
 
-  Core::Utils::double_parameter(
-      "XFLUIDFLUID_SEARCHRADIUS", 1.0, "Radius of the search tree", xfluid_general);
+  xfluid_general.specs.emplace_back(parameter<double>("XFLUIDFLUID_SEARCHRADIUS",
+      {.description = "Radius of the search tree", .default_value = 1.0}));
 
   // xfluidfluid-fsi-monolithic approach
   Core::Utils::string_to_integral_parameter<MonolithicXffsiApproach>("MONOLITHIC_XFFSI_APPROACH",
@@ -138,7 +148,8 @@ void Inpar::XFEM::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
           Inpar::XFEM::Xf_TimeIntScheme_STD_by_Copy_or_Proj_AND_GHOST_by_Proj_or_Copy_or_GP),
       xfluid_general);
 
-  Core::Utils::bool_parameter("ALE_XFluid", false, "XFluid is Ale Fluid?", xfluid_general);
+  xfluid_general.specs.emplace_back(parameter<bool>(
+      "ALE_XFluid", {.description = "XFluid is Ale Fluid?", .default_value = false}));
 
   // for new OST-implementation: which interface terms to be evaluated for previous time step
   Core::Utils::string_to_integral_parameter<InterfaceTermsPreviousState>(
@@ -153,11 +164,13 @@ void Inpar::XFEM::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
           ),
       xfluid_general);
 
-  Core::Utils::bool_parameter("XFLUID_TIMEINT_CHECK_INTERFACETIPS", true,
-      "Xfluid TimeIntegration Special Check if node has changed the side!", xfluid_general);
+  xfluid_general.specs.emplace_back(parameter<bool>("XFLUID_TIMEINT_CHECK_INTERFACETIPS",
+      {.description = "Xfluid TimeIntegration Special Check if node has changed the side!",
+          .default_value = true}));
 
-  Core::Utils::bool_parameter("XFLUID_TIMEINT_CHECK_SLIDINGONSURFACE", true,
-      "Xfluid TimeIntegration Special Check if node is sliding on surface!", xfluid_general);
+  xfluid_general.specs.emplace_back(parameter<bool>("XFLUID_TIMEINT_CHECK_SLIDINGONSURFACE",
+      {.description = "Xfluid TimeIntegration Special Check if node is sliding on surface!",
+          .default_value = true}));
 
   xfluid_general.move_into_collection(list);
 
@@ -193,10 +206,12 @@ void Inpar::XFEM::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
       xfluid_stab);
 
   // viscous and convective Nitsche/MSH stabilization parameter
-  Core::Utils::double_parameter(
-      "NIT_STAB_FAC", 35.0, " ( stabilization parameter for Nitsche's penalty term", xfluid_stab);
-  Core::Utils::double_parameter("NIT_STAB_FAC_TANG", 35.0,
-      " ( stabilization parameter for Nitsche's penalty tangential term", xfluid_stab);
+  xfluid_stab.specs.emplace_back(parameter<double>(
+      "NIT_STAB_FAC", {.description = " ( stabilization parameter for Nitsche's penalty term",
+                          .default_value = 35.0}));
+  xfluid_stab.specs.emplace_back(parameter<double>("NIT_STAB_FAC_TANG",
+      {.description = " ( stabilization parameter for Nitsche's penalty tangential term",
+          .default_value = 35.0}));
 
   Core::Utils::string_to_integral_parameter<ViscStabTraceEstimate>("VISC_STAB_TRACE_ESTIMATE",
       "CT_div_by_hk", "how to estimate the scaling from the trace inequality in Nitsche's method",
@@ -292,49 +307,58 @@ void Inpar::XFEM::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
           ),
       xfluid_stab);
 
-  Core::Utils::bool_parameter("GHOST_PENALTY_STAB", false,
-      "switch on/off ghost penalty interface stabilization", xfluid_stab);
+  xfluid_stab.specs.emplace_back(parameter<bool>(
+      "GHOST_PENALTY_STAB", {.description = "switch on/off ghost penalty interface stabilization",
+                                .default_value = false}));
 
-  Core::Utils::bool_parameter("GHOST_PENALTY_TRANSIENT_STAB", false,
-      "switch on/off ghost penalty transient interface stabilization", xfluid_stab);
+  xfluid_stab.specs.emplace_back(parameter<bool>("GHOST_PENALTY_TRANSIENT_STAB",
+      {.description = "switch on/off ghost penalty transient interface stabilization",
+          .default_value = false}));
 
-  Core::Utils::bool_parameter("GHOST_PENALTY_2nd_STAB", false,
-      "switch on/off ghost penalty interface stabilization for 2nd order derivatives", xfluid_stab);
-  Core::Utils::bool_parameter("GHOST_PENALTY_2nd_STAB_NORMAL", false,
-      "switch between ghost penalty interface stabilization for 2nd order derivatives in normal or "
-      "all spatial directions",
-      xfluid_stab);
-
-
-  Core::Utils::double_parameter("GHOST_PENALTY_FAC", 0.1,
-      "define stabilization parameter ghost penalty interface stabilization", xfluid_stab);
-
-  Core::Utils::double_parameter("GHOST_PENALTY_TRANSIENT_FAC", 0.001,
-      "define stabilization parameter ghost penalty transient interface stabilization",
-      xfluid_stab);
-
-  Core::Utils::double_parameter("GHOST_PENALTY_2nd_FAC", 0.05,
-      "define stabilization parameter ghost penalty 2nd order viscous interface stabilization",
-      xfluid_stab);
-  Core::Utils::double_parameter("GHOST_PENALTY_PRESSURE_2nd_FAC", 0.05,
-      "define stabilization parameter ghost penalty 2nd order pressure interface stabilization",
-      xfluid_stab);
+  xfluid_stab.specs.emplace_back(parameter<bool>("GHOST_PENALTY_2nd_STAB",
+      {.description =
+              "switch on/off ghost penalty interface stabilization for 2nd order derivatives",
+          .default_value = false}));
+  xfluid_stab.specs.emplace_back(parameter<bool>("GHOST_PENALTY_2nd_STAB_NORMAL",
+      {.description = "switch between ghost penalty interface stabilization for 2nd order "
+                      "derivatives in normal or all spatial directions",
+          .default_value = false}));
 
 
-  Core::Utils::bool_parameter("XFF_EOS_PRES_EMB_LAYER", false,
-      "switch on/off edge-based pressure stabilization on interface-contributing elements of the "
-      "embedded fluid",
-      xfluid_stab);
+  xfluid_stab.specs.emplace_back(parameter<double>("GHOST_PENALTY_FAC",
+      {.description = "define stabilization parameter ghost penalty interface stabilization",
+          .default_value = 0.1}));
 
-  Core::Utils::bool_parameter("IS_PSEUDO_2D", false,
-      "modify viscous interface stabilization due to the vanishing polynomial in third dimension "
-      "when using strong Dirichlet conditions to block polynomials in one spatial dimension",
-      xfluid_stab);
+  xfluid_stab.specs.emplace_back(parameter<double>("GHOST_PENALTY_TRANSIENT_FAC",
+      {.description =
+              "define stabilization parameter ghost penalty transient interface stabilization",
+          .default_value = 0.001}));
 
-  Core::Utils::bool_parameter("GHOST_PENALTY_ADD_INNER_FACES", false,
-      "Apply ghost penalty stabilization also for inner faces if this is possible due to the "
-      "dofsets",
-      xfluid_stab);
+  xfluid_stab.specs.emplace_back(parameter<double>(
+      "GHOST_PENALTY_2nd_FAC", {.description = "define stabilization parameter ghost penalty 2nd "
+                                               "order viscous interface stabilization",
+                                   .default_value = 0.05}));
+  xfluid_stab.specs.emplace_back(parameter<double>("GHOST_PENALTY_PRESSURE_2nd_FAC",
+      {.description = "define stabilization parameter ghost penalty 2nd order pressure interface "
+                      "stabilization",
+          .default_value = 0.05}));
+
+
+  xfluid_stab.specs.emplace_back(parameter<bool>("XFF_EOS_PRES_EMB_LAYER",
+      {.description = "switch on/off edge-based pressure stabilization on interface-contributing "
+                      "elements of the embedded fluid",
+          .default_value = false}));
+
+  xfluid_stab.specs.emplace_back(parameter<bool>(
+      "IS_PSEUDO_2D", {.description = "modify viscous interface stabilization due to the vanishing "
+                                      "polynomial in third dimension when using strong Dirichlet "
+                                      "conditions to block polynomials in one spatial dimension",
+                          .default_value = false}));
+
+  xfluid_stab.specs.emplace_back(parameter<bool>("GHOST_PENALTY_ADD_INNER_FACES",
+      {.description = "Apply ghost penalty stabilization also for inner faces if this is possible "
+                      "due to the dofsets",
+          .default_value = false}));
 
   xfluid_stab.move_into_collection(list);
 
@@ -345,42 +369,50 @@ void Inpar::XFEM::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
       "ITEMIN", 1, "How many iterations are performed minimal", xfsi_monolithic);
   Core::Utils::int_parameter(
       "ITEMAX_OUTER", 5, "How many outer iterations are performed maximal", xfsi_monolithic);
-  Core::Utils::bool_parameter("ND_NEWTON_DAMPING", false,
-      "Activate Newton damping based on residual and increment", xfsi_monolithic);
-  Core::Utils::double_parameter("ND_MAX_DISP_ITERINC", -1.0,
-      "Maximal displacement increment to apply full newton --> otherwise damp newton",
-      xfsi_monolithic);
-  Core::Utils::double_parameter("ND_MAX_VEL_ITERINC", -1.0,
-      "Maximal fluid velocity increment to apply full newton --> otherwise damp newton",
-      xfsi_monolithic);
-  Core::Utils::double_parameter("ND_MAX_PRES_ITERINC", -1.0,
-      "Maximal fluid pressure increment to apply full newton --> otherwise damp newton",
-      xfsi_monolithic);
-  Core::Utils::double_parameter("ND_MAX_PVEL_ITERINC", -1.0,
-      "Maximal porofluid velocity increment to apply full newton --> otherwise damp newton",
-      xfsi_monolithic);
-  Core::Utils::double_parameter("ND_MAX_PPRES_ITERINC", -1.0,
-      "Maximal porofluid pressure increment to apply full newton --> otherwise damp newton",
-      xfsi_monolithic);
-  Core::Utils::double_parameter("CUT_EVALUATE_MINTOL", 0.0,
-      "Minimal value of the maximal structural displacement for which the CUT is evaluate in this "
-      "iteration!",
-      xfsi_monolithic);
+  xfsi_monolithic.specs.emplace_back(parameter<bool>("ND_NEWTON_DAMPING",
+      {.description = "Activate Newton damping based on residual and increment",
+          .default_value = false}));
+  xfsi_monolithic.specs.emplace_back(parameter<double>("ND_MAX_DISP_ITERINC",
+      {.description =
+              "Maximal displacement increment to apply full newton --> otherwise damp newton",
+          .default_value = -1.0}));
+  xfsi_monolithic.specs.emplace_back(parameter<double>("ND_MAX_VEL_ITERINC",
+      {.description =
+              "Maximal fluid velocity increment to apply full newton --> otherwise damp newton",
+          .default_value = -1.0}));
+  xfsi_monolithic.specs.emplace_back(parameter<double>("ND_MAX_PRES_ITERINC",
+      {.description =
+              "Maximal fluid pressure increment to apply full newton --> otherwise damp newton",
+          .default_value = -1.0}));
+  xfsi_monolithic.specs.emplace_back(parameter<double>("ND_MAX_PVEL_ITERINC",
+      {.description =
+              "Maximal porofluid velocity increment to apply full newton --> otherwise damp newton",
+          .default_value = -1.0}));
+  xfsi_monolithic.specs.emplace_back(parameter<double>("ND_MAX_PPRES_ITERINC",
+      {.description =
+              "Maximal porofluid pressure increment to apply full newton --> otherwise damp newton",
+          .default_value = -1.0}));
+  xfsi_monolithic.specs.emplace_back(parameter<double>(
+      "CUT_EVALUATE_MINTOL", {.description = "Minimal value of the maximal structural displacement "
+                                             "for which the CUT is evaluate in this iteration!",
+                                 .default_value = 0.0}));
   Core::Utils::int_parameter("CUT_EVALUATE_MINITER", 0,
       "Minimal number of nonlinear iterations, before the CUT is potentially not evaluated",
       xfsi_monolithic);
-  Core::Utils::bool_parameter("EXTRAPOLATE_TO_ZERO", false,
-      "the extrapolation of the fluid stress in the contact zone is relaxed to zero after a "
-      "certain distance",
-      xfsi_monolithic);
-  Core::Utils::double_parameter("POROCONTACTFPSI_HFRACTION", 1.0,
-      "factor of element size, when transition between FPSI and PSCI is started!", xfsi_monolithic);
-  Core::Utils::double_parameter("POROCONTACTFPSI_FULLPCFRACTION", 0.0,
-      "ration of gap/(POROCONTACTFPSI_HFRACTION*h) when full PSCI is started!", xfsi_monolithic);
-  Core::Utils::bool_parameter("USE_PORO_PRESSURE", true,
-      "the extrapolation of the fluid stress in the contact zone is relaxed to zero after a "
-      "certtain distance",
-      xfsi_monolithic);
+  xfsi_monolithic.specs.emplace_back(parameter<bool>(
+      "EXTRAPOLATE_TO_ZERO", {.description = "the extrapolation of the fluid stress in the contact "
+                                             "zone is relaxed to zero after a certain distance",
+                                 .default_value = false}));
+  xfsi_monolithic.specs.emplace_back(parameter<double>("POROCONTACTFPSI_HFRACTION",
+      {.description = "factor of element size, when transition between FPSI and PSCI is started!",
+          .default_value = 1.0}));
+  xfsi_monolithic.specs.emplace_back(parameter<double>("POROCONTACTFPSI_FULLPCFRACTION",
+      {.description = "ration of gap/(POROCONTACTFPSI_HFRACTION*h) when full PSCI is started!",
+          .default_value = 0.0}));
+  xfsi_monolithic.specs.emplace_back(parameter<bool>(
+      "USE_PORO_PRESSURE", {.description = "the extrapolation of the fluid stress in the contact "
+                                           "zone is relaxed to zero after a certtain distance",
+                               .default_value = true}));
 
   xfsi_monolithic.move_into_collection(list);
 }

@@ -66,7 +66,6 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::Beam3kType::create(
  *------------------------------------------------------------------------------------------------*/
 std::shared_ptr<Core::Elements::Element> Discret::Elements::Beam3kType::create(
     const int id, const int owner)
-
 {
   return std::make_shared<Beam3k>(id, owner);
 }

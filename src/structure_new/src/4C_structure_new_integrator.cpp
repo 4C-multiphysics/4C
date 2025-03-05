@@ -710,8 +710,7 @@ void Solid::Integrator::post_time_loop()
  *----------------------------------------------------------------------------*/
 Solid::Integrator::MidTimeEnergy::MidTimeEnergy(const Integrator& integrator)
     : integrator_(integrator), avg_type_(Inpar::Solid::midavg_vague)
-{
-  /* empty */
+{ /* empty */
 }
 
 /*----------------------------------------------------------------------------*

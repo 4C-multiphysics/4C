@@ -36,7 +36,6 @@ Mat::PAR::FluidPoroSingleReaction::FluidPoroSingleReaction(
       porosityname_("porosity"),
       volfracnames_(numvolfrac_),
       volfracpressurenames_(numvolfrac_)
-
 {
 }
 

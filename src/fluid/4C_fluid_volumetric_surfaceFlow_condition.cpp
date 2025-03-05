@@ -1397,7 +1397,6 @@ double FLD::Utils::FluidVolumetricSurfaceFlowBc::pressure_calculation(
 double FLD::Utils::FluidVolumetricSurfaceFlowBc::polynomail_velocity(double r, int order)
 {
   return (1.0 - pow(r, double(order)));
-
 }  // FLD::Utils::FluidVolumetricSurfaceFlowBc::PolynomailVelocity
 
 

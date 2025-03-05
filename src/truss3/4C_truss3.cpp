@@ -119,7 +119,6 @@ Discret::Elements::Truss3::Truss3(const Discret::Elements::Truss3& old)
       kintype_(old.kintype_),
       material_(old.material_),
       x_(old.x_)
-
 {
 }
 /*----------------------------------------------------------------------*
