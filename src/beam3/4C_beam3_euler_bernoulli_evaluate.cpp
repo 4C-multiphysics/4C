@@ -307,7 +307,7 @@ int Discret::Elements::Beam3eb::evaluate_neumann(Teuchos::ParameterList& params,
     {
       if (onoff[i] == 0) continue;
       // number of the load curve related with a specific line Neumann condition called
-      if (tmp_funct[i].has_value() && tmp_funct[i].value() > 0)
+      if (tmp_funct[i].has_value())
         functfac[i] = Global::Problem::instance()
                           ->function_by_id<Core::Utils::FunctionOfTime>(tmp_funct[i].value())
                           .evaluate(time);
@@ -406,7 +406,7 @@ int Discret::Elements::Beam3eb::evaluate_neumann(Teuchos::ParameterList& params,
     // Check if MOMENT line Neumann conditions are applied accidentally and throw error
     for (int dof = 3; dof < 6; ++dof)
     {
-      if (tmp_funct[dof].has_value() and tmp_funct[dof].value() > 0)
+      if (tmp_funct[dof].has_value())
         FOUR_C_THROW(
             "Line Neumann conditions for distributed moments are not implemented for beam3eb so "
             "far! Only the function first three function flags (i.e. related to forces) can be "
@@ -488,7 +488,7 @@ int Discret::Elements::Beam3eb::evaluate_neumann(Teuchos::ParameterList& params,
       double functionfac = 1.0;
       for (int dof = 0; dof < 3; ++dof)
       {
-        if (tmp_funct[dof].has_value() && tmp_funct[dof].value() > 0)
+        if (tmp_funct[dof].has_value())
         {
           // evaluate function at the position of the current node       --> dof here correct?
           functionfac =

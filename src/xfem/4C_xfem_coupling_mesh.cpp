@@ -1474,7 +1474,7 @@ void XFEM::MeshCouplingNavierSlip::set_condition_specific_parameters()
     double sliplength = cond->parameters().get<double>("SLIPCOEFFICIENT");
 
     // Is the slip length constant? Don't call functions at GP-level unnecessary.
-    bool slip_bool = (cond->parameters().get<int>("FUNCT") < 1);
+    bool slip_bool = (!cond->parameters().get<std::optional<int>>("FUNCT").has_value());
 
     bool force_tangential = cond->parameters().get<bool>("FORCE_ONLY_TANG_VEL");
 
@@ -1816,7 +1816,7 @@ void XFEM::MeshCouplingFSI::set_condition_specific_parameters()
     double sliplength = cond->parameters().get<double>("SLIPCOEFFICIENT");
 
     // Is the slip length constant? Don't call functions at GP-level unnecessary.
-    bool slip_bool = (cond->parameters().get<int>("SLIP_FUNCT") < 1);
+    bool slip_bool = (!cond->parameters().get<std::optional<int>>("FUNCT").has_value());
 
     if (!sliplength_map_.insert(std::make_pair(cond_int, std::make_pair(sliplength, slip_bool)))
             .second)
@@ -1829,8 +1829,7 @@ void XFEM::MeshCouplingFSI::set_condition_specific_parameters()
       if (interfacelaw_ != interfacelaw)
         FOUR_C_THROW(
             "XFEM::MeshCouplingFSI::set_condition_specific_parameters: You defined two different "
-            "FSI "
-            "INTLAWS, not supported yet!");
+            "FSI INTLAWS, not supported yet!");
     }
     interfacelaw_ = interfacelaw;
     i++;

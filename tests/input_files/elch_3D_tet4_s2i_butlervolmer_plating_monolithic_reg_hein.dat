@@ -79,9 +79,9 @@ SCATRA DIS scatra SPECIAL true QUANTITY meanphi1_0 VALUE 1.00618717025368483e+01
 SCATRA DIS scatra SPECIAL true QUANTITY meanphi1_1 VALUE 1.19999999999999041e+00 TOLERANCE 1.e-09          // mean lithium concentration averaged over electrolyte domain
 SCATRA DIS scatra SPECIAL true QUANTITY meanphi1_2 VALUE 1.18248050000157683e+01 TOLERANCE 1.e-08          // mean lithium concentration averaged over cathode domain
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
-E 6 NUMDOF 2 ONOFF 0 1 VAL 0.0 6.544713556e-4 FUNCT 0 0 TYPE Live
+E 6 NUMDOF 2 ONOFF 0 1 VAL 0.0 6.544713556e-4 FUNCT none none TYPE Live
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT none none
 -----------------------------------------DESIGN VOL INITIAL FIELD CONDITIONS
 E 1 FIELD ScaTra FUNCT 1
 E 2 FIELD ScaTra FUNCT 2

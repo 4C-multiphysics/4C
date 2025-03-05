@@ -70,13 +70,13 @@ MAT 2 MAT_Struct_StVenantKirchhoff YOUNG 1.0 NUE 0.3 DENS 1.0
 LAW 1 CoConstLaw_mirco Offset 0.0 FirstMatID 1 SecondMatID 2 LateralLength 1000 Resolution 6 PressureGreenFunFlag false Tolerance 0.01 InitialTopologyStdDeviationFunct 3 HurstExponentFunct 2 RandomTopologyFlag true RandomSeedFlag false RandomGeneratorSeed 71 MaxIteration 100 WarmStartingFlag true FiniteDifferenceFraction 0.001
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // ground
-E 1 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT none none
 // bottom_left
-E 2 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+E 2 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 // top_left
-E 5 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+E 5 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 // pushing
-E 6 NUMDOF 2 ONOFF 0 1 VAL 0.0 1.0 FUNCT 0 1
+E 6 NUMDOF 2 ONOFF 0 1 VAL 0.0 1.0 FUNCT none 1
 --------------------------DESIGN LINE MORTAR CONTACT CONDITIONS 2D
 // bottom_contact
 E 3 InterfaceID 0 Side Master Initialization Inactive FrCoeffOrBound 0.0 AdhesionBound 0.0 Application Solidcontact DbcHandling DoNothing TwoHalfPass 0 RefConfCheckNonSmoothSelfContactSurface 0.0 ConstitutiveLawID 1

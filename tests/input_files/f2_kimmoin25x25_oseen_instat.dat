@@ -84,25 +84,25 @@ FLUID DIS fluid NODE 669 QUANTITY pressure VALUE  1.54312392369901027e-03  TOLER
 E 1 DIS fluid NUMMODES 3 ONOFF 0 0 1 WEIGHTVECDEF integration // ensure that integral of pressure remains 0.0
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
 // Body_force
-E 1 NUMDOF 6 ONOFF 1 1 0 0 0 0 VAL 1.0 1.0 0.0 0.0 0.0 0.0 FUNCT 1 1 0 0 0 0 TYPE Live
+E 1 NUMDOF 6 ONOFF 1 1 0 0 0 0 VAL 1.0 1.0 0.0 0.0 0.0 0.0 FUNCT 1 1 none none none none TYPE Live
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 // Topleft
-E 1 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 1.0 0.0 FUNCT 2 2 0
+E 1 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 1.0 0.0 FUNCT 2 2 none
 // Bottomleft
-E 2 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 1.0 0.0 FUNCT 2 2 0
+E 2 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 1.0 0.0 FUNCT 2 2 none
 // Bottomright
-E 3 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 1.0 0.0 FUNCT 2 2 0
+E 3 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 1.0 0.0 FUNCT 2 2 none
 // Topright
-E 4 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 1.0 0.0 FUNCT 2 2 0
+E 4 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 1.0 0.0 FUNCT 2 2 none
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
 // Line_top
-E 1 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 1.0 0.0 FUNCT 2 2 0
+E 1 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 1.0 0.0 FUNCT 2 2 none
 // Line_left
-E 2 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 1.0 0.0 FUNCT 2 2 0
+E 2 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 1.0 0.0 FUNCT 2 2 none
 // Line_bottom
-E 3 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 1.0 0.0 FUNCT 2 2 0
+E 3 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 1.0 0.0 FUNCT 2 2 none
 // Line_right
-E 4 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 1.0 0.0 FUNCT 2 2 0
+E 4 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 1.0 0.0 FUNCT 2 2 none
 ---------------------------------------------------------DNODE-NODE TOPOLOGY
 NODE    51 DNODE 1
 NODE    676 DNODE 2

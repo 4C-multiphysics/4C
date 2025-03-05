@@ -61,8 +61,8 @@ SOLVER                          UMFPACK
 NAME                            Contact_Solver
 SOLVER                          UMFPACK
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
-E 12 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 -1.0 FUNCT 0 0 1
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
+E 12 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 -1.0 FUNCT none none 1
 -----------------------------------DESIGN SURF MORTAR CONTACT CONDITIONS 3D
 E 6 InterfaceID 1 Side Master Initialization Inactive
 E 7 InterfaceID 1 Side Slave Initialization Inactive

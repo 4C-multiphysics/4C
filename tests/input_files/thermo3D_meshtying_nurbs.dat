@@ -52,7 +52,7 @@ SOLVER                          UMFPACK
 ---------------------------------------------------------MATERIALS
 MAT 1 MAT_Fourier CONDUCT_PARA_NUM 1 CAPA 0 CONDUCT 52
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 11 NUMDOF 1 ONOFF 1 VAL 0 FUNCT 0
+E 11 NUMDOF 1 ONOFF 1 VAL 0 FUNCT none
 -----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
 E 6 NUMDOF 1 ONOFF 1 VAL 1 FUNCT 1
 ------------------------------------------------DESIGN VOL NEUMANN CONDITIONS

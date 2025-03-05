@@ -73,9 +73,9 @@ MAT 1 MAT_Struct_StVenantKirchhoff YOUNG 1.0E4 NUE 0.49 DENS 1.0
 SYMBOLIC_FUNCTION_OF_TIME t*0.1/5
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 // Dirichlet Point 1
-E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 // Dirichlet Point 2
-E 2 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 2 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 ------------------------------------------DESIGN LINE MULTIPNT CONSTRAINT 2D
 // MPC Line
 E 1 ConditionID 1 amplitude 1.0 curve 1 constrNode1 1 constrNode2 2 constrNode3 3 control dist activeTime 0.0

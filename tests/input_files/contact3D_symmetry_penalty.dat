@@ -65,19 +65,19 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME 4*t
 // d8xyz
 E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT none none none
 // d9xyz_move_z
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 -1 FUNCT 0 0 1
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 -1 FUNCT none none 1
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // d5xy
 E 1 NUMDOF 3 ONOFF 1 1 0 VAL 0 0 0 FUNCT none none none
 // d6xyz
 E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT none none none
 // d7xyz_move_z
-E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 -1 FUNCT 0 0 1
+E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 -1 FUNCT none none 1
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // d1xyz
 E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT none none none
 // d2xyz_move_z
-E 4 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 -1 FUNCT 0 0 1
+E 4 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 -1 FUNCT none none 1
 // d3x
 E 5 NUMDOF 3 ONOFF 1 0 0 VAL 0 0 0 FUNCT none none none
 // d4y

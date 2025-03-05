@@ -181,22 +181,22 @@ VARFUNCTION porosity*S1*10e-10*sin(0.5*pi*phi1/4.2e-6)
 VARFUNCTION D0*1.0/(1.0+exp(-2.0*100.0*(-(S2-0.4))))+Dprev*0.5*1.0/(1.0+exp(-2.0*100.0*(S2-0.4))) //regularized version of: D0*heaviside(-(S2-0.4))+Dprev*(0.5)*heaviside(S2-0.4)
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // all_nodes
-E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 --------------------------------DESIGN LINE PORO DIRICH CONDITIONS
 // curve_left
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 191.7026207774473 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 191.7026207774473 0.0 0.0 FUNCT none none none
 // curve_right
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 191.7026207774473 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 191.7026207774473 0.0 0.0 FUNCT none none none
 --------------------------------DESIGN POINT DIRICH CONDITIONS
 // point 1
-E 1 NUMDOF 1 ONOFF 1 VAL 3000.0 FUNCT 0
+E 1 NUMDOF 1 ONOFF 1 VAL 3000.0 FUNCT none
 // point 2
-E 2 NUMDOF 1 ONOFF 1 VAL 2000.0 FUNCT 0
+E 2 NUMDOF 1 ONOFF 1 VAL 2000.0 FUNCT none
 --------------------------------DESIGN POINT TRANSPORT DIRICH CONDITIONS
 // point 1
-E 1 NUMDOF 1 ONOFF 1 VAL 2.88e-4 FUNCT 0
+E 1 NUMDOF 1 ONOFF 1 VAL 2.88e-4 FUNCT none
 // point 2
-E 2 NUMDOF 1 ONOFF 1 VAL 2.88e-4 FUNCT 0
+E 2 NUMDOF 1 ONOFF 1 VAL 2.88e-4 FUNCT none
 ------------------------------DESIGN LINE INITIAL FIELD CONDITIONS
 // all 1D nodes
 E 3 FIELD Artery FUNCT 1

@@ -80,7 +80,7 @@ namespace
             radius_tube, &direction, distance, maxspeed, &rot_vec_torus, rotspeed, rotramptime);
       else if (type == "MOVINGLEVELSETTORUSSLIPLENGTH")
       {
-        auto slipfunct = function_lin_def.get<int>("SLIP_FUNCT");
+        auto slipfunct = function_lin_def.get<std::optional<int>>("FUNCT");
         return std::make_shared<MovingLevelSetTorusSliplength>(&origin, &orient_vec_torus, radius,
             radius_tube, &direction, distance, maxspeed, &rot_vec_torus, rotspeed, rotramptime,
             slipfunct);
@@ -229,7 +229,7 @@ void Discret::Utils::add_valid_xfluid_functions(Core::Utils::FunctionManager& fu
           parameter<std::vector<double>>("ROTATION_VEC", {.size = 3}),
           parameter<double>("ROTATION_SPEED"),
           parameter<double>("ROTATION_RAMPTIME"),
-          parameter<int>("SLIP_FUNCT"),
+          parameter<std::optional<int>>("FUNCT"),
       }),
       all_of({
           selection<std::string>("XFLUID_FUNCTION", {"TAYLORCOUETTEFLOW"}),
@@ -710,38 +710,39 @@ double Discret::Utils::MovingLevelSetTorusVelocity::evaluate(
 Discret::Utils::MovingLevelSetTorusSliplength::MovingLevelSetTorusSliplength(
     std::vector<double>* origin, std::vector<double>* orientationvec_torus, double radius,
     double radius_tube, std::vector<double>* direction, double distance, double maxspeed,
-    std::vector<double>* rotvector, double rotspeed, double rotramptime, int slipfunct)
+    std::vector<double>* rotvector, double rotspeed, double rotramptime,
+    std::optional<int> slipfunct)
     : MovingLSTorus(origin, orientationvec_torus, radius, radius_tube, direction, distance,
           maxspeed, rotvector, rotspeed, rotramptime),
       slipfunct_(slipfunct)
 {
   // Check if the slip function is valid!
-  if (slipfunct_ == 0)
+  if (!slipfunct_.has_value())
     std::cout << "MOVINGLEVELSETTORUSSLIPLENGTH[0]: The slip function is 0.0 everywhere!"
               << std::endl;
-  else if (slipfunct_ == 1)
+  else if (slipfunct_.value() == 1)
     std::cout << "MOVINGLEVELSETTORUSSLIPLENGTH[1]: You have chosen the Spherical shaped "
                  "increase/decrease of the slip-function! (Inner WDBC (eps ~ 0.0) - Outer NavSlip "
                  "(eps ~ infty))"
               << std::endl;
-  else if (slipfunct_ == 2)
+  else if (slipfunct_.value() == 2)
     std::cout << "MOVINGLEVELSETTORUSSLIPLENGTH[2]: You have chosen the Spherical shaped "
                  "increase/decrease of the slip-function! (Inner NavSlip (eps ~ infty) - Outer "
                  "WDBC (eps ~ 0.0))"
               << std::endl;
-  else if (slipfunct_ == 3)
+  else if (slipfunct_.value() == 3)
     std::cout << "MOVINGLEVELSETTORUSSLIPLENGTH[3]: You have chosen the Cylindrical shaped "
                  "increase/decrease of the slip-function! (Inner WDBC (eps ~ 0.0) - Outer NavSlip "
                  "(eps ~ infty))"
               << std::endl;
-  else if (slipfunct_ == 4)
+  else if (slipfunct_.value() == 4)
     std::cout << "MOVINGLEVELSETTORUSSLIPLENGTH[4]: You have chosen the Cylindrical shaped "
                  "increase/decrease of the slip-function! (Inner NavSlip (eps ~ infty) - Outer "
                  "WDBC (eps ~ 0.0))"
               << std::endl;
   else
   {
-    std::cout << slipfunct_ << std::endl;
+    std::cout << slipfunct_.value() << std::endl;
     FOUR_C_THROW("The chosen function is not supported at the moment!!!");
   }
 }
@@ -834,11 +835,11 @@ double Discret::Utils::MovingLevelSetTorusSliplength::evaluate(
 
   // Do the slip length calculations!!!
   double sliplength = 0.0;
-  if (slipfunct_ == 0)
+  if (!slipfunct_.has_value())
   {
     return sliplength;
   }
-  else if (slipfunct_ == 1)
+  else if (slipfunct_.value() == 1)
   {
     // Set slip length 2.71.^((r-0.5)/0.01)  [10^(-9),10^(8)]
     double r_sphere = std::sqrt(x_based_trajectory[0] * x_based_trajectory[0] +
@@ -847,7 +848,7 @@ double Discret::Utils::MovingLevelSetTorusSliplength::evaluate(
 
     sliplength = pow(2.7182818284590452353602874, 100.0 * (r_sphere - 0.5));
   }
-  else if (slipfunct_ == 2)
+  else if (slipfunct_.value() == 2)
   {
     // Set slip length 2.71.^(-(r-0.5)/0.01)  [10^(8),10^(-9)]
     double r_sphere = std::sqrt(x_based_trajectory[0] * x_based_trajectory[0] +
@@ -856,13 +857,13 @@ double Discret::Utils::MovingLevelSetTorusSliplength::evaluate(
 
     sliplength = pow(2.7182818284590452353602874, -100.0 * (r_sphere - 0.5));
   }
-  else if (slipfunct_ == 3)
+  else if (slipfunct_.value() == 3)
   {
     // Set slip length 2.71.^((r_base-0.5)/0.01)  [10^(-9),10^(8)]
 
     sliplength = pow(2.7182818284590452353602874, 100.0 * (r_base - 0.5));
   }
-  else if (slipfunct_ == 4)
+  else if (slipfunct_.value() == 4)
   {
     // Set slip length 2.71.^(-(r_base-0.5)/0.01)  [10^(8),10^(-9)]
 

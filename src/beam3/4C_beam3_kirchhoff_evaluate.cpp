@@ -2121,7 +2121,7 @@ int Discret::Elements::Beam3k::evaluate_neumann(Teuchos::ParameterList& params,
     for (unsigned int i = 0; i < 6; ++i)
     {
       // number of the load curve related with a specific line Neumann condition called
-      if (funct[i].has_value() && funct[i].value() > 0)
+      if (funct[i].has_value())
         functtimefac[i] = Global::Problem::instance()
                               ->function_by_id<Core::Utils::FunctionOfTime>(funct[i].value())
                               .evaluate(time);
@@ -2164,7 +2164,7 @@ int Discret::Elements::Beam3k::evaluate_neumann(Teuchos::ParameterList& params,
     // Check if distributed moment load is applied and throw error
     for (unsigned int idof = 3; idof < 6; ++idof)
     {
-      if (function_numbers[idof].has_value() && function_numbers[idof].value() > 0)
+      if (function_numbers[idof].has_value())
         FOUR_C_THROW(
             "Line Neumann conditions for distributed moments are not implemented for beam3k"
             " so far! Only the function flag 1, 2 and 3 can be set!");
@@ -2578,7 +2578,7 @@ void Discret::Elements::Beam3k::evaluate_line_neumann_forces(
     // sum up load components
     for (unsigned int idof = 0; idof < 3; ++idof)
     {
-      if (function_numbers[idof].has_value() && function_numbers[idof].value() > 0)
+      if (function_numbers[idof].has_value())
       {
         functionfac =
             Global::Problem::instance()

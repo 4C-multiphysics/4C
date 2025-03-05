@@ -100,7 +100,7 @@ FLUID DIS fluid NODE 18 QUANTITY pressure VALUE -8.53761015205689144e-01 TOLERAN
 E 1 NUMDOF 2 ONOFF 1 0 VAL 1.0 0.0 FUNCT 3 3
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // ale_out
-E 4 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 4 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 -------------------------------DESIGN FSI COUPLING LINE CONDITIONS
 // struc_fsi
 E 1 coupling_id 1

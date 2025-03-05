@@ -58,8 +58,8 @@ MAT 1 MAT_Struct_StVenantKirchhoff YOUNG 1000.0 NUE 0.0 DENS 0.0
 --------------------------------------------------------------------------FUNCT1
 SYMBOLIC_FUNCTION_OF_SPACE_TIME t
 ---------------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT 0 0 0 TAG monitor_reaction
-E 2 NUMDOF 3 ONOFF 0 1 1 VAL 0 1.5 3.0 FUNCT 0 1 1 TAG monitor_reaction
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT none none none TAG monitor_reaction
+E 2 NUMDOF 3 ONOFF 0 1 1 VAL 0 1.5 3.0 FUNCT none 1 1 TAG monitor_reaction
 -------------------------------------------------------------DSURF-NODE TOPOLOGY
 NODE    1 DSURFACE 1
 NODE    2 DSURFACE 1

@@ -121,7 +121,7 @@ int Discret::Elements::StructuralLine::evaluate_neumann(Teuchos::ParameterList& 
             // factor given by spatial function
             double functfac = 1.0;
 
-            if (spa_func[i].has_value() && spa_func[i].value() > 0)
+            if (spa_func[i].has_value())
             {
               // calculate reference position of GP
               Core::LinAlg::SerialDenseMatrix gp_coord(1, numdim);

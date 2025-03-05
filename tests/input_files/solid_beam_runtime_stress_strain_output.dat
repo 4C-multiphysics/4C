@@ -73,13 +73,13 @@ SYMBOLIC_FUNCTION_OF_SPACE_TIME t
 --------------------------------------------------------------------------FUNCT2
 SYMBOLIC_FUNCTION_OF_TIME t
 --------------------------------------------------DESIGN POINT DIRICH CONDITIONS
-E 1 NUMDOF 9 ONOFF 1 1 1 0 1 0 0 0 0 VAL 0 0 0 0 0 0 0 0 0 FUNCT 0 0 0 0 0 0 0 0 0
+E 1 NUMDOF 9 ONOFF 1 1 1 0 1 0 0 0 0 VAL 0 0 0 0 0 0 0 0 0 FUNCT none none none none none none none none none
 ---------------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT none none none
 -------------------------------------------------DESIGN POINT NEUMANN CONDITIONS
-E 2 NUMDOF 9 ONOFF 0 0 1 0 0 0 0 0 0 VAL 0 0 0.001 0 0 0 0 0 0 FUNCT 0 0 2 0 0 0 0 0 0
+E 2 NUMDOF 9 ONOFF 0 0 1 0 0 0 0 0 0 VAL 0 0 0.001 0 0 0 0 0 0 FUNCT none none 2 none none none none none none
 --------------------------------------------------DESIGN SURF NEUMANN CONDITIONS
-E 2 NUMDOF 3 ONOFF 0 0 1 VAL 0 0 0.005 FUNCT 0 0 1
+E 2 NUMDOF 3 ONOFF 0 0 1 VAL 0 0 0.005 FUNCT none none 1
 -------------------------------------------------------------DNODE-NODE TOPOLOGY
 NODE 111 DNODE 1
 NODE 117 DNODE 2

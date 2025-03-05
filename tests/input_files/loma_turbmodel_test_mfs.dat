@@ -157,12 +157,12 @@ COMPONENT 3 SYMBOLIC_FUNCTION_OF_SPACE_TIME 0
 COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME 0.005*y+1.0 //initial temperature field
 -----------------------------------------------DESIGN VOL NEUMANN CONDITIONS
 //                              volume
-E 1 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 TYPE PressureGrad
+E 1 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none TYPE PressureGrad
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 // wall top
-E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // wall bottom
-E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 ------------------------------------DESIGN SURF PERIODIC BOUNDARY CONDITIONS
 // master stream
 E 3 ID 2 MASTER_OR_SLAVE Master PLANE yz LAYER 1 ANGLE 0.0 ABSTREETOL 1e-9
@@ -177,9 +177,9 @@ E 6 ID 1 MASTER_OR_SLAVE Master PLANE xy LAYER 1 ANGLE 0.0 ABSTREETOL 1e-9
 E 1 DIS fluid NUMMODES 4 ONOFF 0 0 0 1 WEIGHTVECDEF integration
 -------------------------------------DESIGN SURF TRANSPORT DIRICH CONDITIONS
 // wall top
-E 2 NUMDOF 1 ONOFF 1 VAL 0.995 FUNCT 0
+E 2 NUMDOF 1 ONOFF 1 VAL 0.995 FUNCT none
 // wall bottom
-E 1 NUMDOF 1 ONOFF 1 VAL 1.005 FUNCT 0
+E 1 NUMDOF 1 ONOFF 1 VAL 1.005 FUNCT none
 --------------------------------------------SCATRA FLUX CALC SURF CONDITIONS
 //                              DOBJECT
 // wall top

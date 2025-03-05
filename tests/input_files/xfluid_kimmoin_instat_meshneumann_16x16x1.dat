@@ -110,10 +110,10 @@ XFLUID DIS fluid NODE 1451 QUANTITY velz VALUE 0.0e00 TOLERANCE 1e-12
 XFLUID DIS fluid NODE 1451 QUANTITY pressure VALUE 3.77742042937735001e-01 TOLERANCE 1e-10
 -----------------------------------------------DESIGN VOL NEUMANN CONDITIONS
 // fluid_volume
-E 1 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 1.0 1.0 0.0 0.0 0.0 FUNCT 1 1 1 0 0 0 TYPE Live
+E 1 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 1.0 1.0 0.0 0.0 0.0 FUNCT 1 1 1 none none none TYPE Live
 ------------------------------------------------DESIGN VOL DIRICH CONDITIONS
 // fluid_volume
-E 1 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 1.0 1.0 1.0 0.0 0.0 0.0 FUNCT 2 2 2 0 0 0
+E 1 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 1.0 1.0 1.0 0.0 0.0 0.0 FUNCT 2 2 2 none none none
 ----------------------------------DESIGN XFEM NEUMANN SURF CONDITIONS
 // surface_inner_structure
 E 1 COUPLINGID 1 NUMDOF 6 ONOFF 1 1 1 1 1 1 VAL 1 1 1 1 1 1 FUNCT 3 3 3 3 3 3 TYPE Live
@@ -122,9 +122,9 @@ E 1 COUPLINGID 1 NUMDOF 6 ONOFF 1 1 1 1 1 1 VAL 1 1 1 1 1 1 FUNCT 3 3 3 3 3 3 TY
 E 2 COUPLINGID 2 EVALTYPE funct_interpolated NUMDOF 3 ONOFF 1 1 1 VAL 1.0 1.0 1.0 FUNCT 2 2 2
 ------------------------------------DESIGN XFEM DISPLACEMENT SURF CONDITIONS
 // surface_inner_structure
-E 1 COUPLINGID 1 EVALTYPE zero NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 COUPLINGID 1 EVALTYPE zero NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // surface_outer_structure
-E 2 COUPLINGID 2 EVALTYPE zero NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 COUPLINGID 2 EVALTYPE zero NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 ---------------------------------------------------------DNODE-NODE TOPOLOGY
 NODE 1141 DNODE 1
 NODE 1142 DNODE 1

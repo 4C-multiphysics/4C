@@ -977,7 +977,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::calc_subgr_velocity(
 
       for (unsigned jnode = 0; jnode < nen_; ++jnode)
       {
-        if (funct[isd].has_value() && funct[isd].value() > 0)
+        if (funct[isd].has_value())
         {
           // time factor for the intermediate step
           // (negative time value indicates error)

@@ -34,12 +34,12 @@ VARIABLE 0 NAME a TYPE linearinterpolation NUMPOINTS 3 TIMES 0 1 1000 VALUES 0 1
 STRUCTURE DIS structure NODE 21 QUANTITY dispz VALUE 2.14876994921447473e+00 TOLERANCE 1e-8
 ------------------------------------DESIGN SURF NEUMANN CONDITIONS
 // surf
-E 1 NUMDOF 3 ONOFF 1 0 0 VAL 0.3 0.0 0.0 FUNCT 1 0 0 TYPE orthopressure
+E 1 NUMDOF 3 ONOFF 1 0 0 VAL 0.3 0.0 0.0 FUNCT 1 none none TYPE orthopressure
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // curve-x
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // curve+x
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------------DNODE-NODE TOPOLOGY
 NODE    34 DNODE 1
 NODE    37 DNODE 2

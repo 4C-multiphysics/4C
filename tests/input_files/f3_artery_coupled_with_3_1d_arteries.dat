@@ -81,9 +81,9 @@ SRC_FIELD fluid SRC_MAT 1 TAR_FIELD ale TAR_MAT 5
 ----------------------------------------------------------------------FUNCT1
 SYMBOLIC_FUNCTION_OF_TIME 1.0e4*sin(2*(t)*pi/2.0)
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
-E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 --------------------------------------DESIGN SURF VOLUMETRIC FLOW CONDITIONS
 E 2 ConditionID 1 ConditionType POLYNOMIAL prebiased FORCED FlowType InFlow CorrectionFlag WithCorrection Period 1.0 Order 2 Harmonics 16 Val 1.0 Funct 1 NORMAL SelfEvaluateNormal n1 0.0 n2 0.0 n3 1.0 CenterOfMass SelfEvaluateCenterOfMass c1 0.0 c2 0.0 c3 0.0
 ------------------------------------DESIGN LINE VOLUMETRIC FLOW BORDER NODES

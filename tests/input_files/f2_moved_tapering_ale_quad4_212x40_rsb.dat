@@ -81,33 +81,33 @@ VARIABLE 0 NAME a TYPE multifunction NUMPOINTS 3 TIMES 0 1 1000000000 DESCRIPTIO
 COMPONENT 0  SYMBOLIC_FUNCTION_OF_SPACE_TIME 0.5*0.38*(1.0-cos(2*pi*t/5.0))
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 // junction_xmid_lower
-E 1 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // junction_xend_lower
-E 2 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // junction_xstart_lower
-E 3 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // inlet
-E 4 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 3 0 0
+E 4 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 3 none none
 // upper_wall
-E 6 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 6 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // lower_wall
-E 7 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 7 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 --------------------------------DESIGN POINT ALE DIRICH CONDITIONS
 // junction_xmid_lower
-E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 1.0 FUNCT 0 4
+E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 1.0 FUNCT none 4
 // junction_xend_lower
-E 2 NUMDOF 2 ONOFF 1 1 VAL 0.0 1.0 FUNCT 0 1
+E 2 NUMDOF 2 ONOFF 1 1 VAL 0.0 1.0 FUNCT none 1
 // junction_xstart_lower
-E 3 NUMDOF 2 ONOFF 1 1 VAL 0.0 1.0 FUNCT 0 2
+E 3 NUMDOF 2 ONOFF 1 1 VAL 0.0 1.0 FUNCT none 2
 // inlet
-E 4 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 4 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 // outlet
-E 5 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 5 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 ---------------------------------DESIGN LINE ALE DIRICH CONDITIONS
 // upper_wall
-E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 // lower_wall
-E 2 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 2 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 -----------------------------------------------DNODE-NODE TOPOLOGY
 NODE    8628 DNODE 1
 NODE    8629 DNODE 1

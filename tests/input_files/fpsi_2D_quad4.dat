@@ -154,28 +154,28 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME a
 VARIABLE 0 NAME a TYPE multifunction NUMPOINTS 3 TIMES 0.0 1.0 500000.0 DESCRIPTION 20.0*0.5*(1-cos(t*pi/1.0)) 20
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 // bottom_corner_fluid
-E 1 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.01 0.0 FUNCT 0 2 0
+E 1 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.01 0.0 FUNCT none 2 none
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // left_right_fluid
-E 3 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // bottom_fluid
-E 5 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.01 0.0 FUNCT 0 2 0
+E 5 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.01 0.0 FUNCT none 2 none
 // top_poro
-E 6 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 6 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // poro
-E 1 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 ---------------------------------DESIGN LINE ALE DIRICH CONDITIONS
 // fpsi_line_fluid
-E 2 NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT 0 0
+E 2 NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT none none
 // bottom_fluid
-E 5 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 5 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 ---------------------------------DESIGN SURF ALE DIRICH CONDITIONS
 // fluid
-E 2 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+E 2 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 --------------------------------DESIGN LINE PORO DIRICH CONDITIONS
 // left_right_poro
-E 4 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 4 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------DESIGN SURFACE POROCOUPLING CONDITION
 // poro
 E 1

@@ -128,13 +128,13 @@ SCATRA DIS scatra NODE 16 QUANTITY phi VALUE 5.95117298270338546e-01 TOLERANCE 1
 SCATRA DIS scatra NODE 14 QUANTITY phi VALUE 1.16851006066816177e+00 TOLERANCE 1e-8
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
 //                              Line_x+
-E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 //                              Line_x-
-//E 2 - NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+//E 2 - NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 //                              Line_y+
-//E 3 - NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT 0 0
+//E 3 - NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT none none
 //                              Line_y-
-//E 4 - NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT 0 0
+//E 4 - NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT none none
 E 5 NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT 2
 ----------------------------------------DESIGN LINE PORO PARTIAL INTEGRATION
 //                              Line_x+
@@ -147,25 +147,25 @@ E 2
 //E 4 -
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 //                              Surface
-E 1 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT none none
 -----------------------------------------DESIGN POINT PORO DIRICH CONDITIONS
 // Point x+y+
-E 1 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 3 0 0
+E 1 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 3 none none
 // Point x-y+
-//E 2 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+//E 2 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // Point x-y-
-//E 3 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+//E 3 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // Point x+y+
-E 4 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0  FUNCT 3 0 0
+E 4 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0  FUNCT 3 none none
 ------------------------------------------DESIGN LINE PORO DIRICH CONDITIONS
 //                              Line_x+
-E 1 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0  FUNCT 3 0 0
+E 1 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0  FUNCT 3 none none
 //                              Line_x-
-//E 2 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0
+//E 2 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none
 //                              Line_y+
-E 3 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 //                              Line_y-
-E 4 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 4 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 ---------------------------------------DESIGN SURFACE POROCOUPLING CONDITION
 //                              Surface
 E 1

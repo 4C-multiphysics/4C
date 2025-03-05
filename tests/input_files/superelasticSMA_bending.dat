@@ -47,10 +47,10 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME a
 VARIABLE 0 NAME a TYPE linearinterpolation NUMPOINTS 3 TIMES 0 0.005 0.01 VALUES 0 1 0
 ------------------------------------DESIGN SURF NEUMANN CONDITIONS
 // surface_z+
-E 2 NUMDOF 3 ONOFF 1 0 0 VAL -60 0.0 0.0 FUNCT 1 0 0
+E 2 NUMDOF 3 ONOFF 1 0 0 VAL -60 0.0 0.0 FUNCT 1 none none
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // surface_z-
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------------DSURF-NODE TOPOLOGY
 NODE    5 DSURFACE 1
 NODE    6 DSURFACE 1

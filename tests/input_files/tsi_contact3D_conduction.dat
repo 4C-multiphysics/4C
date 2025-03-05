@@ -102,14 +102,14 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME 25+z*5
 SYMBOLIC_FUNCTION_OF_SPACE_TIME t/100
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // top_dirichlet
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 -1.0 FUNCT 0 0 2
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 -1.0 FUNCT none none 2
 // bottom_dirichlet
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ------------------------------DESIGN SURF THERMO DIRICH CONDITIONS
 // top_dirichlet
-E 1 NUMDOF 1 ONOFF 1 VAL 40 FUNCT 0
+E 1 NUMDOF 1 ONOFF 1 VAL 40 FUNCT none
 // bottom_dirichlet
-E 2 NUMDOF 1 ONOFF 1 VAL 20 FUNCT 0
+E 2 NUMDOF 1 ONOFF 1 VAL 20 FUNCT none
 --------------------------DESIGN SURF MORTAR CONTACT CONDITIONS 3D
 // top_contact
 E 3 InterfaceID 1 Side Slave Initialization Active
