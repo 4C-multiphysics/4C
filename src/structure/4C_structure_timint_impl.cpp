@@ -1051,13 +1051,6 @@ void Solid::TimIntImpl::apply_force_stiff_contact_meshtying(
     // *********** time measurement ***********
     dtcmt_ = timer_->wallTime() - dtcpu;
     // *********** time measurement ***********
-
-    // visualization of current Newton step
-#ifdef MORTARGMSH2
-    bool gmsh =
-        Teuchos::getIntegralValue<int>(Global::Problem::instance()->IOParams(), "OUTPUT_GMSH");
-    if (gmsh) cmtbridge_->VisualizeGmsh(stepn_, iter_);
-#endif
   }
 
   return;

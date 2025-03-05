@@ -550,12 +550,6 @@ void Solid::TimInt::prepare_contact_meshtying(const Teuchos::ParameterList& sdyn
     cmtbridge_->contact_manager()->get_strategy().evaluate_reference_state();
   }
 
-  // visualization of initial configuration
-#ifdef MORTARGMSH3
-  bool gmsh = Global::Problem::instance()->IOParams().get<bool>("OUTPUT_GMSH");
-  if (gmsh) cmtbridge_->VisualizeGmsh(0);
-#endif  // #ifdef MORTARGMSH3
-
   //**********************************************************************
   // prepare solvers for contact/meshtying problem
   //**********************************************************************
@@ -1225,12 +1219,6 @@ void Solid::TimInt::update_step_contact_meshtying()
   if (have_contact_meshtying())
   {
     cmtbridge_->update(disn_);
-#ifdef MORTARGMSH1
-    if (Global::Problem::instance()->IOParams().get<bool>("OUTPUT_GMSH"))
-    {
-      cmtbridge_->VisualizeGmsh(stepn_);
-    }
-#endif
   }
 }
 

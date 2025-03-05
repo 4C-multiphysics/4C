@@ -581,12 +581,6 @@ void Mortar::BinaryTree::evaluate_search()
       break;
   }
 
-#ifdef MORTARGMSHCTN
-  for (int i = 0; i < (int)(binarytree_->coupling_map().size()); i++)
-    binarytree_->coupling_map()[i].clear();
-  binarytree_->coupling_map().clear();
-  binarytree_->coupling_map().resize(2);
-#endif
   // evaluate search algorithm
   evaluate_search(sroot_, mroot_);
 
@@ -795,15 +789,6 @@ void Mortar::BinaryTree::evaluate_search(
       selement->add_search_elements(mgid);
     }
   }
-
-#ifdef MORTARGMSHCTN  // for plotting contacting treenodes
-  if (streenode->Type() == SLAVE_LEAF && mtreenode->Type() == MASTER_LEAF &&
-      nintercepts == kdop_ / 2)
-  {
-    couplingmap_[0].push_back(streenode);
-    couplingmap_[1].push_back(mtreenode);
-  }
-#endif  // #ifdef MORTARGMSHCTN
 
   return;
 }

@@ -2491,17 +2491,6 @@ void CONTACT::AbstractStrategy::print_active_set() const
 }
 
 /*----------------------------------------------------------------------*
- | Visualization of contact segments with gmsh                popp 08/08|
- *----------------------------------------------------------------------*/
-void CONTACT::AbstractStrategy::visualize_gmsh(const int step, const int iter) const
-{
-  // visualization with gmsh
-  for (int i = 0; i < (int)interfaces().size(); ++i)
-    interfaces()[i]->visualize_gmsh(
-        step, iter, Global::Problem::instance()->output_control_file()->file_name_only_prefix());
-}
-
-/*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void CONTACT::AbstractStrategy::collect_maps_for_preconditioner(
     std::shared_ptr<Epetra_Map>& MasterDofMap, std::shared_ptr<Epetra_Map>& SlaveDofMap,

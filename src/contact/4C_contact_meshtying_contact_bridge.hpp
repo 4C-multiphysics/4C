@@ -162,12 +162,6 @@ namespace CONTACT
     void update(std::shared_ptr<Core::LinAlg::Vector<double>> dis);
 
     /*!
-    \brief visualize stuff with gmsh
-
-    */
-    void visualize_gmsh(const int istep, const int iter = -1);
-
-    /*!
     \brief write restart
 
     @param[in] output Output writer to be used for writing outpu
