@@ -17,7 +17,6 @@ set(_dependencies
     inpar
     mat
     solver_nonlin_nox
-    structure_new
     )
 
 four_c_add_dependency(${AUTO_DEFINED_MODULE_NAME} ${_dependencies})

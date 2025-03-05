@@ -5,4 +5,4 @@
 #
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
-four_c_auto_define_tests(contact_constitutivelaw)
+four_c_auto_define_tests(MODULE contact_constitutivelaw)

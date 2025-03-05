@@ -5,4 +5,7 @@
 #
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
-four_c_auto_define_tests(io)
+# These tests claim they test IO (part of core) but they use other parts as well,
+# notably concrete materials. Therefore, the tests are attached to the mat module,
+# until this problem is resolved.
+four_c_auto_define_tests(MODULE mat)

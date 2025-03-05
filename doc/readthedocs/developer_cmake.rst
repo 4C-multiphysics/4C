@@ -7,11 +7,6 @@ CMake presets are |FOURC|'s recommended way to configure and manage different co
 This small article will go through a few of them. The experts should also read the
 `official CMake presets documentation <https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html>`_ to get all convenient tricks.
 
-.. note::
-  CMake presets are available since cmake 3.19 and have been improved in the following versions.
-  We are currently using CMake preset version 5, which requires at least cmake 3.24.
-  Make sure to have a sufficient cmake-version in your path or use the provided ones on the institute's server.
-
 Configuration from a terminal
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -27,15 +22,15 @@ This is the current output of this command:
 
 .. literalinclude:: 4C-cmake-presets.txt
 
-In general, it is highly recommended to create your own preset, see bélow.
+In general, it is highly recommended to create your own preset, see below.
 
 Defining your own CMake presets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CMake presets allow you to also create your own configuration.
 You need to put a ``CMakeUserPresets.json``-file (**important:** ``User``) in the source-directory of |FOURC|.
-This file will not be part of the repository (it is listed in ``.gitignore``).
-There you can define your own configurations.
+This file will not be part of the repository as it is listed in ``.gitignore``.
+In this file, you can define your own configurations.
 Particularly, you may define the binary directory,
 so you don't need to go to your binary directory in order to configure |FOURC|.
 CMake presets integrate well with recent releases of IDEs.
@@ -57,22 +52,27 @@ Such a local preset could look like this::
             "lnm_workstation"
           ],
           "cacheVariables": {
-            "CMAKE_CXX_COMPILER": "/usr/bin/mpic++",
+            "CMAKE_CXX_COMPILER": "g++",
             "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
             "FOUR_C_WITH_GOOGLETEST": "OFF",
             "FOUR_C_BUILD_READTHEDOCS": "ON",
-            "FOUR_C_SPHINX_THEME": "sphinx_rtd_theme",
             "FOUR_C_BUILD_DOXYGEN": "ON",
+            "FOUR_C_ENABLE_DEVELOPER_MODE": "ON",
           }
         }
       ]
     }
 
 Don't be overwhelmed by the options you could potentially set.
-For a basic build of |FOURC|, you should start with `CMAKE_BUILD_TYPE` (either `RELEASE` or `DEBUG`) and maybe a compiler. We try to
-detect reasonable defaults for you internally. Over time you might realize that you want to turn on
-additional dependencies or features. To see which other options you can set, consult
-the console output of CMake or run `ccmake .` in the build folder.
+
+- For a basic build of |FOURC|, you should start with `CMAKE_BUILD_TYPE` (either `RELEASE` or `DEBUG`) and maybe a compiler.
+- If you are developing |FOURC| with this configuration, you usually want to turn on ``FOUR_C_ENABLE_DEVELOPER_MODE`` which
+  optimizes the build setup for iterative development cycles.
+- We try to detect reasonable defaults for you internally.
+
+Over time you might realize that you want to turn on additional dependencies or features.
+To see which other options you can set, consult the console output of CMake or run `ccmake .` in the build folder.
+Alternatively, all options are also printed with their ``ON`` or ``OFF`` state whenever ``cmake`` runs.
 
 **Remark:** Variables either start with the prefix `FOUR_C_` indicating that this variable only affects |FOURC| itself,
 or they start with `CMAKE_` indicating that the variable (potentially) affects all dependent projects in a way

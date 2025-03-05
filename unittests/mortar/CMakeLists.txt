@@ -5,4 +5,4 @@
 #
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
-four_c_auto_define_tests(mortar)
+four_c_auto_define_tests(MODULE mortar)
