@@ -1,7 +1,7 @@
-.. _SetupGuideto4C:
+.. _installation:
 
-Setup Guide
-=============
+Installation
+============
 
 Here you'll find some useful notes on setting up and running |FOURC|.
 
@@ -11,11 +11,6 @@ People around have already ported the code to Windows, but this needs quite a nu
 so it is not advised to try on your own, and the topic will not be covered here.
 Additionally, |FOURC| can be compiled under Windows using the WSL (Windows Subsystem for Linux),
 which provides a complete Linux Environment within the Windows operating system.
-
-You'll find more information about the |FOURC| installation in the
-`README.md <https://github.com/4C-multiphysics/4C/blob/main/README.md>`_ and the
-`CONTRIBUTING.md <https://github.com/4C-multiphysics/4C/blob/main/CONTRIBUTING.md>`_
-files located in the |FOURC| root directory.
 
 Besides the basic setup of the software, the following topics are of particular interest for **all** developers:
 
@@ -38,7 +33,7 @@ So we have to install TPLs first. Here's an list of the |FOURC|-related tools an
 General software development:
 
 - git
-- c++ compiler with c++17 compatibility (e.g. gcc 11)
+- c++ compiler with c++20 compatibility (e.g. gcc 11)
 - MPI installation
 - CMake
 - Ninja

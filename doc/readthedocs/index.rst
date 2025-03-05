@@ -38,6 +38,9 @@ This guide to |FOURC| is structured as follows:
 :ref:`Part II - The 4C Community<4Ccommunity>`
    A brief summary of the roles and responsibilities within the |FOURC| community.
 
+:ref:`Installation<Installation>`
+   A summary of all requirements of |FOURC| and detailed steps how to build |FOURC|.
+
 :ref:`Part III — Tutorials<tutorials>`
    A series of beginner-level tutorials showcases the setup procedure for specific application scenarios.
 
@@ -51,8 +54,7 @@ This guide to |FOURC| is structured as follows:
 
 :ref:`Part V - Developer guide<developerguide>`
    This guide gets you started on actively developing and contributing to |FOURC|.
-   It covers the build process, our CI/CD testing infrastructure,
-   coding guidelines, and useful tools for the daily development of |FOURC|.
+   It covers our CI/CD testing infrastructure, coding guidelines, and useful tools for the daily development of |FOURC|.
 
 :ref:`Part VI - Input Parameter Reference<inputparameterreference>`
    A comprehensive list of all input parameters, elements, materials, and boundary conditions
@@ -71,6 +73,7 @@ This guide to |FOURC| is structured as follows:
 
    about
    4Ccommunity
+   installation
    tutorials
    analysisguide
    developmentguide

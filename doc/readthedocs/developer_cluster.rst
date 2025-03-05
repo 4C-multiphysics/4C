@@ -7,7 +7,7 @@ In general there are several ways to get the |FOURC| source code to a cluster. I
 
 - Limitations due to firewall settings may emerge.
 - In case you want to commit changes in your repository on a cluster,
-  remember to set up |FOURC| as described in the |FOURC| ``README.md`` or in the :ref:`Setup guide <SetupGuideto4C>`.
+  remember to set up |FOURC| as described in the :ref:`Installation guide <installation>`.
   However, in general, it is recommended to develop code primarily on your workstation.
 
 Method 1: Clone |FOURC| repository from GitHub
