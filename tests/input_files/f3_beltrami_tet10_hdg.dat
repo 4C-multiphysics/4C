@@ -43,7 +43,6 @@ SOLVER                          Belos
 AZSOLVE                         GMRES
 AZPREC                          ILU
 AZREUSE                         0
-IFPACKGFILL                     0
 AZCONV                          AZ_r0
 AZTOL                           1.0E-3
 AZITER                          200

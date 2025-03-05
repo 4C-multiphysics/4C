@@ -221,8 +221,7 @@ NAME                            ALE_Solver
 SOLVER                          UMFPACK
 AZSOLVE                         GMRES
 AZPREC                          ILU
-IFPACKOVERLAP                   0
-IFPACKGFILL                     0
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 IFPACKCOMBINE                   Add
 AZSUB                           50
 AZCONV                          AZ_r0
