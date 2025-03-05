@@ -83,8 +83,8 @@ class Map(Primitive):
 
 
 @dataclass
-class Selection(Primitive):
-    """Selection parameter."""
+class Enum(Primitive):
+    """Enum parameter."""
 
     choices: list = field(default_factory=list)
 
@@ -274,8 +274,8 @@ def _metadata_object_from_dict(metadata_dict):
         # Primitives
         case _ if metadata_dict["type"] in FOURC_BASE_TYPES_TO_JSON_SCHEMA_DICT:
             cls = Primitive
-        case "selection":
-            cls = Selection
+        case "enum":
+            cls = Enum
         case "vector":
             cls = Vector
         case "map":

@@ -19,7 +19,7 @@ from metadata_utils import (
     Primitive,
     Vector,
     Map,
-    Selection,
+    Enum,
     Group,
     List,
     All_Of,
@@ -119,11 +119,11 @@ def schema_from_base_type(primitive):
     return schema
 
 
-def schema_from_selection(selection):
-    """Create schema from Selection.
+def schema_from_enum(enum):
+    """Create schema from Enum.
 
     Args:
-        selection (Selection): Selection parameter
+        enum (Enum): Enum parameter
 
     Returns:
         dict: JSON schema data
@@ -132,11 +132,11 @@ def schema_from_selection(selection):
     # This would allow to add a description for each option.
     schema = json_schema(
         schema_type=FOURC_BASE_TYPES_TO_JSON_SCHEMA_DICT["string"],
-        title=selection.short_description(),
-        description=selection.description,
-        default=selection.default,
-        enum=list(set(selection.choices)),
-        noneable=selection.noneable,
+        title=enum.short_description(),
+        description=enum.description,
+        default=enum.default,
+        enum=list(set(enum.choices)),
+        noneable=enum.noneable,
     )
 
     return schema
@@ -398,8 +398,8 @@ def get_schema(parameter):
     schema = {}
 
     match parameter:
-        case Selection():
-            schema = schema_from_selection(parameter)
+        case Enum():
+            schema = schema_from_enum(parameter)
         case Vector():
             schema = schema_from_vector(parameter)
         case Map():

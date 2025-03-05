@@ -37,6 +37,12 @@ void Core::IO::emit_value_as_yaml(ryml::NodeRef node, const std::string& value)
   node << ryml::to_csubstr(value);
 }
 
+void Core::IO::emit_value_as_yaml(ryml::NodeRef node, const std::string_view& value)
+{
+  node |= ryml::VAL_DQUO;
+  node << ryml::csubstr(value.data(), value.size());
+}
+
 void Core::IO::emit_value_as_yaml(ryml::NodeRef node, const bool& value)
 {
   node << (value ? "true" : "false");

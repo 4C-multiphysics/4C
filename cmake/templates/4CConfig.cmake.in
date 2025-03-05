@@ -71,6 +71,10 @@ if(FOUR_C_WITH_RYML)
   find_package(ryml CONFIG HINTS ${FOUR_C_RYML_ROOT})
 endif()
 
+if(FOUR_C_WITH_MAGIC_ENUM)
+  find_package(magic_enum CONFIG HINTS ${FOUR_C_MAGIC_ENUM_ROOT})
+endif()
+
 include("${CMAKE_CURRENT_LIST_DIR}/4CTargets.cmake")
 check_required_components(4C)
 

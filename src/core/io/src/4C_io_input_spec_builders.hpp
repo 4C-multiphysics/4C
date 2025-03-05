@@ -17,6 +17,8 @@
 #include "4C_io_yaml.hpp"
 #include "4C_utils_string.hpp"
 
+#include <magic_enum/magic_enum_iostream.hpp>
+
 #include <algorithm>
 #include <functional>
 #include <optional>
@@ -43,6 +45,7 @@ namespace Core::IO
       template <SupportedType T>
       void operator()(std::ostream& out, const T& val) const
       {
+        using magic_enum::iostream_operators::operator<<;
         out << val;
       }
 
@@ -111,6 +114,13 @@ namespace Core::IO
       std::string operator()() { return "path"; }
     };
 
+    template <typename Enum>
+      requires(std::is_enum_v<Enum>)
+    struct PrettyTypeName<Enum>
+    {
+      std::string operator()() { return "enum"; }
+    };
+
     template <typename T>
     struct PrettyTypeName<std::vector<T>>
     {
@@ -145,12 +155,32 @@ namespace Core::IO
     };
 
     template <YamlSupportedType T>
+      requires(!std::is_enum_v<T>)
     struct YamlTypeEmitter<T>
     {
       void operator()(ryml::NodeRef node, size_t*)
       {
         FOUR_C_ASSERT(node.is_map(), "Expected a map node.");
         node["type"] << get_pretty_type_name<T>();
+      }
+    };
+
+    template <typename Enum>
+      requires(std::is_enum_v<Enum>)
+    struct YamlTypeEmitter<Enum>
+    {
+      void operator()(ryml::NodeRef node, size_t*)
+      {
+        FOUR_C_ASSERT(node.is_map(), "Expected a map node.");
+        node["type"] = "enum";
+        node["choices"] |= ryml::SEQ;
+        for (const auto& choice_string : magic_enum::enum_values<Enum>())
+        {
+          auto entry = node["choices"].append_child();
+          // Write every choice entry as a map to easily extend the information at a later point.
+          entry |= ryml::MAP;
+          emit_value_as_yaml(entry["name"], choice_string);
+        }
       }
     };
 
@@ -1604,7 +1634,7 @@ void Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::emit_metadata(
   node["name"] << name;
 
   if constexpr (OptionalType<T>) emit_value_as_yaml(node["noneable"], true);
-  node["type"] = "selection";
+  node["type"] = "enum";
 
   if (!data.description.empty())
   {

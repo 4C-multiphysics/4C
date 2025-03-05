@@ -12,10 +12,12 @@
 
 #include "4C_utils_exceptions.hpp"
 
+#include <magic_enum/magic_enum.hpp>
 #include <ryml.hpp>      // IWYU pragma: export
 #include <ryml_std.hpp>  // IWYU pragma: export
 
 #include <filesystem>
+#include <format>
 #include <optional>
 
 FOUR_C_NAMESPACE_OPEN
@@ -104,7 +106,7 @@ namespace Core::IO
   template <typename T>
   concept YamlSupportedType =
       std::same_as<T, int> || std::same_as<T, double> || std::same_as<T, bool> ||
-      std::same_as<T, std::string> || std::same_as<T, std::filesystem::path>;
+      std::same_as<T, std::string> || std::same_as<T, std::filesystem::path> || std::is_enum_v<T>;
 
   /**
    * An exception thrown when an error occurs during yaml processing..
@@ -126,10 +128,15 @@ namespace Core::IO
   void emit_value_as_yaml(ryml::NodeRef node, const double& value);
 
   void emit_value_as_yaml(ryml::NodeRef node, const std::string& value);
+  void emit_value_as_yaml(ryml::NodeRef node, const std::string_view& value);
 
   void emit_value_as_yaml(ryml::NodeRef node, const bool& value);
 
   void emit_value_as_yaml(ryml::NodeRef node, const std::filesystem::path& value);
+
+  template <typename T>
+    requires(std::is_enum_v<T>)
+  void emit_value_as_yaml(ryml::NodeRef node, const T& value);
 
   template <typename T>
   void emit_value_as_yaml(ryml::NodeRef node, const std::optional<T>& value);
@@ -141,6 +148,7 @@ namespace Core::IO
   void emit_value_as_yaml(ryml::NodeRef node, const std::vector<T>& value);
 
   template <YamlSupportedType T>
+    requires(!std::is_enum_v<T>)
   void read_value_from_yaml(ConstYamlNodeRef node, T& value)
   {
     FOUR_C_ASSERT_ALWAYS(node.node.has_val(), "Expected a value node.");
@@ -158,6 +166,24 @@ namespace Core::IO
    * All of them are case-insensitive.
    */
   void read_value_from_yaml(ConstYamlNodeRef node, bool& value);
+
+  template <typename T>
+    requires(std::is_enum_v<T>)
+  void read_value_from_yaml(ConstYamlNodeRef node, T& value)
+  {
+    FOUR_C_ASSERT_ALWAYS(node.node.has_val(), "Expected a value node.");
+    auto substr = node.node.val();
+    auto val = magic_enum::enum_cast<T>(std::string_view(substr.data(), substr.size()));
+    if (val)
+    {
+      value = *val;
+    }
+    else
+    {
+      FOUR_C_THROW(std::format("Could not parse value '{}' as an enum constant of type '{}'.",
+          std::string_view(substr.data(), substr.size()), magic_enum::enum_type_name<T>()));
+    }
+  }
 
   template <typename T>
   void read_value_from_yaml(ConstYamlNodeRef node, std::optional<T>& value)
@@ -213,6 +239,14 @@ namespace Core::IO
     }
   }
 }  // namespace Core::IO
+
+template <typename T>
+  requires(std::is_enum_v<T>)
+void Core::IO::emit_value_as_yaml(ryml::NodeRef node, const T& value)
+{
+  std::string_view str = magic_enum::enum_name(value);
+  node << ryml::csubstr(str.data(), str.size());
+}
 
 template <typename T>
 void Core::IO::emit_value_as_yaml(ryml::NodeRef node, const std::optional<T>& value)
