@@ -15,9 +15,9 @@
 #include "4C_comm_parobject.hpp"
 #include "4C_comm_parobjectfactory.hpp"
 #include "4C_inpar_structure.hpp"
+#include "4C_io_discretization_visualization_writer_mesh.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
-#include "4C_linalg_vector.hpp"
 
 #include <Epetra_Map.h>
 #include <Teuchos_Time.hpp>
@@ -134,11 +134,21 @@ namespace MultiScale
         const double dt);
 
     /*!
+     * @brief Write runtime output (displacement, tangent-stiffness, material IDs)
+     *
+     * Controlled via the RUNTIMEOUTPUT_GP flag, this function allows runtime output for
+     * different levels of detail: `"none"` (no output), `"all"` (all Gauss points), and `"gp1"`
+     * (only the first Gauss point).
+     *
+     */
+    void runtime_output(
+        const std::pair<double, int>& output_time_and_step, const std::string& section_name) const;
+    /*!
     \brief Write restart
 
     */
     void write_restart(std::shared_ptr<Core::IO::DiscretizationWriter> output, const double time,
-        const int step, const double dt);
+        const int step, const double dt) const;
 
     /*!
     \brief Determine toggle vector identifying prescribed boundary dofs
@@ -244,6 +254,10 @@ namespace MultiScale
 
     double density() const { return density_; };
 
+   private:
+    std::shared_ptr<Core::IO::DiscretizationVisualizationWriterMesh> micro_vtu_writer_;
+    Core::IO::VisualizationParameters visualization_params_;
+
    protected:
     // don't want = operator and cctor
     MicroStatic operator=(const MicroStatic& old);
@@ -284,6 +298,8 @@ namespace MultiScale
     double tolfres_;
     double toldisi_;
 
+
+    Core::LinAlg::Matrix<6, 6> macro_cmat_;  //!< Averaged tangent stiffness tensor
 
     enum Inpar::Solid::BinaryOp combdisifres_;  //!< binary operator to
                                                 // combine displacement and forces
