@@ -1,0 +1,134 @@
+name: Trilinos develop
+
+on:
+  workflow_dispatch:
+  # Skip manual input for now because it will likely lead to code duplication
+  # inputs:
+  #   trilinos_commit_ref:
+  #     description: 'The Trilinos commit ref to test 4C with'
+  #     default: 'develop'
+  #     type: string
+  schedule:
+    - cron: '0 8 * * 6'
+  # For testing
+  push:
+
+env:
+  # IMAGE_NAME: ghcr.io/4c-multiphysics/4c-dependencies-trilinos
+  IMAGE_NAME: ghcr.io/ppraegla/4c-dependencies-trilinos
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # build-and-push-trilinos-image:
+  #   runs-on: ubuntu-latest
+  #   # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
+  #   permissions:
+  #     contents: read
+  #     packages: write
+  #     attestations: write
+  #     id-token: write
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+  #     # Uses the `docker/login-action` action to log in to the Container registry registry using the account and password that will publish the packages. Once published, the packages are scoped to the account defined here.
+  #     - name: Log in to the Container registry
+  #       uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
+  #     # This step uses [docker/metadata-action](https://github.com/docker/metadata-action#about) to extract tags and labels that will be applied to the specified image. The `id` "meta" allows the output of this step to be referenced in a subsequent step. The `images` value provides the base name for the tags and labels.
+  #     - name: Extract metadata (tags, labels) for Docker
+  #       id: meta
+  #       uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5.5.1
+  #       with:
+  #         images: ${{ env.IMAGE_NAME }}
+  #         labels: |
+  #           org.opencontainers.image.description=Image containing all the dependencies required for building and testing 4C based on the specified Trilinos commit ref
+  #     # This step uses the `docker/build-push-action` action to build the image, based on your repository's `Dockerfile`. If the build succeeds, it pushes the image to GitHub Packages.
+  #     # It uses the `context` parameter to define the build's context as the set of files located in the specified path. For more information, see "[Usage](https://github.com/docker/build-push-action#usage)" in the README of the `docker/build-push-action` repository.
+  #     # It uses the `tags` and `labels` parameters to tag and label the image with the output from the "meta" step.
+  #     - name: Build and push Docker image
+  #       id: push
+  #       uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
+  #       with:
+  #         context: .
+  #         file: docker/trilinos_develop/Dockerfile
+  #         build-args: |
+  #           TRILINOS_VERSION=develop
+  #         push: true
+  #         tags: ${{ env.IMAGE_NAME }}:develop
+  #         labels: ${{ steps.meta.outputs.labels }}
+
+  build:
+    # needs: build-and-push-trilinos-image
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/ppraegla/4c-dependencies-trilinos:develop
+      options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      test-chunks: ${{ steps.set-matrix.outputs.chunk-array }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/build_4C
+        with:
+          cmake-preset: docker_assertions
+          build-targets: full
+          build-directory: ${{ github.workspace }}/build
+          use-ccache: "true"
+      - uses: ./.github/actions/upload_4C_build
+        with:
+          build-directory: ${{ github.workspace }}/build
+          retention-days: 1
+      - uses: ./.github/actions/chunk_test_suite
+        id: set-matrix
+        with:
+          build-directory: ${{ github.workspace }}/build
+          source-directory: ${{ github.workspace }}
+          number-of-chunks: 15
+          junit-report-artifact-name: trilinos_test_report.xml
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/ppraegla/4c-dependencies-trilinos:develop
+      options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    strategy:
+      fail-fast: false
+      matrix:
+        test-chunk: ${{fromJson(needs.build.outputs.test-chunks)}}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check docker hash
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+      - name: Setup developer environment for testing
+        run: |
+          cd $GITHUB_WORKSPACE
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+      - uses: ./.github/actions/download_4C_build
+        with:
+          build-job: build
+      - name: Test
+        run: |
+          cd $GITHUB_WORKSPACE/build
+          ctest -I $TEST_CHUNK -j `nproc` --output-on-failure --output-junit $GITHUB_WORKSPACE/trilinos_test_report-$TEST_CHUNK.xml
+        env:
+          TEST_CHUNK: ${{ matrix.test-chunk }}
+      - name: Upload test report
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trilinos_test_report-${{ matrix.test-chunk }}.xml
+          path: |
+            ${{ github.workspace }}/trilinos_test_report-${{ matrix.test-chunk }}.xml
+          retention-days: 1
