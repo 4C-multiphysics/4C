@@ -120,16 +120,6 @@ void CONTACT::IntegratorNitscheFpi::gpts_forces(Mortar::Element& sele, Mortar::E
   double normal_contact_transition = get_normal_contact_transition<dim>(
       sele, mele, sval, mval, sxi, pxsi, normal, FSI_integrated, gp_on_this_proc);
 
-#ifdef WRITE_GMSH
-  {
-    Core::LinAlg::Matrix<3, 1> sgp_x;
-    for (int i = 0; i < sele.num_node(); ++i)
-      for (int d = 0; d < dim; ++d)
-        sgp_x(d) += sval(i) * dynamic_cast<CONTACT::Node*>(sele.Nodes()[i])->xspatial()[d];
-    xf_c_comm_->Gmsh_Write(sgp_x, gp_on_this_proc, 7);
-  }
-#endif
-
   if (!gp_on_this_proc) return;
 
   static int processed_gps = 0;
@@ -150,18 +140,6 @@ void CONTACT::IntegratorNitscheFpi::gpts_forces(Mortar::Element& sele, Mortar::E
                Core::LinAlg::Matrix<dim - 1, 1>(mxi, true), normal, normal) +
       pen * gap;
 
-#ifdef WRITE_GMSH
-  {
-    Core::LinAlg::Matrix<3, 1> sgp_x;
-    for (int i = 0; i < sele.num_node(); ++i)
-      for (int d = 0; d < dim; ++d)
-        sgp_x(d) += sval(i) * dynamic_cast<CONTACT::Node*>(sele.Nodes()[i])->xspatial()[d];
-    xf_c_comm_->Gmsh_Write(sgp_x, snn_pengap, 4);
-    xf_c_comm_->Gmsh_Write(sgp_x, normal_contact_transition, 5);
-  }
-#endif
-
-
   if (!FSI_integrated || (gap < (1 + xf_c_comm_->get_fpi_pcontact_fullfraction()) *
                                      xf_c_comm_->get_fpi_pcontact_exchange_dist() &&
                              xf_c_comm_->get_fpi_pcontact_exchange_dist() > 1e-16))
@@ -177,45 +155,14 @@ void CONTACT::IntegratorNitscheFpi::gpts_forces(Mortar::Element& sele, Mortar::E
 
     integrate_poro_no_out_flow<dim>(
         -ffac, sele, sxi, sval, sderiv, jac, jacintcellmap, wgt, normal, dnmap_unit, mele, mval);
-#ifdef WRITE_GMSH
-    {
-      Core::LinAlg::Matrix<3, 1> sgp_x;
-      for (int i = 0; i < sele.num_node(); ++i)
-        for (int d = 0; d < dim; ++d)
-          sgp_x(d) += sval(i) * dynamic_cast<CONTACT::Node*>(sele.Nodes()[i])->xspatial()[d];
-      xf_c_comm_->Gmsh_Write(sgp_x, ffac, 8);
-    }
-#endif
   }
-  else
-  {
-#ifdef WRITE_GMSH
-    {
-      Core::LinAlg::Matrix<3, 1> sgp_x;
-      for (int i = 0; i < sele.num_node(); ++i)
-        for (int d = 0; d < dim; ++d)
-          sgp_x(d) += sval(i) * dynamic_cast<CONTACT::Node*>(sele.Nodes()[i])->xspatial()[d];
-      xf_c_comm_->Gmsh_Write(sgp_x, gap, 9);
-    }
-#endif
-  }
-
 
   if (snn_pengap >= normal_contact_transition && !FSI_integrated)
   {
     Core::Gen::Pairedvector<int, double> lin_fluid_traction(0);
     integrate_test<dim>(-1., sele, sval, sderiv, dsxi, jac, jacintcellmap, wgt,
         normal_contact_transition, lin_fluid_traction, lin_fluid_traction, normal, dnmap_unit);
-#ifdef WRITE_GMSH
-    {
-      Core::LinAlg::Matrix<3, 1> sgp_x;
-      for (int i = 0; i < sele.num_node(); ++i)
-        for (int d = 0; d < dim; ++d)
-          sgp_x(d) += sval(i) * dynamic_cast<CONTACT::Node*>(sele.Nodes()[i])->xspatial()[d];
-      xf_c_comm_->Gmsh_Write(sgp_x, normal_contact_transition, 0);
-      xf_c_comm_->Gmsh_Write(sgp_x, 2.0, 2);
-    }
-#endif
+
     update_ele_contact_state(sele, 0);
   }
 
@@ -254,17 +201,7 @@ void CONTACT::IntegratorNitscheFpi::gpts_forces(Mortar::Element& sele, Mortar::E
       d_snn_av_pen_gap, cauchy_nn_weighted_average_deriv_p, normal, dnmap_unit);
 
   update_ele_contact_state(sele, 1);
-#ifdef WRITE_GMSH
-  {
-    Core::LinAlg::Matrix<3, 1> sgp_x;
-    for (int i = 0; i < sele.num_node(); ++i)
-      for (int d = 0; d < dim; ++d)
-        sgp_x(d) += sval(i) * dynamic_cast<CONTACT::Node*>(sele.Nodes()[i])->xspatial()[d];
 
-    xf_c_comm_->Gmsh_Write(sgp_x, snn_av_pen_gap, 0);
-    xf_c_comm_->Gmsh_Write(sgp_x, 1.0, 2);
-  }
-#endif
   xf_c_comm_->inc_gp(0);
 }
 
