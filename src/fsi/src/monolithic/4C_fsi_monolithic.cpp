@@ -367,6 +367,15 @@ FSI::Monolithic::Monolithic(MPI_Comm comm, const Teuchos::ParameterList& timepar
 
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
+void FSI::MonolithicBase::post_setup()
+{
+  // call post_setup of the structure field
+  structure_->post_setup();
+}
+
+
+/*----------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------*/
 void FSI::Monolithic::setup_system()
 {
   // right now we use matching meshes at the interface

@@ -57,6 +57,13 @@ namespace PoroElast
     //! read restart data
     void read_restart(const int step) override;
 
+    /*!
+     * @brief Perform all necessary tasks after setting up the PoroElast
+     * object. Currently, this only calls the post_setup routine of the
+     * structural field.
+     */
+    void post_setup();
+
     //! outer level time loop
     virtual void time_loop();
 

@@ -58,6 +58,13 @@ namespace FSI
     /// setup this object
     virtual void setup();
 
+    /*!
+     * @brief Perform all necessary tasks after setting up the FSI
+     * algorithm. Currently, this only calls the post_setup routine of the
+     * structure field.
+     */
+    void post_setup();
+
     /// access to structure field
     const std::shared_ptr<Adapter::FSIStructureWrapper>& structure_field() { return structure_; }
 

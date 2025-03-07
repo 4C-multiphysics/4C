@@ -72,7 +72,7 @@ namespace Solid
       /*! \brief Initialize viscous and inertial matrices
        *
        *  This is the place where we calculate the default mass matrix and the
-       *  Rayleigh damping matrix only once during the equilibrate_initial_state routine.
+       *  Rayleigh damping matrix only once during the compute_mass_matrix_and_init_acc routine.
        *
 
        *  */
@@ -352,7 +352,7 @@ namespace Solid
       /*! \brief Assemble the Rayleigh damping matrix
        *
        *  Please note, that this has to been done only once during the
-       *  Solid::Integrator::equilibrate_initial_state routine!
+       *  Solid::Integrator::compute_mass_matrix_and_init_acc routine!
        *
 
        *  */
