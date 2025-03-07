@@ -83,9 +83,9 @@ MAT 1 MAT_Struct_StVenantKirchhoff YOUNG 21.0e6 NUE 0.0 DENS 0.0
 SYMBOLIC_FUNCTION_OF_SPACE_TIME  a
 VARIABLE 0 NAME a TYPE linearinterpolation NUMPOINTS 3 TIMES 0 3 1000 VALUES 0 1 1
 ------------------------------------DESIGN LINE NEUMANN CONDITIONS
-E 2 NUMDOF 6  ONOFF 0 0 1 0 0 0  VAL 0.0 0.0 0.8 0.0 0.0 0.0 FUNCT 0 0 1 0 0 0 TYPE Live
+E 2 NUMDOF 6  ONOFF 0 0 1 0 0 0  VAL 0.0 0.0 0.8 0.0 0.0 0.0 FUNCT none none 1 none none none TYPE Live
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
-E 1 NUMDOF 6 ONOFF 1 1 1 1 1 1 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 1 NUMDOF 6 ONOFF 1 1 1 1 1 1 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 -----------------------------------------------DLINE-NODE TOPOLOGY
 NODE    1 DLINE 1
 NODE    2 DLINE 1

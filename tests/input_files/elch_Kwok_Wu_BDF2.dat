@@ -66,7 +66,7 @@ SCATRA DIS scatra NODE 131 QUANTITY phi3 VALUE  8.32267835015413765e-02 TOLERANC
 SCATRA DIS scatra NODE 307 QUANTITY phi3 VALUE  -3.16554188195561390e-10 TOLERANCE 1.0e-16
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 //                              origin
-E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------------DNODE-NODE TOPOLOGY
 NODE 1 DNODE 1
 -----------------------------------------------DSURF-NODE TOPOLOGY

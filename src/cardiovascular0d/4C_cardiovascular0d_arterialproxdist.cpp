@@ -107,7 +107,7 @@ void Utils::Cardiovascular0DArterialProxDist::evaluate(Teuchos::ParameterList& p
         cardiovascular0dcond_[condID]->parameters().get<std::optional<int>>("p_at_crv");
     double curvefac_np = 1.0;
 
-    if (curvenum.has_value() && curvenum.value() > 0 && time >= 0)
+    if (curvenum.has_value() && time >= 0)
     {
       // function_by_id takes a zero based index
       curvefac_np = Global::Problem::instance()

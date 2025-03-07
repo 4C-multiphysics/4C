@@ -124,25 +124,25 @@ STRUCTURE DIS structure NODE 1325 QUANTITY dispz VALUE -2.20574796267256171e-04 
 E 1 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 -1.3332e4 0.0 0.0 0.0 FUNCT 2 2 2 2 2 2 TYPE Live
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 //                              fluid_fsi_ring_slave_noDBC
-E 1 NUMDOF 4 ONOFF 0 0 0 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 0 0 0 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 //                              fluid_inflow
-//E 1 - NUMDOF 4 ONOFF 1 0 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+//E 1 - NUMDOF 4 ONOFF 1 0 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 //                              fluid_outflow
-//E 2 - NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+//E 2 - NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 //                              str_moveplatedown
-E 8 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 -1.0 0.0 FUNCT 0 3 0
+E 8 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 -1.0 0.0 FUNCT none 3 none
 //                              str_moveplateup
-E 9 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 1.0 0.0 FUNCT 0 3 0
+E 9 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 1.0 0.0 FUNCT none 3 none
 //                              str_inring
-E 12 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 12 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 //                              str_outring
-E 13 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 13 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -------------------------------------------DESIGN SURF ALE DIRICH CONDITIONS
 //                              fluid_inflow
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 //                              fluid_outflow
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ------------------------------------DESIGN SURF MORTAR CONTACT CONDITIONS 3D
 E 6 InterfaceID 1 Side Master Initialization Inactive
 E 7 InterfaceID 1 Side Slave Initialization Inactive

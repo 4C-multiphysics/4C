@@ -79,7 +79,7 @@ VARIABLE 0 NAME a TYPE multifunction NUMPOINTS 3 TIMES 0.0 4 500000.0 DESCRIPTIO
 //E 2 - 1  1 0 0 0 0 0  10.0 0.0 0.0 0.0 0.0 0.0  TYPE Live 0 0 0 0 0 0  // first 1 is loadcurve
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // left_surface_temperature
-E 1 NUMDOF 1 ONOFF 1 VAL 0.0 FUNCT 0
+E 1 NUMDOF 1 ONOFF 1 VAL 0.0 FUNCT none
 // right_surface_temperature
 E 2 NUMDOF 1 ONOFF 1 VAL 10.0 FUNCT 1
 -----------------------------------------------DSURF-NODE TOPOLOGY

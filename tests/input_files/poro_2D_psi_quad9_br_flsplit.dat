@@ -97,18 +97,18 @@ STRUCTURE DIS structure NODE 94 QUANTITY vely VALUE -1.29242663503418509e-01 TOL
 STRUCTURE DIS structure NODE 95 QUANTITY dispy VALUE -2.19005514845106069e-03 TOLERANCE 1e-7
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 //                              top
-E 2 NUMDOF 2 ONOFF 1 1 VAL 0.0 -1.0 FUNCT 0 1
+E 2 NUMDOF 2 ONOFF 1 1 VAL 0.0 -1.0 FUNCT none 1
 //                              bottom
-E 3 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 3 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 //                              structleft
-//E 4 - NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+//E 4 - NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 //                              structright
-//E 5 - NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+//E 5 - NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 //                              structsurf
-E 1 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 //                              porosurf
-E 2 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+E 2 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 -------------------------------DESIGN FSI COUPLING LINE CONDITIONS
 //                              interface
 E 1 coupling_id 1
@@ -119,7 +119,7 @@ E 1 coupling_id 1
 E 3
 --------------------------------DESIGN LINE PORO DIRICH CONDITIONS
 //                              bottom
-E 3 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------------DLINE-NODE TOPOLOGY
 NODE 1 DLINE 1
 NODE 2 DLINE 1

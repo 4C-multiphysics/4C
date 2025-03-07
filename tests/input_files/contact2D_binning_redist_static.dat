@@ -116,7 +116,7 @@ STRUCTURE DIS structure NODE 22 QUANTITY dispy VALUE -1.04644449992358446e-01 TO
 E 1 NUMDOF 2 ONOFF 1 1 VAL 1.0 1.0 FUNCT 2 1
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // table_front_surf
-E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 --------------------------DESIGN LINE MORTAR CONTACT CONDITIONS 2D
 // block_bottom_curve
 E 2 InterfaceID 0 Side Slave Initialization Inactive FrCoeffOrBound 0.0 AdhesionBound 0.0 Application Solidcontact

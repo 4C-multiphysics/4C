@@ -127,27 +127,27 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME a
 VARIABLE 0 NAME a TYPE multifunction NUMPOINTS 5 TIMES 0 2.5 3.5 10.5 10000000 DESCRIPTION 1/2 1 cos((t/3.5-1)*pi/2) -1
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 // xFluid__upper_surface
-E 1 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 4 0 0 0 0 0
+E 1 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 4 none none none none none
 // xFluid__lower_surface
-E 2 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL -1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 4 0 0 0 0 0
+E 2 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL -1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 4 none none none none none
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 1 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 // xFluid__outflow
-E 2 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 2 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 // fluid fsi
-E 3 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 3 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 // structure fsi
-E 5 NUMDOF 6 ONOFF 0 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 5 NUMDOF 6 ONOFF 0 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 ------------------------------------------------DESIGN VOL DIRICH CONDITIONS
 // bgFluid_volume
-E 1 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 1 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 // embFluid_volume
-E 2 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 2 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 // structure_volume
-E 3 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 3 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 --------------------------------------------DESIGN VOL ALE DIRICH CONDITIONS
 // embFluid_volume
-E 2 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 2 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 -----------------------------------------DESIGN FSI COUPLING SURF CONDITIONS
 // fluid fsi
 E 3 coupling_id 1

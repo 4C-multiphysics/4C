@@ -60,9 +60,9 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME 100*t
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 //DSURF                         2
 //                              up
-//E 1 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+//E 1 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 //                              down
-//E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+//E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ---------------------------------------------------------DSURF-NODE TOPOLOGY
 NODE 184 DSURFACE 1
 NODE 185 DSURFACE 1

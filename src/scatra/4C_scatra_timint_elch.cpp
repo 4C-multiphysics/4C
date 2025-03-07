@@ -32,6 +32,7 @@
 
 #include <Teuchos_TimeMonitor.hpp>
 
+#include <iterator>
 #include <unordered_set>
 
 FOUR_C_NAMESPACE_OPEN
@@ -2976,7 +2977,8 @@ void ScaTra::ScaTraTimIntElch::apply_neumann_bc(
             // condition.
             const std::vector<int> onoff = {0, 1};
             const std::vector<double> val = {0.0, condition->parameters().get<double>("CURRENT")};
-            const std::vector<std::optional<int>> funct = {0, 0};
+            const std::vector<std::optional<int>> funct = {std::nullopt, std::nullopt};
+
             condition->parameters().add("NUMDOF", 2);
             condition->parameters().add("FUNCT", funct);
             condition->parameters().add("ONOFF", onoff);

@@ -153,21 +153,21 @@ XFLUID DIS fluid NODE 3397 QUANTITY pressure VALUE  1.41477286498793209e+00 TOLE
 // CORNER fluid x+ y+ z- DNODE 7
 // CORNER fluid x+ y+ z+ DNODE 8
 //                              bottom_south_west
-E 2 NUMDOF 6 ONOFF 1 0 1 0 0 0 VAL 0.05 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 2 NUMDOF 6 ONOFF 1 0 1 0 0 0 VAL 0.05 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              bottom_north_west
-E 1 NUMDOF 6 ONOFF 1 0 1 0 0 0 VAL 0.05 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 1 NUMDOF 6 ONOFF 1 0 1 0 0 0 VAL 0.05 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              bottom_south_east
-E 6 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 6 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              bottom_north_east
-E 5 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 5 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              top_south_west
-E 3 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 0.05 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 3 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 0.05 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              top_north_west
-E 4 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 0.05 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 4 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 0.05 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              top_south_east
-E 7 NUMDOF 6 ONOFF 0 1 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 7 NUMDOF 6 ONOFF 0 1 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              top_north_east
-E 8 NUMDOF 6 ONOFF 0 1 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 8 NUMDOF 6 ONOFF 0 1 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
 // EDGE fluid y+ z+ DLINE 1
 // EDGE fluid y- z+ DLINE 2
@@ -182,53 +182,53 @@ E 8 NUMDOF 6 ONOFF 0 1 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
 // EDGE fluid x+ y- DLINE 11
 // EDGE fluid x+ z- DLINE 12
 //                              bottom_south_line
-E 3 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 3 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              bottom_north_line
-E 2 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 2 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              bottom_west_line
-E 7 NUMDOF 6 ONOFF 1 0 1 0 0 0 VAL 0.05 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 7 NUMDOF 6 ONOFF 1 0 1 0 0 0 VAL 0.05 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              bottom_east_line
-E 11 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 11 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              west_south_line
-E 8 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 0.05 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 8 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 0.05 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              west_north_line
-E 6 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 0.05 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 6 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 0.05 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              east_south_line
-E 12 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 12 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              east_north_line
-E 10 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 10 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              top_south_line
-E 4 NUMDOF 6 ONOFF 0 1 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 4 NUMDOF 6 ONOFF 0 1 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              top_north_line
-E 1 NUMDOF 6 ONOFF 0 1 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 1 NUMDOF 6 ONOFF 0 1 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              top_west_line
-E 5 NUMDOF 6 ONOFF 0 1 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 5 NUMDOF 6 ONOFF 0 1 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              top_east_line
-E 9 NUMDOF 6 ONOFF 0 1 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 9 NUMDOF 6 ONOFF 0 1 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 //                              bottom
-E 2 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 2 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              top
-E 1 NUMDOF 6 ONOFF 0 1 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 1 NUMDOF 6 ONOFF 0 1 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              east
-E 4 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 4 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              west
-E 3 NUMDOF 6 ONOFF 1 0 1 0 0 0 VAL 0.05 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 3 NUMDOF 6 ONOFF 1 0 1 0 0 0 VAL 0.05 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              z-
-E 5 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 5 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 //                              z+
-E 7 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0
+E 7 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none
 ------------------------------------------------DESIGN VOL DIRICH CONDITIONS
 //                              volume
-E 2 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 -------------------------------------DESIGN XFEM NAVIER SLIP SURF CONDITIONS
-E 6 COUPLINGID 1 EVALTYPE zero ROBIN_DIRICHLET_ID 4 ROBIN_NEUMANN_ID 4 SLIPCOEFFICIENT 1.6 FUNCT 0
+E 6 COUPLINGID 1 EVALTYPE zero ROBIN_DIRICHLET_ID 4 ROBIN_NEUMANN_ID 4 SLIPCOEFFICIENT 1.6 FUNCT none
 --------------------------DESIGN XFEM ROBIN DIRICHLET SURF CONDITIONS
-E 6 COUPLINGID 1 ROBIN_ID 4 EVALTYPE zero NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 6 COUPLINGID 1 ROBIN_ID 4 EVALTYPE zero NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 --------------------------DESIGN XFEM ROBIN NEUMANN SURF CONDITIONS
-E 6 COUPLINGID 1 ROBIN_ID 4 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 6 COUPLINGID 1 ROBIN_ID 4 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 ------------------------------------DESIGN XFEM DISPLACEMENT SURF CONDITIONS
-E 6 COUPLINGID 1 EVALTYPE zero NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 6 COUPLINGID 1 EVALTYPE zero NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------------DNODE-NODE TOPOLOGY
 CORNER fluid x- y- z+ DNODE 1
 CORNER fluid x- y- z- DNODE 2

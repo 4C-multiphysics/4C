@@ -1092,15 +1092,15 @@ TYPE phase1 POS 4.500000000000000e-01 4.500000000000000e-01 1.850000000000000e+0
 TYPE phase1 POS 4.500000000000000e-01 4.500000000000000e-01 1.950000000000000e+00
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // bottom_line
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // bottom_surf
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // side_surf
-E 3 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 --------------------------------------DESIGN VOL DIRICH CONDITIONS
 // top_vol
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 1.0 FUNCT 0 0 1
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 1.0 FUNCT none none 1
 --------------------------------------DESIGN SURFACE PARTICLE WALL
 // particlewall
 E 1 MAT -1

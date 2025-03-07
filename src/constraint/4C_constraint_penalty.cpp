@@ -206,7 +206,7 @@ void CONSTRAINTS::ConstraintPenalty::evaluate_constraint(Teuchos::ParameterList&
       // Evaluate loadcurve if defined. Put current load factor in parameterlist
       const auto curvenum = cond->parameters().get<std::optional<int>>("curve");
       double curvefac = 1.0;
-      if (curvenum.has_value() && curvenum.value() > 0)
+      if (curvenum.has_value())
       {
         // function_by_id takes a zero-based index
         curvefac = Global::Problem::instance()

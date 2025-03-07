@@ -639,7 +639,7 @@ int Discret::Elements::Beam3r::evaluate_neumann(Teuchos::ParameterList& params,
     for (unsigned int dof = 0; dof < 6; ++dof)
     {
       // evaluate function at the position of the current GP if it is not none
-      if (functions[dof].has_value() && functions[dof].value() > 0)
+      if (functions[dof].has_value())
         functionfac = Global::Problem::instance()
                           ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functions[dof].value())
                           .evaluate(X_ref.data(), time, dof);

@@ -57,22 +57,22 @@ MAT 2 MAT_Struct_StVenantKirchhoff YOUNG 2.0 NUE 0.0 DENS 1.0
 LAW 1 CoConstLaw_brokenrational A -0.02188 B 3.854 C -0.005677 Offset 0.0
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 // bottomcorner
-E 1 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 // topcorner
-E 2 NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT 0 0
+E 2 NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT none none
 // other corner
-E 3 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 3 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 // other corner
-E 4 NUMDOF 2 ONOFF 1 1 VAL 0.0 1.0 FUNCT 0 1
+E 4 NUMDOF 2 ONOFF 1 1 VAL 0.0 1.0 FUNCT none 1
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // ground
-E 3 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT 0 0
+E 3 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT none none
 // topleft
-E 4 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+E 4 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 // bottomleft
-E 5 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+E 5 NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 // pushing
-E 6 NUMDOF 2 ONOFF 0 1 VAL 0.0 1.0 FUNCT 0 1
+E 6 NUMDOF 2 ONOFF 0 1 VAL 0.0 1.0 FUNCT none 1
 --------------------------DESIGN LINE MORTAR CONTACT CONDITIONS 2D
 // bottomcontact
 E 1 InterfaceID 0 Side Master Initialization Inactive FrCoeffOrBound 0.0 AdhesionBound 0.0 Application Solidcontact DbcHandling DoNothing TwoHalfPass 0 RefConfCheckNonSmoothSelfContactSurface 0.0 ConstitutiveLawID 1

@@ -105,19 +105,19 @@ FLUID DIS fluid NODE 2205 QUANTITY vely VALUE 0.0 TOLERANCE 1e-11
 FLUID DIS fluid NODE 2205 QUANTITY pressure VALUE -6.67847586754276179e+00 TOLERANCE 1e-10
 ------------------------------------DESIGN LINE NEUMANN CONDITIONS
 // line_outflow
-E 4 NUMDOF 3 ONOFF 1 1 0 VAL 3.0 1.0 0.0 FUNCT 0 4 0 TYPE Live
+E 4 NUMDOF 3 ONOFF 1 1 0 VAL 3.0 1.0 0.0 FUNCT none 4 none TYPE Live
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 // inflow_points
-E 1 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1 0 0
+E 1 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1 none none
 // outflow_points
-E 2 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1 0 0
+E 2 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1 none none
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // line_top
-E 1 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1 0 0
+E 1 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1 none none
 // line_bottom
-E 2 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1 0 0
+E 2 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1 none none
 // line_inflow
-E 3 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1 0 0
+E 3 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1 none none
 -----------------------------------------------DNODE-NODE TOPOLOGY
 NODE    401 DNODE 1
 NODE    2211 DNODE 1

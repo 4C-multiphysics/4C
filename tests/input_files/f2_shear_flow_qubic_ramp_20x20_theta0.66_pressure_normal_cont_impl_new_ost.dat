@@ -75,26 +75,26 @@ FLUID DIS fluid NODE 173 QUANTITY vely VALUE 2.73086590176020651e-04 TOLERANCE 1
 FLUID DIS fluid NODE 173 QUANTITY pressure VALUE -1.97813333217094220e-03 TOLERANCE 1e-14
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 //bottom_west
-E 1 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 //bottom_east
-E 2 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 //top_east
-E 3 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1  0 0
+E 3 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1  none none
 //top_west
-E 4 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1  0 0
+E 4 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1  none none
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
 //bottom
-E 1 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 //east
-//E 2 - NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1  0 0
+//E 2 - NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1  none none
 //top
-E 3 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1  0 0
+E 3 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1  none none
 //west
-E 4 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1  0 0
+E 4 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1  none none
 ----------------------------------------------DESIGN LINE NEUMANN CONDITIONS
-E 2 NUMDOF 6 ONOFF 1 1 0 0 0 0 VAL 0.0 1.0 0.0 0.0 0.0 0.0 FUNCT 0 2 0 0 0 0 TYPE Live
+E 2 NUMDOF 6 ONOFF 1 1 0 0 0 0 VAL 0.0 1.0 0.0 0.0 0.0 0.0 FUNCT none 2 none none none none TYPE Live
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
-E 1 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 3 0 0 0 0 0 TYPE Live
+E 1 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 3 none none none none none TYPE Live
 ---------------------------------------------------------DNODE-NODE TOPOLOGY
 NODE 332 DNODE 1
 NODE 1 DNODE 2

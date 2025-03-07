@@ -608,7 +608,7 @@ void Core::FE::Utils::DbcNurbs::fill_matrix_and_rhs_for_ls_dirichlet_boundary(
       std::vector<double> functimederivfac(deg + 1, 1.0);
       for (unsigned i = 1; i < (deg + 1); ++i) functimederivfac[i] = 0.0;
 
-      if (funct[rr].has_value() && funct[rr].value() > 0)
+      if (funct[rr].has_value())
       {
         // important: position has to have always three components!!
         functimederivfac =
@@ -758,7 +758,7 @@ void Core::FE::Utils::DbcNurbs::fill_matrix_and_rhs_for_ls_dirichlet_domain(
       // factor given by FUNCTS
       std::vector<double> functimederivfac(deg + 1, 1.0);
       double functfac = 1.0;
-      if (funct[rr].has_value() && funct[rr].value() > 0)
+      if (funct[rr].has_value())
       {
         // important: position has to have always three components!!
         functimederivfac =
