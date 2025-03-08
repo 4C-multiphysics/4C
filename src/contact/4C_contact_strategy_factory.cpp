@@ -1924,7 +1924,8 @@ void CONTACT::STRATEGY::Factory::set_parameters_for_contact_condition(
       if (s2ikinetics_cond->parameters().get<int>("ConditionID") == conditiongroupid)
       {
         // only the slave-side stores the parameters
-        if (s2ikinetics_cond->parameters().get<int>("INTERFACE_SIDE") == Inpar::S2I::side_slave)
+        if (s2ikinetics_cond->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE") ==
+            Inpar::S2I::side_slave)
         {
           // fill the parameters from the s2i condition
           ScaTra::MeshtyingStrategyS2I::

@@ -696,7 +696,9 @@ void SSI::ScaTraManifoldScaTraFluxEvaluator::pre_evaluate(
   eleparams.set<Core::Conditions::ConditionType>(
       "condition type", Core::Conditions::ConditionType::S2IKinetics);
 
-  switch (scatra_manifold_coupling.condition_kinetics()->parameters().get<int>("KINETIC_MODEL"))
+  switch (
+      scatra_manifold_coupling.condition_kinetics()->parameters().get<Inpar::S2I::KineticModels>(
+          "KINETIC_MODEL"))
   {
     case Inpar::S2I::kinetics_constantinterfaceresistance:
     {

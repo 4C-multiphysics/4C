@@ -264,7 +264,7 @@ void Discret::Elements::ScaTraEleCalcElchDiffCond<distype, probdim>::calc_elch_d
   if (cond == nullptr) FOUR_C_THROW("Cannot access condition 'ElchDomainKinetics'");
 
   // access parameters of the condition
-  const int kinetics = cond->parameters().get<int>("KINETIC_MODEL");
+  const int kinetics = cond->parameters().get<Inpar::ElCh::ElectrodeKinetics>("KINETIC_MODEL");
   double pot0 = cond->parameters().get<double>("POT");
   const auto curvenum = cond->parameters().get<std::optional<int>>("FUNCT");
   const int nume = cond->parameters().get<int>("E-");

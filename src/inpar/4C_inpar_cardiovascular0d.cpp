@@ -654,7 +654,7 @@ void Inpar::Cardiovascular0D::set_valid_conditions(
       Core::Conditions::geometry_type_surface);
 
   cardiovascular0dsyspulcirculationcond.add_component(parameter<int>("id"));
-  cardiovascular0dsyspulcirculationcond.add_component(selection<std::string>("TYPE",
+  cardiovascular0dsyspulcirculationcond.add_component(deprecated_selection<std::string>("TYPE",
       {"ventricle_left", "ventricle_right", "atrium_left", "atrium_right", "dummy"},
       {.description = ""}));
 
@@ -672,9 +672,10 @@ void Inpar::Cardiovascular0D::set_valid_conditions(
       Core::Conditions::geometry_type_surface);
 
   cardiovascularrespiratory0dsyspulperiphcirculationcond.add_component(parameter<int>("id"));
-  cardiovascularrespiratory0dsyspulperiphcirculationcond.add_component(selection<std::string>(
-      "TYPE", {"ventricle_left", "ventricle_right", "atrium_left", "atrium_right", "dummy"},
-      {.description = ""}));
+  cardiovascularrespiratory0dsyspulperiphcirculationcond.add_component(
+      deprecated_selection<std::string>("TYPE",
+          {"ventricle_left", "ventricle_right", "atrium_left", "atrium_right", "dummy"},
+          {.description = ""}));
 
   condlist.push_back(cardiovascularrespiratory0dsyspulperiphcirculationcond);
 

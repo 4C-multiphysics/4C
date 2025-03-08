@@ -529,7 +529,7 @@ std::shared_ptr<std::vector<std::shared_ptr<Mat::MaterialDefinition>>> Global::v
     m->add_component(parameter<double>("LAMBDAOPT",
         {.description = "optimal active fiber stretch related to active nominal stress maximum"}));
 
-    m->add_component(selection<Inpar::Mat::ActivationType>("ACTEVALTYPE",
+    m->add_component(deprecated_selection<Inpar::Mat::ActivationType>("ACTEVALTYPE",
         {{"function", Inpar::Mat::ActivationType::function_of_space_time},
             {"map", Inpar::Mat::ActivationType::map}},
         {.description = "type of activation evaluation"}));

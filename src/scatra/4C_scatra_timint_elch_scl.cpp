@@ -604,7 +604,7 @@ void ScaTra::ScaTraTimIntElchSCL::setup_coupling()
       // is this node owned by this proc?
       if (!Core::Communication::is_node_gid_on_this_proc(*discret_, coupling_node_gid)) continue;
 
-      switch (coupling_condition->parameters().get<int>("INTERFACE_SIDE"))
+      switch (coupling_condition->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE"))
       {
         case Inpar::S2I::side_slave:
           my_macro_slave_node_gids.emplace_back(coupling_node_gid);

@@ -49,7 +49,7 @@ void Inpar::RveMpc::set_valid_conditions(
       Core::Conditions::LineRvePeriodic, false, Core::Conditions::geometry_type_line);
 
   rve_lineperiodic_condition.add_component(
-      selection<std::string>("EDGE", {"x+", "x-", "y+", "y-", "undefined"},
+      deprecated_selection<std::string>("EDGE", {"x+", "x-", "y+", "y-", "undefined"},
           {.description = "edge line id", .default_value = "undefined"}));
 
   condlist.push_back(rve_lineperiodic_condition);
@@ -61,7 +61,7 @@ void Inpar::RveMpc::set_valid_conditions(
       Core::Conditions::SurfaceRvePeriodic, false, Core::Conditions::geometry_type_surface);
 
   rve_surfperiodic_condition.add_component(
-      selection<std::string>("SURF", {"x+", "x-", "y+", "y-", "z+", "z-", "undefined"},
+      deprecated_selection<std::string>("SURF", {"x+", "x-", "y+", "y-", "z+", "z-", "undefined"},
           {.description = "surface id", .default_value = "undefined"}));
 
   condlist.push_back(rve_surfperiodic_condition);
@@ -73,9 +73,9 @@ void Inpar::RveMpc::set_valid_conditions(
       "condition -  only required if RVE_REFERENCE_POINTS = automatic",
       Core::Conditions::PointRvePeriodicReference, false, Core::Conditions::geometry_type_point);
 
-  rve_cornerpoint_condition.add_component(
-      selection<std::string>("POSITION", {"N1L", "N1B", "N2", "N4", "N1", "N3", "undefined"},
-          {.description = "position of reference node", .default_value = "undefined"}));
+  rve_cornerpoint_condition.add_component(deprecated_selection<std::string>("POSITION",
+      {"N1L", "N1B", "N2", "N4", "N1", "N3", "undefined"},
+      {.description = "position of reference node", .default_value = "undefined"}));
 
   condlist.push_back(rve_cornerpoint_condition);
 
@@ -88,7 +88,7 @@ void Inpar::RveMpc::set_valid_conditions(
       Core::Conditions::PointLinearCoupledEquation, false, Core::Conditions::geometry_type_point);
 
   linear_ce.add_component(parameter<int>("EQUATION", {.description = "EQUATION"}));
-  linear_ce.add_component(selection<std::string>("ADD", {"dispx", "dispy", "undefined"},
+  linear_ce.add_component(deprecated_selection<std::string>("ADD", {"dispx", "dispy", "undefined"},
       {.description = "degrees of freedom", .default_value = "undefined"}));
   linear_ce.add_component(parameter<double>("COEFFICIENT"));
 

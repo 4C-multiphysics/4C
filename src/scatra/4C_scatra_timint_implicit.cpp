@@ -3386,7 +3386,8 @@ void ScaTra::ScaTraTimIntImpl::evaluate_macro_micro_coupling()
 
           // compute matrix and vector contributions according to kinetic model for current
           // macro-micro coupling condition
-          const int kinetic_model = condition->parameters().get<int>("KINETIC_MODEL");
+          const int kinetic_model =
+              condition->parameters().get<Inpar::S2I::KineticModels>("KINETIC_MODEL");
 
           switch (kinetic_model)
           {
@@ -3507,12 +3508,12 @@ void ScaTra::ScaTraTimIntImpl::evaluate_macro_micro_coupling()
               const double eta = phinp_macro_[2] - phinp_macro_[1] - epd;
 
               // Butler-Volmer exchange mass flux density
-              const double j0 = condition->parameters().get<int>("KINETIC_MODEL") ==
-                                        Inpar::S2I::kinetics_butlervolmerreduced
-                                    ? kr
-                                    : kr * std::pow(conc_el, alphaa) *
-                                          std::pow(cmax - conc_ed, alphaa) *
-                                          std::pow(conc_ed, alphac);
+              const double j0 =
+                  condition->parameters().get<Inpar::S2I::KineticModels>("KINETIC_MODEL") ==
+                          Inpar::S2I::kinetics_butlervolmerreduced
+                      ? kr
+                      : kr * std::pow(conc_el, alphaa) * std::pow(cmax - conc_ed, alphaa) *
+                            std::pow(conc_ed, alphac);
 
               // exponential Butler-Volmer terms
               const double expterm1 = std::exp(alphaa * frt * eta);

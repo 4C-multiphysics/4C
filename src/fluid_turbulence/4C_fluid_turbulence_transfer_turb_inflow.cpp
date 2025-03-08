@@ -12,6 +12,7 @@
 #include "4C_fem_general_node.hpp"
 #include "4C_fem_geometric_search_matchingoctree.hpp"
 #include "4C_global_data.hpp"
+#include "4C_inpar_fluid.hpp"
 #include "4C_io_input_parameter_container.hpp"
 #include "4C_utils_function_of_time.hpp"
 
@@ -320,7 +321,8 @@ void FLD::TransferTurbulentInflowCondition::get_data(
 {
   id = cond->parameters().get<int>("ID");
 
-  direction = cond->parameters().get<int>("DIRECTION");
+  direction =
+      static_cast<int>(cond->parameters().get<Inpar::FLUID::TurbInflowDirection>("DIRECTION"));
 
   const auto mytoggle = cond->parameters().get<std::string>("toggle");
   if (mytoggle == "master")

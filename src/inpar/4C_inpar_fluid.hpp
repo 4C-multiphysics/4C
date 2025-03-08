@@ -327,6 +327,14 @@ namespace Inpar
       dynamic_vreman
     };
 
+    //! Direction of inflow for turbulence
+    enum class TurbInflowDirection
+    {
+      x,
+      y,
+      z,
+    };
+
     /// Define forcing for scalar field
     enum ScalarForcing
     {

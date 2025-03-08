@@ -70,8 +70,9 @@ namespace Inpar::SOLVER
           "The amount of fill allowed for an internal \"ilu\" preconditioner.", list);
 
       std::vector<std::string> ifpack_combine_valid_input = {"Add", "Insert", "Zero"};
-      list.specs.emplace_back(selection<std::string>("IFPACKCOMBINE", ifpack_combine_valid_input,
-          {.description = "Combine mode for Ifpack Additive Schwarz", .default_value = "Add"}));
+      list.specs.emplace_back(
+          deprecated_selection<std::string>("IFPACKCOMBINE", ifpack_combine_valid_input,
+              {.description = "Combine mode for Ifpack Additive Schwarz", .default_value = "Add"}));
     }
 
     // Iterative solver options

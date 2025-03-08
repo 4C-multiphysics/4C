@@ -94,17 +94,18 @@ void Core::Utils::add_valid_builtin_functions(Core::Utils::FunctionManager& func
           parameter<std::string>("NAME"),
           one_of({
               all_of({
-                  selection<std::string>("TYPE", {"expression"}),
+                  deprecated_selection<std::string>("TYPE", {"expression"}),
                   parameter<std::string>("DESCRIPTION"),
               }),
               all_of({
-                  selection<std::string>("TYPE", {"linearinterpolation", "fourierinterpolation"}),
+                  deprecated_selection<std::string>(
+                      "TYPE", {"linearinterpolation", "fourierinterpolation"}),
                   time_info,
                   parameter<std::vector<double>>(
                       "VALUES", {.size = from_parameter<int>("NUMPOINTS")}),
               }),
               all_of({
-                  selection<std::string>("TYPE", {"multifunction"}),
+                  deprecated_selection<std::string>("TYPE", {"multifunction"}),
                   time_info,
                   parameter<std::vector<std::string>>(
                       "DESCRIPTION", {.size = [](const IO::InputParameterContainer& container)

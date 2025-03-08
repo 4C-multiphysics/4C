@@ -202,7 +202,8 @@ void ScaTra::MeshtyingStrategyS2IElch::evaluate_point_coupling()
 
     // compute matrix and vector contributions according to kinetic model for current point coupling
     // condition
-    const int kinetic_model = cond_slave->parameters().get<int>("KINETIC_MODEL");
+    const int kinetic_model =
+        cond_slave->parameters().get<Inpar::S2I::KineticModels>("KINETIC_MODEL");
     switch (kinetic_model)
     {
       case Inpar::S2I::kinetics_butlervolmer:
@@ -278,8 +279,8 @@ void ScaTra::MeshtyingStrategyS2IElch::evaluate_point_coupling()
         const double eta = ed_pot - el_pot - epd;
 
         // Butler-Volmer exchange mass flux density
-        const double j0 = cond_slave->parameters().get<int>("KINETIC_MODEL") ==
-                                  Inpar::S2I::kinetics_butlervolmerreduced
+        const double j0 = cond_slave->parameters().get<Inpar::S2I::KineticModels>(
+                              "KINETIC_MODEL") == Inpar::S2I::kinetics_butlervolmerreduced
                               ? kr
                               : kr * std::pow(el_conc, alphaa) * std::pow(cmax - ed_conc, alphaa) *
                                     std::pow(ed_conc, alphac);
@@ -386,7 +387,7 @@ void ScaTra::MeshtyingStrategyS2IElch::update() const
     {
       // extract current condition
       // extract kinetic model from current condition
-      switch (condition->parameters().get<int>("KINETIC_MODEL"))
+      switch (condition->parameters().get<Inpar::S2I::GrowthKineticModels>("KINETIC_MODEL"))
       {
         case Inpar::S2I::growth_kinetics_butlervolmer:
         {
@@ -1222,7 +1223,7 @@ void ScaTra::MeshtyingStrategyS2IElchSCL::setup_meshtying()
     if (s2imeshtying_condition->parameters().get<int>("S2I_KINETICS_ID") != -1)
       FOUR_C_THROW("No kinetics condition is allowed for the coupled space-charge layer problem.");
 
-    switch (s2imeshtying_condition->parameters().get<int>("INTERFACE_SIDE"))
+    switch (s2imeshtying_condition->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE"))
     {
       case Inpar::S2I::side_slave:
       {

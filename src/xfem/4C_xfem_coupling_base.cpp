@@ -377,8 +377,9 @@ void XFEM::CouplingBase::set_averaging_strategy()
     {
       // ask the first cutter element
       const int lid = 0;
-      const int val = cutterele_conds_[lid].second->parameters().get<int>("COUPSTRATEGY");
-      averaging_strategy_ = static_cast<Inpar::XFEM::AveragingStrategy>(val);
+      averaging_strategy_ =
+          cutterele_conds_[lid].second->parameters().get<Inpar::XFEM::AveragingStrategy>(
+              "COUPSTRATEGY");
       // check unhandled cased
       if (averaging_strategy_ == Inpar::XFEM::Mean || averaging_strategy_ == Inpar::XFEM::Harmonic)
         FOUR_C_THROW(
@@ -396,8 +397,9 @@ void XFEM::CouplingBase::set_averaging_strategy()
     {
       // ask the first cutter element
       const int lid = 0;
-      const int val = cutterele_conds_[lid].second->parameters().get<int>("COUPSTRATEGY");
-      averaging_strategy_ = static_cast<Inpar::XFEM::AveragingStrategy>(val);
+      averaging_strategy_ =
+          cutterele_conds_[lid].second->parameters().get<Inpar::XFEM::AveragingStrategy>(
+              "COUPSTRATEGY");
       break;
     }
     case Inpar::XFEM::CouplingCond_LEVELSET_TWOPHASE:

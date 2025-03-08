@@ -86,7 +86,7 @@ void ScaTra::ScaTraUtils::check_consistency_with_s2_i_kinetics_condition(
     const int s2ikinetics_id = conditionToBeTested->parameters().get<int>("S2I_KINETICS_ID");
 
     // check the interface side
-    switch (conditionToBeTested->parameters().get<int>("INTERFACE_SIDE"))
+    switch (conditionToBeTested->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE"))
     {
       case Inpar::S2I::side_slave:
       {
@@ -114,7 +114,7 @@ void ScaTra::ScaTraUtils::check_consistency_with_s2_i_kinetics_condition(
       if (s2ikinetics_id != s2ikinetics_cond_id) continue;
 
       // check the interface side
-      switch (s2ikinetics_cond->parameters().get<int>("INTERFACE_SIDE"))
+      switch (s2ikinetics_cond->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE"))
       {
         case Inpar::S2I::side_slave:
         {

@@ -337,13 +337,13 @@ void FLD::add_valid_fluid_functions(Core::Utils::FunctionManager& function_manag
   using namespace Core::IO::InputSpecBuilders;
   auto spec = one_of({
       all_of({
-          selection<std::string>("FLUID_FUNCTION", {"BELTRAMI"}),
+          deprecated_selection<std::string>("FLUID_FUNCTION", {"BELTRAMI"}),
           parameter<double>("c1"),
       }),
-      selection<std::string>("FLUID_FUNCTION",
+      deprecated_selection<std::string>("FLUID_FUNCTION",
           {"CHANNELWEAKLYCOMPRESSIBLE", "CORRECTIONTERMCHANNELWEAKLYCOMPRESSIBLE"}),
       all_of({
-          selection<std::string>("FLUID_FUNCTION",
+          deprecated_selection<std::string>("FLUID_FUNCTION",
               {"WEAKLYCOMPRESSIBLE_POISEUILLE", "WEAKLYCOMPRESSIBLE_POISEUILLE_FORCE"}),
           parameter<int>("MAT"),
           parameter<double>("L"),
@@ -351,33 +351,33 @@ void FLD::add_valid_fluid_functions(Core::Utils::FunctionManager& function_manag
           parameter<double>("U"),
       }),
       all_of({
-          selection<std::string>("FLUID_FUNCTION",
+          deprecated_selection<std::string>("FLUID_FUNCTION",
               {"WEAKLYCOMPRESSIBLE_MANUFACTUREDFLOW", "WEAKLYCOMPRESSIBLE_MANUFACTUREDFLOW_FORCE",
                   "WEAKLYCOMPRESSIBLE_ETIENNE_CFD", "WEAKLYCOMPRESSIBLE_ETIENNE_CFD_FORCE",
                   "WEAKLYCOMPRESSIBLE_ETIENNE_CFD_VISCOSITY"}),
           parameter<int>("MAT"),
       }),
       all_of({
-          selection<std::string>("FLUID_FUNCTION",
+          deprecated_selection<std::string>("FLUID_FUNCTION",
               {"WEAKLYCOMPRESSIBLE_ETIENNE_FSI_FLUID", "WEAKLYCOMPRESSIBLE_ETIENNE_FSI_FLUID_FORCE",
                   "WEAKLYCOMPRESSIBLE_ETIENNE_FSI_FLUID_VISCOSITY"}),
           parameter<int>("MAT_FLUID"),
           parameter<int>("MAT_STRUCT"),
       }),
       all_of({
-          selection<std::string>(
+          deprecated_selection<std::string>(
               "FLUID_FUNCTION", {"BELTRAMI-UP", "BELTRAMI-GRADU", "KIMMOIN-UP", "KIMMOIN-GRADU"}),
           parameter<int>("MAT"),
           parameter<int>("ISSTAT"),
       }),
       all_of({
-          selection<std::string>("FLUID_FUNCTION", {"BELTRAMI-RHS", "KIMMOIN-RHS"}),
+          deprecated_selection<std::string>("FLUID_FUNCTION", {"BELTRAMI-RHS", "KIMMOIN-RHS"}),
           parameter<int>("MAT"),
           parameter<int>("ISSTAT"),
           parameter<int>("ISSTOKES"),
       }),
       all_of({
-          selection<std::string>("FLUID_FUNCTION", {"KIMMOIN-STRESS"}),
+          deprecated_selection<std::string>("FLUID_FUNCTION", {"KIMMOIN-STRESS"}),
           parameter<int>("MAT"),
           parameter<int>("ISSTAT"),
           parameter<double>("AMPLITUDE"),

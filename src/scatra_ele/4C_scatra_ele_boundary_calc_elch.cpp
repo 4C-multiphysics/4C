@@ -107,7 +107,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElch<distype, probdim>::calc_elch_b
   if (cond == nullptr) FOUR_C_THROW("Cannot access condition 'ElchBoundaryKinetics'");
 
   // access parameters of the condition
-  const auto kinetics = cond->parameters().get<int>("KINETIC_MODEL");
+  const auto kinetics = cond->parameters().get<Inpar::ElCh::ElectrodeKinetics>("KINETIC_MODEL");
   auto pot0 = cond->parameters().get<double>("POT");
   const auto curvenum = cond->parameters().get<std::optional<int>>("FUNCT");
   const auto nume = cond->parameters().get<int>("E-");
@@ -227,7 +227,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElch<distype, probdim>::calc_nernst
       params.get<std::shared_ptr<Core::Conditions::Condition>>("condition");
   if (cond == nullptr) FOUR_C_THROW("Cannot access condition 'ElchBoundaryKinetics'");
 
-  const auto kinetics = cond->parameters().get<int>("KINETIC_MODEL");
+  const auto kinetics = cond->parameters().get<Inpar::ElCh::ElectrodeKinetics>("KINETIC_MODEL");
 
   // Nernst-BC
   if (kinetics == Inpar::ElCh::nernst)

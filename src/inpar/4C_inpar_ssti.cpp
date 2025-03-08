@@ -161,7 +161,7 @@ void Inpar::SSTI::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
   const auto make_sstiinterfacemeshtying = [&condlist](Core::Conditions::ConditionDefinition& cond)
   {
     cond.add_component(parameter<int>("ConditionID"));
-    cond.add_component(selection<int>("INTERFACE_SIDE",
+    cond.add_component(deprecated_selection<S2I::InterfaceSides>("INTERFACE_SIDE",
         {{"Undefined", Inpar::S2I::side_undefined}, {"Slave", Inpar::S2I::side_slave},
             {"Master", Inpar::S2I::side_master}},
         {.description = "interface side"}));

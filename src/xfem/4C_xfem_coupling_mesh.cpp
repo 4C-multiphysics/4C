@@ -1823,7 +1823,7 @@ void XFEM::MeshCouplingFSI::set_condition_specific_parameters()
       FOUR_C_THROW("ID already existing! For sliplength_map_.");
 
     Inpar::XFEM::InterfaceLaw interfacelaw =
-        static_cast<Inpar::XFEM::InterfaceLaw>(cond->parameters().get<int>("INTLAW"));
+        cond->parameters().get<Inpar::XFEM::InterfaceLaw>("INTLAW");
     if (i != conditions_XFSI.begin())
     {
       if (interfacelaw_ != interfacelaw)

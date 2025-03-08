@@ -288,8 +288,7 @@ void Discret::Elements::ScaTraEleParameterBoundary::set_regularization(
   regularizationparameter_ = parameters.get<double>("REGPAR", -1.0);
   if (regularizationparameter_ < 0.0)
     FOUR_C_THROW("Regularization parameter for lithium stripping must not be negative!");
-  regularizationtype_ = static_cast<Inpar::S2I::RegularizationType>(
-      parameters.get<int>("REGTYPE", std::numeric_limits<int>::infinity()));
+  regularizationtype_ = parameters.get<Inpar::S2I::RegularizationType>("REGTYPE");
 }
 
 /*----------------------------------------------------------------------*

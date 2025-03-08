@@ -33,7 +33,7 @@ namespace
 
   Core::IO::InputSpec get_kinem_type_input_spec()
   {
-    return selection<Inpar::Solid::KinemType>("KINEM",
+    return deprecated_selection<Inpar::Solid::KinemType>("KINEM",
         {
             {kinem_type_string(Inpar::Solid::KinemType::linear), Inpar::Solid::KinemType::linear},
             {kinem_type_string(Inpar::Solid::KinemType::nonlinearTotLag),
@@ -51,7 +51,7 @@ namespace
             Core::FE::cell_type_to_string(celltype), {.size = Core::FE::num_nodes<celltype>}),
         parameter<int>("MAT"),
         get_kinem_type_input_spec(),
-        selection<Discret::Elements::PrestressTechnology>("PRESTRESS_TECH",
+        deprecated_selection<Discret::Elements::PrestressTechnology>("PRESTRESS_TECH",
             {
                 {Discret::Elements::prestress_technology_string(
                      Discret::Elements::PrestressTechnology::mulf),
@@ -83,7 +83,7 @@ void Discret::Elements::SolidType::setup_element_definition(
 
   defsgeneral[Core::FE::cell_type_to_string(Core::FE::CellType::hex8)] = all_of({
       get_default_input_spec<Core::FE::CellType::hex8>(),
-      selection<ElementTechnology>("TECH",
+      deprecated_selection<ElementTechnology>("TECH",
           {
               {element_technology_string(ElementTechnology::none), ElementTechnology::none},
               {element_technology_string(ElementTechnology::fbar), ElementTechnology::fbar},
@@ -117,7 +117,7 @@ void Discret::Elements::SolidType::setup_element_definition(
 
   defsgeneral[Core::FE::cell_type_to_string(Core::FE::CellType::wedge6)] = all_of({
       get_default_input_spec<Core::FE::CellType::wedge6>(),
-      selection<ElementTechnology>("TECH",
+      deprecated_selection<ElementTechnology>("TECH",
           {
               {element_technology_string(ElementTechnology::none), ElementTechnology::none},
               {element_technology_string(ElementTechnology::shell_ans),
@@ -130,7 +130,7 @@ void Discret::Elements::SolidType::setup_element_definition(
 
   defsgeneral[Core::FE::cell_type_to_string(Core::FE::CellType::pyramid5)] = all_of({
       get_default_input_spec<Core::FE::CellType::pyramid5>(),
-      selection<ElementTechnology>("TECH",
+      deprecated_selection<ElementTechnology>("TECH",
           {
               {element_technology_string(ElementTechnology::none), ElementTechnology::none},
               {element_technology_string(ElementTechnology::fbar), ElementTechnology::fbar},

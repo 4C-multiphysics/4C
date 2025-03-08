@@ -112,10 +112,10 @@ void Inpar::ArteryNetwork::set_valid_conditions(
   Core::Conditions::ConditionDefinition art_in_bc("DESIGN NODE 1D ARTERY PRESCRIBED CONDITIONS",
       "ArtPrescribedCond", "Artery prescribed boundary condition",
       Core::Conditions::ArtPrescribedCond, true, Core::Conditions::geometry_type_point);
-  art_in_bc.add_component(selection<std::string>("boundarycond",
+  art_in_bc.add_component(deprecated_selection<std::string>("boundarycond",
       {"flow", "pressure", "velocity", "area", "characteristicWave"},
       {.description = "boundarycond", .default_value = "flow"}));
-  art_in_bc.add_component(selection<std::string>(
+  art_in_bc.add_component(deprecated_selection<std::string>(
       "type", {"forced", "absorbing"}, {.description = "type", .default_value = "forced"}));
 
   art_in_bc.add_component(
@@ -146,8 +146,8 @@ void Inpar::ArteryNetwork::set_valid_conditions(
       "Artery terminal in_outlet condition", Core::Conditions::ArtInOutletCond, true,
       Core::Conditions::geometry_type_point);
 
-  art_in_outlet_bc.add_component(selection<std::string>("terminaltype", {"inlet", "outlet"},
-      {.description = "terminaltype", .default_value = "inlet"}));
+  art_in_outlet_bc.add_component(deprecated_selection<std::string>("terminaltype",
+      {"inlet", "outlet"}, {.description = "terminaltype", .default_value = "inlet"}));
 
   condlist.push_back(art_in_outlet_bc);
 
@@ -183,7 +183,7 @@ void Inpar::ArteryNetwork::set_valid_conditions(
       Core::Conditions::ArtPorofluidCouplingCondNodeToPoint, true,
       Core::Conditions::geometry_type_point);
 
-  artcoup_ntp.add_component(selection<std::string>("COUPLING_TYPE", {"ARTERY", "AIRWAY"},
+  artcoup_ntp.add_component(deprecated_selection<std::string>("COUPLING_TYPE", {"ARTERY", "AIRWAY"},
       {.description = "coupling type", .default_value = "ARTERY"}));
   artcoup_ntp.add_component(parameter<int>("NUMDOF"));
   artcoup_ntp.add_component(parameter<std::vector<int>>(
@@ -203,8 +203,8 @@ void Inpar::ArteryNetwork::set_valid_conditions(
       Core::Conditions::ArtScatraCouplingCondNodeToPoint, true,
       Core::Conditions::geometry_type_point);
 
-  artscatracoup_ntp.add_component(selection<std::string>("COUPLING_TYPE", {"ARTERY", "AIRWAY"},
-      {.description = "coupling type", .default_value = "ARTERY"}));
+  artscatracoup_ntp.add_component(deprecated_selection<std::string>("COUPLING_TYPE",
+      {"ARTERY", "AIRWAY"}, {.description = "coupling type", .default_value = "ARTERY"}));
   artscatracoup_ntp.add_component(parameter<int>("NUMDOF"));
   artscatracoup_ntp.add_component(parameter<std::vector<int>>(
       "COUPLEDDOF_REDUCED", {.description = "coupling dofs of reduced airways or arteries",
@@ -336,10 +336,10 @@ void Inpar::ReducedLung::set_valid_conditions(
       Core::Conditions::geometry_type_point);
 
   art_red_to_3d_bc.add_component(parameter<int>("ConditionID"));
-  art_red_to_3d_bc.add_component(selection<std::string>("CouplingType", {"forced", "absorbing"},
-      {.description = "coupling type", .default_value = "forced"}));
-  art_red_to_3d_bc.add_component(selection<std::string>("ReturnedVariable", {"pressure", "flow"},
-      {.description = "returned variable", .default_value = "pressure"}));
+  art_red_to_3d_bc.add_component(deprecated_selection<std::string>("CouplingType",
+      {"forced", "absorbing"}, {.description = "coupling type", .default_value = "forced"}));
+  art_red_to_3d_bc.add_component(deprecated_selection<std::string>("ReturnedVariable",
+      {"pressure", "flow"}, {.description = "returned variable", .default_value = "pressure"}));
   art_red_to_3d_bc.add_component(parameter<double>("Tolerance"));
   art_red_to_3d_bc.add_component(parameter<int>("MaximumIterations"));
 
@@ -353,8 +353,8 @@ void Inpar::ReducedLung::set_valid_conditions(
       Core::Conditions::geometry_type_surface);
 
   art_3d_to_red_bc.add_component(parameter<int>("ConditionID"));
-  art_3d_to_red_bc.add_component(selection<std::string>("ReturnedVariable", {"pressure", "flow"},
-      {.description = "returned variable", .default_value = "flow"}));
+  art_3d_to_red_bc.add_component(deprecated_selection<std::string>("ReturnedVariable",
+      {"pressure", "flow"}, {.description = "returned variable", .default_value = "flow"}));
   art_3d_to_red_bc.add_component(parameter<double>("Tolerance"));
   art_3d_to_red_bc.add_component(parameter<int>("MaximumIterations"));
 
@@ -393,7 +393,7 @@ void Inpar::ReducedLung::set_valid_conditions(
       "Reduced d airway prescribed boundary condition", Core::Conditions::RedAirwayPrescribedCond,
       true, Core::Conditions::geometry_type_point);
 
-  raw_in_bc.add_component(selection<std::string>("boundarycond",
+  raw_in_bc.add_component(deprecated_selection<std::string>("boundarycond",
       {"flow", "pressure", "switchFlowPressure", "VolumeDependentPleuralPressure"},
       {.description = "boundary condition type", .default_value = "flow"}));
 
@@ -434,7 +434,7 @@ void Inpar::ReducedLung::set_valid_conditions(
       Core::Conditions::RedAirwayVolDependentPleuralPressureCond, true,
       Core::Conditions::geometry_type_line);
 
-  raw_volPpl_bc.add_component(selection<std::string>("TYPE",
+  raw_volPpl_bc.add_component(deprecated_selection<std::string>("TYPE",
       {"Linear_Polynomial", "Linear_Exponential", "Linear_Ogden", "Nonlinear_Polynomial",
           "Nonlinear_Exponential", "Nonlinear_Ogden"},
       {.description = "type", .default_value = "Linear_Exponential"}));
@@ -476,7 +476,7 @@ void Inpar::ReducedLung::set_valid_conditions(
 
   impedancebc.add_component(parameter<int>("ConditionID"));
   impedancebc.add_component(
-      selection<std::string>("TYPE", {"windkessel", "resistive", "pressure_by_funct"},
+      deprecated_selection<std::string>("TYPE", {"windkessel", "resistive", "pressure_by_funct"},
           {.description = "type", .default_value = "windkessel"}));
   impedancebc.add_component(parameter<double>("R1"));
   impedancebc.add_component(parameter<double>("R2"));

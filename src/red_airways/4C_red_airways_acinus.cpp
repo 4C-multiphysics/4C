@@ -67,7 +67,7 @@ void Discret::Elements::RedAcinusType::setup_element_definition(
   defs["LINE2"] = all_of({
       parameter<std::vector<int>>("LINE2", {.size = 2}),
       parameter<int>("MAT"),
-      selection<std::string>("TYPE",
+      deprecated_selection<std::string>("TYPE",
           {"NeoHookean", "Exponential", "DoubleExponential", "VolumetricOgden"},
           {.description = "Visco-elastic model of this acinus"}),
       parameter<double>("AcinusVolume"),

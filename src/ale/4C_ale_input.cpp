@@ -100,7 +100,7 @@ void ALE::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition
 
   const auto make_ale_update = [&condlist](Core::Conditions::ConditionDefinition& cond)
   {
-    cond.add_component(selection<std::string>("COUPLING",
+    cond.add_component(deprecated_selection<std::string>("COUPLING",
         {"lagrange", "heightfunction", "sphereHeightFunction", "meantangentialvelocity",
             "meantangentialvelocityscaled"},
         {.description = "", .default_value = "lagrange"}));

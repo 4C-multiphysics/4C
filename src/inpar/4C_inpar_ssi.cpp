@@ -353,7 +353,7 @@ void Inpar::SSI::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
   const auto make_ssiinterfacemeshtying = [&condlist](Core::Conditions::ConditionDefinition& cond)
   {
     cond.add_component(parameter<int>("ConditionID"));
-    cond.add_component(selection<int>("INTERFACE_SIDE",
+    cond.add_component(deprecated_selection<S2I::InterfaceSides>("INTERFACE_SIDE",
         {{"Undefined", Inpar::S2I::side_undefined}, {"Slave", Inpar::S2I::side_slave},
             {"Master", Inpar::S2I::side_master}},
         {.description = "interface_side"}));
@@ -373,7 +373,7 @@ void Inpar::SSI::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
       true, Core::Conditions::geometry_type_surface);
 
   ssisurfacemanifold.add_component(parameter<int>("ConditionID"));
-  ssisurfacemanifold.add_component(selection<int>("ImplType",
+  ssisurfacemanifold.add_component(deprecated_selection<Inpar::ScaTra::ImplType>("ImplType",
       {{"Undefined", Inpar::ScaTra::impltype_undefined}, {"Standard", Inpar::ScaTra::impltype_std},
           {"ElchElectrode", Inpar::ScaTra::impltype_elch_electrode},
           {"ElchDiffCond", Inpar::ScaTra::impltype_elch_diffcond}},
@@ -390,7 +390,7 @@ void Inpar::SSI::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
       Core::Conditions::geometry_type_surface);
 
   surfmanifoldinitfields.add_component(
-      selection<std::string>("FIELD", {"ScaTra"}, {.description = "init field"}));
+      deprecated_selection<std::string>("FIELD", {"ScaTra"}, {.description = "init field"}));
   surfmanifoldinitfields.add_component(parameter<int>("FUNCT"));
 
   condlist.emplace_back(surfmanifoldinitfields);
@@ -410,14 +410,15 @@ void Inpar::SSI::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
 
     surfmanifoldkinetics.add_component(one_of({
         all_of({
-            selection<int>("KINETIC_MODEL", {{"ConstantInterfaceResistance",
-                                                Inpar::S2I::kinetics_constantinterfaceresistance}}),
+            deprecated_selection<Inpar::S2I::KineticModels>(
+                "KINETIC_MODEL", {{"ConstantInterfaceResistance",
+                                     Inpar::S2I::kinetics_constantinterfaceresistance}}),
             parameter<std::vector<int>>("ONOFF", {.size = 2}),
             parameter<double>("RESISTANCE"),
             parameter<int>("E-"),
         }),
         all_of({
-            selection<int>("KINETIC_MODEL",
+            deprecated_selection<Inpar::S2I::KineticModels>("KINETIC_MODEL",
                 {{"Butler-VolmerReduced", Inpar::S2I::kinetics_butlervolmerreduced}}),
             parameter<int>("NUMSCAL"),
             parameter<std::vector<int>>(
@@ -427,7 +428,7 @@ void Inpar::SSI::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
             parameter<double>("ALPHA_A"),
             parameter<double>("ALPHA_C"),
         }),
-        selection<int>(
+        deprecated_selection<S2I::KineticModels>(
             "KINETIC_MODEL", {{"NoInterfaceFlux", Inpar::S2I::kinetics_nointerfaceflux}}),
     }));
   }
@@ -483,7 +484,7 @@ void Inpar::SSI::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
   const auto make_ssiinterfacecontact = [&condlist](Core::Conditions::ConditionDefinition& cond)
   {
     cond.add_component(parameter<int>("ConditionID"));
-    cond.add_component(selection<int>("INTERFACE_SIDE",
+    cond.add_component(deprecated_selection<S2I::InterfaceSides>("INTERFACE_SIDE",
         {{"Undefined", Inpar::S2I::side_undefined}, {"Slave", Inpar::S2I::side_slave},
             {"Master", Inpar::S2I::side_master}},
         {.description = "interface_side"}));

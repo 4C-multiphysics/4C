@@ -69,7 +69,7 @@ void Discret::Elements::RedAirwayType::setup_element_definition(
       parameter<std::vector<int>>("LINE2", {.size = 2}),
       parameter<int>("MAT"),
       parameter<std::string>("ElemSolvingType"),
-      selection<std::string>("TYPE",
+      deprecated_selection<std::string>("TYPE",
           {"Resistive", "InductoResistive", "CompliantResistive", "RLC", "ViscoElasticRLC",
               "ConvectiveViscoElasticRLC"},
           {.description = "Reduced-dimensional model of this airway"}),

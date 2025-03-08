@@ -399,7 +399,7 @@ void Inpar::FSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
           .default_value = 1e-6}));
 
   std::vector<std::string> coupmethod_valid_input = {"mortar", "conforming", "immersed"};
-  fsipart.specs.emplace_back(selection<std::string>("COUPMETHOD", coupmethod_valid_input,
+  fsipart.specs.emplace_back(deprecated_selection<std::string>("COUPMETHOD", coupmethod_valid_input,
       {.description = "Coupling Method mortar or conforming nodes at interface",
           .default_value = "conforming"}));
 
@@ -434,7 +434,7 @@ void Inpar::FSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
 
   std::vector<std::string> predictor_valid_input = {
       "d(n)", "d(n)+dt*(1.5*v(n)-0.5*v(n-1))", "d(n)+dt*v(n)", "d(n)+dt*v(n)+0.5*dt^2*a(n)"};
-  fsipart.specs.emplace_back(selection<std::string>("PREDICTOR", predictor_valid_input,
+  fsipart.specs.emplace_back(deprecated_selection<std::string>("PREDICTOR", predictor_valid_input,
       {.description = "Predictor for interface displacements", .default_value = "d(n)"}));
 
 
@@ -496,7 +496,7 @@ void Inpar::FSI::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
       Core::Conditions::geometry_type_surface);
 
   surfsac.add_component(parameter<int>("coupling_id"));
-  surfsac.add_component(selection<std::string>(
+  surfsac.add_component(deprecated_selection<std::string>(
       "field", {"structure", "ale"}, {.description = "field", .default_value = "structure"}));
 
   condlist.push_back(surfsac);
@@ -510,7 +510,7 @@ void Inpar::FSI::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
       Core::Conditions::geometry_type_volume);
 
   volsfv.add_component(parameter<int>("coupling_id"));
-  volsfv.add_component(selection<std::string>(
+  volsfv.add_component(deprecated_selection<std::string>(
       "field", {"structure", "ale"}, {.description = "field", .default_value = "structure"}));
 
   condlist.push_back(volsfv);

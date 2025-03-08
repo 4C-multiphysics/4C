@@ -132,7 +132,7 @@ void SSI::ScatraStructureCloneStrategyManifold::set_element_data(
     auto cond_eles = condition->geometry();
     if (cond_eles.find(oldele->id()) != cond_eles.end())
     {
-      impltype = static_cast<Inpar::ScaTra::ImplType>(condition->parameters().get<int>("ImplType"));
+      impltype = condition->parameters().get<Inpar::ScaTra::ImplType>("ImplType");
       continue;
     }
   }

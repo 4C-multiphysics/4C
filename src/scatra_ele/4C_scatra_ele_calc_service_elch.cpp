@@ -353,7 +353,7 @@ void Discret::Elements::ScaTraEleCalcElch<distype, probdim>::calc_elch_boundary_
   if (cond == nullptr) FOUR_C_THROW("Cannot access condition 'ElchBoundaryKineticsPoint'!");
 
   // access parameters of the condition
-  const int kinetics = cond->parameters().get<int>("KINETIC_MODEL");
+  const int kinetics = cond->parameters().get<Inpar::ElCh::ElectrodeKinetics>("KINETIC_MODEL");
   double pot0 = cond->parameters().get<double>("POT");
   const auto functnum = cond->parameters().get<std::optional<int>>("FUNCT");
   const int nume = cond->parameters().get<int>("E-");

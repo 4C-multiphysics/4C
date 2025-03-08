@@ -33,7 +33,7 @@ namespace
         parameter<std::vector<int>>(
             Core::FE::cell_type_to_string(celltype), {.size = Core::FE::num_nodes<celltype>}),
         parameter<int>("MAT"),
-        selection<Inpar::Solid::KinemType>("KINEM",
+        deprecated_selection<Inpar::Solid::KinemType>("KINEM",
             {
                 {kinem_type_string(Inpar::Solid::KinemType::linear),
                     Inpar::Solid::KinemType::linear},
@@ -43,7 +43,7 @@ namespace
             {.description = "Whether to use linear kinematics (small displacements) or nonlinear "
                             "kinematics (large displacements)"}),
         parameter<std::string>("TYPE"),
-        selection<Discret::Elements::PrestressTechnology>("PRESTRESS_TECH",
+        deprecated_selection<Discret::Elements::PrestressTechnology>("PRESTRESS_TECH",
             {
                 {Discret::Elements::prestress_technology_string(
                      Discret::Elements::PrestressTechnology::mulf),
@@ -79,7 +79,7 @@ void Discret::Elements::SolidScatraType::setup_element_definition(
 
   defsgeneral[Core::FE::cell_type_to_string(Core::FE::CellType::hex8)] = all_of({
       get_default_input_spec<Core::FE::CellType::hex8>(),
-      selection<ElementTechnology>("TECH",
+      deprecated_selection<ElementTechnology>("TECH",
           {
               {element_technology_string(ElementTechnology::none), ElementTechnology::none},
               {element_technology_string(ElementTechnology::fbar), ElementTechnology::fbar},

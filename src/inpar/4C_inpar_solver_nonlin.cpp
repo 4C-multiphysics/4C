@@ -29,9 +29,10 @@ void Inpar::NlnSol::set_valid_parameters(std::map<std::string, Core::IO::InputSp
         "Pseudo Transient", "Trust Region Based", "Inexact Trust Region Based", "Tensor Based",
         "Single Step"};
 
-    snox.specs.emplace_back(selection<std::string>("Nonlinear Solver", nonlinear_solver_valid_input,
-        {.description = "Choose a nonlinear solver method.",
-            .default_value = "Line Search Based"}));
+    snox.specs.emplace_back(
+        deprecated_selection<std::string>("Nonlinear Solver", nonlinear_solver_valid_input,
+            {.description = "Choose a nonlinear solver method.",
+                .default_value = "Line Search Based"}));
   }
   snox.move_into_collection(list);
 
@@ -41,13 +42,14 @@ void Inpar::NlnSol::set_valid_parameters(std::map<std::string, Core::IO::InputSp
   {
     std::vector<std::string> newton_method_valid_input = {
         "Newton", "Steepest Descent", "NonlinearCG", "Broyden", "User Defined"};
-    direction.specs.emplace_back(selection<std::string>("Method", newton_method_valid_input,
-        {.description = "Choose a direction method for the nonlinear solver.",
-            .default_value = "Newton"}));
+    direction.specs.emplace_back(
+        deprecated_selection<std::string>("Method", newton_method_valid_input,
+            {.description = "Choose a direction method for the nonlinear solver.",
+                .default_value = "Newton"}));
 
     std::vector<std::string> user_defined_method_valid_input = {"Newton", "Modified Newton"};
     direction.specs.emplace_back(
-        selection<std::string>("User Defined Method", user_defined_method_valid_input,
+        deprecated_selection<std::string>("User Defined Method", user_defined_method_valid_input,
             {.description = "Choose a user-defined direction method.",
                 .default_value = "Modified Newton"}));
   }
@@ -58,7 +60,7 @@ void Inpar::NlnSol::set_valid_parameters(std::map<std::string, Core::IO::InputSp
 
   {
     std::vector<std::string> forcing_term_valid_input = {"Constant", "Type 1", "Type 2"};
-    newton.specs.emplace_back(selection<std::string>("Forcing Term Method",
+    newton.specs.emplace_back(deprecated_selection<std::string>("Forcing Term Method",
         forcing_term_valid_input, {.description = "", .default_value = "Constant"}));
 
     newton.specs.emplace_back(parameter<double>("Forcing Term Initial Tolerance",
@@ -82,7 +84,7 @@ void Inpar::NlnSol::set_valid_parameters(std::map<std::string, Core::IO::InputSp
   {
     std::vector<std::string> scaling_type_valid_input = {
         "2-Norm", "Quadratic Model Min", "F 2-Norm", "None"};
-    steepestdescent.specs.emplace_back(selection<std::string>(
+    steepestdescent.specs.emplace_back(deprecated_selection<std::string>(
         "Scaling Type", scaling_type_valid_input, {.description = "", .default_value = "None"}));
   }
   steepestdescent.move_into_collection(list);
@@ -112,22 +114,23 @@ void Inpar::NlnSol::set_valid_parameters(std::map<std::string, Core::IO::InputSp
     std::vector<std::string> time_step_control_valid_input = {"SER",
         "Switched Evolution Relaxation", "TTE", "Temporal Truncation Error", "MRR",
         "Model Reduction Ratio"};
-    ptc.specs.emplace_back(selection<std::string>("Time Step Control",
+    ptc.specs.emplace_back(deprecated_selection<std::string>("Time Step Control",
         time_step_control_valid_input, {.description = "", .default_value = "SER"}));
 
     std::vector<std::string> tsc_norm_type_valid_input = {"Two Norm", "One Norm", "Max Norm"};
-    ptc.specs.emplace_back(selection<std::string>("Norm Type for TSC", tsc_norm_type_valid_input,
-        {.description = "Norm Type for the time step control", .default_value = "Max Norm"}));
+    ptc.specs.emplace_back(
+        deprecated_selection<std::string>("Norm Type for TSC", tsc_norm_type_valid_input,
+            {.description = "Norm Type for the time step control", .default_value = "Max Norm"}));
 
     std::vector<std::string> scaling_op_valid_input = {
         "Identity", "CFL Diagonal", "Lumped Mass", "Element based"};
-    ptc.specs.emplace_back(selection<std::string>("Scaling Type", scaling_op_valid_input,
+    ptc.specs.emplace_back(deprecated_selection<std::string>("Scaling Type", scaling_op_valid_input,
         {.description = "Type of the scaling matrix for the PTC method.",
             .default_value = "Identity"}));
 
     std::vector<std::string> build_scale_op_valid_input = {"every iter", "every timestep"};
     ptc.specs.emplace_back(
-        selection<std::string>("Build scaling operator", build_scale_op_valid_input,
+        deprecated_selection<std::string>("Build scaling operator", build_scale_op_valid_input,
             {.description = "Build scaling operator in every iteration or timestep",
                 .default_value = "every timestep"}));
   }
@@ -139,7 +142,7 @@ void Inpar::NlnSol::set_valid_parameters(std::map<std::string, Core::IO::InputSp
   {
     std::vector<std::string> method_valid_input = {
         "Full Step", "Backtrack", "Polynomial", "More'-Thuente", "User Defined"};
-    linesearch.specs.emplace_back(selection<std::string>(
+    linesearch.specs.emplace_back(deprecated_selection<std::string>(
         "Method", method_valid_input, {.description = "", .default_value = "Full Step"}));
 
 
@@ -204,7 +207,7 @@ void Inpar::NlnSol::set_valid_parameters(std::map<std::string, Core::IO::InputSp
 
     std::vector<std::string> recovery_step_type_valid_input = {"Constant", "Last Computed Step"};
     polynomial.specs.emplace_back(
-        selection<std::string>("Recovery Step Type", recovery_step_type_valid_input,
+        deprecated_selection<std::string>("Recovery Step Type", recovery_step_type_valid_input,
             {.description = "Determines the step size to take when the line search fails",
                 .default_value = "Constant"}));
 
@@ -214,7 +217,7 @@ void Inpar::NlnSol::set_valid_parameters(std::map<std::string, Core::IO::InputSp
         polynomial);
 
     std::vector<std::string> interpolation_type_valid_input = {"Quadratic", "Quadratic3", "Cubic"};
-    polynomial.specs.emplace_back(selection<std::string>("Interpolation Type",
+    polynomial.specs.emplace_back(deprecated_selection<std::string>("Interpolation Type",
         interpolation_type_valid_input,
         {.description = "Type of interpolation that should be used", .default_value = "Cubic"}));
 
@@ -229,7 +232,7 @@ void Inpar::NlnSol::set_valid_parameters(std::map<std::string, Core::IO::InputSp
 
     std::vector<std::string> sufficient_decrease_condition_valid_input = {
         "Armijo-Goldstein", "Ared/Pred", "None"};
-    polynomial.specs.emplace_back(selection<std::string>("Sufficient Decrease Condition",
+    polynomial.specs.emplace_back(deprecated_selection<std::string>("Sufficient Decrease Condition",
         sufficient_decrease_condition_valid_input,
         {.description = "Choice to use for the sufficient decrease condition",
             .default_value = "Armijo-Goldstein"}));
@@ -277,7 +280,7 @@ void Inpar::NlnSol::set_valid_parameters(std::map<std::string, Core::IO::InputSp
 
     std::vector<std::string> recovery_step_type_valid_input = {"Constant", "Last Computed Step"};
     morethuente.specs.emplace_back(
-        selection<std::string>("Recovery Step Type", recovery_step_type_valid_input,
+        deprecated_selection<std::string>("Recovery Step Type", recovery_step_type_valid_input,
             {.description = "Determines the step size to take when the line search fails",
                 .default_value = "Constant"}));
 
@@ -288,8 +291,8 @@ void Inpar::NlnSol::set_valid_parameters(std::map<std::string, Core::IO::InputSp
 
     std::vector<std::string> sufficient_decrease_condition_valid_input = {
         "Armijo-Goldstein", "Ared/Pred", "None"};
-    morethuente.specs.emplace_back(selection<std::string>("Sufficient Decrease Condition",
-        sufficient_decrease_condition_valid_input,
+    morethuente.specs.emplace_back(deprecated_selection<std::string>(
+        "Sufficient Decrease Condition", sufficient_decrease_condition_valid_input,
         {.description = "Choice to use for the sufficient decrease condition",
             .default_value = "Armijo-Goldstein"}));
 
@@ -381,7 +384,7 @@ void Inpar::NlnSol::set_valid_parameters(std::map<std::string, Core::IO::InputSp
         solverOptions);
 
     std::vector<std::string> status_test_check_type_valid_input = {"Complete", "Minimal", "None"};
-    solverOptions.specs.emplace_back(selection<std::string>("Status Test Check Type",
+    solverOptions.specs.emplace_back(deprecated_selection<std::string>("Status Test Check Type",
         status_test_check_type_valid_input, {.description = "", .default_value = "Complete"}));
   }
   solverOptions.move_into_collection(list);

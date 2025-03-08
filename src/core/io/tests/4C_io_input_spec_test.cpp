@@ -80,7 +80,7 @@ namespace
     };
 
     auto spec = all_of({
-        selection<EnumClass>("enum",
+        deprecated_selection<EnumClass>("enum",
             {
                 {"A", EnumClass::A},
                 {"B", EnumClass::B},
@@ -161,23 +161,6 @@ required: true
       EXPECT_EQ(container.get<double>("a"), 1.0);
     }
   }
-
-  TEST(InputSpecTest, ParseSingleDefaultedSelectionDat)
-  {
-    // This used to be a bug where a single default selection parameter was not accepted.
-    auto spec = all_of({
-        selection<int>("a", {{"A", 1}, {"B", 2}}, {.default_value = 2}),
-    });
-
-    {
-      InputParameterContainer container;
-      std::string stream("");
-      ValueParser parser(stream);
-      spec.fully_parse(parser, container);
-      EXPECT_EQ(container.get<int>("a"), 2);
-    }
-  }
-
 
   TEST(InputSpecTest, Vector)
   {
@@ -361,46 +344,6 @@ required: true
       ValueParser parser(stream);
       FOUR_C_EXPECT_THROW_WITH_MESSAGE(
           spec.fully_parse(parser, container), std::invalid_argument, "stoi");
-    }
-  }
-
-  TEST(InputSpecTest, Selection)
-  {
-    auto spec = all_of({
-        parameter<int>("a"),
-        selection<int>("b", {{"b1", 1}, {"b2", 2}}, {.default_value = 1}),
-        selection<std::string>("c", {"c1", "c2"}, {.default_value = "c2"}),
-        selection<std::optional<int>>("d", {{"d1", 1}, {"d2", 2}}),
-    });
-
-    {
-      InputParameterContainer container;
-      std::string stream("a 1 b b2 d d1 c c1");
-      ValueParser parser(stream);
-      spec.fully_parse(parser, container);
-      EXPECT_EQ(container.get<int>("a"), 1);
-      EXPECT_EQ(container.get<int>("b"), 2);
-      EXPECT_EQ(container.get<std::string>("c"), "c1");
-      EXPECT_EQ(container.get<std::optional<int>>("d").value(), 1);
-    }
-
-    {
-      InputParameterContainer container;
-      std::string stream("a 1");
-      ValueParser parser(stream);
-      spec.fully_parse(parser, container);
-      EXPECT_EQ(container.get<int>("a"), 1);
-      EXPECT_EQ(container.get<int>("b"), 1);
-      EXPECT_EQ(container.get<std::string>("c"), "c2");
-      EXPECT_EQ(container.get<std::optional<int>>("d").has_value(), false);
-    }
-
-    {
-      InputParameterContainer container;
-      std::string stream("a 1 b b4 c string");
-      ValueParser parser(stream);
-      FOUR_C_EXPECT_THROW_WITH_MESSAGE(spec.fully_parse(parser, container), Core::Exception,
-          "Could not parse parameter 'b': invalid value 'b4'. Valid options are: b1|b2");
     }
   }
 
@@ -721,23 +664,27 @@ specs:
 
   TEST(InputSpecTest, PrintAsDat)
   {
-    auto spec = group(
-        "g", {
-                 // Note: the all_of entries will be pulled into the parent group.
-                 all_of({
-                     parameter<int>("a", {.description = "An integer"}),
-                     selection<int>("c", {{"c1", 1}, {"c2", 2}},
-                         {.description = "Selection", .default_value = 1}),
-                 }),
-                 parameter<int>("d", {.description = "Another\n integer ", .default_value = 42}),
-             });
+    enum class Options
+    {
+      c1,
+      c2,
+    };
+    auto spec = group("g",
+        {
+            // Note: the all_of entries will be pulled into the parent group.
+            all_of({
+                parameter<int>("a", {.description = "An integer"}),
+                parameter<Options>("c", {.description = "Selection", .default_value = Options::c1}),
+            }),
+            parameter<int>("d", {.description = "Another\n integer ", .default_value = 42}),
+        });
 
     {
       std::ostringstream out;
       spec.print_as_dat(out);
       EXPECT_EQ(out.str(), R"(// g:
 //   a <int> "An integer"
-//   c (default: c1) (choices: c1|c2) "Selection"
+//   c <enum> (default: c1) "Selection"
 //   d <int> (default: 42) "Another integer"
 )");
     }
@@ -745,6 +692,13 @@ specs:
 
   TEST(InputSpecTest, EmitMetadata)
   {
+    enum class EnumClass
+    {
+      A,
+      B,
+      C,
+    };
+
     auto spec = all_of({
         parameter<int>("a", {.default_value = 42}),
         parameter<std::vector<std::optional<double>>>("b",
@@ -765,8 +719,8 @@ specs:
                 },
                 {.description = "A group"}),
         }),
-        selection<int>("e", {{"e1", 1}, {"e2", 2}}, {.default_value = 1}),
-        selection<std::optional<double>>("f", {{"f1", 1.0}, {"f2", 2.0}}),
+        parameter<EnumClass>("e", {.default_value = EnumClass::A}),
+        parameter<std::optional<EnumClass>>("eo"),
         group("group2",
             {
                 parameter<int>("g"),
@@ -790,7 +744,7 @@ specs:
       out << tree;
 
       std::string expected = R"(type: all_of
-description: 'all_of {a, b, one_of {all_of {b, c}, triple_vector, group}, e, f, group2, list}'
+description: 'all_of {a, b, one_of {all_of {b, c}, triple_vector, group}, e, eo, group2, list}'
 required: true
 specs:
   - name: a
@@ -848,20 +802,21 @@ specs:
             required: true
   - name: e
     type: enum
-    required: false
-    default: "e1"
     choices:
-      - name: "e1"
-      - name: "e2"
-  - name: f
+      - name: A
+      - name: B
+      - name: C
+    required: false
+    default: A
+  - name: eo
     noneable: true
     type: enum
+    choices:
+      - name: A
+      - name: B
+      - name: C
     required: false
     default: null
-    choices:
-      - name: null
-      - name: "f1"
-      - name: "f2"
   - name: group2
     type: group
     required: false
@@ -898,7 +853,6 @@ specs:
       auto tmp = all_of({
           parameter<int>("a"),
           parameter<std::string>("b"),
-          selection<int>("c", {{"c1", 1}, {"c2", 2}}, {.default_value = 1}),
       });
 
       spec = all_of({
@@ -909,12 +863,11 @@ specs:
 
     {
       InputParameterContainer container;
-      std::string stream("a 1 b string c c2 d 42");
+      std::string stream("a 1 b string d 42");
       ValueParser parser(stream);
       spec.fully_parse(parser, container);
       EXPECT_EQ(container.get<int>("a"), 1);
       EXPECT_EQ(container.get<std::string>("b"), "string");
-      EXPECT_EQ(container.get<int>("c"), 2);
       EXPECT_EQ(container.get<int>("d"), 42);
     }
   }
@@ -1075,7 +1028,7 @@ specs:
     auto spec = all_of({
         parameter<int>("a"),
         parameter<std::vector<std::string>>("b"),
-        selection<std::optional<int>>("c", {{"c1", 1}, {"c2", 2}}),
+        parameter<std::optional<int>>("c"),
         group("group",
             {
                 parameter<int>("d"),
@@ -1093,7 +1046,7 @@ specs:
       root["b"] |= ryml::SEQ;
       root["b"].append_child() << "b1";
       root["b"].append_child() << "b2";
-      root["c"] << "c2";
+      root["c"] << 2;
       root["group"] |= ryml::MAP;
       root["group"]["d"] << 42;
 
@@ -1175,7 +1128,7 @@ group:
       root["b"] |= ryml::SEQ;
       root["b"].append_child() << "b1";
       root["b"].append_child() << "b2";
-      root["c"] << "c2";
+      root["c"] << 2;
       root["d"] << 42;
       ConstYamlNodeRef node(root, "");
 
@@ -1589,7 +1542,6 @@ v:
         group("group",
             {
                 parameter<double>("c", {.default_value = 1.0}),
-                selection<int>("d", {{"d1", 1}, {"d2", 2}}, {.default_value = 2}),
             },
             {.required = false}),
         list("list",
@@ -1602,7 +1554,7 @@ v:
         parameter<std::vector<double>>("v", {.size = 3}),
     });
 
-    std::string dat = "a 1 d 3.0 group c 1 d d2 i 42 v 1.0 2.0 3.0 list l1 1 l2 2.0 l1 3 l2 4.0";
+    std::string dat = "a 1 d 3.0 group c 1 i 42 v 1.0 2.0 3.0 list l1 1 l2 2.0 l1 3 l2 4.0";
 
     InputParameterContainer container;
     ValueParser parser(dat);
@@ -1641,7 +1593,6 @@ v: [1,2,3]
 d: 3
 group:
   c: 1
-  d: "d2"
 list:
   - l1: 1
     l2: 2

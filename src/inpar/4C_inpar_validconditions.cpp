@@ -161,7 +161,7 @@ std::vector<Core::Conditions::ConditionDefinition> Input::valid_conditions()
         "VAL", {.description = "values", .size = from_parameter<int>("NUMDOF")}));
     cond.add_component(parameter<std::vector<std::optional<int>>>(
         "FUNCT", {.description = "function ids", .size = from_parameter<int>("NUMDOF")}));
-    cond.add_component(selection<std::string>("TYPE",
+    cond.add_component(deprecated_selection<std::string>("TYPE",
         {"Live", "Dead", "pseudo_orthopressure", "orthopressure", "PressureGrad"},
         {.description = "type", .default_value = "Live"}));
 
@@ -284,7 +284,7 @@ std::vector<Core::Conditions::ConditionDefinition> Input::valid_conditions()
         "FUNCT", {.description = "", .size = from_parameter<int>("NUMDOF")}));
 
     // optional
-    cond.add_component(selection<std::string>(
+    cond.add_component(deprecated_selection<std::string>(
         "TAG", {"none", "monitor_reaction"}, {.description = "", .default_value = "none"}));
 
     condlist.emplace_back(cond);
@@ -362,7 +362,7 @@ std::vector<Core::Conditions::ConditionDefinition> Input::valid_conditions()
 
   const auto make_init_field_condition = [&condlist](auto& cond)
   {
-    cond.add_component(selection<std::string>("FIELD",
+    cond.add_component(deprecated_selection<std::string>("FIELD",
         {"Undefined", "Velocity", "Pressure", "Temperature", "ScaTra", "Porosity", "PoroMultiFluid",
             "Artery"},
         {.description = "init field"}));
@@ -407,8 +407,8 @@ std::vector<Core::Conditions::ConditionDefinition> Input::valid_conditions()
 
   const auto make_thermo_init_field_condition = [&condlist](auto& cond)
   {
-    cond.add_component(
-        selection<std::string>("FIELD", {"Undefined", "ScaTra"}, {.description = "init field"}));
+    cond.add_component(deprecated_selection<std::string>(
+        "FIELD", {"Undefined", "ScaTra"}, {.description = "init field"}));
     cond.add_component(parameter<int>("FUNCT"));
 
     condlist.emplace_back(cond);
@@ -520,9 +520,9 @@ std::vector<Core::Conditions::ConditionDefinition> Input::valid_conditions()
   const auto make_periodic_condition = [&condlist](auto& cond)
   {
     cond.add_component(parameter<int>("ID", {.description = "periodic boundary condition id"}));
-    cond.add_component(selection<std::string>(
+    cond.add_component(deprecated_selection<std::string>(
         "MASTER_OR_SLAVE", {"Master", "Slave"}, {.description = "master-slave toggle"}));
-    cond.add_component(selection<std::string>("PLANE", {"xy", "yz", "xz", "xyz"},
+    cond.add_component(deprecated_selection<std::string>("PLANE", {"xy", "yz", "xz", "xyz"},
         {.description = "degrees of freedom for the pbc plane"}));
     cond.add_component(
         parameter<int>("LAYER", {.description = "layer of periodic boundary condition"}));
@@ -549,17 +549,18 @@ std::vector<Core::Conditions::ConditionDefinition> Input::valid_conditions()
   const auto make_weak_dirichlet_condition = [&condlist](auto& cond)
   {
     // weak DBCs can be imposed adjoint consistent or adjoint inconsistent
-    cond.add_component(selection<std::string>("GAMMATYPE",
+    cond.add_component(deprecated_selection<std::string>("GAMMATYPE",
         {"adjoint-consistent", "diffusive-optimal"}, {.description = "Choice of gamma parameter"}));
 
     // weak DBCs can be imposed in all directions or only in normal direction
     // (SCATRA: not checked, only in all_directions so far)
-    cond.add_component(selection<std::string>("DIR", {"all_directions", "only_in_normal_direction"},
-        {.description = "Directions to apply weak dbc"}));
+    cond.add_component(
+        deprecated_selection<std::string>("DIR", {"all_directions", "only_in_normal_direction"},
+            {.description = "Directions to apply weak dbc"}));
 
     // FLUID: penalty parameter either computed dynamically (using Spaldings law of
     // the wall) or by a fixed value; SCATRA: not checked, only constant value so far
-    cond.add_component(selection<std::string>(
+    cond.add_component(deprecated_selection<std::string>(
         "PENTYPE", {"constant", "Spalding"}, {.description = "Definition of penalty parameter"}));
 
     // scaling factor for penalty parameter tauB or
@@ -572,7 +573,7 @@ std::vector<Core::Conditions::ConditionDefinition> Input::valid_conditions()
     // suppressed, since the flux is a kink function and including this one
     // might result in even worse convergence behaviour
     // (SCATRA: not checked)
-    cond.add_component(selection<std::string>(
+    cond.add_component(deprecated_selection<std::string>(
         "LINEARISATION", {"lin_all", "no_lin_conv_inflow"}, {.description = "Linearisation"}));
 
     // we provide a vector of 3 values for velocities
@@ -612,8 +613,8 @@ std::vector<Core::Conditions::ConditionDefinition> Input::valid_conditions()
   volumeconstraint.add_component(
       parameter<std::optional<int>>("curve", {.description = "id of the curve"}));
   volumeconstraint.add_component(parameter<double>("activeTime"));
-  volumeconstraint.add_component(selection<std::string>("projection", {"none", "xy", "yz", "xz"},
-      {.description = "projection", .default_value = "none"}));
+  volumeconstraint.add_component(deprecated_selection<std::string>("projection",
+      {"none", "xy", "yz", "xz"}, {.description = "projection", .default_value = "none"}));
 
 
   condlist.push_back(volumeconstraint);
@@ -632,8 +633,8 @@ std::vector<Core::Conditions::ConditionDefinition> Input::valid_conditions()
   volumeconstraintpen.add_component(parameter<double>("activeTime"));
   volumeconstraintpen.add_component(parameter<double>("penalty"));
   volumeconstraintpen.add_component(parameter<double>("rho"));
-  volumeconstraintpen.add_component(selection<std::string>("projection", {"none", "xy", "yz", "xz"},
-      {.description = "projection", .default_value = "none"}));
+  volumeconstraintpen.add_component(deprecated_selection<std::string>("projection",
+      {"none", "xy", "yz", "xz"}, {.description = "projection", .default_value = "none"}));
 
   condlist.push_back(volumeconstraintpen);
 
@@ -671,8 +672,8 @@ std::vector<Core::Conditions::ConditionDefinition> Input::valid_conditions()
       Core::Conditions::geometry_type_surface);
 
   areamonitor.add_component(parameter<int>("ConditionID"));
-  areamonitor.add_component(selection<std::string>("projection", {"none", "xy", "yz", "xz"},
-      {.description = "projection", .default_value = "none"}));
+  areamonitor.add_component(deprecated_selection<std::string>("projection",
+      {"none", "xy", "yz", "xz"}, {.description = "projection", .default_value = "none"}));
 
   condlist.push_back(areamonitor);
 
@@ -713,7 +714,7 @@ std::vector<Core::Conditions::ConditionDefinition> Input::valid_conditions()
   nodeonplaneconst3D.add_component(parameter<double>("activeTime"));
   nodeonplaneconst3D.add_component(parameter<std::vector<int>>(
       "planeNodes", {.description = "ids of the nodes spanning the plane", .size = 3}));
-  nodeonplaneconst3D.add_component(selection<std::string>("control", {"rel", "abs"},
+  nodeonplaneconst3D.add_component(deprecated_selection<std::string>("control", {"rel", "abs"},
       {.description = "relative or absolute control", .default_value = "rel"}));
 
   condlist.push_back(nodeonplaneconst3D);
@@ -733,9 +734,9 @@ std::vector<Core::Conditions::ConditionDefinition> Input::valid_conditions()
   nodemasterconst3D.add_component(parameter<int>("masterNode"));
   nodemasterconst3D.add_component(
       parameter<std::vector<double>>("direction", {.description = "direction", .size = 3}));
-  nodemasterconst3D.add_component(selection<std::string>(
+  nodemasterconst3D.add_component(deprecated_selection<std::string>(
       "value", {"disp", "x"}, {.description = "value", .default_value = "disp"}));
-  nodemasterconst3D.add_component(selection<std::string>("control", {"rel", "abs"},
+  nodemasterconst3D.add_component(deprecated_selection<std::string>("control", {"rel", "abs"},
       {.description = "relative or absolute control", .default_value = "rel"}));
 
   condlist.push_back(nodemasterconst3D);
@@ -757,9 +758,9 @@ std::vector<Core::Conditions::ConditionDefinition> Input::valid_conditions()
   nodemasterconst3Dpen.add_component(parameter<int>("masterNode"));
   nodemasterconst3Dpen.add_component(
       parameter<std::vector<int>>("direction", {.description = "direction", .size = 3}));
-  nodemasterconst3Dpen.add_component(selection<std::string>(
+  nodemasterconst3Dpen.add_component(deprecated_selection<std::string>(
       "value", {"disp", "x"}, {.description = "value", .default_value = "disp"}));
-  nodemasterconst3Dpen.add_component(selection<std::string>("control", {"rel", "abs"},
+  nodemasterconst3Dpen.add_component(deprecated_selection<std::string>("control", {"rel", "abs"},
       {.description = "relative or absolute control", .default_value = "rel"}));
 
   condlist.push_back(nodemasterconst3Dpen);
@@ -775,7 +776,7 @@ std::vector<Core::Conditions::ConditionDefinition> Input::valid_conditions()
   nodeonlineconst2D.add_component(parameter<int>("constrNode1"));
   nodeonlineconst2D.add_component(parameter<int>("constrNode2"));
   nodeonlineconst2D.add_component(parameter<int>("constrNode3"));
-  nodeonlineconst2D.add_component(selection<std::string>("control", {"dist", "angle"},
+  nodeonlineconst2D.add_component(deprecated_selection<std::string>("control", {"dist", "angle"},
       {.description = "distance or angle control", .default_value = "dist"}));
   nodeonlineconst2D.add_component(parameter<double>("activeTime"));
 
@@ -814,13 +815,13 @@ std::vector<Core::Conditions::ConditionDefinition> Input::valid_conditions()
 
   const auto make_rigidbody_mode_condition = [&condlist](auto& cond)
   {
-    cond.add_component(selection<std::string>(
+    cond.add_component(deprecated_selection<std::string>(
         "DIS", {"fluid", "scatra", "solid"}, {.description = "discretization"}));
     cond.add_component(parameter<int>("NUMMODES"));
     cond.add_component(parameter<std::vector<int>>(
         "ONOFF", {.description = "", .size = from_parameter<int>("NUMMODES")}));
-    cond.add_component(selection<std::string>("WEIGHTVECDEF", {"integration", "pointvalues"},
-        {.description = "weight vector definition"}));
+    cond.add_component(deprecated_selection<std::string>("WEIGHTVECDEF",
+        {"integration", "pointvalues"}, {.description = "weight vector definition"}));
 
     condlist.emplace_back(cond);
   };

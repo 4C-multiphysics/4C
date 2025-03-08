@@ -310,7 +310,7 @@ void STI::ScatraThermoOffDiagCouplingMatchingNodes::evaluate_scatra_thermo_inter
   for (const auto& kinetics_slave_cond :
       meshtying_strategy_scatra()->kinetics_conditions_meshtying_slave_side())
   {
-    if (kinetics_slave_cond.second->parameters().get<int>("KINETIC_MODEL") !=
+    if (kinetics_slave_cond.second->parameters().get<Inpar::S2I::KineticModels>("KINETIC_MODEL") !=
         static_cast<int>(Inpar::S2I::kinetics_nointerfaceflux))
     {
       // collect condition specific data and store to scatra boundary parameter class
@@ -492,7 +492,7 @@ void STI::ScatraThermoOffDiagCouplingMatchingNodes::evaluate_off_diag_block_ther
   for (const auto& kinetics_slave_cond :
       meshtying_strategy_thermo()->kinetics_conditions_meshtying_slave_side())
   {
-    if (kinetics_slave_cond.second->parameters().get<int>("KINETIC_MODEL") !=
+    if (kinetics_slave_cond.second->parameters().get<Inpar::S2I::KineticModels>("KINETIC_MODEL") !=
         static_cast<int>(Inpar::S2I::kinetics_nointerfaceflux))
     {
       // collect condition specific data and store to scatra boundary parameter class
@@ -664,7 +664,8 @@ void STI::ScatraThermoOffDiagCouplingMortarStandard::
   for (const auto& condition : conditions)
   {
     // consider conditions for slave side only
-    if (condition->parameters().get<int>("INTERFACE_SIDE") == Inpar::S2I::side_slave)
+    if (condition->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE") ==
+        Inpar::S2I::side_slave)
     {
       // add condition to parameter list
       condparams.set<Core::Conditions::Condition*>("condition", condition);
@@ -811,7 +812,8 @@ void STI::ScatraThermoOffDiagCouplingMortarStandard::
   for (const auto& condition : conditions)
   {
     // consider conditions for slave side only
-    if (condition->parameters().get<int>("INTERFACE_SIDE") == Inpar::S2I::side_slave)
+    if (condition->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE") ==
+        Inpar::S2I::side_slave)
     {
       // add condition to parameter list
       condparams.set<Core::Conditions::Condition*>("condition", condition);

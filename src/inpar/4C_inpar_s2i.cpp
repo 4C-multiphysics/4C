@@ -122,7 +122,7 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
     const auto make_s2imeshtying = [&condlist](Core::Conditions::ConditionDefinition& cond)
     {
       cond.add_component(parameter<int>("ConditionID"));
-      cond.add_component(selection<int>("INTERFACE_SIDE",
+      cond.add_component(deprecated_selection<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE",
           {{"Undefined", Inpar::S2I::side_undefined}, {"Slave", Inpar::S2I::side_slave},
               {"Master", Inpar::S2I::side_master}},
           {.description = "interface side"}));
@@ -164,7 +164,7 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
       {
         // constant and linear permeability
         auto constlinperm = all_of({
-            selection<int>("KINETIC_MODEL",
+            deprecated_selection<Inpar::S2I::KineticModels>("KINETIC_MODEL",
                 {
                     {"ConstantPermeability", Inpar::S2I::kinetics_constperm},
                     {"LinearPermeability", Inpar::S2I::kinetics_linearperm},
@@ -179,7 +179,7 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
 
       {
         auto butler_volmer = all_of({
-            selection<int>("KINETIC_MODEL",
+            deprecated_selection<Inpar::S2I::KineticModels>("KINETIC_MODEL",
                 {
                     {"Butler-Volmer", Inpar::S2I::kinetics_butlervolmer},
                     {"Butler-Volmer_Linearized", Inpar::S2I::kinetics_butlervolmerlinearized},
@@ -201,7 +201,7 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
 
       {
         auto butler_volmer_peltier = all_of({
-            selection<int>("KINETIC_MODEL",
+            deprecated_selection<Inpar::S2I::KineticModels>("KINETIC_MODEL",
                 {
                     {"Butler-Volmer-Peltier", Inpar::S2I::kinetics_butlervolmerpeltier},
                 }),
@@ -221,7 +221,7 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
 
       {
         auto butler_volmer_reduced_capacitance = all_of({
-            selection<int>("KINETIC_MODEL",
+            deprecated_selection<Inpar::S2I::KineticModels>("KINETIC_MODEL",
                 {
                     {"Butler-VolmerReduced_Capacitance",
                         Inpar::S2I::kinetics_butlervolmerreducedcapacitance},
@@ -242,7 +242,7 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
 
       {
         auto butler_volmer_resistance = all_of({
-            selection<int>("KINETIC_MODEL",
+            deprecated_selection<Inpar::S2I::KineticModels>("KINETIC_MODEL",
                 {
                     {"Butler-Volmer_Resistance", Inpar::S2I::kinetics_butlervolmerresistance},
                 }),
@@ -263,7 +263,7 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
 
       {
         auto butler_volmer_reduced_with_resistance = all_of({
-            selection<int>("KINETIC_MODEL",
+            deprecated_selection<Inpar::S2I::KineticModels>("KINETIC_MODEL",
                 {
                     {"Butler-VolmerReduced_Resistance",
                         Inpar::S2I::kinetics_butlervolmerreducedresistance},
@@ -286,7 +286,7 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
 
       {
         auto butler_volmer_reduced_thermo = all_of({
-            selection<int>("KINETIC_MODEL",
+            deprecated_selection<Inpar::S2I::KineticModels>("KINETIC_MODEL",
                 {
                     {"Butler-VolmerReduced_ThermoResistance",
                         Inpar::S2I::kinetics_butlervolmerreducedthermoresistance},
@@ -308,7 +308,7 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
 
       {
         auto constant_interface_resistance = all_of({
-            selection<int>("KINETIC_MODEL",
+            deprecated_selection<Inpar::S2I::KineticModels>("KINETIC_MODEL",
                 {
                     {"ConstantInterfaceResistance",
                         Inpar::S2I::kinetics_constantinterfaceresistance},
@@ -324,7 +324,7 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
 
       {
         // no interface flux
-        auto noflux = selection<int>(
+        auto noflux = deprecated_selection<KineticModels>(
             "KINETIC_MODEL", {
                                  {"NoInterfaceFlux", Inpar::S2I::kinetics_nointerfaceflux},
                              });
@@ -336,9 +336,10 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
     }
 
     auto interface_side_options = one_of({
-        selection<int>("INTERFACE_SIDE", {{"Master", side_master}, {"Undefined", side_undefined}}),
+        deprecated_selection<InterfaceSides>(
+            "INTERFACE_SIDE", {{"Master", side_master}, {"Undefined", side_undefined}}),
         all_of({
-            selection<int>("INTERFACE_SIDE", {{"Slave", side_slave}}),
+            deprecated_selection<InterfaceSides>("INTERFACE_SIDE", {{"Slave", side_slave}}),
             one_of(kinetic_model_choices),
         }),
     });
@@ -389,7 +390,7 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
         parameter<double>("MOLMASS"),
         parameter<double>("DENSITY"),
         parameter<double>("CONDUCTIVITY"),
-        selection<int>("REGTYPE",
+        deprecated_selection<RegularizationType>("REGTYPE",
             {
                 {"none", Inpar::S2I::regularization_none},
                 {"polynomial", Inpar::S2I::regularization_polynomial},
@@ -404,8 +405,8 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
                                     Core::Conditions::ConditionDefinition& cond)
     {
       cond.add_component(parameter<int>("ConditionID"));
-      cond.add_component(
-          selection<int>("KINETIC_MODEL", {{"Butler-Volmer", growth_kinetics_butlervolmer}}));
+      cond.add_component(deprecated_selection<GrowthKineticModels>(
+          "KINETIC_MODEL", {{"Butler-Volmer", growth_kinetics_butlervolmer}}));
       cond.add_component(butler_volmer);
 
       condlist.emplace_back(cond);
@@ -422,7 +423,7 @@ void Inpar::S2I::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
         "S2ISCLCoupling", "Scatra-scatra surface with SCL micro-macro coupling between",
         Core::Conditions::S2ISCLCoupling, true, Core::Conditions::geometry_type_surface);
 
-    s2isclcond.add_component(selection<int>("INTERFACE_SIDE",
+    s2isclcond.add_component(deprecated_selection<InterfaceSides>("INTERFACE_SIDE",
         {{"Undefined", Inpar::S2I::side_undefined}, {"Slave", Inpar::S2I::side_slave},
             {"Master", Inpar::S2I::side_master}},
         {.description = "interface side"}));

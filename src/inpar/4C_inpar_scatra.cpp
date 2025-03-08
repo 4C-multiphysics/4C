@@ -647,7 +647,7 @@ void Inpar::ScaTra::set_valid_conditions(
     // --> Tempn (old temperature T_n)
     // or if the exact solution is needed
     // --> Tempnp (current temperature solution T_n+1) with linearisation
-    cond.add_component(selection<std::string>(
+    cond.add_component(deprecated_selection<std::string>(
         "temperature_state", {"Tempnp", "Tempn"}, {.description = "temperature state"}));
     cond.add_component(parameter<double>("coeff", {.description = "heat transfer coefficient h"}));
     cond.add_component(

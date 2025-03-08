@@ -891,9 +891,9 @@ void ScaTra::ScaTraTimIntElch::read_restart_problem_specific(
   for (auto* s2ikinetics_cond : s2ikinetics_conditions)
   {
     // only slave side has relevant information
-    if (s2ikinetics_cond->parameters().get<int>("INTERFACE_SIDE") ==
+    if (s2ikinetics_cond->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE") ==
             static_cast<int>(Inpar::S2I::side_slave) and
-        s2ikinetics_cond->parameters().get<int>("KINETIC_MODEL") ==
+        s2ikinetics_cond->parameters().get<Inpar::S2I::KineticModels>("KINETIC_MODEL") ==
             static_cast<int>(Inpar::S2I::kinetics_butlervolmerreducedcapacitance))
     {
       reader.read_vector(phidtnp_, "phidtnp");
@@ -1627,9 +1627,9 @@ void ScaTra::ScaTraTimIntElch::write_restart() const
   for (auto* s2ikinetics_cond : s2ikinetics_conditions)
   {
     // only slave side has relevant information
-    if (s2ikinetics_cond->parameters().get<int>("INTERFACE_SIDE") ==
+    if (s2ikinetics_cond->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE") ==
             static_cast<int>(Inpar::S2I::side_slave) and
-        s2ikinetics_cond->parameters().get<int>("KINETIC_MODEL") ==
+        s2ikinetics_cond->parameters().get<Inpar::S2I::KineticModels>("KINETIC_MODEL") ==
             static_cast<int>(Inpar::S2I::kinetics_butlervolmerreducedcapacitance))
     {
       output_->write_vector("phidtnp", phidtnp_);
@@ -1826,7 +1826,8 @@ void ScaTra::ScaTraTimIntElch::init_nernst_bc()
   for (unsigned icond = 0; icond < Elchcond.size(); ++icond)
   {
     // check if Nernst-BC is defined on electrode kinetics condition
-    if (Elchcond[icond]->parameters().get<int>("KINETIC_MODEL") == Inpar::ElCh::nernst)
+    if (Elchcond[icond]->parameters().get<Inpar::ElCh::ElectrodeKinetics>("KINETIC_MODEL") ==
+        Inpar::ElCh::nernst)
     {
       // safety check
       if (!Elchcond[icond]->geometry_description())

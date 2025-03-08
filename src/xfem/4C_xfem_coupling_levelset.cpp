@@ -427,8 +427,8 @@ bool XFEM::LevelSetCoupling::set_level_set_field(const double time)
   if (cond_type == Inpar::XFEM::CouplingCond_LEVELSET_NAVIER_SLIP)
   {
     // Do we need smoothed gradients? I.e. what type is it?
-    const int val = cutterele_conds_[lid].second->parameters().get<int>("SURFACE_PROJECTION");
-    projtosurf_ = static_cast<Inpar::XFEM::ProjToSurface>(val);
+    projtosurf_ = cutterele_conds_[lid].second->parameters().get<Inpar::XFEM::ProjToSurface>(
+        "SURFACE_PROJECTION");
 
     if (projtosurf_ != Inpar::XFEM::Proj_normal)  // and projtosurf_!=Inpar::XFEM::Proj_normal_phi
     {

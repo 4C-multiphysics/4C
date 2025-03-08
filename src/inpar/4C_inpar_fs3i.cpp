@@ -36,8 +36,9 @@ void Inpar::FS3I::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
   fs3idyn.specs.emplace_back(parameter<bool>(
       "INF_PERM", {.description = "Flag for infinite permeability", .default_value = true}));
   std::vector<std::string> consthermpress_valid_input = {"No_energy", "No_mass", "Yes"};
-  fs3idyn.specs.emplace_back(selection<std::string>("CONSTHERMPRESS", consthermpress_valid_input,
-      {.description = "treatment of thermodynamic pressure in time", .default_value = "Yes"}));
+  fs3idyn.specs.emplace_back(
+      deprecated_selection<std::string>("CONSTHERMPRESS", consthermpress_valid_input,
+          {.description = "treatment of thermodynamic pressure in time", .default_value = "Yes"}));
 
   // number of linear solver used for fs3i problems
   Core::Utils::int_parameter(

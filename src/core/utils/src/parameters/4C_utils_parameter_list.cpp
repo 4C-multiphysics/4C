@@ -54,8 +54,9 @@ namespace Core::Utils
     }
     else
     {
-      section_specs.specs.emplace_back(Core::IO::InputSpecBuilders::selection<std::string>(
-          paramName, validParams, {.description = docString, .default_value = value}));
+      section_specs.specs.emplace_back(
+          Core::IO::InputSpecBuilders::deprecated_selection<std::string>(
+              paramName, validParams, {.description = docString, .default_value = value}));
     }
   }
 

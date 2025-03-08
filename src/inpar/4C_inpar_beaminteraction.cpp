@@ -205,7 +205,7 @@ void Inpar::BeamInteraction::set_valid_conditions(
       Core::Conditions::geometry_type_line);
 
   beam_filament_condition.add_component(parameter<int>("ID", {.description = "filament id"}));
-  beam_filament_condition.add_component(selection<std::string>("TYPE",
+  beam_filament_condition.add_component(deprecated_selection<std::string>("TYPE",
       {"Arbitrary", "arbitrary", "Actin", "actin", "Collagen", "collagen"},
       {.description = "", .default_value = "Arbitrary"}));
 

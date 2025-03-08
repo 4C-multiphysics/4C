@@ -198,7 +198,7 @@ namespace Inpar
 
       std::vector<std::string> material_tangent_valid_input = {"analytical", "finitedifferences"};
       sdyn.specs.emplace_back(
-          selection<std::string>("MATERIALTANGENT", material_tangent_valid_input,
+          deprecated_selection<std::string>("MATERIALTANGENT", material_tangent_valid_input,
               {.description = "way of evaluating the constitutive matrix",
                   .default_value = "analytical"}));
 
@@ -461,7 +461,7 @@ namespace Inpar
         cond.add_component(parameter<std::vector<int>>(
             "FUNCTNONLINSTIFF", {.description = "", .size = from_parameter<int>("NUMDOF")}));
         cond.add_component(
-            selection<CONSTRAINTS::SpringDashpot::RobinSpringDashpotType>("DIRECTION",
+            deprecated_selection<CONSTRAINTS::SpringDashpot::RobinSpringDashpotType>("DIRECTION",
                 {{"xyz", CONSTRAINTS::SpringDashpot::RobinSpringDashpotType::xyz},
                     {"refsurfnormal",
                         CONSTRAINTS::SpringDashpot::RobinSpringDashpotType::refsurfnormal},

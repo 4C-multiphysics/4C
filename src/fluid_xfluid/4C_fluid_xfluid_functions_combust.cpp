@@ -42,7 +42,7 @@ void Discret::Utils::add_valid_combust_functions(Core::Utils::FunctionManager& f
   using namespace Core::IO::InputSpecBuilders;
 
   auto spec = one_of({
-      selection<std::string>("COMBUSTION_FUNCTION",
+      deprecated_selection<std::string>("COMBUSTION_FUNCTION",
           {
               "ZALESAKSDISK",
               "COLLAPSINGWATERCOLUMN",

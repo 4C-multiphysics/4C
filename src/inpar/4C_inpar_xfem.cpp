@@ -428,7 +428,8 @@ void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
       parameter<std::vector<int>>("ONOFF", {.size = from_parameter<int>("NUMDOF")}),
       parameter<std::vector<double>>("VAL", {.size = from_parameter<int>("NUMDOF")}),
       parameter<std::vector<std::optional<int>>>("FUNCT", {.size = from_parameter<int>("NUMDOF")}),
-      selection<std::string>("TAG", {"none", "monitor_reaction"}, {.default_value = "none"}),
+      deprecated_selection<std::string>(
+          "TAG", {"none", "monitor_reaction"}, {.default_value = "none"}),
   });
 
   auto neumanncomponents = all_of({
@@ -436,7 +437,7 @@ void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
       parameter<std::vector<int>>("ONOFF", {.size = from_parameter<int>("NUMDOF")}),
       parameter<std::vector<double>>("VAL", {.size = from_parameter<int>("NUMDOF")}),
       parameter<std::vector<std::optional<int>>>("FUNCT", {.size = from_parameter<int>("NUMDOF")}),
-      selection<std::string>("TYPE",
+      deprecated_selection<std::string>("TYPE",
           {"Live", "Dead", "pseudo_orthopressure", "orthopressure", "PressureGrad"},
           {.default_value = "Live"}),
   });
@@ -472,7 +473,7 @@ void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
       Core::Conditions::XFEM_Surf_Displacement, true, Core::Conditions::geometry_type_surface);
 
   xfem_surf_displacement.add_component(parameter<int>("COUPLINGID"));
-  xfem_surf_displacement.add_component(selection<std::string>("EVALTYPE",
+  xfem_surf_displacement.add_component(deprecated_selection<std::string>("EVALTYPE",
       {"zero", "funct", "implementation"}, {.description = "", .default_value = "funct"}));
 
   xfem_surf_displacement.add_component(dirichletbundcomponents);
@@ -485,7 +486,7 @@ void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
   auto levelsetfield_components = all_of({
       parameter<int>("COUPLINGID"),
       parameter<int>("LEVELSETFIELDNO"),
-      selection<std::string>("BOOLEANTYPE",
+      deprecated_selection<std::string>("BOOLEANTYPE",
           {"none", "cut", "union", "difference", "sym_difference"},
           {.description = "define which boolean operator is used for combining this level-set "
                           "field with the previous one with smaller coupling id"}),
@@ -540,7 +541,7 @@ void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
 
   xfem_levelset_navier_slip.add_component(levelsetfield_components);
 
-  xfem_levelset_navier_slip.add_component(selection<int>("SURFACE_PROJECTION",
+  xfem_levelset_navier_slip.add_component(deprecated_selection<ProjToSurface>("SURFACE_PROJECTION",
       {{"proj_normal", Inpar::XFEM::Proj_normal}, {"proj_smoothed", Inpar::XFEM::Proj_smoothed},
           {"proj_normal_smoothed_comb", Inpar::XFEM::Proj_normal_smoothed_comb},
           {"proj_normal_phi", Inpar::XFEM::Proj_normal_phi}},
@@ -606,7 +607,7 @@ void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
       Core::Conditions::XFEM_Surf_FluidFluid, true, Core::Conditions::geometry_type_surface);
 
   xfem_surf_fluidfluid.add_component(parameter<int>("COUPLINGID"));
-  xfem_surf_fluidfluid.add_component(selection<int>("COUPSTRATEGY",
+  xfem_surf_fluidfluid.add_component(deprecated_selection<AveragingStrategy>("COUPSTRATEGY",
       {{"xfluid", Inpar::XFEM::Xfluid_Sided}, {"embedded", Inpar::XFEM::Embedded_Sided},
           {"mean", Inpar::XFEM::Mean}},
       {.description = "coupling strategy"}));
@@ -623,7 +624,7 @@ void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
   xfem_surf_fsi_part.add_component(parameter<int>("COUPLINGID"));
 
   // COUPSTRATEGY IS FLUID SIDED
-  xfem_surf_fsi_part.add_component(selection<int>("INTLAW",
+  xfem_surf_fsi_part.add_component(deprecated_selection<InterfaceLaw>("INTLAW",
       {{"noslip", Inpar::XFEM::noslip}, {"noslip_splitpen", Inpar::XFEM::noslip_splitpen},
           {"slip", Inpar::XFEM::slip}, {"navslip", Inpar::XFEM::navierslip}},
       {.description = "", .default_value = Inpar::XFEM::noslip}));
@@ -642,11 +643,11 @@ void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
       Core::Conditions::XFEM_Surf_FSIMono, true, Core::Conditions::geometry_type_surface);
 
   xfem_surf_fsi_mono.add_component(parameter<int>("COUPLINGID"));
-  xfem_surf_fsi_mono.add_component(selection<int>("COUPSTRATEGY",
+  xfem_surf_fsi_mono.add_component(deprecated_selection<AveragingStrategy>("COUPSTRATEGY",
       {{"xfluid", Inpar::XFEM::Xfluid_Sided}, {"solid", Inpar::XFEM::Embedded_Sided},
           {"mean", Inpar::XFEM::Mean}, {"harmonic", Inpar::XFEM::Harmonic}},
       {.description = "", .default_value = Inpar::XFEM::Xfluid_Sided}));
-  xfem_surf_fsi_mono.add_component(selection<int>("INTLAW",
+  xfem_surf_fsi_mono.add_component(deprecated_selection<InterfaceLaw>("INTLAW",
       {{"noslip", Inpar::XFEM::noslip}, {"noslip_splitpen", Inpar::XFEM::noslip_splitpen},
           {"slip", Inpar::XFEM::slip}, {"navslip", Inpar::XFEM::navierslip},
           {"navslip_contact", Inpar::XFEM::navierslip_contact}},
@@ -668,9 +669,9 @@ void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
   xfem_surf_fpi_mono.add_component(parameter<int>("COUPLINGID"));
   xfem_surf_fpi_mono.add_component(
       parameter<double>("BJ_COEFF", {.description = "", .default_value = 0.}));
-  xfem_surf_fpi_mono.add_component(selection<std::string>(
+  xfem_surf_fpi_mono.add_component(deprecated_selection<std::string>(
       "Variant", {"BJ", "BJS"}, {.description = "variant", .default_value = "BJ"}));
-  xfem_surf_fpi_mono.add_component(selection<std::string>(
+  xfem_surf_fpi_mono.add_component(deprecated_selection<std::string>(
       "Method", {"NIT", "SUB"}, {.description = "method", .default_value = "NIT"}));
   xfem_surf_fpi_mono.add_component(
       parameter<bool>("Contact", {.description = "contact", .default_value = false}));
@@ -686,7 +687,7 @@ void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
       Core::Conditions::XFEM_Surf_Weak_Dirichlet, true, Core::Conditions::geometry_type_surface);
 
   xfem_surf_wdbc.add_component(parameter<int>("COUPLINGID"));
-  xfem_surf_wdbc.add_component(selection<std::string>("EVALTYPE",
+  xfem_surf_wdbc.add_component(deprecated_selection<std::string>("EVALTYPE",
       {"zero", "funct_interpolated", "funct_gausspoint", "displacement_1storder_wo_initfunct",
           "displacement_2ndorder_wo_initfunct", "displacement_1storder_with_initfunct",
           "displacement_2ndorder_with_initfunct"},
@@ -727,7 +728,7 @@ void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
       Core::Conditions::XFEM_Surf_Navier_Slip, true, Core::Conditions::geometry_type_surface);
 
   xfem_surf_navier_slip.add_component(parameter<int>("COUPLINGID"));
-  xfem_surf_navier_slip.add_component(selection<std::string>("EVALTYPE",
+  xfem_surf_navier_slip.add_component(deprecated_selection<std::string>("EVALTYPE",
       {"zero", "funct_interpolated", "funct_gausspoint", "displacement_1storder_wo_initfunct",
           "displacement_2ndorder_wo_initfunct", "displacement_1storder_with_initfunct",
           "displacement_2ndorder_with_initfunct"},
@@ -756,7 +757,7 @@ void Inpar::XFEM::set_valid_conditions(std::vector<Core::Conditions::ConditionDe
       parameter<std::optional<int>>("ROBIN_ID", {.description = "robin id"}));
 
   // Likely, not necessary. But needed for the current structure.
-  xfem_navier_slip_robin_dirch_surf.add_component(selection<std::string>("EVALTYPE",
+  xfem_navier_slip_robin_dirch_surf.add_component(deprecated_selection<std::string>("EVALTYPE",
       {"zero", "funct_interpolated", "funct_gausspoint", "displacement_1storder_wo_initfunct",
           "displacement_2ndorder_wo_initfunct", "displacement_1storder_with_initfunct",
           "displacement_2ndorder_with_initfunct"},

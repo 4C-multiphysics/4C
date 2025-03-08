@@ -112,11 +112,12 @@ namespace Core
       auto default_it = std::find(strings.begin(), strings.end(), defaultValue);
       FOUR_C_ASSERT(default_it != strings.end(), "Default value not found in choices.");
 
-      section_specs.specs.emplace_back(Core::IO::InputSpecBuilders::selection<T>(paramName, choices,
-          {
-              .description = docString,
-              .default_value = integrals[std::distance(strings.begin(), default_it)],
-          }));
+      section_specs.specs.emplace_back(
+          Core::IO::InputSpecBuilders::deprecated_selection<T>(paramName, choices,
+              {
+                  .description = docString,
+                  .default_value = integrals[std::distance(strings.begin(), default_it)],
+              }));
     }
 
   }  // namespace Utils

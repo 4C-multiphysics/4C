@@ -1341,7 +1341,8 @@ void SSI::Utils::SSIMeshTying::find_slave_slave_transformation_nodes(Core::FE::D
   std::vector<int> original_slave_gids;
   for (auto* meshtying_condition : meshtying_conditions)
   {
-    if (meshtying_condition->parameters().get<int>("INTERFACE_SIDE") == Inpar::S2I::side_slave)
+    if (meshtying_condition->parameters().get<Inpar::S2I::InterfaceSides>("INTERFACE_SIDE") ==
+        Inpar::S2I::side_slave)
     {
       Core::Communication::add_owned_node_gid_from_list(
           dis, *meshtying_condition->get_nodes(), original_slave_gids);

@@ -43,7 +43,7 @@ namespace Discret::Elements::SolidPoroPressureVelocityBasedInternal
           parameter<std::vector<int>>(
               Core::FE::cell_type_to_string(celltype), {.size = Core::FE::num_nodes<celltype>}),
           parameter<int>("MAT"),
-          selection<Inpar::Solid::KinemType>("KINEM",
+          deprecated_selection<Inpar::Solid::KinemType>("KINEM",
               {
                   {kinem_type_string(Inpar::Solid::KinemType::linear),
                       Inpar::Solid::KinemType::linear},
@@ -55,7 +55,8 @@ namespace Discret::Elements::SolidPoroPressureVelocityBasedInternal
           parameter<std::optional<std::vector<double>>>("POROANISODIR1", {.size = 3}),
           parameter<std::optional<std::vector<double>>>("POROANISODIR2", {.size = 3}),
           parameter<std::optional<std::vector<double>>>("POROANISODIR3", {.size = 3}),
-          selection<Inpar::ScaTra::ImplType>("TYPE", Discret::Elements::get_impltype_inpar_map(),
+          deprecated_selection<Inpar::ScaTra::ImplType>("TYPE",
+              Discret::Elements::get_impltype_inpar_map(),
               {.description = "Scalar transport implementation type",
                   .default_value = Inpar::ScaTra::ImplType::impltype_undefined}),
       });

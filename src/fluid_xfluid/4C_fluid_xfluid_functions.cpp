@@ -194,9 +194,9 @@ void Discret::Utils::add_valid_xfluid_functions(Core::Utils::FunctionManager& fu
   using namespace Core::IO::InputSpecBuilders;
 
   auto spec = one_of({
-      selection<std::string>("XFLUID_FUNCTION", {"FORWARDFACINGSTEP"}),
+      deprecated_selection<std::string>("XFLUID_FUNCTION", {"FORWARDFACINGSTEP"}),
       all_of({
-          selection<std::string>("XFLUID_FUNCTION", {"MOVINGLEVELSETCYLINDER"}),
+          deprecated_selection<std::string>("XFLUID_FUNCTION", {"MOVINGLEVELSETCYLINDER"}),
           parameter<std::vector<double>>("ORIGIN", {.size = 3}),
           parameter<double>("RADIUS"),
           parameter<std::vector<double>>("DIRECTION", {.size = 3}),
@@ -204,7 +204,7 @@ void Discret::Utils::add_valid_xfluid_functions(Core::Utils::FunctionManager& fu
           parameter<double>("MAXSPEED"),
       }),
       all_of({
-          selection<std::string>(
+          deprecated_selection<std::string>(
               "XFLUID_FUNCTION", {"MOVINGLEVELSETTORUS", "MOVINGLEVELSETTORUSVELOCITY"}),
           parameter<std::vector<double>>("ORIGIN", {.size = 3}),
           parameter<std::vector<double>>("ORIENTVEC_TORUS", {.size = 3}),
@@ -218,7 +218,7 @@ void Discret::Utils::add_valid_xfluid_functions(Core::Utils::FunctionManager& fu
           parameter<double>("ROTATION_RAMPTIME"),
       }),
       all_of({
-          selection<std::string>("XFLUID_FUNCTION", {"MOVINGLEVELSETTORUSSLIPLENGTH"}),
+          deprecated_selection<std::string>("XFLUID_FUNCTION", {"MOVINGLEVELSETTORUSSLIPLENGTH"}),
           parameter<std::vector<double>>("ORIGIN", {.size = 3}),
           parameter<std::vector<double>>("ORIENTVEC_TORUS", {.size = 3}),
           parameter<double>("RADIUS"),
@@ -232,7 +232,7 @@ void Discret::Utils::add_valid_xfluid_functions(Core::Utils::FunctionManager& fu
           parameter<int>("SLIP_FUNCT"),
       }),
       all_of({
-          selection<std::string>("XFLUID_FUNCTION", {"TAYLORCOUETTEFLOW"}),
+          deprecated_selection<std::string>("XFLUID_FUNCTION", {"TAYLORCOUETTEFLOW"}),
           parameter<double>("RADIUS_I"),
           parameter<double>("RADIUS_O"),
           parameter<double>("VEL_THETA_I"),
@@ -244,7 +244,7 @@ void Discret::Utils::add_valid_xfluid_functions(Core::Utils::FunctionManager& fu
           parameter<double>("VISCOSITY"),
       }),
       all_of({
-          selection<std::string>("XFLUID_FUNCTION",
+          deprecated_selection<std::string>("XFLUID_FUNCTION",
               {"URQUIZABOXFLOW", "URQUIZABOXFLOW_TRACTION", "URQUIZABOXFLOW_FORCE"}),
           parameter<double>("LENGTHX"),
           parameter<double>("LENGTHY"),

@@ -456,17 +456,16 @@ void CONTACT::Utils::DbcHandler::detect_dbc_slave_nodes_and_elements(
 
       const Core::Conditions::Condition* sl_cond = ccond_grp[i];
 
-      const int dbc_handling_id = sl_cond->parameters().get<int>("DbcHandling");
-      const auto dbc_handling = static_cast<Inpar::Mortar::DBCHandling>(dbc_handling_id);
-
+      const auto dbc_handling =
+          sl_cond->parameters().get<Inpar::Mortar::DBCHandling>("DbcHandling");
       switch (dbc_handling)
       {
-        case Inpar::Mortar::DBCHandling::remove_dbc_nodes_from_slave_side:
+        case Inpar::Mortar::DBCHandling::RemoveDBCSlaveNodes:
         {
           sl_conds.push_back(sl_cond);
           break;
         }
-        case Inpar::Mortar::DBCHandling::do_nothing:
+        case Inpar::Mortar::DBCHandling::DoNothing:
         {
           break;
         }

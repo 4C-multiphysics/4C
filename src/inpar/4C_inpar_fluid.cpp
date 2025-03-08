@@ -91,7 +91,7 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
 
   std::vector<std::string> predictor_valid_input = {"steady_state", "zero_acceleration",
       "constant_acceleration", "constant_increment", "explicit_second_order_midpoint", "TangVel"};
-  fdyn.specs.emplace_back(selection<std::string>("PREDICTOR", predictor_valid_input,
+  fdyn.specs.emplace_back(deprecated_selection<std::string>("PREDICTOR", predictor_valid_input,
       {.description = "Predictor for first guess in nonlinear iteration",
           .default_value = "steady_state"}));
 
@@ -143,7 +143,7 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
                       .default_value = false}));
 
   std::vector<std::string> convform_valid_input = {"convective", "conservative"};
-  fdyn.specs.emplace_back(selection<std::string>("CONVFORM", convform_valid_input,
+  fdyn.specs.emplace_back(deprecated_selection<std::string>("CONVFORM", convform_valid_input,
       {.description = "form of convective term", .default_value = "convective"}));
 
   fdyn.specs.emplace_back(parameter<bool>("NONLINEARBC",
@@ -475,16 +475,18 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
   // this parameter selects the location where tau is evaluated
 
   std::vector<std::string> evaluation_tau_valid_input = {"element_center", "integration_point"};
-  fdyn_stab.specs.emplace_back(selection<std::string>("EVALUATION_TAU", evaluation_tau_valid_input,
-      {.description = "Location where tau is evaluated", .default_value = "element_center"}));
+  fdyn_stab.specs.emplace_back(
+      deprecated_selection<std::string>("EVALUATION_TAU", evaluation_tau_valid_input,
+          {.description = "Location where tau is evaluated", .default_value = "element_center"}));
 
   // this parameter selects the location where the material law is evaluated
   // (does not fit here very well, but parameter transfer is easier)
 
   std::vector<std::string> evaluation_mat_valid_input = {"element_center", "integration_point"};
-  fdyn_stab.specs.emplace_back(selection<std::string>("EVALUATION_MAT", evaluation_mat_valid_input,
-      {.description = "Location where material law is evaluated",
-          .default_value = "element_center"}));
+  fdyn_stab.specs.emplace_back(
+      deprecated_selection<std::string>("EVALUATION_MAT", evaluation_mat_valid_input,
+          {.description = "Location where material law is evaluated",
+              .default_value = "element_center"}));
 
   // these parameters active additional terms in loma continuity equation
   // which might be identified as SUPG-/cross- and Reynolds-stress term
@@ -749,14 +751,14 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
   // this parameter selects the location where tau is evaluated
   evaluation_tau_valid_input = {"element_center", "integration_point"};
   fdyn_porostab.specs.emplace_back(
-      selection<std::string>("EVALUATION_TAU", evaluation_tau_valid_input,
+      deprecated_selection<std::string>("EVALUATION_TAU", evaluation_tau_valid_input,
           {.description = "Location where tau is evaluated", .default_value = "element_center"}));
 
   // this parameter selects the location where the material law is evaluated
   // (does not fit here very well, but parameter transfer is easier)
   evaluation_mat_valid_input = {"element_center", "integration_point"};
   fdyn_porostab.specs.emplace_back(
-      selection<std::string>("EVALUATION_MAT", evaluation_mat_valid_input,
+      deprecated_selection<std::string>("EVALUATION_MAT", evaluation_mat_valid_input,
           {.description = "Location where material law is evaluated",
               .default_value = "element_center"}));
 
@@ -797,7 +799,7 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
       "turbulent viscosity. This may be based on various physical models.)";
 
   fdyn_turbu.specs.emplace_back(
-      selection<std::string>("TURBULENCE_APPROACH", turbulence_approach_valid_input,
+      deprecated_selection<std::string>("TURBULENCE_APPROACH", turbulence_approach_valid_input,
           {.description = turbulence_approach_doc_string, .default_value = "DNS_OR_RESVMM_LES"}));
 
   std::vector<std::string> physical_model_valid_input = {"no_model", "Smagorinsky",
@@ -814,8 +816,9 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
       "averaging in the xz plane, hence this implementation will only work for a channel flow. "
       "Multifractal Subgrid-Scale Modeling based on the work of burton. Vremans constant model. "
       "Dynamic Vreman model according to You and Moin (2007)";
-  fdyn_turbu.specs.emplace_back(selection<std::string>("PHYSICAL_MODEL", physical_model_valid_input,
-      {.description = physical_model_doc_string, .default_value = "no_model"}));
+  fdyn_turbu.specs.emplace_back(
+      deprecated_selection<std::string>("PHYSICAL_MODEL", physical_model_valid_input,
+          {.description = physical_model_doc_string, .default_value = "no_model"}));
 
   Core::Utils::string_to_integral_parameter<Inpar::FLUID::FineSubgridVisc>("FSSUGRVISC", "No",
       "fine-scale subgrid viscosity",
@@ -908,7 +911,7 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
         "blood_fda_flow: For this flow, statistical data is evaluated on various planes.\n"
         "backward_facing_step2: For this flow, statistical data is evaluated on various planes.\n";
 
-    fdyn_turbu.specs.emplace_back(selection<std::string>("CANONICAL_FLOW",
+    fdyn_turbu.specs.emplace_back(deprecated_selection<std::string>("CANONICAL_FLOW",
         canonical_flow_valid_input, {.description = canonical_flow_doc, .default_value = "no"}));
   }
 
@@ -925,7 +928,7 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
       "xz: Wall normal direction is y, average in x and z direction\n"
       "yz: Wall normal direction is x, average in y and z direction\n"
       "xyz: Averaging in all directions\n";
-  fdyn_turbu.specs.emplace_back(selection<std::string>(
+  fdyn_turbu.specs.emplace_back(deprecated_selection<std::string>(
       "HOMDIR", homdir_valid_input, {.description = homdir_doc, .default_value = "not_specified"}));
 
   //---------------------------------------
@@ -969,8 +972,8 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
       "no: Do not force the scalar field\n"
       "isotropic: Force scalar field isotropically such as the fluid field.\n"
       "mean_scalar_gradient: Force scalar field by imposed mean-scalar gradient.\n";
-  fdyn_turbu.specs.emplace_back(selection<std::string>("SCALAR_FORCING", scalar_forcing_valid_input,
-      {.description = scalar_forcing_doc, .default_value = "no"}));
+  fdyn_turbu.specs.emplace_back(deprecated_selection<std::string>("SCALAR_FORCING",
+      scalar_forcing_valid_input, {.description = scalar_forcing_doc, .default_value = "no"}));
 
   fdyn_turbu.specs.emplace_back(parameter<double>("MEAN_SCALAR_GRADIENT",
       {.description = "Value of imposed mean-scalar gradient to force scalar field.",
@@ -1045,8 +1048,8 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
       "constant: Use the constant wall shear stress given in the input file for the whole "
       "simulation.\n"
       "between_steps: Calculate wall shear stress in between time steps.\n";
-  fdyn_wallmodel.specs.emplace_back(selection<std::string>("Tauw_Type", tauw_type_valid_input,
-      {.description = tauw_type_doc, .default_value = "constant"}));
+  fdyn_wallmodel.specs.emplace_back(deprecated_selection<std::string>("Tauw_Type",
+      tauw_type_valid_input, {.description = tauw_type_doc, .default_value = "constant"}));
 
   std::vector<std::string> tauw_calc_type_valid_input = {
       "residual", "gradient", "gradient_to_residual"};
@@ -1055,7 +1058,7 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
       "gradient: Gradient via shape functions and nodal values.\n"
       "gradient_to_residual: First gradient, then residual.\n";
   fdyn_wallmodel.specs.emplace_back(
-      selection<std::string>("Tauw_Calc_Type", tauw_calc_type_valid_input,
+      deprecated_selection<std::string>("Tauw_Calc_Type", tauw_calc_type_valid_input,
           {.description = tauw_calc_type_doc, .default_value = "residual"}));
 
 
@@ -1067,8 +1070,8 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
   std::string projection_doc =
       "Flag to switch projection of the enriched dofs after updating tauw, alternatively with or "
       "without continuity constraint.";
-  fdyn_wallmodel.specs.emplace_back(selection<std::string>("Projection", projection_valid_input,
-      {.description = projection_doc, .default_value = "No"}));
+  fdyn_wallmodel.specs.emplace_back(deprecated_selection<std::string>("Projection",
+      projection_valid_input, {.description = projection_doc, .default_value = "No"}));
 
   fdyn_wallmodel.specs.emplace_back(parameter<double>(
       "C_Tauw", {.description = "Constant wall shear stress for Spalding's law, if applicable",
@@ -1088,7 +1091,7 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
       "none: No ramp function, does not converge!\n"
       "ramp_function: Enrichment is multiplied with linear ramp function resulting in zero "
       "enrichment at the interface.\n";
-  fdyn_wallmodel.specs.emplace_back(selection<std::string>("Blending_Type",
+  fdyn_wallmodel.specs.emplace_back(deprecated_selection<std::string>("Blending_Type",
       blending_type_valid_input, {.description = blending_type_doc, .default_value = "none"}));
 
 
@@ -1124,7 +1127,7 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
       "box_filter: classical box filter.\n"
       "algebraic_multigrid_operator: scale separation by algebraic multigrid operator.\n";
   fdyn_turbmfs.specs.emplace_back(
-      selection<std::string>("SCALE_SEPARATION", scale_separation_valid_input,
+      deprecated_selection<std::string>("SCALE_SEPARATION", scale_separation_valid_input,
           {.description = scale_separation_doc, .default_value = "no_scale_sep"}));
 
 
@@ -1149,8 +1152,8 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
       "streamlength: streamlength taken from stabilization.\n"
       "gradient_based: gradient based length taken from stabilization.\n"
       "metric_tensor: metric tensor taken from stabilization.\n";
-  fdyn_turbmfs.specs.emplace_back(selection<std::string>("REF_LENGTH", ref_length_valid_input,
-      {.description = ref_length_doc, .default_value = "cube_edge"}));
+  fdyn_turbmfs.specs.emplace_back(deprecated_selection<std::string>("REF_LENGTH",
+      ref_length_valid_input, {.description = ref_length_doc, .default_value = "cube_edge"}));
 
   std::vector<std::string> ref_velocity_valid_input = {"strainrate", "resolved", "fine_scale"};
   std::string ref_velocity_doc =
@@ -1158,8 +1161,8 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
       "strainrate: norm of strain rate.\n"
       "resolved: resolved velocity.\n"
       "fine_scale: fine-scale velocity.\n";
-  fdyn_turbmfs.specs.emplace_back(selection<std::string>("REF_VELOCITY", ref_velocity_valid_input,
-      {.description = ref_velocity_doc, .default_value = "strainrate"}));
+  fdyn_turbmfs.specs.emplace_back(deprecated_selection<std::string>("REF_VELOCITY",
+      ref_velocity_valid_input, {.description = ref_velocity_doc, .default_value = "strainrate"}));
 
 
   fdyn_turbmfs.specs.emplace_back(parameter<double>("C_NU",
@@ -1175,8 +1178,9 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
       "Location where B is evaluated\n"
       "element_center: evaluate B at element center.\n"
       "integration_point: evaluate B at integration point.\n";
-  fdyn_turbmfs.specs.emplace_back(selection<std::string>("EVALUATION_B", evaluation_b_valid_input,
-      {.description = evaluation_b_doc, .default_value = "element_center"}));
+  fdyn_turbmfs.specs.emplace_back(
+      deprecated_selection<std::string>("EVALUATION_B", evaluation_b_valid_input,
+          {.description = evaluation_b_doc, .default_value = "element_center"}));
 
 
   fdyn_turbmfs.specs.emplace_back(parameter<double>(
@@ -1188,8 +1192,8 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
       "form of convective term\n"
       "convective: Use the convective form.\n"
       "conservative: Use the conservative form.\n";
-  fdyn_turbmfs.specs.emplace_back(selection<std::string>("CONVFORM", convform_valid_input,
-      {.description = convform_doc, .default_value = "convective"}));
+  fdyn_turbmfs.specs.emplace_back(deprecated_selection<std::string>("CONVFORM",
+      convform_valid_input, {.description = convform_doc, .default_value = "convective"}));
 
   fdyn_turbmfs.specs.emplace_back(parameter<double>("CSGS_PHI",
       {.description = "Modelparameter of multifractal subgrid-scales for scalar transport.",
@@ -1265,7 +1269,7 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
       "flow.\n"
       "scatra_channel_flow_of_height_2: For this flow, all statistical data could be averaged in "
       "\nthe homogeneous planes --- it is essentially a statistically one dimensional flow.\n";
-  fdyn_turbinf.specs.emplace_back(selection<std::string>("CANONICAL_INFLOW",
+  fdyn_turbinf.specs.emplace_back(deprecated_selection<std::string>("CANONICAL_INFLOW",
       canonical_inflow_valid_input, {.description = canonical_inflow_doc, .default_value = "no"}));
 
 
@@ -1285,8 +1289,9 @@ void Inpar::FLUID::set_valid_parameters(std::map<std::string, Core::IO::InputSpe
       "xy: Wall normal direction is z, average in x and y direction.\n"
       "xz: Wall normal direction is y, average in x and z direction (standard case).\n"
       "yz: Wall normal direction is x, average in y and z direction.\n";
-  fdyn_turbinf.specs.emplace_back(selection<std::string>("INFLOW_HOMDIR", inflow_homdir_valid_input,
-      {.description = inflow_homdir_doc, .default_value = "not_specified"}));
+  fdyn_turbinf.specs.emplace_back(
+      deprecated_selection<std::string>("INFLOW_HOMDIR", inflow_homdir_valid_input,
+          {.description = inflow_homdir_doc, .default_value = "not_specified"}));
 
   Core::Utils::int_parameter("INFLOW_SAMPLING_START", 10000000,
       "Time step after when sampling shall be started", fdyn_turbinf);
@@ -1344,7 +1349,7 @@ void Inpar::LowMach::set_valid_parameters(std::map<std::string, Core::IO::InputS
 
   std::vector<std::string> constthermpress_valid_input = {"No_energy", "No_mass", "Yes"};
   lomacontrol.specs.emplace_back(
-      selection<std::string>("CONSTHERMPRESS", constthermpress_valid_input,
+      deprecated_selection<std::string>("CONSTHERMPRESS", constthermpress_valid_input,
           {.description = "treatment of thermodynamic pressure in time", .default_value = "Yes"}));
 
   lomacontrol.specs.emplace_back(parameter<bool>(
@@ -1373,9 +1378,9 @@ void Inpar::FLUID::set_valid_conditions(
 
   tbc_turb_inflow.add_component(parameter<int>("ID", {.description = ""}));
   tbc_turb_inflow.add_component(
-      selection<std::string>("toggle", {"master", "slave"}, {.description = "toggle"}));
-  tbc_turb_inflow.add_component(selection<int>("DIRECTION", {{"x", 0}, {"y", 1}, {"z", 2}},
-      {.description = "transfer direction", .default_value = 0}));
+      deprecated_selection<std::string>("toggle", {"master", "slave"}, {.description = "toggle"}));
+  tbc_turb_inflow.add_component(parameter<TurbInflowDirection>(
+      "DIRECTION", {.description = "transfer direction", .default_value = TurbInflowDirection::x}));
   tbc_turb_inflow.add_component(
       parameter<std::optional<int>>("curve", {.description = "curve id"}));
 
@@ -1401,7 +1406,7 @@ void Inpar::FLUID::set_valid_conditions(
 
   // flow-dependent pressure conditions can be imposed either based on
   // (out)flow rate or (out)flow volume (e.g., for air-cushion condition)
-  surfflowdeppressure.add_component(selection<std::string>("TYPE_OF_FLOW_DEPENDENCE",
+  surfflowdeppressure.add_component(deprecated_selection<std::string>("TYPE_OF_FLOW_DEPENDENCE",
       {"flow_rate", "flow_volume", "fixed_pressure"}, {.description = "type of flow dependence"}));
   surfflowdeppressure.add_component(parameter<double>("ConstCoeff",
       {.description = "constant coefficient for (linear) flow-rate-based condition"}));
@@ -1513,15 +1518,16 @@ void Inpar::FLUID::set_valid_conditions(
 
     // the penalty parameter could be computed dynamically (using Spaldings
     // law of the wall) or using a fixed value (1)
-    cond.add_component(selection<std::string>(
+    cond.add_component(deprecated_selection<std::string>(
         "PENTYPE", {"constant", "Spalding"}, {.description = "how penalty parameter is computed"}));
 
     // scaling factor for penalty parameter tauB
     cond.add_component(parameter<double>("hB_divided_by"));
 
     // if Spaldings law is used, this defines the way how the traction at y is computed from utau
-    cond.add_component(selection<std::string>("utau_computation", {"at_wall", "viscous_tangent"},
-        {.description = "how traction at y is computed from utau"}));
+    cond.add_component(
+        deprecated_selection<std::string>("utau_computation", {"at_wall", "viscous_tangent"},
+            {.description = "how traction at y is computed from utau"}));
 
     // we append it to the list of all conditions
     condlist.push_back(cond);
@@ -1589,17 +1595,17 @@ void Inpar::FLUID::set_valid_conditions(
   volumetric_surface_flow_cond.add_component(parameter<int>("ConditionID"));
 
   volumetric_surface_flow_cond.add_component(
-      selection<std::string>("ConditionType", {"POLYNOMIAL", "WOMERSLEY"},
+      deprecated_selection<std::string>("ConditionType", {"POLYNOMIAL", "WOMERSLEY"},
           {.description = "condition type", .default_value = "POLYNOMIAL"}));
 
   volumetric_surface_flow_cond.add_component(
-      selection<std::string>("prebiased", {"NOTPREBIASED", "PREBIASED", "FORCED"},
+      deprecated_selection<std::string>("prebiased", {"NOTPREBIASED", "PREBIASED", "FORCED"},
           {.description = "prebiased", .default_value = "NOTPREBIASED"}));
 
-  volumetric_surface_flow_cond.add_component(selection<std::string>(
+  volumetric_surface_flow_cond.add_component(deprecated_selection<std::string>(
       "FlowType", {"InFlow", "OutFlow"}, {.description = "flow type", .default_value = "InFlow"}));
   volumetric_surface_flow_cond.add_component(
-      selection<std::string>("CorrectionFlag", {"WithOutCorrection", "WithCorrection"},
+      deprecated_selection<std::string>("CorrectionFlag", {"WithOutCorrection", "WithCorrection"},
           {.description = "correction flag", .default_value = "WithOutCorrection"}));
 
   volumetric_surface_flow_cond.add_component(parameter<double>("Period"));
@@ -1609,13 +1615,13 @@ void Inpar::FLUID::set_valid_conditions(
   volumetric_surface_flow_cond.add_component(parameter<int>("Funct"));
 
   volumetric_surface_flow_cond.add_component(
-      selection<std::string>("NORMAL", {"SelfEvaluateNormal", "UsePrescribedNormal"},
+      deprecated_selection<std::string>("NORMAL", {"SelfEvaluateNormal", "UsePrescribedNormal"},
           {.description = "normal", .default_value = "SelfEvaluateNormal"}));
   volumetric_surface_flow_cond.add_component(parameter<double>("n1"));
   volumetric_surface_flow_cond.add_component(parameter<double>("n2"));
   volumetric_surface_flow_cond.add_component(parameter<double>("n3"));
 
-  volumetric_surface_flow_cond.add_component(selection<std::string>("CenterOfMass",
+  volumetric_surface_flow_cond.add_component(deprecated_selection<std::string>("CenterOfMass",
       {"SelfEvaluateCenterOfMass", "UsePrescribedCenterOfMass"},
       {.description = "center of mass", .default_value = "SelfEvaluateCenterOfMass"}));
   volumetric_surface_flow_cond.add_component(parameter<double>("c1"));
@@ -1647,17 +1653,17 @@ void Inpar::FLUID::set_valid_conditions(
 
   total_traction_correction_cond.add_component(parameter<int>("ConditionID"));
   total_traction_correction_cond.add_component(
-      selection<std::string>("ConditionType", {"POLYNOMIAL", "WOMERSLEY"},
+      deprecated_selection<std::string>("ConditionType", {"POLYNOMIAL", "WOMERSLEY"},
           {.description = "condition type", .default_value = "POLYNOMIAL"}));
 
   total_traction_correction_cond.add_component(
-      selection<std::string>("prebiased", {"NOTPREBIASED", "PREBIASED", "FORCED"},
+      deprecated_selection<std::string>("prebiased", {"NOTPREBIASED", "PREBIASED", "FORCED"},
           {.description = "prebiased", .default_value = "NOTPREBIASED"}));
 
-  total_traction_correction_cond.add_component(selection<std::string>(
+  total_traction_correction_cond.add_component(deprecated_selection<std::string>(
       "FlowType", {"InFlow", "OutFlow"}, {.description = "flow type", .default_value = "InFlow"}));
   total_traction_correction_cond.add_component(
-      selection<std::string>("CorrectionFlag", {"WithOutCorrection", "WithCorrection"},
+      deprecated_selection<std::string>("CorrectionFlag", {"WithOutCorrection", "WithCorrection"},
           {.description = "correction flag", .default_value = "WithOutCorrection"}));
 
   total_traction_correction_cond.add_component(parameter<double>("Period"));
@@ -1667,13 +1673,13 @@ void Inpar::FLUID::set_valid_conditions(
   total_traction_correction_cond.add_component(parameter<int>("Funct"));
 
   total_traction_correction_cond.add_component(
-      selection<std::string>("NORMAL", {"SelfEvaluateNormal", "UsePrescribedNormal"},
+      deprecated_selection<std::string>("NORMAL", {"SelfEvaluateNormal", "UsePrescribedNormal"},
           {.description = "normal", .default_value = "SelfEvaluateNormal"}));
   total_traction_correction_cond.add_component(parameter<double>("n1"));
   total_traction_correction_cond.add_component(parameter<double>("n2"));
   total_traction_correction_cond.add_component(parameter<double>("n3"));
 
-  total_traction_correction_cond.add_component(selection<std::string>("CenterOfMass",
+  total_traction_correction_cond.add_component(deprecated_selection<std::string>("CenterOfMass",
       {"SelfEvaluateCenterOfMass", "UsePrescribedCenterOfMass"},
       {.description = "center of mass", .default_value = "SelfEvaluateCenterOfMass"}));
   total_traction_correction_cond.add_component(parameter<double>("c1"));
