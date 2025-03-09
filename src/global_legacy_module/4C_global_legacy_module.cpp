@@ -73,7 +73,6 @@
 #include "4C_mat_list_chemoreac.hpp"
 #include "4C_mat_list_chemotaxis.hpp"
 #include "4C_mat_list_reactions.hpp"
-#include "4C_mat_materialdefinition.hpp"
 #include "4C_mat_maxwell_0d_acinus.hpp"
 #include "4C_mat_maxwell_0d_acinus_DoubleExponential.hpp"
 #include "4C_mat_maxwell_0d_acinus_Exponential.hpp"
@@ -538,20 +537,6 @@ namespace
             }),
     });
   }
-
-  std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> materials()
-  {
-    std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> mat;
-
-    auto mat_definitions = Global::valid_materials();
-    for (const auto& d : *mat_definitions)
-    {
-      mat[d->type()] = Core::IO::InputSpecBuilders::group(d->name(), d->specs());
-    }
-    return mat;
-  }
-
-
 }  // namespace
 
 ModuleCallbacks global_legacy_module_callbacks()
@@ -560,7 +545,7 @@ ModuleCallbacks global_legacy_module_callbacks()
   callbacks.RegisterParObjectTypes = register_par_object_types;
   callbacks.AttachFunctionDefinitions = attach_function_definitions;
   callbacks.valid_result_description_lines = valid_result_lines;
-  callbacks.materials = materials;
+  callbacks.materials = Global::valid_materials;
 
   return callbacks;
 }

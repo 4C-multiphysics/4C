@@ -19,7 +19,7 @@
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
 #include "4C_io_input_file_utils.hpp"
-#include "4C_mat_materialdefinition.hpp"
+#include "4C_mat_par_bundle.hpp"
 #include "4C_rebalance_graph_based.hpp"
 #include "4C_utils_singleton_owner.hpp"
 

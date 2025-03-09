@@ -28,7 +28,6 @@
 #include "4C_io_meshreader.hpp"
 #include "4C_mat_elchmat.hpp"
 #include "4C_mat_elchphase.hpp"
-#include "4C_mat_materialdefinition.hpp"
 #include "4C_mat_micromaterial.hpp"
 #include "4C_mat_newman_multiscale.hpp"
 #include "4C_mat_par_bundle.hpp"

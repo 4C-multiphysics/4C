@@ -259,10 +259,36 @@ namespace RTD
     }
   }
 
+  void write_single_material_read_the_docs(
+      std::ostream& stream, const Core::IO::InputSpec& material)
+  {
+    /* Each entry consists of a number of fields:
+    - header
+    - description
+    - code line
+    - parameter description */
+
+    // the Material title
+    write_linktarget(stream, material.impl().name());
+    write_header(stream, 1, material.impl().name());
+
+    // the description of the material
+    std::string materialDescription = material.impl().description();
+    write_paragraph(stream, materialDescription);
+
+    std::stringstream specs_string;
+    material.print_as_dat(specs_string);
+
+    // Split on newline because this is what the write_code function expects
+    std::vector<std::string> specs_list = Core::Utils::split(specs_string.str(), "\n");
+
+    write_code(stream, specs_list);
+  }
+
   /*----------------------------------------------------------------------*/
   /*----------------------------------------------------------------------*/
-  void write_material_reference(
-      std::ostream& stream, const std::vector<std::shared_ptr<Mat::MaterialDefinition>>& matlist)
+  void write_material_reference(std::ostream& stream,
+      const std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec>& materials)
   {
     write_linktarget(stream, "materialsreference");
     write_header(stream, 0, "Material reference");
@@ -270,9 +296,9 @@ namespace RTD
     std::vector<std::string> materialsectionstring{std::string(58, '-') + "MATERIALS"};
     write_code(stream, materialsectionstring);
 
-    for (auto& material : matlist)
+    for (auto& material : materials)
     {
-      write_single_material_read_the_docs(stream, material);
+      write_single_material_read_the_docs(stream, material.second);
     }
     //
     // adding the section for the CLONING MATERIAL MAP
@@ -297,57 +323,6 @@ namespace RTD
   }
 
 
-  void write_single_material_read_the_docs(
-      std::ostream& stream, const std::shared_ptr<Mat::MaterialDefinition> material)
-  {
-    /* Each entry consists of a number of fields:
-    - header
-    - description
-    - code line
-    - parameter description */
-
-    // the Material title
-    write_linktarget(stream, material->name());
-    write_header(stream, 1, material->name());
-
-    // the description of the material
-    std::string materialDescription = material->description();
-    write_paragraph(stream, materialDescription);
-
-    // Also: create the table from the parameter descriptions
-    const unsigned tablesize = 3;
-    Table parametertable(tablesize);
-    std::vector<std::string> tablerow(tablesize);
-    tablerow = {"Parameter", "optional", "Description"};
-    parametertable.add_row(tablerow);
-
-
-    for (const auto& spec : material->specs())
-    {
-      std::vector<std::string> table_row;
-      table_row.push_back(spec.impl().name());
-      table_row.emplace_back((spec.impl().required() ? "" : "yes"));
-      std::string description_string = spec.impl().description();
-      replace_restructuredtext_keys(description_string);
-      table_row.push_back(description_string);
-
-      parametertable.add_row(table_row);
-    }
-
-    //
-    // Now printing the parameter table
-    parametertable.set_widths({10, 10, 50});
-    parametertable.add_directive("header-rows", "1");
-
-    if (parametertable.get_rows() == 1)
-    {
-      tablerow = {"no parameters", "", ""};
-      parametertable.add_row(tablerow);
-    }
-    parametertable.print(stream);
-
-    return;
-  }
   /*----------------------------------------------------------------------*/
   /*----------------------------------------------------------------------*/
   void write_header_reference(

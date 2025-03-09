@@ -105,7 +105,7 @@ namespace RTD
       FOUR_C_THROW("failed to open file: %s", materialdocumentationfilename.c_str());
     materialdocumentationfile << "..\n   Created using 4C version (git SHA1):\n";
     materialdocumentationfile << "   " << VersionControl::git_hash << "\n\n";
-    write_material_reference(materialdocumentationfile, *Global::valid_materials());
+    write_material_reference(materialdocumentationfile, Global::valid_materials());
   }
 
   /*----------------------------------------------------------------------*/
