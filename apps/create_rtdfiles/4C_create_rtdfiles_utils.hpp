@@ -11,11 +11,9 @@
 
 #include "4C_fem_condition_definition.hpp"
 #include "4C_inpar_validparameters.hpp"
-#include "4C_mat_materialdefinition.hpp"
+#include "4C_legacy_enum_definitions_materials.hpp"
 
-#include <iostream>
 #include <map>
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -177,17 +175,9 @@ namespace RTD
    *  \param[in] stream: stream for the restructuredText file
    *  \param[in] matlist: vector containing all material definitions
    */
-  void write_material_reference(
-      std::ostream& stream, const std::vector<std::shared_ptr<Mat::MaterialDefinition>>& matlist);
+  void write_material_reference(std::ostream& stream,
+      const std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec>& materials);
 
-  /*!
-   *  \brief write the information of a single material to readthedocs
-   *
-   *  \param[in] stream: stream for the restructuredText file
-   *  \param[in] material: single material definition
-   */
-  void write_single_material_read_the_docs(
-      std::ostream& stream, const std::shared_ptr<Mat::MaterialDefinition> material);
   /*!
    *  \brief write all parameters of the header sections for readthedocs
    *

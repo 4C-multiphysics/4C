@@ -10,12 +10,12 @@
 
 #include "4C_config.hpp"
 
+#include "4C_io_input_spec.hpp"
+#include "4C_legacy_enum_definitions_materials.hpp"
+
 #include <Teuchos_Array.hpp>
 
-#include <iostream>
-#include <memory>
-#include <string>
-#include <vector>
+#include <unordered_map>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -26,8 +26,7 @@ namespace Mat
 
 namespace Global
 {
-  /// construct list with all materials and documentation
-  std::shared_ptr<std::vector<std::shared_ptr<Mat::MaterialDefinition>>> valid_materials();
+  std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> valid_materials();
 }  // namespace Global
 
 
