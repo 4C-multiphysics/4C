@@ -828,18 +828,6 @@ void CONTACT::MtAbstractStrategy::print(std::ostream& os) const
 void CONTACT::MtAbstractStrategy::print_active_set() const { return; }
 
 /*----------------------------------------------------------------------*
- | Visualization of meshtying segments with gmsh              popp 08/08|
- *----------------------------------------------------------------------*/
-void CONTACT::MtAbstractStrategy::visualize_gmsh(const int step, const int iter) const
-{
-  // visualization with gmsh
-  for (int i = 0; i < (int)interface_.size(); ++i)
-    interface_[i]->visualize_gmsh(
-        step, iter, Global::Problem::instance()->output_control_file()->file_name_only_prefix());
-}
-
-/*----------------------------------------------------------------------*
- | Visualization of meshtying segments with gmsh              popp 08/08|
  *----------------------------------------------------------------------*/
 void CONTACT::MtAbstractStrategy::assemble_coords(
     const std::string& sidename, bool ref, Core::LinAlg::Vector<double>& vec)

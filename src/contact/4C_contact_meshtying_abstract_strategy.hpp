@@ -358,20 +358,6 @@ namespace CONTACT
 
     //! @}
 
-    //! @name Debugging methods
-    //! @{
-
-    /*!
-    \brief Visualize contact stuff with gmsh
-
-    \param step (in): current time step index
-    \param iter (in): current nonlinear iteration index
-
-    */
-    void visualize_gmsh(const int step, const int iter) const override;
-
-    //! @}
-
     //! @name Preconditioner methods
     //! @{
 

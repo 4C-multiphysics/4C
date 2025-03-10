@@ -890,18 +890,6 @@ namespace CONTACT
 
     //!@}
 
-    //! @name Debugging methods
-    //!@{
-
-    /*! \brief Visualize contact stuff with gmsh
-
-     \param step (in): current time step index
-     \param iter (in): current iteration index
-     */
-    void visualize_gmsh(const int step, const int iter) const override;
-
-    //!@}
-
     /*! @name Purely virtual functions
      *
      * All these functions are defined in one or more specific derived classes,

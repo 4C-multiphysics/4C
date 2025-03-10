@@ -344,7 +344,6 @@ namespace Mortar
     virtual void update_active_set_semi_smooth(const bool firstStepPredictor = false) = 0;
     virtual void update_uzawa_augmented_lagrange() = 0;
     virtual void update_constraint_norm(int uzawaiter = 0) = 0;
-    virtual void visualize_gmsh(const int step, const int iter) const = 0;
     virtual bool was_in_contact() const = 0;
     virtual bool was_in_contact_last_time_step() const = 0;
 

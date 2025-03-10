@@ -98,39 +98,6 @@ namespace Mortar
     void print_slabs();
     //@}
 
-    //! @name Visualization methods (GMSH)
-    // please note: these methods only get called if "MORTARGMSHTN" of mortar_defines.H is
-    // activated. However, this might be interesting functionality for debug and development
-    // purposes
-
-    /*!
-    \brief Print slabs of DOP to file for GMSH output
-    \param filename     filename to which tree nodes are plotted
-
-    */
-    void print_dops_for_gmsh(std::string filename);
-
-    /*!
-    \brief Plot a point in GMSH to given file
-
-    */
-    void plot_gmsh_point(std::string filename, double* position0, int nr);
-
-    /*!
-    \brief Plot a quadrangle in GMSH to given file
-
-    */
-    void plot_gmsh_quadrangle(std::string filename, double* position0, double* position1,
-        double* position2, double* position3);
-
-    /*!
-    \brief Plot a triangle in GMSH to given file
-
-    */
-    void plot_gmsh_triangle(
-        std::string filename, double* position0, double* position1, double* position2);
-    //@}
-
    protected:
     //! @name Access and modification methods
     /*!
