@@ -63,11 +63,13 @@ namespace Inpar::SOLVER
 
     // Ifpack options
     {
-      Core::Utils::int_parameter("IFPACKOVERLAP", 0,
-          "The amount of overlap used for the ifpack \"ilu\" preconditioner.", list);
+      list.specs.emplace_back(parameter<int>("IFPACKOVERLAP",
+          {.description = "The amount of overlap used for the ifpack \"ilu\" preconditioner.",
+              .default_value = 0}));
 
-      Core::Utils::int_parameter("IFPACKGFILL", 0,
-          "The amount of fill allowed for an internal \"ilu\" preconditioner.", list);
+      list.specs.emplace_back(parameter<int>("IFPACKGFILL",
+          {.description = "The amount of fill allowed for an internal \"ilu\" preconditioner.",
+              .default_value = 0}));
 
       std::vector<std::string> ifpack_combine_valid_input = {"Add", "Insert", "Zero"};
       list.specs.emplace_back(
@@ -77,10 +79,10 @@ namespace Inpar::SOLVER
 
     // Iterative solver options
     {
-      Core::Utils::int_parameter("AZITER", 1000,
-          "The maximum number of iterations the underlying iterative solver is allowed to "
-          "perform",
-          list);
+      list.specs.emplace_back(parameter<int>(
+          "AZITER", {.description = "The maximum number of iterations the underlying iterative "
+                                    "solver is allowed to perform",
+                        .default_value = 1000}));
 
       list.specs.emplace_back(parameter<double>("AZTOL",
           {.description =
@@ -93,17 +95,20 @@ namespace Inpar::SOLVER
           Teuchos::tuple<Belos::ScaleType>(Belos::ScaleType::NormOfInitRes, Belos::ScaleType::None),
           list);
 
-      Core::Utils::int_parameter("AZOUTPUT", 0,
-          "The number of iterations between each output of the solver's progress is written to "
-          "screen",
-          list);
-      Core::Utils::int_parameter(
-          "AZREUSE", 0, "The number specifying how often to recompute some preconditioners", list);
+      list.specs.emplace_back(parameter<int>(
+          "AZOUTPUT", {.description = "The number of iterations between each output of the "
+                                      "solver's progress is written to "
+                                      "screen",
+                          .default_value = 0}));
 
-      Core::Utils::int_parameter("AZSUB", 50,
-          "The maximum size of the Krylov subspace used with \"GMRES\" before\n"
-          "a restart is performed.",
-          list);
+      list.specs.emplace_back(parameter<int>("AZREUSE",
+          {.description = "The number specifying how often to recompute some preconditioners",
+              .default_value = 0}));
+
+      list.specs.emplace_back(parameter<int>(
+          "AZSUB", {.description = "The maximum size of the Krylov subspace used with \"GMRES\" "
+                                   "before\n a restart is performed.",
+                       .default_value = 50}));
 
       list.specs.emplace_back(
           Core::IO::InputSpecBuilders::parameter<std::optional<std::filesystem::path>>(

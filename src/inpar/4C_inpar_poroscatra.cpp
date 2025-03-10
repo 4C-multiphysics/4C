@@ -23,19 +23,21 @@ void Inpar::PoroScaTra::set_valid_parameters(std::map<std::string, Core::IO::Inp
   Core::Utils::SectionSpecs poroscatradyn{"POROSCATRA CONTROL"};
 
   // Output type
-  Core::Utils::int_parameter(
-      "RESTARTEVERY", 1, "write restart possibility every RESTARTEVERY steps", poroscatradyn);
+  poroscatradyn.specs.emplace_back(parameter<int>("RESTARTEVERY",
+      {.description = "write restart possibility every RESTARTEVERY steps", .default_value = 1}));
   // Time loop control
-  Core::Utils::int_parameter("NUMSTEP", 200, "maximum number of Timesteps", poroscatradyn);
+  poroscatradyn.specs.emplace_back(parameter<int>(
+      "NUMSTEP", {.description = "maximum number of Timesteps", .default_value = 200}));
   poroscatradyn.specs.emplace_back(parameter<double>(
       "MAXTIME", {.description = "total simulation time", .default_value = 1000.0}));
   poroscatradyn.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "time step size dt", .default_value = 0.05}));
-  Core::Utils::int_parameter("RESULTSEVERY", 1, "increment for writing solution", poroscatradyn);
-  Core::Utils::int_parameter(
-      "ITEMAX", 10, "maximum number of iterations over fields", poroscatradyn);
-  Core::Utils::int_parameter(
-      "ITEMIN", 1, "minimal number of iterations over fields", poroscatradyn);
+  poroscatradyn.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "increment for writing solution", .default_value = 1}));
+  poroscatradyn.specs.emplace_back(parameter<int>(
+      "ITEMAX", {.description = "maximum number of iterations over fields", .default_value = 10}));
+  poroscatradyn.specs.emplace_back(parameter<int>(
+      "ITEMIN", {.description = "minimal number of iterations over fields", .default_value = 1}));
 
   // Iterationparameters
   poroscatradyn.specs.emplace_back(parameter<double>(
@@ -106,8 +108,9 @@ void Inpar::PoroScaTra::set_valid_parameters(std::map<std::string, Core::IO::Inp
       poroscatradyn);
 
   // number of linear solver used for poroelasticity
-  Core::Utils::int_parameter("LINEAR_SOLVER", -1,
-      "number of linear solver used for monolithic poroscatra problems", poroscatradyn);
+  poroscatradyn.specs.emplace_back(parameter<int>("LINEAR_SOLVER",
+      {.description = "number of linear solver used for monolithic poroscatra problems",
+          .default_value = -1}));
 
   // Coupling strategy for poroscatra solvers
   Core::Utils::string_to_integral_parameter<SolutionSchemeOverFields>("COUPALGO", "solid_to_scatra",

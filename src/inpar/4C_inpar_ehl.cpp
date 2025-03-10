@@ -25,10 +25,11 @@ void Inpar::EHL::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
   // Output type
   ehldyn.specs.emplace_back(parameter<double>("RESTARTEVERYTIME",
       {.description = "write restart possibility every RESTARTEVERY steps", .default_value = 0.0}));
-  Core::Utils::int_parameter(
-      "RESTARTEVERY", 1, "write restart possibility every RESTARTEVERY steps", ehldyn);
+  ehldyn.specs.emplace_back(parameter<int>("RESTARTEVERY",
+      {.description = "write restart possibility every RESTARTEVERY steps", .default_value = 1}));
   // Time loop control
-  Core::Utils::int_parameter("NUMSTEP", 200, "maximum number of Timesteps", ehldyn);
+  ehldyn.specs.emplace_back(parameter<int>(
+      "NUMSTEP", {.description = "maximum number of Timesteps", .default_value = 200}));
   ehldyn.specs.emplace_back(parameter<double>(
       "MAXTIME", {.description = "total simulation time", .default_value = 1000.0}));
   ehldyn.specs.emplace_back(
@@ -38,9 +39,12 @@ void Inpar::EHL::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
                               .default_value = false}));
   ehldyn.specs.emplace_back(parameter<double>(
       "RESULTSEVERYTIME", {.description = "increment for writing solution", .default_value = 0.0}));
-  Core::Utils::int_parameter("RESULTSEVERY", 1, "increment for writing solution", ehldyn);
-  Core::Utils::int_parameter("ITEMAX", 10, "maximum number of iterations over fields", ehldyn);
-  Core::Utils::int_parameter("ITEMIN", 1, "minimal number of iterations over fields", ehldyn);
+  ehldyn.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "increment for writing solution", .default_value = 1}));
+  ehldyn.specs.emplace_back(parameter<int>(
+      "ITEMAX", {.description = "maximum number of iterations over fields", .default_value = 10}));
+  ehldyn.specs.emplace_back(parameter<int>(
+      "ITEMIN", {.description = "minimal number of iterations over fields", .default_value = 1}));
 
   // Type of coupling strategy between the two fields
   Core::Utils::string_to_integral_parameter<FieldCoupling>("FIELDCOUPLING", "none",
@@ -106,8 +110,9 @@ void Inpar::EHL::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
                                      .default_value = 0.1}));
 
   // number of linear solver used for monolithic EHL
-  Core::Utils::int_parameter(
-      "LINEAR_SOLVER", -1, "number of linear solver used for monolithic EHL problems", ehldynmono);
+  ehldynmono.specs.emplace_back(parameter<int>(
+      "LINEAR_SOLVER", {.description = "number of linear solver used for monolithic EHL problems",
+                           .default_value = -1}));
 
   // convergence criteria adaptivity of monolithic EHL solver
   ehldynmono.specs.emplace_back(parameter<bool>("ADAPTCONV",

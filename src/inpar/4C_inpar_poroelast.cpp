@@ -48,19 +48,22 @@ void Inpar::PoroElast::set_valid_parameters(std::map<std::string, Core::IO::Inpu
       poroelastdyn);
 
   // Output type
-  Core::Utils::int_parameter(
-      "RESTARTEVERY", 1, "write restart possibility every RESTARTEVERY steps", poroelastdyn);
+  poroelastdyn.specs.emplace_back(parameter<int>("RESTARTEVERY",
+      {.description = "write restart possibility every RESTARTEVERY steps", .default_value = 1}));
 
   // Time loop control
-  Core::Utils::int_parameter("NUMSTEP", 200, "maximum number of Timesteps", poroelastdyn);
+  poroelastdyn.specs.emplace_back(parameter<int>(
+      "NUMSTEP", {.description = "maximum number of Timesteps", .default_value = 200}));
   poroelastdyn.specs.emplace_back(parameter<double>(
       "MAXTIME", {.description = "total simulation time", .default_value = 1000.0}));
   poroelastdyn.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "time step size dt", .default_value = 0.05}));
-  Core::Utils::int_parameter(
-      "ITEMAX", 10, "maximum number of iterations over fields", poroelastdyn);
-  Core::Utils::int_parameter("ITEMIN", 1, "minimal number of iterations over fields", poroelastdyn);
-  Core::Utils::int_parameter("RESULTSEVERY", 1, "increment for writing solution", poroelastdyn);
+  poroelastdyn.specs.emplace_back(parameter<int>(
+      "ITEMAX", {.description = "maximum number of iterations over fields", .default_value = 10}));
+  poroelastdyn.specs.emplace_back(parameter<int>(
+      "ITEMIN", {.description = "minimal number of iterations over fields", .default_value = 1}));
+  poroelastdyn.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "increment for writing solution", .default_value = 1}));
 
   // Iterationparameters
   poroelastdyn.specs.emplace_back(parameter<double>(
@@ -145,8 +148,9 @@ void Inpar::PoroElast::set_valid_parameters(std::map<std::string, Core::IO::Inpu
       "CONVECTIVE_TERM", {.description = "convective term ", .default_value = false}));
 
   // number of linear solver used for poroelasticity
-  Core::Utils::int_parameter("LINEAR_SOLVER", -1,
-      "number of linear solver used for poroelasticity problems", poroelastdyn);
+  poroelastdyn.specs.emplace_back(parameter<int>(
+      "LINEAR_SOLVER", {.description = "number of linear solver used for poroelasticity problems",
+                           .default_value = -1}));
 
   // flag for equilibration of global system of equations
   Core::Utils::string_to_integral_parameter<Core::LinAlg::EquilibrationMethod>("EQUILIBRATION",

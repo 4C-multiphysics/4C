@@ -41,8 +41,9 @@ void Inpar::Cardiovascular0D::set_valid_parameters(std::map<std::string, Core::I
           .default_value = false}));
 
   // linear solver id used for monolithic 0D cardiovascular-structural problems
-  Core::Utils::int_parameter("LINEAR_COUPLED_SOLVER", -1,
-      "number of linear solver used for cardiovascular 0D-structural problems", cardvasc0dstruct);
+  cardvasc0dstruct.specs.emplace_back(parameter<int>("LINEAR_COUPLED_SOLVER",
+      {.description = "number of linear solver used for cardiovascular 0D-structural problems",
+          .default_value = -1}));
 
   Core::Utils::string_to_integral_parameter<Cardvasc0DSolveAlgo>("SOLALGORITHM", "direct", "",
       tuple<std::string>("block", "direct"),
@@ -95,16 +96,20 @@ void Inpar::Cardiovascular0D::set_valid_parameters(std::map<std::string, Core::I
       tuple<Cardvasc0DAtriumModel>(Inpar::Cardiovascular0D::atr_elastance_0d,
           Inpar::Cardiovascular0D::atr_structure_3d, Inpar::Cardiovascular0D::atr_prescribed),
       cardvasc0dsyspulcirc);
-  Core::Utils::int_parameter("Atrium_act_curve_l", -1,
-      "left atrial activation curve (ONLY for ATRIUM_MODEL '0D'!)", cardvasc0dsyspulcirc);
-  Core::Utils::int_parameter("Atrium_act_curve_r", -1,
-      "right atrial activation curve (ONLY for ATRIUM_MODEL '0D'!)", cardvasc0dsyspulcirc);
-  Core::Utils::int_parameter("Atrium_prescr_E_curve_l", -1,
-      "left atrial elastance prescription curve (ONLY for ATRIUM_MODEL 'prescribed'!)",
-      cardvasc0dsyspulcirc);
-  Core::Utils::int_parameter("Atrium_prescr_E_curve_r", -1,
-      "right atrial elastance prescription curve (ONLY for ATRIUM_MODEL 'prescribed'!)",
-      cardvasc0dsyspulcirc);
+  cardvasc0dsyspulcirc.specs.emplace_back(parameter<int>("Atrium_act_curve_l",
+      {.description = "left atrial activation curve (ONLY for ATRIUM_MODEL '0D'!)",
+          .default_value = -1}));
+  cardvasc0dsyspulcirc.specs.emplace_back(parameter<int>("Atrium_act_curve_r",
+      {.description = "right atrial activation curve (ONLY for ATRIUM_MODEL '0D'!)",
+          .default_value = -1}));
+  cardvasc0dsyspulcirc.specs.emplace_back(parameter<int>("Atrium_prescr_E_curve_l",
+      {.description =
+              "left atrial elastance prescription curve (ONLY for ATRIUM_MODEL 'prescribed'!)",
+          .default_value = -1}));
+  cardvasc0dsyspulcirc.specs.emplace_back(parameter<int>("Atrium_prescr_E_curve_r",
+      {.description =
+              "right atrial elastance prescription curve (ONLY for ATRIUM_MODEL 'prescribed'!)",
+          .default_value = -1}));
   cardvasc0dsyspulcirc.specs.emplace_back(parameter<double>(
       "E_at_max_l", {.description = "0D maximum left atrial elastance", .default_value = 0.0}));
   cardvasc0dsyspulcirc.specs.emplace_back(parameter<double>(
@@ -119,16 +124,20 @@ void Inpar::Cardiovascular0D::set_valid_parameters(std::map<std::string, Core::I
       tuple<Cardvasc0DVentricleModel>(Inpar::Cardiovascular0D::ventr_structure_3d,
           Inpar::Cardiovascular0D::ventr_elastance_0d, Inpar::Cardiovascular0D::ventr_prescribed),
       cardvasc0dsyspulcirc);
-  Core::Utils::int_parameter("Ventricle_act_curve_l", -1,
-      "left ventricular activation curve (ONLY for VENTRICLE_MODEL '0D'!)", cardvasc0dsyspulcirc);
-  Core::Utils::int_parameter("Ventricle_act_curve_r", -1,
-      "right ventricular activation curve (ONLY for VENTRICLE_MODEL '0D'!)", cardvasc0dsyspulcirc);
-  Core::Utils::int_parameter("Ventricle_prescr_E_curve_l", -1,
-      "left ventricular elastance prescription curve (ONLY for VENTRICLE_MODEL 'prescribed'!)",
-      cardvasc0dsyspulcirc);
-  Core::Utils::int_parameter("Ventricle_prescr_E_curve_r", -1,
-      "right ventricular elastance prescription curve (ONLY for VENTRICLE_MODEL 'prescribed'!)",
-      cardvasc0dsyspulcirc);
+  cardvasc0dsyspulcirc.specs.emplace_back(parameter<int>("Ventricle_act_curve_l",
+      {.description = "left ventricular activation curve (ONLY for VENTRICLE_MODEL '0D'!)",
+          .default_value = -1}));
+  cardvasc0dsyspulcirc.specs.emplace_back(parameter<int>("Ventricle_act_curve_r",
+      {.description = "right ventricular activation curve (ONLY for VENTRICLE_MODEL '0D'!)",
+          .default_value = -1}));
+  cardvasc0dsyspulcirc.specs.emplace_back(parameter<int>(
+      "Ventricle_prescr_E_curve_l", {.description = "left ventricular elastance prescription curve "
+                                                    "(ONLY for VENTRICLE_MODEL 'prescribed'!)",
+                                        .default_value = -1}));
+  cardvasc0dsyspulcirc.specs.emplace_back(parameter<int>("Ventricle_prescr_E_curve_r",
+      {.description = "right ventricular elastance prescription curve (ONLY for "
+                      "VENTRICLE_MODEL 'prescribed'!)",
+          .default_value = -1}));
   cardvasc0dsyspulcirc.specs.emplace_back(parameter<double>(
       "E_v_max_l", {.description = "0D maximum left ventricular elastance", .default_value = 0.0}));
   cardvasc0dsyspulcirc.specs.emplace_back(parameter<double>("E_v_min_l",
@@ -374,8 +383,9 @@ void Inpar::Cardiovascular0D::set_valid_parameters(std::map<std::string, Core::I
                                                     "when it is fully collapsed outside the body)",
                                         .default_value = 0.0}));
 
-  Core::Utils::int_parameter("U_t_curve", -1,
-      "time-varying, prescribed pleural pressure curve driven by diaphragm", cardvascrespir0d);
+  cardvascrespir0d.specs.emplace_back(parameter<int>("U_t_curve",
+      {.description = "time-varying, prescribed pleural pressure curve driven by diaphragm",
+          .default_value = -1}));
   cardvascrespir0d.specs.emplace_back(
       parameter<double>("U_m", {.description = "in-breath pressure", .default_value = 0.0}));
 
@@ -681,8 +691,7 @@ void Inpar::Cardiovascular0D::set_valid_conditions(
 
 
   /*--------------------------------------------------------------------*/
-  // Monolithic coupling of structure and 0D cardiovascular flow models: Neumann coupling surface -
-  // mhv 11/13
+  // Monolithic coupling of structure and 0D cardiovascular flow models: Neumann coupling surface
 
   Core::Conditions::ConditionDefinition cardiovascular0dstructurecouplingcond(
       "DESIGN SURF CARDIOVASCULAR 0D-STRUCTURE COUPLING CONDITIONS",

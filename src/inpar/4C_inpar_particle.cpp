@@ -42,10 +42,11 @@ void Inpar::PARTICLE::set_valid_parameters(std::map<std::string, Core::IO::Input
       particledyn);
 
   // output type
-  Core::Utils::int_parameter(
-      "RESULTSEVERY", 1, "write particle runtime output every RESULTSEVERY steps", particledyn);
-  Core::Utils::int_parameter(
-      "RESTARTEVERY", 1, "write restart possibility every RESTARTEVERY steps", particledyn);
+  particledyn.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "write particle runtime output every RESULTSEVERY steps",
+                          .default_value = 1}));
+  particledyn.specs.emplace_back(parameter<int>("RESTARTEVERY",
+      {.description = "write restart possibility every RESTARTEVERY steps", .default_value = 1}));
 
   // write ghosted particles
   particledyn.specs.emplace_back(parameter<bool>("WRITE_GHOSTED_PARTICLES",
@@ -54,15 +55,16 @@ void Inpar::PARTICLE::set_valid_parameters(std::map<std::string, Core::IO::Input
   // time loop control
   particledyn.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "time step size", .default_value = 0.01}));
-  Core::Utils::int_parameter("NUMSTEP", 100, "maximum number of steps", particledyn);
+  particledyn.specs.emplace_back(
+      parameter<int>("NUMSTEP", {.description = "maximum number of steps", .default_value = 100}));
   particledyn.specs.emplace_back(
       parameter<double>("MAXTIME", {.description = "maximum time", .default_value = 1.0}));
 
   // gravity acceleration control
   particledyn.specs.emplace_back(parameter<std::string>("GRAVITY_ACCELERATION",
       {.description = "acceleration due to gravity", .default_value = "0.0 0.0 0.0"}));
-  Core::Utils::int_parameter(
-      "GRAVITY_RAMP_FUNCT", -1, "number of function governing gravity ramp", particledyn);
+  particledyn.specs.emplace_back(parameter<int>("GRAVITY_RAMP_FUNCT",
+      {.description = "number of function governing gravity ramp", .default_value = -1}));
 
   // viscous damping factor
   particledyn.specs.emplace_back(parameter<double>("VISCOUS_DAMPING",
@@ -96,8 +98,9 @@ void Inpar::PARTICLE::set_valid_parameters(std::map<std::string, Core::IO::Input
       particledyn);
 
   // material id for particle wall from bounding box source
-  Core::Utils::int_parameter("PARTICLE_WALL_MAT", -1,
-      "material id for particle wall from bounding box source", particledyn);
+  particledyn.specs.emplace_back(parameter<int>(
+      "PARTICLE_WALL_MAT", {.description = "material id for particle wall from bounding box source",
+                               .default_value = -1}));
 
   // flags defining considered states of particle wall
   particledyn.specs.emplace_back(parameter<bool>("PARTICLE_WALL_MOVING",
@@ -282,8 +285,8 @@ void Inpar::PARTICLE::set_valid_parameters(std::map<std::string, Core::IO::Input
           Inpar::PARTICLE::SurfaceHeatSource),
       particledynsph);
 
-  Core::Utils::int_parameter(
-      "HEATSOURCE_FUNCT", -1, "number of function governing heat source", particledynsph);
+  particledynsph.specs.emplace_back(parameter<int>("HEATSOURCE_FUNCT",
+      {.description = "number of function governing heat source", .default_value = -1}));
 
   particledynsph.specs.emplace_back(parameter<std::string>("HEATSOURCE_DIRECTION",
       {.description = "direction of surface heat source", .default_value = "0.0 0.0 0.0"}));
@@ -319,8 +322,8 @@ void Inpar::PARTICLE::set_valid_parameters(std::map<std::string, Core::IO::Input
           Inpar::PARTICLE::NoSurfaceTension, Inpar::PARTICLE::ContinuumSurfaceForce),
       particledynsph);
 
-  Core::Utils::int_parameter("SURFACETENSION_RAMP_FUNCT", -1,
-      "number of function governing surface tension ramp", particledynsph);
+  particledynsph.specs.emplace_back(parameter<int>("SURFACETENSION_RAMP_FUNCT",
+      {.description = "number of function governing surface tension ramp", .default_value = -1}));
 
   particledynsph.specs.emplace_back(parameter<double>("SURFACETENSIONCOEFFICIENT",
       {.description = "constant part of surface tension coefficient", .default_value = -1.0}));
@@ -398,8 +401,9 @@ void Inpar::PARTICLE::set_valid_parameters(std::map<std::string, Core::IO::Input
           Inpar::PARTICLE::NoDirichletOpenBoundary, Inpar::PARTICLE::DirichletNormalToPlane),
       particledynsph);
 
-  Core::Utils::int_parameter("DIRICHLET_FUNCT", -1,
-      "number of function governing velocity condition on dirichlet open boundary", particledynsph);
+  particledynsph.specs.emplace_back(parameter<int>("DIRICHLET_FUNCT",
+      {.description = "number of function governing velocity condition on dirichlet open boundary",
+          .default_value = -1}));
 
   particledynsph.specs.emplace_back(parameter<std::string>("DIRICHLET_OUTWARD_NORMAL",
       {.description = "direction of outward normal on dirichlet open boundary",
@@ -415,8 +419,9 @@ void Inpar::PARTICLE::set_valid_parameters(std::map<std::string, Core::IO::Input
           Inpar::PARTICLE::NoNeumannOpenBoundary, Inpar::PARTICLE::NeumannNormalToPlane),
       particledynsph);
 
-  Core::Utils::int_parameter("NEUMANN_FUNCT", -1,
-      "number of function governing pressure condition on neumann open boundary", particledynsph);
+  particledynsph.specs.emplace_back(parameter<int>("NEUMANN_FUNCT",
+      {.description = "number of function governing pressure condition on neumann open boundary",
+          .default_value = -1}));
 
   particledynsph.specs.emplace_back(parameter<std::string>("NEUMANN_OUTWARD_NORMAL",
       {.description = "direction of outward normal on neumann open boundary",

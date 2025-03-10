@@ -22,18 +22,19 @@ void Inpar::ElCh::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
 
   Core::Utils::SectionSpecs elchcontrol{"ELCH CONTROL"};
 
-  Core::Utils::int_parameter("MOVBOUNDARYITEMAX", 10,
-      "Maximum number of outer iterations in electrode shape change computations", elchcontrol);
+  elchcontrol.specs.emplace_back(parameter<int>("MOVBOUNDARYITEMAX",
+      {.description = "Maximum number of outer iterations in electrode shape change computations",
+          .default_value = 10}));
   elchcontrol.specs.emplace_back(parameter<double>("MOVBOUNDARYCONVTOL",
       {.description =
               "Convergence check tolerance for outer loop in electrode shape change computations",
           .default_value = 1e-6}));
   elchcontrol.specs.emplace_back(parameter<double>(
       "TEMPERATURE", {.description = "Constant temperature (Kelvin)", .default_value = 298.0}));
-  Core::Utils::int_parameter("TEMPERATURE_FROM_FUNCT", -1,
-      "Homogeneous temperature within electrochemistry field that can be time dependent according "
-      "to function definition",
-      elchcontrol);
+  elchcontrol.specs.emplace_back(parameter<int>("TEMPERATURE_FROM_FUNCT",
+      {.description = "Homogeneous temperature within electrochemistry field that can be time "
+                      "dependent according to function definition",
+          .default_value = -1}));
   elchcontrol.specs.emplace_back(parameter<double>("FARADAY_CONSTANT",
       {.description = "Faraday constant (in unit system as chosen in input file)",
           .default_value = 9.64853399e4}));
@@ -62,19 +63,19 @@ void Inpar::ElCh::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
       tuple<Inpar::ElCh::ApproxElectResist>(approxelctresist_relpotcur,
           approxelctresist_effleninitcond, approxelctresist_efflenintegcond),
       elchcontrol);
-  Core::Utils::int_parameter(
-      "GSTATCONDID_CATHODE", 0, "condition id of electrode kinetics for cathode", elchcontrol);
-  Core::Utils::int_parameter(
-      "GSTATCONDID_ANODE", 1, "condition id of electrode kinetics for anode", elchcontrol);
+  elchcontrol.specs.emplace_back(parameter<int>("GSTATCONDID_CATHODE",
+      {.description = "condition id of electrode kinetics for cathode", .default_value = 0}));
+  elchcontrol.specs.emplace_back(parameter<int>("GSTATCONDID_ANODE",
+      {.description = "condition id of electrode kinetics for anode", .default_value = 1}));
   elchcontrol.specs.emplace_back(parameter<double>(
       "GSTATCONVTOL", {.description = "Convergence check tolerance for galvanostatic mode",
                           .default_value = 1.e-5}));
   elchcontrol.specs.emplace_back(parameter<double>(
       "GSTATCURTOL", {.description = "Current Tolerance", .default_value = 1.e-15}));
-  Core::Utils::int_parameter(
-      "GSTATFUNCTNO", -1, "function number defining the imposed current curve", elchcontrol);
-  Core::Utils::int_parameter(
-      "GSTATITEMAX", 10, "maximum number of iterations for galvanostatic mode", elchcontrol);
+  elchcontrol.specs.emplace_back(parameter<int>("GSTATFUNCTNO",
+      {.description = "function number defining the imposed current curve", .default_value = -1}));
+  elchcontrol.specs.emplace_back(parameter<int>("GSTATITEMAX",
+      {.description = "maximum number of iterations for galvanostatic mode", .default_value = 10}));
   elchcontrol.specs.emplace_back(parameter<double>("GSTAT_LENGTH_CURRENTPATH",
       {.description = "average length of the current path", .default_value = 0.0}));
 
@@ -152,15 +153,18 @@ void Inpar::ElCh::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
                              .default_value = false}));
   sclcontrol.specs.emplace_back(parameter<bool>("INITPOTCALC",
       {.description = "calculate initial potential field?", .default_value = false}));
-  Core::Utils::int_parameter("SOLVER", -1, "solver for coupled SCL problem", sclcontrol);
+  sclcontrol.specs.emplace_back(parameter<int>(
+      "SOLVER", {.description = "solver for coupled SCL problem", .default_value = -1}));
   Core::Utils::string_to_integral_parameter<Core::LinAlg::MatrixType>("MATRIXTYPE", "undefined",
       "type of global system matrix in global system of equations",
       tuple<std::string>("undefined", "block", "sparse"),
       tuple<Core::LinAlg::MatrixType>(Core::LinAlg::MatrixType::undefined,
           Core::LinAlg::MatrixType::block_field, Core::LinAlg::MatrixType::sparse),
       sclcontrol);
-  Core::Utils::int_parameter("ADAPT_TIME_STEP", -1,
-      "time step when time step size should be updated to 'ADAPTED_TIME_STEP_SIZE'.", sclcontrol);
+  sclcontrol.specs.emplace_back(parameter<int>("ADAPT_TIME_STEP",
+      {.description =
+              "time step when time step size should be updated to 'ADAPTED_TIME_STEP_SIZE'.",
+          .default_value = -1}));
   sclcontrol.specs.emplace_back(parameter<double>(
       "ADAPTED_TIME_STEP_SIZE", {.description = "new time step size.", .default_value = -1.0}));
 
@@ -171,8 +175,8 @@ void Inpar::ElCh::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
           ScaTra::initfield_field_by_condition),
       sclcontrol);
 
-  Core::Utils::int_parameter(
-      "INITFUNCNO", -1, "function number for scalar transport initial field", sclcontrol);
+  sclcontrol.specs.emplace_back(parameter<int>("INITFUNCNO",
+      {.description = "function number for scalar transport initial field", .default_value = -1}));
 
   sclcontrol.move_into_collection(list);
 }

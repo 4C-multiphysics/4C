@@ -96,17 +96,22 @@ void Inpar::FPSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
       {.description = "perform FPSIFDCheck() finite difference check", .default_value = false}));
 
   // number of linear solver used for poroelasticity
-  Core::Utils::int_parameter(
-      "LINEAR_SOLVER", -1, "number of linear solver used for FPSI problems", fpsidyn);
-
-  Core::Utils::int_parameter("ITEMIN", 1, "minimal number of iterations over fields", fpsidyn);
-  Core::Utils::int_parameter("NUMSTEP", 200, "Total number of Timesteps", fpsidyn);
-  Core::Utils::int_parameter("ITEMAX", 100, "Maximum number of iterations over fields", fpsidyn);
-  Core::Utils::int_parameter("RESULTSEVERY", 1, "Increment for writing solution", fpsidyn);
-  Core::Utils::int_parameter("RESTARTEVERY", 1, "Increment for writing restart", fpsidyn);
-
-  Core::Utils::int_parameter("FDCheck_row", 0, "print row value during fd_check", fpsidyn);
-  Core::Utils::int_parameter("FDCheck_column", 0, "print column value during fd_check", fpsidyn);
+  fpsidyn.specs.emplace_back(parameter<int>("LINEAR_SOLVER",
+      {.description = "number of linear solver used for FPSI problems", .default_value = -1}));
+  fpsidyn.specs.emplace_back(parameter<int>(
+      "ITEMIN", {.description = "minimal number of iterations over fields", .default_value = 1}));
+  fpsidyn.specs.emplace_back(parameter<int>(
+      "NUMSTEP", {.description = "Total number of Timesteps", .default_value = 200}));
+  fpsidyn.specs.emplace_back(parameter<int>(
+      "ITEMAX", {.description = "Maximum number of iterations over fields", .default_value = 100}));
+  fpsidyn.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "Increment for writing solution", .default_value = 1}));
+  fpsidyn.specs.emplace_back(parameter<int>(
+      "RESTARTEVERY", {.description = "Increment for writing restart", .default_value = 1}));
+  fpsidyn.specs.emplace_back(parameter<int>(
+      "FDCheck_row", {.description = "print row value during fd_check", .default_value = 0}));
+  fpsidyn.specs.emplace_back(parameter<int>(
+      "FDCheck_column", {.description = "print column value during fd_check", .default_value = 0}));
 
   fpsidyn.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "Time increment dt", .default_value = 0.1}));

@@ -31,14 +31,12 @@ namespace Inpar
 
 
       // output interval regarding steps: write output every INTERVAL_STEPS steps
-      Core::Utils::int_parameter("INTERVAL_STEPS", -1,
-          "write visualization output at runtime every INTERVAL_STEPS steps",
-          sublist_IO_VTK_structure);
-
-
-      Core::Utils::int_parameter("STEP_OFFSET", 0,
-          "An offset added to the current step to shift the steps to be written.",
-          sublist_IO_VTK_structure);
+      sublist_IO_VTK_structure.specs.emplace_back(parameter<int>("INTERVAL_STEPS",
+          {.description = "write visualization output at runtime every INTERVAL_STEPS steps",
+              .default_value = -1}));
+      sublist_IO_VTK_structure.specs.emplace_back(parameter<int>("STEP_OFFSET",
+          {.description = "An offset added to the current step to shift the steps to be written.",
+              .default_value = 0}));
 
 
       // data format for written numeric data
@@ -56,11 +54,12 @@ namespace Inpar
               LibB64::CompressionLevel::best_speed, LibB64::CompressionLevel::no_compression),
           sublist_IO_VTK_structure);
 
-      // specify the maximum digits in the number of time steps that shall be written
-      Core::Utils::int_parameter("TIMESTEP_RESERVE_DIGITS", 5,
-          "Specify the maximum digits in the number of time steps that shall be written. This only "
-          "affects the number of leading zeros in the output file names.",
-          sublist_IO_VTK_structure);
+      // specify the maximum digits in the number of time steps that shall be written#
+      sublist_IO_VTK_structure.specs.emplace_back(parameter<int>("TIMESTEP_RESERVE_DIGITS",
+          {.description = "Specify the maximum digits in the number of time steps that shall be "
+                          "written. This only affects the number of leading zeros in the output "
+                          "file names.",
+              .default_value = 5}));
 
       // whether to write output in every iteration of the nonlinear solver
       sublist_IO_VTK_structure.specs.emplace_back(parameter<bool>("EVERY_ITERATION",
@@ -75,10 +74,11 @@ namespace Inpar
                   .default_value = 1e-8}));
 
       // specify the maximum digits in the number of iterations that shall be written
-      Core::Utils::int_parameter("EVERY_ITERATION_RESERVE_DIGITS", 4,
-          "Specify the maximum digits in the number of iterations that shall be written. This only "
-          "affects the number of leading zeros in the output file names.",
-          sublist_IO_VTK_structure);
+      sublist_IO_VTK_structure.specs.emplace_back(parameter<int>("EVERY_ITERATION_RESERVE_DIGITS",
+          {.description = "Specify the maximum digits in the number of iterations that shall be "
+                          "written. This only affects the number of leading zeros in the output "
+                          "file names.",
+              .default_value = 4}));
 
       // specify the actual visualization writer
       Core::Utils::string_to_integral_parameter<Core::IO::OutputWriter>("OUTPUT_WRITER",

@@ -88,9 +88,11 @@ void Inpar::FSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
 
   fsidyn.specs.emplace_back(parameter<double>(
       "MAXTIME", {.description = "Total simulation time", .default_value = 1000.0}));
-  Core::Utils::int_parameter("NUMSTEP", 200, "Total number of Timesteps", fsidyn);
+  fsidyn.specs.emplace_back(parameter<int>(
+      "NUMSTEP", {.description = "Total number of Timesteps", .default_value = 200}));
 
-  Core::Utils::int_parameter("RESTARTEVERY", 1, "Increment for writing restart", fsidyn);
+  fsidyn.specs.emplace_back(parameter<int>(
+      "RESTARTEVERY", {.description = "Increment for writing restart", .default_value = 1}));
 
   fsidyn.specs.emplace_back(parameter<bool>(
       "RESTART_FROM_PART_FSI", {.description = "restart from partitioned fsi (e.g. from prestress "
@@ -112,7 +114,8 @@ void Inpar::FSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
   fsidyn.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "Time increment dt", .default_value = 0.1}));
 
-  Core::Utils::int_parameter("RESULTSEVERY", 1, "Increment for writing solution", fsidyn);
+  fsidyn.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "Increment for writing solution", .default_value = 1}));
 
   Core::Utils::string_to_integral_parameter<Inpar::FSI::Verbosity>("VERBOSITY", "full",
       "Verbosity of the FSI problem.", tuple<std::string>("full", "medium", "low", "subproblem"),
@@ -126,10 +129,10 @@ void Inpar::FSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
   /* parameters for time step size adaptivity in fsi dynamics */
   Core::Utils::SectionSpecs fsiadapt{fsidyn, "TIMEADAPTIVITY"};
 
-  Core::Utils::int_parameter("ADAPTSTEPMAX", 5,
-      "Maximum number of repetitions of one time step for adapting/reducing the time step size "
-      "(>0)",
-      fsiadapt);
+  fsiadapt.specs.emplace_back(parameter<int>("ADAPTSTEPMAX",
+      {.description = "Maximum number of repetitions of one time step for adapting/reducing the "
+                      "time step size (>0)",
+          .default_value = 5}));
 
   Core::Utils::string_to_integral_parameter<Inpar::FSI::FluidMethod>("AUXINTEGRATORFLUID", "AB2",
       "Method for error estimation in the fluid field",
@@ -162,10 +165,10 @@ void Inpar::FSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
       {.description = "Tolerance for the norm of local velocity error", .default_value = 1.0e-3}));
 
 
-  Core::Utils::int_parameter("NUMINCREASESTEPS", 0,
-      "Number of consecutive steps that want to increase time step size before\n"
-      "actually increasing it. Set 0 to deactivate this feature.",
-      fsiadapt);
+  fsiadapt.specs.emplace_back(parameter<int>("NUMINCREASESTEPS",
+      {.description = "Number of consecutive steps that want to increase time step size before\n"
+                      "actually increasing it. Set 0 to deactivate this feature.",
+          .default_value = 0}));
 
   fsiadapt.specs.emplace_back(parameter<double>(
       "SAFETYFACTOR", {.description = "This is a safety factor to scale theoretical optimal step "
@@ -220,12 +223,12 @@ void Inpar::FSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
   fsimono.specs.emplace_back(parameter<bool>(
       "INFNORMSCALING", {.description = "Scale Blocks with row infnorm?", .default_value = true}));
 
-  Core::Utils::int_parameter(
-      "ITEMAX", 100, "Maximum allowed number of nonlinear iterations", fsimono);
-
-  Core::Utils::int_parameter("KRYLOV_ITEMAX", 1000, "Max Iterations for linear solver.", fsimono);
-
-  Core::Utils::int_parameter("KRYLOV_SIZE", 50, "Size of Krylov Subspace.", fsimono);
+  fsimono.specs.emplace_back(parameter<int>("ITEMAX",
+      {.description = "Maximum allowed number of nonlinear iterations", .default_value = 100}));
+  fsimono.specs.emplace_back(parameter<int>("KRYLOV_ITEMAX",
+      {.description = "Max Iterations for linear solver.", .default_value = 1000}));
+  fsimono.specs.emplace_back(parameter<int>(
+      "KRYLOV_SIZE", {.description = "Size of Krylov Subspace.", .default_value = 50}));
 
   Core::Utils::string_to_integral_parameter<Inpar::FSI::LinearBlockSolver>("LINEARBLOCKSOLVER",
       "PreconditionedKrylov", "Linear block preconditioner for block system in monolithic FSI.",
@@ -234,8 +237,9 @@ void Inpar::FSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
           Inpar::FSI::PreconditionedKrylov, Inpar::FSI::LinalgSolver),
       fsimono);
 
-  Core::Utils::int_parameter("LINEAR_SOLVER", -1,
-      "Number of SOLVER block describing the linear solver and preconditioner", fsimono);
+  fsimono.specs.emplace_back(parameter<int>("LINEAR_SOLVER",
+      {.description = "Number of SOLVER block describing the linear solver and preconditioner",
+          .default_value = -1}));
 
   // Iteration parameters for convergence check of newton loop
   // for implementations without NOX
@@ -258,9 +262,10 @@ void Inpar::FSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
       "binary operator to combine primary variables and residual force values",
       tuple<std::string>("And"), tuple<Inpar::FSI::BinaryOp>(Inpar::FSI::bop_and), fsimono);
 
-  Core::Utils::int_parameter("PRECONDREUSE", 0,
-      "Number of iterations in one time step reusing the preconditioner before rebuilding it",
-      fsimono);
+  fsimono.specs.emplace_back(parameter<int>(
+      "PRECONDREUSE", {.description = "Number of iterations in one time step reusing the "
+                                      "preconditioner before rebuilding it",
+                          .default_value = 0}));
 
   fsimono.specs.emplace_back(parameter<bool>("REBUILDPRECEVERYSTEP",
       {.description = "Enforce rebuilding the preconditioner at the beginning of every time step",
@@ -413,7 +418,8 @@ void Inpar::FSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
       {.description = "Project velocity into divergence-free subspace for partitioned fsi",
           .default_value = false}));
 
-  Core::Utils::int_parameter("ITEMAX", 100, "Maximum number of iterations over fields", fsipart);
+  fsipart.specs.emplace_back(parameter<int>(
+      "ITEMAX", {.description = "Maximum number of iterations over fields", .default_value = 100}));
 
   fsipart.specs.emplace_back(parameter<double>("MAXOMEGA",
       {.description = "largest omega allowed for Aitken relaxation (0.0 means no constraint)",
@@ -450,7 +456,8 @@ void Inpar::FSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
   Core::Utils::string_to_integral_parameter<Inpar::FSI::PrecConstr>("PRECONDITIONER", "Simple",
       "preconditioner to use", tuple<std::string>("Simple", "Simplec"),
       tuple<Inpar::FSI::PrecConstr>(Inpar::FSI::Simple, Inpar::FSI::Simplec), constrfsi);
-  Core::Utils::int_parameter("SIMPLEITER", 2, "Number of iterations for simple pc", constrfsi);
+  constrfsi.specs.emplace_back(parameter<int>(
+      "SIMPLEITER", {.description = "Number of iterations for simple pc", .default_value = 2}));
   constrfsi.specs.emplace_back(parameter<double>(
       "ALPHA", {.description = "alpha parameter for simple pc", .default_value = 0.8}));
 

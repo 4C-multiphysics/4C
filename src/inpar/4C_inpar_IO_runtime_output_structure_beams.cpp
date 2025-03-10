@@ -115,9 +115,9 @@ namespace Inpar
             {.description = "write which processors ghost the elements", .default_value = false}));
 
         // number of subsegments along a single beam element for visualization
-        Core::Utils::int_parameter("NUMBER_SUBSEGMENTS", 5,
-            "Number of subsegments along a single beam element for visualization",
-            sublist_IO_output_beams);
+        sublist_IO_output_beams.specs.emplace_back(parameter<int>("NUMBER_SUBSEGMENTS",
+            {.description = "Number of subsegments along a single beam element for visualization",
+                .default_value = 5}));
 
         sublist_IO_output_beams.move_into_collection(list);
       }

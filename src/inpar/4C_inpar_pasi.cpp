@@ -22,11 +22,14 @@ void Inpar::PaSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
   Core::Utils::SectionSpecs pasidyn{"PASI DYNAMIC"};
 
   // time loop control
-  Core::Utils::int_parameter("RESULTSEVERY", 1, "Increment for writing solution", pasidyn);
-  Core::Utils::int_parameter("RESTARTEVERY", 1, "Increment for writing restart", pasidyn);
+  pasidyn.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "Increment for writing solution", .default_value = 1}));
+  pasidyn.specs.emplace_back(parameter<int>(
+      "RESTARTEVERY", {.description = "Increment for writing restart", .default_value = 1}));
   pasidyn.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "Time increment dt", .default_value = 0.01}));
-  Core::Utils::int_parameter("NUMSTEP", 100, "Total number of Timesteps", pasidyn);
+  pasidyn.specs.emplace_back(parameter<int>(
+      "NUMSTEP", {.description = "Total number of Timesteps", .default_value = 100}));
   pasidyn.specs.emplace_back(
       parameter<double>("MAXTIME", {.description = "Total simulation time", .default_value = 1.0}));
 
@@ -41,8 +44,9 @@ void Inpar::PaSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
       pasidyn);
 
   // partitioned iteration dependent parameters
-  Core::Utils::int_parameter(
-      "ITEMAX", 10, "maximum number of partitioned iterations over fields", pasidyn);
+  pasidyn.specs.emplace_back(parameter<int>(
+      "ITEMAX", {.description = "maximum number of partitioned iterations over fields",
+                    .default_value = 10}));
 
   pasidyn.specs.emplace_back(parameter<double>(
       "CONVTOLSCALEDDISP", {.description = "tolerance of dof and dt scaled interface displacement "

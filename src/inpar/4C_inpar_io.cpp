@@ -33,8 +33,9 @@ void Inpar::IO::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>&
   io.specs.emplace_back(parameter<bool>("OUTPUT_EVERY_ITER",
       {.description = "Do you desire structural displ. output every Newton iteration",
           .default_value = false}));
-  Core::Utils::int_parameter(
-      "OEI_FILE_COUNTER", 0, "Add an output name affix by introducing a additional number", io);
+  io.specs.emplace_back(parameter<int>("OEI_FILE_COUNTER",
+      {.description = "Add an output name affix by introducing a additional number",
+          .default_value = 0}));
 
   io.specs.emplace_back(parameter<bool>("ELEMENT_MAT_ID",
       {.description = "Output of the material id of each element", .default_value = false}));
@@ -121,9 +122,11 @@ void Inpar::IO::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>&
           Thermo::tempgrad_initial),
       io);
 
-  Core::Utils::int_parameter(
-      "FILESTEPS", 1000, "Amount of timesteps written to a single result file", io);
-  Core::Utils::int_parameter("STDOUTEVERY", 1, "Print to screen every n step", io);
+  io.specs.emplace_back(parameter<int>(
+      "FILESTEPS", {.description = "Amount of timesteps written to a single result file",
+                       .default_value = 1000}));
+  io.specs.emplace_back(parameter<int>(
+      "STDOUTEVERY", {.description = "Print to screen every n step", .default_value = 1}));
 
   io.specs.emplace_back(parameter<bool>(
       "WRITE_TO_SCREEN", {.description = "Write screen output", .default_value = true}));
@@ -139,8 +142,8 @@ void Inpar::IO::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>&
 
   io.specs.emplace_back(parameter<bool>("PREFIX_GROUP_ID",
       {.description = "Put a <GroupID>: in front of every line", .default_value = false}));
-  Core::Utils::int_parameter(
-      "LIMIT_OUTP_TO_PROC", -1, "Only the specified procs will write output", io);
+  io.specs.emplace_back(parameter<int>("LIMIT_OUTP_TO_PROC",
+      {.description = "Only the specified procs will write output", .default_value = -1}));
   Core::Utils::string_to_integral_parameter<FourC::Core::IO::Verbositylevel>("VERBOSITY", "verbose",
       "",
       tuple<std::string>(
@@ -154,7 +157,8 @@ void Inpar::IO::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>&
       {.description =
               "Enforce restart after this walltime interval (in seconds), smaller zero to disable",
           .default_value = -1.0}));
-  Core::Utils::int_parameter("RESTARTEVERY", -1, "write restart every RESTARTEVERY steps", io);
+  io.specs.emplace_back(parameter<int>("RESTARTEVERY",
+      {.description = "write restart every RESTARTEVERY steps", .default_value = -1}));
 
   io.move_into_collection(list);
 
@@ -165,16 +169,16 @@ void Inpar::IO::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>&
   io_every_iter.specs.emplace_back(parameter<bool>("OUTPUT_EVERY_ITER",
       {.description = "Do you wish output every Newton iteration?", .default_value = false}));
 
-  Core::Utils::int_parameter("RUN_NUMBER", -1,
-      "Create a new folder for different runs of the same simulation. "
-      "If equal -1, no folder is created.",
-      io_every_iter);
+  io_every_iter.specs.emplace_back(parameter<int>("RUN_NUMBER",
+      {.description = "Create a new folder for different runs of the same simulation. "
+                      "If equal -1, no folder is created.",
+          .default_value = -1}));
 
-  Core::Utils::int_parameter("STEP_NP_NUMBER", -1,
-      "Give the number of the step (i.e. step_{n+1}) for which you want to write the "
-      "debug output. If a negative step number is provided, all steps will"
-      "be written.",
-      io_every_iter);
+  io_every_iter.specs.emplace_back(parameter<int>("STEP_NP_NUMBER",
+      {.description = "Give the number of the step (i.e. step_{n+1}) for which you want to write "
+                      "the debug output. If a negative step number is provided, all steps will"
+                      "be written.",
+          .default_value = -1}));
 
   io_every_iter.specs.emplace_back(parameter<bool>("WRITE_OWNER_EACH_NEWTON_ITER",
       {.description = "If yes, the ownership of elements and nodes are written each Newton step, "

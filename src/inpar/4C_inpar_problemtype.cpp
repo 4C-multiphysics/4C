@@ -53,8 +53,9 @@ void Inpar::PROBLEMTYPE::set_valid_parameters(std::map<std::string, Core::IO::In
         "Defines the function spaces for the spatial approximation", name, label, type);
   }
 
-  Core::Utils::int_parameter("RESTART", 0, "", type);
-  Core::Utils::int_parameter("RANDSEED", -1, "Set the random seed. If < 0 use current time.", type);
+  type.specs.emplace_back(parameter<int>("RESTART", {.description = "", .default_value = 0}));
+  type.specs.emplace_back(parameter<int>("RANDSEED",
+      {.description = "Set the random seed. If < 0 use current time.", .default_value = -1}));
 
   type.move_into_collection(list);
 }

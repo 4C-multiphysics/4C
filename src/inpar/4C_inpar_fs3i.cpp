@@ -23,11 +23,14 @@ void Inpar::FS3I::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
 
   fs3idyn.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "Time increment dt", .default_value = 0.1}));
-  Core::Utils::int_parameter("NUMSTEP", 20, "Total number of time steps", fs3idyn);
+  fs3idyn.specs.emplace_back(parameter<int>(
+      "NUMSTEP", {.description = "Total number of time steps", .default_value = 20}));
   fs3idyn.specs.emplace_back(parameter<double>(
       "MAXTIME", {.description = "Total simulation time", .default_value = 1000.0}));
-  Core::Utils::int_parameter("RESULTSEVERY", 1, "Increment for writing solution", fs3idyn);
-  Core::Utils::int_parameter("RESTARTEVERY", 1, "Increment for writing restart", fs3idyn);
+  fs3idyn.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "Increment for writing solution", .default_value = 1}));
+  fs3idyn.specs.emplace_back(parameter<int>(
+      "RESTARTEVERY", {.description = "Increment for writing restart", .default_value = 1}));
   Core::Utils::string_to_integral_parameter<Inpar::ScaTra::SolverType>("SCATRA_SOLVERTYPE",
       "nonlinear", "type of scalar transport solver", tuple<std::string>("linear", "nonlinear"),
       tuple<Inpar::ScaTra::SolverType>(
@@ -41,12 +44,12 @@ void Inpar::FS3I::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
           {.description = "treatment of thermodynamic pressure in time", .default_value = "Yes"}));
 
   // number of linear solver used for fs3i problems
-  Core::Utils::int_parameter(
-      "COUPLED_LINEAR_SOLVER", -1, "number of linear solver used for fs3i problem", fs3idyn);
-  Core::Utils::int_parameter(
-      "LINEAR_SOLVER1", -1, "number of linear solver used for fluid problem", fs3idyn);
-  Core::Utils::int_parameter(
-      "LINEAR_SOLVER2", -1, "number of linear solver used for structural problem", fs3idyn);
+  fs3idyn.specs.emplace_back(parameter<int>("COUPLED_LINEAR_SOLVER",
+      {.description = "number of linear solver used for fs3i problem", .default_value = -1}));
+  fs3idyn.specs.emplace_back(parameter<int>("LINEAR_SOLVER1",
+      {.description = "number of linear solver used for fluid problem", .default_value = -1}));
+  fs3idyn.specs.emplace_back(parameter<int>("LINEAR_SOLVER2",
+      {.description = "number of linear solver used for structural problem", .default_value = -1}));
 
   Core::Utils::string_to_integral_parameter<Inpar::ScaTra::ConvForm>("STRUCTSCAL_CONVFORM",
       "conservative", "form of convective term of structure scalar",
@@ -62,8 +65,9 @@ void Inpar::FS3I::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
           Inpar::ScaTra::initfield_zero_field, Inpar::ScaTra::initfield_field_by_function),
       fs3idyn);
 
-  Core::Utils::int_parameter("STRUCTSCAL_INITFUNCNO", -1,
-      "function number for structure scalar transport initial field", fs3idyn);
+  fs3idyn.specs.emplace_back(parameter<int>("STRUCTSCAL_INITFUNCNO",
+      {.description = "function number for structure scalar transport initial field",
+          .default_value = -1}));
 
   // Type of coupling strategy between structure and structure-scalar field
   Core::Utils::string_to_integral_parameter<VolumeCoupling>("STRUCTSCAL_FIELDCOUPLING",
@@ -111,7 +115,8 @@ void Inpar::FS3I::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
       {.description = "tolerance for convergence check of outer iteration within partitioned FS3I",
           .default_value = 1e-6}));
 
-  Core::Utils::int_parameter("ITEMAX", 10, "Maximum number of outer iterations", fs3idynpart);
+  fs3idynpart.specs.emplace_back(parameter<int>(
+      "ITEMAX", {.description = "Maximum number of outer iterations", .default_value = 10}));
 
   fs3idynpart.move_into_collection(list);
 

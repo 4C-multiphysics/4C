@@ -59,26 +59,30 @@ namespace Inpar
       sdyn.specs.emplace_back(parameter<double>("PRESTRESSTOLDISP",
           {.description = "tolerance in the displacement norm during prestressing",
               .default_value = 1e-9}));
-      Core::Utils::int_parameter(
-          "PRESTRESSMINLOADSTEPS", 0, "Minimum number of load steps during prestressing", sdyn);
+      sdyn.specs.emplace_back(parameter<int>("PRESTRESSMINLOADSTEPS",
+          {.description = "Minimum number of load steps during prestressing", .default_value = 0}));
 
       // Output type
-      Core::Utils::int_parameter("RESULTSEVERY", 1,
-          "save displacements and contact forces every RESULTSEVERY steps", sdyn);
-      Core::Utils::int_parameter(
-          "RESEVERYERGY", 0, "write system energies every requested step", sdyn);
-      Core::Utils::int_parameter(
-          "RESTARTEVERY", 1, "write restart possibility every RESTARTEVERY steps", sdyn);
+      sdyn.specs.emplace_back(parameter<int>("RESULTSEVERY",
+          {.description = "save displacements and contact forces every RESULTSEVERY steps",
+              .default_value = 1}));
+      sdyn.specs.emplace_back(parameter<int>("RESEVERYERGY",
+          {.description = "write system energies every requested step", .default_value = 0}));
+      sdyn.specs.emplace_back(parameter<int>(
+          "RESTARTEVERY", {.description = "write restart possibility every RESTARTEVERY steps",
+                              .default_value = 1}));
       sdyn.specs.emplace_back(parameter<bool>("CALC_ACC_ON_RESTART",
           {.description = "Compute the initial state for a restart dynamics analysis",
               .default_value = false}));
-      Core::Utils::int_parameter("OUTPUT_STEP_OFFSET", 0,
-          "An offset added to the current step to shift the steps to be written.", sdyn);
+      sdyn.specs.emplace_back(parameter<int>("OUTPUT_STEP_OFFSET",
+          {.description = "An offset added to the current step to shift the steps to be written.",
+              .default_value = 0}));
 
       // Time loop control
       sdyn.specs.emplace_back(
           parameter<double>("TIMESTEP", {.description = "time step size", .default_value = 0.05}));
-      Core::Utils::int_parameter("NUMSTEP", 200, "maximum number of steps", sdyn);
+      sdyn.specs.emplace_back(parameter<int>(
+          "NUMSTEP", {.description = "maximum number of steps", .default_value = 200}));
       sdyn.specs.emplace_back(
           parameter<double>("TIMEINIT", {.description = "initial time", .default_value = 0.0}));
       sdyn.specs.emplace_back(
@@ -141,7 +145,8 @@ namespace Inpar
           tuple<std::string>("Inactive", "Symmetric", "Right"),
           tuple<Solid::StcScale>(stc_inactive, stc_currsym, stc_curr), sdyn);
 
-      Core::Utils::int_parameter("STC_LAYER", 1, "number of STC layers for multilayer case", sdyn);
+      sdyn.specs.emplace_back(parameter<int>("STC_LAYER",
+          {.description = "number of STC layers for multilayer case", .default_value = 1}));
 
       sdyn.specs.emplace_back(parameter<double>(
           "PTCDT", {.description = "pseudo time step for pseudo transient continuation (PTC) "
@@ -156,10 +161,13 @@ namespace Inpar
           {.description = "tolerance in the constr lm incr norm for the newton iteration",
               .default_value = 1.0E-08}));
 
-      Core::Utils::int_parameter("MAXITER", 50,
-          "maximum number of iterations allowed for Newton-Raphson iteration before failure", sdyn);
-      Core::Utils::int_parameter(
-          "MINITER", 0, "minimum number of iterations to be done within Newton-Raphson loop", sdyn);
+      sdyn.specs.emplace_back(parameter<int>(
+          "MAXITER", {.description = "maximum number of iterations allowed for Newton-Raphson "
+                                     "iteration before failure",
+                         .default_value = 50}));
+      sdyn.specs.emplace_back(parameter<int>("MINITER",
+          {.description = "minimum number of iterations to be done within Newton-Raphson loop",
+              .default_value = 0}));
       Core::Utils::string_to_integral_parameter<Solid::VectorNorm>("ITERNORM", "L2",
           "type of norm to be applied to residuals", tuple<std::string>("L1", "L2", "Rms", "Inf"),
           tuple<Solid::VectorNorm>(norm_l1, norm_l2, norm_rms, norm_inf), sdyn);
@@ -175,8 +183,9 @@ namespace Inpar
               divcont_adapt_penaltycontact, divcont_adapt_3D0Dptc_ele_err),
           sdyn);
 
-      Core::Utils::int_parameter("MAXDIVCONREFINEMENTLEVEL", 10,
-          "number of times timestep is halved in case nonlinear solver diverges", sdyn);
+      sdyn.specs.emplace_back(parameter<int>("MAXDIVCONREFINEMENTLEVEL",
+          {.description = "number of times timestep is halved in case nonlinear solver diverges",
+              .default_value = 10}));
 
       Core::Utils::string_to_integral_parameter<Solid::NonlinSolTech>("NLNSOL", "fullnewton",
           "Nonlinear solution technique",
@@ -188,7 +197,8 @@ namespace Inpar
               soltech_noxnewtonlinesearch, soltech_noxgeneral, soltech_nox_nln, soltech_singlestep),
           sdyn);
 
-      Core::Utils::int_parameter("LSMAXITER", 30, "maximum number of line search steps", sdyn);
+      sdyn.specs.emplace_back(parameter<int>("LSMAXITER",
+          {.description = "maximum number of line search steps", .default_value = 30}));
       sdyn.specs.emplace_back(parameter<double>(
           "ALPHA_LS", {.description = "step reduction factor alpha in (Newton) line search scheme",
                           .default_value = 0.5}));
@@ -233,10 +243,10 @@ namespace Inpar
       sdyn.specs.emplace_back(parameter<double>(
           "UZAWATOL", {.description = "Tolerance for iterative solve with Uzawa algorithm",
                           .default_value = 1.0E-8}));
-      Core::Utils::int_parameter("UZAWAMAXITER", 50,
-          "maximum number of iterations allowed for uzawa algorithm before failure going to next "
-          "newton step",
-          sdyn);
+      sdyn.specs.emplace_back(parameter<int>(
+          "UZAWAMAXITER", {.description = "maximum number of iterations allowed for uzawa "
+                                          "algorithm before failure going to next newton step",
+                              .default_value = 50}));
       Core::Utils::string_to_integral_parameter<Solid::ConSolveAlgo>("UZAWAALGO", "direct", "",
           tuple<std::string>("uzawa", "simple", "direct"),
           tuple<Solid::ConSolveAlgo>(consolve_uzawa, consolve_simple, consolve_direct), sdyn);
@@ -260,8 +270,9 @@ namespace Inpar
               .default_value = true}));
 
       // linear solver id used for structural problems
-      Core::Utils::int_parameter(
-          "LINEAR_SOLVER", -1, "number of linear solver used for structural problems", sdyn);
+      sdyn.specs.emplace_back(parameter<int>(
+          "LINEAR_SOLVER", {.description = "number of linear solver used for structural problems",
+                               .default_value = -1}));
 
       // where the geometry comes from
       Core::Utils::string_to_integral_parameter<Core::IO::GeometryType>("GEOMETRY", "full",
@@ -282,7 +293,8 @@ namespace Inpar
           tuple<Solid::InitialDisp>(initdisp_zero_disp, initdisp_disp_by_function), sdyn);
 
       // Function to evaluate initial displacement
-      Core::Utils::int_parameter("STARTFUNCNO", -1, "Function for Initial displacement", sdyn);
+      sdyn.specs.emplace_back(parameter<int>("STARTFUNCNO",
+          {.description = "Function for Initial displacement", .default_value = -1}));
 
       sdyn.move_into_collection(list);
 
@@ -309,7 +321,8 @@ namespace Inpar
           {.description = "Write energy every given period of time", .default_value = 0.0}));
       tap.specs.emplace_back(parameter<double>("OUTRESTPERIOD",
           {.description = "Write restart data every given period of time", .default_value = 0.0}));
-      Core::Utils::int_parameter("OUTSIZEEVERY", 0, "Write step size every given time step", tap);
+      tap.specs.emplace_back(parameter<int>("OUTSIZEEVERY",
+          {.description = "Write step size every given time step", .default_value = 0}));
 
       tap.specs.emplace_back(parameter<double>("STEPSIZEMAX",
           {.description = "Limit maximally permitted time step size (>0)", .default_value = 0.0}));
@@ -337,16 +350,18 @@ namespace Inpar
 
       tap.specs.emplace_back(parameter<double>(
           "LOCERRTOL", {.description = "Target local error tolerance (>0)", .default_value = 0.0}));
-      Core::Utils::int_parameter(
-          "ADAPTSTEPMAX", 0, "Limit maximally allowed step size reduction attempts (>0)", tap);
+      tap.specs.emplace_back(parameter<int>("ADAPTSTEPMAX",
+          {.description = "Limit maximally allowed step size reduction attempts (>0)",
+              .default_value = 0}));
       tap.move_into_collection(list);
 
       /// valid parameters for JOINT EXPLICIT
 
       Core::Utils::SectionSpecs jep{tap, "JOINT EXPLICIT"};
 
-      Core::Utils::int_parameter(
-          "LINEAR_SOLVER", -1, "number of linear solver used for auxiliary integrator", jep);
+      jep.specs.emplace_back(parameter<int>(
+          "LINEAR_SOLVER", {.description = "number of linear solver used for auxiliary integrator",
+                               .default_value = -1}));
 
       Core::Utils::string_to_integral_parameter<Inpar::Solid::IntegrationStrategy>("INT_STRATEGY",
           "Standard", "global type of the used integration strategy",
@@ -414,8 +429,8 @@ namespace Inpar
           {.description =
                   "Calculate error with respect to analytical solution defined by a function",
               .default_value = false}));
-      Core::Utils::int_parameter("ANALYTICAL_DISPLACEMENT_FUNCTION", -1,
-          "function ID of the analytical solution", errorevaluator);
+      errorevaluator.specs.emplace_back(parameter<int>("ANALYTICAL_DISPLACEMENT_FUNCTION",
+          {.description = "function ID of the analytical solution", .default_value = -1}));
 
       errorevaluator.move_into_collection(list);
     }

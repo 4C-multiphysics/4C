@@ -17,6 +17,8 @@ FOUR_C_NAMESPACE_OPEN
  */
 void Inpar::GEOMETRYPAIR::set_valid_parameters_line_to3_d(Core::Utils::SectionSpecs& list)
 {
+  using namespace Core::IO::InputSpecBuilders;
+
   // Add the input parameters for line to 3D coupling.
 
   // Segmentation strategy.
@@ -32,8 +34,8 @@ void Inpar::GEOMETRYPAIR::set_valid_parameters_line_to3_d(Core::Utils::SectionSp
       list);
 
   // Number of search points for segmentation.
-  Core::Utils::int_parameter("GEOMETRY_PAIR_SEGMENTATION_SEARCH_POINTS", 6,
-      "Number of search points for segmentation", list);
+  list.specs.emplace_back(parameter<int>("GEOMETRY_PAIR_SEGMENTATION_SEARCH_POINTS",
+      {.description = "Number of search points for segmentation", .default_value = 6}));
 
   // What to do if not all Gauss points of a segment project valid
   Core::Utils::string_to_integral_parameter<NotAllGaussPointsProjectValidAction>(
@@ -45,15 +47,16 @@ void Inpar::GEOMETRYPAIR::set_valid_parameters_line_to3_d(Core::Utils::SectionSp
       list);
 
   // Number of integration points on the line.
-  Core::Utils::int_parameter(
-      "GAUSS_POINTS", 6, "Number of Gauss Points for the integral evaluations", list);
+  list.specs.emplace_back(parameter<int>("GAUSS_POINTS",
+      {.description = "Number of Gauss Points for the integral evaluations", .default_value = 6}));
 
   // Number of integration along the circumference in cross section coupling.
-  Core::Utils::int_parameter("INTEGRATION_POINTS_CIRCUMFERENCE", 6,
-      "Number of Integration points along the circumferential direction of the beam. This is "
-      "parameter is only used in beam to cylinder meshtying. No gauss integration is "
-      "used along the circumferential direction, equally spaced integration points are used.",
-      list);
+  list.specs.emplace_back(parameter<int>("INTEGRATION_POINTS_CIRCUMFERENCE",
+      {.description = "Number of Integration points along the circumferential direction of the "
+                      "beam. This is parameter is only used in beam to cylinder meshtying. No "
+                      "gauss integration is used along the circumferential direction, equally "
+                      "spaced integration points are used.",
+          .default_value = 6}));
 }
 
 /**

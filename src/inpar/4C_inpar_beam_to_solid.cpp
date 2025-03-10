@@ -86,9 +86,9 @@ void Inpar::BeamToSolid::set_valid_parameters(std::map<std::string, Core::IO::In
             BeamToSolidMortarShapefunctions::line4),
         beam_to_solid_volume_mestying);
 
-    Core::Utils::int_parameter("MORTAR_FOURIER_MODES", -1,
-        "Number of fourier modes to be used for cross-section mortar coupling",
-        beam_to_solid_volume_mestying);
+    beam_to_solid_volume_mestying.specs.emplace_back(parameter<int>("MORTAR_FOURIER_MODES",
+        {.description = "Number of fourier modes to be used for cross-section mortar coupling",
+            .default_value = -1}));
 
     beam_to_solid_volume_mestying.specs.emplace_back(parameter<double>(
         "PENALTY_PARAMETER", {.description = "Penalty parameter for beam-to-solid volume meshtying",
@@ -172,13 +172,14 @@ void Inpar::BeamToSolid::set_valid_parameters(std::map<std::string, Core::IO::In
                                                     "Lagrange multipliers function along the beam.",
                                         .default_value = false}));
 
-    Core::Utils::int_parameter("MORTAR_LAMBDA_CONTINUOUS_SEGMENTS", 5,
-        "Number of segments for continuous mortar output", beam_to_solid_volume_mestying_output);
-
-    Core::Utils::int_parameter("MORTAR_LAMBDA_CONTINUOUS_SEGMENTS_CIRCUMFERENCE", 8,
-        "Number of segments for continuous mortar output along the beam cross-section "
-        "circumference",
-        beam_to_solid_volume_mestying_output);
+    beam_to_solid_volume_mestying_output.specs.emplace_back(parameter<int>(
+        "MORTAR_LAMBDA_CONTINUOUS_SEGMENTS",
+        {.description = "Number of segments for continuous mortar output", .default_value = 5}));
+    beam_to_solid_volume_mestying_output.specs.emplace_back(
+        parameter<int>("MORTAR_LAMBDA_CONTINUOUS_SEGMENTS_CIRCUMFERENCE",
+            {.description = "Number of segments for continuous mortar output along the beam "
+                            "cross-section circumference",
+                .default_value = 8}));
 
     beam_to_solid_volume_mestying_output.specs.emplace_back(parameter<bool>(
         "SEGMENTATION", {.description = "Enable / disable output of segmentation points.",
@@ -363,8 +364,9 @@ void Inpar::BeamToSolid::set_valid_parameters(std::map<std::string, Core::IO::In
                                                     "Lagrange multipliers function along the beam.",
                                         .default_value = false}));
 
-    Core::Utils::int_parameter("MORTAR_LAMBDA_CONTINUOUS_SEGMENTS", 5,
-        "Number of segments for continuous mortar output", beam_to_solid_surface_output);
+    beam_to_solid_surface_output.specs.emplace_back(parameter<int>(
+        "MORTAR_LAMBDA_CONTINUOUS_SEGMENTS",
+        {.description = "Number of segments for continuous mortar output", .default_value = 5}));
 
     beam_to_solid_surface_output.specs.emplace_back(parameter<bool>(
         "SEGMENTATION", {.description = "Enable / disable output of segmentation points.",

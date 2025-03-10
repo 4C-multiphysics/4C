@@ -7,6 +7,7 @@
 
 #include "4C_lubrication_input.hpp"
 
+#include "4C_io_input_spec_builders.hpp"
 #include "4C_utils_parameter_list.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -20,19 +21,23 @@ void Lubrication::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
 
   lubricationdyn.specs.emplace_back(parameter<double>(
       "MAXTIME", {.description = "Total simulation time", .default_value = 1000.0}));
-  Core::Utils::int_parameter("NUMSTEP", 20, "Total number of time steps", lubricationdyn);
+  lubricationdyn.specs.emplace_back(parameter<int>(
+      "NUMSTEP", {.description = "Total number of time steps", .default_value = 20}));
   lubricationdyn.specs.emplace_back(
       parameter<double>("TIMESTEP", {.description = "Time increment dt", .default_value = 0.1}));
-  Core::Utils::int_parameter("RESULTSEVERY", 1, "Increment for writing solution", lubricationdyn);
-  Core::Utils::int_parameter("RESTARTEVERY", 1, "Increment for writing restart", lubricationdyn);
+  lubricationdyn.specs.emplace_back(parameter<int>(
+      "RESULTSEVERY", {.description = "Increment for writing solution", .default_value = 1}));
+  lubricationdyn.specs.emplace_back(parameter<int>(
+      "RESTARTEVERY", {.description = "Increment for writing restart", .default_value = 1}));
+
 
   Core::Utils::string_to_integral_parameter<Lubrication::CalcError>("CALCERROR", "No",
       "compute error compared to analytical solution",
       tuple<std::string>("No", "error_by_function"),
       tuple<Lubrication::CalcError>(calcerror_no, calcerror_byfunction), lubricationdyn);
 
-  Core::Utils::int_parameter(
-      "CALCERRORNO", -1, "function number for lubrication error computation", lubricationdyn);
+  lubricationdyn.specs.emplace_back(parameter<int>("CALCERRORNO",
+      {.description = "function number for lubrication error computation", .default_value = -1}));
 
   Core::Utils::string_to_integral_parameter<Lubrication::VelocityField>("VELOCITYFIELD", "zero",
       "type of velocity field used for lubrication problems",
@@ -40,16 +45,16 @@ void Lubrication::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
       tuple<Lubrication::VelocityField>(velocity_zero, velocity_function, velocity_EHL),
       lubricationdyn);
 
-  Core::Utils::int_parameter(
-      "VELFUNCNO", -1, "function number for lubrication velocity field", lubricationdyn);
+  lubricationdyn.specs.emplace_back(parameter<int>("VELFUNCNO",
+      {.description = "function number for lubrication velocity field", .default_value = -1}));
 
   Core::Utils::string_to_integral_parameter<Lubrication::HeightField>("HEIGHTFEILD", "zero",
       "type of height field used for lubrication problems",
       tuple<std::string>("zero", "function", "EHL"),
       tuple<Lubrication::HeightField>(height_zero, height_function, height_EHL), lubricationdyn);
 
-  Core::Utils::int_parameter(
-      "HFUNCNO", -1, "function number for lubrication height field", lubricationdyn);
+  lubricationdyn.specs.emplace_back(parameter<int>("HFUNCNO",
+      {.description = "function number for lubrication height field", .default_value = -1}));
 
   lubricationdyn.specs.emplace_back(parameter<bool>("OUTMEAN",
       {.description = "Output of mean values for scalars and density", .default_value = false}));
@@ -62,10 +67,12 @@ void Lubrication::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
           .default_value = false}));
 
   /// linear solver id used for lubrication problems
-  Core::Utils::int_parameter("LINEAR_SOLVER", -1,
-      "number of linear solver used for the Lubrication problem", lubricationdyn);
+  lubricationdyn.specs.emplace_back(parameter<int>(
+      "LINEAR_SOLVER", {.description = "number of linear solver used for the Lubrication problem",
+                           .default_value = -1}));
 
-  Core::Utils::int_parameter("ITEMAX", 10, "max. number of nonlin. iterations", lubricationdyn);
+  lubricationdyn.specs.emplace_back(parameter<int>(
+      "ITEMAX", {.description = "max. number of nonlin. iterations", .default_value = 10}));
   lubricationdyn.specs.emplace_back(parameter<double>("ABSTOLRES",
       {.description =
               "Absolute tolerance for deciding if residual of nonlinear problem is already zero",
