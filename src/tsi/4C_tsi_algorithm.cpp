@@ -536,4 +536,10 @@ void TSI::Algorithm::prepare_contact_strategy()
   }
 }
 
+void TSI::Algorithm::post_setup()
+{
+  // call the post_setup routine of the structure field
+  structure_->post_setup();
+}
+
 FOUR_C_NAMESPACE_CLOSE

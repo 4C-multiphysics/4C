@@ -128,6 +128,12 @@ namespace SSI
     */
     virtual void setup();
 
+    /*!
+     * @brief Perform all necessary tasks after setting up the object.
+     * Currently, this only calls the post_setup routine of the structure field.
+     */
+    void post_setup();
+
     //! returns true if setup() was called and is still valid
     bool is_setup() const { return issetup_; };
 

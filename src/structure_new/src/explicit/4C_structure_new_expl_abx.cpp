@@ -80,7 +80,7 @@ template <int t_order>
 void Solid::EXPLICIT::AdamsBashforthX<t_order>::post_setup()
 {
   check_init_setup();
-  equilibrate_initial_state();
+  compute_mass_matrix_and_init_acc();
 
   model_eval().post_setup();
 }
