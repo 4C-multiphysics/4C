@@ -120,17 +120,17 @@ FLUID DIS porofluid NODE 400 QUANTITY velx VALUE 1.62194513642199212e+00 TOLERAN
 FLUID DIS porofluid NODE 500 QUANTITY pressure VALUE -1.55677849836899761e-02 TOLERANCE 1e-8
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
 //                              surf_fluid
-E 2 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 2 0 0 0 0 0 TYPE Live
+E 2 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 2 none none none none none TYPE Live
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
 //                              outflow_struct
-E 3 NUMDOF 2 ONOFF 1 1 VAL 1.0 0.0 FUNCT 4 0
+E 3 NUMDOF 2 ONOFF 1 1 VAL 1.0 0.0 FUNCT 4 none
 //                              inflow_struct
-E 4 NUMDOF 2 ONOFF 1 1 VAL 1.0 0.0 FUNCT 4 0
+E 4 NUMDOF 2 ONOFF 1 1 VAL 1.0 0.0 FUNCT 4 none
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 //                              surf_struct
-E 1 NUMDOF 2 ONOFF 1 1 VAL 1.0 0.0 FUNCT 4 0
+E 1 NUMDOF 2 ONOFF 1 1 VAL 1.0 0.0 FUNCT 4 none
 //                              surf_fluid
-E 2 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 ---------------------------------------DESIGN SURFACE POROCOUPLING CONDITION
 //                              surf_struct
 E 1

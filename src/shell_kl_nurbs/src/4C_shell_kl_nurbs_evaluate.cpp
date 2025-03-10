@@ -152,7 +152,7 @@ int Discret::Elements::KirchhoffLoveShellNurbs::evaluate_neumann(Teuchos::Parame
   std::array<const Core::Utils::FunctionOfSpaceTime*, n_nodal_dof> functions;
   for (int i_dof = 0; i_dof < n_nodal_dof; ++i_dof)
   {
-    if (onoff[i_dof] == 1 and funct_id[i_dof].has_value() and funct_id[i_dof].value() > 0)
+    if (onoff[i_dof] == 1 and funct_id[i_dof].has_value())
     {
       functions[i_dof] =
           &(Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfSpaceTime>(

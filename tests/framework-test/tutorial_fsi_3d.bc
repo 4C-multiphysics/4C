@@ -20,28 +20,28 @@ Property Name: none
 has 4 Nodes
 *ns1="CONDITION"
 sectionname="DESIGN SURF DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0"
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none"
 
 Node Set, named: structure_surface_right
 Property Name: none
 has 4 Nodes
 *ns2="CONDITION"
 sectionname="DESIGN SURF DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0"
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none"
 
 Node Set, named: structure_surface_front
 Property Name: none
 has 66 Nodes
 *ns3="CONDITION"
 sectionname="DESIGN SURF DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0"
+description="NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none"
 
 Node Set, named: structure_surface_back
 Property Name: none
 has 66 Nodes
 *ns4="CONDITION"
 sectionname="DESIGN SURF DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0"
+description="NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none"
 
 Node Set, named: structure_coupling_surface
 Property Name: none
@@ -55,84 +55,84 @@ Property Name: none
 has 2 Nodes
 *ns6="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0"
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none"
 
 Node Set, named: structure_edge_back_left
 Property Name: none
 has 2 Nodes
 *ns7="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0"
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none"
 
 Node Set, named: structure_edge_back_right
 Property Name: none
 has 2 Nodes
 *ns8="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0"
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none"
 
 Node Set, named: structure_edge_front_right
 Property Name: none
 has 2 Nodes
 *ns9="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0"
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none"
 
 Node Set, named: cavity_wall_left
 Property Name: none
 has 66 Nodes
 *ns10="CONDITION"
 sectionname="DESIGN SURF DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none"
 
 Node Set, named: cavity_wall_left
 Property Name: none
 has 66 Nodes
 *ns10="CONDITION"
 sectionname="DESIGN SURF ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: cavity_wall_right
 Property Name: none
 has 66 Nodes
 *ns11="CONDITION"
 sectionname="DESIGN SURF DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none"
 
 Node Set, named: cavity_wall_right
 Property Name: none
 has 66 Nodes
 *ns11="CONDITION"
 sectionname="DESIGN SURF ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: fluid_wall_front
 Property Name: none
 has 1320 Nodes
 *ns12="CONDITION"
 sectionname="DESIGN SURF DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0"
+description="NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none"
 
 Node Set, named: fluid_wall_front
 Property Name: none
 has 1320 Nodes
 *ns12="CONDITION"
 sectionname="DESIGN SURF ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: fluid_wall_back
 Property Name: none
 has 1320 Nodes
 *ns13="CONDITION"
 sectionname="DESIGN SURF DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0"
+description="NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none"
 
 Node Set, named: fluid_wall_back
 Property Name: none
 has 1320 Nodes
 *ns13="CONDITION"
 sectionname="DESIGN SURF ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: fluid_coupling_surface
 Property Name: none
@@ -146,231 +146,231 @@ Property Name: none
 has 66 Nodes
 *ns15="CONDITION"
 sectionname="DESIGN SURF DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 0 0 0 "
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 none none none "
 
 Node Set, named: lid
 Property Name: none
 has 66 Nodes
 *ns15="CONDITION"
 sectionname="DESIGN SURF ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: inflow
 Property Name: none
 has 16 Nodes
 *ns16="CONDITION"
 sectionname="DESIGN SURF DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 2 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 2 none none none"
 
 Node Set, named: inflow
 Property Name: none
 has 16 Nodes
 *ns16="CONDITION"
 sectionname="DESIGN SURF ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: outflow
 Property Name: none
 has 16 Nodes
 *ns17="CONDITION"
 sectionname="DESIGN SURF ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: cavity_edge_front_left
 Property Name: none
 has 33 Nodes
 *ns18="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none"
 
 Node Set, named: cavity_edge_front_left
 Property Name: none
 has 33 Nodes
 *ns18="CONDITION"
 sectionname="DESIGN LINE ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: cavity_edge_back_left
 Property Name: none
 has 33 Nodes
 *ns19="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none"
 
 Node Set, named: cavity_edge_back_left
 Property Name: none
 has 33 Nodes
 *ns19="CONDITION"
 sectionname="DESIGN LINE ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: cavity_edge_back_right
 Property Name: none
 has 33 Nodes
 *ns20="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none"
 
 Node Set, named: cavity_edge_back_right
 Property Name: none
 has 33 Nodes
 *ns20="CONDITION"
 sectionname="DESIGN LINE ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: cavity_edge_front_right
 Property Name: none
 has 33 Nodes
 *ns21="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none"
 
 Node Set, named: cavity_edge_front_right
 Property Name: none
 has 33 Nodes
 *ns21="CONDITION"
 sectionname="DESIGN LINE ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: cavity_edge_front_bottom
 Property Name: none
 has 33 Nodes
 *ns22="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0"
+description="NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none"
 
 Node Set, named: cavity_edge_back_bottom
 Property Name: none
 has 33 Nodes
 *ns23="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0"
+description="NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none"
 
 Node Set, named: cavity_edge_left_bottom
 Property Name: none
 has 2 Nodes
 *ns24="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none"
 
 Node Set, named: cavity_edge_left_bottom
 Property Name: none
 has 2 Nodes
 *ns24="CONDITION"
 sectionname="DESIGN LINE ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: cavity_edge_right_bottom
 Property Name: none
 has 2 Nodes
 *ns25="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none"
 
 Node Set, named: cavity_edge_right_bottom
 Property Name: none
 has 2 Nodes
 *ns25="CONDITION"
 sectionname="DESIGN LINE ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: cavity-inflow_edge
 Property Name: none
 has 2 Nodes
 *ns26="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none"
 
 Node Set, named: cavity-inflow_edge
 Property Name: none
 has 2 Nodes
 *ns26="CONDITION"
 sectionname="DESIGN LINE ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: inflow_edge_front
 Property Name: none
 has 8 Nodes
 *ns27="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 2 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 2 none none none"
 
 Node Set, named: inflow_edge_front
 Property Name: none
 has 8 Nodes
 *ns27="CONDITION"
 sectionname="DESIGN LINE ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: inflow_edge_back
 Property Name: none
 has 8 Nodes
 *ns28="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 2 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 2 none none none"
 
 Node Set, named: inflow_edge_back
 Property Name: none
 has 8 Nodes
 *ns28="CONDITION"
 sectionname="DESIGN LINE ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: lid_edge_left
 Property Name: none
 has 2 Nodes
 *ns29="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 none none none"
 
 Node Set, named: lid_edge_left
 Property Name: none
 has 2 Nodes
 *ns29="CONDITION"
 sectionname="DESIGN LINE ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: lid_edge_front
 Property Name: none
 has 33 Nodes
 *ns30="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 none none none"
 
 Node Set, named: lid_edge_front
 Property Name: none
 has 33 Nodes
 *ns30="CONDITION"
 sectionname="DESIGN LINE ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: lid_edge_back
 Property Name: none
 has 33 Nodes
 *ns31="CONDITION"
 sectionname="DESIGN LINE DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 none none none"
 
 Node Set, named: lid_edge_back
 Property Name: none
 has 33 Nodes
 *ns31="CONDITION"
 sectionname="DESIGN LINE ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: cavity_vertex_front_left_bottom
 Property Name: none
 has 1 Nodes
 *ns32="CONDITION"
 sectionname="DESIGN POINT DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none"
 
 Node Set, named: cavity_vertex_back_left_bottom
 Property Name: none
 has 1 Nodes
 *ns33="CONDITION"
 sectionname="DESIGN POINT DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none"
 
 
 Node Set, named: cavity_vertex_back_right_bottom
@@ -378,69 +378,69 @@ Property Name: none
 has 1 Nodes
 *ns34="CONDITION"
 sectionname="DESIGN POINT DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none"
 
 Node Set, named: cavity_vertex_front_right_bottom
 Property Name: none
 has 1 Nodes
 *ns35="CONDITION"
 sectionname="DESIGN POINT DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none"
 
 Node Set, named: cavity-inflow_vertex_front_1
 Property Name: none
 has 1 Nodes
 *ns36="CONDITION"
 sectionname="DESIGN POINT DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none"
 
 Node Set, named: cavity-inflow_vertex_front_1
 Property Name: none
 has 1 Nodes
 *ns36="CONDITION"
 sectionname="DESIGN POINT ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: cavity-inflow_vertex_front_2
 Property Name: none
 has 1 Nodes
 *ns36="CONDITION"
 sectionname="DESIGN POINT DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none"
 
 Node Set, named: cavity-inflow_vertex_front_2
 Property Name: none
 has 1 Nodes
 *ns37="CONDITION"
 sectionname="DESIGN POINT ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: lid_vertex_front_left
 Property Name: none
 has 1 Nodes
 *ns38="CONDITION"
 sectionname="DESIGN POINT DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 none none none"
 
 Node Set, named: lid_vertex_front_left
 Property Name: none
 has 1 Nodes
 *ns38="CONDITION"
 sectionname="DESIGN POINT ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 Node Set, named: lid_vertex_back_left
 Property Name: none
 has 1 Nodes
 *ns39="CONDITION"
 sectionname="DESIGN POINT DIRICH CONDITIONS"
-description="NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 0 0 0"
+description="NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 none none none"
 
 Node Set, named: lid_vertex_back_left
 Property Name: none
 has 1 Nodes
 *ns39="CONDITION"
 sectionname="DESIGN POINT ALE DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0 "
+description="NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none "
 
 -----------------------------------------VALIDCONDITIONS

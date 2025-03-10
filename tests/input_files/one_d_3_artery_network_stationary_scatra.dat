@@ -43,10 +43,10 @@ DEFINITION_TAU                  Exact_1D
 NAME                            Arterial_Network_Solver
 SOLVER                          UMFPACK
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
-E 3 NUMDOF 1 ONOFF 1 VAL 0.0 FUNCT 0
+E 3 NUMDOF 1 ONOFF 1 VAL 0.0 FUNCT none
 --------------------------------------------DESIGN POINT TRANSPORT DIRICH CONDITIONS
-E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 1.0 FUNCT 0 1
-E 3 NUMDOF 2 ONOFF 1 1 VAL 1.0 0.0 FUNCT 1 0
+E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 1.0 FUNCT none 1
+E 3 NUMDOF 2 ONOFF 1 1 VAL 1.0 0.0 FUNCT 1 none
 ---------------------------------------------DESIGN POINT NEUMANN CONDITIONS
 E 1 NUMDOF 1 ONOFF 1 VAL 2.261946710584651e+03 FUNCT 7
 -----------------------------DESIGN POINT INITIAL FIELD CONDITIONS

@@ -59,10 +59,10 @@ PARALLEL_REDIST                 None
 NAME                            Direct_Solver
 SOLVER                          UMFPACK
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0  FUNCT 0 0 0
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0  FUNCT 0 0 0
-E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0  FUNCT 0 0 0
-E 4 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0  FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0  FUNCT none none none
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0  FUNCT none none none
+E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0  FUNCT none none none
+E 4 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0  FUNCT none none none
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 E 12 NUMDOF 3 ONOFF 1 1 1 VAL 1.0 1.0 -1.0 FUNCT 1  1 2
 --------------------------DESIGN SURF MORTAR CONTACT CONDITIONS 3D

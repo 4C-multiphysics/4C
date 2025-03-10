@@ -232,39 +232,39 @@ SCATRA DIS scatra1 NODE 319 QUANTITY scfld_growth_displ_x VALUE 9.00428192031614
 SCATRA DIS scatra1 NODE 319 QUANTITY scfld_growth_displ_y VALUE -7.10584704640784479e-03 TOLERANCE 1e-6
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 //                              bottom
-E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 //                              right
-E 2 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 //                              top
-E 3 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 3 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 //                              left
-E 4 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 4 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 //                              stuct_front-back
-E 8 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 8 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 -------------------------------------------DESIGN SURF ALE DIRICH CONDITIONS
 //                              bottom
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 //                              right
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 //                              top
-E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 //                              left
-E 4 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 4 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 //                              fluid_front-back
-E 7 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 7 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 //                              stuct_front-back
-E 8 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 8 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 //                              struct_interface
-E 6 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 6 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -------------------------------------DESIGN SURF TRANSPORT DIRICH CONDITIONS
 //                              right
-E 2 NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT 0
+E 2 NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT none
 //                              left
-E 4 NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT 0
+E 4 NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT none
 //                              bottom
-E 1 NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT 0
+E 1 NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT none
 //                              top
-E 3 NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT 0
+E 3 NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT none
 -----------------------------------------DESIGN FSI COUPLING SURF CONDITIONS
 //                              fluid_interface
 E 5 coupling_id 1

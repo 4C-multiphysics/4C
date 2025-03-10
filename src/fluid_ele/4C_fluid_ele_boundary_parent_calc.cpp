@@ -528,7 +528,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::flow_dep_pressure_bc(
   const auto curvenum = fdp_cond->parameters().get<std::optional<int>>("curve");
 
   double curvefac = 1.0;
-  if (curvenum.has_value() && curvenum.value() > 0 && time >= 0)
+  if (curvenum.has_value() && time >= 0)
     curvefac = Global::Problem::instance()
                    ->function_by_id<Core::Utils::FunctionOfTime>(curvenum.value())
                    .evaluate(time);
@@ -1874,7 +1874,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::evaluate_weak_dbc(
 
   // get values and switches from condition
   // (assumed to be constant on element boundary)
-  const auto functions = wdbc_cond->parameters().get<std::vector<int>>("FUNCT");
+  const auto functions = wdbc_cond->parameters().get<std::vector<std::optional<int>>>("FUNCT");
 
   // find out whether to apply weak DBC only in normal direction
   bool onlynormal = false;
@@ -2185,13 +2185,14 @@ void Discret::Elements::FluidBoundaryParent<distype>::evaluate_weak_dbc(
     for (int idim = 0; idim < nsd; idim++)
     {
       // factor given by spatial function
-      if (functions[idim] > 0)
+      if (functions[idim].has_value())
       {
         // evaluate function at current gauss point
         // (important: requires 3D position vector)
-        functionfac(idim) = Global::Problem::instance()
-                                ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functions[idim])
-                                .evaluate(coordgp.data(), time, idim);
+        functionfac(idim) =
+            Global::Problem::instance()
+                ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functions[idim].value())
+                .evaluate(coordgp.data(), time, idim);
       }
       else
         functionfac(idim) = 1.0;
@@ -4847,7 +4848,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
         for (int dim = 0; dim < nsd; ++dim)
         {
           // factor given by spatial function
-          if (functions[dim].has_value() && functions[dim].value() > 0)
+          if (functions[dim].has_value())
           {
             // evaluate function at current gauss point (important: requires 3D position vector)
             functionfac(dim) =
@@ -4873,11 +4874,11 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
         // adjoint consistency term, tangential stress part (normalised)
 
         /*
-                     /                        \
+                    /                        \
                     |  h       /         \   h |
                   - | r o n , | 1 - n x n | u  |
                     |          \         /     |
-                     \                        / Gamma
+                    \                        / Gamma
         */
 
         for (int A = 0; A < piel; ++A)
@@ -5215,7 +5216,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
       for (int dim = 0; dim < nsd; ++dim)
       {
         // factor given by spatial function
-        if (functions[dim].has_value() && functions[dim].value() > 0)
+        if (functions[dim].has_value())
         {
           // evaluate function at current gauss point (important: requires 3D position vector)
           functionfac(dim) =

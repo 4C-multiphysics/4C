@@ -63,12 +63,12 @@ E 2 COUPLINGID 1
 -----------------------------------------------------------------------MATERIALS
 MAT 1 MAT_Struct_StVenantKirchhoff YOUNG 1 NUE 0.3 DENS 7.8e-07
 ---------------------------------------------------DESIGN POINT DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT 0 0 0
-E 2 NUMDOF 3 ONOFF 0 0 1 VAL 0 0 0 FUNCT 0 0 0
-E 3 NUMDOF 3 ONOFF 0 1 1 VAL 0 0 0 FUNCT 0 0 0
-E 4 NUMDOF 3 ONOFF 0 0 1 VAL 0 0 0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT none none none
+E 2 NUMDOF 3 ONOFF 0 0 1 VAL 0 0 0 FUNCT none none none
+E 3 NUMDOF 3 ONOFF 0 1 1 VAL 0 0 0 FUNCT none none none
+E 4 NUMDOF 3 ONOFF 0 0 1 VAL 0 0 0 FUNCT none none none
 ---------------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 2 NUMDOF 3 ONOFF 0 0 1 VAL 0 0 -0.1 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 0 0 1 VAL 0 0 -0.1 FUNCT none none none
 -----------------------------DESIGN EMBEDDED MESH SOLID SURF COUPLING CONDITIONS
 E 1 COUPLINGID 1
 -----------------------------------------------------------STRUCTURE KNOTVECTORS

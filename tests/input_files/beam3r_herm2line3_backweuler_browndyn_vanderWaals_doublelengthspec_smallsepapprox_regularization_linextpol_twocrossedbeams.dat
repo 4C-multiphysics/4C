@@ -79,12 +79,12 @@ FORCES                          yes
 E 1 POTLAW 1 VAL 1.0 FUNCT none
 E 2 POTLAW 1 VAL 1.0 FUNCT none
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
-E 1 NUMDOF 9 ONOFF 1 1 1 1 1 0 0 0 1 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0 0
+E 1 NUMDOF 9 ONOFF 1 1 1 1 1 0 0 0 1 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none none
 ------------------------------------DESIGN LINE DIRICH CONDITIONS
-E 1 NUMDOF 9 ONOFF 0 0 1 1 1 0 0 0 1 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0 0
-E 2 NUMDOF 9 ONOFF 0 0 1 1 1 0 0 0 1 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0 0
-E 3 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
-E 4 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 9 ONOFF 0 0 1 1 1 0 0 0 1 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none none
+E 2 NUMDOF 9 ONOFF 0 0 1 1 1 0 0 0 1 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none none
+E 3 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
+E 4 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------------DNODE-NODE TOPOLOGY
 NODE       5 DNODE 1
 NODE      14 DNODE 1

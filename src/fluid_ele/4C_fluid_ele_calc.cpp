@@ -1449,7 +1449,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::body_force(Discret::Elem
         // included
         for (int jnode = 0; jnode < nen_; jnode += 2)
         {
-          if (functions[isd].has_value() && functions[isd].value() > 0)
+          if (functions[isd].has_value())
           {
             // evaluate function at the position of the current node if it is not none
             // ------------------------------------------------------
@@ -1477,7 +1477,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::body_force(Discret::Elem
       else
         for (int jnode = 0; jnode < nen_; ++jnode)
         {
-          if (functions[isd].has_value() && functions[isd].value() > 0)
+          if (functions[isd].has_value())
           {
             // evaluate function at the position of the current node
             // ------------------------------------------------------
@@ -1530,7 +1530,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::body_force(Discret::Elem
       double functfac = 0.0;
 
       // compute potential time curve or set time-curve factor to one
-      if (funct[0].has_value() && funct[0] > 0)
+      if (funct[0].has_value())
       {
         // time factor (negative time indicating error)
         if (time >= 0.0)

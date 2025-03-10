@@ -156,7 +156,7 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate(const FaceElement* ele,
 
     // find out whether we shall use a time curve for q^_c and get the factor
     double curvefac = 1.0;
-    if (curvenum.has_value() && curvenum.value() > 0)
+    if (curvenum.has_value())
     {
       curvefac = Global::Problem::instance()
                      ->function_by_id<Core::Utils::FunctionOfTime>(curvenum.value())
@@ -169,7 +169,7 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate(const FaceElement* ele,
     // enabling for instance a load cycle due to combustion of a fluid
     double surtempcurvefac = 1.0;
     // find out whether we shall use a time curve for T_oo and get the factor
-    if (surtempcurvenum.has_value() and surtempcurvenum.value() > 0)
+    if (surtempcurvenum.has_value())
     {
       surtempcurvefac = Global::Problem::instance()
                             ->function_by_id<Core::Utils::FunctionOfTime>(surtempcurvenum.value())
@@ -374,7 +374,7 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate(const FaceElement* ele,
 
         // find out whether we shall use a time curve for q^_c and get the factor
         double curvefac = 1.0;
-        if (curvenum.has_value() && curvenum.value() > 0)
+        if (curvenum.has_value())
         {
           curvefac = Global::Problem::instance()
                          ->function_by_id<Core::Utils::FunctionOfTime>(curvenum.value())
@@ -387,7 +387,7 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate(const FaceElement* ele,
         // enabling for instance a load cycle due to combustion of a fluid
         double surtempcurvefac = 1.0;
         // find out whether we shall use a time curve for T_oo and get the factor
-        if (surtempcurvenum.has_value() && surtempcurvenum.value() > 0)
+        if (surtempcurvenum.has_value())
         {
           surtempcurvefac =
               Global::Problem::instance()
@@ -573,7 +573,7 @@ int Thermo::TemperBoundaryImpl<distype>::evaluate_neumann(const Core::Elements::
       if (onoff[dof])  // is this dof activated?
       {
         // factor given by spatial function
-        if (func[dof].has_value() && func[dof].value() > 0)
+        if (func[dof].has_value())
         {
           // evaluate function at current gauss point
           functfac = Global::Problem::instance()

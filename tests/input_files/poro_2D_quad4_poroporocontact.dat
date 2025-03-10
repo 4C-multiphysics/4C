@@ -236,42 +236,42 @@ STRUCTURE DIS structure NODE 119 QUANTITY dispy VALUE -2.06261646075056759e-01 T
 STRUCTURE DIS structure NODE 181 QUANTITY dispy VALUE -2.04172059100826558e-01 TOLERANCE 1e-8
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 // top_left_point
-//E 1 - NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT 0 0
+//E 1 - NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT none none
 // top_right_point
-//E 2 - NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT 0 0
+//E 2 - NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT none none
 // bottom_left_point
-E 3 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 3 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 // bottom_right_point
-E 4 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 4 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 // semicirc_left
-//E 5 - NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT 0 0
+//E 5 - NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT none none
 // semicirc_right
-//E 6 - NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT 0 0
+//E 6 - NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT none none
 // mid_point_bottom
-//E 7 - NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+//E 7 - NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // top_semicircle
 E 2 NUMDOF 2 ONOFF 1 1 VAL 10.0 -1.8 FUNCT 2 1
 // top_line
-//E 3 - NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT 0 0
+//E 3 - NUMDOF 2 ONOFF 0 0 VAL 0.0 0.0 FUNCT none none
 // left_line
-//E 4 - NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+//E 4 - NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 // bottom_line
-E 5 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT 0 0
+E 5 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT none none
 // right_line
-//E 6 - NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT 0 0
+//E 6 - NUMDOF 2 ONOFF 1 0 VAL 0.0 0.0 FUNCT none none
 --------------------------------DESIGN LINE PORO DIRICH CONDITIONS
 // left_line
-//E 4 - NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+//E 4 - NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // bottom_line
-E 5 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 5 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // right_line
-//E 6 - NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+//E 6 - NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 -------------------------------DESIGN POINT PORO DIRICH CONDITIONS
 // bottom_left_point
-E 3 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // bottom_right_point
-E 4 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 4 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 --------------------------DESIGN LINE MORTAR CONTACT CONDITIONS 2D
 // edge_semicircle
 E 1 InterfaceID 1 Side Slave Initialization Inactive FrCoeffOrBound 0.3

@@ -1351,7 +1351,7 @@ void Discret::Elements::ScaTraEleCalcHDG<distype, probdim>::LocalSolver::compute
     if (onoff[0])  // is this dof activated?
     {
       // factor given by spatial function
-      if (func[0].has_value() && func[0].value() > 0)
+      if (func[0].has_value())
       {
         // evaluate function at current Gauss point (provide always 3D coordinates!)
         functfac = Global::Problem::instance()

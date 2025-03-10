@@ -125,26 +125,26 @@ SCATRA DIS scatra NODE 119 QUANTITY phi1 VALUE 2.19670614939083703e-03 TOLERANCE
 SCATRA DIS scatra NODE 119 QUANTITY phi4 VALUE -1.34434813442248924e-04 TOLERANCE 1e-13
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 //                              innermasterpoints
-E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 1.0 0.0 0.0 FUNCT 1 4 0 0
+E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 1.0 0.0 0.0 FUNCT 1 4 none none
 //                              outermasterpoints
-E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
 //                              horizontalmasterline
-E 1 NUMDOF 4 ONOFF 1 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 1 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 //                              top
-E 1 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 //                              bottom_outer
-E 2 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 //                              master
-E 3 NUMDOF 4 ONOFF 1 0 0 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 3 NUMDOF 4 ONOFF 1 0 0 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 //                              outer_wall
-E 4 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 4 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 //                              inner_wall
-E 6 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 1.0 0.0 0.0 FUNCT 1 4 0 0
+E 6 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 1.0 0.0 0.0 FUNCT 1 4 none none
 -------------------------------------DESIGN SURF TRANSPORT DIRICH CONDITIONS
 //                              outer_wall
-E 4 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.003 0.103 0.2 0.0 FUNCT 0 0 0 0
+E 4 NUMDOF 4 ONOFF 1 1 1 1 VAL 0.003 0.103 0.2 0.0 FUNCT none none none none
 ------------------------------------DESIGN SURF PERIODIC BOUNDARY CONDITIONS
 //                              slave
 E 5 ID 1 MASTER_OR_SLAVE Slave PLANE xz LAYER 0 ANGLE +90.0 ABSTREETOL 1e-9

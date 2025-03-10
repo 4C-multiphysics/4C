@@ -77,12 +77,12 @@ STRUCTURE DIS structure NODE 37 QUANTITY dispy VALUE  8.33625693705409981e-02 TO
 STRUCTURE DIS structure NODE 37 QUANTITY dispz VALUE -4.49947976148626187e-03 TOLERANCE 1e-8
 -------------------------------------DESIGN POINT DIRICH CONDITIONS
 // support
-E 1 NUMDOF 9  ONOFF 1 1 1 1 1 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 0 0 0
+E 1 NUMDOF 9  ONOFF 1 1 1 1 1 1 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none none none none
 // movement
-E 2 NUMDOF 9  ONOFF 0 1 0 0 0 0 0 0 0 VAL 0.0 0.25 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 1 0 0 0 0 0 0 0
+E 2 NUMDOF 9  ONOFF 0 1 0 0 0 0 0 0 0 VAL 0.0 0.25 0.0 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none 1 none none none none none none none
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // support
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 --------------------------BEAM INTERACTION/BEAM TO SOLID VOLUME MESHTYING VOLUME
 // Define the volumes for the beam-to-solid volume meshtying.
 E 1 COUPLING_ID 1

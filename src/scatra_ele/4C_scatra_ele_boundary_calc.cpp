@@ -538,7 +538,7 @@ int Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_neumann
       if (onoff[dof])  // is this dof activated?
       {
         // factor given by spatial function
-        if (func[dof].has_value() && func[dof].value() > 0)
+        if (func[dof].has_value())
         {
           // evaluate function at current Gauss point (provide always 3D coordinates!)
           functfac = Global::Problem::instance()
@@ -2561,7 +2561,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::weak_dirichlet(
     // factor for Dirichlet boundary condition given by spatial function
     //--------------------------------------------------------------------
     double functfac = 1.0;
-    if (func[0].has_value() && func[0].value() > 0)
+    if (func[0].has_value())
     {
       // evaluate function at current integration point (important: a 3D position vector is
       // required)

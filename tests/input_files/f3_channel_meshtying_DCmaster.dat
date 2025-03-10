@@ -134,9 +134,9 @@ FLUID DIS fluid NODE 10707 QUANTITY velz VALUE  3.00000000000000044e+00 TOLERANC
 FLUID DIS fluid NODE 10707 QUANTITY pressure VALUE 2.81124544877500433e-04 TOLERANCE 1e-9
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // inflow
-E 2 NUMDOF 4  ONOFF 1 1 1 0  VAL 0.0 0.0 10.0 0.0 FUNCT 0 0 1 0
+E 2 NUMDOF 4  ONOFF 1 1 1 0  VAL 0.0 0.0 10.0 0.0 FUNCT none none 1 none
 // wall
-E 5 NUMDOF 4  ONOFF 1 1 0 0  VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 5 NUMDOF 4  ONOFF 1 1 0 0  VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 ------------------------DESIGN SURF MORTAR COUPLING CONDITIONS 3D
 // internal interface fluid boundary layer
 E 6 InterfaceID 1 Side Slave

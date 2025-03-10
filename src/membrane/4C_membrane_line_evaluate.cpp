@@ -123,7 +123,7 @@ int Discret::Elements::MembraneLine<distype>::evaluate_neumann(Teuchos::Paramete
             // factor given by spatial function
             double functfac = 1.0;
 
-            if (spa_func[i].has_value() && spa_func[i].value() > 0)
+            if (spa_func[i].has_value())
             {
               // calculate reference position of GP
               Core::LinAlg::Matrix<noddof_, 1> gp_coord(true);

@@ -83,17 +83,17 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME a
 VARIABLE 0 NAME a TYPE linearinterpolation NUMPOINTS 6 TIMES 0 1 2 3 4 5 VALUES 0 1 1.4 1.8 1.9 1.92
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
 // intern pressure
-E 1 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL -1.0e5 0.0 0.0 0.0 0.0 0.0 FUNCT 1 0 0 0 0 0 TYPE pseudo_orthopressure
+E 1 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL -1.0e5 0.0 0.0 0.0 0.0 0.0 FUNCT 1 none none none none none TYPE pseudo_orthopressure
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 // support bottom
-E 2 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // support inclined plane up
-E 3 NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ------------------------------------------------DESIGN VOL DIRICH CONDITIONS
 // support total z
-E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------------DESIGN SURF LOCSYS CONDITIONS
-E 3 ROTANGLE 1.570796052 2.720699205 0 FUNCT 0 0 0 USEUPDATEDNODEPOS 0 USECONSISTENTNODENORMAL 0
+E 3 ROTANGLE 1.570796052 2.720699205 0 FUNCT none none none USEUPDATEDNODEPOS 0 USECONSISTENTNODENORMAL 0
 //normal -0.5 0.866025 0.0 tangent 0.866025 0.5 0.0
 ---------------------------------------------------------DSURF-NODE TOPOLOGY
 NODE 1 DSURFACE 1

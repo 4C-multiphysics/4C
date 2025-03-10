@@ -537,7 +537,7 @@ int Discret::Elements::Membrane<distype>::evaluate_neumann(Teuchos::ParameterLis
   std::vector<double> functfacs(noddof_, 1.0);
   for (int i = 0; i < noddof_; ++i)
   {
-    if (tmp_funct[i].has_value() && tmp_funct[i].value() > 0)
+    if (tmp_funct[i].has_value())
     {
       functfacs[i] = Global::Problem::instance()
                          ->function_by_id<Core::Utils::FunctionOfTime>(tmp_funct[i].value())

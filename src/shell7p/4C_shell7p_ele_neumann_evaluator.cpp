@@ -217,7 +217,7 @@ void Discret::Elements::Shell::evaluate_neumann(Core::Elements::Element& ele,
       if (onoff[dim])
       {
         // function evaluation
-        if (function_ids[dim].has_value() && function_ids[dim].value() > 0)
+        if (function_ids[dim].has_value())
         {
           function_scale_factors[dim] =
               Global::Problem::instance()

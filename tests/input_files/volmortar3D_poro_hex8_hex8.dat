@@ -113,14 +113,14 @@ STRUCTURE DIS structure NODE 40 QUANTITY dispx VALUE -1.74532582918286911e-03 TO
 STRUCTURE DIS structure NODE 50 QUANTITY velx VALUE -4.81756113096460520e-02 TOLERANCE 1e-8
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // struct_surf1
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // fluid_surf1
-E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT none none none none
 --------------------------------------DESIGN VOL DIRICH CONDITIONS
 // vol_struct
-E 1 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // vol_fluid
-E 2 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 0 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 ------------------------------DESIGN VOLUME POROCOUPLING CONDITION
 // vol_struct
 E 1

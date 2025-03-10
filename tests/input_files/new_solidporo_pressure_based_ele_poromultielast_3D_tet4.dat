@@ -71,7 +71,7 @@ POROFLUIDMULTIPHASE DIS porofluid NODE 6 QUANTITY phi1 VALUE 4.77457514062631372
 E 1 NUMDOF 1 ONOFF 1 VAL 1.0 FUNCT 1
 -------------------------------------------------DESIGN SURF DIRICH CONDITIONS
 // leftsurf
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ------------------------------------------------------------------PROBLEM SIZE
 ELEMENTS                        28
 NODES                           15
