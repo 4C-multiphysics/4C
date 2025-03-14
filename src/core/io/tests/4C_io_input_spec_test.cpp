@@ -732,6 +732,13 @@ specs:
                 parameter<double>("l2"),
             }),
             {.size = 2}),
+        selection<EnumClass>("selection_group", {.selector = "type",
+                                                    .choices =
+                                                        {
+                                                            {EnumClass::A, parameter<int>("a")},
+                                                            {EnumClass::B, parameter<int>("b")},
+                                                            {EnumClass::C, parameter<int>("c")},
+                                                        }}),
     });
 
 
@@ -744,7 +751,7 @@ specs:
       out << tree;
 
       std::string expected = R"(type: all_of
-description: 'all_of {a, b, one_of {all_of {b, c}, triple_vector, group}, e, eo, group2, list}'
+description: 'all_of {a, b, one_of {all_of {b, c}, triple_vector, group}, e, eo, group2, list, selection_group}'
 required: true
 specs:
   - name: a
@@ -839,6 +846,26 @@ specs:
           required: true
         - name: l2
           type: double
+          required: true
+  - name: selection_group
+    type: selection
+    required: true
+    selector: type
+    choices:
+      - name: A
+        spec:
+          name: a
+          type: int
+          required: true
+      - name: B
+        spec:
+          name: b
+          type: int
+          required: true
+      - name: C
+        spec:
+          name: c
+          type: int
           required: true
 )";
       EXPECT_EQ(out.str(), expected);
@@ -954,20 +981,29 @@ specs:
   }
 
 
-  TEST(InputSpecTest, MatchYamlGroupWithSelection)
+  TEST(InputSpecTest, MatchYamlSelectionEnum)
   {
-    auto spec = selection<std::string>("model", based_on("type"),
-        from_choices({
-            {"linear", parameter<double>("coefficient")},
-            {"quadratic", one_of({
-                              all_of({
-                                  parameter<int>("a"),
-                                  parameter<double>("b"),
-                              }),
-                              parameter<double>("c"),
-                          })},
-        }));
+    enum class Model
+    {
+      linear,
+      quadratic,
+    };
 
+    auto spec = selection<Model>("model",
+        {
+            .choices =
+                {
+                    {Model::linear, parameter<double>("coefficient")},
+                    {Model::quadratic, one_of({
+                                           all_of({
+                                               parameter<int>("a"),
+                                               parameter<double>("b"),
+                                           }),
+                                           parameter<double>("c"),
+                                       })},
+                },
+        },
+        {.description = "", .required = false});
     {
       SCOPED_TRACE("First selection");
       ryml::Tree tree = init_yaml_tree_with_exceptions();
@@ -981,7 +1017,7 @@ specs:
       ConstYamlNodeRef node(root, "");
       InputParameterContainer container;
       spec.match(node, container);
-      EXPECT_EQ(container.group("model").get<std::string>("type"), "linear");
+      EXPECT_EQ(container.group("model").get<Model>("type"), Model::linear);
       EXPECT_EQ(container.group("model").get<double>("coefficient"), 1.0);
     }
 
@@ -999,7 +1035,7 @@ specs:
       ConstYamlNodeRef node(root, "");
       InputParameterContainer container;
       spec.match(node, container);
-      EXPECT_EQ(container.group("model").get<std::string>("type"), "quadratic");
+      EXPECT_EQ(container.group("model").get<Model>("type"), Model::quadratic);
       EXPECT_EQ(container.group("model").get<int>("a"), 1);
       EXPECT_EQ(container.group("model").get<double>("b"), 2.0);
     }
@@ -1017,7 +1053,7 @@ specs:
       ConstYamlNodeRef node(root, "");
       InputParameterContainer container;
       spec.match(node, container);
-      EXPECT_EQ(container.group("model").get<std::string>("type"), "quadratic");
+      EXPECT_EQ(container.group("model").get<Model>("type"), Model::quadratic);
       EXPECT_EQ(container.group("model").get<double>("c"), 3.0);
     }
   }

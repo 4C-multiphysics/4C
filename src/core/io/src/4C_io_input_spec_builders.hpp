@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <numeric>
 #include <optional>
 #include <ostream>
 #include <variant>
@@ -273,6 +274,7 @@ namespace Core::IO
       {
         unknown,
         parameter,
+        selection,
         group,
         all_of,
         one_of,
@@ -650,6 +652,19 @@ namespace Core::IO
       std::array<Size, rank<T>()> size;
     };
 
+    struct SelectionData
+    {
+      /**
+       * An optional description of the selection.
+       */
+      std::string description{};
+
+      /**
+       * Whether the selection is required or optional.
+       */
+      bool required{true};
+    };
+
     //! Additional parameters for a group().
     struct GroupData
     {
@@ -706,7 +721,7 @@ namespace Core::IO
       };
 
       template <typename T>
-      struct SelectionData
+      struct DeprecatedSelectionData
       {
         using StoredType = T;
 
@@ -734,11 +749,11 @@ namespace Core::IO
       };
 
       /**
-       * Note that a SelectionSpec can store any type since we never need to read or write values of
-       * this type.
+       * Note that a DeprecatedSelectionSpec can store any type since we never need to read or write
+       * values of this type.
        */
       template <typename T>
-      struct SelectionSpec
+      struct DeprecatedSelectionSpec
       {
         std::string name;
         using StoredType = T;
@@ -746,7 +761,7 @@ namespace Core::IO
         using InputType =
             std::conditional_t<OptionalType<T>, std::optional<std::string>, std::string>;
         using ChoiceMap = std::map<InputType, StoredType>;
-        SelectionData<T> data;
+        DeprecatedSelectionData<T> data;
         ChoiceMap choices;
         //! The string representation of the choices.
         std::string choices_string;
@@ -757,6 +772,34 @@ namespace Core::IO
         void emit_metadata(ryml::NodeRef node) const;
         bool emit(YamlNodeRef node, const InputParameterContainer& container,
             const InputSpecEmitOptions& options) const;
+      };
+
+      //! Helper for selection().
+      template <typename T>
+        requires(std::is_enum_v<T>)
+      struct BasedOn
+      {
+        std::string selector{"type"};
+        std::map<T, InputSpec> choices;
+      };
+
+      template <typename T>
+        requires(std::is_enum_v<T>)
+      struct SelectionSpec
+      {
+        std::string group_name;
+        BasedOn<T> based_on;
+        SelectionData data;
+        InputSpec selector_spec;
+
+        void parse(ValueParser& parser, InputParameterContainer& container) const;
+        bool match(ConstYamlNodeRef node, InputParameterContainer& container,
+            IO::Internal::MatchEntry& match_entry) const;
+        void print(std::ostream& stream, std::size_t indent) const;
+        void emit_metadata(ryml::NodeRef node) const;
+        bool emit(YamlNodeRef node, const InputParameterContainer& container,
+            const InputSpecEmitOptions& options) const;
+        void set_default_value(InputParameterContainer& container) const;
       };
 
       struct GroupSpec
@@ -862,19 +905,6 @@ namespace Core::IO
                  std::ranges::all_of(m,
                      [&](const auto& val) { return this->operator()(val.second, size_info + 1); });
         }
-      };
-
-
-      //! Helper for selection().
-      struct BasedOn
-      {
-        std::string name;
-      };
-
-      //! Helper for selection().
-      struct FromChoices
-      {
-        std::map<std::string, InputSpec> choices;
       };
     }  // namespace Internal
 
@@ -1079,20 +1109,29 @@ namespace Core::IO
         std::string name, std::vector<InputSpec> specs, GroupData data = {});
 
     /**
-     * This function is used to select one of multiple InputSpecs based on the value of the
-     * parameter @p selector. For every possible value of the selector, a different InputSpec is
-     * expected. The selector parameter and the selected InputSpec live inside a group with the @p
-     * name. For example:
+     * This function is used to select one of multiple InputSpecs based on the value of a
+     * selector enum parameter. For every possible value of the selector enum, a different InputSpec
+     * is expected. The selector parameter and the selected InputSpec live inside a group with the
+     * @p name. For example:
      *
      * @code
-     * auto spec = selection<std::string>("Time integration", based_on("scheme"),
-     *     from_choices({
+     * enum class TimeIntegration
+     * {
+     *   OST,
+     *   GenAlpha,
+     * };
+     *
+     * auto spec = selection<TimeIntegration>("Time integration",
+     *    {
+     *     .selector = "scheme",
+     *     .choices = {
      *         {"OST", parameter<double>("theta")},
      *         {"GenAlpha", all_of({
      *                               parameter<double>("alpha_f"),
      *                               parameter<double>("alpha_m"),
      *                           }),
-     *     }));
+     *      },
+     *    }));
      * @endcode
      *
      * will match the following input:
@@ -1112,15 +1151,13 @@ namespace Core::IO
      *   alpha_m: 0.5
      * @endcode
      *
-     * Note that the @p selector parameter is added automatically by this function.
-     *
-     * @note This function uses the fluent interface idiom and wraps the name of the @p selector
-     * with based_on() and the choices with from_choices().
+     * Note that the @p selector parameter is automatically added inside the group @p name by this
+     * function.
      */
     template <typename T>
-      requires(std::is_same_v<T, std::string>)
-    [[nodiscard]] InputSpec selection(std::string name, Internal::BasedOn selector,
-        Internal::FromChoices choices, GroupData data = {});
+      requires(std::is_enum_v<T>)
+    [[nodiscard]] InputSpec selection(
+        std::string name, Internal::BasedOn<T> based_on, SelectionData data = {});
 
     /**
      * All of the given InputSpecs are expected, e.g.,
@@ -1280,16 +1317,6 @@ namespace Core::IO
      */
     [[nodiscard]] InputSpec list(std::string name, InputSpec spec, ListData data = {});
 
-    /**
-     * A fluent interface helper. Used for selection().
-     */
-    [[nodiscard]] inline Internal::BasedOn based_on(std::string name);
-
-    /**
-     * A fluent interface helper. Used for selection().
-     */
-    [[nodiscard]] inline Internal::FromChoices from_choices(
-        std::map<std::string, InputSpec> choices);
   }  // namespace InputSpecBuilders
 }  // namespace Core::IO
 
@@ -1509,7 +1536,7 @@ bool Core::IO::InputSpecBuilders::Internal::ParameterSpec<T>::has_correct_size(
 
 
 template <typename T>
-void Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::parse(
+void Core::IO::InputSpecBuilders::Internal::DeprecatedSelectionSpec<T>::parse(
     ValueParser& parser, InputParameterContainer& container) const
 {
   if (parser.peek() == name)
@@ -1543,7 +1570,7 @@ void Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::parse(
 
 
 template <typename T>
-bool Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::match(ConstYamlNodeRef node,
+bool Core::IO::InputSpecBuilders::Internal::DeprecatedSelectionSpec<T>::match(ConstYamlNodeRef node,
     InputParameterContainer& container, IO::Internal::MatchEntry& match_entry) const
 {
   match_entry.type = IO::Internal::MatchEntry::Type::parameter;
@@ -1599,7 +1626,7 @@ bool Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::match(ConstYamlNod
 }
 
 template <typename T>
-void Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::print(
+void Core::IO::InputSpecBuilders::Internal::DeprecatedSelectionSpec<T>::print(
     std::ostream& stream, std::size_t indent) const
 {
   stream << "// " << std::string(indent, ' ') << name;
@@ -1629,7 +1656,7 @@ void Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::print(
 }
 
 template <typename T>
-void Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::emit_metadata(
+void Core::IO::InputSpecBuilders::Internal::DeprecatedSelectionSpec<T>::emit_metadata(
     ryml::NodeRef node) const
 {
   node |= ryml::MAP;
@@ -1663,7 +1690,7 @@ void Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::emit_metadata(
 }
 
 template <typename T>
-bool Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::emit(YamlNodeRef node,
+bool Core::IO::InputSpecBuilders::Internal::DeprecatedSelectionSpec<T>::emit(YamlNodeRef node,
     const InputParameterContainer& container, const InputSpecEmitOptions& options) const
 {
   node.node |= ryml::MAP;
@@ -1707,6 +1734,162 @@ bool Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::emit(YamlNodeRef n
     return false;
   }
 }
+
+template <typename T>
+  requires(std::is_enum_v<T>)
+void Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::parse(
+    ValueParser& parser, InputParameterContainer& container) const
+{
+  if (parser.peek() == group_name)
+  {
+    parser.consume(group_name);
+    const auto selector_value = parser.read<T>();
+    FOUR_C_ASSERT(
+        based_on.choices.contains(selector_value), "Internal error: selector must be in choices.");
+    auto& group_container = container.group(group_name);
+    group_container.add(based_on.selector, selector_value);
+    auto spec = based_on.choices.at(selector_value);
+    spec.impl().parse(parser, group_container);
+  }
+  else if (!data.required)
+  {
+    return;
+  }
+  else
+  {
+    std::string next_token{parser.peek()};
+    FOUR_C_THROW(
+        "Could not parse '%s'. Next token is '%s'.", group_name.c_str(), next_token.c_str());
+  }
+}
+
+
+template <typename T>
+  requires(std::is_enum_v<T>)
+bool Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::match(ConstYamlNodeRef node,
+    InputParameterContainer& container, IO::Internal::MatchEntry& match_entry) const
+{
+  match_entry.type = IO::Internal::MatchEntry::Type::selection;
+  const auto group_name_substr = ryml::to_csubstr(group_name);
+
+  const bool group_node_is_input = node.node.has_key() && (node.node.key() == group_name);
+  const bool group_exists_nested = node.node.is_map() && node.node.has_child(group_name_substr) &&
+                                   node.node[group_name_substr].is_map();
+
+  if (!group_exists_nested && !group_node_is_input)
+  {
+    return !data.required;
+  }
+
+  auto group_node = group_node_is_input ? node : node.wrap(node.node[group_name_substr]);
+
+  // Matching the key of the group is at least a partial match.
+  match_entry.state = IO::Internal::MatchEntry::State::partial;
+  match_entry.matched_node = group_node.node.id();
+
+  // Parse into a separate container to avoid side effects if parsing fails.
+  InputParameterContainer subcontainer;
+  bool selector_found = selector_spec.impl().match(
+      group_node, subcontainer, match_entry.append_child(&selector_spec));
+  if (!selector_found) return false;
+
+  auto selector_value = subcontainer.get<T>(based_on.selector);
+  FOUR_C_ASSERT(
+      based_on.choices.contains(selector_value), "Internal error: selector not found in choices.");
+  const auto& selected_spec = based_on.choices.at(selector_value);
+
+  auto choice_matched = selected_spec.impl().match(
+      group_node, subcontainer, match_entry.append_child(&selected_spec));
+  if (!choice_matched) return false;
+
+  // Everything was correctly matched, so mark the whole node as matched.
+  match_entry.state = IO::Internal::MatchEntry::State::matched;
+
+  container.group(group_name) = subcontainer;
+  return true;
+}
+
+template <typename T>
+  requires(std::is_enum_v<T>)
+void Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::print(
+    std::ostream& stream, std::size_t indent) const
+{
+  stream << "// " << std::string(indent, ' ') << group_name;
+  selector_spec.impl().print(stream, indent + 2);
+  stream << "// " << std::string(indent + 2, ' ') << "<choices>\n";
+  for (const auto& [selector_value, spec] : based_on.choices)
+  {
+    stream << "\n";
+    stream << "//" << std::string(indent + 2, ' ') << " if value of " << based_on.selector << " is "
+           << magic_enum::enum_name<T>(selector_value);
+    spec.impl().print(stream, indent + 4);
+  }
+  stream << "\n";
+}
+
+template <typename T>
+  requires(std::is_enum_v<T>)
+void Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::emit_metadata(
+    ryml::NodeRef node) const
+{
+  node |= ryml::MAP;
+  node["name"] << group_name;
+
+  if constexpr (OptionalType<T>) emit_value_as_yaml(node["noneable"], true);
+  node["type"] = "selection";
+
+  if (!data.description.empty())
+  {
+    emit_value_as_yaml(node["description"], data.description);
+  }
+  emit_value_as_yaml(node["required"], data.required);
+  node["selector"] << based_on.selector;
+
+  node["choices"] |= ryml::SEQ;
+  for (const auto& [choice, spec] : based_on.choices)
+  {
+    auto entry = node["choices"].append_child();
+    entry |= ryml::MAP;
+    emit_value_as_yaml(entry["name"], choice);
+    spec.impl().emit_metadata(entry["spec"]);
+  }
+}
+
+template <typename T>
+  requires(std::is_enum_v<T>)
+bool Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::emit(YamlNodeRef node,
+    const InputParameterContainer& container, const InputSpecEmitOptions& options) const
+{
+  node.node |= ryml::MAP;
+  if (container.has_group(group_name))
+  {
+    auto group_node = node.node.append_child();
+    group_node << ryml::key(group_name);
+    group_node |= ryml::MAP;
+    bool success =
+        selector_spec.impl().emit(node.wrap(group_node), container.group(group_name), options);
+    if (!success) return false;
+
+    auto selector_value = container.group(group_name).get<T>(based_on.selector);
+    FOUR_C_ASSERT(based_on.choices.contains(selector_value),
+        "Internal error: selector not found in choices.");
+
+    success = based_on.choices.at(selector_value)
+                  .impl()
+                  .emit(node.wrap(group_node), container.group(group_name), options);
+    return success;
+  }
+  return !data.required;
+}
+
+template <typename T>
+  requires(std::is_enum_v<T>)
+void Core::IO::InputSpecBuilders::Internal::SelectionSpec<T>::set_default_value(
+    InputParameterContainer& container) const
+{
+  FOUR_C_THROW("Internal error: set_default_value() called on a SelectionSpec.");
+}
+
 
 template <typename T>
 auto Core::IO::InputSpecBuilders::from_parameter(const std::string& name)
@@ -1756,21 +1939,36 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::parameter(
 }
 
 template <typename T>
-  requires(std::is_same_v<T, std::string>)
+  requires(std::is_enum_v<T>)
 Core::IO::InputSpec Core::IO::InputSpecBuilders::selection(
-    std::string name, Internal::BasedOn selector, Internal::FromChoices choices, GroupData data)
+    std::string name, Internal::BasedOn<T> based_on, SelectionData data)
 {
-  std::vector<InputSpec> specs;
-  specs.reserve(choices.choices.size());
-  for (auto&& [choice_name, choice_spec] : choices.choices)
+  // Ensure that every enum constant is mapped to a spec.
+  for (const auto& e : magic_enum::enum_values<T>())
   {
-    specs.emplace_back(all_of({
-        deprecated_selection<std::string>(selector.name, {choice_name},
-            {.description = "Selects which other parameters are allowed in this group."}),
-        std::move(choice_spec),
-    }));
+    FOUR_C_ASSERT_ALWAYS(based_on.choices.contains(e),
+        std::format("You need to give an InputSpec for every possible value of enum '{}'. Missing "
+                    "choice for enum constant '{}'.",
+            magic_enum::enum_type_name<T>(), magic_enum::enum_name(e)));
   }
-  return group(name, {one_of(specs)}, data);
+
+  std::size_t max_specs_for_choices = std::ranges::max_element(
+      based_on.choices, {}, [](const auto& spec) { return spec.second.impl().data.n_specs; })
+                                          ->second.impl()
+                                          .data.n_specs;
+
+  return IO::Internal::make_spec(Internal::SelectionSpec<T>{.group_name = name,
+                                     .based_on = based_on,
+                                     .data = data,
+                                     .selector_spec = parameter<T>(based_on.selector, {})},
+      {
+          .name = name,
+          .description = data.description,
+          .required = data.required,
+          .has_default_value = false,
+          // one for the group, one for the selector, plus the number of specs for the choices.
+          .n_specs = 2 + max_specs_for_choices,
+      });
 }
 
 
@@ -1781,7 +1979,7 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::Internal::selection_internal(
   FOUR_C_ASSERT_ALWAYS(!choices.empty(), "Selection must have at least one choice.");
 
   // If we have a std::optional type, we need to convert the choices.
-  typename SelectionSpec<T>::ChoiceMap modified_choices;
+  typename DeprecatedSelectionSpec<T>::ChoiceMap modified_choices;
   std::string choices_string;
   for (auto&& [key, value] : choices)
   {
@@ -1796,7 +1994,7 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::Internal::selection_internal(
     choices_string += "|none";
   }
 
-  SelectionData<T> internal_data;
+  DeprecatedSelectionData<T> internal_data;
   internal_data.description = data.description;
   if constexpr (OptionalType<T>)
   {
@@ -1828,7 +2026,7 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::Internal::selection_internal(
   }
 
   return IO::Internal::make_spec(
-      Internal::SelectionSpec<T>{
+      Internal::DeprecatedSelectionSpec<T>{
           .name = name,
           .data = internal_data,
           .choices = modified_choices,
@@ -1883,20 +2081,6 @@ auto Core::IO::InputSpecBuilders::store_index_as(std::string name, std::vector<T
     }
   };
 }
-
-
-Core::IO::InputSpecBuilders::Internal::BasedOn Core::IO::InputSpecBuilders::based_on(
-    std::string name)
-{
-  return Internal::BasedOn{name};
-}
-
-Core::IO::InputSpecBuilders::Internal::FromChoices Core::IO::InputSpecBuilders::from_choices(
-    std::map<std::string, InputSpec> choices)
-{
-  return Internal::FromChoices{std::move(choices)};
-}
-
 
 FOUR_C_NAMESPACE_CLOSE
 

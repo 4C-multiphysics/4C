@@ -481,6 +481,13 @@ namespace
           }
           break;
         }
+        case MatchEntry::Type::selection:
+        {
+          if (entry.state == MatchEntry::State::matched)
+          {
+            matched_node_ids.push_back(entry.matched_node);
+          }
+        }
         default:
           break;
       }

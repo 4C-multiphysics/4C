@@ -17,6 +17,9 @@ class NotSet:
         return "NOTSET singleton"
 
 
+NOTSET = NotSet()
+
+
 MISSING_DESCRIPTION = "No description yet."
 FOURC_BASE_TYPES_TO_JSON_SCHEMA_DICT = {
     "double": "number",
@@ -34,15 +37,16 @@ class Parameter:
     name: str = None
     type: str = None
     required: bool = False
-    description: str = None
+    description: str = NOTSET
 
 
 @dataclass
 class Primitive(Parameter):
     """Primitive parameter."""
 
-    default: int = NotSet()
+    default: int = NOTSET
     noneable: bool = False
+    constant: object = NOTSET  # The primitive can only take this value
 
     def short_description(self):
         """Create short description."""
@@ -163,7 +167,7 @@ class Collection(Parameter):
         ids = []
         specs = []
         for i, k in enumerate(self.specs):
-            if isinstance(k, (Primitive, Group, List)):
+            if isinstance(k, NAMED_TYPES):
                 specs.append(k)
             else:
                 ids.append(i)
@@ -239,6 +243,42 @@ class Group(Collection):
 
 
 @dataclass
+class Choice(Parameter):
+    spec: object = None
+    type = "choice"
+
+
+@dataclass
+class Selection(Collection):
+    """Selection."""
+
+    choices: list = field(default_factory=list)
+    name: str = None
+    noneable: bool = False
+    required: bool = False
+    selector: str = None
+    _type = "selection"
+
+    def __post_init__(self):
+        self.type = self._type
+        for i, choice in enumerate(self.choices):
+            if isinstance(choice, dict):
+                spec = _metadata_object_from_dict(choice["spec"])
+
+                self.choices[i] = Choice(
+                    name=choice["name"],
+                    description=f"Selector type {choice['name']} for {self.name} (string)",
+                    spec=spec,
+                )
+
+        self.choices = sorted(self.choices, key=lambda x: x.name)
+
+    def short_description(self):
+        """Create short description."""
+        return f"{self.name} ({self.type})"
+
+
+@dataclass
 class List(Parameter):
     """List."""
 
@@ -258,7 +298,7 @@ class List(Parameter):
 
 
 # Named objects
-NAMED_TYPES = (Primitive, List, Group)
+NAMED_TYPES = (Primitive, List, Group, Selection)
 
 
 def _metadata_object_from_dict(metadata_dict):
@@ -281,6 +321,8 @@ def _metadata_object_from_dict(metadata_dict):
         case "map":
             cls = Map
         # Collections
+        case "selection":
+            cls = Selection
         case "group":
             cls = Group
         case "list":

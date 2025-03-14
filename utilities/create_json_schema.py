@@ -13,6 +13,7 @@ from pathlib import Path
 
 from metadata_utils import (
     NotSet,
+    NOTSET,
     NAMED_TYPES,
     MISSING_DESCRIPTION,
     FOURC_BASE_TYPES_TO_JSON_SCHEMA_DICT,
@@ -21,6 +22,7 @@ from metadata_utils import (
     Map,
     Enum,
     Group,
+    Selection,
     List,
     All_Of,
     One_Of,
@@ -29,15 +31,31 @@ from metadata_utils import (
 from dataclasses import asdict
 
 
+def set_description(schema, description):
+    """Set the description.
+
+    Args:
+        schema (dict): JSON schema
+        description (str): Description to be added.
+    """
+    # Add the missing description if nothing was set
+    if isinstance(description, NotSet):
+        schema["description"] = MISSING_DESCRIPTION
+    else:
+        if description is not None:
+            # Add the description
+            schema["description"] = description
+
+
 def json_schema(
     *,
     schema_type="object",
     title=None,
-    description=MISSING_DESCRIPTION,
+    description=NOTSET,
     noneable=False,
-    default=NotSet(),
+    default=NOTSET,
     enum=None,
-    const=NotSet(),
+    const=NOTSET,
     properties=None,
     required=None,
     oneOf=None,
@@ -67,7 +85,10 @@ def json_schema(
 
     # Properties for any kind of schema
     set_if_not_none(schema, "title", title)
-    schema["description"] = description or MISSING_DESCRIPTION
+
+    # Description is handled differently
+    set_description(schema, description)
+
     set_if_not_none(schema, "type", schema_type)
     if schema_type:
         if noneable:
@@ -115,6 +136,7 @@ def schema_from_base_type(primitive):
         title=primitive.short_description(),
         default=primitive.default,
         noneable=primitive.noneable,
+        const=primitive.constant,
     )
     return schema
 
@@ -170,10 +192,73 @@ def schema_from_group(group):
     metadata_dict.pop("defaultable", False)
     schema = schema_from_all_of(All_Of(**metadata_dict))
     schema["title"] = group.short_description()
-    schema["description"] = group.description or MISSING_DESCRIPTION
+
+    set_description(schema, group.description)
+
     if noneable:
         schema["type"] = [schema["type"], "null"]
         schema["title"] = f"{group.name} (group, null)"
+    return schema
+
+
+def schema_from_selection(selection):
+    """Create selection schema.
+
+    Args:
+        selection (Selection): Metadata object.
+    """
+
+    specs = []
+
+    for choice in selection.choices:
+        # Add the selection parameter
+        selector_variable = Primitive(
+            name=selection.selector,
+            type="string",
+            required=True,
+            description=f"Selector type {choice.name} for {selection.name} (string)",
+            constant=choice.name,
+        )
+
+        choice = All_Of(
+            name=choice.name,
+            required=True,
+            description=f"Selector type {choice.name} for {selection.name} (string)",
+            specs=[selector_variable, choice.spec],
+        )
+        specs.append(choice)
+
+    # The choices are options of a one_of
+    schema = schema_from_one_of(One_Of(description=selection.description, specs=specs))
+
+    schema["title"] = selection.short_description()
+
+    # Add the options additionally as property to be able to chose between them
+    schema["properties"] = {
+        selection.selector: schema_from_base_type(
+            Enum(
+                name=selection.selector,
+                type="string",
+                required=True,
+                description=f"Selector type for {selection.name} (string)\n"
+                + "\nchoices are: "
+                + ", ".join([choice.name for choice in selection.choices]),
+                choices=[choice.name for choice in selection.choices],
+            )
+        )
+    }
+
+    # Selection can be noneable
+    if selection.noneable:
+        schema["type"] = [schema["type"], "null"]
+
+    # Add all the choices as description
+    schema["description"] = (
+        schema.get("description", MISSING_DESCRIPTION)
+        + "\nchoices are: "
+        + ", ".join([choice.name for choice in selection.choices])
+    )
+
     return schema
 
 
@@ -209,9 +294,10 @@ def schema_from_vector(vector):
     Returns:
         dict: JSON schema data
     """
+    if isinstance(vector.description, NotSet):
+        # ignore this entry
+        vector.description = None
     items = get_schema(vector.value_type)
-    if items["description"] == MISSING_DESCRIPTION:
-        items.pop("description")
     return array_schema(vector, items)
 
 
@@ -224,6 +310,10 @@ def schema_from_list(list_metadata):
     Returns:
         dict: JSON schema data
     """
+    if isinstance(list_metadata.spec.description, NotSet):
+        # Ignore this entry
+        list_metadata.spec.description = None
+
     if isinstance(list_metadata.spec, NAMED_TYPES):
         items = json_schema(
             title=list_metadata.spec.short_description(),
@@ -235,8 +325,6 @@ def schema_from_list(list_metadata):
     else:
         items = get_schema(list_metadata.spec)
 
-    if items["description"] == MISSING_DESCRIPTION:
-        items.pop("description")
     return array_schema(list_metadata, items)
 
 
@@ -297,7 +385,7 @@ def schema_from_one_of(one_of):
         else:
             one_of.name = None
 
-    if not one_of.description:
+    if isinstance(one_of.description, NotSet):
         if specs_names := one_of.parameter_names():
             one_of.description = " or ".join(specs_names)
         else:
@@ -406,6 +494,8 @@ def get_schema(parameter):
             schema = schema_from_map(parameter)
         case Primitive():
             schema = schema_from_base_type(parameter)
+        case Selection():
+            schema = schema_from_selection(parameter)
         case Group():
             schema = schema_from_group(parameter)
         case List():
