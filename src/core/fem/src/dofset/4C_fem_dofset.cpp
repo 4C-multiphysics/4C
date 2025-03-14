@@ -16,7 +16,6 @@
 
 #include <algorithm>
 #include <format>
-#include <iostream>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -234,19 +233,18 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
     std::vector<std::vector<int>> nodeids;    // vector of node IDs for each condition
     std::vector<int> mgids;                   // vector of master node IDs for each condition
 
-    for (int k = 0; k < (int)couplingconditions.size(); ++k)
+    for (const auto* condition : couplingconditions)
     {
-      onoffcond.push_back(couplingconditions[k]->parameters().get<std::vector<int>>("ONOFF"));
-      numdofcond.push_back(couplingconditions[k]->parameters().get<int>("NUMDOF"));
-      nodeids.push_back(*couplingconditions[k]->get_nodes());
-      mgids.push_back(nodeids[k][0]);
-      std::cout << "Coupling condition " << k << " contains " << nodeids[k].size()
-                << " nodes, master: " << mgids[k] << "\n";
+      onoffcond.push_back(condition->parameters().get<std::vector<int>>("ONOFF"));
+      numdofcond.push_back(condition->parameters().get<int>("NUMDOF"));
+      const auto conditioned_node_ids = condition->get_nodes();
+      nodeids.push_back(*conditioned_node_ids);
+      mgids.push_back(*conditioned_node_ids->begin());
 
       // check if all nodes in this condition are on same processor
       // (otherwise throw a FOUR_C_THROW for now - not yet implemented)
       bool allononeproc = true;
-      for (auto nd : nodeids[k])
+      for (const auto nd : *conditioned_node_ids)
       {
         if (!dis.node_row_map()->MyGID(nd)) allononeproc = false;
       }
@@ -358,24 +356,7 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
       // **********************************************************************
       // **********************************************************************
       // **********************************************************************
-      // std::cout << "Node ID " << gid << " - 0:" << nodedofset[gid][0] << "/"
-      // << nodeduplicatedofset[gid][0] << ", 2:" << nodedofset[gid][2] << "/"
-      // << nodeduplicatedofset[gid][2]<< "\n";
     }
-    for (int i = 0; i < numrownodes; ++i)
-    {
-      const int gid = dis.l_row_node(i)->id();
-      std::string s = std::format("Node {}: ", gid + 1);
-      bool printflag = false;
-      for (int j = 0; j < 3; ++j)
-      {
-        const int dupnode = nodeduplicatedofset[gid][j];
-        s += std::format("{}/{}, ", nodedofset[gid][j], dupnode);
-        if (dupnode == 1) printflag = true;
-      }
-      if (printflag) std::cout << s << std::endl;
-    }
-
 
     Epetra_Import nodeimporter(numdfcolnodes_->get_map(), num_dof_rownodes.get_map());
     int err = numdfcolnodes_->import(num_dof_rownodes, nodeimporter, Insert);
