@@ -16,7 +16,6 @@
 
 #include <algorithm>
 #include <format>
-#include <iostream>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -236,8 +235,6 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
       numdofcond.push_back(couplingconditions[k]->parameters().get<int>("NUMDOF"));
       nodeids.push_back(*couplingconditions[k]->get_nodes());
       mgids.push_back(nodeids[k][0]);
-      std::cout << "Coupling condition " << k << " contains " << nodeids[k].size()
-                << " nodes, master: " << mgids[k] << "\n";
 
       // check if all nodes in this condition are on same processor
       // (otherwise throw a FOUR_C_THROW for now - not yet implemented)
@@ -354,24 +351,7 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
       // **********************************************************************
       // **********************************************************************
       // **********************************************************************
-      // std::cout << "Node ID " << gid << " - 0:" << nodedofset[gid][0] << "/"
-      // << nodeduplicatedofset[gid][0] << ", 2:" << nodedofset[gid][2] << "/"
-      // << nodeduplicatedofset[gid][2]<< "\n";
     }
-    for (int i = 0; i < numrownodes; ++i)
-    {
-      const int gid = dis.l_row_node(i)->id();
-      std::string s = std::format("Node {}: ", gid + 1);
-      bool printflag = false;
-      for (int j = 0; j < 3; ++j)
-      {
-        const int dupnode = nodeduplicatedofset[gid][j];
-        s += std::format("{}/{}, ", nodedofset[gid][j], dupnode);
-        if (dupnode == 1) printflag = true;
-      }
-      if (printflag) std::cout << s << std::endl;
-    }
-
 
     Epetra_Import nodeimporter(numdfcolnodes_->Map(), num_dof_rownodes.Map());
     int err = numdfcolnodes_->Import(num_dof_rownodes, nodeimporter, Insert);
