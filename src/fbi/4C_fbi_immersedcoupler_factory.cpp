@@ -9,7 +9,7 @@
 
 #include "4C_fbi_immersed_geometry_coupler.hpp"
 #include "4C_fbi_immersed_geometry_coupler_binning.hpp"
-#include "4C_inpar_fbi.hpp"
+#include "4C_fbi_input.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
@@ -19,16 +19,16 @@ FOUR_C_NAMESPACE_OPEN
 std::shared_ptr<FBI::FBIGeometryCoupler> FBI::GeometryCouplerFactory::create_geometry_coupler(
     const Teuchos::ParameterList& fbidyn)
 {
-  Inpar::FBI::BeamToFluidPreSortStrategy presort_strategy =
-      Teuchos::getIntegralValue<Inpar::FBI::BeamToFluidPreSortStrategy>(fbidyn, "PRESORT_STRATEGY");
+  FBI::BeamToFluidPreSortStrategy presort_strategy =
+      Teuchos::getIntegralValue<FBI::BeamToFluidPreSortStrategy>(fbidyn, "PRESORT_STRATEGY");
 
   std::shared_ptr<FBI::FBIGeometryCoupler> coupler;
 
-  if (presort_strategy == Inpar::FBI::BeamToFluidPreSortStrategy::bruteforce)
+  if (presort_strategy == FBI::BeamToFluidPreSortStrategy::bruteforce)
   {
     coupler = std::shared_ptr<FBI::FBIGeometryCoupler>(new FBI::FBIGeometryCoupler);
   }
-  else if (presort_strategy == Inpar::FBI::BeamToFluidPreSortStrategy::binning)
+  else if (presort_strategy == FBI::BeamToFluidPreSortStrategy::binning)
   {
     coupler = std::shared_ptr<FBI::FBIBinningGeometryCoupler>(new FBIBinningGeometryCoupler);
   }

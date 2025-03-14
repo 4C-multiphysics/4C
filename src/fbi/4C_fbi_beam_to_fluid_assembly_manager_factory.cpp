@@ -10,10 +10,10 @@
 #include "4C_beaminteraction_contact_pair.hpp"
 #include "4C_fbi_beam_to_fluid_meshtying_params.hpp"
 #include "4C_fbi_fluid_assembly_strategy.hpp"
+#include "4C_fbi_input.hpp"
 #include "4C_fbi_partitioned_penaltycoupling_assembly_manager_direct.hpp"
 #include "4C_fbi_partitioned_penaltycoupling_assembly_manager_indirect.hpp"
 #include "4C_fem_discretization.hpp"
-#include "4C_inpar_fbi.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 /**
@@ -28,18 +28,18 @@ BeamInteraction::BeamToFluidAssemblyManagerFactory::create_assembly_manager(
     std::shared_ptr<FBI::Utils::FBIAssemblyStrategy> assemblystrategy)
 {
   // Get the meshtying discretization method.
-  Inpar::FBI::BeamToFluidDiscretization meshtying_discretization =
+  FBI::BeamToFluidDiscretization meshtying_discretization =
       params_ptr->get_contact_discretization();
 
   switch (meshtying_discretization)
   {
-    case Inpar::FBI::BeamToFluidDiscretization::mortar:
+    case FBI::BeamToFluidDiscretization::mortar:
       return std::make_shared<
           BeamInteraction::SUBMODELEVALUATOR::PartitionedBeamInteractionAssemblyManagerIndirect>(
 
           interaction_pairs, discretization1, discretization2, params_ptr);
       break;
-    case Inpar::FBI::BeamToFluidDiscretization::gauss_point_to_segment:
+    case FBI::BeamToFluidDiscretization::gauss_point_to_segment:
       return std::make_shared<
           BeamInteraction::SUBMODELEVALUATOR::PartitionedBeamInteractionAssemblyManagerDirect>(
 

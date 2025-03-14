@@ -72,7 +72,7 @@ EHL::Monolithic::Monolithic(MPI_Comm comm, const Teuchos::ParameterList& globalt
       systemmatrix_(nullptr),
       k_sl_(nullptr),
       k_ls_(nullptr),
-      iternorm_(Teuchos::getIntegralValue<Inpar::EHL::VectorNorm>(ehldynmono_, "ITERNORM")),
+      iternorm_(Teuchos::getIntegralValue<EHL::VectorNorm>(ehldynmono_, "ITERNORM")),
       iter_(0),
       sdyn_(structparams),
       timernewton_("EHL_Monolithic_newton", true)
@@ -760,13 +760,13 @@ bool EHL::Monolithic::converged()
   // residual EHL forces
   switch (normtyperhs_)
   {
-    case Inpar::EHL::convnorm_abs:
+    case EHL::convnorm_abs:
       convrhs = normrhs_ < tolrhs_;
       break;
-    case Inpar::EHL::convnorm_rel:
+    case EHL::convnorm_rel:
       convrhs = normrhs_ < std::max(tolrhs_ * normrhsiter0_, 1.0e-15);
       break;
-    case Inpar::EHL::convnorm_mix:
+    case EHL::convnorm_mix:
       convrhs = ((normrhs_ < tolrhs_) and (normrhs_ < std::max(normrhsiter0_ * tolrhs_, 1.0e-15)));
       break;
     default:
@@ -777,13 +777,13 @@ bool EHL::Monolithic::converged()
   // residual EHL increments
   switch (normtypeinc_)
   {
-    case Inpar::EHL::convnorm_abs:
+    case EHL::convnorm_abs:
       convinc = norminc_ < tolinc_;
       break;
-    case Inpar::EHL::convnorm_rel:
+    case EHL::convnorm_rel:
       convinc = norminc_ < std::max(norminciter0_ * tolinc_, 1e-15);
       break;
-    case Inpar::EHL::convnorm_mix:
+    case EHL::convnorm_mix:
       convinc = norminc_ < std::max(norminciter0_ * tolinc_, 1e-15);
       break;
     default:
@@ -869,17 +869,17 @@ bool EHL::Monolithic::converged()
   // combine increment-like and force-like residuals, combine EHL and single
   // field values
   bool conv = false;
-  if (combincrhs_ == Inpar::EHL::bop_and)
+  if (combincrhs_ == EHL::bop_and)
     conv = convinc and convrhs;
-  else if (combincrhs_ == Inpar::EHL::bop_or)
+  else if (combincrhs_ == EHL::bop_or)
     conv = convinc or convrhs;
-  else if (combincrhs_ == Inpar::EHL::bop_coupl_and_single)
+  else if (combincrhs_ == EHL::bop_coupl_and_single)
     conv = convinc and convrhs and convdisp and convstrrhs and convpre and convlubricationrhs;
-  else if (combincrhs_ == Inpar::EHL::bop_coupl_or_single)
+  else if (combincrhs_ == EHL::bop_coupl_or_single)
     conv = (convinc and convrhs) or (convdisp and convstrrhs and convpre and convlubricationrhs);
-  else if (combincrhs_ == Inpar::EHL::bop_and_single)
+  else if (combincrhs_ == EHL::bop_and_single)
     conv = convdisp and convstrrhs and convpre and convlubricationrhs;
-  else if (combincrhs_ == Inpar::EHL::bop_or_single)
+  else if (combincrhs_ == EHL::bop_or_single)
     conv = (convdisp or convstrrhs or convpre or convlubricationrhs);
   else
     FOUR_C_THROW("Something went terribly wrong with binary operator!");
@@ -925,13 +925,13 @@ void EHL::Monolithic::print_newton_iter_header(FILE* ofile)
   // displacement
   switch (normtyperhs_)
   {
-    case Inpar::EHL::convnorm_abs:
+    case EHL::convnorm_abs:
       oss << std::setw(15) << "abs-res-norm";
       break;
-    case Inpar::EHL::convnorm_rel:
+    case EHL::convnorm_rel:
       oss << std::setw(15) << "rel-res-norm";
       break;
-    case Inpar::EHL::convnorm_mix:
+    case EHL::convnorm_mix:
       oss << std::setw(15) << "mix-res-norm";
       break;
     default:
@@ -941,10 +941,10 @@ void EHL::Monolithic::print_newton_iter_header(FILE* ofile)
 
   switch (normtypeinc_)
   {
-    case Inpar::EHL::convnorm_abs:
+    case EHL::convnorm_abs:
       oss << std::setw(15) << "abs-inc-norm";
       break;
-    case Inpar::EHL::convnorm_rel:
+    case EHL::convnorm_rel:
       oss << std::setw(15) << "rel-inc-norm";
       break;
     default:
@@ -1064,13 +1064,13 @@ void EHL::Monolithic::print_newton_iter_text(FILE* ofile)
   // ----------------------------------------------- test coupled problem
   switch (normtyperhs_)
   {
-    case Inpar::EHL::convnorm_abs:
+    case EHL::convnorm_abs:
       oss << std::setw(15) << std::setprecision(5) << std::scientific << normrhs_;
       break;
-    case Inpar::EHL::convnorm_rel:
+    case EHL::convnorm_rel:
       oss << std::setw(15) << std::setprecision(5) << std::scientific << normrhs_ / normrhsiter0_;
       break;
-    case Inpar::EHL::convnorm_mix:
+    case EHL::convnorm_mix:
       oss << std::setw(15) << std::setprecision(5) << std::scientific
           << std::min(normrhs_, normrhs_ / normrhsiter0_);
       break;
@@ -1081,13 +1081,13 @@ void EHL::Monolithic::print_newton_iter_text(FILE* ofile)
 
   switch (normtypeinc_)
   {
-    case Inpar::EHL::convnorm_abs:
+    case EHL::convnorm_abs:
       oss << std::setw(15) << std::setprecision(5) << std::scientific << norminc_;
       break;
-    case Inpar::EHL::convnorm_rel:
+    case EHL::convnorm_rel:
       oss << std::setw(15) << std::setprecision(5) << std::scientific << norminc_ / norminciter0_;
       break;
-    case Inpar::EHL::convnorm_mix:
+    case EHL::convnorm_mix:
       oss << std::setw(15) << std::setprecision(5) << std::scientific
           << std::min(norminc_, norminc_ / norminciter0_);
       break;
@@ -1377,11 +1377,11 @@ void EHL::Monolithic::unscale_solution(Core::LinAlg::BlockSparseMatrixBase& mat,
  | calculate vector norm                                    wirtz 01/16 |
  *----------------------------------------------------------------------*/
 double EHL::Monolithic::calculate_vector_norm(
-    const enum Inpar::EHL::VectorNorm norm, Core::LinAlg::Vector<double>& vect)
+    const enum EHL::VectorNorm norm, Core::LinAlg::Vector<double>& vect)
 {
   // L1 norm
   // norm = sum_0^i vect[i]
-  if (norm == Inpar::EHL::norm_l1)
+  if (norm == EHL::norm_l1)
   {
     double vectnorm;
     vect.norm_1(&vectnorm);
@@ -1389,7 +1389,7 @@ double EHL::Monolithic::calculate_vector_norm(
   }
   // L2/Euclidian norm
   // norm = sqrt{sum_0^i vect[i]^2 }
-  else if (norm == Inpar::EHL::norm_l2)
+  else if (norm == EHL::norm_l2)
   {
     double vectnorm;
     vect.norm_2(&vectnorm);
@@ -1397,7 +1397,7 @@ double EHL::Monolithic::calculate_vector_norm(
   }
   // RMS norm
   // norm = sqrt{sum_0^i vect[i]^2 }/ sqrt{length_vect}
-  else if (norm == Inpar::EHL::norm_rms)
+  else if (norm == EHL::norm_rms)
   {
     double vectnorm;
     vect.norm_2(&vectnorm);
@@ -1405,14 +1405,14 @@ double EHL::Monolithic::calculate_vector_norm(
   }
   // infinity/maximum norm
   // norm = max( vect[i] )
-  else if (norm == Inpar::EHL::norm_inf)
+  else if (norm == EHL::norm_inf)
   {
     double vectnorm;
     vect.norm_inf(&vectnorm);
     return vectnorm;
   }
   // norm = sum_0^i vect[i]/length_vect
-  else if (norm == Inpar::EHL::norm_l1_scaled)
+  else if (norm == EHL::norm_l1_scaled)
   {
     double vectnorm;
     vect.norm_1(&vectnorm);
@@ -1441,8 +1441,8 @@ void EHL::Monolithic::set_default_parameters()
   itermin_ = ehldyn_.get<int>("ITEMIN");
 
   // what kind of norm do we wanna test for coupled EHL problem
-  normtypeinc_ = Teuchos::getIntegralValue<Inpar::EHL::ConvNorm>(ehldynmono_, "NORM_INC");
-  normtyperhs_ = Teuchos::getIntegralValue<Inpar::EHL::ConvNorm>(ehldynmono_, "NORM_RESF");
+  normtypeinc_ = Teuchos::getIntegralValue<EHL::ConvNorm>(ehldynmono_, "NORM_INC");
+  normtyperhs_ = Teuchos::getIntegralValue<EHL::ConvNorm>(ehldynmono_, "NORM_RESF");
   // what kind of norm do we wanna test for the single fields
   normtypedisi_ = Teuchos::getIntegralValue<Inpar::Solid::ConvNorm>(sdyn_, "NORM_DISP");
   normtypestrrhs_ = Teuchos::getIntegralValue<Inpar::Solid::ConvNorm>(sdyn_, "NORM_RESF");
@@ -1451,44 +1451,44 @@ void EHL::Monolithic::set_default_parameters()
   normtypelubricationrhs_ = Teuchos::getIntegralValue<Lubrication::ConvNorm>(ldyn, "NORM_RESF");
   auto lubricationiternorm = Teuchos::getIntegralValue<Lubrication::VectorNorm>(ldyn, "ITERNORM");
   // in total when do we reach a converged state for complete problem
-  combincrhs_ = Teuchos::getIntegralValue<Inpar::EHL::BinaryOp>(ehldynmono_, "NORMCOMBI_RESFINC");
+  combincrhs_ = Teuchos::getIntegralValue<EHL::BinaryOp>(ehldynmono_, "NORMCOMBI_RESFINC");
 
   switch (combincrhs_)
   {
-    case Inpar::EHL::bop_and:
+    case EHL::bop_and:
     {
       if (Core::Communication::my_mpi_rank(get_comm()) == 0)
         std::cout << "Convergence test of EHL:\n res, inc with 'AND'." << std::endl;
       break;
     }
-    case Inpar::EHL::bop_or:
+    case EHL::bop_or:
     {
       if (Core::Communication::my_mpi_rank(get_comm()) == 0)
         std::cout << "Convergence test of EHL:\n res, inc with 'OR'." << std::endl;
       break;
     }
-    case Inpar::EHL::bop_coupl_and_single:
+    case EHL::bop_coupl_and_single:
     {
       if (Core::Communication::my_mpi_rank(get_comm()) == 0)
         std::cout << "Convergence test of EHL:\n res, inc, str-res, lub-res, dis, pre with 'AND'."
                   << std::endl;
       break;
     }
-    case Inpar::EHL::bop_coupl_or_single:
+    case EHL::bop_coupl_or_single:
     {
       if (Core::Communication::my_mpi_rank(get_comm()) == 0)
         std::cout << "Convergence test of EHL:\n (res, inc) or (str-res, lub-res, dis, pre)."
                   << std::endl;
       break;
     }
-    case Inpar::EHL::bop_and_single:
+    case EHL::bop_and_single:
     {
       if (Core::Communication::my_mpi_rank(get_comm()) == 0)
         std::cout << "Convergence test of EHL:\n str-res, lub-res, dis, pre with 'AND'."
                   << std::endl;
       break;
     }
-    case Inpar::EHL::bop_or_single:
+    case EHL::bop_or_single:
     {
       if (Core::Communication::my_mpi_rank(get_comm()) == 0)
         std::cout << "Convergence test of EHL:\n str-res, lub-res, dis, pre with 'OR'."
@@ -1507,16 +1507,16 @@ void EHL::Monolithic::set_default_parameters()
   switch (striternorm)
   {
     case Inpar::Solid::norm_l1:
-      iternormstr_ = Inpar::EHL::norm_l1;
+      iternormstr_ = EHL::norm_l1;
       break;
     case Inpar::Solid::norm_l2:
-      iternormstr_ = Inpar::EHL::norm_l2;
+      iternormstr_ = EHL::norm_l2;
       break;
     case Inpar::Solid::norm_rms:
-      iternormstr_ = Inpar::EHL::norm_rms;
+      iternormstr_ = EHL::norm_rms;
       break;
     case Inpar::Solid::norm_inf:
-      iternormstr_ = Inpar::EHL::norm_inf;
+      iternormstr_ = EHL::norm_inf;
       break;
     case Inpar::Solid::norm_vague:
     default:
@@ -1528,16 +1528,16 @@ void EHL::Monolithic::set_default_parameters()
   switch (lubricationiternorm)
   {
     case Lubrication::norm_l1:
-      iternormlubrication_ = Inpar::EHL::norm_l1;
+      iternormlubrication_ = EHL::norm_l1;
       break;
     case Lubrication::norm_l2:
-      iternormlubrication_ = Inpar::EHL::norm_l2;
+      iternormlubrication_ = EHL::norm_l2;
       break;
     case Lubrication::norm_rms:
-      iternormlubrication_ = Inpar::EHL::norm_rms;
+      iternormlubrication_ = EHL::norm_rms;
       break;
     case Lubrication::norm_inf:
-      iternormlubrication_ = Inpar::EHL::norm_inf;
+      iternormlubrication_ = EHL::norm_inf;
       break;
     case Lubrication::norm_vague:
     default:
@@ -1548,12 +1548,11 @@ void EHL::Monolithic::set_default_parameters()
   }  // switch (lubricationiternorm)
 
   // if scaled L1-norm is wished to be used
-  if ((iternorm_ == Inpar::EHL::norm_l1_scaled) and
-      ((combincrhs_ == Inpar::EHL::bop_coupl_and_single) or
-          (combincrhs_ == Inpar::EHL::bop_coupl_or_single)))
+  if ((iternorm_ == EHL::norm_l1_scaled) and
+      ((combincrhs_ == EHL::bop_coupl_and_single) or (combincrhs_ == EHL::bop_coupl_or_single)))
   {
-    iternormstr_ = Inpar::EHL::norm_l1_scaled;
-    iternormlubrication_ = Inpar::EHL::norm_l1_scaled;
+    iternormstr_ = EHL::norm_l1_scaled;
+    iternormlubrication_ = EHL::norm_l1_scaled;
   }
 
   // test the EHL-residual and the EHL-increment

@@ -12,6 +12,7 @@ set(_dependencies
     config
     contact_constitutivelaw
     core
+    ehl
     global_data
     solver_nonlin_nox
     )

@@ -15,15 +15,14 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-namespace Inpar
+
+namespace FBI
 {
-  namespace FBI
-  {
-    enum class BeamToFluidConstraintEnforcement;
-    enum class BeamToFluidDiscretization;
-    enum class BeamToFluidMeshtingMortarShapefunctions;
-  }  // namespace FBI
-}  // namespace Inpar
+  enum class BeamToFluidConstraintEnforcement;
+  enum class BeamToFluidDiscretization;
+  enum class BeamToFluidMeshtingMortarShapefunctions;
+}  // namespace FBI
+
 namespace FBI
 {
   /**
@@ -91,7 +90,7 @@ namespace FBI
     /**
      * \brief Returns the contact discretization method.
      */
-    inline Inpar::FBI::BeamToFluidConstraintEnforcement get_constraint_enforcement() const
+    inline FBI::BeamToFluidConstraintEnforcement get_constraint_enforcement() const
     {
       return constraint_enforcement_;
     }
@@ -99,7 +98,7 @@ namespace FBI
     /**
      * \brief Returns constraints enforcement strategy.
      */
-    inline Inpar::FBI::BeamToFluidDiscretization get_contact_discretization() const
+    inline FBI::BeamToFluidDiscretization get_contact_discretization() const
     {
       return meshtying_discretization_;
     }
@@ -129,8 +128,7 @@ namespace FBI
     /**
      * \brief Returns the shape function for the mortar Lagrange-multiplicators.
      */
-    inline Inpar::FBI::BeamToFluidMeshtingMortarShapefunctions get_mortar_shape_function_type()
-        const
+    inline FBI::BeamToFluidMeshtingMortarShapefunctions get_mortar_shape_function_type() const
     {
       return mortar_shape_function_;
     }
@@ -144,10 +142,10 @@ namespace FBI
     bool issetup_;
 
     /// Enforcement strategy for constraints.
-    Inpar::FBI::BeamToFluidConstraintEnforcement constraint_enforcement_;
+    FBI::BeamToFluidConstraintEnforcement constraint_enforcement_;
 
     /// discretization used for the contact.
-    Inpar::FBI::BeamToFluidDiscretization meshtying_discretization_;
+    FBI::BeamToFluidDiscretization meshtying_discretization_;
 
     /// Penalty parameter.
     double penalty_parameter_;
@@ -170,7 +168,7 @@ namespace FBI
     std::shared_ptr<FBI::BeamToFluidMeshtyingVtkOutputParams> output_params_;
 
     //! Shape function for the mortar Lagrange-multiplicators
-    Inpar::FBI::BeamToFluidMeshtingMortarShapefunctions mortar_shape_function_;
+    FBI::BeamToFluidMeshtingMortarShapefunctions mortar_shape_function_;
   };
 
 }  // namespace FBI

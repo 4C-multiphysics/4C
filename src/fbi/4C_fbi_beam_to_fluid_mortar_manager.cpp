@@ -11,10 +11,10 @@
 #include "4C_beaminteraction_contact_pair.hpp"
 #include "4C_fbi_beam_to_fluid_meshtying_params.hpp"
 #include "4C_fbi_calc_utils.hpp"
+#include "4C_fbi_input.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_node.hpp"
 #include "4C_global_data.hpp"
-#include "4C_inpar_fbi.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
@@ -52,19 +52,19 @@ BeamInteraction::BeamToFluidMortarManager::BeamToFluidMortarManager(
   // Get the number of Lagrange multiplier DOF on a beam node and on a beam element.
   switch (params->get_mortar_shape_function_type())
   {
-    case Inpar::FBI::BeamToFluidMeshtingMortarShapefunctions::line2:
+    case FBI::BeamToFluidMeshtingMortarShapefunctions::line2:
     {
       n_lambda_node_ = 1 * 3;
       n_lambda_element_ = 0 * 3;
       break;
     }
-    case Inpar::FBI::BeamToFluidMeshtingMortarShapefunctions::line3:
+    case FBI::BeamToFluidMeshtingMortarShapefunctions::line3:
     {
       n_lambda_node_ = 1 * 3;
       n_lambda_element_ = 1 * 3;
       break;
     }
-    case Inpar::FBI::BeamToFluidMeshtingMortarShapefunctions::line4:
+    case FBI::BeamToFluidMeshtingMortarShapefunctions::line4:
     {
       n_lambda_node_ = 1 * 3;
       n_lambda_element_ = 2 * 3;

@@ -8,8 +8,8 @@
 #include "4C_fbi_beam_to_fluid_meshtying_params.hpp"
 
 #include "4C_fbi_beam_to_fluid_meshtying_output_params.hpp"
+#include "4C_fbi_input.hpp"
 #include "4C_global_data.hpp"
-#include "4C_inpar_fbi.hpp"
 #include "4C_inpar_geometry_pair.hpp"
 #include "4C_utils_exceptions.hpp"
 
@@ -23,12 +23,12 @@ FOUR_C_NAMESPACE_OPEN
 FBI::BeamToFluidMeshtyingParams::BeamToFluidMeshtyingParams()
     : isinit_(false),
       issetup_(false),
-      constraint_enforcement_(Inpar::FBI::BeamToFluidConstraintEnforcement::none),
-      meshtying_discretization_(Inpar::FBI::BeamToFluidDiscretization::none),
+      constraint_enforcement_(FBI::BeamToFluidConstraintEnforcement::none),
+      meshtying_discretization_(FBI::BeamToFluidDiscretization::none),
       penalty_parameter_(-1.0),
       gauss_rule_(Core::FE::GaussRule1D::undefined),
       calcfluidweakdirichletforce_(false),
-      mortar_shape_function_(Inpar::FBI::BeamToFluidMeshtingMortarShapefunctions::none)
+      mortar_shape_function_(FBI::BeamToFluidMeshtingMortarShapefunctions::none)
 {
   // Empty Constructor.
 }
@@ -44,18 +44,17 @@ void FBI::BeamToFluidMeshtyingParams::init()
 
   // Get parameters form input file.
   // Constraint enforcement.
-  constraint_enforcement_ = Teuchos::getIntegralValue<Inpar::FBI::BeamToFluidConstraintEnforcement>(
+  constraint_enforcement_ = Teuchos::getIntegralValue<FBI::BeamToFluidConstraintEnforcement>(
       beam_to_fluid_meshtying_params_list.sublist("BEAM TO FLUID MESHTYING"),
       "CONSTRAINT_STRATEGY");
 
   // Constraint enforcement.
-  mortar_shape_function_ =
-      Teuchos::getIntegralValue<Inpar::FBI::BeamToFluidMeshtingMortarShapefunctions>(
-          beam_to_fluid_meshtying_params_list.sublist("BEAM TO FLUID MESHTYING"),
-          "MORTAR_SHAPE_FUNCTION");
+  mortar_shape_function_ = Teuchos::getIntegralValue<FBI::BeamToFluidMeshtingMortarShapefunctions>(
+      beam_to_fluid_meshtying_params_list.sublist("BEAM TO FLUID MESHTYING"),
+      "MORTAR_SHAPE_FUNCTION");
 
   // Contact discretization to be used.
-  meshtying_discretization_ = Teuchos::getIntegralValue<Inpar::FBI::BeamToFluidDiscretization>(
+  meshtying_discretization_ = Teuchos::getIntegralValue<FBI::BeamToFluidDiscretization>(
       beam_to_fluid_meshtying_params_list.sublist("BEAM TO FLUID MESHTYING"),
       "MESHTYING_DISCRETIZATION");
 

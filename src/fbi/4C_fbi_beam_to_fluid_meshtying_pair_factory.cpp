@@ -10,9 +10,9 @@
 #include "4C_fbi_beam_to_fluid_meshtying_pair_gauss_point.hpp"
 #include "4C_fbi_beam_to_fluid_meshtying_pair_mortar.hpp"
 #include "4C_fbi_beam_to_fluid_meshtying_params.hpp"
+#include "4C_fbi_input.hpp"
 #include "4C_fluid_ele.hpp"
 #include "4C_geometry_pair_element_evaluation_functions.hpp"
-#include "4C_inpar_fbi.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -29,11 +29,10 @@ std::shared_ptr<BeamInteraction::BeamContactPair> FBI::PairFactory::create_pair(
   Core::FE::CellType shape = fluidele->shape();
 
   // Get the meshtying discretization method.
-  Inpar::FBI::BeamToFluidDiscretization meshtying_discretization =
-      params_ptr.get_contact_discretization();
+  FBI::BeamToFluidDiscretization meshtying_discretization = params_ptr.get_contact_discretization();
 
   // Check which contact discretization is wanted.
-  if (meshtying_discretization == Inpar::FBI::BeamToFluidDiscretization::gauss_point_to_segment)
+  if (meshtying_discretization == FBI::BeamToFluidDiscretization::gauss_point_to_segment)
   {
     switch (shape)
     {
@@ -61,14 +60,14 @@ std::shared_ptr<BeamInteraction::BeamContactPair> FBI::PairFactory::create_pair(
         FOUR_C_THROW("Wrong element type for fluid element.");
     }
   }
-  else if (meshtying_discretization == Inpar::FBI::BeamToFluidDiscretization::mortar)
+  else if (meshtying_discretization == FBI::BeamToFluidDiscretization::mortar)
   {
-    Inpar::FBI::BeamToFluidMeshtingMortarShapefunctions mortar_shape_function =
+    FBI::BeamToFluidMeshtingMortarShapefunctions mortar_shape_function =
         params_ptr.get_mortar_shape_function_type();
 
     switch (mortar_shape_function)
     {
-      case Inpar::FBI::BeamToFluidMeshtingMortarShapefunctions::line2:
+      case FBI::BeamToFluidMeshtingMortarShapefunctions::line2:
       {
         switch (shape)
         {
@@ -92,7 +91,7 @@ std::shared_ptr<BeamInteraction::BeamContactPair> FBI::PairFactory::create_pair(
         }
         break;
       }
-      case Inpar::FBI::BeamToFluidMeshtingMortarShapefunctions::line3:
+      case FBI::BeamToFluidMeshtingMortarShapefunctions::line3:
       {
         switch (shape)
         {
@@ -116,7 +115,7 @@ std::shared_ptr<BeamInteraction::BeamContactPair> FBI::PairFactory::create_pair(
         }
         break;
       }
-      case Inpar::FBI::BeamToFluidMeshtingMortarShapefunctions::line4:
+      case FBI::BeamToFluidMeshtingMortarShapefunctions::line4:
       {
         switch (shape)
         {

@@ -33,7 +33,7 @@ EHL::Base::Base(MPI_Comm comm, const Teuchos::ParameterList& globaltimeparams,
     : AlgorithmBase(comm, globaltimeparams),
       structure_(nullptr),
       lubrication_(nullptr),
-      fieldcoupling_(Teuchos::getIntegralValue<Inpar::EHL::FieldCoupling>(
+      fieldcoupling_(Teuchos::getIntegralValue<EHL::FieldCoupling>(
           Global::Problem::instance()->elasto_hydro_dynamic_params(), "FIELDCOUPLING")),
       dry_contact_(
           Global::Problem::instance()->elasto_hydro_dynamic_params().get<bool>("DRY_CONTACT_MODEL"))

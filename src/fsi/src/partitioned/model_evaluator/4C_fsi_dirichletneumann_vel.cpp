@@ -15,8 +15,8 @@
 #include "4C_fbi_beam_to_fluid_meshtying_params.hpp"
 #include "4C_fbi_constraintenforcer.hpp"
 #include "4C_fbi_constraintenforcer_factory.hpp"
+#include "4C_fbi_input.hpp"
 #include "4C_global_data.hpp"
-#include "4C_inpar_fbi.hpp"
 #include "4C_inpar_fsi.hpp"
 #include "4C_io_control.hpp"
 #include "4C_io_visualization_parameters.hpp"
@@ -86,8 +86,8 @@ std::shared_ptr<Core::LinAlg::Vector<double>> FSI::DirichletNeumannVel::fluid_op
 
     mb_fluid_field()->set_itemax(itemax);
 
-    if (Teuchos::getIntegralValue<Inpar::FBI::BeamToFluidCoupling>(fbi, "COUPLING") !=
-            Inpar::FBI::BeamToFluidCoupling::fluid &&
+    if (Teuchos::getIntegralValue<FBI::BeamToFluidCoupling>(fbi, "COUPLING") !=
+            FBI::BeamToFluidCoupling::fluid &&
         fbi.get<int>("STARTSTEP") < step())
     {
       constraint_manager_->recompute_coupling_without_pair_creation();
@@ -104,8 +104,8 @@ std::shared_ptr<Core::LinAlg::Vector<double>> FSI::DirichletNeumannVel::struct_o
   FSI::Partitioned::struct_op(iforce, fillFlag);
 
   const Teuchos::ParameterList& fbi = Global::Problem::instance()->fbi_params();
-  if (!(Teuchos::getIntegralValue<Inpar::FBI::BeamToFluidCoupling>(fbi, "COUPLING") ==
-          Inpar::FBI::BeamToFluidCoupling::fluid) &&
+  if (!(Teuchos::getIntegralValue<FBI::BeamToFluidCoupling>(fbi, "COUPLING") ==
+          FBI::BeamToFluidCoupling::fluid) &&
       fbi.get<int>("STARTSTEP") < step())
   {
     if (not use_old_structure_)
@@ -123,8 +123,8 @@ std::shared_ptr<Core::LinAlg::Vector<double>> FSI::DirichletNeumannVel::struct_o
   {
     constraint_manager_->prepare_fluid_solve();
     constraint_manager_->evaluate();
-    if (!(Teuchos::getIntegralValue<Inpar::FBI::BeamToFluidCoupling>(fbi, "COUPLING") ==
-            Inpar::FBI::BeamToFluidCoupling::solid))
+    if (!(Teuchos::getIntegralValue<FBI::BeamToFluidCoupling>(fbi, "COUPLING") ==
+            FBI::BeamToFluidCoupling::solid))
       std::dynamic_pointer_cast<Adapter::FBIFluidMB>(mb_fluid_field())->reset_external_forces();
   }
 

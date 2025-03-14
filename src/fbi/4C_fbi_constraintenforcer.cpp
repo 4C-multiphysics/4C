@@ -17,6 +17,7 @@
 #include "4C_fbi_beam_to_fluid_meshtying_output_params.hpp"
 #include "4C_fbi_beam_to_fluid_meshtying_params.hpp"
 #include "4C_fbi_immersed_geometry_coupler.hpp"
+#include "4C_fbi_input.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_discretization_faces.hpp"
 #include "4C_fem_general_element.hpp"
@@ -24,7 +25,6 @@
 #include "4C_fluid_utils.hpp"
 #include "4C_geometry_pair.hpp"
 #include "4C_global_data.hpp"
-#include "4C_inpar_fbi.hpp"
 #include "4C_inpar_fluid.hpp"
 #include "4C_linalg_blocksparsematrix.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
@@ -151,8 +151,8 @@ std::shared_ptr<Core::LinAlg::Vector<double>> Adapter::FBIConstraintenforcer::st
 
   // Check if we want to couple the fluid
   const Teuchos::ParameterList& fbi = Global::Problem::instance()->fbi_params();
-  if (Teuchos::getIntegralValue<Inpar::FBI::BeamToFluidCoupling>(fbi, "COUPLING") !=
-          Inpar::FBI::BeamToFluidCoupling::solid &&
+  if (Teuchos::getIntegralValue<FBI::BeamToFluidCoupling>(fbi, "COUPLING") !=
+          FBI::BeamToFluidCoupling::solid &&
       fbi.get<int>("STARTSTEP") < step)
   {
     // Assemble the fluid stiffness matrix and hand it to the fluid solver

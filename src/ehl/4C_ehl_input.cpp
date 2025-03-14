@@ -5,7 +5,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "4C_inpar_ehl.hpp"
+#include "4C_ehl_input.hpp"
 
 #include "4C_fem_condition_definition.hpp"
 #include "4C_io_input_spec_builders.hpp"
@@ -15,7 +15,7 @@ FOUR_C_NAMESPACE_OPEN
 
 
 
-void Inpar::EHL::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
+void EHL::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
   using namespace Core::IO::InputSpecBuilders;
@@ -151,7 +151,7 @@ void Inpar::EHL::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
 }
 
 
-void Inpar::EHL::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition>& condlist)
+void EHL::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition>& condlist)
 {
   using namespace Core::IO::InputSpecBuilders;
   /*--------------------------------------------------------------------*/

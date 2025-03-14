@@ -12,7 +12,7 @@
 #include "4C_fbi_constraintenforcer_penalty.hpp"
 #include "4C_fbi_immersed_geometry_coupler.hpp"
 #include "4C_fbi_immersedcoupler_factory.hpp"
-#include "4C_inpar_fbi.hpp"
+#include "4C_fbi_input.hpp"
 #include "4C_inpar_fsi.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>

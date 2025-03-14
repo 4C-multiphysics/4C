@@ -8,13 +8,13 @@
 #include "4C_inpar_validconditions.hpp"
 
 #include "4C_ale_input.hpp"
+#include "4C_ehl_input.hpp"
 #include "4C_fem_condition_definition.hpp"
 #include "4C_inpar_beaminteraction.hpp"
 #include "4C_inpar_beampotential.hpp"
 #include "4C_inpar_bio.hpp"
 #include "4C_inpar_cardiac_monodomain.hpp"
 #include "4C_inpar_cardiovascular0d.hpp"
-#include "4C_inpar_ehl.hpp"
 #include "4C_inpar_elch.hpp"
 #include "4C_inpar_fluid.hpp"
 #include "4C_inpar_fpsi.hpp"
@@ -854,7 +854,7 @@ std::vector<Core::Conditions::ConditionDefinition> Input::valid_conditions()
   Inpar::BeamPotential::set_valid_conditions(condlist);
   Inpar::RveMpc::set_valid_conditions(condlist);
   Inpar::BeamInteraction::set_valid_conditions(condlist);
-  Inpar::EHL::set_valid_conditions(condlist);
+  EHL::set_valid_conditions(condlist);
   Inpar::PoroMultiPhaseScaTra::set_valid_conditions(condlist);
 
   // finally some conditions that do not have their own files yet are problem-specific

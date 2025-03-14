@@ -15,7 +15,7 @@
 #include "4C_config.hpp"
 
 #include "4C_ehl_base.hpp"
-#include "4C_inpar_ehl.hpp"
+#include "4C_ehl_input.hpp"
 #include "4C_inpar_structure.hpp"
 #include "4C_lubrication_input.hpp"
 
@@ -183,8 +183,8 @@ namespace EHL
     void print_newton_conv();
 
     //! Determine norm of force residual
-    double calculate_vector_norm(const enum Inpar::EHL::VectorNorm norm,  //!< norm to use
-        Core::LinAlg::Vector<double>& vect  //!< the vector of interest
+    double calculate_vector_norm(const enum EHL::VectorNorm norm,  //!< norm to use
+        Core::LinAlg::Vector<double>& vect                         //!< the vector of interest
     );
 
     //@}
@@ -293,20 +293,19 @@ namespace EHL
 
     //! @name iterative solution technique
 
-    enum Inpar::EHL::ConvNorm normtypeinc_;       //!< convergence check for increments
-    enum Inpar::EHL::ConvNorm normtyperhs_;       //!< convergence check for residual forces
+    enum EHL::ConvNorm normtypeinc_;              //!< convergence check for increments
+    enum EHL::ConvNorm normtyperhs_;              //!< convergence check for residual forces
     enum Inpar::Solid::ConvNorm normtypedisi_;    //!< convergence check for residual displacements
     enum Inpar::Solid::ConvNorm normtypestrrhs_;  //!< convergence check for residual forces
     enum Lubrication::ConvNorm normtypeprei_;     //!< convergence check for residual pressures
     enum Lubrication::ConvNorm
         normtypelubricationrhs_;  //!< convergence check for residual lubrication forces
 
-    enum Inpar::EHL::BinaryOp combincrhs_;  //!< binary operator to combine increments and forces
+    enum EHL::BinaryOp combincrhs_;  //!< binary operator to combine increments and forces
 
-    enum Inpar::EHL::VectorNorm iternorm_;     //!< vector norm to check EHL values with
-    enum Inpar::EHL::VectorNorm iternormstr_;  //!< vector norm to check structural values with
-    enum Inpar::EHL::VectorNorm
-        iternormlubrication_;  //!< vector norm to check lubrication values with
+    enum EHL::VectorNorm iternorm_;             //!< vector norm to check EHL values with
+    enum EHL::VectorNorm iternormstr_;          //!< vector norm to check structural values with
+    enum EHL::VectorNorm iternormlubrication_;  //!< vector norm to check lubrication values with
 
     double tolinc_;             //!< tolerance for increment
     double tolrhs_;             //!< tolerance for rhs

@@ -13,7 +13,7 @@
 
 #include "4C_adapter_algorithmbase.hpp"
 #include "4C_coupling_adapter.hpp"
-#include "4C_inpar_ehl.hpp"
+#include "4C_ehl_input.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_lubrication_adapter.hpp"
@@ -84,7 +84,7 @@ namespace EHL
     std::shared_ptr<Lubrication::LubricationBaseAlgorithm> lubrication_;
 
     //! Type of coupling strategy between the two fields of the EHL problems
-    const Inpar::EHL::FieldCoupling fieldcoupling_;
+    const EHL::FieldCoupling fieldcoupling_;
 
     //! adapter for coupling the nodes of the lubrication field with the nodes from the master side
     //! of the structure

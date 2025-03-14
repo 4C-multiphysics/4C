@@ -5,7 +5,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "4C_inpar_fbi.hpp"
+#include "4C_fbi_input.hpp"
 
 #include "4C_fem_condition_definition.hpp"
 #include "4C_inpar_geometry_pair.hpp"
@@ -13,7 +13,7 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-void Inpar::FBI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
+void FBI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using Teuchos::tuple;
   using namespace Core::IO::InputSpecBuilders;
@@ -70,14 +70,14 @@ void Inpar::FBI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
                       "to not blow up memory demand but to still find all interaction pairs!",
           .default_value = 1000.0}));
 
-  Core::Utils::string_to_integral_parameter<Inpar::FBI::BeamToFluidMeshtingMortarShapefunctions>(
+  Core::Utils::string_to_integral_parameter<FBI::BeamToFluidMeshtingMortarShapefunctions>(
       "MORTAR_SHAPE_FUNCTION", "none", "Shape function for the mortar Lagrange-multipliers",
       tuple<std::string>("none", "line2", "line3", "line4"),
-      tuple<Inpar::FBI::BeamToFluidMeshtingMortarShapefunctions>(
-          Inpar::FBI::BeamToFluidMeshtingMortarShapefunctions::none,
-          Inpar::FBI::BeamToFluidMeshtingMortarShapefunctions::line2,
-          Inpar::FBI::BeamToFluidMeshtingMortarShapefunctions::line3,
-          Inpar::FBI::BeamToFluidMeshtingMortarShapefunctions::line4),
+      tuple<FBI::BeamToFluidMeshtingMortarShapefunctions>(
+          FBI::BeamToFluidMeshtingMortarShapefunctions::none,
+          FBI::BeamToFluidMeshtingMortarShapefunctions::line2,
+          FBI::BeamToFluidMeshtingMortarShapefunctions::line3,
+          FBI::BeamToFluidMeshtingMortarShapefunctions::line4),
       beam_to_fluid_meshtying);
 
   // Add the geometry pair input parameters.
@@ -132,8 +132,7 @@ void Inpar::FBI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
   beam_to_fluid_meshtying_output.move_into_collection(list);
 }
 
-void Inpar::FBI::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition>& condlist)
-{ /*-------------------------------------------------------------------*/
-}
+void FBI::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition>& condlist)
+{ /*-------------------------------------------------------------------*/ }
 
 FOUR_C_NAMESPACE_CLOSE

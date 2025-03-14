@@ -21,6 +21,7 @@
 #include "4C_binstrategy.hpp"
 #include "4C_coupling_adapter.hpp"
 #include "4C_coupling_adapter_mortar.hpp"
+#include "4C_fbi_input.hpp"
 #include "4C_fem_condition_selector.hpp"
 #include "4C_fem_condition_utils.hpp"
 #include "4C_fem_dofset_fixed_size.hpp"
@@ -50,7 +51,6 @@
 #include "4C_fsi_xfem_fluid.hpp"
 #include "4C_fsi_xfem_monolithic.hpp"
 #include "4C_global_data.hpp"
-#include "4C_inpar_fbi.hpp"
 #include "4C_inpar_fsi.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_poroelast_utils_clonestrategy.hpp"
@@ -297,11 +297,11 @@ void fsi_immersed_drt()
 
   const Teuchos::ParameterList& fbidyn = problem->fbi_params();
 
-  Inpar::FBI::BeamToFluidPreSortStrategy presort_strategy =
-      Teuchos::getIntegralValue<Inpar::FBI::BeamToFluidPreSortStrategy>(fbidyn, "PRESORT_STRATEGY");
+  FBI::BeamToFluidPreSortStrategy presort_strategy =
+      Teuchos::getIntegralValue<FBI::BeamToFluidPreSortStrategy>(fbidyn, "PRESORT_STRATEGY");
 
   // redistribute discr. with help of binning strategy
-  if (presort_strategy == Inpar::FBI::BeamToFluidPreSortStrategy::binning)
+  if (presort_strategy == FBI::BeamToFluidPreSortStrategy::binning)
   {
     std::vector<std::shared_ptr<Epetra_Map>> stdelecolmap;
     std::vector<std::shared_ptr<Epetra_Map>> stdnodecolmap;
@@ -330,7 +330,7 @@ void fsi_immersed_drt()
   else
     FOUR_C_THROW("unsupported partitioned FSI scheme");
 
-  if (presort_strategy == Inpar::FBI::BeamToFluidPreSortStrategy::binning)
+  if (presort_strategy == FBI::BeamToFluidPreSortStrategy::binning)
   {
     std::dynamic_pointer_cast<FSI::DirichletNeumannVel>(fsi)->set_binning(binningstrategy);
   }
