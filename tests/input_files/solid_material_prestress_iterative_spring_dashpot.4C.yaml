@@ -77,7 +77,7 @@ DESIGN SURF NEUMANN CONDITIONS:
     NUMDOF: 6
     ONOFF: [1, 0, 0, 0, 0, 0]
     VAL: [100, 0, 0, 0, 0, 0]
-    FUNCT: [2, 0, 0, 0, 0, 0]
+    FUNCT: [2, null, null, null, null, null]
 RESULT DESCRIPTION:
   - STRUCTURE:
       DIS: structure

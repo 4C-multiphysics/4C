@@ -113,27 +113,27 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME y*(1-cos(2*t*pi/5))
 COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME (1-cos(2*t*pi/5))
 ------------------------------------DESIGN POINT DIRICH CONDITIONS
 // structure_vertices
-E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 // inflow_wall_vertices
-E 2 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 2 0 0
+E 2 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 2 none none
 // cavity_vertices
-E 3 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // fluid_fsi_vertices
-E 4 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 4 NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 -------------------------------------DESIGN LINE DIRICH CONDITIONS
 // structure_clamping_curves
-E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 // cavity_wall_curves
-E 3 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // inflow_wall_curve
-E 4 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 2 0 0
+E 4 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 2 none none
 // inflow_curve
-E 5 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1 0 0
+E 5 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0 FUNCT 1 none none
 ---------------------------------DESIGN LINE ALE DIRICH CONDITIONS
 // inflow_wall_curve
-E 4 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 4 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 // fluid_wall_curves_in_y-direction
-E 6 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
+E 6 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
 -------------------------DESIGN LINE MORTAR COUPLING CONDITIONS 2D
 // hole_interface
 E 7 InterfaceID 1 Side Slave

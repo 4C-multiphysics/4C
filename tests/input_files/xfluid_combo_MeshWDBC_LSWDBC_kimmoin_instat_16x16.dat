@@ -112,13 +112,13 @@ XFLUID DIS fluid NODE 1451 QUANTITY velz VALUE 0.0e00 TOLERANCE 1e-8
 XFLUID DIS fluid NODE 1451 QUANTITY pressure VALUE 3.66546648582250834e-01 TOLERANCE 1e-8
 -----------------------------------------------DESIGN VOL NEUMANN CONDITIONS
 // fluid_volume
-E 1 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 1.0 1.0 0.0 0.0 0.0 FUNCT 1 1 1 0 0 0 TYPE Live
+E 1 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 1.0 1.0 0.0 0.0 0.0 FUNCT 1 1 1 none none none TYPE Live
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 // pressure_middle_nodes
-E 1 NUMDOF 6 ONOFF 0 0 1 1 0 0 VAL 0.0 0.0 0.0 1.0 0.0 0.0 FUNCT 0 0 0 2 0 0
+E 1 NUMDOF 6 ONOFF 0 0 1 1 0 0 VAL 0.0 0.0 0.0 1.0 0.0 0.0 FUNCT none none none 2 none none
 ------------------------------------------------DESIGN VOL DIRICH CONDITIONS
 // fluid_volume
-E 1 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 1.0 1.0 1.0 0.0 0.0 0.0 FUNCT 2 2 2 0 0 0
+E 1 NUMDOF 6 ONOFF 0 0 1 0 0 0 VAL 1.0 1.0 1.0 0.0 0.0 0.0 FUNCT 2 2 2 none none none
 ----------------------------------DESIGN XFEM WEAK DIRICHLET SURF CONDITIONS
 // DOBJECT COUPLINGID EVALTYPE
 // surface_inner_structure
@@ -128,9 +128,9 @@ E 2 COUPLINGID 1 EVALTYPE funct_interpolated NUMDOF 3 ONOFF 1 1 1 VAL 1.0 1.0 1.
 ------------------------------------DESIGN XFEM DISPLACEMENT SURF CONDITIONS
 // DOBJECT COUPLINGID EVALTYPE
 // surface_inner_structure
-E 1 COUPLINGID 1 EVALTYPE zero NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 COUPLINGID 1 EVALTYPE zero NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // surface_outer_structure
-E 2 COUPLINGID 1 EVALTYPE zero NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 COUPLINGID 1 EVALTYPE zero NUMDOF 3 ONOFF 0 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 --------------------------DESIGN XFEM LEVELSET WEAK DIRICHLET VOL CONDITIONS
 // fluid_volume
 E 1 COUPLINGID 1 LEVELSETFIELDNO 3 BOOLEANTYPE none COMPLEMENTARY false NUMDOF 3 ONOFF 1 1 1 VAL 1.0 1.0 1.0 FUNCT 2 2 2

@@ -217,7 +217,7 @@ void Core::FE::Discretization::evaluate_neumann(Teuchos::ParameterList& params,
         const double functfac = std::invoke(
             [&]()
             {
-              if (tmp_funct[j].has_value() && tmp_funct[j].value() > 0)
+              if (tmp_funct[j].has_value())
               {
                 const auto* function_manager =
                     params.isParameter("interface")
@@ -411,7 +411,7 @@ void Core::FE::Discretization::evaluate_condition(Teuchos::ParameterList& params
         double curvefac = 1.0;
         if (curve)
         {
-          if (curve->has_value() && curve->value() > 0)
+          if (curve->has_value())
           {
             const auto& function_manager =
                 params.get<const Core::Utils::FunctionManager*>("function_manager");

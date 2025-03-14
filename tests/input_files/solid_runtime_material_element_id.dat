@@ -50,7 +50,7 @@ Outer Iteration StatusTest      = No
 MAT 1 MAT_Struct_StVenantKirchhoff YOUNG 100 NUE 0.0 DENS 0.0
 MAT 2 MAT_Struct_StVenantKirchhoff YOUNG 100 NUE 0.0 DENS 0.0
 -------------------------------------------------DESIGN SURF DIRICH CONDITIONS
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT none none none
 ------------------------------------------------------------RESULT DESCRIPTION
 STRUCTURE DIS structure NODE 10 QUANTITY dispx VALUE 0.0 TOLERANCE 1e-12
 ------------------------------------------------------------------PROBLEM SIZE

@@ -18,26 +18,26 @@ Property Name: none
 has 47 Nodes
 *ns1="CONDITION"
 sectionname="DESIGN SURF DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 0 1 0  VAL 0 0 0 FUNCT 0 0 0  TAG none "
+description="NUMDOF 3 ONOFF 0 1 0  VAL 0 0 0 FUNCT none none none  TAG none "
 
 Node Set, named: zsymm
 Property Name: none
 has 238 Nodes
 *ns2="CONDITION"
 sectionname="DESIGN SURF DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 0 0 1  VAL 0 0 0 FUNCT 0 0 0  TAG none "
+description="NUMDOF 3 ONOFF 0 0 1  VAL 0 0 0 FUNCT none none none  TAG none "
 
 Node Set, named: xsymm
 Property Name: none
 has 238 Nodes
 *ns3="CONDITION"
 sectionname="DESIGN SURF DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 1 0 0  VAL 0 0 0 FUNCT 0 0 0  TAG none "
+description="NUMDOF 3 ONOFF 1 0 0  VAL 0 0 0 FUNCT none none none  TAG none "
 
 Node Set, named: top
 Property Name: none
 has 47 Nodes
 *ns4="CONDITION"
 sectionname="DESIGN SURF DIRICH CONDITIONS"
-description="NUMDOF 3 ONOFF 0 1 0  VAL 0 1 0 FUNCT 0 1 0  TAG monitor_reaction "
+description="NUMDOF 3 ONOFF 0 1 0  VAL 0 1 0 FUNCT none 1 none  TAG monitor_reaction "
 

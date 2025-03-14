@@ -114,23 +114,23 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME a
 VARIABLE 0 NAME a TYPE multifunction NUMPOINTS 3 TIMES 0 1 500000.0 DESCRIPTION 0 t
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
 // xFluid_outflow
-E 1 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 0.0 1.0 0.0 0.0 0.0 0.0 FUNCT 0 2 0 0 0 0 TYPE Live
+E 1 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 0.0 1.0 0.0 0.0 0.0 0.0 FUNCT none 2 none none none none TYPE Live
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 // xFluid_upper_and_lower_surface
-E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // xFluid_inflow
-E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 0.0 0.0 0.0 FUNCT 1 none none none
 ------------------------------------------------DESIGN VOL DIRICH CONDITIONS
 // xFluid_volume
-E 1 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // Fluid_volume
-E 2 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 -------------------------------------------DESIGN SURF ALE DIRICH CONDITIONS
 // Fluid_xfem
-E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.2 0 0.0 0.0 FUNCT 3 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.2 0 0.0 0.0 FUNCT 3 none none none
 --------------------------------------------DESIGN VOL ALE DIRICH CONDITIONS
 // Fluid_volume
-E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.2 0 0.0 0.0 FUNCT 3 0 0 0
+E 2 NUMDOF 4 ONOFF 1 1 1 0 VAL 0.2 0 0.0 0.0 FUNCT 3 none none none
 --------------------------------------DESIGN XFEM FLUIDFLUID SURF CONDITIONS
 // Fluid_xfem
 E 2 COUPLINGID 1 COUPSTRATEGY xfluid

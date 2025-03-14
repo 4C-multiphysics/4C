@@ -98,7 +98,7 @@ SCATRA DIS scatra NODE 200 QUANTITY phi1 VALUE 9.95e+00 TOLERANCE 1e-09
 SCATRA DIS scatra NODE 200 QUANTITY phi5 VALUE -8.66500819196773053e-05 TOLERANCE 1e-14
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
 //                              right_electrode
-E 2 NUMDOF 5 ONOFF 1 1 1 1 1 VAL 9.95 0.1 990 1010 0.0 FUNCT 0 0 0 0 0
+E 2 NUMDOF 5 ONOFF 1 1 1 1 1 VAL 9.95 0.1 990 1010 0.0 FUNCT none none none none none
 ---------------------------------ELECTRODE BOUNDARY KINETICS LINE CONDITIONS
 //                              left_electrode
 E 1 ConditionID 0 POT -1.0 FUNCT 3 NUMSCAL 4 STOICH -1 1 0 0  E- 1 EPSILON -1 ZERO_CUR 0 KINETIC_MODEL Butler-Volmer-Newman K_A 1.0312e-4 K_C 1.0364e-6 BETA 0.5 DL_SPEC_CAP 0.0

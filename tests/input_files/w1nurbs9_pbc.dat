@@ -59,10 +59,10 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME 1.0+0.5*0.5*(1-cos((y*2.0*pi)))
 -------------------------------------------------------------FUNCT2
 COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME -1.0*0.5*(1-cos((t*pi/2.0)))*(1.0+0.5*0.5*(1-cos((y*2.0*pi))))
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
-E 4 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT 0 0
-//E 3 - NUMDOF 2 ONOFF 1 0 VAL -1.0 0.0 FUNCT 2 0
+E 4 NUMDOF 2 ONOFF 1 1 VAL 0.0 0.0 FUNCT none none
+//E 3 - NUMDOF 2 ONOFF 1 0 VAL -1.0 0.0 FUNCT 2 none
 -----------------------------------------------DESIGN LINE NURBS LS DIRICH CONDITIONS
-E 3 NUMDOF 2 ONOFF 1 0 VAL -1.0 0.0 FUNCT 2 0
+E 3 NUMDOF 2 ONOFF 1 0 VAL -1.0 0.0 FUNCT 2 none
 ------------------------------------DESIGN LINE PERIODIC BOUNDARY CONDITIONS
 // DOBJECT PBC_ID ORIENTATION
 E 1 ID 1 MASTER_OR_SLAVE Master PLANE xz LAYER 0 ANGLE 0.0 ABSTREETOL 1e-9

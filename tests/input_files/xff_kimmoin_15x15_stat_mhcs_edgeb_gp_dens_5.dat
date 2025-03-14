@@ -104,20 +104,20 @@ FLUID_FUNCTION KIMMOIN-RHS MAT 1 ISSTAT 1 ISSTOKES 0
 FLUID_FUNCTION KIMMOIN-UP MAT 1 ISSTAT 1
 -----------------------------------------------DESIGN VOL NEUMANN CONDITIONS
 // fluid_1_volume
-E 1 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 1.0 1.0 0.0 0.0 0.0 FUNCT 1 1 1 0 0 0 TYPE Live
+E 1 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 1.0 1.0 0.0 0.0 0.0 FUNCT 1 1 1 none none none TYPE Live
 // fluid_2_volume
-E 2 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 1.0 1.0 0.0 0.0 0.0 FUNCT 1 1 1 0 0 0 TYPE Live
+E 2 NUMDOF 6 ONOFF 1 1 1 0 0 0 VAL 1.0 1.0 1.0 0.0 0.0 0.0 FUNCT 1 1 1 none none none TYPE Live
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 // pressure_point
-E 1 NUMDOF 4 ONOFF 0 0 1 1 VAL 0.0 0.0 0.0 1.0 FUNCT 0 0 0 2
+E 1 NUMDOF 4 ONOFF 0 0 1 1 VAL 0.0 0.0 0.0 1.0 FUNCT none none none 2
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 // Fluid_1_wall
-E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 1.0 1.0 0.0 FUNCT 2 2 2 0
+E 1 NUMDOF 4 ONOFF 1 1 1 0 VAL 1.0 1.0 1.0 0.0 FUNCT 2 2 2 none
 ------------------------------------------------DESIGN VOL DIRICH CONDITIONS
 // fluid_2_volume
-E 2 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 2 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 // fluid_1_volume
-E 1 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0
+E 1 NUMDOF 4 ONOFF 0 0 1 0 VAL 0.0 0.0 0.0 0.0 FUNCT none none none none
 --------------------------------------DESIGN XFEM FLUIDFLUID SURF CONDITIONS
 // xfem
 E 2 COUPLINGID 1 COUPSTRATEGY xfluid

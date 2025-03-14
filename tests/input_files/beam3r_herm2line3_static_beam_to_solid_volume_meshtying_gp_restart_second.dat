@@ -93,17 +93,17 @@ VARIABLE 0 NAME a TYPE linearinterpolation NUMPOINTS 3 TIMES 0.5 1.0 11.0 VALUES
 SYMBOLIC_FUNCTION_OF_TIME 1*a
 VARIABLE 0 NAME a TYPE linearinterpolation NUMPOINTS 3 TIMES 0.5 1.5 10.0 VALUES 1.0 0.0 0.0
 --------------------------------------------------DESIGN POINT DIRICH CONDITIONS
-E 1 NUMDOF 9 ONOFF 1 1 1 1 1 1 0 0 0 VAL 0 -2.0 0 0 0 0 0 0 0 FUNCT 0 0 0 0 0 0 0 0 0
-E 2 NUMDOF 9 ONOFF 0 0 0 1 0 0 0 0 0 VAL 0 0 0 0 0 0 0 0 0 FUNCT 0 0 0 0 0 0 0 0 0
+E 1 NUMDOF 9 ONOFF 1 1 1 1 1 1 0 0 0 VAL 0 -2.0 0 0 0 0 0 0 0 FUNCT none none none none none none none none none
+E 2 NUMDOF 9 ONOFF 0 0 0 1 0 0 0 0 0 VAL 0 0 0 0 0 0 0 0 0 FUNCT none none none none none none none none none
 ---------------------------------------------------DESIGN SURF DIRICH CONDITIONS
 // surf_fix
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT 0 0 0
-E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT 0 0 0
-E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT none none none
+E 2 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT none none none
+E 3 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT none none none
 -------------------------------------------------DESIGN POINT NEUMANN CONDITIONS
-E 3 NUMDOF 9 ONOFF 0 0 0 0 1 1 0 0 0 VAL 0 0 0 0 0.015 0.02 0 0  0 FUNCT 0 0 0 0 1 1 0 0 0
-E 4 NUMDOF 9 ONOFF 1 0 0 0 0 0 0 0 0 VAL -4.0 0 0 0 0 0 0 0 0 FUNCT 2 0 0 0 0 0 0 0 0
-E 5 NUMDOF 9 ONOFF 1 0 0 0 0 0 0 0 0 VAL 4.0 0 0 0 0 0 0 0 0 FUNCT 2 0 0 0 0 0 0 0 0
+E 3 NUMDOF 9 ONOFF 0 0 0 0 1 1 0 0 0 VAL 0 0 0 0 0.015 0.02 0 0  0 FUNCT none none none none 1 1 none none none
+E 4 NUMDOF 9 ONOFF 1 0 0 0 0 0 0 0 0 VAL -4.0 0 0 0 0 0 0 0 0 FUNCT 2 none none none none none none none none
+E 5 NUMDOF 9 ONOFF 1 0 0 0 0 0 0 0 0 VAL 4.0 0 0 0 0 0 0 0 0 FUNCT 2 none none none none none none none none
 ----------------------------BEAM INTERACTION/BEAM TO SOLID VOLUME MESHTYING LINE
 E 1 COUPLING_ID 1
 E 2 COUPLING_ID 2

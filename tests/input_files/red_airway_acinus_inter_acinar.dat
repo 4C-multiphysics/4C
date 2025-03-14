@@ -38,12 +38,12 @@ SYMBOLIC_FUNCTION_OF_TIME 1.0
 SYMBOLIC_FUNCTION_OF_TIME v
 VARIABLE 0 NAME v TYPE multifunction NUMPOINTS 3 TIMES 0.0 4.0 400.0 DESCRIPTION (-530.0)*(-0.5*(1+cos((t/4.0)*pi))+1.0)-200.0 (-530.0-0.5*330.0*(1.0-cos(2.0*pi*t/4.0)))-200.0
 -------------------------DESIGN NODE Reduced D AIRWAYS PRESCRIBED CONDITIONS
-E 1 boundarycond pressure VAL 0.0 curve 2 0
-E 2 boundarycond pressure VAL 0.0 curve 2 0
-E 3 boundarycond pressure VAL 0.0 curve 2 0
-E 4 boundarycond pressure VAL 0.0 curve 2 0
-E 5 boundarycond pressure VAL 1.0 curve 1 0
-E 6 boundarycond pressure VAL 1.0 curve 3 0
+E 1 boundarycond pressure VAL 0.0 curve 2 none
+E 2 boundarycond pressure VAL 0.0 curve 2 none
+E 3 boundarycond pressure VAL 0.0 curve 2 none
+E 4 boundarycond pressure VAL 0.0 curve 2 none
+E 5 boundarycond pressure VAL 1.0 curve 1 none
+E 6 boundarycond pressure VAL 1.0 curve 3 none
 --------------------------------------------------REDUCED D AIRWAYS ELEMENTS
 1  RED_ACINUS LINE2 2 1 MAT 2 TYPE DoubleExponential AcinusVolume 0.03711 AlveolarDuctVolume 0.03711 E1_01 6510.99  E1_LIN1 3.5228E04 E1_EXP1 6.97154E-06 TAU1 144.716 E1_02 0.0  E1_LIN2 0.0 E1_EXP2 53200 TAU2 -90.000
 2  RED_ACINUS LINE2 3 4 MAT 2 TYPE DoubleExponential AcinusVolume 0.03711 AlveolarDuctVolume 0.03711 E1_01 6510.99  E1_LIN1 3.5228E04 E1_EXP1 6.97154E-06 TAU1 144.716 E1_02 0.0  E1_LIN2 0.0 E1_EXP2 53200 TAU2 -90.000

@@ -84,22 +84,22 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME y*(1-y)*v
 VARIABLE 0 NAME v TYPE multifunction NUMPOINTS 3 TIMES 0.0 0.5 10000.0 DESCRIPTION (1-cos(2*t*pi))/2.0 1.0
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 // vertex left bottom
-E 1 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0  FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0  FUNCT none none none
 // vertex left top
-E 2 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0  FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0  FUNCT none none none
 // vertex right top
-E 3 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0  FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0  FUNCT none none none
 // vertex right bottom
-E 4 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0  FUNCT 0 0 0
+E 4 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0  FUNCT none none none
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
 // left edge
-E 1 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0  FUNCT 1 0 0
+E 1 NUMDOF 3 ONOFF 1 1 0 VAL 1.0 0.0 0.0  FUNCT 1 none none
 // top edge
-E 2 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0  FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0  FUNCT none none none
 // right edge
-E 3 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0  FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0  FUNCT none none none
 // bottom edge
-E 4 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0  FUNCT 0 0 0
+E 4 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0  FUNCT none none none
 ------------------------------------DESIGN FLUID STRESS CALC LINE CONDITIONS
 // bottom edge
 E 4

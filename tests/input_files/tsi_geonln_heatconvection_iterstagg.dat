@@ -110,24 +110,24 @@ SYMBOLIC_FUNCTION_OF_TIME v // 0 degrees celsius
 VARIABLE 0 NAME v TYPE multifunction NUMPOINTS 3 TIMES 0.0 0.1 3000.0 DESCRIPTION 0.5*(sin((t*pi/0.1)-(pi/2)))+0.5 1.0
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
 // No STR Neumann left surf t_x=0
-E 2 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 TYPE Live
+E 2 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none TYPE Live
 ---------------------------------------DESIGN SURF THERMO NEUMANN CONDITIONS
 // No THR heatflux front z=2
-E 8 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 TYPE Live
+E 8 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none TYPE Live
 // No THR heatflux upper surf y=4
-E 9 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 TYPE Live
+E 9 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none TYPE Live
 // No THR heatflux right surf x=6
-E 10 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 TYPE Live
+E 10 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none TYPE Live
 // No THR heatflux lower surf y=0
-E 11 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 TYPE Live
+E 11 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none TYPE Live
 // No THR heatflux back z=-2.0
-E 12 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 TYPE Live
+E 12 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 0.0 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none TYPE Live
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 // fix right surface x=6
-E 4 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 4 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ------------------------------------------------DESIGN VOL DIRICH CONDITIONS
 // STR fix vol in y,z
-E 1 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ------------------------------------DESIGN THERMO CONVECTION SURF CONDITIONS
 // THR left surface heat convection:
 //E 7 - temperature_state Tempnp coeff -6.444497425e-06 surtemp 373.15 surtempfunct none funct none

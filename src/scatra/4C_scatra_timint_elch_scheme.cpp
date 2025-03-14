@@ -283,7 +283,7 @@ void ScaTra::ScaTraTimIntElchOST::compute_time_deriv_pot0(const bool init)
     else
     {
       // compute time derivative of applied potential
-      if (functnum.has_value() && functnum.value() > 0)
+      if (functnum.has_value())
       {
         // function_by_id takes a zero-based index
         const double functfac =
@@ -853,7 +853,7 @@ void ScaTra::ScaTraTimIntElchGenAlpha::compute_time_deriv_pot0(const bool init)
     {
       // these values are not used without double layer charging
       // compute time derivative of applied potential
-      if (functnum.has_value() && functnum.value() > 0)
+      if (functnum.has_value())
       {
         // function_by_id takes a zero-based index
         const double functfac =

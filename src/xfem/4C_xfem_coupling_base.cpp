@@ -580,7 +580,7 @@ void XFEM::CouplingBase::evaluate_function(std::vector<double>& final_values, co
     double num = onoff[dof] * val[dof];
 
     // get factor given by spatial function
-    if (functions[dof].has_value() && functions[dof].value() > 0)
+    if (functions[dof].has_value())
     {
       functionfac = Global::Problem::instance()
                         ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functions[dof].value())
@@ -609,7 +609,7 @@ void XFEM::CouplingBase::evaluate_scalar_function(double& final_values, const do
 
   //---------------------------------------
   // get values and switches from the condition
-  const auto functnum = cond->parameters().get_or<int>("FUNCT", -1);
+  const auto functnum = cond->parameters().get<std::optional<int>>("FUNCT");
 
   // uniformly distributed random noise
   auto& secondary = const_cast<Core::Conditions::Condition&>(*cond);
@@ -624,13 +624,10 @@ void XFEM::CouplingBase::evaluate_scalar_function(double& final_values, const do
   {
     // initialization of time-curve factor and function factor
     double functionfac = 1.0;
-
-    double num = val;
-
-    if (functnum > 0)
+    if (functnum.has_value())
     {
       functionfac = Global::Problem::instance()
-                        ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum)
+                        ->function_by_id<Core::Utils::FunctionOfSpaceTime>(functnum.value())
                         .evaluate(x, time, dof % numdof);
     }
 
@@ -643,7 +640,7 @@ void XFEM::CouplingBase::evaluate_scalar_function(double& final_values, const do
       noise = percentage * randomnumber;
     }
 
-    final_values = num * (functionfac + noise);
+    final_values = val * (functionfac + noise);
   }  // loop dofs
 }
 
@@ -738,7 +735,6 @@ void XFEM::CouplingBase::get_visc_penalty_stabfac(Core::Elements::Element* xfele
 
   XFEM::Utils::nit_compute_visc_penalty_stabfac(xfele->shape(), penscaling, NITStabScalingTang,
       IsPseudo2D, ViscStab_TraceEstimate, NIT_visc_stab_fac_tang);
-  return;
 }
 
 FOUR_C_NAMESPACE_CLOSE

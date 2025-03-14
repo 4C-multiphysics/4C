@@ -93,9 +93,9 @@ VARIABLE 0 NAME a TYPE multifunction NUMPOINTS 4 TIMES 0.0 1 2 500000.0 DESCRIPT
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 //DSURF                         2
 //                              up
-//E 1 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+//E 1 - NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 //                              down
-//E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+//E 2 - NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -------------------------DESIGN POINT TRANSPORT NEUMANN CONDITIONS
 // Apex
 E 2 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 1.0 0.0 0.0 0.0 0.0 0.0 FUNCT 3 3 3 3 3 3 TYPE Live

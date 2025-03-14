@@ -41,8 +41,8 @@ NAME                            Structure_Solver
 SOLVER                          UMFPACK
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // DOBJECT FLAG FLAG FLAG FLAG FLAG FLAG VAL VAL VAL VAL VAL VAL CURVE CURVE CURVE CURVE CURVE CURVE
-E 1 NUMDOF 3 ONOFF 1 0 0 VAL 0.3 0.0 0.0 FUNCT 1 0 0
-E 3 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 0 0 VAL 0.3 0.0 0.0 FUNCT 1 none none
+E 3 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------------DNODE-NODE TOPOLOGY
 NODE 9 DNODE 1
 NODE 21 DNODE 2

@@ -107,16 +107,16 @@ STRUCTURE DIS structure NODE 13 QUANTITY dispz VALUE  0.00000000000000000e+00 TO
 SSI SPECIAL true QUANTITY numiterlastnonlinearsolve VALUE  2.00000000000000000e+00 TOLERANCE 1.0e-16
 --------------------------DESIGN SURF TRANSPORT NEUMANN CONDITIONS
 // cathode_collector
-E 1 NUMDOF 2 ONOFF 0 1 VAL 0.0 1.0e-5 FUNCT 0 0
+E 1 NUMDOF 2 ONOFF 0 1 VAL 0.0 1.0e-5 FUNCT none none
 --------------------------------------DESIGN VOL DIRICH CONDITIONS
 // all_nodes
 E 4 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ---------------------------DESIGN SURF TRANSPORT DIRICH CONDITIONS
 // anode_collector
-E 8 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT 0 0
+E 8 NUMDOF 2 ONOFF 0 1 VAL 0.0 0.0 FUNCT none none
 ----------------------------DESIGN VOL TRANSPORT DIRICH CONDITIONS
 // electrolyte
-E 2 NUMDOF 2 ONOFF 1 0 VAL 1.2 0.0 FUNCT 0 0
+E 2 NUMDOF 2 ONOFF 1 0 VAL 1.2 0.0 FUNCT none none
 -------------------------------DESIGN VOL INITIAL FIELD CONDITIONS
 // cathode
 E 1 FIELD ScaTra FUNCT 3
@@ -160,7 +160,7 @@ E 4 ConditionID 1 ManifoldConditionID 1 KINETIC_MODEL ConstantInterfaceResistanc
 E 5 ConditionID 2 ManifoldConditionID 1 KINETIC_MODEL ConstantInterfaceResistance ONOFF 1 1 RESISTANCE 1.03642731098877849  E- 1
 ----------------------------DESIGN SURF MANIFOLD DIRICH CONDITIONS
 // electrolyte_grain_boundary_2
-E 5 NUMDOF 2 ONOFF 1 0 VAL 1.2 0.0 FUNCT 0 0
+E 5 NUMDOF 2 ONOFF 1 0 VAL 1.2 0.0 FUNCT none none
 -----------------------------------------------DSURF-NODE TOPOLOGY
 NODE    9 DSURFACE 1
 NODE    10 DSURFACE 1

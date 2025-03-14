@@ -18,6 +18,7 @@
 #include "4C_io_control.hpp"
 #include "4C_io_gmsh.hpp"
 #include "4C_io_input_parameter_container.hpp"
+#include "4C_io_input_types.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
@@ -1398,12 +1399,8 @@ void XFEM::LevelSetCouplingNavierSlip::set_condition_specific_parameters()
   // Get the scaling factor for the slip length
   sliplength_ = cond->parameters().get<double>("SLIPCOEFFICIENT");
 
-  // Temporary variable for readability.
-  bool tmp_bool;
-
   // Is the slip length constant? Don't call functions at GP-level unnecessary.
-  tmp_bool = (cond->parameters().get<int>("FUNCT") < 1);
-  is_constant_sliplength_ = (tmp_bool) ? true : false;
+  is_constant_sliplength_ = !cond->parameters().get<std::optional<int>>("FUNCT").has_value();
 
   // Project the prescribed velocity in tangential direction, to remove "spurious velocities"
   //  from the geometry approximation.

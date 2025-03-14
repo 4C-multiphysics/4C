@@ -763,7 +763,7 @@ int Discret::Elements::SoTet4::evaluate_neumann(Teuchos::ParameterList& params,
       {
         // function evaluation
         double functfac = 1.0;
-        if (funct[dim].has_value() && funct[dim].value() > 0)
+        if (funct[dim].has_value())
         {
           functfac = Global::Problem::instance()
                          ->function_by_id<Core::Utils::FunctionOfSpaceTime>(funct[dim].value())

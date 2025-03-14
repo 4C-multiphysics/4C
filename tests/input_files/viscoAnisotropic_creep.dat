@@ -63,24 +63,24 @@ STRUCTURE DIS structure NODE 122 QUANTITY dispy VALUE -3.158513628598202299e-04 
 STRUCTURE DIS structure NODE 122 QUANTITY dispz VALUE -3.158513628544139641e-04 TOLERANCE 1e-9
 ----------------------------------------------DESIGN SURF NEUMANN CONDITIONS
 // neum surface x
-E 4 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 0.1 0.0 0.0 0.0 0.0 0.0 FUNCT 0 0 0 0 0 0 TYPE Live
+E 4 NUMDOF 6 ONOFF 1 0 0 0 0 0 VAL 0.1 0.0 0.0 0.0 0.0 0.0 FUNCT none none none none none none TYPE Live
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 // dirich point
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------------DESIGN LINE DIRICH CONDITIONS
 // dirich line xy
-E 1 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // dirich line yz
-E 2 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 0 1 1 VAL 0.0 0.0 0.0 FUNCT none none none
 // dirich line zx
-E 3 NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 1 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 -----------------------------------------------DESIGN SURF DIRICH CONDITIONS
 // dirich surf x
-E 1 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 1 NUMDOF 3 ONOFF 1 0 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // dirich surf y
-E 2 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 2 NUMDOF 3 ONOFF 0 1 0 VAL 0.0 0.0 0.0 FUNCT none none none
 // dirich surf z
-E 3 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0
+E 3 NUMDOF 3 ONOFF 0 0 1 VAL 0.0 0.0 0.0 FUNCT none none none
 ---------------------------------------------------------DNODE-NODE TOPOLOGY
 NODE 17 DNODE 1
 ---------------------------------------------------------DLINE-NODE TOPOLOGY
