@@ -7056,7 +7056,7 @@ bool CONTACT::Interface::update_active_set_semi_smooth()
     // adhesion
     double adhbound = 0.0;
     if (Teuchos::getIntegralValue<CONTACT::AdhesionType>(interface_params(), "ADHESION") ==
-        CONTACT::AdhesionType::bound)
+        CONTACT::AdhesionType::bounded)
       adhbound = interface_params().get<double>("ADHESION_BOUND");
 
     // check nodes of inactive set *************************************

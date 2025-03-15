@@ -34,8 +34,8 @@ namespace CONTACT
   /// (this enum represents the input file parameter ADHESION)
   enum class AdhesionType
   {
-    none,  ///< no adhesion
-    bound  ///< fix bounded adhesion
+    none,    ///< no adhesion
+    bounded  ///< fix bounded adhesion
   };
 
   /// Type of employed solving strategy

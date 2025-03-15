@@ -79,7 +79,6 @@ MIN_ELEPROC                     0
 GHOSTING_STRATEGY               redundant_master
 ---------------------------------------------------CONTACT DYNAMIC
 LINEAR_SOLVER                   4
-ADHESION                        None
 FRICTION                        None
 FRLESS_FIRST                    No
 GP_SLIP_INCR                    No

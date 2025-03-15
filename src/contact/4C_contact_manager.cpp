@@ -244,7 +244,7 @@ CONTACT::Manager::Manager(Core::FE::Discretization& discret, double alphaf)
     }
 
     // find out if interface-specific coefficients of adhesion are given
-    if (adhesionType == CONTACT::AdhesionType::bound)
+    if (adhesionType == CONTACT::AdhesionType::bounded)
     {
       // read interface COFs
       std::vector<double> ad_bound(currentgroup.size());

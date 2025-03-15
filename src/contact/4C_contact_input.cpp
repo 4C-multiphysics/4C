@@ -30,10 +30,9 @@ void CONTACT::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& l
       {.description = "Must be chosen if a non-contact simulation is to be restarted with contact",
           .default_value = false}));
 
-  Core::Utils::string_to_integral_parameter<CONTACT::AdhesionType>("ADHESION", "None",
-      "Type of adhesion law", tuple<std::string>("None", "none", "bounded", "b"),
-      tuple<CONTACT::AdhesionType>(CONTACT::AdhesionType::none, CONTACT::AdhesionType::none,
-          CONTACT::AdhesionType::bound, CONTACT::AdhesionType::bound),
+  Core::Utils::string_to_integral_parameter<CONTACT::AdhesionType>("ADHESION", "none",
+      "Type of adhesion law", tuple<std::string>("none", "bounded"),
+      tuple<CONTACT::AdhesionType>(CONTACT::AdhesionType::none, CONTACT::AdhesionType::bounded),
       scontact);
 
   Core::Utils::string_to_integral_parameter<CONTACT::FrictionType>("FRICTION", "None",

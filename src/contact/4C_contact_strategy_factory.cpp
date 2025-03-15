@@ -775,7 +775,7 @@ void CONTACT::STRATEGY::Factory::build_interfaces(const Teuchos::ParameterList& 
     }
 
     // find out if interface-specific coefficients of adhesion are given
-    if (ad == CONTACT::AdhesionType::bound)
+    if (ad == CONTACT::AdhesionType::bounded)
     {
       // read interface COFs
       std::vector<double> ad_bound(currentgroup.size());
