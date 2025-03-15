@@ -7,7 +7,6 @@
 
 #include "4C_solver_nonlin_nox_aux.hpp"
 
-#include "4C_inpar_boolifyparameters.hpp"
 #include "4C_linalg_blocksparsematrix.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_solver_nonlin_nox_linearsystem.hpp"
@@ -17,7 +16,6 @@
 #include "4C_solver_nonlin_nox_statustest_normupdate.hpp"
 #include "4C_solver_nonlin_nox_statustest_normwrms.hpp"
 
-#include <NOX_Abstract_ImplicitWeighting.H>
 #include <NOX_Observer_Vector.hpp>
 #include <Teuchos_ParameterList.hpp>
 
@@ -27,9 +25,6 @@ FOUR_C_NAMESPACE_OPEN
  *----------------------------------------------------------------------------*/
 void NOX::Nln::Aux::set_printing_parameters(Teuchos::ParameterList& p_nox, MPI_Comm comm)
 {
-  // make all Yes/No integral values to Boolean
-  Input::boolify_valid_input_parameters(p_nox);
-
   // adjust printing parameter list
   Teuchos::ParameterList& printParams = p_nox.sublist("Printing");
   printParams.set<int>("MyPID", Core::Communication::my_mpi_rank(comm));

@@ -8,7 +8,6 @@
 #include "4C_solver_nonlin_nox_globaldata.hpp"  // class definition
 
 #include "4C_comm_mpi_utils.hpp"
-#include "4C_inpar_boolifyparameters.hpp"
 #include "4C_inpar_structure.hpp"
 #include "4C_io_input_parameter_container.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
@@ -315,11 +314,6 @@ void NOX::Nln::GlobalData::set_status_test_parameters()
     if (xmlParams.sublist("Inner Status Test").numParams())
       innerStatusTestParams = xmlParams.sublist("Inner Status Test");
   }
-
-  // make all Yes/No integral values to Boolean
-  Input::boolify_valid_input_parameters(statusTestParams);
-
-  return;
 }
 
 /*----------------------------------------------------------------------------*

@@ -33,7 +33,7 @@
           <Parameter name="Tolerance Type" type="string" value="Absolute"/>
           <Parameter name="Tolerance" type="double" value="1.0e-10"/>
           <Parameter name="BDF Multiplier" type="double" value="1.0"/>
-          <Parameter name="Disable Implicit Weighting" type="string" value="Yes"/>
+          <Parameter name="Disable Implicit Weighting" type="bool" value="true"/>
         </ParameterList>
       </ParameterList>
     </ParameterList>

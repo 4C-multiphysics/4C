@@ -34,28 +34,28 @@
           <Parameter name="Relative Tolerance" type="double" value="1.0e-05"/>
           <Parameter name="Tolerance" type="double" value="1.0"/>
           <Parameter name="BDF Multiplier" type="double" value="1.0"/>
-          <Parameter name="Disable Implicit Weighting" type="string" value="Yes"/>
+          <Parameter name="Disable Implicit Weighting" type="bool" value="true"/>
         </ParameterList>
       </ParameterList>
       <!-- END: Combo AND - Test 1: "NormWRMS" -->
       <!-- BEGIN: Combo AND - Test 1: "NormUpdate" -->
       <!--
-      <ParameterList name="Test 2">
-        <Parameter name="Test Type"          type="string" value="NormUpdate" />
-        <Parameter name="Alpha"              type="double" value="1.0" />
-        <Parameter name="Beta"               type="double" value="0.5" />
-      -->
+            <ParameterList name="Test 2">
+              <Parameter name="Test Type"          type="string" value="NormUpdate" />
+              <Parameter name="Alpha"              type="double" value="1.0" />
+              <Parameter name="Beta"               type="double" value="0.5" />
+            -->
       <!-- NormIncr - Quantity 0: Check the increment of the structural displacements -->
       <!--
-        <ParameterList name="Quantity 0">
-          <Parameter name="Quantity Type"    type="string" value="Structure" />
-          <Parameter name="Tolerance Type"   type="string" value="Absolute" />
-          <Parameter name="Tolerance"        type="double" value="1.0e-07" />
-          <Parameter name="Norm Type"        type="string" value="Two Norm" />
-          <Parameter name="Scale Type"       type="string" value="Unscaled" />
-        </ParameterList>
-      </ParameterList>
-      -->
+              <ParameterList name="Quantity 0">
+                <Parameter name="Quantity Type"    type="string" value="Structure" />
+                <Parameter name="Tolerance Type"   type="string" value="Absolute" />
+                <Parameter name="Tolerance"        type="double" value="1.0e-07" />
+                <Parameter name="Norm Type"        type="string" value="Two Norm" />
+                <Parameter name="Scale Type"       type="string" value="Unscaled" />
+              </ParameterList>
+            </ParameterList>
+            -->
       <!-- END: Combo AND - Test 1: "NormUpdate" -->
     </ParameterList>
     <!-- END: Combo 0 - Test 0: "Combo" -->

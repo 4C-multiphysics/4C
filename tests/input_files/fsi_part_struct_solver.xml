@@ -32,7 +32,7 @@
           <Parameter name="Quantity Type" type="string" value="Structure"/>
           <Parameter name="Tolerance" type="double" value="1.0e-08"/>
           <Parameter name="BDF Multiplier" type="double" value="1.0"/>
-          <Parameter name="Disable Implicit Weighting" type="string" value="Yes"/>
+          <Parameter name="Disable Implicit Weighting" type="bool" value="true"/>
         </ParameterList>
       </ParameterList>
     </ParameterList>

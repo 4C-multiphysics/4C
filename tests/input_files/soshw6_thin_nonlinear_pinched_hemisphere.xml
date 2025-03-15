@@ -34,7 +34,7 @@
           <Parameter name="Relative Tolerance" type="double" value="1.0e-05"/>
           <Parameter name="Tolerance" type="double" value="1.0"/>
           <Parameter name="BDF Multiplier" type="double" value="1.0"/>
-          <Parameter name="Disable Implicit Weighting" type="string" value="Yes"/>
+          <Parameter name="Disable Implicit Weighting" type="bool" value="true"/>
         </ParameterList>
       </ParameterList>
       <!-- END: Combo AND - Test 1: "NormWRMS" -->

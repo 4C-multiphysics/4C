@@ -5,7 +5,6 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "4C_inpar_boolifyparameters.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_linalg_blocksparsematrix.hpp"
 #include "4C_structure_timint.hpp"
@@ -15,7 +14,6 @@
 
 #include <Teuchos_RCPStdSharedPtrConversions.hpp>
 
-#include <sstream>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -47,8 +45,6 @@ void Solid::TimIntImpl::nox_setup(const Teuchos::ParameterList& noxparams)
 {
   // copy the input list
   noxparams_ = std::make_shared<Teuchos::ParameterList>(noxparams);
-  // make all Yes/No integral values to Boolean
-  Input::boolify_valid_input_parameters(*noxparams_);
 
   // Remove legacy parameters
   {

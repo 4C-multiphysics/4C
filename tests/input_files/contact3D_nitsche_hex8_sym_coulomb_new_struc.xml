@@ -24,34 +24,34 @@
       <!-- END: Combo AND - Test 0: "NormF" -->
       <!-- BEGIN: Combo AND - Test 1: "NormWRMS" -->
       <!--      <ParameterList name="Test 1">
-        <Parameter name="Test Type"          type="string" value="NormWRMS" />
-        <Parameter name="Alpha"              type="double" value="1.0" />
-        <Parameter name="Beta"               type="double" value="0.5" />
-        <ParameterList name="Quantity 0">
-          <Parameter name="Quantity Type"              type="string" value="Structure" />
-          <Parameter name="Absolute Tolerance"         type="double" value="1.0e-10" />
-          <Parameter name="Relative Tolerance"         type="double" value="1.0e-10" />
-          <Parameter name="Tolerance"                  type="double" value="1.0" />
-          <Parameter name="BDF Multiplier"             type="double" value="1.0" />
-          <Parameter name="Disable Implicit Weighting" type="string" value="Yes" />
-        </ParameterList>
-      </ParameterList>
--->
+              <Parameter name="Test Type"          type="string" value="NormWRMS" />
+              <Parameter name="Alpha"              type="double" value="1.0" />
+              <Parameter name="Beta"               type="double" value="0.5" />
+              <ParameterList name="Quantity 0">
+                <Parameter name="Quantity Type"              type="string" value="Structure" />
+                <Parameter name="Absolute Tolerance"         type="double" value="1.0e-10" />
+                <Parameter name="Relative Tolerance"         type="double" value="1.0e-10" />
+                <Parameter name="Tolerance"                  type="double" value="1.0" />
+                <Parameter name="BDF Multiplier"             type="double" value="1.0" />
+                <Parameter name="Disable Implicit Weighting" type="bool" value="true" />
+              </ParameterList>
+            </ParameterList>
+      -->
       <!-- END: Combo AND - Test 1: "NormWRMS" -->
       <!-- BEGIN: Combo AND - Test 2: "NormUpdate" -->
       <!--      <ParameterList name="Test 2">
-        <Parameter name="Test Type"          type="string" value="NormUpdate" />
-        <Parameter name="Alpha"              type="double" value="1.0" />
-        <Parameter name="Beta"               type="double" value="0.5" />
-        <ParameterList name="Quantity 0">
-          <Parameter name="Quantity Type"    type="string" value="EAS" />
-          <Parameter name="Tolerance Type"   type="string" value="Relative" />
-          <Parameter name="Tolerance"        type="double" value="1.0e04" />
-          <Parameter name="Norm Type"        type="string" value="Two Norm" />
-          <Parameter name="Scale Type"       type="string" value="Unscaled" />
-        </ParameterList>
-      </ParameterList>
--->
+              <Parameter name="Test Type"          type="string" value="NormUpdate" />
+              <Parameter name="Alpha"              type="double" value="1.0" />
+              <Parameter name="Beta"               type="double" value="0.5" />
+              <ParameterList name="Quantity 0">
+                <Parameter name="Quantity Type"    type="string" value="EAS" />
+                <Parameter name="Tolerance Type"   type="string" value="Relative" />
+                <Parameter name="Tolerance"        type="double" value="1.0e04" />
+                <Parameter name="Norm Type"        type="string" value="Two Norm" />
+                <Parameter name="Scale Type"       type="string" value="Unscaled" />
+              </ParameterList>
+            </ParameterList>
+      -->
       <!-- END: Combo AND - Test 2: "NormUpdate" -->
       <!-- BEGIN: Combo AND - Test 2: "NormUpdate" -->
       <ParameterList name="Test 3">
