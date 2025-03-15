@@ -134,19 +134,28 @@ Your directory tree should look like the following::
     <someBaseDir>/
         <sourceDir>
 
-Configure
-~~~~~~~~~
+Development environment
+~~~~~~~~~~~~~~~~~~~~~~~
 
-First, you should create the python virtual environment for |FOURC| development.
-You'll need that for testing and active development, you need to create a python virtual environment once.
+If you plan to contribute to |FOURC|, you should create the python virtual environment for development.
 In the source directory, execute::
 
-    ./utilities/set_up_dev_env.sh
+    ./utilities/set_up_dev_env.sh <optional-path-to-python-executable>
+
+If the optional path to the python executable is not given, the script will use ``python3`` as the default. If your
+``python3`` is too old or not available, you can specify the path to a compatible python version. The script will let
+you know if the python version is not compatible.
+
+This script installs `pre-commit <https://pre-commit.com/>`_ and sets up the pre-commit hooks for the repository.
 
 .. note::
 
-    You don't need to execute this command every time you generate a new |FOURC| executable.
+    You only need to execute this command once.
     However, when changes in the virtual python environment have been made, you **must** generate a new environment locally as well.
+    You will be reminded of this when you try to commit with an outdated virtual environment.
+
+Configure
+~~~~~~~~~
 
 |FOURC| enforces an out-of-source build, i.e. your build directory may not be located inside the source code directory.
 

@@ -30,9 +30,9 @@ if [ -d "$PYTHON_VENV" ]; then rm -Rf $PYTHON_VENV; fi
 # Path to python
 PYTHON_PATH=${1:-python3}
 
-# Check Python version >= 3.8
-if ! $PYTHON_PATH -c "import sys; exit(sys.version_info < (3, 8))"; then
-    echo "Provided Python version does not meet the minimum requirement (>=3.8)."
+if ! $PYTHON_PATH -c "import sys; exit(sys.version_info < (3, 9))"; then
+    echo "Provided Python version ${PYTHON_PATH} does not meet the minimum requirement (>=3.9)."
+    echo "Please provide a compatible Python executable as an argument to this script."
     exit 1
 fi
 
