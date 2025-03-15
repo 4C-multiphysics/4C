@@ -35,7 +35,7 @@ To ensure a high quality of the repository, we enforce some pre-commit hooks in 
 
 ### 3. Code development
 
-Add your changes to the codebase. Please add unit tests or input-file tests that capture your changes. For further information, see our documentation on [testing](https://4c-multiphysics.github.io/4C/readthedocs/4Ctesting.html).
+Add your changes to the codebase. Please add unit tests or input-file tests that capture your changes. For further information, see our documentation on [testing](https://4c-multiphysics.github.io/4C/documentation/4Ctesting.html).
 
 #### Coding style
 Your changes are checked for a number of coding style conventions when creating a commit. These conventions are also verified when you submit a pull request. Please annotate your C++ source code with [Doxygen](https://doxygen.nl/index.html) comments.
@@ -48,4 +48,4 @@ Once you submitted your pull request, checks will run automatically to verify th
 We desire a clean commit history. This may require rebasing the commits before merging.
 
 ## Documentation
-In 4C, we have two types of documentation. The general [4C documentation](https://4c-multiphysics.github.io/4C/readthedocs/) generated with [Sphinx](https://www.sphinx-doc.org/en/master/#) and the [4C source code documentation](https://4c-multiphysics.github.io/4C/doxygen/) generated with [Doxygen](https://doxygen.nl/index.html). We welcome any improvements to our documentation. More information can be found [here](doc/README.md).
+In 4C, we have two types of documentation. The general [4C documentation](https://4c-multiphysics.github.io/4C/documentation/) generated with [Sphinx](https://www.sphinx-doc.org/en/master/#) and the [4C source code documentation](https://4c-multiphysics.github.io/4C/doxygen/) generated with [Doxygen](https://doxygen.nl/index.html). We welcome any improvements to our documentation. More information can be found [here](doc/README.md).

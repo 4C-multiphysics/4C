@@ -30,8 +30,8 @@ jobs:
       - uses: dawidd6/action-download-artifact@v6
         with:
           workflow: documentation.yml
-          name: readthedocs
-          path: ${{ github.workspace }}/readthedocs
+          name: documentation
+          path: ${{ github.workspace }}/documentation
           branch: ${{ github.event.repository.default_branch }}
       - uses: dawidd6/action-download-artifact@v6
         with:

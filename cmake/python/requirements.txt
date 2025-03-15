@@ -3,7 +3,7 @@ ruamel.yaml
 # for testing:
 numpy
 vtk
-# for readthedocs:
+# for sphinx documentation:
 matplotlib
 myst-parser
 nbsphinx

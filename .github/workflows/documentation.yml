@@ -41,7 +41,7 @@ jobs:
           path: ${{ github.workspace }}/build/doc/doxygen/html/
           retention-days: 2
 
-  readthedocs:
+  documentation:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:28cfb9d0
@@ -56,12 +56,12 @@ jobs:
       - uses: ./.github/actions/build_4C
         with:
           cmake-preset: docker
-          build-targets: readthedocs
+          build-targets: documentation
           build-directory: ${{ github.workspace }}/build
           use-ccache: "true"
-      - name: Upload readthedocs
+      - name: Upload documentation
         uses: actions/upload-artifact@v4
         with:
-          name: readthedocs
-          path: ${{ github.workspace }}/build/doc/readthedocs/html/
+          name: documentation
+          path: ${{ github.workspace }}/build/doc/documentation/html/
           retention-days: 2

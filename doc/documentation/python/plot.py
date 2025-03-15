@@ -20,7 +20,7 @@ If called directly, it needs two parameters:
 yamlfiledirectory : The path of the yaml file
 figuredirectory   : The path where the figures are stored
 
-Within the process of generating the documentation (`ninja readthedocs`),
+Within the process of generating the documentation (`ninja documentation`),
 the yaml file `elementinformation.yaml` is created by the program `create_rtd`.
 Then, the function `main(yamlfiledirectory, figuredirectory)` given below is called
 by the sphinx generator (`conf.py`). The directories are defined within cmake,
