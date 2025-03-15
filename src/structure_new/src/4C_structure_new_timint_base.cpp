@@ -533,7 +533,6 @@ void Solid::TimeInt::Base::output_step(bool forced_writerestart)
   {
     new_io_step(datawritten);
     output_stress_strain();
-    output_optional_quantity();
   }
 
   // output energy
@@ -742,37 +741,6 @@ void Solid::TimeInt::Base::output_energy() const
 
     Core::IO::cout(Core::IO::verbose) << "\n\nOutput for energy written to file!" << Core::IO::endl;
   }
-}
-
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
-void Solid::TimeInt::Base::output_optional_quantity()
-{
-  check_init_setup();
-
-  Solid::ModelEvaluator::Data& evaldata = int_ptr_->eval_data();
-  std::shared_ptr<Core::IO::DiscretizationWriter> output_ptr = dataio_->get_output_ptr();
-
-  // ---------------------------------------------------------------------------
-  // write optional quantity output
-  // ---------------------------------------------------------------------------
-  std::string text = "";
-  if (dataio_->get_opt_quantity_output_type() != Inpar::Solid::optquantity_none)
-  {
-    switch (dataio_->get_opt_quantity_output_type())
-    {
-      case Inpar::Solid::optquantity_membranethickness:
-        text = "gauss_membrane_thickness";
-        break;
-      default:
-        FOUR_C_THROW("Requested optional quantity type is not supported!");
-        break;
-    }
-    output_ptr->write_vector(
-        text, evaldata.opt_quantity_data(), *(discretization()->element_row_map()));
-  }
-  // we don't need this anymore
-  evaldata.opt_quantity_data_ptr() = nullptr;
 }
 
 /*----------------------------------------------------------------------------*

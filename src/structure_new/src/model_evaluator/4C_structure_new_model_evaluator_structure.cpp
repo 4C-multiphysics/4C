@@ -31,6 +31,7 @@
 #include "4C_structure_new_integrator.hpp"
 #include "4C_structure_new_model_evaluator_data.hpp"
 #include "4C_structure_new_predict_generic.hpp"
+#include "4C_structure_new_timint_basedataio.hpp"
 #include "4C_structure_new_timint_basedataio_runtime_vtk_output.hpp"
 #include "4C_structure_new_timint_implicit.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -853,6 +854,18 @@ void Solid::ModelEvaluator::Structure::write_output_runtime_structure(
     }
   }
 
+
+  // add output for optional quantity
+  if (structure_output_params.output_optional_quantity() ==
+      Inpar::Solid::optquantity_membranethickness)
+  {
+    // Write nodal membrane thickness
+    std::vector<std::optional<std::string>> context(1, "membrane_thickness");
+    vtu_writer_ptr_->append_result_data_vector_with_context(
+        *eval_data().get_opt_quantity_data_node_postprocessed(), Core::IO::OutputEntity::node,
+        context);
+  }
+
   // finalize everything and write all required files to filesystem
   vtu_writer_ptr_->write_to_disk(time, timestep_number);
 }
@@ -872,6 +885,90 @@ void Solid::ModelEvaluator::Structure::evaluate_analytical_error()
     ErrorEvaluator::evaluate_error(
         error_evaluator_parameters_, evaluation_parameters, *discret_ptr());
   }
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::ModelEvaluator::Structure::output_runtime_structure_postprocess_optional_data()
+{
+  check_init_setup();
+
+  switch (global_in_output()
+          .get_runtime_output_params()
+          ->get_structure_params()
+          ->output_optional_quantity())
+  {
+    case Inpar::Solid::optquantity_none:
+    {
+      // do nothing and return
+      return;
+    }
+    case Inpar::Solid::optquantity_membranethickness:
+    {
+      // evaluate thickness of membrane finite elements
+      eval_data().set_action_type(Core::Elements::struct_calc_thickness);
+      break;
+    }
+    default:
+      FOUR_C_THROW("Type of optional quantity not implemented yet!");
+  }
+
+  // set required parameter in the evaluation data container
+  eval_data().set_opt_quantity_data(std::make_shared<std::vector<char>>());
+
+  // set vector values needed by elements
+  discret().clear_state();
+
+  // set dummy evaluation vectors and matrices
+  std::array<std::shared_ptr<Core::LinAlg::Vector<double>>, 3> eval_vec = {
+      nullptr, nullptr, nullptr};
+  std::array<std::shared_ptr<Core::LinAlg::SparseOperator>, 2> eval_mat = {nullptr, nullptr};
+
+  evaluate_internal_specified_elements(
+      eval_mat.data(), eval_vec.data(), discret().element_row_map());
+
+  auto EvaluateGaussPointData = [&](const std::vector<char>& raw_data)
+  {
+    // Get the values at the Gauss-points.
+    std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>> mapdata{};
+
+    Core::Communication::UnpackBuffer buffer(raw_data);
+    for (int i = 0; i < discret_ptr()->element_row_map()->NumMyElements(); ++i)
+    {
+      std::shared_ptr<Core::LinAlg::SerialDenseMatrix> gpthickness =
+          std::make_shared<Core::LinAlg::SerialDenseMatrix>();
+      extract_from_pack(buffer, *gpthickness);
+      mapdata[discret_ptr()->element_row_map()->GID(i)] = gpthickness;
+    }
+    return mapdata;
+  };
+
+  auto PostprocessGaussPointDataToNodes =
+      [&](const std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>& map_data,
+          Core::LinAlg::MultiVector<double>& assembled_data)
+  {
+    discret_ptr()->evaluate(
+        [&](Core::Elements::Element& ele)
+        {
+          Core::FE::extrapolate_gauss_point_quantity_to_nodes(
+              ele, *map_data.at(ele.id()), discret(), assembled_data);
+        });
+  };
+
+  // do the actual post processing
+  std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>> gp_thickness_data =
+      EvaluateGaussPointData(*eval_data().get_opt_quantity_data());
+
+  Core::Communication::Exporter ex(
+      *(discret().element_row_map()), *(discret().element_col_map()), discret().get_comm());
+  ex.do_export(gp_thickness_data);
+
+  Core::LinAlg::MultiVector<double> row_nodal_data(*discret().node_row_map(), 1, true);
+  PostprocessGaussPointDataToNodes(gp_thickness_data, row_nodal_data);
+
+  eval_data().get_opt_quantity_data_node_postprocessed() =
+      std::make_shared<Core::LinAlg::MultiVector<double>>(*discret().node_col_map(), 1, true);
+  export_to(row_nodal_data, *eval_data().get_opt_quantity_data_node_postprocessed());
 }
 
 /*----------------------------------------------------------------------------*
@@ -1376,6 +1473,7 @@ void Solid::ModelEvaluator::Structure::run_post_iterate(const ::NOX::Solver::Gen
   {
     output_runtime_structure_postprocess_stress_strain();
     output_runtime_structure_gauss_point_data();
+    output_runtime_structure_postprocess_optional_data();
     write_iteration_output_runtime_structure();
   }
 
@@ -1615,47 +1713,6 @@ void Solid::ModelEvaluator::Structure::determine_energy(const Core::LinAlg::Vect
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void Solid::ModelEvaluator::Structure::determine_optional_quantity()
-{
-  check_init_setup();
-
-  switch (global_in_output().get_opt_quantity_output_type())
-  {
-    case Inpar::Solid::optquantity_none:
-    {
-      // do nothing and return
-      return;
-    }
-    case Inpar::Solid::optquantity_membranethickness:
-    {
-      // evaluate thickness of membrane finite elements
-      eval_data().set_action_type(Core::Elements::struct_calc_thickness);
-      break;
-    }
-    default:
-      FOUR_C_THROW("Type of optional quantity not implemented yet!");
-  }
-
-  // set all parameters in the evaluation data container
-  eval_data().set_total_time(global_state().get_time_np());
-  eval_data().set_delta_time((*global_state().get_delta_time())[0]);
-  eval_data().set_opt_quantity_data(std::make_shared<std::vector<char>>());
-
-  // set vector values needed by elements
-  discret().clear_state();
-  discret().set_state(0, "displacement", global_state().get_dis_np());
-  discret().set_state(0, "residual displacement", dis_incr_ptr_);
-
-  // set dummy evaluation vectors and matrices
-  std::array<std::shared_ptr<Core::LinAlg::Vector<double>>, 3> eval_vec = {
-      nullptr, nullptr, nullptr};
-  std::array<std::shared_ptr<Core::LinAlg::SparseOperator>, 2> eval_mat = {nullptr, nullptr};
-
-  evaluate_internal(eval_mat.data(), eval_vec.data());
-}
-
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
 void Solid::ModelEvaluator::Structure::output_step_state(
     Core::IO::DiscretizationWriter& iowriter) const
 {
@@ -1683,6 +1740,7 @@ void Solid::ModelEvaluator::Structure::runtime_pre_output_step_state()
   {
     output_runtime_structure_postprocess_stress_strain();
     output_runtime_structure_gauss_point_data();
+    output_runtime_structure_postprocess_optional_data();
   }
 }
 
@@ -2043,14 +2101,10 @@ void Solid::ModelEvaluator::Structure::params_interface2_parameter_list(
   params.set<std::shared_ptr<std::vector<char>>>("strain", interface_ptr->strain_data_ptr());
   params.set<std::shared_ptr<std::vector<char>>>(
       "plstrain", interface_ptr->plastic_strain_data_ptr());
-  params.set<std::shared_ptr<std::vector<char>>>(
-      "optquantity", interface_ptr->opt_quantity_data_ptr());
   params.set<Inpar::Solid::StressType>("iostress", interface_ptr->get_stress_output_type());
   params.set<Inpar::Solid::StrainType>("iostrain", interface_ptr->get_strain_output_type());
   params.set<Inpar::Solid::StrainType>(
       "ioplstrain", interface_ptr->get_plastic_strain_output_type());
-  params.set<Inpar::Solid::OptQuantityType>(
-      "iooptquantity", interface_ptr->get_opt_quantity_output_type());
 
   params.set<Inpar::Solid::DampKind>("damping", interface_ptr->get_damping_type());
 }

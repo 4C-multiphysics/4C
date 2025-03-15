@@ -49,6 +49,8 @@ void Discret::Elements::StructureRuntimeOutputParams::init(
   output_element_gid_ = IO_vtk_structure_structure_paramslist.get<bool>("ELEMENT_GID");
   output_element_material_id_ = IO_vtk_structure_structure_paramslist.get<bool>("ELEMENT_MAT_ID");
   output_element_ghosting_ = IO_vtk_structure_structure_paramslist.get<bool>("ELEMENT_GHOSTING");
+  output_optional_quantity_ =
+      IO_vtk_structure_structure_paramslist.get<Inpar::Solid::OptQuantityType>("OPTIONAL_QUANTITY");
   output_node_gid_ = IO_vtk_structure_structure_paramslist.get<bool>("NODE_GID");
   output_stress_strain_ = IO_vtk_structure_structure_paramslist.get<bool>("STRESS_STRAIN");
   gauss_point_data_output_type_ = Teuchos::getIntegralValue<Inpar::Solid::GaussPointDataOutputType>(

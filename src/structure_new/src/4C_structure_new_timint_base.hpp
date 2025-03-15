@@ -809,9 +809,6 @@ namespace Solid
       /// output energy
       void output_energy() const;
 
-      /// output optional quantity
-      void output_optional_quantity();
-
       /// write restart information
       void output_restart(bool& datawritten);
 

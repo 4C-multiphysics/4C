@@ -80,13 +80,6 @@ void Inpar::IO::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>&
           Inpar::Solid::strain_gl, Inpar::Solid::strain_ea, Inpar::Solid::strain_ea,
           Inpar::Solid::strain_gl, Inpar::Solid::strain_gl),
       io);
-  Core::Utils::string_to_integral_parameter<Inpar::Solid::OptQuantityType>(
-      "STRUCT_OPTIONAL_QUANTITY", "No", "Output of an optional quantity",
-      tuple<std::string>("No", "no", "NO", "membranethickness"),
-      tuple<Inpar::Solid::OptQuantityType>(Inpar::Solid::optquantity_none,
-          Inpar::Solid::optquantity_none, Inpar::Solid::optquantity_none,
-          Inpar::Solid::optquantity_membranethickness),
-      io);
   io.specs.emplace_back(
       parameter<bool>("STRUCT_SURFACTANT", {.description = "", .default_value = false}));
   io.specs.emplace_back(

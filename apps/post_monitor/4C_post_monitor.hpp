@@ -468,8 +468,6 @@ class PoroFluidMultiMonWriter : public FieldMonWriter
   PoroFluidMultiMonWriter(PostProblem& problem, std::string& infieldtype, int node)
       : FieldMonWriter(problem, infieldtype, node), poro_dof_(node)
   {
-    output_porosity_ = false;
-    if (problem.optquantitytype() == "porosity") output_porosity_ = true;
   }
 
  protected:
@@ -490,8 +488,6 @@ class PoroFluidMultiMonWriter : public FieldMonWriter
       std::ofstream& outfile, PostResult& result, std::vector<int>& gdof, int dim) override;
 
  private:
-  //! flag for output of porosity
-  bool output_porosity_;
   //! dof for output of porosity ( = node number, since defined as nodal quantity)
   int poro_dof_;
 };  // end of class FluidMonWriter

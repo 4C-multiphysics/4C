@@ -59,7 +59,6 @@ Solid::TimeInt::BaseDataIO::BaseDataIO()
       writecouplstress_(Inpar::Solid::stress_none),
       writestrain_(Inpar::Solid::strain_none),
       writeplstrain_(Inpar::Solid::strain_none),
-      writeoptquantity_(Inpar::Solid::optquantity_none),
       conditionnumbertype_(Inpar::Solid::ConditionNumber::none)
 {
   // empty constructor
@@ -102,7 +101,6 @@ void Solid::TimeInt::BaseDataIO::init(const Teuchos::ParameterList& ioparams,
         Teuchos::getIntegralValue<Inpar::Solid::StrainType>(ioparams, "STRUCT_PLASTIC_STRAIN");
     writeenergyevery_ = sdynparams.get<int>("RESEVERYERGY");
     writesurfactant_ = ioparams.get<bool>("STRUCT_SURFACTANT");
-    writeoptquantity_ = ioparams.get<Inpar::Solid::OptQuantityType>("STRUCT_OPTIONAL_QUANTITY");
 
     // build params container for monitoring reaction forces
     params_monitor_dbc_ = std::make_shared<ParamsMonitorDBC>();

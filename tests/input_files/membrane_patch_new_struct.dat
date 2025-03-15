@@ -8,7 +8,6 @@ PROBLEMTYPE                     Structure
 -----------------------------------------------------------------IO
 STRUCT_STRESS                   Cauchy
 STRUCT_STRAIN                   GL
-STRUCT_OPTIONAL_QUANTITY        membranethickness
 ----------------------------------------------IO/RUNTIME VTK OUTPUT
 OUTPUT_DATA_FORMAT              ascii
 INTERVAL_STEPS                  2
@@ -16,6 +15,7 @@ EVERY_ITERATION                 no
 ------------------------------------IO/RUNTIME VTK OUTPUT/STRUCTURE
 OUTPUT_STRUCTURE                yes
 ACCELERATION                    yes
+OPTIONAL_QUANTITY               membranethickness
 -------------------------------------------------STRUCTURAL DYNAMIC
 INT_STRATEGY                    Standard
 DYNAMICTYPE                     OneStepTheta

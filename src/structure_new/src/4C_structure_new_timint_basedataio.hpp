@@ -286,13 +286,6 @@ namespace Solid
       {
         check_init_setup();
         return writeplstrain_;
-      };
-
-      /// get optional quantity output type
-      const Inpar::Solid::OptQuantityType& get_opt_quantity_output_type() const
-      {
-        check_init_setup();
-        return writeoptquantity_;
       }
       ///@}
 
@@ -396,9 +389,6 @@ namespace Solid
 
       /// plastic strain output type
       Inpar::Solid::StrainType writeplstrain_;
-
-      /// optional quantity type
-      Inpar::Solid::OptQuantityType writeoptquantity_;
 
       Inpar::Solid::ConditionNumber conditionnumbertype_;
 

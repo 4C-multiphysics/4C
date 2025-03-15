@@ -90,8 +90,8 @@ namespace
         // Regular solid/structure output
         {
           PostField* structurefield = problem.get_discretization(0);
-          StructureFilter structwriter(structurefield, problem.outname(), problem.stresstype(),
-              problem.straintype(), problem.optquantitytype());
+          StructureFilter structwriter(
+              structurefield, problem.outname(), problem.stresstype(), problem.straintype());
           structwriter.write_files();
         }
 
@@ -215,8 +215,8 @@ namespace
           else if (disname == "structure")
           {
             PostField* structure = problem.get_discretization(i);
-            StructureFilter writer(structure, problem.outname(), problem.stresstype(),
-                problem.straintype(), problem.optquantitytype());
+            StructureFilter writer(
+                structure, problem.outname(), problem.stresstype(), problem.straintype());
             writer.write_files();
           }
           else

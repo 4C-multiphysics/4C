@@ -142,7 +142,7 @@ namespace Solid
       void determine_strain_energy(const Core::LinAlg::Vector<double>& disnp, const bool global);
 
       //! derived
-      void determine_optional_quantity() override;
+      void determine_optional_quantity() override {}
 
       //! derived
       void reset_step_state() override;
@@ -410,6 +410,8 @@ namespace Solid
       void output_runtime_structure_postprocess_stress_strain();
 
       void output_runtime_structure_gauss_point_data();
+
+      void output_runtime_structure_postprocess_optional_data();
 
       /*! \brief writes special output for beam elements
        *

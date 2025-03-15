@@ -132,9 +132,6 @@ class PostProblem
   //! returns strain type
   std::string straintype() { return straintype_; }
 
-  //! returns optional quantity type
-  std::string optquantitytype() { return optquantitytype_; }
-
   //! returns heatflux type
   std::string heatfluxtype() { return heatfluxtype_; }
 
@@ -223,9 +220,6 @@ class PostProblem
 
   //! strain output type optionally set by command line argument
   std::string straintype_;
-
-  //! optional quantity output type optionally set by command line argument
-  std::string optquantitytype_;
 
   //! heatflux output type optionally set by command line argument
   std::string heatfluxtype_;

@@ -15,9 +15,11 @@
 #include "4C_solver_nonlin_nox_statustest_normf.hpp"
 #include "4C_solver_nonlin_nox_statustest_normupdate.hpp"
 #include "4C_solver_nonlin_nox_statustest_normwrms.hpp"
+#include "4C_structure_new_discretization_runtime_output_params.hpp"
 #include "4C_structure_new_impl_generic.hpp"
 #include "4C_structure_new_nln_solver_nox.hpp"
 #include "4C_structure_new_nln_solver_utils.hpp"
+#include "4C_structure_new_timint_basedataio_runtime_vtk_output.hpp"
 #include "4C_structure_new_timint_implicit.hpp"
 
 
@@ -578,15 +580,15 @@ const std::vector<char>& Solid::ModelEvaluator::Data::coupling_stress_data() con
 std::shared_ptr<std::vector<char>> Solid::ModelEvaluator::Data::opt_quantity_data_ptr()
 {
   check_init_setup();
-  return optquantitydata_ptr_;
+  return opt_quantity_data_ptr_;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 const std::vector<char>& Solid::ModelEvaluator::Data::opt_quantity_data() const
 {
-  FOUR_C_ASSERT(optquantitydata_ptr_, "Undefined reference to the optional quantity data!");
-  return *optquantitydata_ptr_;
+  FOUR_C_ASSERT(opt_quantity_data_ptr_, "Undefined reference to the optional quantity data!");
+  return *opt_quantity_data_ptr_;
 }
 
 /*----------------------------------------------------------------------------*
@@ -626,7 +628,8 @@ enum Inpar::Solid::StressType Solid::ModelEvaluator::Data::get_coupling_stress_o
 enum Inpar::Solid::OptQuantityType Solid::ModelEvaluator::Data::get_opt_quantity_output_type() const
 {
   check_init_setup();
-  return io_ptr_->get_opt_quantity_output_type();
+
+  return io_ptr_->get_runtime_output_params()->get_structure_params()->output_optional_quantity();
 }
 
 std::shared_ptr<Solid::ModelEvaluator::GaussPointDataOutputManager>&
