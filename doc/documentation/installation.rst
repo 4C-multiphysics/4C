@@ -650,13 +650,12 @@ Executables:
 - ``post_processor`` build the post-filters only
 - ``pre_exodus`` build the pre processor (exodus to 4C converter) only
 - ``post_monitor`` build a nodal data extraction application
-- ``rtd`` build the reference documentation generator ``create_rtd``
 - ``full`` generate all executable targets of |FOURC|
 
 Documentation:
 
-- ``doxygen`` create the Doxygen documentation only
-- ``readthedocs`` create the user documentation (readthedocs style) only
+- ``documentation`` create the main documentation
+- ``doxygen`` create the (developer-oriented) Doxygen documentation
 
 Refer to ``CMakeLists.txt`` for a definition of all other target specifiers.
 

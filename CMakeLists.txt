@@ -192,8 +192,7 @@ add_subdirectory(src)
 add_subdirectory(apps)
 
 # Process documentation
-add_subdirectory(doc/doxygen EXCLUDE_FROM_ALL)
-add_subdirectory(doc/readthedocs EXCLUDE_FROM_ALL)
+add_subdirectory(doc EXCLUDE_FROM_ALL)
 
 # Tests
 add_subdirectory(unittests)

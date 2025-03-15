@@ -1,8 +1,8 @@
 <!-- https://img.shields.io/badge/readthedocs-blue?label=documentation -->
 
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="170"
-    height="20" role="img" aria-label="documentation: readthedocs">
-    <title>documentation: readthedocs</title>
+    height="20" role="img" aria-label="documentation: documentation">
+    <title>documentation: documentation</title>
     <linearGradient id="s" x2="0" y2="100%">
         <stop offset="0" stop-color="#bbb" stop-opacity=".1" />
         <stop offset="1" stop-opacity=".1" />
@@ -21,7 +21,7 @@
             transform="scale(.1)" textLength="830">documentation</text>
         <text x="475" y="140" transform="scale(.1)" fill="#fff" textLength="830">documentation</text>
         <text aria-hidden="true" x="1305" y="150" fill="#010101" fill-opacity=".3"
-            transform="scale(.1)" textLength="670">readthedocs</text>
-        <text x="1305" y="140" transform="scale(.1)" fill="#fff" textLength="670">readthedocs</text>
+            transform="scale(.1)" textLength="670">documentation</text>
+        <text x="1305" y="140" transform="scale(.1)" fill="#fff" textLength="670">documentation</text>
     </g>
 </svg>

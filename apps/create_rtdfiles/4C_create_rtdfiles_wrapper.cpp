@@ -141,7 +141,7 @@ namespace RTD
 
   void print_help_message()
   {
-    std::cout << "This program writes all necessary reference files for readthedocs\n";
+    std::cout << "This program writes all necessary reference files for the main documentation.\n";
     std::cout << "Usage:\n    create_rtd [pathanem]\n";
     std::cout << " Parameter:\n   pathname (str) path where the reference files are stored.\n";
     std::cout << "                   Default: reference_docs";

@@ -88,11 +88,7 @@ rst_prolog = """
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-# Default is sphinx-rtd-theme (set in var FOUR_C_SPHINX_THEME)
-# can be overridden by setting the variable explicitly if desired,
-# e.g. 'classic', 'alabaster', etc.
-#
-html_theme = "@FOUR_C_SPHINX_THEME@"
+html_theme = "@_sphinx_THEME@"
 
 html_theme_options = {
     "collapse_navigation": False,
@@ -118,5 +114,5 @@ mathjax_path = (
 
 # -- Additional scripts to generate more fancy output -------------------------------------------------
 # as soon as the yaml file is created automatically:
-plot.generate_figures("@READTHEDOCS_OUT_DIR@/reference_docs/elementinformation.yaml",
-    "@READTHEDOCS_OUT_DIR@/reference_docs/reference_images")
+plot.generate_figures("@_sphinx_OUT_DIR@/reference_docs/elementinformation.yaml",
+    "@_sphinx_OUT_DIR@/reference_docs/reference_images")
