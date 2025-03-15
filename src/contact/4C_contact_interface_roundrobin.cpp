@@ -220,7 +220,7 @@ void CONTACT::Interface::round_robin_change_ownership()
     // check for ghosting
     int ghost;
 
-    if (ftype == CONTACT::friction_none)
+    if (ftype == CONTACT::FrictionType::None)
     {
       Mortar::Node* cnode = dynamic_cast<Mortar::Node*>(node);
       cnode->pack(datanodes);
@@ -252,7 +252,7 @@ void CONTACT::Interface::round_robin_change_ownership()
     Core::Nodes::Node* node = discret().g_node(gid);
     if (!node) FOUR_C_THROW("Cannot find ele with gid %i", gid);
 
-    if (ftype == CONTACT::friction_none)
+    if (ftype == CONTACT::FrictionType::None)
     {
       Mortar::Node* cnode = dynamic_cast<Mortar::Node*>(node);
       if (cnode->owner() == myrank) idiscret_->delete_node(cnode->id());
@@ -288,7 +288,7 @@ void CONTACT::Interface::round_robin_change_ownership()
       int ghost;
       extract_from_pack(buffer, ghost);
 
-      if (ftype == CONTACT::friction_none)
+      if (ftype == CONTACT::FrictionType::None)
       {
         std::shared_ptr<Mortar::Node> node = std::dynamic_pointer_cast<Mortar::Node>(object);
         if (node == nullptr) FOUR_C_THROW("Received object is not a node");

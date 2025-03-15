@@ -55,7 +55,7 @@ void CONTACT::TSIInterface::assemble_lin_stick(Core::LinAlg::SparseMatrix& linst
 
   // information from interface contact parameter list
   auto ftype = Teuchos::getIntegralValue<CONTACT::FrictionType>(interface_params(), "FRICTION");
-  if (ftype != CONTACT::friction_coulomb) FOUR_C_THROW("only coulomb friction for CTSI");
+  if (ftype != CONTACT::FrictionType::Coulomb) FOUR_C_THROW("only coulomb friction for CTSI");
 
   double frcoeff_in =
       interface_params().get<double>("FRCOEFF");  // the friction coefficient from the input
@@ -175,7 +175,7 @@ void CONTACT::TSIInterface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linsli
 
   // information from interface contact parameter list
   auto ftype = Teuchos::getIntegralValue<CONTACT::FrictionType>(interface_params(), "FRICTION");
-  if (ftype != CONTACT::friction_coulomb) FOUR_C_THROW("only coulomb friction for CTSI");
+  if (ftype != CONTACT::FrictionType::Coulomb) FOUR_C_THROW("only coulomb friction for CTSI");
 
   if (n_dim() != 3) FOUR_C_THROW("CTSI only for 3D");
 

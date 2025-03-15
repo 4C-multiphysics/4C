@@ -33,7 +33,6 @@ namespace Inpar
 
 namespace CONTACT
 {
-  enum VariationalApproach : int;
   enum class CouplingScheme : int;
 }  // namespace CONTACT
 
@@ -78,13 +77,6 @@ namespace CONTACT
 
     //! get the output file path
     virtual std::string get_output_file_path() const = 0;
-
-    //! get the variational approach type
-    virtual enum CONTACT::VariationalApproach get_variational_approach_type() const = 0;
-
-    //! set the variational approach type
-    virtual void set_variational_approach_type(
-        const enum CONTACT::VariationalApproach var_type) = 0;
 
     //! set the coupling approach mode
     virtual enum CONTACT::CouplingScheme get_coupling_scheme() const = 0;

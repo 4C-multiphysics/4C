@@ -1172,18 +1172,6 @@ namespace Solid
       //! get output file name
       [[nodiscard]] std::string get_output_file_path() const override;
 
-      //! get variational approach enumerator
-      [[nodiscard]] enum CONTACT::VariationalApproach get_variational_approach_type() const override
-      {
-        return var_type_;
-      }
-
-      //! set variational approach enumerator
-      void set_variational_approach_type(const enum CONTACT::VariationalApproach var_type) override
-      {
-        var_type_ = var_type;
-      }
-
       //! set coupling mode enumerator
       [[nodiscard]] enum CONTACT::CouplingScheme get_coupling_scheme() const override
       {
@@ -1292,8 +1280,6 @@ namespace Solid
       bool issetup_;
 
       enum Mortar::ActionType mortar_action_;
-
-      enum CONTACT::VariationalApproach var_type_;
 
       enum CONTACT::CouplingScheme coupling_scheme_;
 

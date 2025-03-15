@@ -8,6 +8,7 @@
 #include "4C_contact_nitsche_integrator.hpp"
 
 #include "4C_contact_element.hpp"
+#include "4C_contact_input.hpp"
 #include "4C_contact_nitsche_utils.hpp"
 #include "4C_contact_node.hpp"
 #include "4C_contact_paramsinterface.hpp"
@@ -75,13 +76,13 @@ void CONTACT::IntegratorNitsche::gpts_forces(Mortar::Element& sele, Mortar::Elem
 
   if (dim != n_dim()) FOUR_C_THROW("dimension inconsistency");
 
-  if (frtype_ != CONTACT::friction_none && dim != 3) FOUR_C_THROW("only 3D friction");
-  if (frtype_ != CONTACT::friction_none && frtype_ != CONTACT::friction_coulomb &&
-      frtype_ != CONTACT::friction_tresca)
+  if (frtype_ != CONTACT::FrictionType::None && dim != 3) FOUR_C_THROW("only 3D friction");
+  if (frtype_ != CONTACT::FrictionType::None && frtype_ != CONTACT::FrictionType::Coulomb &&
+      frtype_ != CONTACT::FrictionType::Tresca)
     FOUR_C_THROW("only coulomb or tresca friction");
-  if (frtype_ == CONTACT::friction_coulomb && frcoeff_ < 0.)
+  if (frtype_ == CONTACT::FrictionType::Coulomb && frcoeff_ < 0.)
     FOUR_C_THROW("negative coulomb friction coefficient");
-  if (frtype_ == CONTACT::friction_tresca && frbound_ < 0.)
+  if (frtype_ == CONTACT::FrictionType::Tresca && frbound_ < 0.)
     FOUR_C_THROW("negative tresca friction bound");
 
   Core::LinAlg::Matrix<dim, 1> slave_normal, master_normal;
@@ -176,7 +177,7 @@ void CONTACT::IntegratorNitsche::gpts_forces(Mortar::Element& sele, Mortar::Elem
     for (const auto& p : dgapgp) d_snn_av_pen_gap[p.first] += pen * p.second;
 
     // evaluation of tangential stuff
-    if (frtype_)
+    if (frtype_ != CONTACT::FrictionType::None)
     {
       CONTACT::Utils::build_tangent_vectors<dim>(
           contact_normal.data(), deriv_contact_normal, t1.data(), dt1, t2.data(), dt2);
@@ -200,7 +201,7 @@ void CONTACT::IntegratorNitsche::gpts_forces(Mortar::Element& sele, Mortar::Elem
           deriv_t2_adjoint_test_master);
     }  // evaluation of tangential stuff
 
-    if (frtype_)
+    if (frtype_ != CONTACT::FrictionType::None)
     {
       integrate_test<dim>(-1. + theta_2_, sele, sval, sderiv, dsxi, jac, jacintcellmap, wgt,
           cauchy_nt1_weighted_average, cauchy_nt1_weighted_average_deriv, t1, dt1);
@@ -282,15 +283,15 @@ void CONTACT::IntegratorNitsche::gpts_forces(Mortar::Element& sele, Mortar::Elem
             normal_adjoint_test_master, deriv_normal_adjoint_test_master);
       }
 
-      if (frtype_)
+      if (frtype_ != CONTACT::FrictionType::None)
       {
         double fr = 0.0;
         switch (frtype_)
         {
-          case CONTACT::friction_coulomb:
+          case CONTACT::FrictionType::Coulomb:
             fr = frcoeff_ * (-1.) * (snn_av_pen_gap);
             break;
-          case CONTACT::friction_tresca:
+          case CONTACT::FrictionType::Tresca:
             fr = frbound_;
             break;
           default:
@@ -322,7 +323,7 @@ void CONTACT::IntegratorNitsche::gpts_forces(Mortar::Element& sele, Mortar::Elem
               dgapgp.size() + cauchy_nn_weighted_average_deriv.size() +
                   cauchy_nt1_weighted_average_deriv.size() + dvt1.size(),
               0, 0);
-          if (frtype_ == CONTACT::friction_coulomb)
+          if (frtype_ == CONTACT::FrictionType::Coulomb)
             for (const auto& p : d_snn_av_pen_gap) tmp_d[p.first] += -frcoeff_ / tan_tr * p.second;
 
           for (const auto& p : cauchy_nt1_weighted_average_deriv)
@@ -696,7 +697,7 @@ void CONTACT::Utils::nitsche_weights_and_scaling(Mortar::Element& sele, Mortar::
 
   switch (nit_wgt)
   {
-    case CONTACT::NitWgt_slave:
+    case CONTACT::NitscheWeighting::slave:
     {
       ws = 1.;
       wm = 0.;
@@ -704,7 +705,7 @@ void CONTACT::Utils::nitsche_weights_and_scaling(Mortar::Element& sele, Mortar::
       pet /= he_slave;
     }
     break;
-    case CONTACT::NitWgt_master:
+    case CONTACT::NitscheWeighting::master:
     {
       wm = 1.;
       ws = 0.;
@@ -712,7 +713,7 @@ void CONTACT::Utils::nitsche_weights_and_scaling(Mortar::Element& sele, Mortar::
       pet /= he_master;
     }
     break;
-    case CONTACT::NitWgt_harmonic:
+    case CONTACT::NitscheWeighting::harmonic:
       ws = 1. / he_master;
       wm = 1. / he_slave;
       ws /= (ws + wm);

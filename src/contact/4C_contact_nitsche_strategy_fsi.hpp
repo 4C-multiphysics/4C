@@ -42,7 +42,7 @@ namespace CONTACT
               Teuchos::getIntegralValue<CONTACT::NitscheWeighting>(params, "NITSCHE_WEIGHTING"))
     {
       if (Teuchos::getIntegralValue<CONTACT::FrictionType>(params, "FRICTION") !=
-          CONTACT::friction_none)
+          CONTACT::FrictionType::None)
         FOUR_C_THROW("NitscheStrategyFsi: No frictional contact implemented for Nitsche FSCI!");
     }
 
@@ -58,7 +58,7 @@ namespace CONTACT
               Teuchos::getIntegralValue<CONTACT::NitscheWeighting>(params, "NITSCHE_WEIGHTING"))
     {
       if (Teuchos::getIntegralValue<CONTACT::FrictionType>(params, "FRICTION") !=
-          CONTACT::friction_none)
+          CONTACT::FrictionType::None)
         FOUR_C_THROW("NitscheStrategyFsi: No frictional contact implemented for Nitsche FSCI!");
     }
     //! Evaluate and apply RHS and Stiffness Matrix for Contact

@@ -30,15 +30,15 @@ void CONTACT::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& l
       {.description = "Must be chosen if a non-contact simulation is to be restarted with contact",
           .default_value = false}));
 
-  Core::Utils::string_to_integral_parameter<CONTACT::AdhesionType>("ADHESION", "None",
-      "Type of adhesion law", tuple<std::string>("None", "none", "bounded", "b"),
-      tuple<CONTACT::AdhesionType>(adhesion_none, adhesion_none, adhesion_bound, adhesion_bound),
+  Core::Utils::string_to_integral_parameter<CONTACT::AdhesionType>("ADHESION", "none",
+      "Type of adhesion law", tuple<std::string>("none", "bounded"),
+      tuple<CONTACT::AdhesionType>(CONTACT::AdhesionType::none, CONTACT::AdhesionType::bounded),
       scontact);
 
   Core::Utils::string_to_integral_parameter<CONTACT::FrictionType>("FRICTION", "None",
       "Type of friction law", tuple<std::string>("None", "Stick", "Tresca", "Coulomb"),
       tuple<CONTACT::FrictionType>(
-          friction_none, friction_stick, friction_tresca, friction_coulomb),
+        CONTACT::FrictionType::None, CONTACT::FrictionType::Stick, CONTACT::FrictionType::Tresca, CONTACT::FrictionType::Coulomb),
       scontact);
 
   scontact.specs.emplace_back(parameter<bool>(
@@ -175,7 +175,9 @@ void CONTACT::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& l
   Core::Utils::string_to_integral_parameter<CONTACT::NitscheWeighting>("NITSCHE_WEIGHTING",
       "harmonic", "how to weight consistency terms in Nitsche contact formulation",
       tuple<std::string>("slave", "master", "harmonic"),
-      tuple<CONTACT::NitscheWeighting>(NitWgt_slave, NitWgt_master, NitWgt_harmonic), scontact);
+      tuple<CONTACT::NitscheWeighting>(CONTACT::NitscheWeighting::slave,
+          CONTACT::NitscheWeighting::master, CONTACT::NitscheWeighting::harmonic),
+      scontact);
 
   scontact.specs.emplace_back(parameter<bool>("NITSCHE_PENALTY_ADAPTIVE",
       {.description = "adapt penalty parameter after each converged time step",

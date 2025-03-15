@@ -182,8 +182,9 @@ void Inpar::TSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
   Core::Utils::string_to_integral_parameter<CONTACT::NitscheWeighting>("NITSCHE_WEIGHTING_TSI",
       "harmonic", "how to weight consistency terms in Nitsche contact formulation",
       tuple<std::string>("slave", "master", "harmonic", "physical"),
-      tuple<CONTACT::NitscheWeighting>(CONTACT::NitWgt_slave, CONTACT::NitWgt_master,
-          CONTACT::NitWgt_harmonic, CONTACT::NitWgt_physical),
+      tuple<CONTACT::NitscheWeighting>(CONTACT::NitscheWeighting::slave,
+          CONTACT::NitscheWeighting::master, CONTACT::NitscheWeighting::harmonic,
+          CONTACT::NitscheWeighting::physical),
       tsic);
 
   tsic.specs.emplace_back(parameter<bool>("NITSCHE_PENALTY_ADAPTIVE_TSI",
@@ -192,17 +193,6 @@ void Inpar::TSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
 
   tsic.specs.emplace_back(parameter<double>("PENALTYPARAM_THERMO",
       {.description = "Penalty parameter for Nitsche solution strategy", .default_value = 0.0}));
-
-  Core::Utils::string_to_integral_parameter<CONTACT::NitscheThermoMethod>("NITSCHE_METHOD_TSI",
-      "nitsche",
-      "how to treat thermal interface problem: strong substitution or Nitsche for general "
-      "interface conditions",
-      tuple<std::string>("nitsche", "substitution"),
-      tuple<CONTACT::NitscheThermoMethod>(
-          CONTACT::NitThermo_nitsche, CONTACT::NitThermo_substitution),
-      tsic);
-
-
 
   tsic.move_into_collection(list);
 }

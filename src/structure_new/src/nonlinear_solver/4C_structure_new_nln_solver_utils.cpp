@@ -116,7 +116,7 @@ void Solid::Nln::SOLVER::convert_model_type_to_quantity_type(const enum Inpar::S
       auto frictiontype = Teuchos::getIntegralValue<CONTACT::FrictionType>(p_contact, "FRICTION");
       switch (frictiontype)
       {
-        case CONTACT::friction_none:
+        case CONTACT::FrictionType::None:
         {
           break;
         }

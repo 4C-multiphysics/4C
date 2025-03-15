@@ -116,15 +116,15 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
   // adhesive contact
   // ---------------------------------------------------------------------
   if (Teuchos::getIntegralValue<CONTACT::AdhesionType>(contact, "ADHESION") !=
-          CONTACT::adhesion_none and
+          CONTACT::AdhesionType::none and
       Teuchos::getIntegralValue<Inpar::Wear::WearLaw>(wearlist, "WEARLAW") !=
           Inpar::Wear::wear_none)
     FOUR_C_THROW("Adhesion combined with wear not yet tested!");
 
   if (Teuchos::getIntegralValue<CONTACT::AdhesionType>(contact, "ADHESION") !=
-          CONTACT::adhesion_none and
+          CONTACT::AdhesionType::none and
       Teuchos::getIntegralValue<CONTACT::FrictionType>(contact, "FRICTION") !=
-          CONTACT::friction_none)
+          CONTACT::FrictionType::None)
     FOUR_C_THROW("Adhesion combined with friction not yet tested!");
 
   // ---------------------------------------------------------------------
@@ -142,7 +142,7 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
           Teuchos::getIntegralValue<CONTACT::SolvingStrategy>(contact, "STRATEGY") ==
               CONTACT::solution_nitsche) &&
       Teuchos::getIntegralValue<CONTACT::FrictionType>(contact, "FRICTION") !=
-          CONTACT::friction_none &&
+          CONTACT::FrictionType::None &&
       contact.get<double>("PENALTYPARAMTAN") <= 0.0)
     FOUR_C_THROW("Tangential penalty parameter eps = 0, must be greater than 0");
 
@@ -154,7 +154,7 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
   if (Teuchos::getIntegralValue<CONTACT::SolvingStrategy>(contact, "STRATEGY") ==
           CONTACT::solution_uzawa &&
       Teuchos::getIntegralValue<CONTACT::FrictionType>(contact, "FRICTION") !=
-          CONTACT::friction_none &&
+          CONTACT::FrictionType::None &&
       contact.get<double>("PENALTYPARAMTAN") <= 0.0)
     FOUR_C_THROW("Tangential penalty parameter eps = 0, must be greater than 0");
 
@@ -169,12 +169,12 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
     FOUR_C_THROW("Constraint tolerance for Uzawa / Augmentation scheme must be greater than 0");
 
   if (Teuchos::getIntegralValue<CONTACT::FrictionType>(contact, "FRICTION") !=
-          CONTACT::friction_none &&
+          CONTACT::FrictionType::None &&
       contact.get<double>("SEMI_SMOOTH_CT") == 0.0)
     FOUR_C_THROW("Parameter ct = 0, must be greater than 0 for frictional contact");
 
   if (Teuchos::getIntegralValue<CONTACT::FrictionType>(contact, "FRICTION") ==
-          CONTACT::friction_tresca &&
+          CONTACT::FrictionType::Tresca &&
       dim == 3 &&
       Teuchos::getIntegralValue<CONTACT::SolvingStrategy>(contact, "STRATEGY") !=
           CONTACT::solution_nitsche)
@@ -182,7 +182,7 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
         "3D frictional contact with Tresca's law only implemented for nitsche formulation");
 
   if (Teuchos::getIntegralValue<CONTACT::FrictionType>(contact, "FRICTION") !=
-          CONTACT::friction_none &&
+          CONTACT::FrictionType::None &&
       not contact.get<bool>("SEMI_SMOOTH_NEWTON") && dim == 3)
     FOUR_C_THROW("3D frictional contact only implemented with Semi-smooth Newton");
 
@@ -190,7 +190,7 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
     FOUR_C_THROW("Crosspoints / edge node modification not yet implemented for 3D");
 
   if (Teuchos::getIntegralValue<CONTACT::FrictionType>(contact, "FRICTION") ==
-          CONTACT::friction_tresca &&
+          CONTACT::FrictionType::Tresca &&
       contact.get<bool>("FRLESS_FIRST"))
     // hopefully coming soon, when Coulomb and Tresca are combined
     FOUR_C_THROW("Frictionless first contact step with Tresca's law not yet implemented");
@@ -346,7 +346,7 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
     }
 
     if (Teuchos::getIntegralValue<CONTACT::FrictionType>(contact, "FRICTION") ==
-            CONTACT::friction_none &&
+            CONTACT::FrictionType::None &&
         Teuchos::getIntegralValue<Inpar::Wear::WearLaw>(wearlist, "WEARLAW") !=
             Inpar::Wear::wear_none)
       FOUR_C_THROW("Wear models only applicable to frictional contact.");
@@ -363,7 +363,7 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
       FOUR_C_THROW("Wear model only applicable in combination with Lagrange multiplier strategy.");
 
     if (Teuchos::getIntegralValue<CONTACT::FrictionType>(contact, "FRICTION") ==
-            CONTACT::friction_tresca &&
+            CONTACT::FrictionType::Tresca &&
         Teuchos::getIntegralValue<Inpar::Wear::WearLaw>(wearlist, "WEARLAW") !=
             Inpar::Wear::wear_none)
       FOUR_C_THROW("Wear only for Coulomb friction!");
@@ -411,7 +411,7 @@ void CONTACT::STRATEGY::Factory::read_and_check_input(Teuchos::ParameterList& pa
     if ((problemtype == Core::ProblemType::poroelast || problemtype == Core::ProblemType::fpsi ||
             problemtype == Core::ProblemType::fpsi_xfem) &&
         Teuchos::getIntegralValue<CONTACT::FrictionType>(contact, "FRICTION") !=
-            CONTACT::friction_none)
+            CONTACT::FrictionType::None)
       FOUR_C_THROW("POROCONTACT: Friction for poro contact not implemented!");
 
     if ((problemtype == Core::ProblemType::poroelast || problemtype == Core::ProblemType::fpsi ||
@@ -738,8 +738,8 @@ void CONTACT::STRATEGY::Factory::build_interfaces(const Teuchos::ParameterList& 
     Teuchos::ParameterList icparams = params;
 
     // find out if interface-specific coefficients of friction are given
-    if (ftype == CONTACT::friction_tresca or ftype == CONTACT::friction_coulomb or
-        ftype == CONTACT::friction_stick)
+    if (ftype == CONTACT::FrictionType::Tresca or ftype == CONTACT::FrictionType::Coulomb or
+        ftype == CONTACT::FrictionType::Stick)
     {
       // read interface COFs
       std::vector<double> frcoeff(currentgroup.size());
@@ -755,19 +755,19 @@ void CONTACT::STRATEGY::Factory::build_interfaces(const Teuchos::ParameterList& 
       if (frcoeff[0] < 0.0) FOUR_C_THROW("Negative FrCoeff / FrBound on interface %i", groupid1);
 
       // add COF locally to contact parameter list of this interface
-      if (ftype == CONTACT::friction_tresca)
+      if (ftype == CONTACT::FrictionType::Tresca)
       {
         icparams.setEntry("FRBOUND", static_cast<Teuchos::ParameterEntry>(frcoeff[0]));
         icparams.setEntry("FRCOEFF", static_cast<Teuchos::ParameterEntry>(-1.0));
       }
-      else if (ftype == CONTACT::friction_coulomb)
+      else if (ftype == CONTACT::FrictionType::Coulomb)
       {
         icparams.setEntry("FRCOEFF", static_cast<Teuchos::ParameterEntry>(frcoeff[0]));
         icparams.setEntry("FRBOUND", static_cast<Teuchos::ParameterEntry>(-1.0));
       }
       // dummy values for FRCOEFF and FRBOUND have to be set,
       // since entries are accessed regardless of the friction law
-      else if (ftype == CONTACT::friction_stick)
+      else if (ftype == CONTACT::FrictionType::Stick)
       {
         icparams.setEntry("FRCOEFF", static_cast<Teuchos::ParameterEntry>(-1.0));
         icparams.setEntry("FRBOUND", static_cast<Teuchos::ParameterEntry>(-1.0));
@@ -775,7 +775,7 @@ void CONTACT::STRATEGY::Factory::build_interfaces(const Teuchos::ParameterList& 
     }
 
     // find out if interface-specific coefficients of adhesion are given
-    if (ad == CONTACT::adhesion_bound)
+    if (ad == CONTACT::AdhesionType::bounded)
     {
       // read interface COFs
       std::vector<double> ad_bound(currentgroup.size());
@@ -888,7 +888,7 @@ void CONTACT::STRATEGY::Factory::build_interfaces(const Teuchos::ParameterList& 
          * for the boolean variable initactive we use isactive[j]+foundinitialactive,
          * as this is true for BOTH initial active nodes found for the first time
          * and found for the second, third, ... time! */
-        if (ftype != CONTACT::friction_none)
+        if (ftype != CONTACT::FrictionType::None)
         {
           std::shared_ptr<CONTACT::FriNode> cnode =
               std::make_shared<CONTACT::FriNode>(node->id(), node->x(), node->owner(),
@@ -1659,13 +1659,13 @@ void CONTACT::STRATEGY::Factory::print(
     for (unsigned i = 0; i < interfaces.size(); ++i)
     {
       double checkfrcoeff = 0.0;
-      if (ftype == CONTACT::friction_tresca)
+      if (ftype == CONTACT::FrictionType::Tresca)
       {
         checkfrcoeff = interfaces[i]->interface_params().get<double>("FRBOUND");
         std::cout << std::endl << "Interface         " << i + 1 << std::endl;
         std::cout << "FrBound (Tresca)  " << checkfrcoeff << std::endl;
       }
-      else if (ftype == CONTACT::friction_coulomb)
+      else if (ftype == CONTACT::FrictionType::Coulomb)
       {
         checkfrcoeff = interfaces[i]->interface_params().get<double>("FRCOEFF");
         std::cout << std::endl << "Interface         " << i + 1 << std::endl;

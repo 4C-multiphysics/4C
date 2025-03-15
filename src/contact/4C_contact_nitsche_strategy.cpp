@@ -393,8 +393,8 @@ void CONTACT::NitscheStrategy::update_trace_ineq_etimates()
     {
       auto* mele = dynamic_cast<Mortar::Element*>(
           interface->discret().g_element(interface->discret().element_col_map()->GID(e)));
-      if (NitWgt == CONTACT::NitWgt_slave && !mele->is_slave()) continue;
-      if (NitWgt == CONTACT::NitWgt_master && mele->is_slave()) continue;
+      if (NitWgt == CONTACT::NitscheWeighting::slave && !mele->is_slave()) continue;
+      if (NitWgt == CONTACT::NitscheWeighting::master && mele->is_slave()) continue;
       mele->estimate_nitsche_trace_max_eigenvalue();
     }
   }

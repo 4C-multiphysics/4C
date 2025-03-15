@@ -77,7 +77,6 @@ GHOSTING_STRATEGY               redundant_master
 ---------------------------------------------------CONTACT DYNAMIC
 LINEAR_SOLVER                   4
 RESTART_WITH_CONTACT            Yes
-ADHESION                        None
 FRICTION                        None
 FRLESS_FIRST                    No
 GP_SLIP_INCR                    No

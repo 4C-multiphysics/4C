@@ -428,7 +428,7 @@ bool CONTACT::MtManager::read_and_check_input(
     FOUR_C_THROW("Constraint tolerance for Uzawa / Augmentation scheme must be greater than 0");
 
   if (onlymeshtying && Teuchos::getIntegralValue<CONTACT::FrictionType>(meshtying, "FRICTION") !=
-                           CONTACT::friction_none)
+                           CONTACT::FrictionType::None)
     FOUR_C_THROW("Friction law supplied for mortar meshtying");
 
   if (Teuchos::getIntegralValue<CONTACT::SolvingStrategy>(meshtying, "STRATEGY") ==

@@ -19,7 +19,6 @@ Solid::ModelEvaluator::ContactData::ContactData()
     : isinit_(false),
       issetup_(false),
       mortar_action_(Mortar::eval_none),
-      var_type_(CONTACT::var_unknown),
       coupling_scheme_(CONTACT::CouplingScheme::unknown),
       str_data_ptr_(nullptr)
 {

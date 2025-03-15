@@ -42,7 +42,7 @@ namespace CONTACT
               Teuchos::getIntegralValue<CONTACT::NitscheWeighting>(params, "NITSCHE_WEIGHTING"))
     {
       if (Teuchos::getIntegralValue<CONTACT::FrictionType>(params, "FRICTION") !=
-          CONTACT::friction_none)
+          CONTACT::FrictionType::None)
         FOUR_C_THROW("NitscheStrategyFpi: No frictional contact implemented for Nitsche FPSCI!");
     }
 
@@ -58,7 +58,7 @@ namespace CONTACT
               Teuchos::getIntegralValue<CONTACT::NitscheWeighting>(params, "NITSCHE_WEIGHTING"))
     {
       if (Teuchos::getIntegralValue<CONTACT::FrictionType>(params, "FRICTION") !=
-          CONTACT::friction_none)
+          CONTACT::FrictionType::None)
         FOUR_C_THROW("NitscheStrategyFpi: No frictional contact implemented for Nitsche FPSCI!");
     }
     //! Set Contact State and update search tree and normals
