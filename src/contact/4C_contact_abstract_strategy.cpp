@@ -123,7 +123,7 @@ CONTACT::AbstractStrategy::AbstractStrategy(
   auto ftype = Teuchos::getIntegralValue<CONTACT::FrictionType>(params(), "FRICTION");
 
   // set frictional contact status
-  if (ftype != CONTACT::friction_none) friction_ = true;
+  if (ftype != CONTACT::FrictionType::None) friction_ = true;
 
   // set nonsmooth contact status
   if (params().get<bool>("NONSMOOTH_GEOMETRIES")) nonSmoothContact_ = true;

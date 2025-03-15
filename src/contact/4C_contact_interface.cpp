@@ -176,7 +176,7 @@ CONTACT::Interface::Interface(const std::shared_ptr<Mortar::InterfaceDataContain
 
   // set frictional contact status
   auto ftype = Teuchos::getIntegralValue<CONTACT::FrictionType>(icontact, "FRICTION");
-  if (ftype != CONTACT::friction_none) friction_ = true;
+  if (ftype != CONTACT::FrictionType::None) friction_ = true;
 
   // set poro contact
   if (icontact.get<int>("PROBTYPE") == CONTACT::poroelast ||
@@ -7099,7 +7099,7 @@ bool CONTACT::Interface::update_active_set_semi_smooth()
       else
       {
         // friction tresca
-        if (ftype == CONTACT::friction_tresca)
+        if (ftype == CONTACT::FrictionType::Tresca)
         {
           auto* frinode = dynamic_cast<FriNode*>(cnode);
 
@@ -7135,7 +7135,7 @@ bool CONTACT::Interface::update_active_set_semi_smooth()
         }  // if (fytpe=="tresca")
 
         // friction coulomb
-        if (ftype == CONTACT::friction_coulomb)
+        if (ftype == CONTACT::FrictionType::Coulomb)
         {
           auto* frinode = dynamic_cast<FriNode*>(cnode);
 
@@ -7187,7 +7187,7 @@ bool CONTACT::Interface::update_active_set_semi_smooth()
               localcheck = false;
             }
           }
-        }  // if (ftype == CONTACT::friction_coulomb)
+        }  // if (ftype == CONTACT::FrictionType::Coulomb)
       }  // if (nz - cn*wgap <= 0)
     }  // if (cnode->Active()==false)
   }  // loop over all slave nodes

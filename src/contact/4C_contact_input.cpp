@@ -38,7 +38,7 @@ void CONTACT::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& l
   Core::Utils::string_to_integral_parameter<CONTACT::FrictionType>("FRICTION", "None",
       "Type of friction law", tuple<std::string>("None", "Stick", "Tresca", "Coulomb"),
       tuple<CONTACT::FrictionType>(
-          friction_none, friction_stick, friction_tresca, friction_coulomb),
+        CONTACT::FrictionType::None, CONTACT::FrictionType::Stick, CONTACT::FrictionType::Tresca, CONTACT::FrictionType::Coulomb),
       scontact);
 
   scontact.specs.emplace_back(parameter<bool>(

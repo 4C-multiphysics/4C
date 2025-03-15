@@ -91,12 +91,12 @@ void Adapter::CouplingEhlMortar::setup(std::shared_ptr<Core::FE::Discretization>
 
   switch (ftype)
   {
-    case CONTACT::friction_tresca:
+    case CONTACT::FrictionType::Tresca:
       FOUR_C_THROW("no tresca friction supported");
       break;
-    case CONTACT::friction_none:
+    case CONTACT::FrictionType::None:
       break;
-    case CONTACT::friction_coulomb:
+    case CONTACT::FrictionType::Coulomb:
       interface_->interface_params().set<double>("FRCOEFF", fr_coeff);
       interface_->interface_params().set<double>("FRBOUND", -1.);
       break;

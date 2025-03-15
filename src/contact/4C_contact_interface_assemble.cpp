@@ -279,7 +279,7 @@ void CONTACT::Interface::assemble_reg_tangent_forces_penalty()
       cnode->fri_data().slip() = false;
     }
     else if (cnode->active() == true &&
-             ((abs(maxtantrac) - magnitude >= 0) or ftype == CONTACT::friction_stick))
+             ((abs(maxtantrac) - magnitude >= 0) or ftype == CONTACT::FrictionType::Stick))
     {
       // std::cout << "Node " << gid << " is stick" << std::endl;
       cnode->fri_data().slip() = false;
@@ -632,7 +632,7 @@ void CONTACT::Interface::assemble_reg_tangent_forces_uzawa()
     {
     }
     else if (cnode->active() == true &&
-             ((abs(maxtantrac) - magnitude >= 0) or ftype == CONTACT::friction_stick))
+             ((abs(maxtantrac) - magnitude >= 0) or ftype == CONTACT::FrictionType::Stick))
     {
       // std::cout << "Node " << gid << " is stick" << std::endl;
       cnode->fri_data().slip() = false;
@@ -1959,7 +1959,7 @@ void CONTACT::Interface::assemble_lin_stick(Core::LinAlg::SparseMatrix& linstick
         }
       }
     }
-    else if (consistent && ftype == CONTACT::friction_coulomb)
+    else if (consistent && ftype == CONTACT::FrictionType::Coulomb)
     {
       std::map<int, double>& dgmap = cnode->data().get_deriv_g();
 
@@ -2578,7 +2578,7 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
   //**********************************************************************
   //**********************************************************************
   //**********************************************************************
-  if (ftype == CONTACT::friction_coulomb)
+  if (ftype == CONTACT::FrictionType::Coulomb)
   {
     // loop over all slip nodes of the interface
     for (int i = 0; i < slipnodes_->NumMyElements(); ++i)
@@ -3610,7 +3610,7 @@ void CONTACT::Interface::assemble_lin_slip(Core::LinAlg::SparseMatrix& linslipLM
   //**********************************************************************
   //**********************************************************************
   //**********************************************************************
-  if (ftype == CONTACT::friction_tresca)
+  if (ftype == CONTACT::FrictionType::Tresca)
   {
     // loop over all slip nodes of the interface
     for (int i = 0; i < slipnodes_->NumMyElements(); ++i)
@@ -4336,7 +4336,7 @@ void CONTACT::Interface::assemble_lin_slip_normal_regularization(
   //**********************************************************************
   //**********************************************************************
   //**********************************************************************
-  if (ftype == CONTACT::friction_coulomb)
+  if (ftype == CONTACT::FrictionType::Coulomb)
   {
     // loop over all slip nodes of the interface
     for (int i = 0; i < slipnodes_->NumMyElements(); ++i)

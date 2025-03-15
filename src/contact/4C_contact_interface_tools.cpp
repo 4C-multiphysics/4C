@@ -4511,12 +4511,12 @@ void CONTACT::Interface::fd_check_slip_deriv(
     }  // if cnode == Slip
 
     // store C in vector
-    if (ftype == CONTACT::friction_tresca)
+    if (ftype == CONTACT::FrictionType::Tresca)
     {
       refCtxi[i] = euclidean * ztxi - frbound * (ztxi + ct * jumptxi);
       refCteta[i] = euclidean * zteta - frbound * (zteta + ct * jumpteta);
     }
-    else if (ftype == CONTACT::friction_coulomb)
+    else if (ftype == CONTACT::FrictionType::Coulomb)
     {
       refCtxi[i] = euclidean * ztxi - (frcoeff * znor) * (ztxi + ct * jumptxi);
       refCteta[i] = euclidean * zteta - (frcoeff * znor) * (zteta + ct * jumpteta);
@@ -4641,12 +4641,12 @@ void CONTACT::Interface::fd_check_slip_deriv(
       }  // if cnode == Slip
 
       // store C in vector
-      if (ftype == CONTACT::friction_tresca)
+      if (ftype == CONTACT::FrictionType::Tresca)
       {
         newCtxi[k] = euclidean * ztxi - frbound * (ztxi + ct * jumptxi);
         newCteta[k] = euclidean * zteta - frbound * (zteta + ct * jumpteta);
       }
-      else if (ftype == CONTACT::friction_coulomb)
+      else if (ftype == CONTACT::FrictionType::Coulomb)
       {
         newCtxi[k] = euclidean * ztxi - (frcoeff * znor) * (ztxi + ct * jumptxi);
         newCteta[k] = euclidean * zteta - (frcoeff * znor) * (zteta + ct * jumpteta);
@@ -4878,12 +4878,12 @@ void CONTACT::Interface::fd_check_slip_deriv(
       }  // if cnode == Slip
 
       // store C in vector
-      if (ftype == CONTACT::friction_tresca)
+      if (ftype == CONTACT::FrictionType::Tresca)
       {
         newCtxi[k] = euclidean * ztxi - frbound * (ztxi + ct * jumptxi);
         newCteta[k] = euclidean * zteta - frbound * (zteta + ct * jumpteta);
       }
-      else if (ftype == CONTACT::friction_coulomb)
+      else if (ftype == CONTACT::FrictionType::Coulomb)
       {
         newCtxi[k] = euclidean * ztxi - (frcoeff * znor) * (ztxi + ct * jumptxi);
         newCteta[k] = euclidean * zteta - (frcoeff * znor) * (zteta + ct * jumpteta);
@@ -5116,12 +5116,12 @@ void CONTACT::Interface::fd_check_slip_deriv(
       }  // if cnode == Slip
 
       // store C in vector
-      if (ftype == CONTACT::friction_tresca)
+      if (ftype == CONTACT::FrictionType::Tresca)
       {
         newCtxi[k] = euclidean * ztxi - frbound * (ztxi + ct * jumptxi);
         newCteta[k] = euclidean * zteta - frbound * (zteta + ct * jumpteta);
       }
-      else if (ftype == CONTACT::friction_coulomb)
+      else if (ftype == CONTACT::FrictionType::Coulomb)
       {
         newCtxi[k] = euclidean * ztxi - (frcoeff * znor) * (ztxi + ct * jumptxi);
         newCteta[k] = euclidean * zteta - (frcoeff * znor) * (zteta + ct * jumpteta);

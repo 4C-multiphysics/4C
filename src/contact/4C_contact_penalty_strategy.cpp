@@ -278,12 +278,12 @@ void CONTACT::PenaltyStrategy::evaluate_contact(
   {
     if (IsInContact())
     {
-      if (ftype == CONTACT::friction_coulomb)
+      if (ftype == CONTACT::FrictionType::Coulomb)
       {
         std::cout << "LINZMATRIX" << *linzmatrix_ << std::endl;
         interface_[i]->fd_check_penalty_trac_fric();
       }
-      else if (ftype == CONTACT::friction_none)
+      else if (ftype == CONTACT::FrictionType::None)
       {
         std::cout << "-- CONTACTFDDERIVZ --------------------" << std::endl;
         interface_[i]->fd_check_penalty_trac_nor();
@@ -406,11 +406,11 @@ void CONTACT::PenaltyStrategy::evaluate_friction(
   auto ftype = Teuchos::getIntegralValue<CONTACT::FrictionType>(params(), "FRICTION");
 
   // coulomb friction case
-  if (ftype == CONTACT::friction_coulomb || ftype == CONTACT::friction_stick)
+  if (ftype == CONTACT::FrictionType::Coulomb || ftype == CONTACT::FrictionType::Stick)
   {
     evaluate_contact(kteff, feff);
   }
-  else if (ftype == CONTACT::friction_tresca)
+  else if (ftype == CONTACT::FrictionType::Tresca)
   {
     FOUR_C_THROW(
         "Error in AbstractStrategy::Evaluate: Penalty Strategy for"

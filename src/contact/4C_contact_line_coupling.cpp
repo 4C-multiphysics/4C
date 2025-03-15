@@ -2373,7 +2373,7 @@ void CONTACT::LineToLineCouplingPoint3d::evaluate_terms(double* sxi, double* mxi
 {
   bool friction = false;
   auto ftype = Teuchos::getIntegralValue<CONTACT::FrictionType>(interface_params(), "FRICTION");
-  if (ftype != CONTACT::friction_none) friction = true;
+  if (ftype != CONTACT::FrictionType::None) friction = true;
 
   // get slave element nodes themselves for normal evaluation
   Core::Nodes::Node** mynodes = line_slave_element()->nodes();
