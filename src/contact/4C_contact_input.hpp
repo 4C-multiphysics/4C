@@ -115,13 +115,6 @@ namespace CONTACT
     physical
   };
 
-  /// Constraint enfrocement method method for thermal conduction and frictional dissipation
-  enum NitscheThermoMethod
-  {
-    NitThermo_substitution,
-    NitThermo_nitsche
-  };
-
   /// Assemble strategy for the augmented Lagrangian framework
   enum AssembleStrategy : int
   {

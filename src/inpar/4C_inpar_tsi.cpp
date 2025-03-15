@@ -194,17 +194,6 @@ void Inpar::TSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
   tsic.specs.emplace_back(parameter<double>("PENALTYPARAM_THERMO",
       {.description = "Penalty parameter for Nitsche solution strategy", .default_value = 0.0}));
 
-  Core::Utils::string_to_integral_parameter<CONTACT::NitscheThermoMethod>("NITSCHE_METHOD_TSI",
-      "nitsche",
-      "how to treat thermal interface problem: strong substitution or Nitsche for general "
-      "interface conditions",
-      tuple<std::string>("nitsche", "substitution"),
-      tuple<CONTACT::NitscheThermoMethod>(
-          CONTACT::NitThermo_nitsche, CONTACT::NitThermo_substitution),
-      tsic);
-
-
-
   tsic.move_into_collection(list);
 }
 
