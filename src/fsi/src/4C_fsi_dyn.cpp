@@ -341,6 +341,10 @@ void fsi_immersed_drt()
     // read the restart information, set vectors and variables
     fsi->read_restart(restart);
   }
+  else
+  {
+    fsi->post_setup();
+  }
 
   fsi->timeloop(Teuchos::rcpFromRef(*fsi));
 
@@ -547,6 +551,10 @@ void fsi_ale_drt()
       {
         fsi->read_restart(restart);
       }
+      else
+      {
+        fsi->post_setup();
+      }
 
       // now do the coupling setup and create the combined dofmap
       fsi->setup_system();
@@ -593,6 +601,10 @@ void fsi_ale_drt()
       if (restart)
       {
         fsi->read_restart(restart);
+      }
+      else
+      {
+        fsi->post_setup();
       }
 
       // now do the coupling setup and create the combined dofmap
@@ -644,6 +656,11 @@ void fsi_ale_drt()
       {
         // read the restart information, set vectors and variables
         fsi->read_restart(restart);
+      }
+      else
+      {
+        // call post setup tasks
+        fsi->post_setup();
       }
 
       fsi->timeloop(Teuchos::rcpFromRef(*fsi));
@@ -797,6 +814,11 @@ void xfsi_drt()
       {
         // read the restart information, set vectors and variables
         fsi->read_restart(restart);
+      }
+      else
+      {
+        // call post setup tasks
+        fsi->post_setup();
       }
 
       fsi->timeloop(Teuchos::rcpFromRef(*fsi));

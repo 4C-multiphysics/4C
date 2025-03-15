@@ -54,6 +54,13 @@ namespace Adapter
 
     //@}
 
+    /*!
+     * @brief Perform all necessary tasks after setting up structure
+     * wrapper. Currently, the method only calls the post setup routine of the
+     * underlying structural time integration.
+     */
+    void post_setup() override { structure_->post_setup(); }
+
     //! @name Vector access
     //@{
 

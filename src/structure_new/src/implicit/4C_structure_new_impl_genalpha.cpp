@@ -144,7 +144,7 @@ void Solid::IMPLICIT::GenAlpha::post_setup()
 
   if (not sdyn().neglect_inertia())
   {
-    equilibrate_initial_state();
+    compute_mass_matrix_and_init_acc();
   }
 
   model_eval().post_setup();
@@ -534,7 +534,7 @@ bool Solid::IMPLICIT::GenAlpha::predict_const_vel_consist_acc(Core::LinAlg::Vect
   /* In the general dynamic case there is no need to design a special start-up
    * procedure, since it is possible to prescribe an initial velocity or
    * acceleration. The corresponding accelerations are calculated in the
-   * equilibrate_initial_state() routine. */
+   * compute_mass_matrix_and_init_acc() routine. */
 
   std::shared_ptr<const Core::LinAlg::Vector<double>> disn = global_state().get_dis_n();
   std::shared_ptr<const Core::LinAlg::Vector<double>> veln = global_state().get_vel_n();
@@ -567,7 +567,7 @@ bool Solid::IMPLICIT::GenAlpha::predict_const_acc(Core::LinAlg::Vector<double>& 
   /* In the general dynamic case there is no need to design a special start-up
    * procedure, since it is possible to prescribe an initial velocity or
    * acceleration. The corresponding accelerations are calculated in the
-   * equilibrate_initial_state() routine. */
+   * compute_mass_matrix_and_init_acc() routine. */
 
   std::shared_ptr<const Core::LinAlg::Vector<double>> disn = global_state().get_dis_n();
   std::shared_ptr<const Core::LinAlg::Vector<double>> veln = global_state().get_vel_n();

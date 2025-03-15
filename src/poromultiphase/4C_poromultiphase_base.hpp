@@ -45,6 +45,8 @@ namespace POROMULTIPHASE
         int nds_solidpressure, int ndsporofluid_scatra,
         const std::map<int, std::set<int>>* nearbyelepairs) override = 0;
 
+    void post_init() override;
+
     /// read restart
     void read_restart(int restart) override;
 

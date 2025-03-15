@@ -77,6 +77,14 @@ namespace PaSI
     virtual void setup();
 
     /*!
+     * \brief Perform all necessary tasks after initializing the PaSI
+     * algorithm. Currently, this only calls the post_setup routine of the
+     * structural field.
+     *
+     */
+    void post_init();
+
+    /*!
      * \brief read restart information for given time step
      *
      *
