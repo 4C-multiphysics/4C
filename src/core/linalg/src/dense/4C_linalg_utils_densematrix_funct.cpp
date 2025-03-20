@@ -39,30 +39,11 @@ namespace
       {11, 5.31e-1}, {12, 5.81e-1}, {13, 6.24e-1}, {14, 6.62e-1}, {15, 6.95e-1}, {16, 7.24e-1}};
 
 
-  // matrix_sqrt: db_iter_scaled_product
-
-}  // namespace
-
-
-/*--------------------------------------------------------------------*
- *--------------------------------------------------------------------*/
-template <unsigned int dim>
-Core::LinAlg::Matrix<dim, dim> Core::LinAlg::matrix_sqrt(
-    const Core::LinAlg::Matrix<dim, dim>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
-    unsigned int* num_of_iters, Core::LinAlg::MatrixSqrtCalcMethod calc_method)
-{
-  // set error status to no errors
-  err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
-
-  // return 0 if matrix is 0: determined with matrix norm
-  if (input.norm2() == 0.0)
-  {
-    err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
-    if (num_of_iters != nullptr) *num_of_iters = 0;
-    return input;
-  }
-
-  if (calc_method == Core::LinAlg::MatrixSqrtCalcMethod::db_iter_scaled_product)
+  // matrix_sqrt: Denman and Beavers iteration (scaled product)
+  template <unsigned int dim>
+  Core::LinAlg::Matrix<dim, dim> matrix_sqrt_db_iter_scaled_product(
+      const Core::LinAlg::Matrix<dim, dim>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
+      unsigned int* num_of_iters = nullptr)
   {
     // compute dim-dimensional unit tensor
     Core::LinAlg::Matrix<dim, dim> id{true};
@@ -144,7 +125,7 @@ Core::LinAlg::Matrix<dim, dim> Core::LinAlg::matrix_sqrt(
       // checking stopping criterion
       if (distance_norm * distance_norm < err_tolerance * X_kp1.norm2() / abs_invX_k)
       {
-        err_status = MatrixFunctErrorType::no_errors;
+        err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
         if (num_of_iters != nullptr) *num_of_iters = iter;
         return X_kp1;
       }
@@ -161,51 +142,22 @@ Core::LinAlg::Matrix<dim, dim> Core::LinAlg::matrix_sqrt(
       mu_k = std::pow(inv_abs_detM_k, exponent);
     }
   }
-  else
+
+  // matrix_exp: Taylor series
+  template <unsigned int dim>
+  Core::LinAlg::Matrix<dim, dim> matrix_exp_taylor_series(
+      const Core::LinAlg::Matrix<dim, dim>& input, Core::LinAlg::MatrixFunctErrorType& err_status)
   {
-    FOUR_C_THROW("The matrix sqrt function cannot be computed with the specified method yet!");
-  }
-}
+    // declare output
+    Core::LinAlg::Matrix<dim, dim> output{true};
 
+    // get norm of input matrix
+    double mat_norm = input.norm2();
 
-/*--------------------------------------------------------------------*
- *--------------------------------------------------------------------*/
-template <unsigned int dim>
-Core::LinAlg::Matrix<dim, dim> Core::LinAlg::matrix_exp(const Core::LinAlg::Matrix<dim, dim>& input,
-    Core::LinAlg::MatrixFunctErrorType& err_status, Core::LinAlg::MatrixExpCalcMethod calc_method)
-{
-  // declare output matrix
-  Core::LinAlg::Matrix<dim, dim> output(true);
-
-  // get norm of input matrix
-  double mat_norm = input.norm2();
-
-  // direct calculation for zero-matrix
-  if (mat_norm <= 1.0e-12)
-  {
-    for (unsigned int i = 0; i < dim; i++) output(i, i) = 1.;
-    err_status = MatrixFunctErrorType::no_errors;
-    return output;
-  }
-
-  // determine computation method based on the matrix norm
-  if (calc_method == Core::LinAlg::MatrixExpCalcMethod::default_method)
-  {
-    if (mat_norm < 2.0)
-      calc_method = Core::LinAlg::MatrixExpCalcMethod::taylor_series;
-    else
-      calc_method = Core::LinAlg::MatrixExpCalcMethod::spectral_decomp;
-  }
-
-
-  // compute matrix exponential via power series for small matrix norms. This is usually
-  // faster than by spectral decomposition for matrices which are close to zero.
-  if (calc_method == Core::LinAlg::MatrixExpCalcMethod::taylor_series)
-  {
     // consistency check
     if (mat_norm >= 2.0)
     {
-      err_status = MatrixFunctErrorType::unsuitable_method;
+      err_status = Core::LinAlg::MatrixFunctErrorType::unsuitable_method;
       return Core::LinAlg::Matrix<dim, dim>{true};
     }
 
@@ -237,15 +189,22 @@ Core::LinAlg::Matrix<dim, dim> Core::LinAlg::matrix_exp(const Core::LinAlg::Matr
       std::cout << "Matrix exponential unconverged in " << n
                 << "steps, for the following matrix: " << std::endl;
       input.print(std::cout);
-      err_status = MatrixFunctErrorType::failed_computation;
+      err_status = Core::LinAlg::MatrixFunctErrorType::failed_computation;
       return output;
     }
 
-    err_status = MatrixFunctErrorType::no_errors;
+    err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
     return output;
   }
-  else if (calc_method == Core::LinAlg::MatrixExpCalcMethod::spectral_decomp)
+
+  // matrix_exp: spectral decomposition
+  template <unsigned int dim>
+  Core::LinAlg::Matrix<dim, dim> matrix_exp_spectral_decomp(
+      const Core::LinAlg::Matrix<dim, dim>& input, Core::LinAlg::MatrixFunctErrorType& err_status)
   {
+    // declare output
+    Core::LinAlg::Matrix<dim, dim> output{true};
+
     // spectral decomposition for higher matrix norms
     Core::LinAlg::Matrix<dim, dim, std::complex<double>> eigenval_matrix(true);
     Core::LinAlg::Matrix<dim, dim, std::complex<double>> eigenvect_matrix(true);
@@ -276,435 +235,17 @@ Core::LinAlg::Matrix<dim, dim> Core::LinAlg::matrix_exp(const Core::LinAlg::Matr
       }
     }
 
-    err_status = MatrixFunctErrorType::no_errors;
+    err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
     return output;
   }
-  else
+
+  // matrix_exp (1st deriv. ): Taylor series
+  Core::LinAlg::Matrix<9, 9> matrix_3x3_exp_1st_deriv_taylor_series(
+      const Core::LinAlg::Matrix<3, 3>& input, Core::LinAlg::MatrixFunctErrorType& err_status)
   {
-    FOUR_C_THROW("The provided computation method for the matrix exponential is not implemented!");
-  }
-}
+    // declare output
+    Core::LinAlg::Matrix<9, 9> output{true};
 
-/*--------------------------------------------------------------------*
- *--------------------------------------------------------------------*/
-template <unsigned int dim>
-Core::LinAlg::Matrix<dim, dim> Core::LinAlg::matrix_log(const Core::LinAlg::Matrix<dim, dim>& input,
-    Core::LinAlg::MatrixFunctErrorType& err_status, Core::LinAlg::MatrixLogCalcMethod calc_method,
-    unsigned int* pade_order)
-{
-  // auxiliaries
-  Core::LinAlg::Matrix<dim, dim> id(true);
-  for (unsigned int i = 0; i < dim; ++i)
-  {
-    id(i, i) = 1.0;
-  }
-  Core::LinAlg::Matrix<dim, dim> temp(true);
-
-  // initialize error status to no errors(0)
-  err_status = MatrixFunctErrorType::no_errors;
-
-  // declare output matrix
-  Core::LinAlg::Matrix<dim, dim> output(true);
-
-  // ---> determine matrix logarithm
-  // Pade approximation of a given order \f$ m \f$, using a partial fraction form
-  if (calc_method == Core::LinAlg::MatrixLogCalcMethod::pade_part_fract)
-  {
-    // check whether an approximation order \f$ m \f$ was provided
-    FOUR_C_ASSERT_ALWAYS(pade_order != nullptr,
-        "You want to compute the matrix logarithm with a Pade partial fraction expansion, but have "
-        "not provided an approximation order!");
-
-    // subtract identity from input matrix to obtain the \f$ X \f$
-    // matrix
-    Core::LinAlg::Matrix<dim, dim> X{true};
-    X.update(1.0, input, -1.0, id, 0.0);
-
-    // return directly in the case that \f$ X \f$ has norm 0
-    if (X.norm2() == 0.0)
-    {
-      err_status = MatrixFunctErrorType::no_errors;
-      return Core::LinAlg::Matrix<dim, dim>{true};
-    }
-
-    // initialize m-point Gauss integration points and weights
-    FE::IntPointsAndWeights<1> int_pts_wts{
-        FE::num_gauss_points_to_gauss_rule<Core::FE::CellType::line2>(*pade_order)};
-
-    // declare \f$ \boldsymbol{I} + \beta_j^{(m)} x  \f$ and its inverse
-    Core::LinAlg::Matrix<dim, dim> id_pl_beta_x{true};
-    Core::LinAlg::Matrix<dim, dim> inv_id_pl_beta_x{true};
-
-    // declare current Gauss point and Gauss weight (transformed from
-    // [-1, 1] onto [0, 1])
-    double trafo_point{0.0};
-    double trafo_weight{0.0};
-
-    // add terms successively to the output matrix
-    unsigned int pt = 0;  // point index
-    while (true)
-    {
-      // transform Gauss points and weights from [-1, 1] onto the considered interval
-      // [0, 1]
-      trafo_point = 1.0 / 2.0 * (*int_pts_wts.point(pt) + 1.0);
-      trafo_weight = 1.0 / 2.0 * int_pts_wts.weight(pt);
-
-      // compute \f$ \boldsymbol{I} + \beta_j^{(m)} x  \f$ and its
-      // inverse
-      id_pl_beta_x.update(1.0, id, trafo_point, X, 0.0);
-      inv_id_pl_beta_x.invert(id_pl_beta_x);
-
-      // add contribution of the Gauss point to the output matrix
-      output.multiply(trafo_weight, X, inv_id_pl_beta_x, 1.0);
-
-      // increment point index
-      ++pt;
-
-      // exit loop if point index equal to Pade order
-      if (pt == (*pade_order))
-      {
-        err_status = MatrixFunctErrorType::no_errors;
-        return output;
-      }
-    }
-  }
-  // inverse scaling and squaring method
-  else if (calc_method == Core::LinAlg::MatrixLogCalcMethod::inv_scal_square)
-  {
-    // initialize number of square roots \f$ k \f$, number of iterations for DB iteration \f$
-    // \text{it} \f$, and number of norm checks \f$ p \f$
-    unsigned int k = 0;
-    unsigned int it = 5;
-    unsigned int p = 0;
-
-    // use pointer to iteration number it
-    unsigned int* it_ptr = &it;
-
-    // declare distance norm to identity tensor \f$ \tau \f$
-    double tau{0.0};
-
-    // declare Pade approx. orders \f$ j_1, j_2, m \f$
-    unsigned int j_1, j_2, m = 0;
-
-    // declare and initialize \f$ A \f$ (k-th square root of the input matrix)
-    Core::LinAlg::Matrix<dim, dim> A{input};
-
-    // loop to determine the matrix logarithm
-    while (true)
-    {
-      // compute distance norm
-      temp.update(1.0, A, -1.0, id, 0.0);
-      tau = temp.norm1();
-
-      // check whether the distance norm is already smaller than \f$ \theta_{16} \f$
-      if (tau < theta_m_map[16])
-      {
-        // increment number of norm checks
-        ++p;
-
-        // compute the relevant Pade approx. order \f$ j_1 \f$
-        for (auto theta_m_iter = theta_m_map.rbegin(); theta_m_iter != theta_m_map.rend();
-            ++theta_m_iter)
-        {
-          // account for minimum value of j_1 = 3
-          if (theta_m_iter->first < 3)
-          {
-            j_1 = 3;
-            break;
-          }
-
-
-          if (tau > theta_m_iter->second)  // here, we have found the first Pade order j_1
-          {
-            j_1 = theta_m_iter->first + 1;
-
-            // j_1 is determined -> break out of for-loop
-            break;
-          }
-        }
-
-        // compute the relevant Pade approx. order \f$ j_2 \f$
-        for (auto theta_m_iter =
-                 std::make_reverse_iterator(theta_m_map.find(static_cast<int>(j_1)));
-            theta_m_iter != theta_m_map.rend(); ++theta_m_iter)
-        {
-          // account for minimum value of j_2 = 3
-          if (theta_m_iter->first < 3)
-          {
-            j_2 = 3;
-            break;
-          }
-
-          if (tau > theta_m_iter->second)  // here, we have found the first Pade order j_2
-          {
-            j_2 = theta_m_iter->first + 1;
-
-            // j_2 is determined -> break out of for-loop
-            break;
-          }
-        }
-
-        // check whether loop exit condition is fulfilled
-        if ((2 * (j_1 - j_2) <= 3 * (*it_ptr)) || (p == 2))
-        {
-          // set Pade approximation order \f$ m \f$
-          m = j_1;
-
-          // exit out of the loop
-          break;
-        }
-      }
-
-      // take one more square root
-      A = matrix_sqrt(
-          A, err_status, it_ptr, Core::LinAlg::MatrixSqrtCalcMethod::db_iter_scaled_product);
-
-      // return with error if computation of the matrix sqrt fails
-      if (err_status != MatrixFunctErrorType::no_errors)
-      {
-        return Core::LinAlg::Matrix<dim, dim>{true};
-      }
-
-      // increment square root iterator
-      k += 1;
-    }
-
-    // determine the matrix logarithm of the k-th square root using the Pade approximation of order
-    // m
-    if (pade_order == nullptr)
-    {
-      pade_order = &m;  // bind the Pade order pointer to the local variable, which will go out of
-                        // scope afterwards
-    }
-    else
-    {
-      *pade_order = m;  // save the correct order with the Pade order pointer
-    }
-
-    Core::LinAlg::Matrix<dim, dim> k_sqrt_log = matrix_log(A, err_status,
-        calc_method = Core::LinAlg::MatrixLogCalcMethod::pade_part_fract, pade_order);
-
-    // return scaled matrix logarithm
-    if (err_status == MatrixFunctErrorType::no_errors)
-    {
-      output.update(std::pow(2.0, k), k_sqrt_log, 0.0);
-      return output;
-    }
-    else
-    {
-      return Core::LinAlg::Matrix<dim, dim>{true};
-    }
-  }
-  // series descriptions / spectral decomposition
-  else
-  {
-    // set convergence tolerance for the employed series description
-    double conv_tol = 1.0e-10;
-
-    // characteristic matrix \f$ \boldsymbol{I} - \boldsymbol{A} \f$
-    Core::LinAlg::Matrix<dim, dim> id_minus_A(true);
-    id_minus_A.update(1.0, id, -1.0, input, 0.0);
-
-    // \f$ \boldsymbol{I} + \boldsymbol{A} \f$
-    Core::LinAlg::Matrix<dim, dim> id_plus_A(true);
-    id_plus_A.update(1.0, id, 1.0, input, 0.0);
-
-    // \f$ \left( \boldsymbol{I} + \boldsymbol{A} \right)^{-1} \f$
-    Core::LinAlg::Matrix<dim, dim> inv_id_plus_A(true);
-    inv_id_plus_A.invert(id_plus_A);
-
-    // update matrix: \f$ \left[ \left( \boldsymbol{I} - \boldsymbol{A} \right) \left(
-    // \boldsymbol{I}
-    // + \boldsymbol{A}
-    // \right)^{-1} \right] \f$
-    Core::LinAlg::Matrix<dim, dim> update_mat(true);
-    update_mat.multiply(1.0, id_minus_A, inv_id_plus_A, 0.0);
-
-    // determine the computation method based on characteristic matrix norms
-    if (calc_method == Core::LinAlg::MatrixLogCalcMethod::default_series)
-    {
-      // employ Taylor series if matrix norm smaller than 1 for characteristic matrix
-      if (id_minus_A.norm2() < 1.0)
-      {
-        calc_method = Core::LinAlg::MatrixLogCalcMethod::taylor_series;
-      }
-      // employ the Gregory series, if the norm of the first update matrix is smaller than 1.0
-      else if (update_mat.norm2() < 1.0)
-      {
-        calc_method = Core::LinAlg::MatrixLogCalcMethod::gregory_series;
-      }
-      // spectral decomposition as the last resort
-      else
-      {
-        calc_method = Core::LinAlg::MatrixLogCalcMethod::spectral_decomp;
-      }
-    }
-
-    // compute the matrix logarithm
-    if (calc_method == Core::LinAlg::MatrixLogCalcMethod::taylor_series)
-    {
-      // consistency check
-      if (id_minus_A.norm2() >= 1.0)
-      {
-        err_status = MatrixFunctErrorType::unsuitable_method;
-        return Core::LinAlg::Matrix<dim, dim>{true};
-      }
-
-      // set initial exponent \f$ m \f$ and the maximum acceptable number of series terms
-      int m = 1;
-      int m_max = 50;
-
-      // \f$ \boldsymbol{A} - \boldsymbol{I} \f$
-      Core::LinAlg::Matrix<dim, dim> A_minus_id(true);
-      A_minus_id.update(1.0, input, -1.0, id);
-
-      //  \f$ \left(\boldsymbol{A} - \boldsymbol{I}\right)^m \f$
-      Core::LinAlg::Matrix<dim, dim> A_minus_id_m = A_minus_id;
-
-      while (A_minus_id_m.norm2() > conv_tol)
-      {
-        // check whether the maximum number of terms was reached
-        if (m > m_max)
-        {
-          std::cout << "Couldn't compute the matrix logarithm using the Taylor series for the "
-                       "following matrix: "
-                    << std::endl;
-          input.print(std::cout);
-          err_status = MatrixFunctErrorType::failed_computation;
-          return output;
-        }
-        FOUR_C_ASSERT_ALWAYS(m <= m_max, "");
-
-        // update output matrix
-        output.update(std::pow(-1.0, m + 1) / m, A_minus_id_m, 1.0);
-
-        // update \f$ \left(\boldsymbol{A} - \boldsymbol{I}\right)^m \f$
-        temp = A_minus_id_m;
-        A_minus_id_m.multiply(1.0, temp, A_minus_id, 0.0);
-
-        // increment m
-        m += 1;
-      }
-
-      err_status = MatrixFunctErrorType::no_errors;
-      return output;
-    }
-    else if (calc_method == Core::LinAlg::MatrixLogCalcMethod::gregory_series)
-    {
-      // consistency check
-      if (update_mat.norm2() >= 1.0)
-      {
-        err_status = MatrixFunctErrorType::unsuitable_method;
-        return Core::LinAlg::Matrix<dim, dim>{true};
-      }
-
-      // set initial exponent \f$ m \f$ and the maximum acceptable number of series terms
-      int m = 0;
-      int m_max = 50;
-
-      // \f$ \left[ \left( \boldsymbol{I} - \boldsymbol{A} \right) \left( \boldsymbol{I} +
-      // \boldsymbol{A} \right)^{-1} \right]^{2m+1}
-      // \f$
-      Core::LinAlg::Matrix<dim, dim> update_mat_2mpl1(true);
-      update_mat_2mpl1 = update_mat;
-
-      output.clear();
-      while (update_mat_2mpl1.norm2() > conv_tol)
-      {
-        // check whether the maximum number of terms was reached
-        if (m > m_max)
-        {
-          std::cout << "Couldn't compute the matrix logarithm using the Gregory series for the "
-                       "following matrix: "
-                    << std::endl;
-          input.print(std::cout);
-          err_status = MatrixFunctErrorType::failed_computation;
-          return output;
-        }
-
-        // update output matrix
-        output.update(-2.0 / (2.0 * m + 1.0), update_mat_2mpl1, 1.0);
-
-        // update update_mat_2mpl1
-        temp.multiply(1.0, update_mat_2mpl1, update_mat, 0.0);
-        update_mat_2mpl1.multiply(1.0, temp, update_mat, 0.0);
-
-        // increment m
-        m += 1;
-      }
-
-      err_status = MatrixFunctErrorType::no_errors;
-      return output;
-    }
-    else if (calc_method == Core::LinAlg::MatrixLogCalcMethod::spectral_decomp)
-    {
-      Core::LinAlg::Matrix<dim, dim, std::complex<double>> eigenval_matrix(true);
-      Core::LinAlg::Matrix<dim, dim, std::complex<double>> eigenvect_matrix(true);
-      Core::LinAlg::Matrix<dim, dim> temp_input(input);
-      Core::LinAlg::geev(temp_input, eigenval_matrix, eigenvect_matrix);
-
-      // get the (principal) logarithms of the eigenvalues
-      for (unsigned int i = 0; i < dim; ++i)
-      {
-        if (eigenval_matrix(i, i).real() < 0.0)
-        {
-          std::cout
-              << "The current matrix logarithm implementation only considers the case where all "
-                 "eigenvalues "
-                 "possess positive real parts! This is not given here, real part of eigenval "
-                 "number "
-              << i << ": " << eigenval_matrix(i, i).real() << std::endl;
-          err_status = MatrixFunctErrorType::failed_computation;
-          return output;
-        }
-        eigenval_matrix(i, i) = std::log(eigenval_matrix(i, i));
-      }
-
-      // get inverse of the eigenvector matrix
-      Core::LinAlg::Matrix<dim, dim, std::complex<double>> inv_eigenvect_matrix(true);
-      inv_eigenvect_matrix.invert(eigenvect_matrix);
-
-      // construct the logarithm function
-      Core::LinAlg::Matrix<dim, dim, std::complex<double>> tmp(true);
-      Core::LinAlg::Matrix<dim, dim, std::complex<double>> output_complex(true);
-      tmp.multiply_nn(eigenvect_matrix, eigenval_matrix);
-      output_complex.multiply_nn(tmp, inv_eigenvect_matrix);
-      // restore complex to real form (guaranteed for a real input matrix)
-      for (unsigned int i = 0; i < dim; ++i)
-      {
-        for (unsigned int j = 0; j < dim; ++j)
-        {
-          output(i, j) = output_complex(i, j).real();
-        }
-      }
-
-      err_status = MatrixFunctErrorType::no_errors;
-      return output;
-    }
-    else
-    {
-      FOUR_C_THROW("The provided computation method for the matrix logarithm is not implemented!");
-    }
-  }
-}
-
-/*--------------------------------------------------------------------*
- *--------------------------------------------------------------------*/
-Core::LinAlg::Matrix<9, 9> Core::LinAlg::matrix_3x3_exp_1st_deriv(
-    const Core::LinAlg::Matrix<3, 3>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
-    Core::LinAlg::GenMatrixExpFirstDerivCalcMethod calc_method)
-{
-  // declare output variable
-  Core::LinAlg::Matrix<9, 9> output(true);
-
-  // determine the computation method (currently, only Taylor series implemented)
-  if (calc_method == Core::LinAlg::GenMatrixExpFirstDerivCalcMethod::default_method)
-  {
-    calc_method = Core::LinAlg::GenMatrixExpFirstDerivCalcMethod::taylor_series;
-  }
-
-  if (calc_method == Core::LinAlg::GenMatrixExpFirstDerivCalcMethod::taylor_series)
-  {
     // see Souza-Neto: Computational Methods for plasticity, Box B.2.
     int nmax = 0;
     int nIter = 0;
@@ -739,7 +280,7 @@ Core::LinAlg::Matrix<9, 9> Core::LinAlg::matrix_3x3_exp_1st_deriv(
       std::cout << "Matrix exponential unconverged in " << nIter
                 << " steps for the following matrix: " << std::endl;
       input.print(std::cout);
-      err_status = MatrixFunctErrorType::failed_computation;
+      err_status = Core::LinAlg::MatrixFunctErrorType::failed_computation;
       return output;
     }
     nmax = nIter;
@@ -750,57 +291,24 @@ Core::LinAlg::Matrix<9, 9> Core::LinAlg::matrix_3x3_exp_1st_deriv(
         Core::LinAlg::Tensor::add_non_symmetric_product(
             1. / fac[n], Xn.at(m - 1), Xn.at(n - m), output);
 
-    err_status = MatrixFunctErrorType::no_errors;
+    err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
     return output;
   }
-  else
+
+  // matrix exp (1st deriv, symmetric): Taylor series
+  Core::LinAlg::Matrix<6, 6> sym_matrix_3x3_exp_1st_deriv_taylor_series(
+      const Core::LinAlg::Matrix<3, 3>& input, Core::LinAlg::MatrixFunctErrorType& err_status)
   {
-    FOUR_C_THROW(
-        "The provided computation method for first derivative of the matrix exponential of a "
-        "general matrix is not implemented!");
-  }
-}
+    // declare output
+    Core::LinAlg::Matrix<6, 6> output{true};
 
-/*--------------------------------------------------------------------*
- *--------------------------------------------------------------------*/
-Core::LinAlg::Matrix<6, 6> Core::LinAlg::sym_matrix_3x3_exp_1st_deriv(
-    const Core::LinAlg::Matrix<3, 3>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
-    Core::LinAlg::SymMatrixExpFirstDerivCalcMethod calc_method)
-{
-  // get matrix norm
-  double norm = input.norm2();
+    // compute norm of the input matrix
+    const double norm = input.norm2();
 
-  // declare output variable
-  Core::LinAlg::Matrix<6, 6> output(true);
-
-  // compute 4-th order identity tensor
-  Core::LinAlg::Matrix<6, 6> id4sharp(true);
-  for (int i = 0; i < 3; i++) id4sharp(i, i) = 1.0;
-  for (int i = 3; i < 6; i++) id4sharp(i, i) = 0.5;
-
-  // direct calculation for zero-matrix
-  if (norm <= 1.0e-12)
-  {
-    err_status = MatrixFunctErrorType::no_errors;
-    return id4sharp;
-  }
-
-  // determine computation method based on the matrix norm
-  if (calc_method == Core::LinAlg::SymMatrixExpFirstDerivCalcMethod::default_method)
-  {
-    if (norm < 0.3)
-      calc_method = Core::LinAlg::SymMatrixExpFirstDerivCalcMethod::taylor_series;
-    else
-      calc_method = Core::LinAlg::SymMatrixExpFirstDerivCalcMethod::eigenproj_based;
-  }
-
-  // further norm checking to determine appropriate computation procedure
-  if (calc_method == Core::LinAlg::SymMatrixExpFirstDerivCalcMethod::taylor_series)
-  {
     // consistency check
     if (norm >= 0.3)
     {
-      err_status = MatrixFunctErrorType::unsuitable_method;
+      err_status = Core::LinAlg::MatrixFunctErrorType::unsuitable_method;
       return Core::LinAlg::Matrix<6, 6>{true};
     }
 
@@ -834,10 +342,7 @@ Core::LinAlg::Matrix<6, 6> Core::LinAlg::sym_matrix_3x3_exp_1st_deriv(
     }
     if (nIter > 50)
     {
-      std::cout << "Matrix exponential unconverged in " << nIter
-                << " steps for the following matrix: " << std::endl;
-      input.print(std::cout);
-      err_status = MatrixFunctErrorType::failed_computation;
+      err_status = Core::LinAlg::MatrixFunctErrorType::failed_computation;
       return output;
     }
     nmax = nIter;
@@ -852,9 +357,25 @@ Core::LinAlg::Matrix<6, 6> Core::LinAlg::sym_matrix_3x3_exp_1st_deriv(
         Core::LinAlg::Tensor::add_symmetric_holzapfel_product(
             output, Xn.at((n - 1) / 2), Xn.at((n - 1) / 2), .25 / fac[n]);
     }
+
+    err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
+    return output;
   }
-  else if (calc_method == Core::LinAlg::SymMatrixExpFirstDerivCalcMethod::eigenproj_based)
+
+  // matrix exp (1st deriv, symmetric): eigenprojection-based
+  Core::LinAlg::Matrix<6, 6> sym_matrix_3x3_exp_1st_deriv_eigenproj_based(
+      const Core::LinAlg::Matrix<3, 3>& input, Core::LinAlg::MatrixFunctErrorType& err_status)
+
   {
+    // declare output
+    Core::LinAlg::Matrix<6, 6> output{true};
+
+    // compute 4-th order identity tensor
+    Core::LinAlg::Matrix<6, 6> id4sharp(true);
+    for (int i = 0; i < 3; i++) id4sharp(i, i) = 1.0;
+    for (int i = 3; i < 6; i++) id4sharp(i, i) = 0.5;
+
+
     double EVal_tolerance = 1.e-12;
 
     Core::LinAlg::Matrix<3, 3> EVect(input);
@@ -885,7 +406,6 @@ Core::LinAlg::Matrix<6, 6> Core::LinAlg::sym_matrix_3x3_exp_1st_deriv(
       output = id4sharp;
       output.scale(exp(EVal(0, 0)));
     }
-
     else if ((std::abs(EVal(0, 0) - EVal(1, 1)) < EVal_tolerance &&
                  std::abs(EVal(1, 1) - EVal(2, 2)) > EVal_tolerance) ||
              (std::abs(EVal(0, 0) - EVal(1, 1)) > EVal_tolerance &&
@@ -923,7 +443,7 @@ Core::LinAlg::Matrix<6, 6> Core::LinAlg::sym_matrix_3x3_exp_1st_deriv(
         std::cout << "You should not be here, in the matrix exponential evaluation of: "
                   << std::endl;
         input.print(std::cout);
-        err_status = MatrixFunctErrorType::failed_computation;
+        err_status = Core::LinAlg::MatrixFunctErrorType::failed_computation;
         return output;
       }
 
@@ -949,7 +469,6 @@ Core::LinAlg::Matrix<6, 6> Core::LinAlg::sym_matrix_3x3_exp_1st_deriv(
       Core::LinAlg::Tensor::add_elasticity_tensor_product(output, s5, id2, input, 1.);
       Core::LinAlg::Tensor::add_elasticity_tensor_product(output, -s6, id2, id2, 1.);
     }
-
     else if (std::abs(EVal(0, 0) - EVal(1, 1)) > EVal_tolerance &&
              std::abs(EVal(1, 1) - EVal(2, 2)) >
                  EVal_tolerance)  // ----------------- x_a != x_b != x_c
@@ -1005,53 +524,402 @@ Core::LinAlg::Matrix<6, 6> Core::LinAlg::sym_matrix_3x3_exp_1st_deriv(
     {
       std::cout << "You should not be here, in the matrix exponential evaluation of: " << std::endl;
       input.print(std::cout);
-      err_status = MatrixFunctErrorType::failed_computation;
+      err_status = Core::LinAlg::MatrixFunctErrorType::failed_computation;
       return output;
     }
+
+    err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
+    return output;
   }
-  else
+
+  // matrix_log: Pade partial fraction expansion
+  template <unsigned int dim>
+  Core::LinAlg::Matrix<dim, dim> matrix_log_pade_part_fract_exp(
+      const Core::LinAlg::Matrix<dim, dim>& input, const unsigned int pade_order,
+      Core::LinAlg::MatrixFunctErrorType& err_status)
   {
-    FOUR_C_THROW(
-        "The provided computation method for first derivative of the matrix exponential of a "
-        "symmetric matrix is not implemented!");
-  }
-  err_status = MatrixFunctErrorType::no_errors;
-  return output;
-}
+    // identity tensor
+    Core::LinAlg::Matrix<dim, dim> id{true};
+    for (unsigned int i = 0; i < dim; ++i) id(i, i) = 1.0;
 
-/*--------------------------------------------------------------------*
- *--------------------------------------------------------------------*/
-Core::LinAlg::Matrix<9, 9> Core::LinAlg::matrix_3x3_log_1st_deriv(
-    const Core::LinAlg::Matrix<3, 3>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
-    Core::LinAlg::GenMatrixLogFirstDerivCalcMethod calc_method, const unsigned int* pade_order)
-{
-  // auxiliaries
-  Core::LinAlg::Matrix<3, 3> id_3x3(true);
-  for (int i = 0; i < 3; ++i)
+    // declare output
+    Core::LinAlg::Matrix<dim, dim> output{true};
+
+    // check whether an approximation order \f$ m \f$ was provided
+    FOUR_C_ASSERT_ALWAYS(pade_order != 0,
+        "You cannot compute the matrix logarithm using a Pade partial fraction expansion with "
+        "order 0");
+
+    // subtract identity from input matrix to obtain the \f$ X \f$
+    // matrix
+    Core::LinAlg::Matrix<dim, dim> X{true};
+    X.update(1.0, input, -1.0, id, 0.0);
+
+    // return directly in the case that \f$ X \f$ has norm 0
+    if (X.norm2() == 0.0)
+    {
+      err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
+      return Core::LinAlg::Matrix<dim, dim>{true};
+    }
+
+    // initialize m-point Gauss integration points and weights
+    Core::FE::IntPointsAndWeights<1> int_pts_wts{
+        Core::FE::num_gauss_points_to_gauss_rule<Core::FE::CellType::line2>(pade_order)};
+
+    // declare \f$ \boldsymbol{I} + \beta_j^{(m)} x  \f$ and its inverse
+    Core::LinAlg::Matrix<dim, dim> id_pl_beta_x{true};
+    Core::LinAlg::Matrix<dim, dim> inv_id_pl_beta_x{true};
+
+    // declare current Gauss point and Gauss weight (transformed from
+    // [-1, 1] onto [0, 1])
+    double trafo_point{0.0};
+    double trafo_weight{0.0};
+
+    // add terms successively to the output matrix
+    unsigned int pt = 0;  // point index
+    while (true)
+    {
+      // transform Gauss points and weights from [-1, 1] onto the considered interval
+      // [0, 1]
+      trafo_point = 1.0 / 2.0 * (*int_pts_wts.point(pt) + 1.0);
+      trafo_weight = 1.0 / 2.0 * int_pts_wts.weight(pt);
+
+      // compute \f$ \boldsymbol{I} + \beta_j^{(m)} x  \f$ and its
+      // inverse
+      id_pl_beta_x.update(1.0, id, trafo_point, X, 0.0);
+      inv_id_pl_beta_x.invert(id_pl_beta_x);
+
+      // add contribution of the Gauss point to the output matrix
+      output.multiply(trafo_weight, X, inv_id_pl_beta_x, 1.0);
+
+      // increment point index
+      ++pt;
+
+      // exit loop if point index equal to Pade order
+      if (pt == pade_order)
+      {
+        err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
+        return output;
+      }
+    }
+  }
+
+  // matrix_log: inverse scaling and squaring
+  template <unsigned int dim>
+  Core::LinAlg::Matrix<dim, dim> matrix_log_inv_scal_square(
+      const Core::LinAlg::Matrix<dim, dim>& input, unsigned int& pade_order,
+      Core::LinAlg::MatrixFunctErrorType& err_status)
   {
-    id_3x3(i, i) = 1.0;
+    // auxiliaries
+    Core::LinAlg::Matrix<dim, dim> id{true};
+    for (unsigned int i = 0; i < dim; ++i) id(i, i) = 1.0;
+    Core::LinAlg::Matrix<dim, dim> temp{true};
+
+    // declare output
+    Core::LinAlg::Matrix<dim, dim> output{true};
+
+    // initialize number of square roots \f$ k \f$, number of iterations for DB iteration \f$
+    // \text{it} \f$, and number of norm checks \f$ p \f$
+    unsigned int k = 0;
+    unsigned int it = 5;
+    unsigned int p = 0;
+
+    // declare distance norm to identity tensor \f$ \tau \f$
+    double tau{0.0};
+
+    // declare Pade approx. orders \f$ j_1, j_2, m \f$
+    unsigned int j_1, j_2, m = 0;
+
+    // declare and initialize \f$ A \f$ (k-th square root of the input matrix)
+    Core::LinAlg::Matrix<dim, dim> A{input};
+
+    // loop to determine the required matrix square root and the required Pade order
+    while (true)
+    {
+      // compute distance norm
+      temp.update(1.0, A, -1.0, id, 0.0);
+      tau = temp.norm1();
+
+      // check whether the distance norm is already smaller than \f$ \theta_{16} \f$
+      if (tau < theta_m_map[16])
+      {
+        // increment number of norm checks
+        ++p;
+
+        // compute the relevant Pade approx. order \f$ j_1 \f$
+        for (auto theta_m_iter = theta_m_map.rbegin(); theta_m_iter != theta_m_map.rend();
+            ++theta_m_iter)
+        {
+          // account for minimum value of j_1 = 3
+          if (theta_m_iter->first < 3)
+          {
+            j_1 = 3;
+            break;
+          }
+
+
+          if (tau > theta_m_iter->second)  // here, we have found the first Pade order j_1
+          {
+            j_1 = theta_m_iter->first + 1;
+
+            // j_1 is determined -> break out of for-loop
+            break;
+          }
+        }
+
+        // compute the relevant Pade approx. order \f$ j_2 \f$
+        for (auto theta_m_iter =
+                 std::make_reverse_iterator(theta_m_map.find(static_cast<int>(j_1)));
+            theta_m_iter != theta_m_map.rend(); ++theta_m_iter)
+        {
+          // account for minimum value of j_2 = 3
+          if (theta_m_iter->first < 3)
+          {
+            j_2 = 3;
+            break;
+          }
+
+          if (tau > theta_m_iter->second)  // here, we have found the first Pade order j_2
+          {
+            j_2 = theta_m_iter->first + 1;
+
+            // j_2 is determined -> break out of for-loop
+            break;
+          }
+        }
+
+        // check whether loop exit condition is fulfilled
+        if ((2 * (j_1 - j_2) <= 3 * it) || (p == 2))
+        {
+          // set Pade approximation order \f$ m \f$
+          m = j_1;
+
+          // exit out of the loop
+          break;
+        }
+      }
+
+      // take one more square root (and save the number of iterations)
+      A = matrix_sqrt(
+          A, err_status, it, Core::LinAlg::MatrixSqrtCalcMethod::db_iter_scaled_product);
+
+      // return with error if computation of the matrix sqrt fails
+      if (err_status != Core::LinAlg::MatrixFunctErrorType::no_errors)
+      {
+        return Core::LinAlg::Matrix<dim, dim>{true};
+      }
+
+      // increment square root iterator
+      k += 1;
+    }
+
+    // determine the matrix logarithm of the k-th square root using the Pade approximation of
+    // order
+    // m
+    Core::LinAlg::Matrix<dim, dim> k_sqrt_log = matrix_log_pade_part_fract_exp(A, m, err_status);
+
+    // return scaled matrix logarithm
+    if (err_status == Core::LinAlg::MatrixFunctErrorType::no_errors)
+    {
+      // save the determined order as output
+      pade_order = m;
+
+      output.update(std::pow(2.0, k), k_sqrt_log, 0.0);
+      return output;
+    }
+    else
+    {
+      return Core::LinAlg::Matrix<dim, dim>{true};
+    }
   }
-  Core::LinAlg::Matrix<9, 9> id4(true);
-  Core::LinAlg::Tensor::add_non_symmetric_product(1.0, id_3x3, id_3x3, id4);
-  Core::LinAlg::FourTensor<3> id4_FourTensor(true);
-  Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(id4_FourTensor, id4);
-  Core::LinAlg::Matrix<3, 3> temp3x3(true);
-  Core::LinAlg::Matrix<9, 9> temp9x9(true);
-  Core::LinAlg::FourTensor<3> tempFourTensor(true);
-  Core::LinAlg::FourTensor<3> leftFourTensor(true);
-  Core::LinAlg::FourTensor<3> rightFourTensor(true);
 
-  // declare output variable
-  Core::LinAlg::Matrix<9, 9> output(true);
+  // matrix_log: Taylor series
+  template <unsigned int dim>
+  Core::LinAlg::Matrix<dim, dim> matrix_log_taylor_series(
+      const Core::LinAlg::Matrix<dim, dim>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
+      Core::LinAlg::Matrix<dim, dim> id_minus_A, const double conv_tol)
+  {
+    // auxiliaries
+    Core::LinAlg::Matrix<dim, dim> id{true};
+    for (unsigned int i = 0; i < dim; ++i) id(i, i) = 1.0;
+    Core::LinAlg::Matrix<dim, dim> temp{true};
 
-  // computation using the Pade approximation (partial fraction
-  // expansion)
-  if (calc_method == Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::pade_part_fract)
+    // declare output
+    Core::LinAlg::Matrix<dim, dim> output{true};
+
+    // consistency check
+    if (id_minus_A.norm2() >= 1.0)
+    {
+      err_status = Core::LinAlg::MatrixFunctErrorType::unsuitable_method;
+      return Core::LinAlg::Matrix<dim, dim>{true};
+    }
+
+    // set initial exponent \f$ m \f$ and the maximum acceptable number of series terms
+    int m = 1;
+    int m_max = 50;
+
+    // \f$ \boldsymbol{A} - \boldsymbol{I} \f$
+    Core::LinAlg::Matrix<dim, dim> A_minus_id(id_minus_A);
+    A_minus_id.scale(-1.0);
+
+    //  \f$ \left(\boldsymbol{A} - \boldsymbol{I}\right)^m \f$
+    Core::LinAlg::Matrix<dim, dim> A_minus_id_m = A_minus_id;
+
+    while (A_minus_id_m.norm2() > conv_tol)
+    {
+      // check whether the maximum number of terms was reached
+      if (m > m_max)
+      {
+        err_status = Core::LinAlg::MatrixFunctErrorType::failed_computation;
+        return output;
+      }
+      FOUR_C_ASSERT_ALWAYS(m <= m_max, "");
+
+      // update output matrix
+      output.update(std::pow(-1.0, m + 1) / m, A_minus_id_m, 1.0);
+
+      // update \f$ \left(\boldsymbol{A} - \boldsymbol{I}\right)^m \f$
+      temp = A_minus_id_m;
+      A_minus_id_m.multiply(1.0, temp, A_minus_id, 0.0);
+
+      // increment m
+      m += 1;
+    }
+    err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
+    return output;
+  }
+
+  // matrix_log: Gregory series
+  template <unsigned int dim>
+  Core::LinAlg::Matrix<dim, dim> matrix_log_gregory_series(
+      const Core::LinAlg::Matrix<dim, dim>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
+      Core::LinAlg::Matrix<dim, dim> update_mat, const double conv_tol)
+  {
+    // auxiliaries
+    Core::LinAlg::Matrix<dim, dim> temp{true};
+
+
+    // declare output
+    Core::LinAlg::Matrix<dim, dim> output{true};
+
+    // consistency check
+    if (update_mat.norm2() >= 1.0)
+    {
+      err_status = Core::LinAlg::MatrixFunctErrorType::unsuitable_method;
+      return Core::LinAlg::Matrix<dim, dim>{true};
+    }
+
+    // set initial exponent \f$ m \f$ and the maximum acceptable number of series terms
+    int m = 0;
+    int m_max = 50;
+
+    // \f$ \left[ \left( \boldsymbol{I} - \boldsymbol{A} \right) \left( \boldsymbol{I} +
+    // \boldsymbol{A} \right)^{-1} \right]^{2m+1}
+    // \f$
+    Core::LinAlg::Matrix<dim, dim> update_mat_2mpl1(true);
+    update_mat_2mpl1 = update_mat;
+
+    output.clear();
+    while (update_mat_2mpl1.norm2() > conv_tol)
+    {
+      // check whether the maximum number of terms was reached
+      if (m > m_max)
+      {
+        std::cout << "Couldn't compute the matrix logarithm using the Gregory series for the "
+                     "following matrix: "
+                  << std::endl;
+        input.print(std::cout);
+        err_status = Core::LinAlg::MatrixFunctErrorType::failed_computation;
+        return output;
+      }
+
+      // update output matrix
+      output.update(-2.0 / (2.0 * m + 1.0), update_mat_2mpl1, 1.0);
+
+      // update update_mat_2mpl1
+      temp.multiply(1.0, update_mat_2mpl1, update_mat, 0.0);
+      update_mat_2mpl1.multiply(1.0, temp, update_mat, 0.0);
+
+      // increment m
+      m += 1;
+    }
+
+    err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
+    return output;
+  }
+
+
+  // matrix_log: spectral decomposition
+  template <unsigned int dim>
+  Core::LinAlg::Matrix<dim, dim> matrix_log_spectral_decomp(
+      const Core::LinAlg::Matrix<dim, dim>& input, Core::LinAlg::MatrixFunctErrorType& err_status)
+  {
+    // declare output
+    Core::LinAlg::Matrix<dim, dim> output{true};
+
+    Core::LinAlg::Matrix<dim, dim, std::complex<double>> eigenval_matrix(true);
+    Core::LinAlg::Matrix<dim, dim, std::complex<double>> eigenvect_matrix(true);
+    Core::LinAlg::Matrix<dim, dim> temp_input(input);
+    Core::LinAlg::geev(temp_input, eigenval_matrix, eigenvect_matrix);
+
+    // get the (principal) logarithms of the eigenvalues
+    for (unsigned int i = 0; i < dim; ++i)
+    {
+      if (eigenval_matrix(i, i).real() < 0.0)
+      {
+        std::cout
+            << "The current matrix logarithm implementation only considers the case where all "
+               "eigenvalues "
+               "possess positive real parts! This is not given here, real part of eigenval "
+               "number "
+            << i << ": " << eigenval_matrix(i, i).real() << std::endl;
+        err_status = Core::LinAlg::MatrixFunctErrorType::failed_computation;
+        return output;
+      }
+      eigenval_matrix(i, i) = std::log(eigenval_matrix(i, i));
+    }
+
+    // get inverse of the eigenvector matrix
+    Core::LinAlg::Matrix<dim, dim, std::complex<double>> inv_eigenvect_matrix(true);
+    inv_eigenvect_matrix.invert(eigenvect_matrix);
+
+    // construct the logarithm function
+    Core::LinAlg::Matrix<dim, dim, std::complex<double>> tmp(true);
+    Core::LinAlg::Matrix<dim, dim, std::complex<double>> output_complex(true);
+    tmp.multiply_nn(eigenvect_matrix, eigenval_matrix);
+    output_complex.multiply_nn(tmp, inv_eigenvect_matrix);
+    // restore complex to real form (guaranteed for a real input matrix)
+    for (unsigned int i = 0; i < dim; ++i)
+    {
+      for (unsigned int j = 0; j < dim; ++j)
+      {
+        output(i, j) = output_complex(i, j).real();
+      }
+    }
+
+    err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
+    return output;
+  }
+
+  // matrix_log (1st deriv): Pade partial fraction expansion
+  Core::LinAlg::Matrix<9, 9> matrix_3x3_log_1st_deriv_pade_part_fract(
+      const Core::LinAlg::Matrix<3, 3>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
+      const unsigned int pade_order)
   {
     // check whether an approximation order \f$ m \f$ was provided
-    FOUR_C_ASSERT_ALWAYS(pade_order != nullptr,
+    FOUR_C_ASSERT_ALWAYS(pade_order > 0,
         "You want to compute the matrix logarithm with a Pade partial fraction expansion, but have "
         "not provided an approximation order!");
+
+    // auxiliaries
+    Core::LinAlg::Matrix<3, 3> id_3x3(true);
+    for (int i = 0; i < 3; ++i)
+    {
+      id_3x3(i, i) = 1.0;
+    }
+
+    // declare output
+    Core::LinAlg::Matrix<9, 9> output{true};
 
     // subtract identity from input matrix to obtain the \f$ X \f$
     // matrix
@@ -1061,15 +929,15 @@ Core::LinAlg::Matrix<9, 9> Core::LinAlg::matrix_3x3_log_1st_deriv(
     // return directly in the case that \f$ X \f$ has norm 0
     if (X.norm2() < 1.0e-8)
     {
-      err_status = MatrixFunctErrorType::no_errors;
+      err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
       Core::LinAlg::Matrix<9, 9> id9x9{true};
-      Tensor::add_non_symmetric_product(1.0, id_3x3, id_3x3, id9x9);
+      Core::LinAlg::Tensor::add_non_symmetric_product(1.0, id_3x3, id_3x3, id9x9);
       return id9x9;
     }
 
     // initialize m-point Gauss integration points and weights
-    FE::IntPointsAndWeights<1> int_pts_wts{
-        FE::num_gauss_points_to_gauss_rule<Core::FE::CellType::line2>(*pade_order)};
+    Core::FE::IntPointsAndWeights<1> int_pts_wts{
+        Core::FE::num_gauss_points_to_gauss_rule<Core::FE::CellType::line2>(pade_order)};
 
     // declare \f$ \boldsymbol{K} =  \boldsymbol{I} + \beta_j^{(m)} x  \f$ and its inverse
     Core::LinAlg::Matrix<3, 3> K{true};
@@ -1108,7 +976,7 @@ Core::LinAlg::Matrix<9, 9> Core::LinAlg::matrix_3x3_log_1st_deriv(
       // compute \f$ \boldsymbol{I}_{AC} \boldsymbol{K}^{-1}_{DB}
       // \f$
       id_invKT.clear();
-      Tensor::add_non_symmetric_product(1.0, id_3x3, invK, id_invKT);
+      Core::LinAlg::Tensor::add_non_symmetric_product(1.0, id_3x3, invK, id_invKT);
 
       // compute \f$ \boldsymbol{X}_{AI} \boldsymbol{K}^{-1}_{IB} \f$
       XinvK.multiply(1.0, X, invK, 0.0);
@@ -1116,7 +984,7 @@ Core::LinAlg::Matrix<9, 9> Core::LinAlg::matrix_3x3_log_1st_deriv(
       // compute \f$ \boldsymbol{X}_{AI} \boldsymbol{K}^{-1}_{IC} \boldsymbol{K}^{-1}_{DB}
       // \f$
       XinvK_invKT.clear();
-      Tensor::add_non_symmetric_product(1.0, XinvK, invK, XinvK_invKT);
+      Core::LinAlg::Tensor::add_non_symmetric_product(1.0, XinvK, invK, XinvK_invKT);
 
       // add contribution of the Gauss point to the output matrix
       output.update(-trafo_point * trafo_weight, XinvK_invKT, trafo_weight, id_invKT, 1.0);
@@ -1125,246 +993,629 @@ Core::LinAlg::Matrix<9, 9> Core::LinAlg::matrix_3x3_log_1st_deriv(
       ++pt;
 
       // exit loop if point index equal to Pade order
-      if (pt == (*pade_order))
+      if (pt == (pade_order))
       {
-        err_status = MatrixFunctErrorType::no_errors;
+        err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
         return output;
       }
     }
   }
-  // computation using Taylor / Gregory series
-  else if ((calc_method == GenMatrixLogFirstDerivCalcMethod::default_series) ||
-           (calc_method == GenMatrixLogFirstDerivCalcMethod::taylor_series) ||
-           (calc_method == GenMatrixLogFirstDerivCalcMethod::gregory_series))
+
+  // matrix_log (1st deriv): Taylor series
+  Core::LinAlg::Matrix<9, 9> matrix_3x3_log_1st_deriv_taylor_series(
+      const Core::LinAlg::Matrix<3, 3>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
+      double conv_tol)
   {
-    // set convergence tolerance
-    double conv_tol = 1.0e-10;
-    // characteristic matrix \f$ \boldsymbol{I} - \boldsymbol{A} \f$
+    // auxiliaries
+    Core::LinAlg::Matrix<3, 3> id_3x3(true);
+    for (int i = 0; i < 3; ++i)
+    {
+      id_3x3(i, i) = 1.0;
+    }
+    Core::LinAlg::Matrix<9, 9> id4(true);
+    Core::LinAlg::Tensor::add_non_symmetric_product(1.0, id_3x3, id_3x3, id4);
+    Core::LinAlg::FourTensor<3> id4_FourTensor(true);
+    Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(id4_FourTensor, id4);
+    Core::LinAlg::Matrix<3, 3> temp3x3(true);
+    Core::LinAlg::Matrix<9, 9> temp9x9(true);
+    Core::LinAlg::FourTensor<3> tempFourTensor(true);
+    Core::LinAlg::FourTensor<3> leftFourTensor(true);
+    Core::LinAlg::FourTensor<3> rightFourTensor(true);
+
+    // declare output
+    Core::LinAlg::Matrix<9, 9> output{true};
+
+    // \f$ \bm{I} - \bm{A} \f$
+    Core::LinAlg::Matrix<3, 3> id_minus_A(true);
+    id_minus_A.update(1.0, id_3x3, -1.0, input, 0.0);
+    // consistency check
+    if (id_minus_A.norm2() >= 1.0)
+    {
+      err_status = Core::LinAlg::MatrixFunctErrorType::unsuitable_method;
+      return Core::LinAlg::Matrix<9, 9>{true};
+    }
+
+    // set initial exponent \f$ m \f$ and the maximum acceptable number of series terms
+    int m = 1;
+    int m_max = 50;
+
+    // \f$ \boldsymbol{A} - \boldsymbol{I} \f$
+    Core::LinAlg::Matrix<3, 3> A_minus_id(id_minus_A);
+    A_minus_id.scale(-1.0);
+
+    //\f$ \left( \bm{A} - \bm{I} \right)^T \f$
+    Core::LinAlg::Matrix<3, 3> A_minus_idT(true);
+    A_minus_idT.multiply_tn(1.0, A_minus_id, id_3x3, 0.0);
+
+    //\f$ \left( \bm{A} - \bm{I} \right)^{m-1} \f$
+    Core::LinAlg::Matrix<3, 3> A_minus_id_mmin1 = id_3x3;
+
+    // \f$ \frac{\partial \left( \bm{A} - \bm{I} \right)^{m}}{\partial \bm{A}} \f$
+    Core::LinAlg::Matrix<9, 9> dA_minus_id_m_dA = id4;
+
+    // \f$ \frac{\partial \left( \bm{A} - \bm{I} \right)^{m-1}}{\partial \bm{A}} \f$
+    Core::LinAlg::FourTensor<3> dA_minus_id_mmin1_dA_FourTensor(true);
+
+    // add series terms until convergence tolerance reached
+    while (dA_minus_id_m_dA.norm2() > conv_tol)
+    {
+      // check whether the maximum number of terms was reached
+      if (m > m_max)
+      {
+        std::cout << "Couldn't compute the matrix logarithm derivative using the Taylor series for "
+                     "the following matrix: "
+                  << std::endl;
+        input.print(std::cout);
+        err_status = Core::LinAlg::MatrixFunctErrorType::failed_computation;
+        return output;
+      }
+
+      // update output matrix
+      output.update(std::pow(-1.0, m + 1.0) / m, dA_minus_id_m_dA, 1.0);
+
+      // update A_minus_id_mmin1
+      temp3x3 = A_minus_id_mmin1;
+      A_minus_id_mmin1.multiply_nn(1.0, temp3x3, A_minus_id, 0.0);
+
+      // get dA_minus_id_m_dA as a FourTensor
+      Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(
+          dA_minus_id_mmin1_dA_FourTensor, dA_minus_id_m_dA);
+
+      // update derivative dA_minus_id_m_dA
+      temp9x9.clear();
+      Core::LinAlg::Tensor::add_non_symmetric_product(1.0, A_minus_id_mmin1, id_3x3, temp9x9);
+      tempFourTensor.clear();
+      Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(tempFourTensor, temp9x9);
+      Core::LinAlg::Tensor::multiply_four_tensor_four_tensor(
+          leftFourTensor, tempFourTensor, id4_FourTensor, true);
+      Core::LinAlg::Voigt::setup_9x9_voigt_matrix_from_four_tensor(temp9x9, leftFourTensor);
+      dA_minus_id_m_dA.update(1.0, temp9x9, 0.0);
+
+      temp9x9.clear();
+      Core::LinAlg::Tensor::add_non_symmetric_product(1.0, id_3x3, A_minus_id_mmin1, temp9x9);
+      tempFourTensor.clear();
+      Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(tempFourTensor, temp9x9);
+      Core::LinAlg::Tensor::multiply_four_tensor_four_tensor(
+          rightFourTensor, tempFourTensor, dA_minus_id_mmin1_dA_FourTensor, true);
+      Core::LinAlg::Voigt::setup_9x9_voigt_matrix_from_four_tensor(temp9x9, rightFourTensor);
+      dA_minus_id_m_dA.update(1.0, temp9x9, 1.0);
+      // increment m
+      m += 1;
+    }
+    err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
+    return output;
+  }
+
+  // matrix_log (1st deriv): Gregory series
+  Core::LinAlg::Matrix<9, 9> matrix_3x3_log_1st_deriv_gregory_series(
+      const Core::LinAlg::Matrix<3, 3>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
+      double conv_tol)
+  {
+    // auxiliaries
+    Core::LinAlg::Matrix<3, 3> id_3x3(true);
+    for (int i = 0; i < 3; ++i)
+    {
+      id_3x3(i, i) = 1.0;
+    }
+    Core::LinAlg::Matrix<9, 9> id4(true);
+    Core::LinAlg::Tensor::add_non_symmetric_product(1.0, id_3x3, id_3x3, id4);
+    Core::LinAlg::FourTensor<3> id4_FourTensor(true);
+    Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(id4_FourTensor, id4);
+    Core::LinAlg::Matrix<3, 3> temp3x3(true);
+    Core::LinAlg::Matrix<9, 9> temp9x9(true);
+    Core::LinAlg::FourTensor<3> tempFourTensor(true);
+    Core::LinAlg::FourTensor<3> leftFourTensor(true);
+    Core::LinAlg::FourTensor<3> rightFourTensor(true);
+
+    // declare output
+    Core::LinAlg::Matrix<9, 9> output{true};
+
+
+    // set initial exponent \f$ m \f$ and the maximum acceptable number of series terms
+    int m = 1;
+    int m_max = 2 * 50 + 1;
+
+    // \f$ \bm{I} - \bm{A} \f$
     Core::LinAlg::Matrix<3, 3> id_minus_A(true);
     id_minus_A.update(1.0, id_3x3, -1.0, input, 0.0);
 
-    // determine the computation method based on matrix characteristics
-    if (calc_method == Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::default_series)
-    {
-      if (id_minus_A.norm2() < 1.0)
-        calc_method = Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::taylor_series;
-      else
-        calc_method = Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::gregory_series;
-    }
+    // \f$ \bm{I} + \bm{A} \f$
+    Core::LinAlg::Matrix<3, 3> id_plus_A(true);
+    id_plus_A.update(1.0, id_3x3, 1.0, input, 0.0);
 
-    // employ Taylor series if matrix norm smaller than 1 for characteristic matrix
-    if (calc_method == Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::taylor_series)
+    // \f$ \left( \bm{I} + \bm{A} \right)^{-1} \f$
+    Core::LinAlg::Matrix<3, 3> inv_id_plus_A(true);
+    inv_id_plus_A.invert(id_plus_A);
+
+    // \f$ \frac{\partial  \left( \bm{I} + \bm{A} \right)^{-1}}{\partial \bm{A}}  \f$
+    Core::LinAlg::Matrix<9, 9> dinv_id_plus_A_dA(true);
+    temp9x9.clear();
+    Core::LinAlg::Tensor::add_non_symmetric_product(1.0, inv_id_plus_A, inv_id_plus_A, temp9x9);
+    dinv_id_plus_A_dA.multiply_nn(-1.0, temp9x9, id4, 0.0);
+    Core::LinAlg::FourTensor<3> dinv_id_plus_A_dA_FourTensor(true);
+    Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(
+        dinv_id_plus_A_dA_FourTensor, dinv_id_plus_A_dA);
+
+    // update matrix: \f$ \left[ \left( \bm{I} - \bm{A} \right) \left( \bm{I} + \bm{A}
+    // \right)^{-1} \right] \f$
+    Core::LinAlg::Matrix<3, 3> updateMat(true);
+    updateMat.multiply_nn(1.0, id_minus_A, inv_id_plus_A, 0.0);
+
+    // get derivative of the update matrix w.r.t. input matrix \f$ \bm{A} \f$
+    Core::LinAlg::Matrix<9, 9> dupdateMat_dA(true);
+    temp9x9.clear();
+    Core::LinAlg::Tensor::add_non_symmetric_product(1.0, id_minus_A, id_3x3, temp9x9);
+    Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(tempFourTensor, temp9x9);
+    Core::LinAlg::Tensor::multiply_four_tensor_four_tensor(
+        leftFourTensor, tempFourTensor, dinv_id_plus_A_dA_FourTensor, true);
+    Core::LinAlg::Voigt::setup_9x9_voigt_matrix_from_four_tensor(temp9x9, leftFourTensor);
+    dupdateMat_dA.update(1.0, temp9x9, 0.0);
+
+    temp9x9.clear();
+    Core::LinAlg::Tensor::add_non_symmetric_product(1.0, id_3x3, inv_id_plus_A, temp9x9);
+    Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(tempFourTensor, temp9x9);
+    Core::LinAlg::Tensor::multiply_four_tensor_four_tensor(
+        rightFourTensor, tempFourTensor, id4_FourTensor, true);
+    Core::LinAlg::Voigt::setup_9x9_voigt_matrix_from_four_tensor(temp9x9, rightFourTensor);
+    dupdateMat_dA.update(-1.0, temp9x9, 1.0);
+
+
+    Core::LinAlg::FourTensor<3> dupdateMat_dA_FourTensor(true);
+    Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(
+        dupdateMat_dA_FourTensor, dupdateMat_dA);
+
+    // declare first derivatives of the m-th and m-1-th update term
+    Core::LinAlg::Matrix<9, 9> dupdateMat_dA_mmin1(true);
+    Core::LinAlg::FourTensor<3> dupdateMat_dA_mmin1_FourTensor(true);
+    Core::LinAlg::Matrix<9, 9> dupdateMat_dA_m = dupdateMat_dA;
+    // \f$ \left[ \left( \bm{I} - \bm{A} \right) \left( \bm{I} + \bm{A} \right)^{-1}
+    // \right]^{m-1} \f$
+    Core::LinAlg::Matrix<3, 3> updateMat_mmin1 = id_3x3;
+
+    while (true)
     {
-      // consistency check
-      if (id_minus_A.norm2() >= 1.0)
+      // check whether we have reached the maximum number of terms
+      if (m > m_max)
       {
-        err_status = MatrixFunctErrorType::unsuitable_method;
-        return Core::LinAlg::Matrix<9, 9>{true};
+        std::cout
+            << "Couldn't compute the matrix logarithm derivative using the Gregory series for "
+               "the following matrix: "
+            << std::endl;
+        input.print(std::cout);
+        err_status = Core::LinAlg::MatrixFunctErrorType::failed_computation;
+        return output;
       }
 
-      // set initial exponent \f$ m \f$ and the maximum acceptable number of series terms
-      int m = 1;
-      int m_max = 50;
 
-      // \f$ \boldsymbol{A} - \boldsymbol{I} \f$
-      Core::LinAlg::Matrix<3, 3> A_minus_id(true);
-      A_minus_id.update(1.0, input, -1.0, id_3x3);
-
-      //\f$ \left( \bm{A} - \bm{I} \right)^T \f$
-      Core::LinAlg::Matrix<3, 3> A_minus_idT(true);
-      A_minus_idT.multiply_tn(1.0, A_minus_id, id_3x3, 0.0);
-
-      //\f$ \left( \bm{A} - \bm{I} \right)^{m-1} \f$
-      Core::LinAlg::Matrix<3, 3> A_minus_id_mmin1 = id_3x3;
-
-      // \f$ \frac{\partial \left( \bm{A} - \bm{I} \right)^{m}}{\partial \bm{A}} \f$
-      Core::LinAlg::Matrix<9, 9> dA_minus_id_m_dA = id4;
-
-      // \f$ \frac{\partial \left( \bm{A} - \bm{I} \right)^{m-1}}{\partial \bm{A}} \f$
-      Core::LinAlg::FourTensor<3> dA_minus_id_mmin1_dA_FourTensor(true);
-
-      // add series terms until convergence tolerance reached
-      while (dA_minus_id_m_dA.norm2() > conv_tol)
+      // update output matrix
+      if ((m % 2 == 1))
       {
-        // check whether the maximum number of terms was reached
-        if (m > m_max)
-        {
-          std::cout
-              << "Couldn't compute the matrix logarithm derivative using the Taylor series for "
-                 "the following matrix: "
-              << std::endl;
-          input.print(std::cout);
-          err_status = MatrixFunctErrorType::failed_computation;
-          return output;
-        }
-
-        // update output matrix
-        output.update(std::pow(-1.0, m + 1.0) / m, dA_minus_id_m_dA, 1.0);
-
-        // update A_minus_id_mmin1
-        temp3x3 = A_minus_id_mmin1;
-        A_minus_id_mmin1.multiply_nn(1.0, temp3x3, A_minus_id, 0.0);
-
-        // get dA_minus_id_m_dA as a FourTensor
-        Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(
-            dA_minus_id_mmin1_dA_FourTensor, dA_minus_id_m_dA);
-
-        // update derivative dA_minus_id_m_dA
-        temp9x9.clear();
-        Core::LinAlg::Tensor::add_non_symmetric_product(1.0, A_minus_id_mmin1, id_3x3, temp9x9);
-        tempFourTensor.clear();
-        Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(tempFourTensor, temp9x9);
-        Core::LinAlg::Tensor::multiply_four_tensor_four_tensor(
-            leftFourTensor, tempFourTensor, id4_FourTensor, true);
-        Core::LinAlg::Voigt::setup_9x9_voigt_matrix_from_four_tensor(temp9x9, leftFourTensor);
-        dA_minus_id_m_dA.update(1.0, temp9x9, 0.0);
-
-        temp9x9.clear();
-        Core::LinAlg::Tensor::add_non_symmetric_product(1.0, id_3x3, A_minus_id_mmin1, temp9x9);
-        tempFourTensor.clear();
-        Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(tempFourTensor, temp9x9);
-        Core::LinAlg::Tensor::multiply_four_tensor_four_tensor(
-            rightFourTensor, tempFourTensor, dA_minus_id_mmin1_dA_FourTensor, true);
-        Core::LinAlg::Voigt::setup_9x9_voigt_matrix_from_four_tensor(temp9x9, rightFourTensor);
-        dA_minus_id_m_dA.update(1.0, temp9x9, 1.0);
-        // increment m
-        m += 1;
+        output.update(-2.0 / m, dupdateMat_dA_m, 1.0);
       }
-      err_status = MatrixFunctErrorType::no_errors;
-      return output;
-    }
-    // alternatively, employ the Gregory series
-    else if (calc_method == Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::gregory_series)
-    {
-      // set initial exponent \f$ m \f$ and the maximum acceptable number of series terms
-      int m = 1;
-      int m_max = 2 * 50 + 1;
 
-      // \f$ \bm{I} - \bm{A} \f$
-      Core::LinAlg::Matrix<3, 3> id_minus_A(true);
-      id_minus_A.update(1.0, id_3x3, -1.0, input, 0.0);
+      // update updateMat_mmin1
+      temp3x3 = updateMat_mmin1;
+      updateMat_mmin1.multiply_nn(1.0, temp3x3, updateMat, 0.0);
 
-      // \f$ \bm{I} + \bm{A} \f$
-      Core::LinAlg::Matrix<3, 3> id_plus_A(true);
-      id_plus_A.update(1.0, id_3x3, 1.0, input, 0.0);
-
-      // \f$ \left( \bm{I} + \bm{A} \right)^{-1} \f$
-      Core::LinAlg::Matrix<3, 3> inv_id_plus_A(true);
-      inv_id_plus_A.invert(id_plus_A);
-
-      // \f$ \frac{\partial  \left( \bm{I} + \bm{A} \right)^{-1}}{\partial \bm{A}}  \f$
-      Core::LinAlg::Matrix<9, 9> dinv_id_plus_A_dA(true);
-      temp9x9.clear();
-      Core::LinAlg::Tensor::add_non_symmetric_product(1.0, inv_id_plus_A, inv_id_plus_A, temp9x9);
-      dinv_id_plus_A_dA.multiply_nn(-1.0, temp9x9, id4, 0.0);
-      Core::LinAlg::FourTensor<3> dinv_id_plus_A_dA_FourTensor(true);
+      // update derivatives of the previous and current values for the next iteration
+      dupdateMat_dA_mmin1 = dupdateMat_dA_m;
       Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(
-          dinv_id_plus_A_dA_FourTensor, dinv_id_plus_A_dA);
+          dupdateMat_dA_mmin1_FourTensor, dupdateMat_dA_mmin1);
 
-      // update matrix: \f$ \left[ \left( \bm{I} - \bm{A} \right) \left( \bm{I} + \bm{A}
-      // \right)^{-1} \right] \f$
-      Core::LinAlg::Matrix<3, 3> updateMat(true);
-      updateMat.multiply_nn(1.0, id_minus_A, inv_id_plus_A, 0.0);
-
-      // get derivative of the update matrix w.r.t. input matrix \f$ \bm{A} \f$
-      Core::LinAlg::Matrix<9, 9> dupdateMat_dA(true);
       temp9x9.clear();
-      Core::LinAlg::Tensor::add_non_symmetric_product(1.0, id_minus_A, id_3x3, temp9x9);
+      Core::LinAlg::Tensor::add_non_symmetric_product(1.0, updateMat_mmin1, id_3x3, temp9x9);
       Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(tempFourTensor, temp9x9);
       Core::LinAlg::Tensor::multiply_four_tensor_four_tensor(
-          leftFourTensor, tempFourTensor, dinv_id_plus_A_dA_FourTensor, true);
+          leftFourTensor, tempFourTensor, dupdateMat_dA_FourTensor, true);
       Core::LinAlg::Voigt::setup_9x9_voigt_matrix_from_four_tensor(temp9x9, leftFourTensor);
-      dupdateMat_dA.update(1.0, temp9x9, 0.0);
+      dupdateMat_dA_m.update(1.0, temp9x9, 0.0);
 
       temp9x9.clear();
-      Core::LinAlg::Tensor::add_non_symmetric_product(1.0, id_3x3, inv_id_plus_A, temp9x9);
+      Core::LinAlg::Tensor::add_non_symmetric_product(1.0, id_3x3, updateMat, temp9x9);
       Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(tempFourTensor, temp9x9);
       Core::LinAlg::Tensor::multiply_four_tensor_four_tensor(
-          rightFourTensor, tempFourTensor, id4_FourTensor, true);
+          rightFourTensor, tempFourTensor, dupdateMat_dA_mmin1_FourTensor, true);
       Core::LinAlg::Voigt::setup_9x9_voigt_matrix_from_four_tensor(temp9x9, rightFourTensor);
-      dupdateMat_dA.update(-1.0, temp9x9, 1.0);
+      dupdateMat_dA_m.update(1.0, temp9x9, 1.0);
 
-
-      Core::LinAlg::FourTensor<3> dupdateMat_dA_FourTensor(true);
-      Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(
-          dupdateMat_dA_FourTensor, dupdateMat_dA);
-
-      // declare first derivatives of the m-th and m-1-th update term
-      Core::LinAlg::Matrix<9, 9> dupdateMat_dA_mmin1(true);
-      Core::LinAlg::FourTensor<3> dupdateMat_dA_mmin1_FourTensor(true);
-      Core::LinAlg::Matrix<9, 9> dupdateMat_dA_m = dupdateMat_dA;
-      // \f$ \left[ \left( \bm{I} - \bm{A} \right) \left( \bm{I} + \bm{A} \right)^{-1} \right]^{m-1}
-      // \f$
-      Core::LinAlg::Matrix<3, 3> updateMat_mmin1 = id_3x3;
-
-      while (true)
+      // return if converged
+      if ((dupdateMat_dA_m.norm2() < conv_tol) && (m > 1))
       {
-        // check whether we have reached the maximum number of terms
-        if (m > m_max)
-        {
-          std::cout
-              << "Couldn't compute the matrix logarithm derivative using the Gregory series for "
-                 "the following matrix: "
-              << std::endl;
-          input.print(std::cout);
-          err_status = MatrixFunctErrorType::failed_computation;
-          return output;
-        }
-
-
-        // update output matrix
-        if ((m % 2 == 1))
-        {
-          output.update(-2.0 / m, dupdateMat_dA_m, 1.0);
-        }
-
-        // update updateMat_mmin1
-        temp3x3 = updateMat_mmin1;
-        updateMat_mmin1.multiply_nn(1.0, temp3x3, updateMat, 0.0);
-
-        // update derivatives of the previous and current values for the next iteration
-        dupdateMat_dA_mmin1 = dupdateMat_dA_m;
-        Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(
-            dupdateMat_dA_mmin1_FourTensor, dupdateMat_dA_mmin1);
-
-        temp9x9.clear();
-        Core::LinAlg::Tensor::add_non_symmetric_product(1.0, updateMat_mmin1, id_3x3, temp9x9);
-        Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(tempFourTensor, temp9x9);
-        Core::LinAlg::Tensor::multiply_four_tensor_four_tensor(
-            leftFourTensor, tempFourTensor, dupdateMat_dA_FourTensor, true);
-        Core::LinAlg::Voigt::setup_9x9_voigt_matrix_from_four_tensor(temp9x9, leftFourTensor);
-        dupdateMat_dA_m.update(1.0, temp9x9, 0.0);
-
-        temp9x9.clear();
-        Core::LinAlg::Tensor::add_non_symmetric_product(1.0, id_3x3, updateMat, temp9x9);
-        Core::LinAlg::Voigt::setup_four_tensor_from_9x9_voigt_matrix(tempFourTensor, temp9x9);
-        Core::LinAlg::Tensor::multiply_four_tensor_four_tensor(
-            rightFourTensor, tempFourTensor, dupdateMat_dA_mmin1_FourTensor, true);
-        Core::LinAlg::Voigt::setup_9x9_voigt_matrix_from_four_tensor(temp9x9, rightFourTensor);
-        dupdateMat_dA_m.update(1.0, temp9x9, 1.0);
-
-        // return if converged
-        if ((dupdateMat_dA_m.norm2() < conv_tol) && (m > 1))
-        {
-          err_status = MatrixFunctErrorType::no_errors;
-          return output;
-        }
-
-        // increment m
-        m += 1;
+        err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
+        return output;
       }
+
+      // increment m
+      m += 1;
     }
   }
-  else
+
+}  // namespace
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+template <unsigned int dim>
+Core::LinAlg::Matrix<dim, dim> Core::LinAlg::matrix_sqrt(
+    const Core::LinAlg::Matrix<dim, dim>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
+    Core::LinAlg::MatrixSqrtCalcMethod calc_method)
+{
+  // set error status to no errors
+  err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
+
+  // return 0 if matrix is 0: determined with matrix norm
+  if (input.norm2() <= 1.0e-16)
   {
-    FOUR_C_THROW(
-        "The provided computation method for first derivative of the matrix logarithm of a "
-        "general matrix is not implemented!");
+    err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
+    return input;
   }
 
-  err_status = MatrixFunctErrorType::unsuitable_method;
-  return Core::LinAlg::Matrix<9, 9>{true};
+  // compute using the specified calculation method, if available
+  switch (calc_method)
+  {
+    case MatrixSqrtCalcMethod::db_iter_scaled_product:
+      return matrix_sqrt_db_iter_scaled_product(input, err_status);
+    default:
+      FOUR_C_THROW("The matrix sqrt function cannot be computed with the specified method yet!");
+  }
 }
+
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+template <unsigned int dim>
+Core::LinAlg::Matrix<dim, dim> Core::LinAlg::matrix_sqrt(
+    const Core::LinAlg::Matrix<dim, dim>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
+    unsigned int& num_of_iters, const MatrixSqrtCalcMethod calc_method)
+{
+  // set error status to no errors
+  err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
+
+  // return 0 if matrix is 0: determined with matrix norm
+  if (input.norm2() <= 1.0e-16)
+  {
+    err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
+    num_of_iters = 0;
+    return input;
+  }
+
+  // compute using the specified calculation method, if available
+  switch (calc_method)
+  {
+    case MatrixSqrtCalcMethod::db_iter_scaled_product:
+    {
+      unsigned int* num_of_iters_ptr = &num_of_iters;
+      return matrix_sqrt_db_iter_scaled_product(input, err_status, num_of_iters_ptr);
+    }
+    default:
+      FOUR_C_THROW("The matrix sqrt function cannot be computed with the specified method yet!");
+  }
+}
+
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+template <unsigned int dim>
+Core::LinAlg::Matrix<dim, dim> Core::LinAlg::matrix_exp(const Core::LinAlg::Matrix<dim, dim>& input,
+    Core::LinAlg::MatrixFunctErrorType& err_status, Core::LinAlg::MatrixExpCalcMethod calc_method)
+{
+  // declare output matrix
+  Core::LinAlg::Matrix<dim, dim> output(true);
+
+  // get norm of input matrix
+  double mat_norm = input.norm2();
+
+  // direct calculation for zero-matrix
+  if (mat_norm <= 1.0e-16)
+  {
+    for (unsigned int i = 0; i < dim; i++) output(i, i) = 1.;
+    err_status = MatrixFunctErrorType::no_errors;
+    return output;
+  }
+
+  // determine computation method based on the matrix norm
+  if (calc_method == Core::LinAlg::MatrixExpCalcMethod::default_method)
+  {
+    if (mat_norm < 2.0)
+      calc_method = Core::LinAlg::MatrixExpCalcMethod::taylor_series;
+    else
+      calc_method = Core::LinAlg::MatrixExpCalcMethod::spectral_decomp;
+  }
+
+
+  // compute matrix exponential via power series for small matrix norms. This is usually
+  // faster than by spectral decomposition for matrices which are close
+  // to zero.
+  switch (calc_method)
+  {
+    case Core::LinAlg::MatrixExpCalcMethod::taylor_series:
+      return matrix_exp_taylor_series(input, err_status);
+    case Core::LinAlg::MatrixExpCalcMethod::spectral_decomp:
+      return matrix_exp_spectral_decomp(input, err_status);
+    default:
+      FOUR_C_THROW(
+          "The provided computation method for the matrix exponential is not implemented!");
+  }
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+template <unsigned int dim>
+Core::LinAlg::Matrix<dim, dim> Core::LinAlg::matrix_log(const Core::LinAlg::Matrix<dim, dim>& input,
+    Core::LinAlg::MatrixFunctErrorType& err_status, Core::LinAlg::MatrixLogCalcMethod calc_method)
+{
+  // auxiliaries
+  Core::LinAlg::Matrix<dim, dim> id{true};
+  for (unsigned int i = 0; i < dim; ++i) id(i, i) = 1.0;
+
+
+  // initialize error status to no errors(0)
+  err_status = MatrixFunctErrorType::no_errors;
+
+  // characteristic matrix \f$ \boldsymbol{I} - \boldsymbol{A} \f$
+  Core::LinAlg::Matrix<dim, dim> id_minus_A(true);
+  id_minus_A.update(1.0, id, -1.0, input, 0.0);
+
+  // \f$ \boldsymbol{I} + \boldsymbol{A} \f$
+  Core::LinAlg::Matrix<dim, dim> id_plus_A(true);
+  id_plus_A.update(1.0, id, 1.0, input, 0.0);
+
+  // \f$ \left( \boldsymbol{I} + \boldsymbol{A} \right)^{-1} \f$
+  Core::LinAlg::Matrix<dim, dim> inv_id_plus_A(true);
+  inv_id_plus_A.invert(id_plus_A);
+
+  // update matrix: \f$ \left[ \left( \boldsymbol{I} - \boldsymbol{A} \right) \left(
+  // \boldsymbol{I}
+  // + \boldsymbol{A}
+  // \right)^{-1} \right] \f$
+  Core::LinAlg::Matrix<dim, dim> update_mat(true);
+  update_mat.multiply(1.0, id_minus_A, inv_id_plus_A, 0.0);
+
+  // get computation method if default is specified
+  if (calc_method == Core::LinAlg::MatrixLogCalcMethod::default_series)
+  {
+    // employ Taylor series if matrix norm smaller than 1 for characteristic matrix
+    if (id_minus_A.norm2() < 1.0)
+    {
+      calc_method = Core::LinAlg::MatrixLogCalcMethod::taylor_series;
+    }
+    // employ the Gregory series, if the norm of the first update matrix is smaller than 1.0
+    else if (update_mat.norm2() < 1.0)
+    {
+      calc_method = Core::LinAlg::MatrixLogCalcMethod::gregory_series;
+    }
+    // spectral decomposition as the last resort
+    else
+    {
+      calc_method = Core::LinAlg::MatrixLogCalcMethod::spectral_decomp;
+    }
+  }
+
+
+
+  // ---> determine matrix logarithm
+  switch (calc_method)
+  {
+    case Core::LinAlg::MatrixLogCalcMethod::taylor_series:
+      return matrix_log_taylor_series(input, err_status, id_minus_A, 1.0e-10);
+    case Core::LinAlg::MatrixLogCalcMethod::gregory_series:
+      return matrix_log_gregory_series(input, err_status, update_mat, 1.0e-10);
+    case Core::LinAlg::MatrixLogCalcMethod::spectral_decomp:
+      return matrix_log_spectral_decomp(input, err_status);
+    case Core::LinAlg::MatrixLogCalcMethod::pade_part_fract:
+    case Core::LinAlg::MatrixLogCalcMethod::inv_scal_square:
+      FOUR_C_THROW(
+          "For the computation methods based on the Pade approximation, you have to specify the "
+          "Pade order for the computation as either input or output!");
+    default:
+      FOUR_C_THROW("The provided computation method for the matrix logarithm is not implemented!");
+  }
+}  // namespace
+
+
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+template <unsigned int dim>
+Core::LinAlg::Matrix<dim, dim> Core::LinAlg::matrix_log(const Core::LinAlg::Matrix<dim, dim>& input,
+    Core::LinAlg::MatrixFunctErrorType& err_status, unsigned int& pade_order,
+    Core::LinAlg::MatrixLogCalcMethod calc_method)
+{
+  // initialize error status to no errors(0)
+  err_status = MatrixFunctErrorType::no_errors;
+
+  // ---> determine matrix logarithm
+  switch (calc_method)
+  {
+      // Pade approximation of a given order \f$ m \f$, using a partial fraction form
+    case MatrixLogCalcMethod::pade_part_fract:
+    {
+      // the Pade order remains unchanged
+      return matrix_log_pade_part_fract_exp(input, pade_order, err_status);
+    }
+    // inverse scaling and squaring method
+    case MatrixLogCalcMethod::inv_scal_square:
+    {
+      // the Pade order gets computed in the algorithm
+      return matrix_log_inv_scal_square(input, pade_order, err_status);
+    }
+    default:
+      return matrix_log(input, err_status, calc_method);
+  }
+}
+
+
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+Core::LinAlg::Matrix<9, 9> Core::LinAlg::matrix_3x3_exp_1st_deriv(
+    const Core::LinAlg::Matrix<3, 3>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
+    Core::LinAlg::GenMatrixExpFirstDerivCalcMethod calc_method)
+{
+  // declare output variable
+  Core::LinAlg::Matrix<9, 9> output(true);
+
+  // determine the computation method (currently, only Taylor series implemented)
+  if (calc_method == Core::LinAlg::GenMatrixExpFirstDerivCalcMethod::default_method)
+  {
+    calc_method = Core::LinAlg::GenMatrixExpFirstDerivCalcMethod::taylor_series;
+  }
+
+  switch (calc_method)
+  {
+    case GenMatrixExpFirstDerivCalcMethod::taylor_series:
+      return matrix_3x3_exp_1st_deriv_taylor_series(input, err_status);
+    default:
+      FOUR_C_THROW(
+          "The provided computation method for first derivative of the matrix exponential of a "
+          "general matrix is not implemented!");
+  }
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+Core::LinAlg::Matrix<6, 6> Core::LinAlg::sym_matrix_3x3_exp_1st_deriv(
+    const Core::LinAlg::Matrix<3, 3>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
+    Core::LinAlg::SymMatrixExpFirstDerivCalcMethod calc_method)
+{
+  // get matrix norm
+  double norm = input.norm2();
+
+  // compute 4-th order identity tensor
+  Core::LinAlg::Matrix<6, 6> id4sharp(true);
+  for (int i = 0; i < 3; i++) id4sharp(i, i) = 1.0;
+  for (int i = 3; i < 6; i++) id4sharp(i, i) = 0.5;
+
+  // direct calculation for zero-matrix
+  if (norm <= 1.0e-16)
+  {
+    err_status = MatrixFunctErrorType::no_errors;
+    return id4sharp;
+  }
+
+  // determine computation method based on the matrix norm
+  if (calc_method == Core::LinAlg::SymMatrixExpFirstDerivCalcMethod::default_method)
+  {
+    if (norm < 0.3)
+      calc_method = Core::LinAlg::SymMatrixExpFirstDerivCalcMethod::taylor_series;
+    else
+      calc_method = Core::LinAlg::SymMatrixExpFirstDerivCalcMethod::eigenproj_based;
+  }
+
+  // compute derivative
+  switch (calc_method)
+  {
+    case SymMatrixExpFirstDerivCalcMethod::taylor_series:
+      return sym_matrix_3x3_exp_1st_deriv_taylor_series(input, err_status);
+    case SymMatrixExpFirstDerivCalcMethod::eigenproj_based:
+      return sym_matrix_3x3_exp_1st_deriv_eigenproj_based(input, err_status);
+    default:
+      FOUR_C_THROW(
+          "The provided computation method for first derivative of the matrix exponential of a "
+          "symmetric matrix is not implemented!");
+  }
+}  // namespace
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+Core::LinAlg::Matrix<9, 9> Core::LinAlg::matrix_3x3_log_1st_deriv(
+    const Core::LinAlg::Matrix<3, 3>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
+    Core::LinAlg::GenMatrixLogFirstDerivCalcMethod calc_method)
+{
+  // auxiliaries
+  Core::LinAlg::Matrix<3, 3> id_3x3(true);
+  for (int i = 0; i < 3; ++i)
+  {
+    id_3x3(i, i) = 1.0;
+  }
+
+  // characteristic matrix \f$ \boldsymbol{I} - \boldsymbol{A} \f$
+  Core::LinAlg::Matrix<3, 3> id_minus_A(true);
+  id_minus_A.update(1.0, id_3x3, -1.0, input, 0.0);
+
+  // determine the computation method based on matrix characteristics
+  if (calc_method == Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::default_series)
+  {
+    if (id_minus_A.norm2() < 1.0)
+      calc_method = Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::taylor_series;
+    else
+      calc_method = Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::gregory_series;
+  }
+
+  // compute derivative
+  switch (calc_method)
+  {
+    case GenMatrixLogFirstDerivCalcMethod::pade_part_fract:
+      FOUR_C_THROW(
+          "For the computation methods based on the Pade approximation, you have to specify the "
+          "Pade order for the computation as either input or output!");
+    case FourC::Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::taylor_series:
+      return matrix_3x3_log_1st_deriv_taylor_series(input, err_status, 1.0e-10);
+    case GenMatrixLogFirstDerivCalcMethod::gregory_series:
+      return matrix_3x3_log_1st_deriv_gregory_series(input, err_status, 1.0e-10);
+    default:
+      FOUR_C_THROW(
+          "The provided computation method for first derivative of the matrix logarithm of a "
+          "general matrix is not implemented!");
+  }
+}
+
+/*--------------------------------------------------------------------*
+ *--------------------------------------------------------------------*/
+Core::LinAlg::Matrix<9, 9> Core::LinAlg::matrix_3x3_log_1st_deriv(
+    const Core::LinAlg::Matrix<3, 3>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
+    const unsigned int pade_order, Core::LinAlg::GenMatrixLogFirstDerivCalcMethod calc_method)
+{
+  // auxiliaries
+  Core::LinAlg::Matrix<3, 3> id_3x3(true);
+  for (int i = 0; i < 3; ++i)
+  {
+    id_3x3(i, i) = 1.0;
+  }
+
+  // characteristic matrix \f$ \boldsymbol{I} - \boldsymbol{A} \f$
+  Core::LinAlg::Matrix<3, 3> id_minus_A(true);
+  id_minus_A.update(1.0, id_3x3, -1.0, input, 0.0);
+
+  // determine the computation method based on matrix characteristics
+  if (calc_method == Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::default_series)
+  {
+    if (id_minus_A.norm2() < 1.0)
+      calc_method = Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::taylor_series;
+    else
+      calc_method = Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::gregory_series;
+  }
+
+  // compute derivative
+  switch (calc_method)
+  {
+    case GenMatrixLogFirstDerivCalcMethod::pade_part_fract:
+      return matrix_3x3_log_1st_deriv_pade_part_fract(input, err_status, pade_order);
+    default:
+      return matrix_3x3_log_1st_deriv(input, err_status);
+  }
+}
+
+
 
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
@@ -1485,10 +1736,16 @@ void Core::LinAlg::sym_matrix_3x3_exp_2nd_deriv_voigt(const Core::LinAlg::Matrix
 // explicit instantiation of template functions
 template Core::LinAlg::Matrix<2, 2> Core::LinAlg::matrix_sqrt<2>(
     const Core::LinAlg::Matrix<2, 2>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
-    unsigned int* num_of_iters, Core::LinAlg::MatrixSqrtCalcMethod calc_method);
+    Core::LinAlg::MatrixSqrtCalcMethod calc_method);
+template Core::LinAlg::Matrix<2, 2> Core::LinAlg::matrix_sqrt<2>(
+    const Core::LinAlg::Matrix<2, 2>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
+    unsigned int& num_of_iters, Core::LinAlg::MatrixSqrtCalcMethod calc_method);
 template Core::LinAlg::Matrix<3, 3> Core::LinAlg::matrix_sqrt<3>(
     const Core::LinAlg::Matrix<3, 3>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
-    unsigned int* num_of_iters, Core::LinAlg::MatrixSqrtCalcMethod calc_method);
+    Core::LinAlg::MatrixSqrtCalcMethod calc_method);
+template Core::LinAlg::Matrix<3, 3> Core::LinAlg::matrix_sqrt<3>(
+    const Core::LinAlg::Matrix<3, 3>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
+    unsigned int& num_of_iters, Core::LinAlg::MatrixSqrtCalcMethod calc_method);
 template Core::LinAlg::Matrix<2, 2> Core::LinAlg::matrix_exp<2>(
     const Core::LinAlg::Matrix<2, 2>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
     Core::LinAlg::MatrixExpCalcMethod calc_method);
@@ -1497,9 +1754,16 @@ template Core::LinAlg::Matrix<3, 3> Core::LinAlg::matrix_exp<3>(
     Core::LinAlg::MatrixExpCalcMethod calc_method);
 template Core::LinAlg::Matrix<2, 2> Core::LinAlg::matrix_log<2>(
     const Core::LinAlg::Matrix<2, 2>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
-    Core::LinAlg::MatrixLogCalcMethod calc_method, unsigned int* pade_order);
+    Core::LinAlg::MatrixLogCalcMethod calc_method);
+template Core::LinAlg::Matrix<2, 2> Core::LinAlg::matrix_log<2>(
+    const Core::LinAlg::Matrix<2, 2>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
+    unsigned int& pade_order, Core::LinAlg::MatrixLogCalcMethod calc_method);
 template Core::LinAlg::Matrix<3, 3> Core::LinAlg::matrix_log<3>(
     const Core::LinAlg::Matrix<3, 3>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
-    Core::LinAlg::MatrixLogCalcMethod calc_method, unsigned int* pade_order);
+    Core::LinAlg::MatrixLogCalcMethod calc_method);
+template Core::LinAlg::Matrix<3, 3> Core::LinAlg::matrix_log<3>(
+    const Core::LinAlg::Matrix<3, 3>& input, Core::LinAlg::MatrixFunctErrorType& err_status,
+    unsigned int& pade_order, Core::LinAlg::MatrixLogCalcMethod calc_method);
+
 
 FOUR_C_NAMESPACE_CLOSE

@@ -44,14 +44,6 @@ namespace Core::LinAlg
                          ///< iterations is exceeded)
   };
 
-  /// make sure MatrixFunctErrorType is stream-insertable
-  inline std::ostream& operator<<(
-      std::ostream& stream, const MatrixFunctErrorType& matrix_funct_err_type)
-  {
-    stream << magic_enum::enum_name(matrix_funct_err_type);
-    return stream;
-  }
-
   /// enum class: computation method used for the calculation of the matrix square root
   enum class MatrixSqrtCalcMethod
   {
@@ -60,29 +52,34 @@ namespace Core::LinAlg
                              ///< Square Root, (6.29)
   };
 
-  /// make sure MatrixSqrtCalcMethod is stream-insertable
-  inline std::ostream& operator<<(
-      std::ostream& stream, const MatrixSqrtCalcMethod& matrix_sqrt_calc_method)
-  {
-    stream << magic_enum::enum_name(matrix_sqrt_calc_method);
-    return stream;
-  }
-
   /*!
-   * @brief Computes the matrix square root of a given real matrix with a specified computation
+   * @name Computes the matrix square root of a given real matrix with a specified computation
    * method.
    *
    *
    * @param[in] input input matrix
    * @param[in,out] err_status Error status in the evaluation
-   * @param[out] num_of_iters number of iterations required to compute the matrix square root
    * @param[in] calc_method utilized computation method
    * @returns matrix square root of the input matrix
    */
+  //! @{
+
+  /*!
+   * @brief Basic usage
+   */
   template <unsigned int dim>
   Matrix<dim, dim> matrix_sqrt(const Matrix<dim, dim>& input, MatrixFunctErrorType& err_status,
-      unsigned int* num_of_iters = nullptr,
       const MatrixSqrtCalcMethod calc_method = MatrixSqrtCalcMethod::db_iter_scaled_product);
+
+  /*! @brief Additionally saves the number of iterations required to
+   * compute the matrix square root, in the case of an iterative method
+   * @param[out] num_of_iters number of iterations required to compute the matrix square root
+   */
+  template <unsigned int dim>
+  Matrix<dim, dim> matrix_sqrt(const Matrix<dim, dim>& input, MatrixFunctErrorType& err_status,
+      unsigned int& num_of_iters,
+      const MatrixSqrtCalcMethod calc_method = MatrixSqrtCalcMethod::db_iter_scaled_product);
+  //! @}
 
   /// enum class: computation method used for the calculation of the matrix exponential
   enum class MatrixExpCalcMethod
@@ -92,14 +89,6 @@ namespace Core::LinAlg
     taylor_series,   ///< computation using the Taylor series,
     spectral_decomp,  ///< computation using the spectral decomposition,
   };
-
-  /// make sure MatrixExpCalcMethod is stream-insertable
-  inline std::ostream& operator<<(
-      std::ostream& stream, const MatrixExpCalcMethod& matrix_exp_calc_method)
-  {
-    stream << magic_enum::enum_name(matrix_exp_calc_method);
-    return stream;
-  }
 
   /*!
    * @brief Computes the matrix exponential of a given real matrix, using the Taylor series or a
@@ -132,17 +121,10 @@ namespace Core::LinAlg
                       ///< Higham: Functions of Matrices, Chapter 11: Matrix Logarithm, Eq. 11.18
   };
 
-  /// make sure MatrixLogCalcMethod is stream-insertable
-  inline std::ostream& operator<<(
-      std::ostream& stream, const MatrixLogCalcMethod& matrix_log_calc_method)
-  {
-    stream << magic_enum::enum_name(matrix_log_calc_method);
-    return stream;
-  }
 
   /*!
-   * @brief Computes the (principal) matrix logarithm of a given real matrix, using either the
-   * Taylor series or the Gregory series or a spectral decomposition
+   * @name Computes the (principal) matrix logarithm of a given real
+   * matrix using a specified computation method
    *
    *
    * For further information, refer to:
@@ -155,16 +137,35 @@ namespace Core::LinAlg
    * @param[in] input input matrix
    * @param[in,out] err_status Error status in the evaluation
    * @param[in] calc_method utilized computation method
-   * @param[in, out] pade_order Pade approximation order (only for
-   * algorithms employing this). This is an input or output parameter
-   * depending on the employed method (e.g.: input for Pade
-   * approximation, output for inverse scaling and squaring method)
    * @returns principal matrix logarithm of the input matrix
+   */
+  //! @{
+  /*!
+   * @brief Basic usage for methods not based on the Pade approximation
    */
   template <unsigned int dim>
   Matrix<dim, dim> matrix_log(const Matrix<dim, dim>& input, MatrixFunctErrorType& err_status,
-      const MatrixLogCalcMethod calc_method = MatrixLogCalcMethod::default_series,
-      unsigned int* pade_order = nullptr);
+      const MatrixLogCalcMethod calc_method = MatrixLogCalcMethod::default_series);
+
+  /*!
+   * @brief Special usage for methods employing the Pade approximation, where the Pade
+   * order can be either an input or/and an output parameter
+   *
+   * @note If the computation method does not employ a Pade
+   * approximation (and thus does not require the Pade order as input/output), then the
+   * matrix logarithm is evaluated via the basic usage function and the
+   * input Pade order remains unchanged.
+   *
+   * @param[in, out] pade_order Pade approximation order. This is an input or output parameter
+   * depending on the employed method (e.g.: input for Pade
+   * approximation with partial fraction expansion (remains the same),
+   * output for inverse scaling and squaring method (gets computed))
+   */
+  template <unsigned int dim>
+  Matrix<dim, dim> matrix_log(const Matrix<dim, dim>& input, MatrixFunctErrorType& err_status,
+      unsigned int& pade_order,
+      const MatrixLogCalcMethod calc_method = MatrixLogCalcMethod::pade_part_fract);
+  //! @}
 
   /// enum class: computation method used for the calculation of the first derivative of the matrix
   /// exponential for a general, not necessarily symmetric matrix
@@ -174,14 +175,6 @@ namespace Core::LinAlg
                      ///< on different characteristics, such as the matrix norm
     taylor_series,   ///< computation using the Taylor series,
   };
-
-  /// make sure GenMatrixExpFirstDerivCalcMethod is stream-insertable
-  inline std::ostream& operator<<(std::ostream& stream,
-      const GenMatrixExpFirstDerivCalcMethod& gen_matrix_exp_1st_deriv_calc_method)
-  {
-    stream << magic_enum::enum_name(gen_matrix_exp_1st_deriv_calc_method);
-    return stream;
-  }
 
   /*!
    * @brief Computes the first derivative of the matrix exponential (general, not necessarily
@@ -213,16 +206,8 @@ namespace Core::LinAlg
                       ///< Higham: Functions of Matrices, Chapter 11: Matrix Logarithm, Eq. 11.18
   };
 
-  /// make sure GenMatrixLogFirstDerivCalcMethod is stream-insertable
-  inline std::ostream& operator<<(std::ostream& stream,
-      const GenMatrixLogFirstDerivCalcMethod& gen_matrix_log_1st_deriv_calc_method)
-  {
-    stream << magic_enum::enum_name(gen_matrix_log_1st_deriv_calc_method);
-    return stream;
-  }
-
   /*!
-   * @brief Computes the derivative of the matrix logarithm (general, not necessarily symmetric
+   * @name Computes the derivative of the matrix logarithm (general, not necessarily symmetric
    * matrix) with respect to its argument, using either the Taylor series or
    * the Gregory series
    *
@@ -233,15 +218,34 @@ namespace Core::LinAlg
    * @param[in] input input 3x3 matrix
    * @param[in,out] err_status Error status in the evaluation
    * @param[in] calc_method utilized computation method
-   * @param[in] pade_order Pade approximation order (only for
-   * algorithms employing this)
    * @return derivative of input matrix logarithm w.r.t. input
    * matrix, specified in Voigt notation
    */
+
+  //! @{
+
+  /*! @brief Basic usage for methods not based on the Pade approximation
+   */
   Matrix<9, 9> matrix_3x3_log_1st_deriv(const Matrix<3, 3>& input, MatrixFunctErrorType& err_status,
       GenMatrixLogFirstDerivCalcMethod calc_method =
-          GenMatrixLogFirstDerivCalcMethod::default_series,
-      const unsigned int* pade_order = nullptr);
+          GenMatrixLogFirstDerivCalcMethod::default_series);
+
+  /*!  @brief Special usage for methods employing the Pade approximation, where the Pade
+   * order is also an input parameter
+   *
+   * @note If the computation method does not employ a Pade
+   * approximation (and thus does not require the Pade order as input/output), then the
+   * matrix logarithm is evaluated via the basic usage function and the
+   * input Pade order remains unchanged.
+   *
+   * @param[in] pade_order Pade approximation order
+   */
+  Matrix<9, 9> matrix_3x3_log_1st_deriv(const Matrix<3, 3>& input, MatrixFunctErrorType& err_status,
+      const unsigned int pade_order,
+      GenMatrixLogFirstDerivCalcMethod calc_method =
+          GenMatrixLogFirstDerivCalcMethod::pade_part_fract);
+
+  //! @}
 
   /// enum class: computation method used for the calculation of the first derivative of the matrix
   /// exponential for a symmetric matrix
@@ -254,14 +258,6 @@ namespace Core::LinAlg
                       ///< Methods for Plasticity: Theory and Applications, Wiley & Sons,
                       ///< 2008, Section A.5
   };
-
-  /// make sure SymMatrixExpFirstDerivCalcMethod is stream-insertable
-  inline std::ostream& operator<<(std::ostream& stream,
-      const SymMatrixExpFirstDerivCalcMethod& sym_matrix_exp_1st_deriv_calc_method)
-  {
-    stream << magic_enum::enum_name(sym_matrix_exp_1st_deriv_calc_method);
-    return stream;
-  }
 
   /*!
    * @brief Computes the derivative of the matrix exponential (symmetric 3x3 matrix) with respect to

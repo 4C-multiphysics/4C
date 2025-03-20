@@ -43,7 +43,7 @@ namespace
     Core::LinAlg::MatrixFunctErrorType sqrt_err_status =
         Core::LinAlg::MatrixFunctErrorType::no_errors;
     Core::LinAlg::Matrix<2, 2> sqrt_A = Core::LinAlg::matrix_sqrt(
-        A, sqrt_err_status, nullptr, Core::LinAlg::MatrixSqrtCalcMethod::db_iter_scaled_product);
+        A, sqrt_err_status, Core::LinAlg::MatrixSqrtCalcMethod::db_iter_scaled_product);
     FOUR_C_ASSERT_ALWAYS(sqrt_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
         "Computation of matrix square root (2x2) failed!");
     FOUR_C_EXPECT_NEAR(sqrt_A, sqrt_A_ref, 1.0e-6);
@@ -131,8 +131,10 @@ namespace
     FOUR_C_EXPECT_NEAR(log_A, log_A_ref, 1.0e-9);
 
     log_err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
+    unsigned int pade_order = 0;
     log_A = Core::LinAlg::matrix_log(
-        A, log_err_status, Core::LinAlg::MatrixLogCalcMethod::inv_scal_square);
+        A, log_err_status, pade_order, Core::LinAlg::MatrixLogCalcMethod::inv_scal_square);
+    EXPECT_EQ(pade_order, 10);
     FOUR_C_ASSERT_ALWAYS(log_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
         "Logarithm evaluation failed when using the inverse scaling and squaring method!");
     FOUR_C_EXPECT_NEAR(log_A, log_A_ref, 1.0e-9);
@@ -165,9 +167,20 @@ namespace
     Core::LinAlg::MatrixFunctErrorType sqrt_err_status =
         Core::LinAlg::MatrixFunctErrorType::no_errors;
     Core::LinAlg::Matrix<3, 3> sqrt_A = Core::LinAlg::matrix_sqrt(
-        A, sqrt_err_status, nullptr, Core::LinAlg::MatrixSqrtCalcMethod::db_iter_scaled_product);
+        A, sqrt_err_status, Core::LinAlg::MatrixSqrtCalcMethod::db_iter_scaled_product);
     FOUR_C_ASSERT_ALWAYS(sqrt_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
         "Computation of matrix square root (3x3) using the DB iteration (scaled, product form) "
+        "failed!");
+    FOUR_C_EXPECT_NEAR(sqrt_A, sqrt_A_ref, 1.0e-6);
+
+    sqrt_err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
+    unsigned int num_of_iters = 0;
+    sqrt_A = Core::LinAlg::matrix_sqrt(A, sqrt_err_status, num_of_iters,
+        Core::LinAlg::MatrixSqrtCalcMethod::db_iter_scaled_product);
+    EXPECT_EQ(num_of_iters, 4);
+    FOUR_C_ASSERT_ALWAYS(sqrt_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
+        "Computation of matrix square root (3x3) using the DB iteration (scaled, product form, "
+        "save number of iterations) "
         "failed!");
     FOUR_C_EXPECT_NEAR(sqrt_A, sqrt_A_ref, 1.0e-6);
   }
@@ -465,8 +478,10 @@ namespace
     FOUR_C_EXPECT_NEAR(log_A, log_A_ref, 1.0e-9);
 
     log_err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
+    unsigned int pade_order = 0;
     log_A = Core::LinAlg::matrix_log(
-        A, log_err_status, Core::LinAlg::MatrixLogCalcMethod::inv_scal_square);
+        A, log_err_status, pade_order, Core::LinAlg::MatrixLogCalcMethod::inv_scal_square);
+    EXPECT_EQ(pade_order, 12);
     FOUR_C_ASSERT_ALWAYS(log_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
         "Logarithm evaluation failed when using the inverse scaling and squaring method!");
     FOUR_C_EXPECT_NEAR(log_A, log_A_ref, 1.0e-9);
@@ -570,30 +585,29 @@ namespace
     Core::LinAlg::MatrixFunctErrorType log_err_status =
         Core::LinAlg::MatrixFunctErrorType::no_errors;
     Core::LinAlg::Matrix<9, 9> dlog_dA = Core::LinAlg::matrix_3x3_log_1st_deriv(
-        A, log_err_status, Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::default_series, nullptr);
+        A, log_err_status, Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::default_series);
     FOUR_C_ASSERT_ALWAYS(log_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
         "Evaluation of logarithm derivative failed when using the default series!");
     FOUR_C_EXPECT_NEAR(dlog_dA, dlog_dA_ref, 1.0e-9);
 
     log_err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
     dlog_dA = Core::LinAlg::matrix_3x3_log_1st_deriv(
-        A, log_err_status, Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::taylor_series, nullptr);
+        A, log_err_status, Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::taylor_series);
     EXPECT_EQ(log_err_status,
         Core::LinAlg::MatrixFunctErrorType::unsuitable_method);  // evaluation shall fail due to
                                                                  // unsuitable computation method
 
     log_err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
     dlog_dA = Core::LinAlg::matrix_3x3_log_1st_deriv(
-        A, log_err_status, Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::gregory_series, nullptr);
+        A, log_err_status, Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::gregory_series);
     FOUR_C_ASSERT_ALWAYS(log_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
         "Evaluation of logarithm derivative failed when using the Taylor series!");
     FOUR_C_EXPECT_NEAR(dlog_dA, dlog_dA_ref, 1.0e-9);
 
     log_err_status = Core::LinAlg::MatrixFunctErrorType::no_errors;
-    unsigned int pade_order = 16;
-    unsigned int* pade_order_ptr = &pade_order;
-    dlog_dA = Core::LinAlg::matrix_3x3_log_1st_deriv(A, log_err_status,
-        Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::pade_part_fract, pade_order_ptr);
+    const unsigned int pade_order = 16;
+    dlog_dA = Core::LinAlg::matrix_3x3_log_1st_deriv(A, log_err_status, pade_order,
+        Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::pade_part_fract);
     FOUR_C_ASSERT_ALWAYS(log_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
         "Evaluation of logarithm derivative failed when using the Pade approximation (partial "
         "fraction expansion)!");
