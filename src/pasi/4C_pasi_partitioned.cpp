@@ -72,6 +72,13 @@ void PaSI::PartitionedAlgo::setup()
   set_is_setup(true);
 }
 
+void PaSI::PartitionedAlgo::post_init()
+{
+  // call post setup routine of the structure field
+  structurefield_->post_setup();
+}
+
+
 void PaSI::PartitionedAlgo::read_restart(int restartstep)
 {
   // read restart information for structure field

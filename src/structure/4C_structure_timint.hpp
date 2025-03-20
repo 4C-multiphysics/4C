@@ -184,6 +184,12 @@ namespace Solid
     */
     void setup() override;
 
+    /*!
+     * @brief Perform all necessary tasks after setting up the solid time
+     * integration object.
+     */
+    void post_setup() override {}
+
     //! create fields, based on dofrowmap, whose previous time step values are unimportant
     virtual void create_fields();
 

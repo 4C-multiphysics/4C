@@ -86,7 +86,7 @@ void Solid::IMPLICIT::OneStepTheta::post_setup()
   {
     /* we can use this method for all elements with additive DoFs,
      * but it won't work like this for non-additive rotation vector DoFs */
-    equilibrate_initial_state();
+    compute_mass_matrix_and_init_acc();
   }
   else
   {

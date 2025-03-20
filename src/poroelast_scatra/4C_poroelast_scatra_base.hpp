@@ -75,6 +75,13 @@ namespace PoroElastScaTra
       FOUR_C_THROW("not implemented in base class. override in subclass.");
     };
 
+    /*!
+     * @brief Perform all necessary tasks after initializing the
+     * object. Currently, this only calls the post_setup routine of
+     * the structure field.
+     */
+    void post_setup();
+
     //! read and set fields needed for restart
     void read_restart(int restart) override = 0;
 

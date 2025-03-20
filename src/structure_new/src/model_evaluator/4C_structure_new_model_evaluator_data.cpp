@@ -724,7 +724,7 @@ int Solid::ModelEvaluator::Data::get_nln_iter() const
     std::shared_ptr<const Solid::Nln::SOLVER::Generic> nlnsolver_ptr =
         timint_impl_ptr->get_nln_solver_ptr();
     /* If we are still in the setup process we return -1. This will happen
-     * for the equilibrate_initial_state() call in dynamic simulations. */
+     * for the compute_mass_matrix_and_init_acc() call in dynamic simulations. */
     if (!nlnsolver_ptr) return -1;
     nox_nln_ptr = std::dynamic_pointer_cast<const Solid::Nln::SOLVER::Nox>(nlnsolver_ptr);
     if (nox_nln_ptr) isnox = true;

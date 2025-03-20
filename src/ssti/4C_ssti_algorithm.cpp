@@ -218,6 +218,15 @@ void SSTI::SSTIAlgorithm::setup()
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
+void SSTI::SSTIAlgorithm::post_setup()
+{
+  // call the post_setup routine of the structure field
+  structure_->post_setup();
+}
+
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
 void SSTI::SSTIAlgorithm::clone_discretizations(MPI_Comm comm)
 {
   // The structure discretization is received from the input.

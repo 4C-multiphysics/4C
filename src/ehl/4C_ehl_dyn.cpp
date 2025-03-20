@@ -115,7 +115,15 @@ void ehl_dyn()
 
   // 3.2- Read restart if needed. (discretization called inside)
   const int restart = problem->restart();
-  if (restart) ehl->read_restart(restart);
+  if (restart)
+  {
+    ehl->read_restart(restart);
+  }
+  else
+  {
+    // run post_setup
+    ehl->post_setup();
+  }
 
   // 4.- Run of the actual problem.
 

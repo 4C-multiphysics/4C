@@ -70,6 +70,13 @@ namespace SSTI
     virtual void setup_system() = 0;
     //@}
 
+    /*! @brief Perform all necessary tasks after setting up the SSTI
+     * algorithm. Currently, this only calls the post_setup routine of the
+     * structural field.
+     *
+     */
+    void post_setup();
+
     //! increment the counter for Newton-Raphson iterations (monolithic algorithm)
     void increment_iter() { ++iter_; }
 
