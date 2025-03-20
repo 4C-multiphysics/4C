@@ -65,6 +65,15 @@ void StructureFilter::write_all_results(PostField* field)
   writer_->write_result("H1_norm", "H1_norm", elementbased, 1);
   writer_->write_result("Energy_norm", "Energy_norm", elementbased, 1);
 
+  // one-dimensional artery
+  writer_->write_result("one_d_artery_pressure", "pressure", nodebased, 1);
+  writer_->write_result("one_d_artery_flow", "flow", nodebased, 1);
+  writer_->write_result("one_d_artery_area", "area", nodebased, 1);
+  writer_->write_result("forward_speed", "forward_speed", nodebased, 1);
+  writer_->write_result("forward_speed0", "forward_speed0", nodebased, 1);
+  writer_->write_result("backward_speed", "backward_speed", nodebased, 1);
+  writer_->write_result("backward_speed0", "backward_speed0", nodebased, 1);
+
   // reduced dimensional airway
   writer_->write_result("pnp", "pressure", dofbased, 1);
   writer_->write_result("p_nonlin", "pressure_error", dofbased, 1);

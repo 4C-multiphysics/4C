@@ -25,6 +25,7 @@
 #include "4C_porofluid_pressure_based_elast_dyn.hpp"
 #include "4C_porofluid_pressure_based_elast_scatra_dyn.hpp"
 #include "4C_red_airways_dyn_drt.hpp"
+#include "4C_reduced_lung_1d_pipe_flow_main.hpp"
 #include "4C_reduced_lung_main.hpp"
 #include "4C_scatra_cardiac_monodomain_dyn.hpp"
 #include "4C_scatra_dyn.hpp"
@@ -132,6 +133,10 @@ void entrypoint_switch()
 
     case Core::ProblemType::reduced_lung:
       ReducedLung::reduced_lung_main();
+      break;
+
+    case Core::ProblemType::reduced_lung_1d_pipe_flow:
+      ReducedLung1dPipeFlow::main();
       break;
 
     case Core::ProblemType::poroelast:
