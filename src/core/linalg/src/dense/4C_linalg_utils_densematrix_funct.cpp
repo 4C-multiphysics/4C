@@ -38,6 +38,9 @@ namespace
       {5, 1.14e-1}, {6, 1.87e-1}, {7, 2.64e-1}, {8, 3.40e-1}, {9, 4.11e-1}, {10, 4.75e-1},
       {11, 5.31e-1}, {12, 5.81e-1}, {13, 6.24e-1}, {14, 6.62e-1}, {15, 6.95e-1}, {16, 7.24e-1}};
 
+
+  // matrix_sqrt: db_iter_scaled_product
+
 }  // namespace
 
 
@@ -66,7 +69,7 @@ Core::LinAlg::Matrix<dim, dim> Core::LinAlg::matrix_sqrt(
     for (unsigned int i = 0; i < dim; ++i) id(i, i) = 1.0;
 
     // compute exponent for scaling factor \f$ 1/(2 n) \f$
-    const double exponent = 1.0 / 2.0 / dim;
+    const double exponent = 1.0 / (2.0 * dim);
 
     // initialize iteration matrices for the scaled DB iteration in product form, as shown in
     // Higham: Functions of Matrices, Chapter 6: Matrix Square Root, (6.29)
@@ -178,7 +181,7 @@ Core::LinAlg::Matrix<dim, dim> Core::LinAlg::matrix_exp(const Core::LinAlg::Matr
   double mat_norm = input.norm2();
 
   // direct calculation for zero-matrix
-  if (mat_norm == 0.)
+  if (mat_norm <= 1.0e-12)
   {
     for (unsigned int i = 0; i < dim; i++) output(i, i) = 1.;
     err_status = MatrixFunctErrorType::no_errors;
@@ -776,7 +779,7 @@ Core::LinAlg::Matrix<6, 6> Core::LinAlg::sym_matrix_3x3_exp_1st_deriv(
   for (int i = 3; i < 6; i++) id4sharp(i, i) = 0.5;
 
   // direct calculation for zero-matrix
-  if (norm == 0.)
+  if (norm <= 1.0e-12)
   {
     err_status = MatrixFunctErrorType::no_errors;
     return id4sharp;
@@ -852,11 +855,11 @@ Core::LinAlg::Matrix<6, 6> Core::LinAlg::sym_matrix_3x3_exp_1st_deriv(
   }
   else if (calc_method == Core::LinAlg::SymMatrixExpFirstDerivCalcMethod::eigenproj_based)
   {
-    double EWtolerance = 1.e-12;
+    double EVal_tolerance = 1.e-12;
 
-    Core::LinAlg::Matrix<3, 3> EV(input);
-    Core::LinAlg::Matrix<3, 3> EW;
-    Core::LinAlg::syev(EV, EW, EV);
+    Core::LinAlg::Matrix<3, 3> EVect(input);
+    Core::LinAlg::Matrix<3, 3> EVal;
+    Core::LinAlg::syev(EVect, EVal, EVect);
 
     Core::LinAlg::Matrix<3, 1> vec1;
     Core::LinAlg::Matrix<3, 1> vec2;
@@ -864,7 +867,7 @@ Core::LinAlg::Matrix<6, 6> Core::LinAlg::sym_matrix_3x3_exp_1st_deriv(
     Core::LinAlg::Matrix<3, 3> tmp2;
 
     // souza eq. (A.52)
-    // note: EW stored in ascending order
+    // note: EVal stored in ascending order
 
     //  d X^2 / d X  =  1/2 * (  delta_jk X_lj + delta_il X_kj
     //                         + delta_jl X_ik + delta_kj X_il )
@@ -875,18 +878,19 @@ Core::LinAlg::Matrix<6, 6> Core::LinAlg::sym_matrix_3x3_exp_1st_deriv(
     Core::LinAlg::Matrix<3, 3> id2(true);
     for (int i = 0; i < 3; i++) id2(i, i) = 1.0;
     //  // --------------------------------- switch by number of equal eigenvalues
-    if (abs(EW(0, 0) - EW(1, 1)) < EWtolerance &&
-        abs(EW(1, 1) - EW(2, 2)) < EWtolerance)  // ------------------ x_a == x_b == x_c
+    if (std::abs(EVal(0, 0) - EVal(1, 1)) < EVal_tolerance &&
+        std::abs(EVal(1, 1) - EVal(2, 2)) < EVal_tolerance)  // ------------------ x_a == x_b == x_c
     {
       // calculate derivative
       output = id4sharp;
-      output.scale(exp(EW(0, 0)));
+      output.scale(exp(EVal(0, 0)));
     }
 
-    else if ((abs(EW(0, 0) - EW(1, 1)) < EWtolerance && abs(EW(1, 1) - EW(2, 2)) > EWtolerance) ||
-             (abs(EW(0, 0) - EW(1, 1)) > EWtolerance &&
-                 abs(EW(1, 1) - EW(2, 2)) <
-                     EWtolerance))  // ---- x_a != x_b == x_c or x_a == x_b != x_c
+    else if ((std::abs(EVal(0, 0) - EVal(1, 1)) < EVal_tolerance &&
+                 std::abs(EVal(1, 1) - EVal(2, 2)) > EVal_tolerance) ||
+             (std::abs(EVal(0, 0) - EVal(1, 1)) > EVal_tolerance &&
+                 std::abs(EVal(1, 1) - EVal(2, 2)) <
+                     EVal_tolerance))  // ---- x_a != x_b == x_c or x_a == x_b != x_c
     {
       // factors
       double s1 = 0.0;
@@ -899,15 +903,17 @@ Core::LinAlg::Matrix<6, 6> Core::LinAlg::sym_matrix_3x3_exp_1st_deriv(
       int a = 0;
       int c = 0;
 
-      // switch which two EW are equal
-      if (abs(EW(0, 0) - EW(1, 1)) < EWtolerance &&
-          abs(EW(1, 1) - EW(2, 2)) > EWtolerance)  // ----------------------- x_a == x_b != x_c
+      // switch which two EVal are equal
+      if (std::abs(EVal(0, 0) - EVal(1, 1)) < EVal_tolerance &&
+          std::abs(EVal(1, 1) - EVal(2, 2)) >
+              EVal_tolerance)  // ----------------------- x_a == x_b != x_c
       {
         a = 2;
         c = 0;
       }
-      else if (abs(EW(0, 0) - EW(1, 1)) > EWtolerance &&
-               abs(EW(1, 1) - EW(2, 2)) < EWtolerance)  // ------------------ x_a != x_b == x_c
+      else if (std::abs(EVal(0, 0) - EVal(1, 1)) > EVal_tolerance &&
+               std::abs(EVal(1, 1) - EVal(2, 2)) <
+                   EVal_tolerance)  // ------------------ x_a != x_b == x_c
       {
         a = 0;
         c = 2;
@@ -922,15 +928,18 @@ Core::LinAlg::Matrix<6, 6> Core::LinAlg::sym_matrix_3x3_exp_1st_deriv(
       }
 
       // in souza eq. (A.53):
-      s1 = (exp(EW(a, a)) - exp(EW(c, c))) / (pow(EW(a, a) - EW(c, c), 2.0)) -
-           exp(EW(c, c)) / (EW(a, a) - EW(c, c));
-      s2 = 2.0 * EW(c, c) * (exp(EW(a, a)) - exp(EW(c, c))) / (pow(EW(a, a) - EW(c, c), 2.0)) -
-           (EW(a, a) + EW(c, c)) / (EW(a, a) - EW(c, c)) * exp(EW(c, c));
-      s3 = 2.0 * (exp(EW(a, a)) - exp(EW(c, c))) / (pow(EW(a, a) - EW(c, c), 3.0)) -
-           (exp(EW(a, a)) + exp(EW(c, c))) / (pow(EW(a, a) - EW(c, c), 2.0));
-      s4 = EW(c, c) * s3;
+      s1 =
+          (std::exp(EVal(a, a)) - std::exp(EVal(c, c))) / (std::pow(EVal(a, a) - EVal(c, c), 2.0)) -
+          std::exp(EVal(c, c)) / (EVal(a, a) - EVal(c, c));
+      s2 = 2.0 * EVal(c, c) * (std::exp(EVal(a, a)) - std::exp(EVal(c, c))) /
+               (std::pow(EVal(a, a) - EVal(c, c), 2.0)) -
+           (EVal(a, a) + EVal(c, c)) / (EVal(a, a) - EVal(c, c)) * std::exp(EVal(c, c));
+      s3 = 2.0 * (std::exp(EVal(a, a)) - std::exp(EVal(c, c))) /
+               (std::pow(EVal(a, a) - EVal(c, c), 3.0)) -
+           (std::exp(EVal(a, a)) + std::exp(EVal(c, c))) / (std::pow(EVal(a, a) - EVal(c, c), 2.0));
+      s4 = EVal(c, c) * s3;
       s5 = s4;
-      s6 = EW(c, c) * EW(c, c) * s3;
+      s6 = EVal(c, c) * EVal(c, c) * s3;
 
       // calculate derivative
       Core::LinAlg::Tensor::add_derivative_of_squared_tensor(output, s1, input, 1.);
@@ -941,8 +950,9 @@ Core::LinAlg::Matrix<6, 6> Core::LinAlg::sym_matrix_3x3_exp_1st_deriv(
       Core::LinAlg::Tensor::add_elasticity_tensor_product(output, -s6, id2, id2, 1.);
     }
 
-    else if (abs(EW(0, 0) - EW(1, 1)) > EWtolerance &&
-             abs(EW(1, 1) - EW(2, 2)) > EWtolerance)  // ----------------- x_a != x_b != x_c
+    else if (std::abs(EVal(0, 0) - EVal(1, 1)) > EVal_tolerance &&
+             std::abs(EVal(1, 1) - EVal(2, 2)) >
+                 EVal_tolerance)  // ----------------- x_a != x_b != x_c
     {
       for (int a = 0; a < 3; a++)  // loop over all eigenvalues
       {
@@ -954,9 +964,9 @@ Core::LinAlg::Matrix<6, 6> Core::LinAlg::sym_matrix_3x3_exp_1st_deriv(
         Core::LinAlg::Matrix<3, 1> ec;
         for (int i = 0; i < 3; i++)
         {
-          ea(i) = EV(i, a);
-          eb(i) = EV(i, b);
-          ec(i) = EV(i, c);
+          ea(i) = EVect(i, a);
+          eb(i) = EVect(i, b);
+          ec(i) = EVect(i, c);
         }
         Core::LinAlg::Matrix<3, 3> Ea;
         Ea.multiply_nt(ea, ea);
@@ -965,29 +975,30 @@ Core::LinAlg::Matrix<6, 6> Core::LinAlg::sym_matrix_3x3_exp_1st_deriv(
         Core::LinAlg::Matrix<3, 3> Ec;
         Ec.multiply_nt(ec, ec);
 
-        double fac = exp(EW(a, a)) / ((EW(a, a) - EW(b, b)) * (EW(a, a) - EW(c, c)));
+        double fac = std::exp(EVal(a, a)) / ((EVal(a, a) - EVal(b, b)) * (EVal(a, a) - EVal(c, c)));
 
         // + d X^2 / d X
         Core::LinAlg::Tensor::add_derivative_of_squared_tensor(output, fac, input, 1.);
 
         // - (x_b + x_c) I_s
-        output.update(-1. * (EW(b, b) + EW(c, c)) * fac, id4sharp, 1.);
+        output.update(-1. * (EVal(b, b) + EVal(c, c)) * fac, id4sharp, 1.);
 
         // - [(x_a - x_b) + (x_a - x_c)] E_a \dyad E_a
-        Core::LinAlg::Tensor::add_elasticity_tensor_product(
-            output, -1. * fac * ((EW(a, a) - EW(b, b)) + (EW(a, a) - EW(c, c))), Ea, Ea, 1.);
+        Core::LinAlg::Tensor::add_elasticity_tensor_product(output,
+            -1. * fac * ((EVal(a, a) - EVal(b, b)) + (EVal(a, a) - EVal(c, c))), Ea, Ea, 1.);
 
 
         // - (x_b - x_c) (E_b \dyad E_b)
         Core::LinAlg::Tensor::add_elasticity_tensor_product(
-            output, -1. * fac * (EW(b, b) - EW(c, c)), Eb, Eb, 1.);
+            output, -1. * fac * (EVal(b, b) - EVal(c, c)), Eb, Eb, 1.);
 
         // + (x_b - x_c) (E_c \dyad E_c)
         Core::LinAlg::Tensor::add_elasticity_tensor_product(
-            output, fac * (EW(b, b) - EW(c, c)), Ec, Ec, 1.);
+            output, fac * (EVal(b, b) - EVal(c, c)), Ec, Ec, 1.);
 
         // dy / dx_a E_a \dyad E_a
-        Core::LinAlg::Tensor::add_elasticity_tensor_product(output, exp(EW(a, a)), Ea, Ea, 1.);
+        Core::LinAlg::Tensor::add_elasticity_tensor_product(
+            output, std::exp(EVal(a, a)), Ea, Ea, 1.);
       }  // end loop over all eigenvalues
     }
     else

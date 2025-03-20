@@ -35,12 +35,13 @@ namespace Core::LinAlg
   /// enum class: error types for the calculation of matrix functions
   enum class MatrixFunctErrorType
   {
-    no_errors,           // evaluation without errors
-    unsuitable_method,   // unsuitable computation method (e.g., the matrix norm is too large to use
-                         // a Taylor series description)
-    failed_computation,  // although the computation method is suitable, the evaluation fails
-                         // nonetheless (e.g., the maximum number of
-                         // iterations is exceeded)
+    no_errors,           ///< evaluation without errors
+    unsuitable_method,   ///< unsuitable computation method (e.g., the matrix norm is too large to
+                         ///< use
+                         ///< a Taylor series description)
+    failed_computation,  ///< although the computation method is suitable, the evaluation fails
+                         ///< nonetheless (e.g., the maximum number of
+                         ///< iterations is exceeded)
   };
 
   /// make sure MatrixFunctErrorType is stream-insertable
@@ -54,9 +55,9 @@ namespace Core::LinAlg
   /// enum class: computation method used for the calculation of the matrix square root
   enum class MatrixSqrtCalcMethod
   {
-    db_iter_scaled_product,  // Product form of Denman and Beavers iteration (scaled), as described
-                             // in Higham, Functions of Matrices, Chapter 6: Matrix Square Root,
-                             // (6.29)
+    db_iter_scaled_product,  ///< Product form of Denman and Beavers iteration (scaled), as
+                             ///< described in Higham, Functions of Matrices, Chapter 6: Matrix
+                             ///< Square Root, (6.29)
   };
 
   /// make sure MatrixSqrtCalcMethod is stream-insertable
@@ -86,10 +87,10 @@ namespace Core::LinAlg
   /// enum class: computation method used for the calculation of the matrix exponential
   enum class MatrixExpCalcMethod
   {
-    default_method,   // default computation, employing either of the other methods below depending
-                      // on different characteristics, such as the matrix norm
-    taylor_series,    // computation using the Taylor series,
-    spectral_decomp,  // computation using the spectral decomposition,
+    default_method,  ///< default computation, employing either of the other methods below depending
+                     ///< on different characteristics, such as the matrix norm
+    taylor_series,   ///< computation using the Taylor series,
+    spectral_decomp,  ///< computation using the spectral decomposition,
   };
 
   /// make sure MatrixExpCalcMethod is stream-insertable
@@ -118,17 +119,17 @@ namespace Core::LinAlg
   /// enum class: computation method used for the calculation of the matrix logarithm
   enum class MatrixLogCalcMethod
   {
-    default_series,  // default series computation, employing one of the series descriptions (or the
-                     // spectral decomposition) below, depending on different characteristics, such
-                     // as the matrix norm
-    taylor_series,   // computation using the Taylor series,
-    gregory_series,  // computation using the Gregory series,
-    spectral_decomp,  // computation using the spectral decomposition,
-    inv_scal_square,  // computation using the inverse scaling and squaring algorithm presented in
-                      // Higham: Functions of Matrices, Chapter 11: Matrix Logarithm,
-                      // Algorithm 11.10
-    pade_part_fract,  // Pade approximation using a partial fraction expansion, as presented in
-                      // Higham: Functions of Matrices, Chapter 11: Matrix Logarithm, Eq. 11.18
+    default_series,  ///< default series computation, employing one of the series descriptions (or
+                     ///< the spectral decomposition) below, depending on different characteristics,
+                     ///< such as the matrix norm
+    taylor_series,   ///< computation using the Taylor series,
+    gregory_series,  ///< computation using the Gregory series,
+    spectral_decomp,  ///< computation using the spectral decomposition,
+    inv_scal_square,  ///< computation using the inverse scaling and squaring algorithm presented in
+                      ///< Higham: Functions of Matrices, Chapter 11: Matrix Logarithm,
+                      ///< Algorithm 11.10
+    pade_part_fract,  ///< Pade approximation using a partial fraction expansion, as presented in
+                      ///< Higham: Functions of Matrices, Chapter 11: Matrix Logarithm, Eq. 11.18
   };
 
   /// make sure MatrixLogCalcMethod is stream-insertable
@@ -169,9 +170,9 @@ namespace Core::LinAlg
   /// exponential for a general, not necessarily symmetric matrix
   enum class GenMatrixExpFirstDerivCalcMethod
   {
-    default_method,  // default computation, employing either of the other methods below depending
-                     // on different characteristics, such as the matrix norm
-    taylor_series,   // computation using the Taylor series,
+    default_method,  ///< default computation, employing either of the other methods below depending
+                     ///< on different characteristics, such as the matrix norm
+    taylor_series,   ///< computation using the Taylor series,
   };
 
   /// make sure GenMatrixExpFirstDerivCalcMethod is stream-insertable
@@ -204,12 +205,12 @@ namespace Core::LinAlg
   /// logarithm for a general, not necessarily symmetric matrix
   enum class GenMatrixLogFirstDerivCalcMethod
   {
-    default_series,   // default series computation, employing either of the series below depending
-                      // on different characteristics, such as the matrix norm
-    taylor_series,    // computation using the Taylor series,
-    gregory_series,   // computation using the Gregory series,
-    pade_part_fract,  // Pade approximation using a partial fraction expansion, as presented in
-                      // Higham: Functions of Matrices, Chapter 11: Matrix Logarithm, Eq. 11.18
+    default_series,  ///< default series computation, employing either of the series below depending
+                     ///< on different characteristics, such as the matrix norm
+    taylor_series,   ///< computation using the Taylor series,
+    gregory_series,  ///< computation using the Gregory series,
+    pade_part_fract,  ///< Pade approximation using a partial fraction expansion, as presented in
+                      ///< Higham: Functions of Matrices, Chapter 11: Matrix Logarithm, Eq. 11.18
   };
 
   /// make sure GenMatrixLogFirstDerivCalcMethod is stream-insertable
@@ -246,12 +247,12 @@ namespace Core::LinAlg
   /// exponential for a symmetric matrix
   enum class SymMatrixExpFirstDerivCalcMethod
   {
-    default_method,   // default computation, employing either of the other methods below depending
-                      // on different characteristics, such as the matrix norm
-    taylor_series,    // computation using the Taylor series,
-    eigenproj_based,  // computation based on eigenprojections, as shown in deSouza, Computational
-                      // Methods for Plasticity: Theory and Applications, Wiley & Sons,
-                      // 2008, Section A.5
+    default_method,  ///< default computation, employing either of the other methods below depending
+                     ///< on different characteristics, such as the matrix norm
+    taylor_series,   ///< computation using the Taylor series,
+    eigenproj_based,  ///< computation based on eigenprojections, as shown in deSouza, Computational
+                      ///< Methods for Plasticity: Theory and Applications, Wiley & Sons,
+                      ///< 2008, Section A.5
   };
 
   /// make sure SymMatrixExpFirstDerivCalcMethod is stream-insertable
