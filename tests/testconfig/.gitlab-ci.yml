@@ -21,7 +21,7 @@ variables:
     options: [trilinos develop]
 
   # Hash of all relevant dependencies for the docker image
-  FOUR_C_DOCKER_DEPENDENCIES_HASH: 28cfb9d0
+  FOUR_C_DOCKER_DEPENDENCIES_HASH: 238d8e3e
 
   # Variables for Trilinos pipeline
   # The default Trilinos commit ref the Trilinos pipeline is running on
