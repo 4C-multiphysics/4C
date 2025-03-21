@@ -45,6 +45,8 @@ namespace Core::Elements
     /// return line definitions for given element type
     const Core::IO::InputSpec& element_lines(std::string name, std::string cell_type);
 
+    const auto& definitions() const { return definitions_; }
+
    private:
     /// input line definitions per element type
     std::map<std::string, std::map<std::string, Core::IO::InputSpec>> definitions_;

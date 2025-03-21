@@ -162,13 +162,25 @@ namespace Core::IO
         std::vector<std::string> legacy_section_names, MPI_Comm comm);
 
     /**
+     * Like the other constructor, but also accepts partial specs for legacy sections. This is
+     * useful to provide at least some partial information about the expected format of a legacy
+     * section in the metadata output. 4C will not do anything with the partial specs.
+     *
+     * @note This constructor is meant to ease the transition from legacy sections to fully
+     * parseable sections.
+     */
+    InputFile(std::map<std::string, InputSpec> valid_sections,
+        std::vector<std::string> legacy_section_names,
+        std::map<std::string, InputSpec> legacy_partial_specs, MPI_Comm comm);
+
+    /**
      * Destructor.
      */
     ~InputFile();
 
     /**
-     * Copy constructor is deleted. InputFile can contain large amounts of data and copying it is
-     * almost certainly not what you want.
+     * Copy constructor is deleted. InputFile can contain large amounts of data and copying it
+     * is almost certainly not what you want.
      */
     InputFile(const InputFile&) = delete;
 
@@ -189,15 +201,15 @@ namespace Core::IO
     InputFile& operator=(InputFile&&) noexcept = default;
 
     /**
-     * Read the content of the input file. The file is read on rank 0 and distributed to all other
-     * ranks if necessary. The file format is detected based on the file ending. If the file ending
-     * is not recognized, the .dat format is assumed.
+     * Read the content of the input file. The file is read on rank 0 and distributed to all
+     * other ranks if necessary. The file format is detected based on the file ending. If the
+     * file ending is not recognized, the .dat format is assumed.
      */
     void read(const std::filesystem::path& top_level_file);
 
     /**
-     * Get the (absolute) file path of the input file that contained a section. If the section is
-     * unknown or was not read from any file, an empty path is returned.
+     * Get the (absolute) file path of the input file that contained a section. If the section
+     * is unknown or was not read from any file, an empty path is returned.
      */
     [[nodiscard]] std::filesystem::path file_for_section(const std::string& section_name) const;
 
@@ -216,33 +228,34 @@ namespace Core::IO
      * @return A range of Fragments which encapsulate the content of the section. Use the
      * Fragment::match() function to extract the content.
      *
-     * @note This is a collective call that needs to be called on all MPI ranks in the communicator
-     * associated with this object. Depending on the section size, the content might need to be
-     * distributed from rank 0 to all other ranks. This happens automatically.
+     * @note This is a collective call that needs to be called on all MPI ranks in the
+     * communicator associated with this object. Depending on the section size, the content
+     * might need to be distributed from rank 0 to all other ranks. This happens automatically.
      */
     FragmentIteratorRange in_section(const std::string& section_name) const;
 
     /**
      * This function is similar to in_section(), but it only returns the lines on rank 0 and
-     * returns an empty range on all other ranks. This is useful for sections that might be huge and
-     * are not processed on all ranks.
+     * returns an empty range on all other ranks. This is useful for sections that might be huge
+     * and are not processed on all ranks.
      */
     FragmentIteratorRange in_section_rank_0_only(const std::string& section_name) const;
 
     /**
-     * Match a whole section named @p section_name against the input file content. The results are
-     * stored in the @p container. If the section is not known, an exception is thrown. Note that
-     * you do not need to pass an InputSpec to this function, since the InputFile object already
-     * knows about the expected format of the section. Nevertheless, this function only makes sense
-     * for sections with a known InputSpec. Legacy string sections cannot use this function and must
-     * be processed with in_section() or in_section_rank_0_only().
+     * Match a whole section named @p section_name against the input file content. The results
+     * are stored in the @p container. If the section is not known, an exception is thrown. Note
+     * that you do not need to pass an InputSpec to this function, since the InputFile object
+     * already knows about the expected format of the section. Nevertheless, this function only
+     * makes sense for sections with a known InputSpec. Legacy string sections cannot use this
+     * function and must be processed with in_section() or in_section_rank_0_only().
      */
     void match_section(const std::string& section_name, InputParameterContainer& container) const;
 
     /**
      * Returns true if the input file contains a section with the given name.
      *
-     * @note This is a collective call that needs to be called on all MPI ranks in the communicator.
+     * @note This is a collective call that needs to be called on all MPI ranks in the
+     * communicator.
      */
     [[nodiscard]] bool has_section(const std::string& section_name) const;
 
@@ -252,16 +265,16 @@ namespace Core::IO
     [[nodiscard]] MPI_Comm get_comm() const;
 
     /**
-     * Emit metadata about the input file to the given output stream @p out. The metadata contains
-     * information about all sections and parameters that are known to this object. The metadata
-     * information can be useful for additional tools that generate schema files or documentation.
-     * The output is formatted as YAML.
+     * Emit metadata about the input file to the given output stream @p out. The metadata
+     * contains information about all sections and parameters that are known to this object. The
+     * metadata information can be useful for additional tools that generate schema files or
+     * documentation. The output is formatted as YAML.
      */
     void emit_metadata(std::ostream& out) const;
 
     /**
-     * Write the content of the input file to the given output stream @p out. The content is written
-     * in .yaml format.
+     * Write the content of the input file to the given output stream @p out. The content is
+     * written in .yaml format.
      *
      * @note You probably only want to call this function on rank 0.
      */

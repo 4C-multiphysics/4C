@@ -13,6 +13,7 @@
 #include "4C_fem_condition_definition.hpp"
 #include "4C_fem_discretization_hdg.hpp"
 #include "4C_fem_dofset_independent.hpp"
+#include "4C_fem_general_element_definition.hpp"
 #include "4C_fem_general_utils_createdis.hpp"
 #include "4C_fem_nurbs_discretization.hpp"
 #include "4C_global_legacy_module.hpp"
@@ -157,7 +158,25 @@ Core::IO::InputFile Global::set_up_input_file(MPI_Comm comm)
       "THERMO KNOTVECTORS",
   };
 
-  return Core::IO::InputFile{std::move(valid_sections), std::move(legacy_section_names), comm};
+
+  using namespace Core::IO::InputSpecBuilders;
+
+  std::vector<Core::IO::InputSpec> all_element_specs;
+  Core::Elements::ElementDefinition element_definition;
+  element_definition.setup_valid_element_lines();
+  for (const auto& [element_type, cell_specs] : element_definition.definitions())
+  {
+    std::vector<Core::IO::InputSpec> element_specs;
+    for (const auto& [cell_type, spec] : cell_specs)
+    {
+      element_specs.emplace_back(group(cell_type, {spec}));
+    }
+    all_element_specs.emplace_back(group(element_type, {one_of(std::move(element_specs))}));
+  }
+
+
+  return Core::IO::InputFile{std::move(valid_sections), std::move(legacy_section_names),
+      {{"legacy_element_specs", one_of(std::move(all_element_specs))}}, comm};
 }
 
 void Global::read_fields(Global::Problem& problem, Core::IO::InputFile& input, const bool read_mesh)

@@ -262,6 +262,11 @@ namespace Core::IO
       std::map<std::string, InputSpec> valid_sections_;
       std::vector<std::string> legacy_section_names_;
 
+      /**
+       * Additional specs for legacy sections that are not fully known.
+       */
+      std::map<std::string, InputSpec> legacy_partial_specs_;
+
       bool is_section_known(const std::string& section_name) const
       {
         return is_hacky_function_section(section_name) ||
@@ -603,7 +608,17 @@ namespace Core::IO
   }
 
 
-  // Note: defaulted in implementation file to allow for use of incomplete type in PIMPL unique_ptr.
+  InputFile::InputFile(std::map<std::string, InputSpec> valid_sections,
+      std::vector<std::string> legacy_section_names,
+      std::map<std::string, InputSpec> legacy_partial_specs, MPI_Comm comm)
+      : InputFile(std::move(valid_sections), std::move(legacy_section_names), comm)
+  {
+    pimpl_->legacy_partial_specs_ = std::move(legacy_partial_specs);
+  }
+
+
+  // Note: defaulted in implementation file to allow for use of incomplete type in PIMPL
+  // unique_ptr.
   InputFile::~InputFile() = default;
 
 
@@ -981,6 +996,17 @@ namespace Core::IO
       for (const auto& name : pimpl_->legacy_section_names_)
       {
         legacy_string_sections.append_child() << name;
+      }
+    }
+
+    if (pimpl_->legacy_partial_specs_.size() > 0)
+    {
+      for (const auto& [name, spec] : pimpl_->legacy_partial_specs_)
+      {
+        auto legacy_partial_spec = root[ryml::to_csubstr(name)];
+        legacy_partial_spec |= ryml::MAP;
+        YamlNodeRef spec_emitter{legacy_partial_spec, ""};
+        spec.emit_metadata(spec_emitter);
       }
     }
 
