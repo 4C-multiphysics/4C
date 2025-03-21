@@ -62,9 +62,8 @@ PENALTY_PARAMETER               1e3
 --------------------------------------------------------------BEAM POTENTIAL
 POT_LAW_PREFACTOR               4e-3
 POT_LAW_EXPONENT                1.0
-BEAMPOTENTIAL_TYPE              Surface
-STRATEGY                        DoubleLengthSpecific_LargeSepApprox
-BEAMPOT_BTSPH                   Yes
+TYPE                            surface
+STRATEGY                        double_length_specific_large_separations
 --------------------------------------------------------------------SOLVER 1
 NAME                            Structure_Solver
 SOLVER                          UMFPACK

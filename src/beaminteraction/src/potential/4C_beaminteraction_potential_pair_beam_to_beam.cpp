@@ -145,22 +145,22 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::eval
   // compute the values for element residual vectors ('force') and linearizations ('stiff')
   switch (params()->strategy())
   {
-    case BeamPotential::strategy_doublelengthspec_largesepapprox:
+    case BeamPotential::Strategy::double_length_specific_large_separations:
     {
       evaluate_fpotand_stiffpot_large_sep_approx(
           force_pot1, force_pot2, stiffmat11, stiffmat12, stiffmat21, stiffmat22);
       break;
     }
 
-    case BeamPotential::strategy_doublelengthspec_smallsepapprox:
+    case BeamPotential::Strategy::double_length_specific_small_separations:
     {
       evaluate_fpotand_stiffpot_double_length_specific_small_sep_approx(
           force_pot1, force_pot2, stiffmat11, stiffmat12, stiffmat21, stiffmat22);
       break;
     }
 
-    case BeamPotential::strategy_singlelengthspec_smallsepapprox:
-    case BeamPotential::strategy_singlelengthspec_smallsepapprox_simple:
+    case BeamPotential::Strategy::single_length_specific_small_separations:
+    case BeamPotential::Strategy::single_length_specific_small_separations_simple:
     {
       evaluate_fpotand_stiffpot_single_length_specific_small_sep_approx(
           force_pot1, force_pot2, stiffmat11, stiffmat12, stiffmat21, stiffmat22);
@@ -260,15 +260,14 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
 
   switch (params()->potential_type())
   {
-    case BeamPotential::beampot_surf:
+    case BeamPotential::Type::surface:
       prefactor *= 4 * radius1_ * radius2_ * M_PI * M_PI;
       break;
-    case BeamPotential::beampot_vol:
+    case BeamPotential::Type::volume:
       prefactor *= radius1_ * radius1_ * radius2_ * radius2_ * M_PI * M_PI;
       break;
     default:
-      FOUR_C_THROW(
-          "No valid BEAMPOTENTIAL_TYPE specified. Choose either Surface or Volume in input file!");
+      FOUR_C_THROW("No valid TYPE specified. Choose either `surface` or `volume` in input file!");
   }
 
   // prepare data storage for visualization
@@ -579,8 +578,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   const double cutoff_radius = params()->cutoff_radius();
 
   // get regularization type and separation
-  const BeamPotential::BeamPotentialRegularizationType regularization_type =
-      params()->regularization_type();
+  const BeamPotential::RegularizationType regularization_type = params()->regularization_type();
 
   const double regularization_separation = params()->regularization_separation();
 
@@ -784,7 +782,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
 
 
 
-          if (regularization_type == BeamPotential::regularization_none and gap <= 0.0)
+          if (regularization_type == BeamPotential::RegularizationType::none and gap <= 0.0)
           {
             this->print(std::cout);
             std::cout << "\nGP pair: igp1_total=" << igp1_total << " & igp2_total=" << igp2_total
@@ -797,8 +795,8 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
 
           gap_regularized = gap;
 
-          if ((regularization_type == BeamPotential::regularization_constant or
-                  regularization_type == BeamPotential::regularization_linear) and
+          if ((regularization_type == BeamPotential::RegularizationType::constant or
+                  regularization_type == BeamPotential::RegularizationType::linear) and
               gap < regularization_separation)
           {
             gap_regularized = regularization_separation;
@@ -824,8 +822,8 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
               prefactor / (m_ - 3.5) * q1q2_JacFac_GaussWeights *
               std::pow(Core::FADUtils::cast_to_double(gap_regularized), -m_ + 3.5);
 
-          if ((regularization_type == BeamPotential::regularization_constant or
-                  regularization_type == BeamPotential::regularization_linear) and
+          if ((regularization_type == BeamPotential::RegularizationType::constant or
+                  regularization_type == BeamPotential::RegularizationType::linear) and
               gap < regularization_separation)
           {
             // potential law is linear in the regime of constant extrapolation of force law
@@ -837,7 +835,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
           }
 
 
-          if (regularization_type == BeamPotential::regularization_linear and
+          if (regularization_type == BeamPotential::RegularizationType::linear and
               gap < regularization_separation)
           {
             // Todo: a more intuitive, reasonable auxiliary quantity would be the derivative of the
@@ -947,7 +945,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   // auxiliary variables (same for both elements)
   double gap_exp2 = std::pow(gap_regularized, -m_ + 1.5);
 
-  if (params()->regularization_type() == BeamPotential::regularization_constant and
+  if (params()->regularization_type() == BeamPotential::RegularizationType::constant and
       gap < params()->regularization_separation())
   {
     /* in case of constant extrapolation of force law, the derivative of the force is zero
@@ -1060,14 +1058,14 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
         m_);
 
   if (not params()->use_fad() and
-      params()->strategy() == BeamPotential::strategy_singlelengthspec_smallsepapprox)
+      params()->strategy() == BeamPotential::Strategy::single_length_specific_small_separations)
   {
     FOUR_C_THROW(
         "The strategy 'SingleLengthSpecific_SmallSepApprox' to evaluate the interaction "
         "potential requires automatic differentiation via FAD!");
   }
 
-  if (params()->strategy() == BeamPotential::strategy_singlelengthspec_smallsepapprox &&
+  if (params()->strategy() == BeamPotential::Strategy::single_length_specific_small_separations &&
       params()->potential_reduction_length() != -1.0)
   {
     FOUR_C_THROW(
@@ -1393,7 +1391,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
       // evaluate all quantities which depend on the applied disk-cylinder potential law
 
       // 'full' disk-cylinder interaction potential
-      if (params()->strategy() == BeamPotential::strategy_singlelengthspec_smallsepapprox)
+      if (params()->strategy() == BeamPotential::Strategy::single_length_specific_small_separations)
       {
         if (not evaluate_full_disk_cylinder_potential(interaction_potential_GP, force_pot_slave_GP,
                 force_pot_master_GP, r_slave, r_xi_slave, t_slave, r_master, r_xi_master,
@@ -1407,7 +1405,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
       }
       // reduced, simpler variant of the disk-cylinder interaction potential
       else if (params()->strategy() ==
-               BeamPotential::strategy_singlelengthspec_smallsepapprox_simple)
+               BeamPotential::Strategy::single_length_specific_small_separations_simple)
       {
         if (not evaluate_simple_disk_cylinder_potential(dist_ul, norm_dist_ul, alpha, cos_alpha,
                 r_slave, r_xi_slave, norm_r_xi_slave, t_slave, r_master, r_xi_master,
@@ -2383,8 +2381,7 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
     Core::LinAlg::Matrix<1, numnodes * numnodalvalues, T> const& N_i_xi_master)
 {
   // get regularization type and separation
-  const BeamPotential::BeamPotentialRegularizationType regularization_type =
-      params()->regularization_type();
+  const BeamPotential::RegularizationType regularization_type = params()->regularization_type();
 
   const double regularization_separation = params()->regularization_separation();
 
@@ -2540,7 +2537,7 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
 
   Delta = 4 * a * (beta - radius2_) - x * x * sin_2alpha * sin_2alpha / (4 * beta_exp2);
 
-  if (regularization_type == BeamPotential::regularization_none and Delta < 1e-14)
+  if (regularization_type == BeamPotential::RegularizationType::none and Delta < 1e-14)
   {
     this->print(std::cout);
 
@@ -2557,7 +2554,7 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
 
   Delta_regularized = Delta;
 
-  if (regularization_type == BeamPotential::regularization_linear and
+  if (regularization_type == BeamPotential::RegularizationType::linear and
       Delta < regularization_separation)
   {
     Delta_regularized = regularization_separation;
@@ -2619,7 +2616,7 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
   pot_ia_partial_Delta = (-m_ + 4.5) * interaction_potential_GP / Delta_regularized;
 
 
-  if (regularization_type == BeamPotential::regularization_linear and
+  if (regularization_type == BeamPotential::RegularizationType::linear and
       Delta < regularization_separation)
   {
     // partial derivative w.r.t. Delta
@@ -2662,7 +2659,7 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
                              pot_ia_partial_Delta * Delta_partial_cos_alpha;
 
 
-  if (regularization_type == BeamPotential::regularization_linear and
+  if (regularization_type == BeamPotential::RegularizationType::linear and
       Delta < regularization_separation)
   {
     // partial derivative w.r.t. bilateral gap
@@ -2683,7 +2680,7 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
    * an intermediate result anymore, we can
    * add the additional (linear and quadratic) contributions in case of active
    * regularization also to the interaction potential */
-  if (regularization_type == BeamPotential::regularization_linear and
+  if (regularization_type == BeamPotential::RegularizationType::linear and
       Delta < regularization_separation)
   {
     interaction_potential_GP +=
@@ -3047,8 +3044,7 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
     Core::LinAlg::SerialDenseMatrix* stiffmat21, Core::LinAlg::SerialDenseMatrix* stiffmat22)
 {
   // get regularization type and separation
-  const BeamPotential::BeamPotentialRegularizationType regularization_type =
-      params()->regularization_type();
+  const BeamPotential::RegularizationType regularization_type = params()->regularization_type();
 
   const double regularization_separation = params()->regularization_separation();
 
@@ -3111,12 +3107,12 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
   gap_ul_regularized = gap_ul;
 
 
-  if (regularization_type != BeamPotential::regularization_none and
+  if (regularization_type != BeamPotential::RegularizationType::none and
       gap_ul < regularization_separation)
   {
     gap_ul_regularized = regularization_separation;
   }
-  else if (regularization_type == BeamPotential::regularization_none and gap_ul < 1e-14)
+  else if (regularization_type == BeamPotential::RegularizationType::none and gap_ul < 1e-14)
   {
     this->print(std::cout);
 
@@ -3182,7 +3178,7 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
   /* now that we don't need the interaction potential at gap_ul=regularization_separation as
    * an intermediate result anymore, we can add the additional (linear and quadratic)
    * contributions in case of active regularization to the interaction potential */
-  if (regularization_type != BeamPotential::regularization_none and
+  if (regularization_type != BeamPotential::RegularizationType::none and
       gap_ul < regularization_separation)
   {
     interaction_potential_GP += pot_ia_deriv_gap_ul * (gap_ul - regularization_separation);
@@ -3191,7 +3187,7 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
         pot_ia_deriv_gap_ul_deriv_cos_alpha * (gap_ul - regularization_separation);
 
 
-    if (regularization_type == BeamPotential::regularization_linear)
+    if (regularization_type == BeamPotential::RegularizationType::linear)
     {
       interaction_potential_GP += 0.5 * pot_ia_2ndderiv_gap_ul *
                                   (gap_ul - regularization_separation) *
@@ -3207,15 +3203,16 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
 
   /* adapt also the second derivatives (required for analytic linearization) in
    * case of active regularization*/
-  if (regularization_type != BeamPotential::regularization_none and
+  if (regularization_type != BeamPotential::RegularizationType::none and
       gap_ul < regularization_separation)
   {
-    if (regularization_type == BeamPotential::regularization_constant) pot_ia_2ndderiv_gap_ul = 0.0;
+    if (regularization_type == BeamPotential::RegularizationType::constant)
+      pot_ia_2ndderiv_gap_ul = 0.0;
 
     pot_ia_2ndderiv_cos_alpha +=
         pot_ia_deriv_gap_ul_2ndderiv_cos_alpha_at_regsep * (gap_ul - regularization_separation);
 
-    if (regularization_type == BeamPotential::regularization_linear)
+    if (regularization_type == BeamPotential::RegularizationType::linear)
     {
       pot_ia_deriv_gap_ul_deriv_cos_alpha +=
           pot_ia_2ndderiv_gap_ul_deriv_cos_alpha_atregsep * (gap_ul - regularization_separation);

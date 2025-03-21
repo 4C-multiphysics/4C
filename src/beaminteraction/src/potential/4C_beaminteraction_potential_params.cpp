@@ -8,6 +8,7 @@
 #include "4C_beaminteraction_potential_params.hpp"
 
 #include "4C_beamcontact_input.hpp"
+#include "4C_beaminteraction_potential_input.hpp"
 #include "4C_beaminteraction_potential_runtime_visualization_output_params.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io_value_parser.hpp"
@@ -24,15 +25,15 @@ BeamInteraction::BeamPotentialParams::BeamPotentialParams()
       issetup_(false),
       pot_law_exponents_(nullptr),
       pot_law_prefactors_(nullptr),
-      potential_type_(BeamPotential::beampot_vague),
-      strategy_(BeamPotential::strategy_vague),
+      potential_type_(BeamPotential::Type::vague),
+      strategy_(BeamPotential::Strategy::vague),
       cutoff_radius_(0.0),
-      regularization_type_(BeamPotential::regularization_none),
+      regularization_type_(BeamPotential::RegularizationType::none),
       regularization_separation_(0.0),
       num_integration_segments_(-1),
       num_gp_s_(-1),
       use_fad_(false),
-      choice_master_slave_(BeamPotential::MasterSlaveChoice::choice_master_slave_vague),
+      choice_master_slave_(BeamPotential::MasterSlaveChoice::vague),
       visualization_output_(false),
       params_runtime_visualization_output_btb_potential_(nullptr),
       potential_reduction_length_(0.0)
@@ -98,21 +99,21 @@ void BeamInteraction::BeamPotentialParams::init(const double restart_time)
   }
 
   /****************************************************************************/
-  strategy_ = Teuchos::getIntegralValue<BeamPotential::BeamPotentialStrategy>(
-      beam_potential_params_list, "STRATEGY");
+  strategy_ =
+      Teuchos::getIntegralValue<BeamPotential::Strategy>(beam_potential_params_list, "STRATEGY");
 
-  if (strategy_ == BeamPotential::strategy_vague)
+  if (strategy_ == BeamPotential::Strategy::vague)
     FOUR_C_THROW("You must specify a strategy to be used to evaluate beam interaction potential!");
 
   /****************************************************************************/
-  potential_type_ = Teuchos::getIntegralValue<BeamPotential::BeamPotentialType>(
-      beam_potential_params_list, "BEAMPOTENTIAL_TYPE");
+  potential_type_ =
+      Teuchos::getIntegralValue<BeamPotential::Type>(beam_potential_params_list, "TYPE");
 
-  if (potential_type_ == BeamPotential::beampot_vague)
+  if (potential_type_ == BeamPotential::Type::vague)
     FOUR_C_THROW("You must specify the type of the specified beam interaction potential!");
 
-  if (potential_type_ == BeamPotential::beampot_surf and
-      strategy_ != BeamPotential::strategy_doublelengthspec_largesepapprox)
+  if (potential_type_ == BeamPotential::Type::surface and
+      strategy_ != BeamPotential::Strategy::double_length_specific_large_separations)
   {
     FOUR_C_THROW("Surface interaction is not implemented for this strategy yet!");
   }
@@ -124,13 +125,13 @@ void BeamInteraction::BeamPotentialParams::init(const double restart_time)
     FOUR_C_THROW("Invalid cutoff radius! Must be positive value or -1 to deactivate.");
 
   /****************************************************************************/
-  regularization_type_ = Teuchos::getIntegralValue<BeamPotential::BeamPotentialRegularizationType>(
+  regularization_type_ = Teuchos::getIntegralValue<BeamPotential::RegularizationType>(
       beam_potential_params_list, "REGULARIZATION_TYPE");
 
-  if ((regularization_type_ != BeamPotential::regularization_none and
-          strategy_ == BeamPotential::strategy_doublelengthspec_largesepapprox) or
-      (regularization_type_ == BeamPotential::regularization_constant and
-          strategy_ == BeamPotential::strategy_singlelengthspec_smallsepapprox))
+  if ((regularization_type_ != BeamPotential::RegularizationType::none and
+          strategy_ == BeamPotential::Strategy::double_length_specific_large_separations) or
+      (regularization_type_ == BeamPotential::RegularizationType::constant and
+          strategy_ == BeamPotential::Strategy::single_length_specific_small_separations))
   {
     FOUR_C_THROW(
         "This kind of regularization of the force law is not implemented for this strategy yet!");
@@ -139,7 +140,7 @@ void BeamInteraction::BeamPotentialParams::init(const double restart_time)
   /****************************************************************************/
   regularization_separation_ = beam_potential_params_list.get<double>("REGULARIZATION_SEPARATION");
 
-  if (regularization_type_ != BeamPotential::regularization_none and
+  if (regularization_type_ != BeamPotential::RegularizationType::none and
       regularization_separation_ <= 0.0)
   {
     FOUR_C_THROW(
@@ -165,7 +166,7 @@ void BeamInteraction::BeamPotentialParams::init(const double restart_time)
   choice_master_slave_ = Teuchos::getIntegralValue<BeamPotential::MasterSlaveChoice>(
       beam_potential_params_list, "CHOICE_MASTER_SLAVE");
 
-  if (choice_master_slave_ == BeamPotential::MasterSlaveChoice::choice_master_slave_vague)
+  if (choice_master_slave_ == BeamPotential::MasterSlaveChoice::vague)
   {
     FOUR_C_THROW("Invalid choice of master and slave!");
   }
@@ -192,26 +193,6 @@ void BeamInteraction::BeamPotentialParams::init(const double restart_time)
 
   if (potential_reduction_length_ != -1.0 and potential_reduction_length_ <= 0.0)
     FOUR_C_THROW("Invalid potential reduction length! Must be positive value or -1 to deactivate.");
-
-  /****************************************************************************/
-  // safety checks for currently unsupported parameter settings
-  /****************************************************************************/
-
-  // outdated: octtree for search of potential-based interaction pairs
-  if (Teuchos::getIntegralValue<BeamContact::OctreeType>(
-          beam_potential_params_list, "BEAMPOT_OCTREE") != BeamContact::boct_none)
-  {
-    FOUR_C_THROW("Octree-based search for potential-based beam interactions is deprecated!");
-  }
-
-  // outdated: flags to indicate, if beam-to-solid or beam-to-sphere potential-based interaction is
-  // applied
-  if (beam_potential_params_list.get<bool>("BEAMPOT_BTSOL"))
-  {
-    FOUR_C_THROW(
-        "The flag BEAMPOT_BTSOL is outdated! remove them as soon"
-        "as old beamcontact_manager is gone!");
-  }
 
   isinit_ = true;
 }

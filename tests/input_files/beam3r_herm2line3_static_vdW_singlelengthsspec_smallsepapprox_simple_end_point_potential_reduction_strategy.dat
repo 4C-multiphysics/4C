@@ -91,9 +91,9 @@ REPARTITIONSTRATEGY             Everydt
 --------------------------------------------------------------BEAM POTENTIAL
 POT_LAW_PREFACTOR               -1.0
 POT_LAW_EXPONENT                6.0
-BEAMPOTENTIAL_TYPE              Volume
+TYPE                            volume
 CUTOFF_RADIUS                   100
-STRATEGY                        SingleLengthSpecific_SmallSepApprox_Simple
+STRATEGY                        single_length_specific_small_separations_simple
 NUM_INTEGRATION_SEGMENTS        1
 NUM_GAUSSPOINTS                 10
 POTENTIAL_REDUCTION_LENGTH      15.0

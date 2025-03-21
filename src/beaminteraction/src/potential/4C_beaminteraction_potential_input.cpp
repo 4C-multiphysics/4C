@@ -24,54 +24,34 @@ void BeamPotential::set_valid_parameters(std::map<std::string, Core::IO::InputSp
   /* parameters for potential-based beam interaction */
   Core::Utils::SectionSpecs beampotential{"BEAM POTENTIAL"};
 
+  // TODO change to vector and remove default value
   beampotential.specs.emplace_back(parameter<std::string>(
       "POT_LAW_EXPONENT", {.description = "negative(!) exponent(s)  $m_i$ of potential law  "
                                           "$\\Phi(r) = \\sum_i (k_i * r^{-m_i}).$",
                               .default_value = "1.0"}));
 
+  // TODO change to vector and remove default value
   beampotential.specs.emplace_back(parameter<std::string>("POT_LAW_PREFACTOR",
       {.description = "prefactor(s) $k_i$ of potential law $\\Phi(r) = \\sum_i (k_i * r^{-m_i})$.",
           .default_value = "0.0"}));
 
-  beampotential.specs.emplace_back(
-      deprecated_selection<BeamPotential::BeamPotentialType>("BEAMPOTENTIAL_TYPE",
-          {
-              {"Surface", beampot_surf},
-              {"surface", beampot_surf},
-              {"Volume", beampot_vol},
-              {"volume", beampot_vol},
-          },
-          {.description = "Type of potential interaction: surface (default) or volume potential",
-              .default_value = beampot_surf}));
+  beampotential.specs.emplace_back(parameter<BeamPotential::Type>("TYPE",
+      {.description = "Type of potential interaction: surface (default) or volume potential",
+          .default_value = BeamPotential::Type::surface}));
 
-  beampotential.specs.emplace_back(
-      deprecated_selection<BeamPotential::BeamPotentialStrategy>("STRATEGY",
-          {
-              {"DoubleLengthSpecific_LargeSepApprox", strategy_doublelengthspec_largesepapprox},
-              {"DoubleLengthSpecific_SmallSepApprox", strategy_doublelengthspec_smallsepapprox},
-              {"SingleLengthSpecific_SmallSepApprox", strategy_singlelengthspec_smallsepapprox},
-              {"SingleLengthSpecific_SmallSepApprox_Simple",
-                  strategy_singlelengthspec_smallsepapprox_simple},
-          },
-          {.description = "strategy to evaluate interaction potential: double/single length "
-                          "specific, small/large separation approximation, ...",
-              .default_value = strategy_doublelengthspec_largesepapprox}));
+  beampotential.specs.emplace_back(parameter<BeamPotential::Strategy>("STRATEGY",
+      {.description = "strategy to evaluate interaction potential: double/single length specific, "
+                      "small/large separation approximation, ...",
+          .default_value = BeamPotential::Strategy::double_length_specific_large_separations}));
 
   beampotential.specs.emplace_back(parameter<double>("CUTOFF_RADIUS",
       {.description =
               "Neglect all potential contributions at separation largerthan this cutoff radius",
           .default_value = -1.0}));
 
-  beampotential.specs.emplace_back(
-      deprecated_selection<BeamPotential::BeamPotentialRegularizationType>("REGULARIZATION_TYPE",
-          {
-              {"linear_extrapolation", regularization_linear},
-              {"constant_extrapolation", regularization_constant},
-              {"None", regularization_none},
-              {"none", regularization_none},
-          },
-          {.description = "Type of regularization applied to the force law",
-              .default_value = regularization_none}));
+  beampotential.specs.emplace_back(parameter<BeamPotential::RegularizationType>(
+      "REGULARIZATION_TYPE", {.description = "Type of regularization applied to the force law",
+                                 .default_value = BeamPotential::RegularizationType::none}));
 
   beampotential.specs.emplace_back(parameter<double>("REGULARIZATION_SEPARATION",
       {.description = "Use regularization of force law at separations smaller than this separation",
@@ -90,33 +70,6 @@ void BeamPotential::set_valid_parameters(std::map<std::string, Core::IO::InputSp
       "CHOICE_MASTER_SLAVE", {.description = "According to which rule shall the role of master and "
                                              "slave be assigned to beam elements?",
                                  .default_value = MasterSlaveChoice::smaller_eleGID_is_slave}));
-
-  beampotential.specs.emplace_back(parameter<bool>("BEAMPOT_BTSOL",
-      {.description =
-              "decide, whether potential-based interaction between beams and solids is considered",
-          .default_value = false}));
-
-  beampotential.specs.emplace_back(parameter<bool>("BEAMPOT_BTSPH",
-      {.description =
-              "decide, whether potential-based interaction between beams and spheres is considered",
-          .default_value = false}));
-
-  // enable octree search and determine type of bounding box (aabb = axis aligned, spbb = spherical)
-  beampotential.specs.emplace_back(deprecated_selection<BeamContact::OctreeType>("BEAMPOT_OCTREE",
-      {
-          {"None", BeamContact::boct_none},
-          {"none", BeamContact::boct_none},
-          {"octree_axisaligned", BeamContact::boct_aabb},
-          {"octree_cylorient", BeamContact::boct_cobb},
-          {"octree_spherical", BeamContact::boct_spbb},
-      },
-      {.description = "octree and bounding box type for octree search routine",
-          .default_value = BeamContact::boct_none}));
-
-  beampotential.specs.emplace_back(parameter<int>(
-      "BEAMPOT_TREEDEPTH", {.description = "max. tree depth of the octree", .default_value = 6}));
-  beampotential.specs.emplace_back(parameter<int>("BEAMPOT_BOXESINOCT",
-      {.description = "max number of bounding boxes in any leaf octant", .default_value = 8}));
 
   beampotential.specs.emplace_back(parameter<double>("POTENTIAL_REDUCTION_LENGTH",
       {.description = "Within this length of the master beam end point the potential is smoothly "

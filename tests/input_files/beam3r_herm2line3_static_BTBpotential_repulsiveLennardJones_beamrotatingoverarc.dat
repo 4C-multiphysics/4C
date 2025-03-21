@@ -52,9 +52,9 @@ REPARTITIONSTRATEGY             adaptive
 --------------------------------------------------------------BEAM POTENTIAL
 POT_LAW_PREFACTOR               1.0e-14
 POT_LAW_EXPONENT                12
-BEAMPOTENTIAL_TYPE              Volume
+TYPE                            volume
 CUTOFF_RADIUS                   0.2
-STRATEGY                        DoubleLengthSpecific_SmallSepApprox
+STRATEGY                        double_length_specific_small_separations
 NUM_INTEGRATION_SEGMENTS        10
 NUM_GAUSSPOINTS                 10
 -------------------------------------------------BEAM POTENTIAL/RUNTIME VTK OUTPUT

@@ -315,15 +315,14 @@ CONTACT::Beam3cmanager::Beam3cmanager(Core::FE::Discretization& discret, double 
     {
       std::cout << "=============== Beam Potential-Based Interaction ===============" << std::endl;
 
-      switch (Teuchos::getIntegralValue<BeamPotential::BeamPotentialType>(
-          sbeampotential_, "BEAMPOTENTIAL_TYPE"))
+      switch (Teuchos::getIntegralValue<BeamPotential::Type>(sbeampotential_, "TYPE"))
       {
-        case BeamPotential::beampot_surf:
+        case BeamPotential::Type::surface:
         {
           std::cout << "Potential Type:      Surface" << std::endl;
           break;
         }
-        case BeamPotential::beampot_vol:
+        case BeamPotential::Type::volume:
         {
           std::cout << "Potential Type:      Volume" << std::endl;
           break;

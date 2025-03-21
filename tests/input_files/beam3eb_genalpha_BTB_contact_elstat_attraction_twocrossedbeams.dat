@@ -90,8 +90,8 @@ GAPS                            yes
 --------------------------------------------------------------BEAM POTENTIAL
 POT_LAW_PREFACTOR               0.3 0.1
 POT_LAW_EXPONENT                1.0 1.0
-BEAMPOTENTIAL_TYPE              Surface
-STRATEGY                        DoubleLengthSpecific_LargeSepApprox
+TYPE                            surface
+STRATEGY                        double_length_specific_large_separations
 NUM_INTEGRATION_SEGMENTS        1
 NUM_GAUSSPOINTS                 10
 -------------------------------------------------BEAM POTENTIAL/RUNTIME VTK OUTPUT
