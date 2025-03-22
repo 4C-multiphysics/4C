@@ -109,33 +109,6 @@ namespace Discret::Elements
   template <typename T>
   constexpr bool is_valid_type = Internal::IsValidTypeTrait<T>::value;
 
-  /*!
-   * @brief An automatic switch from runtime kinematic type to constexpr kinematic type.
-   *
-   * @tparam Function
-   * @param kinem_type
-   * @param fct : A callable function that has operators for each kinematic-type integral
-   * constants
-   * @return auto
-   */
-  template <typename Function>
-  auto switch_kinematic_type(Inpar::Solid::KinemType kinem_type, Function fct)
-  {
-    switch (kinem_type)
-    {
-      case Inpar::Solid::KinemType::linear:
-        return fct(
-            std::integral_constant<Inpar::Solid::KinemType, Inpar::Solid::KinemType::linear>{});
-      case Inpar::Solid::KinemType::nonlinearTotLag:
-        return fct(std::integral_constant<Inpar::Solid::KinemType,
-            Inpar::Solid::KinemType::nonlinearTotLag>{});
-      case Inpar::Solid::KinemType::vague:
-        return fct(
-            std::integral_constant<Inpar::Solid::KinemType, Inpar::Solid::KinemType::vague>{});
-    }
-
-    FOUR_C_THROW("Your kinematic type is unknown: {}", kinem_type);
-  }
 }  // namespace Discret::Elements
 
 

@@ -44,11 +44,13 @@
 #include "4C_stru_multi_microstatic.hpp"
 #include "4C_structure_resulttest.hpp"
 #include "4C_structure_timint_genalpha.hpp"
+#include "4C_utils_enum.hpp"
 
 #include <Teuchos_TimeMonitor.hpp>
 
 #include <algorithm>
 #include <iostream>
+
 FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*/

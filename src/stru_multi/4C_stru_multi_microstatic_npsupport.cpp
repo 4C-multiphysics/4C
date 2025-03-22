@@ -14,6 +14,7 @@
 #include "4C_inpar_material.hpp"
 #include "4C_mat_micromaterial.hpp"
 #include "4C_stru_multi_microstatic.hpp"
+#include "4C_utils_enum.hpp"
 
 #include <hdf5.h>
 

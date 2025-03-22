@@ -24,6 +24,7 @@
 #include "4C_mat_scatra_chemotaxis.hpp"
 #include "4C_mat_scatra_reaction.hpp"
 #include "4C_scatra_ele_calc_utils.hpp"
+#include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 
 FOUR_C_NAMESPACE_OPEN

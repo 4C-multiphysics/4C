@@ -23,6 +23,7 @@
 #include "4C_structure_new_nox_nln_str_linearsystem.hpp"
 #include "4C_structure_new_timint_base.hpp"
 #include "4C_structure_new_timint_noxinterface.hpp"
+#include "4C_utils_enum.hpp"
 #include "4C_utils_epetra_exceptions.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_function.hpp"

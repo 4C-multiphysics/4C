@@ -15,6 +15,7 @@
 #include "4C_structure_new_model_evaluator_factory.hpp"
 #include "4C_structure_new_model_evaluator_structure.hpp"
 #include "4C_structure_new_timint_base.hpp"
+#include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -660,8 +661,7 @@ Solid::ModelEvaluator::Generic& Solid::ModelEvaluatorManager::evaluator(
   // sanity check, if there is a model evaluator for the given model type
   Solid::ModelEvaluatorManager::Map::const_iterator me_iter = me_map_ptr_->find(mt);
   if (me_iter == me_map_ptr_->end())
-    FOUR_C_THROW("There is no model evaluator for the model type {}",
-        Inpar::Solid::model_type_string(mt).c_str());
+    FOUR_C_THROW("There is no model evaluator for the model type {}", mt);
 
   return *(me_iter->second);
 }
@@ -675,8 +675,7 @@ const Solid::ModelEvaluator::Generic& Solid::ModelEvaluatorManager::evaluator(
   // sanity check, if there is a model evaluator for the given model type
   Solid::ModelEvaluatorManager::Map::const_iterator me_iter = me_map_ptr_->find(mt);
   if (me_iter == me_map_ptr_->end())
-    FOUR_C_THROW("There is no model evaluator for the model type {}",
-        Inpar::Solid::model_type_string(mt).c_str());
+    FOUR_C_THROW("There is no model evaluator for the model type {}", mt);
 
   return *(me_iter->second);
 }

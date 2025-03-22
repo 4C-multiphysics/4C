@@ -17,6 +17,7 @@
 #include "4C_linalg_utils_densematrix_multiply.hpp"
 #include "4C_mat_fluid_murnaghantait.hpp"
 #include "4C_mat_newtonianfluid.hpp"
+#include "4C_utils_enum.hpp"
 #include "4C_utils_shared_ptr_from_ref.hpp"
 
 #include <Teuchos_BLAS.hpp>

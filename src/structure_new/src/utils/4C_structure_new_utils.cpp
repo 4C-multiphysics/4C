@@ -28,6 +28,7 @@
 #include "4C_structure_new_model_evaluator_meshtying.hpp"
 #include "4C_structure_new_nln_linearsystem_scaling.hpp"
 #include "4C_structure_new_timint_basedatasdyn.hpp"
+#include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -148,7 +149,7 @@ enum NOX::Nln::SolutionType Solid::Nln::convert_model_type2_sol_type(
         FOUR_C_THROW(
             "The corresponding solution-type was not found. "
             "Given string: {}",
-            Inpar::Solid::model_type_string(modeltype).c_str());
+            modeltype);
       break;
   }
 

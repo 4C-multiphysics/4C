@@ -12,7 +12,6 @@
 #include "4C_config.hpp"
 
 #include "4C_io_input_spec.hpp"
-#include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <map>
@@ -40,28 +39,6 @@ namespace Inpar
       ps_mulf    ///< prestressing: mulf
     };
 
-    /// Map element technology to string
-    static inline std::string ele_tech_string(const enum EleTech name  ///< enum to convert
-    )
-    {
-      switch (name)
-      {
-        case EleTech::eas:
-          return "EAS";
-          break;
-        case EleTech::fbar:
-          return "FBar";
-          break;
-        case EleTech::rotvec:
-          return "rotationvectorDOFs";
-          break;
-        default:
-          FOUR_C_THROW("Cannot make std::string for element technology {}", name);
-          break;
-      }
-      return "";
-    }
-
     /// Type of the used models/conditions
     /// necessary for the model evaluator
     enum ModelType : int
@@ -84,99 +61,6 @@ namespace Inpar
                                    ///< monolithic or partitioned coupling
       model_constraints = 12,      ///< evaluate the contributions of the constraint framework
       model_multiscale = 13        ///< consider multi scale simulations
-    };
-
-    /// Map model type to string
-    static inline std::string model_type_string(const enum ModelType name  ///< enum to convert
-    )
-    {
-      switch (name)
-      {
-        case model_structure:
-          return "Structure";
-          break;
-        case model_contact:
-          return "Contact";
-          break;
-        case model_meshtying:
-          return "Meshtying";
-          break;
-        case model_cardiovascular0d:
-          return "Cardiovascular0D";
-          break;
-        case model_springdashpot:
-          return "SpringDashpot";
-          break;
-        case model_lag_pen_constraint:
-          return "Lag-Pen-Constraint";
-          break;
-        case model_monolithic_coupling:
-          return "Monolithic-Coupling";
-          break;
-        case model_partitioned_coupling:
-          return "Partitioned-Coupling";
-          break;
-        case model_beam_interaction_old:
-          return "BeamInteractionOld";
-          break;
-        case model_browniandyn:
-          return "BrownianDyn";
-          break;
-        case model_beaminteraction:
-          return "BeamInteraction";
-          break;
-        case model_basic_coupling:
-          return "Basic-Coupling";
-          break;
-        case model_constraints:
-          return "Constraints";
-          break;
-        case model_multiscale:
-          return "Multiscale";
-          break;
-
-        default:
-          FOUR_C_THROW("Cannot make std::string for model type {}", name);
-          return "";
-      }
-    };
-
-    //! Map model std::string to enum
-    inline enum ModelType string_to_model_type(const std::string& name)
-    {
-      ModelType type = model_vague;
-      if (name == "Structure")
-        type = model_structure;
-      else if (name == "Contact")
-        type = model_contact;
-      else if (name == "Meshtying")
-        type = model_meshtying;
-      else if (name == "Cardiovascular0D")
-        type = model_cardiovascular0d;
-      else if (name == "SpringDashpot")
-        type = model_springdashpot;
-      else if (name == "Lag-Pen-Constraint")
-        type = model_lag_pen_constraint;
-      else if (name == "Monolithic-Coupling")
-        type = model_monolithic_coupling;
-      else if (name == "Partitioned-Coupling")
-        type = model_partitioned_coupling;
-      else if (name == "BeamInteractionOld")
-        type = model_beam_interaction_old;
-      else if (name == "BrownianDyn")
-        type = model_browniandyn;
-      else if (name == "BeamInteraction")
-        type = model_beaminteraction;
-      else if (name == "Basic-Coupling")
-        type = model_basic_coupling;
-      else if (name == "Constraints")
-        type = model_constraints;
-      else if (name == "Multiscale")
-        type = model_multiscale;
-      else
-        FOUR_C_THROW("Unknown Inpar::Solid::ModelType with name '{}'.", name.c_str());
-
-      return type;
     };
 
     /// @name Time integration
@@ -262,34 +146,7 @@ namespace Inpar
     };
 
     /// Map predictor enum term to std::string
-    static inline std::string pred_enum_string(const PredEnum name  ///< identifier
-    )
-    {
-      switch (name)
-      {
-        case pred_vague:
-          return "Vague";
-        case pred_constdis:
-          return "ConstDis";
-        case pred_constvel:
-          return "ConstVel";
-        case pred_constacc:
-          return "ConstAcc";
-        case pred_constdisvelacc:
-          return "ConstDisVelAcc";
-        case pred_tangdis:
-          return "TangDis";
-        case pred_tangdis_constfext:
-          return "TangDisConstFext";
-        case pred_constdispres:
-          return "ConstDisPres";
-        case pred_constdisvelaccpres:
-          return "ConstDisVelAccPres";
-        default:
-          FOUR_C_THROW("Cannot make std::string for predictor {}", name);
-          exit(EXIT_FAILURE);
-      }
-    }
+    std::string pred_enum_string(const PredEnum name);
 
     //!@}
 
@@ -342,48 +199,6 @@ namespace Inpar
                                      ///< of 3D0D-coupled problem
     };
 
-    /// Map  enum to string
-    static inline std::string div_cont_act_string(const enum DivContAct name  ///< enum to convert
-    )
-    {
-      switch (name)
-      {
-        case divcont_stop:
-          return "stop";
-          break;
-        case divcont_continue:
-          return "continue";
-          break;
-        case divcont_repeat_step:
-          return "repeat_step";
-          break;
-        case divcont_halve_step:
-          return "halve_step";
-          break;
-        case divcont_adapt_step:
-          return "adapt_step";
-          break;
-        case divcont_rand_adapt_step:
-          return "rand_adapt_step";
-          break;
-        case divcont_rand_adapt_step_ele_err:
-          return "rand_adapt_step_ele_err";
-          break;
-        case divcont_repeat_simulation:
-          return "repeat_simulation";
-          break;
-        case divcont_adapt_penaltycontact:
-          return "adapt_penaltycontact";
-          break;
-        case divcont_adapt_3D0Dptc_ele_err:
-          return "adapt_3D0Dptc_ele_err";
-          break;
-        default:
-          FOUR_C_THROW("Cannot make string for solution div cont technique {}", name);
-          return "";
-      }
-    }
-
     /// Handling of non-converged nonlinear solver
     enum ConvergenceStatus
     {
@@ -428,27 +243,6 @@ namespace Inpar
       stc_curr,          ///< Non-symmetric STC
       stc_currsym        ///< Symmetric STC
     };
-
-    /// map convergence check to enum term
-    static inline std::string stc_string(const enum StcScale name  ///< enum term
-    )
-    {
-      switch (name)
-      {
-        case stc_inactive:
-          return "stc_inactive";
-          break;
-        case stc_curr:
-          return "stc_curr";
-          break;
-        case stc_currsym:
-          return "stc_currsym";
-          break;
-        default:
-          FOUR_C_THROW("Cannot make std::string for stc method {}", name);
-          return "";
-      }
-    }
 
     /// @name Constraints (global, geometric)
     //!@{
@@ -576,20 +370,7 @@ namespace Inpar
       nonlinearTotLag  ///< nonlinear kinematics Total Lagrange
     };
 
-    static inline std::string kinem_type_string(const KinemType kinem_type)
-    {
-      switch (kinem_type)
-      {
-        case Inpar::Solid::KinemType::vague:
-          return "vague";
-        case Inpar::Solid::KinemType::linear:
-          return "linear";
-        case Inpar::Solid::KinemType::nonlinearTotLag:
-          return "nonlinear";
-      }
-
-      FOUR_C_THROW("Unknown kinematic type {}", kinem_type);
-    }
+    std::string kinem_type_string(const KinemType kinem_type);
     //!@}
 
     /// set the structure parameters

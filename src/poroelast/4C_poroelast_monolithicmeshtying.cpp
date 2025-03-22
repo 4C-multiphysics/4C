@@ -14,6 +14,7 @@
 #include "4C_global_data.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_structure_aux.hpp"
+#include "4C_utils_enum.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -287,9 +288,8 @@ void PoroElast::MonolithicMeshtying::print_newton_iter_header_stream(std::ostrin
 {
   oss << "------------------------------------------------------------" << std::endl;
   oss << "                   Newton-Raphson Scheme                    " << std::endl;
-  oss << "                NormRES " << magic_enum::enum_name(vectornormfres_);
-  oss << "     NormINC " << magic_enum::enum_name(vectornorminc_) << "                    "
-      << std::endl;
+  oss << "                NormRES " << vectornormfres_;
+  oss << "     NormINC " << vectornorminc_ << "                    " << std::endl;
   oss << "------------------------------------------------------------" << std::endl;
 
   // enter converged state etc

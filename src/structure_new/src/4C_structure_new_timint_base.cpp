@@ -24,11 +24,9 @@
 #include "4C_structure_new_model_evaluator_data.hpp"
 #include "4C_structure_new_model_evaluator_factory.hpp"
 #include "4C_structure_new_resulttest.hpp"
-#include "4C_structure_new_timint_basedataio_monitor_dbc.hpp"
-#include "4C_structure_new_timint_basedataio_runtime_vtk_output.hpp"
 #include "4C_structure_new_timint_basedataio_runtime_vtp_output.hpp"
+#include "4C_utils_enum.hpp"
 
-#include <Epetra_Map.h>
 #include <Teuchos_ParameterList.hpp>
 
 FOUR_C_NAMESPACE_OPEN

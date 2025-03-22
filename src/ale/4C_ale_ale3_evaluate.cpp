@@ -13,6 +13,7 @@
 #include "4C_fem_nurbs_discretization.hpp"
 #include "4C_mat_elasthyper.hpp"
 #include "4C_mat_stvenantkirchhoff.hpp"
+#include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 
 FOUR_C_NAMESPACE_OPEN

@@ -26,6 +26,7 @@
 #include "4C_structure_new_model_evaluator_meshtying.hpp"
 #include "4C_structure_new_timint_basedatasdyn.hpp"
 #include "4C_structure_new_utils.hpp"
+#include "4C_utils_enum.hpp"
 
 #include <NOX_Epetra_Vector.H>
 #include <Teuchos_RCPStdSharedPtrConversions.hpp>
@@ -482,8 +483,7 @@ Solid::TimeInt::BaseDataGlobalState::get_element_technology_map_extractor(
     const enum Inpar::Solid::EleTech etech) const
 {
   if (mapextractors_.find(etech) == mapextractors_.end())
-    FOUR_C_THROW("Could not find element technology \"{}\" in map extractors.",
-        Inpar::Solid::ele_tech_string(etech).c_str());
+    FOUR_C_THROW("Could not find element technology \"{}\" in map extractors.", etech);
 
   return mapextractors_.at(etech);
 }
@@ -563,6 +563,17 @@ void Solid::TimeInt::BaseDataGlobalState::setup_rot_vec_map_extractor(
   maps[1] = rotvecdofmap;
 
   multimapext.setup(*dof_row_map_view(), maps);
+}
+
+Epetra_Map Solid::TimeInt::BaseDataGlobalState::block_map(const Inpar::Solid::ModelType& mt) const
+{
+  if (model_maps_.find(mt) == model_maps_.end())
+    FOUR_C_THROW(
+        "There is no block map for the given "
+        "modeltype \"{}\".",
+        mt);
+
+  return *(model_maps_.at(mt));
 }
 
 /*----------------------------------------------------------------------------*

@@ -61,11 +61,7 @@ namespace Mat
     virtual void evaluate_non_lin_mass(const Core::LinAlg::Matrix<3, 3>* defgrd,
         const Core::LinAlg::Matrix<6, 1>* glstrain, Teuchos::ParameterList& params,
         Core::LinAlg::Matrix<6, 1>* linmass_disp, Core::LinAlg::Matrix<6, 1>* linmass_vel, int gp,
-        int eleGID)
-    {
-      FOUR_C_THROW("Material of type {} does not support evaluation of nonlinear mass matrix",
-          this->material_type());
-    }
+        int eleGID);
 
     /*!
      * @brief Evaluate the strain energy function (for hyperelastic materials only)
@@ -76,11 +72,7 @@ namespace Mat
      * @param[in] eleGID   Global element ID
      */
     virtual void strain_energy(
-        const Core::LinAlg::Matrix<6, 1>& glstrain, double& psi, int gp, int eleGID) const
-    {
-      FOUR_C_THROW("Material of type {} does not support calculation of strain energy",
-          this->material_type());
-    }
+        const Core::LinAlg::Matrix<6, 1>& glstrain, double& psi, int gp, int eleGID) const;
 
     /*!
      * @brief Evaluate the Cauchy stress contracted with normal and direction vector and
@@ -138,11 +130,7 @@ namespace Mat
         Core::LinAlg::Matrix<9, 3>* d2_cauchyndir_dF_dn,
         Core::LinAlg::Matrix<9, 3>* d2_cauchyndir_dF_ddir, int gp, int eleGID,
         const double* concentration, const double* temp, double* d_cauchyndir_dT,
-        Core::LinAlg::Matrix<9, 1>* d2_cauchyndir_dF_dT)
-    {
-      FOUR_C_THROW("evaluate_cauchy_n_dir_and_derivatives not implemented for material of type {}",
-          this->material_type());
-    }
+        Core::LinAlg::Matrix<9, 1>* d2_cauchyndir_dF_dT);
 
     /*!
      * @brief Evaluate the derivative of the deformation gradient w.r.t. degree of freedom x
@@ -152,11 +140,7 @@ namespace Mat
      * @param[out] d_F_dx       Derivative of deformation gradient w.r.t. degree of freedom x
      */
     virtual void evaluate_linearization_od(const Core::LinAlg::Matrix<3, 3>& defgrd,
-        double concentration, Core::LinAlg::Matrix<9, 1>* d_F_dx)
-    {
-      FOUR_C_THROW("evaluate_linearization_od not implemented for material of type {}",
-          this->material_type());
-    }
+        double concentration, Core::LinAlg::Matrix<9, 1>* d_F_dx);
     //@}
 
     /*!
@@ -311,6 +295,7 @@ namespace Mat
     virtual bool needs_defgrd() const { return false; }
     //@}
   };
+
 }  // namespace Mat
 
 FOUR_C_NAMESPACE_CLOSE

@@ -11,6 +11,7 @@
 #include "4C_structure_timint_impl.hpp"
 #include "4C_structure_timint_noxgroup.hpp"
 #include "4C_structure_timint_noxlinsys.hpp"
+#include "4C_utils_enum.hpp"
 
 #include <Teuchos_RCPStdSharedPtrConversions.hpp>
 

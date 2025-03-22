@@ -17,6 +17,7 @@
 #include "4C_tsi_monolithic.hpp"
 #include "4C_tsi_partitioned.hpp"
 #include "4C_tsi_utils.hpp"
+#include "4C_utils_enum.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 #include <Teuchos_TimeMonitor.hpp>

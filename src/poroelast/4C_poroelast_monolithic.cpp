@@ -31,6 +31,7 @@
 #include "4C_mortar_manager_base.hpp"
 #include "4C_structure_aux.hpp"
 #include "4C_structure_new_model_evaluator_contact.hpp"
+#include "4C_utils_enum.hpp"
 
 #include <Teuchos_Time.hpp>
 #include <Teuchos_TimeMonitor.hpp>
