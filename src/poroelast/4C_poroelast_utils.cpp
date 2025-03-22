@@ -26,6 +26,7 @@
 #include "4C_solid_poro_3D_ele_pressure_based.hpp"
 #include "4C_solid_poro_3D_ele_pressure_velocity_based.hpp"
 #include "4C_solid_poro_3D_ele_pressure_velocity_based_p1.hpp"
+#include "4C_utils_enum.hpp"
 #include "4C_w1_poro_eletypes.hpp"
 #include "4C_w1_poro_p1_eletypes.hpp"
 

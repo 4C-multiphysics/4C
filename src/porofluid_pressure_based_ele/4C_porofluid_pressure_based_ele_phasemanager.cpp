@@ -16,6 +16,7 @@
 #include "4C_mat_structporo.hpp"
 #include "4C_porofluid_pressure_based_ele_calc_utils.hpp"
 #include "4C_porofluid_pressure_based_ele_variablemanager.hpp"
+#include "4C_utils_enum.hpp"
 
 #include <Teuchos_ParameterList.hpp>
 #include <Teuchos_SerialDenseSolver.hpp>

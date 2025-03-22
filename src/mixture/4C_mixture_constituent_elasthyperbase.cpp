@@ -13,6 +13,7 @@
 #include "4C_mat_multiplicative_split_defgrad_elasthyper_service.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_mixture_prestress_strategy.hpp"
+#include "4C_utils_enum.hpp"
 
 
 

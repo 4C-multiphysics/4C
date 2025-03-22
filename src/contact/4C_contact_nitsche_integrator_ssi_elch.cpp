@@ -18,6 +18,7 @@
 #include "4C_scatra_ele_parameter_elch.hpp"
 #include "4C_scatra_ele_parameter_timint.hpp"
 #include "4C_solid_3D_ele_calc_lib.hpp"
+#include "4C_utils_enum.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 

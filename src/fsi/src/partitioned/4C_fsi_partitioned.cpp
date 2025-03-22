@@ -30,6 +30,7 @@
 #include "4C_inpar_validparameters.hpp"
 #include "4C_io_control.hpp"
 #include "4C_structure_aux.hpp"
+#include "4C_utils_enum.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 #include <Teuchos_Time.hpp>

@@ -11,6 +11,9 @@
 #include "4C_inpar_scatra.hpp"
 #include "4C_solid_3D_ele_factory_lib.hpp"
 #include "4C_solid_3D_ele_properties.hpp"
+#include "4C_utils_enum.hpp"
+
+#include <magic_enum/magic_enum_switch.hpp>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -119,13 +122,13 @@ Discret::Elements::create_solid_scatra_calculation_interface(Core::FE::CellType 
   return Core::FE::cell_type_switch<Internal::ImplementedSolidScatraCellTypes>(celltype,
       [&](auto celltype_t)
       {
-        return switch_kinematic_type(element_properties.kintype,
+        return magic_enum::enum_switch(
             [&](auto kinemtype_t)
             {
-              return element_technology_switch(element_properties.element_technology,
+              return magic_enum::enum_switch(
                   [&](auto eletech_t)
                   {
-                    return prestress_technology_switch(element_properties.prestress_technology,
+                    return magic_enum::enum_switch(
                         [&](auto prestress_tech_t) -> SolidScatraCalcVariant
                         {
                           constexpr Core::FE::CellType celltype_c = celltype_t();
@@ -143,15 +146,16 @@ Discret::Elements::create_solid_scatra_calculation_interface(Core::FE::CellType 
                               "Your element formulation with cell type {}, kinematic type {},"
                               " element technology {} and prestress type {} does not exist in the "
                               "solid-scatra context.",
-                              Core::FE::celltype_string<celltype_t()>,
-                              Inpar::Solid::kinem_type_string(element_properties.kintype).c_str(),
+                              Core::FE::celltype_string<celltype_t()>, element_properties.kintype,
                               element_technology_string(element_properties.element_technology)
                                   .c_str(),
-                              prestress_technology_string(element_properties.prestress_technology)
-                                  .c_str());
-                        });
-                  });
-            });
+                              element_properties.prestress_technology);
+                        },
+                        element_properties.prestress_technology);
+                  },
+                  element_properties.element_technology);
+            },
+            element_properties.kintype);
       });
 }
 

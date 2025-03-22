@@ -18,6 +18,7 @@
 #include "4C_mat_stvenantkirchhoff.hpp"
 #include "4C_rigidsphere.hpp"
 #include "4C_structure_new_elements_paramsinterface.hpp"
+#include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 
 FOUR_C_NAMESPACE_OPEN

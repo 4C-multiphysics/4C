@@ -19,6 +19,7 @@
 #include "4C_linear_solver_method.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_linear_solver_method_parameters.hpp"
+#include "4C_utils_enum.hpp"
 
 #include <Teuchos_ParameterList.hpp>
 
@@ -80,8 +81,7 @@ std::shared_ptr<Solid::SOLVER::Factory::LinSolMap> Solid::SOLVER::Factory::build
         (*linsolvers)[*mt_iter] = build_cardiovascular0_d_lin_solver(sdyn, actdis);
         break;
       default:
-        FOUR_C_THROW("No idea which solver to use for the given model type {}",
-            model_type_string(*mt_iter).c_str());
+        FOUR_C_THROW("No idea which solver to use for the given model type {}", *mt_iter);
     }
   }
 

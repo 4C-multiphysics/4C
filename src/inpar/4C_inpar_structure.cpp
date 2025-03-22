@@ -11,6 +11,7 @@
 #include "4C_fem_condition_definition.hpp"
 #include "4C_io_geometry_type.hpp"
 #include "4C_io_input_spec_builders.hpp"
+#include "4C_utils_enum.hpp"
 #include "4C_utils_parameter_list.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -19,6 +20,49 @@ namespace Inpar
 {
   namespace Solid
   {
+    std::string pred_enum_string(const PredEnum name)
+    {
+      switch (name)
+      {
+        case pred_vague:
+          return "Vague";
+        case pred_constdis:
+          return "ConstDis";
+        case pred_constvel:
+          return "ConstVel";
+        case pred_constacc:
+          return "ConstAcc";
+        case pred_constdisvelacc:
+          return "ConstDisVelAcc";
+        case pred_tangdis:
+          return "TangDis";
+        case pred_tangdis_constfext:
+          return "TangDisConstFext";
+        case pred_constdispres:
+          return "ConstDisPres";
+        case pred_constdisvelaccpres:
+          return "ConstDisVelAccPres";
+        default:
+          FOUR_C_THROW("Cannot make std::string for predictor {}", name);
+          exit(EXIT_FAILURE);
+      }
+    }
+
+    std::string kinem_type_string(const KinemType kinem_type)
+    {
+      switch (kinem_type)
+      {
+        case Inpar::Solid::KinemType::vague:
+          return "vague";
+        case Inpar::Solid::KinemType::linear:
+          return "linear";
+        case Inpar::Solid::KinemType::nonlinearTotLag:
+          return "nonlinear";
+      }
+
+      FOUR_C_THROW("Unknown kinematic type {}", kinem_type);
+    }
+
     void set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
     {
       using Teuchos::tuple;

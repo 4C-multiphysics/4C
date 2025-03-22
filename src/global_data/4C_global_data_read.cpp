@@ -34,6 +34,7 @@
 #include "4C_mat_scatra_multiscale.hpp"
 #include "4C_particle_engine_particlereader.hpp"
 #include "4C_rebalance_graph_based.hpp"
+#include "4C_utils_enum.hpp"
 #include "4C_xfem_discretization.hpp"
 #include "4C_xfem_discretization_utils.hpp"
 

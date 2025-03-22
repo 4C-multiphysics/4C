@@ -18,7 +18,10 @@
 #include "4C_solid_3D_ele_calc_mulf_fbar.hpp"
 #include "4C_solid_3D_ele_calc_shell_ans.hpp"
 #include "4C_solid_3D_ele_properties.hpp"
+#include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
+
+#include <magic_enum/magic_enum_switch.hpp>
 
 #include <type_traits>
 
@@ -203,13 +206,13 @@ Discret::Elements::SolidCalcVariant Discret::Elements::create_solid_calculation_
   return Core::FE::cell_type_switch<Internal::ImplementedSolidCellTypes>(celltype,
       [&](auto celltype_t)
       {
-        return switch_kinematic_type(element_properties.kintype,
+        return magic_enum::enum_switch(
             [&](auto kinemtype_t)
             {
-              return element_technology_switch(element_properties.element_technology,
+              return magic_enum::enum_switch(
                   [&](auto eletech_t)
                   {
-                    return prestress_technology_switch(element_properties.prestress_technology,
+                    return magic_enum::enum_switch(
                         [&](auto prestress_tech_t) -> SolidCalcVariant
                         {
                           constexpr Core::FE::CellType celltype_c = celltype_t();
@@ -230,11 +233,13 @@ Discret::Elements::SolidCalcVariant Discret::Elements::create_solid_calculation_
                               Inpar::Solid::kinem_type_string(element_properties.kintype).c_str(),
                               element_technology_string(element_properties.element_technology)
                                   .c_str(),
-                              prestress_technology_string(element_properties.prestress_technology)
-                                  .c_str());
-                        });
-                  });
-            });
+                              element_properties.prestress_technology);
+                        },
+                        element_properties.prestress_technology);
+                  },
+                  element_properties.element_technology);
+            },
+            element_properties.kintype);
       });
 }
 

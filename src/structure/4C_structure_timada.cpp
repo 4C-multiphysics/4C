@@ -19,11 +19,38 @@
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_structure_aux.hpp"
 #include "4C_structure_timint.hpp"
+#include "4C_utils_enum.hpp"
 
 #include <iostream>
 
 FOUR_C_NAMESPACE_OPEN
 
+
+namespace
+{
+  std::string map_kind_enum_to_string(Inpar::Solid::TimAdaKind term)
+  {
+    switch (term)
+    {
+      case Inpar::Solid::timada_kind_zienxie:
+        return "ZienkiewiczXie";
+        break;
+      case Inpar::Solid::timada_kind_ab2:
+        return "AdamsBashforth2";
+        break;
+      case Inpar::Solid::timada_kind_expleuler:
+        return "ExplicitEuler";
+        break;
+      case Inpar::Solid::timada_kind_centraldiff:
+        return "CentralDifference";
+        break;
+      default:
+        FOUR_C_THROW("Cannot cope with name enum {}", term);
+        return "";
+        break;
+    }
+  }
+}  // namespace
 
 /*----------------------------------------------------------------------*/
 /* Constructor */
@@ -454,6 +481,8 @@ void Solid::TimAda::output_step_size()
                     << std::endl;
   }
 }
+
+std::string Solid::TimAda::method_title() const { return map_kind_enum_to_string(method_name()); }
 
 /*----------------------------------------------------------------------*/
 /* Print constants */

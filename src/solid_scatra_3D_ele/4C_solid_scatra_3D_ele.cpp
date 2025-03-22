@@ -43,17 +43,9 @@ namespace
             {.description = "Whether to use linear kinematics (small displacements) or nonlinear "
                             "kinematics (large displacements)"}),
         parameter<std::string>("TYPE"),
-        deprecated_selection<Discret::Elements::PrestressTechnology>("PRESTRESS_TECH",
-            {
-                {Discret::Elements::prestress_technology_string(
-                     Discret::Elements::PrestressTechnology::mulf),
-                    Discret::Elements::PrestressTechnology::mulf},
-                {Discret::Elements::prestress_technology_string(
-                     Discret::Elements::PrestressTechnology::none),
-                    Discret::Elements::PrestressTechnology::none},
-            },
-            {.description = "The technology used for prestressing",
-                .default_value = Discret::Elements::PrestressTechnology::none}),
+        parameter<Discret::Elements::PrestressTechnology>(
+            "PRESTRESS_TECH", {.description = "The technology used for prestressing",
+                                  .default_value = Discret::Elements::PrestressTechnology::none}),
         parameter<std::optional<std::vector<double>>>("RAD", {.size = 3}),
         parameter<std::optional<std::vector<double>>>("AXI", {.size = 3}),
         parameter<std::optional<std::vector<double>>>("CIR", {.size = 3}),
