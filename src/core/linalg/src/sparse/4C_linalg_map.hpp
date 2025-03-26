@@ -12,6 +12,7 @@
 #include "4C_config.hpp"
 
 #include "4C_comm_mpi_utils.hpp"
+#include "4C_linalg_view.hpp"
 
 #include <Epetra_Comm.h>
 #include <Epetra_Map.h>
@@ -151,9 +152,48 @@ namespace Core::LinAlg
     //! Returns a pointer to the BlockMapData instance this BlockMap uses.
     const Epetra_BlockMapData* DataPtr() const { return map_->DataPtr(); }
 
+
+    /**
+     * View a given Epetra_Map object under our own Vector wrapper.
+     */
+    [[nodiscard]] static std::shared_ptr<Map> create_view(Epetra_Map& view)
+    {
+      std::shared_ptr<Map> ret(new Map);
+      ret->map_ = std::make_shared<Epetra_Map>(view);
+      return ret;
+    }
+
+    [[nodiscard]] static std::shared_ptr<const Map> create_view(const Epetra_Map& view)
+    {
+      std::shared_ptr<Map> ret(new Map);
+      ret->map_ = std::make_shared<Epetra_Map>(view);
+      return ret;
+    }
+
+    /**
+     * View the Epetra_BlockMap object under our own Vector wrapper.
+     */
+
+    [[nodiscard]] static std::shared_ptr<const Map> create_view(Epetra_BlockMap& view)
+    {
+      std::shared_ptr<Map> ret(new Map);
+      ret->map_ = std::make_shared<Epetra_Map>(view.NumGlobalElements(), view.NumMyElements(),
+          view.MyGlobalElements(), view.IndexBase(), view.Comm());
+      return ret;
+    }
+
+    [[nodiscard]] static std::shared_ptr<const Map> create_view(const Epetra_BlockMap& view)
+    {
+      std::shared_ptr<Map> ret(new Map);
+      ret->map_ = std::make_shared<Epetra_Map>(view.NumGlobalElements(), view.NumMyElements(),
+          view.MyGlobalElements(), view.IndexBase(), view.Comm());
+      return ret;
+    }
+
    private:
+    Map() = default;
     //! The actual Epetra_Map object.
-    std::shared_ptr<Epetra_Map> map_;
+    std::shared_ptr<Epetra_Map> map_ = nullptr;
   };
 
   inline std::ostream& operator<<(std::ostream& os, const Map& m)
@@ -162,6 +202,17 @@ namespace Core::LinAlg
     return os;
   }
 
+  template <>
+  struct WrapperFor<Epetra_Map>
+  {
+    using type = Map;
+  };
+
+  template <>
+  struct WrapperFor<Epetra_BlockMap>
+  {
+    using type = Map;
+  };
 }  // namespace Core::LinAlg
 
 
