@@ -246,7 +246,7 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPair2D3DMortar<Beam, Solid,
     local_constraint_lin_beam_rot += local_constraint_lin_beam_rot_gp;
 
     Core::LinAlg::Matrix<n_dof_rot_, Mortar::n_dof_, scalar_type_rotation_vector>
-        force_beam_rot_lin_lambda_gp(true);
+        force_beam_rot_lin_lambda_gp(Core::LinAlg::Initialization::set_zero);
     Core::LinAlg::Matrix<3, 3, scalar_type_rotation_vector> skew_rcs(
         Core::LinAlg::Initialization::set_zero);
     Core::LargeRotations::computespin(skew_rcs, cross_section_vector_current);

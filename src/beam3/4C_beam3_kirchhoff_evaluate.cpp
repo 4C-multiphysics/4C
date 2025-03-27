@@ -417,8 +417,8 @@ void Discret::Elements::Beam3k::calc_internal_and_inertia_forces_and_stiff(
         Core::LinAlg::Initialization::set_zero);
 
     // material triads at collocation points
-    std::vector<Core::LinAlg::Matrix<3, 3, FAD>> triad_mat_cp_FAD(
-        BEAM3K_COLLOCATION_POINTS, Core::LinAlg::Matrix<3, 3, FAD>(true));
+    std::vector<Core::LinAlg::Matrix<3, 3, FAD>> triad_mat_cp_FAD(BEAM3K_COLLOCATION_POINTS,
+        Core::LinAlg::Matrix<3, 3, FAD>(Core::LinAlg::Initialization::set_zero));
 
     // Next, we have to set variables for FAD
     set_automatic_differentiation_variables<nnodecl>(disp_totlag_FAD);
@@ -609,7 +609,7 @@ void Discret::Elements::Beam3k::calculate_internal_forces_and_stiff_wk(
   Core::LinAlg::Matrix<numdofelement, 3, T> v_thetapar_s_bar(
       Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Matrix<numdofelement, 3, T> v_theta_s_bar(
-      true);  //=v_thetaperp_s_bar+v_thetapar_s_bar
+      Core::LinAlg::Initialization::set_zero);  //=v_thetaperp_s_bar+v_thetapar_s_bar
 
 
   // interpolated spin vector variation required for inertia forces: v_theta=v_thetaperp+v_thetapar
@@ -617,8 +617,8 @@ void Discret::Elements::Beam3k::calculate_internal_forces_and_stiff_wk(
 
   // CP values of increments lin_theta_cp = lin_theta_perp_cp + lin_theta_par_cp
   // (required for analytic linearization)
-  std::vector<Core::LinAlg::Matrix<3, numdofelement, T>> lin_theta_cp(
-      BEAM3K_COLLOCATION_POINTS, Core::LinAlg::Matrix<3, numdofelement, T>(true));
+  std::vector<Core::LinAlg::Matrix<3, numdofelement, T>> lin_theta_cp(BEAM3K_COLLOCATION_POINTS,
+      Core::LinAlg::Matrix<3, numdofelement, T>(Core::LinAlg::Initialization::set_zero));
 
   lin_theta_gp.resize(gausspoints.nquad);
 
@@ -1188,7 +1188,7 @@ void Discret::Elements::Beam3k::calculate_internal_forces_and_stiff_sk(
   Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS, 3, FAD> v_thetapartheta_s(
       Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS, 3, FAD> v_theta_s(
-      true);  //=v_thetaperp_s+v_thetapartheta_s(+v_thetapard_s)
+      Core::LinAlg::Initialization::set_zero);  //=v_thetaperp_s+v_thetapartheta_s(+v_thetapard_s)
 
   // interpolated spin vector variation required for inertia forces:
   // v_theta=v_thetaperp+v_thetapartheta(+v_thetapard)
@@ -1251,7 +1251,7 @@ void Discret::Elements::Beam3k::calculate_internal_forces_and_stiff_sk(
   Core::LinAlg::Matrix<3, 3, FAD> auxmatrix1(
       Core::LinAlg::Initialization::set_zero);  // auxiliary matrix
   Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS, 3, FAD> auxmatrix2(
-      true);  // auxiliary matrix
+      Core::LinAlg::Initialization::set_zero);  // auxiliary matrix
 
 #ifdef CONSISTENTSPINSK
   Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS, 3, FAD> v_thetapard_s(
@@ -2315,7 +2315,7 @@ void Discret::Elements::Beam3k::evaluate_point_neumann_eb(Core::LinAlg::SerialDe
       set_automatic_differentiation_variables<nnodecl>(disp_totlag_FAD);
 
       Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS, 1, FAD>
-          disp_totlag_centerline_FAD(true);
+          disp_totlag_centerline_FAD(Core::LinAlg::Initialization::set_zero);
       std::vector<Core::LinAlg::Matrix<3, 3, FAD>> triad_mat_cp_FAD(BEAM3K_COLLOCATION_POINTS);
       std::vector<Core::LinAlg::Matrix<4, 1>> Qref(BEAM3K_COLLOCATION_POINTS);
 
@@ -2523,7 +2523,7 @@ void Discret::Elements::Beam3k::evaluate_line_neumann(Core::LinAlg::SerialDenseV
     set_automatic_differentiation_variables<nnodecl>(disp_totlag_FAD);
 
     Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS, 1, FAD>
-        disp_totlag_centerline_FAD(true);
+        disp_totlag_centerline_FAD(Core::LinAlg::Initialization::set_zero);
     std::vector<Core::LinAlg::Matrix<3, 3, FAD>> triad_mat_cp_FAD(BEAM3K_COLLOCATION_POINTS);
     std::vector<Core::LinAlg::Matrix<4, 1>> Qref(BEAM3K_COLLOCATION_POINTS);
 
@@ -2752,11 +2752,11 @@ inline void Discret::Elements::Beam3k::calc_brownian_forces_and_stiff(
   {
     // force vector resulting from Brownian dynamics
     Core::LinAlg::Matrix<ndim * vpernode * nnode + BEAM3K_COLLOCATION_POINTS, 1, FAD>
-        force_brownian_FAD(true);
+        force_brownian_FAD(Core::LinAlg::Initialization::set_zero);
 
     // copy pre-computed disp_totlag to a FAD matrix
     Core::LinAlg::Matrix<ndim * vpernode * nnode + BEAM3K_COLLOCATION_POINTS, 1, FAD>
-        disp_totlag_FAD(true);
+        disp_totlag_FAD(Core::LinAlg::Initialization::set_zero);
 
     for (unsigned int idof = 0; idof < ndim * vpernode * nnode + BEAM3K_COLLOCATION_POINTS; ++idof)
       disp_totlag_FAD(idof) = disp_totlag(idof);
@@ -2766,7 +2766,7 @@ inline void Discret::Elements::Beam3k::calc_brownian_forces_and_stiff(
     // r(s)=N(s)*disp_totlag_centerline, with disp_totlag_centerline=[\v{d}_1, \v{t}_1, 0, \v{d}_2,
     // \v{t}_2, 0, 0]
     Core::LinAlg::Matrix<nnode * vpernode * ndim + BEAM3K_COLLOCATION_POINTS, 1, FAD>
-        disp_totlag_centerline_FAD(true);
+        disp_totlag_centerline_FAD(Core::LinAlg::Initialization::set_zero);
 
     // material triads at collocation points
     std::vector<Core::LinAlg::Matrix<3, 3, FAD>> triad_mat_cp_FAD(BEAM3K_COLLOCATION_POINTS);
@@ -3180,7 +3180,7 @@ void Discret::Elements::Beam3k::evaluate_rotational_damping(
 
   // re-interpolated values of strains and their variations evaluated at Gauss points
   Core::LinAlg::Matrix<ndim * vpernode * nnode + BEAM3K_COLLOCATION_POINTS, 3, T> v_thetapar_bar(
-      true);
+      Core::LinAlg::Initialization::set_zero);
 
   std::vector<Core::LinAlg::Matrix<ndim, ndim * vpernode * nnode + BEAM3K_COLLOCATION_POINTS, T>>
       lin_theta_cp(BEAM3K_COLLOCATION_POINTS);

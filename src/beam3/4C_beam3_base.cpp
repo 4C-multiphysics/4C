@@ -365,10 +365,9 @@ void Discret::Elements::Beam3Base::get_directions_of_shifts(std::vector<double>&
 
   // loop through all nodes except for the first node which remains
   // fixed as reference node
-  static Core::LinAlg::Matrix<3, 1> d(true), ref(true), X(true);
-  d.clear();
-  ref.clear();
-  X.clear();
+  static Core::LinAlg::Matrix<3, 1> d(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<3, 1> ref(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<3, 1> X(Core::LinAlg::Initialization::set_zero);
   for (unsigned int i = 1; i < nnodecl; ++i)
   {
     for (int dim = 0; dim < 3; ++dim)
