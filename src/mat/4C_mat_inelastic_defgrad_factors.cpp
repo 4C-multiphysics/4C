@@ -84,18 +84,18 @@ namespace
     }
 
     // second-order 3x3 identity tensor in matrix form \f$ \boldsymbol{I} \f$
-    Core::LinAlg::Matrix<3, 3> id3x3_{true};
+    Core::LinAlg::Matrix<3, 3> id3x3_{Core::LinAlg::Initialization::set_zero};
     // second-order 3x3 identity in Voigt stress form \f$ \boldsymbol{I} \f$
-    Core::LinAlg::Matrix<6, 1> id6x1_{true};
+    Core::LinAlg::Matrix<6, 1> id6x1_{Core::LinAlg::Initialization::set_zero};
     // symmetric identity four tensor of dimension 3 \f$ \mathbb{I}_\text{S} \f$
-    Core::LinAlg::Matrix<6, 6> id4_6x6_{true};
+    Core::LinAlg::Matrix<6, 6> id4_6x6_{Core::LinAlg::Initialization::set_zero};
     // deviatoric operator \f$ \mathbb{P}_{\texŧ{dev}}  =  \mathbb{I}_\text{S} -
     // \frac{1}{3} \boldsymbol{I} \otimes \boldsymbol{I} \f$
-    Core::LinAlg::Matrix<6, 6> dev_op_{true};
+    Core::LinAlg::Matrix<6, 6> dev_op_{Core::LinAlg::Initialization::set_zero};
     // identity fourth-order tensor in Voigt notation: delta_AC delta_BD in index notation
-    Core::LinAlg::Matrix<9, 9> id4_9x9_{true};
+    Core::LinAlg::Matrix<9, 9> id4_9x9_{Core::LinAlg::Initialization::set_zero};
     // second-order 10x10 identity tensor in matrix form
-    Core::LinAlg::Matrix<10, 10> id10x10_{true};
+    Core::LinAlg::Matrix<10, 10> id10x10_{Core::LinAlg::Initialization::set_zero};
   };
 
   // declare file-scope instance of the constant non-material tensors
@@ -2439,7 +2439,7 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_inverse_inelast
 
   // check whether we have already evaluated the inverse inelastic deformation gradient for the
   // given reduced deformation gradient
-  Core::LinAlg::Matrix<3, 3> diff_defgrad{true};
+  Core::LinAlg::Matrix<3, 3> diff_defgrad{Core::LinAlg::Initialization::set_zero};
   diff_defgrad.update(1.0, FredM, -1.0, time_step_quantities_.current_defgrad_[gp_], 0.0);
   if (diff_defgrad.norm2() == 0.0)
   {

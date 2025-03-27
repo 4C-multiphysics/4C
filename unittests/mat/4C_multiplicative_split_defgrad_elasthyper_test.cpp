@@ -690,7 +690,7 @@ namespace
     stress_fact.gamma = gamma_ref_;
     stress_fact.delta = delta_ref_;
 
-    Core::LinAlg::Matrix<6, 6> cMatIso{true};
+    Core::LinAlg::Matrix<6, 6> cMatIso{Core::LinAlg::Initialization::set_zero};
     multiplicative_split_defgrad_->evaluate_stress_cmat_iso(kinemat_quant, stress_fact, S, cMatIso);
 
     FOUR_C_EXPECT_NEAR(S, S_ref, 1.0e-10);

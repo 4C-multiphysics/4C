@@ -96,20 +96,20 @@ namespace Discret::Elements
     constexpr static int num_eas = Discret::Elements::EasTypeToNumEas<eastype>::num_eas;
 
     /// inverse EAS matrix K_{alpha alpha}
-    Core::LinAlg::Matrix<num_eas, num_eas> invKaa{true};
+    Core::LinAlg::Matrix<num_eas, num_eas> invKaa{Core::LinAlg::Initialization::set_zero};
 
     /// EAS matrix K_{d alpha}
     Core::LinAlg::Matrix<Core::FE::num_nodes<celltype> * Core::FE::dim<celltype>, num_eas> Kda{
         true};
 
     /// EAS enhancement vector s
-    Core::LinAlg::Matrix<num_eas, 1> s{true};
+    Core::LinAlg::Matrix<num_eas, 1> s{Core::LinAlg::Initialization::set_zero};
 
     /// discrete enhanced strain scalars increment
-    Core::LinAlg::Matrix<num_eas, 1> alpha_inc{true};
+    Core::LinAlg::Matrix<num_eas, 1> alpha_inc{Core::LinAlg::Initialization::set_zero};
 
     /// discrete enhanced strain scalars alpha
-    Core::LinAlg::Matrix<num_eas, 1> alpha{true};
+    Core::LinAlg::Matrix<num_eas, 1> alpha{Core::LinAlg::Initialization::set_zero};
   };
 
   template <Core::FE::CellType celltype>

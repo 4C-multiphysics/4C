@@ -290,7 +290,7 @@ void Mat::BeamPlasticMaterial<T>::evaluate_moment_contributions_to_stress(
   else
   {
     //! copy of material curvature K (but first entry is 0 if torsional plasticity is turned off)
-    Core::LinAlg::Matrix<3, 1, T> kappa{true};
+    Core::LinAlg::Matrix<3, 1, T> kappa{Core::LinAlg::Initialization::set_zero};
 
     // If torsional plasticity is turned on, use full curvature vector for plasticity,
     // else, continue with reduced curvature vector (first entry is zero)

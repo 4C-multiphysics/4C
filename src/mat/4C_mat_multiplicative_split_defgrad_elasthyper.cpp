@@ -238,7 +238,7 @@ void Mat::MultiplicativeSplitDefgradElastHyper::evaluate(
   CM.multiply_tn(1.0, *defgrad, *defgrad, 0.0);
 
   /// part of the elasticity tensor as shown in evaluate_stress_cmat_iso
-  Core::LinAlg::Matrix<6, 6> cmatiso{true};
+  Core::LinAlg::Matrix<6, 6> cmatiso{Core::LinAlg::Initialization::set_zero};
 
   // cmat = 2 dS/dC = 2 \frac{\partial S}{\partial C} + 2 \frac{\partial S}{\partial F_{in}^{-1}}
   // : \frac{\partial F_{in}^{-1}}{\partial C} = cmatiso + cmatadd
@@ -645,7 +645,7 @@ Core::LinAlg::Matrix<6, 9> Mat::MultiplicativeSplitDefgradElastHyper::evaluated_
     const Mat::MultiplicativeSplitDefgradElastHyper::StressFactors& stress_fact) const
 {
   // declare output variables
-  Core::LinAlg::Matrix<6, 9> dSdiFin{true};
+  Core::LinAlg::Matrix<6, 9> dSdiFin{Core::LinAlg::Initialization::set_zero};
 
   // extract variables from kinemat_quant
   const Core::LinAlg::Matrix<3, 1>& gamma = stress_fact.gamma;
@@ -839,7 +839,7 @@ Core::LinAlg::Matrix<6, 6> Mat::MultiplicativeSplitDefgradElastHyper::evaluate_a
     const Core::LinAlg::Matrix<6, 9>& dSdiFin)
 {
   // declare output variable
-  Core::LinAlg::Matrix<6, 6> cmatadd{true};
+  Core::LinAlg::Matrix<6, 6> cmatadd;
 
   const auto& facdefgradin = inelastic_->fac_def_grad_in();
   const auto& iFinjM = inelastic_->geti_finj();
