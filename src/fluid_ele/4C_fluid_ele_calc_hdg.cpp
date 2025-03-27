@@ -340,10 +340,10 @@ int Discret::Elements::FluidEleCalcHDG<distype>::compute_error(Discret::Elements
   }
 
   // analytic solution
-  Core::LinAlg::Matrix<nsd_, 1> u(true);
+  Core::LinAlg::Matrix<nsd_, 1> u(Core::LinAlg::Initialization::set_zero);
   double p = 0.0;
-  Core::LinAlg::Matrix<nsd_, nsd_> dervel(true);
-  Core::LinAlg::Matrix<nsd_, 1> xyz(true);
+  Core::LinAlg::Matrix<nsd_, nsd_> dervel(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, 1> xyz(Core::LinAlg::Initialization::set_zero);
 
   const auto calcerr =
       Teuchos::getIntegralValue<Inpar::FLUID::CalcError>(params, "calculate error");
@@ -446,7 +446,8 @@ int Discret::Elements::FluidEleCalcHDG<distype>::project_field(Discret::Elements
       for (unsigned int d = 0; d < nsd_; ++d) xyz(d) = shapes_->xyzreal(d, q);
       // Declaring vectors for velocity and grad(u) as well as the pressure scalar value
       Core::LinAlg::Matrix<nsd_, 1> u(false);
-      Core::LinAlg::Matrix<nsd_, nsd_> grad(true);  // is not necessarily set in evaluate_all
+      Core::LinAlg::Matrix<nsd_, nsd_> grad(
+          Core::LinAlg::Initialization::set_zero);  // is not necessarily set in evaluate_all
       double p;
 
       FOUR_C_ASSERT(initfield != nullptr && startfunc != nullptr,
@@ -784,7 +785,7 @@ int Discret::Elements::FluidEleCalcHDG<distype>::interpolate_solution_to_nodes(
 
     // As already said, the dimension of the coordinate matrix is now nsd_-1
     // times the number of nodes in the face.
-    Core::LinAlg::Matrix<nsd_ - 1, nfn> xsishuffle(true);
+    Core::LinAlg::Matrix<nsd_ - 1, nfn> xsishuffle(Core::LinAlg::Initialization::set_zero);
 
     // Cycling through the nodes of the face to store the node positions in the
     // correct order using xsishuffle as a temporary vector
@@ -861,7 +862,7 @@ int Discret::Elements::FluidEleCalcHDG<distype>::interpolate_solution_for_hit(
 {
   initialize_shapes(ele);
   // get coordinates of hex 8
-  Core::LinAlg::Matrix<nsd_, nen_> xyze(true);
+  Core::LinAlg::Matrix<nsd_, nen_> xyze(Core::LinAlg::Initialization::set_zero);
 
   Core::Geo::fill_initial_position_array<distype, nsd_, Core::LinAlg::Matrix<nsd_, nen_>>(
       ele, xyze);
@@ -915,7 +916,7 @@ int Discret::Elements::FluidEleCalcHDG<distype>::interpolate_solution_for_hit(
     Core::LinAlg::Matrix<nen_, 1> myfunct;
     Core::FE::shape_function<distype>(shapes_->xsi, myfunct);
 
-    Core::LinAlg::Matrix<nsd_, 1> mypoint(true);
+    Core::LinAlg::Matrix<nsd_, 1> mypoint(Core::LinAlg::Initialization::set_zero);
     mypoint.multiply_nn(xyze, myfunct);
 
     for (unsigned int d = 0; d < nsd_; ++d) elevec1(6 * i + d + 3) = mypoint(d);
@@ -1223,7 +1224,7 @@ void Discret::Elements::FluidEleCalcHDG<distype>::evaluate_velocity(const int st
     Core::LinAlg::Matrix<nsd_, 1>& u) const
 {
   // pass on dummy entries (costs a little but will not be significant)
-  Core::LinAlg::Matrix<nsd_, nsd_> grad(true);
+  Core::LinAlg::Matrix<nsd_, nsd_> grad(Core::LinAlg::Initialization::set_zero);
   double p;
   evaluate_all(startfunc, initfield, xyz, u, grad, p);
 }
@@ -1350,10 +1351,10 @@ int Discret::Elements::FluidEleCalcHDG<distype>::evaluate_pressure_average(
   const double time = local_solver_->fldparatimint_->time();
 
   // initialize variables
-  Core::LinAlg::Matrix<nsd_, 1> u(true);
+  Core::LinAlg::Matrix<nsd_, 1> u(Core::LinAlg::Initialization::set_zero);
   double p = 0.0;
-  Core::LinAlg::Matrix<nsd_, nsd_> dervel(true);
-  Core::LinAlg::Matrix<nsd_, 1> xyz(true);
+  Core::LinAlg::Matrix<nsd_, nsd_> dervel(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, 1> xyz(Core::LinAlg::Initialization::set_zero);
 
   // get function used to evaluate the error
   const Teuchos::ParameterList fluidparams = Global::Problem::instance()->fluid_dynamic_params();

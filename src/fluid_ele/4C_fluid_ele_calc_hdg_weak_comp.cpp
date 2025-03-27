@@ -351,12 +351,12 @@ int Discret::Elements::FluidEleCalcHDGWeakComp<distype>::compute_error(
   }
 
   // initialize exact solution
-  Core::LinAlg::Matrix<msd_, 1> L_ex(true);
+  Core::LinAlg::Matrix<msd_, 1> L_ex(Core::LinAlg::Initialization::set_zero);
   double r_ex = 0.0;
-  Core::LinAlg::Matrix<nsd_, 1> w_ex(true);
+  Core::LinAlg::Matrix<nsd_, 1> w_ex(Core::LinAlg::Initialization::set_zero);
 
   // initialize spatial coordinates
-  Core::LinAlg::Matrix<nsd_, 1> xyz(true);
+  Core::LinAlg::Matrix<nsd_, 1> xyz(Core::LinAlg::Initialization::set_zero);
 
   // get function number
   const int calcerrfunctno = params.get<int>("error function number");
@@ -479,9 +479,9 @@ int Discret::Elements::FluidEleCalcHDGWeakComp<distype>::project_field(
       // Filling xyz with the values take from the element xyzreal matrix
       for (unsigned int d = 0; d < nsd_; ++d) xyz(d) = shapes_->xyzreal(d, q);
       // Declaring vectors for interior variables
-      Core::LinAlg::Matrix<msd_, 1> L(true);
+      Core::LinAlg::Matrix<msd_, 1> L(Core::LinAlg::Initialization::set_zero);
       double r = 0.0;
-      Core::LinAlg::Matrix<nsd_, 1> w(true);
+      Core::LinAlg::Matrix<nsd_, 1> w(Core::LinAlg::Initialization::set_zero);
 
       FOUR_C_ASSERT(initfield != nullptr && startfunc != nullptr,
           "initfield or startfuncno not set for initial value");
@@ -765,7 +765,7 @@ int Discret::Elements::FluidEleCalcHDGWeakComp<distype>::interpolate_solution_to
 
     // As already said, the dimension of the coordinate matrix is now nsd_-1
     // times the number of nodes in the face.
-    Core::LinAlg::Matrix<nsd_ - 1, nfn> xsishuffle(true);
+    Core::LinAlg::Matrix<nsd_ - 1, nfn> xsishuffle(Core::LinAlg::Initialization::set_zero);
 
     // Cycling through the nodes of the face to store the node positions in the
     // correct order using xsishuffle as a temporary vector

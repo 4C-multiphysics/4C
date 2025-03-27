@@ -216,8 +216,8 @@ void Mat::MuscleWeickenmeier::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
     Core::LinAlg::Matrix<6, 1>* stress, Core::LinAlg::Matrix<6, 6>* cmat, const int gp,
     const int eleGID)
 {
-  Core::LinAlg::Matrix<6, 1> Sc_stress(true);
-  Core::LinAlg::Matrix<6, 6> ccmat(true);
+  Core::LinAlg::Matrix<6, 1> Sc_stress(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 6> ccmat(Core::LinAlg::Initialization::set_zero);
 
   // get passive material parameters
   const double alpha = params_->alpha_;

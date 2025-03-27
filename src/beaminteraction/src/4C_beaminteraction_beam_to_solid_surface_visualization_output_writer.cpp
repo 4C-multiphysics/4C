@@ -285,8 +285,8 @@ void BeamInteraction::BeamToSolidSurfaceVisualizationOutputWriter::
       {
         // Get the global force and moment resultants from the nodal forces. The first column
         // represents the forces, the second one the moments.
-        Core::LinAlg::Matrix<3, 2, double> beam_resultant(true);
-        Core::LinAlg::Matrix<3, 2, double> solid_resultant(true);
+        Core::LinAlg::Matrix<3, 2, double> beam_resultant(Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Matrix<3, 2, double> solid_resultant(Core::LinAlg::Initialization::set_zero);
         get_global_coupling_force_resultants(beam_contact->discret(),
             Core::LinAlg::MultiVector<double>(
                 *(beam_contact->beam_interaction_data_state().get_force_np())),
@@ -302,8 +302,10 @@ void BeamInteraction::BeamToSolidSurfaceVisualizationOutputWriter::
           beam_resultant(i_dim, 1) = (*global_coupling_moment_origin)(i_dim);
 
         // Sum the values over all ranks.
-        Core::LinAlg::Matrix<3, 2, double> beam_resultant_global(true);
-        Core::LinAlg::Matrix<3, 2, double> solid_resultant_global(true);
+        Core::LinAlg::Matrix<3, 2, double> beam_resultant_global(
+            Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Matrix<3, 2, double> solid_resultant_global(
+            Core::LinAlg::Initialization::set_zero);
         MPI_Allreduce(beam_resultant.data(), beam_resultant_global.data(),
             beam_resultant.num_rows() * beam_resultant.num_cols(), MPI_DOUBLE, MPI_SUM,
             beam_contact->discret().get_comm());

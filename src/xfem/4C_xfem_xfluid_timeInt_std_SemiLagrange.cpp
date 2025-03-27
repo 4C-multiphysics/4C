@@ -214,7 +214,8 @@ void XFEM::XfluidSemiLagrange::compute(
               nullptr;  // pointer to the element where start point lies in
           Core::LinAlg::Matrix<nsd, 1> xi(
               true);  // local transformed coordinates of x w.r.t found ele
-          Core::LinAlg::Matrix<nsd, 1> vel(true);  // velocity of the start point approximation
+          Core::LinAlg::Matrix<nsd, 1> vel(
+              Core::LinAlg::Initialization::set_zero);  // velocity of the start point approximation
 
           // search for an element where the current startpoint lies in
           element_search(ele, data->startpoint_, xi, elefound);
@@ -335,7 +336,7 @@ void XFEM::XfluidSemiLagrange::compute(
                   // a Lagrangean origin has been found but it does not lie in the fluid
                   //----------------------------------------------------------------------
 
-                  Core::LinAlg::Matrix<nsd, 1> proj_x(true);
+                  Core::LinAlg::Matrix<nsd, 1> proj_x(Core::LinAlg::Initialization::set_zero);
 
                   find_nearest_surf_point(
                       data->startpoint_, proj_x, data->last_valid_vc_, "idispn");
@@ -497,11 +498,13 @@ void XFEM::XfluidSemiLagrange::newton_loop(Core::Elements::Element*& ele,  /// p
   const int nsd = 3;  // 3 dimensions for a 3d fluid element
 
   // Initialization
-  Core::LinAlg::Matrix<nsd, 1> residuum(true);  // residuum of the newton iteration
-  Core::LinAlg::Matrix<nsd, 1> incr(true);      // increment of the newton system
+  Core::LinAlg::Matrix<nsd, 1> residuum(
+      Core::LinAlg::Initialization::set_zero);  // residuum of the newton iteration
+  Core::LinAlg::Matrix<nsd, 1> incr(
+      Core::LinAlg::Initialization::set_zero);  // increment of the newton system
 
   // coordinates of endpoint of Lagrangian characteristics
-  Core::LinAlg::Matrix<nsd, 1> origNodeCoords(true);
+  Core::LinAlg::Matrix<nsd, 1> origNodeCoords(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < nsd; i++) origNodeCoords(i) = data->node_.x()[i] + data->dispnp_(i);
 
   //-------------------------------------------------------
@@ -584,9 +587,11 @@ void XFEM::XfluidSemiLagrange::newton_loop(Core::Elements::Element*& ele,  /// p
 
       //-------------------------------------------------------
       // compute the velocity at startpoint
-      Core::LinAlg::Matrix<nsd, nsd> vel_deriv(true);  // dummy matrix
-      double pres = 0.0;                               // dummy variable for pressure
-      Core::LinAlg::Matrix<1, nsd> pres_deriv(true);   // dummy matrix for the pressure derivatives
+      Core::LinAlg::Matrix<nsd, nsd> vel_deriv(
+          Core::LinAlg::Initialization::set_zero);  // dummy matrix
+      double pres = 0.0;                            // dummy variable for pressure
+      Core::LinAlg::Matrix<1, nsd> pres_deriv(
+          Core::LinAlg::Initialization::set_zero);  // dummy matrix for the pressure derivatives
 
       get_gp_values(
           ele, xi, nds_curr, *dofset_old_, vel, vel_deriv, pres, pres_deriv, veln_, false);
@@ -720,12 +725,16 @@ void XFEM::XfluidSemiLagrange::newton_iter(
   const int nsd = 3;  // 3 dimensions for a 3d fluid element
 
   // Initialization
-  Core::LinAlg::Matrix<nsd, 1> vel_dummy(true);    // dummy matrix for the velocity
-  Core::LinAlg::Matrix<nsd, nsd> vel_deriv(true);  // matrix for the velocity derivatives
-  double pres_dummy = 0.0;                         // dummy variable for pressure
-  Core::LinAlg::Matrix<1, nsd> pres_deriv(true);   // dummy matrix for the pressure derivatives
+  Core::LinAlg::Matrix<nsd, 1> vel_dummy(
+      Core::LinAlg::Initialization::set_zero);  // dummy matrix for the velocity
+  Core::LinAlg::Matrix<nsd, nsd> vel_deriv(
+      Core::LinAlg::Initialization::set_zero);  // matrix for the velocity derivatives
+  double pres_dummy = 0.0;                      // dummy variable for pressure
+  Core::LinAlg::Matrix<1, nsd> pres_deriv(
+      Core::LinAlg::Initialization::set_zero);  // dummy matrix for the pressure derivatives
 
-  Core::LinAlg::Matrix<nsd, nsd> sysmat(true);  // matrix for the newton system
+  Core::LinAlg::Matrix<nsd, nsd> sysmat(
+      Core::LinAlg::Initialization::set_zero);  // matrix for the newton system
 
   // compute the velocity derivatives at startpoint
   get_gp_values(
@@ -875,8 +884,10 @@ void XFEM::XfluidSemiLagrange::get_data_for_not_converged_nodes()
       // Initialization
       Core::Elements::Element* ele =
           nullptr;  // pointer to the element where pseudo-Lagrangian origin lies in
-      Core::LinAlg::Matrix<nsd, 1> xi(true);   // local coordinates of pseudo-Lagrangian origin
-      Core::LinAlg::Matrix<nsd, 1> vel(true);  // velocity at pseudo-Lagrangian origin
+      Core::LinAlg::Matrix<nsd, 1> xi(
+          Core::LinAlg::Initialization::set_zero);  // local coordinates of pseudo-Lagrangian origin
+      Core::LinAlg::Matrix<nsd, 1> vel(
+          Core::LinAlg::Initialization::set_zero);  // velocity at pseudo-Lagrangian origin
       bool elefound = false;  // true if an element for a point was found on the processor
 
       // search for an element where the current startpoint lies in
@@ -1060,19 +1071,19 @@ void XFEM::XfluidSemiLagrange::new_iteration_nodal_data(
 
     //-------------------------------------------------------
     // the first vector contains the velocity information
-    Core::LinAlg::Matrix<3, 1> nodevel(true);
-    Core::LinAlg::Matrix<1, 1> nodepre(true);
+    Core::LinAlg::Matrix<3, 1> nodevel(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<1, 1> nodepre(Core::LinAlg::Initialization::set_zero);
     extract_nodal_values_from_vector<1>(nodevel, nodepre, newColVectors[0], lm);
 
     data->vel_ = nodevel;
 
-    Core::LinAlg::Matrix<3, 1> nodedispnp(true);
+    Core::LinAlg::Matrix<3, 1> nodedispnp(Core::LinAlg::Initialization::set_zero);
     if (dispnp_ != nullptr)  // is alefluid
     {
       //------------------------------------------------------- add ale disp
       // get node location vector, dirichlet flags and ownerships (discret, nds, la, doDirichlet)
 
-      Core::LinAlg::Matrix<1, 1> nodepredummy(true);
+      Core::LinAlg::Matrix<1, 1> nodepredummy(Core::LinAlg::Initialization::set_zero);
       extract_nodal_values_from_vector<1>(nodedispnp, nodepredummy, dispnp_, lm);
     }
 
@@ -1280,19 +1291,22 @@ void XFEM::XfluidSemiLagrange::back_tracking(
     FOUR_C_THROW("backTrackingType not implemented");
 
 
-  Core::LinAlg::Matrix<numnode, 1> shapeFcn(true);       // shape function
-  Core::LinAlg::Matrix<3, numnode> shapeFcnDeriv(true);  // shape function derivatives w.r.t xyz
-  Core::LinAlg::Matrix<nsd, nsd> xji(true);              // inverse of jacobian
+  Core::LinAlg::Matrix<numnode, 1> shapeFcn(
+      Core::LinAlg::Initialization::set_zero);  // shape function
+  Core::LinAlg::Matrix<3, numnode> shapeFcnDeriv(
+      Core::LinAlg::Initialization::set_zero);  // shape function derivatives w.r.t xyz
+  Core::LinAlg::Matrix<nsd, nsd> xji(
+      Core::LinAlg::Initialization::set_zero);  // inverse of jacobian
 
   double deltaT = 0;  // pseudo time-step size, used when the initial point is used instead of the
                       // computed lagrangean startpoint
 
   // data for the final back-tracking
-  Core::LinAlg::Matrix<nsd, 1> vel(true);  // velocity data
+  Core::LinAlg::Matrix<nsd, 1> vel(Core::LinAlg::Initialization::set_zero);  // velocity data
   std::vector<Core::LinAlg::Matrix<nsd, nsd>> velnDeriv1(oldVectors_.size(),
       Core::LinAlg::Matrix<nsd, nsd>(true));  // first derivation of velocity data
 
-  Core::LinAlg::Matrix<1, 1> pres(true);  // pressure data
+  Core::LinAlg::Matrix<1, 1> pres(Core::LinAlg::Initialization::set_zero);  // pressure data
   std::vector<Core::LinAlg::Matrix<1, nsd>> presnDeriv1(
       oldVectors_.size(), Core::LinAlg::Matrix<1, nsd>(true));  // first derivation of pressure data
 
@@ -1306,8 +1320,8 @@ void XFEM::XfluidSemiLagrange::back_tracking(
   // fill velocity and pressure data at nodes of element ...
 
   // node velocities of the element nodes for transport velocity
-  Core::LinAlg::Matrix<nsd, numnode> nodevel(true);
-  Core::LinAlg::Matrix<numnode, 1> nodepre(true);
+  Core::LinAlg::Matrix<nsd, numnode> nodevel(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<numnode, 1> nodepre(Core::LinAlg::Initialization::set_zero);
 
   // node velocities of the element nodes for the data that should be changed
   std::vector<Core::LinAlg::Matrix<nsd, numnode>> nodeveldata(
@@ -1723,7 +1737,7 @@ void XFEM::XfluidSemiLagrange::compute_nodal_gradient(
     Core::Elements::Element* e = eles[iele];
 
     // xi coordinates of node w.r.t this element
-    Core::LinAlg::Matrix<nsd, 1> tmp_xi(true);
+    Core::LinAlg::Matrix<nsd, 1> tmp_xi(Core::LinAlg::Initialization::set_zero);
     bool indomain = false;  // dummy variable
 
     // xyz coordinates of the node
@@ -1738,10 +1752,10 @@ void XFEM::XfluidSemiLagrange::compute_nodal_gradient(
 
     for (size_t tmp_index = 0; tmp_index < colVectors.size(); tmp_index++)
     {
-      Core::LinAlg::Matrix<nsd, 1> vel(true);
-      Core::LinAlg::Matrix<nsd, nsd> vel_deriv(true);
+      Core::LinAlg::Matrix<nsd, 1> vel(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<nsd, nsd> vel_deriv(Core::LinAlg::Initialization::set_zero);
       double pres = 0.0;
-      Core::LinAlg::Matrix<1, nsd> pres_deriv(true);
+      Core::LinAlg::Matrix<1, nsd> pres_deriv(Core::LinAlg::Initialization::set_zero);
 
       get_gp_values(e, tmp_xi, ele_nds[iele], dofset, vel, vel_deriv, pres, pres_deriv,
           colVectors[tmp_index], true);

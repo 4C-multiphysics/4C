@@ -348,7 +348,7 @@ int Discret::Elements::Truss3Type::initialize(Core::FE::Discretization& dis)
   std::vector<double> xrefe;
 
   // reference nodal tangent positions
-  Core::LinAlg::Matrix<3, 1> trefNodeAux(true);
+  Core::LinAlg::Matrix<3, 1> trefNodeAux(Core::LinAlg::Initialization::set_zero);
   // resize vectors for the number of coordinates we need to store
   xrefe.resize(3 * 2);
 

@@ -79,7 +79,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrodeSTIThermo<distype,
       my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
   my::extract_node_values(emasterphinp, discretization, la, "imasterphinp");
 
-  Core::LinAlg::Matrix<nen_, 1> emastertempnp(true);
+  Core::LinAlg::Matrix<nen_, 1> emastertempnp(Core::LinAlg::Initialization::set_zero);
   if (kineticmodel == Inpar::S2I::kinetics_butlervolmerreducedthermoresistance)
     my::extract_node_values(
         emastertempnp, discretization, la, "imastertemp", my::scatraparams_->nds_thermo());

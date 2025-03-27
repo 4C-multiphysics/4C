@@ -719,7 +719,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrodeGrowth<distype,
   extract_node_values(discretization, la);
   std::vector<Core::LinAlg::Matrix<nen_, 1>> emasterphinp(
       my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
-  Core::LinAlg::Matrix<nen_, 1> eslavegrowthhist(true);
+  Core::LinAlg::Matrix<nen_, 1> eslavegrowthhist(Core::LinAlg::Initialization::set_zero);
   my::extract_node_values(emasterphinp, discretization, la, "imasterphinp");
   my::extract_node_values(
       eslavegrowthhist, discretization, la, "growthhist", my::scatraparams_->nds_growth());

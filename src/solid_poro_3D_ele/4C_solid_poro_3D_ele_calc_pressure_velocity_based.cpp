@@ -411,23 +411,23 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
         double fluid_press = shape_functions.shapefunctions_.dot(fluid_variables.fluidpress_nodal);
 
         // structure velocity at integration point
-        Core::LinAlg::Matrix<num_dim_, 1> disp_velocity(true);
+        Core::LinAlg::Matrix<num_dim_, 1> disp_velocity(Core::LinAlg::Initialization::set_zero);
         disp_velocity.multiply(solid_variables.solidvel_nodal, shape_functions.shapefunctions_);
 
         // fluid velocity at integration point
-        Core::LinAlg::Matrix<num_dim_, 1> fluid_velocity(true);
+        Core::LinAlg::Matrix<num_dim_, 1> fluid_velocity(Core::LinAlg::Initialization::set_zero);
         fluid_velocity.multiply(fluid_variables.fluidvel_nodal, shape_functions.shapefunctions_);
 
         // material fluid velocity gradient at integration point
-        Core::LinAlg::Matrix<num_dim_, num_dim_> fvelder(true);
+        Core::LinAlg::Matrix<num_dim_, num_dim_> fvelder(Core::LinAlg::Initialization::set_zero);
         fvelder.multiply_nt(fluid_variables.fluidvel_nodal, jacobian_mapping.N_XYZ_);
 
         // pressure gradient at integration point
-        Core::LinAlg::Matrix<num_dim_, 1> Gradp(true);
+        Core::LinAlg::Matrix<num_dim_, 1> Gradp(Core::LinAlg::Initialization::set_zero);
         Gradp.multiply(jacobian_mapping.N_XYZ_, fluid_variables.fluidpress_nodal);
 
         // F^-1 * Grad p
-        Core::LinAlg::Matrix<num_dim_, 1> FinvGradp(true);
+        Core::LinAlg::Matrix<num_dim_, 1> FinvGradp(Core::LinAlg::Initialization::set_zero);
         FinvGradp.multiply_tn(spatial_material_mapping.inverse_deformation_gradient_, Gradp);
 
         Core::LinAlg::Matrix<num_dim_ * num_dim_, num_dim_ * num_nodes_>
@@ -447,10 +447,10 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
             cauchygreen.inverse_right_cauchy_green_, C_inv_vec);
 
         // B^T . C^-1
-        Core::LinAlg::Matrix<num_dof_per_ele_, 1> BopCinv(true);
+        Core::LinAlg::Matrix<num_dof_per_ele_, 1> BopCinv(Core::LinAlg::Initialization::set_zero);
         BopCinv.multiply_tn(Bop, C_inv_vec);
 
-        Core::LinAlg::Matrix<num_str_, 1> fstress(true);
+        Core::LinAlg::Matrix<num_str_, 1> fstress(Core::LinAlg::Initialization::set_zero);
 
 
         // update internal force vector
@@ -492,7 +492,8 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
           }
 
           // initialize element matrizes and vectors
-          Core::LinAlg::Matrix<num_dof_per_ele_, num_dof_per_ele_> erea_v(true);
+          Core::LinAlg::Matrix<num_dof_per_ele_, num_dof_per_ele_> erea_v(
+              Core::LinAlg::Initialization::set_zero);
 
           update_stiffness_matrix_with_structure_fluid_coupling_and_reactive_darcy_terms<celltype>(
               integration_factor, shape_functions.shapefunctions_, porofluidmat,
@@ -502,7 +503,8 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
               *matrix_views.K_displacement_displacement);
 
           // derivative of press w.r.t. displacements zero here
-          Core::LinAlg::Matrix<1, num_dof_per_ele_> dSolidpressure_dDisp(true);
+          Core::LinAlg::Matrix<1, num_dof_per_ele_> dSolidpressure_dDisp(
+              Core::LinAlg::Initialization::set_zero);
 
           update_elastic_stiffness_matrix<celltype>(integration_factor, fluid_press,
               spatial_material_mapping.determinant_deformation_gradient_, BopCinv, Bop,
@@ -669,12 +671,13 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
             fluid_variables.fluidvel_nodal, shape_functions);
 
         // material fluid velocity gradient at integration point
-        Core::LinAlg::Matrix<num_dim_, num_dim_> fluid_velocity_gradient(true);
+        Core::LinAlg::Matrix<num_dim_, num_dim_> fluid_velocity_gradient(
+            Core::LinAlg::Initialization::set_zero);
         fluid_velocity_gradient.multiply_nt(
             fluid_variables.fluidvel_nodal, jacobian_mapping.N_XYZ_);
 
         // pressure gradient at integration point
-        Core::LinAlg::Matrix<num_dim_, 1> pressure_gradient(true);
+        Core::LinAlg::Matrix<num_dim_, 1> pressure_gradient(Core::LinAlg::Initialization::set_zero);
         pressure_gradient.multiply(jacobian_mapping.N_XYZ_, fluid_variables.fluidpress_nodal);
 
         const PorosityAndLinearizationOD porosity_and_linearization_od =
@@ -687,7 +690,7 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
             cauchygreen.inverse_right_cauchy_green_, C_inv_vec);
 
         // B^T . C^-1
-        Core::LinAlg::Matrix<num_dof_per_ele_, 1> BopCinv(true);
+        Core::LinAlg::Matrix<num_dof_per_ele_, 1> BopCinv(Core::LinAlg::Initialization::set_zero);
         BopCinv.multiply_tn(Bop, C_inv_vec);
 
         // F^-T * grad p
@@ -700,11 +703,11 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
         FinvNXYZ.multiply_tn(
             spatial_material_mapping.inverse_deformation_gradient_, jacobian_mapping.N_XYZ_);
 
-        Core::LinAlg::Matrix<num_dim_, num_dim_> reatensor(true);
+        Core::LinAlg::Matrix<num_dim_, num_dim_> reatensor(Core::LinAlg::Initialization::set_zero);
         Core::LinAlg::Matrix<num_dim_, num_dim_> linreac_dporosity(
             true);  // Derivative of the material reaction tensor w.r.t. the porosity
-        Core::LinAlg::Matrix<num_dim_, 1> rea_fluid_vel(true);
-        Core::LinAlg::Matrix<num_dim_, 1> rea_disp_vel(true);
+        Core::LinAlg::Matrix<num_dim_, 1> rea_fluid_vel(Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Matrix<num_dim_, 1> rea_disp_vel(Core::LinAlg::Initialization::set_zero);
 
         compute_linearization_of_reaction_tensor_od<celltype>(porofluidmat,
             shape_functions.shapefunctions_, spatial_material_mapping,
@@ -788,7 +791,8 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
         double fluid_press = shape_functions.shapefunctions_.dot(fluid_variables.fluidpress_nodal);
 
         // coupling part of homogenized 2 Piola-Kirchhoff stress (3D)
-        Core::LinAlg::Matrix<num_str_, 1> pk2_couplstress_gp(true);
+        Core::LinAlg::Matrix<num_str_, 1> pk2_couplstress_gp(
+            Core::LinAlg::Initialization::set_zero);
 
         porostructmat.coupl_stress(
             spatial_material_mapping.deformation_gradient_, fluid_press, pk2_couplstress_gp);

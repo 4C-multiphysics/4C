@@ -110,7 +110,8 @@ namespace Discret::Elements
     {
       Core::LinAlg::Matrix<9, Core::FE::dim<celltype>> d_F_dxi{};
 
-      Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::num_nodes<celltype>> xXFT(true);
+      Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::num_nodes<celltype>> xXFT(
+          Core::LinAlg::Initialization::set_zero);
       Core::LinAlg::Matrix<Core::FE::dim<celltype>,
           Core::FE::DisTypeToNumDeriv2<celltype>::numderiv2>
           xXFsec(true);

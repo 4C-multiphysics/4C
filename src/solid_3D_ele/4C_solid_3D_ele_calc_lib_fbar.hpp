@@ -87,7 +87,8 @@ namespace Discret::Elements
     Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>> invdefgrd;
     invdefgrd.invert(spatial_material_mapping.deformation_gradient_);
 
-    Core::LinAlg::Matrix<Core::FE::dim<celltype> * Core::FE::num_nodes<celltype>, 1> Hop(true);
+    Core::LinAlg::Matrix<Core::FE::dim<celltype> * Core::FE::num_nodes<celltype>, 1> Hop(
+        Core::LinAlg::Initialization::set_zero);
     for (int idof = 0; idof < Core::FE::dim<celltype> * Core::FE::num_nodes<celltype>; idof++)
     {
       for (int idim = 0; idim < Core::FE::dim<celltype>; idim++)

@@ -306,7 +306,8 @@ namespace Discret::Elements
   {
     if (kinematictype == Inpar::Solid::KinemType::linear)
     {
-      Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> dispgrad(true);
+      Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> dispgrad(
+          Core::LinAlg::Initialization::set_zero);
       // gradient of displacements
       dispgrad.multiply_nt(displacements, jacobian_mapping.N_XYZ_);
 
@@ -366,7 +367,8 @@ namespace Discret::Elements
       defgrd_inv_vec(8) = spatial_material_mapping.inverse_deformation_gradient_(2, 2);
 
       // build N_X operator (w.r.t. material configuration)
-      Core::LinAlg::Matrix<9, Internal::num_dof_per_ele<celltype>> N_X(true);  // set to zero
+      Core::LinAlg::Matrix<9, Internal::num_dof_per_ele<celltype>> N_X(
+          Core::LinAlg::Initialization::set_zero);  // set to zero
       for (int i = 0; i < Internal::num_nodes<celltype>; ++i)
       {
         N_X(0, 3 * i + 0) = jacobian_mapping.N_XYZ_(0, i);
@@ -691,7 +693,8 @@ namespace Discret::Elements
       Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_nodes<celltype>> node_values,
       const ShapeFunctionsAndDerivatives<celltype> shapefunctions)
   {
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> value_at_gp(true);
+    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> value_at_gp(
+        Core::LinAlg::Initialization::set_zero);
     value_at_gp.multiply(node_values, shapefunctions.shapefunctions_);
     return value_at_gp;
   }
@@ -901,12 +904,16 @@ namespace Discret::Elements
   {
     Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> matreatensor(
         true);
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> reatensor(true);
+    Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> reatensor(
+        Core::LinAlg::Initialization::set_zero);
     Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> linreac_dphi(
         true);
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> linreac_dJ(true);
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> rea_fluid_vel(true);
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> rea_disp_vel(true);
+    Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> linreac_dJ(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> rea_fluid_vel(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> rea_disp_vel(
+        Core::LinAlg::Initialization::set_zero);
 
     static Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> temp(
         true);
@@ -992,7 +999,8 @@ namespace Discret::Elements
         linreac_ddet_defgrd(
             true);  // Derivative of the material reaction tensor w.r.t. the determinant of the
 
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> temp(true);
+    Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> temp(
+        Core::LinAlg::Initialization::set_zero);
 
     std::vector<double> anisotropic_permeability_coeffs =
         compute_anisotropic_permeability_coeffs_at_gp<celltype>(
@@ -1326,12 +1334,16 @@ namespace Discret::Elements
     const double numnod_ = Internal::num_nodes<celltype>;
     Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> matreatensor(
         true);
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> reatensor(true);
+    Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> reatensor(
+        Core::LinAlg::Initialization::set_zero);
     Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> linreac_dphi(
         true);
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> linreac_dJ(true);
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> reafvel(true);
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> reavel(true);
+    Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> linreac_dJ(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> reafvel(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> reavel(
+        Core::LinAlg::Initialization::set_zero);
     static Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> temp(
         true);
     std::vector<double> anisotropic_permeability_coeffs =

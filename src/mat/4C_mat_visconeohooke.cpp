@@ -141,7 +141,7 @@ void Mat::ViscoNeoHooke::unpack(Core::Communication::UnpackBuffer& buffer)
   artstresslast_ = std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>();
   for (int var = 0; var < twicehistsize; var += 2)
   {
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tmp(true);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tmp(Core::LinAlg::Initialization::set_zero);
     histstresscurr_->push_back(tmp);
     artstresscurr_->push_back(tmp);
     extract_from_pack(buffer, tmp);

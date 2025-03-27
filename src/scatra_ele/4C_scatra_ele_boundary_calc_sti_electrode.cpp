@@ -87,7 +87,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcSTIElectrode<distype, probdim>::eva
 
   const int kineticmodel = my::scatraparamsboundary_->kinetic_model();
 
-  Core::LinAlg::Matrix<nen_, 1> emastertemp(true);
+  Core::LinAlg::Matrix<nen_, 1> emastertemp(Core::LinAlg::Initialization::set_zero);
   if (kineticmodel == Inpar::S2I::kinetics_butlervolmerreducedthermoresistance)
     my::extract_node_values(emastertemp, discretization, la, "imastertemp", 3);
 
@@ -336,7 +336,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcSTIElectrode<distype,
 
   const int kineticmodel = my::scatraparamsboundary_->kinetic_model();
 
-  Core::LinAlg::Matrix<nen_, 1> emastertemp(true);
+  Core::LinAlg::Matrix<nen_, 1> emastertemp(Core::LinAlg::Initialization::set_zero);
   if (kineticmodel == Inpar::S2I::kinetics_butlervolmerreducedthermoresistance)
     my::extract_node_values(emastertemp, discretization, la, "imastertemp", 3);
 

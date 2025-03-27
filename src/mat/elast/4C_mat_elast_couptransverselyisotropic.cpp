@@ -58,7 +58,7 @@ void Mat::Elastic::CoupTransverselyIsotropic::setup(
     case 0:
     {
       // fibers aligned in YZ-plane with gamma around Z in global cartesian cosy
-      Core::LinAlg::Matrix<3, 3> Id(true);
+      Core::LinAlg::Matrix<3, 3> Id(Core::LinAlg::Initialization::set_zero);
       for (int i = 0; i < 3; i++) Id(i, i) = 1.0;
       set_fiber_vecs(-1.0, Id, Id);
 
@@ -76,9 +76,9 @@ void Mat::Elastic::CoupTransverselyIsotropic::setup(
           container.get<std::optional<std::vector<double>>>("CIR").has_value())
       {
         // Read in of data
-        Core::LinAlg::Matrix<3, 3> locsys(true);
+        Core::LinAlg::Matrix<3, 3> locsys(Core::LinAlg::Initialization::set_zero);
         read_rad_axi_cir(container, locsys);
-        Core::LinAlg::Matrix<3, 3> Id(true);
+        Core::LinAlg::Matrix<3, 3> Id(Core::LinAlg::Initialization::set_zero);
         for (int i = 0; i < 3; i++) Id(i, i) = 1.0;
         // final setup of fiber data
         set_fiber_vecs(0.0, locsys, Id);
@@ -134,15 +134,15 @@ void Mat::Elastic::CoupTransverselyIsotropic::set_fiber_vecs(const double newang
   // convert
   const double angle = (params_->angle_ * M_PI) / 180.;
 
-  Core::LinAlg::Matrix<3, 1> ca(true);
+  Core::LinAlg::Matrix<3, 1> ca(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; ++i)
   {
     // a = cos gamma e3 + sin gamma e2
     ca(i) = std::cos(angle) * locsys(i, 2) + std::sin(angle) * locsys(i, 1);
   }
   // pull back in reference configuration
-  Core::LinAlg::Matrix<3, 1> A_0(true);
-  Core::LinAlg::Matrix<3, 3> idefgrd(true);
+  Core::LinAlg::Matrix<3, 1> A_0(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> idefgrd(Core::LinAlg::Initialization::set_zero);
   idefgrd.invert(defgrd);
 
   A_0.multiply(idefgrd, ca);
@@ -156,12 +156,12 @@ void Mat::Elastic::CoupTransverselyIsotropic::add_strain_energy(double& psi,
     const Core::LinAlg::Matrix<6, 1>& glstrain, const int gp, const int eleGID)
 {
   // build Cartesian identity 2-tensor I_{AB}
-  Core::LinAlg::Matrix<6, 1> identity(true);
+  Core::LinAlg::Matrix<6, 1> identity(Core::LinAlg::Initialization::set_zero);
   std::fill(identity.data(), identity.data() + 3, 1.0);
 
   // convert Green-Lagrange strain to right Cauchy-Green Tensor
   // C_{AB} = 2 * E_{AB} + I_{AB} [ REMARK: strain-like 6-Voigt vector ]
-  Core::LinAlg::Matrix<6, 1> rcg(true);
+  Core::LinAlg::Matrix<6, 1> rcg(Core::LinAlg::Initialization::set_zero);
   rcg.update(2.0, glstrain, 1.0);
   rcg.update(1.0, identity, 1.0);
 
@@ -315,10 +315,10 @@ void Mat::Elastic::CoupTransverselyIsotropic::update_second_piola_kirchhoff_stre
 
   // (2) contribution
   {
-    Core::LinAlg::Matrix<3, 1> ca(true);
+    Core::LinAlg::Matrix<3, 1> ca(Core::LinAlg::Initialization::set_zero);
     Core::LinAlg::Voigt::Stresses::multiply_tensor_vector(rcg_s, a_, ca);
 
-    Core::LinAlg::Matrix<6, 1> caa_aac(true);
+    Core::LinAlg::Matrix<6, 1> caa_aac(Core::LinAlg::Initialization::set_zero);
     Core::LinAlg::Voigt::Stresses::symmetric_outer_product(ca, a_, caa_aac);
 
     const double fac = -alpha;

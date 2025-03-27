@@ -289,9 +289,9 @@ void Mat::ConstraintMixture::unpack(Core::Communication::UnpackBuffer& buffer)
     history_->at(idpast).get_time(&temptime, &tempdt);
     for (int idgauss = 0; idgauss < numgp; idgauss++)
     {
-      Core::LinAlg::Matrix<4,1> stretchtemp(true);
-      Core::LinAlg::Matrix<4,1> stretchact(true);
-      Core::LinAlg::Matrix<4,1> stretchold(true);
+      Core::LinAlg::Matrix<4,1> stretchtemp(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<4,1> stretchact(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<4,1> stretchold(Core::LinAlg::Initialization::set_zero);
       history_->at(sizehistory-2).get_stretches(idgauss, &stretchact);
       history_->begin()->get_stretches(idgauss, &stretchold);
       stretchtemp.update(stretchact);
@@ -579,35 +579,35 @@ void Mat::ConstraintMixture::update()
       for (int igp = 0; igp < numgp; igp++)
       {
         // set stretch
-        Core::LinAlg::Matrix<4, 1> actstretch(true);
+        Core::LinAlg::Matrix<4, 1> actstretch(Core::LinAlg::Initialization::set_zero);
         history_->back().get_stretches(igp, &actstretch);
         // special treatment for first timestep
         if (deptime == depdt)
         {
-          Core::LinAlg::Matrix<4, 1> ones(true);
+          Core::LinAlg::Matrix<4, 1> ones(Core::LinAlg::Initialization::set_zero);
           ones.put_scalar(1.0);
           history_->back().set_stretches(igp, ones);
         }
         for (int istep = 0; istep < sizehistory; istep++)
         {
-          Core::LinAlg::Matrix<4, 1> oldstretch(true);
+          Core::LinAlg::Matrix<4, 1> oldstretch(Core::LinAlg::Initialization::set_zero);
           history_->at(istep).get_stretches(igp, &oldstretch);
           oldstretch.elementwise_divide(actstretch);
           history_->at(istep).set_stretches(igp, oldstretch);
         }
 
         // set mass
-        Core::LinAlg::Matrix<4, 1> actmass(true);
+        Core::LinAlg::Matrix<4, 1> actmass(Core::LinAlg::Initialization::set_zero);
         history_->back().get_mass(igp, &actmass);
         if (abs(actmass(0) - massprodbasal_) > 1.0e-8 ||
             abs(actmass(1) - massprodbasal_) > 1.0e-8 ||
             abs(actmass(2) - massprodbasal_) > 1.0e-8 || abs(actmass(3) - massprodbasal_) > 1.0e-8)
         {
-          Core::LinAlg::Matrix<4, 1> ones(true);
+          Core::LinAlg::Matrix<4, 1> ones(Core::LinAlg::Initialization::set_zero);
           ones.put_scalar(1.0);
-          Core::LinAlg::Matrix<1, 1> summass(true);
+          Core::LinAlg::Matrix<1, 1> summass(Core::LinAlg::Initialization::set_zero);
           summass.multiply_tn(ones, actmass);
-          Core::LinAlg::Matrix<4, 1> newmass(true);
+          Core::LinAlg::Matrix<4, 1> newmass(Core::LinAlg::Initialization::set_zero);
           newmass.put_scalar(4.0 * massprodbasal_);
           if (summass(0) > 0.0 + 1.0e-12)
           {
@@ -628,9 +628,9 @@ void Mat::ConstraintMixture::update()
     {
       for (int igp = 0; igp < numgp; igp++)
       {
-        Core::LinAlg::Matrix<4, 1> actstretch(true);
+        Core::LinAlg::Matrix<4, 1> actstretch(Core::LinAlg::Initialization::set_zero);
         history_->back().get_stretches(igp, &actstretch);
-        Core::LinAlg::Matrix<4, 1> actmass(true);
+        Core::LinAlg::Matrix<4, 1> actmass(Core::LinAlg::Initialization::set_zero);
         history_->back().get_mass(igp, &actmass);
         if (abs(actmass(0) - massprodbasal_) < 1.0e-8 &&
             abs(actmass(1) - massprodbasal_) < 1.0e-8 &&
@@ -642,11 +642,11 @@ void Mat::ConstraintMixture::update()
             // set stretch
             for (int istep = 0; istep < sizehistory - 1; istep++)
             {
-              Core::LinAlg::Matrix<4, 1> oldstretch(true);
+              Core::LinAlg::Matrix<4, 1> oldstretch(Core::LinAlg::Initialization::set_zero);
               for (int idfiber = 0; idfiber < 4; idfiber++)
                 oldstretch(idfiber) =
                     (actstretch(idfiber) - 1.0) * (1.0 - istep / (sizehistory - 1.0)) + 1.0;
-              Core::LinAlg::Matrix<4, 1> ones(true);
+              Core::LinAlg::Matrix<4, 1> ones(Core::LinAlg::Initialization::set_zero);
               ones.put_scalar(1.0);
               ones.elementwise_divide(oldstretch);
               history_->at(istep).set_stretches(igp, ones);
@@ -658,11 +658,11 @@ void Mat::ConstraintMixture::update()
         else
         {
           // set mass
-          Core::LinAlg::Matrix<4, 1> ones(true);
+          Core::LinAlg::Matrix<4, 1> ones(Core::LinAlg::Initialization::set_zero);
           ones.put_scalar(1.0);
-          Core::LinAlg::Matrix<1, 1> summass(true);
+          Core::LinAlg::Matrix<1, 1> summass(Core::LinAlg::Initialization::set_zero);
           summass.multiply_tn(ones, actmass);
-          Core::LinAlg::Matrix<4, 1> newmass(true);
+          Core::LinAlg::Matrix<4, 1> newmass(Core::LinAlg::Initialization::set_zero);
           newmass.put_scalar(4.0 * massprodbasal_);
           if (summass(0) > 0.0 + 1.0e-12)
           {
@@ -851,7 +851,7 @@ void Mat::ConstraintMixture::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
             FOUR_C_THROW("ExpVar not implemented for implicit time integration");
           int sizehistory = history_->size();
           // stretch of previous time step
-          Core::LinAlg::Matrix<4, 1> actstretch(true);
+          Core::LinAlg::Matrix<4, 1> actstretch(Core::LinAlg::Initialization::set_zero);
           history_->at(sizehistory - 2).get_stretches(gp, &actstretch);
           for (int idfiber = 0; idfiber < 4; idfiber++)
           {
@@ -863,7 +863,7 @@ void Mat::ConstraintMixture::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
             homstrain = homstrain * localprestretch_->at(gp)(idfiber);
             for (int idtime = minindex_; idtime < sizehistory - 2; idtime++)
             {
-              Core::LinAlg::Matrix<4, 1> depstretch(true);
+              Core::LinAlg::Matrix<4, 1> depstretch(Core::LinAlg::Initialization::set_zero);
               history_->at(idtime).get_stretches(gp, &depstretch);
               double strain = 0.0;
               double fac_cmat = 0.0;
@@ -892,7 +892,7 @@ void Mat::ConstraintMixture::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
 
     //--------------------------------------------------------------------------------------
     // build identity tensor I
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Id(true);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Id(Core::LinAlg::Initialization::set_zero);
     for (int i = 0; i < 3; i++) Id(i) = 1.0;
     // right Cauchy-Green Tensor  C = 2 * E + I
     Core::LinAlg::Matrix<NUM_STRESS_3D, 1> C(*glstrain);
@@ -901,7 +901,7 @@ void Mat::ConstraintMixture::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
 
     //--------------------------------------------------------------------------------------
     // compute actual collagen stretches
-    Core::LinAlg::Matrix<4, 1> actstretch(true);
+    Core::LinAlg::Matrix<4, 1> actstretch(Core::LinAlg::Initialization::set_zero);
     double actcollagenstretch =
         a1_->at(gp)(0) * a1_->at(gp)(0) * C(0) + a1_->at(gp)(1) * a1_->at(gp)(1) * C(1) +
         a1_->at(gp)(2) * a1_->at(gp)(2) * C(2) + a1_->at(gp)(0) * a1_->at(gp)(1) * C(3) +
@@ -1010,7 +1010,7 @@ void Mat::ConstraintMixture::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
     }
 
     // start in every iteration from the original value, this is important for implicit only
-    Core::LinAlg::Matrix<4, 1> massprodstart(true);
+    Core::LinAlg::Matrix<4, 1> massprodstart(Core::LinAlg::Initialization::set_zero);
     for (int id = 0; id < 4; id++) massprodstart(id) = massprodbasal_;
     //    massprodstart(2) = massprodstart(2)*4;
     //    massprodstart(3) = massprodstart(3)*4;
@@ -1021,8 +1021,8 @@ void Mat::ConstraintMixture::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
     //--------------------------------------------------------------------------------------
     // compute new deposition rates
     // either for future use or just for visualization
-    Core::LinAlg::Matrix<4, 1> massstress(true);
-    Core::LinAlg::Matrix<4, 1> massprodcomp(true);
+    Core::LinAlg::Matrix<4, 1> massstress(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<4, 1> massprodcomp(Core::LinAlg::Initialization::set_zero);
     if (params_->growthforce_ == "All")
     {
       mass_production(gp, *defgrd, *stress, &massstress, inner_radius, &massprodcomp, growthfactor);
@@ -1030,13 +1030,15 @@ void Mat::ConstraintMixture::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
     else if (params_->growthforce_ == "ElaCol")
     {
       double masstemp = 0.0;
-      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> stresstemp(true);
-      Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmattemp(true);
+      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> stresstemp(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmattemp(
+          Core::LinAlg::Initialization::set_zero);
 
       // 1st step: elastin
       //==========================
-      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Siso(true);
-      Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatiso(true);
+      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Siso(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatiso(
+          Core::LinAlg::Initialization::set_zero);
       evaluate_elastin(C, &cmatiso, &Siso, time, &masstemp, elastin_survival);
       stresstemp = Siso;
       cmattemp = cmatiso;
@@ -1059,8 +1061,9 @@ void Mat::ConstraintMixture::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
     {
       double massstresstemp = 0.0;
       double massprodtemp = 0.0;
-      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> stresstemp(true);
-      Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmattemp(true);
+      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> stresstemp(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmattemp(
+          Core::LinAlg::Initialization::set_zero);
       double masstemp = 0.0;
       evaluate_fiber_family(
           C, gp, &cmattemp, &stresstemp, a1_->at(gp), &masstemp, firstiter, time, 0);
@@ -1189,7 +1192,7 @@ void Mat::ConstraintMixture::evaluate_stress(const Core::LinAlg::Matrix<NUM_STRE
 
   //--------------------------------------------------------------------------------------
   // build identity tensor I
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Id(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Id(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; i++) Id(i) = 1.0;
   // right Cauchy-Green Tensor  C = 2 * E + I
   Core::LinAlg::Matrix<NUM_STRESS_3D, 1> C(*glstrain);
@@ -1201,8 +1204,9 @@ void Mat::ConstraintMixture::evaluate_stress(const Core::LinAlg::Matrix<NUM_STRE
 
   // 1st step: elastin
   //==========================
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Siso(true);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatiso(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Siso(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatiso(
+      Core::LinAlg::Initialization::set_zero);
   evaluate_elastin(C, &cmatiso, &Siso, time, &currmassdens, elastin_survival);
   (*stress) = Siso;
   (*cmat) = cmatiso;
@@ -1219,16 +1223,18 @@ void Mat::ConstraintMixture::evaluate_stress(const Core::LinAlg::Matrix<NUM_STRE
 
   // 3rd step: smooth muscle
   //==========================
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Smus(true);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatmus(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Smus(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatmus(
+      Core::LinAlg::Initialization::set_zero);
   evaluate_muscle(C, &cmatmus, &Smus, gp, &currmassdens);
   (*stress) += Smus;
   (*cmat) += cmatmus;
 
   // 4th step: volumetric part
   //==========================
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Svol(true);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatvol(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Svol(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatvol(
+      Core::LinAlg::Initialization::set_zero);
   evaluate_volumetric(C, &cmatvol, &Svol, currmassdens, density);
   (*stress) += Svol;
   (*cmat) += cmatvol;
@@ -1297,7 +1303,7 @@ void Mat::ConstraintMixture::evaluate_fiber_family(const Core::LinAlg::Matrix<NU
       depdt = deptime - time + params_->lifetime_;
     }
 
-    Core::LinAlg::Matrix<4, 1> collstretch(true);
+    Core::LinAlg::Matrix<4, 1> collstretch(Core::LinAlg::Initialization::set_zero);
     history_->at(idpast).get_stretches(gp, &collstretch);
     double stretch = prestretchcollagen / collstretch(idfiber);
     // prestretch of collagen fibers is not applied, might be reasonable combined with prestress
@@ -1312,7 +1318,7 @@ void Mat::ConstraintMixture::evaluate_fiber_family(const Core::LinAlg::Matrix<NU
     {
       I4_loc = ((sqrt(I4) - 1.0) * (1.0 - idpast / (sizehistory - 1.0)) + 1.0) *
                ((sqrt(I4) - 1.0) * (1.0 - idpast / (sizehistory - 1.0)) + 1.0);
-      Core::LinAlg::Matrix<4, 1> tempstretch(true);
+      Core::LinAlg::Matrix<4, 1> tempstretch(Core::LinAlg::Initialization::set_zero);
       history_->at(idpast).get_stretches(gp, &tempstretch);
       if (abs(tempstretch(idfiber) - 1.0) > 1.0e-12)
         FOUR_C_THROW("linear stretch when stretch history has been modified");
@@ -1321,7 +1327,7 @@ void Mat::ConstraintMixture::evaluate_fiber_family(const Core::LinAlg::Matrix<NU
     I4_loc = I4_loc * stretch * stretch;  // account for prestretch and stretch at deposition time
     if (sqrt(I4_loc) > params_->damagestretch_)
     {
-      Core::LinAlg::Matrix<3, 1> deldata(true);
+      Core::LinAlg::Matrix<3, 1> deldata(Core::LinAlg::Initialization::set_zero);
       deldata(0) = gp;
       deldata(1) = idpast;
       deldata(2) = idfiber;
@@ -1346,7 +1352,7 @@ void Mat::ConstraintMixture::evaluate_fiber_family(const Core::LinAlg::Matrix<NU
       history_->at(idpast).get_var_degrad(gp, idfiber, &vardegrad);
       qdegrad = qdegrad * vardegrad;
     }
-    Core::LinAlg::Matrix<4, 1> collmass(true);
+    Core::LinAlg::Matrix<4, 1> collmass(Core::LinAlg::Initialization::set_zero);
     history_->at(idpast).get_mass(gp, &collmass);
     fac_stress +=
         fac_stress_loc * stretch * stretch * qdegrad * collmass(idfiber) / density * depdt;
@@ -1357,7 +1363,8 @@ void Mat::ConstraintMixture::evaluate_fiber_family(const Core::LinAlg::Matrix<NU
       Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Saniso_loc(A);
       Saniso_loc.scale(
           fac_stress_loc * stretch * stretch * qdegrad * collmass(idfiber) / density * depdt);
-      Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatanisoadd(true);
+      Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatanisoadd(
+          Core::LinAlg::Initialization::set_zero);
       cmatanisoadd.multiply_nt(A, Saniso_loc);
       cmatanisoadd.scale(-2.0 / (collstretch(idfiber) * collstretch(idfiber)));
       (*cmat) += cmatanisoadd;
@@ -1374,7 +1381,8 @@ void Mat::ConstraintMixture::evaluate_fiber_family(const Core::LinAlg::Matrix<NU
 
   // matrices for stress and cmat
   Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Saniso(A);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmataniso(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmataniso(
+      Core::LinAlg::Initialization::set_zero);
   cmataniso.multiply_nt(A, A);
   Saniso.scale(fac_stress);
   cmataniso.scale(fac_cmat);
@@ -1467,7 +1475,7 @@ void Mat::ConstraintMixture::evaluate_elastin(const Core::LinAlg::Matrix<NUM_STR
 
   //--------------------------------------------------------------------------------------
   // invert Ciso
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Cisoinv(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Cisoinv(Core::LinAlg::Initialization::set_zero);
   Cisoinv(0) = Ciso(1) * Ciso(2) - 0.25 * Ciso(4) * Ciso(4);
   Cisoinv(1) = Ciso(0) * Ciso(2) - 0.25 * Ciso(5) * Ciso(5);
   Cisoinv(2) = Ciso(0) * Ciso(1) - 0.25 * Ciso(3) * Ciso(3);
@@ -1476,7 +1484,7 @@ void Mat::ConstraintMixture::evaluate_elastin(const Core::LinAlg::Matrix<NUM_STR
   Cisoinv(5) = 0.25 * Ciso(3) * Ciso(4) - 0.5 * Ciso(5) * Ciso(1);
   Cisoinv.scale(1.0 / I3);
 
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Siso(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Siso(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; i++) Siso(i) = mue;
 
   double gamma2 = -mue * pow(I3, -beta);
@@ -1485,7 +1493,8 @@ void Mat::ConstraintMixture::evaluate_elastin(const Core::LinAlg::Matrix<NUM_STR
       refmassdenselastin / density * prestretchelastin * prestretchelastin * elastin_survival);
   *stress = Siso;
 
-  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatiso(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatiso(
+      Core::LinAlg::Initialization::set_zero);
   double delta6 = 2. * beta * mue * pow(I3, -beta);
   cmatiso.multiply_nt(delta6, Cisoinv, Cisoinv);
   double delta7 = 2. * mue * pow(I3, -beta);
@@ -1581,7 +1590,8 @@ void Mat::ConstraintMixture::evaluate_muscle(const Core::LinAlg::Matrix<NUM_STRE
   Saniso.scale(facS);
   *stress += Saniso;
 
-  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmataniso(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmataniso(
+      Core::LinAlg::Initialization::set_zero);
   double faccmat = -Smax / (lambda * lambda) *
                    ((1.0 - ((lambda_M - lambda) * (lambda_M - lambda) / (lambda_M - lambda_0) /
                                (lambda_M - lambda_0))) /
@@ -1624,7 +1634,7 @@ void Mat::ConstraintMixture::evaluate_volumetric(const Core::LinAlg::Matrix<NUM_
 
   //--------------------------------------------------------------------------------------
   // invert C
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Cinv(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Cinv(Core::LinAlg::Initialization::set_zero);
   Cinv(0) = C(1) * C(2) - 0.25 * C(4) * C(4);
   Cinv(1) = C(0) * C(2) - 0.25 * C(5) * C(5);
   Cinv(2) = C(0) * C(1) - 0.25 * C(3) * C(3);
@@ -1634,7 +1644,7 @@ void Mat::ConstraintMixture::evaluate_volumetric(const Core::LinAlg::Matrix<NUM_
   Cinv.scale(1.0 / I3);
 
   //--- determine 2nd Piola Kirchhoff stresses S -----------------------------------------
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Svol(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Svol(Core::LinAlg::Initialization::set_zero);
   // volumetric part J*kappa*(J-M(t)/M(0))*Cinv
   for (int i = 0; i < 6; i++) Svol(i) = J * p * Cinv(i);
 
@@ -1666,7 +1676,7 @@ void Mat::ConstraintMixture::mass_production(const int gp, Core::LinAlg::Matrix<
     Core::LinAlg::Matrix<NUM_STRESS_3D, 1> S, Core::LinAlg::Matrix<4, 1>* massstress,
     double inner_radius, Core::LinAlg::Matrix<4, 1>* massprodcomp, double growthfactor)
 {
-  Core::LinAlg::Matrix<3, 3> Smatrix(true);
+  Core::LinAlg::Matrix<3, 3> Smatrix(Core::LinAlg::Initialization::set_zero);
   Smatrix(0, 0) = S(0);
   Smatrix(0, 1) = S(3);
   Smatrix(0, 2) = S(5);
@@ -1677,12 +1687,12 @@ void Mat::ConstraintMixture::mass_production(const int gp, Core::LinAlg::Matrix<
   Smatrix(2, 1) = Smatrix(1, 2);
   Smatrix(2, 2) = S(2);
   // one has to use the defgrd here, as with EAS C != F^T F
-  Core::LinAlg::Matrix<3, 3> Cmatrix(true);
+  Core::LinAlg::Matrix<3, 3> Cmatrix(Core::LinAlg::Initialization::set_zero);
   Cmatrix.multiply_tn(defgrd, defgrd);
   double detC = Cmatrix.determinant();
 
-  Core::LinAlg::Matrix<3, 3> temp1(true);
-  Core::LinAlg::Matrix<3, 3> temp2(true);
+  Core::LinAlg::Matrix<3, 3> temp1(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> temp2(Core::LinAlg::Initialization::set_zero);
   temp1.multiply(Smatrix, Cmatrix);
   temp2.multiply(Cmatrix, temp1);
   temp1.put_scalar(0.0);
@@ -1698,8 +1708,8 @@ void Mat::ConstraintMixture::mass_production(const int gp, Core::LinAlg::Matrix<
   double maxmassprodfac = params_->maxmassprodfac_;
 
   // Fiber1
-  Core::LinAlg::Matrix<3, 1> temp_vector(true);
-  Core::LinAlg::Matrix<1, 1> temp_scalar(true);
+  Core::LinAlg::Matrix<3, 1> temp_vector(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<1, 1> temp_scalar(Core::LinAlg::Initialization::set_zero);
   temp_vector.multiply(Cmatrix, a1_->at(gp));
   temp_scalar.multiply_tn(a1_->at(gp), temp_vector);
   double currentstretch = sqrt(temp_scalar(0));
@@ -1906,7 +1916,7 @@ void Mat::ConstraintMixture::mass_production_single_fiber(const int gp,
     double inner_radius, double* massprodcomp, Core::LinAlg::Matrix<3, 1> a, const int idfiber,
     double growthfactor)
 {
-  Core::LinAlg::Matrix<3, 3> Smatrix(true);
+  Core::LinAlg::Matrix<3, 3> Smatrix(Core::LinAlg::Initialization::set_zero);
   Smatrix(0, 0) = S(0);
   Smatrix(0, 1) = S(3);
   Smatrix(0, 2) = S(5);
@@ -1917,7 +1927,7 @@ void Mat::ConstraintMixture::mass_production_single_fiber(const int gp,
   Smatrix(2, 1) = Smatrix(1, 2);
   Smatrix(2, 2) = S(2);
   // one has to use the defgrd here, as with EAS C != F^T F
-  Core::LinAlg::Matrix<3, 3> Cmatrix(true);
+  Core::LinAlg::Matrix<3, 3> Cmatrix(Core::LinAlg::Initialization::set_zero);
   Cmatrix.multiply_tn(defgrd, defgrd);
   double detC = Cmatrix.determinant();
 
@@ -1928,16 +1938,16 @@ void Mat::ConstraintMixture::mass_production_single_fiber(const int gp,
         1.0 - homradius_ * homradius_ * homradius_ / (inner_radius * inner_radius * inner_radius);
   double maxmassprodfac = params_->maxmassprodfac_;
 
-  Core::LinAlg::Matrix<3, 1> CSCa(true);
-  Core::LinAlg::Matrix<3, 1> SCa(true);
-  Core::LinAlg::Matrix<1, 1> temp(true);
+  Core::LinAlg::Matrix<3, 1> CSCa(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> SCa(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<1, 1> temp(Core::LinAlg::Initialization::set_zero);
   CSCa.multiply(Cmatrix, a);
   SCa.multiply(Smatrix, CSCa);
   CSCa.multiply(Cmatrix, SCa);
   temp.multiply_tn(1.0 / detC, SCa, CSCa);
   (*massstress) = temp(0);
-  Core::LinAlg::Matrix<3, 1> temp_vector(true);
-  Core::LinAlg::Matrix<1, 1> temp_scalar(true);
+  Core::LinAlg::Matrix<3, 1> temp_vector(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<1, 1> temp_scalar(Core::LinAlg::Initialization::set_zero);
   temp_vector.multiply(Cmatrix, a);
   temp_scalar.multiply_tn(a, temp_vector);
   double currentstretch = sqrt(temp_scalar(0));
@@ -2169,7 +2179,7 @@ void Mat::ConstraintMixture::elastin_degradation(
     double radmin = 10.0;
     double radmax = 15.0;
     double func1 = 0.0;
-    Core::LinAlg::Matrix<1, 3> center1(true);
+    Core::LinAlg::Matrix<1, 3> center1(Core::LinAlg::Initialization::set_zero);
     center1(0) = 12.0;
     center1(1) = 0.0;
     center1(2) = 10.0;
@@ -2185,7 +2195,7 @@ void Mat::ConstraintMixture::elastin_degradation(
       func1 = 0.5 * (1.0 - cos((rad1 - radmax) / (radmax - radmin) * M_PI));
     }
     double func2 = 0.0;
-    Core::LinAlg::Matrix<1, 3> center2(true);
+    Core::LinAlg::Matrix<1, 3> center2(Core::LinAlg::Initialization::set_zero);
     center2(0) = -12.0;
     center2(1) = 0.0;
     center2(2) = -10.0;
@@ -2220,7 +2230,7 @@ void Mat::ConstraintMixture::evaluate_implicit_all(Core::LinAlg::Matrix<3, 3> de
 {
   //--------------------------------------------------------------------------------------
   // build identity tensor I
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Id(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Id(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; i++) Id(i) = 1.0;
   // right Cauchy-Green Tensor  C = 2 * E + I
   Core::LinAlg::Matrix<NUM_STRESS_3D, 1> C(*glstrain);
@@ -2229,7 +2239,7 @@ void Mat::ConstraintMixture::evaluate_implicit_all(Core::LinAlg::Matrix<3, 3> de
 
   //--------------------------------------------------------------------------------------
   // store stress and stretch in a matrix to do matrix-matrix multiplications
-  Core::LinAlg::Matrix<3, 3> Smatrix(true);
+  Core::LinAlg::Matrix<3, 3> Smatrix(Core::LinAlg::Initialization::set_zero);
   Smatrix(0, 0) = (*stress)(0);
   Smatrix(0, 1) = (*stress)(3);
   Smatrix(0, 2) = (*stress)(5);
@@ -2239,7 +2249,7 @@ void Mat::ConstraintMixture::evaluate_implicit_all(Core::LinAlg::Matrix<3, 3> de
   Smatrix(2, 0) = Smatrix(0, 2);
   Smatrix(2, 1) = Smatrix(1, 2);
   Smatrix(2, 2) = (*stress)(2);
-  Core::LinAlg::Matrix<3, 3> Cmatrix(true);
+  Core::LinAlg::Matrix<3, 3> Cmatrix(Core::LinAlg::Initialization::set_zero);
   Cmatrix(0, 0) = C(0);
   Cmatrix(0, 1) = 0.5 * C(3);
   Cmatrix(0, 2) = 0.5 * C(5);
@@ -2255,7 +2265,7 @@ void Mat::ConstraintMixture::evaluate_implicit_all(Core::LinAlg::Matrix<3, 3> de
   const int firstiter = 0;
   Core::LinAlg::Matrix<4, 1> prestretchcollagen = localprestretch_->at(gp);
   // store actual collagen stretches, do not change anymore
-  Core::LinAlg::Matrix<4, 1> actcollstretch(true);
+  Core::LinAlg::Matrix<4, 1> actcollstretch(Core::LinAlg::Initialization::set_zero);
   history_->back().get_stretches(gp, &actcollstretch);
 
   // isotropic invariant
@@ -2266,7 +2276,7 @@ void Mat::ConstraintMixture::evaluate_implicit_all(Core::LinAlg::Matrix<3, 3> de
 
   //-------------------------------------
   // invert C
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Cinv(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Cinv(Core::LinAlg::Initialization::set_zero);
   Cinv(0) = C(1) * C(2) - 0.25 * C(4) * C(4);
   Cinv(1) = C(0) * C(2) - 0.25 * C(5) * C(5);
   Cinv(2) = C(0) * C(1) - 0.25 * C(3) * C(3);
@@ -2276,8 +2286,9 @@ void Mat::ConstraintMixture::evaluate_implicit_all(Core::LinAlg::Matrix<3, 3> de
   Cinv.scale(1.0 / I3);
 
   history_->back().set_mass(gp, massprod);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> stressresidual(true);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmattemp(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> stressresidual(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmattemp(
+      Core::LinAlg::Initialization::set_zero);
   evaluate_stress(glstrain, gp, &cmattemp, &stressresidual, firstiter, time, elastin_survival);
 
   // determine residual
@@ -2294,13 +2305,14 @@ void Mat::ConstraintMixture::evaluate_implicit_all(Core::LinAlg::Matrix<3, 3> de
     localistep += 1;
     //--------------------------------------------------------------------------------------
     // derivative of residual
-    Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> DResidual(true);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> DResidual(
+        Core::LinAlg::Initialization::set_zero);
     for (int id = 0; id < NUM_STRESS_3D; id++) DResidual(id, id) = 1.0;
 
     // for all 4 fiber families
     double stretch = prestretchcollagen(0) / actcollstretch(0);
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> dstressdmass(true);
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> dmassdstress(true);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> dstressdmass(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> dmassdstress(Core::LinAlg::Initialization::set_zero);
     grad_stress_d_mass(glstrain, &dstressdmass, Cinv, a1_->at(gp), stretch, J, dt, true);
     grad_mass_d_stress(&dmassdstress, defgrd, Smatrix, a1_->at(gp), J, massstress(0),
         localhomstress_->at(gp)(0), actcollstretch(0), growthfactor);
@@ -2335,7 +2347,7 @@ void Mat::ConstraintMixture::evaluate_implicit_all(Core::LinAlg::Matrix<3, 3> de
     //----------------------------------------------------
     // F = F*-1.0
     Residual.scale(-1.0);
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> increment(true);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> increment(Core::LinAlg::Initialization::set_zero);
     // solve A.X=B
     Core::LinAlg::FixedSizeSerialDenseSolver<NUM_STRESS_3D, NUM_STRESS_3D, 1> solver;
     solver.set_matrix(DResidual);             // set A=DResidual
@@ -2349,7 +2361,7 @@ void Mat::ConstraintMixture::evaluate_implicit_all(Core::LinAlg::Matrix<3, 3> de
 
     // damping strategy
     double omega = 2.0;
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> stepstress(true);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> stepstress(Core::LinAlg::Initialization::set_zero);
     Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Residualtemp(Residual);
     double omegamin = 1.0 / 64.0;
     while (Residualtemp.norm2() > (1.0 - 0.5 * omega) * Residual.norm2() && omega > omegamin)
@@ -2394,7 +2406,8 @@ void Mat::ConstraintMixture::evaluate_implicit_all(Core::LinAlg::Matrix<3, 3> de
   if (localistep == maxstep && Residual.norm2() > params_->abstol_ * (*stress).norm_inf())
     FOUR_C_THROW("local Newton iteration did not converge {}", Residual.norm2());
 
-  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatelastic(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatelastic(
+      Core::LinAlg::Initialization::set_zero);
   evaluate_stress(glstrain, gp, &cmatelastic, stress, firstiter, time, elastin_survival);
 
   //--------------------------------------------------------------------------------------
@@ -2402,14 +2415,14 @@ void Mat::ConstraintMixture::evaluate_implicit_all(Core::LinAlg::Matrix<3, 3> de
   // right handside of the linear equations
   Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> RHS(cmatelastic);
   // left matrix of the linear equations
-  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> LM(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> LM(Core::LinAlg::Initialization::set_zero);
   for (int id = 0; id < NUM_STRESS_3D; id++) LM(id, id) = 1.0;
 
   // Fiber1
   double stretch = prestretchcollagen(0) / actcollstretch(0);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> dmassdstress(true);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> dmassdstretch(true);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> dstressdmass(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> dmassdstress(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> dmassdstretch(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> dstressdmass(Core::LinAlg::Initialization::set_zero);
   grad_mass_d_stretch(&dmassdstretch, defgrd, Smatrix, Cinv, a1_->at(gp), J, massstress(0),
       localhomstress_->at(gp)(0), actcollstretch(0), dt, growthfactor);
   grad_mass_d_stress(&dmassdstress, defgrd, Smatrix, a1_->at(gp), J, massstress(0),
@@ -2480,7 +2493,7 @@ void Mat::ConstraintMixture::evaluate_implicit_single(Core::LinAlg::Matrix<3, 3>
 {
   //--------------------------------------------------------------------------------------
   // build identity tensor I
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Id(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Id(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; i++) Id(i) = 1.0;
   // right Cauchy-Green Tensor  C = 2 * E + I
   Core::LinAlg::Matrix<NUM_STRESS_3D, 1> C(*glstrain);
@@ -2489,7 +2502,7 @@ void Mat::ConstraintMixture::evaluate_implicit_single(Core::LinAlg::Matrix<3, 3>
 
   //--------------------------------------------------------------------------------------
   // store stretch in a matrix to do matrix-matrix multiplications
-  Core::LinAlg::Matrix<3, 3> Cmatrix(true);
+  Core::LinAlg::Matrix<3, 3> Cmatrix(Core::LinAlg::Initialization::set_zero);
   Cmatrix(0, 0) = C(0);
   Cmatrix(0, 1) = 0.5 * C(3);
   Cmatrix(0, 2) = 0.5 * C(5);
@@ -2508,7 +2521,7 @@ void Mat::ConstraintMixture::evaluate_implicit_single(Core::LinAlg::Matrix<3, 3>
 
   //-------------------------------------
   // invert C
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Cinv(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Cinv(Core::LinAlg::Initialization::set_zero);
   Cinv(0) = C(1) * C(2) - 0.25 * C(4) * C(4);
   Cinv(1) = C(0) * C(2) - 0.25 * C(5) * C(5);
   Cinv(2) = C(0) * C(1) - 0.25 * C(3) * C(3);
@@ -2525,11 +2538,11 @@ void Mat::ConstraintMixture::evaluate_implicit_single(Core::LinAlg::Matrix<3, 3>
   degradation(0.0, qdegrad);
   double density = params_->density_;
   // store actual collagen stretches, do not change anymore
-  Core::LinAlg::Matrix<4, 1> actcollstretch(true);
+  Core::LinAlg::Matrix<4, 1> actcollstretch(Core::LinAlg::Initialization::set_zero);
   history_->back().get_stretches(gp, &actcollstretch);
-  Core::LinAlg::Matrix<4, 1> massprod(true);
+  Core::LinAlg::Matrix<4, 1> massprod(Core::LinAlg::Initialization::set_zero);
   history_->back().get_mass(gp, &massprod);
-  Core::LinAlg::Matrix<4, 1> massstress(true);
+  Core::LinAlg::Matrix<4, 1> massstress(Core::LinAlg::Initialization::set_zero);
 
   // set stress and cmat to zero, as they are not zero here
   (*stress).put_scalar(0.0);
@@ -2538,7 +2551,7 @@ void Mat::ConstraintMixture::evaluate_implicit_single(Core::LinAlg::Matrix<3, 3>
   // everything related to the fiber families
   for (int idfiber = 0; idfiber < 4; idfiber++)
   {
-    Core::LinAlg::Matrix<3, 1> a(true);
+    Core::LinAlg::Matrix<3, 1> a(Core::LinAlg::Initialization::set_zero);
     if (idfiber == 0)
       a = a1_->at(gp);
     else if (idfiber == 1)
@@ -2551,10 +2564,12 @@ void Mat::ConstraintMixture::evaluate_implicit_single(Core::LinAlg::Matrix<3, 3>
     double homstress = localhomstress_->at(gp)(idfiber);
     double prestretchcollagen = localprestretch_->at(gp)(idfiber);
     double stretch = prestretchcollagen / actcollstretch(idfiber);
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> stressfiber(true);
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> stressresidual(true);
-    Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatfiber(true);
-    Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmattemp(true);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> stressfiber(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> stressresidual(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatfiber(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmattemp(
+        Core::LinAlg::Initialization::set_zero);
     double currmassdensfiber = 0.0;
     double currmassdenstemp = 0.0;
     double massprodfiber = 0.0;
@@ -2571,7 +2586,7 @@ void Mat::ConstraintMixture::evaluate_implicit_single(Core::LinAlg::Matrix<3, 3>
     evaluate_fiber_family(
         C, gp, &cmattemp, &stressresidual, a, &currmassdenstemp, firstiter, time, idfiber);
 
-    Core::LinAlg::Matrix<3, 3> Smatrix(true);
+    Core::LinAlg::Matrix<3, 3> Smatrix(Core::LinAlg::Initialization::set_zero);
     Smatrix(0, 0) = stressfiber(0);
     Smatrix(0, 1) = stressfiber(3);
     Smatrix(0, 2) = stressfiber(5);
@@ -2595,13 +2610,14 @@ void Mat::ConstraintMixture::evaluate_implicit_single(Core::LinAlg::Matrix<3, 3>
       localistep += 1;
       //--------------------------------------------------------------------------------------
       // derivative of residual
-      Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> DResidual(true);
+      Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> DResidual(
+          Core::LinAlg::Initialization::set_zero);
       for (int id = 0; id < NUM_STRESS_3D; id++) DResidual(id, id) = 1.0;
 
       // linearisation of stress formula
-      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> dstressdmass(true);
+      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> dstressdmass(Core::LinAlg::Initialization::set_zero);
       grad_stress_d_mass(glstrain, &dstressdmass, Cinv, a, stretch, J, dt, false);
-      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> dmassdstress(true);
+      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> dmassdstress(Core::LinAlg::Initialization::set_zero);
       grad_mass_d_stress(&dmassdstress, defgrd, Smatrix, a, J, massstress(idfiber), homstress,
           actcollstretch(idfiber), growthfactor);
       DResidual.multiply_nt(-1.0, dstressdmass, dmassdstress, 1.0);
@@ -2611,7 +2627,7 @@ void Mat::ConstraintMixture::evaluate_implicit_single(Core::LinAlg::Matrix<3, 3>
       //----------------------------------------------------
       // F = F*-1.0
       Residual.scale(-1.0);
-      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> increment(true);
+      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> increment(Core::LinAlg::Initialization::set_zero);
       // solve A.X=B
       Core::LinAlg::FixedSizeSerialDenseSolver<NUM_STRESS_3D, NUM_STRESS_3D, 1> solver;
       solver.set_matrix(DResidual);             // set A=DResidual
@@ -2625,7 +2641,7 @@ void Mat::ConstraintMixture::evaluate_implicit_single(Core::LinAlg::Matrix<3, 3>
 
       // damping strategy
       double omega = 2.0;
-      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> stepstress(true);
+      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> stepstress(Core::LinAlg::Initialization::set_zero);
       Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Residualtemp(Residual);
       double omegamin = 1.0 / 64.0;
       while (Residualtemp.norm2() > (1.0 - 0.5 * omega) * Residual.norm2() && omega > omegamin)
@@ -2674,7 +2690,8 @@ void Mat::ConstraintMixture::evaluate_implicit_single(Core::LinAlg::Matrix<3, 3>
       FOUR_C_THROW("local Newton iteration did not converge {}", Residual.norm2());
 
     currmassdensfiber = 0.0;
-    Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatelastic(true);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatelastic(
+        Core::LinAlg::Initialization::set_zero);
     stressfiber.put_scalar(0.0);
     evaluate_fiber_family(
         C, gp, &cmatelastic, &stressfiber, a, &currmassdensfiber, firstiter, time, idfiber);
@@ -2684,12 +2701,12 @@ void Mat::ConstraintMixture::evaluate_implicit_single(Core::LinAlg::Matrix<3, 3>
     // right handside of the linear equations
     Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> RHS(cmatelastic);
     // left matrix of the linear equations
-    Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> LM(true);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> LM(Core::LinAlg::Initialization::set_zero);
     for (int id = 0; id < NUM_STRESS_3D; id++) LM(id, id) = 1.0;
 
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> dmassdstress(true);
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> dmassdstretch(true);
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> dstressdmass(true);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> dmassdstress(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> dmassdstretch(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> dstressdmass(Core::LinAlg::Initialization::set_zero);
     grad_mass_d_stretch(&dmassdstretch, defgrd, Smatrix, Cinv, a, J, massstress(idfiber), homstress,
         actcollstretch(idfiber), dt, growthfactor);
     grad_mass_d_stress(&dmassdstress, defgrd, Smatrix, a, J, massstress(idfiber), homstress,
@@ -2715,8 +2732,9 @@ void Mat::ConstraintMixture::evaluate_implicit_single(Core::LinAlg::Matrix<3, 3>
     currmassdens += currmassdensfiber;
 
     // volumetric part, that is related to this fiber family
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tempvol(true);
-    Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatvolfiber(true);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tempvol(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatvolfiber(
+        Core::LinAlg::Initialization::set_zero);
     tempvol.multiply_tn(cmatfiber, dmassdstress);
     tempvol.update(2.0, dmassdstretch, 1.0);
     cmatvolfiber.multiply_nt(-1.0 * dt / density * qdegrad * params_->kappa_ * J, Cinv, tempvol);
@@ -2725,22 +2743,25 @@ void Mat::ConstraintMixture::evaluate_implicit_single(Core::LinAlg::Matrix<3, 3>
   }
 
   // elastin
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Siso(true);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatiso(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Siso(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatiso(
+      Core::LinAlg::Initialization::set_zero);
   evaluate_elastin(C, &cmatiso, &Siso, time, &currmassdens, elastin_survival);
   (*stress) += Siso;
   (*cmat) += cmatiso;
 
   // smooth muscle cells
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Smus(true);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatmus(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Smus(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatmus(
+      Core::LinAlg::Initialization::set_zero);
   evaluate_muscle(C, &cmatmus, &Smus, gp, &currmassdens);
   (*stress) += Smus;
   (*cmat) += cmatmus;
 
   // volumetric part
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Svol(true);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatvol(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Svol(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatvol(
+      Core::LinAlg::Initialization::set_zero);
   evaluate_volumetric(C, &cmatvol, &Svol, currmassdens, density);
   (*stress) += Svol;
   (*cmat) += cmatvol;
@@ -2765,7 +2786,7 @@ void Mat::ConstraintMixture::grad_stress_d_mass(
 
   //--------------------------------------------------------------------------------------
   // build identity tensor I
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Id(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Id(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; i++) Id(i) = 1.0;
   // right Cauchy-Green Tensor  C = 2 * E + I
   Core::LinAlg::Matrix<NUM_STRESS_3D, 1> C(*glstrain);
@@ -2810,13 +2831,13 @@ void Mat::ConstraintMixture::grad_mass_d_stress(Core::LinAlg::Matrix<NUM_STRESS_
   double homstressfixed = 1.0;
   if (homstress != 0.0) homstressfixed = homstress;
 
-  Core::LinAlg::Matrix<3, 3> Cmatrix(true);
+  Core::LinAlg::Matrix<3, 3> Cmatrix(Core::LinAlg::Initialization::set_zero);
   Cmatrix.multiply_tn(defgrd, defgrd);
 
-  Core::LinAlg::Matrix<3, 1> Ca(true);
-  Core::LinAlg::Matrix<3, 1> CSCa(true);
+  Core::LinAlg::Matrix<3, 1> Ca(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> CSCa(Core::LinAlg::Initialization::set_zero);
   Ca.multiply(Cmatrix, a);
-  Core::LinAlg::Matrix<3, 1> temp1(true);
+  Core::LinAlg::Matrix<3, 1> temp1(Core::LinAlg::Initialization::set_zero);
   temp1.multiply(Smatrix, Ca);
   CSCa.multiply(Cmatrix, temp1);
   double fac = massprodbasal_ * growthfactor / homstressfixed / (J * J) / massstress /
@@ -2842,12 +2863,12 @@ void Mat::ConstraintMixture::grad_mass_d_stretch(Core::LinAlg::Matrix<NUM_STRESS
   double homstressfixed = 1.0;
   if (homstress != 0.0) homstressfixed = homstress;
 
-  Core::LinAlg::Matrix<3, 3> Cmatrix(true);
+  Core::LinAlg::Matrix<3, 3> Cmatrix(Core::LinAlg::Initialization::set_zero);
   Cmatrix.multiply_tn(defgrd, defgrd);
 
-  Core::LinAlg::Matrix<3, 1> SCa(true);
-  Core::LinAlg::Matrix<3, 1> SCSCa(true);
-  Core::LinAlg::Matrix<3, 1> temp(true);
+  Core::LinAlg::Matrix<3, 1> SCa(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> SCSCa(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> temp(Core::LinAlg::Initialization::set_zero);
   temp.multiply(Cmatrix, a);
   SCa.multiply(Smatrix, temp);
   temp.put_scalar(0.0);
@@ -2885,10 +2906,10 @@ void Mat::ConstraintMixture::evaluate_fiber_vecs(const int gp,
   // If this function is called during Setup defgrd should be replaced by the Identity.
 
   const double gamma = (45 * M_PI) / 180.;  // angle for diagonal fibers
-  Core::LinAlg::Matrix<3, 1> ca1(true);
-  Core::LinAlg::Matrix<3, 1> ca2(true);
-  Core::LinAlg::Matrix<3, 1> ca3(true);
-  Core::LinAlg::Matrix<3, 1> ca4(true);
+  Core::LinAlg::Matrix<3, 1> ca1(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> ca2(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> ca3(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> ca4(Core::LinAlg::Initialization::set_zero);
 
   for (int i = 0; i < 3; i++)
   {
@@ -2903,10 +2924,10 @@ void Mat::ConstraintMixture::evaluate_fiber_vecs(const int gp,
   }
 
   // pull back in reference configuration
-  Core::LinAlg::Matrix<3, 1> a1_0(true);
-  Core::LinAlg::Matrix<3, 1> a2_0(true);
-  Core::LinAlg::Matrix<3, 1> a3_0(true);
-  Core::LinAlg::Matrix<3, 1> a4_0(true);
+  Core::LinAlg::Matrix<3, 1> a1_0(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> a2_0(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> a3_0(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> a4_0(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Matrix<3, 3> idefgrd(false);
   idefgrd.invert(defgrd);
   a1_0.multiply(idefgrd, ca1);
@@ -2963,7 +2984,7 @@ bool Mat::ConstraintMixture::vis_data(
   if (name == "MassStress")
   {
     if ((int)data.size() != 3) FOUR_C_THROW("size mismatch");
-    Core::LinAlg::Matrix<3, 1> temp(true);
+    Core::LinAlg::Matrix<3, 1> temp(Core::LinAlg::Initialization::set_zero);
     for (int iter = 0; iter < numgp; iter++) temp.update(1.0, vismassstress_->at(iter), 1.0);
     data[0] = temp(0) / numgp;
     data[1] = temp(1) / numgp;
@@ -2995,7 +3016,7 @@ bool Mat::ConstraintMixture::vis_data(
   else if (name == "CollagenMassDensity")
   {
     if ((int)data.size() != 3) FOUR_C_THROW("size mismatch");
-    Core::LinAlg::Matrix<3, 1> temp(true);
+    Core::LinAlg::Matrix<3, 1> temp(Core::LinAlg::Initialization::set_zero);
     for (int iter = 0; iter < numgp; iter++) temp.update(1.0, visrefmassdens_->at(iter), 1.0);
     data[0] = temp(0) / numgp;
     data[1] = temp(1) / numgp;
@@ -3004,7 +3025,7 @@ bool Mat::ConstraintMixture::vis_data(
   else if (name == "Prestretch")
   {
     if ((int)data.size() != 3) FOUR_C_THROW("size mismatch");
-    Core::LinAlg::Matrix<3, 1> temp(true);
+    Core::LinAlg::Matrix<3, 1> temp(Core::LinAlg::Initialization::set_zero);
     for (int iter = 0; iter < numgp; iter++) temp.update(1.0, get_prestretch(iter), 1.0);
     data[0] = temp(0) / numgp;
     data[1] = temp(1) / numgp;
@@ -3013,7 +3034,7 @@ bool Mat::ConstraintMixture::vis_data(
   else if (name == "Homstress")
   {
     if ((int)data.size() != 3) FOUR_C_THROW("size mismatch");
-    Core::LinAlg::Matrix<3, 1> temp(true);
+    Core::LinAlg::Matrix<3, 1> temp(Core::LinAlg::Initialization::set_zero);
     for (int iter = 0; iter < numgp; iter++) temp.update(1.0, get_homstress(iter), 1.0);
     data[0] = temp(0) / numgp;
     data[1] = temp(1) / numgp;
@@ -3022,11 +3043,11 @@ bool Mat::ConstraintMixture::vis_data(
   else if (name == "MassProd")
   {
     if ((int)data.size() != 3) FOUR_C_THROW("size mismatch");
-    Core::LinAlg::Matrix<4, 1> temp(true);
+    Core::LinAlg::Matrix<4, 1> temp(Core::LinAlg::Initialization::set_zero);
     int sizehistory = history_->size();
     for (int iter = 0; iter < numgp; iter++)
     {
-      Core::LinAlg::Matrix<4, 1> temp_loc(true);
+      Core::LinAlg::Matrix<4, 1> temp_loc(Core::LinAlg::Initialization::set_zero);
       history_->at(sizehistory - 2).get_mass(iter, &temp_loc);
       // history_->at(0).get_mass(iter,&temp_loc);
       // history_->at(0).get_stretches(iter,&temp_loc);

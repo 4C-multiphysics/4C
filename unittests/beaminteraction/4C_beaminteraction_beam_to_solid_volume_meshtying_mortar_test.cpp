@@ -156,9 +156,12 @@ namespace
     Core::LinAlg::SerialDenseVector local_kappa;
 
     // Matrices for the results.
-    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(true);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(
+        Core::LinAlg::Initialization::set_zero);
 
     // Define the geometry of the two elements.
     q_beam.shape_function_data_.ref_length_ = 0.6192043571449604711;
@@ -324,9 +327,12 @@ namespace
     Core::LinAlg::SerialDenseVector local_kappa;
 
     // Matrices for the results.
-    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(true);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(
+        Core::LinAlg::Initialization::set_zero);
 
     // Define the geometry of the two elements.
     q_beam.shape_function_data_.ref_length_ = 0.6192043571449604711;
@@ -531,9 +537,12 @@ namespace
     Core::LinAlg::SerialDenseVector local_kappa;
 
     // Matrices for the results.
-    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(true);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(
+        Core::LinAlg::Initialization::set_zero);
 
     // Define the geometry of the two elements.
     q_beam.shape_function_data_.ref_length_ = 0.6192043571449604711;
@@ -777,9 +786,12 @@ namespace
     Core::LinAlg::SerialDenseVector local_kappa;
 
     // Matrices for the results.
-    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(true);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(
+        Core::LinAlg::Initialization::set_zero);
 
     // Define the geometry of the two elements.
     q_beam.shape_function_data_.ref_length_ = 0.6192043571449604711;
@@ -1053,9 +1065,12 @@ namespace
     Core::LinAlg::SerialDenseVector local_kappa;
 
     // Matrices for the results.
-    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(true);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(
+        Core::LinAlg::Initialization::set_zero);
 
     // Define the geometry of the two elements.
     q_beam.shape_function_data_.ref_length_ = 0.6192043571449604711;
@@ -1404,9 +1419,12 @@ namespace
     Core::LinAlg::SerialDenseVector local_kappa;
 
     // Matrices for the results.
-    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(true);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(
+        Core::LinAlg::Initialization::set_zero);
 
     // Define the geometry of the two elements.
     q_beam.shape_function_data_.ref_length_ = 0.6192043571449604711;
@@ -1830,9 +1848,12 @@ namespace
     Core::LinAlg::SerialDenseVector local_kappa;
 
     // Matrices for the results.
-    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(true);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(
+        Core::LinAlg::Initialization::set_zero);
 
     // Define the geometry of the two elements.
     q_beam.shape_function_data_.ref_length_ = 0.6192043571449604711;
@@ -2169,9 +2190,12 @@ namespace
     Core::LinAlg::SerialDenseVector local_kappa;
 
     // Matrices for the results.
-    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(true);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(
+        Core::LinAlg::Initialization::set_zero);
 
     // Define the geometry of the two elements.
     q_beam.shape_function_data_.ref_length_ = 0.6192043571449604711;
@@ -2604,9 +2628,12 @@ namespace
     Core::LinAlg::SerialDenseVector local_kappa;
 
     // Matrices for the results.
-    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(true);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(
+        Core::LinAlg::Initialization::set_zero);
 
     // Define the geometry of the two elements.
     q_beam.shape_function_data_.ref_length_ = 0.6192043571449604711;
@@ -3135,9 +3162,12 @@ namespace
     Core::LinAlg::SerialDenseVector local_kappa;
 
     // Matrices for the results.
-    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(true);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(
+        Core::LinAlg::Initialization::set_zero);
 
     // Define the geometry of the two elements.
     q_beam.shape_function_data_.ref_length_ = 0.6192043571449604711;
@@ -3267,9 +3297,12 @@ namespace
     Core::LinAlg::SerialDenseVector local_kappa;
 
     // Matrices for the results.
-    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(true);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(
+        Core::LinAlg::Initialization::set_zero);
 
     // Define the geometry of the two elements.
     q_beam.shape_function_data_.ref_length_ = 0.6192043571449604711;
@@ -3426,9 +3459,12 @@ namespace
     Core::LinAlg::SerialDenseVector local_kappa;
 
     // Matrices for the results.
-    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(true);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(
+        Core::LinAlg::Initialization::set_zero);
 
     // Define the geometry of the two elements.
     q_beam.shape_function_data_.ref_length_ = 0.6192043571449604711;
@@ -3612,9 +3648,12 @@ namespace
     Core::LinAlg::SerialDenseVector local_kappa;
 
     // Matrices for the results.
-    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(true);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(
+        Core::LinAlg::Initialization::set_zero);
 
     // Define the geometry of the two elements.
     q_beam.shape_function_data_.ref_length_ = 0.6192043571449604711;
@@ -3798,9 +3837,12 @@ namespace
     Core::LinAlg::SerialDenseVector local_kappa;
 
     // Matrices for the results.
-    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(true);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(
+        Core::LinAlg::Initialization::set_zero);
 
     // Define the geometry of the two elements.
     q_beam.shape_function_data_.ref_length_ = 0.6192043571449604711;
@@ -4029,9 +4071,12 @@ namespace
     Core::LinAlg::SerialDenseVector local_kappa;
 
     // Matrices for the results.
-    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(true);
-    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(true);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, beam_type::n_dof_> result_local_D(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, solid_type::n_dof_> result_local_M(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<lambda_type::n_dof_, 1> result_local_kappa(
+        Core::LinAlg::Initialization::set_zero);
 
     // Define the geometry of the two elements.
     q_beam.shape_function_data_.ref_length_ = 0.6192043571449604711;

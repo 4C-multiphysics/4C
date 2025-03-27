@@ -230,8 +230,8 @@ void Mat::elast_hyper_add_response_stretches(Core::LinAlg::Matrix<6, 6>& cmat,
   const double detdefgrad = prstr(0) * prstr(1) * prstr(2);
 
   // get coefficients
-  Core::LinAlg::Matrix<3, 1> gamma_(true);
-  Core::LinAlg::Matrix<6, 1> delta_(true);
+  Core::LinAlg::Matrix<3, 1> gamma_(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 1> delta_(Core::LinAlg::Initialization::set_zero);
   if (properties.coeffStretchesPrinc)
   {
     // loop map of associated potential summands
@@ -572,9 +572,9 @@ void Mat::elast_hyper_get_derivs_of_elastic_right_cg_tensor(const Core::LinAlg::
     const Core::LinAlg::Matrix<3, 3>& CM, Core::LinAlg::Matrix<6, 6>& dCedC,
     Core::LinAlg::Matrix<6, 9>& dCediFin)
 {  // auxiliaries
-  Core::LinAlg::Matrix<3, 3> id3x3(true);
+  Core::LinAlg::Matrix<3, 3> id3x3(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; ++i) id3x3(i, i) = 1.0;
-  Core::LinAlg::Matrix<9, 9> temp9x9(true);
+  Core::LinAlg::Matrix<9, 9> temp9x9(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::FourTensor<3> tempFourTensor(true);
 
   // C * F_{in}^{-1}
@@ -583,13 +583,13 @@ void Mat::elast_hyper_get_derivs_of_elastic_right_cg_tensor(const Core::LinAlg::
 
   // \frac{\partial C^e}{\partial C}
   dCedC.clear();
-  Core::LinAlg::Matrix<3, 3> iFinTM(true);
+  Core::LinAlg::Matrix<3, 3> iFinTM(Core::LinAlg::Initialization::set_zero);
   iFinTM.multiply_nt(1.0, id3x3, iFinM, 0.0);
   Core::LinAlg::Tensor::add_kronecker_tensor_product(dCedC, 1.0, iFinTM, iFinTM, 0.0);
 
   // \frac{\partial C^e}{\partial F_{in}^{-1}}
   dCediFin.clear();
-  Core::LinAlg::Matrix<3, 3> iFinTCM(true);
+  Core::LinAlg::Matrix<3, 3> iFinTCM(Core::LinAlg::Initialization::set_zero);
   iFinTCM.multiply_tn(1.0, iFinM, CM, 0.0);
   temp9x9.clear();
   Core::LinAlg::Tensor::add_adbc_tensor_product(1.0, id3x3, iFinTCM, temp9x9);

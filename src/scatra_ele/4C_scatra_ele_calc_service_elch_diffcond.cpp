@@ -725,11 +725,11 @@ void Discret::Elements::ScaTraEleCalcElchDiffCond<distype,
 
       // working arrays
       double potint(0.0);
-      Core::LinAlg::Matrix<1, 1> conint(true);
-      Core::LinAlg::Matrix<nsd_, 1> xint(true);
-      Core::LinAlg::Matrix<1, 1> c(true);
+      Core::LinAlg::Matrix<1, 1> conint(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<nsd_, 1> xint(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<1, 1> c(Core::LinAlg::Initialization::set_zero);
       double deltapot(0.0);
-      Core::LinAlg::Matrix<1, 1> deltacon(true);
+      Core::LinAlg::Matrix<1, 1> deltacon(Core::LinAlg::Initialization::set_zero);
 
       // start loop over integration points
       for (int iquad = 0; iquad < intpoints.ip().nquad; iquad++)

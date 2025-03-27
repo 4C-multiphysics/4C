@@ -237,7 +237,7 @@ void Mat::BeamPlasticMaterial<T>::evaluate_force_contributions_to_stress(
   else
   {
     // material elastic strain
-    Core::LinAlg::Matrix<3, 1, T> Gammaelast(true);
+    Core::LinAlg::Matrix<3, 1, T> Gammaelast(Core::LinAlg::Initialization::set_zero);
 
     // compute elastic strain
     for (int i = 0; i < 3; i++)

@@ -483,9 +483,9 @@ namespace Discret
         phase_fluid_velocity_conv.resize(numfluidphases + numvolfrac);
 
         //! temperature convective velocity
-        Core::LinAlg::Matrix<nsd, 1> temperatureconvelint(true);
+        Core::LinAlg::Matrix<nsd, 1> temperatureconvelint(Core::LinAlg::Initialization::set_zero);
         //! temperature convective part in convective form
-        Core::LinAlg::Matrix<nen, 1> temperatureconv(true);
+        Core::LinAlg::Matrix<nen, 1> temperatureconv(Core::LinAlg::Initialization::set_zero);
 
         for (int i_phase = 0; i_phase < numfluidphases; ++i_phase)
         {

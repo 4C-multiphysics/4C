@@ -237,7 +237,7 @@ bool Core::Geo::MeshFree::BoundingBox::shift_3d(
   Core::LinAlg::Matrix<3, 1> x(X);
   x.update(1.0, d, 1.0);
 
-  Core::LinAlg::Matrix<3, 1> x_ud(true);
+  Core::LinAlg::Matrix<3, 1> x_ud(Core::LinAlg::Initialization::set_zero);
   transform_from_global_to_undeformed_bounding_box_system(x, x_ud);
 
   // shift
@@ -472,7 +472,7 @@ void Core::Geo::MeshFree::BoundingBox::random_pos_within(
   std::vector<double> randuni;
   random->uni(randuni, 3);
 
-  Core::LinAlg::Matrix<3, 1> randpos_ud(true);
+  Core::LinAlg::Matrix<3, 1> randpos_ud(Core::LinAlg::Initialization::set_zero);
   for (int dim = 0; dim < 3; ++dim)
     randpos_ud(dim) = box_min(dim) + (edgelength_[dim] * randuni[dim]);
 
@@ -651,7 +651,7 @@ Core::LinAlg::Matrix<3, 1> Core::Geo::MeshFree::BoundingBox::reference_pos_of_co
   // therefore local numbering from 0 to 7 on each proc)
   Core::Nodes::Node* node_i = boxdiscret_->l_col_node(i);
 
-  Core::LinAlg::Matrix<3, 1> x(true);
+  Core::LinAlg::Matrix<3, 1> x(Core::LinAlg::Initialization::set_zero);
   for (int dim = 0; dim < 3; ++dim) x(dim) = node_i->x()[dim];
 
   return x;
@@ -664,7 +664,7 @@ Core::LinAlg::Matrix<3, 1> Core::Geo::MeshFree::BoundingBox::current_position_of
 {
   // dof gids of node i (note: each proc just has one element and eight nodes,
   // therefore local numbering from 0 to 7 on each proc)
-  Core::LinAlg::Matrix<3, 1> x(true);
+  Core::LinAlg::Matrix<3, 1> x(Core::LinAlg::Initialization::set_zero);
   if (boxdiscret_ != nullptr)
   {
     Core::Nodes::Node* node_i = boxdiscret_->l_col_node(i);
@@ -708,7 +708,7 @@ Core::LinAlg::Matrix<3, 1> Core::Geo::MeshFree::BoundingBox::undeformed_box_corn
   else if (i == 3 or i == 7)
     --i;
 
-  Core::LinAlg::Matrix<3, 1> x(true);
+  Core::LinAlg::Matrix<3, 1> x(Core::LinAlg::Initialization::set_zero);
   x(0) = ((i & 1) == 1) ? box_max(0) : box_min(0);
   x(1) = ((i & 2) == 2) ? box_max(1) : box_min(1);
   x(2) = ((i & 4) == 4) ? box_max(2) : box_min(2);
@@ -868,7 +868,7 @@ bool Core::Geo::MeshFree::BoundingBox::transform_from_global_to_undeformed_bound
     if (abs(xjm_invert) < 1e-15) FOUR_C_THROW("ERROR: Singular Jacobian");
 
     // compute increment
-    Core::LinAlg::Matrix<ndim, 1> deltaxi(true);
+    Core::LinAlg::Matrix<ndim, 1> deltaxi(Core::LinAlg::Initialization::set_zero);
     for (int z = 0; z < ndim; ++z)
       for (int p = 0; p < ndim; ++p) deltaxi(z) -= xjm(z, p) * rhs(p);
 

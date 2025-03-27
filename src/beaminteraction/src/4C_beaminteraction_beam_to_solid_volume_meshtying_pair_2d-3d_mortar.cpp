@@ -138,12 +138,18 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPair2D3DMortar<Beam, Solid,
   Core::LinAlg::Matrix<3, n_dof_rot_, double> T_times_I_tilde;
 
   // Initialize local matrices.
-  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_constraint(true);
-  Core::LinAlg::Matrix<Mortar::n_dof_, Beam::n_dof_, double> local_constraint_lin_beam_pos(true);
-  Core::LinAlg::Matrix<Mortar::n_dof_, n_dof_rot_, double> local_constraint_lin_beam_rot(true);
-  Core::LinAlg::Matrix<n_dof_rot_, Mortar::n_dof_, double> force_beam_rot_lin_lambda(true);
-  Core::LinAlg::Matrix<Mortar::n_dof_, Solid::n_dof_, double> local_constraint_lin_solid(true);
-  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_kappa(true);
+  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_constraint(
+      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Mortar::n_dof_, Beam::n_dof_, double> local_constraint_lin_beam_pos(
+      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Mortar::n_dof_, n_dof_rot_, double> local_constraint_lin_beam_rot(
+      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<n_dof_rot_, Mortar::n_dof_, double> force_beam_rot_lin_lambda(
+      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Mortar::n_dof_, Solid::n_dof_, double> local_constraint_lin_solid(
+      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_kappa(
+      Core::LinAlg::Initialization::set_zero);
 
   // Initialize scalar variables.
   double eta_last_gauss_point = 1e10;
@@ -209,7 +215,8 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPair2D3DMortar<Beam, Solid,
         projected_gauss_point.get_gauss_weight() * beam_jacobian * beam_cross_section_radius * M_PI;
 
     // Evaluate the mortar matrices
-    Core::LinAlg::Matrix<Mortar::n_dof_, Solid::n_dof_, double> local_constraint_lin_solid_gp(true);
+    Core::LinAlg::Matrix<Mortar::n_dof_, Solid::n_dof_, double> local_constraint_lin_solid_gp(
+        Core::LinAlg::Initialization::set_zero);
     local_constraint_lin_solid_gp.multiply_tn(psi, N);
     local_constraint_lin_solid_gp.scale(-1.0 * integration_factor);
     local_constraint_lin_solid += local_constraint_lin_solid_gp;
@@ -220,9 +227,12 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPair2D3DMortar<Beam, Solid,
     local_constraint_lin_beam_pos_gp.scale(integration_factor);
     local_constraint_lin_beam_pos += local_constraint_lin_beam_pos_gp;
 
-    Core::LinAlg::Matrix<Mortar::n_dof_, 1, scalar_type_rotation_vector> psi_times_rcs(true);
-    Core::LinAlg::Matrix<Mortar::n_dof_, 3, double> psi_times_rcs_lin_phi(true);
-    Core::LinAlg::Matrix<Mortar::n_dof_, n_dof_rot_, double> local_constraint_lin_beam_rot_gp(true);
+    Core::LinAlg::Matrix<Mortar::n_dof_, 1, scalar_type_rotation_vector> psi_times_rcs(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<Mortar::n_dof_, 3, double> psi_times_rcs_lin_phi(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<Mortar::n_dof_, n_dof_rot_, double> local_constraint_lin_beam_rot_gp(
+        Core::LinAlg::Initialization::set_zero);
     psi_times_rcs.multiply_tn(psi, cross_section_vector_current);
     for (unsigned int i_lambda = 0; i_lambda < Mortar::n_dof_; i_lambda++)
     {
@@ -237,9 +247,11 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPair2D3DMortar<Beam, Solid,
 
     Core::LinAlg::Matrix<n_dof_rot_, Mortar::n_dof_, scalar_type_rotation_vector>
         force_beam_rot_lin_lambda_gp(true);
-    Core::LinAlg::Matrix<3, 3, scalar_type_rotation_vector> skew_rcs(true);
+    Core::LinAlg::Matrix<3, 3, scalar_type_rotation_vector> skew_rcs(
+        Core::LinAlg::Initialization::set_zero);
     Core::LargeRotations::computespin(skew_rcs, cross_section_vector_current);
-    Core::LinAlg::Matrix<3, Mortar::n_dof_, scalar_type_rotation_vector> skew_rcs_times_psi(true);
+    Core::LinAlg::Matrix<3, Mortar::n_dof_, scalar_type_rotation_vector> skew_rcs_times_psi(
+        Core::LinAlg::Initialization::set_zero);
     skew_rcs_times_psi.multiply_nn(skew_rcs, psi);
     force_beam_rot_lin_lambda_gp.multiply_tn(L, skew_rcs_times_psi);
     for (unsigned int i = 0; i < n_dof_rot_; i++)
@@ -252,8 +264,9 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPair2D3DMortar<Beam, Solid,
     force_beam_rot_lin_lambda_gp.scale(integration_factor);
     force_beam_rot_lin_lambda += Core::FADUtils::cast_to_double(force_beam_rot_lin_lambda_gp);
 
-    Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_constraint_gp(true);
-    Core::LinAlg::Matrix<3, 1, double> diff(true);
+    Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_constraint_gp(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<3, 1, double> diff(Core::LinAlg::Initialization::set_zero);
     diff = pos_beam;
     diff += Core::FADUtils::cast_to_double(cross_section_vector_current);
     diff -= pos_solid;
@@ -357,7 +370,8 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPair2D3DMortar<Beam, Solid,
   const auto lambda_pos = Core::LinAlg::Matrix<Mortar::n_dof_, 1, double>(lambda_pos_vector.data());
 
   // Multiply with the matrices evaluated in evaluate_and_assemble_mortar_contributions
-  Core::LinAlg::Matrix<n_dof_rot_, n_dof_rot_, double> local_stiff(true);
+  Core::LinAlg::Matrix<n_dof_rot_, n_dof_rot_, double> local_stiff(
+      Core::LinAlg::Initialization::set_zero);
   for (unsigned int i = 0; i < n_dof_rot_; i++)
     for (unsigned int j = 0; j < Mortar::n_dof_; j++)
       for (unsigned int l = 0; l < n_dof_rot_; l++)

@@ -80,8 +80,8 @@ namespace Mat
     // Compute principal invariants
     Mat::invariants_principal(principleInvariantsCe, Ce);
 
-    Core::LinAlg::Matrix<3, 1> dPIe(true);
-    Core::LinAlg::Matrix<6, 1> ddPIIe(true);
+    Core::LinAlg::Matrix<3, 1> dPIe(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<6, 1> ddPIIe(Core::LinAlg::Initialization::set_zero);
 
     Mat::elast_hyper_evaluate_invariant_derivatives(
         principleInvariantsCe, dPIe, ddPIIe, potsum, summandProperties, gp, eleGID);

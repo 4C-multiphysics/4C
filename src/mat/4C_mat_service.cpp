@@ -186,7 +186,7 @@ Core::LinAlg::Matrix<6, 6> Mat::pull_back_four_tensor(const double det_F,
 
   // We can use the fact that cmat_result_voigt(i,j,k,l)=cmat_result_voigt(k,l,i,j) if we have a
   // hyper-elastic material
-  Core::LinAlg::Matrix<6, 6> cmat_result_voigt(true);
+  Core::LinAlg::Matrix<6, 6> cmat_result_voigt(Core::LinAlg::Initialization::set_zero);
 
   cmat_result_voigt(0, 0) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 0, 0, 0, 0);
   cmat_result_voigt(0, 1) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 0, 0, 1, 1);
@@ -255,7 +255,7 @@ double Mat::get_pull_back_four_tensor_entry(const double det_F,
 Core::LinAlg::Matrix<6, 6> Mat::push_forward_four_tensor(const double det_F,
     const Core::LinAlg::Matrix<3, 3>& defgrd, const Core::LinAlg::Matrix<6, 6>& cmat_lagr_voigt)
 {
-  Core::LinAlg::Matrix<6, 6> cmatEul(true);
+  Core::LinAlg::Matrix<6, 6> cmatEul(Core::LinAlg::Initialization::set_zero);
   for (int p = 0; p < 6; p++)
   {
     for (int q = 0; q < 6; q++)
@@ -293,9 +293,9 @@ Core::LinAlg::Matrix<6, 1> Mat::push_forward_stress_tensor_voigt(
     const Core::LinAlg::Matrix<6, 1>& stress_elastic,
     const Core::LinAlg::Matrix<3, 3>& deformation_gradient)
 {
-  Core::LinAlg::Matrix<3, 3> GS_tilde(true);
-  Core::LinAlg::Matrix<3, 3> GS_tildeGT(true);
-  Core::LinAlg::Matrix<3, 3> S_elastic(true);
+  Core::LinAlg::Matrix<3, 3> GS_tilde(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> GS_tildeGT(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> S_elastic(Core::LinAlg::Initialization::set_zero);
 
   // convert original stress to stress like Voigt notation
   Core::LinAlg::Voigt::Stresses::vector_to_matrix(stress_elastic, S_elastic);
@@ -305,7 +305,7 @@ Core::LinAlg::Matrix<6, 1> Mat::push_forward_stress_tensor_voigt(
   GS_tildeGT.multiply_nt(GS_tilde, deformation_gradient);
 
   // compute pk2 in reference configuration
-  Core::LinAlg::Matrix<6, 1> stress(true);
+  Core::LinAlg::Matrix<6, 1> stress(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Voigt::Stresses::matrix_to_vector(GS_tildeGT, stress);
   stress.scale(1.0 / deformation_gradient.determinant());
 

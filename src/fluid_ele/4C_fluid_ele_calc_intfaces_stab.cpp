@@ -900,7 +900,8 @@ int Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
 
   //------------------------
   // local coordinates of the face nodes w.r.t slave side
-  Core::LinAlg::Matrix<facensd_, iel> local_slave_coordinates_trafo(true);
+  Core::LinAlg::Matrix<facensd_, iel> local_slave_coordinates_trafo(
+      Core::LinAlg::Initialization::set_zero);
 
   const std::vector<int>& localtrafomap = intface->get_local_trafo_map();
 
@@ -947,8 +948,10 @@ int Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
   // of the respective parent element
   for (unsigned int q = 0; q < numgp_; q++)
   {
-    Core::LinAlg::Matrix<facensd_, 1> face_xi_points_master_linalg(true);
-    Core::LinAlg::Matrix<facensd_, 1> face_xi_points_slave_linalg(true);
+    Core::LinAlg::Matrix<facensd_, 1> face_xi_points_master_linalg(
+        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<facensd_, 1> face_xi_points_slave_linalg(
+        Core::LinAlg::Initialization::set_zero);
 
 
     // Gaussian point in face's element's local coordinates w.r.t master element
@@ -2018,12 +2021,12 @@ double Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
     FOUR_C_THROW("not implemented for nurbs");
   }
 
-  Core::LinAlg::Matrix<nsd_, 1> x_gp(true);
+  Core::LinAlg::Matrix<nsd_, 1> x_gp(Core::LinAlg::Initialization::set_zero);
   x_gp.multiply(xyze_, funct_);
 
   //---------------
   // compute local coordinates with respect to slave element
-  Core::LinAlg::Matrix<nsd_, 1> nqxg(true);
+  Core::LinAlg::Matrix<nsd_, 1> nqxg(Core::LinAlg::Initialization::set_zero);
 
   bool inelement_n = Core::Geo::compute_local_coordinates<ndistype>(nxyze_, x_gp, nqxg);
 
@@ -2033,7 +2036,7 @@ double Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
   //---------------
   // compute local coordinates with respect to master element
 
-  Core::LinAlg::Matrix<nsd_, 1> pqxg(true);
+  Core::LinAlg::Matrix<nsd_, 1> pqxg(Core::LinAlg::Initialization::set_zero);
   bool inelement_p = Core::Geo::compute_local_coordinates<pdistype>(pxyze_, x_gp, pqxg);
 
   if (!inelement_p) FOUR_C_THROW("point does not lie in element");
@@ -2249,7 +2252,7 @@ void Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
 
   // vector of shape function (2nd) derivatives in reference coordinate system, parent element,
   // scaled with normals
-  Core::LinAlg::Matrix<numderiv2_p, piel> pderxy2_n_scaled(true);
+  Core::LinAlg::Matrix<numderiv2_p, piel> pderxy2_n_scaled(Core::LinAlg::Initialization::set_zero);
   pderxy2_n_scaled.update(1.0, pderxy2_, 0.0);
 
   for (int ui = 0; ui < piel; ++ui)
@@ -2269,7 +2272,7 @@ void Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
 
   //! vector of shape function (2nd) derivatives in global coordinate system, neighbor element,
   //! scaled with normals
-  Core::LinAlg::Matrix<numderiv2_p, niel> nderxy2_n_scaled(true);
+  Core::LinAlg::Matrix<numderiv2_p, niel> nderxy2_n_scaled(Core::LinAlg::Initialization::set_zero);
   nderxy2_n_scaled.update(1.0, nderxy2_, 0.0);
 
 
@@ -2288,8 +2291,8 @@ void Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
       }
   }
 
-  Core::LinAlg::Matrix<piel, 1> pderxy2_n_scaled_sum(true);
-  Core::LinAlg::Matrix<niel, 1> nderxy2_n_scaled_sum(true);
+  Core::LinAlg::Matrix<piel, 1> pderxy2_n_scaled_sum(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<niel, 1> nderxy2_n_scaled_sum(Core::LinAlg::Initialization::set_zero);
 
   for (int ui = 0; ui < piel; ++ui)
   {

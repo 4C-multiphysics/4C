@@ -642,7 +642,7 @@ void Thermo::TemperBoundaryImpl<distype>::calculate_convection_fint_cond(
     Ntemp.multiply_tn(funct_, etemp_);
 
     // subtract the surface temperature: Ntemp -=  T_surf
-    Core::LinAlg::Matrix<1, 1> Tsurf(true);
+    Core::LinAlg::Matrix<1, 1> Tsurf(Core::LinAlg::Initialization::set_zero);
     for (int i = 0; i < 1; ++i)
     {
       Tsurf(i) = (surtemp);
@@ -728,7 +728,8 @@ void Thermo::TemperBoundaryImpl<distype>::calculate_nln_convection_fint_cond(
   // interfacial area, i.e. current element area
   double A = 0.0;
   // first partial derivatives VECTOR
-  Core::LinAlg::Matrix<(nsd_ + 1) * nen_, 1> Adiff(true);  // (12x1)
+  Core::LinAlg::Matrix<(nsd_ + 1) * nen_, 1> Adiff(
+      Core::LinAlg::Initialization::set_zero);  // (12x1)
 
   // ----------------------------------------- loop over Gauss Points
   // with ngp = intpoints.ip().nquad
@@ -750,10 +751,12 @@ void Thermo::TemperBoundaryImpl<distype>::calculate_nln_convection_fint_cond(
     A = detA * intpoints.ip().qwgt[iquad];  // here is the current area included
 
     // initialise the matrices
-    Core::LinAlg::Matrix<(nsd_ + 1), (nsd_ + 1) * nen_> ddet(true);  // (3x12)
+    Core::LinAlg::Matrix<(nsd_ + 1), (nsd_ + 1) * nen_> ddet(
+        Core::LinAlg::Initialization::set_zero);  // (3x12)
     Core::LinAlg::Matrix<((nsd_ + 1) * (nsd_ + 1) * nen_), (nsd_ + 1) * nen_> ddet2(
-        true);                                                        // (3*2*4x2*4)=(24x8)
-    Core::LinAlg::Matrix<((nsd_ + 1) * nen_), 1> jacobi_deriv(true);  // (3*4x1)=(12x1)
+        true);  // (3*2*4x2*4)=(24x8)
+    Core::LinAlg::Matrix<((nsd_ + 1) * nen_), 1> jacobi_deriv(
+        Core::LinAlg::Initialization::set_zero);  // (3*4x1)=(12x1)
 
     // with derxy_ (2x4) --> (nsd_xnen_)
     // derxy_== (LENA) dxyzdrs.multiply('N','N',1.0,deriv,x,0.0);

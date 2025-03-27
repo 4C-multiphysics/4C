@@ -180,7 +180,7 @@ void Mat::ViscoAnisotropic::unpack(Core::Communication::UnpackBuffer& buffer)
   for (int var = 0; var < numhist; var++)
   {
     // current vectors have to be initialized
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tmp(true);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tmp(Core::LinAlg::Initialization::set_zero);
     histstresscurr_->push_back(tmp);
     artstresscurr_->push_back(tmp);
 
@@ -405,7 +405,7 @@ void Mat::ViscoAnisotropic::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
 
   // right Cauchy-Green Tensor  C = 2 * E + I
   // build identity tensor I
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Id(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Id(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; i++) Id(i) = 1.0;
   Core::LinAlg::Matrix<NUM_STRESS_3D, 1> C(*glstrain);
   C.scale(2.0);

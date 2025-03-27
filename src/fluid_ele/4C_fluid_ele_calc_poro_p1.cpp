@@ -320,9 +320,9 @@ int Discret::Elements::FluidEleCalcPoroP1<distype>::evaluate_od(Discret::Element
   // (evaluation at time n+alpha_F for generalized-alpha scheme,
   //  and at time n+1 otherwise)
   // ---------------------------------------------------------------------
-  Core::LinAlg::Matrix<nsd_, nen_> ebofoaf(true);
-  Core::LinAlg::Matrix<nsd_, nen_> eprescpgaf(true);
-  Core::LinAlg::Matrix<nen_, 1> escabofoaf(true);
+  Core::LinAlg::Matrix<nsd_, nen_> ebofoaf(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, nen_> eprescpgaf(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nen_, 1> escabofoaf(Core::LinAlg::Initialization::set_zero);
   this->body_force(ele, ebofoaf, eprescpgaf, escabofoaf);
 
   // ---------------------------------------------------------------------
@@ -337,21 +337,21 @@ int Discret::Elements::FluidEleCalcPoroP1<distype>::evaluate_od(Discret::Element
   // af_genalpha: velocity/pressure at time n+alpha_F
   // np_genalpha: velocity at time n+alpha_F, pressure at time n+1
   // ost:         velocity/pressure at time n+1
-  Core::LinAlg::Matrix<nsd_, nen_> evelaf(true);
-  Core::LinAlg::Matrix<nen_, 1> epreaf(true);
+  Core::LinAlg::Matrix<nsd_, nen_> evelaf(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nen_, 1> epreaf(Core::LinAlg::Initialization::set_zero);
   Base::extract_values_from_global_vector(
       discretization, lm, *Base::rotsymmpbc_, &evelaf, &epreaf, "velaf");
 
   // np_genalpha: additional vector for velocity at time n+1
-  Core::LinAlg::Matrix<nsd_, nen_> evelnp(true);
-  Core::LinAlg::Matrix<nen_, 1> eprenp(true);
+  Core::LinAlg::Matrix<nsd_, nen_> evelnp(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nen_, 1> eprenp(Core::LinAlg::Initialization::set_zero);
   if (Base::fldparatimint_->is_genalpha_np())
     this->extract_values_from_global_vector(
         discretization, lm, *Base::rotsymmpbc_, &evelnp, &eprenp, "velnp");
 
   // np_genalpha: additional vector for velocity at time n+1
-  Core::LinAlg::Matrix<nsd_, nen_> eveln(true);
-  Core::LinAlg::Matrix<nen_, 1> epren(true);
+  Core::LinAlg::Matrix<nsd_, nen_> eveln(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nen_, 1> epren(Core::LinAlg::Initialization::set_zero);
   if (Base::fldparatimint_->is_genalpha_np())
     this->extract_values_from_global_vector(
         discretization, lm, *Base::rotsymmpbc_, &eveln, &epren, "veln");
@@ -371,28 +371,28 @@ int Discret::Elements::FluidEleCalcPoroP1<distype>::evaluate_od(Discret::Element
     Base::extract_values_from_global_vector(
         discretization, lm, *Base::rotsymmpbc_, nullptr, &epressn_timederiv, "accn");
 
-  Core::LinAlg::Matrix<nen_, 1> epressnp_timederiv(true);
+  Core::LinAlg::Matrix<nen_, 1> epressnp_timederiv(Core::LinAlg::Initialization::set_zero);
   this->extract_values_from_global_vector(
       discretization, lm, *Base::rotsymmpbc_, nullptr, &epressnp_timederiv, "accnp");
 
-  Core::LinAlg::Matrix<nen_, 1> escaaf(true);
+  Core::LinAlg::Matrix<nen_, 1> escaaf(Core::LinAlg::Initialization::set_zero);
   Base::extract_values_from_global_vector(
       discretization, lm, *Base::rotsymmpbc_, nullptr, &escaaf, "scaaf");
 
-  Core::LinAlg::Matrix<nsd_, nen_> emhist(true);
-  Core::LinAlg::Matrix<nen_, 1> echist(true);
+  Core::LinAlg::Matrix<nsd_, nen_> emhist(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nen_, 1> echist(Core::LinAlg::Initialization::set_zero);
   Base::extract_values_from_global_vector(
       discretization, lm, *Base::rotsymmpbc_, &emhist, &echist, "hist");
 
   // ---------------------------------------------------------------------
   // get additional state vectors for ALE case: grid displacement and vel.
   // ---------------------------------------------------------------------
-  Core::LinAlg::Matrix<nsd_, nen_> edispnp(true);
-  Core::LinAlg::Matrix<nsd_, nen_> egridv(true);
-  Core::LinAlg::Matrix<nsd_, nen_> edispn(true);
-  Core::LinAlg::Matrix<nsd_, nen_> egridvn(true);
+  Core::LinAlg::Matrix<nsd_, nen_> edispnp(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, nen_> egridv(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, nen_> edispn(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, nen_> egridvn(Core::LinAlg::Initialization::set_zero);
 
-  Core::LinAlg::Matrix<nen_, 1> eporositynp(true);
+  Core::LinAlg::Matrix<nen_, 1> eporositynp(Core::LinAlg::Initialization::set_zero);
 
   Base::extract_values_from_global_vector(
       discretization, lm, *Base::rotsymmpbc_, &edispnp, &eporositynp, "dispnp");
@@ -1178,12 +1178,12 @@ int Discret::Elements::FluidEleCalcPoroP1<distype>::compute_volume(Teuchos::Para
   // set element id
   Base::eid_ = ele->id();
 
-  Core::LinAlg::Matrix<nsd_, nen_> edispnp(true);
-  Core::LinAlg::Matrix<nen_, 1> eporositynp(true);
+  Core::LinAlg::Matrix<nsd_, nen_> edispnp(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nen_, 1> eporositynp(Core::LinAlg::Initialization::set_zero);
   Base::extract_values_from_global_vector(
       discretization, lm, *Base::rotsymmpbc_, &edispnp, &eporositynp, "dispnp");
 
-  Core::LinAlg::Matrix<nsd_, nen_> egridvnp(true);
+  Core::LinAlg::Matrix<nsd_, nen_> egridvnp(Core::LinAlg::Initialization::set_zero);
   Base::extract_values_from_global_vector(
       discretization, lm, *Base::rotsymmpbc_, &egridvnp, nullptr, "gridv");
 

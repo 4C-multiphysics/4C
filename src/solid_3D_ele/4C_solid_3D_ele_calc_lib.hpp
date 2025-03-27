@@ -231,7 +231,7 @@ namespace Discret::Elements
   Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> evaluate_parameter_coordinate_centroid()
     requires(Core::FE::is_hex<celltype> || Core::FE::is_nurbs<celltype>)
   {
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> xi(true);
+    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> xi(Core::LinAlg::Initialization::set_zero);
     return xi;
   }
 
@@ -267,7 +267,7 @@ namespace Discret::Elements
   Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> evaluate_parameter_coordinate_centroid()
     requires(Core::FE::is_pyramid<celltype>)
   {
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> xi(true);
+    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> xi(Core::LinAlg::Initialization::set_zero);
     xi(2) = 0.25;
 
     return xi;
@@ -286,7 +286,7 @@ namespace Discret::Elements
   Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> evaluate_parameter_coordinate_centroid()
     requires(Core::FE::is_wedge<celltype>)
   {
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> xi(true);
+    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> xi(Core::LinAlg::Initialization::set_zero);
     xi(0) = 1.0 / 3.0;
     xi(1) = 1.0 / 3.0;
 
@@ -307,7 +307,8 @@ namespace Discret::Elements
           nodal_coordinates_reference,
       const Core::LinAlg::Matrix<Internal::num_nodes<celltype>, 1>& shape_functions_point)
   {
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> coordinates_reference(true);
+    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> coordinates_reference(
+        Core::LinAlg::Initialization::set_zero);
     coordinates_reference.multiply_nn(nodal_coordinates_reference, shape_functions_point);
 
     return coordinates_reference;
@@ -329,7 +330,8 @@ namespace Discret::Elements
     const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> xi_centroid =
         evaluate_parameter_coordinate_centroid<celltype>();
 
-    Core::LinAlg::Matrix<Internal::num_nodes<celltype>, 1> shape_functions_centroid(true);
+    Core::LinAlg::Matrix<Internal::num_nodes<celltype>, 1> shape_functions_centroid(
+        Core::LinAlg::Initialization::set_zero);
     Core::FE::shape_function<celltype>(xi_centroid, shape_functions_centroid);
 
     return evaluate_reference_coordinate<celltype>(
@@ -344,7 +346,8 @@ namespace Discret::Elements
     const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> xi_centroid =
         evaluate_parameter_coordinate_centroid<celltype>();
 
-    Core::LinAlg::Matrix<Internal::num_nodes<celltype>, 1> shape_functions_centroid(true);
+    Core::LinAlg::Matrix<Internal::num_nodes<celltype>, 1> shape_functions_centroid(
+        Core::LinAlg::Initialization::set_zero);
     Core::FE::Nurbs::nurbs_shape_function_dim(shape_functions_centroid, xi_centroid,
         nodal_coordinates.knots, nodal_coordinates.weights, celltype);
 

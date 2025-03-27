@@ -1090,7 +1090,7 @@ double PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art,
     std::shared_ptr<Core::FE::Discretization> contdis)
 {
   // nodal displacement values for ALE
-  Core::LinAlg::Matrix<numdim_, numnodescont_> edispnp(true);
+  Core::LinAlg::Matrix<numdim_, numnodescont_> edispnp(Core::LinAlg::Initialization::set_zero);
 
   if (!firstcall)
   {
@@ -2969,9 +2969,9 @@ void PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art, d
   }
 
   // Initialize function f and Jacobian J for Newton iteration
-  Core::LinAlg::Matrix<numdim_, 1> f(true);
-  Core::LinAlg::Matrix<numdim_, numdim_> J(true);
-  Core::LinAlg::Matrix<numdim_, numdim_> Jinv(true);
+  Core::LinAlg::Matrix<numdim_, 1> f(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<numdim_, numdim_> J(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<numdim_, numdim_> Jinv(Core::LinAlg::Initialization::set_zero);
 
   // Vectors for shape functions and their derivatives
   static Core::LinAlg::Matrix<1, numnodesart_> N1(true);      // = N1
@@ -3283,9 +3283,9 @@ void PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art, d
   }
 
   // Initialize function f and Jacobian J for Newton iteration
-  Core::LinAlg::Matrix<numdim_, 1, T> f(true);
-  Core::LinAlg::Matrix<numdim_, numdim_, T> J(true);
-  Core::LinAlg::Matrix<numdim_, numdim_, T> Jinv(true);
+  Core::LinAlg::Matrix<numdim_, 1, T> f(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<numdim_, numdim_, T> J(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<numdim_, numdim_, T> Jinv(Core::LinAlg::Initialization::set_zero);
 
   // Vectors for shape functions and their derivatives
   static Core::LinAlg::Matrix<1, numnodesart_, T> N1(true);      // = N1

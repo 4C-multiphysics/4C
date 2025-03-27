@@ -119,7 +119,7 @@ int Discret::Elements::ScaTraEleBoundaryCalcPoro<distype, probdim>::evaluate_act
           lmvel[inode * nsd_ele_ + idim] = la[ndsvel].lm_[inode * numveldofpernode + idim];
 
       // we deal with a nsd_-dimensional flow field
-      Core::LinAlg::Matrix<nsd_, nen_> econvel(true);
+      Core::LinAlg::Matrix<nsd_, nen_> econvel(Core::LinAlg::Initialization::set_zero);
 
       // extract local values of convective velocity field from global state vector
       Core::FE::extract_my_values<Core::LinAlg::Matrix<nsd_, nen_>>(*convel, econvel, lmvel);

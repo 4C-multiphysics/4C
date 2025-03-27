@@ -277,7 +277,7 @@ int Discret::Elements::FluidEleCalcPoro<distype>::evaluate(Discret::Elements::Fl
   static Core::LinAlg::Matrix<nsd_, nen_> edispn(true);
   edispn.clear();
 
-  Core::LinAlg::Matrix<nen_, 1> eporositynp(true);
+  Core::LinAlg::Matrix<nen_, 1> eporositynp(Core::LinAlg::Initialization::set_zero);
 
   Base::extract_values_from_global_vector(
       discretization, lm, *Base::rotsymmpbc_, &edispnp, nullptr, "dispnp");
@@ -572,8 +572,8 @@ void Discret::Elements::FluidEleCalcPoro<distype>::sysmat(Teuchos::ParameterList
   ppmat.clear();
 
   // definition of vectors (static to avoid unnecessary reallocation of memory)
-  Core::LinAlg::Matrix<nen_, 1> preforce(true);
-  Core::LinAlg::Matrix<nsd_, nen_> velforce(true);
+  Core::LinAlg::Matrix<nen_, 1> preforce(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, nen_> velforce(Core::LinAlg::Initialization::set_zero);
   preforce.clear();
   velforce.clear();
 
@@ -4863,7 +4863,7 @@ double Discret::Elements::FluidEleCalcPoro<distype>::setup_material_derivatives(
   xjm0.multiply_nt(Base::deriv_, xyze0_);
 
   // inverse of transposed jacobian "ds/dX"
-  Core::LinAlg::Matrix<nsd_, nsd_> xji0(true);
+  Core::LinAlg::Matrix<nsd_, nsd_> xji0(Core::LinAlg::Initialization::set_zero);
   double det0 = xji0.invert(xjm0);
 
   // ----------------------compute derivatives N_XYZ_ at gp w.r.t. material coordinates
@@ -6150,12 +6150,12 @@ int Discret::Elements::FluidEleCalcPoro<distype>::compute_volume(Teuchos::Parame
   // set element id
   Base::eid_ = ele->id();
 
-  Core::LinAlg::Matrix<nsd_, nen_> edispnp(true);
+  Core::LinAlg::Matrix<nsd_, nen_> edispnp(Core::LinAlg::Initialization::set_zero);
   Base::extract_values_from_global_vector(
       discretization, lm, *Base::rotsymmpbc_, &edispnp, nullptr, "dispnp");
 
-  Core::LinAlg::Matrix<nsd_, nen_> evelnp(true);
-  Core::LinAlg::Matrix<nen_, 1> epressnp(true);
+  Core::LinAlg::Matrix<nsd_, nen_> evelnp(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nen_, 1> epressnp(Core::LinAlg::Initialization::set_zero);
   Base::extract_values_from_global_vector(
       discretization, lm, *Base::rotsymmpbc_, &evelnp, &epressnp, "velnp");
 
@@ -6240,11 +6240,11 @@ int Discret::Elements::FluidEleCalcPoro<distype>::compute_error(Discret::Element
     Core::LinAlg::SerialDenseVector& elevec1, const Core::FE::GaussIntegration& intpoints)
 {
   // analytical solution
-  Core::LinAlg::Matrix<nsd_, 1> u(true);
+  Core::LinAlg::Matrix<nsd_, 1> u(Core::LinAlg::Initialization::set_zero);
   double p = 0.0;
 
   // error
-  Core::LinAlg::Matrix<nsd_, 1> deltavel(true);
+  Core::LinAlg::Matrix<nsd_, 1> deltavel(Core::LinAlg::Initialization::set_zero);
   double deltap = 0.0;
 
   const auto calcerr =
@@ -6258,14 +6258,14 @@ int Discret::Elements::FluidEleCalcPoro<distype>::compute_error(Discret::Element
   // af_genalpha: velocity/pressure at time n+alpha_F
   // np_genalpha: velocity at time n+alpha_F, pressure at time n+1
   // ost:         velocity/pressure at time n+1
-  Core::LinAlg::Matrix<nsd_, nen_> evelaf(true);
-  Core::LinAlg::Matrix<nen_, 1> epreaf(true);
+  Core::LinAlg::Matrix<nsd_, nen_> evelaf(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nen_, 1> epreaf(Core::LinAlg::Initialization::set_zero);
   Base::extract_values_from_global_vector(
       discretization, lm, *Base::rotsymmpbc_, &evelaf, &epreaf, "velaf");
 
   // np_genalpha: additional vector for velocity at time n+1
-  Core::LinAlg::Matrix<nsd_, nen_> evelnp(true);
-  Core::LinAlg::Matrix<nen_, 1> eprenp(true);
+  Core::LinAlg::Matrix<nsd_, nen_> evelnp(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nen_, 1> eprenp(Core::LinAlg::Initialization::set_zero);
   if (Base::fldparatimint_->is_genalpha_np())
     Base::extract_values_from_global_vector(
         discretization, lm, *Base::rotsymmpbc_, &evelnp, &eprenp, "velnp");
@@ -6280,7 +6280,7 @@ int Discret::Elements::FluidEleCalcPoro<distype>::compute_error(Discret::Element
   // set element id
   Base::eid_ = ele->id();
 
-  Core::LinAlg::Matrix<nsd_, nen_> edispnp(true);
+  Core::LinAlg::Matrix<nsd_, nen_> edispnp(Core::LinAlg::Initialization::set_zero);
   Base::extract_values_from_global_vector(
       discretization, lm, *Base::rotsymmpbc_, &edispnp, nullptr, "dispnp");
 
@@ -6317,7 +6317,7 @@ int Discret::Elements::FluidEleCalcPoro<distype>::compute_error(Discret::Element
     */
 
     // get coordinates at integration point
-    Core::LinAlg::Matrix<nsd_, 1> xyzint(true);
+    Core::LinAlg::Matrix<nsd_, 1> xyzint(Core::LinAlg::Initialization::set_zero);
     xyzint.multiply(Base::xyze_, Base::funct_);
 
     //  the error is evaluated at the specific time of the used time integration scheme
@@ -6492,7 +6492,7 @@ void Discret::Elements::FluidEleCalcPoro<distype>::compute_mixture_strong_residu
     }
     else
     {
-      Core::LinAlg::Matrix<6, nsd_ * nen_> bop(true);
+      Core::LinAlg::Matrix<6, nsd_ * nen_> bop(Core::LinAlg::Initialization::set_zero);
       for (int i = 0; i < nen_; ++i)
       {
         for (int j = 0; j < nsd_; ++j)

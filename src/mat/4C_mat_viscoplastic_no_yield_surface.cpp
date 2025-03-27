@@ -144,7 +144,7 @@ void Mat::ViscoPlasticNoYieldSurface::setup(
   last_flowres_isotropic_.resize(numgp, params_->init_flow_res());
 
   // initialize last inverse plastic deformation gradient as identity
-  Core::LinAlg::Matrix<3, 3> id2(true);
+  Core::LinAlg::Matrix<3, 3> id2(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; ++i) id2(i, i) = 1.0;
   last_plastic_defgrd_inverse_.resize(numgp, id2);
 

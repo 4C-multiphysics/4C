@@ -150,7 +150,7 @@ double Discret::Elements::ScaTraEleCalcPoroReacECM<distype>::compute_struct_chem
   xjm0.multiply_nt(my::deriv_, poro::xyze0_);
 
   // inverse of transposed jacobian "ds/dX"
-  Core::LinAlg::Matrix<nsd_, nsd_> xji0(true);
+  Core::LinAlg::Matrix<nsd_, nsd_> xji0(Core::LinAlg::Initialization::set_zero);
   xji0.invert(xjm0);
 
   // inverse of transposed jacobian "ds/dX"

@@ -104,7 +104,7 @@ namespace
   {
     assert_eigen_values(eigenvalues, eig_compare);
 
-    Core::LinAlg::Matrix<size, size> A_result(true);
+    Core::LinAlg::Matrix<size, size> A_result(Core::LinAlg::Initialization::set_zero);
     for (unsigned int i = 0; i < size; ++i)
     {
       Core::LinAlg::Matrix<size, 1> v(false);
@@ -123,11 +123,13 @@ namespace
   {
     assert_eigen_values(eigenvalues, eig_compare);
 
-    Core::LinAlg::Matrix<size, size> A_result(true);
-    Core::LinAlg::Matrix<size, size, std::complex<double>> inv_eigenvectors(true);
+    Core::LinAlg::Matrix<size, size> A_result(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<size, size, std::complex<double>> inv_eigenvectors(
+        Core::LinAlg::Initialization::set_zero);
     Core::LinAlg::Matrix<size, size, std::complex<double>> temp(eigenvectors);
     inv_eigenvectors.invert(temp);
-    Core::LinAlg::Matrix<size, size, std::complex<double>> output_complex(true);
+    Core::LinAlg::Matrix<size, size, std::complex<double>> output_complex(
+        Core::LinAlg::Initialization::set_zero);
     temp.multiply_nn(eigenvectors, eigenvalues);
     output_complex.multiply_nn(temp, inv_eigenvectors);
     // restore complex to real form (guaranteed for a real input matrix)

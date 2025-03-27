@@ -296,7 +296,7 @@ void TSI::Utils::TSIMaterialStrategy::assign_material1_to2(
       Core::Elements::Element* actele1 = dis1->g_element(ids_1[i]);
       std::vector<double> centercoords1 = Core::FE::element_center_refe_coords(*actele1);
 
-      Core::LinAlg::Matrix<3, 1> diffcoords(true);
+      Core::LinAlg::Matrix<3, 1> diffcoords(Core::LinAlg::Initialization::set_zero);
 
       for (int j = 0; j < 3; ++j) diffcoords(j, 0) = centercoords1[j] - centercoords2[j];
 

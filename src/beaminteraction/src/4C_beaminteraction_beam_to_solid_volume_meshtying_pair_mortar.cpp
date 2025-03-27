@@ -284,12 +284,15 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<Beam, Solid, Mortar>:
   local_constraint.put_scalar(0.0);
 
   // Initialize variables for shape function values.
-  Core::LinAlg::Matrix<1, Mortar::n_nodes_ * Mortar::n_val_, double> N_mortar(true);
-  Core::LinAlg::Matrix<1, Beam::n_nodes_ * Beam::n_val_, double> N_beam(true);
-  Core::LinAlg::Matrix<1, Solid::n_nodes_ * Solid::n_val_, double> N_solid(true);
+  Core::LinAlg::Matrix<1, Mortar::n_nodes_ * Mortar::n_val_, double> N_mortar(
+      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<1, Beam::n_nodes_ * Beam::n_val_, double> N_beam(
+      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<1, Solid::n_nodes_ * Solid::n_val_, double> N_solid(
+      Core::LinAlg::Initialization::set_zero);
 
   // Initialize variable for beam position derivative.
-  Core::LinAlg::Matrix<3, 1, double> dr_beam_ref(true);
+  Core::LinAlg::Matrix<3, 1, double> dr_beam_ref(Core::LinAlg::Initialization::set_zero);
 
   // Initialize scalar variables.Clear
   double segment_jacobian = 0.0;

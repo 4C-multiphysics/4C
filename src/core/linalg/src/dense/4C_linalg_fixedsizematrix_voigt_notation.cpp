@@ -56,7 +56,7 @@ void Core::LinAlg::Voigt::fourth_order_identity_matrix(Core::LinAlg::Matrix<6, 6
 Core::LinAlg::Matrix<6, 6> Core::LinAlg::Voigt::modify_voigt_representation(
     const Core::LinAlg::Matrix<6, 6>& input, const double scalar_row, const double scalar_col)
 {
-  Core::LinAlg::Matrix<6, 6> output(true);
+  Core::LinAlg::Matrix<6, 6> output(Core::LinAlg::Initialization::set_zero);
 
   output(0, 0) = 1.0 * input(0, 0) * 1.0;
   output(0, 1) = 1.0 * input(0, 1) * 1.0;

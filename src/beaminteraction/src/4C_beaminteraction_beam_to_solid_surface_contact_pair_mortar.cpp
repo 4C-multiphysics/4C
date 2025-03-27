@@ -84,9 +84,12 @@ void BeamInteraction::BeamToSolidSurfaceContactPairMortar<ScalarType, Beam, Surf
   Core::LinAlg::Matrix<Surface::spatial_dim_, Surface::n_dof_, ScalarType> N_surface;
 
   // Initialize variables for local vectors
-  Core::LinAlg::Matrix<mortar_trial::n_dof_, 1, ScalarType> constraint_vector(true);
-  Core::LinAlg::Matrix<mortar_trial::n_dof_, 1, ScalarType> kappa(true);
-  Core::LinAlg::Matrix<3, Mortar::n_dof_, ScalarType> normal_times_lambda_shape(true);
+  Core::LinAlg::Matrix<mortar_trial::n_dof_, 1, ScalarType> constraint_vector(
+      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<mortar_trial::n_dof_, 1, ScalarType> kappa(
+      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, Mortar::n_dof_, ScalarType> normal_times_lambda_shape(
+      Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Matrix<Beam::n_dof_, Mortar::n_dof_, ScalarType>
       beam_shape_times_normal_times_lambda_shape_gp(true);
   Core::LinAlg::Matrix<Surface::n_dof_, Mortar::n_dof_, ScalarType>
@@ -140,9 +143,11 @@ void BeamInteraction::BeamToSolidSurfaceContactPairMortar<ScalarType, Beam, Surf
           surface_shape_times_normal_times_lambda_shape_gp;
 
       // Scaling vector
-      Core::LinAlg::Matrix<mortar_trial::spatial_dim_, 1, double> ones(true);
+      Core::LinAlg::Matrix<mortar_trial::spatial_dim_, 1, double> ones(
+          Core::LinAlg::Initialization::set_zero);
       ones.put_scalar(1.0);
-      Core::LinAlg::Matrix<mortar_trial::n_dof_, 1, ScalarType> N_lambda_trial_flat(true);
+      Core::LinAlg::Matrix<mortar_trial::n_dof_, 1, ScalarType> N_lambda_trial_flat(
+          Core::LinAlg::Initialization::set_zero);
       N_lambda_trial_flat.multiply_tn(N_lambda_trial, ones);
       N_lambda_trial_flat.scale(gauss_factor);
       kappa += N_lambda_trial_flat;

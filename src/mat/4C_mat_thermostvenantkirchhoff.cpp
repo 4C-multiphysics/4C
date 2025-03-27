@@ -265,7 +265,7 @@ Core::LinAlg::Matrix<6, 1> Mat::ThermoStVenantKirchhoff::evaluate_d_stress_d_sca
 
   reinit(&defgrad, &glstrain, temperature, gp);  // fixme call this before
 
-  Core::LinAlg::Matrix<6, 1> dS_dT(true);
+  Core::LinAlg::Matrix<6, 1> dS_dT(Core::LinAlg::Initialization::set_zero);
 
   // total derivative of stress (mechanical + thermal part) wrt. temperature
   // calculate derivative of cmat w.r.t. T_{n+1}

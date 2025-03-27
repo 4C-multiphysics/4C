@@ -39,7 +39,7 @@ namespace
     b(2, 1) = 1.2000000000;
     b(2, 2) = 1.0000000000;
 
-    Core::LinAlg::Matrix<6, 6> a_kron_b_ref(true);
+    Core::LinAlg::Matrix<6, 6> a_kron_b_ref(Core::LinAlg::Initialization::set_zero);
     a_kron_b_ref(0, 0) = 1.0000000000;
     a_kron_b_ref(0, 1) = 0.0000000000;
     a_kron_b_ref(0, 2) = 15.0000000000;
@@ -77,7 +77,7 @@ namespace
     a_kron_b_ref(5, 4) = 2.8000000000;
     a_kron_b_ref(5, 5) = 2.4500000000;
 
-    Core::LinAlg::Matrix<6, 6> a_kron_b(true);
+    Core::LinAlg::Matrix<6, 6> a_kron_b(Core::LinAlg::Initialization::set_zero);
     Core::LinAlg::Tensor::add_kronecker_tensor_product(a_kron_b, 1.0, a, b, 0.0);
 
     FOUR_C_EXPECT_NEAR(a_kron_b, a_kron_b_ref, 1.0e-10);

@@ -83,7 +83,7 @@ void Mat::Elastic::IsoMuscleBlemker::add_stress_aniso_modified(
     const int eleGID, Teuchos::ParameterList& params)
 {
   // right Cauchy Green tensor C in matrix notation
-  Core::LinAlg::Matrix<3, 3> C(true);
+  Core::LinAlg::Matrix<3, 3> C(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Voigt::Strains::vector_to_matrix(rcg, C);
 
   // compute volume ratio J
@@ -101,13 +101,13 @@ void Mat::Elastic::IsoMuscleBlemker::add_stress_aniso_modified(
   // compute modified invariants modI1, modI4 and modI5
   double modI1 = modC(0, 0) + modC(1, 1) + modC(2, 2);
 
-  Core::LinAlg::Matrix<3, 3> modCM(true);
+  Core::LinAlg::Matrix<3, 3> modCM(Core::LinAlg::Initialization::set_zero);
   modCM.multiply_nn(1.0, modC, M);                           // modC*M
   double modI4 = (modCM(0, 0) + modCM(1, 1) + modCM(2, 2));  // modI4 = tr(modC*M)
 
-  Core::LinAlg::Matrix<3, 3> modC2(true);
+  Core::LinAlg::Matrix<3, 3> modC2(Core::LinAlg::Initialization::set_zero);
   modC2.multiply_nn(1.0, modC, modC);  // modC*modC
-  Core::LinAlg::Matrix<3, 3> modC2M(true);
+  Core::LinAlg::Matrix<3, 3> modC2M(Core::LinAlg::Initialization::set_zero);
   modC2M.multiply_nn(1.0, modC2, M);                            // (modC*modC)*M
   double modI5 = (modC2M(0, 0) + modC2M(1, 1) + modC2M(2, 2));  // modI5 = tr((modC*modC)*M)
 
@@ -161,7 +161,7 @@ void Mat::Elastic::IsoMuscleBlemker::add_stress_aniso_modified(
   Core::LinAlg::Voigt::Stresses::matrix_to_vector(modCMsumMmodC, modCMsumMmodCv);
 
   // fictitious 2nd Piola-Kirchhoff stress tensor modS
-  Core::LinAlg::Matrix<3, 3> modS(true);
+  Core::LinAlg::Matrix<3, 3> modS(Core::LinAlg::Initialization::set_zero);
   modS.update(gamma1, Id3, 1.0);            // + gamma1*I
   modS.update(gamma4, M, 1.0);              // + gamma4*M
   modS.update(gamma5, modCMsumMmodC, 1.0);  // dyad(a0,modC*a0)+dyad(a0*C,a0) = (modC*M)' +modC'*M
@@ -235,7 +235,7 @@ void Mat::Elastic::IsoMuscleBlemker::add_stress_aniso_modified(
   modcmat.scale(std::pow(J, -4.0 / 3.0));
 
   // modified projection tensor Psl = Cinv o Cinv - 1/3 Cinv x Cinv
-  Core::LinAlg::Matrix<6, 6> Psl(true);
+  Core::LinAlg::Matrix<6, 6> Psl(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Tensor::add_holzapfel_product(Psl, icg, 1.0);
   Psl.multiply_nt(-1.0 / 3.0, icg, icg, 1.0);
 

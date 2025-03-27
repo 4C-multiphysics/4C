@@ -818,7 +818,7 @@ void Discret::Elements::Beam3r::set_up_reference_geometry(
     Core::LinAlg::Matrix<3, 1> dr0dxi;
 
     // dummy 3x1 vector
-    Core::LinAlg::Matrix<3, 1> dummy(true);
+    Core::LinAlg::Matrix<3, 1> dummy(Core::LinAlg::Initialization::set_zero);
 
 
     /********************************** Compute nodal quantities

@@ -54,7 +54,7 @@ namespace
       return {residuum, jacobian};
     };
 
-    Core::LinAlg::Matrix<2, 1> x_0(true);
+    Core::LinAlg::Matrix<2, 1> x_0(Core::LinAlg::Initialization::set_zero);
     x_0(0) = 1.1;
     x_0(1) = 0.1;
 

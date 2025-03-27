@@ -88,12 +88,15 @@ void BeamInteraction::BeamToSolidSurfaceMeshtyingPairMortar<Beam, Surface, Morta
   local_constraint.put_scalar(0.0);
 
   // Initialize variables for shape function values.
-  Core::LinAlg::Matrix<1, Mortar::n_nodes_ * Mortar::n_val_, double> N_mortar(true);
-  Core::LinAlg::Matrix<1, Beam::n_nodes_ * Beam::n_val_, double> N_beam(true);
-  Core::LinAlg::Matrix<1, Surface::n_nodes_ * Surface::n_val_, double> N_surface(true);
+  Core::LinAlg::Matrix<1, Mortar::n_nodes_ * Mortar::n_val_, double> N_mortar(
+      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<1, Beam::n_nodes_ * Beam::n_val_, double> N_beam(
+      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<1, Surface::n_nodes_ * Surface::n_val_, double> N_surface(
+      Core::LinAlg::Initialization::set_zero);
 
   // Initialize variable for beam position derivative.
-  Core::LinAlg::Matrix<3, 1, double> dr_beam_ref(true);
+  Core::LinAlg::Matrix<3, 1, double> dr_beam_ref(Core::LinAlg::Initialization::set_zero);
 
   // Initialize scalar variables.Clear
   double segment_jacobian = 0.0;
@@ -171,8 +174,10 @@ void BeamInteraction::BeamToSolidSurfaceMeshtyingPairMortar<Beam, Surface, Morta
 
   // Add the local constraint contributions. For this we multiply the local mortar matrices with the
   // positions / displacements to get the actual constraint terms for this pair.
-  Core::LinAlg::Matrix<Beam::n_dof_, 1, double> beam_coupling_dof(true);
-  Core::LinAlg::Matrix<Surface::n_dof_, 1, double> surface_coupling_dof(true);
+  Core::LinAlg::Matrix<Beam::n_dof_, 1, double> beam_coupling_dof(
+      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Surface::n_dof_, 1, double> surface_coupling_dof(
+      Core::LinAlg::Initialization::set_zero);
   switch (this->params()->beam_to_solid_surface_meshtying_params()->get_coupling_type())
   {
     case Inpar::BeamToSolid::BeamToSolidSurfaceCoupling::reference_configuration_forced_to_zero:

@@ -680,7 +680,7 @@ void XFEM::MeshCouplingFPI::set_condition_specific_parameters()
       Core::Elements::Element* fluid_ele = bg_dis_->l_row_element(ele);
       if (fluid_ele->shape() == Core::FE::CellType::hex8)
       {
-        Core::LinAlg::Matrix<3, 8> xyze(true);
+        Core::LinAlg::Matrix<3, 8> xyze(Core::LinAlg::Initialization::set_zero);
         Core::Geo::fill_initial_position_array(fluid_ele, xyze);
         double vol = XFEM::Utils::eval_element_volume<Core::FE::CellType::hex8>(xyze);
         hmax = std::max(hmax, XFEM::Utils::compute_vol_eq_diameter(vol));
@@ -755,7 +755,7 @@ void XFEM::MeshCouplingFPI::lift_drag(const int step, const double time) const
     // compute force components
     const int nsd = 3;
     const Core::LinAlg::Map* dofcolmap = cutter_dis_->dof_col_map();
-    Core::LinAlg::Matrix<3, 1> c(true);
+    Core::LinAlg::Matrix<3, 1> c(Core::LinAlg::Initialization::set_zero);
     for (int inode = 0; inode < cutter_dis_->num_my_col_nodes(); ++inode)
     {
       const Core::Nodes::Node* node = cutter_dis_->l_col_node(inode);
@@ -881,12 +881,13 @@ double XFEM::MeshCouplingFPI::compute_jacobianand_pressure(
 
     // get coordinates of gauss point w.r.t. local parent coordinate system
     Core::LinAlg::SerialDenseMatrix pqxg(1, SLAVE_NUMDOF);
-    Core::LinAlg::Matrix<SLAVE_NUMDOF, SLAVE_NUMDOF> derivtrafo(true);
+    Core::LinAlg::Matrix<SLAVE_NUMDOF, SLAVE_NUMDOF> derivtrafo(
+        Core::LinAlg::Initialization::set_zero);
 
     Core::FE::boundary_gp_to_parent_gp<SLAVE_NUMDOF>(
         pqxg, derivtrafo, intpoints, coupl_ele->shape(), fele->shape(), fele->face_parent_number());
 
-    Core::LinAlg::Matrix<SLAVE_NUMDOF, 1> pxsi(true);
+    Core::LinAlg::Matrix<SLAVE_NUMDOF, 1> pxsi(Core::LinAlg::Initialization::set_zero);
 
     // coordinates of the current integration point in parent coordinate system
     for (unsigned int idim = 0; idim < SLAVE_NUMDOF; idim++)

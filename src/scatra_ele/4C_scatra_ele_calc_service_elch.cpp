@@ -147,7 +147,7 @@ int Discret::Elements::ScaTraEleCalcElch<distype, probdim>::evaluate_action(
           // Thus, this method here DOES NOT YET provide flux values that are ready to use!!
 
           // allocate and initialize!
-          Core::LinAlg::Matrix<nsd_, 1> q(true);
+          Core::LinAlg::Matrix<nsd_, 1> q(Core::LinAlg::Initialization::set_zero);
 
           if (writefluxid != my::numdofpernode_)
           {

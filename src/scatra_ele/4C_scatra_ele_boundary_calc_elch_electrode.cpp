@@ -81,8 +81,8 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype,
   else
     my::extract_node_values(emasterphinp, discretization, la, "imasterphinp");
 
-  Core::LinAlg::Matrix<nen_, 1> eslavetempnp(true);
-  Core::LinAlg::Matrix<nen_, 1> emastertempnp(true);
+  Core::LinAlg::Matrix<nen_, 1> eslavetempnp(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nen_, 1> emastertempnp(Core::LinAlg::Initialization::set_zero);
   if (kineticmodel == Inpar::S2I::kinetics_butlervolmerreducedthermoresistance)
   {
     my::extract_node_values(
@@ -1177,8 +1177,8 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrode<distype,
     // evaluate values of shape functions and domain integration factor at current integration point
     const double fac = my::eval_shape_func_and_int_fac(intpoints, gpid);
 
-    Core::LinAlg::Matrix<nen_, 1> eslavetempnp(true);
-    Core::LinAlg::Matrix<nen_, 1> emastertempnp(true);
+    Core::LinAlg::Matrix<nen_, 1> eslavetempnp(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<nen_, 1> emastertempnp(Core::LinAlg::Initialization::set_zero);
     if (kineticmodel == Inpar::S2I::kinetics_butlervolmerreducedthermoresistance)
     {
       my::extract_node_values(

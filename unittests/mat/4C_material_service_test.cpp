@@ -59,7 +59,7 @@ namespace
     InvABInvB(4) = 1.46;
     InvABInvB(5) = 1.23;
 
-    Core::LinAlg::Matrix<6, 6> Result(true);
+    Core::LinAlg::Matrix<6, 6> Result(Core::LinAlg::Initialization::set_zero);
     double scalar = 0.5;
 
     // result_ijkl = A_ik InvABInvB_jl +  A_il InvABInvB_jk + A_jk InvABInvB_il + A_jl InvABInvB_ik
@@ -234,7 +234,7 @@ namespace
     y(2, 1) = 1.2000000000;
     y(2, 2) = 1.0000000000;
 
-    Core::LinAlg::Matrix<9, 9> x_adbc_y_ref(true);
+    Core::LinAlg::Matrix<9, 9> x_adbc_y_ref(Core::LinAlg::Initialization::set_zero);
     x_adbc_y_ref(0, 0) = 1.0000000000;
     x_adbc_y_ref(0, 1) = 0.0000000000;
     x_adbc_y_ref(0, 2) = 15.0000000000;
@@ -317,7 +317,7 @@ namespace
     x_adbc_y_ref(8, 7) = 5.0000000000;
     x_adbc_y_ref(8, 8) = 5.0000000000;
 
-    Core::LinAlg::Matrix<9, 9> x_adbc_y(true);
+    Core::LinAlg::Matrix<9, 9> x_adbc_y(Core::LinAlg::Initialization::set_zero);
     Core::LinAlg::Tensor::add_adbc_tensor_product(1.0, x, y, x_adbc_y);
 
     FOUR_C_EXPECT_NEAR(x_adbc_y, x_adbc_y_ref, 1.0e-10);

@@ -145,7 +145,7 @@ Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_derivatives_of_plastic_stra
   // computation of derivatives
 
   // first we set derivatives to 0
-  Core::LinAlg::Matrix<2, 1> equiv_plastic_strain_rate_ders(true);
+  Core::LinAlg::Matrix<2, 1> equiv_plastic_strain_rate_ders(Core::LinAlg::Initialization::set_zero);
 
   // then we check the yield condition
   if (evaluate_stress_ratio(equiv_stress, used_equiv_plastic_strain) >= 1.0)

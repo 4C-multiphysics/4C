@@ -193,8 +193,8 @@ void Mat::ThermoPlasticHyperElast::unpack(Core::Communication::UnpackBuffer& buf
   for (int var = 0; var < histsize; ++var)
   {
     // initialise
-    Core::LinAlg::Matrix<3, 3> tmp_matrix(true);
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tmp_vect(true);
+    Core::LinAlg::Matrix<3, 3> tmp_matrix(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tmp_vect(Core::LinAlg::Initialization::set_zero);
     double tmp_scalar = 0.0;
 
     extract_from_pack(buffer, tmp_matrix);
@@ -278,9 +278,9 @@ void Mat::ThermoPlasticHyperElast::setup(
   thrplheat_k_tt_->resize(numgp);
   thrplheat_k_td_->resize(numgp);
 
-  Core::LinAlg::Matrix<3, 3> emptymat(true);
+  Core::LinAlg::Matrix<3, 3> emptymat(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; i++) emptymat(i, i) = 1.0;
-  Core::LinAlg::Matrix<6, 1> emptyvect(true);
+  Core::LinAlg::Matrix<6, 1> emptyvect(Core::LinAlg::Initialization::set_zero);
 
   for (int i = 0; i < numgp; i++)
   {
@@ -328,7 +328,7 @@ void Mat::ThermoPlasticHyperElast::update()
   bebarcurr_->resize(histsize);
   accplstraincurr_->resize(histsize);
 
-  Core::LinAlg::Matrix<3, 3> emptymat(true);
+  Core::LinAlg::Matrix<3, 3> emptymat(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < histsize; i++)
   {
     defgrdcurr_->at(i) = emptymat;
@@ -399,14 +399,14 @@ Core::LinAlg::Matrix<6, 1> Mat::ThermoPlasticHyperElast::evaluate_d_stress_d_sca
   Core::LinAlg::Voigt::Stresses::matrix_to_vector(Cinv, Cinv_vct);
 
   // get the temperature-dependent mechanical material tangent
-  Core::LinAlg::Matrix<6, 1> dS_dT(true);
+  Core::LinAlg::Matrix<6, 1> dS_dT(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Matrix<6, 6> cmat_T(false);
   setup_cmat_thermo(current_temperature_, cmat_T, defgrad);
   // evaluate mechanical stress part
   dS_dT.multiply_nn(cmat_T, glstrain);
 
   // get the temperature-dependent material tangent
-  Core::LinAlg::Matrix<6, 1> ctemp(true);
+  Core::LinAlg::Matrix<6, 1> ctemp(Core::LinAlg::Initialization::set_zero);
   setup_cthermo(ctemp, defgrad.determinant(), Cinv_vct);
 
   // add the derivatives of thermal stress w.r.t temperature
@@ -451,7 +451,7 @@ void Mat::ThermoPlasticHyperElast::evaluate(const Core::LinAlg::Matrix<3, 3>* de
   double inittemp = params_->inittemp_;
 
   // 3x3 2nd-order identity matrix
-  Core::LinAlg::Matrix<3, 3> id2(true);
+  Core::LinAlg::Matrix<3, 3> id2(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; i++) id2(i, i) = 1.0;
 
   // start with current deformation
@@ -1001,8 +1001,8 @@ void Mat::ThermoPlasticHyperElast::setup_cmat_elasto_plastic(
 ) const
 {
   // ---------------------------------------------- initialise material tangents
-  Core::LinAlg::Matrix<6, 6> Cmat(true);
-  Core::LinAlg::Matrix<6, 6> Cbar_trialMaterial(true);
+  Core::LinAlg::Matrix<6, 6> Cmat(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 6> Cbar_trialMaterial(Core::LinAlg::Initialization::set_zero);
 
   // Cmat = C_ep = C_e + Cbar_trial + Cbar_p
 
@@ -1206,7 +1206,8 @@ void Mat::ThermoPlasticHyperElast::evaluate(const Core::LinAlg::Matrix<1, 1>& Nt
   //  stresstemp.update(ctemp);
 
   // build the elasto-plastic tangent modulus
-  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmat_TFD(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmat_TFD(
+      Core::LinAlg::Initialization::set_zero);
   fd_check(stresstemp, cmat_T, cmat_TFD, Ntemp, params);
   std::cout << "cmat_T " << cmat_T << std::endl;
   std::cout << "cmat_TFD " << cmat_TFD << std::endl;
@@ -1429,7 +1430,7 @@ void Mat::ThermoPlasticHyperElast::fd_check(
       // double J = defgrd.Determinant();
       // double m = m_0 * (J + 1.0 / J);
       // clear the material tangent
-      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> disturb_ctemp(true);
+      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> disturb_ctemp(Core::LinAlg::Initialization::set_zero);
       disturb_ctemp.clear();
       // C_T = m_0/2.0 . (J + 1/J) . Cinv
       disturb_ctemp.update((m / 2.0), disturb_Cinv_vct);
@@ -1442,7 +1443,8 @@ void Mat::ThermoPlasticHyperElast::fd_check(
       // PK2 = F^{-1} . tau . F^{-T}
       // --> PK2 = ctemp . Delta T = m_0/2 . (J + 1/J). Cinv . Delta T
       // initialise disturbed total stresses
-      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> disturb_stresstemp(true);
+      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> disturb_stresstemp(
+          Core::LinAlg::Initialization::set_zero);
       disturb_stresstemp.multiply_nn(disturb_ctemp, deltaT);
       // in case of testing only disturb_ctemp, ignore deltaT
       // disturb_stresstemp.update(disturb_ctemp);

@@ -193,8 +193,8 @@ void Discret::Elements::Wall1::material_response3d_plane(Core::LinAlg::SerialDen
   green_lagrange_plane3d(strain, gl);
 
   // call 3d stress response
-  Core::LinAlg::Matrix<6, 1> pk2(true);   // must be zerofied!!!
-  Core::LinAlg::Matrix<6, 6> cmat(true);  // must be zerofied!!!
+  Core::LinAlg::Matrix<6, 1> pk2(Core::LinAlg::Initialization::set_zero);   // must be zerofied!!!
+  Core::LinAlg::Matrix<6, 6> cmat(Core::LinAlg::Initialization::set_zero);  // must be zerofied!!!
   material_response3d(&pk2, &cmat, &gl, params, gp);
 
   // dimension reduction type
@@ -370,7 +370,7 @@ double Discret::Elements::Wall1::energy_internal(
     case Core::Materials::m_elasthyper:
     {
       // transform the 2d Green-Lagrange strains into 3d notation
-      Core::LinAlg::Matrix<6, 1> glstrain(true);
+      Core::LinAlg::Matrix<6, 1> glstrain(Core::LinAlg::Initialization::set_zero);
       green_lagrange_plane3d(Ev, glstrain);
 
       // strain energy
@@ -387,7 +387,7 @@ double Discret::Elements::Wall1::energy_internal(
     case Core::Materials::m_structpororeactionECM:
     {
       // transform the 2d Green-Lagrange strains into 3d notation
-      Core::LinAlg::Matrix<6, 1> glstrain(true);
+      Core::LinAlg::Matrix<6, 1> glstrain(Core::LinAlg::Initialization::set_zero);
       green_lagrange_plane3d(Ev, glstrain);
 
       // strain energy

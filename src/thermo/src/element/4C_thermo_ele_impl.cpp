@@ -291,7 +291,8 @@ int Discret::Elements::TemperImpl<distype>::evaluate(
     // set views
     Core::LinAlg::Matrix<nen_ * numdofpernode_, nen_ * numdofpernode_> etang(
         elemat1_epetra.values(), true);  // view only!
-    Core::LinAlg::Matrix<nen_ * numdofpernode_, nen_ * numdofpernode_> ecapa(true);
+    Core::LinAlg::Matrix<nen_ * numdofpernode_, nen_ * numdofpernode_> ecapa(
+        Core::LinAlg::Initialization::set_zero);
     Core::LinAlg::Matrix<nen_ * numdofpernode_, 1> efint(
         elevec1_epetra.values(), true);  // view only!
     Core::LinAlg::Matrix<nen_ * numdofpernode_, 1> efcap(
@@ -304,7 +305,8 @@ int Discret::Elements::TemperImpl<distype>::evaluate(
     // --> If dynamic analysis, i.e. T' != 0 --> etang consists of econd AND ecapa
 
     // helper matrix to store partial dC/dT*(T_{n+1} - T_n) linearization of capacity
-    Core::LinAlg::Matrix<nen_ * numdofpernode_, nen_ * numdofpernode_> ecapalin(true);
+    Core::LinAlg::Matrix<nen_ * numdofpernode_, nen_ * numdofpernode_> ecapalin(
+        Core::LinAlg::Initialization::set_zero);
 
     evaluate_tang_capa_fint(
         ele, time, discretization, la, &etang, &ecapa, &ecapalin, &efint, params);
@@ -949,7 +951,7 @@ void Discret::Elements::TemperImpl<distype>::linear_disp_contribution(
   // ------------------------------------------------ initialise material
 
   // thermal material tangent
-  Core::LinAlg::Matrix<6, 1> ctemp(true);
+  Core::LinAlg::Matrix<6, 1> ctemp(Core::LinAlg::Initialization::set_zero);
   // get scalar-valued element temperature
   // build the product of the shapefunctions and element temperatures T = N . T
   Core::LinAlg::Matrix<1, 1> NT(false);
@@ -979,7 +981,7 @@ void Discret::Elements::TemperImpl<distype>::linear_disp_contribution(
 #endif  // CALCSTABILOFREACTTERM
   }  // m_thermostvenant
 
-  Core::LinAlg::Matrix<nen_, 1> Ndctemp_dTBvNT(true);
+  Core::LinAlg::Matrix<nen_, 1> Ndctemp_dTBvNT(Core::LinAlg::Initialization::set_zero);
 
   // --------------------------------------------------- time integration
   // get the time step size
@@ -1157,9 +1159,9 @@ void Discret::Elements::TemperImpl<distype>::linear_coupled_tang(
   // ------------------------------------------------ initialise material
 
   // in case of thermo-elasto-plastic material: elasto-plastic tangent modulus
-  Core::LinAlg::Matrix<6, 6> cmat(true);
+  Core::LinAlg::Matrix<6, 6> cmat(Core::LinAlg::Initialization::set_zero);
   // thermal material tangent
-  Core::LinAlg::Matrix<6, 1> ctemp(true);
+  Core::LinAlg::Matrix<6, 1> ctemp(Core::LinAlg::Initialization::set_zero);
   // get scalar-valued element temperature
   // build the product of the shapefunctions and element temperatures T = N . T
   Core::LinAlg::Matrix<1, 1> NT(false);
@@ -1325,7 +1327,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_thermo_disp_contribution(
   // ------------------------------------------------ initialise material
 
   // thermal material tangent
-  Core::LinAlg::Matrix<6, 1> ctemp(true);
+  Core::LinAlg::Matrix<6, 1> ctemp(Core::LinAlg::Initialization::set_zero);
   // get scalar-valued element temperature
   // build the product of the shapefunctions and element temperatures T = N . T
   Core::LinAlg::Matrix<1, 1> NT(false);
@@ -1335,7 +1337,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_thermo_disp_contribution(
   // ------------------------------------------------ structural material
   std::shared_ptr<Core::Mat::Material> structmat = get_str_material(ele);
 
-  Core::LinAlg::Matrix<nen_, 1> Ndctemp_dTCrateNT(true);
+  Core::LinAlg::Matrix<nen_, 1> Ndctemp_dTCrateNT(Core::LinAlg::Initialization::set_zero);
 
   // build the deformation gradient w.r.t. material configuration
   Core::LinAlg::Matrix<nsd_, nsd_> defgrd(false);
@@ -1700,7 +1702,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_coupled_tang(
   // N_T^T . N_T . T
   Core::LinAlg::Matrix<nen_, 1> NNT(false);
   // thermal material tangent
-  Core::LinAlg::Matrix<6, 1> ctemp(true);
+  Core::LinAlg::Matrix<6, 1> ctemp(Core::LinAlg::Initialization::set_zero);
 
   // ------------------------------------------------ structural material
   std::shared_ptr<Core::Mat::Material> structmat = get_str_material(ele);
@@ -1710,7 +1712,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_coupled_tang(
   // build the rate of the deformation gradient w.r.t. material configuration
   Core::LinAlg::Matrix<nsd_, nsd_> defgrdrate(false);
   // inverse of deformation gradient
-  Core::LinAlg::Matrix<nsd_, nsd_> invdefgrd(true);
+  Core::LinAlg::Matrix<nsd_, nsd_> invdefgrd(Core::LinAlg::Initialization::set_zero);
   // initialise Jacobi-determinant
   double J = 0.0;
 
@@ -1738,7 +1740,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_coupled_tang(
     materialize(ele, iquad);
 
     // put thermal material tangent in vector notation
-    Core::LinAlg::Matrix<6, 1> cmat_vct(true);
+    Core::LinAlg::Matrix<6, 1> cmat_vct(Core::LinAlg::Initialization::set_zero);
     for (unsigned i = 0; i < nsd_; ++i) cmat_vct(i) = cmat_(i, i);
 
     // B_T^T . B_T . T
@@ -1801,7 +1803,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_coupled_tang(
     // calculate linearisation of C^{-1} according to so3_poro_evaluate: compute_auxiliary_values()
     // dC^{-1}/dd = dCinv_dd = - F^{-1} . ( B_L . F^{-1} + F^{-T} . B_L^T ) . F^{-T}
     //                       = - F^{-1} . ( B_L . F^{-1} + (B_L . F^{-1})^T ) . F^{-T}
-    Core::LinAlg::Matrix<6, nen_ * nsd_> dCinv_dd(true);
+    Core::LinAlg::Matrix<6, nen_ * nsd_> dCinv_dd(Core::LinAlg::Initialization::set_zero);
     for (int n = 0; n < nen_; ++n)
     {
       for (int k = 0; k < nsd_; ++k)
@@ -1902,7 +1904,8 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_coupled_tang(
       // k^e_Td += timefac . ( B_T^T . B_T . T . C_mat . dC^{-1}/dd . detJ . w(gp) )
       // (8x24)                (8x3)  (3x8)(8x1) (1x6) (6x24)
 
-      Core::LinAlg::Matrix<nen_, Mat::NUM_STRESS_3D> bgradTcmat(true);
+      Core::LinAlg::Matrix<nen_, Mat::NUM_STRESS_3D> bgradTcmat(
+          Core::LinAlg::Initialization::set_zero);
       Core::LinAlg::Matrix<nsd_, 1> G;
       G.multiply(cmat_, gradtemp_);
       for (int i = 0; i < nen_; i++)
@@ -1941,7 +1944,8 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_coupled_tang(
           std::dynamic_pointer_cast<Mat::ThermoPlasticHyperElast>(structmat);
 
       // dJ/dd (1x24)
-      Core::LinAlg::Matrix<1, nsd_ * nen_ * numdofpernode_> dJ_dd(true);
+      Core::LinAlg::Matrix<1, nsd_ * nen_ * numdofpernode_> dJ_dd(
+          Core::LinAlg::Initialization::set_zero);
       calculate_linearisation_of_jacobian(dJ_dd, J, derxy_, invdefgrd);
 
       // --------------------------------- thermoelastic heating term H_e
@@ -2019,7 +2023,7 @@ void Discret::Elements::TemperImpl<distype>::linear_dissipation_fint(
 
   // --------------------------------------------------------- initialise
   // thermal material tangent
-  Core::LinAlg::Matrix<6, 1> ctemp(true);
+  Core::LinAlg::Matrix<6, 1> ctemp(Core::LinAlg::Initialization::set_zero);
 
   // ------------------------------------------------ structural material
   std::shared_ptr<Core::Mat::Material> structmat = get_str_material(ele);
@@ -2290,7 +2294,7 @@ void Discret::Elements::TemperImpl<distype>::nonlinear_dissipation_fint_tang(
 
   // --------------------------------------------------------------- initialise
   // thermal material tangent
-  Core::LinAlg::Matrix<6, 1> ctemp(true);
+  Core::LinAlg::Matrix<6, 1> ctemp(Core::LinAlg::Initialization::set_zero);
 
   // ------------------------------------------------------ structural material
   std::shared_ptr<Core::Mat::Material> structmat = get_str_material(ele);
@@ -3159,7 +3163,8 @@ void Discret::Elements::TemperImpl<distype>::calculate_linearisation_of_jacobian
     defgrd_inv_vec(8) = defgrd_inv(2, 2);
 
     // ------------------------ build N_X operator (w.r.t. material config)
-    Core::LinAlg::Matrix<nsd_ * nsd_, nsd_ * nen_ * numdofpernode_> N_X(true);  // set to zero
+    Core::LinAlg::Matrix<nsd_ * nsd_, nsd_ * nen_ * numdofpernode_> N_X(
+        Core::LinAlg::Initialization::set_zero);  // set to zero
     for (int i = 0; i < nen_; ++i)
     {
       N_X(0, 3 * i + 0) = N_XYZ(0, i);
@@ -3283,8 +3288,8 @@ void Discret::Elements::TemperImpl<distype>::compute_error(
   Core::LinAlg::Matrix<1, 1> NT(false);
 
   // analytical solution
-  Core::LinAlg::Matrix<1, 1> T_analytical(true);
-  Core::LinAlg::Matrix<1, 1> deltaT(true);
+  Core::LinAlg::Matrix<1, 1> T_analytical(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<1, 1> deltaT(Core::LinAlg::Initialization::set_zero);
   // ------------------------------- integration loop for one element
 
   // integrations points and weights
@@ -3314,8 +3319,8 @@ void Discret::Elements::TemperImpl<distype>::compute_error(
 
     // H1 -error norm
     // compute first derivative of the displacement
-    Core::LinAlg::Matrix<nsd_, 1> derT(true);
-    Core::LinAlg::Matrix<nsd_, 1> deltaderT(true);
+    Core::LinAlg::Matrix<nsd_, 1> derT(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<nsd_, 1> deltaderT(Core::LinAlg::Initialization::set_zero);
 
     // Compute analytical solution
     switch (calcerr)
@@ -3324,7 +3329,7 @@ void Discret::Elements::TemperImpl<distype>::compute_error(
       {
         // get coordinates at integration point
         // gp reference coordinates
-        Core::LinAlg::Matrix<nsd_, 1> xyzint(true);
+        Core::LinAlg::Matrix<nsd_, 1> xyzint(Core::LinAlg::Initialization::set_zero);
         xyzint.multiply(xyze_, funct_);
 
         // function evaluation requires a 3D position vector!!
@@ -3556,8 +3561,10 @@ void Discret::Elements::TemperImpl<distype>::fd_check_capalin(
   res_act.update(1, efcapn, -1, efcap);
 
   // create a vector for evaluation of disturbed ecapa and residual
-  Core::LinAlg::Matrix<nen_ * numdofpernode_, nen_ * numdofpernode_> ecapa_disturb(true);
-  Core::LinAlg::Matrix<nen_ * numdofpernode_, 1> res_disturb(true);
+  Core::LinAlg::Matrix<nen_ * numdofpernode_, nen_ * numdofpernode_> ecapa_disturb(
+      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nen_ * numdofpernode_, 1> res_disturb(
+      Core::LinAlg::Initialization::set_zero);
   // loop over rows and disturb corresponding temperature
   for (int j = 0; j < nen_ * numdofpernode_; j++)
   {

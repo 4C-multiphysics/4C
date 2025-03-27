@@ -188,7 +188,7 @@ void Mat::ThermoPlasticLinElast::unpack(Core::Communication::UnpackBuffer& buffe
 
   for (int var = 0; var < histsize; ++var)
   {
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tmp_vect(true);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tmp_vect(Core::LinAlg::Initialization::set_zero);
     double tmp_scalar = 0.0;
     // vectors of last converged state are unpacked
     extract_from_pack(buffer, tmp_vect);
@@ -239,7 +239,7 @@ void Mat::ThermoPlasticLinElast::setup(
   incstrainpl_ = std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>();
   strainelrate_ = std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>();
 
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> emptymat_vect(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> emptymat_vect(Core::LinAlg::Initialization::set_zero);
   strainpllast_->resize(numgp);
   strainplcurr_->resize(numgp);
 
@@ -329,7 +329,7 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Matrix<3, 3>* defg
     int gp,                                                    ///< Gauss point
     int eleGID)
 {
-  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> plstrain(true);
+  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> plstrain(Core::LinAlg::Initialization::set_zero);
   if (eleGID == -1) FOUR_C_THROW("no element provided in material");
 
   // get material parameters
@@ -354,7 +354,7 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Matrix<3, 3>* defg
   kappa = young / (3.0 * (1.0 - 2.0 * nu));
 
   // build Cartesian identity 2-tensor I_{AB}
-  Core::LinAlg::Matrix<6, 1> id2(true);
+  Core::LinAlg::Matrix<6, 1> id2(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; i++) id2(i) = 1.0;
 
   // glstrain (in): independent variable passed from the element
@@ -397,7 +397,7 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Matrix<3, 3>* defg
   // ----------------------------------------------- elastic trial strain
   // assume load step is elastic
   // strain^e_{n+1}
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> strain_e(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> strain_e(Core::LinAlg::Initialization::set_zero);
 
   // strain^{e,trial}_{n+1} = strain_{n+1} - strain^p_n
   Core::LinAlg::Matrix<NUM_STRESS_3D, 1> trialstrain_e(false);
@@ -428,7 +428,7 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Matrix<3, 3>* defg
 
   // ------------------------------------------ relative effective stress
   // eta^{trial}_{n+1} = s^{trial}_{n+1} - beta^{trial}_{n+1}
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> eta(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> eta(Core::LinAlg::Initialization::set_zero);
   rel_dev_stress(devstress, beta, eta);
 
   // J2 = 1/2 ( (eta11^{trial})^2 + (eta22^{trial})^2 + (eta33^{trial})^2
@@ -506,13 +506,13 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Matrix<3, 3>* defg
   // unit flow vector Nbar (Prandtl-Reuss)
   // (using the updated relative stress eta_{n+1}, no longer eta_{n+1}^trial)
   // Nbar = ( eta^{trial}_{n+1} / || eta^{trial}_{n+1} || )
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Nbar(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> Nbar(Core::LinAlg::Initialization::set_zero);
 
   // flow vector N (Prandtl-Reuss)
   // (using the updated relative stress eta_{n+1}, no longer eta^{trial}_{n+1})
   // N = sqrt{3/2} . ( eta^{trial}_{n+1} / || eta^{trial}_{n+1} || )
   //   = sqrt{3/2} . Nbar
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> N(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> N(Core::LinAlg::Initialization::set_zero);
 
   //---------------------------------------------------------------------------
   // IF consistency condition is violated, i.e. plastic load step
@@ -799,7 +799,7 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Matrix<3, 3>* defg
 
   // temperature dependent stress
   // sigma = C_theta * Delta T = (m*I) * Delta T
-  Core::LinAlg::Matrix<6, 1> ctemp(true);
+  Core::LinAlg::Matrix<6, 1> ctemp(Core::LinAlg::Initialization::set_zero);
   setup_cthermo(ctemp);
   Core::LinAlg::Matrix<6, 1> stresstemp(false);
   stresstemp.multiply_nn(ctemp, deltaT);
@@ -832,7 +832,7 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Matrix<3, 3>* defg
   std::cout << " Kinematic hardening module " << Hkin << std::endl;
 
   // build the elasto-plastic tangent modulus
-  Core::LinAlg::Matrix<6, 6> cmatFD(true);
+  Core::LinAlg::Matrix<6, 6> cmatFD(Core::LinAlg::Initialization::set_zero);
 
   std::cout << "cmat " << *cmat << std::endl;
 #endif  // #ifdef DEBUGMATERIAL
@@ -901,10 +901,10 @@ Core::LinAlg::Matrix<6, 1> Mat::ThermoPlasticLinElast::evaluate_d_stress_d_scala
     const Core::LinAlg::Matrix<3, 3>& defgrad, const Core::LinAlg::Matrix<6, 1>& glstrain,
     Teuchos::ParameterList& params, int gp, int eleGID)
 {
-  Core::LinAlg::Matrix<6, 1> dS_dT(true);
+  Core::LinAlg::Matrix<6, 1> dS_dT(Core::LinAlg::Initialization::set_zero);
 
   // get the temperature-dependent material tangent
-  Core::LinAlg::Matrix<6, 1> ctemp(true);
+  Core::LinAlg::Matrix<6, 1> ctemp(Core::LinAlg::Initialization::set_zero);
   setup_cthermo(ctemp);
 
   // add the derivatives of thermal stress w.r.t temperature
@@ -1032,14 +1032,15 @@ void Mat::ThermoPlasticLinElast::setup_cmat_elasto_plastic(
   //
 
   // build Cartesian identity 2-tensor I_{AB}
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> id2(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> id2(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; i++) id2(i) = 1.0;
 
   // set Cartesian identity 4-tensor in 6-Voigt matrix notation
   // this is fully 'contra-variant' identity tensor, ie I^{ABCD}
   // REMARK: rows are stress-like 6-Voigt
   //         columns are stress-like 6-Voigt
-  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> id4sharp(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> id4sharp(
+      Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; i++) id4sharp(i, i) = 1.0;
   for (int i = 3; i < 6; i++) id4sharp(i, i) = 0.5;
 
@@ -1221,14 +1222,15 @@ void Mat::ThermoPlasticLinElast::dissipation_coupl_cond(
 
   // build Cartesian identity 2-tensor I_{AB}
   // build Cartesian identity 2-tensor I_{AB}
-  Core::LinAlg::Matrix<6, 1> id2(true);
+  Core::LinAlg::Matrix<6, 1> id2(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; i++) id2(i) = 1.0;
 
   // set Cartesian identity 4-tensor in 6-Voigt matrix notation
   // this is fully 'contra-variant' identity tensor, ie I^{ABCD}
   // REMARK: rows are stress-like 6-Voigt
   //         columns are stress-like 6-Voigt
-  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> id4sharp(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> id4sharp(
+      Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; i++) id4sharp(i, i) = 1.0;
   for (int i = 3; i < 6; i++) id4sharp(i, i) = 0.5;
 

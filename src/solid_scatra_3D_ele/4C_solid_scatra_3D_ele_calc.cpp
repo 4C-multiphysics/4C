@@ -472,7 +472,8 @@ void Discret::Elements::SolidScatraEleCalc<celltype, SolidFormulation>::evaluate
 
               // Assemble matrix
               // k_dS = B^T . dS/dc * detJ * N * w(gp)
-              Core::LinAlg::Matrix<num_dof_per_ele, 1> BdSdc(true);
+              Core::LinAlg::Matrix<num_dof_per_ele, 1> BdSdc(
+                  Core::LinAlg::Initialization::set_zero);
               BdSdc.multiply_tn(integration_factor, bop, dSdc);
 
               // loop over rows

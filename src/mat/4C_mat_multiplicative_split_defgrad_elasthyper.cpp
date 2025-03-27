@@ -234,7 +234,7 @@ void Mat::MultiplicativeSplitDefgradElastHyper::evaluate(
   Core::LinAlg::Matrix<6, 9> dSdiFin = evaluated_sdi_fin(kinematic_quantities, stress_factors);
 
   // right Cauchy-Green deformation tensor
-  Core::LinAlg::Matrix<3, 3> CM(true);
+  Core::LinAlg::Matrix<3, 3> CM(Core::LinAlg::Initialization::set_zero);
   CM.multiply_tn(1.0, *defgrad, *defgrad, 0.0);
 
   /// part of the elasticity tensor as shown in evaluate_stress_cmat_iso
@@ -286,7 +286,7 @@ Core::LinAlg::Matrix<6, 1> Mat::MultiplicativeSplitDefgradElastHyper::evaluate_d
       kinematic_quantities.dPIe, kinematic_quantities.ddPIIe);
   Core::LinAlg::Matrix<6, 9> dSdiFin = evaluated_sdi_fin(kinematic_quantities, stress_factors);
 
-  Core::LinAlg::Matrix<6, 1> d_stress_d_scalar(true);
+  Core::LinAlg::Matrix<6, 1> d_stress_d_scalar(Core::LinAlg::Initialization::set_zero);
   evaluate_od_stiff_mat(source, &defgrad, dSdiFin, d_stress_d_scalar);
   return d_stress_d_scalar;
 }
@@ -688,15 +688,15 @@ Core::LinAlg::Matrix<6, 9> Mat::MultiplicativeSplitDefgradElastHyper::evaluated_
   // (contribution from det(Fin))
 
   // dS/d(det(Fin))
-  Core::LinAlg::Matrix<6, 1> dSddetFin(true);
+  Core::LinAlg::Matrix<6, 1> dSddetFin(Core::LinAlg::Initialization::set_zero);
   dSddetFin.update(gamma(0), iCinV, 0.0);
   dSddetFin.update(gamma(1), iCinCiCinV, 1.0);
   dSddetFin.update(gamma(2), iCV, 1.0);
 
   // d(det(Fin))/diFin
-  Core::LinAlg::Matrix<9, 1> ddetFindiFinV(true);
-  Core::LinAlg::Matrix<3, 3> ddetFindiFinM(true);
-  Core::LinAlg::Matrix<3, 3> FinM(true);
+  Core::LinAlg::Matrix<9, 1> ddetFindiFinV(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> ddetFindiFinM(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> FinM(Core::LinAlg::Initialization::set_zero);
   FinM.invert(iFinM);
   ddetFindiFinM.update_t((-1.0) * detFin, FinM);
   Core::LinAlg::Voigt::matrix_3x3_to_9x1(ddetFindiFinM, ddetFindiFinV);
@@ -721,27 +721,29 @@ void Mat::MultiplicativeSplitDefgradElastHyper::evaluate_transv_iso_quantities(
   const Core::LinAlg::Matrix<6, 9>& dCediFin = kinemat_quant.dCediFin;
 
   // auxiliaries
-  Core::LinAlg::Matrix<3, 3> id3x3(true);
+  Core::LinAlg::Matrix<3, 3> id3x3(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; ++i) id3x3(i, i) = 1.0;
-  Core::LinAlg::Matrix<3, 3> temp3x3(true);
-  Core::LinAlg::Matrix<6, 6> temp6x6(true);
-  Core::LinAlg::Matrix<6, 9> temp6x9(true);
-  Core::LinAlg::Matrix<9, 9> temp9x9(true);
-  Core::LinAlg::Matrix<6, 1> temp6x1(true);
+  Core::LinAlg::Matrix<3, 3> temp3x3(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 6> temp6x6(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 9> temp6x9(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<9, 9> temp9x9(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 1> temp6x1(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::FourTensor<3> tempFourTensor(true);
 
   // compute elastic right CG tensor in matrix form (CeM) and in Voigt strain notation (CeV)
-  Core::LinAlg::Matrix<3, 3> CeM(true);
+  Core::LinAlg::Matrix<3, 3> CeM(Core::LinAlg::Initialization::set_zero);
   temp3x3.multiply_tn(1.0, iFinM, CM, 0.0);
   CeM.multiply_nn(1.0, temp3x3, iFinM, 0.0);
-  Core::LinAlg::Matrix<6, 1> CeV(true);
+  Core::LinAlg::Matrix<6, 1> CeV(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Voigt::VoigtUtils<Core::LinAlg::Voigt::NotationType::strain>::matrix_to_vector(
       CeM, CeV);
 
   // initialize elastic 2nd PK stress elast_stress and elasticity tensor elast_stiffness (associated
   // to the transversely isotropic hyperelastic component)
-  Core::LinAlg::Matrix<6, 1> elast_stress(true);     // Voigt stress notation of SeM
-  Core::LinAlg::Matrix<6, 6> elast_stiffness(true);  // Voigt stress-strain
+  Core::LinAlg::Matrix<6, 1> elast_stress(
+      Core::LinAlg::Initialization::set_zero);  // Voigt stress notation of SeM
+  Core::LinAlg::Matrix<6, 6> elast_stiffness(
+      Core::LinAlg::Initialization::set_zero);  // Voigt stress-strain
 
   // loop through all transversely isotropic parts, and compute the total elastic stress and elastic
   // stiffness
@@ -755,10 +757,10 @@ void Mat::MultiplicativeSplitDefgradElastHyper::evaluate_transv_iso_quantities(
   elast_stiffness = Core::LinAlg::Voigt::modify_voigt_representation(temp6x6, 1.0, 2.0);
 
   // calculate stress from elast_stress
-  Core::LinAlg::Matrix<3, 3> SeM(true);
+  Core::LinAlg::Matrix<3, 3> SeM(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Voigt::VoigtUtils<Core::LinAlg::Voigt::NotationType::stress>::vector_to_matrix(
       elast_stress, SeM);
-  Core::LinAlg::Matrix<3, 3> SM(true);
+  Core::LinAlg::Matrix<3, 3> SM(Core::LinAlg::Initialization::set_zero);
   temp3x3.multiply_nn(1.0, iFinM, SeM, 0.0);
   SM.multiply_nt(1.0, temp3x3, iFinM, 0.0);
   SM.scale(iFinM.determinant());
@@ -767,19 +769,20 @@ void Mat::MultiplicativeSplitDefgradElastHyper::evaluate_transv_iso_quantities(
   stress.update(1.0, temp6x1, 1.0);
 
   // F^{-1}_{in} S_{e} and S_{e} F^{-T}_{in}
-  Core::LinAlg::Matrix<3, 3> iFinSeM(true);
+  Core::LinAlg::Matrix<3, 3> iFinSeM(Core::LinAlg::Initialization::set_zero);
   iFinSeM.multiply_nn(1.0, iFinM, SeM, 0.0);
-  Core::LinAlg::Matrix<3, 3> SeiFinTM(true);
+  Core::LinAlg::Matrix<3, 3> SeiFinTM(Core::LinAlg::Initialization::set_zero);
   SeiFinTM.multiply_nt(1.0, id3x3, iFinSeM, 0.0);
 
   // \frac{\partial S_{e}}{\partial F^{-1}_{in}}
-  Core::LinAlg::Matrix<6, 9> dSediFin(true);  // Voigt stress-form
+  Core::LinAlg::Matrix<6, 9> dSediFin(Core::LinAlg::Initialization::set_zero);  // Voigt stress-form
   dSediFin.multiply_nn(1.0, elast_stiffness, dCediFin, 0.0);
   Core::LinAlg::FourTensor<3> dSediFin_FourTensor(true);
   Core::LinAlg::Voigt::setup_four_tensor_from_6x9_voigt_matrix(dSediFin_FourTensor, dSediFin);
 
   // \frac{\partial S_{e}}{\partial C}
-  Core::LinAlg::Matrix<6, 6> dSedC(true);  // Voigt stress-stress-form
+  Core::LinAlg::Matrix<6, 6> dSedC(
+      Core::LinAlg::Initialization::set_zero);  // Voigt stress-stress-form
   dSedC.multiply_nn(1.0, elast_stiffness, dCedC, 0.0);
   Core::LinAlg::FourTensor<3> dSedC_FourTensor(true);
   Core::LinAlg::Voigt::setup_four_tensor_from_6x6_voigt_matrix(dSedC_FourTensor, dSedC);
@@ -795,7 +798,8 @@ void Mat::MultiplicativeSplitDefgradElastHyper::evaluate_transv_iso_quantities(
   Core::LinAlg::FourTensor<3> iFin_iFindSediFin_T12_FourTensor(true);
   Core::LinAlg::Tensor::multiply_matrix_four_tensor<3>(
       iFin_iFindSediFin_T12_FourTensor, iFinM, iFindSediFin_FourTensor_T12, true);
-  Core::LinAlg::Matrix<6, 9> iFin_iFindSediFin_T12(true);  // Voigt stress-form
+  Core::LinAlg::Matrix<6, 9> iFin_iFindSediFin_T12(
+      Core::LinAlg::Initialization::set_zero);  // Voigt stress-form
   Core::LinAlg::Voigt::setup_6x9_voigt_matrix_from_four_tensor(iFin_iFindSediFin_T12,
       iFin_iFindSediFin_T12_FourTensor);  // NOTE: we do not transpose ijkl->jikl anymore, this
                                           // should be symmetric!
@@ -809,7 +813,8 @@ void Mat::MultiplicativeSplitDefgradElastHyper::evaluate_transv_iso_quantities(
   Core::LinAlg::FourTensor<3> iFin_iFindSedC_T12_FourTensor(true);
   Core::LinAlg::Tensor::multiply_matrix_four_tensor<3>(
       iFin_iFindSedC_T12_FourTensor, iFinM, iFindSedC_FourTensor_T12, true);
-  Core::LinAlg::Matrix<6, 6> iFin_iFindSedC_T12(true);  // Voigt stress-stress-form
+  Core::LinAlg::Matrix<6, 6> iFin_iFindSedC_T12(
+      Core::LinAlg::Initialization::set_zero);  // Voigt stress-stress-form
   Core::LinAlg::Voigt::setup_6x6_voigt_matrix_from_four_tensor(iFin_iFindSedC_T12,
       iFin_iFindSedC_T12_FourTensor);  // NOTE: we do not transpose ijkl->jikl anymore, this should
                                        // be symmetric!
@@ -844,7 +849,7 @@ Core::LinAlg::Matrix<6, 6> Mat::MultiplicativeSplitDefgradElastHyper::evaluate_a
   // implementation accordingly
   if (num_contributions == 1)
   {
-    Core::LinAlg::Matrix<3, 3> id3x3(true);
+    Core::LinAlg::Matrix<3, 3> id3x3(Core::LinAlg::Initialization::set_zero);
     for (int i = 0; i < 3; ++i) id3x3(i, i) = 1.0;
     facdefgradin[0].second->evaluate_additional_cmat(
         defgrad, id3x3, iFinjM[0].second, iCV, dSdiFin, cmatadd);

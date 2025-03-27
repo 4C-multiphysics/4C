@@ -349,7 +349,7 @@ void XFEM::XFluidContactComm::get_states(const int fluidele_id, const std::vecto
 
   // 3 // get quantities in gp
   {
-    Core::LinAlg::Matrix<3, 1> fluidele_xsi(true);
+    Core::LinAlg::Matrix<3, 1> fluidele_xsi(Core::LinAlg::Initialization::set_zero);
     if (fluidele->shape() == Core::FE::CellType::hex8)
     {
       Core::LinAlg::Matrix<3, 8> xyze(ele_xyze.values(), true);
@@ -873,7 +873,7 @@ Cut::Side* XFEM::XFluidContactComm::findnext_physical_side(Core::LinAlg::Matrix<
     physical_sides = last_physical_sides_.second;
 
   distance = 1e200;
-  Core::LinAlg::Matrix<3, 1> newx(true);
+  Core::LinAlg::Matrix<3, 1> newx(Core::LinAlg::Initialization::set_zero);
   Cut::Side* newSide = nullptr;
 
   for (std::set<Cut::Side*>::iterator psit = physical_sides.begin(); psit != physical_sides.end();
@@ -987,7 +987,7 @@ void XFEM::XFluidContactComm::update_physical_sides(
     else
     {
       Core::LinAlg::Matrix<3, 1> normal;
-      Core::LinAlg::Matrix<2, 1> center(true);
+      Core::LinAlg::Matrix<2, 1> center(Core::LinAlg::Initialization::set_zero);
       neibs[sid]->normal(center, normal, false);
       double norm = normal.norm2();
       if (norm > 1e-10)
@@ -1135,8 +1135,8 @@ void XFEM::XFluidContactComm::get_cut_side_integration_points(
   sh->coordinates(xquad);
   Core::LinAlg::Matrix<2, numnodes_sh> deriv(false);
   Core::LinAlg::Matrix<2, 2> metrictensor(false);
-  Core::LinAlg::Matrix<3, 1> normal_side(true);
-  Core::LinAlg::Matrix<3, 1> normal_bc(true);
+  Core::LinAlg::Matrix<3, 1> normal_side(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> normal_bc(Core::LinAlg::Initialization::set_zero);
 
   Cut::plain_side_set subsides;
   sh->collect_sides(subsides);
@@ -1266,9 +1266,10 @@ void XFEM::XFluidContactComm::get_cut_side_integration_points(
   }
 
   weights.clear();
-  Core::LinAlg::Matrix<3, 1> x_gp_lin(true);
-  Core::LinAlg::Matrix<3, 1> normal(true);
-  Core::LinAlg::Matrix<2, 1> rst(true);  // local coordinates w.r.t side
+  Core::LinAlg::Matrix<3, 1> x_gp_lin(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> normal(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<2, 1> rst(
+      Core::LinAlg::Initialization::set_zero);  // local coordinates w.r.t side
   double drs = 0;
   double drs_sh = 0;
   for (std::size_t bc = 0; bc < bcs.size(); ++bc)

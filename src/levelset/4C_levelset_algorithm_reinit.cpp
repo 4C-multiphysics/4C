@@ -851,7 +851,7 @@ void ScaTra::LevelSetAlgorithm::reinit_geo(
             const Core::LinAlg::SerialDenseMatrix& patchcoord = patch.cell_nodal_pos_xyz();
 
             // compute normal vector to flame front patch
-            Core::LinAlg::Matrix<3, 1> normal(true);
+            Core::LinAlg::Matrix<3, 1> normal(Core::LinAlg::Initialization::set_zero);
             compute_normal_vector_to_interface(patch, patchcoord, normal);
 
             //-----------------------------------------
@@ -1128,9 +1128,9 @@ void ScaTra::LevelSetAlgorithm::compute_distance_to_edge(const Core::LinAlg::Mat
     if ((lotfusspointdist >= 0.0) and
         (lotfusspointdist <= normvertex1tovertex2))  // lotfusspoint on edge
     {
-      Core::LinAlg::Matrix<3, 1> lotfusspoint(true);
+      Core::LinAlg::Matrix<3, 1> lotfusspoint(Core::LinAlg::Initialization::set_zero);
       lotfusspoint.update(1.0, vertex1, lotfusspointdist, vertex1tovertex2);
-      Core::LinAlg::Matrix<3, 1> nodetolotfusspoint(true);
+      Core::LinAlg::Matrix<3, 1> nodetolotfusspoint(Core::LinAlg::Initialization::set_zero);
       nodetolotfusspoint.update(1.0, lotfusspoint, -1.0, node);
 
       // determine length of vector from node to lot fuss point

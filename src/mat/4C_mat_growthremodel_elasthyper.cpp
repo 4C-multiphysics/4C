@@ -510,7 +510,7 @@ void Mat::GrowthRemodelElastHyper::setup_aniso_growth_tensors()
   ag_m_.update(1.0, arad_m_, 0.0);
 
   // structural tensor of the plane in which all fibers are located
-  Core::LinAlg::Matrix<3, 3> id(true);
+  Core::LinAlg::Matrix<3, 3> id(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; ++i) id(i, i) = 1.0;
   apl_m_.update(1.0, arad_m_, 0.0);
   apl_m_.update(1.0, id, -1.0);
@@ -599,10 +599,10 @@ void Mat::GrowthRemodelElastHyper::update(Core::LinAlg::Matrix<3, 3> const& defg
 
 
   // build inelastic growth deformation gradient
-  Core::LinAlg::Matrix<3, 3> FgM(true);
-  Core::LinAlg::Matrix<3, 3> iFgM(true);
-  Core::LinAlg::Matrix<3, 3> dFgdrhoM(true);
-  Core::LinAlg::Matrix<3, 3> diFgdrhoM(true);
+  Core::LinAlg::Matrix<3, 3> FgM(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> iFgM(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> dFgdrhoM(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> diFgdrhoM(Core::LinAlg::Initialization::set_zero);
   evaluate_growth_def_grad(FgM, iFgM, dFgdrhoM, diFgdrhoM, gp);
 
   // time step size
@@ -691,18 +691,18 @@ void Mat::GrowthRemodelElastHyper::evaluate_prestretch(
 
   // calculate circumferential residual stress
   double sig = 0.0;
-  Core::LinAlg::Matrix<6, 1> Acir_strain(true);
+  Core::LinAlg::Matrix<6, 1> Acir_strain(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Voigt::Strains::matrix_to_vector(acir_m_, Acir_strain);
 
   // total circumferential Cauchy stress ("membrane stress")
   double sig_tot = (params_->p_mean_ * params_->ri_) / params_->t_ref_;
 
   // evaluate anisotropic remodel fibers
-  Core::LinAlg::Matrix<3, 3> CM(true);
+  Core::LinAlg::Matrix<3, 3> CM(Core::LinAlg::Initialization::set_zero);
   CM.multiply_tn(1.0, *defgrd, *defgrd, 0.0);
-  Core::LinAlg::Matrix<6, 1> stressaniso(true);
-  Core::LinAlg::Matrix<6, 6> cmataniso(true);
-  Core::LinAlg::Matrix<3, 3> id(true);
+  Core::LinAlg::Matrix<6, 1> stressaniso(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 6> cmataniso(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> id(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; ++i) id(i, i) = 1.0;
   for (auto& p : potsumrf_)
   {
@@ -711,9 +711,10 @@ void Mat::GrowthRemodelElastHyper::evaluate_prestretch(
   }
 
   // build stress response and elasticity tensor of 3D material
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> stressiso(true);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatiso(true);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 9> dSdiFgiso(true);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> stressiso(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> cmatiso(
+      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 9> dSdiFgiso(Core::LinAlg::Initialization::set_zero);
   evaluate_stress_cmat_iso(defgrd, gm_[gp], stressiso, cmatiso, dSdiFgiso, gp, eleGID);
   sig += stressiso.dot(Acir_strain);
 
@@ -726,9 +727,9 @@ void Mat::GrowthRemodelElastHyper::evaluate_prestretch(
         "So far, only ONE CoupNeoHooke material can be chosen for the membrane \"material\"");
 
   // build stress response and elasticity tensor of membrane material
-  Core::LinAlg::Matrix<6, 1> stressmem(true);
-  Core::LinAlg::Matrix<6, 6> cmatmem(true);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 9> dSdiFgmem(true);
+  Core::LinAlg::Matrix<6, 1> stressmem(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 6> cmatmem(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 9> dSdiFgmem(Core::LinAlg::Initialization::set_zero);
   evaluate_stress_cmat_membrane(CM, id, stressmem, cmatmem, dSdiFgmem, gp, eleGID);
 
   mue_frac_[gp] = sig_res / stressmem.dot(Acir_strain);
@@ -740,8 +741,8 @@ void Mat::GrowthRemodelElastHyper::evaluate_prestretch(
 void Mat::GrowthRemodelElastHyper::setup_g_r_3d(Core::LinAlg::Matrix<3, 3> const* const defgrd,
     Teuchos::ParameterList& params, const double dt, const int gp, const int eleGID)
 {
-  Core::LinAlg::Matrix<3, 1> axdir(true);
-  Core::LinAlg::Matrix<3, 1> raddir(true);
+  Core::LinAlg::Matrix<3, 1> axdir(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> raddir(Core::LinAlg::Initialization::set_zero);
   const auto& gp_reference_coordinates = params.get<Core::LinAlg::Matrix<3, 1>>("gp_coords_ref");
 
   if ((params_->cylinder_ == 1 || params_->cylinder_ == 2 || params_->cylinder_ == 3) &&
@@ -1095,14 +1096,14 @@ void Mat::GrowthRemodelElastHyper::evaluate_stress_cmat_iso(
   static Core::LinAlg::Matrix<3, 3> iCinCM(true);
   static Core::LinAlg::Matrix<3, 3> iFinCeM(true);
   static Core::LinAlg::Matrix<9, 1> CiFin9x1(true);
-  Core::LinAlg::Matrix<9, 1> CiFinCe9x1(true);
-  Core::LinAlg::Matrix<9, 1> CiFiniCe9x1(true);
+  Core::LinAlg::Matrix<9, 1> CiFinCe9x1(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<9, 1> CiFiniCe9x1(Core::LinAlg::Initialization::set_zero);
 
   evaluate_kin_quant_elast(defgrd, iFinM, iCinv, iCinCiCinv, iCv, iCinCM, iFinCeM, CiFin9x1,
       CiFinCe9x1, CiFiniCe9x1, prinv, gp);
 
-  Core::LinAlg::Matrix<3, 1> dPIe(true);
-  Core::LinAlg::Matrix<6, 1> ddPIIe(true);
+  Core::LinAlg::Matrix<3, 1> dPIe(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 1> ddPIIe(Core::LinAlg::Initialization::set_zero);
   evaluate_invariant_derivatives(prinv, dPIe, ddPIIe, gp, eleGID);
 
   // 2nd Piola Kirchhoff stress factors (according to Holzapfel-Nonlinear Solid Mechanics p. 216)
@@ -1213,8 +1214,8 @@ void Mat::GrowthRemodelElastHyper::evaluate_invariant_derivatives(
   // in the constraint mixture
   static Core::LinAlg::Matrix<3, 1> modinv(true);
   invariants_modified(modinv, prinv);
-  Core::LinAlg::Matrix<3, 1> dPmodI(true);
-  Core::LinAlg::Matrix<6, 1> ddPmodII(true);
+  Core::LinAlg::Matrix<3, 1> dPmodI(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 1> ddPmodII(Core::LinAlg::Initialization::set_zero);
   for (const auto& p : potsumeliso_)
   {
     dPgrowthI.clear();
@@ -1369,8 +1370,8 @@ void Mat::GrowthRemodelElastHyper::evaluate_additional_cmat(Core::LinAlg::Matrix
   cmatadd.clear();
 
   // diFg/dC
-  Core::LinAlg::Matrix<9, 6> diFgdC(true);
-  Core::LinAlg::Matrix<9, 1> diFgdrho9x1(true);
+  Core::LinAlg::Matrix<9, 6> diFgdC(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<9, 1> diFgdrho9x1(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Voigt::matrix_3x3_to_9x1(diFgdrhoM, diFgdrho9x1);
   diFgdC.multiply_nn(1.0, diFgdrho9x1, sum_drhodC, 0.0);
 
@@ -1572,7 +1573,7 @@ void Mat::GrowthRemodelElastHyper::evaluate_growth_def_grad(Core::LinAlg::Matrix
 void Mat::GrowthRemodelElastHyper::setup_g_r_2d(
     Teuchos::ParameterList& params, const double dt, const int gp)
 {
-  Core::LinAlg::Matrix<3, 1> axdir(true);
+  Core::LinAlg::Matrix<3, 1> axdir(Core::LinAlg::Initialization::set_zero);
   const auto& gp_coords_ref = params.get<Core::LinAlg::Matrix<3, 1>>("gp_coords_ref");
 
   if ((params_->cylinder_ == 1 || params_->cylinder_ == 2 || params_->cylinder_ == 3) &&
@@ -1611,14 +1612,14 @@ void Mat::GrowthRemodelElastHyper::evaluate_membrane(Core::LinAlg::Matrix<3, 3> 
   cmat_glob.clear();
 
   // Evaluate growth deformation gradient
-  Core::LinAlg::Matrix<3, 3> FgM(true);
-  Core::LinAlg::Matrix<3, 3> iFgM(true);
-  Core::LinAlg::Matrix<3, 3> dFgdrhoM(true);
-  Core::LinAlg::Matrix<3, 3> diFgdrhoM(true);
+  Core::LinAlg::Matrix<3, 3> FgM(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> iFgM(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> dFgdrhoM(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> diFgdrhoM(Core::LinAlg::Initialization::set_zero);
   evaluate_growth_def_grad(FgM, iFgM, dFgdrhoM, diFgdrhoM, gp);
 
   // Elastic deformation gradient
-  Core::LinAlg::Matrix<3, 3> CM(true);
+  Core::LinAlg::Matrix<3, 3> CM(Core::LinAlg::Initialization::set_zero);
   CM.multiply_tn(1.0, defgrd_glob, defgrd_glob, 0.0);
 
   // Evaluate anisotropic remodel fibers
@@ -1662,25 +1663,25 @@ double Mat::GrowthRemodelElastHyper::evaluate_membrane_thickness_stretch(
 
   // Evaluate growth deformation gradient
   // growth deformation gradient
-  Core::LinAlg::Matrix<3, 3> FgM(true);
-  Core::LinAlg::Matrix<3, 3> iFgM(true);
-  Core::LinAlg::Matrix<3, 3> dFgdrhoM(true);
-  Core::LinAlg::Matrix<3, 3> diFgdrhoM(true);
+  Core::LinAlg::Matrix<3, 3> FgM(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> iFgM(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> dFgdrhoM(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> diFgdrhoM(Core::LinAlg::Initialization::set_zero);
   evaluate_growth_def_grad(FgM, iFgM, dFgdrhoM, diFgdrhoM, gp);
 
   // Elastic deformation gradient
-  Core::LinAlg::Matrix<3, 3> CM(true);
+  Core::LinAlg::Matrix<3, 3> CM(Core::LinAlg::Initialization::set_zero);
   CM.multiply_tn(1.0, defgrd_glob, defgrd_glob, 0.0);
-  Core::LinAlg::Matrix<3, 3> CeM(true);
-  Core::LinAlg::Matrix<3, 3> iFinM(true);
-  Core::LinAlg::Matrix<3, 3> tmp(true);
+  Core::LinAlg::Matrix<3, 3> CeM(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> iFinM(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> tmp(Core::LinAlg::Initialization::set_zero);
   iFinM.multiply_nn(1.0, iFgM, gm_[gp], 0.0);
   tmp.multiply_tn(1.0, iFinM, CM, 0.0);
   CeM.multiply_nn(1.0, tmp, iFinM, 0.0);
 
   // Calculate adapted right Cauchy Green stretch in thickness direction
-  Core::LinAlg::Matrix<3, 3> AplCeAplAradM(true);
-  Core::LinAlg::Matrix<3, 3> CinM(true);
+  Core::LinAlg::Matrix<3, 3> AplCeAplAradM(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> CinM(Core::LinAlg::Initialization::set_zero);
   tmp.multiply(1.0, apl_m_, CeM, 0.0);
   AplCeAplAradM.multiply_nn(1.0, tmp, apl_m_, 0.0);
   AplCeAplAradM.update(1.0, arad_m_, 1.0);

@@ -169,24 +169,24 @@ void Mat::Elastic::RemodelFiber::setup(
 
 
   // some variables
-  Core::LinAlg::Matrix<2, 1> dPI(true);
-  Core::LinAlg::Matrix<3, 1> ddPII(true);
-  Core::LinAlg::Matrix<4, 1> dddPIII(true);
-  Core::LinAlg::Matrix<6, 1> stressactv(true);
-  Core::LinAlg::Matrix<6, 6> cmatactive(true);
-  Core::LinAlg::Matrix<3, 3> stressactM(true);
+  Core::LinAlg::Matrix<2, 1> dPI(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> ddPII(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<4, 1> dddPIII(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 1> stressactv(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 6> cmatactive(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> stressactM(Core::LinAlg::Initialization::set_zero);
 
   setup_structural_tensors_gr();
 
   // quadratic prestretch in tensor notation
-  Core::LinAlg::Matrix<3, 3> CpreM(true);
+  Core::LinAlg::Matrix<3, 3> CpreM(Core::LinAlg::Initialization::set_zero);
 
   // temporary pointers to check the type of the remodelfiber (active or passive)
   std::shared_ptr<Mat::Elastic::CoupAnisoExpo> t1;
   std::shared_ptr<Mat::Elastic::CoupAnisoExpoActive> t2;
 
   // identity matrix
-  Core::LinAlg::Matrix<3, 3> id(true);
+  Core::LinAlg::Matrix<3, 3> id(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; ++i) id(i, i) = 1.0;
 
   double sig_pre = 0.0;
@@ -232,7 +232,7 @@ void Mat::Elastic::RemodelFiber::setup(
 void Mat::Elastic::RemodelFiber::setup_structural_tensors_gr()
 {
   // identity tensor
-  Core::LinAlg::Matrix<3, 3> id(true);
+  Core::LinAlg::Matrix<3, 3> id(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; ++i) id(i, i) = 1.0;
 
   // fiber directions
@@ -261,7 +261,7 @@ void Mat::Elastic::RemodelFiber::update()
 void Mat::Elastic::RemodelFiber::update_fiber_dirs(
     Core::LinAlg::Matrix<3, 3> const& locsys, const double& dt)
 {
-  Core::LinAlg::Matrix<3, 3> id(true);
+  Core::LinAlg::Matrix<3, 3> id(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; ++i) id(i, i) = 1.0;
 
   for (auto& k : potsumfiber_) k->fiber->set_fiber_vecs(-1.0, locsys, id);
@@ -277,20 +277,20 @@ void Mat::Elastic::RemodelFiber::update_fiber_dirs(
 void Mat::Elastic::RemodelFiber::update_sig_h()
 {
   // some variables
-  Core::LinAlg::Matrix<3, 3> CpreM(true);
-  Core::LinAlg::Matrix<2, 1> dPI(true);
-  Core::LinAlg::Matrix<3, 1> ddPII(true);
-  Core::LinAlg::Matrix<4, 1> dddPIII(true);
-  Core::LinAlg::Matrix<6, 1> stressactv(true);
-  Core::LinAlg::Matrix<6, 6> cmatactive(true);
-  Core::LinAlg::Matrix<3, 3> stressactM(true);
+  Core::LinAlg::Matrix<3, 3> CpreM(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<2, 1> dPI(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> ddPII(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<4, 1> dddPIII(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 1> stressactv(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 6> cmatactive(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> stressactM(Core::LinAlg::Initialization::set_zero);
 
   // temporary pointers to check the type of the remodelfiber (active or passive)
   std::shared_ptr<Mat::Elastic::CoupAnisoExpo> t1;
   std::shared_ptr<Mat::Elastic::CoupAnisoExpoActive> t2;
 
   // identity matrix
-  Core::LinAlg::Matrix<3, 3> id(true);
+  Core::LinAlg::Matrix<3, 3> id(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; ++i) id(i, i) = 1.0;
 
   double sig = 0.0;
@@ -470,7 +470,7 @@ void Mat::Elastic::RemodelFiber::derivd_c(Core::LinAlg::Matrix<3, 3, T> const& C
   FAD r_fad = 0.0;
   func.evaluate_func(r_fad, CeM_fad, gp, eleGID);
 
-  Core::LinAlg::Matrix<3, 3> tmp(true);
+  Core::LinAlg::Matrix<3, 3> tmp(Core::LinAlg::Initialization::set_zero);
   first_deriv_to_matrix(r_fad, tmp);
   dfuncdC.update(1.0, tmp, 0.0);
 }
@@ -795,7 +795,7 @@ void Mat::Elastic::RemodelFiber::evaluate_derivatives_cauchy_growth(
   FAD sig_fad = 0.0;
   evaluate_local_cauchy_stress(CM_fad, iFinM_fad, AM_fad, fiberdat.fiber, gp, eleGID, sig_fad);
 
-  Core::LinAlg::Matrix<3, 3> dsigdiFgM(true);
+  Core::LinAlg::Matrix<3, 3> dsigdiFgM(Core::LinAlg::Initialization::set_zero);
   first_deriv_to_matrix(sig_fad, dsigdiFgM);
   dsigdrho = dsigdiFgM.dot(diFgdrhoM);
 
@@ -923,7 +923,7 @@ void Mat::Elastic::RemodelFiber::evaluate_derivatives_cauchy_remodel(
   FAD sig_fad = 0.0;
   evaluate_local_cauchy_stress(CM_fad, iFinM_fad, AM_fad, fiberdat.fiber, gp, eleGID, sig_fad);
 
-  Core::LinAlg::Matrix<3, 3> dsigdiFrM(true);
+  Core::LinAlg::Matrix<3, 3> dsigdiFrM(Core::LinAlg::Initialization::set_zero);
   first_deriv_to_matrix(sig_fad, dsigdiFrM);
   dsigdlambr = dsigdiFrM.dot(fiberdat.diFrdlambrM[gp]);
 
@@ -1052,7 +1052,7 @@ void Mat::Elastic::RemodelFiber::evaluatedsigd_c(Core::LinAlg::Matrix<3, 3, T> c
   FAD sig_fad = 0.0;
   evaluate_local_cauchy_stress(CM_fad, iFinM_fad, AM_fad, fiber, gp, eleGID, sig_fad);
 
-  Core::LinAlg::Matrix<3, 3, T> tmp(true);
+  Core::LinAlg::Matrix<3, 3, T> tmp(Core::LinAlg::Initialization::set_zero);
   FirstDerivToMatrix(sig_fad, dsigdC);
 }
 
@@ -1226,7 +1226,7 @@ void Mat::Elastic::RemodelFiber::evaluated_evolution_equationd_c(Core::LinAlg::M
   YM.multiply_nn(1.0, CeM, FrdotiFrM, 0.0);
   Core::LinAlg::Voigt::Strains::matrix_to_vector(YM, Y_strain);
 
-  Core::LinAlg::Matrix<9, 6> dYdC(true);
+  Core::LinAlg::Matrix<9, 6> dYdC(Core::LinAlg::Initialization::set_zero);
   static Core::LinAlg::Matrix<3, 3> iFinTM(true);
   static Core::LinAlg::Matrix<3, 3> iFrTFrdotTiFinTM(true);
   iFinTM.update_t(1.0, iFinM, 0.0);

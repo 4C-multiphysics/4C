@@ -190,9 +190,9 @@ double Mixture::IsotropicCylinderPrestressStrategy::evaluate_mue_frac(MixtureRul
   }
 
   Core::LinAlg::Matrix<3, 3> F = Core::LinAlg::identity_matrix<3>();
-  Core::LinAlg::Matrix<6, 1> E_strain(true);
-  Core::LinAlg::Matrix<6, 1> S_stress(true);
-  Core::LinAlg::Matrix<6, 6> cmat(true);
+  Core::LinAlg::Matrix<6, 1> E_strain(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 1> S_stress(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 6> cmat(Core::LinAlg::Initialization::set_zero);
 
 
   mixtureRule.evaluate(F, E_strain, params, S_stress, cmat, gp, eleGID);

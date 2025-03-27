@@ -388,7 +388,7 @@ namespace XFEM
       if (forcetangvel_)
       {
         // We project in the normal direction
-        Core::LinAlg::Matrix<3, 1> tmp_ivel(true);
+        Core::LinAlg::Matrix<3, 1> tmp_ivel(Core::LinAlg::Initialization::set_zero);
         tmp_ivel.multiply_tn(
             projection_matrix, ivel);  // apply Projection matrix from the right. (u_0 * P^t)
         ivel.update(1.0, tmp_ivel, 0.0);
@@ -468,7 +468,7 @@ namespace XFEM
           gradphi.put_scalar(0.0);  // This to catch the cases when gradphi \approx 0
 
         // normal_comb = alpha_n * normal + (1-alpha)*gradphi
-        Core::LinAlg::Matrix<nsd, 1> normal_comb(true);
+        Core::LinAlg::Matrix<nsd, 1> normal_comb(Core::LinAlg::Initialization::set_zero);
         double alpha_n = 0.3;
         normal_comb.update(alpha_n, normal, -(1.0 - alpha_n), gradphi);
 
