@@ -99,7 +99,8 @@ namespace
   {
     if constexpr (is_scalar)
     {
-      Core::LinAlg::Matrix<Core::FE::num_nodes<celltype>, 1> nodal_quantities(num_scalars);
+      Core::LinAlg::Matrix<Core::FE::num_nodes<celltype>, 1> nodal_quantities(
+          Core::LinAlg::Initialization::set_zero);
       for (int i = 0; i < Core::FE::num_nodes<celltype>; ++i)
         nodal_quantities(i, 0) = quantities_at_dofs.at(i);
 
