@@ -52,7 +52,8 @@ namespace
       const Core::LinAlg::Matrix<3, 3>& deformation_gradient,
       const Core::LinAlg::Matrix<3, 3>& prestretch_tensor)
   {
-    Core::LinAlg::Matrix<3, 3> elastic_deformation_gradient(false);
+    Core::LinAlg::Matrix<3, 3> elastic_deformation_gradient(
+        Core::LinAlg::Initialization::leave_uninitialized);
     elastic_deformation_gradient.multiply_nn(deformation_gradient, prestretch_tensor);
 
     return elastic_deformation_gradient;

@@ -170,9 +170,9 @@ namespace Cut
       Core::LinAlg::Matrix<3, numnodes> xyze(xyz_, true);
       if (referencepos) xyze = Core::LinAlg::Matrix<3, numnodes>(xyz_ref_, true);
 
-      Core::LinAlg::Matrix<numnodes, 1> funct(false);
-      Core::LinAlg::Matrix<2, numnodes> deriv(false);
-      Core::LinAlg::Matrix<2, 2> metrictensor(false);
+      Core::LinAlg::Matrix<numnodes, 1> funct(Core::LinAlg::Initialization::leave_uninitialized);
+      Core::LinAlg::Matrix<2, numnodes> deriv(Core::LinAlg::Initialization::leave_uninitialized);
+      Core::LinAlg::Matrix<2, 2> metrictensor(Core::LinAlg::Initialization::leave_uninitialized);
 
       Core::FE::shape_function_2d(funct, eta(0), eta(1), celldistype);
 

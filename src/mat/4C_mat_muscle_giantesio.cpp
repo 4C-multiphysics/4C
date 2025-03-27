@@ -34,10 +34,10 @@ namespace
       const Core::LinAlg::FourTensor<3>& tensor_A, const Core::LinAlg::FourTensor<3>& tensor_B,
       const Core::LinAlg::FourTensor<3>& tensor_C, const double& scalar)
   {
-    Core::LinAlg::Matrix<3, 3> mBmC(false);
+    Core::LinAlg::Matrix<3, 3> mBmC(Core::LinAlg::Initialization::leave_uninitialized);
     mBmC.multiply_nn(matrix_B, matrix_C);
 
-    Core::LinAlg::Matrix<3, 3> mAmB(false);
+    Core::LinAlg::Matrix<3, 3> mAmB(Core::LinAlg::Initialization::leave_uninitialized);
     mAmB.multiply_nn(matrix_A, matrix_B);
 
     // part1 = tensor_A * matrix_B * matrix_C
@@ -126,7 +126,8 @@ namespace
   {
     // structural tensor L = omega0/3*Identity + omegap*M
     Core::LinAlg::Matrix<3, 3> L = compute_structural_tensor_l(M, omega0);
-    Core::LinAlg::Matrix<6, 1> Lv(false);  // Voigt notation
+    Core::LinAlg::Matrix<6, 1> Lv(
+        Core::LinAlg::Initialization::leave_uninitialized);  // Voigt notation
     Core::LinAlg::Voigt::Stresses::matrix_to_vector(L, Lv);
 
     // elastic right Cauchy Green tensor Ce = Fe^T Fe
@@ -395,7 +396,7 @@ void Mat::MuscleGiantesio::update(Core::LinAlg::Matrix<3, 3> const& defgrd, int 
 {
   // compute the current fibre stretch using the deformation gradient and the structural tensor
   // right Cauchy Green tensor C= F^T F
-  Core::LinAlg::Matrix<3, 3> C(false);
+  Core::LinAlg::Matrix<3, 3> C(Core::LinAlg::Initialization::leave_uninitialized);
   C.multiply_tn(defgrd, defgrd);
 
   // structural tensor M, i.e. dyadic product of fibre directions
@@ -432,8 +433,9 @@ void Mat::MuscleGiantesio::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
 
   // compute matrices
   // right Cauchy Green tensor C
-  Core::LinAlg::Matrix<3, 3> C(false);  // matrix notation
-  C.multiply_tn(*defgrd, *defgrd);      // C = F^T F
+  Core::LinAlg::Matrix<3, 3> C(
+      Core::LinAlg::Initialization::leave_uninitialized);  // matrix notation
+  C.multiply_tn(*defgrd, *defgrd);                         // C = F^T F
 
   // determinant of C
   double detC = C.determinant();
@@ -478,12 +480,12 @@ void Mat::MuscleGiantesio::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
   // domegaadC = domegaadlambdaM dlambdaMdC
   Core::LinAlg::Matrix<3, 3> domegaadC(dlambdaMdC);
   domegaadC.scale(omegaaAndDerivs.val_deriv_funct);
-  Core::LinAlg::Matrix<6, 1> domegaadCv(false);
+  Core::LinAlg::Matrix<6, 1> domegaadCv(Core::LinAlg::Initialization::leave_uninitialized);
   Core::LinAlg::Voigt::Stresses::matrix_to_vector(domegaadC, domegaadCv);
 
   // second derivative of omegaa w.r.t. C
   // ddomegaaddC = (ddomegaaddlambdaM - 1/lambdaM domegaadlambdaM) dlambdaM_ij dlambdaM_kl
-  Core::LinAlg::Matrix<6, 6> ddomegaaddCv(false);
+  Core::LinAlg::Matrix<6, 6> ddomegaaddCv(Core::LinAlg::Initialization::leave_uninitialized);
   ddomegaaddCv.multiply_nt(
       omegaaAndDerivs.val_deriv_deriv_funct - omegaaAndDerivs.val_deriv_funct / lambdaM,
       dlambdaMdCv, dlambdaMdCv);

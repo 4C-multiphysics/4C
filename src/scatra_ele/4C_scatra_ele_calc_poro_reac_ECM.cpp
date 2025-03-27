@@ -142,7 +142,7 @@ double Discret::Elements::ScaTraEleCalcPoroReacECM<distype>::compute_struct_chem
     Mat::StructPoroReactionECM& structmat, const int gp)
 {
   // gauss point displacements
-  Core::LinAlg::Matrix<nsd_, 1> dispint(false);
+  Core::LinAlg::Matrix<nsd_, 1> dispint(Core::LinAlg::Initialization::leave_uninitialized);
   dispint.multiply(my::edispnp_, my::funct_);
 
   // transposed jacobian "dX/ds"

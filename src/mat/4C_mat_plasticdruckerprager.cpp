@@ -269,7 +269,8 @@ void Mat::PlasticDruckerPrager::evaluate_fad(const Core::LinAlg::Matrix<3, 3>* d
           return 1;
       });
 
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1, ScalarT> strain_p(false);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1, ScalarT> strain_p(
+      Core::LinAlg::Initialization::leave_uninitialized);
   for (int i = 0; i < 6; i++) strain_p(i, 0) = strainpllast_.at(gp)(i, 0);
   ScalarT strainbar_p = 0.0;
   strainbar_p = (strainbarpllast_.at(gp));
@@ -280,19 +281,23 @@ void Mat::PlasticDruckerPrager::evaluate_fad(const Core::LinAlg::Matrix<3, 3>* d
   for (int i = 3; i < 6; ++i) strain_p(i) /= 2.0;
 
   Core::LinAlg::Matrix<NUM_STRESS_3D, 1, ScalarT> strain_e(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1, ScalarT> trialstrain_e(false);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1, ScalarT> trialstrain_e(
+      Core::LinAlg::Initialization::leave_uninitialized);
   trialstrain_e.update(1.0, strain, (-1.0), strain_p);
   ScalarT tracestrain = trialstrain_e(0) + trialstrain_e(1) + trialstrain_e(2);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1, ScalarT> volumetricstrain(false);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1, ScalarT> volumetricstrain(
+      Core::LinAlg::Initialization::leave_uninitialized);
   Core::LinAlg::Matrix<NUM_STRESS_3D, 1, ScalarT> id2Scalar(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < NUM_STRESS_3D; ++i) id2Scalar(i) = static_cast<ScalarT>(id2(i));
   volumetricstrain.update((tracestrain / 3.0), id2Scalar);
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1, ScalarT> devstrain(false);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1, ScalarT> devstrain(
+      Core::LinAlg::Initialization::leave_uninitialized);
   devstrain.update(1.0, trialstrain_e, (-1.0), volumetricstrain);
 
   ScalarT p = kappa * tracestrain;
   ScalarT p_trial = p;
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1, ScalarT> devstress(false);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1, ScalarT> devstress(
+      Core::LinAlg::Initialization::leave_uninitialized);
   devstress.update((2.0 * G), devstrain);
 
   ScalarT J2 = 1.0 / 2.0 *

@@ -614,8 +614,9 @@ namespace XFEM
     // number space dimensions for element
     const size_t nsd = Core::FE::dim<distype>;
 
-    Core::LinAlg::Matrix<nsd, nsd> p_matrix(false);
-    Core::LinAlg::Matrix<nsd, nsd> p_smoothed_matrix(false);
+    Core::LinAlg::Matrix<nsd, nsd> p_matrix(Core::LinAlg::Initialization::leave_uninitialized);
+    Core::LinAlg::Matrix<nsd, nsd> p_smoothed_matrix(
+        Core::LinAlg::Initialization::leave_uninitialized);
 
     //  -----------------------------------------------------------
     //

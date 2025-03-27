@@ -310,7 +310,8 @@ void Mat::PlasticLinElast::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
   // ------------------------------------------------ old plastic strains
   // strain^{p,trial}_{n+1} = strain^p_n
   // accumulated/equivalent plastic strain
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> strain_p(false);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> strain_p(
+      Core::LinAlg::Initialization::leave_uninitialized);
   for (int i = 0; i < 6; i++) strain_p(i, 0) = strainpllast_->at(gp)(i, 0);
 
   // get old equivalent plastic strain only in case of plastic step
@@ -323,7 +324,7 @@ void Mat::PlasticLinElast::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
 
   // ---------------------------------------------------- old back stress
   // beta^{trial}_{n+1} = beta_n
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> beta(false);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> beta(Core::LinAlg::Initialization::leave_uninitialized);
   for (int i = 0; i < 6; i++) beta(i, 0) = backstresslast_->at(gp)(i, 0);
 
   // ----------------------------------------------- physical strains
@@ -340,19 +341,22 @@ void Mat::PlasticLinElast::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
   Core::LinAlg::Matrix<NUM_STRESS_3D, 1> strain_e(Core::LinAlg::Initialization::set_zero);
 
   // strain^{e,trial}_{n+1} = strain_{n+1} - strain^p_n
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> trialstrain_e(false);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> trialstrain_e(
+      Core::LinAlg::Initialization::leave_uninitialized);
   trialstrain_e.update(1.0, strain, (-1.0), strain_p);
 
   // volumetric strain
   // trace of strain vector
   double tracestrain = trialstrain_e(0) + trialstrain_e(1) + trialstrain_e(2);
   // volstrain = 1/3 . tr( strain ) . Id
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> volumetricstrain(false);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> volumetricstrain(
+      Core::LinAlg::Initialization::leave_uninitialized);
   volumetricstrain.update((tracestrain / 3.0), id2);
 
   // deviatoric strain
   // devstrain^e = strain^e - volstrain^e
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> devstrain(false);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> devstrain(
+      Core::LinAlg::Initialization::leave_uninitialized);
   devstrain.update(1.0, trialstrain_e, (-1.0), volumetricstrain);
 
   // ------------------------------------------------------- trial stress
@@ -361,7 +365,8 @@ void Mat::PlasticLinElast::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
   double p = kappa * tracestrain;
 
   // deviatoric stress = 2 . G . devstrain
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> devstress(false);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> devstress(
+      Core::LinAlg::Initialization::leave_uninitialized);
   devstress.update((2.0 * G), devstrain);
   // be careful for shear stresses (sigma_12)
   // in Voigt-notation the shear strains have to be scaled with 1/2
@@ -1016,7 +1021,8 @@ void Mat::PlasticLinElast::fd_check(
 
     // deviatoric strain
     // dev = strain - volstrain
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> devstrain(false);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> devstrain(
+        Core::LinAlg::Initialization::leave_uninitialized);
     devstrain.update(1.0, disturbstrain, (-1.0), volumetricstrain);
 
     // ----------------------------------------------------------- stress

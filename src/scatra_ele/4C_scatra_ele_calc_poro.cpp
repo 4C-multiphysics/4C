@@ -320,7 +320,7 @@ void Discret::Elements::ScaTraEleCalcPoro<distype>::compute_porosity(
   else
   {
     // gauss point displacements
-    Core::LinAlg::Matrix<nsd_, 1> dispint(false);
+    Core::LinAlg::Matrix<nsd_, 1> dispint(Core::LinAlg::Initialization::leave_uninitialized);
     dispint.multiply(my::edispnp_, my::funct_);
 
     //------------------------get determinant of Jacobian dX / ds

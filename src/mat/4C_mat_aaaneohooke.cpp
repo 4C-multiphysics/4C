@@ -195,7 +195,7 @@ void Mat::AAAneohooke::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
 
   //--------------------------------------------------------------------------------------
   // invert C
-  Core::LinAlg::Matrix<6, 1> invc(false);
+  Core::LinAlg::Matrix<6, 1> invc(Core::LinAlg::Initialization::leave_uninitialized);
 
   double invdet = 1. / iiinv;
 

@@ -30,8 +30,10 @@ namespace Core::Elements
     static_assert(numnode == Core::FE::num_nodes<type>, "Wrong matrix dimension.");
     static_assert(numdim == Core::FE::dim<type>, "Wrong matrix dimension.");
 
-    Core::LinAlg::Matrix<numdim, numnode> deriv_at_c(false);
-    Core::LinAlg::Matrix<numdim, numdim> jac_at_c(false);
+    Core::LinAlg::Matrix<numdim, numnode> deriv_at_c(
+        Core::LinAlg::Initialization::leave_uninitialized);
+    Core::LinAlg::Matrix<numdim, numdim> jac_at_c(
+        Core::LinAlg::Initialization::leave_uninitialized);
 
     // parametric coordinates of the HEX8 corners
     static const Core::LinAlg::SerialDenseMatrix rst =

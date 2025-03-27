@@ -2928,7 +2928,7 @@ void Mat::ConstraintMixture::evaluate_fiber_vecs(const int gp,
   Core::LinAlg::Matrix<3, 1> a2_0(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Matrix<3, 1> a3_0(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Matrix<3, 1> a4_0(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3, 3> idefgrd(false);
+  Core::LinAlg::Matrix<3, 3> idefgrd(Core::LinAlg::Initialization::leave_uninitialized);
   idefgrd.invert(defgrd);
   a1_0.multiply(idefgrd, ca1);
   a2_0.multiply(idefgrd, ca2);

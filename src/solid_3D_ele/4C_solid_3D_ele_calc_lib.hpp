@@ -581,7 +581,7 @@ namespace Discret::Elements
       const JacobianMapping<celltype>& jacobian_mapping,
       const ElementNodes<celltype>& element_nodes, const double scale_defgrd = 1.0)
   {
-    Core::LinAlg::Matrix<3, 3> defgrd(false);
+    Core::LinAlg::Matrix<3, 3> defgrd(Core::LinAlg::Initialization::leave_uninitialized);
     if constexpr (celltype == Core::FE::CellType::hex8)
     {
       // For some reason, some contact tests with hex8 discretization don't like the computation
@@ -1180,7 +1180,8 @@ namespace Discret::Elements
   {
     // build T^T (based on strain-like Voigt notation: xx,yy,zz,xy,yz,xz)
     // currently only works in 3D
-    Core::LinAlg::Matrix<Internal::num_str<celltype>, Internal::num_str<celltype>> TinvT(false);
+    Core::LinAlg::Matrix<Internal::num_str<celltype>, Internal::num_str<celltype>> TinvT(
+        Core::LinAlg::Initialization::leave_uninitialized);
     TinvT(0, 0) = jacobian.jacobian_(0, 0) * jacobian.jacobian_(0, 0);
     TinvT(1, 0) = jacobian.jacobian_(1, 0) * jacobian.jacobian_(1, 0);
     TinvT(2, 0) = jacobian.jacobian_(2, 0) * jacobian.jacobian_(2, 0);

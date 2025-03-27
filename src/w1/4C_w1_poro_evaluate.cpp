@@ -650,7 +650,8 @@ void Discret::Elements::Wall1Poro<distype>::gauss_point_loop(Teuchos::ParameterL
     compute_def_gradient(defgrd, N_XYZ, xcurr);
 
     // inverse deformation gradient F^-1
-    Core::LinAlg::Matrix<numdim_, numdim_> defgrd_inv(false);
+    Core::LinAlg::Matrix<numdim_, numdim_> defgrd_inv(
+        Core::LinAlg::Initialization::leave_uninitialized);
     defgrd_inv.invert(defgrd);
 
     // jacobian determinant of transformation between spatial and material space "|dx/dX|"
@@ -698,7 +699,7 @@ void Discret::Elements::Wall1Poro<distype>::gauss_point_loop(Teuchos::ParameterL
     cauchygreen.multiply_tn(defgrd, defgrd);
 
     // inverse Right Cauchy-Green tensor
-    Core::LinAlg::Matrix<numdim_, numdim_> C_inv(false);
+    Core::LinAlg::Matrix<numdim_, numdim_> C_inv(Core::LinAlg::Initialization::leave_uninitialized);
     C_inv.invert(cauchygreen);
 
     // compute some auxiliary matrixes for computation of linearization
@@ -787,7 +788,8 @@ void Discret::Elements::Wall1Poro<distype>::gauss_point_loop_pressure_based(
     compute_def_gradient(defgrd, N_XYZ, xcurr);
 
     // inverse deformation gradient F^-1
-    Core::LinAlg::Matrix<numdim_, numdim_> defgrd_inv(false);
+    Core::LinAlg::Matrix<numdim_, numdim_> defgrd_inv(
+        Core::LinAlg::Initialization::leave_uninitialized);
     defgrd_inv.invert(defgrd);
 
     // jacobian determinant of transformation between spatial and material space "|dx/dX|"
@@ -836,7 +838,7 @@ void Discret::Elements::Wall1Poro<distype>::gauss_point_loop_pressure_based(
     cauchygreen.multiply_tn(defgrd, defgrd);
 
     // inverse Right Cauchy-Green tensor
-    Core::LinAlg::Matrix<numdim_, numdim_> C_inv(false);
+    Core::LinAlg::Matrix<numdim_, numdim_> C_inv(Core::LinAlg::Initialization::leave_uninitialized);
     C_inv.invert(cauchygreen);
 
     // compute some auxiliary matrixes for computation of linearization
@@ -1346,11 +1348,12 @@ void Discret::Elements::Wall1Poro<distype>::gauss_point_loop_od(Teuchos::Paramet
     cauchygreen.multiply_tn(defgrd, defgrd);
 
     // inverse Right Cauchy-Green tensor
-    Core::LinAlg::Matrix<numdim_, numdim_> C_inv(false);
+    Core::LinAlg::Matrix<numdim_, numdim_> C_inv(Core::LinAlg::Initialization::leave_uninitialized);
     C_inv.invert(cauchygreen);
 
     // inverse deformation gradient F^-1
-    Core::LinAlg::Matrix<numdim_, numdim_> defgrd_inv(false);
+    Core::LinAlg::Matrix<numdim_, numdim_> defgrd_inv(
+        Core::LinAlg::Initialization::leave_uninitialized);
     defgrd_inv.invert(defgrd);
 
     //---------------- get pressure at integration point
@@ -1456,7 +1459,7 @@ void Discret::Elements::Wall1Poro<distype>::gauss_point_loop_od_pressure_based(
     cauchygreen.multiply_tn(defgrd, defgrd);
 
     // inverse Right Cauchy-Green tensor
-    Core::LinAlg::Matrix<numdim_, numdim_> C_inv(false);
+    Core::LinAlg::Matrix<numdim_, numdim_> C_inv(Core::LinAlg::Initialization::leave_uninitialized);
     C_inv.invert(cauchygreen);
 
     // compute derivative of solid pressure w.r.t primary variable phi at node

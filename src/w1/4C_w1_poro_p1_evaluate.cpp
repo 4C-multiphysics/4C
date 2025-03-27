@@ -538,7 +538,8 @@ void Discret::Elements::Wall1PoroP1<distype>::gauss_point_loop_p1(Teuchos::Param
     Base::compute_def_gradient(defgrd, N_XYZ, xcurr);
 
     // inverse deformation gradient F^-1
-    Core::LinAlg::Matrix<Base::numdim_, Base::numdim_> defgrd_inv(false);
+    Core::LinAlg::Matrix<Base::numdim_, Base::numdim_> defgrd_inv(
+        Core::LinAlg::Initialization::leave_uninitialized);
     defgrd_inv.invert(defgrd);
 
     // jacobian determinant of transformation between spatial and material space "|dx/dX|"
@@ -586,7 +587,8 @@ void Discret::Elements::Wall1PoroP1<distype>::gauss_point_loop_p1(Teuchos::Param
     cauchygreen.multiply_tn(defgrd, defgrd);
 
     // inverse Right Cauchy-Green tensor
-    Core::LinAlg::Matrix<Base::numdim_, Base::numdim_> C_inv(false);
+    Core::LinAlg::Matrix<Base::numdim_, Base::numdim_> C_inv(
+        Core::LinAlg::Initialization::leave_uninitialized);
     C_inv.invert(cauchygreen);
 
     //------linearization of material gradient of jacobi determinant GradJ  w.r.t. structure
@@ -806,7 +808,8 @@ void Discret::Elements::Wall1PoroP1<distype>::gauss_point_loop_p1_od(Teuchos::Pa
     Base::compute_def_gradient(defgrd, N_XYZ, xcurr);
 
     // inverse deformation gradient F^-1
-    Core::LinAlg::Matrix<Base::numdim_, Base::numdim_> defgrd_inv(false);
+    Core::LinAlg::Matrix<Base::numdim_, Base::numdim_> defgrd_inv(
+        Core::LinAlg::Initialization::leave_uninitialized);
     defgrd_inv.invert(defgrd);
 
     // jacobian determinant of transformation between spatial and material space "|dx/dX|"
@@ -826,7 +829,8 @@ void Discret::Elements::Wall1PoroP1<distype>::gauss_point_loop_p1_od(Teuchos::Pa
     cauchygreen.multiply_tn(defgrd, defgrd);
 
     //------------------ inverse Right Cauchy-Green tensor
-    Core::LinAlg::Matrix<Base::numdim_, Base::numdim_> C_inv(false);
+    Core::LinAlg::Matrix<Base::numdim_, Base::numdim_> C_inv(
+        Core::LinAlg::Initialization::leave_uninitialized);
     C_inv.invert(cauchygreen);
 
     //---------------- get pressure at integration point

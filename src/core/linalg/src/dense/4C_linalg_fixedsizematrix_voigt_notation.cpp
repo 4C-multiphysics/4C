@@ -154,7 +154,7 @@ void Core::LinAlg::Voigt::VoigtUtils<type>::power_of_symmetric_tensor(const unsi
     // unscale the off-diagonal values
     unscale_off_diagonal_vals(strain_pow);
 
-    Core::LinAlg::Matrix<6, 1> prod(false);
+    Core::LinAlg::Matrix<6, 1> prod(Core::LinAlg::Initialization::leave_uninitialized);
 
     for (unsigned p = 1; p < pow; ++p)
     {

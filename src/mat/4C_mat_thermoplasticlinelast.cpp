@@ -370,7 +370,8 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Matrix<3, 3>* defg
 
   // ------------------------------------------------- old plastic strain
   // strain^{p,trial}_{n+1} = strain^p_n
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> strain_p(false);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> strain_p(
+      Core::LinAlg::Initialization::leave_uninitialized);
   for (int i = 0; i < 6; i++) strain_p(i, 0) = strainpllast_->at(gp)(i, 0);
 
   // get old equivalent plastic strain only in case of plastic step
@@ -383,7 +384,7 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Matrix<3, 3>* defg
 
   // ---------------------------------------------------- old back stress
   // beta^{trial}_{n+1} = beta_n
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> beta(false);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> beta(Core::LinAlg::Initialization::leave_uninitialized);
   for (int i = 0; i < 6; i++) beta(i, 0) = backstresslast_->at(gp)(i, 0);
 
   // --------------------------------------------------------- physical strains
@@ -400,19 +401,22 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Matrix<3, 3>* defg
   Core::LinAlg::Matrix<NUM_STRESS_3D, 1> strain_e(Core::LinAlg::Initialization::set_zero);
 
   // strain^{e,trial}_{n+1} = strain_{n+1} - strain^p_n
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> trialstrain_e(false);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> trialstrain_e(
+      Core::LinAlg::Initialization::leave_uninitialized);
   trialstrain_e.update(1.0, strain, (-1.0), strain_p);
 
   // volumetric strain
   // trace of strain vector
   double tracestrain = trialstrain_e(0) + trialstrain_e(1) + trialstrain_e(2);
   // volstrain = 1/3 . tr( strain ) . Id
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> volumetricstrain(false);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> volumetricstrain(
+      Core::LinAlg::Initialization::leave_uninitialized);
   volumetricstrain.update((tracestrain / 3.0), id2);
 
   // deviatoric strain
   // devstrain^e = strain^e - volstrain^e
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> devstrain(false);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> devstrain(
+      Core::LinAlg::Initialization::leave_uninitialized);
   devstrain.update(1.0, trialstrain_e, (-1.0), volumetricstrain);
 
   // ------------------------------------------------------- trial stress
@@ -420,7 +424,8 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Matrix<3, 3>* defg
   double p = kappa * tracestrain;
 
   // deviatoric stress = 2 . G . devstrain
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> devstress(false);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> devstress(
+      Core::LinAlg::Initialization::leave_uninitialized);
   devstress.update((2.0 * G), devstrain);
   // be careful for shear stresses (sigma_12)
   // in Voigt-notation the shear strains have to be scaled with 1/2
@@ -794,14 +799,14 @@ void Mat::ThermoPlasticLinElast::evaluate(const Core::LinAlg::Matrix<3, 3>* defg
 
   // calculate the temperature difference
   // Delta T = T - T_0
-  Core::LinAlg::Matrix<1, 1> deltaT(false);
+  Core::LinAlg::Matrix<1, 1> deltaT(Core::LinAlg::Initialization::leave_uninitialized);
   deltaT(0, 0) = temperature - params_->thetainit_;
 
   // temperature dependent stress
   // sigma = C_theta * Delta T = (m*I) * Delta T
   Core::LinAlg::Matrix<6, 1> ctemp(Core::LinAlg::Initialization::set_zero);
   setup_cthermo(ctemp);
-  Core::LinAlg::Matrix<6, 1> stresstemp(false);
+  Core::LinAlg::Matrix<6, 1> stresstemp(Core::LinAlg::Initialization::leave_uninitialized);
   stresstemp.multiply_nn(ctemp, deltaT);
   stress->update(1.0, stresstemp, 1.0);
 
@@ -1157,7 +1162,8 @@ void Mat::ThermoPlasticLinElast::dissipation(int gp,  // current Gauss point
 
   // --------------------------------------- kinematic hardening for fint
   // stressdiff = stress_d_{n+1} - beta_{n+1} = s_{n+1} + p_{n+1} . I - beta_{n+1}
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> stressdiff(false);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> stressdiff(
+      Core::LinAlg::Initialization::leave_uninitialized);
   stressdiff.update(1.0, stress, (-1.0), (backstresscurr_->at(gp)));
 
   // Dmech = (stress_d + sigma_T - beta) : Inc_strain^p_{n+1}
@@ -1249,7 +1255,7 @@ void Mat::ThermoPlasticLinElast::dissipation_coupl_cond(
 
   // d(sigma_d - beta)/dstrain = dstress_d/dstrain = C_ep
   // calculate C_ep . Inc_strain^p_{n+1}
-  Core::LinAlg::Matrix<6, 1> cmatstrainpinc(false);
+  Core::LinAlg::Matrix<6, 1> cmatstrainpinc(Core::LinAlg::Initialization::leave_uninitialized);
   cmatstrainpinc.multiply(cmat, incstrainpl_->at(gp));
   // --> divide by dt in thermo_ele
 
@@ -1260,7 +1266,8 @@ void Mat::ThermoPlasticLinElast::dissipation_coupl_cond(
   // = 2G/(3 G + Hkin + Hiso) . N \otimes N
   //   + Dgamma . 2G / || eta^{trial}_{n+1} || [sqrt(3/2) I_d - N \otimes N]
 
-  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> Dmech_kin_d(false);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, NUM_STRESS_3D> Dmech_kin_d(
+      Core::LinAlg::Initialization::leave_uninitialized);
   double fac_kinlin = 0.0;
   if (etanorm != 0.0)
   {
@@ -1323,7 +1330,8 @@ void Mat::ThermoPlasticLinElast::dissipation_coupl_cond(
 
   // ------------------------------------------------------ term for k_Td
   // add the linearisation term to D_mech_d
-  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> D_mech_d(false);
+  Core::LinAlg::Matrix<NUM_STRESS_3D, 1> D_mech_d(
+      Core::LinAlg::Initialization::leave_uninitialized);
   D_mech_d.multiply(Dmech_kin_d, stress);
   D_mech_d.update((-1.0), cmatstrainpinc, (-1.0));
   D_mech_d.update((fac_liniso), N, 1.0);
@@ -1343,10 +1351,10 @@ void Mat::ThermoPlasticLinElast::evaluate(
   setup_cthermo(ctemp);
 
   // calculate the temperature difference
-  Core::LinAlg::Matrix<1, 1> init(false);
+  Core::LinAlg::Matrix<1, 1> init(Core::LinAlg::Initialization::leave_uninitialized);
   init(0, 0) = (params_->thetainit_);
   // Delta T = T - T_0
-  Core::LinAlg::Matrix<1, 1> deltaT(false);
+  Core::LinAlg::Matrix<1, 1> deltaT(Core::LinAlg::Initialization::leave_uninitialized);
   deltaT.update(1.0, Ntemp, (-1.0), init);
 
   // temperature dependent stress

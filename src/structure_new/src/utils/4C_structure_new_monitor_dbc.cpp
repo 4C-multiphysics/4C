@@ -282,8 +282,8 @@ void Solid::MonitorDbc::execute(Core::IO::DiscretizationWriter& writer)
   std::array<double, 2> area = {0.0, 0.0};
   double& area_ref = area[0];
   double& area_curr = area[1];
-  Core::LinAlg::Matrix<DIM, 1> rforce_xyz(false);
-  Core::LinAlg::Matrix<DIM, 1> rmoment_xyz(false);
+  Core::LinAlg::Matrix<DIM, 1> rforce_xyz(Core::LinAlg::Initialization::leave_uninitialized);
+  Core::LinAlg::Matrix<DIM, 1> rmoment_xyz(Core::LinAlg::Initialization::leave_uninitialized);
 
   auto filepath = full_filepaths_.cbegin();
   for (const std::shared_ptr<Core::Conditions::Condition>& rcond_ptr : rconds)

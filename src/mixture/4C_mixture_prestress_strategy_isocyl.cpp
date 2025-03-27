@@ -197,7 +197,7 @@ double Mixture::IsotropicCylinderPrestressStrategy::evaluate_mue_frac(MixtureRul
 
   mixtureRule.evaluate(F, E_strain, params, S_stress, cmat, gp, eleGID);
 
-  Core::LinAlg::Matrix<6, 1> Acir(false);
+  Core::LinAlg::Matrix<6, 1> Acir(Core::LinAlg::Initialization::leave_uninitialized);
   // Compute structural tensor
   for (int i = 0; i < 3; ++i) Acir(i) = cylinderCosy->get_cir()(i) * cylinderCosy->get_cir()(i);
   Acir(3) = 2.0 * cylinderCosy->get_cir()(0) * cylinderCosy->get_cir()(1);
@@ -211,7 +211,7 @@ double Mixture::IsotropicCylinderPrestressStrategy::evaluate_mue_frac(MixtureRul
   double initial_constituent_reference_density =
       growth_remodel_rule.get_constituent_initial_reference_mass_density(constituent);
 
-  Core::LinAlg::Matrix<6, 1> Smembrane(false);
+  Core::LinAlg::Matrix<6, 1> Smembrane(Core::LinAlg::Initialization::leave_uninitialized);
   membraneEvaluation.evaluate_membrane_stress(Smembrane, params, gp, eleGID);
   Smembrane.scale(initial_constituent_reference_density);
 

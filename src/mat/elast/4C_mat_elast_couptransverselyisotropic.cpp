@@ -184,10 +184,10 @@ void Mat::Elastic::CoupTransverselyIsotropic::add_stress_aniso_principal(
   if (reset_invariants(rcg, &params)) return;
 
   // switch to stress notation
-  Core::LinAlg::Matrix<6, 1> rcg_s(false);
+  Core::LinAlg::Matrix<6, 1> rcg_s(Core::LinAlg::Initialization::leave_uninitialized);
   Core::LinAlg::Voigt::Strains::to_stress_like(rcg, rcg_s);
 
-  Core::LinAlg::Matrix<6, 1> rcg_inv_s(false);
+  Core::LinAlg::Matrix<6, 1> rcg_inv_s(Core::LinAlg::Initialization::leave_uninitialized);
   update_second_piola_kirchhoff_stress(stress, rcg_s, rcg_inv_s);
 
   update_elasticity_tensor(cmat, rcg_inv_s);
@@ -282,7 +282,7 @@ int Mat::Elastic::CoupTransverselyIsotropic::reset_invariants(
         aa_(5) * rcg(5);
 
   // calculate pseudo invariant I5 ( quad. strain measure in fiber direction )
-  Core::LinAlg::Matrix<6, 1> rcg_quad(false);
+  Core::LinAlg::Matrix<6, 1> rcg_quad(Core::LinAlg::Initialization::leave_uninitialized);
   Core::LinAlg::Voigt::Strains::power_of_symmetric_tensor(2, rcg, rcg_quad);
   i5_ = aa_(0) * (rcg_quad(0)) + aa_(1) * (rcg_quad(1)) + aa_(2) * (rcg_quad(2)) +
         aa_(3) * (rcg_quad(3)) + aa_(4) * (rcg_quad(4)) + aa_(5) * (rcg_quad(5));

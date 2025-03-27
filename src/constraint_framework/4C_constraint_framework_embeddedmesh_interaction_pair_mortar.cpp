@@ -324,10 +324,14 @@ void CONSTRAINTS::EMBEDDEDMESH::SurfaceToBackgroundCouplingPairMortar<Interface,
     Epetra_FEVector& global_lambda_active)
 {
   // Initialize variables for local mortar matrices.
-  Core::LinAlg::Matrix<Mortar::n_dof_, Interface::n_dof_, double> local_D(false);
-  Core::LinAlg::Matrix<Mortar::n_dof_, Background::n_dof_, double> local_M(false);
-  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_kappa(false);
-  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_constraint(false);
+  Core::LinAlg::Matrix<Mortar::n_dof_, Interface::n_dof_, double> local_D(
+      Core::LinAlg::Initialization::leave_uninitialized);
+  Core::LinAlg::Matrix<Mortar::n_dof_, Background::n_dof_, double> local_M(
+      Core::LinAlg::Initialization::leave_uninitialized);
+  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_kappa(
+      Core::LinAlg::Initialization::leave_uninitialized);
+  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_constraint(
+      Core::LinAlg::Initialization::leave_uninitialized);
 
   // Evaluate the local mortar contributions
   evaluate_dm(local_D, local_M, local_kappa, local_constraint);

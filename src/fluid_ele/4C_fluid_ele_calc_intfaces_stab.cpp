@@ -1124,7 +1124,8 @@ int Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
       pderiv_dyad_nderiv_tau_timefacfac_.update(tau_timefacfac, pderiv_dyad_nderiv_, 0.0);
       nderiv_dyad_nderiv_tau_timefacfac_.update(tau_timefacfac, nderiv_dyad_nderiv_, 0.0);
 
-      Core::LinAlg::Matrix<nsd_, nsd_> vderxyaf_diff_scaled(false);
+      Core::LinAlg::Matrix<nsd_, nsd_> vderxyaf_diff_scaled(
+          Core::LinAlg::Initialization::leave_uninitialized);
       vderxyaf_diff_scaled.update(tau_timefacfac_rhs, vderxyaf_diff_, 0.0);
 
       //-----------------------------------------------------
@@ -2567,7 +2568,7 @@ void Discret::Elements::FluidInternalSurfaceStab<distype, pdistype, ndistype>::p
    */
 
   // grad(p_neighbor) - grad(p_parent)
-  Core::LinAlg::Matrix<nsd_, 1> prederxy_jump(false);
+  Core::LinAlg::Matrix<nsd_, 1> prederxy_jump(Core::LinAlg::Initialization::leave_uninitialized);
   prederxy_jump.update(1.0, nprederxy_, -1.0, pprederxy_);
   prederxy_jump.scale(tau_timefacfacrhs);
 
@@ -2603,14 +2604,16 @@ void Discret::Elements::FluidInternalSurfaceStab<distype, pdistype, ndistype>::p
   }
 
   // q_master (p_slave-p_master)
-  Core::LinAlg::Matrix<piel, 1> pderxy_times_prederxy_jump(false);
+  Core::LinAlg::Matrix<piel, 1> pderxy_times_prederxy_jump(
+      Core::LinAlg::Initialization::leave_uninitialized);
   pderxy_times_prederxy_jump.multiply_tn(pderxy_, prederxy_jump);
 
   for (int vi = 0; vi < piel; ++vi)
     elevector_m_(vi * numdofpernode_ + nsd_, 0) += pderxy_times_prederxy_jump(vi);
 
   // -q_slave (p_slave-p_master)
-  Core::LinAlg::Matrix<niel, 1> nderxy_times_prederxy_jump(false);
+  Core::LinAlg::Matrix<niel, 1> nderxy_times_prederxy_jump(
+      Core::LinAlg::Initialization::leave_uninitialized);
   nderxy_times_prederxy_jump.multiply_tn(nderxy_, prederxy_jump);
 
   for (int vi = 0; vi < niel; ++vi)
@@ -2721,7 +2724,8 @@ void Discret::Elements::FluidInternalSurfaceStab<distype, pdistype, ndistype>::d
   }
 
 
-  Core::LinAlg::Matrix<nsd_, piel> pderxy_times_vderxyaf_diff(false);
+  Core::LinAlg::Matrix<nsd_, piel> pderxy_times_vderxyaf_diff(
+      Core::LinAlg::Initialization::leave_uninitialized);
   pderxy_times_vderxyaf_diff.multiply(vderxyaf_diff_scaled, pderxy_);
 
   // master row
@@ -2729,7 +2733,8 @@ void Discret::Elements::FluidInternalSurfaceStab<distype, pdistype, ndistype>::d
     for (int idim = 0; idim < nsd_; ++idim)  // combined components of u and v
       elevector_m_(vi * numdofpernode_ + idim, 0) += pderxy_times_vderxyaf_diff(idim, vi);
 
-  Core::LinAlg::Matrix<nsd_, niel> nderxy_times_vderxyaf_diff(false);
+  Core::LinAlg::Matrix<nsd_, niel> nderxy_times_vderxyaf_diff(
+      Core::LinAlg::Initialization::leave_uninitialized);
   nderxy_times_vderxyaf_diff.multiply(vderxyaf_diff_scaled, nderxy_);
 
   // slave row

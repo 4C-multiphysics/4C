@@ -296,9 +296,9 @@ void Mixture::MixtureConstituentElastHyperElastinMembrane::evaluate_elastic_part
 void Mixture::MixtureConstituentElastHyperElastinMembrane::evaluate_membrane_stress(
     Core::LinAlg::Matrix<6, 1>& S, Teuchos::ParameterList& params, int gp, int eleGID)
 {
-  Core::LinAlg::Matrix<6, 6> cmat(false);
+  Core::LinAlg::Matrix<6, 6> cmat(Core::LinAlg::Initialization::leave_uninitialized);
   const Core::LinAlg::Matrix<3, 3> Id = Core::LinAlg::identity_matrix<3>();
-  Core::LinAlg::Matrix<3, 3> iFin(false);
+  Core::LinAlg::Matrix<3, 3> iFin(Core::LinAlg::Initialization::leave_uninitialized);
 
   iFin.multiply_nn(Id, prestretch_tensor(gp));
 

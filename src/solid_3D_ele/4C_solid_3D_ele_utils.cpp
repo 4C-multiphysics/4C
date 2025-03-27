@@ -70,7 +70,7 @@ Core::LinAlg::Matrix<6, 1> Solid::Utils::green_lagrange_to_log_strain(
 
   // create logarithmic strain matrix
   Core::LinAlg::Matrix<3, 3> log_strain_matrix(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3, 3> VH(false);
+  Core::LinAlg::Matrix<3, 3> VH(Core::LinAlg::Initialization::leave_uninitialized);
   VH.multiply_nn(pr_dir, pr_log_strain);
   log_strain_matrix.multiply_nt(VH, pr_dir);
 

@@ -169,7 +169,8 @@ namespace Discret::Elements
     const std::array residual =
         Core::FE::extract_values_as_array<Discret::Elements::num_dof_per_ele<celltype>>(
             *residual_from_dis, lm);
-    Core::LinAlg::Matrix<Discret::Elements::num_dof_per_ele<celltype>, 1> displ_inc(false);
+    Core::LinAlg::Matrix<Discret::Elements::num_dof_per_ele<celltype>, 1> displ_inc(
+        Core::LinAlg::Initialization::leave_uninitialized);
     std::memcpy(displ_inc.data(), residual.data(), sizeof(double) * residual.size());
 
     return displ_inc;
@@ -448,7 +449,8 @@ namespace Discret::Elements
           Discret::Elements::EasTypeToNumEas<eastype>::num_eas>& Mtilde,
       const Core::LinAlg::Matrix<Discret::Elements::EasTypeToNumEas<eastype>::num_eas, 1>& alpha)
   {
-    Core::LinAlg::Matrix<Discret::Elements::num_str<celltype>, 1> enhanced_gl_strain(false);
+    Core::LinAlg::Matrix<Discret::Elements::num_str<celltype>, 1> enhanced_gl_strain(
+        Core::LinAlg::Initialization::leave_uninitialized);
     enhanced_gl_strain.multiply(Mtilde, alpha);
     return enhanced_gl_strain;
   }

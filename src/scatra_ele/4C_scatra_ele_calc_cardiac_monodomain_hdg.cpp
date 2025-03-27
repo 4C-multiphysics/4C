@@ -814,7 +814,7 @@ void Discret::Elements::ScaTraEleCalcHDGCardiacMonodomain<distype, probdim>::set
     double deg2rad = M_PI / 180.;
     for (unsigned int gp = 0; gp < cir.size(); ++gp)
     {
-      Core::LinAlg::Matrix<3, 1> rad(false);
+      Core::LinAlg::Matrix<3, 1> rad(Core::LinAlg::Initialization::leave_uninitialized);
       rad.cross_product(cir[gp], tan[gp]);
 
       double tmp1 = cos(helix[gp] * deg2rad) * cos(transverse[gp] * deg2rad);

@@ -189,7 +189,7 @@ void Discret::Elements::Wall1::material_response3d_plane(Core::LinAlg::SerialDen
     Teuchos::ParameterList& params, const int gp)
 {
   // make 3d equivalent of Green-Lagrange strain
-  Core::LinAlg::Matrix<6, 1> gl(false);
+  Core::LinAlg::Matrix<6, 1> gl(Core::LinAlg::Initialization::leave_uninitialized);
   green_lagrange_plane3d(strain, gl);
 
   // call 3d stress response
@@ -220,8 +220,11 @@ void Discret::Elements::Wall1::material_response3d_plane(Core::LinAlg::SerialDen
         true);  // LHS // constitutive matrix of restraint compo
                 // this matrix needs to be zeroed out for further usage
                 // in case the following while loop is entirely skipped during runtime
-    Core::LinAlg::Matrix<3, 1> rr(false);  // RHS // stress residual of restraint compo
-    Core::LinAlg::Matrix<3, 1> ir(false);  // SOL  // restraint strain components
+    Core::LinAlg::Matrix<3, 1> rr(
+        Core::LinAlg::Initialization::leave_uninitialized);  // RHS // stress residual of restraint
+                                                             // compo
+    Core::LinAlg::Matrix<3, 1> ir(
+        Core::LinAlg::Initialization::leave_uninitialized);  // SOL  // restraint strain components
     // the Newton-Raphson loop
     while ((pserr > tol) and (i < n))
     {
@@ -272,7 +275,7 @@ void Discret::Elements::Wall1::material_response3d_plane(Core::LinAlg::SerialDen
       // --- with an implicit function.
       // Thus the effect of the linearisation with respect to the
       // dependent strains must be added onto the free strains.
-      Core::LinAlg::Matrix<3, 3> cfr(false);
+      Core::LinAlg::Matrix<3, 3> cfr(Core::LinAlg::Initialization::leave_uninitialized);
       cfr(0, 0) = cmat(0, 2);
       cfr(0, 1) = cmat(0, 4);
       cfr(0, 2) = cmat(0, 5);
@@ -282,9 +285,9 @@ void Discret::Elements::Wall1::material_response3d_plane(Core::LinAlg::SerialDen
       cfr(2, 0) = cmat(3, 2);
       cfr(2, 1) = cmat(3, 4);
       cfr(2, 2) = cmat(3, 5);
-      Core::LinAlg::Matrix<3, 3> crrrf(false);
+      Core::LinAlg::Matrix<3, 3> crrrf(Core::LinAlg::Initialization::leave_uninitialized);
       crrrf.multiply_nt(crr, cfr);
-      Core::LinAlg::Matrix<3, 3> cfrrrrf(false);
+      Core::LinAlg::Matrix<3, 3> cfrrrrf(Core::LinAlg::Initialization::leave_uninitialized);
       cfrrrrf.multiply_nn(cfr, crrrf);
       // update constitutive matrix of free components
       cmat(0, 0) -= cfrrrrf(0, 0);

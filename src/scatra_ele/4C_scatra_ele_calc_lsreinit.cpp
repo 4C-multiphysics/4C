@@ -160,7 +160,8 @@ void Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::eval_reinitial
       std::map<int, Core::Geo::BoundaryIntCellPtrs>::const_iterator cit = allcells->find(my::eid_);
       if (cit != allcells->end()) boundaryIntCells = cit->second;
 
-      Core::LinAlg::Matrix<nen_, 1> el2sysmat_diag_inv(false);
+      Core::LinAlg::Matrix<nen_, 1> el2sysmat_diag_inv(
+          Core::LinAlg::Initialization::leave_uninitialized);
       if (lsreinitparams_->project())
       {
         FOUR_C_THROW(

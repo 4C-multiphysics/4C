@@ -442,7 +442,8 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
             dDetDefGrad_dDisp, dPorosity_dDisp);
 
         // inverse Right Cauchy-Green tensor as vector in voigt notation
-        Core::LinAlg::Matrix<num_str_, 1> C_inv_vec(false);
+        Core::LinAlg::Matrix<num_str_, 1> C_inv_vec(
+            Core::LinAlg::Initialization::leave_uninitialized);
         Core::LinAlg::Voigt::Stresses::matrix_to_vector(
             cauchygreen.inverse_right_cauchy_green_, C_inv_vec);
 
@@ -685,7 +686,8 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
                 params, solid_variables, shape_functions, fluid_press, volchange, gp);
 
         // inverse Right Cauchy-Green tensor as vector in voigt notation
-        Core::LinAlg::Matrix<num_str_, 1> C_inv_vec(false);
+        Core::LinAlg::Matrix<num_str_, 1> C_inv_vec(
+            Core::LinAlg::Initialization::leave_uninitialized);
         Core::LinAlg::Voigt::Stresses::matrix_to_vector(
             cauchygreen.inverse_right_cauchy_green_, C_inv_vec);
 

@@ -73,7 +73,7 @@ void Mat::volumetrify_and_isochorify(Core::LinAlg::Matrix<6, 1>* pk2vol,
 
   // inverse right Cauchy--Green tensor C^{-1}
   // REMARK: stored in as _stress_ 6-Voigt vector
-  Core::LinAlg::Matrix<6, 1> icg(false);
+  Core::LinAlg::Matrix<6, 1> icg(Core::LinAlg::Initialization::leave_uninitialized);
   icg(0) = (rcg(1) * rcg(2) - 0.25 * rcg(4) * rcg(4)) / rcg3rd;        // (C^{-1})^{11}
   icg(1) = (rcg(0) * rcg(2) - 0.25 * rcg(5) * rcg(5)) / rcg3rd;        // (C^{-1})^{22}
   icg(2) = (rcg(0) * rcg(1) - 0.25 * rcg(3) * rcg(3)) / rcg3rd;        // (C^{-1})^{33}
@@ -89,7 +89,7 @@ void Mat::volumetrify_and_isochorify(Core::LinAlg::Matrix<6, 1>* pk2vol,
   // stress splitting
   {
     // volumetric 2nd Piola--Kirchhoff stress
-    Core::LinAlg::Matrix<6, 1> pk2vol_tmp(false);
+    Core::LinAlg::Matrix<6, 1> pk2vol_tmp(Core::LinAlg::Initialization::leave_uninitialized);
     if (pk2vol != nullptr) pk2vol_tmp.set_view(*pk2vol);
     pk2vol_tmp.update(pk2rcg / 3.0, icg);
 
@@ -110,7 +110,7 @@ void Mat::volumetrify_and_isochorify(Core::LinAlg::Matrix<6, 1>* pk2vol,
     //              - 2/3 (S^{EF} C_{EF}) ( 1/2 (
     //                (C^{-1})^{AC} (C^{-1})^{BD} + (C^{-1})^{AD} (C^{-1})^{BC}
     //              ) )
-    Core::LinAlg::Matrix<6, 6> cvol_tmp(false);
+    Core::LinAlg::Matrix<6, 6> cvol_tmp(Core::LinAlg::Initialization::leave_uninitialized);
     if (cvol != nullptr) cvol_tmp.set_view(*cvol);
     cvol_tmp.multiply_nt(2.0 / 3.0, icg, pk2lin);
     Core::LinAlg::Tensor::add_holzapfel_product(cvol_tmp, icg, -2.0 / 3.0 * pk2rcg);
@@ -152,7 +152,7 @@ void Mat::stretches_principal(Core::LinAlg::Matrix<3, 1>& prstr, Core::LinAlg::M
     const Core::LinAlg::Matrix<6, 1>& rcg)
 {
   // create right Cauchy-Green 2-tensor
-  Core::LinAlg::Matrix<3, 3> rcgt(false);
+  Core::LinAlg::Matrix<3, 3> rcgt(Core::LinAlg::Initialization::leave_uninitialized);
   rcgt(0, 0) = rcg(0);
   rcgt(1, 1) = rcg(1);
   rcgt(2, 2) = rcg(2);

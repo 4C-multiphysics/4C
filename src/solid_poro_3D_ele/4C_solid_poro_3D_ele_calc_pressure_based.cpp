@@ -130,7 +130,8 @@ void Discret::Elements::SolidPoroPressureBasedEleCalc<celltype>::evaluate_nonlin
         }
 
         // inverse Right Cauchy-Green tensor as vector in voigt notation
-        Core::LinAlg::Matrix<num_str_, 1> C_inv_vec(false);
+        Core::LinAlg::Matrix<num_str_, 1> C_inv_vec(
+            Core::LinAlg::Initialization::leave_uninitialized);
         Core::LinAlg::Voigt::Stresses::matrix_to_vector(
             cauchygreen.inverse_right_cauchy_green_, C_inv_vec);
 
@@ -232,7 +233,8 @@ void Discret::Elements::SolidPoroPressureBasedEleCalc<
         const double detJ_w = jacobian_mapping.determinant_ * gauss_integration_.weight(gp);
 
         // inverse Right Cauchy-Green tensor as vector in voigt notation
-        Core::LinAlg::Matrix<num_str_, 1> C_inv_vec(false);
+        Core::LinAlg::Matrix<num_str_, 1> C_inv_vec(
+            Core::LinAlg::Initialization::leave_uninitialized);
         Core::LinAlg::Voigt::Stresses::matrix_to_vector(
             cauchygreen.inverse_right_cauchy_green_, C_inv_vec);
 

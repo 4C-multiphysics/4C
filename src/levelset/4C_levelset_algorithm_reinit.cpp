@@ -668,7 +668,7 @@ void ScaTra::LevelSetAlgorithm::reinit_geo(
           "Proc {}: Cannot find dof gid={} in Core::LinAlg::Vector<double>", myrank_, dofgid);
 
     // get physical coordinates of this node
-    Core::LinAlg::Matrix<3, 1> nodecoord(false);
+    Core::LinAlg::Matrix<3, 1> nodecoord(Core::LinAlg::Initialization::leave_uninitialized);
     nodecoord(0) = lnode->x()[0];
     nodecoord(1) = lnode->x()[1];
     nodecoord(2) = lnode->x()[2];
@@ -691,7 +691,7 @@ void ScaTra::LevelSetAlgorithm::reinit_geo(
         for (int inode = 0; inode < numnodesperele; ++inode)
         {
           const int nodecoordbase = coordbase + 3 * inode;
-          Core::LinAlg::Matrix<3, 1> delta(false);
+          Core::LinAlg::Matrix<3, 1> delta(Core::LinAlg::Initialization::leave_uninitialized);
           delta(0) = allnodecoords[nodecoordbase + 0];
           delta(1) = allnodecoords[nodecoordbase + 1];
           delta(2) = allnodecoords[nodecoordbase + 2];

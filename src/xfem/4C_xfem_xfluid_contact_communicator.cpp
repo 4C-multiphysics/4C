@@ -656,7 +656,7 @@ bool XFEM::XFluidContactComm::get_volumecell(Discret::Elements::SolidSurface*& s
     const int numnodes = Core::FE::num_nodes<Core::FE::CellType::quad4>;
 
     Core::LinAlg::SerialDenseMatrix xyze_m;
-    Core::LinAlg::Matrix<numnodes, 1> funct(false);
+    Core::LinAlg::Matrix<numnodes, 1> funct(Core::LinAlg::Initialization::leave_uninitialized);
 
     sidehandle->coordinates(xyze_m);
     Core::LinAlg::Matrix<3, numnodes> xyze(xyze_m.values(), true);
@@ -1133,8 +1133,8 @@ void XFEM::XFluidContactComm::get_cut_side_integration_points(
   const int numnodes_sh = Core::FE::num_nodes<Core::FE::CellType::quad4>;
   Core::LinAlg::SerialDenseMatrix xquad;
   sh->coordinates(xquad);
-  Core::LinAlg::Matrix<2, numnodes_sh> deriv(false);
-  Core::LinAlg::Matrix<2, 2> metrictensor(false);
+  Core::LinAlg::Matrix<2, numnodes_sh> deriv(Core::LinAlg::Initialization::leave_uninitialized);
+  Core::LinAlg::Matrix<2, 2> metrictensor(Core::LinAlg::Initialization::leave_uninitialized);
   Core::LinAlg::Matrix<3, 1> normal_side(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Matrix<3, 1> normal_bc(Core::LinAlg::Initialization::set_zero);
 

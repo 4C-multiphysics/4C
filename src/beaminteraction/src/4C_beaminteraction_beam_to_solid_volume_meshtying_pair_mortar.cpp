@@ -65,10 +65,14 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortar<Beam, Solid,
   if (this->line_to_3D_segments_.size() == 0) return;
 
   // Initialize variables for local mortar matrices.
-  Core::LinAlg::Matrix<Mortar::n_dof_, Beam::n_dof_, double> local_D(false);
-  Core::LinAlg::Matrix<Mortar::n_dof_, Solid::n_dof_, double> local_M(false);
-  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_kappa(false);
-  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_constraint(false);
+  Core::LinAlg::Matrix<Mortar::n_dof_, Beam::n_dof_, double> local_D(
+      Core::LinAlg::Initialization::leave_uninitialized);
+  Core::LinAlg::Matrix<Mortar::n_dof_, Solid::n_dof_, double> local_M(
+      Core::LinAlg::Initialization::leave_uninitialized);
+  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_kappa(
+      Core::LinAlg::Initialization::leave_uninitialized);
+  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_constraint(
+      Core::LinAlg::Initialization::leave_uninitialized);
 
   // Evaluate the local mortar contributions.
   evaluate_dm(local_D, local_M, local_kappa, local_constraint);

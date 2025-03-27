@@ -17,7 +17,7 @@ namespace
   TEST(LinalgTensorProductsTest, TestKroneckerProduct)
   {
     // test the calculation of the fourth order kronecker product of two second-order tensors
-    Core::LinAlg::Matrix<3, 3> a(false);
+    Core::LinAlg::Matrix<3, 3> a(Core::LinAlg::Initialization::leave_uninitialized);
     a(0, 0) = 1.0000000000;
     a(0, 1) = 2.0000000000;
     a(0, 2) = 3.0000000000;
@@ -28,7 +28,7 @@ namespace
     a(2, 1) = 1.0000000000;
     a(2, 2) = 1.0000000000;
 
-    Core::LinAlg::Matrix<3, 3> b(false);
+    Core::LinAlg::Matrix<3, 3> b(Core::LinAlg::Initialization::leave_uninitialized);
     b(0, 0) = 1.0000000000;
     b(0, 1) = 0.0000000000;
     b(0, 2) = 5.0000000000;
