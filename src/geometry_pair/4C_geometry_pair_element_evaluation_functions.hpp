@@ -55,7 +55,7 @@ namespace GEOMETRYPAIR
     // Matrix for shape function values
     Core::LinAlg::Matrix<ElementType::element_dim_, ElementType::n_nodes_ * ElementType::n_val_,
         ScalarType>
-        dN(true);
+        dN(Core::LinAlg::Initialization::set_zero);
 
     // Evaluate the shape function values
     EvaluateShapeFunction<ElementType>::evaluate_deriv1(dN, xi, element_data.shape_function_data_);

@@ -59,7 +59,7 @@ namespace GEOMETRYPAIR
           projection_result_(ProjectionResult::none),
           gauss_weight_(gauss_weight),
           intersection_face_(-1),
-          eta_cross_section_(true),
+          eta_cross_section_(Core::LinAlg::Initialization::set_zero),
           is_cross_section_point_(false) {};
 
     /**
@@ -75,7 +75,9 @@ namespace GEOMETRYPAIR
      * @param eta Parameter coordinate on the line.
      */
     ProjectionPoint1DTo3D(ScalarType eta)
-        : ProjectionPoint1DTo3D(eta, Core::LinAlg::Matrix<3, 1, ScalarType>(true), -1.) {};
+        : ProjectionPoint1DTo3D(eta,
+              Core::LinAlg::Matrix<3, 1, ScalarType>(Core::LinAlg::Initialization::set_zero),
+              -1.) {};
 
     /**
      * \brief Empty constructor.
