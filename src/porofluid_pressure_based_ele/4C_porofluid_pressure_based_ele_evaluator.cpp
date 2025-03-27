@@ -3264,7 +3264,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPhaseVelocities<nsd,
 
   const std::vector<Core::LinAlg::Matrix<nsd, 1>>& gradient_phi = *variablemanager.grad_phinp();
 
-  Core::LinAlg::Matrix<nsd, 1> structure_velocity(0.0);
+  Core::LinAlg::Matrix<nsd, 1> structure_velocity(Core::LinAlg::Initialization::set_zero);
   if (is_ale_) structure_velocity = *variablemanager.con_velnp();
 
   // FLUID phases
