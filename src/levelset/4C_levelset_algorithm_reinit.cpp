@@ -978,7 +978,7 @@ void ScaTra::LevelSetAlgorithm::find_facing_patch_proj_cell_space(
   // indicator
   facenode = false;
 
-  static Core::LinAlg::Matrix<2, 1> eta(true);
+  static Core::LinAlg::Matrix<2, 1> eta(Core::LinAlg::Initialization::set_zero);
   double alpha = 0.0;
 
   //-------------------------------------------------------
@@ -1085,13 +1085,13 @@ void ScaTra::LevelSetAlgorithm::compute_distance_to_edge(const Core::LinAlg::Mat
   const size_t numvertices = patchcoord.numCols();
 
   // current vertex of the patch (first vertex)
-  static Core::LinAlg::Matrix<3, 1> vertex1(true);
+  static Core::LinAlg::Matrix<3, 1> vertex1(Core::LinAlg::Initialization::set_zero);
   // current next vertex of the patch (second vertex)
-  static Core::LinAlg::Matrix<3, 1> vertex2(true);
+  static Core::LinAlg::Matrix<3, 1> vertex2(Core::LinAlg::Initialization::set_zero);
   // distance vector from first vertex to node
-  static Core::LinAlg::Matrix<3, 1> vertex1tonode(true);
+  static Core::LinAlg::Matrix<3, 1> vertex1tonode(Core::LinAlg::Initialization::set_zero);
   // distance vector from first vertex to second vertex
-  static Core::LinAlg::Matrix<3, 1> vertex1tovertex2(true);
+  static Core::LinAlg::Matrix<3, 1> vertex1tovertex2(Core::LinAlg::Initialization::set_zero);
 
   // compute distance to all vertices of patch
   for (size_t ivert = 0; ivert < numvertices; ++ivert)
@@ -1157,9 +1157,9 @@ void ScaTra::LevelSetAlgorithm::compute_distance_to_patch(const Core::LinAlg::Ma
   const size_t numvertices = patchcoord.numCols();
 
   // current vertex of the patch
-  static Core::LinAlg::Matrix<3, 1> vertex(true);
+  static Core::LinAlg::Matrix<3, 1> vertex(Core::LinAlg::Initialization::set_zero);
   // distance vector from patch to node
-  static Core::LinAlg::Matrix<3, 1> dist(true);
+  static Core::LinAlg::Matrix<3, 1> dist(Core::LinAlg::Initialization::set_zero);
 
   // compute distance to all vertices of patch
   for (size_t ivert = 0; ivert < numvertices; ++ivert)
@@ -1253,10 +1253,10 @@ bool ScaTra::LevelSetAlgorithm::project_node_on_patch(const Core::LinAlg::Matrix
   // CellNodalPosXYZ()
   Core::LinAlg::Matrix<nsd, numvertices> patchcoordfix(patchcoord.values(), true);
 
-  static Core::LinAlg::Matrix<numvertices, 1> funct(true);
-  static Core::LinAlg::Matrix<2, numvertices> deriv(true);
-  static Core::LinAlg::Matrix<nsd, 1> projX(true);
-  static Core::LinAlg::Matrix<nsd, 2> gradprojX(true);
+  static Core::LinAlg::Matrix<numvertices, 1> funct(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<2, numvertices> deriv(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<nsd, 1> projX(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<nsd, 2> gradprojX(Core::LinAlg::Initialization::set_zero);
 
   //----------------------------------
   // start values for iterative scheme
@@ -1269,11 +1269,11 @@ bool ScaTra::LevelSetAlgorithm::project_node_on_patch(const Core::LinAlg::Matrix
   alpha = 0.0;
 
   // function F (system of equations)
-  static Core::LinAlg::Matrix<nsd, 1> f(true);
+  static Core::LinAlg::Matrix<nsd, 1> f(Core::LinAlg::Initialization::set_zero);
   // gradient of function F (dF/deta(0), dF/deta(1), dF/dalpha)
-  static Core::LinAlg::Matrix<nsd, nsd> gradf(true);
+  static Core::LinAlg::Matrix<nsd, nsd> gradf(Core::LinAlg::Initialization::set_zero);
   // increment in Newton iteration (unknown to be solved for)
-  static Core::LinAlg::Matrix<nsd, 1> incr(true);
+  static Core::LinAlg::Matrix<nsd, 1> incr(Core::LinAlg::Initialization::set_zero);
 
   // maximum number Newton iterations
   size_t maxiter = 3;

@@ -188,8 +188,9 @@ void CONTACT::IntegratorNitscheSsi::so_ele_cauchy_struct(Mortar::Element& mortar
     double& cauchy_nt_wgt, Core::Gen::Pairedvector<int, double>& d_cauchy_nt_dd,
     Core::LinAlg::SerialDenseMatrix* d_sigma_nt_ds)
 {
-  static Core::LinAlg::Matrix<dim, 1> parent_xi(true);
-  static Core::LinAlg::Matrix<dim, dim> local_to_parent_trafo(true);
+  static Core::LinAlg::Matrix<dim, 1> parent_xi(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<dim, dim> local_to_parent_trafo(
+      Core::LinAlg::Initialization::set_zero);
   CONTACT::Utils::map_gp_to_parent<dim>(
       mortar_ele, gp_coord, gp_wgt, parent_xi, local_to_parent_trafo);
 

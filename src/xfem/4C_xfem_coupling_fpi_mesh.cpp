@@ -815,7 +815,7 @@ double XFEM::MeshCouplingFPI::calctr_permeability(
   else
     FOUR_C_THROW("no second material defined for element {}", ele->id());
 
-  static Core::LinAlg::Matrix<3, 3> reactiontensor(true);
+  static Core::LinAlg::Matrix<3, 3> reactiontensor(Core::LinAlg::Initialization::set_zero);
   poromat->compute_reaction_tensor(reactiontensor, J, porosity);
 
   return sqrt((1. / reactiontensor(0, 0) + 1. / reactiontensor(1, 1) + 1. / reactiontensor(2, 2)) /

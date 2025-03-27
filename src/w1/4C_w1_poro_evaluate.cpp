@@ -888,12 +888,14 @@ void Discret::Elements::Wall1Poro<distype>::fill_matrix_and_vectors(const int& g
 {
   // const double reacoeff = fluid_mat_->compute_reaction_coeff();
 
-  static Core::LinAlg::Matrix<numdim_, numdim_> matreatensor(true);
-  static Core::LinAlg::Matrix<numdim_, numdim_> reatensor(true);
-  static Core::LinAlg::Matrix<numdim_, numdim_> linreac_dphi(true);
-  static Core::LinAlg::Matrix<numdim_, numdim_> linreac_dJ(true);
-  static Core::LinAlg::Matrix<numdim_, 1> reafvel(true);
-  static Core::LinAlg::Matrix<numdim_, 1> reavel(true);
+  static Core::LinAlg::Matrix<numdim_, numdim_> matreatensor(
+      Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<numdim_, numdim_> reatensor(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<numdim_, numdim_> linreac_dphi(
+      Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<numdim_, numdim_> linreac_dJ(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<numdim_, 1> reafvel(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<numdim_, 1> reavel(Core::LinAlg::Initialization::set_zero);
   {
     static Core::LinAlg::Matrix<numdim_, numdim_> temp(
         Core::LinAlg::Initialization::leave_uninitialized);
@@ -1010,7 +1012,7 @@ void Discret::Elements::Wall1Poro<distype>::fill_matrix_and_vectors(const int& g
   C_inv_vec(2) = C_inv(0, 1);
 
   // B^T . C^-1
-  static Core::LinAlg::Matrix<numdof_, 1> cinvb(true);
+  static Core::LinAlg::Matrix<numdof_, 1> cinvb(Core::LinAlg::Initialization::set_zero);
   cinvb.multiply_tn(bop, C_inv_vec);
 
   const double fac1 = -detJ_w * press;
@@ -1079,7 +1081,7 @@ void Discret::Elements::Wall1Poro<distype>::fill_matrix_and_vectors_pressure_bas
   C_inv_vec(2) = C_inv(0, 1);
 
   // B^T . C^-1
-  static Core::LinAlg::Matrix<numdof_, 1> cinvb(true);
+  static Core::LinAlg::Matrix<numdof_, 1> cinvb(Core::LinAlg::Initialization::set_zero);
   cinvb.multiply_tn(bop, C_inv_vec);
 
   const double fac1 = -detJ_w * press;

@@ -500,7 +500,7 @@ namespace Discret
           double& h_e                      ///< element length w.r.t parent element
       )
       {
-        static Core::LinAlg::Matrix<nsd_, numnode> xyz_surf(true);
+        static Core::LinAlg::Matrix<nsd_, numnode> xyz_surf(Core::LinAlg::Initialization::set_zero);
         xyz_surf.clear();
 
         if (connectivity.size() != numnode)
@@ -603,7 +603,7 @@ namespace Discret
           double& h_e                      ///< element length w.r.t parent element
       )
       {
-        static Core::LinAlg::Matrix<nsd_, numnode> xyz_surf(true);
+        static Core::LinAlg::Matrix<nsd_, numnode> xyz_surf(Core::LinAlg::Initialization::set_zero);
         xyz_surf.clear();
 
         if (connectivity.size() != numnode)

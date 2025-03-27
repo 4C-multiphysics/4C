@@ -165,7 +165,7 @@ namespace Discret
         const Core::LinAlg::Matrix<nsd, nen> eforcevelocity(true);
         my::set_internal_variables(funct, derxy, ephinp, ephin, econvelnp, ehist, eforcevelocity);
 
-        static Core::LinAlg::Matrix<nsd, 1> pressuregrad(true);
+        static Core::LinAlg::Matrix<nsd, 1> pressuregrad(Core::LinAlg::Initialization::set_zero);
         pressuregrad.multiply(derxy, earterypressure);
 
         for (int k = 0; k < my::numscal_; ++k)

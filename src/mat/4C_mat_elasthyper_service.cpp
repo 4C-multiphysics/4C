@@ -105,11 +105,11 @@ void Mat::elast_hyper_evaluate_invariant_derivatives(const Core::LinAlg::Matrix<
   // derivatives of decoupled (volumetric or isochoric) materials
   if (properties.isomod)
   {
-    static Core::LinAlg::Matrix<3, 1> modinv(true);
+    static Core::LinAlg::Matrix<3, 1> modinv(Core::LinAlg::Initialization::set_zero);
     modinv.clear();
-    static Core::LinAlg::Matrix<3, 1> dPmodI(true);
+    static Core::LinAlg::Matrix<3, 1> dPmodI(Core::LinAlg::Initialization::set_zero);
     dPmodI.clear();
-    static Core::LinAlg::Matrix<6, 1> ddPmodII(true);
+    static Core::LinAlg::Matrix<6, 1> ddPmodII(Core::LinAlg::Initialization::set_zero);
     ddPmodII.clear();
 
     // Evaluate modified invariants
@@ -165,9 +165,9 @@ void Mat::elast_hyper_add_isotropic_stress_cmat(Core::LinAlg::Matrix<6, 1>& S_st
     const Core::LinAlg::Matrix<3, 1>& dPI, const Core::LinAlg::Matrix<6, 1>& ddPII)
 {
   // 2nd Piola Kirchhoff stress factors (according to Holzapfel-Nonlinear Solid Mechanics p. 216)
-  static Core::LinAlg::Matrix<3, 1> gamma(true);
+  static Core::LinAlg::Matrix<3, 1> gamma(Core::LinAlg::Initialization::set_zero);
   // constitutive tensor factors (according to Holzapfel-Nonlinear Solid Mechanics p. 261)
-  static Core::LinAlg::Matrix<8, 1> delta(true);
+  static Core::LinAlg::Matrix<8, 1> delta(Core::LinAlg::Initialization::set_zero);
   // 2nd order identity tensor
   static Core::LinAlg::Matrix<6, 1> id2(Core::LinAlg::Initialization::leave_uninitialized);
   // Right Cauchy-Green tensor in stress-like Voigt notation
@@ -245,9 +245,9 @@ void Mat::elast_hyper_add_response_stretches(Core::LinAlg::Matrix<6, 6>& cmat,
     // reciprocal of cubic root of determinant of deformation gradient (convenience)
     const double detdefgrad13 = std::pow(detdefgrad, -1.0 / 3.0);
     // retrieve coefficients with respect to modified principal stretches
-    static Core::LinAlg::Matrix<3, 1> modgamma(true);
+    static Core::LinAlg::Matrix<3, 1> modgamma(Core::LinAlg::Initialization::set_zero);
     modgamma.clear();
-    static Core::LinAlg::Matrix<6, 1> moddelta(true);
+    static Core::LinAlg::Matrix<6, 1> moddelta(Core::LinAlg::Initialization::set_zero);
     moddelta.clear();
     {
       // loop map of associated potential summands
@@ -314,7 +314,7 @@ void Mat::elast_hyper_add_response_stretches(Core::LinAlg::Matrix<6, 6>& cmat,
   }
 
   // principal 2nd Piola--Kirchhoff stress tensor, cf [1] Eq (6.47)
-  static Core::LinAlg::Matrix<3, 1> prsts(true);
+  static Core::LinAlg::Matrix<3, 1> prsts(Core::LinAlg::Initialization::set_zero);
   prsts.clear();
   for (int al = 0; al < 3; ++al)
   {
@@ -332,9 +332,9 @@ void Mat::elast_hyper_add_response_stretches(Core::LinAlg::Matrix<6, 6>& cmat,
   using map = Core::LinAlg::Voigt::IndexMappings;
 
   // integration factor prfact_{al be}
-  static Core::LinAlg::Matrix<6, 1> prfact1(true);
+  static Core::LinAlg::Matrix<6, 1> prfact1(Core::LinAlg::Initialization::set_zero);
   prfact1.clear();
-  static Core::LinAlg::Matrix<6, 1> prfact2(true);
+  static Core::LinAlg::Matrix<6, 1> prfact2(Core::LinAlg::Initialization::set_zero);
   prfact2.clear();
   for (int albe = 0; albe < 6; ++albe)
   {
@@ -465,39 +465,41 @@ void Mat::elast_hyper_check_polyconvexity(const Core::LinAlg::Matrix<3, 3>& defg
 
   // defgrd = F (i)
   // dfgrd = F in Voigt - Notation
-  static Core::LinAlg::Matrix<9, 1> dfgrd(true);
+  static Core::LinAlg::Matrix<9, 1> dfgrd(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Voigt::matrix_3x3_to_9x1(defgrd, dfgrd);
 
   // Cof(F) = J*F^(-T)
-  static Core::LinAlg::Matrix<3, 3> CoFacF(true);  // Cof(F) in Matrix-Notation
-  static Core::LinAlg::Matrix<9, 1> CofF(true);    // Cof(F) in Voigt-Notation
+  static Core::LinAlg::Matrix<3, 3> CoFacF(
+      Core::LinAlg::Initialization::set_zero);  // Cof(F) in Matrix-Notation
+  static Core::LinAlg::Matrix<9, 1> CofF(
+      Core::LinAlg::Initialization::set_zero);  // Cof(F) in Voigt-Notation
   CoFacF.invert(defgrd);
   CoFacF.scale(J);
   // sort in Voigt-Notation and invert!
   Core::LinAlg::Voigt::matrix_3x3_to_9x1(CoFacF, CofF);
 
   // id4 (9x9)
-  static Core::LinAlg::Matrix<9, 9> ID4(true);
+  static Core::LinAlg::Matrix<9, 9> ID4(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 9; i++)
     for (int j = 0; j < 9; j++)
       if (i == j) ID4(i, j) = 1.0;
 
   // Frechet Derivative according to Ebbing, PhD-thesis page 79, Eq: (5.31)
-  static Core::LinAlg::Matrix<19, 19> FreeD(true);
+  static Core::LinAlg::Matrix<19, 19> FreeD(Core::LinAlg::Initialization::set_zero);
   FreeD.clear();
 
   // single matrices of Frechet Derivative:
 
   // d^2P/dFdF
   // = 4 d^2\Psi/dI_1dI_1 F \otimes F + 2 \d\Psi/dI_1 *II
-  static Core::LinAlg::Matrix<9, 9> FreeDFF(true);
+  static Core::LinAlg::Matrix<9, 9> FreeDFF(Core::LinAlg::Initialization::set_zero);
   FreeDFF.clear();
   FreeDFF.multiply_nt(4 * ddPII(0), dfgrd, dfgrd, 1.0);
   FreeDFF.update(2 * dPI(0), ID4, 1.0);
 
   // d^2P/d(cofF)d(cofF)
   // = = 4 d^2\Psi/dI_2dI_2 cof(F) \otimes cof(F) + 2 \d\Psi/dI_2 *II
-  static Core::LinAlg::Matrix<9, 9> FreeDcFcF(true);
+  static Core::LinAlg::Matrix<9, 9> FreeDcFcF(Core::LinAlg::Initialization::set_zero);
   FreeDcFcF.clear();
   FreeDcFcF.multiply_nt(4 * ddPII(1), CofF, CofF, 1.0);
   FreeDcFcF.update(2 * dPI(1), ID4, 1.0);
@@ -509,19 +511,19 @@ void Mat::elast_hyper_check_polyconvexity(const Core::LinAlg::Matrix<3, 3>& defg
 
   // d^2P/d(cofF)dF
   // = 4*d\Psi/dI_1dI_2 F /otimes CofF
-  static Core::LinAlg::Matrix<9, 9> FreeDcFF(true);
+  static Core::LinAlg::Matrix<9, 9> FreeDcFF(Core::LinAlg::Initialization::set_zero);
   FreeDcFF.clear();
   FreeDcFF.multiply_nt(4 * ddPII(5), dfgrd, CofF, 1.0);
 
   // d^2P/d(detF)d(cofF)
   // = 4*J*d^2 \Psi /dI_2 dI_3 \mat{CofF}
-  static Core::LinAlg::Matrix<9, 1> FreeDcFJ(true);
+  static Core::LinAlg::Matrix<9, 1> FreeDcFJ(Core::LinAlg::Initialization::set_zero);
   FreeDcFF.clear();
   FreeDcFJ.update(4 * J * ddPII(3), CofF, 1.0);
 
   // d^2P/d(detF) dF = d^2P/dF d(detF)
   // = 4*J*d^2 \Psi /dI_1 dI_3 \mat{F}
-  static Core::LinAlg::Matrix<9, 1> FreeDFJ(true);
+  static Core::LinAlg::Matrix<9, 1> FreeDFJ(Core::LinAlg::Initialization::set_zero);
   FreeDcFF.clear();
   FreeDFJ.update(4 * J * ddPII(4), dfgrd, 1.0);
 
@@ -550,8 +552,9 @@ void Mat::elast_hyper_check_polyconvexity(const Core::LinAlg::Matrix<3, 3>& defg
   FreeD(18, 18) = FreeDJJ;
 
   // EigenValues of Frechet Derivative
-  static Core::LinAlg::Matrix<19, 19> EWFreeD(true);  // EW on diagonal
-  static Core::LinAlg::Matrix<19, 19> EVFreeD(true);
+  static Core::LinAlg::Matrix<19, 19> EWFreeD(
+      Core::LinAlg::Initialization::set_zero);  // EW on diagonal
+  static Core::LinAlg::Matrix<19, 19> EVFreeD(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::syev(FreeD, EWFreeD, EVFreeD);
 
   // Just positive EigenValues --> System is polyconvex
@@ -578,7 +581,7 @@ void Mat::elast_hyper_get_derivs_of_elastic_right_cg_tensor(const Core::LinAlg::
   Core::LinAlg::FourTensor<3> tempFourTensor(true);
 
   // C * F_{in}^{-1}
-  static Core::LinAlg::Matrix<3, 3> CiFinM(true);
+  static Core::LinAlg::Matrix<3, 3> CiFinM(Core::LinAlg::Initialization::set_zero);
   CiFinM.multiply_nn(1.0, CM, iFinM, 0.0);
 
   // \frac{\partial C^e}{\partial C}

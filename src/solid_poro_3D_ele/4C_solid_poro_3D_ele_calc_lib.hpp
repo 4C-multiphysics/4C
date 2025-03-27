@@ -1694,7 +1694,8 @@ namespace Discret::Elements
     Discret::Elements::Internal::calculate_viscous_stress<celltype>(integration_fac, viscosity,
         det_defgrd, porosity, fvelder, defgrd_inv, C_inv, fstress, CinvFvel);
     // B^T . C^-1
-    static Core::LinAlg::Matrix<Internal::num_dof_per_ele<celltype>, 1> fstressb(true);
+    static Core::LinAlg::Matrix<Internal::num_dof_per_ele<celltype>, 1> fstressb(
+        Core::LinAlg::Initialization::set_zero);
     fstressb.multiply_tn(bop, fstress);
     force_vector.update(1.0, fstressb, 1.0);
   }
@@ -1743,7 +1744,8 @@ namespace Discret::Elements
     Discret::Elements::Internal::calculate_viscous_stress<celltype>(integration_fac, viscosity,
         det_defgrd, porosity, fvelder, defgrd_inv, C_inv, fstress, CinvFvel);
     // B^T . C^-1
-    static Core::LinAlg::Matrix<Internal::num_dof_per_ele<celltype>, 1> fstressb(true);
+    static Core::LinAlg::Matrix<Internal::num_dof_per_ele<celltype>, 1> fstressb(
+        Core::LinAlg::Initialization::set_zero);
     fstressb.multiply_tn(bop, fstress);
 
     // evaluate viscous terms (for darcy-brinkman flow only)

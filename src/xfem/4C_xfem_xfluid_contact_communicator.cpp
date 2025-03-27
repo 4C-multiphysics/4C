@@ -155,7 +155,7 @@ double XFEM::XFluidContactComm::get_fsi_traction(Mortar::Element* ele,
   int eleid;
 
   Cut::VolumeCell* volumecell = nullptr;
-  static Core::LinAlg::Matrix<3, 1> elenormal(true);
+  static Core::LinAlg::Matrix<3, 1> elenormal(Core::LinAlg::Initialization::set_zero);
   static Core::LinAlg::Matrix<3, 1> x(Core::LinAlg::Initialization::leave_uninitialized);
   Core::LinAlg::Matrix<2, 1> new_xsi(xsi_boundary.data(), false);
   double distance = 0.0;
@@ -673,8 +673,8 @@ bool XFEM::XFluidContactComm::get_volumecell(Discret::Elements::SolidSurface*& s
   Cut::plain_side_set subsides;
   sidehandle->collect_sides(subsides);
   int found_side = -1;
-  static Core::LinAlg::Matrix<3, 1> tmpxsi(true);
-  static Core::LinAlg::Matrix<3, 1> tmpxsi_tmp(true);
+  static Core::LinAlg::Matrix<3, 1> tmpxsi(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<3, 1> tmpxsi_tmp(Core::LinAlg::Initialization::set_zero);
   for (std::size_t ss = 0; ss < subsides.size(); ++ss)
   {
     Cut::Side* s = subsides[ss];
@@ -880,7 +880,7 @@ Cut::Side* XFEM::XFluidContactComm::findnext_physical_side(Core::LinAlg::Matrix<
   for (std::set<Cut::Side*>::iterator psit = physical_sides.begin(); psit != physical_sides.end();
       ++psit)
   {
-    static Core::LinAlg::Matrix<3, 1> tmpx(true);
+    static Core::LinAlg::Matrix<3, 1> tmpx(Core::LinAlg::Initialization::set_zero);
     double tmpdistance = distanceto_side(x, *psit, tmpx);
     if (distance > tmpdistance)
     {

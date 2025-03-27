@@ -896,8 +896,8 @@ void Mat::InelasticDefgradLinScalarIso::evaluate_additional_cmat(
     const Core::LinAlg::Matrix<6, 9>& dSdiFinj, Core::LinAlg::Matrix<6, 6>& cmatadd)
 {
   // static variables
-  static Core::LinAlg::Matrix<9, 6> diFinjdC(true);
-  static Core::LinAlg::Matrix<9, 1> id9x1(true);
+  static Core::LinAlg::Matrix<9, 6> diFinjdC(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<9, 1> id9x1(Core::LinAlg::Initialization::set_zero);
 
   // prepare id9x1 (identity matrix written as a 9x1 vector)
   for (int i = 0; i < 3; ++i) id9x1(i) = 1.0;
@@ -928,7 +928,7 @@ void Mat::InelasticDefgradLinScalarIso::evaluate_od_stiff_mat(
     const Core::LinAlg::Matrix<3, 3>* const defgrad, const Core::LinAlg::Matrix<3, 3>& iFinjM,
     const Core::LinAlg::Matrix<6, 9>& dSdiFinj, Core::LinAlg::Matrix<6, 1>& dstressdc)
 {
-  static Core::LinAlg::Matrix<9, 1> id9x1(true);
+  static Core::LinAlg::Matrix<9, 1> id9x1(Core::LinAlg::Initialization::set_zero);
   // prepare id9x1 (identity matrix written as a 9x1 vector)
   for (int i = 0; i < 3; ++i) id9x1(i) = 1.0;
 
@@ -965,7 +965,7 @@ void Mat::InelasticDefgradLinScalarIso::evaluate_inelastic_def_grad_derivative(
                           linear_growth_->growth_fac() * detjacobian;
 
   // prepare identity tensor as 9x1 vector
-  static Core::LinAlg::Matrix<9, 1> id9x1(true);
+  static Core::LinAlg::Matrix<9, 1> id9x1(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; ++i) id9x1(i) = 1.0;
 
   // here dFindc is zeroed out and filled with the current value
@@ -996,7 +996,7 @@ void Mat::InelasticDefgradLinScalarAniso::evaluate_inverse_inelastic_def_grad(
     Core::LinAlg::Matrix<3, 3>& iFinM)
 {
   // init and clear variable
-  static Core::LinAlg::Matrix<3, 3> FinM(true);
+  static Core::LinAlg::Matrix<3, 3> FinM(Core::LinAlg::Initialization::set_zero);
   FinM.clear();
 
   // get parameters
@@ -1024,10 +1024,10 @@ void Mat::InelasticDefgradLinScalarAniso::evaluate_additional_cmat(
     const Core::LinAlg::Matrix<3, 3>& iFinjM, const Core::LinAlg::Matrix<6, 1>& iCV,
     const Core::LinAlg::Matrix<6, 9>& dSdiFinj, Core::LinAlg::Matrix<6, 6>& cmatadd)
 {
-  static Core::LinAlg::Matrix<3, 3> temp(true);
-  static Core::LinAlg::Matrix<3, 3> iFinjGiFinj(true);
-  static Core::LinAlg::Matrix<9, 1> iFinjGiFinj9x1(true);
-  static Core::LinAlg::Matrix<9, 6> diFinjdC(true);
+  static Core::LinAlg::Matrix<3, 3> temp(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<3, 3> iFinjGiFinj(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<9, 1> iFinjGiFinj9x1(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<9, 6> diFinjdC(Core::LinAlg::Initialization::set_zero);
 
   // get parameters
   const int sc1 = parameter()->scalar1();
@@ -1057,9 +1057,9 @@ void Mat::InelasticDefgradLinScalarAniso::evaluate_od_stiff_mat(
     const Core::LinAlg::Matrix<6, 9>& dSdiFinj, Core::LinAlg::Matrix<6, 1>& dstressdc)
 {
   // static variables
-  static Core::LinAlg::Matrix<3, 3> tmp(true);
-  static Core::LinAlg::Matrix<3, 3> diFinjdcM(true);
-  static Core::LinAlg::Matrix<9, 1> diFinjdc9x1(true);
+  static Core::LinAlg::Matrix<3, 3> tmp(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<3, 3> diFinjdcM(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<9, 1> diFinjdc9x1(Core::LinAlg::Initialization::set_zero);
 
   // get parameters
   const double sc1GrowthFac = linear_growth_->growth_fac();
@@ -1085,7 +1085,7 @@ void Mat::InelasticDefgradLinScalarAniso::evaluate_inelastic_def_grad_derivative
   const double scalefac = linear_growth_->growth_fac() * detjacobian;
 
   // get the growth direction matrix as a 9x1 vector
-  static Core::LinAlg::Matrix<9, 1> growthdirmat9x1(true);
+  static Core::LinAlg::Matrix<9, 1> growthdirmat9x1(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Voigt::matrix_3x3_to_9x1(parameter()->growth_dir_mat(), growthdirmat9x1);
 
   // here dFindc is zeroed out and filled with the current value
@@ -1129,8 +1129,8 @@ void Mat::InelasticDefgradPolyIntercalFracIso::evaluate_additional_cmat(
     const Core::LinAlg::Matrix<6, 9>& dSdiFinj, Core::LinAlg::Matrix<6, 6>& cmatadd)
 {
   // static variables
-  static Core::LinAlg::Matrix<9, 6> diFinjdC(true);
-  static Core::LinAlg::Matrix<9, 1> id9x1(true);
+  static Core::LinAlg::Matrix<9, 6> diFinjdC(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<9, 1> id9x1(Core::LinAlg::Initialization::set_zero);
 
   // prepare id9x1 (identity matrix written as a 9x1 vector)
   for (int i = 0; i < 3; ++i) id9x1(i) = 1.0;
@@ -1165,7 +1165,7 @@ void Mat::InelasticDefgradPolyIntercalFracIso::evaluate_od_stiff_mat(
     const Core::LinAlg::Matrix<3, 3>* const defgrad, const Core::LinAlg::Matrix<3, 3>& iFinjM,
     const Core::LinAlg::Matrix<6, 9>& dSdiFinj, Core::LinAlg::Matrix<6, 1>& dstressdc)
 {
-  static Core::LinAlg::Matrix<9, 1> id9x1(true);
+  static Core::LinAlg::Matrix<9, 1> id9x1(Core::LinAlg::Initialization::set_zero);
   // prepare id9x1 (identity matrix written as a 9x1 vector)
   for (int i = 0; i < 3; ++i) id9x1(i) = 1.0;
 
@@ -1195,7 +1195,7 @@ void Mat::InelasticDefgradPolyIntercalFracIso::evaluate_od_stiff_mat(
 void Mat::InelasticDefgradPolyIntercalFracIso::evaluate_inelastic_def_grad_derivative(
     const double detjacobian, Core::LinAlg::Matrix<9, 1>& dFindx)
 {
-  static Core::LinAlg::Matrix<9, 1> id9x1(true);
+  static Core::LinAlg::Matrix<9, 1> id9x1(Core::LinAlg::Initialization::set_zero);
   // prepare id9x1 (identity matrix written as a 9x1 vector)
   for (int i = 0; i < 3; ++i) id9x1(i) = 1.0;
 
@@ -1235,7 +1235,7 @@ void Mat::InelasticDefgradPolyIntercalFracAniso::evaluate_inverse_inelastic_def_
     Core::LinAlg::Matrix<3, 3>& iFinM)
 {
   // init and clear variable
-  static Core::LinAlg::Matrix<3, 3> FinM(true);
+  static Core::LinAlg::Matrix<3, 3> FinM(Core::LinAlg::Initialization::set_zero);
   FinM.clear();
 
   // get parameters
@@ -1267,10 +1267,10 @@ void Mat::InelasticDefgradPolyIntercalFracAniso::evaluate_additional_cmat(
     const Core::LinAlg::Matrix<3, 3>& iFinjM, const Core::LinAlg::Matrix<6, 1>& iCV,
     const Core::LinAlg::Matrix<6, 9>& dSdiFinj, Core::LinAlg::Matrix<6, 6>& cmatadd)
 {
-  static Core::LinAlg::Matrix<3, 3> temp(true);
-  static Core::LinAlg::Matrix<3, 3> iFinjGiFinj(true);
-  static Core::LinAlg::Matrix<9, 1> iFinjGiFinj9x1(true);
-  static Core::LinAlg::Matrix<9, 6> diFinjdC(true);
+  static Core::LinAlg::Matrix<3, 3> temp(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<3, 3> iFinjGiFinj(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<9, 1> iFinjGiFinj9x1(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<9, 6> diFinjdC(Core::LinAlg::Initialization::set_zero);
 
   // get parameters
   const int sc1 = parameter()->scalar1();
@@ -1306,9 +1306,9 @@ void Mat::InelasticDefgradPolyIntercalFracAniso::evaluate_od_stiff_mat(
     const Core::LinAlg::Matrix<6, 9>& dSdiFinj, Core::LinAlg::Matrix<6, 1>& dstressdc)
 {
   // static variables
-  static Core::LinAlg::Matrix<3, 3> tmp(true);
-  static Core::LinAlg::Matrix<3, 3> diFinjdcM(true);
-  static Core::LinAlg::Matrix<9, 1> diFinjdc9x1(true);
+  static Core::LinAlg::Matrix<3, 3> tmp(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<3, 3> diFinjdcM(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<9, 1> diFinjdc9x1(Core::LinAlg::Initialization::set_zero);
 
   // get parameters
   const int sc1 = parameter()->scalar1();
@@ -1351,7 +1351,7 @@ void Mat::InelasticDefgradPolyIntercalFracAniso::evaluate_inelastic_def_grad_der
   const double scalefac = polynomDerivativeValue / (polynomReferenceValue + 1.0) * dChidc;
 
   // get the growth direction matrix as a 9x1 vector
-  static Core::LinAlg::Matrix<9, 1> growthdirmat9x1(true);
+  static Core::LinAlg::Matrix<9, 1> growthdirmat9x1(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Voigt::matrix_3x3_to_9x1(parameter()->growth_dir_mat(), growthdirmat9x1);
 
   // here dFindc is zeroed out and filled with the current value
@@ -1477,7 +1477,7 @@ void Mat::InelasticDefgradLinTempIso::evaluate_inelastic_def_grad_derivative(
   const double scalefac = tempgrowthfac / 3.0 * std::pow(growthfactor, -2.0 / 3.0);
 
   // prepare identity tensor as 9x1 vector
-  static Core::LinAlg::Matrix<9, 1> id9x1(true);
+  static Core::LinAlg::Matrix<9, 1> id9x1(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; ++i) id9x1(i) = 1.0;
 
   // here dFindT is zeroed out and filled with the current value
@@ -1500,7 +1500,7 @@ void Mat::InelasticDefgradLinTempIso::evaluate_od_stiff_mat(
     const Core::LinAlg::Matrix<3, 3>* const defgrad, const Core::LinAlg::Matrix<3, 3>& iFinjM,
     const Core::LinAlg::Matrix<6, 9>& dSdiFinj, Core::LinAlg::Matrix<6, 1>& dstressdT)
 {
-  static Core::LinAlg::Matrix<9, 1> id9x1(true);
+  static Core::LinAlg::Matrix<9, 1> id9x1(Core::LinAlg::Initialization::set_zero);
   // prepare id9x1 (identity matrix written as a 9x1 vector)
   for (int i = 0; i < 3; ++i) id9x1(i) = 1.0;
 

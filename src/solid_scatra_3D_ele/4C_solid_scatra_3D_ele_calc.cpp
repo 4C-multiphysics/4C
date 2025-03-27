@@ -234,7 +234,7 @@ namespace
           scalars_at_xi.has_value(), "Scalar needs to have a value if the derivatives are needed!");
       linearizations.d_cauchyndir_ds->shape(Core::FE::num_nodes<celltype>, 1);
 
-      static Core::LinAlg::Matrix<9, 1> d_F_dc(true);
+      static Core::LinAlg::Matrix<9, 1> d_F_dc(Core::LinAlg::Initialization::set_zero);
       mat.evaluate_linearization_od(deformation_gradient, (*scalars_at_xi)[0], &d_F_dc);
 
       double d_cauchyndir_ds_gp = (*linearization_dependencies.d_cauchyndir_dF).dot(d_F_dc);

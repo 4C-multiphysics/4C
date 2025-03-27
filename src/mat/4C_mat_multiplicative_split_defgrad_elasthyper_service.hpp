@@ -51,16 +51,16 @@ namespace Mat
     cmat.clear();
 
     // Variables needed for the computation of the stress resultants
-    static Core::LinAlg::Matrix<3, 3> C(true);
-    static Core::LinAlg::Matrix<3, 3> Ce(true);
-    static Core::LinAlg::Matrix<3, 3> iC(true);
-    static Core::LinAlg::Matrix<3, 3> iCin(true);
-    static Core::LinAlg::Matrix<3, 3> iCinCiCin(true);
+    static Core::LinAlg::Matrix<3, 3> C(Core::LinAlg::Initialization::set_zero);
+    static Core::LinAlg::Matrix<3, 3> Ce(Core::LinAlg::Initialization::set_zero);
+    static Core::LinAlg::Matrix<3, 3> iC(Core::LinAlg::Initialization::set_zero);
+    static Core::LinAlg::Matrix<3, 3> iCin(Core::LinAlg::Initialization::set_zero);
+    static Core::LinAlg::Matrix<3, 3> iCinCiCin(Core::LinAlg::Initialization::set_zero);
 
-    static Core::LinAlg::Matrix<6, 1> iCinv(true);
-    static Core::LinAlg::Matrix<6, 1> iCinCiCinv(true);
-    static Core::LinAlg::Matrix<6, 1> iCv(true);
-    static Core::LinAlg::Matrix<3, 1> principleInvariantsCe(true);
+    static Core::LinAlg::Matrix<6, 1> iCinv(Core::LinAlg::Initialization::set_zero);
+    static Core::LinAlg::Matrix<6, 1> iCinCiCinv(Core::LinAlg::Initialization::set_zero);
+    static Core::LinAlg::Matrix<6, 1> iCv(Core::LinAlg::Initialization::set_zero);
+    static Core::LinAlg::Matrix<3, 1> principleInvariantsCe(Core::LinAlg::Initialization::set_zero);
 
     // Compute right Cauchy-Green tensor C=F^TF
     C.multiply_tn(F, F);
@@ -87,9 +87,9 @@ namespace Mat
         principleInvariantsCe, dPIe, ddPIIe, potsum, summandProperties, gp, eleGID);
 
     // 2nd Piola Kirchhoff stress factors (according to Holzapfel-Nonlinear Solid Mechanics p. 216)
-    static Core::LinAlg::Matrix<3, 1> gamma(true);
+    static Core::LinAlg::Matrix<3, 1> gamma(Core::LinAlg::Initialization::set_zero);
     // constitutive tensor factors (according to Holzapfel-Nonlinear Solid Mechanics p. 261)
-    static Core::LinAlg::Matrix<8, 1> delta(true);
+    static Core::LinAlg::Matrix<8, 1> delta(Core::LinAlg::Initialization::set_zero);
 
     Mat::calculate_gamma_delta(gamma, delta, principleInvariantsCe, dPIe, ddPIIe);
 

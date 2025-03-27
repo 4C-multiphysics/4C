@@ -187,9 +187,9 @@ namespace Cut
         // For Tri's this method of determining the area and thus the gp-weights is more robust.
         //  It is needed for TRI's which are small/ill-conditioned but large enough to affect the
         //  simulation.
-        static Core::LinAlg::Matrix<3, 1> p0(true);
-        static Core::LinAlg::Matrix<3, 1> p1(true);
-        static Core::LinAlg::Matrix<3, 1> p2(true);
+        static Core::LinAlg::Matrix<3, 1> p0(Core::LinAlg::Initialization::set_zero);
+        static Core::LinAlg::Matrix<3, 1> p1(Core::LinAlg::Initialization::set_zero);
+        static Core::LinAlg::Matrix<3, 1> p2(Core::LinAlg::Initialization::set_zero);
         for (unsigned dim = 0; dim < 3; ++dim)
         {
           p0(dim) = xyze(dim, 0);

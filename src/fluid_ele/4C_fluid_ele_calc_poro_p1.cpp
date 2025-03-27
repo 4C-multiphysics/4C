@@ -76,11 +76,11 @@ int Discret::Elements::FluidEleCalcPoroP1<distype>::evaluate(Discret::Elements::
   // (evaluation at time n+alpha_F for generalized-alpha scheme,
   //  and at time n+1 otherwise)
   // ---------------------------------------------------------------------
-  static Core::LinAlg::Matrix<nsd_, nen_> ebofoaf(true);
+  static Core::LinAlg::Matrix<nsd_, nen_> ebofoaf(Core::LinAlg::Initialization::set_zero);
   ebofoaf.clear();
-  static Core::LinAlg::Matrix<nsd_, nen_> eprescpgaf(true);
+  static Core::LinAlg::Matrix<nsd_, nen_> eprescpgaf(Core::LinAlg::Initialization::set_zero);
   eprescpgaf.clear();
-  static Core::LinAlg::Matrix<nen_, 1> escabofoaf(true);
+  static Core::LinAlg::Matrix<nen_, 1> escabofoaf(Core::LinAlg::Initialization::set_zero);
   escabofoaf.clear();
   Base::body_force(ele, ebofoaf, eprescpgaf, escabofoaf);
 
@@ -96,31 +96,31 @@ int Discret::Elements::FluidEleCalcPoroP1<distype>::evaluate(Discret::Elements::
   // af_genalpha: velocity/pressure at time n+alpha_F
   // np_genalpha: velocity at time n+alpha_F, pressure at time n+1
   // ost:         velocity/pressure at time n+1
-  static Core::LinAlg::Matrix<nsd_, nen_> evelaf(true);
+  static Core::LinAlg::Matrix<nsd_, nen_> evelaf(Core::LinAlg::Initialization::set_zero);
   evelaf.clear();
-  static Core::LinAlg::Matrix<nen_, 1> epreaf(true);
+  static Core::LinAlg::Matrix<nen_, 1> epreaf(Core::LinAlg::Initialization::set_zero);
   epreaf.clear();
   Base::extract_values_from_global_vector(
       discretization, lm, *Base::rotsymmpbc_, &evelaf, &epreaf, "velaf");
 
   // np_genalpha: additional vector for velocity at time n+1
-  static Core::LinAlg::Matrix<nsd_, nen_> evelnp(true);
+  static Core::LinAlg::Matrix<nsd_, nen_> evelnp(Core::LinAlg::Initialization::set_zero);
   evelnp.clear();
-  static Core::LinAlg::Matrix<nen_, 1> eprenp(true);
+  static Core::LinAlg::Matrix<nen_, 1> eprenp(Core::LinAlg::Initialization::set_zero);
   eprenp.clear();
   if (FluidEleCalc<distype>::fldparatimint_->is_genalpha_np())
     Base::extract_values_from_global_vector(
         discretization, lm, *Base::rotsymmpbc_, &evelnp, &eprenp, "velnp");
 
-  static Core::LinAlg::Matrix<nsd_, nen_> emhist(true);
+  static Core::LinAlg::Matrix<nsd_, nen_> emhist(Core::LinAlg::Initialization::set_zero);
   emhist.clear();
-  static Core::LinAlg::Matrix<nen_, 1> echist(true);
+  static Core::LinAlg::Matrix<nen_, 1> echist(Core::LinAlg::Initialization::set_zero);
   echist.clear();
   Base::extract_values_from_global_vector(
       discretization, lm, *Base::rotsymmpbc_, &emhist, &echist, "hist");
 
-  static Core::LinAlg::Matrix<nsd_, nen_> eaccam(true);
-  static Core::LinAlg::Matrix<nen_, 1> epressam_timederiv(true);
+  static Core::LinAlg::Matrix<nsd_, nen_> eaccam(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<nen_, 1> epressam_timederiv(Core::LinAlg::Initialization::set_zero);
   eaccam.clear();
   epressam_timederiv.clear();
 
@@ -128,25 +128,25 @@ int Discret::Elements::FluidEleCalcPoroP1<distype>::evaluate(Discret::Elements::
     Base::extract_values_from_global_vector(
         discretization, lm, *Base::rotsymmpbc_, &eaccam, &epressam_timederiv, "accam");
 
-  static Core::LinAlg::Matrix<nen_, 1> epressn_timederiv(true);
+  static Core::LinAlg::Matrix<nen_, 1> epressn_timederiv(Core::LinAlg::Initialization::set_zero);
   epressn_timederiv.clear();
   if (Base::fldparatimint_->is_genalpha())
     Base::extract_values_from_global_vector(
         discretization, lm, *Base::rotsymmpbc_, nullptr, &epressn_timederiv, "accn");
 
-  static Core::LinAlg::Matrix<nen_, 1> epren(true);
+  static Core::LinAlg::Matrix<nen_, 1> epren(Core::LinAlg::Initialization::set_zero);
   epren.clear();
-  static Core::LinAlg::Matrix<nsd_, nen_> eveln(true);
+  static Core::LinAlg::Matrix<nsd_, nen_> eveln(Core::LinAlg::Initialization::set_zero);
   eveln.clear();
   Base::extract_values_from_global_vector(
       discretization, lm, *Base::rotsymmpbc_, &eveln, &epren, "veln");
 
-  static Core::LinAlg::Matrix<nen_, 1> epressnp_timederiv(true);
+  static Core::LinAlg::Matrix<nen_, 1> epressnp_timederiv(Core::LinAlg::Initialization::set_zero);
   epressnp_timederiv.clear();
   Base::extract_values_from_global_vector(
       discretization, lm, *Base::rotsymmpbc_, nullptr, &epressnp_timederiv, "accnp");
 
-  static Core::LinAlg::Matrix<nen_, 1> escaaf(true);
+  static Core::LinAlg::Matrix<nen_, 1> escaaf(Core::LinAlg::Initialization::set_zero);
   escaaf.clear();
   Base::extract_values_from_global_vector(
       discretization, lm, *Base::rotsymmpbc_, nullptr, &escaaf, "scaaf");
@@ -154,20 +154,20 @@ int Discret::Elements::FluidEleCalcPoroP1<distype>::evaluate(Discret::Elements::
   // ---------------------------------------------------------------------
   // get additional state vectors for ALE case: grid displacement and vel.
   // ---------------------------------------------------------------------
-  static Core::LinAlg::Matrix<nsd_, nen_> edispnp(true);
+  static Core::LinAlg::Matrix<nsd_, nen_> edispnp(Core::LinAlg::Initialization::set_zero);
   edispnp.clear();
-  static Core::LinAlg::Matrix<nsd_, nen_> egridv(true);
+  static Core::LinAlg::Matrix<nsd_, nen_> egridv(Core::LinAlg::Initialization::set_zero);
   egridv.clear();
-  static Core::LinAlg::Matrix<nsd_, nen_> egridvn(true);
+  static Core::LinAlg::Matrix<nsd_, nen_> egridvn(Core::LinAlg::Initialization::set_zero);
   egridvn.clear();
-  static Core::LinAlg::Matrix<nsd_, nen_> edispn(true);
+  static Core::LinAlg::Matrix<nsd_, nen_> edispn(Core::LinAlg::Initialization::set_zero);
   edispn.clear();
 
-  static Core::LinAlg::Matrix<nen_, 1> eporositynp(true);
+  static Core::LinAlg::Matrix<nen_, 1> eporositynp(Core::LinAlg::Initialization::set_zero);
   eporositynp.clear();
-  static Core::LinAlg::Matrix<nen_, 1> eporositydot(true);
+  static Core::LinAlg::Matrix<nen_, 1> eporositydot(Core::LinAlg::Initialization::set_zero);
   eporositydot.clear();
-  static Core::LinAlg::Matrix<nen_, 1> eporositydotn(true);
+  static Core::LinAlg::Matrix<nen_, 1> eporositydotn(Core::LinAlg::Initialization::set_zero);
   eporositydotn.clear();
 
   Base::extract_values_from_global_vector(
@@ -356,8 +356,8 @@ int Discret::Elements::FluidEleCalcPoroP1<distype>::evaluate_od(Discret::Element
     this->extract_values_from_global_vector(
         discretization, lm, *Base::rotsymmpbc_, &eveln, &epren, "veln");
 
-  static Core::LinAlg::Matrix<nsd_, nen_> eaccam(true);
-  static Core::LinAlg::Matrix<nen_, 1> epressam_timederiv(true);
+  static Core::LinAlg::Matrix<nsd_, nen_> eaccam(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<nen_, 1> epressam_timederiv(Core::LinAlg::Initialization::set_zero);
   eaccam.clear();
   epressam_timederiv.clear();
 
@@ -365,7 +365,7 @@ int Discret::Elements::FluidEleCalcPoroP1<distype>::evaluate_od(Discret::Element
     Base::extract_values_from_global_vector(
         discretization, lm, *Base::rotsymmpbc_, &eaccam, &epressam_timederiv, "accam");
 
-  static Core::LinAlg::Matrix<nen_, 1> epressn_timederiv(true);
+  static Core::LinAlg::Matrix<nen_, 1> epressn_timederiv(Core::LinAlg::Initialization::set_zero);
   epressn_timederiv.clear();
   if (Base::fldparatimint_->is_genalpha())
     Base::extract_values_from_global_vector(
@@ -611,9 +611,11 @@ void Discret::Elements::FluidEleCalcPoroP1<distype>::gauss_point_loop_p1_od(
     const Core::FE::GaussIntegration& intpoints)
 {
   // definition of velocity-based momentum residual vectors
-  static Core::LinAlg::Matrix<nsd_, nen_ * nsd_> lin_resM_Dus(true);
-  static Core::LinAlg::Matrix<nsd_, nen_ * nsd_> lin_resM_Dus_gridvel(true);
-  static Core::LinAlg::Matrix<nsd_, nen_> lin_resM_Dphi(true);
+  static Core::LinAlg::Matrix<nsd_, nen_ * nsd_> lin_resM_Dus(
+      Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<nsd_, nen_ * nsd_> lin_resM_Dus_gridvel(
+      Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<nsd_, nen_> lin_resM_Dphi(Core::LinAlg::Initialization::set_zero);
 
   // set element area or volume
   const double vol = Base::fac_;

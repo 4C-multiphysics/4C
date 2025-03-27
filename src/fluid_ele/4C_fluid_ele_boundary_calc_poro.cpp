@@ -3974,7 +3974,8 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
       }
     }
 
-    static Core::LinAlg::Matrix<1, Base::bdrynen_ * nsd_> convvel_normalderiv(true);
+    static Core::LinAlg::Matrix<1, Base::bdrynen_ * nsd_> convvel_normalderiv(
+        Core::LinAlg::Initialization::set_zero);
     convvel_normalderiv.multiply_tn(convvel, normalderiv);
 
     // fill element matrix
@@ -3995,9 +3996,11 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
 
     if (nsd_ == 3)
     {
-      static Core::LinAlg::Matrix<1, Base::bdrynen_ * nsd_> lambda_tangent1deriv(true);
+      static Core::LinAlg::Matrix<1, Base::bdrynen_ * nsd_> lambda_tangent1deriv(
+          Core::LinAlg::Initialization::set_zero);
       lambda_tangent1deriv.multiply_tn(lambda, tangent1deriv);
-      static Core::LinAlg::Matrix<1, Base::bdrynen_ * nsd_> lambda_tangent2deriv(true);
+      static Core::LinAlg::Matrix<1, Base::bdrynen_ * nsd_> lambda_tangent2deriv(
+          Core::LinAlg::Initialization::set_zero);
       lambda_tangent2deriv.multiply_tn(lambda, tangent2deriv);
 
       for (int inode = 0; inode < Base::bdrynen_; inode++)

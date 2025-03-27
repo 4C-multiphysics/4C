@@ -3790,8 +3790,8 @@ namespace Discret
               {
                 double J = 0;
                 double porosity = mc_fpi->calc_porosity(side, rst_slave, J);
-                static Core::LinAlg::Matrix<3, 1> vel_s(true);
-                static Core::LinAlg::Matrix<3, 1> velpf_s(true);
+                static Core::LinAlg::Matrix<3, 1> vel_s(Core::LinAlg::Initialization::set_zero);
+                static Core::LinAlg::Matrix<3, 1> velpf_s(Core::LinAlg::Initialization::set_zero);
                 XFEM::Utils::evaluate_stateat_gp(side, rst_slave,
                     *cond_manager->get_mesh_coupling("XFEMSurfFPIMono_ps_ps")->get_cutter_dis(),
                     "ivelnp", vel_s);

@@ -1052,12 +1052,14 @@ namespace Discret
             const Core::LinAlg::Matrix<nsd, 1> gradpres = pressure_gradient(phase);
             const double abspressgrad = abs_pressure_gradient(phase);
 
-            static Core::LinAlg::Matrix<nsd, nsd> difftensor(true);
+            static Core::LinAlg::Matrix<nsd, nsd> difftensor(
+                Core::LinAlg::Initialization::set_zero);
             phasemanager_->permeability_tensor(phase, difftensor);
             difftensor.scale(phasemanager_->rel_permeability_deriv(phase) /
                              phasemanager_->dyn_viscosity(phase, abspressgrad, 2));
 
-            static Core::LinAlg::Matrix<1, nsd> gradphiTdifftensor(true);
+            static Core::LinAlg::Matrix<1, nsd> gradphiTdifftensor(
+                Core::LinAlg::Initialization::set_zero);
             gradphiTdifftensor.multiply_tn(gradphi, difftensor);
 
             double laplawf(0.0);

@@ -1896,8 +1896,8 @@ void Mat::PlasticElastHyper::evaluate_cauchy_temp_deriv(const Core::LinAlg::Matr
   // then we plug them into the cauchy stress derivative and voila
   // we keep many zero entries here for possible future extension to more
   // than just thermal expansion
-  static Core::LinAlg::Matrix<3, 1> dPI(true);
-  static Core::LinAlg::Matrix<6, 1> ddPII(true);
+  static Core::LinAlg::Matrix<3, 1> dPI(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<6, 1> ddPII(Core::LinAlg::Initialization::set_zero);
   dPI.clear();
   ddPII.clear();
 

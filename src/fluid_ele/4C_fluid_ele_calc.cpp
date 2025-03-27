@@ -740,7 +740,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::sysmat(
 
   // potential evaluation of multifractal subgrid-scales at element center
   // coefficient B of fine-scale velocity
-  static Core::LinAlg::Matrix<nsd_, 1> B_mfs(true);
+  static Core::LinAlg::Matrix<nsd_, 1> B_mfs(Core::LinAlg::Initialization::set_zero);
   B_mfs.clear();
 
   // coefficient D of fine-scale scalar (loma only)
@@ -792,7 +792,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::sysmat(
       vderxy_.multiply_nt(evelaf, derxy_);  // required for time-dependent subscales
 
       // compute velnp at integration point (required for time-dependent subscales)
-      static Core::LinAlg::Matrix<nsd_, 1> velintnp(true);
+      static Core::LinAlg::Matrix<nsd_, 1> velintnp(Core::LinAlg::Initialization::set_zero);
       velintnp.multiply(evelnp, funct_);
       vel_normnp_ = velintnp.norm2();
     }
@@ -1011,7 +1011,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::sysmat(
       for (int idim = 0; idim < nsd_; ++idim)
       {
         // get vdiv at time n+1 for np_genalpha,
-        static Core::LinAlg::Matrix<nsd_, nsd_> vderxy(true);
+        static Core::LinAlg::Matrix<nsd_, nsd_> vderxy(Core::LinAlg::Initialization::set_zero);
         vderxy.multiply_nt(evelnp, derxy_);
         vdiv_ += vderxy(idim, idim);
       }
@@ -1140,7 +1140,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::sysmat(
     // 2) standard Galerkin viscous term
     //    (including viscous stress computation,
     //     excluding viscous part for low-Mach-number flow)
-    static Core::LinAlg::Matrix<nsd_, nsd_> viscstress(true);
+    static Core::LinAlg::Matrix<nsd_, nsd_> viscstress(Core::LinAlg::Initialization::set_zero);
     viscstress.clear();
     viscous_gal_part(estif_u_, velforce_, viscstress, timefacfac, rhsfac);
 
@@ -1593,11 +1593,11 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::add_surface_tension_forc
   // Add surface force if inside interface thickness, otherwise do not.
   if (abs(gaussescaaf) <= epsilon)
   {
-    static Core::LinAlg::Matrix<nsd_, nen_> egradphi(true);
-    static Core::LinAlg::Matrix<nsd_, nen_> egradphin(true);
+    static Core::LinAlg::Matrix<nsd_, nen_> egradphi(Core::LinAlg::Initialization::set_zero);
+    static Core::LinAlg::Matrix<nsd_, nen_> egradphin(Core::LinAlg::Initialization::set_zero);
 
-    static Core::LinAlg::Matrix<nen_, 1> ecurvature(true);
-    static Core::LinAlg::Matrix<nen_, 1> ecurvaturen(true);
+    static Core::LinAlg::Matrix<nen_, 1> ecurvature(Core::LinAlg::Initialization::set_zero);
+    static Core::LinAlg::Matrix<nen_, 1> ecurvaturen(Core::LinAlg::Initialization::set_zero);
 
     // Extract values from gradient and curvature vectors (who been compressed to not use too many
     // unnecessary variables)
@@ -3097,7 +3097,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::calc_stab_parameter(cons
     //
     // j : direction of derivative x/y/z
     //
-    static Core::LinAlg::Matrix<nsd_, nsd_> vderxyaf_(true);
+    static Core::LinAlg::Matrix<nsd_, nsd_> vderxyaf_(Core::LinAlg::Initialization::set_zero);
     vderxyaf_.update(1.0, vderxy_, 0.0);
 
     // Now we are ready. Let's go on!
@@ -3382,7 +3382,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::calc_char_ele_length(
     // normed velocity vector
     case Inpar::FLUID::streamlength_u:
     {
-      static Core::LinAlg::Matrix<nsd_, 1> velino(true);
+      static Core::LinAlg::Matrix<nsd_, 1> velino(Core::LinAlg::Initialization::set_zero);
       if (vel_norm >= 1e-6)
         velino.update(1.0 / vel_norm, convvelint_);
       else
@@ -3443,7 +3443,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::calc_char_ele_length(
     // normed velocity vector
     case Inpar::FLUID::streamlength_pc:
     {
-      static Core::LinAlg::Matrix<nsd_, 1> velino(true);
+      static Core::LinAlg::Matrix<nsd_, 1> velino(Core::LinAlg::Initialization::set_zero);
       if (vel_norm >= 1e-6)
         velino.update(1.0 / vel_norm, convvelint_);
       else
@@ -3841,7 +3841,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::compute_subgrid_scale_ve
 
     */
 
-    static Core::LinAlg::Matrix<1, nsd_> sgvelintaf(true);
+    static Core::LinAlg::Matrix<1, nsd_> sgvelintaf(Core::LinAlg::Initialization::set_zero);
     sgvelintaf.clear();
     for (int rr = 0; rr < nsd_; ++rr)
     {
@@ -11183,7 +11183,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::sysmat_ost_new(
 
   // potential evaluation of multifractal subgrid-scales at element center
   // coefficient B of fine-scale velocity
-  static Core::LinAlg::Matrix<nsd_, 1> B_mfs(true);
+  static Core::LinAlg::Matrix<nsd_, 1> B_mfs(Core::LinAlg::Initialization::set_zero);
   B_mfs.clear();
 
   // coefficient D of fine-scale scalar (loma only)
@@ -11239,7 +11239,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::sysmat_ost_new(
       vderxy_.multiply_nt(evelaf, derxy_);  // required for time-dependent subscales
 
       // compute velnp at integration point (required for time-dependent subscales)
-      static Core::LinAlg::Matrix<nsd_, 1> velintnp(true);
+      static Core::LinAlg::Matrix<nsd_, 1> velintnp(Core::LinAlg::Initialization::set_zero);
       velintnp.multiply(evelnp, funct_);
       vel_normnp_ = velintnp.norm2();
     }
@@ -11471,7 +11471,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::sysmat_ost_new(
       for (int idim = 0; idim < nsd_; ++idim)
       {
         // get vdiv at time n+1 for np_genalpha,
-        static Core::LinAlg::Matrix<nsd_, nsd_> vderxy(true);
+        static Core::LinAlg::Matrix<nsd_, nsd_> vderxy(Core::LinAlg::Initialization::set_zero);
         vderxy.multiply_nt(evelnp, derxy_);
         vdiv_ += vderxy(idim, idim);
       }
@@ -11616,7 +11616,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::sysmat_ost_new(
     // 2) standard Galerkin viscous term
     //    (including viscous stress computation,
     //     excluding viscous part for low-Mach-number flow)
-    static Core::LinAlg::Matrix<nsd_, nsd_> viscstress(true);
+    static Core::LinAlg::Matrix<nsd_, nsd_> viscstress(Core::LinAlg::Initialization::set_zero);
     viscstress.clear();
 
     viscous_gal_part(estif_u_, velforce_, viscstress, timefacfac, rhsfac, rhsfacn);
@@ -12314,7 +12314,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::compute_subgrid_scale_ve
 
     */
 
-    static Core::LinAlg::Matrix<1, nsd_> sgvelintaf(true);
+    static Core::LinAlg::Matrix<1, nsd_> sgvelintaf(Core::LinAlg::Initialization::set_zero);
     sgvelintaf.clear();
     for (int rr = 0; rr < nsd_; ++rr)
     {

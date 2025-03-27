@@ -173,7 +173,7 @@ double Discret::Elements::ScaTraEleCalcPoroReacECM<distype>::compute_struct_chem
   defgrd.multiply_nt(my::xyze_, N_XYZ);
 
   // GL strain vector glstrain={E11,E22,E33,2*E12,2*E23,2*E31}
-  static Core::LinAlg::Matrix<6, 1> glstrain(true);
+  static Core::LinAlg::Matrix<6, 1> glstrain(Core::LinAlg::Initialization::set_zero);
   glstrain.clear();
   // if (kinemtype_ == Inpar::Solid::KinemType::nonlinearTotLag)
   {
