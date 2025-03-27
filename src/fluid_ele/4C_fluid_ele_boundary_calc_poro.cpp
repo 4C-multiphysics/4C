@@ -749,8 +749,10 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
 
     // dxyzdrs vector -> normal which is not normalized built from cross product of columns
     // of Jacobian matrix d(x,y,z)/d(r,s)
-    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(0.0);
-    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs_n(0.0);
+    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(
+        Core::LinAlg::Initialization::leave_uninitialized);
+    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs_n(
+        Core::LinAlg::Initialization::leave_uninitialized);
     dxyzdrs.multiply_nt(Base::deriv_, Base::xyze_);
     dxyzdrs_n.multiply_nt(Base::deriv_, Base::xyze_n_);
 
@@ -2203,7 +2205,8 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration(
           Core::FE::is_nurbs<distype>);
 
       // dxyzdrs vector -> normal which is not normalized
-      Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(0.0);
+      Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(
+          Core::LinAlg::Initialization::leave_uninitialized);
       dxyzdrs.multiply_nt(Base::deriv_, Base::xyze_);
 
       // The integration factor is not multiplied with drs
@@ -2738,7 +2741,8 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::poro_boundary(
         Core::LinAlg::Initialization::set_zero);
 
     // dxyzdrs vector -> normal which is not normalized
-    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(0.0);
+    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(
+        Core::LinAlg::Initialization::leave_uninitialized);
     dxyzdrs.multiply_nt(Base::deriv_, Base::xyze_);
 
     if (nsd_ == 3)
@@ -2985,7 +2989,8 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::pressure_coupling(
     double press = Base::funct_.dot(epressnp);
 
     // dxyzdrs vector -> normal which is not normalized
-    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(0.0);
+    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(
+        Core::LinAlg::Initialization::leave_uninitialized);
     dxyzdrs.multiply_nt(Base::deriv_, Base::xyze_);
 
     // in the case of nurbs the normal vector must be scaled with a special factor
@@ -3418,7 +3423,8 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_an
     // --------------------------------------------------
 
     // dxyzdrs vector -> normal which is not normalized
-    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(0.0);
+    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(
+        Core::LinAlg::Initialization::leave_uninitialized);
     dxyzdrs.multiply_nt(Base::deriv_, Base::xyze_);
 
     // in the case of nurbs the normal vector must be scaled with a special factor
@@ -3819,7 +3825,8 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
     Coupling::VolMortar::Utils::dual_shape_function<distype>(dualfunct, Axi.data(), *ele);
 
     // dxyzdrs vector -> normal which is not normalized
-    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(0.0);
+    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(
+        Core::LinAlg::Initialization::leave_uninitialized);
     dxyzdrs.multiply_nt(Base::deriv_, Base::xyze_);
 
     // in the case of nurbs the normal vector must be scaled with a special factor
@@ -4396,7 +4403,8 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
         params, ele, Base::funct_, eporosity, press, J, gpid, porosity_gp, dphi_dp, dphi_dJ, false);
 
     // dxyzdrs vector -> normal which is not normalized
-    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(0.0);
+    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(
+        Core::LinAlg::Initialization::leave_uninitialized);
     dxyzdrs.multiply_nt(Base::deriv_, Base::xyze_);
 
     // in the case of nurbs the normal vector must be scaled with a special factor
@@ -4765,7 +4773,8 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
         params, ele, Base::funct_, eporosity, press, J, gpid, porosity_gp, dphi_dp, dphi_dJ, false);
 
     // dxyzdrs vector -> normal which is not normalized
-    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(0.0);
+    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(
+        Core::LinAlg::Initialization::leave_uninitialized);
     dxyzdrs.multiply_nt(Base::deriv_, Base::xyze_);
 
     // in the case of nurbs the normal vector must be scaled with a special factor

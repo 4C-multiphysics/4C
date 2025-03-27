@@ -392,7 +392,7 @@ int Discret::Elements::FluidBoundaryImpl<distype>::evaluate_neumann(
     double functfacn = 1.0;
 
     // global coordinates of gausspoint
-    Core::LinAlg::Matrix<(nsd_), 1> coordgp(0.0);
+    Core::LinAlg::Matrix<(nsd_), 1> coordgp(Core::LinAlg::Initialization::leave_uninitialized);
 
     // determine coordinates of current Gauss point
     coordgp.multiply(xyze_, funct_);
@@ -884,7 +884,8 @@ void Discret::Elements::FluidBoundaryImpl<distype>::element_mean_curvature(
 
     // calculate mean curvature H at node.
     double H = 0.0;
-    Core::LinAlg::Matrix<bdrynsd_, nsd_> dn123drs(0.0);
+    Core::LinAlg::Matrix<bdrynsd_, nsd_> dn123drs(
+        Core::LinAlg::Initialization::leave_uninitialized);
 
     dn123drs.multiply_nt(deriv_, norm_elem);
 
@@ -1448,7 +1449,7 @@ void Discret::Elements::FluidBoundaryImpl<distype>::flow_rate_deriv(
     const double fac = intpoints.ip().qwgt[gpid];
 
     // dxyzdrs vector -> normal which is not normalized
-    Core::LinAlg::Matrix<bdrynsd_, nsd_> dxyzdrs(0.0);
+    Core::LinAlg::Matrix<bdrynsd_, nsd_> dxyzdrs(Core::LinAlg::Initialization::leave_uninitialized);
     dxyzdrs.multiply_nt(deriv_, xyze_);
     normal(0, 0) = dxyzdrs(0, 1) * dxyzdrs(1, 2) - dxyzdrs(0, 2) * dxyzdrs(1, 1);
     normal(1, 0) = dxyzdrs(0, 2) * dxyzdrs(1, 0) - dxyzdrs(0, 0) * dxyzdrs(1, 2);
