@@ -275,10 +275,14 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   // prepare data storage for visualization
   centerline_coords_gp_1_.resize(numgp_perelement);
   centerline_coords_gp_2_.resize(numgp_perelement);
-  forces_pot_gp_1_.resize(numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(true));
-  forces_pot_gp_2_.resize(numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(true));
-  moments_pot_gp_1_.resize(numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(true));
-  moments_pot_gp_2_.resize(numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(true));
+  forces_pot_gp_1_.resize(
+      numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
+  forces_pot_gp_2_.resize(
+      numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
+  moments_pot_gp_1_.resize(
+      numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
+  moments_pot_gp_2_.resize(
+      numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
 
   for (unsigned int isegment1 = 0; isegment1 < num_integration_segments; ++isegment1)
   {
@@ -682,10 +686,14 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   // prepare data storage for visualization
   centerline_coords_gp_1_.resize(numgp_perelement);
   centerline_coords_gp_2_.resize(numgp_perelement);
-  forces_pot_gp_1_.resize(numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(true));
-  forces_pot_gp_2_.resize(numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(true));
-  moments_pot_gp_1_.resize(numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(true));
-  moments_pot_gp_2_.resize(numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(true));
+  forces_pot_gp_1_.resize(
+      numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
+  forces_pot_gp_2_.resize(
+      numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
+  moments_pot_gp_1_.resize(
+      numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
+  moments_pot_gp_2_.resize(
+      numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
 
   // auxiliary variables
   Core::LinAlg::Matrix<3, 1, T> fpot_tmp(Core::LinAlg::Initialization::set_zero);
@@ -1265,10 +1273,14 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   // prepare data storage for visualization
   centerline_coords_gp_1_.resize(numgp_total);
   centerline_coords_gp_2_.resize(numgp_total);
-  forces_pot_gp_1_.resize(numgp_total, Core::LinAlg::Matrix<3, 1, double>(true));
-  forces_pot_gp_2_.resize(numgp_total, Core::LinAlg::Matrix<3, 1, double>(true));
-  moments_pot_gp_1_.resize(numgp_total, Core::LinAlg::Matrix<3, 1, double>(true));
-  moments_pot_gp_2_.resize(numgp_total, Core::LinAlg::Matrix<3, 1, double>(true));
+  forces_pot_gp_1_.resize(
+      numgp_total, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
+  forces_pot_gp_2_.resize(
+      numgp_total, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
+  moments_pot_gp_1_.resize(
+      numgp_total, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
+  moments_pot_gp_2_.resize(
+      numgp_total, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
 
 
   for (unsigned int isegment = 0; isegment < num_integration_segments; ++isegment)

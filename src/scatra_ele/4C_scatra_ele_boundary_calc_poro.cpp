@@ -97,8 +97,8 @@ int Discret::Elements::ScaTraEleBoundaryCalcPoro<distype, probdim>::evaluate_act
       if (phinp == nullptr) FOUR_C_THROW("Cannot get state vector 'phinp'");
 
       // extract local values from the global vector
-      std::vector<Core::LinAlg::Matrix<nen_, 1>> ephinp(
-          my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      std::vector<Core::LinAlg::Matrix<nen_, 1>> ephinp(my::numdofpernode_,
+          Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero));
       Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phinp, ephinp, la[0].lm_);
 
       // get number of dofset associated with velocity related dofs

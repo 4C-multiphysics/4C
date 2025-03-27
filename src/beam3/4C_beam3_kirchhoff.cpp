@@ -1033,12 +1033,12 @@ void Discret::Elements::Beam3k::get_triad_at_xi(
   update_disp_totlag<2, double>(disp, disp_totlag);
 
   // material triads at collocation points
-  std::vector<Core::LinAlg::Matrix<3, 3, double>> triad_mat_cp(
-      BEAM3K_COLLOCATION_POINTS, Core::LinAlg::Matrix<3, 3, double>(true));
+  std::vector<Core::LinAlg::Matrix<3, 3, double>> triad_mat_cp(BEAM3K_COLLOCATION_POINTS,
+      Core::LinAlg::Matrix<3, 3, double>(Core::LinAlg::Initialization::set_zero));
   Core::LinAlg::Matrix<6 * 2 + BEAM3K_COLLOCATION_POINTS, 1, double> dummy(
       Core::LinAlg::Initialization::set_zero);
-  std::vector<Core::LinAlg::Matrix<4, 1>> Qref_dummy(
-      BEAM3K_COLLOCATION_POINTS, Core::LinAlg::Matrix<4, 1>(true));
+  std::vector<Core::LinAlg::Matrix<4, 1>> Qref_dummy(BEAM3K_COLLOCATION_POINTS,
+      Core::LinAlg::Matrix<4, 1>(Core::LinAlg::Initialization::set_zero));
 
   // Todo @grill:
   //    this method uses Qrefconv_[node] as reference triads; so we can only call this method if
@@ -1151,20 +1151,20 @@ void Discret::Elements::Beam3k::get_generalized_interpolation_matrix_variations_
   Core::LinAlg::Matrix<numdof, 1, double> disp_totlag_centerline(
       Core::LinAlg::Initialization::set_zero);
 
-  std::vector<Core::LinAlg::Matrix<3, 3, double>> triad_dummy(
-      BEAM3K_COLLOCATION_POINTS, Core::LinAlg::Matrix<3, 3, double>(true));
-  std::vector<Core::LinAlg::Matrix<4, 1>> Qref_dummy(
-      BEAM3K_COLLOCATION_POINTS, Core::LinAlg::Matrix<4, 1>(true));
+  std::vector<Core::LinAlg::Matrix<3, 3, double>> triad_dummy(BEAM3K_COLLOCATION_POINTS,
+      Core::LinAlg::Matrix<3, 3, double>(Core::LinAlg::Initialization::set_zero));
+  std::vector<Core::LinAlg::Matrix<4, 1>> Qref_dummy(BEAM3K_COLLOCATION_POINTS,
+      Core::LinAlg::Matrix<4, 1>(Core::LinAlg::Initialization::set_zero));
 
 
   Core::LinAlg::Matrix<3, 1, double> r_s(Core::LinAlg::Initialization::set_zero);  // r' vector
   double abs_r_s = 0.0;                                                            // ||r'||
 
 
-  std::vector<Core::LinAlg::Matrix<numdof, ndim, double>> v_thetaperp_cp(
-      BEAM3K_COLLOCATION_POINTS, Core::LinAlg::Matrix<numdof, ndim, double>(true));
-  std::vector<Core::LinAlg::Matrix<numdof, ndim, double>> v_thetapar_cp(
-      BEAM3K_COLLOCATION_POINTS, Core::LinAlg::Matrix<numdof, ndim, double>(true));
+  std::vector<Core::LinAlg::Matrix<numdof, ndim, double>> v_thetaperp_cp(BEAM3K_COLLOCATION_POINTS,
+      Core::LinAlg::Matrix<numdof, ndim, double>(Core::LinAlg::Initialization::set_zero));
+  std::vector<Core::LinAlg::Matrix<numdof, ndim, double>> v_thetapar_cp(BEAM3K_COLLOCATION_POINTS,
+      Core::LinAlg::Matrix<numdof, ndim, double>(Core::LinAlg::Initialization::set_zero));
 
 
   // re-interpolated spin vector variation: v_theta_bar
@@ -1301,10 +1301,10 @@ void Discret::Elements::Beam3k::get_stiffmat_resulting_from_generalized_interpol
   Core::LinAlg::Matrix<numdof, 1, double> disp_totlag_centerline(
       Core::LinAlg::Initialization::set_zero);
 
-  std::vector<Core::LinAlg::Matrix<3, 3, double>> triad_mat_cp(
-      BEAM3K_COLLOCATION_POINTS, Core::LinAlg::Matrix<3, 3, double>(true));
-  std::vector<Core::LinAlg::Matrix<4, 1>> Qref_dummy(
-      BEAM3K_COLLOCATION_POINTS, Core::LinAlg::Matrix<4, 1>(true));
+  std::vector<Core::LinAlg::Matrix<3, 3, double>> triad_mat_cp(BEAM3K_COLLOCATION_POINTS,
+      Core::LinAlg::Matrix<3, 3, double>(Core::LinAlg::Initialization::set_zero));
+  std::vector<Core::LinAlg::Matrix<4, 1>> Qref_dummy(BEAM3K_COLLOCATION_POINTS,
+      Core::LinAlg::Matrix<4, 1>(Core::LinAlg::Initialization::set_zero));
 
 
   Core::LinAlg::Matrix<ndim, 1, double> r_s(Core::LinAlg::Initialization::set_zero);  // r' vector
@@ -1315,10 +1315,12 @@ void Discret::Elements::Beam3k::get_stiffmat_resulting_from_generalized_interpol
 
 
   std::vector<Core::LinAlg::Matrix<numdof, numdof, double>> lin_v_thetaperp_moment_cp(
-      BEAM3K_COLLOCATION_POINTS, Core::LinAlg::Matrix<numdof, numdof, double>(true));
+      BEAM3K_COLLOCATION_POINTS,
+      Core::LinAlg::Matrix<numdof, numdof, double>(Core::LinAlg::Initialization::set_zero));
 
   std::vector<Core::LinAlg::Matrix<numdof, numdof, double>> lin_v_thetapar_moment_cp(
-      BEAM3K_COLLOCATION_POINTS, Core::LinAlg::Matrix<numdof, numdof, double>(true));
+      BEAM3K_COLLOCATION_POINTS,
+      Core::LinAlg::Matrix<numdof, numdof, double>(Core::LinAlg::Initialization::set_zero));
 
 
   // set nodal / cp quantities: positions, tangents, triads
@@ -1453,10 +1455,10 @@ void Discret::Elements::Beam3k::get_generalized_interpolation_matrix_increments_
   Core::LinAlg::Matrix<numdof, 1, double> disp_totlag_centerline(
       Core::LinAlg::Initialization::set_zero);
 
-  std::vector<Core::LinAlg::Matrix<3, 3, double>> triad_mat_cp(
-      BEAM3K_COLLOCATION_POINTS, Core::LinAlg::Matrix<3, 3, double>(true));
-  std::vector<Core::LinAlg::Matrix<4, 1>> Qref_dummy(
-      BEAM3K_COLLOCATION_POINTS, Core::LinAlg::Matrix<4, 1>(true));
+  std::vector<Core::LinAlg::Matrix<3, 3, double>> triad_mat_cp(BEAM3K_COLLOCATION_POINTS,
+      Core::LinAlg::Matrix<3, 3, double>(Core::LinAlg::Initialization::set_zero));
+  std::vector<Core::LinAlg::Matrix<4, 1>> Qref_dummy(BEAM3K_COLLOCATION_POINTS,
+      Core::LinAlg::Matrix<4, 1>(Core::LinAlg::Initialization::set_zero));
 
 
   Core::LinAlg::Matrix<3, 1, double> r_s(Core::LinAlg::Initialization::set_zero);  // r' vector
@@ -1470,11 +1472,14 @@ void Discret::Elements::Beam3k::get_generalized_interpolation_matrix_increments_
   Core::LinAlg::Matrix<3, 1, double> g_1_cp_bar(Core::LinAlg::Initialization::set_zero);
 
 
-  Core::LinAlg::Matrix<ndim, numdof, double> lin_theta_perp_cp(true), lin_theta_par_cp(true);
+  Core::LinAlg::Matrix<ndim, numdof, double> lin_theta_perp_cp{
+      Core::LinAlg::Initialization::set_zero};
+  Core::LinAlg::Matrix<ndim, numdof, double> lin_theta_par_cp(
+      Core::LinAlg::Initialization::set_zero);
 
   // lin_theta_cp = lin_theta_perp_cp + lin_theta_par_cp
-  std::vector<Core::LinAlg::Matrix<ndim, numdof, double>> lin_theta_cp(
-      BEAM3K_COLLOCATION_POINTS, Core::LinAlg::Matrix<ndim, numdof, double>(true));
+  std::vector<Core::LinAlg::Matrix<ndim, numdof, double>> lin_theta_cp(BEAM3K_COLLOCATION_POINTS,
+      Core::LinAlg::Matrix<ndim, numdof, double>(Core::LinAlg::Initialization::set_zero));
 
   // re-interpolated lin_theta:
   Core::LinAlg::Matrix<ndim, numdof, double> lin_theta_bar(Core::LinAlg::Initialization::set_zero);
@@ -1546,8 +1551,8 @@ void Discret::Elements::Beam3k::get_generalized_interpolation_matrix_increments_
 
   // re-interpolation of quantities at xi based on CP values
   // *******************************************************************************
-  std::vector<Core::LinAlg::Matrix<3, 3, double>> Itilde(
-      BEAM3K_COLLOCATION_POINTS, Core::LinAlg::Matrix<3, 3, double>(true));
+  std::vector<Core::LinAlg::Matrix<3, 3, double>> Itilde(BEAM3K_COLLOCATION_POINTS,
+      Core::LinAlg::Matrix<3, 3, double>(Core::LinAlg::Initialization::set_zero));
 
   // create object of triad interpolation scheme
   LargeRotations::TriadInterpolationLocalRotationVectors<3, double> triad_interpolation_scheme_ptr;
@@ -1993,7 +1998,8 @@ void Discret::Elements::Beam3k::calc_velocity(
   std::shared_ptr<Core::Geo::MeshFree::BoundingBox> pbb =
       brownian_dyn_params_interface().get_periodic_bounding_box();
 
-  Core::LinAlg::Matrix<3, 1> unshiftedrconvmass_i(true), position_i_double(true);
+  Core::LinAlg::Matrix<3, 1> unshiftedrconvmass_i(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> position_i_double(Core::LinAlg::Initialization::set_zero);
 
   for (unsigned int idim = 0; idim < ndim; ++idim)
   {

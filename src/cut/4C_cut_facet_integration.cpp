@@ -597,7 +597,8 @@ void Cut::FacetIntegration::divergence_integration_rule(
         ++iquad)
     {
       double drs = 0.0;
-      Core::LinAlg::Matrix<3, 1> x_gp_loc(true), normal(true);
+      Core::LinAlg::Matrix<3, 1> x_gp_loc(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<3, 1> normal(Core::LinAlg::Initialization::set_zero);
       const Core::LinAlg::Matrix<2, 1> eta(iquad.point());
 
       switch (bcell->shape())
@@ -881,7 +882,8 @@ void Cut::FacetIntegration::divergence_integration_rule_new(
         ++iquad)
     {
       double drs = 0.0;
-      Core::LinAlg::Matrix<3, 1> x_gp_loc(true), normal(true);
+      Core::LinAlg::Matrix<3, 1> x_gp_loc(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<3, 1> normal(Core::LinAlg::Initialization::set_zero);
       const Core::LinAlg::Matrix<2, 1> eta(iquad.point());
 
       switch (bcell->shape())

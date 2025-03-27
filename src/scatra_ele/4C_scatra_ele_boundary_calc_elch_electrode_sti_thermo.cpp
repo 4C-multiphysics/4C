@@ -76,7 +76,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrodeSTIThermo<distype,
   // extract local nodal values on present and opposite side of scatra-scatra interface
   extract_node_values(discretization, la);
   std::vector<Core::LinAlg::Matrix<nen_, 1>> emasterphinp(
-      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero));
   my::extract_node_values(emasterphinp, discretization, la, "imasterphinp");
 
   Core::LinAlg::Matrix<nen_, 1> emastertempnp(Core::LinAlg::Initialization::set_zero);
@@ -87,7 +87,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrodeSTIThermo<distype,
   // element slave mechanical stress tensor
   const bool is_pseudo_contact = my::scatraparamsboundary_->is_pseudo_contact();
   std::vector<Core::LinAlg::Matrix<nen_, 1>> eslavestress_vector(
-      6, Core::LinAlg::Matrix<nen_, 1>(true));
+      6, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero));
   if (is_pseudo_contact)
     my::extract_node_values(eslavestress_vector, discretization, la, "mechanicalStressState",
         my::scatraparams_->nds_two_tensor_quantity());

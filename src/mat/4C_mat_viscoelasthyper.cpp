@@ -394,7 +394,8 @@ void Mat::ViscoElastHyper::setup(int numgp, const Core::IO::InputParameterContai
     // set true that history size is known
     histfractartstresslastall_ =
         std::make_shared<std::vector<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>>(
-            numgp, std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>(true));
+            numgp, std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>(
+                       Core::LinAlg::Initialization::set_zero));
   }
 
   isinitvis_ = true;

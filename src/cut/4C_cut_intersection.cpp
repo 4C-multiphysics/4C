@@ -314,7 +314,8 @@ bool Cut::Intersection<probdim, edgetype, sidetype, debug, dimedge, dimside, num
       if (withinlimits)
       {
         side_xyz_corner_intersect.push_back(e_cornerpoint);
-        side_rs_corner_intersect.push_back(Core::LinAlg::Matrix<dimside, 1>(true));
+        side_rs_corner_intersect.push_back(
+            Core::LinAlg::Matrix<dimside, 1>(Core::LinAlg::Initialization::set_zero));
         pos->local_coordinates(*(side_rs_corner_intersect.end() - 1));
       }
     }

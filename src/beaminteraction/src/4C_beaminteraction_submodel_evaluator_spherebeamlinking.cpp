@@ -128,7 +128,8 @@ void BeamInteraction::SUBMODELEVALUATOR::SphereBeamLinking::reset()
               discret().g_element(elepairptr->get_ele_gid(1)));
 
       // init position of linker nodes
-      std::vector<Core::LinAlg::Matrix<3, 1>> pos(2, Core::LinAlg::Matrix<3, 1>(true));
+      std::vector<Core::LinAlg::Matrix<3, 1>> pos(
+          2, Core::LinAlg::Matrix<3, 1>(Core::LinAlg::Initialization::set_zero));
 
       // sphere current position
       std::vector<double> sphereeledisp;
@@ -152,7 +153,8 @@ void BeamInteraction::SUBMODELEVALUATOR::SphereBeamLinking::reset()
       periodic_bounding_box_ptr()->un_shift_3d(pos[1], pos[0]);
 
       // dummy triad
-      std::vector<Core::LinAlg::Matrix<3, 3>> dummy_triad(2, Core::LinAlg::Matrix<3, 3>(true));
+      std::vector<Core::LinAlg::Matrix<3, 3>> dummy_triad(
+          2, Core::LinAlg::Matrix<3, 3>(Core::LinAlg::Initialization::set_zero));
 
       // finally reset state
       elepairptr->reset_state(pos, dummy_triad);
@@ -657,7 +659,8 @@ void BeamInteraction::SUBMODELEVALUATOR::SphereBeamLinking::write_output_runtime
               discret().g_element(elepairptr->get_ele_gid(1)));
 
       // init position of linker nodes
-      std::vector<Core::LinAlg::Matrix<3, 1>> pos(2, Core::LinAlg::Matrix<3, 1>(true));
+      std::vector<Core::LinAlg::Matrix<3, 1>> pos(
+          2, Core::LinAlg::Matrix<3, 1>(Core::LinAlg::Initialization::set_zero));
 
       // sphere current position
       std::vector<double> sphereeledisp;
@@ -924,7 +927,8 @@ void BeamInteraction::SUBMODELEVALUATOR::SphereBeamLinking::create_beam_to_spher
   for (auto const& newlinkiter : newlinks)
   {
     // init position of linker nodes
-    std::vector<Core::LinAlg::Matrix<3, 1>> pos(2, Core::LinAlg::Matrix<3, 1>(true));
+    std::vector<Core::LinAlg::Matrix<3, 1>> pos(
+        2, Core::LinAlg::Matrix<3, 1>(Core::LinAlg::Initialization::set_zero));
 
     int const spheregid = newlinkiter.first;
     // get elements
@@ -972,7 +976,8 @@ void BeamInteraction::SUBMODELEVALUATOR::SphereBeamLinking::create_beam_to_spher
       int id = BeamInteraction::Utils::cantor_pairing(eleids[1]);
 
       // dummy triad
-      std::vector<Core::LinAlg::Matrix<3, 3>> dummy_triad(2, Core::LinAlg::Matrix<3, 3>(true));
+      std::vector<Core::LinAlg::Matrix<3, 3>> dummy_triad(
+          2, Core::LinAlg::Matrix<3, 3>(Core::LinAlg::Initialization::set_zero));
 
       // finally initialize and setup object
       linkelepairptr->init(id, eleids, pos, dummy_triad,

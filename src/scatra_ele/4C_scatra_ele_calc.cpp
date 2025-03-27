@@ -43,10 +43,12 @@ Discret::Elements::ScaTraEleCalc<distype, probdim>::ScaTraEleCalc(
       scatraparatimint_(Discret::Elements::ScaTraEleParameterTimInt::instance(disname)),
       diffmanager_(std::make_shared<ScaTraEleDiffManager>(numscal_)),
       reamanager_(std::make_shared<ScaTraEleReaManager>(numscal_)),
-      ephin_(numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true)),
-      ephinp_(numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true)),
-      ehist_(numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true)),
-      fsphinp_(numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true)),
+      ephin_(numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero)),
+      ephinp_(
+          numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero)),
+      ehist_(numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero)),
+      fsphinp_(
+          numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero)),
       rotsymmpbc_(std::make_shared<FLD::RotationallySymmetricPeriodicBC<distype, nsd_ + 1,
               Discret::Elements::Fluid::none>>()),
       evelnp_(true),

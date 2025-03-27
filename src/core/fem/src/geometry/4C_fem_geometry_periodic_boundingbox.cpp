@@ -33,7 +33,7 @@ Core::Geo::MeshFree::BoundingBox::BoundingBox()
       empty_(true),
       haveperiodicbc_(false),
       havedirichletbc_(false),
-      box_(true),
+      box_(Core::LinAlg::Initialization::set_zero),
       visualization_output_writer_ptr_(nullptr)
 {
   // initialize arrays
@@ -276,7 +276,8 @@ void Core::Geo::MeshFree::BoundingBox::get_xi_of_intersection_3d(
   // set default values
   for (unsigned int dim = 0; dim < 3; ++dim) xi(dim) = 2.0;
 
-  Core::LinAlg::Matrix<3, 1> x1_ud(true), x2_ud(true);
+  Core::LinAlg::Matrix<3, 1> x1_ud(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> x2_ud(Core::LinAlg::Initialization::set_zero);
   transform_from_global_to_undeformed_bounding_box_system(x1, x1_ud);
   transform_from_global_to_undeformed_bounding_box_system(x2, x2_ud);
 
@@ -345,7 +346,8 @@ void Core::Geo::MeshFree::BoundingBox::un_shift_3d(Core::LinAlg::Matrix<3, 1>& d
   Core::LinAlg::Matrix<3, 1> x(X);
   x.update(1.0, d, 1.0);
 
-  Core::LinAlg::Matrix<3, 1> x_ud(true), ref_ud(true);
+  Core::LinAlg::Matrix<3, 1> x_ud(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> ref_ud(Core::LinAlg::Initialization::set_zero);
   transform_from_global_to_undeformed_bounding_box_system(x, x_ud);
   transform_from_global_to_undeformed_bounding_box_system(ref, ref_ud);
 
@@ -381,7 +383,8 @@ bool Core::Geo::MeshFree::BoundingBox::check_if_shift_between_points(Core::LinAl
   Core::LinAlg::Matrix<3, 1> x(X);
   x.update(1.0, d, 1.0);
 
-  Core::LinAlg::Matrix<3, 1> x_ud(true), ref_ud(true);
+  Core::LinAlg::Matrix<3, 1> x_ud(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> ref_ud(Core::LinAlg::Initialization::set_zero);
   transform_from_global_to_undeformed_bounding_box_system(x, x_ud);
   transform_from_global_to_undeformed_bounding_box_system(ref, ref_ud);
 
@@ -886,7 +889,8 @@ bool Core::Geo::MeshFree::BoundingBox::transform_from_global_to_undeformed_bound
     double const* x, double* xi) const
 {
   throw_if_not_init();
-  static Core::LinAlg::Matrix<3, 1> x_m(true), xi_m(true);
+  static Core::LinAlg::Matrix<3, 1> x_m(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<3, 1> xi_m(Core::LinAlg::Initialization::set_zero);
   for (int dim = 0; dim < 3; ++dim) x_m(dim) = x[dim];
 
   bool converged = transform_from_global_to_undeformed_bounding_box_system(x_m, xi_m);

@@ -1147,7 +1147,8 @@ void XFEM::XFluidContactComm::get_cut_side_integration_points(
   for (Cut::plain_side_set::iterator sit = subsides.begin(); sit != subsides.end(); ++sit)
   {
     Cut::Side* side = *sit;
-    side->normal(Core::LinAlg::Matrix<2, 1>(true), normal_side, true);
+    side->normal(
+        Core::LinAlg::Matrix<2, 1>(Core::LinAlg::Initialization::set_zero), normal_side, true);
     for (std::vector<Cut::Facet*>::const_iterator fit = side->facets().begin();
         fit != side->facets().end(); ++fit)
     {
@@ -1167,7 +1168,8 @@ void XFEM::XFluidContactComm::get_cut_side_integration_points(
           }
           std::shared_ptr<Cut::Tri3BoundaryCell> tmp_bc = std::make_shared<Cut::Tri3BoundaryCell>(
               tcoords, facet, facet->triangulation()[triangle]);
-          tmp_bc->normal(Core::LinAlg::Matrix<2, 1>(true), normal_bc);
+          tmp_bc->normal(
+              Core::LinAlg::Matrix<2, 1>(Core::LinAlg::Initialization::set_zero), normal_bc);
           if (normal_bc.dot(normal_side) < 0.0)
             bcs.push_back(tmp_bc);
           else
@@ -1194,7 +1196,8 @@ void XFEM::XFluidContactComm::get_cut_side_integration_points(
         facet->coordinates(tcoords.values());
         std::shared_ptr<Cut::Tri3BoundaryCell> tmp_bc =
             std::make_shared<Cut::Tri3BoundaryCell>(tcoords, facet, facet->points());
-        tmp_bc->normal(Core::LinAlg::Matrix<2, 1>(true), normal_bc);
+        tmp_bc->normal(
+            Core::LinAlg::Matrix<2, 1>(Core::LinAlg::Initialization::set_zero), normal_bc);
         if (normal_bc.dot(normal_side) < 0.0)
           bcs.push_back(tmp_bc);
         else
@@ -1240,7 +1243,8 @@ void XFEM::XFluidContactComm::get_cut_side_integration_points(
           points.push_back(side->nodes()[p]->point());
         std::shared_ptr<Cut::Tri3BoundaryCell> tmp_bc =
             std::make_shared<Cut::Tri3BoundaryCell>(tcoords, nullptr, points);
-        tmp_bc->normal(Core::LinAlg::Matrix<2, 1>(true), normal_bc);
+        tmp_bc->normal(
+            Core::LinAlg::Matrix<2, 1>(Core::LinAlg::Initialization::set_zero), normal_bc);
         if (normal_bc.dot(normal_side) < 0.0)
           bcs.push_back(tmp_bc);
         else

@@ -197,8 +197,9 @@ void CONTACT::IntegratorNitscheSsi::so_ele_cauchy_struct(Mortar::Element& mortar
   // cauchy stress tensor contracted with normal and test direction
   double sigma_nt(0.0);
   Core::LinAlg::SerialDenseMatrix d_sigma_nt_dd;
-  static Core::LinAlg::Matrix<dim, 1> d_sigma_nt_dn(true), d_sigma_nt_dt(true),
-      d_sigma_nt_dxi(true);
+  static Core::LinAlg::Matrix<dim, 1> d_sigma_nt_dn(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<dim, 1> d_sigma_nt_dt(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<dim, 1> d_sigma_nt_dxi(Core::LinAlg::Initialization::set_zero);
 
   Discret::Elements::SolidScatraCauchyNDirLinearizations<3> linearizations{};
   linearizations.solid.d_cauchyndir_dd = &d_sigma_nt_dd;

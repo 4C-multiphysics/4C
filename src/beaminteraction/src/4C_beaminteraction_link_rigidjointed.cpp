@@ -24,10 +24,7 @@ BeamInteraction::BeamLinkRigidJointedType BeamInteraction::BeamLinkRigidJointedT
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-BeamInteraction::BeamLinkRigidJointed::BeamLinkRigidJointed()
-    : BeamLink(), bspottriad1_(true), bspottriad2_(true), lambdarel1_(true), lambdarel2_(true)
-{
-}
+BeamInteraction::BeamLinkRigidJointed::BeamLinkRigidJointed() {}
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
@@ -97,7 +94,8 @@ void BeamInteraction::BeamLinkRigidJointed::init(const int id,
   // check included angle of desired crosslinker axis (normalized distvec = first
   // base vector) and (1,0,0), i.e. scalar product which in this case simplifies to
   // first component of distvec
-  Core::LinAlg::Matrix<3, 1> unit_vector_global_x(true), unit_vector_global_y(true);
+  Core::LinAlg::Matrix<3, 1> unit_vector_global_x;
+  Core::LinAlg::Matrix<3, 1> unit_vector_global_y;
   unit_vector_global_x(0) = 1.0;
   unit_vector_global_y(1) = 1.0;
 

@@ -152,12 +152,14 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::Beam3ebType::compute_null_spa
   for (std::size_t dim = 0; dim < 3; ++dim) nodeCoords(dim) = x[dim] - x0[dim];
 
   // Compute rotations in displacement DOFs
-  Core::LinAlg::Matrix<spacedim, 1> rotOne(true), rotTwo(true);
+  Core::LinAlg::Matrix<spacedim, 1> rotOne(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<spacedim, 1> rotTwo(Core::LinAlg::Initialization::set_zero);
   rotOne.cross_product(omegaOne, nodeCoords);
   rotTwo.cross_product(omegaTwo, nodeCoords);
 
   // Compute rotations in tangent DOFs
-  Core::LinAlg::Matrix<spacedim, 1> rotTangOne(true), rotTangTwo(true);
+  Core::LinAlg::Matrix<spacedim, 1> rotTangOne(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<spacedim, 1> rotTangTwo(Core::LinAlg::Initialization::set_zero);
   rotTangOne.cross_product(omegaOne, tangent);
   rotTangTwo.cross_product(omegaTwo, tangent);
 
@@ -285,10 +287,10 @@ Discret::Elements::Beam3eb::Beam3eb(int id, int owner)
       firstcall_(true),
       ekin_(0.0),
       eint_(0.0),
-      l_(Core::LinAlg::Matrix<3, 1>(true)),
-      p_(Core::LinAlg::Matrix<3, 1>(true)),
-      t0_(Core::LinAlg::Matrix<3, 2>(true)),
-      t_(Core::LinAlg::Matrix<3, 2>(true)),
+      l_(Core::LinAlg::Matrix<3, 1>(Core::LinAlg::Initialization::set_zero)),
+      p_(Core::LinAlg::Matrix<3, 1>(Core::LinAlg::Initialization::set_zero)),
+      t0_(Core::LinAlg::Matrix<3, 2>(Core::LinAlg::Initialization::set_zero)),
+      t_(Core::LinAlg::Matrix<3, 2>(Core::LinAlg::Initialization::set_zero)),
       kappa_max_(0.0),
       epsilon_max_(0.0),
       axial_strain_gp_(0),

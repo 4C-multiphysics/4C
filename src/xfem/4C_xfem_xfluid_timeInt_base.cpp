@@ -937,7 +937,9 @@ XFEM::XfluidStd::XfluidStd(
             timeIntData_->push_back(TimeIntData(*node,  //! node for which SL-algorithm is called
                 i,  //! nds (nodal dofset) number w.r.t new interface position, for which SL-algo is
                     //! called
-                Core::LinAlg::Matrix<nsd, 1>(true),  //!  velocity at point x (=x_Lagr(t^n+1))
+                Core::LinAlg::Matrix<nsd, 1>(
+                    Core::LinAlg::Initialization::set_zero),  //!  velocity at point x
+                                                              //!  (=x_Lagr(t^n+1))
                 std::vector<Core::LinAlg::Matrix<nsd, nsd>>(oldVectors_.size(),
                     Core::LinAlg::Matrix<nsd, nsd>(
                         true)),  //! velocity gradient at point x (=x_Lagr(t^n+1))

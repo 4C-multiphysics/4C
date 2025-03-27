@@ -340,7 +340,8 @@ Core::LinAlg::Matrix<1, 6>
 Mixture::MixtureConstituentFullConstrainedMixtureFiber::get_d_growth_scalar_d_cg(
     int gp, int eleGID) const
 {
-  if (!params_->enable_growth_) return Core::LinAlg::Matrix<1, 6>(true);
+  if (!params_->enable_growth_)
+    return Core::LinAlg::Matrix<1, 6>(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Matrix<1, 6> dGrowthScalarDE = evaluate_d_lambdafsq_dc(gp, eleGID);
   dGrowthScalarDE.scale(
       2.0 * full_constrained_mixture_fiber_[gp].computed_dgrowth_scalar_dlambda_f_sq_);

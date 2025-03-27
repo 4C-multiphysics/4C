@@ -1377,7 +1377,7 @@ void Discret::Elements::Ale3Impl<distype>::static_ke_nonlinear(Ale3* ele,
   // --------------------------------------------------
   // Now do the nurbs specific stuff
   std::vector<Core::LinAlg::SerialDenseVector> myknots;
-  Core::LinAlg::Matrix<iel, 1> weights(iel);
+  Core::LinAlg::Matrix<iel, 1> weights;
 
   if (distype == Core::FE::CellType::nurbs8 || distype == Core::FE::CellType::nurbs27)
   {
@@ -1613,7 +1613,7 @@ void Discret::Elements::Ale3Impl<distype>::static_ke_laplace(Ale3* ele,
   // --------------------------------------------------
   // Now do the nurbs specific stuff
   std::vector<Core::LinAlg::SerialDenseVector> myknots(3);
-  Core::LinAlg::Matrix<iel, 1> weights(iel);
+  Core::LinAlg::Matrix<iel, 1> weights;
 
   if (distype == Core::FE::CellType::nurbs8 or distype == Core::FE::CellType::nurbs27)
   {

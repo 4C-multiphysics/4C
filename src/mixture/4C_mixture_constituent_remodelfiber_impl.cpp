@@ -280,7 +280,8 @@ double Mixture::MixtureConstituentRemodelFiberImpl::get_growth_scalar(int gp) co
 Core::LinAlg::Matrix<1, 6> Mixture::MixtureConstituentRemodelFiberImpl::get_d_growth_scalar_d_cg(
     int gp, int eleGID) const
 {
-  if (!params_->enable_growth_) return Core::LinAlg::Matrix<1, 6>(true);
+  if (!params_->enable_growth_)
+    return Core::LinAlg::Matrix<1, 6>(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Matrix<1, 6> d_growth_scalar_d_cauchy_green = evaluate_d_lambdafsq_dc(gp, eleGID);
   d_growth_scalar_d_cauchy_green.scale(
       remodel_fiber_[gp].evaluate_d_current_growth_scalar_d_lambda_f_sq());

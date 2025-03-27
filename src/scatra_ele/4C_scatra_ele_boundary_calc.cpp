@@ -40,7 +40,8 @@ Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::ScaTraEleBoundaryCal
       myknots_(nsd_ele_),
       mypknots_(nsd_),
       normalfac_(1.0),
-      ephinp_(numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true)),
+      ephinp_(
+          numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero)),
       edispnp_(true),
       diffus_(numscal_, 0),
       shcacp_(0.0),
@@ -302,7 +303,7 @@ int Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_action(
 
       // extract local values from global vector
       std::vector<Core::LinAlg::Matrix<nen_, 1>> ephinp(
-          numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+          numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero));
       Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phinp, ephinp, lm);
 
       // get condition
@@ -396,7 +397,7 @@ int Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_action(
 
       // extract local values from the global vector
       std::vector<Core::LinAlg::Matrix<nen_, 1>> ephinp(
-          numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+          numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero));
       Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phinp, ephinp, lm);
 
       // get number of dofset associated with velocity related dofs
@@ -641,7 +642,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::neumann_inflow(
 
   // extract local values from global vector
   std::vector<Core::LinAlg::Matrix<nen_, 1>> ephinp(
-      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero));
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phinp, ephinp, lm);
 
   // get number of dofset associated with velocity related dofs
@@ -1017,7 +1018,9 @@ Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::get_const_normal(
 {
   if (Core::FE::is_nurbs<distype>) FOUR_C_THROW("Element normal not implemented for NURBS");
 
-  Core::LinAlg::Matrix<3, 1> normal(true), dist1(true), dist2(true);
+  Core::LinAlg::Matrix<3, 1> normal(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> dist1(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> dist2(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; i++)
   {
     dist1(i) = xyze(i, 1) - xyze(i, 0);
@@ -1065,8 +1068,11 @@ Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::get_const_normal(
 {
   if (Core::FE::is_nurbs<distype>) FOUR_C_THROW("Element normal not implemented for NURBS");
 
-  Core::LinAlg::Matrix<3, 1> normal(true), normal_parent_ele(true), boundary_ele(true),
-      parent_ele_v1(true), parent_ele_v2(true);
+  Core::LinAlg::Matrix<3, 1> normal(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> normal_parent_ele(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> boundary_ele(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> parent_ele_v1(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> parent_ele_v2(Core::LinAlg::Initialization::set_zero);
 
   for (int dim = 0; dim < 3; ++dim)
   {
@@ -1080,7 +1086,8 @@ Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::get_const_normal(
 
   // compute inward vector and check if its scalar product with the normal vector is negative.
   // Otherwise, change the sign of the normal vector
-  Core::LinAlg::Matrix<3, 1> distance(true), inward_vector(true);
+  Core::LinAlg::Matrix<3, 1> distance(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> inward_vector(Core::LinAlg::Initialization::set_zero);
   // find node on parent element, that has non-zero distance to all boundary nodes
   for (int i_parent_node = 0; i_parent_node < 3; ++i_parent_node)
   {
@@ -1141,7 +1148,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_s2_i_c
   // element slave mechanical stress tensor
   const bool is_pseudo_contact = scatraparamsboundary_->is_pseudo_contact();
   std::vector<Core::LinAlg::Matrix<nen_, 1>> eslavestress_vector(
-      6, Core::LinAlg::Matrix<nen_, 1>(true));
+      6, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero));
   if (is_pseudo_contact)
     extract_node_values(eslavestress_vector, discretization, la, "mechanicalStressState",
         scatraparams_->nds_two_tensor_quantity());
@@ -1395,7 +1402,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_s2_i_c
   // extract local nodal values on present and opposite side of scatra-scatra interface
   extract_node_values(discretization, la);
   std::vector<Core::LinAlg::Matrix<nen_, 1>> emasterphinp(
-      numscal_, Core::LinAlg::Matrix<nen_, 1>(true));
+      numscal_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero));
   extract_node_values(emasterphinp, discretization, la, "imasterphinp");
 
   Core::LinAlg::Matrix<nsd_, 1> normal;
@@ -1403,7 +1410,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_s2_i_c
   // element slave mechanical stress tensor
   const bool is_pseudo_contact = scatraparamsboundary_->is_pseudo_contact();
   std::vector<Core::LinAlg::Matrix<nen_, 1>> eslavestress_vector(
-      6, Core::LinAlg::Matrix<nen_, 1>(true));
+      6, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero));
   if (is_pseudo_contact)
     extract_node_values(eslavestress_vector, discretization, la, "mechanicalStressState",
         scatraparams_->nds_two_tensor_quantity());
@@ -1530,7 +1537,8 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::extract_node_va
     Core::Elements::LocationArray& la, const std::string& statename, const int& nds) const
 {
   // initialize matrix vector
-  std::vector<Core::LinAlg::Matrix<nen_, 1>> estate_temp(1, Core::LinAlg::Matrix<nen_, 1>(true));
+  std::vector<Core::LinAlg::Matrix<nen_, 1>> estate_temp(
+      1, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero));
 
   // call more general routine
   extract_node_values(estate_temp, discretization, la, statename, nds);
@@ -1667,7 +1675,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::calc_robin_boun
 
   // extract local nodal state variables from global state vector
   std::vector<Core::LinAlg::Matrix<nen_, 1>> ephinp(
-      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero));
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phinp, ephinp, lm);
 
   //////////////////////////////////////////////////////////////////////
@@ -1760,7 +1768,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_surfac
   if (phinp == nullptr) FOUR_C_THROW("Cannot get state vector 'phinp'");
   // extract local values from global vector
   std::vector<Core::LinAlg::Matrix<nen_, 1>> ephinp(
-      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero));
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phinp, ephinp, lm);
 
   //------------get membrane concentration at the interface (i.e. within the
@@ -1770,7 +1778,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_surfac
   if (phibar == nullptr) FOUR_C_THROW("Cannot get state vector 'MembraneConcentration'");
   // extract local values from global vector
   std::vector<Core::LinAlg::Matrix<nen_, 1>> ephibar(
-      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero));
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phibar, ephibar, lm);
 
   // ------------get values of wall shear stress-----------------------
@@ -1897,7 +1905,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_kedem_
   if (phinp == nullptr) FOUR_C_THROW("Cannot get state vector 'phinp'");
   // extract local values from global vector
   std::vector<Core::LinAlg::Matrix<nen_, 1>> ephinp(
-      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero));
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phinp, ephinp, lm);
 
 
@@ -1908,7 +1916,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_kedem_
   if (phibar == nullptr) FOUR_C_THROW("Cannot get state vector 'MembraneConcentration'");
   // extract local values from global vector
   std::vector<Core::LinAlg::Matrix<nen_, 1>> ephibar(
-      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero));
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phibar, ephibar, lm);
 
 

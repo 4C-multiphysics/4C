@@ -1973,6 +1973,9 @@ namespace Core::LinAlg
      */
     explicit Matrix(Initialization init = Initialization::set_zero);
 
+    template <typename T>
+    explicit Matrix(T) = delete;
+
     /// Constructor
     /*!
       Constructs a new Matrix from data \e d. If

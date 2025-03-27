@@ -41,7 +41,7 @@ Core::Communication::ParObject* BeamInteraction::BeamLinkBeam3rLine2PinJointedTy
  *----------------------------------------------------------------------------*/
 BeamInteraction::BeamLinkBeam3rLine2PinJointed::BeamLinkBeam3rLine2PinJointed()
     : BeamLinkPinJointed(),
-      triad_(true),
+      triad_(Core::LinAlg::Initialization::set_zero),
       linkele_(nullptr),
       bspotforces_(2, Core::LinAlg::SerialDenseVector(true))
 {
@@ -119,7 +119,8 @@ void BeamInteraction::BeamLinkBeam3rLine2PinJointed::init(int id,
   // check included angle of desired crosslinker axis (normalized distvec = first
   // base vector) and (1,0,0), i.e. scalar product which in this case simplifies to
   // first component of distvec
-  Core::LinAlg::Matrix<3, 1> unit_vector_global_x(true), unit_vector_global_y(true);
+  Core::LinAlg::Matrix<3, 1> unit_vector_global_x(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> unit_vector_global_y(Core::LinAlg::Initialization::set_zero);
   unit_vector_global_x(0) = 1.0;
   unit_vector_global_y(1) = 1.0;
 
@@ -483,7 +484,8 @@ void BeamInteraction::BeamLinkBeam3rLine2PinJointed::reset_state(
   // check included angle of desired crosslinker axis (normalized distvec = first
   // base vector) and (1,0,0), i.e. scalar product which in this case simplifies to
   // first component of distvec
-  Core::LinAlg::Matrix<3, 1> unit_vector_global_x(true), unit_vector_global_y(true);
+  Core::LinAlg::Matrix<3, 1> unit_vector_global_x(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> unit_vector_global_y(Core::LinAlg::Initialization::set_zero);
   unit_vector_global_x(0) = 1.0;
   unit_vector_global_y(1) = 1.0;
 

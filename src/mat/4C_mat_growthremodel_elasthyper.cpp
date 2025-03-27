@@ -410,7 +410,7 @@ void Mat::GrowthRemodelElastHyper::setup(
   gp_rad_.resize(numgp, 0.0);
   cur_rho_el_.resize(numgp);
   init_rho_el_.resize(numgp);
-  gm_.resize(numgp, Core::LinAlg::Matrix<3, 3>(true));
+  gm_.resize(numgp, Core::LinAlg::Matrix<3, 3>(Core::LinAlg::Initialization::set_zero));
   setup_.resize(numgp, 1);
 
   for (int gp = 0; gp < numgp; ++gp)
@@ -884,9 +884,9 @@ void Mat::GrowthRemodelElastHyper::evaluate(const Core::LinAlg::Matrix<3, 3>* de
 
         // split solution vector in dlambda_r/dC and drho/dC
         static std::vector<Core::LinAlg::Matrix<1, 6>> drhodC(
-            nr_rf_tot_, Core::LinAlg::Matrix<1, 6>(true));
+            nr_rf_tot_, Core::LinAlg::Matrix<1, 6>(Core::LinAlg::Initialization::set_zero));
         static std::vector<Core::LinAlg::Matrix<1, 6>> dlambrdC(
-            nr_rf_tot_, Core::LinAlg::Matrix<1, 6>(true));
+            nr_rf_tot_, Core::LinAlg::Matrix<1, 6>(Core::LinAlg::Initialization::set_zero));
         static Core::LinAlg::Matrix<1, 6> sum_drhodC(Core::LinAlg::Initialization::set_zero);
         solve_fordrhod_cdlambrd_c(drhodC, dlambrdC, sum_drhodC, K_T, iFgM, defgrd, dt, gp, eleGID);
 
@@ -1034,8 +1034,10 @@ void Mat::GrowthRemodelElastHyper::solve_fordrhod_cdlambrd_c(
     Core::LinAlg::Matrix<3, 3> const* const defgrd, double const& dt, int const gp,
     int const eleGID) const
 {
-  static std::vector<Core::LinAlg::Matrix<1, 6>> dWdC(nr_rf_tot_, Core::LinAlg::Matrix<1, 6>(true));
-  static std::vector<Core::LinAlg::Matrix<1, 6>> dEdC(nr_rf_tot_, Core::LinAlg::Matrix<1, 6>(true));
+  static std::vector<Core::LinAlg::Matrix<1, 6>> dWdC(
+      nr_rf_tot_, Core::LinAlg::Matrix<1, 6>(Core::LinAlg::Initialization::set_zero));
+  static std::vector<Core::LinAlg::Matrix<1, 6>> dEdC(
+      nr_rf_tot_, Core::LinAlg::Matrix<1, 6>(Core::LinAlg::Initialization::set_zero));
   int nr_grf_proc = 0;
   for (const auto& p : potsumrf_)
   {

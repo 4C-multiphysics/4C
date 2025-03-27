@@ -131,29 +131,29 @@ void Mat::BeamPlasticMaterial<T>::setup(int numgp_force, int numgp_moment)
 
   for (int gp = 0; gp < numgp_force; gp++)
   {
-    c_n_eff_[gp] = Core::LinAlg::Matrix<3, 3, T>(true);
-    gammaplastconv_[gp] = Core::LinAlg::Matrix<3, 1, T>(true);
-    gammaplastnew_[gp] = Core::LinAlg::Matrix<3, 1, T>(true);
+    c_n_eff_[gp] = Core::LinAlg::Matrix<3, 3, T>(Core::LinAlg::Initialization::set_zero);
+    gammaplastconv_[gp] = Core::LinAlg::Matrix<3, 1, T>(Core::LinAlg::Initialization::set_zero);
+    gammaplastnew_[gp] = Core::LinAlg::Matrix<3, 1, T>(Core::LinAlg::Initialization::set_zero);
     gammaplastaccum_[gp] = 0;
     effyieldstress_n_[gp] = 0;
     delta_kappaplast_[gp] = 0;
-    delta_gammaplast_[gp] = Core::LinAlg::Matrix<3, 1, T>(true);
-    deltastress_n_[gp] = Core::LinAlg::Matrix<3, 1, T>(true);
+    delta_gammaplast_[gp] = Core::LinAlg::Matrix<3, 1, T>(Core::LinAlg::Initialization::set_zero);
+    deltastress_n_[gp] = Core::LinAlg::Matrix<3, 1, T>(Core::LinAlg::Initialization::set_zero);
     stress_n_[gp] = 0;
   }
 
   for (int gp = 0; gp < numgp_moment; gp++)
   {
-    c_m_eff_[gp] = Core::LinAlg::Matrix<3, 3, T>(true);
-    kappaplastconv_[gp] = Core::LinAlg::Matrix<3, 1, T>(true);
-    kappaplastnew_[gp] = Core::LinAlg::Matrix<3, 1, T>(true);
+    c_m_eff_[gp] = Core::LinAlg::Matrix<3, 3, T>(Core::LinAlg::Initialization::set_zero);
+    kappaplastconv_[gp] = Core::LinAlg::Matrix<3, 1, T>(Core::LinAlg::Initialization::set_zero);
+    kappaplastnew_[gp] = Core::LinAlg::Matrix<3, 1, T>(Core::LinAlg::Initialization::set_zero);
     kappaplastaccum_[gp] = 0;
     effyieldstress_m_[gp] = 0;
     normstress_m_[gp] = 0;
     deltastress_m_[gp] = 0;
-    kappaelast_[gp] = Core::LinAlg::Matrix<3, 1, T>(true);
-    kappaelastflow_[gp] = Core::LinAlg::Matrix<3, 1, T>(true);
-    elastic_curvature_[gp] = Core::LinAlg::Matrix<3, 1, T>(true);
+    kappaelast_[gp] = Core::LinAlg::Matrix<3, 1, T>(Core::LinAlg::Initialization::set_zero);
+    kappaelastflow_[gp] = Core::LinAlg::Matrix<3, 1, T>(Core::LinAlg::Initialization::set_zero);
+    elastic_curvature_[gp] = Core::LinAlg::Matrix<3, 1, T>(Core::LinAlg::Initialization::set_zero);
   }
 
   numgp_force_ = numgp_force;

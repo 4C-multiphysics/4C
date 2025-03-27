@@ -1775,8 +1775,8 @@ double CONTACT::Beam3contact<numnodes, numnodalvalues>::create_segments(
     int& numsegment, int i)
 {
   // endpoints of the segments
-  std::vector<Core::LinAlg::Matrix<3, 1, double>> endpoints(
-      (int)MAXNUMSEG + 1, Core::LinAlg::Matrix<3, 1, double>(true));
+  std::vector<Core::LinAlg::Matrix<3, 1, double>> endpoints((int)MAXNUMSEG + 1,
+      Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
   double segangle = bcparams_.get<double>("BEAMS_SEGANGLE") / 180.0 * M_PI;
 
   numsegment = 1;

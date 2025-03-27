@@ -485,7 +485,8 @@ namespace
 
     // output variables
     double cauchy_n_dir(0.0);
-    Core::LinAlg::Matrix<3, 1> d_cauchyndir_dn(true), d_cauchyndir_ddir(true);
+    Core::LinAlg::Matrix<3, 1> d_cauchyndir_dn(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<3, 1> d_cauchyndir_ddir(Core::LinAlg::Initialization::set_zero);
     Core::LinAlg::Matrix<9, 1> d_cauchyndir_dF(Core::LinAlg::Initialization::set_zero);
 
     multiplicative_split_defgrad_->evaluate_cauchy_n_dir_and_derivatives(FM_, n, dir, cauchy_n_dir,
@@ -493,7 +494,8 @@ namespace
         &concentration, nullptr, nullptr, nullptr);
 
     const double cauchy_n_dir_ref(6.019860168755);
-    Core::LinAlg::Matrix<3, 1> d_cauchyndir_dn_ref(true), d_cauchyndir_ddir_ref(true);
+    Core::LinAlg::Matrix<3, 1> d_cauchyndir_dn_ref(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<3, 1> d_cauchyndir_ddir_ref(Core::LinAlg::Initialization::set_zero);
     Core::LinAlg::Matrix<9, 1> d_cauchyndir_dF_ref(Core::LinAlg::Initialization::set_zero);
     d_cauchyndir_dn_ref(0) = -2.856437080521;
     d_cauchyndir_dn_ref(1) = -6.736850094992;

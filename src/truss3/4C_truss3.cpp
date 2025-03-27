@@ -92,7 +92,7 @@ Discret::Elements::Truss3::Truss3(int id, int owner)
       eint_(0.0),
       lrefe_(0.0),
       gaussrule_(Core::FE::GaussRule1D::line_2point),
-      diff_disp_ref_(Core::LinAlg::Matrix<1, 3>(true)),
+      diff_disp_ref_(Core::LinAlg::Matrix<1, 3>(Core::LinAlg::Initialization::set_zero)),
       interface_ptr_(nullptr),
       isinit_(false),
       jacobimass_(),

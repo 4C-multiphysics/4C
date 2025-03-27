@@ -946,7 +946,8 @@ void Thermo::TemperBoundaryImpl<distype>::get_const_normal(
   {
     case 2:
     {
-      Core::LinAlg::Matrix<3, 1> dist1(true), dist2(true);
+      Core::LinAlg::Matrix<3, 1> dist1(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<3, 1> dist2(Core::LinAlg::Initialization::set_zero);
       for (int i = 0; i < 3; i++)
       {
         dist1(i) = xyze(i, 1) - xyze(i, 0);

@@ -346,8 +346,8 @@ void Discret::Elements::Beam3k::calc_internal_and_inertia_forces_and_stiff(
         Core::LinAlg::Initialization::set_zero);
 
     // material triads at collocation points
-    std::vector<Core::LinAlg::Matrix<3, 3, double>> triad_mat_cp(
-        BEAM3K_COLLOCATION_POINTS, Core::LinAlg::Matrix<3, 3, double>(true));
+    std::vector<Core::LinAlg::Matrix<3, 3, double>> triad_mat_cp(BEAM3K_COLLOCATION_POINTS,
+        Core::LinAlg::Matrix<3, 3, double>(Core::LinAlg::Initialization::set_zero));
 
     update_nodal_variables<nnodecl, double>(
         disp_totlag, disp_totlag_centerline, triad_mat_cp, qrefnew_);
@@ -918,11 +918,13 @@ void Discret::Elements::Beam3k::calculate_stiffmat_contributions_analytic_wk(
   Core::LinAlg::Matrix<1, BEAM3K_COLLOCATION_POINTS, double> L_i, L_i_xi, L_i_s;
 
   // r' vector and its norm
-  Core::LinAlg::Matrix<3, 1, double> r_s_cp(true), r_ss_cp(true);
+  Core::LinAlg::Matrix<3, 1, double> r_s_cp(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1, double> r_ss_cp(Core::LinAlg::Initialization::set_zero);
   double abs_r_s_cp = 0.0;
 
   // first base vector and s-derivative
-  Core::LinAlg::Matrix<3, 1, double> g_1_cp(true), g_1_s_cp(true);
+  Core::LinAlg::Matrix<3, 1, double> g_1_cp(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1, double> g_1_s_cp(Core::LinAlg::Initialization::set_zero);
 
 
   // re-interpolated lin_theta
@@ -935,8 +937,10 @@ void Discret::Elements::Beam3k::calculate_stiffmat_contributions_analytic_wk(
       lin_v_thetapar_moment_cp(BEAM3K_COLLOCATION_POINTS);
 
 
-  Core::LinAlg::Matrix<numdofelement, numdofelement, double> lin_v_thetaperp_s_bar_moment(true),
-      lin_v_thetapar_s_bar_moment(true);
+  Core::LinAlg::Matrix<numdofelement, numdofelement, double> lin_v_thetaperp_s_bar_moment(
+      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<numdofelement, numdofelement, double> lin_v_thetapar_s_bar_moment(
+      Core::LinAlg::Initialization::set_zero);
 
 
   // linearization of re-interpolated strain variations
@@ -1132,7 +1136,10 @@ void Discret::Elements::Beam3k::pre_compute_terms_at_cp_for_stiffmat_contributio
 
 
   // CP values of strain increments
-  Core::LinAlg::Matrix<ndim, numdofelement, double> lin_theta_perp(true), lin_theta_par(true);
+  Core::LinAlg::Matrix<ndim, numdofelement, double> lin_theta_perp(
+      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<ndim, numdofelement, double> lin_theta_par(
+      Core::LinAlg::Initialization::set_zero);
 
   calc_lin_thetapar<nnodecl>(lin_theta_par, L, N_s, g_1, g_1_bar, abs_r_s);
 
@@ -1256,16 +1263,18 @@ void Discret::Elements::Beam3k::calculate_internal_forces_and_stiff_sk(
 #ifdef CONSISTENTSPINSK
   Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS, 3, FAD> v_thetapard_s(
       Core::LinAlg::Initialization::set_zero);
-  std::vector<Core::LinAlg::Matrix<3, 1, FAD>> g1_cp(
-      BEAM3K_COLLOCATION_POINTS, Core::LinAlg::Matrix<3, 1, FAD>(true));
-  std::vector<Core::LinAlg::Matrix<3, 1, FAD>> ttilde_cp(
-      BEAM3K_COLLOCATION_POINTS, Core::LinAlg::Matrix<3, 1, FAD>(true));
+  std::vector<Core::LinAlg::Matrix<3, 1, FAD>> g1_cp(BEAM3K_COLLOCATION_POINTS,
+      Core::LinAlg::Matrix<3, 1, FAD>(Core::LinAlg::Initialization::set_zero));
+  std::vector<Core::LinAlg::Matrix<3, 1, FAD>> ttilde_cp(BEAM3K_COLLOCATION_POINTS,
+      Core::LinAlg::Matrix<3, 1, FAD>(Core::LinAlg::Initialization::set_zero));
   std::vector<Core::LinAlg::Matrix<3, 6 * nnodecl + BEAM3K_COLLOCATION_POINTS, FAD>> N_s_cp(
       BEAM3K_COLLOCATION_POINTS,
-      Core::LinAlg::Matrix<3, 6 * nnodecl + BEAM3K_COLLOCATION_POINTS, FAD>(true));
+      Core::LinAlg::Matrix<3, 6 * nnodecl + BEAM3K_COLLOCATION_POINTS, FAD>(
+          Core::LinAlg::Initialization::set_zero));
   std::vector<Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS, 1, FAD>> v1_cp(
       BEAM3K_COLLOCATION_POINTS,
-      Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS, 1, FAD>(true));
+      Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS, 1, FAD>(
+          Core::LinAlg::Initialization::set_zero));
   Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS, 1, FAD> v1(
       Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS, 1, FAD> v1_s(
@@ -1989,8 +1998,10 @@ void Discret::Elements::Beam3k::calculate_mass_matrix_contributions_analytic_wk(
       BEAM3K_COLLOCATION_POINTS),
       lin_v_thetapar_moment_cp(BEAM3K_COLLOCATION_POINTS);
 
-  Core::LinAlg::Matrix<numdofelement, numdofelement, double> lin_v_thetaperp_bar_moment(true),
-      lin_v_thetapar_bar_moment(true);
+  Core::LinAlg::Matrix<numdofelement, numdofelement, double> lin_v_thetaperp_bar_moment(
+      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<numdofelement, numdofelement, double> lin_v_thetapar_bar_moment(
+      Core::LinAlg::Initialization::set_zero);
 
 
   Core::LinAlg::Matrix<3, 3, double> spinmatrix_of_moment_rho(
@@ -2679,7 +2690,7 @@ inline void Discret::Elements::Beam3k::calc_brownian_forces_and_stiff(
    * rotvec_==false: disp_totlag=[\v{d}_1, \v{t}_1, \alpha_1, \v{d}_2, \v{t}_2, \alpha_2, \alpha_3]
    */
   Core::LinAlg::Matrix<nnode * vpernode * ndim + BEAM3K_COLLOCATION_POINTS, 1, double> disp_totlag(
-      true);
+      Core::LinAlg::Initialization::set_zero);
 
   // Set current positions and tangents and triads at all nodes
   update_disp_totlag<nnode, double>(disp, disp_totlag);
@@ -2703,7 +2714,7 @@ inline void Discret::Elements::Beam3k::calc_brownian_forces_and_stiff(
   {
     // force vector resulting from Brownian dynamics
     Core::LinAlg::Matrix<ndim * vpernode * nnode + BEAM3K_COLLOCATION_POINTS, 1, double>
-        force_brownian(true);
+        force_brownian(Core::LinAlg::Initialization::set_zero);
 
     if (force != nullptr)
     {
@@ -2715,7 +2726,7 @@ inline void Discret::Elements::Beam3k::calc_brownian_forces_and_stiff(
     // r(s)=N(s)*disp_totlag_centerline, with disp_totlag_centerline=[\v{d}_1, \v{t}_1, 0, \v{d}_2,
     // \v{t}_2, 0, 0]
     Core::LinAlg::Matrix<nnode * vpernode * ndim + BEAM3K_COLLOCATION_POINTS, 1, double>
-        disp_totlag_centerline(true);
+        disp_totlag_centerline(Core::LinAlg::Initialization::set_zero);
 
     // material triads at collocation points
     std::vector<Core::LinAlg::Matrix<3, 3, double>> triad_mat_cp(BEAM3K_COLLOCATION_POINTS);
@@ -3523,7 +3534,10 @@ void Discret::Elements::Beam3k::
   for (unsigned int idim = 0; idim < ndim; ++idim) g_1_bar(idim) = triad_ref_conv_cp(idim, 0);
 
   // CP values of strain increments
-  Core::LinAlg::Matrix<ndim, numdofelement, double> lin_theta_perp(true), lin_theta_par(true);
+  Core::LinAlg::Matrix<ndim, numdofelement, double> lin_theta_perp(
+      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<ndim, numdofelement, double> lin_theta_par(
+      Core::LinAlg::Initialization::set_zero);
 
   calc_lin_thetapar<nnode>(lin_theta_par, L, N_s, g_1, g_1_bar, abs_r_s);
 
@@ -3751,7 +3765,8 @@ void Discret::Elements::Beam3k::transform_stiff_matrix_multiplicative(
   Core::LinAlg::Matrix<2 * 6 + BEAM3K_COLLOCATION_POINTS, 3> newstiffmat(
       Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Matrix<3, 3> Tmat(Core::LinAlg::Initialization::set_zero);
-  std::vector<Core::LinAlg::Matrix<3, 1>> theta(2, Core::LinAlg::Matrix<3, 1>(true));
+  std::vector<Core::LinAlg::Matrix<3, 1>> theta(
+      2, Core::LinAlg::Matrix<3, 1>(Core::LinAlg::Initialization::set_zero));
 
   // Loop over the two boundary nodes
   for (unsigned int node = 0; node < 2; node++)

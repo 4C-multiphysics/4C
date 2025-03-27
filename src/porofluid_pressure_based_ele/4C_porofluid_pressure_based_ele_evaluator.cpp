@@ -1432,7 +1432,9 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd,
 
   // gradient of phi w.r.t. reference coordinates
   std::vector<Core::LinAlg::Matrix<nsd, 1>> refgradphi(numfluidphases,
-      Core::LinAlg::Matrix<nsd, 1>(true));  // static Core::LinAlg::Matrix<nsd,1> refgradphi;
+      Core::LinAlg::Matrix<nsd, 1>(
+          Core::LinAlg::Initialization::set_zero));  // static Core::LinAlg::Matrix<nsd,1>
+                                                     // refgradphi;
   for (int idof = 0; idof < numfluidphases; ++idof) refgradphi[idof].multiply(xjm, gradphi[idof]);
 
   // compute the pressure gradient from the phi gradients

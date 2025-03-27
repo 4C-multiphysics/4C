@@ -255,8 +255,8 @@ void BeamInteraction::BeamToSolidSurfaceVisualizationOutputWriter::
       if (nodal_force_visualization != nullptr)
       {
         // This array will hold the global coupling moment around the origin.
-        auto global_coupling_moment_origin =
-            std::make_shared<Core::LinAlg::Matrix<3, 1, double>>(true);
+        auto global_coupling_moment_origin = std::make_shared<Core::LinAlg::Matrix<3, 1, double>>(
+            Core::LinAlg::Initialization::set_zero);
         visualization_params.set("global_coupling_moment_origin", global_coupling_moment_origin);
       }
 

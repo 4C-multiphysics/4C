@@ -831,7 +831,8 @@ void PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art, d
           element1_->location_vector(*artdis, la, false);
           // rebuild scalar vector
           eartscalarnp_.clear();
-          eartscalarnp_.resize(numscalart_, Core::LinAlg::Matrix<numnodesart_, 1>(true));
+          eartscalarnp_.resize(numscalart_,
+              Core::LinAlg::Matrix<numnodesart_, 1>(Core::LinAlg::Initialization::set_zero));
           // extract local values of artery-scatra field from global state vector
           Core::FE::extract_my_values<Core::LinAlg::Matrix<numnodesart_, 1>>(
               *artscalarnp, eartscalarnp_, la[ndsartery_scatra_].lm_);
@@ -851,7 +852,8 @@ void PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art, d
           element2_->location_vector(*contdis, la, false);
           // rebuild scalar vector
           econtscalarnp_.clear();
-          econtscalarnp_.resize(numscalcont_, Core::LinAlg::Matrix<numnodescont_, 1>(true));
+          econtscalarnp_.resize(numscalcont_,
+              Core::LinAlg::Matrix<numnodescont_, 1>(Core::LinAlg::Initialization::set_zero));
           // extract local values of continuous-scatra field from global state vector
           Core::FE::extract_my_values<Core::LinAlg::Matrix<numnodescont_, 1>>(
               *contscalarnp, econtscalarnp_, la[3].lm_);

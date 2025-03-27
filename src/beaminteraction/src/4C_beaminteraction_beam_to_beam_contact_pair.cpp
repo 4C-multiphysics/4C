@@ -1822,8 +1822,8 @@ double BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::create_
     std::vector<Core::LinAlg::Matrix<3, 1, double>>& endpoints_final, int& numsegment, int i)
 {
   // endpoints of the segments
-  std::vector<Core::LinAlg::Matrix<3, 1, double>> endpoints(
-      (int)MAXNUMSEG + 1, Core::LinAlg::Matrix<3, 1, double>(true));
+  std::vector<Core::LinAlg::Matrix<3, 1, double>> endpoints((int)MAXNUMSEG + 1,
+      Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
   double segangle = params()->beam_to_beam_contact_params()->segmentation_angle();
 
   numsegment = 1;
@@ -5129,7 +5129,8 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::
   int size2 = gpvariables_.size();
   int size3 = epvariables_.size();
 
-  coords.resize(size1 + size2 + size3, Core::LinAlg::Matrix<3, 1, double>(true));
+  coords.resize(size1 + size2 + size3,
+      Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
 
   for (int i = 0; i < size1; ++i)
   {
@@ -5169,7 +5170,8 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::
   int size2 = gpvariables_.size();
   int size3 = epvariables_.size();
 
-  coords.resize(size1 + size2 + size3, Core::LinAlg::Matrix<3, 1, double>(true));
+  coords.resize(size1 + size2 + size3,
+      Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
 
   for (int i = 0; i < size1; ++i)
   {

@@ -239,7 +239,7 @@ void XFEM::MeshProjector::project(std::map<int, std::set<int>>& projection_nodeT
 
     tar_nodepositions_n.push_back(pos);
     projection_targetnodes.push_back(i->first);
-    interpolated_vecs.push_back(Core::LinAlg::Matrix<8, 1>(true));
+    interpolated_vecs.push_back(Core::LinAlg::Matrix<8, 1>(Core::LinAlg::Initialization::set_zero));
   }
 
   setup_search_tree();

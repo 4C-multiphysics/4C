@@ -242,7 +242,7 @@ void Mat::Robinson::setup(const int numgp, const Core::IO::InputParameterContain
   Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> emptymat(Core::LinAlg::Initialization::set_zero);
   strainpllast_->resize(numgp);
   strainplcurr_->resize(numgp);
-  strain_last_.resize(numgp, Core::LinAlg::Matrix<6, 1>(true));
+  strain_last_.resize(numgp, Core::LinAlg::Matrix<6, 1>(Core::LinAlg::Initialization::set_zero));
 
   backstresslast_->resize(numgp);
   backstresscurr_->resize(numgp);

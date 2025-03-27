@@ -4306,8 +4306,10 @@ ScaTra::MortarCellCalc<distype_s, distype_m>::MortarCellCalc(
     const int& numdofpernode_slave, const int& numdofpernode_master)
     : MortarCellInterface(couplingtype, lmside, numdofpernode_slave, numdofpernode_master),
       scatraparamsboundary_(Discret::Elements::ScaTraEleParameterBoundary::instance("scatra")),
-      ephinp_slave_(numdofpernode_slave, Core::LinAlg::Matrix<nen_slave_, 1>(true)),
-      ephinp_master_(numdofpernode_master, Core::LinAlg::Matrix<nen_master_, 1>(true)),
+      ephinp_slave_(numdofpernode_slave,
+          Core::LinAlg::Matrix<nen_slave_, 1>(Core::LinAlg::Initialization::set_zero)),
+      ephinp_master_(numdofpernode_master,
+          Core::LinAlg::Matrix<nen_master_, 1>(Core::LinAlg::Initialization::set_zero)),
       funct_slave_(true),
       funct_master_(true),
       shape_lm_slave_(true),

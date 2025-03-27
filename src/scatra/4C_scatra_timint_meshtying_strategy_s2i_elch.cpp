@@ -965,8 +965,10 @@ ScaTra::MortarCellCalcSTIElch<distype_s, distype_m>::MortarCellCalcSTIElch(
       my::MortarCellCalc(couplingtype, lmside, numdofpernode_slave, numdofpernode_master),
 
       // initialize member variables
-      eelchnp_slave_(2, Core::LinAlg::Matrix<nen_slave_, 1>(true)),
-      eelchnp_master_(2, Core::LinAlg::Matrix<nen_master_, 1>(true))
+      eelchnp_slave_(
+          2, Core::LinAlg::Matrix<nen_slave_, 1>(Core::LinAlg::Initialization::set_zero)),
+      eelchnp_master_(
+          2, Core::LinAlg::Matrix<nen_master_, 1>(Core::LinAlg::Initialization::set_zero))
 {
 }
 

@@ -12797,7 +12797,8 @@ double CONTACT::Integrator::t_det_deformation_gradient(
   }
 
   Core::LinAlg::Matrix<dim, numnodes> pderiv_loc(
-      true);  // derivatives of parent element shape functions in parent element coordinate system
+      Core::LinAlg::Initialization::set_zero);  // derivatives of parent element shape functions in
+                                                // parent element coordinate system
 
   // evaluate derivatives of parent element shape functions at current integration point in parent
   // coordinate system

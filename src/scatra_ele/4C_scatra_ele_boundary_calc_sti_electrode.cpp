@@ -52,7 +52,7 @@ Discret::Elements::ScaTraEleBoundaryCalcSTIElectrode<distype,
       my::ScaTraEleBoundaryCalc(numdofpernode, numscal, disname),
 
       // initialize member variable
-      eelchnp_(2, Core::LinAlg::Matrix<nen_, 1>(true))
+      eelchnp_(2, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero))
 {
 }
 
@@ -77,7 +77,8 @@ void Discret::Elements::ScaTraEleBoundaryCalcSTIElectrode<distype, probdim>::eva
 
   // extract local nodal values on present and opposite side of scatra-scatra interface
   extract_node_values(discretization, la);
-  std::vector<Core::LinAlg::Matrix<nen_, 1>> emasterscatra(2, Core::LinAlg::Matrix<nen_, 1>(true));
+  std::vector<Core::LinAlg::Matrix<nen_, 1>> emasterscatra(
+      2, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero));
   my::extract_node_values(
       emasterscatra, discretization, la, "imasterscatra", my::scatraparams_->nds_scatra());
 
@@ -94,7 +95,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcSTIElectrode<distype, probdim>::eva
   // element slave mechanical stress tensor
   const bool is_pseudo_contact = my::scatraparamsboundary_->is_pseudo_contact();
   std::vector<Core::LinAlg::Matrix<nen_, 1>> eslavestress_vector(
-      6, Core::LinAlg::Matrix<nen_, 1>(true));
+      6, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero));
   if (is_pseudo_contact)
     my::extract_node_values(eslavestress_vector, discretization, la, "mechanicalStressState",
         my::scatraparams_->nds_two_tensor_quantity());
@@ -326,7 +327,8 @@ void Discret::Elements::ScaTraEleBoundaryCalcSTIElectrode<distype,
 
   // extract local nodal values on present and opposite side of scatra-scatra interface
   extract_node_values(discretization, la);
-  std::vector<Core::LinAlg::Matrix<nen_, 1>> emasterscatra(2, Core::LinAlg::Matrix<nen_, 1>(true));
+  std::vector<Core::LinAlg::Matrix<nen_, 1>> emasterscatra(
+      2, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero));
   my::extract_node_values(
       emasterscatra, discretization, la, "imasterscatra", my::scatraparams_->nds_scatra());
 
@@ -347,7 +349,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcSTIElectrode<distype,
   // element slave mechanical stress tensor
   const bool is_pseudo_contact = my::scatraparamsboundary_->is_pseudo_contact();
   std::vector<Core::LinAlg::Matrix<nen_, 1>> eslavestress_vector(
-      6, Core::LinAlg::Matrix<nen_, 1>(true));
+      6, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero));
   if (is_pseudo_contact)
     my::extract_node_values(eslavestress_vector, discretization, la, "mechanicalStressState",
         my::scatraparams_->nds_two_tensor_quantity());
