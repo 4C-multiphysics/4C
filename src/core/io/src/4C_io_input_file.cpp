@@ -33,6 +33,30 @@ namespace Core::IO
   namespace
   {
     std::string to_string(const ryml::csubstr str) { return std::string(str.data(), str.size()); };
+
+    // Copy the content of the source node to the destination node. Useful to copy a node from one
+    // tree to another.
+    void deep_copy(ryml::NodeRef src, ryml::NodeRef dst)
+    {
+      dst.set_type(src.type());
+
+      if (src.has_key())
+      {
+        dst.set_key(src.key());
+      }
+      if (src.has_val())
+      {
+        dst.set_val(src.val());
+      }
+      // Recursively copy children
+      for (size_t i = 0; i < src.num_children(); ++i)
+      {
+        c4::yml::NodeRef src_child = src.child(i);
+        c4::yml::NodeRef dst_child = dst.append_child();
+        deep_copy(src_child, dst_child);
+      }
+    };
+
   }  // namespace
 
   namespace Internal
@@ -728,8 +752,29 @@ namespace Core::IO
     {
       if (Core::Communication::my_mpi_rank(pimpl_->comm_) == 0)
       {
+        ryml::Tree tree_with_small_sections = init_yaml_tree_with_exceptions();
+        tree_with_small_sections.rootref() |= ryml::MAP;
+        // Go through the tree and drop the huge sections from the tree.
+        for (auto file_node : pimpl_->yaml_tree_.rootref())
+        {
+          auto new_file_node = tree_with_small_sections.rootref().append_child();
+          new_file_node.set_type(file_node.type());
+          new_file_node.set_key(file_node.key());
+
+          for (auto section_node : file_node.children())
+          {
+            if (section_node.is_map() ||
+                (section_node.is_seq() && section_node.num_children() < huge_section_threshold))
+            {
+              // Copy the node to the new tree.
+              auto new_section_node = new_file_node.append_child();
+              deep_copy(section_node, new_section_node);
+            }
+          }
+        }
+
         std::stringstream ss;
-        ss << pimpl_->yaml_tree_;
+        ss << tree_with_small_sections;
         std::string yaml_str = ss.str();
         Core::Communication::broadcast(yaml_str, /*root*/ 0, pimpl_->comm_);
       }

@@ -86,7 +86,7 @@ std::shared_ptr<BeamInteraction::BeamPotentialPair> BeamInteraction::BeamPotenti
             return std::make_shared<BeamInteraction::BeamToSpherePotentialPair<2, 1>>();
           else
           {
-            if (beam_potential_params.use_fad())
+            if (beam_potential_params.use_fad)
               return std::make_shared<
                   BeamInteraction::BeamToBeamPotentialPair<2, 1, Sacado::Fad::DFad<double>>>();
             else
@@ -99,7 +99,7 @@ std::shared_ptr<BeamInteraction::BeamPotentialPair> BeamInteraction::BeamPotenti
             return std::make_shared<BeamInteraction::BeamToSpherePotentialPair<3, 1>>();
           else
           {
-            if (beam_potential_params.use_fad())
+            if (beam_potential_params.use_fad)
               return std::make_shared<
                   BeamInteraction::BeamToBeamPotentialPair<3, 1, Sacado::Fad::DFad<double>>>();
             else
@@ -112,7 +112,7 @@ std::shared_ptr<BeamInteraction::BeamPotentialPair> BeamInteraction::BeamPotenti
             return std::make_shared<BeamInteraction::BeamToSpherePotentialPair<4, 1>>();
           else
           {
-            if (beam_potential_params.use_fad())
+            if (beam_potential_params.use_fad)
               return std::make_shared<
                   BeamInteraction::BeamToBeamPotentialPair<4, 1, Sacado::Fad::DFad<double>>>();
             else
@@ -125,7 +125,7 @@ std::shared_ptr<BeamInteraction::BeamPotentialPair> BeamInteraction::BeamPotenti
             return std::make_shared<BeamInteraction::BeamToSpherePotentialPair<5, 1>>();
           else
           {
-            if (beam_potential_params.use_fad())
+            if (beam_potential_params.use_fad)
               return std::make_shared<
                   BeamInteraction::BeamToBeamPotentialPair<5, 1, Sacado::Fad::DFad<double>>>();
             else
@@ -154,7 +154,7 @@ std::shared_ptr<BeamInteraction::BeamPotentialPair> BeamInteraction::BeamPotenti
             return std::make_shared<BeamInteraction::BeamToSpherePotentialPair<2, 2>>();
           else
           {
-            if (beam_potential_params.use_fad())
+            if (beam_potential_params.use_fad)
               return std::make_shared<
                   BeamInteraction::BeamToBeamPotentialPair<2, 2, Sacado::Fad::DFad<double>>>();
             else
@@ -203,7 +203,7 @@ void BeamInteraction::BeamPotentialPair::check_init_setup() const
  *-----------------------------------------------------------------------------------------------*/
 Core::FE::GaussRule1D BeamInteraction::BeamPotentialPair::get_gauss_rule() const
 {
-  switch (params()->number_gauss_points())
+  switch (params()->n_gauss_points)
   {
     case 5:
     {
@@ -236,7 +236,7 @@ Core::FE::GaussRule1D BeamInteraction::BeamPotentialPair::get_gauss_rule() const
     }
 
     default:
-      FOUR_C_THROW("{} Gauss points are not supported yet!", params()->number_gauss_points());
+      FOUR_C_THROW("{} Gauss points are not supported yet!", params()->n_gauss_points);
   }
 
   return Core::FE::GaussRule1D::undefined;

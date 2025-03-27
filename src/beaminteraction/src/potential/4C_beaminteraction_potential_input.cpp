@@ -59,10 +59,10 @@ void BeamPotential::set_valid_parameters(std::map<std::string, Core::IO::InputSp
       {.description = "Use regularization of force law at separations smaller than this separation",
           .default_value = -1.0}));
 
-  beampotential.specs.emplace_back(parameter<int>("NUM_INTEGRATION_SEGMENTS",
+  beampotential.specs.emplace_back(parameter<int>("N_INTEGRATION_SEGMENTS",
       {.description = "Number of integration segments used per beam element", .default_value = 1}));
 
-  beampotential.specs.emplace_back(parameter<int>("NUM_GAUSSPOINTS",
+  beampotential.specs.emplace_back(parameter<int>("N_GAUSS_POINTS",
       {.description = "Number of Gauss points used per integration segment", .default_value = 10}));
 
   beampotential.specs.emplace_back(parameter<bool>("AUTOMATIC_DIFFERENTIATION",
@@ -93,7 +93,7 @@ void BeamPotential::set_valid_parameters(std::map<std::string, Core::IO::InputSp
 
   // output interval regarding steps: write output every INTERVAL_STEPS steps
   beampotential_output_sublist.specs.emplace_back(parameter<int>("INTERVAL_STEPS",
-      {.description = "write output at runtime every INTERVAL_STEPS steps", .default_value = -1}));
+      {.description = "write output at runtime every INTERVAL_STEPS steps", .default_value = 1}));
 
   // whether to write output in every iteration of the nonlinear solver
   beampotential_output_sublist.specs.emplace_back(parameter<bool>(
@@ -130,30 +130,31 @@ void BeamPotential::set_valid_conditions(
 {
   using namespace Core::IO::InputSpecBuilders;
 
-  /*-------------------------------------------------------------------*/
   // beam potential interaction: atom/charge density per unit length on LINE
-  Core::Conditions::ConditionDefinition rigidsphere_potential_charge(
-      "DESIGN POINT RIGIDSPHERE POTENTIAL CHARGE CONDITIONS", "RigidspherePotentialPointCharge",
-      "Rigidsphere_Potential_Point_Charge", Core::Conditions::RigidspherePotential_PointCharge,
-      false, Core::Conditions::geometry_type_point);
 
   Core::Conditions::ConditionDefinition beam_potential_line_charge(
       "DESIGN LINE BEAM POTENTIAL CHARGE CONDITIONS", "BeamPotentialLineCharge",
       "Beam_Potential_Line_Charge_Density", Core::Conditions::BeamPotential_LineChargeDensity,
       false, Core::Conditions::geometry_type_line);
 
-  rigidsphere_potential_charge.add_component(parameter<int>("POTLAW"));
-  rigidsphere_potential_charge.add_component(parameter<double>("VAL"));
-  rigidsphere_potential_charge.add_component(
-      parameter<std::optional<int>>("FUNCT", {.description = ""}));
-
   beam_potential_line_charge.add_component(parameter<int>("POTLAW"));
   beam_potential_line_charge.add_component(parameter<double>("VAL"));
   beam_potential_line_charge.add_component(
       parameter<std::optional<int>>("FUNCT", {.description = ""}));
 
-  condlist.push_back(rigidsphere_potential_charge);
   condlist.push_back(beam_potential_line_charge);
+
+  Core::Conditions::ConditionDefinition rigidsphere_potential_charge(
+      "DESIGN POINT RIGIDSPHERE POTENTIAL CHARGE CONDITIONS", "RigidspherePotentialPointCharge",
+      "Rigidsphere_Potential_Point_Charge", Core::Conditions::RigidspherePotential_PointCharge,
+      false, Core::Conditions::geometry_type_point);
+
+  rigidsphere_potential_charge.add_component(parameter<int>("POTLAW"));
+  rigidsphere_potential_charge.add_component(parameter<double>("VAL"));
+  rigidsphere_potential_charge.add_component(
+      parameter<std::optional<int>>("FUNCT", {.description = ""}));
+
+  condlist.push_back(rigidsphere_potential_charge);
 }
 
 FOUR_C_NAMESPACE_CLOSE

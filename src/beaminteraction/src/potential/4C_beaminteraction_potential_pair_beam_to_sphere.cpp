@@ -150,7 +150,7 @@ bool BeamInteraction::BeamToSpherePotentialPair<numnodes, numnodalvalues>::evalu
 
   // compute the values for element residual vectors ('force') and linearizations ('stiff')
   // Todo allow for independent choice of strategy for beam-to-sphere potentials
-  switch (params()->strategy())
+  switch (params()->strategy)
   {
     case BeamPotential::Strategy::double_length_specific_large_separations:
     {
@@ -215,7 +215,7 @@ void BeamInteraction::BeamToSpherePotentialPair<numnodes,
     numnodalvalues>::evaluate_fpotand_stiffpot_large_sep_approx()
 {
   // get cutoff radius
-  const std::optional<double> cutoff_radius = params()->cutoff_radius();
+  const std::optional<double> cutoff_radius = params()->cutoff_radius;
 
   // Set gauss integration rule
   Core::FE::GaussRule1D gaussrule = get_gauss_rule();
@@ -270,7 +270,7 @@ void BeamInteraction::BeamToSpherePotentialPair<numnodes,
   // determine prefactor of the integral (depends on whether surface or volume potential is applied)
   double prefactor = k_ * m_;
 
-  switch (params()->potential_type())  // Todo do we need a own Beam-to-sphere potential type here?
+  switch (params()->potential_type)  // Todo do we need a own Beam-to-sphere potential type here?
   {
     case BeamPotential::Type::surface:
       prefactor *= 2 * radius1_ * M_PI;

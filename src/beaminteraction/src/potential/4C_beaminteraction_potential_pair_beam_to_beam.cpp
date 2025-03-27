@@ -64,7 +64,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::setu
   /* take care of how to assign the role of master and slave (only applicable to
    * "SingleLengthSpecific" approach). Immediately before this setup(), the element with smaller GID
    * has been assigned as element1_, i.e., slave. */
-  if (params()->choice_master_slave() == BeamPotential::MasterSlaveChoice::higher_eleGID_is_slave)
+  if (params()->choice_master_slave == BeamPotential::MasterSlaveChoice::higher_eleGID_is_slave)
   {
     // interchange order, i.e., role of elements
     Core::Elements::Element const* tmp_ele_ptr = element1();
@@ -102,7 +102,7 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::eval
     const std::vector<Core::Conditions::Condition*> linechargeconds, const double k, const double m)
 {
   // no need to evaluate this pair in case of separation by far larger than cutoff or prefactor zero
-  if ((params()->cutoff_radius().has_value() and
+  if ((params()->cutoff_radius.has_value() and
           are_elements_much_more_separated_than_cutoff_distance()) or
       k == 0.0)
     return false;
@@ -145,7 +145,7 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::eval
 
 
   // compute the values for element residual vectors ('force') and linearizations ('stiff')
-  switch (params()->strategy())
+  switch (params()->strategy)
   {
     case BeamPotential::Strategy::double_length_specific_large_separations:
     {
@@ -205,10 +205,10 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   set_automatic_differentiation_variables_if_required(ele1pos_, ele2pos_);
 
   // get cutoff radius
-  const std::optional<double> cutoff_radius = params()->cutoff_radius();
+  const std::optional<double> cutoff_radius = params()->cutoff_radius;
 
   // number of integration segments per element
-  const unsigned int num_integration_segments = params()->number_integration_segments();
+  const unsigned int n_integration_segments = params()->n_integration_segments;
 
   // Set Gauss integration rule applied in each integration segment
   Core::FE::GaussRule1D gaussrule = get_gauss_rule();
@@ -217,7 +217,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   Core::FE::IntegrationPoints1D gausspoints(gaussrule);
   // number of Gauss points per integration segment and in total per element
   int numgp_persegment = gausspoints.nquad;
-  int numgp_perelement = num_integration_segments * numgp_persegment;
+  int numgp_perelement = n_integration_segments * numgp_persegment;
 
   // vectors for shape functions
   // Attention: these are individual shape function values, NOT shape function matrices
@@ -260,7 +260,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   // determine prefactor of the integral (depends on whether surface or volume potential is applied)
   double prefactor = k_ * m_;
 
-  switch (params()->potential_type())
+  switch (params()->potential_type)
   {
     case BeamPotential::Type::surface:
       prefactor *= 4 * radius1_ * radius2_ * M_PI * M_PI;
@@ -284,12 +284,11 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   moments_pot_gp_2_.resize(
       numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
 
-  for (unsigned int isegment1 = 0; isegment1 < num_integration_segments; ++isegment1)
+  for (unsigned int isegment1 = 0; isegment1 < n_integration_segments; ++isegment1)
   {
     // compute element parameter coordinate for lower and upper limit of current integration segment
-    double integration_segment1_lower_limit = -1.0 + isegment1 * 2.0 / num_integration_segments;
-    double integration_segment1_upper_limit =
-        -1.0 + (isegment1 + 1) * 2.0 / num_integration_segments;
+    double integration_segment1_lower_limit = -1.0 + isegment1 * 2.0 / n_integration_segments;
+    double integration_segment1_upper_limit = -1.0 + (isegment1 + 1) * 2.0 / n_integration_segments;
 
     double jacobifactor_segment1 =
         0.5 * (integration_segment1_upper_limit - integration_segment1_lower_limit);
@@ -298,13 +297,13 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
         N1_i, beam_element1()->shape(), ele1length_, integration_segment1_lower_limit,
         integration_segment1_upper_limit);
 
-    for (unsigned int isegment2 = 0; isegment2 < num_integration_segments; ++isegment2)
+    for (unsigned int isegment2 = 0; isegment2 < n_integration_segments; ++isegment2)
     {
       // compute element parameter coordinate for lower and upper limit of current integration
       // segment
-      double integration_segment2_lower_limit = -1.0 + isegment2 * 2.0 / num_integration_segments;
+      double integration_segment2_lower_limit = -1.0 + isegment2 * 2.0 / n_integration_segments;
       double integration_segment2_upper_limit =
-          -1.0 + (isegment2 + 1) * 2.0 / num_integration_segments;
+          -1.0 + (isegment2 + 1) * 2.0 / n_integration_segments;
 
       double jacobifactor_segment2 =
           0.5 * (integration_segment2_upper_limit - integration_segment2_lower_limit);
@@ -582,15 +581,15 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   set_automatic_differentiation_variables_if_required(ele1pos_, ele2pos_);
 
   // get cutoff radius
-  const std::optional<double> cutoff_radius = params()->cutoff_radius();
+  const std::optional<double> cutoff_radius = params()->cutoff_radius;
 
   // get regularization type and separation
-  const BeamPotential::RegularizationType regularization_type = params()->regularization_type();
+  const BeamPotential::RegularizationType regularization_type = params()->regularization_type;
 
-  const double regularization_separation = params()->regularization_separation();
+  const double regularization_separation = params()->regularization_separation;
 
   // number of integration segments per element
-  const unsigned int num_integration_segments = params()->number_integration_segments();
+  const unsigned int n_integration_segments = params()->n_integration_segments;
 
   // Set Gauss integration rule applied in each integration segment
   Core::FE::GaussRule1D gaussrule = get_gauss_rule();
@@ -599,7 +598,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   Core::FE::IntegrationPoints1D gausspoints(gaussrule);
   // number of Gauss points per integration segment and in total per element
   int numgp_persegment = gausspoints.nquad;
-  int numgp_perelement = num_integration_segments * numgp_persegment;
+  int numgp_perelement = n_integration_segments * numgp_persegment;
 
   // vectors for shape function values
   // Attention: these are individual shape function values, NOT shape function matrices
@@ -701,12 +700,11 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   double prefactor = k_ * 2 * M_PI * (m_ - 3.5) / (m_ - 2) / (m_ - 2) *
                      std::sqrt(2 * radius1_ * radius2_ / (radius1_ + radius2_)) * C;
 
-  for (unsigned int isegment1 = 0; isegment1 < num_integration_segments; ++isegment1)
+  for (unsigned int isegment1 = 0; isegment1 < n_integration_segments; ++isegment1)
   {
     // compute element parameter coordinate for lower and upper limit of current integration segment
-    double integration_segment1_lower_limit = -1.0 + isegment1 * 2.0 / num_integration_segments;
-    double integration_segment1_upper_limit =
-        -1.0 + (isegment1 + 1) * 2.0 / num_integration_segments;
+    double integration_segment1_lower_limit = -1.0 + isegment1 * 2.0 / n_integration_segments;
+    double integration_segment1_upper_limit = -1.0 + (isegment1 + 1) * 2.0 / n_integration_segments;
 
     double jacobifactor_segment1 =
         0.5 * (integration_segment1_upper_limit - integration_segment1_lower_limit);
@@ -715,13 +713,13 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
         N1_i, beam_element1()->shape(), ele1length_, integration_segment1_lower_limit,
         integration_segment1_upper_limit);
 
-    for (unsigned int isegment2 = 0; isegment2 < num_integration_segments; ++isegment2)
+    for (unsigned int isegment2 = 0; isegment2 < n_integration_segments; ++isegment2)
     {
       // compute element parameter coordinate for lower and upper limit of current integration
       // segment
-      double integration_segment2_lower_limit = -1.0 + isegment2 * 2.0 / num_integration_segments;
+      double integration_segment2_lower_limit = -1.0 + isegment2 * 2.0 / n_integration_segments;
       double integration_segment2_upper_limit =
-          -1.0 + (isegment2 + 1) * 2.0 / num_integration_segments;
+          -1.0 + (isegment2 + 1) * 2.0 / n_integration_segments;
 
       double jacobifactor_segment2 =
           0.5 * (integration_segment2_upper_limit - integration_segment2_lower_limit);
@@ -957,8 +955,8 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   // auxiliary variables (same for both elements)
   double gap_exp2 = std::pow(gap_regularized, -m_ + 1.5);
 
-  if (params()->regularization_type() == BeamPotential::RegularizationType::constant and
-      gap < params()->regularization_separation())
+  if (params()->regularization_type == BeamPotential::RegularizationType::constant and
+      gap < params()->regularization_separation)
   {
     /* in case of constant extrapolation of force law, the derivative of the force is zero
      * and this contribution to the stiffness matrix vanishes */
@@ -1069,16 +1067,16 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
         "e.g. van der Waals (m=6) or the repulsive part of Lennard-Jones (m=12)!",
         m_);
 
-  if (not params()->use_fad() and
-      params()->strategy() == BeamPotential::Strategy::single_length_specific_small_separations)
+  if (not params()->use_fad and
+      params()->strategy == BeamPotential::Strategy::single_length_specific_small_separations)
   {
     FOUR_C_THROW(
         "The strategy 'SingleLengthSpecific_SmallSepApprox' to evaluate the interaction "
         "potential requires automatic differentiation via FAD!");
   }
 
-  if (params()->strategy() == BeamPotential::Strategy::single_length_specific_small_separations &&
-      params()->potential_reduction_length().has_value())
+  if (params()->strategy == BeamPotential::Strategy::single_length_specific_small_separations &&
+      params()->potential_reduction_length.has_value())
   {
     FOUR_C_THROW(
         "The potential reduction strategy is currently not implemented for the beam interaction "
@@ -1091,10 +1089,10 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
         "potential requires the beam radii to be identical!");
 
   // get cutoff radius
-  const std::optional<double> cutoff_radius = params()->cutoff_radius();
+  const std::optional<double> cutoff_radius = params()->cutoff_radius;
 
   // get potential reduction length
-  const std::optional<double> potential_reduction_length = params()->potential_reduction_length();
+  const std::optional<double> potential_reduction_length = params()->potential_reduction_length;
 
   // get length from current master beam element to beam edge
   double length_prior_left = 0.0;
@@ -1103,7 +1101,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   if (potential_reduction_length.has_value())
   {
     std::tie(length_prior_left, length_prior_right) =
-        params()->ele_gid_prior_length_map_.at(element2()->id());
+        params()->ele_gid_prior_length_map.at(element2()->id());
 
     if ((length_prior_left >= 0.0) && (length_prior_right >= 0.0) &&
         ((ele2length_ - 2 * potential_reduction_length.value() + length_prior_left +
@@ -1128,7 +1126,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
 
 
   // number of integration segments per element
-  const unsigned int num_integration_segments = params()->number_integration_segments();
+  const unsigned int n_integration_segments = params()->n_integration_segments;
 
   // Set Gauss integration rule applied in each integration segment
   Core::FE::GaussRule1D gaussrule = get_gauss_rule();
@@ -1138,7 +1136,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
 
   // number of Gauss points per integration segment and in total
   int numgp_persegment = gausspoints.nquad;
-  int numgp_total = num_integration_segments * numgp_persegment;
+  int numgp_total = n_integration_segments * numgp_persegment;
 
   int igp_total = 0;
   double xi_GP_tilde = 0.0;
@@ -1283,13 +1281,13 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
       numgp_total, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
 
 
-  for (unsigned int isegment = 0; isegment < num_integration_segments; ++isegment)
+  for (unsigned int isegment = 0; isegment < n_integration_segments; ++isegment)
   {
     // compute element parameter coordinate for lower and upper limit of current integration segment
     double integration_segment_lower_limit =
-        -1.0 + (double)isegment * 2.0 / (double)num_integration_segments;
+        -1.0 + (double)isegment * 2.0 / (double)n_integration_segments;
     double integration_segment_upper_limit =
-        -1.0 + (double)(isegment + 1) * 2.0 / (double)num_integration_segments;
+        -1.0 + (double)(isegment + 1) * 2.0 / (double)n_integration_segments;
 
     double jacobifactor_segment =
         0.5 * (integration_segment_upper_limit - integration_segment_lower_limit);
@@ -1428,7 +1426,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
       // evaluate all quantities which depend on the applied disk-cylinder potential law
 
       // 'full' disk-cylinder interaction potential
-      if (params()->strategy() == BeamPotential::Strategy::single_length_specific_small_separations)
+      if (params()->strategy == BeamPotential::Strategy::single_length_specific_small_separations)
       {
         if (not evaluate_full_disk_cylinder_potential(interaction_potential_GP, force_pot_slave_GP,
                 force_pot_master_GP, r_slave, r_xi_slave, t_slave, r_master, r_xi_master,
@@ -1441,7 +1439,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
           continue;
       }
       // reduced, simpler variant of the disk-cylinder interaction potential
-      else if (params()->strategy() ==
+      else if (params()->strategy ==
                BeamPotential::Strategy::single_length_specific_small_separations_simple)
       {
         if (not evaluate_simple_disk_cylinder_potential(dist_ul, norm_dist_ul, alpha, cos_alpha,
@@ -2474,9 +2472,9 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
     Core::LinAlg::Matrix<1, numnodes * numnodalvalues, T> const& N_i_xi_master)
 {
   // get regularization type and separation
-  const BeamPotential::RegularizationType regularization_type = params()->regularization_type();
+  const BeamPotential::RegularizationType regularization_type = params()->regularization_type;
 
-  const double regularization_separation = params()->regularization_separation();
+  const double regularization_separation = params()->regularization_separation;
 
 
   T sin_alpha = 0.0;   // sine of mutual angle of tangent vectors
@@ -3141,9 +3139,9 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
     Core::LinAlg::SerialDenseMatrix* stiffmat21, Core::LinAlg::SerialDenseMatrix* stiffmat22)
 {
   // get regularization type and separation
-  const BeamPotential::RegularizationType regularization_type = params()->regularization_type();
+  const BeamPotential::RegularizationType regularization_type = params()->regularization_type;
 
-  const double regularization_separation = params()->regularization_separation();
+  const double regularization_separation = params()->regularization_separation;
 
   T signum_tangentsscalarproduct = 0.0;
 
@@ -3909,7 +3907,7 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
 
 
   return (
-      estimated_minimal_centerline_separation > safety_factor * params()->cutoff_radius().value());
+      estimated_minimal_centerline_separation > safety_factor * params()->cutoff_radius.value());
 }
 
 // explicit template instantiations

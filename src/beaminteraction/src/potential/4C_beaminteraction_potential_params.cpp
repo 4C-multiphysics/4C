@@ -9,7 +9,6 @@
 
 #include "4C_beamcontact_input.hpp"
 #include "4C_beaminteraction_potential_input.hpp"
-#include "4C_beaminteraction_potential_runtime_visualization_output_params.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io_value_parser.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -18,209 +17,173 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-/*-----------------------------------------------------------------------------------------------*
- *-----------------------------------------------------------------------------------------------*/
-BeamInteraction::BeamPotentialParams::BeamPotentialParams()
-    : isinit_(false),
-      issetup_(false),
-      pot_law_exponents_(nullptr),
-      pot_law_prefactors_(nullptr),
-      potential_type_(BeamPotential::Type::vague),
-      strategy_(BeamPotential::Strategy::vague),
-      cutoff_radius_(std::nullopt),
-      regularization_type_(BeamPotential::RegularizationType::none),
-      regularization_separation_(0.0),
-      num_integration_segments_(-1),
-      num_gp_s_(-1),
-      use_fad_(false),
-      choice_master_slave_(BeamPotential::MasterSlaveChoice::vague),
-      visualization_output_(false),
-      params_runtime_visualization_output_btb_potential_(nullptr),
-      potential_reduction_length_(std::nullopt)
+
+namespace BeamInteraction
 {
-  // empty constructor
-}
 
-/*-----------------------------------------------------------------------------------------------*
- *-----------------------------------------------------------------------------------------------*/
-void BeamInteraction::BeamPotentialParams::init(const double restart_time)
-{
-  issetup_ = false;
-
-  // Teuchos parameter list for beam potential-based interactions
-  const Teuchos::ParameterList& beam_potential_params_list =
-      Global::Problem::instance()->beam_potential_params();
-
-  /****************************************************************************/
-  // get and check required parameters
-  /****************************************************************************/
-
-  pot_law_prefactors_ = std::make_shared<std::vector<double>>();
-  pot_law_exponents_ = std::make_shared<std::vector<double>>();
-  pot_law_prefactors_->clear();
-  pot_law_exponents_->clear();
-  // read potential law parameters from input and check
+  void initialize_validate_beam_potential_params(BeamPotentialParams& params, double restart_time)
   {
-    std::string pot_law_exponents_in =
-        Teuchos::getNumericStringParameter(beam_potential_params_list, "POT_LAW_EXPONENT");
+    // Teuchos parameter list for beam potential-based interactions
+    const Teuchos::ParameterList& beam_potential_params_list =
+        Global::Problem::instance()->beam_potential_params();
 
-    Core::IO::ValueParser pot_law_exponents_parser(
-        pot_law_exponents_in, {.user_scope_message = "While reading potential law exponents: "});
 
-    while (!pot_law_exponents_parser.at_end())
+    // potential law parameters
+    // TODO remove parsers once parameters are directly read as vectors
     {
-      pot_law_exponents_->push_back(pot_law_exponents_parser.read<double>());
+      std::string potential_law_exponents_in =
+          Teuchos::getNumericStringParameter(beam_potential_params_list, "POT_LAW_EXPONENT");
+
+      Core::IO::ValueParser potential_law_exponents_parser(potential_law_exponents_in,
+          {.user_scope_message = "While reading potential law exponents: "});
+
+      while (!potential_law_exponents_parser.at_end())
+      {
+        params.potential_law_exponents.push_back(potential_law_exponents_parser.read<double>());
+      }
     }
-  }
-  {
-    std::string pot_law_prefactors_in =
-        Teuchos::getNumericStringParameter(beam_potential_params_list, "POT_LAW_PREFACTOR");
-
-    Core::IO::ValueParser pot_law_prefactors_parser(
-        pot_law_prefactors_in, {.user_scope_message = "While reading potential law prefactors: "});
-
-    while (!pot_law_prefactors_parser.at_end())
     {
-      pot_law_prefactors_->push_back(pot_law_prefactors_parser.read<double>());
+      std::string potential_law_prefactors_in =
+          Teuchos::getNumericStringParameter(beam_potential_params_list, "POT_LAW_PREFACTOR");
+
+      Core::IO::ValueParser potential_law_prefactors_parser(potential_law_prefactors_in,
+          {.user_scope_message = "While reading potential law prefactors: "});
+
+      while (!potential_law_prefactors_parser.at_end())
+      {
+        params.potential_law_prefactors.push_back(potential_law_prefactors_parser.read<double>());
+      }
     }
-  }
-  if (!pot_law_prefactors_->empty())
-  {
-    if (pot_law_prefactors_->size() != pot_law_exponents_->size())
+
+    if (params.potential_law_prefactors.size() != params.potential_law_exponents.size())
       FOUR_C_THROW(
           "Number of potential law prefactors does not match number of potential law exponents."
           " Check your input file!");
 
-    for (unsigned int i = 0; i < pot_law_exponents_->size(); ++i)
-      if (pot_law_exponents_->at(i) <= 0)
+    for (double pot_law_exponent : params.potential_law_exponents)
+      if (pot_law_exponent <= 0)
         FOUR_C_THROW(
             "Only positive values are allowed for potential law exponent."
             " Check your input file");
+
+
+    // potential strategy
+    params.strategy =
+        Teuchos::getIntegralValue<BeamPotential::Strategy>(beam_potential_params_list, "STRATEGY");
+
+    if (params.strategy == BeamPotential::Strategy::vague)
+      FOUR_C_THROW(
+          "You must specify a strategy to be used to evaluate beam interaction potential!");
+
+    // potential type
+    params.potential_type =
+        Teuchos::getIntegralValue<BeamPotential::Type>(beam_potential_params_list, "TYPE");
+
+    if (params.potential_type == BeamPotential::Type::vague)
+      FOUR_C_THROW("You must specify the type of the specified beam interaction potential!");
+
+    if (params.potential_type == BeamPotential::Type::surface and
+        params.strategy != BeamPotential::Strategy::double_length_specific_large_separations)
+    {
+      FOUR_C_THROW("Surface interaction is not implemented for this strategy yet!");
+    }
+
+    // cutoff radius
+    params.cutoff_radius = beam_potential_params_list.get<std::optional<double>>("CUTOFF_RADIUS");
+
+    if (params.cutoff_radius.has_value() and params.cutoff_radius.value() <= 0.0)
+      FOUR_C_THROW("Invalid cutoff radius! Must be positive value or null to deactivate.");
+
+    // regularization
+    params.regularization_type = Teuchos::getIntegralValue<BeamPotential::RegularizationType>(
+        beam_potential_params_list, "REGULARIZATION_TYPE");
+
+    if ((params.regularization_type != BeamPotential::RegularizationType::none and
+            params.strategy == BeamPotential::Strategy::double_length_specific_large_separations) or
+        (params.regularization_type == BeamPotential::RegularizationType::constant and
+            params.strategy == BeamPotential::Strategy::single_length_specific_small_separations))
+    {
+      FOUR_C_THROW(
+          "This kind of regularization of the force law is not implemented for this strategy yet!");
+    }
+
+    params.regularization_separation =
+        beam_potential_params_list.get<double>("REGULARIZATION_SEPARATION");
+
+    if (params.regularization_type != BeamPotential::RegularizationType::none and
+        params.regularization_separation <= 0.0)
+    {
+      FOUR_C_THROW(
+          "Invalid regularization separation! Must be a positive value since force law "
+          "is not defined for separations <= 0!");
+    }
+
+    // potential reduction strategy
+    params.potential_reduction_length =
+        beam_potential_params_list.get<std::optional<double>>("POTENTIAL_REDUCTION_LENGTH");
+
+    if (params.potential_reduction_length.has_value() and
+        params.potential_reduction_length.value() <= 0.0)
+      FOUR_C_THROW(
+          "Invalid potential reduction length! Must be positive value or none to deactivate.");
+
+    // integration parameters
+    params.n_integration_segments = beam_potential_params_list.get<int>("N_INTEGRATION_SEGMENTS");
+
+    if (params.n_integration_segments <= 0)
+      FOUR_C_THROW("Invalid number of integration segments per element!");
+
+    params.n_gauss_points = beam_potential_params_list.get<int>("N_GAUSS_POINTS");
+
+    if (params.n_gauss_points <= 0)
+      FOUR_C_THROW("Invalid number of Gauss points per integration segment!");
+
+    // automatic differentiation
+    params.use_fad = beam_potential_params_list.get<bool>("AUTOMATIC_DIFFERENTIATION");
+
+    // master/slave choice
+    params.choice_master_slave = Teuchos::getIntegralValue<BeamPotential::MasterSlaveChoice>(
+        beam_potential_params_list, "CHOICE_MASTER_SLAVE");
+
+    if (params.choice_master_slave == BeamPotential::MasterSlaveChoice::vague)
+    {
+      FOUR_C_THROW("Invalid choice of master and slave!");
+    }
+
+    // check for vtk output which is to be handled by an own writer object
+    params.write_visualization_output = beam_potential_params_list.sublist("RUNTIME VTK OUTPUT")
+                                            .get<bool>("VTK_OUTPUT_BEAM_POTENTIAL");
+
+    // create and initialize parameter container object for runtime output
+    if (params.write_visualization_output)
+    {
+      params.runtime_output_params = {
+          .visualization_parameters = Core::IO::visualization_parameters_factory(
+              Global::Problem::instance()->io_params().sublist("RUNTIME VTK OUTPUT"),
+              *Global::Problem::instance()->output_control_file(), restart_time)};
+
+      initialize_validate_beam_potential_runtime_output_params(
+          params.runtime_output_params, beam_potential_params_list.sublist("RUNTIME VTK OUTPUT"));
+    }
   }
 
-  /****************************************************************************/
-  strategy_ =
-      Teuchos::getIntegralValue<BeamPotential::Strategy>(beam_potential_params_list, "STRATEGY");
-
-  if (strategy_ == BeamPotential::Strategy::vague)
-    FOUR_C_THROW("You must specify a strategy to be used to evaluate beam interaction potential!");
-
-  /****************************************************************************/
-  potential_type_ =
-      Teuchos::getIntegralValue<BeamPotential::Type>(beam_potential_params_list, "TYPE");
-
-  if (potential_type_ == BeamPotential::Type::vague)
-    FOUR_C_THROW("You must specify the type of the specified beam interaction potential!");
-
-  if (potential_type_ == BeamPotential::Type::surface and
-      strategy_ != BeamPotential::Strategy::double_length_specific_large_separations)
+  void initialize_validate_beam_potential_runtime_output_params(
+      BeamPotentialRuntimeOutputParams& params, Teuchos::ParameterList const& sublist)
   {
-    FOUR_C_THROW("Surface interaction is not implemented for this strategy yet!");
+    params.output_interval = sublist.get<int>("INTERVAL_STEPS");
+
+    params.write_all_iterations = sublist.get<bool>("EVERY_ITERATION");
+
+    params.write_forces = sublist.get<bool>("FORCES");
+
+    params.write_moments = sublist.get<bool>("MOMENTS");
+
+    params.write_forces_moments_per_pair = sublist.get<bool>("WRITE_FORCE_MOMENT_PER_ELEMENTPAIR");
+
+    params.write_uids = sublist.get<bool>("WRITE_UIDS");
+
+    // overwrite global option to write visualization output of every iteration
+    params.visualization_parameters.every_iteration_ = params.write_all_iterations;
   }
-
-  /****************************************************************************/
-  cutoff_radius_ = beam_potential_params_list.get<std::optional<double>>("CUTOFF_RADIUS");
-
-  if (cutoff_radius_.has_value() and cutoff_radius_.value() <= 0.0)
-    FOUR_C_THROW("Invalid cutoff radius! Must be positive value or null to deactivate.");
-
-  /****************************************************************************/
-  regularization_type_ = Teuchos::getIntegralValue<BeamPotential::RegularizationType>(
-      beam_potential_params_list, "REGULARIZATION_TYPE");
-
-  if ((regularization_type_ != BeamPotential::RegularizationType::none and
-          strategy_ == BeamPotential::Strategy::double_length_specific_large_separations) or
-      (regularization_type_ == BeamPotential::RegularizationType::constant and
-          strategy_ == BeamPotential::Strategy::single_length_specific_small_separations))
-  {
-    FOUR_C_THROW(
-        "This kind of regularization of the force law is not implemented for this strategy yet!");
-  }
-
-  /****************************************************************************/
-  regularization_separation_ = beam_potential_params_list.get<double>("REGULARIZATION_SEPARATION");
-
-  if (regularization_type_ != BeamPotential::RegularizationType::none and
-      regularization_separation_ <= 0.0)
-  {
-    FOUR_C_THROW(
-        "Invalid regularization separation! Must be a positive value since force law "
-        "is not defined for separations <= 0!");
-  }
-
-  /****************************************************************************/
-  num_integration_segments_ = beam_potential_params_list.get<int>("NUM_INTEGRATION_SEGMENTS");
-
-  if (num_integration_segments_ <= 0)
-    FOUR_C_THROW("Invalid number of integration segments per element!");
-
-  /****************************************************************************/
-  num_gp_s_ = beam_potential_params_list.get<int>("NUM_GAUSSPOINTS");
-
-  if (num_gp_s_ <= 0) FOUR_C_THROW("Invalid number of Gauss points per integration segment!");
-
-  /****************************************************************************/
-  use_fad_ = beam_potential_params_list.get<bool>("AUTOMATIC_DIFFERENTIATION");
-
-  /****************************************************************************/
-  choice_master_slave_ = Teuchos::getIntegralValue<BeamPotential::MasterSlaveChoice>(
-      beam_potential_params_list, "CHOICE_MASTER_SLAVE");
-
-  if (choice_master_slave_ == BeamPotential::MasterSlaveChoice::vague)
-  {
-    FOUR_C_THROW("Invalid choice of master and slave!");
-  }
-
-  /****************************************************************************/
-  // check for vtk output which is to be handled by an own writer object
-  visualization_output_ = beam_potential_params_list.sublist("RUNTIME VTK OUTPUT")
-                              .get<bool>("VTK_OUTPUT_BEAM_POTENTIAL");
-
-  // create and initialize parameter container object for runtime output
-  if (visualization_output_)
-  {
-    params_runtime_visualization_output_btb_potential_ =
-        std::make_shared<BeamInteraction::BeamToBeamPotentialRuntimeOutputParams>(restart_time);
-
-    params_runtime_visualization_output_btb_potential_->init(
-        beam_potential_params_list.sublist("RUNTIME VTK OUTPUT"));
-    params_runtime_visualization_output_btb_potential_->setup();
-  }
-
-  /****************************************************************************/
-  potential_reduction_length_ =
-      beam_potential_params_list.get<std::optional<double>>("POTENTIAL_REDUCTION_LENGTH");
-
-  if (potential_reduction_length_.has_value() and potential_reduction_length_.value() <= 0.0)
-    FOUR_C_THROW(
-        "Invalid potential reduction length! Must be positive value or none to deactivate.");
-
-  isinit_ = true;
-}
-
-/*-----------------------------------------------------------------------------------------------*
- *-----------------------------------------------------------------------------------------------*/
-void BeamInteraction::BeamPotentialParams::setup()
-{
-  throw_error_if_not_init();
-
-  // empty for now
-
-  issetup_ = true;
-}
-
-/*-----------------------------------------------------------------------------------------------*
- *-----------------------------------------------------------------------------------------------*/
-void BeamInteraction::BeamPotentialParams::throw_error_if_not_init_and_setup() const
-{
-  if (!is_init() or !is_setup()) FOUR_C_THROW("Call init() and setup() first!");
-}
-
-/*-----------------------------------------------------------------------------------------------*
- *-----------------------------------------------------------------------------------------------*/
-void BeamInteraction::BeamPotentialParams::throw_error_if_not_init() const
-{
-  if (!is_init()) FOUR_C_THROW("init() has not been called, yet!");
-}
-
+}  // namespace BeamInteraction
 FOUR_C_NAMESPACE_CLOSE

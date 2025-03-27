@@ -26,7 +26,7 @@ namespace Core::Elements
 
 namespace BeamInteraction
 {
-  class BeamPotentialParams;
+  struct BeamPotentialParams;
   class BeamPotentialPair;
 
   namespace SUBMODELEVALUATOR

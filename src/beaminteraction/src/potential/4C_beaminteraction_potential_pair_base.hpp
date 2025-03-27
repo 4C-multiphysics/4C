@@ -33,7 +33,7 @@ namespace Core::Elements
 namespace BeamInteraction
 {
   // forward declaration ...
-  class BeamPotentialParams;
+  struct BeamPotentialParams;
 
 
   /*!

@@ -1,6 +1,15 @@
-<h1 align="center">
-  4C
-</h1>
+<p align="center">
+  <picture>
+    <source
+      srcset="https://raw.githubusercontent.com/4C-multiphysics/4C-design/refs/heads/main/4C-logo/negative-white/4C-logo-landscape_negative.svg"
+      media="(prefers-color-scheme: dark)">
+    <img
+      src="https://raw.githubusercontent.com/4C-multiphysics/4C-design/refs/heads/main/4C-logo/standard-color/4C-logo-landscape_rgb.svg"
+      width="350"
+      title="4C"
+      alt="4C logo">
+  </picture>
+</p>
 
 <div align="center">
 

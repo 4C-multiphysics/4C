@@ -94,8 +94,8 @@ POT_LAW_EXPONENT                6.0
 TYPE                            volume
 CUTOFF_RADIUS                   100
 STRATEGY                        single_length_specific_small_separations_simple
-NUM_INTEGRATION_SEGMENTS        1
-NUM_GAUSSPOINTS                 10
+N_INTEGRATION_SEGMENTS          1
+N_GAUSS_POINTS                  10
 POTENTIAL_REDUCTION_LENGTH      15.0
 ----------------------------------BEAM POTENTIAL/RUNTIME VTK OUTPUT
 VTK_OUTPUT_BEAM_POTENTIAL       yes

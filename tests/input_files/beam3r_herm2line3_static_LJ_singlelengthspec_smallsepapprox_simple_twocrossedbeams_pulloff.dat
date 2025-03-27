@@ -63,8 +63,8 @@ POT_LAW_PREFACTOR               -2.356194490192345e-7 1.8948417228819560e-24
 POT_LAW_EXPONENT                6.0 12.0
 TYPE                            volume
 STRATEGY                        single_length_specific_small_separations_simple
-NUM_INTEGRATION_SEGMENTS        10
-NUM_GAUSSPOINTS                 50
+N_INTEGRATION_SEGMENTS          10
+N_GAUSS_POINTS                  50
 CUTOFF_RADIUS                   1.0e-1
 ----------------------------------BEAM POTENTIAL/RUNTIME VTK OUTPUT
 VTK_OUTPUT_BEAM_POTENTIAL       yes
