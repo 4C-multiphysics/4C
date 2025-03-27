@@ -898,11 +898,11 @@ double XFEM::MeshCouplingFPI::compute_jacobianand_pressure(
     {
       const size_t PARENT_NEN = Core::FE::num_nodes<Core::FE::CellType::hex8>;
       Core::LinAlg::Matrix<PARENT_NEN, 1> pfunc_loc(
-          true);  // derivatives of parent element shape functions in parent element coordinate
-                  // system
+          Core::LinAlg::Initialization::set_zero);  // derivatives of parent element shape functions
+                                                    // in parent element coordinate system
       Core::LinAlg::Matrix<SLAVE_NUMDOF, PARENT_NEN> pderiv_loc(
-          true);  // derivatives of parent element shape functions in parent element coordinate
-                  // system
+          Core::LinAlg::Initialization::set_zero);  // derivatives of parent element shape functions
+                                                    // in parent element coordinate system
 
       // evaluate derivatives of parent element shape functions at current integration point in
       // parent coordinate system
@@ -926,9 +926,9 @@ double XFEM::MeshCouplingFPI::compute_jacobianand_pressure(
       Core::LinAlg::Matrix<SLAVE_NUMDOF, SLAVE_NUMDOF> Jmat;
 
       Core::LinAlg::Matrix<SLAVE_NUMDOF, PARENT_NEN> xrefe(
-          true);  // material coord. of parent element
+          Core::LinAlg::Initialization::set_zero);  // material coord. of parent element
       Core::LinAlg::Matrix<SLAVE_NUMDOF, PARENT_NEN> xcurr(
-          true);  // current  coord. of parent element
+          Core::LinAlg::Initialization::set_zero);  // current  coord. of parent element
 
       // update element geometry of parent element
       {

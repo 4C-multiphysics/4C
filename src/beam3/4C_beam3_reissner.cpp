@@ -308,8 +308,8 @@ Discret::Elements::Beam3r::Beam3r(int id, int owner)
       ekintorsion_(0.0),
       ekinbending_(0.0),
       ekintrans_(0.0),
-      l_(true),
-      p_(true)
+      l_(Core::LinAlg::Initialization::set_zero),
+      p_(Core::LinAlg::Initialization::set_zero)
 {
   return;
 }

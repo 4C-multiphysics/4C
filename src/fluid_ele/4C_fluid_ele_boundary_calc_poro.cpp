@@ -557,9 +557,11 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
     Core::LinAlg::Matrix<nenparent, 1> pfunct(
         Core::LinAlg::Initialization::set_zero);  // parent element shape function
     Core::LinAlg::Matrix<nsd_, nenparent> pderiv(
-        true);  // derivatives of parent element shape functions in interface coordinate system
+        Core::LinAlg::Initialization::set_zero);  // derivatives of parent element shape functions
+                                                  // in interface coordinate system
     Core::LinAlg::Matrix<nsd_, nenparent> pderiv_loc(
-        true);  // derivatives of parent element shape functions in parent element coordinate system
+        Core::LinAlg::Initialization::set_zero);  // derivatives of parent element shape functions
+                                                  // in parent element coordinate system
 
     // coordinates of the current integration point in parent coordinate system
     for (int idim = 0; idim < nsd_; idim++)

@@ -942,10 +942,12 @@ XFEM::XfluidStd::XfluidStd(
                                                               //!  (=x_Lagr(t^n+1))
                 std::vector<Core::LinAlg::Matrix<nsd, nsd>>(oldVectors_.size(),
                     Core::LinAlg::Matrix<nsd, nsd>(
-                        true)),  //! velocity gradient at point x (=x_Lagr(t^n+1))
+                        Core::LinAlg::Initialization::set_zero)),  //! velocity gradient at point x
+                                                                   //! (=x_Lagr(t^n+1))
                 std::vector<Core::LinAlg::Matrix<1, nsd>>(oldVectors_.size(),
                     Core::LinAlg::Matrix<1, nsd>(
-                        true)),             //! pressure gradient at point x (=x_Lagr(t^n+1))
+                        Core::LinAlg::Initialization::set_zero)),  //! pressure gradient at point x
+                                                                   //! (=x_Lagr(t^n+1))
                 nodedispnp,                 //!  displacement at point x (=x_Lagr(t^n+1))
                 dummyStartpoint,            // dummy-startpoint
                 1,                          // searchedProcs
@@ -1347,7 +1349,8 @@ void XFEM::XfluidStd::project_and_trackback(TimeIntData& data)
   Core::LinAlg::Matrix<3, 1> proj_x_np(
       Core::LinAlg::Initialization::set_zero);  ///< projected point at t^(n+1)
   Core::LinAlg::Matrix<3, 1> proj_x_n(
-      true);  ///< projected point at t^n (tracked back along structural movement)
+      Core::LinAlg::Initialization::set_zero);  ///< projected point at t^n (tracked back along
+                                                ///< structural movement)
   Core::LinAlg::Matrix<3, 1> start_point(
       Core::LinAlg::Initialization::set_zero);  ///< final start point for SemiLagrange algo
   int proj_sid = -1;                            ///< id of side that contains the projected point
@@ -1355,7 +1358,8 @@ void XFEM::XfluidStd::project_and_trackback(TimeIntData& data)
       proj_lineid;  ///< std::map< sorted nids, global side IDs >
   // smallest distance w.r.t side
   Core::LinAlg::Matrix<2, 1> proj_xi_side(
-      true);  ///< local coordinates of projected point if projection w.r.t side
+      Core::LinAlg::Initialization::set_zero);  ///< local coordinates of projected point if
+                                                ///< projection w.r.t side
   // smallest distance w.r.t line
   std::map<std::vector<int>, std::vector<double>>
       proj_xi_line;  ///< std::map<sorted nids,local line coordinates w.r.t lines of different
@@ -1803,7 +1807,8 @@ bool XFEM::XfluidStd::project_to_surface(
       proj_lineid;  ///< std::map< sorted nids, global side IDs >
   // smallest distance w.r.t side
   Core::LinAlg::Matrix<2, 1> proj_xi_side(
-      true);  ///< local coordinates of projected point if projection w.r.t side
+      Core::LinAlg::Initialization::set_zero);  ///< local coordinates of projected point if
+                                                ///< projection w.r.t side
   // smallest distance w.r.t line
   std::map<std::vector<int>, std::vector<double>>
       proj_xi_line;  ///< std::map<sorted nids,local line coordinates w.r.t lines of different

@@ -2500,7 +2500,7 @@ void Discret::Elements::Beam3k::calc_lin_v_thetaperp_s_moment(
 
   // second summand
   Core::LinAlg::Matrix<3, 6 * nnodecl + BEAM3K_COLLOCATION_POINTS, double> lin_tangent_tilde_s(
-      true);
+      Core::LinAlg::Initialization::set_zero);
 
   calc_lin_tangent_tilde_s<nnodecl>(lin_tangent_tilde_s, N_s, N_ss, g_1, g_1_s, r_s, r_ss, abs_r_s);
 
@@ -2509,7 +2509,7 @@ void Discret::Elements::Beam3k::calc_lin_v_thetaperp_s_moment(
 
   Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS,
       6 * nnodecl + BEAM3K_COLLOCATION_POINTS, double>
-      second_summand(true);
+      second_summand(Core::LinAlg::Initialization::set_zero);
 
   second_summand.multiply(auxmatrix, lin_tangent_tilde_s);
 
@@ -2587,7 +2587,7 @@ void Discret::Elements::Beam3k::calc_lin_v_thetapar_s_moment(
 
   Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS,
       6 * nnodecl + BEAM3K_COLLOCATION_POINTS, double>
-      second_summand(true);
+      second_summand(Core::LinAlg::Initialization::set_zero);
 
   second_summand.multiply(auxmatrix, lin_g_1_s);
 

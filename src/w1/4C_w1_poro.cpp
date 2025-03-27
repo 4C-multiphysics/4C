@@ -20,7 +20,10 @@ FOUR_C_NAMESPACE_OPEN
 
 template <Core::FE::CellType distype>
 Discret::Elements::Wall1Poro<distype>::Wall1Poro(int id, int owner)
-    : Discret::Elements::Wall1(id, owner), intpoints_(distype), weights_(true), myknots_(numdim_)
+    : Discret::Elements::Wall1(id, owner),
+      intpoints_(distype),
+      weights_(Core::LinAlg::Initialization::set_zero),
+      myknots_(numdim_)
 {
   numgpt_ = intpoints_.num_points();
 

@@ -564,7 +564,7 @@ Mat::PAR::InelasticDefgradPolyIntercalFracAniso::InelasticDefgradPolyIntercalFra
  *--------------------------------------------------------------------*/
 Mat::PAR::InelasticDeformationDirection::InelasticDeformationDirection(
     std::vector<double> growthdirection)
-    : growth_dir_mat_(true)
+    : growth_dir_mat_(Core::LinAlg::Initialization::set_zero)
 {
   if (growthdirection.size() != 3)
   {
@@ -1568,7 +1568,7 @@ Mat::PAR::InelasticSource Mat::InelasticDefgradNoGrowth::get_inelastic_source()
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
 Mat::InelasticDefgradNoGrowth::InelasticDefgradNoGrowth(Core::Mat::PAR::Parameter* params)
-    : InelasticDefgradFactors(params), identity_(true)
+    : InelasticDefgradFactors(params), identity_(Core::LinAlg::Initialization::set_zero)
 {
   // add 1.0 to main diagonal
   identity_(0, 0) = identity_(1, 1) = identity_(2, 2) = 1.0;
@@ -1602,7 +1602,9 @@ Mat::PAR::InelasticSource Mat::InelasticDefgradTimeFunct::get_inelastic_source()
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
 Mat::InelasticDefgradTimeFunct::InelasticDefgradTimeFunct(Core::Mat::PAR::Parameter* params)
-    : InelasticDefgradFactors(params), funct_value_(0.0), identity_(true)
+    : InelasticDefgradFactors(params),
+      funct_value_(0.0),
+      identity_(Core::LinAlg::Initialization::set_zero)
 {
   // add 1.0 to main diagonal
   identity_(0, 0) = identity_(1, 1) = identity_(2, 2) = 1.0;
@@ -1662,7 +1664,8 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::InelasticDefgradTransvIsotrop
 
   // default value for the current deformation gradient: zero tensor \f$ \boldsymbol{0} f$ (to make
   // sure that the inverse inelastic deformation gradient is evaluated in the first method call)
-  time_step_quantities_.current_defgrad_.resize(1, Core::LinAlg::Matrix<3, 3>{true});
+  time_step_quantities_.current_defgrad_.resize(
+      1, Core::LinAlg::Matrix<3, 3>{Core::LinAlg::Initialization::set_zero});
 }
 
 
@@ -2629,7 +2632,7 @@ void Mat::InelasticDefgradTransvIsotropElastViscoplast::unpack_inelastic(
   // gradient is evaluated fully after the restart
   time_step_quantities_.current_defgrad_.resize(
       time_step_quantities_.last_substep_plastic_defgrd_inverse_.size(),
-      Core::LinAlg::Matrix<3, 3>{true});
+      Core::LinAlg::Matrix<3, 3>{Core::LinAlg::Initialization::set_zero});
 
 
   // now that the fiber direction is available, we set the material-dependent constant tensors

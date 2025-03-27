@@ -751,7 +751,7 @@ ScaTra::MortarCellCalcElchSTIThermo<distype_s, distype_m>::MortarCellCalcElchSTI
       myelch::MortarCellCalcElch(couplingtype, lmside, numdofpernode_slave, numdofpernode_master),
 
       // initialize member variable
-      etempnp_slave_(true)
+      etempnp_slave_(Core::LinAlg::Initialization::set_zero)
 {
 }
 

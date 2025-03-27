@@ -82,12 +82,12 @@ Thermo::TemperBoundaryImplInterface* Thermo::TemperBoundaryImplInterface::impl(
 template <Core::FE::CellType distype>
 Thermo::TemperBoundaryImpl<distype>::TemperBoundaryImpl(int numdofpernode)
     : numdofpernode_(numdofpernode),
-      xyze_(true),
-      xsi_(true),
-      funct_(true),
-      deriv_(true),
-      derxy_(true),
-      normal_(true),
+      xyze_(Core::LinAlg::Initialization::set_zero),
+      xsi_(Core::LinAlg::Initialization::set_zero),
+      funct_(Core::LinAlg::Initialization::set_zero),
+      deriv_(Core::LinAlg::Initialization::set_zero),
+      derxy_(Core::LinAlg::Initialization::set_zero),
+      normal_(Core::LinAlg::Initialization::set_zero),
       fac_(0.0),
       normalfac_(1.0)
 {
@@ -754,7 +754,7 @@ void Thermo::TemperBoundaryImpl<distype>::calculate_nln_convection_fint_cond(
     Core::LinAlg::Matrix<(nsd_ + 1), (nsd_ + 1) * nen_> ddet(
         Core::LinAlg::Initialization::set_zero);  // (3x12)
     Core::LinAlg::Matrix<((nsd_ + 1) * (nsd_ + 1) * nen_), (nsd_ + 1) * nen_> ddet2(
-        true);  // (3*2*4x2*4)=(24x8)
+        Core::LinAlg::Initialization::set_zero);  // (3*2*4x2*4)=(24x8)
     Core::LinAlg::Matrix<((nsd_ + 1) * nen_), 1> jacobi_deriv(
         Core::LinAlg::Initialization::set_zero);  // (3*4x1)=(12x1)
 

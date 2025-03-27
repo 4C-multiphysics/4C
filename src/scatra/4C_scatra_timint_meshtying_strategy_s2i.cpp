@@ -4310,12 +4310,12 @@ ScaTra::MortarCellCalc<distype_s, distype_m>::MortarCellCalc(
           Core::LinAlg::Matrix<nen_slave_, 1>(Core::LinAlg::Initialization::set_zero)),
       ephinp_master_(numdofpernode_master,
           Core::LinAlg::Matrix<nen_master_, 1>(Core::LinAlg::Initialization::set_zero)),
-      funct_slave_(true),
-      funct_master_(true),
-      shape_lm_slave_(true),
-      shape_lm_master_(true),
-      test_lm_slave_(true),
-      test_lm_master_(true)
+      funct_slave_(Core::LinAlg::Initialization::set_zero),
+      funct_master_(Core::LinAlg::Initialization::set_zero),
+      shape_lm_slave_(Core::LinAlg::Initialization::set_zero),
+      shape_lm_master_(Core::LinAlg::Initialization::set_zero),
+      test_lm_slave_(Core::LinAlg::Initialization::set_zero),
+      test_lm_master_(Core::LinAlg::Initialization::set_zero)
 {
   // safety check
   if (nsd_slave_ != 2 or nsd_master_ != 2)

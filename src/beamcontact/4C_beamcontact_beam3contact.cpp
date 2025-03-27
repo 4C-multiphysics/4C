@@ -5488,10 +5488,10 @@ void CONTACT::Beam3contact<numnodes, numnodalvalues>::fd_check(
   stiffmatrix_dummy.put_scalar(0.0);
 
   Core::LinAlg::Matrix<2 * 3 * numnodes * numnodalvalues, 2 * 3 * numnodes * numnodalvalues>
-      stiffmatrix_fd(true);
+      stiffmatrix_fd(Core::LinAlg::Initialization::set_zero);
 
   Core::LinAlg::Matrix<2 * 3 * numnodes * numnodalvalues, 2 * 3 * numnodes * numnodalvalues>
-      fint2_mat(true);
+      fint2_mat(Core::LinAlg::Initialization::set_zero);
 
   double delta = 1.0e-10;
 

@@ -100,7 +100,7 @@ namespace Discret::Elements
 
     /// EAS matrix K_{d alpha}
     Core::LinAlg::Matrix<Core::FE::num_nodes<celltype> * Core::FE::dim<celltype>, num_eas> Kda{
-        true};
+        Core::LinAlg::Initialization::set_zero};
 
     /// EAS enhancement vector s
     Core::LinAlg::Matrix<num_eas, 1> s{Core::LinAlg::Initialization::set_zero};
@@ -258,7 +258,7 @@ namespace Discret::Elements
   {
     Core::LinAlg::Matrix<Discret::Elements::num_str<celltype>,
         Discret::Elements::EasTypeToNumEas<eastype>::num_eas>
-        M(true);
+        M(Core::LinAlg::Initialization::set_zero);
 
     switch (eastype)
     {
@@ -511,7 +511,7 @@ namespace Discret::Elements
     // invert the matrix. At this point, this is still Kaa and NOT invKaa.
     Core::LinAlg::Matrix<Discret::Elements::num_str<celltype>,
         Discret::Elements::EasTypeToNumEas<eastype>::num_eas>
-        cmatM(true);
+        cmatM(Core::LinAlg::Initialization::set_zero);
     cmatM.multiply(stress.cmat_, Mtilde);
     eas_iteration_data.invKaa.multiply_tn(integration_factor, Mtilde, cmatM, 1.);
 

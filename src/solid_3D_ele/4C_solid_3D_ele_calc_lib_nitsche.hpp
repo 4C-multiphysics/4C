@@ -119,7 +119,7 @@ namespace Discret::Elements
       Core::LinAlg::SerialDenseMatrix& d2_cauchyndir_dd_dd)
   {
     Core::LinAlg::Matrix<9, Core::FE::num_nodes<celltype> * Core::FE::dim<celltype>>
-        d2_cauchyndir_dF_2d_F_dd(false);
+        d2_cauchyndir_dF_2d_F_dd(Core::LinAlg::Initialization::set_zero);
     d2_cauchyndir_dF_2d_F_dd.multiply(d2_cauchyndir_dF2, d_F_dd);
     Internal::multiply_tn(d_F_dd, d2_cauchyndir_dF_2d_F_dd, d2_cauchyndir_dd_dd);
   }

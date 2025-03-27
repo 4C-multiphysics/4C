@@ -248,7 +248,7 @@ void Mat::PlasticLinElast::update()
 
   strainbarplcurr_->resize(histsize);
 
-  const Core::LinAlg::Matrix<NUM_STRESS_3D, 1> emptyvec(true);
+  const Core::LinAlg::Matrix<NUM_STRESS_3D, 1> emptyvec(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < histsize; i++)
   {
     strainplcurr_->at(i) = emptyvec;

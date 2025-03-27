@@ -161,8 +161,8 @@ namespace Discret
           const Core::LinAlg::Matrix<nen, 1>& earterypressure)
       {
         // call base class (scatra) with dummy variable econvelnp
-        const Core::LinAlg::Matrix<nsd, nen> econvelnp(true);
-        const Core::LinAlg::Matrix<nsd, nen> eforcevelocity(true);
+        const Core::LinAlg::Matrix<nsd, nen> econvelnp(Core::LinAlg::Initialization::set_zero);
+        const Core::LinAlg::Matrix<nsd, nen> eforcevelocity(Core::LinAlg::Initialization::set_zero);
         my::set_internal_variables(funct, derxy, ephinp, ephin, econvelnp, ehist, eforcevelocity);
 
         static Core::LinAlg::Matrix<nsd, 1> pressuregrad(Core::LinAlg::Initialization::set_zero);

@@ -52,22 +52,22 @@ Discret::Elements::FluidEleCalcXFEM<distype>::FluidEleCalcXFEM()
       viscaf_slave_(0.0),
       gamma_m_(0.0),
       gamma_s_(0.0),
-      evelaf_(true),
-      epreaf_(true),
-      eveln_(true),
-      epren_(true),
-      ivelint_jump_(true),
-      itraction_jump_(true),
-      proj_tangential_(true),
-      lb_proj_matrix_(true),
-      ivelintn_jump_(true),
-      itractionn_jump_(true),
-      velint_s_(true),
-      velintn_s_(true),
-      rst_(true),
-      normal_(true),
-      x_side_(true),
-      x_gp_lin_(true)
+      evelaf_(Core::LinAlg::Initialization::set_zero),
+      epreaf_(Core::LinAlg::Initialization::set_zero),
+      eveln_(Core::LinAlg::Initialization::set_zero),
+      epren_(Core::LinAlg::Initialization::set_zero),
+      ivelint_jump_(Core::LinAlg::Initialization::set_zero),
+      itraction_jump_(Core::LinAlg::Initialization::set_zero),
+      proj_tangential_(Core::LinAlg::Initialization::set_zero),
+      lb_proj_matrix_(Core::LinAlg::Initialization::set_zero),
+      ivelintn_jump_(Core::LinAlg::Initialization::set_zero),
+      itractionn_jump_(Core::LinAlg::Initialization::set_zero),
+      velint_s_(Core::LinAlg::Initialization::set_zero),
+      velintn_s_(Core::LinAlg::Initialization::set_zero),
+      rst_(Core::LinAlg::Initialization::set_zero),
+      normal_(Core::LinAlg::Initialization::set_zero),
+      x_side_(Core::LinAlg::Initialization::set_zero),
+      x_gp_lin_(Core::LinAlg::Initialization::set_zero)
 {
   // we use the standard parameter list here, since there are not any additional
   // xfem-specific parameters required in this derived class
@@ -1141,8 +1141,9 @@ namespace Discret
             // compute errors
 
             Core::LinAlg::Matrix<nsd_, 1> u_analyt(
-                true);  // boundary condition to enforce (xfsi),
-                        // interfacial jump to enforce (fluidfluid)
+                Core::LinAlg::Initialization::set_zero);  // boundary condition to enforce (xfsi),
+                                                          // interfacial jump to enforce
+                                                          // (fluidfluid)
             Core::LinAlg::Matrix<nsd_, nsd_> grad_u_analyt(Core::LinAlg::Initialization::set_zero);
             p_analyt = 0.0;
 
@@ -4042,7 +4043,8 @@ namespace Discret
           if (cond->parameters().get<int>("NUMDOF") == 6)
           {
             Core::LinAlg::Matrix<6, 1> fulltraction(
-                true);  // sigma_xx, sigma_yy, sigma_zz, sigma_xy, sigma_yz, sigma_zx
+                Core::LinAlg::Initialization::set_zero);  // sigma_xx, sigma_yy, sigma_zz, sigma_xy,
+                                                          // sigma_yz, sigma_zx
             coupling->evaluate_coupling_conditions(ivelint_jump, fulltraction, x, cond);
             itraction_jump(0, 0) = fulltraction(0, 0) * normal(0, 0) +
                                    fulltraction(3, 0) * normal(1, 0) +

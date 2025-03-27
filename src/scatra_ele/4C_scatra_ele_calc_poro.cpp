@@ -48,8 +48,8 @@ template <Core::FE::CellType distype>
 Discret::Elements::ScaTraEleCalcPoro<distype>::ScaTraEleCalcPoro(
     const int numdofpernode, const int numscal, const std::string& disname)
     : Discret::Elements::ScaTraEleCalc<distype>::ScaTraEleCalc(numdofpernode, numscal, disname),
-      xyze0_(true),
-      eporosity_(true),
+      xyze0_(Core::LinAlg::Initialization::set_zero),
+      eporosity_(Core::LinAlg::Initialization::set_zero),
       isnodalporosity_(false)
 {
   // initialization of diffusion manager (override initialization in base class)

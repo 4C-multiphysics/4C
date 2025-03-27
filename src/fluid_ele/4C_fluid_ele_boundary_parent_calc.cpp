@@ -1391,13 +1391,15 @@ void Discret::Elements::FluidBoundaryParent<distype>::slip_supp_bc(
   Core::LinAlg::Matrix<nsd, nsd> pxjm(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Matrix<nsd, nsd> pxji(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Matrix<nsd, 1> boundaryNormal(
-      true);  // outward unit ('surface/line') normal of boundary element at integration point
+      Core::LinAlg::Initialization::set_zero);  // outward unit ('surface/line') normal of boundary
+                                                // element at integration point
   Core::LinAlg::Matrix<nsd, piel> pderxy(
       Core::LinAlg::Initialization::set_zero);  // nabla of parent element at integration point
   Core::LinAlg::Matrix<nsd, nsd> pvderxyaf(
       Core::LinAlg::Initialization::set_zero);  // nabla*u of parent element at integration point
   Core::LinAlg::Matrix<1, 1> pressint(
-      true);  // pressure of boundary element at integration point (N_C * p_C)
+      Core::LinAlg::Initialization::set_zero);  // pressure of boundary element at integration point
+                                                // (N_C * p_C)
 
   Core::LinAlg::Matrix<bnsd, 1> xsi(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Matrix<biel, 1> funct(Core::LinAlg::Initialization::set_zero);
@@ -1715,15 +1717,18 @@ void Discret::Elements::FluidBoundaryParent<distype>::navier_slip_bc(
   Core::LinAlg::Matrix<nsd, nsd> pxjm(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Matrix<nsd, nsd> pxji(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Matrix<nsd, 1> boundaryNormal(
-      true);  // outward unit ('surface/line') normal of boundary element at integration point
+      Core::LinAlg::Initialization::set_zero);  // outward unit ('surface/line') normal of boundary
+                                                // element at integration point
   Core::LinAlg::Matrix<nsd, piel> pderxy(
       Core::LinAlg::Initialization::set_zero);  // nabla of parent element at integration point
   Core::LinAlg::Matrix<nsd, nsd> pvderxyaf(
       Core::LinAlg::Initialization::set_zero);  // nabla*u of parent element at integration point
   Core::LinAlg::Matrix<1, 1> pressint(
-      true);  // pressure of boundary element at integration point (N_C * p_C)
+      Core::LinAlg::Initialization::set_zero);  // pressure of boundary element at integration point
+                                                // (N_C * p_C)
   Core::LinAlg::Matrix<nsd, 1> pvelint(
-      true);  // velocity of parent element at integration point (N_B * U_B_i)
+      Core::LinAlg::Initialization::set_zero);  // velocity of parent element at integration point
+                                                // (N_B * U_B_i)
 
   Core::LinAlg::Matrix<bnsd, 1> xsi(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Matrix<biel, 1> funct(Core::LinAlg::Initialization::set_zero);

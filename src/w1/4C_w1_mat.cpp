@@ -217,9 +217,10 @@ void Discret::Elements::Wall1::material_response3d_plane(Core::LinAlg::SerialDen
     const int n = 10;
     // working arrays
     Core::LinAlg::Matrix<3, 3> crr(
-        true);  // LHS // constitutive matrix of restraint compo
-                // this matrix needs to be zeroed out for further usage
-                // in case the following while loop is entirely skipped during runtime
+        Core::LinAlg::Initialization::set_zero);  // LHS // constitutive matrix of restraint compo
+                                                  // this matrix needs to be zeroed out for further
+                                                  // usage in case the following while loop is
+                                                  // entirely skipped during runtime
     Core::LinAlg::Matrix<3, 1> rr(
         Core::LinAlg::Initialization::leave_uninitialized);  // RHS // stress residual of restraint
                                                              // compo

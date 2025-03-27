@@ -2275,7 +2275,7 @@ void Discret::Elements::Beam3k::evaluate_point_neumann_eb(Core::LinAlg::SerialDe
     if (not use_fad_)
     {
       Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS, 1, double>
-          disp_totlag_centerline(true);
+          disp_totlag_centerline(Core::LinAlg::Initialization::set_zero);
       std::vector<Core::LinAlg::Matrix<3, 3, double>> triad_mat_cp(BEAM3K_COLLOCATION_POINTS);
       std::vector<Core::LinAlg::Matrix<4, 1>> Qref(BEAM3K_COLLOCATION_POINTS);
 
@@ -2471,7 +2471,10 @@ void Discret::Elements::Beam3k::evaluate_stiff_matrix_analytic_from_point_neuman
 
   Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS,
       6 * nnodecl + BEAM3K_COLLOCATION_POINTS, double>
-      lin_v_thetaperp_moment(true), lin_v_thetapar_moment(true);
+      lin_v_thetaperp_moment(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS,
+      6 * nnodecl + BEAM3K_COLLOCATION_POINTS, double>
+      lin_v_thetapar_moment(Core::LinAlg::Initialization::set_zero);
 
   calc_lin_v_thetaperp_moment<nnodecl>(
       lin_v_thetaperp_moment, N_s, g_1, abs_r_s, spinmatrix_of_moment_ext);
@@ -2501,7 +2504,7 @@ void Discret::Elements::Beam3k::evaluate_line_neumann(Core::LinAlg::SerialDenseV
   if (not use_fad_)
   {
     Core::LinAlg::Matrix<6 * nnodecl + BEAM3K_COLLOCATION_POINTS, 1, double> disp_totlag_centerline(
-        true);
+        Core::LinAlg::Initialization::set_zero);
     std::vector<Core::LinAlg::Matrix<3, 3, double>> triad_mat_cp(BEAM3K_COLLOCATION_POINTS);
     std::vector<Core::LinAlg::Matrix<4, 1>> Qref(BEAM3K_COLLOCATION_POINTS);
 

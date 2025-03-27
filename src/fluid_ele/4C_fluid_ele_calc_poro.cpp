@@ -46,32 +46,32 @@ Discret::Elements::FluidEleCalcPoro<distype>::instance(Core::Utils::SingletonAct
 template <Core::FE::CellType distype>
 Discret::Elements::FluidEleCalcPoro<distype>::FluidEleCalcPoro()
     : Discret::Elements::FluidEleCalc<distype>::FluidEleCalc(),
-      N_XYZ_(true),
-      N_XYZ2_(true),
-      N_XYZ2full_(true),
-      xyze0_(true),
-      xyzeold_(true),
+      N_XYZ_(Core::LinAlg::Initialization::set_zero),
+      N_XYZ2_(Core::LinAlg::Initialization::set_zero),
+      N_XYZ2full_(Core::LinAlg::Initialization::set_zero),
+      xyze0_(Core::LinAlg::Initialization::set_zero),
+      xyzeold_(Core::LinAlg::Initialization::set_zero),
       hist_con_(true),
       porosity_(0.0),
-      grad_porosity_(true),
-      gridvel_int_(true),
-      gridvel_n_int_(true),
-      convvel_(true),
+      grad_porosity_(Core::LinAlg::Initialization::set_zero),
+      gridvel_int_(Core::LinAlg::Initialization::set_zero),
+      gridvel_n_int_(Core::LinAlg::Initialization::set_zero),
+      convvel_(Core::LinAlg::Initialization::set_zero),
       gridvel_div_(0.0),
       J_(0.0),
       press_(0.0),
       press_dot_(0.0),
-      refgrad_press_(true),
-      mat_reac_tensor_(true),
-      reac_tensor_(true),
-      reac_tensor_linOD_vel_(true),
-      reac_tensor_linOD_grid_vel_(true),
-      reac_tensor_vel_(true),
-      reac_tensor_gridvel_(true),
-      reac_tensor_convvel_(true),
-      dtau_dphi_(true),
+      refgrad_press_(Core::LinAlg::Initialization::set_zero),
+      mat_reac_tensor_(Core::LinAlg::Initialization::set_zero),
+      reac_tensor_(Core::LinAlg::Initialization::set_zero),
+      reac_tensor_linOD_vel_(Core::LinAlg::Initialization::set_zero),
+      reac_tensor_linOD_grid_vel_(Core::LinAlg::Initialization::set_zero),
+      reac_tensor_vel_(Core::LinAlg::Initialization::set_zero),
+      reac_tensor_gridvel_(Core::LinAlg::Initialization::set_zero),
+      reac_tensor_convvel_(Core::LinAlg::Initialization::set_zero),
+      dtau_dphi_(Core::LinAlg::Initialization::set_zero),
       tau_struct_(0.0),
-      mixres_(true),
+      mixres_(Core::LinAlg::Initialization::set_zero),
       struct_mat_(nullptr),
       const_permeability_(true),
       kintype_(Inpar::Solid::KinemType::vague)
@@ -718,9 +718,9 @@ void Discret::Elements::FluidEleCalcPoro<distype>::sysmat_od(Teuchos::ParameterL
   //------------------------------------------------------------------------
   // definition of matrices
   static Core::LinAlg::Matrix<nen_ * nsd_, nen_ * nsd_> ecoupl_u(
-      true);  // coupling matrix for momentum equation
+      Core::LinAlg::Initialization::set_zero);  // coupling matrix for momentum equation
   static Core::LinAlg::Matrix<nen_, nen_ * nsd_> ecoupl_p(
-      true);  // coupling matrix for continuity equation
+      Core::LinAlg::Initialization::set_zero);  // coupling matrix for continuity equation
   // Core::LinAlg::Matrix<(nsd_ + 1) * nen_, nen_ * nsd_> emesh(true); //
   // linearisation of mesh motion
 

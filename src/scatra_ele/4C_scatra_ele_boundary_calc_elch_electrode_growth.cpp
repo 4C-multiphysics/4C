@@ -45,7 +45,7 @@ Discret::Elements::ScaTraEleBoundaryCalcElchElectrodeGrowth<distype,
     probdim>::ScaTraEleBoundaryCalcElchElectrodeGrowth(const int numdofpernode, const int numscal,
     const std::string& disname)
     : myelectrode::ScaTraEleBoundaryCalcElchElectrode(numdofpernode, numscal, disname),
-      egrowth_(true)
+      egrowth_(Core::LinAlg::Initialization::set_zero)
 {
 }
 

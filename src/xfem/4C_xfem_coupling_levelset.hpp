@@ -371,7 +371,7 @@ namespace XFEM
         if (sliplength != 0.0)
         {
           double sl_visc_fac = sliplength / (kappa_m * visc_m + (1.0 - kappa_m) * visc_s);
-          V2 tmp_itraction(true);
+          V2 tmp_itraction(Core::LinAlg::Initialization::set_zero);
           tmp_itraction.multiply_tn(projection_matrix, itraction);
           // Project this into tangential direction!!!
           ivel.update(sl_visc_fac, tmp_itraction, 1.0);

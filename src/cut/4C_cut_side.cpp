@@ -1634,7 +1634,7 @@ bool Cut::ConcreteSide<probdim, sidetype, num_nodes_side, dim>::is_closer_side(
   Core::LinAlg::Matrix<probdim, 1> ray_dir(Core::LinAlg::Initialization::set_zero);
 
   // get normal of other side at its center
-  Core::LinAlg::Matrix<probdim, 1> t1, t2, n(true);
+  Core::LinAlg::Matrix<probdim, 1> t1, t2, n(Core::LinAlg::Initialization::set_zero);
   other->basis_at_center(t1, t2, n);
 
 

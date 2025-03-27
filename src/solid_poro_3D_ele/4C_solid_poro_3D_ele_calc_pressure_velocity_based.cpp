@@ -237,7 +237,7 @@ namespace
                              Discret::Elements::Internal::num_dim<celltype>,
         Discret::Elements::Internal::num_dim<celltype> *
             Discret::Elements::Internal::num_nodes<celltype>>
-        dInverseDeformationGradientTransposed_dDisp(true);
+        dInverseDeformationGradientTransposed_dDisp(Core::LinAlg::Initialization::set_zero);
     if (kinematictype != Inpar::Solid::KinemType::linear)
     {
       // dF^-T/dus
@@ -293,7 +293,7 @@ namespace
                              Discret::Elements::Internal::num_dim<celltype>,
         Discret::Elements::Internal::num_dim<celltype> *
             Discret::Elements::Internal::num_nodes<celltype>>
-        dInverseDeformationGradient_dDisp_Gradp(true);
+        dInverseDeformationGradient_dDisp_Gradp(Core::LinAlg::Initialization::set_zero);
     if (kinematictype != Inpar::Solid::KinemType::linear)
     {
       for (int i = 0; i < Discret::Elements::Internal::num_dim<celltype>; i++)
@@ -707,7 +707,8 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
 
         Core::LinAlg::Matrix<num_dim_, num_dim_> reatensor(Core::LinAlg::Initialization::set_zero);
         Core::LinAlg::Matrix<num_dim_, num_dim_> linreac_dporosity(
-            true);  // Derivative of the material reaction tensor w.r.t. the porosity
+            Core::LinAlg::Initialization::set_zero);  // Derivative of the material reaction tensor
+                                                      // w.r.t. the porosity
         Core::LinAlg::Matrix<num_dim_, 1> rea_fluid_vel(Core::LinAlg::Initialization::set_zero);
         Core::LinAlg::Matrix<num_dim_, 1> rea_disp_vel(Core::LinAlg::Initialization::set_zero);
 

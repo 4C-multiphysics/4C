@@ -125,7 +125,7 @@ Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_derivatives_of_plastic_stra
   if (equiv_plastic_strain < 0.0)
   {
     err_status = Mat::ViscoplastErrorType::NegativePlasticStrain;
-    return Core::LinAlg::Matrix<2, 1>{true};
+    return Core::LinAlg::Matrix<2, 1>{Core::LinAlg::Initialization::set_zero};
   }
 
   // extraction of the yield strength from the plastic strain and the material parameters
@@ -164,7 +164,7 @@ Mat::Viscoplastic::ReformulatedJohnsonCook::evaluate_derivatives_of_plastic_stra
         (log_substep && (log_dt + log_deriv_sigma > 2.0e30) && (log_dt + log_deriv_eps > 2.0e30)))
     {
       err_status = Mat::ViscoplastErrorType::OverflowError;
-      return Core::LinAlg::Matrix<2, 1>{true};
+      return Core::LinAlg::Matrix<2, 1>{Core::LinAlg::Initialization::set_zero};
     }
 
     // compute the exact derivatives using these logarithms

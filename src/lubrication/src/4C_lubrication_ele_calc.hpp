@@ -406,7 +406,11 @@ namespace Discret
     class LubricationEleInternalVariableManager
     {
      public:
-      LubricationEleInternalVariableManager() : prenp_(0.0), gradpre_(true) { return; }
+      LubricationEleInternalVariableManager()
+          : prenp_(0.0), gradpre_(Core::LinAlg::Initialization::set_zero)
+      {
+        return;
+      }
 
       virtual ~LubricationEleInternalVariableManager() = default;
 

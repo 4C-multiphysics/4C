@@ -52,8 +52,8 @@ Discret::Elements::ScaTraEleBoundaryCalcPoro<distype, probdim>::ScaTraEleBoundar
     const int numdofpernode, const int numscal, const std::string& disname)
     : Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::ScaTraEleBoundaryCalc(
           numdofpernode, numscal, disname),
-      eporosity_(true),
-      eprenp_(true),
+      eporosity_(Core::LinAlg::Initialization::set_zero),
+      eprenp_(Core::LinAlg::Initialization::set_zero),
       isnodalporosity_(false)
 {
   return;

@@ -474,14 +474,14 @@ void Discret::Elements::FluidEleCalcPoroP1<distype>::sysmat_od(Teuchos::Paramete
   //------------------------------------------------------------------------
   // definition of matrices
   static Core::LinAlg::Matrix<nen_ * nsd_, nen_ * nsd_> ecoupl_u(
-      true);  // coupling matrix for momentum equation
+      Core::LinAlg::Initialization::set_zero);  // coupling matrix for momentum equation
   static Core::LinAlg::Matrix<nen_, nen_ * nsd_> ecoupl_p(
-      true);  // coupling matrix for continuity equation
+      Core::LinAlg::Initialization::set_zero);  // coupling matrix for continuity equation
 
   static Core::LinAlg::Matrix<nen_ * nsd_, nen_> ecouplp1_u(
-      true);  // coupling matrix for momentum equation
+      Core::LinAlg::Initialization::set_zero);  // coupling matrix for momentum equation
   static Core::LinAlg::Matrix<nen_, nen_> ecouplp1_p(
-      true);  // coupling matrix for continuity equation
+      Core::LinAlg::Initialization::set_zero);  // coupling matrix for continuity equation
 
   ecoupl_u.clear();
   ecoupl_p.clear();

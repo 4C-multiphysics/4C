@@ -792,10 +792,10 @@ void Discret::Elements::Wall1PoroP1<distype>::gauss_point_loop_p1_od(Teuchos::Pa
   // in case of prestressing, build defgrd wrt to last stored configuration
   // CAUTION: defgrd(true): filled with zeros!
   Core::LinAlg::Matrix<Base::numdim_, Base::numdim_> defgrd(
-      true);  //  deformation gradient evaluated at gauss point
+      Core::LinAlg::Initialization::set_zero);  //  deformation gradient evaluated at gauss point
   Core::LinAlg::Matrix<Base::numnod_, 1> shapefct;  //  shape functions evaluated at gauss point
   Core::LinAlg::Matrix<Base::numdim_, Base::numnod_> deriv(
-      true);  //  first derivatives at gausspoint w.r.t. r,s,t
+      Core::LinAlg::Initialization::set_zero);  //  first derivatives at gausspoint w.r.t. r,s,t
 
   for (int gp = 0; gp < Base::numgpt_; ++gp)
   {

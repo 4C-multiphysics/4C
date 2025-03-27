@@ -35,11 +35,11 @@ FOUR_C_NAMESPACE_OPEN
 template <Core::FE::CellType distype>
 Discret::Elements::FluidBoundaryImpl<distype>::FluidBoundaryImpl()
     :  // Discret::Elements::FluidBoundaryInterface(),
-      xyze_(true),
-      funct_(true),
-      deriv_(true),
-      unitnormal_(true),
-      velint_(true),
+      xyze_(Core::LinAlg::Initialization::set_zero),
+      funct_(Core::LinAlg::Initialization::set_zero),
+      deriv_(Core::LinAlg::Initialization::set_zero),
+      unitnormal_(Core::LinAlg::Initialization::set_zero),
+      velint_(Core::LinAlg::Initialization::set_zero),
       drs_(0.0),
       fac_(0.0),
       visc_(0.0),

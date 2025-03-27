@@ -293,9 +293,12 @@ void Mat::Robinson::update()
   strainplcurr_->resize(numgp);
   backstresscurr_->resize(numgp);
 
-  const Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> emptymat(true);
-  const Core::LinAlg::Matrix<2 * Mat::NUM_STRESS_3D, 1> emptymat1(true);
-  const Core::LinAlg::Matrix<2 * Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> emptymat2(true);
+  const Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> emptymat(
+      Core::LinAlg::Initialization::set_zero);
+  const Core::LinAlg::Matrix<2 * Mat::NUM_STRESS_3D, 1> emptymat1(
+      Core::LinAlg::Initialization::set_zero);
+  const Core::LinAlg::Matrix<2 * Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> emptymat2(
+      Core::LinAlg::Initialization::set_zero);
 
   for (int i = 0; i < numgp; i++)
   {

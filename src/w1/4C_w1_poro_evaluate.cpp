@@ -1321,10 +1321,10 @@ void Discret::Elements::Wall1Poro<distype>::gauss_point_loop_od(Teuchos::Paramet
   // in case of prestressing, build defgrd wrt to last stored configuration
   // CAUTION: defgrd(true): filled with zeros!
   Core::LinAlg::Matrix<numdim_, numdim_> defgrd(
-      true);                                  //  deformation gradient evaluated at gauss point
-  Core::LinAlg::Matrix<numnod_, 1> shapefct;  //  shape functions evaluated at gauss point
+      Core::LinAlg::Initialization::set_zero);  //  deformation gradient evaluated at gauss point
+  Core::LinAlg::Matrix<numnod_, 1> shapefct;    //  shape functions evaluated at gauss point
   Core::LinAlg::Matrix<numdim_, numnod_> deriv(
-      true);  //  first derivatives at gausspoint w.r.t. r,s,t
+      Core::LinAlg::Initialization::set_zero);  //  first derivatives at gausspoint w.r.t. r,s,t
   // Core::LinAlg::Matrix<numdim_,1> xsi;
   for (int gp = 0; gp < numgpt_; ++gp)
   {
@@ -1424,10 +1424,10 @@ void Discret::Elements::Wall1Poro<distype>::gauss_point_loop_od_pressure_based(
   // in case of prestressing, build defgrd wrt to last stored configuration
   // CAUTION: defgrd(true): filled with zeros!
   Core::LinAlg::Matrix<numdim_, numdim_> defgrd(
-      true);                                  //  deformation gradient evaluated at gauss point
-  Core::LinAlg::Matrix<numnod_, 1> shapefct;  //  shape functions evaluated at gauss point
+      Core::LinAlg::Initialization::set_zero);  //  deformation gradient evaluated at gauss point
+  Core::LinAlg::Matrix<numnod_, 1> shapefct;    //  shape functions evaluated at gauss point
   Core::LinAlg::Matrix<numdim_, numnod_> deriv(
-      true);  //  first derivatives at gausspoint w.r.t. r,s,t
+      Core::LinAlg::Initialization::set_zero);  //  first derivatives at gausspoint w.r.t. r,s,t
 
   // Initialize
   const int numfluidphases = fluidmulti_mat_->num_fluid_phases();

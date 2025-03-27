@@ -248,13 +248,13 @@ namespace GEOMETRYPAIR
 
     // Get the derivatives of the shape functions w.r.t to the parameter coordinates
     Core::LinAlg::Matrix<Volume::element_dim_, Volume::n_nodes_ * Volume::n_val_, ScalarTypeXi>
-        dNdxi(true);
+        dNdxi(Core::LinAlg::Initialization::set_zero);
     GEOMETRYPAIR::EvaluateShapeFunction<Volume>::evaluate_deriv1(
         dNdxi, xi, q_volume.shape_function_data_);
 
     // Transform to derivatives w.r.t physical coordinates
     Core::LinAlg::Matrix<Volume::element_dim_, Volume::n_nodes_ * Volume::n_val_, ScalarTypeXi>
-        dNdX(true);
+        dNdX(Core::LinAlg::Initialization::set_zero);
     for (unsigned int i_row = 0; i_row < 3; i_row++)
       for (unsigned int i_col = 0; i_col < Volume::n_nodes_ * Volume::n_val_; i_col++)
         for (unsigned int i_sum = 0; i_sum < 3; i_sum++)

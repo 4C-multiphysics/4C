@@ -144,7 +144,8 @@ void XFEM::XfluidSemiLagrange::compute(
           Core::Elements::Element* initial_ele =
               nullptr;  // pointer to the element where start point lies in
           Core::LinAlg::Matrix<nsd, 1> initial_xi(
-              true);  // local transformed coordinates of x w.r.t found ele
+              Core::LinAlg::Initialization::set_zero);  // local transformed coordinates of x w.r.t
+                                                        // found ele
 
           // set the element pointer where the initial point lies in!
           element_search(initial_ele, data->initialpoint_, initial_xi, initial_elefound);
@@ -213,7 +214,8 @@ void XFEM::XfluidSemiLagrange::compute(
           Core::Elements::Element* ele =
               nullptr;  // pointer to the element where start point lies in
           Core::LinAlg::Matrix<nsd, 1> xi(
-              true);  // local transformed coordinates of x w.r.t found ele
+              Core::LinAlg::Initialization::set_zero);  // local transformed coordinates of x w.r.t
+                                                        // found ele
           Core::LinAlg::Matrix<nsd, 1> vel(
               Core::LinAlg::Initialization::set_zero);  // velocity of the start point approximation
 
@@ -288,10 +290,11 @@ void XFEM::XfluidSemiLagrange::compute(
             //----------------------------------------------
             // compute the velocity at startpoint
             Core::LinAlg::Matrix<nsd, nsd> vel_deriv(
-                true);          // dummy matrix for velocity derivatives
-            double pres = 0.0;  // dummy variable for pressure
+                Core::LinAlg::Initialization::set_zero);  // dummy matrix for velocity derivatives
+            double pres = 0.0;                            // dummy variable for pressure
             Core::LinAlg::Matrix<1, nsd> pres_deriv(
-                true);  // dummy matrix for the pressure derivatives
+                Core::LinAlg::Initialization::set_zero);  // dummy matrix for the pressure
+                                                          // derivatives
 
             get_gp_values(
                 ele, xi, nds_curr, *dofset_old_, vel, vel_deriv, pres, pres_deriv, veln_, false);
@@ -1272,7 +1275,8 @@ void XFEM::XfluidSemiLagrange::back_tracking(
   // Initialization
 
   Core::LinAlg::Matrix<3, 1> lagrangeanOrigin(
-      true);  // the applied Lagrangean origin (the real computed or an approximated)
+      Core::LinAlg::Initialization::set_zero);  // the applied Lagrangean origin (the real computed
+                                                // or an approximated)
 
   if (strcmp(backTrackingType, static_cast<const char*>("standard")) == 0)
   {
@@ -1316,7 +1320,8 @@ void XFEM::XfluidSemiLagrange::back_tracking(
   std::vector<Core::LinAlg::Matrix<nsd, 1>> veln(oldVectors_.size(),
       Core::LinAlg::Matrix<nsd, 1>(Core::LinAlg::Initialization::set_zero));  // velocity at t^n
   Core::LinAlg::Matrix<nsd, 1> transportVeln(
-      true);  // transport velocity at Lagrangian origin (x_Lagr(t^n))
+      Core::LinAlg::Initialization::set_zero);  // transport velocity at Lagrangian origin
+                                                // (x_Lagr(t^n))
 
 
   //---------------------------------------------------------------------------------

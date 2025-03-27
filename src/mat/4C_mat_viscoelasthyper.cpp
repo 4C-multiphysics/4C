@@ -352,7 +352,7 @@ void Mat::ViscoElastHyper::setup(int numgp, const Core::IO::InputParameterContai
   }
 
   // Initialise/allocate history variables 09/13
-  const Core::LinAlg::Matrix<6, 1> emptyvec(true);
+  const Core::LinAlg::Matrix<6, 1> emptyvec(Core::LinAlg::Initialization::set_zero);
   Core::LinAlg::Matrix<6, 1> idvec(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; ++i) idvec(i) = 1.;
 
@@ -394,8 +394,7 @@ void Mat::ViscoElastHyper::setup(int numgp, const Core::IO::InputParameterContai
     // set true that history size is known
     histfractartstresslastall_ =
         std::make_shared<std::vector<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>>(
-            numgp, std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>(
-                       Core::LinAlg::Initialization::set_zero));
+            numgp, std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>(true));
   }
 
   isinitvis_ = true;
@@ -452,7 +451,7 @@ void Mat::ViscoElastHyper::update()
   }
 
   // initialize current data
-  const Core::LinAlg::Matrix<6, 1> emptyvec(true);
+  const Core::LinAlg::Matrix<6, 1> emptyvec(Core::LinAlg::Initialization::set_zero);
 
   Core::LinAlg::Matrix<6, 1> idvec(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; ++i) idvec(i) = 1.;

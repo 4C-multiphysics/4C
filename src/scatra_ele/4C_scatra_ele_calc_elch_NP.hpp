@@ -381,8 +381,8 @@ namespace Discret
             // empty
 
             //! internal variables evaluated at the Gauss point
-            migvelint_(true),
-            migconv_(true) {};
+            migvelint_(Core::LinAlg::Initialization::set_zero),
+            migconv_(Core::LinAlg::Initialization::set_zero) {};
 
       //! compute and set internal variables for the Nernst-Planck formulation
       void set_internal_variables_elch_np(

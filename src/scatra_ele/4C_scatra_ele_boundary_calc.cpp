@@ -35,23 +35,23 @@ Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::ScaTraEleBoundaryCal
       scatraparamsboundary_(Discret::Elements::ScaTraEleParameterBoundary::instance("scatra")),
       numdofpernode_(numdofpernode),
       numscal_(numscal),
-      xyze_(true),  // initialize to zero
-      weights_(true),
+      xyze_(),  // initialize to zero
+      weights_(),
       myknots_(nsd_ele_),
       mypknots_(nsd_),
       normalfac_(1.0),
       ephinp_(
           numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::set_zero)),
-      edispnp_(true),
+      edispnp_(),
       diffus_(numscal_, 0),
       shcacp_(0.0),
-      xsi_(true),
-      funct_(true),
-      deriv_(true),
-      derxy_(true),
-      normal_(true),
-      velint_(true),
-      metrictensor_(true),
+      xsi_(),
+      funct_(),
+      deriv_(),
+      derxy_(),
+      normal_(),
+      velint_(),
+      metrictensor_(),
       rotsymmpbc_(std::make_shared<FLD::RotationallySymmetricPeriodicBC<distype, nsd_ + 1,
               Discret::Elements::Fluid::none>>())
 {

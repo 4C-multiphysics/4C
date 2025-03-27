@@ -33,17 +33,17 @@ Discret::Elements::LubricationEleCalc<distype, probdim>::LubricationEleCalc(
     const std::string& disname)
     : lubricationpara_(Discret::Elements::LubricationEleParameter::instance(
           disname)),  // standard parameter list
-      eprenp_(true),  // initialized to zero
-      xsi_(true),     // initialized to zero
-      xyze_(true),    // initialized to zero
-      funct_(true),   // initialized to zero
-      deriv_(true),   // initialized to zero
-      derxy_(true),   // initialized to zero
-      xjm_(true),     // initialized to zero
-      xij_(true),     // initialized to zero
-      eheinp_(true),
-      eheidotnp_(true),
-      edispnp_(true),
+      eprenp_(),      // initialized to zero
+      xsi_(),         // initialized to zero
+      xyze_(),        // initialized to zero
+      funct_(),       // initialized to zero
+      deriv_(),       // initialized to zero
+      derxy_(),       // initialized to zero
+      xjm_(),         // initialized to zero
+      xij_(),         // initialized to zero
+      eheinp_(),
+      eheidotnp_(),
+      edispnp_(),
       viscmanager_(
           std::make_shared<LubricationEleViscManager>()),  // viscosity manager for viscosity
       lubricationvarmanager_(std::shared_ptr<LubricationEleInternalVariableManager<nsd_, nen_>>(
@@ -54,8 +54,8 @@ Discret::Elements::LubricationEleCalc<distype, probdim>::LubricationEleCalc(
 
       // heightint_(0.0),
       // heightdotint_(0.0),
-      pflowfac_(true),
-      pflowfacderiv_(true),
+      pflowfac_(),
+      pflowfacderiv_(),
       sflowfac_(0.0),
       sflowfacderiv_(0.0)
 {

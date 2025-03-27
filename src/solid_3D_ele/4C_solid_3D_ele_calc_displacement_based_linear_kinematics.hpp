@@ -107,7 +107,8 @@ namespace Discret::Elements
     {
       // linearization is zero for small displacements
       return Core::LinAlg::Matrix<9,
-          Core::FE::num_nodes<celltype> * Core::FE::dim<celltype> * Core::FE::dim<celltype>>(true);
+          Core::FE::num_nodes<celltype> * Core::FE::dim<celltype> * Core::FE::dim<celltype>>(
+          Core::LinAlg::Initialization::set_zero);
     }
 
     static Core::LinAlg::Matrix<Internal::num_str<celltype>,

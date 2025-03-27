@@ -222,7 +222,7 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPair2D3DMortar<Beam, Solid,
     local_constraint_lin_solid += local_constraint_lin_solid_gp;
 
     Core::LinAlg::Matrix<Mortar::n_dof_, Beam::n_dof_, double> local_constraint_lin_beam_pos_gp(
-        true);
+        Core::LinAlg::Initialization::set_zero);
     local_constraint_lin_beam_pos_gp.multiply_tn(psi, H);
     local_constraint_lin_beam_pos_gp.scale(integration_factor);
     local_constraint_lin_beam_pos += local_constraint_lin_beam_pos_gp;
