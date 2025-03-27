@@ -276,19 +276,19 @@ namespace Discret::Elements
         Internal::make_optional_if<Core::LinAlg::Matrix<9, 1>>(
             linearizations.d_cauchyndir_dd || linearizations.d_cauchyndir_dxi ||
                 linearizations.d2_cauchyndir_dd_dxi,
-            true);
+            Core::LinAlg::Initialization::set_zero);
 
     linearization_dependencies.d2_cauchyndir_dF2 =
         Internal::make_optional_if<Core::LinAlg::Matrix<9, 9>>(
-            linearizations.d2_cauchyndir_dd2, true);
+            linearizations.d2_cauchyndir_dd2, Core::LinAlg::Initialization::set_zero);
 
     linearization_dependencies.d2_cauchyndir_dF_dn =
         Internal::make_optional_if<Core::LinAlg::Matrix<9, 3>>(
-            linearizations.d2_cauchyndir_dd_dn, true);
+            linearizations.d2_cauchyndir_dd_dn, Core::LinAlg::Initialization::set_zero);
 
     linearization_dependencies.d2_cauchyndir_dF_ddir =
         Internal::make_optional_if<Core::LinAlg::Matrix<9, 3>>(
-            linearizations.d2_cauchyndir_dd_ddir, true);
+            linearizations.d2_cauchyndir_dd_ddir, Core::LinAlg::Initialization::set_zero);
 
 
     if (linearizations.d_cauchyndir_dd || linearizations.d2_cauchyndir_dd_dn ||
