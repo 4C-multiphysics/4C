@@ -35,8 +35,8 @@ namespace
     CoupAnisoExpoShearElementFibersTest()
         : anisotropy_(),
           eleFibers_(3),
-          eleTensors_(false),
-          eleTensors_stress_(false),
+          eleTensors_(Core::LinAlg::Initialization::leave_uninitialized),
+          eleTensors_stress_(Core::LinAlg::Initialization::leave_uninitialized),
           eleScalarProducts_(0.0)
     {
       // setup fibers fibers

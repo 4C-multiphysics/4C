@@ -425,7 +425,7 @@ namespace Discret
       )
       {
         // call base class (scatra) with dummy variable
-        const Core::LinAlg::Matrix<nsd, nen> dummy_econv(true);
+        const Core::LinAlg::Matrix<nsd, nen> dummy_econv(Core::LinAlg::Initialization::set_zero);
         my::set_internal_variables(funct, derxy, ephinp, ephin, dummy_econv, ehist, dummy_econv);
 
         // velocity due to the external force
@@ -581,8 +581,9 @@ namespace Discret
               break;
 
             case Mat::ScaTraMatMultiPoro::SpeciesType::species_in_solid:
-              my::convelint_[k] = Core::LinAlg::Matrix<nsd, 1>(0.0);
-              my::conv_[k] = Core::LinAlg::Matrix<nen, 1>(0.0);
+              my::convelint_[k] =
+                  Core::LinAlg::Matrix<nsd, 1>(Core::LinAlg::Initialization::set_zero);
+              my::conv_[k] = Core::LinAlg::Matrix<nen, 1>(Core::LinAlg::Initialization::set_zero);
               my::conv_phi_[k] = 0;
               break;
 
@@ -1311,7 +1312,7 @@ namespace Discret
 
           // gradient of phi w.r.t. reference coordinates
           std::vector<Core::LinAlg::Matrix<nsd, 1>> reffluidgradphi(
-              numfluidphases, Core::LinAlg::Matrix<nsd, 1>(true));
+              numfluidphases, Core::LinAlg::Matrix<nsd, 1>(Core::LinAlg::Initialization::set_zero));
           for (int idof = 0; idof < numfluidphases; ++idof)
             reffluidgradphi[idof].multiply(xjm, fluidgradphi[idof]);
 

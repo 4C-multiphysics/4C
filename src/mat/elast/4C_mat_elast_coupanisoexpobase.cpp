@@ -198,12 +198,7 @@ void Mat::Elastic::CoupAnisoExpoBase::set_fiber_vecs(const Core::LinAlg::Matrix<
 template void Mat::Elastic::CoupAnisoExpoBase::get_derivatives_aniso<double>(
     Core::LinAlg::Matrix<2, 1, double>&, Core::LinAlg::Matrix<3, 1, double>&,
     Core::LinAlg::Matrix<4, 1, double>&, Core::LinAlg::Matrix<3, 3, double> const&, int, int) const;
-template void Mat::Elastic::CoupAnisoExpoBase::get_derivatives_aniso<FAD>(
-    Core::LinAlg::Matrix<2, 1, FAD>&, Core::LinAlg::Matrix<3, 1, FAD>&,
-    Core::LinAlg::Matrix<4, 1, FAD>&, Core::LinAlg::Matrix<3, 3, FAD> const&, int, int) const;
 template void Mat::Elastic::CoupAnisoExpoBase::evaluate_func<double>(
     double&, Core::LinAlg::Matrix<3, 3, double> const&, int, int) const;
-template void Mat::Elastic::CoupAnisoExpoBase::evaluate_func<FAD>(
-    FAD&, Core::LinAlg::Matrix<3, 3, FAD> const&, int, int) const;
 
 FOUR_C_NAMESPACE_CLOSE

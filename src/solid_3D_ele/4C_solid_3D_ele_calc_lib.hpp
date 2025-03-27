@@ -667,7 +667,7 @@ namespace Discret::Elements
     requires(Internal::num_dim<celltype> == 3)
   {
     Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> cauchygreen(
-        false);
+        Core::LinAlg::Initialization::leave_uninitialized);
 
     cauchygreen.multiply_tn(spatial_material_mapping.deformation_gradient_,
         spatial_material_mapping.deformation_gradient_);
