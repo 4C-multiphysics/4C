@@ -1397,45 +1397,46 @@ void Mat::GrowthRemodelElastHyper::evaluate_stress_cmat_membrane(
   dSdiFg.clear();
 
   // 2nd Piola Kirchhoff stress
-  Core::LinAlg::FADMatrix<3, 3> iFgM_fad(true);
+  Core::LinAlg::FADMatrix<3, 3> iFgM_fad(Core::LinAlg::Initialization::set_zero);
   iFgM_fad = iFgM;
   iFgM_fad.diff(0, 9);
-  static Core::LinAlg::FADMatrix<3, 3> CM_fad(true);
+  static Core::LinAlg::FADMatrix<3, 3> CM_fad(Core::LinAlg::Initialization::set_zero);
   CM_fad = CM;
-  static Core::LinAlg::FADMatrix<3, 3> FgM_fad(true);
+  static Core::LinAlg::FADMatrix<3, 3> FgM_fad(Core::LinAlg::Initialization::set_zero);
   FgM_fad.invert(iFgM_fad);
-  static Core::LinAlg::FADMatrix<3, 3> GM_fad(true);
+  static Core::LinAlg::FADMatrix<3, 3> GM_fad(Core::LinAlg::Initialization::set_zero);
   GM_fad = gm_[gp];
-  static Core::LinAlg::FADMatrix<3, 3> iFinM_fad(true);
+  static Core::LinAlg::FADMatrix<3, 3> iFinM_fad(Core::LinAlg::Initialization::set_zero);
   iFinM_fad.multiply_nn(1.0, iFgM_fad, GM_fad, 0.0);
-  static Core::LinAlg::FADMatrix<3, 3> FinM_fad(true);
+  static Core::LinAlg::FADMatrix<3, 3> FinM_fad(Core::LinAlg::Initialization::set_zero);
   FinM_fad.invert(iFinM_fad);
-  Core::LinAlg::FADMatrix<3, 3> CinM_fad(true);
+  Core::LinAlg::FADMatrix<3, 3> CinM_fad(Core::LinAlg::Initialization::set_zero);
   CinM_fad.multiply_tn(1.0, FinM_fad, FinM_fad, 0.0);
 
-  static Core::LinAlg::FADMatrix<3, 3> CeM_fad(true);
-  static Core::LinAlg::FADMatrix<3, 3> tmp_fad(true);
+  static Core::LinAlg::FADMatrix<3, 3> CeM_fad(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::FADMatrix<3, 3> tmp_fad(Core::LinAlg::Initialization::set_zero);
   tmp_fad.multiply_nn(1.0, CM_fad, iFinM_fad, 0.0);
   CeM_fad.multiply_tn(1.0, iFinM_fad, tmp_fad, 0.0);
 
-  static Core::LinAlg::FADMatrix<3, 3> id_fad(true);
+  static Core::LinAlg::FADMatrix<3, 3> id_fad(Core::LinAlg::Initialization::set_zero);
   for (int i = 0; i < 3; ++i) id_fad(i, i) = 1.0;
-  static Core::LinAlg::FADMatrix<3, 3> AradM_fad(true);
+  static Core::LinAlg::FADMatrix<3, 3> AradM_fad(Core::LinAlg::Initialization::set_zero);
   AradM_fad = arad_m_;
-  static Core::LinAlg::FADMatrix<3, 3> AradgrM_fad(true);
-  static Core::LinAlg::FADMatrix<3, 3> AorthgrM_fad(true);
+  static Core::LinAlg::FADMatrix<3, 3> AradgrM_fad(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::FADMatrix<3, 3> AorthgrM_fad(Core::LinAlg::Initialization::set_zero);
   tmp_fad.multiply_nn(1.0, FinM_fad, AradM_fad, 0.0);
   AradgrM_fad.multiply_nt(1.0 / CinM_fad.dot(AradM_fad), tmp_fad, FinM_fad, 0.0);
   AorthgrM_fad.update(1.0, id_fad, 0.0);
   AorthgrM_fad.update(-1.0, AradgrM_fad, 1.0);
 
   // X = Aorthgr*Ce*Aorthgr + Aradgr
-  static Core::LinAlg::FADMatrix<3, 3> XM_fad(true);
+  static Core::LinAlg::FADMatrix<3, 3> XM_fad(Core::LinAlg::Initialization::set_zero);
   tmp_fad.multiply_nn(1.0, AorthgrM_fad, CeM_fad, 0.0);
   XM_fad.multiply_nn(1.0, tmp_fad, AorthgrM_fad, 0.0);
   XM_fad.update(1.0, AradgrM_fad, 1.0);
 
-  static Core::LinAlg::FADMatrix<3, 3> iFinAorthgriFinTM_fad(true);
+  static Core::LinAlg::FADMatrix<3, 3> iFinAorthgriFinTM_fad(
+      Core::LinAlg::Initialization::set_zero);
   tmp_fad.multiply_nn(1.0, iFinM_fad, AorthgrM_fad, 0.0);
   iFinAorthgriFinTM_fad.multiply_nt(1.0, tmp_fad, iFinM_fad, 0.0);
 
@@ -1451,18 +1452,18 @@ void Mat::GrowthRemodelElastHyper::evaluate_stress_cmat_membrane(
               XM_fad(0, 1) * (XM_fad(1, 0) * XM_fad(2, 2) - XM_fad(1, 2) * XM_fad(2, 0)) +
               XM_fad(0, 2) * (XM_fad(1, 0) * XM_fad(2, 1) - XM_fad(1, 1) * XM_fad(2, 0));
 
-  static Core::LinAlg::FADMatrix<3, 3> iXM_fad(true);
+  static Core::LinAlg::FADMatrix<3, 3> iXM_fad(Core::LinAlg::Initialization::set_zero);
   iXM_fad.invert(XM_fad);
-  static Core::LinAlg::FADMatrix<3, 3> ZM_fad(
-      true);  // Z = F_{in}^{-T}*A_{gr}^{T}*X^{-1}*A_{gr}^{T}*F_{in}^{-1}
-  static Core::LinAlg::FADMatrix<3, 3> ZTM_fad(true);
-  static Core::LinAlg::FADMatrix<3, 3> AorthgriFinM_fad(true);
+  static Core::LinAlg::FADMatrix<3, 3> ZM_fad(Core::LinAlg::Initialization::
+          set_zero);  // Z = F_{in}^{-T}*A_{gr}^{T}*X^{-1}*A_{gr}^{T}*F_{in}^{-1}
+  static Core::LinAlg::FADMatrix<3, 3> ZTM_fad(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::FADMatrix<3, 3> AorthgriFinM_fad(Core::LinAlg::Initialization::set_zero);
   AorthgriFinM_fad.multiply_nn(1.0, AorthgrM_fad, iFinM_fad, 0.0);
   tmp_fad.multiply_tt(1.0, AorthgriFinM_fad, iXM_fad, 0.0);
   ZTM_fad.multiply_nn(1.0, tmp_fad, AorthgriFinM_fad, 0.0);
   ZM_fad.update_t(1.0, ZTM_fad, 0.0);
 
-  static Core::LinAlg::FADMatrix<3, 3> stress_fad(true);
+  static Core::LinAlg::FADMatrix<3, 3> stress_fad(Core::LinAlg::Initialization::set_zero);
   stress_fad.update(mue_el_mem * cur_rho_el_[gp] * mue_frac_[gp], iFinAorthgriFinTM_fad, 0.0);
   stress_fad.update(-0.5 * mue_el_mem * cur_rho_el_[gp] * mue_frac_[gp] / X_det, ZM_fad, 1.0);
   stress_fad.update(-0.5 * mue_el_mem * cur_rho_el_[gp] * mue_frac_[gp] / X_det, ZTM_fad, 1.0);

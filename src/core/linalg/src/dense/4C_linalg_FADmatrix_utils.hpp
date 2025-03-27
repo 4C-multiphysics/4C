@@ -27,7 +27,10 @@ namespace Core::LinAlg
   {
    public:
     /// Constructor
-    explicit FADMatrix(bool setzero = true) : Matrix<rows, cols, FAD>(setzero) {}
+    explicit FADMatrix(Initialization init = Initialization::set_zero)
+        : Matrix<rows, cols, FAD>(init)
+    {
+    }
 
     /// Constructor
     explicit FADMatrix(double* d, bool view = false) : Matrix<rows, cols, FAD>(d, view) {}
