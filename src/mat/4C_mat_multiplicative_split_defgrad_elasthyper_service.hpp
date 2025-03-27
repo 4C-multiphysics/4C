@@ -22,7 +22,7 @@ namespace Mat
   inline void evaluate_ce(const Core::LinAlg::Matrix<3, 3>& F,
       const Core::LinAlg::Matrix<3, 3>& iFin, Core::LinAlg::Matrix<3, 3>& Ce)
   {
-    static Core::LinAlg::Matrix<3, 3> FiFin(false);
+    static Core::LinAlg::Matrix<3, 3> FiFin(Core::LinAlg::Initialization::leave_uninitialized);
     FiFin.multiply_nn(F, iFin);
     Ce.multiply_tn(FiFin, FiFin);
   }
@@ -30,7 +30,7 @@ namespace Mat
   inline void evaluatei_cin_ci_cin(const Core::LinAlg::Matrix<3, 3>& C,
       const Core::LinAlg::Matrix<3, 3>& iCin, Core::LinAlg::Matrix<3, 3>& iCinCiCin)
   {
-    static Core::LinAlg::Matrix<3, 3> CiCin(false);
+    static Core::LinAlg::Matrix<3, 3> CiCin(Core::LinAlg::Initialization::leave_uninitialized);
     CiCin.multiply_nn(C, iCin);
     iCinCiCin.multiply_nn(iCin, CiCin);
   }

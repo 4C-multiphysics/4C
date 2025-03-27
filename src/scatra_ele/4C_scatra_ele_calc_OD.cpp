@@ -166,7 +166,8 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::sysmat_od_mesh(
     // J * N_x
     // J denotes the determinant of the Jacobian of the mapping between current and parameter space,
     // i.e. det(dx/ds)
-    static Core::LinAlg::Matrix<1, nsd_ * nen_> dJ_dmesh(false);
+    static Core::LinAlg::Matrix<1, nsd_ * nen_> dJ_dmesh(
+        Core::LinAlg::Initialization::leave_uninitialized);
     calc_djd_mesh(dJ_dmesh);
     const double J = xjm_.determinant();
 

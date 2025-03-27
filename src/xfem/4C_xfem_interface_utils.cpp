@@ -1067,7 +1067,8 @@ void XFEM::Utils::evaluate_stateat_gp(const Core::Elements::Element* sele,
     }
 
     const int numnodes = Core::FE::num_nodes<Core::FE::CellType::quad4>;
-    static Core::LinAlg::Matrix<numnodes, 1> funct(false);
+    static Core::LinAlg::Matrix<numnodes, 1> funct(
+        Core::LinAlg::Initialization::leave_uninitialized);
     Core::FE::shape_function_2d(funct, selexsi(0), selexsi(1), Core::FE::CellType::quad4);
     vel_s.multiply(vels, funct);
   }

@@ -4672,7 +4672,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::pressure_projection_fina
   ppmat.scale(1.0 / visc_);
 
   // compute rhs-contribution
-  static Core::LinAlg::Matrix<nen_, 1> temp(false);
+  static Core::LinAlg::Matrix<nen_, 1> temp(Core::LinAlg::Initialization::leave_uninitialized);
   temp.multiply(ppmat, epre);
   preforce.update(-fldparatimint_->time_fac_rhs(), temp, 1.0);
 

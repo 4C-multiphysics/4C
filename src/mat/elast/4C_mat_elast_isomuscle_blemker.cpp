@@ -240,7 +240,7 @@ void Mat::Elastic::IsoMuscleBlemker::add_stress_aniso_modified(
   Psl.multiply_nt(-1.0 / 3.0, icg, icg, 1.0);
 
   // Right Cauchy-Green tensor in stress-like Voigt notation
-  static Core::LinAlg::Matrix<6, 1> rcg_stress(false);
+  static Core::LinAlg::Matrix<6, 1> rcg_stress(Core::LinAlg::Initialization::leave_uninitialized);
   Core::LinAlg::Voigt::Strains::to_stress_like(rcg, rcg_stress);
 
   // compute the projection tensor P = II - 1/3 Cinv x C

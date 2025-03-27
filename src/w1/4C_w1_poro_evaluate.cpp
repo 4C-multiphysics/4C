@@ -895,7 +895,8 @@ void Discret::Elements::Wall1Poro<distype>::fill_matrix_and_vectors(const int& g
   static Core::LinAlg::Matrix<numdim_, 1> reafvel(true);
   static Core::LinAlg::Matrix<numdim_, 1> reavel(true);
   {
-    static Core::LinAlg::Matrix<numdim_, numdim_> temp(false);
+    static Core::LinAlg::Matrix<numdim_, numdim_> temp(
+        Core::LinAlg::Initialization::leave_uninitialized);
     std::vector<double> anisotropic_permeability_coeffs =
         compute_anisotropic_permeability_coeffs_at_gp(shapefct);
     fluid_mat_->compute_reaction_tensor(matreatensor, J, porosity,

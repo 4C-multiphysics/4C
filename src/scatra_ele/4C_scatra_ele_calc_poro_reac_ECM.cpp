@@ -169,7 +169,7 @@ double Discret::Elements::ScaTraEleCalcPoroReacECM<distype>::compute_struct_chem
 
   // -------------------------(material) deformation gradient F = d xyze_ / d XYZE = xyze_ *
   // N_XYZ_^T
-  static Core::LinAlg::Matrix<nsd_, nsd_> defgrd(false);
+  static Core::LinAlg::Matrix<nsd_, nsd_> defgrd(Core::LinAlg::Initialization::leave_uninitialized);
   defgrd.multiply_nt(my::xyze_, N_XYZ);
 
   // GL strain vector glstrain={E11,E22,E33,2*E12,2*E23,2*E31}

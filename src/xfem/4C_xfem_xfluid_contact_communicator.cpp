@@ -156,7 +156,7 @@ double XFEM::XFluidContactComm::get_fsi_traction(Mortar::Element* ele,
 
   Cut::VolumeCell* volumecell = nullptr;
   static Core::LinAlg::Matrix<3, 1> elenormal(true);
-  static Core::LinAlg::Matrix<3, 1> x(false);
+  static Core::LinAlg::Matrix<3, 1> x(Core::LinAlg::Initialization::leave_uninitialized);
   Core::LinAlg::Matrix<2, 1> new_xsi(xsi_boundary.data(), false);
   double distance = 0.0;
   if (!get_volumecell(sele, new_xsi, sidehandle, nds, eleid, volumecell, elenormal, x,
@@ -413,7 +413,8 @@ void XFEM::XFluidContactComm::get_states(const int fluidele_id, const std::vecto
     }
 
     const int numnodes = Core::FE::num_nodes<Core::FE::CellType::quad4>;
-    static Core::LinAlg::Matrix<numnodes, 1> funct(false);
+    static Core::LinAlg::Matrix<numnodes, 1> funct(
+        Core::LinAlg::Initialization::leave_uninitialized);
     Core::FE::shape_function_2d(funct, selexsi(0), selexsi(1), Core::FE::CellType::quad4);
     vel_s.multiply(vels, funct);
     if (isporo_) velpf_s.multiply(velpfs, funct);

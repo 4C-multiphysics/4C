@@ -633,11 +633,13 @@ void Discret::Elements::FluidEleCalcPoroP1<distype>::gauss_point_loop_p1_od(
 
     // -------------------------(material) deformation gradient F = d xyze_ / d XYZE = xyze_ *
     // N_XYZ_^T
-    static Core::LinAlg::Matrix<nsd_, nsd_> defgrd(false);
+    static Core::LinAlg::Matrix<nsd_, nsd_> defgrd(
+        Core::LinAlg::Initialization::leave_uninitialized);
     Base::compute_def_gradient(defgrd, Base::N_XYZ_, Base::xyze_);
 
     // inverse deformation gradient F^-1
-    static Core::LinAlg::Matrix<nsd_, nsd_> defgrd_inv(false);
+    static Core::LinAlg::Matrix<nsd_, nsd_> defgrd_inv(
+        Core::LinAlg::Initialization::leave_uninitialized);
     defgrd_inv.invert(defgrd);
 
     // volume change (used for porosity law). Same as J in nonlinear theory.
@@ -670,29 +672,36 @@ void Discret::Elements::FluidEleCalcPoroP1<distype>::gauss_point_loop_p1_od(
     double refporositydot = Base::struct_mat_->ref_porosity_time_deriv();
 
     //---------------------------  dJ/dx = dJ/dF : dF/dx = JF^-T : dF/dx at gausspoint
-    static Core::LinAlg::Matrix<nsd_, 1> gradJ(false);
+    static Core::LinAlg::Matrix<nsd_, 1> gradJ(Core::LinAlg::Initialization::leave_uninitialized);
     // spatial porosity gradient
-    static Core::LinAlg::Matrix<nsd_, 1> grad_porosity(false);
+    static Core::LinAlg::Matrix<nsd_, 1> grad_porosity(
+        Core::LinAlg::Initialization::leave_uninitialized);
     //--------------------- linearization of porosity w.r.t. structure displacements
-    static Core::LinAlg::Matrix<1, nsd_ * nen_> dphi_dus(false);
+    static Core::LinAlg::Matrix<1, nsd_ * nen_> dphi_dus(
+        Core::LinAlg::Initialization::leave_uninitialized);
 
     //------------------------------------------------dJ/dus = dJ/dF : dF/dus = J * F^-T . N_X = J *
     // N_x
-    static Core::LinAlg::Matrix<1, nsd_ * nen_> dJ_dus(false);
+    static Core::LinAlg::Matrix<1, nsd_ * nen_> dJ_dus(
+        Core::LinAlg::Initialization::leave_uninitialized);
     //------------------ d( grad(\phi) ) / du_s = d\phi/(dJ du_s) * dJ/dx+ d\phi/dJ * dJ/(dx*du_s) +
     // d\phi/(dp*du_s) * dp/dx
-    static Core::LinAlg::Matrix<nsd_, nen_ * nsd_> dgradphi_dus(false);
+    static Core::LinAlg::Matrix<nsd_, nen_ * nsd_> dgradphi_dus(
+        Core::LinAlg::Initialization::leave_uninitialized);
 
     //------------------------------------ build F^-T as vector 9x1
-    static Core::LinAlg::Matrix<nsd_ * nsd_, 1> defgrd_IT_vec(false);
+    static Core::LinAlg::Matrix<nsd_ * nsd_, 1> defgrd_IT_vec(
+        Core::LinAlg::Initialization::leave_uninitialized);
     for (int i = 0; i < nsd_; i++)
       for (int j = 0; j < nsd_; j++) defgrd_IT_vec(i * nsd_ + j) = defgrd_inv(j, i);
 
     // dF/dx
-    static Core::LinAlg::Matrix<nsd_ * nsd_, nsd_> F_x(false);
+    static Core::LinAlg::Matrix<nsd_ * nsd_, nsd_> F_x(
+        Core::LinAlg::Initialization::leave_uninitialized);
 
     // dF/dX
-    static Core::LinAlg::Matrix<nsd_ * nsd_, nsd_> F_X(false);
+    static Core::LinAlg::Matrix<nsd_ * nsd_, nsd_> F_X(
+        Core::LinAlg::Initialization::leave_uninitialized);
 
     Base::compute_f_derivative(edispnp, defgrd_inv, F_x, F_X);
 
@@ -804,7 +813,8 @@ void Discret::Elements::FluidEleCalcPoroP1<distype>::gauss_point_loop_p1_od(
     // viscous terms (brinkman terms)
     if (Base::visceff_)
     {
-      static Core::LinAlg::Matrix<nsd_, nsd_> viscstress(false);
+      static Core::LinAlg::Matrix<nsd_, nsd_> viscstress(
+          Core::LinAlg::Initialization::leave_uninitialized);
       for (int jdim = 0; jdim < nsd_; ++jdim)
       {
         for (int idim = 0; idim < nsd_; ++idim)
@@ -814,10 +824,12 @@ void Discret::Elements::FluidEleCalcPoroP1<distype>::gauss_point_loop_p1_od(
         }
       }
 
-      static Core::LinAlg::Matrix<nsd_, 1> viscstress_gradphi(false);
+      static Core::LinAlg::Matrix<nsd_, 1> viscstress_gradphi(
+          Core::LinAlg::Initialization::leave_uninitialized);
       viscstress_gradphi.multiply(viscstress, Base::grad_porosity_);
 
-      static Core::LinAlg::Matrix<nsd_, nen_> viscstress_derxy(false);
+      static Core::LinAlg::Matrix<nsd_, nen_> viscstress_derxy(
+          Core::LinAlg::Initialization::leave_uninitialized);
       viscstress_derxy.multiply(viscstress, Base::derxy_);
 
       const double porosity_inv = 1.0 / Base::porosity_;
@@ -863,7 +875,8 @@ void Discret::Elements::FluidEleCalcPoroP1<distype>::gauss_point_loop_p1_od(
           ecouplp1_p(vi, ui) += Base::fac_ * Base::funct_(vi) * Base::funct_(ui);
     }
 
-    static Core::LinAlg::Matrix<nen_, 1> derxy_convel(false);
+    static Core::LinAlg::Matrix<nen_, 1> derxy_convel(
+        Core::LinAlg::Initialization::leave_uninitialized);
     derxy_convel.clear();
 
     for (int i = 0; i < nen_; i++)
@@ -965,7 +978,8 @@ void Discret::Elements::FluidEleCalcPoroP1<distype>::gauss_point_loop_p1_od(
       // linearization of residual in stabilization term w.r.t. porosity
       if (Base::is_higher_order_ele_ || Base::fldpara_->is_newton())
       {
-        static Core::LinAlg::Matrix<nen_, nen_> temp(false);
+        static Core::LinAlg::Matrix<nen_, nen_> temp(
+            Core::LinAlg::Initialization::leave_uninitialized);
         temp.clear();
 
         for (int vi = 0; vi < nen_; ++vi)
@@ -1078,7 +1092,8 @@ void Discret::Elements::FluidEleCalcPoroP1<distype>::compute_linearization_od(co
     // F^-T : N_X_x
 
     // dF^-T/dus : dF/dx = - (F^-1. dN/dx . u_s)^T  : dF/dx
-    static Core::LinAlg::Matrix<nsd_, nsd_ * nen_> dFinvdus_dFdx(false);
+    static Core::LinAlg::Matrix<nsd_, nsd_ * nen_> dFinvdus_dFdx(
+        Core::LinAlg::Initialization::leave_uninitialized);
     dFinvdus_dFdx.clear();
     for (int i = 0; i < nsd_; i++)
     {
@@ -1099,7 +1114,8 @@ void Discret::Elements::FluidEleCalcPoroP1<distype>::compute_linearization_od(co
     }
 
     // F^-T : d(dF/dx)/dus =  F^-T : (N,XX * F^ -1 + dF/dX * F^-1 * N,x)
-    static Core::LinAlg::Matrix<nsd_, nsd_ * nen_> FinvT_dFx_dus(false);
+    static Core::LinAlg::Matrix<nsd_, nsd_ * nen_> FinvT_dFx_dus(
+        Core::LinAlg::Initialization::leave_uninitialized);
     FinvT_dFx_dus.clear();
 
     for (int n = 0; n < nen_; n++)

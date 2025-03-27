@@ -22,17 +22,17 @@ void Mat::elast_hyper_evaluate(const Core::LinAlg::Matrix<3, 3>& defgrd,
     const std::vector<std::shared_ptr<Mat::Elastic::Summand>>& potsum,
     const SummandProperties& properties, bool checkpolyconvexity)
 {
-  static Core::LinAlg::Matrix<6, 1> id2(false);
+  static Core::LinAlg::Matrix<6, 1> id2(Core::LinAlg::Initialization::leave_uninitialized);
   id2.clear();
-  static Core::LinAlg::Matrix<6, 1> C_strain(false);
+  static Core::LinAlg::Matrix<6, 1> C_strain(Core::LinAlg::Initialization::leave_uninitialized);
   C_strain.clear();
-  static Core::LinAlg::Matrix<6, 1> iC_strain(false);
+  static Core::LinAlg::Matrix<6, 1> iC_strain(Core::LinAlg::Initialization::leave_uninitialized);
   iC_strain.clear();
-  static Core::LinAlg::Matrix<3, 1> prinv(false);
+  static Core::LinAlg::Matrix<3, 1> prinv(Core::LinAlg::Initialization::leave_uninitialized);
   prinv.clear();
-  static Core::LinAlg::Matrix<3, 1> dPI(false);
+  static Core::LinAlg::Matrix<3, 1> dPI(Core::LinAlg::Initialization::leave_uninitialized);
   dPI.clear();
-  static Core::LinAlg::Matrix<6, 1> ddPII(false);
+  static Core::LinAlg::Matrix<6, 1> ddPII(Core::LinAlg::Initialization::leave_uninitialized);
   ddPII.clear();
 
   // Evaluate identity tensor
@@ -169,13 +169,13 @@ void Mat::elast_hyper_add_isotropic_stress_cmat(Core::LinAlg::Matrix<6, 1>& S_st
   // constitutive tensor factors (according to Holzapfel-Nonlinear Solid Mechanics p. 261)
   static Core::LinAlg::Matrix<8, 1> delta(true);
   // 2nd order identity tensor
-  static Core::LinAlg::Matrix<6, 1> id2(false);
+  static Core::LinAlg::Matrix<6, 1> id2(Core::LinAlg::Initialization::leave_uninitialized);
   // Right Cauchy-Green tensor in stress-like Voigt notation
-  static Core::LinAlg::Matrix<6, 1> C_stress(false);
+  static Core::LinAlg::Matrix<6, 1> C_stress(Core::LinAlg::Initialization::leave_uninitialized);
   // Inverse Right Cauchy-Green tensor in stress-like Voigt notation
-  static Core::LinAlg::Matrix<6, 1> iC_stress(false);
+  static Core::LinAlg::Matrix<6, 1> iC_stress(Core::LinAlg::Initialization::leave_uninitialized);
   // 4th order identity tensor (rows and columns are stress-like)
-  static Core::LinAlg::Matrix<6, 6> id4sharp(false);
+  static Core::LinAlg::Matrix<6, 6> id4sharp(Core::LinAlg::Initialization::leave_uninitialized);
   Core::LinAlg::Voigt::fourth_order_identity_matrix<Core::LinAlg::Voigt::NotationType::stress,
       Core::LinAlg::Voigt::NotationType::stress>(id4sharp);
 
@@ -259,7 +259,7 @@ void Mat::elast_hyper_add_response_stretches(Core::LinAlg::Matrix<6, 6>& cmat,
     // convert modified coefficients to ordinary counterparts
     //
     // derivatives of modified pr. stretches WRT pr. stretches
-    static Core::LinAlg::Matrix<3, 3> modbypr(false);
+    static Core::LinAlg::Matrix<3, 3> modbypr(Core::LinAlg::Initialization::leave_uninitialized);
     for (int al = 0; al < 3; ++al)
     {
       for (int be = 0; be < 3; ++be)
@@ -274,7 +274,7 @@ void Mat::elast_hyper_add_response_stretches(Core::LinAlg::Matrix<6, 6>& cmat,
     // determine unmodified coefficients delta and add them
     //
     // rewrite mod.coeff. as 2-tensor
-    static Core::LinAlg::Matrix<3, 3> moddeltat(false);
+    static Core::LinAlg::Matrix<3, 3> moddeltat(Core::LinAlg::Initialization::leave_uninitialized);
     moddeltat(0, 0) = moddelta(0);
     moddeltat(1, 1) = moddelta(1);
     moddeltat(2, 2) = moddelta(2);
@@ -282,9 +282,9 @@ void Mat::elast_hyper_add_response_stretches(Core::LinAlg::Matrix<6, 6>& cmat,
     moddeltat(1, 2) = moddeltat(2, 1) = moddelta(4);
     moddeltat(2, 0) = moddeltat(0, 2) = moddelta(5);
     // Psi_{,barlam barlam} barlam_{,lam} barlam_{,lam}
-    static Core::LinAlg::Matrix<3, 3> aux(false);
+    static Core::LinAlg::Matrix<3, 3> aux(Core::LinAlg::Initialization::leave_uninitialized);
     aux.multiply_tn(modbypr, moddeltat);
-    static Core::LinAlg::Matrix<3, 3> deltat(false);
+    static Core::LinAlg::Matrix<3, 3> deltat(Core::LinAlg::Initialization::leave_uninitialized);
     deltat.multiply_nn(aux, modbypr);
     // Psi_{,barlam} barlam_{,lam lam}
     for (int be = 0; be < 3; ++be)
@@ -401,7 +401,7 @@ void Mat::elast_hyper_add_anisotropic_mod(Core::LinAlg::Matrix<6, 1>& S_stress,
     const int gp, int eleGID, Teuchos::ParameterList& params,
     const std::vector<std::shared_ptr<Mat::Elastic::Summand>>& potsum)
 {
-  static Core::LinAlg::Matrix<6, 1> iC_stress(false);
+  static Core::LinAlg::Matrix<6, 1> iC_stress(Core::LinAlg::Initialization::leave_uninitialized);
   Core::LinAlg::Voigt::Strains::to_stress_like(iC_strain, iC_stress);
   // Loop over all summands and add aniso stress
   // ToDo: This should be solved in analogy to the solution in elast_remodelfiber.cpp
