@@ -12,6 +12,8 @@
 
 #include "4C_fem_general_utils_gausspoints.hpp"
 #include "4C_inpar_structure.hpp"
+#include "4C_mat_fluidporo_singlephase.hpp"
+#include "4C_solid_poro_3D_ele_calc_lib.hpp"
 #include "4C_w1.hpp"
 #include "4C_w1_poro_eletypes.hpp"
 
@@ -33,6 +35,7 @@ namespace Discret
 {
   namespace Elements
   {
+
     /*!
     \brief A C++ version of a 2 dimensional solid element with modifications for porous media
 
@@ -412,7 +415,7 @@ namespace Discret
           const Core::LinAlg::Matrix<numnod_, 1>& shapfct,
           const Core::LinAlg::Matrix<numnod_, 1>* myporosity,
           const Core::LinAlg::Matrix<1, numdof_>& dJ_dus, double& porosity,
-          Core::LinAlg::Matrix<1, numdof_>& dphi_dus);
+          Core::LinAlg::Matrix<1, numdof_>& dphi_dus, double& dphi_dJ);
 
       //! compute porosity at gausspoint and linearization of porosity w.r.t. fluid pressure
       virtual void compute_porosity_and_linearization_od(Teuchos::ParameterList& params,
@@ -581,12 +584,16 @@ namespace Discret
       //! recalculate solid pressure at GP in case of volfracs
       double recalculate_sol_pressure_at_gp(double press, const double porosity,
           const int totalnumdofpernode, const int numfluidphases, const int numvolfrac,
-          const std::vector<double>& phiAtGP);
+          const std::vector<double>& phiAtGP,
+          const Mat::PAR::PoroFluidPressureBased::ClosingRelation type_volfrac_closing_relation,
+          const double J);
 
       //! recalculate solid pressure derivative in case of volfracs
       void recalculate_sol_pressure_deriv(const std::vector<double>& phiAtGP,
           const int totalnumdofpernode, const int numfluidphases, const int numvolfrac,
-          const double press, const double porosity, std::vector<double>& solidpressderiv);
+          const double press, const double porosity, std::vector<double>& solidpressderiv,
+          const double J,
+          Mat::PAR::PoroFluidPressureBased::ClosingRelation type_volfrac_closing_relation);
 
       //! Compute primary variable for multiphase flow at GP
       void compute_primary_variable_at_gp(
@@ -603,7 +610,9 @@ namespace Discret
           const double porosity, const int totalnumdofpernode, const int numfluidphases,
           const int numvolfrac, const std::vector<double>& phiAtGP,
           const Core::LinAlg::Matrix<1, numdof_>& dphi_dus,
-          Core::LinAlg::Matrix<1, numdof_>& dps_dus);
+          Core::LinAlg::Matrix<1, numdof_>& dps_dus, const double J, const double dporosity_dJ,
+          const Core::LinAlg::Matrix<1, numdof_>& dJ_dus,
+          const Mat::PAR::PoroFluidPressureBased::ClosingRelation type_volfrac_closingrelation);
 
       //! get materials (solid and fluid)
       void get_materials();
@@ -622,6 +631,13 @@ namespace Discret
       //! interpolate the anisotropic permeability coefficients at GP from nodal values
       std::vector<double> compute_anisotropic_permeability_coeffs_at_gp(
           const Core::LinAlg::Matrix<numnod_, 1>& shapefct) const;
+
+      //! get porofluid properties
+      SolidPoroFluidProperties evaluate_porofluid_properties();
+
+      //! get volfrac closing relation type
+      Mat::PAR::PoroFluidPressureBased::ClosingRelation get_volfrac_closing_relation_type(
+          const Discret::Elements::SolidPoroFluidProperties solidporo_fluid_properties);
 
       //! Gauss integration rule
       Core::FE::GaussIntegration intpoints_;

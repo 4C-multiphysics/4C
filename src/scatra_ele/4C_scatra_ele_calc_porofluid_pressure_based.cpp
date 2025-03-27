@@ -156,7 +156,9 @@ int Discret::Elements::ScaTraEleCalcPorofluidPressureBased<discretization_type>:
           std::shared_ptr<Core::Mat::Material> porofluid_material =
               variable_manager()->porofluid_material()->material_by_id(porofluid_material_id);
 
-          if (porofluid_material->material_type() != Core::Materials::m_fluidporo_singlevolfrac)
+          if (porofluid_material->material_type() != Core::Materials::m_fluidporo_singlevolfrac &&
+              porofluid_material->material_type() !=
+                  Core::Materials::m_fluidporo_volfrac_pressure_blood_lung)
           {
             FOUR_C_THROW(
                 "Invalid phase ID for scalar {} (species in volume fraction = "
@@ -299,7 +301,9 @@ int Discret::Elements::ScaTraEleCalcPorofluidPressureBased<discretization_type>:
         std::shared_ptr<Core::Mat::Material> porofluid_material =
             variable_manager()->porofluid_material()->material_by_id(porofluid_material_id);
 
-        if (porofluid_material->material_type() != Core::Materials::m_fluidporo_singlevolfrac)
+        if (porofluid_material->material_type() != Core::Materials::m_fluidporo_singlevolfrac &&
+            porofluid_material->material_type() !=
+                Core::Materials::m_fluidporo_volfrac_pressure_blood_lung)
         {
           FOUR_C_THROW(
               "Invalid phase ID for scalar {} (species in volume fraction = "
@@ -496,8 +500,8 @@ void Discret::Elements::ScaTraEleCalcPorofluidPressureBased<
   // extract element and node values of the porofluid
   if (discretization.has_state(nds_pressure, "phinp_fluid"))
   {
-    variable_manager()->setup_porofluid_managers(
-        element, discretization, number_of_fluid_phases, total_number_of_porofluid_dofs);
+    variable_manager()->setup_porofluid_managers(element, discretization, number_of_fluid_phases,
+        total_number_of_porofluid_dofs, variable_manager()->porofluid_material()->num_vol_frac());
     variable_manager()->extract_element_and_node_values_of_porofluid(
         element, discretization, location_array, scatra_ele_calc::xyze_);
     enable_L2_projection_ = parameters.get<bool>("L2-projection");
@@ -1553,17 +1557,32 @@ void Discret::Elements::ScaTraEleCalcPorofluidPressureBased<discretization_type>
       for (int volume_fraction_id = 0; volume_fraction_id < number_of_volume_fractions;
           volume_fraction_id++)
       {
-        // derivatives after volume fractions at [2*number_of_fluid_phases + 1 + volume_fraction_id]
-        phi_derivatives[volume_fraction_id + number_of_fluid_phases] +=
-            reaction_derivatives[2 * number_of_fluid_phases + 1 + volume_fraction_id] +
-            reaction_derivatives[2 * number_of_fluid_phases] *
-                variable_manager()->porofluid_phase_manager()->porosity_deriv(
-                    volume_fraction_id + number_of_fluid_phases);
-        // derivatives after volume fraction pressures at
-        // [2*number_of_fluid_phases + number_of_volume_fractions+ 1 + volume_fraction_id]
-        phi_derivatives[volume_fraction_id + number_of_fluid_phases + number_of_volume_fractions] +=
-            reaction_derivatives[2 * number_of_fluid_phases + number_of_volume_fractions + 1 +
-                                 volume_fraction_id];
+        if (total_number_of_porofluid_dofs ==
+            number_of_fluid_phases +
+                2 * number_of_volume_fractions)  // volfrac with closing relation
+                                                 // "homogenized_vasculature_tumor"
+        {
+          // derivatives after volume fractions at [2*number_of_fluid_phases + 1 +
+          // volume_fraction_id]
+          phi_derivatives[volume_fraction_id + number_of_fluid_phases] +=
+              reaction_derivatives[2 * number_of_fluid_phases + 1 + volume_fraction_id] +
+              reaction_derivatives[2 * number_of_fluid_phases] *
+                  variable_manager()->porofluid_phase_manager()->porosity_deriv(
+                      volume_fraction_id + number_of_fluid_phases);
+          // derivatives after volume fraction pressures at
+          // [2*number_of_fluid_phases + number_of_volume_fractions+ 1 + volume_fraction_id]
+          phi_derivatives[volume_fraction_id + number_of_fluid_phases +
+                          number_of_volume_fractions] +=
+              reaction_derivatives[2 * number_of_fluid_phases + number_of_volume_fractions + 1 +
+                                   volume_fraction_id];
+        }
+        else  // volfrac with closing relation "blood lung"
+        {
+          // derivatives after volume fraction pressures at
+          // [2*number_of_fluid_phases + 1 + volume_fraction_id]
+          phi_derivatives[volume_fraction_id + number_of_fluid_phases] +=
+              reaction_derivatives[2 * number_of_fluid_phases + 1 + volume_fraction_id];
+        }
       }
 
       // fill matrix
@@ -1820,6 +1839,7 @@ void Discret::Elements::ScaTraEleInternalVariableManagerPorofluidPressureBased<n
 
   const int number_of_fluid_phases = phase_manager_->num_fluid_phases();
   const int number_of_volume_fractions = phase_manager_->num_vol_frac();
+  const int number_of_fluid_dofs = phase_manager_->total_num_dof();
 
   // resize all phase related vectors
   pressure_.resize(number_of_fluid_phases);
@@ -1839,6 +1859,19 @@ void Discret::Elements::ScaTraEleInternalVariableManagerPorofluidPressureBased<n
 
   volume_fractions_ = phase_manager_->vol_frac();
   volume_fractions_pressure_ = phase_manager_->vol_frac_pressure();
+
+  // set closing relation type volfrac
+  auto closing_relation = std::invoke(
+      [&]()
+      {
+        if (number_of_fluid_dofs == number_of_fluid_phases + number_of_volume_fractions)
+          return Mat::PAR::PoroFluidPressureBased::ClosingRelation::cr_evolutionequation_blood_lung;
+        else if (number_of_fluid_dofs == number_of_fluid_phases + 2 * number_of_volume_fractions)
+          return Mat::PAR::PoroFluidPressureBased::ClosingRelation::
+              cr_evolutionequation_homogenized_vasculature_tumor;
+        else
+          FOUR_C_THROW("Internal error!");
+      });
 
   //! convective velocity
   std::vector<Core::LinAlg::Matrix<nsd, 1>> convective_phase_velocity(0.0);
@@ -1904,36 +1937,73 @@ void Discret::Elements::ScaTraEleInternalVariableManagerPorofluidPressureBased<n
       volume_fraction_id < number_of_fluid_phases + number_of_volume_fractions;
       ++volume_fraction_id)
   {
-    // current pressure gradient
-    pressure_gradient_[volume_fraction_id].update(
-        1.0, fluid_gradient_phi[volume_fraction_id + number_of_volume_fractions], 0.0);
+    if (closing_relation ==
+        Mat::PAR::PoroFluidPressureBased::ClosingRelation::cr_evolutionequation_blood_lung)
+    {
+      // current pressure gradient
+      pressure_gradient_[volume_fraction_id].update(
+          1.0, fluid_gradient_phi[volume_fraction_id], 0.0);
 
-    // density of the volume fraction
-    density_[volume_fraction_id] =
-        phase_manager_->vol_frac_density(volume_fraction_id - number_of_fluid_phases);
+      // vol frac density
+      density_[volume_fraction_id] =
+          phase_manager_->vol_frac_density(volume_fraction_id - number_of_fluid_phases);
 
-    // diffusion tensor
-    diffusion_tensor_porofluid_[volume_fraction_id].clear();
-    phase_manager_->permeability_tensor_vol_frac_pressure(
-        volume_fraction_id - number_of_fluid_phases,
-        diffusion_tensor_porofluid_[volume_fraction_id]);
-    // -1.0 --> don't need pressure gradient norm
-    diffusion_tensor_porofluid_[volume_fraction_id].scale(
-        1.0 / phase_manager_->dyn_viscosity_vol_frac_pressure(
-                  volume_fraction_id - number_of_fluid_phases, -1.0, nds_scatra_porofluid_));
+      // diffusion tensor
+      diffusion_tensor_porofluid_[volume_fraction_id].clear();
+      phase_manager_->permeability_tensor_vol_frac_pressure(
+          volume_fraction_id - number_of_fluid_phases,
+          diffusion_tensor_porofluid_[volume_fraction_id]);
+      diffusion_tensor_porofluid_[volume_fraction_id].scale(
+          1.0 / phase_manager_->dyn_viscosity_vol_frac_pressure_blood_lung(
+                    volume_fraction_id - number_of_fluid_phases, -1.0,
+                    nds_scatra_porofluid_));  // -1.0 --> don't need abspressgrad
 
-    // Insert Darcy's law: volume fraction * (v^phase - v^s) = - permeability/viscosity * grad p
-    convective_phase_velocity[volume_fraction_id].multiply(-1.0,
-        diffusion_tensor_porofluid_[volume_fraction_id], pressure_gradient_[volume_fraction_id]);
-    convective_temperature_velocity.update(
-        heat_capacity_[volume_fraction_id] * density_[volume_fraction_id],
-        convective_phase_velocity[volume_fraction_id], 1.0);
-    // in convective form: (u_x * N,x) + (u_y * N,y)
-    convective_phase_velocity_convective_form[volume_fraction_id].multiply_tn(
-        shape_functions_deriv_xyz, convective_phase_velocity[volume_fraction_id]);
-    convective_temperature_velocity_convective_form.update(
-        heat_capacity_[volume_fraction_id] * density_[volume_fraction_id],
-        convective_phase_velocity_convective_form[volume_fraction_id], 1.0);
+      // Insert Darcy's law: porosity*(v^\pi - v_s) = - k/\mu * grad p
+      convective_phase_velocity[volume_fraction_id].multiply(-1.0,
+          diffusion_tensor_porofluid_[volume_fraction_id], pressure_gradient_[volume_fraction_id]);
+      convective_temperature_velocity.update(
+          heat_capacity_[volume_fraction_id] * density_[volume_fraction_id],
+          convective_phase_velocity[volume_fraction_id], 1.0);
+      // in convective form: u_x*N,x + u_y*N,y
+      convective_phase_velocity_convective_form[volume_fraction_id].multiply_tn(
+          shape_functions_deriv_xyz, convective_phase_velocity[volume_fraction_id]);
+      convective_temperature_velocity_convective_form.update(
+          heat_capacity_[volume_fraction_id] * density_[volume_fraction_id],
+          convective_phase_velocity_convective_form[volume_fraction_id], 1.0);
+    }
+    else
+    {
+      // current pressure gradient
+      pressure_gradient_[volume_fraction_id].update(
+          1.0, fluid_gradient_phi[volume_fraction_id + number_of_volume_fractions], 0.0);
+
+      // density of the volume fraction
+      density_[volume_fraction_id] =
+          phase_manager_->vol_frac_density(volume_fraction_id - number_of_fluid_phases);
+
+      // diffusion tensor
+      diffusion_tensor_porofluid_[volume_fraction_id].clear();
+      phase_manager_->permeability_tensor_vol_frac_pressure(
+          volume_fraction_id - number_of_fluid_phases,
+          diffusion_tensor_porofluid_[volume_fraction_id]);
+      // -1.0 --> don't need pressure gradient norm
+      diffusion_tensor_porofluid_[volume_fraction_id].scale(
+          1.0 / phase_manager_->dyn_viscosity_vol_frac_pressure(
+                    volume_fraction_id - number_of_fluid_phases, -1.0, nds_scatra_porofluid_));
+
+      // Insert Darcy's law: volume fraction * (v^phase - v^s) = - permeability/viscosity * grad p
+      convective_phase_velocity[volume_fraction_id].multiply(-1.0,
+          diffusion_tensor_porofluid_[volume_fraction_id], pressure_gradient_[volume_fraction_id]);
+      convective_temperature_velocity.update(
+          heat_capacity_[volume_fraction_id] * density_[volume_fraction_id],
+          convective_phase_velocity[volume_fraction_id], 1.0);
+      // in convective form: (u_x * N,x) + (u_y * N,y)
+      convective_phase_velocity_convective_form[volume_fraction_id].multiply_tn(
+          shape_functions_deriv_xyz, convective_phase_velocity[volume_fraction_id]);
+      convective_temperature_velocity_convective_form.update(
+          heat_capacity_[volume_fraction_id] * density_[volume_fraction_id],
+          convective_phase_velocity_convective_form[volume_fraction_id], 1.0);
+    }
   }
 
   // solid pressure
@@ -2159,9 +2229,14 @@ void Discret::Elements::ScaTraEleInternalVariableManagerPorofluidPressureBased<n
     case Mat::ScaTraMatMultiPoro::SpeciesType::species_in_volfrac:
     {
       const int phase_id = get_phase_id(scalar_id);
-      // d volfrac_j / d volfrac_j = 1.0
+      // only necessary in volfrac closing relation "homogenized_vasculature_tumor", because
+      // otherwise volfrac is no primary variable d volfrac_j / d volfrac_j = 1.0
       // --> scaling with 1.0/volfrac since term is re-scaled with densnp = rho * volfrac
-      (*pre_factor_mass_matrix_od_porofluid)[phase_id] += 1.0 / get_volume_fraction(scalar_id);
+      if (porofluid_material_->num_mat() ==
+          (number_of_fluid_phases + 2 * phase_manager_->num_vol_frac()))
+      {
+        (*pre_factor_mass_matrix_od_porofluid)[phase_id] += 1.0 / get_volume_fraction(scalar_id);
+      }
 
       break;
     }
@@ -2266,6 +2341,7 @@ void Discret::Elements::ScaTraEleInternalVariableManagerPorofluidPressureBased<n
 
   const int number_of_fluid_phases = phase_manager_->num_fluid_phases();
   const int number_of_volume_fractions = phase_manager_->num_vol_frac();
+  const int number_of_fluid_dofs = phase_manager_->total_num_dof();
 
   // fluid phase
   if (phase_id >= 0 && phase_id < number_of_fluid_phases)
@@ -2305,7 +2381,15 @@ void Discret::Elements::ScaTraEleInternalVariableManagerPorofluidPressureBased<n
   else if (phase_id < number_of_fluid_phases + number_of_volume_fractions)
   {
     // derivative after volfrac-pressure
-    (*pre_factor_convection_od_porofluid)[phase_id + number_of_volume_fractions] += laplacian;
+    // for volfrac with closing relation "homogenized_vasculature_tumor"
+    if (number_of_fluid_dofs == number_of_fluid_phases + 2 * number_of_volume_fractions)
+    {
+      (*pre_factor_convection_od_porofluid)[phase_id + number_of_volume_fractions] += laplacian;
+    }
+    else  // derivative after volfrac-pressure for volfrac with closing relation "blood lung"
+    {
+      (*pre_factor_convection_od_porofluid)[phase_id] += laplacian;
+    }
   }
   else
   {
@@ -2601,8 +2685,16 @@ void Discret::Elements::ScaTraEleInternalVariableManagerPorofluidPressureBased<n
     case Mat::ScaTraMatMultiPoro::SpeciesType::species_in_volfrac:
     {
       // we do not evaluate if smaller than minimum nodal volume fraction in element
-      evaluate_scalar_[scalar_id] = variable_manager_->element_has_valid_vol_frac_species(
-          scalar_to_phase_map_[scalar_id].phaseID - number_of_fluid_phases);
+      if (phase_manager_->total_num_dof() ==
+          phase_manager_->num_fluid_phases() + 2 * phase_manager_->num_vol_frac())
+      {
+        evaluate_scalar_[scalar_id] = variable_manager_->element_has_valid_vol_frac_species(
+            scalar_to_phase_map_[scalar_id].phaseID - number_of_fluid_phases);
+      }
+      else  // blood lung
+      {
+        evaluate_scalar_[scalar_id] = true;
+      }
       break;
     }
     case Mat::ScaTraMatMultiPoro::SpeciesType::species_in_solid:
@@ -2703,14 +2795,14 @@ template <int nsd, int nen>
 void Discret::Elements::ScaTraEleInternalVariableManagerPorofluidPressureBased<nsd,
     nen>::setup_porofluid_managers(const Core::Elements::Element* element,
     const Core::FE::Discretization& discretization, const int number_of_fluid_phases,
-    const int total_number_of_porofluid_dofs)
+    const int total_number_of_porofluid_dofs, const int number_volfracs)
 {
   PoroFluidMultiPhaseEleParameter* parameters =
       PoroFluidMultiPhaseEleParameter::instance(discretization.name());
 
   phase_manager_ = PoroFluidManager::PhaseManagerInterface::create_phase_manager(*parameters, nsd,
       porofluid_material()->material_type(), PoroPressureBased::Action::get_access_from_scatra,
-      total_number_of_porofluid_dofs, number_of_fluid_phases);
+      total_number_of_porofluid_dofs, number_of_fluid_phases, number_volfracs);
 
   // access from outside to the phase manager:
   // scatra-discretization has fluid-discretization on dofset 2
@@ -2718,7 +2810,7 @@ void Discret::Elements::ScaTraEleInternalVariableManagerPorofluidPressureBased<n
 
   variable_manager_ = PoroFluidManager::VariableManagerInterface<nsd, nen>::create_variable_manager(
       *parameters, PoroPressureBased::Action::get_access_from_scatra, porofluid_material(),
-      total_number_of_porofluid_dofs, number_of_fluid_phases);
+      total_number_of_porofluid_dofs, number_of_fluid_phases, number_volfracs);
 }
 
 /*------------------------------------------------------------------------------*
