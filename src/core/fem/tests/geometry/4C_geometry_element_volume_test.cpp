@@ -9,12 +9,19 @@
 
 #include "4C_fem_geometry_element_volume.hpp"
 
+#include <Kokkos_Core.hpp>
+
 namespace
 {
   using namespace FourC;
 
   class ElementVolumeTest : public ::testing::Test
   {
+   public:
+    static void SetUpTestSuite() { Kokkos::initialize(); }
+
+    static void TearDownTestSuite() { Kokkos::finalize(); }
+
    protected:
     void SetUp() override {}
 

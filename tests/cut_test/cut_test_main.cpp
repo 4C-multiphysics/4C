@@ -14,6 +14,7 @@
 #include "4C_utils_singleton_owner.hpp"
 
 #include <fenv.h>
+#include <Kokkos_Core.hpp>
 #include <Teuchos_CommandLineProcessor.hpp>
 
 #include <map>
@@ -440,6 +441,7 @@ int main(int argc, char** argv)
 {
   Core::Utils::SingletonOwnerRegistry::ScopeGuard guard;
   MPI_Init(&argc, &argv);
+  Kokkos::ScopeGuard kokkos_guard{};
 
   std::map<std::string, testfunct> functable;
 
