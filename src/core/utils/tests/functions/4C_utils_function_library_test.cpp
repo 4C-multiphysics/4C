@@ -7,9 +7,10 @@
 
 #include <gtest/gtest.h>
 
+#include "4C_utils_function_library.hpp"
+
 #include "4C_utils_cubic_spline_interpolation.hpp"
 #include "4C_utils_function.hpp"
-#include "4C_utils_function_library.hpp"
 
 #include <fstream>
 

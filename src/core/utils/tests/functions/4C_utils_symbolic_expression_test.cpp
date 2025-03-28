@@ -7,9 +7,10 @@
 
 #include <gtest/gtest.h>
 
+#include "4C_utils_symbolic_expression.hpp"
+
 #include "4C_unittest_utils_assertions_test.hpp"
 #include "4C_utils_exceptions.hpp"
-#include "4C_utils_symbolic_expression.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 

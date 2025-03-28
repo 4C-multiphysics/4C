@@ -19,7 +19,8 @@ include = ["four_c_utils"]
 
 [project.scripts]
 check-file-header = "four_c_utils.check_file_header:main"
-check-filenames-and-includes = "four_c_utils.check_filenames_and_includes:main"
+check-filenames = "four_c_utils.check_filenames:main"
+check-includes = "four_c_utils.check_includes:main"
 check-header-guards = "four_c_utils.check_header_guards:main"
 check-test-files = "four_c_utils.check_test_files:main"
 check-preprocessor = "four_c_utils.check_preprocessor:main"

@@ -100,18 +100,27 @@ repos:
         always_run: true
         pass_filenames: false
 
-      - id: cpp-filename-includes
-        name: C++ file names and include style
-        description: 'Check that all C++ files have the correct file name and include style'
+      - id: cpp-filename
+        name: C++ file names
+        description: 'Check that all C++ files have the correct file name'
+        language: system
+        types_or: [c++, c]
+        exclude: 'tests/cut_test/|mm$|dummy.cpp'
+        entry: utilities/python-venv/bin/check-filenames
+        require_serial: true # To give a non duplicated error output
+
+      - id: cpp-include
+        name: C++ includes
+        description: 'Check that all C++ files have correct includes'
         language: system
         types_or: [c++, c]
         exclude: 'tests/cut_test/|mm$'
-        entry: utilities/python-venv/bin/check-filenames-and-includes
-        args: ['--paths', 'src/', 'unittests/', 'apps/', '--files']
+        entry: utilities/python-venv/bin/check-includes
+        require_serial: true # To give a non duplicated error output
 
-      - id: cpp-include-guard
-        name: Include guards
-        description: 'Check that all C++ files have the correct include guards'
+      - id: cpp-header-guard
+        name: Header guards
+        description: 'Check that all C++ files have the correct header guards'
         language: python
         types_or: [c++, c]
         files: '\.(h|hpp)$'
