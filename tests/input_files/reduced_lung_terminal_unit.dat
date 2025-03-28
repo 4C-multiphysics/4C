@@ -35,5 +35,5 @@ NODE 2 DLINE 1
 --------------------------------------------------REDUCED D AIRWAYS ELEMENTS
 1 RED_ACINUS LINE2 1 2 MAT 1 TYPE NeoHookean AcinusVolume 10 AlveolarDuctVolume 0.0372
 -----------------------------------------------------------------NODE COORDS
-NODE 1 COORDS 0 0 0
-NODE 2 COORDS 1 0 0
+NODE 1 COORD 0 0 0
+NODE 2 COORD 1 0 0

@@ -7,6 +7,8 @@
 
 #include "4C_io_value_parser.hpp"
 
+#include <c4/charconv.hpp>
+
 #include <algorithm>
 
 FOUR_C_NAMESPACE_OPEN
@@ -74,34 +76,36 @@ void Core::IO::ValueParser::read_internal(bool& value)
 
 void Core::IO::ValueParser::read_internal(int& value)
 {
-  std::string token(advance_token());
-  std::size_t end;
-  try
+  auto token(advance_token());
+  if (token.front() == '+') [[unlikely]]
   {
-    value = std::stoi(token.data(), &end);
-  }
-  catch (const std::logic_error&)
-  {
-    FOUR_C_THROW("Could not parse '{}' as an integer value.", token.c_str());
+    token = token.substr(1);
   }
 
-  if (end != token.size()) FOUR_C_THROW("Could not parse '{}' as an integer value.", token.c_str());
+  c4::csubstr token_cstr = c4::csubstr{token.data(), token.size()};
+  // Note: this could use std::from_chars if clang fully supports it at some point.
+  std::size_t n_chars_used = c4::from_chars_first(token_cstr, &value);
+  if (n_chars_used != token.size())
+  {
+    FOUR_C_THROW("Could not parse '{}' as an integer value.", token);
+  }
 }
 
 void Core::IO::ValueParser::read_internal(double& value)
 {
-  std::string token(advance_token());
-  std::size_t end;
-  try
+  auto token(advance_token());
+  if (token.front() == '+') [[unlikely]]
   {
-    value = std::stod(token.data(), &end);
-  }
-  catch (const std::logic_error&)
-  {
-    FOUR_C_THROW("Could not parse '{}' as a double value.", token.c_str());
+    token = token.substr(1);
   }
 
-  if (end != token.size()) FOUR_C_THROW("Could not parse '{}' as a double value.", token.c_str());
+  c4::csubstr token_cstr = c4::csubstr{token.data(), token.size()};
+  // Note: this could use std::from_chars if clang fully supports it at some point.
+  std::size_t n_chars_used = c4::from_chars_first(token_cstr, &value);
+  if (n_chars_used != token.size())
+  {
+    FOUR_C_THROW("Could not parse '{}' as a double value.", token);
+  }
 }
 
 void Core::IO::ValueParser::read_internal(std::string& value)

@@ -47,9 +47,9 @@ NODE 6 DLINE 1
 4 RED_ACINUS LINE2 3 5 MAT 2 TYPE NeoHookean AcinusVolume 10 AlveolarDuctVolume 0.0372
 5 RED_ACINUS LINE2 4 6 MAT 2 TYPE NeoHookean AcinusVolume 10 AlveolarDuctVolume 0.0372
 -----------------------------------------------------------------NODE COORDS
-NODE 1 COORDS 0 0 0
-NODE 2 COORDS 1 0 0
-NODE 3 COORDS 1 1 0
-NODE 4 COORDS 1 -1 0
-NODE 5 COORDS 2 1 0
-NODE 6 COORDS 2 -1 0
+NODE 1 COORD 0 0 0
+NODE 2 COORD 1 0 0
+NODE 3 COORD 1 1 0
+NODE 4 COORD 1 -1 0
+NODE 5 COORD 2 1 0
+NODE 6 COORD 2 -1 0

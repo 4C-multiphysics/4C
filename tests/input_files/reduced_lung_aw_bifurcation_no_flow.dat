@@ -38,7 +38,7 @@ NODE 4 DLINE 1
 2 RED_AIRWAY LINE2 2 3 MAT 1 ElemSolvingType Linear TYPE Resistive Resistance Poiseuille PowerOfVelocityProfile 2 WallElasticity 0.0 PoissonsRatio 0.0 ViscousTs 0.0 ViscousPhaseShift 0.0 WallThickness 0.0 Area 4.0 Generation 1
 3 RED_AIRWAY LINE2 2 4 MAT 1 ElemSolvingType Linear TYPE Resistive Resistance Poiseuille PowerOfVelocityProfile 2 WallElasticity 0.0 PoissonsRatio 0.0 ViscousTs 0.0 ViscousPhaseShift 0.0 WallThickness 0.0 Area 2.0 Generation 1
 -----------------------------------------------------------------NODE COORDS
-NODE 1 COORDS 0 0 0
-NODE 2 COORDS 1 0 0
-NODE 3 COORDS 1 1 0
-NODE 4 COORDS 1 -1 0
+NODE 1 COORD 0 0 0
+NODE 2 COORD 1 0 0
+NODE 3 COORD 1 1 0
+NODE 4 COORD 1 -1 0

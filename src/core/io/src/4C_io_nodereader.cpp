@@ -13,8 +13,7 @@
 #include "4C_fem_general_fiber_node.hpp"
 #include "4C_fem_nurbs_discretization_control_point.hpp"
 #include "4C_io_input_file.hpp"
-
-#include <istream>
+#include "4C_io_value_parser.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -40,23 +39,19 @@ void Core::IO::read_nodes(Core::IO::InputFile& input, const std::string& node_se
   const int myrank = Core::Communication::my_mpi_rank(input.get_comm());
   if (myrank > 0) return;
 
-  std::string tmp;
-  std::string tmp2;
-
   int line_count = 0;
   for (const auto& node_line : input.in_section_rank_0_only(node_section_name))
   {
-    std::istringstream linestream{std::string{node_line.get_as_dat_style_string()}};
-    linestream >> tmp;
+    Core::IO::ValueParser parser{
+        node_line.get_as_dat_style_string(), {.user_scope_message = "While reading node data: "}};
+    auto type = parser.read<std::string>();
 
-    if (tmp == "NODE")
+    if (type == "NODE")
     {
-      std::vector<double> coords(3, 0.0);
-      int nodeid;
-      // read in the node coordinates
-      linestream >> nodeid >> tmp >> coords[0] >> coords[1] >> coords[2];
+      int nodeid = parser.read<int>() - 1;
+      parser.consume("COORD");
+      auto coords = parser.read<std::vector<double>>(3);
 
-      nodeid--;
       max_node_id = std::max(max_node_id, nodeid) + 1;
       std::vector<std::shared_ptr<Core::FE::Discretization>> dis =
           find_dis_node(element_readers, nodeid);
@@ -70,20 +65,17 @@ void Core::IO::read_nodes(Core::IO::InputFile& input, const std::string& node_se
       }
     }
     // this node is a Nurbs control point
-    else if (tmp == "CP")
+    else if (type == "CP")
     {
-      // read control points for isogeometric analysis (Nurbs)
-      std::vector<double> coords(3, 0.0);
-      double weight;
+      int cpid = parser.read<int>() - 1;
+      parser.consume("COORD");
+      auto coords = parser.read<std::vector<double>>(3);
+      double weight = parser.read<double>();
 
-      int cpid;
-      linestream >> cpid >> tmp >> coords[0] >> coords[1] >> coords[2] >> weight;
-      cpid--;
       max_node_id = std::max(max_node_id, cpid) + 1;
       if (cpid != line_count)
         FOUR_C_THROW(
             "Reading of control points {} failed: They must be numbered consecutive!!", cpid);
-      if (tmp != "COORD") FOUR_C_THROW("failed to read control point {}", cpid);
       std::vector<std::shared_ptr<Core::FE::Discretization>> diss =
           find_dis_node(element_readers, cpid);
 
@@ -96,7 +88,7 @@ void Core::IO::read_nodes(Core::IO::InputFile& input, const std::string& node_se
       }
     }
     // this is a special node with additional fiber information
-    else if (tmp == "FNODE")
+    else if (type == "FNODE")
     {
       enum class FiberType
       {
@@ -107,97 +99,45 @@ void Core::IO::read_nodes(Core::IO::InputFile& input, const std::string& node_se
       };
 
       // read fiber node
-      std::vector<double> coords(3, 0.0);
       std::map<Core::Nodes::CoordinateSystemDirection, std::array<double, 3>> cosyDirections;
       std::vector<std::array<double, 3>> fibers;
       std::map<Core::Nodes::AngleType, double> angles;
 
-      int nodeid;
-      // read in the node coordinates and fiber direction
-      linestream >> nodeid >> tmp >> coords[0] >> coords[1] >> coords[2];
-      nodeid--;
+      int nodeid = parser.read<int>() - 1;
+      parser.consume("COORD");
+      auto coords = parser.read<std::vector<double>>(3);
       max_node_id = std::max(max_node_id, nodeid) + 1;
 
-      while (true)
+      while (!parser.at_end())
       {
-        // store current position of linestream reader
-        auto length = linestream.tellg();
-        // try to read new fiber direction or coordinate system
-        linestream >> tmp2;
+        auto next = parser.read<std::string>();
 
-        // Nothing more to read.
-        if (linestream.fail()) break;
-
-        Core::Nodes::CoordinateSystemDirection coordinateSystemDirection;
-        Core::Nodes::AngleType angleType;
-        FiberType type = FiberType::Unknown;
-
-        if (tmp2 == "FIBER" + std::to_string(1 + fibers.size()))
+        if (next == "FIBER" + std::to_string(1 + fibers.size()))
         {
-          type = FiberType::Fiber;
+          fibers.emplace_back(parser.read<std::array<double, 3>>());
         }
-        else if (tmp2 == "CIR")
+        else if (next == "CIR")
         {
-          coordinateSystemDirection = Core::Nodes::CoordinateSystemDirection::Circular;
-          type = FiberType::CosyDirection;
+          cosyDirections[Nodes::CoordinateSystemDirection::Circular] =
+              parser.read<std::array<double, 3>>();
         }
-        else if (tmp2 == "TAN")
+        else if (next == "TAN")
         {
-          coordinateSystemDirection = Core::Nodes::CoordinateSystemDirection::Tangential;
-          type = FiberType::CosyDirection;
+          cosyDirections[Nodes::CoordinateSystemDirection::Tangential] =
+              parser.read<std::array<double, 3>>();
         }
-        else if (tmp2 == "RAD")
+        else if (next == "RAD")
         {
-          coordinateSystemDirection = Core::Nodes::CoordinateSystemDirection::Radial;
-          type = FiberType::CosyDirection;
+          cosyDirections[Nodes::CoordinateSystemDirection::Radial] =
+              parser.read<std::array<double, 3>>();
         }
-        else if (tmp2 == "HELIX")
+        else if (next == "HELIX")
         {
-          angleType = Core::Nodes::AngleType::Helix;
-          type = FiberType::Angle;
+          angles[Nodes::AngleType::Helix] = parser.read<double>();
         }
-        else if (tmp2 == "TRANS")
+        else if (next == "TRANS")
         {
-          angleType = Core::Nodes::AngleType::Transverse;
-          type = FiberType::Angle;
-        }
-        else
-        {
-          // No more fiber information. Jump to last position.
-          linestream.seekg(length);
-          break;
-        }
-
-        // add fiber / angle to the map
-        switch (type)
-        {
-          case FiberType::Unknown:
-          {
-            FOUR_C_THROW(
-                "Unknown fiber node attribute. Numbered fibers must be in order, i.e. "
-                "FIBER1, FIBER2, ...");
-          }
-          case FiberType::Angle:
-          {
-            linestream >> angles[angleType];
-            break;
-          }
-          case FiberType::Fiber:
-          {
-            std::array<double, 3> fiber_components;
-            linestream >> fiber_components[0] >> fiber_components[1] >> fiber_components[2];
-            fibers.emplace_back(fiber_components);
-            break;
-          }
-          case FiberType::CosyDirection:
-          {
-            linestream >> cosyDirections[coordinateSystemDirection][0] >>
-                cosyDirections[coordinateSystemDirection][1] >>
-                cosyDirections[coordinateSystemDirection][2];
-            break;
-          }
-          default:
-            FOUR_C_THROW("Unknown number of components");
+          angles[Nodes::AngleType::Transverse] = parser.read<double>();
         }
       }
 
@@ -212,7 +152,7 @@ void Core::IO::read_nodes(Core::IO::InputFile& input, const std::string& node_se
       }
     }
     else
-      FOUR_C_THROW("unexpected word '{}'", tmp.c_str());
+      FOUR_C_THROW("Unknown node type '{}'", type);
 
     ++line_count;
   }
