@@ -68,7 +68,7 @@ namespace BeamInteraction
         B3CNeighbor& neighbors1)
     {
       Core::LinAlg::Matrix<3 * numnodes, 1> node_tangent1(
-          true);  // = vector of element1's node tangents
+          Core::LinAlg::Initialization::zero);  // = vector of element1's node tangents
 
       // So far, the next lines are only implemented and for linear Reissner beam elements -->
       // FOUR_C_THROW() otherwise

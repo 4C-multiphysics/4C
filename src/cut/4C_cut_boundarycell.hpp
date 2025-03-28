@@ -170,9 +170,9 @@ namespace Cut
       Core::LinAlg::Matrix<3, numnodes> xyze(xyz_, true);
       if (referencepos) xyze = Core::LinAlg::Matrix<3, numnodes>(xyz_ref_, true);
 
-      Core::LinAlg::Matrix<numnodes, 1> funct(false);
-      Core::LinAlg::Matrix<2, numnodes> deriv(false);
-      Core::LinAlg::Matrix<2, 2> metrictensor(false);
+      Core::LinAlg::Matrix<numnodes, 1> funct(Core::LinAlg::Initialization::uninitialized);
+      Core::LinAlg::Matrix<2, numnodes> deriv(Core::LinAlg::Initialization::uninitialized);
+      Core::LinAlg::Matrix<2, 2> metrictensor(Core::LinAlg::Initialization::uninitialized);
 
       Core::FE::shape_function_2d(funct, eta(0), eta(1), celldistype);
 
@@ -187,9 +187,9 @@ namespace Cut
         // For Tri's this method of determining the area and thus the gp-weights is more robust.
         //  It is needed for TRI's which are small/ill-conditioned but large enough to affect the
         //  simulation.
-        static Core::LinAlg::Matrix<3, 1> p0(true);
-        static Core::LinAlg::Matrix<3, 1> p1(true);
-        static Core::LinAlg::Matrix<3, 1> p2(true);
+        static Core::LinAlg::Matrix<3, 1> p0(Core::LinAlg::Initialization::zero);
+        static Core::LinAlg::Matrix<3, 1> p1(Core::LinAlg::Initialization::zero);
+        static Core::LinAlg::Matrix<3, 1> p2(Core::LinAlg::Initialization::zero);
         for (unsigned dim = 0; dim < 3; ++dim)
         {
           p0(dim) = xyze(dim, 0);

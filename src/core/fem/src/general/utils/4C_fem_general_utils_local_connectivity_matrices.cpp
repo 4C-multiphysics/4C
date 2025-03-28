@@ -1148,7 +1148,7 @@ Core::LinAlg::Matrix<probdim, 1> Core::FE::get_node_coordinates(
   FOUR_C_ASSERT(nodeId < get_number_of_element_nodes(distype), "node number is not correct");
 
   const int dim = get_dimension(distype);
-  Core::LinAlg::Matrix<probdim, 1> coord(true);
+  Core::LinAlg::Matrix<probdim, 1> coord(Core::LinAlg::Initialization::zero);
 
   switch (distype)
   {

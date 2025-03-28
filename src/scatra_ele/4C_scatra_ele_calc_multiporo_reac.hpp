@@ -425,7 +425,7 @@ namespace Discret
       )
       {
         // call base class (scatra) with dummy variable
-        const Core::LinAlg::Matrix<nsd, nen> dummy_econv(true);
+        const Core::LinAlg::Matrix<nsd, nen> dummy_econv(Core::LinAlg::Initialization::zero);
         my::set_internal_variables(funct, derxy, ephinp, ephin, dummy_econv, ehist, dummy_econv);
 
         // velocity due to the external force
@@ -483,9 +483,9 @@ namespace Discret
         phase_fluid_velocity_conv.resize(numfluidphases + numvolfrac);
 
         //! temperature convective velocity
-        Core::LinAlg::Matrix<nsd, 1> temperatureconvelint(true);
+        Core::LinAlg::Matrix<nsd, 1> temperatureconvelint(Core::LinAlg::Initialization::zero);
         //! temperature convective part in convective form
-        Core::LinAlg::Matrix<nen, 1> temperatureconv(true);
+        Core::LinAlg::Matrix<nen, 1> temperatureconv(Core::LinAlg::Initialization::zero);
 
         for (int i_phase = 0; i_phase < numfluidphases; ++i_phase)
         {
@@ -581,8 +581,8 @@ namespace Discret
               break;
 
             case Mat::ScaTraMatMultiPoro::SpeciesType::species_in_solid:
-              my::convelint_[k] = Core::LinAlg::Matrix<nsd, 1>(0.0);
-              my::conv_[k] = Core::LinAlg::Matrix<nen, 1>(0.0);
+              my::convelint_[k] = Core::LinAlg::Matrix<nsd, 1>(Core::LinAlg::Initialization::zero);
+              my::conv_[k] = Core::LinAlg::Matrix<nen, 1>(Core::LinAlg::Initialization::zero);
               my::conv_phi_[k] = 0;
               break;
 
@@ -1052,12 +1052,13 @@ namespace Discret
             const Core::LinAlg::Matrix<nsd, 1> gradpres = pressure_gradient(phase);
             const double abspressgrad = abs_pressure_gradient(phase);
 
-            static Core::LinAlg::Matrix<nsd, nsd> difftensor(true);
+            static Core::LinAlg::Matrix<nsd, nsd> difftensor(Core::LinAlg::Initialization::zero);
             phasemanager_->permeability_tensor(phase, difftensor);
             difftensor.scale(phasemanager_->rel_permeability_deriv(phase) /
                              phasemanager_->dyn_viscosity(phase, abspressgrad, 2));
 
-            static Core::LinAlg::Matrix<1, nsd> gradphiTdifftensor(true);
+            static Core::LinAlg::Matrix<1, nsd> gradphiTdifftensor(
+                Core::LinAlg::Initialization::zero);
             gradphiTdifftensor.multiply_tn(gradphi, difftensor);
 
             double laplawf(0.0);
@@ -1309,7 +1310,7 @@ namespace Discret
 
           // gradient of phi w.r.t. reference coordinates
           std::vector<Core::LinAlg::Matrix<nsd, 1>> reffluidgradphi(
-              numfluidphases, Core::LinAlg::Matrix<nsd, 1>(true));
+              numfluidphases, Core::LinAlg::Matrix<nsd, 1>(Core::LinAlg::Initialization::zero));
           for (int idof = 0; idof < numfluidphases; ++idof)
             reffluidgradphi[idof].multiply(xjm, fluidgradphi[idof]);
 

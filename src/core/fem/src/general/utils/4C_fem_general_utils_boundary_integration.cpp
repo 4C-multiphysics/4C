@@ -128,11 +128,12 @@ Core::LinAlg::Matrix<parent_ele_dim, 1> Core::FE::calculate_parent_gp_from_face_
 
   // get coordinates of gauss point w.r.t. local parent coordinate system
   Core::LinAlg::SerialDenseMatrix pqxg(1, parent_ele_dim);
-  Core::LinAlg::Matrix<parent_ele_dim, parent_ele_dim> derivtrafo(true);
+  Core::LinAlg::Matrix<parent_ele_dim, parent_ele_dim> derivtrafo(
+      Core::LinAlg::Initialization::zero);
   Core::FE::boundary_gp_to_parent_gp<parent_ele_dim>(pqxg, derivtrafo, intpoints,
       faceele->parent_element()->shape(), faceele->shape(), faceele->face_parent_number());
 
-  Core::LinAlg::Matrix<parent_ele_dim, 1> xi_parent(true);
+  Core::LinAlg::Matrix<parent_ele_dim, 1> xi_parent(Core::LinAlg::Initialization::zero);
   for (auto i = 0; i < parent_ele_dim; ++i)
   {
     xi_parent(i) = pqxg(0, i);

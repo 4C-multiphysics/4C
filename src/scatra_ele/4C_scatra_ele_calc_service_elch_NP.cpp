@@ -307,11 +307,11 @@ void Discret::Elements::ScaTraEleCalcElchNP<distype>::cal_error_compared_to_anal
 
       // working arrays
       double potint(0.0);
-      Core::LinAlg::Matrix<2, 1> conint(true);
-      Core::LinAlg::Matrix<nsd_, 1> xint(true);
-      Core::LinAlg::Matrix<2, 1> c(true);
+      Core::LinAlg::Matrix<2, 1> conint(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd_, 1> xint(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<2, 1> c(Core::LinAlg::Initialization::zero);
       double deltapot(0.0);
-      Core::LinAlg::Matrix<2, 1> deltacon(true);
+      Core::LinAlg::Matrix<2, 1> deltacon(Core::LinAlg::Initialization::zero);
 
       // start loop over integration points
       for (int iquad = 0; iquad < intpoints.ip().nquad; iquad++)
@@ -406,10 +406,10 @@ void Discret::Elements::ScaTraEleCalcElchNP<distype>::cal_error_compared_to_anal
       if (my::numscal_ != 2) FOUR_C_THROW("Numscal_ != 2 for desired error calculation.");
 
       // working arrays
-      Core::LinAlg::Matrix<2, 1> conint(true);
-      Core::LinAlg::Matrix<nsd_, 1> xint(true);
-      Core::LinAlg::Matrix<2, 1> c(true);
-      Core::LinAlg::Matrix<2, 1> deltacon(true);
+      Core::LinAlg::Matrix<2, 1> conint(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd_, 1> xint(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<2, 1> c(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<2, 1> deltacon(Core::LinAlg::Initialization::zero);
 
       // some constants that are needed
       const double c0_inner = 0.6147737641011396;

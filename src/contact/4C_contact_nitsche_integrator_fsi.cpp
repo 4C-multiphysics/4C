@@ -119,7 +119,7 @@ void CONTACT::IntegratorNitscheFsi::gpts_forces(Mortar::Element& sele, Mortar::E
   bool FSI_integrated = true;  // bool indicates if fsi condition is already evaluated ... --> if
                                // true no contribution here ...
 
-  Core::LinAlg::Matrix<dim, 1> pxsi(true);
+  Core::LinAlg::Matrix<dim, 1> pxsi(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<dim, dim> derivtravo_slave;
   CONTACT::Utils::map_gp_to_parent<dim>(sele, sxi, wgt, pxsi, derivtravo_slave);
 
@@ -227,7 +227,7 @@ double CONTACT::Utils::solid_cauchy_at_xi(CONTACT::Element* cele,
   if (cele->parent_element()->shape() != Core::FE::CellType::hex8)
     FOUR_C_THROW("This Element shape is not implemented for CONTACT::Utils::CauchyStressatXi");
 
-  Core::LinAlg::Matrix<3, 1> pxsi(true);
+  Core::LinAlg::Matrix<3, 1> pxsi(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<3, 3> trafo;
   CONTACT::Utils::so_ele_gp<Core::FE::CellType::hex8, 3>(*cele, 1., xsi.data(), pxsi, trafo);
 

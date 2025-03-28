@@ -59,7 +59,7 @@ namespace Core::LinAlg
       ValueType* b = blocks_[p];
       if (b == nullptr)
       {
-        b = new ValueType(true);
+        b = new ValueType(Core::LinAlg::Initialization::zero);
         blocks_[p] = b;
       }
       return b;

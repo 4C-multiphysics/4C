@@ -2799,7 +2799,7 @@ void FLD::FluidImplicitTimeInt::ale_update(std::string condName)
           // 2) u_g * t = lambda * scalingValue (* scalingFactor)
           // with u_g and u_f being the grid and fluid velocity, resp.,
           // n the normal and t the tangent vector.
-          Core::LinAlg::Matrix<2, 3> A(true);
+          Core::LinAlg::Matrix<2, 3> A(Core::LinAlg::Initialization::zero);
           A(0, 0) = (*nodeNormals)[dofsLocalInd[0]];
           A(0, 1) = (*nodeNormals)[dofsLocalInd[1]];
           A(0, 2) = (*nodeNormals)[dofsLocalInd[2]];
@@ -2807,7 +2807,7 @@ void FLD::FluidImplicitTimeInt::ale_update(std::string condName)
           A(1, 1) = (*nodeTangents)[dofsLocalInd[1]];
           A(1, 2) = (*nodeTangents)[dofsLocalInd[2]];
 
-          Core::LinAlg::Matrix<2, 1> b(true);
+          Core::LinAlg::Matrix<2, 1> b(Core::LinAlg::Initialization::zero);
           b(0, 0) = velnpDotNodeNormal;
           if (coupling == "meantangentialvelocity")
           {
@@ -2822,17 +2822,18 @@ void FLD::FluidImplicitTimeInt::ale_update(std::string condName)
 
           // Calculate pseudo inverse of A (always possible due to linear independent rows [n and
           // t])
-          Core::LinAlg::Matrix<2, 2> matTimesMatTransposed(true);
+          Core::LinAlg::Matrix<2, 2> matTimesMatTransposed(Core::LinAlg::Initialization::zero);
           matTimesMatTransposed.multiply_nt(A, A);
 
-          Core::LinAlg::Matrix<2, 2> inverseOfMatTimesmatTransposed(true);
+          Core::LinAlg::Matrix<2, 2> inverseOfMatTimesmatTransposed(
+              Core::LinAlg::Initialization::zero);
           inverseOfMatTimesmatTransposed.invert(matTimesMatTransposed);
 
-          Core::LinAlg::Matrix<3, 2> pInvA(true);
+          Core::LinAlg::Matrix<3, 2> pInvA(Core::LinAlg::Initialization::zero);
           pInvA.multiply_tn(A, inverseOfMatTimesmatTransposed);
 
           // Solve for grid velocities
-          Core::LinAlg::Matrix<3, 1> sol(true);
+          Core::LinAlg::Matrix<3, 1> sol(Core::LinAlg::Initialization::zero);
           sol.multiply(pInvA, b);
 
           // Calculate ale velocities
@@ -2895,7 +2896,7 @@ void FLD::FluidImplicitTimeInt::ale_update(std::string condName)
           // with u_g and u_f being the grid and fluid velocity, resp.
           // and e_r, e_phi and e_theta the basis vectors of a spherical
           // coordinate system, expressed in Cartesian coordinates.
-          Core::LinAlg::Matrix<3, 3> A(true);
+          Core::LinAlg::Matrix<3, 3> A(Core::LinAlg::Initialization::zero);
           A(0, 0) = sinTheta * cosPhi;
           A(0, 1) = sinTheta * sinPhi;
           A(0, 2) = cosTheta;
@@ -2906,17 +2907,17 @@ void FLD::FluidImplicitTimeInt::ale_update(std::string condName)
           A(2, 1) = cosTheta * sinPhi;
           A(2, 2) = -sinTheta;
 
-          Core::LinAlg::Matrix<3, 1> b(true);
+          Core::LinAlg::Matrix<3, 1> b(Core::LinAlg::Initialization::zero);
           b(0, 0) = 0.0;
           b(1, 0) = 0.0;
           b(2, 0) = velnpDotETheta;
 
           // Calculate inverse of A (always possible due to linear independent rows)
-          Core::LinAlg::Matrix<3, 3> invA(true);
+          Core::LinAlg::Matrix<3, 3> invA(Core::LinAlg::Initialization::zero);
           invA.invert(A);
 
           // Solve for grid velocities
-          Core::LinAlg::Matrix<3, 1> sol(true);
+          Core::LinAlg::Matrix<3, 1> sol(Core::LinAlg::Initialization::zero);
           sol.multiply(invA, b);
 
           // Calculate ale velocities

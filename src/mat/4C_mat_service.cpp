@@ -73,7 +73,7 @@ void Mat::volumetrify_and_isochorify(Core::LinAlg::Matrix<6, 1>* pk2vol,
 
   // inverse right Cauchy--Green tensor C^{-1}
   // REMARK: stored in as _stress_ 6-Voigt vector
-  Core::LinAlg::Matrix<6, 1> icg(false);
+  Core::LinAlg::Matrix<6, 1> icg(Core::LinAlg::Initialization::uninitialized);
   icg(0) = (rcg(1) * rcg(2) - 0.25 * rcg(4) * rcg(4)) / rcg3rd;        // (C^{-1})^{11}
   icg(1) = (rcg(0) * rcg(2) - 0.25 * rcg(5) * rcg(5)) / rcg3rd;        // (C^{-1})^{22}
   icg(2) = (rcg(0) * rcg(1) - 0.25 * rcg(3) * rcg(3)) / rcg3rd;        // (C^{-1})^{33}
@@ -89,7 +89,7 @@ void Mat::volumetrify_and_isochorify(Core::LinAlg::Matrix<6, 1>* pk2vol,
   // stress splitting
   {
     // volumetric 2nd Piola--Kirchhoff stress
-    Core::LinAlg::Matrix<6, 1> pk2vol_tmp(false);
+    Core::LinAlg::Matrix<6, 1> pk2vol_tmp(Core::LinAlg::Initialization::uninitialized);
     if (pk2vol != nullptr) pk2vol_tmp.set_view(*pk2vol);
     pk2vol_tmp.update(pk2rcg / 3.0, icg);
 
@@ -110,7 +110,7 @@ void Mat::volumetrify_and_isochorify(Core::LinAlg::Matrix<6, 1>* pk2vol,
     //              - 2/3 (S^{EF} C_{EF}) ( 1/2 (
     //                (C^{-1})^{AC} (C^{-1})^{BD} + (C^{-1})^{AD} (C^{-1})^{BC}
     //              ) )
-    Core::LinAlg::Matrix<6, 6> cvol_tmp(false);
+    Core::LinAlg::Matrix<6, 6> cvol_tmp(Core::LinAlg::Initialization::uninitialized);
     if (cvol != nullptr) cvol_tmp.set_view(*cvol);
     cvol_tmp.multiply_nt(2.0 / 3.0, icg, pk2lin);
     Core::LinAlg::Tensor::add_holzapfel_product(cvol_tmp, icg, -2.0 / 3.0 * pk2rcg);
@@ -152,7 +152,7 @@ void Mat::stretches_principal(Core::LinAlg::Matrix<3, 1>& prstr, Core::LinAlg::M
     const Core::LinAlg::Matrix<6, 1>& rcg)
 {
   // create right Cauchy-Green 2-tensor
-  Core::LinAlg::Matrix<3, 3> rcgt(false);
+  Core::LinAlg::Matrix<3, 3> rcgt(Core::LinAlg::Initialization::uninitialized);
   rcgt(0, 0) = rcg(0);
   rcgt(1, 1) = rcg(1);
   rcgt(2, 2) = rcg(2);
@@ -186,7 +186,7 @@ Core::LinAlg::Matrix<6, 6> Mat::pull_back_four_tensor(const double det_F,
 
   // We can use the fact that cmat_result_voigt(i,j,k,l)=cmat_result_voigt(k,l,i,j) if we have a
   // hyper-elastic material
-  Core::LinAlg::Matrix<6, 6> cmat_result_voigt(true);
+  Core::LinAlg::Matrix<6, 6> cmat_result_voigt(Core::LinAlg::Initialization::zero);
 
   cmat_result_voigt(0, 0) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 0, 0, 0, 0);
   cmat_result_voigt(0, 1) = get_pull_back_four_tensor_entry(det_F, F_inv, cmat_tensor, 0, 0, 1, 1);
@@ -255,7 +255,7 @@ double Mat::get_pull_back_four_tensor_entry(const double det_F,
 Core::LinAlg::Matrix<6, 6> Mat::push_forward_four_tensor(const double det_F,
     const Core::LinAlg::Matrix<3, 3>& defgrd, const Core::LinAlg::Matrix<6, 6>& cmat_lagr_voigt)
 {
-  Core::LinAlg::Matrix<6, 6> cmatEul(true);
+  Core::LinAlg::Matrix<6, 6> cmatEul(Core::LinAlg::Initialization::zero);
   for (int p = 0; p < 6; p++)
   {
     for (int q = 0; q < 6; q++)
@@ -293,9 +293,9 @@ Core::LinAlg::Matrix<6, 1> Mat::push_forward_stress_tensor_voigt(
     const Core::LinAlg::Matrix<6, 1>& stress_elastic,
     const Core::LinAlg::Matrix<3, 3>& deformation_gradient)
 {
-  Core::LinAlg::Matrix<3, 3> GS_tilde(true);
-  Core::LinAlg::Matrix<3, 3> GS_tildeGT(true);
-  Core::LinAlg::Matrix<3, 3> S_elastic(true);
+  Core::LinAlg::Matrix<3, 3> GS_tilde(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> GS_tildeGT(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> S_elastic(Core::LinAlg::Initialization::zero);
 
   // convert original stress to stress like Voigt notation
   Core::LinAlg::Voigt::Stresses::vector_to_matrix(stress_elastic, S_elastic);
@@ -305,7 +305,7 @@ Core::LinAlg::Matrix<6, 1> Mat::push_forward_stress_tensor_voigt(
   GS_tildeGT.multiply_nt(GS_tilde, deformation_gradient);
 
   // compute pk2 in reference configuration
-  Core::LinAlg::Matrix<6, 1> stress(true);
+  Core::LinAlg::Matrix<6, 1> stress(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Voigt::Stresses::matrix_to_vector(GS_tildeGT, stress);
   stress.scale(1.0 / deformation_gradient.determinant());
 

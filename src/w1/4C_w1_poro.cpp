@@ -20,13 +20,16 @@ FOUR_C_NAMESPACE_OPEN
 
 template <Core::FE::CellType distype>
 Discret::Elements::Wall1Poro<distype>::Wall1Poro(int id, int owner)
-    : Discret::Elements::Wall1(id, owner), intpoints_(distype), weights_(true), myknots_(numdim_)
+    : Discret::Elements::Wall1(id, owner),
+      intpoints_(distype),
+      weights_(Core::LinAlg::Initialization::zero),
+      myknots_(numdim_)
 {
   numgpt_ = intpoints_.num_points();
 
-  invJ_.resize(numgpt_, Core::LinAlg::Matrix<numdim_, numdim_>(true));
+  invJ_.resize(numgpt_, Core::LinAlg::Matrix<numdim_, numdim_>(Core::LinAlg::Initialization::zero));
   detJ_.resize(numgpt_, 0.0);
-  xsi_.resize(numgpt_, Core::LinAlg::Matrix<numdim_, 1>(true));
+  xsi_.resize(numgpt_, Core::LinAlg::Matrix<numdim_, 1>(Core::LinAlg::Initialization::zero));
   anisotropic_permeability_directions_.resize(2, std::vector<double>(2, 0.0));
   anisotropic_permeability_nodal_coeffs_.resize(2, std::vector<double>(numnod_, 0.0));
 
@@ -107,13 +110,13 @@ void Discret::Elements::Wall1Poro<distype>::unpack(Core::Communication::UnpackBu
   // invJ_
   int size = 0;
   extract_from_pack(buffer, size);
-  invJ_.resize(size, Core::LinAlg::Matrix<numdim_, numdim_>(true));
+  invJ_.resize(size, Core::LinAlg::Matrix<numdim_, numdim_>(Core::LinAlg::Initialization::zero));
   for (int i = 0; i < size; ++i) extract_from_pack(buffer, invJ_[i]);
 
   // xsi_
   size = 0;
   extract_from_pack(buffer, size);
-  xsi_.resize(size, Core::LinAlg::Matrix<numdim_, 1>(true));
+  xsi_.resize(size, Core::LinAlg::Matrix<numdim_, 1>(Core::LinAlg::Initialization::zero));
   for (int i = 0; i < size; ++i) extract_from_pack(buffer, xsi_[i]);
 
   // scatra_coupling_

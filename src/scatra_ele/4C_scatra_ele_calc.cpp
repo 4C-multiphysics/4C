@@ -43,31 +43,31 @@ Discret::Elements::ScaTraEleCalc<distype, probdim>::ScaTraEleCalc(
       scatraparatimint_(Discret::Elements::ScaTraEleParameterTimInt::instance(disname)),
       diffmanager_(std::make_shared<ScaTraEleDiffManager>(numscal_)),
       reamanager_(std::make_shared<ScaTraEleReaManager>(numscal_)),
-      ephin_(numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true)),
-      ephinp_(numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true)),
-      ehist_(numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true)),
-      fsphinp_(numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true)),
+      ephin_(numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero)),
+      ephinp_(numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero)),
+      ehist_(numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero)),
+      fsphinp_(numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero)),
       rotsymmpbc_(std::make_shared<FLD::RotationallySymmetricPeriodicBC<distype, nsd_ + 1,
               Discret::Elements::Fluid::none>>()),
-      evelnp_(true),
-      econvelnp_(true),
-      efsvel_(true),
-      eaccnp_(true),
-      edispnp_(true),
-      eprenp_(true),
+      evelnp_(),
+      econvelnp_(),
+      efsvel_(),
+      eaccnp_(),
+      edispnp_(),
+      eprenp_(),
       tpn_(0.0),
-      xsi_(true),
-      xyze_(true),
-      funct_(true),
-      deriv_(true),
-      deriv2_(true),
-      derxy_(true),
-      derxy2_(true),
-      xjm_(true),
-      xij_(true),
-      xder2_(true),
+      xsi_(),
+      xyze_(),
+      funct_(),
+      deriv_(),
+      deriv2_(),
+      derxy_(),
+      derxy2_(),
+      xjm_(),
+      xij_(),
+      xder2_(),
       bodyforce_(numdofpernode_),
-      weights_(true),
+      weights_(),
       myknots_(nsd_),
       eid_(0),
       ele_(nullptr),
@@ -490,7 +490,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::sysmat(Core::Elements::
   // calculation of model coefficients B (velocity) and D (scalar)
   // at element center
   // coefficient B of fine-scale velocity
-  Core::LinAlg::Matrix<nsd_, 1> B_mfs(true);
+  Core::LinAlg::Matrix<nsd_, 1> B_mfs(Core::LinAlg::Initialization::zero);
   // coefficient D of fine-scale scalar
   double D_mfs = 0.0;
   if (turbparams_->turb_model() == Inpar::FLUID::multifractal_subgrid_scales)
@@ -508,7 +508,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::sysmat(Core::Elements::
 
       // provide necessary velocities and gradients at element center
       // get velocity at element center
-      Core::LinAlg::Matrix<nsd_, 1> fsvelint(true);
+      Core::LinAlg::Matrix<nsd_, 1> fsvelint(Core::LinAlg::Initialization::zero);
       fsvelint.multiply(efsvel_, funct_);
 
       // calculate model coefficients
@@ -542,7 +542,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::sysmat(Core::Elements::
     if (scatrapara_->is_conservative()) get_divergence(vdiv, evelnp_);
 
     // get fine-scale velocity and its derivatives at integration point
-    Core::LinAlg::Matrix<nsd_, 1> fsvelint(true);
+    Core::LinAlg::Matrix<nsd_, 1> fsvelint(Core::LinAlg::Initialization::zero);
     if (turbparams_->turb_model() == Inpar::FLUID::multifractal_subgrid_scales)
       fsvelint.multiply(efsvel_, funct_);
 
@@ -554,7 +554,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::sysmat(Core::Elements::
       rea_phi = densnp[k] * scatravarmanager_->phinp(k) * reamanager_->get_rea_coeff(k);
 
       // compute gradient of fine-scale part of scalar value
-      Core::LinAlg::Matrix<nsd_, 1> fsgradphi(true);
+      Core::LinAlg::Matrix<nsd_, 1> fsgradphi(Core::LinAlg::Initialization::zero);
       if (turbparams_->fssgd()) fsgradphi.multiply(derxy_, fsphinp_[k]);
 
       // compute rhs containing bodyforce (divided by specific heat capacity) and,
@@ -570,9 +570,9 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::sysmat(Core::Elements::
       //--------------------------------------------------------------------
 
       // subgrid-scale convective term
-      Core::LinAlg::Matrix<nen_, 1> sgconv(true);
+      Core::LinAlg::Matrix<nen_, 1> sgconv(Core::LinAlg::Initialization::zero);
       // subgrid-scale velocity vector in gausspoint
-      Core::LinAlg::Matrix<nsd_, 1> sgvelint(true);
+      Core::LinAlg::Matrix<nsd_, 1> sgvelint(Core::LinAlg::Initialization::zero);
 
       double scatrares(0.0);
       // calculate strong residual
@@ -636,7 +636,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::sysmat(Core::Elements::
             scatravarmanager_->con_vel(k), vol);  // TODO:(Thon) do we really have to do this??
       }
 
-      Core::LinAlg::Matrix<nen_, 1> diff(true);
+      Core::LinAlg::Matrix<nen_, 1> diff(Core::LinAlg::Initialization::zero);
       // diffusive term using current scalar value for higher-order elements
       if (use2ndderiv_)
       {
@@ -649,10 +649,10 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::sysmat(Core::Elements::
       // calculation of model coefficients B (velocity) and D (scalar)
       // at Gauss point as well as calculation
       // of multifractal subgrid-scale quantities
-      Core::LinAlg::Matrix<nsd_, 1> mfsgvelint(true);
+      Core::LinAlg::Matrix<nsd_, 1> mfsgvelint(Core::LinAlg::Initialization::zero);
       double mfsvdiv(0.0);
       double mfssgphi(0.0);
-      Core::LinAlg::Matrix<nsd_, 1> mfsggradphi(true);
+      Core::LinAlg::Matrix<nsd_, 1> mfsggradphi(Core::LinAlg::Initialization::zero);
       if (turbparams_->turb_model() == Inpar::FLUID::multifractal_subgrid_scales)
       {
         if (turbparams_->bd_gp())

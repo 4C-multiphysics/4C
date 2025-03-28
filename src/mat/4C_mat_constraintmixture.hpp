@@ -268,7 +268,7 @@ namespace Mat
     /// Return prestretch of collagen fibers
     Core::LinAlg::Matrix<3, 1> get_prestretch(int gp) const
     {
-      Core::LinAlg::Matrix<3, 1> visprestretch(true);
+      Core::LinAlg::Matrix<3, 1> visprestretch(Core::LinAlg::Initialization::zero);
       visprestretch(0) = localprestretch_->at(gp)(0);
       visprestretch(1) = localprestretch_->at(gp)(1);
       visprestretch(2) = localprestretch_->at(gp)(2);
@@ -277,7 +277,7 @@ namespace Mat
     /// Return prestretch of collagen fibers
     Core::LinAlg::Matrix<3, 1> get_homstress(int gp) const
     {
-      Core::LinAlg::Matrix<3, 1> visprestretch(true);
+      Core::LinAlg::Matrix<3, 1> visprestretch(Core::LinAlg::Initialization::zero);
       visprestretch(0) = localhomstress_->at(gp)(0);
       visprestretch(1) = localhomstress_->at(gp)(1);
       visprestretch(2) = localhomstress_->at(gp)(2);

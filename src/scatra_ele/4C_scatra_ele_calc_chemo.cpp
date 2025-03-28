@@ -86,8 +86,8 @@ void Discret::Elements::ScaTraEleCalcChemo<distype, probdim>::calc_mat_chemo(
     {
       // Standard Galerkin terms
 
-      Core::LinAlg::Matrix<nen_, nen_> gradgradmatrix(true);
-      Core::LinAlg::Matrix<nen_, 1> bigterm(true);
+      Core::LinAlg::Matrix<nen_, nen_> gradgradmatrix(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nen_, 1> bigterm(Core::LinAlg::Initialization::zero);
 
       const double chemofac = timefacfac * densnp;
       const int partner = get_partner(pair);  // Get attracting partner ID
@@ -155,7 +155,7 @@ void Discret::Elements::ScaTraEleCalcChemo<distype, probdim>::calc_rhs_chemo(
 
       const int partner = get_partner(pair);
 
-      Core::LinAlg::Matrix<nen_, 1> gradfunctattr(true);
+      Core::LinAlg::Matrix<nen_, 1> gradfunctattr(Core::LinAlg::Initialization::zero);
       Core::LinAlg::Matrix<nsd_, 1> attractant = varmanager->grad_phi(partner);
 
       gradfunctattr.multiply_tn(my::derxy_, attractant);
@@ -340,12 +340,12 @@ void Discret::Elements::ScaTraEleCalcChemo<distype, probdim>::calc_strong_residu
       if (my::use2ndderiv_)
       {
         // diffusive part:  diffus * ( N,xx  +  N,yy +  N,zz )
-        Core::LinAlg::Matrix<nen_, 1> laplace(true);
+        Core::LinAlg::Matrix<nen_, 1> laplace(Core::LinAlg::Initialization::zero);
         my::get_laplacian_strong_form(laplace);
         laplattractant = laplace.dot(my::ephinp_[partner]);
       }
 
-      Core::LinAlg::Matrix<1, 1> chemoderivattr(true);
+      Core::LinAlg::Matrix<1, 1> chemoderivattr(Core::LinAlg::Initialization::zero);
       chemoderivattr.multiply_tn(varmanager->grad_phi(partner), varmanager->grad_phi(k));
 
       chemo_phi += chemocoeff * (chemoderivattr(0, 0) + laplattractant * varmanager->phinp(k));

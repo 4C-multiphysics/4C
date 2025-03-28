@@ -652,7 +652,7 @@ void FLD::Utils::lift_drag(const std::shared_ptr<const Core::FE::Discretization>
         const std::vector<int> dof = dis->dof(*actnode);
 
         // get nodal forces
-        Core::LinAlg::Matrix<3, 1> actforces(true);
+        Core::LinAlg::Matrix<3, 1> actforces(Core::LinAlg::Initialization::zero);
         for (int idim = 0; idim < ndim; idim++)
         {
           actforces(idim, 0) = (trueresidual)[rowdofmap.LID(dof[idim])];
@@ -661,7 +661,7 @@ void FLD::Utils::lift_drag(const std::shared_ptr<const Core::FE::Discretization>
         // z-component remains zero for ndim=2
 
         // get moment
-        Core::LinAlg::Matrix<3, 1> actmoments(true);
+        Core::LinAlg::Matrix<3, 1> actmoments(Core::LinAlg::Initialization::zero);
         // get vector of point to center point
         Core::LinAlg::Matrix<3, 1> distances;
         distances.update(1.0, x, -1.0, centerCoord);
@@ -677,7 +677,7 @@ void FLD::Utils::lift_drag(const std::shared_ptr<const Core::FE::Discretization>
         }
 
         // calculate nodal angular moment with respect to global coordinate system
-        Core::LinAlg::Matrix<3, 1> actmoment_gc(true);
+        Core::LinAlg::Matrix<3, 1> actmoment_gc(Core::LinAlg::Initialization::zero);
         actmoment_gc(0, 0) =
             distances(1) * actforces(2, 0) - distances(2) * actforces(1, 0);  // zero for 2D
         actmoment_gc(1, 0) =

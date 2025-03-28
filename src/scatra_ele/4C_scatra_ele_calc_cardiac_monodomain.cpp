@@ -113,7 +113,7 @@ void Discret::Elements::ScaTraEleCalcCardiacMonodomain<distype, probdim>::mat_my
       std::dynamic_pointer_cast<ScaTraEleDiffManagerAniso<nsd_>>(my::diffmanager_);
 
   // get constant diffusivity
-  Core::LinAlg::Matrix<nsd_, nsd_> difftensor(true);
+  Core::LinAlg::Matrix<nsd_, nsd_> difftensor(Core::LinAlg::Initialization::zero);
   actmat->diffusivity(difftensor);
 
   diffmanageraniso->set_anisotropic_diff(difftensor, k);
@@ -206,7 +206,7 @@ void Discret::Elements::ScaTraEleCalcCardiacMonodomain<distype, probdim>::sysmat
         double rhsint(0.0);
         advreac::get_rhs_int(rhsint, densnp[k], k);
 
-        Core::LinAlg::Matrix<nen_, 1> dummy(true);
+        Core::LinAlg::Matrix<nen_, 1> dummy(Core::LinAlg::Initialization::zero);
         const double timefacfac = my::scatraparatimint_->time_fac() * fac;
 
         // reactive terms on integration point on rhs
@@ -262,7 +262,7 @@ void Discret::Elements::ScaTraEleCalcCardiacMonodomain<distype, probdim>::sysmat
       // 3) element matrix: reactive term
       //----------------------------------------------------------------
 
-      Core::LinAlg::Matrix<nen_, 1> dummy(true);
+      Core::LinAlg::Matrix<nen_, 1> dummy(Core::LinAlg::Initialization::zero);
       if (not my::scatrapara_->mat_gp())
         advreac::calc_mat_react(emat, k, timefacfac, 0., 0., densnp[k], dummy, dummy);
 

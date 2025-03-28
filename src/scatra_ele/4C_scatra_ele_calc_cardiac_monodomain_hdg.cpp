@@ -94,7 +94,7 @@ void Discret::Elements::ScaTraEleCalcHDGCardiacMonodomain<distype, probdim>::pre
   if (actmat->diffusion_at_ele_center())
   {
     // get diffusivity at ele center
-    Core::LinAlg::Matrix<probdim, probdim> diff(true);
+    Core::LinAlg::Matrix<probdim, probdim> diff(Core::LinAlg::Initialization::zero);
     actmat->diffusivity(diff, 0);
     Core::LinAlg::SerialDenseMatrix difftensortmp(this->nsd_, this->nsd_);
     for (unsigned int i = 0; i < this->nsd_; ++i)
@@ -133,7 +133,7 @@ void Discret::Elements::ScaTraEleCalcHDGCardiacMonodomain<distype, probdim>::pre
     for (unsigned int q = 0; q < shapes->nqpoints_; ++q)
     {
       Core::LinAlg::SerialDenseMatrix difftensortmp(this->nsd_, this->nsd_);
-      Core::LinAlg::Matrix<probdim, probdim> diff(true);
+      Core::LinAlg::Matrix<probdim, probdim> diff(Core::LinAlg::Initialization::zero);
       actmat->diffusivity(diff, q);
       for (unsigned int i = 0; i < this->nsd_; ++i)
         for (unsigned int j = 0; j < this->nsd_; ++j) difftensortmp(i, j) = diff(i, j);
@@ -180,7 +180,7 @@ void Discret::Elements::ScaTraEleCalcHDGCardiacMonodomain<distype, probdim>::pre
   if (actmat->diffusion_at_ele_center())
   {
     // get diffusivity at ele center
-    Core::LinAlg::Matrix<probdim, probdim> diff(true);
+    Core::LinAlg::Matrix<probdim, probdim> diff(Core::LinAlg::Initialization::zero);
     actmat->diffusivity(diff, 0);
     Core::LinAlg::SerialDenseMatrix difftensortmp(this->nsd_, this->nsd_);
     for (unsigned int i = 0; i < this->nsd_; ++i)
@@ -199,7 +199,7 @@ void Discret::Elements::ScaTraEleCalcHDGCardiacMonodomain<distype, probdim>::pre
 
     std::vector<Core::LinAlg::Matrix<Core::FE::num_nodes<distype>, 1>> shapefcns(numgp);
 
-    Core::LinAlg::Matrix<probdim, 1> gp_coord(true);
+    Core::LinAlg::Matrix<probdim, 1> gp_coord(Core::LinAlg::Initialization::zero);
     for (std::size_t q = 0; q < numgp; ++q)
     {
       // gaussian points coordinates
@@ -220,7 +220,7 @@ void Discret::Elements::ScaTraEleCalcHDGCardiacMonodomain<distype, probdim>::pre
     for (unsigned int q = 0; q < numgp; ++q)
     {
       Core::LinAlg::SerialDenseMatrix difftensortmp(this->nsd_, this->nsd_);
-      Core::LinAlg::Matrix<probdim, probdim> diff(true);
+      Core::LinAlg::Matrix<probdim, probdim> diff(Core::LinAlg::Initialization::zero);
       actmat->diffusivity(diff, q);
       for (unsigned int i = 0; i < this->nsd_; ++i)
         for (unsigned int j = 0; j < this->nsd_; ++j) difftensortmp(i, j) = diff(i, j);
@@ -265,7 +265,7 @@ void Discret::Elements::ScaTraEleCalcHDGCardiacMonodomain<distype, probdim>::mat
       std::dynamic_pointer_cast<const Mat::Myocard>(material);
 
   // coordinate of material gauss points
-  Core::LinAlg::Matrix<probdim, 1> mat_gp_coord(true);
+  Core::LinAlg::Matrix<probdim, 1> mat_gp_coord(Core::LinAlg::Initialization::zero);
   // values of shape function at material gauss points
   Core::LinAlg::SerialDenseVector values_mat_gp(this->shapes_->ndofs_);
 
@@ -692,7 +692,7 @@ int Discret::Elements::ScaTraEleCalcHDGCardiacMonodomain<distype,
   std::vector<Core::LinAlg::SerialDenseVector> shape_gp(intpoints.ip().nquad);
 
   // coordinate of material gauss points
-  Core::LinAlg::Matrix<probdim, 1> mat_gp_coord(true);
+  Core::LinAlg::Matrix<probdim, 1> mat_gp_coord(Core::LinAlg::Initialization::zero);
 
   for (int q = 0; q < intpoints_old.ip().nquad; ++q)
   {
@@ -814,7 +814,7 @@ void Discret::Elements::ScaTraEleCalcHDGCardiacMonodomain<distype, probdim>::set
     double deg2rad = M_PI / 180.;
     for (unsigned int gp = 0; gp < cir.size(); ++gp)
     {
-      Core::LinAlg::Matrix<3, 1> rad(false);
+      Core::LinAlg::Matrix<3, 1> rad(Core::LinAlg::Initialization::uninitialized);
       rad.cross_product(cir[gp], tan[gp]);
 
       double tmp1 = cos(helix[gp] * deg2rad) * cos(transverse[gp] * deg2rad);

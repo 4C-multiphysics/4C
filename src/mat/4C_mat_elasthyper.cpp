@@ -312,11 +312,11 @@ void Mat::ElastHyper::evaluate_fiber_vecs(const double newgamma,
 void Mat::ElastHyper::strain_energy(
     const Core::LinAlg::Matrix<6, 1>& glstrain, double& psi, const int gp, const int eleGID) const
 {
-  static Core::LinAlg::Matrix<6, 1> C_strain(true);
+  static Core::LinAlg::Matrix<6, 1> C_strain(Core::LinAlg::Initialization::zero);
   C_strain.clear();
-  static Core::LinAlg::Matrix<3, 1> prinv(true);
+  static Core::LinAlg::Matrix<3, 1> prinv(Core::LinAlg::Initialization::zero);
   prinv.clear();
-  static Core::LinAlg::Matrix<3, 1> modinv(true);
+  static Core::LinAlg::Matrix<3, 1> modinv(Core::LinAlg::Initialization::zero);
   modinv.clear();
 
   evaluate_right_cauchy_green_strain_like_voigt(glstrain, C_strain);
@@ -377,31 +377,31 @@ void Mat::ElastHyper::evaluate_cauchy_n_dir_and_derivatives(
 {
   cauchy_n_dir = 0.0;
 
-  static Core::LinAlg::Matrix<3, 3> b(true);
+  static Core::LinAlg::Matrix<3, 3> b(Core::LinAlg::Initialization::zero);
   b.multiply_nt(1.0, defgrd, defgrd, 0.0);
-  static Core::LinAlg::Matrix<3, 1> bdn(true);
+  static Core::LinAlg::Matrix<3, 1> bdn(Core::LinAlg::Initialization::zero);
   bdn.multiply(1.0, b, n, 0.0);
-  static Core::LinAlg::Matrix<3, 1> bddir(true);
+  static Core::LinAlg::Matrix<3, 1> bddir(Core::LinAlg::Initialization::zero);
   bddir.multiply(1.0, b, dir, 0.0);
   const double bdnddir = bdn.dot(dir);
 
-  static Core::LinAlg::Matrix<3, 3> ib(true);
+  static Core::LinAlg::Matrix<3, 3> ib(Core::LinAlg::Initialization::zero);
   ib.invert(b);
-  static Core::LinAlg::Matrix<3, 1> ibdn(true);
+  static Core::LinAlg::Matrix<3, 1> ibdn(Core::LinAlg::Initialization::zero);
   ibdn.multiply(1.0, ib, n, 0.0);
-  static Core::LinAlg::Matrix<3, 1> ibddir(true);
+  static Core::LinAlg::Matrix<3, 1> ibddir(Core::LinAlg::Initialization::zero);
   ibddir.multiply(1.0, ib, dir, 0.0);
   const double ibdnddir = ibdn.dot(dir);
   const double nddir = n.dot(dir);
 
-  static Core::LinAlg::Matrix<6, 1> bV_strain(true);
+  static Core::LinAlg::Matrix<6, 1> bV_strain(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Voigt::Strains::matrix_to_vector(b, bV_strain);
-  static Core::LinAlg::Matrix<3, 1> prinv(true);
+  static Core::LinAlg::Matrix<3, 1> prinv(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Voigt::Strains::invariants_principal(prinv, bV_strain);
 
-  static Core::LinAlg::Matrix<3, 1> dPI(true);
-  static Core::LinAlg::Matrix<6, 1> ddPII(true);
-  static Core::LinAlg::Matrix<10, 1> dddPIII(true);
+  static Core::LinAlg::Matrix<3, 1> dPI(Core::LinAlg::Initialization::zero);
+  static Core::LinAlg::Matrix<6, 1> ddPII(Core::LinAlg::Initialization::zero);
+  static Core::LinAlg::Matrix<10, 1> dddPIII(Core::LinAlg::Initialization::zero);
   dPI.clear();
   ddPII.clear();
   dddPIII.clear();
@@ -429,54 +429,54 @@ void Mat::ElastHyper::evaluate_cauchy_n_dir_and_derivatives(
   }
 
   // calculate stuff that is needed for evaluations of derivatives w.r.t. F
-  static Core::LinAlg::Matrix<9, 1> FV(true);
+  static Core::LinAlg::Matrix<9, 1> FV(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Voigt::matrix_3x3_to_9x1(defgrd, FV);
-  static Core::LinAlg::Matrix<3, 3> iF(true);
+  static Core::LinAlg::Matrix<3, 3> iF(Core::LinAlg::Initialization::zero);
   iF.invert(defgrd);
-  static Core::LinAlg::Matrix<3, 3> iFT(true);
+  static Core::LinAlg::Matrix<3, 3> iFT(Core::LinAlg::Initialization::zero);
   iFT.update_t(iF);
-  static Core::LinAlg::Matrix<9, 1> iFTV(true);
+  static Core::LinAlg::Matrix<9, 1> iFTV(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Voigt::matrix_3x3_to_9x1(iFT, iFTV);
 
   // calculation of dI_i/dF (derivatives of invariants of b w.r.t. deformation gradient)
-  static Core::LinAlg::Matrix<3, 3> bdF(true);
+  static Core::LinAlg::Matrix<3, 3> bdF(Core::LinAlg::Initialization::zero);
   bdF.multiply(1.0, b, defgrd, 0.0);
-  static Core::LinAlg::Matrix<9, 1> bdFV(true);
+  static Core::LinAlg::Matrix<9, 1> bdFV(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Voigt::matrix_3x3_to_9x1(bdF, bdFV);
-  static Core::LinAlg::Matrix<3, 3> ibdF(true);
+  static Core::LinAlg::Matrix<3, 3> ibdF(Core::LinAlg::Initialization::zero);
   ibdF.multiply(1.0, ib, defgrd, 0.0);
-  static Core::LinAlg::Matrix<9, 1> ibdFV(true);
+  static Core::LinAlg::Matrix<9, 1> ibdFV(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Voigt::matrix_3x3_to_9x1(ibdF, ibdFV);
-  static Core::LinAlg::Matrix<9, 1> d_I1_dF(true);
+  static Core::LinAlg::Matrix<9, 1> d_I1_dF(Core::LinAlg::Initialization::zero);
   d_I1_dF.update(2.0, FV, 0.0);
-  static Core::LinAlg::Matrix<9, 1> d_I2_dF(true);
+  static Core::LinAlg::Matrix<9, 1> d_I2_dF(Core::LinAlg::Initialization::zero);
   d_I2_dF.update(prinv(0), FV, 0.0);
   d_I2_dF.update(-1.0, bdFV, 1.0);
   d_I2_dF.scale(2.0);
-  static Core::LinAlg::Matrix<9, 1> d_I3_dF(true);
+  static Core::LinAlg::Matrix<9, 1> d_I3_dF(Core::LinAlg::Initialization::zero);
   d_I3_dF.update(2.0 * prinv(2), ibdFV, 0.0);
 
   // calculate d(b \cdot n \cdot t)/dF
-  static Core::LinAlg::Matrix<3, 1> tempvec3x1(true);
-  static Core::LinAlg::Matrix<1, 3> tempvec1x3(true);
+  static Core::LinAlg::Matrix<3, 1> tempvec3x1(Core::LinAlg::Initialization::zero);
+  static Core::LinAlg::Matrix<1, 3> tempvec1x3(Core::LinAlg::Initialization::zero);
   tempvec1x3.multiply_tn(1.0, dir, defgrd, 0.0);
-  static Core::LinAlg::Matrix<3, 3> d_bdnddir_dF(true);
+  static Core::LinAlg::Matrix<3, 3> d_bdnddir_dF(Core::LinAlg::Initialization::zero);
   d_bdnddir_dF.multiply_nn(1.0, n, tempvec1x3, 0.0);
   tempvec1x3.multiply_tn(1.0, n, defgrd, 0.0);
   d_bdnddir_dF.multiply_nn(1.0, dir, tempvec1x3, 1.0);
-  static Core::LinAlg::Matrix<9, 1> d_bdnddir_dFV(true);
+  static Core::LinAlg::Matrix<9, 1> d_bdnddir_dFV(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Voigt::matrix_3x3_to_9x1(d_bdnddir_dF, d_bdnddir_dFV);
 
   // calculate d(b^{-1} \cdot n \cdot t)/dF
-  static Core::LinAlg::Matrix<1, 3> dirdibdF(true);
-  static Core::LinAlg::Matrix<1, 3> ndibdF(true);
+  static Core::LinAlg::Matrix<1, 3> dirdibdF(Core::LinAlg::Initialization::zero);
+  static Core::LinAlg::Matrix<1, 3> ndibdF(Core::LinAlg::Initialization::zero);
   dirdibdF.multiply_tn(1.0, dir, ibdF, 0.0);
-  static Core::LinAlg::Matrix<3, 3> d_ibdnddir_dF(true);
+  static Core::LinAlg::Matrix<3, 3> d_ibdnddir_dF(Core::LinAlg::Initialization::zero);
   d_ibdnddir_dF.multiply_nn(1.0, ibdn, dirdibdF, 0.0);
   ndibdF.multiply_tn(1.0, n, ibdF, 0.0);
   d_ibdnddir_dF.multiply_nn(1.0, ibddir, ndibdF, 1.0);
   d_ibdnddir_dF.scale(-1.0);
-  static Core::LinAlg::Matrix<9, 1> d_ibdnddir_dFV(true);
+  static Core::LinAlg::Matrix<9, 1> d_ibdnddir_dFV(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Voigt::matrix_3x3_to_9x1(d_ibdnddir_dF, d_ibdnddir_dFV);
 
   if (temp != nullptr)
@@ -623,12 +623,12 @@ void Mat::ElastHyper::evaluate_cauchy_n_dir_and_derivatives(
   if (d2_cauchyndir_dF2 != nullptr)
   {
     // define and fill all tensors that can not be calculated using multiply operations first
-    static Core::LinAlg::Matrix<9, 9> d_iFT_dF(true);
-    static Core::LinAlg::Matrix<9, 9> d2_bdnddir_dF2(true);
-    static Core::LinAlg::Matrix<9, 9> d2_ibdnddir_dF2(true);
-    static Core::LinAlg::Matrix<9, 9> d2_I1_dF2(true);
-    static Core::LinAlg::Matrix<9, 9> d2_I2_dF2(true);
-    static Core::LinAlg::Matrix<9, 9> d2_I3_dF2(true);
+    static Core::LinAlg::Matrix<9, 9> d_iFT_dF(Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<9, 9> d2_bdnddir_dF2(Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<9, 9> d2_ibdnddir_dF2(Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<9, 9> d2_I1_dF2(Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<9, 9> d2_I2_dF2(Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<9, 9> d2_I3_dF2(Core::LinAlg::Initialization::zero);
     d_iFT_dF.clear();
     d2_bdnddir_dF2.clear();
     d2_ibdnddir_dF2.clear();
@@ -636,7 +636,7 @@ void Mat::ElastHyper::evaluate_cauchy_n_dir_and_derivatives(
     d2_I2_dF2.clear();
     d2_I3_dF2.clear();
 
-    static Core::LinAlg::Matrix<3, 3> C(true);
+    static Core::LinAlg::Matrix<3, 3> C(Core::LinAlg::Initialization::zero);
     C.multiply_tn(1.0, defgrd, defgrd, 0.0);
 
     using map = Core::LinAlg::Voigt::IndexMappings;

@@ -260,8 +260,8 @@ void Mat::MembraneActiveStrain::evaluate_membrane(const Core::LinAlg::Matrix<3, 
   std::vector<Core::LinAlg::Matrix<3, 3>> structural_tensors_loc;
 
   // loop over all fiber vectors
-  Core::LinAlg::Matrix<3, 1> fibervector(true);
-  Core::LinAlg::Matrix<3, 3> structuraltensor(true);
+  Core::LinAlg::Matrix<3, 1> fibervector(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> structuraltensor(Core::LinAlg::Initialization::zero);
   for (unsigned int p = 0; p < 3; ++p)
   {
     fibervector.multiply_tn(1.0, Q_trafo, fibervecs_[p], 0.0);
@@ -272,7 +272,7 @@ void Mat::MembraneActiveStrain::evaluate_membrane(const Core::LinAlg::Matrix<3, 
   //******************
   // ACTIVE deformation gradient in local coordinates
   //******************
-  Core::LinAlg::Matrix<3, 3> defgrd_active_inv_loc(true);
+  Core::LinAlg::Matrix<3, 3> defgrd_active_inv_loc(Core::LinAlg::Initialization::zero);
 
   // set defgrd_active to identity tensor
   for (int i = 0; i < 3; i++) defgrd_active_inv_loc(i, i) = 1.0;
@@ -305,14 +305,14 @@ void Mat::MembraneActiveStrain::evaluate_membrane(const Core::LinAlg::Matrix<3, 
   //******************
   // PASSIVE cauchy green in local coordinates
   //******************
-  Core::LinAlg::Matrix<3, 3> cauchygreen_passive_local(true);
-  Core::LinAlg::Matrix<3, 3> defgrd_passive_local(true);
+  Core::LinAlg::Matrix<3, 3> cauchygreen_passive_local(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> defgrd_passive_local(Core::LinAlg::Initialization::zero);
   defgrd_passive_local.multiply_nn(1.0, defgrd, defgrd_active_inv_loc, 0.0);
   cauchygreen_passive_local.multiply_tn(1.0, defgrd_passive_local, defgrd_passive_local, 0.0);
 
   // compute passive green lagrange strain
-  Core::LinAlg::Matrix<3, 3> cmatpassive_loc(true);
-  Core::LinAlg::Matrix<3, 1> S_passive_loc_voigt(true);
+  Core::LinAlg::Matrix<3, 3> cmatpassive_loc(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> S_passive_loc_voigt(Core::LinAlg::Initialization::zero);
   std::dynamic_pointer_cast<Mat::MembraneElastHyper>(matpassive_)
       ->evaluate_membrane(defgrd_passive_local, cauchygreen_passive_local, params, Q_trafo,
           S_passive_loc_voigt, cmatpassive_loc, gp, eleGID);
@@ -320,20 +320,20 @@ void Mat::MembraneActiveStrain::evaluate_membrane(const Core::LinAlg::Matrix<3, 
   //******************
   // FULL PART
   //******************
-  Core::LinAlg::Matrix<2, 2> S_tot(true);
-  Core::LinAlg::Matrix<2, 2> S_passive_loc(true);
+  Core::LinAlg::Matrix<2, 2> S_tot(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<2, 2> S_passive_loc(Core::LinAlg::Initialization::zero);
   S_passive_loc(0, 0) = S_passive_loc_voigt(0);
   S_passive_loc(1, 1) = S_passive_loc_voigt(1);
   S_passive_loc(1, 0) = S_passive_loc_voigt(2);
   S_passive_loc(0, 1) = S_passive_loc_voigt(2);
 
-  Core::LinAlg::Matrix<2, 2> defgrd_active_inv_loc_red(true);
+  Core::LinAlg::Matrix<2, 2> defgrd_active_inv_loc_red(Core::LinAlg::Initialization::zero);
   defgrd_active_inv_loc_red(0, 0) = defgrd_active_inv_loc(0, 0);
   defgrd_active_inv_loc_red(1, 0) = defgrd_active_inv_loc(1, 0);
   defgrd_active_inv_loc_red(0, 1) = defgrd_active_inv_loc(0, 1);
   defgrd_active_inv_loc_red(1, 1) = defgrd_active_inv_loc(1, 1);
 
-  Core::LinAlg::Matrix<2, 2> temp2(true);
+  Core::LinAlg::Matrix<2, 2> temp2(Core::LinAlg::Initialization::zero);
   temp2.multiply_nt(1.0, S_passive_loc, defgrd_active_inv_loc_red, 0.0);
   S_tot.multiply_nn(1.0, defgrd_active_inv_loc_red, temp2, 0.0);
 

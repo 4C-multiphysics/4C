@@ -332,7 +332,7 @@ void Cut::ParentIntersection::create_parallel_dof_set_data_vc(
       }
     }
 
-    Core::LinAlg::Matrix<3, 1> coords(true);
+    Core::LinAlg::Matrix<3, 1> coords(Core::LinAlg::Initialization::zero);
 
     std::vector<Core::LinAlg::Matrix<3, 1>> cut_points_coords(cut_points.size(), coords);
 

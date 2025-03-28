@@ -155,8 +155,8 @@ double XFEM::XFluidContactComm::get_fsi_traction(Mortar::Element* ele,
   int eleid;
 
   Cut::VolumeCell* volumecell = nullptr;
-  static Core::LinAlg::Matrix<3, 1> elenormal(true);
-  static Core::LinAlg::Matrix<3, 1> x(false);
+  static Core::LinAlg::Matrix<3, 1> elenormal(Core::LinAlg::Initialization::zero);
+  static Core::LinAlg::Matrix<3, 1> x(Core::LinAlg::Initialization::uninitialized);
   Core::LinAlg::Matrix<2, 1> new_xsi(xsi_boundary.data(), false);
   double distance = 0.0;
   if (!get_volumecell(sele, new_xsi, sidehandle, nds, eleid, volumecell, elenormal, x,
@@ -349,7 +349,7 @@ void XFEM::XFluidContactComm::get_states(const int fluidele_id, const std::vecto
 
   // 3 // get quantities in gp
   {
-    Core::LinAlg::Matrix<3, 1> fluidele_xsi(true);
+    Core::LinAlg::Matrix<3, 1> fluidele_xsi(Core::LinAlg::Initialization::zero);
     if (fluidele->shape() == Core::FE::CellType::hex8)
     {
       Core::LinAlg::Matrix<3, 8> xyze(ele_xyze.values(), true);
@@ -413,7 +413,7 @@ void XFEM::XFluidContactComm::get_states(const int fluidele_id, const std::vecto
     }
 
     const int numnodes = Core::FE::num_nodes<Core::FE::CellType::quad4>;
-    static Core::LinAlg::Matrix<numnodes, 1> funct(false);
+    static Core::LinAlg::Matrix<numnodes, 1> funct(Core::LinAlg::Initialization::uninitialized);
     Core::FE::shape_function_2d(funct, selexsi(0), selexsi(1), Core::FE::CellType::quad4);
     vel_s.multiply(vels, funct);
     if (isporo_) velpf_s.multiply(velpfs, funct);
@@ -656,7 +656,7 @@ bool XFEM::XFluidContactComm::get_volumecell(Discret::Elements::SolidSurface*& s
     const int numnodes = Core::FE::num_nodes<Core::FE::CellType::quad4>;
 
     Core::LinAlg::SerialDenseMatrix xyze_m;
-    Core::LinAlg::Matrix<numnodes, 1> funct(false);
+    Core::LinAlg::Matrix<numnodes, 1> funct(Core::LinAlg::Initialization::uninitialized);
 
     sidehandle->coordinates(xyze_m);
     Core::LinAlg::Matrix<3, numnodes> xyze(xyze_m.values(), true);
@@ -672,8 +672,8 @@ bool XFEM::XFluidContactComm::get_volumecell(Discret::Elements::SolidSurface*& s
   Cut::plain_side_set subsides;
   sidehandle->collect_sides(subsides);
   int found_side = -1;
-  static Core::LinAlg::Matrix<3, 1> tmpxsi(true);
-  static Core::LinAlg::Matrix<3, 1> tmpxsi_tmp(true);
+  static Core::LinAlg::Matrix<3, 1> tmpxsi(Core::LinAlg::Initialization::zero);
+  static Core::LinAlg::Matrix<3, 1> tmpxsi_tmp(Core::LinAlg::Initialization::zero);
   for (std::size_t ss = 0; ss < subsides.size(); ++ss)
   {
     Cut::Side* s = subsides[ss];
@@ -873,13 +873,13 @@ Cut::Side* XFEM::XFluidContactComm::findnext_physical_side(Core::LinAlg::Matrix<
     physical_sides = last_physical_sides_.second;
 
   distance = 1e200;
-  Core::LinAlg::Matrix<3, 1> newx(true);
+  Core::LinAlg::Matrix<3, 1> newx(Core::LinAlg::Initialization::zero);
   Cut::Side* newSide = nullptr;
 
   for (std::set<Cut::Side*>::iterator psit = physical_sides.begin(); psit != physical_sides.end();
       ++psit)
   {
-    static Core::LinAlg::Matrix<3, 1> tmpx(true);
+    static Core::LinAlg::Matrix<3, 1> tmpx(Core::LinAlg::Initialization::zero);
     double tmpdistance = distanceto_side(x, *psit, tmpx);
     if (distance > tmpdistance)
     {
@@ -987,7 +987,7 @@ void XFEM::XFluidContactComm::update_physical_sides(
     else
     {
       Core::LinAlg::Matrix<3, 1> normal;
-      Core::LinAlg::Matrix<2, 1> center(true);
+      Core::LinAlg::Matrix<2, 1> center(Core::LinAlg::Initialization::zero);
       neibs[sid]->normal(center, normal, false);
       double norm = normal.norm2();
       if (norm > 1e-10)
@@ -1133,10 +1133,10 @@ void XFEM::XFluidContactComm::get_cut_side_integration_points(
   const int numnodes_sh = Core::FE::num_nodes<Core::FE::CellType::quad4>;
   Core::LinAlg::SerialDenseMatrix xquad;
   sh->coordinates(xquad);
-  Core::LinAlg::Matrix<2, numnodes_sh> deriv(false);
-  Core::LinAlg::Matrix<2, 2> metrictensor(false);
-  Core::LinAlg::Matrix<3, 1> normal_side(true);
-  Core::LinAlg::Matrix<3, 1> normal_bc(true);
+  Core::LinAlg::Matrix<2, numnodes_sh> deriv(Core::LinAlg::Initialization::uninitialized);
+  Core::LinAlg::Matrix<2, 2> metrictensor(Core::LinAlg::Initialization::uninitialized);
+  Core::LinAlg::Matrix<3, 1> normal_side(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> normal_bc(Core::LinAlg::Initialization::zero);
 
   Cut::plain_side_set subsides;
   sh->collect_sides(subsides);
@@ -1146,7 +1146,7 @@ void XFEM::XFluidContactComm::get_cut_side_integration_points(
   for (Cut::plain_side_set::iterator sit = subsides.begin(); sit != subsides.end(); ++sit)
   {
     Cut::Side* side = *sit;
-    side->normal(Core::LinAlg::Matrix<2, 1>(true), normal_side, true);
+    side->normal(Core::LinAlg::Matrix<2, 1>(Core::LinAlg::Initialization::zero), normal_side, true);
     for (std::vector<Cut::Facet*>::const_iterator fit = side->facets().begin();
         fit != side->facets().end(); ++fit)
     {
@@ -1166,7 +1166,7 @@ void XFEM::XFluidContactComm::get_cut_side_integration_points(
           }
           std::shared_ptr<Cut::Tri3BoundaryCell> tmp_bc = std::make_shared<Cut::Tri3BoundaryCell>(
               tcoords, facet, facet->triangulation()[triangle]);
-          tmp_bc->normal(Core::LinAlg::Matrix<2, 1>(true), normal_bc);
+          tmp_bc->normal(Core::LinAlg::Matrix<2, 1>(Core::LinAlg::Initialization::zero), normal_bc);
           if (normal_bc.dot(normal_side) < 0.0)
             bcs.push_back(tmp_bc);
           else
@@ -1193,7 +1193,7 @@ void XFEM::XFluidContactComm::get_cut_side_integration_points(
         facet->coordinates(tcoords.values());
         std::shared_ptr<Cut::Tri3BoundaryCell> tmp_bc =
             std::make_shared<Cut::Tri3BoundaryCell>(tcoords, facet, facet->points());
-        tmp_bc->normal(Core::LinAlg::Matrix<2, 1>(true), normal_bc);
+        tmp_bc->normal(Core::LinAlg::Matrix<2, 1>(Core::LinAlg::Initialization::zero), normal_bc);
         if (normal_bc.dot(normal_side) < 0.0)
           bcs.push_back(tmp_bc);
         else
@@ -1239,7 +1239,7 @@ void XFEM::XFluidContactComm::get_cut_side_integration_points(
           points.push_back(side->nodes()[p]->point());
         std::shared_ptr<Cut::Tri3BoundaryCell> tmp_bc =
             std::make_shared<Cut::Tri3BoundaryCell>(tcoords, nullptr, points);
-        tmp_bc->normal(Core::LinAlg::Matrix<2, 1>(true), normal_bc);
+        tmp_bc->normal(Core::LinAlg::Matrix<2, 1>(Core::LinAlg::Initialization::zero), normal_bc);
         if (normal_bc.dot(normal_side) < 0.0)
           bcs.push_back(tmp_bc);
         else
@@ -1266,9 +1266,10 @@ void XFEM::XFluidContactComm::get_cut_side_integration_points(
   }
 
   weights.clear();
-  Core::LinAlg::Matrix<3, 1> x_gp_lin(true);
-  Core::LinAlg::Matrix<3, 1> normal(true);
-  Core::LinAlg::Matrix<2, 1> rst(true);  // local coordinates w.r.t side
+  Core::LinAlg::Matrix<3, 1> x_gp_lin(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> normal(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<2, 1> rst(
+      Core::LinAlg::Initialization::zero);  // local coordinates w.r.t side
   double drs = 0;
   double drs_sh = 0;
   for (std::size_t bc = 0; bc < bcs.size(); ++bc)

@@ -58,7 +58,7 @@ void Mat::Elastic::CoupTransverselyIsotropic::setup(
     case 0:
     {
       // fibers aligned in YZ-plane with gamma around Z in global cartesian cosy
-      Core::LinAlg::Matrix<3, 3> Id(true);
+      Core::LinAlg::Matrix<3, 3> Id(Core::LinAlg::Initialization::zero);
       for (int i = 0; i < 3; i++) Id(i, i) = 1.0;
       set_fiber_vecs(-1.0, Id, Id);
 
@@ -76,9 +76,9 @@ void Mat::Elastic::CoupTransverselyIsotropic::setup(
           container.get<std::optional<std::vector<double>>>("CIR").has_value())
       {
         // Read in of data
-        Core::LinAlg::Matrix<3, 3> locsys(true);
+        Core::LinAlg::Matrix<3, 3> locsys(Core::LinAlg::Initialization::zero);
         read_rad_axi_cir(container, locsys);
-        Core::LinAlg::Matrix<3, 3> Id(true);
+        Core::LinAlg::Matrix<3, 3> Id(Core::LinAlg::Initialization::zero);
         for (int i = 0; i < 3; i++) Id(i, i) = 1.0;
         // final setup of fiber data
         set_fiber_vecs(0.0, locsys, Id);
@@ -134,15 +134,15 @@ void Mat::Elastic::CoupTransverselyIsotropic::set_fiber_vecs(const double newang
   // convert
   const double angle = (params_->angle_ * M_PI) / 180.;
 
-  Core::LinAlg::Matrix<3, 1> ca(true);
+  Core::LinAlg::Matrix<3, 1> ca(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 3; ++i)
   {
     // a = cos gamma e3 + sin gamma e2
     ca(i) = std::cos(angle) * locsys(i, 2) + std::sin(angle) * locsys(i, 1);
   }
   // pull back in reference configuration
-  Core::LinAlg::Matrix<3, 1> A_0(true);
-  Core::LinAlg::Matrix<3, 3> idefgrd(true);
+  Core::LinAlg::Matrix<3, 1> A_0(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> idefgrd(Core::LinAlg::Initialization::zero);
   idefgrd.invert(defgrd);
 
   A_0.multiply(idefgrd, ca);
@@ -156,12 +156,12 @@ void Mat::Elastic::CoupTransverselyIsotropic::add_strain_energy(double& psi,
     const Core::LinAlg::Matrix<6, 1>& glstrain, const int gp, const int eleGID)
 {
   // build Cartesian identity 2-tensor I_{AB}
-  Core::LinAlg::Matrix<6, 1> identity(true);
+  Core::LinAlg::Matrix<6, 1> identity(Core::LinAlg::Initialization::zero);
   std::fill(identity.data(), identity.data() + 3, 1.0);
 
   // convert Green-Lagrange strain to right Cauchy-Green Tensor
   // C_{AB} = 2 * E_{AB} + I_{AB} [ REMARK: strain-like 6-Voigt vector ]
-  Core::LinAlg::Matrix<6, 1> rcg(true);
+  Core::LinAlg::Matrix<6, 1> rcg(Core::LinAlg::Initialization::zero);
   rcg.update(2.0, glstrain, 1.0);
   rcg.update(1.0, identity, 1.0);
 
@@ -184,10 +184,10 @@ void Mat::Elastic::CoupTransverselyIsotropic::add_stress_aniso_principal(
   if (reset_invariants(rcg, &params)) return;
 
   // switch to stress notation
-  Core::LinAlg::Matrix<6, 1> rcg_s(false);
+  Core::LinAlg::Matrix<6, 1> rcg_s(Core::LinAlg::Initialization::uninitialized);
   Core::LinAlg::Voigt::Strains::to_stress_like(rcg, rcg_s);
 
-  Core::LinAlg::Matrix<6, 1> rcg_inv_s(false);
+  Core::LinAlg::Matrix<6, 1> rcg_inv_s(Core::LinAlg::Initialization::uninitialized);
   update_second_piola_kirchhoff_stress(stress, rcg_s, rcg_inv_s);
 
   update_elasticity_tensor(cmat, rcg_inv_s);
@@ -282,7 +282,7 @@ int Mat::Elastic::CoupTransverselyIsotropic::reset_invariants(
         aa_(5) * rcg(5);
 
   // calculate pseudo invariant I5 ( quad. strain measure in fiber direction )
-  Core::LinAlg::Matrix<6, 1> rcg_quad(false);
+  Core::LinAlg::Matrix<6, 1> rcg_quad(Core::LinAlg::Initialization::uninitialized);
   Core::LinAlg::Voigt::Strains::power_of_symmetric_tensor(2, rcg, rcg_quad);
   i5_ = aa_(0) * (rcg_quad(0)) + aa_(1) * (rcg_quad(1)) + aa_(2) * (rcg_quad(2)) +
         aa_(3) * (rcg_quad(3)) + aa_(4) * (rcg_quad(4)) + aa_(5) * (rcg_quad(5));
@@ -315,10 +315,10 @@ void Mat::Elastic::CoupTransverselyIsotropic::update_second_piola_kirchhoff_stre
 
   // (2) contribution
   {
-    Core::LinAlg::Matrix<3, 1> ca(true);
+    Core::LinAlg::Matrix<3, 1> ca(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Voigt::Stresses::multiply_tensor_vector(rcg_s, a_, ca);
 
-    Core::LinAlg::Matrix<6, 1> caa_aac(true);
+    Core::LinAlg::Matrix<6, 1> caa_aac(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Voigt::Stresses::symmetric_outer_product(ca, a_, caa_aac);
 
     const double fac = -alpha;

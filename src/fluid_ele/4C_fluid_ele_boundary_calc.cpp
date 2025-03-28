@@ -35,11 +35,11 @@ FOUR_C_NAMESPACE_OPEN
 template <Core::FE::CellType distype>
 Discret::Elements::FluidBoundaryImpl<distype>::FluidBoundaryImpl()
     :  // Discret::Elements::FluidBoundaryInterface(),
-      xyze_(true),
-      funct_(true),
-      deriv_(true),
-      unitnormal_(true),
-      velint_(true),
+      xyze_(Core::LinAlg::Initialization::zero),
+      funct_(Core::LinAlg::Initialization::zero),
+      deriv_(Core::LinAlg::Initialization::zero),
+      unitnormal_(Core::LinAlg::Initialization::zero),
+      velint_(Core::LinAlg::Initialization::zero),
       drs_(0.0),
       fac_(0.0),
       visc_(0.0),
@@ -250,7 +250,7 @@ int Discret::Elements::FluidBoundaryImpl<distype>::evaluate_neumann(
   // extract local values from global vector
   std::vector<double> myscaaf = Core::FE::extract_values(*scaaf, lm);
 
-  Core::LinAlg::Matrix<bdrynen_, 1> escaaf(true);
+  Core::LinAlg::Matrix<bdrynen_, 1> escaaf(Core::LinAlg::Initialization::zero);
 
   // insert scalar into element array
   // the scalar is stored to the pressure dof
@@ -264,7 +264,7 @@ int Discret::Elements::FluidBoundaryImpl<distype>::evaluate_neumann(
 
   // extract pressure values from global velocity/pressure vector
   // (needed for weakly_compressible fluids)
-  Core::LinAlg::Matrix<bdrynen_, 1> epreaf(true);
+  Core::LinAlg::Matrix<bdrynen_, 1> epreaf(Core::LinAlg::Initialization::zero);
   Discret::Elements::FluidEleParameter* fldpara =
       Discret::Elements::FluidEleParameterStd::instance();
   if (fldpara->physical_type() == Inpar::FLUID::weakly_compressible or
@@ -392,7 +392,7 @@ int Discret::Elements::FluidBoundaryImpl<distype>::evaluate_neumann(
     double functfacn = 1.0;
 
     // global coordinates of gausspoint
-    Core::LinAlg::Matrix<(nsd_), 1> coordgp(0.0);
+    Core::LinAlg::Matrix<(nsd_), 1> coordgp(Core::LinAlg::Initialization::uninitialized);
 
     // determine coordinates of current Gauss point
     coordgp.multiply(xyze_, funct_);
@@ -575,9 +575,9 @@ void Discret::Elements::FluidBoundaryImpl<distype>::neumann_inflow(
   myscaaf = Core::FE::extract_values(*scaaf, lm);
 
   // create Epetra objects for scalar array and velocities
-  Core::LinAlg::Matrix<nsd_, bdrynen_> evelaf(true);
-  Core::LinAlg::Matrix<bdrynen_, 1> epreaf(true);
-  Core::LinAlg::Matrix<bdrynen_, 1> escaaf(true);
+  Core::LinAlg::Matrix<nsd_, bdrynen_> evelaf(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<bdrynen_, 1> epreaf(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<bdrynen_, 1> escaaf(Core::LinAlg::Initialization::zero);
 
   // insert velocity, pressure and scalar into element array
   for (int inode = 0; inode < bdrynen_; ++inode)
@@ -682,7 +682,7 @@ void Discret::Elements::FluidBoundaryImpl<distype>::neumann_inflow(
         const double lhsnewtonfac = densaf_ * timefac * fac_;
 
         // dyadic product of unit normal vector and velocity vector
-        Core::LinAlg::Matrix<nsd_, nsd_> n_x_u(true);
+        Core::LinAlg::Matrix<nsd_, nsd_> n_x_u(Core::LinAlg::Initialization::zero);
         n_x_u.multiply_nt(velint_, unitnormal_);
 
         /*
@@ -816,11 +816,11 @@ void Discret::Elements::FluidBoundaryImpl<distype>::element_mean_curvature(
       Discret::Elements::DisTypeToOptGaussRule<distype>::rule);
 
   // node normals &
-  Core::LinAlg::Matrix<nsd_, bdrynen_> norm_elem(true);
-  Core::LinAlg::Matrix<bdrynsd_, nsd_> dxyzdrs(true);
+  Core::LinAlg::Matrix<nsd_, bdrynen_> norm_elem(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<bdrynsd_, nsd_> dxyzdrs(Core::LinAlg::Initialization::zero);
 
   // coordinates of current node in reference coordinates
-  Core::LinAlg::Matrix<bdrynsd_, 1> xsi_node(true);
+  Core::LinAlg::Matrix<bdrynsd_, 1> xsi_node(Core::LinAlg::Initialization::zero);
 
   // get node coordinates
   // (we have a nsd_ dimensional domain, since nsd_ determines the dimension of FluidBoundary
@@ -875,7 +875,7 @@ void Discret::Elements::FluidBoundaryImpl<distype>::element_mean_curvature(
 
     // the metric tensor and its determinant
     // Core::LinAlg::SerialDenseMatrix      metrictensor(nsd_,nsd_);
-    Core::LinAlg::Matrix<bdrynsd_, bdrynsd_> metrictensor(true);
+    Core::LinAlg::Matrix<bdrynsd_, bdrynsd_> metrictensor(Core::LinAlg::Initialization::zero);
 
     // Additionally, compute metric tensor
     Core::FE::compute_metric_tensor_for_boundary_ele<distype>(xyze_, deriv_, metrictensor, drs_);
@@ -884,7 +884,7 @@ void Discret::Elements::FluidBoundaryImpl<distype>::element_mean_curvature(
 
     // calculate mean curvature H at node.
     double H = 0.0;
-    Core::LinAlg::Matrix<bdrynsd_, nsd_> dn123drs(0.0);
+    Core::LinAlg::Matrix<bdrynsd_, nsd_> dn123drs(Core::LinAlg::Initialization::uninitialized);
 
     dn123drs.multiply_nt(deriv_, norm_elem);
 
@@ -1073,7 +1073,7 @@ void Discret::Elements::FluidBoundaryImpl<distype>::pressure_boundary_integral(
 
   std::vector<double> myvelnp = Core::FE::extract_values(*velnp, lm);
 
-  Core::LinAlg::Matrix<1, bdrynen_> eprenp(true);
+  Core::LinAlg::Matrix<1, bdrynen_> eprenp(Core::LinAlg::Initialization::zero);
   for (int inode = 0; inode < bdrynen_; inode++)
   {
     eprenp(inode) = myvelnp[nsd_ + inode * numdofpernode_];
@@ -1184,7 +1184,7 @@ void Discret::Elements::FluidBoundaryImpl<distype>::center_of_mass_calculation(
   // get the surface element area
   const double elem_area = params.get<double>("area");
 
-  Core::LinAlg::Matrix<(nsd_), 1> xyzGe(true);
+  Core::LinAlg::Matrix<(nsd_), 1> xyzGe(Core::LinAlg::Initialization::zero);
 
   for (int i = 0; i < nsd_; i++)
   {
@@ -1198,7 +1198,7 @@ void Discret::Elements::FluidBoundaryImpl<distype>::center_of_mass_calculation(
           xsi_, xyze_, intpoints, gpid, nullptr, nullptr, Core::FE::is_nurbs<distype>);
 
       // global coordinates of gausspoint
-      Core::LinAlg::Matrix<(nsd_), 1> coordgp(true);
+      Core::LinAlg::Matrix<(nsd_), 1> coordgp(Core::LinAlg::Initialization::zero);
 
       // determine coordinates of current Gauss point
       coordgp.multiply(xyze_, funct_);
@@ -1254,7 +1254,7 @@ void Discret::Elements::FluidBoundaryImpl<distype>::compute_flow_rate(
   std::vector<double> myvelnp = Core::FE::extract_values(*velnp, lm);
 
   // allocate velocity vector
-  Core::LinAlg::Matrix<nsd_, bdrynen_> evelnp(true);
+  Core::LinAlg::Matrix<nsd_, bdrynen_> evelnp(Core::LinAlg::Initialization::zero);
 
   // split velocity and pressure, insert into element arrays
   for (int inode = 0; inode < bdrynen_; inode++)
@@ -1389,7 +1389,7 @@ void Discret::Elements::FluidBoundaryImpl<distype>::flow_rate_deriv(
   const auto gridvel = Teuchos::getIntegralValue<Inpar::FLUID::Gridvel>(fdyn, "GRIDVEL");
 
   // normal vector
-  Core::LinAlg::Matrix<nsd_, 1> normal(true);
+  Core::LinAlg::Matrix<nsd_, 1> normal(Core::LinAlg::Initialization::zero);
 
   // get node coordinates
   // (we have a nsd_ dimensional domain, since nsd_ determines the dimension of FluidBoundary
@@ -1420,7 +1420,7 @@ void Discret::Elements::FluidBoundaryImpl<distype>::flow_rate_deriv(
   std::vector<double> myconvelnp = Core::FE::extract_values(*convelnp, lm);
 
   // allocate velocities vector
-  Core::LinAlg::Matrix<nsd_, bdrynen_> evelnp(true);
+  Core::LinAlg::Matrix<nsd_, bdrynen_> evelnp(Core::LinAlg::Initialization::zero);
 
   for (int inode = 0; inode < bdrynen_; ++inode)
   {
@@ -1448,7 +1448,7 @@ void Discret::Elements::FluidBoundaryImpl<distype>::flow_rate_deriv(
     const double fac = intpoints.ip().qwgt[gpid];
 
     // dxyzdrs vector -> normal which is not normalized
-    Core::LinAlg::Matrix<bdrynsd_, nsd_> dxyzdrs(0.0);
+    Core::LinAlg::Matrix<bdrynsd_, nsd_> dxyzdrs(Core::LinAlg::Initialization::uninitialized);
     dxyzdrs.multiply_nt(deriv_, xyze_);
     normal(0, 0) = dxyzdrs(0, 1) * dxyzdrs(1, 2) - dxyzdrs(0, 2) * dxyzdrs(1, 1);
     normal(1, 0) = dxyzdrs(0, 2) * dxyzdrs(1, 0) - dxyzdrs(0, 0) * dxyzdrs(1, 2);
@@ -1456,7 +1456,7 @@ void Discret::Elements::FluidBoundaryImpl<distype>::flow_rate_deriv(
 
     //-------------------------------------------------------------------
     //  Q
-    Core::LinAlg::Matrix<3, 1> u(true);
+    Core::LinAlg::Matrix<3, 1> u(Core::LinAlg::Initialization::zero);
     for (int dim = 0; dim < 3; ++dim)
       for (int node = 0; node < bdrynen_; ++node) u(dim) += funct_(node) * evelnp(dim, node);
 
@@ -1477,7 +1477,7 @@ void Discret::Elements::FluidBoundaryImpl<distype>::flow_rate_deriv(
       // dQ/dd
 
       // determine derivatives of surface normals wrt mesh displacements
-      Core::LinAlg::Matrix<3, bdrynen_ * 3> normalderiv(true);
+      Core::LinAlg::Matrix<3, bdrynen_ * 3> normalderiv(Core::LinAlg::Initialization::zero);
 
       for (int node = 0; node < bdrynen_; ++node)
       {
@@ -1896,7 +1896,7 @@ void Discret::Elements::FluidBoundaryImpl<distype>::calc_traction_velocity_compo
   std::vector<double> myvelnp = Core::FE::extract_values(*velnp, lm);
 
   // allocate velocity vector
-  Core::LinAlg::Matrix<nsd_, bdrynen_> evelnp(true);
+  Core::LinAlg::Matrix<nsd_, bdrynen_> evelnp(Core::LinAlg::Initialization::zero);
 
   // split velocity and pressure, insert into element arrays
   for (int inode = 0; inode < bdrynen_; inode++)

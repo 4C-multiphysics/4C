@@ -43,8 +43,8 @@ struct NextSideAlongRay
    *--------------------------------------------------------------------*/
   bool same_normal(Cut::Side* s1, Cut::Side* s2, const Core::LinAlg::Matrix<3, 1>& cutpoint_xyz)
   {
-    Core::LinAlg::Matrix<3, 1> rst(true);
-    Core::LinAlg::Matrix<2, 1> rs(true);
+    Core::LinAlg::Matrix<3, 1> rst(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<2, 1> rs(Core::LinAlg::Initialization::zero);
 
     //-------------
     // first side
@@ -53,7 +53,7 @@ struct NextSideAlongRay
     rs(0) = rst(0);
     rs(1) = rst(1);
 
-    Core::LinAlg::Matrix<3, 1> normal_1(true);
+    Core::LinAlg::Matrix<3, 1> normal_1(Core::LinAlg::Initialization::zero);
     s1->normal(rs, normal_1);
 
     //-------------
@@ -63,7 +63,7 @@ struct NextSideAlongRay
     rs(0) = rst(0);
     rs(1) = rst(1);
 
-    Core::LinAlg::Matrix<3, 1> normal_2(true);
+    Core::LinAlg::Matrix<3, 1> normal_2(Core::LinAlg::Initialization::zero);
     s2->normal(rs, normal_2);
 
     //-------------
@@ -632,8 +632,8 @@ bool Cut::Element::compute_position(Point* p, Point* cutpoint, Facet* f, Side* s
  *------------------------------------------------------------------------------------------*/
 bool Cut::Element::position_by_angle(Point* p, Point* cutpoint, Side* s)
 {
-  Core::LinAlg::Matrix<3, 1> xyz(true);
-  Core::LinAlg::Matrix<3, 1> cut_point_xyz(true);
+  Core::LinAlg::Matrix<3, 1> xyz(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> cut_point_xyz(Core::LinAlg::Initialization::zero);
 
   p->coordinates(xyz.data());
   cutpoint->coordinates(cut_point_xyz.data());
@@ -642,12 +642,13 @@ bool Cut::Element::position_by_angle(Point* p, Point* cutpoint, Side* s)
   // determine the inside/outside position w.r.t the chosen cut-side
   // in case of the right side the "angle-criterion" leads to the right decision (position)
 
-  Core::LinAlg::Matrix<2, 1> rs(true);  // local coordinates of the cut-point w.r.t side
+  Core::LinAlg::Matrix<2, 1> rs(
+      Core::LinAlg::Initialization::zero);  // local coordinates of the cut-point w.r.t side
 
-  Core::LinAlg::Matrix<3, 1> normal(true);
+  Core::LinAlg::Matrix<3, 1> normal(Core::LinAlg::Initialization::zero);
   s->normal(rs, normal);  // outward pointing normal at cut-point
 
-  Core::LinAlg::Matrix<3, 1> line_vec(true);
+  Core::LinAlg::Matrix<3, 1> line_vec(Core::LinAlg::Initialization::zero);
   line_vec.update(
       1.0, xyz, -1.0, cut_point_xyz);  // vector representing the line between p and the cut-point
 
@@ -698,9 +699,9 @@ bool Cut::Element::is_orthogonal_side(Side* s, Point* p, Point* cutpoint)
   if (s->on_edge(cutpoint))  // check if the point lies on at least one edge of the side, otherwise
                              // it cannot be orthogonal
   {
-    Core::LinAlg::Matrix<3, 1> line(true);
-    Core::LinAlg::Matrix<3, 1> p_xyz(true);
-    Core::LinAlg::Matrix<3, 1> cut_point_xyz(true);
+    Core::LinAlg::Matrix<3, 1> line(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> p_xyz(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> cut_point_xyz(Core::LinAlg::Initialization::zero);
 
     p->coordinates(p_xyz.data());
     cutpoint->coordinates(cut_point_xyz.data());
@@ -726,7 +727,7 @@ bool Cut::Element::is_orthogonal_side(Side* s, Point* p, Point* cutpoint)
     }
 
     // tri3/quad4 element center
-    Core::LinAlg::Matrix<2, 1> rs(true);
+    Core::LinAlg::Matrix<2, 1> rs(Core::LinAlg::Initialization::zero);
 
     if (s->shape() == Core::FE::CellType::tri3)
     {
@@ -739,7 +740,7 @@ bool Cut::Element::is_orthogonal_side(Side* s, Point* p, Point* cutpoint)
     else
       FOUR_C_THROW("unsupported side-shape");
 
-    Core::LinAlg::Matrix<3, 1> normal(true);
+    Core::LinAlg::Matrix<3, 1> normal(Core::LinAlg::Initialization::zero);
     s->normal(rs, normal);
 
     // check for angle=+-90 between line and normal

@@ -24,10 +24,7 @@ BeamInteraction::BeamLinkRigidJointedType BeamInteraction::BeamLinkRigidJointedT
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-BeamInteraction::BeamLinkRigidJointed::BeamLinkRigidJointed()
-    : BeamLink(), bspottriad1_(true), bspottriad2_(true), lambdarel1_(true), lambdarel2_(true)
-{
-}
+BeamInteraction::BeamLinkRigidJointed::BeamLinkRigidJointed() {}
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
@@ -62,8 +59,8 @@ void BeamInteraction::BeamLinkRigidJointed::init(const int id,
    * - second and third base vector are arbitrarily constructed from cross-product
    *   of first base vector with either first or second base vector of global
    *   coordinate system; this avoids any singularities */
-  Core::LinAlg::Matrix<3, 3> linkeletriad(true);
-  Core::LinAlg::Matrix<3, 1> distvec(true);
+  Core::LinAlg::Matrix<3, 3> linkeletriad(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> distvec(Core::LinAlg::Initialization::zero);
 
   distvec.update(1.0, get_bind_spot_pos2(), -1.0, get_bind_spot_pos1());
 
@@ -97,13 +94,14 @@ void BeamInteraction::BeamLinkRigidJointed::init(const int id,
   // check included angle of desired crosslinker axis (normalized distvec = first
   // base vector) and (1,0,0), i.e. scalar product which in this case simplifies to
   // first component of distvec
-  Core::LinAlg::Matrix<3, 1> unit_vector_global_x(true), unit_vector_global_y(true);
+  Core::LinAlg::Matrix<3, 1> unit_vector_global_x;
+  Core::LinAlg::Matrix<3, 1> unit_vector_global_y;
   unit_vector_global_x(0) = 1.0;
   unit_vector_global_y(1) = 1.0;
 
   const double scalarproduct = distvec(0);
 
-  Core::LinAlg::Matrix<3, 1> second_base_vecor_linkerele(true);
+  Core::LinAlg::Matrix<3, 1> second_base_vecor_linkerele(Core::LinAlg::Initialization::zero);
 
   // is included angle smaller than 45 degrees ? then avoid singularity at angle=0 degrees ...
   if (std::abs(scalarproduct) > 0.5 * std::sqrt(2))
@@ -144,7 +142,7 @@ void BeamInteraction::BeamLinkRigidJointed::init(const int id,
 
 
   // third base vector to complete orthonormal triad
-  Core::LinAlg::Matrix<3, 1> third_base_vecor_linkerele(true);
+  Core::LinAlg::Matrix<3, 1> third_base_vecor_linkerele(Core::LinAlg::Initialization::zero);
   third_base_vecor_linkerele.cross_product(distvec, second_base_vecor_linkerele);
 
   // feasibility check
@@ -261,7 +259,7 @@ void BeamInteraction::BeamLinkRigidJointed::reset_state(
    * parent elements.
    * Note: constant rotation in material frame, therefore multiplication from right
    *       side */
-  Core::LinAlg::Matrix<3, 3, double> currenttriad(true);
+  Core::LinAlg::Matrix<3, 3, double> currenttriad(Core::LinAlg::Initialization::zero);
   currenttriad.multiply(bspottriad[0], lambdarel1_);
   Core::LargeRotations::triadtoquaternion<double>(currenttriad, bspottriad1_);
 

@@ -17,7 +17,7 @@ namespace
   TEST(LinalgTensorProductsTest, TestKroneckerProduct)
   {
     // test the calculation of the fourth order kronecker product of two second-order tensors
-    Core::LinAlg::Matrix<3, 3> a(false);
+    Core::LinAlg::Matrix<3, 3> a(Core::LinAlg::Initialization::uninitialized);
     a(0, 0) = 1.0000000000;
     a(0, 1) = 2.0000000000;
     a(0, 2) = 3.0000000000;
@@ -28,7 +28,7 @@ namespace
     a(2, 1) = 1.0000000000;
     a(2, 2) = 1.0000000000;
 
-    Core::LinAlg::Matrix<3, 3> b(false);
+    Core::LinAlg::Matrix<3, 3> b(Core::LinAlg::Initialization::uninitialized);
     b(0, 0) = 1.0000000000;
     b(0, 1) = 0.0000000000;
     b(0, 2) = 5.0000000000;
@@ -39,7 +39,7 @@ namespace
     b(2, 1) = 1.2000000000;
     b(2, 2) = 1.0000000000;
 
-    Core::LinAlg::Matrix<6, 6> a_kron_b_ref(true);
+    Core::LinAlg::Matrix<6, 6> a_kron_b_ref(Core::LinAlg::Initialization::zero);
     a_kron_b_ref(0, 0) = 1.0000000000;
     a_kron_b_ref(0, 1) = 0.0000000000;
     a_kron_b_ref(0, 2) = 15.0000000000;
@@ -77,7 +77,7 @@ namespace
     a_kron_b_ref(5, 4) = 2.8000000000;
     a_kron_b_ref(5, 5) = 2.4500000000;
 
-    Core::LinAlg::Matrix<6, 6> a_kron_b(true);
+    Core::LinAlg::Matrix<6, 6> a_kron_b(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Tensor::add_kronecker_tensor_product(a_kron_b, 1.0, a, b, 0.0);
 
     FOUR_C_EXPECT_NEAR(a_kron_b, a_kron_b_ref, 1.0e-10);

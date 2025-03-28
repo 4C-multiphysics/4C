@@ -870,19 +870,19 @@ void XFEM::MeshCouplingBC::evaluate_implementation(std::vector<double>& final_va
 
 
   // rotation with constant angle velocity around point
-  Core::LinAlg::Matrix<3, 1> center(true);
+  Core::LinAlg::Matrix<3, 1> center(Core::LinAlg::Initialization::zero);
 
   center(0) = 0.0;
   center(1) = 0.0;
   center(2) = 0.0;
 
-  Core::LinAlg::Matrix<3, 1> diff(true);
+  Core::LinAlg::Matrix<3, 1> diff(Core::LinAlg::Initialization::zero);
   diff(0) = x[0] - center(0);
   diff(1) = x[1] - center(1);
   diff(2) = x[2] - center(2);
 
   // rotation matrix
-  Core::LinAlg::Matrix<3, 3> rot(true);
+  Core::LinAlg::Matrix<3, 3> rot(Core::LinAlg::Initialization::zero);
 
   rot(0, 0) = cos(arg);
   rot(0, 1) = -sin(arg);
@@ -898,8 +898,8 @@ void XFEM::MeshCouplingBC::evaluate_implementation(std::vector<double>& final_va
   //
   //          rot.Scale(r);
 
-  Core::LinAlg::Matrix<3, 1> x_new(true);
-  Core::LinAlg::Matrix<3, 1> rotated(true);
+  Core::LinAlg::Matrix<3, 1> x_new(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> rotated(Core::LinAlg::Initialization::zero);
 
   rotated.multiply(rot, diff);
 
@@ -1290,7 +1290,7 @@ void XFEM::MeshCouplingNavierSlip::evaluate_coupling_conditions(Core::LinAlg::Ma
           itraction, x, conditionsmap_robin_neumann_.find(robin_id)->second, time_);
 
       double sl_visc_fac = sliplength / (kappa_m * visc_m + (1.0 - kappa_m) * visc_s);
-      Core::LinAlg::Matrix<3, 1> tmp_itraction(true);
+      Core::LinAlg::Matrix<3, 1> tmp_itraction(Core::LinAlg::Initialization::zero);
       tmp_itraction.multiply_tn(proj_matrix, itraction);
       // Project this into tangential direction!!!
 
@@ -1302,7 +1302,7 @@ void XFEM::MeshCouplingNavierSlip::evaluate_coupling_conditions(Core::LinAlg::Ma
 
   if (force_tangvel_map_.find(cond->id())->second)
   {
-    Core::LinAlg::Matrix<3, 1> tmp_ivel(true);
+    Core::LinAlg::Matrix<3, 1> tmp_ivel(Core::LinAlg::Initialization::zero);
     tmp_ivel.multiply_tn(proj_matrix, ivel);  // apply Projection matrix from the right. (u_0 * P^t)
     ivel.update(1.0, tmp_ivel, 0.0);
   }
@@ -1843,7 +1843,7 @@ void XFEM::MeshCouplingFSI::set_condition_specific_parameters()
       Core::Elements::Element* fluid_ele = bg_dis_->l_row_element(ele);
       if (fluid_ele->shape() == Core::FE::CellType::hex8)
       {
-        Core::LinAlg::Matrix<3, 8> xyze(true);
+        Core::LinAlg::Matrix<3, 8> xyze(Core::LinAlg::Initialization::zero);
         Core::Geo::fill_initial_position_array(fluid_ele, xyze);
         double vol = XFEM::Utils::eval_element_volume<Core::FE::CellType::hex8>(xyze);
         hmax = std::max(hmax, XFEM::Utils::compute_vol_eq_diameter(vol));
@@ -1910,7 +1910,7 @@ void XFEM::MeshCouplingFSI::lift_drag(const int step, const double time) const
     // compute force components
     const int nsd = 3;
     const Core::LinAlg::Map* dofcolmap = cutter_dis_->dof_col_map();
-    Core::LinAlg::Matrix<3, 1> c(true);
+    Core::LinAlg::Matrix<3, 1> c(Core::LinAlg::Initialization::zero);
     for (int inode = 0; inode < cutter_dis_->num_my_col_nodes(); ++inode)
     {
       const Core::Nodes::Node* node = cutter_dis_->l_col_node(inode);
@@ -2375,7 +2375,7 @@ void XFEM::MeshCouplingFSI::evaluate_structural_cauchy_stress(Core::Elements::El
   static Core::LinAlg::SerialDenseMatrix dtraction_dd_i;
   for (int i = 0; i < num_dim; ++i)
   {
-    Core::LinAlg::Matrix<num_dim, 1> ei(true);
+    Core::LinAlg::Matrix<num_dim, 1> ei(Core::LinAlg::Initialization::zero);
     ei(i, 0) = 1.;
 
     evaluate_cauchy_n_dir_and_derivatives(ei, traction(i, 0), dtraction_dd_i, solid_stress[2 + i]);

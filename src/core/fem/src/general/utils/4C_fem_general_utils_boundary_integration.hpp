@@ -1604,7 +1604,7 @@ namespace Core::FE
 
     // compute measure tensor for surface element, infinitesimal area element drs
     // and (outward-pointing) unit normal vector
-    Core::LinAlg::Matrix<bdrynsd, bdrynsd> metrictensor(true);
+    Core::LinAlg::Matrix<bdrynsd, bdrynsd> metrictensor(Core::LinAlg::Initialization::zero);
     Core::FE::compute_metric_tensor_for_boundary_ele<distype>(
         xyze, deriv, metrictensor, drs, &unitnormal);
 

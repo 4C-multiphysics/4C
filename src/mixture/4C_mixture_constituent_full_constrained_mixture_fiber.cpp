@@ -30,7 +30,7 @@ namespace
   [[nodiscard]] static inline Core::LinAlg::Matrix<3, 3> evaluate_c(
       const Core::LinAlg::Matrix<3, 3>& F)
   {
-    Core::LinAlg::Matrix<3, 3> C(false);
+    Core::LinAlg::Matrix<3, 3> C(Core::LinAlg::Initialization::uninitialized);
     C.multiply_tn(F, F);
     return C;
   }
@@ -273,7 +273,7 @@ Core::LinAlg::Matrix<1, 6>
 Mixture::MixtureConstituentFullConstrainedMixtureFiber::evaluate_d_lambdafsq_dc(
     int gp, int eleGID) const
 {
-  Core::LinAlg::Matrix<1, 6> dLambdafDC(false);
+  Core::LinAlg::Matrix<1, 6> dLambdafDC(Core::LinAlg::Initialization::uninitialized);
   dLambdafDC.update_t(anisotropy_extension_.get_structural_tensor_stress(gp, 0));
   return dLambdafDC;
 }
@@ -282,7 +282,7 @@ Core::LinAlg::Matrix<6, 1>
 Mixture::MixtureConstituentFullConstrainedMixtureFiber::evaluate_current_p_k2(
     int gp, int eleGID) const
 {
-  Core::LinAlg::Matrix<6, 1> S_stress(false);
+  Core::LinAlg::Matrix<6, 1> S_stress(Core::LinAlg::Initialization::uninitialized);
   const double fiber_pk2 = full_constrained_mixture_fiber_[gp].evaluate_current_second_pk_stress();
 
   S_stress.update(fiber_pk2, anisotropy_extension_.get_structural_tensor_stress(gp, 0));
@@ -297,7 +297,7 @@ Mixture::MixtureConstituentFullConstrainedMixtureFiber::evaluate_current_cmat(
   const double dPK2dlambdafsq =
       full_constrained_mixture_fiber_[gp].evaluate_d_current_fiber_pk2_stress_d_lambda_f_sq();
 
-  Core::LinAlg::Matrix<6, 6> cmat(false);
+  Core::LinAlg::Matrix<6, 6> cmat(Core::LinAlg::Initialization::uninitialized);
   cmat.multiply_nn(2.0 * dPK2dlambdafsq, anisotropy_extension_.get_structural_tensor_stress(gp, 0),
       evaluate_d_lambdafsq_dc(gp, eleGID));
 
@@ -340,7 +340,8 @@ Core::LinAlg::Matrix<1, 6>
 Mixture::MixtureConstituentFullConstrainedMixtureFiber::get_d_growth_scalar_d_cg(
     int gp, int eleGID) const
 {
-  if (!params_->enable_growth_) return Core::LinAlg::Matrix<1, 6>(true);
+  if (!params_->enable_growth_)
+    return Core::LinAlg::Matrix<1, 6>(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<1, 6> dGrowthScalarDE = evaluate_d_lambdafsq_dc(gp, eleGID);
   dGrowthScalarDE.scale(
       2.0 * full_constrained_mixture_fiber_[gp].computed_dgrowth_scalar_dlambda_f_sq_);

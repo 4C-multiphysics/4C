@@ -36,7 +36,7 @@ namespace Core::FE
   {
     constexpr int num_nodes = Core::FE::num_nodes<celltype>;
 
-    Core::LinAlg::Matrix<num_nodes, 1> shapefunct(true);
+    Core::LinAlg::Matrix<num_nodes, 1> shapefunct(Core::LinAlg::Initialization::zero);
     Core::FE::shape_function<celltype>(xi, shapefunct);
 
     const int num_dof_per_node = static_cast<int>(nodal_quantity.size()) / num_nodes;

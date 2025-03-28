@@ -1216,7 +1216,7 @@ Core::LinAlg::Matrix<6, 1> Beam3ContactOctTree::get_root_box()
   else
     entriesperbbox = 6;
 
-  Core::LinAlg::Matrix<6, 1> lim(true);
+  Core::LinAlg::Matrix<6, 1> lim(Core::LinAlg::Initialization::zero);
   // determine globally extremal coordinates and use them as root box.
   // initialize
   lim(0) = 1.0e9;
@@ -1680,8 +1680,8 @@ bool Beam3ContactOctTree::intersection_cobb(
   // Distance at which intersection happens
   double distancelimit = 0.5 * (bbox0diameter + bbox1diameter);
 
-  Core::LinAlg::Matrix<3, 1, double> t1(true);
-  Core::LinAlg::Matrix<3, 1, double> t2(true);
+  Core::LinAlg::Matrix<3, 1, double> t1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> t2(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<3, 1, double> r1_a;
   Core::LinAlg::Matrix<3, 1, double> r1_b;
   Core::LinAlg::Matrix<3, 1, double> r2_a;
@@ -1851,8 +1851,8 @@ void Beam3ContactOctTree::calc_corner_pos(Core::Elements::Element* element,
     std::map<int, Core::LinAlg::Matrix<3, 1>>& currentpositions,
     Core::LinAlg::SerialDenseMatrix& coord)
 {
-  Core::LinAlg::Matrix<3, 1> coord_max(true);
-  Core::LinAlg::Matrix<3, 1> coord_min(true);
+  Core::LinAlg::Matrix<3, 1> coord_max(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> coord_min(Core::LinAlg::Initialization::zero);
   for (int k = 0; k < 3; ++k)
   {
     coord_max(k) = -1.0e12;

@@ -33,7 +33,8 @@ namespace
       Core::LinAlg::Matrix<Pointtype::spatial_dim_, 1, double>& point_physical_space)
   {
     // Evaluate the shape functions on the given point
-    Core::LinAlg::Matrix<1, Pointtype::n_nodes_ * Pointtype::n_val_, double> shape_fun(true);
+    Core::LinAlg::Matrix<1, Pointtype::n_nodes_ * Pointtype::n_val_, double> shape_fun(
+        Core::LinAlg::Initialization::zero);
 
     GEOMETRYPAIR::EvaluateShapeFunction<Pointtype>::evaluate(
         shape_fun, point_param_space, element_data.shape_function_data_);
@@ -323,10 +324,14 @@ void CONSTRAINTS::EMBEDDEDMESH::SurfaceToBackgroundCouplingPairMortar<Interface,
     Epetra_FEVector& global_lambda_active)
 {
   // Initialize variables for local mortar matrices.
-  Core::LinAlg::Matrix<Mortar::n_dof_, Interface::n_dof_, double> local_D(false);
-  Core::LinAlg::Matrix<Mortar::n_dof_, Background::n_dof_, double> local_M(false);
-  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_kappa(false);
-  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_constraint(false);
+  Core::LinAlg::Matrix<Mortar::n_dof_, Interface::n_dof_, double> local_D(
+      Core::LinAlg::Initialization::uninitialized);
+  Core::LinAlg::Matrix<Mortar::n_dof_, Background::n_dof_, double> local_M(
+      Core::LinAlg::Initialization::uninitialized);
+  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_kappa(
+      Core::LinAlg::Initialization::uninitialized);
+  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_constraint(
+      Core::LinAlg::Initialization::uninitialized);
 
   // Evaluate the local mortar contributions
   evaluate_dm(local_D, local_M, local_kappa, local_constraint);
@@ -368,7 +373,7 @@ void CONSTRAINTS::EMBEDDEDMESH::SurfaceToBackgroundCouplingPairMortar<Interface,
       gp_projected_cutelement(1, 0) = gp.point()[1];
       gp_projected_cutelement(2, 0) = gp.point()[2];
 
-      Core::LinAlg::Matrix<3, 1, double> point_coord(true);
+      Core::LinAlg::Matrix<3, 1, double> point_coord(Core::LinAlg::Initialization::zero);
 
       map_from_parametric_to_physical_space<Background>(
           ele2pos_, gp_projected_cutelement, this->ele2pos_.element_position_, point_coord);
@@ -429,8 +434,8 @@ void CONSTRAINTS::EMBEDDEDMESH::SurfaceToBackgroundCouplingPairMortar<Interface,
   {
     auto& [xi_interface, xi_background, weight] = interface_integration_points_[it_gp];
 
-    Core::LinAlg::Matrix<3, 1, double> interface_point_coord(true);
-    Core::LinAlg::Matrix<3, 1, double> background_point_coord(true);
+    Core::LinAlg::Matrix<3, 1, double> interface_point_coord(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1, double> background_point_coord(Core::LinAlg::Initialization::zero);
 
     map_from_parametric_to_physical_space<Interface>(
         ele1pos_, xi_interface, this->ele1pos_.element_position_, interface_point_coord);
@@ -440,7 +445,7 @@ void CONSTRAINTS::EMBEDDEDMESH::SurfaceToBackgroundCouplingPairMortar<Interface,
 
     // Do check to see if the physical position of the gauss point of interface
     // and background are the same
-    Core::LinAlg::Matrix<3, 1, double> vec(true);
+    Core::LinAlg::Matrix<3, 1, double> vec(Core::LinAlg::Initialization::zero);
     for (int i_dim = 0; i_dim < 3; ++i_dim)
       vec(i_dim) = interface_point_coord(i_dim) - background_point_coord(i_dim);
     double norm2 = vec.norm2();
@@ -534,7 +539,7 @@ double calculate_determinant_interface_element(
   // Evaluate the shape functions and its derivatives on eta
   if (celldistype == Core::FE::CellType::nurbs9)
   {
-    Core::LinAlg::Matrix<9, 1, double> cp_weights(true);
+    Core::LinAlg::Matrix<9, 1, double> cp_weights(Core::LinAlg::Initialization::zero);
     std::vector<Core::LinAlg::SerialDenseVector> myknots(2);
     std::vector<Core::LinAlg::SerialDenseVector> mypknots(3);
 
@@ -603,9 +608,12 @@ void CONSTRAINTS::EMBEDDEDMESH::SurfaceToBackgroundCouplingPairMortar<Interface,
   local_constraint.put_scalar(0.0);
 
   // Initialize variables for shape function values.
-  Core::LinAlg::Matrix<1, Mortar::n_nodes_ * Mortar::n_val_, double> N_mortar(true);
-  Core::LinAlg::Matrix<1, Interface::n_nodes_ * Interface::n_val_, double> N_interface(true);
-  Core::LinAlg::Matrix<1, Background::n_nodes_ * Background::n_val_, double> N_background(true);
+  Core::LinAlg::Matrix<1, Mortar::n_nodes_ * Mortar::n_val_, double> N_mortar(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, Interface::n_nodes_ * Interface::n_val_, double> N_interface(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, Background::n_nodes_ * Background::n_val_, double> N_background(
+      Core::LinAlg::Initialization::zero);
 
   // Calculate the mortar matrices.
   // Gauss point loop

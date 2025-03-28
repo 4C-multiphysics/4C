@@ -95,7 +95,7 @@ namespace
   {
     using fad_type = Sacado::Fad::DFad<double>;
 
-    Core::LinAlg::Matrix<2, 4> shape_function_matrix(true);
+    Core::LinAlg::Matrix<2, 4> shape_function_matrix(Core::LinAlg::Initialization::zero);
     shape_function_matrix(0, 0) = 0.75;
     shape_function_matrix(1, 1) = 0.75;
     shape_function_matrix(0, 2) = 0.25;

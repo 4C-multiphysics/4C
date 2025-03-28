@@ -70,7 +70,7 @@ void Mixture::MixtureConstituentElastHyper::evaluate_elastic_part(
     Teuchos::ParameterList& params, Core::LinAlg::Matrix<6, 1>& S_stress,
     Core::LinAlg::Matrix<6, 6>& cmat, int gp, int eleGID)
 {
-  static Core::LinAlg::Matrix<3, 3> iFin(false);
+  static Core::LinAlg::Matrix<3, 3> iFin(Core::LinAlg::Initialization::uninitialized);
   iFin.multiply_nn(iFextin, prestretch_tensor(gp));
 
   Mat::elast_hyper_evaluate_elastic_part(

@@ -681,7 +681,7 @@ void FLD::TurbulenceStatisticsCcy::evaluate_pointwise_mean_values_in_planes()
       eprenp(i) = myvelnp[3 + fi];
     }
 
-    Core::LinAlg::Matrix<1, 27> escanp(true);
+    Core::LinAlg::Matrix<1, 27> escanp(Core::LinAlg::Initialization::zero);
 
     //! scalar at t_(n+1) or t_(n+alpha_F)
     const int nen = 27;  // only quadratic nurbs elements are supported!!

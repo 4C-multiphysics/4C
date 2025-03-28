@@ -1319,7 +1319,7 @@ namespace Core::FE
   template <unsigned dim>
   inline Core::LinAlg::Matrix<dim, 1> get_local_center_position(const Core::FE::CellType distype)
   {
-    Core::LinAlg::Matrix<dim, 1> pos(false);
+    Core::LinAlg::Matrix<dim, 1> pos(Core::LinAlg::Initialization::uninitialized);
     get_local_center_position(distype, pos);
     return pos;
   }

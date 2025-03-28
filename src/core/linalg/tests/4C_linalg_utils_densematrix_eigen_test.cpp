@@ -104,10 +104,10 @@ namespace
   {
     assert_eigen_values(eigenvalues, eig_compare);
 
-    Core::LinAlg::Matrix<size, size> A_result(true);
+    Core::LinAlg::Matrix<size, size> A_result(Core::LinAlg::Initialization::zero);
     for (unsigned int i = 0; i < size; ++i)
     {
-      Core::LinAlg::Matrix<size, 1> v(false);
+      Core::LinAlg::Matrix<size, 1> v(Core::LinAlg::Initialization::uninitialized);
       for (unsigned int j = 0; j < size; ++j) v(j, 0) = eigenvectors(j, i);
       A_result.multiply_nt(eigenvalues(i, i), v, v, 1.0);
     }
@@ -123,11 +123,13 @@ namespace
   {
     assert_eigen_values(eigenvalues, eig_compare);
 
-    Core::LinAlg::Matrix<size, size> A_result(true);
-    Core::LinAlg::Matrix<size, size, std::complex<double>> inv_eigenvectors(true);
+    Core::LinAlg::Matrix<size, size> A_result(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<size, size, std::complex<double>> inv_eigenvectors(
+        Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<size, size, std::complex<double>> temp(eigenvectors);
     inv_eigenvectors.invert(temp);
-    Core::LinAlg::Matrix<size, size, std::complex<double>> output_complex(true);
+    Core::LinAlg::Matrix<size, size, std::complex<double>> output_complex(
+        Core::LinAlg::Initialization::zero);
     temp.multiply_nn(eigenvectors, eigenvalues);
     output_complex.multiply_nn(temp, inv_eigenvectors);
     // restore complex to real form (guaranteed for a real input matrix)
@@ -213,7 +215,7 @@ namespace
 
   TEST(LinalgDenseMatrixEigenTest, 2x2SYEV)
   {
-    Core::LinAlg::Matrix<2, 2> A(false);
+    Core::LinAlg::Matrix<2, 2> A(Core::LinAlg::Initialization::uninitialized);
     A(0, 0) = 0.9964456203546112;
     A(0, 1) = 0.490484665405466;
     A(1, 0) = 0.490484665405466;
@@ -221,8 +223,8 @@ namespace
 
     std::array eigenvalues{0.24218351254540577, 1.3154000057163198};
 
-    Core::LinAlg::Matrix<2, 2> V(false);
-    Core::LinAlg::Matrix<2, 2> S(false);
+    Core::LinAlg::Matrix<2, 2> V(Core::LinAlg::Initialization::uninitialized);
+    Core::LinAlg::Matrix<2, 2> S(Core::LinAlg::Initialization::uninitialized);
     Core::LinAlg::syev(A, S, V);
 
     assert_eigen_problem(A, S, V, eigenvalues);
@@ -230,7 +232,7 @@ namespace
 
   TEST(LinalgDenseMatrixEigenTest, 2x2GEEV)
   {
-    Core::LinAlg::Matrix<2, 2> A(false);
+    Core::LinAlg::Matrix<2, 2> A(Core::LinAlg::Initialization::uninitialized);
     A(0, 0) = 0.9964456203546112;
     A(0, 1) = -0.490484665405466;
     A(1, 0) = 0.2345123987123478;
@@ -238,8 +240,8 @@ namespace
 
     std::array eigenvalues{std::complex<double>(0.77879176, 0.260099081),
         std::complex<double>(0.77879176, -0.260099081)};
-    Core::LinAlg::Matrix<2, 2, std::complex<double>> V(false);
-    Core::LinAlg::Matrix<2, 2, std::complex<double>> S(false);
+    Core::LinAlg::Matrix<2, 2, std::complex<double>> V(Core::LinAlg::Initialization::uninitialized);
+    Core::LinAlg::Matrix<2, 2, std::complex<double>> S(Core::LinAlg::Initialization::uninitialized);
     Core::LinAlg::geev(A, S, V);
 
     assert_eigen_problem(A, S, V, eigenvalues);
@@ -333,7 +335,7 @@ namespace
 
   TEST(LinalgDenseMatrixEigenTest, 3x3SYEV)
   {
-    Core::LinAlg::Matrix<3, 3> A(false);
+    Core::LinAlg::Matrix<3, 3> A(Core::LinAlg::Initialization::uninitialized);
     A(0, 0) = 1.2966342861458506;
     A(0, 1) = 0.8940941796919223;
     A(0, 2) = 0.16862685184206302;
@@ -346,8 +348,8 @@ namespace
 
     std::array eigenvalues{0.01628207201103285, 0.2515293645924337, 2.0639621389680487};
 
-    Core::LinAlg::Matrix<3, 3> V(false);
-    Core::LinAlg::Matrix<3, 3> S(false);
+    Core::LinAlg::Matrix<3, 3> V(Core::LinAlg::Initialization::uninitialized);
+    Core::LinAlg::Matrix<3, 3> S(Core::LinAlg::Initialization::uninitialized);
     Core::LinAlg::syev(A, S, V);
 
     assert_eigen_problem(A, S, V, eigenvalues);
@@ -355,7 +357,7 @@ namespace
 
   TEST(LinalgDenseMatrixEigenTest, 3x3GEEV)
   {
-    Core::LinAlg::Matrix<3, 3> A(false);
+    Core::LinAlg::Matrix<3, 3> A(Core::LinAlg::Initialization::uninitialized);
     A(0, 0) = 0.9876543212345678;
     A(0, 1) = 1.2345678901234567;
     A(0, 2) = 2.3456789012345678;
@@ -369,8 +371,8 @@ namespace
     std::array eigenvalues{std::complex<double>(-2.262778181431353, 0.0),
         std::complex<double>(1.010906471515987, 0.0), std::complex<double>(5.461748143372156, 0.0)};
 
-    Core::LinAlg::Matrix<3, 3, std::complex<double>> V(false);
-    Core::LinAlg::Matrix<3, 3, std::complex<double>> S(false);
+    Core::LinAlg::Matrix<3, 3, std::complex<double>> V(Core::LinAlg::Initialization::uninitialized);
+    Core::LinAlg::Matrix<3, 3, std::complex<double>> S(Core::LinAlg::Initialization::uninitialized);
     Core::LinAlg::geev(A, S, V);
 
     assert_eigen_problem(A, S, V, eigenvalues);
@@ -497,7 +499,7 @@ namespace
 
   TEST(LinalgDenseMatrixEigenTest, 4x4SYEV)
   {
-    Core::LinAlg::Matrix<4, 4> A(false);
+    Core::LinAlg::Matrix<4, 4> A(Core::LinAlg::Initialization::uninitialized);
     A(0, 0) = 0.5561130226871257;
     A(0, 1) = 1.0052918588741722;
     A(0, 2) = 0.8408494685470309;
@@ -518,8 +520,8 @@ namespace
     std::array eigenvalues{
         0.00023212100268553735, 0.06219024553961773, 0.11100584442852221, 5.443458239275074};
 
-    Core::LinAlg::Matrix<4, 4> V(false);
-    Core::LinAlg::Matrix<4, 4> S(false);
+    Core::LinAlg::Matrix<4, 4> V(Core::LinAlg::Initialization::uninitialized);
+    Core::LinAlg::Matrix<4, 4> S(Core::LinAlg::Initialization::uninitialized);
     Core::LinAlg::syev(A, S, V);
 
     assert_eigen_problem(A, S, V, eigenvalues);

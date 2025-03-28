@@ -69,7 +69,7 @@ void XFEM::Utils::print_discretization_to_stream(std::shared_ptr<Core::FE::Discr
       for (int i = 0; i < dis->num_my_col_nodes(); ++i)
       {
         const Core::Nodes::Node* actnode = dis->l_col_node(i);
-        Core::LinAlg::Matrix<3, 1> pos(true);
+        Core::LinAlg::Matrix<3, 1> pos(Core::LinAlg::Initialization::zero);
 
         if (curr_pos != nullptr)
         {
@@ -95,7 +95,7 @@ void XFEM::Utils::print_discretization_to_stream(std::shared_ptr<Core::FE::Discr
       for (int i = 0; i < dis->num_my_row_nodes(); ++i)
       {
         const Core::Nodes::Node* actnode = dis->l_row_node(i);
-        Core::LinAlg::Matrix<3, 1> pos(true);
+        Core::LinAlg::Matrix<3, 1> pos(Core::LinAlg::Initialization::zero);
 
         if (curr_pos != nullptr)
         {

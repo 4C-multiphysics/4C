@@ -412,7 +412,7 @@ void Solid::Utils::Shell::Director::setup_director_for_element(
 
     // get thickness direction derivative perpendicular to a1 and a2
     // -> a3 = (a1 x a2) / (|a1 x a2 |)
-    Core::LinAlg::Matrix<num_dim, 1> a1a2crossprod(true);
+    Core::LinAlg::Matrix<num_dim, 1> a1a2crossprod(Core::LinAlg::Initialization::zero);
     a1a2crossprod(0) = metrics_kovariant(0, 1) * metrics_kovariant(1, 2) -
                        metrics_kovariant(0, 2) * metrics_kovariant(1, 1);
     a1a2crossprod(1) = metrics_kovariant(0, 2) * metrics_kovariant(1, 0) -
@@ -430,15 +430,15 @@ void Solid::Utils::Shell::Director::setup_director_for_element(
 void Solid::Utils::Shell::Director::average_director(const Core::LinAlg::Matrix<3, 8>& dir_list,
     const int num_directors, Core::LinAlg::Matrix<3, 1>& nodal_director)
 {
-  Core::LinAlg::Matrix<3, 1> davn(true);
-  Core::LinAlg::Matrix<3, 1> averdir(true);
+  Core::LinAlg::Matrix<3, 1> davn(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> averdir(Core::LinAlg::Initialization::zero);
   for (int dim = 0; dim < Discret::Elements::Shell::Internal::num_dim; ++dim)
     averdir(dim) = dir_list(dim, 0);
 
   for (int i = 1; i < num_directors; ++i)
   {
     // make cross product of two directors
-    Core::LinAlg::Matrix<3, 1> normal(true);
+    Core::LinAlg::Matrix<3, 1> normal(Core::LinAlg::Initialization::zero);
     normal(0) = averdir(1) * dir_list(2, i) - averdir(2) * dir_list(1, i);
     normal(1) = averdir(2) * dir_list(0, i) - averdir(0) * dir_list(2, i);
     normal(2) = averdir(0) * dir_list(1, i) - averdir(1) * dir_list(0, i);
@@ -547,7 +547,7 @@ void Solid::Utils::Shell::Director::average_directors_at_nodes(
 {
   const int max_ele = 8;
   static constexpr int num_dim = Discret::Elements::Shell::Internal::num_dim;
-  Core::LinAlg::Matrix<num_dim, max_ele> collaverdir(true);
+  Core::LinAlg::Matrix<num_dim, max_ele> collaverdir(Core::LinAlg::Initialization::zero);
 
   // loop through all row nodes and build director map
   for (const auto& act_node : dis.my_row_node_range())
@@ -600,7 +600,7 @@ void Solid::Utils::Shell::Director::average_directors_at_nodes(
     }
     else  // average director at node actnode
     {
-      Core::LinAlg::Matrix<num_dim, 1> nodal_director(true);
+      Core::LinAlg::Matrix<num_dim, 1> nodal_director(Core::LinAlg::Initialization::zero);
       average_director(collaverdir, num_directors, nodal_director);
       director_map[act_node->id()].resize(num_dim);
       for (int dim = 0; dim < num_dim; ++dim)

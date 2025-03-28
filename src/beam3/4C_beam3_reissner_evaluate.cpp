@@ -707,7 +707,8 @@ void Discret::Elements::Beam3r::calc_internal_and_inertia_forces_and_stiff(
 
   /* current nodal DOFs relevant for centerline interpolation in total Lagrangian
    * style, i.e. initial values + displacements */
-  Core::LinAlg::Matrix<3 * vpernode * nnodecl, 1, double> disp_totlag_centerline(true);
+  Core::LinAlg::Matrix<3 * vpernode * nnodecl, 1, double> disp_totlag_centerline(
+      Core::LinAlg::Initialization::zero);
 
   // quaternions of all nodal triads
   std::vector<Core::LinAlg::Matrix<4, 1, double>> Qnode(nnodetriad);
@@ -733,7 +734,8 @@ void Discret::Elements::Beam3r::calc_internal_and_inertia_forces_and_stiff(
   if (not use_fad_)
   {
     // internal force vector
-    Core::LinAlg::Matrix<numdofelement, 1, double> internal_force(true);
+    Core::LinAlg::Matrix<numdofelement, 1, double> internal_force(
+        Core::LinAlg::Initialization::zero);
 
     if (force != nullptr)
     {
@@ -753,7 +755,8 @@ void Discret::Elements::Beam3r::calc_internal_and_inertia_forces_and_stiff(
   else
   {
     // internal force vector
-    Core::LinAlg::Matrix<numdofelement, 1, Sacado::Fad::DFad<double>> internal_force(true);
+    Core::LinAlg::Matrix<numdofelement, 1, Sacado::Fad::DFad<double>> internal_force(
+        Core::LinAlg::Initialization::zero);
 
     /* current nodal DOFs relevant for centerline interpolation in total Lagrangian
      * style, i.e. initial values + displacements */
@@ -895,7 +898,7 @@ void Discret::Elements::Beam3r::calc_internal_force_and_stiff(
   triad_interpolation_scheme_ptr->reset(Qnode);
 
   // matrix containing contributions to the jacobian depending on the material model
-  Core::LinAlg::Matrix<3, 3, T> stiffness_contribution(true);
+  Core::LinAlg::Matrix<3, 3, T> stiffness_contribution(Core::LinAlg::Initialization::zero);
 
   /******************************* elasticity: compute fint and stiffmatrix
    *****************************
@@ -1177,12 +1180,12 @@ void Discret::Elements::Beam3r::calc_inertia_force_and_mass_matrix(
   const double diff_factor_vel = gamma / (beta * dt);
   const double diff_factor_acc = (1.0 - alpha_m) / (beta * dt * dt * (1.0 - alpha_f));
 
-  Core::LinAlg::Matrix<3, 3> Lambdanewmass(true);
-  Core::LinAlg::Matrix<3, 3> Lambdaconvmass(true);
+  Core::LinAlg::Matrix<3, 3> Lambdanewmass(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> Lambdaconvmass(Core::LinAlg::Initialization::zero);
 
   // tensor of mass moments of inertia for translational and rotational motion
   double mass_inertia_translational = 0.0;
-  Core::LinAlg::Matrix<3, 3> Jp(true);
+  Core::LinAlg::Matrix<3, 3> Jp(Core::LinAlg::Initialization::zero);
 
   get_translational_and_rotational_mass_inertia_tensor(mass_inertia_translational, Jp);
 
@@ -1231,7 +1234,7 @@ void Discret::Elements::Beam3r::calc_inertia_force_and_mass_matrix(
 
   // interpolated local relative rotation \Psi^l at a certain Gauss point according to (3.11),
   // Jelenic 1999
-  Core::LinAlg::Matrix<3, 1, double> Psi_l(true);
+  Core::LinAlg::Matrix<3, 1, double> Psi_l(Core::LinAlg::Initialization::zero);
 
   // vector with nnode elements, who represent the 3x3-matrix-shaped interpolation function
   // \tilde{I}^nnode at a certain Gauss point according to (3.18), Jelenic 1999
@@ -1245,7 +1248,7 @@ void Discret::Elements::Beam3r::calc_inertia_force_and_mass_matrix(
     Core::LinAlg::Matrix<3, 3> Jp_bar(Jp);
     Jp_bar.scale(diff_factor_acc);
 
-    Core::LinAlg::Matrix<3, 1> dL(true);
+    Core::LinAlg::Matrix<3, 1> dL(Core::LinAlg::Initialization::zero);
 
     triad_interpolation_scheme_ptr->get_interpolated_local_rotation_vector(Psi_l, I_i[gp]);
 
@@ -1261,24 +1264,24 @@ void Discret::Elements::Beam3r::calc_inertia_force_and_mass_matrix(
     Core::LargeRotations::quaterniontotriad<double>(qconv_gp_mass_[gp], Lambdaconvmass);
 
     // rotation between last converged position and current position expressed as a quaternion
-    Core::LinAlg::Matrix<4, 1> deltaQ(true);
+    Core::LinAlg::Matrix<4, 1> deltaQ(Core::LinAlg::Initialization::zero);
     Core::LargeRotations::quaternionproduct(
         Core::LargeRotations::inversequaternion<double>(qconv_gp_mass_[gp]), qnew_gp_mass_[gp],
         deltaQ);
 
     // spatial rotation between last converged position and current position expressed as a three
     // element rotation vector
-    Core::LinAlg::Matrix<3, 1> deltatheta(true);
+    Core::LinAlg::Matrix<3, 1> deltatheta(Core::LinAlg::Initialization::zero);
     Core::LargeRotations::quaterniontoangle<double>(deltaQ, deltatheta);
 
     // compute material counterparts of spatial vectors
-    Core::LinAlg::Matrix<3, 1> deltaTHETA(true);
-    Core::LinAlg::Matrix<3, 1> Wconvmass(true);
-    Core::LinAlg::Matrix<3, 1> Wnewmass(true);
-    Core::LinAlg::Matrix<3, 1> Aconvmass(true);
-    Core::LinAlg::Matrix<3, 1> Anewmass(true);
-    Core::LinAlg::Matrix<3, 1> Amodconvmass(true);
-    Core::LinAlg::Matrix<3, 1> Amodnewmass(true);
+    Core::LinAlg::Matrix<3, 1> deltaTHETA(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> Wconvmass(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> Wnewmass(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> Aconvmass(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> Anewmass(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> Amodconvmass(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> Amodnewmass(Core::LinAlg::Initialization::zero);
     deltaTHETA.multiply_tn(Lambdanewmass, deltatheta);
     Wconvmass.multiply_tn(Lambdaconvmass, wconv_gp_mass_[gp]);
     Aconvmass.multiply_tn(Lambdaconvmass, aconv_gp_mass_[gp]);
@@ -1341,7 +1344,7 @@ void Discret::Elements::Beam3r::calc_inertia_force_and_mass_matrix(
       Amodnewmass.multiply_tn(Lambdanewmass, amodnew_gp_mass_[gp]);
     }
 
-    Core::LinAlg::Matrix<3, 1> deltar(true);
+    Core::LinAlg::Matrix<3, 1> deltar(Core::LinAlg::Initialization::zero);
     for (unsigned int i = 0; i < 3; i++)
     {
       deltar(i) = rnew_gp_mass_[gp](i) - rconv_gp_mass_[gp](i);
@@ -1366,30 +1369,30 @@ void Discret::Elements::Beam3r::calc_inertia_force_and_mass_matrix(
     }
 
     // spin matrix of the material angular velocity, i.e. S(W)
-    Core::LinAlg::Matrix<3, 3> SWnewmass(true);
+    Core::LinAlg::Matrix<3, 3> SWnewmass(Core::LinAlg::Initialization::zero);
     Core::LargeRotations::computespin<double>(SWnewmass, Wnewmass);
-    Core::LinAlg::Matrix<3, 1> Jp_Wnewmass(true);
-    Core::LinAlg::Matrix<3, 1> auxvector1(true);
-    Core::LinAlg::Matrix<3, 1> Pi_t(true);
+    Core::LinAlg::Matrix<3, 1> Jp_Wnewmass(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> auxvector1(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> Pi_t(Core::LinAlg::Initialization::zero);
     Jp_Wnewmass.multiply(Jp, Wnewmass);
     for (unsigned int i = 0; i < 3; i++)
       for (unsigned int j = 0; j < 3; j++)
         auxvector1(i) += SWnewmass(i, j) * Jp_Wnewmass(j) + Jp(i, j) * Anewmass(j);
 
     Pi_t.multiply(Lambdanewmass, auxvector1);
-    Core::LinAlg::Matrix<3, 1> r_tt(true);
-    Core::LinAlg::Matrix<3, 1> r_t(true);
-    Core::LinAlg::Matrix<3, 1> r(true);
+    Core::LinAlg::Matrix<3, 1> r_tt(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> r_t(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> r(Core::LinAlg::Initialization::zero);
 
     r_tt = rttnew_gp_mass_[gp];
     r_t = rtnew_gp_mass_[gp];
     r = rnew_gp_mass_[gp];
 
-    Core::LinAlg::Matrix<3, 3> S_r(true);
+    Core::LinAlg::Matrix<3, 3> S_r(Core::LinAlg::Initialization::zero);
     Core::LargeRotations::computespin<double>(S_r, r);
     dL.multiply(S_r, r_t);
     dL.scale(mass_inertia_translational);
-    Core::LinAlg::Matrix<3, 1> Lambdanewmass_Jp_Wnewmass(true);
+    Core::LinAlg::Matrix<3, 1> Lambdanewmass_Jp_Wnewmass(Core::LinAlg::Initialization::zero);
     Lambdanewmass_Jp_Wnewmass.multiply(Lambdanewmass, Jp_Wnewmass);
     dL.update(1.0, Lambdanewmass_Jp_Wnewmass, 1.0);
     for (unsigned int i = 0; i < 3; i++)
@@ -1398,26 +1401,27 @@ void Discret::Elements::Beam3r::calc_inertia_force_and_mass_matrix(
       p_(i) += wgtmass * jacobi_gp_mass_[gp] * mass_inertia_translational * r_t(i);
     }
 
-    Core::LinAlg::Matrix<3, 3> S_Pit(true);
+    Core::LinAlg::Matrix<3, 3> S_Pit(Core::LinAlg::Initialization::zero);
     Core::LargeRotations::computespin<double>(S_Pit, Pi_t);
-    Core::LinAlg::Matrix<3, 3> SJpWnewmass(true);
+    Core::LinAlg::Matrix<3, 3> SJpWnewmass(Core::LinAlg::Initialization::zero);
     Core::LargeRotations::computespin<double>(SJpWnewmass, Jp_Wnewmass);
-    Core::LinAlg::Matrix<3, 3> SWnewmass_Jp(true);
+    Core::LinAlg::Matrix<3, 3> SWnewmass_Jp(Core::LinAlg::Initialization::zero);
     SWnewmass_Jp.multiply(SWnewmass, Jp);
     Jp_bar.update(diff_factor_vel, SWnewmass_Jp, 1.0);
     Jp_bar.update(-diff_factor_vel, SJpWnewmass, 1.0);
 
-    Core::LinAlg::Matrix<3, 3> Tmatrix(true);
+    Core::LinAlg::Matrix<3, 3> Tmatrix(Core::LinAlg::Initialization::zero);
     Tmatrix = Core::LargeRotations::tmatrix(deltatheta);
 
-    Core::LinAlg::Matrix<3, 3> Lambdanewmass_Jpbar(true);
+    Core::LinAlg::Matrix<3, 3> Lambdanewmass_Jpbar(Core::LinAlg::Initialization::zero);
     Lambdanewmass_Jpbar.multiply(Lambdanewmass, Jp_bar);
-    Core::LinAlg::Matrix<3, 3> LambdaconvmassT_Tmatrix(true);
+    Core::LinAlg::Matrix<3, 3> LambdaconvmassT_Tmatrix(Core::LinAlg::Initialization::zero);
     LambdaconvmassT_Tmatrix.multiply_tn(Lambdaconvmass, Tmatrix);
-    Core::LinAlg::Matrix<3, 3> Lambdanewmass_Jpbar_LambdaconvmassT_Tmatrix(true);
+    Core::LinAlg::Matrix<3, 3> Lambdanewmass_Jpbar_LambdaconvmassT_Tmatrix(
+        Core::LinAlg::Initialization::zero);
     Lambdanewmass_Jpbar_LambdaconvmassT_Tmatrix.multiply(
         Lambdanewmass_Jpbar, LambdaconvmassT_Tmatrix);
-    Core::LinAlg::Matrix<3, 3> auxmatrix1(true);
+    Core::LinAlg::Matrix<3, 3> auxmatrix1(Core::LinAlg::Initialization::zero);
     auxmatrix1.update(-1.0, S_Pit, 1.0);
     auxmatrix1.update(1.0, Lambdanewmass_Jpbar_LambdaconvmassT_Tmatrix, 1.0);
 
@@ -1477,7 +1481,7 @@ void Discret::Elements::Beam3r::calc_inertia_force_and_mass_matrix(
           }
 
         // rotational contribution
-        Core::LinAlg::Matrix<3, 3> auxmatrix2(true);
+        Core::LinAlg::Matrix<3, 3> auxmatrix2(Core::LinAlg::Initialization::zero);
         auxmatrix2.multiply(auxmatrix1, Itilde[jnode]);
         for (unsigned int inode = 0; inode < nnodecl; inode++)
         {
@@ -1500,7 +1504,7 @@ void Discret::Elements::Beam3r::calc_inertia_force_and_mass_matrix(
           ++jnode)  // this loop is only entered in case of nnodetriad>nnodecl
       {
         // rotational contribution
-        Core::LinAlg::Matrix<3, 3> auxmatrix2(true);
+        Core::LinAlg::Matrix<3, 3> auxmatrix2(Core::LinAlg::Initialization::zero);
         auxmatrix2.multiply(auxmatrix1, Itilde[jnode]);
         for (unsigned int inode = 0; inode < nnodecl; inode++)
         {
@@ -1523,8 +1527,8 @@ void Discret::Elements::Beam3r::calc_inertia_force_and_mass_matrix(
     }
 
     // Calculation of kinetic energy
-    Core::LinAlg::Matrix<1, 1> ekinrot(true);
-    Core::LinAlg::Matrix<1, 1> ekintrans(true);
+    Core::LinAlg::Matrix<1, 1> ekinrot(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<1, 1> ekintrans(Core::LinAlg::Initialization::zero);
     ekinrot.multiply_tn(Wnewmass, Jp_Wnewmass);
     ekintrans.multiply_tn(r_t, r_t);
     ekin_ += 0.5 * (ekinrot.norm2() + mass_inertia_translational * ekintrans.norm2()) *
@@ -1570,7 +1574,7 @@ void Discret::Elements::Beam3r::calc_stiffmat_analytic_force_contributions(
   // \tilde{I}^nnode at a certain Gauss point according to (3.18), Jelenic 1999
   std::vector<Core::LinAlg::Matrix<3, 3, double>> Itilde(nnodetriad);
 
-  Core::LinAlg::Matrix<3, 1, double> Psi_l(true);
+  Core::LinAlg::Matrix<3, 1, double> Psi_l(Core::LinAlg::Initialization::zero);
   triad_intpol.get_interpolated_local_rotation_vector(Psi_l, I_i);
   triad_intpol.get_nodal_generalized_rotation_interpolation_matrices(Itilde, Psi_l, I_i);
 
@@ -1910,10 +1914,10 @@ void Discret::Elements::Beam3r::calc_stiffmat_automatic_differentiation(
    * the trafo matrix is simply the T-Matrix (see Jelenic1999, (2.4)): \Delta_{mult} \vec
    * \theta_{inode} = \mat T(\vec \theta_{inode} * \Delta_{addit} \vec \theta_{inode}*/
 
-  Core::LinAlg::Matrix<3, 3, double> tempmat(true);
-  Core::LinAlg::Matrix<3, 3, double> newstiffmat(true);
-  Core::LinAlg::Matrix<3, 3, double> Tmat(true);
-  Core::LinAlg::Matrix<3, 1, double> theta_totlag_j(true);
+  Core::LinAlg::Matrix<3, 3, double> tempmat(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> newstiffmat(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> Tmat(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> theta_totlag_j(Core::LinAlg::Initialization::zero);
 
   for (unsigned int jnode = 0; jnode < nnodecl; jnode++)
   {
@@ -2091,10 +2095,12 @@ void Discret::Elements::Beam3r::calc_brownian_forces_and_stiff(Teuchos::Paramete
 
   // current nodal DOFs relevant for centerline interpolation in total Lagrangian style, i.e.
   // initial values + displacements
-  Core::LinAlg::Matrix<3 * vpernode * nnodecl, 1, double> disp_totlag_centerline(true);
+  Core::LinAlg::Matrix<3 * vpernode * nnodecl, 1, double> disp_totlag_centerline(
+      Core::LinAlg::Initialization::zero);
 
   // discrete centerline (i.e. translational) velocity vector
-  Core::LinAlg::Matrix<3 * vpernode * nnodecl, 1, double> vel_centerline(true);
+  Core::LinAlg::Matrix<3 * vpernode * nnodecl, 1, double> vel_centerline(
+      Core::LinAlg::Initialization::zero);
 
   // quaternions of all nodal triads
   std::vector<Core::LinAlg::Matrix<4, 1, double>> Q_i(nnodetriad);
@@ -2244,7 +2250,7 @@ void Discret::Elements::Beam3r::evaluate_rotational_damping(
     dt_inv = 1.0 / params.get<double>("delta time", 1000);
 
   // get damping coefficients for translational and rotational degrees of freedom
-  Core::LinAlg::Matrix<3, 1> gamma(true);
+  Core::LinAlg::Matrix<3, 1> gamma(Core::LinAlg::Initialization::zero);
   get_damping_coefficients(gamma);
 
   // get Gauss points and weights for evaluation of viscous damping contributions
@@ -2313,17 +2319,17 @@ void Discret::Elements::Beam3r::evaluate_rotational_damping(
     // ******** alternative 2 ***************
 
     // get quaternion in converged state at gp and compute corresponding triad
-    Core::LinAlg::Matrix<3, 3, double> triad_mat_conv(true);
-    Core::LinAlg::Matrix<4, 1, double> Qconv(true);
+    Core::LinAlg::Matrix<3, 3, double> triad_mat_conv(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<4, 1, double> Qconv(Core::LinAlg::Initialization::zero);
     for (unsigned int i = 0; i < 4; ++i) Qconv(i) = (qconv_gp_dampstoch_[gp])(i);
 
     Core::LargeRotations::quaterniontotriad(Qconv, triad_mat_conv);
 
     // compute quaternion of relative rotation from converged to current state
-    Core::LinAlg::Matrix<3, 3, double> deltatriad(true);
+    Core::LinAlg::Matrix<3, 3, double> deltatriad(Core::LinAlg::Initialization::zero);
     deltatriad.multiply_nt(LambdaGP, triad_mat_conv);
 
-    Core::LinAlg::Matrix<4, 1, double> deltaQ(true);
+    Core::LinAlg::Matrix<4, 1, double> deltaQ(Core::LinAlg::Initialization::zero);
     Core::LargeRotations::triadtoquaternion(deltatriad, deltaQ);
 
     // **************************************
@@ -2333,7 +2339,7 @@ void Discret::Elements::Beam3r::evaluate_rotational_damping(
     Core::LargeRotations::quaterniontoangle(deltaQ, deltatheta);
 
     // angular velocity at this Gauss point according to backward Euler scheme
-    Core::LinAlg::Matrix<3, 1> omega(true);
+    Core::LinAlg::Matrix<3, 1> omega(Core::LinAlg::Initialization::zero);
     omega.update(dt_inv, deltatheta);
 
     // compute matrix Lambda*[gamma(2) 0 0 \\ 0 0 0 \\ 0 0 0]*Lambda^t = gamma(2) * g_1 \otimes g_1
@@ -2395,8 +2401,8 @@ void Discret::Elements::Beam3r::evaluate_rotational_damping(
       Core::LargeRotations::computespin(Sofg1g1gammaomega, g1g1gammaomega);
 
       // auxiliary matrices
-      Core::LinAlg::Matrix<3, 3> sum(true);
-      Core::LinAlg::Matrix<3, 3> auxmatrix(true);
+      Core::LinAlg::Matrix<3, 3> sum(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<3, 3> auxmatrix(Core::LinAlg::Initialization::zero);
 
       sum += g1g1oldgammaTmat;
       sum.scale(dt_inv);
@@ -2496,20 +2502,20 @@ void Discret::Elements::Beam3r::evaluate_translational_damping(Teuchos::Paramete
   Core::LinAlg::Matrix<ndim, ndim> velbackgroundgrad;
 
   // position of beam centerline point corresponding to a certain Gauss point
-  Core::LinAlg::Matrix<ndim, 1> r(true);
+  Core::LinAlg::Matrix<ndim, 1> r(Core::LinAlg::Initialization::zero);
   // tangent vector (derivative of beam centerline curve r with respect to arc-length parameter s)
-  Core::LinAlg::Matrix<ndim, 1> r_s(true);
+  Core::LinAlg::Matrix<ndim, 1> r_s(Core::LinAlg::Initialization::zero);
   // velocity of beam centerline point relative to background fluid velocity
-  Core::LinAlg::Matrix<ndim, 1> vel_rel(true);
+  Core::LinAlg::Matrix<ndim, 1> vel_rel(Core::LinAlg::Initialization::zero);
 
   // damping coefficients for translational and rotational degrees of freedom
-  Core::LinAlg::Matrix<3, 1> gamma(true);
+  Core::LinAlg::Matrix<3, 1> gamma(Core::LinAlg::Initialization::zero);
   get_damping_coefficients(gamma);
 
   // viscous force vector per unit length at current GP
-  Core::LinAlg::Matrix<ndim, 1> f_visc(true);
+  Core::LinAlg::Matrix<ndim, 1> f_visc(Core::LinAlg::Initialization::zero);
   // damping matrix
-  Core::LinAlg::Matrix<ndim, ndim> damp_mat(true);
+  Core::LinAlg::Matrix<ndim, ndim> damp_mat(Core::LinAlg::Initialization::zero);
 
   // get Gauss points and weights for evaluation of damping matrix
   Core::FE::GaussRule1D gaussrule = my_gauss_rule(res_damp_stoch);
@@ -2574,7 +2580,7 @@ void Discret::Elements::Beam3r::evaluate_translational_damping(Teuchos::Paramete
     if (stiffmatrix != nullptr)
     {
       // compute matrix product of damping matrix and gradient of background velocity
-      Core::LinAlg::Matrix<ndim, ndim> dampmatvelbackgroundgrad(true);
+      Core::LinAlg::Matrix<ndim, ndim> dampmatvelbackgroundgrad(Core::LinAlg::Initialization::zero);
       dampmatvelbackgroundgrad.multiply(damp_mat, velbackgroundgrad);
 
 
@@ -2674,7 +2680,7 @@ void Discret::Elements::Beam3r::evaluate_stochastic_forces(Teuchos::ParameterLis
   const unsigned int dofpernode = 3 * vpernode + 3;
 
   // damping coefficients for three translational and one rotational degree of freedom
-  Core::LinAlg::Matrix<3, 1> sqrt_gamma(true);
+  Core::LinAlg::Matrix<3, 1> sqrt_gamma(Core::LinAlg::Initialization::zero);
   get_damping_coefficients(sqrt_gamma);
   for (unsigned int i = 0; i < 2; ++i) sqrt_gamma(i) = std::sqrt(sqrt_gamma(i));
 
@@ -2684,13 +2690,13 @@ void Discret::Elements::Beam3r::evaluate_stochastic_forces(Teuchos::ParameterLis
       brownian_dyn_params_interface().get_random_forces();
 
   // my random number vector at current GP
-  Core::LinAlg::Matrix<ndim, 1> randnumvec(true);
+  Core::LinAlg::Matrix<ndim, 1> randnumvec(Core::LinAlg::Initialization::zero);
 
   // tangent vector (derivative of beam centerline curve r with respect to arc-length parameter s)
-  Core::LinAlg::Matrix<ndim, 1> r_s(true);
+  Core::LinAlg::Matrix<ndim, 1> r_s(Core::LinAlg::Initialization::zero);
 
   // stochastic force vector per unit length at current GP
-  Core::LinAlg::Matrix<ndim, 1> f_stoch(true);
+  Core::LinAlg::Matrix<ndim, 1> f_stoch(Core::LinAlg::Initialization::zero);
 
   // get Gauss points and weights for evaluation of damping matrix
   Core::FE::GaussRule1D gaussrule = my_gauss_rule(res_damp_stoch);

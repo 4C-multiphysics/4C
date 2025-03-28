@@ -58,22 +58,23 @@ Core::LinAlg::Matrix<6, 1> Solid::Utils::green_lagrange_to_log_strain(
   Core::LinAlg::Matrix<3, 3> E_matrix;
   Core::LinAlg::Voigt::Strains::vector_to_matrix(gl, E_matrix);
 
-  Core::LinAlg::Matrix<3, 3> pr_strain(true);  // squared principal strains
-  Core::LinAlg::Matrix<3, 3> pr_dir(true);     // principal directions
+  Core::LinAlg::Matrix<3, 3> pr_strain(
+      Core::LinAlg::Initialization::zero);  // squared principal strains
+  Core::LinAlg::Matrix<3, 3> pr_dir(Core::LinAlg::Initialization::zero);  // principal directions
   Core::LinAlg::syev(E_matrix, pr_strain, pr_dir);
 
   // compute principal logarithmic strains
-  Core::LinAlg::Matrix<3, 3> pr_log_strain(true);
+  Core::LinAlg::Matrix<3, 3> pr_log_strain(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 3; ++i) pr_log_strain(i, i) = std::log(std::sqrt(2 * pr_strain(i, i) + 1.0));
 
   // create logarithmic strain matrix
-  Core::LinAlg::Matrix<3, 3> log_strain_matrix(true);
-  Core::LinAlg::Matrix<3, 3> VH(false);
+  Core::LinAlg::Matrix<3, 3> log_strain_matrix(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> VH(Core::LinAlg::Initialization::uninitialized);
   VH.multiply_nn(pr_dir, pr_log_strain);
   log_strain_matrix.multiply_nt(VH, pr_dir);
 
   // convert to strain-like voigt notation
-  Core::LinAlg::Matrix<6, 1> log_strain_voigt(true);
+  Core::LinAlg::Matrix<6, 1> log_strain_voigt(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Voigt::Strains::matrix_to_vector(log_strain_matrix, log_strain_voigt);
   return log_strain_voigt;
 }

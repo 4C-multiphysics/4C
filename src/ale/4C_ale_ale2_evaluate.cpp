@@ -1139,12 +1139,12 @@ void Discret::Elements::Ale2::material_response3d_plane(Core::LinAlg::SerialDens
     Teuchos::ParameterList& params, const int gp)
 {
   // make 3d equivalent of Green-Lagrange strain
-  Core::LinAlg::Matrix<6, 1> gl(false);
+  Core::LinAlg::Matrix<6, 1> gl(Core::LinAlg::Initialization::uninitialized);
   green_lagrange_plane3d(strain, gl);
 
   // call 3d stress response
-  Core::LinAlg::Matrix<6, 1> pk2(true);   // must be zerofied!!!
-  Core::LinAlg::Matrix<6, 6> cmat(true);  // must be zerofied!!!
+  Core::LinAlg::Matrix<6, 1> pk2(Core::LinAlg::Initialization::zero);   // must be zerofied!!!
+  Core::LinAlg::Matrix<6, 6> cmat(Core::LinAlg::Initialization::zero);  // must be zerofied!!!
   material_response3d(&pk2, &cmat, &gl, params, gp);
 
   // we have plain strain

@@ -25,13 +25,13 @@ namespace
    */
   TEST(LinalgDenseMatrixExpLogTest, 2x2MatrixExp)
   {
-    Core::LinAlg::Matrix<2, 2> A(true);
+    Core::LinAlg::Matrix<2, 2> A(Core::LinAlg::Initialization::zero);
     A(0, 0) = 0.1320698936;
     A(0, 1) = 0.7174840819;
     A(1, 0) = 0.9846543275;
     A(1, 1) = 0.0134355791;
 
-    Core::LinAlg::Matrix<2, 2> exp_A_ref(true);
+    Core::LinAlg::Matrix<2, 2> exp_A_ref(Core::LinAlg::Initialization::zero);
     exp_A_ref(0, 0) = 1.5519954316;
     exp_A_ref(0, 1) = 0.8662338814;
     exp_A_ref(1, 0) = 1.1887942346;
@@ -44,13 +44,13 @@ namespace
 
   TEST(LinalgDenseMatrixExpLogTest, 2x2MatrixLog)
   {
-    Core::LinAlg::Matrix<2, 2> A(true);
+    Core::LinAlg::Matrix<2, 2> A(Core::LinAlg::Initialization::zero);
     A(0, 0) = 0.8710528572;
     A(0, 1) = 0.4665807292;
     A(1, 0) = 0.0007588202;
     A(1, 1) = 0.7447870648;
 
-    Core::LinAlg::Matrix<2, 2> log_A_ref(true);
+    Core::LinAlg::Matrix<2, 2> log_A_ref(Core::LinAlg::Initialization::zero);
     log_A_ref(0, 0) = -0.1383113276;
     log_A_ref(0, 1) = 0.5787936215;
     log_A_ref(1, 0) = 0.0009413169;
@@ -63,7 +63,7 @@ namespace
 
   TEST(LinalgDenseMatrixExpLogTest, 3x3MatrixExp)
   {
-    Core::LinAlg::Matrix<3, 3> A(true);
+    Core::LinAlg::Matrix<3, 3> A(Core::LinAlg::Initialization::zero);
     A(0, 0) = 0.4908570193;
     A(0, 1) = 0.0227448063;
     A(0, 2) = 0.8823601080;
@@ -74,7 +74,7 @@ namespace
     A(2, 1) = 0.3123498741;
     A(2, 2) = 0.9434957224;
 
-    Core::LinAlg::Matrix<3, 3> exp_A_ref(true);
+    Core::LinAlg::Matrix<3, 3> exp_A_ref(Core::LinAlg::Initialization::zero);
     exp_A_ref(0, 0) = 2.1642950359;
     exp_A_ref(0, 1) = 0.3611066893;
     exp_A_ref(0, 2) = 2.0038269622;
@@ -91,7 +91,7 @@ namespace
   }
   TEST(LinalgDenseMatrixExpLogTest, MatrixExp1stDeriv)
   {
-    Core::LinAlg::Matrix<3, 3> A(true);
+    Core::LinAlg::Matrix<3, 3> A(Core::LinAlg::Initialization::zero);
     A(0, 0) = 0.0825983659;
     A(0, 1) = 0.4025712945;
     A(0, 2) = 0.8812204459;
@@ -102,7 +102,7 @@ namespace
     A(2, 1) = 0.4929807721;
     A(2, 2) = 0.2853229892;
 
-    Core::LinAlg::Matrix<9, 9> dexp_dA_ref(true);
+    Core::LinAlg::Matrix<9, 9> dexp_dA_ref(Core::LinAlg::Initialization::zero);
     dexp_dA_ref(0, 0) = 1.3754913371;
     dexp_dA_ref(0, 1) = 0.0304833776;
     dexp_dA_ref(0, 2) = 0.1363342698;
@@ -191,7 +191,7 @@ namespace
 
   TEST(LinalgDenseMatrixExpLogTest, SymMatrix3x3Exp1stDeriv)
   {
-    Core::LinAlg::Matrix<3, 3> A(true);
+    Core::LinAlg::Matrix<3, 3> A(Core::LinAlg::Initialization::zero);
     A(0, 0) = 0.8690903698;
     A(0, 1) = 0.1617986658;
     A(0, 2) = 0.2280178825;
@@ -202,7 +202,7 @@ namespace
     A(2, 1) = 0.4866432170;
     A(2, 2) = 0.1288095746;
 
-    Core::LinAlg::Matrix<6, 6> dexp_dA_ref(true);
+    Core::LinAlg::Matrix<6, 6> dexp_dA_ref(Core::LinAlg::Initialization::zero);
     dexp_dA_ref(0, 0) = 2.4472876345;
     dexp_dA_ref(0, 1) = 0.0138990186;
     dexp_dA_ref(0, 2) = 0.0177623391;
@@ -248,7 +248,7 @@ namespace
 
   TEST(LinalgDenseMatrixExpLogTest, 3x3MatrixLog)
   {
-    Core::LinAlg::Matrix<3, 3> A(true);
+    Core::LinAlg::Matrix<3, 3> A(Core::LinAlg::Initialization::zero);
     A(0, 0) = 0.4908570193;
     A(0, 1) = 0.0227448063;
     A(0, 2) = 0.8823601080;
@@ -259,7 +259,7 @@ namespace
     A(2, 1) = 0.3123498741;
     A(2, 2) = 0.9434957224;
 
-    Core::LinAlg::Matrix<3, 3> log_A_ref(true);
+    Core::LinAlg::Matrix<3, 3> log_A_ref(Core::LinAlg::Initialization::zero);
     log_A_ref(0, 0) = -2.3112341006;
     log_A_ref(0, 1) = -0.6036784103;
     log_A_ref(0, 2) = 2.6135476834;
@@ -276,7 +276,7 @@ namespace
   }
   TEST(LinalgDenseMatrixExpLogTest, MatrixLog1stDeriv)
   {
-    Core::LinAlg::Matrix<3, 3> A(true);
+    Core::LinAlg::Matrix<3, 3> A(Core::LinAlg::Initialization::zero);
     A(0, 0) = 0.9023044993;
     A(0, 1) = 0.5012335252;
     A(0, 2) = 0.9168173456;
@@ -287,7 +287,7 @@ namespace
     A(2, 1) = 0.2844070513;
     A(2, 2) = 0.8815705957;
 
-    Core::LinAlg::Matrix<9, 9> dlog_dA_ref(true);
+    Core::LinAlg::Matrix<9, 9> dlog_dA_ref(Core::LinAlg::Initialization::zero);
     dlog_dA_ref(0, 0) = 1.9623864897;
     dlog_dA_ref(0, 1) = 0.6058626691;
     dlog_dA_ref(0, 2) = -0.0924008485;

@@ -160,7 +160,7 @@ void Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::eval_reinitial
       std::map<int, Core::Geo::BoundaryIntCellPtrs>::const_iterator cit = allcells->find(my::eid_);
       if (cit != allcells->end()) boundaryIntCells = cit->second;
 
-      Core::LinAlg::Matrix<nen_, 1> el2sysmat_diag_inv(false);
+      Core::LinAlg::Matrix<nen_, 1> el2sysmat_diag_inv(Core::LinAlg::Initialization::uninitialized);
       if (lsreinitparams_->project())
       {
         FOUR_C_THROW(
@@ -239,7 +239,7 @@ void Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::elliptic_newto
     //--------------------------------------------------------------------
 
     // gradient of current scalar value at integration point
-    Core::LinAlg::Matrix<nsd_, 1> gradphinp(true);
+    Core::LinAlg::Matrix<nsd_, 1> gradphinp(Core::LinAlg::Initialization::zero);
     if (lsreinitparams_->project())
       gradphinp.multiply(my::econvelnp_, my::funct_);
     else
@@ -439,7 +439,7 @@ void Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::sysmat_hyperbo
   //----------------------------------------------------------------------
 
   // get gradient of initial phi at element center
-  Core::LinAlg::Matrix<nsd_, 1> gradphizero(true);
+  Core::LinAlg::Matrix<nsd_, 1> gradphizero(Core::LinAlg::Initialization::zero);
   gradphizero.multiply(my::derxy_, ephizero_[0]);
 
   // get characteristic element length
@@ -464,14 +464,14 @@ void Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::sysmat_hyperbo
     if (not my::scatrapara_->tau_gp())
     {
       // get velocity at element center
-      Core::LinAlg::Matrix<nsd_, 1> convelint(true);
+      Core::LinAlg::Matrix<nsd_, 1> convelint(Core::LinAlg::Initialization::zero);
 
       // switch type for velocity field
       if (not lsreinitparams_->use_projected_vel())
       {
 #ifndef USE_PHIN_FOR_VEL
         // gradient of current scalar value at element center
-        Core::LinAlg::Matrix<nsd_, 1> gradphinp(true);
+        Core::LinAlg::Matrix<nsd_, 1> gradphinp(Core::LinAlg::Initialization::zero);
         gradphinp.multiply(my::derxy_, my::ephinp_[0]);
         // get norm
         const double gradphinp_norm = gradphinp.norm2();
@@ -489,7 +489,7 @@ void Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::sysmat_hyperbo
         // otherwise gradphi is almost zero and we keep a zero velocity
 #else
         // gradient of scalar value at t_n at element center
-        Core::LinAlg::Matrix<nsd_, 1> gradphin(true);
+        Core::LinAlg::Matrix<nsd_, 1> gradphin(Core::LinAlg::Initialization::zero);
         gradphin.multiply(my::derxy_, my::ephin_[0]);
         // get norm
         const double gradphin_norm = gradphin.norm2();
@@ -540,7 +540,7 @@ void Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::sysmat_hyperbo
     //--------------------------------------------------------------------
 
     // gradient of current scalar value at integration point
-    Core::LinAlg::Matrix<nsd_, 1> gradphinp(true);
+    Core::LinAlg::Matrix<nsd_, 1> gradphinp(Core::LinAlg::Initialization::zero);
     gradphinp.multiply(my::derxy_, my::ephinp_[0]);
     // scalar at integration point at time step n+1
     const double phinp = my::funct_.dot(my::ephinp_[0]);
@@ -561,7 +561,7 @@ void Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::sysmat_hyperbo
     var_manager()->set_grad_phi(0, gradphinp);
 
     // get velocity at element center
-    Core::LinAlg::Matrix<nsd_, 1> convelint(true);
+    Core::LinAlg::Matrix<nsd_, 1> convelint(Core::LinAlg::Initialization::zero);
 
     // get sign function
     double signphi = 0.0;
@@ -569,7 +569,7 @@ void Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::sysmat_hyperbo
     sign_function(signphi, charelelength, phizero, gradphizero, phinp, gradphinp);
 #else
     // gradient of scalar value at t_n at integration point
-    Core::LinAlg::Matrix<nsd_, 1> gradphin(true);
+    Core::LinAlg::Matrix<nsd_, 1> gradphin(Core::LinAlg::Initialization::zero);
     gradphin.multiply(my::derxy_, my::ephin_[0]);
 
     sign_function(signphi, charelelength, phizero, gradphizero, phin, gradphin);
@@ -598,7 +598,7 @@ void Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::sysmat_hyperbo
     }
 
     // convective part in convective form: u_x*N,x+ u_y*N,y
-    Core::LinAlg::Matrix<nen_, 1> conv(true);
+    Core::LinAlg::Matrix<nen_, 1> conv(Core::LinAlg::Initialization::zero);
     conv.multiply_tn(my::derxy_, convelint);
 
     // convective term using current scalar value
@@ -610,7 +610,7 @@ void Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::sysmat_hyperbo
     var_manager()->set_con_vel(0, convelint);
     var_manager()->set_conv_phi(0, conv_phi);
 
-    Core::LinAlg::Matrix<nen_, 1> diff(true);
+    Core::LinAlg::Matrix<nen_, 1> diff(Core::LinAlg::Initialization::zero);
     // diffusive term using current scalar value for higher-order elements
     if (my::use2ndderiv_)
     {
@@ -704,7 +704,7 @@ void Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::sysmat_hyperbo
     my::calc_mat_mass(emat, 0, fac, 1.0);
 
     // subgrid-scale velocity (dummy)
-    Core::LinAlg::Matrix<nen_, 1> sgconv(true);
+    Core::LinAlg::Matrix<nen_, 1> sgconv(Core::LinAlg::Initialization::zero);
     if (lsreinitparams_->lin_form() == Inpar::ScaTra::newton)
     {
       if (my::scatrapara_->stab_type() != Inpar::ScaTra::stabtype_no_stabilization)
@@ -803,7 +803,7 @@ void Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::sysmat_ellipti
     //--------------------------------------------------------------------
 
     // gradient of current scalar value at integration point
-    Core::LinAlg::Matrix<nsd_, 1> gradphinp(true);
+    Core::LinAlg::Matrix<nsd_, 1> gradphinp(Core::LinAlg::Initialization::zero);
     if (lsreinitparams_->project())
       gradphinp.multiply(my::econvelnp_, my::funct_);
     else
@@ -998,7 +998,7 @@ double Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::calc_char_el
     {
       // get norm of gradient of phi
       double gradphi_norm = gradphizero.norm2();
-      Core::LinAlg::Matrix<nsd_, 1> gradphi_scaled(true);
+      Core::LinAlg::Matrix<nsd_, 1> gradphi_scaled(Core::LinAlg::Initialization::zero);
       if (gradphi_norm >= 1e-8)
         gradphi_scaled.update(1.0 / gradphi_norm, gradphizero);
       else
@@ -1104,7 +1104,7 @@ void Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::calc_rhs_diff(
   // crosswind diffusion
   double vrhs = rhsfac * diff_manager()->get_isotropic_diff(k);
 
-  Core::LinAlg::Matrix<nsd_, 1> gradphirhs(true);
+  Core::LinAlg::Matrix<nsd_, 1> gradphirhs(Core::LinAlg::Initialization::zero);
   if (crosswind)
   {
     // in case of anisotropic or crosswind diffusion, multiply 'gradphi' with diffusion tensor

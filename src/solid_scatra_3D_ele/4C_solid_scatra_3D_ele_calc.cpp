@@ -99,7 +99,8 @@ namespace
   {
     if constexpr (is_scalar)
     {
-      Core::LinAlg::Matrix<Core::FE::num_nodes<celltype>, 1> nodal_quantities(num_scalars);
+      Core::LinAlg::Matrix<Core::FE::num_nodes<celltype>, 1> nodal_quantities(
+          Core::LinAlg::Initialization::zero);
       for (int i = 0; i < Core::FE::num_nodes<celltype>; ++i)
         nodal_quantities(i, 0) = quantities_at_dofs.at(i);
 
@@ -234,7 +235,7 @@ namespace
           scalars_at_xi.has_value(), "Scalar needs to have a value if the derivatives are needed!");
       linearizations.d_cauchyndir_ds->shape(Core::FE::num_nodes<celltype>, 1);
 
-      static Core::LinAlg::Matrix<9, 1> d_F_dc(true);
+      static Core::LinAlg::Matrix<9, 1> d_F_dc(Core::LinAlg::Initialization::zero);
       mat.evaluate_linearization_od(deformation_gradient, (*scalars_at_xi)[0], &d_F_dc);
 
       double d_cauchyndir_ds_gp = (*linearization_dependencies.d_cauchyndir_dF).dot(d_F_dc);
@@ -472,7 +473,7 @@ void Discret::Elements::SolidScatraEleCalc<celltype, SolidFormulation>::evaluate
 
               // Assemble matrix
               // k_dS = B^T . dS/dc * detJ * N * w(gp)
-              Core::LinAlg::Matrix<num_dof_per_ele, 1> BdSdc(true);
+              Core::LinAlg::Matrix<num_dof_per_ele, 1> BdSdc(Core::LinAlg::Initialization::zero);
               BdSdc.multiply_tn(integration_factor, bop, dSdc);
 
               // loop over rows

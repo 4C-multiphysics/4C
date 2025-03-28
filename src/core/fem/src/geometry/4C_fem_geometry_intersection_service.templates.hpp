@@ -90,7 +90,7 @@ namespace Core::Geo
         std::cout << Core::FE::cell_type_to_string(distype) << std::endl;
         FOUR_C_THROW("add your distype to this switch!");
     }
-    return Core::LinAlg::Matrix<3, 2>(true);
+    return Core::LinAlg::Matrix<3, 2>(Core::LinAlg::Initialization::zero);
   }
 
 

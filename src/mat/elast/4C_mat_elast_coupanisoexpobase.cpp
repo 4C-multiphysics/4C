@@ -39,7 +39,7 @@ void Mat::Elastic::CoupAnisoExpoBase::add_strain_energy(double& psi,
     const Core::LinAlg::Matrix<6, 1>& glstrain, const int gp, const int eleGID)
 {
   // right Cauchy Green
-  Core::LinAlg::Matrix<3, 3> C(true);
+  Core::LinAlg::Matrix<3, 3> C(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 3; ++i) C(i, i) = 2.0 * glstrain(i) + 1.0;
   C(0, 1) = C(1, 0) = glstrain(3);
   C(1, 2) = C(2, 1) = glstrain(4);
@@ -198,12 +198,7 @@ void Mat::Elastic::CoupAnisoExpoBase::set_fiber_vecs(const Core::LinAlg::Matrix<
 template void Mat::Elastic::CoupAnisoExpoBase::get_derivatives_aniso<double>(
     Core::LinAlg::Matrix<2, 1, double>&, Core::LinAlg::Matrix<3, 1, double>&,
     Core::LinAlg::Matrix<4, 1, double>&, Core::LinAlg::Matrix<3, 3, double> const&, int, int) const;
-template void Mat::Elastic::CoupAnisoExpoBase::get_derivatives_aniso<FAD>(
-    Core::LinAlg::Matrix<2, 1, FAD>&, Core::LinAlg::Matrix<3, 1, FAD>&,
-    Core::LinAlg::Matrix<4, 1, FAD>&, Core::LinAlg::Matrix<3, 3, FAD> const&, int, int) const;
 template void Mat::Elastic::CoupAnisoExpoBase::evaluate_func<double>(
     double&, Core::LinAlg::Matrix<3, 3, double> const&, int, int) const;
-template void Mat::Elastic::CoupAnisoExpoBase::evaluate_func<FAD>(
-    FAD&, Core::LinAlg::Matrix<3, 3, FAD> const&, int, int) const;
 
 FOUR_C_NAMESPACE_CLOSE

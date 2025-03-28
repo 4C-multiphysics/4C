@@ -45,7 +45,7 @@ Discret::Elements::ScaTraEleBoundaryCalcElchElectrodeGrowth<distype,
     probdim>::ScaTraEleBoundaryCalcElchElectrodeGrowth(const int numdofpernode, const int numscal,
     const std::string& disname)
     : myelectrode::ScaTraEleBoundaryCalcElchElectrode(numdofpernode, numscal, disname),
-      egrowth_(true)
+      egrowth_(Core::LinAlg::Initialization::zero)
 {
 }
 
@@ -66,7 +66,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrodeGrowth<distype,
   // extract local nodal values on present and opposite side of scatra-scatra interface
   extract_node_values(discretization, la);
   std::vector<Core::LinAlg::Matrix<nen_, 1>> emasterphinp(
-      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
   my::extract_node_values(emasterphinp, discretization, la, "imasterphinp");
 
   if (my::scatraparamsboundary_->condition_type() != Core::Conditions::S2IKineticsGrowth)
@@ -169,7 +169,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrodeGrowth<distype,
   // extract local nodal values on present and opposite side of scatra-scatra interface
   extract_node_values(discretization, la);
   std::vector<Core::LinAlg::Matrix<nen_, 1>> emasterphinp(
-      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
   my::extract_node_values(emasterphinp, discretization, la, "imasterphinp");
 
   // extract condition type
@@ -421,7 +421,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrodeGrowth<distype,
   // extract local nodal values on present and opposite side of scatra-scatra interface
   extract_node_values(discretization, la);
   std::vector<Core::LinAlg::Matrix<nen_, 1>> emasterphinp(
-      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
   my::extract_node_values(emasterphinp, discretization, la, "imasterphinp");
 
   // extract condition type
@@ -605,7 +605,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrodeGrowth<distype,
   // extract local nodal values on present and opposite side of scatra-scatra interface
   extract_node_values(discretization, la);
   std::vector<Core::LinAlg::Matrix<nen_, 1>> emasterphinp(
-      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
   my::extract_node_values(emasterphinp, discretization, la, "imasterphinp");
 
   if (my::scatraparamsboundary_->condition_type() != Core::Conditions::S2IKineticsGrowth)
@@ -718,8 +718,8 @@ void Discret::Elements::ScaTraEleBoundaryCalcElchElectrodeGrowth<distype,
   // extract local nodal values on present and opposite side of scatra-scatra interface
   extract_node_values(discretization, la);
   std::vector<Core::LinAlg::Matrix<nen_, 1>> emasterphinp(
-      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
-  Core::LinAlg::Matrix<nen_, 1> eslavegrowthhist(true);
+      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
+  Core::LinAlg::Matrix<nen_, 1> eslavegrowthhist(Core::LinAlg::Initialization::zero);
   my::extract_node_values(emasterphinp, discretization, la, "imasterphinp");
   my::extract_node_values(
       eslavegrowthhist, discretization, la, "growthhist", my::scatraparams_->nds_growth());

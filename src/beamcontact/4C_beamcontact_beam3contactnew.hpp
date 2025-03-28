@@ -179,7 +179,8 @@ namespace CONTACT
     */
     std::vector<Core::LinAlg::Matrix<3, 1>> get_x1() override
     {
-      std::vector<Core::LinAlg::Matrix<3, 1>> r1(1, Core::LinAlg::Matrix<3, 1>(true));
+      std::vector<Core::LinAlg::Matrix<3, 1>> r1(
+          1, Core::LinAlg::Matrix<3, 1>(Core::LinAlg::Initialization::zero));
 
       for (int j = 0; j < 3; j++) r1[0](j) = Core::FADUtils::cast_to_double(r1_(j));
 
@@ -191,7 +192,8 @@ namespace CONTACT
     */
     std::vector<Core::LinAlg::Matrix<3, 1>> get_x2() override
     {
-      std::vector<Core::LinAlg::Matrix<3, 1>> r2(1, Core::LinAlg::Matrix<3, 1>(true));
+      std::vector<Core::LinAlg::Matrix<3, 1>> r2(
+          1, Core::LinAlg::Matrix<3, 1>(Core::LinAlg::Initialization::zero));
 
       for (int j = 0; j < 3; j++) r2[0](j) = Core::FADUtils::cast_to_double(r2_(j));
 

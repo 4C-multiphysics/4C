@@ -575,7 +575,7 @@ void CONTACT::TSIInterface::assemble_dm_lin_diss(Core::LinAlg::SparseMatrix* d_L
     const Core::LinAlg::Matrix<3, 1> n(cnode->mo_data().n(), true);
 
     // projection into tangential plane = 1 - n \otimes n
-    Core::LinAlg::Matrix<3, 3> tang_proj(true);
+    Core::LinAlg::Matrix<3, 3> tang_proj(Core::LinAlg::Initialization::zero);
     for (int i = 0; i < 3; ++i) tang_proj(i, i) = 1.;
     tang_proj.multiply_nt(-1., n, n, 1.);
 

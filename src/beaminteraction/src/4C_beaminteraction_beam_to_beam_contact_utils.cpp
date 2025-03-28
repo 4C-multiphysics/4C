@@ -115,13 +115,13 @@ bool BeamInteraction::intersect_arbitrary_cylinders(Core::LinAlg::Matrix<3, 1, d
     Core::LinAlg::Matrix<3, 1, double>& r2_b, double& distancelimit,
     std::pair<double, double>& closestpoints, bool& etaset)
 {
-  Core::LinAlg::Matrix<3, 1, double> t1(true);
-  Core::LinAlg::Matrix<3, 1, double> t2(true);
+  Core::LinAlg::Matrix<3, 1, double> t1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> t2(Core::LinAlg::Initialization::zero);
   double closestnodetolinedist(0.0);
   double closestlinedist(0.0);
   double closestnodaldist(0.0);
-  Core::LinAlg::Matrix<3, 1, double> vec1(true);
-  Core::LinAlg::Matrix<3, 1, double> vec2(true);
+  Core::LinAlg::Matrix<3, 1, double> vec1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> vec2(Core::LinAlg::Initialization::zero);
 
   t1 = Core::FADUtils::diff_vector(r1_b, r1_a);
   t2 = Core::FADUtils::diff_vector(r2_b, r2_a);
@@ -227,9 +227,9 @@ double BeamInteraction::calc_point_line_dist(
 {
   double closestpointlinedist = 0.0;
 
-  Core::LinAlg::Matrix<3, 1, double> tline(true);
+  Core::LinAlg::Matrix<3, 1, double> tline(Core::LinAlg::Initialization::zero);
   tline = Core::FADUtils::diff_vector(rline_b, rline_a);
-  Core::LinAlg::Matrix<3, 1, double> vec1(true);
+  Core::LinAlg::Matrix<3, 1, double> vec1(Core::LinAlg::Initialization::zero);
   vec1 = Core::FADUtils::diff_vector(rline_a, rp);
   closestpointlinedist =
       fabs(Core::FADUtils::vector_norm<3>(Core::FADUtils::vector_product(vec1, tline)) /

@@ -151,8 +151,10 @@ namespace CONTACT
       const Core::LinAlg::Matrix<Core::FE::dim<distype>, 1>& xi,
       Core::LinAlg::Matrix<probdim, 1>& coord)
   {
-    static Core::LinAlg::Matrix<Core::FE::num_nodes<distype>, 1> funct(true);
-    static Core::LinAlg::Matrix<probdim, Core::FE::num_nodes<distype>> nodecoords(true);
+    static Core::LinAlg::Matrix<Core::FE::num_nodes<distype>, 1> funct(
+        Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<probdim, Core::FE::num_nodes<distype>> nodecoords(
+        Core::LinAlg::Initialization::zero);
 
     Core::FE::shape_function<distype>(xi, funct);
 
@@ -187,9 +189,12 @@ namespace CONTACT
   static void compute_unit_normal_at_xi_ref_config(const Core::Elements::Element* element,
       const Core::LinAlg::Matrix<Core::FE::dim<distype>, 1>& xi, Core::LinAlg::Matrix<3, 1>& normal)
   {
-    static Core::LinAlg::Matrix<3, Core::FE::dim<distype>> gxieta(true);
-    static Core::LinAlg::Matrix<Core::FE::dim<distype>, Core::FE::num_nodes<distype>> deriv(true);
-    static Core::LinAlg::Matrix<3, Core::FE::num_nodes<distype>> nodecoords(true);
+    static Core::LinAlg::Matrix<3, Core::FE::dim<distype>> gxieta(
+        Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<Core::FE::dim<distype>, Core::FE::num_nodes<distype>> deriv(
+        Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<3, Core::FE::num_nodes<distype>> nodecoords(
+        Core::LinAlg::Initialization::zero);
 
     Core::FE::shape_function_deriv1<distype>(xi, deriv);
 
@@ -208,10 +213,10 @@ namespace CONTACT
     }
 
     gxieta.multiply_nt(1.0, nodecoords, deriv, 0.0);
-    static Core::LinAlg::Matrix<3, 1> gxi(true);
-    static Core::LinAlg::Matrix<3, 1> geta(true);
-    static Core::LinAlg::Matrix<2, 1> first(true);
-    static Core::LinAlg::Matrix<2, 1> second(true);
+    static Core::LinAlg::Matrix<3, 1> gxi(Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<3, 1> geta(Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<2, 1> first(Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<2, 1> second(Core::LinAlg::Initialization::zero);
     first(0, 0) = 1.0;
     second(1, 0) = 1.0;
     gxi.multiply(1.0, gxieta, first, 0.0);

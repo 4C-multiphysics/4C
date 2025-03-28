@@ -338,7 +338,7 @@ void Discret::Elements::Torsion3::t3_nlnstiffmass(std::vector<double>& disp,
 {
   // current node position (first entries 0,1,2 for first node, 3,4,5 for second node , 6,7,8 for
   // third node)
-  Core::LinAlg::Matrix<9, 1> xcurr(true);
+  Core::LinAlg::Matrix<9, 1> xcurr(Core::LinAlg::Initialization::zero);
 
   // current nodal position
   for (int j = 0; j < 3; ++j)
@@ -349,11 +349,11 @@ void Discret::Elements::Torsion3::t3_nlnstiffmass(std::vector<double>& disp,
   }
 
   // auxiliary vector for both internal force and stiffness matrix
-  Core::LinAlg::Matrix<6, 1> aux(true);
+  Core::LinAlg::Matrix<6, 1> aux(Core::LinAlg::Initialization::zero);
   for (int j = 0; j < 6; ++j) aux(j) = xcurr(j + 3) - xcurr(j);
 
   // current length of vectors 1-->2  and 2-->3
-  Core::LinAlg::Matrix<2, 1> lcurr(true);
+  Core::LinAlg::Matrix<2, 1> lcurr(Core::LinAlg::Initialization::zero);
   for (int j = 0; j < 2; ++j)
     lcurr(j) = sqrt(pow(aux(3 * j), 2) + pow(aux(3 * j + 1), 2) + pow(aux(3 * j + 2), 2));
 

@@ -24,7 +24,7 @@ namespace
 
   TEST_F(ElementVolumeTest, TestElementLength_line2)
   {
-    Core::LinAlg::Matrix<3, 2> xyz(true);
+    Core::LinAlg::Matrix<3, 2> xyz(Core::LinAlg::Initialization::zero);
     xyz(0, 0) = 0.0;
     xyz(1, 0) = 0.0;
     xyz(2, 0) = 0.0;  // node 1
@@ -40,7 +40,7 @@ namespace
 
   TEST_F(ElementVolumeTest, TestElementLength_line3)
   {
-    Core::LinAlg::Matrix<3, 3> xyz(true);
+    Core::LinAlg::Matrix<3, 3> xyz(Core::LinAlg::Initialization::zero);
     xyz(0, 0) = 0.0;
     xyz(1, 0) = 0.0;
     xyz(2, 0) = 0.0;  // node 1
@@ -59,7 +59,7 @@ namespace
 
   TEST_F(ElementVolumeTest, TestElementArea_tri3)
   {
-    Core::LinAlg::Matrix<3, 3> xyz(true);
+    Core::LinAlg::Matrix<3, 3> xyz(Core::LinAlg::Initialization::zero);
     xyz(0, 0) = 0.0;
     xyz(1, 0) = 0.0;
     xyz(2, 0) = 0.0;  // node 1
@@ -78,7 +78,7 @@ namespace
 
   TEST_F(ElementVolumeTest, TestElementArea_tri6)
   {
-    Core::LinAlg::Matrix<3, 6> xyz(true);
+    Core::LinAlg::Matrix<3, 6> xyz(Core::LinAlg::Initialization::zero);
     xyz(0, 0) = 0.0;
     xyz(1, 0) = 0.0;
     xyz(2, 0) = 0.0;  // node 1
@@ -106,7 +106,7 @@ namespace
 
   TEST_F(ElementVolumeTest, TestElementArea_quad4)
   {
-    Core::LinAlg::Matrix<3, 4> xyz(true);
+    Core::LinAlg::Matrix<3, 4> xyz(Core::LinAlg::Initialization::zero);
     xyz(0, 0) = 0.0;
     xyz(1, 0) = 0.0;
     xyz(2, 0) = 0.0;  // node 1
@@ -128,7 +128,7 @@ namespace
 
   TEST_F(ElementVolumeTest, TestElementArea_quad8)
   {
-    Core::LinAlg::Matrix<3, 8> xyz(true);
+    Core::LinAlg::Matrix<3, 8> xyz(Core::LinAlg::Initialization::zero);
     xyz(0, 0) = 0.0;
     xyz(1, 0) = 0.0;
     xyz(2, 0) = 0.0;  // node 1
@@ -162,7 +162,7 @@ namespace
 
   TEST_F(ElementVolumeTest, TestElementArea_quad9)
   {
-    Core::LinAlg::Matrix<3, 9> xyz(true);
+    Core::LinAlg::Matrix<3, 9> xyz(Core::LinAlg::Initialization::zero);
     xyz(0, 0) = 0.0;
     xyz(1, 0) = 0.0;
     xyz(2, 0) = 0.0;  // node 1
@@ -199,7 +199,7 @@ namespace
 
   TEST_F(ElementVolumeTest, TestElementVolume_tet4)
   {
-    Core::LinAlg::Matrix<3, 4> xyz(true);
+    Core::LinAlg::Matrix<3, 4> xyz(Core::LinAlg::Initialization::zero);
     xyz(0, 0) = 0.0;
     xyz(1, 0) = 0.0;
     xyz(2, 0) = 0.0;  // node 1
@@ -221,7 +221,7 @@ namespace
 
   TEST_F(ElementVolumeTest, TestElementVolume_tet10)
   {
-    Core::LinAlg::Matrix<3, 10> xyz(true);
+    Core::LinAlg::Matrix<3, 10> xyz(Core::LinAlg::Initialization::zero);
     xyz(0, 0) = 0.0;
     xyz(1, 0) = 0.0;
     xyz(2, 0) = 0.0;  // node 1
@@ -261,7 +261,7 @@ namespace
 
   TEST_F(ElementVolumeTest, TestElementVolume_hex8)
   {
-    Core::LinAlg::Matrix<3, 8> xyz(true);
+    Core::LinAlg::Matrix<3, 8> xyz(Core::LinAlg::Initialization::zero);
     xyz(0, 0) = 0.0;
     xyz(1, 0) = 0.0;
     xyz(2, 0) = 0.0;  // node 1
@@ -295,7 +295,7 @@ namespace
 
   TEST_F(ElementVolumeTest, TestElementVolume_hex20)
   {
-    Core::LinAlg::Matrix<3, 20> xyz(true);
+    Core::LinAlg::Matrix<3, 20> xyz(Core::LinAlg::Initialization::zero);
 
     double x1 = xyz(0, 0) = 0.0;
     double y1 = xyz(1, 0) = 0.0;
@@ -370,7 +370,7 @@ namespace
 
   TEST_F(ElementVolumeTest, TestElementVolume_hex27)
   {
-    Core::LinAlg::Matrix<3, 27> xyz(true);
+    Core::LinAlg::Matrix<3, 27> xyz(Core::LinAlg::Initialization::zero);
 
     double x1 = xyz(0, 0) = 0.0;
     double y1 = xyz(1, 0) = 0.0;

@@ -23,7 +23,7 @@ namespace
   template <unsigned int n>
   void assert_is_unitary_matrix(const Core::LinAlg::Matrix<n, n>& M)
   {
-    Core::LinAlg::Matrix<n, n> MHM(false);
+    Core::LinAlg::Matrix<n, n> MHM(Core::LinAlg::Initialization::uninitialized);
     MHM.multiply_tn(M, M);
 
     for (unsigned int i = 0; i < n; ++i)
@@ -46,8 +46,8 @@ namespace
       const Core::LinAlg::Matrix<cols, cols>& VT, const std::array<double, length>& singularValues)
   {
     // check whether SVD fulfills: A = Q * S * VT
-    Core::LinAlg::Matrix<rows, cols> QS(false);
-    Core::LinAlg::Matrix<rows, cols> A_result(false);
+    Core::LinAlg::Matrix<rows, cols> QS(Core::LinAlg::Initialization::uninitialized);
+    Core::LinAlg::Matrix<rows, cols> A_result(Core::LinAlg::Initialization::uninitialized);
     QS.multiply_nn(Q, S);
     A_result.multiply_nn(QS, VT);
 

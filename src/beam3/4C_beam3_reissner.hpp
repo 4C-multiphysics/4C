@@ -761,7 +761,7 @@ namespace Discret
          * equation has been derived for a different beam element formulation but is also valid for
          * the element type considered here),
          * or Jelenic 1999, paragraph on page 153 between NOTE 5 and NOTE 6*/
-        Core::LinAlg::Matrix<3, 3, T> Tinv(true);
+        Core::LinAlg::Matrix<3, 3, T> Tinv(Core::LinAlg::Initialization::zero);
         Tinv = Core::LargeRotations::tinvmatrix<T>(Psi_l);
         // It is important to use the transposed matrix Tinv^T instead of Tinv (these two only
         // differ in one of three terms)

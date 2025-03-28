@@ -33,7 +33,7 @@ Core::Geo::MeshFree::BoundingBox::BoundingBox()
       empty_(true),
       haveperiodicbc_(false),
       havedirichletbc_(false),
-      box_(true),
+      box_(Core::LinAlg::Initialization::zero),
       visualization_output_writer_ptr_(nullptr)
 {
   // initialize arrays
@@ -237,7 +237,7 @@ bool Core::Geo::MeshFree::BoundingBox::shift_3d(
   Core::LinAlg::Matrix<3, 1> x(X);
   x.update(1.0, d, 1.0);
 
-  Core::LinAlg::Matrix<3, 1> x_ud(true);
+  Core::LinAlg::Matrix<3, 1> x_ud(Core::LinAlg::Initialization::zero);
   transform_from_global_to_undeformed_bounding_box_system(x, x_ud);
 
   // shift
@@ -276,7 +276,8 @@ void Core::Geo::MeshFree::BoundingBox::get_xi_of_intersection_3d(
   // set default values
   for (unsigned int dim = 0; dim < 3; ++dim) xi(dim) = 2.0;
 
-  Core::LinAlg::Matrix<3, 1> x1_ud(true), x2_ud(true);
+  Core::LinAlg::Matrix<3, 1> x1_ud(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> x2_ud(Core::LinAlg::Initialization::zero);
   transform_from_global_to_undeformed_bounding_box_system(x1, x1_ud);
   transform_from_global_to_undeformed_bounding_box_system(x2, x2_ud);
 
@@ -345,7 +346,8 @@ void Core::Geo::MeshFree::BoundingBox::un_shift_3d(Core::LinAlg::Matrix<3, 1>& d
   Core::LinAlg::Matrix<3, 1> x(X);
   x.update(1.0, d, 1.0);
 
-  Core::LinAlg::Matrix<3, 1> x_ud(true), ref_ud(true);
+  Core::LinAlg::Matrix<3, 1> x_ud(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> ref_ud(Core::LinAlg::Initialization::zero);
   transform_from_global_to_undeformed_bounding_box_system(x, x_ud);
   transform_from_global_to_undeformed_bounding_box_system(ref, ref_ud);
 
@@ -381,7 +383,8 @@ bool Core::Geo::MeshFree::BoundingBox::check_if_shift_between_points(Core::LinAl
   Core::LinAlg::Matrix<3, 1> x(X);
   x.update(1.0, d, 1.0);
 
-  Core::LinAlg::Matrix<3, 1> x_ud(true), ref_ud(true);
+  Core::LinAlg::Matrix<3, 1> x_ud(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> ref_ud(Core::LinAlg::Initialization::zero);
   transform_from_global_to_undeformed_bounding_box_system(x, x_ud);
   transform_from_global_to_undeformed_bounding_box_system(ref, ref_ud);
 
@@ -472,7 +475,7 @@ void Core::Geo::MeshFree::BoundingBox::random_pos_within(
   std::vector<double> randuni;
   random->uni(randuni, 3);
 
-  Core::LinAlg::Matrix<3, 1> randpos_ud(true);
+  Core::LinAlg::Matrix<3, 1> randpos_ud(Core::LinAlg::Initialization::zero);
   for (int dim = 0; dim < 3; ++dim)
     randpos_ud(dim) = box_min(dim) + (edgelength_[dim] * randuni[dim]);
 
@@ -651,7 +654,7 @@ Core::LinAlg::Matrix<3, 1> Core::Geo::MeshFree::BoundingBox::reference_pos_of_co
   // therefore local numbering from 0 to 7 on each proc)
   Core::Nodes::Node* node_i = boxdiscret_->l_col_node(i);
 
-  Core::LinAlg::Matrix<3, 1> x(true);
+  Core::LinAlg::Matrix<3, 1> x(Core::LinAlg::Initialization::zero);
   for (int dim = 0; dim < 3; ++dim) x(dim) = node_i->x()[dim];
 
   return x;
@@ -664,7 +667,7 @@ Core::LinAlg::Matrix<3, 1> Core::Geo::MeshFree::BoundingBox::current_position_of
 {
   // dof gids of node i (note: each proc just has one element and eight nodes,
   // therefore local numbering from 0 to 7 on each proc)
-  Core::LinAlg::Matrix<3, 1> x(true);
+  Core::LinAlg::Matrix<3, 1> x(Core::LinAlg::Initialization::zero);
   if (boxdiscret_ != nullptr)
   {
     Core::Nodes::Node* node_i = boxdiscret_->l_col_node(i);
@@ -708,7 +711,7 @@ Core::LinAlg::Matrix<3, 1> Core::Geo::MeshFree::BoundingBox::undeformed_box_corn
   else if (i == 3 or i == 7)
     --i;
 
-  Core::LinAlg::Matrix<3, 1> x(true);
+  Core::LinAlg::Matrix<3, 1> x(Core::LinAlg::Initialization::zero);
   x(0) = ((i & 1) == 1) ? box_max(0) : box_min(0);
   x(1) = ((i & 2) == 2) ? box_max(1) : box_min(1);
   x(2) = ((i & 4) == 4) ? box_max(2) : box_min(2);
@@ -868,7 +871,7 @@ bool Core::Geo::MeshFree::BoundingBox::transform_from_global_to_undeformed_bound
     if (abs(xjm_invert) < 1e-15) FOUR_C_THROW("ERROR: Singular Jacobian");
 
     // compute increment
-    Core::LinAlg::Matrix<ndim, 1> deltaxi(true);
+    Core::LinAlg::Matrix<ndim, 1> deltaxi(Core::LinAlg::Initialization::zero);
     for (int z = 0; z < ndim; ++z)
       for (int p = 0; p < ndim; ++p) deltaxi(z) -= xjm(z, p) * rhs(p);
 
@@ -886,7 +889,8 @@ bool Core::Geo::MeshFree::BoundingBox::transform_from_global_to_undeformed_bound
     double const* x, double* xi) const
 {
   throw_if_not_init();
-  static Core::LinAlg::Matrix<3, 1> x_m(true), xi_m(true);
+  static Core::LinAlg::Matrix<3, 1> x_m(Core::LinAlg::Initialization::zero);
+  static Core::LinAlg::Matrix<3, 1> xi_m(Core::LinAlg::Initialization::zero);
   for (int dim = 0; dim < 3; ++dim) x_m(dim) = x[dim];
 
   bool converged = transform_from_global_to_undeformed_bounding_box_system(x_m, xi_m);

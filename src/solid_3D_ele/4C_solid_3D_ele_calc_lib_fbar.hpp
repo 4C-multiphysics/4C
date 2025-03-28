@@ -87,7 +87,8 @@ namespace Discret::Elements
     Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>> invdefgrd;
     invdefgrd.invert(spatial_material_mapping.deformation_gradient_);
 
-    Core::LinAlg::Matrix<Core::FE::dim<celltype> * Core::FE::num_nodes<celltype>, 1> Hop(true);
+    Core::LinAlg::Matrix<Core::FE::dim<celltype> * Core::FE::num_nodes<celltype>, 1> Hop(
+        Core::LinAlg::Initialization::zero);
     for (int idof = 0; idof < Core::FE::dim<celltype> * Core::FE::num_nodes<celltype>; idof++)
     {
       for (int idim = 0; idim < Core::FE::dim<celltype>; idim++)
@@ -137,10 +138,10 @@ namespace Discret::Elements
     ccg.multiply_nn(stress_bar.cmat_, rcg_bar_voigt);
 
     // auxiliary integrated stress_bar
-    Core::LinAlg::Matrix<num_dof_per_ele, 1> bopccg(false);
+    Core::LinAlg::Matrix<num_dof_per_ele, 1> bopccg(Core::LinAlg::Initialization::uninitialized);
     bopccg.multiply_tn(integration_fac * f_bar_factor / 3.0, Bop, ccg);
 
-    Core::LinAlg::Matrix<num_dof_per_ele, 1> bops(false);
+    Core::LinAlg::Matrix<num_dof_per_ele, 1> bops(Core::LinAlg::Initialization::uninitialized);
     bops.multiply_tn(-integration_fac / f_bar_factor / 3.0, Bop, stress_bar.pk2_);
 
     for (int idof = 0; idof < num_dof_per_ele; idof++)

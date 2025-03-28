@@ -91,7 +91,8 @@ void Discret::Elements::Shell::pre_evaluate_scatra(Core::Elements::Element& ele,
               intpoints_midsurface_.num_points(), std::vector<double>(numscal, 0.0));
 
       // allocate vector for shape functions and matrix for derivatives at gp
-      Core::LinAlg::Matrix<Shell::Internal::num_node<distype>, 1> shapefunctions(true);
+      Core::LinAlg::Matrix<Shell::Internal::num_node<distype>, 1> shapefunctions(
+          Core::LinAlg::Initialization::zero);
 
       // loop over gauss points
       for (int gp = 0; gp < intpoints_midsurface_.num_points(); ++gp)
@@ -119,7 +120,7 @@ void Discret::Elements::Shell::pre_evaluate_scatra(Core::Elements::Element& ele,
       params.set<std::shared_ptr<std::vector<std::vector<double>>>>("gp_conc", gpscalar);
     }
   }
-  Core::LinAlg::Matrix<2, 1> center(true);
+  Core::LinAlg::Matrix<2, 1> center(Core::LinAlg::Initialization::zero);
   params.set("elecenter_coords_ref", center);
 }
 

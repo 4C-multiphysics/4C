@@ -125,8 +125,8 @@ namespace Discret
 
             // initialize internal member variables
             conc_(0.),
-            gradconc_(true),
-            gradpot_(true)
+            gradconc_(Core::LinAlg::Initialization::zero),
+            gradpot_(Core::LinAlg::Initialization::zero)
       {
         return;
       };
@@ -149,7 +149,7 @@ namespace Discret
       )
       {
         // call base class routine to set thermo variables
-        const Core::LinAlg::Matrix<nsd, nen> eforcevelocity(true);
+        const Core::LinAlg::Matrix<nsd, nen> eforcevelocity(Core::LinAlg::Initialization::zero);
         vm::set_internal_variables(funct, derxy, etempnp, etempn, econvelnp, ehist, eforcevelocity);
 
         // set local values of scatra variables at time t_(n+1) or t_(n+alpha_F)

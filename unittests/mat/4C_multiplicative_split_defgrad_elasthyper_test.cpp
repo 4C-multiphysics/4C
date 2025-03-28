@@ -485,16 +485,18 @@ namespace
 
     // output variables
     double cauchy_n_dir(0.0);
-    Core::LinAlg::Matrix<3, 1> d_cauchyndir_dn(true), d_cauchyndir_ddir(true);
-    Core::LinAlg::Matrix<9, 1> d_cauchyndir_dF(true);
+    Core::LinAlg::Matrix<3, 1> d_cauchyndir_dn(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> d_cauchyndir_ddir(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<9, 1> d_cauchyndir_dF(Core::LinAlg::Initialization::zero);
 
     multiplicative_split_defgrad_->evaluate_cauchy_n_dir_and_derivatives(FM_, n, dir, cauchy_n_dir,
         &d_cauchyndir_dn, &d_cauchyndir_ddir, &d_cauchyndir_dF, nullptr, nullptr, nullptr, 0, 0,
         &concentration, nullptr, nullptr, nullptr);
 
     const double cauchy_n_dir_ref(6.019860168755);
-    Core::LinAlg::Matrix<3, 1> d_cauchyndir_dn_ref(true), d_cauchyndir_ddir_ref(true);
-    Core::LinAlg::Matrix<9, 1> d_cauchyndir_dF_ref(true);
+    Core::LinAlg::Matrix<3, 1> d_cauchyndir_dn_ref(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> d_cauchyndir_ddir_ref(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<9, 1> d_cauchyndir_dF_ref(Core::LinAlg::Initialization::zero);
     d_cauchyndir_dn_ref(0) = -2.856437080521;
     d_cauchyndir_dn_ref(1) = -6.736850094992;
     d_cauchyndir_dn_ref(2) = -1.136980497476e+01;
@@ -548,8 +550,8 @@ namespace
     // derivatives of principle invariants
     const int gp(0);
     const int eleGID(0);
-    Core::LinAlg::Matrix<3, 1> dPIe(true);
-    Core::LinAlg::Matrix<6, 1> ddPIIe(true);
+    Core::LinAlg::Matrix<3, 1> dPIe(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<6, 1> ddPIIe(Core::LinAlg::Initialization::zero);
     multiplicative_split_defgrad_->evaluate_invariant_derivatives(
         prinv_ref_, gp, eleGID, dPIe, ddPIIe);
 
@@ -589,7 +591,7 @@ namespace
 
     // actual material call
     const double concentration(1.0);
-    Core::LinAlg::Matrix<9, 1> DFDx(true);
+    Core::LinAlg::Matrix<9, 1> DFDx(Core::LinAlg::Initialization::zero);
     multiplicative_split_defgrad_->evaluate_linearization_od(FM_, concentration, &DFDx);
 
     // define the reference solution
@@ -614,7 +616,7 @@ namespace
 
     // do the actual call that is tested
     auto source(Mat::PAR::InelasticSource::concentration);
-    Core::LinAlg::Matrix<6, 1> dSdx(true);
+    Core::LinAlg::Matrix<6, 1> dSdx(Core::LinAlg::Initialization::zero);
     // reference solution
     Core::LinAlg::Matrix<6, 1> dSdx_ref;
     dSdx_ref(0) = -1.907155639254611e-05;
@@ -632,9 +634,9 @@ namespace
   TEST_F(MultiplicativeSplitDefgradElastHyperTest, TestEvaluateStressCmatIso)
   {
     // second Piola-Kirchhoff stress
-    Core::LinAlg::Matrix<6, 1> S(true);
+    Core::LinAlg::Matrix<6, 1> S(Core::LinAlg::Initialization::zero);
     // reference solution
-    Core::LinAlg::Matrix<6, 1> S_ref(true);
+    Core::LinAlg::Matrix<6, 1> S_ref(Core::LinAlg::Initialization::zero);
     S_ref(0) = 35.001617076265632;
     S_ref(1) = 39.602547633321855;
     S_ref(2) = 42.518455970246585;
@@ -690,7 +692,7 @@ namespace
     stress_fact.gamma = gamma_ref_;
     stress_fact.delta = delta_ref_;
 
-    Core::LinAlg::Matrix<6, 6> cMatIso{true};
+    Core::LinAlg::Matrix<6, 6> cMatIso{Core::LinAlg::Initialization::zero};
     multiplicative_split_defgrad_->evaluate_stress_cmat_iso(kinemat_quant, stress_fact, S, cMatIso);
 
     FOUR_C_EXPECT_NEAR(S, S_ref, 1.0e-10);

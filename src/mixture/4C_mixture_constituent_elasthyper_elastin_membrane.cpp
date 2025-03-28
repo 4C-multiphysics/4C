@@ -277,7 +277,7 @@ void Mixture::MixtureConstituentElastHyperElastinMembrane::evaluate_elastic_part
     Core::LinAlg::Matrix<6, 6>& cmat, int gp, int eleGID)
 {
   // Compute total inelastic deformation gradient
-  static Core::LinAlg::Matrix<3, 3> iFin(false);
+  static Core::LinAlg::Matrix<3, 3> iFin(Core::LinAlg::Initialization::uninitialized);
   iFin.multiply_nn(iFextin, prestretch_tensor(gp));
 
   // Evaluate 3D elastic part
@@ -285,8 +285,8 @@ void Mixture::MixtureConstituentElastHyperElastinMembrane::evaluate_elastic_part
       F, iFin, S_stress, cmat, summands(), summand_properties(), gp, eleGID);
 
   // Evaluate Membrane
-  static Core::LinAlg::Matrix<6, 1> Smembrane_stress(false);
-  static Core::LinAlg::Matrix<6, 6> cmatmembrane(false);
+  static Core::LinAlg::Matrix<6, 1> Smembrane_stress(Core::LinAlg::Initialization::uninitialized);
+  static Core::LinAlg::Matrix<6, 6> cmatmembrane(Core::LinAlg::Initialization::uninitialized);
   evaluate_stress_c_mat_membrane(F, iFin, params, Smembrane_stress, cmatmembrane, gp, eleGID);
 
   S_stress.update(1.0, Smembrane_stress, 1.0);
@@ -296,9 +296,9 @@ void Mixture::MixtureConstituentElastHyperElastinMembrane::evaluate_elastic_part
 void Mixture::MixtureConstituentElastHyperElastinMembrane::evaluate_membrane_stress(
     Core::LinAlg::Matrix<6, 1>& S, Teuchos::ParameterList& params, int gp, int eleGID)
 {
-  Core::LinAlg::Matrix<6, 6> cmat(false);
+  Core::LinAlg::Matrix<6, 6> cmat(Core::LinAlg::Initialization::uninitialized);
   const Core::LinAlg::Matrix<3, 3> Id = Core::LinAlg::identity_matrix<3>();
-  Core::LinAlg::Matrix<3, 3> iFin(false);
+  Core::LinAlg::Matrix<3, 3> iFin(Core::LinAlg::Initialization::uninitialized);
 
   iFin.multiply_nn(Id, prestretch_tensor(gp));
 
@@ -310,24 +310,27 @@ void Mixture::MixtureConstituentElastHyperElastinMembrane::evaluate_stress_c_mat
     Teuchos::ParameterList& params, Core::LinAlg::Matrix<6, 1>& S_stress,
     Core::LinAlg::Matrix<6, 6>& cmat, int gp, int eleGID) const
 {
-  static Core::LinAlg::Matrix<3, 3> Ce(false);
+  static Core::LinAlg::Matrix<3, 3> Ce(Core::LinAlg::Initialization::uninitialized);
   Mat::evaluate_ce(F, iFin, Ce);
 
   // Compute structural tensors in grown configuration
-  static Core::LinAlg::Matrix<3, 3> Aradgr(false);
-  static Core::LinAlg::Matrix<3, 3> Aorthgr(false);
+  static Core::LinAlg::Matrix<3, 3> Aradgr(Core::LinAlg::Initialization::uninitialized);
+  static Core::LinAlg::Matrix<3, 3> Aorthgr(Core::LinAlg::Initialization::uninitialized);
   evaluate_structural_tensors_in_grown_configuration(Aradgr, Aorthgr, iFin, gp, eleGID);
 
-  static Core::LinAlg::Matrix<3, 3> AorthgrCeAorthgrArad(false);
+  static Core::LinAlg::Matrix<3, 3> AorthgrCeAorthgrArad(
+      Core::LinAlg::Initialization::uninitialized);
   evaluate_aorthgr_ce_aorthgr_arad(AorthgrCeAorthgrArad, Aradgr, Aorthgr, Ce);
   double detX = AorthgrCeAorthgrArad.determinant();
 
-  static Core::LinAlg::Matrix<3, 3> iFinAorthgriFinT(false);
+  static Core::LinAlg::Matrix<3, 3> iFinAorthgriFinT(Core::LinAlg::Initialization::uninitialized);
   evaluatei_fin_aorthgri_fin_t(iFinAorthgriFinT, iFin, Aorthgr);
 
   // Z = F_{in}^{-T}*A_{gr}^{T}*X^{-1}*A_{gr}^{T}*F_{in}^{-1}
-  static Core::LinAlg::Matrix<3, 3> iFinTAorthgrTiXTAorthgriFin_sym(false);
-  static Core::LinAlg::Matrix<6, 1> iFinTAorthgrTiXTAorthgriFin_sym_stress(false);
+  static Core::LinAlg::Matrix<3, 3> iFinTAorthgrTiXTAorthgriFin_sym(
+      Core::LinAlg::Initialization::uninitialized);
+  static Core::LinAlg::Matrix<6, 1> iFinTAorthgrTiXTAorthgriFin_sym_stress(
+      Core::LinAlg::Initialization::uninitialized);
 
   evaluatei_fin_t_aorthgr_ti_xt_aorthgri_fin(
       iFinTAorthgrTiXTAorthgriFin_sym, AorthgrCeAorthgrArad, iFin, Aorthgr);
@@ -350,7 +353,8 @@ void Mixture::MixtureConstituentElastHyperElastinMembrane::evaluate_stress_c_mat
   Core::LinAlg::Voigt::Stresses::matrix_to_vector(Smembrane, S_stress);
 
   // Compute constitutive tensor
-  static Core::LinAlg::Matrix<6, 6> dAradgriXAradgr_symdC(false);
+  static Core::LinAlg::Matrix<6, 6> dAradgriXAradgr_symdC(
+      Core::LinAlg::Initialization::uninitialized);
   dAradgriXAradgr_symdC.clear();
 
   Core::LinAlg::Tensor::add_holzapfel_product(
@@ -367,14 +371,14 @@ void Mixture::MixtureConstituentElastHyperElastinMembrane::
         const int eleGID) const
 {
   // Compute inelastic right Cauchy-Green deformation gradient
-  static Core::LinAlg::Matrix<3, 3> iCin(false);
+  static Core::LinAlg::Matrix<3, 3> iCin(Core::LinAlg::Initialization::uninitialized);
   iCin.multiply_nt(iFin, iFin);
 
-  static Core::LinAlg::Matrix<3, 3> Fin(false);
+  static Core::LinAlg::Matrix<3, 3> Fin(Core::LinAlg::Initialization::uninitialized);
   Fin.invert(iFin);
 
   // Compute radial structural tensor in grown configuration
-  static Core::LinAlg::Matrix<3, 3> FinArad(false);
+  static Core::LinAlg::Matrix<3, 3> FinArad(Core::LinAlg::Initialization::uninitialized);
   FinArad.multiply_nn(Fin, anisotropy_extension_.get_structural_tensor(gp, 0));
   Aradgr.multiply_nt(
       iCin.dot(anisotropy_extension_.get_structural_tensor(gp, 0)), FinArad, Fin, 0.0);
@@ -388,7 +392,7 @@ void Mixture::MixtureConstituentElastHyperElastinMembrane::evaluate_aorthgr_ce_a
     Core::LinAlg::Matrix<3, 3>& AorthgrCeAorthgrArad, const Core::LinAlg::Matrix<3, 3>& Aradgr,
     const Core::LinAlg::Matrix<3, 3>& Aorthgr, const Core::LinAlg::Matrix<3, 3>& Ce)
 {
-  static Core::LinAlg::Matrix<3, 3> AorthgrCe(false);
+  static Core::LinAlg::Matrix<3, 3> AorthgrCe(Core::LinAlg::Initialization::uninitialized);
   AorthgrCe.multiply_nn(Aorthgr, Ce);
   AorthgrCeAorthgrArad.multiply_nn(AorthgrCe, Aorthgr);
   AorthgrCeAorthgrArad.update(1.0, Aradgr, 1.0);
@@ -398,7 +402,7 @@ void Mixture::MixtureConstituentElastHyperElastinMembrane::evaluatei_fin_aorthgr
     Core::LinAlg::Matrix<3, 3>& iFinAorthgriFinT, const Core::LinAlg::Matrix<3, 3>& iFin,
     const Core::LinAlg::Matrix<3, 3>& Aorthgr)
 {
-  static Core::LinAlg::Matrix<3, 3> iFinAorthgr(false);
+  static Core::LinAlg::Matrix<3, 3> iFinAorthgr(Core::LinAlg::Initialization::uninitialized);
   iFinAorthgr.multiply_nn(iFin, Aorthgr);
   iFinAorthgriFinT.multiply_nt(iFinAorthgr, iFin);
 }
@@ -409,16 +413,18 @@ void Mixture::MixtureConstituentElastHyperElastinMembrane::
         const Core::LinAlg::Matrix<3, 3>& AorthgrCeAorthgrArad,
         const Core::LinAlg::Matrix<3, 3>& iFin, const Core::LinAlg::Matrix<3, 3>& Aorthgr)
 {
-  static Core::LinAlg::Matrix<3, 3> iAorthgrCeAorthgrArad(false);
+  static Core::LinAlg::Matrix<3, 3> iAorthgrCeAorthgrArad(
+      Core::LinAlg::Initialization::uninitialized);
   iAorthgrCeAorthgrArad.invert(AorthgrCeAorthgrArad);
 
-  static Core::LinAlg::Matrix<3, 3> AorthgriFin(false);
+  static Core::LinAlg::Matrix<3, 3> AorthgriFin(Core::LinAlg::Initialization::uninitialized);
   AorthgriFin.multiply_nn(Aorthgr, iFin);
 
-  static Core::LinAlg::Matrix<3, 3> iFinTAorthgrTiXT(false);
+  static Core::LinAlg::Matrix<3, 3> iFinTAorthgrTiXT(Core::LinAlg::Initialization::uninitialized);
   iFinTAorthgrTiXT.multiply_tt(AorthgriFin, iAorthgrCeAorthgrArad);
 
-  static Core::LinAlg::Matrix<3, 3> iFinTAorthgrTiXTAorthgriFin(false);
+  static Core::LinAlg::Matrix<3, 3> iFinTAorthgrTiXTAorthgriFin(
+      Core::LinAlg::Initialization::uninitialized);
   iFinTAorthgrTiXTAorthgriFin.multiply_nn(iFinTAorthgrTiXT, AorthgriFin);
 
   iFinTAorthgrTiXTAorthgriFin_sym.update(0.5, iFinTAorthgrTiXTAorthgriFin, 0.0);

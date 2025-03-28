@@ -272,7 +272,7 @@ void Mat::CrystalPlasticity::unpack(Core::Communication::UnpackBuffer& buffer)
 
     for (int var = 0; var < histsize; ++var)
     {
-      Core::LinAlg::Matrix<3, 3> tmp_matrix(true);
+      Core::LinAlg::Matrix<3, 3> tmp_matrix(Core::LinAlg::Initialization::zero);
       std::vector<double> tmp_vect(def_system_count_);
 
       extract_from_pack(buffer, tmp_matrix);
@@ -508,7 +508,7 @@ void Mat::CrystalPlasticity::update()
   gamma_current_->resize(histsize);
   defect_densities_current_->resize(histsize);
 
-  Core::LinAlg::Matrix<3, 3> emptymat(true);
+  Core::LinAlg::Matrix<3, 3> emptymat(Core::LinAlg::Initialization::zero);
   std::vector<double> emptyvect(def_system_count_);
   for (int i = 0; i < def_system_count_; i++) emptyvect[i] = 0.0;
 
@@ -1216,7 +1216,7 @@ void Mat::CrystalPlasticity::newton_raphson(Core::LinAlg::Matrix<3, 3>& deform_g
   double total_residual;
 
   // empty matrix
-  Core::LinAlg::Matrix<3, 3> emptymat(true);
+  Core::LinAlg::Matrix<3, 3> emptymat(Core::LinAlg::Initialization::zero);
 
   // iteration
   //--------------------------------------------------------------------------
@@ -1259,23 +1259,23 @@ void Mat::CrystalPlasticity::newton_raphson(Core::LinAlg::Matrix<3, 3>& deform_g
       // depending on total number of deformation systems the equation system has a different
       // size def_system_count_ = 1
       Core::LinAlg::Matrix<1, 1> residual_tangent_1x1;
-      Core::LinAlg::Matrix<1, 1> d_gamma_trial_1(true);
+      Core::LinAlg::Matrix<1, 1> d_gamma_trial_1(Core::LinAlg::Initialization::zero);
       Core::LinAlg::Matrix<1, 1> residuals_trial_LIN_1;
       Core::LinAlg::FixedSizeSerialDenseSolver<1, 1, 1> newton_raphson_solver_1x1;
       // depending on total number of deformation systems the equation system has a different
       // size def_system_count_ = 2
       Core::LinAlg::Matrix<2, 2> residual_tangent_2x2;
-      Core::LinAlg::Matrix<2, 1> d_gamma_trial_2(true);
+      Core::LinAlg::Matrix<2, 1> d_gamma_trial_2(Core::LinAlg::Initialization::zero);
       Core::LinAlg::Matrix<2, 1> residuals_trial_LIN_2;
       Core::LinAlg::FixedSizeSerialDenseSolver<2, 2, 1> newton_raphson_solver_2x2;
       // def_system_count_ = 12
       Core::LinAlg::Matrix<12, 12> residual_tangent_12x12;
-      Core::LinAlg::Matrix<12, 1> d_gamma_trial_12(true);
+      Core::LinAlg::Matrix<12, 1> d_gamma_trial_12(Core::LinAlg::Initialization::zero);
       Core::LinAlg::Matrix<12, 1> residuals_trial_LIN_12;
       Core::LinAlg::FixedSizeSerialDenseSolver<12, 12, 1> newton_raphson_solver_12x12;
       // def_system_count_ = 16
       Core::LinAlg::Matrix<16, 16> residual_tangent_16x16;
-      Core::LinAlg::Matrix<16, 1> d_gamma_trial_16(true);
+      Core::LinAlg::Matrix<16, 1> d_gamma_trial_16(Core::LinAlg::Initialization::zero);
       Core::LinAlg::Matrix<16, 1> residuals_trial_LIN_16;
       Core::LinAlg::FixedSizeSerialDenseSolver<16, 16, 1> newton_raphson_solver_16x16;
 
@@ -1298,7 +1298,7 @@ void Mat::CrystalPlasticity::newton_raphson(Core::LinAlg::Matrix<3, 3>& deform_g
         std::vector<double> defect_densities_perturbed(def_system_count_);
 
         // resultant 2nd PK stress
-        Core::LinAlg::Matrix<3, 3> second_pk_stress_perturbed(true);
+        Core::LinAlg::Matrix<3, 3> second_pk_stress_perturbed(Core::LinAlg::Initialization::zero);
 
         // resultant plastic part of deformation gradient
         Core::LinAlg::Matrix<3, 3> plastic_deform_grad_perturbed;
@@ -1477,7 +1477,7 @@ void Mat::CrystalPlasticity::setup_flow_rule(Core::LinAlg::Matrix<3, 3> deform_g
 
   // determine trial plastic velocity gradient L_p
   // set up L_p_trial
-  Core::LinAlg::Matrix<3, 3> plastic_velocity_grad_trial(true);
+  Core::LinAlg::Matrix<3, 3> plastic_velocity_grad_trial(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<3, 3> temp_mat;
 
   // slip system contributions
@@ -1498,7 +1498,8 @@ void Mat::CrystalPlasticity::setup_flow_rule(Core::LinAlg::Matrix<3, 3> deform_g
   }
 
   // take unimodular part of I + L_p to ensure plastic incompressibility
-  Core::LinAlg::Matrix<3, 3> unimod_identity_plus_plastic_velocity_grad_trial(true);
+  Core::LinAlg::Matrix<3, 3> unimod_identity_plus_plastic_velocity_grad_trial(
+      Core::LinAlg::Initialization::zero);
 
   unimod_identity_plus_plastic_velocity_grad_trial.update(
       Core::LinAlg::identity_matrix<3>(), plastic_velocity_grad_trial);
@@ -1587,9 +1588,9 @@ void Mat::CrystalPlasticity::setup_flow_rule(Core::LinAlg::Matrix<3, 3> deform_g
     //--------------------------------------------------------------------------
 
     // resolved shear stress/Schmid stress
-    Core::LinAlg::Matrix<1, 1> resolved_shear_stress(true);
+    Core::LinAlg::Matrix<1, 1> resolved_shear_stress(Core::LinAlg::Initialization::zero);
 
-    Core::LinAlg::Matrix<3, 1> TempVec(true);
+    Core::LinAlg::Matrix<3, 1> TempVec(Core::LinAlg::Initialization::zero);
 
     TempVec.multiply_nn(mandel_stress_trial, slip_plane_normal_[i]);
 
@@ -1658,9 +1659,9 @@ void Mat::CrystalPlasticity::setup_flow_rule(Core::LinAlg::Matrix<3, 3> deform_g
       //--------------------------------------------------------------------------
 
       // resolved shear stress/Schmid stress
-      Core::LinAlg::Matrix<1, 1> resolved_shear_stress(true);
+      Core::LinAlg::Matrix<1, 1> resolved_shear_stress(Core::LinAlg::Initialization::zero);
 
-      Core::LinAlg::Matrix<3, 1> TempVec(true);
+      Core::LinAlg::Matrix<3, 1> TempVec(Core::LinAlg::Initialization::zero);
 
       TempVec.multiply_nn(mandel_stress_trial, twin_plane_normal_[i - slip_system_count_]);
 

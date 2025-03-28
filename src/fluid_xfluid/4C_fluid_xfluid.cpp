@@ -4641,11 +4641,11 @@ void FLD::XFluid::set_initial_flow_field(
 
     // define vectors for velocity field, node coordinates and coordinates of left and right
     // vortices
-    Core::LinAlg::Matrix<nsd, 1> vel(true);
+    Core::LinAlg::Matrix<nsd, 1> vel(Core::LinAlg::Initialization::zero);
     double pres = 0.0;
-    Core::LinAlg::Matrix<nsd, 1> xyz(true);
-    Core::LinAlg::Matrix<nsd, 1> xyz0_left(true);
-    Core::LinAlg::Matrix<nsd, 1> xyz0_right(true);
+    Core::LinAlg::Matrix<nsd, 1> xyz(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, 1> xyz0_left(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, 1> xyz0_right(Core::LinAlg::Initialization::zero);
 
     // set initial locations of vortices
     xyz0_left(0) = 37.5;   // 87.5+0.78125; //37.5; // x-coordinate left vortex

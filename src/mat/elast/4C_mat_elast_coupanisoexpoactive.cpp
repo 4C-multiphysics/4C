@@ -80,7 +80,7 @@ void Mat::Elastic::CoupAnisoExpoActive::add_strain_energy(double& psi,
     const Core::LinAlg::Matrix<6, 1>& glstrain, const int gp, const int eleGID)
 {
   // right Cauchy Green in strain like Voigt notation
-  Core::LinAlg::Matrix<6, 1> rcg(true);
+  Core::LinAlg::Matrix<6, 1> rcg(Core::LinAlg::Initialization::zero);
 
   for (int i = 0; i < 3; ++i) rcg(i) = 2.0 * glstrain(i) + 1.0;
   rcg(3) = 2.0 * glstrain(3);
@@ -112,7 +112,7 @@ void Mat::Elastic::CoupAnisoExpoActive::evaluate_func(
     T& psi, Core::LinAlg::Matrix<3, 3, T> const& rcg, const int gp, int const eleGID) const
 {
   T I4_fad;
-  static Core::LinAlg::Matrix<6, 1, T> Av_T(true);
+  static Core::LinAlg::Matrix<6, 1, T> Av_T(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 6; ++i)
     Av_T(i) = anisotropy_extension_.get_structural_tensor_stress(gp, 0)(i);
   I4_fad = Av_T(0) * rcg(0, 0) + Av_T(1) * rcg(1, 1) + Av_T(2) * rcg(2, 2) +
@@ -137,7 +137,7 @@ void Mat::Elastic::CoupAnisoExpoActive::evaluate_active_stress_cmat_aniso(
     Core::LinAlg::Matrix<6, 1, T>& stress, const int gp, const int eleGID) const
 {
   T lambda_sq = 0.0;
-  static Core::LinAlg::Matrix<6, 1, T> Av_T(true);
+  static Core::LinAlg::Matrix<6, 1, T> Av_T(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 6; ++i)
     Av_T(i) = anisotropy_extension_.get_structural_tensor_stress(gp, 0)(i);
   lambda_sq = Av_T(0) * CM(0, 0) + Av_T(1) * CM(1, 1) + Av_T(2) * CM(2, 2) + Av_T(3) * CM(0, 1) +
@@ -209,7 +209,7 @@ void Mat::Elastic::CoupAnisoExpoActive::get_derivatives_aniso(
     const int gp, const int eleGID) const
 {
   T I4 = 0.0;
-  Core::LinAlg::Matrix<3, 3, T> AM(true);
+  Core::LinAlg::Matrix<3, 3, T> AM(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 3; ++i)
     AM(i, i) = anisotropy_extension_.get_structural_tensor_stress(gp, 0)(i);
   AM(0, 1) = AM(1, 0) = anisotropy_extension_.get_structural_tensor_stress(gp, 0)(3);

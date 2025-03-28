@@ -60,7 +60,7 @@ int Discret::Elements::Bele3::evaluate(Teuchos::ParameterList& params,
 
       // dummy size for stress/strain. size does not matter. just write something that can be
       // extracted later
-      Core::LinAlg::Matrix<1, 1> dummy(true);
+      Core::LinAlg::Matrix<1, 1> dummy(Core::LinAlg::Initialization::zero);
 
       // write dummy stress
       {

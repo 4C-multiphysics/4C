@@ -538,7 +538,7 @@ namespace BeamInteraction
     bool is_distance_out_of_range(Core::LinAlg::Matrix<3, 1> const& pos1,
         Core::LinAlg::Matrix<3, 1> const& pos2, double const lowerbound, double const upperbound)
     {
-      Core::LinAlg::Matrix<3, 1> dist_vec(true);
+      Core::LinAlg::Matrix<3, 1> dist_vec(Core::LinAlg::Initialization::zero);
       dist_vec.update(1.0, pos1, -1.0, pos2);
 
       const double distance = dist_vec.norm2();

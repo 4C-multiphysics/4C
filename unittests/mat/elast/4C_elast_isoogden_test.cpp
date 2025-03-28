@@ -49,14 +49,14 @@ namespace
         28.615778605, 688.214269644, 25322.480278435, 0.0, 0.0, 0.0};
 
     // define modified principal strains
-    Core::LinAlg::Matrix<3, 1> modstr(true);
+    Core::LinAlg::Matrix<3, 1> modstr(Core::LinAlg::Initialization::zero);
     modstr(0) = 0.9;
     modstr(1) = 0.8;
     modstr(2) = 0.7;
 
     // initialize resulting coefficients
-    Core::LinAlg::Matrix<3, 1> modgamma(true);
-    Core::LinAlg::Matrix<6, 1> moddelta(true);
+    Core::LinAlg::Matrix<3, 1> modgamma(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<6, 1> moddelta(Core::LinAlg::Initialization::zero);
 
     // call add_coefficients_stretches_modified function with test modified principal strains
     isoogden_.add_coefficients_stretches_modified(modgamma, moddelta, modstr);

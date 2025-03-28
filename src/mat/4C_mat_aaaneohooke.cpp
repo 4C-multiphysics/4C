@@ -173,7 +173,7 @@ void Mat::AAAneohooke::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
 
   //--------------------------------------------------------------------------------------
   // build identity tensor I
-  Core::LinAlg::Matrix<6, 1> identity(true);
+  Core::LinAlg::Matrix<6, 1> identity(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 3; i++) identity(i) = 1.0;
 
   // right Cauchy-Green Tensor  C = 2 * E + I
@@ -195,7 +195,7 @@ void Mat::AAAneohooke::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
 
   //--------------------------------------------------------------------------------------
   // invert C
-  Core::LinAlg::Matrix<6, 1> invc(false);
+  Core::LinAlg::Matrix<6, 1> invc(Core::LinAlg::Initialization::uninitialized);
 
   double invdet = 1. / iiinv;
 
@@ -343,7 +343,7 @@ void Mat::AAAneohooke::strain_energy(
   double komp = (nue != 0.5) ? 2.0 * alpha / (1.0 - 2.0 * nue) : 0.0;  // bulk modulus
 
   // build identity tensor I
-  Core::LinAlg::Matrix<6, 1> identity(true);
+  Core::LinAlg::Matrix<6, 1> identity(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 3; i++) identity(i) = 1.0;
 
   // right Cauchy-Green Tensor  C = 2 * E + I

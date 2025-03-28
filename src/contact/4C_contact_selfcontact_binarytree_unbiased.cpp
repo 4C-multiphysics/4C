@@ -341,13 +341,13 @@ bool CONTACT::UnbiasedSelfBinaryTree::rough_check_ref_config(int ele1gid, int el
 {
   // variables
   bool refconfig(false);
-  static Core::LinAlg::Matrix<2, 1> xicele1(true);
-  static Core::LinAlg::Matrix<3, 1> ele1coords(true);
-  static Core::LinAlg::Matrix<3, 1> ele1normal(true);
-  static Core::LinAlg::Matrix<2, 1> xicele2(true);
-  static Core::LinAlg::Matrix<3, 1> ele2coords(true);
-  static Core::LinAlg::Matrix<3, 1> ele1ele2vec(true);
-  static Core::LinAlg::Matrix<1, 1> scalarprod(true);
+  static Core::LinAlg::Matrix<2, 1> xicele1(Core::LinAlg::Initialization::zero);
+  static Core::LinAlg::Matrix<3, 1> ele1coords(Core::LinAlg::Initialization::zero);
+  static Core::LinAlg::Matrix<3, 1> ele1normal(Core::LinAlg::Initialization::zero);
+  static Core::LinAlg::Matrix<2, 1> xicele2(Core::LinAlg::Initialization::zero);
+  static Core::LinAlg::Matrix<3, 1> ele2coords(Core::LinAlg::Initialization::zero);
+  static Core::LinAlg::Matrix<3, 1> ele1ele2vec(Core::LinAlg::Initialization::zero);
+  static Core::LinAlg::Matrix<1, 1> scalarprod(Core::LinAlg::Initialization::zero);
 
   // get center and normal of leaf1-element
   const Core::Elements::Element* ele1 = discret().g_element(ele1gid);

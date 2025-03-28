@@ -29,7 +29,8 @@ namespace
   Core::LinAlg::Matrix<Core::FE::num_nodes<celltype>, prob_dim> evaluate_nodal_coordinates(
       Core::Nodes::Node** nodes)
   {
-    Core::LinAlg::Matrix<Core::FE::num_nodes<celltype>, prob_dim> xrefe(true);
+    Core::LinAlg::Matrix<Core::FE::num_nodes<celltype>, prob_dim> xrefe(
+        Core::LinAlg::Initialization::zero);
     for (auto i = 0; i < Core::FE::num_nodes<celltype>; ++i)
     {
       const auto& x = nodes[i]->x();

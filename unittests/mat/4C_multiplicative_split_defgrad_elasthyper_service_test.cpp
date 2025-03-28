@@ -51,7 +51,7 @@ namespace
 
   TEST_F(MultiplicativeSplitDefgradElastHyperServiceTest, TestEvaluateCe)
   {
-    Core::LinAlg::Matrix<3, 3> CeM_target(false);
+    Core::LinAlg::Matrix<3, 3> CeM_target(Core::LinAlg::Initialization::uninitialized);
     CeM_target(0, 0) = 1.3107725000000006;
     CeM_target(1, 1) = 1.5284889394999996;
     CeM_target(2, 2) = 1.7604995235000003;
@@ -59,7 +59,7 @@ namespace
     CeM_target(0, 2) = CeM_target(2, 0) = 0.091697784;
     CeM_target(1, 2) = CeM_target(2, 1) = 0.0564151401;
 
-    Core::LinAlg::Matrix<3, 3> CeM(false);
+    Core::LinAlg::Matrix<3, 3> CeM(Core::LinAlg::Initialization::uninitialized);
     Mat::evaluate_ce(FM_, iFinM_, CeM);
 
     FOUR_C_EXPECT_NEAR(CeM, CeM_target, 1.0e-10);
@@ -67,7 +67,7 @@ namespace
 
   TEST_F(MultiplicativeSplitDefgradElastHyperServiceTest, TestEvaluateiCinCiCin)
   {
-    Core::LinAlg::Matrix<3, 3> iCinCiCinM_target(false);
+    Core::LinAlg::Matrix<3, 3> iCinCiCinM_target(Core::LinAlg::Initialization::uninitialized);
     iCinCiCinM_target(0, 0) = 1.418955902138138;
     iCinCiCinM_target(1, 1) = 1.6219134553554275;
     iCinCiCinM_target(2, 2) = 1.832708744871652;
@@ -75,7 +75,7 @@ namespace
     iCinCiCinM_target(0, 2) = iCinCiCinM_target(2, 0) = 0.113283079933819;
     iCinCiCinM_target(1, 2) = iCinCiCinM_target(2, 1) = 0.0631150197598975;
 
-    Core::LinAlg::Matrix<3, 3> iCinCiCinM(false);
+    Core::LinAlg::Matrix<3, 3> iCinCiCinM(Core::LinAlg::Initialization::uninitialized);
     Mat::evaluatei_cin_ci_cin(CM_, iCinM_, iCinCiCinM);
 
     FOUR_C_EXPECT_NEAR(iCinCiCinM, iCinCiCinM_target, 1.0e-10);

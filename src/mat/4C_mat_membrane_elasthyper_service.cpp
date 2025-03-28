@@ -19,8 +19,8 @@ namespace Mat
       const std::vector<std::shared_ptr<Mat::Elastic::Summand>>& potsum,
       const SummandProperties& properties)
   {
-    Core::LinAlg::Matrix<3, 1> dPI_full(true);
-    Core::LinAlg::Matrix<6, 1> ddPII_full(true);
+    Core::LinAlg::Matrix<3, 1> dPI_full(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<6, 1> ddPII_full(Core::LinAlg::Initialization::zero);
 
     // REMARK: since incompressibility (J=1) is assumed principal and modified invariants are equal
     // no transformation between principal and modified invariants needed below
@@ -96,11 +96,11 @@ void Mat::membrane_elast_hyper_evaluate_isotropic_stress_cmat(
   cmat.clear();
 
   // kinematic quantities and identity tensors
-  Core::LinAlg::Matrix<3, 1> id2(true);
-  Core::LinAlg::Matrix<3, 3> id4sharp(true);
-  Core::LinAlg::Matrix<3, 1> rcg(true);
+  Core::LinAlg::Matrix<3, 1> id2(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> id4sharp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> rcg(Core::LinAlg::Initialization::zero);
   double rcg33;
-  Core::LinAlg::Matrix<3, 1> icg(true);
+  Core::LinAlg::Matrix<3, 1> icg(Core::LinAlg::Initialization::zero);
   membrane_elast_hyper_evaluate_kin_quant(cauchygreen, id2, id4sharp, rcg, rcg33, icg);
 
   // evaluate isotropic 2nd Piola-Kirchhoff stress and constitutive tensor
@@ -149,18 +149,18 @@ void Mat::membrane_elast_hyper_evaluate_isotropic_stress_cmat(
     const SummandProperties& properties)
 {
   // principal isotropic invariants
-  Core::LinAlg::Matrix<3, 1> prinv_iso(true);
+  Core::LinAlg::Matrix<3, 1> prinv_iso(Core::LinAlg::Initialization::zero);
   membrane_elast_hyper_invariants_principal(prinv_iso, rcg, rcg33);
 
   // 1st and 2nd derivative of the isotropic strain energy function
-  Core::LinAlg::Matrix<2, 1> dPI_iso(true);
-  Core::LinAlg::Matrix<3, 1> ddPII_iso(true);
+  Core::LinAlg::Matrix<2, 1> dPI_iso(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> ddPII_iso(Core::LinAlg::Initialization::zero);
   membrane_elast_hyper_evaluate_invariant_derivatives(
       prinv_iso, dPI_iso, ddPII_iso, gp, eleGID, potsum, properties);
 
   // stress and constitutive tensor factors according to Fakhreddine2011 equation (11,15)
-  Core::LinAlg::Matrix<3, 1> gamma_iso(true);
-  Core::LinAlg::Matrix<8, 1> delta_iso(true);
+  Core::LinAlg::Matrix<3, 1> gamma_iso(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<8, 1> delta_iso(Core::LinAlg::Initialization::zero);
   membrane_elast_hyper_calculate_gamma_delta(
       gamma_iso, delta_iso, prinv_iso, dPI_iso, ddPII_iso, rcg33);
 

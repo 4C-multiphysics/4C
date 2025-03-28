@@ -39,8 +39,8 @@ namespace
     auto residuum_and_jacobian = [](const Core::LinAlg::Matrix<2, 1>& x)
         -> std::tuple<Core::LinAlg::Matrix<2, 1>, Core::LinAlg::Matrix<2, 2>>
     {
-      Core::LinAlg::Matrix<2, 1> residuum(false);
-      Core::LinAlg::Matrix<2, 2> jacobian(false);
+      Core::LinAlg::Matrix<2, 1> residuum(Core::LinAlg::Initialization::uninitialized);
+      Core::LinAlg::Matrix<2, 2> jacobian(Core::LinAlg::Initialization::uninitialized);
 
       residuum(0) = std::exp(x(0) * x(1)) - 1;
       residuum(1) = 2 * std::exp(x(0) * x(1)) - x(0);
@@ -54,7 +54,7 @@ namespace
       return {residuum, jacobian};
     };
 
-    Core::LinAlg::Matrix<2, 1> x_0(true);
+    Core::LinAlg::Matrix<2, 1> x_0(Core::LinAlg::Initialization::zero);
     x_0(0) = 1.1;
     x_0(1) = 0.1;
 

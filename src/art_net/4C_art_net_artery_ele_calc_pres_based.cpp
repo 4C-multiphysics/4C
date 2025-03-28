@@ -139,7 +139,7 @@ void Discret::Elements::ArteryEleCalcPresBased<distype>::sysmat(Artery* ele,
   if (pressnp == nullptr) FOUR_C_THROW("could not get pressure inside artery element");
 
   // extract local values of pressure field from global state vector
-  Core::LinAlg::Matrix<my::iel_, 1> mypress(true);
+  Core::LinAlg::Matrix<my::iel_, 1> mypress(Core::LinAlg::Initialization::zero);
   Core::FE::extract_my_values<Core::LinAlg::Matrix<my::iel_, 1>>(*pressnp, mypress, la[0].lm_);
 
   // calculate the element length
@@ -217,7 +217,7 @@ void Discret::Elements::ArteryEleCalcPresBased<distype>::evaluate_flow(Artery* e
   if (pressnp == nullptr) FOUR_C_THROW("could not get pressure inside artery element");
 
   // extract local values of pressure field from global state vector
-  Core::LinAlg::Matrix<my::iel_, 1> mypress(true);
+  Core::LinAlg::Matrix<my::iel_, 1> mypress(Core::LinAlg::Initialization::zero);
   Core::FE::extract_my_values<Core::LinAlg::Matrix<my::iel_, 1>>(*pressnp, mypress, la[0].lm_);
 
   // calculate the element length

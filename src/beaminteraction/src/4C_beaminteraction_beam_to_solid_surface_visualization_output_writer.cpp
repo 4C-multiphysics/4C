@@ -255,8 +255,8 @@ void BeamInteraction::BeamToSolidSurfaceVisualizationOutputWriter::
       if (nodal_force_visualization != nullptr)
       {
         // This array will hold the global coupling moment around the origin.
-        auto global_coupling_moment_origin =
-            std::make_shared<Core::LinAlg::Matrix<3, 1, double>>(true);
+        auto global_coupling_moment_origin = std::make_shared<Core::LinAlg::Matrix<3, 1, double>>(
+            Core::LinAlg::Initialization::zero);
         visualization_params.set("global_coupling_moment_origin", global_coupling_moment_origin);
       }
 
@@ -285,8 +285,8 @@ void BeamInteraction::BeamToSolidSurfaceVisualizationOutputWriter::
       {
         // Get the global force and moment resultants from the nodal forces. The first column
         // represents the forces, the second one the moments.
-        Core::LinAlg::Matrix<3, 2, double> beam_resultant(true);
-        Core::LinAlg::Matrix<3, 2, double> solid_resultant(true);
+        Core::LinAlg::Matrix<3, 2, double> beam_resultant(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<3, 2, double> solid_resultant(Core::LinAlg::Initialization::zero);
         get_global_coupling_force_resultants(beam_contact->discret(),
             Core::LinAlg::MultiVector<double>(
                 *(beam_contact->beam_interaction_data_state().get_force_np())),
@@ -302,8 +302,10 @@ void BeamInteraction::BeamToSolidSurfaceVisualizationOutputWriter::
           beam_resultant(i_dim, 1) = (*global_coupling_moment_origin)(i_dim);
 
         // Sum the values over all ranks.
-        Core::LinAlg::Matrix<3, 2, double> beam_resultant_global(true);
-        Core::LinAlg::Matrix<3, 2, double> solid_resultant_global(true);
+        Core::LinAlg::Matrix<3, 2, double> beam_resultant_global(
+            Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<3, 2, double> solid_resultant_global(
+            Core::LinAlg::Initialization::zero);
         MPI_Allreduce(beam_resultant.data(), beam_resultant_global.data(),
             beam_resultant.num_rows() * beam_resultant.num_cols(), MPI_DOUBLE, MPI_SUM,
             beam_contact->discret().get_comm());

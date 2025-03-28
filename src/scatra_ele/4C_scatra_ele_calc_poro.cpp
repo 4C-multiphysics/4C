@@ -48,8 +48,8 @@ template <Core::FE::CellType distype>
 Discret::Elements::ScaTraEleCalcPoro<distype>::ScaTraEleCalcPoro(
     const int numdofpernode, const int numscal, const std::string& disname)
     : Discret::Elements::ScaTraEleCalc<distype>::ScaTraEleCalc(numdofpernode, numscal, disname),
-      xyze0_(true),
-      eporosity_(true),
+      xyze0_(Core::LinAlg::Initialization::zero),
+      eporosity_(Core::LinAlg::Initialization::zero),
       isnodalporosity_(false)
 {
   // initialization of diffusion manager (override initialization in base class)
@@ -320,7 +320,7 @@ void Discret::Elements::ScaTraEleCalcPoro<distype>::compute_porosity(
   else
   {
     // gauss point displacements
-    Core::LinAlg::Matrix<nsd_, 1> dispint(false);
+    Core::LinAlg::Matrix<nsd_, 1> dispint(Core::LinAlg::Initialization::uninitialized);
     dispint.multiply(my::edispnp_, my::funct_);
 
     //------------------------get determinant of Jacobian dX / ds

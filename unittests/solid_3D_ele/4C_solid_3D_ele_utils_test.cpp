@@ -17,7 +17,7 @@ namespace
 
   Core::LinAlg::Matrix<3, 3> get_f()
   {
-    Core::LinAlg::Matrix<3, 3> F(true);
+    Core::LinAlg::Matrix<3, 3> F(Core::LinAlg::Initialization::zero);
     F(0, 0) = 1.1;
     F(0, 1) = 0.2;
     F(0, 2) = 0.5;
@@ -69,7 +69,7 @@ namespace
         202.01904686970775, 142.72731871521245, 182.86374040756576, 278.020938548381}
             .data());
 
-    Core::LinAlg::Matrix<6, 1> cauchy(true);
+    Core::LinAlg::Matrix<6, 1> cauchy(Core::LinAlg::Initialization::zero);
     Solid::Utils::pk2_to_cauchy(pk2, get_f(), cauchy);
 
     Core::LinAlg::Matrix<6, 1> cauchy_ref(

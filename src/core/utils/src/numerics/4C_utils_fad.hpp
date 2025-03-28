@@ -54,7 +54,7 @@ namespace Core::FADUtils
   template <typename Type, unsigned int dim1, unsigned int dim2>
   Core::LinAlg::Matrix<dim1, dim2, double> cast_to_double(Core::LinAlg::Matrix<dim1, dim2, Type> a)
   {
-    Core::LinAlg::Matrix<dim1, dim2, double> b(true);
+    Core::LinAlg::Matrix<dim1, dim2, double> b(Core::LinAlg::Initialization::zero);
 
     for (unsigned int i = 0; i < dim1; i++)
     {
@@ -166,7 +166,7 @@ namespace Core::FADUtils
   Core::LinAlg::Matrix<3, 1, Type> diff_vector(
       Core::LinAlg::Matrix<3, 1, Type> a, Core::LinAlg::Matrix<3, 1, Type> b)
   {
-    Core::LinAlg::Matrix<3, 1, Type> c(true);
+    Core::LinAlg::Matrix<3, 1, Type> c(Core::LinAlg::Initialization::zero);
     for (int i = 0; i < 3; i++) c(i) = a(i) - b(i);
 
     return c;

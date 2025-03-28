@@ -680,7 +680,7 @@ void XFEM::MeshCouplingFPI::set_condition_specific_parameters()
       Core::Elements::Element* fluid_ele = bg_dis_->l_row_element(ele);
       if (fluid_ele->shape() == Core::FE::CellType::hex8)
       {
-        Core::LinAlg::Matrix<3, 8> xyze(true);
+        Core::LinAlg::Matrix<3, 8> xyze(Core::LinAlg::Initialization::zero);
         Core::Geo::fill_initial_position_array(fluid_ele, xyze);
         double vol = XFEM::Utils::eval_element_volume<Core::FE::CellType::hex8>(xyze);
         hmax = std::max(hmax, XFEM::Utils::compute_vol_eq_diameter(vol));
@@ -755,7 +755,7 @@ void XFEM::MeshCouplingFPI::lift_drag(const int step, const double time) const
     // compute force components
     const int nsd = 3;
     const Core::LinAlg::Map* dofcolmap = cutter_dis_->dof_col_map();
-    Core::LinAlg::Matrix<3, 1> c(true);
+    Core::LinAlg::Matrix<3, 1> c(Core::LinAlg::Initialization::zero);
     for (int inode = 0; inode < cutter_dis_->num_my_col_nodes(); ++inode)
     {
       const Core::Nodes::Node* node = cutter_dis_->l_col_node(inode);
@@ -815,7 +815,7 @@ double XFEM::MeshCouplingFPI::calctr_permeability(
   else
     FOUR_C_THROW("no second material defined for element {}", ele->id());
 
-  static Core::LinAlg::Matrix<3, 3> reactiontensor(true);
+  static Core::LinAlg::Matrix<3, 3> reactiontensor(Core::LinAlg::Initialization::zero);
   poromat->compute_reaction_tensor(reactiontensor, J, porosity);
 
   return sqrt((1. / reactiontensor(0, 0) + 1. / reactiontensor(1, 1) + 1. / reactiontensor(2, 2)) /
@@ -881,12 +881,12 @@ double XFEM::MeshCouplingFPI::compute_jacobianand_pressure(
 
     // get coordinates of gauss point w.r.t. local parent coordinate system
     Core::LinAlg::SerialDenseMatrix pqxg(1, SLAVE_NUMDOF);
-    Core::LinAlg::Matrix<SLAVE_NUMDOF, SLAVE_NUMDOF> derivtrafo(true);
+    Core::LinAlg::Matrix<SLAVE_NUMDOF, SLAVE_NUMDOF> derivtrafo(Core::LinAlg::Initialization::zero);
 
     Core::FE::boundary_gp_to_parent_gp<SLAVE_NUMDOF>(
         pqxg, derivtrafo, intpoints, coupl_ele->shape(), fele->shape(), fele->face_parent_number());
 
-    Core::LinAlg::Matrix<SLAVE_NUMDOF, 1> pxsi(true);
+    Core::LinAlg::Matrix<SLAVE_NUMDOF, 1> pxsi(Core::LinAlg::Initialization::zero);
 
     // coordinates of the current integration point in parent coordinate system
     for (unsigned int idim = 0; idim < SLAVE_NUMDOF; idim++)
@@ -897,11 +897,11 @@ double XFEM::MeshCouplingFPI::compute_jacobianand_pressure(
     {
       const size_t PARENT_NEN = Core::FE::num_nodes<Core::FE::CellType::hex8>;
       Core::LinAlg::Matrix<PARENT_NEN, 1> pfunc_loc(
-          true);  // derivatives of parent element shape functions in parent element coordinate
-                  // system
+          Core::LinAlg::Initialization::zero);  // derivatives of parent element shape functions
+                                                // in parent element coordinate system
       Core::LinAlg::Matrix<SLAVE_NUMDOF, PARENT_NEN> pderiv_loc(
-          true);  // derivatives of parent element shape functions in parent element coordinate
-                  // system
+          Core::LinAlg::Initialization::zero);  // derivatives of parent element shape functions
+                                                // in parent element coordinate system
 
       // evaluate derivatives of parent element shape functions at current integration point in
       // parent coordinate system
@@ -925,9 +925,9 @@ double XFEM::MeshCouplingFPI::compute_jacobianand_pressure(
       Core::LinAlg::Matrix<SLAVE_NUMDOF, SLAVE_NUMDOF> Jmat;
 
       Core::LinAlg::Matrix<SLAVE_NUMDOF, PARENT_NEN> xrefe(
-          true);  // material coord. of parent element
+          Core::LinAlg::Initialization::zero);  // material coord. of parent element
       Core::LinAlg::Matrix<SLAVE_NUMDOF, PARENT_NEN> xcurr(
-          true);  // current  coord. of parent element
+          Core::LinAlg::Initialization::zero);  // current  coord. of parent element
 
       // update element geometry of parent element
       {

@@ -128,8 +128,8 @@ bool BeamInteraction::SUBMODELEVALUATOR::Crosslinking::post_partition_problem()
     {
       // loop over all binding spots of current type j of current element
       int unsigned const numbbspot = beamele_i->get_number_of_binding_spots(iter.first);
-      Core::LinAlg::Matrix<3, 1> pos(true);
-      Core::LinAlg::Matrix<3, 3> triad(true);
+      Core::LinAlg::Matrix<3, 1> pos(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<3, 3> triad(Core::LinAlg::Initialization::zero);
       for (int unsigned k = 0; k < numbbspot; ++k)
       {
         BeamInteraction::Utils::get_pos_and_triad_of_binding_spot(
@@ -414,13 +414,15 @@ void BeamInteraction::SUBMODELEVALUATOR::Crosslinking::get_all_possible_bspot_li
               double const linkanglemax = mat->linking_angle() + mat->linking_angle_tolerance();
 
               // get tangent of binding spot on beamele
-              Core::LinAlg::Matrix<3, 1> bindingspot_beam_tangent(true);
+              Core::LinAlg::Matrix<3, 1> bindingspot_beam_tangent(
+                  Core::LinAlg::Initialization::zero);
               for (unsigned int idim = 0; idim < 3; ++idim)
                 bindingspot_beam_tangent(idim) =
                     beamdata_i->get_b_spot_triad(iter.first, locbspot_i)(idim, 0);
 
               // get tangent of binding spot on nb_beamele
-              Core::LinAlg::Matrix<3, 1> nb_bindingspot_beam_tangent(true);
+              Core::LinAlg::Matrix<3, 1> nb_bindingspot_beam_tangent(
+                  Core::LinAlg::Initialization::zero);
               for (unsigned int idim = 0; idim < 3; ++idim)
                 nb_bindingspot_beam_tangent(idim) =
                     nb_beamdata_i->get_b_spot_triad(iter.first, nb_locbspot_i)(idim, 0);
@@ -553,7 +555,7 @@ void BeamInteraction::SUBMODELEVALUATOR::Crosslinking::unambiguous_decisions_on_
   std::set<std::pair<long long, long long>, BeamInteraction::Utils::StdPairComparatorOrderCounts>
       doublebonds;
   std::map<int, int> numpertype;
-  Core::LinAlg::Matrix<3, 1> clpos(true);
+  Core::LinAlg::Matrix<3, 1> clpos(Core::LinAlg::Initialization::zero);
   for (auto const& iter_sort : global_bspot_linker)
   {
     for (auto const& iter : iter_sort.second)
@@ -801,7 +803,7 @@ void BeamInteraction::SUBMODELEVALUATOR::Crosslinking::reset()
     // safety check until code is better tested for potential problems with periodic boundary
     // conditions
     // **************************** DEBUG ****************************************
-    Core::LinAlg::Matrix<3, 1> dist(true);
+    Core::LinAlg::Matrix<3, 1> dist(Core::LinAlg::Initialization::zero);
     dist.update(1.0, pos[0], -1.0, pos[1]);
     for (unsigned int i = 0; i < 3; ++i)
     {
@@ -1825,7 +1827,7 @@ void BeamInteraction::SUBMODELEVALUATOR::Crosslinking::diffuse_crosslinker()
             crosslinker_i->get_material()->linker_type(), cldata_i->get_b_spots()[1].second,
             periodic_bounding_box());
 
-        Core::LinAlg::Matrix<3, 1> clpos(true);
+        Core::LinAlg::Matrix<3, 1> clpos(Core::LinAlg::Initialization::zero);
         set_position_of_double_bonded_crosslinker_pb_cconsistent(clpos, bbspotposone, bbspotpostwo);
 
         std::vector<double> newpos(3, 0.0);
@@ -1872,7 +1874,7 @@ void BeamInteraction::SUBMODELEVALUATOR::Crosslinking::diffuse_unbound_crosslink
   Global::Problem::instance()->random()->set_mean_variance(meanvalue, standarddev);
 
   // diffuse crosslinker according to brownian dynamics
-  Core::LinAlg::Matrix<3, 1> newclpos(true);
+  Core::LinAlg::Matrix<3, 1> newclpos(Core::LinAlg::Initialization::zero);
   std::vector<double> randvec;
   int count = 3;
   // maximal diffusion given by cutoff radius (sqrt(3) = 1.73..)
@@ -2139,8 +2141,8 @@ void BeamInteraction::SUBMODELEVALUATOR::Crosslinking::update_and_export_beam_da
       {
         // loop over all binding spots of current type j of current element
         int unsigned const numbbspot = beamele_i->get_number_of_binding_spots(iter.first);
-        Core::LinAlg::Matrix<3, 1> pos(true);
-        Core::LinAlg::Matrix<3, 3> triad(true);
+        Core::LinAlg::Matrix<3, 1> pos(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<3, 3> triad(Core::LinAlg::Initialization::zero);
         for (int unsigned k = 0; k < numbbspot; ++k)
         {
           BeamInteraction::Utils::get_pos_and_triad_of_binding_spot(
@@ -2367,7 +2369,7 @@ bool BeamInteraction::SUBMODELEVALUATOR::Crosslinking::check_if_sphere_prohibits
   for (auto const& sphere_iter : neighboring_col_spheres)
   {
     // init position of linker nodes
-    Core::LinAlg::Matrix<3, 1> sphere_pos(true);
+    Core::LinAlg::Matrix<3, 1> sphere_pos(Core::LinAlg::Initialization::zero);
 
     // sphere current position
     std::vector<double> sphereeledisp;
@@ -2378,7 +2380,7 @@ bool BeamInteraction::SUBMODELEVALUATOR::Crosslinking::check_if_sphere_prohibits
     for (unsigned int dim = 0; dim < 3; ++dim)
       sphere_pos(dim) = sphere_iter->nodes()[0]->x()[dim] + sphereeledisp[dim];
 
-    Core::LinAlg::Matrix<3, 1> dist_vec(true);
+    Core::LinAlg::Matrix<3, 1> dist_vec(Core::LinAlg::Initialization::zero);
     dist_vec.update(1.0, sphere_pos, -1.0, cldata_i->get_position());
     const double distance = dist_vec.norm2();
 
@@ -2577,13 +2579,13 @@ bool BeamInteraction::SUBMODELEVALUATOR::Crosslinking::check_bind_event_criteria
                               crosslinker_i->get_material()->linking_angle_tolerance();
 
   // if crosslinker is singly bound, we fetch the orientation vector
-  Core::LinAlg::Matrix<3, 1> occ_bindingspot_beam_tangent(true);
+  Core::LinAlg::Matrix<3, 1> occ_bindingspot_beam_tangent(Core::LinAlg::Initialization::zero);
   if (cldata_i->get_number_of_bonds() == 1)
     get_occupied_cl_b_spot_beam_tangent(
         crosslinker_i, cldata_i, occ_bindingspot_beam_tangent, crosslinker_i->id());
 
   // note: we use first base vector instead of tangent vector here
-  Core::LinAlg::Matrix<3, 1> curr_bindingspot_beam_tangent(true);
+  Core::LinAlg::Matrix<3, 1> curr_bindingspot_beam_tangent(Core::LinAlg::Initialization::zero);
   for (unsigned int idim = 0; idim < 3; ++idim)
     curr_bindingspot_beam_tangent(idim) =
         beamdata_i->get_b_spot_triad(linkertype, locnbspot)(idim, 0);
@@ -3357,8 +3359,8 @@ void BeamInteraction::SUBMODELEVALUATOR::Crosslinking::
   // check if linker is stretched -> sgn+ or compressed -> sgn- by checking orientation of force
   // vector note: this works only if there are no other forces (like inertia, stochastic, damping)
   // acting on the cl
-  Core::LinAlg::Matrix<3, 1> dist_vec(true);
-  Core::LinAlg::Matrix<3, 1> bspotforceone(true);
+  Core::LinAlg::Matrix<3, 1> dist_vec(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> bspotforceone(Core::LinAlg::Initialization::zero);
   dist_vec.update(1.0, elepairptr.get_bind_spot_pos1(), -1.0, elepairptr.get_bind_spot_pos2());
   for (unsigned int j = 0; j < 3; ++j) bspotforceone(j) = bspotforce[0](j);
   double sgn = (dist_vec.dot(bspotforceone) < 0.0) ? -1.0 : 1.0;

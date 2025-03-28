@@ -22,7 +22,7 @@ namespace Mat
   inline void evaluate_ce(const Core::LinAlg::Matrix<3, 3>& F,
       const Core::LinAlg::Matrix<3, 3>& iFin, Core::LinAlg::Matrix<3, 3>& Ce)
   {
-    static Core::LinAlg::Matrix<3, 3> FiFin(false);
+    static Core::LinAlg::Matrix<3, 3> FiFin(Core::LinAlg::Initialization::uninitialized);
     FiFin.multiply_nn(F, iFin);
     Ce.multiply_tn(FiFin, FiFin);
   }
@@ -30,7 +30,7 @@ namespace Mat
   inline void evaluatei_cin_ci_cin(const Core::LinAlg::Matrix<3, 3>& C,
       const Core::LinAlg::Matrix<3, 3>& iCin, Core::LinAlg::Matrix<3, 3>& iCinCiCin)
   {
-    static Core::LinAlg::Matrix<3, 3> CiCin(false);
+    static Core::LinAlg::Matrix<3, 3> CiCin(Core::LinAlg::Initialization::uninitialized);
     CiCin.multiply_nn(C, iCin);
     iCinCiCin.multiply_nn(iCin, CiCin);
   }
@@ -51,16 +51,16 @@ namespace Mat
     cmat.clear();
 
     // Variables needed for the computation of the stress resultants
-    static Core::LinAlg::Matrix<3, 3> C(true);
-    static Core::LinAlg::Matrix<3, 3> Ce(true);
-    static Core::LinAlg::Matrix<3, 3> iC(true);
-    static Core::LinAlg::Matrix<3, 3> iCin(true);
-    static Core::LinAlg::Matrix<3, 3> iCinCiCin(true);
+    static Core::LinAlg::Matrix<3, 3> C(Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<3, 3> Ce(Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<3, 3> iC(Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<3, 3> iCin(Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<3, 3> iCinCiCin(Core::LinAlg::Initialization::zero);
 
-    static Core::LinAlg::Matrix<6, 1> iCinv(true);
-    static Core::LinAlg::Matrix<6, 1> iCinCiCinv(true);
-    static Core::LinAlg::Matrix<6, 1> iCv(true);
-    static Core::LinAlg::Matrix<3, 1> principleInvariantsCe(true);
+    static Core::LinAlg::Matrix<6, 1> iCinv(Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<6, 1> iCinCiCinv(Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<6, 1> iCv(Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<3, 1> principleInvariantsCe(Core::LinAlg::Initialization::zero);
 
     // Compute right Cauchy-Green tensor C=F^TF
     C.multiply_tn(F, F);
@@ -80,16 +80,16 @@ namespace Mat
     // Compute principal invariants
     Mat::invariants_principal(principleInvariantsCe, Ce);
 
-    Core::LinAlg::Matrix<3, 1> dPIe(true);
-    Core::LinAlg::Matrix<6, 1> ddPIIe(true);
+    Core::LinAlg::Matrix<3, 1> dPIe(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<6, 1> ddPIIe(Core::LinAlg::Initialization::zero);
 
     Mat::elast_hyper_evaluate_invariant_derivatives(
         principleInvariantsCe, dPIe, ddPIIe, potsum, summandProperties, gp, eleGID);
 
     // 2nd Piola Kirchhoff stress factors (according to Holzapfel-Nonlinear Solid Mechanics p. 216)
-    static Core::LinAlg::Matrix<3, 1> gamma(true);
+    static Core::LinAlg::Matrix<3, 1> gamma(Core::LinAlg::Initialization::zero);
     // constitutive tensor factors (according to Holzapfel-Nonlinear Solid Mechanics p. 261)
-    static Core::LinAlg::Matrix<8, 1> delta(true);
+    static Core::LinAlg::Matrix<8, 1> delta(Core::LinAlg::Initialization::zero);
 
     Mat::calculate_gamma_delta(gamma, delta, principleInvariantsCe, dPIe, ddPIIe);
 

@@ -166,7 +166,8 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::sysmat_od_mesh(
     // J * N_x
     // J denotes the determinant of the Jacobian of the mapping between current and parameter space,
     // i.e. det(dx/ds)
-    static Core::LinAlg::Matrix<1, nsd_ * nen_> dJ_dmesh(false);
+    static Core::LinAlg::Matrix<1, nsd_ * nen_> dJ_dmesh(
+        Core::LinAlg::Initialization::uninitialized);
     calc_djd_mesh(dJ_dmesh);
     const double J = xjm_.determinant();
 
@@ -186,9 +187,9 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::sysmat_od_mesh(
 
 
       // subgrid-scale convective term
-      Core::LinAlg::Matrix<nen_, 1> sgconv(true);
+      Core::LinAlg::Matrix<nen_, 1> sgconv(Core::LinAlg::Initialization::zero);
       // subgrid-scale velocity vector in gausspoint
-      Core::LinAlg::Matrix<nsd_, 1> sgvelint(true);
+      Core::LinAlg::Matrix<nsd_, 1> sgvelint(Core::LinAlg::Initialization::zero);
 
       // residual of convection-diffusion-reaction eq
       double scatrares(0.0);
@@ -212,7 +213,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::sysmat_od_mesh(
       compute_rhs_int(rhsint, densam[k], densnp[k], scatravarmanager_->hist(k));
 
       // diffusive part used in stabilization terms
-      Core::LinAlg::Matrix<nen_, 1> diff(true);
+      Core::LinAlg::Matrix<nen_, 1> diff(Core::LinAlg::Initialization::zero);
       // diffusive term using current scalar value for higher-order elements
       if (use2ndderiv_)
       {
@@ -560,7 +561,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::calc_conv_cons_od_mesh(
   }
 
   // shape derivatives associated with divergence operator
-  Core::LinAlg::Matrix<nsd_, nsd_> gridvelderiv(true);
+  Core::LinAlg::Matrix<nsd_, nsd_> gridvelderiv(Core::LinAlg::Initialization::zero);
   gridvelderiv.multiply_nt(evelnp_, deriv_);
 
   if (nsd_ == 3)

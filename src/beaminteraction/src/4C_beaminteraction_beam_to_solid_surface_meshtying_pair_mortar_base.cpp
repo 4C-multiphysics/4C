@@ -229,10 +229,10 @@ void BeamInteraction::BeamToSolidSurfaceMeshtyingPairMortarBase<ScalarType, Beam
               "global_coupling_moment_origin");
 
       // Initialize variables for local values.
-      Core::LinAlg::Matrix<3, 1, double> dr_beam_ref(true);
-      Core::LinAlg::Matrix<3, 1, double> lambda_gauss_point(true);
-      Core::LinAlg::Matrix<3, 1, double> r_gauss_point(true);
-      Core::LinAlg::Matrix<3, 1, double> temp_moment(true);
+      Core::LinAlg::Matrix<3, 1, double> dr_beam_ref(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<3, 1, double> lambda_gauss_point(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<3, 1, double> r_gauss_point(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<3, 1, double> temp_moment(Core::LinAlg::Initialization::zero);
 
       // Initialize scalar variables.
       double segment_jacobian = 0.0;

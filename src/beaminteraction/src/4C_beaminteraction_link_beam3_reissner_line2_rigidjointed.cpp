@@ -108,7 +108,7 @@ void BeamInteraction::BeamLinkBeam3rLine2RigidJointed::setup(int matnum)
 
   // the triads at the two connection sites are chosen identical initially, so we only use the first
   // one
-  Core::LinAlg::Matrix<3, 1> linkelerotvec(true);
+  Core::LinAlg::Matrix<3, 1> linkelerotvec(Core::LinAlg::Initialization::zero);
   Core::LargeRotations::quaterniontoangle(get_bind_spot_quaternion1(), linkelerotvec);
 
   std::vector<double> refpos(6, 0.0);

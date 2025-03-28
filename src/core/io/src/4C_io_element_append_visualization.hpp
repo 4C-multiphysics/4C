@@ -97,7 +97,8 @@ namespace Core::IO
     // Create the vertices for the visualization.
     {
       // Get the knots and weights of this element.
-      Core::LinAlg::Matrix<number_of_output_points, 1, double> weights(true);
+      Core::LinAlg::Matrix<number_of_output_points, 1, double> weights(
+          Core::LinAlg::Initialization::zero);
       std::vector<Core::LinAlg::SerialDenseVector> knots(true);
       const bool zero_size =
           Core::FE::Nurbs::get_my_nurbs_knots_and_weights(discret, &ele, knots, weights);
@@ -282,7 +283,8 @@ namespace Core::IO
     // Add the data at the nodes of the nurbs visualization.
     {
       // Get the knots and weights for this element.
-      Core::LinAlg::Matrix<number_of_output_points, 1, double> weights(true);
+      Core::LinAlg::Matrix<number_of_output_points, 1, double> weights(
+          Core::LinAlg::Initialization::zero);
       std::vector<Core::LinAlg::SerialDenseVector> knots(true);
       const bool zero_size =
           Core::FE::Nurbs::get_my_nurbs_knots_and_weights(discret, &ele, knots, weights);
@@ -368,7 +370,8 @@ namespace Core::IO
     // Add the data at the nodes of the nurbs visualization.
     {
       // Get the knots and weights for this element.
-      Core::LinAlg::Matrix<number_of_output_points, 1, double> weights(true);
+      Core::LinAlg::Matrix<number_of_output_points, 1, double> weights(
+          Core::LinAlg::Initialization::zero);
       std::vector<Core::LinAlg::SerialDenseVector> knots(true);
       const bool zero_size =
           Core::FE::Nurbs::get_my_nurbs_knots_and_weights(discret, &ele, knots, weights);

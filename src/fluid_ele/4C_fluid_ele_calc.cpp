@@ -49,94 +49,94 @@ Discret::Elements::FluidEleCalc<distype, enrtype>::FluidEleCalc()
     : rotsymmpbc_(nullptr),
       eid_(-1.0),
       is_higher_order_ele_(false),
-      weights_(true),
+      weights_(Core::LinAlg::Initialization::zero),
       myknots_(nsd_),
       intpoints_(distype),
       is_inflow_ele_(false),
-      estif_u_(true),
-      estif_p_v_(true),
-      estif_q_u_(true),
-      ppmat_(true),
-      preforce_(true),
-      velforce_(true),
-      lin_resM_Du_(true),
-      resM_Du_(true),
-      ebofoaf_(true),
-      eprescpgaf_(true),
-      escabofoaf_(true),
-      ebofon_(true),
-      eprescpgn_(true),
-      escabofon_(true),
-      evelaf_(true),
-      epreaf_(true),
-      evelam_(true),
-      epream_(true),
-      evelnp_(true),
-      eprenp_(true),
-      eveln_(true),
-      epren_(true),
-      eaccam_(true),
-      escadtam_(true),
-      eveldtam_(true),
-      epredtam_(true),
-      escaaf_(true),
-      escaam_(true),
-      emhist_(true),
-      eporo_(true),
-      gradphiele_(true),
-      curvatureele_(true),
-      gradphielen_(true),
-      curvatureelen_(true),
-      gradphieletot_(true),
-      curvatureeletot_(true),
-      edispnp_(true),
-      egridv_(true),
-      fsevelaf_(true),
-      fsescaaf_(true),
-      evel_hat_(true),
-      ereynoldsstress_hat_(true),
-      xyze_(true),
-      funct_(true),
-      deriv_(true),
-      deriv2_(true),
-      xjm_(true),
-      xji_(true),
-      vderxy_(true),
-      derxy_(true),
-      derxy2_(true),
-      bodyforce_(true),
+      estif_u_(Core::LinAlg::Initialization::zero),
+      estif_p_v_(Core::LinAlg::Initialization::zero),
+      estif_q_u_(Core::LinAlg::Initialization::zero),
+      ppmat_(Core::LinAlg::Initialization::zero),
+      preforce_(Core::LinAlg::Initialization::zero),
+      velforce_(Core::LinAlg::Initialization::zero),
+      lin_resM_Du_(Core::LinAlg::Initialization::zero),
+      resM_Du_(Core::LinAlg::Initialization::zero),
+      ebofoaf_(Core::LinAlg::Initialization::zero),
+      eprescpgaf_(Core::LinAlg::Initialization::zero),
+      escabofoaf_(Core::LinAlg::Initialization::zero),
+      ebofon_(Core::LinAlg::Initialization::zero),
+      eprescpgn_(Core::LinAlg::Initialization::zero),
+      escabofon_(Core::LinAlg::Initialization::zero),
+      evelaf_(Core::LinAlg::Initialization::zero),
+      epreaf_(Core::LinAlg::Initialization::zero),
+      evelam_(Core::LinAlg::Initialization::zero),
+      epream_(Core::LinAlg::Initialization::zero),
+      evelnp_(Core::LinAlg::Initialization::zero),
+      eprenp_(Core::LinAlg::Initialization::zero),
+      eveln_(Core::LinAlg::Initialization::zero),
+      epren_(Core::LinAlg::Initialization::zero),
+      eaccam_(Core::LinAlg::Initialization::zero),
+      escadtam_(Core::LinAlg::Initialization::zero),
+      eveldtam_(Core::LinAlg::Initialization::zero),
+      epredtam_(Core::LinAlg::Initialization::zero),
+      escaaf_(Core::LinAlg::Initialization::zero),
+      escaam_(Core::LinAlg::Initialization::zero),
+      emhist_(Core::LinAlg::Initialization::zero),
+      eporo_(Core::LinAlg::Initialization::zero),
+      gradphiele_(Core::LinAlg::Initialization::zero),
+      curvatureele_(Core::LinAlg::Initialization::zero),
+      gradphielen_(Core::LinAlg::Initialization::zero),
+      curvatureelen_(Core::LinAlg::Initialization::zero),
+      gradphieletot_(Core::LinAlg::Initialization::zero),
+      curvatureeletot_(Core::LinAlg::Initialization::zero),
+      edispnp_(Core::LinAlg::Initialization::zero),
+      egridv_(Core::LinAlg::Initialization::zero),
+      fsevelaf_(Core::LinAlg::Initialization::zero),
+      fsescaaf_(Core::LinAlg::Initialization::zero),
+      evel_hat_(Core::LinAlg::Initialization::zero),
+      ereynoldsstress_hat_(Core::LinAlg::Initialization::zero),
+      xyze_(Core::LinAlg::Initialization::zero),
+      funct_(Core::LinAlg::Initialization::zero),
+      deriv_(Core::LinAlg::Initialization::zero),
+      deriv2_(Core::LinAlg::Initialization::zero),
+      xjm_(Core::LinAlg::Initialization::zero),
+      xji_(Core::LinAlg::Initialization::zero),
+      vderxy_(Core::LinAlg::Initialization::zero),
+      derxy_(Core::LinAlg::Initialization::zero),
+      derxy2_(Core::LinAlg::Initialization::zero),
+      bodyforce_(Core::LinAlg::Initialization::zero),
       dens_theta_(0.0),
-      bodyforcen_(true),
-      conv_oldn_(true),
-      visc_oldn_(true),
-      gradpn_(true),
-      velintn_(true),
+      bodyforcen_(Core::LinAlg::Initialization::zero),
+      conv_oldn_(Core::LinAlg::Initialization::zero),
+      visc_oldn_(Core::LinAlg::Initialization::zero),
+      gradpn_(Core::LinAlg::Initialization::zero),
+      velintn_(Core::LinAlg::Initialization::zero),
       viscn_(0.0),
       conres_oldn_(0.0),
-      generalbodyforcen_(true),
-      generalbodyforce_(true),
-      histmom_(true),
-      velint_(true),
-      sgvelint_(true),
-      gridvelint_(true),
-      gridvelintn_(true),
-      convvelint_(true),
-      eadvvel_(true),
-      accint_(true),
-      gradp_(true),
-      tau_(true),
-      viscs2_(true),
-      conv_c_(true),
-      sgconv_c_(true),
+      generalbodyforcen_(Core::LinAlg::Initialization::zero),
+      generalbodyforce_(Core::LinAlg::Initialization::zero),
+      histmom_(Core::LinAlg::Initialization::zero),
+      velint_(Core::LinAlg::Initialization::zero),
+      sgvelint_(Core::LinAlg::Initialization::zero),
+      gridvelint_(Core::LinAlg::Initialization::zero),
+      gridvelintn_(Core::LinAlg::Initialization::zero),
+      convvelint_(Core::LinAlg::Initialization::zero),
+      eadvvel_(Core::LinAlg::Initialization::zero),
+      accint_(Core::LinAlg::Initialization::zero),
+      gradp_(Core::LinAlg::Initialization::zero),
+      tau_(Core::LinAlg::Initialization::zero),
+      viscs2_(Core::LinAlg::Initialization::zero),
+      conv_c_(Core::LinAlg::Initialization::zero),
+      sgconv_c_(Core::LinAlg::Initialization::zero),
       vdiv_(0.0),
-      rhsmom_(true),
-      conv_old_(true),
-      visc_old_(true),
-      momres_old_(true),
+      rhsmom_(Core::LinAlg::Initialization::zero),
+      conv_old_(Core::LinAlg::Initialization::zero),
+      visc_old_(Core::LinAlg::Initialization::zero),
+      momres_old_(Core::LinAlg::Initialization::zero),
       conres_old_(true),
-      xder2_(true),
-      vderiv_(true),
-      xsi_(true),
+      xder2_(Core::LinAlg::Initialization::zero),
+      vderiv_(Core::LinAlg::Initialization::zero),
+      xsi_(Core::LinAlg::Initialization::zero),
       det_(0.0),
       fac_(0.0),
       visc_(0.0),
@@ -153,11 +153,11 @@ Discret::Elements::FluidEleCalc<distype, enrtype>::FluidEleCalc()
       scaconvfacaf_(0.0),   // initialized to 0.0 (filled in Fluid::get_material_params)
       scaconvfacn_(0.0),    // initialized to 0.0 (filled in Fluid::get_material_params)
       thermpressadd_(0.0),  // initialized to 0.0 (filled in Fluid::get_material_params)
-      convvelintn_(true),
-      vderxyn_(true),
+      convvelintn_(Core::LinAlg::Initialization::zero),
+      vderxyn_(Core::LinAlg::Initialization::zero),
       vdivn_(0.0),
-      grad_scaaf_(true),
-      grad_scan_(true),
+      grad_scaaf_(Core::LinAlg::Initialization::zero),
+      grad_scan_(Core::LinAlg::Initialization::zero),
       scaaf_(0.0),
       scan_(0.0),
       tder_sca_(0.0),
@@ -171,22 +171,22 @@ Discret::Elements::FluidEleCalc<distype, enrtype>::FluidEleCalc()
       preconvfacaf_(0.0),  // initialized to 0.0 (filled in Fluid::get_material_params)
       tder_pre_(0.0),
       predtfac_(0.0),  // initialized to 0.0 (filled in Fluid::get_material_params)
-      grad_preaf_(true),
+      grad_preaf_(Core::LinAlg::Initialization::zero),
       conv_preaf_(0.0),
       // turbulence-specific variables
-      fsvelint_(true),
-      mffsvelint_(true),
-      fsvderxy_(true),
-      mffsvderxy_(true),
+      fsvelint_(Core::LinAlg::Initialization::zero),
+      mffsvelint_(Core::LinAlg::Initialization::zero),
+      fsvderxy_(Core::LinAlg::Initialization::zero),
+      mffsvderxy_(Core::LinAlg::Initialization::zero),
       mffsvdiv_(0.0),
       sgvisc_(0.0),
       fssgvisc_(0.0),
       q_sq_(0.0),
       mfssgscaint_(0.0),
-      grad_fsscaaf_(true),
+      grad_fsscaaf_(Core::LinAlg::Initialization::zero),
       tds_(nullptr),
-      evelafgrad_(true),
-      evelngrad_(true)
+      evelafgrad_(Core::LinAlg::Initialization::zero),
+      evelngrad_(Core::LinAlg::Initialization::zero)
 {
   rotsymmpbc_ =
       std::make_shared<FLD::RotationallySymmetricPeriodicBC<distype, nsd_ + 1, enrtype>>();
@@ -740,7 +740,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::sysmat(
 
   // potential evaluation of multifractal subgrid-scales at element center
   // coefficient B of fine-scale velocity
-  static Core::LinAlg::Matrix<nsd_, 1> B_mfs(true);
+  static Core::LinAlg::Matrix<nsd_, 1> B_mfs(Core::LinAlg::Initialization::zero);
   B_mfs.clear();
 
   // coefficient D of fine-scale scalar (loma only)
@@ -792,7 +792,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::sysmat(
       vderxy_.multiply_nt(evelaf, derxy_);  // required for time-dependent subscales
 
       // compute velnp at integration point (required for time-dependent subscales)
-      static Core::LinAlg::Matrix<nsd_, 1> velintnp(true);
+      static Core::LinAlg::Matrix<nsd_, 1> velintnp(Core::LinAlg::Initialization::zero);
       velintnp.multiply(evelnp, funct_);
       vel_normnp_ = velintnp.norm2();
     }
@@ -1011,7 +1011,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::sysmat(
       for (int idim = 0; idim < nsd_; ++idim)
       {
         // get vdiv at time n+1 for np_genalpha,
-        static Core::LinAlg::Matrix<nsd_, nsd_> vderxy(true);
+        static Core::LinAlg::Matrix<nsd_, nsd_> vderxy(Core::LinAlg::Initialization::zero);
         vderxy.multiply_nt(evelnp, derxy_);
         vdiv_ += vderxy(idim, idim);
       }
@@ -1140,7 +1140,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::sysmat(
     // 2) standard Galerkin viscous term
     //    (including viscous stress computation,
     //     excluding viscous part for low-Mach-number flow)
-    static Core::LinAlg::Matrix<nsd_, nsd_> viscstress(true);
+    static Core::LinAlg::Matrix<nsd_, nsd_> viscstress(Core::LinAlg::Initialization::zero);
     viscstress.clear();
     viscous_gal_part(estif_u_, velforce_, viscstress, timefacfac, rhsfac);
 
@@ -1593,11 +1593,11 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::add_surface_tension_forc
   // Add surface force if inside interface thickness, otherwise do not.
   if (abs(gaussescaaf) <= epsilon)
   {
-    static Core::LinAlg::Matrix<nsd_, nen_> egradphi(true);
-    static Core::LinAlg::Matrix<nsd_, nen_> egradphin(true);
+    static Core::LinAlg::Matrix<nsd_, nen_> egradphi(Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<nsd_, nen_> egradphin(Core::LinAlg::Initialization::zero);
 
-    static Core::LinAlg::Matrix<nen_, 1> ecurvature(true);
-    static Core::LinAlg::Matrix<nen_, 1> ecurvaturen(true);
+    static Core::LinAlg::Matrix<nen_, 1> ecurvature(Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<nen_, 1> ecurvaturen(Core::LinAlg::Initialization::zero);
 
     // Extract values from gradient and curvature vectors (who been compressed to not use too many
     // unnecessary variables)
@@ -3097,7 +3097,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::calc_stab_parameter(cons
     //
     // j : direction of derivative x/y/z
     //
-    static Core::LinAlg::Matrix<nsd_, nsd_> vderxyaf_(true);
+    static Core::LinAlg::Matrix<nsd_, nsd_> vderxyaf_(Core::LinAlg::Initialization::zero);
     vderxyaf_.update(1.0, vderxy_, 0.0);
 
     // Now we are ready. Let's go on!
@@ -3382,7 +3382,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::calc_char_ele_length(
     // normed velocity vector
     case Inpar::FLUID::streamlength_u:
     {
-      static Core::LinAlg::Matrix<nsd_, 1> velino(true);
+      static Core::LinAlg::Matrix<nsd_, 1> velino(Core::LinAlg::Initialization::zero);
       if (vel_norm >= 1e-6)
         velino.update(1.0 / vel_norm, convvelint_);
       else
@@ -3443,7 +3443,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::calc_char_ele_length(
     // normed velocity vector
     case Inpar::FLUID::streamlength_pc:
     {
-      static Core::LinAlg::Matrix<nsd_, 1> velino(true);
+      static Core::LinAlg::Matrix<nsd_, 1> velino(Core::LinAlg::Initialization::zero);
       if (vel_norm >= 1e-6)
         velino.update(1.0 / vel_norm, convvelint_);
       else
@@ -3841,7 +3841,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::compute_subgrid_scale_ve
 
     */
 
-    static Core::LinAlg::Matrix<1, nsd_> sgvelintaf(true);
+    static Core::LinAlg::Matrix<1, nsd_> sgvelintaf(Core::LinAlg::Initialization::zero);
     sgvelintaf.clear();
     for (int rr = 0; rr < nsd_; ++rr)
     {
@@ -4672,7 +4672,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::pressure_projection_fina
   ppmat.scale(1.0 / visc_);
 
   // compute rhs-contribution
-  static Core::LinAlg::Matrix<nen_, 1> temp(false);
+  static Core::LinAlg::Matrix<nen_, 1> temp(Core::LinAlg::Initialization::uninitialized);
   temp.multiply(ppmat, epre);
   preforce.update(-fldparatimint_->time_fac_rhs(), temp, 1.0);
 
@@ -5983,7 +5983,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::integrate_shape_function(
 
   if (ele->is_ale())
   {
-    Core::LinAlg::Matrix<nsd_, nen_> edispnp(true);
+    Core::LinAlg::Matrix<nsd_, nen_> edispnp(Core::LinAlg::Initialization::zero);
     extract_values_from_global_vector(
         discretization, lm, *rotsymmpbc_, &edispnp, nullptr, "dispnp");
 
@@ -6031,7 +6031,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_div_op(Discret::Elem
 
   if (ele->is_ale())  // Do ALE specific updates if necessary
   {
-    Core::LinAlg::Matrix<nsd_, nen_> edispnp(true);
+    Core::LinAlg::Matrix<nsd_, nen_> edispnp(Core::LinAlg::Initialization::zero);
     extract_values_from_global_vector(
         discretization, lm, *rotsymmpbc_, &edispnp, nullptr, "dispnp");
 
@@ -6073,7 +6073,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::vel_gradient_projection(
   //   Extract velocity/pressure from global vectors
   //----------------------------------------------------------------------------
 
-  Core::LinAlg::Matrix<nsd_, nen_> evel(true);
+  Core::LinAlg::Matrix<nsd_, nen_> evel(Core::LinAlg::Initialization::zero);
   extract_values_from_global_vector(discretization, lm, *rotsymmpbc_, &evel, nullptr, "vel");
 
   //----------------------------------------------------------------------------
@@ -6088,7 +6088,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::vel_gradient_projection(
 
   if (ele->is_ale())
   {
-    Core::LinAlg::Matrix<nsd_, nen_> edispnp(true);
+    Core::LinAlg::Matrix<nsd_, nen_> edispnp(Core::LinAlg::Initialization::zero);
     extract_values_from_global_vector(discretization, lm, *rotsymmpbc_, &edispnp, nullptr, "disp");
 
     // get new node positions for isale
@@ -6147,7 +6147,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::pres_gradient_projection(
   //   Extract velocity/pressure from global vectors
   //----------------------------------------------------------------------------
 
-  Core::LinAlg::Matrix<nen_, 1> epres(true);
+  Core::LinAlg::Matrix<nen_, 1> epres(Core::LinAlg::Initialization::zero);
   extract_values_from_global_vector(discretization, lm, *rotsymmpbc_, nullptr, &epres, "pres");
 
   //----------------------------------------------------------------------------
@@ -6162,7 +6162,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::pres_gradient_projection(
 
   if (ele->is_ale())
   {
-    Core::LinAlg::Matrix<nsd_, nen_> edispnp(true);
+    Core::LinAlg::Matrix<nsd_, nen_> edispnp(Core::LinAlg::Initialization::zero);
     extract_values_from_global_vector(discretization, lm, *rotsymmpbc_, &edispnp, nullptr, "disp");
 
     // get new node positions for isale
@@ -6227,7 +6227,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::compute_div_u(Discret::El
   // af_genalpha: velocity/pressure at time n+alpha_F
   // np_genalpha: velocity at time n+alpha_F, pressure at time n+1, velocity for continuity equ. at
   // time n+1 ost:         velocity/pressure at time n+1
-  Core::LinAlg::Matrix<nsd_, nen_> evelaf(true);
+  Core::LinAlg::Matrix<nsd_, nen_> evelaf(Core::LinAlg::Initialization::zero);
   extract_values_from_global_vector(discretization, lm, *rotsymmpbc_, &evelaf, nullptr, "velaf");
 
   //----------------------------------------------------------------------------
@@ -6256,7 +6256,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::compute_div_u(Discret::El
 
   if (ele->is_ale())
   {
-    Core::LinAlg::Matrix<nsd_, nen_> edispnp(true);
+    Core::LinAlg::Matrix<nsd_, nen_> edispnp(Core::LinAlg::Initialization::zero);
     extract_values_from_global_vector(
         discretization, lm, *rotsymmpbc_, &edispnp, nullptr, "dispnp");
 
@@ -6329,15 +6329,15 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::compute_error(Discret::El
     Core::LinAlg::SerialDenseVector& elevec1, const Core::FE::GaussIntegration& intpoints)
 {
   // analytical solution
-  Core::LinAlg::Matrix<nsd_, 1> u(true);
+  Core::LinAlg::Matrix<nsd_, 1> u(Core::LinAlg::Initialization::zero);
   double p = 0.0;
-  Core::LinAlg::Matrix<nsd_, nsd_> dervel(true);
+  Core::LinAlg::Matrix<nsd_, nsd_> dervel(Core::LinAlg::Initialization::zero);
 
   // error
-  Core::LinAlg::Matrix<nsd_, 1> deltavel(true);
+  Core::LinAlg::Matrix<nsd_, 1> deltavel(Core::LinAlg::Initialization::zero);
   double deltap = 0.0;
-  Core::LinAlg::Matrix<nsd_, nsd_> deltadervel(true);
-  Core::LinAlg::Matrix<nsd_, nsd_> dervelint(true);
+  Core::LinAlg::Matrix<nsd_, nsd_> deltadervel(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, nsd_> dervelint(Core::LinAlg::Initialization::zero);
 
   const auto calcerr =
       Teuchos::getIntegralValue<Inpar::FLUID::CalcError>(params, "calculate error");
@@ -6351,13 +6351,13 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::compute_error(Discret::El
   // af_genalpha: velocity/pressure at time n+alpha_F
   // np_genalpha: velocity at time n+alpha_F, pressure at time n+1
   // ost:         velocity/pressure at time n+1
-  Core::LinAlg::Matrix<nsd_, nen_> evelaf(true);
-  Core::LinAlg::Matrix<nen_, 1> epreaf(true);
+  Core::LinAlg::Matrix<nsd_, nen_> evelaf(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nen_, 1> epreaf(Core::LinAlg::Initialization::zero);
   extract_values_from_global_vector(discretization, lm, *rotsymmpbc_, &evelaf, &epreaf, "velaf");
 
   // np_genalpha: additional vector for velocity at time n+1
-  Core::LinAlg::Matrix<nsd_, nen_> evelnp(true);
-  Core::LinAlg::Matrix<nen_, 1> eprenp(true);
+  Core::LinAlg::Matrix<nsd_, nen_> evelnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nen_, 1> eprenp(Core::LinAlg::Initialization::zero);
   if (fldparatimint_->is_genalpha_np())
     extract_values_from_global_vector(discretization, lm, *rotsymmpbc_, &evelnp, &eprenp, "velnp");
 
@@ -6386,7 +6386,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::compute_error(Discret::El
 
   if (ele->is_ale())
   {
-    Core::LinAlg::Matrix<nsd_, nen_> edispnp(true);
+    Core::LinAlg::Matrix<nsd_, nen_> edispnp(Core::LinAlg::Initialization::zero);
     extract_values_from_global_vector(
         discretization, lm, *rotsymmpbc_, &edispnp, nullptr, "dispnp");
 
@@ -6422,7 +6422,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::compute_error(Discret::El
     dervelint.multiply_nt(evelaf, derxy_);
 
     // get coordinates at integration point
-    Core::LinAlg::Matrix<nsd_, 1> xyzint(true);
+    Core::LinAlg::Matrix<nsd_, 1> xyzint(Core::LinAlg::Initialization::zero);
     xyzint.multiply(xyze_, funct_);
 
     //  the error is evaluated at the specific time of the used time integration scheme
@@ -7097,9 +7097,9 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_dissipation(Fluid* e
   // channel flow and with scatra body force included for variable-density flow
   // (evaluation at time n+alpha_F for generalized-alpha scheme,
   //  and at time n+1 otherwise)
-  Core::LinAlg::Matrix<nsd_, nen_> ebofoaf(true);
-  Core::LinAlg::Matrix<nsd_, nen_> eprescpgaf(true);
-  Core::LinAlg::Matrix<nen_, 1> escabofoaf(true);
+  Core::LinAlg::Matrix<nsd_, nen_> ebofoaf(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, nen_> eprescpgaf(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nen_, 1> escabofoaf(Core::LinAlg::Initialization::zero);
   body_force(ele, ebofoaf, eprescpgaf, escabofoaf);
 
   // if not available, the arrays for the subscale quantities have to be
@@ -7117,12 +7117,12 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_dissipation(Fluid* e
   // af_genalpha: velocity/pressure at time n+alpha_F and n+alpha_M
   // np_genalpha: velocity at time n+alpha_F, pressure at time n+1
   // ost:         velocity/pressure at time n+1
-  Core::LinAlg::Matrix<nsd_, nen_> evelaf(true);
-  Core::LinAlg::Matrix<nen_, 1> epreaf(true);
+  Core::LinAlg::Matrix<nsd_, nen_> evelaf(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nen_, 1> epreaf(Core::LinAlg::Initialization::zero);
   extract_values_from_global_vector(discretization, lm, *rotsymmpbc_, &evelaf, &epreaf, "velaf");
 
-  Core::LinAlg::Matrix<nsd_, nen_> evelam(true);
-  Core::LinAlg::Matrix<nen_, 1> epream(true);
+  Core::LinAlg::Matrix<nsd_, nen_> evelam(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nen_, 1> epream(Core::LinAlg::Initialization::zero);
   if (fldpara_->physical_type() == Inpar::FLUID::weakly_compressible &&
       fldparatimint_->is_genalpha())
   {
@@ -7135,23 +7135,23 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_dissipation(Fluid* e
   }
 
   // np_genalpha: additional vector for velocity at time n+1
-  Core::LinAlg::Matrix<nsd_, nen_> evelnp(true);
-  Core::LinAlg::Matrix<nen_, 1> eprenp(true);
+  Core::LinAlg::Matrix<nsd_, nen_> evelnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nen_, 1> eprenp(Core::LinAlg::Initialization::zero);
   if (fldparatimint_->is_genalpha_np())
     extract_values_from_global_vector(discretization, lm, *rotsymmpbc_, &evelnp, &eprenp, "velnp");
 
-  Core::LinAlg::Matrix<nen_, 1> escaaf(true);
+  Core::LinAlg::Matrix<nen_, 1> escaaf(Core::LinAlg::Initialization::zero);
   extract_values_from_global_vector(discretization, lm, *rotsymmpbc_, nullptr, &escaaf, "scaaf");
 
-  Core::LinAlg::Matrix<nsd_, nen_> emhist(true);
+  Core::LinAlg::Matrix<nsd_, nen_> emhist(Core::LinAlg::Initialization::zero);
   extract_values_from_global_vector(discretization, lm, *rotsymmpbc_, &emhist, nullptr, "hist");
 
-  Core::LinAlg::Matrix<nsd_, nen_> eaccam(true);
-  Core::LinAlg::Matrix<nen_, 1> escadtam(true);
+  Core::LinAlg::Matrix<nsd_, nen_> eaccam(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nen_, 1> escadtam(Core::LinAlg::Initialization::zero);
   extract_values_from_global_vector(discretization, lm, *rotsymmpbc_, &eaccam, &escadtam, "accam");
 
-  Core::LinAlg::Matrix<nsd_, nen_> eveln(true);
-  Core::LinAlg::Matrix<nen_, 1> escaam(true);
+  Core::LinAlg::Matrix<nsd_, nen_> eveln(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nen_, 1> escaam(Core::LinAlg::Initialization::zero);
   extract_values_from_global_vector(discretization, lm, *rotsymmpbc_, &eveln, &escaam, "scaam");
 
   if (fldparatimint_->is_genalpha())
@@ -7167,8 +7167,8 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_dissipation(Fluid* e
   }
 
   // get additional state vectors for ALE case: grid displacement and vel.
-  Core::LinAlg::Matrix<nsd_, nen_> edispnp(true);
-  Core::LinAlg::Matrix<nsd_, nen_> egridv(true);
+  Core::LinAlg::Matrix<nsd_, nen_> edispnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, nen_> egridv(Core::LinAlg::Initialization::zero);
 
   if (ele->is_ale())
   {
@@ -7180,8 +7180,8 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_dissipation(Fluid* e
   // get additional state vector for AVM3 case and multifractal subgrid scales:
   // fine-scale velocity values are at time n+alpha_F for generalized-alpha
   // scheme and at time n+1 for all other schemes
-  Core::LinAlg::Matrix<nsd_, nen_> fsevelaf(true);
-  Core::LinAlg::Matrix<nen_, 1> fsescaaf(true);
+  Core::LinAlg::Matrix<nsd_, nen_> fsevelaf(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nen_, 1> fsescaaf(Core::LinAlg::Initialization::zero);
   if (fldpara_->fssgv() != Inpar::FLUID::no_fssgv or
       fldpara_->turb_mod_action() == Inpar::FLUID::multifractal_subgrid_scales)
   {
@@ -7350,7 +7350,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_dissipation(Fluid* e
 
   // potential evaluation of multifractal subgrid-scales at element center
   // coefficient B of fine-scale velocity
-  Core::LinAlg::Matrix<nsd_, 1> B_mfs(true);
+  Core::LinAlg::Matrix<nsd_, 1> B_mfs(Core::LinAlg::Initialization::zero);
   // coefficient D of fine-scale scalar (loma only)
   double D_mfs = 0.0;
   if (fldpara_->turb_mod_action() == Inpar::FLUID::multifractal_subgrid_scales)
@@ -7486,7 +7486,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_dissipation(Fluid* e
       for (int idim = 0; idim < nsd_; ++idim)
       {
         // get vdiv at time n+1 for np_genalpha,
-        Core::LinAlg::Matrix<nsd_, nsd_> vderxy(true);
+        Core::LinAlg::Matrix<nsd_, nsd_> vderxy(Core::LinAlg::Initialization::zero);
         vderxy.multiply_nt(evelnp, derxy_);
         vdiv_ += vderxy(idim, idim);
       }
@@ -8316,15 +8316,17 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::f_dcheck(
 
   // allocate arrays to compute element matrices and vectors at perturbed
   // positions
-  Core::LinAlg::Matrix<(nsd_ + 1) * nen_, (nsd_ + 1) * nen_> checkmat1(true);
-  Core::LinAlg::Matrix<(nsd_ + 1) * nen_, (nsd_ + 1) * nen_> checkmat2(true);
-  Core::LinAlg::Matrix<(nsd_ + 1) * nen_, 1> checkvec1(true);
+  Core::LinAlg::Matrix<(nsd_ + 1) * nen_, (nsd_ + 1) * nen_> checkmat1(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<(nsd_ + 1) * nen_, (nsd_ + 1) * nen_> checkmat2(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<(nsd_ + 1) * nen_, 1> checkvec1(Core::LinAlg::Initialization::zero);
 
   // alloc the vectors that will contain the perturbed velocities or
   // pressures
-  Core::LinAlg::Matrix<nsd_, nen_> checkevelaf(true);
-  Core::LinAlg::Matrix<nsd_, nen_> checkeaccam(true);
-  Core::LinAlg::Matrix<nen_, 1> checkepreaf(true);
+  Core::LinAlg::Matrix<nsd_, nen_> checkevelaf(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, nen_> checkeaccam(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nen_, 1> checkepreaf(Core::LinAlg::Initialization::zero);
 
   // echo to screen
   printf("+-------------------------------------------+\n");
@@ -8512,8 +8514,8 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_mass_matrix(
   // Since we need only the density, we use a lot of dummy values.
 
   // create dummy matrices
-  Core::LinAlg::Matrix<nsd_, nen_> mat1(true);
-  Core::LinAlg::Matrix<nen_, 1> mat2(true);
+  Core::LinAlg::Matrix<nsd_, nen_> mat1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nen_, 1> mat2(Core::LinAlg::Initialization::zero);
 
   get_material_params(mat, mat1, mat2, mat2, mat2, mat2, mat2, 0.0, 0.0, 0.0, 0.0, 0.0);
 
@@ -8527,7 +8529,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_mass_matrix(
   // Do ALE specific updates if necessary
   if (ele->is_ale())
   {
-    Core::LinAlg::Matrix<nsd_, nen_> edispnp(true);
+    Core::LinAlg::Matrix<nsd_, nen_> edispnp(Core::LinAlg::Initialization::zero);
     extract_values_from_global_vector(
         discretization, lm, *rotsymmpbc_, &edispnp, nullptr, "dispnp");
 
@@ -8536,7 +8538,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_mass_matrix(
   }
 
   // definition of matrices
-  Core::LinAlg::Matrix<nen_ * nsd_, nen_ * nsd_> estif_u(true);
+  Core::LinAlg::Matrix<nen_ * nsd_, nen_ * nsd_> estif_u(Core::LinAlg::Initialization::zero);
 
   // ---------------------------------------------------------------------------
   // Integration loop
@@ -8611,7 +8613,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_mass_matrix(
     double compr_fac = 1.0 / (RefBulkModulus + MatParameter * (preaf_ - RefPressure));
 
     // definition of matrices
-    Core::LinAlg::Matrix<nen_, nen_> ppmat(true);
+    Core::LinAlg::Matrix<nen_, nen_> ppmat(Core::LinAlg::Initialization::zero);
 
     // ---------------------------------------------------------------------------
     // Integration loop
@@ -8801,7 +8803,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_channel_statistics(
   // Do ALE specific updates if necessary
   if (ele->is_ale())
   {
-    Core::LinAlg::Matrix<nsd_, nen_> edispnp(true);
+    Core::LinAlg::Matrix<nsd_, nen_> edispnp(Core::LinAlg::Initialization::zero);
     // get new node positions of ALE mesh
     get_grid_disp_ale(discretization, lm, edispnp);
 
@@ -9371,8 +9373,8 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_time_step(Discret::E
   // ---------------------------------------------------------------------
   // get additional state vectors for ALE case: grid displacement and vel.
   // ---------------------------------------------------------------------
-  Core::LinAlg::Matrix<nsd_, nen_> edispnp(true);
-  Core::LinAlg::Matrix<nsd_, nen_> egridv(true);
+  Core::LinAlg::Matrix<nsd_, nen_> edispnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, nen_> egridv(Core::LinAlg::Initialization::zero);
   if (ele->is_ale()) get_grid_disp_vel_ale(discretization, lm, edispnp, egridv);
 
 
@@ -9380,7 +9382,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_time_step(Discret::E
   eval_shape_func_and_derivs_at_ele_center();
 
   // np_genalpha: additional vector for velocity at time n+1
-  Core::LinAlg::Matrix<nsd_, nen_> evelnp(true);
+  Core::LinAlg::Matrix<nsd_, nen_> evelnp(Core::LinAlg::Initialization::zero);
 
   extract_values_from_global_vector(discretization, lm, *rotsymmpbc_, &evelnp, nullptr, "velnp");
 
@@ -9401,7 +9403,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_time_step(Discret::E
 
   if (vel_norm > 1.0e-6)
   {
-    Core::LinAlg::Matrix<nsd_, 1> velino(true);
+    Core::LinAlg::Matrix<nsd_, 1> velino(Core::LinAlg::Initialization::zero);
     velino.update(1.0 / vel_norm, convvelint_);
 
     // get streamlength using the normed velocity at element centre
@@ -9447,8 +9449,8 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_mass_flow_periodic_h
   // ---------------------------------------------------------------------------
   // Since we need only the density, we use a lot of dummy values.
   // create dummy matrices
-  Core::LinAlg::Matrix<nsd_, nen_> mat1(true);
-  Core::LinAlg::Matrix<nen_, 1> mat2(true);
+  Core::LinAlg::Matrix<nsd_, nen_> mat1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nen_, 1> mat2(Core::LinAlg::Initialization::zero);
 
   get_material_params(mat, mat1, mat2, mat2, mat2, mat2, mat2, 0.0, 0.0, 0.0, 0.0, 0.0);
 
@@ -9462,11 +9464,11 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_mass_flow_periodic_h
   // Do ALE specific updates if necessary
   if (ele->is_ale()) FOUR_C_THROW("no ale for periodic hill");
 
-  Core::LinAlg::Matrix<nsd_, nen_> evelnp(true);
+  Core::LinAlg::Matrix<nsd_, nen_> evelnp(Core::LinAlg::Initialization::zero);
   extract_values_from_global_vector(discretization, lm, *rotsymmpbc_, &evelnp, nullptr, "velnp");
 
   // definition of matrices
-  Core::LinAlg::Matrix<nen_ * nsd_, nen_ * nsd_> estif_u(true);
+  Core::LinAlg::Matrix<nen_ * nsd_, nen_ * nsd_> estif_u(Core::LinAlg::Initialization::zero);
 
   // length of whole domain
   double length = params.get<double>("length");
@@ -9482,8 +9484,8 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_mass_flow_periodic_h
     eval_shape_func_and_derivs_at_int_point(iquad.point(), iquad.weight());
 
     // create dummy matrices
-    Core::LinAlg::Matrix<nsd_, nen_> mat1(true);
-    Core::LinAlg::Matrix<nen_, 1> mat2(true);
+    Core::LinAlg::Matrix<nsd_, nen_> mat1(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nen_, 1> mat2(Core::LinAlg::Initialization::zero);
 
     get_material_params(mat, mat1, mat2, mat2, mat2, mat2, mat2, 0.0, 0.0, 0.0, 0.0, 0.0);
 
@@ -9515,7 +9517,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_vel_gradient_ele_cen
   // Do ALE specific updates if necessary
   if (ele->is_ale())
   {
-    Core::LinAlg::Matrix<nsd_, nen_> edisp(true);
+    Core::LinAlg::Matrix<nsd_, nen_> edisp(Core::LinAlg::Initialization::zero);
     extract_values_from_global_vector(discretization, lm, *rotsymmpbc_, &edisp, nullptr, "disp");
 
     // get new node positions of ALE mesh
@@ -9528,7 +9530,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_vel_gradient_ele_cen
   if (discretization.has_state("vel"))
   {
     // extract element velocities
-    Core::LinAlg::Matrix<nsd_, nen_> evel(true);
+    Core::LinAlg::Matrix<nsd_, nen_> evel(Core::LinAlg::Initialization::zero);
     extract_values_from_global_vector(discretization, lm, *rotsymmpbc_, &evel, nullptr, "vel");
 
     // get gradient of velocity at element center
@@ -9545,7 +9547,7 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_vel_gradient_ele_cen
   }
 
   // get position of element centroid
-  Core::LinAlg::Matrix<nsd_, 1> x_centroid(true);
+  Core::LinAlg::Matrix<nsd_, 1> x_centroid(Core::LinAlg::Initialization::zero);
   x_centroid.multiply(xyze_, funct_);
   for (int i = 0; i < nsd_; ++i)
   {
@@ -11181,7 +11183,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::sysmat_ost_new(
 
   // potential evaluation of multifractal subgrid-scales at element center
   // coefficient B of fine-scale velocity
-  static Core::LinAlg::Matrix<nsd_, 1> B_mfs(true);
+  static Core::LinAlg::Matrix<nsd_, 1> B_mfs(Core::LinAlg::Initialization::zero);
   B_mfs.clear();
 
   // coefficient D of fine-scale scalar (loma only)
@@ -11237,7 +11239,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::sysmat_ost_new(
       vderxy_.multiply_nt(evelaf, derxy_);  // required for time-dependent subscales
 
       // compute velnp at integration point (required for time-dependent subscales)
-      static Core::LinAlg::Matrix<nsd_, 1> velintnp(true);
+      static Core::LinAlg::Matrix<nsd_, 1> velintnp(Core::LinAlg::Initialization::zero);
       velintnp.multiply(evelnp, funct_);
       vel_normnp_ = velintnp.norm2();
     }
@@ -11469,7 +11471,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::sysmat_ost_new(
       for (int idim = 0; idim < nsd_; ++idim)
       {
         // get vdiv at time n+1 for np_genalpha,
-        static Core::LinAlg::Matrix<nsd_, nsd_> vderxy(true);
+        static Core::LinAlg::Matrix<nsd_, nsd_> vderxy(Core::LinAlg::Initialization::zero);
         vderxy.multiply_nt(evelnp, derxy_);
         vdiv_ += vderxy(idim, idim);
       }
@@ -11614,7 +11616,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::sysmat_ost_new(
     // 2) standard Galerkin viscous term
     //    (including viscous stress computation,
     //     excluding viscous part for low-Mach-number flow)
-    static Core::LinAlg::Matrix<nsd_, nsd_> viscstress(true);
+    static Core::LinAlg::Matrix<nsd_, nsd_> viscstress(Core::LinAlg::Initialization::zero);
     viscstress.clear();
 
     viscous_gal_part(estif_u_, velforce_, viscstress, timefacfac, rhsfac, rhsfacn);
@@ -12312,7 +12314,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::compute_subgrid_scale_ve
 
     */
 
-    static Core::LinAlg::Matrix<1, nsd_> sgvelintaf(true);
+    static Core::LinAlg::Matrix<1, nsd_> sgvelintaf(Core::LinAlg::Initialization::zero);
     sgvelintaf.clear();
     for (int rr = 0; rr < nsd_; ++rr)
     {
@@ -14076,7 +14078,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::prepare_multifractal_sub
       {
         // a) streamlength due to Tezduyar et al. (1992)
         // normed velocity vector
-        Core::LinAlg::Matrix<nsd_, 1> velino(true);
+        Core::LinAlg::Matrix<nsd_, 1> velino(Core::LinAlg::Initialization::zero);
         if (vel_norm >= 1e-6)
           velino.update(1.0 / vel_norm, velint_);
         else
@@ -14126,7 +14128,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::prepare_multifractal_sub
                     |    i     j  |   |    i     j  |   |    i     j  |
                     +-           -+   +-           -+   +-           -+
         */
-        Core::LinAlg::Matrix<nsd_, nsd_> G(true);
+        Core::LinAlg::Matrix<nsd_, nsd_> G(Core::LinAlg::Initialization::zero);
 
         for (int nn = 0; nn < nsd_; ++nn)
         {
@@ -14694,7 +14696,7 @@ void Discret::Elements::FluidEleCalc<distype, enrtype>::multfrac_sub_grid_scales
   {
     if (gridvelint_.norm2() > 1.0e-9)
       FOUR_C_THROW("left hand side terms of MFS not supported with ale");
-    Core::LinAlg::Matrix<nen_, 1> mfconv_c(true);
+    Core::LinAlg::Matrix<nen_, 1> mfconv_c(Core::LinAlg::Initialization::zero);
     mfconv_c.multiply_tn(derxy_, mffsvelint_);
     // convective part
     for (int ui = 0; ui < nen_; ui++)
@@ -14853,7 +14855,7 @@ void Discret::Elements::FluidEleCalc<distype,
           "please check the implementation of the consistent residual for mfs for your "
           "time-integrator!");
 
-    Core::LinAlg::Matrix<nsd_, 1> velforce(true);
+    Core::LinAlg::Matrix<nsd_, 1> velforce(Core::LinAlg::Initialization::zero);
 
     /* cross-stress term of residual */
     /*

@@ -381,7 +381,7 @@ namespace FLD
       Core::Nodes::Node* node = discret_->l_row_node(inode);
 
       // get coordinates
-      Core::LinAlg::Matrix<3, 1> xyz(true);
+      Core::LinAlg::Matrix<3, 1> xyz(Core::LinAlg::Initialization::zero);
       for (int idim = 0; idim < 3; idim++) xyz(idim, 0) = node->x()[idim];
 
       // get global ids of all dofs of the node
@@ -736,7 +736,7 @@ namespace FLD
       Core::Nodes::Node* node = discret_->l_row_node(inode);
 
       // get coordinates
-      Core::LinAlg::Matrix<3, 1> xyz(true);
+      Core::LinAlg::Matrix<3, 1> xyz(Core::LinAlg::Initialization::zero);
       for (int idim = 0; idim < 3; idim++) xyz(idim, 0) = node->x()[idim];
 
       // get global ids of all dofs of the node
@@ -786,7 +786,7 @@ namespace FLD
       Core::Nodes::Node* node = scatradiscret_->l_row_node(inode);
 
       // get coordinates
-      Core::LinAlg::Matrix<3, 1> xyz(true);
+      Core::LinAlg::Matrix<3, 1> xyz(Core::LinAlg::Initialization::zero);
       for (int idim = 0; idim < 3; idim++) xyz(idim, 0) = node->x()[idim];
 
       // get global ids of all dofs of the node
@@ -1868,7 +1868,7 @@ namespace FLD
       for (int i = 0; i < 5 * 5 * 5; ++i)
       {
         // get coordinates
-        Core::LinAlg::Matrix<3, 1> xyz(true);
+        Core::LinAlg::Matrix<3, 1> xyz(Core::LinAlg::Initialization::zero);
         for (int d = 0; d < 3; ++d) xyz(d) = interpolVec(i * 6 + d + 3);
         // determine position
         std::vector<int> loc(3);

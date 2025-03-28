@@ -1580,7 +1580,7 @@ bool Cut::ConcreteSide<probdim, sidetype, num_nodes_side, dim>::is_closer_side(
 {
   /* shoot a ray starting from the startpoint through the midpoint of this side
    * and find an intersection point with the other side */
-  Core::LinAlg::Matrix<probdim, 1> ray_point_xyz(true);
+  Core::LinAlg::Matrix<probdim, 1> ray_point_xyz(Core::LinAlg::Initialization::zero);
   // as second point on the ray we define the midpoint of this side
 
 
@@ -1590,7 +1590,7 @@ bool Cut::ConcreteSide<probdim, sidetype, num_nodes_side, dim>::is_closer_side(
    * almost parallel sides and a start-point next to the common point of the sides
    * the side-center might lead to a ray which is almost parallel to the other side */
 
-  Core::LinAlg::Matrix<dim, num_nodes_side> corner_coords_rst(true);
+  Core::LinAlg::Matrix<dim, num_nodes_side> corner_coords_rst(Core::LinAlg::Initialization::zero);
   this->local_corner_coordinates(corner_coords_rst.data());
 
   /* shrink/perturb the local coordinates around the center point with a given
@@ -1601,7 +1601,8 @@ bool Cut::ConcreteSide<probdim, sidetype, num_nodes_side, dim>::is_closer_side(
   //-----------------------------
   // get perturbed coordinates
   //-----------------------------
-  Core::LinAlg::Matrix<dim, num_nodes_side> inner_corner_coords_rst(true);
+  Core::LinAlg::Matrix<dim, num_nodes_side> inner_corner_coords_rst(
+      Core::LinAlg::Initialization::zero);
 
   // 1. transform such that coordinates center is located in the element center
   for (unsigned i = 0; i < num_nodes_side; ++i)
@@ -1628,11 +1629,11 @@ bool Cut::ConcreteSide<probdim, sidetype, num_nodes_side, dim>::is_closer_side(
    * as possible to guarantee well-conditioned systems for finding ray-cut points */
   //-----------------------------
 
-  Core::LinAlg::Matrix<probdim, 1> xyz(true);
-  Core::LinAlg::Matrix<probdim, 1> ray_dir(true);
+  Core::LinAlg::Matrix<probdim, 1> xyz(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<probdim, 1> ray_dir(Core::LinAlg::Initialization::zero);
 
   // get normal of other side at its center
-  Core::LinAlg::Matrix<probdim, 1> t1, t2, n(true);
+  Core::LinAlg::Matrix<probdim, 1> t1, t2, n(Core::LinAlg::Initialization::zero);
   other->basis_at_center(t1, t2, n);
 
 
@@ -1666,7 +1667,7 @@ bool Cut::ConcreteSide<probdim, sidetype, num_nodes_side, dim>::is_closer_side(
   /* shoot the ray and find a cutpoint with the other side's plane or curved
    * surface space */
   //-----------------------------
-  Core::LinAlg::Matrix<dim, 1> rs(true);
+  Core::LinAlg::Matrix<dim, 1> rs(Core::LinAlg::Initialization::zero);
   double line_xi = 0.0;
 
   bool cut_found = other->ray_cut(startpoint_xyz, ray_point_xyz, rs, line_xi);
@@ -1776,7 +1777,7 @@ bool Cut::ConcreteSide<probdim, sidetype, num_nodes_side, dim>::local_coordinate
 {
   std::shared_ptr<Position> pos = PositionFactory::build_position<probdim, sidetype>(*this, xyz);
   bool success = pos->compute(tol, allow_dist);
-  Core::LinAlg::Matrix<dim, 1> rs(true);
+  Core::LinAlg::Matrix<dim, 1> rs(Core::LinAlg::Initialization::zero);
   if (pos->status() == Position::position_valid) pos->local_coordinates(rs);
   // copy the position
   std::copy(rs.data(), rs.data() + dim, &rsd(0));
@@ -1819,10 +1820,10 @@ bool Cut::ConcreteSide<probdim, sidetype, num_nodes_side, dim>::ray_cut(
     const Core::LinAlg::Matrix<probdim, 1>& p1_xyz, const Core::LinAlg::Matrix<probdim, 1>& p2_xyz,
     Core::LinAlg::Matrix<dim, 1>& rs, double& line_xi)
 {
-  Core::LinAlg::Matrix<probdim, num_nodes_side> xyze_surface(true);
+  Core::LinAlg::Matrix<probdim, num_nodes_side> xyze_surface(Core::LinAlg::Initialization::zero);
   this->coordinates(xyze_surface);
 
-  Core::LinAlg::Matrix<probdim, 2> xyze_line(true);
+  Core::LinAlg::Matrix<probdim, 2> xyze_line(Core::LinAlg::Initialization::zero);
   for (unsigned i = 0; i < probdim; ++i)
   {
     xyze_line(i, 0) = p1_xyz(i);
@@ -1830,7 +1831,7 @@ bool Cut::ConcreteSide<probdim, sidetype, num_nodes_side, dim>::ray_cut(
   }
   /* The dim+1 entry corresponds to the parameter space coordinate of the
    * 1-D line element. */
-  Core::LinAlg::Matrix<dim + 1, 1> xsi(true);
+  Core::LinAlg::Matrix<dim + 1, 1> xsi(Core::LinAlg::Initialization::zero);
 
   // do not check for within-limits during the Newton-scheme, since the cut-point is
   // allowed to be not within the side and line

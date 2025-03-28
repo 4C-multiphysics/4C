@@ -112,7 +112,7 @@ namespace Core::LargeRotations
       const Core::LinAlg::Matrix<3, 1, T>& theta, Core::LinAlg::Matrix<3, 3, T>& triad)
   {
     triad.clear();
-    Core::LinAlg::Matrix<4, 1, T> quaternion(true);
+    Core::LinAlg::Matrix<4, 1, T> quaternion(Core::LinAlg::Initialization::zero);
     Core::LargeRotations::angletoquaternion(theta, quaternion);
     Core::LargeRotations::quaterniontotriad(quaternion, triad);
   }
@@ -296,7 +296,7 @@ namespace Core::LargeRotations
   template <typename T>
   Core::LinAlg::Matrix<3, 3, T> tmatrix(Core::LinAlg::Matrix<3, 1, T> theta)
   {
-    Core::LinAlg::Matrix<3, 3, T> result(true);
+    Core::LinAlg::Matrix<3, 3, T> result(Core::LinAlg::Initialization::zero);
     const T theta_abs = Core::FADUtils::vector_norm(theta);
 
     // in case of theta_abs == 0 the following computation has problems with singularities
@@ -333,7 +333,7 @@ namespace Core::LargeRotations
   template <typename T>
   Core::LinAlg::Matrix<3, 3, T> tinvmatrix(Core::LinAlg::Matrix<3, 1, T> theta)
   {
-    Core::LinAlg::Matrix<3, 3, T> result(true);
+    Core::LinAlg::Matrix<3, 3, T> result(Core::LinAlg::Initialization::zero);
     T theta_abs =
         Core::FADUtils::sqrt<T>(theta(0) * theta(0) + theta(1) * theta(1) + theta(2) * theta(2));
 

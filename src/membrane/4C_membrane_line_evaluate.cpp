@@ -72,7 +72,7 @@ int Discret::Elements::MembraneLine<distype>::evaluate_neumann(Teuchos::Paramete
   }
 
   // element geometry update - currently only material configuration
-  Core::LinAlg::Matrix<numnod_line_, noddof_> x(true);
+  Core::LinAlg::Matrix<numnod_line_, noddof_> x(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < numnod_line_; ++i)
   {
     x(i, 0) = nodes()[i]->x()[0];
@@ -81,8 +81,8 @@ int Discret::Elements::MembraneLine<distype>::evaluate_neumann(Teuchos::Paramete
   }
 
   // allocate vector for shape functions and matrix for derivatives at gp
-  Core::LinAlg::Matrix<numnod_line_, 1> shapefcts(true);
-  Core::LinAlg::Matrix<1, numnod_line_> derivs(true);
+  Core::LinAlg::Matrix<numnod_line_, 1> shapefcts(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, numnod_line_> derivs(Core::LinAlg::Initialization::zero);
 
   // integration
   for (int gp = 0; gp < intpointsline_.nquad; ++gp)
@@ -104,7 +104,7 @@ int Discret::Elements::MembraneLine<distype>::evaluate_neumann(Teuchos::Paramete
         // uniform load on reference configuration
 
         // compute dXYZ / dr
-        Core::LinAlg::Matrix<noddof_, 1> dxyzdr(true);
+        Core::LinAlg::Matrix<noddof_, 1> dxyzdr(Core::LinAlg::Initialization::zero);
         dxyzdr.multiply_tt(1.0, x, derivs, 0.0);
         // compute line increment dL
         double dL;
@@ -126,7 +126,7 @@ int Discret::Elements::MembraneLine<distype>::evaluate_neumann(Teuchos::Paramete
             if (spa_func[i].has_value() && spa_func[i].value() > 0)
             {
               // calculate reference position of GP
-              Core::LinAlg::Matrix<noddof_, 1> gp_coord(true);
+              Core::LinAlg::Matrix<noddof_, 1> gp_coord(Core::LinAlg::Initialization::zero);
               gp_coord.multiply_tn(1.0, x, shapefcts, 0.0);
 
               // write coordinates in another datatype

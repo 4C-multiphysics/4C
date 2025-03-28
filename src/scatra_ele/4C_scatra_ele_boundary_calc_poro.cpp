@@ -52,8 +52,8 @@ Discret::Elements::ScaTraEleBoundaryCalcPoro<distype, probdim>::ScaTraEleBoundar
     const int numdofpernode, const int numscal, const std::string& disname)
     : Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::ScaTraEleBoundaryCalc(
           numdofpernode, numscal, disname),
-      eporosity_(true),
-      eprenp_(true),
+      eporosity_(Core::LinAlg::Initialization::zero),
+      eprenp_(Core::LinAlg::Initialization::zero),
       isnodalporosity_(false)
 {
   return;
@@ -98,7 +98,7 @@ int Discret::Elements::ScaTraEleBoundaryCalcPoro<distype, probdim>::evaluate_act
 
       // extract local values from the global vector
       std::vector<Core::LinAlg::Matrix<nen_, 1>> ephinp(
-          my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+          my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
       Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phinp, ephinp, la[0].lm_);
 
       // get number of dofset associated with velocity related dofs
@@ -119,7 +119,7 @@ int Discret::Elements::ScaTraEleBoundaryCalcPoro<distype, probdim>::evaluate_act
           lmvel[inode * nsd_ele_ + idim] = la[ndsvel].lm_[inode * numveldofpernode + idim];
 
       // we deal with a nsd_-dimensional flow field
-      Core::LinAlg::Matrix<nsd_, nen_> econvel(true);
+      Core::LinAlg::Matrix<nsd_, nen_> econvel(Core::LinAlg::Initialization::zero);
 
       // extract local values of convective velocity field from global state vector
       Core::FE::extract_my_values<Core::LinAlg::Matrix<nsd_, nen_>>(*convel, econvel, lmvel);

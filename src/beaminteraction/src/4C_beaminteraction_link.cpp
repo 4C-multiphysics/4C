@@ -27,8 +27,6 @@ BeamInteraction::BeamLink::BeamLink()
       isinit_(false),
       issetup_(false),
       id_(-1),
-      bspotpos1_(true),
-      bspotpos2_(true),
       linkertype_(Inpar::BeamInteraction::linkertype_arbitrary),
       timelinkwasset_(-1.0),
       reflength_(-1.0)

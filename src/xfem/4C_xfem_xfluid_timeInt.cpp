@@ -1704,14 +1704,14 @@ bool XFEM::XFluidTimeInt::special_check_interface_tips(
 
   //------------------------------------
 
-  Core::LinAlg::Matrix<3, 1> n_coord_old(true);
+  Core::LinAlg::Matrix<3, 1> n_coord_old(Core::LinAlg::Initialization::zero);
   n_old->coordinates(&n_coord_old(0, 0));
 
-  Core::LinAlg::Matrix<3, 1> n_coord_new(true);
+  Core::LinAlg::Matrix<3, 1> n_coord_new(Core::LinAlg::Initialization::zero);
   n_new->coordinates(&n_coord_new(0, 0));
 
   // check if moving node (ALE case)
-  Core::LinAlg::Matrix<3, 1> n_diff(true);
+  Core::LinAlg::Matrix<3, 1> n_diff(Core::LinAlg::Initialization::zero);
   n_diff.update(1.0, n_coord_new, -1.0, n_coord_old);
 
   // TODO: for ALE we have to check whether the path of the point crosses at least one space-time
@@ -1944,9 +1944,9 @@ bool XFEM::XFluidTimeInt::within_space_time_side(
     //------------------------------------------------------------------
     // get normal vector on side at new interface position at center of side
 
-    Core::LinAlg::Matrix<3, 1> normal(true);
+    Core::LinAlg::Matrix<3, 1> normal(Core::LinAlg::Initialization::zero);
 
-    Core::LinAlg::Matrix<2, 1> xi_side(true);
+    Core::LinAlg::Matrix<2, 1> xi_side(Core::LinAlg::Initialization::zero);
 
     if (numnode_side == 3)
     {
@@ -1962,11 +1962,12 @@ bool XFEM::XFluidTimeInt::within_space_time_side(
       FOUR_C_THROW("unknown side type with {} nodes", numnode_side);
 
     // Initialization
-    Core::LinAlg::Matrix<2, numnode_side> deriv(true);  // derivatives dr, ds
+    Core::LinAlg::Matrix<2, numnode_side> deriv(
+        Core::LinAlg::Initialization::zero);  // derivatives dr, ds
 
-    Core::LinAlg::Matrix<3, 2> derxy(true);
-    Core::LinAlg::Matrix<3, 1> dx_dr(true);
-    Core::LinAlg::Matrix<3, 1> dx_ds(true);
+    Core::LinAlg::Matrix<3, 2> derxy(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> dx_dr(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> dx_ds(Core::LinAlg::Initialization::zero);
 
     // get current values
     Core::FE::shape_function_2d_deriv1(deriv, xi_side(0), xi_side(1), side_distype);
@@ -2018,7 +2019,9 @@ bool XFEM::XFluidTimeInt::within_space_time_side(
   within_space_time_side = pos->compute();
 
 #ifdef DEBUG_TIMINT
-  Core::LinAlg::Matrix<3, 1> rst(true);  // local coordinates w.r.t space time element (r,s,t !!!)
+  Core::LinAlg::Matrix<3, 1> rst(
+      Core::LinAlg::Initialization::zero);  // local coordinates w.r.t space time element (r,s,t
+                                            // !!!)
   pos->local_coordinates(rst);
 
   if (within_space_time_side)
@@ -2049,7 +2052,7 @@ bool XFEM::XFluidTimeInt::check_st_side_volume(
   Core::FE::IntPointsAndWeights<nsd> intpoints_stab(
       Discret::Elements::DisTypeToStabGaussRule<space_time_distype>::rule);
 
-  Core::LinAlg::Matrix<nsd, 1> xsi(true);
+  Core::LinAlg::Matrix<nsd, 1> xsi(Core::LinAlg::Initialization::zero);
 
   // coordinates of the current integration point
   const double* gpcoord = (intpoints_stab.ip().qxg)[0];
@@ -2059,8 +2062,8 @@ bool XFEM::XFluidTimeInt::check_st_side_volume(
   }
 
 
-  Core::LinAlg::Matrix<nsd, numnode_space_time> deriv(true);
-  Core::LinAlg::Matrix<nsd, nsd> xjm(true);
+  Core::LinAlg::Matrix<nsd, numnode_space_time> deriv(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, nsd> xjm(Core::LinAlg::Initialization::zero);
 
   Core::FE::shape_function_deriv1<space_time_distype>(xsi, deriv);
 

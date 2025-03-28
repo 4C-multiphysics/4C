@@ -407,7 +407,7 @@ double Mat::Utils::Muscle::fiber_stretch(
     const Core::LinAlg::Matrix<3, 3>& C, const Core::LinAlg::Matrix<3, 3>& M)
 {
   // product C^T*M
-  Core::LinAlg::Matrix<3, 3> transpCM(false);
+  Core::LinAlg::Matrix<3, 3> transpCM(Core::LinAlg::Initialization::uninitialized);
   transpCM.multiply_tn(C, M);  // C^TM = C^T*M
 
   // stretch in fibre direction lambdaM

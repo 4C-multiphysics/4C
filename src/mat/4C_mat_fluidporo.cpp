@@ -415,8 +415,8 @@ namespace Mat::FLUIDPORO
 
       reaction_tensor.clear();
 
-      Core::LinAlg::Matrix<dim, dim> permeability_tensor(true);
-      Core::LinAlg::Matrix<dim, dim> structure_tensor(true);
+      Core::LinAlg::Matrix<dim, dim> permeability_tensor(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<dim, dim> structure_tensor(Core::LinAlg::Initialization::zero);
       create_structure_tensor_from_vector<dim>(
           anisotropic_permeability_directions[0], structure_tensor);
 
@@ -492,8 +492,8 @@ namespace Mat::FLUIDPORO
 
       reaction_tensor.clear();
 
-      Core::LinAlg::Matrix<3, 3> permeability_tensor(true);
-      Core::LinAlg::Matrix<3, 3> structure_tensor(true);
+      Core::LinAlg::Matrix<3, 3> permeability_tensor(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<3, 3> structure_tensor(Core::LinAlg::Initialization::zero);
 
       for (int dim = 0; dim < 3; ++dim)
       {
@@ -606,8 +606,8 @@ namespace Mat::FLUIDPORO
 
       reaction_tensor.clear();
 
-      Core::LinAlg::Matrix<dim, dim> permeability_tensor(true);
-      Core::LinAlg::Matrix<dim, dim> structure_tensor(true);
+      Core::LinAlg::Matrix<dim, dim> permeability_tensor(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<dim, dim> structure_tensor(Core::LinAlg::Initialization::zero);
 
       for (unsigned int i = 0; i < dim; ++i)
       {

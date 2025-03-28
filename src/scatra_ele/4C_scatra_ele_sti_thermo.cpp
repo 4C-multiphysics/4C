@@ -175,7 +175,7 @@ template <Core::FE::CellType distype>
 Discret::Elements::ScaTraEleSTIThermo<distype>::ScaTraEleSTIThermo(
     const int& numscal  //!< number of transported scalars
     )
-    : etempnp_(true),
+    : etempnp_(Core::LinAlg::Initialization::zero),
 
       // initialize thermo diffusion manager
       diffmanagerstithermo_(std::make_shared<ScaTraEleDiffManagerSTIThermo>(numscal))

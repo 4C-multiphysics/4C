@@ -242,7 +242,7 @@ void Cut::Impl::SimplePointGraph2D::correct_rotation_direction(
     const Side* side, std::vector<Cycle>& cycles)
 {
   Core::LinAlg::Matrix<2, 1> rs = Core::FE::get_local_center_position<2>(side->shape());
-  Core::LinAlg::Matrix<3, 1> normal_side(false);
+  Core::LinAlg::Matrix<3, 1> normal_side(Core::LinAlg::Initialization::uninitialized);
 
   Core::LinAlg::SerialDenseMatrix xyze_side(3, side->num_nodes());
   side->coordinates(xyze_side);

@@ -421,9 +421,9 @@ namespace GEOMETRYPAIR
     FaceElementTemplateExtendedVolume(
         const std::shared_ptr<const Core::Elements::Element>& core_element)
         : base_class(core_element),
-          surface_dof_lid_map_(true),
-          face_to_volume_coordinate_axis_map_(true),
-          face_to_volume_coordinate_axis_factor_(true),
+          surface_dof_lid_map_(Core::LinAlg::Initialization::zero),
+          face_to_volume_coordinate_axis_map_(Core::LinAlg::Initialization::zero),
+          face_to_volume_coordinate_axis_factor_(Core::LinAlg::Initialization::zero),
           third_direction_(-1),
           third_direction_factor_(0) {};
 

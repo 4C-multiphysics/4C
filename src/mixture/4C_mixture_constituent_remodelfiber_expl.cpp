@@ -31,14 +31,14 @@ namespace
 {
   [[nodiscard]] Core::LinAlg::Matrix<3, 3> evaluate_c(const Core::LinAlg::Matrix<3, 3>& F)
   {
-    Core::LinAlg::Matrix<3, 3> C(false);
+    Core::LinAlg::Matrix<3, 3> C(Core::LinAlg::Initialization::uninitialized);
     C.multiply_tn(F, F);
     return C;
   }
 
   [[nodiscard]] Core::LinAlg::Matrix<3, 3> evaluatei_cext(const Core::LinAlg::Matrix<3, 3>& iFext)
   {
-    Core::LinAlg::Matrix<3, 3> iCext(false);
+    Core::LinAlg::Matrix<3, 3> iCext(Core::LinAlg::Initialization::uninitialized);
     iCext.multiply_nt(iFext, iFext);
     return iCext;
   }
@@ -242,7 +242,7 @@ bool Mixture::MixtureConstituentRemodelFiberExpl::evaluate_output_data(
 Core::LinAlg::Matrix<6, 1> Mixture::MixtureConstituentRemodelFiberExpl::evaluate_current_p_k2(
     int gp, int eleGID) const
 {
-  Core::LinAlg::Matrix<6, 1> S_stress(false);
+  Core::LinAlg::Matrix<6, 1> S_stress(Core::LinAlg::Initialization::uninitialized);
   const double fiber_pk2 = remodel_fiber_[gp].evaluate_current_fiber_pk2_stress();
 
   S_stress.update(fiber_pk2, anisotropy_extension_.get_structural_tensor_stress(gp, 0));
@@ -256,7 +256,7 @@ Core::LinAlg::Matrix<6, 6> Mixture::MixtureConstituentRemodelFiberExpl::evaluate
   const double dPK2dlambdafsq =
       remodel_fiber_[gp].evaluate_d_current_fiber_pk2_stress_d_lambda_f_sq();
 
-  Core::LinAlg::Matrix<6, 6> cmat(false);
+  Core::LinAlg::Matrix<6, 6> cmat(Core::LinAlg::Initialization::uninitialized);
   cmat.multiply_nt(2.0 * dPK2dlambdafsq, anisotropy_extension_.get_structural_tensor_stress(gp, 0),
       anisotropy_extension_.get_structural_tensor_stress(gp, 0));
   return cmat;

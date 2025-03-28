@@ -52,7 +52,8 @@ namespace
       const Core::LinAlg::Matrix<3, 3>& deformation_gradient,
       const Core::LinAlg::Matrix<3, 3>& prestretch_tensor)
   {
-    Core::LinAlg::Matrix<3, 3> elastic_deformation_gradient(false);
+    Core::LinAlg::Matrix<3, 3> elastic_deformation_gradient(
+        Core::LinAlg::Initialization::uninitialized);
     elastic_deformation_gradient.multiply_nn(deformation_gradient, prestretch_tensor);
 
     return elastic_deformation_gradient;
@@ -81,9 +82,9 @@ namespace
     pre_deformation_gradinet.multiply_nn(deformation_gradient, prestretch_tensor);
 
     // Singular value decomposition of F = RU
-    Core::LinAlg::Matrix<3, 3> Q(true);
-    Core::LinAlg::Matrix<3, 3> S(true);
-    Core::LinAlg::Matrix<3, 3> VT(true);
+    Core::LinAlg::Matrix<3, 3> Q(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 3> S(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 3> VT(Core::LinAlg::Initialization::zero);
 
     Core::LinAlg::svd<3, 3>(pre_deformation_gradinet, Q, S, VT);
 
@@ -251,8 +252,8 @@ void Mat::IterativePrestressMaterial::evaluate(const Core::LinAlg::Matrix<3, 3>*
   const Core::LinAlg::Matrix<6, 1> elastic_gl_strain =
       get_green_lagrange_strain(elastic_deformation_gradient);
 
-  Core::LinAlg::Matrix<6, 1> elastic_stress(true);
-  Core::LinAlg::Matrix<6, 6> elastic_cmat(true);
+  Core::LinAlg::Matrix<6, 1> elastic_stress(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<6, 6> elastic_cmat(Core::LinAlg::Initialization::zero);
 
 
   // evaluate child material

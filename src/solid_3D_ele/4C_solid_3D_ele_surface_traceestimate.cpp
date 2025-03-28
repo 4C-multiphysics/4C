@@ -127,8 +127,8 @@ void Discret::Elements::SolidSurface::trace_estimate_vol_matrix(
     const Core::LinAlg::Matrix<3, 1> xi(ip.ip().qxg[gp], false);
     strains<dt_vol>(xrefe, xcurr, xi, jac, defgrd, glstrain, rcg, bop, N_XYZ);
 
-    Core::LinAlg::Matrix<6, 6> cmat(true);
-    Core::LinAlg::Matrix<6, 1> stress(true);
+    Core::LinAlg::Matrix<6, 6> cmat(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<6, 1> stress(Core::LinAlg::Initialization::zero);
     Teuchos::ParameterList params;
     if (not parent_scalar.empty())
     {
@@ -192,8 +192,8 @@ void Discret::Elements::SolidSurface::trace_estimate_surf_matrix(
     for (int i = 0; i < 3; ++i) xi(i) = pqxg(0, i);
     strains<dt_vol>(xrefe, xcurr, xi, jac, defgrd, glstrain, rcg, bop, N_XYZ);
 
-    Core::LinAlg::Matrix<6, 6> cmat(true);
-    Core::LinAlg::Matrix<6, 1> stress(true);
+    Core::LinAlg::Matrix<6, 6> cmat(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<6, 1> stress(Core::LinAlg::Initialization::zero);
     Teuchos::ParameterList params;
     if (not parent_scalar.empty())
     {

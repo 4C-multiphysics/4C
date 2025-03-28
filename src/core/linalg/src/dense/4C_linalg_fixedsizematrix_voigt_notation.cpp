@@ -56,7 +56,7 @@ void Core::LinAlg::Voigt::fourth_order_identity_matrix(Core::LinAlg::Matrix<6, 6
 Core::LinAlg::Matrix<6, 6> Core::LinAlg::Voigt::modify_voigt_representation(
     const Core::LinAlg::Matrix<6, 6>& input, const double scalar_row, const double scalar_col)
 {
-  Core::LinAlg::Matrix<6, 6> output(true);
+  Core::LinAlg::Matrix<6, 6> output(Core::LinAlg::Initialization::zero);
 
   output(0, 0) = 1.0 * input(0, 0) * 1.0;
   output(0, 1) = 1.0 * input(0, 1) * 1.0;
@@ -154,7 +154,7 @@ void Core::LinAlg::Voigt::VoigtUtils<type>::power_of_symmetric_tensor(const unsi
     // unscale the off-diagonal values
     unscale_off_diagonal_vals(strain_pow);
 
-    Core::LinAlg::Matrix<6, 1> prod(false);
+    Core::LinAlg::Matrix<6, 1> prod(Core::LinAlg::Initialization::uninitialized);
 
     for (unsigned p = 1; p < pow; ++p)
     {

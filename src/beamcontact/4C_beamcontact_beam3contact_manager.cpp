@@ -1052,7 +1052,7 @@ void CONTACT::Beam3cmanager::set_state(std::map<int, Core::LinAlg::Matrix<3, 1>>
       // get GIDs of this node's degrees of freedom
       std::vector<int> dofnode = bt_sol_discret().dof(node);
 
-      Core::LinAlg::Matrix<3, 1> currtan(true);
+      Core::LinAlg::Matrix<3, 1> currtan(Core::LinAlg::Initialization::zero);
       for (int i = 0; i < numnodes_;
           i++)  // TODO for now, use number of centerline nodes numnodes_ (=2) (no matter how many
                 // nodes the function call node->Elements()[0]->num_node() would tell you)
@@ -2694,9 +2694,9 @@ void CONTACT::Beam3cmanager::gmsh_output(const Core::LinAlg::Vector<double>& dis
 
         for (int j = 0; j < (int)r1_vec.size(); j++)
         {
-          Core::LinAlg::Matrix<3, 1> normal(true);
-          Core::LinAlg::Matrix<3, 1> r1(true);
-          Core::LinAlg::Matrix<3, 1> r2(true);
+          Core::LinAlg::Matrix<3, 1> normal(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<3, 1> r1(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<3, 1> r2(Core::LinAlg::Initialization::zero);
 
           double fac = 1.0;
           double color = 1.0;
@@ -5053,9 +5053,9 @@ bool CONTACT::Beam3cmanager::close_midpoint_distance(const Core::Elements::Eleme
 {
   if (sphericalsearchradius == -1.0) return true;
 
-  Core::LinAlg::Matrix<3, 1> midpos1(true);
-  Core::LinAlg::Matrix<3, 1> midpos2(true);
-  Core::LinAlg::Matrix<3, 1> diffvector(true);
+  Core::LinAlg::Matrix<3, 1> midpos1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> midpos2(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> diffvector(Core::LinAlg::Initialization::zero);
 
   // get midpoint position of element 1
   if (ele1->num_node() == 2)  // 2-noded beam element

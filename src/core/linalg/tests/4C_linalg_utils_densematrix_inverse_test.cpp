@@ -58,7 +58,7 @@ namespace
 
   TEST(LinalgDenseMatrixInverseTest, 2x2InverseSingular)
   {
-    Core::LinAlg::Matrix<2, 2, double> A_singular(true);
+    Core::LinAlg::Matrix<2, 2, double> A_singular(Core::LinAlg::Initialization::zero);
     A_singular(0, 0) = 1.0;
     EXPECT_ANY_THROW(Core::LinAlg::inverse(A_singular));
   }
@@ -81,7 +81,7 @@ namespace
 
   TEST(LinalgDenseMatrixInverseTest, 2x2InverseDoNotThrowErrorOnZeroDeterminantSingular)
   {
-    Core::LinAlg::Matrix<2, 2, double> A_singular(true);
+    Core::LinAlg::Matrix<2, 2, double> A_singular(Core::LinAlg::Initialization::zero);
     A_singular(0, 0) = 1.0;
     EXPECT_TRUE(
         not Core::LinAlg::inverse_do_not_throw_error_on_zero_determinant(A_singular, 1e-12));
@@ -143,7 +143,7 @@ namespace
 
   TEST(LinalgDenseMatrixInverseTest, 3x3InverseSingular)
   {
-    Core::LinAlg::Matrix<3, 3, double> A_singular(true);
+    Core::LinAlg::Matrix<3, 3, double> A_singular(Core::LinAlg::Initialization::zero);
     A_singular(0, 0) = 1.0;
     A_singular(1, 1) = 1.0;
     EXPECT_ANY_THROW(Core::LinAlg::inverse(A_singular));
@@ -177,7 +177,7 @@ namespace
 
   TEST(LinalgDenseMatrixInverseTest, 3x3InverseDoNotThrowErrorOnZeroDeterminantSingular)
   {
-    Core::LinAlg::Matrix<3, 3, double> A_singular(true);
+    Core::LinAlg::Matrix<3, 3, double> A_singular(Core::LinAlg::Initialization::zero);
     A_singular(0, 0) = 1.0;
     A_singular(1, 1) = 1.0;
     EXPECT_TRUE(
@@ -266,7 +266,7 @@ namespace
 
   TEST(LinalgDenseMatrixInverseTest, 4x4InverseSingular)
   {
-    Core::LinAlg::Matrix<4, 4, double> A_singular(true);
+    Core::LinAlg::Matrix<4, 4, double> A_singular(Core::LinAlg::Initialization::zero);
     A_singular(0, 0) = 1.0;
     A_singular(1, 1) = 1.0;
     A_singular(2, 2) = 1.0;
@@ -315,7 +315,7 @@ namespace
 
   TEST(LinalgDenseMatrixInverseTest, 4x4InverseDoNotThrowErrorOnZeroDeterminantSingular)
   {
-    Core::LinAlg::Matrix<4, 4, double> A_singular(true);
+    Core::LinAlg::Matrix<4, 4, double> A_singular(Core::LinAlg::Initialization::zero);
     A_singular(0, 0) = 1.0;
     A_singular(1, 1) = 1.0;
     A_singular(2, 2) = 1.0;
@@ -325,9 +325,9 @@ namespace
 
   TEST(LinalgDenseMatrixInverseTest, 4x4InverseDoNotThrowErrorOnZeroDeterminantScaled)
   {
-    Core::LinAlg::Matrix<4, 4, double> A(true);
-    Core::LinAlg::Matrix<4, 1, double> b(true);
-    Core::LinAlg::Matrix<4, 1, double> x(true);
+    Core::LinAlg::Matrix<4, 4, double> A(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<4, 1, double> b(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<4, 1, double> x(Core::LinAlg::Initialization::zero);
     const double eps_det = 1e-10;
     const double eps_result = 1e-12;
 

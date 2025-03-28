@@ -253,7 +253,9 @@ namespace Discret
     {
      public:
       ScaTraEleDiffManagerLsReinit(int numscal)
-          : ScaTraEleDiffManager(numscal), diffdirectiontensor_(true), have_cross_wind_diff_(false)
+          : ScaTraEleDiffManager(numscal),
+            diffdirectiontensor_(Core::LinAlg::Initialization::zero),
+            have_cross_wind_diff_(false)
       {
         return;
       }

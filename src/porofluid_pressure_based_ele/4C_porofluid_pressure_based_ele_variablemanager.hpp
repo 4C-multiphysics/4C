@@ -527,11 +527,11 @@ namespace Discret
             : VariableManagerDecorator<nsd, nen>(varmanager),
               ndsvel_(ndsvel),
               ndsdisp_(ndsdisp),
-              econvelnp_(true),  // initialized to zero
-              edispnp_(true),    // initialized to zero
+              econvelnp_(Core::LinAlg::Initialization::zero),  // initialized to zero
+              edispnp_(Core::LinAlg::Initialization::zero),    // initialized to zero
               divconvelint_(0.0),
-              convelint_(true),
-              dispint_(true) {};
+              convelint_(Core::LinAlg::Initialization::zero),
+              dispint_(Core::LinAlg::Initialization::zero) {};
 
         //! extract variables related to structure coupling
         //! dofsetnum is the number of the porofluid-dofset on the current element

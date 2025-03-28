@@ -1069,8 +1069,8 @@ namespace Coupling::VolMortar
 
           double detg = 0.0;
 
-          Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-          Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+          Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
           Core::LinAlg::Matrix<nnodes, nnodes> ae;
 
           Core::LinAlg::Matrix<nnodes, 1> stdval;
@@ -1151,8 +1151,8 @@ namespace Coupling::VolMortar
           double detg = 0.0;
 
           // compute entries to bi-ortho matrices me/de with Gauss quadrature
-          Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-          Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+          Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
           Core::LinAlg::Matrix<nnodes, nnodes> ae;
 
           for (int i = 0; i < intpoints.ip().nquad; ++i)
@@ -1244,8 +1244,8 @@ namespace Coupling::VolMortar
 
           // establish fundamental data
           double detg = 0.0;
-          Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-          Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+          Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
           Core::LinAlg::Matrix<nnodes, nnodes> ae;
 
           for (int i = 0; i < intpoints.ip().nquad; ++i)
@@ -1321,8 +1321,8 @@ namespace Coupling::VolMortar
           double detg = 0.0;
 
           // compute entries to bi-ortho matrices me/de with Gauss quadrature
-          Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-          Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+          Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
           Core::LinAlg::Matrix<nnodes, nnodes> ae;
 
           for (int i = 0; i < intpoints.ip().nquad; ++i)
@@ -1406,8 +1406,8 @@ namespace Coupling::VolMortar
           double detg = 0.0;
 
           // compute entries to bi-ortho matrices me/de with Gauss quadrature
-          Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-          Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+          Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
           Core::LinAlg::Matrix<nnodes, nnodes> ae;
 
           for (int i = 0; i < intpoints.ip().nquad; ++i)
@@ -1496,8 +1496,8 @@ namespace Coupling::VolMortar
           double detg = 0.0;
 
           // compute entries to bi-ortho matrices me/de with Gauss quadrature
-          Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-          Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+          Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
           Core::LinAlg::Matrix<nnodes, nnodes> ae;
 
           for (int i = 0; i < intpoints.ip().nquad; ++i)

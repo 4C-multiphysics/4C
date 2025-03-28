@@ -453,7 +453,7 @@ void CONTACT::IntegratorNitsche::so_ele_cauchy(Mortar::Element& moEle, double* b
 {
   if constexpr (dim == 3)
   {
-    Core::LinAlg::Matrix<dim, 1> pxsi(true);
+    Core::LinAlg::Matrix<dim, 1> pxsi(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<dim, dim> derivtravo_slave;
     CONTACT::Utils::map_gp_to_parent<dim>(moEle, boundary_gpcoord, gp_wgt, pxsi, derivtravo_slave);
 

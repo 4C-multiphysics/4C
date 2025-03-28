@@ -296,7 +296,7 @@ namespace ScaTra
       Core::Nodes::Node* node = discret_->l_row_node(inode);
 
       // get coordinates
-      Core::LinAlg::Matrix<3, 1> xyz(true);
+      Core::LinAlg::Matrix<3, 1> xyz(Core::LinAlg::Initialization::zero);
       for (int idim = 0; idim < 3; idim++) xyz(idim, 0) = node->x()[idim];
 
       // get global ids of all dofs of the node
@@ -633,7 +633,7 @@ namespace ScaTra
         Core::Nodes::Node* node = discret_->l_row_node(inode);
 
         // get coordinates
-        Core::LinAlg::Matrix<3, 1> xyz(true);
+        Core::LinAlg::Matrix<3, 1> xyz(Core::LinAlg::Initialization::zero);
         for (int idim = 0; idim < 3; idim++) xyz(idim, 0) = node->x()[idim];
 
         // get global ids of all dofs of the node
@@ -752,7 +752,7 @@ namespace ScaTra
         Core::Nodes::Node* node = discret_->l_row_node(inode);
 
         // get coordinates
-        Core::LinAlg::Matrix<3, 1> xyz(true);
+        Core::LinAlg::Matrix<3, 1> xyz(Core::LinAlg::Initialization::zero);
         for (int idim = 0; idim < 3; idim++) xyz(idim, 0) = node->x()[idim];
 
         // get global ids of all dofs of the node

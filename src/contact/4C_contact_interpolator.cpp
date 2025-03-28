@@ -1592,7 +1592,7 @@ void NTS::Interpolator::deriv_xi_gp_3d(Mortar::Element& sele, Mortar::Element& m
     }
 
   // build 3x3 factor matrix L
-  Core::LinAlg::Matrix<3, 3> lmatrix(true);
+  Core::LinAlg::Matrix<3, 3> lmatrix(Core::LinAlg::Initialization::zero);
   for (int k = 0; k < 3; ++k) lmatrix(k, 2) = -sgpn[k];
   for (int z = 0; z < nummnode; ++z)
     for (int k = 0; k < 3; ++k)

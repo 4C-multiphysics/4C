@@ -708,8 +708,8 @@ namespace Mortar
           // compute entries to bi-ortho matrices me/de with Gauss quadrature
           Mortar::ElementIntegrator integrator(ele.shape());
 
-          Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-          Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+          Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
           Core::LinAlg::Matrix<nnodes, nnodes> ae;
 
           Core::LinAlg::Matrix<nnodes, 1> stdval;
@@ -771,7 +771,7 @@ namespace Mortar
 
           // compute entries to bi-ortho matrices me/de with Gauss quadrature
           Mortar::ElementIntegrator integrator(ele.shape());
-          Core::LinAlg::Matrix<nnodes, nnodes> me(true);
+          Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
           Core::LinAlg::SerialDenseMatrix de(nnodes, nnodes, true);
           Core::LinAlg::SerialDenseMatrix ae(nnodes, nnodes);
 
@@ -1469,8 +1469,8 @@ namespace Mortar
             // compute entries to bi-ortho matrices me/de with Gauss quadrature
             Mortar::ElementIntegrator integrator(ele.shape());
 
-            Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-            Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+            Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+            Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
 
             for (int i = 0; i < integrator.n_gp(); ++i)
             {
@@ -1503,7 +1503,7 @@ namespace Mortar
           evaluate_shape_displ(xi, stdval, ele, false);
 
           // evaluate dual shape functions
-          Core::LinAlg::Matrix<nnodes, 1> valtemp(true);
+          Core::LinAlg::Matrix<nnodes, 1> valtemp(Core::LinAlg::Initialization::zero);
           for (int i = 0; i < nnodes; ++i)
             for (int j = 0; j < nnodes; ++j) valtemp(i) += ae(i, j) * stdval(j);
 
@@ -1532,8 +1532,8 @@ namespace Mortar
 
           // compute entries to bi-ortho matrices me/de with Gauss quadrature
           Mortar::ElementIntegrator integrator(ele.shape());
-          Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-          Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+          Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
           Core::LinAlg::Matrix<nnodes, nnodes> ae;
 
           for (int i = 0; i < integrator.n_gp(); ++i)
@@ -1583,8 +1583,8 @@ namespace Mortar
 
           // compute entries to bi-ortho matrices me/de with Gauss quadrature
           Mortar::ElementIntegrator integrator(ele.shape());
-          Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-          Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+          Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
           Core::LinAlg::Matrix<nnodes, nnodes> ae;
 
           for (int i = 0; i < integrator.n_gp(); ++i)
@@ -1634,8 +1634,8 @@ namespace Mortar
 
           // compute entries to bi-ortho matrices me/de with Gauss quadrature
           Mortar::ElementIntegrator integrator(ele.shape());
-          Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-          Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+          Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
           Core::LinAlg::Matrix<nnodes, nnodes> ae;
 
           for (int i = 0; i < integrator.n_gp(); ++i)
@@ -1685,7 +1685,7 @@ namespace Mortar
 
           // compute entries to bi-ortho matrices me/de with Gauss quadrature
           Mortar::ElementIntegrator integrator(ele.shape());
-          Core::LinAlg::Matrix<nnodes, nnodes> me(true);
+          Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
           Core::LinAlg::SerialDenseMatrix de(nnodes, nnodes, true);
 
           for (int i = 0; i < integrator.n_gp(); ++i)
@@ -1755,7 +1755,7 @@ namespace Mortar
 
           // compute entries to bi-ortho matrices me/de with Gauss quadrature
           Mortar::ElementIntegrator integrator(ele.shape());
-          Core::LinAlg::Matrix<nnodes, nnodes> me(true);
+          Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
           Core::LinAlg::SerialDenseMatrix de(nnodes, nnodes, true);
 
           for (int i = 0; i < integrator.n_gp(); ++i)
@@ -1824,7 +1824,7 @@ namespace Mortar
 
           // compute entries to bi-ortho matrices me/de with Gauss quadrature
           Mortar::ElementIntegrator integrator(ele.shape());
-          Core::LinAlg::Matrix<nnodes, nnodes> me(true);
+          Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
           Core::LinAlg::SerialDenseMatrix de(nnodes, nnodes, true);
 
           for (int i = 0; i < integrator.n_gp(); ++i)
@@ -2004,8 +2004,8 @@ namespace Mortar
           // compute entries to bi-ortho matrices me/de with Gauss quadrature
           Mortar::ElementIntegrator integrator(shape);
 
-          Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-          Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+          Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
           Core::LinAlg::Matrix<nnodes, nnodes> ae;
 
           for (int i = 0; i < integrator.n_gp(); ++i)
@@ -2032,7 +2032,7 @@ namespace Mortar
           mortar_nurbs_shape_function_1d(funct, ele, xi0, Core::FE::CellType::nurbs3);
 
           // evaluate dual shape functions
-          Core::LinAlg::Matrix<nnodes, 1> valtemp(true);
+          Core::LinAlg::Matrix<nnodes, 1> valtemp(Core::LinAlg::Initialization::zero);
 
           for (int i = 0; i < nnodes; ++i)
             for (int j = 0; j < nnodes; ++j) valtemp(i) += ae(i, j) * funct(j);
@@ -2075,8 +2075,8 @@ namespace Mortar
           // compute entries to bi-ortho matrices me/de with Gauss quadrature
           Mortar::ElementIntegrator integrator(shape);
 
-          Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-          Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+          Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
           Core::LinAlg::Matrix<nnodes, nnodes> ae;
 
           for (int i = 0; i < integrator.n_gp(); ++i)
@@ -2099,7 +2099,7 @@ namespace Mortar
           Core::LinAlg::invert_and_multiply_by_cholesky<nnodes>(me, de, ae);
 
           // evaluate dual shape functions
-          Core::LinAlg::Matrix<nnodes, 1> valtemp(true);
+          Core::LinAlg::Matrix<nnodes, 1> valtemp(Core::LinAlg::Initialization::zero);
 
           // evaluate dual shape functions at loc. coord. xi
           // need standard shape functions at xi first

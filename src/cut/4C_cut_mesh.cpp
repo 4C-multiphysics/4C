@@ -2229,7 +2229,8 @@ void Cut::Mesh::dump_gmsh_volume_cells(std::string name)
 
         if (facet->on_cut_side())
         {
-          Core::LinAlg::Matrix<3, 1> facet_triang_midpoint_coord(true);
+          Core::LinAlg::Matrix<3, 1> facet_triang_midpoint_coord(
+              Core::LinAlg::Initialization::zero);
 
           if (facet->is_triangulated())
           {

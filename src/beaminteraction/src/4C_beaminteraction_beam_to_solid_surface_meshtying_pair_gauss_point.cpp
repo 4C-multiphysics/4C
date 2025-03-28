@@ -57,7 +57,8 @@ void BeamInteraction::BeamToSolidSurfaceMeshtyingPairGaussPoint<Beam,
   Core::LinAlg::Matrix<3, 1, double> dr_beam_ref;
   Core::LinAlg::Matrix<3, 1, scalar_type> coupling_vector;
   Core::LinAlg::Matrix<3, 1, scalar_type> force;
-  Core::LinAlg::Matrix<Beam::n_dof_ + Surface::n_dof_, 1, scalar_type> force_pair(true);
+  Core::LinAlg::Matrix<Beam::n_dof_ + Surface::n_dof_, 1, scalar_type> force_pair(
+      Core::LinAlg::Initialization::zero);
 
   // Initialize scalar variables.
   double segment_jacobian = 0.0;

@@ -340,10 +340,10 @@ int Discret::Elements::FluidEleCalcHDG<distype>::compute_error(Discret::Elements
   }
 
   // analytic solution
-  Core::LinAlg::Matrix<nsd_, 1> u(true);
+  Core::LinAlg::Matrix<nsd_, 1> u(Core::LinAlg::Initialization::zero);
   double p = 0.0;
-  Core::LinAlg::Matrix<nsd_, nsd_> dervel(true);
-  Core::LinAlg::Matrix<nsd_, 1> xyz(true);
+  Core::LinAlg::Matrix<nsd_, nsd_> dervel(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, 1> xyz(Core::LinAlg::Initialization::zero);
 
   const auto calcerr =
       Teuchos::getIntegralValue<Inpar::FLUID::CalcError>(params, "calculate error");
@@ -441,12 +441,13 @@ int Discret::Elements::FluidEleCalcHDG<distype>::project_field(Discret::Elements
       // jfac is a vector containing the jacobian times the weight of the quadrature points
       const double fac = shapes_->jfac(q);
       // xyz is a vector containing the coordinates of the quadrature points in real coordinates
-      Core::LinAlg::Matrix<nsd_, 1> xyz(false);
+      Core::LinAlg::Matrix<nsd_, 1> xyz(Core::LinAlg::Initialization::uninitialized);
       // Filling xyz with the values take from the element xyzreal matrix
       for (unsigned int d = 0; d < nsd_; ++d) xyz(d) = shapes_->xyzreal(d, q);
       // Declaring vectors for velocity and grad(u) as well as the pressure scalar value
-      Core::LinAlg::Matrix<nsd_, 1> u(false);
-      Core::LinAlg::Matrix<nsd_, nsd_> grad(true);  // is not necessarily set in evaluate_all
+      Core::LinAlg::Matrix<nsd_, 1> u(Core::LinAlg::Initialization::uninitialized);
+      Core::LinAlg::Matrix<nsd_, nsd_> grad(
+          Core::LinAlg::Initialization::zero);  // is not necessarily set in evaluate_all
       double p;
 
       FOUR_C_ASSERT(initfield != nullptr && startfunc != nullptr,
@@ -575,7 +576,7 @@ int Discret::Elements::FluidEleCalcHDG<distype>::project_field(Discret::Elements
       const double fac = shapesface_->jfac(q);
       // xyz is the vector containing the coordinates of the quadrature points
       //(in local coordinates)
-      Core::LinAlg::Matrix<nsd_, 1> xyz(false);
+      Core::LinAlg::Matrix<nsd_, 1> xyz(Core::LinAlg::Initialization::uninitialized);
 
       // Taking the real coordinates of quadrature points of the current face
       // from the shapesface_ utility
@@ -584,7 +585,7 @@ int Discret::Elements::FluidEleCalcHDG<distype>::project_field(Discret::Elements
       // Creating the vector of trace velocities
       // It is a nsd_ dimensional vector because we are working in a quadrature
       // point and therefore we only have nds_ unknowns
-      Core::LinAlg::Matrix<nsd_, 1> u(false);
+      Core::LinAlg::Matrix<nsd_, 1> u(Core::LinAlg::Initialization::uninitialized);
 
       // Deciding if we are initializing a field or if it is a time dependant
       // boundary condition
@@ -784,7 +785,7 @@ int Discret::Elements::FluidEleCalcHDG<distype>::interpolate_solution_to_nodes(
 
     // As already said, the dimension of the coordinate matrix is now nsd_-1
     // times the number of nodes in the face.
-    Core::LinAlg::Matrix<nsd_ - 1, nfn> xsishuffle(true);
+    Core::LinAlg::Matrix<nsd_ - 1, nfn> xsishuffle(Core::LinAlg::Initialization::zero);
 
     // Cycling through the nodes of the face to store the node positions in the
     // correct order using xsishuffle as a temporary vector
@@ -861,7 +862,7 @@ int Discret::Elements::FluidEleCalcHDG<distype>::interpolate_solution_for_hit(
 {
   initialize_shapes(ele);
   // get coordinates of hex 8
-  Core::LinAlg::Matrix<nsd_, nen_> xyze(true);
+  Core::LinAlg::Matrix<nsd_, nen_> xyze(Core::LinAlg::Initialization::zero);
 
   Core::Geo::fill_initial_position_array<distype, nsd_, Core::LinAlg::Matrix<nsd_, nen_>>(
       ele, xyze);
@@ -915,7 +916,7 @@ int Discret::Elements::FluidEleCalcHDG<distype>::interpolate_solution_for_hit(
     Core::LinAlg::Matrix<nen_, 1> myfunct;
     Core::FE::shape_function<distype>(shapes_->xsi, myfunct);
 
-    Core::LinAlg::Matrix<nsd_, 1> mypoint(true);
+    Core::LinAlg::Matrix<nsd_, 1> mypoint(Core::LinAlg::Initialization::zero);
     mypoint.multiply_nn(xyze, myfunct);
 
     for (unsigned int d = 0; d < nsd_; ++d) elevec1(6 * i + d + 3) = mypoint(d);
@@ -985,10 +986,10 @@ int Discret::Elements::FluidEleCalcHDG<distype>::project_force_on_dof_vec_for_hi
     // create mass matrix for interior by looping over quadrature points
     for (unsigned int q = 0; q < shapes_->nqpoints_; ++q)
     {
-      Core::LinAlg::Matrix<nsd_, 1> f(false);
+      Core::LinAlg::Matrix<nsd_, 1> f(Core::LinAlg::Initialization::uninitialized);
       const double fac = shapes_->jfac(q);
       Core::LinAlg::SerialDenseVector values(numsamppoints * numsamppoints * numsamppoints);
-      Core::LinAlg::Matrix<nsd_, 1> xsi(false);
+      Core::LinAlg::Matrix<nsd_, 1> xsi(Core::LinAlg::Initialization::uninitialized);
       for (unsigned int sdm = 0; sdm < nsd_; sdm++) xsi(sdm) = shapes_->quadrature_->point(q)[sdm];
 
       poly.evaluate(xsi, values);
@@ -1094,10 +1095,10 @@ int Discret::Elements::FluidEleCalcHDG<distype>::project_initial_field_for_hit(
     // create mass matrix for interior by looping over quadrature points
     for (unsigned int q = 0; q < shapes_->nqpoints_; ++q)
     {
-      Core::LinAlg::Matrix<nsd_, 1> f(false);
+      Core::LinAlg::Matrix<nsd_, 1> f(Core::LinAlg::Initialization::uninitialized);
       const double fac = shapes_->jfac(q);
       Core::LinAlg::SerialDenseVector values(numsamppoints * numsamppoints * numsamppoints);
-      Core::LinAlg::Matrix<nsd_, 1> xsi(false);
+      Core::LinAlg::Matrix<nsd_, 1> xsi(Core::LinAlg::Initialization::uninitialized);
       for (unsigned int sdm = 0; sdm < nsd_; sdm++) xsi(sdm) = shapes_->quadrature_->point(q)[sdm];
 
       poly.evaluate(xsi, values);
@@ -1164,12 +1165,12 @@ int Discret::Elements::FluidEleCalcHDG<distype>::project_initial_field_for_hit(
     for (unsigned int q = 0; q < shapesface_->nqpoints_; ++q)
     {
       const double fac = shapesface_->jfac(q);
-      Core::LinAlg::Matrix<nsd_, 1> xsi(false);
+      Core::LinAlg::Matrix<nsd_, 1> xsi(Core::LinAlg::Initialization::uninitialized);
 
       // use the location of the quadrature point in the parent element to evaluate the polynomial
       for (unsigned int d = 0; d < nsd_; ++d) xsi(d) = faceQPoints(q, d);
 
-      Core::LinAlg::Matrix<nsd_, 1> u(false);
+      Core::LinAlg::Matrix<nsd_, 1> u(Core::LinAlg::Initialization::uninitialized);
 
       Core::LinAlg::SerialDenseVector values(numsamppoints * numsamppoints * numsamppoints);
 
@@ -1223,7 +1224,7 @@ void Discret::Elements::FluidEleCalcHDG<distype>::evaluate_velocity(const int st
     Core::LinAlg::Matrix<nsd_, 1>& u) const
 {
   // pass on dummy entries (costs a little but will not be significant)
-  Core::LinAlg::Matrix<nsd_, nsd_> grad(true);
+  Core::LinAlg::Matrix<nsd_, nsd_> grad(Core::LinAlg::Initialization::zero);
   double p;
   evaluate_all(startfunc, initfield, xyz, u, grad, p);
 }
@@ -1350,10 +1351,10 @@ int Discret::Elements::FluidEleCalcHDG<distype>::evaluate_pressure_average(
   const double time = local_solver_->fldparatimint_->time();
 
   // initialize variables
-  Core::LinAlg::Matrix<nsd_, 1> u(true);
+  Core::LinAlg::Matrix<nsd_, 1> u(Core::LinAlg::Initialization::zero);
   double p = 0.0;
-  Core::LinAlg::Matrix<nsd_, nsd_> dervel(true);
-  Core::LinAlg::Matrix<nsd_, 1> xyz(true);
+  Core::LinAlg::Matrix<nsd_, nsd_> dervel(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, 1> xyz(Core::LinAlg::Initialization::zero);
 
   // get function used to evaluate the error
   const Teuchos::ParameterList fluidparams = Global::Problem::instance()->fluid_dynamic_params();

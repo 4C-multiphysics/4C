@@ -865,7 +865,8 @@ namespace Discret
 
         if (only_rhs) return;
 
-        static Core::LinAlg::Matrix<nsd_ * slave_nen_, nsd_> proj_dtraction_vel(true);
+        static Core::LinAlg::Matrix<nsd_ * slave_nen_, nsd_> proj_dtraction_vel(
+            Core::LinAlg::Initialization::zero);
         proj_dtraction_vel.clear();
         for (unsigned col = 0; col < nsd_ * slave_nen_; ++col)
         {
@@ -993,7 +994,8 @@ namespace Discret
               const std::pair<bool, double>& s_col,  ///< scaling for slave col
               bool only_rhs)
       {
-        static Core::LinAlg::Matrix<nsd_ * slave_nen_, nsd_> proj_dtraction_vel(true);
+        static Core::LinAlg::Matrix<nsd_ * slave_nen_, nsd_> proj_dtraction_vel(
+            Core::LinAlg::Initialization::zero);
         if (!only_rhs)
         {
           proj_dtraction_vel.clear();

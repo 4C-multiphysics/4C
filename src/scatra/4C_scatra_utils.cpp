@@ -355,7 +355,7 @@ Core::LinAlg::Matrix<dim, 1> ScaTra::ScaTraUtils::do_mean_value_averaging_of_ele
 {
   // number of nodes of this element for interpolation
   const int numnode = Core::FE::num_nodes<distype>;
-  Core::LinAlg::Matrix<dim, 1> node_gradphi_smoothed(true);
+  Core::LinAlg::Matrix<dim, 1> node_gradphi_smoothed(Core::LinAlg::Initialization::zero);
 
   // number of elements located around this node
   const int numberOfElements = static_cast<int>(elements.size());

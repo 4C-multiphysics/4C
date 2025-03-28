@@ -34,7 +34,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::scatra_apply_box_filter
 {
   // do preparations first
   // ---------------------------------------------
-  Core::LinAlg::Matrix<nsd_, nsd_> vderxy(true);
+  Core::LinAlg::Matrix<nsd_, nsd_> vderxy(Core::LinAlg::Initialization::zero);
   double alpha2 = 0.0;
   // use one-point Gauss rule to do calculations at the element center
   volume = eval_shape_func_and_derivs_at_ele_center();
@@ -57,7 +57,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::scatra_apply_box_filter
   const double densnp = get_density(ele, material, params, tempnp);
 
   // get velocities (n+alpha_F/1,i) at integration point
-  Core::LinAlg::Matrix<nsd_, 1> convelint(true);
+  Core::LinAlg::Matrix<nsd_, 1> convelint(Core::LinAlg::Initialization::zero);
   convelint.multiply(evelnp_, funct_);
 
   // compute rate of strain
@@ -65,7 +65,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::scatra_apply_box_filter
   rateofstrain = get_strain_rate(evelnp_);
 
   // gradient of scalar value
-  Core::LinAlg::Matrix<nsd_, 1> gradphi(true);
+  Core::LinAlg::Matrix<nsd_, 1> gradphi(Core::LinAlg::Initialization::zero);
   gradphi.multiply(derxy_, ephinp_[0]);
 
   // perform integrations, i.e., convolution
@@ -367,14 +367,14 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::scatra_calc_vreman_dt(
     double& dt_denominator, const Core::Elements::Element* ele)
 {
   double phi_hat2 = 0.0;
-  Core::LinAlg::Matrix<9, nen_> ealphaijsc_hat(true);
-  Core::LinAlg::Matrix<nsd_, nen_> ephi_hat(true);
-  Core::LinAlg::Matrix<1, nen_> ephi2_hat(true);
-  Core::LinAlg::Matrix<1, nen_> ephiexpression_hat(true);
-  Core::LinAlg::Matrix<nsd_, nsd_> alphaijsc_hat(true);
-  Core::LinAlg::Matrix<nsd_, 1> phi_hat(true);
-  Core::LinAlg::Matrix<1, 1> phi2_hat(true);
-  Core::LinAlg::Matrix<1, 1> phiexpression_hat(true);
+  Core::LinAlg::Matrix<9, nen_> ealphaijsc_hat(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, nen_> ephi_hat(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, nen_> ephi2_hat(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, nen_> ephiexpression_hat(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, nsd_> alphaijsc_hat(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, 1> phi_hat(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, 1> phi2_hat(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, 1> phiexpression_hat(Core::LinAlg::Initialization::zero);
 
   Core::FE::extract_my_node_based_values(ele, ephi_hat, col_filtered_phi, nsd_);
   Core::FE::extract_my_node_based_values(ele, ephi2_hat, col_filtered_phi2, 1);
@@ -708,7 +708,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::calc_subgr_diff(
       double hkzpow2;
       double sgviscwocv = 0.0;
 
-      Core::LinAlg::Matrix<nsd_, nsd_> velderxy(true);
+      Core::LinAlg::Matrix<nsd_, nsd_> velderxy(Core::LinAlg::Initialization::zero);
 
       velderxy.multiply_nt(econvelnp_, derxy_);
 
@@ -1182,7 +1182,7 @@ double Discret::Elements::ScaTraEleCalc<distype, probdim>::calc_ref_length(
       // get norm of velocity
       const double vel_norm = convelint.norm2();
       // normed velocity vector
-      Core::LinAlg::Matrix<nsd_, 1> velino(true);
+      Core::LinAlg::Matrix<nsd_, 1> velino(Core::LinAlg::Initialization::zero);
       if (vel_norm >= 1e-6)
         velino.update(1.0 / vel_norm, convelint);
       else
@@ -1222,7 +1222,7 @@ double Discret::Elements::ScaTraEleCalc<distype, probdim>::calc_ref_length(
                 |    i     j  |   |    i     j  |   |    i     j  |
                 +-           -+   +-           -+   +-           -+
       */
-      Core::LinAlg::Matrix<nsd_, nsd_> G(true);
+      Core::LinAlg::Matrix<nsd_, nsd_> G(Core::LinAlg::Initialization::zero);
 
       for (unsigned nn = 0; nn < nsd_; ++nn)
       {
@@ -1647,7 +1647,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::calc_dissipation(
   // calculation of model coefficients B (velocity) and D (scalar)
   // at element center
   // coefficient B of fine-scale velocity
-  Core::LinAlg::Matrix<nsd_, 1> B_mfs(true);
+  Core::LinAlg::Matrix<nsd_, 1> B_mfs(Core::LinAlg::Initialization::zero);
   // coefficient D of fine-scale scalar
   double D_mfs = 0.0;
   if (turbparams_->turb_model() == Inpar::FLUID::multifractal_subgrid_scales)
@@ -1664,7 +1664,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::calc_dissipation(
       }
       // provide necessary velocities and gradients at element center
       // get velocity at element center
-      Core::LinAlg::Matrix<nsd_, 1> fsvelint(true);
+      Core::LinAlg::Matrix<nsd_, 1> fsvelint(Core::LinAlg::Initialization::zero);
       fsvelint.multiply(efsvel_, funct_);
 
       // calculate model coefficients
@@ -1705,19 +1705,19 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::calc_dissipation(
     const double& phinp = scatravarmanager_->phinp(0);
 
     // gradient of current scalar value at integration point
-    Core::LinAlg::Matrix<nsd_, 1> gradphi(true);
+    Core::LinAlg::Matrix<nsd_, 1> gradphi(Core::LinAlg::Initialization::zero);
     gradphi.multiply(derxy_, ephinp_[0]);
 
     // reactive part of the form: (reaction coefficient)*phi
     const double rea_phi = densnp[0] * phinp * reamanager_->get_rea_coeff(0);
 
     // get fine-scale velocity and its derivatives at integration point
-    Core::LinAlg::Matrix<nsd_, 1> fsvelint(true);
+    Core::LinAlg::Matrix<nsd_, 1> fsvelint(Core::LinAlg::Initialization::zero);
     if (turbparams_->turb_model() == Inpar::FLUID::multifractal_subgrid_scales)
       fsvelint.multiply(efsvel_, funct_);
 
     // compute gradient of fine-scale part of scalar value
-    Core::LinAlg::Matrix<nsd_, 1> fsgradphi(true);
+    Core::LinAlg::Matrix<nsd_, 1> fsgradphi(Core::LinAlg::Initialization::zero);
     if (turbparams_->fssgd()) fsgradphi.multiply(derxy_, fsphinp_[0]);
 
     double rhsint(0.0);
@@ -1729,9 +1729,9 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::calc_dissipation(
     //--------------------------------------------------------------------
 
     // subgrid-scale convective term
-    Core::LinAlg::Matrix<nen_, 1> sgconv(true);
+    Core::LinAlg::Matrix<nen_, 1> sgconv(Core::LinAlg::Initialization::zero);
     // subgrid-scale velocity vector in gausspoint
-    Core::LinAlg::Matrix<nsd_, 1> sgvelint(true);
+    Core::LinAlg::Matrix<nsd_, 1> sgvelint(Core::LinAlg::Initialization::zero);
 
     if (scatrapara_->tau_gp())
     {
@@ -1779,10 +1779,10 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::calc_dissipation(
     // calculation of model coefficients B (velocity) and D (scalar)
     // at Gauss point as well as calculation
     // of multifractal subgrid-scale quantities
-    Core::LinAlg::Matrix<nsd_, 1> mfsgvelint(true);
+    Core::LinAlg::Matrix<nsd_, 1> mfsgvelint(Core::LinAlg::Initialization::zero);
     double mfsvdiv(0.0);
     double mfssgphi(0.0);
-    Core::LinAlg::Matrix<nsd_, 1> mfsggradphi(true);
+    Core::LinAlg::Matrix<nsd_, 1> mfsggradphi(Core::LinAlg::Initialization::zero);
     if (turbparams_->turb_model() == Inpar::FLUID::multifractal_subgrid_scales)
     {
       if (turbparams_->bd_gp())

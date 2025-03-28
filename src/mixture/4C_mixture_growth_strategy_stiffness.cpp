@@ -47,11 +47,11 @@ void Mixture::StiffnessGrowthStrategy::evaluate_growth_stress_cmat(
     Teuchos::ParameterList& params, Core::LinAlg::Matrix<6, 1>& S_stress,
     Core::LinAlg::Matrix<6, 6>& cmat, const int gp, const int eleGID) const
 {
-  Core::LinAlg::Matrix<3, 3> iC(false);
+  Core::LinAlg::Matrix<3, 3> iC(Core::LinAlg::Initialization::uninitialized);
   iC.multiply_tn(F, F);
   iC.invert();
 
-  Core::LinAlg::Matrix<6, 1> iC_stress(false);
+  Core::LinAlg::Matrix<6, 1> iC_stress(Core::LinAlg::Initialization::uninitialized);
   Core::LinAlg::Voigt::Stresses::matrix_to_vector(iC, iC_stress);
 
   const double kappa = params_->kappa_;

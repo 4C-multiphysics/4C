@@ -183,10 +183,10 @@ void Mat::StVenantKirchhoff::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
 void Mat::StVenantKirchhoff::strain_energy(
     const Core::LinAlg::Matrix<6, 1>& glstrain, double& psi, const int gp, const int eleGID) const
 {
-  Core::LinAlg::Matrix<6, 6> cmat(true);
+  Core::LinAlg::Matrix<6, 6> cmat(Core::LinAlg::Initialization::zero);
   setup_cmat(cmat);
 
-  Core::LinAlg::Matrix<6, 1> stress(true);
+  Core::LinAlg::Matrix<6, 1> stress(Core::LinAlg::Initialization::zero);
   stress.multiply_nn(cmat, glstrain);
 
   for (int k = 0; k < 6; ++k) psi += glstrain(k) * stress(k);

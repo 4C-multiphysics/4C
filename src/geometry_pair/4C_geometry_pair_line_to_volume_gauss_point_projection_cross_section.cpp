@@ -77,7 +77,7 @@ void GEOMETRYPAIR::GeometryPairLineToVolumeGaussPointProjectionCrossSection<Scal
   Core::LinAlg::Matrix<3, 3, ScalarType> triad;
   Core::LinAlg::Matrix<3, 1, ScalarType> r_cross_section;
   Core::LinAlg::Matrix<3, 1, ScalarType> r_surface;
-  Core::LinAlg::Matrix<3, 1, ScalarType> eta_cross_section(true);
+  Core::LinAlg::Matrix<3, 1, ScalarType> eta_cross_section(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<2, 1, ScalarType> eta_cross_section_2d;
   Core::LinAlg::Matrix<3, 1, ScalarType> xi_volume;
   ProjectionResult projection_result;

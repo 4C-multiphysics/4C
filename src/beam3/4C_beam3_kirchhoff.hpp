@@ -1067,7 +1067,7 @@ namespace Discret
           const Core::LinAlg::Matrix<3, 3, T>& triad_ref,
           Core::LinAlg::Matrix<3, 3, T>& triad) const
       {
-        Core::LinAlg::Matrix<3, 3, T> triad_bar(true);
+        Core::LinAlg::Matrix<3, 3, T> triad_bar(Core::LinAlg::Initialization::zero);
 
         // Compute triad_bar via SR mapping from triad_ref onto r_s
         Core::LargeRotations::calculate_sr_triads<T>(r_s, triad_ref, triad_bar);
@@ -1173,11 +1173,11 @@ namespace Discret
           Core::LinAlg::Matrix<3, 1, T>& r_ss, Core::LinAlg::Matrix<3, 1, T>& kappacl) const
       {
         // spinmatrix Sr' = r'x
-        Core::LinAlg::Matrix<3, 3, T> Srs(true);
+        Core::LinAlg::Matrix<3, 3, T> Srs(Core::LinAlg::Initialization::zero);
         Core::LargeRotations::computespin(Srs, r_s);
 
         // cross-product r'xr''
-        Core::LinAlg::Matrix<3, 1, T> Srsrss(true);
+        Core::LinAlg::Matrix<3, 1, T> Srsrss(Core::LinAlg::Initialization::zero);
         Srsrss.multiply(Srs, r_ss);
         T rsTrs = 0.0;
 
@@ -1196,11 +1196,11 @@ namespace Discret
           const Core::LinAlg::Matrix<3, 3, T>& triadref,
           const Core::LinAlg::Matrix<3, 3, T>& triad_mat, Core::LinAlg::Matrix<3, 1, T>& K) const
       {
-        Core::LinAlg::Matrix<1, 1, T> scalar_aux(true);
-        Core::LinAlg::Matrix<3, 1, T> g1(true);
-        Core::LinAlg::Matrix<3, 1, T> g2(true);
-        Core::LinAlg::Matrix<3, 1, T> g3(true);
-        Core::LinAlg::Matrix<3, 1, T> gref1(true);
+        Core::LinAlg::Matrix<1, 1, T> scalar_aux(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<3, 1, T> g1(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<3, 1, T> g2(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<3, 1, T> g3(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<3, 1, T> gref1(Core::LinAlg::Initialization::zero);
         T KR1 = 0.0;
 
         for (int i = 0; i < 3; i++)
@@ -1296,8 +1296,8 @@ namespace Discret
           Core::LinAlg::Matrix<3, 1, FAD>& vec1, Core::LinAlg::Matrix<3, 1, FAD>& vec2,
           Core::LinAlg::Matrix<dim, 1, FAD>& vec_out) const
       {
-        Core::LinAlg::Matrix<3, 3, FAD> auxmatrix1(true);
-        Core::LinAlg::Matrix<3, 1, FAD> auxvec1(true);
+        Core::LinAlg::Matrix<3, 3, FAD> auxmatrix1(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<3, 1, FAD> auxvec1(Core::LinAlg::Initialization::zero);
         Core::LargeRotations::computespin(auxmatrix1, vec1);
         auxvec1.multiply(auxmatrix1, vec2);
         vec_out.multiply_tn(mat1, auxvec1);

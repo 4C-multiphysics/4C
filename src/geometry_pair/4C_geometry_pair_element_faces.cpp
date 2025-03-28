@@ -270,7 +270,7 @@ void GEOMETRYPAIR::FaceElementPatchTemplate<Surface, ScalarType>::set_state(
   if (evaluate_current_normals_)
   {
     // Parameter coordinates corresponding to LIDs of nodes.
-    Core::LinAlg::Matrix<3, 1, double> xi(true);
+    Core::LinAlg::Matrix<3, 1, double> xi(Core::LinAlg::Initialization::zero);
     Core::LinAlg::SerialDenseMatrix nodal_coordinates =
         Core::FE::get_ele_node_numbering_nodes_paramspace(Surface::discretization_);
 
@@ -326,7 +326,7 @@ void GEOMETRYPAIR::FaceElementPatchTemplate<Surface,
     std::shared_ptr<GEOMETRYPAIR::FaceElement>>& face_elements)
 {
   // Parameter coordinates corresponding to LIDs of nodes.
-  Core::LinAlg::Matrix<2, 1, double> xi(true);
+  Core::LinAlg::Matrix<2, 1, double> xi(Core::LinAlg::Initialization::zero);
   Core::LinAlg::SerialDenseMatrix nodal_coordinates =
       Core::FE::get_ele_node_numbering_nodes_paramspace(Surface::discretization_);
 
@@ -583,12 +583,12 @@ void GEOMETRYPAIR::FaceElementTemplateExtendedVolume<Surface, ScalarType,
     Core::LinAlg::Matrix<3 * Surface::n_nodes_, 1, ScalarTypeNormal>& normals) const
 {
   // Parameter coordinates corresponding to LIDs of nodes.
-  Core::LinAlg::Matrix<2, 1, double> xi_surface(true);
+  Core::LinAlg::Matrix<2, 1, double> xi_surface(Core::LinAlg::Initialization::zero);
   Core::LinAlg::SerialDenseMatrix nodal_coordinates =
       Core::FE::get_ele_node_numbering_nodes_paramspace(Surface::discretization_);
 
   // Loop over the faces and evaluate the "normals" at the nodes.
-  Core::LinAlg::Matrix<3, 1, double> xi_volume(true);
+  Core::LinAlg::Matrix<3, 1, double> xi_volume(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<3, 1, ScalarTypeNormal> r_surface;
   Core::LinAlg::Matrix<3, 1, ScalarTypeNormal> r_volume;
   Core::LinAlg::Matrix<3, 3, ScalarTypeNormal> dr_volume;

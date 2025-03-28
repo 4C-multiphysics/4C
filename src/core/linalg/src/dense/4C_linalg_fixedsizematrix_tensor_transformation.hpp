@@ -28,7 +28,7 @@ namespace Core::LinAlg::Tensor
   inline void tensor_rotation(const Core::LinAlg::Matrix<n, n>& Q,
       const Core::LinAlg::Matrix<n, n>& Tin, Core::LinAlg::Matrix<n, n>& Tout)
   {
-    Core::LinAlg::Matrix<n, n> temp(false);
+    Core::LinAlg::Matrix<n, n> temp(Core::LinAlg::Initialization::uninitialized);
     temp.multiply_nn(1.0, Q, Tin);
     Tout.multiply_nt(1.0, temp, Q);
   }
@@ -45,7 +45,7 @@ namespace Core::LinAlg::Tensor
   inline void inverse_tensor_rotation(const Core::LinAlg::Matrix<n, n>& Q,
       const Core::LinAlg::Matrix<n, n>& Tin, Core::LinAlg::Matrix<n, n>& Tout)
   {
-    Core::LinAlg::Matrix<n, n> temp(false);
+    Core::LinAlg::Matrix<n, n> temp(Core::LinAlg::Initialization::uninitialized);
     temp.multiply_tn(1.0, Q, Tin);
     Tout.multiply_nn(1.0, temp, Q);
   }
@@ -117,7 +117,7 @@ namespace Core::LinAlg::Tensor
     Core::LinAlg::Matrix<6, 6> Qfourth;
     fourth_tensor_rotation_matrix(Q, Qfourth);
 
-    Core::LinAlg::Matrix<6, 6> temp(false);
+    Core::LinAlg::Matrix<6, 6> temp(Core::LinAlg::Initialization::uninitialized);
     temp.multiply_tn(1.0, Qfourth, Tin);
     Tout.multiply_nn(1.0, temp, Qfourth);
   }

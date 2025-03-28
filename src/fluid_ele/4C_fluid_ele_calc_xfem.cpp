@@ -52,22 +52,22 @@ Discret::Elements::FluidEleCalcXFEM<distype>::FluidEleCalcXFEM()
       viscaf_slave_(0.0),
       gamma_m_(0.0),
       gamma_s_(0.0),
-      evelaf_(true),
-      epreaf_(true),
-      eveln_(true),
-      epren_(true),
-      ivelint_jump_(true),
-      itraction_jump_(true),
-      proj_tangential_(true),
-      lb_proj_matrix_(true),
-      ivelintn_jump_(true),
-      itractionn_jump_(true),
-      velint_s_(true),
-      velintn_s_(true),
-      rst_(true),
-      normal_(true),
-      x_side_(true),
-      x_gp_lin_(true)
+      evelaf_(Core::LinAlg::Initialization::zero),
+      epreaf_(Core::LinAlg::Initialization::zero),
+      eveln_(Core::LinAlg::Initialization::zero),
+      epren_(Core::LinAlg::Initialization::zero),
+      ivelint_jump_(Core::LinAlg::Initialization::zero),
+      itraction_jump_(Core::LinAlg::Initialization::zero),
+      proj_tangential_(Core::LinAlg::Initialization::zero),
+      lb_proj_matrix_(Core::LinAlg::Initialization::zero),
+      ivelintn_jump_(Core::LinAlg::Initialization::zero),
+      itractionn_jump_(Core::LinAlg::Initialization::zero),
+      velint_s_(Core::LinAlg::Initialization::zero),
+      velintn_s_(Core::LinAlg::Initialization::zero),
+      rst_(Core::LinAlg::Initialization::zero),
+      normal_(Core::LinAlg::Initialization::zero),
+      x_side_(Core::LinAlg::Initialization::zero),
+      x_gp_lin_(Core::LinAlg::Initialization::zero)
 {
   // we use the standard parameter list here, since there are not any additional
   // xfem-specific parameters required in this derived class
@@ -154,13 +154,13 @@ namespace Discret
         const Core::FE::GaussIntegration& intpoints)
     {
       // analytical solution
-      Core::LinAlg::Matrix<nsd_, 1> u_analyt(true);
-      Core::LinAlg::Matrix<nsd_, nsd_> grad_u_analyt(true);
+      Core::LinAlg::Matrix<nsd_, 1> u_analyt(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd_, nsd_> grad_u_analyt(Core::LinAlg::Initialization::zero);
       double p_analyt = 0.0;
 
       // error
-      Core::LinAlg::Matrix<nsd_, 1> u_err(true);
-      Core::LinAlg::Matrix<nsd_, nsd_> grad_u_err(true);
+      Core::LinAlg::Matrix<nsd_, 1> u_err(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd_, nsd_> grad_u_err(Core::LinAlg::Initialization::zero);
       double p_err = 0.0;
 
       const auto calcerr =
@@ -178,8 +178,8 @@ namespace Discret
       //----------------------------------------------------------------------------
 
       // fill the local element vector/matrix with the global values
-      Core::LinAlg::Matrix<nsd_, nen_> evelaf(true);
-      Core::LinAlg::Matrix<nen_, 1> epreaf(true);
+      Core::LinAlg::Matrix<nsd_, nen_> evelaf(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nen_, 1> epreaf(Core::LinAlg::Initialization::zero);
       this->extract_values_from_global_vector(discretization, lm, *my::rotsymmpbc_, &evelaf,
           &epreaf, "u and p at time n+1 (converged)");
 
@@ -201,7 +201,7 @@ namespace Discret
 
       if (ele->is_ale())
       {
-        Core::LinAlg::Matrix<nsd_, nen_> edispnp(true);
+        Core::LinAlg::Matrix<nsd_, nen_> edispnp(Core::LinAlg::Initialization::zero);
         this->extract_values_from_global_vector(
             discretization, lm, *my::rotsymmpbc_, &edispnp, nullptr, "dispnp");
 
@@ -232,7 +232,7 @@ namespace Discret
         double preint = my::funct_.dot(epreaf);
 
         // get coordinates at integration point
-        Core::LinAlg::Matrix<nsd_, 1> xyzint(true);
+        Core::LinAlg::Matrix<nsd_, 1> xyzint(Core::LinAlg::Initialization::zero);
         xyzint.multiply(my::xyze_, my::funct_);
 
         // get viscosity
@@ -810,8 +810,8 @@ namespace Discret
       // get additional state vectors for ALE case: grid displacement and vel.
       // ---------------------------------------------------------------------
 
-      Core::LinAlg::Matrix<nsd_, nen_> edispnp(true);
-      Core::LinAlg::Matrix<nsd_, nen_> egridv(true);
+      Core::LinAlg::Matrix<nsd_, nen_> edispnp(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd_, nen_> egridv(Core::LinAlg::Initialization::zero);
 
       if (ele->is_ale()) my::get_grid_disp_vel_ale(dis, lm, edispnp, egridv);
       // add displacement when fluid nodes move in the ALE case
@@ -832,8 +832,8 @@ namespace Discret
       // ---------------------------------------------------------------------
 
       // get element-wise velocity/pressure field
-      Core::LinAlg::Matrix<nsd_, nen_> evelaf(true);
-      Core::LinAlg::Matrix<nen_, 1> epreaf(true);
+      Core::LinAlg::Matrix<nsd_, nen_> evelaf(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nen_, 1> epreaf(Core::LinAlg::Initialization::zero);
       my::extract_values_from_global_vector(
           dis, lm, *my::rotsymmpbc_, &evelaf, &epreaf, "u and p at time n+1 (converged)");
 
@@ -874,17 +874,17 @@ namespace Discret
       //-----------------------------------------------------------------------------------
 
       // analytical solution
-      Core::LinAlg::Matrix<nsd_, 1> u_analyt(true);
-      Core::LinAlg::Matrix<nsd_, nsd_> grad_u_analyt(true);
+      Core::LinAlg::Matrix<nsd_, 1> u_analyt(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd_, nsd_> grad_u_analyt(Core::LinAlg::Initialization::zero);
       double p_analyt = 0.0;
 
       // error
-      Core::LinAlg::Matrix<nsd_, 1> u_err(true);
-      Core::LinAlg::Matrix<nsd_, nsd_> grad_u_err(true);
+      Core::LinAlg::Matrix<nsd_, 1> u_err(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd_, nsd_> grad_u_err(Core::LinAlg::Initialization::zero);
       double p_err = 0.0;
 
-      Core::LinAlg::Matrix<nsd_, 1> flux_u_err(true);
-      Core::LinAlg::Matrix<nsd_, 1> flux_p_err(true);
+      Core::LinAlg::Matrix<nsd_, 1> flux_u_err(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd_, 1> flux_p_err(Core::LinAlg::Initialization::zero);
 
 
       //--------------------------------------------
@@ -898,9 +898,9 @@ namespace Discret
         //-----------------------------------------------------------------------------------
 
         // interface normal vector, pointing from background domain into the interface
-        Core::LinAlg::Matrix<3, 1> normal(true);
+        Core::LinAlg::Matrix<3, 1> normal(Core::LinAlg::Initialization::zero);
         // gauss-point coordinates
-        Core::LinAlg::Matrix<3, 1> x_side(true);
+        Core::LinAlg::Matrix<3, 1> x_side(Core::LinAlg::Initialization::zero);
 
         // we need an interface to the boundary element (for projection)
         std::shared_ptr<Discret::Elements::XFLUID::SlaveElementInterface<distype>> si;
@@ -1042,9 +1042,13 @@ namespace Discret
             const Core::LinAlg::Matrix<2, 1> eta(
                 iquad.point());  // xi-coordinates with respect to side
 
-            Core::LinAlg::Matrix<3, 1> rst(true);  // local coordinates w.r.t background element
+            Core::LinAlg::Matrix<3, 1> rst(
+                Core::LinAlg::Initialization::zero);  // local coordinates w.r.t background
+                                                      // element
 
-            Core::LinAlg::Matrix<3, 1> x_gp_lin(true);  // gp in xyz-system on linearized interface
+            Core::LinAlg::Matrix<3, 1> x_gp_lin(
+                Core::LinAlg::Initialization::zero);  // gp in xyz-system on linearized
+                                                      // interface
 
             // compute transformation factor, normal vector and global Gauss point coordinates
             if (bc->shape() != Core::FE::CellType::dis_none)  // Tessellation approach
@@ -1085,7 +1089,7 @@ namespace Discret
             {
               // project gaussian point from linearized interface to warped side (get/set local side
               // coordinates in SideImpl)
-              Core::LinAlg::Matrix<3, 1> xi_side(true);
+              Core::LinAlg::Matrix<3, 1> xi_side(Core::LinAlg::Initialization::zero);
               // project on boundary element
               si->project_on_side(x_gp_lin, x_side, xi_side);
 
@@ -1137,9 +1141,10 @@ namespace Discret
             // compute errors
 
             Core::LinAlg::Matrix<nsd_, 1> u_analyt(
-                true);  // boundary condition to enforce (xfsi),
-                        // interfacial jump to enforce (fluidfluid)
-            Core::LinAlg::Matrix<nsd_, nsd_> grad_u_analyt(true);
+                Core::LinAlg::Initialization::zero);  // boundary condition to enforce (xfsi),
+                                                      // interfacial jump to enforce
+                                                      // (fluidfluid)
+            Core::LinAlg::Matrix<nsd_, nsd_> grad_u_analyt(Core::LinAlg::Initialization::zero);
             p_analyt = 0.0;
 
             analytical_reference(calcerr,  ///< which reference solution
@@ -1161,7 +1166,7 @@ namespace Discret
             {
               u_err.update(1.0, my::velint_, -1.0, velint_s, 0.0);
 
-              Core::LinAlg::Matrix<nsd_, nsd_> grad_u_side(true);
+              Core::LinAlg::Matrix<nsd_, nsd_> grad_u_side(Core::LinAlg::Initialization::zero);
               ci->get_interface_vel_gradnp(grad_u_side);
 
               grad_u_err.update(1.0, my::vderxy_, -1.0, grad_u_side, 0.0);
@@ -1341,8 +1346,8 @@ namespace Discret
       // get additional state vectors for ALE case: grid displacement and vel.
       // ---------------------------------------------------------------------
 
-      Core::LinAlg::Matrix<nsd_, nen_> edispnp(true);
-      Core::LinAlg::Matrix<nsd_, nen_> egridv(true);
+      Core::LinAlg::Matrix<nsd_, nen_> edispnp(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd_, nen_> egridv(Core::LinAlg::Initialization::zero);
 
       if (ele->is_ale()) my::get_grid_disp_vel_ale(dis, lm, edispnp, egridv);
 
@@ -1361,13 +1366,13 @@ namespace Discret
       // ---------------------------------------------------------------------
 
       // get element-wise velocity/pressure field for current time step
-      Core::LinAlg::Matrix<nsd_, nen_> evelaf(true);
-      Core::LinAlg::Matrix<nen_, 1> epreaf(true);
+      Core::LinAlg::Matrix<nsd_, nen_> evelaf(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nen_, 1> epreaf(Core::LinAlg::Initialization::zero);
       my::extract_values_from_global_vector(dis, lm, *my::rotsymmpbc_, &evelaf, &epreaf, "velaf");
 
       // get element-wise velocity/pressure field for previous time step
-      Core::LinAlg::Matrix<nsd_, nen_> eveln(true);
-      Core::LinAlg::Matrix<nen_, 1> epren(true);
+      Core::LinAlg::Matrix<nsd_, nen_> eveln(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nen_, 1> epren(Core::LinAlg::Initialization::zero);
       if (my::fldparatimint_->is_new_ost_implementation())
         my::extract_values_from_global_vector(dis, lm, *my::rotsymmpbc_, &eveln, &epren, "veln");
 
@@ -1385,9 +1390,11 @@ namespace Discret
       //--------------------------------------------------------
 
       // sub-blocks of matrix K_{\sigma\sigma} (-->K_ss)
-      Core::LinAlg::Matrix<nen_, nen_> bK_ss(true);         // N * N^T
-      Core::LinAlg::Matrix<nen_, nen_> invbK_ss(true);      // inverse of bK_ss, (N * N^T)^-1
-      Core::LinAlg::Matrix<nen_, nen_> halfInvbK_ss(true);  // inverse scaled by 1/2
+      Core::LinAlg::Matrix<nen_, nen_> bK_ss(Core::LinAlg::Initialization::zero);  // N * N^T
+      Core::LinAlg::Matrix<nen_, nen_> invbK_ss(
+          Core::LinAlg::Initialization::zero);  // inverse of bK_ss, (N * N^T)^-1
+      Core::LinAlg::Matrix<nen_, nen_> halfInvbK_ss(
+          Core::LinAlg::Initialization::zero);  // inverse scaled by 1/2
 
       // The block matrices K_... result from the volume integrals on the cut element.
       // In case of a viscous stress-based approach (MHVS), there is no term like K_sp,
@@ -1418,7 +1425,7 @@ namespace Discret
 
       // rhs-contributions from interface integration
       Core::LinAlg::BlockMatrix<Core::LinAlg::Matrix<nen_, 1>, nsd_, 1> rhs_up;
-      Core::LinAlg::Matrix<nen_, 1> rhs_pu(true);
+      Core::LinAlg::Matrix<nen_, 1> rhs_pu(Core::LinAlg::Initialization::zero);
 
       //--------------------------------------------------------
       // build matrices K (based on volume terms)
@@ -1536,9 +1543,9 @@ namespace Discret
         //-----------------------------------------------------------------------------------
 
         // interface normal vector, pointing from background domain into the interface
-        Core::LinAlg::Matrix<3, 1> normal(true);
+        Core::LinAlg::Matrix<3, 1> normal(Core::LinAlg::Initialization::zero);
         // gauss-point coordinates
-        Core::LinAlg::Matrix<3, 1> x_side(true);
+        Core::LinAlg::Matrix<3, 1> x_side(Core::LinAlg::Initialization::zero);
 
         // we need an interface to the boundary element (for projection)
         std::shared_ptr<Discret::Elements::XFLUID::SlaveElementInterface<distype>> si;
@@ -1822,9 +1829,13 @@ namespace Discret
             const Core::LinAlg::Matrix<2, 1> eta(
                 iquad.point());  // xi-coordinates with respect to side
 
-            Core::LinAlg::Matrix<3, 1> rst(true);  // local coordinates w.r.t background element
+            Core::LinAlg::Matrix<3, 1> rst(
+                Core::LinAlg::Initialization::zero);  // local coordinates w.r.t background
+                                                      // element
 
-            Core::LinAlg::Matrix<3, 1> x_gp_lin(true);  // gp in xyz-system on linearized interface
+            Core::LinAlg::Matrix<3, 1> x_gp_lin(
+                Core::LinAlg::Initialization::zero);  // gp in xyz-system on linearized
+                                                      // interface
 
             // compute transformation factor, normal vector and global Gauss point coordinates
             if (bc->shape() != Core::FE::CellType::dis_none)  // Tessellation approach
@@ -1854,7 +1865,7 @@ namespace Discret
             {
               // project gaussian point from linearized interface to warped side (get/set local side
               // coordinates in SideImpl)
-              Core::LinAlg::Matrix<3, 1> xi_side(true);
+              Core::LinAlg::Matrix<3, 1> xi_side(Core::LinAlg::Initialization::zero);
               // project on boundary element
               si->project_on_side(x_gp_lin, x_side, xi_side);
 
@@ -1909,10 +1920,10 @@ namespace Discret
             //-----------------------------------------------------------------------------
             // define the prescribed interface jump vectors for velocity and traction
 
-            Core::LinAlg::Matrix<nsd_, 1> ivelint_jump(true);
-            Core::LinAlg::Matrix<nsd_, 1> itraction_jump(true);
-            Core::LinAlg::Matrix<nsd_, nsd_> proj_tangential(true);
-            Core::LinAlg::Matrix<nsd_, nsd_> LB_proj_matrix(true);
+            Core::LinAlg::Matrix<nsd_, 1> ivelint_jump(Core::LinAlg::Initialization::zero);
+            Core::LinAlg::Matrix<nsd_, 1> itraction_jump(Core::LinAlg::Initialization::zero);
+            Core::LinAlg::Matrix<nsd_, nsd_> proj_tangential(Core::LinAlg::Initialization::zero);
+            Core::LinAlg::Matrix<nsd_, nsd_> LB_proj_matrix(Core::LinAlg::Initialization::zero);
 
             double kappa_m = 0.0;
             double kappa_s = 0.0;
@@ -2127,7 +2138,7 @@ namespace Discret
             //-------------------------------
             // traction vector w.r.t fluid domain, resulting stresses acting on the fluid surface
             // t= (-p*I + 2mu*eps(u))*n^f
-            Core::LinAlg::Matrix<nsd_, 1> traction(true);
+            Core::LinAlg::Matrix<nsd_, 1> traction(Core::LinAlg::Initialization::zero);
 
             build_traction_vector(traction, press, normal);
 
@@ -2982,8 +2993,8 @@ namespace Discret
       dN.push_back(&dy);
       dN.push_back(&dz);
 
-      Core::LinAlg::Matrix<nen_, nen_> dNidxj(true);
-      Core::LinAlg::Matrix<nen_, nen_> dNjdxj(true);
+      Core::LinAlg::Matrix<nen_, nen_> dNidxj(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nen_, nen_> dNjdxj(Core::LinAlg::Initialization::zero);
 
       for (int idim = 0; idim < nsd_; ++idim)
       {
@@ -3779,8 +3790,8 @@ namespace Discret
               {
                 double J = 0;
                 double porosity = mc_fpi->calc_porosity(side, rst_slave, J);
-                static Core::LinAlg::Matrix<3, 1> vel_s(true);
-                static Core::LinAlg::Matrix<3, 1> velpf_s(true);
+                static Core::LinAlg::Matrix<3, 1> vel_s(Core::LinAlg::Initialization::zero);
+                static Core::LinAlg::Matrix<3, 1> velpf_s(Core::LinAlg::Initialization::zero);
                 XFEM::Utils::evaluate_stateat_gp(side, rst_slave,
                     *cond_manager->get_mesh_coupling("XFEMSurfFPIMono_ps_ps")->get_cutter_dis(),
                     "ivelnp", vel_s);
@@ -4031,7 +4042,8 @@ namespace Discret
           if (cond->parameters().get<int>("NUMDOF") == 6)
           {
             Core::LinAlg::Matrix<6, 1> fulltraction(
-                true);  // sigma_xx, sigma_yy, sigma_zz, sigma_xy, sigma_yz, sigma_zx
+                Core::LinAlg::Initialization::zero);  // sigma_xx, sigma_yy, sigma_zz, sigma_xy,
+                                                      // sigma_yz, sigma_zx
             coupling->evaluate_coupling_conditions(ivelint_jump, fulltraction, x, cond);
             itraction_jump(0, 0) = fulltraction(0, 0) * normal(0, 0) +
                                    fulltraction(3, 0) * normal(1, 0) +
@@ -4135,7 +4147,7 @@ namespace Discret
           cond_type != Inpar::XFEM::CouplingCond_SURF_NAVIER_SLIP_TWOPHASE)
       {
         // Create normal projection matrix.
-        Core::LinAlg::Matrix<nsd_, nsd_> eye(true);
+        Core::LinAlg::Matrix<nsd_, nsd_> eye(Core::LinAlg::Initialization::zero);
         for (int i = 0; i < nsd_; ++i) eye(i, i) = 1;
         for (int i = 0; i < nsd_; ++i)
         {
@@ -4231,7 +4243,7 @@ namespace Discret
         case Inpar::XFEM::CouplingCond_LEVELSET_TWOPHASE:
         {
           // Spatial velocity gradient for slave side
-          Core::LinAlg::Matrix<nsd_, nsd_> vderxyn_s(true);
+          Core::LinAlg::Matrix<nsd_, nsd_> vderxyn_s(Core::LinAlg::Initialization::zero);
           si.get_interface_vel_gradn(vderxyn_s);
 
 
@@ -4249,11 +4261,11 @@ namespace Discret
 
           // Shear tensor part
           //===================
-          Core::LinAlg::Matrix<nsd_, nsd_> tmp_matrix(true);
+          Core::LinAlg::Matrix<nsd_, nsd_> tmp_matrix(Core::LinAlg::Initialization::zero);
           tmp_matrix.update(viscaf_master_, my::vderxyn_, -viscaf_slave_, vderxyn_s);
 
           // Initialize dummy variable
-          Core::LinAlg::Matrix<nsd_, 1> tmp_vector(true);
+          Core::LinAlg::Matrix<nsd_, 1> tmp_vector(Core::LinAlg::Initialization::zero);
 
           // Normal
           tmp_vector.multiply(tmp_matrix, normal);

@@ -83,7 +83,7 @@ void Mat::Elastic::IsoMuscleBlemker::add_stress_aniso_modified(
     const int eleGID, Teuchos::ParameterList& params)
 {
   // right Cauchy Green tensor C in matrix notation
-  Core::LinAlg::Matrix<3, 3> C(true);
+  Core::LinAlg::Matrix<3, 3> C(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Voigt::Strains::vector_to_matrix(rcg, C);
 
   // compute volume ratio J
@@ -91,7 +91,7 @@ void Mat::Elastic::IsoMuscleBlemker::add_stress_aniso_modified(
   double incJ = std::pow(J, -2.0 / 3.0);
 
   // compute modified right Cauchy-Green Tensor
-  Core::LinAlg::Matrix<3, 3> modC(false);
+  Core::LinAlg::Matrix<3, 3> modC(Core::LinAlg::Initialization::uninitialized);
   modC.update(incJ, C, 0.0);
 
   // structural tensor M, i.e. dyadic product of fibre directions
@@ -101,13 +101,13 @@ void Mat::Elastic::IsoMuscleBlemker::add_stress_aniso_modified(
   // compute modified invariants modI1, modI4 and modI5
   double modI1 = modC(0, 0) + modC(1, 1) + modC(2, 2);
 
-  Core::LinAlg::Matrix<3, 3> modCM(true);
+  Core::LinAlg::Matrix<3, 3> modCM(Core::LinAlg::Initialization::zero);
   modCM.multiply_nn(1.0, modC, M);                           // modC*M
   double modI4 = (modCM(0, 0) + modCM(1, 1) + modCM(2, 2));  // modI4 = tr(modC*M)
 
-  Core::LinAlg::Matrix<3, 3> modC2(true);
+  Core::LinAlg::Matrix<3, 3> modC2(Core::LinAlg::Initialization::zero);
   modC2.multiply_nn(1.0, modC, modC);  // modC*modC
-  Core::LinAlg::Matrix<3, 3> modC2M(true);
+  Core::LinAlg::Matrix<3, 3> modC2M(Core::LinAlg::Initialization::zero);
   modC2M.multiply_nn(1.0, modC2, M);                            // (modC*modC)*M
   double modI5 = (modC2M(0, 0) + modC2M(1, 1) + modC2M(2, 2));  // modI5 = tr((modC*modC)*M)
 
@@ -151,21 +151,21 @@ void Mat::Elastic::IsoMuscleBlemker::add_stress_aniso_modified(
   // matrix terms for stress evaluation
   // unitary 3x3 matrix
   const Core::LinAlg::Matrix<3, 3> Id3 = Core::LinAlg::identity_matrix<3>();
-  Core::LinAlg::Matrix<6, 1> Id3v(false);
+  Core::LinAlg::Matrix<6, 1> Id3v(Core::LinAlg::Initialization::uninitialized);
   Core::LinAlg::Voigt::identity_matrix(Id3v);
 
   // sum modC*M + M*modC = dI5/dC
   Core::LinAlg::Matrix<3, 3> modCMsumMmodC(modCM);
   modCMsumMmodC.multiply_nn(1.0, M, modC, 1.0);
-  Core::LinAlg::Matrix<6, 1> modCMsumMmodCv(false);
+  Core::LinAlg::Matrix<6, 1> modCMsumMmodCv(Core::LinAlg::Initialization::uninitialized);
   Core::LinAlg::Voigt::Stresses::matrix_to_vector(modCMsumMmodC, modCMsumMmodCv);
 
   // fictitious 2nd Piola-Kirchhoff stress tensor modS
-  Core::LinAlg::Matrix<3, 3> modS(true);
+  Core::LinAlg::Matrix<3, 3> modS(Core::LinAlg::Initialization::zero);
   modS.update(gamma1, Id3, 1.0);            // + gamma1*I
   modS.update(gamma4, M, 1.0);              // + gamma4*M
   modS.update(gamma5, modCMsumMmodC, 1.0);  // dyad(a0,modC*a0)+dyad(a0*C,a0) = (modC*M)' +modC'*M
-  Core::LinAlg::Matrix<6, 1> modSv(false);
+  Core::LinAlg::Matrix<6, 1> modSv(Core::LinAlg::Initialization::uninitialized);
   Core::LinAlg::Voigt::Stresses::matrix_to_vector(modS, modSv);
 
   // isometirc 2nd Piola-Kirchhoff tensor S_iso from fictitious 2nd PK stress
@@ -197,31 +197,31 @@ void Mat::Elastic::IsoMuscleBlemker::add_stress_aniso_modified(
   double delta12 = (4. * G1) / (std::pow(modI4, 2.)) - (4. * B2 * G2) / (H2 * lambdaM);
 
   // summand tensors for computation of elasticity tensor
-  Core::LinAlg::Matrix<6, 6> IdId(false);
+  Core::LinAlg::Matrix<6, 6> IdId(Core::LinAlg::Initialization::uninitialized);
   IdId.multiply_nt(Id3v, Id3v);  // summand1 = dyad(Id,Id) in Voigt-Notation
 
-  Core::LinAlg::Matrix<6, 6> IdMsumMId(false);
+  Core::LinAlg::Matrix<6, 6> IdMsumMId(Core::LinAlg::Initialization::uninitialized);
   IdMsumMId.multiply_nt(Id3v, Mv);
   IdMsumMId.multiply_nt(
       1.0, Mv, Id3v, 1.0);  // summand5 = dyad(Id,Md) + dyad(M,Id) in Voigt-Notation
 
-  Core::LinAlg::Matrix<6, 6> MM(false);
+  Core::LinAlg::Matrix<6, 6> MM(Core::LinAlg::Initialization::uninitialized);
   MM.multiply_nt(Mv, Mv);  // summand7 = dyad(M,M) in Voigt-Notation
 
-  Core::LinAlg::Matrix<6, 6> IddI5sumdI5Id(false);
+  Core::LinAlg::Matrix<6, 6> IddI5sumdI5Id(Core::LinAlg::Initialization::uninitialized);
   IddI5sumdI5Id.multiply_nt(Id3v, modCMsumMmodCv);
   IddI5sumdI5Id.multiply_nt(
       1.0, modCMsumMmodCv, Id3v, 1.0);  // summand8 = dyad(Id,dI5) + dyad(dI5,Id)
 
-  Core::LinAlg::Matrix<6, 6> dI5dI5(false);
+  Core::LinAlg::Matrix<6, 6> dI5dI5(Core::LinAlg::Initialization::uninitialized);
   dI5dI5.multiply_nt(modCMsumMmodCv, modCMsumMmodCv);  // summand10 = dyad(dI5,dI5)
 
-  Core::LinAlg::Matrix<6, 6> MdI5sumdI5M(false);
+  Core::LinAlg::Matrix<6, 6> MdI5sumdI5M(Core::LinAlg::Initialization::uninitialized);
   MdI5sumdI5M.multiply_nt(Mv, modCMsumMmodCv);
   MdI5sumdI5M.multiply_nt(1.0, modCMsumMmodCv, Mv, 1.0);  // summand11 = dyad(M,dI5) + dyad(dI5,M)
 
   // fictitious elasticiy tensor
-  Core::LinAlg::Matrix<6, 6> modcmat(false);
+  Core::LinAlg::Matrix<6, 6> modcmat(Core::LinAlg::Initialization::uninitialized);
   modcmat.update(delta1, IdId);
   modcmat.update(delta5, IdMsumMId, 1.0);
   modcmat.update(delta7, MM, 1.0);
@@ -235,28 +235,28 @@ void Mat::Elastic::IsoMuscleBlemker::add_stress_aniso_modified(
   modcmat.scale(std::pow(J, -4.0 / 3.0));
 
   // modified projection tensor Psl = Cinv o Cinv - 1/3 Cinv x Cinv
-  Core::LinAlg::Matrix<6, 6> Psl(true);
+  Core::LinAlg::Matrix<6, 6> Psl(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Tensor::add_holzapfel_product(Psl, icg, 1.0);
   Psl.multiply_nt(-1.0 / 3.0, icg, icg, 1.0);
 
   // Right Cauchy-Green tensor in stress-like Voigt notation
-  static Core::LinAlg::Matrix<6, 1> rcg_stress(false);
+  static Core::LinAlg::Matrix<6, 1> rcg_stress(Core::LinAlg::Initialization::uninitialized);
   Core::LinAlg::Voigt::Strains::to_stress_like(rcg, rcg_stress);
 
   // compute the projection tensor P = II - 1/3 Cinv x C
-  Core::LinAlg::Matrix<6, 6> P(false);
+  Core::LinAlg::Matrix<6, 6> P(Core::LinAlg::Initialization::uninitialized);
   Core::LinAlg::Voigt::fourth_order_identity_matrix<Core::LinAlg::Voigt::NotationType::stress,
       Core::LinAlg::Voigt::NotationType::stress>(P);
   P.multiply_nt(-1.0 / 3.0, icg, rcg_stress, 1.0);
 
   // compute the transpose of the projection tensor PT = II - 1/3 C x Cinv
-  Core::LinAlg::Matrix<6, 6> PT(false);
+  Core::LinAlg::Matrix<6, 6> PT(Core::LinAlg::Initialization::uninitialized);
   Core::LinAlg::Voigt::fourth_order_identity_matrix<Core::LinAlg::Voigt::NotationType::stress,
       Core::LinAlg::Voigt::NotationType::stress>(PT);
   PT.multiply_nt(-1.0 / 3.0, rcg_stress, icg, 1.0);
 
   // compute isochoric cmat from fictitious elasticiy tensor
-  Core::LinAlg::Matrix<6, 6> cmatiso(false);
+  Core::LinAlg::Matrix<6, 6> cmatiso(Core::LinAlg::Initialization::uninitialized);
   cmatiso.multiply_nn(P, modcmat);
   cmatiso.multiply_nn(1.0, modcmat, PT, 1.0);
   cmatiso.update(2.0 / 3.0 * incJ * traceCmodS, Psl, 1.0);

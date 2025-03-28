@@ -83,8 +83,10 @@ bool BeamInteraction::BeamToSolidVolumeMeshtyingPair2D3DPlane<Beam, Solid>::eval
   Core::LinAlg::Matrix<3, 1, scalar_type> r_cross_section;
   Core::LinAlg::Matrix<3, 1, scalar_type> r_solid;
   Core::LinAlg::Matrix<3, 1, scalar_type> force;
-  Core::LinAlg::Matrix<Beam::n_dof_, 1, scalar_type> force_element_1(true);
-  Core::LinAlg::Matrix<Solid::n_dof_, 1, scalar_type> force_element_2(true);
+  Core::LinAlg::Matrix<Beam::n_dof_, 1, scalar_type> force_element_1(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<Solid::n_dof_, 1, scalar_type> force_element_2(
+      Core::LinAlg::Initialization::zero);
 
   // Initialize scalar variables.
   double beam_jacobian;

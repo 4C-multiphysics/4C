@@ -152,7 +152,7 @@ void Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::sysmat_correct
   //----------------------------------------------------------------------
 
   // get gradient of initial phi at element center
-  Core::LinAlg::Matrix<nsd_, 1> gradphizero(true);
+  Core::LinAlg::Matrix<nsd_, 1> gradphizero(Core::LinAlg::Initialization::zero);
   gradphizero.multiply(my::derxy_, ephizero_[0]);
 
   // get characteristic element length
@@ -249,7 +249,7 @@ void Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::calc_ele_penal
   //----------------------------------------------------------------------
 
   // get gradient of initial phi at element center
-  Core::LinAlg::Matrix<nsd_, 1> gradphizero(true);
+  Core::LinAlg::Matrix<nsd_, 1> gradphizero(Core::LinAlg::Initialization::zero);
   gradphizero.multiply(my::derxy_, ephizero_[0]);
 
   // get characteristic element length
@@ -284,14 +284,14 @@ void Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::calc_ele_penal
     // get sign function
     double signphi = 0.0;
     // gradient of current scalar
-    Core::LinAlg::Matrix<nsd_, 1> gradphi(true);
+    Core::LinAlg::Matrix<nsd_, 1> gradphi(Core::LinAlg::Initialization::zero);
     gradphi.multiply(my::derxy_, my::ephinp_[0]);
     // get norm
     const double gradphi_norm = gradphi.norm2();
     sign_function(signphi, charelelength, phizero, gradphizero, phinp, gradphi);
 
     // get velocity at element center
-    Core::LinAlg::Matrix<nsd_, 1> convelint(true);
+    Core::LinAlg::Matrix<nsd_, 1> convelint(Core::LinAlg::Initialization::zero);
     if (gradphi_norm > 1e-8) convelint.update(signphi / gradphi_norm, gradphi);
     // convective term
     //    double conv_phi = convelint.Dot(gradphi);
@@ -357,7 +357,7 @@ void Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::sysmat_nodal_v
   //----------------------------------------------------------------------
 
   // get gradient of initial phi at element center
-  Core::LinAlg::Matrix<nsd_, 1> gradphizero(true);
+  Core::LinAlg::Matrix<nsd_, 1> gradphizero(Core::LinAlg::Initialization::zero);
   gradphizero.multiply(my::derxy_, ephizero_[0]);
 
   // get characteristic element length
@@ -384,7 +384,7 @@ void Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::sysmat_nodal_v
     double phinp = 0.0;
     phinp = my::funct_.dot(my::ephinp_[0]);
     // gradient of current scalar
-    Core::LinAlg::Matrix<nsd_, 1> gradphi(true);
+    Core::LinAlg::Matrix<nsd_, 1> gradphi(Core::LinAlg::Initialization::zero);
     gradphi.multiply(my::derxy_, my::ephinp_[0]);
     // get norm
     const double gradphi_norm = gradphi.norm2();
@@ -400,7 +400,7 @@ void Discret::Elements::ScaTraEleCalcLsReinit<distype, prob_dim>::sysmat_nodal_v
     //    }
 
     // get velocity at element center
-    Core::LinAlg::Matrix<nsd_, 1> convelint(true);
+    Core::LinAlg::Matrix<nsd_, 1> convelint(Core::LinAlg::Initialization::zero);
     if (lsreinitparams_->reinit_type() == Inpar::ScaTra::reinitaction_sussman)
     {
       // get sign function

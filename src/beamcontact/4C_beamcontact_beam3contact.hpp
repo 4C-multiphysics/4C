@@ -302,7 +302,7 @@ namespace CONTACT
       int size2 = gpvariables_.size();
       int size3 = epvariables_.size();
       std::vector<Core::LinAlg::Matrix<3, 1>> r1(
-          size1 + size2 + size3, Core::LinAlg::Matrix<3, 1>(true));
+          size1 + size2 + size3, Core::LinAlg::Matrix<3, 1>(Core::LinAlg::Initialization::zero));
 
       for (int i = 0; i < size1; i++)
       {
@@ -337,7 +337,7 @@ namespace CONTACT
       int size2 = gpvariables_.size();
       int size3 = epvariables_.size();
       std::vector<Core::LinAlg::Matrix<3, 1>> r2(
-          size1 + size2 + size3, Core::LinAlg::Matrix<3, 1>(true));
+          size1 + size2 + size3, Core::LinAlg::Matrix<3, 1>(Core::LinAlg::Initialization::zero));
 
       for (int i = 0; i < size1; i++)
       {

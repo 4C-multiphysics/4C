@@ -308,8 +308,8 @@ Discret::Elements::Beam3r::Beam3r(int id, int owner)
       ekintorsion_(0.0),
       ekinbending_(0.0),
       ekintrans_(0.0),
-      l_(true),
-      p_(true)
+      l_(Core::LinAlg::Initialization::zero),
+      p_(Core::LinAlg::Initialization::zero)
 {
   return;
 }
@@ -818,7 +818,7 @@ void Discret::Elements::Beam3r::set_up_reference_geometry(
     Core::LinAlg::Matrix<3, 1> dr0dxi;
 
     // dummy 3x1 vector
-    Core::LinAlg::Matrix<3, 1> dummy(true);
+    Core::LinAlg::Matrix<3, 1> dummy(Core::LinAlg::Initialization::zero);
 
 
     /********************************** Compute nodal quantities

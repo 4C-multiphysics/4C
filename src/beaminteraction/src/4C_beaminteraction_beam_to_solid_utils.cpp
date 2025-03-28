@@ -284,7 +284,7 @@ void BeamInteraction::get_solid_rotation_vector_deformation_gradient_3d_general(
   deformed_basis.multiply(deformation_gradient, ref_triad);
 
   // Average of deformed basis vectors.
-  Core::LinAlg::Matrix<3, 1, ScalarType> average_vector(true);
+  Core::LinAlg::Matrix<3, 1, ScalarType> average_vector(Core::LinAlg::Initialization::zero);
   for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
     for (unsigned int j_vec = 0; j_vec < 3; j_vec++)
       average_vector(i_dim) += deformed_basis(i_dim, j_vec);
@@ -400,7 +400,8 @@ void BeamInteraction::
   cross_section_normal_vector.scale(1.0 / Core::FADUtils::vector_norm(cross_section_normal_vector));
 
   // Average the current cross section basis vectors.
-  Core::LinAlg::Matrix<3, 1, ScalarType> cross_section_average_vector(true);
+  Core::LinAlg::Matrix<3, 1, ScalarType> cross_section_average_vector(
+      Core::LinAlg::Initialization::zero);
   for (unsigned int i_basis = 0; i_basis < 2; i_basis++)
   {
     cross_section_basis_vector[i_basis].scale(
@@ -428,9 +429,9 @@ void BeamInteraction::
     for (unsigned int i_col = 0; i_col < 3; i_col++)
       beam_ref_triad_fad(i_row, i_col) = beam_ref_triad(i_row, i_col);
 
-  Core::LinAlg::Matrix<3, 1, ScalarType> rot_vec(true);
-  Core::LinAlg::Matrix<4, 1, ScalarType> rot_quat(true);
-  Core::LinAlg::Matrix<3, 3, ScalarType> solid_triad_rel(true);
+  Core::LinAlg::Matrix<3, 1, ScalarType> rot_vec(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<4, 1, ScalarType> rot_quat(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, ScalarType> solid_triad_rel(Core::LinAlg::Initialization::zero);
 
   rot_vec(0) = -M_PI_4;
   Core::LargeRotations::angletoquaternion(rot_vec, rot_quat);
@@ -466,7 +467,7 @@ void BeamInteraction::get_solid_rotation_vector_deformation_gradient_3d_base1(
   deformed_basis.multiply(deformation_gradient, ref_triad);
 
   // Average of deformed basis vectors.
-  Core::LinAlg::Matrix<3, 1, ScalarType> normalized_base_1(true);
+  Core::LinAlg::Matrix<3, 1, ScalarType> normalized_base_1(Core::LinAlg::Initialization::zero);
   for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
     normalized_base_1(i_dim) = deformed_basis(i_dim, 0);
   normalized_base_1.scale(1.0 / Core::FADUtils::norm(normalized_base_1));

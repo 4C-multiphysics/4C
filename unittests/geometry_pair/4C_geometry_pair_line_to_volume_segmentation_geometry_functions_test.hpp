@@ -394,7 +394,7 @@ namespace
     volume_elements.push_back(std::make_shared<Discret::Elements::Solid>(0, 0));
 
     // Positional and tangent DOFs of the line(s).
-    Core::LinAlg::Matrix<12, 1, double> q_line(true);
+    Core::LinAlg::Matrix<12, 1, double> q_line(Core::LinAlg::Initialization::zero);
     q_line(0) = -0.05;
     q_line(1) = 0.05;
     q_line(2) = 0.3;
@@ -412,7 +412,7 @@ namespace
     line_ref_lengths.push_back(0.61920435714496047108);
 
     // Positional DOFs of the solid(s).
-    Core::LinAlg::Matrix<81, 1, double> q_volume(true);
+    Core::LinAlg::Matrix<81, 1, double> q_volume(Core::LinAlg::Initialization::zero);
     q_volume(0) = 0.0;
     q_volume(1) = 0.1;
     q_volume(2) = 0.0;

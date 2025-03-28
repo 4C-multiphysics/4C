@@ -233,7 +233,7 @@ namespace GEOMETRYPAIR
   {
     // Matrix for shape function values.
     Core::LinAlg::Matrix<1, ElementType::n_nodes_ * ElementType::n_val_, ScalarTypeResult> N_flat(
-        true);
+        Core::LinAlg::Initialization::zero);
 
     // Evaluate the shape function values.
     EvaluateShapeFunction<ElementType>::evaluate(N_flat, xi, shape_function_data...);

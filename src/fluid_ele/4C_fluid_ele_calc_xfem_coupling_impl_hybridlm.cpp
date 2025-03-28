@@ -36,7 +36,7 @@ namespace Discret
         Core::LinAlg::Matrix<slave_nen_, nen_> bK_sm;
 
         // interface velocity at gauss-point (current gauss-point in calling method)
-        Core::LinAlg::Matrix<nsd_, 1> velint_s(true);
+        Core::LinAlg::Matrix<nsd_, 1> velint_s(Core::LinAlg::Initialization::zero);
         this->get_interface_velnp(velint_s);
 
         // add the prescribed interface velocity for weak Dirichlet boundary conditions or the jump
@@ -44,7 +44,7 @@ namespace Discret
         velint_s.update(1.0, ivelint_jump, 1.0);
 
         // get nodal shape function vector
-        Core::LinAlg::Matrix<slave_nen_, 1> slave_funct(true);
+        Core::LinAlg::Matrix<slave_nen_, 1> slave_funct(Core::LinAlg::Initialization::zero);
         this->get_slave_funct(slave_funct);
 
         bK_ms.multiply_nt(funct, slave_funct);
@@ -95,7 +95,7 @@ namespace Discret
       )
       {
         // interface velocity at gauss-point (current gauss-point in calling method)
-        Core::LinAlg::Matrix<nsd_, 1> velint_s(true);
+        Core::LinAlg::Matrix<nsd_, 1> velint_s(Core::LinAlg::Initialization::zero);
         this->get_interface_velnp(velint_s);
 
         // add the prescribed interface velocity for weak Dirichlet boundary conditions or the jump
@@ -104,8 +104,8 @@ namespace Discret
 
         // block submatrices for interface coupling; s: slave side, m: master side (always
         // background here)
-        Core::LinAlg::Matrix<nen_, slave_nen_> bG_ms(true);
-        Core::LinAlg::Matrix<slave_nen_, nen_> bG_sm(true);
+        Core::LinAlg::Matrix<nen_, slave_nen_> bG_ms(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<slave_nen_, nen_> bG_sm(Core::LinAlg::Initialization::zero);
 
         Core::LinAlg::Matrix<slave_nen_, 1> slave_funct;
         this->get_slave_funct(slave_funct);

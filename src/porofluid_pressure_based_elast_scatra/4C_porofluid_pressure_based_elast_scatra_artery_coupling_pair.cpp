@@ -550,11 +550,14 @@ void PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art, d
       1.0 / numpatch_axi_ * arteryelelengthref_ * 1.0 / numpatch_rad_ * 2.0 * M_PI * radius;
 
   // Vectors for shape functions and their derivatives
-  static Core::LinAlg::Matrix<1, numnodesart_, double> N1(true);      // = N1
-  static Core::LinAlg::Matrix<1, numnodesart_, double> N1_eta(true);  // = N1,eta
+  static Core::LinAlg::Matrix<1, numnodesart_, double> N1(
+      Core::LinAlg::Initialization::zero);  // = N1
+  static Core::LinAlg::Matrix<1, numnodesart_, double> N1_eta(
+      Core::LinAlg::Initialization::zero);  // = N1,eta
   // Coords and derivatives of 1D and 2D/3D element
-  static Core::LinAlg::Matrix<numdim_, 1, double> r1(true);      // = r1
-  static Core::LinAlg::Matrix<numdim_, 1, double> r1_eta(true);  // = r1,eta
+  static Core::LinAlg::Matrix<numdim_, 1, double> r1(Core::LinAlg::Initialization::zero);  // = r1
+  static Core::LinAlg::Matrix<numdim_, 1, double> r1_eta(
+      Core::LinAlg::Initialization::zero);  // = r1,eta
 
   // element parameter space coordinates in 3D element
   std::vector<double> xi(3);
@@ -671,14 +674,18 @@ void PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art, d
   const double determinant = (eta_b_ - eta_a_) / 2.0;
   jacobi_ = determinant * arteryelelengthref_ / 2.0;
 
-  static Core::LinAlg::Matrix<1, numnodescont_> N2(true);           // = N2
-  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(true);  // = N2,xi1
+  static Core::LinAlg::Matrix<1, numnodescont_> N2(Core::LinAlg::Initialization::zero);  // = N2
+  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(
+      Core::LinAlg::Initialization::zero);  // = N2,xi1
   // Vectors for shape functions and their derivatives
-  static Core::LinAlg::Matrix<1, numnodesart_, double> N1(true);      // = N1
-  static Core::LinAlg::Matrix<1, numnodesart_, double> N1_eta(true);  // = N1,eta
+  static Core::LinAlg::Matrix<1, numnodesart_, double> N1(
+      Core::LinAlg::Initialization::zero);  // = N1
+  static Core::LinAlg::Matrix<1, numnodesart_, double> N1_eta(
+      Core::LinAlg::Initialization::zero);  // = N1,eta
   // Coords and derivatives of 1D and 2D/3D element
-  static Core::LinAlg::Matrix<numdim_, 1, double> r1(true);      // = r1
-  static Core::LinAlg::Matrix<numdim_, 1, double> r1_eta(true);  // = r1,eta
+  static Core::LinAlg::Matrix<numdim_, 1, double> r1(Core::LinAlg::Initialization::zero);  // = r1
+  static Core::LinAlg::Matrix<numdim_, 1, double> r1_eta(
+      Core::LinAlg::Initialization::zero);  // = r1,eta
 
   // project the Gauss points --> those have to able to be projected
   for (int i_gp = 0; i_gp < n_gp_; i_gp++)
@@ -713,14 +720,18 @@ void PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art, d
   xi_.resize(1);
   xi_[0].resize(numdim_);
 
-  static Core::LinAlg::Matrix<1, numnodescont_> N2(true);           // = N2
-  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(true);  // = N2,xi1
+  static Core::LinAlg::Matrix<1, numnodescont_> N2(Core::LinAlg::Initialization::zero);  // = N2
+  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(
+      Core::LinAlg::Initialization::zero);  // = N2,xi1
   // Vectors for shape functions and their derivatives
-  static Core::LinAlg::Matrix<1, numnodesart_, double> N1(true);      // = N1
-  static Core::LinAlg::Matrix<1, numnodesart_, double> N1_eta(true);  // = N1,eta
+  static Core::LinAlg::Matrix<1, numnodesart_, double> N1(
+      Core::LinAlg::Initialization::zero);  // = N1
+  static Core::LinAlg::Matrix<1, numnodesart_, double> N1_eta(
+      Core::LinAlg::Initialization::zero);  // = N1,eta
   // Coords and derivatives of 1D and 2D/3D element
-  static Core::LinAlg::Matrix<numdim_, 1, double> r1(true);      // = r1
-  static Core::LinAlg::Matrix<numdim_, 1, double> r1_eta(true);  // = r1,eta
+  static Core::LinAlg::Matrix<numdim_, 1, double> r1(Core::LinAlg::Initialization::zero);  // = r1
+  static Core::LinAlg::Matrix<numdim_, 1, double> r1_eta(
+      Core::LinAlg::Initialization::zero);  // = r1,eta
 
   // Update coordinates and derivatives for 1D and 2D/3D element
   get_1d_shape_functions<double>(N1, N1_eta, eta_[0]);
@@ -817,7 +828,8 @@ void PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art, d
           element1_->location_vector(*artdis, la, false);
           // rebuild scalar vector
           eartscalarnp_.clear();
-          eartscalarnp_.resize(numscalart_, Core::LinAlg::Matrix<numnodesart_, 1>(true));
+          eartscalarnp_.resize(numscalart_,
+              Core::LinAlg::Matrix<numnodesart_, 1>(Core::LinAlg::Initialization::zero));
           // extract local values of artery-scatra field from global state vector
           Core::FE::extract_my_values<Core::LinAlg::Matrix<numnodesart_, 1>>(
               *artscalarnp, eartscalarnp_, la[ndsartery_scatra_].lm_);
@@ -837,7 +849,8 @@ void PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art, d
           element2_->location_vector(*contdis, la, false);
           // rebuild scalar vector
           econtscalarnp_.clear();
-          econtscalarnp_.resize(numscalcont_, Core::LinAlg::Matrix<numnodescont_, 1>(true));
+          econtscalarnp_.resize(numscalcont_,
+              Core::LinAlg::Matrix<numnodescont_, 1>(Core::LinAlg::Initialization::zero));
           // extract local values of continuous-scatra field from global state vector
           Core::FE::extract_my_values<Core::LinAlg::Matrix<numnodescont_, 1>>(
               *contscalarnp, econtscalarnp_, la[3].lm_);
@@ -1090,7 +1103,7 @@ double PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art,
     std::shared_ptr<Core::FE::Discretization> contdis)
 {
   // nodal displacement values for ALE
-  Core::LinAlg::Matrix<numdim_, numnodescont_> edispnp(true);
+  Core::LinAlg::Matrix<numdim_, numnodescont_> edispnp(Core::LinAlg::Initialization::zero);
 
   if (!firstcall)
   {
@@ -1114,11 +1127,14 @@ double PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art,
   // update current configuration
   ele2pos_.update(1.0, ele2posref_, 1.0, edispnp, 0.0);
 
-  static Core::LinAlg::Matrix<1, numnodescont_> N2(true);            // = N2
-  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(true);   // = N2,xi1
-  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_XYZ(true);  // = N2,X
-  static Core::LinAlg::Matrix<numdim_, numdim_> defgrad(true);       // = dx/dX = F
-  static Core::LinAlg::Matrix<numdim_, 1> Ft0;                       // = F*t0
+  static Core::LinAlg::Matrix<1, numnodescont_> N2(Core::LinAlg::Initialization::zero);  // = N2
+  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(
+      Core::LinAlg::Initialization::zero);  // = N2,xi1
+  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_XYZ(
+      Core::LinAlg::Initialization::zero);  // = N2,X
+  static Core::LinAlg::Matrix<numdim_, numdim_> defgrad(
+      Core::LinAlg::Initialization::zero);      // = dx/dX = F
+  static Core::LinAlg::Matrix<numdim_, 1> Ft0;  // = F*t0
 
   curr_segment_length_ = 0.0;
   // current segment length = \int_{\eta_a}^{eta_b} || F*t0 ||_2 ds
@@ -1173,11 +1189,14 @@ void PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art, d
   else
   {
     // Vectors for shape functions and their derivatives
-    static Core::LinAlg::Matrix<1, numnodesart_, double> N1(true);      // = N1
-    static Core::LinAlg::Matrix<1, numnodesart_, double> N1_eta(true);  // = N1,eta
+    static Core::LinAlg::Matrix<1, numnodesart_, double> N1(
+        Core::LinAlg::Initialization::zero);  // = N1
+    static Core::LinAlg::Matrix<1, numnodesart_, double> N1_eta(
+        Core::LinAlg::Initialization::zero);  // = N1,eta
     // Coords and derivatives of 1D and 2D/3D element
-    static Core::LinAlg::Matrix<numdim_, 1, double> r1(true);      // = r1
-    static Core::LinAlg::Matrix<numdim_, 1, double> r1_eta(true);  // = r1,eta
+    static Core::LinAlg::Matrix<numdim_, 1, double> r1(Core::LinAlg::Initialization::zero);  // = r1
+    static Core::LinAlg::Matrix<numdim_, 1, double> r1_eta(
+        Core::LinAlg::Initialization::zero);  // = r1,eta
 
     // current length of artery
     arteryelelength_ = std::accumulate(segmentlengths.begin(), segmentlengths.end(), 0.0);
@@ -1274,11 +1293,13 @@ void PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art, d
     if (!constant_part_evaluated_ or !evaluate_in_ref_config_)
     {
       // Vectors for shape functions and their derivatives
-      static Core::LinAlg::Matrix<1, numnodesart_> N1(true);      // = N1
-      static Core::LinAlg::Matrix<1, numnodesart_> N1_eta(true);  // = N1,eta
+      static Core::LinAlg::Matrix<1, numnodesart_> N1(Core::LinAlg::Initialization::zero);  // = N1
+      static Core::LinAlg::Matrix<1, numnodesart_> N1_eta(
+          Core::LinAlg::Initialization::zero);  // = N1,eta
 
-      static Core::LinAlg::Matrix<1, numnodescont_> N2(true);           // = N2
-      static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(true);  // = N2,xi1
+      static Core::LinAlg::Matrix<1, numnodescont_> N2(Core::LinAlg::Initialization::zero);  // = N2
+      static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(
+          Core::LinAlg::Initialization::zero);  // = N2,xi1
 
       gpts_ntp_stiffmat11_.shape(dim1_, dim1_);
       gpts_ntp_stiffmat12_.shape(dim1_, dim2_);
@@ -1335,11 +1356,13 @@ void PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art, d
     if (!constant_part_evaluated_ or !evaluate_in_ref_config_)
     {
       // Vectors for shape functions and their derivatives
-      static Core::LinAlg::Matrix<1, numnodesart_> N1(true);      // = N1
-      static Core::LinAlg::Matrix<1, numnodesart_> N1_eta(true);  // = N1,eta
+      static Core::LinAlg::Matrix<1, numnodesart_> N1(Core::LinAlg::Initialization::zero);  // = N1
+      static Core::LinAlg::Matrix<1, numnodesart_> N1_eta(
+          Core::LinAlg::Initialization::zero);  // = N1,eta
 
-      static Core::LinAlg::Matrix<1, numnodescont_> N2(true);           // = N2
-      static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(true);  // = N2,xi1
+      static Core::LinAlg::Matrix<1, numnodescont_> N2(Core::LinAlg::Initialization::zero);  // = N2
+      static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(
+          Core::LinAlg::Initialization::zero);  // = N2,xi1
 
       gpts_ntp_stiffmat11_.shape(dim1_, dim1_);
       gpts_ntp_stiffmat12_.shape(dim1_, dim2_);
@@ -1395,11 +1418,13 @@ void PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art, d
     if (!constant_part_evaluated_ or !evaluate_in_ref_config_)
     {
       // Vectors for shape functions and their derivatives
-      static Core::LinAlg::Matrix<1, numnodesart_> N1(true);      // = N1
-      static Core::LinAlg::Matrix<1, numnodesart_> N1_eta(true);  // = N1,eta
+      static Core::LinAlg::Matrix<1, numnodesart_> N1(Core::LinAlg::Initialization::zero);  // = N1
+      static Core::LinAlg::Matrix<1, numnodesart_> N1_eta(
+          Core::LinAlg::Initialization::zero);  // = N1,eta
 
-      static Core::LinAlg::Matrix<1, numnodescont_> N2(true);           // = N2
-      static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(true);  // = N2,xi1
+      static Core::LinAlg::Matrix<1, numnodescont_> N2(Core::LinAlg::Initialization::zero);  // = N2
+      static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(
+          Core::LinAlg::Initialization::zero);  // = N2,xi1
 
       d_.shape(dim1_, dim1_);
       m_.shape(dim1_, dim2_);
@@ -1439,14 +1464,18 @@ void PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art, d
     double& integrated_diam)
 {
   // Vectors for shape functions and their derivatives
-  static Core::LinAlg::Matrix<1, numnodesart_> N1(true);      // = N1
-  static Core::LinAlg::Matrix<1, numnodesart_> N1_eta(true);  // = N1,eta
+  static Core::LinAlg::Matrix<1, numnodesart_> N1(Core::LinAlg::Initialization::zero);  // = N1
+  static Core::LinAlg::Matrix<1, numnodesart_> N1_eta(
+      Core::LinAlg::Initialization::zero);  // = N1,eta
 
-  static Core::LinAlg::Matrix<1, numnodescont_> N2(true);            // = N2
-  static Core::LinAlg::Matrix<numnodescont_, 1> N2_transpose(true);  // = N2^T
+  static Core::LinAlg::Matrix<1, numnodescont_> N2(Core::LinAlg::Initialization::zero);  // = N2
+  static Core::LinAlg::Matrix<numnodescont_, 1> N2_transpose(
+      Core::LinAlg::Initialization::zero);  // = N2^T
 
-  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(true);  // = N2,xi1
-  static Core::LinAlg::Matrix<numdim_, numnodescont_> derxy(true);  // = N2,xi1
+  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(
+      Core::LinAlg::Initialization::zero);  // = N2,xi1
+  static Core::LinAlg::Matrix<numdim_, numnodescont_> derxy(
+      Core::LinAlg::Initialization::zero);  // = N2,xi1
 
   static Core::LinAlg::Matrix<numdim_, numdim_> xjm;
   static Core::LinAlg::Matrix<numdim_, numdim_> xjm0;
@@ -1514,13 +1543,17 @@ void PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art, d
     return;
 
   // Vectors for shape functions and their derivatives
-  static Core::LinAlg::Matrix<1, numnodesart_> N1(true);      // = N1
-  static Core::LinAlg::Matrix<1, numnodesart_> N1_eta(true);  // = N1,eta
+  static Core::LinAlg::Matrix<1, numnodesart_> N1(Core::LinAlg::Initialization::zero);  // = N1
+  static Core::LinAlg::Matrix<1, numnodesart_> N1_eta(
+      Core::LinAlg::Initialization::zero);  // = N1,eta
 
-  static Core::LinAlg::Matrix<1, numnodescont_> N2(true);            // = N2
-  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(true);   // = N2,xi1
-  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_XYZ(true);  // = N2,X
-  static Core::LinAlg::Matrix<numdim_, numdim_> defgrad(true);       // = dx/dX = F
+  static Core::LinAlg::Matrix<1, numnodescont_> N2(Core::LinAlg::Initialization::zero);  // = N2
+  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(
+      Core::LinAlg::Initialization::zero);  // = N2,xi1
+  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_XYZ(
+      Core::LinAlg::Initialization::zero);  // = N2,X
+  static Core::LinAlg::Matrix<numdim_, numdim_> defgrad(
+      Core::LinAlg::Initialization::zero);  // = dx/dX = F
 
   static Core::LinAlg::Matrix<numdim_, numdim_> xjm;
   static Core::LinAlg::Matrix<numdim_, numdim_> xjm0;
@@ -2118,20 +2151,27 @@ FAD PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art, di
       Core::FE::IntegrationPoints1D(Core::FE::GaussRule1D::line_3point);
   if (numdim_ == 3) gaussPoints = Core::FE::IntegrationPoints1D(Core::FE::GaussRule1D::line_4point);
 
-  static Core::LinAlg::Matrix<1, numnodescont_, FAD> N2(true);           // = N2
-  static Core::LinAlg::Matrix<numdim_, numnodescont_, FAD> N2_xi(true);  // = N2,xi1
+  static Core::LinAlg::Matrix<1, numnodescont_, FAD> N2(
+      Core::LinAlg::Initialization::zero);  // = N2
+  static Core::LinAlg::Matrix<numdim_, numnodescont_, FAD> N2_xi(
+      Core::LinAlg::Initialization::zero);  // = N2,xi1
 
-  static Core::LinAlg::Matrix<numdim_, numdim_, FAD> InvJ(true);          // (dX/dxi)^-1
-  static Core::LinAlg::Matrix<numdim_, numdim_, FAD> defGrad(true);       // (dX/dx) = F
-  static Core::LinAlg::Matrix<numdim_, numnodescont_, FAD> N2_XYZ(true);  // = N2,X
-  static Core::LinAlg::Matrix<numdim_, 1, FAD> Ft0(true);                 // = F*t0
+  static Core::LinAlg::Matrix<numdim_, numdim_, FAD> InvJ(
+      Core::LinAlg::Initialization::zero);  // (dX/dxi)^-1
+  static Core::LinAlg::Matrix<numdim_, numdim_, FAD> defGrad(
+      Core::LinAlg::Initialization::zero);  // (dX/dx) = F
+  static Core::LinAlg::Matrix<numdim_, numnodescont_, FAD> N2_XYZ(
+      Core::LinAlg::Initialization::zero);                                               // = N2,X
+  static Core::LinAlg::Matrix<numdim_, 1, FAD> Ft0(Core::LinAlg::Initialization::zero);  // = F*t0
 
   // Vectors for shape functions and their derivatives
-  static Core::LinAlg::Matrix<1, numnodesart_, FAD> N1(true);      // = N1
-  static Core::LinAlg::Matrix<1, numnodesart_, FAD> N1_eta(true);  // = N1,eta
+  static Core::LinAlg::Matrix<1, numnodesart_, FAD> N1(Core::LinAlg::Initialization::zero);  // = N1
+  static Core::LinAlg::Matrix<1, numnodesart_, FAD> N1_eta(
+      Core::LinAlg::Initialization::zero);  // = N1,eta
   // Coords and derivatives of 1D and 2D/3D element
-  static Core::LinAlg::Matrix<numdim_, 1, FAD> r1(true);      // = r1
-  static Core::LinAlg::Matrix<numdim_, 1, FAD> r1_eta(true);  // = r1,eta
+  static Core::LinAlg::Matrix<numdim_, 1, FAD> r1(Core::LinAlg::Initialization::zero);  // = r1
+  static Core::LinAlg::Matrix<numdim_, 1, FAD> r1_eta(
+      Core::LinAlg::Initialization::zero);  // = r1,eta
 
   // t0
   static Core::LinAlg::Matrix<numdim_, 1, FAD> t0;
@@ -2620,11 +2660,14 @@ void PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art, d
 
   std::vector<double> xi(numdim_);
   // Vectors for shape functions and their derivatives
-  static Core::LinAlg::Matrix<1, numnodesart_, double> N1(true);      // = N1
-  static Core::LinAlg::Matrix<1, numnodesart_, double> N1_eta(true);  // = N1,eta
+  static Core::LinAlg::Matrix<1, numnodesart_, double> N1(
+      Core::LinAlg::Initialization::zero);  // = N1
+  static Core::LinAlg::Matrix<1, numnodesart_, double> N1_eta(
+      Core::LinAlg::Initialization::zero);  // = N1,eta
   // Coords and derivatives of 1D and 2D/3D element
-  static Core::LinAlg::Matrix<numdim_, 1, double> r1(true);      // = r1
-  static Core::LinAlg::Matrix<numdim_, 1, double> r1_eta(true);  // = r1,eta
+  static Core::LinAlg::Matrix<numdim_, 1, double> r1(Core::LinAlg::Initialization::zero);  // = r1
+  static Core::LinAlg::Matrix<numdim_, 1, double> r1_eta(
+      Core::LinAlg::Initialization::zero);  // = r1,eta
   bool projection_valid = false;
 
   // 1st case: no intersection found
@@ -2969,23 +3012,26 @@ void PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art, d
   }
 
   // Initialize function f and Jacobian J for Newton iteration
-  Core::LinAlg::Matrix<numdim_, 1> f(true);
-  Core::LinAlg::Matrix<numdim_, numdim_> J(true);
-  Core::LinAlg::Matrix<numdim_, numdim_> Jinv(true);
+  Core::LinAlg::Matrix<numdim_, 1> f(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<numdim_, numdim_> J(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<numdim_, numdim_> Jinv(Core::LinAlg::Initialization::zero);
 
   // Vectors for shape functions and their derivatives
-  static Core::LinAlg::Matrix<1, numnodesart_> N1(true);      // = N1
-  static Core::LinAlg::Matrix<1, numnodesart_> N1_eta(true);  // = N1,eta
+  static Core::LinAlg::Matrix<1, numnodesart_> N1(Core::LinAlg::Initialization::zero);  // = N1
+  static Core::LinAlg::Matrix<1, numnodesart_> N1_eta(
+      Core::LinAlg::Initialization::zero);  // = N1,eta
 
-  static Core::LinAlg::Matrix<1, numnodescont_> N2(true);           // = N2
-  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(true);  // = N2,xi1
+  static Core::LinAlg::Matrix<1, numnodescont_> N2(Core::LinAlg::Initialization::zero);  // = N2
+  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(
+      Core::LinAlg::Initialization::zero);  // = N2,xi1
 
   // Coords and derivatives of for 1D and 2D/3D element
-  static Core::LinAlg::Matrix<numdim_, 1> r1(true);      // = r1
-  static Core::LinAlg::Matrix<numdim_, 1> r1_eta(true);  // = r1,eta
+  static Core::LinAlg::Matrix<numdim_, 1> r1(Core::LinAlg::Initialization::zero);      // = r1
+  static Core::LinAlg::Matrix<numdim_, 1> r1_eta(Core::LinAlg::Initialization::zero);  // = r1,eta
 
-  static Core::LinAlg::Matrix<numdim_, 1> x2(true);           // = x2
-  static Core::LinAlg::Matrix<numdim_, numdim_> x2_xi(true);  // = x2,xi
+  static Core::LinAlg::Matrix<numdim_, 1> x2(Core::LinAlg::Initialization::zero);  // = x2
+  static Core::LinAlg::Matrix<numdim_, numdim_> x2_xi(
+      Core::LinAlg::Initialization::zero);  // = x2,xi
 
   // Initial scalar residual (L2-norm of f)
   double residual;
@@ -3283,19 +3329,22 @@ void PoroMultiPhaseScaTra::PoroMultiPhaseScatraArteryCouplingPair<distype_art, d
   }
 
   // Initialize function f and Jacobian J for Newton iteration
-  Core::LinAlg::Matrix<numdim_, 1, T> f(true);
-  Core::LinAlg::Matrix<numdim_, numdim_, T> J(true);
-  Core::LinAlg::Matrix<numdim_, numdim_, T> Jinv(true);
+  Core::LinAlg::Matrix<numdim_, 1, T> f(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<numdim_, numdim_, T> J(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<numdim_, numdim_, T> Jinv(Core::LinAlg::Initialization::zero);
 
   // Vectors for shape functions and their derivatives
-  static Core::LinAlg::Matrix<1, numnodesart_, T> N1(true);      // = N1
-  static Core::LinAlg::Matrix<1, numnodesart_, T> N1_eta(true);  // = N1,eta
+  static Core::LinAlg::Matrix<1, numnodesart_, T> N1(Core::LinAlg::Initialization::zero);  // = N1
+  static Core::LinAlg::Matrix<1, numnodesart_, T> N1_eta(
+      Core::LinAlg::Initialization::zero);  // = N1,eta
 
-  static Core::LinAlg::Matrix<1, numnodescont_, T> N2(true);           // = N2
-  static Core::LinAlg::Matrix<numdim_, numnodescont_, T> N2_xi(true);  // = N2,xi1
+  static Core::LinAlg::Matrix<1, numnodescont_, T> N2(Core::LinAlg::Initialization::zero);  // = N2
+  static Core::LinAlg::Matrix<numdim_, numnodescont_, T> N2_xi(
+      Core::LinAlg::Initialization::zero);  // = N2,xi1
 
-  static Core::LinAlg::Matrix<numdim_, 1, T> x2(true);           // = x2
-  static Core::LinAlg::Matrix<numdim_, numdim_, T> x2_xi(true);  // = x2,xi
+  static Core::LinAlg::Matrix<numdim_, 1, T> x2(Core::LinAlg::Initialization::zero);  // = x2
+  static Core::LinAlg::Matrix<numdim_, numdim_, T> x2_xi(
+      Core::LinAlg::Initialization::zero);  // = x2,xi
 
   // Initial scalar residual (L2-norm of f)
   T residual;

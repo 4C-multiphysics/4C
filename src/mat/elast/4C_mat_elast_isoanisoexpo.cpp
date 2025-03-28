@@ -51,7 +51,7 @@ void Mat::Elastic::IsoAnisoExpo::setup(
   if (params_->init_ == 0)
   {
     // fibers aligned in YZ-plane with gamma around Z in global cartesian cosy
-    Core::LinAlg::Matrix<3, 3> Id(true);
+    Core::LinAlg::Matrix<3, 3> Id(Core::LinAlg::Initialization::zero);
     for (int i = 0; i < 3; i++) Id(i, i) = 1.0;
     set_fiber_vecs(-1.0, Id, Id);
   }
@@ -65,10 +65,10 @@ void Mat::Elastic::IsoAnisoExpo::setup(
         container.get<std::optional<std::vector<double>>>("CIR").has_value())
     {
       // Read in of data
-      Core::LinAlg::Matrix<3, 3> locsys(true);
+      Core::LinAlg::Matrix<3, 3> locsys(Core::LinAlg::Initialization::zero);
       read_rad_axi_cir(container, locsys);
 
-      Core::LinAlg::Matrix<3, 3> Id(true);
+      Core::LinAlg::Matrix<3, 3> Id(Core::LinAlg::Initialization::zero);
       for (int i = 0; i < 3; i++) Id(i, i) = 1.0;
       // final setup of fiber data
       set_fiber_vecs(0.0, locsys, Id);
@@ -121,13 +121,15 @@ void Mat::Elastic::IsoAnisoExpo::add_stress_aniso_modified(const Core::LinAlg::M
                        1. * (Saniso(3) * rcg(3) + Saniso(4) * rcg(4) + Saniso(5) * rcg(5));
   Saniso.update(-incJ / 3. * traceCSfbar, icg, incJ);
 
-  Core::LinAlg::Matrix<6, 6> Psl(true);  // Psl = Cinv o Cinv - 1/3 Cinv x Cinv
+  Core::LinAlg::Matrix<6, 6> Psl(
+      Core::LinAlg::Initialization::zero);  // Psl = Cinv o Cinv - 1/3 Cinv x Cinv
   Core::LinAlg::Tensor::add_holzapfel_product(Psl, icg, 1.0);
   Psl.multiply_nt(-1. / 3., icg, icg, 1.0);
 
   Core::LinAlg::Matrix<6, 1> Aiso(structural_tensor_);
   Aiso.update(-J4 / 3.0, icg, incJ);
-  Core::LinAlg::Matrix<6, 6> cmataniso(true);  // isochoric elastic cmat
+  Core::LinAlg::Matrix<6, 6> cmataniso(
+      Core::LinAlg::Initialization::zero);  // isochoric elastic cmat
   double deltabar = 2. * (1. + 2. * k2 * (J4 - 1.) * (J4 - 1.)) * 2. * k1 *
                     exp(k2 * (J4 - 1.) * (J4 - 1.));  // 4 d^2Wf/dJ4dJ4
   cmataniso.multiply_nt(deltabar, Aiso, Aiso);
@@ -185,15 +187,15 @@ void Mat::Elastic::IsoAnisoExpo::set_fiber_vecs(const double newgamma,
       gamma = newgamma;
   }
 
-  Core::LinAlg::Matrix<3, 1> ca(true);
+  Core::LinAlg::Matrix<3, 1> ca(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 3; ++i)
   {
     // a = cos gamma e3 + sin gamma e2
     ca(i) = cos(gamma) * locsys(i, 2) + sin(gamma) * locsys(i, 1);
   }
   // pull back in reference configuration
-  Core::LinAlg::Matrix<3, 1> a_0(true);
-  Core::LinAlg::Matrix<3, 3> idefgrd(true);
+  Core::LinAlg::Matrix<3, 1> a_0(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> idefgrd(Core::LinAlg::Initialization::zero);
   idefgrd.invert(defgrd);
 
   a_0.multiply(idefgrd, ca);

@@ -597,7 +597,8 @@ void Cut::FacetIntegration::divergence_integration_rule(
         ++iquad)
     {
       double drs = 0.0;
-      Core::LinAlg::Matrix<3, 1> x_gp_loc(true), normal(true);
+      Core::LinAlg::Matrix<3, 1> x_gp_loc(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<3, 1> normal(Core::LinAlg::Initialization::zero);
       const Core::LinAlg::Matrix<2, 1> eta(iquad.point());
 
       switch (bcell->shape())
@@ -845,7 +846,7 @@ void Cut::FacetIntegration::divergence_integration_rule_new(
       for (std::vector<std::vector<Point*>>::iterator k = facetSplit.begin(); k != facetSplit.end();
           k++)
       {
-        Core::LinAlg::Matrix<3, 1> midpt(true);
+        Core::LinAlg::Matrix<3, 1> midpt(Core::LinAlg::Initialization::zero);
 
         std::vector<std::vector<double>> corners_split;
         for (std::vector<Point*>::iterator l = (*k).begin(); l != (*k).end(); l++)
@@ -865,7 +866,7 @@ void Cut::FacetIntegration::divergence_integration_rule_new(
     }
     else
     {
-      Core::LinAlg::Matrix<3, 1> midpt(true);
+      Core::LinAlg::Matrix<3, 1> midpt(Core::LinAlg::Initialization::zero);
       bcell->element_center(midpt);
       Cut::Output::GmshTriSideDump(file, bcell->Points());
       Cut::Output::GmshVector(file, midpt, Cut::Output::GetEqOfPlane(bcell->Points()), true);
@@ -881,7 +882,8 @@ void Cut::FacetIntegration::divergence_integration_rule_new(
         ++iquad)
     {
       double drs = 0.0;
-      Core::LinAlg::Matrix<3, 1> x_gp_loc(true), normal(true);
+      Core::LinAlg::Matrix<3, 1> x_gp_loc(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<3, 1> normal(Core::LinAlg::Initialization::zero);
       const Core::LinAlg::Matrix<2, 1> eta(iquad.point());
 
       switch (bcell->shape())

@@ -161,8 +161,8 @@ void BeamDiscretizationRuntimeOutputWriter::set_geometry_from_beam_discretizatio
 
     /* loop over the chosen visualization points (equidistant distribution in the element
      * parameter space xi \in [-1,1] ) and determine their interpolated (initial) positions r */
-    Core::LinAlg::Matrix<3, 1> interpolated_position(true);
-    Core::LinAlg::Matrix<3, 1> interpolated_position_priorpoint(true);
+    Core::LinAlg::Matrix<3, 1> interpolated_position(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> interpolated_position_priorpoint(Core::LinAlg::Initialization::zero);
     double xi = 0.0;
 
     for (unsigned int ipoint = 0; ipoint < n_subsegments_ + 1; ++ipoint)
@@ -1357,7 +1357,7 @@ void BeamDiscretizationRuntimeOutputWriter::append_element_orientation_parameter
 
     // length of element is approximated linearly, as also the direction of a element is calculated
     // linearly independent of centerline interpolation
-    Core::LinAlg::Matrix<3, 1> dirvec(true);
+    Core::LinAlg::Matrix<3, 1> dirvec(Core::LinAlg::Initialization::zero);
 
     std::vector<double> pos(2, 0.0);
     for (int dim = 0; dim < 3; ++dim)
@@ -1375,7 +1375,7 @@ void BeamDiscretizationRuntimeOutputWriter::append_element_orientation_parameter
     double curr_lin_ele_length = dirvec.norm2();
 
     // loop over all base vectors for orientation index x,y and z
-    Core::LinAlg::Matrix<3, 1> unit_base_vec(true);
+    Core::LinAlg::Matrix<3, 1> unit_base_vec(Core::LinAlg::Initialization::zero);
     std::vector<double> curr_ele_orientation_parameter(3, 0.0);
     for (int unsigned ibase = 0; ibase < 3; ++ibase)
     {
@@ -1454,12 +1454,12 @@ void BeamDiscretizationRuntimeOutputWriter::append_rve_crosssection_forces(
   std::vector<std::vector<double>> fint_sum(3, std::vector<double>(3, 0.0));
   std::vector<double> beamelement_displacement_vector;
   std::vector<double> beamelement_shift_displacement_vector;
-  Core::LinAlg::Matrix<3, 1> pos_node_1(true);
-  Core::LinAlg::Matrix<3, 1> pos_node_2(true);
+  Core::LinAlg::Matrix<3, 1> pos_node_1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> pos_node_2(Core::LinAlg::Initialization::zero);
 
   // create pseudo planes through center of RVE (like this it also works if
   // your box is not periodic, i.e. you do not have cut element on the box edges)
-  Core::LinAlg::Matrix<3, 2> box(true);
+  Core::LinAlg::Matrix<3, 2> box(Core::LinAlg::Initialization::zero);
   if (periodic_boundingbox_ != nullptr)
   {
     for (unsigned dim = 0; dim < 3; ++dim)
@@ -1470,7 +1470,7 @@ void BeamDiscretizationRuntimeOutputWriter::append_rve_crosssection_forces(
     }
   }
 
-  Core::LinAlg::Matrix<3, 1> xi_intersect(true);
+  Core::LinAlg::Matrix<3, 1> xi_intersect(Core::LinAlg::Initialization::zero);
 
   // loop over all my elements and build force sum of myrank's cut element
   for (unsigned int ibeamele = 0; ibeamele < num_beam_row_elements; ++ibeamele)

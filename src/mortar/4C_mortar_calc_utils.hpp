@@ -206,7 +206,7 @@ namespace Mortar
         // Second Derivation (eta)
         case 2:
         {
-          Core::LinAlg::Matrix<ndim - 1, n> deriv2(true);
+          Core::LinAlg::Matrix<ndim - 1, n> deriv2(Core::LinAlg::Initialization::zero);
           switch (ndim)
           {
             case 2:
@@ -405,10 +405,10 @@ namespace Mortar
       static constexpr int numnod = Core::FE::num_nodes<distype>;
       static constexpr int ndim = Core::FE::dim<distype>;
 
-      Core::LinAlg::Matrix<numnod, 1> funct(true);
-      Core::LinAlg::Matrix<ndim, numnod> xref(true);
-      Core::LinAlg::Matrix<ndim, ndim> xjm(true);
-      Core::LinAlg::Matrix<ndim, numnod> deriv(true);
+      Core::LinAlg::Matrix<numnod, 1> funct(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<ndim, numnod> xref(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<ndim, ndim> xjm(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<ndim, numnod> deriv(Core::LinAlg::Initialization::zero);
 
       // spatial configuration of this element!
       for (int k = 0; k < numnod; ++k)

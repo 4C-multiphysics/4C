@@ -84,13 +84,13 @@ namespace
   TEST_F(StVenantKirchhoffTest, TestEvaluateLinalgMatrix)
   {
     // Resulting stress
-    Core::LinAlg::Matrix<6, 1> result_stress(true);
+    Core::LinAlg::Matrix<6, 1> result_stress(Core::LinAlg::Initialization::zero);
 
     // Resulting material stiffness matrix
-    Core::LinAlg::Matrix<6, 6> result_cmat(true);
+    Core::LinAlg::Matrix<6, 6> result_cmat(Core::LinAlg::Initialization::zero);
 
     // Input deformation gradient, which is not used here
-    Core::LinAlg::Matrix<3, 3> defgrad(true);
+    Core::LinAlg::Matrix<3, 3> defgrad(Core::LinAlg::Initialization::zero);
 
     // ParameterList, also not used here
     Teuchos::ParameterList paras;

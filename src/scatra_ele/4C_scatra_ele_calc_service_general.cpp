@@ -119,7 +119,7 @@ int Discret::Elements::ScaTraEleCalc<distype, probdim>::evaluate_action(
       std::shared_ptr<std::vector<int>> writefluxids = scatrapara_->write_flux_ids();
 
       // we always get an 3D flux vector for each node
-      Core::LinAlg::Matrix<3, nen_> eflux(true);
+      Core::LinAlg::Matrix<3, nen_> eflux(Core::LinAlg::Initialization::zero);
 
       // do a loop for systems of transported scalars
       for (int& writefluxid : *writefluxids)
@@ -400,7 +400,7 @@ int Discret::Elements::ScaTraEleCalc<distype, probdim>::evaluate_action(
           get_material_params(ele, densn, densnp, densam, visc);
 
           // get velocity at integration point
-          Core::LinAlg::Matrix<nsd_, 1> convelint(true);
+          Core::LinAlg::Matrix<nsd_, 1> convelint(Core::LinAlg::Initialization::zero);
           convelint.multiply(econvelnp_, funct_);
 
           // calculate characteristic element length
@@ -1008,7 +1008,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::calc_initial_time_deriv
       if (scatrapara_->is_conservative()) get_divergence(vdiv, evelnp_);
 
       // diffusive part used in stabilization terms
-      Core::LinAlg::Matrix<nen_, 1> diff(true);
+      Core::LinAlg::Matrix<nen_, 1> diff(Core::LinAlg::Initialization::zero);
       // diffusive term using current scalar value for higher-order elements
       if (use2ndderiv_)
       {
@@ -1041,7 +1041,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::calc_initial_time_deriv
       if (scatrapara_->stab_type() != Inpar::ScaTra::stabtype_no_stabilization)
       {
         // subgrid-scale velocity (dummy)
-        Core::LinAlg::Matrix<nen_, 1> sgconv(true);
+        Core::LinAlg::Matrix<nen_, 1> sgconv(Core::LinAlg::Initialization::zero);
         calc_mat_mass_stab(emat, k, fac_tau, densam[k], densnp[k], sgconv, diff);
 
         // remove convective stabilization of inertia term
@@ -1175,17 +1175,17 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::calculate_flux(
     if (scatrapara_->mat_gp()) get_material_params(ele, densn, densnp, densam, visc);
 
     // get velocity at integration point
-    Core::LinAlg::Matrix<nsd_, 1> velint(true);
-    Core::LinAlg::Matrix<nsd_, 1> convelint(true);
+    Core::LinAlg::Matrix<nsd_, 1> velint(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd_, 1> convelint(Core::LinAlg::Initialization::zero);
     velint.multiply(evelnp_, funct_);
     convelint.multiply(econvelnp_, funct_);
 
     // get gradient of scalar at integration point
-    Core::LinAlg::Matrix<nsd_, 1> gradphi(true);
+    Core::LinAlg::Matrix<nsd_, 1> gradphi(Core::LinAlg::Initialization::zero);
     gradphi.multiply(derxy_, ephinp_[k]);
 
     // allocate and initialize!
-    Core::LinAlg::Matrix<nsd_, 1> q(true);
+    Core::LinAlg::Matrix<nsd_, 1> q(Core::LinAlg::Initialization::zero);
 
     // add different flux contributions as specified by user input
     switch (fluxtype)
@@ -1279,7 +1279,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::calculate_scalars(
     for (int k = 0; k < numdofpernode_; k++)
     {
       // evaluate 1.0/phi if needed
-      Core::LinAlg::Matrix<nen_, 1> inv_ephinp(true);
+      Core::LinAlg::Matrix<nen_, 1> inv_ephinp(Core::LinAlg::Initialization::zero);
       if (inverting)
       {
         for (unsigned i = 0; i < nen_; i++)
@@ -1658,9 +1658,9 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::cal_error_compared_to_a
       double phi_exact(0.0);
       double deltaphi(0.0);
       //! spatial gradient of current scalar value
-      Core::LinAlg::Matrix<nsd_, 1> gradphi(true);
-      Core::LinAlg::Matrix<nsd_, 1> gradphi_exact(true);
-      Core::LinAlg::Matrix<nsd_, 1> deltagradphi(true);
+      Core::LinAlg::Matrix<nsd_, 1> gradphi(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd_, 1> gradphi_exact(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd_, 1> deltagradphi(Core::LinAlg::Initialization::zero);
 
       // start loop over integration points
       for (int iquad = 0; iquad < intpoints.ip().nquad; iquad++)
@@ -1669,7 +1669,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::cal_error_compared_to_a
 
         // get coordinates at integration point
         // gp reference coordinates
-        Core::LinAlg::Matrix<nsd_, 1> xyzint(true);
+        Core::LinAlg::Matrix<nsd_, 1> xyzint(Core::LinAlg::Initialization::zero);
         xyzint.multiply(xyze_, funct_);
 
         // function evaluation requires a 3D position vector!!
@@ -1746,9 +1746,9 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::cal_error_compared_to_a
       double phi_exact(0.0);
       double deltaphi(0.0);
       //! spatial gradient of current scalar value
-      Core::LinAlg::Matrix<nsd_, 1> gradphi(true);
-      Core::LinAlg::Matrix<nsd_, 1> gradphi_exact(true);
-      Core::LinAlg::Matrix<nsd_, 1> deltagradphi(true);
+      Core::LinAlg::Matrix<nsd_, 1> gradphi(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd_, 1> gradphi_exact(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd_, 1> deltagradphi(Core::LinAlg::Initialization::zero);
 
       // start loop over integration points
       for (int iquad = 0; iquad < intpoints.ip().nquad; iquad++)
@@ -1757,7 +1757,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::cal_error_compared_to_a
 
         // get coordinates at integration point
         // gp reference coordinates
-        Core::LinAlg::Matrix<nsd_, 1> xyzint(true);
+        Core::LinAlg::Matrix<nsd_, 1> xyzint(Core::LinAlg::Initialization::zero);
         xyzint.multiply(xyze_, funct_);
 
         for (int k = 0; k < numscal_; k++)
@@ -1925,8 +1925,8 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::calc_hetero_reac_mat_an
       // 3) element matrix: reactive term
       //----------------------------------------------------------------
 
-      Core::LinAlg::Matrix<nen_, 1> sgconv(true);
-      Core::LinAlg::Matrix<nen_, 1> diff(true);
+      Core::LinAlg::Matrix<nen_, 1> sgconv(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nen_, 1> diff(Core::LinAlg::Initialization::zero);
       // diffusive term using current scalar value for higher-order elements
       if (use2ndderiv_)
       {

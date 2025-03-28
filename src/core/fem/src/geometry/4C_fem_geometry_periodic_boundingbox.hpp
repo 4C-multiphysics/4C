@@ -80,7 +80,8 @@ namespace Core::Geo
       \brief shift node (if outside) back in box if periodic boundary conditions
       */
       bool shift_3d(Core::LinAlg::Matrix<3, 1>& d,
-          Core::LinAlg::Matrix<3, 1> const X = Core::LinAlg::Matrix<3, 1>(true)) const;
+          Core::LinAlg::Matrix<3, 1> const X = Core::LinAlg::Matrix<3, 1>(
+              Core::LinAlg::Initialization::zero)) const;
 
       /*!
       \brief get xi of intersection between two points
@@ -105,11 +106,13 @@ namespace Core::Geo
        *       that the distance between given point and reference point
        *       decreases by either adding or subtracting the period length. */
       void un_shift_3d(Core::LinAlg::Matrix<3, 1>& d, Core::LinAlg::Matrix<3, 1> const& ref,
-          Core::LinAlg::Matrix<3, 1> const X = Core::LinAlg::Matrix<3, 1>(true)) const;
+          Core::LinAlg::Matrix<3, 1> const X = Core::LinAlg::Matrix<3, 1>(
+              Core::LinAlg::Initialization::zero)) const;
 
       bool check_if_shift_between_points(Core::LinAlg::Matrix<3, 1>& d,
           Core::LinAlg::Matrix<3, 1> const& ref, std::vector<bool>& shift_in_dim,
-          Core::LinAlg::Matrix<3, 1> const X = Core::LinAlg::Matrix<3, 1>(true)) const;
+          Core::LinAlg::Matrix<3, 1> const X = Core::LinAlg::Matrix<3, 1>(
+              Core::LinAlg::Initialization::zero)) const;
 
       /*!
       \brief get random position inside box

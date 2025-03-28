@@ -220,7 +220,7 @@ Core::LinAlg::Matrix<2, 2, T> Mixture::Implementation::RemodelFiberImplementatio
     T residuum_growth = ImplicitIntegration<numstates, T>::get_residuum(growth_state, dt);
     T residuum_remodel = ImplicitIntegration<numstates, T>::get_residuum(remodel_state, dt);
 
-    Core::LinAlg::Matrix<2, 1, T> residuum(false);
+    Core::LinAlg::Matrix<2, 1, T> residuum(Core::LinAlg::Initialization::uninitialized);
     residuum(0, 0) = residuum_growth;
     residuum(1, 0) = residuum_remodel;
 
@@ -228,7 +228,7 @@ Core::LinAlg::Matrix<2, 2, T> Mixture::Implementation::RemodelFiberImplementatio
     const T lambda_r_np = states_.back().lambda_r;
 
     // evaluate growth and remodel matrices
-    Core::LinAlg::Matrix<2, 2, T> drdx(false);
+    Core::LinAlg::Matrix<2, 2, T> drdx(Core::LinAlg::Initialization::uninitialized);
     drdx(0, 0) = ImplicitIntegration<numstates, T>::get_partial_derivative_xnp(growth_state, dt) +
                  ImplicitIntegration<numstates, T>::get_partial_derivative_fnp(growth_state, dt) *
                      evaluate_d_growth_evolution_equation_dt_d_growth(
@@ -247,12 +247,12 @@ Core::LinAlg::Matrix<2, 2, T> Mixture::Implementation::RemodelFiberImplementatio
     return std::make_tuple(drdx, residuum);
   };
 
-  Core::LinAlg::Matrix<2, 1, T> x_np(false);
+  Core::LinAlg::Matrix<2, 1, T> x_np(Core::LinAlg::Initialization::uninitialized);
   x_np(0) = states_.back().growth_scalar;
   x_np(1) = states_.back().lambda_r;
 
-  Core::LinAlg::Matrix<2, 2, T> K(false);
-  Core::LinAlg::Matrix<2, 1, T> b(false);
+  Core::LinAlg::Matrix<2, 2, T> K(Core::LinAlg::Initialization::uninitialized);
+  Core::LinAlg::Matrix<2, 1, T> b(Core::LinAlg::Initialization::uninitialized);
   std::tie(K, b) = EvaluateLocalNewtonLinearSystem();
 
   unsigned iteration = 0;
@@ -292,8 +292,9 @@ Core::LinAlg::Matrix<2, 2, T> Mixture::Implementation::RemodelFiberImplementatio
 
 
   K.invert();
-  Core::LinAlg::Matrix<2, 1, T> d_growth_scalar_d_residuum(false);
-  Core::LinAlg::Matrix<2, 1, T> d_lambda_r_d_residuum(false);
+  Core::LinAlg::Matrix<2, 1, T> d_growth_scalar_d_residuum(
+      Core::LinAlg::Initialization::uninitialized);
+  Core::LinAlg::Matrix<2, 1, T> d_lambda_r_d_residuum(Core::LinAlg::Initialization::uninitialized);
 
   for (std::size_t i = 0; i < 2; ++i)
   {

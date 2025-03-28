@@ -122,7 +122,7 @@ namespace Discret
             Core::LinAlg::Matrix<nsd_, 1>& ivelint  ///< interface velocity at coupling slave side
         ) const
         {
-          ivelint = Core::LinAlg::Matrix<nsd_, 1>(true);
+          ivelint = Core::LinAlg::Matrix<nsd_, 1>(Core::LinAlg::Initialization::zero);
         };
 
         /*!
@@ -134,7 +134,7 @@ namespace Discret
             Core::LinAlg::Matrix<nsd_, 1>& ivelint  ///< interface velocity at coupling slave side
         ) const
         {
-          ivelint = Core::LinAlg::Matrix<nsd_, 1>(true);
+          ivelint = Core::LinAlg::Matrix<nsd_, 1>(Core::LinAlg::Initialization::zero);
         };
 
         //! get interface pressure

@@ -22,7 +22,7 @@ namespace
 
   TEST(MaterialServiceTest, TestInvariantsPrincipal)
   {
-    Core::LinAlg::Matrix<3, 3> sym_tensor(false);
+    Core::LinAlg::Matrix<3, 3> sym_tensor(Core::LinAlg::Initialization::uninitialized);
     sym_tensor(0, 0) = 1.1;
     sym_tensor(1, 1) = 1.2;
     sym_tensor(2, 2) = 1.3;
@@ -30,10 +30,10 @@ namespace
     sym_tensor(1, 2) = sym_tensor(2, 1) = 0.02;
     sym_tensor(0, 2) = sym_tensor(2, 0) = 0.03;
 
-    Core::LinAlg::Matrix<3, 1> prinv(false);
+    Core::LinAlg::Matrix<3, 1> prinv(Core::LinAlg::Initialization::uninitialized);
     Mat::invariants_principal(prinv, sym_tensor);
 
-    Core::LinAlg::Matrix<3, 1> prinv_reference(false);
+    Core::LinAlg::Matrix<3, 1> prinv_reference(Core::LinAlg::Initialization::uninitialized);
     prinv_reference(0) = 3.5999999999999996;
     prinv_reference(1) = 4.3085999999999984;
     prinv_reference(2) = 1.7143620000000002;
@@ -43,7 +43,7 @@ namespace
 
   TEST(MaterialServiceTest, Testadd_derivative_of_inva_b_inva_product)
   {
-    Core::LinAlg::Matrix<6, 1> A(false);
+    Core::LinAlg::Matrix<6, 1> A(Core::LinAlg::Initialization::uninitialized);
     A(0) = 0.5;
     A(1) = 0.3;
     A(2) = 0.6;
@@ -51,7 +51,7 @@ namespace
     A(4) = 0.4;
     A(5) = 0.9;
 
-    Core::LinAlg::Matrix<6, 1> InvABInvB(false);
+    Core::LinAlg::Matrix<6, 1> InvABInvB(Core::LinAlg::Initialization::uninitialized);
     InvABInvB(0) = 1.72;
     InvABInvB(1) = 1.65;
     InvABInvB(2) = 1.13;
@@ -59,13 +59,13 @@ namespace
     InvABInvB(4) = 1.46;
     InvABInvB(5) = 1.23;
 
-    Core::LinAlg::Matrix<6, 6> Result(true);
+    Core::LinAlg::Matrix<6, 6> Result(Core::LinAlg::Initialization::zero);
     double scalar = 0.5;
 
     // result_ijkl = A_ik InvABInvB_jl +  A_il InvABInvB_jk + A_jk InvABInvB_il + A_jl InvABInvB_ik
     Core::LinAlg::Tensor::add_derivative_of_inva_b_inva_product(scalar, A, InvABInvB, Result);
 
-    Core::LinAlg::Matrix<6, 6> Result_reference(false);
+    Core::LinAlg::Matrix<6, 6> Result_reference(Core::LinAlg::Initialization::uninitialized);
     Result_reference(0, 0) = -0.86;
     Result_reference(0, 1) = -0.254;
     Result_reference(0, 2) = -1.107;
@@ -109,7 +109,7 @@ namespace
   TEST(MaterialServiceTest, TestComputeJ2)
   {
     // test the calculation of J2 invariant
-    Core::LinAlg::Matrix<3, 3> stress(false);
+    Core::LinAlg::Matrix<3, 3> stress(Core::LinAlg::Initialization::uninitialized);
     stress(0, 0) = 1.0;
     stress(1, 1) = 2.0;
     stress(2, 2) = 3.0;
@@ -185,7 +185,7 @@ namespace
     // and Matrix
     Core::LinAlg::FourTensor<3> Id = Core::LinAlg::setup_deviatoric_projection_tensor<3>();
 
-    Core::LinAlg::Matrix<3, 3> stress(false);
+    Core::LinAlg::Matrix<3, 3> stress(Core::LinAlg::Initialization::uninitialized);
     stress(0, 0) = 1.0;
     stress(1, 1) = 2.0;
     stress(2, 2) = 3.0;
@@ -193,7 +193,7 @@ namespace
     stress(1, 2) = stress(2, 1) = 0.5;
     stress(0, 2) = stress(2, 0) = 0.6;
 
-    Core::LinAlg::Matrix<3, 3> s_ref(false);
+    Core::LinAlg::Matrix<3, 3> s_ref(Core::LinAlg::Initialization::uninitialized);
     s_ref(0, 0) = -1.0;
     s_ref(1, 1) = 0.0;
     s_ref(2, 2) = 1.0;
@@ -212,7 +212,7 @@ namespace
   TEST(MaterialServiceTest, TestADBCProduct)
   {
     // test the calculation of the fourth order ADBC product of two second-order tensors
-    Core::LinAlg::Matrix<3, 3> x(false);
+    Core::LinAlg::Matrix<3, 3> x(Core::LinAlg::Initialization::uninitialized);
     x(0, 0) = 1.0000000000;
     x(0, 1) = 2.0000000000;
     x(0, 2) = 3.0000000000;
@@ -223,7 +223,7 @@ namespace
     x(2, 1) = 1.0000000000;
     x(2, 2) = 1.0000000000;
 
-    Core::LinAlg::Matrix<3, 3> y(false);
+    Core::LinAlg::Matrix<3, 3> y(Core::LinAlg::Initialization::uninitialized);
     y(0, 0) = 1.0000000000;
     y(0, 1) = 0.0000000000;
     y(0, 2) = 5.0000000000;
@@ -234,7 +234,7 @@ namespace
     y(2, 1) = 1.2000000000;
     y(2, 2) = 1.0000000000;
 
-    Core::LinAlg::Matrix<9, 9> x_adbc_y_ref(true);
+    Core::LinAlg::Matrix<9, 9> x_adbc_y_ref(Core::LinAlg::Initialization::zero);
     x_adbc_y_ref(0, 0) = 1.0000000000;
     x_adbc_y_ref(0, 1) = 0.0000000000;
     x_adbc_y_ref(0, 2) = 15.0000000000;
@@ -317,7 +317,7 @@ namespace
     x_adbc_y_ref(8, 7) = 5.0000000000;
     x_adbc_y_ref(8, 8) = 5.0000000000;
 
-    Core::LinAlg::Matrix<9, 9> x_adbc_y(true);
+    Core::LinAlg::Matrix<9, 9> x_adbc_y(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Tensor::add_adbc_tensor_product(1.0, x, y, x_adbc_y);
 
     FOUR_C_EXPECT_NEAR(x_adbc_y, x_adbc_y_ref, 1.0e-10);
@@ -326,7 +326,7 @@ namespace
   TEST(MaterialServiceTest, TestDyadicProductMatrixMatrix)
   {
     // test the dyadic product of two Matrices
-    Core::LinAlg::Matrix<3, 3> stress(false);
+    Core::LinAlg::Matrix<3, 3> stress(Core::LinAlg::Initialization::uninitialized);
     stress(0, 0) = 1.0;
     stress(1, 1) = 2.0;
     stress(2, 2) = 3.0;

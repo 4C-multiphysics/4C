@@ -27,7 +27,8 @@ namespace GEOMETRYPAIR
       Core::LinAlg::Matrix<ElementType::spatial_dim_, 1, ScalarType>& r)
   {
     // Matrix for shape function values
-    Core::LinAlg::Matrix<1, ElementType::n_nodes_ * ElementType::n_val_, ScalarType> N(true);
+    Core::LinAlg::Matrix<1, ElementType::n_nodes_ * ElementType::n_val_, ScalarType> N(
+        Core::LinAlg::Initialization::zero);
 
     // Evaluate the shape function values
     EvaluateShapeFunction<ElementType>::evaluate(N, xi, element_data.shape_function_data_);
@@ -54,7 +55,7 @@ namespace GEOMETRYPAIR
     // Matrix for shape function values
     Core::LinAlg::Matrix<ElementType::element_dim_, ElementType::n_nodes_ * ElementType::n_val_,
         ScalarType>
-        dN(true);
+        dN(Core::LinAlg::Initialization::zero);
 
     // Evaluate the shape function values
     EvaluateShapeFunction<ElementType>::evaluate_deriv1(dN, xi, element_data.shape_function_data_);
@@ -122,7 +123,8 @@ namespace GEOMETRYPAIR
           "one value per node and dimension");
 
       // Calculate the normal as a interpolation of nodal normals
-      Core::LinAlg::Matrix<1, Surface::n_nodes_, typename T::scalar_type> N(true);
+      Core::LinAlg::Matrix<1, Surface::n_nodes_, typename T::scalar_type> N(
+          Core::LinAlg::Initialization::zero);
       EvaluateShapeFunction<Surface>::evaluate(N, xi, element_data_surface.shape_function_data_);
       normal.clear();
       for (unsigned int node = 0; node < Surface::n_nodes_; node++)
@@ -219,7 +221,7 @@ namespace GEOMETRYPAIR
 
     // Get the derivatives of the reference position w.r.t the parameter coordinates. This is the
     // transposed Jacobi matrix.
-    Core::LinAlg::Matrix<3, 3, ScalarType> dXdxi(true);
+    Core::LinAlg::Matrix<3, 3, ScalarType> dXdxi(Core::LinAlg::Initialization::zero);
     evaluate_position_derivative1<Volume>(xi, X_volume, dXdxi);
     J.clear();
     J.update_t(dXdxi);
@@ -240,19 +242,19 @@ namespace GEOMETRYPAIR
         "EvaluateDeformationGradient can only be called for 3D elements!");
 
     // Get the inverse of the Jacobian
-    Core::LinAlg::Matrix<3, 3, ScalarTypeXi> inv_J(true);
+    Core::LinAlg::Matrix<3, 3, ScalarTypeXi> inv_J(Core::LinAlg::Initialization::zero);
     evaluate_jacobian<Volume>(xi, X_volume, inv_J);
     Core::LinAlg::inverse(inv_J);
 
     // Get the derivatives of the shape functions w.r.t to the parameter coordinates
     Core::LinAlg::Matrix<Volume::element_dim_, Volume::n_nodes_ * Volume::n_val_, ScalarTypeXi>
-        dNdxi(true);
+        dNdxi(Core::LinAlg::Initialization::zero);
     GEOMETRYPAIR::EvaluateShapeFunction<Volume>::evaluate_deriv1(
         dNdxi, xi, q_volume.shape_function_data_);
 
     // Transform to derivatives w.r.t physical coordinates
     Core::LinAlg::Matrix<Volume::element_dim_, Volume::n_nodes_ * Volume::n_val_, ScalarTypeXi>
-        dNdX(true);
+        dNdX(Core::LinAlg::Initialization::zero);
     for (unsigned int i_row = 0; i_row < 3; i_row++)
       for (unsigned int i_col = 0; i_col < Volume::n_nodes_ * Volume::n_val_; i_col++)
         for (unsigned int i_sum = 0; i_sum < 3; i_sum++)

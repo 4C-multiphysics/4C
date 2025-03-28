@@ -336,7 +336,7 @@ void Cut::Facet::create_triangulation(Mesh& mesh, const std::vector<Point*>& poi
     std::vector<Point*> pts(points);
     // Find the middle point
     Core::LinAlg::Matrix<3, 1> cur;
-    Core::LinAlg::Matrix<3, 1> avg(true);  // fill with zeros
+    Core::LinAlg::Matrix<3, 1> avg(Core::LinAlg::Initialization::zero);  // fill with zeros
     for (std::vector<Point*>::iterator i = pts.begin(); i != pts.end(); i++)
     {
       Point* p1 = *i;

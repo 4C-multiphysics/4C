@@ -189,7 +189,7 @@ namespace Discret::Elements
       // compute the product (- Kda Kaa^{-1}) which is later needed for force and stiffness update
       Core::LinAlg::Matrix<num_dof_per_ele<celltype>,
           Discret::Elements::EasTypeToNumEas<eastype>::num_eas>
-          minusKdainvKaa(true);
+          minusKdainvKaa(Core::LinAlg::Initialization::zero);
       minusKdainvKaa.multiply_nn(
           -1.0, eas_data.eas_iteration_data.Kda, eas_data.eas_iteration_data.invKaa);
 

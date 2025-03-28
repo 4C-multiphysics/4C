@@ -144,7 +144,7 @@ void Mat::ViscoPlasticNoYieldSurface::setup(
   last_flowres_isotropic_.resize(numgp, params_->init_flow_res());
 
   // initialize last inverse plastic deformation gradient as identity
-  Core::LinAlg::Matrix<3, 3> id2(true);
+  Core::LinAlg::Matrix<3, 3> id2(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 3; ++i) id2(i, i) = 1.0;
   last_plastic_defgrd_inverse_.resize(numgp, id2);
 
@@ -227,7 +227,7 @@ void Mat::ViscoPlasticNoYieldSurface::evaluate(const Core::LinAlg::Matrix<3, 3>*
   // conjugate stress (Me = eta * Me_trial_dev - p * id2)
   static Core::LinAlg::Matrix<3, 3> Me;
   // identity matrix
-  static Core::LinAlg::Matrix<3, 3> id2(true);
+  static Core::LinAlg::Matrix<3, 3> id2(Core::LinAlg::Initialization::zero);
   for (unsigned i = 0; i < 3; ++i) id2(i, i) = 1.0;
   Me.update(eta, Me_trial_dev, p, id2);
 
@@ -275,7 +275,7 @@ Mat::ViscoPlasticNoYieldSurface::calculate_updated_inverse_viscous_defgrad(
     const Core::LinAlg::Matrix<3, 3>& last_iFv, const Core::LinAlg::Matrix<3, 3>& eigen_vectors,
     const Core::LinAlg::Matrix<3, 1>& eigen_values, const double eta) const
 {
-  static Core::LinAlg::Matrix<3, 3> scaledEigenvalues(true);
+  static Core::LinAlg::Matrix<3, 3> scaledEigenvalues(Core::LinAlg::Initialization::zero);
 
   // cubic root of determinant
   const double cubicRoot_stretchTensorTrial_determinant =
@@ -452,7 +452,7 @@ Mat::ViscoPlasticNoYieldSurface::calculate_log_elastic_strain_in_strain_like_voi
   static Core::LinAlg::Matrix<3, 3> Ee_trial;
   static Core::LinAlg::Matrix<6, 1> Ee_trial_Vstrain;
   static Core::LinAlg::Matrix<3, 3> tmp3x3;
-  static Core::LinAlg::Matrix<3, 3> logEigenValues(true);
+  static Core::LinAlg::Matrix<3, 3> logEigenValues(Core::LinAlg::Initialization::zero);
 
   for (unsigned i = 0; i < 3; ++i)
   {
@@ -476,7 +476,7 @@ Core::LinAlg::Matrix<3, 3>& Mat::ViscoPlasticNoYieldSurface::calculate_trial_ela
 {
   static Core::LinAlg::Matrix<3, 3> Re_trial;
   static Core::LinAlg::Matrix<3, 3> tmp3x3;
-  static Core::LinAlg::Matrix<3, 3> invEigenValues(true);
+  static Core::LinAlg::Matrix<3, 3> invEigenValues(Core::LinAlg::Initialization::zero);
 
   for (unsigned i = 0; i < 3; ++i)
   {

@@ -912,7 +912,7 @@ void Cut::SelfCut::determine_self_cut_position()
         if (anotherselfcutside->id() != selfcutside->id())
         {
           Core::LinAlg::Matrix<3, 1> normal;
-          Core::LinAlg::Matrix<2, 1> center(true);
+          Core::LinAlg::Matrix<2, 1> center(Core::LinAlg::Initialization::zero);
           anotherselfcutside->normal(center, normal, false);
           double norm = normal.norm2();
           if (norm > 1e-8)

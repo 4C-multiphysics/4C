@@ -351,12 +351,12 @@ int Discret::Elements::FluidEleCalcHDGWeakComp<distype>::compute_error(
   }
 
   // initialize exact solution
-  Core::LinAlg::Matrix<msd_, 1> L_ex(true);
+  Core::LinAlg::Matrix<msd_, 1> L_ex(Core::LinAlg::Initialization::zero);
   double r_ex = 0.0;
-  Core::LinAlg::Matrix<nsd_, 1> w_ex(true);
+  Core::LinAlg::Matrix<nsd_, 1> w_ex(Core::LinAlg::Initialization::zero);
 
   // initialize spatial coordinates
-  Core::LinAlg::Matrix<nsd_, 1> xyz(true);
+  Core::LinAlg::Matrix<nsd_, 1> xyz(Core::LinAlg::Initialization::zero);
 
   // get function number
   const int calcerrfunctno = params.get<int>("error function number");
@@ -475,13 +475,13 @@ int Discret::Elements::FluidEleCalcHDGWeakComp<distype>::project_field(
       // jfac is a vector containing the jacobian times the weight of the quadrature points
       const double fac = shapes_->jfac(q);
       // xyz is a vector containing the coordinates of the quadrature points in real coordinates
-      Core::LinAlg::Matrix<nsd_, 1> xyz(false);
+      Core::LinAlg::Matrix<nsd_, 1> xyz(Core::LinAlg::Initialization::uninitialized);
       // Filling xyz with the values take from the element xyzreal matrix
       for (unsigned int d = 0; d < nsd_; ++d) xyz(d) = shapes_->xyzreal(d, q);
       // Declaring vectors for interior variables
-      Core::LinAlg::Matrix<msd_, 1> L(true);
+      Core::LinAlg::Matrix<msd_, 1> L(Core::LinAlg::Initialization::zero);
       double r = 0.0;
-      Core::LinAlg::Matrix<nsd_, 1> w(true);
+      Core::LinAlg::Matrix<nsd_, 1> w(Core::LinAlg::Initialization::zero);
 
       FOUR_C_ASSERT(initfield != nullptr && startfunc != nullptr,
           "initfield or startfuncno not set for initial value");
@@ -558,14 +558,14 @@ int Discret::Elements::FluidEleCalcHDGWeakComp<distype>::project_field(
       // shapesface_->jfac contains the jacobian evaluated in the quadrature points
       const double fac = shapesface_->jfac(q);
       // xyz is the vector containing the coordinates of the quadrature points
-      Core::LinAlg::Matrix<nsd_, 1> xyz(false);
+      Core::LinAlg::Matrix<nsd_, 1> xyz(Core::LinAlg::Initialization::uninitialized);
 
       // Taking the real coordinates of quadrature points of the current face
       for (unsigned int d = 0; d < nsd_; ++d) xyz(d) = shapesface_->xyzreal(d, q);
 
       // Creating the vector of traces variables
       double r;
-      Core::LinAlg::Matrix<nsd_, 1> w(false);
+      Core::LinAlg::Matrix<nsd_, 1> w(Core::LinAlg::Initialization::uninitialized);
 
       // Create dummy variables
       double dummy_r;
@@ -765,7 +765,7 @@ int Discret::Elements::FluidEleCalcHDGWeakComp<distype>::interpolate_solution_to
 
     // As already said, the dimension of the coordinate matrix is now nsd_-1
     // times the number of nodes in the face.
-    Core::LinAlg::Matrix<nsd_ - 1, nfn> xsishuffle(true);
+    Core::LinAlg::Matrix<nsd_ - 1, nfn> xsishuffle(Core::LinAlg::Initialization::zero);
 
     // Cycling through the nodes of the face to store the node positions in the
     // correct order using xsishuffle as a temporary vector

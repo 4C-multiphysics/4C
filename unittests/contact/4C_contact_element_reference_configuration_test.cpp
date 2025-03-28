@@ -72,9 +72,9 @@ namespace
   {
     // get hex8 element and test it
     const Core::Elements::Element* hex8ele = testdis_->g_element(0);
-    Core::LinAlg::Matrix<3, 1> xicenterhex8ele(true);
-    Core::LinAlg::Matrix<3, 1> hex8elecoords(true);
-    Core::LinAlg::Matrix<3, 1> hex8refsolution(true);
+    Core::LinAlg::Matrix<3, 1> xicenterhex8ele(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> hex8elecoords(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> hex8refsolution(Core::LinAlg::Initialization::zero);
     hex8refsolution(0, 0) = 423.0 / 800.0;
     hex8refsolution(1, 0) = 281.0 / 800.0;
     hex8refsolution(2, 0) = 207.0 / 200.0;
@@ -85,9 +85,9 @@ namespace
 
     // get quad4 element and test it
     const Core::Elements::Element* quad4ele = testdis_->g_element(1);
-    Core::LinAlg::Matrix<2, 1> xicenterquad4ele(true);
-    Core::LinAlg::Matrix<3, 1> quad4elecoords(true);
-    Core::LinAlg::Matrix<3, 1> quad4refsolution(true);
+    Core::LinAlg::Matrix<2, 1> xicenterquad4ele(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> quad4elecoords(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> quad4refsolution(Core::LinAlg::Initialization::zero);
     quad4refsolution(0, 0) = 14.0 / 25.0;
     quad4refsolution(1, 0) = 111.0 / 200.0;
     quad4refsolution(2, 0) = 33.0 / 100.0;
@@ -98,9 +98,9 @@ namespace
 
     // get tet4 element stuff and test it
     const Core::Elements::Element* tet4ele = testdis_->g_element(2);
-    Core::LinAlg::Matrix<3, 1> xicentertet4ele(true);
-    Core::LinAlg::Matrix<3, 1> tet4elecoords(true);
-    Core::LinAlg::Matrix<3, 1> tet4refsolution(true);
+    Core::LinAlg::Matrix<3, 1> xicentertet4ele(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> tet4elecoords(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> tet4refsolution(Core::LinAlg::Initialization::zero);
     tet4refsolution(0, 0) = 61.0 / 40.0;
     tet4refsolution(1, 0) = -199.0 / 400.0;
     tet4refsolution(2, 0) = 9.0 / 16.0;
@@ -112,9 +112,9 @@ namespace
 
     // get tri3 element and test it
     const Core::Elements::Element* tri3ele = testdis_->g_element(3);
-    Core::LinAlg::Matrix<2, 1> xicentertri3ele(true);
-    Core::LinAlg::Matrix<3, 1> tri3elecoords(true);
-    Core::LinAlg::Matrix<3, 1> tri3refsolution(true);
+    Core::LinAlg::Matrix<2, 1> xicentertri3ele(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> tri3elecoords(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> tri3refsolution(Core::LinAlg::Initialization::zero);
     tri3refsolution(0, 0) = 23.0 / 15.0;
     tri3refsolution(1, 0) = -149.0 / 300.0;
     tri3refsolution(2, 0) = 1.0 / 12.0;
@@ -129,9 +129,9 @@ namespace
   {
     // get quad4 element and test it
     const Core::Elements::Element* quad4ele = testdis_->g_element(1);
-    Core::LinAlg::Matrix<2, 1> xicenterquad4ele(true);
-    Core::LinAlg::Matrix<3, 1> quad4elecoords(true);
-    Core::LinAlg::Matrix<3, 1> quad4refsolution(true);
+    Core::LinAlg::Matrix<2, 1> xicenterquad4ele(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> quad4elecoords(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> quad4refsolution(Core::LinAlg::Initialization::zero);
     quad4refsolution(0, 0) = -0.29138926578643;
     quad4refsolution(1, 0) = -0.40854577471087;
     quad4refsolution(2, 0) = 0.86497551742829;
@@ -142,9 +142,9 @@ namespace
 
     // get tri3 element and test it
     const Core::Elements::Element* tri3ele = testdis_->g_element(3);
-    Core::LinAlg::Matrix<2, 1> xicentertri3ele(true);
-    Core::LinAlg::Matrix<3, 1> tri3elecoords(true);
-    Core::LinAlg::Matrix<3, 1> tri3refsolution(true);
+    Core::LinAlg::Matrix<2, 1> xicentertri3ele(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> tri3elecoords(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> tri3refsolution(Core::LinAlg::Initialization::zero);
     tri3refsolution(0, 0) = -0.085623542490578;
     tri3refsolution(1, 0) = 0.048198682858935;
     tri3refsolution(2, 0) = -0.995161040205065;

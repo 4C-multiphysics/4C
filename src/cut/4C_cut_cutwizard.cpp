@@ -368,7 +368,7 @@ void evaluate_position_on_nurbs9(Core::Elements::Element* element,
     const Core::LinAlg::Vector<double>& cutter_disp_col)
 {
   // Initialize the information needed for NURBS elements
-  Core::LinAlg::Matrix<9, 1, double> weights(true);
+  Core::LinAlg::Matrix<9, 1, double> weights(Core::LinAlg::Initialization::zero);
   std::vector<Core::LinAlg::SerialDenseVector> myknots(2);
   std::vector<Core::LinAlg::SerialDenseVector> mypknots(3);
 
@@ -1106,7 +1106,7 @@ void Cut::CutWizard::update_boundary_cell_coords(
             Core::LinAlg::Matrix<4, 1> funct;
             Core::FE::shape_function_2d(funct, xsi(0, 0), xsi(1, 0), sh->shape());
 
-            Core::LinAlg::Matrix<3, 1> newpos(true);
+            Core::LinAlg::Matrix<3, 1> newpos(Core::LinAlg::Initialization::zero);
             newpos.multiply(XYZE, funct);
             bc->reset_pos(bcpoint, newpos);
           }

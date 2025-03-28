@@ -147,7 +147,7 @@ int Discret::Elements::ScaTraEleCalcElch<distype, probdim>::evaluate_action(
           // Thus, this method here DOES NOT YET provide flux values that are ready to use!!
 
           // allocate and initialize!
-          Core::LinAlg::Matrix<nsd_, 1> q(true);
+          Core::LinAlg::Matrix<nsd_, 1> q(Core::LinAlg::Initialization::zero);
 
           if (writefluxid != my::numdofpernode_)
           {
@@ -335,7 +335,7 @@ void Discret::Elements::ScaTraEleCalcElch<distype, probdim>::calc_elch_boundary_
 
   // extract local values from the global vector
   std::vector<Core::LinAlg::Matrix<nen_, 1>> ephinp(
-      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phinp, ephinp, lm);
 
   // get history variable (needed for double layer modeling)
@@ -344,7 +344,7 @@ void Discret::Elements::ScaTraEleCalcElch<distype, probdim>::calc_elch_boundary_
 
   // extract local values from the global vector
   std::vector<Core::LinAlg::Matrix<nen_, 1>> ehist(
-      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*hist, ehist, lm);
 
   // get current condition
@@ -449,7 +449,7 @@ void Discret::Elements::ScaTraEleCalcElch<distype, probdim>::calc_elch_boundary_
     if (phidtnp == nullptr) FOUR_C_THROW("Cannot get state vector 'ephidtnp'");
     // extract local values from the global vector
     std::vector<Core::LinAlg::Matrix<nen_, 1>> ephidtnp(
-        my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+        my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
     Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phidtnp, ephidtnp, lm);
 
     if (not is_stationary)

@@ -23,7 +23,7 @@ namespace
 
   TEST(ElementServiceTest, TestProjectNodalQuantityToXiHex8)
   {
-    Core::LinAlg::Matrix<3, 1> xi(true);
+    Core::LinAlg::Matrix<3, 1> xi(Core::LinAlg::Initialization::zero);
     xi(0) = 0.01, xi(1) = 0.25, xi(2) = 0.115;
     std::vector<double> nodal_quantity = {1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7};
     std::vector<double> ref_val{1.397875};
@@ -33,7 +33,7 @@ namespace
 
   TEST(ElementServiceTest, TestProjectNodalQuantityToXiHex27)
   {
-    Core::LinAlg::Matrix<3, 1> xi(true);
+    Core::LinAlg::Matrix<3, 1> xi(Core::LinAlg::Initialization::zero);
     xi(0) = 0.01, xi(1) = 0.25, xi(2) = 0.115;
     std::vector<double> nodal_quantity = {1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0,
         2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6};
@@ -44,7 +44,7 @@ namespace
 
   TEST(ElementServiceTest, TestProjectNodalQuantityToXiTet4)
   {
-    Core::LinAlg::Matrix<3, 1> xi(true);
+    Core::LinAlg::Matrix<3, 1> xi(Core::LinAlg::Initialization::zero);
     xi(0) = 0.01, xi(1) = 0.25, xi(2) = 0.115;
     std::vector<double> nodal_quantity = {1.0, 2.0, 1.1, 2.1, 1.2, 2.2, 1.3, 2.3};
     std::vector<double> ref_val = {1.0855, 2.0855};
@@ -54,7 +54,7 @@ namespace
 
   TEST(ElementServiceTest, TestProjectNodalQuantityToXiTet10)
   {
-    Core::LinAlg::Matrix<3, 1> xi(true);
+    Core::LinAlg::Matrix<3, 1> xi(Core::LinAlg::Initialization::zero);
     xi(0) = 0.01, xi(1) = 0.25, xi(2) = 0.115;
     std::vector<double> nodal_quantity = {1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9};
     std::vector<double> ref_val = {1.645885};
@@ -64,7 +64,7 @@ namespace
 
   TEST(ElementServiceTest, TestProjectNodalQuantityToXiWedge6)
   {
-    Core::LinAlg::Matrix<3, 1> xi(true);
+    Core::LinAlg::Matrix<3, 1> xi(Core::LinAlg::Initialization::zero);
     xi(0) = 0.01, xi(1) = 0.25, xi(2) = 0.115;
     std::vector<double> nodal_quantity = {1.0, 1.1, 1.2, 1.3, 1.4, 1.5};
     std::vector<double> ref_val = {1.34025};

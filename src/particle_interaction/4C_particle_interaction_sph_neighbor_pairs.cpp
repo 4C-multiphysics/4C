@@ -328,7 +328,7 @@ void ParticleInteraction::SPHNeighborPairs::evaluate_particle_wall_pairs()
       Utils::vec_set_scale(particlewallpair.e_ij_, -1.0 / absdist, r_ji);
 
       // get coordinates of wall contact point in element parameter space
-      Core::LinAlg::Matrix<2, 1> elecoords(true);
+      Core::LinAlg::Matrix<2, 1> elecoords(Core::LinAlg::Initialization::zero);
       const Core::LinAlg::SerialDenseMatrix xyze(
           Core::Geo::get_current_nodal_positions(ele, colelenodalpos));
       Core::Geo::current_to_surface_element_coordinates(ele->shape(), xyze, closestpos, elecoords);

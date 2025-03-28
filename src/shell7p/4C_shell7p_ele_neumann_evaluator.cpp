@@ -142,10 +142,10 @@ void Discret::Elements::Shell::evaluate_neumann(Core::Elements::Element& ele,
     // get shape functions and derivatives at gaussian points
     ShapefunctionsAndDerivatives<distype> shapefunctions =
         evaluate_shapefunctions_and_derivs<distype>(xi_gp);
-    Core::LinAlg::Matrix<num_dim, num_dim> g_metrics_kovariant(true);
+    Core::LinAlg::Matrix<num_dim, num_dim> g_metrics_kovariant(Core::LinAlg::Initialization::zero);
 
-    Core::LinAlg::Matrix<numnod, num_dim> x_refe(true);
-    Core::LinAlg::Matrix<numnod, num_dim> x_curr(true);
+    Core::LinAlg::Matrix<numnod, num_dim> x_refe(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<numnod, num_dim> x_curr(Core::LinAlg::Initialization::zero);
 
     for (int i = 0; i < numnod; ++i)
     {
@@ -191,7 +191,7 @@ void Discret::Elements::Shell::evaluate_neumann(Core::Elements::Element& ele,
 
     // get thickness direction derivative perpendicular to g1 and g2 (with area as length)
     // -> g3 = (g1 x g2) / (|g1 x g2 |)
-    Core::LinAlg::Matrix<num_dim, 1> g3(true);
+    Core::LinAlg::Matrix<num_dim, 1> g3(Core::LinAlg::Initialization::zero);
     g3(0) = g_metrics_kovariant(0, 1) * g_metrics_kovariant(1, 2) -
             g_metrics_kovariant(0, 2) * g_metrics_kovariant(1, 1);
     g3(1) = g_metrics_kovariant(0, 2) * g_metrics_kovariant(1, 0) -

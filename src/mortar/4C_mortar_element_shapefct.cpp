@@ -955,8 +955,8 @@ void Mortar::Element::shape_functions(Mortar::Element::ShapeType shape, const do
         // compute entries to bi-ortho matrices me/de with Gauss quadrature
         Mortar::ElementIntegrator integrator(Element::shape());
 
-        Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-        Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+        Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
 
         for (int i = 0; i < integrator.n_gp(); ++i)
         {
@@ -1036,8 +1036,8 @@ void Mortar::Element::shape_functions(Mortar::Element::ShapeType shape, const do
         // compute entries to bi-ortho matrices me/de with Gauss quadrature
         Mortar::ElementIntegrator integrator(Element::shape());
 
-        Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-        Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+        Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
 
         for (int i = 0; i < integrator.n_gp(); ++i)
         {
@@ -1116,7 +1116,7 @@ void Mortar::Element::shape_functions(Mortar::Element::ShapeType shape, const do
       {
         // compute entries to bi-ortho matrices me/de with Gauss quadrature
         Mortar::ElementIntegrator integrator(Element::shape());
-        Core::LinAlg::Matrix<nnodes, nnodes> me(true);
+        Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
         Core::LinAlg::SerialDenseMatrix de(nnodes, nnodes, true);
 
         for (int i = 0; i < integrator.n_gp(); ++i)
@@ -1211,8 +1211,8 @@ void Mortar::Element::shape_functions(Mortar::Element::ShapeType shape, const do
       {
         // compute entries to bi-ortho matrices me/de with Gauss quadrature
         Mortar::ElementIntegrator integrator(Element::shape());
-        Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-        Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+        Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
 
         for (int i = 0; i < integrator.n_gp(); ++i)
         {
@@ -1287,8 +1287,8 @@ void Mortar::Element::shape_functions(Mortar::Element::ShapeType shape, const do
       {
         // compute entries to bi-ortho matrices me/de with Gauss quadrature
         Mortar::ElementIntegrator integrator(Element::shape());
-        Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-        Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+        Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
 
         for (int i = 0; i < integrator.n_gp(); ++i)
         {
@@ -1362,8 +1362,8 @@ void Mortar::Element::shape_functions(Mortar::Element::ShapeType shape, const do
       {
         // compute entries to bi-ortho matrices me/de with Gauss quadrature
         Mortar::ElementIntegrator integrator(Element::shape());
-        Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-        Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+        Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
 
         for (int i = 0; i < integrator.n_gp(); ++i)
         {
@@ -1437,7 +1437,7 @@ void Mortar::Element::shape_functions(Mortar::Element::ShapeType shape, const do
       {
         // compute entries to bi-ortho matrices me/de with Gauss quadrature
         Mortar::ElementIntegrator integrator(Element::shape());
-        Core::LinAlg::Matrix<nnodes, nnodes> me(true);
+        Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
         Core::LinAlg::SerialDenseMatrix de(nnodes, nnodes, true);
 
         for (int i = 0; i < integrator.n_gp(); ++i)
@@ -1528,7 +1528,7 @@ void Mortar::Element::shape_functions(Mortar::Element::ShapeType shape, const do
       {
         // compute entries to bi-ortho matrices me/de with Gauss quadrature
         Mortar::ElementIntegrator integrator(Element::shape());
-        Core::LinAlg::Matrix<nnodes, nnodes> me(true);
+        Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
         Core::LinAlg::SerialDenseMatrix de(nnodes, nnodes, true);
 
         for (int i = 0; i < integrator.n_gp(); ++i)
@@ -1552,7 +1552,7 @@ void Mortar::Element::shape_functions(Mortar::Element::ShapeType shape, const do
         const int nnodeslin = 4;
 
         // reduce me to non-zero nodes before inverting
-        Core::LinAlg::Matrix<nnodeslin, nnodeslin> melin(true);
+        Core::LinAlg::Matrix<nnodeslin, nnodeslin> melin(Core::LinAlg::Initialization::zero);
         for (int j = 0; j < nnodeslin; ++j)
           for (int k = 0; k < nnodeslin; ++k) melin(j, k) = me(j, k);
 
@@ -1620,7 +1620,7 @@ void Mortar::Element::shape_functions(Mortar::Element::ShapeType shape, const do
       {
         // compute entries to bi-ortho matrices me/de with Gauss quadrature
         Mortar::ElementIntegrator integrator(Element::shape());
-        Core::LinAlg::Matrix<nnodes, nnodes> me(true);
+        Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
         Core::LinAlg::SerialDenseMatrix de(nnodes, nnodes, true);
 
         for (int i = 0; i < integrator.n_gp(); ++i)
@@ -1643,7 +1643,7 @@ void Mortar::Element::shape_functions(Mortar::Element::ShapeType shape, const do
         const int nnodeslin = 4;
 
         // reduce me to non-zero nodes before inverting
-        Core::LinAlg::Matrix<nnodeslin, nnodeslin> melin(true);
+        Core::LinAlg::Matrix<nnodeslin, nnodeslin> melin(Core::LinAlg::Initialization::zero);
         for (int j = 0; j < nnodeslin; ++j)
           for (int k = 0; k < nnodeslin; ++k) melin(j, k) = me(j, k);
 
@@ -2185,8 +2185,8 @@ bool Mortar::Element::evaluate_shape_lag_mult(const Inpar::Mortar::ShapeFcn& lmt
           // compute entries to bi-ortho matrices me/de with Gauss quadrature
           Mortar::ElementIntegrator integrator(Element::shape());
 
-          Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-          Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+          Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
 
           for (int i = 0; i < integrator.n_gp(); ++i)
           {
@@ -2278,8 +2278,8 @@ bool Mortar::Element::evaluate_shape_lag_mult(const Inpar::Mortar::ShapeFcn& lmt
           // compute entries to bi-ortho matrices me/de with Gauss quadrature
           Mortar::ElementIntegrator integrator(Element::shape());
 
-          Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-          Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+          Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
 
           for (int i = 0; i < integrator.n_gp(); ++i)
           {
@@ -2660,8 +2660,8 @@ void Mortar::Element::shape_function_linearizations(Mortar::Element::ShapeType s
 
         // prepare computation with Gauss quadrature
         Mortar::ElementIntegrator integrator(Element::shape());
-        Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-        Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+        Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
         Core::LinAlg::Matrix<nnodes, 1> val;
 
         // two-dim arrays of maps for linearization of me/de
@@ -2776,8 +2776,8 @@ void Mortar::Element::shape_function_linearizations(Mortar::Element::ShapeType s
         Mortar::ElementIntegrator integrator(Element::shape());
         Core::LinAlg::SerialDenseVector val(nnodes);
         Core::LinAlg::SerialDenseMatrix deriv(nnodes, 2, true);
-        Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-        Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+        Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
 
         // two-dim arrays of maps for linearization of me/de
         Core::Gen::Pairedvector<int, Core::LinAlg::SerialDenseMatrix> derivde_me(
@@ -2970,8 +2970,8 @@ void Mortar::Element::shape_function_linearizations(Mortar::Element::ShapeType s
         Mortar::ElementIntegrator integrator(Element::shape());
         Core::LinAlg::SerialDenseVector val(nnodes);
         Core::LinAlg::SerialDenseMatrix deriv(nnodes, 2, true);
-        Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-        Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+        Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
 
         // two-dim arrays of maps for linearization of me/de
         Core::Gen::Pairedvector<int, Core::LinAlg::SerialDenseMatrix> derivde_me(
@@ -3110,8 +3110,8 @@ void Mortar::Element::shape_function_linearizations(Mortar::Element::ShapeType s
         Mortar::ElementIntegrator integrator(Element::shape());
         Core::LinAlg::SerialDenseVector val(nnodes);
         Core::LinAlg::SerialDenseMatrix deriv(nnodes, 2, true);
-        Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-        Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+        Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
 
         // two-dim arrays of maps for linearization of me/de
         Core::Gen::Pairedvector<int, Core::LinAlg::SerialDenseMatrix> derivde_me(
@@ -3309,8 +3309,8 @@ void Mortar::Element::shape_function_linearizations(Mortar::Element::ShapeType s
         Mortar::ElementIntegrator integrator(Element::shape());
         Core::LinAlg::SerialDenseVector val(nnodes);
         Core::LinAlg::SerialDenseMatrix deriv(nnodes, 2, true);
-        Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-        Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+        Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
 
         // two-dim arrays of maps for linearization of me/de
         Core::Gen::Pairedvector<int, Core::LinAlg::SerialDenseMatrix> derivde_me(
@@ -3505,8 +3505,8 @@ void Mortar::Element::shape_function_linearizations(Mortar::Element::ShapeType s
         Mortar::ElementIntegrator integrator(Element::shape());
         Core::LinAlg::SerialDenseVector val(nnodes);
         Core::LinAlg::SerialDenseMatrix deriv(nnodes, 2, true);
-        Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-        Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+        Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
 
         // two-dim arrays of maps for linearization of me/de
         Core::Gen::Pairedvector<int, Core::LinAlg::SerialDenseMatrix> derivde_me(
@@ -4073,8 +4073,8 @@ void Mortar::Element::shape_function_linearizations(Mortar::Element::ShapeType s
         Mortar::ElementIntegrator integrator(Element::shape());
         Core::LinAlg::SerialDenseVector val(nnodes);
         Core::LinAlg::SerialDenseMatrix deriv(nnodes, 2, true);
-        Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-        Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+        Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
 
         // two-dim arrays of maps for linearization of me/de
         Core::Gen::Pairedvector<int, Core::LinAlg::SerialDenseMatrix> derivde_me(
@@ -4214,8 +4214,8 @@ void Mortar::Element::shape_function_linearizations(Mortar::Element::ShapeType s
         Mortar::ElementIntegrator integrator(Element::shape());
         Core::LinAlg::SerialDenseVector val(nnodes);
         Core::LinAlg::SerialDenseMatrix deriv(nnodes, 2, true);
-        Core::LinAlg::Matrix<nnodes, nnodes> me(true);
-        Core::LinAlg::Matrix<nnodes, nnodes> de(true);
+        Core::LinAlg::Matrix<nnodes, nnodes> me(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nnodes, nnodes> de(Core::LinAlg::Initialization::zero);
 
         // two-dim arrays of maps for linearization of me/de
         Core::Gen::Pairedvector<int, Core::LinAlg::SerialDenseMatrix> derivde_me(

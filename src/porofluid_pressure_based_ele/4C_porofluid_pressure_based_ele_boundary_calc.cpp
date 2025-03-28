@@ -47,15 +47,15 @@ Discret::Elements::PoroFluidMultiPhaseEleBoundaryCalc<distype>::PoroFluidMultiPh
     const int numdofpernode, const std::string& disname)
     : params_(Discret::Elements::PoroFluidMultiPhaseEleParameter::instance(disname)),
       numdofpernode_(numdofpernode),
-      xyze_(true),  // initialize to zero
-      edispnp_(true),
-      xsi_(true),
-      funct_(true),
-      deriv_(true),
-      derxy_(true),
-      normal_(true),
-      velint_(true),
-      metrictensor_(true)
+      xyze_(Core::LinAlg::Initialization::zero),  // initialize to zero
+      edispnp_(Core::LinAlg::Initialization::zero),
+      xsi_(Core::LinAlg::Initialization::zero),
+      funct_(Core::LinAlg::Initialization::zero),
+      deriv_(Core::LinAlg::Initialization::zero),
+      derxy_(Core::LinAlg::Initialization::zero),
+      normal_(Core::LinAlg::Initialization::zero),
+      velint_(Core::LinAlg::Initialization::zero),
+      metrictensor_(Core::LinAlg::Initialization::zero)
 {
   return;
 }

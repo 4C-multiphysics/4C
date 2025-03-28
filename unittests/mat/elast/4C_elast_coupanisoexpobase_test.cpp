@@ -161,8 +161,8 @@ namespace
 
   TEST_F(CoupAnisoExpoBaseTest, TestAddStrainEnergy)
   {
-    Core::LinAlg::Matrix<3, 1> prinv(true);
-    Core::LinAlg::Matrix<3, 1> modinv(true);
+    Core::LinAlg::Matrix<3, 1> prinv(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> modinv(Core::LinAlg::Initialization::zero);
 
     double psi = 3.3;
     summand_.add_strain_energy(psi, prinv, modinv, E1_strain_, 0, 0);
@@ -183,8 +183,8 @@ namespace
 
   TEST_F(CoupAnisoExpoBaseTest, TestEvaluateFunc)
   {
-    Core::LinAlg::Matrix<3, 1> prinv(true);
-    Core::LinAlg::Matrix<3, 1> modinv(true);
+    Core::LinAlg::Matrix<3, 1> prinv(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> modinv(Core::LinAlg::Initialization::zero);
 
     double psi = 3.3;
     summand_.evaluate_func(psi, C1_, 0, 0);
@@ -205,7 +205,7 @@ namespace
 
   TEST_F(CoupAnisoExpoBaseTest, EvaluateFistDerivativeAniso)
   {
-    Core::LinAlg::Matrix<2, 1> dPIaniso(true);
+    Core::LinAlg::Matrix<2, 1> dPIaniso(Core::LinAlg::Initialization::zero);
 
     summand_.evaluate_first_derivatives_aniso(dPIaniso, C1_, 0, 0);
     EXPECT_NEAR(dPIaniso(0), 0.6000375695574949, 1e-10);
@@ -229,7 +229,7 @@ namespace
 
   TEST_F(CoupAnisoExpoBaseTest, EvaluateSecondDerivativeAnsio)
   {
-    Core::LinAlg::Matrix<3, 1> ddPIaniso(true);
+    Core::LinAlg::Matrix<3, 1> ddPIaniso(Core::LinAlg::Initialization::zero);
 
     summand_.evaluate_second_derivatives_aniso(ddPIaniso, C1_, 0, 0);
     EXPECT_NEAR(ddPIaniso(0), 2.329771574299716, 1e-10);
@@ -258,9 +258,9 @@ namespace
 
   TEST_F(CoupAnisoExpoBaseTest, GetDerivativesAniso)
   {
-    Core::LinAlg::Matrix<2, 1> dPIaniso(true);
-    Core::LinAlg::Matrix<3, 1> ddPIaniso(true);
-    Core::LinAlg::Matrix<4, 1> dddPIaniso(true);
+    Core::LinAlg::Matrix<2, 1> dPIaniso(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1> ddPIaniso(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<4, 1> dddPIaniso(Core::LinAlg::Initialization::zero);
 
     summand_.get_derivatives_aniso(dPIaniso, ddPIaniso, dddPIaniso, C1_, 0, 0);
     EXPECT_NEAR(dPIaniso(0), 0.6000375695574949, 1e-10);

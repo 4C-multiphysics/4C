@@ -406,7 +406,7 @@ namespace Cut
           num_cut_points_(0),
           istatus_(intersect_unevaluated),
           scale_(1.0),
-          shift_(0.0)
+          shift_(Core::LinAlg::Initialization::zero)
     { /* intentionally left blank */
     }
 

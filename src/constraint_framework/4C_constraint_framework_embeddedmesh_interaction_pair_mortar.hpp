@@ -122,7 +122,7 @@ namespace CONSTRAINTS::EMBEDDEDMESH
   {
     Core::LinAlg::SerialDenseMatrix nodal_coordinates =
         Core::FE::get_ele_node_numbering_nodes_paramspace(ElementType::discretization_);
-    Core::LinAlg::Matrix<3, 1, double> xi(true);
+    Core::LinAlg::Matrix<3, 1, double> xi(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<3, 1, double> temp_normal;
     Core::LinAlg::Matrix<ElementType::n_nodes_, 1, Core::LinAlg::Matrix<3, 1, double>> normals;
 

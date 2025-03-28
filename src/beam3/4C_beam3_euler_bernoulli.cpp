@@ -97,7 +97,7 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::Beam3ebType::compute_null_spa
 
   // Compute tangent vector with unit length from nodal coordinates.
   // Note: Tangent vector is the same at both nodes due to straight initial configuration.
-  Core::LinAlg::Matrix<spacedim, 1> tangent(true);
+  Core::LinAlg::Matrix<spacedim, 1> tangent(Core::LinAlg::Initialization::zero);
   {
     const Core::Nodes::Node* firstnode = beam3eb->nodes()[0];
     const Core::Nodes::Node* secondnode = beam3eb->nodes()[1];
@@ -110,11 +110,11 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::Beam3ebType::compute_null_spa
 
   // Form a Cartesian basis
   std::array<Core::LinAlg::Matrix<spacedim, 1>, spacedim> basis;
-  Core::LinAlg::Matrix<spacedim, 1> e1(true);
+  Core::LinAlg::Matrix<spacedim, 1> e1(Core::LinAlg::Initialization::zero);
   e1(0) = 1.0;
-  Core::LinAlg::Matrix<spacedim, 1> e2(true);
+  Core::LinAlg::Matrix<spacedim, 1> e2(Core::LinAlg::Initialization::zero);
   e2(1) = 1.0;
-  Core::LinAlg::Matrix<spacedim, 1> e3(true);
+  Core::LinAlg::Matrix<spacedim, 1> e3(Core::LinAlg::Initialization::zero);
   e3(2) = 1.0;
   basis[0] = e1;
   basis[1] = e2;
@@ -148,16 +148,18 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::Beam3ebType::compute_null_spa
   if (std::abs(omegaTwo.dot(tangent)) > 1.0e-12)
     FOUR_C_THROW("omegaTwo not orthogonal to tangent vector.");
 
-  Core::LinAlg::Matrix<3, 1> nodeCoords(true);
+  Core::LinAlg::Matrix<3, 1> nodeCoords(Core::LinAlg::Initialization::zero);
   for (std::size_t dim = 0; dim < 3; ++dim) nodeCoords(dim) = x[dim] - x0[dim];
 
   // Compute rotations in displacement DOFs
-  Core::LinAlg::Matrix<spacedim, 1> rotOne(true), rotTwo(true);
+  Core::LinAlg::Matrix<spacedim, 1> rotOne(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<spacedim, 1> rotTwo(Core::LinAlg::Initialization::zero);
   rotOne.cross_product(omegaOne, nodeCoords);
   rotTwo.cross_product(omegaTwo, nodeCoords);
 
   // Compute rotations in tangent DOFs
-  Core::LinAlg::Matrix<spacedim, 1> rotTangOne(true), rotTangTwo(true);
+  Core::LinAlg::Matrix<spacedim, 1> rotTangOne(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<spacedim, 1> rotTangTwo(Core::LinAlg::Initialization::zero);
   rotTangOne.cross_product(omegaOne, tangent);
   rotTangTwo.cross_product(omegaTwo, tangent);
 
@@ -285,10 +287,10 @@ Discret::Elements::Beam3eb::Beam3eb(int id, int owner)
       firstcall_(true),
       ekin_(0.0),
       eint_(0.0),
-      l_(Core::LinAlg::Matrix<3, 1>(true)),
-      p_(Core::LinAlg::Matrix<3, 1>(true)),
-      t0_(Core::LinAlg::Matrix<3, 2>(true)),
-      t_(Core::LinAlg::Matrix<3, 2>(true)),
+      l_(Core::LinAlg::Matrix<3, 1>(Core::LinAlg::Initialization::zero)),
+      p_(Core::LinAlg::Matrix<3, 1>(Core::LinAlg::Initialization::zero)),
+      t0_(Core::LinAlg::Matrix<3, 2>(Core::LinAlg::Initialization::zero)),
+      t_(Core::LinAlg::Matrix<3, 2>(Core::LinAlg::Initialization::zero)),
       kappa_max_(0.0),
       epsilon_max_(0.0),
       axial_strain_gp_(0),
@@ -535,7 +537,7 @@ void Discret::Elements::Beam3eb::get_pos_at_xi(
         disp.size());
 
   // add reference positions and tangents => total Lagrangean state vector
-  Core::LinAlg::Matrix<12, 1> disp_totlag(true);
+  Core::LinAlg::Matrix<12, 1> disp_totlag(Core::LinAlg::Initialization::zero);
   update_disp_totlag<2, 6>(disp, disp_totlag);
 
   Beam3Base::get_pos_at_xi<2, 2, double>(pos, xi, disp_totlag);
@@ -553,7 +555,7 @@ void Discret::Elements::Beam3eb::get_triad_at_xi(
         disp.size());
 
   // add reference positions and tangents => total Lagrangean state vector
-  Core::LinAlg::Matrix<12, 1> disp_totlag(true);
+  Core::LinAlg::Matrix<12, 1> disp_totlag(Core::LinAlg::Initialization::zero);
   update_disp_totlag<2, 6>(disp, disp_totlag);
 
   triad.clear();

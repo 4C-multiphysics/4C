@@ -161,11 +161,11 @@ namespace Discret
           const Core::LinAlg::Matrix<nen, 1>& earterypressure)
       {
         // call base class (scatra) with dummy variable econvelnp
-        const Core::LinAlg::Matrix<nsd, nen> econvelnp(true);
-        const Core::LinAlg::Matrix<nsd, nen> eforcevelocity(true);
+        const Core::LinAlg::Matrix<nsd, nen> econvelnp(Core::LinAlg::Initialization::zero);
+        const Core::LinAlg::Matrix<nsd, nen> eforcevelocity(Core::LinAlg::Initialization::zero);
         my::set_internal_variables(funct, derxy, ephinp, ephin, econvelnp, ehist, eforcevelocity);
 
-        static Core::LinAlg::Matrix<nsd, 1> pressuregrad(true);
+        static Core::LinAlg::Matrix<nsd, 1> pressuregrad(Core::LinAlg::Initialization::zero);
         pressuregrad.multiply(derxy, earterypressure);
 
         for (int k = 0; k < my::numscal_; ++k)

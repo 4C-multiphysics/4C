@@ -24,7 +24,7 @@ FOUR_C_NAMESPACE_OPEN
 Core::LinAlg::Matrix<3, 2> Core::Geo::get_xaab_bof_dis(const Core::FE::Discretization& dis,
     const std::map<int, Core::LinAlg::Matrix<3, 1>>& currentpositions)
 {
-  Core::LinAlg::Matrix<3, 2> XAABB(true);
+  Core::LinAlg::Matrix<3, 2> XAABB(Core::LinAlg::Initialization::zero);
   if (dis.num_global_elements() == 0) return XAABB;
 
   if (dis.num_my_col_elements() == 0) return XAABB;
@@ -63,7 +63,7 @@ Core::LinAlg::Matrix<3, 2> Core::Geo::get_xaab_bof_eles(
     std::map<int, std::shared_ptr<Core::Elements::Element>>& elements,
     const std::map<int, Core::LinAlg::Matrix<3, 1>>& currentpositions)
 {
-  Core::LinAlg::Matrix<3, 2> XAABB(true);
+  Core::LinAlg::Matrix<3, 2> XAABB(Core::LinAlg::Initialization::zero);
   if (elements.begin() == elements.end()) return XAABB;
 
   // initialize XAABB as rectangle around the first point of the first element
@@ -119,7 +119,7 @@ Core::LinAlg::Matrix<3, 2> Core::Geo::get_xaab_bof_dis(const Core::FE::Discretiz
 Core::LinAlg::Matrix<3, 2> Core::Geo::get_xaab_bof_positions(
     const std::map<int, Core::LinAlg::Matrix<3, 1>>& currentpositions)
 {
-  Core::LinAlg::Matrix<3, 2> XAABB(true);
+  Core::LinAlg::Matrix<3, 2> XAABB(Core::LinAlg::Initialization::zero);
 
   if (currentpositions.size() == 0) FOUR_C_THROW("map with current positions is empty");
 
@@ -305,8 +305,8 @@ void Core::Geo::nearest_2d_object_in_node(const Core::FE::Discretization& dis,
   bool pointFound = false;
   double min_distance = std::numeric_limits<double>::max();
   double distance = std::numeric_limits<double>::max();
-  Core::LinAlg::Matrix<3, 1> normal(true);
-  Core::LinAlg::Matrix<3, 1> x_surface(true);
+  Core::LinAlg::Matrix<3, 1> normal(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> x_surface(Core::LinAlg::Initialization::zero);
   std::map<int, std::set<int>> nodeList;
 
   // run over all line elements
@@ -372,8 +372,8 @@ int Core::Geo::nearest_3d_object_in_node(const Core::FE::Discretization& dis,
   bool pointFound = false;
   double min_distance = std::numeric_limits<double>::max();
   double distance = std::numeric_limits<double>::max();
-  Core::LinAlg::Matrix<3, 1> normal(true);
-  Core::LinAlg::Matrix<3, 1> x_surface(true);
+  Core::LinAlg::Matrix<3, 1> normal(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> x_surface(Core::LinAlg::Initialization::zero);
   std::map<int, std::set<int>> nodeList;
   int surfid = -1;
 
@@ -453,7 +453,7 @@ Core::Geo::ObjectType Core::Geo::nearest_3d_object_on_element(
   bool pointFound = false;
   double min_distance = std::numeric_limits<double>::max();
   double distance = std::numeric_limits<double>::max();
-  Core::LinAlg::Matrix<3, 1> x_surface(true);
+  Core::LinAlg::Matrix<3, 1> x_surface(Core::LinAlg::Initialization::zero);
 
   pointFound = Core::Geo::get_distance_to_surface(
       surfaceelement, currentpositions, point, x_surface, distance);
@@ -517,8 +517,9 @@ bool Core::Geo::get_distance_to_surface(const Core::Elements::Element* surfaceEl
 {
   bool pointFound = false;
   double min_distance = std::numeric_limits<double>::max();
-  Core::LinAlg::Matrix<3, 1> distance_vector(true);
-  Core::LinAlg::Matrix<2, 1> elecoord(true);  // starting value at element center
+  Core::LinAlg::Matrix<3, 1> distance_vector(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<2, 1> elecoord(
+      Core::LinAlg::Initialization::zero);  // starting value at element center
 
   const Core::LinAlg::SerialDenseMatrix xyze_surfaceElement(
       Core::Geo::get_current_nodal_positions(surfaceElement, currentpositions));
@@ -556,7 +557,7 @@ bool Core::Geo::get_distance_to_surface(const Core::Elements::Element* surfaceEl
       if (Core::Geo::check_position_within_element_parameter_space(
               elecoord, surfaceElement->shape()))
       {
-        Core::LinAlg::Matrix<3, 1> physcoord(true);
+        Core::LinAlg::Matrix<3, 1> physcoord(Core::LinAlg::Initialization::zero);
         Core::Geo::element_to_current_coordinates(
             surfaceElement->shape(), xyze_surfaceElement, elecoord, physcoord);
         // normal pointing away from the surface towards point
@@ -585,8 +586,9 @@ bool Core::Geo::get_distance_to_line(const Core::Elements::Element* lineElement,
 {
   bool pointFound = false;
   double min_distance = std::numeric_limits<double>::max();
-  Core::LinAlg::Matrix<3, 1> distance_vector(true);
-  Core::LinAlg::Matrix<1, 1> elecoord(true);  // starting value at element center
+  Core::LinAlg::Matrix<3, 1> distance_vector(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, 1> elecoord(
+      Core::LinAlg::Initialization::zero);  // starting value at element center
 
   const Core::LinAlg::SerialDenseMatrix xyze_lineElement(
       Core::Geo::get_current_nodal_positions(lineElement, currentpositions));
@@ -623,7 +625,7 @@ bool Core::Geo::get_distance_to_line(const Core::Elements::Element* lineElement,
 
       if (Core::Geo::check_position_within_element_parameter_space(elecoord, lineElement->shape()))
       {
-        Core::LinAlg::Matrix<3, 1> physcoord(true);
+        Core::LinAlg::Matrix<3, 1> physcoord(Core::LinAlg::Initialization::zero);
         Core::Geo::element_to_current_coordinates(
             lineElement->shape(), xyze_lineElement, elecoord, physcoord);
         // normal pointing away from the line towards point

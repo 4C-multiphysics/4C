@@ -20,7 +20,7 @@ namespace
   void setup_single_structural_tensor(const Core::LinAlg::Matrix<3, 1>& fiber1,
       const Core::LinAlg::Matrix<3, 1>& fiber2, Core::LinAlg::Matrix<3, 3>& structuralTensor)
   {
-    Core::LinAlg::Matrix<3, 3> fiber1fiber2T(false);
+    Core::LinAlg::Matrix<3, 3> fiber1fiber2T(Core::LinAlg::Initialization::uninitialized);
 
     fiber1fiber2T.multiply_nt(fiber1, fiber2);
 

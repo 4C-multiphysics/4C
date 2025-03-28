@@ -27,7 +27,7 @@ namespace
   {
     std::vector<Core::GeometricSearch::BoundingVolume> volumes(3);
 
-    Core::LinAlg::Matrix<3, 1, double> point(true);
+    Core::LinAlg::Matrix<3, 1, double> point(Core::LinAlg::Initialization::zero);
 
     // setting up bounding volume 1
     {

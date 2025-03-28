@@ -386,7 +386,7 @@ void ScaTra::LevelSetAlgorithm::apply_contact_point_boundary_condition()
               // determine number of velocity related dofs per node
               const int numveldofpernode = lmvel.size() / nen;
 
-              Core::LinAlg::Matrix<nsd, nen> evel(true);
+              Core::LinAlg::Matrix<nsd, nen> evel(Core::LinAlg::Initialization::zero);
 
               // loop over number of nodes
               for (int inode = 0; inode < nen; ++inode)
@@ -398,16 +398,16 @@ void ScaTra::LevelSetAlgorithm::apply_contact_point_boundary_condition()
               // used here to get center coordinates
               Core::FE::IntPointsAndWeights<nsd> centercoord(
                   ScaTra::DisTypeToStabGaussRule<distype>::rule);
-              Core::LinAlg::Matrix<nsd, 1> xsi(true);
+              Core::LinAlg::Matrix<nsd, 1> xsi(Core::LinAlg::Initialization::zero);
               const double* gpcoord = (centercoord.ip().qxg)[0];
               for (int idim = 0; idim < nsd; idim++) xsi(idim, 0) = gpcoord[idim];
 
               // compute shape functions at element center
-              Core::LinAlg::Matrix<nen, 1> funct(true);
+              Core::LinAlg::Matrix<nen, 1> funct(Core::LinAlg::Initialization::zero);
               Core::FE::shape_function<distype>(xsi, funct);
 
               // get velocity at integration point
-              Core::LinAlg::Matrix<nsd, 1> velint(true);
+              Core::LinAlg::Matrix<nsd, 1> velint(Core::LinAlg::Initialization::zero);
               velint.multiply(evel, funct);
 
               // add to averaged velocity vector
@@ -761,7 +761,7 @@ void ScaTra::LevelSetAlgorithm::manipulate_fluid_field_for_gfunc()
     Core::Nodes::Node* lnode = discret_->l_row_node(lnodeid);
     std::vector<int> nodedofs = discret_->dof(nds_vel(), lnode);
 
-    Core::LinAlg::Matrix<3, 1> fluidvel(true);
+    Core::LinAlg::Matrix<3, 1> fluidvel(Core::LinAlg::Initialization::zero);
 
     // extract velocity values (no pressure!) from global velocity vector
     for (int i = 0; i < 3; ++i)
@@ -778,7 +778,7 @@ void ScaTra::LevelSetAlgorithm::manipulate_fluid_field_for_gfunc()
     if (foundit == allcollectednodes.end())
     {
       // find closest node in surfacenodes
-      Core::LinAlg::Matrix<3, 2> closestnodedata(true);
+      Core::LinAlg::Matrix<3, 2> closestnodedata(Core::LinAlg::Initialization::zero);
       {
         Core::LinAlg::Matrix<3, 1> nodecoord;
         auto& coord = lnode->x();

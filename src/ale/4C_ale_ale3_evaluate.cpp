@@ -1377,7 +1377,7 @@ void Discret::Elements::Ale3Impl<distype>::static_ke_nonlinear(Ale3* ele,
   // --------------------------------------------------
   // Now do the nurbs specific stuff
   std::vector<Core::LinAlg::SerialDenseVector> myknots;
-  Core::LinAlg::Matrix<iel, 1> weights(iel);
+  Core::LinAlg::Matrix<iel, 1> weights;
 
   if (distype == Core::FE::CellType::nurbs8 || distype == Core::FE::CellType::nurbs27)
   {
@@ -1406,7 +1406,7 @@ void Discret::Elements::Ale3Impl<distype>::static_ke_nonlinear(Ale3* ele,
   Core::LinAlg::Matrix<3, 3> xjm;
   Core::LinAlg::Matrix<3, 3> xji;
   Core::LinAlg::Matrix<6, numdof> bop;
-  Core::LinAlg::Matrix<6, 6> D(true);
+  Core::LinAlg::Matrix<6, 6> D(Core::LinAlg::Initialization::zero);
   // gaussian points
   const Core::FE::GaussRule3D gaussrule = get_optimal_gaussrule();
   const Core::FE::IntegrationPoints3D intpoints(gaussrule);
@@ -1518,8 +1518,9 @@ void Discret::Elements::Ale3Impl<distype>::static_ke_nonlinear(Ale3* ele,
       bop(5, NODDOF_ALE3 * i + 2) = defgrd(2, 2) * N_XYZ(0, i) + defgrd(2, 0) * N_XYZ(2, i);
     }
     // call material law cccccccccccccccccccccccccccccccccccccccccccccccccccccc
-    Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> cmat_f(true);
-    Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> stress_f(true);
+    Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> cmat_f(
+        Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> stress_f(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> glstrain_f(glstrain.data());
     // QUICK HACK until so_disp exclusively uses Core::LinAlg::Matrix!!!!!
     Core::LinAlg::Matrix<NUMDIM_ALE3, NUMDIM_ALE3> fixed_defgrd(defgrd);
@@ -1612,7 +1613,7 @@ void Discret::Elements::Ale3Impl<distype>::static_ke_laplace(Ale3* ele,
   // --------------------------------------------------
   // Now do the nurbs specific stuff
   std::vector<Core::LinAlg::SerialDenseVector> myknots(3);
-  Core::LinAlg::Matrix<iel, 1> weights(iel);
+  Core::LinAlg::Matrix<iel, 1> weights;
 
   if (distype == Core::FE::CellType::nurbs8 or distype == Core::FE::CellType::nurbs27)
   {
@@ -1633,13 +1634,13 @@ void Discret::Elements::Ale3Impl<distype>::static_ke_laplace(Ale3* ele,
   }
 
   /*----------------------------------------- declaration of variables ---*/
-  Core::LinAlg::Matrix<iel, 1> funct(true);
-  Core::LinAlg::Matrix<3, iel> deriv(true);
-  Core::LinAlg::Matrix<3, 3> xjm(true);
-  Core::LinAlg::Matrix<3, 3> xji(true);
-  Core::LinAlg::Matrix<3, iel> deriv_xy(true);
-  Core::LinAlg::Matrix<iel, iel> tempmat(true);
-  Core::LinAlg::Matrix<3 * iel, 1> tempmat2(true);
+  Core::LinAlg::Matrix<iel, 1> funct(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, iel> deriv(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> xjm(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> xji(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, iel> deriv_xy(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<iel, iel> tempmat(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3 * iel, 1> tempmat2(Core::LinAlg::Initialization::zero);
 
   // gaussian points
   const Core::FE::GaussRule3D gaussrule = get_optimal_gaussrule();

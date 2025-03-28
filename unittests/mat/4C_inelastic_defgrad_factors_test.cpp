@@ -1200,19 +1200,19 @@ namespace
         {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}, {1.0, 0.5, 0.3}};
 
     // result of first growth direction
-    Core::LinAlg::Matrix<3, 3> growth_dir_1(true);
+    Core::LinAlg::Matrix<3, 3> growth_dir_1(Core::LinAlg::Initialization::zero);
     growth_dir_1(0, 0) = 1.0;
 
     // result of second growth direction
-    Core::LinAlg::Matrix<3, 3> growth_dir_2(true);
+    Core::LinAlg::Matrix<3, 3> growth_dir_2(Core::LinAlg::Initialization::zero);
     growth_dir_2(1, 1) = 1.0;
 
     // result of third growth direction
-    Core::LinAlg::Matrix<3, 3> growth_dir_3(true);
+    Core::LinAlg::Matrix<3, 3> growth_dir_3(Core::LinAlg::Initialization::zero);
     growth_dir_3(2, 2) = 1.0;
 
     // result of fourth growth direction
-    Core::LinAlg::Matrix<3, 3> growth_dir_4(true);
+    Core::LinAlg::Matrix<3, 3> growth_dir_4(Core::LinAlg::Initialization::zero);
     // clang-format off
     growth_dir_4(0, 0) = 0.74626865671641791044776119402985; growth_dir_4(0, 1) = 0.37313432835820895522388059701493; growth_dir_4(0, 2) = 0.22388059701492537313432835820896;
     growth_dir_4(1, 0) = growth_dir_4(0,1); growth_dir_4(1, 1) = 0.18656716417910447761194029850746; growth_dir_4(1, 2) = 0.11194029850746268656716417910448;
@@ -1259,8 +1259,8 @@ namespace
   TEST_F(InelasticDefgradFactorsTest, TestEvaluateInelasticDefGradDerivative)
   {
     const double detF = FM_.determinant();
-    Core::LinAlg::Matrix<9, 1> DFinDx(true);
-    Core::LinAlg::Matrix<9, 1> DFinDx_ref(true);
+    Core::LinAlg::Matrix<9, 1> DFinDx(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<9, 1> DFinDx_ref(Core::LinAlg::Initialization::zero);
 
     lin_scalar_iso_->evaluate_inelastic_def_grad_derivative(detF, DFinDx);
     DFinDx_ref(0) = DFinDx_ref(1) = DFinDx_ref(2) = 2.977205763668e-07;
@@ -1310,13 +1310,13 @@ namespace
     // set up the "other" inverse inelastic deformation gradient (for each inelastic factor: the
     // product of all inverse inelastic deformation gradients) here we assume a single inelastic
     // deformation gradient, therefore, this is the unit tensor!
-    Core::LinAlg::Matrix<3, 3> iFin_other(true);
+    Core::LinAlg::Matrix<3, 3> iFin_other(Core::LinAlg::Initialization::zero);
     iFin_other(0, 0) = 1.0;
     iFin_other(1, 1) = 1.0;
     iFin_other(2, 2) = 1.0;
 
     // create matrix to be filled by tested methods
-    Core::LinAlg::Matrix<3, 3> iFin(true);
+    Core::LinAlg::Matrix<3, 3> iFin(Core::LinAlg::Initialization::zero);
 
     // test InelasticDefgradLinScalarIso evaluate the method
     lin_scalar_iso_->evaluate_inverse_inelastic_def_grad(&FM_, iFin_other, iFin);
@@ -1374,14 +1374,14 @@ namespace
     // set up the "other" inverse inelastic deformation gradient (for each inelastic factor: the
     // product of all inverse inelastic deformation gradients) here we assume a single inelastic
     // deformation gradient, therefore, this is the unit tensor!
-    Core::LinAlg::Matrix<3, 3> iFin_other(true);
+    Core::LinAlg::Matrix<3, 3> iFin_other(Core::LinAlg::Initialization::zero);
     iFin_other(0, 0) = 1.0;
     iFin_other(1, 1) = 1.0;
     iFin_other(2, 2) = 1.0;
 
     // matrix to be filled by the methods
-    Core::LinAlg::Matrix<6, 6> CMatAdd(true);
-    Core::LinAlg::Matrix<6, 6> CMatAdd_ref_solution(true);
+    Core::LinAlg::Matrix<6, 6> CMatAdd(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<6, 6> CMatAdd_ref_solution(Core::LinAlg::Initialization::zero);
 
     // test InelasticDefgradLinScalarIso set up reference solution
     // clang-format off
@@ -1476,8 +1476,8 @@ namespace
 
   TEST_F(InelasticDefgradFactorsTest, TestEvaluateODStiffMat)
   {
-    Core::LinAlg::Matrix<6, 1> dSdc(true);
-    Core::LinAlg::Matrix<6, 1> dSdc_ref_solution(true);
+    Core::LinAlg::Matrix<6, 1> dSdc(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<6, 1> dSdc_ref_solution(Core::LinAlg::Initialization::zero);
 
     // test InelasticDefgradLinScalarIso set up reference solution
     // clang-format off
@@ -1555,7 +1555,7 @@ namespace
     set_up_state_quantities_solution();
 
     // compute right Cauchy-Green deformation tensor
-    Core::LinAlg::Matrix<3, 3> CM(true);
+    Core::LinAlg::Matrix<3, 3> CM(Core::LinAlg::Initialization::zero);
     CM.multiply_tn(1.0, FM_, FM_, 0.0);
 
     // declare error status
@@ -1620,7 +1620,7 @@ namespace
     set_up_state_quantity_derivatives_solution();
 
     // compute right Cauchy-Green deformation tensor
-    Core::LinAlg::Matrix<3, 3> CM(true);
+    Core::LinAlg::Matrix<3, 3> CM(Core::LinAlg::Initialization::zero);
     CM.multiply_tn(1.0, FM_, FM_, 0.0);
 
     Mat::ViscoplastErrorType err_status = Mat::ViscoplastErrorType::NoErrors;

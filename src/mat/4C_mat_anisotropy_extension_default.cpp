@@ -62,8 +62,8 @@ template <unsigned int numfib>
 void Mat::DefaultAnisotropyExtension<numfib>::set_fiber_vecs(const double newgamma,
     const Core::LinAlg::Matrix<3, 3>& locsys, const Core::LinAlg::Matrix<3, 3>& defgrd)
 {
-  Core::LinAlg::Matrix<3, 1> ca1(true);
-  Core::LinAlg::Matrix<3, 1> ca2(true);
+  Core::LinAlg::Matrix<3, 1> ca1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> ca2(Core::LinAlg::Initialization::zero);
 
   // Fiber direction derived from local cosy
   if (init_mode_ == INIT_MODE_ELEMENT_EXTERNAL || init_mode_ == INIT_MODE_ELEMENT_FIBERS)
@@ -101,9 +101,9 @@ void Mat::DefaultAnisotropyExtension<numfib>::set_fiber_vecs(const double newgam
   }
 
   // pull back in reference configuration
-  Core::LinAlg::Matrix<3, 1> a1_0(true);
-  Core::LinAlg::Matrix<3, 1> a2_0(true);
-  Core::LinAlg::Matrix<3, 3> idefgrd(true);
+  Core::LinAlg::Matrix<3, 1> a1_0(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> a2_0(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> idefgrd(Core::LinAlg::Initialization::zero);
   idefgrd.invert(defgrd);
 
 
@@ -158,7 +158,7 @@ bool Mat::DefaultAnisotropyExtension<numfib>::do_element_fiber_initialization()
       if (this->get_anisotropy()->has_element_cylinder_coordinate_system())
       {
         // initialize fiber vector with local coordinate system
-        Core::LinAlg::Matrix<3, 3> locsys(true);
+        Core::LinAlg::Matrix<3, 3> locsys(Core::LinAlg::Initialization::zero);
         const Core::LinAlg::Matrix<3, 3> Id = Core::LinAlg::identity_matrix<3>();
         this->get_anisotropy()
             ->get_element_cylinder_coordinate_system()

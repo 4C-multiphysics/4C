@@ -1075,8 +1075,8 @@ void Discret::Elements::ScaTraEleCalcMultiPoroReac<distype>::calc_conv_od_mesh(
   if (var_manager()->evaluate_scalar(k) &&
       var_manager()->get_species_type(k) != Mat::ScaTraMatMultiPoro::SpeciesType::species_in_solid)
   {
-    static Core::LinAlg::Matrix<nsd_, nsd_> difftensor(true);
-    static Core::LinAlg::Matrix<nsd_, 1> refgradpres(true);
+    static Core::LinAlg::Matrix<nsd_, nsd_> difftensor(Core::LinAlg::Initialization::zero);
+    static Core::LinAlg::Matrix<nsd_, 1> refgradpres(Core::LinAlg::Initialization::zero);
 
     // linearization of mesh motion
     //--------------------------------------dJ/dd = dJ/dF : dF/dd = J * F^-T . N_{\psi} = J * N_x
@@ -1336,12 +1336,12 @@ void Discret::Elements::ScaTraEleCalcMultiPoroReac<distype>::calc_mat_conv_od_fl
     {
       const int totalnummultiphasedofpernode = var_manager()->multiphase_mat()->num_mat();
 
-      static Core::LinAlg::Matrix<nsd_, nsd_> difftensor(true);
+      static Core::LinAlg::Matrix<nsd_, nsd_> difftensor(Core::LinAlg::Initialization::zero);
       var_manager()->get_diff_tensor_fluid(k, difftensor, var_manager()->get_phase_id(k));
 
       // gradphi^T * difftensor
       // TODO: not sure if this works for anisotropic fluid difftensor
-      static Core::LinAlg::Matrix<1, nsd_> gradphiTdifftensor(true);
+      static Core::LinAlg::Matrix<1, nsd_> gradphiTdifftensor(Core::LinAlg::Initialization::zero);
       gradphiTdifftensor.multiply_tn(gradphi, difftensor);
 
       for (unsigned vi = 0; vi < nen_; ++vi)
@@ -1380,11 +1380,11 @@ void Discret::Elements::ScaTraEleCalcMultiPoroReac<distype>::calc_mat_conv_od_fl
       {
         const int totalnummultiphasedofpernode = var_manager()->multiphase_mat()->num_mat();
 
-        static Core::LinAlg::Matrix<nsd_, nsd_> difftensor(true);
+        static Core::LinAlg::Matrix<nsd_, nsd_> difftensor(Core::LinAlg::Initialization::zero);
         var_manager()->get_diff_tensor_fluid(k, difftensor, phase);
 
         // gradphi^T * difftensor
-        static Core::LinAlg::Matrix<1, nsd_> gradphiTdifftensor(true);
+        static Core::LinAlg::Matrix<1, nsd_> gradphiTdifftensor(Core::LinAlg::Initialization::zero);
         gradphiTdifftensor.multiply_tn(gradphi, difftensor);
 
         // calculate density*heatcapacity

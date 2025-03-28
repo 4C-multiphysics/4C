@@ -232,10 +232,10 @@ void BeamInteraction::BeamToSpherePotentialPair<numnodes,
   std::vector<Core::LinAlg::Matrix<1, numnodes * numnodalvalues>> N1_i_xi(numgp);  // = N1_i,xi
 
   // coords and derivatives of the two gauss points
-  Core::LinAlg::Matrix<3, 1, TYPE> r1(true);    // = r1
-  Core::LinAlg::Matrix<3, 1, TYPE> r2(true);    // = r2
-  Core::LinAlg::Matrix<3, 1, TYPE> dist(true);  // = r1-r2
-  TYPE norm_dist = 0.0;                         // = |r1-r2|
+  Core::LinAlg::Matrix<3, 1, TYPE> r1(Core::LinAlg::Initialization::zero);    // = r1
+  Core::LinAlg::Matrix<3, 1, TYPE> r2(Core::LinAlg::Initialization::zero);    // = r2
+  Core::LinAlg::Matrix<3, 1, TYPE> dist(Core::LinAlg::Initialization::zero);  // = r1-r2
+  TYPE norm_dist = 0.0;                                                       // = |r1-r2|
 
   // Evaluate shape functions at gauss points and store values
   get_shape_functions(N1_i, N1_i_xi, gausspoints);
@@ -265,7 +265,7 @@ void BeamInteraction::BeamToSpherePotentialPair<numnodes,
 
 
   // auxiliary variable
-  Core::LinAlg::Matrix<3, 1, TYPE> fpot_tmp(true);
+  Core::LinAlg::Matrix<3, 1, TYPE> fpot_tmp(Core::LinAlg::Initialization::zero);
 
   // determine prefactor of the integral (depends on whether surface or volume potential is applied)
   double prefactor = k_ * m_;
@@ -352,7 +352,7 @@ void BeamInteraction::BeamToSpherePotentialPair<numnodes,
     // auxiliary variables (same for both elements)
     TYPE norm_dist_exp2 = (m_ + 2) * std::pow(norm_dist, -m_ - 4);
 
-    Core::LinAlg::Matrix<3, 3, TYPE> dist_dist_T(true);
+    Core::LinAlg::Matrix<3, 3, TYPE> dist_dist_T(Core::LinAlg::Initialization::zero);
 
     for (unsigned int i = 0; i < 3; ++i)
     {

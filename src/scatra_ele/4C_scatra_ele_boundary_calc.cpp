@@ -35,22 +35,22 @@ Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::ScaTraEleBoundaryCal
       scatraparamsboundary_(Discret::Elements::ScaTraEleParameterBoundary::instance("scatra")),
       numdofpernode_(numdofpernode),
       numscal_(numscal),
-      xyze_(true),  // initialize to zero
-      weights_(true),
+      xyze_(),  // initialize to zero
+      weights_(),
       myknots_(nsd_ele_),
       mypknots_(nsd_),
       normalfac_(1.0),
-      ephinp_(numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true)),
-      edispnp_(true),
+      ephinp_(numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero)),
+      edispnp_(),
       diffus_(numscal_, 0),
       shcacp_(0.0),
-      xsi_(true),
-      funct_(true),
-      deriv_(true),
-      derxy_(true),
-      normal_(true),
-      velint_(true),
-      metrictensor_(true),
+      xsi_(),
+      funct_(),
+      deriv_(),
+      derxy_(),
+      normal_(),
+      velint_(),
+      metrictensor_(),
       rotsymmpbc_(std::make_shared<FLD::RotationallySymmetricPeriodicBC<distype, nsd_ + 1,
               Discret::Elements::Fluid::none>>())
 {
@@ -302,7 +302,7 @@ int Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_action(
 
       // extract local values from global vector
       std::vector<Core::LinAlg::Matrix<nen_, 1>> ephinp(
-          numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+          numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
       Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phinp, ephinp, lm);
 
       // get condition
@@ -396,7 +396,7 @@ int Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_action(
 
       // extract local values from the global vector
       std::vector<Core::LinAlg::Matrix<nen_, 1>> ephinp(
-          numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+          numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
       Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phinp, ephinp, lm);
 
       // get number of dofset associated with velocity related dofs
@@ -417,7 +417,7 @@ int Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_action(
           lmvel[inode * nsd_ + idim] = la[ndsvel].lm_[inode * numveldofpernode + idim];
 
       // we deal with a nsd_-dimensional flow field
-      Core::LinAlg::Matrix<nsd_, nen_> econvel(true);
+      Core::LinAlg::Matrix<nsd_, nen_> econvel(Core::LinAlg::Initialization::zero);
 
       // extract local values of convective velocity field from global state vector
       Core::FE::extract_my_values<Core::LinAlg::Matrix<nsd_, nen_>>(*convel, econvel, lmvel);
@@ -641,7 +641,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::neumann_inflow(
 
   // extract local values from global vector
   std::vector<Core::LinAlg::Matrix<nen_, 1>> ephinp(
-      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phinp, ephinp, lm);
 
   // get number of dofset associated with velocity related dofs
@@ -662,7 +662,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::neumann_inflow(
       lmvel[inode * nsd_ + idim] = la[ndsvel].lm_[inode * numveldofpernode + idim];
 
   // we deal with a nsd_-dimensional flow field
-  Core::LinAlg::Matrix<nsd_, nen_> econvel(true);
+  Core::LinAlg::Matrix<nsd_, nen_> econvel(Core::LinAlg::Initialization::zero);
 
   // extract local values of convective velocity field from global state vector
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nsd_, nen_>>(*convel, econvel, lmvel);
@@ -1017,7 +1017,9 @@ Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::get_const_normal(
 {
   if (Core::FE::is_nurbs<distype>) FOUR_C_THROW("Element normal not implemented for NURBS");
 
-  Core::LinAlg::Matrix<3, 1> normal(true), dist1(true), dist2(true);
+  Core::LinAlg::Matrix<3, 1> normal(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> dist1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> dist2(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 3; i++)
   {
     dist1(i) = xyze(i, 1) - xyze(i, 0);
@@ -1043,7 +1045,7 @@ Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::get_const_normal(
 {
   if (Core::FE::is_nurbs<distype>) FOUR_C_THROW("Element normal not implemented for NURBS");
 
-  Core::LinAlg::Matrix<2, 1> normal(true);
+  Core::LinAlg::Matrix<2, 1> normal(Core::LinAlg::Initialization::zero);
 
   normal(0) = xyze(1, 1) - xyze(1, 0);
   normal(1) = (-1.0) * (xyze(0, 1) - xyze(0, 0));
@@ -1065,8 +1067,11 @@ Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::get_const_normal(
 {
   if (Core::FE::is_nurbs<distype>) FOUR_C_THROW("Element normal not implemented for NURBS");
 
-  Core::LinAlg::Matrix<3, 1> normal(true), normal_parent_ele(true), boundary_ele(true),
-      parent_ele_v1(true), parent_ele_v2(true);
+  Core::LinAlg::Matrix<3, 1> normal(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> normal_parent_ele(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> boundary_ele(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> parent_ele_v1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> parent_ele_v2(Core::LinAlg::Initialization::zero);
 
   for (int dim = 0; dim < 3; ++dim)
   {
@@ -1080,7 +1085,8 @@ Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::get_const_normal(
 
   // compute inward vector and check if its scalar product with the normal vector is negative.
   // Otherwise, change the sign of the normal vector
-  Core::LinAlg::Matrix<3, 1> distance(true), inward_vector(true);
+  Core::LinAlg::Matrix<3, 1> distance(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> inward_vector(Core::LinAlg::Initialization::zero);
   // find node on parent element, that has non-zero distance to all boundary nodes
   for (int i_parent_node = 0; i_parent_node < 3; ++i_parent_node)
   {
@@ -1141,7 +1147,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_s2_i_c
   // element slave mechanical stress tensor
   const bool is_pseudo_contact = scatraparamsboundary_->is_pseudo_contact();
   std::vector<Core::LinAlg::Matrix<nen_, 1>> eslavestress_vector(
-      6, Core::LinAlg::Matrix<nen_, 1>(true));
+      6, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
   if (is_pseudo_contact)
     extract_node_values(eslavestress_vector, discretization, la, "mechanicalStressState",
         scatraparams_->nds_two_tensor_quantity());
@@ -1368,7 +1374,8 @@ Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::calculate_det_f_of_p
     }
   }
 
-  Core::LinAlg::Matrix<probdim, parent_ele_num_nodes> deriv_parent(true);
+  Core::LinAlg::Matrix<probdim, parent_ele_num_nodes> deriv_parent(
+      Core::LinAlg::Initialization::zero);
   Core::FE::shape_function_deriv1<parentdistype>(parent_xi, deriv_parent);
 
   static Core::LinAlg::Matrix<probdim, probdim> inv_detF;
@@ -1394,7 +1401,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_s2_i_c
   // extract local nodal values on present and opposite side of scatra-scatra interface
   extract_node_values(discretization, la);
   std::vector<Core::LinAlg::Matrix<nen_, 1>> emasterphinp(
-      numscal_, Core::LinAlg::Matrix<nen_, 1>(true));
+      numscal_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
   extract_node_values(emasterphinp, discretization, la, "imasterphinp");
 
   Core::LinAlg::Matrix<nsd_, 1> normal;
@@ -1402,7 +1409,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_s2_i_c
   // element slave mechanical stress tensor
   const bool is_pseudo_contact = scatraparamsboundary_->is_pseudo_contact();
   std::vector<Core::LinAlg::Matrix<nen_, 1>> eslavestress_vector(
-      6, Core::LinAlg::Matrix<nen_, 1>(true));
+      6, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
   if (is_pseudo_contact)
     extract_node_values(eslavestress_vector, discretization, la, "mechanicalStressState",
         scatraparams_->nds_two_tensor_quantity());
@@ -1529,7 +1536,8 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::extract_node_va
     Core::Elements::LocationArray& la, const std::string& statename, const int& nds) const
 {
   // initialize matrix vector
-  std::vector<Core::LinAlg::Matrix<nen_, 1>> estate_temp(1, Core::LinAlg::Matrix<nen_, 1>(true));
+  std::vector<Core::LinAlg::Matrix<nen_, 1>> estate_temp(
+      1, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
 
   // call more general routine
   extract_node_values(estate_temp, discretization, la, statename, nds);
@@ -1666,7 +1674,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::calc_robin_boun
 
   // extract local nodal state variables from global state vector
   std::vector<Core::LinAlg::Matrix<nen_, 1>> ephinp(
-      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phinp, ephinp, lm);
 
   //////////////////////////////////////////////////////////////////////
@@ -1759,7 +1767,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_surfac
   if (phinp == nullptr) FOUR_C_THROW("Cannot get state vector 'phinp'");
   // extract local values from global vector
   std::vector<Core::LinAlg::Matrix<nen_, 1>> ephinp(
-      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phinp, ephinp, lm);
 
   //------------get membrane concentration at the interface (i.e. within the
@@ -1769,7 +1777,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_surfac
   if (phibar == nullptr) FOUR_C_THROW("Cannot get state vector 'MembraneConcentration'");
   // extract local values from global vector
   std::vector<Core::LinAlg::Matrix<nen_, 1>> ephibar(
-      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phibar, ephibar, lm);
 
   // ------------get values of wall shear stress-----------------------
@@ -1788,7 +1796,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_surfac
     for (int idim = 0; idim < nsd_; ++idim)
       lmwss[inode * nsd_ + idim] = la[ndswss].lm_[inode * numwssdofpernode + idim];
 
-  Core::LinAlg::Matrix<nsd_, nen_> ewss(true);
+  Core::LinAlg::Matrix<nsd_, nen_> ewss(Core::LinAlg::Initialization::zero);
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nsd_, nen_>>(*wss, ewss, lmwss);
 
   // rotate the vector field in the case of rotationally symmetric boundary conditions
@@ -1896,7 +1904,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_kedem_
   if (phinp == nullptr) FOUR_C_THROW("Cannot get state vector 'phinp'");
   // extract local values from global vector
   std::vector<Core::LinAlg::Matrix<nen_, 1>> ephinp(
-      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phinp, ephinp, lm);
 
 
@@ -1907,7 +1915,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_kedem_
   if (phibar == nullptr) FOUR_C_THROW("Cannot get state vector 'MembraneConcentration'");
   // extract local values from global vector
   std::vector<Core::LinAlg::Matrix<nen_, 1>> ephibar(
-      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phibar, ephibar, lm);
 
 
@@ -1926,7 +1934,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_kedem_
   for (int inode = 0; inode < nen_; ++inode)
     lmpres[inode] = la[ndspres].lm_[inode * numveldofpernode + nsd_];  // only pressure dofs
 
-  Core::LinAlg::Matrix<nen_, 1> epressure(true);
+  Core::LinAlg::Matrix<nen_, 1> epressure(Core::LinAlg::Initialization::zero);
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*pressure, epressure, lmpres);
 
   // rotate the vector field in the case of rotationally symmetric boundary conditions
@@ -1949,7 +1957,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::evaluate_kedem_
     for (int idim = 0; idim < nsd_; ++idim)
       lmwss[inode * nsd_ + idim] = la[ndswss].lm_[inode * numwssdofpernode + idim];
 
-  Core::LinAlg::Matrix<nsd_, nen_> ewss(true);
+  Core::LinAlg::Matrix<nsd_, nen_> ewss(Core::LinAlg::Initialization::zero);
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nsd_, nen_>>(*wss, ewss, lmwss);
 
   // ------------get current condition----------------------------------
@@ -2063,7 +2071,7 @@ double Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::ws_sinfluence
 
   if (wss_onoff)
   {
-    Core::LinAlg::Matrix<nsd_, 1> wss(true);
+    Core::LinAlg::Matrix<nsd_, 1> wss(Core::LinAlg::Initialization::zero);
     for (int ii = 0; ii < nsd_; ii++)
       for (int jj = 0; jj < nen_; jj++) wss(ii) += ewss(ii, jj) * funct_(jj);
 
@@ -2177,7 +2185,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::weak_dirichlet(
       plmvel[inode * pnsd + idim] = pla[ndsvel].lm_[inode * numveldofpernode + idim];
 
   // we deal with a nsd_-dimensional flow field
-  Core::LinAlg::Matrix<pnsd, pnen> econvel(true);
+  Core::LinAlg::Matrix<pnsd, pnen> econvel(Core::LinAlg::Initialization::zero);
 
   // extract local values of convective velocity field from global state vector
   Core::FE::extract_my_values<Core::LinAlg::Matrix<pnsd, pnen>>(*convel, econvel, plmvel);
@@ -2203,29 +2211,29 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::weak_dirichlet(
   Core::LinAlg::Matrix<pnen, 1> erhs(elevec_epetra.values(), true);
 
   // (boundary) element local node coordinates
-  Core::LinAlg::Matrix<pnsd, bnen> bxyze(true);
+  Core::LinAlg::Matrix<pnsd, bnen> bxyze(Core::LinAlg::Initialization::zero);
   Core::Geo::fill_initial_position_array<bdistype, pnsd, Core::LinAlg::Matrix<pnsd, bnen>>(
       ele, bxyze);
 
   // parent element local node coordinates
-  Core::LinAlg::Matrix<pnsd, pnen> pxyze(true);
+  Core::LinAlg::Matrix<pnsd, pnen> pxyze(Core::LinAlg::Initialization::zero);
   Core::Geo::fill_initial_position_array<pdistype, pnsd, Core::LinAlg::Matrix<pnsd, pnen>>(
       pele, pxyze);
 
   // coordinates of integration points for (boundary) and parent element
-  Core::LinAlg::Matrix<bnsd, 1> bxsi(true);
-  Core::LinAlg::Matrix<pnsd, 1> pxsi(true);
+  Core::LinAlg::Matrix<bnsd, 1> bxsi(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<pnsd, 1> pxsi(Core::LinAlg::Initialization::zero);
 
   // transposed jacobian "dx/ds" and inverse of transposed jacobian "ds/dx"
   // for parent element
-  Core::LinAlg::Matrix<pnsd, pnsd> pxjm(true);
-  Core::LinAlg::Matrix<pnsd, pnsd> pxji(true);
+  Core::LinAlg::Matrix<pnsd, pnsd> pxjm(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<pnsd, pnsd> pxji(Core::LinAlg::Initialization::zero);
 
   // metric tensor for (boundary) element
-  Core::LinAlg::Matrix<bnsd, bnsd> bmetrictensor(true);
+  Core::LinAlg::Matrix<bnsd, bnsd> bmetrictensor(Core::LinAlg::Initialization::zero);
 
   // (outward-pointing) unit normal vector to (boundary) element
-  Core::LinAlg::Matrix<pnsd, 1> bnormal(true);
+  Core::LinAlg::Matrix<pnsd, 1> bnormal(Core::LinAlg::Initialization::zero);
 
   // velocity vector at integration point
   Core::LinAlg::Matrix<pnsd, 1> velint;
@@ -2234,32 +2242,32 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::weak_dirichlet(
   Core::LinAlg::Matrix<pnsd, 1> gradphi;
 
   // (boundary) element shape functions, local and global derivatives
-  Core::LinAlg::Matrix<bnen, 1> bfunct(true);
-  Core::LinAlg::Matrix<bnsd, bnen> bderiv(true);
-  Core::LinAlg::Matrix<bnsd, bnen> bderxy(true);
+  Core::LinAlg::Matrix<bnen, 1> bfunct(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<bnsd, bnen> bderiv(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<bnsd, bnen> bderxy(Core::LinAlg::Initialization::zero);
 
   // parent element shape functions, local and global derivatives
-  Core::LinAlg::Matrix<pnen, 1> pfunct(true);
-  Core::LinAlg::Matrix<pnsd, pnen> pderiv(true);
-  Core::LinAlg::Matrix<pnsd, pnen> pderxy(true);
+  Core::LinAlg::Matrix<pnen, 1> pfunct(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<pnsd, pnen> pderiv(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<pnsd, pnen> pderxy(Core::LinAlg::Initialization::zero);
 
   //------------------------------------------------------------------------
   // additional matrices and vectors for mixed-hybrid formulation
   //------------------------------------------------------------------------
   // for volume integrals
-  Core::LinAlg::Matrix<pnsd * pnen, pnsd * pnen> mat_s_q(true);
-  Core::LinAlg::Matrix<pnsd * pnen, pnen> mat_s_gradphi(true);
+  Core::LinAlg::Matrix<pnsd * pnen, pnsd * pnen> mat_s_q(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<pnsd * pnen, pnen> mat_s_gradphi(Core::LinAlg::Initialization::zero);
 
-  Core::LinAlg::Matrix<pnsd * pnen, 1> vec_s_gradphi(true);
+  Core::LinAlg::Matrix<pnsd * pnen, 1> vec_s_gradphi(Core::LinAlg::Initialization::zero);
 
   // for boundary integrals
-  Core::LinAlg::Matrix<pnen, pnsd * pnen> mat_w_q_o_n(true);
-  Core::LinAlg::Matrix<pnsd * pnen, pnen> mat_s_o_n_phi(true);
+  Core::LinAlg::Matrix<pnen, pnsd * pnen> mat_w_q_o_n(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<pnsd * pnen, pnen> mat_s_o_n_phi(Core::LinAlg::Initialization::zero);
 
-  Core::LinAlg::Matrix<pnsd * pnen, 1> vec_s_o_n_phi_minus_g(true);
+  Core::LinAlg::Matrix<pnsd * pnen, 1> vec_s_o_n_phi_minus_g(Core::LinAlg::Initialization::zero);
 
   // inverse matrix
-  Core::LinAlg::Matrix<pnsd * pnen, pnsd * pnen> inv_s_q(true);
+  Core::LinAlg::Matrix<pnsd * pnen, pnsd * pnen> inv_s_q(Core::LinAlg::Initialization::zero);
 
   //------------------------------------------------------------------------
   // check whether Nitsche (default) or mixed-hybrid formulation as well as
@@ -2489,7 +2497,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::weak_dirichlet(
     Core::FE::shape_function_deriv1<bdistype>(bxsi, bderiv);
 
     // global coordinates of current integration point from (boundary) element
-    Core::LinAlg::Matrix<pnsd, 1> coordgp(true);
+    Core::LinAlg::Matrix<pnsd, 1> coordgp(Core::LinAlg::Initialization::zero);
     for (int A = 0; A < bnen; ++A)
     {
       for (int j = 0; j < pnsd; ++j)
@@ -2533,8 +2541,8 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype, probdim>::weak_dirichlet(
     // check whether integration-point coordinates evaluated from
     // (boundary) and parent element match
     //--------------------------------------------------------------------
-    Core::LinAlg::Matrix<pnsd, 1> check(true);
-    Core::LinAlg::Matrix<pnsd, 1> diff(true);
+    Core::LinAlg::Matrix<pnsd, 1> check(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<pnsd, 1> diff(Core::LinAlg::Initialization::zero);
 
     for (int A = 0; A < pnen; ++A)
     {
@@ -2886,29 +2894,29 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype,
   Core::LinAlg::Matrix<pnen, 1> erhs(elevec_epetra.values(), true);
 
   // (boundary) element local node coordinates
-  Core::LinAlg::Matrix<pnsd, bnen> bxyze(true);
+  Core::LinAlg::Matrix<pnsd, bnen> bxyze(Core::LinAlg::Initialization::zero);
   Core::Geo::fill_initial_position_array<bdistype, pnsd, Core::LinAlg::Matrix<pnsd, bnen>>(
       ele, bxyze);
 
   // parent element local node coordinates
-  Core::LinAlg::Matrix<pnsd, pnen> pxyze(true);
+  Core::LinAlg::Matrix<pnsd, pnen> pxyze(Core::LinAlg::Initialization::zero);
   Core::Geo::fill_initial_position_array<pdistype, pnsd, Core::LinAlg::Matrix<pnsd, pnen>>(
       pele, pxyze);
 
   // coordinates of integration points for (boundary) and parent element
-  Core::LinAlg::Matrix<bnsd, 1> bxsi(true);
-  Core::LinAlg::Matrix<pnsd, 1> pxsi(true);
+  Core::LinAlg::Matrix<bnsd, 1> bxsi(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<pnsd, 1> pxsi(Core::LinAlg::Initialization::zero);
 
   // transposed jacobian "dx/ds" and inverse of transposed jacobian "ds/dx"
   // for parent element
-  Core::LinAlg::Matrix<pnsd, pnsd> pxjm(true);
-  Core::LinAlg::Matrix<pnsd, pnsd> pxji(true);
+  Core::LinAlg::Matrix<pnsd, pnsd> pxjm(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<pnsd, pnsd> pxji(Core::LinAlg::Initialization::zero);
 
   // metric tensor for (boundary) element
-  Core::LinAlg::Matrix<bnsd, bnsd> bmetrictensor(true);
+  Core::LinAlg::Matrix<bnsd, bnsd> bmetrictensor(Core::LinAlg::Initialization::zero);
 
   // (outward-pointing) unit normal vector to (boundary) element
-  Core::LinAlg::Matrix<pnsd, 1> bnormal(true);
+  Core::LinAlg::Matrix<pnsd, 1> bnormal(Core::LinAlg::Initialization::zero);
 
   // velocity vector at integration point
   Core::LinAlg::Matrix<pnsd, 1> velint;
@@ -2917,14 +2925,14 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype,
   Core::LinAlg::Matrix<pnsd, 1> gradphi;
 
   // (boundary) element shape functions, local and global derivatives
-  Core::LinAlg::Matrix<bnen, 1> bfunct(true);
-  Core::LinAlg::Matrix<bnsd, bnen> bderiv(true);
-  Core::LinAlg::Matrix<bnsd, bnen> bderxy(true);
+  Core::LinAlg::Matrix<bnen, 1> bfunct(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<bnsd, bnen> bderiv(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<bnsd, bnen> bderxy(Core::LinAlg::Initialization::zero);
 
   // parent element shape functions, local and global derivatives
-  Core::LinAlg::Matrix<pnen, 1> pfunct(true);
-  Core::LinAlg::Matrix<pnsd, pnen> pderiv(true);
-  Core::LinAlg::Matrix<pnsd, pnen> pderxy(true);
+  Core::LinAlg::Matrix<pnen, 1> pfunct(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<pnsd, pnen> pderiv(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<pnsd, pnen> pderxy(Core::LinAlg::Initialization::zero);
 
 
   // use one-point Gauss rule to do calculations at element center
@@ -3001,7 +3009,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype,
     Core::FE::shape_function_deriv1<bdistype>(bxsi, bderiv);
 
     // global coordinates of current integration point from (boundary) element
-    Core::LinAlg::Matrix<pnsd, 1> coordgp(true);
+    Core::LinAlg::Matrix<pnsd, 1> coordgp(Core::LinAlg::Initialization::zero);
     for (int A = 0; A < bnen; ++A)
     {
       for (int j = 0; j < pnsd; ++j)
@@ -3073,10 +3081,10 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype,
       //--------------------------      |                    |
 
       // update grad_dist_n
-      Core::LinAlg::Matrix<pnsd, 1> grad_dist_n(true);
+      Core::LinAlg::Matrix<pnsd, 1> grad_dist_n(Core::LinAlg::Initialization::zero);
       grad_dist_n.multiply(pderxy, ephin[dofindex]);
 
-      Core::LinAlg::Matrix<1, 1> grad_dist_n_normal(true);
+      Core::LinAlg::Matrix<1, 1> grad_dist_n_normal(Core::LinAlg::Initialization::zero);
       grad_dist_n_normal.multiply_tn(bnormal, grad_dist_n);
 
       for (int vi = 0; vi < pnen; ++vi)
@@ -3092,7 +3100,7 @@ void Discret::Elements::ScaTraEleBoundaryCalc<distype,
       //    1/4*delta_tau^2 | w, n*grad(psi   - psi ) |
       //                    |              i          |
       // update grad_dist_n
-      Core::LinAlg::Matrix<pnsd, 1> grad_dist_npi(true);
+      Core::LinAlg::Matrix<pnsd, 1> grad_dist_npi(Core::LinAlg::Initialization::zero);
       grad_dist_npi.multiply(pderxy, ephinp[dofindex]);
 
       Core::LinAlg::Matrix<1, 1> grad_dist_npi_normal;

@@ -122,7 +122,8 @@ namespace
     Core::LinAlg::SerialDenseMatrix mat(intpoints.num_points(), base_numnod);
 
     // Obtain weights and knot vector of element
-    Core::LinAlg::Matrix<Core::FE::num_nodes<distype>, 1> weights(true);
+    Core::LinAlg::Matrix<Core::FE::num_nodes<distype>, 1> weights(
+        Core::LinAlg::Initialization::zero);
     std::vector<Core::LinAlg::SerialDenseVector> myknots(true);
 
     const bool zero_size =

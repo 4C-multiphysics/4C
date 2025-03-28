@@ -1801,12 +1801,12 @@ namespace FLD
       Core::LinAlg::Vector<double>& col_filtered_alpha2, double& cv_numerator,
       double& cv_denominator, double& volume)
   {
-    Core::LinAlg::Matrix<9, iel> estrainrate_hat(true);
-    Core::LinAlg::Matrix<9, iel> ealphaij_hat(true);
-    Core::LinAlg::Matrix<1, iel> eexpression_hat(true);
-    Core::LinAlg::Matrix<1, iel> ealpha2_hat(true);
-    Core::LinAlg::Matrix<3, 3> strainrate_hat(true);
-    Core::LinAlg::Matrix<3, 3> alphaij_hat(true);
+    Core::LinAlg::Matrix<9, iel> estrainrate_hat(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<9, iel> ealphaij_hat(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<1, iel> eexpression_hat(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<1, iel> ealpha2_hat(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 3> strainrate_hat(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 3> alphaij_hat(Core::LinAlg::Initialization::zero);
     double alpha2_hat = 0.0;
     double expression_hat = 0.0;
 
@@ -1842,15 +1842,15 @@ namespace FLD
 
     // set element data
     const Core::FE::CellType distype = ele->shape();
-    Core::LinAlg::Matrix<iel, 1> funct(true);
+    Core::LinAlg::Matrix<iel, 1> funct(Core::LinAlg::Initialization::zero);
     // allocate arrays for shape functions, derivatives and the transposed jacobian
-    Core::LinAlg::Matrix<NSD, NSD> xjm(true);
-    Core::LinAlg::Matrix<NSD, iel> deriv(true);
+    Core::LinAlg::Matrix<NSD, NSD> xjm(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<NSD, iel> deriv(Core::LinAlg::Initialization::zero);
 
 
 
     // get node coordinates of element
-    Core::LinAlg::Matrix<NSD, iel> xyze(true);
+    Core::LinAlg::Matrix<NSD, iel> xyze(Core::LinAlg::Initialization::zero);
     for (int inode = 0; inode < iel; inode++)
     {
       xyze(0, inode) = ele->nodes()[inode]->x()[0];
@@ -2187,7 +2187,7 @@ namespace FLD
         {
           // a) streamlength due to Tezduyar et al. (1992)
           // normed velocity vector
-          Core::LinAlg::Matrix<nsd, 1> velino(true);
+          Core::LinAlg::Matrix<nsd, 1> velino(Core::LinAlg::Initialization::zero);
           if (vel_norm >= 1e-6)
             velino.update(1.0 / vel_norm, velint);
           else
@@ -2446,7 +2446,7 @@ namespace FLD
     // calculate coefficient of subgrid-velocity
     // allocate array for coefficient B
     // B may depend on the direction (if N depends on it)
-    Core::LinAlg::Matrix<nsd, 1> B(true);
+    Core::LinAlg::Matrix<nsd, 1> B(Core::LinAlg::Initialization::zero);
     //                                  1
     //          |       1              |2
     //  kappa = | -------------------- |
@@ -2618,7 +2618,7 @@ namespace FLD
       //          |          \   / ij        \   / ij |
       //          +-                                 -+
       //
-      Core::LinAlg::Matrix<nsd, nsd> velderxy(true);
+      Core::LinAlg::Matrix<nsd, nsd> velderxy(Core::LinAlg::Initialization::zero);
       velintderxy.multiply_nt(evel, derxy);
       fsvelintderxy.multiply_nt(efsvel, derxy);
 
@@ -2886,7 +2886,7 @@ namespace FLD
             // get norm of velocity
             const double vel_norm = velint.norm2();
             // normed velocity vector
-            Core::LinAlg::Matrix<nsd, 1> velino(true);
+            Core::LinAlg::Matrix<nsd, 1> velino(Core::LinAlg::Initialization::zero);
             if (vel_norm >= 1e-6)
               velino.update(1.0 / vel_norm, velint);
             else
@@ -3132,7 +3132,7 @@ namespace FLD
     {
       // --------------------------------------------------
       // create matrix objects for nodal values
-      Core::LinAlg::Matrix<nsd, iel> edispnp(true);
+      Core::LinAlg::Matrix<nsd, iel> edispnp(Core::LinAlg::Initialization::zero);
 
       // get most recent displacements
       std::shared_ptr<const Core::LinAlg::Vector<double>> dispnp =
@@ -3178,8 +3178,8 @@ namespace FLD
     // Core::LinAlg::Matrix<3,  3  > xjm;
     // Core::LinAlg::Matrix<3,  3  > xji;
 
-    Core::LinAlg::Matrix<iel, 1> funct(true);
-    Core::LinAlg::Matrix<nsd, iel> deriv(true);
+    Core::LinAlg::Matrix<iel, 1> funct(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, iel> deriv(Core::LinAlg::Initialization::zero);
     // Core::LinAlg::Matrix<6,6>   bm(true);
 
     // get Gaussrule
@@ -3193,7 +3193,7 @@ namespace FLD
     for (int iquad = 0; iquad < intpoints.ip().nquad; ++iquad)
     {
       // local Gauss point coordinates
-      Core::LinAlg::Matrix<nsd, 1> xsi(true);
+      Core::LinAlg::Matrix<nsd, 1> xsi(Core::LinAlg::Initialization::zero);
 
       // local coordinates of the current integration point
       const double* gpcoord = (intpoints.ip().qxg)[iquad];
@@ -3215,8 +3215,8 @@ namespace FLD
       else
         FOUR_C_THROW("Nurbs are not implemented yet");
 
-      Core::LinAlg::Matrix<nsd, nsd> xjm(true);
-      Core::LinAlg::Matrix<nsd, nsd> xji(true);
+      Core::LinAlg::Matrix<nsd, nsd> xjm(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd, nsd> xji(Core::LinAlg::Initialization::zero);
 
       // compute jacobian matrix
       // determine jacobian at point r,s,t

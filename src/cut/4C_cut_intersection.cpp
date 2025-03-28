@@ -314,7 +314,8 @@ bool Cut::Intersection<probdim, edgetype, sidetype, debug, dimedge, dimside, num
       if (withinlimits)
       {
         side_xyz_corner_intersect.push_back(e_cornerpoint);
-        side_rs_corner_intersect.push_back(Core::LinAlg::Matrix<dimside, 1>(true));
+        side_rs_corner_intersect.push_back(
+            Core::LinAlg::Matrix<dimside, 1>(Core::LinAlg::Initialization::zero));
         pos->local_coordinates(*(side_rs_corner_intersect.end() - 1));
       }
     }
@@ -459,13 +460,14 @@ Cut::ParallelIntersectionStatus Cut::Intersection<probdim, edgetype, sidetype, d
 
   bool zeroarea = false;
   // local coordinates are inside element
-  Core::LinAlg::Matrix<2, 1, bool> lineendpoint_within_surfacelimits(true);
+  Core::LinAlg::Matrix<2, 1, bool> lineendpoint_within_surfacelimits(
+      Core::LinAlg::Initialization::zero);
   // point is really inside element (normal distance = 0)
-  Core::LinAlg::Matrix<2, 1, bool> lineendpoint_in_surface(true);
+  Core::LinAlg::Matrix<2, 1, bool> lineendpoint_in_surface(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<2, 1> lineendpoint_dist;
   Core::LinAlg::Matrix<2, 1> lineendpoint_tol;
-  Core::LinAlg::Matrix<2, 1, bool> lineendpoint_conv(true);
-  Core::LinAlg::Matrix<dimside + dimedge, 2> lineendpoint_xsi(true);
+  Core::LinAlg::Matrix<2, 1, bool> lineendpoint_conv(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<dimside + dimedge, 2> lineendpoint_xsi(Core::LinAlg::Initialization::zero);
   std::vector<std::vector<int>> lineendpoint_touched_edges(2);
   std::vector<Kernel::PointOnSurfaceLoc> lineendpoint_location_kernel(2);
 
@@ -1284,8 +1286,8 @@ bool Cut::Intersection<probdim, edgetype, sidetype, debug, dimedge, dimside, num
       smallestedge = 2;
   }
 
-  Core::LinAlg::Matrix<3, 1> v1(true);
-  Core::LinAlg::Matrix<3, 1> v2(true);
+  Core::LinAlg::Matrix<3, 1> v1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> v2(Core::LinAlg::Initialization::zero);
   v1.update(1.0, surfpoints[(smallestedge + 1) % 3], -1.0, surfpoints[smallestedge]);
   v2.update(1.0, surfpoints[(smallestedge + 2) % 3], -1.0, surfpoints[smallestedge]);
 
@@ -1294,7 +1296,7 @@ bool Cut::Intersection<probdim, edgetype, sidetype, debug, dimedge, dimside, num
     (get_edge().nodes()[nid])->coordinates(actpoint.data());
     linepoints.push_back(actpoint);
   }
-  Core::LinAlg::Matrix<3, 1> v3(true);
+  Core::LinAlg::Matrix<3, 1> v3(Core::LinAlg::Initialization::zero);
   v3.update(1.0, linepoints[1], -1.0, linepoints[0]);
 
   bool overlap = false;  // we have an overlap of the refined bounding boxes?

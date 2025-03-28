@@ -176,7 +176,7 @@ void Core::Conditions::LocsysManager::update(const double time,
           // Each component j of the pseudo rotation vector that rotates the global xyz system onto
           // the local system assigned to each node consists of a constant, a time dependent and
           // spatially variable part: currotangle_j(x,t) = rotangle_j * funct_j(t,x)
-          Core::LinAlg::Matrix<3, 1> currotangle(true);
+          Core::LinAlg::Matrix<3, 1> currotangle(Core::LinAlg::Initialization::zero);
 
           for (int nodeGID : *nodes)
           {

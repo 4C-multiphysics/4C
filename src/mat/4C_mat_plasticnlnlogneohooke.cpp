@@ -297,7 +297,7 @@ void Mat::PlasticNlnLogNeoHooke::unpack(Core::Communication::UnpackBuffer& buffe
     extract_from_pack(buffer, tmp1);
     accplstrainlast_.push_back(tmp1);
 
-    Core::LinAlg::Matrix<3, 3> tmp(true);
+    Core::LinAlg::Matrix<3, 3> tmp(Core::LinAlg::Initialization::zero);
     // vectors of last converged state are unpacked
     extract_from_pack(buffer, tmp);
     invplrcglast_.push_back(tmp);
@@ -331,7 +331,7 @@ void Mat::PlasticNlnLogNeoHooke::setup(
   accplstrainlast_.resize(numgp);
   accplstraincurr_.resize(numgp);
 
-  Core::LinAlg::Matrix<3, 3> emptymat(true);
+  Core::LinAlg::Matrix<3, 3> emptymat(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 3; i++) emptymat(i, i) = 1.0;
 
   for (int i = 0; i < numgp; i++)
@@ -365,7 +365,7 @@ void Mat::PlasticNlnLogNeoHooke::update()
   invplrcgcurr_.resize(histsize);
   accplstraincurr_.resize(histsize);
 
-  Core::LinAlg::Matrix<3, 3> emptymat(true);
+  Core::LinAlg::Matrix<3, 3> emptymat(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 3; i++) emptymat(i, i) = 1.0;
 
   for (int i = 0; i < histsize; i++)
@@ -423,7 +423,7 @@ void Mat::PlasticNlnLogNeoHooke::evaluate(const Core::LinAlg::Matrix<3, 3>* defg
   Core::LinAlg::Matrix<3, 3> tmp2;
 
   // 3x3 2nd-order identity matrix
-  Core::LinAlg::Matrix<3, 3> id2(true);
+  Core::LinAlg::Matrix<3, 3> id2(Core::LinAlg::Initialization::zero);
   // 3x3 2nd-order deviatoric identity matrix in principal directions
   Core::LinAlg::Matrix<3, 3> Idev;
   for (int i = 0; i < 3; i++)
@@ -582,7 +582,7 @@ void Mat::PlasticNlnLogNeoHooke::evaluate(const Core::LinAlg::Matrix<3, 3>* defg
   // or tau_ij = tau'_ii + kappa ln(J)
   // S_ij   = F^-1 tau_ij F^-T
   //        = tau_ij (F^-1 n_i) \otimes (F^-1 n_i)
-  Core::LinAlg::Matrix<3, 3> PK2(true);
+  Core::LinAlg::Matrix<3, 3> PK2(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 3; i++)
   {
     tmp1.multiply_nt(material_principal_directions.at(i), material_principal_directions.at(i));

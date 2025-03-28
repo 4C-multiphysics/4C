@@ -85,7 +85,7 @@ void Discret::Elements::ScaTraEleCalcElchDiffCondMultiScale<distype,
       not Discret::Elements::ScaTraEleParameterStd::instance("scatra")->partitioned_multi_scale());
 
   // calculate gradient of electric potential inside electrode
-  Core::LinAlg::Matrix<nsd_, 1> gradpot_ed(true);
+  Core::LinAlg::Matrix<nsd_, 1> gradpot_ed(Core::LinAlg::Initialization::zero);
   gradpot_ed.multiply(my::derxy_, my::ephinp_[2]);
 
   // evaluate and assemble macro-scale matrix and vector contributions:

@@ -526,7 +526,7 @@ double Discret::Elements::ScaTraEleCalc<distype, probdim>::calc_char_ele_length(
     // normed velocity vector
     case Inpar::ScaTra::streamlength:
     {
-      Core::LinAlg::Matrix<nsd_, 1> velino(true);
+      Core::LinAlg::Matrix<nsd_, 1> velino(Core::LinAlg::Initialization::zero);
       if (vel_norm >= 1e-6)
         velino.update(1.0 / vel_norm, convelint);
       else
@@ -640,7 +640,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::calc_artificial_diff(
     if (phiref > 1e-12 and grad_norm > 1e-12)
     {
       // normalized gradient of phi
-      Core::LinAlg::Matrix<nsd_, 1> normalized_gradphi(true);
+      Core::LinAlg::Matrix<nsd_, 1> normalized_gradphi(Core::LinAlg::Initialization::zero);
       normalized_gradphi.update(1.0, gradphi, 0.0);
       normalized_gradphi.scale(1.0 / grad_norm);
 
@@ -862,7 +862,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::calc_strong_residual(
 
   // diffusive part used in stabilization terms
   double diff_phi(0.0);
-  Core::LinAlg::Matrix<nen_, 1> diff(true);
+  Core::LinAlg::Matrix<nen_, 1> diff(Core::LinAlg::Initialization::zero);
 
   // diffusive term using current scalar value for higher-order elements
   // Note: has to be recomputed here every time, since the diffusion coefficient may have changed

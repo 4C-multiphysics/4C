@@ -881,9 +881,9 @@ void FLD::XFluidOutputServiceGmsh::gmsh_output_volume_cell(
 
         for (unsigned k = 0; k < cell.size(); ++k)
         {
-          Core::LinAlg::Matrix<3, 1> v(true);
-          Core::LinAlg::Matrix<1, 1> p(true);
-          Core::LinAlg::Matrix<3, 1> a(true);
+          Core::LinAlg::Matrix<3, 1> v(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<1, 1> p(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<3, 1> a(Core::LinAlg::Initialization::zero);
 
           Cut::Point* point = cell[k];
           const Core::LinAlg::Matrix<3, 1>& rst = e->local_coordinates(point);
@@ -1008,9 +1008,9 @@ void FLD::XFluidOutputServiceGmsh::gmsh_output_volume_cell(
 
       for (unsigned i = 0; i < points.size(); ++i)
       {
-        Core::LinAlg::Matrix<3, 1> v(true);
-        Core::LinAlg::Matrix<1, 1> p(true);
-        Core::LinAlg::Matrix<3, 1> a(true);
+        Core::LinAlg::Matrix<3, 1> v(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<1, 1> p(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<3, 1> a(Core::LinAlg::Initialization::zero);
 
         Cut::Point* point = points[i];
         const Core::LinAlg::Matrix<3, 1>& rst = e->local_coordinates(point);

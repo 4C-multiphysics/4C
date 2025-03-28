@@ -145,7 +145,7 @@ void Mat::PlasticGTN::unpack(Core::Communication::UnpackBuffer& buffer)
     epbar_n1_ = std::vector<double>();
     for (int var = 0; var < histsize; ++var)
     {
-      Core::LinAlg::Matrix<3, 3> tmp_vect(true);
+      Core::LinAlg::Matrix<3, 3> tmp_vect(Core::LinAlg::Initialization::zero);
       double tmp_scalar = 0.0;
 
       extract_from_pack(buffer, tmp_vect);

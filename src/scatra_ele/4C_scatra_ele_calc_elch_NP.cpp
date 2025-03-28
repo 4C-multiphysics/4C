@@ -367,7 +367,7 @@ double Discret::Elements::ScaTraEleCalcElchNP<distype>::calc_res(
 
   if (my::use2ndderiv_)
   {
-    Core::LinAlg::Matrix<nen_, 1> laplace(true);
+    Core::LinAlg::Matrix<nen_, 1> laplace(Core::LinAlg::Initialization::zero);
     my::get_laplacian_strong_form(laplace);
 
     diffphi = myelch::diff_manager()->get_isotropic_diff(k) * laplace.dot(my::ephinp_[k]);
@@ -412,7 +412,7 @@ void Discret::Elements::ScaTraEleCalcElchNP<distype>::calc_mat_conv_stab(
 {
   // Compute Laplacian N,xx  +  N,yy +  N,zz of all shape functions at current integration point if
   // needed
-  Core::LinAlg::Matrix<nen_, 1> laplace(true);
+  Core::LinAlg::Matrix<nen_, 1> laplace(Core::LinAlg::Initialization::zero);
   if (my::use2ndderiv_) my::get_laplacian_strong_form(laplace);
 
   for (unsigned vi = 0; vi < nen_; ++vi)

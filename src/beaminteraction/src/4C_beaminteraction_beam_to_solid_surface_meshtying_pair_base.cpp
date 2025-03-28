@@ -216,8 +216,8 @@ BeamInteraction::BeamToSolidSurfaceMeshtyingPairBase<ScalarType, Beam, Surface>:
 {
   using namespace Inpar::BeamToSolid;
 
-  Core::LinAlg::Matrix<3, 1, ScalarType> r_beam(true);
-  Core::LinAlg::Matrix<3, 1, ScalarType> r_surface(true);
+  Core::LinAlg::Matrix<3, 1, ScalarType> r_beam(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, ScalarType> r_surface(Core::LinAlg::Initialization::zero);
 
   const BeamToSolidSurfaceCoupling coupling_type =
       this->params()->beam_to_solid_surface_meshtying_params()->get_coupling_type();

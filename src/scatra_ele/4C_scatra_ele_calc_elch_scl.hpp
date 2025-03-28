@@ -306,7 +306,7 @@ namespace Discret
           const Discret::Elements::ScaTraEleParameterElchDiffCond* diffcondparams)
           : ScaTraEleInternalVariableManagerElchDiffCond<nsd, nen>(
                 numscal, elchparams, diffcondparams),
-            curint_(true)
+            curint_(Core::LinAlg::Initialization::zero)
       {
       }
 

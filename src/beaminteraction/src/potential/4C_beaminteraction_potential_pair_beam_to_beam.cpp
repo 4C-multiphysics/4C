@@ -132,8 +132,10 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::eval
   const unsigned int dim1 = 3 * numnodes * numnodalvalues;
   const unsigned int dim2 = 3 * numnodes * numnodalvalues;
 
-  Core::LinAlg::Matrix<3 * numnodes * numnodalvalues, 1, T> force_pot1(true);
-  Core::LinAlg::Matrix<3 * numnodes * numnodalvalues, 1, T> force_pot2(true);
+  Core::LinAlg::Matrix<3 * numnodes * numnodalvalues, 1, T> force_pot1(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3 * numnodes * numnodalvalues, 1, T> force_pot2(
+      Core::LinAlg::Initialization::zero);
 
 
   if (stiffmat11 != nullptr) stiffmat11->shape(dim1, dim1);
@@ -226,10 +228,10 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   // Todo think about pre-computing and storing values for inner Gauss point loops here
 
   // coords of the two gauss points
-  Core::LinAlg::Matrix<3, 1, T> r1(true);    // = r1
-  Core::LinAlg::Matrix<3, 1, T> r2(true);    // = r2
-  Core::LinAlg::Matrix<3, 1, T> dist(true);  // = r1-r2
-  T norm_dist = 0.0;                         // = |r1-r2|
+  Core::LinAlg::Matrix<3, 1, T> r1(Core::LinAlg::Initialization::zero);    // = r1
+  Core::LinAlg::Matrix<3, 1, T> r2(Core::LinAlg::Initialization::zero);    // = r2
+  Core::LinAlg::Matrix<3, 1, T> dist(Core::LinAlg::Initialization::zero);  // = r1-r2
+  T norm_dist = 0.0;                                                       // = |r1-r2|
 
   // evaluate charge densities from DLINE charge condition specified in input file
   double q1 = linechargeconds_[0]->parameters().get<double>("VAL");
@@ -253,7 +255,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
 
 
   // auxiliary variable
-  Core::LinAlg::Matrix<3, 1, T> fpot_tmp(true);
+  Core::LinAlg::Matrix<3, 1, T> fpot_tmp(Core::LinAlg::Initialization::zero);
 
   // determine prefactor of the integral (depends on whether surface or volume potential is applied)
   double prefactor = k_ * m_;
@@ -273,10 +275,14 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   // prepare data storage for visualization
   centerline_coords_gp_1_.resize(numgp_perelement);
   centerline_coords_gp_2_.resize(numgp_perelement);
-  forces_pot_gp_1_.resize(numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(true));
-  forces_pot_gp_2_.resize(numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(true));
-  moments_pot_gp_1_.resize(numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(true));
-  moments_pot_gp_2_.resize(numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(true));
+  forces_pot_gp_1_.resize(
+      numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
+  forces_pot_gp_2_.resize(
+      numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
+  moments_pot_gp_1_.resize(
+      numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
+  moments_pot_gp_2_.resize(
+      numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
 
   for (unsigned int isegment1 = 0; isegment1 < n_integration_segments; ++isegment1)
   {
@@ -466,7 +472,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
   // auxiliary variables (same for both elements)
   double norm_dist_exp2 = (m_ + 2) * std::pow(norm_dist, -m_ - 4);
 
-  Core::LinAlg::Matrix<3, 3, double> dist_dist_T(true);
+  Core::LinAlg::Matrix<3, 3, double> dist_dist_T(Core::LinAlg::Initialization::zero);
 
   for (unsigned int i = 0; i < 3; ++i)
   {
@@ -603,11 +609,11 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   // Todo think about pre-computing and storing values for inner Gauss point loops here
 
   // coords of the two gauss points
-  Core::LinAlg::Matrix<3, 1, T> r1(true);    // = r1
-  Core::LinAlg::Matrix<3, 1, T> r2(true);    // = r2
-  Core::LinAlg::Matrix<3, 1, T> dist(true);  // = r1-r2
-  T norm_dist = 0.0;                         // = |r1-r2|
-  T gap = 0.0;                               // = |r1-r2|-R1-R2
+  Core::LinAlg::Matrix<3, 1, T> r1(Core::LinAlg::Initialization::zero);    // = r1
+  Core::LinAlg::Matrix<3, 1, T> r2(Core::LinAlg::Initialization::zero);    // = r2
+  Core::LinAlg::Matrix<3, 1, T> dist(Core::LinAlg::Initialization::zero);  // = r1-r2
+  T norm_dist = 0.0;                                                       // = |r1-r2|
+  T gap = 0.0;                                                             // = |r1-r2|-R1-R2
   T gap_regularized = 0.0;  // modified gap if a regularization of the force law is applied
 
   // evaluate charge/particle densities from DLINE charge condition specified in input file
@@ -679,13 +685,17 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   // prepare data storage for visualization
   centerline_coords_gp_1_.resize(numgp_perelement);
   centerline_coords_gp_2_.resize(numgp_perelement);
-  forces_pot_gp_1_.resize(numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(true));
-  forces_pot_gp_2_.resize(numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(true));
-  moments_pot_gp_1_.resize(numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(true));
-  moments_pot_gp_2_.resize(numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(true));
+  forces_pot_gp_1_.resize(
+      numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
+  forces_pot_gp_2_.resize(
+      numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
+  moments_pot_gp_1_.resize(
+      numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
+  moments_pot_gp_2_.resize(
+      numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
 
   // auxiliary variables
-  Core::LinAlg::Matrix<3, 1, T> fpot_tmp(true);
+  Core::LinAlg::Matrix<3, 1, T> fpot_tmp(Core::LinAlg::Initialization::zero);
 
   double prefactor = k_ * 2 * M_PI * (m_ - 3.5) / (m_ - 2) / (m_ - 2) *
                      std::sqrt(2 * radius1_ * radius2_ / (radius1_ + radius2_)) * C;
@@ -958,7 +968,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
                         (m_ - 2.5) * gap_exp2 / norm_dist / norm_dist) *
                     q1q2_JacFac_GaussWeights;
 
-  Core::LinAlg::Matrix<3, 3, double> dist_dist_T(true);
+  Core::LinAlg::Matrix<3, 3, double> dist_dist_T(Core::LinAlg::Initialization::zero);
 
   for (unsigned int i = 0; i < 3; ++i)
   {
@@ -1148,31 +1158,45 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   std::vector<Core::LinAlg::Matrix<1, numnodes * numnodalvalues, double>> N_i_xi_slave(
       numgp_persegment);  // = N1_i,xi
 
-  Core::LinAlg::Matrix<1, numnodes * numnodalvalues, T> N_i_master(true);
-  Core::LinAlg::Matrix<1, numnodes * numnodalvalues, T> N_i_xi_master(true);
-  Core::LinAlg::Matrix<1, numnodes * numnodalvalues, T> N_i_xixi_master(true);
+  Core::LinAlg::Matrix<1, numnodes * numnodalvalues, T> N_i_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, numnodes * numnodalvalues, T> N_i_xi_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, numnodes * numnodalvalues, T> N_i_xixi_master(
+      Core::LinAlg::Initialization::zero);
 
   // assembled shape function matrices: Todo maybe avoid these matrices
-  Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, double> N_slave(true);
+  Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, double> N_slave(
+      Core::LinAlg::Initialization::zero);
 
-  Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, T> N_master(true);
-  Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, T> N_xi_master(true);
-  Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, T> N_xixi_master(true);
+  Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, T> N_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, T> N_xi_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, T> N_xixi_master(
+      Core::LinAlg::Initialization::zero);
 
 
   // coords and derivatives of the slave Gauss point and projected point on master element
-  Core::LinAlg::Matrix<3, 1, T> r_slave(true);        // centerline position vector on slave
-  Core::LinAlg::Matrix<3, 1, T> r_xi_slave(true);     // centerline tangent vector on slave
-  Core::LinAlg::Matrix<3, 1, T> t_slave(true);        // unit centerline tangent vector on slave
-  Core::LinAlg::Matrix<3, 1, T> r_master(true);       // centerline position vector on master
-  Core::LinAlg::Matrix<3, 1, T> r_xi_master(true);    // centerline tangent vector on master
-  Core::LinAlg::Matrix<3, 1, T> r_xixi_master(true);  // 2nd deriv of master curve
-  Core::LinAlg::Matrix<3, 1, T> t_master(true);       // unit centerline tangent vector on master
+  Core::LinAlg::Matrix<3, 1, T> r_slave(
+      Core::LinAlg::Initialization::zero);  // centerline position vector on slave
+  Core::LinAlg::Matrix<3, 1, T> r_xi_slave(
+      Core::LinAlg::Initialization::zero);  // centerline tangent vector on slave
+  Core::LinAlg::Matrix<3, 1, T> t_slave(
+      Core::LinAlg::Initialization::zero);  // unit centerline tangent vector on slave
+  Core::LinAlg::Matrix<3, 1, T> r_master(
+      Core::LinAlg::Initialization::zero);  // centerline position vector on master
+  Core::LinAlg::Matrix<3, 1, T> r_xi_master(
+      Core::LinAlg::Initialization::zero);  // centerline tangent vector on master
+  Core::LinAlg::Matrix<3, 1, T> r_xixi_master(
+      Core::LinAlg::Initialization::zero);  // 2nd deriv of master curve
+  Core::LinAlg::Matrix<3, 1, T> t_master(
+      Core::LinAlg::Initialization::zero);  // unit centerline tangent vector on master
 
   T norm_r_xi_slave = 0.0;
   T norm_r_xi_master = 0.0;
 
-  Core::LinAlg::Matrix<3, 1, T> dist_ul(true);  // = r_slave-r_master
+  Core::LinAlg::Matrix<3, 1, T> dist_ul(Core::LinAlg::Initialization::zero);  // = r_slave-r_master
   T norm_dist_ul = 0.0;
 
   T alpha = 0.0;      // mutual angle of tangent vectors
@@ -1181,19 +1205,23 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   T interaction_potential_GP = 0.0;
 
   // components from variation of parameter coordinate on master beam
-  Core::LinAlg::Matrix<1, 3, T> xi_master_partial_r_slave(true);
-  Core::LinAlg::Matrix<1, 3, T> xi_master_partial_r_master(true);
-  Core::LinAlg::Matrix<1, 3, T> xi_master_partial_r_xi_master(true);
+  Core::LinAlg::Matrix<1, 3, T> xi_master_partial_r_slave(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, 3, T> xi_master_partial_r_master(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, 3, T> xi_master_partial_r_xi_master(Core::LinAlg::Initialization::zero);
 
 
   // linearization of parameter coordinate on master resulting from point-to-curve projection
-  Core::LinAlg::Matrix<1, 3 * numnodes * numnodalvalues, T> lin_xi_master_slaveDofs(true);
-  Core::LinAlg::Matrix<1, 3 * numnodes * numnodalvalues, T> lin_xi_master_masterDofs(true);
+  Core::LinAlg::Matrix<1, 3 * numnodes * numnodalvalues, T> lin_xi_master_slaveDofs(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, 3 * numnodes * numnodalvalues, T> lin_xi_master_masterDofs(
+      Core::LinAlg::Initialization::zero);
 
   /* contribution of one Gauss point (required for automatic differentiation with contributions
    * from xi_master) */
-  Core::LinAlg::Matrix<3 * numnodes * numnodalvalues, 1, T> force_pot_slave_GP(true);
-  Core::LinAlg::Matrix<3 * numnodes * numnodalvalues, 1, T> force_pot_master_GP(true);
+  Core::LinAlg::Matrix<3 * numnodes * numnodalvalues, 1, T> force_pot_slave_GP(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3 * numnodes * numnodalvalues, 1, T> force_pot_master_GP(
+      Core::LinAlg::Initialization::zero);
 
   // evaluate charge/particle densities from DLINE charge condition specified in input file
   double rho1 = linechargeconds_[0]->parameters().get<double>("VAL");
@@ -1241,10 +1269,14 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   // prepare data storage for visualization
   centerline_coords_gp_1_.resize(numgp_total);
   centerline_coords_gp_2_.resize(numgp_total);
-  forces_pot_gp_1_.resize(numgp_total, Core::LinAlg::Matrix<3, 1, double>(true));
-  forces_pot_gp_2_.resize(numgp_total, Core::LinAlg::Matrix<3, 1, double>(true));
-  moments_pot_gp_1_.resize(numgp_total, Core::LinAlg::Matrix<3, 1, double>(true));
-  moments_pot_gp_2_.resize(numgp_total, Core::LinAlg::Matrix<3, 1, double>(true));
+  forces_pot_gp_1_.resize(
+      numgp_total, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
+  forces_pot_gp_2_.resize(
+      numgp_total, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
+  moments_pot_gp_1_.resize(
+      numgp_total, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
+  moments_pot_gp_2_.resize(
+      numgp_total, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
 
 
   for (unsigned int isegment = 0; isegment < n_integration_segments; ++isegment)
@@ -1497,13 +1529,13 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
 
 
   // auxiliary and intermediate quantities required for second derivatives of the unilateral gap
-  Core::LinAlg::Matrix<3, 3, double> unit_matrix(true);
+  Core::LinAlg::Matrix<3, 3, double> unit_matrix(Core::LinAlg::Initialization::zero);
   for (unsigned int i = 0; i < 3; ++i) unit_matrix(i, i) = 1.0;
 
   Core::LinAlg::Matrix<3, 3, double> dist_ul_deriv_r_slave(unit_matrix);
   Core::LinAlg::Matrix<3, 3, double> dist_ul_deriv_r_master(unit_matrix);
   dist_ul_deriv_r_master.scale(-1.0);
-  Core::LinAlg::Matrix<3, 3, double> dist_ul_deriv_r_xi_master(true);
+  Core::LinAlg::Matrix<3, 3, double> dist_ul_deriv_r_xi_master(Core::LinAlg::Initialization::zero);
 
   for (unsigned int irow = 0; irow < 3; ++irow)
   {
@@ -1519,7 +1551,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   }
 
 
-  Core::LinAlg::Matrix<3, 3, double> normal_ul_deriv_dist_ul(true);
+  Core::LinAlg::Matrix<3, 3, double> normal_ul_deriv_dist_ul(Core::LinAlg::Initialization::zero);
 
   for (unsigned int i = 0; i < 3; ++i)
   {
@@ -1531,13 +1563,19 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
 
 
   // second derivatives of the unilateral gap
-  Core::LinAlg::Matrix<3, 3, double> gap_ul_deriv_r_slave_deriv_r_slave(true);
-  Core::LinAlg::Matrix<3, 3, double> gap_ul_deriv_r_slave_deriv_r_master(true);
-  Core::LinAlg::Matrix<3, 3, double> gap_ul_deriv_r_slave_deriv_r_xi_master(true);
+  Core::LinAlg::Matrix<3, 3, double> gap_ul_deriv_r_slave_deriv_r_slave(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> gap_ul_deriv_r_slave_deriv_r_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> gap_ul_deriv_r_slave_deriv_r_xi_master(
+      Core::LinAlg::Initialization::zero);
 
-  Core::LinAlg::Matrix<3, 3, double> gap_ul_deriv_r_master_deriv_r_slave(true);
-  Core::LinAlg::Matrix<3, 3, double> gap_ul_deriv_r_master_deriv_r_master(true);
-  Core::LinAlg::Matrix<3, 3, double> gap_ul_deriv_r_master_deriv_r_xi_master(true);
+  Core::LinAlg::Matrix<3, 3, double> gap_ul_deriv_r_master_deriv_r_slave(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> gap_ul_deriv_r_master_deriv_r_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> gap_ul_deriv_r_master_deriv_r_xi_master(
+      Core::LinAlg::Initialization::zero);
 
 
   gap_ul_deriv_r_slave_deriv_r_slave.multiply(1.0, normal_ul_deriv_dist_ul, dist_ul_deriv_r_slave);
@@ -1555,9 +1593,12 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
 
   // add contributions from linearization of (variation of r_master) according to the chain
   // rule
-  Core::LinAlg::Matrix<3, 3, double> gap_ul_deriv_r_xi_master_deriv_r_slave(true);
-  Core::LinAlg::Matrix<3, 3, double> gap_ul_deriv_r_xi_master_deriv_r_master(true);
-  Core::LinAlg::Matrix<3, 3, double> gap_ul_deriv_r_xi_master_deriv_r_xi_master(true);
+  Core::LinAlg::Matrix<3, 3, double> gap_ul_deriv_r_xi_master_deriv_r_slave(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> gap_ul_deriv_r_xi_master_deriv_r_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> gap_ul_deriv_r_xi_master_deriv_r_xi_master(
+      Core::LinAlg::Initialization::zero);
 
   for (unsigned int irow = 0; irow < 3; ++irow)
   {
@@ -1576,28 +1617,47 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
 
 
   // second derivatives of cos(alpha)
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_slave_deriv_r_slave(true);
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_slave_deriv_r_xi_slave(true);
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_slave_deriv_r_master(true);
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_slave_deriv_r_xi_master(true);
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_slave_deriv_r_xixi_master(true);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_slave_deriv_r_slave(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_slave_deriv_r_xi_slave(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_slave_deriv_r_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_slave_deriv_r_xi_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_slave_deriv_r_xixi_master(
+      Core::LinAlg::Initialization::zero);
 
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xi_slave_deriv_r_slave(true);
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xi_slave_deriv_r_xi_slave(true);
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xi_slave_deriv_r_master(true);
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xi_slave_deriv_r_xi_master(true);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xi_slave_deriv_r_slave(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xi_slave_deriv_r_xi_slave(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xi_slave_deriv_r_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xi_slave_deriv_r_xi_master(
+      Core::LinAlg::Initialization::zero);
 
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_master_deriv_r_slave(true);
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_master_deriv_r_xi_slave(true);
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_master_deriv_r_master(true);
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_master_deriv_r_xi_master(true);
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_master_deriv_r_xixi_master(true);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_master_deriv_r_slave(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_master_deriv_r_xi_slave(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_master_deriv_r_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_master_deriv_r_xi_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_master_deriv_r_xixi_master(
+      Core::LinAlg::Initialization::zero);
 
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xi_master_deriv_r_slave(true);
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xi_master_deriv_r_xi_slave(true);
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xi_master_deriv_r_master(true);
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xi_master_deriv_r_xi_master(true);
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xi_master_deriv_r_xixi_master(true);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xi_master_deriv_r_slave(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xi_master_deriv_r_xi_slave(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xi_master_deriv_r_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xi_master_deriv_r_xi_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xi_master_deriv_r_xixi_master(
+      Core::LinAlg::Initialization::zero);
 
 
   // auxiliary and intermediate quantities required for second derivatives of cos(alpha)
@@ -1605,17 +1665,20 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   double norm_r_xi_slave_inverse = 1.0 / Core::FADUtils::vector_norm(r_xi_slave);
   double norm_r_xi_master_inverse = 1.0 / Core::FADUtils::vector_norm(r_xi_master);
 
-  Core::LinAlg::Matrix<3, 1, double> t_slave(true);
+  Core::LinAlg::Matrix<3, 1, double> t_slave(Core::LinAlg::Initialization::zero);
   t_slave.update(norm_r_xi_slave_inverse, r_xi_slave);
-  Core::LinAlg::Matrix<3, 1, double> t_master(true);
+  Core::LinAlg::Matrix<3, 1, double> t_master(Core::LinAlg::Initialization::zero);
   t_master.update(norm_r_xi_master_inverse, r_xi_master);
 
   double t_slave_dot_t_master = t_slave.dot(t_master);
   double signum_tangentsscalarproduct = Core::FADUtils::signum(t_slave_dot_t_master);
 
-  Core::LinAlg::Matrix<3, 3, double> t_slave_tensorproduct_t_slave(true);
-  Core::LinAlg::Matrix<3, 3, double> t_slave_tensorproduct_t_master(true);
-  Core::LinAlg::Matrix<3, 3, double> t_master_tensorproduct_t_master(true);
+  Core::LinAlg::Matrix<3, 3, double> t_slave_tensorproduct_t_slave(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> t_slave_tensorproduct_t_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> t_master_tensorproduct_t_master(
+      Core::LinAlg::Initialization::zero);
 
   for (unsigned int i = 0; i < 3; ++i)
     for (unsigned int j = 0; j < 3; ++j)
@@ -1625,16 +1688,18 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
       t_master_tensorproduct_t_master(i, j) = t_master(i) * t_master(j);
     }
 
-  Core::LinAlg::Matrix<3, 3, double> t_slave_partial_r_xi_slave(true);
+  Core::LinAlg::Matrix<3, 3, double> t_slave_partial_r_xi_slave(Core::LinAlg::Initialization::zero);
   t_slave_partial_r_xi_slave.update(norm_r_xi_slave_inverse, unit_matrix,
       -1.0 * norm_r_xi_slave_inverse, t_slave_tensorproduct_t_slave);
 
-  Core::LinAlg::Matrix<3, 3, double> t_master_partial_r_xi_master(true);
+  Core::LinAlg::Matrix<3, 3, double> t_master_partial_r_xi_master(
+      Core::LinAlg::Initialization::zero);
   t_master_partial_r_xi_master.update(norm_r_xi_master_inverse, unit_matrix,
       -1.0 * norm_r_xi_master_inverse, t_master_tensorproduct_t_master);
 
 
-  Core::LinAlg::Matrix<3, 1, double> t_slave_partial_r_xi_slave_mult_t_master(true);
+  Core::LinAlg::Matrix<3, 1, double> t_slave_partial_r_xi_slave_mult_t_master(
+      Core::LinAlg::Initialization::zero);
   t_slave_partial_r_xi_slave_mult_t_master.multiply(t_slave_partial_r_xi_slave, t_master);
 
   for (unsigned int i = 0; i < 3; ++i)
@@ -1645,7 +1710,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   cos_alpha_deriv_r_xi_slave_deriv_r_xi_slave.update(
       -1.0 * norm_r_xi_slave_inverse * t_slave_dot_t_master, t_slave_partial_r_xi_slave, 1.0);
 
-  Core::LinAlg::Matrix<3, 3, double> tmp_mat(true);
+  Core::LinAlg::Matrix<3, 3, double> tmp_mat(Core::LinAlg::Initialization::zero);
   tmp_mat.multiply(t_slave_tensorproduct_t_master, t_slave_partial_r_xi_slave);
   cos_alpha_deriv_r_xi_slave_deriv_r_xi_slave.update(-1.0 * norm_r_xi_slave_inverse, tmp_mat, 1.0);
 
@@ -1658,7 +1723,8 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
 
 
 
-  Core::LinAlg::Matrix<3, 1, double> t_master_partial_r_xi_master_mult_t_slave(true);
+  Core::LinAlg::Matrix<3, 1, double> t_master_partial_r_xi_master_mult_t_slave(
+      Core::LinAlg::Initialization::zero);
   t_master_partial_r_xi_master_mult_t_slave.multiply(t_master_partial_r_xi_master, t_slave);
 
   for (unsigned int i = 0; i < 3; ++i)
@@ -1814,12 +1880,13 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
 
   // add contributions from linearization of master parameter coordinate xi_master
   // also to [.]_deriv_r_xixi_master expressions (according to chain rule)
-  Core::LinAlg::Matrix<1, numnodes * numnodalvalues, double> N_i_xixixi_master(true);
+  Core::LinAlg::Matrix<1, numnodes * numnodalvalues, double> N_i_xixixi_master(
+      Core::LinAlg::Initialization::zero);
 
   Discret::Utils::Beam::evaluate_shape_function3rd_derivs_at_xi<numnodes, numnodalvalues>(
       xi_master, N_i_xixixi_master, beam_element2()->shape(), ele2length_);
 
-  Core::LinAlg::Matrix<3, 1, double> r_xixixi_master(true);
+  Core::LinAlg::Matrix<3, 1, double> r_xixixi_master(Core::LinAlg::Initialization::zero);
 
   Discret::Utils::Beam::calc_interpolation<numnodes, numnodalvalues, 3>(
       Core::FADUtils::cast_to_double(ele2pos_), N_i_xixixi_master, r_xixixi_master);
@@ -1878,9 +1945,12 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
 
   // add contributions from linearization of (variation of r_xi_master) according to the chain
   // rule
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xixi_master_deriv_r_slave(true);
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xixi_master_deriv_r_master(true);
-  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xixi_master_deriv_r_xi_master(true);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xixi_master_deriv_r_slave(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xixi_master_deriv_r_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> cos_alpha_deriv_r_xixi_master_deriv_r_xi_master(
+      Core::LinAlg::Initialization::zero);
 
   for (unsigned int irow = 0; irow < 3; ++irow)
   {
@@ -1899,23 +1969,38 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
 
 
   // contributions from linarization of the (variation of master parameter coordinate xi_master)
-  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_slave_partial_r_slave(true);
-  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_slave_partial_r_master(true);
-  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_slave_partial_r_xi_master(true);
-  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_slave_partial_r_xixi_master(true);
-  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_master_partial_r_slave(true);
-  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_master_partial_r_master(true);
-  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_master_partial_r_xi_master(true);
-  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_master_partial_r_xixi_master(true);
-  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_xi_master_partial_r_slave(true);
-  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_xi_master_partial_r_master(true);
-  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_xi_master_partial_r_xi_master(true);
-  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_xi_master_partial_r_xixi_master(true);
-  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_xixi_master_partial_r_slave(true);
-  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_xixi_master_partial_r_master(true);
-  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_xixi_master_partial_r_xi_master(true);
+  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_slave_partial_r_slave(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_slave_partial_r_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_slave_partial_r_xi_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_slave_partial_r_xixi_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_master_partial_r_slave(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_master_partial_r_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_master_partial_r_xi_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_master_partial_r_xixi_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_xi_master_partial_r_slave(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_xi_master_partial_r_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_xi_master_partial_r_xi_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_xi_master_partial_r_xixi_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_xixi_master_partial_r_slave(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_xixi_master_partial_r_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> xi_master_partial_r_xixi_master_partial_r_xi_master(
+      Core::LinAlg::Initialization::zero);
 
-  Core::LinAlg::Matrix<3, 1, double> dist_ul(true);
+  Core::LinAlg::Matrix<3, 1, double> dist_ul(Core::LinAlg::Initialization::zero);
   dist_ul.update(norm_dist_ul, normal_ul);
 
   BeamInteraction::Geo::calc_point_to_curve_projection_parameter_coord_master_partial2nd_derivs(
@@ -2387,13 +2472,15 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
   const double regularization_separation = params()->regularization_separation;
 
 
-  T sin_alpha = 0.0;                              // sine of mutual angle of tangent vectors
-  T sin_2alpha = 0.0;                             // sine of 2*mutual angle of tangent vectors
-  Core::LinAlg::Matrix<3, 1, T> normal_bl(true);  // normal vector at bilateral closest point
-  T norm_normal_bl_tilde = 0.0;                   // norm of vector defining bilateral normal vector
-  T gap_bl = 0.0;                                 // gap of bilateral closest point
+  T sin_alpha = 0.0;   // sine of mutual angle of tangent vectors
+  T sin_2alpha = 0.0;  // sine of 2*mutual angle of tangent vectors
+  Core::LinAlg::Matrix<3, 1, T> normal_bl(
+      Core::LinAlg::Initialization::zero);  // normal vector at bilateral closest point
+  T norm_normal_bl_tilde = 0.0;             // norm of vector defining bilateral normal vector
+  T gap_bl = 0.0;                           // gap of bilateral closest point
   T x = 0.0;  // distance between Gauss point and bilateral closest point on slave
-  Core::LinAlg::Matrix<3, 1, T> aux_plane_normal(true);  // normal vector of auxiliary plane n*
+  Core::LinAlg::Matrix<3, 1, T> aux_plane_normal(
+      Core::LinAlg::Initialization::zero);  // normal vector of auxiliary plane n*
 
   T beta = 0.0;       // auxiliary quantity
   T beta_exp2 = 0.0;  // beta^2
@@ -2438,30 +2525,30 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
 
 
   // components from variation of bilateral gap
-  Core::LinAlg::Matrix<3, 1, T> gap_bl_partial_r_slave(true);
-  Core::LinAlg::Matrix<3, 1, T> gap_bl_partial_r_master(true);
-  Core::LinAlg::Matrix<3, 1, T> gap_bl_partial_r_xi_slave(true);
-  Core::LinAlg::Matrix<3, 1, T> gap_bl_partial_r_xi_master(true);
+  Core::LinAlg::Matrix<3, 1, T> gap_bl_partial_r_slave(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, T> gap_bl_partial_r_master(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, T> gap_bl_partial_r_xi_slave(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, T> gap_bl_partial_r_xi_master(Core::LinAlg::Initialization::zero);
   T gap_bl_partial_xi_master = 0.0;
 
   // components from variation of cosine of enclosed angle
-  Core::LinAlg::Matrix<3, 1, T> cos_alpha_partial_r_xi_slave(true);
-  Core::LinAlg::Matrix<3, 1, T> cos_alpha_partial_r_xi_master(true);
+  Core::LinAlg::Matrix<3, 1, T> cos_alpha_partial_r_xi_slave(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, T> cos_alpha_partial_r_xi_master(Core::LinAlg::Initialization::zero);
   T cos_alpha_partial_xi_master = 0.0;
 
   // components from variation of distance from bilateral closest point on slave
-  Core::LinAlg::Matrix<3, 1, T> x_partial_r_slave(true);
-  Core::LinAlg::Matrix<3, 1, T> x_partial_r_master(true);
-  Core::LinAlg::Matrix<3, 1, T> x_partial_r_xi_slave(true);
-  Core::LinAlg::Matrix<3, 1, T> x_partial_r_xi_master(true);
+  Core::LinAlg::Matrix<3, 1, T> x_partial_r_slave(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, T> x_partial_r_master(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, T> x_partial_r_xi_slave(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, T> x_partial_r_xi_master(Core::LinAlg::Initialization::zero);
 
-  Core::LinAlg::Matrix<3, 1, T> x_partial_aux_plane_normal(true);
+  Core::LinAlg::Matrix<3, 1, T> x_partial_aux_plane_normal(Core::LinAlg::Initialization::zero);
   T x_partial_xi_master = 0.0;
 
 
   // auxiliary variables
-  Core::LinAlg::Matrix<3, 1, T> fpot_tmp(true);
-  Core::LinAlg::Matrix<3, 3, T> v_mat_tmp(true);
+  Core::LinAlg::Matrix<3, 1, T> fpot_tmp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, T> v_mat_tmp(Core::LinAlg::Initialization::zero);
 
   sin_alpha = std::sin(alpha);
   sin_2alpha = std::sin(2 * alpha);
@@ -2707,7 +2794,7 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
     for (unsigned int j = 0; j < 3; ++j) v_mat_tmp(i, j) -= normal_bl(i) * normal_bl(j);
   }
 
-  Core::LinAlg::Matrix<3, 1, T> vec_tmp(true);
+  Core::LinAlg::Matrix<3, 1, T> vec_tmp(Core::LinAlg::Initialization::zero);
   vec_tmp.multiply(v_mat_tmp, dist_ul);
 
 
@@ -2846,7 +2933,7 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
           Core::FADUtils::cast_to_double(pot_ia_partial_x * x_partial_xi_master),
       Core::FADUtils::cast_to_double<T, 1, 3>(xi_master_partial_r_slave), 1.0);
 
-  Core::LinAlg::Matrix<3, 1, double> moment_pot_tmp(true);
+  Core::LinAlg::Matrix<3, 1, double> moment_pot_tmp(Core::LinAlg::Initialization::zero);
 
   moment_pot_tmp.update(Core::FADUtils::cast_to_double(pot_ia_partial_gap_bl),
       Core::FADUtils::cast_to_double<T, 3, 1>(gap_bl_partial_r_xi_slave));
@@ -2861,7 +2948,7 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
    *       of) rotation vector theta_perp describing cross-section orientation can be used to
    *       identify (distributed) moments as follows: m_pot = 1/|r_xi| * ( m_pot_pseudo x g1 )
    */
-  Core::LinAlg::Matrix<3, 3, double> spin_pseudo_moment_tmp(true);
+  Core::LinAlg::Matrix<3, 3, double> spin_pseudo_moment_tmp(Core::LinAlg::Initialization::zero);
 
   Core::LargeRotations::computespin(spin_pseudo_moment_tmp, moment_pot_tmp);
 
@@ -3052,7 +3139,7 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
   T signum_tangentsscalarproduct = 0.0;
 
   // unilateral normal vector
-  Core::LinAlg::Matrix<3, 1, T> normal_ul(true);
+  Core::LinAlg::Matrix<3, 1, T> normal_ul(Core::LinAlg::Initialization::zero);
 
   // gap of unilateral closest points
   T gap_ul = 0.0;
@@ -3088,18 +3175,18 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
   T pot_red_fac_2ndderiv_xi_master = 0.0;
 
   // components from variation of unilateral gap
-  Core::LinAlg::Matrix<3, 1, T> gap_ul_deriv_r_slave(true);
-  Core::LinAlg::Matrix<3, 1, T> gap_ul_deriv_r_master(true);
+  Core::LinAlg::Matrix<3, 1, T> gap_ul_deriv_r_slave(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, T> gap_ul_deriv_r_master(Core::LinAlg::Initialization::zero);
 
   // components from variation of cosine of enclosed angle
-  Core::LinAlg::Matrix<3, 1, T> cos_alpha_partial_r_xi_slave(true);
-  Core::LinAlg::Matrix<3, 1, T> cos_alpha_partial_r_xi_master(true);
+  Core::LinAlg::Matrix<3, 1, T> cos_alpha_partial_r_xi_slave(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, T> cos_alpha_partial_r_xi_master(Core::LinAlg::Initialization::zero);
   T cos_alpha_partial_xi_master = 0.0;
 
-  Core::LinAlg::Matrix<3, 1, T> cos_alpha_deriv_r_slave(true);
-  Core::LinAlg::Matrix<3, 1, T> cos_alpha_deriv_r_master(true);
-  Core::LinAlg::Matrix<3, 1, T> cos_alpha_deriv_r_xi_slave(true);
-  Core::LinAlg::Matrix<3, 1, T> cos_alpha_deriv_r_xi_master(true);
+  Core::LinAlg::Matrix<3, 1, T> cos_alpha_deriv_r_slave(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, T> cos_alpha_deriv_r_master(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, T> cos_alpha_deriv_r_xi_slave(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, T> cos_alpha_deriv_r_xi_master(Core::LinAlg::Initialization::zero);
 
   // gap of unilateral closest points
   gap_ul = norm_dist_ul - radius1_ - radius2_;
@@ -3270,7 +3357,7 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
   // compute components from variation of cosine of enclosed angle
   signum_tangentsscalarproduct = Core::FADUtils::signum(r_xi_slave.dot(r_xi_master));
   // auxiliary variables
-  Core::LinAlg::Matrix<3, 3, T> v_mat_tmp(true);
+  Core::LinAlg::Matrix<3, 3, T> v_mat_tmp(Core::LinAlg::Initialization::zero);
 
   for (unsigned int i = 0; i < 3; ++i)
   {
@@ -3326,8 +3413,8 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
       Core::FADUtils::cast_to_double<T, 3, 1>(cos_alpha_deriv_r_slave), 1.0);
 
 
-  Core::LinAlg::Matrix<3, 1, double> moment_pot_tmp(true);
-  Core::LinAlg::Matrix<3, 3, double> spin_pseudo_moment_tmp(true);
+  Core::LinAlg::Matrix<3, 1, double> moment_pot_tmp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, double> spin_pseudo_moment_tmp(Core::LinAlg::Initialization::zero);
 
 
   moment_pot_tmp.update(Core::FADUtils::cast_to_double(potential_reduction_factor_GP) *
@@ -3761,10 +3848,14 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
   const double safety_factor = 2.0;
 
   // extract the current position of both elements' boundary nodes
-  Core::LinAlg::Matrix<num_spatial_dim, 1> position_element1node1(true);
-  Core::LinAlg::Matrix<num_spatial_dim, 1> position_element1node2(true);
-  Core::LinAlg::Matrix<num_spatial_dim, 1> position_element2node1(true);
-  Core::LinAlg::Matrix<num_spatial_dim, 1> position_element2node2(true);
+  Core::LinAlg::Matrix<num_spatial_dim, 1> position_element1node1(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<num_spatial_dim, 1> position_element1node2(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<num_spatial_dim, 1> position_element2node1(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<num_spatial_dim, 1> position_element2node2(
+      Core::LinAlg::Initialization::zero);
 
   for (unsigned int i_dim = 0; i_dim < num_spatial_dim; ++i_dim)
   {
@@ -3779,7 +3870,8 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
 
 
   // the following rough estimate of the elements' separation is based on spherical bounding boxes
-  Core::LinAlg::Matrix<num_spatial_dim, 1> spherical_boxes_midpoint_distance(true);
+  Core::LinAlg::Matrix<num_spatial_dim, 1> spherical_boxes_midpoint_distance(
+      Core::LinAlg::Initialization::zero);
 
   spherical_boxes_midpoint_distance.update(
       0.5, position_element1node1, 0.5, position_element1node2);
@@ -3788,12 +3880,14 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
       -0.5, position_element2node1, -0.5, position_element2node2, 1.0);
 
 
-  Core::LinAlg::Matrix<num_spatial_dim, 1> element1_boundary_nodes_distance(true);
+  Core::LinAlg::Matrix<num_spatial_dim, 1> element1_boundary_nodes_distance(
+      Core::LinAlg::Initialization::zero);
   element1_boundary_nodes_distance.update(
       1.0, position_element1node1, -1.0, position_element1node2);
   double element1_spherical_box_radius = 0.5 * element1_boundary_nodes_distance.norm2();
 
-  Core::LinAlg::Matrix<num_spatial_dim, 1> element2_boundary_nodes_distance(true);
+  Core::LinAlg::Matrix<num_spatial_dim, 1> element2_boundary_nodes_distance(
+      Core::LinAlg::Initialization::zero);
   element2_boundary_nodes_distance.update(
       1.0, position_element2node1, -1.0, position_element2node2);
   double element2_spherical_box_radius = 0.5 * element2_boundary_nodes_distance.norm2();

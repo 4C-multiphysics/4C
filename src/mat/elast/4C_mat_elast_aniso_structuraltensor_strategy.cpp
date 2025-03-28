@@ -204,11 +204,11 @@ void Mat::Elastic::StructuralTensorStrategyByDistributionFunction::setup_structu
   if (params_->distribution_type_ == Mat::Elastic::PAR::distr_type_vonmisesfisher)
   {
     // base vectors
-    Core::LinAlg::Matrix<3, 1> e1(true);
+    Core::LinAlg::Matrix<3, 1> e1(Core::LinAlg::Initialization::zero);
     e1(0) = 1.0;
-    Core::LinAlg::Matrix<3, 1> e2(true);
+    Core::LinAlg::Matrix<3, 1> e2(Core::LinAlg::Initialization::zero);
     e2(1) = 1.0;
-    Core::LinAlg::Matrix<3, 1> e3(true);
+    Core::LinAlg::Matrix<3, 1> e3(Core::LinAlg::Initialization::zero);
     e3(2) = 1.0;
 
     // x1-x2 plane projection of fiber_vector
@@ -229,21 +229,21 @@ void Mat::Elastic::StructuralTensorStrategyByDistributionFunction::setup_structu
     double alpha = -(theta_0 - theta_aux);  //< rotation around x1-axis
     double beta = -phi_0;                   //< rotation around x3-axis
 
-    Core::LinAlg::Matrix<3, 3> rotation1(true);
+    Core::LinAlg::Matrix<3, 3> rotation1(Core::LinAlg::Initialization::zero);
     rotation1(0, 0) = cos(alpha);
     rotation1(1, 1) = 1.0;
     rotation1(2, 2) = cos(alpha);
     rotation1(0, 2) = -sin(alpha);
     rotation1(2, 0) = sin(alpha);
 
-    Core::LinAlg::Matrix<3, 3> rotation2(true);
+    Core::LinAlg::Matrix<3, 3> rotation2(Core::LinAlg::Initialization::zero);
     rotation2(0, 0) = cos(beta);
     rotation2(1, 1) = cos(beta);
     rotation2(2, 2) = 1.0;
     rotation2(0, 1) = sin(beta);
     rotation2(1, 0) = -sin(beta);
 
-    Core::LinAlg::Matrix<3, 3> rotation(true);
+    Core::LinAlg::Matrix<3, 3> rotation(Core::LinAlg::Initialization::zero);
     rotation.multiply(rotation2, rotation1);
 
     Core::LinAlg::Matrix<3, 3> tensor3x3;
@@ -257,7 +257,7 @@ void Mat::Elastic::StructuralTensorStrategyByDistributionFunction::setup_structu
     tensor3x3(2, 0) = tensor3x3(0, 2);
     tensor3x3(2, 1) = tensor3x3(1, 2);
 
-    Core::LinAlg::Matrix<3, 3> temp(true);
+    Core::LinAlg::Matrix<3, 3> temp(Core::LinAlg::Initialization::zero);
     temp.multiply_nn(rotation, tensor3x3);
     tensor3x3.clear();
     tensor3x3.multiply_nt(temp, rotation);
@@ -300,7 +300,7 @@ void Mat::Elastic::StructuralTensorStrategyDispersedTransverselyIsotropic::setup
 
   dyadic_product(fiber_vector, structural_tensor_stress);
 
-  Core::LinAlg::Matrix<6, 1> Identity(true);
+  Core::LinAlg::Matrix<6, 1> Identity(Core::LinAlg::Initialization::zero);
   Identity(0) = 1.0;
   Identity(1) = 1.0;
   Identity(2) = 1.0;

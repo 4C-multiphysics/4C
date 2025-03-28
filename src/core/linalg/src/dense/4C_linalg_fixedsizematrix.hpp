@@ -1915,6 +1915,11 @@ namespace Core::LinAlg
     double* values(Core::LinAlg::SerialDenseVector& vector);
   }  // namespace Internal
 
+  enum class Initialization
+  {
+    zero,
+    uninitialized
+  };
 
   /// Serial dense matrix with templated dimensions
   /*!
@@ -1961,14 +1966,15 @@ namespace Core::LinAlg
 
     /// Default constructor
     /*!
-      Constructs a new Matrix and allocates the
-      memory. If \e setzero==true it is filled with zeros, otherwise it
-      is left uninitialized.
+      Constructs a new matrix and allocates the memory. If \e init is set to set_zero, the matrix is
+      initialized to zero, otherwise it is left uninitialized.
 
-      \param setzero
-        whether matrix should be initialised to zero
+      \param init whether to initialize the matrix to zero or leave it uninitialized
      */
-    explicit Matrix(bool setzero = true);
+    explicit Matrix(Initialization init = Initialization::zero);
+
+    template <typename T>
+    explicit Matrix(T) = delete;
 
     /// Constructor
     /*!
@@ -3050,14 +3056,14 @@ namespace Core::LinAlg
   // Constructors
 
   template <unsigned int rows, unsigned int cols, class ValueType>
-  Matrix<rows, cols, ValueType>::Matrix(bool setzero)
+  Matrix<rows, cols, ValueType>::Matrix(Initialization init)
       : data_(nullptr), isview_(false), isreadonly_(false)
   {
     if (allocatesmemory_)
       data_ = new ValueType[rows * cols];
     else
       data_ = datafieldsmall_;
-    if (setzero) DenseFunctions::clear_matrix<ValueType, rows, cols>(data_);
+    if (init == Initialization::zero) DenseFunctions::clear_matrix<ValueType, rows, cols>(data_);
   }
 
   template <unsigned int rows, unsigned int cols, class ValueType>

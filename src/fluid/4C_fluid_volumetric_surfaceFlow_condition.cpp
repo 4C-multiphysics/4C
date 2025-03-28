@@ -518,16 +518,16 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::eval_local_normalized_radii(
   const int dim = 3;
 
   // define the vector between center-of-mass and current-node
-  Core::LinAlg::Matrix<(dim), 1> c_cnd(true);
+  Core::LinAlg::Matrix<(dim), 1> c_cnd(Core::LinAlg::Initialization::zero);
 
   // define the vector between center-of-mass and border-node
-  Core::LinAlg::Matrix<(dim), 1> c_bnd(true);
+  Core::LinAlg::Matrix<(dim), 1> c_bnd(Core::LinAlg::Initialization::zero);
 
   // define the vector that is the nearest from right
-  Core::LinAlg::Matrix<(dim), 1> v_right(true);
+  Core::LinAlg::Matrix<(dim), 1> v_right(Core::LinAlg::Initialization::zero);
 
   // define the vector that is the nearest from left
-  Core::LinAlg::Matrix<(dim), 1> v_left(true);
+  Core::LinAlg::Matrix<(dim), 1> v_left(Core::LinAlg::Initialization::zero);
 
 
   // define a direction vector perpendicular to the vector
@@ -535,7 +535,7 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::eval_local_normalized_radii(
   // This vector is also used to define whether a certain vector
   // is in the [0,pi] or [pi,2pi] awy from the
   // "center-of-mass and current-node" vector.
-  Core::LinAlg::Matrix<(dim), 1> dir_vec(true);
+  Core::LinAlg::Matrix<(dim), 1> dir_vec(Core::LinAlg::Initialization::zero);
 
   for (int lid = 0; lid < cond_surfnoderowmap_->NumMyElements(); lid++)
   {

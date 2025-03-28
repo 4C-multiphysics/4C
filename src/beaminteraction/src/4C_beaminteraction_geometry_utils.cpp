@@ -24,16 +24,17 @@ bool BeamInteraction::Geo::point_to_curve_projection(Core::LinAlg::Matrix<3, 1, 
     const Core::FE::CellType& master_distype, double master_ele_ref_length)
 {
   // vectors for shape functions values and their derivatives
-  Core::LinAlg::Matrix<1, numnodes * numnodalvalues, T> N_i(true);
-  Core::LinAlg::Matrix<1, numnodes * numnodalvalues, T> N_i_xi(true);
-  Core::LinAlg::Matrix<1, numnodes * numnodalvalues, T> N_i_xixi(true);
+  Core::LinAlg::Matrix<1, numnodes * numnodalvalues, T> N_i(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, numnodes * numnodalvalues, T> N_i_xi(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, numnodes * numnodalvalues, T> N_i_xixi(
+      Core::LinAlg::Initialization::zero);
 
   // coords and derivatives of the two contacting points
-  Core::LinAlg::Matrix<3, 1, T> r_master(true);
-  Core::LinAlg::Matrix<3, 1, T> r_xi_master(true);
-  Core::LinAlg::Matrix<3, 1, T> r_xixi_master(true);
+  Core::LinAlg::Matrix<3, 1, T> r_master(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, T> r_xi_master(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, T> r_xixi_master(Core::LinAlg::Initialization::zero);
 
-  Core::LinAlg::Matrix<3, 1, T> delta_r(true);  // = r1-r2
+  Core::LinAlg::Matrix<3, 1, T> delta_r(Core::LinAlg::Initialization::zero);  // = r1-r2
 
   // initialize function f and Jacobian df for Newton iteration
   T f = 0.0;
@@ -202,17 +203,20 @@ void BeamInteraction::Geo::calc_linearization_point_to_curve_projection_paramete
 
   /* partial derivative of the orthogonality condition with respect to primary Dofs defining
    * slave point and master curve */
-  Core::LinAlg::Matrix<1, 3, T> orthogon_condition_partial_r_slave(true);
+  Core::LinAlg::Matrix<1, 3, T> orthogon_condition_partial_r_slave(
+      Core::LinAlg::Initialization::zero);
 
   calc_ptc_projection_orthogonality_condition_partial_deriv_cl_pos_slave(
       orthogon_condition_partial_r_slave, r_xi_master);
 
-  Core::LinAlg::Matrix<1, 3, T> orthogon_condition_partial_r_master(true);
+  Core::LinAlg::Matrix<1, 3, T> orthogon_condition_partial_r_master(
+      Core::LinAlg::Initialization::zero);
 
   calc_ptc_projection_orthogonality_condition_partial_deriv_cl_pos_master(
       orthogon_condition_partial_r_master, r_xi_master);
 
-  Core::LinAlg::Matrix<1, 3, T> orthogon_condition_partial_r_xi_master(true);
+  Core::LinAlg::Matrix<1, 3, T> orthogon_condition_partial_r_xi_master(
+      Core::LinAlg::Initialization::zero);
 
   calc_ptc_projection_orthogonality_condition_partial_deriv_cl_tangent_master(
       orthogon_condition_partial_r_xi_master, delta_r);
@@ -260,17 +264,20 @@ void BeamInteraction::Geo::calc_point_to_curve_projection_parameter_coord_master
 
   /* partial derivative of the orthogonality condition with respect to primary Dofs defining
    * slave point and master curve */
-  Core::LinAlg::Matrix<1, 3, T> orthogon_condition_partial_r_slave(true);
+  Core::LinAlg::Matrix<1, 3, T> orthogon_condition_partial_r_slave(
+      Core::LinAlg::Initialization::zero);
 
   calc_ptc_projection_orthogonality_condition_partial_deriv_cl_pos_slave(
       orthogon_condition_partial_r_slave, r_xi_master);
 
-  Core::LinAlg::Matrix<1, 3, T> orthogon_condition_partial_r_master(true);
+  Core::LinAlg::Matrix<1, 3, T> orthogon_condition_partial_r_master(
+      Core::LinAlg::Initialization::zero);
 
   calc_ptc_projection_orthogonality_condition_partial_deriv_cl_pos_master(
       orthogon_condition_partial_r_master, r_xi_master);
 
-  Core::LinAlg::Matrix<1, 3, T> orthogon_condition_partial_r_xi_master(true);
+  Core::LinAlg::Matrix<1, 3, T> orthogon_condition_partial_r_xi_master(
+      Core::LinAlg::Initialization::zero);
 
   calc_ptc_projection_orthogonality_condition_partial_deriv_cl_tangent_master(
       orthogon_condition_partial_r_xi_master, delta_r);
@@ -335,14 +342,18 @@ void BeamInteraction::Geo::calc_point_to_curve_projection_parameter_coord_master
   //    (variation of r_xi_master) according to the chain rule
 
 
-  Core::LinAlg::Matrix<3, 3, T> unit_matrix(true);
+  Core::LinAlg::Matrix<3, 3, T> unit_matrix(Core::LinAlg::Initialization::zero);
   for (unsigned int i = 0; i < 3; ++i) unit_matrix(i, i) = 1.0;
 
-  Core::LinAlg::Matrix<3, 3, T> r_xi_master_tensorproduct_r_xi_master(true);
-  Core::LinAlg::Matrix<3, 3, T> r_xi_master_tensorproduct_r_xixi_master(true);
-  Core::LinAlg::Matrix<3, 3, T> r_xi_master_tensorproduct_delta_r(true);
-  Core::LinAlg::Matrix<3, 3, T> delta_r_tensorproduct_r_xixi_master(true);
-  Core::LinAlg::Matrix<3, 3, T> delta_r_tensorproduct_delta_r(true);
+  Core::LinAlg::Matrix<3, 3, T> r_xi_master_tensorproduct_r_xi_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, T> r_xi_master_tensorproduct_r_xixi_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, T> r_xi_master_tensorproduct_delta_r(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, T> delta_r_tensorproduct_r_xixi_master(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, T> delta_r_tensorproduct_delta_r(Core::LinAlg::Initialization::zero);
 
   for (unsigned int irow = 0; irow < 3; ++irow)
     for (unsigned int icol = 0; icol < 3; ++icol)

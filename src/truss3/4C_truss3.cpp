@@ -92,7 +92,7 @@ Discret::Elements::Truss3::Truss3(int id, int owner)
       eint_(0.0),
       lrefe_(0.0),
       gaussrule_(Core::FE::GaussRule1D::line_2point),
-      diff_disp_ref_(Core::LinAlg::Matrix<1, 3>(true)),
+      diff_disp_ref_(Core::LinAlg::Matrix<1, 3>(Core::LinAlg::Initialization::zero)),
       interface_ptr_(nullptr),
       isinit_(false),
       jacobimass_(),
@@ -348,7 +348,7 @@ int Discret::Elements::Truss3Type::initialize(Core::FE::Discretization& dis)
   std::vector<double> xrefe;
 
   // reference nodal tangent positions
-  Core::LinAlg::Matrix<3, 1> trefNodeAux(true);
+  Core::LinAlg::Matrix<3, 1> trefNodeAux(Core::LinAlg::Initialization::zero);
   // resize vectors for the number of coordinates we need to store
   xrefe.resize(3 * 2);
 

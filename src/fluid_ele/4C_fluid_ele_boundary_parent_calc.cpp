@@ -613,7 +613,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::flow_dep_pressure_bc(
     Core::LinAlg::Matrix<peledim, 1> elevec(elevec_epetra.values(), true);
 
     // get local node coordinates
-    Core::LinAlg::Matrix<nsd, piel> pxyze(true);
+    Core::LinAlg::Matrix<nsd, piel> pxyze(Core::LinAlg::Initialization::zero);
     Core::Geo::fill_initial_position_array<pdistype, nsd, Core::LinAlg::Matrix<nsd, piel>>(
         parent, pxyze);
 
@@ -634,7 +634,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::flow_dep_pressure_bc(
     static const int biel = Core::FE::num_nodes<bdistype>;
 
     // get local node coordinates
-    Core::LinAlg::Matrix<nsd, biel> bxyze(true);
+    Core::LinAlg::Matrix<nsd, biel> bxyze(Core::LinAlg::Initialization::zero);
     Core::Geo::fill_initial_position_array<bdistype, nsd, Core::LinAlg::Matrix<nsd, biel>>(
         surfele, bxyze);
 
@@ -684,8 +684,8 @@ void Discret::Elements::FluidBoundaryParent<distype>::flow_dep_pressure_bc(
     mypvelaf = Core::FE::extract_values(*velaf, plm);
     mypscaaf = Core::FE::extract_values(*scaaf, plm);
 
-    Core::LinAlg::Matrix<nsd, piel> pevelaf(true);
-    Core::LinAlg::Matrix<piel, 1> pescaaf(true);
+    Core::LinAlg::Matrix<nsd, piel> pevelaf(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<piel, 1> pescaaf(Core::LinAlg::Initialization::zero);
     for (int inode = 0; inode < piel; ++inode)
     {
       for (int idim = 0; idim < nsd; ++idim)
@@ -724,19 +724,19 @@ void Discret::Elements::FluidBoundaryParent<distype>::flow_dep_pressure_bc(
     //---------------------------------------------------------------------
     // definitions and initializations for parent and boundary element
     //---------------------------------------------------------------------
-    Core::LinAlg::Matrix<nsd, 1> pxsi(true);
-    Core::LinAlg::Matrix<piel, 1> pfunct(true);
-    Core::LinAlg::Matrix<nsd, piel> pderiv(true);
-    Core::LinAlg::Matrix<nsd, nsd> pxjm(true);
-    Core::LinAlg::Matrix<nsd, nsd> pxji(true);
-    Core::LinAlg::Matrix<nsd, 1> unitnormal(true);
-    Core::LinAlg::Matrix<nsd, piel> pderxy(true);
-    Core::LinAlg::Matrix<nsd, 1> pvelaf(true);
-    Core::LinAlg::Matrix<nsd, nsd> pvderxyaf(true);
+    Core::LinAlg::Matrix<nsd, 1> pxsi(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<piel, 1> pfunct(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, piel> pderiv(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, nsd> pxjm(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, nsd> pxji(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, 1> unitnormal(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, piel> pderxy(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, 1> pvelaf(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, nsd> pvderxyaf(Core::LinAlg::Initialization::zero);
 
-    Core::LinAlg::Matrix<bnsd, 1> xsi(true);
-    Core::LinAlg::Matrix<biel, 1> funct(true);
-    Core::LinAlg::Matrix<bnsd, biel> deriv(true);
+    Core::LinAlg::Matrix<bnsd, 1> xsi(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<biel, 1> funct(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<bnsd, biel> deriv(Core::LinAlg::Initialization::zero);
 
     //---------------------------------------------------------------------
     // integration loop
@@ -773,7 +773,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::flow_dep_pressure_bc(
       // compute measure tensor, infinitesimal area and outward unit normal
       // for boundary element
       drs_ = 0.0;
-      Core::LinAlg::Matrix<bnsd, bnsd> metrictensor(true);
+      Core::LinAlg::Matrix<bnsd, bnsd> metrictensor(Core::LinAlg::Initialization::zero);
       Core::FE::compute_metric_tensor_for_boundary_ele<bdistype>(
           bxyze, deriv, metrictensor, drs_, &unitnormal);
 
@@ -988,7 +988,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::flow_dep_pressure_bc(
             const double timefacfacdens = timefac * fac_ * densaf_;
 
             // dyadic product of unit normal vector and velocity vector
-            Core::LinAlg::Matrix<nsd, nsd> n_x_u(true);
+            Core::LinAlg::Matrix<nsd, nsd> n_x_u(Core::LinAlg::Initialization::zero);
             n_x_u.multiply_nt(pvelaf, unitnormal);
 
             for (int ui = 0; ui < piel; ++ui)
@@ -1165,7 +1165,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::flow_dep_pressure_bc(
             const double timefacfacdens = timefac * fac_ * densaf_;
 
             // dyadic product of unit normal vector and velocity vector
-            Core::LinAlg::Matrix<nsd, nsd> n_x_u(true);
+            Core::LinAlg::Matrix<nsd, nsd> n_x_u(Core::LinAlg::Initialization::zero);
             n_x_u.multiply_nt(pvelaf, unitnormal);
 
             for (int ui = 0; ui < piel; ++ui)
@@ -1272,7 +1272,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::slip_supp_bc(
   Core::LinAlg::Matrix<peledim, 1> elevec(elevec_epetra.values(), true);
 
   // get local node coordinates
-  Core::LinAlg::Matrix<nsd, piel> pxyze(true);
+  Core::LinAlg::Matrix<nsd, piel> pxyze(Core::LinAlg::Initialization::zero);
   Core::Geo::fill_initial_position_array<pdistype, nsd, Core::LinAlg::Matrix<nsd, piel>>(
       parent, pxyze);
 
@@ -1293,7 +1293,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::slip_supp_bc(
   static const int biel = Core::FE::num_nodes<bdistype>;
 
   // get local node coordinates
-  Core::LinAlg::Matrix<nsd, biel> bxyze(true);
+  Core::LinAlg::Matrix<nsd, biel> bxyze(Core::LinAlg::Initialization::zero);
   Core::Geo::fill_initial_position_array<bdistype, nsd, Core::LinAlg::Matrix<nsd, biel>>(
       surfele, bxyze);
 
@@ -1338,7 +1338,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::slip_supp_bc(
 
   std::vector<double> mypvelaf = Core::FE::extract_values(*velaf, plm);
 
-  Core::LinAlg::Matrix<nsd, piel> pevelaf(true);
+  Core::LinAlg::Matrix<nsd, piel> pevelaf(Core::LinAlg::Initialization::zero);
   for (int inode = 0; inode < piel; ++inode)
   {
     for (int idim = 0; idim < nsd; ++idim)
@@ -1350,7 +1350,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::slip_supp_bc(
   // boundary pressure
   std::vector<double> mybvelaf = Core::FE::extract_values(*velaf, blm);
 
-  Core::LinAlg::Matrix<1, biel> epressnp(true);
+  Core::LinAlg::Matrix<1, biel> epressnp(Core::LinAlg::Initialization::zero);
 
   for (int inode = 0; inode < biel; ++inode)
   {
@@ -1385,21 +1385,25 @@ void Discret::Elements::FluidBoundaryParent<distype>::slip_supp_bc(
   //---------------------------------------------------------------------
   // definitions and initializations for parent and boundary element
   //---------------------------------------------------------------------
-  Core::LinAlg::Matrix<nsd, 1> pxsi(true);
-  Core::LinAlg::Matrix<piel, 1> pfunct(true);
-  Core::LinAlg::Matrix<nsd, piel> pderiv(true);
-  Core::LinAlg::Matrix<nsd, nsd> pxjm(true);
-  Core::LinAlg::Matrix<nsd, nsd> pxji(true);
+  Core::LinAlg::Matrix<nsd, 1> pxsi(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<piel, 1> pfunct(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, piel> pderiv(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, nsd> pxjm(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, nsd> pxji(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<nsd, 1> boundaryNormal(
-      true);  // outward unit ('surface/line') normal of boundary element at integration point
-  Core::LinAlg::Matrix<nsd, piel> pderxy(true);    // nabla of parent element at integration point
-  Core::LinAlg::Matrix<nsd, nsd> pvderxyaf(true);  // nabla*u of parent element at integration point
+      Core::LinAlg::Initialization::zero);  // outward unit ('surface/line') normal of boundary
+                                            // element at integration point
+  Core::LinAlg::Matrix<nsd, piel> pderxy(
+      Core::LinAlg::Initialization::zero);  // nabla of parent element at integration point
+  Core::LinAlg::Matrix<nsd, nsd> pvderxyaf(
+      Core::LinAlg::Initialization::zero);  // nabla*u of parent element at integration point
   Core::LinAlg::Matrix<1, 1> pressint(
-      true);  // pressure of boundary element at integration point (N_C * p_C)
+      Core::LinAlg::Initialization::zero);  // pressure of boundary element at integration point
+                                            // (N_C * p_C)
 
-  Core::LinAlg::Matrix<bnsd, 1> xsi(true);
-  Core::LinAlg::Matrix<biel, 1> funct(true);
-  Core::LinAlg::Matrix<bnsd, biel> deriv(true);
+  Core::LinAlg::Matrix<bnsd, 1> xsi(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<biel, 1> funct(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<bnsd, biel> deriv(Core::LinAlg::Initialization::zero);
 
   //---------------------------------------------------------------------
   // integration loop
@@ -1439,7 +1443,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::slip_supp_bc(
     // compute measure tensor, infinitesimal area and outward unit normal
     // for boundary element
     drs_ = 0.0;
-    Core::LinAlg::Matrix<bnsd, bnsd> metrictensor(true);
+    Core::LinAlg::Matrix<bnsd, bnsd> metrictensor(Core::LinAlg::Initialization::zero);
     Core::FE::compute_metric_tensor_for_boundary_ele<bdistype>(
         bxyze, deriv, metrictensor, drs_, &boundaryNormal);
 
@@ -1601,7 +1605,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::navier_slip_bc(
   Core::LinAlg::Matrix<peledim, 1> elevec(elevec_epetra.values(), true);
 
   // get local node coordinates
-  Core::LinAlg::Matrix<nsd, piel> pxyze(true);
+  Core::LinAlg::Matrix<nsd, piel> pxyze(Core::LinAlg::Initialization::zero);
   Core::Geo::fill_initial_position_array<pdistype, nsd, Core::LinAlg::Matrix<nsd, piel>>(
       parent, pxyze);
 
@@ -1622,7 +1626,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::navier_slip_bc(
   static const int biel = Core::FE::num_nodes<bdistype>;
 
   // get local node coordinates
-  Core::LinAlg::Matrix<nsd, biel> bxyze(true);
+  Core::LinAlg::Matrix<nsd, biel> bxyze(Core::LinAlg::Initialization::zero);
   Core::Geo::fill_initial_position_array<bdistype, nsd, Core::LinAlg::Matrix<nsd, biel>>(
       surfele, bxyze);
 
@@ -1670,7 +1674,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::navier_slip_bc(
 
   std::vector<double> mypvelaf = Core::FE::extract_values(*velaf, plm);
 
-  Core::LinAlg::Matrix<nsd, piel> pevelaf(true);
+  Core::LinAlg::Matrix<nsd, piel> pevelaf(Core::LinAlg::Initialization::zero);
   for (int inode = 0; inode < piel; ++inode)
   {
     for (int idim = 0; idim < nsd; ++idim)
@@ -1707,23 +1711,28 @@ void Discret::Elements::FluidBoundaryParent<distype>::navier_slip_bc(
   //---------------------------------------------------------------------
   // definitions and initializations for parent and boundary element
   //---------------------------------------------------------------------
-  Core::LinAlg::Matrix<nsd, 1> pxsi(true);
-  Core::LinAlg::Matrix<piel, 1> pfunct(true);
-  Core::LinAlg::Matrix<nsd, piel> pderiv(true);
-  Core::LinAlg::Matrix<nsd, nsd> pxjm(true);
-  Core::LinAlg::Matrix<nsd, nsd> pxji(true);
+  Core::LinAlg::Matrix<nsd, 1> pxsi(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<piel, 1> pfunct(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, piel> pderiv(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, nsd> pxjm(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, nsd> pxji(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<nsd, 1> boundaryNormal(
-      true);  // outward unit ('surface/line') normal of boundary element at integration point
-  Core::LinAlg::Matrix<nsd, piel> pderxy(true);    // nabla of parent element at integration point
-  Core::LinAlg::Matrix<nsd, nsd> pvderxyaf(true);  // nabla*u of parent element at integration point
+      Core::LinAlg::Initialization::zero);  // outward unit ('surface/line') normal of boundary
+                                            // element at integration point
+  Core::LinAlg::Matrix<nsd, piel> pderxy(
+      Core::LinAlg::Initialization::zero);  // nabla of parent element at integration point
+  Core::LinAlg::Matrix<nsd, nsd> pvderxyaf(
+      Core::LinAlg::Initialization::zero);  // nabla*u of parent element at integration point
   Core::LinAlg::Matrix<1, 1> pressint(
-      true);  // pressure of boundary element at integration point (N_C * p_C)
+      Core::LinAlg::Initialization::zero);  // pressure of boundary element at integration point
+                                            // (N_C * p_C)
   Core::LinAlg::Matrix<nsd, 1> pvelint(
-      true);  // velocity of parent element at integration point (N_B * U_B_i)
+      Core::LinAlg::Initialization::zero);  // velocity of parent element at integration point
+                                            // (N_B * U_B_i)
 
-  Core::LinAlg::Matrix<bnsd, 1> xsi(true);
-  Core::LinAlg::Matrix<biel, 1> funct(true);
-  Core::LinAlg::Matrix<bnsd, biel> deriv(true);
+  Core::LinAlg::Matrix<bnsd, 1> xsi(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<biel, 1> funct(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<bnsd, biel> deriv(Core::LinAlg::Initialization::zero);
 
   //---------------------------------------------------------------------
   // integration loop
@@ -1763,7 +1772,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::navier_slip_bc(
     // compute measure tensor, infinitesimal area and outward unit normal
     // for boundary element
     drs_ = 0.0;
-    Core::LinAlg::Matrix<bnsd, bnsd> metrictensor(true);
+    Core::LinAlg::Matrix<bnsd, bnsd> metrictensor(Core::LinAlg::Initialization::zero);
     Core::FE::compute_metric_tensor_for_boundary_ele<bdistype>(
         bxyze, deriv, metrictensor, drs_, &boundaryNormal);
 
@@ -1939,7 +1948,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::evaluate_weak_dbc(
   Core::LinAlg::Matrix<peledim, 1> elevec(elevec_epetra.values(), true);
 
   // get local node coordinates
-  Core::LinAlg::Matrix<nsd, piel> pxyze(true);
+  Core::LinAlg::Matrix<nsd, piel> pxyze(Core::LinAlg::Initialization::zero);
   Core::Geo::fill_initial_position_array<pdistype, nsd, Core::LinAlg::Matrix<nsd, piel>>(
       parent, pxyze);
 
@@ -1960,7 +1969,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::evaluate_weak_dbc(
   static const int biel = Core::FE::num_nodes<bdistype>;
 
   // get local node coordinates
-  Core::LinAlg::Matrix<nsd, biel> bxyze(true);
+  Core::LinAlg::Matrix<nsd, biel> bxyze(Core::LinAlg::Initialization::zero);
   Core::Geo::fill_initial_position_array<bdistype, nsd, Core::LinAlg::Matrix<nsd, biel>>(
       surfele, bxyze);
 
@@ -2005,7 +2014,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::evaluate_weak_dbc(
 
   std::vector<double> mypvelaf = Core::FE::extract_values(*velaf, plm);
 
-  Core::LinAlg::Matrix<nsd, piel> pevelaf(true);
+  Core::LinAlg::Matrix<nsd, piel> pevelaf(Core::LinAlg::Initialization::zero);
   for (int inode = 0; inode < piel; ++inode)
   {
     for (int idim = 0; idim < nsd; ++idim)
@@ -2027,8 +2036,8 @@ void Discret::Elements::FluidBoundaryParent<distype>::evaluate_weak_dbc(
   else
     mypvelnp = Core::FE::extract_values(*velaf, plm);
 
-  Core::LinAlg::Matrix<nsd, piel> pevelnp(true);
-  Core::LinAlg::Matrix<piel, 1> peprenp(true);
+  Core::LinAlg::Matrix<nsd, piel> pevelnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<piel, 1> peprenp(Core::LinAlg::Initialization::zero);
   for (int inode = 0; inode < piel; ++inode)
   {
     for (int idim = 0; idim < nsd; ++idim)
@@ -2066,20 +2075,20 @@ void Discret::Elements::FluidBoundaryParent<distype>::evaluate_weak_dbc(
   //---------------------------------------------------------------------
   // definitions and initializations for parent and boundary element
   //---------------------------------------------------------------------
-  Core::LinAlg::Matrix<nsd, 1> pxsi(true);
-  Core::LinAlg::Matrix<piel, 1> pfunct(true);
-  Core::LinAlg::Matrix<nsd, piel> pderiv(true);
-  Core::LinAlg::Matrix<nsd, nsd> pxjm(true);
-  Core::LinAlg::Matrix<nsd, nsd> pxji(true);
-  Core::LinAlg::Matrix<nsd, 1> unitnormal(true);
-  Core::LinAlg::Matrix<nsd, piel> pderxy(true);
-  Core::LinAlg::Matrix<nsd, 1> pvelintaf(true);
-  Core::LinAlg::Matrix<nsd, 1> pvelintnp(true);
-  Core::LinAlg::Matrix<nsd, nsd> pvderxyaf(true);
+  Core::LinAlg::Matrix<nsd, 1> pxsi(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<piel, 1> pfunct(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, piel> pderiv(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, nsd> pxjm(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, nsd> pxji(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, 1> unitnormal(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, piel> pderxy(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, 1> pvelintaf(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, 1> pvelintnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, nsd> pvderxyaf(Core::LinAlg::Initialization::zero);
 
-  Core::LinAlg::Matrix<bnsd, 1> xsi(true);
-  Core::LinAlg::Matrix<biel, 1> funct(true);
-  Core::LinAlg::Matrix<bnsd, biel> deriv(true);
+  Core::LinAlg::Matrix<bnsd, 1> xsi(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<biel, 1> funct(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<bnsd, biel> deriv(Core::LinAlg::Initialization::zero);
 
   //---------------------------------------------------------------------
   // integration loop
@@ -2116,7 +2125,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::evaluate_weak_dbc(
     // compute measure tensor, infinitesimal area and outward unit normal
     // for boundary element
     drs_ = 0.0;
-    Core::LinAlg::Matrix<bnsd, bnsd> metrictensor(true);
+    Core::LinAlg::Matrix<bnsd, bnsd> metrictensor(Core::LinAlg::Initialization::zero);
     Core::FE::compute_metric_tensor_for_boundary_ele<bdistype>(
         bxyze, deriv, metrictensor, drs_, &unitnormal);
 
@@ -2174,7 +2183,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::evaluate_weak_dbc(
     }
 
     // determine global coordinates of integration point
-    Core::LinAlg::Matrix<nsd, 1> coordgp(true);
+    Core::LinAlg::Matrix<nsd, 1> coordgp(Core::LinAlg::Initialization::zero);
     for (int i = 0; i < biel; ++i)
     {
       for (int idim = 0; idim < nsd; idim++)
@@ -3735,7 +3744,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::estimate_nitsche_trace_max
   Core::LinAlg::Matrix<peledim, peledim> Bmat(elemat_epetra2.values(), true);
 
   // get local node coordinates
-  Core::LinAlg::Matrix<nsd, piel> pxyze(true);
+  Core::LinAlg::Matrix<nsd, piel> pxyze(Core::LinAlg::Initialization::zero);
   Core::Geo::fill_initial_position_array<pdistype, nsd, Core::LinAlg::Matrix<nsd, piel>>(
       parent, pxyze);
 
@@ -3762,7 +3771,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::estimate_nitsche_trace_max
   static const int biel = Core::FE::num_nodes<bdistype>;
 
   // get local node coordinates
-  Core::LinAlg::Matrix<nsd, biel> bxyze(true);
+  Core::LinAlg::Matrix<nsd, biel> bxyze(Core::LinAlg::Initialization::zero);
   Core::Geo::fill_initial_position_array<bdistype, nsd, Core::LinAlg::Matrix<nsd, biel>>(
       surfele, bxyze);
 
@@ -3827,20 +3836,20 @@ void Discret::Elements::FluidBoundaryParent<distype>::estimate_nitsche_trace_max
   //---------------------------------------------------------------------
   // definitions and initializations for parent and boundary element
   //---------------------------------------------------------------------
-  Core::LinAlg::Matrix<nsd, 1> pxsi(true);
-  Core::LinAlg::Matrix<piel, 1> pfunct(true);
-  Core::LinAlg::Matrix<nsd, piel> pderiv(true);
-  Core::LinAlg::Matrix<nsd, nsd> pxjm(true);
-  Core::LinAlg::Matrix<nsd, nsd> pxji(true);
-  Core::LinAlg::Matrix<nsd, 1> unitnormal(true);
-  Core::LinAlg::Matrix<nsd, piel> pderxy(true);
-  Core::LinAlg::Matrix<nsd, 1> pvelintaf(true);
-  Core::LinAlg::Matrix<nsd, 1> pvelintnp(true);
-  Core::LinAlg::Matrix<nsd, nsd> pvderxyaf(true);
+  Core::LinAlg::Matrix<nsd, 1> pxsi(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<piel, 1> pfunct(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, piel> pderiv(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, nsd> pxjm(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, nsd> pxji(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, 1> unitnormal(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, piel> pderxy(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, 1> pvelintaf(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, 1> pvelintnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, nsd> pvderxyaf(Core::LinAlg::Initialization::zero);
 
-  Core::LinAlg::Matrix<bnsd, 1> xsi(true);
-  Core::LinAlg::Matrix<biel, 1> funct(true);
-  Core::LinAlg::Matrix<bnsd, biel> deriv(true);
+  Core::LinAlg::Matrix<bnsd, 1> xsi(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<biel, 1> funct(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<bnsd, biel> deriv(Core::LinAlg::Initialization::zero);
 
   //  double meas_surf = 0.0;
   //  double meas_vol = 0.0;
@@ -3880,7 +3889,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::estimate_nitsche_trace_max
     // compute measure tensor, infinitesimal area and outward unit normal
     // for boundary element
     drs_ = 0.0;
-    Core::LinAlg::Matrix<bnsd, bnsd> metrictensor(true);
+    Core::LinAlg::Matrix<bnsd, bnsd> metrictensor(Core::LinAlg::Initialization::zero);
     Core::FE::compute_metric_tensor_for_boundary_ele<bdistype>(
         bxyze, deriv, metrictensor, drs_, &unitnormal);
 
@@ -4352,7 +4361,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
   // (assumed to be constant on element boundary)
   const auto functions = hixhybdbc_cond->parameters().get<std::vector<std::optional<int>>>("funct");
 
-  Core::LinAlg::Matrix<nsd, 1> u_dirich(true);
+  Core::LinAlg::Matrix<nsd, 1> u_dirich(Core::LinAlg::Initialization::zero);
 
   for (int rr = 0; rr < nsd; ++rr)
   {
@@ -4373,19 +4382,25 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
 
   // for volume integrals
 
-  Core::LinAlg::Matrix<numstressdof_ * piel, piel> mat_r_p(true);
-  Core::LinAlg::Matrix<numstressdof_ * piel, numstressdof_ * piel> mat_r_sigma(true);
-  Core::LinAlg::Matrix<numstressdof_ * piel, nsd * piel> mat_r_epsu(true);
+  Core::LinAlg::Matrix<numstressdof_ * piel, piel> mat_r_p(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<numstressdof_ * piel, numstressdof_ * piel> mat_r_sigma(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<numstressdof_ * piel, nsd * piel> mat_r_epsu(
+      Core::LinAlg::Initialization::zero);
 
   // for boundary integrals
 
-  Core::LinAlg::Matrix<nsd * piel, numstressdof_ * piel> mat_v_sigma_o_n(true);
-  Core::LinAlg::Matrix<numstressdof_ * piel, nsd * piel> mat_r_o_n_u(true);
+  Core::LinAlg::Matrix<nsd * piel, numstressdof_ * piel> mat_v_sigma_o_n(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<numstressdof_ * piel, nsd * piel> mat_r_o_n_u(
+      Core::LinAlg::Initialization::zero);
 
   // rearranging and computational arrays
 
-  Core::LinAlg::Matrix<numstressdof_ * piel, (nsd + 1) * piel> mat_r_up_block(true);
-  Core::LinAlg::Matrix<numstressdof_ * piel, numstressdof_ * piel> inv_r_sigma(true);
+  Core::LinAlg::Matrix<numstressdof_ * piel, (nsd + 1) * piel> mat_r_up_block(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<numstressdof_ * piel, numstressdof_ * piel> inv_r_sigma(
+      Core::LinAlg::Initialization::zero);
 
 
   // --------------------------------------------------
@@ -4393,15 +4408,16 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
 
   // for volume integrals
 
-  Core::LinAlg::Matrix<numstressdof_ * piel, 1> vec_r_p(true);
-  Core::LinAlg::Matrix<numstressdof_ * piel, 1> vec_r_epsu(true);
+  Core::LinAlg::Matrix<numstressdof_ * piel, 1> vec_r_p(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<numstressdof_ * piel, 1> vec_r_epsu(Core::LinAlg::Initialization::zero);
 
   // for boundary integrals
-  Core::LinAlg::Matrix<numstressdof_ * piel, 1> vec_r_o_n_u_minus_g(true);
+  Core::LinAlg::Matrix<numstressdof_ * piel, 1> vec_r_o_n_u_minus_g(
+      Core::LinAlg::Initialization::zero);
 
   // extract local velocities and pressure from the global vectors
-  Core::LinAlg::Matrix<nsd, piel> pevel(true);
-  Core::LinAlg::Matrix<piel, 1> pepres(true);
+  Core::LinAlg::Matrix<nsd, piel> pevel(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<piel, 1> pepres(Core::LinAlg::Initialization::zero);
 
   std::shared_ptr<const Core::LinAlg::Vector<double>> vel = discretization.get_state("velaf");
   if (vel == nullptr) FOUR_C_THROW("Cannot get state vector 'velaf'");
@@ -4467,11 +4483,11 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
     <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>*/
   {
     // allocate vector for shape functions and matrix for derivatives
-    Core::LinAlg::Matrix<piel, 1> pfunct(true);
-    Core::LinAlg::Matrix<nsd, piel> pderiv(true);
+    Core::LinAlg::Matrix<piel, 1> pfunct(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, piel> pderiv(Core::LinAlg::Initialization::zero);
 
     // get local node coordinates
-    Core::LinAlg::Matrix<nsd, piel> pxyze(true);
+    Core::LinAlg::Matrix<nsd, piel> pxyze(Core::LinAlg::Initialization::zero);
     Core::Geo::fill_initial_position_array<pdistype, nsd, Core::LinAlg::Matrix<nsd, piel>>(
         parent, pxyze);
 
@@ -4484,20 +4500,20 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
     // vectors/scalars for Gausspoint values
 
     // velocity at gausspoint
-    Core::LinAlg::Matrix<nsd, 1> pvelint(true);
+    Core::LinAlg::Matrix<nsd, 1> pvelint(Core::LinAlg::Initialization::zero);
     // velocity derivatives at gausspoint
-    Core::LinAlg::Matrix<nsd, nsd> pvderxy(true);
+    Core::LinAlg::Matrix<nsd, nsd> pvderxy(Core::LinAlg::Initialization::zero);
     // pressure at gausspoint
     double ppressure = 0.0;
 
     // global derivatives of shape functions w.r.t x,y,z
-    Core::LinAlg::Matrix<nsd, piel> pderxy(true);
+    Core::LinAlg::Matrix<nsd, piel> pderxy(Core::LinAlg::Initialization::zero);
     // transposed jacobian "dx/ds"
-    Core::LinAlg::Matrix<nsd, nsd> pxjm(true);
+    Core::LinAlg::Matrix<nsd, nsd> pxjm(Core::LinAlg::Initialization::zero);
     // inverse of transposed jacobian "ds/dx"
-    Core::LinAlg::Matrix<nsd, nsd> pxji(true);
+    Core::LinAlg::Matrix<nsd, nsd> pxji(Core::LinAlg::Initialization::zero);
 
-    Core::LinAlg::Matrix<nsd, 1> pxsi(true);
+    Core::LinAlg::Matrix<nsd, 1> pxsi(Core::LinAlg::Initialization::zero);
 
     //--------------------------------------------------
     // the actual loop
@@ -4671,7 +4687,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
       }
       else if (nsd == 3)
       {
-        Core::LinAlg::Matrix<numstressdof_, 1> temp(true);
+        Core::LinAlg::Matrix<numstressdof_, 1> temp(Core::LinAlg::Initialization::zero);
 
         temp(0) = fac_ * pvderxy(0, 0);
         temp(1) = fac_ * pvderxy(1, 1);
@@ -4715,24 +4731,26 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
     if (nsd == 3)
     {
       // for boundary integrals
-      Core::LinAlg::Matrix<numstressdof_ * piel, 1> vec_r_o_n_u_minus_g_SPALDING(true);
-      Core::LinAlg::Matrix<numstressdof_ * piel, 1> SPALDING_stresses(true);
+      Core::LinAlg::Matrix<numstressdof_ * piel, 1> vec_r_o_n_u_minus_g_SPALDING(
+          Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<numstressdof_ * piel, 1> SPALDING_stresses(
+          Core::LinAlg::Initialization::zero);
 
       // allocate vector/matrix for shape functions and derivatives
-      Core::LinAlg::Matrix<biel, 1> funct(true);
-      Core::LinAlg::Matrix<bnsd, biel> deriv(true);
+      Core::LinAlg::Matrix<biel, 1> funct(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<bnsd, biel> deriv(Core::LinAlg::Initialization::zero);
 
       // allocate vector for parents shape functions and matrix for derivatives
-      Core::LinAlg::Matrix<piel, 1> pfunct(true);
-      Core::LinAlg::Matrix<nsd, piel> pderiv(true);
+      Core::LinAlg::Matrix<piel, 1> pfunct(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd, piel> pderiv(Core::LinAlg::Initialization::zero);
 
       // get local node coordinates
-      Core::LinAlg::Matrix<nsd, biel> bxyze(true);
+      Core::LinAlg::Matrix<nsd, biel> bxyze(Core::LinAlg::Initialization::zero);
       Core::Geo::fill_initial_position_array<bdistype, nsd, Core::LinAlg::Matrix<nsd, biel>>(
           surfele, bxyze);
 
       // get local node coordinates
-      Core::LinAlg::Matrix<nsd, piel> pxyze(true);
+      Core::LinAlg::Matrix<nsd, piel> pxyze(Core::LinAlg::Initialization::zero);
       Core::Geo::fill_initial_position_array<pdistype, nsd, Core::LinAlg::Matrix<nsd, piel>>(
           parent, pxyze);
 
@@ -4745,8 +4763,8 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
           Discret::Elements::DisTypeToOptGaussRule<pdistype>::rule);
 
       // coordinates of current integration point in reference coordinates
-      Core::LinAlg::Matrix<bnsd, 1> xsi(true);
-      Core::LinAlg::Matrix<nsd, 1> pxsi(true);
+      Core::LinAlg::Matrix<bnsd, 1> xsi(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd, 1> pxsi(Core::LinAlg::Initialization::zero);
 
 
       Core::LinAlg::SerialDenseMatrix pqxg(pintpoints.ip().nquad, nsd);
@@ -4774,19 +4792,19 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
       // vectors/scalars for Gausspoint values
 
       // the element's normal vector
-      Core::LinAlg::Matrix<nsd, 1> unitnormal(true);
+      Core::LinAlg::Matrix<nsd, 1> unitnormal(Core::LinAlg::Initialization::zero);
       // velocity at gausspoint
-      Core::LinAlg::Matrix<nsd, 1> velint(true);
+      Core::LinAlg::Matrix<nsd, 1> velint(Core::LinAlg::Initialization::zero);
 
       // transposed jacobian "dx/ds"
-      Core::LinAlg::Matrix<nsd, nsd> xjm(true);
+      Core::LinAlg::Matrix<nsd, nsd> xjm(Core::LinAlg::Initialization::zero);
       // inverse of transposed jacobian "ds/dx"
-      Core::LinAlg::Matrix<nsd, nsd> xji(true);
+      Core::LinAlg::Matrix<nsd, nsd> xji(Core::LinAlg::Initialization::zero);
 
       // transposed jacobian "dx/ds" for parent
-      Core::LinAlg::Matrix<nsd, nsd> pxjm(true);
+      Core::LinAlg::Matrix<nsd, nsd> pxjm(Core::LinAlg::Initialization::zero);
       // inverse of transposed jacobian "ds/dx" for parent
-      Core::LinAlg::Matrix<nsd, nsd> pxji(true);
+      Core::LinAlg::Matrix<nsd, nsd> pxji(Core::LinAlg::Initialization::zero);
 
 
       //--------------------------------------------------
@@ -4815,7 +4833,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
 
         // compute measure tensor for surface element and the infinitesimal
         // area element drs for the integration
-        Core::LinAlg::Matrix<bnsd, bnsd> metrictensor(true);
+        Core::LinAlg::Matrix<bnsd, bnsd> metrictensor(Core::LinAlg::Initialization::zero);
 
         Core::FE::compute_metric_tensor_for_boundary_ele<bdistype>(
             bxyze, deriv, metrictensor, drs_, &unitnormal);
@@ -4828,14 +4846,14 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
 
         // ------------------------------------------------
         // factor given by spatial function
-        Core::LinAlg::Matrix<nsd, 1> functionfac(true);
+        Core::LinAlg::Matrix<nsd, 1> functionfac(Core::LinAlg::Initialization::zero);
         for (int i = 0; i < nsd; ++i)
         {
           functionfac(i) = 1.0;
         }
 
         // determine coordinates of current Gauss point
-        Core::LinAlg::Matrix<3, 1> coordgp(true);
+        Core::LinAlg::Matrix<3, 1> coordgp(Core::LinAlg::Initialization::zero);
 
         for (int A = 0; A < biel; ++A)
         {
@@ -4862,7 +4880,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
           }
         }
 
-        Core::LinAlg::Matrix<nsd, 1> delta_vel(true);
+        Core::LinAlg::Matrix<nsd, 1> delta_vel(Core::LinAlg::Initialization::zero);
 
         for (int rr = 0; rr < nsd; ++rr)
         {
@@ -4934,8 +4952,8 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
       for (int iquad = 0; iquad < intpoints.ip().nquad; ++iquad)
       {
         // traction and stress at gausspoint
-        Core::LinAlg::Matrix<numstressdof_, 1> GP_stress(true);
-        Core::LinAlg::Matrix<nsd, 1> traction(true);
+        Core::LinAlg::Matrix<numstressdof_, 1> GP_stress(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nsd, 1> traction(Core::LinAlg::Initialization::zero);
 
         // coordinates of the current integration point
         const double* gpcoord = (intpoints.ip().qxg)[iquad];
@@ -4959,7 +4977,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
 
         // compute measure tensor for surface element and the infinitesimal
         // area element drs for the integration
-        Core::LinAlg::Matrix<bnsd, bnsd> metrictensor(true);
+        Core::LinAlg::Matrix<bnsd, bnsd> metrictensor(Core::LinAlg::Initialization::zero);
 
         Core::FE::compute_metric_tensor_for_boundary_ele<bdistype>(
             bxyze, deriv, metrictensor, drs_, &unitnormal);
@@ -5011,21 +5029,21 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
     <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>*/
   {
     // allocate vector/matrix for shape functions and derivatives
-    Core::LinAlg::Matrix<biel, 1> funct(true);
-    Core::LinAlg::Matrix<bnsd, biel> deriv(true);
+    Core::LinAlg::Matrix<biel, 1> funct(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<bnsd, biel> deriv(Core::LinAlg::Initialization::zero);
 
     // allocate vector for parents shape functions and matrix for derivatives
-    Core::LinAlg::Matrix<piel, 1> pfunct(true);
-    Core::LinAlg::Matrix<nsd, piel> pderiv(true);
+    Core::LinAlg::Matrix<piel, 1> pfunct(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, piel> pderiv(Core::LinAlg::Initialization::zero);
 
 
     // get local node coordinates
-    Core::LinAlg::Matrix<nsd, biel> bxyze(true);
+    Core::LinAlg::Matrix<nsd, biel> bxyze(Core::LinAlg::Initialization::zero);
     Core::Geo::fill_initial_position_array<bdistype, nsd, Core::LinAlg::Matrix<nsd, biel>>(
         surfele, bxyze);
 
     // get local node coordinates
-    Core::LinAlg::Matrix<nsd, piel> pxyze(true);
+    Core::LinAlg::Matrix<nsd, piel> pxyze(Core::LinAlg::Initialization::zero);
     Core::Geo::fill_initial_position_array<pdistype, nsd, Core::LinAlg::Matrix<nsd, piel>>(
         parent, pxyze);
 
@@ -5038,8 +5056,8 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
         Discret::Elements::DisTypeToOptGaussRule<pdistype>::rule);
 
     // coordinates of current integration point in reference coordinates
-    Core::LinAlg::Matrix<bnsd, 1> xsi(true);
-    Core::LinAlg::Matrix<nsd, 1> pxsi(true);
+    Core::LinAlg::Matrix<bnsd, 1> xsi(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, 1> pxsi(Core::LinAlg::Initialization::zero);
 
 
     Core::LinAlg::SerialDenseMatrix pqxg(pintpoints.ip().nquad, nsd);
@@ -5075,19 +5093,19 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
     // vectors/scalars for Gausspoint values
 
     // the element's normal vector
-    Core::LinAlg::Matrix<nsd, 1> unitnormal(true);
+    Core::LinAlg::Matrix<nsd, 1> unitnormal(Core::LinAlg::Initialization::zero);
     // velocity at gausspoint
-    Core::LinAlg::Matrix<nsd, 1> velint(true);
+    Core::LinAlg::Matrix<nsd, 1> velint(Core::LinAlg::Initialization::zero);
 
     // transposed jacobian "dx/ds"
-    Core::LinAlg::Matrix<nsd, nsd> xjm(true);
+    Core::LinAlg::Matrix<nsd, nsd> xjm(Core::LinAlg::Initialization::zero);
     // inverse of transposed jacobian "ds/dx"
-    Core::LinAlg::Matrix<nsd, nsd> xji(true);
+    Core::LinAlg::Matrix<nsd, nsd> xji(Core::LinAlg::Initialization::zero);
 
     // transposed jacobian "dx/ds" for parent
-    Core::LinAlg::Matrix<nsd, nsd> pxjm(true);
+    Core::LinAlg::Matrix<nsd, nsd> pxjm(Core::LinAlg::Initialization::zero);
     // inverse of transposed jacobian "ds/dx" for parent
-    Core::LinAlg::Matrix<nsd, nsd> pxji(true);
+    Core::LinAlg::Matrix<nsd, nsd> pxji(Core::LinAlg::Initialization::zero);
 
 
     //--------------------------------------------------
@@ -5116,7 +5134,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
 
       // compute measure tensor for surface element and the infinitesimal
       // area element drs for the integration
-      Core::LinAlg::Matrix<bnsd, bnsd> metrictensor(true);
+      Core::LinAlg::Matrix<bnsd, bnsd> metrictensor(Core::LinAlg::Initialization::zero);
 
       Core::FE::compute_metric_tensor_for_boundary_ele<bdistype>(
           bxyze, deriv, metrictensor, drs_, &unitnormal);
@@ -5196,14 +5214,14 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
 
       // ------------------------------------------------
       // factor given by spatial function
-      Core::LinAlg::Matrix<nsd, 1> functionfac(true);
+      Core::LinAlg::Matrix<nsd, 1> functionfac(Core::LinAlg::Initialization::zero);
       for (int i = 0; i < nsd; ++i)
       {
         functionfac(i) = 1.0;
       }
 
       // determine coordinates of current Gauss point
-      Core::LinAlg::Matrix<3, 1> coordgp(true);
+      Core::LinAlg::Matrix<3, 1> coordgp(Core::LinAlg::Initialization::zero);
 
       for (int A = 0; A < biel; ++A)
       {
@@ -5230,7 +5248,7 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
         }
       }
 
-      Core::LinAlg::Matrix<nsd, 1> delta_vel(true);
+      Core::LinAlg::Matrix<nsd, 1> delta_vel(Core::LinAlg::Initialization::zero);
 
       for (int rr = 0; rr < nsd; ++rr)
       {
@@ -5265,8 +5283,8 @@ void Discret::Elements::FluidBoundaryParent<distype>::mix_hyb_dirichlet(
       }
       else if (nsd == 3)
       {
-        Core::LinAlg::Matrix<nsd, 1> temp(true);
-        Core::LinAlg::Matrix<nsd, 1> tempA(true);
+        Core::LinAlg::Matrix<nsd, 1> temp(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nsd, 1> tempA(Core::LinAlg::Initialization::zero);
 
         for (int dim = 0; dim < nsd; ++dim)
         {

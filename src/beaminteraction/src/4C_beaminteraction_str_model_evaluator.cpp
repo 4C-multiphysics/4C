@@ -1243,7 +1243,7 @@ void Solid::ModelEvaluator::BeamInteraction::print_binning_info_to_screen() cons
   double bin_size_lower_bound =
       binstrategy_->compute_lower_bound_for_bin_size_as_max_edge_length_of_aabb_of_largest_ele(
           discret_vec, disnp_vec);
-  Core::LinAlg::Matrix<3, 2> XAABB(true);
+  Core::LinAlg::Matrix<3, 2> XAABB(Core::LinAlg::Initialization::zero);
   binstrategy_->compute_min_binning_domain_containing_all_elements_of_multiple_discrets(
       discret_vec, disnp_vec, XAABB, false);
   if (global_state().get_my_rank() == 0)

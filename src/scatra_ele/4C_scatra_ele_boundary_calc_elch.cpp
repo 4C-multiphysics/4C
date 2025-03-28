@@ -98,7 +98,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElch<distype, probdim>::calc_elch_b
   // state and history variables at element nodes
   my::extract_node_values(discretization, la);
   std::vector<Core::LinAlg::Matrix<nen_, 1>> ehist(
-      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
   my::extract_node_values(ehist, discretization, la, "hist");
 
   // get current condition
@@ -193,7 +193,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcElch<distype, probdim>::calc_elch_b
   {
     // extract local values from the global vector
     std::vector<Core::LinAlg::Matrix<nen_, 1>> ephidtnp(
-        my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+        my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
     my::extract_node_values(ephidtnp, discretization, la, "phidtnp");
 
     if (not is_stationary)

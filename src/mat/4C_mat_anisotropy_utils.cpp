@@ -61,7 +61,7 @@ void Mat::compute_structural_tensors(
   {
     for (std::vector<Core::LinAlg::Matrix<3, 1>>::size_type i = 0; i < numfib; ++i)
     {
-      T A(false);
+      T A(Core::LinAlg::Initialization::uninitialized);
       strategy->setup_structural_tensor(fibers[gp].at(i), A);
 
       structural_tensor[gp].at(i).update(A);

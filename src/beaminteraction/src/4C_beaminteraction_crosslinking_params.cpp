@@ -20,7 +20,12 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 BeamInteraction::CrosslinkingParams::CrosslinkingParams()
-    : isinit_(false), issetup_(false), viscosity_(0.0), kt_(0.0), deltatime_(0.0), init_box_(true)
+    : isinit_(false),
+      issetup_(false),
+      viscosity_(0.0),
+      kt_(0.0),
+      deltatime_(0.0),
+      init_box_(Core::LinAlg::Initialization::zero)
 {
   maxnum_init_crosslinker_pertype_.clear();
   numcrosslinkerpertype_.clear();

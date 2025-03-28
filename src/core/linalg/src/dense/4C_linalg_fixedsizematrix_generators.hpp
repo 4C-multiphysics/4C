@@ -20,7 +20,7 @@ namespace Core::LinAlg
   template <unsigned int size, typename ValueType = double>
   LinAlg::Matrix<size, size, ValueType> diagonal_matrix(const ValueType diagonal_value)
   {
-    LinAlg::Matrix<size, size, ValueType> diag_matrix(true);
+    LinAlg::Matrix<size, size, ValueType> diag_matrix(Initialization::zero);
     for (unsigned int i = 0; i < size; ++i) diag_matrix(i, i) = diagonal_value;
     return diag_matrix;
   }

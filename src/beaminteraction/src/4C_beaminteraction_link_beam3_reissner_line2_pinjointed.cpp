@@ -41,7 +41,7 @@ Core::Communication::ParObject* BeamInteraction::BeamLinkBeam3rLine2PinJointedTy
  *----------------------------------------------------------------------------*/
 BeamInteraction::BeamLinkBeam3rLine2PinJointed::BeamLinkBeam3rLine2PinJointed()
     : BeamLinkPinJointed(),
-      triad_(true),
+      triad_(Core::LinAlg::Initialization::zero),
       linkele_(nullptr),
       bspotforces_(2, Core::LinAlg::SerialDenseVector(true))
 {
@@ -91,8 +91,8 @@ void BeamInteraction::BeamLinkBeam3rLine2PinJointed::init(int id,
    * - second and third base vector are arbitrarily constructed from cross-product
    *   of first base vector with either first or second base vector of global
    *   coordinate system; this avoids any singularities */
-  Core::LinAlg::Matrix<3, 3> linkeletriad(true);
-  Core::LinAlg::Matrix<3, 1> distvec(true);
+  Core::LinAlg::Matrix<3, 3> linkeletriad(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> distvec(Core::LinAlg::Initialization::zero);
 
   distvec.update(1.0, get_bind_spot_pos2(), -1.0, get_bind_spot_pos1());
 
@@ -119,13 +119,14 @@ void BeamInteraction::BeamLinkBeam3rLine2PinJointed::init(int id,
   // check included angle of desired crosslinker axis (normalized distvec = first
   // base vector) and (1,0,0), i.e. scalar product which in this case simplifies to
   // first component of distvec
-  Core::LinAlg::Matrix<3, 1> unit_vector_global_x(true), unit_vector_global_y(true);
+  Core::LinAlg::Matrix<3, 1> unit_vector_global_x(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> unit_vector_global_y(Core::LinAlg::Initialization::zero);
   unit_vector_global_x(0) = 1.0;
   unit_vector_global_y(1) = 1.0;
 
   const double scalarproduct = distvec(0);
 
-  Core::LinAlg::Matrix<3, 1> second_base_vecor_linkerele(true);
+  Core::LinAlg::Matrix<3, 1> second_base_vecor_linkerele(Core::LinAlg::Initialization::zero);
 
   // is included angle smaller than 45 degrees ? then avoid singularity at angle=0 degrees ...
   if (std::abs(scalarproduct) > 0.5 * std::sqrt(2))
@@ -162,7 +163,7 @@ void BeamInteraction::BeamLinkBeam3rLine2PinJointed::init(int id,
 
 
   // THIRD base vector to complete orthonormal triad
-  Core::LinAlg::Matrix<3, 1> third_base_vecor_linkerele(true);
+  Core::LinAlg::Matrix<3, 1> third_base_vecor_linkerele(Core::LinAlg::Initialization::zero);
   third_base_vecor_linkerele.cross_product(distvec, second_base_vecor_linkerele);
 
   // feasibility check
@@ -236,7 +237,7 @@ void BeamInteraction::BeamLinkBeam3rLine2PinJointed::setup(const int matnum)
 
   // the triads at the two connection sites are chosen identical initially, so we only use the first
   // one
-  Core::LinAlg::Matrix<3, 1> linkelerotvec(true);
+  Core::LinAlg::Matrix<3, 1> linkelerotvec(Core::LinAlg::Initialization::zero);
   Core::LargeRotations::quaterniontoangle(triad_, linkelerotvec);
 
   std::vector<double> refpos(6, 0.0);
@@ -450,8 +451,8 @@ void BeamInteraction::BeamLinkBeam3rLine2PinJointed::reset_state(
    * - second and third base vector are arbitrarily constructed from cross-product
    *   of first base vector with either first or second base vector of global
    *   coordinate system; this avoids any singularities */
-  Core::LinAlg::Matrix<3, 3> linkeletriad(true);
-  Core::LinAlg::Matrix<3, 1> distvec(true);
+  Core::LinAlg::Matrix<3, 3> linkeletriad(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> distvec(Core::LinAlg::Initialization::zero);
 
   distvec.update(1.0, get_bind_spot_pos2(), -1.0, get_bind_spot_pos1());
 
@@ -483,13 +484,14 @@ void BeamInteraction::BeamLinkBeam3rLine2PinJointed::reset_state(
   // check included angle of desired crosslinker axis (normalized distvec = first
   // base vector) and (1,0,0), i.e. scalar product which in this case simplifies to
   // first component of distvec
-  Core::LinAlg::Matrix<3, 1> unit_vector_global_x(true), unit_vector_global_y(true);
+  Core::LinAlg::Matrix<3, 1> unit_vector_global_x(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> unit_vector_global_y(Core::LinAlg::Initialization::zero);
   unit_vector_global_x(0) = 1.0;
   unit_vector_global_y(1) = 1.0;
 
   const double scalarproduct = distvec(0);
 
-  Core::LinAlg::Matrix<3, 1> second_base_vecor_linkerele(true);
+  Core::LinAlg::Matrix<3, 1> second_base_vecor_linkerele(Core::LinAlg::Initialization::zero);
 
   // is included angle smaller than 45 degrees ? then avoid singularity at angle=0 degrees ...
   if (std::abs(scalarproduct) > 0.5 * std::sqrt(2))
@@ -530,7 +532,7 @@ void BeamInteraction::BeamLinkBeam3rLine2PinJointed::reset_state(
 
 
   // third base vector to complete orthonormal triad
-  Core::LinAlg::Matrix<3, 1> third_base_vecor_linkerele(true);
+  Core::LinAlg::Matrix<3, 1> third_base_vecor_linkerele(Core::LinAlg::Initialization::zero);
   third_base_vecor_linkerele.cross_product(distvec, second_base_vecor_linkerele);
 
   // feasibility check

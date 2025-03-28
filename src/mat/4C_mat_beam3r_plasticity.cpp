@@ -131,29 +131,29 @@ void Mat::BeamPlasticMaterial<T>::setup(int numgp_force, int numgp_moment)
 
   for (int gp = 0; gp < numgp_force; gp++)
   {
-    c_n_eff_[gp] = Core::LinAlg::Matrix<3, 3, T>(true);
-    gammaplastconv_[gp] = Core::LinAlg::Matrix<3, 1, T>(true);
-    gammaplastnew_[gp] = Core::LinAlg::Matrix<3, 1, T>(true);
+    c_n_eff_[gp] = Core::LinAlg::Matrix<3, 3, T>(Core::LinAlg::Initialization::zero);
+    gammaplastconv_[gp] = Core::LinAlg::Matrix<3, 1, T>(Core::LinAlg::Initialization::zero);
+    gammaplastnew_[gp] = Core::LinAlg::Matrix<3, 1, T>(Core::LinAlg::Initialization::zero);
     gammaplastaccum_[gp] = 0;
     effyieldstress_n_[gp] = 0;
     delta_kappaplast_[gp] = 0;
-    delta_gammaplast_[gp] = Core::LinAlg::Matrix<3, 1, T>(true);
-    deltastress_n_[gp] = Core::LinAlg::Matrix<3, 1, T>(true);
+    delta_gammaplast_[gp] = Core::LinAlg::Matrix<3, 1, T>(Core::LinAlg::Initialization::zero);
+    deltastress_n_[gp] = Core::LinAlg::Matrix<3, 1, T>(Core::LinAlg::Initialization::zero);
     stress_n_[gp] = 0;
   }
 
   for (int gp = 0; gp < numgp_moment; gp++)
   {
-    c_m_eff_[gp] = Core::LinAlg::Matrix<3, 3, T>(true);
-    kappaplastconv_[gp] = Core::LinAlg::Matrix<3, 1, T>(true);
-    kappaplastnew_[gp] = Core::LinAlg::Matrix<3, 1, T>(true);
+    c_m_eff_[gp] = Core::LinAlg::Matrix<3, 3, T>(Core::LinAlg::Initialization::zero);
+    kappaplastconv_[gp] = Core::LinAlg::Matrix<3, 1, T>(Core::LinAlg::Initialization::zero);
+    kappaplastnew_[gp] = Core::LinAlg::Matrix<3, 1, T>(Core::LinAlg::Initialization::zero);
     kappaplastaccum_[gp] = 0;
     effyieldstress_m_[gp] = 0;
     normstress_m_[gp] = 0;
     deltastress_m_[gp] = 0;
-    kappaelast_[gp] = Core::LinAlg::Matrix<3, 1, T>(true);
-    kappaelastflow_[gp] = Core::LinAlg::Matrix<3, 1, T>(true);
-    elastic_curvature_[gp] = Core::LinAlg::Matrix<3, 1, T>(true);
+    kappaelast_[gp] = Core::LinAlg::Matrix<3, 1, T>(Core::LinAlg::Initialization::zero);
+    kappaelastflow_[gp] = Core::LinAlg::Matrix<3, 1, T>(Core::LinAlg::Initialization::zero);
+    elastic_curvature_[gp] = Core::LinAlg::Matrix<3, 1, T>(Core::LinAlg::Initialization::zero);
   }
 
   numgp_force_ = numgp_force;
@@ -237,7 +237,7 @@ void Mat::BeamPlasticMaterial<T>::evaluate_force_contributions_to_stress(
   else
   {
     // material elastic strain
-    Core::LinAlg::Matrix<3, 1, T> Gammaelast(true);
+    Core::LinAlg::Matrix<3, 1, T> Gammaelast(Core::LinAlg::Initialization::zero);
 
     // compute elastic strain
     for (int i = 0; i < 3; i++)
@@ -290,7 +290,7 @@ void Mat::BeamPlasticMaterial<T>::evaluate_moment_contributions_to_stress(
   else
   {
     //! copy of material curvature K (but first entry is 0 if torsional plasticity is turned off)
-    Core::LinAlg::Matrix<3, 1, T> kappa{true};
+    Core::LinAlg::Matrix<3, 1, T> kappa{Core::LinAlg::Initialization::zero};
 
     // If torsional plasticity is turned on, use full curvature vector for plasticity,
     // else, continue with reduced curvature vector (first entry is zero)

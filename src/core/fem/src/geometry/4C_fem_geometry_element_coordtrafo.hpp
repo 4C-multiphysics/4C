@@ -1111,17 +1111,17 @@ namespace Core::Geo
     const int maxiter = 20;
     double residual = 1.0;
 
-    Core::LinAlg::Matrix<numDim, numDim> A(true);
-    Core::LinAlg::Matrix<numDim, numDim> A_inv(true);
+    Core::LinAlg::Matrix<numDim, numDim> A(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<numDim, numDim> A_inv(Core::LinAlg::Initialization::zero);
 
-    Core::LinAlg::Matrix<numDim, 1> b(true);
-    Core::LinAlg::Matrix<numDim, 1> dx(true);
+    Core::LinAlg::Matrix<numDim, 1> b(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<numDim, 1> dx(Core::LinAlg::Initialization::zero);
 
     // initialize != 0
     dx(0) = 1.0;
 
-    Core::LinAlg::Matrix<numNodes, 1> funct(true);
-    Core::LinAlg::Matrix<numDim, numNodes> deriv1(true);
+    Core::LinAlg::Matrix<numNodes, 1> funct(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<numDim, numNodes> deriv1(Core::LinAlg::Initialization::zero);
 
     // initial guess
     starting_value_current_to_element_coords<distype>(xsi);

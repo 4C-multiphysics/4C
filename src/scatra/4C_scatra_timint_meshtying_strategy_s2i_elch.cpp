@@ -609,8 +609,8 @@ void ScaTra::MortarCellCalcElch<distype_s, distype_m>::evaluate_condition(
   const Core::FE::IntPointsAndWeights<2> intpoints(Core::FE::GaussRule2D::tri_7point);
 
   // dummy matrix of nodal temperature values
-  Core::LinAlg::Matrix<nen_slave_, 1> dummy_slave_temp(true);
-  Core::LinAlg::Matrix<nen_master_, 1> dummy_master_temp(true);
+  Core::LinAlg::Matrix<nen_slave_, 1> dummy_slave_temp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nen_master_, 1> dummy_master_temp(Core::LinAlg::Initialization::zero);
   // always in contact
   const double pseudo_contact_fac = 1.0;
 
@@ -672,8 +672,8 @@ void ScaTra::MortarCellCalcElch<distype_s, distype_m>::evaluate_condition_nts(
   my::eval_shape_func_at_slave_node(slavenode, slaveelement, masterelement);
 
   // dummy matrix of nodal temperature values
-  Core::LinAlg::Matrix<nen_slave_, 1> dummy_slave_temp(true);
-  Core::LinAlg::Matrix<nen_master_, 1> dummy_master_temp(true);
+  Core::LinAlg::Matrix<nen_slave_, 1> dummy_slave_temp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nen_master_, 1> dummy_master_temp(Core::LinAlg::Initialization::zero);
   // always in contact
   const double pseudo_contact_fac = 1.0;
 
@@ -751,7 +751,7 @@ ScaTra::MortarCellCalcElchSTIThermo<distype_s, distype_m>::MortarCellCalcElchSTI
       myelch::MortarCellCalcElch(couplingtype, lmside, numdofpernode_slave, numdofpernode_master),
 
       // initialize member variable
-      etempnp_slave_(true)
+      etempnp_slave_(Core::LinAlg::Initialization::zero)
 {
 }
 
@@ -848,8 +848,9 @@ void ScaTra::MortarCellCalcElchSTIThermo<distype_s, distype_m>::evaluate_conditi
   const Core::FE::IntPointsAndWeights<2> intpoints(Core::FE::GaussRule2D::tri_7point);
 
   // dummy matrix of nodal master temperature values and shape derivatives
-  Core::LinAlg::Matrix<nen_master_, 1> dummy_master_temp(true);
-  Core::LinAlg::Matrix<nsd_slave_ + 1, nen_slave_> dummy_shapederivatives(true);
+  Core::LinAlg::Matrix<nen_master_, 1> dummy_master_temp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_slave_ + 1, nen_slave_> dummy_shapederivatives(
+      Core::LinAlg::Initialization::zero);
   // always in contact
   const double pseudo_contact_fac = 1.0;
 
@@ -964,8 +965,8 @@ ScaTra::MortarCellCalcSTIElch<distype_s, distype_m>::MortarCellCalcSTIElch(
       my::MortarCellCalc(couplingtype, lmside, numdofpernode_slave, numdofpernode_master),
 
       // initialize member variables
-      eelchnp_slave_(2, Core::LinAlg::Matrix<nen_slave_, 1>(true)),
-      eelchnp_master_(2, Core::LinAlg::Matrix<nen_master_, 1>(true))
+      eelchnp_slave_(2, Core::LinAlg::Matrix<nen_slave_, 1>(Core::LinAlg::Initialization::zero)),
+      eelchnp_master_(2, Core::LinAlg::Matrix<nen_master_, 1>(Core::LinAlg::Initialization::zero))
 {
 }
 

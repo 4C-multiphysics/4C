@@ -18,7 +18,8 @@ namespace
     // only tested for hex8, but equivalent for hex18, hex27, ...
     const auto distype = Core::FE::CellType::hex8;
 
-    Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1> xi_centroid_ref(true);
+    Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1> xi_centroid_ref(
+        Core::LinAlg::Initialization::zero);
 
     Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1> xi_centroid =
         Discret::Elements::evaluate_parameter_coordinate_centroid<distype>();
@@ -31,7 +32,8 @@ namespace
     // only tested for tet4, but equivalent for tet10
     const auto distype = Core::FE::CellType::tet4;
 
-    Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1> xi_centroid_ref(true);
+    Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1> xi_centroid_ref(
+        Core::LinAlg::Initialization::zero);
     xi_centroid_ref(0) = 0.25;
     xi_centroid_ref(1) = 0.25;
     xi_centroid_ref(2) = 0.25;
@@ -46,7 +48,8 @@ namespace
   {
     const auto distype = Core::FE::CellType::pyramid5;
 
-    Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1> xi_centroid_ref(true);
+    Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1> xi_centroid_ref(
+        Core::LinAlg::Initialization::zero);
     xi_centroid_ref(2) = 0.25;
 
     Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1> xi_centroid =
@@ -59,7 +62,8 @@ namespace
   {
     const auto distype = Core::FE::CellType::wedge6;
 
-    Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1> xi_centroid_ref(true);
+    Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1> xi_centroid_ref(
+        Core::LinAlg::Initialization::zero);
     xi_centroid_ref(0) = 1.0 / 3.0;
     xi_centroid_ref(1) = 1.0 / 3.0;
 
@@ -74,7 +78,7 @@ namespace
     const auto distype = Core::FE::CellType::hex8;
 
     Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1>
-        reference_coords_centroid_ref(true);
+        reference_coords_centroid_ref(Core::LinAlg::Initialization::zero);
 
     Discret::Elements::ElementNodes<distype> nodal_coordinates;
 
@@ -110,7 +114,8 @@ namespace
     nodal_coordinates.reference_coordinates(1, 7) = 1;
     nodal_coordinates.reference_coordinates(2, 7) = 2;
 
-    Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1> x_centroid_ref(true);
+    Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1> x_centroid_ref(
+        Core::LinAlg::Initialization::zero);
     x_centroid_ref(0) = 2;
     x_centroid_ref(1) = 0.5;
     x_centroid_ref(2) = 1.0;
@@ -126,7 +131,7 @@ namespace
     const auto distype = Core::FE::CellType::tet4;
 
     Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1>
-        reference_coords_centroid_ref(true);
+        reference_coords_centroid_ref(Core::LinAlg::Initialization::zero);
 
     Discret::Elements::ElementNodes<distype> nodal_coordinates;
 
@@ -146,7 +151,8 @@ namespace
     nodal_coordinates.reference_coordinates(1, 3) = 0;
     nodal_coordinates.reference_coordinates(2, 3) = 4;
 
-    Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1> x_centroid_ref(true);
+    Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1> x_centroid_ref(
+        Core::LinAlg::Initialization::zero);
     x_centroid_ref(0) = 0.25;
     x_centroid_ref(1) = 0.5;
     x_centroid_ref(2) = 1.0;
@@ -162,7 +168,7 @@ namespace
     const auto distype = Core::FE::CellType::pyramid5;
 
     Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1>
-        reference_coords_centroid_ref(true);
+        reference_coords_centroid_ref(Core::LinAlg::Initialization::zero);
 
     Discret::Elements::ElementNodes<distype> nodal_coordinates;
 
@@ -186,7 +192,8 @@ namespace
     nodal_coordinates.reference_coordinates(1, 4) = 0;
     nodal_coordinates.reference_coordinates(2, 4) = 4;
 
-    Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1> x_centroid_ref(true);
+    Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1> x_centroid_ref(
+        Core::LinAlg::Initialization::zero);
     x_centroid_ref(0) = 1.0;
     x_centroid_ref(1) = 0.0;
     x_centroid_ref(2) = 1.0;
@@ -202,7 +209,7 @@ namespace
     const auto distype = Core::FE::CellType::wedge6;
 
     Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1>
-        reference_coords_centroid_ref(true);
+        reference_coords_centroid_ref(Core::LinAlg::Initialization::zero);
 
     Discret::Elements::ElementNodes<distype> nodal_coordinates;
 
@@ -230,7 +237,8 @@ namespace
     nodal_coordinates.reference_coordinates(1, 5) = 6;
     nodal_coordinates.reference_coordinates(2, 5) = 1;
 
-    Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1> x_centroid_ref(true);
+    Core::LinAlg::Matrix<Discret::Elements::Internal::num_dim<distype>, 1> x_centroid_ref(
+        Core::LinAlg::Initialization::zero);
     x_centroid_ref(0) = 1;
     x_centroid_ref(1) = 2;
     x_centroid_ref(2) = 0.5;

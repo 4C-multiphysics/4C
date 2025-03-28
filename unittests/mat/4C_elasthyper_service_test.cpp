@@ -53,7 +53,7 @@ namespace
 
     // factors for stress calculation as in Holzapfel: Nonlinear Solid Mechanics, 2000:
     // p. 216 (6.32)
-    Core::LinAlg::Matrix<3, 1> gamma(true);
+    Core::LinAlg::Matrix<3, 1> gamma(Core::LinAlg::Initialization::zero);
     // reference solutions
     Core::LinAlg::Matrix<3, 1> gamma_ref;
     gamma_ref(0) = 5.294200000000001;
@@ -62,7 +62,7 @@ namespace
 
     // factors for calculation of elasticity tensor as in Holzapfel: Nonlinear Solid Mechanics,
     // 2000: p. 261 (6.194)
-    Core::LinAlg::Matrix<8, 1> delta(true);
+    Core::LinAlg::Matrix<8, 1> delta(Core::LinAlg::Initialization::zero);
     // reference solutions
     Core::LinAlg::Matrix<8, 1> delta_ref;
     delta_ref(0) = 125.31604;
@@ -91,9 +91,9 @@ namespace
     E_VoigtStrain(4, 0) = 0.02;
     E_VoigtStrain(5, 0) = 0.03;
 
-    Core::LinAlg::Matrix<6, 1> C_VoigtStrain(true);
+    Core::LinAlg::Matrix<6, 1> C_VoigtStrain(Core::LinAlg::Initialization::zero);
     // set up reference solution for Cauchy-Green tensor in strain-like voigt notation
-    Core::LinAlg::Matrix<6, 1> C_VoigtStrain_ref(true);
+    Core::LinAlg::Matrix<6, 1> C_VoigtStrain_ref(Core::LinAlg::Initialization::zero);
     C_VoigtStrain_ref(0) = 1.2;
     C_VoigtStrain_ref(1) = 1.4;
     C_VoigtStrain_ref(2) = 1.6;
@@ -129,7 +129,7 @@ namespace
     Mat::elast_hyper_properties(potsum, properties);
 
     // first derivative of strain energy function w.r.t. principle invariants
-    Core::LinAlg::Matrix<3, 1> dPI(true);
+    Core::LinAlg::Matrix<3, 1> dPI(Core::LinAlg::Initialization::zero);
     // reference solutions
     Core::LinAlg::Matrix<3, 1> dPI_ref;
     dPI_ref(0) = 0.639514;
@@ -137,7 +137,7 @@ namespace
     dPI_ref(2) = -0.629363;
 
     // second derivative of strain energy function w.r.t. principle invariants
-    Core::LinAlg::Matrix<6, 1> ddPII(true);
+    Core::LinAlg::Matrix<6, 1> ddPII(Core::LinAlg::Initialization::zero);
     // reference solutions
     Core::LinAlg::Matrix<6, 1> ddPII_ref;
     ddPII_ref(0) = 0.0;

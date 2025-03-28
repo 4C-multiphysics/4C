@@ -61,7 +61,8 @@ void BeamInteraction::BeamInteractionParams::setup()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-BeamInteraction::Data::CrosslinkerData::CrosslinkerData() : id_(-1), pos_(true), numbond_(0)
+BeamInteraction::Data::CrosslinkerData::CrosslinkerData()
+    : id_(-1), pos_(Core::LinAlg::Initialization::zero), numbond_(0)
 {
   bspots_ = std::vector<std::pair<int, int>>(2, std::pair<int, int>(-1, -1));
 }

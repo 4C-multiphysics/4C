@@ -68,9 +68,9 @@ void BeamInteraction::BeamToSolidSurfaceMeshtyingPairMortarFAD<ScalarType, Beam,
       Core::LinAlg::Matrix<Mortar::n_dof_, 1, double>(local_lambda_pos.data());
 
   // Initialize variables for local values.
-  Core::LinAlg::Matrix<3, 1, ScalarType> coupling_vector(true);
-  Core::LinAlg::Matrix<3, 1, double> lambda(true);
-  Core::LinAlg::Matrix<3, 1, double> dr_beam_ref(true);
+  Core::LinAlg::Matrix<3, 1, ScalarType> coupling_vector(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> lambda(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> dr_beam_ref(Core::LinAlg::Initialization::zero);
   ScalarType potential = 0.0;
 
   // Initialize scalar variables.
@@ -147,11 +147,13 @@ void BeamInteraction::BeamToSolidSurfaceMeshtyingPairMortarFAD<ScalarType, Beam,
   if (this->line_to_3D_segments_.size() == 0) return;
 
   // Initialize variables for local values.
-  Core::LinAlg::Matrix<3, 1, ScalarType> coupling_vector(true);
-  Core::LinAlg::Matrix<Mortar::n_dof_, 1, ScalarType> constraint_vector(true);
-  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_kappa(true);
-  Core::LinAlg::Matrix<3, 1, double> dr_beam_ref(true);
-  Core::LinAlg::Matrix<1, Mortar::n_nodes_ * Mortar::n_val_, double> N_mortar(true);
+  Core::LinAlg::Matrix<3, 1, ScalarType> coupling_vector(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<Mortar::n_dof_, 1, ScalarType> constraint_vector(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_kappa(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> dr_beam_ref(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, Mortar::n_nodes_ * Mortar::n_val_, double> N_mortar(
+      Core::LinAlg::Initialization::zero);
 
   // Initialize scalar variables.
   double segment_jacobian = 0.0;
@@ -257,7 +259,7 @@ void get_surface_basis(const Core::LinAlg::Matrix<3, 1, double>& xi,
     Core::LinAlg::Matrix<3, 3, ScalarTypeBasis>& surface_basis)
 {
   // Calculate surface basis vectors in the surface plane.
-  Core::LinAlg::Matrix<3, 2, ScalarTypeBasis> dr_surf(true);
+  Core::LinAlg::Matrix<3, 2, ScalarTypeBasis> dr_surf(Core::LinAlg::Initialization::zero);
   GEOMETRYPAIR::evaluate_position_derivative1<Surface>(xi, q_solid, dr_surf);
 
   Core::LinAlg::Matrix<3, 1, ScalarTypeBasis> dr_surf_0;
@@ -293,7 +295,7 @@ void get_surface_rotation_vector_averaged(const Core::LinAlg::Matrix<3, 1, doubl
     Core::LinAlg::Matrix<3, 1, ScalarTypeRotVec>& psi_solid)
 {
   // Get beam basis vectors in reference configuration.
-  Core::LinAlg::Matrix<3, 3, double> triad_beam_ref(true);
+  Core::LinAlg::Matrix<3, 3, double> triad_beam_ref(Core::LinAlg::Initialization::zero);
   Core::LargeRotations::quaterniontotriad(quaternion_beam_ref, triad_beam_ref);
 
   // Calculate surface basis coordinate transformation matrix.
@@ -331,7 +333,7 @@ void get_surface_rotation_vector_cross_section_director(
     Core::LinAlg::Matrix<3, 1, ScalarTypeRotVec>& psi_solid)
 {
   // Get beam basis vectors in reference configuration.
-  Core::LinAlg::Matrix<3, 3, double> triad_beam_ref(true);
+  Core::LinAlg::Matrix<3, 3, double> triad_beam_ref(Core::LinAlg::Initialization::zero);
   Core::LargeRotations::quaterniontotriad(quaternion_beam_ref, triad_beam_ref);
 
   // Get the surface basis vectors in the reference configuration.
@@ -509,10 +511,14 @@ void BeamInteraction::BeamToSolidSurfaceMeshtyingPairMortarRotationFAD<ScalarTyp
       this->params()->beam_to_solid_surface_meshtying_params()->get_surface_triad_construction();
 
   // Initialize local matrices.
-  Core::LinAlg::Matrix<n_dof_rot_, n_dof_rot_, double> local_stiff_BB(true);
-  Core::LinAlg::Matrix<n_dof_rot_, Surface::n_dof_, double> local_stiff_BS(true);
-  Core::LinAlg::Matrix<Surface::n_dof_, n_dof_rot_, double> local_stiff_SB(true);
-  Core::LinAlg::Matrix<Surface::n_dof_, Surface::n_dof_, double> local_stiff_SS(true);
+  Core::LinAlg::Matrix<n_dof_rot_, n_dof_rot_, double> local_stiff_BB(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<n_dof_rot_, Surface::n_dof_, double> local_stiff_BS(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<Surface::n_dof_, n_dof_rot_, double> local_stiff_SB(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<Surface::n_dof_, Surface::n_dof_, double> local_stiff_SS(
+      Core::LinAlg::Initialization::zero);
 
   // Evaluate the pair wise terms.
   {
@@ -535,9 +541,11 @@ void BeamInteraction::BeamToSolidSurfaceMeshtyingPairMortarRotationFAD<ScalarTyp
     Core::LinAlg::Matrix<3, 3, scalar_type_rot_1st> T_rel;
 
     Core::LinAlg::Matrix<Mortar::n_nodes_, 1, double> lambda_shape_functions;
-    Core::LinAlg::Matrix<3, Mortar::n_dof_, scalar_type_rot_1st> lambda_shape_functions_full(true);
+    Core::LinAlg::Matrix<3, Mortar::n_dof_, scalar_type_rot_1st> lambda_shape_functions_full(
+        Core::LinAlg::Initialization::zero);
     Core::LinAlg::SerialDenseVector L_i(3);
-    Core::LinAlg::Matrix<3, n_dof_rot_, scalar_type_rot_1st> L_full(true);
+    Core::LinAlg::Matrix<3, n_dof_rot_, scalar_type_rot_1st> L_full(
+        Core::LinAlg::Initialization::zero);
     std::vector<Core::LinAlg::Matrix<3, 3, double>> I_beam_tilde;
     Core::LinAlg::Matrix<3, n_dof_rot_, double> I_beam_tilde_full;
     Core::LinAlg::Matrix<3, n_dof_rot_, double> T_beam_times_I_beam_tilde_full;
@@ -761,12 +769,16 @@ void BeamInteraction::BeamToSolidSurfaceMeshtyingPairMortarRotationFAD<ScalarTyp
                 this->face_element_->get_face_element_data().element_position_(i_surface)));
 
   // Initialize local matrices.
-  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_g(true);
-  Core::LinAlg::Matrix<Mortar::n_dof_, n_dof_rot_, double> local_GB(true);
-  Core::LinAlg::Matrix<Mortar::n_dof_, Surface::n_dof_, double> local_GS(true);
-  Core::LinAlg::Matrix<n_dof_rot_, Mortar::n_dof_, double> local_FB(true);
-  Core::LinAlg::Matrix<Surface::n_dof_, Mortar::n_dof_, double> local_FS(true);
-  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_kappa(true);
+  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_g(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<Mortar::n_dof_, n_dof_rot_, double> local_GB(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<Mortar::n_dof_, Surface::n_dof_, double> local_GS(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<n_dof_rot_, Mortar::n_dof_, double> local_FB(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<Surface::n_dof_, Mortar::n_dof_, double> local_FS(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_kappa(Core::LinAlg::Initialization::zero);
 
   // Get the type of surface triad construction.
   const auto surface_triad_type =
@@ -792,9 +804,10 @@ void BeamInteraction::BeamToSolidSurfaceMeshtyingPairMortarRotationFAD<ScalarTyp
     Core::LinAlg::Matrix<3, 3, double> T_rel;
 
     Core::LinAlg::Matrix<Mortar::n_nodes_, 1, double> lambda_shape_functions;
-    Core::LinAlg::Matrix<3, Mortar::n_dof_, double> lambda_shape_functions_full(true);
+    Core::LinAlg::Matrix<3, Mortar::n_dof_, double> lambda_shape_functions_full(
+        Core::LinAlg::Initialization::zero);
     Core::LinAlg::SerialDenseVector L_i(3);
-    Core::LinAlg::Matrix<3, n_dof_rot_, double> L_full(true);
+    Core::LinAlg::Matrix<3, n_dof_rot_, double> L_full(Core::LinAlg::Initialization::zero);
     std::vector<Core::LinAlg::Matrix<3, 3, double>> I_beam_tilde;
     Core::LinAlg::Matrix<3, n_dof_rot_, double> I_beam_tilde_full;
     Core::LinAlg::Matrix<3, n_dof_rot_, double> T_beam_times_I_beam_tilde_full;

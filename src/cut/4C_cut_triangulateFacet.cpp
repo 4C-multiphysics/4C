@@ -479,7 +479,7 @@ unsigned int Cut::TriangulateFacet::find_second_best_ear(
       // skip points of the triangle itself
       if (reflInd == ind0 || reflInd == ind2) continue;
 
-      Core::LinAlg::Matrix<3, 1> point_cord(ptlist_[reflInd]);
+      Core::LinAlg::Matrix<3, 1> point_cord(Core::LinAlg::Initialization::zero);
       std::shared_ptr<Cut::Position> pos =
           Cut::Position::create(tri_coord, point_cord, Core::FE::CellType::tri3);
       // precise computation if it is inside

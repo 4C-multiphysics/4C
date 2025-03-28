@@ -734,8 +734,8 @@ namespace Cut
      */
     void point_at(const Core::LinAlg::Matrix<dim, 1>& rst, Core::LinAlg::Matrix<probdim, 1>& xyz)
     {
-      Core::LinAlg::Matrix<num_nodes_element, 1> funct(true);
-      Core::LinAlg::Matrix<probdim, num_nodes_element> xyze(true);
+      Core::LinAlg::Matrix<num_nodes_element, 1> funct(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<probdim, num_nodes_element> xyze(Core::LinAlg::Initialization::zero);
       this->coordinates(xyze);
 
       Core::FE::shape_function<elementtype>(rst, funct);

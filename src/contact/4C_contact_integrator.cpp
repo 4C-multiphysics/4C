@@ -5444,7 +5444,7 @@ void CONTACT::Integrator::deriv_xi_gp_3d(const Mortar::Element& sele, const Mort
     }
 
   // build 3x3 factor matrix L
-  Core::LinAlg::Matrix<3, 3> lmatrix(true);
+  Core::LinAlg::Matrix<3, 3> lmatrix(Core::LinAlg::Initialization::zero);
   for (int k = 0; k < 3; ++k) lmatrix(k, 2) = -sgpn[k];
   for (int z = 0; z < nummnode; ++z)
     for (int k = 0; k < 3; ++k)
@@ -5604,7 +5604,7 @@ void CONTACT::Integrator::deriv_xi_gp_3d_aux_plane(const Mortar::Element& ele, c
   ele.evaluate_shape(xigp, valxigp, derivxigp, numnode);
 
   // build 3x3 factor matrix L
-  Core::LinAlg::Matrix<3, 3> lmatrix(true);
+  Core::LinAlg::Matrix<3, 3> lmatrix(Core::LinAlg::Initialization::zero);
   for (int k = 0; k < 3; ++k) lmatrix(k, 2) = -auxn[k];
   for (int z = 0; z < numnode; ++z)
     for (int k = 0; k < 3; ++k)
@@ -12783,12 +12783,12 @@ double CONTACT::Integrator::t_det_deformation_gradient(
 
   // get coordinates of gauss point w.r.t. local parent coordinate system
   Core::LinAlg::SerialDenseMatrix pqxg(1, dim);
-  Core::LinAlg::Matrix<dim, dim> derivtrafo(true);
+  Core::LinAlg::Matrix<dim, dim> derivtrafo(Core::LinAlg::Initialization::zero);
 
   Core::FE::boundary_gp_to_parent_gp<dim>(pqxg, derivtrafo, intpoints,
       sele.parent_element()->shape(), sele.shape(), sele.face_parent_number());
 
-  Core::LinAlg::Matrix<dim, 1> pxsi(true);
+  Core::LinAlg::Matrix<dim, 1> pxsi(Core::LinAlg::Initialization::zero);
 
   // coordinates of the current integration point in parent coordinate system
   for (int idim = 0; idim < dim; idim++)
@@ -12797,7 +12797,8 @@ double CONTACT::Integrator::t_det_deformation_gradient(
   }
 
   Core::LinAlg::Matrix<dim, numnodes> pderiv_loc(
-      true);  // derivatives of parent element shape functions in parent element coordinate system
+      Core::LinAlg::Initialization::zero);  // derivatives of parent element shape functions in
+                                            // parent element coordinate system
 
   // evaluate derivatives of parent element shape functions at current integration point in parent
   // coordinate system
@@ -12819,8 +12820,10 @@ double CONTACT::Integrator::t_det_deformation_gradient(
   Core::LinAlg::Matrix<dim, dim> xjm;
   Core::LinAlg::Matrix<dim, dim> Jmat;
 
-  Core::LinAlg::Matrix<dim, numnodes> xrefe(true);  // material coord. of parent element
-  Core::LinAlg::Matrix<dim, numnodes> xcurr(true);  // current  coord. of parent element
+  Core::LinAlg::Matrix<dim, numnodes> xrefe(
+      Core::LinAlg::Initialization::zero);  // material coord. of parent element
+  Core::LinAlg::Matrix<dim, numnodes> xcurr(
+      Core::LinAlg::Initialization::zero);  // current  coord. of parent element
 
   // update element geometry of parent element
   {

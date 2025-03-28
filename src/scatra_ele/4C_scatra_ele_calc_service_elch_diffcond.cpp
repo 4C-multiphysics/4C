@@ -252,9 +252,9 @@ void Discret::Elements::ScaTraEleCalcElchDiffCond<distype, probdim>::calc_elch_d
 
   // state and history variables at element nodes
   std::vector<Core::LinAlg::Matrix<nen_, 1>> ephinp(
-      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
   std::vector<Core::LinAlg::Matrix<nen_, 1>> ehist(
-      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+      my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phinp, ephinp, lm);
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*hist, ehist, lm);
 
@@ -356,7 +356,7 @@ void Discret::Elements::ScaTraEleCalcElchDiffCond<distype, probdim>::calc_elch_d
         discretization.get_state("phidtnp");
     if (phidtnp == nullptr) FOUR_C_THROW("Cannot get state vector 'ephidtnp'");
     std::vector<Core::LinAlg::Matrix<nen_, 1>> ephidtnp(
-        my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(true));
+        my::numdofpernode_, Core::LinAlg::Matrix<nen_, 1>(Core::LinAlg::Initialization::zero));
     Core::FE::extract_my_values<Core::LinAlg::Matrix<nen_, 1>>(*phidtnp, ephidtnp, lm);
 
     if (not is_stationary)
@@ -725,11 +725,11 @@ void Discret::Elements::ScaTraEleCalcElchDiffCond<distype,
 
       // working arrays
       double potint(0.0);
-      Core::LinAlg::Matrix<1, 1> conint(true);
-      Core::LinAlg::Matrix<nsd_, 1> xint(true);
-      Core::LinAlg::Matrix<1, 1> c(true);
+      Core::LinAlg::Matrix<1, 1> conint(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd_, 1> xint(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<1, 1> c(Core::LinAlg::Initialization::zero);
       double deltapot(0.0);
-      Core::LinAlg::Matrix<1, 1> deltacon(true);
+      Core::LinAlg::Matrix<1, 1> deltacon(Core::LinAlg::Initialization::zero);
 
       // start loop over integration points
       for (int iquad = 0; iquad < intpoints.ip().nquad; iquad++)

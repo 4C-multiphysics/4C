@@ -37,7 +37,7 @@ namespace
       std::array<std::pair<double, Core::LinAlg::Matrix<3, 1>>, 3>& eigenpairs)
   {
     // auxiliaries
-    Core::LinAlg::Matrix<3, 1> temp3x1(true);
+    Core::LinAlg::Matrix<3, 1> temp3x1(Core::LinAlg::Initialization::zero);
 
     // loop through reference eigenpairs, determine the corresponding eigenpairs
     int tensor_ind;
@@ -135,7 +135,7 @@ namespace
   {
     // difference vector between the locations of matrices and the location of the determined base
     // matrix
-    Core::LinAlg::Matrix<loc_dim, 1> diff_locs(true);
+    Core::LinAlg::Matrix<loc_dim, 1> diff_locs(Core::LinAlg::Initialization::zero);
 
     // find matrix(or matrices) closest to the basis matrix
     double min_distance = -1.0;
@@ -258,7 +258,7 @@ Core::LinAlg::SecondOrderTensorInterpolator<loc_dim>::get_interpolated_matrix(
     const Core::LinAlg::Matrix<loc_dim, 1>& interp_loc)
 {
   // declare output variable
-  Core::LinAlg::Matrix<3, 3> output(true);
+  Core::LinAlg::Matrix<3, 3> output(Core::LinAlg::Initialization::zero);
 
   // assert if the number of input matrices does not match the number of input locations
   FOUR_C_ASSERT(ref_matrices.size() == ref_locs.size(),
@@ -266,11 +266,11 @@ Core::LinAlg::SecondOrderTensorInterpolator<loc_dim>::get_interpolated_matrix(
       "locations");
 
   // auxiliaries
-  Core::LinAlg::Matrix<3, 3> temp3x3(true);
-  Core::LinAlg::Matrix<3, 3> id3x3(true);
+  Core::LinAlg::Matrix<3, 3> temp3x3(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> id3x3(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 3; ++i) id3x3(i, i) = 1.0;
-  Core::LinAlg::Matrix<3, 1> temp3x1(true);
-  Core::LinAlg::Matrix<loc_dim, 1> diff_locs(true);
+  Core::LinAlg::Matrix<3, 1> temp3x1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<loc_dim, 1> diff_locs(Core::LinAlg::Initialization::zero);
 
   // interpolation setting: exponential decay factor of the weighting function in Satheesh,
   // 2024, 10.1002/nme.7373, Eq. (21)
@@ -391,7 +391,7 @@ Core::LinAlg::SecondOrderTensorInterpolator<loc_dim>::get_interpolated_matrix(
   Core::LinAlg::SerialDenseMatrix b_R(m, 3, true);
 
   // \f$ \log{\bm{\lambda}_{\text{x}_p}} \f$
-  Core::LinAlg::Matrix<3, 1> ln_lambda_interp(true);
+  Core::LinAlg::Matrix<3, 1> ln_lambda_interp(Core::LinAlg::Initialization::zero);
 
   // loop once more over all matrices with the updated info
   for (unsigned int i = 0; i < ref_locs.size(); ++i)
@@ -477,14 +477,14 @@ Core::LinAlg::SecondOrderTensorInterpolator<loc_dim>::get_interpolated_matrix(
 
   // ...for Q
   rot_serial_dense_vec.multiply(Teuchos::TRANS, Teuchos::NO_TRANS, 1.0, a_Q, p_vec, 0.0);
-  Core::LinAlg::Matrix<3, 1> rot_vect_Q_rel_interp(true);
+  Core::LinAlg::Matrix<3, 1> rot_vect_Q_rel_interp(Core::LinAlg::Initialization::zero);
   rot_vect_Q_rel_interp(0) = rot_serial_dense_vec(0);
   rot_vect_Q_rel_interp(1) = rot_serial_dense_vec(1);
   rot_vect_Q_rel_interp(2) = rot_serial_dense_vec(2);
 
   // ...for R
   rot_serial_dense_vec.multiply(Teuchos::TRANS, Teuchos::NO_TRANS, 1.0, a_R, p_vec, 0.0);
-  Core::LinAlg::Matrix<3, 1> rot_vect_R_rel_interp(true);
+  Core::LinAlg::Matrix<3, 1> rot_vect_R_rel_interp(Core::LinAlg::Initialization::zero);
   rot_vect_R_rel_interp(0) = rot_serial_dense_vec(0);
   rot_vect_R_rel_interp(1) = rot_serial_dense_vec(1);
   rot_vect_R_rel_interp(2) = rot_serial_dense_vec(2);
@@ -494,14 +494,14 @@ Core::LinAlg::SecondOrderTensorInterpolator<loc_dim>::get_interpolated_matrix(
   Core::LinAlg::Matrix<3, 3> R_rel_interp = calc_rot_matrix_from_rot_vect(rot_vect_R_rel_interp);
 
   // compute interpolated rotation tensors (absolute)
-  Core::LinAlg::Matrix<3, 3> Q_interp(true);
+  Core::LinAlg::Matrix<3, 3> Q_interp(Core::LinAlg::Initialization::zero);
   Q_interp.multiply_nn(1.0, all_Q[base_ind], Q_rel_interp, 0.0);
-  Core::LinAlg::Matrix<3, 3> R_interp(true);
+  Core::LinAlg::Matrix<3, 3> R_interp(Core::LinAlg::Initialization::zero);
   R_interp.multiply_nn(1.0, all_R[base_ind], R_rel_interp, 0.0);
 
   // STEP 4 (Satheesh, 2024, 10.1002/nme.7373, Section 2.5): interpolate eigenvalue tensor
   // we use the logarithmic weighted average to ensure a positive-definite lambda matrix
-  Core::LinAlg::Matrix<3, 3> lambda_interp(true);
+  Core::LinAlg::Matrix<3, 3> lambda_interp(Core::LinAlg::Initialization::zero);
   lambda_interp(0, 0) = std::exp(ln_lambda_interp(0));
   lambda_interp(1, 1) = std::exp(ln_lambda_interp(1));
   lambda_interp(2, 2) = std::exp(ln_lambda_interp(2));
@@ -522,16 +522,16 @@ void Core::LinAlg::matrix_3x3_polar_decomposition(const Core::LinAlg::Matrix<3, 
     std::array<std::pair<double, Core::LinAlg::Matrix<3, 1>>, 3>& spectral_pairs)
 {
   // auxiliaries
-  Core::LinAlg::Matrix<3, 3> temp3x3(true);
-  Core::LinAlg::Matrix<3, 1> temp3x1(true);
+  Core::LinAlg::Matrix<3, 3> temp3x3(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> temp3x1(Core::LinAlg::Initialization::zero);
 
   // compute squared stretch tensors U
-  Core::LinAlg::Matrix<3, 3> U_squared(true);
+  Core::LinAlg::Matrix<3, 3> U_squared(Core::LinAlg::Initialization::zero);
   U_squared.multiply_tn(1.0, inp_matrix, inp_matrix, 0.0);
 
   // decompose squared stretch tensors U
-  Core::LinAlg::Matrix<3, 3> eigenvectors_U(true);
-  Core::LinAlg::Matrix<3, 3> eigenvalues_U(true);
+  Core::LinAlg::Matrix<3, 3> eigenvectors_U(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> eigenvalues_U(Core::LinAlg::Initialization::zero);
   temp3x3.clear();
   Core::LinAlg::syev(U_squared, temp3x3, eigenvectors_U);
   eigenvalues_U(0, 0) = std::sqrt(temp3x3(0, 0));
@@ -573,13 +573,13 @@ Core::LinAlg::Matrix<3, 1> Core::LinAlg::calc_rot_vect_from_rot_matrix(
     const Core::LinAlg::Matrix<3, 3>& rot_matrix)
 {
   // declare output rotation vector
-  Core::LinAlg::Matrix<3, 1> rot_vect(true);
+  Core::LinAlg::Matrix<3, 1> rot_vect(Core::LinAlg::Initialization::zero);
 
   // --> interpolate quaternion from rotation matrix using Spurrier's algorithm
 
   // utilities
-  Core::LinAlg::Matrix<4, 1> tensor_characteristics(true);
-  Core::LinAlg::Matrix<4, 1> quaternion(true);
+  Core::LinAlg::Matrix<4, 1> tensor_characteristics(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<4, 1> quaternion(Core::LinAlg::Initialization::zero);
   double max_value = 0.0;
 
   // compute tensor characteristics for the algorithm
@@ -630,7 +630,7 @@ Core::LinAlg::Matrix<3, 1> Core::LinAlg::calc_rot_vect_from_rot_matrix(
     quaternion(2) = 1.0 / 4.0 * (rot_matrix(1, 2) + rot_matrix(2, 1)) / quaternion(3);
   }
   // compute unit quaternion
-  Core::LinAlg::Matrix<4, 1> unit_quaternion(true);
+  Core::LinAlg::Matrix<4, 1> unit_quaternion(Core::LinAlg::Initialization::zero);
   unit_quaternion.update(1.0 / quaternion.norm2(), quaternion, 0.0);
 
   // extract rotation vector
@@ -650,11 +650,11 @@ Core::LinAlg::Matrix<3, 3> Core::LinAlg::calc_rot_matrix_from_rot_vect(
     const Core::LinAlg::Matrix<3, 1>& rot_vect)
 {
   // auxiliaries
-  Core::LinAlg::Matrix<3, 3> id3x3(true);
+  Core::LinAlg::Matrix<3, 3> id3x3(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 3; ++i) id3x3(i, i) = 1.0;
 
   // declare output matrix
-  Core::LinAlg::Matrix<3, 3> rot_matrix(true);
+  Core::LinAlg::Matrix<3, 3> rot_matrix(Core::LinAlg::Initialization::zero);
 
   // add unit tensor to the rotation tensor
   rot_matrix.update(1.0, id3x3, 0.0);
@@ -667,11 +667,11 @@ Core::LinAlg::Matrix<3, 3> Core::LinAlg::calc_rot_matrix_from_rot_vect(
   if (angle > 1.0e-16)
   {
     // get normalized rotation vector
-    Core::LinAlg::Matrix<3, 1> norm_rot_vect(true);
+    Core::LinAlg::Matrix<3, 1> norm_rot_vect(Core::LinAlg::Initialization::zero);
     norm_rot_vect.update(1.0 / angle, rot_vect, 0.0);
 
     // compute S matrix with components from the normalized rotation vector
-    Core::LinAlg::Matrix<3, 3> S(true);
+    Core::LinAlg::Matrix<3, 3> S(Core::LinAlg::Initialization::zero);
     S(0, 1) = -norm_rot_vect(2);
     S(1, 0) = -S(0, 1);
     S(0, 2) = norm_rot_vect(1);
@@ -683,7 +683,7 @@ Core::LinAlg::Matrix<3, 3> Core::LinAlg::calc_rot_matrix_from_rot_vect(
     rot_matrix.update(std::sin(angle), S, 1.0);
 
     // \f$ \bm{S} \bm{S} \f$
-    Core::LinAlg::Matrix<3, 3> SS(true);
+    Core::LinAlg::Matrix<3, 3> SS(Core::LinAlg::Initialization::zero);
     SS.multiply_nn(1.0, S, S, 0.0);
 
     // update rotation matrix
@@ -713,7 +713,7 @@ Core::LinAlg::Matrix<3, 3> Core::LinAlg::SecondOrderTensorInterpolator<1>::get_i
   }
 
   // pack interpolation location to matrix
-  Core::LinAlg::Matrix<1, 1> converted_interp_loc(true);
+  Core::LinAlg::Matrix<1, 1> converted_interp_loc(Core::LinAlg::Initialization::zero);
   converted_interp_loc(0) = interp_loc;
 
   // call the general constructor with the matrix expressions

@@ -214,19 +214,19 @@ namespace Core::FE
       {
         case 1:
         {
-          Core::LinAlg::Matrix<2, 1> derivatives(false);
+          Core::LinAlg::Matrix<2, 1> derivatives(Core::LinAlg::Initialization::uninitialized);
           evaluate(point, derivatives);
           return derivatives(1, 0);
         }
         case 2:
         {
-          Core::LinAlg::Matrix<3, 1> derivatives(false);
+          Core::LinAlg::Matrix<3, 1> derivatives(Core::LinAlg::Initialization::uninitialized);
           evaluate(point, derivatives);
           return derivatives(2, 0);
         }
         case 3:
         {
-          Core::LinAlg::Matrix<4, 1> derivatives(false);
+          Core::LinAlg::Matrix<4, 1> derivatives(Core::LinAlg::Initialization::uninitialized);
           evaluate(point, derivatives);
           return derivatives(3, 0);
         }

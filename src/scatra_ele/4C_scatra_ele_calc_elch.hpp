@@ -332,8 +332,8 @@ namespace Discret
             frt_(0.),
             // internal variables evaluated at the Gauss point
             conintinv_(numscal),
-            gradpot_(true),
-            sgconv_(true)
+            gradpot_(Core::LinAlg::Initialization::zero),
+            sgconv_(Core::LinAlg::Initialization::zero)
       {
       }
       // compute and set internal variables used by Nernst-Planck formulation and the
@@ -359,7 +359,7 @@ namespace Discret
           const std::vector<Core::LinAlg::Matrix<nen, 1>>& ehist, bool do_setfrt = true)
       {
         // call base class (scatra)
-        const Core::LinAlg::Matrix<nsd, nen> eforcevelocity(true);
+        const Core::LinAlg::Matrix<nsd, nen> eforcevelocity(Core::LinAlg::Initialization::zero);
         my::set_internal_variables(funct, derxy, ephinp, ephin, econvelnp, ehist, eforcevelocity);
 
         // loop over all transported scalars

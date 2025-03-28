@@ -347,8 +347,8 @@ namespace Core::LinAlg
   template <const int n>
   void symmetric_positive_definite_inverse(Core::LinAlg::Matrix<n, n>& A)
   {
-    Core::LinAlg::Matrix<n, n> y(true);
-    Core::LinAlg::Matrix<n, n> ae(true);
+    Core::LinAlg::Matrix<n, n> y(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<n, n> ae(Core::LinAlg::Initialization::zero);
 
     // calc G with me=G*G^T
     for (int z = 0; z < n; ++z)

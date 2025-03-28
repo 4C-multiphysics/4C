@@ -112,7 +112,7 @@ void CONTACT::IntegratorNitscheFpi::gpts_forces(Mortar::Element& sele, Mortar::E
   bool FSI_integrated = true;  // bool indicates if fsi condition is already evaluated ... --> if
                                // true no contribution here ...
 
-  Core::LinAlg::Matrix<dim, 1> pxsi(true);
+  Core::LinAlg::Matrix<dim, 1> pxsi(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<dim, dim> derivtravo_slave;
   CONTACT::Utils::map_gp_to_parent<dim>(sele, sxi, wgt, pxsi, derivtravo_slave);
 

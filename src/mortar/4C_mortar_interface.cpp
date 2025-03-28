@@ -985,7 +985,7 @@ std::shared_ptr<Core::Binstrategy::BinningStrategy> Mortar::Interface::setup_bin
     const Core::FE::ShapeFunctionType spatial_approximation_type)
 {
   // Initialize eXtendedAxisAlignedBoundingBox (XAABB)
-  Core::LinAlg::Matrix<3, 2> XAABB(false);
+  Core::LinAlg::Matrix<3, 2> XAABB(Core::LinAlg::Initialization::uninitialized);
   for (unsigned int dim = 0; dim < 3; ++dim)
   {
     XAABB(dim, 0) = +1.0e12;

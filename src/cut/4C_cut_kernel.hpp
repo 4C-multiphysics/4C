@@ -1378,7 +1378,10 @@ namespace Cut::Kernel
   {
    public:
     ComputePositionAdaptivePrecision(Core::LinAlg::Matrix<dim, 1>& xsi)
-        : Strategy(clnxsi_, true), xsi_(xsi), clnxsi_(true), cond_infinity_(false)
+        : Strategy(clnxsi_, true),
+          xsi_(xsi),
+          clnxsi_(Core::LinAlg::Initialization::zero),
+          cond_infinity_(false)
     {
     }
 
@@ -2455,7 +2458,10 @@ namespace Cut::Kernel
    public:
     /// constructor
     ComputeDistanceAdaptivePrecision(Core::LinAlg::Matrix<prob_dim, 1>& xsi, bool checklimits)
-        : Strategy(clnxsi_, checklimits), xsi_(xsi), clnxsi_(true), cond_infinity_(false)
+        : Strategy(clnxsi_, checklimits),
+          xsi_(xsi),
+          clnxsi_(Core::LinAlg::Initialization::zero),
+          cond_infinity_(false)
     {
     }
 
@@ -3887,7 +3893,10 @@ namespace Cut::Kernel
     //! constructor
     ComputeIntersectionAdaptivePrecision(
         Core::LinAlg::Matrix<dim_edge + dim_side, 1>& xsi, bool checklimits)
-        : Strategy(clnxsi_, checklimits), xsi_(xsi), clnxsi_(true), cond_infinity_(false)
+        : Strategy(clnxsi_, checklimits),
+          xsi_(xsi),
+          clnxsi_(Core::LinAlg::Initialization::zero),
+          cond_infinity_(false)
     {
     }
 

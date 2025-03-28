@@ -99,8 +99,9 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPair2D3DFull<Beam, Solid>::evalu
           nullptr);
 
   // Initialize pair wise vectors and matrices.
-  Core::LinAlg::Matrix<n_dof_pair_, 1, double> force_pair(true);
-  Core::LinAlg::Matrix<n_dof_pair_, n_dof_pair_, double> stiff_pair(true);
+  Core::LinAlg::Matrix<n_dof_pair_, 1, double> force_pair(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<n_dof_pair_, n_dof_pair_, double> stiff_pair(
+      Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<n_dof_pair_, 1, scalar_type_pair> force_pair_local;
   Core::LinAlg::Matrix<n_dof_pair_, 3, double> d_force_d_psi;
   Core::LinAlg::Matrix<n_dof_pair_, n_dof_rot_, double> local_stiffness_rot;

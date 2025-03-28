@@ -19,7 +19,7 @@ template <unsigned int nnode, unsigned int vpernode>
 double Discret::Elements::Beam3Base::calc_reflength(
     const Core::LinAlg::Matrix<3 * vpernode * nnode, 1, double>& disp_refe_centerline)
 {
-  Core::LinAlg::Matrix<3, 1> tempvec(true);
+  Core::LinAlg::Matrix<3, 1> tempvec(Core::LinAlg::Initialization::zero);
 
   for (int dim = 0; dim < 3; dim++)
     tempvec(dim) = disp_refe_centerline(3 * vpernode * 1 + dim) - disp_refe_centerline(dim);

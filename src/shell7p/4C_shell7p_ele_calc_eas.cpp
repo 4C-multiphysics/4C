@@ -443,7 +443,7 @@ void Discret::Elements::Shell7pEleCalcEas<distype>::calculate_stresses_strains(
 
           // update the deformation gradient
           Core::LinAlg::Matrix<Shell::Internal::num_dim, Shell::Internal::num_dim> defgrd_enh(
-              false);
+              Core::LinAlg::Initialization::uninitialized);
           Shell::calc_consistent_defgrd<Shell::Internal::num_dim>(
               strains.defgrd_, strains.gl_strain_, defgrd_enh);
           strains.defgrd_ = defgrd_enh;
@@ -615,7 +615,7 @@ void Discret::Elements::Shell7pEleCalcEas<distype>::evaluate_nonlinear_force_sti
           if (solid_material.needs_defgrd())
           {
             Core::LinAlg::Matrix<Shell::Internal::num_dim, Shell::Internal::num_dim> defgrd_enh(
-                false);
+                Core::LinAlg::Initialization::uninitialized);
             Shell::calc_consistent_defgrd<Shell::Internal::num_dim>(
                 strains.defgrd_, strains.gl_strain_, defgrd_enh);
             strains.defgrd_ = defgrd_enh;
@@ -868,7 +868,7 @@ void Discret::Elements::Shell7pEleCalcEas<distype>::update(Core::Elements::Eleme
               // update the deformation gradient (if needed)
               Core::LinAlg::Matrix<Discret::Elements::Shell::Internal::num_dim,
                   Discret::Elements::Shell::Internal::num_dim>
-                  defgrd_enh(false);
+                  defgrd_enh(Core::LinAlg::Initialization::uninitialized);
               Shell::calc_consistent_defgrd<Shell::Internal::num_dim>(
                   strains.defgrd_, strains.gl_strain_, defgrd_enh);
               strains.defgrd_ = defgrd_enh;

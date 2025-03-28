@@ -82,18 +82,18 @@ namespace
     const auto element_data_solid = xtest_setup_tri3();
 
     // Point to project to.
-    Core::LinAlg::Matrix<3, 1, double> point(true);
+    Core::LinAlg::Matrix<3, 1, double> point(Core::LinAlg::Initialization::zero);
     point(0) = 0.3;
     point(1) = 0.1;
     point(2) = 0.2;
 
     // Project the point to the surface.
-    Core::LinAlg::Matrix<3, 1, double> xi(true);
+    Core::LinAlg::Matrix<3, 1, double> xi(Core::LinAlg::Initialization::zero);
     ProjectionResult projection_result;
     pair.project_point_to_other(point, element_data_solid, xi, projection_result);
 
     // Check the results.
-    Core::LinAlg::Matrix<3, 1, double> xi_result(true);
+    Core::LinAlg::Matrix<3, 1, double> xi_result(Core::LinAlg::Initialization::zero);
     xi_result(0) = 0.3457692493957274;
     xi_result(1) = 0.2853120425437799;
     xi_result(2) = 0.03218342274405913;
@@ -117,18 +117,18 @@ namespace
     const auto element_data_solid = xtest_setup_tri6();
 
     // Point to project to.
-    Core::LinAlg::Matrix<3, 1, double> point(true);
+    Core::LinAlg::Matrix<3, 1, double> point(Core::LinAlg::Initialization::zero);
     point(0) = 0.3;
     point(1) = 0.1;
     point(2) = 0.2;
 
     // Project the point to the surface.
-    Core::LinAlg::Matrix<3, 1, double> xi(true);
+    Core::LinAlg::Matrix<3, 1, double> xi(Core::LinAlg::Initialization::zero);
     ProjectionResult projection_result;
     pair.project_point_to_other(point, element_data_solid, xi, projection_result);
 
     // Check the results.
-    Core::LinAlg::Matrix<3, 1, double> xi_result(true);
+    Core::LinAlg::Matrix<3, 1, double> xi_result(Core::LinAlg::Initialization::zero);
     xi_result(0) = 0.3274411842809972;
     xi_result(1) = 0.1649919700896869;
     xi_result(2) = 0.2749865824042791;
@@ -152,18 +152,18 @@ namespace
     const auto element_data_solid = xtest_setup_quad4();
 
     // Point to project to.
-    Core::LinAlg::Matrix<3, 1, double> point(true);
+    Core::LinAlg::Matrix<3, 1, double> point(Core::LinAlg::Initialization::zero);
     point(0) = 0.8;
     point(1) = 0.2;
     point(2) = 0.5;
 
     // Project the point to the surface.
-    Core::LinAlg::Matrix<3, 1, double> xi(true);
+    Core::LinAlg::Matrix<3, 1, double> xi(Core::LinAlg::Initialization::zero);
     ProjectionResult projection_result;
     pair.project_point_to_other(point, element_data_solid, xi, projection_result);
 
     // Check the results.
-    Core::LinAlg::Matrix<3, 1, double> xi_result(true);
+    Core::LinAlg::Matrix<3, 1, double> xi_result(Core::LinAlg::Initialization::zero);
     xi_result(0) = 0.6306816217205055;
     xi_result(1) = -0.2391123963538002;
     xi_result(2) = 0.1168739495183324;
@@ -187,18 +187,18 @@ namespace
     const auto element_data_solid = xtest_setup_quad8();
 
     // Point to project to.
-    Core::LinAlg::Matrix<3, 1, double> point(true);
+    Core::LinAlg::Matrix<3, 1, double> point(Core::LinAlg::Initialization::zero);
     point(0) = 0.8;
     point(1) = 0.2;
     point(2) = 0.5;
 
     // Project the point to the surface.
-    Core::LinAlg::Matrix<3, 1, double> xi(true);
+    Core::LinAlg::Matrix<3, 1, double> xi(Core::LinAlg::Initialization::zero);
     ProjectionResult projection_result;
     pair.project_point_to_other(point, element_data_solid, xi, projection_result);
 
     // Check the results.
-    Core::LinAlg::Matrix<3, 1, double> xi_result(true);
+    Core::LinAlg::Matrix<3, 1, double> xi_result(Core::LinAlg::Initialization::zero);
     xi_result(0) = -0.167932271257968;
     xi_result(1) = 0.1593451990533972;
     xi_result(2) = 0.6729448863050194;
@@ -222,18 +222,18 @@ namespace
     const auto element_data_solid = xtest_setup_quad9();
 
     // Point to project to.
-    Core::LinAlg::Matrix<3, 1, double> point(true);
+    Core::LinAlg::Matrix<3, 1, double> point(Core::LinAlg::Initialization::zero);
     point(0) = 0.8;
     point(1) = 0.2;
     point(2) = 0.5;
 
     // Project the point to the surface.
-    Core::LinAlg::Matrix<3, 1, double> xi(true);
+    Core::LinAlg::Matrix<3, 1, double> xi(Core::LinAlg::Initialization::zero);
     ProjectionResult projection_result;
     pair.project_point_to_other(point, element_data_solid, xi, projection_result);
 
     // Check the results.
-    Core::LinAlg::Matrix<3, 1, double> xi_result(true);
+    Core::LinAlg::Matrix<3, 1, double> xi_result(Core::LinAlg::Initialization::zero);
     xi_result(0) = 0.3784195771508677;
     xi_result(1) = -0.436333510864013;
     xi_result(2) = 0.2483249147920992;
@@ -259,7 +259,7 @@ namespace
 
     // Intersect the beam with the surface.
     std::vector<ProjectionPoint1DTo3D<double>> intersection_points;
-    Core::LinAlg::Matrix<3, 1, double> xi_start(true);
+    Core::LinAlg::Matrix<3, 1, double> xi_start(Core::LinAlg::Initialization::zero);
     pair.intersect_line_with_other(
         element_data_line, element_data_solid, intersection_points, 0., xi_start);
 
@@ -307,7 +307,7 @@ namespace
 
     // Intersect the beam with the surface.
     std::vector<ProjectionPoint1DTo3D<double>> intersection_points;
-    Core::LinAlg::Matrix<3, 1, double> xi_start(true);
+    Core::LinAlg::Matrix<3, 1, double> xi_start(Core::LinAlg::Initialization::zero);
     pair.intersect_line_with_other(
         element_data_line, element_data_solid, intersection_points, 0., xi_start);
 
@@ -354,7 +354,7 @@ namespace
 
     // Intersect the beam with the surface.
     std::vector<ProjectionPoint1DTo3D<double>> intersection_points;
-    Core::LinAlg::Matrix<3, 1, double> xi_start(true);
+    Core::LinAlg::Matrix<3, 1, double> xi_start(Core::LinAlg::Initialization::zero);
     pair.intersect_line_with_other(
         element_data_line, element_data_solid, intersection_points, 0., xi_start);
 
@@ -402,7 +402,7 @@ namespace
 
     // Intersect the beam with the surface.
     std::vector<ProjectionPoint1DTo3D<double>> intersection_points;
-    Core::LinAlg::Matrix<3, 1, double> xi_start(true);
+    Core::LinAlg::Matrix<3, 1, double> xi_start(Core::LinAlg::Initialization::zero);
     pair.intersect_line_with_other(
         element_data_line, element_data_solid, intersection_points, 0., xi_start);
 
@@ -449,7 +449,7 @@ namespace
 
     // Intersect the beam with the surface.
     std::vector<ProjectionPoint1DTo3D<double>> intersection_points;
-    Core::LinAlg::Matrix<3, 1, double> xi_start(true);
+    Core::LinAlg::Matrix<3, 1, double> xi_start(Core::LinAlg::Initialization::zero);
     pair.intersect_line_with_other(
         element_data_line, element_data_solid, intersection_points, 0., xi_start);
 

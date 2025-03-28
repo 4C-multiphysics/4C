@@ -97,7 +97,7 @@ void Discret::Elements::ScaTraEleSTIElch<distype>::extract_element_and_node_valu
 template <Core::FE::CellType distype>
 Discret::Elements::ScaTraEleSTIElch<distype>::ScaTraEleSTIElch(
     const int numdofpernode, const int numscal, const std::string& disname)
-    : econcnp_(true), epotnp_(true)
+    : econcnp_(Core::LinAlg::Initialization::zero), epotnp_(Core::LinAlg::Initialization::zero)
 {
   return;
 }

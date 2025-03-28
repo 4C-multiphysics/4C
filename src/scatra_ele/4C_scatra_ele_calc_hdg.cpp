@@ -778,7 +778,7 @@ void Discret::Elements::ScaTraEleCalcHDG<distype,
 
 
   // coordinate of gauss points
-  Core::LinAlg::Matrix<probdim, 1> gp_coord(true);
+  Core::LinAlg::Matrix<probdim, 1> gp_coord(Core::LinAlg::Initialization::zero);
 
   for (int q = 0; q < intpoints.ip().nquad; ++q)
   {

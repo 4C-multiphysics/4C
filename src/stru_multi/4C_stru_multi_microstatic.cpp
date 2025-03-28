@@ -805,7 +805,7 @@ void MultiScale::MicroStatic::evaluate_micro_bc(
       // deformation gradient
       double disp_prescribed[3];
       Core::LinAlg::Matrix<3, 3> Du(defgrd->data(), false);
-      Core::LinAlg::Matrix<3, 3> I(true);
+      Core::LinAlg::Matrix<3, 3> I(Core::LinAlg::Initialization::zero);
       I(0, 0) = -1.0;
       I(1, 1) = -1.0;
       I(2, 2) = -1.0;
@@ -918,7 +918,7 @@ void MultiScale::MicroStatic::static_homogenization(Core::LinAlg::Matrix<6, 1>* 
 
   freactn_->scale(-1.0);
 
-  Core::LinAlg::Matrix<3, 3> P(true);
+  Core::LinAlg::Matrix<3, 3> P(Core::LinAlg::Initialization::zero);
 
   for (int i = 0; i < 3; ++i)
   {

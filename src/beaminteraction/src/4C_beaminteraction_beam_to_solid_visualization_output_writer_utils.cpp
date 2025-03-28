@@ -103,7 +103,7 @@ void BeamInteraction::add_averaged_nodal_normals(
       Core::LinAlg::Matrix<3, 1, double> X, u, r, n, n_averaged;
 
       // Set the element parameter coordinates.
-      Core::LinAlg::Matrix<2, 1, double> xi(true);
+      Core::LinAlg::Matrix<2, 1, double> xi(Core::LinAlg::Initialization::zero);
       Core::LinAlg::SerialDenseMatrix nodal_coordinates =
           Core::FE::get_ele_node_numbering_nodes_paramspace(
               face_element_iterator.second->get_element()->shape());
@@ -183,9 +183,9 @@ void BeamInteraction::get_global_coupling_force_resultants(const Core::FE::Discr
 void BeamInteraction::get_node_coupling_force_resultants(const std::vector<double>& local_force,
     const std::vector<double>& local_position, Core::LinAlg::Matrix<3, 2, double>& resultant)
 {
-  Core::LinAlg::Matrix<3, 1, double> node_pos(true);
-  Core::LinAlg::Matrix<3, 1, double> node_force(true);
-  Core::LinAlg::Matrix<3, 1, double> node_moment(true);
+  Core::LinAlg::Matrix<3, 1, double> node_pos(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> node_force(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> node_moment(Core::LinAlg::Initialization::zero);
 
   // Add the force values for this node to the resultants and get the local node position.
   for (unsigned int dim = 0; dim < 3; ++dim)

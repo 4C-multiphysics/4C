@@ -128,7 +128,8 @@ void BeamInteraction::SUBMODELEVALUATOR::SphereBeamLinking::reset()
               discret().g_element(elepairptr->get_ele_gid(1)));
 
       // init position of linker nodes
-      std::vector<Core::LinAlg::Matrix<3, 1>> pos(2, Core::LinAlg::Matrix<3, 1>(true));
+      std::vector<Core::LinAlg::Matrix<3, 1>> pos(
+          2, Core::LinAlg::Matrix<3, 1>(Core::LinAlg::Initialization::zero));
 
       // sphere current position
       std::vector<double> sphereeledisp;
@@ -152,7 +153,8 @@ void BeamInteraction::SUBMODELEVALUATOR::SphereBeamLinking::reset()
       periodic_bounding_box_ptr()->un_shift_3d(pos[1], pos[0]);
 
       // dummy triad
-      std::vector<Core::LinAlg::Matrix<3, 3>> dummy_triad(2, Core::LinAlg::Matrix<3, 3>(true));
+      std::vector<Core::LinAlg::Matrix<3, 3>> dummy_triad(
+          2, Core::LinAlg::Matrix<3, 3>(Core::LinAlg::Initialization::zero));
 
       // finally reset state
       elepairptr->reset_state(pos, dummy_triad);
@@ -657,7 +659,8 @@ void BeamInteraction::SUBMODELEVALUATOR::SphereBeamLinking::write_output_runtime
               discret().g_element(elepairptr->get_ele_gid(1)));
 
       // init position of linker nodes
-      std::vector<Core::LinAlg::Matrix<3, 1>> pos(2, Core::LinAlg::Matrix<3, 1>(true));
+      std::vector<Core::LinAlg::Matrix<3, 1>> pos(
+          2, Core::LinAlg::Matrix<3, 1>(Core::LinAlg::Initialization::zero));
 
       // sphere current position
       std::vector<double> sphereeledisp;
@@ -784,7 +787,7 @@ void BeamInteraction::SUBMODELEVALUATOR::SphereBeamLinking::check_feasibility_of
       discret(), currele, *beam_interaction_data_state().get_dis_col_np(), sphereeledisp);
 
   // note: sphere has just one node (with three translational dofs)
-  Core::LinAlg::Matrix<3, 1> spherepos(true);
+  Core::LinAlg::Matrix<3, 1> spherepos(Core::LinAlg::Initialization::zero);
   for (unsigned int dim = 0; dim < 3; ++dim)
     spherepos(dim) = sphere->nodes()[0]->x()[dim] + sphereeledisp[dim];
 
@@ -804,8 +807,8 @@ void BeamInteraction::SUBMODELEVALUATOR::SphereBeamLinking::check_feasibility_of
     BeamInteraction::Utils::get_current_unshifted_element_dis(discret(), beamele,
         *beam_interaction_data_state().get_dis_col_np(), periodic_bounding_box(), beameledisp);
 
-    Core::LinAlg::Matrix<3, 1> bspotpos(true);
-    Core::LinAlg::Matrix<3, 3> bspottriad(true);
+    Core::LinAlg::Matrix<3, 1> bspotpos(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 3> bspottriad(Core::LinAlg::Initialization::zero);
 
     // loop over binding spots of neighboring element
     unsigned int numbspots = beamele->get_number_of_binding_spots(
@@ -881,11 +884,11 @@ void BeamInteraction::SUBMODELEVALUATOR::SphereBeamLinking::check_feasibility_of
           spherebeamlinking_params_ptr_->get_linker_material()->linker_type(), rand_bsp[bspot_i]);
 
       // note: we use first base vector instead of tangent vector here
-      Core::LinAlg::Matrix<3, 1> curr_bindingspot_beam_tangent(true);
+      Core::LinAlg::Matrix<3, 1> curr_bindingspot_beam_tangent(Core::LinAlg::Initialization::zero);
       for (unsigned int idim = 0; idim < 3; ++idim)
         curr_bindingspot_beam_tangent(idim) = bspottriad(idim, 0);
 
-      Core::LinAlg::Matrix<3, 1> dist_vec(true);
+      Core::LinAlg::Matrix<3, 1> dist_vec(Core::LinAlg::Initialization::zero);
       dist_vec.update(1.0, bspotpos, -1.0, spherepos);
 
       double const linkanglemin =
@@ -923,7 +926,8 @@ void BeamInteraction::SUBMODELEVALUATOR::SphereBeamLinking::create_beam_to_spher
   for (auto const& newlinkiter : newlinks)
   {
     // init position of linker nodes
-    std::vector<Core::LinAlg::Matrix<3, 1>> pos(2, Core::LinAlg::Matrix<3, 1>(true));
+    std::vector<Core::LinAlg::Matrix<3, 1>> pos(
+        2, Core::LinAlg::Matrix<3, 1>(Core::LinAlg::Initialization::zero));
 
     int const spheregid = newlinkiter.first;
     // get elements
@@ -971,7 +975,8 @@ void BeamInteraction::SUBMODELEVALUATOR::SphereBeamLinking::create_beam_to_spher
       int id = BeamInteraction::Utils::cantor_pairing(eleids[1]);
 
       // dummy triad
-      std::vector<Core::LinAlg::Matrix<3, 3>> dummy_triad(2, Core::LinAlg::Matrix<3, 3>(true));
+      std::vector<Core::LinAlg::Matrix<3, 3>> dummy_triad(
+          2, Core::LinAlg::Matrix<3, 3>(Core::LinAlg::Initialization::zero));
 
       // finally initialize and setup object
       linkelepairptr->init(id, eleids, pos, dummy_triad,
@@ -1078,8 +1083,8 @@ void BeamInteraction::SUBMODELEVALUATOR::SphereBeamLinking::
   // check if linker is stretched -> sgn+ or compressed -> sgn- by checking orientation of force
   // vector note: this works only if there are no other forces (like inertia, stochastic, damping)
   // acting on the linker
-  Core::LinAlg::Matrix<3, 1> dist_vec(true);
-  Core::LinAlg::Matrix<3, 1> bspotforceone(true);
+  Core::LinAlg::Matrix<3, 1> dist_vec(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1> bspotforceone(Core::LinAlg::Initialization::zero);
   dist_vec.update(
       -1.0, linkelepairptr->get_bind_spot_pos1(), 1.0, linkelepairptr->get_bind_spot_pos2());
   for (unsigned int j = 0; j < 3; ++j) bspotforceone(j) = bspotforce_one(j);

@@ -335,7 +335,7 @@ void CONTACT::Element::d_jac_d_xi(
         1.0 / sqrt(cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]);
 
     // 2nd deriv. evaluation
-    Core::LinAlg::Matrix<3, 3> gsec(true);
+    Core::LinAlg::Matrix<3, 3> gsec(Core::LinAlg::Initialization::zero);
     for (int i = 0; i < num_node(); ++i)
       for (int k = 0; k < 3; ++k)
         for (int d = 0; d < 3; ++d) gsec(k, d) += secderiv(i, d) * coord(k, i);

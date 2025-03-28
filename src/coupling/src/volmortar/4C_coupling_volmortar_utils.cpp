@@ -37,7 +37,7 @@ void Coupling::VolMortar::Utils::DefaultMaterialStrategy::assign_material2_to1(
       Core::Elements::Element* actele2 = dis2->g_element(ids_2[i]);
       std::vector<double> centercoords2 = Core::FE::element_center_refe_coords(*actele2);
 
-      Core::LinAlg::Matrix<3, 1> diffcoords(true);
+      Core::LinAlg::Matrix<3, 1> diffcoords(Core::LinAlg::Initialization::zero);
 
       for (int j = 0; j < 3; ++j) diffcoords(j, 0) = centercoords1[j] - centercoords2[j];
 
@@ -80,7 +80,7 @@ void Coupling::VolMortar::Utils::DefaultMaterialStrategy::assign_material1_to2(
       Core::Elements::Element* actele1 = dis1->g_element(ids_1[i]);
       std::vector<double> centercoords1 = Core::FE::element_center_refe_coords(*actele1);
 
-      Core::LinAlg::Matrix<3, 1> diffcoords(true);
+      Core::LinAlg::Matrix<3, 1> diffcoords(Core::LinAlg::Initialization::zero);
 
       for (int j = 0; j < 3; ++j) diffcoords(j, 0) = centercoords1[j] - centercoords2[j];
 

@@ -282,8 +282,8 @@ void Solid::MonitorDbc::execute(Core::IO::DiscretizationWriter& writer)
   std::array<double, 2> area = {0.0, 0.0};
   double& area_ref = area[0];
   double& area_curr = area[1];
-  Core::LinAlg::Matrix<DIM, 1> rforce_xyz(false);
-  Core::LinAlg::Matrix<DIM, 1> rmoment_xyz(false);
+  Core::LinAlg::Matrix<DIM, 1> rforce_xyz(Core::LinAlg::Initialization::uninitialized);
+  Core::LinAlg::Matrix<DIM, 1> rmoment_xyz(Core::LinAlg::Initialization::uninitialized);
 
   auto filepath = full_filepaths_.cbegin();
   for (const std::shared_ptr<Core::Conditions::Condition>& rcond_ptr : rconds)
@@ -512,7 +512,7 @@ double Solid::MonitorDbc::get_reaction_force(Core::LinAlg::Matrix<DIM, 1>& rforc
   Core::LinAlg::Vector<double> complete_freact(*gstate_ptr_->get_freact_np());
   dbc_ptr_->rotate_global_to_local(complete_freact);
 
-  Core::LinAlg::Matrix<DIM, 1> lrforce_xyz(true);
+  Core::LinAlg::Matrix<DIM, 1> lrforce_xyz(Core::LinAlg::Initialization::zero);
   for (unsigned d = 0; d < DIM; ++d)
   {
     std::shared_ptr<Core::LinAlg::Vector<double>> partial_freact_ptr =
@@ -539,10 +539,10 @@ double Solid::MonitorDbc::get_reaction_moment(Core::LinAlg::Matrix<DIM, 1>& rmom
   Core::LinAlg::Vector<double> complete_freact(*gstate_ptr_->get_freact_np());
   dbc_ptr_->rotate_global_to_local(complete_freact);
 
-  Core::LinAlg::Matrix<DIM, 1> lrmoment_xyz(true);
-  Core::LinAlg::Matrix<DIM, 1> node_reaction_force(true);
-  Core::LinAlg::Matrix<DIM, 1> node_position(true);
-  Core::LinAlg::Matrix<DIM, 1> node_reaction_moment(true);
+  Core::LinAlg::Matrix<DIM, 1> lrmoment_xyz(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<DIM, 1> node_reaction_force(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<DIM, 1> node_position(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<DIM, 1> node_reaction_moment(Core::LinAlg::Initialization::zero);
   std::vector<int> node_gid(3);
 
   const auto onoff = rcond->parameters().get<std::vector<int>>("ONOFF");

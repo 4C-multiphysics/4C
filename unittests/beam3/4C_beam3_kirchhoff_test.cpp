@@ -41,11 +41,11 @@ namespace
 
       // setup internal beam element parameters
       // different data layout is necessary to call this method
-      Core::LinAlg::Matrix<3, 1> coord1(true);
+      Core::LinAlg::Matrix<3, 1> coord1(Core::LinAlg::Initialization::zero);
       coord1(0) = xrefe[0][0];
       coord1(1) = xrefe[0][1];
       coord1(2) = xrefe[0][2];
-      Core::LinAlg::Matrix<3, 1> coord2(true);
+      Core::LinAlg::Matrix<3, 1> coord2(Core::LinAlg::Initialization::zero);
       coord2(0) = xrefe[1][0];
       coord2(1) = xrefe[1][1];
       coord2(2) = xrefe[1][2];

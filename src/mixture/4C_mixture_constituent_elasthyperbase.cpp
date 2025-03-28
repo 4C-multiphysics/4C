@@ -241,7 +241,7 @@ bool Mixture::MixtureConstituentElastHyperBase::evaluate_output_data(
   {
     for (int gp = 0; gp < num_gp(); ++gp)
     {
-      static Core::LinAlg::Matrix<9, 1> tmp(false);
+      static Core::LinAlg::Matrix<9, 1> tmp(Core::LinAlg::Initialization::uninitialized);
       tmp.clear();
       Core::LinAlg::Voigt::matrix_3x3_to_9x1(prestretch_[gp], tmp);
 

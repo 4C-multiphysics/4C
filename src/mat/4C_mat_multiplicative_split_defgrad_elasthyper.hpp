@@ -173,46 +173,46 @@ namespace Mat
       // ----- variables of kinetic quantities ----- //
 
       /// inverse right Cauchy-Green tensor \f$ \mathbf{C}^{-1} \f$ stored as 6x1 vector
-      Core::LinAlg::Matrix<6, 1> iCV{true};
+      Core::LinAlg::Matrix<6, 1> iCV{Core::LinAlg::Initialization::zero};
       /// inverse inelastic right Cauchy-Green tensor \f$\mathbf{C}_\text{in}^{-1}\f$ stored as 6x1
       /// vector
-      Core::LinAlg::Matrix<6, 1> iCinV{true};
+      Core::LinAlg::Matrix<6, 1> iCinV{Core::LinAlg::Initialization::zero};
       /// \f$ \mathbf{C}_\text{in}^{-1} \cdot \mathbf{C} \cdot \mathbf{C}_\text{in}^{-1} \f$ stored
       /// as 6x1 vector
-      Core::LinAlg::Matrix<6, 1> iCinCiCinV{true};
+      Core::LinAlg::Matrix<6, 1> iCinCiCinV{Core::LinAlg::Initialization::zero};
       /// \f$ \mathbf{C}_\text{in}^{-1} \cdot \mathbf{C} \f$
-      Core::LinAlg::Matrix<3, 3> iCinCM{true};
+      Core::LinAlg::Matrix<3, 3> iCinCM{Core::LinAlg::Initialization::zero};
       ///\f$ \mathbf{F}_\text{in}^{-1} \cdot \mathbf{C}_\text{el} \f$
-      Core::LinAlg::Matrix<3, 3> iFinCeM{true};
+      Core::LinAlg::Matrix<3, 3> iFinCeM{Core::LinAlg::Initialization::zero};
       /// \f$ \mathbf{C} \cdot \mathbf{F}_\text{in}^{-1} \f$ stored as 9x1 vector
-      Core::LinAlg::Matrix<9, 1> CiFin9x1{true};
+      Core::LinAlg::Matrix<9, 1> CiFin9x1{Core::LinAlg::Initialization::zero};
       ///\f$ \mathbf{C} \cdot \mathbf{F}_\text{in}^{-1} \cdot \mathbf{C}_\text{el} \f$ stored as 9x1
       /// vector
-      Core::LinAlg::Matrix<9, 1> CiFinCe9x1{true};
+      Core::LinAlg::Matrix<9, 1> CiFinCe9x1{Core::LinAlg::Initialization::zero};
       /// \f$ \mathbf{C} \cdot \mathbf{F}_\text{in}^{-1} \cdot \mathbf{C}_\text{el}^{-1} \f$ stored
       /// as 9x1 vector
-      Core::LinAlg::Matrix<9, 1> CiFiniCe9x1{true};
+      Core::LinAlg::Matrix<9, 1> CiFiniCe9x1{Core::LinAlg::Initialization::zero};
       /// principal invariants of the elastic right Cauchy-Green tensor
-      Core::LinAlg::Matrix<3, 1> prinv{true};
+      Core::LinAlg::Matrix<3, 1> prinv{Core::LinAlg::Initialization::zero};
       /// partial derivative of the elastic right Cauchy-Green tensor w.r.t. right Cauchy-Green
       /// tensor \f$ \frac{\partial \boldsymbol{C}_\text{e}}{\partial \boldsymbol{C}} \f$ (Voigt
       /// stress-stress notation)
-      Core::LinAlg::Matrix<6, 6> dCedC{true};
+      Core::LinAlg::Matrix<6, 6> dCedC{Core::LinAlg::Initialization::zero};
       /// partial derivative of the elastic right Cauchy-Green tensor w.r.t. inelastic deformation
       /// gradient \f$ \frac{\partial \boldsymbol{C}_\text{e}}{\partial \boldsymbol{F} _\text{in} ^
       /// { -1 }} \f$(Voigt stress notation)
-      Core::LinAlg::Matrix<6, 9> dCediFin{true};
+      Core::LinAlg::Matrix<6, 9> dCediFin{Core::LinAlg::Initialization::zero};
       /// inverse inelastic deformation gradient
-      Core::LinAlg::Matrix<3, 3> iFinM{true};
+      Core::LinAlg::Matrix<3, 3> iFinM{Core::LinAlg::Initialization::zero};
       /// determinant of the inelastic deformation gradient
       double detFin = 1.0;
 
       // ----- derivatives of principal invariants ----- //
 
       /// first derivatives of principle invariants
-      Core::LinAlg::Matrix<3, 1> dPIe{true};
+      Core::LinAlg::Matrix<3, 1> dPIe{Core::LinAlg::Initialization::zero};
       /// second derivatives of principle invariants
-      Core::LinAlg::Matrix<6, 1> ddPIIe{true};
+      Core::LinAlg::Matrix<6, 1> ddPIIe{Core::LinAlg::Initialization::zero};
     };
 
     /// struct containing free-energy related stress factors, as presented in Holzapfel-Nonlinear
@@ -223,9 +223,9 @@ namespace Mat
 
       // 2nd Piola Kirchhoff stresses factors (according to Holzapfel-Nonlinear Solid Mechanics p.
       // 216)
-      Core::LinAlg::Matrix<3, 1> gamma{true};
+      Core::LinAlg::Matrix<3, 1> gamma{Core::LinAlg::Initialization::zero};
       // constitutive tensor factors (according to Holzapfel-Nonlinear Solid Mechanics p. 261)
-      Core::LinAlg::Matrix<8, 1> delta{true};
+      Core::LinAlg::Matrix<8, 1> delta{Core::LinAlg::Initialization::zero};
     };
 
     int unique_par_object_id() const override

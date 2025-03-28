@@ -180,9 +180,12 @@ namespace
     std::vector<double> fluid_dofvec;
 
     // Matrices for the results.
-    Core::LinAlg::Matrix<fluid_type::n_dof_, fluid_type::n_dof_, double> results_kff(true);
-    Core::LinAlg::Matrix<fluid_type::n_dof_, beam_type::n_dof_, double> results_kfs(true);
-    Core::LinAlg::Matrix<beam_type::n_dof_, fluid_type::n_dof_, double> results_ksf(true);
+    Core::LinAlg::Matrix<fluid_type::n_dof_, fluid_type::n_dof_, double> results_kff(
+        Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<fluid_type::n_dof_, beam_type::n_dof_, double> results_kfs(
+        Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<beam_type::n_dof_, fluid_type::n_dof_, double> results_ksf(
+        Core::LinAlg::Initialization::zero);
     Core::LinAlg::SerialDenseVector results_fs(beam_type::n_dof_, true);
     Core::LinAlg::SerialDenseVector results_ff(fluid_type::n_dof_, true);
     results_fs.putScalar(0.0);

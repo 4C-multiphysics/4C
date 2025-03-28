@@ -239,7 +239,7 @@ void XFEM::MeshProjector::project(std::map<int, std::set<int>>& projection_nodeT
 
     tar_nodepositions_n.push_back(pos);
     projection_targetnodes.push_back(i->first);
-    interpolated_vecs.push_back(Core::LinAlg::Matrix<8, 1>(true));
+    interpolated_vecs.push_back(Core::LinAlg::Matrix<8, 1>(Core::LinAlg::Initialization::zero));
   }
 
   setup_search_tree();
@@ -327,7 +327,7 @@ bool XFEM::MeshProjector::check_position_and_project(const Core::Elements::Eleme
   // number of element's nodes
   const unsigned int src_numnodes = Core::FE::num_nodes<distype>;
   // nodal coordinates
-  Core::LinAlg::Matrix<3, src_numnodes> src_xyze(true);
+  Core::LinAlg::Matrix<3, src_numnodes> src_xyze(Core::LinAlg::Initialization::zero);
 
   for (int in = 0; in < src_ele->num_node(); ++in)
   {
@@ -400,7 +400,7 @@ void XFEM::MeshProjector::find_covering_elements_and_interpolate_values(
     // node coordinate
     const Core::LinAlg::Matrix<3, 1>& node_xyz = tar_nodepositions.at(ni);
     // interpolated vector which is zero at the beginning
-    Core::LinAlg::Matrix<8, 1> interpolatedvec(true);
+    Core::LinAlg::Matrix<8, 1> interpolatedvec(Core::LinAlg::Initialization::zero);
 
     // search for near elements
     std::map<int, std::set<int>> closeeles = search_tree_->search_elements_in_radius(

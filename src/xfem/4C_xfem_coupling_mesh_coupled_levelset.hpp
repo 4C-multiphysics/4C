@@ -108,7 +108,7 @@ namespace XFEM
               itraction, x, conditionsmap_robin_neumann_.find(robin_id)->second, time_);
 
           double sl_visc_fac = sliplength / (kappa_m * visc_m + (1.0 - kappa_m) * visc_s);
-          Core::LinAlg::Matrix<3, 1> tmp_itraction(true);
+          Core::LinAlg::Matrix<3, 1> tmp_itraction(Core::LinAlg::Initialization::zero);
           tmp_itraction.multiply_tn(proj_matrix, itraction);
           // Project this into tangential direction!!!
 
@@ -120,7 +120,7 @@ namespace XFEM
 
       if (force_tangvel_map_.find(cond->id())->second)
       {
-        Core::LinAlg::Matrix<3, 1> tmp_ivel(true);
+        Core::LinAlg::Matrix<3, 1> tmp_ivel(Core::LinAlg::Initialization::zero);
         tmp_ivel.multiply_tn(
             proj_matrix, ivel);  // apply Projection matrix from the right. (u_0 * P^t)
         ivel.update(1.0, tmp_ivel, 0.0);

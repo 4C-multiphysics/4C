@@ -114,7 +114,7 @@ void Mixture::MixtureConstituentElastHyperDamage::evaluate_elastic_part(
     Core::LinAlg::Matrix<6, 6>& cmat, int gp, int eleGID)
 {
   // Compute total inelastic deformation gradient
-  static Core::LinAlg::Matrix<3, 3> iFin(false);
+  static Core::LinAlg::Matrix<3, 3> iFin(Core::LinAlg::Initialization::uninitialized);
   iFin.multiply_nn(iFextin, prestretch_tensor(gp));
 
   // Evaluate 3D elastic part

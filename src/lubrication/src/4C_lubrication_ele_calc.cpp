@@ -33,17 +33,17 @@ Discret::Elements::LubricationEleCalc<distype, probdim>::LubricationEleCalc(
     const std::string& disname)
     : lubricationpara_(Discret::Elements::LubricationEleParameter::instance(
           disname)),  // standard parameter list
-      eprenp_(true),  // initialized to zero
-      xsi_(true),     // initialized to zero
-      xyze_(true),    // initialized to zero
-      funct_(true),   // initialized to zero
-      deriv_(true),   // initialized to zero
-      derxy_(true),   // initialized to zero
-      xjm_(true),     // initialized to zero
-      xij_(true),     // initialized to zero
-      eheinp_(true),
-      eheidotnp_(true),
-      edispnp_(true),
+      eprenp_(),      // initialized to zero
+      xsi_(),         // initialized to zero
+      xyze_(),        // initialized to zero
+      funct_(),       // initialized to zero
+      deriv_(),       // initialized to zero
+      derxy_(),       // initialized to zero
+      xjm_(),         // initialized to zero
+      xij_(),         // initialized to zero
+      eheinp_(),
+      eheidotnp_(),
+      edispnp_(),
       viscmanager_(
           std::make_shared<LubricationEleViscManager>()),  // viscosity manager for viscosity
       lubricationvarmanager_(std::shared_ptr<LubricationEleInternalVariableManager<nsd_, nen_>>(
@@ -54,8 +54,8 @@ Discret::Elements::LubricationEleCalc<distype, probdim>::LubricationEleCalc(
 
       // heightint_(0.0),
       // heightdotint_(0.0),
-      pflowfac_(true),
-      pflowfacderiv_(true),
+      pflowfac_(),
+      pflowfacderiv_(),
       sflowfac_(0.0),
       sflowfacderiv_(0.0)
 {
@@ -372,7 +372,8 @@ void Discret::Elements::LubricationEleCalc<distype, probdim>::sysmat(
     calc_height_dot_at_int_point(heightdotint);
 
     // calculate average surface velocity of the contacting bodies at Integration point
-    Core::LinAlg::Matrix<nsd_, 1> avrvel(true);  // average surface velocity, initialized to zero
+    Core::LinAlg::Matrix<nsd_, 1> avrvel(
+        Core::LinAlg::Initialization::zero);  // average surface velocity, initialized to zero
     calc_avr_vel_at_int_point(avrvel);
 
     //----------------------------------------------------------------------
@@ -391,7 +392,9 @@ void Discret::Elements::LubricationEleCalc<distype, probdim>::sysmat(
       if (lubricationpara_->pure_lub())
         FOUR_C_THROW("pure lubrication is not implemented for modified Reynolds equation");
       // calculate relative surface velocity of the contacting bodies at Integration point
-      Core::LinAlg::Matrix<nsd_, 1> relvel(true);  // relative surface velocity, initialized to zero
+      Core::LinAlg::Matrix<nsd_, 1> relvel(
+          Core::LinAlg::Initialization::zero);  // relative surface velocity, initialized to
+                                                // zero
       calc_rel_vel_at_int_point(relvel);
 
       // calculate pressure flow factor at Integration point
@@ -480,7 +483,8 @@ void Discret::Elements::LubricationEleCalc<distype, probdim>::matrixfor_ehl_mon(
     calc_height_at_int_point(heightint);
 
     // calculate average surface velocity of the contacting bodies at Integration point
-    Core::LinAlg::Matrix<nsd_, 1> avrvel(true);  // average surface velocity, initialized to zero
+    Core::LinAlg::Matrix<nsd_, 1> avrvel(
+        Core::LinAlg::Initialization::zero);  // average surface velocity, initialized to zero
     calc_avr_vel_at_int_point(avrvel);
 
     //----------------------------------------------------------------------
@@ -496,7 +500,9 @@ void Discret::Elements::LubricationEleCalc<distype, probdim>::matrixfor_ehl_mon(
     {
       // FOUR_C_THROW("we should not be here");
       // calculate relative surface velocity of the contacting bodies at Integration point
-      Core::LinAlg::Matrix<nsd_, 1> relvel(true);  // relative surface velocity, initialized to zero
+      Core::LinAlg::Matrix<nsd_, 1> relvel(
+          Core::LinAlg::Initialization::zero);  // relative surface velocity, initialized to
+                                                // zero
       calc_rel_vel_at_int_point(relvel);
 
       // calculate pressure flow factor at Integration point
@@ -1330,9 +1336,9 @@ void Discret::Elements::LubricationEleCalc<distype, probdim>::cal_error_compared
       double pre_exact(0.0);
       double deltapre(0.0);
       //! spatial gradient of current pressure value
-      Core::LinAlg::Matrix<nsd_, 1> gradpre(true);
-      Core::LinAlg::Matrix<nsd_, 1> gradpre_exact(true);
-      Core::LinAlg::Matrix<nsd_, 1> deltagradpre(true);
+      Core::LinAlg::Matrix<nsd_, 1> gradpre(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd_, 1> gradpre_exact(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd_, 1> deltagradpre(Core::LinAlg::Initialization::zero);
 
       // start loop over integration points
       for (int iquad = 0; iquad < intpoints.ip().nquad; iquad++)
@@ -1341,7 +1347,7 @@ void Discret::Elements::LubricationEleCalc<distype, probdim>::cal_error_compared
 
         // get coordinates at integration point
         // gp reference coordinates
-        Core::LinAlg::Matrix<nsd_, 1> xyzint(true);
+        Core::LinAlg::Matrix<nsd_, 1> xyzint(Core::LinAlg::Initialization::zero);
         xyzint.multiply(xyze_, funct_);
 
         // function evaluation requires a 3D position vector!!

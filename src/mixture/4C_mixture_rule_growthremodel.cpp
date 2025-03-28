@@ -168,7 +168,7 @@ void Mixture::GrowthRemodelMixtureRule::evaluate(const Core::LinAlg::Matrix<3, 3
       [&]()
       {
         double growthScalar = 0.0;
-        Core::LinAlg::Matrix<1, 6> dGrowthScalarDC(true);
+        Core::LinAlg::Matrix<1, 6> dGrowthScalarDC(Core::LinAlg::Initialization::zero);
 
         for (std::size_t i = 0; i < constituents().size(); ++i)
         {

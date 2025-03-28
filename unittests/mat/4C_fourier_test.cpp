@@ -89,23 +89,23 @@ namespace
   //! test member function pack and unpack
   TEST_P(IsotropicTest, TestPackUnpack)
   {
-    Core::LinAlg::Matrix<3, 1> ref_heatflux(true);
+    Core::LinAlg::Matrix<3, 1> ref_heatflux(Core::LinAlg::Initialization::zero);
     ref_heatflux(0, 0) = 4.0;
     ref_heatflux(1, 0) = 20.0;
     ref_heatflux(2, 0) = 100.0;
 
-    Core::LinAlg::Matrix<3, 3> ref_cmat(true);
+    Core::LinAlg::Matrix<3, 3> ref_cmat(Core::LinAlg::Initialization::zero);
     ref_cmat(0, 0) = 1.0;
     ref_cmat(1, 1) = 1.0;
     ref_cmat(2, 2) = 1.0;
 
-    Core::LinAlg::Matrix<3, 1> gradtemp(true);
+    Core::LinAlg::Matrix<3, 1> gradtemp(Core::LinAlg::Initialization::zero);
     gradtemp(0, 0) = 4.0;
     gradtemp(1, 0) = 20.0;
     gradtemp(2, 0) = 100.0;
 
-    Core::LinAlg::Matrix<3, 1> result_heatflux(true);
-    Core::LinAlg::Matrix<3, 3> result_cmat(true);
+    Core::LinAlg::Matrix<3, 1> result_heatflux(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 3> result_cmat(Core::LinAlg::Initialization::zero);
 
     fourier_->pack(data_);
     std::vector<char> dataSend;
@@ -123,23 +123,23 @@ namespace
   //! test member function evaluate
   TEST_P(IsotropicTest, TestEvaluate)
   {
-    Core::LinAlg::Matrix<3, 1> ref_heatflux(true);
+    Core::LinAlg::Matrix<3, 1> ref_heatflux(Core::LinAlg::Initialization::zero);
     ref_heatflux(0, 0) = 4.0;
     ref_heatflux(1, 0) = 20.0;
     ref_heatflux(2, 0) = 100.0;
 
-    Core::LinAlg::Matrix<3, 3> ref_cmat(true);
+    Core::LinAlg::Matrix<3, 3> ref_cmat(Core::LinAlg::Initialization::zero);
     ref_cmat(0, 0) = 1.0;
     ref_cmat(1, 1) = 1.0;
     ref_cmat(2, 2) = 1.0;
 
-    Core::LinAlg::Matrix<3, 1> gradtemp(true);
+    Core::LinAlg::Matrix<3, 1> gradtemp(Core::LinAlg::Initialization::zero);
     gradtemp(0, 0) = 4.0;
     gradtemp(1, 0) = 20.0;
     gradtemp(2, 0) = 100.0;
 
-    Core::LinAlg::Matrix<3, 1> result_heatflux(true);
-    Core::LinAlg::Matrix<3, 3> result_cmat(true);
+    Core::LinAlg::Matrix<3, 1> result_heatflux(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 3> result_cmat(Core::LinAlg::Initialization::zero);
 
     fourier_->evaluate(gradtemp, result_cmat, result_heatflux);
 
@@ -209,23 +209,23 @@ namespace
   //! test member function pack and unpack
   TEST_P(AnisotropicTest, TestPackUnpack)
   {
-    Core::LinAlg::Matrix<3, 1> ref_heatflux(true);
+    Core::LinAlg::Matrix<3, 1> ref_heatflux(Core::LinAlg::Initialization::zero);
     ref_heatflux(0, 0) = 4.0;
     ref_heatflux(1, 0) = 20.0;
     ref_heatflux(2, 0) = 100.0;
 
-    Core::LinAlg::Matrix<3, 3> ref_cmat(true);
+    Core::LinAlg::Matrix<3, 3> ref_cmat(Core::LinAlg::Initialization::zero);
     ref_cmat(0, 0) = 1.0;
     ref_cmat(1, 1) = 10.0;
     ref_cmat(2, 2) = 100.0;
 
-    Core::LinAlg::Matrix<3, 1> gradtemp(true);
+    Core::LinAlg::Matrix<3, 1> gradtemp(Core::LinAlg::Initialization::zero);
     gradtemp(0, 0) = 4.0;
     gradtemp(1, 0) = 2.0;
     gradtemp(2, 0) = 1.0;
 
-    Core::LinAlg::Matrix<3, 1> result_heatflux(true);
-    Core::LinAlg::Matrix<3, 3> result_cmat(true);
+    Core::LinAlg::Matrix<3, 1> result_heatflux(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 3> result_cmat(Core::LinAlg::Initialization::zero);
 
     fourier_->pack(data_);
     std::vector<char> dataSend;
@@ -243,23 +243,23 @@ namespace
   //! test member function evaluate
   TEST_P(AnisotropicTest, TestEvaluate)
   {
-    Core::LinAlg::Matrix<3, 1> ref_heatflux(true);
+    Core::LinAlg::Matrix<3, 1> ref_heatflux(Core::LinAlg::Initialization::zero);
     ref_heatflux(0, 0) = 4.0;
     ref_heatflux(1, 0) = 20.0;
     ref_heatflux(2, 0) = 100.0;
 
-    Core::LinAlg::Matrix<3, 3> ref_cmat(true);
+    Core::LinAlg::Matrix<3, 3> ref_cmat(Core::LinAlg::Initialization::zero);
     ref_cmat(0, 0) = 1.0;
     ref_cmat(1, 1) = 10.0;
     ref_cmat(2, 2) = 100.0;
 
-    Core::LinAlg::Matrix<3, 1> gradtemp(true);
+    Core::LinAlg::Matrix<3, 1> gradtemp(Core::LinAlg::Initialization::zero);
     gradtemp(0, 0) = 4.0;
     gradtemp(1, 0) = 2.0;
     gradtemp(2, 0) = 1.0;
 
-    Core::LinAlg::Matrix<3, 1> result_heatflux(true);
-    Core::LinAlg::Matrix<3, 3> result_cmat(true);
+    Core::LinAlg::Matrix<3, 1> result_heatflux(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 3> result_cmat(Core::LinAlg::Initialization::zero);
 
     fourier_->evaluate(gradtemp, result_cmat, result_heatflux);
 

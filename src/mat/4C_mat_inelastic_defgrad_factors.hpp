@@ -1203,22 +1203,22 @@ namespace Mat
       // ----- current state quantities (for the evaluated Gauss points) ----- //
 
       //! elastic right Cauchy-Green deformation tensor
-      Core::LinAlg::Matrix<3, 3> curr_CeM_{true};
+      Core::LinAlg::Matrix<3, 3> curr_CeM_{Core::LinAlg::Initialization::zero};
 
       //! isotropic stress factors
-      Core::LinAlg::Matrix<3, 1> curr_gamma_{true};
+      Core::LinAlg::Matrix<3, 1> curr_gamma_{Core::LinAlg::Initialization::zero};
 
       //! isotropic constitutive tensor factors
-      Core::LinAlg::Matrix<8, 1> curr_delta_{true};
+      Core::LinAlg::Matrix<8, 1> curr_delta_{Core::LinAlg::Initialization::zero};
 
       //! elastic 2nd PK stress tensors (specifically only transversely-isotropic components)
-      Core::LinAlg::Matrix<3, 3> curr_SeM_{true};
+      Core::LinAlg::Matrix<3, 3> curr_SeM_{Core::LinAlg::Initialization::zero};
 
       //! elastic stiffness tensor (specifically only transversely-isotropic components)
-      Core::LinAlg::Matrix<6, 6> curr_dSedCe_{true};
+      Core::LinAlg::Matrix<6, 6> curr_dSedCe_{Core::LinAlg::Initialization::zero};
 
       //! deviatoric, symmetric part of the Mandel stress tensor
-      Core::LinAlg::Matrix<3, 3> curr_Me_dev_sym_M_{true};
+      Core::LinAlg::Matrix<3, 3> curr_Me_dev_sym_M_{Core::LinAlg::Initialization::zero};
 
       //! equivalent tensile stress
       double curr_equiv_stress_{0.0};
@@ -1227,16 +1227,16 @@ namespace Mat
       double curr_equiv_plastic_strain_rate_{0.0};
 
       //! plastic flow direction tensor
-      Core::LinAlg::Matrix<3, 3> curr_NpM_{true};
+      Core::LinAlg::Matrix<3, 3> curr_NpM_{Core::LinAlg::Initialization::zero};
 
       //! plastic stretching tensor
-      Core::LinAlg::Matrix<3, 3> curr_dpM_{true};
+      Core::LinAlg::Matrix<3, 3> curr_dpM_{Core::LinAlg::Initialization::zero};
 
       //! plastic velocity gradient tensor
-      Core::LinAlg::Matrix<3, 3> curr_lpM_{true};
+      Core::LinAlg::Matrix<3, 3> curr_lpM_{Core::LinAlg::Initialization::zero};
 
       //! plastic update tensor
-      Core::LinAlg::Matrix<3, 3> curr_EpM_{true};
+      Core::LinAlg::Matrix<3, 3> curr_EpM_{Core::LinAlg::Initialization::zero};
     };
 
 
@@ -1249,24 +1249,24 @@ namespace Mat
 
       //! derivative of the elastic right Cauchy_Green deformation tensor w.r.t. the inverse
       //! inelastic deformation gradient (Voigt stress form)
-      Core::LinAlg::Matrix<6, 9> curr_dCediFin_{true};
+      Core::LinAlg::Matrix<6, 9> curr_dCediFin_{Core::LinAlg::Initialization::zero};
       //! derivative of the elastic right Cauchy_Green deformation tensor w.r.t. the right
       //! Cauchy-Green deformation tensor (Voigt stress-stress form)
-      Core::LinAlg::Matrix<6, 6> curr_dCedC_{true};
+      Core::LinAlg::Matrix<6, 6> curr_dCedC_{Core::LinAlg::Initialization::zero};
 
       //! derivatives of the equivalent tensile stress w.r.t. the inverse inelastic deformation
       //! gradient (Voigt notation)
-      Core::LinAlg::Matrix<1, 9> curr_dequiv_stress_diFin_{true};
+      Core::LinAlg::Matrix<1, 9> curr_dequiv_stress_diFin_{Core::LinAlg::Initialization::zero};
       //! derivatives of the equivalent tensile stress w.r.t. the right Cauchy-Green deformation
       //! tensor (Voigt stress form)
-      Core::LinAlg::Matrix<1, 6> curr_dequiv_stress_dC_{true};
+      Core::LinAlg::Matrix<1, 6> curr_dequiv_stress_dC_{Core::LinAlg::Initialization::zero};
 
       //! derivative of the deviatoric, symmetric part of the Mandel stress tensor w.r.t. the
       //! inverse inelastic deformation gradient (Voigt stress form)
-      Core::LinAlg::Matrix<6, 9> curr_dMe_dev_sym_diFin_{true};
+      Core::LinAlg::Matrix<6, 9> curr_dMe_dev_sym_diFin_{Core::LinAlg::Initialization::zero};
       //! derivative of the deviatoric, symmetric part of the Mandel stress tensor w.r.t. the right
       //! Cauchy-Green deformation tensor (Voigt stress-stress form)
-      Core::LinAlg::Matrix<6, 6> curr_dMe_dev_sym_dC_{true};
+      Core::LinAlg::Matrix<6, 6> curr_dMe_dev_sym_dC_{Core::LinAlg::Initialization::zero};
 
       //! derivative of the plastic strain rate w.r.t. the equivalent stress
       double curr_dpsr_dequiv_stress_{0.0};
@@ -1275,33 +1275,33 @@ namespace Mat
 
       //! derivative of the plastic stretching tensor w.r.t. the inverse inelastic deformation
       //! gradient (Voigt stress form)
-      Core::LinAlg::Matrix<6, 9> curr_ddpdiFin_{true};
+      Core::LinAlg::Matrix<6, 9> curr_ddpdiFin_{Core::LinAlg::Initialization::zero};
       //! derivative of the plastic stretching tensor w.r.t. the equivalent plastic strain (Voigt
       //! stress form)
-      Core::LinAlg::Matrix<6, 1> curr_ddpdepsp_{true};
+      Core::LinAlg::Matrix<6, 1> curr_ddpdepsp_{Core::LinAlg::Initialization::zero};
       //! derivative of the plastic stretching tensor w.r.t. the right Cauchy-Green deformation
       //! tensor (Voigt stress-stress form)
-      Core::LinAlg::Matrix<6, 6> curr_ddpdC_{true};
+      Core::LinAlg::Matrix<6, 6> curr_ddpdC_{Core::LinAlg::Initialization::zero};
 
       //! derivative of the plastic velocity gradient tensor w.r.t. the inverse inelastic
       //! deformation gradient (Voigt notation)
-      Core::LinAlg::Matrix<9, 9> curr_dlpdiFin_{true};
+      Core::LinAlg::Matrix<9, 9> curr_dlpdiFin_{Core::LinAlg::Initialization::zero};
       //! derivative of the plastic velocity gradient tensor w.r.t. the equivalent plastic strain
       //! (Voigt notation)
-      Core::LinAlg::Matrix<9, 1> curr_dlpdepsp_{true};
+      Core::LinAlg::Matrix<9, 1> curr_dlpdepsp_{Core::LinAlg::Initialization::zero};
       //! derivative of the plastic velocity gradient tensor w.r.t. the right Cauchy-Green
       //! deformation tensor (Voigt stress form)
-      Core::LinAlg::Matrix<9, 6> curr_dlpdC_{true};
+      Core::LinAlg::Matrix<9, 6> curr_dlpdC_{Core::LinAlg::Initialization::zero};
 
       //! derivative of the plastic update tensor w.r.t. the inverse inelastic deformation gradient
       //! (Voigt notation)
-      Core::LinAlg::Matrix<9, 9> curr_dEpdiFin_{true};
+      Core::LinAlg::Matrix<9, 9> curr_dEpdiFin_{Core::LinAlg::Initialization::zero};
       //! derivative of the plastic update tensor w.r.t. the equivalent plastic strain (Voigt
       //! notation)
-      Core::LinAlg::Matrix<9, 1> curr_dEpdepsp_{true};
+      Core::LinAlg::Matrix<9, 1> curr_dEpdepsp_{Core::LinAlg::Initialization::zero};
       //! derivative of the plastic update tensor w.r.t. the right Cauchy-Green deformation tensor
       //! (Voigt stress form)
-      Core::LinAlg::Matrix<9, 6> curr_dEpdC_{true};
+      Core::LinAlg::Matrix<9, 6> curr_dEpdC_{Core::LinAlg::Initialization::zero};
     };
 
     /*!
@@ -1406,18 +1406,18 @@ namespace Mat
       //! \f$ \boldsymbol{I} + \boldsymbol{m} \otimes \boldsymbol{m} \f$
       Core::LinAlg::Matrix<3, 3> id_plus_mm_;
       //! \f$ \boldsymbol{m} \otimes \boldsymbol{m} \f$
-      Core::LinAlg::Matrix<3, 3> mm_{true};
+      Core::LinAlg::Matrix<3, 3> mm_{Core::LinAlg::Initialization::zero};
       //! deviatoric part \f$ \left( \boldsymbol{m} \otimes \boldsymbol{m}
       //! \right)_\text{dev}\f$
-      Core::LinAlg::Matrix<3, 3> mm_dev_{true};
+      Core::LinAlg::Matrix<3, 3> mm_dev_{Core::LinAlg::Initialization::zero};
       //! \f$ \left( \boldsymbol{m} \otimes \boldsymbol{m} \right) \otimes \left( \boldsymbol{m}
       //! \otimes \boldsymbol{m} \right) \f$ (Voigt stress-stress form)
-      Core::LinAlg::Matrix<6, 6> mm_dyad_mm_{true};
+      Core::LinAlg::Matrix<6, 6> mm_dyad_mm_{Core::LinAlg::Initialization::zero};
       //!  \f$ \left( \boldsymbol{m} \otimes \boldsymbol{m} \right)_\text{dev} \otimes \left(
       //!  \boldsymbol{m} \otimes \boldsymbol{m}
       //!  \right) \f$
       //! (Voigt stress-stress form)
-      Core::LinAlg::Matrix<6, 6> mm_dev_dyad_mm_{true};
+      Core::LinAlg::Matrix<6, 6> mm_dev_dyad_mm_{Core::LinAlg::Initialization::zero};
       //!  \f$ \boldsymbol{I} \otimes \left( \boldsymbol{m} \otimes \boldsymbol{m}
       //!  \right) \f$
       //! (Voigt stress-stress form)

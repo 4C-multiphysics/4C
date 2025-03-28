@@ -83,9 +83,9 @@ void Mixture::IterativePrestressStrategy::update(
   // Compute polar decomposition of the prestretch deformation gradient
 
   // Singular value decomposition of F = RU
-  Core::LinAlg::Matrix<3, 3> Q(true);
-  Core::LinAlg::Matrix<3, 3> S(true);
-  Core::LinAlg::Matrix<3, 3> VT(true);
+  Core::LinAlg::Matrix<3, 3> Q(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> S(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> VT(Core::LinAlg::Initialization::zero);
 
   Core::LinAlg::svd<3, 3>(G, Q, S, VT);
 

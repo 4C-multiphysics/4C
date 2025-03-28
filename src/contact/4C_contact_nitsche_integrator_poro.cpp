@@ -167,7 +167,7 @@ void CONTACT::IntegratorNitschePoro::so_ele_cauchy(Mortar::Element& moEle, doubl
     double& cauchy_nt, Core::Gen::Pairedvector<int, double>& deriv_sigma_nt_d,
     Core::Gen::Pairedvector<int, double>& deriv_sigma_nt_p)
 {
-  Core::LinAlg::Matrix<dim, 1> pxsi(true);
+  Core::LinAlg::Matrix<dim, 1> pxsi(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<dim, dim> derivtravo_slave;
   CONTACT::Utils::map_gp_to_parent<dim>(moEle, boundary_gpcoord, gp_wgt, pxsi, derivtravo_slave);
 
