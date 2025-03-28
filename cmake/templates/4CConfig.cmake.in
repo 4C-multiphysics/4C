@@ -71,6 +71,10 @@ if(FOUR_C_WITH_RYML)
   find_package(ryml CONFIG HINTS ${FOUR_C_RYML_ROOT})
 endif()
 
+if(FOUR_C_WITH_FASTOR)
+  find_package(Fastor CONFIG HINTS ${FOUR_C_FASTOR_ROOT})
+endif()
+
 if(FOUR_C_WITH_MAGIC_ENUM)
   find_package(magic_enum CONFIG HINTS ${FOUR_C_MAGIC_ENUM_ROOT})
 endif()
