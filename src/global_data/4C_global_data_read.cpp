@@ -163,24 +163,38 @@ Core::IO::InputFile Global::set_up_input_file(MPI_Comm comm)
   };
 
 
-  using namespace Core::IO::InputSpecBuilders;
-
-  std::vector<Core::IO::InputSpec> all_element_specs;
-  Core::Elements::ElementDefinition element_definition;
-  element_definition.setup_valid_element_lines();
-  for (const auto& [element_type, cell_specs] : element_definition.definitions())
+  std::map<std::string, Core::IO::InputSpec> legacy_partial_specs;
+  // We know quite a lot about the legacy sections. Even though we cannot parse them via
+  // the InputSpec engine, we can still emit as much information as possible to the metadata.
+  //
+  // A parameter named "_positional_<index>_<name>" implies that the parameter needs to appear
+  // at the specified position without a key. This is very useful for the geometry information
+  // which often contains enumerators.
   {
-    std::vector<Core::IO::InputSpec> element_specs;
-    for (const auto& [cell_type, spec] : cell_specs)
+    using namespace Core::IO::InputSpecBuilders;
+    std::vector<Core::IO::InputSpec> all_element_specs;
+    Core::Elements::ElementDefinition element_definition;
+    element_definition.setup_valid_element_lines();
+    for (const auto& [element_type, cell_specs] : element_definition.definitions())
     {
-      element_specs.emplace_back(group(cell_type, {spec}));
+      std::vector<Core::IO::InputSpec> element_specs;
+      for (const auto& [cell_type, spec] : cell_specs)
+      {
+        element_specs.emplace_back(group(cell_type, {spec}));
+      }
+      all_element_specs.emplace_back(group(element_type, {one_of(std::move(element_specs))}));
     }
-    all_element_specs.emplace_back(group(element_type, {one_of(std::move(element_specs))}));
+
+    legacy_partial_specs["legacy_element_specs"] = all_of({
+        parameter<int>("_positional_0_id"),
+        one_of(std::move(all_element_specs)),
+    });
+
+    legacy_partial_specs["legacy_particle_specs"] = PARTICLEENGINE::create_particle_spec();
   }
 
-
   return Core::IO::InputFile{std::move(valid_sections), std::move(legacy_section_names),
-      {{"legacy_element_specs", one_of(std::move(all_element_specs))}}, comm};
+      std::move(legacy_partial_specs), comm};
 }
 
 void Global::read_fields(Global::Problem& problem, Core::IO::InputFile& input, const bool read_mesh)

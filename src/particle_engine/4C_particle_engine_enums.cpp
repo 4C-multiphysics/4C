@@ -222,57 +222,26 @@ enum PARTICLEENGINE::ParticleState PARTICLEENGINE::enum_from_state_name(const st
   return state;
 }
 
+static std::vector<std::string> particle_type_names = {
+    "phase1", "phase2", "boundaryphase", "rigidphase", "dirichletphase", "neumannphase"};
+
 std::string PARTICLEENGINE::enum_to_type_name(const enum ParticleType& type)
 {
-  std::string name;
-
-  switch (type)
-  {
-    case Phase1:
-      name = "phase1";
-      break;
-    case Phase2:
-      name = "phase2";
-      break;
-    case BoundaryPhase:
-      name = "boundaryphase";
-      break;
-    case RigidPhase:
-      name = "rigidphase";
-      break;
-    case DirichletPhase:
-      name = "dirichletphase";
-      break;
-    case NeumannPhase:
-      name = "neumannphase";
-      break;
-    default:
-      FOUR_C_THROW("particle type unknown!");
-  }
-
-  return name;
+  FOUR_C_ASSERT(type >= 0 and type < static_cast<int>(particle_type_names.size()),
+      "particle type out of range!");
+  return particle_type_names[type];
 }
 
 enum PARTICLEENGINE::ParticleType PARTICLEENGINE::enum_from_type_name(const std::string& name)
 {
-  enum ParticleType type;
+  auto it = std::ranges::find(particle_type_names, name);
+  FOUR_C_ASSERT(it != particle_type_names.end(), "particle type '{}' unknown!", name.c_str());
+  return static_cast<enum ParticleType>(std::distance(particle_type_names.begin(), it));
+}
 
-  if (name == "phase1")
-    type = Phase1;
-  else if (name == "phase2")
-    type = Phase2;
-  else if (name == "boundaryphase")
-    type = BoundaryPhase;
-  else if (name == "rigidphase")
-    type = RigidPhase;
-  else if (name == "dirichletphase")
-    type = DirichletPhase;
-  else if (name == "neumannphase")
-    type = NeumannPhase;
-  else
-    FOUR_C_THROW("particle type '{}' unknown!", name.c_str());
-
-  return type;
+const std::vector<std::string>& PARTICLEENGINE::get_particle_type_names()
+{
+  return particle_type_names;
 }
 
 std::string PARTICLEENGINE::enum_to_status_name(const enum ParticleStatus& status)

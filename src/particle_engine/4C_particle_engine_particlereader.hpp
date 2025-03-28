@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_io_input_spec.hpp"
 #include "4C_particle_engine_typedefs.hpp"
 
 #include <memory>
@@ -29,6 +30,11 @@ namespace PARTICLEENGINE
    */
   void read_particles(Core::IO::InputFile& input, const std::string& section_name,
       std::vector<PARTICLEENGINE::ParticleObjShrdPtr>& particles);
+
+  /**
+   * The InputSpec for a single particle line.
+   */
+  [[nodiscard]] Core::IO::InputSpec create_particle_spec();
 
 }  // namespace PARTICLEENGINE
 

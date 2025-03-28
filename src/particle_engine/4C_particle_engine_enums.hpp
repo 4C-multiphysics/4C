@@ -15,6 +15,8 @@
 
 #include "4C_utils_exceptions.hpp"
 
+#include <vector>
+
 FOUR_C_NAMESPACE_OPEN
 
 /*---------------------------------------------------------------------------*
@@ -176,6 +178,8 @@ namespace PARTICLEENGINE
    * \return particle type
    */
   enum ParticleType enum_from_type_name(const std::string& name);
+
+  const std::vector<std::string>& get_particle_type_names();
 
   //! @}
 
