@@ -82,7 +82,7 @@ namespace Discret::Elements
               shape_functions, element_nodes.displacements, mulf_data);
 
       Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>> inv_delta_defgrd(
-          Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Initialization::zero);
       inv_delta_defgrd.invert(delta_defgrd);
 
       Core::LinAlg::Matrix<3, 3> old_defgrd = mulf_data.deformation_gradient;

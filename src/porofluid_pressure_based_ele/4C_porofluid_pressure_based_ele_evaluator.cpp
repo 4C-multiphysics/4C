@@ -996,7 +996,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDivVel<nsd,
   // get matrix to fill
   Core::LinAlg::SerialDenseMatrix& mymat = *elemat[0];
 
-  static Core::LinAlg::Matrix<nsd, nsd> gridvelderiv(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<nsd, nsd> gridvelderiv(Core::LinAlg::Initialization::zero);
   gridvelderiv.multiply_nt(*(variablemanager.e_con_velnp()), deriv);
 
   // OD mesh - div vel term
@@ -1217,7 +1217,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd, nen>::evaluate_ma
     const std::vector<Core::LinAlg::Matrix<nsd, 1>>& gradphi = *variablemanager.grad_phinp();
 
     // current pressure gradient
-    static Core::LinAlg::Matrix<nsd, 1> gradpres(Core::LinAlg::Initialization::set_zero);
+    static Core::LinAlg::Matrix<nsd, 1> gradpres(Core::LinAlg::Initialization::zero);
     gradpres.clear();
 
     // compute the pressure gradient from the phi gradients
@@ -1229,18 +1229,17 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd, nen>::evaluate_ma
     abspressgrad = sqrt(abspressgrad);
 
     // permeability tensor
-    static Core::LinAlg::Matrix<nsd, nsd> permeabilitytensor(
-        Core::LinAlg::Initialization::set_zero);
+    static Core::LinAlg::Matrix<nsd, nsd> permeabilitytensor(Core::LinAlg::Initialization::zero);
     phasemanager.permeability_tensor(curphase, permeabilitytensor);
 
-    static Core::LinAlg::Matrix<nsd, nen> diffflux(Core::LinAlg::Initialization::set_zero);
+    static Core::LinAlg::Matrix<nsd, nen> diffflux(Core::LinAlg::Initialization::zero);
     diffflux.multiply(permeabilitytensor, derxy);
     diffflux.scale(phasemanager.rel_permeability(curphase) /
                    phasemanager.dyn_viscosity(curphase, abspressgrad));
 
     // helper variable for linearization
     static Core::LinAlg::Matrix<nsd, 1> diffflux_relpermeability(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
 
     if (not phasemanager.has_constant_rel_permeability(curphase))
     {
@@ -1285,13 +1284,13 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd, nen>::evaluate_ma
     {
       // derivative of abspressgrad w.r.t. pressure gradient
       static Core::LinAlg::Matrix<nsd, 1> dabspressgraddpresgradp(
-          Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Initialization::zero);
       dabspressgraddpresgradp.put_scalar(0.0);
       // avoid division by zero
       if (abspressgrad > 1.0e-12)
         for (int i = 0; i < nsd; i++) dabspressgraddpresgradp(i) = gradpres(i) / abspressgrad;
 
-      static Core::LinAlg::Matrix<nsd, 1> diffflux2(Core::LinAlg::Initialization::set_zero);
+      static Core::LinAlg::Matrix<nsd, 1> diffflux2(Core::LinAlg::Initialization::zero);
       diffflux2.multiply(permeabilitytensor, gradpres);
       // d (1/visc) / d abspressgrad = -1.0 * visc^(-2) * d visc / d abspressgrad
       diffflux2.scale(-1.0 * phasemanager.rel_permeability(curphase) /
@@ -1346,7 +1345,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd, nen>::evaluate_ve
   const std::vector<Core::LinAlg::Matrix<nsd, 1>>& gradphi = *variablemanager.grad_phinp();
 
   // current pressure gradient
-  static Core::LinAlg::Matrix<nsd, 1> gradpres(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<nsd, 1> gradpres(Core::LinAlg::Initialization::zero);
   gradpres.clear();
 
   // compute the pressure gradient from the phi gradients
@@ -1358,12 +1357,12 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd, nen>::evaluate_ve
   abspressgrad = sqrt(abspressgrad);
 
   // diffusion tensor
-  static Core::LinAlg::Matrix<nsd, nsd> difftensor(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<nsd, nsd> difftensor(Core::LinAlg::Initialization::zero);
   phasemanager.permeability_tensor(curphase, difftensor);
   difftensor.scale(
       phasemanager.rel_permeability(curphase) / phasemanager.dyn_viscosity(curphase, abspressgrad));
 
-  static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
   diffflux.multiply(difftensor, gradpres);
 
   for (int vi = 0; vi < nen; ++vi)
@@ -1401,7 +1400,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd,
   const std::vector<Core::LinAlg::Matrix<nsd, 1>>& gradphi = *variablemanager.grad_phinp();
 
   // current pressure gradient
-  static Core::LinAlg::Matrix<nsd, 1> gradpres(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<nsd, 1> gradpres(Core::LinAlg::Initialization::zero);
   gradpres.clear();
 
   // compute the pressure gradient from the phi gradients
@@ -1413,28 +1412,28 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd,
   abspressgrad = sqrt(abspressgrad);
 
   // diffusion tensor
-  static Core::LinAlg::Matrix<nsd, nsd> difftensor(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<nsd, nsd> difftensor(Core::LinAlg::Initialization::zero);
   phasemanager.permeability_tensor(curphase, difftensor);
   difftensor.scale(
       phasemanager.rel_permeability(curphase) / phasemanager.dyn_viscosity(curphase, abspressgrad));
 
   // TODO: anisotropic difftensor and
   //       non-constant viscosity (because of pressure gradient, probably not really necessary)
-  static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
   diffflux.multiply(difftensor, gradpres);
 
   // diffusive pre-factor for linearization
   const double v = difftensor(0, 0) * timefacfac / det;
 
   // gradient of pressure w.r.t. reference coordinates
-  static Core::LinAlg::Matrix<nsd, 1> refgradpres(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<nsd, 1> refgradpres(Core::LinAlg::Initialization::zero);
   refgradpres.clear();
 
   // gradient of phi w.r.t. reference coordinates
   std::vector<Core::LinAlg::Matrix<nsd, 1>> refgradphi(numfluidphases,
       Core::LinAlg::Matrix<nsd, 1>(
-          Core::LinAlg::Initialization::set_zero));  // static Core::LinAlg::Matrix<nsd,1>
-                                                     // refgradphi;
+          Core::LinAlg::Initialization::zero));  // static Core::LinAlg::Matrix<nsd,1>
+                                                 // refgradphi;
   for (int idof = 0; idof < numfluidphases; ++idof) refgradphi[idof].multiply(xjm, gradphi[idof]);
 
   // compute the pressure gradient from the phi gradients
@@ -3165,7 +3164,7 @@ void Discret::Elements::PoroFluidEvaluator::ReconstructFluxRHS<nsd,
   const std::vector<Core::LinAlg::Matrix<nsd, 1>>& gradphi = *variablemanager.grad_phinp();
 
   // current pressure gradient
-  Core::LinAlg::Matrix<nsd, 1> gradpres(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd, 1> gradpres(Core::LinAlg::Initialization::zero);
   gradpres.clear();
 
   // compute the pressure gradient from the phi gradients
@@ -3177,13 +3176,13 @@ void Discret::Elements::PoroFluidEvaluator::ReconstructFluxRHS<nsd,
   abspressgrad = sqrt(abspressgrad);
 
   // diffusion tensor
-  Core::LinAlg::Matrix<nsd, nsd> difftensor(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd, nsd> difftensor(Core::LinAlg::Initialization::zero);
   phasemanager.permeability_tensor(curphase, difftensor);
   difftensor.scale(
       phasemanager.rel_permeability(curphase) / phasemanager.dyn_viscosity(curphase, abspressgrad));
 
   // diffusive flux
-  static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::set_zero);
+  static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
   diffflux.multiply(-1.0, difftensor, gradpres);
 
   // Compute element vectors. For L2-Projection
@@ -3269,7 +3268,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPhaseVelocities<nsd,
 
   const std::vector<Core::LinAlg::Matrix<nsd, 1>>& gradient_phi = *variablemanager.grad_phinp();
 
-  Core::LinAlg::Matrix<nsd, 1> structure_velocity(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd, 1> structure_velocity(Core::LinAlg::Initialization::zero);
   if (is_ale_) structure_velocity = *variablemanager.con_velnp();
 
   // FLUID phases
@@ -3290,18 +3289,17 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPhaseVelocities<nsd,
         // the generic primary variable psi can be pressure, pressure difference or saturation, and
         // hence we need to employ the chain rule:
         // d p(psi_1, psi_2, psi_3)/dx = sum_i ( (p(psi_1, psi_2, psi_3)/d psi_i) * (d psi_i/dx) )
-        Core::LinAlg::Matrix<nsd, 1> pressure_gradient(Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Matrix<nsd, 1> pressure_gradient(Core::LinAlg::Initialization::zero);
         pressure_gradient.clear();
         for (int i = 0; i < numfluidphases; ++i)
           pressure_gradient.update(phasemanager.pressure_deriv(curphase, i), gradient_phi[i], 1.0);
 
-        Core::LinAlg::Matrix<nsd, nsd> diffusion_tensor(Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Matrix<nsd, nsd> diffusion_tensor(Core::LinAlg::Initialization::zero);
         phasemanager.permeability_tensor(curphase, diffusion_tensor);
         diffusion_tensor.scale(phasemanager.rel_permeability(curphase) /
                                phasemanager.dyn_viscosity(curphase, pressure_gradient.norm2()));
 
-        static Core::LinAlg::Matrix<nsd, 1> diffusive_velocity(
-            Core::LinAlg::Initialization::set_zero);
+        static Core::LinAlg::Matrix<nsd, 1> diffusive_velocity(Core::LinAlg::Initialization::zero);
         diffusive_velocity.multiply(
             -1.0 / phase_volume_fraction, diffusion_tensor, pressure_gradient);
 
@@ -3335,13 +3333,12 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPhaseVelocities<nsd,
         // of the primary variable directly is the pressure gradient.
         auto pressure_gradient = gradient_phi[curphase];
 
-        Core::LinAlg::Matrix<nsd, nsd> diffusion_tensor(Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Matrix<nsd, nsd> diffusion_tensor(Core::LinAlg::Initialization::zero);
         phasemanager.permeability_tensor_vol_frac_pressure(i_volfrac_pressure, diffusion_tensor);
         diffusion_tensor.scale(1.0 / phasemanager.dyn_viscosity_vol_frac_pressure(
                                          i_volfrac_pressure, pressure_gradient.norm2()));
 
-        static Core::LinAlg::Matrix<nsd, 1> diffusive_velocity(
-            Core::LinAlg::Initialization::set_zero);
+        static Core::LinAlg::Matrix<nsd, 1> diffusive_velocity(Core::LinAlg::Initialization::zero);
         diffusive_velocity.multiply(
             -1.0 / phase_volume_fraction, diffusion_tensor, pressure_gradient);
 
@@ -3742,7 +3739,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddDivVelTerm<nsd,
 
   const double sumaddvolfrac = phasemanager.sum_add_vol_frac();
 
-  Core::LinAlg::Matrix<nsd, nsd> gridvelderiv(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd, nsd> gridvelderiv(Core::LinAlg::Initialization::zero);
   gridvelderiv.multiply_nt(*(variablemanager.e_con_velnp()), deriv);
 
   // OD mesh - div vel term
@@ -4284,7 +4281,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracDivVel<nsd,
     }
 
     // shapederivatives see fluid_ele_calc_poro.cpp
-    Core::LinAlg::Matrix<nsd, nsd> gridvelderiv(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<nsd, nsd> gridvelderiv(Core::LinAlg::Initialization::zero);
     gridvelderiv.multiply_nt(*(variablemanager.e_con_velnp()), deriv);
 
     if (nsd == 3)
@@ -4427,10 +4424,10 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracDiff<nsd,
     for (int ivolfrac = numfluidphases; ivolfrac < numfluidphases + numvolfrac; ivolfrac++)
     {
       // get difftensor and diffusive flux
-      Core::LinAlg::Matrix<nsd, nsd> difftensor(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<nsd, nsd> difftensor(Core::LinAlg::Initialization::zero);
       phasemanager.diff_tensor_vol_frac(ivolfrac - numfluidphases, difftensor);
 
-      static Core::LinAlg::Matrix<nsd, nen> diffflux(Core::LinAlg::Initialization::set_zero);
+      static Core::LinAlg::Matrix<nsd, nen> diffflux(Core::LinAlg::Initialization::zero);
       diffflux.multiply(difftensor, derxy);
 
       // diffusive term
@@ -4478,10 +4475,10 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracDiff<nsd,
   for (int ivolfrac = numfluidphases; ivolfrac < numfluidphases + numvolfrac; ivolfrac++)
   {
     // diffusion tensor
-    Core::LinAlg::Matrix<nsd, nsd> difftensor(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<nsd, nsd> difftensor(Core::LinAlg::Initialization::zero);
     phasemanager.diff_tensor_vol_frac(ivolfrac - numfluidphases, difftensor);
 
-    static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::set_zero);
+    static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
     diffflux.multiply(difftensor, gradphi[ivolfrac]);
 
     for (int vi = 0; vi < nen; ++vi)
@@ -4524,17 +4521,17 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracDiff<nsd,
   for (int ivolfrac = numfluidphases; ivolfrac < numfluidphases + numvolfrac; ivolfrac++)
   {
     // diffusion tensor
-    Core::LinAlg::Matrix<nsd, nsd> difftensor(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<nsd, nsd> difftensor(Core::LinAlg::Initialization::zero);
     phasemanager.diff_tensor_vol_frac(ivolfrac - numfluidphases, difftensor);
 
-    static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::set_zero);
+    static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
     diffflux.multiply(difftensor, gradphi[ivolfrac]);
 
     // TODO: anisotropic difftensor
     const double v = difftensor(0, 0) * timefacfac / det;
 
     // gradient of phi w.r.t. reference coordinates
-    Core::LinAlg::Matrix<nsd, 1> refgradphi(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<nsd, 1> refgradphi(Core::LinAlg::Initialization::zero);
     refgradphi.multiply(xjm, gradphi[ivolfrac]);
 
     // OD mesh - diffusive term
@@ -4802,12 +4799,11 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddFlux<nsd,
           if (phasemanager.has_add_scalar_dependent_flux(ivolfrac - numfluidphases, iscal))
           {
             // diffusion tensor and diffusive flux
-            Core::LinAlg::Matrix<nsd, nsd> difftensoraddflux(
-                Core::LinAlg::Initialization::set_zero);
+            Core::LinAlg::Matrix<nsd, nsd> difftensoraddflux(Core::LinAlg::Initialization::zero);
             for (int i = 0; i < nsd; i++)
               difftensoraddflux(i, i) = phasemanager.scalar_diff(ivolfrac - numfluidphases, iscal);
 
-            static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::set_zero);
+            static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
             diffflux.multiply(difftensoraddflux, gradscalarnp[iscal]);
 
             for (int vi = 0; vi < nen; ++vi)
@@ -4931,7 +4927,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddFlux<nsd,
         if (phasemanager.has_add_scalar_dependent_flux(ivolfrac - numfluidphases, iscal))
         {
           // diffusion tensor
-          Core::LinAlg::Matrix<nsd, nsd> difftensoraddflux(Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Matrix<nsd, nsd> difftensoraddflux(Core::LinAlg::Initialization::zero);
           for (int i = 0; i < nsd; i++)
             difftensoraddflux(i, i) = phasemanager.scalar_diff(ivolfrac - numfluidphases, iscal);
 
@@ -4954,7 +4950,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddFlux<nsd,
           else
             FOUR_C_THROW("AddScalarDependentFlux only possible for species in fluid or solid!");
 
-          static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::set_zero);
+          static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
           diffflux.multiply(difftensoraddflux, gradscalarnp[iscal]);
           for (int vi = 0; vi < nen; ++vi)
           {
@@ -5008,11 +5004,11 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddFlux<nsd,
         if (phasemanager.has_add_scalar_dependent_flux(ivolfrac - numfluidphases, iscal))
         {
           // diffusion tensor
-          Core::LinAlg::Matrix<nsd, nsd> difftensoraddflux(Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Matrix<nsd, nsd> difftensoraddflux(Core::LinAlg::Initialization::zero);
           for (int i = 0; i < nsd; i++)
             difftensoraddflux(i, i) = phasemanager.scalar_diff(ivolfrac - numfluidphases, iscal);
 
-          static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::set_zero);
+          static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
           // haptotaxis: scale with volfrac * (1 - porosity - sumaddvolfrac)
           if (phasemanager.scalar_to_phase(iscal).species_type ==
               Mat::ScaTraMatMultiPoro::SpeciesType::species_in_solid)
@@ -5055,7 +5051,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddFlux<nsd,
             FOUR_C_THROW("AddScalarDependentFlux only possible for species in fluid or solid!");
 
           // gradient of phi w.r.t. reference coordinates
-          Core::LinAlg::Matrix<nsd, 1> refgradscalarnp(Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Matrix<nsd, 1> refgradscalarnp(Core::LinAlg::Initialization::zero);
           refgradscalarnp.multiply(xjm, gradscalarnp[iscal]);
 
           // 1)
@@ -5074,7 +5070,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddFlux<nsd,
 
           if (phasemanager.porosity_depends_on_struct())
           {
-            static Core::LinAlg::Matrix<nsd, 1> diffflux2(Core::LinAlg::Initialization::set_zero);
+            static Core::LinAlg::Matrix<nsd, 1> diffflux2(Core::LinAlg::Initialization::zero);
 
             // haptotaxis
             if (phasemanager.scalar_to_phase(iscal).species_type ==
@@ -5155,7 +5151,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddFlux<nsd,
         if (phasemanager.has_add_scalar_dependent_flux(ivolfrac - numfluidphases, iscal))
         {
           // diffusion tensor
-          Core::LinAlg::Matrix<nsd, nsd> difftensoraddflux(Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Matrix<nsd, nsd> difftensoraddflux(Core::LinAlg::Initialization::zero);
           for (int i = 0; i < nsd; i++)
             difftensoraddflux(i, i) = phasemanager.scalar_diff(ivolfrac - numfluidphases, iscal);
 
@@ -5174,7 +5170,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddFlux<nsd,
           else
             FOUR_C_THROW("AddScalarDependentFlux only possible for species in fluid or solid!");
 
-          static Core::LinAlg::Matrix<nsd, nen> diffflux(Core::LinAlg::Initialization::set_zero);
+          static Core::LinAlg::Matrix<nsd, nen> diffflux(Core::LinAlg::Initialization::zero);
           diffflux.multiply(difftensoraddflux, derxy);
 
           // diffusive term
@@ -5207,7 +5203,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddFlux<nsd,
                 -1.0 /
                 (phasemanager.omega_half(ivolfrac - numfluidphases, iscal) + scalars[iscal]));
 
-            static Core::LinAlg::Matrix<nsd, 1> diffflux2(Core::LinAlg::Initialization::set_zero);
+            static Core::LinAlg::Matrix<nsd, 1> diffflux2(Core::LinAlg::Initialization::zero);
             diffflux2.multiply(difftensoraddflux, gradscalarnp[iscal]);
 
             for (int vi = 0; vi < nen; ++vi)
@@ -5266,14 +5262,14 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracPressureDiff<nsd,
       {
         // get permeability tensor and diffusive flux
         Core::LinAlg::Matrix<nsd, nsd> permeabilitytensorvolfracpress(
-            Core::LinAlg::Initialization::set_zero);
+            Core::LinAlg::Initialization::zero);
         phasemanager.permeability_tensor_vol_frac_pressure(
             ivolfracpress - numfluidphases - numvolfrac, permeabilitytensorvolfracpress);
         permeabilitytensorvolfracpress.scale(
             1.0 / phasemanager.dyn_viscosity_vol_frac_pressure(
                       ivolfracpress - numfluidphases - numvolfrac, -1.0));  // TODO: change -1.0
 
-        static Core::LinAlg::Matrix<nsd, nen> diffflux(Core::LinAlg::Initialization::set_zero);
+        static Core::LinAlg::Matrix<nsd, nen> diffflux(Core::LinAlg::Initialization::zero);
         diffflux.multiply(permeabilitytensorvolfracpress, derxy);
 
         // diffusive term
@@ -5339,14 +5335,14 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracPressureDiff<nsd,
     {
       // get permeability tensor
       Core::LinAlg::Matrix<nsd, nsd> permeabilitytensorvolfracpress(
-          Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Initialization::zero);
       phasemanager.permeability_tensor_vol_frac_pressure(
           ivolfracpress - numfluidphases - numvolfrac, permeabilitytensorvolfracpress);
       permeabilitytensorvolfracpress.scale(
           1.0 / phasemanager.dyn_viscosity_vol_frac_pressure(
                     ivolfracpress - numfluidphases - numvolfrac, -1.0));
 
-      static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::set_zero);
+      static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
       diffflux.multiply(permeabilitytensorvolfracpress, gradphi[ivolfracpress]);
 
       for (int vi = 0; vi < nen; ++vi)
@@ -5397,21 +5393,21 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracPressureDiff<nsd,
     {
       // get permeability tensor
       Core::LinAlg::Matrix<nsd, nsd> permeabilitytensorvolfracpress(
-          Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Initialization::zero);
       phasemanager.permeability_tensor_vol_frac_pressure(
           ivolfracpress - numfluidphases - numvolfrac, permeabilitytensorvolfracpress);
       permeabilitytensorvolfracpress.scale(
           1.0 / phasemanager.dyn_viscosity_vol_frac_pressure(
                     ivolfracpress - numfluidphases - numvolfrac, -1.0));
 
-      static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::set_zero);
+      static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
       diffflux.multiply(permeabilitytensorvolfracpress, gradphi[ivolfracpress]);
 
       // TODO: anisotropic difftensor
       const double v = permeabilitytensorvolfracpress(0, 0) * timefacfac / det;
 
       // gradient of phi w.r.t. reference coordinates
-      Core::LinAlg::Matrix<nsd, 1> refgradphi(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<nsd, 1> refgradphi(Core::LinAlg::Initialization::zero);
       refgradphi.multiply(xjm, gradphi[ivolfracpress]);
 
       // OD mesh - diffusive term

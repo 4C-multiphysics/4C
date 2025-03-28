@@ -407,7 +407,7 @@ namespace Discret
     {
      public:
       LubricationEleInternalVariableManager()
-          : prenp_(0.0), gradpre_(Core::LinAlg::Initialization::set_zero)
+          : prenp_(0.0), gradpre_(Core::LinAlg::Initialization::zero)
       {
         return;
       }

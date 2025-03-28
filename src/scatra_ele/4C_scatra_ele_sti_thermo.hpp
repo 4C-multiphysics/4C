@@ -184,7 +184,7 @@ namespace Discret
      public:
       //! constructor
       ScaTraEleInternalVariableManagerSTIThermo()
-          : temp_(0.), gradtemp_(Core::LinAlg::Initialization::set_zero) {};
+          : temp_(0.), gradtemp_(Core::LinAlg::Initialization::zero) {};
 
       //! set internal variables for element evaluation
       void set_internal_variables_sti_thermo(

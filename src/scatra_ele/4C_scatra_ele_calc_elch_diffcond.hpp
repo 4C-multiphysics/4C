@@ -677,7 +677,7 @@ namespace Discret
             diffcondparams_(diffcondparams),
             rtf_(0.),
             rtffc_(0.),
-            curint_(Core::LinAlg::Initialization::set_zero)
+            curint_(Core::LinAlg::Initialization::zero)
       {
       }
 

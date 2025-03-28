@@ -100,7 +100,7 @@ Core::Geo::BoundaryIntCell& Core::Geo::BoundaryIntCell::operator=(
 Core::Geo::BoundaryIntCell::BoundaryIntCell(Core::FE::CellType distype, const int& surface_ele_gid)
     : IntCell(distype),
       surface_ele_gid_(surface_ele_gid),
-      phys_center_(Core::LinAlg::Initialization::set_zero)
+      phys_center_(Core::LinAlg::Initialization::zero)
 { /* intentionally left blank */
 }
 

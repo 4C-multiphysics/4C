@@ -273,7 +273,7 @@ bool BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate(
   get_close_segments(endpoints1, endpoints2, closesmallanglesegments, closelargeanglesegments,
       closeendpointsegments, maxactivegap_);
 #else
-  Core::LinAlg::Matrix<3, 1, double> segmentdata(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1, double> segmentdata(Core::LinAlg::Initialization::zero);
   segmentdata(0) = 0.0;  // segment angle
   segmentdata(1) = 0.0;  // eta1_seg
   segmentdata(2) = 0.0;  // eta2_seg
@@ -452,27 +452,26 @@ void BeamInteraction::BeamToBeamContactPair<numnodes,
 
     // vectors for shape functions and their derivatives
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N1(
-        Core::LinAlg::Initialization::set_zero);  // = N1
+        Core::LinAlg::Initialization::zero);  // = N1
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N2(
-        Core::LinAlg::Initialization::set_zero);  // = N2
+        Core::LinAlg::Initialization::zero);  // = N2
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N1_xi(
-        Core::LinAlg::Initialization::set_zero);  // = N1,xi
+        Core::LinAlg::Initialization::zero);  // = N1,xi
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N2_xi(
-        Core::LinAlg::Initialization::set_zero);  // = N2,eta
+        Core::LinAlg::Initialization::zero);  // = N2,eta
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N1_xixi(
-        Core::LinAlg::Initialization::set_zero);  // = N1,xixi
+        Core::LinAlg::Initialization::zero);  // = N1,xixi
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N2_xixi(
-        Core::LinAlg::Initialization::set_zero);  // = N2,etaeta
+        Core::LinAlg::Initialization::zero);  // = N2,etaeta
 
     // coords and derivatives of the two contacting points
-    Core::LinAlg::Matrix<3, 1, TYPE> r1(Core::LinAlg::Initialization::set_zero);       // = r1
-    Core::LinAlg::Matrix<3, 1, TYPE> r2(Core::LinAlg::Initialization::set_zero);       // = r2
-    Core::LinAlg::Matrix<3, 1, TYPE> r1_xi(Core::LinAlg::Initialization::set_zero);    // = r1,xi
-    Core::LinAlg::Matrix<3, 1, TYPE> r2_xi(Core::LinAlg::Initialization::set_zero);    // = r2,eta
-    Core::LinAlg::Matrix<3, 1, TYPE> r1_xixi(Core::LinAlg::Initialization::set_zero);  // = r1,xixi
-    Core::LinAlg::Matrix<3, 1, TYPE> r2_xixi(
-        Core::LinAlg::Initialization::set_zero);  // = r2,etaeta
-    Core::LinAlg::Matrix<3, 1, TYPE> delta_r(Core::LinAlg::Initialization::set_zero);  // = r1-r2
+    Core::LinAlg::Matrix<3, 1, TYPE> r1(Core::LinAlg::Initialization::zero);       // = r1
+    Core::LinAlg::Matrix<3, 1, TYPE> r2(Core::LinAlg::Initialization::zero);       // = r2
+    Core::LinAlg::Matrix<3, 1, TYPE> r1_xi(Core::LinAlg::Initialization::zero);    // = r1,xi
+    Core::LinAlg::Matrix<3, 1, TYPE> r2_xi(Core::LinAlg::Initialization::zero);    // = r2,eta
+    Core::LinAlg::Matrix<3, 1, TYPE> r1_xixi(Core::LinAlg::Initialization::zero);  // = r1,xixi
+    Core::LinAlg::Matrix<3, 1, TYPE> r2_xixi(Core::LinAlg::Initialization::zero);  // = r2,etaeta
+    Core::LinAlg::Matrix<3, 1, TYPE> delta_r(Core::LinAlg::Initialization::zero);  // = r1-r2
 
     TYPE eta1 = cpvariables_[numcp]->get_cp().first;
     TYPE eta2 = cpvariables_[numcp]->get_cp().second;
@@ -945,9 +944,9 @@ void BeamInteraction::BeamToBeamContactPair<numnodes,
   double eta1_rightboundary = (*eta1_leftrightboundary).second;
 
   Core::LinAlg::Matrix<2 * 3 * numnodes * numnodalvalues, 1, TYPE> delta_xi_R(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<2 * 3 * numnodes * numnodalvalues, 1, TYPE> delta_xi_L(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
 
   if (leftsolutionwithinsegment)
   {
@@ -979,27 +978,26 @@ void BeamInteraction::BeamToBeamContactPair<numnodes,
 
     // vectors for shape functions and their derivatives
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N1(
-        Core::LinAlg::Initialization::set_zero);  // = N1
+        Core::LinAlg::Initialization::zero);  // = N1
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N2(
-        Core::LinAlg::Initialization::set_zero);  // = N2
+        Core::LinAlg::Initialization::zero);  // = N2
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N1_xi(
-        Core::LinAlg::Initialization::set_zero);  // = N1,xi
+        Core::LinAlg::Initialization::zero);  // = N1,xi
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N2_xi(
-        Core::LinAlg::Initialization::set_zero);  // = N2,eta
+        Core::LinAlg::Initialization::zero);  // = N2,eta
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N1_xixi(
-        Core::LinAlg::Initialization::set_zero);  // = N1,xixi
+        Core::LinAlg::Initialization::zero);  // = N1,xixi
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N2_xixi(
-        Core::LinAlg::Initialization::set_zero);  // = N2,etaeta
+        Core::LinAlg::Initialization::zero);  // = N2,etaeta
 
     // coords and derivatives of the two contacting points
-    Core::LinAlg::Matrix<3, 1, TYPE> r1(Core::LinAlg::Initialization::set_zero);       // = r1
-    Core::LinAlg::Matrix<3, 1, TYPE> r2(Core::LinAlg::Initialization::set_zero);       // = r2
-    Core::LinAlg::Matrix<3, 1, TYPE> r1_xi(Core::LinAlg::Initialization::set_zero);    // = r1,xi
-    Core::LinAlg::Matrix<3, 1, TYPE> r2_xi(Core::LinAlg::Initialization::set_zero);    // = r2,eta
-    Core::LinAlg::Matrix<3, 1, TYPE> r1_xixi(Core::LinAlg::Initialization::set_zero);  // = r1,xixi
-    Core::LinAlg::Matrix<3, 1, TYPE> r2_xixi(
-        Core::LinAlg::Initialization::set_zero);  // = r2,etaeta
-    Core::LinAlg::Matrix<3, 1, TYPE> delta_r(Core::LinAlg::Initialization::set_zero);  // = r1-r2
+    Core::LinAlg::Matrix<3, 1, TYPE> r1(Core::LinAlg::Initialization::zero);       // = r1
+    Core::LinAlg::Matrix<3, 1, TYPE> r2(Core::LinAlg::Initialization::zero);       // = r2
+    Core::LinAlg::Matrix<3, 1, TYPE> r1_xi(Core::LinAlg::Initialization::zero);    // = r1,xi
+    Core::LinAlg::Matrix<3, 1, TYPE> r2_xi(Core::LinAlg::Initialization::zero);    // = r2,eta
+    Core::LinAlg::Matrix<3, 1, TYPE> r1_xixi(Core::LinAlg::Initialization::zero);  // = r1,xixi
+    Core::LinAlg::Matrix<3, 1, TYPE> r2_xixi(Core::LinAlg::Initialization::zero);  // = r2,etaeta
+    Core::LinAlg::Matrix<3, 1, TYPE> delta_r(Core::LinAlg::Initialization::zero);  // = r1-r2
 
     // update shape functions and their derivatives
     get_shape_functions(N1, N2, N1_xi, N2_xi, N1_xixi, N2_xixi, eta1, eta2);
@@ -1257,7 +1255,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::get_activ
     {
       double eta1 = -1.0;
       double eta2 = -1.0;
-      Core::LinAlg::Matrix<3, 1> deltanodalpos(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<3, 1> deltanodalpos(Core::LinAlg::Initialization::zero);
       for (int i = 0; i < 3; i++)
       {
         deltanodalpos(i) = Core::FADUtils::cast_to_double(ele2pos_(i) - ele1pos_(i));
@@ -1287,7 +1285,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::get_activ
     {
       double eta1 = -1.0;
       double eta2 = 1.0;
-      Core::LinAlg::Matrix<3, 1> deltanodalpos(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<3, 1> deltanodalpos(Core::LinAlg::Initialization::zero);
       for (int i = 0; i < 3; i++)
       {
         deltanodalpos(i) = Core::FADUtils::cast_to_double(ele2pos_(6 + i) - ele1pos_(i));
@@ -1316,7 +1314,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::get_activ
     {
       double eta1 = 1.0;
       double eta2 = -1.0;
-      Core::LinAlg::Matrix<3, 1> deltanodalpos(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<3, 1> deltanodalpos(Core::LinAlg::Initialization::zero);
       for (int i = 0; i < 3; i++)
       {
         deltanodalpos(i) = Core::FADUtils::cast_to_double(ele2pos_(i) - ele1pos_(6 + i));
@@ -1345,7 +1343,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::get_activ
     {
       double eta1 = 1.0;
       double eta2 = 1.0;
-      Core::LinAlg::Matrix<3, 1> deltanodalpos(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<3, 1> deltanodalpos(Core::LinAlg::Initialization::zero);
       for (int i = 0; i < 3; i++)
       {
         deltanodalpos(i) = Core::FADUtils::cast_to_double(ele2pos_(6 + i) - ele1pos_(6 + i));
@@ -1393,27 +1391,26 @@ void BeamInteraction::BeamToBeamContactPair<numnodes,
 
     // vectors for shape functions and their derivatives
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N1(
-        Core::LinAlg::Initialization::set_zero);  // = N1
+        Core::LinAlg::Initialization::zero);  // = N1
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N2(
-        Core::LinAlg::Initialization::set_zero);  // = N2
+        Core::LinAlg::Initialization::zero);  // = N2
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N1_xi(
-        Core::LinAlg::Initialization::set_zero);  // = N1,xi
+        Core::LinAlg::Initialization::zero);  // = N1,xi
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N2_xi(
-        Core::LinAlg::Initialization::set_zero);  // = N2,eta
+        Core::LinAlg::Initialization::zero);  // = N2,eta
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N1_xixi(
-        Core::LinAlg::Initialization::set_zero);  // = N1,xixi
+        Core::LinAlg::Initialization::zero);  // = N1,xixi
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N2_xixi(
-        Core::LinAlg::Initialization::set_zero);  // = N2,etaeta
+        Core::LinAlg::Initialization::zero);  // = N2,etaeta
 
     // coords and derivatives of the two contacting points
-    Core::LinAlg::Matrix<3, 1, TYPE> r1(Core::LinAlg::Initialization::set_zero);       // = r1
-    Core::LinAlg::Matrix<3, 1, TYPE> r2(Core::LinAlg::Initialization::set_zero);       // = r2
-    Core::LinAlg::Matrix<3, 1, TYPE> r1_xi(Core::LinAlg::Initialization::set_zero);    // = r1,xi
-    Core::LinAlg::Matrix<3, 1, TYPE> r2_xi(Core::LinAlg::Initialization::set_zero);    // = r2,eta
-    Core::LinAlg::Matrix<3, 1, TYPE> r1_xixi(Core::LinAlg::Initialization::set_zero);  // = r1,xixi
-    Core::LinAlg::Matrix<3, 1, TYPE> r2_xixi(
-        Core::LinAlg::Initialization::set_zero);  // = r2,etaeta
-    Core::LinAlg::Matrix<3, 1, TYPE> delta_r(Core::LinAlg::Initialization::set_zero);  // = r1-r2
+    Core::LinAlg::Matrix<3, 1, TYPE> r1(Core::LinAlg::Initialization::zero);       // = r1
+    Core::LinAlg::Matrix<3, 1, TYPE> r2(Core::LinAlg::Initialization::zero);       // = r2
+    Core::LinAlg::Matrix<3, 1, TYPE> r1_xi(Core::LinAlg::Initialization::zero);    // = r1,xi
+    Core::LinAlg::Matrix<3, 1, TYPE> r2_xi(Core::LinAlg::Initialization::zero);    // = r2,eta
+    Core::LinAlg::Matrix<3, 1, TYPE> r1_xixi(Core::LinAlg::Initialization::zero);  // = r1,xixi
+    Core::LinAlg::Matrix<3, 1, TYPE> r2_xixi(Core::LinAlg::Initialization::zero);  // = r2,etaeta
+    Core::LinAlg::Matrix<3, 1, TYPE> delta_r(Core::LinAlg::Initialization::zero);  // = r1-r2
 
     TYPE eta1 = epvariables_[numep]->get_cp().first;
     TYPE eta2 = epvariables_[numep]->get_cp().second;
@@ -1822,8 +1819,8 @@ double BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::create_
     std::vector<Core::LinAlg::Matrix<3, 1, double>>& endpoints_final, int& numsegment, int i)
 {
   // endpoints of the segments
-  std::vector<Core::LinAlg::Matrix<3, 1, double>> endpoints((int)MAXNUMSEG + 1,
-      Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
+  std::vector<Core::LinAlg::Matrix<3, 1, double>> endpoints(
+      (int)MAXNUMSEG + 1, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
   double segangle = params()->beam_to_beam_contact_params()->segmentation_angle();
 
   numsegment = 1;
@@ -1843,11 +1840,11 @@ double BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::create_
 
   double xi1 = 0.0;
   double xi2 = 0.0;
-  Core::LinAlg::Matrix<3, 1, double> r1(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3, 1, double> t1(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3, 1, double> r2(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3, 1, double> t2(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3, 1, double> rm(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1, double> r1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> t1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> r2(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> t2(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> rm(Core::LinAlg::Initialization::zero);
   double l = 0.0;
   double segdist = 0.0;
   double maxsegdist = 0.0;
@@ -1871,7 +1868,7 @@ double BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::create_
       xi1 = -1.0 + i / ((double)numsegment) * 2.0;
       xi2 = -1.0 + (i + 1) / ((double)numsegment) *
                        2.0;  // The cast to double is necessary here to avoid integer round-off
-      Core::LinAlg::Matrix<3, 1, TYPE> auxmatrix(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<3, 1, TYPE> auxmatrix(Core::LinAlg::Initialization::zero);
 
       auxmatrix = r(xi1, ele);
       r1 = Core::FADUtils::cast_to_double<TYPE, 3, 1>(auxmatrix);
@@ -1976,8 +1973,8 @@ bool BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::check_seg
     Core::LinAlg::Matrix<3, 1, double>& r2, Core::LinAlg::Matrix<3, 1, double>& t2,
     Core::LinAlg::Matrix<3, 1, double>& rm, double& segdist)
 {
-  Core::LinAlg::Matrix<3, 1, double> t_lin(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3, 1, double> rm_lin(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1, double> t_lin(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> rm_lin(Core::LinAlg::Initialization::zero);
   double angle1(0.0);
   double angle2(0.0);
   double dist(0.0);
@@ -1990,7 +1987,7 @@ bool BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::check_seg
     rm_lin(i) = (r2(i) + r1(i)) / 2.0;
   }
 
-  Core::LinAlg::Matrix<3, 1, double> diffvec(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1, double> diffvec(Core::LinAlg::Initialization::zero);
   diffvec = Core::FADUtils::diff_vector(rm_lin, rm);
   dist = (double)Core::FADUtils::vector_norm<3>(diffvec);
   angle1 = (double)BeamInteraction::calc_angle(t1, t_lin);
@@ -2034,12 +2031,12 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::get_close
     std::map<std::pair<int, int>, Core::LinAlg::Matrix<3, 1, double>>& closelargeanglesegments,
     std::vector<std::pair<int, int>>& closeendpointsegments, double maxactivedist)
 {
-  Core::LinAlg::Matrix<3, 1, double> t1(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3, 1, double> t2(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3, 1, double> r1_a(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3, 1, double> r1_b(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3, 1, double> r2_a(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3, 1, double> r2_b(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1, double> t1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> t2(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> r1_a(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> r1_b(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> r2_a(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> r2_b(Core::LinAlg::Initialization::zero);
   double angle(0.0);
 
   bool endpoint_penalty = params()->beam_to_beam_contact_params()->end_point_penalty();
@@ -2073,7 +2070,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::get_close
       {
         if (BeamInteraction::intersect_parallel_cylinders(r1_a, r1_b, r2_a, r2_b, distancelimit))
         {
-          Core::LinAlg::Matrix<3, 1, double> segmentdata(Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Matrix<3, 1, double> segmentdata(Core::LinAlg::Initialization::zero);
           segmentdata(0) = angle;   // segment angle
           segmentdata(1) = 1000.0;  // eta1_seg
           segmentdata(2) = 1000.0;  // eta2_seg
@@ -2103,7 +2100,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::get_close
         if (BeamInteraction::intersect_arbitrary_cylinders(
                 r1_a, r1_b, r2_a, r2_b, distancelimit, closestpoints, etaset))
         {
-          Core::LinAlg::Matrix<3, 1, double> segmentdata(Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Matrix<3, 1, double> segmentdata(Core::LinAlg::Initialization::zero);
           segmentdata(0) = angle;  // segment angle
 
           if (etaset)
@@ -2182,38 +2179,37 @@ bool BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::closest_p
   {
     // vectors for shape functions and their derivatives
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N1(
-        Core::LinAlg::Initialization::set_zero);  // = N1
+        Core::LinAlg::Initialization::zero);  // = N1
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N2(
-        Core::LinAlg::Initialization::set_zero);  // = N2
+        Core::LinAlg::Initialization::zero);  // = N2
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N1_xi(
-        Core::LinAlg::Initialization::set_zero);  // = N1,xi
+        Core::LinAlg::Initialization::zero);  // = N1,xi
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N2_xi(
-        Core::LinAlg::Initialization::set_zero);  // = N2,eta
+        Core::LinAlg::Initialization::zero);  // = N2,eta
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N1_xixi(
-        Core::LinAlg::Initialization::set_zero);  // = N1,xixi
+        Core::LinAlg::Initialization::zero);  // = N1,xixi
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N2_xixi(
-        Core::LinAlg::Initialization::set_zero);  // = N2,etaeta
+        Core::LinAlg::Initialization::zero);  // = N2,etaeta
 
     // coords and derivatives of the two contacting points
-    Core::LinAlg::Matrix<3, 1, TYPE> r1(Core::LinAlg::Initialization::set_zero);       // = r1
-    Core::LinAlg::Matrix<3, 1, TYPE> r2(Core::LinAlg::Initialization::set_zero);       // = r2
-    Core::LinAlg::Matrix<3, 1, TYPE> r1_xi(Core::LinAlg::Initialization::set_zero);    // = r1,xi
-    Core::LinAlg::Matrix<3, 1, TYPE> r2_xi(Core::LinAlg::Initialization::set_zero);    // = r2,eta
-    Core::LinAlg::Matrix<3, 1, TYPE> r1_xixi(Core::LinAlg::Initialization::set_zero);  // = r1,xixi
-    Core::LinAlg::Matrix<3, 1, TYPE> r2_xixi(
-        Core::LinAlg::Initialization::set_zero);  // = r2,etaeta
-    Core::LinAlg::Matrix<3, 1, TYPE> delta_r(Core::LinAlg::Initialization::set_zero);  // = r1-r2
+    Core::LinAlg::Matrix<3, 1, TYPE> r1(Core::LinAlg::Initialization::zero);       // = r1
+    Core::LinAlg::Matrix<3, 1, TYPE> r2(Core::LinAlg::Initialization::zero);       // = r2
+    Core::LinAlg::Matrix<3, 1, TYPE> r1_xi(Core::LinAlg::Initialization::zero);    // = r1,xi
+    Core::LinAlg::Matrix<3, 1, TYPE> r2_xi(Core::LinAlg::Initialization::zero);    // = r2,eta
+    Core::LinAlg::Matrix<3, 1, TYPE> r1_xixi(Core::LinAlg::Initialization::zero);  // = r1,xixi
+    Core::LinAlg::Matrix<3, 1, TYPE> r2_xixi(Core::LinAlg::Initialization::zero);  // = r2,etaeta
+    Core::LinAlg::Matrix<3, 1, TYPE> delta_r(Core::LinAlg::Initialization::zero);  // = r1-r2
 
     // Tangent and derivatives for tangent field smoothing (only for Reissner beams)
-    Core::LinAlg::Matrix<3, 1, TYPE> t1(Core::LinAlg::Initialization::set_zero);
-    Core::LinAlg::Matrix<3, 1, TYPE> t1_xi(Core::LinAlg::Initialization::set_zero);
-    Core::LinAlg::Matrix<3, 1, TYPE> t2(Core::LinAlg::Initialization::set_zero);
-    Core::LinAlg::Matrix<3, 1, TYPE> t2_xi(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<3, 1, TYPE> t1(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1, TYPE> t1_xi(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1, TYPE> t2(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, 1, TYPE> t2_xi(Core::LinAlg::Initialization::zero);
 
     // initialize function f and Jacobian df for Newton iteration
-    Core::LinAlg::Matrix<2, 1, TYPE> f(Core::LinAlg::Initialization::set_zero);
-    Core::LinAlg::Matrix<2, 2, TYPE> df(Core::LinAlg::Initialization::set_zero);
-    Core::LinAlg::Matrix<2, 2, TYPE> dfinv(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<2, 1, TYPE> f(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<2, 2, TYPE> df(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<2, 2, TYPE> dfinv(Core::LinAlg::Initialization::zero);
 
     // initial scalar residual (L2-norm of f)
     double residual = 0.0;
@@ -2593,32 +2589,31 @@ bool BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::point_to_
   {
     // vectors for shape functions and their derivatives
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N1(
-        Core::LinAlg::Initialization::set_zero);  // = N1
+        Core::LinAlg::Initialization::zero);  // = N1
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N2(
-        Core::LinAlg::Initialization::set_zero);  // = N2
+        Core::LinAlg::Initialization::zero);  // = N2
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N1_xi(
-        Core::LinAlg::Initialization::set_zero);  // = N1,xi
+        Core::LinAlg::Initialization::zero);  // = N1,xi
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N2_xi(
-        Core::LinAlg::Initialization::set_zero);  // = N2,eta
+        Core::LinAlg::Initialization::zero);  // = N2,eta
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N1_xixi(
-        Core::LinAlg::Initialization::set_zero);  // = N1,xixi
+        Core::LinAlg::Initialization::zero);  // = N1,xixi
     Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N2_xixi(
-        Core::LinAlg::Initialization::set_zero);  // = N2,etaeta
+        Core::LinAlg::Initialization::zero);  // = N2,etaeta
 
     // coords and derivatives of the two contacting points
-    Core::LinAlg::Matrix<3, 1, TYPE> r1(Core::LinAlg::Initialization::set_zero);       // = r1
-    Core::LinAlg::Matrix<3, 1, TYPE> r2(Core::LinAlg::Initialization::set_zero);       // = r2
-    Core::LinAlg::Matrix<3, 1, TYPE> r1_xi(Core::LinAlg::Initialization::set_zero);    // = r1,xi
-    Core::LinAlg::Matrix<3, 1, TYPE> r2_xi(Core::LinAlg::Initialization::set_zero);    // = r2,eta
-    Core::LinAlg::Matrix<3, 1, TYPE> r1_xixi(Core::LinAlg::Initialization::set_zero);  // = r1,xixi
-    Core::LinAlg::Matrix<3, 1, TYPE> r2_xixi(
-        Core::LinAlg::Initialization::set_zero);  // = r2,etaeta
-    Core::LinAlg::Matrix<3, 1, TYPE> delta_r(Core::LinAlg::Initialization::set_zero);  // = r1-r2
+    Core::LinAlg::Matrix<3, 1, TYPE> r1(Core::LinAlg::Initialization::zero);       // = r1
+    Core::LinAlg::Matrix<3, 1, TYPE> r2(Core::LinAlg::Initialization::zero);       // = r2
+    Core::LinAlg::Matrix<3, 1, TYPE> r1_xi(Core::LinAlg::Initialization::zero);    // = r1,xi
+    Core::LinAlg::Matrix<3, 1, TYPE> r2_xi(Core::LinAlg::Initialization::zero);    // = r2,eta
+    Core::LinAlg::Matrix<3, 1, TYPE> r1_xixi(Core::LinAlg::Initialization::zero);  // = r1,xixi
+    Core::LinAlg::Matrix<3, 1, TYPE> r2_xixi(Core::LinAlg::Initialization::zero);  // = r2,etaeta
+    Core::LinAlg::Matrix<3, 1, TYPE> delta_r(Core::LinAlg::Initialization::zero);  // = r1-r2
 
     // initialize function f and Jacobian df for Newton iteration
     TYPE f = 0.0;
     TYPE df = 0.0;
-    Core::LinAlg::Matrix<2, 2, TYPE> dfinv(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<2, 2, TYPE> dfinv(Core::LinAlg::Initialization::zero);
 
     // initial scalar residual (L2-norm of f)
     double residual = 0.0;
@@ -2949,7 +2944,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes,
     bool& pointtolinesolfound)
 {
   // Calculate initial length of slave element
-  Core::LinAlg::Matrix<3, 1, double> lengthvec1(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1, double> lengthvec1(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 3; i++)
   {
     lengthvec1(i) = (element1()->nodes())[0]->x()[i] - (element1()->nodes())[1]->x()[i];
@@ -3092,8 +3087,8 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate_
   const unsigned int dim2 = 3 * numnodes * numnodalvalues;
 
   // temporary vectors for contact forces, DOF-GIDs and owning procs
-  Core::LinAlg::Matrix<dim1, 1, TYPE> fc1(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<dim2, 1, TYPE> fc2(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<dim1, 1, TYPE> fc1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<dim2, 1, TYPE> fc2(Core::LinAlg::Initialization::zero);
 
   // flag indicating assembly
   bool DoNotAssemble = true;
@@ -3141,10 +3136,10 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate_
     }
 #else
     // initialize storage for linearizations
-    Core::LinAlg::Matrix<dim1 + dim2, 1, TYPE> delta_xi(Core::LinAlg::Initialization::set_zero);
-    Core::LinAlg::Matrix<dim1 + dim2, 1, TYPE> delta_eta(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<dim1 + dim2, 1, TYPE> delta_xi(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<dim1 + dim2, 1, TYPE> delta_eta(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<dim1 + dim2, 1, TYPE> delta_coscontactangle(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
 
     Core::LinAlg::Matrix<3, 1, TYPE> delta_r = Core::FADUtils::DiffVector(r1, r2);
     TYPE norm_delta_r = Core::FADUtils::vector_norm<3>(delta_r);
@@ -3273,10 +3268,10 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate_
   const unsigned int dim2 = 3 * numnodes * numnodalvalues;
 
   // temporary matrices for stiffness and vectors for DOF-GIDs and owning procs
-  Core::LinAlg::Matrix<dim1, dim1 + dim2, TYPE> stiffc1(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<dim2, dim1 + dim2, TYPE> stiffc2(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<dim1, dim1 + dim2, TYPE> stiffc1_FAD(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<dim2, dim1 + dim2, TYPE> stiffc2_FAD(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<dim1, dim1 + dim2, TYPE> stiffc1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<dim2, dim1 + dim2, TYPE> stiffc2(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<dim1, dim1 + dim2, TYPE> stiffc1_FAD(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<dim2, dim1 + dim2, TYPE> stiffc2_FAD(Core::LinAlg::Initialization::zero);
 
   // flag indicating assembly
   bool DoNotAssemble = true;
@@ -3318,15 +3313,15 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate_
     DoNotAssemble = false;
 
     // initialize storage for linearizations
-    Core::LinAlg::Matrix<dim1 + dim2, 1, TYPE> delta_xi(Core::LinAlg::Initialization::set_zero);
-    Core::LinAlg::Matrix<dim1 + dim2, 1, TYPE> delta_eta(Core::LinAlg::Initialization::set_zero);
-    Core::LinAlg::Matrix<dim1 + dim2, 1, TYPE> delta_gap(Core::LinAlg::Initialization::set_zero);
-    Core::LinAlg::Matrix<dim1 + dim2, 1, TYPE> delta_gap_t(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<dim1 + dim2, 1, TYPE> delta_xi(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<dim1 + dim2, 1, TYPE> delta_eta(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<dim1 + dim2, 1, TYPE> delta_gap(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<dim1 + dim2, 1, TYPE> delta_gap_t(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<3, dim1 + dim2, TYPE> delta_x1_minus_x2(
-        Core::LinAlg::Initialization::set_zero);
-    Core::LinAlg::Matrix<3, dim1 + dim2, TYPE> delta_n(Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<3, dim1 + dim2, TYPE> delta_n(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<dim1 + dim2, 1, TYPE> delta_coscontactangle(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
 
     Core::LinAlg::Matrix<3, 1, TYPE> delta_r = Core::FADUtils::diff_vector(r1, r2);
     TYPE norm_delta_r = Core::FADUtils::vector_norm<3>(delta_r);
@@ -3397,7 +3392,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate_
     // part I - basic stiffness
     //********************************************************************
 
-    Core::LinAlg::Matrix<dim1, 1, TYPE> N1T_normal(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<dim1, 1, TYPE> N1T_normal(Core::LinAlg::Initialization::zero);
     for (unsigned int i = 0; i < 3; i++)
     {
       for (unsigned int j = 0; j < dim1; j++)
@@ -3433,7 +3428,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate_
       //********************************************************************
       // part III - geometric stiffness 2
       //********************************************************************
-      Core::LinAlg::Matrix<dim1, 1, TYPE> N1xiT_normal(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<dim1, 1, TYPE> N1xiT_normal(Core::LinAlg::Initialization::zero);
       for (unsigned int i = 0; i < 3; i++)
       {
         for (unsigned int j = 0; j < dim1; j++)
@@ -3458,7 +3453,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate_
     //********************************************************************
     // part I
     //********************************************************************
-    Core::LinAlg::Matrix<dim2, 1, TYPE> N2T_normal(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<dim2, 1, TYPE> N2T_normal(Core::LinAlg::Initialization::zero);
     for (unsigned int i = 0; i < 3; i++)
     {
       for (unsigned int j = 0; j < dim2; j++)
@@ -3493,7 +3488,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate_
       //********************************************************************
       // part III
       //********************************************************************
-      Core::LinAlg::Matrix<dim1, 1, TYPE> N2xiT_normal(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<dim1, 1, TYPE> N2xiT_normal(Core::LinAlg::Initialization::zero);
       for (unsigned int i = 0; i < 3; i++)
       {
         for (unsigned int j = 0; j < dim2; j++)
@@ -3520,8 +3515,8 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate_
     FOUR_C_THROW(
         "check implementation of AUTOMATICDIFF for BeamToBeamContactPair before using it!");
 
-    Core::LinAlg::Matrix<dim1, 1, TYPE> fc1_FAD(Core::LinAlg::Initialization::set_zero);
-    Core::LinAlg::Matrix<dim2, 1, TYPE> fc2_FAD(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<dim1, 1, TYPE> fc1_FAD(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<dim2, 1, TYPE> fc2_FAD(Core::LinAlg::Initialization::zero);
     evaluate_fc_contact(nullptr, r1, r2, r1_xi, r2_xi, r1_xixi, r2_xixi, N1, N2, N1_xi, N2_xi,
         variables, intfac, cpp, gp, fixedendpointxi, fixedendpointeta, &fc1_FAD, &fc2_FAD);
 
@@ -3711,8 +3706,8 @@ void BeamInteraction::BeamToBeamContactPair<numnodes,
   const unsigned int dim2 = 3 * numnodes * numnodalvalues;
 
   // temporary matrices for stiffness and vectors for DOF-GIDs and owning procs
-  Core::LinAlg::Matrix<dim1, dim1 + dim2, TYPE> stiffc1_FAD(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<dim2, dim1 + dim2, TYPE> stiffc2_FAD(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<dim1, dim1 + dim2, TYPE> stiffc1_FAD(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<dim2, dim1 + dim2, TYPE> stiffc2_FAD(Core::LinAlg::Initialization::zero);
   Core::LinAlg::SerialDenseMatrix stiffcontact1(dim1, dim1 + dim2);
   Core::LinAlg::SerialDenseMatrix stiffcontact2(dim2, dim1 + dim2);
   std::vector<int> lmrow1(dim1);
@@ -3798,13 +3793,13 @@ void BeamInteraction::BeamToBeamContactPair<numnodes,
     //    }
 
     // initialize storage for linearizations
-    Core::LinAlg::Matrix<dim1 + dim2, 1, TYPE> delta_eta(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<dim1 + dim2, 1, TYPE> delta_eta(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<3, 1, TYPE> delta_r = Core::FADUtils::DiffVector(r1, r2);
 
     compute_lin_eta_fix_xi(delta_eta, delta_r, r2_xi, r2_xixi, N1, N2, N2_xi);
 
-    Core::LinAlg::Matrix<dim1, 1, TYPE> fc1_FAD(Core::LinAlg::Initialization::set_zero);
-    Core::LinAlg::Matrix<dim2, 1, TYPE> fc2_FAD(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<dim1, 1, TYPE> fc1_FAD(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<dim2, 1, TYPE> fc2_FAD(Core::LinAlg::Initialization::zero);
     evaluate_fc_contact(nullptr, r1, r2, r1_xi, r2_xi, r1_xixi, r2_xixi, N1, N2, N1_xi, N2_xi,
         cpvariables, intfac, false, true, false, false, &fc1_FAD, &fc2_FAD);
 
@@ -3904,10 +3899,10 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::compute_l
   const unsigned int dim2 = 3 * numnodes * numnodalvalues;
 
   // matrices to compute Lin_Xi and Lin_Eta
-  Core::LinAlg::Matrix<2, 2, TYPE> L(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<2, 2, TYPE> L_inv(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<2, dim1 + dim2, TYPE> B(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<2, dim1 + dim2, TYPE> D(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<2, 2, TYPE> L(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<2, 2, TYPE> L_inv(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<2, dim1 + dim2, TYPE> B(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<2, dim1 + dim2, TYPE> D(Core::LinAlg::Initialization::zero);
 
   // compute L elementwise
   L(0, 0) = Core::FADUtils::scalar_product(r1_xi, r1_xi) +
@@ -3977,7 +3972,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::compute_l
 
   // matrices to compute Lin_Xi and Lin_Eta
   TYPE L = 0.0;
-  Core::LinAlg::Matrix<1, dim1 + dim2, TYPE> B(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<1, dim1 + dim2, TYPE> B(Core::LinAlg::Initialization::zero);
 
   // compute L elementwise
   L = -Core::FADUtils::scalar_product(r2_xi, r2_xi) +
@@ -4034,7 +4029,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::compute_l
 
   // matrices to compute Lin_Xi and Lin_Eta
   TYPE L = 0.0;
-  Core::LinAlg::Matrix<1, dim1 + dim2, TYPE> B(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<1, dim1 + dim2, TYPE> B(Core::LinAlg::Initialization::zero);
 
   // compute L elementwise
   L = Core::FADUtils::scalar_product(r1_xi, r1_xi) +
@@ -4081,26 +4076,26 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::compute_l
 {
   // vectors for shape functions and their derivatives
   Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N1(
-      Core::LinAlg::Initialization::set_zero);  // = N1
+      Core::LinAlg::Initialization::zero);  // = N1
   Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N2(
-      Core::LinAlg::Initialization::set_zero);  // = N2
+      Core::LinAlg::Initialization::zero);  // = N2
   Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N1_xi(
-      Core::LinAlg::Initialization::set_zero);  // = N1,xi
+      Core::LinAlg::Initialization::zero);  // = N1,xi
   Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N2_xi(
-      Core::LinAlg::Initialization::set_zero);  // = N2,eta
+      Core::LinAlg::Initialization::zero);  // = N2,eta
   Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N1_xixi(
-      Core::LinAlg::Initialization::set_zero);  // = N1,xixi
+      Core::LinAlg::Initialization::zero);  // = N1,xixi
   Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N2_xixi(
-      Core::LinAlg::Initialization::set_zero);  // = N2,etaeta
+      Core::LinAlg::Initialization::zero);  // = N2,etaeta
 
   // coords and derivatives of the two contacting points
-  Core::LinAlg::Matrix<3, 1, TYPE> r1(Core::LinAlg::Initialization::set_zero);       // = r1
-  Core::LinAlg::Matrix<3, 1, TYPE> r2(Core::LinAlg::Initialization::set_zero);       // = r2
-  Core::LinAlg::Matrix<3, 1, TYPE> r1_xi(Core::LinAlg::Initialization::set_zero);    // = r1,xi
-  Core::LinAlg::Matrix<3, 1, TYPE> r2_xi(Core::LinAlg::Initialization::set_zero);    // = r2,eta
-  Core::LinAlg::Matrix<3, 1, TYPE> r1_xixi(Core::LinAlg::Initialization::set_zero);  // = r1,xixi
-  Core::LinAlg::Matrix<3, 1, TYPE> r2_xixi(Core::LinAlg::Initialization::set_zero);  // = r2,etaeta
-  Core::LinAlg::Matrix<3, 1, TYPE> delta_r(Core::LinAlg::Initialization::set_zero);  // = r1-r2
+  Core::LinAlg::Matrix<3, 1, TYPE> r1(Core::LinAlg::Initialization::zero);       // = r1
+  Core::LinAlg::Matrix<3, 1, TYPE> r2(Core::LinAlg::Initialization::zero);       // = r2
+  Core::LinAlg::Matrix<3, 1, TYPE> r1_xi(Core::LinAlg::Initialization::zero);    // = r1,xi
+  Core::LinAlg::Matrix<3, 1, TYPE> r2_xi(Core::LinAlg::Initialization::zero);    // = r2,eta
+  Core::LinAlg::Matrix<3, 1, TYPE> r1_xixi(Core::LinAlg::Initialization::zero);  // = r1,xixi
+  Core::LinAlg::Matrix<3, 1, TYPE> r2_xixi(Core::LinAlg::Initialization::zero);  // = r2,etaeta
+  Core::LinAlg::Matrix<3, 1, TYPE> delta_r(Core::LinAlg::Initialization::zero);  // = r1-r2
 
   // update shape functions and their derivatives
   get_shape_functions(N1, N2, N1_xi, N2_xi, N1_xixi, N2_xixi, eta1_bound, eta2);
@@ -4115,7 +4110,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::compute_l
 
   // matrices to compute Lin_Xi and Lin_Eta
   TYPE a_11(0.0);
-  Core::LinAlg::Matrix<2, dim1 + dim2, TYPE> B(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<2, dim1 + dim2, TYPE> B(Core::LinAlg::Initialization::zero);
 
   a_11 = Core::FADUtils::scalar_product(r1_xi, r1_xi) +
          Core::FADUtils::scalar_product(delta_r, r1_xixi);
@@ -4185,8 +4180,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::compute_l
   // delta g := delta_r/||delta_r||*auxiliary_matri1 delta d, with auxiliary_matri1 =
   // (r1_xi*delta_xi-r2_xi*delta_eta + (N1, -N2))
 
-  Core::LinAlg::Matrix<3, dim1 + dim2, TYPE> auxiliary_matrix1(
-      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, dim1 + dim2, TYPE> auxiliary_matrix1(Core::LinAlg::Initialization::zero);
 
   for (unsigned int i = 0; i < 3; i++)
   {
@@ -4266,8 +4260,8 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::
   v1.scale(1.0 / norm_r1xi);
   v2.scale(1.0 / norm_r2xi);
 
-  Core::LinAlg::Matrix<3, dim1 + dim2, TYPE> delta_r1_xi(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3, dim1 + dim2, TYPE> delta_r2_xi(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, dim1 + dim2, TYPE> delta_r1_xi(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, dim1 + dim2, TYPE> delta_r2_xi(Core::LinAlg::Initialization::zero);
 
   for (unsigned int i = 0; i < 3; i++)
   {
@@ -4289,8 +4283,8 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::
     }
   }
 
-  Core::LinAlg::Matrix<1, dim1 + dim2, TYPE> v1_delta_r1_xi(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<1, dim1 + dim2, TYPE> v2_delta_r2_xi(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<1, dim1 + dim2, TYPE> v1_delta_r1_xi(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, dim1 + dim2, TYPE> v2_delta_r2_xi(Core::LinAlg::Initialization::zero);
   v1_delta_r1_xi.multiply_tn(v1, delta_r1_xi);
   v2_delta_r2_xi.multiply_tn(v2, delta_r2_xi);
 
@@ -4328,9 +4322,8 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::compute_l
   Core::LinAlg::Matrix<3, 1, TYPE> normal(delta_r);
   normal.scale(1.0 / norm_delta_r);
 
-  Core::LinAlg::Matrix<3, dim1 + dim2, TYPE> auxiliary_matrix1(
-      Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3, 3, TYPE> auxiliary_matrix2(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, dim1 + dim2, TYPE> auxiliary_matrix1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3, TYPE> auxiliary_matrix2(Core::LinAlg::Initialization::zero);
 
   // compute auxiliary_matrix1
   for (unsigned int i = 0; i < 3; i++)
@@ -4396,18 +4389,16 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::get_shape
   const Core::FE::CellType distype1 = element1()->shape();
   const Core::FE::CellType distype2 = element2()->shape();
 
-  Core::LinAlg::Matrix<1, numnodes * numnodalvalues, TYPE> N1_i(
-      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<1, numnodes * numnodalvalues, TYPE> N1_i(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<1, numnodes * numnodalvalues, TYPE> N1_i_xi(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<1, numnodes * numnodalvalues, TYPE> N1_i_xixi(
-      Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<1, numnodes * numnodalvalues, TYPE> N2_i(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, numnodes * numnodalvalues, TYPE> N2_i(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<1, numnodes * numnodalvalues, TYPE> N2_i_xi(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<1, numnodes * numnodalvalues, TYPE> N2_i_xixi(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
 
   if (numnodalvalues == 1)
   {
@@ -4466,8 +4457,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::get_shape
 {
   // get both discretization types
   const Core::FE::CellType distype = ele->shape();
-  Core::LinAlg::Matrix<1, numnodes * numnodalvalues, TYPE> N_i(
-      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<1, numnodes * numnodalvalues, TYPE> N_i(Core::LinAlg::Initialization::zero);
 
   if (numnodalvalues == 1)
   {
@@ -4542,9 +4532,9 @@ Core::LinAlg::Matrix<3, 1, TYPE>
 BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::r(
     const TYPE& eta, const Core::Elements::Element* ele) const
 {
-  Core::LinAlg::Matrix<3, 1, TYPE> r(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1, TYPE> r(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   get_shape_functions(N, eta, 0, ele);
 
   if (ele->id() == element1()->id())
@@ -4586,9 +4576,9 @@ Core::LinAlg::Matrix<3, 1, TYPE>
 BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::r_xi(
     const TYPE& eta, const Core::Elements::Element* ele)
 {
-  Core::LinAlg::Matrix<3, 1, TYPE> r_xi(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1, TYPE> r_xi(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE> N_xi(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   get_shape_functions(N_xi, eta, 1, ele);
 
   if (ele->id() == element1()->id())
@@ -4857,7 +4847,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::compute_n
     FOUR_C_THROW("ERROR: Normal of length zero! --> change time step!");
 
   // unit normal
-  Core::LinAlg::Matrix<3, 1, TYPE> normal(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1, TYPE> normal(Core::LinAlg::Initialization::zero);
   normal.update(1.0 / norm_delta_r, delta_r, 0.0);
 
   TYPE gap = norm_delta_r - r1_ - r2_;
@@ -5130,7 +5120,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::
   int size3 = epvariables_.size();
 
   coords.resize(size1 + size2 + size3,
-      Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
+      Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
 
   for (int i = 0; i < size1; ++i)
   {
@@ -5171,7 +5161,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::
   int size3 = epvariables_.size();
 
   coords.resize(size1 + size2 + size3,
-      Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::set_zero));
+      Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
 
   for (int i = 0; i < size1; ++i)
   {
@@ -5305,9 +5295,9 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::fad_check
     const Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE>& N1_xi,
     const Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE>& N2_xi)
 {
-  Core::LinAlg::Matrix<2, 1, TYPE> f(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3, 1, TYPE> t1_dummy(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3, 1, TYPE> t2_dummy(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<2, 1, TYPE> f(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, TYPE> t1_dummy(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, TYPE> t2_dummy(Core::LinAlg::Initialization::zero);
 
   // compute norm of difference vector to scale the equations
   // (this yields better conditioning)
@@ -5336,10 +5326,10 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::fad_check
   const unsigned int dim2 = 3 * numnodes * numnodalvalues;
 
   // matrices to compute Lin_Xi and Lin_Eta
-  Core::LinAlg::Matrix<2, 2, TYPE> L(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<2, 2, TYPE> L_inv(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<2, dim1 + dim2, TYPE> B(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<2, dim1 + dim2, TYPE> D(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<2, 2, TYPE> L(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<2, 2, TYPE> L_inv(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<2, dim1 + dim2, TYPE> B(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<2, dim1 + dim2, TYPE> D(Core::LinAlg::Initialization::zero);
 
   // compute L elementwise
   L(0, 0) = f(0).dx(2 * 3 * numnodes * numnodalvalues);
@@ -5386,11 +5376,11 @@ void BeamInteraction::BeamToBeamContactPair<numnodes,
     const Core::LinAlg::Matrix<3, 1, TYPE>& r2_xi, const Core::LinAlg::Matrix<3, 1, TYPE>& t1,
     const Core::LinAlg::Matrix<3, 1, TYPE>& t2)
 {
-  Core::LinAlg::Matrix<2, 1, TYPE> f(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<2, 1, TYPE> f(Core::LinAlg::Initialization::zero);
 
   evaluate_orthogonality_condition(f, delta_r, norm_delta_r, r1_xi, r2_xi, t1, t2);
 
-  Core::LinAlg::Matrix<2, 2, TYPE> df(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<2, 2, TYPE> df(Core::LinAlg::Initialization::zero);
 
   for (unsigned int i = 0; i < 2; i++)
   {

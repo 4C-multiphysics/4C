@@ -4307,15 +4307,15 @@ ScaTra::MortarCellCalc<distype_s, distype_m>::MortarCellCalc(
     : MortarCellInterface(couplingtype, lmside, numdofpernode_slave, numdofpernode_master),
       scatraparamsboundary_(Discret::Elements::ScaTraEleParameterBoundary::instance("scatra")),
       ephinp_slave_(numdofpernode_slave,
-          Core::LinAlg::Matrix<nen_slave_, 1>(Core::LinAlg::Initialization::set_zero)),
+          Core::LinAlg::Matrix<nen_slave_, 1>(Core::LinAlg::Initialization::zero)),
       ephinp_master_(numdofpernode_master,
-          Core::LinAlg::Matrix<nen_master_, 1>(Core::LinAlg::Initialization::set_zero)),
-      funct_slave_(Core::LinAlg::Initialization::set_zero),
-      funct_master_(Core::LinAlg::Initialization::set_zero),
-      shape_lm_slave_(Core::LinAlg::Initialization::set_zero),
-      shape_lm_master_(Core::LinAlg::Initialization::set_zero),
-      test_lm_slave_(Core::LinAlg::Initialization::set_zero),
-      test_lm_master_(Core::LinAlg::Initialization::set_zero)
+          Core::LinAlg::Matrix<nen_master_, 1>(Core::LinAlg::Initialization::zero)),
+      funct_slave_(Core::LinAlg::Initialization::zero),
+      funct_master_(Core::LinAlg::Initialization::zero),
+      shape_lm_slave_(Core::LinAlg::Initialization::zero),
+      shape_lm_master_(Core::LinAlg::Initialization::zero),
+      test_lm_slave_(Core::LinAlg::Initialization::zero),
+      test_lm_master_(Core::LinAlg::Initialization::zero)
 {
   // safety check
   if (nsd_slave_ != 2 or nsd_master_ != 2)

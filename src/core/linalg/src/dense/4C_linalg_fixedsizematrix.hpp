@@ -1917,8 +1917,8 @@ namespace Core::LinAlg
 
   enum class Initialization
   {
-    set_zero,
-    leave_uninitialized
+    zero,
+    uninitialized
   };
 
   /// Serial dense matrix with templated dimensions
@@ -1971,7 +1971,7 @@ namespace Core::LinAlg
 
       \param init whether to initialize the matrix to zero or leave it uninitialized
      */
-    explicit Matrix(Initialization init = Initialization::set_zero);
+    explicit Matrix(Initialization init = Initialization::zero);
 
     template <typename T>
     explicit Matrix(T) = delete;
@@ -3063,8 +3063,7 @@ namespace Core::LinAlg
       data_ = new ValueType[rows * cols];
     else
       data_ = datafieldsmall_;
-    if (init == Initialization::set_zero)
-      DenseFunctions::clear_matrix<ValueType, rows, cols>(data_);
+    if (init == Initialization::zero) DenseFunctions::clear_matrix<ValueType, rows, cols>(data_);
   }
 
   template <unsigned int rows, unsigned int cols, class ValueType>

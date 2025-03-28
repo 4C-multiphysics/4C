@@ -98,7 +98,7 @@ namespace Core::IO
     {
       // Get the knots and weights of this element.
       Core::LinAlg::Matrix<number_of_output_points, 1, double> weights(
-          Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Initialization::zero);
       std::vector<Core::LinAlg::SerialDenseVector> knots(true);
       const bool zero_size =
           Core::FE::Nurbs::get_my_nurbs_knots_and_weights(discret, &ele, knots, weights);
@@ -284,7 +284,7 @@ namespace Core::IO
     {
       // Get the knots and weights for this element.
       Core::LinAlg::Matrix<number_of_output_points, 1, double> weights(
-          Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Initialization::zero);
       std::vector<Core::LinAlg::SerialDenseVector> knots(true);
       const bool zero_size =
           Core::FE::Nurbs::get_my_nurbs_knots_and_weights(discret, &ele, knots, weights);
@@ -371,7 +371,7 @@ namespace Core::IO
     {
       // Get the knots and weights for this element.
       Core::LinAlg::Matrix<number_of_output_points, 1, double> weights(
-          Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Initialization::zero);
       std::vector<Core::LinAlg::SerialDenseVector> knots(true);
       const bool zero_size =
           Core::FE::Nurbs::get_my_nurbs_knots_and_weights(discret, &ele, knots, weights);

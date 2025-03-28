@@ -473,9 +473,9 @@ bool Cut::Kernel::pt_inside_triangle(std::vector<Point*> tri, Point* check, bool
   Core::LinAlg::Matrix<3, 1> t2;
   Core::LinAlg::Matrix<3, 1> t3;
   Core::LinAlg::Matrix<3, 1> pt;
-  Core::LinAlg::Matrix<3, 1> v0(Core::LinAlg::Initialization::leave_uninitialized);
-  Core::LinAlg::Matrix<3, 1> v1(Core::LinAlg::Initialization::leave_uninitialized);
-  Core::LinAlg::Matrix<3, 1> v2(Core::LinAlg::Initialization::leave_uninitialized);
+  Core::LinAlg::Matrix<3, 1> v0(Core::LinAlg::Initialization::uninitialized);
+  Core::LinAlg::Matrix<3, 1> v1(Core::LinAlg::Initialization::uninitialized);
+  Core::LinAlg::Matrix<3, 1> v2(Core::LinAlg::Initialization::uninitialized);
   tri[0]->coordinates(t1.data());
   tri[1]->coordinates(t2.data());
   tri[2]->coordinates(t3.data());

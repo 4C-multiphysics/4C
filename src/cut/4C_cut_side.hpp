@@ -822,12 +822,11 @@ namespace Cut
         bool unitnormal = true)
     {
       // get derivatives at pos
-      Core::LinAlg::Matrix<probdim, num_nodes_side> side_xyze(
-          Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<probdim, num_nodes_side> side_xyze(Core::LinAlg::Initialization::zero);
       this->coordinates(side_xyze);
 
-      Core::LinAlg::Matrix<dim, num_nodes_side> deriv(Core::LinAlg::Initialization::set_zero);
-      Core::LinAlg::Matrix<dim, probdim> A(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<dim, num_nodes_side> deriv(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<dim, probdim> A(Core::LinAlg::Initialization::zero);
 
       Core::FE::shape_function_deriv1<sidetype>(xsi, deriv);
       A.multiply_nt(deriv, side_xyze);
@@ -887,12 +886,11 @@ namespace Cut
         Core::LinAlg::Matrix<probdim, 1>& t2, Core::LinAlg::Matrix<probdim, 1>& n)
     {
       // get derivatives at pos
-      Core::LinAlg::Matrix<probdim, num_nodes_side> side_xyze(
-          Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<probdim, num_nodes_side> side_xyze(Core::LinAlg::Initialization::zero);
       this->coordinates(side_xyze);
 
-      Core::LinAlg::Matrix<dim, num_nodes_side> deriv(Core::LinAlg::Initialization::set_zero);
-      Core::LinAlg::Matrix<dim, probdim> A(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<dim, num_nodes_side> deriv(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<dim, probdim> A(Core::LinAlg::Initialization::zero);
 
       Core::FE::shape_function_deriv1<sidetype>(xsi, deriv);
       A.multiply_nt(deriv, side_xyze);

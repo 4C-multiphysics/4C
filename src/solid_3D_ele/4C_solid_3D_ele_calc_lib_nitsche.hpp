@@ -119,7 +119,7 @@ namespace Discret::Elements
       Core::LinAlg::SerialDenseMatrix& d2_cauchyndir_dd_dd)
   {
     Core::LinAlg::Matrix<9, Core::FE::num_nodes<celltype> * Core::FE::dim<celltype>>
-        d2_cauchyndir_dF_2d_F_dd(Core::LinAlg::Initialization::set_zero);
+        d2_cauchyndir_dF_2d_F_dd(Core::LinAlg::Initialization::zero);
     d2_cauchyndir_dF_2d_F_dd.multiply(d2_cauchyndir_dF2, d_F_dd);
     Internal::multiply_tn(d_F_dd, d2_cauchyndir_dF_2d_F_dd, d2_cauchyndir_dd_dd);
   }
@@ -276,19 +276,19 @@ namespace Discret::Elements
         Internal::make_optional_if<Core::LinAlg::Matrix<9, 1>>(
             linearizations.d_cauchyndir_dd || linearizations.d_cauchyndir_dxi ||
                 linearizations.d2_cauchyndir_dd_dxi,
-            Core::LinAlg::Initialization::set_zero);
+            Core::LinAlg::Initialization::zero);
 
     linearization_dependencies.d2_cauchyndir_dF2 =
         Internal::make_optional_if<Core::LinAlg::Matrix<9, 9>>(
-            linearizations.d2_cauchyndir_dd2, Core::LinAlg::Initialization::set_zero);
+            linearizations.d2_cauchyndir_dd2, Core::LinAlg::Initialization::zero);
 
     linearization_dependencies.d2_cauchyndir_dF_dn =
         Internal::make_optional_if<Core::LinAlg::Matrix<9, 3>>(
-            linearizations.d2_cauchyndir_dd_dn, Core::LinAlg::Initialization::set_zero);
+            linearizations.d2_cauchyndir_dd_dn, Core::LinAlg::Initialization::zero);
 
     linearization_dependencies.d2_cauchyndir_dF_ddir =
         Internal::make_optional_if<Core::LinAlg::Matrix<9, 3>>(
-            linearizations.d2_cauchyndir_dd_ddir, Core::LinAlg::Initialization::set_zero);
+            linearizations.d2_cauchyndir_dd_ddir, Core::LinAlg::Initialization::zero);
 
 
     if (linearizations.d_cauchyndir_dd || linearizations.d2_cauchyndir_dd_dn ||

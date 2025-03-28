@@ -267,7 +267,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
   double scalarintegraltransformfac = 0.0;
   double tangentialfac = 0.0;
 
-  Core::LinAlg::Matrix<nsd_, 1> neumannoverinflow(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, 1> neumannoverinflow(Core::LinAlg::Initialization::zero);
 
   std::vector<int> lm;
   std::vector<int> lmowner;
@@ -279,32 +279,32 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
   std::vector<double> my_parentdisp_n;
   std::vector<double> porosity;
 
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> evelnp(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> eveln(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<nsd_, nenparent> pevelnp(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> evelnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> eveln(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, nenparent> pevelnp(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<nsd_, nenparent> peveln(
-      Core::LinAlg::Initialization::set_zero);  // at previous time step n
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> edispnp(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> egridvel(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> egridvel_n(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<1, Base::bdrynen_> epressnp(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<1, Base::bdrynen_> epressn(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<nsd_, 1> gridvelint(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<nsd_, 1> pxsi(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<1, 1> pressint(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);  // at previous time step n
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> edispnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> egridvel(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> egridvel_n(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, Base::bdrynen_> epressnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, Base::bdrynen_> epressn(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, 1> gridvelint(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, 1> pxsi(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, 1> pressint(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<1, 1> pressint_n(
-      Core::LinAlg::Initialization::set_zero);  // at previous time step n
-  Core::LinAlg::Matrix<nsd_, nsd_> dudxi(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);  // at previous time step n
+  Core::LinAlg::Matrix<nsd_, nsd_> dudxi(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<nsd_, nsd_> dudxi_n(
-      Core::LinAlg::Initialization::set_zero);  // at previous time step n
-  Core::LinAlg::Matrix<nsd_, nsd_> dudxioJinv(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);  // at previous time step n
+  Core::LinAlg::Matrix<nsd_, nsd_> dudxioJinv(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<nsd_, nsd_> dudxioJinv_n(
-      Core::LinAlg::Initialization::set_zero);  // at previous time step n
-  Core::LinAlg::Matrix<1, 1> tangentialvelocity1(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<1, 1> tangentialvelocity2(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<1, 1> tangentialgridvelocity1(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<1, 1> tangentialgridvelocity2(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<1, 1> normalvelocity(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);  // at previous time step n
+  Core::LinAlg::Matrix<1, 1> tangentialvelocity1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, 1> tangentialvelocity2(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, 1> tangentialgridvelocity1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, 1> tangentialgridvelocity2(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, 1> normalvelocity(Core::LinAlg::Initialization::zero);
 
   Core::LinAlg::Matrix<nsd_, nenparent> xrefe;  // material coord. of parent element
   Core::LinAlg::Matrix<nsd_, nenparent> xcurr;  // current  coord. of parent element
@@ -543,7 +543,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
 
   // get coordinates of gauss points w.r.t. local parent coordinate system
   Core::LinAlg::SerialDenseMatrix pqxg(intpoints.ip().nquad, nsd_);
-  Core::LinAlg::Matrix<nsd_, nsd_> derivtrafo(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, nsd_> derivtrafo(Core::LinAlg::Initialization::zero);
 
   Core::FE::boundary_gp_to_parent_gp<nsd_>(
       pqxg, derivtrafo, intpoints, pdistype, distype, ele->surface_number());
@@ -555,13 +555,13 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
   {
     // get shape functions and derivatives in the plane of the element
     Core::LinAlg::Matrix<nenparent, 1> pfunct(
-        Core::LinAlg::Initialization::set_zero);  // parent element shape function
+        Core::LinAlg::Initialization::zero);  // parent element shape function
     Core::LinAlg::Matrix<nsd_, nenparent> pderiv(
-        Core::LinAlg::Initialization::set_zero);  // derivatives of parent element shape functions
-                                                  // in interface coordinate system
+        Core::LinAlg::Initialization::zero);  // derivatives of parent element shape functions
+                                              // in interface coordinate system
     Core::LinAlg::Matrix<nsd_, nenparent> pderiv_loc(
-        Core::LinAlg::Initialization::set_zero);  // derivatives of parent element shape functions
-                                                  // in parent element coordinate system
+        Core::LinAlg::Initialization::zero);  // derivatives of parent element shape functions
+                                              // in parent element coordinate system
 
     // coordinates of the current integration point in parent coordinate system
     for (int idim = 0; idim < nsd_; idim++)
@@ -696,9 +696,9 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
     dudxioJinv.multiply_nt(dudxi, xji);
     dudxioJinv_n.multiply_nt(dudxi_n, xji_n);  // at previous time step n
 
-    Core::LinAlg::Matrix<1, nsd_> graduon(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<1, nsd_> graduon(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<1, nsd_> graduon_n(
-        Core::LinAlg::Initialization::set_zero);  // from previous time step
+        Core::LinAlg::Initialization::zero);  // from previous time step
     //
     // l=  1     2     3
     // [  ...   ...   ...  ]
@@ -712,9 +712,9 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
         graduon_n(0, idof) += dudxioJinv_n(idof, idof2) * Base::unitnormal_n_(idof2);
       }
     }
-    Core::LinAlg::Matrix<1, nsd_> graduTon(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<1, nsd_> graduTon(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<1, nsd_> graduTon_n(
-        Core::LinAlg::Initialization::set_zero);  // at previous time step n
+        Core::LinAlg::Initialization::zero);  // at previous time step n
     //
     // l=  1     2     3
     // [  ...   ...   ...  ]
@@ -751,18 +751,17 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
 
     // dxyzdrs vector -> normal which is not normalized built from cross product of columns
     // of Jacobian matrix d(x,y,z)/d(r,s)
-    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(
-        Core::LinAlg::Initialization::leave_uninitialized);
+    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(Core::LinAlg::Initialization::uninitialized);
     Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs_n(
-        Core::LinAlg::Initialization::leave_uninitialized);
+        Core::LinAlg::Initialization::uninitialized);
     dxyzdrs.multiply_nt(Base::deriv_, Base::xyze_);
     dxyzdrs_n.multiply_nt(Base::deriv_, Base::xyze_n_);
 
     // tangential surface vectors are columns of dxyzdrs
-    Core::LinAlg::Matrix<nsd_, 1> tangential1(Core::LinAlg::Initialization::set_zero);
-    Core::LinAlg::Matrix<nsd_, 1> tangential2(Core::LinAlg::Initialization::set_zero);
-    Core::LinAlg::Matrix<nsd_, 1> tangential1_n(Core::LinAlg::Initialization::set_zero);
-    Core::LinAlg::Matrix<nsd_, 1> tangential2_n(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<nsd_, 1> tangential1(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd_, 1> tangential2(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd_, 1> tangential1_n(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd_, 1> tangential2_n(Core::LinAlg::Initialization::zero);
 
     for (int idof = 0; idof < nsd_; idof++)
     {
@@ -832,9 +831,9 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
     //     |_                                                                              _|
     //
     Core::LinAlg::Matrix<nsd_, nenparent * nsd_> tangentialderiv1(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<nsd_, nenparent * nsd_> tangentialderiv2(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
 
     for (int node = 0; node < nenparent; ++node)
     {
@@ -877,9 +876,9 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
     //       d d^L_l
     //
     Core::LinAlg::Matrix<nenparent * nsd_, 1> vsotangentialderiv1(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<nenparent * nsd_, 1> vsotangentialderiv2(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
     for (int inode = 0; inode < nenparent; inode++)
     {
       for (int idof = 0; idof < nsd_; idof++)
@@ -894,9 +893,9 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
       }
     }
     Core::LinAlg::Matrix<nenparent * nsd_, 1> vfotangentialderiv1(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<nenparent * nsd_, 1> vfotangentialderiv2(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
     for (int inode = 0; inode < nenparent; inode++)
     {
       for (int idof = 0; idof < nsd_; idof++)
@@ -928,8 +927,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
     //  interface and its corresponding basic functions become zero. this makes perfect
     //  sense for the normal and its linearization are well determined solely by the
     //  surface of the element.
-    Core::LinAlg::Matrix<nsd_, nenparent * nsd_> normalderiv(
-        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<nsd_, nenparent * nsd_> normalderiv(Core::LinAlg::Initialization::zero);
 
     if (nsd_ == 3)
     {
@@ -977,7 +975,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
     //          | x_3,r |     | x_3,s |
     //          |_     _|     |_     _|
     //
-    Core::LinAlg::Matrix<nsd_, 1> normal(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<nsd_, 1> normal(Core::LinAlg::Initialization::zero);
 
     if (nsd_ == 3)
     {
@@ -1006,7 +1004,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
     //
     //
     Core::LinAlg::Matrix<nsd_, nenparent> linearizationofscalarintegraltransformfac(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
 
     for (int node = 0; node < nenparent; ++node)
     {
@@ -1045,7 +1043,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
     //  N_L,beta  ---------- n^j = derxy o n
     //            d   x_j
     //
-    Core::LinAlg::Matrix<1, nenparent> dNdxon(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<1, nenparent> dNdxon(Core::LinAlg::Initialization::zero);
     for (int inode = 0; inode < nenparent; inode++)
     {
       for (int idof = 0; idof < nsd_; idof++)
@@ -1054,8 +1052,8 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
       }
     }
 
-    Core::LinAlg::Matrix<1, nenparent> gradNon(Core::LinAlg::Initialization::set_zero);
-    Core::LinAlg::Matrix<1, nsd_ * nenparent> gradN(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<1, nenparent> gradNon(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<1, nsd_ * nenparent> gradN(Core::LinAlg::Initialization::zero);
     //              d xi_alpha
     //  N_L,alpha  ------------ [g_L x g_j]
     //              d  x_j
@@ -1131,7 +1129,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
     for (int inode = 0; inode < nenparent; inode++)
     {
       double normal_u_minus_vs = 0.0;
-      Core::LinAlg::Matrix<1, nsd_> u_minus_vs(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<1, nsd_> u_minus_vs(Core::LinAlg::Initialization::zero);
 
       for (int idof = 0; idof < nsd_; idof++)
       {
@@ -1140,7 +1138,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
       }
 
       Core::LinAlg::Matrix<1, nenparent * nsd_> u_minus_vs_normalderiv(
-          Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Initialization::zero);
       u_minus_vs_normalderiv.multiply(u_minus_vs, normalderiv);
 
 
@@ -1591,7 +1589,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
     for (int inode = 0; inode < nenparent; inode++)
     {
       double normal_u_minus_vs = 0.0;
-      Core::LinAlg::Matrix<1, nsd_> u_minus_vs(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<1, nsd_> u_minus_vs(Core::LinAlg::Initialization::zero);
 
       for (int idof = 0; idof < nsd_; idof++)
       {
@@ -1600,7 +1598,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::fpsi_coupling(
       }
 
       Core::LinAlg::Matrix<1, nenparent * nsd_> u_minus_vs_normalderiv(
-          Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Initialization::zero);
       u_minus_vs_normalderiv.multiply(u_minus_vs, normalderiv);
 
       // //////////////////////////////////////////////////////////////////////////
@@ -1897,12 +1895,12 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::compute_flow_rate(
   std::vector<double> mygridvel = Core::FE::extract_values(*gridvel, lm);
 
   // allocate velocity vectors
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> evelnp(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<Base::bdrynen_, 1> epressnp(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> edispnp(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> egridvel(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<Base::bdrynen_, 1> escaaf(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<Base::bdrynen_, 1> eporosity(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> evelnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<Base::bdrynen_, 1> epressnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> edispnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> egridvel(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<Base::bdrynen_, 1> escaaf(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<Base::bdrynen_, 1> eporosity(Core::LinAlg::Initialization::zero);
 
   // split velocity and pressure, insert into element arrays
   for (int inode = 0; inode < Base::bdrynen_; inode++)
@@ -1920,7 +1918,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::compute_flow_rate(
 
   // get coordinates of gauss points w.r.t. local parent coordinate system
   Core::LinAlg::SerialDenseMatrix pqxg(intpoints.ip().nquad, nsd_);
-  Core::LinAlg::Matrix<nsd_, nsd_> derivtrafo(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, nsd_> derivtrafo(Core::LinAlg::Initialization::zero);
 
   Core::FE::boundary_gp_to_parent_gp<nsd_>(
       pqxg, derivtrafo, intpoints, pdistype, distype, ele->surface_number());
@@ -1956,12 +1954,12 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::compute_flow_rate(
   Core::LinAlg::Matrix<nsd_, 1> gridvelint;
 
   // coordinates of gauss points of parent element
-  Core::LinAlg::Matrix<nsd_, 1> pxsi(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, 1> pxsi(Core::LinAlg::Initialization::zero);
 
   for (int gpid = 0; gpid < intpoints.ip().nquad; gpid++)
   {
     // get shape functions and derivatives in the plane of the element
-    Core::LinAlg::Matrix<nenparent, 1> pfunct(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<nenparent, 1> pfunct(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<nsd_, nenparent> pderiv_loc;
 
     // coordinates of the current integration point
@@ -2140,7 +2138,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration(
     }
   }
 
-  Core::LinAlg::Matrix<Base::numdofpernode_, 1> nodenormal(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Base::numdofpernode_, 1> nodenormal(Core::LinAlg::Initialization::zero);
 
   // check which matrix is to be filled
   PoroElast::Coupltype coupling =
@@ -2180,8 +2178,8 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration(
     std::vector<double> mygridvel = Core::FE::extract_values(*gridvel, lm);
 
     // allocate velocity vectors
-    Core::LinAlg::Matrix<nsd_, Base::bdrynen_> evelnp(Core::LinAlg::Initialization::set_zero);
-    Core::LinAlg::Matrix<nsd_, Base::bdrynen_> egridvel(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<nsd_, Base::bdrynen_> evelnp(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd_, Base::bdrynen_> egridvel(Core::LinAlg::Initialization::zero);
 
     // split velocity and pressure, insert into element arrays
     for (int inode = 0; inode < Base::bdrynen_; inode++)
@@ -2195,7 +2193,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration(
 
     //  derivatives of surface normals wrt mesh displacements
     Core::LinAlg::Matrix<nsd_, Base::bdrynen_ * nsd_> normalderiv(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
 
     for (int gpid = 0; gpid < intpoints.ip().nquad; gpid++)
     {
@@ -2208,7 +2206,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration(
 
       // dxyzdrs vector -> normal which is not normalized
       Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(
-          Core::LinAlg::Initialization::leave_uninitialized);
+          Core::LinAlg::Initialization::uninitialized);
       dxyzdrs.multiply_nt(Base::deriv_, Base::xyze_);
 
       // The integration factor is not multiplied with drs
@@ -2259,9 +2257,9 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration(
     }
 
     // allocate auxiliary variable (= normalderiv^T * velocity)
-    Core::LinAlg::Matrix<1, nsd_ * Base::bdrynen_> temp(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<1, nsd_ * Base::bdrynen_> temp(Core::LinAlg::Initialization::zero);
     // allocate convective velocity at node
-    Core::LinAlg::Matrix<1, nsd_> convvel(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<1, nsd_> convvel(Core::LinAlg::Initialization::zero);
 
     // fill element matrix
     for (int inode = 0; inode < Base::bdrynen_; inode++)
@@ -2363,7 +2361,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_ids(
     }
   }
 
-  Core::LinAlg::Matrix<Base::numdofpernode_, 1> nodenormal(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Base::numdofpernode_, 1> nodenormal(Core::LinAlg::Initialization::zero);
 
   // fill element matrix
   for (int inode = 0; inode < Base::bdrynen_; inode++)
@@ -2606,12 +2604,12 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::poro_boundary(
   std::vector<double> myscaaf = Core::FE::extract_values(*scaaf, lm);
 
   // allocate velocity vectors
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> evelnp(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<Base::bdrynen_, 1> epressnp(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> edispnp(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> egridvel(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<Base::bdrynen_, 1> escaaf(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<Base::bdrynen_, 1> eporosity(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> evelnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<Base::bdrynen_, 1> epressnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> edispnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> egridvel(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<Base::bdrynen_, 1> escaaf(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<Base::bdrynen_, 1> eporosity(Core::LinAlg::Initialization::zero);
 
   // split velocity and pressure, insert into element arrays
   for (int inode = 0; inode < Base::bdrynen_; inode++)
@@ -2630,7 +2628,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::poro_boundary(
 
   // get coordinates of gauss points w.r.t. local parent coordinate system
   Core::LinAlg::SerialDenseMatrix pqxg(intpoints.ip().nquad, nsd_);
-  Core::LinAlg::Matrix<nsd_, nsd_> derivtrafo(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, nsd_> derivtrafo(Core::LinAlg::Initialization::zero);
 
   Core::FE::boundary_gp_to_parent_gp<nsd_>(
       pqxg, derivtrafo, intpoints, pdistype, distype, ele->surface_number());
@@ -2664,12 +2662,12 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::poro_boundary(
   Core::LinAlg::Matrix<nsd_, 1> gridvelint;
 
   // coordinates of gauss points of parent element
-  Core::LinAlg::Matrix<nsd_, 1> pxsi(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, 1> pxsi(Core::LinAlg::Initialization::zero);
 
   for (int gpid = 0; gpid < intpoints.ip().nquad; gpid++)
   {
     // get shape functions and derivatives in the plane of the element
-    Core::LinAlg::Matrix<nenparent, 1> pfunct(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<nenparent, 1> pfunct(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<nsd_, nenparent> pderiv;
     Core::LinAlg::Matrix<nsd_, nenparent> pderiv_loc;
 
@@ -2739,12 +2737,10 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::poro_boundary(
     const double fac = intpoints.ip().qwgt[gpid];
 
     //  derivatives of surface normals wrt mesh displacements
-    Core::LinAlg::Matrix<nsd_, nenparent * nsd_> normalderiv(
-        Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<nsd_, nenparent * nsd_> normalderiv(Core::LinAlg::Initialization::zero);
 
     // dxyzdrs vector -> normal which is not normalized
-    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(
-        Core::LinAlg::Initialization::leave_uninitialized);
+    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(Core::LinAlg::Initialization::uninitialized);
     dxyzdrs.multiply_nt(Base::deriv_, Base::xyze_);
 
     if (nsd_ == 3)
@@ -2942,7 +2938,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::pressure_coupling(
   std::vector<double> myvelnp = Core::FE::extract_values(*velnp, lm);
 
   // allocate velocity vectors
-  Core::LinAlg::Matrix<Base::bdrynen_, 1> epressnp(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Base::bdrynen_, 1> epressnp(Core::LinAlg::Initialization::zero);
 
   // split velocity and pressure, insert into element arrays
   for (int inode = 0; inode < Base::bdrynen_; inode++)
@@ -2991,8 +2987,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::pressure_coupling(
     double press = Base::funct_.dot(epressnp);
 
     // dxyzdrs vector -> normal which is not normalized
-    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(
-        Core::LinAlg::Initialization::leave_uninitialized);
+    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(Core::LinAlg::Initialization::uninitialized);
     dxyzdrs.multiply_nt(Base::deriv_, Base::xyze_);
 
     // in the case of nurbs the normal vector must be scaled with a special factor
@@ -3000,7 +2995,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::pressure_coupling(
 
     //  derivatives of surface normals wrt mesh displacements
     Core::LinAlg::Matrix<nsd_, Base::bdrynen_ * nsd_> normalderiv(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
 
     // The integration factor is not multiplied with drs
     // since it is the same as the scaling factor for the unit normal derivatives
@@ -3262,8 +3257,8 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_an
   std::vector<double> mygridvel = Core::FE::extract_values(*gridvel, lm);
 
   // allocate velocity vectors
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> evelnp(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> egridvel(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> evelnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> egridvel(Core::LinAlg::Initialization::zero);
 
   // split velocity and pressure, insert into element arrays
   for (int inode = 0; inode < Base::bdrynen_; inode++)
@@ -3276,7 +3271,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_an
   }
 
   // allocate convective velocity at node
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> econvvel(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> econvvel(Core::LinAlg::Initialization::zero);
   econvvel += evelnp;
   if (not Base::fldparatimint_->is_stationary()) econvvel -= egridvel;
 
@@ -3317,7 +3312,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_an
   std::vector<double> pvelnp = Core::FE::extract_values(*velnp, plm);
 
   // allocate vectors
-  Core::LinAlg::Matrix<nenparent, 1> pepressnp(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nenparent, 1> pepressnp(Core::LinAlg::Initialization::zero);
 
   // split velocity and pressure, insert into element arrays
   for (int inode = 0; inode < nenparent; inode++)
@@ -3327,15 +3322,15 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_an
 
   // get coordinates of gauss points w.r.t. local parent coordinate system
   Core::LinAlg::SerialDenseMatrix pqxg(intpoints.ip().nquad, nsd_);
-  Core::LinAlg::Matrix<nsd_, nsd_> derivtrafo(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, nsd_> derivtrafo(Core::LinAlg::Initialization::zero);
 
   Core::FE::boundary_gp_to_parent_gp<nsd_>(
       pqxg, derivtrafo, intpoints, pdistype, distype, ele->surface_number());
 
   // coordinates of gauss points of parent element
-  Core::LinAlg::Matrix<nsd_, 1> pxsi(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, 1> pxsi(Core::LinAlg::Initialization::zero);
 
-  Core::LinAlg::Matrix<Base::bdrynen_, 1> eporosity(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Base::bdrynen_, 1> eporosity(Core::LinAlg::Initialization::zero);
 
   // --------------------------------------------------
   // Now do the nurbs specific stuff
@@ -3365,7 +3360,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_an
   // --------------------------------------------------
 
   // allocate convective velocity at gauss point
-  Core::LinAlg::Matrix<nsd_, 1> convvel(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, 1> convvel(Core::LinAlg::Initialization::zero);
 
   for (int gpid = 0; gpid < intpoints.ip().nquad; gpid++)
   {
@@ -3380,7 +3375,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_an
     // parent element
     // --------------------------------------------------
     // get shape functions and derivatives in the plane of the element
-    Core::LinAlg::Matrix<nenparent, 1> pfunct(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<nenparent, 1> pfunct(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<nsd_, nenparent> pderiv_loc;
 
     // coordinates of the current integration point
@@ -3425,8 +3420,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_an
     // --------------------------------------------------
 
     // dxyzdrs vector -> normal which is not normalized
-    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(
-        Core::LinAlg::Initialization::leave_uninitialized);
+    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(Core::LinAlg::Initialization::uninitialized);
     dxyzdrs.multiply_nt(Base::deriv_, Base::xyze_);
 
     // in the case of nurbs the normal vector must be scaled with a special factor
@@ -3634,8 +3628,8 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
   std::vector<double> mygridvel = Core::FE::extract_values(*gridvel, lm);
 
   // allocate velocity vectors
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> evelnp(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> egridvel(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> evelnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> egridvel(Core::LinAlg::Initialization::zero);
 
   // split velocity and pressure, insert into element arrays
   for (int inode = 0; inode < Base::bdrynen_; inode++)
@@ -3653,7 +3647,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
 
   std::vector<double> mylambda = Core::FE::extract_values(*glambda, lm);
 
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> elambda(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> elambda(Core::LinAlg::Initialization::zero);
 
   // copy lagrange multiplier values into matrix
   for (int inode = 0; inode < Base::bdrynen_; inode++)
@@ -3665,7 +3659,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
   }
 
   // allocate convective velocity at node
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> econvvel(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> econvvel(Core::LinAlg::Initialization::zero);
 
   econvvel += evelnp;
   if (not Base::fldparatimint_->is_stationary()) econvvel -= egridvel;
@@ -3707,7 +3701,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
   std::vector<double> pvelnp = Core::FE::extract_values(*velnp, plm);
 
   // allocate vectors
-  Core::LinAlg::Matrix<nenparent, 1> pepressnp(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nenparent, 1> pepressnp(Core::LinAlg::Initialization::zero);
 
   // split velocity and pressure, insert into element arrays
   for (int inode = 0; inode < nenparent; inode++)
@@ -3717,15 +3711,15 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
 
   // get coordinates of gauss points w.r.t. local parent coordinate system
   Core::LinAlg::SerialDenseMatrix pqxg(intpoints.ip().nquad, nsd_);
-  Core::LinAlg::Matrix<nsd_, nsd_> derivtrafo(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, nsd_> derivtrafo(Core::LinAlg::Initialization::zero);
 
   Core::FE::boundary_gp_to_parent_gp<nsd_>(
       pqxg, derivtrafo, intpoints, pdistype, distype, ele->surface_number());
 
   // coordinates of gauss points of parent element
-  Core::LinAlg::Matrix<nsd_, 1> pxsi(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, 1> pxsi(Core::LinAlg::Initialization::zero);
 
-  Core::LinAlg::Matrix<Base::bdrynen_, 1> eporosity(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Base::bdrynen_, 1> eporosity(Core::LinAlg::Initialization::zero);
 
   // --------------------------------------------------
   // Now do the nurbs specific stuff
@@ -3753,15 +3747,15 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
   }
   // --------------------------------------------------
   // tangent vectors
-  Core::LinAlg::Matrix<nsd_, 1> tangent1(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<nsd_, 1> tangent2(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, 1> tangent1(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, 1> tangent2(Core::LinAlg::Initialization::zero);
 
   // allocate convective velocity at gauss point
-  Core::LinAlg::Matrix<nsd_, 1> convvel(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<nsd_, 1> lambda(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, 1> convvel(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, 1> lambda(Core::LinAlg::Initialization::zero);
 
   // array for dual shape functions for boundary element
-  Core::LinAlg::Matrix<Base::bdrynen_, 1> dualfunct(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Base::bdrynen_, 1> dualfunct(Core::LinAlg::Initialization::zero);
 
   for (int gpid = 0; gpid < intpoints.ip().nquad; gpid++)
   {
@@ -3777,7 +3771,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
     // --------------------------------------------------
 
     // get shape functions and derivatives in the plane of the element
-    Core::LinAlg::Matrix<nenparent, 1> pfunct(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<nenparent, 1> pfunct(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<nsd_, nenparent> pderiv_loc;
 
     // coordinates of the current integration point
@@ -3827,8 +3821,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
     Coupling::VolMortar::Utils::dual_shape_function<distype>(dualfunct, Axi.data(), *ele);
 
     // dxyzdrs vector -> normal which is not normalized
-    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(
-        Core::LinAlg::Initialization::leave_uninitialized);
+    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(Core::LinAlg::Initialization::uninitialized);
     dxyzdrs.multiply_nt(Base::deriv_, Base::xyze_);
 
     // in the case of nurbs the normal vector must be scaled with a special factor
@@ -3839,11 +3832,11 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
 
     //  derivatives of surface normals wrt mesh displacements
     Core::LinAlg::Matrix<nsd_, Base::bdrynen_ * nsd_> normalderiv(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<nsd_, Base::bdrynen_ * nsd_> tangent1deriv(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<nsd_, Base::bdrynen_ * nsd_> tangent2deriv(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
 
     // The integration factor is not multiplied with drs
     // since it is the same as the scaling factor for the unit normal derivatives
@@ -3977,7 +3970,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
     }
 
     static Core::LinAlg::Matrix<1, Base::bdrynen_ * nsd_> convvel_normalderiv(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
     convvel_normalderiv.multiply_tn(convvel, normalderiv);
 
     // fill element matrix
@@ -3999,10 +3992,10 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
     if (nsd_ == 3)
     {
       static Core::LinAlg::Matrix<1, Base::bdrynen_ * nsd_> lambda_tangent1deriv(
-          Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Initialization::zero);
       lambda_tangent1deriv.multiply_tn(lambda, tangent1deriv);
       static Core::LinAlg::Matrix<1, Base::bdrynen_ * nsd_> lambda_tangent2deriv(
-          Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Initialization::zero);
       lambda_tangent2deriv.multiply_tn(lambda, tangent2deriv);
 
       for (int inode = 0; inode < Base::bdrynen_; inode++)
@@ -4023,7 +4016,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
     else if (nsd_ == 2)
     {
       Core::LinAlg::Matrix<1, Base::bdrynen_ * nsd_> lambda_tangent1deriv(
-          Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Initialization::zero);
       lambda_tangent1deriv.multiply_tn(lambda, tangent1deriv);
 
       for (int inode = 0; inode < Base::bdrynen_; inode++)
@@ -4245,8 +4238,8 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
   std::vector<double> mygridvel = Core::FE::extract_values(*gridvel, lm);
 
   // allocate velocity vectors
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> evelnp(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> egridvel(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> evelnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> egridvel(Core::LinAlg::Initialization::zero);
 
   // split velocity and pressure, insert into element arrays
   for (int inode = 0; inode < Base::bdrynen_; inode++)
@@ -4259,7 +4252,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
   }
 
   // allocate convective velocity at node
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> econvvel(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> econvvel(Core::LinAlg::Initialization::zero);
 
   econvvel += evelnp;
   if (not Base::fldparatimint_->is_stationary()) econvvel -= egridvel;
@@ -4301,7 +4294,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
   std::vector<double> pvelnp = Core::FE::extract_values(*velnp, plm);
 
   // allocate vectors
-  Core::LinAlg::Matrix<nenparent, 1> pepressnp(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nenparent, 1> pepressnp(Core::LinAlg::Initialization::zero);
 
   // split velocity and pressure, insert into element arrays
   for (int inode = 0; inode < nenparent; inode++)
@@ -4311,15 +4304,15 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
 
   // get coordinates of gauss points w.r.t. local parent coordinate system
   Core::LinAlg::SerialDenseMatrix pqxg(intpoints.ip().nquad, nsd_);
-  Core::LinAlg::Matrix<nsd_, nsd_> derivtrafo(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, nsd_> derivtrafo(Core::LinAlg::Initialization::zero);
 
   Core::FE::boundary_gp_to_parent_gp<nsd_>(
       pqxg, derivtrafo, intpoints, pdistype, distype, ele->surface_number());
 
   // coordinates of gauss points of parent element
-  Core::LinAlg::Matrix<nsd_, 1> pxsi(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, 1> pxsi(Core::LinAlg::Initialization::zero);
 
-  Core::LinAlg::Matrix<Base::bdrynen_, 1> eporosity(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Base::bdrynen_, 1> eporosity(Core::LinAlg::Initialization::zero);
 
   // --------------------------------------------------
   // Now do the nurbs specific stuff
@@ -4347,7 +4340,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
   }
 
   // --------------------------------------------------
-  Core::LinAlg::Matrix<nsd_, 1> convvel(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, 1> convvel(Core::LinAlg::Initialization::zero);
 
   for (int gpid = 0; gpid < intpoints.ip().nquad; gpid++)
   {
@@ -4363,7 +4356,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
     // --------------------------------------------------
 
     // get shape functions and derivatives in the plane of the element
-    Core::LinAlg::Matrix<nenparent, 1> pfunct(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<nenparent, 1> pfunct(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<nsd_, nenparent> pderiv_loc;
 
     // coordinates of the current integration point
@@ -4408,8 +4401,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
         params, ele, Base::funct_, eporosity, press, J, gpid, porosity_gp, dphi_dp, dphi_dJ, false);
 
     // dxyzdrs vector -> normal which is not normalized
-    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(
-        Core::LinAlg::Initialization::leave_uninitialized);
+    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(Core::LinAlg::Initialization::uninitialized);
     dxyzdrs.multiply_nt(Base::deriv_, Base::xyze_);
 
     // in the case of nurbs the normal vector must be scaled with a special factor
@@ -4610,8 +4602,8 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
   std::vector<double> mygridvel = Core::FE::extract_values(*gridvel, lm);
 
   // allocate velocity vectors
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> evelnp(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> egridvel(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> evelnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> egridvel(Core::LinAlg::Initialization::zero);
 
   // split velocity and pressure, insert into element arrays
   for (int inode = 0; inode < Base::bdrynen_; inode++)
@@ -4624,7 +4616,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
   }
 
   // allocate convective velocity at node
-  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> econvvel(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, Base::bdrynen_> econvvel(Core::LinAlg::Initialization::zero);
 
   econvvel += evelnp;
   if (not Base::fldparatimint_->is_stationary()) econvvel -= egridvel;
@@ -4660,7 +4652,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
   std::vector<double> pvelnp = Core::FE::extract_values(*velnp, plm);
 
   // allocate vectors
-  Core::LinAlg::Matrix<nenparent, 1> pepressnp(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nenparent, 1> pepressnp(Core::LinAlg::Initialization::zero);
 
   // split velocity and pressure, insert into element arrays
   for (int inode = 0; inode < nenparent; inode++)
@@ -4670,16 +4662,16 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
 
   // get coordinates of gauss points w.r.t. local parent coordinate system
   Core::LinAlg::SerialDenseMatrix pqxg(intpoints.ip().nquad, nsd_);
-  Core::LinAlg::Matrix<nsd_, nsd_> derivtrafo(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, nsd_> derivtrafo(Core::LinAlg::Initialization::zero);
 
   Core::FE::boundary_gp_to_parent_gp<nsd_>(
       pqxg, derivtrafo, intpoints, pdistype, distype, ele->surface_number());
 
   // coordinates of gauss points of parent element
-  Core::LinAlg::Matrix<nsd_, 1> pxsi(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, 1> pxsi(Core::LinAlg::Initialization::zero);
 
-  Core::LinAlg::Matrix<Base::bdrynen_, 1> eporosity(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<nsd_, 1> convvel(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Base::bdrynen_, 1> eporosity(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd_, 1> convvel(Core::LinAlg::Initialization::zero);
 
   // --------------------------------------------------
   // Now do the nurbs specific stuff
@@ -4720,7 +4712,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
     // --------------------------------------------------
 
     // get shape functions and derivatives in the plane of the element
-    Core::LinAlg::Matrix<nenparent, 1> pfunct(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<nenparent, 1> pfunct(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<nsd_, nenparent> pderiv_loc;
 
     // coordinates of the current integration point
@@ -4778,8 +4770,7 @@ void Discret::Elements::FluidEleBoundaryCalcPoro<distype>::no_penetration_mat_od
         params, ele, Base::funct_, eporosity, press, J, gpid, porosity_gp, dphi_dp, dphi_dJ, false);
 
     // dxyzdrs vector -> normal which is not normalized
-    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(
-        Core::LinAlg::Initialization::leave_uninitialized);
+    Core::LinAlg::Matrix<Base::bdrynsd_, nsd_> dxyzdrs(Core::LinAlg::Initialization::uninitialized);
     dxyzdrs.multiply_nt(Base::deriv_, Base::xyze_);
 
     // in the case of nurbs the normal vector must be scaled with a special factor

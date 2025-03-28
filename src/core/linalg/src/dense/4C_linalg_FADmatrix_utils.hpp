@@ -27,8 +27,7 @@ namespace Core::LinAlg
   {
    public:
     /// Constructor
-    explicit FADMatrix(Initialization init = Initialization::set_zero)
-        : Matrix<rows, cols, FAD>(init)
+    explicit FADMatrix(Initialization init = Initialization::zero) : Matrix<rows, cols, FAD>(init)
     {
     }
 
@@ -90,7 +89,7 @@ namespace Core::LinAlg
     /// Convert FADMatrix to Matrix<rows,cols,double>
     inline Matrix<rows, cols> convertto_double() const
     {
-      Core::LinAlg::Matrix<rows, cols> tmp(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<rows, cols> tmp(Core::LinAlg::Initialization::zero);
       for (unsigned i = 0; i < rows; ++i)
         for (unsigned j = 0; j < cols; ++j) tmp(i, j) = (*this)(i, j).val();
 

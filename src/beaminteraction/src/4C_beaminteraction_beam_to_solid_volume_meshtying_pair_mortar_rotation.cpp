@@ -77,18 +77,17 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortarRotation<Beam, Solid, 
             3 + i_solid, Core::FADUtils::cast_to_double(this->ele2pos_.element_position_(i_solid)));
 
   // Initialize local matrices.
-  Core::LinAlg::Matrix<MortarRot::n_dof_, 1, double> local_g(
-      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<MortarRot::n_dof_, 1, double> local_g(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<MortarRot::n_dof_, n_dof_rot_, double> local_G_B(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<MortarRot::n_dof_, Solid::n_dof_, double> local_G_S(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<n_dof_rot_, MortarRot::n_dof_, double> local_FB_L(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<Solid::n_dof_, MortarRot::n_dof_, double> local_FS_L(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<MortarRot::n_dof_, 1, double> local_kappa(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
 
   const auto rot_coupling_type =
       this->params()->beam_to_solid_volume_meshtying_params()->get_rotational_coupling_type();
@@ -185,9 +184,9 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortarRotation<Beam, Solid, 
 
   Core::LinAlg::Matrix<MortarRot::n_nodes_, 1, double> lambda_shape_functions;
   Core::LinAlg::Matrix<3, MortarRot::n_dof_, double> lambda_shape_functions_full(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   Core::LinAlg::SerialDenseVector L_i(3);
-  Core::LinAlg::Matrix<3, n_dof_rot_, double> L_full(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, n_dof_rot_, double> L_full(Core::LinAlg::Initialization::zero);
   std::vector<Core::LinAlg::Matrix<3, 3, double>> I_beam_tilde;
   Core::LinAlg::Matrix<3, n_dof_rot_, double> I_beam_tilde_full;
   Core::LinAlg::Matrix<3, n_dof_rot_, double> T_beam_times_I_beam_tilde_full;
@@ -376,13 +375,13 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortarRotation<Beam, Solid, 
 
   // Initialize local matrices.
   Core::LinAlg::Matrix<n_dof_rot_, n_dof_rot_, double> local_stiff_BB(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<n_dof_rot_, Solid::n_dof_, double> local_stiff_BS(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<Solid::n_dof_, n_dof_rot_, double> local_stiff_SB(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<Solid::n_dof_, Solid::n_dof_, double> local_stiff_SS(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
 
   const auto rot_coupling_type =
       this->params()->beam_to_solid_volume_meshtying_params()->get_rotational_coupling_type();
@@ -468,10 +467,10 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairMortarRotation<Beam, Solid, 
 
   Core::LinAlg::Matrix<MortarRot::n_nodes_, 1, double> lambda_shape_functions;
   Core::LinAlg::Matrix<3, MortarRot::n_dof_, scalar_type_rot_1st> lambda_shape_functions_full(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   Core::LinAlg::SerialDenseVector L_i(3);
   Core::LinAlg::Matrix<3, n_dof_rot_, scalar_type_rot_1st> L_full(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   std::vector<Core::LinAlg::Matrix<3, 3, double>> I_beam_tilde;
   Core::LinAlg::Matrix<3, n_dof_rot_, double> I_beam_tilde_full;
   Core::LinAlg::Matrix<3, n_dof_rot_, double> T_beam_times_I_beam_tilde_full;

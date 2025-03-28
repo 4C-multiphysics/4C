@@ -326,7 +326,7 @@ namespace Discret
       void SlaveElementRepresentation<distype, slave_distype, slave_numdof>::evaluate(
           Core::LinAlg::Matrix<nsd_, 1>& xslave)
       {
-        Core::LinAlg::Matrix<3, 1> rst_slave(Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Matrix<3, 1> rst_slave(Core::LinAlg::Initialization::zero);
         evaluate(xslave, rst_slave);
       }
 
@@ -365,8 +365,8 @@ namespace Discret
           FOUR_C_THROW("Unsupported dimension clash!");
 
 
-        Core::LinAlg::Matrix<nsd_, nsd_> slave_xjm(Core::LinAlg::Initialization::set_zero);
-        Core::LinAlg::Matrix<nsd_, nsd_> slave_xji(Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Matrix<nsd_, nsd_> slave_xjm(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nsd_, nsd_> slave_xji(Core::LinAlg::Initialization::zero);
 
         slave_xjm.multiply_nt(slave_deriv_, slave_xyze_);
         slave_xji.invert(slave_xjm);

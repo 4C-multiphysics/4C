@@ -584,7 +584,7 @@ namespace Discret::Elements::Shell
     if (zeta)
     {
       Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim> tmp(
-          Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Initialization::zero);
       tmp.multiply_nn(zeta, shape_functions.derivatives_, a3, 0.0);
       basis_and_metrics.kovariant_.update(1.0, tmp, 1.0);
     }
@@ -933,7 +933,7 @@ namespace Discret::Elements::Shell
   {
     //  evaluate strain tensor in curvilinear coordinate system E_ij = 0.5 (g_ij-G_ij)
     Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim> gl_strain_tensor(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
     for (int i = 0; i < Internal::num_dim; ++i)
     {
       for (int j = 0; j < Internal::num_dim; ++j)
@@ -942,7 +942,7 @@ namespace Discret::Elements::Shell
     }
     // map gl strains from curvilinear system to global cartesian system
     Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim> gl_strain_tensor_cartesian(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
     Core::LinAlg::Tensor::inverse_tensor_rotation<Internal::num_dim>(
         g_reference.kontravariant_, gl_strain_tensor, gl_strain_tensor_cartesian);
     // GL strain vector glstrain for solid material E={E11,E22,E33,2*E12,2*E23,2*E31}
@@ -972,10 +972,10 @@ namespace Discret::Elements::Shell
     // transform Piola-Kirchhoff-stresses from global cartesian coordinate system back to local
     // curvilinear coordinate system
     Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim> stress_tensor(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
     Core::LinAlg::Voigt::Stresses::vector_to_matrix(stress.pk2_, stress_tensor);
     Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim> tmp(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
     Core::LinAlg::Tensor::tensor_rotation(g_reference.kontravariant_, stress_tensor, tmp);
 
     // re-arrange indices for shell element formulation:
@@ -990,9 +990,9 @@ namespace Discret::Elements::Shell
     // transform elasticity matrix from global cartesian coordinate system back to local
     // curvilinear coordinate system
     Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> Cmat(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim> g_metrics_trans(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
     g_metrics_trans.update_t(g_reference.kontravariant_);
     Core::LinAlg::Tensor::inverse_fourth_tensor_rotation(g_metrics_trans, stress.cmat_, Cmat);
 
@@ -1630,7 +1630,7 @@ namespace Discret::Elements::Shell
       evaluate_metrics(shapefunctions, a_reference, a_current, nodal_coordinates, 0.0);
 
       // make h as cross product in ref configuration to get area da on shell mid-surface
-      Core::LinAlg::Matrix<Internal::num_dim, 1> h(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<Internal::num_dim, 1> h(Core::LinAlg::Initialization::zero);
       {
         Core::LinAlg::Matrix<Internal::num_dim, Internal::num_dim> akovrefe =
             a_reference.kovariant_;

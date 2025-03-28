@@ -1406,7 +1406,7 @@ void Discret::Elements::Ale3Impl<distype>::static_ke_nonlinear(Ale3* ele,
   Core::LinAlg::Matrix<3, 3> xjm;
   Core::LinAlg::Matrix<3, 3> xji;
   Core::LinAlg::Matrix<6, numdof> bop;
-  Core::LinAlg::Matrix<6, 6> D(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 6> D(Core::LinAlg::Initialization::zero);
   // gaussian points
   const Core::FE::GaussRule3D gaussrule = get_optimal_gaussrule();
   const Core::FE::IntegrationPoints3D intpoints(gaussrule);
@@ -1519,8 +1519,8 @@ void Discret::Elements::Ale3Impl<distype>::static_ke_nonlinear(Ale3* ele,
     }
     // call material law cccccccccccccccccccccccccccccccccccccccccccccccccccccc
     Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> cmat_f(
-        Core::LinAlg::Initialization::set_zero);
-    Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> stress_f(Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> stress_f(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> glstrain_f(glstrain.data());
     // QUICK HACK until so_disp exclusively uses Core::LinAlg::Matrix!!!!!
     Core::LinAlg::Matrix<NUMDIM_ALE3, NUMDIM_ALE3> fixed_defgrd(defgrd);
@@ -1634,13 +1634,13 @@ void Discret::Elements::Ale3Impl<distype>::static_ke_laplace(Ale3* ele,
   }
 
   /*----------------------------------------- declaration of variables ---*/
-  Core::LinAlg::Matrix<iel, 1> funct(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3, iel> deriv(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3, 3> xjm(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3, 3> xji(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3, iel> deriv_xy(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<iel, iel> tempmat(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<3 * iel, 1> tempmat2(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<iel, 1> funct(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, iel> deriv(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> xjm(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 3> xji(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, iel> deriv_xy(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<iel, iel> tempmat(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3 * iel, 1> tempmat2(Core::LinAlg::Initialization::zero);
 
   // gaussian points
   const Core::FE::GaussRule3D gaussrule = get_optimal_gaussrule();

@@ -81,7 +81,7 @@ namespace Core::Geo
       */
       bool shift_3d(Core::LinAlg::Matrix<3, 1>& d,
           Core::LinAlg::Matrix<3, 1> const X = Core::LinAlg::Matrix<3, 1>(
-              Core::LinAlg::Initialization::set_zero)) const;
+              Core::LinAlg::Initialization::zero)) const;
 
       /*!
       \brief get xi of intersection between two points
@@ -107,12 +107,12 @@ namespace Core::Geo
        *       decreases by either adding or subtracting the period length. */
       void un_shift_3d(Core::LinAlg::Matrix<3, 1>& d, Core::LinAlg::Matrix<3, 1> const& ref,
           Core::LinAlg::Matrix<3, 1> const X = Core::LinAlg::Matrix<3, 1>(
-              Core::LinAlg::Initialization::set_zero)) const;
+              Core::LinAlg::Initialization::zero)) const;
 
       bool check_if_shift_between_points(Core::LinAlg::Matrix<3, 1>& d,
           Core::LinAlg::Matrix<3, 1> const& ref, std::vector<bool>& shift_in_dim,
           Core::LinAlg::Matrix<3, 1> const X = Core::LinAlg::Matrix<3, 1>(
-              Core::LinAlg::Initialization::set_zero)) const;
+              Core::LinAlg::Initialization::zero)) const;
 
       /*!
       \brief get random position inside box

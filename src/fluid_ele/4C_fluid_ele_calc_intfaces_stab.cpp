@@ -901,7 +901,7 @@ int Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
   //------------------------
   // local coordinates of the face nodes w.r.t slave side
   Core::LinAlg::Matrix<facensd_, iel> local_slave_coordinates_trafo(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
 
   const std::vector<int>& localtrafomap = intface->get_local_trafo_map();
 
@@ -949,9 +949,9 @@ int Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
   for (unsigned int q = 0; q < numgp_; q++)
   {
     Core::LinAlg::Matrix<facensd_, 1> face_xi_points_master_linalg(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<facensd_, 1> face_xi_points_slave_linalg(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
 
 
     // Gaussian point in face's element's local coordinates w.r.t master element
@@ -1125,7 +1125,7 @@ int Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
       nderiv_dyad_nderiv_tau_timefacfac_.update(tau_timefacfac, nderiv_dyad_nderiv_, 0.0);
 
       Core::LinAlg::Matrix<nsd_, nsd_> vderxyaf_diff_scaled(
-          Core::LinAlg::Initialization::leave_uninitialized);
+          Core::LinAlg::Initialization::uninitialized);
       vderxyaf_diff_scaled.update(tau_timefacfac_rhs, vderxyaf_diff_, 0.0);
 
       //-----------------------------------------------------
@@ -2022,12 +2022,12 @@ double Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
     FOUR_C_THROW("not implemented for nurbs");
   }
 
-  Core::LinAlg::Matrix<nsd_, 1> x_gp(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, 1> x_gp(Core::LinAlg::Initialization::zero);
   x_gp.multiply(xyze_, funct_);
 
   //---------------
   // compute local coordinates with respect to slave element
-  Core::LinAlg::Matrix<nsd_, 1> nqxg(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, 1> nqxg(Core::LinAlg::Initialization::zero);
 
   bool inelement_n = Core::Geo::compute_local_coordinates<ndistype>(nxyze_, x_gp, nqxg);
 
@@ -2037,7 +2037,7 @@ double Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
   //---------------
   // compute local coordinates with respect to master element
 
-  Core::LinAlg::Matrix<nsd_, 1> pqxg(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<nsd_, 1> pqxg(Core::LinAlg::Initialization::zero);
   bool inelement_p = Core::Geo::compute_local_coordinates<pdistype>(pxyze_, x_gp, pqxg);
 
   if (!inelement_p) FOUR_C_THROW("point does not lie in element");
@@ -2253,7 +2253,7 @@ void Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
 
   // vector of shape function (2nd) derivatives in reference coordinate system, parent element,
   // scaled with normals
-  Core::LinAlg::Matrix<numderiv2_p, piel> pderxy2_n_scaled(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<numderiv2_p, piel> pderxy2_n_scaled(Core::LinAlg::Initialization::zero);
   pderxy2_n_scaled.update(1.0, pderxy2_, 0.0);
 
   for (int ui = 0; ui < piel; ++ui)
@@ -2273,7 +2273,7 @@ void Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
 
   //! vector of shape function (2nd) derivatives in global coordinate system, neighbor element,
   //! scaled with normals
-  Core::LinAlg::Matrix<numderiv2_p, niel> nderxy2_n_scaled(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<numderiv2_p, niel> nderxy2_n_scaled(Core::LinAlg::Initialization::zero);
   nderxy2_n_scaled.update(1.0, nderxy2_, 0.0);
 
 
@@ -2292,8 +2292,8 @@ void Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
       }
   }
 
-  Core::LinAlg::Matrix<piel, 1> pderxy2_n_scaled_sum(Core::LinAlg::Initialization::set_zero);
-  Core::LinAlg::Matrix<niel, 1> nderxy2_n_scaled_sum(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<piel, 1> pderxy2_n_scaled_sum(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<niel, 1> nderxy2_n_scaled_sum(Core::LinAlg::Initialization::zero);
 
   for (int ui = 0; ui < piel; ++ui)
   {
@@ -2568,7 +2568,7 @@ void Discret::Elements::FluidInternalSurfaceStab<distype, pdistype, ndistype>::p
    */
 
   // grad(p_neighbor) - grad(p_parent)
-  Core::LinAlg::Matrix<nsd_, 1> prederxy_jump(Core::LinAlg::Initialization::leave_uninitialized);
+  Core::LinAlg::Matrix<nsd_, 1> prederxy_jump(Core::LinAlg::Initialization::uninitialized);
   prederxy_jump.update(1.0, nprederxy_, -1.0, pprederxy_);
   prederxy_jump.scale(tau_timefacfacrhs);
 
@@ -2605,7 +2605,7 @@ void Discret::Elements::FluidInternalSurfaceStab<distype, pdistype, ndistype>::p
 
   // q_master (p_slave-p_master)
   Core::LinAlg::Matrix<piel, 1> pderxy_times_prederxy_jump(
-      Core::LinAlg::Initialization::leave_uninitialized);
+      Core::LinAlg::Initialization::uninitialized);
   pderxy_times_prederxy_jump.multiply_tn(pderxy_, prederxy_jump);
 
   for (int vi = 0; vi < piel; ++vi)
@@ -2613,7 +2613,7 @@ void Discret::Elements::FluidInternalSurfaceStab<distype, pdistype, ndistype>::p
 
   // -q_slave (p_slave-p_master)
   Core::LinAlg::Matrix<niel, 1> nderxy_times_prederxy_jump(
-      Core::LinAlg::Initialization::leave_uninitialized);
+      Core::LinAlg::Initialization::uninitialized);
   nderxy_times_prederxy_jump.multiply_tn(nderxy_, prederxy_jump);
 
   for (int vi = 0; vi < niel; ++vi)
@@ -2725,7 +2725,7 @@ void Discret::Elements::FluidInternalSurfaceStab<distype, pdistype, ndistype>::d
 
 
   Core::LinAlg::Matrix<nsd_, piel> pderxy_times_vderxyaf_diff(
-      Core::LinAlg::Initialization::leave_uninitialized);
+      Core::LinAlg::Initialization::uninitialized);
   pderxy_times_vderxyaf_diff.multiply(vderxyaf_diff_scaled, pderxy_);
 
   // master row
@@ -2734,7 +2734,7 @@ void Discret::Elements::FluidInternalSurfaceStab<distype, pdistype, ndistype>::d
       elevector_m_(vi * numdofpernode_ + idim, 0) += pderxy_times_vderxyaf_diff(idim, vi);
 
   Core::LinAlg::Matrix<nsd_, niel> nderxy_times_vderxyaf_diff(
-      Core::LinAlg::Initialization::leave_uninitialized);
+      Core::LinAlg::Initialization::uninitialized);
   nderxy_times_vderxyaf_diff.multiply(vderxyaf_diff_scaled, nderxy_);
 
   // slave row

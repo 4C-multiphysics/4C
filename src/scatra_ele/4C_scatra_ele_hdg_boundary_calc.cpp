@@ -93,11 +93,11 @@ Discret::Elements::ScaTraHDGBoundaryImpl<distype>::instance(Core::Utils::Singlet
  *----------------------------------------------------------------------*/
 template <Core::FE::CellType distype>
 Discret::Elements::ScaTraHDGBoundaryImpl<distype>::ScaTraHDGBoundaryImpl()
-    : xyze_(Core::LinAlg::Initialization::set_zero),
-      funct_(Core::LinAlg::Initialization::set_zero),
-      deriv_(Core::LinAlg::Initialization::set_zero),
-      unitnormal_(Core::LinAlg::Initialization::set_zero),
-      velint_(Core::LinAlg::Initialization::set_zero),
+    : xyze_(Core::LinAlg::Initialization::zero),
+      funct_(Core::LinAlg::Initialization::zero),
+      deriv_(Core::LinAlg::Initialization::zero),
+      unitnormal_(Core::LinAlg::Initialization::zero),
+      velint_(Core::LinAlg::Initialization::zero),
       drs_(0.0),
       fac_(0.0)
 {

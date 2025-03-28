@@ -610,8 +610,7 @@ void Cut::Output::gmsh_level_set_gradient_dump(std::ofstream& file, Element* ele
     std::vector<double> normal_triag_midp;
     if (facet->on_cut_side())
     {
-      Core::LinAlg::Matrix<3, 1> facet_triang_midpoint_coord(
-          Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<3, 1> facet_triang_midpoint_coord(Core::LinAlg::Initialization::zero);
 
       if (facet->is_triangulated())
       {
@@ -627,7 +626,7 @@ void Cut::Output::gmsh_level_set_gradient_dump(std::ofstream& file, Element* ele
           std::vector<Point*> facet_triang_tri = *k;
 
           Core::LinAlg::Matrix<3, 1> cur;
-          Core::LinAlg::Matrix<3, 1> f_triang_tri_midp(Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Matrix<3, 1> f_triang_tri_midp(Core::LinAlg::Initialization::zero);
           for (std::vector<Point*>::iterator i = facet_triang_tri.begin();
               i != facet_triang_tri.end(); i++)
           {
@@ -692,8 +691,7 @@ void Cut::Output::gmsh_level_set_value_dump(
 
     if (facet->on_cut_side())
     {
-      Core::LinAlg::Matrix<3, 1> facet_triang_midpoint_coord(
-          Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<3, 1> facet_triang_midpoint_coord(Core::LinAlg::Initialization::zero);
 
       if (facet->is_triangulated())
       {
@@ -704,7 +702,7 @@ void Cut::Output::gmsh_level_set_value_dump(
           std::vector<Point*> facet_triang_tri = *k;
 
           Core::LinAlg::Matrix<3, 1> cur;
-          Core::LinAlg::Matrix<3, 1> f_triang_tri_midp(Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Matrix<3, 1> f_triang_tri_midp(Core::LinAlg::Initialization::zero);
           for (std::vector<Point*>::iterator i = facet_triang_tri.begin();
               i != facet_triang_tri.end(); i++)
           {
@@ -744,7 +742,7 @@ void Cut::Output::gmsh_level_set_value_dump(
     for (std::vector<Node*>::iterator j = nodes.begin(); j != nodes.end(); j++)
     {
       Node* node = *j;
-      Core::LinAlg::Matrix<3, 1> node_coord(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<3, 1> node_coord(Core::LinAlg::Initialization::zero);
       node->coordinates(&node_coord(0, 0));
 
       gmsh_scalar(file, node_coord, node->lsv(), to_local, ele);
@@ -867,7 +865,7 @@ void Cut::Output::gmsh_level_set_orientation_dump(std::ofstream& file, Element* 
 
       std::vector<std::vector<double>> coords_bc = bc->coordinates_v();
       // const Core::LinAlg::SerialDenseMatrix ls_coordEp = bc->coordinates();
-      Core::LinAlg::Matrix<3, 1> ls_coord(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<3, 1> ls_coord(Core::LinAlg::Initialization::zero);
       ls_coord(0, 0) = coords_bc[1][0];
       ls_coord(1, 0) = coords_bc[1][1];
       ls_coord(2, 0) = coords_bc[1][2];
@@ -909,7 +907,7 @@ void Cut::Output::gmsh_eqn_plane_normal_dump(
 void Cut::Output::gmsh_eqn_plane_normal_dump(
     std::ofstream& file, Facet* facet, bool normalize, bool to_local, Element* ele)
 {
-  Core::LinAlg::Matrix<3, 1> facet_triang_midpoint_coord(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> facet_triang_midpoint_coord(Core::LinAlg::Initialization::zero);
   std::vector<Point*> f_cornpts = facet->corner_points();
   std::vector<double> eqn_plane = get_eq_of_plane(f_cornpts);
 
@@ -925,7 +923,7 @@ void Cut::Output::gmsh_eqn_plane_normal_dump(
       std::vector<Point*> facet_triang_tri = *k;
 
       Core::LinAlg::Matrix<3, 1> cur;
-      Core::LinAlg::Matrix<3, 1> f_triang_tri_midp(Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Matrix<3, 1> f_triang_tri_midp(Core::LinAlg::Initialization::zero);
       for (std::vector<Point*>::iterator i = facet_triang_tri.begin(); i != facet_triang_tri.end();
           i++)
       {
@@ -1003,7 +1001,7 @@ void Cut::Output::gmsh_vector(std::ofstream& file, Core::LinAlg::Matrix<3, 1> co
 void Cut::Output::gmsh_write_coords(
     std::ofstream& file, std::vector<double> coord, bool to_local, Element* ele)
 {
-  Core::LinAlg::Matrix<3, 1> xyz(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 1> xyz(Core::LinAlg::Initialization::zero);
 
   if (coord.size() <= 3)
     std::copy(coord.begin(), coord.end(), xyz.data());
@@ -1015,7 +1013,7 @@ void Cut::Output::gmsh_write_coords(
     if (ele == nullptr)
       FOUR_C_THROW("GmshWriteCoords: Didn't get a parent element for the Coordinate!");
 
-    Core::LinAlg::Matrix<3, 1> rst(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<3, 1> rst(Core::LinAlg::Initialization::zero);
 
     ele->local_coordinates(xyz, rst);
     gmsh_write_coords(file, rst, false, nullptr);  // rst are already local coords!

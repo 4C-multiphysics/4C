@@ -188,10 +188,10 @@ void Mat::Robinson::unpack(Core::Communication::UnpackBuffer& buffer)
 
   for (int var = 0; var < numgp; ++var)
   {
-    Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> tmp(Core::LinAlg::Initialization::set_zero);
-    Core::LinAlg::Matrix<2 * Mat::NUM_STRESS_3D, 1> tmp1(Core::LinAlg::Initialization::set_zero);
+    Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> tmp(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<2 * Mat::NUM_STRESS_3D, 1> tmp1(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<2 * Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> tmp2(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
 
     // unpack strain/stress vectors of last converged state
     extract_from_pack(buffer, tmp);
@@ -239,18 +239,18 @@ void Mat::Robinson::setup(const int numgp, const Core::IO::InputParameterContain
   kvakvae_ = std::make_shared<
       std::vector<Core::LinAlg::Matrix<2 * Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D>>>();
 
-  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> emptymat(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> emptymat(Core::LinAlg::Initialization::zero);
   strainpllast_->resize(numgp);
   strainplcurr_->resize(numgp);
-  strain_last_.resize(numgp, Core::LinAlg::Matrix<6, 1>(Core::LinAlg::Initialization::set_zero));
+  strain_last_.resize(numgp, Core::LinAlg::Matrix<6, 1>(Core::LinAlg::Initialization::zero));
 
   backstresslast_->resize(numgp);
   backstresscurr_->resize(numgp);
 
-  Core::LinAlg::Matrix<2 * Mat::NUM_STRESS_3D, 1> emptymat2(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<2 * Mat::NUM_STRESS_3D, 1> emptymat2(Core::LinAlg::Initialization::zero);
   kvarva_->resize(numgp);
   Core::LinAlg::Matrix<2 * Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> emptymat3(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   kvakvae_->resize(numgp);
 
   for (int i = 0; i < numgp; i++)
@@ -293,12 +293,11 @@ void Mat::Robinson::update()
   strainplcurr_->resize(numgp);
   backstresscurr_->resize(numgp);
 
-  const Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> emptymat(
-      Core::LinAlg::Initialization::set_zero);
+  const Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> emptymat(Core::LinAlg::Initialization::zero);
   const Core::LinAlg::Matrix<2 * Mat::NUM_STRESS_3D, 1> emptymat1(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   const Core::LinAlg::Matrix<2 * Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> emptymat2(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
 
   for (int i = 0; i < numgp; i++)
   {
@@ -350,13 +349,13 @@ void Mat::Robinson::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
   const double dt_ = params.get<double>("delta time");
 
   // build Cartesian identity 2-tensor I_{AB}
-  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> id2(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> id2(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 3; i++) id2(i) = 1.0;
   // set Cartesian identity 4-tensor in 6x6-matrix notation (stress-like)
   // this is a 'mixed co- and contra-variant' identity 4-tensor, ie I^{AB}_{CD}
   // REMARK: rows are stress-like 6-Voigt
   //         columns are strain-like 6-Voigt
-  Core::LinAlg::Matrix<6, 6> id4(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 6> id4(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 6; i++) id4(i, i) = 1.0;
 
   // -------------------------------- temperatures and thermal strain
@@ -366,7 +365,7 @@ void Mat::Robinson::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
   // initialise the thermal expansion coefficient
   const double thermexpans = params_->thermexpans_;
   // thermal strain vector
-  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> strain_t(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> strain_t(Core::LinAlg::Initialization::zero);
   // update current temperature at Gauss point
   for (int i = 0; i < 3; ++i) strain_t(i) = thermexpans * (scalartemp - tempinit);
   // for (int i=3; i<6; ++i){ strain_t(i) = 2E_xy = 2E_yz = 2E_zx = 0.0; }
@@ -376,18 +375,16 @@ void Mat::Robinson::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
   // use the newest plastic strains here, i.e., from latest Newton iteration
   // (strainplcurr_), not necessarily equal to newest temporal strains (last_)
   Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> strain_on(
-      Core::LinAlg::Initialization::leave_uninitialized);
+      Core::LinAlg::Initialization::uninitialized);
   strain_on.update(strainplcurr_->at(gp));
   // get history vector of old visco-plastic strain at t_n
-  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> strain_p(
-      Core::LinAlg::Initialization::leave_uninitialized);
+  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> strain_p(Core::LinAlg::Initialization::uninitialized);
   strain_p.update(strainpllast_->at(gp));
 
   // ------------------------------------------------- elastic strain
   // elastic strain at t_{n+1}
   // strain^{e}_{n+1}
-  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> strain_e(
-      Core::LinAlg::Initialization::leave_uninitialized);
+  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> strain_e(Core::LinAlg::Initialization::uninitialized);
 
   // strain^e_{n+1} = strain_n+1 - strain^p_n - strain^t
   strain_e.update(*strain);
@@ -404,7 +401,7 @@ void Mat::Robinson::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
   // kev = pd(sigma)/pd(eps^v)
   // tangent term resulting from linearisation \frac{\pd sig}{\pd eps^v}
   Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> kev(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   // assign vector by another vector and scale it
   // (i): scale (-1.0)
   // (i): input matrix cmat
@@ -414,7 +411,7 @@ void Mat::Robinson::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
   // kea = pd(sigma)/pd(backstress)
   // tangent term resulting from linearisation \frac{\pd sig}{\pd al}
   Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> kea(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   // initialise with 1 on the diagonals
   kea.update(id4);
 
@@ -431,7 +428,7 @@ void Mat::Robinson::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
   // calculate the deviator from stress
   // CAUTION: s = 2G . devstrain only in case of small strain
   Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> devstress(
-      Core::LinAlg::Initialization::leave_uninitialized);
+      Core::LinAlg::Initialization::uninitialized);
   // trace of stress vector
   double tracestress = ((*stress)(0) + (*stress)(1) + (*stress)(2));
   for (int i = 0; i < 3; i++) devstress(i) = (*stress)(i)-tracestress / 3.0;
@@ -443,11 +440,11 @@ void Mat::Robinson::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
   // ---------------------------------------------------- back stress
   // new back stress at t_{n+1} backstress_{n+1}^i
   Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> backstress_n(
-      Core::LinAlg::Initialization::leave_uninitialized);
+      Core::LinAlg::Initialization::uninitialized);
   backstress_n.update(backstresscurr_->at(gp));
   // old back stress at t_{n} backstress_{n}
   Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> backstress(
-      Core::LinAlg::Initialization::leave_uninitialized);
+      Core::LinAlg::Initialization::uninitialized);
   backstress.update(backstresslast_->at(gp));
 
   // ------------------------------------------ over/relativestress
@@ -456,7 +453,7 @@ void Mat::Robinson::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
   // (i): input vector backstress_n
   // (o): output vector stsovr: subtract 2 vectors
   // eta_{n+1} = devstress_{n+1} - backstress_{n+1}
-  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> eta(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> eta(Core::LinAlg::Initialization::zero);
   rel_dev_stress(devstress, backstress_n, eta);
 
   // to calculate the new history vectors (strainplcurr_, backstresscurr_), the
@@ -466,15 +463,15 @@ void Mat::Robinson::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
   // residual of visc. strain eps_{n+1}^<i> and its consistent tangent for <i>
   // tangent term resulting from linearisation \frac{\pd res^v}{\pd eps}
   Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> kve(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   // tangent term resulting from linearisation \frac{\pd res^v}{\pd eps^v}
   Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> kvv(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   // tangent term resulting from linearisation \frac{\pd res^v}{\pd al}
   Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> kva(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   // initialise the visco-plastic strain residual
-  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> strain_pres(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> strain_pres(Core::LinAlg::Initialization::zero);
   calc_be_viscous_strain_rate(
       dt_, scalartemp, strain_p, strain_on, devstress, eta, strain_pres, kve, kvv, kva);
 
@@ -484,17 +481,16 @@ void Mat::Robinson::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
   // problem
   // tangent term resulting from linearisation \frac{\pd res^al}{\pd eps}
   Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> kae(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   // tangent term resulting from linearisation \frac{\pd res^al}{\pd eps^v}
   Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> kav(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   // tangent term resulting from linearisation \frac{\pd res^al}{\pd al}
   Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> kaa(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   // initialise the back stress residual
   // back stress (residual): beta/backstress --> bckstsr
-  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> backstress_res(
-      Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> backstress_res(Core::LinAlg::Initialization::zero);
   calc_be_back_stress_flow(dt_, scalartemp, strain_p, strain_on, devstress, backstress,
       backstress_n, backstress_res, kae, kav, kaa);
 
@@ -508,8 +504,7 @@ void Mat::Robinson::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
       (kvakvae_->at(gp)));
 
   // pass the current plastic strains to the element (for visualisation)
-  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> plstrain(
-      Core::LinAlg::Initialization::leave_uninitialized);
+  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> plstrain(Core::LinAlg::Initialization::uninitialized);
   plstrain.update(strainplcurr_->at(gp));
   // set in parameter list
   params.set<Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1>>("plglstrain", plstrain);
@@ -543,7 +538,7 @@ Core::LinAlg::Matrix<6, 1> Mat::Robinson::evaluate_d_stress_d_scalar(
     const Core::LinAlg::Matrix<3, 3>& defgrad, const Core::LinAlg::Matrix<6, 1>& glstrain,
     Teuchos::ParameterList& params, int gp, int eleGID)
 {
-  Core::LinAlg::Matrix<6, 1> dS_dT(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 1> dS_dT(Core::LinAlg::Initialization::zero);
   return dS_dT;
 }
 
@@ -652,7 +647,7 @@ void Mat::Robinson::calc_be_viscous_strain_rate(const double dt,  // (i) time st
   double nn = params_->hrdn_expo_;
 
   // identity tensor in vector notation
-  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> id2(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> id2(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 3; i++) id2(i) = 1.0;
 
   // -------------------------------------------------- preliminaries
@@ -708,7 +703,7 @@ void Mat::Robinson::calc_be_viscous_strain_rate(const double dt,  // (i) time st
        +devstress(3) * eta(3) + devstress(4) * eta(4) + devstress(5) * eta(5);
 
   // viscous strain rate
-  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> strainrate_p(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> strainrate_p(Core::LinAlg::Initialization::zero);
   //-------------------------------------------------------------------
   // IF plastic step ( F > 0.0, (1/2 * devstress : eta) > 0.0 )
   //-------------------------------------------------------------------
@@ -764,7 +759,7 @@ void Mat::Robinson::calc_be_viscous_strain_rate(const double dt,  // (i) time st
   // kvs = d(strain_pres) / d (eta)
   // kvs[NUMSTR_SOLID3][NUMSTR_SOLID3];
   Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> kvs(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   //-------------------------------------------------------------------
   // IF plastic step ( F > 0.0, (1/2 * devstress : eta) > 0.0 )
   //-------------------------------------------------------------------
@@ -813,12 +808,11 @@ void Mat::Robinson::calc_be_viscous_strain_rate(const double dt,  // (i) time st
     // calculate elastic material tangent with temperature-dependent Young's modulus
     // kse = (pd eta) / (pd strain)
     Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> kse(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
     // pass the current temperature to calculate the current youngs modulus
     setup_cmat(tempnp, kse);
     // Matrix vector product: cid2 = kse(i,j)*id2(j)
-    Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> cid2(
-        Core::LinAlg::Initialization::leave_uninitialized);
+    Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> cid2(Core::LinAlg::Initialization::uninitialized);
     cid2.multiply(kse, id2);
     // update matrix with scaled dyadic vector product
     // contribution: kse = kse + (-1/3) . (id2 \otimes cid2^T)
@@ -848,13 +842,12 @@ void Mat::Robinson::calc_be_viscous_strain_rate(const double dt,  // (i) time st
   {
     // derivative ksv = (pd eta) / (pd strain_p)
     Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> ksv(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
     // pass the current temperature to calculate the current youngs modulus
     setup_cmat(tempnp, ksv);
 
     // Matrix vector product: cid2 = kse(i,j)*id2(j)
-    Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> cid2(
-        Core::LinAlg::Initialization::leave_uninitialized);
+    Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> cid2(Core::LinAlg::Initialization::uninitialized);
     cid2.multiply(ksv, id2);
     // update matrix with scaled dyadic vector product
     // contribution: ksv = ksv + (-1/3) . (id2 \otimes cid2^T)
@@ -929,7 +922,7 @@ void Mat::Robinson::calc_be_back_stress_flow(const double dt, const double tempn
   // this is fully 'contra-variant' identity tensor, ie I^{ABCD}
   // REMARK: rows are stress-like 6-Voigt
   //         columns are stress-like 6-Voigt
-  Core::LinAlg::Matrix<6, 6> id4sharp(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 6> id4sharp(Core::LinAlg::Initialization::zero);
   for (unsigned i = 0; i < 3; i++) id4sharp(i, i) = 1.0;
   for (unsigned i = 3; i < 6; i++) id4sharp(i, i) = 0.5;
 
@@ -1044,7 +1037,7 @@ void Mat::Robinson::calc_be_back_stress_flow(const double dt, const double tempn
   //  \incr \eps^v = \eps_{n+1}^v - \eps_{n}^v
   //  with halved entries to conform with stress vectors */
   Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> strain_pd05(
-      Core::LinAlg::Initialization::leave_uninitialized);
+      Core::LinAlg::Initialization::uninitialized);
   strain_pd05.update(1.0, strain_on, (-1.0), strain_p);
   // Due to the fact that strain vector component have a doubled shear
   // components, i.e.
@@ -1137,7 +1130,7 @@ void Mat::Robinson::calc_be_back_stress_flow(const double dt, const double tempn
   // this is a 'mixed co- and contra-variant' identity 4-tensor, ie I^{AB}_{CD}
   // REMARK: rows are stress-like 6-Voigt
   //         columns are strain-like 6-Voigt
-  Core::LinAlg::Matrix<6, 6> id4(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<6, 6> id4(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 6; i++) id4(i, i) = 1.0;
   //-------------------------------------------------------------------
   // IF plastic step (G > G_0, 1/2 (devstress . backstress) > 0.0)
@@ -1271,12 +1264,12 @@ void Mat::Robinson::calculate_condensed_system(
   // kvvkvakavkaa = [          ] and its inverse after factorisation
   //                [ kav  kaa ]
   Core::LinAlg::Matrix<2 * Mat::NUM_STRESS_3D, 2 * Mat::NUM_STRESS_3D> kvvkvakavkaa(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
 
   // build the matrix kevea (6x12)
   // kevea = [ kev  kea ] stored in column-major order
   Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 2 * Mat::NUM_STRESS_3D> kevea(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
 
   // ------------------ build tangent and right hand side to reduce
   {
@@ -1399,7 +1392,7 @@ void Mat::Robinson::iterative_update_of_internal_variables(const int gp,
   //           [ kav  kaa ]      [ res^al ]
   // condensed vector of residual
   Core::LinAlg::Matrix<(2 * Mat::NUM_STRESS_3D), 1> kvarva(
-      Core::LinAlg::Initialization::leave_uninitialized);
+      Core::LinAlg::Initialization::uninitialized);
   kvarva = kvarva_->at(gp);
 
   // get the condensed / reduced scaled tangent
@@ -1407,18 +1400,18 @@ void Mat::Robinson::iterative_update_of_internal_variables(const int gp,
   // kvakvae =  [          ]      [     ]
   //            [ kav  kaa ]      [ kae ]
   Core::LinAlg::Matrix<(2 * Mat::NUM_STRESS_3D), Mat::NUM_STRESS_3D> kvakvae(
-      Core::LinAlg::Initialization::leave_uninitialized);
+      Core::LinAlg::Initialization::uninitialized);
   kvakvae = kvakvae_->at(gp);
 
   // initialise updated vector with newest values strainp_np = strainp_n
   // strainp_np = strainp_n + Delta strain_np
   // viscous strain \f$\varepsilon_{n+1}\f$ at t_{n+1}^i
   Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> strain_on(
-      Core::LinAlg::Initialization::leave_uninitialized);
+      Core::LinAlg::Initialization::uninitialized);
   strain_on.update(strainplcurr_->at(gp));
   // back stress \f$alpha_{n+1}\f$ at t_{n+1}^i
   Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> backstress_n(
-      Core::LinAlg::Initialization::leave_uninitialized);
+      Core::LinAlg::Initialization::uninitialized);
   backstress_n.update(backstresscurr_->at(gp));
 
   // ---------------------------------  update current viscous strain

@@ -42,7 +42,7 @@ namespace FLD
 
     /// standard constructor
     explicit RotationallySymmetricPeriodicBC()
-        : rotangle_(0.0), rotmat_(Core::LinAlg::Initialization::set_zero)
+        : rotangle_(0.0), rotmat_(Core::LinAlg::Initialization::zero)
     {
       return;
     };
@@ -187,7 +187,7 @@ namespace FLD
           Core::LinAlg::Matrix<numdofpernode * elenumnode, numdofpernode * elenumnode> elematold1(
               elemat1);
           Core::LinAlg::Matrix<numdofpernode * elenumnode, numdofpernode * elenumnode> tempmatrix(
-              Core::LinAlg::Initialization::set_zero);
+              Core::LinAlg::Initialization::zero);
           tempmatrix.multiply_nt(elematold1, rotmat_);
           elemat1.multiply(rotmat_, tempmatrix);
         }
@@ -196,7 +196,7 @@ namespace FLD
           Core::LinAlg::Matrix<numdofpernode * elenumnode, numdofpernode * elenumnode> elematold2(
               elemat2);
           Core::LinAlg::Matrix<numdofpernode * elenumnode, numdofpernode * elenumnode> tempmatrix(
-              Core::LinAlg::Initialization::set_zero);
+              Core::LinAlg::Initialization::zero);
           tempmatrix.multiply_nt(elematold2, rotmat_);
           elemat2.multiply(rotmat_, tempmatrix);
         }
@@ -227,7 +227,7 @@ namespace FLD
           Core::LinAlg::Matrix<numdofpernode * elenumnode, numdofpernode * elenumnode> elemat1old(
               elemat1);
           Core::LinAlg::Matrix<numdofpernode * elenumnode, numdofpernode * elenumnode> tempmatrix(
-              Core::LinAlg::Initialization::set_zero);
+              Core::LinAlg::Initialization::zero);
           tempmatrix.multiply_nt(elemat1old, rotmat_);
           elemat1.multiply(rotmat_, tempmatrix);
         }

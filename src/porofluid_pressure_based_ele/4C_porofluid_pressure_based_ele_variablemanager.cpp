@@ -385,7 +385,7 @@ void Discret::Elements::PoroFluidManager::VariableManagerScalar<nsd,
   // rebuild scalar vector
   escalarnp_.clear();
   escalarnp_.resize(
-      numscalardofpernode, Core::LinAlg::Matrix<nen, 1>(Core::LinAlg::Initialization::set_zero));
+      numscalardofpernode, Core::LinAlg::Matrix<nen, 1>(Core::LinAlg::Initialization::zero));
   // extract local values of displacement field from global state vector
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nen, 1>>(
       *scalarnp, escalarnp_, la[ndsscalar_].lm_);

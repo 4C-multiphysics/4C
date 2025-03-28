@@ -107,7 +107,7 @@ void Discret::Elements::SolidPoroPressureBasedEleCalc<celltype>::evaluate_nonlin
             numfluidphases, fluidmultiphase_phiAtGP, porofluidmat);
         // derivative of press w.r.t. displacements (only in case of volfracs)
         Core::LinAlg::Matrix<1, num_dof_per_ele_> dSolidpressure_dDisp(
-            Core::LinAlg::Initialization::set_zero);
+            Core::LinAlg::Initialization::zero);
 
         if (hasvolfracs)
         {
@@ -130,13 +130,12 @@ void Discret::Elements::SolidPoroPressureBasedEleCalc<celltype>::evaluate_nonlin
         }
 
         // inverse Right Cauchy-Green tensor as vector in voigt notation
-        Core::LinAlg::Matrix<num_str_, 1> C_inv_vec(
-            Core::LinAlg::Initialization::leave_uninitialized);
+        Core::LinAlg::Matrix<num_str_, 1> C_inv_vec(Core::LinAlg::Initialization::uninitialized);
         Core::LinAlg::Voigt::Stresses::matrix_to_vector(
             cauchygreen.inverse_right_cauchy_green_, C_inv_vec);
 
         // B^T . C^-1
-        Core::LinAlg::Matrix<num_dof_per_ele_, 1> BopCinv(Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Matrix<num_dof_per_ele_, 1> BopCinv(Core::LinAlg::Initialization::zero);
         BopCinv.multiply_tn(Bop, C_inv_vec);
 
         // update internal force vector
@@ -233,13 +232,12 @@ void Discret::Elements::SolidPoroPressureBasedEleCalc<
         const double detJ_w = jacobian_mapping.determinant_ * gauss_integration_.weight(gp);
 
         // inverse Right Cauchy-Green tensor as vector in voigt notation
-        Core::LinAlg::Matrix<num_str_, 1> C_inv_vec(
-            Core::LinAlg::Initialization::leave_uninitialized);
+        Core::LinAlg::Matrix<num_str_, 1> C_inv_vec(Core::LinAlg::Initialization::uninitialized);
         Core::LinAlg::Voigt::Stresses::matrix_to_vector(
             cauchygreen.inverse_right_cauchy_green_, C_inv_vec);
 
         // B^T . C^-1
-        Core::LinAlg::Matrix<num_dof_per_ele_, 1> BopCinv(Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Matrix<num_dof_per_ele_, 1> BopCinv(Core::LinAlg::Initialization::zero);
         BopCinv.multiply_tn(Bop, C_inv_vec);
 
         update_stiffness_matrix_coupling_multiphase_pressurebased<celltype>(detJ_w,

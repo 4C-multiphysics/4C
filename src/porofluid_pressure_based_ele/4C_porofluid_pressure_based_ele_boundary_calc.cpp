@@ -47,15 +47,15 @@ Discret::Elements::PoroFluidMultiPhaseEleBoundaryCalc<distype>::PoroFluidMultiPh
     const int numdofpernode, const std::string& disname)
     : params_(Discret::Elements::PoroFluidMultiPhaseEleParameter::instance(disname)),
       numdofpernode_(numdofpernode),
-      xyze_(Core::LinAlg::Initialization::set_zero),  // initialize to zero
-      edispnp_(Core::LinAlg::Initialization::set_zero),
-      xsi_(Core::LinAlg::Initialization::set_zero),
-      funct_(Core::LinAlg::Initialization::set_zero),
-      deriv_(Core::LinAlg::Initialization::set_zero),
-      derxy_(Core::LinAlg::Initialization::set_zero),
-      normal_(Core::LinAlg::Initialization::set_zero),
-      velint_(Core::LinAlg::Initialization::set_zero),
-      metrictensor_(Core::LinAlg::Initialization::set_zero)
+      xyze_(Core::LinAlg::Initialization::zero),  // initialize to zero
+      edispnp_(Core::LinAlg::Initialization::zero),
+      xsi_(Core::LinAlg::Initialization::zero),
+      funct_(Core::LinAlg::Initialization::zero),
+      deriv_(Core::LinAlg::Initialization::zero),
+      derxy_(Core::LinAlg::Initialization::zero),
+      normal_(Core::LinAlg::Initialization::zero),
+      velint_(Core::LinAlg::Initialization::zero),
+      metrictensor_(Core::LinAlg::Initialization::zero)
 {
   return;
 }

@@ -225,7 +225,7 @@ namespace Mixture
     [[nodiscard]] virtual Core::LinAlg::Matrix<1, 6> get_d_growth_scalar_d_cg(
         int gp, int eleGID) const
     {
-      const Core::LinAlg::Matrix<1, 6> dGrowthScalarDC(Core::LinAlg::Initialization::set_zero);
+      const Core::LinAlg::Matrix<1, 6> dGrowthScalarDC(Core::LinAlg::Initialization::zero);
       return dGrowthScalarDC;
     };
 

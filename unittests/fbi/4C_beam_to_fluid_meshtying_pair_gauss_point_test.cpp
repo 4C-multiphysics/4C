@@ -181,11 +181,11 @@ namespace
 
     // Matrices for the results.
     Core::LinAlg::Matrix<fluid_type::n_dof_, fluid_type::n_dof_, double> results_kff(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<fluid_type::n_dof_, beam_type::n_dof_, double> results_kfs(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<beam_type::n_dof_, fluid_type::n_dof_, double> results_ksf(
-        Core::LinAlg::Initialization::set_zero);
+        Core::LinAlg::Initialization::zero);
     Core::LinAlg::SerialDenseVector results_fs(beam_type::n_dof_, true);
     Core::LinAlg::SerialDenseVector results_ff(fluid_type::n_dof_, true);
     results_fs.putScalar(0.0);

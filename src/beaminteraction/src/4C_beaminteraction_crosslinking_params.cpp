@@ -25,7 +25,7 @@ BeamInteraction::CrosslinkingParams::CrosslinkingParams()
       viscosity_(0.0),
       kt_(0.0),
       deltatime_(0.0),
-      init_box_(Core::LinAlg::Initialization::set_zero)
+      init_box_(Core::LinAlg::Initialization::zero)
 {
   maxnum_init_crosslinker_pertype_.clear();
   numcrosslinkerpertype_.clear();

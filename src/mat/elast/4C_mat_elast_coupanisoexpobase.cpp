@@ -39,7 +39,7 @@ void Mat::Elastic::CoupAnisoExpoBase::add_strain_energy(double& psi,
     const Core::LinAlg::Matrix<6, 1>& glstrain, const int gp, const int eleGID)
 {
   // right Cauchy Green
-  Core::LinAlg::Matrix<3, 3> C(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<3, 3> C(Core::LinAlg::Initialization::zero);
   for (int i = 0; i < 3; ++i) C(i, i) = 2.0 * glstrain(i) + 1.0;
   C(0, 1) = C(1, 0) = glstrain(3);
   C(1, 2) = C(2, 1) = glstrain(4);

@@ -64,9 +64,9 @@ bool BeamInteraction::BeamToSolidVolumeMeshtyingPairGaussPoint<Beam, Solid>::eva
   Core::LinAlg::Matrix<3, 1, scalar_type> r_solid;
   Core::LinAlg::Matrix<3, 1, scalar_type> force;
   Core::LinAlg::Matrix<Beam::n_dof_, 1, scalar_type> force_element_1(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<Solid::n_dof_, 1, scalar_type> force_element_2(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
 
   // Initialize scalar variables.
   double segment_jacobian = 0.0;
@@ -222,9 +222,9 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairGaussPoint<Beam, Solid>::eva
 
 
   // Initialize local matrices.
-  Core::LinAlg::Matrix<n_dof_pair_, 1, double> local_force(Core::LinAlg::Initialization::set_zero);
+  Core::LinAlg::Matrix<n_dof_pair_, 1, double> local_force(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<n_dof_pair_, n_dof_pair_, double> local_stiff(
-      Core::LinAlg::Initialization::set_zero);
+      Core::LinAlg::Initialization::zero);
 
 
   if (rot_coupling_type == Inpar::BeamToSolid::BeamToSolidRotationCoupling::fix_triad_2d)

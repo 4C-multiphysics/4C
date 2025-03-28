@@ -63,7 +63,7 @@ void Discret::Elements::MembraneScatra<distype>::pre_evaluate(Teuchos::Parameter
 
       // allocate vector for shape functions and matrix for derivatives at gp
       Core::LinAlg::Matrix<Membrane<distype>::numnod_, 1> shapefcts(
-          Core::LinAlg::Initialization::set_zero);
+          Core::LinAlg::Initialization::zero);
 
       // loop over gauss points
       for (int gp = 0; gp < numgp; ++gp)
