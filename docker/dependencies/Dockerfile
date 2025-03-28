@@ -5,8 +5,8 @@
 #
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
-ARG UBUNTU_VERSION=20.04
-FROM ubuntu:${UBUNTU_VERSION}
+ARG BASE_IMAGE=ubuntu:20.04
+FROM ${BASE_IMAGE}
 LABEL org.opencontainers.image.description="Image containing all the dependencies required for building and testing 4C"
 LABEL org.4c-multiphysics.project=4C
 

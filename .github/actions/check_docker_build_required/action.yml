@@ -13,6 +13,10 @@ inputs:
   image-name:
     description: Name of the image
     required: true
+  compute-dependencies-hash-script:
+    description: Path to the script that computes the dependencies hash
+    required: false
+    default: './docker/dependencies/compute_dependencies_hash.sh'
 outputs:
   build_docker_image:
     description: Whether the docker image needs to be built
@@ -27,6 +31,7 @@ runs:
       uses: ./.github/actions/compute-and-check-dependencies-hash
       with:
         skip-check: 'true'
+        compute-dependencies-hash-script: ${{ inputs.compute-dependencies-hash-script }}
     - name: Log in to the Container registry
       uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
       with:

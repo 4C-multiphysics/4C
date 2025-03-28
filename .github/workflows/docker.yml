@@ -21,12 +21,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check-if-ubuntu24_04-build-is-required:
+  check-if-build-dependencies-is-required:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch'
     outputs:
       dependencies_hash: ${{ steps.check-docker-build-required.outputs.dependencies_hash }}
-      build_docker_image: ${{ steps.check-docker-build-required.outputs.build }}
+      build_docker_image: ${{ steps.check-docker-build-required.outputs.build_docker_image }}
     steps:
       - uses: actions/checkout@v4
       - id: check-docker-build-required
@@ -37,7 +37,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           image-name: ${{ env.REGISTRY }}/${{ env.PROJECT_NAMESPACE }}/4c-dependencies-ubuntu24.04
 
-  build-and-push-ubuntu24_04:
+  build-dependencies:
     runs-on: ubuntu-latest
     # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
     permissions:
@@ -45,8 +45,8 @@ jobs:
       packages: write
       id-token: write
       #
-    needs: check-if-ubuntu24_04-build-is-required
-    if: github.event_name == 'workflow_dispatch' && ${{ needs.check-if-ubuntu24_04-build-is-required.outputs.build_docker_image
+    needs: check-if-build-dependencies-is-required
+    if: ${{ github.event_name == 'workflow_dispatch' && needs.check-if-build-dependencies-is-required.outputs.build_docker_image
       == 'true' }}
     steps:
       - name: Checkout repository
@@ -59,9 +59,61 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           image-name: ${{ env.REGISTRY }}/${{ env.PROJECT_NAMESPACE }}/4c-dependencies-ubuntu24.04
-          dependencies-hash: ${{ needs.check-if-ubuntu24_04-build-is-required.outputs.dependencies_hash
+          dependencies-hash: ${{ needs.check-if-build-dependencies-is-required.outputs.dependencies_hash
             }}
-          ubuntu-version: "24.04"
+          base-image: "ubuntu:24.04"
+
+  check-if-build-dependencies-dealii-is-required:
+    runs-on: ubuntu-latest
+    if: github.ref_name != 'main'
+    outputs:
+      dependencies_hash: ${{ steps.check-docker-build-required.outputs.dependencies_hash }}
+      build_docker_image: ${{ steps.check-docker-build-required.outputs.build_docker_image }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: check-docker-build-required
+        uses: ./.github/actions/check_docker_build_required
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          image-name: ${{ env.REGISTRY }}/${{ env.PROJECT_NAMESPACE }}/4c-dependencies-dealii-ubuntu24.04
+          compute-dependencies-hash-script: './docker/dependencies_dealii/compute_dependencies_hash.sh'
+
+  build-dependencies-dealii:
+    runs-on: ubuntu-latest
+    # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    needs:
+      - check-if-build-dependencies-dealii-is-required
+      - build-dependencies
+    if: ${{ github.event_name == 'workflow_dispatch' && needs.check-if-build-dependencies-dealii-is-required.outputs.build_docker_image
+      == 'true' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      # We need to compute the dependencies hash for the base image (which must have been built before)
+      - name: Compute dependencies hash base dependencies
+        id: compute-dependencies-hash-base
+        uses: ./.github/actions/compute-and-check-dependencies-hash
+        with:
+          compute-dependencies-hash-script: './docker/dependencies/compute_dependencies_hash.sh'
+          skip-check: 'true'
+      - name: Build and push image
+        uses: ./.github/actions/build_dependencies
+        with:
+          docker-file: docker/dependencies_dealii/Dockerfile
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          image-name: ${{ env.REGISTRY }}/${{ env.PROJECT_NAMESPACE }}/4c-dependencies-dealii-ubuntu24.04
+          dependencies-hash: ${{ needs.check-if-build-dependencies-dealii-is-required.outputs.dependencies_hash
+            }}
+          base-image: "ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04:${{ steps.check-if-build-dependencies-required.outputs.dependencies_hash
+            }}"
 
   tag-images-as-main:
     runs-on: ubuntu-latest

@@ -5,18 +5,22 @@ inputs:
     description: 'If true, the check is skipped'
     required: false
     default: 'false'
+  compute-dependencies-hash-script:
+    description: 'Path to the script that computes the dependencies hash'
+    required: false
+    default: './docker/dependencies/compute_dependencies_hash.sh'
 outputs:
   computed_dependencies_hash:
     description: 'The computed hash from the dependencies'
-    value: ${{ steps.compute-depencencies-hash.outputs.dependencies_hash }}
+    value: ${{ steps.compute-dependencies-hash.outputs.dependencies_hash }}
 runs:
   using: composite
   steps:
-    - id: compute-depencencies-hash
+    - id: compute-dependencies-hash
       name: Compute the dependencies hash
       run: |
         cd $GITHUB_WORKSPACE
-        COMPUTED_DOCKER_DEPENDENCIES_HASH=`./docker/dependencies/compute_dependencies_hash.sh`
+        COMPUTED_DOCKER_DEPENDENCIES_HASH=`bash ${{ inputs.compute-dependencies-hash-script }}`
         echo "dependencies_hash=$COMPUTED_DOCKER_DEPENDENCIES_HASH" >> $GITHUB_OUTPUT
       shell: bash
     - id: check-if-dependencies-hash-matches
@@ -25,9 +29,9 @@ runs:
       shell: bash
       # Note: The dependencies hash is stored in the environment variable DEPENDENCIES_HASH in the docker image
       run: |
-        if [[ "${{ steps.compute-depencencies-hash.outputs.dependencies_hash }}" == "$DEPENDENCIES_HASH" ]]; then
+        if [[ "${{ steps.compute-dependencies-hash.outputs.dependencies_hash }}" == "$DEPENDENCIES_HASH" ]]; then
           echo "The hash is correct."
         else
-          echo "The hashes differ. The computed hash is ${{ steps.compute-depencencies-hash.outputs.dependencies_hash }} while the container dependencies hash is $DEPENDENCIES_HASH. You probably need to adapt the dependencies hash in the workflow."
+          echo "The hashes differ. The computed hash is ${{ steps.compute-dependencies-hash.outputs.dependencies_hash }} while the container dependencies hash is $DEPENDENCIES_HASH. You probably need to adapt the dependencies hash in the workflow."
           exit 1
         fi

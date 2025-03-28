@@ -9,4 +9,4 @@
 # Exit the script at the first failure
 set -e
 
-find dependencies/current dependencies/testing docker/dependencies -type f -exec sha1sum {} \; | sort | sha1sum | cut -c -8
+find dependencies/current dependencies/dealii dependencies/testing docker/dependencies docker/dependencies_dealii -type f -exec sha1sum {} \; | sort | sha1sum | cut -c -8

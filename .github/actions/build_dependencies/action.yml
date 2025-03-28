@@ -19,8 +19,8 @@ inputs:
   dependencies-hash:
     description: Hash of the dependencies
     required: true
-  ubuntu-version:
-    description: Version of Ubuntu to use
+  base-image:
+    description: Which image is the build based on
     required: true
 runs:
   using: composite
@@ -50,7 +50,7 @@ runs:
         file: ${{ inputs.docker-file }}
         build-args: |
           DEPENDENCIES_HASH=${{ inputs.dependencies-hash }}
-          UBUNTU_VERSION=${{ inputs.ubuntu-version }}
+          BASE_IMAGE=${{ inputs.base-image }}
         push: true
         tags: ${{ inputs.image-name }}:${{ inputs.dependencies-hash }}
         # tags: ${{ steps.meta.outputs.tags }}
