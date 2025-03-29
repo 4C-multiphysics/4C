@@ -152,6 +152,17 @@ else()
   enable_compiler_flag_if_supported("-fno-trapping-math")
 endif()
 
+four_c_process_global_option(FOUR_C_ENABLE_IWYU "Enable include-what-you-use" OFF)
+if(FOUR_C_ENABLE_IWYU)
+  find_program(FOUR_C_IWYU_EXECUTABLE NAMES include-what-you-use iwyu)
+  if(NOT FOUR_C_IWYU_EXECUTABLE)
+    message(
+      FATAL_ERROR "Option FOUR_C_ENABLE_IWYU is ON but include-what-you-use/iwyu is not found."
+                  "You can specify the path in the CMake variable FOUR_C_IWYU_EXECUTABLE."
+      )
+  endif()
+endif()
+
 ##
 # Optimization flags
 # These flags are reasonable defaults. Users may amend them by setting FOUR_C_CXX_FLAGS and/or FOUR_C_CXX_FLAGS_<CONFIG>.

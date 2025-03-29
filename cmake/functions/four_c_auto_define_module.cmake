@@ -38,6 +38,12 @@ function(four_c_auto_define_module)
     # them on other users of the library.
     target_link_libraries(${_target}_objs PRIVATE four_c_private_compile_interface)
 
+    if(FOUR_C_ENABLE_IWYU)
+      set_target_properties(
+        ${_target}_objs PROPERTIES CXX_INCLUDE_WHAT_YOU_USE ${FOUR_C_IWYU_EXECUTABLE}
+        )
+    endif()
+
     if(FOUR_C_ENABLE_DEVELOPER_MODE AND _parsed_NO_CYCLES)
       # Define an additional library built from the sources. In developer mode, we link unit tests against this library which can
       # be faster to build than lib4C.
