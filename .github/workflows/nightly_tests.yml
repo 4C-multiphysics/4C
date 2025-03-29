@@ -136,6 +136,11 @@ jobs:
           repository: aras-p/ClangBuildAnalyzer
           ref: bae0cb488cce944bfc3da9850a69ad621701ebef # version 1.6.0
           path: ClangBuildAnalyzer
+      - uses: actions/checkout@v4
+        with:
+          repository: nico/ninjatracing
+          ref: a669e3644cf22b29cbece31dbed2cfbf34e5f48e # no releases for this repo, this is a stable commit
+          path: ninjatracing
       - name: Build ClangBuildAnalyzer
         run: |
           cd $GITHUB_WORKSPACE/ClangBuildAnalyzer
@@ -150,12 +155,22 @@ jobs:
           $GITHUB_WORKSPACE/ClangBuildAnalyzer/build/ClangBuildAnalyzer --all $GITHUB_WORKSPACE/build time_trace.bin
           $GITHUB_WORKSPACE/ClangBuildAnalyzer/build/ClangBuildAnalyzer --analyze time_trace.bin > $GITHUB_WORKSPACE/clang18_compile_time_report.txt
           cat $GITHUB_WORKSPACE/clang18_compile_time_report.txt
+      - name: Aggregate trace
+        run: |
+          $GITHUB_WORKSPACE/ninjatracing/ninjatracing -e $GITHUB_WORKSPACE/build/.ninja_log > $GITHUB_WORKSPACE/clang18_compile_time_trace.json
       - name: Upload report
         uses: actions/upload-artifact@v4
         with:
           name: clang18_compile_time_report.txt
           path: |
             ${{ github.workspace }}/clang18_compile_time_report.txt
+          retention-days: 90
+      - name: Upload trace
+        uses: actions/upload-artifact@v4
+        with:
+          name: clang18_compile_time_trace.json
+          path: |
+            ${{ github.workspace }}/clang18_compile_time_trace.json
           retention-days: 90
 
   clang18_test:
