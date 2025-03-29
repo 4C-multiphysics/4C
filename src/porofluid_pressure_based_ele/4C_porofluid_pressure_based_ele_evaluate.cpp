@@ -62,10 +62,6 @@ int Discret::Elements::PoroFluidMultiPhase::evaluate(Teuchos::ParameterList& par
           ->evaluate(this, params, discretization, la, elemat, elevec);
       break;
     }
-    case POROFLUIDMULTIPHASE::set_timestep_parameter:
-    case POROFLUIDMULTIPHASE::set_general_parameter:
-      // these actions have already been evaluated during element pre-evaluate
-      break;
     default:
     {
       FOUR_C_THROW("Unknown type of action '{}' for PoroFluidMultiPhase", action);
@@ -90,43 +86,6 @@ int Discret::Elements::PoroFluidMultiPhase::evaluate_neumann(Teuchos::ParameterL
   //    integration of volume Neumann conditions (body forces) takes place
   //    in the element. We need it there for potential stabilisation terms!
   return 0;
-}
-
-/*---------------------------------------------------------------------*
-|  Call the element to set all basic parameter             vuong 08/16 |
-*----------------------------------------------------------------------*/
-void Discret::Elements::PoroFluidMultiPhaseType::pre_evaluate(Core::FE::Discretization& dis,
-    Teuchos::ParameterList& p, std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix1,
-    std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix2,
-    std::shared_ptr<Core::LinAlg::Vector<double>> systemvector1,
-    std::shared_ptr<Core::LinAlg::Vector<double>> systemvector2,
-    std::shared_ptr<Core::LinAlg::Vector<double>> systemvector3)
-{
-  const auto action = Teuchos::getIntegralValue<POROFLUIDMULTIPHASE::Action>(p, "action");
-
-  switch (action)
-  {
-    case POROFLUIDMULTIPHASE::set_general_parameter:
-    {
-      Discret::Elements::PoroFluidMultiPhaseEleParameter::instance(dis.name())
-          ->set_general_parameters(p);
-
-      break;
-    }
-
-    case POROFLUIDMULTIPHASE::set_timestep_parameter:
-    {
-      Discret::Elements::PoroFluidMultiPhaseEleParameter::instance(dis.name())
-          ->set_time_step_parameters(p);
-
-      break;
-    }
-    default:
-      // do nothing in all other cases
-      break;
-  }
-
-  return;
 }
 
 FOUR_C_NAMESPACE_CLOSE

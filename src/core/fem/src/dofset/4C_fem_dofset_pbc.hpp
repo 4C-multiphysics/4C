@@ -11,10 +11,10 @@
 #include "4C_config.hpp"
 
 #include "4C_fem_dofset.hpp"
-#include "4C_linalg_map.hpp"
 
 #include <map>
 #include <memory>
+#include <set>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN

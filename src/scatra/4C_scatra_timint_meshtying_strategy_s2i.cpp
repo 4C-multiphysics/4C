@@ -3006,9 +3006,8 @@ void ScaTra::MeshtyingStrategyS2I::set_condition_specific_scatra_parameters(
   // fill the parameter list
   write_s2_i_kinetics_specific_scatra_parameters_to_parameter_list(s2icondition, conditionparams);
 
-  // call standard loop over elements
-  scatratimint_->discretization()->evaluate(
-      conditionparams, nullptr, nullptr, nullptr, nullptr, nullptr);
+  Discret::Elements::ScaTraEleParameterBoundary::instance("scatra")->set_parameters(
+      conditionparams);
 }
 
 /*----------------------------------------------------------------------*
@@ -3019,9 +3018,7 @@ void ScaTra::MeshtyingStrategyS2I::write_s2_i_kinetics_specific_scatra_parameter
   // get kinetic model and condition type
   const Core::Conditions::ConditionType conditiontype = s2ikinetics_cond.type();
 
-  // set action, kinetic model, condition type and numscal
-  Core::Utils::add_enum_class_to_parameter_list<ScaTra::Action>(
-      "action", ScaTra::Action::set_scatra_ele_boundary_parameter, s2icouplingparameters);
+  // set kinetic model, condition type and numscal
   s2icouplingparameters.set<Core::Conditions::ConditionType>("condition type", conditiontype);
 
   // set the condition type specific parameters

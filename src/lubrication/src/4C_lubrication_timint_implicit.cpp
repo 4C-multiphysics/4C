@@ -19,6 +19,7 @@
 #include "4C_linalg_utils_sparse_algebra_print.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_lubrication_ele_action.hpp"
+#include "4C_lubrication_ele_parameter.hpp"
 #include "4C_lubrication_input.hpp"
 #include "4C_utils_function.hpp"
 
@@ -172,8 +173,6 @@ void Lubrication::TimIntImpl::set_element_general_parameters() const
 {
   Teuchos::ParameterList eleparams;
 
-  eleparams.set<Lubrication::Action>("action", Lubrication::set_general_lubrication_parameter);
-
   eleparams.set<bool>("isale", isale_);
 
   eleparams.set<bool>("ismodifiedrey", modified_reynolds_);
@@ -184,10 +183,8 @@ void Lubrication::TimIntImpl::set_element_general_parameters() const
 
   eleparams.set("roughnessdeviation", roughness_deviation_);
 
-  // call standard loop over elements
-  discret_->evaluate(eleparams, nullptr, nullptr, nullptr, nullptr, nullptr);
-
-  return;
+  Discret::Elements::LubricationEleParameter::instance(discret_->name())
+      ->set_general_parameters(eleparams);
 }
 
 

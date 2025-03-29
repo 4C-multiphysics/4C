@@ -30,7 +30,9 @@
 #include "4C_mat_scatra.hpp"
 #include "4C_scatra_ele_action.hpp"
 #include "4C_scatra_ele_boundary_calc_elch_electrode_utils.hpp"
+#include "4C_scatra_ele_parameter_std.hpp"
 #include "4C_scatra_ele_parameter_timint.hpp"
+#include "4C_scatra_ele_parameter_turbulence.hpp"
 #include "4C_scatra_resulttest.hpp"
 #include "4C_scatra_timint_heterogeneous_reaction_strategy.hpp"
 #include "4C_scatra_timint_meshtying_strategy_artery.hpp"
@@ -40,7 +42,6 @@
 #include "4C_scatra_turbulence_hit_initial_scalar_field.hpp"
 #include "4C_scatra_turbulence_hit_scalar_forcing.hpp"
 #include "4C_scatra_utils.hpp"
-#include "4C_ssi_contact_strategy.hpp"
 #include "4C_utils_enum.hpp"
 #include "4C_utils_function.hpp"
 #include "4C_utils_parameter_list.hpp"
@@ -944,10 +945,6 @@ void ScaTra::ScaTraTimIntImpl::set_element_nodeset_parameters() const
 {
   Teuchos::ParameterList eleparams;
 
-  // set action
-  Core::Utils::add_enum_class_to_parameter_list<ScaTra::Action>(
-      "action", ScaTra::Action::set_nodeset_parameter, eleparams);
-
   eleparams.set<int>("ndsdisp", nds_disp());
   eleparams.set<int>("ndsgrowth", nds_growth());
   eleparams.set<int>("ndspres", nds_pressure());
@@ -957,8 +954,8 @@ void ScaTra::ScaTraTimIntImpl::set_element_nodeset_parameters() const
   eleparams.set<int>("ndsvel", nds_vel());
   eleparams.set<int>("ndswss", nds_wall_shear_stress());
 
-  // call standard loop over elements
-  discret_->evaluate(eleparams, nullptr, nullptr, nullptr, nullptr, nullptr);
+  Discret::Elements::ScaTraEleParameterStd::instance(discret_->name())
+      ->set_nodeset_parameters(eleparams);
 }
 
 /*--------------------------------------------------------------------------------*
@@ -966,10 +963,6 @@ void ScaTra::ScaTraTimIntImpl::set_element_nodeset_parameters() const
 void ScaTra::ScaTraTimIntImpl::set_element_general_parameters(bool calcinitialtimederivative) const
 {
   Teuchos::ParameterList eleparams;
-
-  // set action
-  Core::Utils::add_enum_class_to_parameter_list<ScaTra::Action>(
-      "action", ScaTra::Action::set_general_scatra_parameter, eleparams);
 
   // set problem number
   eleparams.set<int>("probnum", probnum_);
@@ -1032,8 +1025,7 @@ void ScaTra::ScaTraTimIntImpl::set_element_general_parameters(bool calcinitialti
   // (electrochemistry etc.)
   set_element_specific_scatra_parameters(eleparams);
 
-  // call standard loop over elements
-  discret_->evaluate(eleparams, nullptr, nullptr, nullptr, nullptr, nullptr);
+  Discret::Elements::ScaTraEleParameterStd::instance(discret_->name())->set_parameters(eleparams);
 }
 
 
@@ -1043,9 +1035,6 @@ void ScaTra::ScaTraTimIntImpl::set_element_turbulence_parameters(
     bool calcinitialtimederivative) const
 {
   Teuchos::ParameterList eleparams;
-
-  Core::Utils::add_enum_class_to_parameter_list<ScaTra::Action>(
-      "action", ScaTra::Action::set_turbulence_scatra_parameter, eleparams);
 
   eleparams.sublist("TURBULENCE MODEL") = extraparams_->sublist("TURBULENCE MODEL");
   if (calcinitialtimederivative)
@@ -1081,8 +1070,8 @@ void ScaTra::ScaTraTimIntImpl::set_element_turbulence_parameters(
     eleparams.set<Inpar::ScaTra::FSSUGRDIFF>("fs subgrid diffusivity", fssgd_);
   }
 
-  // call standard loop over elements
-  discret_->evaluate(eleparams, nullptr, nullptr, nullptr, nullptr, nullptr);
+  Discret::Elements::ScaTraEleParameterTurbulence::instance(discret_->name())
+      ->set_parameters(eleparams);
 }
 
 /*----------------------------------------------------------------------*

@@ -229,12 +229,6 @@ int Discret::Elements::FluidHDGWeakComp::evaluate(Teuchos::ParameterList& params
       break;
     }
 
-    case FLD::set_general_fluid_parameter:
-    case FLD::set_time_parameter:
-    case FLD::set_turbulence_parameter:
-    case FLD::set_loma_parameter:
-      break;
-
     default:
       FOUR_C_THROW("Unknown type of action '{}' for FluidHDGWeakComp", act);
       break;

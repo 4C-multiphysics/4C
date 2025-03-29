@@ -13,6 +13,8 @@
 #include "4C_fem_dofset_base.hpp"
 #include "4C_fem_general_node.hpp"
 
+#include <set>
+
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -20,6 +22,12 @@ namespace Core::FE
 {
   class Discretization;
 }  // namespace Core::FE
+
+namespace Core::LinAlg
+{
+  template <typename T>
+  class Vector;
+}
 
 namespace Core::DOFSets
 {

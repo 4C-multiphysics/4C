@@ -29,58 +29,6 @@ FOUR_C_NAMESPACE_OPEN
 
   */
 
-/*---------------------------------------------------------------------*
-|  Call the element to set all basic parameter                         |
-*----------------------------------------------------------------------*/
-void Discret::Elements::FluidType::pre_evaluate(Core::FE::Discretization& dis,
-    Teuchos::ParameterList& p, std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix1,
-    std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix2,
-    std::shared_ptr<Core::LinAlg::Vector<double>> systemvector1,
-    std::shared_ptr<Core::LinAlg::Vector<double>> systemvector2,
-    std::shared_ptr<Core::LinAlg::Vector<double>> systemvector3)
-{
-  const auto action = Teuchos::getIntegralValue<FLD::Action>(p, "action");
-
-  if (action == FLD::set_general_fluid_parameter)
-  {
-    Discret::Elements::FluidEleParameterStd* fldpara =
-        Discret::Elements::FluidEleParameterStd::instance();
-    fldpara->set_element_general_fluid_parameter(
-        p, Core::Communication::my_mpi_rank(dis.get_comm()));
-  }
-  else if (action == FLD::set_time_parameter)
-  {
-    Discret::Elements::FluidEleParameterTimInt* fldpara =
-        Discret::Elements::FluidEleParameterTimInt::instance();
-    fldpara->set_element_time_parameter(p);
-  }
-  else if (action == FLD::set_turbulence_parameter)
-  {
-    Discret::Elements::FluidEleParameterStd* fldpara =
-        Discret::Elements::FluidEleParameterStd::instance();
-    fldpara->set_element_turbulence_parameters(p);
-  }
-  else if (action == FLD::set_loma_parameter)
-  {
-    Discret::Elements::FluidEleParameterStd* fldpara =
-        Discret::Elements::FluidEleParameterStd::instance();
-    fldpara->set_element_loma_parameter(p);
-  }
-  else if (action == FLD::set_general_fluid_xfem_parameter)
-  {
-    Discret::Elements::FluidEleParameterXFEM* fldpara =
-        Discret::Elements::FluidEleParameterXFEM::instance();
-
-    fldpara->set_element_general_fluid_parameter(
-        p, Core::Communication::my_mpi_rank(dis.get_comm()));
-    fldpara->set_element_turbulence_parameters(p);
-    fldpara->set_element_xfem_parameter(p, Core::Communication::my_mpi_rank(dis.get_comm()));
-  }
-
-  return;
-}
-
-
 /*----------------------------------------------------------------------*
 |  evaluate the element (public)                            g.bau 03/07|
 *----------------------------------------------------------------------*/
@@ -644,14 +592,6 @@ int Discret::Elements::Fluid::evaluate(Teuchos::ParameterList& params,
         FOUR_C_THROW("{} D elements does not support calculation of mean Cai", nsd);
     }
     break;
-    case FLD::set_mean_Cai:
-    {
-      // pointer to class FluidEleParameter
-      Discret::Elements::FluidEleParameterStd* fldpara =
-          Discret::Elements::FluidEleParameterStd::instance();
-      fldpara->set_csgs_phi(params.get<double>("meanCai"));
-    }
-    break;
     case FLD::calc_node_normal:
     {
       if (nsd == 3)
@@ -722,16 +662,6 @@ int Discret::Elements::Fluid::evaluate(Teuchos::ParameterList& params,
               this, params, mat, discretization, lm, elemat1, elemat2, elevec1, elevec2, elevec3);
       break;
     }
-    case FLD::set_general_fluid_parameter:
-    case FLD::set_time_parameter:
-    case FLD::set_turbulence_parameter:
-    case FLD::set_loma_parameter:
-      //    case FLD::calc_adjoint_neumann: // this is done by the surface elements
-      break;
-    //-----------------------------------------------------------------------
-    // adjoint implementation enabling time-integration schemes such as
-    // one-step-theta, BDF2, and generalized-alpha (n+alpha_F and n+1)
-    //-----------------------------------------------------------------------
     default:
       FOUR_C_THROW("Unknown type of action '{}' for Fluid", act);
       break;
@@ -754,39 +684,6 @@ int Discret::Elements::Fluid::evaluate_neumann(Teuchos::ParameterList& params,
     Core::LinAlg::SerialDenseMatrix* elemat1)
 {
   return 0;
-}
-
-
-/*----------------------------------------------------------------------*
- | pre-evaluation of FluidIntFaceType class (public)        schott Jun14|
- *----------------------------------------------------------------------*/
-void Discret::Elements::FluidIntFaceType::pre_evaluate(Core::FE::Discretization& dis,
-    Teuchos::ParameterList& p, std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix1,
-    std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix2,
-    std::shared_ptr<Core::LinAlg::Vector<double>> systemvector1,
-    std::shared_ptr<Core::LinAlg::Vector<double>> systemvector2,
-    std::shared_ptr<Core::LinAlg::Vector<double>> systemvector3)
-{
-  const auto action = Teuchos::getIntegralValue<FLD::Action>(p, "action");
-
-  if (action == FLD::set_general_face_fluid_parameter)
-  {
-    Discret::Elements::FluidEleParameterIntFace* fldintfacepara =
-        Discret::Elements::FluidEleParameterIntFace::instance();
-    fldintfacepara->set_face_general_fluid_parameter(
-        p, Core::Communication::my_mpi_rank(dis.get_comm()));
-  }
-  else if (action == FLD::set_general_face_xfem_parameter)
-  {
-    Discret::Elements::FluidEleParameterIntFace* fldintfacepara =
-        Discret::Elements::FluidEleParameterIntFace::instance();
-    fldintfacepara->set_face_general_xfem_parameter(
-        p, Core::Communication::my_mpi_rank(dis.get_comm()));
-  }
-  else
-    FOUR_C_THROW("unknown action type for FluidIntFaceType::pre_evaluate");
-
-  return;
 }
 
 FOUR_C_NAMESPACE_CLOSE

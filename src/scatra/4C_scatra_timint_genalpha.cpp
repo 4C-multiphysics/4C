@@ -12,6 +12,7 @@
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
 #include "4C_scatra_ele_action.hpp"
+#include "4C_scatra_ele_parameter_timint.hpp"
 #include "4C_scatra_timint_meshtying_strategy_base.hpp"
 #include "4C_scatra_turbulence_hit_scalar_forcing.hpp"
 #include "4C_utils_parameter_list.hpp"
@@ -120,8 +121,6 @@ void ScaTra::TimIntGenAlpha::set_element_time_parameter(bool forcedincrementalso
 {
   Teuchos::ParameterList eleparams;
 
-  Core::Utils::add_enum_class_to_parameter_list<ScaTra::Action>(
-      "action", ScaTra::Action::set_time_parameter, eleparams);
   eleparams.set<bool>("using generalized-alpha time integration", true);
   eleparams.set<bool>("using stationary formulation", false);
   if (!forcedincrementalsolver)
@@ -134,8 +133,8 @@ void ScaTra::TimIntGenAlpha::set_element_time_parameter(bool forcedincrementalso
   eleparams.set<double>("time factor", genalphafac_ * dta_);
   eleparams.set<double>("alpha_F", alphaF_);
 
-  // call standard loop over elements
-  discret_->evaluate(eleparams, nullptr, nullptr, nullptr, nullptr, nullptr);
+  Discret::Elements::ScaTraEleParameterTimInt::instance(discret_->name())
+      ->set_parameters(eleparams);
 }
 
 
@@ -146,9 +145,6 @@ void ScaTra::TimIntGenAlpha::set_element_time_parameter_backward_euler() const
 {
   Teuchos::ParameterList eleparams;
 
-  Core::Utils::add_enum_class_to_parameter_list<ScaTra::Action>(
-      "action", ScaTra::Action::set_time_parameter, eleparams);
-
   eleparams.set<bool>("using generalized-alpha time integration", false);
   eleparams.set<bool>("using stationary formulation", false);
   eleparams.set<bool>("incremental solver", true);
@@ -158,8 +154,8 @@ void ScaTra::TimIntGenAlpha::set_element_time_parameter_backward_euler() const
   eleparams.set<double>("time factor", 1.0 * dta_);
   eleparams.set<double>("alpha_F", 1.0);
 
-  // call standard loop over elements
-  discret_->evaluate(eleparams, nullptr, nullptr, nullptr, nullptr, nullptr);
+  Discret::Elements::ScaTraEleParameterTimInt::instance(discret_->name())
+      ->set_parameters(eleparams);
 }
 
 

@@ -22,12 +22,10 @@ namespace Lubrication
   enum Action
   {
     // domain action
-    set_general_lubrication_parameter,  // set general parameters for element evaluation
-    set_time_parameter,                 // set time-integration parameters for element evaluation
-    calc_mat_and_rhs,                   // calc_condif_systemmat_and_residual,
-    calc_mean_pressures,                // calc_mean_pressures,
-    calc_error,                         // calc_error
-    calc_lubrication_coupltang          // calculate off-diagonal tangent matrix term
+    calc_mat_and_rhs,           // calc_condif_systemmat_and_residual,
+    calc_mean_pressures,        // calc_mean_pressures,
+    calc_error,                 // calc_error
+    calc_lubrication_coupltang  // calculate off-diagonal tangent matrix term
   };  // enum Action
 
   /*--------------------------------------------------------------------------*/

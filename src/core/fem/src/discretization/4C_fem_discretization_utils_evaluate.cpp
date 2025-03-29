@@ -67,17 +67,6 @@ void Core::FE::Utils::evaluate(Core::FE::Discretization& discret, Teuchos::Param
   int row = strategy.first_dof_set();
   int col = strategy.second_dof_set();
 
-  // call the element's register class pre-evaluation method
-  // for each type of element
-  // for most element types, just the base class dummy is called
-  // that does nothing
-  {
-    TEUCHOS_FUNC_TIME_MONITOR("Core::FE::Utils::Evaluate pre_evaluate");
-    Core::Communication::ParObjectFactory::instance().pre_evaluate(discret, eparams,
-        strategy.systemmatrix1(), strategy.systemmatrix2(), strategy.systemvector1(),
-        strategy.systemvector2(), strategy.systemvector3());
-  }
-
   Core::Elements::LocationArray la(discret.num_dof_sets());
 
   bool is_subset = false;

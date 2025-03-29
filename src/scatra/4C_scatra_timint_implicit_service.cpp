@@ -22,6 +22,7 @@
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_linear_solver_method_parameters.hpp"
 #include "4C_scatra_ele_action.hpp"
+#include "4C_scatra_ele_parameter_turbulence.hpp"
 #include "4C_scatra_timint_implicit.hpp"
 #include "4C_scatra_turbulence_hit_scalar_forcing.hpp"
 #include "4C_utils_parameter_list.hpp"
@@ -1618,12 +1619,8 @@ void ScaTra::ScaTraTimIntImpl::recompute_mean_csgs_b()
                 << std::endl;
     }
 
-    // set meanCai via pre-evaluate call
-    Core::Utils::add_enum_class_to_parameter_list<ScaTra::Action>(
-        "action", ScaTra::Action::set_mean_Cai, myparams);
-    myparams.set<double>("meanCai", meanCai);
-    // call standard loop over elements
-    discret_->evaluate(myparams, nullptr, nullptr, nullptr, nullptr, nullptr);
+    Discret::Elements::ScaTraEleParameterTurbulence::instance(discret_->name())
+        ->set_csgs_phi(meanCai);
   }
 }
 

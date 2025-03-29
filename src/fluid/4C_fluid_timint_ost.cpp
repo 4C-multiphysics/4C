@@ -8,6 +8,7 @@
 #include "4C_fluid_timint_ost.hpp"
 
 #include "4C_fluid_ele_action.hpp"
+#include "4C_fluid_ele_parameter_timint.hpp"
 #include "4C_fluid_utils.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
@@ -171,7 +172,6 @@ void FLD::TimIntOneStepTheta::set_element_time_parameter()
 {
   Teuchos::ParameterList eleparams;
 
-  eleparams.set<FLD::Action>("action", FLD::set_time_parameter);
   eleparams.set<Inpar::FLUID::PhysicalType>("Physical Type", physicaltype_);
 
   // set time integration scheme
@@ -190,8 +190,7 @@ void FLD::TimIntOneStepTheta::set_element_time_parameter()
       Teuchos::getIntegralValue<Inpar::FLUID::OstContAndPress>(*params_, "ost cont and press"));
   eleparams.set<bool>("ost new", params_->get<bool>("ost new"));
 
-  // call standard loop over elements
-  discret_->evaluate(eleparams, nullptr, nullptr, nullptr, nullptr, nullptr);
+  Discret::Elements::FluidEleParameterTimInt::instance()->set_element_time_parameter(eleparams);
 }
 
 void FLD::TimIntOneStepTheta::set_theta()

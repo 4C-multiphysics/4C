@@ -89,18 +89,9 @@ namespace ScaTra
     project_field,                  ///< project field
     project_material_field,         ///< project material field for hdg
     project_neumann_field,          ///< project neumann field for hdg
-    set_diffcond_scatra_parameter,  ///< set diffusion-conduction parameters for element evaluation
-    set_elch_scatra_parameter,      ///< set elch parameters for element evaluation
-    set_general_scatra_parameter,   ///< set general parameters for element evaluation
-    set_nodeset_parameter,          ///< set the nodeset parameters for element evaluation
     set_initial_field,              ///< set initial field for hdg
-    set_lsreinit_scatra_parameter,  ///< set reinitialization parameters for element evaluation
     set_material_internal_state,    ///< set material internal state (for restart for example),
-    set_mean_Cai,                   ///< special action for mfs
-    set_scatra_ele_boundary_parameter,  ///< set scatra boundary parameter for interface
-    set_time_parameter,                 ///< set time-integration parameters for element evaluation
-    set_turbulence_scatra_parameter,    ///< set turbulence parameters for element evaluation
-    time_update_material,               ///< time update for materials
+    time_update_material,           ///< time update for materials
     transform_real_to_reference_point,  ///< gets a point in real coordinates and returns reference
                                         ///< coordinates
     update_interior_variables           ///< update interior variables for hdg

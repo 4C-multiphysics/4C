@@ -13,6 +13,8 @@
 
 #include "4C_mortar_coupling3d_classes.hpp"
 
+#include <set>
+
 FOUR_C_NAMESPACE_OPEN
 
 namespace Mortar

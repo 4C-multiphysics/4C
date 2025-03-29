@@ -36,8 +36,6 @@ namespace POROFLUIDMULTIPHASE
     get_access_from_artcoupling,  // get access from artery-coupling to evaluate variables
     get_access_from_scatra,       // get access from scatra-framework to evaluate variables
     recon_flux_at_nodes,          // reconstruct flux at nodes
-    set_general_parameter,        // set general parameters for element evaluation
-    set_timestep_parameter,       // set time-integration parameters for element evaluation
   };  // enum Action
 
   /*--------------------------------------------------------------------------*/

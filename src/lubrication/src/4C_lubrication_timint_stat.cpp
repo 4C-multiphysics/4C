@@ -11,6 +11,7 @@
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
 #include "4C_lubrication_ele_action.hpp"
+#include "4C_lubrication_ele_parameter.hpp"
 
 #include <Teuchos_TimeMonitor.hpp>
 
@@ -57,8 +58,6 @@ void Lubrication::TimIntStationary::init()
 void Lubrication::TimIntStationary::set_element_time_parameter() const
 {
   Teuchos::ParameterList eleparams;
-
-  eleparams.set<Lubrication::Action>("action", Lubrication::set_time_parameter);
   eleparams.set<bool>("using generalized-alpha time integration", false);
   eleparams.set<bool>("using stationary formulation", true);
   eleparams.set<double>("time-step length", dta_);
@@ -66,8 +65,8 @@ void Lubrication::TimIntStationary::set_element_time_parameter() const
   eleparams.set<double>("time factor", 1.0);
   eleparams.set<double>("alpha_F", 1.0);
 
-  // call standard loop over elements
-  discret_->evaluate(eleparams, nullptr, nullptr, nullptr, nullptr, nullptr);
+  Discret::Elements::LubricationEleParameter::instance(discret_->name())
+      ->set_time_parameters(eleparams);
 }
 
 

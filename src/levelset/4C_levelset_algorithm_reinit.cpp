@@ -14,6 +14,9 @@
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_scatra_ele_action.hpp"
+#include "4C_scatra_ele_parameter_lsreinit.hpp"
+#include "4C_scatra_ele_parameter_std.hpp"
+#include "4C_scatra_ele_parameter_timint.hpp"
 #include "4C_utils_parameter_list.hpp"
 
 #include <list>
@@ -63,10 +66,6 @@ void ScaTra::LevelSetAlgorithm::set_reinitialization_element_parameters(
   // create element parameter list
   Teuchos::ParameterList eleparams;
 
-  // set action for elements
-  Core::Utils::add_enum_class_to_parameter_list<ScaTra::Action>(
-      "action", ScaTra::Action::set_lsreinit_scatra_parameter, eleparams);
-
   // reinitialization equation is given in convective form
   eleparams.set<Inpar::ScaTra::ConvForm>("convform", Inpar::ScaTra::convform_convective);
 
@@ -114,11 +113,14 @@ void ScaTra::LevelSetAlgorithm::set_reinitialization_element_parameters(
           "DEFINITION_ASSGD", eleparams.sublist("REINITIALIZATION")
                                   .get<Inpar::ScaTra::AssgdType>("DEFINITION_ARTDIFFREINIT"));
 
-  // call standard loop over elements
-  discret_->evaluate(eleparams, nullptr, nullptr, nullptr, nullptr, nullptr);
+  // set general parameters first
+  Discret::Elements::ScaTraEleParameterStd::instance(discret_->name())->set_parameters(eleparams);
 
-  return;
+  // set additional, problem-dependent parameters
+  Discret::Elements::ScaTraEleParameterLsReinit::instance(discret_->name())
+      ->set_parameters(eleparams);
 }
+
 
 
 /*----------------------------------------------------------------------*
@@ -127,9 +129,6 @@ void ScaTra::LevelSetAlgorithm::set_reinitialization_element_parameters(
 void ScaTra::LevelSetAlgorithm::set_reinitialization_element_time_parameters()
 {
   Teuchos::ParameterList eleparams;
-
-  Core::Utils::add_enum_class_to_parameter_list<ScaTra::Action>(
-      "action", ScaTra::Action::set_time_parameter, eleparams);
 
   eleparams.set<bool>("using generalized-alpha time integration", false);
   eleparams.set<bool>("using stationary formulation", false);
@@ -141,10 +140,8 @@ void ScaTra::LevelSetAlgorithm::set_reinitialization_element_time_parameters()
   eleparams.set<double>("time factor", thetareinit_ * dtau_);
   eleparams.set<double>("alpha_F", 1.0);
 
-  // call standard loop over elements
-  discret_->evaluate(eleparams, nullptr, nullptr, nullptr, nullptr, nullptr);
-
-  return;
+  Discret::Elements::ScaTraEleParameterTimInt::instance(discret_->name())
+      ->set_parameters(eleparams);
 }
 
 

@@ -222,17 +222,13 @@ void Core::Communication::ParObjectFactory::initialize_elements(Core::FE::Discre
 
   Core::LinAlg::allreduce_vector(localtypeids, globaltypeids, dis.get_comm());
 
-  std::set<Core::Elements::ElementType*>& ae = active_elements_[&dis];
-
   // This is element specific code. Thus we need a down cast.
-
   for (std::vector<int>::iterator i = globaltypeids.begin(); i != globaltypeids.end(); ++i)
   {
     ParObjectType* pot = type_map_[*i];
     Core::Elements::ElementType* eot = dynamic_cast<Core::Elements::ElementType*>(pot);
     if (eot != nullptr)
     {
-      ae.insert(eot);
       int err = eot->initialize(dis);
       if (err) FOUR_C_THROW("Element Initialize returned err={}", err);
     }
@@ -240,27 +236,6 @@ void Core::Communication::ParObjectFactory::initialize_elements(Core::FE::Discre
     {
       FOUR_C_THROW("illegal element type id {}", *i);
     }
-  }
-}
-
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-void Core::Communication::ParObjectFactory::pre_evaluate(Core::FE::Discretization& dis,
-    Teuchos::ParameterList& p, std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix1,
-    std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix2,
-    std::shared_ptr<Core::LinAlg::Vector<double>> systemvector1,
-    std::shared_ptr<Core::LinAlg::Vector<double>> systemvector2,
-    std::shared_ptr<Core::LinAlg::Vector<double>> systemvector3)
-{
-  finalize_registration();
-
-  std::set<Core::Elements::ElementType*>& ae = active_elements_[&dis];
-
-  for (std::set<Core::Elements::ElementType*>::iterator i = ae.begin(); i != ae.end(); ++i)
-  {
-    (*i)->pre_evaluate(
-        dis, p, systemmatrix1, systemmatrix2, systemvector1, systemvector2, systemvector3);
   }
 }
 

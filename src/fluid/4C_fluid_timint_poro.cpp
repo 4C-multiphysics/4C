@@ -9,6 +9,7 @@
 
 #include "4C_fem_general_node.hpp"
 #include "4C_fluid_ele_action.hpp"
+#include "4C_fluid_ele_parameter_poro.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
@@ -78,8 +79,6 @@ void FLD::TimIntPoro::set_element_custom_parameter()
 {
   Teuchos::ParameterList eleparams;
 
-  eleparams.set<FLD::Action>("action", FLD::set_poro_parameter);
-
   // set general element parameters
   eleparams.set("form of convective term", convform_);
   eleparams.set<Inpar::FLUID::LinearisationAction>("Linearisation", newton_);
@@ -96,8 +95,10 @@ void FLD::TimIntPoro::set_element_custom_parameter()
       params_->sublist("RESIDUAL-BASED STABILIZATION");
   eleparams.sublist("EDGE-BASED STABILIZATION") = params_->sublist("EDGE-BASED STABILIZATION");
 
-  // call standard loop over elements
-  discret_->evaluate(eleparams, nullptr, nullptr, nullptr, nullptr, nullptr);
+  Discret::Elements::FluidEleParameterPoro* fldpara =
+      Discret::Elements::FluidEleParameterPoro::instance();
+  fldpara->set_element_poro_parameter(
+      eleparams, Core::Communication::my_mpi_rank(discret_->get_comm()));
 }
 
 void FLD::TimIntPoro::set_initial_porosity_field(

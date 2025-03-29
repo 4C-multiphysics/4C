@@ -664,8 +664,9 @@ void Core::FE::Nurbs::Knotvector::finish_knots(const int smallest_gid_in_dis)
 
         for (int mm = 1; mm < (degree_[np])[rr] + 1; ++mm)
         {
-          double db = abs((*((knot_values_[np])[rr]))[mm] - firstval);
-          double de = abs((*((knot_values_[np])[rr]))[(n_x_m_x_l_[np])[rr] - 1 - mm] - lastval);
+          double db = std::abs((*((knot_values_[np])[rr]))[mm] - firstval);
+          double de =
+              std::abs((*((knot_values_[np])[rr]))[(n_x_m_x_l_[np])[rr] - 1 - mm] - lastval);
 
           if (de > 1e-9 || db > 1e-9)
           {
@@ -683,7 +684,7 @@ void Core::FE::Nurbs::Knotvector::finish_knots(const int smallest_gid_in_dis)
           double db = (*((knot_values_[np])[rr]))[mm] - (*((knot_values_[np])[rr]))[mm - 1];
           double de = (*((knot_values_[np])[rr]))[(n_x_m_x_l_[np])[rr] - mm] -
                       (*((knot_values_[np])[rr]))[(n_x_m_x_l_[np])[rr] - 1 - mm];
-          if (abs(de - db) > 1e-9)
+          if (std::abs(de - db) > 1e-9)
           {
             FOUR_C_THROW("periodic knotvector doesn't obey periodicity\n");
           }

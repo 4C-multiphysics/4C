@@ -9,6 +9,7 @@
 
 #include "4C_io.hpp"
 #include "4C_scatra_ele_action.hpp"
+#include "4C_scatra_ele_parameter_timint.hpp"
 #include "4C_utils_parameter_list.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -49,8 +50,6 @@ void ScaTra::TimIntStationaryHDG::set_element_time_parameter(bool forcedincremen
 {
   Teuchos::ParameterList eleparams;
 
-  Core::Utils::add_enum_class_to_parameter_list<ScaTra::Action>(
-      "action", ScaTra::Action::set_time_parameter, eleparams);
   eleparams.set<bool>("using generalized-alpha time integration", false);
   eleparams.set<bool>("using stationary formulation", true);
   if (forcedincrementalsolver == false)
@@ -64,10 +63,8 @@ void ScaTra::TimIntStationaryHDG::set_element_time_parameter(bool forcedincremen
   eleparams.set<double>("time factor", 1.0);
   eleparams.set<double>("alpha_F", 1.0);
 
-  // call standard loop over elements
-  discret_->evaluate(eleparams, nullptr, nullptr, nullptr, nullptr, nullptr);
-
-  return;
+  Discret::Elements::ScaTraEleParameterTimInt::instance(discret_->name())
+      ->set_parameters(eleparams);
 }
 
 

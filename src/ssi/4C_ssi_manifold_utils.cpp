@@ -20,6 +20,7 @@
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_scatra_ele_action.hpp"
+#include "4C_scatra_ele_parameter_boundary.hpp"
 #include "4C_scatra_timint_implicit.hpp"
 #include "4C_ssi_monolithic.hpp"
 #include "4C_ssi_utils.hpp"
@@ -690,9 +691,6 @@ void SSI::ScaTraManifoldScaTraFluxEvaluator::pre_evaluate(
 {
   Teuchos::ParameterList eleparams;
 
-  Core::Utils::add_enum_class_to_parameter_list<ScaTra::Action>(
-      "action", ScaTra::Action::set_scatra_ele_boundary_parameter, eleparams);
-
   eleparams.set<Core::Conditions::ConditionType>(
       "condition type", Core::Conditions::ConditionType::S2IKinetics);
 
@@ -741,7 +739,8 @@ void SSI::ScaTraManifoldScaTraFluxEvaluator::pre_evaluate(
       break;
     }
   }
-  scatra_manifold_->scatra_field()->discretization()->evaluate(eleparams, nullptr, nullptr);
+
+  Discret::Elements::ScaTraEleParameterBoundary::instance("scatra")->set_parameters(eleparams);
 }
 
 /*----------------------------------------------------------------------*

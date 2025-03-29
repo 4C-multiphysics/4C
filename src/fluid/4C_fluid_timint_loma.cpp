@@ -8,6 +8,7 @@
 #include "4C_fluid_timint_loma.hpp"
 
 #include "4C_fluid_ele_action.hpp"
+#include "4C_fluid_ele_parameter_std.hpp"
 #include "4C_fluid_turbulence_statistic_manager.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
@@ -198,8 +199,6 @@ void FLD::TimIntLoma::set_element_custom_parameter()
 {
   Teuchos::ParameterList eleparams;
 
-  eleparams.set<FLD::Action>("action", FLD::set_loma_parameter);
-
   // set parameters to update material with subgrid-scale temperature
   // potential inclusion of additional subgrid-scale terms in continuity equation
   eleparams.sublist("LOMA") = params_->sublist("LOMA");
@@ -208,9 +207,7 @@ void FLD::TimIntLoma::set_element_custom_parameter()
   eleparams.sublist("MULTIFRACTAL SUBGRID SCALES") =
       params_->sublist("MULTIFRACTAL SUBGRID SCALES");
 
-  // call standard loop over elements
-  discret_->evaluate(eleparams, nullptr, nullptr, nullptr, nullptr, nullptr);
-  return;
+  Discret::Elements::FluidEleParameterStd::instance()->set_element_loma_parameter(eleparams);
 }
 
 /*----------------------------------------------------------------------*

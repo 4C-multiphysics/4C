@@ -71,17 +71,6 @@ namespace Core::Elements
     /// initialize the element type
     virtual int initialize(Core::FE::Discretization& dis);
 
-    /// preevaluation
-    virtual inline void pre_evaluate(Core::FE::Discretization& dis, Teuchos::ParameterList& p,
-        std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix1,
-        std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix2,
-        std::shared_ptr<Core::LinAlg::Vector<double>> systemvector1,
-        std::shared_ptr<Core::LinAlg::Vector<double>> systemvector2,
-        std::shared_ptr<Core::LinAlg::Vector<double>> systemvector3)
-    {
-      return;
-    }
-
     /*!
     \brief Get nodal block information to create a null space description
 

@@ -12,6 +12,8 @@
 
 #include "4C_contact_node.hpp"
 
+#include <set>
+
 FOUR_C_NAMESPACE_OPEN
 
 namespace CONTACT

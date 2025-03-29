@@ -54,14 +54,6 @@ namespace Discret
       /// initialize element
       int initialize(Core::FE::Discretization& dis) override;
 
-      /// pre-evaluation
-      void pre_evaluate(Core::FE::Discretization& dis, Teuchos::ParameterList& p,
-          std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix1,
-          std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix2,
-          std::shared_ptr<Core::LinAlg::Vector<double>> systemvector1,
-          std::shared_ptr<Core::LinAlg::Vector<double>> systemvector2,
-          std::shared_ptr<Core::LinAlg::Vector<double>> systemvector3) override;
-
      private:
       /// the actual instance
       static PoroFluidMultiPhaseType instance_;

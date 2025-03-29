@@ -17,6 +17,8 @@
 #include "4C_fluid_ele_parameter_timint.hpp"
 #include "4C_utils_singleton_owner.hpp"
 
+#include <set>
+
 FOUR_C_NAMESPACE_OPEN
 
 namespace Discret

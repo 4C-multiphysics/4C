@@ -24,103 +24,6 @@ FOUR_C_NAMESPACE_OPEN
 
 
 
-/*---------------------------------------------------------------------*
-|  Call the element to set all basic parameter                         |
-*----------------------------------------------------------------------*/
-void Discret::Elements::TransportType::pre_evaluate(Core::FE::Discretization& dis,
-    Teuchos::ParameterList& p, std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix1,
-    std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix2,
-    std::shared_ptr<Core::LinAlg::Vector<double>> systemvector1,
-    std::shared_ptr<Core::LinAlg::Vector<double>> systemvector2,
-    std::shared_ptr<Core::LinAlg::Vector<double>> systemvector3)
-{
-  const auto action = Teuchos::getIntegralValue<ScaTra::Action>(p, "action");
-
-  switch (action)
-  {
-    case ScaTra::Action::set_general_scatra_parameter:
-    {
-      ScaTraEleParameterStd::instance(dis.name())->set_parameters(p);
-
-      break;
-    }
-
-    case ScaTra::Action::set_nodeset_parameter:
-    {
-      ScaTraEleParameterStd::instance(dis.name())->set_nodeset_parameters(p);
-
-      break;
-    }
-
-    case ScaTra::Action::set_turbulence_scatra_parameter:
-    {
-      ScaTraEleParameterTurbulence::instance(dis.name())->set_parameters(p);
-
-      break;
-    }
-
-    case ScaTra::Action::set_time_parameter:
-    {
-      ScaTraEleParameterTimInt::instance(dis.name())->set_parameters(p);
-
-      break;
-    }
-
-    case ScaTra::Action::set_mean_Cai:
-    {
-      ScaTraEleParameterTurbulence::instance(dis.name())->set_csgs_phi(p.get<double>("meanCai"));
-
-      break;
-    }
-
-    case ScaTra::Action::set_lsreinit_scatra_parameter:
-    {
-      // set general parameters first
-      ScaTraEleParameterStd::instance(dis.name())->set_parameters(p);
-
-      // set additional, problem-dependent parameters
-      ScaTraEleParameterLsReinit::instance(dis.name())->set_parameters(p);
-
-      break;
-    }
-
-    case ScaTra::Action::set_elch_scatra_parameter:
-    {
-      // set general parameters first
-      ScaTraEleParameterStd::instance(dis.name())->set_parameters(p);
-
-      // set additional, problem-dependent parameters
-      ScaTraEleParameterElch::instance(dis.name())->set_parameters(p);
-
-      break;
-    }
-
-    case ScaTra::Action::set_scatra_ele_boundary_parameter:
-    {
-      // set additional, problem-dependent parameters
-      ScaTraEleParameterBoundary::instance("scatra")->set_parameters(p);
-
-      break;
-    }
-
-    case ScaTra::Action::set_diffcond_scatra_parameter:
-    {
-      // set general parameters first
-      ScaTraEleParameterStd::instance(dis.name())->set_parameters(p);
-
-      // set additional, problem-dependent parameters
-      ScaTraEleParameterElch::instance(dis.name())->set_parameters(p);
-      ScaTraEleParameterElchDiffCond::instance(dis.name())->set_parameters(p);
-
-      break;
-    }
-
-    default:
-      // do nothing in all other cases
-      break;
-  }
-}
-
 /*----------------------------------------------------------------------*
  |  evaluate the element (public)                              gjb 01/09|
  *----------------------------------------------------------------------*/
@@ -288,17 +191,6 @@ int Discret::Elements::Transport::evaluate(Teuchos::ParameterList& params,
               this, params, discretization, la, elemat1, elemat2, elevec1, elevec2, elevec3);
       break;
     }
-    case ScaTra::Action::set_general_scatra_parameter:
-    case ScaTra::Action::set_turbulence_scatra_parameter:
-    case ScaTra::Action::set_time_parameter:
-    case ScaTra::Action::set_mean_Cai:
-    case ScaTra::Action::set_nodeset_parameter:
-    case ScaTra::Action::set_lsreinit_scatra_parameter:
-    case ScaTra::Action::set_elch_scatra_parameter:
-    case ScaTra::Action::set_scatra_ele_boundary_parameter:
-    case ScaTra::Action::set_diffcond_scatra_parameter:
-      // these actions have already been evaluated during element pre-evaluate
-      break;
 
     default:
     {

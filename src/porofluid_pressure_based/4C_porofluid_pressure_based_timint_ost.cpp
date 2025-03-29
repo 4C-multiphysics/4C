@@ -10,6 +10,7 @@
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
 #include "4C_porofluid_pressure_based_ele_action.hpp"
+#include "4C_porofluid_pressure_based_ele_parameter.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -36,16 +37,14 @@ void POROFLUIDMULTIPHASE::TimIntOneStepTheta::set_element_time_step_parameter() 
 {
   Teuchos::ParameterList eleparams;
 
-  eleparams.set<POROFLUIDMULTIPHASE::Action>("action", POROFLUIDMULTIPHASE::set_timestep_parameter);
-
   // the total time definitely changes
   eleparams.set<double>("total time", time_);
   // we set the time step and related, just in case we want adaptive time stepping
   eleparams.set<double>("time-step length", dt_);
   eleparams.set<double>("time factor", theta_ * dt_);
 
-  // call standard loop over elements
-  discret_->evaluate(eleparams, nullptr, nullptr, nullptr, nullptr, nullptr);
+  Discret::Elements::PoroFluidMultiPhaseEleParameter::instance(discret_->name())
+      ->set_time_step_parameters(eleparams);
 }
 
 

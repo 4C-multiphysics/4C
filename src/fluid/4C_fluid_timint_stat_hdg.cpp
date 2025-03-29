@@ -12,6 +12,7 @@
 #include "4C_fluid_ele_action.hpp"
 #include "4C_fluid_ele_hdg.hpp"
 #include "4C_fluid_ele_hdg_weak_comp.hpp"
+#include "4C_fluid_ele_parameter_timint.hpp"
 #include "4C_fluid_turbulence_boxfilter.hpp"
 #include "4C_fluid_turbulence_dyn_smag.hpp"
 #include "4C_fluid_turbulence_dyn_vreman.hpp"
@@ -233,7 +234,6 @@ void FLD::TimIntStationaryHDG::set_element_time_parameter()
 {
   Teuchos::ParameterList eleparams;
 
-  eleparams.set<FLD::Action>("action", FLD::set_time_parameter);
   eleparams.set<Inpar::FLUID::PhysicalType>("Physical Type", physicaltype_);
 
   // set time integration scheme
@@ -247,8 +247,7 @@ void FLD::TimIntStationaryHDG::set_element_time_parameter()
   // set scheme-specific element parameters and vector values
   eleparams.set("total time", time_);
 
-  // call standard loop over elements
-  discret_->evaluate(eleparams, nullptr, nullptr, nullptr, nullptr, nullptr);
+  Discret::Elements::FluidEleParameterTimInt::instance()->set_element_time_parameter(eleparams);
 }
 
 FOUR_C_NAMESPACE_CLOSE

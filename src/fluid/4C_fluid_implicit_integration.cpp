@@ -23,6 +23,8 @@
 #include "4C_fluid_ele.hpp"
 #include "4C_fluid_ele_action.hpp"
 #include "4C_fluid_ele_intfaces_calc.hpp"
+#include "4C_fluid_ele_parameter_intface.hpp"
+#include "4C_fluid_ele_parameter_std.hpp"
 #include "4C_fluid_impedancecondition.hpp"
 #include "4C_fluid_meshtying.hpp"
 #include "4C_fluid_result_test.hpp"
@@ -5445,8 +5447,6 @@ void FLD::FluidImplicitTimeInt::set_element_general_fluid_parameter()
 {
   Teuchos::ParameterList eleparams;
 
-  eleparams.set<FLD::Action>("action", FLD::set_general_fluid_parameter);
-
   // set general element parameters
   eleparams.set("form of convective term", convform_);
   eleparams.set<Inpar::FLUID::LinearisationAction>("Linearisation", newton_);
@@ -5461,8 +5461,8 @@ void FLD::FluidImplicitTimeInt::set_element_general_fluid_parameter()
   if (physicaltype_ == Inpar::FLUID::oseen)
     eleparams.set<int>("OSEENFIELDFUNCNO", params_->get<int>("OSEENFIELDFUNCNO"));
 
-  // call standard loop over elements
-  discret_->evaluate(eleparams, nullptr, nullptr, nullptr, nullptr, nullptr);
+  Discret::Elements::FluidEleParameterStd::instance()->set_element_general_fluid_parameter(
+      eleparams, Core::Communication::my_mpi_rank(discret_->get_comm()));
 }
 
 // -------------------------------------------------------------------
@@ -5472,7 +5472,6 @@ void FLD::FluidImplicitTimeInt::set_element_turbulence_parameters()
 {
   Teuchos::ParameterList eleparams;
 
-  eleparams.set<FLD::Action>("action", FLD::set_turbulence_parameter);
   eleparams.set<Inpar::FLUID::PhysicalType>("Physical Type", physicaltype_);
 
   // set general parameters for turbulent flow
@@ -5483,8 +5482,7 @@ void FLD::FluidImplicitTimeInt::set_element_turbulence_parameters()
   eleparams.sublist("MULTIFRACTAL SUBGRID SCALES") =
       params_->sublist("MULTIFRACTAL SUBGRID SCALES");
 
-  // call standard loop over elements
-  discret_->evaluate(eleparams, nullptr, nullptr, nullptr, nullptr, nullptr);
+  Discret::Elements::FluidEleParameterStd::instance()->set_element_turbulence_parameters(eleparams);
 }
 
 // -------------------------------------------------------------------
@@ -5493,8 +5491,6 @@ void FLD::FluidImplicitTimeInt::set_element_turbulence_parameters()
 void FLD::FluidImplicitTimeInt::set_face_general_fluid_parameter()
 {
   Teuchos::ParameterList faceparams;
-
-  faceparams.set<FLD::Action>("action", FLD::set_general_face_fluid_parameter);
 
   // set general fluid face parameters are contained in the following two sublists
   faceparams.sublist("EDGE-BASED STABILIZATION") = params_->sublist("EDGE-BASED STABILIZATION");
@@ -5509,9 +5505,10 @@ void FLD::FluidImplicitTimeInt::set_face_general_fluid_parameter()
   if (physicaltype_ == Inpar::FLUID::oseen)
     faceparams.set<int>("OSEENFIELDFUNCNO", params_->get<int>("OSEENFIELDFUNCNO"));
 
-
-  Discret::Elements::FluidIntFaceType::instance().pre_evaluate(
-      *discret_, faceparams, nullptr, nullptr, nullptr, nullptr, nullptr);
+  Discret::Elements::FluidEleParameterIntFace* fldintfacepara =
+      Discret::Elements::FluidEleParameterIntFace::instance();
+  fldintfacepara->set_face_general_fluid_parameter(
+      faceparams, Core::Communication::my_mpi_rank(discret_->get_comm()));
 }
 
 // -------------------------------------------------------------------
@@ -6079,23 +6076,7 @@ void FLD::FluidImplicitTimeInt::recompute_mean_csgs_b()
     }
 
     // store value in element parameter list
-    myparams.set<FLD::Action>("action", FLD::set_mean_Cai);
-    myparams.set<double>("meanCai", meanCai);
-    for (int nele = 0; nele < discret_->num_my_row_elements(); ++nele)
-    {
-      // get the element
-      Core::Elements::Element* ele = discret_->l_row_element(nele);
-
-      // get element location vector, dirichlet flags and ownerships
-      std::vector<int> lm;
-      std::vector<int> lmowner;
-      std::vector<int> lmstride;
-      ele->location_vector(*discret_, lm, lmowner, lmstride);
-
-      // call the element evaluate method to integrate functions
-      int err = ele->evaluate(myparams, *discret_, lm, emat1, emat2, evec1, evec2, evec2);
-      if (err) FOUR_C_THROW("Proc {}: Element {} returned err={}", myrank_, ele->id(), err);
-    }
+    Discret::Elements::FluidEleParameterStd::instance()->set_csgs_phi(meanCai);
   }
 }
 

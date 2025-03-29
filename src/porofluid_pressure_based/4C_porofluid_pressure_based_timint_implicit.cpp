@@ -22,6 +22,7 @@
 #include "4C_mat_fluidporo_multiphase.hpp"
 #include "4C_porofluid_pressure_based_ele.hpp"
 #include "4C_porofluid_pressure_based_ele_action.hpp"
+#include "4C_porofluid_pressure_based_ele_parameter.hpp"
 #include "4C_porofluid_pressure_based_meshtying_strategy_artery.hpp"
 #include "4C_porofluid_pressure_based_meshtying_strategy_std.hpp"
 #include "4C_porofluid_pressure_based_resulttest.hpp"
@@ -339,8 +340,6 @@ void POROFLUIDMULTIPHASE::TimIntImpl::set_element_general_parameters() const
 {
   Teuchos::ParameterList eleparams;
 
-  eleparams.set<POROFLUIDMULTIPHASE::Action>("action", POROFLUIDMULTIPHASE::set_general_parameter);
-
   eleparams.set<bool>("isale", isale_);
   eleparams.set<int>("nds_disp", nds_disp_);
   eleparams.set<int>("nds_vel", nds_vel_);
@@ -356,10 +355,8 @@ void POROFLUIDMULTIPHASE::TimIntImpl::set_element_general_parameters() const
   for (int ifunct = 0; ifunct < num_domainint_funct_; ifunct++)
     eleparams.set<int>("domainint_funct_" + std::to_string(ifunct), domainint_funct_[ifunct]);
 
-  // call standard loop over elements
-  discret_->evaluate(eleparams, nullptr, nullptr, nullptr, nullptr, nullptr);
-
-  return;
+  Discret::Elements::PoroFluidMultiPhaseEleParameter::instance(discret_->name())
+      ->set_general_parameters(eleparams);
 }
 
 

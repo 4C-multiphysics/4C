@@ -22,6 +22,8 @@
 #include "4C_mat_list.hpp"
 #include "4C_rebalance_binning_based.hpp"
 #include "4C_scatra_ele_action.hpp"
+#include "4C_scatra_ele_parameter_elch.hpp"
+#include "4C_scatra_ele_parameter_elch_diffcond.hpp"
 #include "4C_scatra_resulttest_elch.hpp"
 #include "4C_scatra_timint_elch_service.hpp"
 #include "4C_scatra_timint_meshtying_strategy_fluid_elch.hpp"
@@ -413,19 +415,6 @@ void ScaTra::ScaTraTimIntElch::setup_conc_pot_pot_split()
 void ScaTra::ScaTraTimIntElch::set_element_specific_scatra_parameters(
     Teuchos::ParameterList& eleparams) const
 {
-  // overwrite action type
-  if (elchparams_->get<bool>("DIFFCOND_FORMULATION"))
-  {
-    Core::Utils::add_enum_class_to_parameter_list<ScaTra::Action>(
-        "action", ScaTra::Action::set_diffcond_scatra_parameter, eleparams);
-
-    // parameters for diffusion-conduction formulation
-    eleparams.sublist("DIFFCOND") = elchparams_->sublist("DIFFCOND");
-  }
-  else
-    Core::Utils::add_enum_class_to_parameter_list<ScaTra::Action>(
-        "action", ScaTra::Action::set_elch_scatra_parameter, eleparams);
-
   // general elch parameters
   eleparams.set<double>("faraday", elchparams_->get<double>("FARADAY_CONSTANT"));
   eleparams.set<double>("gas_constant", elchparams_->get<double>("GAS_CONSTANT"));
@@ -433,6 +422,18 @@ void ScaTra::ScaTraTimIntElch::set_element_specific_scatra_parameters(
   eleparams.set<double>("temperature", temperature_);
   eleparams.set<Inpar::ElCh::EquPot>("equpot", equpot_);
   eleparams.set<bool>("boundaryfluxcoupling", elchparams_->get<bool>("COUPLE_BOUNDARY_FLUXES"));
+
+  // set additional, problem-dependent parameters
+  Discret::Elements::ScaTraEleParameterElch::instance(discret_->name())->set_parameters(eleparams);
+
+  if (elchparams_->get<bool>("DIFFCOND_FORMULATION"))
+  {
+    // parameters for diffusion-conduction formulation
+    eleparams.sublist("DIFFCOND") = elchparams_->sublist("DIFFCOND");
+
+    Discret::Elements::ScaTraEleParameterElchDiffCond::instance(discret_->name())
+        ->set_parameters(eleparams);
+  }
 }
 
 /*----------------------------------------------------------------------*
