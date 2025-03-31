@@ -15,45 +15,58 @@
 #ifdef FOUR_C_WITH_ARBORX
 #include <ArborX.hpp>
 
+struct PrimitiveIndexableGetter
+{
+  using memory_space = Kokkos::HostSpace;
+
+  std::vector<FourC::Core::GeometricSearch::BoundingVolume> primitives;
+
+  KOKKOS_FUNCTION auto size() const { return primitives.size(); }
+
+  KOKKOS_FUNCTION auto operator()(int i) const
+  {
+    return ArborX::Box<3>{primitives[i].bounding_volume_};
+  }
+};
+
 namespace ArborX
 {
   using namespace FourC;
 
   template <>
-  struct AccessTraits<std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>>,
-      PrimitivesTag>
+  struct AccessTraits<std::vector<Core::GeometricSearch::BoundingVolume>>
   {
     using memory_space = Kokkos::HostSpace;
+    using size_type = typename Kokkos::HostSpace::size_type;
 
-    static std::size_t size(
-        const std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>>& vector)
+    static KOKKOS_FUNCTION size_type size(
+        const std::vector<Core::GeometricSearch::BoundingVolume>& vector)
     {
       return vector.size();
     }
 
-    static auto get(
-        const std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>>& vector,
-        std::size_t i)
+    static KOKKOS_FUNCTION auto get(
+        const std::vector<Core::GeometricSearch::BoundingVolume>& vector, size_type i)
     {
-      return ArborX::Box{vector[i].second.bounding_volume_};
+      return i;
     }
   };
 
   template <>
-  struct AccessTraits<std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>>,
-      PredicatesTag>
+  struct AccessTraits<std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>>>
   {
     using memory_space = Kokkos::HostSpace;
+    using size_type = typename Kokkos::HostSpace::size_type;
 
-    static std::size_t size(
+    static KOKKOS_FUNCTION size_type size(
         const std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>>& vector)
     {
       return vector.size();
     }
 
-    static auto get(
+    static KOKKOS_FUNCTION auto get(
         const std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>>& vector,
-        std::size_t i)
+        size_type i)
     {
       auto const& vector_entry = vector[i];
       return intersects(vector_entry.second.bounding_volume_);

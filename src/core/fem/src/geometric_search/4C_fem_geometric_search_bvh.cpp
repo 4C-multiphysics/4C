@@ -54,13 +54,24 @@ namespace Core::GeometricSearch
     else
     {
       using memory_space = Kokkos::HostSpace;
+      using indexer_type = PrimitiveIndexableGetter;
+      Kokkos::DefaultExecutionSpace execution_space{};
+
+      std::vector<BoundingVolume> indexes(primitives.size());
+      int id = 0;
+      for (const auto& primitive : primitives)
+      {
+        indexes[id] = primitive.second;
+        id++;
+      }
 
       // Build tree structure containing all primitives.
-      ArborX::BoundingVolumeHierarchy<memory_space> bounding_volume_hierarchy(
-          Kokkos::DefaultExecutionSpace{}, primitives);
+      PrimitiveIndexableGetter indexable{indexes};
+      ArborX::BoundingVolumeHierarchy<memory_space, size_t, indexer_type> bounding_volume_hierarchy{
+          execution_space, indexes, indexable};
 
-      Kokkos::View<int*, Kokkos::HostSpace> indices_full("indices_full", 0);
-      Kokkos::View<int*, Kokkos::HostSpace> offset_full("offset_full", 0);
+      Kokkos::View<int*, memory_space> indices_full("indices_full", 0);
+      Kokkos::View<int*, memory_space> offset_full("offset_full", 0);
 
       // The currently used ArborX version only supports tree structures for points and
       // axis-aligned-boundary-boxes (AABB). We convert the k-DOPs to AABB in the creation of the
@@ -71,14 +82,14 @@ namespace Core::GeometricSearch
       auto IntersectActualVolumeType =
           KOKKOS_LAMBDA(const auto predicate, const int primitive_index, const auto& out)->void
       {
-        const auto& primitive_geometry = primitives[primitive_index].second.bounding_volume_;
+        const auto& primitive_geometry = indexes[primitive_index].bounding_volume_;
 
         if (predicate(primitive_geometry)) out(primitive_index);
       };
 
       // Perform the collision check.
-      bounding_volume_hierarchy.query(Kokkos::DefaultExecutionSpace{}, predicates,
-          IntersectActualVolumeType, indices_full, offset_full);
+      bounding_volume_hierarchy.query(
+          execution_space, predicates, IntersectActualVolumeType, indices_full, offset_full);
 
       // Copy kokkos view to std::vector
       indices_final.insert(

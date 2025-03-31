@@ -39,15 +39,26 @@ namespace Core::GeometricSearch
     int myrank = Core::Communication::my_mpi_rank(comm);
 
     using memory_space = Kokkos::HostSpace;
+    using indexer_type = PrimitiveIndexableGetter;
+    Kokkos::DefaultExecutionSpace execution_space{};
+
+    std::vector<BoundingVolume> indexes(primitives.size());
+    int id = 0;
+    for (const auto& primitive : primitives)
+    {
+      indexes[id] = primitive.second;
+      id++;
+    }
 
     // Build tree structure containing all primitives.
-    ArborX::DistributedTree<memory_space> distributed_tree(
-        comm, Kokkos::DefaultExecutionSpace{}, primitives);
+    PrimitiveIndexableGetter indexable{indexes};
+    ArborX::DistributedTree<memory_space, size_t, indexer_type> distributed_tree{
+        comm, execution_space, indexes, indexable};
 
     // TODO: Check for better data structure in Kokkos (something like a tuple)
-    Kokkos::View<Kokkos::pair<int, Kokkos::pair<int, int>>*, Kokkos::HostSpace> indices_ranks_full(
+    Kokkos::View<Kokkos::pair<int, Kokkos::pair<int, int>>*, memory_space> indices_ranks_full(
         "indices_ranks_full", 0);
-    Kokkos::View<int*, Kokkos::HostSpace> offset_full("offset_full", 0);
+    Kokkos::View<int*, memory_space> offset_full("offset_full", 0);
 
     // The currently used ArborX version only supports tree structures for points and
     // axis-aligned-boundary-boxes (AABB). We convert the k-DOPs to AABB in the creation of the
@@ -65,8 +76,8 @@ namespace Core::GeometricSearch
     };
 
     // Perform the collision check.
-    distributed_tree.query(Kokkos::DefaultExecutionSpace{}, predicates, IntersectActualVolumeType,
-        indices_ranks_full, offset_full);
+    distributed_tree.query(
+        execution_space, predicates, IntersectActualVolumeType, indices_ranks_full, offset_full);
 
     // Create the vector with the pairs.
     std::vector<GlobalCollisionSearchResult> pairs;
