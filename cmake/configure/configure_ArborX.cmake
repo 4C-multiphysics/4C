@@ -31,7 +31,7 @@ else() # Fetch ArborX from GIT repository
     GIT_TAG ${ARBORX_GIT_TAG}
     )
   fetchcontent_makeavailable(arborx)
-  set(FOUR_C_ARBORX_ROOT "${CMAKE_INSTALL_PREFIX}/lib/cmake/ArborX")
+  set(FOUR_C_ARBORX_ROOT "${CMAKE_INSTALL_DATADIR}/cmake/ArborX")
 
   four_c_add_external_dependency(four_c_all_enabled_external_dependencies ArborX::ArborX)
 endif()
