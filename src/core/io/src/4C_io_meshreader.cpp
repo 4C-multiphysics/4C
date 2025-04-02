@@ -136,7 +136,7 @@ void Core::IO::MeshReader::rebalance()
         parameters_.mesh_partitioning_parameters.get<double>("IMBALANCE_TOL");
 
     Teuchos::ParameterList rebalanceParams;
-    rebalanceParams.set<std::string>("imbalance tol", std::to_string(imbalance_tol));
+    rebalanceParams.set<std::string>("imbalance_tolerance", std::to_string(imbalance_tol));
 
     const int minele_per_proc =
         parameters_.mesh_partitioning_parameters.get<int>("MIN_ELE_PER_PROC");
@@ -147,7 +147,7 @@ void Core::IO::MeshReader::rebalance()
       min_global_procs =
           element_readers_[i].get_row_elements()->NumGlobalElements() / minele_per_proc;
     const int num_procs = std::min(max_global_procs, min_global_procs);
-    rebalanceParams.set<std::string>("num parts", std::to_string(num_procs));
+    rebalanceParams.set<std::string>("num_global_parts", std::to_string(num_procs));
 
     const auto rebalanceMethod = Teuchos::getIntegralValue<Core::Rebalance::RebalanceType>(
         parameters_.mesh_partitioning_parameters, "METHOD");
@@ -168,7 +168,7 @@ void Core::IO::MeshReader::rebalance()
                       << "hypergraph"
                       << " .........\n";
 
-          rebalanceParams.set("partitioning method", "HYPERGRAPH");
+          rebalanceParams.set("algorithm", "phg");
 
           // here we can reuse the graph, which was calculated before, this saves us some time
           std::tie(rowmap, colmap) =
@@ -176,14 +176,14 @@ void Core::IO::MeshReader::rebalance()
 
           break;
         }
-        case Core::Rebalance::RebalanceType::recursive_coordinate_bisection:
+        case Core::Rebalance::RebalanceType::multijagged:
         {
           if (!Core::Communication::my_mpi_rank(comm_))
             std::cout << "Redistributing using "
                       << "recursive coordinate bisection"
                       << " .........\n";
 
-          rebalanceParams.set("partitioning method", "RCB");
+          rebalanceParams.set("algorithm", "multijagged");
 
           // here we can reuse the graph, which was calculated before, this saves us some time and
           // in addition calculate geometric information based on the coordinates of the
@@ -215,7 +215,7 @@ void Core::IO::MeshReader::rebalance()
                       << "monolithic hypergraph"
                       << " .........\n";
 
-          rebalanceParams.set("partitioning method", "HYPERGRAPH");
+          rebalanceParams.set("algorithm", "phg");
 
           rowmap = std::make_shared<Core::LinAlg::Map>(-1, graph_[i]->row_map().NumMyElements(),
               graph_[i]->row_map().MyGlobalElements(), 0,
