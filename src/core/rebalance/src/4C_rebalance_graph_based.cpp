@@ -18,11 +18,16 @@
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_vector.hpp"
 
+#include <Epetra_FECrsGraph.h>
 #include <Isorropia_Epetra.hpp>
 #include <Isorropia_EpetraCostDescriber.hpp>
 #include <Isorropia_EpetraPartitioner.hpp>
 #include <Isorropia_EpetraRedistributor.hpp>
 #include <Isorropia_Exception.hpp>
+#include <Zoltan2_PartitioningProblem.hpp>
+#include <Zoltan2_PartitioningSolution.hpp>
+#include <Zoltan2_XpetraCrsGraphAdapter.hpp>
+#include <Zoltan2_XpetraMultiVectorAdapter.hpp>
 #include <Teuchos_TimeMonitor.hpp>
 
 FOUR_C_NAMESPACE_OPEN
@@ -31,7 +36,7 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------*/
 std::pair<std::shared_ptr<Core::LinAlg::Map>, std::shared_ptr<Core::LinAlg::Map>>
 Core::Rebalance::rebalance_node_maps(const Core::LinAlg::Graph& initialGraph,
-    const Teuchos::ParameterList& rebalanceParams,
+    Teuchos::ParameterList rebalanceParams,
     const std::shared_ptr<Core::LinAlg::Vector<double>>& initialNodeWeights,
     const std::shared_ptr<Core::LinAlg::SparseMatrix>& initialEdgeWeights,
     const std::shared_ptr<Core::LinAlg::MultiVector<double>>& initialNodeCoordinates)
@@ -56,43 +61,64 @@ Core::Rebalance::rebalance_node_maps(const Core::LinAlg::Graph& initialGraph,
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 std::shared_ptr<Core::LinAlg::Graph> Core::Rebalance::rebalance_graph(
-    const Core::LinAlg::Graph& initialGraph, const Teuchos::ParameterList& rebalanceParams,
+    const Core::LinAlg::Graph& initialGraph, Teuchos::ParameterList rebalanceParams,
     const std::shared_ptr<Core::LinAlg::Vector<double>>& initialNodeWeights,
     const std::shared_ptr<Core::LinAlg::SparseMatrix>& initialEdgeWeights,
     const std::shared_ptr<Core::LinAlg::MultiVector<double>>& initialNodeCoordinates)
 {
-  TEUCHOS_FUNC_TIME_MONITOR("Rebalance::RebalanceGraph");
+  TEUCHOS_FUNC_TIME_MONITOR("Rebalance::rebalance_graph");
+
+  using GraphAdapter = Zoltan2::XpetraCrsGraphAdapter<Epetra_CrsGraph, Epetra_MultiVector>;
+  using VectorAdapter = Zoltan2::XpetraMultiVectorAdapter<Epetra_MultiVector>;
 
   if (!initialGraph.filled())
     FOUR_C_THROW("The graph needs to be fill completed before being able to be rebalanced.");
 
-  Isorropia::Epetra::CostDescriber costs = Isorropia::Epetra::CostDescriber();
+  auto* graphAdapter = new GraphAdapter(Teuchos::rcpFromRef(initialGraph.get_epetra_crs_graph()),
+      initialNodeWeights != nullptr ? 1 : 0, initialEdgeWeights != nullptr ? 1 : 0);
+
   if (initialNodeWeights != nullptr)
-    costs.setVertexWeights(Teuchos::rcpFromRef(initialNodeWeights->get_ref_of_epetra_vector()));
+    graphAdapter->setVertexWeights(initialNodeWeights->get_values(), 1, 0);
+
   if (initialEdgeWeights != nullptr)
-    costs.setGraphEdgeWeights(Teuchos::rcpFromRef(initialEdgeWeights->epetra_matrix()));
-
-  Teuchos::RCP<Isorropia::Epetra::Partitioner> partitioner;
-  if (initialNodeCoordinates)
   {
-    partitioner =
-        Teuchos::make_rcp<Isorropia::Epetra::Partitioner>(&initialGraph.get_epetra_crs_graph(),
-            &costs, &initialNodeCoordinates->get_epetra_multi_vector(), nullptr, rebalanceParams);
-  }
-  else
-  {
-    partitioner = Teuchos::make_rcp<Isorropia::Epetra::Partitioner>(
-        &initialGraph.get_epetra_crs_graph(), &costs, rebalanceParams);
+    std::vector<double> edgeWeights;
+    for (int local_row = 0; local_row < initialEdgeWeights->row_map().num_my_elements(); local_row++)
+    {
+      int numEntries;
+      double* entries;
+      int* indices;
+      initialEdgeWeights->extract_my_row_view(local_row, numEntries, entries, indices);
+      for (int i = 0; i < numEntries; i++) edgeWeights.push_back(entries[i]);
+    }
+    graphAdapter->setEdgeWeights(edgeWeights.data(), 1, 0);
   }
 
-  Isorropia::Epetra::Redistributor rd(partitioner);
-  auto balancedGraph = std::make_shared<Core::LinAlg::Graph>(
-      *rd.redistribute(initialGraph.get_epetra_crs_graph(), true));
+  if (initialNodeCoordinates != nullptr)
+  {
+    std::vector<const double*> weights;
+    std::vector<int> stride;
 
-  balancedGraph->fill_complete();
-  balancedGraph->optimize_storage();
+    auto* vectorAdapter = new VectorAdapter(
+        Teuchos::rcpFromRef(initialNodeCoordinates->get_epetra_multi_vector()), weights,
+        stride);
+    graphAdapter->setCoordinateInput(vectorAdapter);
+  }
 
-  return balancedGraph;
+  Zoltan2::PartitioningProblem<GraphAdapter> problem(graphAdapter, &rebalanceParams);
+  problem.solve();
+
+  const auto solution = problem.getSolution();
+
+  Teuchos::RCP<Epetra_CrsGraph> balancedGraph = Teuchos::null;
+  graphAdapter->applyPartitioningSolution(
+      initialGraph.get_epetra_crs_graph(), balancedGraph, solution);
+
+  auto graph = std::make_shared<Core::LinAlg::Graph>(*balancedGraph);
+  graph->fill_complete();
+  graph->optimize_storage();
+
+  return graph;
 }
 
 /*----------------------------------------------------------------------*/
@@ -100,20 +126,36 @@ std::shared_ptr<Core::LinAlg::Graph> Core::Rebalance::rebalance_graph(
 std::pair<std::shared_ptr<Core::LinAlg::MultiVector<double>>,
     std::shared_ptr<Core::LinAlg::MultiVector<double>>>
 Core::Rebalance::rebalance_coordinates(const Core::LinAlg::MultiVector<double>& initialCoordinates,
-    const Teuchos::ParameterList& rebalanceParams,
-    const Core::LinAlg::MultiVector<double>& initialWeights)
+    Teuchos::ParameterList rebalanceParams, const Core::LinAlg::MultiVector<double>& initialWeights)
 {
-  TEUCHOS_FUNC_TIME_MONITOR("Rebalance::RebalanceCoordinates");
+  TEUCHOS_FUNC_TIME_MONITOR("Rebalance::rebalance_coordinates");
 
-  Teuchos::RCP<Isorropia::Epetra::Partitioner> part =
-      Teuchos::make_rcp<Isorropia::Epetra::Partitioner>(
-          Teuchos::rcpFromRef(initialCoordinates.get_epetra_multi_vector()),
-          Teuchos::rcpFromRef(initialWeights.get_epetra_multi_vector()), rebalanceParams);
+  using VectorAdapter = Zoltan2::XpetraMultiVectorAdapter<Epetra_MultiVector>;
 
-  Isorropia::Epetra::Redistributor rd(part);
+  std::vector<const double*> weights(initialWeights.NumVectors());
+  for (int weight_num = 0; weight_num < initialWeights.NumVectors(); weight_num++)
+    weights[weight_num] = initialWeights(weight_num).get_values();
 
-  return {std::make_shared<Core::LinAlg::MultiVector<double>>(*rd.redistribute(initialCoordinates)),
-      std::make_shared<Core::LinAlg::MultiVector<double>>(*rd.redistribute(initialWeights))};
+  std::vector<int> stride(initialWeights.NumVectors());
+  for (int stride_num = 0; stride_num < initialWeights.NumVectors(); stride_num++)
+    stride[stride_num] = initialWeights.NumVectors();
+
+  auto* adapter = new VectorAdapter(
+      Teuchos::rcpFromRef(initialCoordinates.get_epetra_multi_vector()), weights, stride);
+  Zoltan2::PartitioningProblem<VectorAdapter> problem(adapter, &rebalanceParams);
+
+  problem.solve();
+
+  Teuchos::RCP<Epetra_MultiVector> balancedCoordinates;
+  Teuchos::RCP<Epetra_MultiVector> balancedWeights;
+
+  adapter->applyPartitioningSolution(initialCoordinates.get_epetra_multi_vector(),
+      balancedCoordinates, problem.getSolution());
+  adapter->applyPartitioningSolution(
+      initialWeights.get_epetra_multi_vector(), balancedWeights, problem.getSolution());
+
+  return {std::make_shared<Core::LinAlg::MultiVector<double>>(*balancedCoordinates),
+      std::make_shared<Core::LinAlg::MultiVector<double>>(*balancedWeights)};
 }
 
 /*----------------------------------------------------------------------*/
@@ -159,16 +201,16 @@ Core::Rebalance::build_weights(const Core::FE::Discretization& dis)
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_graph(
-    Core::FE::Discretization& dis, const Core::LinAlg::Map& roweles)
+    Core::FE::Discretization& dis, const Core::LinAlg::Map& element_row_map)
 {
   const int myrank = Core::Communication::my_mpi_rank(dis.get_comm());
   const int numproc = Core::Communication::num_mpi_ranks(dis.get_comm());
 
   // create a set of all nodes that I have
   std::set<int> mynodes;
-  for (int lid = 0; lid < roweles.num_my_elements(); ++lid)
+  for (int lid = 0; lid < element_row_map.num_my_elements(); ++lid)
   {
-    Core::Elements::Element* ele = dis.g_element(roweles.gid(lid));
+    Core::Elements::Element* ele = dis.g_element(element_row_map.gid(lid));
     const int numnode = ele->num_node();
     const int* nodeids = ele->node_ids();
     copy(nodeids, nodeids + numnode, inserter(mynodes, mynodes.begin()));
@@ -218,9 +260,9 @@ std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_graph(
   // start building the graph object
   std::map<int, std::set<int>> locals;
   std::map<int, std::set<int>> remotes;
-  for (int lid = 0; lid < roweles.num_my_elements(); ++lid)
+  for (int lid = 0; lid < element_row_map.num_my_elements(); ++lid)
   {
-    Core::Elements::Element* ele = dis.g_element(roweles.gid(lid));
+    Core::Elements::Element* ele = dis.g_element(element_row_map.gid(lid));
     const int numnode = ele->num_node();
     const int* nodeids = ele->node_ids();
     for (int i = 0; i < numnode; ++i)

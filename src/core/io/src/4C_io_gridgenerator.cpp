@@ -201,7 +201,7 @@ namespace Core::IO::GridGenerator
 
       Teuchos::ParameterList rebalanceParams;
       rebalanceParams.set<std::string>(
-          "num parts", std::to_string(Core::Communication::num_mpi_ranks(comm)));
+          "num_global_parts", std::to_string(Core::Communication::num_mpi_ranks(comm)));
 
       std::tie(nodeRowMap, nodeColMap) =
           Core::Rebalance::rebalance_node_maps(*nodeGraph, rebalanceParams);
