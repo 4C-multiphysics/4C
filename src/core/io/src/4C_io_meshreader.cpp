@@ -371,16 +371,17 @@ namespace
         if (!Core::Communication::my_mpi_rank(comm))
           std::cout << "Redistributing using hypergraph .........\n";
 
-        rebalanceParams.set("partitioning method", "HYPERGRAPH");
+        rebalanceParams.set("algorithm", "phg");
+        
         std::tie(rowmap, colmap) = Core::Rebalance::rebalance_node_maps(*graph, rebalanceParams);
         break;
       }
-      case Core::Rebalance::RebalanceType::recursive_coordinate_bisection:
+      case Core::Rebalance::RebalanceType::multijagged:
       {
         if (!Core::Communication::my_mpi_rank(comm))
-          std::cout << "Redistributing using recursive coordinate bisection .........\n";
+          std::cout << "Redistributing using multijagged .........\n";
 
-        rebalanceParams.set("partitioning method", "RCB");
+        rebalanceParams.set("algorithm", "multijagged");
 
         rowmap = std::make_shared<Core::LinAlg::Map>(
             -1, graph->row_map().num_my_elements(), graph->row_map().my_global_elements(), 0, comm);
@@ -404,7 +405,7 @@ namespace
         if (!Core::Communication::my_mpi_rank(comm))
           std::cout << "Redistributing using monolithic hypergraph .........\n";
 
-        rebalanceParams.set("partitioning method", "HYPERGRAPH");
+        rebalanceParams.set("algorithm", "phg");
 
         rowmap = std::make_shared<Core::LinAlg::Map>(
             -1, graph->row_map().num_my_elements(), graph->row_map().my_global_elements(), 0, comm);
@@ -444,7 +445,7 @@ namespace
         parameters.mesh_partitioning_parameters.get<double>("IMBALANCE_TOL");
 
     Teuchos::ParameterList rebalanceParams;
-    rebalanceParams.set<std::string>("imbalance tol", std::to_string(imbalance_tol));
+    rebalanceParams.set<std::string>("imbalance_tolerance", std::to_string(imbalance_tol));
 
     const int minele_per_proc =
         parameters.mesh_partitioning_parameters.get<int>("MIN_ELE_PER_PROC");
@@ -454,7 +455,7 @@ namespace
     if (minele_per_proc > 0)
       min_global_procs = row_elements.num_global_elements() / minele_per_proc;
     const int num_procs = std::min(max_global_procs, min_global_procs);
-    rebalanceParams.set<std::string>("num parts", std::to_string(num_procs));
+    rebalanceParams.set<std::string>("num_global_parts", std::to_string(num_procs));
 
     const auto rebalanceMethod = Teuchos::getIntegralValue<Core::Rebalance::RebalanceType>(
         parameters.mesh_partitioning_parameters, "METHOD");
