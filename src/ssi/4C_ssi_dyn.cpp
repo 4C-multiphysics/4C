@@ -117,8 +117,16 @@ void ssi_drt()
     // objects relying on the parallel distribution
     ssi->setup();
 
-    // 3.2- Read restart if needed. (discretization called inside)
-    if (ssi->is_restart()) ssi->read_restart(problem->restart());
+    // 3.2 - Read restart if needed / Call post_setup of structure.(discretization called inside)
+    if (ssi->is_restart())
+    {
+      ssi->read_restart(problem->restart());
+    }
+    else
+    {
+      // call post_setup for the structure field
+      ssi->post_setup();
+    }
 
     // 3.3 AFTER restart: reset input filename of the problem so that results from other runs can be
     // read

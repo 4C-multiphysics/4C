@@ -291,6 +291,13 @@ void PoroElast::PoroBase::read_restart(const int step)
   }
 }
 
+void PoroElast::PoroBase::post_setup()
+{
+  // call post_setup routine of the structural field
+  structure_->post_setup();
+}
+
+
 void PoroElast::PoroBase::prepare_time_step()
 {
   // counter and print header

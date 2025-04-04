@@ -204,7 +204,7 @@ namespace
       Discret::Elements::ShapeFunctionsAndDerivatives<celltype> shape_functions,
       const Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>>&
           deformation_gradient,
-      const std::optional<std::vector<double>>& scalars_at_xi, const Core::LinAlg::Matrix<3, 1>& n,
+      const std::vector<double>& scalars_at_xi, const Core::LinAlg::Matrix<3, 1>& n,
       const Core::LinAlg::Matrix<3, 1>& dir, int eleGID,
       const Discret::Elements::ElementFormulationDerivativeEvaluator<celltype, SolidFormulation>&
           evaluator,
@@ -220,8 +220,8 @@ namespace
         get_ptr(linearization_dependencies.d_cauchyndir_dF),
         get_ptr(linearization_dependencies.d2_cauchyndir_dF2),
         get_ptr(linearization_dependencies.d2_cauchyndir_dF_dn),
-        get_ptr(linearization_dependencies.d2_cauchyndir_dF_ddir), -1, eleGID,
-        get_data(scalars_at_xi), nullptr, nullptr, nullptr);
+        get_ptr(linearization_dependencies.d2_cauchyndir_dF_ddir), -1, eleGID, scalars_at_xi.data(),
+        nullptr, nullptr, nullptr);
 
     // Evaluate pure solid linearizations
     Discret::Elements::evaluate_cauchy_n_dir_linearizations<celltype>(
@@ -231,12 +231,10 @@ namespace
     if (linearizations.d_cauchyndir_ds)
     {
       FOUR_C_ASSERT(linearization_dependencies.d_cauchyndir_dF, "Not all tensors are computed!");
-      FOUR_C_ASSERT(
-          scalars_at_xi.has_value(), "Scalar needs to have a value if the derivatives are needed!");
       linearizations.d_cauchyndir_ds->shape(Core::FE::num_nodes<celltype>, 1);
 
       static Core::LinAlg::Matrix<9, 1> d_F_dc(Core::LinAlg::Initialization::zero);
-      mat.evaluate_linearization_od(deformation_gradient, (*scalars_at_xi)[0], &d_F_dc);
+      mat.evaluate_linearization_od(deformation_gradient, (scalars_at_xi)[0], &d_F_dc);
 
       double d_cauchyndir_ds_gp = (*linearization_dependencies.d_cauchyndir_dF).dot(d_F_dc);
 
@@ -688,7 +686,7 @@ template <Core::FE::CellType celltype, typename SolidFormulation>
 double
 Discret::Elements::SolidScatraEleCalc<celltype, SolidFormulation>::get_normal_cauchy_stress_at_xi(
     const Core::Elements::Element& ele, Mat::So3Material& solid_material,
-    const std::vector<double>& disp, const std::optional<std::vector<double>>& scalars,
+    const std::vector<double>& disp, const std::vector<double>& scalars,
     const Core::LinAlg::Matrix<3, 1>& xi, const Core::LinAlg::Matrix<3, 1>& n,
     const Core::LinAlg::Matrix<3, 1>& dir, SolidScatraCauchyNDirLinearizations<3>& linearizations)
 {
@@ -702,13 +700,8 @@ Discret::Elements::SolidScatraEleCalc<celltype, SolidFormulation>::get_normal_ca
   else
   {
     // project scalar values to xi
-    const auto scalar_values_at_xi = std::invoke(
-        [&]() -> std::optional<std::vector<double>>
-        {
-          if (!scalars.has_value()) return std::nullopt;
+    const auto scalar_values_at_xi = Core::FE::interpolate_to_xi<celltype>(xi, scalars);
 
-          return Core::FE::interpolate_to_xi<celltype>(xi, *scalars);
-        });
 
     ElementNodes<celltype> element_nodes = evaluate_element_nodes<celltype>(ele, disp);
 

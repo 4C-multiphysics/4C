@@ -108,6 +108,15 @@ void POROMULTIPHASE::PoroMultiPhaseBase::init(const Teuchos::ParameterList& glob
 }
 
 /*----------------------------------------------------------------------*
+----------------------------------------------------------------------*/
+void POROMULTIPHASE::PoroMultiPhaseBase::post_init()
+{
+  // call post_setup routine of the structure field
+  structure_->post_setup();
+}
+
+
+/*----------------------------------------------------------------------*
  | read restart information for given time step (public)   vuong 08/16  |
  *----------------------------------------------------------------------*/
 void POROMULTIPHASE::PoroMultiPhaseBase::read_restart(int restart)

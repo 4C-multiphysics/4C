@@ -162,13 +162,9 @@ namespace Discret::Elements
      * @param linearizations [in/out] : Struct holding the linearizations that are possible for
      * evaluation
      * @return double
-     *
-     * @note @p scalars is an optional since it might not be set in the very initial call of the
-     * structure. Once the structure does not evaluate itself after setup, this optional parameter
-     * can be made mandatory.
      */
     double get_normal_cauchy_stress_at_xi(const std::vector<double>& disp,
-        const std::optional<std::vector<double>>& scalars, const Core::LinAlg::Matrix<3, 1>& xi,
+        const std::vector<double>& scalars, const Core::LinAlg::Matrix<3, 1>& xi,
         const Core::LinAlg::Matrix<3, 1>& n, const Core::LinAlg::Matrix<3, 1>& dir,
         SolidScatraCauchyNDirLinearizations<3>& linearizations);
 

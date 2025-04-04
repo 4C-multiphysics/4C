@@ -58,8 +58,7 @@ namespace Discret::Elements
   constexpr bool can_evaluate_solid_scatra_cauchy_n_dir_at_xi<T, dim,
       std::void_t<decltype(std::declval<T>()->get_normal_cauchy_stress_at_xi(
           std::declval<const Core::Elements::Element&>(), std::declval<Mat::So3Material&>(),
-          std::declval<const std::vector<double>&>(),
-          std::declval<const std::optional<std::vector<double>>&>(),
+          std::declval<const std::vector<double>&>(), std::declval<const std::vector<double>&>(),
           std::declval<const Core::LinAlg::Matrix<dim, 1>&>(),
           std::declval<const Core::LinAlg::Matrix<dim, 1>&>(),
           std::declval<const Core::LinAlg::Matrix<dim, 1>&>(),
@@ -72,7 +71,7 @@ namespace Discret::Elements
     struct EvaluateSolidScatraCauchyNDirAction
     {
       EvaluateSolidScatraCauchyNDirAction(const Core::Elements::Element& e, Mat::So3Material& m,
-          const std::vector<double>& d, const std::optional<std::vector<double>>& s,
+          const std::vector<double>& d, const std::vector<double>& s,
           const Core::LinAlg::Matrix<dim, 1>& x, const Core::LinAlg::Matrix<dim, 1>& normal,
           const Core::LinAlg::Matrix<dim, 1>& direction,
           SolidScatraCauchyNDirLinearizations<dim>& lins)
@@ -109,7 +108,7 @@ namespace Discret::Elements
       const Core::Elements::Element& element;
       Mat::So3Material& mat;
       const std::vector<double>& disp;
-      const std::optional<std::vector<double>>& scalars;
+      const std::vector<double>& scalars;
       const Core::LinAlg::Matrix<dim, 1>& xi;
       const Core::LinAlg::Matrix<dim, 1>& n;
       const Core::LinAlg::Matrix<dim, 1>& dir;
@@ -120,7 +119,7 @@ namespace Discret::Elements
   template <typename VariantType>
   double get_normal_cauchy_stress_at_xi(VariantType& variant,
       const Core::Elements::Element& element, Mat::So3Material& mat,
-      const std::vector<double>& disp, const std::optional<std::vector<double>>& scalars,
+      const std::vector<double>& disp, const std::vector<double>& scalars,
       const Core::LinAlg::Matrix<3, 1>& xi, const Core::LinAlg::Matrix<3, 1>& n,
       const Core::LinAlg::Matrix<3, 1>& dir, SolidScatraCauchyNDirLinearizations<3>& linearizations)
   {

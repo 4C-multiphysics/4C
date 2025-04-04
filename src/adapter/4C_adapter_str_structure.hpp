@@ -147,6 +147,11 @@ namespace Adapter
 
     //@}
 
+    /*!
+     * @brief Perform all necessary tasks after setting up the object.
+     */
+    virtual void post_setup() = 0;
+
     //! @name Vector access
     //@{
 

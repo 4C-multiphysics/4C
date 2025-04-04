@@ -17,7 +17,7 @@ and electrode-electrolyte interface coupling:
 //ELEMENTS    429
 //NODES       212
 DIM           3
--------------------------------------------------------PROBLEM TYPE
+------------------------------------------------------PROBLEM TYPE
 PROBLEMTYPE                      Structure_Scalar_Interaction
 ----------------------------------------------------------------IO
 STDOUTEVERY                      0

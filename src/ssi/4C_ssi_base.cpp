@@ -10,6 +10,7 @@
 #include "4C_adapter_scatra_base_algorithm.hpp"
 #include "4C_adapter_str_factory.hpp"
 #include "4C_adapter_str_ssiwrapper.hpp"
+#include "4C_adapter_str_structure.hpp"
 #include "4C_adapter_str_structure_new.hpp"
 #include "4C_contact_nitsche_strategy_ssi.hpp"
 #include "4C_coupling_volmortar.hpp"
@@ -223,6 +224,23 @@ void SSI::SSIBase::setup()
 }
 
 /*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void SSI::SSIBase::post_setup()
+{
+  check_is_setup();
+
+  // communicate scatra states to structure if necessary
+  if (Teuchos::getIntegralValue<Inpar::SSI::SolutionSchemeOverFields>(
+          Global::Problem::instance()->ssi_control_params(), "COUPALGO") !=
+      Inpar::SSI::SolutionSchemeOverFields::ssi_OneWay_SolidToScatra)
+  {
+    set_scatra_solution(scatra_field()->phinp());
+  }
+
+  structure_->post_setup();
+}
+
+/*----------------------------------------------------------------------*
  | Setup the discretizations                                rauch 08/16 |
  *----------------------------------------------------------------------*/
 void SSI::SSIBase::init_discretizations(MPI_Comm comm, const std::string& struct_disname,
@@ -250,7 +268,8 @@ void SSI::SSIBase::init_discretizations(MPI_Comm comm, const std::string& struct
     {
       FOUR_C_THROW(
           "If 'FIELDCOUPLING' is NOT 'volume_matching' or 'volumeboundary_matching' in the SSI "
-          "CONTROL section cloning of the scatra discretization from the structure discretization "
+          "CONTROL section cloning of the scatra discretization from the structure "
+          "discretization "
           "is not supported!");
     }
 
@@ -344,8 +363,10 @@ void SSI::SSIBase::init_discretizations(MPI_Comm comm, const std::string& struct
       FOUR_C_THROW(
           "Reading a TRANSPORT discretization from the input file for the input parameter "
           "'FIELDCOUPLING volume_matching' in the SSI CONTROL section is not supported! As this "
-          "coupling relies on matching node (and sometimes element) IDs, the ScaTra discretization "
-          "is cloned from the structure discretization. Delete the ScaTra discretization from your "
+          "coupling relies on matching node (and sometimes element) IDs, the ScaTra "
+          "discretization "
+          "is cloned from the structure discretization. Delete the ScaTra discretization from "
+          "your "
           "input file.");
     }
 
@@ -371,7 +392,8 @@ void SSI::SSIBase::init_discretizations(MPI_Comm comm, const std::string& struct
             "discretization is not cloned from the structure discretization. But in the STRUCTURE "
             "ELEMENTS section of the input file an ImplType that is NOT 'Undefined' is prescribed "
             "which does not make sense if you don't want to clone the structure discretization. "
-            "Change the ImplType to 'Undefined' or decide to clone the scatra discretization from "
+            "Change the ImplType to 'Undefined' or decide to clone the scatra discretization "
+            "from "
             "the structure discretization.");
       }
     }
@@ -885,7 +907,8 @@ bool SSI::SSIBase::check_s2_i_kinetics_condition_for_pseudo_contact(
         {
           FOUR_C_THROW(
               "Pseudo contact formulation of s2i kinetics conditions does not make sense in "
-              "combination with resolved contact formulation. Set the respective IS_PSEUDO_CONTACT "
+              "combination with resolved contact formulation. Set the respective "
+              "IS_PSEUDO_CONTACT "
               "flag to 'False'");
         }
       }

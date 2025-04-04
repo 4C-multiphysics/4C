@@ -12,6 +12,7 @@
 #include "4C_config.hpp"
 
 #include "4C_adapter_algorithmbase.hpp"
+#include "4C_adapter_str_structure.hpp"
 #include "4C_coupling_adapter.hpp"
 #include "4C_ehl_input.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
@@ -44,6 +45,13 @@ namespace EHL
 
     /// setup
     virtual void setup_system() = 0;
+
+    /*!
+     * @brief Perform all necessary tasks after setting up the object.
+     * Currently, this only calls the post setup routine of the
+     * structure field.
+     */
+    void post_setup() { structure_->post_setup(); }
 
     /// timeloop of coupled problem
     virtual void timeloop() = 0;

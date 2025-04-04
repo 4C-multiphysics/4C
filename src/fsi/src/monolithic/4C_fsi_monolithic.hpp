@@ -105,6 +105,13 @@ namespace FSI
     explicit MonolithicBase(MPI_Comm comm, const Teuchos::ParameterList& timeparams);
 
 
+    /*!
+     * @brief Perform all necessary tasks after setting up the object.
+     * Currently, this only calls the post_setup method of the structure
+     * field.
+     */
+    void post_setup();
+
     /// read restart data
     void read_restart(int step) override;
 

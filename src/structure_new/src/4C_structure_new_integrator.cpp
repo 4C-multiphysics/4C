@@ -172,7 +172,7 @@ void Solid::Integrator::reset_model_states(const Core::LinAlg::Vector<double>& x
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void Solid::Integrator::equilibrate_initial_state()
+void Solid::Integrator::compute_mass_matrix_and_init_acc()
 {
   check_init();
 

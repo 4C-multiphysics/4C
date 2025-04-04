@@ -57,6 +57,13 @@ namespace PoroMultiPhaseScaTra
         int nds_disp, int nds_vel, int nds_solidpressure, int ndsporofluid_scatra,
         const std::map<int, std::set<int>>* nearbyelepairs) = 0;
 
+    /*!
+     * @brief Perform all the necessary tasks after initializing the
+     * algorithm. Currently, this only calls the post_setup routine of
+     * the underlying poroelast multi-phase object.
+     */
+    void post_init();
+
     //! read restart
     void read_restart(int restart) override;
 

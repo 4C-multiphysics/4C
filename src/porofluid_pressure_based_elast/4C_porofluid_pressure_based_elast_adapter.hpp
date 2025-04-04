@@ -49,6 +49,14 @@ namespace POROMULTIPHASE
         int nds_solidpressure, int ndsporofluid_scatra,
         const std::map<int, std::set<int>>* nearbyelepairs) = 0;
 
+    /*!
+     * @brief Perform all necessary tasks after initializing the
+     * object. Currently, this only calls the post_setup routine of
+     * the structure field.
+     */
+    virtual void post_init() = 0;
+
+
     /// read restart
     virtual void read_restart(int restart) = 0;
 

@@ -67,6 +67,10 @@ namespace Solid
       /// setup of the new class variables
       void setup() override;
 
+      /// run the post_setup tasks of the structural time integrator
+      /// (e.g. compute mass matrix, initial accelerations, ...)
+      void post_setup() override;
+
       /// tests if there are more time steps to do
       [[nodiscard]] bool not_finished() const override;
 

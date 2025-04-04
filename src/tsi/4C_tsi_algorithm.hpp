@@ -82,6 +82,13 @@ namespace TSI
     /// initialise TSI system
     virtual void setup_system() = 0;
 
+    /*!
+     * @brief Perform all necessary tasks after setting up the TSI
+     * algorithm. Currently, this only calls the post_setup method of the
+     * structure_field.
+     */
+    void post_setup();
+
     /// non-linear solve, i.e. (multiple) corrector
     virtual void solve() = 0;
 

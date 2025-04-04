@@ -76,7 +76,14 @@ void poromultiphase_dyn(int restart)
       &nearbyelepairs);
 
   // read the restart information, set vectors and variables
-  if (restart) algo->read_restart(restart);
+  if (restart)
+  {
+    algo->read_restart(restart);
+  }
+  else
+  {
+    algo->post_init();
+  }
 
   // assign poro material for evaluation of porosity
   // note: to be done after potential restart, as in read_restart()

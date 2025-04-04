@@ -355,9 +355,9 @@ namespace Solid
     //! Check the setup state
     void check_init_setup() const;
 
-    /*! \brief Equilibriate system at initial state and identify consistent accelerations
+    /*! \brief Compute the mass matrix and identify consistent accelerations for the initial state.
      */
-    void equilibrate_initial_state();
+    void compute_mass_matrix_and_init_acc();
 
     /*! \brief Check if current state is equilibrium (with respect to
      *  a given tolerance of the inf-norm)

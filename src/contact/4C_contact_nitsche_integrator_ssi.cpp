@@ -206,46 +206,20 @@ void CONTACT::IntegratorNitscheSsi::so_ele_cauchy_struct(Mortar::Element& mortar
   linearizations.solid.d_cauchyndir_ddir = &d_sigma_nt_dt;
   linearizations.solid.d_cauchyndir_dxi = &d_sigma_nt_dxi;
 
-  if (mortar_ele.mo_data().parent_scalar().empty())
-  {
-    // Note: This branch is only needed since the structure is evaluating itself during setup before
-    // the ssi problem is setup. Once this is fixed, this can be deleted.
-    sigma_nt = std::invoke(
-        [&]()
-        {
-          auto* solid_scatra_ele =
-              dynamic_cast<Discret::Elements::SolidScatra*>(mortar_ele.parent_element());
+  linearizations.d_cauchyndir_ds = d_sigma_nt_ds;
+  sigma_nt = std::invoke(
+      [&]()
+      {
+        auto* solid_scatra_ele =
+            dynamic_cast<Discret::Elements::SolidScatra*>(mortar_ele.parent_element());
 
-          FOUR_C_ASSERT_ALWAYS(solid_scatra_ele,
-              "Nitsche contact is not implemented for this element (expecting SOLIDSCATRA "
-              "element)!");
+        FOUR_C_ASSERT_ALWAYS(solid_scatra_ele,
+            "Nitsche contact is not implemented for this element (expecting SOLIDSCATRA "
+            "element)!");
 
-          // SSI is not yet setup, so don't set the scalar.
-          // Note: Once it is fixed in the structure time integration framework, the
-          // scalars-parameter can be made non-optional
-          return solid_scatra_ele->get_normal_cauchy_stress_at_xi(
-              mortar_ele.mo_data().parent_disp(), std::nullopt, parent_xi, gp_normal, test_dir,
-              linearizations);
-        });
-  }
-  else
-  {
-    linearizations.d_cauchyndir_ds = d_sigma_nt_ds;
-    sigma_nt = std::invoke(
-        [&]()
-        {
-          auto* solid_scatra_ele =
-              dynamic_cast<Discret::Elements::SolidScatra*>(mortar_ele.parent_element());
-
-          FOUR_C_ASSERT_ALWAYS(solid_scatra_ele,
-              "Nitsche contact is not implemented for this element (expecting SOLIDSCATRA "
-              "element)!");
-
-          return solid_scatra_ele->get_normal_cauchy_stress_at_xi(
-              mortar_ele.mo_data().parent_disp(), mortar_ele.mo_data().parent_scalar(), parent_xi,
-              gp_normal, test_dir, linearizations);
-        });
-  }
+        return solid_scatra_ele->get_normal_cauchy_stress_at_xi(mortar_ele.mo_data().parent_disp(),
+            mortar_ele.mo_data().parent_scalar(), parent_xi, gp_normal, test_dir, linearizations);
+      });
 
   cauchy_nt_wgt += nitsche_wgt * sigma_nt;
 

@@ -64,7 +64,7 @@ void Solid::EXPLICIT::ForwardEuler::setup()
 void Solid::EXPLICIT::ForwardEuler::post_setup()
 {
   check_init_setup();
-  equilibrate_initial_state();
+  compute_mass_matrix_and_init_acc();
 
   model_eval().post_setup();
 }

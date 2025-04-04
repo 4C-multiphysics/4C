@@ -82,6 +82,11 @@ void tsi_dyn_drt()
     // read the restart information, set vectors and variables
     tsi->read_restart(restart);
   }
+  else
+  {
+    // run post_setup to update the structure field
+    tsi->post_setup();
+  }
 
   // now do the coupling setup and create the combined dofmap
   tsi->setup_system();

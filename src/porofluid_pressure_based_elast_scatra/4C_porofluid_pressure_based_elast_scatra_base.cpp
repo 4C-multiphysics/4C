@@ -164,6 +164,15 @@ void PoroMultiPhaseScaTra::PoroMultiPhaseScaTraBase::init(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
+void PoroMultiPhaseScaTra::PoroMultiPhaseScaTraBase::post_init()
+{
+  // call the post_setup routine of the underlying poroelast multi-phase object
+  poromulti_->post_init();
+}
+
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
 void PoroMultiPhaseScaTra::PoroMultiPhaseScaTraBase::read_restart(int restart)
 {
   if (restart)

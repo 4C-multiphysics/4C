@@ -101,8 +101,7 @@ void Solid::TimeInt::Base::setup()
   int_ptr_->init(data_s_dyn_ptr(), data_global_state_ptr(), data_io_ptr(), dbc_ptr_,
       Core::Utils::shared_ptr_from_ref(*this));
   int_ptr_->setup();
-  int_ptr_->post_setup();
-  // Initialize and Setup the input/output writer for every Newton iteration
+  //   Initialize and Setup the input/output writer for every Newton iteration
   dataio_->init_setup_every_iteration_writer(this, data_sdyn().get_nox_params());
 
   // Initialize the output of system energy
@@ -115,6 +114,15 @@ void Solid::TimeInt::Base::setup()
 
   issetup_ = true;
 }
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Solid::TimeInt::Base::post_setup()
+{
+  check_init_setup();
+  int_ptr_->post_setup();
+}
+
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
@@ -815,8 +823,7 @@ void Solid::TimeInt::Base::write_gmsh_struct_output_step()
   std::ofstream gmshfilecontent(filename.c_str());
 
   // add 'View' to Gmsh postprocessing file
-  gmshfilecontent << "View \" "
-                  << "struct displacement \" {" << std::endl;
+  gmshfilecontent << "View \" " << "struct displacement \" {" << std::endl;
   // draw vector field 'struct displacement' for every element
   Core::IO::Gmsh::vector_field_dof_based_to_gmsh(
       *discretization(), dispn(), gmshfilecontent, 0, true);
@@ -869,7 +876,7 @@ void Solid::TimeInt::Base::read_restart(const int stepn)
   // (3) read specific time integrator (forces, etc.) and model evaluator data
   int_ptr_->read_restart(ioreader);
   int_ptr_->post_setup();  // compute here the equilibrium system to account for initial
-                           // displacement/velocity.
+  //  displacement/velocity.
 
   // short screen output
   if (dataglobalstate_->get_my_rank() == 0)
