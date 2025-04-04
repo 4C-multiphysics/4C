@@ -150,8 +150,13 @@ RESULT DESCRIPTION:
   - FSI:
       NODE: 37
       QUANTITY: "lambday"
+<<<<<<< HEAD
       VALUE: 1.23279181402521009e-03
       TOLERANCE: 1.2e-09
+=======
+      VALUE: 0.0012327918108863182
+      TOLERANCE: 2e-11
+>>>>>>> d6a7fdb440 (Fix FSI tests)
   - FSI:
       SPECIAL: true
       QUANTITY: "dt"
