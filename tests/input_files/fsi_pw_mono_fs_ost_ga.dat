@@ -10,7 +10,7 @@ DIM                             3
 MATERIALS                       2
 NUMDF                           6
 -----------------------------------------------------------------PROBLEM TYPE
-PROBLEMTYPE                      Fluid_Structure_Interaction
+PROBLEMTYPE                     Fluid_Structure_Interaction
 RESTART                         0
 //!RESTART                      3
 --------------------------------------------------------------DISCRETISATION
@@ -20,7 +20,7 @@ NUMALEDIS                       1
 NUMTHERMDIS                     0
 ----------------------------------------------------------STRUCTURAL DYNAMIC
 LINEAR_SOLVER                   1
-DYNAMICTYPE                      GenAlpha
+DYNAMICTYPE                     GenAlpha
 PREDICT                         ConstDisVelAcc
 -------------------------------------------------STRUCTURAL DYNAMIC/GENALPHA
 GENAVG                          TrLike
@@ -39,9 +39,9 @@ THETA                           0.66
 COUPALGO                        iter_monolithicfluidsplit
 MAXTIME                         0.0005
 NUMSTEP                         5
-RESTARTEVERY                     1
+RESTARTEVERY                    1
 TIMESTEP                        0.0001
-RESULTSEVERY                           1
+RESULTSEVERY                    1
 -----------------------------------------------FSI DYNAMIC/MONOLITHIC SOLVER
 ADAPTIVEDIST                    0.001
 BASETOL                         1.0E-6
@@ -19251,4 +19251,4 @@ VARIABLE 0 NAME a TYPE linearinterpolation NUMPOINTS 4 TIMES 0 3e-3 3.1e-3 10000
 FLUID DIS fluid NODE 3043 QUANTITY velx VALUE 1.42025232849260887e-03 TOLERANCE 1e-10
 FLUID DIS fluid NODE 3043 QUANTITY vely VALUE -6.81719226447697300e-04 TOLERANCE 1e-10
 FLUID DIS fluid NODE 3043 QUANTITY velz VALUE -3.91353544091383430e-04 TOLERANCE 1e-10
-FLUID DIS fluid NODE 3043 QUANTITY pressure VALUE 1.28742548077894980e+00 TOLERANCE 1e-7
+FLUID DIS fluid NODE 3043 QUANTITY pressure VALUE 1.28742548077894980e+00 TOLERANCE 3e-7

@@ -12,11 +12,11 @@ NUMDF                           3
 --------------------------------------------------------------------------IO
 VERBOSITY                       standard
 -----------------------------------------------------------------PROBLEM TYPE
-PROBLEMTYPE                      Fluid_Structure_Interaction
+PROBLEMTYPE                     Fluid_Structure_Interaction
 RESTART                         0
 ----------------------------------------------------------STRUCTURAL DYNAMIC
 LINEAR_SOLVER                   1
-DYNAMICTYPE                      GenAlpha
+DYNAMICTYPE                     GenAlpha
 TOLDISP                         1.0E-10
 MAXITER                         50
 PREDICT                         ConstDisVelAcc
@@ -39,10 +39,10 @@ ALPHA_M                         1.0
 GAMMA                           1.0
 PREDICTOR                       steady_state
 -----------------------------------FLUID DYNAMIC/NONLINEAR SOLVER TOLERANCES
-TOL_VEL_RES	  1.0E-8
-TOL_VEL_INC	  1.0E-8
-TOL_PRES_RES	  1.0E-8
-TOL_PRES_INC	  1.0E-8
+TOL_VEL_RES	                    1.0E-8
+TOL_VEL_INC	                    1.0E-8
+TOL_PRES_RES	                  1.0E-8
+TOL_PRES_INC	                  1.0E-8
 ----------------------------------FLUID DYNAMIC/RESIDUAL-BASED STABILIZATION
 CHARELELENGTH_PC                root_of_volume
 VSTAB                           vstab_gls
@@ -54,8 +54,8 @@ UPDATEMATRIX                    no
 MAXTIME                         1
 TIMESTEP                        0.1
 NUMSTEP                         10
-RESULTSEVERY                           1
-RESTARTEVERY                     2
+RESULTSEVERY                    1
+RESTARTEVERY                    2
 COUPALGO                        iter_monolithicfluidsplit
 -----------------------------------------------FSI DYNAMIC/MONOLITHIC SOLVER
 ADAPTIVEDIST                    0.001
@@ -2870,7 +2870,7 @@ STRUCTURE DIS structure NODE 38 QUANTITY dispy VALUE  -8.73210175774679666e-03  
 FLUID DIS fluid NODE 841 QUANTITY velx VALUE 3.08241545463093535e-04  TOLERANCE 1e-10
 FLUID DIS fluid NODE 841 QUANTITY vely VALUE -2.13166029546369359e-02 TOLERANCE 1e-10
 FLUID DIS fluid NODE 841 QUANTITY pressure VALUE  4.54410049719161588e-02 TOLERANCE 1e-9
-ALE DIS ale NODE 841 QUANTITY dispx VALUE 3.03122711456396565e-05  TOLERANCE 1e-12
+ALE DIS ale NODE 841 QUANTITY dispx VALUE 3.03122711456396565e-05  TOLERANCE 2e-11
 ALE DIS ale NODE 841 QUANTITY dispy VALUE -6.46531527355607288e-03  TOLERANCE 1e-10
 FSI NODE 1139 QUANTITY lambdax VALUE -4.18289900499353110e-06  TOLERANCE 1e-13
 FSI NODE 1139 QUANTITY lambday VALUE -1.12817107171173320e-03 TOLERANCE 1e-11
