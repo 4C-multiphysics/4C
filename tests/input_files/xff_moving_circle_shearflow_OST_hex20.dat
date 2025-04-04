@@ -79,9 +79,11 @@ XFLUID_TIMEINT                  STD=COPY/PROJ_and_GHOST=COPY/PROJ/GP
 XFLUIDFLUID_SEARCHRADIUS        10.0
 --------------------------------------------------------------------SOLVER 1
 SOLVER                          UMFPACK
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 --------------------------------------------------------------------SOLVER 2
 NAME                            Ale_Solver
 SOLVER                          UMFPACK
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 ----------------------------------------------------------------XFEM GENERAL
 GMSH_DEBUG_OUT                  No
 GMSH_DISCRET_OUT                Yes

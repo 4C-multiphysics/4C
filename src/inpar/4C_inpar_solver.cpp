@@ -57,17 +57,8 @@ namespace Inpar::SOLVER
                 .default_value = Core::LinearSolver::PreconditionerType::ilu}),
 
         // Ifpack options
-        parameter<int>("IFPACKOVERLAP",
-            {.description = "The amount of overlap used for the ifpack \"ilu\" preconditioner.",
-                .default_value = 0}),
-
-        parameter<int>("IFPACKGFILL",
-            {.description = "The amount of fill allowed for an internal \"ilu\" preconditioner.",
-                .default_value = 0}),
-
-
-        deprecated_selection<std::string>("IFPACKCOMBINE", {"Add", "Insert", "Zero"},
-            {.description = "Combine mode for Ifpack Additive Schwarz", .default_value = "Add"}),
+        Core::IO::InputSpecBuilders::parameter<std::optional<std::filesystem::path>>(
+            "IFPACK_XML_FILE", {.description = "xml file defining any Ifpack preconditioner"}),
 
         // Iterative solver options
         parameter<int>(

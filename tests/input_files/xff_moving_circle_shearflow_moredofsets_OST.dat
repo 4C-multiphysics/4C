@@ -51,9 +51,11 @@ RESTARTEVERY                     2
 TIMESTEP                        0.4
 --------------------------------------------------------------------SOLVER 1
 SOLVER                          UMFPACK
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 --------------------------------------------------------------------SOLVER 2
 NAME                            Ale_Solver
 SOLVER                          UMFPACK
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 ----------------------------------------------------------------XFEM GENERAL
 VOLUME_GAUSS_POINTS_BY          DirectDivergence
 ------------------------------------------------XFLUID DYNAMIC/STABILIZATION

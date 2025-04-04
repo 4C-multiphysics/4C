@@ -97,9 +97,11 @@ VOLUME_GAUSS_POINTS_BY          DirectDivergence
 BOUNDARY_GAUSS_POINTS_BY        Tessellation
 --------------------------------------------------------------------SOLVER 1
 SOLVER                          UMFPACK
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 --------------------------------------------------------------------SOLVER 2
 NAME                            Ale_Solver
 SOLVER                          UMFPACK
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 -------------------------------------------------------------------MATERIALS
 MAT 1 MAT_fluid DYNVISCOSITY 1.0 DENSITY 1.0 GAMMA 1.0
 MAT 2 MAT_Struct_StVenantKirchhoff YOUNG 10000000.0 NUE 0.4 DENS 2.0

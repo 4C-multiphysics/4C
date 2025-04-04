@@ -96,6 +96,7 @@ IS_PSEUDO_2D                    yes
 --------------------------------------------------------------------SOLVER 1
 NAME                            Fluid_Solver
 SOLVER                          Belos
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 AZOUTPUT                        50
 AZSOLVE                         GMRES
 AZTOL                           1e-13

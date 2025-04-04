@@ -87,6 +87,7 @@ SOLVER                          UMFPACK
 --------------------------------------------------------------------SOLVER 4
 NAME                            Sca_Tra_Solver
 SOLVER                          Belos
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 AZTOL                           1.0E-11
 ----------------------------------------------------------STRUCTURAL DYNAMIC
 DAMPING                         Material

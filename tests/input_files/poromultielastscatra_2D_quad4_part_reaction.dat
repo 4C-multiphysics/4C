@@ -62,6 +62,7 @@ CONVTOL                         1e-8
 --------------------------------------------------------------------SOLVER 1
 NAME                            solver
 SOLVER                          UMFPACK
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 --------------------------------------------------------------------SOLVER 2
 NAME                            L2-projection solver for fluxes/pressure gradient
 SOLVER                          Belos
@@ -69,11 +70,10 @@ AZOUTPUT                        5
 AZSOLVE                         CG
 AZPREC                          ILU
 AZREUSE                         8
-IFPACKGFILL                     0
 AZTOL                           1.0E-6
 AZITER                          60
 AZSUB                           25
-IFPACKOVERLAP                   0
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 AZCONV                          AZ_r0
 -------------------------------------------------------------------MATERIALS
 MAT 1 MAT_FluidPoroMultiPhaseReactions LOCAL No PERMEABILITY 1.0 NUMMAT 4 MATIDS 10 11 12 13 NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE 4 NUMREAC 1 REACIDS 14

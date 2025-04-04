@@ -71,6 +71,7 @@ TOL_VEL_RES_INF                 1e-08
 TOL_VEL_RES_L2                  1e-10
 ----------------------------------------------------------SOLVER 1
 SOLVER                          UMFPACK
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 --------------------------------------XFLUID DYNAMIC/STABILIZATION
 COUPLING_METHOD                 Hybrid_LM_Cauchy_stress
 XFF_CONV_STAB_SCALING           none

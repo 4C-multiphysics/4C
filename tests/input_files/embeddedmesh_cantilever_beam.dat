@@ -36,6 +36,7 @@ DIVERCONT                             stop
 NAME                                  Struct_Solver
 SOLVER                                Belos
 SOLVER_XML_FILE                       xml/linear_solver/iterative_gmres_template.xml
+IFPACK_XML_FILE                       xml/preconditioner/ifpack.xml
 --------------------------------------------------------------------XFEM GENERAL
 GMSH_DEBUG_OUT                        Yes
 GMSH_CUT_OUT                          Yes

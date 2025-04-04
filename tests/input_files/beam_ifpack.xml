@@ -1,0 +1,7 @@
+<ParameterList name="Ifpack">
+  <!-- General settings for Ifpack preconditioners -->
+  <Parameter name="Preconditioner type" type="string" value="ILU"/>
+  <Parameter name="Overlap" type="int" value="1"/>
+  <!-- Level-of-fill setting for Ifpack ILU preconditioner -->
+  <Parameter name="fact: level-of-fill" type="int" value="1"/>
+</ParameterList>

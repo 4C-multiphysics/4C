@@ -55,9 +55,11 @@ TIMESTEP                        0.3
 RESULTSEVERY                           1
 --------------------------------------------------------------------SOLVER 1
 SOLVER                          UMFPACK
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 --------------------------------------------------------------------SOLVER 2
 NAME                            Ale_Solver
 SOLVER                          UMFPACK
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 ----------------------------------------------------------------XFEM GENERAL
 GMSH_DEBUG_OUT                  No
 VOLUME_GAUSS_POINTS_BY          DirectDivergence

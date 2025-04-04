@@ -67,6 +67,7 @@ GHOST_PENALTY_STAB              yes
 GHOST_PENALTY_FAC               0.05
 ----------------------------------------------------------SOLVER 1
 SOLVER                          UMFPACK
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 ---------------------------------------------------------MATERIALS
 MAT 1 MAT_fluid DYNVISCOSITY 0.8 DENSITY 10.0 GAMMA 1.0
 MAT 2 MAT_Struct_StVenantKirchhoff YOUNG 2000000 NUE 0.4 DENS 2.0

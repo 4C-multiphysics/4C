@@ -60,6 +60,7 @@ ITEMAX                          7
 SHAPEDERIVATIVES                yes
 ----------------------------------------------------------SOLVER 1
 SOLVER                          UMFPACK
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 --------------------------------------XFLUID DYNAMIC/STABILIZATION
 COUPLING_METHOD                 Hybrid_LM_Cauchy_stress
 XFF_CONV_STAB_SCALING           none

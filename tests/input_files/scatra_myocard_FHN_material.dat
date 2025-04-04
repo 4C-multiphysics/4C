@@ -47,6 +47,7 @@ EVALUATION_TAU                  integration_point
 --------------------------------------------------------------------SOLVER 1
 NAME                            Sca_Tra_Solver
 SOLVER                          Belos
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 -------------------------------------------------------------------MATERIALS
 MAT 1 MAT_myocard DIFF1 0.0001171 DIFF2 0.0001171 DIFF3 0.0001171 PERTURBATION_DERIV 1e-6 MODEL FHN TISSUE M TIME_SCALE 1.0
 -----------------------------------DESIGN VOL NEUMANN CONDITIONS
