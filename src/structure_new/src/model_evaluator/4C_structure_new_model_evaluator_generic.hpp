@@ -417,10 +417,11 @@ namespace Solid
        *  example the EAS state or the condensed Lagrange multiplier state. The
        *  global state in terms of the x-vector is stored more globally.
        *
-       *  */
-      virtual void create_backup_state(const Core::LinAlg::Vector<double>& dir) {
+       *  \author hiermeier \date 12/17 */
+      virtual void create_backup_state(const Core::LinAlg::Vector<double>& dir)
+      {
         /* do nothing in default */
-      };
+      }
 
       /** \brief Recover from the previously created backup state
        *
@@ -451,7 +452,14 @@ namespace Solid
 
       //! Get the mechanical stress state vector (read access)
       [[nodiscard]] virtual std::shared_ptr<const Core::LinAlg::Vector<double>>
-      get_mechanical_stress_state() const
+      get_mechanical_stress_state_np() const
+      {
+        return nullptr;
+      }
+
+      //! Get the mechanical stress state vector (read access)
+      [[nodiscard]] virtual std::shared_ptr<const Core::LinAlg::Vector<double>>
+      get_mechanical_stress_state_n() const
       {
         return nullptr;
       }
