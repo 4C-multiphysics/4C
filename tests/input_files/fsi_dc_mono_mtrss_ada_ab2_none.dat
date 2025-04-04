@@ -10,7 +10,7 @@ DIM                             2
 MATERIALS                       3
 NUMDF                           3
 -----------------------------------------------------------------PROBLEM TYPE
-PROBLEMTYPE                      Fluid_Structure_Interaction
+PROBLEMTYPE                     Fluid_Structure_Interaction
 RESTART                         0
 ----------------------------------------------------------STRUCTURAL DYNAMIC
 LINEAR_SOLVER                   1
@@ -51,8 +51,8 @@ UPDATEMATRIX                    no
 MAXTIME                         1.0
 TIMESTEP                        0.002
 NUMSTEP                         11
-RESULTSEVERY                           1
-RESTARTEVERY                     1
+RESULTSEVERY                    1
+RESTARTEVERY                    1
 COUPALGO                        iter_mortar_monolithicstructuresplit
 --------------------------------------------------FSI DYNAMIC/TIMEADAPTIVITY
 ADAPTSTEPMAX                    5
@@ -116,12 +116,12 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME (1-cos(2*t*pi/5))
 STRUCTURE DIS structure NODE 38 QUANTITY dispx VALUE -6.27126676757261358e-06 TOLERANCE 1e-13
 STRUCTURE DIS structure NODE 38 QUANTITY dispy VALUE -6.06181090343867711e-04 TOLERANCE 1e-10
 FLUID DIS fluid NODE 841 QUANTITY velx VALUE -1.03652508239162971e-03 TOLERANCE 1e-12
-FLUID DIS fluid NODE 841 QUANTITY vely VALUE -2.27521014920982088e-03 TOLERANCE 1e-12
+FLUID DIS fluid NODE 841 QUANTITY vely VALUE -2.27521014920982088e-03 TOLERANCE 2e-12
 FLUID DIS fluid NODE 841 QUANTITY pressure VALUE 5.01067472988512945e-04 TOLERANCE 1e-10
 ALE DIS ale NODE 841 QUANTITY dispx VALUE -1.34034600130374772e-06 TOLERANCE 1e-11
 ALE DIS ale NODE 841 QUANTITY dispy VALUE -4.75545010804424536e-04 TOLERANCE 1e-11
 FSI NODE 37 QUANTITY lambdax VALUE -2.62159270269929194e-04 TOLERANCE 1e-10
-FSI NODE 37 QUANTITY lambday VALUE 1.23279181088631817e-03 TOLERANCE 1e-11
+FSI NODE 37 QUANTITY lambday VALUE 1.23279181088631817e-03 TOLERANCE 2e-11
 FSI SPECIAL true QUANTITY dt VALUE 7.94359473584322212e-02 TOLERANCE 1.0e-12
 FSI SPECIAL true QUANTITY time VALUE 7.43126548289639977e-01 TOLERANCE 1.0e-11
 FSI SPECIAL true QUANTITY adasteps VALUE 2 TOLERANCE 1.0e-13

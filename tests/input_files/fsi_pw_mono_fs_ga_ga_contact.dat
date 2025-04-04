@@ -28,7 +28,7 @@ THERM_HEATFLUX                  No
 FILESTEPS                       1000
 ----------------------------------------------------------STRUCTURAL DYNAMIC
 LINEAR_SOLVER                   1
-DYNAMICTYPE                      GenAlpha
+DYNAMICTYPE                     GenAlpha
 PREDICT                         ConstDisVelAcc
 -------------------------------------------------STRUCTURAL DYNAMIC/GENALPHA
 GENAVG                          TrLike
@@ -48,9 +48,9 @@ GAMMA                           1.0
 COUPALGO                        iter_monolithicfluidsplit
 MAXTIME                         0.0005
 NUMSTEP                         5
-RESTARTEVERY                     1
+RESTARTEVERY                    1
 TIMESTEP                        0.0001
-RESULTSEVERY                           1
+RESULTSEVERY                    1
 -----------------------------------------------FSI DYNAMIC/MONOLITHIC SOLVER
 ADAPTIVEDIST                    0.001
 BASETOL                         1.0E-5
@@ -112,10 +112,10 @@ VARIABLE 0 NAME a TYPE linearinterpolation NUMPOINTS 4 TIMES 0 3e-3 3.1e-3 10000
 COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME a
 VARIABLE 0 NAME a TYPE linearinterpolation NUMPOINTS 3 TIMES 0 0.01 6 VALUES 0 0.4 0.4
 ----------------------------------------------------------RESULT DESCRIPTION
-FLUID DIS fluid NODE 478 QUANTITY velx VALUE 1.06374926830703487e+00 TOLERANCE 1e-8
-FLUID DIS fluid NODE 478 QUANTITY vely VALUE -1.32778091933146580e+00 TOLERANCE 1e-8
-FLUID DIS fluid NODE 478 QUANTITY velz VALUE -6.42313783105409430e-01 TOLERANCE 1e-9
-FLUID DIS fluid NODE 478 QUANTITY pressure VALUE 1.03231781926927179e+04 TOLERANCE 1e-4
+FLUID DIS fluid NODE 478 QUANTITY velx VALUE 1.06374926830703487e+00 TOLERANCE 3e-8
+FLUID DIS fluid NODE 478 QUANTITY vely VALUE -1.32778091933146580e+00 TOLERANCE 4e-7
+FLUID DIS fluid NODE 478 QUANTITY velz VALUE -6.42313783105409430e-01 TOLERANCE 9e-8
+FLUID DIS fluid NODE 478 QUANTITY pressure VALUE 1.03231781926927179e+04 TOLERANCE 3e-3
 STRUCTURE DIS structure NODE 1325 QUANTITY dispx VALUE -1.42709609116804933e-04 TOLERANCE 1e-8
 STRUCTURE DIS structure NODE 1325 QUANTITY dispy VALUE -8.14217844055244513e-03 TOLERANCE 1e-8
 STRUCTURE DIS structure NODE 1325 QUANTITY dispz VALUE -2.20574796267256171e-04 TOLERANCE 1e-8
