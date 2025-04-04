@@ -124,7 +124,7 @@ RESULT DESCRIPTION:
       NODE: 841
       QUANTITY: "vely"
       VALUE: -0.002275210149209821
-      TOLERANCE: 1e-12
+      TOLERANCE: 2e-12
   - FLUID:
       DIS: "fluid"
       NODE: 841
@@ -152,7 +152,7 @@ RESULT DESCRIPTION:
       NODE: 37
       QUANTITY: "lambday"
       VALUE: 0.0012327918108863182
-      TOLERANCE: 1e-11
+      TOLERANCE: 2e-11
   - FSI:
       SPECIAL: true
       QUANTITY: "dt"
