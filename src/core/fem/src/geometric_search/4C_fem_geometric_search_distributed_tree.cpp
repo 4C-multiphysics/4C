@@ -39,45 +39,32 @@ namespace Core::GeometricSearch
     int myrank = Core::Communication::my_mpi_rank(comm);
 
     using memory_space = Kokkos::HostSpace;
-    using indexer_type = PrimitiveIndexableGetter;
     Kokkos::DefaultExecutionSpace execution_space{};
 
-    std::vector<BoundingVolume> indexes(primitives.size());
-    int id = 0;
-    for (const auto& primitive : primitives)
-    {
-      indexes[id] = primitive.second;
-      id++;
-    }
-
     // Build tree structure containing all primitives.
-    PrimitiveIndexableGetter indexable{indexes};
-    ArborX::DistributedTree<memory_space, size_t, indexer_type> distributed_tree{
-        comm, execution_space, indexes, indexable};
+    ArborX::DistributedTree distributed_tree{comm, execution_space,
+        ArborX::Experimental::attach_indices(
+            BoundingVolumeVectorPlaceholder<PrimitivesTag>{primitives})};
 
     // TODO: Check for better data structure in Kokkos (something like a tuple)
     Kokkos::View<Kokkos::pair<int, Kokkos::pair<int, int>>*, memory_space> indices_ranks_full(
         "indices_ranks_full", 0);
     Kokkos::View<int*, memory_space> offset_full("offset_full", 0);
 
-    // The currently used ArborX version only supports tree structures for points and
-    // axis-aligned-boundary-boxes (AABB). We convert the k-DOPs to AABB in the creation of the
-    // tree. Therefore, the standard query would only give the intersections of the AABB of the
-    // primitives with the predicates. With this callback we perform the query in the sense, that
-    // we check each k-DOP of the primitives with each k-DOP of the predicates. This can lead to a
-    // drastic reduction of the found pairs.
-    auto IntersectActualVolumeType =
-        KOKKOS_LAMBDA(const auto predicate, const int primitive_index, const auto& out)->void
+    // We want the indices of the colliding pairs, thus we have to use this callback to extract the
+    // attached primitive index and give it to the output functor.
+    auto get_indices_callback =
+        KOKKOS_LAMBDA(const auto predicate, const auto& value, const auto& out)->void
     {
+      const int primitive_index = value.index;
       const auto& primitive_vector_entry = primitives[primitive_index];
-      const auto& primitive_geometry = primitive_vector_entry.second.bounding_volume_;
-      if (predicate(primitive_geometry))
-        out({primitive_index, {primitive_vector_entry.first, myrank}});
+      out({primitive_index, {primitive_vector_entry.first, myrank}});
     };
 
     // Perform the collision check.
-    distributed_tree.query(
-        execution_space, predicates, IntersectActualVolumeType, indices_ranks_full, offset_full);
+    distributed_tree.query(Kokkos::DefaultExecutionSpace{},
+        BoundingVolumeVectorPlaceholder<PredicatesTag>{predicates}, get_indices_callback,
+        indices_ranks_full, offset_full);
 
     // Create the vector with the pairs.
     std::vector<GlobalCollisionSearchResult> pairs;
