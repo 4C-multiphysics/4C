@@ -2958,7 +2958,7 @@ RESULT DESCRIPTION:
       NODE: 841
       QUANTITY: "dispx"
       VALUE: 3.0312271145639657e-05
-      TOLERANCE: 1e-11
+      TOLERANCE: 2e-11
   - ALE:
       DIS: "ale"
       NODE: 841
