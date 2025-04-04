@@ -14,7 +14,7 @@
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_four_tensor_generators.hpp"
-#include "4C_linalg_utils_densematrix_exp_log.hpp"
+#include "4C_linalg_utils_densematrix_funct.hpp"
 #include "4C_mat_elast_couptransverselyisotropic.hpp"
 #include "4C_mat_elasthyper_service.hpp"
 #include "4C_mat_electrode.hpp"
@@ -1911,7 +1911,11 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantities(
   if (!parameter()->bool_log_substepping())
   {
     temp3x3.update(-dt, state_quantities.curr_lpM_, 0.0);
-    state_quantities.curr_EpM_ = Core::LinAlg::matrix_exp(temp3x3);
+    Core::LinAlg::MatrixFunctErrorType exp_err_status{
+        Core::LinAlg::MatrixFunctErrorType::no_errors};
+    state_quantities.curr_EpM_ = Core::LinAlg::matrix_exp(temp3x3, exp_err_status);
+    FOUR_C_ASSERT_ALWAYS(exp_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
+        "Matrix exponential evaluation failed!");
   }
 
   return state_quantities;
@@ -2290,7 +2294,13 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::evaluate_state_quantity_deriv
     // compute derivative of exponential ...
 
     // ... w.r.t. its argument
-    Core::LinAlg::Matrix<9, 9> expderivV = Core::LinAlg::matrix_3x3_exp_1st_deriv(min_dt_lpM);
+    Core::LinAlg::MatrixFunctErrorType exp_deriv_err_status{
+        Core::LinAlg::MatrixFunctErrorType::no_errors};
+    Core::LinAlg::Matrix<9, 9> expderivV =
+        Core::LinAlg::matrix_3x3_exp_1st_deriv(min_dt_lpM, exp_deriv_err_status);
+    FOUR_C_ASSERT_ALWAYS(exp_deriv_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
+        "Matrix exponential derivative evaluation failed!");
+
 
     // ... w.r.t. inverse inelastic defgrad
     state_quantity_derivatives.curr_dEpdiFin_.multiply_nn(
@@ -2682,7 +2692,11 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::calculate_local_newton_loop_r
     last_FinM.invert(last_iFinM);
     Core::LinAlg::Matrix<3, 3> T(Core::LinAlg::Initialization::zero);
     T.multiply_nn(1.0, last_FinM, iFinM, 0.0);
-    Core::LinAlg::Matrix<3, 3> logT = Core::LinAlg::matrix_log(T);
+    Core::LinAlg::MatrixFunctErrorType log_err_status{
+        Core::LinAlg::MatrixFunctErrorType::no_errors};
+    Core::LinAlg::Matrix<3, 3> logT = Core::LinAlg::matrix_log(T, log_err_status);
+    FOUR_C_ASSERT_ALWAYS(log_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
+        "Matrix logarithm evaluation failed!");
 
     // calculate residual of the equation for inelastic defgrad
     resFM.update(1.0, logT, dt, state_quantities_.curr_lpM_, 0.0);
@@ -2784,7 +2798,12 @@ Core::LinAlg::Matrix<10, 10> Mat::InelasticDefgradTransvIsotropElastViscoplast::
     last_FinM.invert(last_iFinM);
     Core::LinAlg::Matrix<3, 3> T(Core::LinAlg::Initialization::zero);
     T.multiply_nn(1.0, last_FinM, iFinM, 0.0);
-    Core::LinAlg::Matrix<9, 9> dlogTdT = Core::LinAlg::matrix_3x3_log_1st_deriv(T);
+    Core::LinAlg::MatrixFunctErrorType log_deriv_err_status{
+        Core::LinAlg::MatrixFunctErrorType::no_errors};
+    Core::LinAlg::Matrix<9, 9> dlogTdT =
+        Core::LinAlg::matrix_3x3_log_1st_deriv(T, log_deriv_err_status);
+    FOUR_C_ASSERT_ALWAYS(log_deriv_err_status == Core::LinAlg::MatrixFunctErrorType::no_errors,
+        "Matrix logarithm derivative evaluation failed!");
     Core::LinAlg::Matrix<9, 9> dTdiFin(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Tensor::add_non_symmetric_product(
         1.0, last_FinM, const_non_mat_tensors.id3x3_, dTdiFin);
