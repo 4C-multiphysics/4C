@@ -252,7 +252,16 @@ class All_Of(Collection):
 
     def __post_init__(self):
         super().__post_init__()
+        self._condense_all_ofs()
         _check_for_multiple_one_ofs(self)
+
+    def _condense_all_ofs(self):
+        """All_of in All_of can be condensed into a single All_of."""
+        if self.all_ofs():
+            all_ofs = self.all_ofs(pop=True)
+            for ao in all_ofs:
+                ao._condense_all_ofs()
+            self.specs.extend(ao.specs)
 
 
 @dataclass
