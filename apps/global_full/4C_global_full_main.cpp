@@ -350,8 +350,6 @@ int main(int argc, char* argv[])
     {
       std::filesystem::path inputfile_name = argv[2];
       std::filesystem::path outputfile_name;
-      Core::IO::InputFile input_file = Global::set_up_input_file(lcomm);
-      input_file.read(inputfile_name);
       if (argc == 3)
       {
         outputfile_name = inputfile_name.replace_extension("4C.yaml");
@@ -368,6 +366,8 @@ int main(int argc, char* argv[])
       {
         outputfile_name = argv[3];
       }
+      Core::IO::InputFile input_file = Global::set_up_input_file(lcomm);
+      input_file.read(inputfile_name);
       std::ofstream output_file(outputfile_name);
       input_file.write_as_yaml(output_file);
       printf("The input file has been converted to yaml format");
