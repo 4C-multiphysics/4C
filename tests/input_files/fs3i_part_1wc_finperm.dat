@@ -41,10 +41,10 @@ THETA                           0.66
 TIMEINTEGR                      One_Step_Theta
 TIMESTEP                        1.0
 -------------------------FLUID DYNAMIC/NONLINEAR SOLVER TOLERANCES
-TOL_VEL_RES	  1e-05
-TOL_VEL_INC	  1e-05
-TOL_PRES_RES	  1e-05
-TOL_PRES_INC	  1e-05
+TOL_VEL_RES	                    1e-05
+TOL_VEL_INC	                    1e-05
+TOL_PRES_RES	                  1e-05
+TOL_PRES_INC	                  1e-05
 ------------------------FLUID DYNAMIC/RESIDUAL-BASED STABILIZATION
 CROSS-STRESS                    no_cross
 GRAD_DIV                        yes
@@ -63,10 +63,10 @@ VSTAB                           no_vstab
 COUPALGO                        iter_monolithicstructuresplit
 MAXTIME                         10000.0
 NUMSTEP                         10
-RESTARTEVERY                     100
+RESTARTEVERY                    100
 SECONDORDER                     yes
 TIMESTEP                        25.0
-RESULTSEVERY                     1
+RESULTSEVERY                    1
 -------------------------------------FSI DYNAMIC/MONOLITHIC SOLVER
 BASETOL                         1.0e-10
 CONVTOL                         1.0e-10
@@ -91,7 +91,7 @@ THERM_TEMPERATURE               No
 THERM_TEMPGRAD                  None
 VERBOSITY                       standard
 -------------------------------------------------------PROBLEM TYPE
-PROBLEMTYPE                      Gas_Fluid_Structure_Interaction
+PROBLEMTYPE                     Gas_Fluid_Structure_Interaction
 RESTART                         0
 //!RESTART                      10
 SHAPEFCT                        Polynomial
@@ -99,8 +99,8 @@ SHAPEFCT                        Polynomial
 MAXTIME                         10000.0
 TIMESTEP                        12.5
 NUMSTEP                         20
-RESTARTEVERY                     10
-RESULTSEVERY                           1
+RESTARTEVERY                    10
+RESULTSEVERY                    1
 INF_PERM                        No
 SCATRA_SOLVERTYPE               linear
 COUPLED_LINEAR_SOLVER           2
@@ -126,13 +126,13 @@ INITIALFIELD                    field_by_function
 MAXTIME                         10000
 NUMSTEP                         10
 OUTPUT_GMSH                     No
-RESTARTEVERY                     1
+RESTARTEVERY                    1
 SKIPINITDER                     yes
 SOLVERTYPE                      linear_incremental
 THETA                           0.66
 TIMEINTEGR                      One_Step_Theta
 TIMESTEP                        25.0
-RESULTSEVERY                           1
+RESULTSEVERY                    1
 VELFUNCNO                       -1
 VELOCITYFIELD                   Navier_Stokes
 LINEAR_SOLVER                   1
@@ -155,7 +155,7 @@ SUGRVEL                         no
 -------------------------------------------------STRUCTURAL DYNAMIC
 DAMPING                         None
 DIVERCONT                       stop
-DYNAMICTYPE                      OneStepTheta
+DYNAMICTYPE                     OneStepTheta
 ITERNORM                        L2
 K_DAMP                          0.5
 LOADLIN                         no
@@ -173,8 +173,8 @@ NORM_PRES                       Abs
 NORM_RESF                       Abs
 NUMSTEP                         2000
 PREDICT                         ConstDisVelAcc
-RESULTSEVERY                     1
-RESTARTEVERY                     1
+RESULTSEVERY                    1
+RESTARTEVERY                    1
 TIMESTEP                        1.0
 TOLCONSTR                       1e-05
 TOLDISP                         1e-05
@@ -2687,5 +2687,5 @@ NODE 924 COORD 5.0000000000000000e+01 2.5000000000000000e+00 1.0000000000000000e
 400 FLUID HEX8 887 889 890 888 921 923 924 922 MAT 1 NA ALE
 ------------------------------------------------RESULT DESCRIPTION
 SCATRA DIS scatra2 NODE 206 QUANTITY phi VALUE  8.18393287524511348e-01 TOLERANCE 3e-9
-SCATRA DIS scatra1 NODE 910 QUANTITY phi VALUE  4.50097394860943245e-01 TOLERANCE 1e-9
+SCATRA DIS scatra1 NODE 910 QUANTITY phi VALUE  4.50097394860943245e-01 TOLERANCE 3e-9
 FLUID DIS fluid NODE 910 QUANTITY velx VALUE  9.79854964747224472e-02 TOLERANCE 1e-9
