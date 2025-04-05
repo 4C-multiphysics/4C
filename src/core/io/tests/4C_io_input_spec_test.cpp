@@ -491,8 +491,8 @@ required: true
       std::string stream("a 1 group c string d 2.0 b 3.0");
       ValueParser parser(stream);
       // More than one of the one_of entries is present. Refuse to parse any of them.
-      FOUR_C_EXPECT_THROW_WITH_MESSAGE(spec.fully_parse(parser, container), Core::Exception,
-          "still contains 'group c string d 2.0 b 3.0'");
+      FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+          spec.fully_parse(parser, container), Core::Exception, "still contains 'b 3.0'");
     }
 
     {
@@ -502,7 +502,7 @@ required: true
       // The result is that the parts of the group remain unparsed.
       ValueParser parser(stream);
       FOUR_C_EXPECT_THROW_WITH_MESSAGE(
-          spec.fully_parse(parser, container), Core::Exception, "still contains 'group c string'");
+          spec.fully_parse(parser, container), Core::Exception, "None of the specs fit the input.");
     }
 
     {
@@ -510,7 +510,7 @@ required: true
       std::string stream("a 1");
       ValueParser parser(stream);
       FOUR_C_EXPECT_THROW_WITH_MESSAGE(
-          spec.fully_parse(parser, container), Core::Exception, "Required 'one_of {b, group}'");
+          spec.fully_parse(parser, container), Core::Exception, "None of the specs fit the input.");
     }
   }
 
@@ -705,9 +705,9 @@ specs:
             {.default_value = std::vector<std::optional<double>>{1., std::nullopt, 3.}, .size = 3}),
         one_of({
             all_of({
-                parameter<std::map<std::string, std::string>>(
-                    "b", {.default_value = std::map<std::string, std::string>{{"key", "abc"}},
-                             .size = 1}),
+                parameter<std::map<std::string, std::string>>("string to string",
+                    {.default_value = std::map<std::string, std::string>{{"key", "abc"}},
+                        .size = 1}),
                 parameter<std::string>("c"),
             }),
             parameter<std::vector<std::vector<std::vector<int>>>>(
@@ -750,40 +750,112 @@ specs:
       spec.emit_metadata(yaml);
       out << tree;
 
-      std::string expected = R"(type: all_of
-description: 'all_of {a, b, one_of {all_of {b, c}, triple_vector, group}, e, eo, group2, list, selection_group}'
-required: true
+      std::string expected = R"(type: one_of
+description: 'one_of {all_of {a, b, string to string, c, e, eo, group2, list, selection_group}, all_of {a, b, triple_vector, e, eo, group2, list, selection_group}, all_of {a, b, group, e, eo, group2, list, selection_group}}'
 specs:
-  - name: a
-    type: int
-    required: false
-    default: 42
-  - name: b
-    type: vector
-    size: 3
-    value_type:
-      noneable: true
-      type: double
-    required: false
-    default: [1,null,3]
-  - type: one_of
-    description: 'one_of {all_of {b, c}, triple_vector, group}'
+  - type: all_of
+    description: 'all_of {a, b, string to string, c, e, eo, group2, list, selection_group}'
+    required: true
     specs:
-      - type: all_of
-        description: 'all_of {b, c}'
+      - name: a
+        type: int
+        required: false
+        default: 42
+      - name: b
+        type: vector
+        size: 3
+        value_type:
+          noneable: true
+          type: double
+        required: false
+        default: [1,null,3]
+      - name: string to string
+        type: map
+        size: 1
+        value_type:
+          type: string
+        required: false
+        default:
+          key: "abc"
+      - name: c
+        type: string
         required: true
+      - name: e
+        type: enum
+        choices:
+          - name: A
+          - name: B
+          - name: C
+        required: false
+        default: A
+      - name: eo
+        noneable: true
+        type: enum
+        choices:
+          - name: A
+          - name: B
+          - name: C
+        required: false
+        default: null
+      - name: group2
+        type: group
+        required: false
+        defaultable: false
         specs:
-          - name: b
-            type: map
-            size: 1
-            value_type:
-              type: string
-            required: false
-            default:
-              key: "abc"
-          - name: c
-            type: string
+          - name: g
+            type: int
             required: true
+      - name: list
+        type: list
+        required: true
+        size: 2
+        spec:
+          type: all_of
+          description: 'all_of {l1, l2}'
+          required: true
+          specs:
+            - name: l1
+              type: int
+              required: true
+            - name: l2
+              type: double
+              required: true
+      - name: selection_group
+        type: selection
+        required: true
+        selector: type
+        choices:
+          - name: A
+            spec:
+              name: a
+              type: int
+              required: true
+          - name: B
+            spec:
+              name: b
+              type: int
+              required: true
+          - name: C
+            spec:
+              name: c
+              type: int
+              required: true
+  - type: all_of
+    description: 'all_of {a, b, triple_vector, e, eo, group2, list, selection_group}'
+    required: true
+    specs:
+      - name: a
+        type: int
+        required: false
+        default: 42
+      - name: b
+        type: vector
+        size: 3
+        value_type:
+          noneable: true
+          type: double
+        required: false
+        default: [1,null,3]
       - name: triple_vector
         type: vector
         value_type:
@@ -794,6 +866,82 @@ specs:
             value_type:
               type: int
         required: true
+      - name: e
+        type: enum
+        choices:
+          - name: A
+          - name: B
+          - name: C
+        required: false
+        default: A
+      - name: eo
+        noneable: true
+        type: enum
+        choices:
+          - name: A
+          - name: B
+          - name: C
+        required: false
+        default: null
+      - name: group2
+        type: group
+        required: false
+        defaultable: false
+        specs:
+          - name: g
+            type: int
+            required: true
+      - name: list
+        type: list
+        required: true
+        size: 2
+        spec:
+          type: all_of
+          description: 'all_of {l1, l2}'
+          required: true
+          specs:
+            - name: l1
+              type: int
+              required: true
+            - name: l2
+              type: double
+              required: true
+      - name: selection_group
+        type: selection
+        required: true
+        selector: type
+        choices:
+          - name: A
+            spec:
+              name: a
+              type: int
+              required: true
+          - name: B
+            spec:
+              name: b
+              type: int
+              required: true
+          - name: C
+            spec:
+              name: c
+              type: int
+              required: true
+  - type: all_of
+    description: 'all_of {a, b, group, e, eo, group2, list, selection_group}'
+    required: true
+    specs:
+      - name: a
+        type: int
+        required: false
+        default: 42
+      - name: b
+        type: vector
+        size: 3
+        value_type:
+          noneable: true
+          type: double
+        required: false
+        default: [1,null,3]
       - name: group
         type: group
         description: A group
@@ -807,66 +955,66 @@ specs:
           - name: d
             type: double
             required: true
-  - name: e
-    type: enum
-    choices:
-      - name: A
-      - name: B
-      - name: C
-    required: false
-    default: A
-  - name: eo
-    noneable: true
-    type: enum
-    choices:
-      - name: A
-      - name: B
-      - name: C
-    required: false
-    default: null
-  - name: group2
-    type: group
-    required: false
-    defaultable: false
-    specs:
-      - name: g
-        type: int
+      - name: e
+        type: enum
+        choices:
+          - name: A
+          - name: B
+          - name: C
+        required: false
+        default: A
+      - name: eo
+        noneable: true
+        type: enum
+        choices:
+          - name: A
+          - name: B
+          - name: C
+        required: false
+        default: null
+      - name: group2
+        type: group
+        required: false
+        defaultable: false
+        specs:
+          - name: g
+            type: int
+            required: true
+      - name: list
+        type: list
         required: true
-  - name: list
-    type: list
-    required: true
-    size: 2
-    spec:
-      type: all_of
-      description: 'all_of {l1, l2}'
-      required: true
-      specs:
-        - name: l1
-          type: int
-          required: true
-        - name: l2
-          type: double
-          required: true
-  - name: selection_group
-    type: selection
-    required: true
-    selector: type
-    choices:
-      - name: A
+        size: 2
         spec:
-          name: a
-          type: int
+          type: all_of
+          description: 'all_of {l1, l2}'
           required: true
-      - name: B
-        spec:
-          name: b
-          type: int
-          required: true
-      - name: C
-        spec:
-          name: c
-          type: int
-          required: true
+          specs:
+            - name: l1
+              type: int
+              required: true
+            - name: l2
+              type: double
+              required: true
+      - name: selection_group
+        type: selection
+        required: true
+        selector: type
+        choices:
+          - name: A
+            spec:
+              name: a
+              type: int
+              required: true
+          - name: B
+            spec:
+              name: b
+              type: int
+              required: true
+          - name: C
+            spec:
+              name: c
+              type: int
+              required: true
 )";
       EXPECT_EQ(out.str(), expected);
       std::cout << out.str() << std::endl;
@@ -1572,11 +1720,11 @@ v:
     }
 
     {
-      SCOPED_TRACE("Wrong size from_parameter not validated in yaml.");
+      SCOPED_TRACE("Wrong size from_parameter");
       ryml::Tree tree = init_yaml_tree_with_exceptions();
       ryml::parse_in_arena(R"(num: 2
 v:
-  - key1: [1, 2, 3] # inner most vector is too long but we do not check for this in yaml
+  - key1: [1, 2, 3]
     key2: [3, 4]
   - key1: [5, 6])",
           &tree);
@@ -1584,7 +1732,7 @@ v:
       ConstYamlNodeRef node(root, "");
 
       InputParameterContainer container;
-      spec.match(node, container);
+      EXPECT_THROW(spec.match(node, container), Core::Exception);
     }
 
     {

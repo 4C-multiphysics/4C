@@ -1229,6 +1229,51 @@ namespace
     return flattened_specs;
   }
 
+  // Convert an InputSpec of the form all_of(x,y, one_of(a,b,c))
+  // into one_of(all_of(x,y,a), all_of(x,y,b), all_of(x,y,c)).
+  std::vector<Core::IO::InputSpec> push_all_of_into_one_of(std::vector<Core::IO::InputSpec> specs)
+  {
+    // Find the one_of spec and pull it out of the list. Assert that it is only one.
+    auto one_of_it = std::ranges::find_if(
+        specs, [](const auto& spec) { return spec.impl().data.type == InputSpecType::one_of; });
+
+    if (one_of_it == specs.end())
+    {
+      // No one_of spec found, nothing to do.
+      return specs;
+    }
+
+    // Check that there is no other one_of spec in the list.
+    if (std::find_if(one_of_it + 1, specs.end(), [](const auto& spec)
+            { return spec.impl().data.type == InputSpecType::one_of; }) != specs.end())
+    {
+      FOUR_C_THROW("Cannot have multiple one_of specs in the same all_of spec.");
+    }
+    using namespace InputSpecBuilders;
+    // Take the choices from the one_of spec and enhance them with the other specs that we got
+    // passed in this function.
+    auto& one_of_spec = *one_of_it;
+    const auto& old_one_of_choices =
+        dynamic_cast<InputSpecTypeErasedImplementation<OneOfSpec>&>(one_of_spec.impl())
+            .wrapped.specs;
+    // specs now only contains the other specs that are not one_ofs. These are pulled into the
+    // one_of specs.
+    std::vector<Core::IO::InputSpec> new_one_of_choices;
+    for (const auto& choice : old_one_of_choices)
+    {
+      // Make sure to keep the ordering.
+      std::vector<Core::IO::InputSpec> new_choice_specs(specs.begin(), one_of_it);
+      new_choice_specs.emplace_back(choice);
+      new_choice_specs.insert(new_choice_specs.end(), one_of_it + 1, specs.end());
+
+      new_one_of_choices.emplace_back(all_of(std::move(new_choice_specs)));
+    }
+
+    return {one_of(new_one_of_choices,
+        dynamic_cast<InputSpecTypeErasedImplementation<OneOfSpec>&>(one_of_spec.impl())
+            .wrapped.on_parse_callback)};
+  }
+
   std::size_t count_contained_specs(const std::vector<Core::IO::InputSpec>& specs)
   {
     return std::accumulate(specs.begin(), specs.end(), 0u,
@@ -1279,6 +1324,7 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::group(
 Core::IO::InputSpec Core::IO::InputSpecBuilders::all_of(std::vector<InputSpec> specs)
 {
   auto flattened_specs = flatten_nested<Internal::AllOfSpec>(std::move(specs));
+  flattened_specs = push_all_of_into_one_of(std::move(flattened_specs));
 
   if (flattened_specs.size() == 1)
   {

@@ -1550,9 +1550,7 @@ bool Core::IO::Internal::ParameterSpec<T>::has_correct_size(
       int operator()(int size) const { return size; }
       int operator()(const InputSpecBuilders::SizeCallback& callback) const
       {
-        // For yaml, we do not validate the size based on the callback. This feature can be removed
-        // once we remove dat.
-        return InputSpecBuilders::dynamic_size;
+        return callback(container);
       }
       const InputParameterContainer& container;
     };
