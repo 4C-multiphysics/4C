@@ -140,7 +140,7 @@ void Cut::ElementHandle::append_volume_cell_gauss_points_tessellation(
     Cut::IntegrationCell* ic = *i;
 
     std::shared_ptr<Core::FE::GaussPoints> gp_ic =
-        Core::FE::GaussPointCache::instance().create(ic->shape(), ic->cubature_degree(ic->shape()));
+        Core::FE::create_gauss_points(ic->shape(), ic->cubature_degree(ic->shape()));
     const std::vector<Cut::Point*>& cpoints = ic->points();
 
     switch (ic->shape())
@@ -286,8 +286,8 @@ std::shared_ptr<Core::FE::GaussPointsComposite> Cut::ElementHandle::gauss_points
       {
         Cut::IntegrationCell* ic = *i;
 
-        std::shared_ptr<Core::FE::GaussPoints> gp_ic = Core::FE::GaussPointCache::instance().create(
-            ic->shape(), ic->cubature_degree(ic->shape()));
+        std::shared_ptr<Core::FE::GaussPoints> gp_ic =
+            Core::FE::create_gauss_points(ic->shape(), ic->cubature_degree(ic->shape()));
         const std::vector<Cut::Point*>& cpoints = ic->points();
 
         switch (ic->shape())
