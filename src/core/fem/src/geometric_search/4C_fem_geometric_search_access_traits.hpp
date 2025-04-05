@@ -15,48 +15,53 @@
 #ifdef FOUR_C_WITH_ARBORX
 #include <ArborX.hpp>
 
-namespace ArborX
+FOUR_C_NAMESPACE_OPEN
+
+namespace Core::GeometricSearch
 {
-  using namespace FourC;
-
-  template <>
-  struct AccessTraits<std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>>,
-      PrimitivesTag>
+  struct PrimitivesTag
   {
-    using memory_space = Kokkos::HostSpace;
-
-    static std::size_t size(
-        const std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>>& vector)
-    {
-      return vector.size();
-    }
-
-    static auto get(
-        const std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>>& vector,
-        std::size_t i)
-    {
-      return ArborX::Box{vector[i].second.bounding_volume_};
-    }
   };
 
-  template <>
-  struct AccessTraits<std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>>,
-      PredicatesTag>
+  struct PredicatesTag
+  {
+  };
+
+  template <typename Tag>
+  struct BoundingVolumeVectorPlaceholder
+  {
+    const std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>>& bounding_volumes_;
+  };
+}  // namespace Core::GeometricSearch
+
+FOUR_C_NAMESPACE_CLOSE
+
+
+namespace ArborX
+{
+  using namespace FourC::Core::GeometricSearch;
+
+  template <typename Tag>
+  struct AccessTraits<BoundingVolumeVectorPlaceholder<Tag>>
   {
     using memory_space = Kokkos::HostSpace;
+    using size_type = typename Kokkos::HostSpace::size_type;
 
-    static std::size_t size(
-        const std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>>& vector)
+    static KOKKOS_FUNCTION size_type size(const BoundingVolumeVectorPlaceholder<Tag>& placeholder)
     {
-      return vector.size();
+      return placeholder.bounding_volumes_.size();
     }
 
-    static auto get(
-        const std::vector<std::pair<int, Core::GeometricSearch::BoundingVolume>>& vector,
-        std::size_t i)
+    static KOKKOS_FUNCTION auto get(
+        const BoundingVolumeVectorPlaceholder<PrimitivesTag>& placeholder, size_type i)
     {
-      auto const& vector_entry = vector[i];
-      return intersects(vector_entry.second.bounding_volume_);
+      return placeholder.bounding_volumes_[i].second.bounding_volume_;
+    }
+
+    static KOKKOS_FUNCTION auto get(
+        const BoundingVolumeVectorPlaceholder<PredicatesTag>& placeholder, size_type i)
+    {
+      return intersects(placeholder.bounding_volumes_[i].second.bounding_volume_);
     }
   };
 }  // namespace ArborX
