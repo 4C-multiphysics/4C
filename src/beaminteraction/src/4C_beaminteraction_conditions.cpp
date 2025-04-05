@@ -273,8 +273,8 @@ void BeamInteraction::BeamInteractionConditions::clear()
 /**
  *
  */
-std::shared_ptr<BeamInteraction::BeamContactPair>
-BeamInteraction::BeamInteractionConditions::create_contact_pair(
+void BeamInteraction::BeamInteractionConditions::create_contact_pairs(
+    std::vector<std::shared_ptr<BeamInteraction::BeamContactPair>>& created_pairs,
     const std::vector<Core::Elements::Element const*>& ele_ptrs)
 {
   std::shared_ptr<BeamInteraction::BeamContactPair> new_pair;
@@ -283,12 +283,9 @@ BeamInteraction::BeamInteractionConditions::create_contact_pair(
     for (auto& condition : map_pair.second)
     {
       new_pair = condition->create_contact_pair(ele_ptrs);
-      if (new_pair != nullptr) return new_pair;
+      if (new_pair != nullptr) created_pairs.push_back(new_pair);
     }
   }
-
-  // Default return value, i.e. the pair was not found in any of the conditions.
-  return nullptr;
 }
 
 /**

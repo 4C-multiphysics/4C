@@ -999,16 +999,16 @@ void BeamInteraction::SUBMODELEVALUATOR::BeamContact::create_beam_contact_elemen
       ele_ptrs[1] = *secondeleiter;
 
       // construct, init and setup contact pairs
-      std::shared_ptr<BeamInteraction::BeamContactPair> newbeaminteractionpair =
+      std::vector<std::shared_ptr<BeamInteraction::BeamContactPair>> newbeaminteractionpairs =
           BeamInteraction::BeamContactPair::create(ele_ptrs, *beam_interaction_conditions_ptr_);
 
-      if (newbeaminteractionpair != nullptr)
+      for (auto& pair : newbeaminteractionpairs)
       {
-        newbeaminteractionpair->init(beam_contact_params_ptr_, ele_ptrs);
-        newbeaminteractionpair->setup();
+        pair->init(beam_contact_params_ptr_, ele_ptrs);
+        pair->setup();
 
         // add to list of current contact pairs
-        contact_elepairs_.push_back(newbeaminteractionpair);
+        contact_elepairs_.push_back(pair);
       }
     }
   }

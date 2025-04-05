@@ -198,13 +198,14 @@ namespace BeamInteraction
     /**
      * \brief Create the correct pair for the given element pointers.
      *
-     * We assume, that each beam interaction pair can only be in one beam interaction condition.
+     * We assume, that each beam interaction condition can only have one interaction pair.
      * This function checks which interaction condition contains both elements of this pair and
      * creates the correct pair.
      *
      * @param ele_ptrs (in) Pointer to the two elements contained in the pair.
      */
-    std::shared_ptr<BeamInteraction::BeamContactPair> create_contact_pair(
+    void create_contact_pairs(
+        std::vector<std::shared_ptr<BeamInteraction::BeamContactPair>>& created_pairs,
         const std::vector<Core::Elements::Element const*>& ele_ptrs);
 
     /**

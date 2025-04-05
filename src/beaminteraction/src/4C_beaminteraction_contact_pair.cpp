@@ -65,10 +65,13 @@ void BeamInteraction::BeamContactPair::setup()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-std::shared_ptr<BeamInteraction::BeamContactPair> BeamInteraction::BeamContactPair::create(
+std::vector<std::shared_ptr<BeamInteraction::BeamContactPair>>
+BeamInteraction::BeamContactPair::create(
     std::vector<Core::Elements::Element const*> const& ele_ptrs,
     BeamInteraction::BeamInteractionConditions& beam_interaction_conditions_ptr)
 {
+  std::vector<std::shared_ptr<BeamInteraction::BeamContactPair>> created_pairs;
+
   // Check the type of the second element.
   const bool other_is_beam =
       dynamic_cast<Discret::Elements::Beam3Base const*>(ele_ptrs[1]) != nullptr;
@@ -81,7 +84,7 @@ std::shared_ptr<BeamInteraction::BeamContactPair> BeamInteraction::BeamContactPa
   if (other_is_beam or other_is_solid)
   {
     // Beam-to-beam and beam-to-solid pairs are exclusively created by conditions.
-    return beam_interaction_conditions_ptr.create_contact_pair(ele_ptrs);
+    beam_interaction_conditions_ptr.create_contact_pairs(created_pairs, ele_ptrs);
   }
   else if (other_is_sphere)
   {
@@ -103,19 +106,27 @@ std::shared_ptr<BeamInteraction::BeamContactPair> BeamInteraction::BeamContactPa
         {
           case 2:
           {
-            return std::make_shared<BeamInteraction::BeamToSphereContactPair<2, 1>>();
+            created_pairs.push_back(
+                std::make_shared<BeamInteraction::BeamToSphereContactPair<2, 1>>());
+            break;
           }
           case 3:
           {
-            return std::make_shared<BeamInteraction::BeamToSphereContactPair<3, 1>>();
+            created_pairs.push_back(
+                std::make_shared<BeamInteraction::BeamToSphereContactPair<3, 1>>());
+            break;
           }
           case 4:
           {
-            return std::make_shared<BeamInteraction::BeamToSphereContactPair<4, 1>>();
+            created_pairs.push_back(
+                std::make_shared<BeamInteraction::BeamToSphereContactPair<4, 1>>());
+            break;
           }
           case 5:
           {
-            return std::make_shared<BeamInteraction::BeamToSphereContactPair<5, 1>>();
+            created_pairs.push_back(
+                std::make_shared<BeamInteraction::BeamToSphereContactPair<5, 1>>());
+            break;
           }
           default:
           {
@@ -135,7 +146,9 @@ std::shared_ptr<BeamInteraction::BeamContactPair> BeamInteraction::BeamContactPa
         {
           case 2:
           {
-            return std::make_shared<BeamInteraction::BeamToSphereContactPair<2, 2>>();
+            created_pairs.push_back(
+                std::make_shared<BeamInteraction::BeamToSphereContactPair<2, 2>>());
+            break;
           }
           default:
           {
@@ -164,7 +177,7 @@ std::shared_ptr<BeamInteraction::BeamContactPair> BeamInteraction::BeamContactPa
   {
     FOUR_C_THROW("Unknown type of second element in creation of beam contact pair.");
   }
-  return nullptr;
+  return created_pairs;
 }
 
 /*----------------------------------------------------------------------------*

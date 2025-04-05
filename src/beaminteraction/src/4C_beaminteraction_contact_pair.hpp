@@ -95,8 +95,9 @@ namespace BeamInteraction
         Core::LinAlg::SerialDenseMatrix* stiffmat12, Core::LinAlg::SerialDenseMatrix* stiffmat21,
         Core::LinAlg::SerialDenseMatrix* stiffmat22) = 0;
 
-    //! return appropriate internal implementation class (acts as a simple factory)
-    static std::shared_ptr<BeamContactPair> create(
+    //! return appropriate internal implementation class (acts as a simple factory), also works if a
+    //! single pair of elements results in multiple beam contact pairs
+    static std::vector<std::shared_ptr<BeamContactPair>> create(
         std::vector<Core::Elements::Element const*> const& ele_ptrs,
         BeamInteraction::BeamInteractionConditions& beam_interaction_conditions_ptr);
 
