@@ -15,6 +15,7 @@
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_four_tensor_generators.hpp"
 #include "4C_linalg_utils_densematrix_funct.hpp"
+#include "4C_linalg_utils_tensor_interpolation.hpp"
 #include "4C_mat_elast_couptransverselyisotropic.hpp"
 #include "4C_mat_elasthyper_service.hpp"
 #include "4C_mat_electrode.hpp"
@@ -1633,7 +1634,8 @@ Mat::InelasticDefgradTransvIsotropElastViscoplast::InelasticDefgradTransvIsotrop
       potsumel_(std::move(pot_sum_el)),
       potsumel_transviso_(std::move(pot_sum_el_transv_iso)),
       viscoplastic_law_(std::move(viscoplastic_law)),
-      fiber_reader_(std::move(fiber_reader))
+      fiber_reader_(std::move(fiber_reader)),
+      tensor_interpolator_(init_tensor_interpolator())
 {
   // set time step size to 0.0 (this is set to the correct and current value in the preevaluate
   // method)
@@ -2883,6 +2885,10 @@ Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::l
   // many times (false) or if a new substep is possible (true)
   bool new_substep_status = true;
 
+  // declare error status for tensor interpolation
+  Core::LinAlg::TensorInterpolation::TensorInterpErrorType tensor_interpolator_err_status{
+      Core::LinAlg::TensorInterpolation::TensorInterpErrorType::NoErrors};
+
   // substepping procedure
   while (substep_params.substep_counter <= substep_params.total_num_of_substeps)
   {
@@ -2891,7 +2897,12 @@ Core::LinAlg::Matrix<10, 1> Mat::InelasticDefgradTransvIsotropElastViscoplast::l
 
     // get the right Cauchy-Green tensor of the current substep
     curr_CM = tensor_interpolator_.get_interpolated_matrix(ref_matrices_, ref_locs_,
-        (substep_params.t + substep_params.curr_dt) / time_step_settings_.dt_);
+        (substep_params.t + substep_params.curr_dt) / time_step_settings_.dt_,
+        tensor_interpolator_err_status);
+    FOUR_C_ASSERT_ALWAYS(tensor_interpolator_err_status ==
+                             Core::LinAlg::TensorInterpolation::TensorInterpErrorType::NoErrors,
+        "Tensor interpolation failed with err: {}",
+        Core::LinAlg::TensorInterpolation::to_string(tensor_interpolator_err_status));
 
     // Newton-Raphson scheme for the current substep
     while (true)
@@ -3081,10 +3092,17 @@ bool Mat::InelasticDefgradTransvIsotropElastViscoplast::prepare_new_substep(
   sol = wrap_unknowns(time_step_quantities_.last_substep_plastic_defgrd_inverse_[gp_],
       time_step_quantities_.last_substep_plastic_strain_[gp_]);
 
+  // initialize the error status for the tensor interpolation
+  Core::LinAlg::TensorInterpolation::TensorInterpErrorType tensor_interpolator_err_status{
+      Core::LinAlg::TensorInterpolation::TensorInterpErrorType::NoErrors};
 
   // recompute the current right CG
-  curr_CM = tensor_interpolator_.get_interpolated_matrix(
-      ref_matrices_, ref_locs_, (t + curr_dt) / time_step_settings_.dt_);
+  curr_CM = tensor_interpolator_.get_interpolated_matrix(ref_matrices_, ref_locs_,
+      (t + curr_dt) / time_step_settings_.dt_, tensor_interpolator_err_status);
+  FOUR_C_ASSERT_ALWAYS(tensor_interpolator_err_status ==
+                           Core::LinAlg::TensorInterpolation::TensorInterpErrorType::NoErrors,
+      "Tensor interpolation failed with err: {}",
+      Core::LinAlg::TensorInterpolation::to_string(tensor_interpolator_err_status));
 
 
   // reset iteration counter to 0, as we restart the Newton-Raphson Loop
