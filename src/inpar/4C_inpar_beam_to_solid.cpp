@@ -67,9 +67,8 @@ void Inpar::BeamToSolid::set_valid_parameters(std::map<std::string, Core::IO::In
           {.description = "Shape function for the mortar Lagrange-multipliers",
               .default_value = BeamToSolidMortarShapefunctions::none}),
 
-    parameter<bool>("SADDLE_POINT_FORMULATION",
-          {.description = "Enable / disable saddle point formulation.",
-              .default_value = false}),
+      parameter<bool>("SADDLE_POINT_FORMULATION",
+          {.description = "Enable / disable saddle point formulation.", .default_value = false}),
 
 
       parameter<int>("MORTAR_FOURIER_MODES",
