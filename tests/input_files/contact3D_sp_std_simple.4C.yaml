@@ -104,7 +104,7 @@ RESULT DESCRIPTION:
   - STRUCTURE:
       SPECIAL: true
       QUANTITY: "lin_iters_contact"
-      VALUE: 20
+      VALUE: 27
       TOLERANCE: 1e-13
 DESIGN SURF DIRICH CONDITIONS:
   - E: 1
