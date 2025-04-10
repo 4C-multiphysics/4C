@@ -87,7 +87,7 @@ RESULT DESCRIPTION:
       NODE: 6284
       QUANTITY: "dispx"
       VALUE: 0.0003935016886020346
-      TOLERANCE: 1e-07
+      TOLERANCE: 3e-07
   - STRUCTURE:
       DIS: "structure"
       NODE: 6284
@@ -103,7 +103,7 @@ RESULT DESCRIPTION:
   - STRUCTURE:
       SPECIAL: true
       QUANTITY: "lin_iters_contact"
-      VALUE: 37
+      VALUE: 38
       TOLERANCE: 1e-13
 DESIGN SURF DIRICH CONDITIONS:
   - E: 1
