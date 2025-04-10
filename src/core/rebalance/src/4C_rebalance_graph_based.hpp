@@ -16,10 +16,6 @@
 #include "4C_linalg_multi_vector.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
-#include <Teuchos_RCPDecl.hpp>
-
-#include <memory>
-
 FOUR_C_NAMESPACE_OPEN
 
 namespace Core::FE
@@ -55,7 +51,7 @@ namespace Core::Rebalance
   */
   std::pair<std::shared_ptr<Core::LinAlg::Map>, std::shared_ptr<Core::LinAlg::Map>>
   rebalance_node_maps(const Core::LinAlg::Graph& initialGraph,
-      const Teuchos::ParameterList& rebalanceParams,
+      Teuchos::ParameterList rebalanceParams,
       const std::shared_ptr<Core::LinAlg::Vector<double>>& initialNodeWeights = nullptr,
       const std::shared_ptr<Epetra_CrsMatrix>& initialEdgeWeights = nullptr,
       const std::shared_ptr<Core::LinAlg::MultiVector<double>>& initialNodeCoordinates = nullptr);
@@ -79,7 +75,7 @@ namespace Core::Rebalance
   @return std::shared_ptr<Core::LinAlg::Graph>
   */
   std::shared_ptr<Core::LinAlg::Graph> rebalance_graph(const Core::LinAlg::Graph& initialGraph,
-      const Teuchos::ParameterList& rebalanceParams,
+      Teuchos::ParameterList rebalanceParams,
       const std::shared_ptr<Core::LinAlg::Vector<double>>& initialNodeWeights = nullptr,
       const std::shared_ptr<Epetra_CrsMatrix>& initialEdgeWeights = nullptr,
       const std::shared_ptr<Core::LinAlg::MultiVector<double>>& initialNodeCoordinates = nullptr);
@@ -99,7 +95,7 @@ namespace Core::Rebalance
   std::pair<std::shared_ptr<Core::LinAlg::MultiVector<double>>,
       std::shared_ptr<Core::LinAlg::MultiVector<double>>>
   rebalance_coordinates(const Core::LinAlg::MultiVector<double>& initialCoordinates,
-      const Teuchos::ParameterList& rebalanceParams,
+      Teuchos::ParameterList rebalanceParams,
       const Core::LinAlg::MultiVector<double>& initialWeights);
 
   /*!
@@ -118,12 +114,12 @@ namespace Core::Rebalance
   \pre discretization does NOT have to be fill_complete().
 
   @param[in] dis discretization whose node graph will be build
-  @param[in] roweles Element row map of this discretization
+  @param[in] element_row_map Element row map of this discretization
 
   @return Uncompleted node graph of input discretization
   */
   std::shared_ptr<const Core::LinAlg::Graph> build_graph(
-      Core::FE::Discretization& dis, const Core::LinAlg::Map& roweles);
+      Core::FE::Discretization& dis, const Core::LinAlg::Map& element_row_map);
 
   /*!
   \brief Build monolithic node graph of a given discretization
