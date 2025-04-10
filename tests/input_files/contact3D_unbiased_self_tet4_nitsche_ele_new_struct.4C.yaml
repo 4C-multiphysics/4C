@@ -85,7 +85,7 @@ RESULT DESCRIPTION:
   - STRUCTURE:
       SPECIAL: true
       QUANTITY: "num_iter_step_3"
-      VALUE: 10
+      VALUE: 9
       TOLERANCE: 1e-20
 DESIGN POINT DIRICH CONDITIONS:
   - E: 1
