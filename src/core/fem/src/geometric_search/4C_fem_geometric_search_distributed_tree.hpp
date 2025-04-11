@@ -31,8 +31,6 @@ namespace Core::GeometricSearch
     int lid_predicate;
     //! Global ID of the predicate
     int gid_predicate;
-    //! Local ID of the primitives (on the primitives rank)
-    int lid_primitive;
     //! Global ID of the primitives
     int gid_primitive;
     //! Processor ID owning the primitive

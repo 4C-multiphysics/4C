@@ -891,24 +891,25 @@ void BeamInteraction::SUBMODELEVALUATOR::BeamContact::find_and_store_neighboring
     }
 
     // Get colliding pairs.
-    const auto& [indices, offsets] = collision_search(other_bounding_boxes, beam_bounding_boxes,
+    const auto& collision_pairs = collision_search(other_bounding_boxes, beam_bounding_boxes,
         discret().get_comm(), geometric_search_params_ptr_->verbosity_);
 
     // Create the beam-to-xxx pair pointers according to the search.
-    for (size_t i_beam = 0; i_beam < beam_bounding_boxes.size(); i_beam++)
+    for (const auto& pair : collision_pairs)
     {
-      const int beam_gid = beam_bounding_boxes[i_beam].first;
-      Core::Elements::Element* currele = discret().g_element(beam_gid);
-      std::set<Core::Elements::Element*> neighboring_elements;
-      for (int j = offsets[i_beam]; j < offsets[i_beam + 1]; j++)
+      const int beam_gid = pair.gid_predicate;
+      if (nearby_elements_map_.contains(beam_gid))
       {
-        neighboring_elements.insert(discret().g_element(other_bounding_boxes[indices[j]].first));
+        nearby_elements_map_[beam_gid] = {};
       }
+      nearby_elements_map_[beam_gid].insert(discret().g_element(pair.gid_primitive));
+    }
 
-      // sort out elements that should not be considered in contact evaluation
+    // Pre-filter some pairs
+    for (auto& [beam_gid, neighboring_elements] : nearby_elements_map_)
+    {
+      Core::Elements::Element* currele = discret().g_element(beam_gid);
       select_eles_to_be_considered_for_contact_evaluation(currele, neighboring_elements);
-
-      nearby_elements_map_[beam_gid] = neighboring_elements;
     }
 
     // Check if the primitives and predicates should be output

@@ -20,6 +20,16 @@ namespace Core::GeometricSearch
 {
   struct BoundingVolume;
 
+  /*! \brief Structure to hold the resulting pairings that are found during a collision search
+   */
+  struct CollisionSearchResult
+  {
+    //! Global ID of the predicate
+    int gid_predicate;
+    //! Global ID of the primitives
+    int gid_primitive;
+  };
+
   /*! \brief Finds all primitives meeting the predicates and record results in {indices, offsets}.
    *
    * (From ArborX documentation)
@@ -35,10 +45,9 @@ namespace Core::GeometricSearch
    * @param predicates Bounding volumes to intersect with
    * @param comm Communicator object of the discretization
    * @param verbosity Enabling printout of the geometric search information
-   * @return {indices, offsets} stores indices of the objects that satisfy the predicates and
-   *          offsets stores the locations in the indices view that start a predicate
+   * @return pairs Vector of the found interaction pairs
    */
-  std::pair<std::vector<int>, std::vector<int>> collision_search(
+  std::vector<CollisionSearchResult> collision_search(
       const std::vector<std::pair<int, BoundingVolume>>& primitives,
       const std::vector<std::pair<int, BoundingVolume>>& predicates, MPI_Comm comm,
       const Core::IO::Verbositylevel verbosity);

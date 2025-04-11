@@ -416,8 +416,7 @@ std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_monolithic_nod
   }
 
   // 5. Fill the graph with the geometric close entries
-  for (const auto& [predicate_lid, predicate_gid, primitive_lid, primitive_gid, primitive_proc] :
-      result)
+  for (const auto& [predicate_lid, predicate_gid, primitive_gid, primitive_proc] : result)
   {
     int predicate_lid_discretization = dis.element_row_map()->LID(predicate_gid);
     if (predicate_lid_discretization < 0)

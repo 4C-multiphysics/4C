@@ -22,7 +22,7 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace Core::GeometricSearch
 {
-  std::pair<std::vector<int>, std::vector<int>> collision_search(
+  std::vector<CollisionSearchResult> collision_search(
       const std::vector<std::pair<int, BoundingVolume>>& primitives,
       const std::vector<std::pair<int, BoundingVolume>>& predicates, MPI_Comm comm,
       const Core::IO::Verbositylevel verbosity)
@@ -36,20 +36,14 @@ namespace Core::GeometricSearch
 
     TEUCHOS_FUNC_TIME_MONITOR("Core::GeometricSearch::CollisionSearch");
 
-    std::vector<int> indices_final;
-    std::vector<int> offsets_final;
+    std::vector<CollisionSearchResult> pairs;
 
     if (primitives.size() == 0 or predicates.size() == 0)
     {
       // This is the special case, where we can a priori say that there are no collisions. ArborX
       // produces a floating point exception if primitives.size() == 0, therefore, we take care of
       // this special case here.
-
-      // Indices stays empty, as there are no collisions.
-      indices_final.resize(0);
-      // Offsets have to be filled so put all indices to 0, to align with the expected ArborX
-      // output.
-      offsets_final.resize(predicates.size() + 1, 0);
+      pairs.resize(0);
     }
     else
     {
@@ -58,8 +52,7 @@ namespace Core::GeometricSearch
 
       // Build tree structure containing all primitives.
       ArborX::BoundingVolumeHierarchy bounding_volume_hierarchy{
-          execution_space, ArborX::Experimental::attach_indices(
-                               BoundingVolumeVectorPlaceholder<PrimitivesTag>{primitives})};
+          execution_space, BoundingVolumeVectorPlaceholder<PrimitivesTag>{primitives}};
 
       Kokkos::View<int*, memory_space> indices_full("indices_full", 0);
       Kokkos::View<int*, memory_space> offset_full("offset_full", 0);
@@ -75,21 +68,30 @@ namespace Core::GeometricSearch
           BoundingVolumeVectorPlaceholder<PredicatesTag>{predicates}, get_indices_callback,
           indices_full, offset_full);
 
-      // Copy kokkos view to std::vector
-      indices_final.insert(
-          indices_final.begin(), indices_full.data(), indices_full.data() + indices_full.extent(0));
-      offsets_final.insert(
-          offsets_final.begin(), offset_full.data(), offset_full.data() + offset_full.extent(0));
+      // Create the vector with the pairs.
+      pairs.reserve(indices_full.size());
+      for (size_t i_offset = 0; i_offset < offset_full.size() - 1; i_offset++)
+      {
+        const int gid_predicate = predicates[i_offset].first;
+        for (int j = offset_full[i_offset]; j < offset_full[i_offset + 1]; j++)
+        {
+          pairs.emplace_back(CollisionSearchResult{
+              .gid_predicate = gid_predicate,
+              .gid_primitive = indices_full[j],
+          });
+        }
+      }
     }
 
     if (verbosity == Core::IO::verbose)
     {
       Core::GeometricSearch::GeometricSearchInfo info = {static_cast<int>(primitives.size()),
-          static_cast<int>(predicates.size()), static_cast<int>(indices_final.size())};
+          static_cast<int>(predicates.size()), static_cast<int>(pairs.size())};
       Core::GeometricSearch::print_geometric_search_details(comm, info);
     }
 
-    return {indices_final, offsets_final};
+    return pairs;
+
 #endif
   }
 }  // namespace Core::GeometricSearch
