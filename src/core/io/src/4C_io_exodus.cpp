@@ -34,10 +34,6 @@ Core::IO::Exodus::Mesh::Mesh(const std::string exofilename)
       ex_open(exofilename.c_str(), EX_READ, &CPU_word_size, &IO_word_size, &exoversion);
   if (exo_handle <= 0) FOUR_C_THROW("Error while opening EXODUS II file {}", exofilename);
 
-  // print version
-  std::cout << "File " << exofilename << " was created with EXODUS II library version "
-            << exoversion << std::endl;
-
   // read database parameters
   int num_elem_blk, num_node_sets, num_side_sets, num_nodes;
   char title[MAX_LINE_LENGTH + 1];
@@ -203,29 +199,25 @@ void Core::IO::Exodus::Mesh::print(std::ostream& os, bool verbose) const
   os << std::endl << std::endl;
   if (verbose)
   {
-    os << "ElementBlocks" << std::endl;
-    std::map<int, std::shared_ptr<ElementBlock>>::const_iterator it;
+    os << "ElementBlocks\n";
     for (const auto& [eb_id, eb] : get_element_blocks())
     {
       os << eb_id << ": ";
       eb.print(os);
     }
-    os << std::endl << "NodeSets" << std::endl;
-    std::map<int, NodeSet>::const_iterator it2;
-    std::map<int, NodeSet> nodeSets = get_node_sets();
-    for (it2 = nodeSets.begin(); it2 != nodeSets.end(); it2++)
+
+    os << "\nNodeSets\n";
+    for (const auto& [ns_id, ns] : get_node_sets())
     {
-      os << "NodeSet " << it2->first << ": ";
-      it2->second.print(os);
+      os << "NodeSet " << ns_id << ": ";
+      ns.print(os);
     }
-    os << std::endl << "SideSets" << std::endl;
-    os << "Warning: SideSets are not yet fully supported by PreExodus!" << std::endl;
-    std::map<int, SideSet>::const_iterator it3;
-    std::map<int, SideSet> sideSets = get_side_sets();
-    for (it3 = sideSets.begin(); it3 != sideSets.end(); it3++)
+
+    os << "\nSideSets\n";
+    for (const auto& [ss_id, ss] : get_side_sets())
     {
-      os << "SideSet " << it3->first << ": ";
-      it3->second.print(os);
+      os << "SideSet " << ss_id << ": ";
+      ss.print(os);
     }
   }
 }
