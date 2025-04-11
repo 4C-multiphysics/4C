@@ -77,6 +77,7 @@ THROW_IF_UNCONVERGED            No
 -----------------------------------------------------------SOLVER 2
 NAME                            Fluid_Solver
 SOLVER                          Belos
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 AZSOLVE                         CG
 AZPREC                          ILU
 AZTOL                           1.0E-12

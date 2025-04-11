@@ -130,6 +130,7 @@ AZOUTPUT                        10
 --------------------------------------------------------------------SOLVER 2
 NAME                            Fluid_Solver
 SOLVER                          Belos
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 AZSOLVE                         GMRES
 AZPREC                          ILU
 AZTOL                           1.0E-12

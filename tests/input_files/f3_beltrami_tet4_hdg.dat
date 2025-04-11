@@ -43,7 +43,7 @@ SOLVER                          Belos
 AZSOLVE                         BiCGSTAB
 AZPREC                          ILU
 AZREUSE                         0
-IFPACKGFILL                     0
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 AZCONV                          AZ_r0
 AZTOL                           1.0E-4
 AZITER                          2500

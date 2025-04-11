@@ -102,6 +102,7 @@ CHARELELENGTH_PC                      root_of_volume
 SOLVER                                Superlu
 ------------------------------------------------------------------------SOLVER 2
 SOLVER                                Belos
+IFPACK_XML_FILE                       xml/preconditioner/ifpack.xml
 AZREUSE                              2
 AZTOL                                 1e-05
 ------------------------------------------------------------------FLUID ELEMENTS

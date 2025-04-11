@@ -21,6 +21,7 @@ SHAPEFCT                        Nurbs
 NUMSTRUCDIS                     1
 --------------------------------------------------------------------SOLVER 1
 SOLVER                          Belos
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 --------------------------------------------------------------------SOLVER 2
 NAME                            nurbs_ls_dbc
 SOLVER                          Belos

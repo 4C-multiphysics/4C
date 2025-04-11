@@ -43,6 +43,7 @@ DIVERCONT                             stop
 ------------------------------------------------------------------------SOLVER 1
 NAME                                  Struct_Solver
 SOLVER                                Belos
+IFPACK_XML_FILE                       xml/preconditioner/ifpack.xml
 --------------------------------------------------------------------XFEM GENERAL
 GMSH_DEBUG_OUT                        Yes
 GMSH_CUT_OUT                          Yes

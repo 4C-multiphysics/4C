@@ -112,7 +112,8 @@ EOS_H_DEFINITION                      EOS_he_surf_with_max_diameter
 SOLVER                                Superlu
 ------------------------------------------------------------------------SOLVER 2
 SOLVER                                Belos
-AZREUSE                              10
+IFPACK_XML_FILE                       xml/preconditioner/ifpack.xml
+AZREUSE                               10
 AZTOL                                 1e-05
 ------------------------------------------------------------------FLUID ELEMENTS
 1 FLUID HEX8  1 2 3 4 5 6 7 8    MAT 1 NA Euler

@@ -75,12 +75,11 @@ AZOUTPUT          0
 AZSOLVE           GMRES
 AZPREC            ILU
 AZREUSE           8
-IFPACKGFILL       8
 AZTOL             1.0E-18
 AZCONV            AZ_r0
 AZITER            2000
 AZSUB             120
-IFPACKOVERLAP     1
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 ----------------------------------------------------------MATERIALS
 MAT 1   MAT_fluid   DYNVISCOSITY 0.002531646 DENSITY 1.0
 -------------------------------------------------------------FUNCT1

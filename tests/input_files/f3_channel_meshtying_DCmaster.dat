@@ -83,8 +83,7 @@ AZOUTPUT                        50
 AZSOLVE                         GMRES
 AZPREC                          ILU
 AZREUSE                         5
-IFPACKGFILL                     0
-IFPACKOVERLAP                   0
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 AZTOL                           1.0E-9
 AZCONV                          AZ_r0
 AZITER                          1000

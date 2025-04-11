@@ -61,9 +61,7 @@ AZTOL                  1.0E-3
 AZCONV                 AZ_r0
 AZITER                 1000
 AZSUB                  50
-IFPACKGFILL            1
-IFPACKOVERLAP          1
-IFPACKCOMBINE          Zero
+IFPACK_XML_FILE        beam_ifpack.xml
 ------------------------------------------------STRUCT NOX/Printing
 Outer Iteration                 = Yes
 Inner Iteration                 = No

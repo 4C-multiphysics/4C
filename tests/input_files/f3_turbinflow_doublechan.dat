@@ -87,9 +87,7 @@ AZTOL                           1.0E-4
 AZCONV                          AZ_r0
 AZITER                          1000
 AZSUB                           40
-IFPACKGFILL                     0
-IFPACKOVERLAP                   0
-IFPACKCOMBINE                   Add
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 -------------------------------------------------------------------MATERIALS
 MAT 1 MAT_fluid DYNVISCOSITY 1.0 DENSITY 1.0 GAMMA 1.0
 ----------------------------------------------------------------------FUNCT1
