@@ -42,13 +42,10 @@ namespace Core::GeometricSearch
     Kokkos::DefaultExecutionSpace execution_space{};
 
     // Build tree structure containing all primitives.
-    ArborX::DistributedTree distributed_tree{comm, execution_space,
-        ArborX::Experimental::attach_indices(
-            BoundingVolumeVectorPlaceholder<PrimitivesTag>{primitives})};
+    ArborX::DistributedTree distributed_tree{
+        comm, execution_space, BoundingVolumeVectorPlaceholder<PrimitivesTag>{primitives}};
 
-    // TODO: Check for better data structure in Kokkos (something like a tuple)
-    Kokkos::View<Kokkos::pair<int, Kokkos::pair<int, int>>*, memory_space> indices_ranks_full(
-        "indices_ranks_full", 0);
+    Kokkos::View<Kokkos::pair<int, int>*, memory_space> indices_ranks_full("indices_ranks_full", 0);
     Kokkos::View<int*, memory_space> offset_full("offset_full", 0);
 
     // We want the indices of the colliding pairs, thus we have to use this callback to extract the
@@ -56,9 +53,8 @@ namespace Core::GeometricSearch
     auto get_indices_callback =
         KOKKOS_LAMBDA(const auto predicate, const auto& value, const auto& out)->void
     {
-      const int primitive_index = value.index;
-      const auto& primitive_vector_entry = primitives[primitive_index];
-      out({primitive_index, {primitive_vector_entry.first, myrank}});
+      const int primitive_gid = value.index;
+      out({primitive_gid, myrank});
     };
 
     // Perform the collision check.
@@ -68,6 +64,7 @@ namespace Core::GeometricSearch
 
     // Create the vector with the pairs.
     std::vector<GlobalCollisionSearchResult> pairs;
+    pairs.reserve(indices_ranks_full.size());
     for (size_t i_offset = 0; i_offset < offset_full.size() - 1; i_offset++)
     {
       const int gid_predicate = predicates[i_offset].first;
@@ -75,16 +72,15 @@ namespace Core::GeometricSearch
       {
         pairs.emplace_back(GlobalCollisionSearchResult{.lid_predicate = static_cast<int>(i_offset),
             .gid_predicate = gid_predicate,
-            .lid_primitive = indices_ranks_full[j].first,
-            .gid_primitive = indices_ranks_full[j].second.first,
-            .pid_primitive = indices_ranks_full[j].second.second});
+            .gid_primitive = indices_ranks_full[j].first,
+            .pid_primitive = indices_ranks_full[j].second});
       }
     }
 
     if (verbosity == Core::IO::verbose)
     {
       Core::GeometricSearch::GeometricSearchInfo info = {static_cast<int>(primitives.size()),
-          static_cast<int>(predicates.size()), static_cast<int>(indices_ranks_full.size())};
+          static_cast<int>(predicates.size()), static_cast<int>(pairs.size())};
       Core::GeometricSearch::print_geometric_search_details(comm, info);
     }
 

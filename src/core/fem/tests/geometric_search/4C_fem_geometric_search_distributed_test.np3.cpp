@@ -87,8 +87,7 @@ namespace
         {
           const auto& reference_pair = reference_map.at({pair.gid_predicate, pair.gid_primitive});
           EXPECT_EQ(pair.lid_predicate, std::get<0>(reference_pair));
-          EXPECT_EQ(pair.lid_primitive, std::get<1>(reference_pair));
-          EXPECT_EQ(pair.pid_primitive, std::get<2>(reference_pair));
+          EXPECT_EQ(pair.pid_primitive, std::get<1>(reference_pair));
         }
         else
         {
@@ -100,38 +99,38 @@ namespace
 
     if (my_rank_ == 0)
     {
-      std::map<std::pair<int, int>, std::array<int, 4>> reference_pairs{
-          {{3, 0}, {0, 0, 0}},   //
-          {{3, 1}, {0, 1, 0}},   //
-          {{3, 6}, {0, 0, 1}},   //
-          {{3, 9}, {0, 0, 2}},   //
-          {{3, 10}, {0, 1, 2}},  //
-          {{4, 0}, {1, 0, 0}},   //
-          {{4, 1}, {1, 1, 0}},   //
-          {{4, 6}, {1, 0, 1}},   //
-          {{4, 9}, {1, 0, 2}},   //
-          {{4, 10}, {1, 1, 2}},  //
-          {{5, 2}, {2, 2, 0}},   //
-          {{5, 7}, {2, 1, 1}}    //
+      std::map<std::pair<int, int>, std::array<int, 2>> reference_pairs{
+          {{3, 0}, {0, 0}},   //
+          {{3, 1}, {0, 0}},   //
+          {{3, 6}, {0, 1}},   //
+          {{3, 9}, {0, 2}},   //
+          {{3, 10}, {0, 2}},  //
+          {{4, 0}, {1, 0}},   //
+          {{4, 1}, {1, 0}},   //
+          {{4, 6}, {1, 1}},   //
+          {{4, 9}, {1, 2}},   //
+          {{4, 10}, {1, 2}},  //
+          {{5, 2}, {2, 0}},   //
+          {{5, 7}, {2, 1}}    //
       };
       compare_results(pairs, reference_pairs);
     }
     else if (my_rank_ == 1)
     {
-      std::map<std::pair<int, int>, std::array<int, 4>> reference_pairs{
-          {{8, 0}, {0, 0, 0}},   //
-          {{8, 1}, {0, 1, 0}},   //
-          {{8, 6}, {0, 0, 1}},   //
-          {{8, 9}, {0, 0, 2}},   //
-          {{8, 10}, {0, 1, 2}},  //
+      std::map<std::pair<int, int>, std::array<int, 2>> reference_pairs{
+          {{8, 0}, {0, 0}},   //
+          {{8, 1}, {0, 0}},   //
+          {{8, 6}, {0, 1}},   //
+          {{8, 9}, {0, 2}},   //
+          {{8, 10}, {0, 2}},  //
       };
       compare_results(pairs, reference_pairs);
     }
     else if (my_rank_ == 2)
     {
-      std::map<std::pair<int, int>, std::array<int, 4>> reference_pairs{
-          {{11, 2}, {0, 2, 0}},  //
-          {{11, 7}, {0, 1, 1}}   //
+      std::map<std::pair<int, int>, std::array<int, 2>> reference_pairs{
+          {{11, 2}, {0, 0}},  //
+          {{11, 7}, {0, 1}}   //
       };
       compare_results(pairs, reference_pairs);
     }
@@ -165,13 +164,11 @@ namespace
 
       EXPECT_EQ(pairs[0].lid_predicate, 0);
       EXPECT_EQ(pairs[0].gid_predicate, 3);
-      EXPECT_EQ(pairs[0].lid_primitive, 1);
       EXPECT_EQ(pairs[0].gid_primitive, 1);
       EXPECT_EQ(pairs[0].pid_primitive, 0);
 
       EXPECT_EQ(pairs[1].lid_predicate, 0);
       EXPECT_EQ(pairs[1].gid_predicate, 3);
-      EXPECT_EQ(pairs[1].lid_primitive, 0);
       EXPECT_EQ(pairs[1].gid_primitive, 0);
       EXPECT_EQ(pairs[1].pid_primitive, 0);
     }

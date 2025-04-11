@@ -51,14 +51,12 @@ namespace
     EXPECT_EQ(primitives_.size(), 2);
     EXPECT_EQ(predicates_.size(), 1);
 
-    const auto& [indices, offsets] =
+    const auto pairs =
         Core::GeometricSearch::collision_search(primitives_, predicates_, comm_, verbosity_);
 
-    const auto pairs = Core::GeometricSearch::get_pairs(indices, offsets);
-
     EXPECT_EQ(pairs.size(), 1);
-    EXPECT_EQ(pairs[0].first, 0);
-    EXPECT_EQ(pairs[0].second, 0);
+    EXPECT_EQ(pairs[0].gid_primitive, 0);
+    EXPECT_EQ(pairs[0].gid_predicate, 2);
   }
 
   /**
@@ -76,10 +74,8 @@ namespace
     EXPECT_EQ(primitives_.size(), 0);
     EXPECT_EQ(predicates_.size(), 3);
 
-    const auto& [indices, offsets] =
+    const auto& pairs =
         Core::GeometricSearch::collision_search(primitives_, predicates_, comm_, verbosity_);
-
-    const auto pairs = Core::GeometricSearch::get_pairs(indices, offsets);
 
     EXPECT_EQ(pairs.size(), 0);
   }
@@ -99,10 +95,8 @@ namespace
     EXPECT_EQ(primitives_.size(), 3);
     EXPECT_EQ(predicates_.size(), 0);
 
-    const auto& [indices, offsets] =
+    const auto& pairs =
         Core::GeometricSearch::collision_search(primitives_, predicates_, comm_, verbosity_);
-
-    const auto pairs = Core::GeometricSearch::get_pairs(indices, offsets);
 
     EXPECT_EQ(pairs.size(), 0);
   }
@@ -115,10 +109,8 @@ namespace
     EXPECT_EQ(primitives_.size(), 0);
     EXPECT_EQ(predicates_.size(), 0);
 
-    const auto& [indices, offsets] =
+    const auto pairs =
         Core::GeometricSearch::collision_search(primitives_, predicates_, comm_, verbosity_);
-
-    const auto pairs = Core::GeometricSearch::get_pairs(indices, offsets);
 
     EXPECT_EQ(pairs.size(), 0);
   }
