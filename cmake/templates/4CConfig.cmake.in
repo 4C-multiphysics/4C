@@ -27,6 +27,10 @@ if(FOUR_C_WITH_TRILINOS)
   endif()
 endif()
 
+if(FOUR_C_WITH_DEAL_II)
+  find_package(deal.II REQUIRED)
+endif()
+
 if(FOUR_C_WITH_BOOST)
   find_package(
     Boost

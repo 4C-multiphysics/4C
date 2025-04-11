@@ -13,6 +13,7 @@
         "FOUR_C_CXX_FLAGS": "-msse3",
         "FOUR_C_ENABLE_WARNINGS_AS_ERRORS": "ON",
         "FOUR_C_TRILINOS_ROOT": "/opt/4C-dependencies",
+        "FOUR_C_DEAL_II_ROOT": "/opt/4C-dependencies",
         "FOUR_C_QHULL_ROOT": "/opt/4C-dependencies",
         "FOUR_C_PVPYTHON": "/opt/4C-dependencies-testing/ParaView-5.5.2-Qt5-MPI-Linux-64bit/bin/pvpython",
         "BUILD_SHARED_LIBS": "ON",
@@ -24,7 +25,8 @@
         "FOUR_C_WITH_ARBORX": "ON",
         "FOUR_C_WITH_BACKTRACE": "ON",
         "FOUR_C_BACKTRACE_ROOT": "/opt/4C-dependencies",
-        "FOUR_C_WITH_MIRCO": "ON"
+        "FOUR_C_WITH_MIRCO": "ON",
+        "FOUR_C_WITH_DEAL_II": "ON"
       }
     },
     {
@@ -125,7 +127,8 @@
       "cacheVariables": {
         "FOUR_C_WITH_ARBORX": "OFF",
         "FOUR_C_WITH_BACKTRACE": "OFF",
-        "FOUR_C_WITH_MIRCO": "OFF"
+        "FOUR_C_WITH_MIRCO": "OFF",
+        "FOUR_C_WITH_DEAL_II": "OFF"
       }
     }
   ]
