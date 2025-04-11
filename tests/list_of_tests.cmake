@@ -1161,6 +1161,7 @@ four_c_test(TEST_FILE scatra_1D_line2_multiscale_constperm_macro_partitioned_mic
 four_c_test(TEST_FILE scatra_1D_straight_convection.dat NP 2)
 four_c_test(TEST_FILE scatra_2D_external_force.dat NP 2 RESTART_STEP 28)
 four_c_test(TEST_FILE scatra_2D_external_force_supg.dat NP 2 RESTART_STEP 28)
+four_c_test(TEST_FILE scatra_2D_external_force_magnet.4C.yaml NP 2 RESTART_STEP 8)
 four_c_test(TEST_FILE scatra_2D_quad4_s2i_constperm.dat NP 2)
 four_c_test(TEST_FILE scatra_2D_quad4_s2i_constperm_AMG.dat NP 2)
 four_c_test(TEST_FILE scatra_2D_straight_convection_direct.dat NP 2)

@@ -113,6 +113,7 @@
 #include "4C_red_airways_elementbase.hpp"
 #include "4C_rigidsphere.hpp"
 #include "4C_scatra_ele.hpp"
+#include "4C_scatra_functions.hpp"
 #include "4C_shell7p_ele.hpp"
 #include "4C_shell7p_ele_scatra.hpp"
 #include "4C_shell_kl_nurbs.hpp"
@@ -289,6 +290,7 @@ namespace
     Discret::Utils::add_valid_xfluid_functions(function_manager);
     add_valid_library_functions(function_manager);
     PoroMultiPhaseScaTra::add_valid_poro_functions(function_manager);
+    ScaTra::add_valid_scatra_functions(function_manager);
   }
 
   Core::IO::InputSpec valid_result_lines()

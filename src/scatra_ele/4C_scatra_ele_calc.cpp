@@ -120,6 +120,13 @@ int Discret::Elements::ScaTraEleCalc<distype, probdim>::setup_calc(
   rotsymmpbc_->setup(ele);
 
   std::shared_ptr<Core::Mat::Material> material = ele->material();
+  if (material->material_type() == Core::Materials::m_scatra)
+  {
+    const std::shared_ptr<const Mat::ScatraMat> single_material =
+        std::static_pointer_cast<const Mat::ScatraMat>(material);
+    scatravarmanager_->set_reacts_to_force(single_material->reacts_to_external_force(), 0);
+  }
+
   if (material->material_type() == Core::Materials::m_matlist or
       material->material_type() == Core::Materials::m_matlist_reactions)
   {

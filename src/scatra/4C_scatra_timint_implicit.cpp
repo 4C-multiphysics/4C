@@ -33,6 +33,7 @@
 #include "4C_scatra_ele_parameter_std.hpp"
 #include "4C_scatra_ele_parameter_timint.hpp"
 #include "4C_scatra_ele_parameter_turbulence.hpp"
+#include "4C_scatra_functions.hpp"
 #include "4C_scatra_resulttest.hpp"
 #include "4C_scatra_timint_heterogeneous_reaction_strategy.hpp"
 #include "4C_scatra_timint_meshtying_strategy_artery.hpp"
@@ -1295,7 +1296,7 @@ void ScaTra::ScaTraTimIntImpl::set_velocity_field()
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void ScaTra::ScaTraTimIntImpl::set_external_force()
+void ScaTra::ScaTraTimIntImpl::set_external_force() const
 {
   const auto input_params_external_force = params_->sublist("EXTERNAL FORCE");
   const int external_force_function_id = input_params_external_force.get<int>("FORCE_FUNCTION_ID");
@@ -1315,17 +1316,22 @@ void ScaTra::ScaTraTimIntImpl::set_external_force()
   // force_velocity = intrinsic_mobility * external_force
   auto force_velocity = Core::LinAlg::create_vector(*discret_->dof_row_map(nds_vel()), true);
 
+  // magnetic field
+  auto magnetic_field = Core::LinAlg::create_vector(*discret_->dof_row_map(nds_vel()), true);
+
   for (int lnodeid = 0; lnodeid < discret_->num_my_row_nodes(); lnodeid++)
   {
     auto* const current_node = discret_->l_row_node(lnodeid);
     const auto nodedofs = discret_->dof(nds_vel(), current_node);
 
+    std::vector<double> external_force_vector(3);
+    problem_->function_by_id<Core::Utils::FunctionOfSpaceTime>(external_force_function_id)
+        .evaluate_vector(std::span<const double, 3>(current_node->x().begin(), 3), time_,
+            std::span<double, 3>(external_force_vector));
+
     for (int spatial_dimension = 0; spatial_dimension < nsd_; ++spatial_dimension)
     {
-      const double external_force_value =
-          problem_->function_by_id<Core::Utils::FunctionOfSpaceTime>(external_force_function_id)
-              .evaluate(current_node->x().data(), time_, spatial_dimension);
-
+      const double external_force_value = external_force_vector[spatial_dimension];
       const double intrinsic_mobility_value =
           problem_->function_by_id<Core::Utils::FunctionOfSpaceTime>(intrinsic_mobility_function_id)
               .evaluate(current_node->x().data(), time_, spatial_dimension);
@@ -1770,6 +1776,32 @@ void ScaTra::ScaTraTimIntImpl::collect_runtime_output_data()
     std::vector<std::optional<std::string>> context(nsd_, "convec_velocity");
     visualization_writer_->append_result_data_vector_with_context(
         convel_multi, Core::IO::OutputEntity::node, context);
+  }
+
+  if (has_external_force_)
+  {
+    auto write_output_as_multivector = [this](const std::string& field_name)
+    {
+      const auto state_vector = discret_->get_state(nds_vel_, field_name);
+      if (state_vector == nullptr) FOUR_C_THROW("Cannot get state vector {}", field_name);
+
+      // convert dof-based linalg vector into node-based multi-vector for postprocessing
+      auto multi_vector = Core::LinAlg::MultiVector<double>(*discret_->node_row_map(), nsd_, true);
+      for (int inode = 0; inode < discret_->num_my_row_nodes(); ++inode)
+      {
+        const Core::Nodes::Node* node = discret_->l_row_node(inode);
+        for (int idim = 0; idim < nsd_; ++idim)
+          (multi_vector)(idim)[inode] = (*state_vector)[state_vector->get_block_map().LID(
+              discret_->dof(nds_vel(), node, idim))];
+      }
+      const std::vector<std::optional<std::string>> context(nsd_, field_name);
+      visualization_writer_->append_result_data_vector_with_context(
+          multi_vector, Core::IO::OutputEntity::node, context);
+    };
+
+    write_output_as_multivector("external_force");
+    write_output_as_multivector("intrinsic_mobility");
+    write_output_as_multivector("force_velocity");
   }
 
   // displacement field

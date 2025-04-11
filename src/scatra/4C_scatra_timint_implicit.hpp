@@ -242,7 +242,7 @@ namespace ScaTra
      \f]
      where M is the intrinsic mobility of the scalar.
      */
-    void set_external_force();
+    void set_external_force() const;
 
     //! set convective velocity field (+ pressure and acceleration field as
     //! well as fine-scale velocity field, if required)

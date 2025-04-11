@@ -15,6 +15,7 @@
 #include "4C_utils_functionvariables.hpp"
 
 #include <memory>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -52,6 +53,23 @@ namespace Core::Utils
     virtual double evaluate(const double* x, double t, std::size_t component) const = 0;
 
     /*!
+     * @brief Vector-valued evaluation of time and space dependent function
+     *
+     * Evaluate the function at the specified position and point in time and return the vector of
+     * all components.
+     *
+     * @param x the point in 3-dimensional space in which the function will be evaluated
+     * @param t the point in time in which the function will be evaluated
+     * @param values function values
+     */
+    virtual void evaluate_vector(
+        const std::span<const double, 3> x, double t, std::span<double> values) const
+    {
+      for (std::size_t i = 0; i < number_components(); ++i) values[i] = evaluate(x.data(), t, i);
+    }
+
+
+    /*!
      * \brief Evaluation of first spatial derivative of time and space dependent function
      *
      * \param x  (i) The point in 3-dimensional space in which the function will be evaluated
@@ -64,8 +82,6 @@ namespace Core::Utils
         const double* x, double t, std::size_t component) const
     {
       FOUR_C_THROW("The evaluation of the derivative is not implemented for this function");
-      std::vector<double> emptyvector;
-      return emptyvector;
     };
 
     /*!
@@ -85,8 +101,6 @@ namespace Core::Utils
         const double* x, double t, unsigned deg, std::size_t component) const
     {
       FOUR_C_THROW("The evaluation of the time derivative is not implemented for this function");
-      std::vector<double> emptyvector;
-      return emptyvector;
     };
 
     /// Return number of components of function
