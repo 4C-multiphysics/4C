@@ -674,10 +674,7 @@ namespace Core::IO
   /*----------------------------------------------------------------------*/
   bool InputFile::has_section(const std::string& section_name) const
   {
-    const bool known_somewhere = Core::Communication::all_reduce<bool>(
-        pimpl_->content_by_section_.contains(section_name),
-        [](const bool& r, const bool& in) { return r || in; }, pimpl_->comm_);
-    return known_somewhere;
+    return pimpl_->content_by_section_.contains(section_name);
   }
 
 

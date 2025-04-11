@@ -230,9 +230,6 @@ namespace Core::IO
 
     /**
      * Returns true if the input file contains a section with the given name.
-     *
-     * @note This is a collective call that needs to be called on all MPI ranks in the
-     * communicator.
      */
     [[nodiscard]] bool has_section(const std::string& section_name) const;
 
