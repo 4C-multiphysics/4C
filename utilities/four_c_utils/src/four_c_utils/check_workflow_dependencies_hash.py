@@ -37,7 +37,7 @@ def main():
                 if "container" in job and "image" in job["container"]:
                     image_name = job["container"]["image"]
                     if image_name.startswith(
-                        "ghcr.io/4c-multiphysics/4c-dependencies"
+                        "ghcr.io/4c-multiphysics/4c-dependencies-ubuntu24.04"
                     ) and not image_name.endswith(f":{dependencies_hash}"):
                         if file not in jobs_with_wrong_dependency_hash:
                             jobs_with_wrong_dependency_hash[file] = []

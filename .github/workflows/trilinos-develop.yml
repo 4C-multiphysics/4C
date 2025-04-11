@@ -1,0 +1,118 @@
+name: Trilinos develop
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 8 * * 6'
+
+env:
+  IMAGE_NAME: ghcr.io/4c-multiphysics/4c-dependencies-trilinos
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-push-trilinos-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Log in to the Container registry
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5.5.1
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          labels: |
+            org.opencontainers.image.description=Image containing all the dependencies required for building and testing 4C based on the specified Trilinos commit ref
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
+        with:
+          context: .
+          file: docker/trilinos_develop/Dockerfile
+          build-args: |
+            TRILINOS_VERSION=develop
+          push: true
+          tags: ${{ env.IMAGE_NAME }}:develop
+          labels: ${{ steps.meta.outputs.labels }}
+
+  build:
+    needs: build-and-push-trilinos-image
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos:develop
+      options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      test-chunks: ${{ steps.set-matrix.outputs.chunk-array }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/build_4C
+        with:
+          cmake-preset: docker_assertions
+          build-targets: full
+          build-directory: ${{ github.workspace }}/build
+          use-ccache: "false"
+      - uses: ./.github/actions/upload_4C_build
+        with:
+          build-directory: ${{ github.workspace }}/build
+          retention-days: 1
+      - uses: ./.github/actions/chunk_test_suite
+        id: set-matrix
+        with:
+          build-directory: ${{ github.workspace }}/build
+          source-directory: ${{ github.workspace }}
+          number-of-chunks: 15
+          junit-report-artifact-name: trilinos_test_report.xml
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/4c-multiphysics/4c-dependencies-trilinos:develop
+      options: --user root --env OMPI_ALLOW_RUN_AS_ROOT=1 --env OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    strategy:
+      fail-fast: false
+      matrix:
+        test-chunk: ${{fromJson(needs.build.outputs.test-chunks)}}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup developer environment for testing
+        run: |
+          cd $GITHUB_WORKSPACE
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+      - uses: ./.github/actions/download_4C_build
+        with:
+          build-job: build
+          destination: ${{ github.workspace }}/build
+      - name: Test
+        run: |
+          cd $GITHUB_WORKSPACE/build
+          ctest -I $TEST_CHUNK -j `nproc` --output-on-failure --output-junit $GITHUB_WORKSPACE/trilinos_test_report-$TEST_CHUNK.xml
+        env:
+          TEST_CHUNK: ${{ matrix.test-chunk }}
+      - name: Upload test report
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trilinos_test_report-${{ matrix.test-chunk }}.xml
+          path: |
+            ${{ github.workspace }}/trilinos_test_report-${{ matrix.test-chunk }}.xml
+          retention-days: 1

@@ -22,7 +22,7 @@ VERSION=${2:-develop}
 
 
 # Location of script to apply patches later
-SCRIPT_DIR="`dirname "$0"`"
+SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 CMAKE_COMMAND=cmake
 
 git clone https://github.com/trilinos/Trilinos.git
@@ -111,3 +111,4 @@ $CMAKE_COMMAND \
 
 make -j${NPROCS} install
 cd ..
+rm -rf Trilinos trilinos_build
