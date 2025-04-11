@@ -1508,7 +1508,25 @@ namespace Mat
     StateQuantityDerivatives state_quantity_derivatives_;
 
     //! tensor interpolator used in the substepping procedure (one-dimensional, of order 1)
-    Core::LinAlg::SecondOrderTensorInterpolator<1> tensor_interpolator_{1};
+    Core::LinAlg::TensorInterpolation::SecondOrderTensorInterpolator<1> tensor_interpolator_;
+
+    /*!
+     * @brief Initialize the second-order tensor interpolator.
+     * Currently, we consider R-LOG interpolation with a set exponential
+     * decay factor.
+     */
+    Core::LinAlg::TensorInterpolation::SecondOrderTensorInterpolator<1> init_tensor_interpolator()
+    {
+      // initialize interpolation parameter list
+      Core::LinAlg::TensorInterpolation::InterpParams interp_param_list;
+      /// add exponential decay factor for weighting
+      interp_param_list.c = 20.0;
+
+      // return corresponding tensor interpolator
+      return Core::LinAlg::TensorInterpolation::SecondOrderTensorInterpolator<1>{1,
+          Core::LinAlg::TensorInterpolation::RotInterpType::RotVectInterp,
+          Core::LinAlg::TensorInterpolation::EigenvalInterpType::LOG, interp_param_list};
+    }
 
     //! tensor interpolation: reference matrices
     std::vector<Core::LinAlg::Matrix<3, 3>> ref_matrices_;
