@@ -109,141 +109,127 @@ void Core::IO::MeshReader::read_mesh_from_dat_file(int& max_node_id)
   read_nodes(input_, node_section_name_, element_readers_, max_node_id);
 }
 
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-void Core::IO::MeshReader::rebalance()
+namespace
 {
-  TEUCHOS_FUNC_TIME_MONITOR("Core::IO::MeshReader::Rebalance");
-
-  // do the real partitioning and distribute maps
-  for (size_t i = 0; i < element_readers_.size(); i++)
+  std::pair<std::shared_ptr<Core::LinAlg::Map>, std::shared_ptr<Core::LinAlg::Map>>
+  do_rebalance_discretization(const std::shared_ptr<const Core::LinAlg::Graph>& graph,
+      Core::FE::Discretization& discret, Core::Rebalance::RebalanceType rebalanceMethod,
+      Teuchos::ParameterList& rebalanceParams,
+      const Core::IO::MeshReader::MeshReaderParameters& parameters, MPI_Comm comm)
   {
-    // global node ids --- this will be a fully redundant vector!
-    int numnodes = static_cast<int>(element_readers_[i].get_unique_nodes().size());
-    Core::Communication::broadcast(&numnodes, 1, 0, comm_);
+    std::shared_ptr<Core::LinAlg::Map> rowmap, colmap;
 
-    const auto discret = element_readers_[i].get_dis();
+    switch (rebalanceMethod)
+    {
+      case Core::Rebalance::RebalanceType::hypergraph:
+      {
+        if (!Core::Communication::my_mpi_rank(comm))
+          std::cout << "Redistributing using hypergraph .........\n";
 
-    // We want to be able to read empty fields. If we have such a beast
-    // just skip the building of the node  graph and do a proper initialization
-    if (numnodes)
-      graph_[i] = Core::Rebalance::build_graph(*discret, *element_readers_[i].get_row_elements());
-    else
-      graph_[i] = nullptr;
+        rebalanceParams.set("partitioning method", "HYPERGRAPH");
+        std::tie(rowmap, colmap) = Core::Rebalance::rebalance_node_maps(*graph, rebalanceParams);
+        break;
+      }
+      case Core::Rebalance::RebalanceType::recursive_coordinate_bisection:
+      {
+        if (!Core::Communication::my_mpi_rank(comm))
+          std::cout << "Redistributing using recursive coordinate bisection .........\n";
 
-    // create partitioning parameters
+        rebalanceParams.set("partitioning method", "RCB");
+
+        rowmap = std::make_shared<Core::LinAlg::Map>(-1, graph->row_map().NumMyElements(),
+            graph->row_map().MyGlobalElements(), 0, Core::Communication::as_epetra_comm(comm));
+        colmap = std::make_shared<Core::LinAlg::Map>(-1, graph->col_map().NumMyElements(),
+            graph->col_map().MyGlobalElements(), 0, Core::Communication::as_epetra_comm(comm));
+
+        discret.redistribute(*rowmap, *colmap,
+            {.assign_degrees_of_freedom = false,
+                .init_elements = false,
+                .do_boundary_conditions = false});
+
+        std::shared_ptr<Core::LinAlg::MultiVector<double>> coordinates =
+            discret.build_node_coordinates();
+
+        std::tie(rowmap, colmap) = Core::Rebalance::rebalance_node_maps(
+            *graph, rebalanceParams, nullptr, nullptr, coordinates);
+        break;
+      }
+      case Core::Rebalance::RebalanceType::monolithic:
+      {
+        if (!Core::Communication::my_mpi_rank(comm))
+          std::cout << "Redistributing using monolithic hypergraph .........\n";
+
+        rebalanceParams.set("partitioning method", "HYPERGRAPH");
+
+        rowmap = std::make_shared<Core::LinAlg::Map>(-1, graph->row_map().NumMyElements(),
+            graph->row_map().MyGlobalElements(), 0, Core::Communication::as_epetra_comm(comm));
+        colmap = std::make_shared<Core::LinAlg::Map>(-1, graph->col_map().NumMyElements(),
+            graph->col_map().MyGlobalElements(), 0, Core::Communication::as_epetra_comm(comm));
+
+        discret.redistribute(*rowmap, *colmap, {.do_boundary_conditions = false});
+
+        std::shared_ptr<const Core::LinAlg::Graph> enriched_graph =
+            Core::Rebalance::build_monolithic_node_graph(
+                discret, Core::GeometricSearch::GeometricSearchParams(
+                             parameters.geometric_search_parameters, parameters.io_parameters));
+
+        std::tie(rowmap, colmap) =
+            Core::Rebalance::rebalance_node_maps(*enriched_graph, rebalanceParams);
+        break;
+      }
+      default:
+        FOUR_C_THROW("Appropriate partitioning has to be set!");
+    }
+
+    return {rowmap, colmap};
+  }
+
+  void rebalance_discretization(Core::FE::Discretization& discret,
+      const std::set<int>& unique_nodes, const Core::LinAlg::Map& row_elements,
+      const Core::IO::MeshReader::MeshReaderParameters& parameters, MPI_Comm comm)
+  {
+    // Global node IDs --- this will be a fully redundant vector!
+    int numnodes = static_cast<int>(unique_nodes.size());
+    Core::Communication::broadcast(&numnodes, 1, 0, comm);
+
+    std::shared_ptr<const Core::LinAlg::Graph> graph = nullptr;
+
+    // Skip building the node graph if there are no nodes
+    if (numnodes) graph = Core::Rebalance::build_graph(discret, row_elements);
+
+    // Create partitioning parameters
     const double imbalance_tol =
-        parameters_.mesh_partitioning_parameters.get<double>("IMBALANCE_TOL");
+        parameters.mesh_partitioning_parameters.get<double>("IMBALANCE_TOL");
 
     Teuchos::ParameterList rebalanceParams;
     rebalanceParams.set<std::string>("imbalance tol", std::to_string(imbalance_tol));
 
     const int minele_per_proc =
-        parameters_.mesh_partitioning_parameters.get<int>("MIN_ELE_PER_PROC");
-    const int max_global_procs = Core::Communication::num_mpi_ranks(comm_);
+        parameters.mesh_partitioning_parameters.get<int>("MIN_ELE_PER_PROC");
+    const int max_global_procs = Core::Communication::num_mpi_ranks(comm);
     int min_global_procs = max_global_procs;
 
-    if (minele_per_proc > 0)
-      min_global_procs =
-          element_readers_[i].get_row_elements()->NumGlobalElements() / minele_per_proc;
+    if (minele_per_proc > 0) min_global_procs = row_elements.NumGlobalElements() / minele_per_proc;
     const int num_procs = std::min(max_global_procs, min_global_procs);
     rebalanceParams.set<std::string>("num parts", std::to_string(num_procs));
 
     const auto rebalanceMethod = Teuchos::getIntegralValue<Core::Rebalance::RebalanceType>(
-        parameters_.mesh_partitioning_parameters, "METHOD");
+        parameters.mesh_partitioning_parameters, "METHOD");
 
-    if (!Core::Communication::my_mpi_rank(comm_))
+    if (!Core::Communication::my_mpi_rank(comm))
       std::cout << "\nNumber of procs used for redistribution: " << num_procs << "\n";
 
     std::shared_ptr<Core::LinAlg::Map> rowmap, colmap;
 
-    if (graph_[i])
+    if (graph)
     {
-      switch (rebalanceMethod)
-      {
-        case Core::Rebalance::RebalanceType::hypergraph:
-        {
-          if (!Core::Communication::my_mpi_rank(comm_))
-            std::cout << "Redistributing using "
-                      << "hypergraph"
-                      << " .........\n";
-
-          rebalanceParams.set("partitioning method", "HYPERGRAPH");
-
-          // here we can reuse the graph, which was calculated before, this saves us some time
-          std::tie(rowmap, colmap) =
-              Core::Rebalance::rebalance_node_maps(*graph_[i], rebalanceParams);
-
-          break;
-        }
-        case Core::Rebalance::RebalanceType::recursive_coordinate_bisection:
-        {
-          if (!Core::Communication::my_mpi_rank(comm_))
-            std::cout << "Redistributing using "
-                      << "recursive coordinate bisection"
-                      << " .........\n";
-
-          rebalanceParams.set("partitioning method", "RCB");
-
-          // here we can reuse the graph, which was calculated before, this saves us some time and
-          // in addition calculate geometric information based on the coordinates of the
-          // discretization
-          rowmap = std::make_shared<Core::LinAlg::Map>(-1, graph_[i]->row_map().NumMyElements(),
-              graph_[i]->row_map().MyGlobalElements(), 0,
-              Core::Communication::as_epetra_comm(comm_));
-          colmap = std::make_shared<Core::LinAlg::Map>(-1, graph_[i]->col_map().NumMyElements(),
-              graph_[i]->col_map().MyGlobalElements(), 0,
-              Core::Communication::as_epetra_comm(comm_));
-
-          discret->redistribute(*rowmap, *colmap,
-              {.assign_degrees_of_freedom = false,
-                  .init_elements = false,
-                  .do_boundary_conditions = false});
-
-          std::shared_ptr<Core::LinAlg::MultiVector<double>> coordinates =
-              discret->build_node_coordinates();
-
-          std::tie(rowmap, colmap) = Core::Rebalance::rebalance_node_maps(
-              *graph_[i], rebalanceParams, nullptr, nullptr, coordinates);
-
-          break;
-        }
-        case Core::Rebalance::RebalanceType::monolithic:
-        {
-          if (!Core::Communication::my_mpi_rank(comm_))
-            std::cout << "Redistributing using "
-                      << "monolithic hypergraph"
-                      << " .........\n";
-
-          rebalanceParams.set("partitioning method", "HYPERGRAPH");
-
-          rowmap = std::make_shared<Core::LinAlg::Map>(-1, graph_[i]->row_map().NumMyElements(),
-              graph_[i]->row_map().MyGlobalElements(), 0,
-              Core::Communication::as_epetra_comm(comm_));
-          colmap = std::make_shared<Core::LinAlg::Map>(-1, graph_[i]->col_map().NumMyElements(),
-              graph_[i]->col_map().MyGlobalElements(), 0,
-              Core::Communication::as_epetra_comm(comm_));
-
-          discret->redistribute(*rowmap, *colmap, {.do_boundary_conditions = false});
-
-          std::shared_ptr<const Core::LinAlg::Graph> enriched_graph =
-              Core::Rebalance::build_monolithic_node_graph(*discret,
-                  Core::GeometricSearch::GeometricSearchParams(
-                      parameters_.geometric_search_parameters, parameters_.io_parameters));
-
-          std::tie(rowmap, colmap) =
-              Core::Rebalance::rebalance_node_maps(*enriched_graph, rebalanceParams);
-
-          break;
-        }
-        default:
-          FOUR_C_THROW("Appropriate partitioning has to be set!");
-      }
+      std::tie(rowmap, colmap) = do_rebalance_discretization(
+          graph, discret, rebalanceMethod, rebalanceParams, parameters, comm);
     }
     else
     {
       rowmap = colmap = std::make_shared<Core::LinAlg::Map>(
-          -1, 0, nullptr, 0, Core::Communication::as_epetra_comm(comm_));
+          -1, 0, nullptr, 0, Core::Communication::as_epetra_comm(comm));
     }
 
     auto options_redistribution = Core::FE::OptionsRedistribution();
@@ -254,11 +240,25 @@ void Core::IO::MeshReader::rebalance()
     options_redistribution.init_elements = false;
     options_redistribution.do_boundary_conditions = false;
 
-    discret->redistribute(*rowmap, *colmap, options_redistribution);
+    discret.redistribute(*rowmap, *colmap, options_redistribution);
 
-    Core::Rebalance::Utils::print_parallel_distribution(*discret);
+    Core::Rebalance::Utils::print_parallel_distribution(discret);
+  }
+}  // namespace
+
+/*----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*/
+void Core::IO::MeshReader::rebalance()
+{
+  TEUCHOS_FUNC_TIME_MONITOR("Core::IO::MeshReader::Rebalance");
+
+  for (size_t i = 0; i < element_readers_.size(); i++)
+  {
+    rebalance_discretization(*element_readers_[i].get_dis(), element_readers_[i].get_unique_nodes(),
+        *element_readers_[i].get_row_elements(), parameters_, comm_);
   }
 }
+
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
