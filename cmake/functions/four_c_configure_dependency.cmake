@@ -259,7 +259,7 @@ function(four_c_configure_dependency _package_name)
           "#define FOUR_C_${_package_name_sanitized}_INTERNAL_VERSION_MINOR ${FOUR_C_${_package_name_sanitized}_INTERNAL_VERSION_MINOR}\n"
           # Define a macro to check if the version is greater or equal to a given version.
           "#define FOUR_C_${_package_name_sanitized}_INTERNAL_VERSION_GE(major, minor) \\\n"
-          "  ((FOUR_C_${_package_name_sanitized}_INTERNAL_VERSION_MAJOR * 1000 + \\\n"
+          "  (FOUR_C_${_package_name_sanitized}_INTERNAL_VERSION_MAJOR * 1000 + \\\n"
           "  FOUR_C_${_package_name_sanitized}_INTERNAL_VERSION_MINOR\\\n"
           "  >= ((major) * 1000 + (minor)))\n"
           "#define FOUR_C_${_package_name_sanitized}_HASH \"${FOUR_C_${_package_name}_GIT_HASH}\"\n"
