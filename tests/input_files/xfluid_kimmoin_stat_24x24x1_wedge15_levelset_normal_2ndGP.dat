@@ -99,8 +99,7 @@ AZPREC                          ILU
 AZREUSE                         1
 AZTOL                           1.0E-8
 AZCONV                          AZ_r0
-IFPACKOVERLAP                   3
-IFPACKGFILL                     3
+IFPACK_XML_FILE                 xfluid_ifpack.xml
 -------------------------------------------------------------------MATERIALS
 MAT 1 MAT_fluid DYNVISCOSITY 0.0001 DENSITY 1.0 GAMMA 1.0
 ----------------------------------------------------------------------FUNCT1

@@ -106,12 +106,11 @@ AZOUTPUT                        50
 AZSOLVE                         GMRES
 AZPREC                          ILU
 AZREUSE                         1
-IFPACKGFILL                     3
 AZTOL                           1.0E-13
 AZCONV                          AZ_r0
 AZITER                          1000
 AZSUB                           1000
-IFPACKOVERLAP                   0
+IFPACK_XML_FILE                 xff_kimmoin_ifpack.xml
 --------------------------------------------------------------------SOLVER 2
 NAME                            Scatra_Solver
 SOLVER                          UMFPACK

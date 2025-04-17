@@ -66,11 +66,10 @@ AZOUTPUT                        0
 AZSOLVE                         GMRES
 AZPREC                          ILU
 AZREUSE                         0
-IFPACKGFILL                     0
 AZTOL                           1.0E-7
 AZITER                          1000
 AZSUB                           25
-IFPACKOVERLAP                   0
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 THROW_IF_UNCONVERGED            No
 ----------------------------------------------DESIGN POINT DIRICH CONDITIONS
 // DOBJECT FLAG FLAG FLAG FLAG FLAG FLAG VAL VAL VAL VAL VAL VAL CURVE CURVE CURVE CURVE CURVE CURVE

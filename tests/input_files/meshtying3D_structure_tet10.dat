@@ -45,6 +45,7 @@ LM_QUAD                         quad
 NAME                            Meshtying_Solver
 SOLVER                          Belos
 AZPREC                          ILU
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 -------------------------------------------------------------------MATERIALS
 MAT 1 MAT_ElastHyper NUMMAT 1 MATIDS 2 DENS 7.8e-6
 MAT 2 ELAST_CoupNeoHooke YOUNG 10 NUE 0.3

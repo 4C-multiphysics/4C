@@ -127,6 +127,7 @@ NAME                            Fluid_Solver
 SOLVER                          Belos
 AZSOLVE                         GMRES
 AZPREC                          ILU
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 AZTOL                           1.0E-10
 AZCONV                          AZ_r0
 AZREUSE                         5

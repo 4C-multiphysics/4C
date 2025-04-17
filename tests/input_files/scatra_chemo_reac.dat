@@ -81,6 +81,7 @@ CONSISTENCY                     no
 -----------------------------------------------------------SOLVER 1
 NAME                            ScaTraSolver
 SOLVER                          Belos
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 AZSOLVE                         GMRES
 AZPREC                          ILU
 AZTOL                           1e-12

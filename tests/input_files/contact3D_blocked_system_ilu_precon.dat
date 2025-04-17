@@ -91,8 +91,7 @@ NAME                            Contact_Solver
 SOLVER                          Belos
 SOLVER_XML_FILE                 xml/linear_solver/iterative_gmres_template.xml
 AZPREC                          ILU
-IFPACKGFILL                     4
-IFPACKOVERLAP                   1
+IFPACK_XML_FILE                 contact3D_ifpack.xml
 AZREUSE                         5
 ----------------------------------------------------------MATERIALS
 MAT 1 MAT_ElastHyper NUMMAT 1 MATIDS 10 DENS 1.0e-6

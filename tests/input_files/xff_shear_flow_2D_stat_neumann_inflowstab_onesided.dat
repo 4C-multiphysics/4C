@@ -60,10 +60,9 @@ REYNOLDS-STRESS                 no_reynolds
 --------------------------------------------------------------------SOLVER 1
 SOLVER                          UMFPACK
 AZCONV                          AZ_r0
-IFPACKGFILL                     0
 AZITER                          1000
 AZOUTPUT                        0
-IFPACKOVERLAP                   0
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 AZPREC                          ILU
 AZREUSE                         4
 AZSOLVE                         GMRES

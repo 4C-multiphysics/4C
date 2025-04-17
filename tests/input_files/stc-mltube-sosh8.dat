@@ -27,6 +27,7 @@ THETA                           1.0
 --------------------------------------------------------------------SOLVER 1
 NAME                            Structure_Solver
 SOLVER                          Belos
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 AZREUSE                         1
 AZTOL                           1.0E-6
 AZSUB                           100
