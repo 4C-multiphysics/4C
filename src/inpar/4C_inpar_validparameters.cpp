@@ -149,7 +149,7 @@ std::map<std::string, Core::IO::InputSpec> Input::valid_parameters()
             parameter<std::filesystem::path>(
                 "FILE", {.description = "Path to the exodus geometry file. Either absolute or "
                                         "relative to the input file."}),
-            // Once we support more format, we should add a "TYPE" parameter for the file format.
+            // Once we support more formats, we should add a "TYPE" parameter for the file format.
             list("ELEMENT_BLOCKS",
                 all_of({
                     parameter<int>(

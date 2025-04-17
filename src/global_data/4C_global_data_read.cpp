@@ -21,7 +21,6 @@
 #include "4C_inpar_validconditions.hpp"
 #include "4C_inpar_validparameters.hpp"
 #include "4C_io.hpp"
-#include "4C_io_elementreader.hpp"
 #include "4C_io_exodus.hpp"
 #include "4C_io_input_file.hpp"
 #include "4C_io_input_file_utils.hpp"
@@ -199,12 +198,12 @@ std::unique_ptr<Core::IO::MeshReader> Global::read_discretization(
   auto output_control = problem.output_control_file();
 
   // the basic mesh reader. now add desired node and element readers to it!
-  auto meshreader_out = std::make_unique<Core::IO::MeshReader>(input, "NODE COORDS",
-      Core::IO::MeshReader::MeshReaderParameters{
-          .mesh_partitioning_parameters = Problem::instance()->mesh_partitioning_params(),
-          .geometric_search_parameters = Problem::instance()->geometric_search_params(),
-          .io_parameters = Problem::instance()->io_params(),
-      });
+  auto meshreader_out = std::make_unique<Core::IO::MeshReader>(
+      input, Core::IO::MeshReader::MeshReaderParameters{
+                 .mesh_partitioning_parameters = Problem::instance()->mesh_partitioning_params(),
+                 .geometric_search_parameters = Problem::instance()->geometric_search_params(),
+                 .io_parameters = Problem::instance()->io_params(),
+             });
   auto& meshreader = *meshreader_out;
 
   MPI_Comm comm = problem.get_communicators()->local_comm();
@@ -825,7 +824,7 @@ std::unique_ptr<Core::IO::MeshReader> Global::read_discretization(
 
     problem.add_dis(name, dis);
 
-    if (!input_file_keyword.empty()) meshreader.add_advanced_reader(dis, input_file_keyword);
+    if (!input_file_keyword.empty()) meshreader.attach_discretization(dis, input_file_keyword);
   }
 
   // Set the output writer for all discretizations that have been allocated and attached to the
@@ -1113,19 +1112,17 @@ void Global::read_micro_fields(Global::Problem& problem, const std::filesystem::
 
         read_materials(*micro_problem, micro_input_file);
 
-        Core::IO::MeshReader micromeshreader(micro_input_file, "NODE COORDS",
+        Core::IO::MeshReader micromeshreader(micro_input_file,
             {.mesh_partitioning_parameters = Problem::instance()->mesh_partitioning_params(),
                 .geometric_search_parameters = Problem::instance()->geometric_search_params(),
                 .io_parameters = Problem::instance()->io_params()});
 
         if (micro_dis_name == "structure")
         {
-          micromeshreader.add_element_reader(
-              Core::IO::ElementReader(dis_micro, micro_input_file, "STRUCTURE ELEMENTS"));
+          micromeshreader.attach_discretization(dis_micro, "STRUCTURE");
         }
         else
-          micromeshreader.add_element_reader(
-              Core::IO::ElementReader(dis_micro, micro_input_file, "TRANSPORT ELEMENTS"));
+          micromeshreader.attach_discretization(dis_micro, "TRANSPORT");
 
         micromeshreader.read_and_partition();
 
@@ -1245,12 +1242,11 @@ void Global::read_microfields_np_support(Global::Problem& problem)
 
     read_materials(*micro_problem, micro_input_file);
 
-    Core::IO::MeshReader micromeshreader(micro_input_file, "NODE COORDS",
+    Core::IO::MeshReader micromeshreader(micro_input_file,
         {.mesh_partitioning_parameters = Problem::instance()->mesh_partitioning_params(),
             .geometric_search_parameters = Problem::instance()->geometric_search_params(),
             .io_parameters = Problem::instance()->io_params()});
-    micromeshreader.add_element_reader(
-        Core::IO::ElementReader(structdis_micro, micro_input_file, "STRUCTURE ELEMENTS"));
+    micromeshreader.attach_discretization(structdis_micro, "STRUCTURE");
     micromeshreader.read_and_partition();
 
     read_conditions(*micro_problem, micro_input_file, micromeshreader);
