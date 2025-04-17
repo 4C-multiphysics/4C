@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------TITLE
-Description: Simulate a beam coupled to a solid via penalty mortar coupling.
+Description: Simulate a beam coupled to a solid via penalty mortar coupling using saddle point formulation.
              The shape functions for the Lagrange multplicators are line2.
 --------------------------------------------------------------------PROBLEM SIZE
 DIM                                   3
@@ -25,7 +25,7 @@ STRAINS_GAUSSPOINT                    Yes
 LINEAR_SOLVER                         1
 INT_STRATEGY                          Standard
 DYNAMICTYPE                            Statics
-RESULTSEVERY                           1
+RESULTSEVRY                           1
 NLNSOL                                fullnewton
 PREDICT                               TangDis
 TIMESTEP                              0.5
@@ -55,6 +55,7 @@ MODELEVALUATOR                        Standard
 CONTACT_DISCRETIZATION                mortar
 MORTAR_SHAPE_FUNCTION                 line2
 CONSTRAINT_STRATEGY                   penalty
+SADDLE_POINT_FORMULATION              no
 PENALTY_PARAMETER                     10
 GEOMETRY_PAIR_STRATEGY                segmentation
 GEOMETRY_PAIR_SEGMENTATION_SEARCH_POINTS           2
@@ -68,31 +69,36 @@ SEGMENTATION                          yes
 INTEGRATION_POINTS                    yes
 --------------------------------------------------------------RESULT DESCRIPTION
 // Displacements at a solid node.
-STRUCTURE DIS structure NODE 175 QUANTITY dispx VALUE -4.57882749223645247e-01 TOLERANCE 1e-10
-STRUCTURE DIS structure NODE 175 QUANTITY dispy VALUE -4.90627874498921271e-02 TOLERANCE 1e-10
-STRUCTURE DIS structure NODE 175 QUANTITY dispz VALUE 2.32330318631286525e+00 TOLERANCE 1e-10
+STRUCTURE DIS structure NODE 175 QUANTITY dispx VALUE -4.57780181127378838e-01 TOLERANCE 1e-10
+STRUCTURE DIS structure NODE 175 QUANTITY dispy VALUE -4.99437938601516238e-02 TOLERANCE 1e-10
+STRUCTURE DIS structure NODE 175 QUANTITY dispz VALUE 2.32320426889857101e+00 TOLERANCE 1e-10
 // Displacements at a beam node.
-STRUCTURE DIS structure NODE 204 QUANTITY dispx VALUE -2.45242805062737074e-01 TOLERANCE 1e-10
-STRUCTURE DIS structure NODE 204 QUANTITY dispy VALUE -2.63939733702232074e-02 TOLERANCE 1e-10
-STRUCTURE DIS structure NODE 204 QUANTITY dispz VALUE 1.90067729494861815e+00 TOLERANCE 1e-10
+STRUCTURE DIS structure NODE 204 QUANTITY dispx VALUE -2.45169239738679101e-01 TOLERANCE 1e-10
+STRUCTURE DIS structure NODE 204 QUANTITY dispy VALUE -2.71493989526840028e-02 TOLERANCE 1e-10
+STRUCTURE DIS structure NODE 204 QUANTITY dispz VALUE 1.90057965870567602e+00 TOLERANCE 1e-10
 -----------------------------------------------------------------------MATERIALS
 MAT 1 MAT_Struct_StVenantKirchhoff YOUNG 1 NUE 0.0 DENS 0.0
 MAT 2 MAT_BeamReissnerElastHyper YOUNG 100 POISSONRATIO 0.0 DENS 0.0 CROSSAREA 0.007853981633974483 SHEARCORR 1 MOMINPOL 9.817477042468105e-06 MOMIN2 4.9087385212340526e-06 MOMIN3 4.9087385212340526e-06
 --------------------------------------------------------------------------FUNCT1
 SYMBOLIC_FUNCTION_OF_SPACE_TIME t
 --------------------------------------------------DESIGN POINT DIRICH CONDITIONS
-E 1 NUMDOF 9 ONOFF 0 0 0 0 0 1 0 0 0 VAL 0 0 0 0 0 0 0 0 0 FUNCT 0 0 0 0 0 0 0 0 0
+DPOINT 1
+E 1 - NUMDOF 9 ONOFF 0 0 0 0 0 1 0 0 0 VAL 0 0 0 0 0 0 0 0 0 FUNCT 0 0 0 0 0 0 0 0 0
 ---------------------------------------------------DESIGN SURF DIRICH CONDITIONS
+DSURF 1
 // fix
-E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT 0 0 0
+E 1 - NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT 0 0 0
 --------------------------------------------------DESIGN LINE NEUMANN CONDITIONS
-E 1 NUMDOF 9 ONOFF 1 1 1 0 0 0 0 0 0 VAL 0 0 0.00025 0 0 0 0 0 0 FUNCT 1 1 1 0 0 0 0 0 0
+DLINE 1
+E 1 - NUMDOF 9 ONOFF 1 1 1 0 0 0 0 0 0 VAL 0 0 0.00025 0 0 0 0 0 0 FUNCT 1 1 1 0 0 0 0 0 0
 --------------------------BEAM INTERACTION/BEAM TO SOLID VOLUME MESHTYING VOLUME
 // Define the volumes for the beam-to-solid volume meshtying.
-E 1 COUPLING_ID 1
+DVOL                                  1
+E 1 - COUPLING_ID 1
 ----------------------------BEAM INTERACTION/BEAM TO SOLID VOLUME MESHTYING LINE
 // Define the lines for the beam-to-solid volume meshtying.
-E 1 COUPLING_ID 1
+DLINE                                 1
+E 1 - COUPLING_ID 1
 -------------------------------------------------------------DNODE-NODE TOPOLOGY
 NODE 190 DNODE 1
 -------------------------------------------------------------DLINE-NODE TOPOLOGY

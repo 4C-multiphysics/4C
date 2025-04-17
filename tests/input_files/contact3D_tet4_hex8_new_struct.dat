@@ -20,6 +20,23 @@ OUTPUT_BIN                      Yes
 STRUCT_DISP                     Yes
 STRUCT_STRESS                   Cauchy
 FILESTEPS                       1000
+-----------------------------------------------------------IO/RUNTIME VTK OUTPUT
+OUTPUT_DATA_FORMAT                    binary
+INTERVAL_STEPS                        1
+EVERY_ITERATION                       yes
+-------------------------------------------------IO/RUNTIME VTK OUTPUT/STRUCTURE
+OUTPUT_STRUCTURE                      yes
+DISPLACEMENT                          yes
+STRESS_STRAIN                         no
+ELEMENT_OWNER                         yes
+ELEMENT_GID                           yes
+-----------------------------------------------------IO/RUNTIME VTK OUTPUT/BEAMS
+OUTPUT_BEAMS                          yes
+DISPLACEMENT                          yes
+USE_ABSOLUTE_POSITIONS                yes
+TRIAD_VISUALIZATIONPOINT              yes
+STRAINS_GAUSSPOINT                    yes
+ELEMENT_GID                           yes
 ----------------------------------------------------------STRUCTURAL DYNAMIC
 INT_STRATEGY                    Standard
 LINEAR_SOLVER                   1

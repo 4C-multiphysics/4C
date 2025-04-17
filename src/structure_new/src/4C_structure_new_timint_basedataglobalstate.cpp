@@ -393,7 +393,8 @@ int Solid::TimeInt::BaseDataGlobalState::setup_block_information(
     case Inpar::Solid::model_constraints:
     {
       // structural block
-      model_block_id_[mt] = 0;
+      model_block_id_[mt] = max_block_num_;
+      ++max_block_num_;
       break;
     }
     case Inpar::Solid::model_basic_coupling:
