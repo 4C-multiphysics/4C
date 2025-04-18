@@ -12,8 +12,7 @@
 
 #include "4C_linear_solver_method.hpp"
 
-#include <Amesos_BaseSolver.h>
-#include <EpetraExt_Reindex_LinearProblem2.h>
+#include <Amesos2.hpp>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -52,9 +51,6 @@ namespace Core::LinearSolver
     //! flag indicating whether a valid factorization is stored
     bool factored_;
 
-    //! a linear problem wrapper class used by Trilinos and for scaling of the system
-    std::shared_ptr<Epetra_LinearProblem> linear_problem_;
-
     //! initial guess and solution
     std::shared_ptr<VectorType> x_;
 
@@ -65,10 +61,7 @@ namespace Core::LinearSolver
     std::shared_ptr<MatrixType> a_;
 
     //! an abstract amesos solver that can be any of the amesos concrete implementations
-    std::shared_ptr<Amesos_BaseSolver> solver_;
-
-    //! reindex linear problem for amesos
-    std::shared_ptr<EpetraExt::LinearProblem_Reindex2> reindexer_;
+    Teuchos::RCP<Amesos2::Solver<Epetra_CrsMatrix, Epetra_MultiVector>> solver_;
 
     /*! \brief Krylov projector for solving near singular linear systems
      *

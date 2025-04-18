@@ -10,10 +10,7 @@
 #include "4C_linalg_krylov_projector.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 
-#include <Amesos_Klu.h>
-#include <Amesos_Superludist.h>
-#include <Amesos_Umfpack.h>
-#include <Epetra_LinearProblem.h>
+#include <Teuchos_RCP.hpp>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -21,13 +18,8 @@ FOUR_C_NAMESPACE_OPEN
 //----------------------------------------------------------------------------------
 template <class MatrixType, class VectorType>
 Core::LinearSolver::DirectSolver<MatrixType, VectorType>::DirectSolver(std::string solvertype)
-    : solvertype_(solvertype),
-      factored_(false),
-      solver_(nullptr),
-      reindexer_(nullptr),
-      projector_(nullptr)
+    : solvertype_(solvertype), factored_(false), solver_(nullptr), projector_(nullptr)
 {
-  linear_problem_ = std::make_shared<Epetra_LinearProblem>();
 }
 
 //----------------------------------------------------------------------------------
@@ -69,29 +61,41 @@ void Core::LinearSolver::DirectSolver<MatrixType, VectorType>::setup(
   b_ = b;
   a_ = crsA;
 
-  // 3. Do a GID reindexing of the overall problem and create the direct solver
-  linear_problem_->SetRHS(b_->get_ptr_of_Epetra_MultiVector().get());
-  linear_problem_->SetLHS(x_->get_ptr_of_Epetra_MultiVector().get());
-  linear_problem_->SetOperator(a_.get());
-
-  if (reindexer_ and not(reset or refactor)) reindexer_->fwd();
-
+  // 3. create linear solver
   if (reset or refactor or not is_factored())
   {
-    reindexer_ = std::make_shared<EpetraExt::LinearProblem_Reindex2>(nullptr);
+    std::string solver_type;
+    Teuchos::ParameterList params("Amesos2");
 
     if (solvertype_ == "umfpack")
     {
-      solver_ = std::make_shared<Amesos_Umfpack>((*reindexer_)(*linear_problem_));
+      solver_type = "Umfpack";
+      auto umfpack_params = Teuchos::sublist(Teuchos::rcpFromRef(params), solver_type);
+      umfpack_params->set("IsContiguous", false, "Are GIDs Contiguous");
     }
     else if (solvertype_ == "superlu")
     {
-      solver_ = std::make_shared<Amesos_Superludist>((*reindexer_)(*linear_problem_));
+      solver_type = "SuperLU_DIST";
+      auto superludist_params = Teuchos::sublist(Teuchos::rcpFromRef(params), solver_type);
+      // superludist_params->set("Equal", true, "Whether to equilibrate the system before solve");
+      // superludist_params->set("ColPerm", "NATURAL", "Column ordering");
+      superludist_params->set("RowPerm", "LargeDiag_MC64", "Row ordering");
+      superludist_params->set("ReplaceTinyPivot", true, "Replace tiny pivot");
+      superludist_params->set("IsContiguous", false, "Are GIDs Contiguous");
     }
     else
     {
-      solver_ = std::make_shared<Amesos_Klu>((*reindexer_)(*linear_problem_));
+      solver_type = "KLU2";
+      auto klu_params = Teuchos::sublist(Teuchos::rcpFromRef(params), solver_type);
+      klu_params->set("IsContiguous", false, "Are GIDs Contiguous");
     }
+
+    solver_ = Amesos2::create<Epetra_CrsMatrix, Epetra_MultiVector>(solver_type,
+        Teuchos::rcp_dynamic_cast<Epetra_CrsMatrix>(Teuchos::rcpFromRef(*a_)),
+        Teuchos::rcpFromRef(*x_->get_ptr_of_Epetra_MultiVector()),
+        Teuchos::rcpFromRef(*b_->get_ptr_of_Epetra_MultiVector()));
+
+    solver_->setParameters(Teuchos::rcpFromRef(params));
 
     factored_ = false;
   }
@@ -104,12 +108,12 @@ int Core::LinearSolver::DirectSolver<MatrixType, VectorType>::solve()
 {
   if (not is_factored())
   {
-    solver_->SymbolicFactorization();
-    solver_->NumericFactorization();
+    solver_->symbolicFactorization();
+    solver_->numericFactorization();
     factored_ = true;
   }
 
-  solver_->Solve();
+  solver_->solve();
 
   if (projector_ != nullptr) projector_->apply_p(*x_);
 
