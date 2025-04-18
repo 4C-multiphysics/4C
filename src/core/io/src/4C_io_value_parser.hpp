@@ -122,6 +122,7 @@ namespace Core::IO
       requires(rank<T>() == 0)
     T read()
     {
+      ParsingGuard guard(*this);
       T val;
       read_internal(val);
       return val;
@@ -131,6 +132,7 @@ namespace Core::IO
       requires(rank<T>() == 1)
     T read(std::size_t size)
     {
+      ParsingGuard guard(*this);
       size_info_ = &size;
       T val;
       read_internal(val);
@@ -143,6 +145,7 @@ namespace Core::IO
       requires(rank<T>() > 0)
     T read(const std::array<std::size_t, rank<T>()>& size)
     {
+      ParsingGuard guard(*this);
       size_info_ = size.data();
       T val;
       read_internal(val);
@@ -153,6 +156,7 @@ namespace Core::IO
     template <Internal::IsStdArray T>
     T read()
     {
+      ParsingGuard guard(*this);
       T val;
       read_internal(val);
       return val;
@@ -185,7 +189,21 @@ namespace Core::IO
     void backtrack();
 
    private:
+    //! Use RAII to initialize and cleanup the parser in every read operation.
+    struct ParsingGuard
+    {
+      ParsingGuard(ValueParser& parser) : parser(parser) { parser.advance_token_compound(); }
+      ~ParsingGuard() { parser.decompose_index_ = std::numeric_limits<std::size_t>::max(); }
+      ValueParser& parser;
+    };
+
     std::string_view advance_token();
+    std::string_view advance_token_compound();
+    std::string_view peek_internal() const;
+
+    //! This function is called when a compound type is parsed. In this case, we need to further
+    //! decompose the token into subtokens.
+    void mark_current_token_as_compound();
 
     void read_internal(bool& value);
     void read_internal(int& value);
@@ -214,10 +232,10 @@ namespace Core::IO
     template <typename T, typename... SizeInfo>
     void read_internal(std::optional<T>& value)
     {
-      auto next = peek();
+      auto next = peek_internal();
       if (next == "none")
       {
-        consume("none");
+        advance_token();
         value.reset();
       }
       else
@@ -230,7 +248,10 @@ namespace Core::IO
     void read_internal(std::vector<T>& value)
     {
       const std::size_t my_size = size_info_[0];
+      FOUR_C_ASSERT_ALWAYS(my_size > 0, "{}Expected a size greater than 0 for the vector.",
+          context_.user_scope_message);
       size_info_++;
+      mark_current_token_as_compound();
       value.resize(my_size);
       for (std::size_t i = 0; i < my_size; ++i)
       {
@@ -242,6 +263,8 @@ namespace Core::IO
     template <typename T, std::size_t n, typename... SizeInfo>
     void read_internal(std::array<T, n>& value)
     {
+      static_assert(n > 0);
+      mark_current_token_as_compound();
       for (std::size_t i = 0; i < n; ++i)
       {
         read_internal(value[i]);
@@ -252,10 +275,14 @@ namespace Core::IO
     void read_internal(std::map<std::string, U>& value)
     {
       const std::size_t my_size = size_info_[0];
+      FOUR_C_ASSERT_ALWAYS(my_size > 0, "{}Expected a size greater than 0 for the map.",
+          context_.user_scope_message);
       size_info_++;
+      mark_current_token_as_compound();
+
+      std::string key;
       for (std::size_t i = 0; i < my_size; ++i)
       {
-        std::string key;
         read_internal(key);
         read_internal(value[key]);
       }
@@ -265,8 +292,18 @@ namespace Core::IO
     //! The data to parse from.
     std::string_view line_;
 
-    //! The current position in the line_.
+    //! The current position of the token in the line_.
     std::size_t current_index_{0};
+
+    //! The current token that is being parsed.
+    std::string_view token_;
+
+    //! The current compound token. #token_ is either identical to this or a subtoken of it.
+    std::string_view compound_token_;
+
+    //! If the token is further decomposed into subtokens, this is the index of the current
+    //! subtoken. If the value is equal to the max value, the token is not decomposed.
+    std::size_t decompose_index_{std::numeric_limits<std::size_t>::max()};
 
     //! Additional context.
     ValueParserContext context_{};

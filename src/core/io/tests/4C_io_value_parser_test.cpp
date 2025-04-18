@@ -216,16 +216,20 @@ namespace
 
   TEST(ValueParser, ReadOptionalNone)
   {
-    std::string_view in("none none none");
+    std::string_view in("none none none 1 none");
     Core::IO::ValueParser parser(in);
 
     auto optional_int = parser.read<std::optional<int>>();
     auto optional_double = parser.read<std::optional<double>>();
     auto optional_string = parser.read<std::optional<std::string>>();
+    auto optional_vector = parser.read<std::vector<std::optional<int>>>(2);
 
     EXPECT_FALSE(optional_int.has_value());
     EXPECT_FALSE(optional_double.has_value());
     EXPECT_FALSE(optional_string.has_value());
+    EXPECT_EQ(optional_vector.size(), 2);
+    EXPECT_TRUE(optional_vector[0].has_value());
+    EXPECT_FALSE(optional_vector[1].has_value());
   }
 
   TEST(ValueParser, NestedVectors)
@@ -338,13 +342,16 @@ namespace
 
   TEST(ValueParser, ReadQuoted)
   {
-    std::string_view in(R"("string with spaces" "a" "1.0" "consume this"
+    std::string_view in(R"("string with spaces" "a" "1.0" "none 1.0 3" "consume this"
   )");  // trailing whitespace and newline are deliberate
     Core::IO::ValueParser parser(in, {.token_delimiter = '"'});
 
     EXPECT_EQ(parser.read<std::string>(), "string with spaces");
     EXPECT_EQ(parser.read<std::string>(), "a");
     EXPECT_EQ(parser.read<double>(), 1.0);
+    EXPECT_EQ(parser.read<std::vector<std::optional<double>>>(3),
+        (std::vector<std::optional<double>>{std::nullopt, 1.0, 3.0}));
+    EXPECT_EQ(parser.peek(), "consume this");
     parser.consume("consume this");
     EXPECT_TRUE(parser.at_end());
     EXPECT_TRUE(parser.peek().empty());

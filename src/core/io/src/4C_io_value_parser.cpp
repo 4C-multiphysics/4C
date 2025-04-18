@@ -129,18 +129,18 @@ Core::IO::ValueParser::ValueParser(std::string_view line, ValueParserContext con
 
 void Core::IO::ValueParser::consume(const std::string& expected)
 {
-  std::string_view read_string = advance_token();
-  if (read_string != std::string_view(expected))
+  ParsingGuard guard(*this);
+  if (token_ != std::string_view(expected))
     FOUR_C_THROW("{}Could not read expected string '{}'.", context_.user_scope_message, expected);
 }
 
 
 void Core::IO::ValueParser::consume_comment(const std::string& comment_marker)
 {
-  std::string token(advance_token());
-  if (token != comment_marker)
+  ParsingGuard guard(*this);
+  if (token_ != comment_marker)
     FOUR_C_THROW(
-        "{}', but found '{}'.", context_.user_scope_message, comment_marker.c_str(), token);
+        "{}', but found '{}'.", context_.user_scope_message, comment_marker.c_str(), token_);
 
   // Consume the rest of the line
   current_index_ = line_.size();
@@ -164,14 +164,78 @@ std::string_view Core::IO::ValueParser::get_unparsed_remainder() const
 }
 
 
-std::string_view Core::IO::ValueParser::advance_token()
+std::string_view Core::IO::ValueParser::advance_token_compound()
 {
-  auto token = advance_token_impl(line_, current_index_, context_.token_delimiter);
-
-  FOUR_C_ASSERT_ALWAYS(!token.empty(), "{}Expected more tokens, but reached the end of the line.",
+  token_ = advance_token_impl(line_, current_index_, context_.token_delimiter);
+  FOUR_C_ASSERT_ALWAYS(!token_.empty(), "{}Expected more tokens, but reached the end of the line.",
       context_.user_scope_message);
 
-  return token;
+  // If we deal with compound tokens, due to different delimiters, we store it here. The
+  // advance_token_compound() function will take care of the rest.
+  decompose_index_ = std::numeric_limits<std::size_t>::max();
+  compound_token_ = token_;
+
+  return token_;
+}
+
+std::string_view Core::IO::ValueParser::advance_token()
+{
+  const bool is_current_token_marked_as_compound =
+      decompose_index_ != std::numeric_limits<std::size_t>::max();
+  if (context_.token_delimiter == 0 || !is_current_token_marked_as_compound)
+  {
+    if (compound_token_.empty())
+    {
+      token_ = advance_token_impl(line_, current_index_, context_.token_delimiter);
+    }
+    else
+    {
+      // The first time we try to advance inside a compound token here, we realize that we don't
+      // need to do anything special, so we discard the compound_token_ (which is identical to
+      // token_). This also means that we do not advance anything, since we are already at the next
+      // token that should be consumed by some compound type.
+      compound_token_ = {};
+    }
+  }
+  else if (is_current_token_marked_as_compound)
+  {
+    FOUR_C_ASSERT(!compound_token_.empty(), "Internal error: no token to decompose.");
+    token_ = advance_token_impl(compound_token_, decompose_index_, 0);
+  }
+  FOUR_C_ASSERT_ALWAYS(!token_.empty(), "{}Expected more tokens, but reached the end of the line.",
+      context_.user_scope_message);
+  return token_;
+}
+
+std::string_view Core::IO::ValueParser::peek_internal() const
+{
+  const bool is_current_token_marked_as_compound =
+      decompose_index_ != std::numeric_limits<std::size_t>::max();
+  if (context_.token_delimiter == 0 || !is_current_token_marked_as_compound)
+  {
+    if (compound_token_.empty())
+    {
+      std::size_t tmp_index = current_index_;
+      return advance_token_impl(line_, tmp_index, context_.token_delimiter);
+    }
+    else
+    {
+      return compound_token_;
+    }
+  }
+  else
+  {
+    FOUR_C_ASSERT(!compound_token_.empty(), "Internal error: no token to decompose.");
+
+    std::size_t tmp_index = decompose_index_;
+    return advance_token_impl(compound_token_, tmp_index, 0);
+  }
+}
+
+
+void Core::IO::ValueParser::mark_current_token_as_compound()
+{
+  if (decompose_index_ == std::numeric_limits<std::size_t>::max()) decompose_index_ = 0;
 }
 
 void Core::IO::ValueParser::backtrack()
