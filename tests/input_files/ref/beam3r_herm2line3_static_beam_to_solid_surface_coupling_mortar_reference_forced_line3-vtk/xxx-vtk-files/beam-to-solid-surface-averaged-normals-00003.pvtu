@@ -1,0 +1,21 @@
+<?xml version="1.0" ?> 
+<!-- 
+# vtk DataFile Version 3.0
+-->
+<VTKFile type="PUnstructuredGrid" version="0.1" byte_order="LittleEndian">
+  <PUnstructuredGrid GhostLevel="0">
+    <PPoints>
+      <PDataArray type="Float64" NumberOfComponents="3"/>
+    </PPoints>
+    <PPointData>
+      <PDataArray type="Int32" Name="coupling_id" format="ascii"/>
+      <PDataArray type="Float64" Name="displacement" NumberOfComponents="3" format="ascii"/>
+      <PDataArray type="Float64" Name="normal_averaged" NumberOfComponents="3" format="ascii"/>
+      <PDataArray type="Float64" Name="normal_element" NumberOfComponents="3" format="ascii"/>
+      <PDataArray type="Int32" Name="uid_0_face_id" format="ascii"/>
+    </PPointData>
+    <Piece Source="beam-to-solid-surface-averaged-normals-00003-0.vtu"/>
+    <Piece Source="beam-to-solid-surface-averaged-normals-00003-1.vtu"/>
+    <Piece Source="beam-to-solid-surface-averaged-normals-00003-2.vtu"/>
+  </PUnstructuredGrid>
+</VTKFile>
