@@ -42,7 +42,7 @@ Debug                               = No
 -----------------------------------------------------------IO/RUNTIME VTK OUTPUT
 OUTPUT_DATA_FORMAT                    binary
 INTERVAL_STEPS                        1
-EVERY_ITERATION                       yes
+EVERY_ITERATION                       no
 -------------------------------------------------IO/RUNTIME VTK OUTPUT/STRUCTURE
 OUTPUT_STRUCTURE                      yes
 DISPLACEMENT                          yes

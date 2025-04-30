@@ -4,7 +4,9 @@
 -->
 <VTKFile type="Collection" version="0.1" ByteOrder="LittleEndian">
   <Collection>
-    <DataSet timestep="1.00000001000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-000010001.pvtu"/>
-    <DataSet timestep="3.00000000000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-000030000.pvtu"/>
+    <DataSet timestep="0.00000000000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-00000.pvtu"/>
+    <DataSet timestep="1.00000000000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-00001.pvtu"/>
+    <DataSet timestep="2.00000000000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-00002.pvtu"/>
+    <DataSet timestep="3.00000000000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-00003.pvtu"/>
   </Collection>
 </VTKFile>
