@@ -55,17 +55,17 @@ RESULT DESCRIPTION:
   - STRUCTURE:
       SPECIAL: true
       QUANTITY: "nodes_proc0"
-      VALUE: 1562
+      VALUE: 1534
       TOLERANCE: 1e-08
   - STRUCTURE:
       SPECIAL: true
       QUANTITY: "nodes_proc1"
-      VALUE: 1311
+      VALUE: 1534
       TOLERANCE: 1e-08
   - STRUCTURE:
       SPECIAL: true
       QUANTITY: "nodes_proc2"
-      VALUE: 1533
+      VALUE: 1338
       TOLERANCE: 1e-08
 DESIGN SURF DIRICH CONDITIONS:
   - E: 1
