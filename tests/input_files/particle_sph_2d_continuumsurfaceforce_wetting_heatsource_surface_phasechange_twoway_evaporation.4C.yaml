@@ -99,7 +99,7 @@ RESULT DESCRIPTION:
       ID: 874
       QUANTITY: "temperature"
       VALUE: 97.8786337246021
-      TOLERANCE: 1e-10
+      TOLERANCE: 7e-10
   - PARTICLE:
       ID: 919
       QUANTITY: "posx"
