@@ -15,86 +15,94 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-Core::Conditions::ConditionSelector::ConditionSelector(
-    const Core::FE::Discretization& dis, std::string condname)
-    : dis_(dis)
+Core::Conditions::Selector::Selector(std::string condition_name) : condition_name_(condition_name)
 {
-  dis.get_condition(condname, conds_);
-  std::sort(conds_.begin(), conds_.end());
 }
 
 
-/*----------------------------------------------------------------------*
- | construct a selector from a given vector of conditions    fang 07/16 |
- *----------------------------------------------------------------------*/
-Core::Conditions::ConditionSelector::ConditionSelector(
-    const Core::FE::Discretization& dis,  //!< discretization
-    const std::vector<Condition*>& conds  //!< given vector of conditions
-    )
-    : dis_(dis), conds_(conds)
+
+Core::Conditions::Selector::Selector(std::string condition_name, int start_pos, int end_pos)
+    : condition_name_(condition_name), start_pos_(start_pos), end_pos_(end_pos)
 {
-  std::sort(conds_.begin(), conds_.end());
 }
 
 
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-bool Core::Conditions::ConditionSelector::select_dofs(
-    Core::Nodes::Node* node, std::set<int>& conddofset)
-{
-  bool found = false;
 
-  // put all conditioned dofs into conddofset
-  if (contains_node(node->id()))
+Core::Conditions::Selector::Selector(const std::vector<Core::Conditions::Condition*>& conditions)
+    : conditions_(conditions)
+{
+  FOUR_C_ASSERT_ALWAYS(conditions_.size() > 0, "Empty condition list");
+}
+
+
+
+void Core::Conditions::setup_extractor(const Core::FE::Discretization& dis,
+    Core::LinAlg::MultiMapExtractor& extractor, const std::vector<Selector>& selectors,
+    bool is_overlapping)
+{
+  setup_extractor(dis, *dis.dof_row_map(), extractor, selectors, is_overlapping);
+}
+
+
+
+void Core::Conditions::setup_extractor(const Core::FE::Discretization& dis,
+    const Core::LinAlg::Map& full_map, Core::LinAlg::MultiMapExtractor& extractor,
+    const std::vector<Selector>& selectors, bool is_overlapping)
+{
+  std::vector<std::set<int>> conditioned_dof_sets(selectors.size());
+
+  std::vector<std::vector<Core::Conditions::Condition*>> conditions_for_selector;
+  for (const auto& selector : selectors)
   {
-    std::vector<int> dof = discretization().dof(0, node);
-    for (unsigned k = 0; k < dof.size(); ++k)
+    if (selector.condition_name_ != "")
     {
-      // test for dof position
-      if (contains_dof(dof[k], k))
-      {
-        conddofset.insert(dof[k]);
-        found = true;
-      }
+      dis.get_condition(selector.condition_name_, conditions_for_selector.emplace_back());
+      // TODO: why do we need to sort here?
+      std::ranges::sort(conditions_for_selector.back());
+    }
+    else
+    {
+      conditions_for_selector.emplace_back(selector.conditions_);
     }
   }
-  return found;
-}
 
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-bool Core::Conditions::ConditionSelector::contains_node(int ngid)
-{
-  for (const auto& cond : conds_)
+  const auto select_dofs = [&](const Selector& selector,
+                               const std::vector<Core::Conditions::Condition*> conditions,
+                               Core::Nodes::Node* node, std::set<int>& conddofset) -> bool
   {
-    if (cond->contains_node(ngid))
+    const bool contains_node = std::ranges::any_of(
+        conditions, [gid = node->id()](const auto* cond) { return cond->contains_node(gid); });
+
+    // put all conditioned dofs into conddofset
+    if (contains_node)
     {
-      return true;
+      std::vector<int> dof = dis.dof(0, node);
+      // Insert the dofs that are within the given range.
+      const auto first_dof = dof.begin() + selector.start_pos_;
+      const auto last_dof = dof.begin() + std::min(selector.end_pos_, static_cast<int>(dof.size()));
+      conddofset.insert(first_dof, last_dof);
+      return std::distance(first_dof, last_dof) > 0;
+    }
+    return false;
+  };
+
+  for (const auto& node : dis.my_row_node_range())
+  {
+    for (unsigned j = 0; j < selectors.size(); ++j)
+    {
+      const Selector& selector = selectors[j];
+
+      // if the selector applies, we are done
+      if (select_dofs(selector, conditions_for_selector[j], node, conditioned_dof_sets[j]))
+        if (!is_overlapping) break;
     }
   }
-  return false;
-}
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-Core::Conditions::MultiConditionSelector::MultiConditionSelector() : overlapping_(false) {}
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-void Core::Conditions::MultiConditionSelector::setup_extractor(const Core::FE::Discretization& dis,
-    const Core::LinAlg::Map& fullmap, Core::LinAlg::MultiMapExtractor& extractor)
-{
-  setup_cond_dof_sets(dis);
 
   // Find all non-conditioned dofs by subtracting all conditioned ones.
-
   std::set<int> otherdofset(
-      fullmap.MyGlobalElements(), fullmap.MyGlobalElements() + fullmap.NumMyElements());
+      full_map.MyGlobalElements(), full_map.MyGlobalElements() + full_map.NumMyElements());
 
-  for (auto& conddofset : conddofset_)
+  for (auto& conddofset : conditioned_dof_sets)
   {
     for (const auto& dof : conddofset)
     {
@@ -106,45 +114,16 @@ void Core::Conditions::MultiConditionSelector::setup_extractor(const Core::FE::D
   // of the MultiMapExtractor.
 
   std::vector<std::shared_ptr<const Core::LinAlg::Map>> maps;
-  maps.reserve(conddofset_.size() + 1);
+  maps.reserve(conditioned_dof_sets.size() + 1);
 
   maps.emplace_back(Core::LinAlg::create_map(otherdofset, dis.get_comm()));
-  for (auto& conddofset : conddofset_)
+  for (auto& conddofset : conditioned_dof_sets)
   {
     maps.emplace_back(Core::LinAlg::create_map(conddofset, dis.get_comm()));
   }
 
   // MultiMapExtractor setup
-
-  extractor.setup(fullmap, maps);
-}
-
-
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-void Core::Conditions::MultiConditionSelector::setup_cond_dof_sets(
-    const Core::FE::Discretization& dis)
-{
-  // we get as many sets as we have selectors
-  conddofset_.resize(selectors_.size());
-
-  // for each owned node
-  int numrownodes = dis.num_my_row_nodes();
-  for (int i = 0; i < numrownodes; ++i)
-  {
-    Core::Nodes::Node* node = dis.l_row_node(i);
-
-    // test each selector
-    for (unsigned j = 0; j < selectors_.size(); ++j)
-    {
-      ConditionSelector& conds = *selectors_[j];
-
-      // if the selector applies, we are done
-      if (conds.select_dofs(node, conddofset_[j]))
-        if (!overlapping_) break;
-    }
-  }
+  extractor.setup(full_map, maps);
 }
 
 FOUR_C_NAMESPACE_CLOSE

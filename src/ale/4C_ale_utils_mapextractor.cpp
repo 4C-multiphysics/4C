@@ -19,25 +19,18 @@ FOUR_C_NAMESPACE_OPEN
 void ALE::Utils::MapExtractor::setup(const Core::FE::Discretization& dis, bool overlapping)
 {
   const int ndim = Global::Problem::instance()->n_dim();
-  Core::Conditions::MultiConditionSelector mcs;
-  mcs.set_overlapping(overlapping);
-  mcs.add_selector(
-      std::make_shared<Core::Conditions::NDimConditionSelector>(dis, "FSICoupling", 0, ndim));
-  mcs.add_selector(
-      std::make_shared<Core::Conditions::NDimConditionSelector>(dis, "FREESURFCoupling", 0, ndim));
-  mcs.add_selector(
-      std::make_shared<Core::Conditions::NDimConditionSelector>(dis, "StructAleCoupling", 0, ndim));
-  mcs.add_selector(
-      std::make_shared<Core::Conditions::NDimConditionSelector>(dis, "AleWear", 0, ndim));
-  mcs.add_selector(
-      std::make_shared<Core::Conditions::NDimConditionSelector>(dis, "BioGrCoupling", 0, ndim));
-  mcs.add_selector(
-      std::make_shared<Core::Conditions::NDimConditionSelector>(dis, "ALEUPDATECoupling", 0, ndim));
-  mcs.add_selector(
-      std::make_shared<Core::Conditions::NDimConditionSelector>(dis, "fpsi_coupling", 0, ndim));
-  mcs.add_selector(
-      std::make_shared<Core::Conditions::NDimConditionSelector>(dis, "Mortar", 0, ndim));
-  mcs.setup_extractor(dis, *dis.dof_row_map(), *this);
+  Core::Conditions::setup_extractor(dis, *this,
+      {
+          Core::Conditions::Selector("FSICoupling", 0, ndim),
+          Core::Conditions::Selector("FREESURFCoupling", 0, ndim),
+          Core::Conditions::Selector("StructAleCoupling", 0, ndim),
+          Core::Conditions::Selector("AleWear", 0, ndim),
+          Core::Conditions::Selector("BioGrCoupling", 0, ndim),
+          Core::Conditions::Selector("ALEUPDATECoupling", 0, ndim),
+          Core::Conditions::Selector("fpsi_coupling", 0, ndim),
+          Core::Conditions::Selector("Mortar", 0, ndim),
+      },
+      overlapping);
 }
 
 
@@ -84,10 +77,8 @@ std::shared_ptr<std::set<int>> ALE::Utils::MapExtractor::conditioned_element_map
 void ALE::Utils::FsiMapExtractor::setup(const Core::FE::Discretization& dis)
 {
   const int ndim = Global::Problem::instance()->n_dim();
-  Core::Conditions::MultiConditionSelector mcs;
-  mcs.add_selector(
-      std::make_shared<Core::Conditions::NDimConditionSelector>(dis, "FSICoupling", 0, ndim));
-  mcs.setup_extractor(dis, *dis.dof_row_map(), *this);
+  Core::Conditions::setup_extractor(
+      dis, *this, {Core::Conditions::Selector("FSICoupling", 0, ndim)});
 }
 
 /*----------------------------------------------------------------------------*/
@@ -95,10 +86,8 @@ void ALE::Utils::FsiMapExtractor::setup(const Core::FE::Discretization& dis)
 void ALE::Utils::XFluidFluidMapExtractor::setup(const Core::FE::Discretization& dis)
 {
   const int ndim = Global::Problem::instance()->n_dim();
-  Core::Conditions::MultiConditionSelector mcs;
-  mcs.add_selector(std::make_shared<Core::Conditions::NDimConditionSelector>(
-      dis, "FluidFluidCoupling", 0, ndim));
-  mcs.setup_extractor(dis, *dis.dof_row_map(), *this);
+  Core::Conditions::setup_extractor(
+      dis, *this, {Core::Conditions::Selector("FluidFluidCoupling", 0, ndim)});
 }
 
 FOUR_C_NAMESPACE_CLOSE

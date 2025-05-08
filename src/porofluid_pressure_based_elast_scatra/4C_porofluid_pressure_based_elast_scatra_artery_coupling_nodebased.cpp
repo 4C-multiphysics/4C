@@ -129,12 +129,9 @@ void PoroPressureBased::PoroMultiPhaseScaTraArtCouplNodeBased::setup_map_extract
   // build coupled maps for all coupled dofs
   for (int idof = 0; idof < num_coupled_dofs_; idof++)
   {
-    Core::Conditions::MultiConditionSelector mcs;
     Core::LinAlg::MultiMapExtractor dummy;
-    // selector for coupleddofs[idof]
-    mcs.add_selector(std::make_shared<Core::Conditions::NDimConditionSelector>(
-        dis, condname_, coupleddofs[idof], coupleddofs[idof] + 1));
-    mcs.setup_extractor(dis, *dis.dof_row_map(), dummy);
+    Core::Conditions::setup_extractor(dis, dummy,
+        {Core::Conditions::Selector(condname_, coupleddofs[idof], coupleddofs[idof] + 1)});
 
     partialmaps_coupled.push_back(dummy.map(1));
   }

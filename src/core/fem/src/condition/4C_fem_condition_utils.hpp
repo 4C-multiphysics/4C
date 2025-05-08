@@ -42,7 +42,7 @@ namespace Core::Elements
 namespace Core::Conditions
 {
   // forward declaration
-  class ConditionSelector;
+  class Selector;
 
   /**
    * A functor that returns true if the given global id is owned by the emap.

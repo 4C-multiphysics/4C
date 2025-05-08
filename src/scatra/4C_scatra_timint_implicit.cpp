@@ -494,18 +494,15 @@ void ScaTra::ScaTraTimIntImpl::setup()
     // initialize map extractor associated with boundary segments for flux calculation
     if (calcflux_boundary_ != Inpar::ScaTra::flux_none)
     {
-      // extract conditions for boundary flux calculation
       std::vector<Core::Conditions::Condition*> conditions;
       discret_->get_condition("ScaTraFluxCalc", conditions);
-
       // set up map extractor
       flux_boundary_maps_ = std::make_shared<Core::LinAlg::MultiMapExtractor>();
-      Core::Conditions::MultiConditionSelector mcs;
-      mcs.set_overlapping(true);
-      for (auto& condition : conditions)
-        mcs.add_selector(std::make_shared<Core::Conditions::ConditionSelector>(
-            *discret_, std::vector<Core::Conditions::Condition*>(1, condition)));
-      mcs.setup_extractor(*discret_, *discret_->dof_row_map(), *flux_boundary_maps_);
+      std::vector<Core::Conditions::Selector> selectors;
+      for (const auto& c : conditions)
+        selectors.emplace_back(
+            Core::Conditions::Selector(std::vector<Core::Conditions::Condition*>{c}));
+      Core::Conditions::setup_extractor(*discret_, *flux_boundary_maps_, selectors, true);
     }
   }
 

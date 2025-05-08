@@ -25,20 +25,29 @@ FOUR_C_NAMESPACE_OPEN
 namespace
 {
   template <typename Range>
-  std::shared_ptr<Core::LinAlg::Map> fill_condition_map(
-      const Core::FE::Discretization& dis, const Range& nodeRange, const std::string& condname)
+  void fill_conditioned_node_set(const Core::FE::Discretization& discretization,
+      const Range& node_range, const std::string& condname, std::set<int>& condnodeset)
   {
-    std::set<int> condnodeset;
+    std::vector<Core::Conditions::Condition*> conditions;
+    discretization.get_condition(condname, conditions);
 
-    Core::Conditions::ConditionSelector conds(dis, condname);
-
-    for (const Core::Nodes::Node* node : nodeRange)
+    for (const Core::Nodes::Node* node : node_range)
     {
-      if (conds.contains_node(node->id()))
+      const bool contains_node = std::ranges::any_of(
+          conditions, [gid = node->id()](const auto* cond) { return cond->contains_node(gid); });
+      if (contains_node)
       {
         condnodeset.insert(node->id());
       }
     }
+  }
+
+  template <typename Range>
+  std::shared_ptr<Core::LinAlg::Map> fill_condition_map(
+      const Core::FE::Discretization& dis, const Range& nodeRange, const std::string& condname)
+  {
+    std::set<int> condnodeset;
+    fill_conditioned_node_set(dis, nodeRange, condname, condnodeset);
 
     std::shared_ptr<Core::LinAlg::Map> condnodemap =
         Core::LinAlg::create_map(condnodeset, dis.get_comm());
@@ -365,7 +374,8 @@ std::shared_ptr<Core::LinAlg::Map> Core::Conditions::condition_node_col_map(
 std::shared_ptr<std::set<int>> Core::Conditions::conditioned_element_map(
     const Core::FE::Discretization& dis, const std::string& condname)
 {
-  ConditionSelector conds(dis, condname);
+  std::vector<Core::Conditions::Condition*> conditions;
+  dis.get_condition(condname, conditions);
 
   std::shared_ptr<std::set<int>> condelementmap = std::make_shared<std::set<int>>();
   const int nummyelements = dis.num_my_col_elements();
@@ -378,12 +388,9 @@ std::shared_ptr<std::set<int>> Core::Conditions::conditioned_element_map(
     for (size_t n = 0; n < numnodes; ++n)
     {
       const Core::Nodes::Node* actnode = nodes[n];
-
-      // test if node is covered by condition
-      if (conds.contains_node(actnode->id()))
-      {
-        condelementmap->insert(actele->id());
-      }
+      const bool contains_node = std::ranges::any_of(
+          conditions, [gid = actnode->id()](const auto* cond) { return cond->contains_node(gid); });
+      if (contains_node) condelementmap->insert(actele->id());
     }
   }
 
