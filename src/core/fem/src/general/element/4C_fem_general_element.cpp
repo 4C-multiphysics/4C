@@ -198,11 +198,10 @@ void Core::Elements::Element::set_node_ids(const int nnode, const int* nodes)
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Core::Elements::Element::set_node_ids_one_based_index(
+void Core::Elements::Element::set_node_ids(
     const std::string& distype, const Core::IO::InputParameterContainer& container)
 {
   nodeid_ = container.get<std::vector<int>>(distype);
-  for (int& i : nodeid_) i -= 1;
   node_.resize(0);
 }
 

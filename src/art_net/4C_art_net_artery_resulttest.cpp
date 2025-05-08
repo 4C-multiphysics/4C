@@ -46,7 +46,6 @@ void Arteries::ArteryResultTest::test_node(
   if (dis != dis_->name()) return;
 
   int node = container.get<int>("NODE");
-  node -= 1;
 
   int havenode(dis_->have_global_node(node));
   int isnodeofanybody(0);
@@ -54,7 +53,7 @@ void Arteries::ArteryResultTest::test_node(
 
   if (isnodeofanybody == 0)
   {
-    FOUR_C_THROW("Node {} does not belong to discretization {}", node + 1, dis_->name());
+    FOUR_C_THROW("Node {} does not belong to discretization {}", node, dis_->name());
   }
   else
   {

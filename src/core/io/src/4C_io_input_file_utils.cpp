@@ -150,7 +150,7 @@ void Core::IO::read_design(InputFile& input, const std::string& name,
                                (name == "DVOL" && dname == "DVOLUME"),
           "Wrong design node name: {}. Expected {}.", dname, name);
 
-      topology[dobj - 1].insert(nodeid - 1);
+      topology[dobj - 1].insert(nodeid);
     }
     else  // fancy specification of the design nodes by specifying min or max of the domain
     {     // works best on rectangular domains ;)

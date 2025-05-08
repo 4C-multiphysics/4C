@@ -19,10 +19,7 @@ FOUR_C_NAMESPACE_OPEN
 
 
 FLD::XFluidResultTest::XFluidResultTest(const FLD::XFluid& xfluid)
-    : Core::Utils::ResultTest("XFLUID"),
-      discret_(xfluid.discret_),
-      velnp_(xfluid.state_->velnp_),
-      node_from_zero_(true)
+    : Core::Utils::ResultTest("XFLUID"), discret_(xfluid.discret_), velnp_(xfluid.state_->velnp_)
 {
 }
 
@@ -31,11 +28,8 @@ FLD::XFluidResultTest::XFluidResultTest(const FLD::XFluidFluid& xfluid)
       discret_(xfluid.discret_),
       velnp_(xfluid.state_->velnp_),
       coupl_discret_(xfluid.embedded_fluid_->discretization()),
-      coupl_velnp_(xfluid.embedded_fluid_->velnp()),
-      node_from_zero_(false)
+      coupl_velnp_(xfluid.embedded_fluid_->velnp())
 {
-  // Todo: remove the "node_from_zero" flag for fluidfluid:
-  // adapt the test cases!
 }
 
 void FLD::XFluidResultTest::test_node(
@@ -45,9 +39,6 @@ void FLD::XFluidResultTest::test_node(
   std::string dis = container.get<std::string>("DIS");
 
   int node = container.get<int>("NODE");
-
-  // Todo: remove!
-  if (node_from_zero_) node -= 1;
 
   if (dis == discret_->name())
   {
@@ -71,7 +62,7 @@ void FLD::XFluidResultTest::test_node(const Core::IO::InputParameterContainer& c
 
   if (isnodeofanybody == 0)
   {
-    FOUR_C_THROW("Node {} does not belong to discretization {}", node + 1, discret.name());
+    FOUR_C_THROW("Node {} does not belong to discretization {}", node, discret.name());
   }
   else
   {

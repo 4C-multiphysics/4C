@@ -205,7 +205,6 @@ void FSI::FSIResultTest::test_node(
     const Core::IO::InputParameterContainer& container, int& nerr, int& test_count)
 {
   int node = container.get<int>("NODE");
-  node -= 1;
 
   int havenode(slavedisc_->have_global_node(node));
   int isnodeofanybody(0);
@@ -213,7 +212,7 @@ void FSI::FSIResultTest::test_node(
 
   if (isnodeofanybody == 0)
   {
-    FOUR_C_THROW("Node {} does not belong to discretization {}", node + 1, slavedisc_->name());
+    FOUR_C_THROW("Node {} does not belong to discretization {}", node, slavedisc_->name());
   }
   else
   {

@@ -443,7 +443,7 @@ void EnsightWriter::write_cells(std::ofstream& geofile,
             for (int inode = 0; inode < numnp; ++inode)
             {
               if (myrank_ == 0)  // proc0 can write its elements immediately
-                write(geofile, proc0map->LID(nodes[inode]->id()) + 1);
+                write(geofile, proc0map->LID(nodes[inode]->id()));
               else  // elements on other procs have to store their global node ids
                 nodevector.push_back(nodes[inode]->id());
             }
@@ -456,7 +456,7 @@ void EnsightWriter::write_cells(std::ofstream& geofile,
             for (int inode = 0; inode < numnp; ++inode)
             {
               if (myrank_ == 0)  // proc0 can write its elements immediately
-                write(geofile, proc0map->LID(nodes[Hex20_FourCToEnsightGold[inode]]->id()) + 1);
+                write(geofile, proc0map->LID(nodes[Hex20_FourCToEnsightGold[inode]]->id()));
               else  // elements on other procs have to store their global node ids
                 nodevector.push_back(nodes[Hex20_FourCToEnsightGold[inode]]->id());
             }
@@ -468,7 +468,7 @@ void EnsightWriter::write_cells(std::ofstream& geofile,
             for (int isubele = 0; isubele < get_num_sub_ele(Core::FE::CellType::hex16); ++isubele)
               for (int isubnode = 0; isubnode < 8; ++isubnode)
                 if (myrank_ == 0)  // proc0 can write its elements immediately
-                  write(geofile, proc0map->LID(nodes[subhex16map[isubele][isubnode]]->id()) + 1);
+                  write(geofile, proc0map->LID(nodes[subhex16map[isubele][isubnode]]->id()));
                 else  // elements on other procs have to store their global node ids
                   nodevector.push_back(nodes[subhex16map[isubele][isubnode]]->id());
             break;
@@ -479,7 +479,7 @@ void EnsightWriter::write_cells(std::ofstream& geofile,
             for (int isubele = 0; isubele < get_num_sub_ele(Core::FE::CellType::hex18); ++isubele)
               for (int isubnode = 0; isubnode < 8; ++isubnode)
                 if (myrank_ == 0)  // proc0 can write its elements immediately
-                  write(geofile, proc0map->LID(nodes[subhex18map[isubele][isubnode]]->id()) + 1);
+                  write(geofile, proc0map->LID(nodes[subhex18map[isubele][isubnode]]->id()));
                 else  // elements on other procs have to store their global node ids
                   nodevector.push_back(nodes[subhex18map[isubele][isubnode]]->id());
             break;
@@ -490,7 +490,7 @@ void EnsightWriter::write_cells(std::ofstream& geofile,
             for (int isubele = 0; isubele < get_num_sub_ele(Core::FE::CellType::hex27); ++isubele)
               for (int isubnode = 0; isubnode < 8; ++isubnode)
                 if (myrank_ == 0)  // proc0 can write its elements immediately
-                  write(geofile, proc0map->LID(nodes[subhexmap[isubele][isubnode]]->id()) + 1);
+                  write(geofile, proc0map->LID(nodes[subhexmap[isubele][isubnode]]->id()));
                 else  // elements on other procs have to store their global node ids
                   nodevector.push_back(nodes[subhexmap[isubele][isubnode]]->id());
             break;
@@ -501,7 +501,7 @@ void EnsightWriter::write_cells(std::ofstream& geofile,
             for (int isubele = 0; isubele < get_num_sub_ele(Core::FE::CellType::quad9); ++isubele)
               for (int isubnode = 0; isubnode < 4; ++isubnode)
                 if (myrank_ == 0)  // proc0 can write its elements immediately
-                  write(geofile, proc0map->LID(nodes[subquadmap[isubele][isubnode]]->id()) + 1);
+                  write(geofile, proc0map->LID(nodes[subquadmap[isubele][isubnode]]->id()));
                 else  // elements on other procs have to store their global node ids
                   nodevector.push_back(nodes[subquadmap[isubele][isubnode]]->id());
             break;
@@ -512,7 +512,7 @@ void EnsightWriter::write_cells(std::ofstream& geofile,
             for (int isubele = 0; isubele < get_num_sub_ele(Core::FE::CellType::line3); ++isubele)
               for (int isubnode = 0; isubnode < 2; ++isubnode)
                 if (myrank_ == 0)  // proc0 can write its elements immediately
-                  write(geofile, proc0map->LID(nodes[sublinemap[isubele][isubnode]]->id()) + 1);
+                  write(geofile, proc0map->LID(nodes[sublinemap[isubele][isubnode]]->id()));
                 else  // elements on other procs have to store their global node ids
                   nodevector.push_back(nodes[sublinemap[isubele][isubnode]]->id());
             break;
@@ -528,7 +528,7 @@ void EnsightWriter::write_cells(std::ofstream& geofile,
               for (int inode = 0; inode < numnp; ++inode)
               {
                 if (myrank_ == 0)  // proc0 can write its elements immediately
-                  write(geofile, proc0map->LID(nodes[inode]->id()) + 1);
+                  write(geofile, proc0map->LID(nodes[inode]->id()));
                 else  // elements on other procs have to store their global node ids
                   nodevector.push_back(nodes[inode]->id());
               }
@@ -545,7 +545,7 @@ void EnsightWriter::write_cells(std::ofstream& geofile,
               for (int isubele = 0; isubele < get_num_sub_ele(Core::FE::CellType::quad9); ++isubele)
                 for (int isubnode = 0; isubnode < 4; ++isubnode)
                   if (myrank_ == 0)  // proc0 can write its elements immediately
-                    write(geofile, proc0map->LID(nodes[subquadmap[isubele][isubnode]]->id()) + 1);
+                    write(geofile, proc0map->LID(nodes[subquadmap[isubele][isubnode]]->id()));
                   else  // elements on other procs have to store their global node ids
                     nodevector.push_back(nodes[subquadmap[isubele][isubnode]]->id());
             }
@@ -561,7 +561,7 @@ void EnsightWriter::write_cells(std::ofstream& geofile,
               for (int isubele = 0; isubele < get_num_sub_ele(Core::FE::CellType::hex27); ++isubele)
                 for (int isubnode = 0; isubnode < 8; ++isubnode)
                   if (myrank_ == 0)  // proc0 can write its elements immediately
-                    write(geofile, proc0map->LID(nodes[subhexmap[isubele][isubnode]]->id()) + 1);
+                    write(geofile, proc0map->LID(nodes[subhexmap[isubele][isubnode]]->id()));
                   else  // elements on other procs have to store their global node ids
                     nodevector.push_back(nodes[subhexmap[isubele][isubnode]]->id());
             }
@@ -657,7 +657,7 @@ void EnsightWriter::write_node_connectivity_par(std::ofstream& geofile,
       for (int i = 0; i < (int)nodeids.size(); ++i)
       {
         // using the same map as for the writing the node coordinates
-        int id = (proc0map.LID(nodeids[i])) + 1;
+        int id = (proc0map.LID(nodeids[i]));
         write(geofile, id);
       }
       nodeids.clear();
@@ -2379,8 +2379,7 @@ void EnsightWriter::write_coordinates_for_polynomial_shapefunctions(std::ofstrea
       // first write node global ids (default)
       for (int inode = 0; inode < proc0map->NumGlobalElements(); ++inode)
       {
-        write(geofile, proc0map->GID(inode) + 1);
-        // gid+1 delivers the node numbering of the input file starting with 1
+        write(geofile, proc0map->GID(inode));
       }
     }
     // now write the coordinate information

@@ -721,7 +721,7 @@ might become invalid after a redistribution of the discretization.
      * Set the list of node ids this element is connected to. Here, the index
      * starts at 1, not 0. This is used for the legacy element input.
      */
-    void set_node_ids_one_based_index(
+    void set_node_ids(
         const std::string& distype, const Core::IO::InputParameterContainer& container);
 
     /*!

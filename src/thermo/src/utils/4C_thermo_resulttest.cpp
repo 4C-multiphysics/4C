@@ -36,7 +36,6 @@ void Thermo::ResultTest::test_node(
   if (dis != thrdisc_->name()) return;
 
   int node = container.get<int>("NODE");
-  node -= 1;
 
   int havenode(thrdisc_->have_global_node(node));
   int isnodeofanybody(0);
@@ -44,7 +43,7 @@ void Thermo::ResultTest::test_node(
 
   if (isnodeofanybody == 0)
   {
-    FOUR_C_THROW("Node {} does not belong to discretization {}", node + 1, thrdisc_->name());
+    FOUR_C_THROW("Node {} does not belong to discretization {}", node, thrdisc_->name());
   }
   else
   {

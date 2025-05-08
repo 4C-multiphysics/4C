@@ -65,9 +65,6 @@ namespace FLD
 
     /// solution vector for additional coupling discretization
     std::shared_ptr<const Core::LinAlg::Vector<double>> coupl_velnp_;
-
-    /// take care of node numbering off-by-one (will be removed soon)
-    const bool node_from_zero_;
   };
 
 }  // namespace FLD

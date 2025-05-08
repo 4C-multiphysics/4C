@@ -298,7 +298,7 @@ namespace
         Core::IO::InputParameterContainer data;
         linedef.fully_parse(element_parser, data);
 
-        ele->set_node_ids_one_based_index(distype, data);
+        ele->set_node_ids(distype, data);
         ele->read_element(eletype, distype, data);
 
         // add element to discretization
@@ -690,11 +690,11 @@ namespace
 
       if (type == "NODE")
       {
-        int nodeid = parser.read<int>() - 1;
+        const int nodeid = parser.read<int>();
         parser.consume("COORD");
         auto coords = parser.read<std::vector<double>>(3);
 
-        max_node_id = std::max(max_node_id, nodeid) + 1;
+        max_node_id = std::max(max_node_id, nodeid);
         std::vector<std::shared_ptr<Core::FE::Discretization>> dis =
             find_dis_node(element_readers, nodeid);
 
@@ -709,13 +709,13 @@ namespace
       // this node is a Nurbs control point
       else if (type == "CP")
       {
-        int cpid = parser.read<int>() - 1;
+        const int cpid = parser.read<int>();
         parser.consume("COORD");
         auto coords = parser.read<std::vector<double>>(3);
         double weight = parser.read<double>();
 
-        max_node_id = std::max(max_node_id, cpid) + 1;
-        if (cpid != line_count)
+        max_node_id = std::max(max_node_id, cpid);
+        if (cpid != line_count + 1)
           FOUR_C_THROW(
               "Reading of control points {} failed: They must be numbered consecutive!!", cpid);
         std::vector<std::shared_ptr<Core::FE::Discretization>> diss =
@@ -745,10 +745,10 @@ namespace
         std::vector<std::array<double, 3>> fibers;
         std::map<Core::Nodes::AngleType, double> angles;
 
-        int nodeid = parser.read<int>() - 1;
+        const int nodeid = parser.read<int>();
         parser.consume("COORD");
         auto coords = parser.read<std::vector<double>>(3);
-        max_node_id = std::max(max_node_id, nodeid) + 1;
+        max_node_id = std::max(max_node_id, nodeid);
 
         while (!parser.at_end())
         {

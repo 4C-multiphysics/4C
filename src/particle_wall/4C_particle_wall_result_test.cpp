@@ -48,7 +48,6 @@ void PARTICLEWALL::WallResultTest::test_node(
 
   // extract node id
   int node = container.get<int>("NODE");
-  node -= 1;
 
   int havenode(walldiscretization_->have_global_node(node));
   int havenodeonanyproc(0);

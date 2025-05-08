@@ -45,7 +45,6 @@ void FLD::FluidResultTest::test_node(
   if (dis != fluiddis_->name()) return;
 
   int node = container.get<int>("NODE");
-  node -= 1;
 
   int havenode(fluiddis_->have_global_node(node));
   int isnodeofanybody(0);
@@ -53,7 +52,7 @@ void FLD::FluidResultTest::test_node(
 
   if (isnodeofanybody == 0)
   {
-    FOUR_C_THROW("Node {} does not belong to discretization {}", node + 1, fluiddis_->name());
+    FOUR_C_THROW("Node {} does not belong to discretization {}", node, fluiddis_->name());
   }
   else
   {

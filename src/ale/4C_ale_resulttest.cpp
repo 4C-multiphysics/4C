@@ -32,7 +32,6 @@ void ALE::AleResultTest::test_node(
   if (dis != aledis_->name()) return;
 
   int node = container.get<int>("NODE");
-  node -= 1;
 
   int havenode(aledis_->have_global_node(node));
   int isnodeofanybody(0);
@@ -40,7 +39,7 @@ void ALE::AleResultTest::test_node(
 
   if (isnodeofanybody == 0)
   {
-    FOUR_C_THROW("Node {} does not belong to discretization {}", node + 1, aledis_->name());
+    FOUR_C_THROW("Node {} does not belong to discretization {}", node, aledis_->name());
   }
   else
   {
