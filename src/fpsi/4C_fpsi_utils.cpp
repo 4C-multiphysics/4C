@@ -626,13 +626,12 @@ void FPSI::Utils::MapExtractor::setup(
     const Core::FE::Discretization& dis, bool withpressure, bool overlapping)
 {
   const int ndim = Global::Problem::instance()->n_dim();
-  Core::Conditions::MultiConditionSelector mcs;
-  mcs.set_overlapping(overlapping);  // defines if maps can overlap
-  mcs.add_selector(std::make_shared<Core::Conditions::NDimConditionSelector>(
-      dis, "FSICoupling", 0, ndim + withpressure));
-  mcs.add_selector(std::make_shared<Core::Conditions::NDimConditionSelector>(
-      dis, "fpsi_coupling", 0, ndim + withpressure));
-  mcs.setup_extractor(dis, *dis.dof_row_map(), *this);
+  Core::Conditions::setup_extractor(dis, *this,
+      {
+          Core::Conditions::Selector("FSICoupling", 0, ndim + withpressure),
+          Core::Conditions::Selector("fpsi_coupling", 0, ndim + withpressure),
+      },
+      overlapping);
 }
 
 /*----------------------------------------------------------------------*/

@@ -21,19 +21,15 @@ void FLD::Utils::MapExtractor::setup(
     const Core::FE::Discretization& dis, bool withpressure, bool overlapping, const int nds_master)
 {
   const int ndim = Global::Problem::instance()->n_dim();
-  Core::Conditions::MultiConditionSelector mcs;
-  mcs.set_overlapping(overlapping);  // defines if maps can overlap
-  mcs.add_selector(std::make_shared<Core::Conditions::NDimConditionSelector>(
-      dis, "FSICoupling", 0, ndim + withpressure));
-  mcs.add_selector(std::make_shared<Core::Conditions::NDimConditionSelector>(
-      dis, "FREESURFCoupling", 0, ndim + withpressure));
-  mcs.add_selector(std::make_shared<Core::Conditions::NDimConditionSelector>(
-      dis, "StructAleCoupling", 0, ndim + withpressure));
-  mcs.add_selector(std::make_shared<Core::Conditions::NDimConditionSelector>(
-      dis, "Mortar", 0, ndim + withpressure));
-  mcs.add_selector(std::make_shared<Core::Conditions::NDimConditionSelector>(
-      dis, "ALEUPDATECoupling", 0, ndim + withpressure));
-  mcs.setup_extractor(dis, *dis.dof_row_map(nds_master), *this);
+  Core::Conditions::setup_extractor(dis, *dis.dof_row_map(nds_master), *this,
+      {
+          Core::Conditions::Selector("FSICoupling", 0, ndim + withpressure),
+          Core::Conditions::Selector("FREESURFCoupling", 0, ndim + withpressure),
+          Core::Conditions::Selector("StructAleCoupling", 0, ndim + withpressure),
+          Core::Conditions::Selector("Mortar", 0, ndim + withpressure),
+          Core::Conditions::Selector("ALEUPDATECoupling", 0, ndim + withpressure),
+      },
+      overlapping);
 }
 
 /*----------------------------------------------------------------------*/
@@ -97,21 +93,16 @@ std::shared_ptr<std::set<int>> FLD::Utils::MapExtractor::conditioned_element_map
 void FLD::Utils::VolumetricFlowMapExtractor::setup(const Core::FE::Discretization& dis)
 {
   const int ndim = Global::Problem::instance()->n_dim();
-  Core::Conditions::MultiConditionSelector mcs;
-  mcs.set_overlapping(true);  // defines if maps can overlap
-  mcs.add_selector(std::make_shared<Core::Conditions::NDimConditionSelector>(
-      dis, "VolumetricSurfaceFlowCond", 0, ndim));
-  mcs.setup_extractor(dis, *dis.dof_row_map(), *this);
+  Core::Conditions::setup_extractor(
+      dis, *this, {Core::Conditions::Selector("VolumetricSurfaceFlowCond", 0, ndim)}, true);
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void FLD::Utils::KSPMapExtractor::setup(const Core::FE::Discretization& dis)
 {
-  Core::Conditions::MultiConditionSelector mcs;
-  mcs.add_selector(
-      std::make_shared<Core::Conditions::ConditionSelector>(dis, "KrylovSpaceProjection"));
-  mcs.setup_extractor(dis, *dis.dof_row_map(), *this);
+  Core::Conditions::setup_extractor(
+      dis, *this, {Core::Conditions::Selector("KrylovSpaceProjection")});
 }
 
 
@@ -139,10 +130,8 @@ void FLD::Utils::VelPressExtractor::setup(const Core::FE::Discretization& dis)
 void FLD::Utils::FsiMapExtractor::setup(const Core::FE::Discretization& dis)
 {
   const int ndim = Global::Problem::instance()->n_dim();
-  Core::Conditions::MultiConditionSelector mcs;
-  mcs.add_selector(
-      std::make_shared<Core::Conditions::NDimConditionSelector>(dis, "FSICoupling", 0, ndim));
-  mcs.setup_extractor(dis, *dis.dof_row_map(), *this);
+  Core::Conditions::setup_extractor(
+      dis, *this, {Core::Conditions::Selector("FSICoupling", 0, ndim)});
 }
 
 /*----------------------------------------------------------------------*/

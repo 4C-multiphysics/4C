@@ -486,10 +486,8 @@ void FS3I::PartFS3I::setup_system()
     const int numscal = currscatra->scatra_field()->num_scal();
     std::shared_ptr<Core::LinAlg::MultiMapExtractor> mapex =
         std::make_shared<Core::LinAlg::MultiMapExtractor>();
-    Core::Conditions::MultiConditionSelector mcs;
-    mcs.add_selector(std::make_shared<Core::Conditions::NDimConditionSelector>(
-        *currdis, "ScaTraCoupling", 0, numscal));
-    mcs.setup_extractor(*currdis, *currdis->dof_row_map(), *mapex);
+    Core::Conditions::setup_extractor(
+        *currdis, *mapex, {Core::Conditions::Selector("ScaTraCoupling", 0, numscal)});
     scatrafieldexvec_.push_back(mapex);
   }
 

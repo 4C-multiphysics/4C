@@ -60,24 +60,17 @@ void Solid::MapExtractor::setup(
     const Core::FE::Discretization& dis, const Core::LinAlg::Map& fullmap, bool overlapping)
 {
   const int ndim = Global::Problem::instance()->n_dim();
-  Core::Conditions::MultiConditionSelector mcs;
-  mcs.set_overlapping(overlapping);
-  mcs.add_selector(
-      std::make_shared<Core::Conditions::NDimConditionSelector>(dis, "FSICoupling", 0, ndim));
-  mcs.add_selector(
-      std::make_shared<Core::Conditions::NDimConditionSelector>(dis, "StructAleCoupling", 0, ndim));
-  mcs.add_selector(
-      std::make_shared<Core::Conditions::NDimConditionSelector>(dis, "BioGrCoupling", 0, ndim));
-  mcs.add_selector(
-      std::make_shared<Core::Conditions::NDimConditionSelector>(dis, "AleWear", 0, ndim));
-  mcs.add_selector(
-      std::make_shared<Core::Conditions::NDimConditionSelector>(dis, "fpsi_coupling", 0, ndim));
-  mcs.add_selector(
-      std::make_shared<Core::Conditions::NDimConditionSelector>(dis, "IMMERSEDCoupling", 0, ndim));
-  mcs.add_selector(
-      std::make_shared<Core::Conditions::NDimConditionSelector>(dis, "ParticleWall", 0, ndim));
-
-  mcs.setup_extractor(dis, fullmap, *this);
+  Core::Conditions::setup_extractor(dis, fullmap, *this,
+      {
+          Core::Conditions::Selector("FSICoupling", 0, ndim),
+          Core::Conditions::Selector("StructAleCoupling", 0, ndim),
+          Core::Conditions::Selector("BioGrCoupling", 0, ndim),
+          Core::Conditions::Selector("AleWear", 0, ndim),
+          Core::Conditions::Selector("fpsi_coupling", 0, ndim),
+          Core::Conditions::Selector("IMMERSEDCoupling", 0, ndim),
+          Core::Conditions::Selector("ParticleWall", 0, ndim),
+      },
+      overlapping);
 }
 
 

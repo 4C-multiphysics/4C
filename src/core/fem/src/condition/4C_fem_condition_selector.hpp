@@ -10,21 +10,17 @@
 
 #include "4C_config.hpp"
 
-#include "4C_fem_condition.hpp"
-#include "4C_linalg_map.hpp"
-
-#include <memory>
-#include <set>
+#include <limits>
 #include <string>
-#include <utility>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
 
 namespace Core::LinAlg
 {
+  class Map;
   class MultiMapExtractor;
-}
+}  // namespace Core::LinAlg
 
 namespace Core::FE
 {
@@ -38,143 +34,86 @@ namespace Core::Nodes
 
 namespace Core::Conditions
 {
-  /// Select nodes (and their dofs) that are covered by a condition
-  /*!
-    We have nodal clouds. Each nodal cloud can have an arbitrary number of
-    conditions. And in turn one condition (name) can be assigned to any number
-    of nodal clouds. Oftentimes, however, we are not so much concerned with
-    nodal clouds. We just want to known if a given node is covered by a
-    specific condition. This is what this class is for.
+  class Condition;
 
-    A stack of ConditionSelector objects is used to build a
-    MultiConditionSelector which in turn is used to setup a
-    Core::LinAlg::MultiMapExtractor object.
+  class Selector;
 
-    To put it the other way: A Core::LinAlg::MultiMapExtractor splits a full (row)
-    map into non-overlapping parts. If each part corresponds to a Condition, a
-    MultiConditionSelector can be used to setup the Core::LinAlg::MultiMapExtractor,
-    where each Condition is found by a ConditionSelector object.
-
-    \note The Condition objects know the nodes. The maps contain dofs. The
-    ConditionSelector translates between nodes and dofs.
-
-    \see Core::Conditions::MultiConditionSelector
+  /**
+   * Oftentimes the DOFs of a field need to be split into a set of disjoint maps. The
+   * Core::LinAlg::MultiMapExtractor class takes care of these splits. This function helps you to
+   * set up the @p extractor by providing the necessary information. It takes a number of @p
+   * selectors that encapsulate the conditions to be selected from the given Discretization @p dis.
+   * Refer to the Selector class for more information on how conditions can be selected.
+   *
+   * The ordering of the maps in the extractor is as follows:
+   *
+   * - The first map is the "other" map, which contains all DOFs that are not selected by any of the
+   *   conditions.
+   * - The subsequent maps are the selected maps, which contain the DOFs of the selected conditions.
+   *   The order of the maps is determined by the order of the selectors in the @p selectors
+   *   vector.
+   *
+   * The optional @p is_overlapping flag indicates whether the selected conditions may have
+   * overlapping dofs. By default, this is false.
+   *
+   * @note Each node ends up in one condition only, independent of whether all its dofs are selected
+   * or not.
    */
-  class ConditionSelector
+  void setup_extractor(const Core::FE::Discretization& dis,
+      Core::LinAlg::MultiMapExtractor& extractor, const std::vector<Selector>& selectors,
+      bool is_overlapping = false);
+
+  /**
+   * This function is a variant of the above setup_extractor() function. It takes an additional
+   * @p full_map parameter. The extracted DOFs are subtracted from that map to create the
+   * "other" map of the extractor. In the other functions, the @p full_map is equal to the DOF row
+   * map of the discretization.
+   */
+  void setup_extractor(const Core::FE::Discretization& dis, const Core::LinAlg::Map& full_map,
+      Core::LinAlg::MultiMapExtractor& extractor, const std::vector<Selector>& selectors,
+      bool is_overlapping = false);
+
+  /**
+   * A class to select Condition whose DOFs should be extracted. It works in conjunction with
+   * @p setup_extractor() to set up a Core::LinAlg::MultiMapExtractor object.
+   */
+  class Selector
   {
    public:
-    /// Construct a selector on the given discretization for the Condition
-    /// with the given name
-    ConditionSelector(const Core::FE::Discretization& dis, std::string condname);
-
-    /// construct a selector from a given vector of conditions
-    ConditionSelector(const Core::FE::Discretization& dis,  //!< discretization
-        const std::vector<Condition*>& conds                //!< given vector of conditions
-    );
-
-    /// Destructor
-    virtual ~ConditionSelector() = default;
-
-    /// select all matching dofs of the node and put them into conddofset
-    virtual bool select_dofs(Core::Nodes::Node* node, std::set<int>& conddofset);
-
-    /// tell if the node gid is known by any condition of the given name
-    virtual bool contains_node(int ngid);
-
-    /// tell if the dof of a node from this condition is covered as well
-    virtual bool contains_dof(int dof, int pos) { return true; }
-
-   protected:
-    /// discretization we are looking at
-    const Core::FE::Discretization& discretization() const { return dis_; }
-
-    /// all conditions that come by the given name
-    const std::vector<Condition*>& conditions() const { return conds_; }
-
-   private:
-    /// discretization
-    const Core::FE::Discretization& dis_;
-
-    /// Conditions
-    std::vector<Condition*> conds_;
-  };
-
-
-  /// Select some dofs of the conditioned node
-  /*!
-    In addition to the assignment of nodes we might want to distinguish
-    between different dofs. Sometimes a condition applies only to some dofs of
-    each node. This is what the ContainsDof() method is for.
-
-    This selector is used most often. It can be applied e.g. to extract the
-    velocity dofs from a fluid node (with velocity and pressure dofs)
-   */
-  class NDimConditionSelector : public ConditionSelector
-  {
-   public:
-    NDimConditionSelector(
-        const Core::FE::Discretization& dis, std::string condname, int startdim, int enddim)
-        : ConditionSelector(dis, std::move(condname)), startdim_(startdim), enddim_(enddim)
-    {
-    }
-
-    /// Contain a dof number only if the dof nodal position is within the
-    /// allowed range.
-    bool contains_dof(int dof, int pos) override { return startdim_ <= pos and pos < enddim_; }
-
-   private:
-    int startdim_;
-    int enddim_;
-  };
-
-  /// a collection of ConditionSelector objects used to create a Core::LinAlg::MultiMapExtractor
-  /*!
-    Oftentimes the dofs of a field need to be split into a set of disjoint
-    maps. The Core::LinAlg::MultiMapExtractor class takes care of these splits. However,
-    Core::LinAlg::MultiMapExtractor does not do the splitting itself. This is where
-    MultiConditionSelector comes in. Here, different ConditionSelector objects
-    are collected and afterwards the Core::LinAlg::MultiMapExtractor is setup according to the
-    conditions.
-
-    MultiConditionSelector is a helper class that is needed during the setup
-    only.
-
-    \note Each node ends up in one condition only, independent of whether all
-    its dofs are selected or not.
-   */
-  class MultiConditionSelector
-  {
-   public:
-    MultiConditionSelector();
-
-    /// add a new ConditionSelector
-    /*!
-      \note The order of the selector additions determines the slots within
-      Core::LinAlg::MultiMapExtractor.
+    /**
+     * Selects all conditions that match the given @p condition_name.
      */
-    void add_selector(std::shared_ptr<ConditionSelector> s) { selectors_.push_back(s); }
+    Selector(std::string condition_name);
 
-    /// Do the setup
-    void setup_extractor(const Core::FE::Discretization& dis, const Core::LinAlg::Map& fullmap,
-        Core::LinAlg::MultiMapExtractor& extractor);
+    /**
+     * Selects all conditions that match the given @p condition_name.
+     * The dof positions to be selected are given by the  @p start_pos (inclusive) and @p end_pos
+     * (exclusive) parameters.
+     */
+    Selector(std::string condition_name, int start_pos, int end_pos);
 
-    /// Activate overlapping
-    void set_overlapping(bool overlapping) { overlapping_ = overlapping; }
+    /**
+     * Selects the given @p conditions.
+     */
+    Selector(const std::vector<Condition*>& conditions);
 
    private:
-    /// evaluate the ConditionSelector objects
-    void setup_cond_dof_sets(const Core::FE::Discretization& dis);
+    /// The name of the condition to extract.
+    std::string condition_name_;
 
-    /// condition selectors
-    std::vector<std::shared_ptr<ConditionSelector>> selectors_;
+    /// The conditions to extract.
+    std::vector<Condition*> conditions_;
 
-    /// sets of selected dof numbers
-    std::vector<std::set<int>> conddofset_;
+    /// The first dof position of the node to select.
+    int start_pos_{0};
 
-    /// flag defines if maps are overlapping
-    bool overlapping_;
+    /// The past-the-end dof position of the node to select.
+    int end_pos_{std::numeric_limits<int>::max()};
+
+    friend void setup_extractor(const Core::FE::Discretization& dis,
+        const Core::LinAlg::Map& full_map, Core::LinAlg::MultiMapExtractor& extractor,
+        const std::vector<Selector>& selectors, bool is_overlapping);
   };
-
 }  // namespace Core::Conditions
 
 FOUR_C_NAMESPACE_CLOSE

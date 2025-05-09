@@ -110,44 +110,35 @@ void FPSI::FpsiCoupling::setup_interface_coupling()
 
   {
     porofluid_extractor_ = std::make_shared<Core::LinAlg::MapExtractor>();
-    Core::Conditions::MultiConditionSelector mcs;
-    mcs.add_selector(std::make_shared<Core::Conditions::NDimConditionSelector>(
-        *porofluiddis, "fpsi_coupling", 0, ndim + 1));
-    mcs.setup_extractor(*porofluiddis, *(porofluiddis->dof_row_map()), *porofluid_extractor_);
+    Core::Conditions::setup_extractor(*porofluiddis, *porofluid_extractor_,
+        {Core::Conditions::Selector("fpsi_coupling", 0, ndim + 1)});
   }
 
   {
     porostruct_extractor_ = std::make_shared<Core::LinAlg::MapExtractor>();
-    Core::Conditions::MultiConditionSelector mcs;
-    mcs.add_selector(std::make_shared<Core::Conditions::NDimConditionSelector>(
-        *porostructdis, "fpsi_coupling", 0, ndim));
-    mcs.setup_extractor(*porostructdis, *(porostructdis->dof_row_map()), *porostruct_extractor_);
+    Core::Conditions::setup_extractor(*porostructdis, *porostruct_extractor_,
+        {Core::Conditions::Selector("fpsi_coupling", 0, ndim)});
   }
 
   {
     fluidvelpres_extractor_ = std::make_shared<Core::LinAlg::MapExtractor>();
-    Core::Conditions::MultiConditionSelector mcs;
-    mcs.add_selector(std::make_shared<Core::Conditions::NDimConditionSelector>(
-        *fluiddis, "fpsi_coupling", 0, ndim + 1));
-    mcs.setup_extractor(*fluiddis, *(fluiddis->dof_row_map()), *fluidvelpres_extractor_);
+    Core::Conditions::setup_extractor(*fluiddis, *fluidvelpres_extractor_,
+        {Core::Conditions::Selector("fpsi_coupling", 0, ndim + 1)});
   }
 
   {
     fluidvel_extractor_ = std::make_shared<Core::LinAlg::MapExtractor>();
-    Core::Conditions::MultiConditionSelector mcs;
-    mcs.add_selector(std::make_shared<Core::Conditions::NDimConditionSelector>(
-        *fluiddis, "fpsi_coupling", 0, ndim));
-    mcs.setup_extractor(*fluiddis, *(fluiddis->dof_row_map()), *fluidvel_extractor_);
+    Core::Conditions::setup_extractor(
+        *fluiddis, *fluidvel_extractor_, {Core::Conditions::Selector("fpsi_coupling", 0, ndim)});
   }
 
   {
     fluid_fsifpsi_extractor_ = std::make_shared<FPSI::Utils::MapExtractor>();
-    Core::Conditions::MultiConditionSelector mcs;
-    mcs.add_selector(std::make_shared<Core::Conditions::NDimConditionSelector>(
-        *fluiddis, "FSICoupling", 0, ndim));
-    mcs.add_selector(std::make_shared<Core::Conditions::NDimConditionSelector>(
-        *fluiddis, "fpsi_coupling", 0, ndim));
-    mcs.setup_extractor(*fluiddis, *(fluiddis->dof_row_map()), *fluid_fsifpsi_extractor_);
+    Core::Conditions::setup_extractor(*fluiddis, *fluid_fsifpsi_extractor_,
+        {
+            Core::Conditions::Selector("FSICoupling", 0, ndim),
+            Core::Conditions::Selector("fpsi_coupling", 0, ndim),
+        });
   }
 
   {

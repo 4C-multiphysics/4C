@@ -231,11 +231,10 @@ void XFEM::CouplingCommManager::setup_multi_map_extractors(
   for (std::map<int, std::shared_ptr<const Core::FE::Discretization>>::iterator dit = dis.begin();
       dit != dis.end(); ++dit)
   {
-    Core::Conditions::MultiConditionSelector mcs;
     mme_[dit->first] = std::make_shared<Core::LinAlg::MultiMapExtractor>();
-    mcs.add_selector(std::make_shared<Core::Conditions::NDimConditionSelector>(
-        *dit->second, cond_name_, startdim_, enddim_));
-    mcs.setup_extractor(*dit->second, *dit->second->dof_row_map(), *mme_[dit->first]);
+    Core::Conditions::setup_extractor(*dit->second, *mme_[dit->first],
+        std::vector<Core::Conditions::Selector>{
+            Core::Conditions::Selector(cond_name_, startdim_, enddim_)});
   }
 }
 
