@@ -12,8 +12,6 @@
 #include "4C_fem_discretization_hdg.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 
-#include <Epetra_FECrsGraph.h>
-
 #include <algorithm>
 #include <format>
 

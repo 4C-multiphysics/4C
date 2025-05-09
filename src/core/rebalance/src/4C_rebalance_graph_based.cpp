@@ -18,7 +18,6 @@
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_vector.hpp"
 
-#include <Epetra_FECrsGraph.h>
 #include <Epetra_Import.h>
 #include <Isorropia_Epetra.hpp>
 #include <Isorropia_EpetraCostDescriber.hpp>
@@ -393,8 +392,8 @@ std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_monolithic_nod
   if (err != 0) FOUR_C_THROW("Core::LinAlg::Graph::Import returned {}", err);
 
   // 4. Build and fill the graph with element internal connectivities
-  auto my_graph =
-      std::make_shared<Epetra_FECrsGraph>(Copy, (dis.node_row_map()->get_epetra_map()), 40, false);
+  auto my_graph = std::make_shared<Core::LinAlg::Graph>(
+      Copy, *dis.node_row_map(), 40, false, Core::LinAlg::Graph::GraphType::FE_GRAPH);
 
   for (const auto* element : dis.my_row_element_range())
   {
@@ -407,7 +406,7 @@ std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_monolithic_nod
         const auto* node_inner = element->nodes()[j_node];
         int index = node_inner->id();
 
-        int err = my_graph->InsertGlobalIndices(1, &index_main, 1, &index);
+        int err = my_graph->insert_global_indices(1, &index_main, 1, &index);
         if (err != 0)
           FOUR_C_THROW("Core::LinAlg::Graph::InsertGlobalIndices returned {} for global row {}",
               err, node_main->id());
@@ -440,7 +439,7 @@ std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_monolithic_nod
           primitive_gid, primitive_num_nodes, primitive_node_indices);
       if (err != 0) FOUR_C_THROW("Core::LinAlg::Graph::ExtractGlobalRowView returned {}", err);
 
-      int err = my_graph->InsertGlobalIndices(
+      int err = my_graph->insert_global_indices(
           1, &index_main, primitive_num_nodes, primitive_node_indices);
       if (err != 0)
         FOUR_C_THROW("Core::LinAlg::Graph::InsertGlobalIndices returned {} for global row {}", err,
@@ -448,9 +447,10 @@ std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_monolithic_nod
     }
   }
 
-  my_graph->GlobalAssemble(true);
-  my_graph->OptimizeStorage();
-  // cast graph
-  return std::make_shared<const Core::LinAlg::Graph>(static_cast<Epetra_CrsGraph>(*my_graph));
+  my_graph->fill_complete();
+  my_graph->optimize_storage();
+
+  return my_graph;
 }
+
 FOUR_C_NAMESPACE_CLOSE

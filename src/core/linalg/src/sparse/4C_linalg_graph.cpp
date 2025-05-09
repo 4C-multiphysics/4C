@@ -7,34 +7,68 @@
 
 #include "4C_linalg_graph.hpp"
 
+#include "4C_utils_exceptions.hpp"
+
 FOUR_C_NAMESPACE_OPEN
 
 
 Core::LinAlg::Graph::Graph(const Epetra_CrsGraph& Source)
-    : graph_(std::make_unique<Epetra_CrsGraph>(Source))
+    : graphtype_(CRS_GRAPH), graph_(std::make_unique<Epetra_CrsGraph>(Source))
 {
 }
 
 Core::LinAlg::Graph::Graph(const Epetra_FECrsGraph& Source)
-    : graph_(std::make_unique<Epetra_CrsGraph>(Source))
+    : graphtype_(CRS_GRAPH), graph_(std::make_unique<Epetra_CrsGraph>(Source))
 {
 }
 
 Core::LinAlg::Graph::Graph(Epetra_DataAccess CV, const Epetra_BlockMap& RowMap,
-    const int* NumIndicesPerRow, bool StaticProfile)
-    : graph_(std::make_unique<Epetra_CrsGraph>(CV, RowMap, NumIndicesPerRow, StaticProfile))
+    const int* NumIndicesPerRow, bool StaticProfile, GraphType graphtype)
+    : graphtype_(graphtype)
 {
+  if (graphtype_ == CRS_GRAPH)
+    graph_ = std::make_unique<Epetra_CrsGraph>(CV, RowMap, NumIndicesPerRow, StaticProfile);
+  else if (graphtype_ == FE_GRAPH)
+    graph_ = std::make_unique<Epetra_FECrsGraph>(
+        CV, RowMap, const_cast<int*>(NumIndicesPerRow), StaticProfile);
 }
 
-Core::LinAlg::Graph::Graph(
-    Epetra_DataAccess CV, const Map& RowMap, const int* NumIndicesPerRow, bool StaticProfile)
-    : graph_(std::make_unique<Epetra_CrsGraph>(
-          CV, RowMap.get_epetra_map(), NumIndicesPerRow, StaticProfile))
+Core::LinAlg::Graph::Graph(Epetra_DataAccess CV, const Map& RowMap, const int* NumIndicesPerRow,
+    bool StaticProfile, GraphType graphtype)
+    : graphtype_(graphtype)
 {
+  if (graphtype_ == CRS_GRAPH)
+    graph_ = std::make_unique<Epetra_CrsGraph>(
+        CV, RowMap.get_epetra_map(), NumIndicesPerRow, StaticProfile);
+  else if (graphtype_ == FE_GRAPH)
+    graph_ = std::make_unique<Epetra_FECrsGraph>(
+        CV, RowMap.get_epetra_map(), const_cast<int*>(NumIndicesPerRow), StaticProfile);
+}
+
+Core::LinAlg::Graph::Graph(Epetra_DataAccess CV, const Epetra_BlockMap& RowMap,
+    int NumIndicesPerRow, bool StaticProfile, GraphType graphtype)
+    : graphtype_(graphtype)
+{
+  if (graphtype_ == CRS_GRAPH)
+    graph_ = std::make_unique<Epetra_CrsGraph>(CV, RowMap, NumIndicesPerRow, StaticProfile);
+  else if (graphtype_ == FE_GRAPH)
+    graph_ = std::make_unique<Epetra_FECrsGraph>(CV, RowMap, NumIndicesPerRow, StaticProfile);
+}
+
+Core::LinAlg::Graph::Graph(Epetra_DataAccess CV, const Map& RowMap, int NumIndicesPerRow,
+    bool StaticProfile, GraphType graphtype)
+    : graphtype_(graphtype)
+{
+  if (graphtype_ == CRS_GRAPH)
+    graph_ = std::make_unique<Epetra_CrsGraph>(
+        CV, RowMap.get_epetra_map(), NumIndicesPerRow, StaticProfile);
+  else if (graphtype_ == FE_GRAPH)
+    graph_ = std::make_unique<Epetra_FECrsGraph>(
+        CV, RowMap.get_epetra_map(), NumIndicesPerRow, StaticProfile);
 }
 
 Core::LinAlg::Graph::Graph(const Graph& other)
-    : graph_(std::make_unique<Epetra_CrsGraph>(other.get_epetra_crs_graph()))
+    : graphtype_(CRS_GRAPH), graph_(std::make_unique<Epetra_CrsGraph>(other.get_epetra_crs_graph()))
 {
 }
 
@@ -44,30 +78,28 @@ Core::LinAlg::Graph& Core::LinAlg::Graph::operator=(const Graph& other)
   return *this;
 }
 
-
-Core::LinAlg::Graph::Graph(
-    Epetra_DataAccess CV, const Epetra_BlockMap& RowMap, int NumIndicesPerRow, bool StaticProfile)
-    : graph_(std::make_unique<Epetra_CrsGraph>(CV, RowMap, NumIndicesPerRow, StaticProfile))
-{
-}
-
-Core::LinAlg::Graph::Graph(
-    Epetra_DataAccess CV, const Map& RowMap, int NumIndicesPerRow, bool StaticProfile)
-    : graph_(std::make_unique<Epetra_CrsGraph>(
-          CV, RowMap.get_epetra_map(), NumIndicesPerRow, StaticProfile))
-{
-}
-
 int Core::LinAlg::Graph::insert_global_indices(int GlobalRow, int NumIndices, int* Indices)
 {
   return graph_->InsertGlobalIndices(GlobalRow, NumIndices, Indices);
 }
 
+int Core::LinAlg::Graph::insert_global_indices(
+    int numRows, const int* rows, int numCols, const int* cols)
+{
+  int err = 0;
+
+  if (graphtype_ == CRS_GRAPH)
+    FOUR_C_THROW("This type of insert_global_indices() only available for FE_GRAPH type.");
+  else if (graphtype_ == FE_GRAPH)
+    err = static_cast<Epetra_FECrsGraph*>(graph_.get())
+              ->InsertGlobalIndices(numRows, rows, numCols, cols);
+
+  return err;
+}
 
 int Core::LinAlg::Graph::remove_global_indices(int GlobalRow, int NumIndices, int* Indices)
 {
   return graph_->RemoveGlobalIndices(GlobalRow, NumIndices, Indices);
 }
-
 
 FOUR_C_NAMESPACE_CLOSE

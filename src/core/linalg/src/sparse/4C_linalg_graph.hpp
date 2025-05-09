@@ -29,18 +29,25 @@ namespace Core::LinAlg
   class Graph
   {
    public:
+    //! Type of the underlying graph object
+    enum GraphType
+    {
+      CRS_GRAPH,
+      FE_GRAPH
+    };
+
     //! Creates a Epetra_CrsGraph object and allocates storage.
     Graph(Epetra_DataAccess CV, const Epetra_BlockMap& RowMap, const int* NumIndicesPerRow,
-        bool StaticProfile = false);
+        bool StaticProfile = false, GraphType graphtype = CRS_GRAPH);
 
     Graph(Epetra_DataAccess CV, const Epetra_BlockMap& RowMap, int NumIndicesPerRow,
-        bool StaticProfile = false);
+        bool StaticProfile = false, GraphType graphtype = CRS_GRAPH);
 
     Graph(Epetra_DataAccess CV, const Core::LinAlg::Map& RowMap, const int* NumIndicesPerRow,
-        bool StaticProfile = false);
+        bool StaticProfile = false, GraphType graphtype = CRS_GRAPH);
 
     Graph(Epetra_DataAccess CV, const Core::LinAlg::Map& RowMap, int NumIndicesPerRow,
-        bool StaticProfile = false);
+        bool StaticProfile = false, GraphType graphtype = CRS_GRAPH);
 
     Graph(const Graph& other);
 
@@ -93,7 +100,30 @@ namespace Core::LinAlg
     }
 
     //! Transform to local index space. Perform other operations to allow optimal matrix operations.
-    int fill_complete() { return graph_->FillComplete(); }
+    int fill_complete()
+    {
+      int err = 0;
+
+      if (graphtype_ == CRS_GRAPH)
+        err = graph_->FillComplete();
+      else if (graphtype_ == FE_GRAPH)
+        err = static_cast<Epetra_FECrsGraph*>(graph_.get())->GlobalAssemble();
+
+      return err;
+    }
+
+    int fill_complete(const Map& domain_map, const Map& range_map)
+    {
+      int err = 0;
+
+      if (graphtype_ == CRS_GRAPH)
+        err = graph_->FillComplete(domain_map.get_epetra_map(), range_map.get_epetra_map());
+      else if (graphtype_ == FE_GRAPH)
+        err = static_cast<Epetra_FECrsGraph*>(graph_.get())
+                  ->GlobalAssemble(domain_map.get_epetra_map(), range_map.get_epetra_map());
+
+      return err;
+    }
 
     //! If FillComplete() has been called, this query returns true, otherwise it returns false.
     bool filled() const { return (graph_->Filled()); }
@@ -107,6 +137,8 @@ namespace Core::LinAlg
 
     //! Enter a list of elements in a specified global row of the graph.
     int insert_global_indices(int GlobalRow, int NumIndices, int* Indices);
+
+    int insert_global_indices(int numRows, const int* rows, int numCols, const int* cols);
 
     //! Get a view of the elements in a specified global row of the graph.
     int extract_global_row_view(int GlobalRow, int& NumIndices, int*& Indices) const
@@ -139,6 +171,8 @@ namespace Core::LinAlg
     const Epetra_BlockMap& row_map() const { return graph_->RowMap(); }
 
    private:
+    GraphType graphtype_;
+
     //! The actual Epetra_CrsGraph object.
     std::unique_ptr<Epetra_CrsGraph> graph_;
   };

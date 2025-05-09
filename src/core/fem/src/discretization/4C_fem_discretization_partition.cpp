@@ -11,8 +11,6 @@
 #include "4C_linalg_utils_densematrix_communication.hpp"
 #include "4C_utils_exceptions.hpp"
 
-#include <Epetra_FECrsGraph.h>
-
 FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*
@@ -849,8 +847,8 @@ void Core::FE::Discretization::setup_ghosting(
   // Construct FE graph. This graph allows processor off-rows to be inserted
   // as well. The communication issue is solved.
 
-  std::shared_ptr<Epetra_FECrsGraph> graph = std::make_shared<Epetra_FECrsGraph>(
-      Copy, rownodes.get_epetra_map(), entriesperrow.data(), false);
+  auto graph = std::make_shared<Core::LinAlg::Graph>(Copy, rownodes.get_epetra_map(),
+      entriesperrow.data(), false, Core::LinAlg::Graph::GraphType::FE_GRAPH);
 
   gids.clear();
   entriesperrow.clear();
@@ -865,7 +863,7 @@ void Core::FE::Discretization::setup_ghosting(
     row.assign(rowset.begin(), rowset.end());
     rowset.clear();
 
-    int err = graph->InsertGlobalIndices(1, &i->first, row.size(), row.data());
+    int err = graph->insert_global_indices(1, &i->first, row.size(), row.data());
     if (err < 0) FOUR_C_THROW("graph->InsertGlobalIndices returned {}", err);
   }
 
@@ -874,13 +872,13 @@ void Core::FE::Discretization::setup_ghosting(
   // Finalize construction of this graph. Here the communication
   // happens. The ghosting problem is solved at this point.
 
-  int err = graph->GlobalAssemble(rownodes.get_epetra_map(), rownodes.get_epetra_map());
+  int err = graph->fill_complete(rownodes, rownodes);
   if (err) FOUR_C_THROW("graph->GlobalAssemble returned {}", err);
 
   // replace rownodes, colnodes with row and column maps from the graph
   // do stupid conversion from Epetra_BlockMap to Core::LinAlg::Map
-  const Epetra_BlockMap& brow = graph->RowMap();
-  const Epetra_BlockMap& bcol = graph->ColMap();
+  const Epetra_BlockMap& brow = graph->row_map();
+  const Epetra_BlockMap& bcol = graph->col_map();
   Core::LinAlg::Map noderowmap(brow.NumGlobalElements(), brow.NumMyElements(),
       brow.MyGlobalElements(), 0, Core::Communication::as_epetra_comm(comm_));
   Core::LinAlg::Map nodecolmap(bcol.NumGlobalElements(), bcol.NumMyElements(),
