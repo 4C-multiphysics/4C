@@ -1,11 +1,10 @@
-Fluid Tutorial with *pre_exodus* and Cubit
-=============================================
+{% set tutorial_file = "tutorial_fluid.4C.yaml" %}
+{% set input_file_content = load_input_file(tutorial_file) %}
 
 .. _fluidtutorial:
 
-For this as for all other tutorials you'll need a complete |FOURC| installation
-as well as access to the pre-processing tool *cubit* and the post-processing tool *paraview*.
-If you did not do so already, install |FOURC| based on the information given in the :ref:`Installation Guide <installation>`.
+Fluid Tutorial
+==============
 
 Introduction
 ------------
@@ -31,23 +30,13 @@ Creating the Geometry with Cubit
 
 We will use Cubit for creating the geometry and the mesh.
 Within Cubit, open the Journal-Editor (*Tools* :math:`\to` *Journal
-Editor*), paste the text below and press *play*. If the geometry
-couldn’t be created, try to set the editor to ’Translate to Cubit
-commands’ first and retry. Alternatively, double-check every single line
-of the text, since sometimes errors occur during copying and pasting.
+Editor*), paste the text below and press *play*.
 After successful geometry and mesh creation, export everything to an
-Exodus-file of your choice via *File* :math:`\to`\ *Export...*. Select
-the folder ``build-release`` created before, pick an arbitrary name for
-the file, click on ``Save``, and then set the dimension explicitly to
-2d.
+Exodus file of your choice via *File* :math:`\to`\ *Export...* and
+set the dimension explicitly to 2D.
 
 .. literalinclude::  /tutorial_fluid.jou
    :linenos:
-
-
-When Cubit version 11.0 is used for
-creating geometry and mesh, you have to adapt some of the previous
-commands, since numbering of entities changed between Cubit versions!
 
 The generated mesh should look like this:
 
@@ -59,130 +48,43 @@ The generated mesh should look like this:
 
    Mesh for a flow past a circular cylinder.
 
-Working with *pre_exodus* and |FOURC|
---------------------------------------
-
-*pre_exodus* is a C++ code embedded into the |FOURC| environment. It is
-meant to transfer a given mesh into a |FOURC|-readable input file.
-
-Preliminaries
-~~~~~~~~~~~~~
-
-If not already done, compile *pre_exodus* in the ``build-release``
-folder via
-
-::
-
-     make pre_exodus
-
-after configuring |FOURC| in the usual way.
+Working with |FOURC|
+--------------------
 
 General Procedure of Creating a Valid |FOURC| Input File
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-With a given mesh including some nodal clouds to apply conditions to you
-need another text-file (*bc-file  *) where you specify, what you would
-like to do with it. It contains for example the specific element
-declaration (fluid, structure, parameters, etc.) and the particular
-boundary condition such as Dirichlet or Neumann. Finally, a *header-file* consists of general parameters such as solvers, algorithmic
-parameters, etc. Those three files are merged by *pre_exodus* into an
-input file for |FOURC|. This file is then *automatically* validated using
-all available |FOURC| validation and is therefore likely to run.
+The execution of |FOURC| is controlled by an input file. Let us create a file
+``tutorial_fluid.4C.yaml`` and enter the essential parameters:
 
-Sure, you usually do not have already a proper *header-file* and
-matching *bc-file*. By typing
+{{ section_dump(input_file_content, ["PROBLEM TYPE", "FLUID DYNAMIC", "SOLVER 1", "MATERIALS", "FUNCT1"]) }}
 
-.. container:: center
+The mesh is read from the Exodus file created in the previous step. We can read the mesh as
+follows:
 
-   ``./pre_exodus –exo=yourmesh.e``
+{{ section_dump(input_file_content, ["FLUID GEOMETRY"]) }}
 
-in the ``build-release`` folder you get two preliminary files
-’default.head’ and ’default.bc’. The first contains the currently valid
-header parameters with default values and commented options which you
-can edit to adapt it to your means. Similarly, ’default.bc’ consists of
-all your mesh entities and a list of all currently valid conditions. See
-next section for details how to work with them and how to create valid
-input files.
+This tells |FOURC| to read the mesh as the fluid geometry and assign corresponding
+elements.
 
-Adapting the *header-file*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Setting the boundary conditions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Open the previously created *header-file* ’default.head’ and edit the
-following entries as shown below.
+The boundary conditions are set as follows:
 
--  ``PROBLEM TYPE``
-
-   ``PROBLEMTYPE Fluid``
-
--  ``FLUID DYNAMIC``
-
-   ``LINEAR_SOLVER 1``
-
-   ``NUMSTEP 20``
-
-   ``TIMESTEP 0.01``
-
--  ``SOLVER 1``
-
-   ``NAME Fluid solver``
-
-   ``SOLVER UMFPACK``
-
--  ``MATERIALS``
-
-   insert the following line in the section ``MATERIALS`` in order to
-   define your material parameters:
-   ``MAT 1 MAT_fluid DYNVISCOSITY 0.004 DENSITY 1.0``
-
--  ``FUNCT1``
-
-   | insert the following line in the section ``FUNCT1`` in order to
-     define a time curve:
-   | ``SYMBOLIC_FUNCTION_OF_SPACE_TIME 0.5*(sin((t*pi/0.1)-(pi/2)))+0.5``
-
-Save the file under a different name of your choice.
-
-Adapting the *bc-file*
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Open the previously created *bc-file* ’default.bc’ and edit your
-boundary conditions as shown below.
-
-.. literalinclude:: /tutorial_fluid.bc
-
-
-Save the file under a different name of your choice.
-
-Creating a |FOURC| input file with *pre_exodus*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The previously created files have to be merged to a |FOURC| input file in
-order to solve the problem. We will use *pre_exodus* for this purpose.
-Open a terminal and execute the following command in the
-``build-release`` folder:
-
-.. container:: center
-
-   ``./pre_exodus --exo=<meshpath>/yourmesh.e --head=<headpath>/headerfile.head``
-   ``--bc=<bcpath>/bcfile.bc --dat=<datpath>/datfile.dat``
-
-Where the filenames and their paths have to be replaced according to how
-you have named and where you have saved them. *pre_exodus* will
-output a dat-file to the path you specified above.
+{{ section_dump(input_file_content, ["DESIGN LINE DIRICH CONDITIONS", "DESIGN POINT DIRICH CONDITIONS"]) }}
 
 
 Running a Simulation with |FOURC|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To start the solver use the call
+Execute 4C as usual:
 
 .. container:: center
 
-   ``./4C <inputdirectory>/datfile.dat <outputdirectory>/outputprefix``
+   ``./4C <input_directory>/<input_file_name> <output_directory>/output_prefix``
 
-in the ``build-release`` folder. You may have to adapt the name of the
-executable in this command. The prefix that you have chosen before will
-be applied to all output files that |FOURC| generates.
+The prefix that you choose will be applied to all output files that |FOURC| generates.
 
 Postprocessing
 --------------
@@ -220,9 +122,6 @@ Visualize your results in Paraview
 
 -  *File :math:`\to` Open* and select the filtered ``*\*.case*`` file:
    *outputprefix_fluid.case*
-
--  Choose *LittleEndian* instead of *BigEndian* in case you have an old
-   version of Paraview.
 
 -  Press *Apply* to activate the display.
 
