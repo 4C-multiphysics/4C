@@ -292,6 +292,13 @@ bool NOX::Nln::LinearSystem::applyJacobianInverse(Teuchos::ParameterList& linear
   // Zero out the delta X of the linear problem if requested by user.
   if (zeroInitialGuess_) result.init(0.0);
 
+  // solve the linear system
+  if (jacobian().NormInf() == 0.0)
+  {
+    std::cout << "WARNING: You are about to invert a singular matrix! Skipping linear solve ...";
+    return true;
+  }
+
   // Create Epetra linear problem object for the linear solve
   /* Note: We switch from LINALG_objects to pure Epetra_objects.
    * This is necessary for the linear solver.
