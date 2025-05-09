@@ -9,7 +9,7 @@ RESTART                               0
 OUTPUT_BIN                            no
 STRUCT_DISP                           No
 FILESTEPS                             1000
-VERBOSITY                             verbose
+VERBOSITY                             minimal
 -----------------------------------------------------------IO/RUNTIME VTK OUTPUT
 OUTPUT_DATA_FORMAT                    ascii
 INTERVAL_STEPS                        1
@@ -59,9 +59,9 @@ MAT 2 MAT_BeamKirchhoffTorsionFreeElastHyper YOUNG 10 DENS 0.0 CROSSAREA 7.85398
 --------------------------------------------------------------------------FUNCT1
 SYMBOLIC_FUNCTION_OF_SPACE_TIME t
 --------------------------------------------------------------RESULT DESCRIPTION
-STRUCTURE SPECIAL true QUANTITY nodes_proc0 VALUE 1562 TOLERANCE 1e-8
-STRUCTURE SPECIAL true QUANTITY nodes_proc1 VALUE 1311 TOLERANCE 1e-8
-STRUCTURE SPECIAL true QUANTITY nodes_proc2 VALUE 1533 TOLERANCE 1e-8
+STRUCTURE SPECIAL true QUANTITY nodes_proc0 VALUE 1534 TOLERANCE 1e-8
+STRUCTURE SPECIAL true QUANTITY nodes_proc1 VALUE 1534 TOLERANCE 1e-8
+STRUCTURE SPECIAL true QUANTITY nodes_proc2 VALUE 1338 TOLERANCE 1e-8
 ---------------------------------------------------DESIGN SURF DIRICH CONDITIONS
 // fix_xyz
 E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0 0 0 FUNCT 0 0 0

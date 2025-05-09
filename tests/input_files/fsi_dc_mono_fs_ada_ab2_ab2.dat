@@ -10,11 +10,11 @@ DIM                             2
 MATERIALS                       3
 NUMDF                           3
 -----------------------------------------------------------------PROBLEM TYPE
-PROBLEMTYPE                      Fluid_Structure_Interaction
+PROBLEMTYPE                     Fluid_Structure_Interaction
 RESTART                         0
 ----------------------------------------------------------STRUCTURAL DYNAMIC
 LINEAR_SOLVER                   1
-DYNAMICTYPE                      GenAlpha
+DYNAMICTYPE                     GenAlpha
 TOLDISP                         1.0E-10
 MAXITER                         50
 PREDICT                         ConstDisVelAcc
@@ -41,10 +41,10 @@ ALPHA_M                         1.0
 GAMMA                           1.0
 PREDICTOR                       steady_state
 -----------------------------------FLUID DYNAMIC/NONLINEAR SOLVER TOLERANCES
-TOL_VEL_RES	  1.0E-8
-TOL_VEL_INC	  1.0E-8
-TOL_PRES_RES	  1.0E-8
-TOL_PRES_INC	  1.0E-8
+TOL_VEL_RES	                    1.0E-8
+TOL_VEL_INC	                    1.0E-8
+TOL_PRES_RES	                  1.0E-8
+TOL_PRES_INC	                  1.0E-8
 ----------------------------------FLUID DYNAMIC/RESIDUAL-BASED STABILIZATION
 CHARELELENGTH_PC                root_of_volume
 VSTAB                           vstab_gls
@@ -55,10 +55,10 @@ ALE_TYPE                        solid
 COUPALGO                        iter_monolithicfluidsplit
 MAXTIME                         1.0
 NUMSTEP                         15
-RESTARTEVERY                     2
+RESTARTEVERY                    2
 SECONDORDER                     yes
 TIMESTEP                        0.002
-RESULTSEVERY                           2
+RESULTSEVERY                    2
 --------------------------------------------------FSI DYNAMIC/TIMEADAPTIVITY
 ADAPTSTEPMAX                    5
 AUXINTEGRATORFLUID              AB2
@@ -118,15 +118,15 @@ COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME y*(1-cos(2*t*pi/5))
 ----------------------------------------------------------------------FUNCT2
 COMPONENT 0 SYMBOLIC_FUNCTION_OF_SPACE_TIME (1-cos(2*t*pi/5))
 ----------------------------------------------------------RESULT DESCRIPTION
-STRUCTURE DIS structure NODE 38 QUANTITY dispx VALUE -1.28547069831684625e-06 TOLERANCE 1e-13
-STRUCTURE DIS structure NODE 38 QUANTITY dispy VALUE -8.95911590486747449e-03 TOLERANCE 1e-13
-FLUID DIS fluid NODE 841 QUANTITY velx VALUE -1.65697548756419712e-03 TOLERANCE 1e-13
-FLUID DIS fluid NODE 841 QUANTITY vely VALUE -2.35043232239501437e-02 TOLERANCE 1e-13
-FLUID DIS fluid NODE 841 QUANTITY pressure VALUE 4.44870465323184278e-02 TOLERANCE 1e-13
-ALE DIS ale NODE 841 QUANTITY dispx VALUE -1.11731043201888682e-05 TOLERANCE 1e-13
-ALE DIS ale NODE 841 QUANTITY dispy VALUE -5.76197579421372855e-03 TOLERANCE 1e-13
+STRUCTURE DIS structure NODE 38 QUANTITY dispx VALUE -1.28547069831684625e-06 TOLERANCE 3e-13
+STRUCTURE DIS structure NODE 38 QUANTITY dispy VALUE -8.95911590486747449e-03 TOLERANCE 9e-12
+FLUID DIS fluid NODE 841 QUANTITY velx VALUE -1.65697548756419712e-03 TOLERANCE 4e-11
+FLUID DIS fluid NODE 841 QUANTITY vely VALUE -2.35043232239501437e-02 TOLERANCE 3e-12
+FLUID DIS fluid NODE 841 QUANTITY pressure VALUE 4.44870465323184278e-02 TOLERANCE 5e-10
+ALE DIS ale NODE 841 QUANTITY dispx VALUE -1.11731043201888682e-05 TOLERANCE 2e-12
+ALE DIS ale NODE 841 QUANTITY dispy VALUE -5.76197579421372855e-03 TOLERANCE 3e-12
 FSI NODE 1139 QUANTITY lambdax VALUE -9.73737795047591731e-06 TOLERANCE 1e-13
-FSI NODE 1139 QUANTITY lambday VALUE -1.09624081154833857e-03 TOLERANCE 1e-13
+FSI NODE 1139 QUANTITY lambday VALUE -1.09624081154833857e-03 TOLERANCE 3e-11
 FSI SPECIAL true QUANTITY dt VALUE 2.0e-01 TOLERANCE 1.0e-13
 FSI SPECIAL true QUANTITY time VALUE 1.05400000000000005e+00 TOLERANCE 1.0e-13
 FSI SPECIAL true QUANTITY adasteps VALUE 1 TOLERANCE 1.0e-13

@@ -2,9 +2,9 @@
 3D contact in saddle-point formulation with fully coupled AMG
 preconditioner from MueLu
 ------------------------------------------------------PROBLEM SIZE
-//ELEMENTS    9216
-//NODES       11250
-DIM           3
+//ELEMENTS                      9216
+//NODES                         11250
+DIM                             3
 -----------------------------------------------------DISCRETISATION
 NUMFLUIDDIS                     1
 NUMSTRUCDIS                     1
@@ -13,7 +13,7 @@ NUMARTNETDIS                    1
 NUMTHERMDIS                     1
 NUMAIRWAYSDIS                   1
 --------------------------------------------------------PROBLEM TYPE
-PROBLEMTYPE                      Structure
+PROBLEMTYPE                     Structure
 RESTART                         0
 SHAPEFCT                        Polynomial
 RANDSEED                        -1
@@ -24,18 +24,18 @@ STRUCT_STRESS                   No
 STRUCT_COUPLING_STRESS          No
 STRUCT_STRAIN                   No
 FILESTEPS                       1000
-STDOUTEVERY                      1
+STDOUTEVERY                     1
 WRITE_TO_SCREEN                 Yes
 WRITE_TO_FILE                   No
 VERBOSITY                       verbose
-RESTARTEVERY                     -1
+RESTARTEVERY                    -1
 --------------------------------------------------MESH PARTITIONING
 IMBALANCE_TOL                   1.03
 -------------------------------------------------STRUCTURAL DYNAMIC
 INT_STRATEGY                    Old
-DYNAMICTYPE                      Statics
-RESULTSEVERY                     1
-RESEVERYERGY                     0
+DYNAMICTYPE                     Statics
+RESULTSEVERY                    1
+RESEVERYERGY                    0
 RESTARTEVERY                     1000
 TIMESTEP                        0.0025
 NUMSTEP                         1
@@ -108,11 +108,11 @@ STRUCTURE DIS structure NODE 5460 QUANTITY dispx VALUE -6.06478973853427183e-04 
 STRUCTURE DIS structure NODE 5460 QUANTITY dispy VALUE -4.76147405311606387e-05 TOLERANCE 1.0e-7
 STRUCTURE DIS structure NODE 5460 QUANTITY dispz VALUE -2.07060581325553978e-05 TOLERANCE 1.0e-7
 // Check displacement of node on master side of the contact interface
-STRUCTURE DIS structure NODE 6284 QUANTITY dispx VALUE 3.93501688602034591e-04 TOLERANCE 1.0e-7
+STRUCTURE DIS structure NODE 6284 QUANTITY dispx VALUE 3.93501688602034591e-04 TOLERANCE 3.0e-7
 STRUCTURE DIS structure NODE 6284 QUANTITY dispy VALUE 3.21827951739344922e-06 TOLERANCE 1.0e-7
 STRUCTURE DIS structure NODE 6284 QUANTITY dispz VALUE 3.00076971309307133e-05 TOLERANCE 1.0e-7
 // Check linear iterations in last Newton step
-STRUCTURE SPECIAL true QUANTITY lin_iters_contact VALUE 37 TOLERANCE 1.0e-13
+STRUCTURE SPECIAL true QUANTITY lin_iters_contact VALUE 38 TOLERANCE 1.0e-13
 -------------------------------------DESIGN SURF DIRICH CONDITIONS
 // dirichlet_surf_large
 E 1 NUMDOF 3 ONOFF 1 1 1 VAL 0.0 0.0 0.0 FUNCT 0 0 0

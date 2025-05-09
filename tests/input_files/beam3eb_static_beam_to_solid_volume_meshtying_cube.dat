@@ -37,7 +37,7 @@ MODELEVALUATOR                        Standard
 BIN_SIZE_LOWER_BOUND                  0.3
 DOMAINBOUNDINGBOX -1 1 -1 1 -1 1
 ---------------------------------------------------------------MESH PARTITIONING
-METHOD                                recursive_coordinate_bisection
+METHOD                                multijagged
 ---------------------------------BEAM INTERACTION/BEAM TO SOLID VOLUME MESHTYING
 CONSTRAINT_STRATEGY                   penalty
 PENALTY_PARAMETER                     10
