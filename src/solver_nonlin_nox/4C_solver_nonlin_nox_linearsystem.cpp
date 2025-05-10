@@ -334,8 +334,9 @@ bool NOX::Nln::LinearSystem::applyJacobianInverse(Teuchos::ParameterList& linear
     Core::LinAlg::View x(*linProblem.GetLHS());
     Core::LinAlg::View b(*linProblem.GetRHS());
 
-    linsol_status = currSolver->solve_with_multi_vector(matrix, x.get_non_owning_shared_ptr_ref(),
-        b.get_non_owning_shared_ptr_ref(), solver_params);
+    linsol_status = currSolver->solve_with_multi_vector(matrix,
+        Core::Utils::shared_ptr_from_ref(x.underlying()),
+        Core::Utils::shared_ptr_from_ref(b.underlying()), solver_params);
 
     if (linsol_status)
     {

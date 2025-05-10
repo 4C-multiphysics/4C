@@ -132,7 +132,8 @@ bool NOX::FSI::LinearSystem::applyJacobianInverse(
   Core::LinAlg::SolverParams solver_params;
   solver_params.refactor = true;
   solver_params.reset = callcount_ == 0;
-  solver_->solve(jac_ptr_, disi.get_non_owning_shared_ptr_ref(), fres, solver_params);
+  solver_->solve(
+      jac_ptr_, Core::Utils::shared_ptr_from_ref(disi.underlying()), fres, solver_params);
 
   callcount_ += 1;
 

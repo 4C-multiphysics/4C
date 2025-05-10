@@ -313,17 +313,17 @@ namespace Core::LinAlg
     /**
      * View a given Epetra_Vector object under our own Vector wrapper.
      */
-    [[nodiscard]] static std::shared_ptr<Vector<T>> create_view(Epetra_Vector& view)
+    [[nodiscard]] static std::unique_ptr<Vector<T>> create_view(Epetra_Vector& view)
     {
-      std::shared_ptr<Vector<T>> ret(new Vector<T>);
-      ret->vector_ = std::make_shared<Epetra_Vector>(Epetra_DataAccess::View, view, 0);
+      std::unique_ptr<Vector<T>> ret(new Vector<T>);
+      ret->vector_ = std::make_unique<Epetra_Vector>(Epetra_DataAccess::View, view, 0);
       return ret;
     }
 
-    [[nodiscard]] static std::shared_ptr<const Vector<T>> create_view(const Epetra_Vector& view)
+    [[nodiscard]] static std::unique_ptr<const Vector<T>> create_view(const Epetra_Vector& view)
     {
-      std::shared_ptr<Vector<T>> ret(new Vector<T>);
-      ret->vector_ = std::make_shared<Epetra_Vector>(Epetra_DataAccess::View, view, 0);
+      std::unique_ptr<Vector<T>> ret(new Vector<T>);
+      ret->vector_ = std::make_unique<Epetra_Vector>(Epetra_DataAccess::View, view, 0);
       return ret;
     }
 

@@ -48,13 +48,28 @@ namespace Core::LinAlg
   concept Viewable = requires(SourceType source) {
     {
       Internal::WrapperForWithQualifiers<SourceType>::create_view(source)
-    } -> std::same_as<std::shared_ptr<Internal::WrapperForWithQualifiers<SourceType>>>;
+    } -> std::same_as<std::unique_ptr<Internal::WrapperForWithQualifiers<SourceType>>>;
   };
 
   /**
    * Temporary helper class for migration from raw Trilinos classes to our own wrappers. Views one
    * of the Trilinos linear algebra types as one of ours. It is the users responsibility to ensure
-   * that the viewed source object outlives the view.
+   * that the viewed source object outlives the view. Example:
+   *
+   * @code
+   *   // Function taking our Vector type.
+   *   void f(const Core::LinAlg::Vector<double>& vec);
+   *
+   *   // We only have an Epetra_Vector object.
+   *   const Epetra_Vector& source = ...;
+   *   // Create a view of the source object.
+   *   Core::LinAlg::View view(source);
+   *   // It behaves like our type Core::LinAlg::Vector<double> and converts implicitly.
+   *   f(view); // works
+   *   // Convert to our type explicitly
+   *   const Core::LinAlg::Vector<double>& vec = view.underlying();
+   * @endcode
+   *
    */
   template <typename WrapperType>
   class View
@@ -75,16 +90,22 @@ namespace Core::LinAlg
     View& operator=(View&& other) = delete;
     ~View() = default;
 
-    //! Allow implicit conversion to the WrapperType for easy use in new interfaces.
-    //! The view should behave like an object of the WrapperType.
+    /**
+     * Allow implicit conversion to the underlying type. This allows us to use the view as if it
+     * were the underlying type. This is useful for passing the view to functions which expect the
+     * underlying wrapper type.
+     */
     operator WrapperType&() { return *view_; }
 
-    //! For easier interoperability with existing code, allow access to the shared pointer.
-    std::shared_ptr<WrapperType>& get_non_owning_shared_ptr_ref() { return view_; }
+    /**
+     * Explicitly ask for the viewed underlying wrapper. This is simply another way to access
+     * the viewed object when implicit conversion is not happening automatically.
+     */
+    WrapperType& underlying() { return *view_; }
 
    private:
     //! Source content wrapped in our own type.
-    std::shared_ptr<WrapperType> view_;
+    std::unique_ptr<WrapperType> view_;
   };
 
 

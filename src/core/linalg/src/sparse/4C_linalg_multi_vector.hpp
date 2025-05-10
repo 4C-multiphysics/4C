@@ -234,20 +234,20 @@ namespace Core::LinAlg
     /**
      * View a given Epetra_MultiVector under our own MultiVector wrapper.
      */
-    [[nodiscard]] static std::shared_ptr<MultiVector<T>> create_view(Epetra_MultiVector& view)
+    [[nodiscard]] static std::unique_ptr<MultiVector<T>> create_view(Epetra_MultiVector& view)
     {
-      std::shared_ptr<MultiVector<T>> ret(new MultiVector<T>);
+      std::unique_ptr<MultiVector<T>> ret(new MultiVector<T>);
       ret->vector_ =
-          std::make_shared<Epetra_MultiVector>(Epetra_DataAccess::View, view, 0, view.NumVectors());
+          std::make_unique<Epetra_MultiVector>(Epetra_DataAccess::View, view, 0, view.NumVectors());
       return ret;
     }
 
-    [[nodiscard]] static std::shared_ptr<const MultiVector<T>> create_view(
+    [[nodiscard]] static std::unique_ptr<const MultiVector<T>> create_view(
         const Epetra_MultiVector& view)
     {
-      std::shared_ptr<MultiVector<T>> ret(new MultiVector<T>);
+      std::unique_ptr<MultiVector<T>> ret(new MultiVector<T>);
       ret->vector_ =
-          std::make_shared<Epetra_MultiVector>(Epetra_DataAccess::View, view, 0, view.NumVectors());
+          std::make_unique<Epetra_MultiVector>(Epetra_DataAccess::View, view, 0, view.NumVectors());
       return ret;
     }
 
@@ -267,7 +267,7 @@ namespace Core::LinAlg
 
     //! Vector view of the single columns stored inside the vector. This is used to allow
     //! access to the single columns of the MultiVector.
-    mutable std::vector<std::shared_ptr<Vector<T>>> column_vector_view_;
+    mutable std::vector<std::unique_ptr<Vector<T>>> column_vector_view_;
 
     friend class Vector<T>;
   };
