@@ -80,9 +80,6 @@ AZREUSE                         0
 AZSOLVE                         GMRES
 AZSUB                           300
 AZTOL                           1e-08
-IFPACKGFILL                     0
-IFPACKOVERLAP                   0
-IFPACKCOMBINE                   Add
 SOLVER                          UMFPACK
 -------------------------------------------------------------------MATERIALS
 // MAT 1 MAT_matlist LOCAL No NUMMAT 2 MATIDS 21 22

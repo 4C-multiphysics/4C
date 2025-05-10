@@ -236,11 +236,8 @@ Teuchos::ParameterList translate_four_c_to_ifpack(const Teuchos::ParameterList& 
 {
   Teuchos::ParameterList ifpacklist;
 
-  ifpacklist.set("fact: level-of-fill", inparams.get<int>("IFPACKGFILL"));
-  ifpacklist.set("partitioner: overlap", inparams.get<int>("IFPACKOVERLAP"));
-  ifpacklist.set("schwarz: combine mode",
-      inparams.get<std::string>("IFPACKCOMBINE"));    // can be "Zero", "Add", "Insert"
-  ifpacklist.set("schwarz: reordering type", "rcm");  // "rcm" or "metis" or "amd"
+  auto xmlfile = inparams.get<std::optional<std::filesystem::path>>("IFPACK_XML_FILE");
+  if (xmlfile) ifpacklist.set("IFPACK_XML_FILE", xmlfile->string());
 
   return ifpacklist;
 }

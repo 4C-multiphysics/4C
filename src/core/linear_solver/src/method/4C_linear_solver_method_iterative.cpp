@@ -138,7 +138,7 @@ int Core::LinearSolver::IterativeSolver<MatrixType, VectorType>::solve()
   {
     if (Core::Communication::my_mpi_rank(comm_) == 0)
       std::cout << "WARNING: The linear solver input parameters from the input file will be "
-                   "depreciated soon. Switch to an appropriate xml-file version."
+                   "removed soon. Switch to an appropriate xml-file version."
                 << std::endl;
 
     std::string solverType = belist.get<std::string>("Solver Type");

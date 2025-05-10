@@ -99,6 +99,7 @@ SOLVER                          UMFPACK
 --------------------------------------------------------------------SOLVER 2
 NAME                            THERMAL_SOLVER
 SOLVER                          Belos
+IFPACK_XML_FILE                 xml/preconditioner/ifpack.xml
 --------------------------------------------------------------------SOLVER 3
 NAME                            STRUCTURAL_SOLVER
 SOLVER                          UMFPACK

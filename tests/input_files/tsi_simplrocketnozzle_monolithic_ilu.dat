@@ -115,8 +115,7 @@ NAME                            Thermo_Structure_Interaction_Solver
 SOLVER                          Belos
 SOLVER_XML_FILE                 xml/linear_solver/iterative_gmres_template.xml
 AZPREC                          ILU
-IFPACKGFILL                     4
-IFPACKOVERLAP                   1
+IFPACK_XML_FILE                 contact3D_ifpack.xml
 AZREUSE                         5
 -------------------------------------------------------------------MATERIALS
 MAT 1 MAT_Struct_ThermoStVenantK YOUNGNUM 1 YOUNG 1.48e8 NUE 0.3 DENS 9.130e-6 THEXPANS 1.72e-5 CAPA 3405.49 CONDUCT 3.1e5 INITTEMP 293.15

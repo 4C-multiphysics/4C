@@ -107,10 +107,8 @@ Debug                           = No
 --------------------------------------------------------------------SOLVER 1
 NAME                            Ale_Solver
 AZCONV                          AZ_r0
-IFPACKGFILL                     0
 AZITER                          1000
 AZOUTPUT                        0
-IFPACKOVERLAP                   0
 AZPREC                          ILU
 AZREUSE                         0
 AZSOLVE                         GMRES
@@ -120,10 +118,8 @@ SOLVER                          UMFPACK
 --------------------------------------------------------------------SOLVER 2
 NAME                            Structure_Solver
 AZCONV                          AZ_r0
-IFPACKGFILL                     0
 AZITER                          1000
 AZOUTPUT                        0
-IFPACKOVERLAP                   0
 AZPREC                          ILU
 AZREUSE                         0
 AZSOLVE                         GMRES
@@ -133,10 +129,8 @@ SOLVER                          UMFPACK
 --------------------------------------------------------------------SOLVER 3
 NAME                            Fluid_Solver
 AZCONV                          AZ_r0
-IFPACKGFILL                     0
 AZITER                          1000
 AZOUTPUT                        0
-IFPACKOVERLAP                   0
 AZPREC                          ILU
 AZREUSE                         0
 AZSOLVE                         GMRES

@@ -89,12 +89,11 @@ MASS_CONSERVATION_SCALING       full
 MASS_CONSERVATION_COMBO         sum
 --------------------------------------------------------------------SOLVER 1
 NAME                            Fluid_Solver
-//SOLVER                          UMFPACK
+//SOLVER                        UMFPACK
 SOLVER                          Belos
 AZOUTPUT                        100
 AZSOLVE                         GMRES
-AZPREC                        ILU
-IFPACKGFILL                   0
+AZPREC                          ILU
 --------------------------------------------------------------------SOLVER 2
 NAME                            ALE_Solver
 SOLVER                          Belos

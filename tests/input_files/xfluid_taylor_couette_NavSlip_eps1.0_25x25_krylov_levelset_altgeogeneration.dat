@@ -166,8 +166,7 @@ AZREUSE                         1
 AZTOL                           1.0E-5
 AZCONV                          AZ_r0
 THROW_IF_UNCONVERGED            No
-IFPACKOVERLAP                   3
-IFPACKGFILL                     3
+IFPACK_XML_FILE                 xfluid_ifpack.xml
 --------------------------------------------------------------------SOLVER 2
 NAME                            Scatra_Solver
 SOLVER                          UMFPACK

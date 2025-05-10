@@ -57,17 +57,13 @@ namespace Inpar::SOLVER
                 .default_value = Core::LinearSolver::PreconditionerType::ilu}),
 
         // Ifpack options
-        parameter<int>("IFPACKOVERLAP",
-            {.description = "The amount of overlap used for the ifpack \"ilu\" preconditioner.",
-                .default_value = 0}),
-
-        parameter<int>("IFPACKGFILL",
-            {.description = "The amount of fill allowed for an internal \"ilu\" preconditioner.",
-                .default_value = 0}),
-
-
-        deprecated_selection<std::string>("IFPACKCOMBINE", {"Add", "Insert", "Zero"},
-            {.description = "Combine mode for Ifpack Additive Schwarz", .default_value = "Add"}),
+        Core::IO::InputSpecBuilders::parameter<std::optional<std::filesystem::path>>(
+            "IFPACK_XML_FILE",
+            {.description = "This parameter describes the absolute or relative path to an xml file "
+                            "containing the configuration of a Trilinos/Ifpack preconditioner. The "
+                            "content of this xml file needs to follow Ifpack guidelines. Consult "
+                            "the Trilinos/Ifpack documentation and user guide for more information "
+                            "on valid Ifpack parameters.."}),
 
         // Iterative solver options
         parameter<int>(
@@ -110,7 +106,6 @@ namespace Inpar::SOLVER
                     "converge. To only issue a warning without stopping the simulation, set "
                     "this parameter to false.",
                 .default_value = true}),
-
 
         parameter<std::optional<std::filesystem::path>>(
             "SOLVER_XML_FILE", {.description = "xml file defining any iterative solver"}),
