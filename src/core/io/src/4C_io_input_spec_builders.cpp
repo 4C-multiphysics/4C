@@ -240,7 +240,7 @@ namespace
             case MatchEntry::State::matched:
               return entry.matched_node;
           }
-          FOUR_C_ASSERT_ALWAYS(false, "Internal error: unknown MatchEntry::State.");
+          FOUR_C_THROW("Internal error: unknown MatchEntry::State.");
         });
 
     std::string indent = std::string(depth, ' ');

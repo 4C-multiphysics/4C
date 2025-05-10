@@ -27,7 +27,7 @@ namespace Core
 {
   namespace Internal
   {
-    void throw_error(const ErrorHelper& error_helper, const std::string& formatted_message)
+    void throw_error(const std::source_location& loc, const std::string& formatted_message)
     {
       int initialized;
       MPI_Initialized(&initialized);
@@ -38,14 +38,10 @@ namespace Core
       }
 
       std::stringstream compound_message;
-      compound_message << "PROC " << myrank << " ERROR in " << error_helper.file_name << ", line "
-                       << error_helper.line_number << ":\n";
+      compound_message << "PROC " << myrank << " ERROR in " << loc.file_name() << ", line "
+                       << loc.line() << ":\n";
 
-      if (error_helper.failed_assertion_string)
-        compound_message << "The following test failed:\n  " << error_helper.failed_assertion_string
-                         << "\n";
-
-      compound_message << "Error message:\n  " << formatted_message;
+      compound_message << formatted_message;
       compound_message << "\n------------------\n";
 
       throw Core::Exception(compound_message.str());
