@@ -91,7 +91,7 @@ namespace ReducedLung
         }
         else
         {
-          FOUR_C_ASSERT_ALWAYS(false, "Material not implemented.");
+          FOUR_C_THROW("Material not implemented.");
         }
         terminal_units.push_back(TerminalUnit{element_id, local_element_id, n_terminal_units,
             TerminalUnitType::kelvin_voigt, E, eta});
@@ -100,7 +100,7 @@ namespace ReducedLung
       }
       else
       {
-        FOUR_C_ASSERT_ALWAYS(false, "Unknown element type.");
+        FOUR_C_THROW("Unknown element type.");
       }
     }
 
@@ -209,7 +209,7 @@ namespace ReducedLung
         }
         else
         {
-          FOUR_C_ASSERT_ALWAYS(false, "Boundary condition not implemented!");
+          FOUR_C_THROW("Boundary condition not implemented!");
         }
       }
       // Create entities "top down"-like (a processor owning an element also owns its outlet node
@@ -304,7 +304,7 @@ namespace ReducedLung
       }
       else
       {
-        FOUR_C_ASSERT_ALWAYS(false, "Too many elements at junction.");
+        FOUR_C_THROW("Too many elements at junction.");
       }
     }
 

@@ -40,10 +40,10 @@ namespace
     FOUR_C_EXPECT_THROW_WITH_MESSAGE(test_no_return(), Core::Exception, "No return.");
   }
 
-  TEST(ExceptionsTest, AssertAlwaysPrintsTest)
+  TEST(ExceptionsTest, AssertAlways)
   {
     const auto always = []() { FOUR_C_ASSERT_ALWAYS(1 == 2, "Throw."); };
 
-    FOUR_C_EXPECT_THROW_WITH_MESSAGE(always(), Core::Exception, "1 == 2");
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(always(), Core::Exception, "Throw");
   }
 }  // namespace
