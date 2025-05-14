@@ -17,3 +17,4 @@ Developer guide
     developer_cluster
     petra_object_model
     development_parts
+    developer_release
