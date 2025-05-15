@@ -188,6 +188,18 @@ namespace Solid
         return forcen_;
       }
 
+      std::shared_ptr<Epetra_FEVector>& get_lambda()
+      {
+        check_init_setup();
+        return lambda_;
+      }
+
+      std::shared_ptr<const Epetra_FEVector> get_lambda() const
+      {
+        check_init_setup();
+        return lambda_;
+      }
+
       /// Return internal force \f$fint_{n+1}\f$
       std::shared_ptr<const Epetra_FEVector> get_force_np() const
       {
@@ -359,6 +371,7 @@ namespace Solid
       /// supposed to hold the entire jacobian (saddle point system if desired)
       std::shared_ptr<Core::LinAlg::SparseMatrix> stiff_;
 
+      std::shared_ptr<Epetra_FEVector> lambda_;
       ///@}
     };
   }  // namespace ModelEvaluator
