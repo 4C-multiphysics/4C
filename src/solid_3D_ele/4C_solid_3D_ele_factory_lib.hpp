@@ -12,8 +12,8 @@
 
 #include "4C_fem_general_cell_type_traits.hpp"
 #include "4C_inpar_structure.hpp"
+#include "4C_utils_box.hpp"
 
-#include <memory>
 #include <variant>
 
 FOUR_C_NAMESPACE_OPEN
@@ -26,50 +26,13 @@ namespace Discret::Elements
 {
   namespace Internal
   {
-    /*!
-     * @brief A simple container type that holds a pointer to the value of type T providing value
-     * semantics.
-     *
-     * It is used to store types of different size in a std::variant.
-     *
-     * @tparam T
-     */
-    template <typename T>
-    class VariantItem
-    {
-     public:
-      VariantItem() { value_ = std::make_unique<T>(); }
-      VariantItem(T&& obj) : value_(new T(std::move(obj))) {}
-      VariantItem(const T& obj) : value_(new T(obj)) {}
-
-      ~VariantItem() = default;
-
-      VariantItem(const VariantItem& other) : VariantItem(*other.value_) {}
-      VariantItem& operator=(const VariantItem& other)
-      {
-        *value_ = *other.value_;
-        return *this;
-      }
-
-      // allow access via dereferencing operator propagating constness
-      T& operator*() { return *value_; }
-      const T& operator*() const { return *value_; }
-
-      // allow class member access propagating constness
-      T* operator->() { return value_.get(); }
-      const T* operator->() const { return value_.get(); }
-
-     private:
-      std::unique_ptr<T> value_;
-    };
-
     template <typename Tuple>
     struct CreateVariant;
 
     template <typename... Ts>
     struct CreateVariant<Core::FE::BaseTypeList<Ts...>>
     {
-      using type = std::variant<VariantItem<Ts>...>;
+      using type = std::variant<Core::Utils::Box<Ts>...>;
     };
 
   }  // namespace Internal
