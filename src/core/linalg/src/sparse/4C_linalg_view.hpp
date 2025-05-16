@@ -11,6 +11,7 @@
 
 #include "4C_config.hpp"
 
+#include <functional>
 #include <memory>
 
 FOUR_C_NAMESPACE_OPEN
@@ -26,6 +27,37 @@ namespace Core::LinAlg
   struct WrapperFor
   {
     static_assert("You need to specialize this struct for the wrapper class.");
+  };
+
+
+  /**
+   * A wrapper around unique_ptr, which propagates constness to the pointee.
+   * This type is useful to hold wrapped objects in various LinAlg wrappers in combination with
+   * the View mechanism.
+   */
+  template <typename T>
+  struct ConstPropagatingUniquePtr
+  {
+    using Deleter = std::function<void(T*)>;
+
+    ConstPropagatingUniquePtr() = default;
+    template <typename D>
+    ConstPropagatingUniquePtr(std::unique_ptr<T, D>&& obj) : obj(std::move(obj))
+    {
+    }
+
+    ConstPropagatingUniquePtr(T* ptr) : obj(ptr, std::default_delete<T>{}) {}
+    ConstPropagatingUniquePtr(T* ptr, Deleter deleter) : obj(ptr, deleter) {}
+
+    const T& operator*() const { return *obj; }
+    T& operator*() { return *obj; }
+
+    const T* operator->() const { return obj.get(); }
+    T* operator->() { return obj.get(); }
+
+    //! The actual unique_ptr. You may access it directly, but be aware that constness will not
+    //! be propagated this way.
+    std::unique_ptr<T, Deleter> obj;
   };
 
   namespace Internal
@@ -83,11 +115,15 @@ namespace Core::LinAlg
     {
     }
 
-    // Make the class hard to misuse and disallow copy and move.
-    View(const View& other) = delete;
-    View& operator=(const View& other) = delete;
-    View(View&& other) = delete;
-    View& operator=(View&& other) = delete;
+    /**
+     * Copying the View creates a new View of the same underlying object.
+     */
+    View(const View& other) = default;
+    View& operator=(const View& other) = default;
+
+    View(View&& other) = default;
+    View& operator=(View&& other) = default;
+
     ~View() = default;
 
     /**
@@ -105,7 +141,9 @@ namespace Core::LinAlg
 
    private:
     //! Source content wrapped in our own type.
-    std::unique_ptr<WrapperType> view_;
+    //! We need to share ownership so we can make copies of the view (which refer to the same
+    //! underlying object).
+    std::shared_ptr<WrapperType> view_;
   };
 
 
