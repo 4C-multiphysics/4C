@@ -95,8 +95,10 @@ Download and install
 
 After you have installed all the external dependencies, you should download and install |FOURC| itself.
 
-Clone the repository
+Access the repository
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**If you only want to use** |FOURC| **without contributing to the project,** you can simply clone the repository:
 
 ::
 
@@ -113,10 +115,16 @@ Your directory tree should look like the following::
     <someBaseDir>/
         <sourceDir>
 
-Development environment
-~~~~~~~~~~~~~~~~~~~~~~~
+**If you want to contribute to the project via pull requests,** you should fork the repository.
+We recommend setting your forked repository as ``origin`` and the `4C-multiphysics/4C  <https://github.com/4C-multiphysics/4C>`_ repository as ``upstream``.
+Details about forks, how to fork a repository, how to clone the forked repository,
+and how to configure git to sync with the upstream repository can be found in the `GitHub Docs <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>`_.
 
-If you plan to contribute to |FOURC|, you need to create a python virtual environment for development.
+You can set your local ``main`` branch to track the upstream``main`` branch with the following command::
+
+     git branch main --set-upstream-to=upstream/main
+
+Further, you need to create a python virtual environment for development.
 In the source directory, execute::
 
     ./utilities/set_up_dev_env.sh <optional-path-to-python-executable>
