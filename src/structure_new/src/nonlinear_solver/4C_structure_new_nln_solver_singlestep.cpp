@@ -104,13 +104,20 @@ enum Inpar::Solid::ConvergenceStatus Solid::Nln::SOLVER::SingleStep::solve()
 {
   check_init_setup();
 
+#if !(FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 4))
   auto& nln_group = dynamic_cast<NOX::Nln::Group&>(*group_ptr());
+#endif
 
   const auto& x_epetra = dynamic_cast<const ::NOX::Epetra::Vector&>(group_ptr()->getX());
 
+#if !(FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 4))
   nln_group.set_is_valid_newton(true);  // to circumvent the check in ::NOX::Solver::SingleStep
   nln_group.set_is_valid_rhs(false);    // force to compute the RHS
   nln_group.reset_x();                  // to initialize the solution vector to zero
+#else
+  // This nullifies the solution vector in the group
+  group_ptr()->computeX(*group_ptr(), group_ptr()->getX(), -1.0);
+#endif
 
   //// do one non-linear step using solve
   ::NOX::StatusTest::StatusType stepstatus = nlnsolver_->solve();

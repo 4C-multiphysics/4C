@@ -90,8 +90,10 @@ namespace NOX
       //! set right hand side
       ::NOX::Abstract::Group::ReturnType set_f(Teuchos::RCP<::NOX::Epetra::Vector> Fptr);
 
+#if !(FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 4))
       //! set the solution vector to zero
       void reset_x();
+#endif
 
       //! set flag whether update of x vector should be skipped (because it has already be done in
       //! preComputeX)
@@ -184,11 +186,13 @@ namespace NOX
       Teuchos::RCP<Core::LinAlg::SparseMatrix> get_contributions_from_element_level();
       //! @}
 
+#if !(FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 4))
       /// allow to set isValidNewton manually
       inline void set_is_valid_newton(const bool value) { isValidNewton = value; };
 
       /// allow to set isValidRHS manually
       inline void set_is_valid_rhs(const bool value) { isValidRHS = value; };
+#endif
 
      protected:
       //! resets the isValid flags to false
