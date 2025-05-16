@@ -8,8 +8,9 @@
 #ifndef FOUR_C_LINALG_MAP_HPP
 #define FOUR_C_LINALG_MAP_HPP
 
-
 #include "4C_config.hpp"
+
+#include "4C_linalg_view.hpp"
 
 #include <Epetra_Comm.h>
 #include <Epetra_Map.h>
@@ -150,9 +151,15 @@ namespace Core::LinAlg
     //! Returns a pointer to the BlockMapData instance this BlockMap uses.
     const Epetra_BlockMapData* DataPtr() const { return map_->DataPtr(); }
 
+    [[nodiscard]] static std::unique_ptr<Map> create_view(Epetra_Map& view);
+
+    [[nodiscard]] static std::unique_ptr<const Map> create_view(const Epetra_Map& view);
+
    private:
+    Map() = default;
+
     //! The actual Epetra_Map object.
-    std::shared_ptr<Epetra_Map> map_;
+    ConstPropagatingUniquePtr<Epetra_Map> map_;
   };
 
   inline std::ostream& operator<<(std::ostream& os, const Map& m)
@@ -160,6 +167,12 @@ namespace Core::LinAlg
     os << m.get_epetra_map();
     return os;
   }
+
+  template <>
+  struct WrapperFor<Epetra_Map>
+  {
+    using type = Map;
+  };
 
 }  // namespace Core::LinAlg
 

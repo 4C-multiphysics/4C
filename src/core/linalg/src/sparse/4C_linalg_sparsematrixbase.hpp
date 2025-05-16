@@ -138,7 +138,7 @@ namespace Core::LinAlg
     {
       if (!row_map_)
       {  // check if view is uninitialized
-        row_map_ = Core::LinAlg::Map(sysmat_->RowMap());
+        row_map_.emplace(sysmat_->RowMap());
       }
       return *row_map_;
     }
@@ -149,7 +149,7 @@ namespace Core::LinAlg
     {
       if (!column_map_)
       {  // check if view is uninitialized
-        column_map_ = Core::LinAlg::Map(sysmat_->ColMap());
+        column_map_.emplace(sysmat_->ColMap());
       }
       return *column_map_;
     }
@@ -159,7 +159,7 @@ namespace Core::LinAlg
     {
       if (!domain_map_)
       {  // check if view is uninitialized
-        domain_map_ = Core::LinAlg::Map(sysmat_->DomainMap());
+        domain_map_.emplace(sysmat_->DomainMap());
       }
       return *domain_map_;
     }
@@ -170,7 +170,7 @@ namespace Core::LinAlg
     {
       if (!range_map_)
       {  // check if view is uninitialized
-        range_map_ = Core::LinAlg::Map(sysmat_->RangeMap());
+        range_map_.emplace(sysmat_->RangeMap());
       }
       return *range_map_;
     }
@@ -302,10 +302,10 @@ namespace Core::LinAlg
     /// internal epetra matrix (Epetra_CrsMatrix or Epetra_FECrsMatrix)
     std::shared_ptr<Epetra_CrsMatrix> sysmat_;
 
-    mutable std::optional<Core::LinAlg::Map> range_map_;
-    mutable std::optional<Core::LinAlg::Map> row_map_;
-    mutable std::optional<Core::LinAlg::Map> domain_map_;
-    mutable std::optional<Core::LinAlg::Map> column_map_;
+    mutable std::optional<View<const Map>> range_map_;
+    mutable std::optional<View<const Map>> row_map_;
+    mutable std::optional<View<const Map>> domain_map_;
+    mutable std::optional<View<const Map>> column_map_;
   };
 
 }  // namespace Core::LinAlg
