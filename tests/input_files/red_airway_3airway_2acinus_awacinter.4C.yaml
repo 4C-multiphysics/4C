@@ -1,0 +1,109 @@
+TITLE:
+  - 2-generation bifurcating airway-tree consisting of 3 airways and 2 acini.
+  - The pressure prevailing at the inlet of element 1 is driven sinusoidally from
+  - 0 cmH2O to 30 cmH2O. One-tenth of this pressure is prescribed at the outside
+  - of one acinus (element 4) and a fifth of this pressure is prevailing at the
+  - outside of the other acinus (element 5). These pressures are mapped as external
+  - pressures to the airways (element 1-3) according to the airway acinus interdependency.
+PROBLEM SIZE:
+  ELEMENTS: 5
+  NODES: 6
+  MATERIALS: 1
+  NUMDF: 1
+PROBLEM TYPE:
+  PROBLEMTYPE: "ReducedDimensionalAirWays"
+REDUCED DIMENSIONAL AIRWAYS DYNAMIC:
+  SOLVERTYPE: Nonlinear
+  NUMSTEP: 5000
+  RESTARTEVERY: 10000
+  RESULTSEVERY: 10000
+  MAXITERATIONS: 40
+  TOLERANCE: 1e-07
+  LINEAR_SOLVER: 1
+  COMPAWACINTER: true
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Reduced_dimensional_Airways_Solver"
+MATERIALS:
+  - MAT: 1
+    MAT_fluid:
+      DYNVISCOSITY: 0.04
+      DENSITY: 1.176e-06
+      GAMMA: 1
+  - MAT: 2
+    MAT_0D_MAXWELL_ACINUS_EXPONENTIAL:
+      Stiffness1: 0.001
+      Stiffness2: 0.001
+      Viscosity1: 0.001
+      Viscosity2: 0.001
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_TIME: "15*(sin(pi*t/50-pi/2)+1)"
+DESIGN NODE Reduced D AIRWAYS PRESCRIBED CONDITIONS:
+  - E: 1
+    boundarycond: "pressure"
+    VAL: [1]
+    curve: [1, null]
+  - E: 2
+    boundarycond: "pressure"
+    VAL: [0.1]
+    curve: [1, null]
+  - E: 3
+    boundarycond: "pressure"
+    VAL: [0.2]
+    curve: [1, null]
+REDUCED D AIRWAYS ELEMENTS:
+  - 1 RED_AIRWAY LINE2 1 2 MAT 1 ElemSolvingType NonLinear TYPE ConvectiveViscoElasticRLC Resistance Poiseuille
+    PowerOfVelocityProfile 2 WallElasticity 500.0 PoissonsRatio 0.4 ViscousTs 2.0 ViscousPhaseShift 0.13
+    WallThickness 0.1 Area 1.0 Generation 0
+  - 2 RED_AIRWAY LINE2 2 3 MAT 1 ElemSolvingType NonLinear TYPE ConvectiveViscoElasticRLC Resistance Poiseuille
+    PowerOfVelocityProfile 2 WallElasticity 500.0 PoissonsRatio 0.4 ViscousTs 2.0 ViscousPhaseShift 0.13
+    WallThickness 0.1 Area 1.0 Generation 1
+  - 3 RED_AIRWAY LINE2 2 4 MAT 1 ElemSolvingType NonLinear TYPE ConvectiveViscoElasticRLC Resistance Poiseuille
+    PowerOfVelocityProfile 2 WallElasticity 500.0 PoissonsRatio 0.4 ViscousTs 2.0 ViscousPhaseShift 0.13
+    WallThickness 0.1 Area 1.0 Generation 1
+  - 4 RED_ACINUS LINE2 3 5 MAT 2 TYPE Exponential AcinusVolume 1.0 AlveolarDuctVolume 1.0 E1_0 8.0 E1_LIN
+    1.0 E1_EXP 0.022 TAU 7
+  - 5 RED_ACINUS LINE2 4 6 MAT 2 TYPE Exponential AcinusVolume 1.0 AlveolarDuctVolume 1.0 E1_0 8.0 E1_LIN
+    1.0 E1_EXP 0.022 TAU 7
+NODE COORDS:
+  - NODE 1 COORD 0.000 0.000 0.000
+  - NODE 2 COORD 10.00 0.000 0.000
+  - NODE 3 COORD 15.00 2.000 0.000
+  - NODE 4 COORD 15.00 -2.000 0.000
+  - NODE 5 COORD 17.50 2.000 0.000
+  - NODE 6 COORD 17.00 -2.000 0.000
+DNODE-NODE TOPOLOGY:
+  - NODE 1 DNODE 1
+  - NODE 5 DNODE 2
+  - NODE 6 DNODE 3
+RESULT DESCRIPTION:
+  - RED_AIRWAY:
+      DIS: "red_airway"
+      NODE: 2
+      QUANTITY: "pressure"
+      VALUE: 29.868113950083814
+      TOLERANCE: 1e-09
+  - RED_AIRWAY:
+      DIS: "red_airway"
+      NODE: 3
+      QUANTITY: "pressure"
+      VALUE: 29.853956470853067
+      TOLERANCE: 1e-09
+  - RED_AIRWAY:
+      DIS: "red_airway"
+      NODE: 4
+      QUANTITY: "pressure"
+      VALUE: 29.852762357099095
+      TOLERANCE: 1e-09
+  - RED_AIRWAY:
+      DIS: "red_airway"
+      ELEMENT: 4
+      QUANTITY: "acini_volume"
+      VALUE: 1.9648748803625533
+      TOLERANCE: 1e-09
+  - RED_AIRWAY:
+      DIS: "red_airway"
+      ELEMENT: 5
+      QUANTITY: "acini_volume"
+      VALUE: 1.9441551137956947
+      TOLERANCE: 1e-09

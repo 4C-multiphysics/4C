@@ -1,0 +1,277 @@
+TITLE:
+  - 'Taylor-Couette flow (50x50) [-0.5,0.5]x[-0.5,0.5]'
+  - Two LevelSet-Fields are combined.
+  - 'Outer field is prescribed a Weak Dirichlet condition ( (u-u_{2,\theta})_t = 0 )'
+  - '( (u - u_{2,r})_n = 0 )'
+  - 'The inner field is prescribed a Navier Slip condition : ( \eps * \sigma * n + \mu (u-u_{\theta})_t
+    = 0 )'
+  - ( (u-u_r)_n = 0 )
+  - 'Parmeters:'
+  - r_1 = 0.2
+  - r_2 = 0.45
+  - 'u_{2,\theta} = -0.45'
+  - 'u_{2,r} = 0.0'
+  - mu = 1.0
+  - eps = 1.0
+  - 'Solution field:'
+  - A = u_2/r_2
+  - p(r) = A^2 * r^2/2 + C
+  - 'u_{\theta}(r) = A*r'
+  - A = (u_2*r_2 -u_1*r_1) / (r_2^2 - r_1^2)
+  - B = u_1*r_1 - A *r_1^2
+  - p(r) = A^2 * r^2/2 + 2*A*B*log(r) - B^2/(2*r^2) + C
+  - 'u_{\theta}(r) = A*r + B/r'
+PROBLEM TYPE:
+  PROBLEMTYPE: "Fluid_XFEM"
+IO:
+  STRUCT_DISP: false
+FLUID DYNAMIC:
+  LINEAR_SOLVER: 1
+  TIMEINTEGR: "Stationary"
+  CALCERROR: byfunct
+  CALCERRORFUNCNO: 5
+  RESTARTEVERY: 10
+  MAXTIME: 1
+  THETA: 1
+FLUID DYNAMIC/NONLINEAR SOLVER TOLERANCES:
+  TOL_VEL_RES: 1e-13
+  TOL_VEL_INC: 1e-13
+  TOL_PRES_RES: 1e-13
+  TOL_PRES_INC: 1e-13
+FLUID DYNAMIC/RESIDUAL-BASED STABILIZATION:
+  DEFINITION_TAU: "Taylor_Hughes_Zarins_Whiting_Jansen_wo_dt"
+  EVALUATION_TAU: "integration_point"
+  EVALUATION_MAT: "integration_point"
+FLUID DYNAMIC/EDGE-BASED STABILIZATION:
+  EOS_PRES: "xfem_gp"
+  EOS_CONV_STREAM: "xfem_gp"
+  EOS_DEFINITION_TAU: "Burman_Hansbo_DAngelo_Zunino_wo_dt"
+XFEM GENERAL:
+  GMSH_SOL_OUT: true
+XFLUID DYNAMIC/STABILIZATION:
+  VISC_ADJOINT_SYMMETRY: "no"
+  NIT_STAB_FAC: 0.001
+  NIT_STAB_FAC_TANG: 0.001
+  GHOST_PENALTY_STAB: true
+  GHOST_PENALTY_2nd_STAB: true
+  GHOST_PENALTY_FAC: 0.05
+  GHOST_PENALTY_TRANSIENT_FAC: 0.005
+  GHOST_PENALTY_2nd_FAC: 1
+  GHOST_PENALTY_PRESSURE_2nd_FAC: 1
+  IS_PSEUDO_2D: true
+SCALAR TRANSPORT DYNAMIC:
+  TIMEINTEGR: "Stationary"
+  MAXTIME: 1
+  NUMSTEP: 1
+  RESTARTEVERY: 20
+  MATID: 2
+  VELOCITYFIELD: "Navier_Stokes"
+  INITIALFIELD: "field_by_function"
+  INITFUNCNO: 2
+  CALCFLUX_DOMAIN: "total"
+  LINEAR_SOLVER: 1
+SCALAR TRANSPORT DYNAMIC/STABILIZATION:
+  DEFINITION_TAU: "Taylor_Hughes_Zarins_wo_dt"
+SOLVER 1:
+  SOLVER: "Belos"
+  IFPACK_XML_FILE: "xfluid_ifpack.xml"
+  AZTOL: 1e-05
+  AZOUTPUT: 50
+  AZREUSE: 1
+  THROW_IF_UNCONVERGED: false
+  NAME: "Fluid_Solver"
+SOLVER 2:
+  SOLVER: "UMFPACK"
+  NAME: "Scatra_Solver"
+SOLVER 3:
+  SOLVER: "UMFPACK"
+  NAME: "L2_Projection"
+MATERIALS:
+  - MAT: 1
+    MAT_fluid:
+      DYNVISCOSITY: 1
+      DENSITY: 1
+  - MAT: 2
+    MAT_scatra:
+      DIFFUSIVITY: 0
+CLONING MATERIAL MAP:
+  - SRC_FIELD: "fluid"
+    SRC_MAT: 1
+    TAR_FIELD: "scatra"
+    TAR_MAT: 2
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "-(sqrt((x+0.0)*(x+0.0)+(y-0.0)*(y-0.0))-0.45)"
+FUNCT2:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "sqrt((x+0.0)*(x+0.0)+(y-0.0)*(y-0.0))-0.205"
+FUNCT3:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "-1.0*(x+0.0)"
+FUNCT4:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "1.0*y"
+FUNCT5:
+  - XFLUID_FUNCTION: "TAYLORCOUETTEFLOW"
+    RADIUS_I: 0.205
+    RADIUS_O: 0.45
+    VEL_THETA_I: 0
+    VEL_THETA_O: 0.45
+    SLIPLENGTH_I: 1
+    SLIPLENGTH_O: 0
+    TRACTION_THETA_I: 0
+    TRACTION_THETA_O: 0
+    VISCOSITY: 1
+RESULT DESCRIPTION:
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 5953
+      QUANTITY: "velx"
+      VALUE: 0.21534090300069245
+      TOLERANCE: 1e-12
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 5953
+      QUANTITY: "vely"
+      VALUE: 0.21534168107664173
+      TOLERANCE: 1e-12
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 5953
+      QUANTITY: "pressure"
+      VALUE: -0.01270833852582181
+      TOLERANCE: 1e-11
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 1263
+      QUANTITY: "velx"
+      VALUE: 0.019269601439865124
+      TOLERANCE: 1e-12
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 1263
+      QUANTITY: "vely"
+      VALUE: 0.25003142239069553
+      TOLERANCE: 1e-12
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 1263
+      QUANTITY: "pressure"
+      VALUE: -0.02690465358855777
+      TOLERANCE: 1e-11
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 0]
+    VAL: [0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0]
+  - E: 2
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 0]
+    VAL: [0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0]
+  - E: 3
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 0]
+    VAL: [0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0]
+  - E: 4
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 0]
+    VAL: [0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0]
+DESIGN VOL DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 4
+    ONOFF: [0, 0, 1, 0]
+    VAL: [0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0]
+DESIGN XFEM LEVELSET NAVIER SLIP VOL CONDITIONS:
+  - E: 1
+    COUPLINGID: 1
+    LEVELSETFIELDNO: 2
+    BOOLEANTYPE: "none"
+    COMPLEMENTARY: false
+    SURFACE_PROJECTION: "proj_smoothed"
+    L2_PROJECTION_SOLVER: 3
+    ROBIN_DIRICHLET_ID: 1
+    ROBIN_NEUMANN_ID: 1
+    SLIPCOEFFICIENT: 1
+  - E: 1
+    COUPLINGID: 2
+    LEVELSETFIELDNO: 1
+    BOOLEANTYPE: "union"
+    COMPLEMENTARY: false
+    L2_PROJECTION_SOLVER: 3
+    ROBIN_DIRICHLET_ID: 2
+    ROBIN_NEUMANN_ID: 2
+    SLIPCOEFFICIENT: 0
+DESIGN XFEM ROBIN NEUMANN VOL CONDITIONS:
+  - E: 1
+    ROBIN_ID: 1
+    NUMDOF: 3
+    ONOFF: [0, 0, 0]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 1
+    ROBIN_ID: 2
+    NUMDOF: 3
+    ONOFF: [0, 0, 0]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DESIGN XFEM ROBIN DIRICHLET VOL CONDITIONS:
+  - E: 1
+    ROBIN_ID: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 1
+    ROBIN_ID: 2
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [1, 1, 0]
+    FUNCT: [5, 5, 0]
+DESIGN VOL MODE FOR KRYLOV SPACE PROJECTION:
+  - E: 1
+    DIS: "fluid"
+    NUMMODES: 4
+    ONOFF: [0, 0, 0, 1]
+    WEIGHTVECDEF: "integration"
+DNODE-NODE TOPOLOGY:
+  - CORNER fluid x- y- z+ DNODE 1
+  - CORNER fluid x- y- z- DNODE 2
+  - CORNER fluid x- y+ z- DNODE 3
+  - CORNER fluid x- y+ z+ DNODE 4
+  - CORNER fluid x+ y- z+ DNODE 5
+  - CORNER fluid x+ y- z- DNODE 6
+  - CORNER fluid x+ y+ z- DNODE 7
+  - CORNER fluid x+ y+ z+ DNODE 8
+DLINE-NODE TOPOLOGY:
+  - EDGE fluid y+ z+ DLINE 1
+  - EDGE fluid y- z+ DLINE 2
+  - EDGE fluid y- z- DLINE 3
+  - EDGE fluid y+ z- DLINE 4
+  - EDGE fluid x- y+ DLINE 5
+  - EDGE fluid x- z+ DLINE 6
+  - EDGE fluid x- y- DLINE 7
+  - EDGE fluid x- z- DLINE 8
+  - EDGE fluid x+ y+ DLINE 9
+  - EDGE fluid x+ z+ DLINE 10
+  - EDGE fluid x+ y- DLINE 11
+  - EDGE fluid x+ z- DLINE 12
+DSURF-NODE TOPOLOGY:
+  - SIDE fluid y+ DSURFACE 1
+  - SIDE fluid y- DSURFACE 2
+  - SIDE fluid x- DSURFACE 3
+  - SIDE fluid x+ DSURFACE 4
+  - SIDE fluid z+ DSURFACE 5
+  - SIDE fluid z- DSURFACE 6
+DVOL-NODE TOPOLOGY:
+  - VOLUME fluid DVOL 1
+FLUID DOMAIN:
+  - LOWER_BOUND -0.5 -0.5 -0.025
+  - UPPER_BOUND 0.5 0.5 0.025
+  - INTERVALS 25 25 1
+  - ELEMENTS FLUID HEX8 MAT 1 NA Euler
+  - PARTITION auto

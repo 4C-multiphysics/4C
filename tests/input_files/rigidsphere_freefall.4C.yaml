@@ -1,0 +1,103 @@
+TITLE:
+  - point-like rigid sphere subject to gravity acceleration
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+DISCRETISATION:
+  NUMFLUIDDIS: 0
+  NUMALEDIS: 0
+  NUMTHERMDIS: 0
+STRUCTURAL DYNAMIC:
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "GenAlphaLieGroup"
+  RESTARTEVERY: 5
+  TIMESTEP: 0.1
+  NUMSTEP: 10
+  MAXTIME: 1
+  TOLDISP: 1e-12
+  TOLRES: 1e-12
+  MAXITER: 10
+  LINEAR_SOLVER: 1
+STRUCTURAL DYNAMIC/GENALPHA:
+  BETA: 0.5
+  GAMMA: 1
+  ALPHA_M: 0.5
+  ALPHA_F: 0.5
+  RHO_INF: -1
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Structure_Solver"
+DESIGN POINT NEUMANN CONDITIONS:
+  - E: 1
+    NUMDOF: 6
+    ONOFF: [0, 0, 1, 0, 0, 0]
+    VAL: [0, 0, -41.002, 0, 0, 0]
+    FUNCT: [1, 1, 1, 1, 1, 1]
+DNODE-NODE TOPOLOGY:
+  - NODE 1 DNODE 1
+NODE COORDS:
+  - NODE 1 COORD 0.0000000000000e+00 0.00000000000000e+00 -0.000000000000000e+00
+STRUCTURE ELEMENTS:
+  - 1 RIGIDSPHERE POINT1 1 RADIUS 1.0 DENSITY 1.0
+MATERIALS:
+  - MAT: 1
+    MAT_Struct_StVenantKirchhoff:
+      YOUNG: 1e+09
+      NUE: 0
+      DENS: 0
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_TIME: "1"
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispx"
+      VALUE: 0
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispy"
+      VALUE: 0
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispz"
+      VALUE: -4.894253232490425
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "velx"
+      VALUE: 0
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "vely"
+      VALUE: 0
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "velz"
+      VALUE: -9.78850646498084
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "accx"
+      VALUE: 0
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "accy"
+      VALUE: 0
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "accz"
+      VALUE: -9.78850646498084
+      TOLERANCE: 1e-08

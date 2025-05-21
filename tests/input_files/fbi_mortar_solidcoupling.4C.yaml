@@ -1,0 +1,194 @@
+TITLE: []
+PROBLEM TYPE:
+  PROBLEMTYPE: "Fluid_Beam_Interaction"
+FLUID BEAM INTERACTION:
+  COUPLING: "solid"
+FLUID BEAM INTERACTION/BEAM TO FLUID MESHTYING:
+  MESHTYING_DISCRETIZATION: mortar
+  CONSTRAINT_STRATEGY: penalty
+  PENALTY_PARAMETER: 0.1
+  SEARCH_RADIUS: 0.2
+  MORTAR_SHAPE_FUNCTION: line3
+FSI DYNAMIC:
+  MAXTIME: 0.05
+  NUMSTEP: 2
+  TIMESTEP: 0.01
+FSI DYNAMIC/PARTITIONED SOLVER:
+  CONVTOL: 1e-08
+  COUPVARIABLE: "Force"
+  ITEMAX: 50
+STRUCTURAL DYNAMIC:
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "GenAlphaLieGroup"
+  LOADLIN: true
+  MASSLIN: "rotations"
+  LINEAR_SOLVER: 1
+STRUCT NOX/Status Test:
+  XML File: "beam_flow_solver.xml"
+STRUCT NOX/Printing:
+  Outer Iteration StatusTest: false
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 1
+IO/RUNTIME VTK OUTPUT/BEAMS:
+  OUTPUT_BEAMS: true
+  DISPLACEMENT: true
+  TRIAD_VISUALIZATIONPOINT: true
+  STRAINS_GAUSSPOINT: true
+  MATERIAL_FORCES_GAUSSPOINT: true
+IO:
+  STRUCT_ELE: false
+  STRUCT_DISP: false
+  FLUID_STRESS: true
+FLUID DYNAMIC:
+  LINEAR_SOLVER: 1
+  NONLINITER: Newton
+  PREDICTOR: "explicit_second_order_midpoint"
+  ITEMAX: 50
+  THETA: 0.5
+FLUID DYNAMIC/NONLINEAR SOLVER TOLERANCES:
+  TOL_VEL_RES: 1e-08
+  TOL_VEL_INC: 1e-15
+  TOL_PRES_RES: 1e-08
+  TOL_PRES_INC: 1e-08
+FLUID DYNAMIC/RESIDUAL-BASED STABILIZATION:
+  CHARELELENGTH_PC: "root_of_volume"
+SOLVER 1:
+  SOLVER: "UMFPACK"
+FLUID BEAM INTERACTION/BEAM TO FLUID MESHTYING/RUNTIME VTK OUTPUT:
+  NODAL_FORCES: true
+  INTEGRATION_POINTS: true
+  CONSTRAINT_VIOLATION: true
+MATERIALS:
+  - MAT: 1
+    MAT_fluid:
+      DYNVISCOSITY: 0.004
+      DENSITY: 1
+  - MAT: 2
+    MAT_BeamReissnerElastHyper:
+      YOUNG: 1e+08
+      POISSONRATIO: 0
+      DENS: 0.1
+      CROSSAREA: 0.12566370614359174
+      SHEARCORR: 0.75
+      MOMINPOL: 0.002513274122871835
+      MOMIN2: 0.0012566370614359175
+      MOMIN3: 0.0012566370614359175
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "-1000*t*(x-0.5)*(x+0.5)*(y-0.5)*(y+0.5)"
+DESIGN LINE DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 0]
+    VAL: [1, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0]
+  - E: 2
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 0]
+    VAL: [1, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0]
+  - E: 3
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 0]
+    VAL: [1, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0]
+  - E: 4
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 0]
+    VAL: [1, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0]
+  - E: 5
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 0]
+    VAL: [1, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0]
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 0]
+    VAL: [1, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0]
+  - E: 2
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 0]
+    VAL: [1, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0]
+  - E: 3
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 0]
+    VAL: [1, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0]
+  - E: 4
+    NUMDOF: 4
+    ONOFF: [0, 0, 0, 0]
+    VAL: [0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0]
+DLINE-NODE TOPOLOGY:
+  - EDGE fluid y+ z+ DLINE 1
+  - EDGE fluid y+ z- DLINE 1
+  - EDGE fluid y- z+ DLINE 1
+  - EDGE fluid y- z- DLINE 1
+  - EDGE fluid x- z+ DLINE 2
+  - EDGE fluid x- z- DLINE 2
+  - EDGE fluid x- y+ DLINE 3
+  - EDGE fluid x- y- DLINE 3
+  - EDGE fluid x+ z+ DLINE 4
+  - EDGE fluid x+ z- DLINE 4
+  - EDGE fluid x+ y+ DLINE 5
+  - EDGE fluid x+ y- DLINE 5
+DSURF-NODE TOPOLOGY:
+  - SIDE fluid z+ DSURFACE 1
+  - SIDE fluid z- DSURFACE 1
+  - SIDE fluid y+ DSURFACE 2
+  - SIDE fluid y- DSURFACE 2
+  - SIDE fluid x- DSURFACE 3
+  - SIDE fluid x+ DSURFACE 4
+FLUID DOMAIN:
+  - LOWER_BOUND -0.5 -0.5 -0.5
+  - UPPER_BOUND 0.5 0.5 0.5
+  - INTERVALS 4 4 4
+  - ELEMENTS FLUID HEX8 MAT 1 NA Euler
+  - PARTITION structured
+NODE COORDS:
+  - NODE 1 COORD 0.0 -0.5 0
+  - NODE 2 COORD 0.0 0.0 0
+  - NODE 3 COORD 0.0 -0.25 0.0
+STRUCTURE ELEMENTS:
+  - 1 BEAM3R HERM2LINE3 1 2 3 MAT 2 TRIADS 1.20919957616 1.20919957616 1.20919957616 1.20919957616 1.20919957616
+    1.20919957616 1.20919957616 1.20919957616 1.20919957616
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispx"
+      VALUE: 0.0009420113279861834
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispy"
+      VALUE: 0
+      TOLERANCE: 1e-15
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispz"
+      VALUE: 0
+      TOLERANCE: 1e-15
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "dispx"
+      VALUE: 0.0009420113279861834
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "dispy"
+      VALUE: 0
+      TOLERANCE: 1e-15
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "dispz"
+      VALUE: 0
+      TOLERANCE: 1e-15

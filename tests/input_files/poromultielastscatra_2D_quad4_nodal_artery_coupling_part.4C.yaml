@@ -1,0 +1,565 @@
+TITLE:
+  - Framework test for multiphase flow through elastic porous medium
+  - with scalar transport and nodal coupling with 1D artery network.
+  - Artery pressure (DOF1) coupled with volume fraction pressure (DOF 5)
+  - at three nodes on the right of 2D domain
+  - Scalar in artery (DOFs 2 and 4) coupled with scalar in 2D domain
+  - (DOFs 1 and 2) on the same three DOFs
+  - 'In addition there is a small uncoupled artery line with 10 elements,'
+  - which has equivalent setup with test case
+  - '"one_d_3_artery_network_stationary_scatra_ost.dat".'
+  - Equivalent results are obtained
+  - Test of partitioned-sequential algorithm.
+PROBLEM SIZE:
+  DIM: 2
+PROBLEM TYPE:
+  PROBLEMTYPE: "Multiphase_Poroelasticity_ScaTra"
+POROMULTIPHASESCATRA DYNAMIC:
+  RESTARTEVERY: 2
+  NUMSTEP: 10
+  MAXTIME: 1
+  TIMESTEP: 0.1
+  RESULTSEVERY: 2
+  COUPALGO: "twoway_partitioned_sequential"
+  ARTERY_COUPLING: true
+STRUCTURAL DYNAMIC:
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "OneStepTheta"
+  LINEAR_SOLVER: 1
+STRUCTURAL DYNAMIC/ONESTEPTHETA:
+  THETA: 1
+POROFLUIDMULTIPHASE DYNAMIC:
+  THETA: 1
+  LINEAR_SOLVER: 1
+  INITIALFIELD: "field_by_function"
+  INITFUNCNO: 1
+  FLUX_PROJ_SOLVER: 2
+POROFLUIDMULTIPHASE DYNAMIC/ARTERY COUPLING:
+  ARTERY_COUPLING_METHOD: "Nodal"
+  COUPLEDDOFS_ART: "1"
+  COUPLEDDOFS_PORO: "5"
+SCALAR TRANSPORT DYNAMIC:
+  SOLVERTYPE: "nonlinear"
+  MAXTIME: 1
+  NUMSTEP: 10
+  INITIALFIELD: "field_by_function"
+  INITFUNCNO: 6
+  SKIPINITDER: true
+  LINEAR_SOLVER: 1
+SCALAR TRANSPORT DYNAMIC/STABILIZATION:
+  STABTYPE: "no_stabilization"
+  DEFINITION_TAU: "Zero"
+  EVALUATION_TAU: "integration_point"
+  EVALUATION_MAT: "integration_point"
+SCALAR TRANSPORT DYNAMIC/NONLINEAR:
+  CONVTOL: 1e-08
+  ABSTOLRES: -1
+SCALAR TRANSPORT DYNAMIC/ARTERY COUPLING:
+  ARTERY_COUPLING_METHOD: "Nodal"
+  COUPLEDDOFS_ARTSCATRA: "2 4"
+  COUPLEDDOFS_SCATRA: "1 2"
+ARTERIAL DYNAMIC:
+  DYNAMICTYPE: "Stationary"
+  SOLVESCATRA: true
+  LINEAR_SOLVER: 1
+  INITFUNCNO: 2
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "solver"
+MATERIALS:
+  - MAT: 1
+    MAT_FluidPoroMultiPhaseReactions:
+      LOCAL: false
+      PERMEABILITY: 1
+      NUMMAT: 5
+      MATIDS: [10, 11, 12, 13, 14]
+      NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE: 3
+      NUMREAC: 1
+      REACIDS: [50]
+  - MAT: 50
+    MAT_FluidPoroSingleReaction:
+      NUMSCAL: 2
+      TOTALNUMDOF: 5
+      NUMVOLFRAC: 1
+      SCALE: [0, -1, 1, 0, -1]
+      COUPLING: "scalar_by_function"
+      FUNCTID: 7
+  - MAT: 10
+    MAT_FluidPoroSinglePhase:
+      DENSITYLAWID: 103
+      DENSITY: 10
+      RELPERMEABILITYLAWID: 105
+      VISCOSITYLAWID: 104
+      DOFTYPEID: 101
+  - MAT: 101
+    MAT_FluidPoroSinglePhaseDofSaturation:
+      PHASELAWID: 102
+  - MAT: 102
+    MAT_PhaseLawTangent:
+      RELTENSION: 0.02
+      EXP: 1
+      SATURATION_0: 0.1
+      NUMDOF: 3
+      PRESCOEFF: [-1, 1, 0]
+  - MAT: 103
+    MAT_PoroDensityLawExp:
+      BULKMODULUS: 100
+  - MAT: 104
+    MAT_FluidPoroViscosityLawConstant:
+      VALUE: 0.01
+  - MAT: 105
+    MAT_FluidPoroRelPermeabilityLawConstant:
+      VALUE: 1
+  - MAT: 11
+    MAT_FluidPoroSinglePhase:
+      DENSITYLAWID: 113
+      DENSITY: 10
+      RELPERMEABILITYLAWID: 105
+      VISCOSITYLAWID: 104
+      DOFTYPEID: 111
+  - MAT: 111
+    MAT_FluidPoroSinglePhaseDofDiffPressure:
+      PHASELAWID: 112
+      NUMDOF: 3
+      PRESCOEFF: [0, 1, -1]
+  - MAT: 112
+    MAT_PhaseLawTangent:
+      RELTENSION: 0.005
+      EXP: 1
+      SATURATION_0: 0.2
+      NUMDOF: 3
+      PRESCOEFF: [0, -1, 1]
+  - MAT: 113
+    MAT_PoroDensityLawExp:
+      BULKMODULUS: 100
+  - MAT: 12
+    MAT_FluidPoroSinglePhase:
+      DENSITYLAWID: 123
+      DENSITY: 10
+      RELPERMEABILITYLAWID: 105
+      VISCOSITYLAWID: 104
+      DOFTYPEID: 121
+  - MAT: 121
+    MAT_FluidPoroSinglePhaseDofPressure:
+      PHASELAWID: 122
+  - MAT: 122
+    MAT_PhaseLawConstraint: {}
+  - MAT: 123
+    MAT_PoroDensityLawExp:
+      BULKMODULUS: 100
+  - MAT: 13
+    MAT_FluidPoroSingleVolFrac:
+      DENSITY: 10
+      DIFFUSIVITY: 1
+      AddScalarDependentFlux: false
+  - MAT: 14
+    MAT_FluidPoroVolFracPressure:
+      PERMEABILITY: 203575.2039526186
+      VISCOSITYLAWID: 141
+  - MAT: 141
+    MAT_FluidPoroViscosityLawConstant:
+      VALUE: 1
+  - MAT: 2
+    MAT_StructPoro:
+      MATID: 20
+      POROLAWID: 200
+      INITPOROSITY: 0.4
+  - MAT: 20
+    MAT_Struct_StVenantKirchhoff:
+      YOUNG: 10
+      NUE: 0.35
+      DENS: 0.1
+  - MAT: 200
+    MAT_PoroLawConstant: {}
+  - MAT: 3
+    MAT_CNST_ART:
+      VISCOSITY: 0.04
+      DENS: 10
+      YOUNG: 400000
+      NUE: 0.5
+      TH: 1.63
+      PEXT1: 0
+      PEXT2: 0
+  - MAT: 6
+    MAT_matlist:
+      LOCAL: false
+      NUMMAT: 4
+      MATIDS: [7, 8, 9, 19]
+  - MAT: 7
+    MAT_scatra:
+      DIFFUSIVITY: 2
+  - MAT: 8
+    MAT_scatra:
+      DIFFUSIVITY: 1
+  - MAT: 9
+    MAT_scatra:
+      DIFFUSIVITY: 0.8
+  - MAT: 19
+    MAT_scatra:
+      DIFFUSIVITY: 1.4
+  - MAT: 5
+    MAT_matlist_reactions:
+      LOCAL: false
+      NUMMAT: 2
+      MATIDS: [301, 302]
+      NUMREAC: 2
+      REACIDS: [401, 402]
+  - MAT: 301
+    MAT_scatra_multiporo_fluid:
+      DIFFUSIVITY: 0.1
+      PHASEID: 2
+  - MAT: 302
+    MAT_scatra_multiporo_fluid:
+      DIFFUSIVITY: 0.1
+      PHASEID: 1
+  - MAT: 401
+    MAT_scatra_reaction:
+      NUMSCAL: 2
+      STOICH: [-1, 0]
+      REACCOEFF: 1
+      COUPLING: "by_function"
+      ROLE: [4, 0]
+  - MAT: 402
+    MAT_scatra_reaction:
+      NUMSCAL: 2
+      STOICH: [0, 1]
+      REACCOEFF: 1
+      COUPLING: "by_function"
+      ROLE: [0, 5]
+CLONING MATERIAL MAP:
+  - SRC_FIELD: "structure"
+    SRC_MAT: 2
+    TAR_FIELD: "porofluid"
+    TAR_MAT: 1
+  - SRC_FIELD: "structure"
+    SRC_MAT: 2
+    TAR_FIELD: "scatra"
+    TAR_MAT: 5
+  - SRC_FIELD: "artery"
+    SRC_MAT: 3
+    TAR_FIELD: "artery_scatra"
+    TAR_MAT: 6
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.1"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+  - COMPONENT: 2
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+  - COMPONENT: 3
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.2"
+  - COMPONENT: 4
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+FUNCT2:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.1*x+1.0"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.2*x+1.0"
+FUNCT3:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "v"
+  - VARIABLE: 0
+    NAME: "v"
+    TYPE: "multifunction"
+    NUMPOINTS: 3
+    TIMES: [0, 1, 1000]
+    DESCRIPTION: ["1000.0*0.5*(1-cos(t*pi/1.0))", "1000.0"]
+FUNCT4:
+  - VARFUNCTION: "0.0"
+FUNCT5:
+  - VARFUNCTION: "0.0"
+FUNCT6:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+  - COMPONENT: 2
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+  - COMPONENT: 3
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+FUNCT7:
+  - VARFUNCTION: "0.0"
+RESULT DESCRIPTION:
+  - SCATRA:
+      DIS: "artery_scatra"
+      NODE: 27
+      QUANTITY: "phi1"
+      VALUE: 0.43175140481860547
+      TOLERANCE: 1e-10
+  - SCATRA:
+      DIS: "artery_scatra"
+      NODE: 28
+      QUANTITY: "phi1"
+      VALUE: 0.2431041787457828
+      TOLERANCE: 1e-10
+  - POROFLUIDMULTIPHASE:
+      DIS: "porofluid"
+      NODE: 1
+      QUANTITY: "pressure5"
+      VALUE: 2.9754340057909783
+      TOLERANCE: 1e-10
+  - POROFLUIDMULTIPHASE:
+      DIS: "porofluid"
+      NODE: 4
+      QUANTITY: "pressure5"
+      VALUE: 2.4754180914803077
+      TOLERANCE: 1e-10
+  - POROFLUIDMULTIPHASE:
+      DIS: "porofluid"
+      NODE: 6
+      QUANTITY: "pressure5"
+      VALUE: 2.9754340057909787
+      TOLERANCE: 1e-10
+  - ARTNET:
+      DIS: "artery"
+      NODE: 10
+      QUANTITY: "pressure"
+      VALUE: 2.4754180914803077
+      TOLERANCE: 1e-10
+  - ARTNET:
+      DIS: "artery"
+      NODE: 13
+      QUANTITY: "pressure"
+      VALUE: 2.9754340057909783
+      TOLERANCE: 1e-10
+  - ARTNET:
+      DIS: "artery"
+      NODE: 16
+      QUANTITY: "pressure"
+      VALUE: 2.9754340057909787
+      TOLERANCE: 1e-10
+  - SCATRA:
+      DIS: "artery_scatra"
+      NODE: 10
+      QUANTITY: "phi2"
+      VALUE: -3.249092491324235
+      TOLERANCE: 1e-10
+  - SCATRA:
+      DIS: "artery_scatra"
+      NODE: 13
+      QUANTITY: "phi2"
+      VALUE: -3.243846250597633
+      TOLERANCE: 1e-10
+  - SCATRA:
+      DIS: "artery_scatra"
+      NODE: 16
+      QUANTITY: "phi4"
+      VALUE: -3.2439718000832998
+      TOLERANCE: 1e-10
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 1
+      QUANTITY: "phi1"
+      VALUE: -3.243846250597633
+      TOLERANCE: 1e-10
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 4
+      QUANTITY: "phi1"
+      VALUE: -3.249092491324235
+      TOLERANCE: 1e-10
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 6
+      QUANTITY: "phi2"
+      VALUE: -3.2439718000832998
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 4
+      QUANTITY: "dispx"
+      VALUE: 0.6469832159608494
+      TOLERANCE: 1e-10
+DESIGN LINE DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 2
+    ONOFF: [1, 1]
+    VAL: [0, 0]
+    FUNCT: [0, 0]
+DESIGN LINE TRANSPORT DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 2
+    ONOFF: [1, 1]
+    VAL: [-1, -3]
+    FUNCT: [0, 0]
+DESIGN POINT TRANSPORT DIRICH CONDITIONS:
+  - E: 5
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 1]
+    VAL: [16, 31, 16, 31]
+    FUNCT: [0, 0, 0, 0]
+  - E: 6
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 1]
+    VAL: [16, 31, 16, 31]
+    FUNCT: [0, 0, 0, 0]
+  - E: 7
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 1]
+    VAL: [16, 31, 16, 31]
+    FUNCT: [0, 0, 0, 0]
+  - E: 9
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 1]
+    VAL: [1, 1, 0.5, 0.4]
+    FUNCT: [0, 0, 0, 0]
+  - E: 10
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 1]
+    VAL: [0, 0, 1, 0.8]
+    FUNCT: [0, 0, 0, 0]
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 2
+    ONOFF: [0, 1]
+    VAL: [0, 0]
+    FUNCT: [0, 0]
+DESIGN LINE PORO DIRICH CONDITIONS:
+  - E: 2
+    NUMDOF: 5
+    ONOFF: [1, 1, 1, 1, 0]
+    VAL: [0.1, 0, 0, 0.2, 0]
+    FUNCT: [0, 0, 0, 0, 0]
+  - E: 1
+    NUMDOF: 5
+    ONOFF: [0, 0, 0, 0, 1]
+    VAL: [0, 0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0, 0]
+DESIGN POINT NEUMANN CONDITIONS:
+  - E: 9
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [2261.946710584651]
+    FUNCT: [0]
+DESIGN POINT DIRICH CONDITIONS:
+  - E: 5
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [16]
+    FUNCT: [0]
+  - E: 6
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [16]
+    FUNCT: [0]
+  - E: 7
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [16]
+    FUNCT: [0]
+  - E: 10
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [0]
+    FUNCT: [0]
+DESIGN NODE 1D ARTERY TO SCATRA COUPLING CONDITIONS:
+  - E: 8
+    COUPID: 1
+  - E: 1
+    COUPID: 1
+  - E: 11
+    COUPID: 2
+  - E: 2
+    COUPID: 2
+  - E: 12
+    COUPID: 3
+  - E: 3
+    COUPID: 3
+DESIGN NODE 1D ARTERY TO POROFLUID COUPLING CONDITIONS:
+  - E: 8
+    COUPID: 1
+  - E: 1
+    COUPID: 1
+  - E: 11
+    COUPID: 2
+  - E: 2
+    COUPID: 2
+  - E: 12
+    COUPID: 3
+  - E: 3
+    COUPID: 3
+DNODE-NODE TOPOLOGY:
+  - NODE 10 DNODE 1
+  - NODE 13 DNODE 2
+  - NODE 16 DNODE 3
+  - NODE 12 DNODE 5
+  - NODE 15 DNODE 6
+  - NODE 18 DNODE 7
+  - NODE 4 DNODE 8
+  - NODE 19 DNODE 9
+  - NODE 29 DNODE 10
+  - NODE 1 DNODE 11
+  - NODE 6 DNODE 12
+DLINE-NODE TOPOLOGY:
+  - NODE 7 DLINE 1
+  - NODE 8 DLINE 1
+  - NODE 9 DLINE 1
+  - NODE 1 DLINE 2
+  - NODE 4 DLINE 2
+  - NODE 6 DLINE 2
+DSURF-NODE TOPOLOGY:
+  - NODE 1 DSURFACE 1
+  - NODE 2 DSURFACE 1
+  - NODE 3 DSURFACE 1
+  - NODE 4 DSURFACE 1
+  - NODE 5 DSURFACE 1
+  - NODE 6 DSURFACE 1
+  - NODE 7 DSURFACE 1
+  - NODE 8 DSURFACE 1
+  - NODE 9 DSURFACE 1
+NODE COORDS:
+  - NODE 1 COORD 0.0 10.0 0.0000000000000000e+00
+  - NODE 2 COORD -10.0 10.0 0.0000000000000000e+00
+  - NODE 3 COORD -10.0 0.0 0.0000000000000000e+00
+  - NODE 4 COORD 0.0 0.0 0.0000000000000000e+00
+  - NODE 5 COORD -10.0 -10.0 0.0000000000000000e+00
+  - NODE 6 COORD 0.0 -10.0 0.0000000000000000e+00
+  - NODE 7 COORD -20.0 10.0 0.0000000000000000e+00
+  - NODE 8 COORD -20.0 0.0 0.0000000000000000e+00
+  - NODE 9 COORD -20.0 -10.0 0.0000000000000000e+00
+  - NODE 10 COORD 0.0 0.0 0.0
+  - NODE 11 COORD 75.0 0.0 0.0
+  - NODE 12 COORD 150.0 0.0 0.0
+  - NODE 13 COORD 0.0 10.0 0.0
+  - NODE 14 COORD 75.0 10.0 0.0
+  - NODE 15 COORD 150.0 10.0 0.0
+  - NODE 16 COORD 0.0 -10.0 0.0
+  - NODE 17 COORD 75.0 -10.0 0.0
+  - NODE 18 COORD 150.0 -10.0 0.0
+  - NODE 19 COORD -25.0 0.0 0.0
+  - NODE 20 COORD -25.0 0.1 0.0
+  - NODE 21 COORD -25.0 0.2 0.0
+  - NODE 22 COORD -25.0 0.3 0.0
+  - NODE 23 COORD -25.0 0.4 0.0
+  - NODE 24 COORD -25.0 0.5 0.0
+  - NODE 25 COORD -25.0 0.6 0.0
+  - NODE 26 COORD -25.0 0.7 0.0
+  - NODE 27 COORD -25.0 0.8 0.0
+  - NODE 28 COORD -25.0 0.9 0.0
+  - NODE 29 COORD -25.0 1.0 0.0
+STRUCTURE ELEMENTS:
+  - 1 WALLQ4POROSCATRA QUAD4 1 2 3 4 MAT 2 KINEM nonlinear EAS none THICK 1 STRESS_STRAIN plane_strain
+    GP 2 2 TYPE PoroMultiReac
+  - 2 WALLQ4POROSCATRA QUAD4 4 3 5 6 MAT 2 KINEM nonlinear EAS none THICK 1 STRESS_STRAIN plane_strain
+    GP 2 2 TYPE PoroMultiReac
+  - 3 WALLQ4POROSCATRA QUAD4 2 7 8 3 MAT 2 KINEM nonlinear EAS none THICK 1 STRESS_STRAIN plane_strain
+    GP 2 2 TYPE PoroMultiReac
+  - 4 WALLQ4POROSCATRA QUAD4 3 8 9 5 MAT 2 KINEM nonlinear EAS none THICK 1 STRESS_STRAIN plane_strain
+    GP 2 2 TYPE PoroMultiReac
+ARTERY ELEMENTS:
+  - 1 ART LINE2 10 11 MAT 3 GP 3 TYPE PressureBased DIAM 24.0
+  - 2 ART LINE2 11 12 MAT 3 GP 3 TYPE PressureBased DIAM 24.0
+  - 3 ART LINE2 13 14 MAT 3 GP 3 TYPE PressureBased DIAM 24.0
+  - 4 ART LINE2 14 15 MAT 3 GP 3 TYPE PressureBased DIAM 24.0
+  - 5 ART LINE2 16 17 MAT 3 GP 3 TYPE PressureBased DIAM 24.0
+  - 6 ART LINE2 17 18 MAT 3 GP 3 TYPE PressureBased DIAM 24.0
+  - 7 ART LINE2 19 20 MAT 3 GP 2 TYPE PressureBased DIAM 24.0
+  - 8 ART LINE2 20 21 MAT 3 GP 2 TYPE PressureBased DIAM 24.0
+  - 9 ART LINE2 21 22 MAT 3 GP 2 TYPE PressureBased DIAM 24.0
+  - 10 ART LINE2 22 23 MAT 3 GP 2 TYPE PressureBased DIAM 24.0
+  - 12 ART LINE2 23 24 MAT 3 GP 2 TYPE PressureBased DIAM 24.0
+  - 13 ART LINE2 24 25 MAT 3 GP 2 TYPE PressureBased DIAM 24.0
+  - 14 ART LINE2 25 26 MAT 3 GP 2 TYPE PressureBased DIAM 24.0
+  - 15 ART LINE2 26 27 MAT 3 GP 2 TYPE PressureBased DIAM 24.0
+  - 16 ART LINE2 27 28 MAT 3 GP 2 TYPE PressureBased DIAM 24.0
+  - 17 ART LINE2 28 29 MAT 3 GP 2 TYPE PressureBased DIAM 24.0

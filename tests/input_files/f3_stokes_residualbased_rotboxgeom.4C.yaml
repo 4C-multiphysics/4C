@@ -1,0 +1,83 @@
+TITLE: []
+PROBLEM SIZE:
+  MATERIALS: 1
+PROBLEM TYPE:
+  PROBLEMTYPE: "Fluid"
+DISCRETISATION:
+  NUMSTRUCDIS: 0
+  NUMALEDIS: 0
+  NUMARTNETDIS: 0
+  NUMTHERMDIS: 0
+  NUMAIRWAYSDIS: 0
+FLUID DYNAMIC:
+  PHYSICAL_TYPE: "Stokes"
+  LINEAR_SOLVER: 1
+  TIMEINTEGR: "Stationary"
+  ITEMAX: 2
+FLUID DYNAMIC/NONLINEAR SOLVER TOLERANCES:
+  TOL_VEL_RES: 1e-09
+  TOL_VEL_INC: 1e-09
+  TOL_PRES_RES: 1e-09
+  TOL_PRES_INC: 1e-09
+FLUID DYNAMIC/RESIDUAL-BASED STABILIZATION:
+  SUPG: false
+  GRAD_DIV: false
+  DEFINITION_TAU: "Hughes_Franca_Balestra_wo_dt"
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Fluid_Solver"
+MATERIALS:
+  - MAT: 1
+    MAT_fluid:
+      DYNVISCOSITY: 1
+      DENSITY: 1
+RESULT DESCRIPTION:
+  - FLUID:
+      DIS: "fluid"
+      NODE: 1
+      QUANTITY: "velx"
+      VALUE: 1
+      TOLERANCE: 1e-12
+  - FLUID:
+      DIS: "fluid"
+      NODE: 1
+      QUANTITY: "vely"
+      VALUE: 0
+      TOLERANCE: 1e-12
+  - FLUID:
+      DIS: "fluid"
+      NODE: 1
+      QUANTITY: "vely"
+      VALUE: 0
+      TOLERANCE: 1e-12
+  - FLUID:
+      DIS: "fluid"
+      NODE: 1
+      QUANTITY: "pressure"
+      VALUE: 2.1079390934445175
+      TOLERANCE: 1e-12
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 0]
+    VAL: [1, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0]
+  - E: 2
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 0]
+    VAL: [0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0]
+DSURF-NODE TOPOLOGY:
+  - SIDE fluid x- DSURFACE 1
+  - SIDE fluid x+ DSURFACE 2
+  - SIDE fluid y- DSURFACE 3
+  - SIDE fluid y+ DSURFACE 4
+  - SIDE fluid z- DSURFACE 5
+  - SIDE fluid z+ DSURFACE 6
+FLUID DOMAIN:
+  - LOWER_BOUND -1 -1 -1
+  - UPPER_BOUND 1 1 1
+  - INTERVALS 5 5 5
+  - ROTATION 10 20 30
+  - ELEMENTS FLUID HEX8 MAT 1 NA Euler
+  - PARTITION structured

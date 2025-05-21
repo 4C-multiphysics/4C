@@ -1,0 +1,345 @@
+TITLE:
+  - 'Urquiza square (NxN) [-1.0,1.0]x[-1.0,1.0]'
+  - Analytic solution to a rotational flow in 2D for the Oseen equation.
+  - 'Used for the analysis in the paper of Winter, Schott and Wall (2017)'
+  - A Mesh-surface cut is made on the fluid background mesh.
+PROBLEM TYPE:
+  PROBLEMTYPE: "Fluid_XFEM"
+IO:
+  OUTPUT_BIN: false
+FLUID DYNAMIC:
+  PHYSICAL_TYPE: "Oseen"
+  LINEAR_SOLVER: 1
+  INITIALFIELD: "field_by_function"
+  OSEENFIELDFUNCNO: 1
+  CALCERROR: byfunct
+  CALCERRORFUNCNO: 1
+  ADAPTCONV: true
+  RESTARTEVERY: 0
+  STARTFUNCNO: 1
+  ITEMAX: 3
+  TIMESTEP: 1
+  MAXTIME: 1
+  THETA: 1
+FLUID DYNAMIC/NONLINEAR SOLVER TOLERANCES:
+  TOL_VEL_RES: 1e-12
+  TOL_VEL_INC: 1e-12
+  TOL_PRES_RES: 1e-12
+  TOL_PRES_INC: 1e-12
+FLUID DYNAMIC/RESIDUAL-BASED STABILIZATION:
+  STABTYPE: "edge_based"
+  PSPG: false
+  SUPG: false
+  GRAD_DIV: false
+  DEFINITION_TAU: "Taylor_Hughes_Zarins_Whiting_Jansen_wo_dt"
+  EVALUATION_TAU: "integration_point"
+  EVALUATION_MAT: "integration_point"
+FLUID DYNAMIC/EDGE-BASED STABILIZATION:
+  EOS_PRES: "std_eos"
+  EOS_CONV_STREAM: "std_eos"
+  EOS_DIV: "div_jump_std_eos"
+  PRES_KRYLOV_2Dz: true
+  EOS_DEFINITION_TAU: "Schott_Massing_Burman_DAngelo_Zunino"
+XFEM GENERAL:
+  VOLUME_GAUSS_POINTS_BY: "DirectDivergence"
+XFLUID DYNAMIC/STABILIZATION:
+  VISC_ADJOINT_SYMMETRY: "no"
+  NIT_STAB_FAC: 10
+  NIT_STAB_FAC_TANG: 10
+  CONV_STAB_SCALING: "abs_inflow"
+  MASS_CONSERVATION_SCALING: "full"
+  GHOST_PENALTY_STAB: true
+  GHOST_PENALTY_TRANSIENT_STAB: true
+  GHOST_PENALTY_2nd_STAB: true
+  GHOST_PENALTY_FAC: 0.05
+  GHOST_PENALTY_TRANSIENT_FAC: 0.005
+  IS_PSEUDO_2D: true
+SOLVER 1:
+  SOLVER: "Belos"
+  IFPACK_XML_FILE: "xfluid_ifpack.xml"
+  AZTOL: 1e-14
+  AZOUTPUT: 50
+  AZREUSE: 1
+  NAME: "Fluid_Solver"
+MATERIALS:
+  - MAT: 1
+    MAT_fluid:
+      DYNVISCOSITY: 1
+      DENSITY: 1
+  - MAT: 2
+    MAT_Struct_StVenantKirchhoff:
+      YOUNG: 1e+11
+      NUE: 0
+      DENS: 0
+FUNCT1:
+  - XFLUID_FUNCTION: "URQUIZABOXFLOW"
+    LENGTHX: 1
+    LENGTHY: 1
+    ROTATION: 0
+    VISCOSITY: 1
+    DENSITY: 1
+    CASE: 3
+    COMBINATION: [1.25, 0.75]
+FUNCT2:
+  - XFLUID_FUNCTION: "URQUIZABOXFLOW_TRACTION"
+    LENGTHX: 1
+    LENGTHY: 1
+    ROTATION: 0
+    VISCOSITY: 1
+    DENSITY: 1
+    CASE: 3
+    COMBINATION: [1.25, 0.75]
+FUNCT3:
+  - XFLUID_FUNCTION: "URQUIZABOXFLOW_FORCE"
+    LENGTHX: 1
+    LENGTHY: 1
+    ROTATION: 0
+    VISCOSITY: 1
+    DENSITY: 1
+    CASE: 3
+    COMBINATION: [1.25, 0.75]
+RESULT DESCRIPTION:
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 3153
+      QUANTITY: "velx"
+      VALUE: -0.04868016039026213
+      TOLERANCE: 1e-14
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 3153
+      QUANTITY: "vely"
+      VALUE: -1.1768436475971507
+      TOLERANCE: 1e-14
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 3153
+      QUANTITY: "velz"
+      VALUE: 0
+      TOLERANCE: 1e-14
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 3153
+      QUANTITY: "pressure"
+      VALUE: 0.844173525142318
+      TOLERANCE: 1e-13
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 18337
+      QUANTITY: "velx"
+      VALUE: -0.1930840248710124
+      TOLERANCE: 1e-14
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 18337
+      QUANTITY: "vely"
+      VALUE: 0.23038092353609627
+      TOLERANCE: 1e-14
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 18337
+      QUANTITY: "velz"
+      VALUE: 0
+      TOLERANCE: 1e-14
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 18337
+      QUANTITY: "pressure"
+      VALUE: 0.4992198298662502
+      TOLERANCE: 1e-13
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 2811
+      QUANTITY: "velx"
+      VALUE: -0.3110979813109622
+      TOLERANCE: 1e-14
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 2811
+      QUANTITY: "vely"
+      VALUE: 5.787920159241668e-06
+      TOLERANCE: 1e-14
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 2811
+      QUANTITY: "velz"
+      VALUE: 0
+      TOLERANCE: 1e-14
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 2811
+      QUANTITY: "pressure"
+      VALUE: -0.0031250017781722064
+      TOLERANCE: 1e-13
+DESIGN VOL NEUMANN CONDITIONS:
+  - E: 1
+    NUMDOF: 6
+    ONOFF: [1, 1, 1, 0, 0, 0]
+    VAL: [1, 1, 0, 0, 0, 0]
+    FUNCT: [3, 3, 0, 0, 0, 0]
+DESIGN VOL DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 4
+    ONOFF: [0, 0, 1, 0]
+    VAL: [0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0]
+DESIGN XFEM WEAK DIRICHLET SURF CONDITIONS:
+  - E: 8
+    COUPLINGID: 1
+    EVALTYPE: "zero"
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DESIGN XFEM NAVIER SLIP SURF CONDITIONS:
+  - E: 7
+    COUPLINGID: 1
+    EVALTYPE: "funct_gausspoint"
+    ROBIN_DIRICHLET_ID: 1
+    ROBIN_NEUMANN_ID: 1
+    SLIPCOEFFICIENT: 1
+DESIGN XFEM ROBIN DIRICHLET SURF CONDITIONS:
+  - E: 7
+    COUPLINGID: 1
+    ROBIN_ID: 1
+    EVALTYPE: "funct_gausspoint"
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [1, 1, 0]
+    FUNCT: [1, 1, 0]
+DESIGN XFEM ROBIN NEUMANN SURF CONDITIONS:
+  - E: 7
+    COUPLINGID: 1
+    ROBIN_ID: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [1, 1, 0]
+    FUNCT: [2, 2, 0]
+DESIGN XFEM DISPLACEMENT SURF CONDITIONS:
+  - E: 7
+    COUPLINGID: 1
+    EVALTYPE: "zero"
+    NUMDOF: 3
+    ONOFF: [0, 0, 0]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 8
+    COUPLINGID: 1
+    EVALTYPE: "zero"
+    NUMDOF: 3
+    ONOFF: [0, 0, 0]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DESIGN VOL MODE FOR KRYLOV SPACE PROJECTION:
+  - E: 1
+    DIS: "fluid"
+    NUMMODES: 4
+    ONOFF: [0, 0, 0, 1]
+    WEIGHTVECDEF: "integration"
+DNODE-NODE TOPOLOGY:
+  - CORNER fluid x- y- z+ DNODE 1
+  - CORNER fluid x- y- z- DNODE 2
+  - CORNER fluid x- y+ z- DNODE 3
+  - CORNER fluid x- y+ z+ DNODE 4
+  - CORNER fluid x+ y- z+ DNODE 5
+  - CORNER fluid x+ y- z- DNODE 6
+  - CORNER fluid x+ y+ z- DNODE 7
+  - CORNER fluid x+ y+ z+ DNODE 8
+DLINE-NODE TOPOLOGY:
+  - EDGE fluid y+ z+ DLINE 1
+  - EDGE fluid y- z+ DLINE 2
+  - EDGE fluid y- z- DLINE 3
+  - EDGE fluid y+ z- DLINE 4
+  - EDGE fluid x- y+ DLINE 5
+  - EDGE fluid x- z+ DLINE 6
+  - EDGE fluid x- y- DLINE 7
+  - EDGE fluid x- z- DLINE 8
+  - EDGE fluid x+ y+ DLINE 9
+  - EDGE fluid x+ z+ DLINE 10
+  - EDGE fluid x+ y- DLINE 11
+  - EDGE fluid x+ z- DLINE 12
+DSURF-NODE TOPOLOGY:
+  - SIDE fluid y+ DSURFACE 1
+  - SIDE fluid y- DSURFACE 2
+  - SIDE fluid x- DSURFACE 3
+  - SIDE fluid x+ DSURFACE 4
+  - SIDE fluid z+ DSURFACE 5
+  - SIDE fluid z- DSURFACE 6
+  - NODE 2 DSURFACE 7
+  - NODE 6 DSURFACE 7
+  - NODE 7 DSURFACE 7
+  - NODE 3 DSURFACE 7
+  - NODE 9 DSURFACE 7
+  - NODE 13 DSURFACE 7
+  - NODE 6 DSURFACE 7
+  - NODE 2 DSURFACE 7
+  - NODE 12 DSURFACE 7
+  - NODE 16 DSURFACE 7
+  - NODE 13 DSURFACE 7
+  - NODE 9 DSURFACE 7
+  - NODE 3 DSURFACE 7
+  - NODE 7 DSURFACE 7
+  - NODE 16 DSURFACE 7
+  - NODE 12 DSURFACE 7
+  - NODE 1 DSURFACE 8
+  - NODE 5 DSURFACE 8
+  - NODE 8 DSURFACE 8
+  - NODE 4 DSURFACE 8
+  - NODE 10 DSURFACE 8
+  - NODE 14 DSURFACE 8
+  - NODE 5 DSURFACE 8
+  - NODE 1 DSURFACE 8
+  - NODE 11 DSURFACE 8
+  - NODE 10 DSURFACE 8
+  - NODE 14 DSURFACE 8
+  - NODE 15 DSURFACE 8
+  - NODE 4 DSURFACE 8
+  - NODE 11 DSURFACE 8
+  - NODE 15 DSURFACE 8
+  - NODE 8 DSURFACE 8
+DVOL-NODE TOPOLOGY:
+  - VOLUME fluid DVOL 1
+  - NODE 1 DVOL 2
+  - NODE 2 DVOL 2
+  - NODE 3 DVOL 2
+  - NODE 4 DVOL 2
+  - NODE 5 DVOL 2
+  - NODE 6 DVOL 2
+  - NODE 7 DVOL 2
+  - NODE 8 DVOL 2
+  - NODE 9 DVOL 2
+  - NODE 10 DVOL 2
+  - NODE 11 DVOL 2
+  - NODE 12 DVOL 2
+  - NODE 13 DVOL 2
+  - NODE 14 DVOL 2
+  - NODE 15 DVOL 2
+  - NODE 16 DVOL 2
+NODE COORDS:
+  - NODE 1 COORD -2.5 -2.5 0.2
+  - NODE 2 COORD -1.0 -1.0 0.2
+  - NODE 3 COORD -1.0 1.0 0.2
+  - NODE 4 COORD -2.5 2.5 0.2
+  - NODE 5 COORD -2.5 -2.5 -0.2
+  - NODE 6 COORD -1.0 -1.0 -0.2
+  - NODE 7 COORD -1.0 1.0 -0.2
+  - NODE 8 COORD -2.5 2.5 -0.2
+  - NODE 9 COORD 1.0 -1.0 0.2
+  - NODE 10 COORD 2.5 -2.5 0.2
+  - NODE 11 COORD 2.5 2.5 0.2
+  - NODE 12 COORD 1.0 1.0 0.2
+  - NODE 13 COORD 1.0 -1.0 -0.2
+  - NODE 14 COORD 2.5 -2.5 -0.2
+  - NODE 15 COORD 2.5 2.5 -0.2
+  - NODE 16 COORD 1.0 1.0 -0.2
+STRUCTURE ELEMENTS:
+  - 1 SOLID HEX8 1 2 6 5 4 3 7 8 MAT 2 KINEM nonlinear
+  - 2 SOLID HEX8 1 10 14 5 2 9 13 6 MAT 2 KINEM nonlinear
+  - 3 SOLID HEX8 9 10 14 13 12 11 15 16 MAT 2 KINEM nonlinear
+  - 4 SOLID HEX8 3 12 16 7 11 15 8 4 MAT 2 KINEM nonlinear
+FLUID DOMAIN:
+  - LOWER_BOUND -1.6 -1.6 -.04
+  - UPPER_BOUND 1.6 1.6 .04
+  - INTERVALS 40 40 1
+  - ELEMENTS FLUID HEX8 MAT 1 NA Euler
+  - PARTITION auto

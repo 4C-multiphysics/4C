@@ -1,0 +1,149 @@
+TITLE:
+  - Prestressing
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+IO:
+  OUTPUT_SPRING: true
+  STRUCT_STRESS: "Cauchy"
+  STRUCT_STRAIN: "GL"
+  VERBOSITY: "Standard"
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 1
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  DISPLACEMENT: true
+  ELEMENT_OWNER: true
+  STRESS_STRAIN: true
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Structure_Solver"
+STRUCTURAL DYNAMIC:
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "Statics"
+  TIMESTEP: 0.5
+  NUMSTEP: 2
+  MAXTIME: 2
+  TOLDISP: 1e-09
+  TOLRES: 1e-09
+  LOADLIN: true
+  LINEAR_SOLVER: 1
+STRUCT NOX/Printing:
+  Inner Iteration: false
+  Outer Iteration StatusTest: false
+MATERIALS:
+  - MAT: 1
+    MAT_Struct_StVenantKirchhoff:
+      YOUNG: 10
+      NUE: 0.3
+      DENS: 1
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "stress_xx"
+      VALUE: 14.141339382
+      TOLERANCE: 1e-05
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "stress_yy"
+      VALUE: 7.8936088526
+      TOLERANCE: 1e-05
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "stress_zz"
+      VALUE: 9.8401682567
+      TOLERANCE: 1e-05
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "stress_xy"
+      VALUE: 7.2675190452
+      TOLERANCE: 1e-05
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "stress_yz"
+      VALUE: 5.3885569081
+      TOLERANCE: 1e-05
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "stress_xz"
+      VALUE: 8.4106237096
+      TOLERANCE: 1e-05
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "a"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: "linearinterpolation"
+    NUMPOINTS: 3
+    TIMES: [0, 1, 9.999999999e+09]
+    VALUES: [0, 1, 1]
+DESIGN POINT DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0.11, 0.12, 0.13]
+    FUNCT: [1, 1, 1]
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0.21, 0.22, 0.23]
+    FUNCT: [1, 1, 1]
+  - E: 3
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0.31, 0.32, 0.33]
+    FUNCT: [1, 1, 1]
+  - E: 4
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0.41, 0.42, 0.42]
+    FUNCT: [1, 1, 1]
+  - E: 5
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0.51, 0.52, 0.53]
+    FUNCT: [1, 1, 1]
+  - E: 6
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0.61, 0.62, 0.63]
+    FUNCT: [1, 1, 1]
+  - E: 7
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0.71, 0.72, 0.73]
+    FUNCT: [1, 1, 1]
+  - E: 8
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0.81, 0.82, 0.83]
+    FUNCT: [1, 1, 1]
+PROBLEM SIZE:
+  ELEMENTS: 1
+  NODES: 8
+  MATERIALS: 9999
+DNODE-NODE TOPOLOGY:
+  - NODE 1 DNODE 1
+  - NODE 2 DNODE 2
+  - NODE 3 DNODE 3
+  - NODE 4 DNODE 4
+  - NODE 5 DNODE 5
+  - NODE 6 DNODE 6
+  - NODE 7 DNODE 7
+  - NODE 8 DNODE 8
+NODE COORDS:
+  - FNODE 1 COORD 0.0 0.0 0.0 FIBER1 1.0 0.0 0.0
+  - FNODE 2 COORD 0.0 1.0 0.0 FIBER1 1.0 0.0 0.0
+  - FNODE 3 COORD 0.0 0.0 1.0 FIBER1 1.0 0.0 0.0
+  - FNODE 4 COORD 0.0 1.0 1.0 FIBER1 1.0 0.0 0.0
+  - FNODE 5 COORD 1.0 0.0 0.0 FIBER1 1.0 0.0 0.0
+  - FNODE 6 COORD 1.0 1.0 0.0 FIBER1 1.0 0.0 0.0
+  - FNODE 7 COORD 1.0 0.0 1.0 FIBER1 1.0 0.0 0.0
+  - FNODE 8 COORD 1.0 1.0 1.0 FIBER1 1.0 0.0 0.0
+STRUCTURE ELEMENTS:
+  - 1 SOLID HEX8 1 5 6 2 3 7 8 4 MAT 1 KINEM nonlinear

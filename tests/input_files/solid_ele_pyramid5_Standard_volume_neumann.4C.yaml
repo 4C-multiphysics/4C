@@ -1,0 +1,163 @@
+TITLE:
+  - Test of the templated implementation of solid elements
+  - 'Time Integration: Standard'
+  - 'Shape: pyramid5'
+  - 'Element-Technology:'
+  - 'Fibers: none'
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Structure_Solver"
+STRUCTURAL DYNAMIC:
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "Statics"
+  TIMESTEP: 0.5
+  NUMSTEP: 2
+  MAXTIME: 1
+  TOLDISP: 1e-12
+  TOLRES: 1e-12
+  LINEAR_SOLVER: 1
+MATERIALS:
+  - MAT: 1
+    MAT_ElastHyper:
+      NUMMAT: 1
+      MATIDS: [10]
+      DENS: 0.1
+  - MAT: 10
+    ELAST_CoupNeoHooke:
+      YOUNG: 10
+      NUE: 0.25
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t"
+FUNCT2:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "(x+1)*(y+2)*(z+3)"
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "dispx"
+      VALUE: 2.868444864881279
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "dispy"
+      VALUE: 0.2321130752326639
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "dispz"
+      VALUE: 0.23026389762221064
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "dispx"
+      VALUE: 2.857292927078165
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "dispy"
+      VALUE: 0.23186551520503285
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "dispz"
+      VALUE: -0.10844825368336877
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 3
+      QUANTITY: "dispx"
+      VALUE: 2.8572513090711738
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 3
+      QUANTITY: "dispy"
+      VALUE: -0.10593336211695516
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 3
+      QUANTITY: "dispz"
+      VALUE: 0.23438527653600794
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "dispx"
+      VALUE: 2.8458361446290596
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "dispy"
+      VALUE: -0.10606306158303024
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "dispz"
+      VALUE: -0.10421192268758875
+      TOLERANCE: 1e-12
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DESIGN SURF NEUMANN CONDITIONS:
+  - E: 2
+    NUMDOF: 6
+    ONOFF: [1, 1, 1, 0, 0, 0]
+    VAL: [10, 0.01, 0.01, 0, 0, 0]
+    FUNCT: [1, 2, 2, 0, 0, 0]
+DESIGN VOL NEUMANN CONDITIONS:
+  - E: 1
+    NUMDOF: 6
+    ONOFF: [1, 1, 1, 0, 0, 0]
+    VAL: [10, 0.01, 0.01, 0, 0, 0]
+    FUNCT: [1, 2, 2, 0, 0, 0]
+DSURF-NODE TOPOLOGY:
+  - NODE 5 DSURFACE 1
+  - NODE 4 DSURFACE 1
+  - NODE 8 DSURFACE 1
+  - NODE 1 DSURFACE 1
+  - NODE 2 DSURFACE 2
+  - NODE 6 DSURFACE 2
+  - NODE 3 DSURFACE 2
+  - NODE 7 DSURFACE 2
+DVOL-NODE TOPOLOGY:
+  - NODE 2 DVOL 1
+  - NODE 8 DVOL 1
+  - NODE 3 DVOL 1
+  - NODE 9 DVOL 1
+  - NODE 7 DVOL 1
+  - NODE 4 DVOL 1
+  - NODE 6 DVOL 1
+  - NODE 5 DVOL 1
+  - NODE 1 DVOL 1
+NODE COORDS:
+  - NODE 1 COORD 0.0 0.0 0.0
+  - NODE 2 COORD 1.0 0.0 0.0
+  - NODE 3 COORD 1.0 1.0 0.0
+  - NODE 4 COORD 0.0 1.0 0.0
+  - NODE 5 COORD 0.0 0.0 1.0
+  - NODE 6 COORD 1.0 0.0 1.0
+  - NODE 7 COORD 1.0 1.0 1.0
+  - NODE 8 COORD 0.0 1.0 1.0
+  - NODE 9 COORD 0.5 0.5 0.5
+STRUCTURE ELEMENTS:
+  - 1 SOLID PYRAMID5 1 2 3 4 9 MAT 1 KINEM nonlinear
+  - 2 SOLID PYRAMID5 5 6 2 1 9 MAT 1 KINEM nonlinear
+  - 3 SOLID PYRAMID5 6 7 3 2 9 MAT 1 KINEM nonlinear
+  - 4 SOLID PYRAMID5 7 8 4 3 9 MAT 1 KINEM nonlinear
+  - 5 SOLID PYRAMID5 8 5 1 4 9 MAT 1 KINEM nonlinear
+  - 6 SOLID PYRAMID5 5 8 7 6 9 MAT 1 KINEM nonlinear

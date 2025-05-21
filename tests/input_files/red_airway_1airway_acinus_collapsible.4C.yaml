@@ -1,0 +1,71 @@
+TITLE:
+  - 'Combination of single airway with single acinus following example 1 in Bates & Irvin,'
+  - 'Time dependence of recruitment and derecruitment in the lung, J Appl Physiol, 93:705-713, 2002.'
+PROBLEM SIZE:
+  ELEMENTS: 2
+  NODES: 3
+  MATERIALS: 1
+  NUMDF: 1
+PROBLEM TYPE:
+  PROBLEMTYPE: "ReducedDimensionalAirWays"
+REDUCED DIMENSIONAL AIRWAYS DYNAMIC:
+  SOLVERTYPE: Nonlinear
+  TIMESTEP: 0.1
+  NUMSTEP: 1000
+  RESTARTEVERY: 500
+  RESULTSEVERY: 10
+  MAXITERATIONS: 40
+  TOLERANCE: 1e-07
+  LINEAR_SOLVER: 1
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Reduced_dimensional_Airways_Solver"
+MATERIALS:
+  - MAT: 1
+    MAT_fluid:
+      DYNVISCOSITY: 0.04
+      DENSITY: 1.176e-06
+      GAMMA: 1
+  - MAT: 2
+    MAT_0D_MAXWELL_ACINUS_EXPONENTIAL:
+      Stiffness1: 0.001
+      Stiffness2: 0.001
+      Viscosity1: 0.001
+      Viscosity2: 0.001
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_TIME: "15*(sin(pi*t/50-pi/2)+1)"
+DESIGN NODE Reduced D AIRWAYS PRESCRIBED CONDITIONS:
+  - E: 1
+    boundarycond: "pressure"
+    VAL: [1]
+    curve: [1, null]
+  - E: 2
+    boundarycond: "pressure"
+    VAL: [0]
+    curve: [1, null]
+REDUCED D AIRWAYS ELEMENTS:
+  - 1 RED_AIRWAY LINE2 1 2 MAT 1 ElemSolvingType NonLinear TYPE Resistive Resistance Poiseuille PowerOfVelocityProfile
+    2 WallElasticity 0.0 PoissonsRatio 0.0 ViscousTs 0.0 ViscousPhaseShift 0.0 WallThickness 0.0 Area
+    1.0 Generation 0 AirwayColl 1 S_Close 0.05 S_Open 0.05 Pcrit_Open 5.0 Pcrit_Close 5.0 Open_Init 0.0
+  - 2 RED_ACINUS LINE2 2 3 MAT 2 TYPE Exponential AcinusVolume 1.0 AlveolarDuctVolume 1.0 E1_0 8.0 E1_LIN
+    1.0 E1_EXP 0.022 TAU 7
+NODE COORDS:
+  - NODE 1 COORD 0.000 0.000 0.000
+  - NODE 2 COORD 10.00 0.000 0.000
+  - NODE 3 COORD 12.00 2.000 0.000
+DNODE-NODE TOPOLOGY:
+  - NODE 1 DNODE 1
+  - NODE 3 DNODE 2
+RESULT DESCRIPTION:
+  - RED_AIRWAY:
+      DIS: "red_airway"
+      NODE: 2
+      QUANTITY: "pressure"
+      VALUE: 1.1964164122045515
+      TOLERANCE: 1e-09
+  - RED_AIRWAY:
+      DIS: "red_airway"
+      ELEMENT: 2
+      QUANTITY: "acini_volume"
+      VALUE: 1.1457664999087525
+      TOLERANCE: 1e-06

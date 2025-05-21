@@ -1,0 +1,244 @@
+TITLE:
+  - 'geometric linear case: dynamic compression of a body movable only'
+  - in x-direction
+  - one-way coupling TSI (COUPVARIABLE=Displacement)
+  - 'mechanical problem: dynamic (OST), geometric linear'
+  - dynamic thermal problem (OST)
+PROBLEM SIZE:
+  ELEMENTS: 2
+  NODES: 12
+  MATERIALS: 3
+  NUMDF: 6
+IO:
+  STRUCT_STRESS: "2PK"
+  STRUCT_COUPLING_STRESS: "2PK"
+  STRUCT_STRAIN: "GL"
+  THERM_TEMPERATURE: true
+  THERM_HEATFLUX: "Initial"
+  THERM_TEMPGRAD: "Initial"
+PROBLEM TYPE:
+  PROBLEMTYPE: "Thermo_Structure_Interaction"
+STRUCT NOX/Printing:
+  Inner Iteration: false
+  Outer Iteration StatusTest: false
+STRUCTURAL DYNAMIC:
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "Statics"
+  TIMESTEP: 0.01
+  MAXTIME: 1
+  M_DAMP: 0.5
+  TOLRES: 2e-08
+  LINEAR_SOLVER: 2
+THERMAL DYNAMIC:
+  INITIALFIELD: "field_by_function"
+  INITFUNCNO: 1
+  TIMESTEP: 0.01
+  MAXTIME: 1
+  LINEAR_SOLVER: 1
+TSI DYNAMIC:
+  COUPALGO: "tsi_oneway"
+  MAXTIME: 3
+  TIMESTEP: 0.1
+  ITEMAX: 1
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Thermal_Solver"
+SOLVER 2:
+  SOLVER: "UMFPACK"
+  NAME: "Structure_Solver"
+MATERIALS:
+  - MAT: 1
+    MAT_Struct_ThermoStVenantK:
+      YOUNGNUM: 1
+      YOUNG: [1e+11]
+      NUE: 0
+      DENS: 1
+      THEXPANS: 1e-05
+      CAPA: 420
+      CONDUCT: 52
+      INITTEMP: 293
+  - MAT: 2
+    MAT_Fourier:
+      CAPA: 420
+      CONDUCT_PARA_NUM: 1
+      CONDUCT: [52]
+CLONING MATERIAL MAP:
+  - SRC_FIELD: "structure"
+    SRC_MAT: 1
+    TAR_FIELD: "thermo"
+    TAR_MAT: 2
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "293.0"
+FUNCT2:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "a"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: "linearinterpolation"
+    NUMPOINTS: 4
+    TIMES: [0, 0.1, 1, 3]
+    VALUES: [0, 0, -4e+07, -4e+07]
+DESIGN SURF NEUMANN CONDITIONS:
+  - E: 1
+    NUMDOF: 6
+    ONOFF: [1, 0, 0, 0, 0, 0]
+    VAL: [1, 0, 0, 0, 0, 0]
+    FUNCT: [2, 2, 2, 2, 2, 2]
+DESIGN POINT DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 3
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 4
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DESIGN LINE DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [0, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [0, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 3
+    NUMDOF: 3
+    ONOFF: [0, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 4
+    NUMDOF: 3
+    ONOFF: [0, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [0, 1, 0]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 3
+    NUMDOF: 3
+    ONOFF: [0, 1, 0]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 4
+    NUMDOF: 3
+    ONOFF: [0, 0, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 5
+    NUMDOF: 3
+    ONOFF: [0, 0, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DNODE-NODE TOPOLOGY:
+  - NODE 1 DNODE 1
+  - NODE 4 DNODE 2
+  - NODE 5 DNODE 3
+  - NODE 8 DNODE 4
+DLINE-NODE TOPOLOGY:
+  - NODE 7 DLINE 1
+  - NODE 8 DLINE 1
+  - NODE 12 DLINE 1
+  - NODE 3 DLINE 2
+  - NODE 4 DLINE 2
+  - NODE 10 DLINE 2
+  - NODE 1 DLINE 3
+  - NODE 2 DLINE 3
+  - NODE 9 DLINE 3
+  - NODE 5 DLINE 4
+  - NODE 6 DLINE 4
+  - NODE 11 DLINE 4
+DSURF-NODE TOPOLOGY:
+  - NODE 9 DSURFACE 1
+  - NODE 10 DSURFACE 1
+  - NODE 11 DSURFACE 1
+  - NODE 12 DSURFACE 1
+  - NODE 3 DSURFACE 2
+  - NODE 4 DSURFACE 2
+  - NODE 7 DSURFACE 2
+  - NODE 8 DSURFACE 2
+  - NODE 10 DSURFACE 2
+  - NODE 12 DSURFACE 2
+  - NODE 1 DSURFACE 3
+  - NODE 2 DSURFACE 3
+  - NODE 5 DSURFACE 3
+  - NODE 6 DSURFACE 3
+  - NODE 9 DSURFACE 3
+  - NODE 11 DSURFACE 3
+  - NODE 5 DSURFACE 4
+  - NODE 6 DSURFACE 4
+  - NODE 7 DSURFACE 4
+  - NODE 8 DSURFACE 4
+  - NODE 11 DSURFACE 4
+  - NODE 12 DSURFACE 4
+  - NODE 1 DSURFACE 5
+  - NODE 2 DSURFACE 5
+  - NODE 3 DSURFACE 5
+  - NODE 4 DSURFACE 5
+  - NODE 9 DSURFACE 5
+  - NODE 10 DSURFACE 5
+NODE COORDS:
+  - NODE 1 COORD 0.00000000e+00 0.00000000e+00 -1.00000000e+00
+  - NODE 2 COORD 2.00000000e+00 0.00000000e+00 -1.00000000e+00
+  - NODE 3 COORD 2.00000000e+00 2.00000000e+00 -1.00000000e+00
+  - NODE 4 COORD 0.00000000e+00 2.00000000e+00 -1.00000000e+00
+  - NODE 5 COORD 0.00000000e+00 0.00000000e+00 1.00000000e+00
+  - NODE 6 COORD 2.00000000e+00 0.00000000e+00 1.00000000e+00
+  - NODE 7 COORD 2.00000000e+00 2.00000000e+00 1.00000000e+00
+  - NODE 8 COORD 0.00000000e+00 2.00000000e+00 1.00000000e+00
+  - NODE 9 COORD 4.00000000e+00 0.00000000e+00 -1.00000000e+00
+  - NODE 10 COORD 4.00000000e+00 2.00000000e+00 -1.00000000e+00
+  - NODE 11 COORD 4.00000000e+00 0.00000000e+00 1.00000000e+00
+  - NODE 12 COORD 4.00000000e+00 2.00000000e+00 1.00000000e+00
+STRUCTURE ELEMENTS:
+  - 1 SOLIDSCATRA HEX8 1 2 3 4 5 6 7 8 MAT 1 KINEM linear TYPE Undefined
+  - 2 SOLIDSCATRA HEX8 2 9 10 3 6 11 12 7 MAT 1 KINEM linear TYPE Undefined
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispx"
+      VALUE: 0
+      TOLERANCE: 1e-09
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 10
+      QUANTITY: "dispx"
+      VALUE: -0.0016
+      TOLERANCE: 1e-09
+  - THERMAL:
+      DIS: "thermo"
+      NODE: 1
+      QUANTITY: "temp"
+      VALUE: 760.0952686952845
+      TOLERANCE: 1e-06
+  - THERMAL:
+      DIS: "thermo"
+      NODE: 2
+      QUANTITY: "temp"
+      VALUE: 760.0952686952847
+      TOLERANCE: 1e-06
+  - THERMAL:
+      DIS: "thermo"
+      NODE: 9
+      QUANTITY: "temp"
+      VALUE: 760.0952686952845
+      TOLERANCE: 1e-06

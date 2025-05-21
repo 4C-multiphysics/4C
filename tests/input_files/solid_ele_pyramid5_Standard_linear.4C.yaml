@@ -1,0 +1,317 @@
+TITLE:
+  - Test of the new solid elements in 4C
+  - 'Time Integration: Standard'
+  - 'Shape: pyramid5'
+  - 'Element-Technology: linear_kinematics'
+  - 'Fibers: element'
+IO:
+  STRUCT_STRESS: "Cauchy"
+  STRUCT_STRAIN: "GL"
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 1
+  OUTPUT_DATA_FORMAT: ascii
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  DISPLACEMENT: true
+  STRESS_STRAIN: true
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Structure_Solver"
+STRUCTURAL DYNAMIC:
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "Statics"
+  TIMESTEP: 0.5
+  NUMSTEP: 2
+  MAXTIME: 1
+  TOLDISP: 1e-12
+  TOLRES: 1e-12
+  LINEAR_SOLVER: 1
+MATERIALS:
+  - MAT: 1
+    MAT_Struct_StVenantKirchhoff:
+      YOUNG: 10
+      NUE: 0.3
+      DENS: 1
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t"
+FUNCT2:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "(x+1)*(y+2)*(z+3)"
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "dispx"
+      VALUE: 0.7111054908166695
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "dispy"
+      VALUE: 0.005403750347990012
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "dispz"
+      VALUE: -0.16634388503827197
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "dispx"
+      VALUE: 0.7283822605582998
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "dispy"
+      VALUE: 0.28316255614791846
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "dispz"
+      VALUE: -0.12748958035697894
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "dispx"
+      VALUE: 0.7339872119962679
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "dispy"
+      VALUE: 0.25331038667499794
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "dispz"
+      VALUE: 0.13640925905910897
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 3
+      QUANTITY: "dispx"
+      VALUE: 0.5633787077185372
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 3
+      QUANTITY: "dispy"
+      VALUE: -0.0047254452862647445
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 3
+      QUANTITY: "dispz"
+      VALUE: 0.13436765688968144
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "stress_xx"
+      VALUE: 6.687040079807418
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "stress_yy"
+      VALUE: -0.4293905733558479
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "stress_zz"
+      VALUE: -0.46869095655601445
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "stress_xy"
+      VALUE: 0.3553818604230189
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "stress_yz"
+      VALUE: -0.0037112911565199136
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "stress_yz"
+      VALUE: -0.0037112911565199136
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "stress_xx"
+      VALUE: 7.39093701425587
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "stress_yy"
+      VALUE: 0.10198464279493358
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "stress_zz"
+      VALUE: 0.7226876278358294
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "stress_xy"
+      VALUE: 0.5941119991588374
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "stress_yz"
+      VALUE: -0.010875840355936695
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "stress_yz"
+      VALUE: -0.010875840355936695
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "stress_xx"
+      VALUE: 7.677309079894696
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "stress_yy"
+      VALUE: 1.2776851474569422
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "stress_zz"
+      VALUE: 1.1992939680861905
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "stress_xy"
+      VALUE: 0.554305691850909
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "stress_yz"
+      VALUE: -0.32788909612862444
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "stress_yz"
+      VALUE: -0.32788909612862444
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 3
+      QUANTITY: "stress_xx"
+      VALUE: 6.9845461543511735
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 3
+      QUANTITY: "stress_yy"
+      VALUE: 0.800243068811513
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 3
+      QUANTITY: "stress_zz"
+      VALUE: -0.0051502590856649655
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 3
+      QUANTITY: "stress_xy"
+      VALUE: -0.009124360691558059
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 3
+      QUANTITY: "stress_yz"
+      VALUE: -0.008837107887099988
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 3
+      QUANTITY: "stress_yz"
+      VALUE: -0.008837107887099988
+      TOLERANCE: 1e-10
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DESIGN SURF NEUMANN CONDITIONS:
+  - E: 2
+    NUMDOF: 6
+    ONOFF: [1, 1, 1, 0, 0, 0]
+    VAL: [5, 0.01, 0.01, 0, 0, 0]
+    FUNCT: [1, 2, 2, 0, 0, 0]
+DESIGN VOL NEUMANN CONDITIONS:
+  - E: 1
+    NUMDOF: 6
+    ONOFF: [1, 1, 1, 0, 0, 0]
+    VAL: [5, 0.01, 0.01, 0, 0, 0]
+    FUNCT: [1, 2, 2, 0, 0, 0]
+PROBLEM SIZE:
+  ELEMENTS: 6
+  NODES: 9
+  MATERIALS: 9999
+DSURF-NODE TOPOLOGY:
+  - NODE 4 DSURFACE 1
+  - NODE 8 DSURFACE 1
+  - NODE 1 DSURFACE 1
+  - NODE 5 DSURFACE 1
+  - NODE 7 DSURFACE 2
+  - NODE 6 DSURFACE 2
+  - NODE 2 DSURFACE 2
+  - NODE 3 DSURFACE 2
+DVOL-NODE TOPOLOGY:
+  - NODE 8 DVOL 1
+  - NODE 3 DVOL 1
+  - NODE 1 DVOL 1
+  - NODE 2 DVOL 1
+  - NODE 7 DVOL 1
+  - NODE 9 DVOL 1
+  - NODE 4 DVOL 1
+  - NODE 6 DVOL 1
+  - NODE 5 DVOL 1
+NODE COORDS:
+  - NODE 1 COORD 0.002047565460885581 0.002047565460885581 0.002047565460885581
+  - NODE 2 COORD 1.0780226009001797 0.07802260090017976 0.07802260090017976
+  - NODE 3 COORD 0.9383666369845419 0.9383666369845419 -0.06163336301545805
+  - NODE 4 COORD 0.07770836372293935 1.0777083637229394 0.07770836372293935
+  - NODE 5 COORD -0.03259174855043017 -0.03259174855043017 0.9674082514495699
+  - NODE 6 COORD 0.9867197514023776 -0.01328024859762239 0.9867197514023776
+  - NODE 7 COORD 1.0567597542269112 1.0567597542269112 1.0567597542269112
+  - NODE 8 COORD -0.01572717091797457 0.9842728290820254 0.9842728290820254
+  - NODE 9 COORD 0.5085898786784442 0.5085898786784442 0.5085898786784442
+STRUCTURE ELEMENTS:
+  - 1 SOLID PYRAMID5 1 2 3 4 9 MAT 1 KINEM linear FIBER1 0.7071067811865475 0.7071067811865475 0.0
+  - 2 SOLID PYRAMID5 5 6 2 1 9 MAT 1 KINEM linear FIBER1 0.7582029890619258 0.5686522417964444 0.31900290794511477
+  - 3 SOLID PYRAMID5 6 7 3 2 9 MAT 1 KINEM linear FIBER1 0.8067891921354792 0.5378594614236528 0.24453711213318724
+  - 4 SOLID PYRAMID5 7 8 4 3 9 MAT 1 KINEM linear FIBER1 0.8476190582389812 0.5297619113993632 0.029904002082595523
+  - 5 SOLID PYRAMID5 8 5 1 4 9 MAT 1 KINEM linear FIBER1 0.8503604270366216 0.510216256221973 -0.12871097861848613
+  - 6 SOLID PYRAMID5 5 8 7 6 9 MAT 1 KINEM linear FIBER1 0.855663873806087 0.4991372597202174 -0.13675280992415886

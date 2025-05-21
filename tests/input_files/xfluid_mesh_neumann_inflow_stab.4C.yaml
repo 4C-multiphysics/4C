@@ -1,0 +1,176 @@
+PROBLEM TYPE:
+  PROBLEMTYPE: "Fluid_XFEM"
+IO:
+  OUTPUT_GMSH: true
+  STRUCT_STRESS: "2PK"
+  FLUID_STRESS: true
+FLUID DYNAMIC:
+  LINEAR_SOLVER: 1
+  NONLINITER: Newton
+  LIFTDRAG: true
+  RESTARTEVERY: 100
+  NUMSTEP: 3
+  TIMESTEP: 0.1
+  MAXTIME: 0.3
+  THETA: 1
+FLUID DYNAMIC/NONLINEAR SOLVER TOLERANCES:
+  TOL_VEL_RES: 1e-08
+  TOL_VEL_INC: 1e-08
+  TOL_PRES_RES: 1e-08
+  TOL_PRES_INC: 1e-08
+FLUID DYNAMIC/RESIDUAL-BASED STABILIZATION:
+  STABTYPE: "edge_based"
+FLUID DYNAMIC/EDGE-BASED STABILIZATION:
+  EOS_PRES: "std_eos"
+  EOS_CONV_STREAM: "std_eos"
+  EOS_DIV: "div_jump_std_eos"
+  PRES_KRYLOV_2Dz: true
+  EOS_DEFINITION_TAU: "Schott_Massing_Burman_DAngelo_Zunino"
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Fluid_Solver"
+XFEM GENERAL:
+  GMSH_SOL_OUT: true
+  VOLUME_GAUSS_POINTS_BY: "DirectDivergence"
+XFLUID DYNAMIC/STABILIZATION:
+  VISC_STAB_HK: "ele_vol_div_by_cut_surf"
+  MASS_CONSERVATION_COMBO: "sum"
+  MASS_CONSERVATION_SCALING: "full"
+  GHOST_PENALTY_STAB: true
+  GHOST_PENALTY_TRANSIENT_STAB: true
+  GHOST_PENALTY_2nd_STAB: true
+  IS_PSEUDO_2D: true
+MATERIALS:
+  - MAT: 1
+    MAT_fluid:
+      DYNVISCOSITY: 0.1
+      DENSITY: 10
+      GAMMA: 1
+  - MAT: 2
+    MAT_ElastHyper:
+      NUMMAT: 1
+      MATIDS: [13]
+      DENS: 1
+  - MAT: 13
+    ELAST_CoupNeoHooke:
+      YOUNG: 100000
+      NUE: 0.3
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.707106781186547"
+DESIGN VOL DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 4
+    ONOFF: [0, 0, 1, 0]
+    VAL: [0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0]
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DESIGN XFEM DISPLACEMENT SURF CONDITIONS:
+  - E: 1
+    COUPLINGID: 1
+    EVALTYPE: "zero"
+    NUMDOF: 3
+    ONOFF: [0, 0, 0]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 2
+    COUPLINGID: 1
+    EVALTYPE: "zero"
+    NUMDOF: 3
+    ONOFF: [0, 0, 0]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 3
+    COUPLINGID: 1
+    EVALTYPE: "zero"
+    NUMDOF: 3
+    ONOFF: [0, 0, 0]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+  - E: 4
+    COUPLINGID: 1
+    EVALTYPE: "zero"
+    NUMDOF: 3
+    ONOFF: [0, 0, 0]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DESIGN XFEM NEUMANN SURF CONDITIONS:
+  - E: 1
+    COUPLINGID: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 0]
+    VAL: [-5, 5, 0]
+    FUNCT: [1, 1, 1]
+    INFLOW_STAB: true
+  - E: 2
+    COUPLINGID: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 0]
+    VAL: [5, 5, 0]
+    FUNCT: [1, 1, 1]
+    INFLOW_STAB: true
+  - E: 3
+    COUPLINGID: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 0]
+    VAL: [5, -5, 0]
+    FUNCT: [1, 1, 1]
+    INFLOW_STAB: true
+  - E: 4
+    COUPLINGID: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 0]
+    VAL: [-5, -5, 0]
+    FUNCT: [1, 1, 1]
+    INFLOW_STAB: true
+DSURF-NODE TOPOLOGY:
+  - SIDE structure x- DSURFACE 1
+  - SIDE structure y+ DSURFACE 2
+  - SIDE structure x+ DSURFACE 3
+  - SIDE structure y- DSURFACE 4
+DVOL-NODE TOPOLOGY:
+  - VOLUME fluid DVOL 1
+  - VOLUME structure DVOL 2
+STRUCTURE DOMAIN:
+  - LOWER_BOUND -0.25 -0.25 -.03
+  - UPPER_BOUND 0.25 0.25 .03
+  - INTERVALS 2 2 1
+  - ROTATION 0 0 45
+  - ELEMENTS SOLID HEX8 MAT 2 KINEM nonlinear
+  - PARTITION structured
+FLUID DOMAIN:
+  - LOWER_BOUND -0.5 -0.5 -.03
+  - UPPER_BOUND 0.5 0.5 .03
+  - INTERVALS 16 16 1
+  - ROTATION 0 0 0
+  - ELEMENTS FLUID HEX8 MAT 1 NA Euler
+  - PARTITION structured
+RESULT DESCRIPTION:
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 300
+      QUANTITY: "velx"
+      VALUE: 0.2293939505291716
+      TOLERANCE: 1e-08
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 300
+      QUANTITY: "vely"
+      VALUE: -0.2293939505291717
+      TOLERANCE: 1e-08
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 300
+      QUANTITY: "velz"
+      VALUE: 0
+      TOLERANCE: 1e-08
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 300
+      QUANTITY: "pressure"
+      VALUE: 0.9069269131347558
+      TOLERANCE: 1e-08

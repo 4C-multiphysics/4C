@@ -1,0 +1,182 @@
+TITLE:
+  - 'simple, academic test case for monolithic scalar-structure interaction:'
+  - '- three-dimensional problem involving standard scalar transport'
+  - '- box-shaped domain discretized by 2 hex8 elements'
+  - '- constant initial value 1.0 of transported scalar'
+  - '- homogeneous Neumann boundary conditions for entire scalar transport field'
+  - '- structural field stretched in x-direction by a factor of 1.5 via Dirichlet boundary conditions'
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure_Scalar_Interaction"
+IO:
+  STDOUTEVERY: 0
+STRUCTURAL DYNAMIC:
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "OneStepTheta"
+  LINEAR_SOLVER: 1
+SCALAR TRANSPORT DYNAMIC:
+  SOLVERTYPE: "nonlinear"
+  VELOCITYFIELD: "Navier_Stokes"
+  INITIALFIELD: "field_by_function"
+  INITFUNCNO: 1
+  CONVFORM: "conservative"
+  SKIPINITDER: true
+  LINEAR_SOLVER: 1
+  FDCHECK: "global"
+  FDCHECKTOL: 0.0003
+SSI CONTROL:
+  NUMSTEP: 10
+  TIMESTEP: 0.1
+  COUPALGO: ssi_Monolithic
+SSI CONTROL/MONOLITHIC:
+  LINEAR_SOLVER: 1
+  MATRIXTYPE: "sparse"
+SOLVER 1:
+  SOLVER: "UMFPACK"
+MATERIALS:
+  - MAT: 1
+    MAT_scatra:
+      DIFFUSIVITY: 1
+  - MAT: 2
+    MAT_MultiplicativeSplitDefgradElastHyper:
+      NUMMATEL: 1
+      MATIDSEL: [3]
+      NUMFACINEL: 1
+      INELDEFGRADFACIDS: [4]
+      DENS: 1
+  - MAT: 3
+    ELAST_CoupSVK:
+      YOUNG: 1
+      NUE: 0.3
+  - MAT: 4
+    MAT_InelasticDefgradNoGrowth: {}
+CLONING MATERIAL MAP:
+  - SRC_FIELD: "structure"
+    SRC_MAT: 2
+    TAR_FIELD: "scatra"
+    TAR_MAT: 1
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "1.0"
+FUNCT2:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t"
+RESULT DESCRIPTION:
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 5
+      QUANTITY: "phi"
+      VALUE: 1.0598197161344727
+      TOLERANCE: 1.1e-08
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 6
+      QUANTITY: "phi"
+      VALUE: 1.0598197161344727
+      TOLERANCE: 1.1e-08
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 7
+      QUANTITY: "phi"
+      VALUE: 1.0598197161344727
+      TOLERANCE: 1.1e-08
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 8
+      QUANTITY: "phi"
+      VALUE: 1.059819716134473
+      TOLERANCE: 1.1e-08
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 9
+      QUANTITY: "phi"
+      VALUE: 0.8998181138278608
+      TOLERANCE: 9e-09
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 10
+      QUANTITY: "phi"
+      VALUE: 0.8998181138278609
+      TOLERANCE: 9e-09
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 11
+      QUANTITY: "phi"
+      VALUE: 0.8998181138278611
+      TOLERANCE: 9e-09
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 12
+      QUANTITY: "phi"
+      VALUE: 0.8998181138278611
+      TOLERANCE: 9e-09
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispx"
+      VALUE: 0.4242308104155987
+      TOLERANCE: 4.2e-09
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispy"
+      VALUE: 0.16613092834108992
+      TOLERANCE: 1.7e-09
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispz"
+      VALUE: -0.16613092834109006
+      TOLERANCE: 1.7e-09
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 9
+      QUANTITY: "dispx"
+      VALUE: 0.9999999999999999
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 9
+      QUANTITY: "dispy"
+      VALUE: 0
+      TOLERANCE: 1e-16
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 9
+      QUANTITY: "dispz"
+      VALUE: 0
+      TOLERANCE: 1e-16
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [null, null, null]
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [1, 0, 0]
+    FUNCT: [2, null, null]
+DSURF-NODE TOPOLOGY:
+  - NODE 1 DSURFACE 1
+  - NODE 2 DSURFACE 1
+  - NODE 3 DSURFACE 1
+  - NODE 4 DSURFACE 1
+  - NODE 9 DSURFACE 2
+  - NODE 10 DSURFACE 2
+  - NODE 11 DSURFACE 2
+  - NODE 12 DSURFACE 2
+NODE COORDS:
+  - NODE 1 COORD -1.0000000000000000e+00 -5.0000000000000000e-01 5.0000000000000000e-01
+  - NODE 2 COORD -1.0000000000000000e+00 -5.0000000000000000e-01 -5.0000000000000000e-01
+  - NODE 3 COORD -1.0000000000000000e+00 5.0000000000000000e-01 -5.0000000000000000e-01
+  - NODE 4 COORD -1.0000000000000000e+00 5.0000000000000000e-01 5.0000000000000000e-01
+  - NODE 5 COORD 0.0000000000000000e+00 -5.0000000000000000e-01 5.0000000000000000e-01
+  - NODE 6 COORD 0.0000000000000000e+00 -5.0000000000000000e-01 -5.0000000000000000e-01
+  - NODE 7 COORD 0.0000000000000000e+00 5.0000000000000000e-01 -5.0000000000000000e-01
+  - NODE 8 COORD 0.0000000000000000e+00 5.0000000000000000e-01 5.0000000000000000e-01
+  - NODE 9 COORD 1.0000000000000000e+00 -5.0000000000000000e-01 5.0000000000000000e-01
+  - NODE 10 COORD 1.0000000000000000e+00 -5.0000000000000000e-01 -5.0000000000000000e-01
+  - NODE 11 COORD 1.0000000000000000e+00 5.0000000000000000e-01 -5.0000000000000000e-01
+  - NODE 12 COORD 1.0000000000000000e+00 5.0000000000000000e-01 5.0000000000000000e-01
+STRUCTURE ELEMENTS:
+  - 1 SOLIDSCATRA HEX8 1 2 3 4 5 6 7 8 MAT 2 KINEM nonlinear TYPE Std
+  - 2 SOLIDSCATRA HEX8 5 6 7 8 9 10 11 12 MAT 2 KINEM nonlinear TYPE Std

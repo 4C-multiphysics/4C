@@ -1,0 +1,295 @@
+TITLE:
+  - Framework test for multiphase flow through deformable porous medium.
+  - Minimal test for monolithic framework also testing finite difference check
+  - of monolithic system matrix
+PROBLEM TYPE:
+  PROBLEMTYPE: "Multiphase_Poroelasticity"
+STRUCTURAL DYNAMIC:
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "OneStepTheta"
+  LINEAR_SOLVER: 1
+STRUCTURAL DYNAMIC/ONESTEPTHETA:
+  THETA: 1
+POROFLUIDMULTIPHASE DYNAMIC:
+  THETA: 1
+  LINEAR_SOLVER: 1
+  INITIALFIELD: "field_by_function"
+  INITFUNCNO: 1
+POROMULTIPHASE DYNAMIC:
+  NUMSTEP: 40
+  MAXTIME: 0.2
+  TIMESTEP: 0.005
+  COUPALGO: "twoway_monolithic"
+POROMULTIPHASE DYNAMIC/MONOLITHIC:
+  TOLRES_GLOBAL: 1e-06
+  TOLINC_GLOBAL: 1e-06
+  LINEAR_SOLVER: 1
+  FDCHECK: "global"
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Solver"
+MATERIALS:
+  - MAT: 1
+    MAT_FluidPoroMultiPhase:
+      LOCAL: false
+      PERMEABILITY: 1
+      NUMMAT: 4
+      MATIDS: [10, 20, 30, 40]
+      NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE: 4
+  - MAT: 10
+    MAT_FluidPoroSinglePhase:
+      DENSITYLAWID: 102
+      DENSITY: 1
+      RELPERMEABILITYLAWID: 103
+      VISCOSITYLAWID: 104
+      DOFTYPEID: 100
+  - MAT: 100
+    MAT_FluidPoroSinglePhaseDofPressure:
+      PHASELAWID: 101
+  - MAT: 101
+    MAT_PhaseLawLinear:
+      RELTENSION: 0.5
+      SATURATION_0: 0.1
+      NUMDOF: 4
+      PRESCOEFF: [1, 1, 0, 0]
+  - MAT: 102
+    MAT_PoroDensityLawExp:
+      BULKMODULUS: 1
+  - MAT: 103
+    MAT_FluidPoroRelPermeabilityLawExp:
+      EXP: 3
+      MIN_SAT: 0
+  - MAT: 104
+    MAT_FluidPoroViscosityLawConstant:
+      VALUE: 10
+  - MAT: 20
+    MAT_FluidPoroSinglePhase:
+      DENSITYLAWID: 202
+      DENSITY: 1
+      RELPERMEABILITYLAWID: 203
+      VISCOSITYLAWID: 104
+      DOFTYPEID: 200
+  - MAT: 200
+    MAT_FluidPoroSinglePhaseDofPressure:
+      PHASELAWID: 201
+  - MAT: 201
+    MAT_PhaseLawLinear:
+      RELTENSION: 0.5
+      SATURATION_0: 0.2
+      NUMDOF: 4
+      PRESCOEFF: [0, 1, -1, 0]
+  - MAT: 202
+    MAT_PoroDensityLawExp:
+      BULKMODULUS: 1
+  - MAT: 203
+    MAT_FluidPoroRelPermeabilityLawConstant:
+      VALUE: 1
+  - MAT: 30
+    MAT_FluidPoroSinglePhase:
+      DENSITYLAWID: 301
+      DENSITY: 1
+      RELPERMEABILITYLAWID: 303
+      VISCOSITYLAWID: 104
+      DOFTYPEID: 300
+  - MAT: 300
+    MAT_FluidPoroSinglePhaseDofPressure:
+      PHASELAWID: 302
+  - MAT: 301
+    MAT_PoroDensityLawExp:
+      BULKMODULUS: 1
+  - MAT: 302
+    MAT_PhaseLawConstraint: {}
+  - MAT: 303
+    MAT_FluidPoroRelPermeabilityLawConstant:
+      VALUE: 1
+  - MAT: 40
+    MAT_FluidPoroSinglePhase:
+      DENSITYLAWID: 402
+      DENSITY: 1
+      RELPERMEABILITYLAWID: 404
+      VISCOSITYLAWID: 104
+      DOFTYPEID: 401
+  - MAT: 401
+    MAT_FluidPoroSinglePhaseDofPressure:
+      PHASELAWID: 403
+  - MAT: 402
+    MAT_PoroDensityLawExp:
+      BULKMODULUS: 1
+  - MAT: 403
+    MAT_PhaseLawLinear:
+      RELTENSION: 0.01
+      SATURATION_0: 0.3
+      NUMDOF: 4
+      PRESCOEFF: [0, 0, 1, -1]
+  - MAT: 404
+    MAT_FluidPoroRelPermeabilityLawExp:
+      EXP: 2
+      MIN_SAT: 0
+  - MAT: 2
+    MAT_StructPoro:
+      MATID: 3
+      POROLAWID: 4
+      INITPOROSITY: 0.4
+  - MAT: 3
+    MAT_Struct_StVenantKirchhoff:
+      YOUNG: 10
+      NUE: 0.35
+      DENS: 0.1
+  - MAT: 4
+    MAT_PoroLawDensityDependent:
+      DENSITYLAWID: 5
+  - MAT: 5
+    MAT_PoroDensityLawExp:
+      BULKMODULUS: 10
+CLONING MATERIAL MAP:
+  - SRC_FIELD: "structure"
+    SRC_MAT: 2
+    TAR_FIELD: "porofluid"
+    TAR_MAT: 1
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "a"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: "multifunction"
+    NUMPOINTS: 3
+    TIMES: [0, 1, 1000]
+    DESCRIPTION: ["2.0*0.5*(1-cos(t*pi/1.0))", "2"]
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispx"
+      VALUE: 0
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispy"
+      VALUE: 0
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispz"
+      VALUE: 0
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "dispx"
+      VALUE: -0.0012049597308071511
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "dispy"
+      VALUE: -0.00015049694456113711
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "dispz"
+      VALUE: -0.00015049694456142394
+      TOLERANCE: 1e-12
+  - POROFLUIDMULTIPHASE:
+      DIS: "porofluid"
+      NODE: 5
+      QUANTITY: "phi1"
+      VALUE: 0.1
+      TOLERANCE: 1e-12
+  - POROFLUIDMULTIPHASE:
+      DIS: "porofluid"
+      NODE: 6
+      QUANTITY: "phi2"
+      VALUE: 0
+      TOLERANCE: 1e-12
+  - POROFLUIDMULTIPHASE:
+      DIS: "porofluid"
+      NODE: 7
+      QUANTITY: "phi3"
+      VALUE: 0
+      TOLERANCE: 1e-12
+  - POROFLUIDMULTIPHASE:
+      DIS: "porofluid"
+      NODE: 8
+      QUANTITY: "phi4"
+      VALUE: 0
+      TOLERANCE: 1e-12
+  - POROFLUIDMULTIPHASE:
+      DIS: "porofluid"
+      NODE: 1
+      QUANTITY: "pressure4"
+      VALUE: -1.657968630209433
+      TOLERANCE: 1e-12
+  - POROFLUIDMULTIPHASE:
+      DIS: "porofluid"
+      NODE: 2
+      QUANTITY: "saturation3"
+      VALUE: 0.19662913424368195
+      TOLERANCE: 1e-12
+  - POROFLUIDMULTIPHASE:
+      DIS: "porofluid"
+      NODE: 3
+      QUANTITY: "phi2"
+      VALUE: 1.4045993081314045
+      TOLERANCE: 1e-12
+  - POROFLUIDMULTIPHASE:
+      DIS: "porofluid"
+      NODE: 4
+      QUANTITY: "phi1"
+      VALUE: -0.9017306453483892
+      TOLERANCE: 1e-12
+  - POROFLUIDMULTIPHASE:
+      DIS: "porofluid"
+      ELEMENT: 1
+      QUANTITY: "phasevelocity1x"
+      VALUE: -0.05014705634288608
+      TOLERANCE: 1e-12
+DESIGN SURF PORO NEUMANN CONDITIONS:
+  - E: 1
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 1]
+    VAL: [1, 2, 3, 1]
+    FUNCT: [1, 1, 1, 1]
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DESIGN SURF PORO DIRICH CONDITIONS:
+  - E: 2
+    NUMDOF: 4
+    ONOFF: [1, 1, 1, 1]
+    VAL: [0.1, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0]
+DSURF-NODE TOPOLOGY:
+  - NODE 1 DSURFACE 1
+  - NODE 2 DSURFACE 1
+  - NODE 3 DSURFACE 1
+  - NODE 4 DSURFACE 1
+  - NODE 5 DSURFACE 2
+  - NODE 6 DSURFACE 2
+  - NODE 7 DSURFACE 2
+  - NODE 8 DSURFACE 2
+DVOL-NODE TOPOLOGY:
+  - NODE 1 DVOL 1
+  - NODE 2 DVOL 1
+  - NODE 3 DVOL 1
+  - NODE 4 DVOL 1
+  - NODE 5 DVOL 1
+  - NODE 6 DVOL 1
+  - NODE 7 DVOL 1
+  - NODE 8 DVOL 1
+NODE COORDS:
+  - NODE 1 COORD -5.0000000000000000e-01 -5.0000000000000000e-01 5.0000000000000000e-01
+  - NODE 2 COORD -5.0000000000000000e-01 -5.0000000000000000e-01 -5.0000000000000000e-01
+  - NODE 3 COORD -5.0000000000000000e-01 5.0000000000000000e-01 -5.0000000000000000e-01
+  - NODE 4 COORD -5.0000000000000000e-01 5.0000000000000000e-01 5.0000000000000000e-01
+  - NODE 5 COORD 5.0000000000000000e-01 -5.0000000000000000e-01 5.0000000000000000e-01
+  - NODE 6 COORD 5.0000000000000000e-01 -5.0000000000000000e-01 -5.0000000000000000e-01
+  - NODE 7 COORD 5.0000000000000000e-01 5.0000000000000000e-01 -5.0000000000000000e-01
+  - NODE 8 COORD 5.0000000000000000e-01 5.0000000000000000e-01 5.0000000000000000e-01
+STRUCTURE ELEMENTS:
+  - 1 SOLIDPORO_PRESSURE_BASED HEX8 1 2 3 4 5 6 7 8 MAT 2 KINEM nonlinear

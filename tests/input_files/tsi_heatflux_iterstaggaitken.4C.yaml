@@ -1,0 +1,176 @@
+TITLE:
+  - simple 3D example. consists of 3 hex8 elements and is loaded with a
+  - surface thermal Neumann boundary condition. Heatflux increasing in time leads to
+  - 'a extension of the body, statics analysis.'
+  - 'resulting heatflux in x q_X = 20000, corresponding to a purely thermal simulation'
+  - '* replacing thermal simulation by a one-way coupling tsi (THR --> STR),'
+  - additionaly the body deforms.
+  - '** iterative staggered tsi, i.e. consider in addition the coupling (THR <--> STR)'
+  - slightly smaller thermal heatflux_max q_x = 19965 AND within one time step instead
+  - 'of a constant heatflux over the body, the coupling term (v!=0) results in an'
+  - 'additonal load for the THR, so that q_x slightly varies'
+  - '** use Aitken relaxation to accelerate the convergence. Compared to standard approach, i.e.'
+  - tsi_iterstagg (six or seven) only two iteration steps are required for convergence
+  - of the iteration loop between the two fields
+PROBLEM SIZE:
+  ELEMENTS: 3
+  NODES: 16
+IO:
+  STRUCT_STRESS: "2PK"
+  STRUCT_COUPLING_STRESS: "2PK"
+  STRUCT_STRAIN: "GL"
+  THERM_TEMPERATURE: true
+  THERM_HEATFLUX: "Initial"
+  THERM_TEMPGRAD: "Initial"
+PROBLEM TYPE:
+  PROBLEMTYPE: "Thermo_Structure_Interaction"
+STRUCTURAL DYNAMIC:
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "Statics"
+  TIMESTEP: 1
+  MAXTIME: 1
+  TOLRES: 0.0001
+  NORM_RESF: "Mix"
+  LINEAR_SOLVER: 2
+THERMAL DYNAMIC:
+  DYNAMICTYPE: Statics
+  TIMESTEP: 1
+  NUMSTEP: 5
+  LINEAR_SOLVER: 1
+TSI DYNAMIC:
+  COUPALGO: "tsi_iterstagg_aitken"
+  NUMSTEP: 2000
+  MAXTIME: 5
+  TIMESTEP: 1
+  ITEMAX: 100
+TSI DYNAMIC/PARTITIONED:
+  MAXOMEGA: 2
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "THERMAL_SOLVER"
+SOLVER 2:
+  SOLVER: "UMFPACK"
+  NAME: "STRUCTURAL_SOLVER"
+MATERIALS:
+  - MAT: 1
+    MAT_Struct_ThermoStVenantK:
+      YOUNGNUM: 1
+      YOUNG: [21000]
+      NUE: 0.3
+      DENS: 1
+      THEXPANS: 1.2e-05
+      CAPA: 3.297e+06
+      CONDUCT: 52
+      INITTEMP: 0
+  - MAT: 2
+    MAT_Fourier:
+      CAPA: 420
+      CONDUCT_PARA_NUM: 1
+      CONDUCT: [52]
+CLONING MATERIAL MAP:
+  - SRC_FIELD: "structure"
+    SRC_MAT: 1
+    TAR_FIELD: "thermo"
+    TAR_MAT: 2
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t*1000/5"
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DESIGN VOL DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [0, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DESIGN SURF THERMO NEUMANN CONDITIONS:
+  - E: 2
+    NUMDOF: 6
+    ONOFF: [1, 0, 0, 0, 0, 0]
+    VAL: [20, 0, 0, 0, 0, 0]
+    FUNCT: [1, 1, 1, 1, 1, 1]
+DESIGN SURF THERMO DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [0]
+    FUNCT: [0]
+DSURF-NODE TOPOLOGY:
+  - NODE 13 DSURFACE 1
+  - NODE 14 DSURFACE 1
+  - NODE 15 DSURFACE 1
+  - NODE 16 DSURFACE 1
+  - NODE 1 DSURFACE 2
+  - NODE 2 DSURFACE 2
+  - NODE 3 DSURFACE 2
+  - NODE 4 DSURFACE 2
+DVOL-NODE TOPOLOGY:
+  - NODE 1 DVOL 1
+  - NODE 2 DVOL 1
+  - NODE 3 DVOL 1
+  - NODE 4 DVOL 1
+  - NODE 5 DVOL 1
+  - NODE 6 DVOL 1
+  - NODE 7 DVOL 1
+  - NODE 8 DVOL 1
+  - NODE 9 DVOL 1
+  - NODE 10 DVOL 1
+  - NODE 11 DVOL 1
+  - NODE 12 DVOL 1
+  - NODE 13 DVOL 1
+  - NODE 14 DVOL 1
+  - NODE 15 DVOL 1
+  - NODE 16 DVOL 1
+NODE COORDS:
+  - NODE 1 COORD 1.00000000e+01 0.00000000e+00 5.00000000e-01
+  - NODE 2 COORD 1.00000000e+01 1.00000000e+00 5.00000000e-01
+  - NODE 3 COORD 1.00000000e+01 1.00000000e+00 -5.00000000e-01
+  - NODE 4 COORD 1.00000000e+01 0.00000000e+00 -5.00000000e-01
+  - NODE 5 COORD 6.66666651e+00 0.00000000e+00 5.00000000e-01
+  - NODE 6 COORD 6.66666651e+00 1.00000000e+00 5.00000000e-01
+  - NODE 7 COORD 6.66666651e+00 1.00000000e+00 -5.00000000e-01
+  - NODE 8 COORD 6.66666651e+00 0.00000000e+00 -5.00000000e-01
+  - NODE 9 COORD 3.33333325e+00 0.00000000e+00 5.00000000e-01
+  - NODE 10 COORD 3.33333325e+00 1.00000000e+00 5.00000000e-01
+  - NODE 11 COORD 3.33333325e+00 1.00000000e+00 -5.00000000e-01
+  - NODE 12 COORD 3.33333325e+00 0.00000000e+00 -5.00000000e-01
+  - NODE 13 COORD 0.00000000e+00 0.00000000e+00 5.00000000e-01
+  - NODE 14 COORD 0.00000000e+00 1.00000000e+00 5.00000000e-01
+  - NODE 15 COORD 0.00000000e+00 1.00000000e+00 -5.00000000e-01
+  - NODE 16 COORD 0.00000000e+00 0.00000000e+00 -5.00000000e-01
+STRUCTURE ELEMENTS:
+  - 1 SOLIDSCATRA HEX8 1 2 3 4 5 6 7 8 MAT 1 KINEM linear TYPE Undefined
+  - 2 SOLIDSCATRA HEX8 5 6 7 8 9 10 11 12 MAT 1 KINEM linear TYPE Undefined
+  - 3 SOLIDSCATRA HEX8 9 10 11 12 13 14 15 16 MAT 1 KINEM linear TYPE Undefined
+RESULT DESCRIPTION:
+  - THERMAL:
+      DIS: "thermo"
+      NODE: 1
+      QUANTITY: "temp"
+      VALUE: 3827.136888978685
+      TOLERANCE: 1e-06
+      NAME: "temp(x=0)"
+  - THERMAL:
+      DIS: "thermo"
+      NODE: 16
+      QUANTITY: "temp"
+      VALUE: 0
+      TOLERANCE: 1e-09
+      NAME: "temp(x=10)"
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispx"
+      VALUE: 0.42606626158166383
+      TOLERANCE: 1e-09
+      NAME: "ux(x=0)"
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 16
+      QUANTITY: "dispx"
+      VALUE: 0
+      TOLERANCE: 1e-09
+      NAME: "ux(x=10)"

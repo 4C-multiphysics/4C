@@ -1,0 +1,293 @@
+TITLE:
+  - Growth simulation with a full constrained mixture fiber adaptive history
+  - integration based on model equation and Gauss point data output postprocessed
+  - to the nodes.
+  - 'Elements: HEX8'
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+IO:
+  OUTPUT_SPRING: true
+  STRUCT_STRESS: "Cauchy"
+  STRUCT_STRAIN: "GL"
+  WRITE_INITIAL_STATE: false
+  VERBOSITY: "Standard"
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 5
+  OUTPUT_DATA_FORMAT: ascii
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  DISPLACEMENT: true
+  STRESS_STRAIN: true
+  GAUSS_POINT_DATA_OUTPUT_TYPE: nodes
+SOLVER 1:
+  SOLVER: "Superlu"
+  NAME: "Structure_Solver"
+STRUCTURAL DYNAMIC:
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "Statics"
+  PRESTRESSTIME: 100
+  TIMESTEP: 0.2
+  NUMSTEP: 500
+  MAXTIME: 100
+  TOLDISP: 1e-09
+  TOLRES: 1e-09
+  LOADLIN: true
+  LINEAR_SOLVER: 1
+STRUCT NOX/Printing:
+  Inner Iteration: false
+  Outer Iteration StatusTest: false
+MATERIALS:
+  - MAT: 1
+    MAT_Mixture:
+      NUMCONST: 2
+      MATIDMIXTURERULE: 10
+      MATIDSCONST: [11, 12]
+  - MAT: 10
+    MIX_GrowthRemodelMixtureRule:
+      GROWTH_STRATEGY: 100
+      DENS: 1
+      NUMCONST: 2
+      MASSFRAC: [0.1, 0.9]
+  - MAT: 100
+    MIX_GrowthStrategy_Stiffness:
+      KAPPA: 100
+  - MAT: 11
+    MIX_Constituent_FullConstrainedMixtureFiber:
+      FIBER_ID: 1
+      FIBER_MATERIAL_ID: 110
+      DECAY_TIME: 5
+      GROWTH_CONSTANT: 0.01
+      DEPOSITION_STRETCH: 1.1783669297169928
+      INIT: 3
+      ADAPTIVE_HISTORY_STRATEGY: "model_equation"
+  - MAT: 110
+    MIX_Constituent_RemodelFiber_Material_Exponential:
+      K1: 10
+      K2: 30
+      COMPRESSION: false
+  - MAT: 12
+    MIX_Constituent_ElastHyper:
+      NUMMAT: 2
+      MATIDS: [121, 122]
+      PRESTRESS_STRATEGY: 129
+  - MAT: 121
+    ELAST_IsoExpoPow:
+      K1: 10
+      K2: 10
+      C: 1
+  - MAT: 122
+    ELAST_VolSussmanBathe:
+      KAPPA: 100
+  - MAT: 129
+    MIX_Prestress_Strategy_Constant:
+      PRESTRETCH: [1, 1, 1, 0, 0, 0, 0, 0, 0]
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "1+0.2*y+0.4*z"
+DESIGN SURF ROBIN SPRING DASHPOT CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    STIFF: [100, 100, 100]
+    TIMEFUNCTSTIFF: [0, 0, 0]
+    VISCO: [0, 0, 0]
+    TIMEFUNCTVISCO: [0, 0, 0]
+    DISPLOFFSET: [-1, 0, 0]
+    TIMEFUNCTDISPLOFFSET: [0, 0, 0]
+    FUNCTNONLINSTIFF: [0, 0, 0]
+    DIRECTION: "xyz"
+DESIGN SURF NEUMANN CONDITIONS:
+  - E: 2
+    NUMDOF: 6
+    ONOFF: [1, 0, 0, 0, 0, 0]
+    VAL: [150, 0, 0, 0, 0, 0]
+    FUNCT: [1, 0, 0, 0, 0, 0]
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispx"
+      VALUE: 0.8740994630725254
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispy"
+      VALUE: 0.003773293290290161
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispz"
+      VALUE: -0.00415831476535039
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "dispx"
+      VALUE: 0.9881232010176789
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "dispy"
+      VALUE: -0.020071827488253206
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "dispz"
+      VALUE: -0.0034386992289451197
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "dispx"
+      VALUE: 1.0992788094098873
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "dispy"
+      VALUE: 0.004751919399499903
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "dispz"
+      VALUE: -0.028626032661079073
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "dispx"
+      VALUE: 1.2077562461552298
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "dispy"
+      VALUE: -0.021134901209946672
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "dispz"
+      VALUE: -0.029127390694476618
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "mixture_constituent_0_growth_scalar"
+      VALUE: 1.4492027117768114
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "mixture_constituent_0_growth_scalar"
+      VALUE: 1.587898988148138
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "mixture_constituent_0_growth_scalar"
+      VALUE: 1.7286079769721996
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "mixture_constituent_0_growth_scalar"
+      VALUE: 1.8716211802352871
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "mixture_constituent_0_sig"
+      VALUE: 1207.7119339752628
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "mixture_constituent_0_sig"
+      VALUE: 1243.8741656431348
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "mixture_constituent_0_sig"
+      VALUE: 1275.584030963984
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "mixture_constituent_0_sig"
+      VALUE: 1303.636039628841
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "mixture_constituent_0_sig_h"
+      VALUE: 1000
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "mixture_constituent_0_sig_h"
+      VALUE: 1000
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "mixture_constituent_0_sig_h"
+      VALUE: 1000
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "mixture_constituent_0_sig_h"
+      VALUE: 1000
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "mixture_constituent_0_history_size"
+      VALUE: 108
+      TOLERANCE: 0.1
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "mixture_constituent_0_history_size"
+      VALUE: 108
+      TOLERANCE: 0.1
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "mixture_constituent_0_history_size"
+      VALUE: 108
+      TOLERANCE: 0.1
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "mixture_constituent_0_history_size"
+      VALUE: 108
+      TOLERANCE: 0.1
+DSURF-NODE TOPOLOGY:
+  - NODE 1 DSURFACE 1
+  - NODE 3 DSURFACE 1
+  - NODE 2 DSURFACE 1
+  - NODE 4 DSURFACE 1
+  - NODE 8 DSURFACE 2
+  - NODE 5 DSURFACE 2
+  - NODE 7 DSURFACE 2
+  - NODE 6 DSURFACE 2
+NODE COORDS:
+  - FNODE 1 COORD 0.0 0.0 0.0 FIBER1 1.0 0.0 0.0
+  - FNODE 2 COORD 0.0 1.0 0.0 FIBER1 1.0 0.0 0.0
+  - FNODE 3 COORD 0.0 0.0 1.0 FIBER1 1.0 0.0 0.0
+  - FNODE 4 COORD 0.0 1.0 1.0 FIBER1 1.0 0.0 0.0
+  - FNODE 5 COORD 1.0 0.0 0.0 FIBER1 1.0 0.0 0.0
+  - FNODE 6 COORD 1.0 1.0 0.0 FIBER1 1.0 0.0 0.0
+  - FNODE 7 COORD 1.0 0.0 1.0 FIBER1 1.0 0.0 0.0
+  - FNODE 8 COORD 1.0 1.0 1.0 FIBER1 1.0 0.0 0.0
+STRUCTURE ELEMENTS:
+  - 1 SOLID HEX8 1 5 6 2 3 7 8 4 MAT 1 KINEM nonlinear

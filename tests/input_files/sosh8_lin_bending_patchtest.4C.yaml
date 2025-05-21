@@ -1,0 +1,167 @@
+TITLE:
+  - Linear out of plane bending test for 5 structural solid shells.
+  - Results are compared to analytical solution given in the reference.
+  - 'Reference:'
+  - 'L. Vu-Quoc, X.G. Tan,'
+  - 'Optimal solid shells for non-linear analyses of multilayer composites. I. Statics,'
+  - Comput. Methods Appl. Mech. Engrg. 192 (9-10) (2003) 975-1016.
+PROBLEM SIZE:
+  ELEMENTS: 5
+  NODES: 16
+  MATERIALS: 41
+  NUMDF: 6
+IO:
+  STRUCT_STRESS: "2PK"
+  STRUCT_STRAIN: "GL"
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+STRUCT NOX/Printing:
+  Outer Iteration StatusTest: false
+STRUCTURAL DYNAMIC:
+  DYNAMICTYPE: "Statics"
+  TIMESTEP: 1
+  NUMSTEP: 1
+  M_DAMP: 0.5
+  K_DAMP: 0.5
+  NORM_DISP: "Mix"
+  NORM_RESF: "Mix"
+  MAXITER: 0
+  DIVERCONT: "continue"
+  PREDICT: "TangDis"
+  LINEAR_SOLVER: 1
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  IFPACK_XML_FILE: "xml/preconditioner/ifpack.xml"
+  AZSUB: 300
+  NAME: "Structure_Solver"
+MATERIALS:
+  - MAT: 1
+    MAT_ElastHyper:
+      NUMMAT: 1
+      MATIDS: [2]
+      DENS: 1
+  - MAT: 2
+    ELAST_CoupLogNeoHooke:
+      MODE: "YN"
+      C1: 1e+06
+      C2: 0.25
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "-z*1.0E-3*(x+y/2.0)"
+FUNCT2:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "-z*1.0E-3*(y+x/2.0)"
+FUNCT3:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "1.0E-3*(x*x+x*y+y*y)/2.0"
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispx"
+      VALUE: -9.75e-08
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispy"
+      VALUE: -6e-08
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispz"
+      VALUE: 1.935e-05
+      TOLERANCE: 1e-09
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "dispx"
+      VALUE: -2.5e-08
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "dispy"
+      VALUE: -2e-08
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "dispz"
+      VALUE: 1.4e-06
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 3
+      QUANTITY: "dispx"
+      VALUE: -6e-08
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 3
+      QUANTITY: "dispy"
+      VALUE: -6e-08
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 3
+      QUANTITY: "dispz"
+      VALUE: 9.6e-06
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 4
+      QUANTITY: "dispx"
+      VALUE: -1e-07
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 4
+      QUANTITY: "dispy"
+      VALUE: -8e-08
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 4
+      QUANTITY: "dispz"
+      VALUE: 2.24e-05
+      TOLERANCE: 1e-09
+DESIGN LINE DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [1, 1, 1]
+    FUNCT: [1, 2, 3]
+DLINE-NODE TOPOLOGY:
+  - NODE 9 DLINE 1
+  - NODE 10 DLINE 1
+  - NODE 11 DLINE 1
+  - NODE 12 DLINE 1
+  - NODE 13 DLINE 1
+  - NODE 14 DLINE 1
+  - NODE 15 DLINE 1
+  - NODE 16 DLINE 1
+NODE COORDS:
+  - NODE 1 COORD 1.80000007e-01 2.99999993e-02 5.00000024e-04
+  - NODE 2 COORD 3.99999991e-02 1.99999996e-02 5.00000024e-04
+  - NODE 3 COORD 7.99999982e-02 7.99999982e-02 5.00000024e-04
+  - NODE 4 COORD 1.59999996e-01 7.99999982e-02 5.00000024e-04
+  - NODE 5 COORD 1.80000007e-01 2.99999993e-02 -5.00000024e-04
+  - NODE 6 COORD 3.99999991e-02 1.99999996e-02 -5.00000024e-04
+  - NODE 7 COORD 7.99999982e-02 7.99999982e-02 -5.00000024e-04
+  - NODE 8 COORD 1.59999996e-01 7.99999982e-02 -5.00000024e-04
+  - NODE 9 COORD 2.39999995e-01 0.00000000e+00 5.00000024e-04
+  - NODE 10 COORD 0.00000000e+00 0.00000000e+00 5.00000024e-04
+  - NODE 11 COORD 2.39999995e-01 0.00000000e+00 -5.00000024e-04
+  - NODE 12 COORD 0.00000000e+00 0.00000000e+00 -5.00000024e-04
+  - NODE 13 COORD 2.39999995e-01 1.19999997e-01 5.00000024e-04
+  - NODE 14 COORD 2.39999995e-01 1.19999997e-01 -5.00000024e-04
+  - NODE 15 COORD 0.00000000e+00 1.19999997e-01 5.00000024e-04
+  - NODE 16 COORD 0.00000000e+00 1.19999997e-01 -5.00000024e-04
+STRUCTURE ELEMENTS:
+  - 1 SOLID HEX8 1 2 3 4 5 6 7 8 MAT 1 KINEM nonlinear TECH shell_eas_ans
+  - 2 SOLID HEX8 1 9 10 2 5 11 12 6 MAT 1 KINEM nonlinear TECH shell_eas_ans
+  - 3 SOLID HEX8 13 9 1 4 14 11 5 8 MAT 1 KINEM nonlinear TECH shell_eas_ans
+  - 4 SOLID HEX8 3 15 13 4 7 16 14 8 MAT 1 KINEM nonlinear TECH shell_eas_ans
+  - 5 SOLID HEX8 2 10 15 3 6 12 16 7 MAT 1 KINEM nonlinear TECH shell_eas_ans

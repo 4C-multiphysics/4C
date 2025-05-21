@@ -1,0 +1,352 @@
+TITLE:
+  - 'Test case for periodic cycling of lithium-ion cells:'
+  - '- two-dimensional problem with two one-dimensional electrode-electrolyte interfaces'
+  - '- anode, electrolyte, and cathode each represented by one quad4 element'
+  - '- constant initial lithium concentrations and electric potentials'
+  - '- charge transfer kinetics characterized by Butler-Volmer equation'
+  - '- cycling starts with constant-current (CC) charge from the fully'
+  - discharged state at a C rate of 1 and switches to constant-voltage
+  - (CV) charge at a cutoff voltage of 3.55
+  - '- discharge begins in constant-current (CC) mode at a cutoff C rate'
+  - of 0.25 and ends at a cutoff voltage of 3.316
+  - '- simulation ends after one more charge half-cycle, i.e., after a'
+  - total of three half-cycles
+  - '- relaxation time of 100.0 between consecutive half-cycles'
+  - '- 3 quad4 elements with matching interface nodes'
+  - '- adaptive time stepping with reduced time step size around current reversals'
+PROBLEM SIZE:
+  DIM: 2
+PROBLEM TYPE:
+  PROBLEMTYPE: "Electrochemistry"
+SCALAR TRANSPORT DYNAMIC:
+  SOLVERTYPE: "nonlinear"
+  TIMESTEP: 2
+  RESULTSEVERY: 100
+  RESTARTEVERY: 100
+  INITIALFIELD: "field_by_condition"
+  CALCFLUX_BOUNDARY: "total"
+  LINEAR_SOLVER: 1
+  ADAPTIVE_TIMESTEPPING: true
+SCALAR TRANSPORT DYNAMIC/NONLINEAR:
+  ABSTOLRES: 0
+SCALAR TRANSPORT DYNAMIC/STABILIZATION:
+  STABTYPE: "no_stabilization"
+  DEFINITION_TAU: "Zero"
+  EVALUATION_TAU: "integration_point"
+  EVALUATION_MAT: "integration_point"
+SCALAR TRANSPORT DYNAMIC/S2I COUPLING:
+  COUPLINGTYPE: "MatchingNodes"
+ELCH CONTROL:
+  EQUPOT: "divi"
+  DIFFCOND_FORMULATION: true
+  INITPOTCALC: true
+  CYCLING_TIMESTEP: 1
+SOLVER 1:
+  SOLVER: "UMFPACK"
+MATERIALS:
+  - MAT: 1
+    MAT_electrode:
+      DIFF_COEF_CONC_DEP_FUNCT: -1
+      DIFF_COEF_TEMP_SCALE_FUNCT: 0
+      COND_CONC_DEP_FUNCT: -1
+      COND_TEMP_SCALE_FUNCT: 0
+      DIFF_PARA_NUM: 1
+      DIFF_PARA: [2e-10]
+      COND_PARA_NUM: 1
+      COND_PARA: [100000]
+      C_MAX: 16.1
+      CHI_MAX: 1
+      OCP_MODEL:
+        Redlich-Kister:
+          OCP_PARA_NUM: 16
+          OCP_PARA: [11652, -3268, 3955, -4573, 6147, -3339, 11170, 299.7, -48660, 136.2, 137300, -21290,
+            -172200, 39560, 93020, -32800]
+        X_MIN: -1
+        X_MAX: -1
+  - MAT: 2
+    MAT_elchmat:
+      NUMDOF: 2
+      NUMSCAL: 1
+      NUMPHASE: 1
+      PHASEIDS: [4]
+  - MAT: 3
+    MAT_electrode:
+      DIFF_COEF_CONC_DEP_FUNCT: -1
+      DIFF_COEF_TEMP_SCALE_FUNCT: 0
+      COND_CONC_DEP_FUNCT: -1
+      COND_TEMP_SCALE_FUNCT: 0
+      DIFF_PARA_NUM: 1
+      DIFF_PARA: [3.7e-10]
+      COND_PARA_NUM: 1
+      COND_PARA: [10000]
+      C_MAX: 23.9
+      CHI_MAX: 1
+      OCP_MODEL:
+        Redlich-Kister:
+          OCP_PARA_NUM: 21
+          OCP_PARA: [395461.6, -76760, 37990, -28730, 11690, 14510, -89380, 167100, -72360, -174600, -406700,
+            953400, 589700, -745500, -1.102e+06, -292700, 721400, 902900, -159900, 665800, -1.084e+06]
+        X_MIN: -1
+        X_MAX: -1
+  - MAT: 4
+    MAT_elchphase:
+      EPSILON: 1
+      TORTUOSITY: 1
+      NUMMAT: 1
+      MATIDS: [5]
+  - MAT: 5
+    MAT_newman:
+      VALENCE: 1
+      DIFF_COEF_CONC_DEP_FUNCT: -1
+      DIFF_COEF_TEMP_SCALE_FUNCT: 0
+      TRANSNR: -1
+      THERMFAC: 0
+      COND_CONC_DEP_FUNCT: -11
+      COND_TEMP_SCALE_FUNCT: 0
+      DIFF_PARA_NUM: 1
+      DIFF_PARA: [0.00026]
+      TRANS_PARA_NUM: 1
+      TRANS_PARA: [0.363]
+      COND_PARA_NUM: 3
+      COND_PARA: [1580, 0.85, 1.4]
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "2.029"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "2.97e-10"
+FUNCT2:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "1.2"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "-0.177573557"
+FUNCT3:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "22.37"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "3.39"
+RESULT DESCRIPTION:
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 1
+      QUANTITY: "phi1"
+      VALUE: 5.464550110809551
+      TOLERANCE: 5.5e-09
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 6
+      QUANTITY: "phi1"
+      VALUE: 1.2000005165734557
+      TOLERANCE: 1.2e-09
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 6
+      QUANTITY: "phi2"
+      VALUE: -0.11091462491809077
+      TOLERANCE: 1.1e-10
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 5
+      QUANTITY: "phi1"
+      VALUE: 1.1999994834266523
+      TOLERANCE: 1.2e-09
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 5
+      QUANTITY: "phi2"
+      VALUE: -0.11091465308504099
+      TOLERANCE: 1.1e-10
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 10
+      QUANTITY: "phi1"
+      VALUE: 19.03098978342782
+      TOLERANCE: 1.9e-08
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 10
+      QUANTITY: "phi2"
+      VALUE: 3.5458786482121183
+      TOLERANCE: 3.5e-09
+  - SCATRA:
+      DIS: "scatra"
+      SPECIAL: true
+      QUANTITY: "soc1"
+      VALUE: 0.37467055680321737
+      TOLERANCE: 3.7e-10
+  - SCATRA:
+      DIS: "scatra"
+      SPECIAL: true
+      QUANTITY: "soc2"
+      VALUE: 0.28079670603429224
+      TOLERANCE: 2.8e-10
+  - SCATRA:
+      DIS: "scatra"
+      SPECIAL: true
+      QUANTITY: "cellvoltage"
+      VALUE: 3.5458786482121183
+      TOLERANCE: 3.5e-09
+  - SCATRA:
+      DIS: "scatra"
+      SPECIAL: true
+      QUANTITY: "numiterlastnewton"
+      VALUE: 3
+      TOLERANCE: 1e-20
+  - SCATRA:
+      DIS: "scatra"
+      SPECIAL: true
+      QUANTITY: "numstep"
+      VALUE: 2334
+      TOLERANCE: 1e-16
+DESIGN LINE DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 2
+    ONOFF: [0, 1]
+    VAL: [0, 0]
+    FUNCT: [0, 0]
+DESIGN SURF INITIAL FIELD CONDITIONS:
+  - E: 1
+    FIELD: "ScaTra"
+    FUNCT: 1
+  - E: 2
+    FIELD: "ScaTra"
+    FUNCT: 2
+  - E: 3
+    FIELD: "ScaTra"
+    FUNCT: 3
+DESIGN S2I MESHTYING LINE CONDITIONS:
+  - E: 2
+    ConditionID: 0
+    INTERFACE_SIDE: "Slave"
+    S2I_KINETICS_ID: 0
+  - E: 3
+    ConditionID: 0
+    INTERFACE_SIDE: "Master"
+    S2I_KINETICS_ID: 0
+  - E: 4
+    ConditionID: 1
+    INTERFACE_SIDE: "Master"
+    S2I_KINETICS_ID: 1
+  - E: 5
+    ConditionID: 1
+    INTERFACE_SIDE: "Slave"
+    S2I_KINETICS_ID: 1
+DESIGN S2I KINETICS LINE CONDITIONS:
+  - E: 2
+    ConditionID: 0
+    INTERFACE_SIDE: "Slave"
+    KINETIC_MODEL: "Butler-Volmer"
+    NUMSCAL: 1
+    STOICHIOMETRIES: [-1]
+    E-: 1
+    K_R: 4.52e-05
+    ALPHA_A: 0.5
+    ALPHA_C: 0.5
+    IS_PSEUDO_CONTACT: false
+  - E: 3
+    ConditionID: 0
+    INTERFACE_SIDE: "Master"
+  - E: 4
+    ConditionID: 1
+    INTERFACE_SIDE: "Master"
+  - E: 5
+    ConditionID: 1
+    INTERFACE_SIDE: "Slave"
+    KINETIC_MODEL: "Butler-Volmer"
+    NUMSCAL: 1
+    STOICHIOMETRIES: [-1]
+    E-: 1
+    K_R: 2.07e-05
+    ALPHA_A: 0.5
+    ALPHA_C: 0.5
+    IS_PSEUDO_CONTACT: false
+SCATRA FLUX CALC LINE CONDITIONS:
+  - E: 1
+  - E: 2
+  - E: 3
+  - E: 4
+  - E: 5
+  - E: 6
+DESIGN ELECTRODE STATE OF CHARGE SURF CONDITIONS:
+  - E: 1
+    ConditionID: 0
+    C_0%: 2.029
+    C_100%: 10.88
+    ONE_HOUR: 3600
+  - E: 3
+    ConditionID: 1
+    C_0%: 22.37
+    C_100%: 10.56
+    ONE_HOUR: 3600
+DESIGN CELL VOLTAGE LINE CONDITIONS:
+  - E: 1
+    ConditionID: 0
+  - E: 6
+    ConditionID: 1
+DESIGN CCCV CELL CYCLING LINE CONDITIONS:
+  - E: 6
+    NUMBER_OF_HALF_CYCLES: 3
+    BEGIN_WITH_CHARGING: 1
+    CONDITION_ID_FOR_CHARGE: 1
+    CONDITION_ID_FOR_DISCHARGE: 2
+    INIT_RELAX_TIME: -1
+    ADAPTIVE_TIME_STEPPING_INIT_RELAX: 0
+    NUM_ADD_ADAPT_TIME_STEPS: 3
+    MIN_TIME_STEPS_DURING_INIT_RELAX: 0
+DESIGN CCCV HALF-CYCLE LINE CONDITIONS:
+  - E: 6
+    ConditionID: 1
+    CURRENT: 1.229302022e-06
+    CUT_OFF_VOLTAGE: 3.55
+    CUT_OFF_C_RATE: 0.25
+    RELAX_TIME: 100
+    ADAPTIVE_TIME_STEPPING_PHASE_ON_OFF: [1, 0, 0]
+  - E: 6
+    ConditionID: 2
+    CURRENT: -1.229302022e-06
+    CUT_OFF_VOLTAGE: 3.316
+    CUT_OFF_C_RATE: 100
+    RELAX_TIME: 100
+    ADAPTIVE_TIME_STEPPING_PHASE_ON_OFF: [1, 0, 0]
+DLINE-NODE TOPOLOGY:
+  - NODE 2 DLINE 1
+  - NODE 3 DLINE 1
+  - NODE 1 DLINE 2
+  - NODE 4 DLINE 2
+  - NODE 6 DLINE 3
+  - NODE 7 DLINE 3
+  - NODE 5 DLINE 4
+  - NODE 8 DLINE 4
+  - NODE 10 DLINE 5
+  - NODE 11 DLINE 5
+  - NODE 9 DLINE 6
+  - NODE 12 DLINE 6
+DSURF-NODE TOPOLOGY:
+  - NODE 1 DSURFACE 1
+  - NODE 2 DSURFACE 1
+  - NODE 3 DSURFACE 1
+  - NODE 4 DSURFACE 1
+  - NODE 5 DSURFACE 2
+  - NODE 6 DSURFACE 2
+  - NODE 7 DSURFACE 2
+  - NODE 8 DSURFACE 2
+  - NODE 9 DSURFACE 3
+  - NODE 10 DSURFACE 3
+  - NODE 11 DSURFACE 3
+  - NODE 12 DSURFACE 3
+NODE COORDS:
+  - NODE 1 COORD 2.5000000000000001e-04 2.5000000000000001e-04 0.0000000000000000e+00
+  - NODE 2 COORD -2.5000000000000001e-04 2.5000000000000001e-04 0.0000000000000000e+00
+  - NODE 3 COORD -2.5000000000000001e-04 -2.5000000000000001e-04 0.0000000000000000e+00
+  - NODE 4 COORD 2.5000000000000001e-04 -2.5000000000000001e-04 0.0000000000000000e+00
+  - NODE 5 COORD 7.5000000000000002e-04 2.5000000000000001e-04 0.0000000000000000e+00
+  - NODE 6 COORD 2.5000000000000001e-04 2.5000000000000001e-04 0.0000000000000000e+00
+  - NODE 7 COORD 2.5000000000000001e-04 -2.5000000000000001e-04 0.0000000000000000e+00
+  - NODE 8 COORD 7.5000000000000002e-04 -2.5000000000000001e-04 0.0000000000000000e+00
+  - NODE 9 COORD 1.2500000000000000e-03 2.5000000000000001e-04 0.0000000000000000e+00
+  - NODE 10 COORD 7.5000000000000002e-04 2.5000000000000001e-04 0.0000000000000000e+00
+  - NODE 11 COORD 7.5000000000000002e-04 -2.5000000000000001e-04 0.0000000000000000e+00
+  - NODE 12 COORD 1.2500000000000000e-03 -2.5000000000000001e-04 0.0000000000000000e+00
+TRANSPORT ELEMENTS:
+  - 1 TRANSP QUAD4 1 2 3 4 MAT 1 TYPE ElchElectrode
+  - 2 TRANSP QUAD4 5 6 7 8 MAT 2 TYPE ElchDiffCond
+  - 3 TRANSP QUAD4 9 10 11 12 MAT 3 TYPE ElchElectrode

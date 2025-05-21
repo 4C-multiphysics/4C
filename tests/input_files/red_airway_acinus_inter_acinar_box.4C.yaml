@@ -1,0 +1,119 @@
+TITLE:
+  - 'Two acini are trapped in a rigid box with interacinar dependency. Here, the'
+  - rigid box is modeled by a prescribed box pressure P_box = (P1*K1+P3*K2)/(K1+K2).
+  - When one acinus (element 1) is subjected to inner pressure it will grow and
+  - the other one (element 2) has to shrink due to increasing outer but constant
+  - inner pressure. Not that acini 2 does not need a bc on its outer pressure
+  - (node 4) as this pressure is given by the interacinar dependency.
+PROBLEM SIZE:
+  ELEMENTS: 1
+  NODES: 2
+  MATERIALS: 1
+  NUMDF: 1
+PROBLEM TYPE:
+  PROBLEMTYPE: "ReducedDimensionalAirWays"
+REDUCED DIMENSIONAL AIRWAYS DYNAMIC:
+  SOLVERTYPE: Nonlinear
+  TIMESTEP: 0.005
+  NUMSTEP: 400
+  MAXITERATIONS: 40
+  TOLERANCE: 1e-08
+  LINEAR_SOLVER: 1
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Reduced_dimensional_Airways_Solver"
+MATERIALS:
+  - MAT: 1
+    MAT_fluid:
+      DYNVISCOSITY: 1.523e-05
+      DENSITY: 1.176e-06
+      GAMMA: 1
+  - MAT: 2
+    MAT_0D_MAXWELL_ACINUS_NEOHOOKEAN:
+      Stiffness1: 1
+      Stiffness2: 1
+      Viscosity1: 1
+      Viscosity2: 1
+  - MAT: 3
+    MAT_0D_MAXWELL_ACINUS_NEOHOOKEAN:
+      Stiffness1: 0
+      Stiffness2: 0
+      Viscosity1: 0
+      Viscosity2: 0
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_TIME: "0.5*(1-cos(pi*t/2.0))"
+FUNCT2:
+  - SYMBOLIC_FUNCTION_OF_TIME: "0.25*(1-cos(pi*t/2.0))"
+DESIGN NODE Reduced D AIRWAYS PRESCRIBED CONDITIONS:
+  - E: 1
+    boundarycond: "pressure"
+    VAL: [1]
+    curve: [1, null]
+  - E: 3
+    boundarycond: "pressure"
+    VAL: [0]
+    curve: [1, null]
+  - E: 2
+    boundarycond: "pressure"
+    VAL: [1]
+    curve: [2, null]
+DESIGN LINE REDUCED D AIRWAYS EVALUATE LUNG VOLUME CONDITIONS:
+  - E: 1
+REDUCED D AIRWAYS ELEMENTS:
+  - 1 RED_ACINUS LINE2 1 2 MAT 2 TYPE NeoHookean AcinusVolume 1.0 AlveolarDuctVolume 1.0
+  - 2 RED_ACINUS LINE2 3 4 MAT 2 TYPE NeoHookean AcinusVolume 1.0 AlveolarDuctVolume 1.0
+  - 3 RED_ACINAR_INTER_DEP LINE2 2 4 MAT 3
+NODE COORDS:
+  - NODE 1 COORD 3.0 0.0 0.0
+  - NODE 2 COORD 5.0 2.0 0.0
+  - NODE 3 COORD 3.0 -1.0 0.0
+  - NODE 4 COORD 5.0 -3.0 0.0
+DNODE-NODE TOPOLOGY:
+  - NODE 1 DNODE 1
+  - NODE 2 DNODE 2
+  - NODE 3 DNODE 3
+  - NODE 4 DNODE 4
+DLINE-NODE TOPOLOGY:
+  - NODE 1 DLINE 1
+  - NODE 2 DLINE 1
+  - NODE 3 DLINE 1
+  - NODE 4 DLINE 1
+  - NODE 2 DLINE 2
+  - NODE 4 DLINE 2
+RESULT DESCRIPTION:
+  - RED_AIRWAY:
+      DIS: "red_airway"
+      NODE: 1
+      QUANTITY: "pressure"
+      VALUE: 1
+      TOLERANCE: 1e-09
+  - RED_AIRWAY:
+      DIS: "red_airway"
+      NODE: 2
+      QUANTITY: "pressure"
+      VALUE: 0.5
+      TOLERANCE: 1e-09
+  - RED_AIRWAY:
+      DIS: "red_airway"
+      NODE: 3
+      QUANTITY: "pressure"
+      VALUE: 0
+      TOLERANCE: 1e-09
+  - RED_AIRWAY:
+      DIS: "red_airway"
+      NODE: 4
+      QUANTITY: "pressure"
+      VALUE: 0.5
+      TOLERANCE: 1e-09
+  - RED_AIRWAY:
+      DIS: "red_airway"
+      ELEMENT: 1
+      QUANTITY: "acini_volume"
+      VALUE: 1.4999961447055992
+      TOLERANCE: 1e-06
+  - RED_AIRWAY:
+      DIS: "red_airway"
+      ELEMENT: 2
+      QUANTITY: "acini_volume"
+      VALUE: 0.5000038552944019
+      TOLERANCE: 1e-06

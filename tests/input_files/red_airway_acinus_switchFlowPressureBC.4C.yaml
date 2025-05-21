@@ -1,0 +1,83 @@
+TITLE:
+  - Test case for the switch flow pressure boundary condition
+PROBLEM SIZE:
+  ELEMENTS: 2
+  NODES: 3
+  MATERIALS: 1
+  NUMDF: 1
+PROBLEM TYPE:
+  PROBLEMTYPE: "ReducedDimensionalAirWays"
+REDUCED DIMENSIONAL AIRWAYS DYNAMIC:
+  SOLVERTYPE: Nonlinear
+  NUMSTEP: 500
+  RESULTSEVERY: 50
+  MAXITERATIONS: 40
+  TOLERANCE: 1e-07
+  LINEAR_SOLVER: 1
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Reduced_dimensional_Airways_Solver"
+MATERIALS:
+  - MAT: 1
+    MAT_fluid:
+      DYNVISCOSITY: 1.79105e-05
+      DENSITY: 1.176e-06
+      GAMMA: 1
+  - MAT: 2
+    MAT_0D_MAXWELL_ACINUS_OGDEN:
+      Stiffness1: 0.1
+      Stiffness2: 0.1
+      Viscosity1: 0.1
+      Viscosity2: 0.1
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_TIME: "79.8*(sin(pi*t))"
+FUNCT2:
+  - SYMBOLIC_FUNCTION_OF_TIME: "500*(1-cos(pi*t))"
+FUNCT3:
+  - SYMBOLIC_FUNCTION_OF_TIME: "f3"
+  - VARIABLE: 0
+    NAME: "f3"
+    TYPE: "multifunction"
+    NUMPOINTS: 5
+    TIMES: [0, 0.7, 2.6, 3.3, 5]
+    DESCRIPTION: ["1.0", "0.0", "1.0", "0.0"]
+DESIGN NODE Reduced D AIRWAYS PRESCRIBED CONDITIONS:
+  - E: 1
+    boundarycond: "switchFlowPressure"
+    VAL: [1]
+    curve: [2, null]
+  - E: 2
+    boundarycond: "pressure"
+    VAL: [0]
+    curve: [1, null]
+DESIGN NODE Reduced D AIRWAYS SWITCH FLOW PRESSURE CONDITIONS:
+  - E: 1
+    FUNCT_ID_FLOW: 1
+    FUNCT_ID_PRESSURE: 2
+    FUNCT_ID_PRESSURE_ACTIVE: 3
+REDUCED D AIRWAYS ELEMENTS:
+  - 1 RED_AIRWAY LINE2 1 2 MAT 1 ElemSolvingType NonLinear TYPE Resistive Resistance Poiseuille PowerOfVelocityProfile
+    2 WallElasticity 0.0 PoissonsRatio 0.0 ViscousTs 0.0 ViscousPhaseShift 0.0 WallThickness 0.0 Area
+    1.0 Generation 0
+  - 2 RED_ACINUS LINE2 2 3 MAT 2 TYPE VolumetricOgden AcinusVolume 523.6 AlveolarDuctVolume 0.0372 KAPPA
+    9000.0 BETA -6.0
+NODE COORDS:
+  - NODE 1 COORD 0.000 0.000 0.000
+  - NODE 2 COORD 10.00 0.000 0.000
+  - NODE 3 COORD 12.00 2.000 0.000
+DNODE-NODE TOPOLOGY:
+  - NODE 1 DNODE 1
+  - NODE 3 DNODE 2
+RESULT DESCRIPTION:
+  - RED_AIRWAY:
+      DIS: "red_airway"
+      NODE: 1
+      QUANTITY: "pressure"
+      VALUE: 1032.7528728889786
+      TOLERANCE: 1e-08
+  - RED_AIRWAY:
+      DIS: "red_airway"
+      NODE: 2
+      QUANTITY: "flow_in"
+      VALUE: -2.7284841053187847e-11
+      TOLERANCE: 1e-08

@@ -1,0 +1,92 @@
+TITLE:
+  - Dynamic test case for truss3 elements and the calculation of a consistent
+  - 'initial acceleration in combination with inhomogeneous DBCs; pay attention:'
+  - suitable for serial tests only since discretization consists of one element;
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+DISCRETISATION:
+  NUMFLUIDDIS: 0
+  NUMALEDIS: 0
+  NUMTHERMDIS: 0
+STRUCTURAL DYNAMIC:
+  INT_STRATEGY: "Standard"
+  RESEVERYERGY: 1
+  TIMESTEP: 0.01
+  NUMSTEP: 1
+  MAXTIME: 0.01
+  TOLDISP: 1e-14
+  TOLRES: 1e-12
+  MAXITER: 10
+  LINEAR_SOLVER: 1
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Structure_Solver"
+DESIGN POINT DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [1, 0, 0]
+    FUNCT: [1, 0, 0]
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [0, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DNODE-NODE TOPOLOGY:
+  - NODE 1 DNODE 1
+  - NODE 2 DNODE 2
+NODE COORDS:
+  - NODE 1 COORD -1.000000000000000e+00 0.000000000000000e+00 0.000000000000000e+00
+  - NODE 2 COORD 1.000000000000000e+00 0.000000000000000e+00 0.000000000000000e+00
+STRUCTURE ELEMENTS:
+  - 1 TRUSS3 LINE2 1 2 MAT 1 CROSS 1 KINEM totlag
+MATERIALS:
+  - MAT: 1
+    MAT_LinElast1D:
+      YOUNG: 1
+      DENS: 1
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "a"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: "multifunction"
+    NUMPOINTS: 3
+    TIMES: [0, 10, 500000]
+    DESCRIPTION: ["cos(2.0*pi*t)-1.0", "cos(2.0*pi*10)-1.0"]
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispx"
+      VALUE: -0.001973271571728441
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "dispx"
+      VALUE: 0.0009865801653857178
+      TOLERANCE: 1e-13
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "velx"
+      VALUE: -0.3946543143456882
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "velx"
+      VALUE: 0.19731603307714357
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "accx"
+      VALUE: -39.45244526478021
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "accx"
+      VALUE: 19.72399781325
+      TOLERANCE: 1e-08

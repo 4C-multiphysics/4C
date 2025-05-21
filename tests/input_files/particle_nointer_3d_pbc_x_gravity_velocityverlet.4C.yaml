@@ -1,0 +1,104 @@
+PROBLEM TYPE:
+  PROBLEMTYPE: "Particle"
+IO:
+  STDOUTEVERY: 100
+  VERBOSITY: "Standard"
+BINNING STRATEGY:
+  BIN_SIZE_LOWER_BOUND: 0.1
+  PERIODICONOFF: "1 0 0"
+  DOMAINBOUNDINGBOX: "-0.4 -0.4 -0.4 0.4 0.4 0.4"
+PARTICLE DYNAMIC:
+  RESULTSEVERY: 10
+  RESTARTEVERY: 100
+  TIMESTEP: 0.001
+  NUMSTEP: 1000
+  GRAVITY_ACCELERATION: "10.0 0.0 0.0"
+  GRAVITY_RAMP_FUNCT: 1
+  PHASE_TO_DYNLOADBALFAC: "phase1 1.0 phase2 1.0"
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_TIME: "a"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: "multifunction"
+    NUMPOINTS: 3
+    TIMES: [0, 1, 1000]
+    DESCRIPTION: ["0.5*(1.0-cos((t*pi)/1.0))", "1.0"]
+RESULT DESCRIPTION:
+  - PARTICLE:
+      ID: 2
+      QUANTITY: "posx"
+      VALUE: -0.3632126697571201
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 2
+      QUANTITY: "posy"
+      VALUE: -0.25
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 2
+      QUANTITY: "posz"
+      VALUE: 0.25
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 2
+      QUANTITY: "velx"
+      VALUE: 5.000000000000005
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 2
+      QUANTITY: "accx"
+      VALUE: 10
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 22
+      QUANTITY: "posx"
+      VALUE: 0.1367873302428796
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 22
+      QUANTITY: "posy"
+      VALUE: 0
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 22
+      QUANTITY: "posz"
+      VALUE: 0
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 22
+      QUANTITY: "velx"
+      VALUE: 5.000000000000005
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 22
+      QUANTITY: "accx"
+      VALUE: 10
+      TOLERANCE: 1e-12
+PARTICLES:
+  - TYPE phase1 POS -0.25 -0.25 -0.25
+  - TYPE phase1 POS -0.25 -0.25 0.0
+  - TYPE phase1 POS -0.25 -0.25 0.25
+  - TYPE phase1 POS -0.25 0.0 -0.25
+  - TYPE phase1 POS -0.25 0.0 0.0
+  - TYPE phase1 POS -0.25 0.0 0.25
+  - TYPE phase1 POS -0.25 0.25 -0.25
+  - TYPE phase1 POS -0.25 0.25 0.0
+  - TYPE phase1 POS -0.25 0.25 0.25
+  - TYPE phase1 POS 0.0 -0.25 -0.25
+  - TYPE phase1 POS 0.0 -0.25 0.0
+  - TYPE phase1 POS 0.0 -0.25 0.25
+  - TYPE phase1 POS 0.0 0.0 -0.25
+  - TYPE phase1 POS 0.0 0.0 0.0
+  - TYPE phase1 POS 0.0 0.0 0.25
+  - TYPE phase1 POS 0.0 0.25 -0.25
+  - TYPE phase1 POS 0.0 0.25 0.0
+  - TYPE phase1 POS 0.0 0.25 0.25
+  - TYPE phase2 POS 0.25 -0.25 -0.25
+  - TYPE phase2 POS 0.25 -0.25 0.0
+  - TYPE phase2 POS 0.25 -0.25 0.25
+  - TYPE phase2 POS 0.25 0.0 -0.25
+  - TYPE phase2 POS 0.25 0.0 0.0
+  - TYPE phase2 POS 0.25 0.0 0.25
+  - TYPE phase2 POS 0.25 0.25 -0.25
+  - TYPE phase2 POS 0.25 0.25 0.0
+  - TYPE phase2 POS 0.25 0.25 0.25

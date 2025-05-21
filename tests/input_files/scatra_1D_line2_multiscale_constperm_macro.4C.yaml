@@ -1,0 +1,141 @@
+TITLE:
+  - 'Academic test case for multi-scale scalar transport:'
+  - '- one 1D macro scale consisting of 10 line2 elements'
+  - '- two 1D micro scales, each consisting of 5 line2 elements'
+  - '- macro scale with initial scalar value 0'
+  - '- micro scale 1 with initial scalar value 0'
+  - '- micro scale 2 with initial scalar value 1'
+  - '- coupling between macro and micro scales based on constant permeability'
+  - '- diffusion on macro scale from micro scale 2 region towards micro scale 1 region'
+  - '- symmetry boundary conditions, i.e., homogeneous Neumann boundary conditions, at both ends of macro
+    scale'
+PROBLEM SIZE:
+  DIM: 1
+PROBLEM TYPE:
+  PROBLEMTYPE: "Scalar_Transport"
+SCALAR TRANSPORT DYNAMIC:
+  SOLVERTYPE: "nonlinear"
+  NUMSTEP: 250
+  RESULTSEVERY: 50
+  RESTARTEVERY: 50
+  INITIALFIELD: "field_by_function"
+  INITFUNCNO: 1
+  LINEAR_SOLVER: 1
+SOLVER 1:
+  SOLVER: "UMFPACK"
+MATERIALS:
+  - MAT: 1
+    MAT_scatra_multiscale:
+      MICROFILE: "scatra_1D_line2_multiscale_constperm_micro1.mat"
+      MICRODIS_NUM: 1
+      POROSITY: 0.4764012244
+      TORTUOSITY: 1.374674082
+      A_s: 1.570796327
+      DIFFUSIVITY: 0.1
+  - MAT: 2
+    MAT_scatra_multiscale:
+      MICROFILE: "scatra_1D_line2_multiscale_constperm_micro2.mat"
+      MICRODIS_NUM: 2
+      POROSITY: 0.4764012244
+      TORTUOSITY: 1.374674082
+      A_s: 1.570796327
+      DIFFUSIVITY: 0.1
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "1.0"
+RESULT DESCRIPTION:
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 1
+      QUANTITY: "phi"
+      VALUE: 0.47734221008298566
+      TOLERANCE: 1e-10
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 2
+      QUANTITY: "phi"
+      VALUE: 0.4799607320841332
+      TOLERANCE: 1e-10
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 3
+      QUANTITY: "phi"
+      VALUE: 0.4928975268669948
+      TOLERANCE: 1e-10
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 4
+      QUANTITY: "phi"
+      VALUE: 0.5313903203678245
+      TOLERANCE: 1e-10
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 5
+      QUANTITY: "phi"
+      VALUE: 0.6138236138171509
+      TOLERANCE: 1e-10
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 6
+      QUANTITY: "phi"
+      VALUE: 0.73820137157594
+      TOLERANCE: 1e-10
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 7
+      QUANTITY: "phi"
+      VALUE: 0.8625791293347309
+      TOLERANCE: 1e-10
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 8
+      QUANTITY: "phi"
+      VALUE: 0.9450124227840638
+      TOLERANCE: 1e-10
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 9
+      QUANTITY: "phi"
+      VALUE: 0.9835052162849074
+      TOLERANCE: 1e-10
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 10
+      QUANTITY: "phi"
+      VALUE: 0.9964420110677885
+      TOLERANCE: 1e-10
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 11
+      QUANTITY: "phi"
+      VALUE: 0.9990605330689524
+      TOLERANCE: 1e-10
+  - SCATRA:
+      DIS: "scatra"
+      SPECIAL: true
+      QUANTITY: "numiterlastnewton"
+      VALUE: 3
+      TOLERANCE: 1e-20
+NODE COORDS:
+  - NODE 1 COORD -4.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00
+  - NODE 2 COORD -3.2000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00
+  - NODE 3 COORD -2.4000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00
+  - NODE 4 COORD -1.6000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00
+  - NODE 5 COORD -0.8000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00
+  - NODE 6 COORD 0.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00
+  - NODE 7 COORD 0.8000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00
+  - NODE 8 COORD 1.6000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00
+  - NODE 9 COORD 2.4000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00
+  - NODE 10 COORD 3.2000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00
+  - NODE 11 COORD 4.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00
+TRANSPORT ELEMENTS:
+  - 1 TRANSP LINE2 1 2 MAT 1 TYPE Std
+  - 2 TRANSP LINE2 2 3 MAT 1 TYPE Std
+  - 3 TRANSP LINE2 3 4 MAT 1 TYPE Std
+  - 4 TRANSP LINE2 4 5 MAT 1 TYPE Std
+  - 5 TRANSP LINE2 5 6 MAT 1 TYPE Std
+  - 6 TRANSP LINE2 6 7 MAT 2 TYPE Std
+  - 7 TRANSP LINE2 7 8 MAT 2 TYPE Std
+  - 8 TRANSP LINE2 8 9 MAT 2 TYPE Std
+  - 9 TRANSP LINE2 9 10 MAT 2 TYPE Std
+  - 10 TRANSP LINE2 10 11 MAT 2 TYPE Std

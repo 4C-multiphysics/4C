@@ -1,0 +1,318 @@
+TITLE:
+  - Test of the templated implementation of solid elements
+  - 'Time Integration: Standard'
+  - 'Shape: hex8'
+  - 'Element-Technology: FBar, MULF'
+  - 'Fibers: element'
+IO:
+  STRUCT_STRESS: "Cauchy"
+  STRUCT_STRAIN: "GL"
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 1
+  OUTPUT_DATA_FORMAT: ascii
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  DISPLACEMENT: true
+  STRESS_STRAIN: true
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Structure_Solver"
+STRUCTURAL DYNAMIC:
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "Statics"
+  PRESTRESS: "MULF"
+  PRESTRESSTIME: 1
+  TIMESTEP: 0.5
+  NUMSTEP: 4
+  MAXTIME: 2
+  TOLDISP: 1e-12
+  TOLRES: 1e-12
+  LINEAR_SOLVER: 1
+MATERIALS:
+  - MAT: 1
+    MAT_ElastHyper:
+      NUMMAT: 2
+      MATIDS: [10, 11]
+      DENS: 0.1
+  - MAT: 10
+    ELAST_CoupNeoHooke:
+      YOUNG: 10
+      NUE: 0.25
+  - MAT: 11
+    ELAST_CoupAnisoExpo:
+      K1: 100
+      K2: 1
+      GAMMA: 35
+      K1COMP: 0
+      K2COMP: 1
+      STR_TENS_ID: 1000
+  - MAT: 1000
+    ELAST_StructuralTensor:
+      STRATEGY: "Standard"
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t"
+FUNCT2:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "(x+1)*(y+2)*(z+3)"
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispx"
+      VALUE: 0.21612418496370414
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispy"
+      VALUE: -0.17179575428247423
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispz"
+      VALUE: -0.0005017628338483326
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "dispx"
+      VALUE: 0.22742581022267677
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "dispy"
+      VALUE: -0.1788655999571614
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "dispz"
+      VALUE: -0.026389034090677346
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "dispx"
+      VALUE: 0.09727624808622341
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "dispy"
+      VALUE: -0.20289001809187393
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "dispz"
+      VALUE: 0.010075632232979316
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "dispx"
+      VALUE: 0.10743729606942516
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "dispy"
+      VALUE: -0.2072124229700181
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "dispz"
+      VALUE: -0.03004594433393234
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "stress_xx"
+      VALUE: 20.680113004803765
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "stress_yy"
+      VALUE: 1.0386557414262187
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "stress_zz"
+      VALUE: 0.11274383486066684
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "stress_xy"
+      VALUE: 1.3997264459088323
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "stress_yz"
+      VALUE: 0.19450234583179862
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "stress_yz"
+      VALUE: 0.19450234583179862
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "stress_xx"
+      VALUE: 20.542011927379964
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "stress_yy"
+      VALUE: 1.058036578082413
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "stress_zz"
+      VALUE: 0.06709145858925561
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "stress_xy"
+      VALUE: 1.5303457023853486
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "stress_yz"
+      VALUE: -0.17405596602033938
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "stress_yz"
+      VALUE: -0.17405596602033938
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "stress_xx"
+      VALUE: 1.056569608131238
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "stress_yy"
+      VALUE: 0.8676788674515782
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "stress_zz"
+      VALUE: 0.31665484042687375
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "stress_xy"
+      VALUE: -4.958865153460402
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "stress_yz"
+      VALUE: -0.23371549164307862
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "stress_yz"
+      VALUE: -0.23371549164307862
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "stress_xx"
+      VALUE: 1.0466597075555848
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "stress_yy"
+      VALUE: 0.8154926760879588
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "stress_zz"
+      VALUE: 0.3127691349220769
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "stress_xy"
+      VALUE: -4.920799563069235
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "stress_yz"
+      VALUE: 0.11973832533094887
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "stress_yz"
+      VALUE: 0.11973832533094887
+      TOLERANCE: 1e-10
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DESIGN SURF NEUMANN CONDITIONS:
+  - E: 2
+    NUMDOF: 6
+    ONOFF: [1, 1, 1, 0, 0, 0]
+    VAL: [5, 0.01, 0.01, 0, 0, 0]
+    FUNCT: [1, 2, 2, 0, 0, 0]
+DSURF-NODE TOPOLOGY:
+  - NODE 4 DSURFACE 1
+  - NODE 3 DSURFACE 1
+  - NODE 1 DSURFACE 1
+  - NODE 2 DSURFACE 1
+  - NODE 5 DSURFACE 2
+  - NODE 7 DSURFACE 2
+  - NODE 6 DSURFACE 2
+  - NODE 8 DSURFACE 2
+DVOL-NODE TOPOLOGY:
+  - NODE 5 DVOL 1
+  - NODE 2 DVOL 1
+  - NODE 6 DVOL 1
+  - NODE 4 DVOL 1
+  - NODE 3 DVOL 1
+  - NODE 8 DVOL 1
+  - NODE 1 DVOL 1
+  - NODE 7 DVOL 1
+NODE COORDS:
+  - NODE 1 COORD 0.0 0.0 0.0
+  - NODE 2 COORD 0.0 1.0 0.0
+  - NODE 3 COORD 0.0 0.0 1.0
+  - NODE 4 COORD 0.0 1.0 1.0
+  - NODE 5 COORD 1.0 0.0 0.0
+  - NODE 6 COORD 1.0 1.0 0.0
+  - NODE 7 COORD 1.0 0.0 1.0
+  - NODE 8 COORD 1.0 1.0 1.0
+STRUCTURE ELEMENTS:
+  - 1 SOLID HEX8 1 5 6 2 3 7 8 4 MAT 1 KINEM nonlinear FIBER1 0.7071067811865475 0.7071067811865475 0.0
+    TECH fbar PRESTRESS_TECH mulf

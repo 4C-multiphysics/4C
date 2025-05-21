@@ -1,0 +1,180 @@
+TITLE:
+  - Checking the coup aniso active material with changing active stress after restart
+IO:
+  STRUCT_ELE: false
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Structure_Solver"
+STRUCTURAL DYNAMIC:
+  DYNAMICTYPE: "Statics"
+  TIMESTEP: 0.5
+  NUMSTEP: 1
+  MAXTIME: 0.5
+  TOLDISP: 1e-09
+  TOLRES: 1e-09
+  LINEAR_SOLVER: 1
+MATERIALS:
+  - MAT: 1
+    MAT_Mixture:
+      NUMCONST: 2
+      MATIDMIXTURERULE: 10
+      MATIDSCONST: [11, 12]
+  - MAT: 10
+    MIX_GrowthRemodelMixtureRule:
+      GROWTH_STRATEGY: 100
+      DENS: 1050
+      NUMCONST: 2
+      MASSFRAC: [0.1, 0.9]
+  - MAT: 100
+    MIX_GrowthStrategy_Isotropic: {}
+  - MAT: 11
+    MIX_Constituent_ExplicitRemodelFiber:
+      FIBER_MATERIAL_ID: 110
+      ENABLE_GROWTH: false
+      DECAY_TIME: 100
+      GROWTH_CONSTANT: 0.05
+      DEPOSITION_STRETCH: 1
+      INELASTIC_GROWTH: true
+      INIT: 3
+  - MAT: 110
+    MIX_Constituent_RemodelFiber_Material_Exponential_Active:
+      K1: 10
+      K2: 10
+      COMPRESSION: false
+      SIGMA_MAX: 10000
+      LAMBDAMAX: 1.4
+      LAMBDA0: 0.8
+      DENS: 1050
+  - MAT: 12
+    MIX_Constituent_ElastHyper:
+      NUMMAT: 2
+      MATIDS: [121, 122]
+      PRESTRESS_STRATEGY: 129
+  - MAT: 121
+    ELAST_IsoNeoHooke:
+      MUE: 1
+  - MAT: 122
+    ELAST_VolSussmanBathe:
+      KAPPA: 100
+  - MAT: 129
+    MIX_Prestress_Strategy_Constant:
+      PRESTRETCH: [1, 1, 1, 0, 0, 0, 0, 0, 0]
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DESIGN SURF NEUMANN CONDITIONS:
+  - E: 2
+    NUMDOF: 6
+    ONOFF: [1, 0, 0, 0, 0, 0]
+    VAL: [1000, 0, 0, 0, 0, 0]
+    FUNCT: [0, 0, 0, 0, 0, 0]
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 9
+      QUANTITY: "dispx"
+      VALUE: 0.06586212069302333
+      TOLERANCE: 1e-07
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 9
+      QUANTITY: "dispy"
+      VALUE: 0.011269047429559502
+      TOLERANCE: 1e-07
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 9
+      QUANTITY: "dispz"
+      VALUE: 0.011269047429559902
+      TOLERANCE: 1e-07
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 10
+      QUANTITY: "dispx"
+      VALUE: 0.0658621206930238
+      TOLERANCE: 1e-07
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 10
+      QUANTITY: "dispy"
+      VALUE: -0.011269047429560168
+      TOLERANCE: 1e-07
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 10
+      QUANTITY: "dispz"
+      VALUE: 0.01126904742956001
+      TOLERANCE: 1e-07
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 11
+      QUANTITY: "dispx"
+      VALUE: 0.06586212069302384
+      TOLERANCE: 1e-07
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 11
+      QUANTITY: "dispy"
+      VALUE: 0.011269047429559743
+      TOLERANCE: 1e-07
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 11
+      QUANTITY: "dispz"
+      VALUE: -0.011269047429560279
+      TOLERANCE: 1e-07
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 12
+      QUANTITY: "dispx"
+      VALUE: 0.06586212069302402
+      TOLERANCE: 1e-07
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 12
+      QUANTITY: "dispy"
+      VALUE: -0.011269047429560614
+      TOLERANCE: 1e-07
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 12
+      QUANTITY: "dispz"
+      VALUE: -0.01126904742955995
+      TOLERANCE: 1e-07
+PROBLEM SIZE:
+  ELEMENTS: 2
+  NODES: 12
+  MATERIALS: 9999
+DNODE-NODE TOPOLOGY:
+  - NODE 9 DNODE 1
+  - NODE 10 DNODE 2
+DSURF-NODE TOPOLOGY:
+  - NODE 1 DSURFACE 1
+  - NODE 3 DSURFACE 1
+  - NODE 2 DSURFACE 1
+  - NODE 4 DSURFACE 1
+  - NODE 10 DSURFACE 2
+  - NODE 12 DSURFACE 2
+  - NODE 9 DSURFACE 2
+  - NODE 11 DSURFACE 2
+NODE COORDS:
+  - FNODE 1 COORD 0.0 0.0 0.0 FIBER1 1.0 0.0 0.0
+  - FNODE 2 COORD 0.0 1.0 0.0 FIBER1 1.0 0.0 0.0
+  - FNODE 3 COORD 0.0 0.0 1.0 FIBER1 1.0 0.0 0.0
+  - FNODE 4 COORD 0.0 1.0 1.0 FIBER1 1.0 0.0 0.0
+  - FNODE 5 COORD 1.0 0.0 0.0 FIBER1 1.0 0.0 0.0
+  - FNODE 6 COORD 1.0 1.0 0.0 FIBER1 1.0 0.0 0.0
+  - FNODE 7 COORD 1.0 0.0 1.0 FIBER1 1.0 0.0 0.0
+  - FNODE 8 COORD 1.0 1.0 1.0 FIBER1 1.0 0.0 0.0
+  - FNODE 9 COORD 2.0 0.0 0.0 FIBER1 1.0 0.0 0.0
+  - FNODE 10 COORD 2.0 1.0 0.0 FIBER1 1.0 0.0 0.0
+  - FNODE 11 COORD 2.0 0.0 1.0 FIBER1 1.0 0.0 0.0
+  - FNODE 12 COORD 2.0 1.0 1.0 FIBER1 1.0 0.0 0.0
+STRUCTURE ELEMENTS:
+  - 1 SOLID HEX8 1 5 6 2 3 7 8 4 MAT 1 KINEM nonlinear
+  - 2 SOLID HEX8 5 9 10 6 7 11 12 8 MAT 1 KINEM nonlinear

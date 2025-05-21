@@ -1,0 +1,120 @@
+PROBLEM TYPE:
+  PROBLEMTYPE: "Particle"
+IO:
+  STDOUTEVERY: 100
+  VERBOSITY: "Standard"
+BINNING STRATEGY:
+  BIN_SIZE_LOWER_BOUND: 0.1
+  PERIODICONOFF: "1 0 0"
+  DOMAINBOUNDINGBOX: "-0.4 -0.4 -0.4 0.4 0.4 0.4"
+PARTICLE DYNAMIC:
+  DYNAMICTYPE: "SemiImplicitEuler"
+  RESULTSEVERY: 10
+  RESTARTEVERY: 100
+  TIMESTEP: 0.001
+  NUMSTEP: 1000
+  GRAVITY_RAMP_FUNCT: 0
+  PHASE_TO_DYNLOADBALFAC: "phase1 1.0 phase2 1.0"
+PARTICLE DYNAMIC/INITIAL AND BOUNDARY CONDITIONS:
+  DIRICHLET_BOUNDARY_CONDITION: "phase1 1 phase2 2"
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "2.5*a"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+  - COMPONENT: 2
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: "expression"
+    DESCRIPTION: "t"
+FUNCT2:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "-0.8*a"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+  - COMPONENT: 2
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: "expression"
+    DESCRIPTION: "t"
+RESULT DESCRIPTION:
+  - PARTICLE:
+      ID: 2
+      QUANTITY: "posx"
+      VALUE: -0.14999999999999836
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 2
+      QUANTITY: "posy"
+      VALUE: -0.25
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 2
+      QUANTITY: "posz"
+      VALUE: 0.25
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 2
+      QUANTITY: "velx"
+      VALUE: 2.5
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 2
+      QUANTITY: "accx"
+      VALUE: 0
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 22
+      QUANTITY: "posx"
+      VALUE: 0.24999999999999944
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 22
+      QUANTITY: "posy"
+      VALUE: 0
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 22
+      QUANTITY: "posz"
+      VALUE: 0
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 22
+      QUANTITY: "velx"
+      VALUE: -0.8
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 22
+      QUANTITY: "accx"
+      VALUE: 0
+      TOLERANCE: 1e-12
+PARTICLES:
+  - TYPE phase1 POS -0.25 -0.25 -0.25
+  - TYPE phase1 POS -0.25 -0.25 0.0
+  - TYPE phase1 POS -0.25 -0.25 0.25
+  - TYPE phase1 POS -0.25 0.0 -0.25
+  - TYPE phase1 POS -0.25 0.0 0.0
+  - TYPE phase1 POS -0.25 0.0 0.25
+  - TYPE phase1 POS -0.25 0.25 -0.25
+  - TYPE phase1 POS -0.25 0.25 0.0
+  - TYPE phase1 POS -0.25 0.25 0.25
+  - TYPE phase1 POS 0.0 -0.25 -0.25
+  - TYPE phase1 POS 0.0 -0.25 0.0
+  - TYPE phase1 POS 0.0 -0.25 0.25
+  - TYPE phase1 POS 0.0 0.0 -0.25
+  - TYPE phase1 POS 0.0 0.0 0.0
+  - TYPE phase1 POS 0.0 0.0 0.25
+  - TYPE phase1 POS 0.0 0.25 -0.25
+  - TYPE phase1 POS 0.0 0.25 0.0
+  - TYPE phase1 POS 0.0 0.25 0.25
+  - TYPE phase2 POS 0.25 -0.25 -0.25
+  - TYPE phase2 POS 0.25 -0.25 0.0
+  - TYPE phase2 POS 0.25 -0.25 0.25
+  - TYPE phase2 POS 0.25 0.0 -0.25
+  - TYPE phase2 POS 0.25 0.0 0.0
+  - TYPE phase2 POS 0.25 0.0 0.25
+  - TYPE phase2 POS 0.25 0.25 -0.25
+  - TYPE phase2 POS 0.25 0.25 0.0
+  - TYPE phase2 POS 0.25 0.25 0.25

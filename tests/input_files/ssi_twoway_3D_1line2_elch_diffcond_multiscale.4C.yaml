@@ -1,0 +1,147 @@
+TITLE:
+  - 'simple, academic test case for partitioned scalar-structure interaction:'
+  - '- one 1D line 2 element with length 1 and initial concentration of 1'
+  - '- elch formulation is ElchDiffCondMultiScale, i.e. formulation used for electrolytes'
+  - 'within the composite electrodes, meaning including the coupling to 1D electrodes'
+  - at the integration points
+  - '- Element is deformed using DBC from length of 1 in x-dir to length of 1.2 in y-dir'
+  - '- concentration is decreasing to 5/6 as expected (see result tests)'
+  - '- 5/6 is not exactly achieved since mass conservation is subject to consistent'
+  - time integration error.
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure_Scalar_Interaction"
+SCALAR TRANSPORT DYNAMIC:
+  SOLVERTYPE: "nonlinear"
+  VELOCITYFIELD: "Navier_Stokes"
+  INITIALFIELD: "field_by_condition"
+  CONVFORM: "conservative"
+  LINEAR_SOLVER: 1
+SCALAR TRANSPORT DYNAMIC/STABILIZATION:
+  STABTYPE: "no_stabilization"
+  DEFINITION_TAU: "Zero"
+  EVALUATION_TAU: "integration_point"
+  EVALUATION_MAT: "integration_point"
+ELCH CONTROL:
+  EQUPOT: "divi"
+  DIFFCOND_FORMULATION: true
+  INITPOTCALC: true
+  COUPLE_BOUNDARY_FLUXES: false
+SSI CONTROL:
+  NUMSTEP: 50
+  TIMESTEP: 0.1
+  SCATRATIMINTTYPE: "Elch"
+STRUCTURAL DYNAMIC:
+  INT_STRATEGY: "Standard"
+  LINEAR_SOLVER: 1
+SOLVER 1:
+  SOLVER: "UMFPACK"
+MATERIALS:
+  - MAT: 1
+    MAT_LinElast1D:
+      YOUNG: 2
+      DENS: 1
+  - MAT: 2
+    MAT_elchmat:
+      LOCAL: true
+      NUMDOF: 3
+      NUMSCAL: 1
+      NUMPHASE: 1
+      PHASEIDS: [3]
+  - MAT: 3
+    MAT_elchphase:
+      LOCAL: true
+      EPSILON: 0.422012856128946
+      TORTUOSITY: 0.649625165867938
+      NUMMAT: 1
+      MATIDS: [4]
+  - MAT: 4
+    MAT_newman_multiscale:
+      VALENCE: 1
+      DIFF_COEF_CONC_DEP_FUNCT: -1
+      DIFF_COEF_TEMP_SCALE_FUNCT: 0
+      TRANSNR: -1
+      THERMFAC: 0
+      COND_CONC_DEP_FUNCT: -11
+      COND_TEMP_SCALE_FUNCT: 0
+      ELECTRONIC_COND: 100000
+      ELECTRONIC_COND_CONC_SCALE_FUNC_NUM: -1
+      A_s: 1564.794278374707
+      MICROFILE: "elch_1D_line2_multiscale_butlervolmer_anode.mat"
+      MICRODIS_NUM: 1
+      DIFF_PARA_NUM: 1
+      DIFF_PARA: [0.00026]
+      TRANS_PARA_NUM: 1
+      TRANS_PARA: [0.363]
+      COND_PARA_NUM: 3
+      COND_PARA: [1580, 0.85, 1.4]
+CLONING MATERIAL MAP:
+  - SRC_FIELD: "structure"
+    SRC_MAT: 1
+    TAR_FIELD: "scatra"
+    TAR_MAT: 2
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "1.0"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+  - COMPONENT: 2
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.0"
+FUNCT2:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t*2.0e-1"
+FUNCT3:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t*2.4e-1"
+RESULT DESCRIPTION:
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 1
+      QUANTITY: "phi1"
+      VALUE: 0.8333488644347758
+      TOLERANCE: 8.3e-09
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 2
+      QUANTITY: "phi1"
+      VALUE: 0.8333488644347722
+      TOLERANCE: 8.3e-09
+  - SSI:
+      SPECIAL: true
+      QUANTITY: "numiterlastnonlinearsolve"
+      VALUE: 2
+      TOLERANCE: 1e-16
+DESIGN POINT DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [null, null, null]
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [-1, 1, 0]
+    FUNCT: [2, 3, null]
+DESIGN POINT TRANSPORT DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [0, 0, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [null, null, null]
+DESIGN CELL VOLTAGE POINT CONDITIONS:
+  - E: 1
+    ConditionID: 0
+  - E: 2
+    ConditionID: 1
+DESIGN LINE INITIAL FIELD CONDITIONS:
+  - E: 1
+    FIELD: "ScaTra"
+    FUNCT: 1
+DNODE-NODE TOPOLOGY:
+  - NODE 1 DNODE 1
+  - NODE 2 DNODE 2
+DLINE-NODE TOPOLOGY:
+  - NODE 1 DLINE 1
+  - NODE 2 DLINE 1
+NODE COORDS:
+  - NODE 1 COORD 0.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00
+  - NODE 2 COORD 1.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00
+STRUCTURE ELEMENTS:
+  - 1 TRUSS3SCATRA LINE2 1 2 MAT 1 CROSS 19e-6 KINEM totlag TYPE ElchDiffCondMultiScale
