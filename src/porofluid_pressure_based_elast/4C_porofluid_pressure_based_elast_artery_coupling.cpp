@@ -195,22 +195,16 @@ void PoroPressureBased::PorofluidElastArteryCouplingAlgorithm::build_combined_db
 void PoroPressureBased::PorofluidElastArteryCouplingAlgorithm::build_artery_block_null_space(
     std::shared_ptr<Core::LinAlg::Solver>& solver, const int& arteryblocknum)
 {
-  // equip smoother for fluid matrix block with empty parameter sublists to trigger null space
-  // computation
-  Teuchos::ParameterList& blocksmootherparams3 =
+  Teuchos::ParameterList& block_smoother_params =
       solver->params().sublist("Inverse" + std::to_string(arteryblocknum));
-  blocksmootherparams3.sublist("Belos Parameters");
-  blocksmootherparams3.sublist("MueLu Parameters");
 
-  // build null space of complete discretization
-  porofluid_algo()->art_net_tim_int()->discretization()->compute_null_space_if_necessary(
-      blocksmootherparams3);
+  Core::LinearSolver::Parameters::compute_solver_parameters(
+      *porofluid_algo()->art_net_tim_int()->discretization(), block_smoother_params);
+
   // fix the null space if some DOFs are condensed out
   Core::LinearSolver::Parameters::fix_null_space("Artery",
       *(porofluid_algo()->art_net_tim_int()->discretization()->dof_row_map(0)),
-      *(porofluid_algo()->artery_dof_row_map()), blocksmootherparams3);
-
-  return;
+      *(porofluid_algo()->artery_dof_row_map()), block_smoother_params);
 }
 
 /*----------------------------------------------------------------------*
