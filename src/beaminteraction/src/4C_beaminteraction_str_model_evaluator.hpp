@@ -114,10 +114,7 @@ namespace Solid
 
       //! derived
       void run_pre_compute_x(const Core::LinAlg::Vector<double>& xold,
-          Core::LinAlg::Vector<double>& dir_mutable, const NOX::Nln::Group& curr_grp) override
-      {
-        return;
-      };
+          Core::LinAlg::Vector<double>& dir_mutable, const NOX::Nln::Group& curr_grp) override;
 
       //! derived
       void run_post_compute_x(const Core::LinAlg::Vector<double>& xold,
