@@ -1086,6 +1086,7 @@ four_c_test(TEST_FILE poromultielastscatra_2D_quad4_hyperthermia.4C.yaml NP 2 RE
 four_c_test(TEST_FILE poromultielastscatra_2D_quad4_linebased_artery_coupling_mono.4C.yaml NP 2 RESTART_STEP 9)
 four_c_test(TEST_FILE poromultielastscatra_2D_quad4_linebased_artery_coupling_mono_GPTS.4C.yaml NP 2 RESTART_STEP 8)
 four_c_test(TEST_FILE poromultielastscatra_2D_quad4_linebased_artery_coupling_mono_MP.4C.yaml NP 2 RESTART_STEP 8)
+four_c_test(TEST_FILE poromultielastscatra_2D_quad4_linebased_artery_coupling_teko.4C.yaml NP 2 RESTART_STEP 8)
 four_c_test(TEST_FILE poromultielastscatra_2D_quad4_linebased_artery_coupling_vessel_collapse.4C.yaml NP 3 RESTART_STEP 48)
 four_c_test(TEST_FILE poromultielastscatra_2D_quad4_linebased_artery_coupling_vessel_collapse_free_hanging.4C.yaml NP 3)
 four_c_test(TEST_FILE poromultielastscatra_2D_quad4_mono_FD.4C.yaml)
