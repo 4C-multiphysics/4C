@@ -141,7 +141,7 @@ namespace Core::LinAlg
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Core::LinAlg::add(const Epetra_CrsMatrix& A, const bool transposeA, const double scalarA,
-    Core::LinAlg::SparseMatrixBase& B, const double scalarB)
+    Core::LinAlg::SparseMatrix& B, const double scalarB)
 {
   if (!A.Filled()) FOUR_C_THROW("fill_complete was not called on A");
 
@@ -182,7 +182,7 @@ void Core::LinAlg::add(const Epetra_CrsMatrix& A, const bool transposeA, const d
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Core::LinAlg::matrix_put(const Core::LinAlg::SparseMatrix& A, const double scalarA,
-    std::shared_ptr<const Core::LinAlg::Map> rowmap, Core::LinAlg::SparseMatrixBase& B)
+    std::shared_ptr<const Core::LinAlg::Map> rowmap, Core::LinAlg::SparseMatrix& B)
 {
   // put values onto sysmat
   if (A.get_matrixtype() != Core::LinAlg::SparseMatrix::CRS_MATRIX)

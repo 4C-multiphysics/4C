@@ -78,7 +78,7 @@ namespace Core::LinAlg
    \param scalarB    (in)     : scaling factor for B
    */
   void add(const Epetra_CrsMatrix& A, const bool transposeA, const double scalarA,
-      Core::LinAlg::SparseMatrixBase& B, const double scalarB);
+      Core::LinAlg::SparseMatrix& B, const double scalarB);
 
   /*!
    \brief Put a sparse matrix (partially) onto another: B(rowmap) = A(rowmap)*scalarA
@@ -93,7 +93,7 @@ namespace Core::LinAlg
   \param B          (in/out) : Matrix to be added to (must have Filled()==false)
   */
   void matrix_put(const Core::LinAlg::SparseMatrix& A, const double scalarA,
-      std::shared_ptr<const Core::LinAlg::Map> rowmap, Core::LinAlg::SparseMatrixBase& B);
+      std::shared_ptr<const Core::LinAlg::Map> rowmap, Core::LinAlg::SparseMatrix& B);
 
   /*!
    \brief Multiply a (transposed) sparse matrix with another (transposed): C = A(^T)*B(^T)
