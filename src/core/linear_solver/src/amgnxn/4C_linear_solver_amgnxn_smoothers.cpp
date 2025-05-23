@@ -688,7 +688,7 @@ void Core::LinearSolver::AMGNxN::SingleFieldAMG::apply(const Core::LinAlg::Multi
 /*------------------------------------------------------------------------------*/
 /*------------------------------------------------------------------------------*/
 Core::LinearSolver::AMGNxN::IfpackWrapper::IfpackWrapper(
-    Teuchos::RCP<Core::LinAlg::SparseMatrixBase> A, Teuchos::ParameterList& list)
+    Teuchos::RCP<Core::LinAlg::SparseMatrix> A, Teuchos::ParameterList& list)
     : a_(std::move(A))
 {
   // Determine the preconditioner type
@@ -1314,7 +1314,7 @@ Core::LinearSolver::AMGNxN::IfpackWrapperFactory::create()
   // Build the smoother
   if (not get_operator()->has_only_one_block())
     FOUR_C_THROW("This smoother can be built only for single block matrices");
-  Teuchos::RCP<Core::LinAlg::SparseMatrixBase> Op = get_operator()->get_matrix(0, 0);
+  Teuchos::RCP<Core::LinAlg::SparseMatrix> Op = get_operator()->get_matrix(0, 0);
   if (Op == Teuchos::null) FOUR_C_THROW("I dont want a null pointer here");
   Teuchos::ParameterList myParams = get_params();
   return Teuchos::make_rcp<IfpackWrapper>(Op, myParams);
@@ -2202,7 +2202,7 @@ Core::LinearSolver::AMGNxN::SimpleSmootherFactory::compute_schur_complement(
 
 Teuchos::RCP<Core::LinAlg::SparseMatrix>
 Core::LinearSolver::AMGNxN::SimpleSmootherFactory::approximate_inverse(
-    const Core::LinAlg::SparseMatrixBase& A, const std::string& method)
+    const Core::LinAlg::SparseMatrix& A, const std::string& method)
 {
   Core::LinAlg::Vector<double> invAVector(A.row_map());
   if (method == "diagonal")

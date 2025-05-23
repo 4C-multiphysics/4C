@@ -68,10 +68,6 @@ NOX::Nln::LinSystem::OperatorType NOX::Nln::Aux::get_operator_type(
   testOperator = dynamic_cast<const Core::LinAlg::SparseMatrix*>(&op);
   if (testOperator != nullptr) return NOX::Nln::LinSystem::LinalgSparseMatrix;
 
-  // Is it a LINALG_SparseMatrixBase?
-  testOperator = dynamic_cast<const Core::LinAlg::SparseMatrixBase*>(&op);
-  if (testOperator != nullptr) return NOX::Nln::LinSystem::LinalgSparseMatrixBase;
-
   // Otherwise it must be a LINALG_SparseOperator
   return NOX::Nln::LinSystem::LinalgSparseOperator;
 }

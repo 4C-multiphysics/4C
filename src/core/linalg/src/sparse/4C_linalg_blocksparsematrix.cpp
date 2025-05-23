@@ -329,7 +329,7 @@ void Core::LinAlg::BlockSparseMatrixBase::add_other(Core::LinAlg::BlockSparseMat
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void Core::LinAlg::BlockSparseMatrixBase::add_other(Core::LinAlg::SparseMatrixBase& A,
+void Core::LinAlg::BlockSparseMatrixBase::add_other(Core::LinAlg::SparseMatrix& A,
     const bool transposeA, const double scalarA, const double scalarB) const
 {
   FOUR_C_THROW("BlockSparseMatrix and SparseMatrix cannot be added");

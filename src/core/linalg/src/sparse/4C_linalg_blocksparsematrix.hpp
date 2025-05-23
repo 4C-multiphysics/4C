@@ -184,7 +184,7 @@ namespace Core::LinAlg
         const double scalarB) override;
 
     /// Resolve virtual function of parent class
-    void add_other(SparseMatrixBase& A, const bool transposeA, const double scalarA,
+    void add_other(SparseMatrix& A, const bool transposeA, const double scalarA,
         const double scalarB) const override;
 
     /// Resolve virtual function of parent class

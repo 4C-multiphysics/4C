@@ -272,14 +272,14 @@ namespace Core::LinearSolver::AMGNxN
   class IfpackWrapper : public SingleFieldSmoother
   {
    public:
-    IfpackWrapper(Teuchos::RCP<Core::LinAlg::SparseMatrixBase> A, Teuchos::ParameterList& list);
+    IfpackWrapper(Teuchos::RCP<Core::LinAlg::SparseMatrix> A, Teuchos::ParameterList& list);
     ~IfpackWrapper() override { delete prec_; }
     void apply(const Core::LinAlg::MultiVector<double>& X, Core::LinAlg::MultiVector<double>& Y,
         bool InitialGuessIsZero = false) const override;
 
    private:
     Ifpack_Preconditioner* prec_;
-    Teuchos::RCP<Core::LinAlg::SparseMatrixBase> a_;
+    Teuchos::RCP<Core::LinAlg::SparseMatrix> a_;
     Teuchos::RCP<Epetra_RowMatrix> arow_;
     Teuchos::ParameterList list_;
     std::string type_;
@@ -441,7 +441,7 @@ namespace Core::LinearSolver::AMGNxN
 
    private:
     Teuchos::RCP<Core::LinAlg::SparseMatrix> approximate_inverse(
-        const Core::LinAlg::SparseMatrixBase& A, const std::string& method);
+        const Core::LinAlg::SparseMatrix& A, const std::string& method);
     Teuchos::RCP<BlockedMatrix> compute_schur_complement(const BlockedMatrix& invApp,
         const BlockedMatrix& Aps, const BlockedMatrix& Asp, const BlockedMatrix& Ass);
   };

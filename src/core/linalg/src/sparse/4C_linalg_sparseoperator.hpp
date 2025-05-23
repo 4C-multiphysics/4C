@@ -26,7 +26,6 @@ namespace Core::LinAlg
 {
   // forward declarations
   class BlockSparseMatrixBase;
-  class SparseMatrixBase;
   class SparseMatrix;
 
   /*! \enum Core::LinAlg::DataAccess
@@ -233,7 +232,7 @@ namespace Core::LinAlg
         const double scalarA, const double scalarB) = 0;
 
     /// Add one SparseMatrixBase to another
-    virtual void add_other(Core::LinAlg::SparseMatrixBase& A, const bool transposeA,
+    virtual void add_other(Core::LinAlg::SparseMatrix& A, const bool transposeA,
         const double scalarA, const double scalarB) const = 0;
 
     /// Add one BlockSparseMatrix to another
