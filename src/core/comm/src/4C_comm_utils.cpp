@@ -347,18 +347,13 @@ namespace Core::Communication
       return false;
     }
 
-    // do stupid conversion from Core::LinAlg::Map to Core::LinAlg::Map
-    const Core::LinAlg::Map& vecblockmap = vec.get_map();
-    Core::LinAlg::Map vecmap(vecblockmap.num_global_elements(), vecblockmap.num_my_elements(),
-        vecblockmap.my_global_elements(), 0, vec.Comm());
-
     // gather data of vector to compare on gcomm proc 0 and last gcomm proc
     std::shared_ptr<Core::LinAlg::Map> proc0map;
     if (Core::Communication::my_mpi_rank(lcomm) == Core::Communication::my_mpi_rank(gcomm))
-      proc0map = Core::LinAlg::allreduce_overlapping_e_map(vecmap, 0);
+      proc0map = Core::LinAlg::allreduce_overlapping_e_map(vec.get_map(), 0);
     else
       proc0map = Core::LinAlg::allreduce_overlapping_e_map(
-          vecmap, Core::Communication::num_mpi_ranks(lcomm) - 1);
+          vec.get_map(), Core::Communication::num_mpi_ranks(lcomm) - 1);
 
     // export full vectors to the two desired processors
     Core::LinAlg::MultiVector<double> fullvec(
