@@ -512,12 +512,9 @@ Core::LinAlg::KrylovProjector::multiply_multi_vector_multi_vector(
   int glob_numnonzero = 0;
   Core::Communication::sum_all(&numnonzero, &glob_numnonzero, 1, prod.get_comm());
 
-  // do stupid conversion into Epetra map
-  Core::LinAlg::Map mv1map(mv1->get_map().num_global_elements(), mv1->get_map().num_my_elements(),
-      mv1->get_map().my_global_elements(), 0, mv1->get_map().get_comm());
   // initialization of mat with map of mv1
   std::shared_ptr<Core::LinAlg::SparseMatrix> mat =
-      std::make_shared<Core::LinAlg::SparseMatrix>(mv1map, glob_numnonzero, false);
+      std::make_shared<Core::LinAlg::SparseMatrix>(mv1->get_map(), glob_numnonzero, false);
 
   //-------------------------------
   // make mv2 redundant on all procs:
@@ -526,12 +523,9 @@ Core::LinAlg::KrylovProjector::multiply_multi_vector_multi_vector(
   const int nummyrows = mv1->MyLength();
   const int numvals = mv2->GlobalLength();
 
-  // do stupid conversion into Epetra map
-  Core::LinAlg::Map mv2map(mv2->get_map().num_global_elements(), mv2->get_map().num_my_elements(),
-      mv2->get_map().my_global_elements(), 0, mv2->get_map().get_comm());
 
   // fully redundant/overlapping map
-  std::shared_ptr<Core::LinAlg::Map> redundant_map = Core::LinAlg::allreduce_e_map(mv2map);
+  std::shared_ptr<Core::LinAlg::Map> redundant_map = Core::LinAlg::allreduce_e_map(mv2->get_map());
   // initialize global mv2 without setting to 0
   Core::LinAlg::MultiVector<double> mv2glob(*redundant_map, nsdim_);
   // create importer with redundant target map and distributed source map
