@@ -19,9 +19,9 @@
 #include "4C_beam3_reissner.hpp"
 #include "4C_beamcontact_input.hpp"
 #include "4C_binstrategy.hpp"
-#include "4C_comm_utils.hpp"
 #include "4C_contact_input.hpp"
 #include "4C_fem_condition.hpp"
+#include "4C_fem_condition_point_coupling_redistribution.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
 #include "4C_inpar_beam_to_solid.hpp"
@@ -29,7 +29,6 @@
 #include "4C_inpar_fsi.hpp"
 #include "4C_inpar_poroelast.hpp"
 #include "4C_io.hpp"
-#include "4C_io_control.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_rebalance_binning_based.hpp"
@@ -38,7 +37,6 @@
 #include "4C_solid_3D_ele.hpp"
 #include "4C_solver_nonlin_nox_group.hpp"
 #include "4C_solver_nonlin_nox_group_prepostoperator.hpp"
-#include "4C_structure_new_model_evaluator_manager.hpp"
 #include "4C_structure_new_solver_factory.hpp"
 #include "4C_structure_new_timint_base.hpp"
 #include "4C_structure_new_timint_factory.hpp"
@@ -144,52 +142,88 @@ void Adapter::StructureBaseAlgorithmNew::setup_tim_int()
   // ---------------------------------------------------------------------------
   if (actdis_->has_condition("PointCoupling"))
   {
-    std::vector<std::shared_ptr<Core::FE::Discretization>> actdis_vec(1, actdis_);
-    Teuchos::ParameterList binning_params = Global::Problem::instance()->binning_strategy_params();
-    Core::Utils::add_enum_class_to_parameter_list<Core::FE::ShapeFunctionType>(
-        "spatial_approximation_type", Global::Problem::instance()->spatial_approximation_type(),
-        binning_params);
-    actdis_vec[0]->fill_complete(false, false, false);
-
-    // Different types of structural elements may be present, so we need to help the binning
-    // strategy understand their different shapes by providing the correct points to compute
-    // bounding boxes.
-    auto correct_node = [](const Core::Nodes::Node& node) -> decltype(auto)
+    std::vector<const Core::Conditions::Condition*> point_coupling_conditions;
+    actdis_->get_condition("PointCoupling", point_coupling_conditions);
+    int conditionend_node_at_solid_element = 0;
+    for (const auto& pcc : point_coupling_conditions)
     {
-      const Core::Elements::Element* element = node.elements()[0];
-      const auto* beamelement = dynamic_cast<const Discret::Elements::Beam3Base*>(element);
-      if (beamelement != nullptr && !beamelement->is_centerline_node(node))
-        return *element->nodes()[0];
-      else
-        return node;
-    };
+      const std::vector<int>* conditioned_nodes = pcc->get_nodes();
+      for (const int node_id : *conditioned_nodes)
+      {
+        if (actdis_->have_global_node(node_id))
+        {
+          const Core::Nodes::Node* node = actdis_->g_node(node_id);
+          const Core::Elements::Element* first_element = node->elements()[0];
 
-    auto determine_relevant_points = [correct_node](const Core::FE::Discretization& discret,
-                                         const Core::Elements::Element& ele,
-                                         std::shared_ptr<const Core::LinAlg::Vector<double>> disnp)
-        -> std::vector<std::array<double, 3>>
+          if (!(dynamic_cast<const Discret::Elements::Beam3Base*>(first_element)) &&
+              first_element->element_type() != Discret::Elements::RigidsphereType::instance())
+          {
+            conditionend_node_at_solid_element = 1;
+            break;
+          }
+        }
+      }
+    }
+
+    int conditionend_node_at_solid_element_global;
+    Core::Communication::max_all(&conditionend_node_at_solid_element,
+        &conditionend_node_at_solid_element_global, 1, actdis_->get_comm());
+
+    if (conditionend_node_at_solid_element_global == 1)
     {
-      if (dynamic_cast<const Discret::Elements::Beam3Base*>(&ele))
-      {
-        return Core::Binstrategy::DefaultRelevantPoints{
-            .correct_node = correct_node,
-        }(discret, ele, disnp);
-      }
-      else if (ele.element_type() == Discret::Elements::RigidsphereType::instance())
-      {
-        double currpos[3] = {0.0, 0.0, 0.0};
-        Core::Binstrategy::Utils::get_current_node_pos(discret, ele.nodes()[0], disnp, currpos);
-        const double radius = dynamic_cast<const Discret::Elements::Rigidsphere&>(ele).radius();
-        return {{currpos[0] - radius, currpos[1] - radius, currpos[2] - radius},
-            {currpos[0] + radius, currpos[1] + radius, currpos[2] + radius}};
-      }
-      else
-        return Core::Binstrategy::DefaultRelevantPoints{}(discret, ele, disnp);
-    };
+      Core::Conditions::redistribute_for_point_coupling_conditions(*actdis_);
+    }
+    else
+    {
+      std::vector<std::shared_ptr<Core::FE::Discretization>> actdis_vec(1, actdis_);
+      Teuchos::ParameterList binning_params =
+          Global::Problem::instance()->binning_strategy_params();
+      Core::Utils::add_enum_class_to_parameter_list<Core::FE::ShapeFunctionType>(
+          "spatial_approximation_type", Global::Problem::instance()->spatial_approximation_type(),
+          binning_params);
+      actdis_vec[0]->fill_complete(false, false, false);
 
-    Core::Rebalance::rebalance_discretizations_by_binning(binning_params,
-        Global::Problem::instance()->output_control_file(), actdis_vec, correct_node,
-        determine_relevant_points, true);
+      // Different types of structural elements may be present, so we need to help the binning
+      // strategy understand their different shapes by providing the correct points to compute
+      // bounding boxes.
+      auto correct_node = [](const Core::Nodes::Node& node) -> decltype(auto)
+      {
+        const Core::Elements::Element* element = node.elements()[0];
+        const auto* beamelement = dynamic_cast<const Discret::Elements::Beam3Base*>(element);
+        if (beamelement != nullptr && !beamelement->is_centerline_node(node))
+          return *element->nodes()[0];
+        else
+          return node;
+      };
+
+      auto determine_relevant_points =
+          [correct_node](const Core::FE::Discretization& discret,
+              const Core::Elements::Element& ele,
+              std::shared_ptr<const Core::LinAlg::Vector<double>> disnp)
+          -> std::vector<std::array<double, 3>>
+      {
+        if (dynamic_cast<const Discret::Elements::Beam3Base*>(&ele))
+        {
+          return Core::Binstrategy::DefaultRelevantPoints{
+              .correct_node = correct_node,
+          }(discret, ele, disnp);
+        }
+        else if (ele.element_type() == Discret::Elements::RigidsphereType::instance())
+        {
+          double currpos[3] = {0.0, 0.0, 0.0};
+          Core::Binstrategy::Utils::get_current_node_pos(discret, ele.nodes()[0], disnp, currpos);
+          const double radius = dynamic_cast<const Discret::Elements::Rigidsphere&>(ele).radius();
+          return {{currpos[0] - radius, currpos[1] - radius, currpos[2] - radius},
+              {currpos[0] + radius, currpos[1] + radius, currpos[2] + radius}};
+        }
+        else
+          return Core::Binstrategy::DefaultRelevantPoints{}(discret, ele, disnp);
+      };
+
+      Core::Rebalance::rebalance_discretizations_by_binning(binning_params,
+          Global::Problem::instance()->output_control_file(), actdis_vec, correct_node,
+          determine_relevant_points, true);
+    }
   }
   else if (not actdis_->filled() || not actdis_->have_dofs())
   {
