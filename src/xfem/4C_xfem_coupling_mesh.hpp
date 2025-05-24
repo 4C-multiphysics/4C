@@ -328,16 +328,17 @@ namespace XFEM
 
    private:
     void evaluate_interface_displacement(std::vector<double>& final_values, Core::Nodes::Node* node,
-        Core::Conditions::Condition* cond, const double time);
+        const Core::Conditions::Condition* cond, const double time);
 
     void evaluate_interface_velocity(std::vector<double>& final_values, Core::Nodes::Node* node,
-        Core::Conditions::Condition* cond, const double time, const double dt);
+        const Core::Conditions::Condition* cond, const double time, const double dt);
 
     void compute_interface_velocity_from_displacement(std::vector<double>& final_values,
         Core::Nodes::Node* node, const double dt, const std::string* evaltype);
 
     void evaluate_implementation(std::vector<double>& final_values, const double* x,
-        Core::Conditions::Condition* cond, const double time, const std::string& function_name);
+        const Core::Conditions::Condition* cond, const double time,
+        const std::string& function_name);
 
    protected:
     void do_condition_specific_setup() override;

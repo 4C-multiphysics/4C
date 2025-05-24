@@ -94,11 +94,10 @@ void ScaTra::ScaTraUtils::check_consistency_of_s2_i_conditions(
   s2iphysics_conditions.insert(s2iphysics_conditions.end(), s2isclcoupling_condition.begin(),
       s2isclcoupling_condition.end());
 
-  std::vector<int> s2ievaluation_nodes, s2iphysics_nodes;
-  Core::Conditions::find_conditioned_nodes(
-      *discretization, s2ievaluation_conditions, s2ievaluation_nodes);
-  Core::Conditions::find_conditioned_nodes(
-      *discretization, s2iphysics_conditions, s2iphysics_nodes);
+  auto s2ievaluation_nodes = Core::Conditions::find_conditioned_node_ids(
+      *discretization, s2ievaluation_conditions, Core::Conditions::LookFor::locally_owned);
+  auto s2iphysics_nodes = Core::Conditions::find_conditioned_node_ids(
+      *discretization, s2iphysics_conditions, Core::Conditions::LookFor::locally_owned);
 
   if (s2iphysics_nodes != s2ievaluation_nodes)
   {

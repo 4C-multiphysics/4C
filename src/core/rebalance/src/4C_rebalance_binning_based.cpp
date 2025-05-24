@@ -374,7 +374,10 @@ void Core::Rebalance::match_element_distribution_of_matching_conditioned_element
     ////////////////////////////////////////
     // ALSO APPEND UNCONDITIONED ELEMENTS
     ////////////////////////////////////////
-    // add row elements
+
+    auto conditioned_node_ids = Conditions::find_conditioned_node_ids(
+        dis_to_rebalance, condname_rebalance, Conditions::LookFor::locally_owned_and_ghosted);
+
     for (int lid = 0; lid < dis_to_rebalance.element_col_map()->num_my_elements(); lid++)
     {
       bool conditionedele = false;
@@ -383,8 +386,7 @@ void Core::Rebalance::match_element_distribution_of_matching_conditioned_element
       Core::Nodes::Node** nodes = ele->nodes();
       for (int node = 0; node < ele->num_node(); node++)
       {
-        Core::Conditions::Condition* nodal_cond = nodes[node]->get_condition(condname_rebalance);
-        if (nodal_cond != nullptr)
+        if (conditioned_node_ids.contains(nodes[node]->id()))
         {
           conditionedele = true;
           break;

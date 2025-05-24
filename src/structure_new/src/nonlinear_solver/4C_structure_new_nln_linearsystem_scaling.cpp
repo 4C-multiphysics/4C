@@ -7,6 +7,7 @@
 
 #include "4C_structure_new_nln_linearsystem_scaling.hpp"
 
+#include "4C_fem_condition_utils.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_cell_type.hpp"
 #include "4C_fem_general_cell_type_traits.hpp"
@@ -73,7 +74,8 @@ namespace
   template <Core::FE::CellType celltype>
   Core::LinAlg::SerialDenseMatrix evaluate_stc_matrix(const Core::Elements::Element& ele,
       const std::vector<double> displacements, const Inpar::Solid::StcScale stc_scaling,
-      int stc_layer)
+      int stc_layer,
+      const std::multimap<int, const Core::Conditions::Condition*>& stc_layer_conditions)
   {
     const Core::Nodes::Node* const* nodes = ele.nodes();
 
@@ -90,14 +92,23 @@ namespace
         Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>,
         Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>);
 
-    std::vector<Core::Conditions::Condition*> cond0;
+    std::vector<const Core::Conditions::Condition*> cond0;
+    {
+      auto range = stc_layer_conditions.equal_range(nodes[0]->id());
+      std::ranges::copy(std::ranges::subrange(range.first, range.second) | std::views::values,
+          std::back_inserter(cond0));
+    }
     int condnum0 = 1000;    // minimum STCid of layer with nodes 0..3
     bool current0 = false;  // layer with nodes 0..4 to be scaled
-    (nodes[0])->get_condition("STC Layer", cond0);
-    std::vector<Core::Conditions::Condition*> cond1;
+
+    std::vector<const Core::Conditions::Condition*> cond1;
+    {
+      auto range = stc_layer_conditions.equal_range(nodes[Core::FE::num_nodes(celltype) / 2]->id());
+      std::ranges::copy(std::ranges::subrange(range.first, range.second) | std::views::values,
+          std::back_inserter(cond1));
+    }
     int condnum1 = 1000;    // minimum STCid of layer with nodes 4..7
     bool current1 = false;  // minimum STCid of layer with nodes 4..7
-    (nodes[Core::FE::num_nodes(celltype) / 2])->get_condition("STC Layer", cond1);
 
     for (auto& conu : cond0)
     {
@@ -219,6 +230,11 @@ namespace
       Core::LinAlg::Vector<double> global_displacements, Inpar::Solid::StcScale stc_scale,
       int stc_layer, Core::LinAlg::SparseMatrix& global_matrix)
   {
+    std::vector<const Core::Conditions::Condition*> stc_conditions;
+    discret.get_condition("STC Layer", stc_conditions);
+    auto stc_layer_conditions = Core::Conditions::find_conditioned_node_ids_and_conditions(
+        discret, stc_conditions, Core::Conditions::LookFor::locally_owned_and_ghosted);
+
     discret.evaluate(
         [&](Core::Elements::Element& ele)
         {
@@ -232,7 +248,7 @@ namespace
 
           Core::LinAlg::SerialDenseMatrix stc_matrix =
               evaluate_stc_matrix<Core::FE::CellType::hex8>(
-                  ele, displacements, stc_scale, stc_layer);
+                  ele, displacements, stc_scale, stc_layer, stc_layer_conditions);
 
           global_matrix.assemble(ele.id(), stc_matrix, la[0].lm_, la[0].lmowner_);
         });

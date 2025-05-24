@@ -277,7 +277,7 @@ void Constraints::EmbeddedMesh::get_coupling_pairs_and_background_elements(
       std::shared_ptr<Core::Elements::Element> surface_ele;
       for (const auto& interfaceEleSurface : interfaceEleSurfaces)
       {
-        if (Constraints::EmbeddedMesh::is_interface_element_surface(*interfaceEleSurface))
+        if (Constraints::EmbeddedMesh::is_interface_element_surface(discret, *interfaceEleSurface))
           surface_ele = interfaceEleSurface;
       }
 
@@ -364,20 +364,22 @@ void Constraints::EmbeddedMesh::mortar_shape_functions_to_number_of_lagrange_val
   }
 }
 
-bool Constraints::EmbeddedMesh::is_interface_node(Core::Nodes::Node const& node)
+bool Constraints::EmbeddedMesh::is_interface_node(
+    const Core::FE::Discretization& discretization, Core::Nodes::Node const& node)
 {
-  bool is_node_on_interface = false;
+  std::vector<const Core::Conditions::Condition*> conditions;
+  discretization.get_condition("EmbeddedMeshSolidSurfCoupling", conditions);
 
-  // Check if the node has the coupling condition EmbeddedMeshSolidSurfCoupling
-  if (node.get_condition("EmbeddedMeshSolidSurfCoupling") != nullptr) is_node_on_interface = true;
-
-  return is_node_on_interface;
+  return std::ranges::any_of(conditions, [&node](const Core::Conditions::Condition* condition)
+      { return condition->contains_node(node.id()); });
 }
 
-bool Constraints::EmbeddedMesh::is_interface_element_surface(Core::Elements::Element& ele)
+bool Constraints::EmbeddedMesh::is_interface_element_surface(
+    const Core::FE::Discretization& discretization, const Core::Elements::Element& ele)
 {
   for (int i = 0; i < ele.num_point(); i++)
-    if (!Constraints::EmbeddedMesh::is_interface_node(*(ele.nodes()[i]))) return false;
+    if (!Constraints::EmbeddedMesh::is_interface_node(discretization, *(ele.nodes()[i])))
+      return false;
 
   return true;
 }

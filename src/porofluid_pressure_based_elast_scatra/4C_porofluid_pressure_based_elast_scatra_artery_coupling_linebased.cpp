@@ -7,6 +7,7 @@
 
 #include "4C_porofluid_pressure_based_elast_scatra_artery_coupling_linebased.hpp"
 
+#include "4C_fem_condition_utils.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_global_data.hpp"
@@ -791,6 +792,8 @@ void PoroPressureBased::PoroMultiPhaseScaTraArtCouplLineBased::find_free_hanging
               << std::endl;
   }
 
+  const auto dirichlet_node_ids = Core::Conditions::find_conditioned_node_ids(
+      *artconncompdis, "Dirichlet", Core::Conditions::LookFor::locally_owned_and_ghosted);
   // loop over all connected components
   for (unsigned int i = 0; i < connected_components.size(); ++i)
   {
@@ -804,12 +807,12 @@ void PoroPressureBased::PoroMultiPhaseScaTraArtCouplLineBased::find_free_hanging
                   << std::endl;
 
       // check if any of the nodes of this connected component has a Dirichlet BC
-      Core::Conditions::Condition* dirich = nullptr;
+      bool has_dirichlet = false;
       for (int j = 0; j < conn_comp_size; ++j)
       {
-        Core::Nodes::Node* mynode = artconncompdis->g_node((connected_components[i])[j]);
-        dirich = mynode->get_condition("Dirichlet");
-        if (dirich != nullptr)
+        has_dirichlet =
+            dirichlet_node_ids.contains(artconncompdis->g_node((connected_components[i])[j])->id());
+        if (has_dirichlet)
         {
           if (myrank_ == 0)
             std::cout << "   ---> has at least one Dirichlet boundary condition" << std::endl;
@@ -819,8 +822,8 @@ void PoroPressureBased::PoroMultiPhaseScaTraArtCouplLineBased::find_free_hanging
 
       // if no node of this connected component has a DBC or if it is smaller than the
       // user-specified threshold, all its elements are taken out
-      if (dirich == nullptr or conn_comp_size < (int)(delete_free_hanging_eles_threshold_ *
-                                                      artconncompdis->num_global_nodes()))
+      if (!has_dirichlet or conn_comp_size < (int)(delete_free_hanging_eles_threshold_ *
+                                                   artconncompdis->num_global_nodes()))
       {
         // get the elements which have to be deleted
         for (int j = 0; j < conn_comp_size; ++j)
@@ -833,12 +836,12 @@ void PoroPressureBased::PoroMultiPhaseScaTraArtCouplLineBased::find_free_hanging
         // user info
         if (myrank_ == 0)
         {
-          if (dirich == nullptr)
+          if (!has_dirichlet)
             std::cout
                 << "   ---> has no Dirichlet boundary condition --> its elements will be taken out"
                 << std::endl;
-          if (dirich != nullptr and conn_comp_size < (int)(delete_free_hanging_eles_threshold_ *
-                                                           artconncompdis->num_global_nodes()))
+          if (has_dirichlet and conn_comp_size < (int)(delete_free_hanging_eles_threshold_ *
+                                                       artconncompdis->num_global_nodes()))
             std::cout << "   ---> smaller than threshold size of "
                       << (int)(delete_free_hanging_eles_threshold_ *
                                artconncompdis->num_global_nodes())

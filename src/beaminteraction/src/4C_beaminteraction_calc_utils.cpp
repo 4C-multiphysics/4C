@@ -13,6 +13,7 @@
 #include "4C_beaminteraction_link.hpp"
 #include "4C_beaminteraction_spherebeamlinking_params.hpp"
 #include "4C_binstrategy.hpp"
+#include "4C_fem_condition_utils.hpp"
 #include "4C_fem_geometry_intersection_math.hpp"
 #include "4C_fem_geometry_periodic_boundingbox.hpp"
 #include "4C_global_data.hpp"
@@ -387,16 +388,20 @@ namespace BeamInteraction
         std::set<int>& relevantfilaments, std::set<int>& setofrequirednodes,
         Core::FE::Discretization& discret)
     {
+      std::vector<const Core::Conditions::Condition*> filament_conditions;
+      discret.get_condition("BeamLineFilamentCondition", filament_conditions);
+      auto filament_nodes_and_conditions =
+          Core::Conditions::find_conditioned_node_ids_and_conditions(
+              discret, filament_conditions, Core::Conditions::LookFor::locally_owned);
+
       // loop over all row nodes
       for (int rown = 0; rown < discret.num_my_row_nodes(); ++rown)
       {
-        // get filament number of current node ( requirement: node belongs to only one filament)
-        Core::Conditions::Condition* cond =
-            discret.l_row_node(rown)->get_condition("BeamLineFilamentCondition");
+        Core::Nodes::Node* currnode = discret.l_row_node(rown);
+        if (!filament_nodes_and_conditions.contains(currnode->id())) continue;
 
-        // in case node (e.g. node of rigid sphere element) does not belong to a filament, go to
-        // next node
-        if (cond == nullptr) continue;
+        const Core::Conditions::Condition* cond =
+            filament_nodes_and_conditions.find(currnode->id())->second;
 
         // get filament number
         int const currfilnum = cond->parameters().get<int>("ID");

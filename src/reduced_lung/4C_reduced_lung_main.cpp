@@ -9,6 +9,7 @@
 
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_fem_condition.hpp"
+#include "4C_fem_condition_utils.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_node.hpp"
 #include "4C_global_data.hpp"
@@ -178,6 +179,13 @@ namespace ReducedLung
     // Loop over all local elements, get their nodes, create associated entity. This way, they are
     // created on the same ranks as at least one of their connected elements. This reduces the
     // amount of communication of dofs between ranks.
+
+    std::vector<const Core::Conditions::Condition*> conditions;
+    actdis->get_condition("RedAirwayPrescribedCond", conditions);
+    const auto red_airway_prescribed_conditions =
+        Core::Conditions::find_conditioned_node_ids_and_conditions(
+            *actdis, conditions, Core::Conditions::LookFor::locally_owned_and_ghosted);
+
     for (const auto* ele : actdis->my_row_element_range())
     {
       const auto* nodes = ele->nodes();
@@ -193,7 +201,12 @@ namespace ReducedLung
       // single lobes, etc.)
       if (node_in_n_eles == 1)
       {
-        const auto* bc_condition = node_in.get_condition("RedAirwayPrescribedCond");
+        FOUR_C_ASSERT_ALWAYS(red_airway_prescribed_conditions.count(node_in.id()) == 1,
+            "Node {} is located at the boundary and needs to have exactly one boundary condition "
+            "but it has {} conditions.",
+            node_in.id(), red_airway_prescribed_conditions.count(node_in.id()));
+
+        const auto* bc_condition = red_airway_prescribed_conditions.find(node_in.id())->second;
         const std::string bc_type = bc_condition->parameters().get<std::string>("boundarycond");
         const std::optional<int> funct_num =
             bc_condition->parameters().get<std::vector<std::optional<int>>>("curve")[0];
@@ -216,7 +229,12 @@ namespace ReducedLung
       // entities).
       if (node_out_n_eles == 1)
       {
-        const auto* bc_condition = node_out.get_condition("RedAirwayPrescribedCond");
+        FOUR_C_ASSERT_ALWAYS(red_airway_prescribed_conditions.count(node_out.id()) == 1,
+            "Node {} is located at the boundary and needs to have exactly one boundary condition "
+            "but it has {} conditions.",
+            node_out.id(), red_airway_prescribed_conditions.count(node_out.id()));
+
+        const auto* bc_condition = red_airway_prescribed_conditions.find(node_out.id())->second;
         const std::string bc_type = bc_condition->parameters().get<std::string>("boundarycond");
         const std::optional<int> funct_num =
             bc_condition->parameters().get<std::vector<std::optional<int>>>("curve")[0];

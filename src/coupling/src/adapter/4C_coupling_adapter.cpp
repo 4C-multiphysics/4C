@@ -52,10 +52,12 @@ void Coupling::Adapter::Coupling::setup_condition_coupling(
   if (numdof != numdof_slave)
     FOUR_C_THROW("Received {} master DOFs, but {} slave DOFs", numdof, numdof_slave);
 
-  std::vector<int> masternodes;
-  Core::Conditions::find_conditioned_nodes(masterdis, condname, masternodes);
-  std::vector<int> slavenodes;
-  Core::Conditions::find_conditioned_nodes(slavedis, condname, slavenodes);
+  auto masternodes_set = Core::Conditions::find_conditioned_node_ids(
+      masterdis, condname, Core::Conditions::LookFor::locally_owned);
+  std::vector<int> masternodes(masternodes_set.begin(), masternodes_set.end());
+  auto slavenodes_set = Core::Conditions::find_conditioned_node_ids(
+      slavedis, condname, Core::Conditions::LookFor::locally_owned);
+  std::vector<int> slavenodes(slavenodes_set.begin(), slavenodes_set.end());
 
   int localmastercount = static_cast<int>(masternodes.size());
   int mastercount;

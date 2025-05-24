@@ -19,6 +19,7 @@
 #include "4C_beaminteraction_str_model_evaluator_datastate.hpp"
 #include "4C_binstrategy_meshfree_multibin.hpp"
 #include "4C_fem_condition.hpp"
+#include "4C_fem_condition_utils.hpp"
 #include "4C_fem_geometry_intersection_math.hpp"
 #include "4C_fem_geometry_periodic_boundingbox.hpp"
 #include "4C_global_data.hpp"
@@ -246,16 +247,20 @@ void BeamInteraction::SubmodelEvaluator::Crosslinking::set_filament_types()
 {
   check_init();
 
+  std::vector<const Core::Conditions::Condition*> filament_conditions;
+  discret().get_condition("BeamLineFilamentCondition", filament_conditions);
+  auto filament_nodes_and_conditions = Core::Conditions::find_conditioned_node_ids_and_conditions(
+      discret(), filament_conditions, Core::Conditions::LookFor::locally_owned_and_ghosted);
+
   // loop over all col nodes
   for (int coln = 0; coln < discret().num_my_col_nodes(); ++coln)
   {
     Core::Nodes::Node* currnode = discret().l_col_node(coln);
     // get filament number of current node ( requirement: node belongs to only one filament)
-    Core::Conditions::Condition* cond = currnode->get_condition("BeamLineFilamentCondition");
+    if (!filament_nodes_and_conditions.contains(currnode->id())) continue;
 
-    // in case node (e.g. node of rigid sphere element) does not belong to a filament, go to next
-    // node
-    if (cond == nullptr) continue;
+    const Core::Conditions::Condition* cond =
+        filament_nodes_and_conditions.find(currnode->id())->second;
 
     // get filament type
     Inpar::BeamInteraction::FilamentType filetype = Inpar::BeamInteraction::string_to_filament_type(

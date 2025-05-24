@@ -25,133 +25,142 @@ FOUR_C_NAMESPACE_OPEN
 namespace
 {
   template <typename Range>
-  void fill_conditioned_node_set(const Core::FE::Discretization& discretization,
-      const Range& node_range, const std::string& condname, std::set<int>& condnodeset)
+  void fill_conditioned_node_set(const Range& node_range,
+      const Core::Conditions::Condition* condition, std::set<int>& node_set)
   {
-    std::vector<const Core::Conditions::Condition*> conditions;
-    discretization.get_condition(condname, conditions);
-
     for (const Core::Nodes::Node* node : node_range)
     {
-      const bool contains_node = std::ranges::any_of(
-          conditions, [gid = node->id()](const auto* cond) { return cond->contains_node(gid); });
-      if (contains_node)
+      if (condition->contains_node(node->id()))
       {
-        condnodeset.insert(node->id());
+        node_set.insert(node->id());
       }
     }
   }
 
   template <typename Range>
-  std::shared_ptr<Core::LinAlg::Map> fill_condition_map(
-      const Core::FE::Discretization& dis, const Range& nodeRange, const std::string& condname)
+  std::shared_ptr<Core::LinAlg::Map> fill_condition_map(const Core::FE::Discretization& dis,
+      const Range& nodeRange, const std::string& condition_name)
   {
     std::set<int> condnodeset;
-    fill_conditioned_node_set(dis, nodeRange, condname, condnodeset);
+    std::vector<const Core::Conditions::Condition*> conditions;
+    dis.get_condition(condition_name, conditions);
+    for (const auto& condition : conditions)
+      fill_conditioned_node_set(nodeRange, condition, condnodeset);
 
     std::shared_ptr<Core::LinAlg::Map> condnodemap =
         Core::LinAlg::create_map(condnodeset, dis.get_comm());
     return condnodemap;
   }
+
+
+  void find_conditioned_nodes_with_gid(const Core::FE::Discretization& dis,
+      std::span<const Core::Conditions::Condition*> conditions,
+      std::map<int, Core::Nodes::Node*>& nodes)
+  {
+    const int my_rank = Core::Communication::my_mpi_rank(dis.get_comm());
+    for (auto cond : conditions)
+    {
+      for (int gid : *cond->get_nodes())
+      {
+        if (dis.have_global_node(gid) and dis.g_node(gid)->owner() == my_rank)
+        {
+          nodes[gid] = dis.g_node(gid);
+        }
+      }
+    }
+  }
+
+  void find_conditioned_nodes_with_coupling_id(const Core::FE::Discretization& dis,
+      std::span<const Core::Conditions::Condition*> conditions,
+      std::map<int, std::map<int, Core::Nodes::Node*>>& nodes)
+  {
+    const int my_rank = Core::Communication::my_mpi_rank(dis.get_comm());
+    for (auto* cond : conditions)
+    {
+      int id = cond->parameters().get<int>("coupling_id");
+      for (int gid : *cond->get_nodes())
+      {
+        if (dis.have_global_node(gid) and dis.g_node(gid)->owner() == my_rank)
+        {
+          (nodes[id])[gid] = dis.g_node(gid);
+        }
+      }
+    }
+  }
 }  // namespace
 
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-void Core::Conditions::find_conditioned_nodes(
-    const Core::FE::Discretization& dis, const std::string& condname, std::vector<int>& nodes)
+
+
+std::set<int> Core::Conditions::find_conditioned_node_ids(
+    const Core::FE::Discretization& dis, const std::string& condition_name, LookFor look_for)
 {
-  std::vector<const Condition*> conds;
-  dis.get_condition(condname, conds);
-  find_conditioned_nodes(dis, conds, nodes);
+  std::vector<const Condition*> conditions;
+  dis.get_condition(condition_name, conditions);
+  return find_conditioned_node_ids(dis, conditions, look_for);
 }
 
 
 
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-void Core::Conditions::find_conditioned_nodes(
-    const Core::FE::Discretization& dis, std::span<const Condition*> conds, std::vector<int>& nodes)
+std::set<int> Core::Conditions::find_conditioned_node_ids(
+    const Core::FE::Discretization& dis, std::span<const Condition*> conditions, LookFor look_for)
 {
-  std::set<int> nodeset;
-  const int myrank = Core::Communication::my_mpi_rank(dis.get_comm());
-  for (const auto& cond : conds)
+  std::set<int> node_set;
+  const auto node_range =
+      (look_for == LookFor::locally_owned) ? dis.my_row_node_range() : dis.my_col_node_range();
+
+  for (const auto& cond : conditions)
   {
-    for (const auto node : *cond->get_nodes())
+    fill_conditioned_node_set(node_range, cond, node_set);
+  }
+
+  return node_set;
+}
+
+
+std::multimap<int, const Core::Conditions::Condition*>
+Core::Conditions::find_conditioned_node_ids_and_conditions(
+    const Core::FE::Discretization& dis, std::span<const Condition*> conditions, LookFor look_for)
+{
+  std::multimap<int, const Condition*> node_set;
+  const auto node_range =
+      (look_for == LookFor::locally_owned) ? dis.my_row_node_range() : dis.my_col_node_range();
+
+  for (const auto& cond : conditions)
+  {
+    std::set<int> nodes_of_current_condition;
+    fill_conditioned_node_set(node_range, cond, nodes_of_current_condition);
+    for (const auto& node_id : nodes_of_current_condition)
     {
-      const int gid = node;
-      if (dis.have_global_node(gid) and dis.g_node(gid)->owner() == myrank)
-      {
-        nodeset.insert(gid);
-      }
+      node_set.emplace(node_id, cond);
     }
   }
 
-  nodes.assign(nodeset.begin(), nodeset.end());
+  return node_set;
 }
 
 
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-void Core::Conditions::find_conditioned_nodes(const Core::FE::Discretization& dis,
-    std::span<const Condition*> conds, std::map<int, Core::Nodes::Node*>& nodes)
-{
-  const int myrank = Core::Communication::my_mpi_rank(dis.get_comm());
-  for (auto cond : conds)
-  {
-    for (int gid : *cond->get_nodes())
-    {
-      if (dis.have_global_node(gid) and dis.g_node(gid)->owner() == myrank)
-      {
-        nodes[gid] = dis.g_node(gid);
-      }
-    }
-  }
-}
 
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
 void Core::Conditions::find_conditioned_nodes(const Core::FE::Discretization& dis,
-    std::span<const Condition*> conds, std::map<int, std::shared_ptr<std::vector<int>>>& nodes,
+    std::span<const Condition*> conditions, std::map<int, std::shared_ptr<std::vector<int>>>& nodes,
     bool use_coupling_id)
 {
-  std::map<int, std::set<int>> nodeset;
-  const int myrank = Core::Communication::my_mpi_rank(dis.get_comm());
-  for (const auto& cond : conds)
+  std::map<int, std::set<int>> node_set;
+  const int my_rank = Core::Communication::my_mpi_rank(dis.get_comm());
+  for (const auto& cond : conditions)
   {
     int id = use_coupling_id ? cond->parameters().get<int>("coupling_id") : 0;
     for (int gid : *cond->get_nodes())
     {
-      if (dis.have_global_node(gid) and dis.g_node(gid)->owner() == myrank)
+      if (dis.have_global_node(gid) and dis.g_node(gid)->owner() == my_rank)
       {
-        nodeset[id].insert(gid);
+        node_set[id].insert(gid);
       }
     }
   }
 
-  for (const auto& [id, gids] : nodeset)
+  for (const auto& [id, gids] : node_set)
   {
-    nodes[id] = std::make_shared<std::vector<int>>(gids.size());
-    nodes[id]->assign(gids.begin(), gids.end());
-  }
-}
-
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-void Core::Conditions::find_conditioned_nodes(const Core::FE::Discretization& dis,
-    std::span<const Condition*> conds, std::map<int, std::map<int, Core::Nodes::Node*>>& nodes)
-{
-  const int myrank = Core::Communication::my_mpi_rank(dis.get_comm());
-  for (auto* cond : conds)
-  {
-    int id = cond->parameters().get<int>("coupling_id");
-    for (int gid : *cond->get_nodes())
-    {
-      if (dis.have_global_node(gid) and dis.g_node(gid)->owner() == myrank)
-      {
-        (nodes[id])[gid] = dis.g_node(gid);
-      }
-    }
+    nodes[id] = std::make_shared<std::vector<int>>(gids.begin(), gids.end());
   }
 }
 
@@ -161,11 +170,11 @@ void Core::Conditions::find_conditioned_nodes(const Core::FE::Discretization& di
 void Core::Conditions::find_condition_objects(const Core::FE::Discretization& dis,
     std::map<int, Core::Nodes::Node*>& nodes, std::map<int, Core::Nodes::Node*>& gnodes,
     std::map<int, std::shared_ptr<Core::Elements::Element>>& elements,
-    std::span<const Condition*> conds)
+    std::span<const Condition*> conditions)
 {
-  find_conditioned_nodes(dis, conds, nodes);
+  find_conditioned_nodes_with_gid(dis, conditions, nodes);
 
-  for (const auto& cond : conds)
+  for (const auto& cond : conditions)
   {
     // get this condition's elements
     const std::map<int, std::shared_ptr<Core::Elements::Element>>& geo = cond->geometry();
@@ -194,14 +203,15 @@ void Core::Conditions::find_condition_objects(const Core::FE::Discretization& di
 /*----------------------------------------------------------------------*/
 void Core::Conditions::find_condition_objects(const Core::FE::Discretization& dis,
     std::map<int, Core::Nodes::Node*>& nodes, std::map<int, Core::Nodes::Node*>& gnodes,
-    std::map<int, std::shared_ptr<Core::Elements::Element>>& elements, const std::string& condname)
+    std::map<int, std::shared_ptr<Core::Elements::Element>>& elements,
+    const std::string& condition_name)
 {
-  std::vector<const Condition*> conds;
-  dis.get_condition(condname, conds);
+  std::vector<const Condition*> conditions;
+  dis.get_condition(condition_name, conditions);
 
-  find_conditioned_nodes(dis, conds, nodes);
+  find_conditioned_nodes_with_gid(dis, conditions, nodes);
 
-  for (const auto& cond : conds)
+  for (const auto& cond : conditions)
   {
     // get this condition's elements
     const std::map<int, std::shared_ptr<Core::Elements::Element>>& geo = cond->geometry();
@@ -232,14 +242,14 @@ void Core::Conditions::find_condition_objects(const Core::FE::Discretization& di
     std::map<int, std::map<int, Core::Nodes::Node*>>& nodes,
     std::map<int, std::map<int, Core::Nodes::Node*>>& gnodes,
     std::map<int, std::map<int, std::shared_ptr<Core::Elements::Element>>>& elements,
-    const std::string& condname)
+    const std::string& condition_name)
 {
-  std::vector<const Condition*> conds;
-  dis.get_condition(condname, conds);
+  std::vector<const Condition*> conditions;
+  dis.get_condition(condition_name, conditions);
 
-  find_conditioned_nodes(dis, conds, nodes);
+  find_conditioned_nodes_with_coupling_id(dis, conditions, nodes);
 
-  for (auto& cond : conds)
+  for (auto& cond : conditions)
   {
     int id = cond->parameters().get<int>("coupling_id");
     // get this condition's elements
@@ -268,15 +278,15 @@ void Core::Conditions::find_condition_objects(const Core::FE::Discretization& di
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void Core::Conditions::find_condition_objects(const Core::FE::Discretization& dis,
-    std::map<int, std::shared_ptr<Core::Elements::Element>>& elements, const std::string& condname,
-    const int label)
+    std::map<int, std::shared_ptr<Core::Elements::Element>>& elements,
+    const std::string& condition_name, const int label)
 {
-  std::vector<const Condition*> conds;
-  dis.get_condition(condname, conds);
+  std::vector<const Condition*> conditions;
+  dis.get_condition(condition_name, conditions);
 
   bool checklabel = (label >= 0);
 
-  for (auto& cond : conds)
+  for (auto& cond : conditions)
   {
     if (checklabel)
     {
@@ -300,7 +310,7 @@ void Core::Conditions::find_condition_objects(const Core::FE::Discretization& di
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Core::Conditions::find_element_conditions(const Core::Elements::Element* ele,
-    const std::string& condname, std::vector<Condition*>& condition)
+    const std::string& condition_name, std::vector<Condition*>& condition)
 {
   const Core::Nodes::Node* const* nodes = ele->nodes();
 
@@ -313,7 +323,7 @@ void Core::Conditions::find_element_conditions(const Core::Elements::Element* el
   // we assume to always have at least one node
   // the first vector of conditions
   std::vector<Condition*> neumcond0;
-  nodes[0]->get_condition(condname, neumcond0);
+  nodes[0]->get_condition(condition_name, neumcond0);
 
   // the first set of conditions (copy vector to set)
   std::set<Condition*> cond0;
@@ -325,7 +335,7 @@ void Core::Conditions::find_element_conditions(const Core::Elements::Element* el
   for (int inode = 1; inode < iel; ++inode)
   {
     std::vector<Condition*> neumcondn;
-    nodes[inode]->get_condition(condname, neumcondn);
+    nodes[inode]->get_condition(condition_name, neumcondn);
 
     // the current set of conditions (copy vector to set)
     std::set<Condition*> condn;
@@ -354,28 +364,28 @@ void Core::Conditions::find_element_conditions(const Core::Elements::Element* el
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 std::shared_ptr<Core::LinAlg::Map> Core::Conditions::condition_node_row_map(
-    const Core::FE::Discretization& dis, const std::string& condname)
+    const Core::FE::Discretization& dis, const std::string& condition_name)
 {
-  return fill_condition_map(dis, dis.my_row_node_range(), condname);
+  return fill_condition_map(dis, dis.my_row_node_range(), condition_name);
 }
 
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 std::shared_ptr<Core::LinAlg::Map> Core::Conditions::condition_node_col_map(
-    const Core::FE::Discretization& dis, const std::string& condname)
+    const Core::FE::Discretization& dis, const std::string& condition_name)
 {
-  return fill_condition_map(dis, dis.my_col_node_range(), condname);
+  return fill_condition_map(dis, dis.my_col_node_range(), condition_name);
 }
 
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 std::shared_ptr<std::set<int>> Core::Conditions::conditioned_element_map(
-    const Core::FE::Discretization& dis, const std::string& condname)
+    const Core::FE::Discretization& dis, const std::string& condition_name)
 {
   std::vector<const Core::Conditions::Condition*> conditions;
-  dis.get_condition(condname, conditions);
+  dis.get_condition(condition_name, conditions);
 
   std::shared_ptr<std::set<int>> condelementmap = std::make_shared<std::set<int>>();
   const int nummyelements = dis.num_my_col_elements();

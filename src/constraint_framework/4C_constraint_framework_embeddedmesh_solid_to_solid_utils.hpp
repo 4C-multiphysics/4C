@@ -165,9 +165,11 @@ namespace Constraints::EmbeddedMesh
       const Constraints::EmbeddedMesh::SolidInteractionPair* interaction_pair,
       const unsigned int n_mortar_pos, std::vector<int>* lambda_gid_pos);
 
-  bool is_interface_node(Core::Nodes::Node const& node);
+  bool is_interface_node(
+      const Core::FE::Discretization& discretization, const Core::Nodes::Node& node);
 
-  bool is_interface_element_surface(Core::Elements::Element& ele);
+  bool is_interface_element_surface(
+      const Core::FE::Discretization& discretization, const Core::Elements::Element& ele);
 
   void get_current_element_displacement(Core::FE::Discretization const& discret,
       Core::Elements::Element const* ele, const Core::LinAlg::Vector<double>& displacement_vector,

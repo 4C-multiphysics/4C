@@ -640,12 +640,10 @@ bool XFEM::MeshCouplingBC::has_moving_interface()
   // get the first local col(!) node
   if (cutter_dis_->num_my_col_nodes() == 0) FOUR_C_THROW("no col node on proc {}", myrank_);
 
-  Core::Nodes::Node* lnode = cutter_dis_->l_col_node(0);
+  std::vector<const Core::Conditions::Condition*> mycond;
+  cutter_dis_->get_condition("XFEMSurfDisplacement", mycond);
 
-  std::vector<Core::Conditions::Condition*> mycond;
-  lnode->get_condition("XFEMSurfDisplacement", mycond);
-
-  Core::Conditions::Condition* cond = mycond[0];
+  const Core::Conditions::Condition* cond = mycond[0];
 
   const std::string& evaltype = cond->parameters().get<std::string>("EVALTYPE");
 
@@ -657,6 +655,11 @@ bool XFEM::MeshCouplingBC::has_moving_interface()
 void XFEM::MeshCouplingBC::evaluate_condition(std::shared_ptr<Core::LinAlg::Vector<double>> ivec,
     const std::string& condname, const double time, const double dt)
 {
+  std::vector<const Core::Conditions::Condition*> search_conditions;
+  cutter_dis_->get_condition(condname, search_conditions);
+  auto my_cond_node_ids_and_conditions = Core::Conditions::find_conditioned_node_ids_and_conditions(
+      *cutter_dis_, search_conditions, Core::Conditions::LookFor::locally_owned);
+
   // loop all nodes on the processor
   for (int lnodeid = 0; lnodeid < cutter_dis_->num_my_row_nodes(); lnodeid++)
   {
@@ -668,13 +671,14 @@ void XFEM::MeshCouplingBC::evaluate_condition(std::shared_ptr<Core::LinAlg::Vect
     const int numdof = nodedofset.size();
 
     if (numdof == 0) FOUR_C_THROW("node has no dofs");
-    std::vector<Core::Conditions::Condition*> mycond;
-    lnode->get_condition(condname, mycond);
 
     // filter out the ones with right coupling id
-    std::vector<Core::Conditions::Condition*> mycond_by_coupid;
+    std::vector<const Core::Conditions::Condition*> mycond_by_coupid;
 
-    for (auto* cond : mycond)
+    auto conditions = my_cond_node_ids_and_conditions.equal_range(lnode->id());
+
+    for (const auto& cond :
+        std::ranges::subrange(conditions.first, conditions.second) | std::views::values)
     {
       if (cond->parameters().get<int>("COUPLINGID") == coupling_id_)
         mycond_by_coupid.push_back(cond);
@@ -692,7 +696,8 @@ void XFEM::MeshCouplingBC::evaluate_condition(std::shared_ptr<Core::LinAlg::Vect
 
     if (numconds == 0) FOUR_C_THROW("no condition available!");
 
-    Core::Conditions::Condition* cond = mycond_by_coupid[numconds - 1];  // take the last condition
+    const Core::Conditions::Condition* cond =
+        mycond_by_coupid[numconds - 1];  // take the last condition
 
     // initial value for all nodal dofs to zero
     std::vector<double> final_values(numdof, 0.0);
@@ -718,7 +723,8 @@ void XFEM::MeshCouplingBC::evaluate_condition(std::shared_ptr<Core::LinAlg::Vect
 /*--------------------------------------------------------------------------*
  *--------------------------------------------------------------------------*/
 void XFEM::MeshCouplingBC::evaluate_interface_velocity(std::vector<double>& final_values,
-    Core::Nodes::Node* node, Core::Conditions::Condition* cond, const double time, const double dt)
+    Core::Nodes::Node* node, const Core::Conditions::Condition* cond, const double time,
+    const double dt)
 {
   const std::string* evaltype = &cond->parameters().get<std::string>("EVALTYPE");
 
@@ -760,7 +766,7 @@ void XFEM::MeshCouplingBC::evaluate_interface_velocity(std::vector<double>& fina
 /*--------------------------------------------------------------------------*
  *--------------------------------------------------------------------------*/
 void XFEM::MeshCouplingBC::evaluate_interface_displacement(std::vector<double>& final_values,
-    Core::Nodes::Node* node, Core::Conditions::Condition* cond, const double time)
+    Core::Nodes::Node* node, const Core::Conditions::Condition* cond, const double time)
 {
   const std::string& evaltype = cond->parameters().get<std::string>("EVALTYPE");
 
@@ -825,7 +831,7 @@ void XFEM::MeshCouplingBC::compute_interface_velocity_from_displacement(
 }
 
 void XFEM::MeshCouplingBC::evaluate_implementation(std::vector<double>& final_values,
-    const double* x, Core::Conditions::Condition* cond, const double time,
+    const double* x, const Core::Conditions::Condition* cond, const double time,
     const std::string& function_name)
 {
   const int numdof = final_values.size();

@@ -12,6 +12,7 @@
 #include "4C_beaminteraction_calc_utils.hpp"
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_fem_condition.hpp"
+#include "4C_fem_condition_utils.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_geometry_periodic_boundingbox.hpp"
@@ -601,6 +602,12 @@ void BeamDiscretizationRuntimeOutputWriter::append_element_filament_id_and_type(
   id.reserve(num_beam_row_elements);
   type.reserve(num_beam_row_elements);
 
+  std::vector<const Core::Conditions::Condition*> conditions;
+  discretization_->get_condition("BeamLineFilamentCondition", conditions);
+  const auto beam_line_filament_conditioned_nodes =
+      Core::Conditions::find_conditioned_node_ids_and_conditions(
+          *discretization_, conditions, Core::Conditions::LookFor::locally_owned_and_ghosted);
+
   // loop over my elements and collect the data about triads/base vectors
   for (unsigned int ibeamele = 0; ibeamele < num_beam_row_elements; ++ibeamele)
   {
@@ -616,10 +623,11 @@ void BeamDiscretizationRuntimeOutputWriter::append_element_filament_id_and_type(
       FOUR_C_THROW("BeamDiscretizationRuntimeOutputWriter expects a beam element here!");
 
     // get filament number (note so far only one filament for each element and node)
-    Core::Conditions::Condition* cond = ele->nodes()[0]->get_condition("BeamLineFilamentCondition");
-    if (cond == nullptr)
-      FOUR_C_THROW(" No filament number assigned to element with gid {} .", ele->id());
+    FOUR_C_ASSERT_ALWAYS(beam_line_filament_conditioned_nodes.count(ele->nodes()[0]->id()) == 1,
+        " No filament number assigned to element with gid {} .", ele->id());
 
+    const Core::Conditions::Condition* cond =
+        beam_line_filament_conditioned_nodes.find(ele->nodes()[0]->id())->second;
     double current_id = cond->parameters().get<int>("ID");
     double current_type = Inpar::BeamInteraction::string_to_filament_type(
         (cond->parameters().get<std::string>("TYPE")));

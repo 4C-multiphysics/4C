@@ -3542,14 +3542,18 @@ void ScaTra::MeshtyingStrategyS2I::init_meshtying()
 
     // provide scalar transport discretization with additional dofset for scatra-scatra interface
     // layer thickness
+    const auto& col_map = *scatratimint_->discretization()->node_col_map();
     const std::shared_ptr<Core::LinAlg::Vector<int>> numdofpernode =
-        std::make_shared<Core::LinAlg::Vector<int>>(
-            *scatratimint_->discretization()->node_col_map());
-    for (int inode = 0; inode < scatratimint_->discretization()->num_my_col_nodes(); ++inode)
+        std::make_shared<Core::LinAlg::Vector<int>>(col_map);
+    auto conditioned_node_ids =
+        Core::Conditions::find_conditioned_node_ids(*scatratimint_->discretization(),
+            "S2IKineticsGrowth", Core::Conditions::LookFor::locally_owned_and_ghosted);
+    const std::span<const int> my_col_nodes(
+        col_map.my_global_elements(), col_map.num_my_elements());
+    for (const int& inode : my_col_nodes)
     {
-      // add one degree of freedom for scatra-scatra interface layer growth to current node if
-      // applicable
-      if (scatratimint_->discretization()->l_col_node(inode)->get_condition("S2IKineticsGrowth"))
+      if (conditioned_node_ids.contains(inode))
+        // add one degree of freedom for scatra-scatra interface layer thickness to current node
         (*numdofpernode)[inode] = 1;
     }
 

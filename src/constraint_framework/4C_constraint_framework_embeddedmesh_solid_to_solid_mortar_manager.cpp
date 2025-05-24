@@ -109,7 +109,8 @@ void Constraints::EmbeddedMesh::SolidToSolidMortarManager::setup(
   for (int i_node = 0; i_node < discret_->node_row_map()->num_my_elements(); i_node++)
   {
     Core::Nodes::Node const& node = *(discret_->l_row_node(i_node));
-    if (Constraints::EmbeddedMesh::is_interface_node(node)) my_nodes_gid.push_back(node.id());
+    if (Constraints::EmbeddedMesh::is_interface_node(*discret_, node))
+      my_nodes_gid.push_back(node.id());
   }
 
   // Calculate the local number of interface nodes
@@ -206,7 +207,7 @@ void Constraints::EmbeddedMesh::SolidToSolidMortarManager::set_global_maps()
     const Core::Nodes::Node* node = discret_->l_row_node(i_node);
     if (is_cut_node(*node))
       discret_->dof(node, background_dofs);
-    else if (Constraints::EmbeddedMesh::is_interface_node(*node))
+    else if (Constraints::EmbeddedMesh::is_interface_node(*discret_, *node))
       discret_->dof(node, boundary_layer_interface_dofs);
   }
 
