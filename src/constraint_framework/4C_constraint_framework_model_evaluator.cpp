@@ -114,6 +114,14 @@ void Solid::ModelEvaluator::Constraint::create_sub_model_evaluators()
   }
 }
 
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+bool Solid::ModelEvaluator::Constraint::have_sub_model_type(
+    Inpar::Constraints::SubModelType const& submodeltype) const
+{
+  check_init();
+  return (submodeltypes_.find(submodeltype) != submodeltypes_.end());
+}
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
@@ -246,7 +254,17 @@ void Solid::ModelEvaluator::Constraint::determine_stress_strain() {}
  *----------------------------------------------------------------------------*/
 void Solid::ModelEvaluator::Constraint::determine_energy()
 {
-  FOUR_C_THROW("This function is not implemented");
+  check_init_setup();
+
+  std::map<Solid::EnergyType, double> energy_this_submodel;
+
+  for (auto& some_iter : sub_model_vec_ptr_)
+  {
+    energy_this_submodel = some_iter->get_energy();
+
+    for (auto const& energy_type : energy_this_submodel)
+      eval_data().add_contribution_to_energy_type(energy_type.second, energy_type.first);
+  }
 }
 
 /*----------------------------------------------------------------------------*

@@ -49,6 +49,8 @@ namespace Constraints::SubmodelEvaluator
      */
     void reset() override;
 
+    std::map<Solid::EnergyType, double> get_energy() const override;
+
     //@}
 
    private:

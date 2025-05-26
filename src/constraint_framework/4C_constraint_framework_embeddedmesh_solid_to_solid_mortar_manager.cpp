@@ -599,4 +599,24 @@ bool Constraints::EmbeddedMesh::SolidToSolidMortarManager::is_cut_node(
   return is_cut_node;
 }
 
+int Constraints::EmbeddedMesh::SolidToSolidMortarManager::get_my_rank()
+{
+  return Core::Communication::my_mpi_rank(discret_->get_comm());
+}
+
+double Constraints::EmbeddedMesh::SolidToSolidMortarManager::get_energy() const
+{
+  // Since this value is also computed for the reference configuration, where the global mortar
+  // matrices are not build yet we return 0 in this case.
+  if (not global_g_bl_->filled() or not global_g_bg_->filled() or not global_fbl_l_->filled() or
+      not global_fbg_l_->filled())
+    return 0.0;
+
+  // Calculate the penalty potential.
+  std::shared_ptr<Core::LinAlg::Vector<double>> lambda = get_global_lambda();
+  double dot_product = 0.0;
+  global_constraint_->Dot(*lambda, &dot_product);
+  return 0.5 * dot_product;
+}
+
 FOUR_C_NAMESPACE_CLOSE

@@ -11,6 +11,7 @@
 #include "4C_config.hpp"
 
 #include "4C_constraint_framework_equation_mpc.hpp"
+#include "4C_structure_new_enum_lists.hpp"
 #include "4C_structure_new_model_evaluator_generic.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -58,6 +59,8 @@ namespace Constraints::SubmodelEvaluator
 
     //! Generate the runtime output
     virtual void runtime_output_step_state(std::pair<double, int> output_time_and_step) {};
+
+    [[nodiscard]] virtual std::map<Solid::EnergyType, double> get_energy() const = 0;
 
    private:
     //! Column Map

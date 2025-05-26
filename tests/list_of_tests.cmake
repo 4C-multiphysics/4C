@@ -494,6 +494,7 @@ four_c_test(TEST_FILE elch_pulseplating_hex27_moving_boundary.dat NP 3 RESTART_S
 four_c_test(TEST_FILE elch_RCE_rotsymm_pbc.dat NP 2)
 four_c_test(TEST_FILE elch_straight_convection.dat NP 2)
 four_c_test(TEST_FILE elch_test.dat NP 2)
+four_c_test(TEST_FILE embeddedmesh_2d_hertzian_contact.dat NP 2 CSV_COMPARISON_RESULT_FILE xxx_energy.csv CSV_COMPARISON_REFERENCE_FILE ref/embeddedmesh_2d_hertzian_contact_energy.csv CSV_COMPARISON_TOL_R 0.0 CSV_COMPARISON_TOL_A 1.0e-16)
 four_c_test(TEST_FILE embeddedmesh_block_nurbs27_hex8_wedge6.dat NP 2)
 four_c_test(TEST_FILE embeddedmesh_cantilever_beam.dat NP 1)
 four_c_test(TEST_FILE embeddedmesh_cut_bar_under_torsion_one_element.dat NP 1)
