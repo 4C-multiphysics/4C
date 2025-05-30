@@ -18,33 +18,34 @@ FOUR_C_NAMESPACE_OPEN
 namespace PoroPressureBased
 {
   //! Surface-based coupling between artery network and porofluid-elasticity-scatra algorithm
-  class PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm
+  class PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm final
       : public PorofluidElastScatraArteryCouplingNonConformingAlgorithm
   {
    public:
     PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm(
-        std::shared_ptr<Core::FE::Discretization> arterydis,
-        std::shared_ptr<Core::FE::Discretization> contdis,
-        const Teuchos::ParameterList& couplingparams, const std::string& condname,
-        const std::string& artcoupleddofname, const std::string& contcoupleddofname);
+        std::shared_ptr<Core::FE::Discretization> artery_dis,
+        std::shared_ptr<Core::FE::Discretization> homogenized_dis,
+        const Teuchos::ParameterList& coupling_params, const std::string& condition_name,
+        const std::string& artery_coupled_dof_name,
+        const std::string& homogenized_coupled_dof_name);
 
-    //! set-up of global system of equations of coupled problem
+    //! set up of the global system of equations of the coupled problem
     void setup_system(std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> sysmat,
         std::shared_ptr<Core::LinAlg::Vector<double>> rhs,
-        std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_cont,
-        std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_art,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_cont,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_art,
-        std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmap_cont,
-        std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmap_art) override;
+        std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_homogenized,
+        std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_artery,
+        std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_homogenized,
+        std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_artery,
+        std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmap_homogenized,
+        std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmap_artery) override;
 
-    //! setup the strategy
+    //! set up the strategy
     void setup() override;
 
     //! apply mesh movement (on artery elements)
     void apply_mesh_movement() override;
 
-    //! access to blood vessel volume fraction
+    //! access to the blood vessel volume fraction
     std::shared_ptr<const Core::LinAlg::Vector<double>> blood_vessel_volume_fraction() override;
 
     //! Evaluate the 1D-3D coupling
@@ -55,30 +56,27 @@ namespace PoroPressureBased
     //! pre-evaluate the pairs
     void pre_evaluate_coupling_pairs();
 
-    //! calculate the volume fraction occupied by blood vessels
-    void calculate_blood_vessel_volume_fraction();
-
     /*!
      * @brief et the artery diameter in material to be able to use it on 1D discretization
      * \note nothing to do for surface-based formulation since variable diameter not yet possible
      */
-    void set_artery_diameter_in_material() override {};
+    void set_artery_diameter_in_material() override {}
 
     /*!
      * @brief reset the integrated diameter vector to zero
      * \note nothing to do for surface-based formulation since variable diameter not yet possible
      */
-    void reset_integrated_diameter_to_zero() override {};
+    void reset_integrated_diameter_to_zero() override {}
 
     /*!
      * @brief evaluate additional linearization of (integrated) element diameter dependent terms
      * (Hagen-Poiseuille)
      * \note nothing to do for surface-based formulation since variable diameter not yet possible
      */
-    void evaluate_additional_linearizationof_integrated_diam() override {};
+    void evaluate_additional_linearization_of_integrated_diameter() override {};
 
     //! get the segment lengths of element 'artelegid'
-    std::vector<double> get_ele_segment_lengths(const int artelegid) override { return {2.0}; };
+    std::vector<double> get_ele_segment_length(const int artery_ele_gid) override { return {2.0}; };
 
     //! print out the coupling method
     void print_coupling_method() const override;

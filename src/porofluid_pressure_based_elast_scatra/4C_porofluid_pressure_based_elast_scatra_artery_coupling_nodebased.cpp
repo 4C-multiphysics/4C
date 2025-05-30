@@ -18,85 +18,80 @@ FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-PoroPressureBased::PorofluidElastScatraArteryCouplingNodebasedAlgorithm::
-    PorofluidElastScatraArteryCouplingNodebasedAlgorithm(
-        std::shared_ptr<Core::FE::Discretization> arterydis,
-        std::shared_ptr<Core::FE::Discretization> contdis,
-        const Teuchos::ParameterList& meshtyingparams, const std::string& condname,
-        const std::string& artcoupleddofname, const std::string& contcoupleddofname)
-    : PorofluidElastScatraArteryCouplingBaseAlgorithm(
-          arterydis, contdis, meshtyingparams, artcoupleddofname, contcoupleddofname),
-      condname_(condname)
+PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm::
+    PorofluidElastScatraArteryCouplingNodeBasedAlgorithm(
+        std::shared_ptr<Core::FE::Discretization> artery_dis,
+        std::shared_ptr<Core::FE::Discretization> homogenized_dis,
+        const Teuchos::ParameterList& meshtying_params, const std::string& condition_name,
+        const std::string& artery_coupled_dof_name, const std::string& homogenized_coupled_dof_name)
+    : PorofluidElastScatraArteryCouplingBaseAlgorithm(artery_dis, homogenized_dis, meshtying_params,
+          artery_coupled_dof_name, homogenized_coupled_dof_name),
+      condition_name_(condition_name)
 {
   // user info
   if (my_mpi_rank_ == 0)
   {
-    std::cout << "<                                                  >" << std::endl;
+    std::cout << "<                                                  >" << '\n';
     print_coupling_method();
-    std::cout << "<                                                  >" << std::endl;
-    std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
+    std::cout << "<                                                  >" << '\n';
+    std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>" << '\n';
     std::cout << "\n";
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void PoroPressureBased::PorofluidElastScatraArteryCouplingNodebasedAlgorithm::init()
+void PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm::init()
 {
   // ARTERY COUPLING CONDITIONS
-  std::vector<std::vector<int>> condIDs;
-  std::vector<int> artIDs;
-  std::vector<int> contfieldIDs;
-  condIDs.push_back(artIDs);
-  condIDs.push_back(contfieldIDs);
+  std::vector condition_ids = {std::vector<int>(), std::vector<int>()};
 
   // check if conditions are defined on both discretizations --------------------------
   // 1) 1D artery discretization
-  std::vector<const Core::Conditions::Condition*> artCoupcond;
-  artery_dis_->get_condition(condname_, artCoupcond);
+  std::vector<const Core::Conditions::Condition*> artery_coupling_condition;
+  artery_dis_->get_condition(condition_name_, artery_coupling_condition);
 
-  for (auto& iter : artCoupcond)
+  for (const auto& iter : artery_coupling_condition)
   {
     int myID = iter->parameters().get<int>("COUPID");
-    condIDs[0].push_back(myID);
+    condition_ids[0].push_back(myID);
   }
 
-  // 2) 2D, 3D continuous field discretization
-  std::vector<const Core::Conditions::Condition*> contfieldCoupcond;
-  homogenized_dis_->get_condition(condname_, contfieldCoupcond);
+  // 2) 2D, 3D homogenized field discretization
+  std::vector<const Core::Conditions::Condition*> homogenized_coupling_condition;
+  homogenized_dis_->get_condition(condition_name_, homogenized_coupling_condition);
 
-  for (auto& iter : contfieldCoupcond)
+  for (const auto& iter : homogenized_coupling_condition)
   {
     int myID = iter->parameters().get<int>("COUPID");
-    condIDs[1].push_back(myID);
+    condition_ids[1].push_back(myID);
   }
 
-  if (condIDs[0].size() != condIDs[1].size())
+  if (condition_ids[0].size() != condition_ids[1].size())
     FOUR_C_THROW("Artery coupling conditions need to be defined on both discretizations");
 
   // -----------------------------------------------------------------------------------------------------------------
-  // create map extractors needed for artery condition coupling --> continuous field part
-  contfieldex_ = std::make_shared<Core::LinAlg::MultiMapExtractor>();
-  setup_map_extractor(*contfieldex_, *homogenized_dis_, coupled_dofs_homogenized_);
-  check_dbc_on_coupled_dofs(*homogenized_dis_, contfieldex_->map(1));
+  // create map extractors needed for artery condition coupling --> homogenized field part
+  homogenized_field_extractor_ = std::make_shared<Core::LinAlg::MultiMapExtractor>();
+  setup_map_extractor(*homogenized_field_extractor_, *homogenized_dis_, coupled_dofs_homogenized_);
+  check_dbc_on_coupled_dofs(*homogenized_dis_, homogenized_field_extractor_->map(1));
 
   // -----------------------------------------------------------------------------------------------------------------
   // create map extractors needed for artery condition coupling --> artery part
-  artex_ = std::make_shared<Core::LinAlg::MultiMapExtractor>();
-  setup_map_extractor(*artex_, *artery_dis_, coupled_dofs_artery_);
-  check_dbc_on_coupled_dofs(*artery_dis_, artex_->map(1));
+  artery_field_extractor_ = std::make_shared<Core::LinAlg::MultiMapExtractor>();
+  setup_map_extractor(*artery_field_extractor_, *artery_dis_, coupled_dofs_artery_);
+  check_dbc_on_coupled_dofs(*artery_dis_, artery_field_extractor_->map(1));
 
   // setup coupling adapter
-  artcontfieldcoup_ = std::make_shared<Coupling::Adapter::Coupling>();
-  artcontfieldcoup_->setup_condition_coupling(*homogenized_dis_, contfieldex_->map(1), *artery_dis_,
-      artex_->map(1), condname_, coupled_dofs_homogenized_, coupled_dofs_artery_);
+  coupling_artery_homogenized_ = std::make_shared<Coupling::Adapter::Coupling>();
+  coupling_artery_homogenized_->setup_condition_coupling(*homogenized_dis_,
+      homogenized_field_extractor_->map(1), *artery_dis_, artery_field_extractor_->map(1),
+      condition_name_, coupled_dofs_homogenized_, coupled_dofs_artery_);
 
-  // full map of continuous field and uncoupled dofs of artery
+  // full map of the homogenized field and uncoupled dofs of artery
   std::vector<std::shared_ptr<const Core::LinAlg::Map>> maps;
-  maps.push_back(contfieldex_->full_map());
-  maps.push_back(artex_->map(0));
+  maps.push_back(homogenized_field_extractor_->full_map());
+  maps.push_back(artery_field_extractor_->map(0));
 
   fullmap_ = Core::LinAlg::MultiMapExtractor::merge_maps(maps);
   /// dof row map of coupled problem split in (field) blocks
@@ -107,61 +102,55 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNodebasedAlgorithm::in
   global_extractor_->check_for_valid_map_extractor();
 
   // needed for matrix transformations
-  sbbtransform_ = std::make_shared<Coupling::Adapter::MatrixRowColTransform>();
-  sbitransform_ = std::make_shared<Coupling::Adapter::MatrixRowTransform>();
-  sibtransform_ = std::make_shared<Coupling::Adapter::MatrixColTransform>();
+  row_col_transform_ = std::make_shared<Coupling::Adapter::MatrixRowColTransform>();
+  row_transform_ = std::make_shared<Coupling::Adapter::MatrixRowTransform>();
+  col_transform_ = std::make_shared<Coupling::Adapter::MatrixColTransform>();
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void PoroPressureBased::PorofluidElastScatraArteryCouplingNodebasedAlgorithm::setup()
+void PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm::setup_map_extractor(
+    Core::LinAlg::MultiMapExtractor& map_extractor, Core::FE::Discretization& dis,
+    const std::vector<int>& coupled_dofs) const
 {
-  // do nothing
-}
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-void PoroPressureBased::PorofluidElastScatraArteryCouplingNodebasedAlgorithm::setup_map_extractor(
-    Core::LinAlg::MultiMapExtractor& mapextractor, Core::FE::Discretization& dis,
-    const std::vector<int>& coupleddofs)
-{
-  std::vector<std::shared_ptr<const Core::LinAlg::Map>> partialmaps_coupled;
+  std::vector<std::shared_ptr<const Core::LinAlg::Map>> coupled_maps;
 
   // build coupled maps for all coupled dofs
   for (int idof = 0; idof < num_coupled_dofs_; idof++)
   {
-    Core::LinAlg::MultiMapExtractor dummy;
-    Core::Conditions::setup_extractor(dis, dummy,
-        {Core::Conditions::Selector(condname_, coupleddofs[idof], coupleddofs[idof] + 1)});
+    Core::LinAlg::MultiMapExtractor current_map_extractor;
+    Core::Conditions::setup_extractor(dis, current_map_extractor,
+        {Core::Conditions::Selector(condition_name_, coupled_dofs[idof], coupled_dofs[idof] + 1)});
 
-    partialmaps_coupled.push_back(dummy.map(1));
+    coupled_maps.push_back(current_map_extractor.map(1));
   }
-  // fullmap coupled -> all coupled dofs
-  std::shared_ptr<Core::LinAlg::Map> fullmap_coupled =
-      Core::LinAlg::MultiMapExtractor::merge_maps(partialmaps_coupled);
+  // full map coupled -> all coupled dofs
+  const std::shared_ptr<Core::LinAlg::Map> full_coupled_maps =
+      Core::LinAlg::MultiMapExtractor::merge_maps(coupled_maps);
 
-  // fullmap uncoupled -> all uncoupled dofs
-  Core::LinAlg::MapExtractor temp(*dis.dof_row_map(), fullmap_coupled, false);
-  std::shared_ptr<Core::LinAlg::Map> fullmap_uncoupled =
-      std::make_shared<Core::LinAlg::Map>(*temp.cond_map());
+  // full map uncoupled -> all uncoupled dofs
+  const Core::LinAlg::MapExtractor full_uncoupled_map_extractor(
+      *dis.dof_row_map(), full_coupled_maps, false);
+  const auto full_uncoupled_map =
+      std::make_shared<Core::LinAlg::Map>(*full_uncoupled_map_extractor.cond_map());
 
   // vector for setup of extractor
-  std::vector<std::shared_ptr<const Core::LinAlg::Map>> fullmap_vector;
-  fullmap_vector.push_back(fullmap_uncoupled);
-  fullmap_vector.push_back(fullmap_coupled);
+  std::vector<std::shared_ptr<const Core::LinAlg::Map>> full_map_vector;
+  full_map_vector.push_back(full_uncoupled_map);
+  full_map_vector.push_back(full_coupled_maps);
 
-  mapextractor.setup(*dis.dof_row_map(), fullmap_vector);
+  map_extractor.setup(*dis.dof_row_map(), full_map_vector);
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void PoroPressureBased::PorofluidElastScatraArteryCouplingNodebasedAlgorithm::setup_system(
-    std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> sysmat,
-    std::shared_ptr<Core::LinAlg::Vector<double>> rhs,
-    std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_cont,
-    std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_art,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_cont,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_art,
+void PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm::setup_system(
+    const std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> sysmat,
+    const std::shared_ptr<Core::LinAlg::Vector<double>> rhs,
+    const std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_cont,
+    const std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_art,
+    const std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_cont,
+    const std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_art,
     std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmap_cont,
     std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmap_art)
 {
@@ -171,134 +160,137 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNodebasedAlgorithm::se
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void PoroPressureBased::PorofluidElastScatraArteryCouplingNodebasedAlgorithm::setup_rhs(
+void PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm::setup_rhs(
     std::shared_ptr<Core::LinAlg::Vector<double>> rhs,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_cont,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_art)
+    std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_homogenized,
+    std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_artery)
 {
-  setup_global_vector(rhs, rhs_cont, rhs_art);
+  setup_global_vector(rhs, rhs_homogenized, rhs_artery);
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void PoroPressureBased::PorofluidElastScatraArteryCouplingNodebasedAlgorithm::setup_global_vector(
-    std::shared_ptr<Core::LinAlg::Vector<double>> vec,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> vec_cont,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> vec_art)
+void PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm::setup_global_vector(
+    const std::shared_ptr<Core::LinAlg::Vector<double>> global_vector,
+    const std::shared_ptr<const Core::LinAlg::Vector<double>> homogenized_vector,
+    const std::shared_ptr<const Core::LinAlg::Vector<double>> artery_vector)
 {
   // zero out
-  vec->put_scalar(0.0);
+  global_vector->put_scalar(0.0);
 
   // inner (uncoupled) DOFs of artery
   std::shared_ptr<Core::LinAlg::Vector<double>> vec2_uncoupled =
-      artex_->extract_vector(*vec_art, 0);
+      artery_field_extractor_->extract_vector(*artery_vector, 0);
 
   // boundary (coupled) DOFs of artery
-  std::shared_ptr<Core::LinAlg::Vector<double>> vec2_coupled = artex_->extract_vector(*vec_art, 1);
+  std::shared_ptr<Core::LinAlg::Vector<double>> vec2_coupled =
+      artery_field_extractor_->extract_vector(*artery_vector, 1);
 
   // transform boundary DOFs to continuous dis
-  std::shared_ptr<Core::LinAlg::Vector<double>> temp =
-      contfieldex_->insert_vector(*artcontfieldcoup_->slave_to_master(*vec2_coupled), 1);
+  std::shared_ptr<Core::LinAlg::Vector<double>> temp = homogenized_field_extractor_->insert_vector(
+      *coupling_artery_homogenized_->slave_to_master(*vec2_coupled), 1);
 
   // add to continuous vec
-  temp->update(1.0, *vec_cont, 1.0);
+  temp->update(1.0, *homogenized_vector, 1.0);
 
   // set up global vector
-  global_extractor_->insert_vector(*temp, 0, *vec);
-  global_extractor_->insert_vector(*vec2_uncoupled, 1, *vec);
+  global_extractor_->insert_vector(*temp, 0, *global_vector);
+  global_extractor_->insert_vector(*vec2_uncoupled, 1, *global_vector);
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void PoroPressureBased::PorofluidElastScatraArteryCouplingNodebasedAlgorithm::setup_matrix(
+void PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm::setup_matrix(
     std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> sysmat,
-    std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_cont, Core::LinAlg::SparseMatrix& sysmat_art)
+    std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_homogenized,
+    Core::LinAlg::SparseMatrix& sysmat_artery) const
 {
-  // uncomplete
-  sysmat_cont->un_complete();
+  sysmat_homogenized->un_complete();
 
   // artery
   // first split the matrix into 2x2 blocks (boundary vs. inner dofs)
-  std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> blockartery =
+  const std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> artery_blocks =
       Core::LinAlg::split_matrix<Core::LinAlg::DefaultBlockMatrixStrategy>(
-          sysmat_art, *(artex_), *(artex_));
-  blockartery->complete();
+          sysmat_artery, *(artery_field_extractor_), *(artery_field_extractor_));
+  artery_blocks->complete();
 
   // inner artery dofs
-  sysmat->assign(1, 1, Core::LinAlg::DataAccess::View, blockartery->matrix(0, 0));
+  sysmat->assign(1, 1, Core::LinAlg::DataAccess::View, artery_blocks->matrix(0, 0));
 
-  (*sibtransform_)(blockartery->full_row_map(), blockartery->full_col_map(),
-      blockartery->matrix(0, 1), 1.0, Coupling::Adapter::CouplingSlaveConverter(*artcontfieldcoup_),
+  (*col_transform_)(artery_blocks->full_row_map(), artery_blocks->full_col_map(),
+      artery_blocks->matrix(0, 1), 1.0,
+      Coupling::Adapter::CouplingSlaveConverter(*coupling_artery_homogenized_),
       sysmat->matrix(1, 0));
 
-  (*sbitransform_)(blockartery->matrix(1, 0), 1.0,
-      Coupling::Adapter::CouplingSlaveConverter(*artcontfieldcoup_), sysmat->matrix(0, 1));
+  (*row_transform_)(artery_blocks->matrix(1, 0), 1.0,
+      Coupling::Adapter::CouplingSlaveConverter(*coupling_artery_homogenized_),
+      sysmat->matrix(0, 1));
 
-  (*sbbtransform_)(blockartery->matrix(1, 1), 1.0,
-      Coupling::Adapter::CouplingSlaveConverter(*artcontfieldcoup_),
-      Coupling::Adapter::CouplingSlaveConverter(*artcontfieldcoup_), *sysmat_cont, true, true);
+  (*row_col_transform_)(artery_blocks->matrix(1, 1), 1.0,
+      Coupling::Adapter::CouplingSlaveConverter(*coupling_artery_homogenized_),
+      Coupling::Adapter::CouplingSlaveConverter(*coupling_artery_homogenized_), *sysmat_homogenized,
+      true, true);
 
   // continuous field
-  sysmat->assign(0, 0, Core::LinAlg::DataAccess::View, *sysmat_cont);
+  sysmat->assign(0, 0, Core::LinAlg::DataAccess::View, *sysmat_homogenized);
   // complete
   sysmat->complete();
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void PoroPressureBased::PorofluidElastScatraArteryCouplingNodebasedAlgorithm::
-    extract_single_field_vectors(std::shared_ptr<const Core::LinAlg::Vector<double>> globalvec,
-        std::shared_ptr<const Core::LinAlg::Vector<double>>& vec_cont,
-        std::shared_ptr<const Core::LinAlg::Vector<double>>& vec_art)
+void PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm::
+    extract_single_field_vectors(std::shared_ptr<const Core::LinAlg::Vector<double>> global_vector,
+        std::shared_ptr<const Core::LinAlg::Vector<double>>& homogenized_vector,
+        std::shared_ptr<const Core::LinAlg::Vector<double>>& artery_vector)
 {
   // process second field (continuous)
-  vec_cont = global_extractor_->extract_vector(*globalvec, 0);
+  homogenized_vector = global_extractor_->extract_vector(*global_vector, 0);
 
   // process coupled (boundary) DOFs of the second field
-  std::shared_ptr<Core::LinAlg::Vector<double>> boundary =
-      contfieldex_->extract_vector(*vec_cont, 1);
+  const std::shared_ptr<Core::LinAlg::Vector<double>> boundary_dofs =
+      homogenized_field_extractor_->extract_vector(*homogenized_vector, 1);
 
   // process inner (uncoupled) and boundary (coupled) DOFs of artery
-  std::shared_ptr<const Core::LinAlg::Vector<double>> artery_inner =
-      global_extractor_->extract_vector(*globalvec, 1);
-  std::shared_ptr<Core::LinAlg::Vector<double>> artery_boundary =
-      artcontfieldcoup_->master_to_slave(*boundary);
+  const std::shared_ptr<const Core::LinAlg::Vector<double>> artery_inner_dofs =
+      global_extractor_->extract_vector(*global_vector, 1);
+  const std::shared_ptr<Core::LinAlg::Vector<double>> artery_boundary_dofs =
+      coupling_artery_homogenized_->master_to_slave(*boundary_dofs);
 
   // build vector for artery
   // 1) inner DOFs
-  std::shared_ptr<Core::LinAlg::Vector<double>> artery_temp =
-      artex_->insert_vector(*artery_inner, 0);
+  const std::shared_ptr<Core::LinAlg::Vector<double>> artery_temp =
+      artery_field_extractor_->insert_vector(*artery_inner_dofs, 0);
   // 2) boundary DOFs
-  artex_->insert_vector(*artery_boundary, 1, *artery_temp);
+  artery_field_extractor_->insert_vector(*artery_boundary_dofs, 1, *artery_temp);
 
-  vec_art = artery_temp;
+  artery_vector = artery_temp;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void PoroPressureBased::PorofluidElastScatraArteryCouplingNodebasedAlgorithm::
-    check_dbc_on_coupled_dofs(Core::FE::Discretization& dis,
-        const std::shared_ptr<const Core::LinAlg::Map>& coupleddofmap)
+void PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm::
+    check_dbc_on_coupled_dofs(const Core::FE::Discretization& dis,
+        const std::shared_ptr<const Core::LinAlg::Map>& coupled_dof_map) const
 {
   // object holds maps/subsets for DOFs subjected to Dirichlet BCs and otherwise
-  std::shared_ptr<Core::LinAlg::MapExtractor> dbcmaps =
-      std::make_shared<Core::LinAlg::MapExtractor>();
+  const auto dbc_maps = std::make_shared<Core::LinAlg::MapExtractor>();
   {
-    std::shared_ptr<Core::LinAlg::Vector<double>> zeros =
+    const std::shared_ptr<Core::LinAlg::Vector<double>> zeros =
         Core::LinAlg::create_vector(*dis.dof_row_map(), true);
-    Teuchos::ParameterList eleparams;
+    Teuchos::ParameterList ele_params;
     // other parameters needed by the elements
-    eleparams.set("total time", 0.0);
-    eleparams.set<const Core::Utils::FunctionManager*>(
+    ele_params.set("total time", 0.0);
+    ele_params.set<const Core::Utils::FunctionManager*>(
         "function_manager", &Global::Problem::instance()->function_manager());
-    dis.evaluate_dirichlet(eleparams, zeros, nullptr, nullptr, nullptr, dbcmaps);
+    dis.evaluate_dirichlet(ele_params, zeros, nullptr, nullptr, nullptr, dbc_maps);
   }
   // intersect DBC maps and coupled dof map to check if coupling and DBC are applied on same dofs
-  std::vector<std::shared_ptr<const Core::LinAlg::Map>> dummy;
-  dummy.push_back(dbcmaps->cond_map());
-  dummy.push_back(coupleddofmap);
-  std::shared_ptr<Core::LinAlg::Map> intersect_dbc_coupled =
-      Core::LinAlg::MultiMapExtractor::intersect_maps(dummy);
+  std::vector<std::shared_ptr<const Core::LinAlg::Map>> maps_vector;
+  maps_vector.push_back(dbc_maps->cond_map());
+  maps_vector.push_back(coupled_dof_map);
+  const std::shared_ptr<Core::LinAlg::Map> intersect_dbc_coupled =
+      Core::LinAlg::MultiMapExtractor::intersect_maps(maps_vector);
 
   if (intersect_dbc_coupled->num_global_elements() > 0)
   {
@@ -310,62 +302,63 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNodebasedAlgorithm::
                 << dis.name()
                 << "\n"
                    "The problematic DOFs are:"
-                << std::endl;
+                << '\n';
     }
     intersect_dbc_coupled->print(std::cout);
-    FOUR_C_THROW("Re-think your Input file definition");
+    FOUR_C_THROW("Review you input file.");
   }
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void PoroPressureBased::PorofluidElastScatraArteryCouplingNodebasedAlgorithm::check_initial_fields(
-    std::shared_ptr<const Core::LinAlg::Vector<double>> vec_cont,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> vec_art)
+void PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm::check_initial_fields(
+    const std::shared_ptr<const Core::LinAlg::Vector<double>> homogenized_vector,
+    const std::shared_ptr<const Core::LinAlg::Vector<double>> artery_vector)
 {
   // boundary (coupled) DOFs of artery
-  std::shared_ptr<Core::LinAlg::Vector<double>> vec2_coupled = artex_->extract_vector(*vec_art, 1);
+  const std::shared_ptr<Core::LinAlg::Vector<double>> artery_coupled_dofs =
+      artery_field_extractor_->extract_vector(*artery_vector, 1);
 
-  // transform boundary DOFs to continuous dis
-  std::shared_ptr<Core::LinAlg::Vector<double>> temp =
-      artcontfieldcoup_->slave_to_master(*vec2_coupled);
+  // transform boundary DOFs to homogenized discretization
+  const std::shared_ptr<Core::LinAlg::Vector<double>> transformed_coupled_dofs =
+      coupling_artery_homogenized_->slave_to_master(*artery_coupled_dofs);
 
   // process coupled (boundary) DOFs of the second field
-  std::shared_ptr<Core::LinAlg::Vector<double>> boundary =
-      contfieldex_->extract_vector(*vec_cont, 1);
+  const std::shared_ptr<Core::LinAlg::Vector<double>> homogenized_coupled_dofs =
+      homogenized_field_extractor_->extract_vector(*homogenized_vector, 1);
 
   // subtract artery DOF values from continuous DOF values
-  boundary->update(-1.0, *temp, 1.0);
+  homogenized_coupled_dofs->update(-1.0, *transformed_coupled_dofs, 1.0);
 
   // build L2 norm
-  double diff(0.0);
-  boundary->norm_2(&diff);
+  double difference(0.0);
+  homogenized_coupled_dofs->norm_2(&difference);
 
-  if (diff > 1.0e-9)
+  if (difference > 1.0e-9)
   {
-    FOUR_C_THROW("Your initial fields apparently are different with an L2 norm of {}", diff);
+    FOUR_C_THROW("Your initial fields differ with an L2 norm of {}", difference);
   }
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 std::shared_ptr<const Core::LinAlg::Map>
-PoroPressureBased::PorofluidElastScatraArteryCouplingNodebasedAlgorithm::artery_dof_row_map() const
+PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm::artery_dof_row_map() const
 {
-  return artex_->map(0);
+  return artery_field_extractor_->map(0);
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 std::shared_ptr<const Core::LinAlg::Map>
-PoroPressureBased::PorofluidElastScatraArteryCouplingNodebasedAlgorithm::dof_row_map() const
+PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm::dof_row_map() const
 {
   return fullmap_;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void PoroPressureBased::PorofluidElastScatraArteryCouplingNodebasedAlgorithm::apply_mesh_movement()
+void PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm::apply_mesh_movement()
 {
   if (!evaluate_in_ref_config_)
     FOUR_C_THROW("Evaluation in current configuration not possible for node-based coupling");
@@ -374,19 +367,17 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNodebasedAlgorithm::ap
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 std::shared_ptr<const Core::LinAlg::Vector<double>> PoroPressureBased::
-    PorofluidElastScatraArteryCouplingNodebasedAlgorithm::blood_vessel_volume_fraction()
+    PorofluidElastScatraArteryCouplingNodeBasedAlgorithm::blood_vessel_volume_fraction()
 {
   FOUR_C_THROW("Output of vessel volume fraction not possible for node-based coupling");
-
-  return nullptr;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void PoroPressureBased::PorofluidElastScatraArteryCouplingNodebasedAlgorithm::
+void PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm::
     print_coupling_method() const
 {
-  std::cout << "<   Coupling-Method : Nodebased                    >" << std::endl;
+  std::cout << "<   Coupling-Method : Node-based                   >" << '\n';
 }
 
 FOUR_C_NAMESPACE_CLOSE

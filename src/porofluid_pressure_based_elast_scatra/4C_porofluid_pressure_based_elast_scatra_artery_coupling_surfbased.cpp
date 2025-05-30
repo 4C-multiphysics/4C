@@ -19,20 +19,20 @@ FOUR_C_NAMESPACE_OPEN
  *----------------------------------------------------------------------*/
 PoroPressureBased::PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm::
     PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm(
-        std::shared_ptr<Core::FE::Discretization> arterydis,
-        std::shared_ptr<Core::FE::Discretization> contdis,
-        const Teuchos::ParameterList& couplingparams, const std::string& condname,
-        const std::string& artcoupleddofname, const std::string& contcoupleddofname)
-    : PorofluidElastScatraArteryCouplingNonConformingAlgorithm(
-          arterydis, contdis, couplingparams, condname, artcoupleddofname, contcoupleddofname)
+        std::shared_ptr<Core::FE::Discretization> artery_dis,
+        std::shared_ptr<Core::FE::Discretization> homogenized_dis,
+        const Teuchos::ParameterList& coupling_params, const std::string& condition_name,
+        const std::string& artery_coupled_dof_name, const std::string& homogenized_coupled_dof_name)
+    : PorofluidElastScatraArteryCouplingNonConformingAlgorithm(artery_dis, homogenized_dis,
+          coupling_params, condition_name, artery_coupled_dof_name, homogenized_coupled_dof_name)
 {
   // user info
   if (my_mpi_rank_ == 0)
   {
-    std::cout << "<                                                  >" << std::endl;
+    std::cout << "<                                                  >" << '\n';
     print_coupling_method();
-    std::cout << "<                                                  >" << std::endl;
-    std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
+    std::cout << "<                                                  >" << '\n';
+    std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>" << '\n';
     std::cout << "\n";
   }
 }
@@ -42,127 +42,126 @@ PoroPressureBased::PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm::
 void PoroPressureBased::PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm::
     pre_evaluate_coupling_pairs()
 {
-  const int numpatch_axi = Global::Problem::instance()
-                               ->poro_fluid_multi_phase_dynamic_params()
-                               .sublist("ARTERY COUPLING")
-                               .get<int>("NUMPATCH_AXI");
-  const int numpatch_rad = Global::Problem::instance()
-                               ->poro_fluid_multi_phase_dynamic_params()
-                               .sublist("ARTERY COUPLING")
-                               .get<int>("NUMPATCH_RAD");
-  const int numartele = artery_dis_->num_global_elements();
-  const int numgp_per_artele = numpatch_axi * numpatch_rad * 25;
-  const int numgp_desired = numgp_per_artele * numartele;
+  const int num_patches_axial = Global::Problem::instance()
+                                    ->poro_fluid_multi_phase_dynamic_params()
+                                    .sublist("ARTERY COUPLING")
+                                    .get<int>("NUMPATCH_AXI");
+  const int num_patches_radial = Global::Problem::instance()
+                                     ->poro_fluid_multi_phase_dynamic_params()
+                                     .sublist("ARTERY COUPLING")
+                                     .get<int>("NUMPATCH_RAD");
+  const int num_artery_ele = artery_dis_->num_global_elements();
+  const int num_gp_per_artery_ele = num_patches_axial * num_patches_radial * 25;
+  const int num_gp_desired = num_gp_per_artery_ele * num_artery_ele;
 
-  // this vector keeps track of evaluation of GPs
-  std::shared_ptr<Core::LinAlg::MultiVector<double>> gp_vector =
-      std::make_shared<Core::LinAlg::MultiVector<double>>(
-          *artery_dis_->element_col_map(), numgp_per_artele);
+  // this vector keeps track of the Gauss point (GP) evaluation
+  const auto gp_vector = std::make_shared<Core::LinAlg::MultiVector<double>>(
+      *artery_dis_->element_col_map(), num_gp_per_artery_ele);
 
   // pre-evaluate
-  for (unsigned i = 0; i < coupled_ele_pairs_.size(); i++)
-    coupled_ele_pairs_[i]->pre_evaluate(gp_vector);
+  for (const auto& coupled_ele_pair : coupled_ele_pairs_) coupled_ele_pair->pre_evaluate(gp_vector);
 
   // delete the inactive pairs
-  coupled_ele_pairs_.erase(std::remove_if(coupled_ele_pairs_.begin(), coupled_ele_pairs_.end(),
-                               [](auto& pair) { return !pair->is_active(); }),
-      coupled_ele_pairs_.end());
+  std::erase_if(coupled_ele_pairs_, [](const auto& pair) { return !pair->is_active(); });
 
-  // the following takes care of a very special case, namely, if a GP on the lateral surface lies
-  // exactly in between two or more 3D elements owned by different procs.
-  // In that case, the GP is duplicated across all owning procs.
-  // We detect such cases and communicate them to all procs. below by adapting the
-  // "gp_vector", to contain the multiplicity of the respective GP. Later the GP weight inside the
-  // coupling pair is scaled by the inverse of the multiplicity
+  // The following takes care of a very special case, namely, if a GP on the lateral surface lies
+  // exactly in between two or more 3D elements owned by different procs. In that case, the GP is
+  // duplicated across all owning procs. We detect such cases and communicate them to all procs
+  // below by adapting the "gp_vector", to contain the multiplicity of the respective GP. Finally,
+  // the GP weight inside the coupling pair is scaled by the inverse of the multiplicity.
 
   int duplicates = 0;
   if (Core::Communication::num_mpi_ranks(get_comm()) > 1)
   {
-    std::vector<int> mygpvec(numgp_per_artele, 0);
-    std::vector<int> sumgpvec(numgp_per_artele, 0);
+    std::vector my_gp_vector(num_gp_per_artery_ele, 0);
+    std::vector sum_gp_vectors(num_gp_per_artery_ele, 0);
     // loop over all GIDs
     for (int gid = gp_vector->get_map().min_all_gid(); gid <= gp_vector->get_map().max_all_gid();
         gid++)
     {
       // reset
-      std::fill(sumgpvec.data(), sumgpvec.data() + numgp_per_artele, 0);
+      std::fill_n(sum_gp_vectors.data(), num_gp_per_artery_ele, 0);
 
-      const int mylid = gp_vector->get_map().lid(gid);
+      const int my_lid = gp_vector->get_map().lid(gid);
       // if not owned or ghosted fill with zeros
-      if (mylid < 0) std::fill(mygpvec.data(), mygpvec.data() + numgp_per_artele, 0);
+      if (my_lid < 0) std::fill_n(my_gp_vector.data(), num_gp_per_artery_ele, 0);
       // else get the GP vector
       else
-        for (int igp = 0; igp < numgp_per_artele; igp++)
-          mygpvec[igp] = static_cast<int>(((*gp_vector)(igp))[mylid]);
+        for (int igp = 0; igp < num_gp_per_artery_ele; igp++)
+          my_gp_vector[igp] = static_cast<int>(((*gp_vector)(igp))[my_lid]);
 
       // communicate to all via summation
-      Core::Communication::sum_all(mygpvec.data(), sumgpvec.data(), numgp_per_artele, get_comm());
+      Core::Communication::sum_all(
+          my_gp_vector.data(), sum_gp_vectors.data(), num_gp_per_artery_ele, get_comm());
 
-      // this is ok for now, either the GID does not exist or the entire element protrudes.
+      // This is ok for now, either the GID does not exist or the entire element protrudes.
       // Inform user and continue
-      if (*std::max_element(sumgpvec.data(), sumgpvec.data() + numgp_per_artele) < 1)
+      if (*std::max_element(sum_gp_vectors.data(), sum_gp_vectors.data() + num_gp_per_artery_ele) <
+          1)
       {
-        std::cout << "WARNING! No GP of element  " << gid + 1 << " could be projected!"
-                  << std::endl;
+        std::cout << "WARNING! No GP of element  " << gid + 1 << " could be projected!" << '\n';
         continue;
       }
 
       // if one entry is equal to zero, this GP could not be projected
-      if (*std::min_element(sumgpvec.data(), sumgpvec.data() + numgp_per_artele) < 1)
+      if (*std::min_element(sum_gp_vectors.data(), sum_gp_vectors.data() + num_gp_per_artery_ele) <
+          1)
         FOUR_C_THROW("It seems as if one GP could not be projected");
 
       // find number of duplicates
       int sum = 0;
-      sum = std::accumulate(sumgpvec.data(), sumgpvec.data() + numgp_per_artele, sum);
-      duplicates += sum - numgp_per_artele;
+      sum = std::accumulate(
+          sum_gp_vectors.data(), sum_gp_vectors.data() + num_gp_per_artery_ele, sum);
+      duplicates += sum - num_gp_per_artery_ele;
 
       // if owned or ghosted by this proc. and if duplicates have been detected, replace entry in
       // gp_vector
-      if (mylid >= 0 && sum > numgp_per_artele)
+      if (my_lid >= 0 && sum > num_gp_per_artery_ele)
       {
-        for (int igp = 0; igp < numgp_per_artele; igp++)
+        for (int igp = 0; igp < num_gp_per_artery_ele; igp++)
         {
-          int err = gp_vector->ReplaceMyValue(mylid, igp, static_cast<double>(sumgpvec[igp]));
-          if (err != 0) FOUR_C_THROW("ReplaceMyValue failed with error code {}!", err);
+          if (int err = gp_vector->ReplaceMyValue(my_lid, igp, sum_gp_vectors[igp]); err != 0)
+            FOUR_C_THROW("ReplaceMyValue failed with error code {}!", err);
         }
       }
     }
   }
 
-  for (unsigned i = 0; i < coupled_ele_pairs_.size(); i++)
-    coupled_ele_pairs_[i]->delete_unnecessary_gps(gp_vector);
+  for (const auto& coupled_ele_pair : coupled_ele_pairs_)
+    coupled_ele_pair->delete_unnecessary_gps(gp_vector);
 
   int total_num_gp = 0;
-  int numgp = 0;
+  int num_gp = 0;
 
-  for (unsigned i = 0; i < coupled_ele_pairs_.size(); i++)
+  for (const auto& coupled_ele_pair : coupled_ele_pairs_)
   {
-    // segment ID not needed in this case, just set to zero
-    coupled_ele_pairs_[i]->set_segment_id(0);
-    numgp = numgp + coupled_ele_pairs_[i]->num_gp();
+    // segment ID is not needed in this case, just set to zero
+    coupled_ele_pair->set_segment_id(0);
+    num_gp = num_gp + coupled_ele_pair->num_gp();
   }
   // safety check
-  Core::Communication::sum_all(&numgp, &total_num_gp, 1, get_comm());
-  if (numgp_desired != total_num_gp - duplicates)
+  Core::Communication::sum_all(&num_gp, &total_num_gp, 1, get_comm());
+  if (num_gp_desired != total_num_gp - duplicates)
     FOUR_C_THROW("It seems as if some GPs could not be projected");
 
   // output
-  int total_numactive_pairs = 0;
-  int numactive_pairs = static_cast<int>(coupled_ele_pairs_.size());
-  Core::Communication::sum_all(&numactive_pairs, &total_numactive_pairs, 1, get_comm());
+  int total_num_active_pairs = 0;
+  int num_active_pairs = static_cast<int>(coupled_ele_pairs_.size());
+  Core::Communication::sum_all(&num_active_pairs, &total_num_active_pairs, 1, get_comm());
   if (homogenized_dis_->name() == "porofluid" && my_mpi_rank_ == 0)
-    std::cout << "Only " << total_numactive_pairs
-              << " Artery-to-PoroMultiphaseScatra coupling pairs are active" << std::endl;
+    std::cout << "Only " << total_num_active_pairs
+              << " Artery-to-PoroMultiphaseScatra coupling pairs are active" << '\n';
 
-  // print out summary of pairs
+  // print summary of pairs
   if (homogenized_dis_->name() == "porofluid" &&
       coupling_params_.get<bool>("PRINT_OUT_SUMMARY_PAIRS"))
   {
     if (my_mpi_rank_ == 0)
-      std::cout << "In total " << numgp_desired << " GPs (" << numgp_per_artele
-                << " per artery element) required for lateral surface coupling" << std::endl;
-    std::cout << "Proc. " << my_mpi_rank_ << " evaluates " << numgp << " GPs " << "("
-              << (double)(numgp) / (double)(total_num_gp) * 100.0 << "% of all GPs)" << std::endl;
+      std::cout << "In total " << num_gp_desired << " GPs (" << num_gp_per_artery_ele
+                << " per artery element) required for lateral surface coupling" << '\n';
+    std::cout << "Proc. " << my_mpi_rank_ << " evaluates " << num_gp << " GPs " << "("
+              << static_cast<double>(num_gp) / static_cast<double>(total_num_gp) * 100.0
+              << "% of all GPs)" << '\n';
   }
 }
 
@@ -171,11 +170,11 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm:
 void PoroPressureBased::PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm::setup()
 {
   // call base class
-  PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm::setup();
+  PorofluidElastScatraArteryCouplingNonConformingAlgorithm::setup();
 
   // error-checks
   if (has_variable_diameter_)
-    FOUR_C_THROW("Varying diameter not yet possible for surface-based coupling");
+    FOUR_C_THROW("Variable diameter not yet possible for surface-based coupling");
   if (!evaluate_in_ref_config_)
     FOUR_C_THROW("Evaluation in current configuration not yet possible for surface-based coupling");
 
@@ -185,8 +184,8 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm:
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void PoroPressureBased::PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm::evaluate(
-    std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> sysmat,
-    std::shared_ptr<Core::LinAlg::Vector<double>> rhs)
+    const std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> sysmat,
+    const std::shared_ptr<Core::LinAlg::Vector<double>> rhs)
 {
   if (!is_setup_) FOUR_C_THROW("setup() has not been called");
 
@@ -204,19 +203,19 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm:
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void PoroPressureBased::PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm::setup_system(
-    std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> sysmat,
-    std::shared_ptr<Core::LinAlg::Vector<double>> rhs,
-    std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_cont,
-    std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_art,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_cont,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_art,
-    std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmap_cont,
-    std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmap_art)
+    const std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> sysmat,
+    const std::shared_ptr<Core::LinAlg::Vector<double>> rhs,
+    const std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_homogenized,
+    const std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_artery,
+    const std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_homogenized,
+    const std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_artery,
+    const std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmap_homogenized,
+    const std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmap_artery)
 {
   // call base class
-  PorofluidElastScatraArteryCouplingNonConformingAlgorithm::setup_system(*sysmat, rhs, *sysmat_cont,
-      *sysmat_art, rhs_cont, rhs_art, *dbcmap_cont, *dbcmap_art->cond_map(),
-      *dbcmap_art->cond_map());
+  PorofluidElastScatraArteryCouplingNonConformingAlgorithm::setup_system(*sysmat, rhs,
+      *sysmat_homogenized, *sysmat_artery, rhs_homogenized, rhs_artery, *dbcmap_homogenized,
+      *dbcmap_artery->cond_map(), *dbcmap_artery->cond_map());
 }
 
 /*----------------------------------------------------------------------*

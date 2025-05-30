@@ -19,20 +19,20 @@ FOUR_C_NAMESPACE_OPEN
  *----------------------------------------------------------------------*/
 PoroPressureBased::PorofluidElastScatraArteryCouplingNodeToPointAlgorithm::
     PorofluidElastScatraArteryCouplingNodeToPointAlgorithm(
-        std::shared_ptr<Core::FE::Discretization> arterydis,
-        std::shared_ptr<Core::FE::Discretization> contdis,
-        const Teuchos::ParameterList& couplingparams, const std::string& condname,
-        const std::string& artcoupleddofname, const std::string& contcoupleddofname)
-    : PorofluidElastScatraArteryCouplingNonConformingAlgorithm(
-          arterydis, contdis, couplingparams, condname, artcoupleddofname, contcoupleddofname)
+        std::shared_ptr<Core::FE::Discretization> artery_dis,
+        std::shared_ptr<Core::FE::Discretization> homogenized_dis,
+        const Teuchos::ParameterList& coupling_params, const std::string& condition_name,
+        const std::string& artery_coupled_dof_name, const std::string& homogenized_coupled_dof_name)
+    : PorofluidElastScatraArteryCouplingNonConformingAlgorithm(artery_dis, homogenized_dis,
+          coupling_params, condition_name, artery_coupled_dof_name, homogenized_coupled_dof_name)
 {
   // user info
   if (my_mpi_rank_ == 0)
   {
-    std::cout << "<                                                  >" << std::endl;
+    std::cout << "<                                                  >" << '\n';
     print_coupling_method();
-    std::cout << "<                                                  >" << std::endl;
-    std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
+    std::cout << "<                                                  >" << '\n';
+    std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>" << '\n';
     std::cout << "\n";
   }
 }
@@ -55,7 +55,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNodeToPointAlgorithm::
 
   // error-checks
   if (has_variable_diameter_)
-    FOUR_C_THROW("Varying diameter not yet possible for node-to-point coupling");
+    FOUR_C_THROW("Variable diameter not yet possible for node-to-point coupling");
   if (!evaluate_in_ref_config_)
     FOUR_C_THROW("Evaluation in current configuration not yet possible for node-to-point coupling");
 
@@ -105,17 +105,17 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNodeToPointAlgorithm::
 void PoroPressureBased::PorofluidElastScatraArteryCouplingNodeToPointAlgorithm::setup_system(
     std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> sysmat,
     std::shared_ptr<Core::LinAlg::Vector<double>> rhs,
-    std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_cont,
-    std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_art,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_cont,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_art,
-    std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmap_cont,
-    std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmap_art)
+    std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_homogenized,
+    std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_artery,
+    std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_homogenized,
+    std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_artery,
+    std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmap_homogenized,
+    std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmap_artery)
 {
   // call base class
-  PorofluidElastScatraArteryCouplingNonConformingAlgorithm::setup_system(*sysmat, rhs, *sysmat_cont,
-      *sysmat_art, rhs_cont, rhs_art, *dbcmap_cont, *dbcmap_art->cond_map(),
-      *dbcmap_art->cond_map());
+  PorofluidElastScatraArteryCouplingNonConformingAlgorithm::setup_system(*sysmat, rhs,
+      *sysmat_homogenized, *sysmat_artery, rhs_homogenized, rhs_artery, *dbcmap_homogenized,
+      *dbcmap_artery->cond_map(), *dbcmap_artery->cond_map());
 }
 
 /*----------------------------------------------------------------------*
@@ -159,7 +159,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNodeToPointAlgorithm::
     std::cout << "Proc " << std::right << std::setw(2) << my_mpi_rank_ << ": Artery-ele "
               << std::right << std::setw(5) << coupled_ele_pair->ele1_gid()
               << ": <---> continuous-ele " << std::right << std::setw(7)
-              << coupled_ele_pair->ele2_gid() << std::endl;
+              << coupled_ele_pair->ele2_gid() << '\n';
   }
   Core::Communication::barrier(get_comm());
   if (my_mpi_rank_ == 0) std::cout << "\n";

@@ -63,7 +63,7 @@ namespace PoroPressureBased
 
     //! evaluate additional linearization of (integrated) element diameter dependent terms
     //! (Hagen-Poiseuille)
-    virtual void evaluate_additional_linearizationof_integrated_diam() = 0;
+    virtual void evaluate_additional_linearization_of_integrated_diameter() = 0;
 
     //! FE-assemble into global force and stiffness matrix
     virtual void assemble(const int& ele1_gid, const int& ele2_gid,
@@ -163,9 +163,6 @@ namespace PoroPressureBased
     //! create interaction pairs for node-to-point coupling
     void create_coupling_pairs_node_to_point();
 
-    //! calculate the volume fraction occupied by blood vessels
-    void calculate_blood_vessel_volume_fraction();
-
     //! get the node Id from 1D nodes from the input file for node-to-point coupling
     void get_coupling_nodes_from_input_node_to_point();
 
@@ -180,7 +177,7 @@ namespace PoroPressureBased
 
     //! sum D and M into global force and stiffness matrix
     void sum_mortar_matrices_into_global_matrix(Core::LinAlg::BlockSparseMatrixBase& sysmat,
-        const std::shared_ptr<Core::LinAlg::Vector<double>> rhs) const;
+        std::shared_ptr<Core::LinAlg::Vector<double>> rhs) const;
 
     //! return appropriate internal implementation class
     //! (acts as a simple factory to create single pairs)
@@ -190,8 +187,8 @@ namespace PoroPressureBased
     //! set the artery diameter in material to be able to use it on 1D discretization
     virtual void set_artery_diameter_in_material() = 0;
 
-    //! get the segment lengths of element 'artery_ele_gid'
-    virtual std::vector<double> get_ele_segment_lengths(int artery_ele_gid) = 0;
+    //! get the segment length
+    virtual std::vector<double> get_ele_segment_length(int artery_ele_gid) = 0;
 
     //! reset the integrated diameter vector to zero
     virtual void reset_integrated_diameter_to_zero() = 0;
