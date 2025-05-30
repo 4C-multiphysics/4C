@@ -190,7 +190,7 @@ def schema_from_group(group):
     metadata_dict = asdict(group)
     noneable = metadata_dict.pop("noneable", False)
     metadata_dict.pop("defaultable", False)
-    schema = schema_from_all_of(All_Of(**metadata_dict))
+    schema = schema_from_all_of(All_Of(**metadata_dict), is_group=True)
     schema["title"] = group.short_description()
 
     set_description(schema, group.description)
@@ -407,11 +407,12 @@ def schema_from_one_of(one_of):
     return flatten_one_ofs(schema)
 
 
-def schema_from_all_of(all_of):
+def schema_from_all_of(all_of, is_group=False):
     """Create schema from all_of.
 
     Args:
         all_of (All_of): All_of collection
+        is_group (bool): The all of is actually a group but we reuse functionality
 
     Returns:
         dict: JSON schema data
@@ -442,6 +443,9 @@ def schema_from_all_of(all_of):
     # One_ofs
     if one_ofs:
         if len(one_ofs) == 1:
+            if is_group:
+                # A group can consist of only one one_of
+                return schema_from_one_of(one_ofs[0])
             raise TypeError("A single one_of had to be returned previously")
         else:
             raise NotImplementedError(

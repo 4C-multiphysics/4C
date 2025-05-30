@@ -264,10 +264,31 @@ namespace Core::IO
 
       enum class State : std::uint8_t
       {
+        /**
+         * Not a match at all.
+         */
         unmatched,
+        /**
+         * A perfect match.
+         */
         matched,
+        /**
+         * At least something matched. Depending on the type of spec, this can e.g. mean that
+         * the key of a group matched.
+         */
         partial,
+        /**
+         * The match was successfully defaulted.
+         */
         defaulted,
+        /**
+         * The node contains entries that were not used by the matched spec.
+         */
+        unused_entries,
+        /**
+         * The spec was not required and was not matched. This is OK.
+         */
+        not_required,
       };
 
       State state{State::unmatched};
@@ -604,6 +625,12 @@ namespace Core::IO
     using DefaultType =
         std::conditional_t<OptionalType<T>, NoDefault, std::variant<std::monostate, T>>;
 
+    /**
+     * Experimental validator function. Currently only used internally and not a documented feature.
+     */
+    template <typename T>
+    using Validator = std::function<bool(const T&, const InputParameterContainer&)>;
+
     //! Additional parameters for a parameter().
     template <typename T>
     struct ParameterDataIn
@@ -625,6 +652,12 @@ namespace Core::IO
        * set additional values in the container.
        */
       ParameterCallback on_parse_callback{nullptr};
+
+      /**
+       * An optional validator function that is called after the value has been parsed as type T. If
+       * the validator returns false, the parameter is considered invalid.
+       */
+      Validator<T> validator{nullptr};
     };
 
     template <typename T>
@@ -638,6 +671,8 @@ namespace Core::IO
       DefaultType<T> default_value{};
 
       ParameterCallback on_parse_callback{nullptr};
+
+      Validator<T> validator{nullptr};
 
       /**
        * The size of the vector. This can be a fixed size, #dynamic_size, or a callback that
@@ -657,6 +692,8 @@ namespace Core::IO
       DefaultType<T> default_value{};
 
       ParameterCallback on_parse_callback{nullptr};
+
+      Validator<T> validator{nullptr};
 
       std::array<Size, rank<T>()> size;
     };
@@ -726,6 +763,8 @@ namespace Core::IO
       std::variant<std::monostate, StoredType> default_value{};
 
       InputSpecBuilders::ParameterCallback on_parse_callback{nullptr};
+
+      InputSpecBuilders::Validator<T> validator{nullptr};
 
       std::array<InputSpecBuilders::Size, rank<T>()> size{};
     };
@@ -801,6 +840,8 @@ namespace Core::IO
       BasedOn<T> based_on;
       InputSpecBuilders::SelectionData data;
       InputSpec selector_spec;
+      //! This specs is built in such a way that it can fully match the selection at once.
+      InputSpec spec_for_matching;
 
       void parse(ValueParser& parser, InputParameterContainer& container) const;
       bool match(ConstYamlNodeRef node, InputParameterContainer& container,
@@ -916,6 +957,13 @@ namespace Core::IO
                    m, [&](const auto& val) { return this->operator()(val.second, size_info + 1); });
       }
     };
+
+    /**
+     * If the given @p spec is not already an all_of spec, this function wraps it into an
+     * all_of spec. This is useful for the match function of InputSpec to ensure a consistent
+     * starting point.
+     */
+    Core::IO::InputSpec wrap_with_all_of(Core::IO::InputSpec spec);
   }  // namespace Internal
 
   namespace InputSpecBuilders
@@ -1434,6 +1482,13 @@ bool Core::IO::Internal::ParameterSpec<T>::match(ConstYamlNodeRef node,
         return false;
       }
     }
+
+    if (data.validator && !data.validator(value, container))
+    {
+      match_entry.additional_info = "value did not pass validation";
+      return false;
+    }
+
     container.add(name, value);
     match_entry.state = IO::Internal::MatchEntry::State::matched;
     match_entry.matched_node = entry_node.node.id();
@@ -1800,43 +1855,14 @@ template <typename T>
 bool Core::IO::Internal::SelectionSpec<T>::match(ConstYamlNodeRef node,
     InputParameterContainer& container, IO::Internal::MatchEntry& match_entry) const
 {
-  const auto group_name_substr = ryml::to_csubstr(group_name);
+  // We could insert the SelectionSpec into the match tree, but instead we just step over it and
+  // use the spec for matching next.
+  match_entry.spec = &spec_for_matching;
 
-  const bool group_node_is_input = node.node.has_key() && (node.node.key() == group_name);
-  const bool group_exists_nested = node.node.is_map() && node.node.has_child(group_name_substr) &&
-                                   node.node[group_name_substr].is_map();
+  FOUR_C_ASSERT(spec_for_matching.impl().data.type == InputSpecType::group,
+      "Internal error: SelectionSpec must be a group.");
 
-  if (!group_exists_nested && !group_node_is_input)
-  {
-    return !data.required;
-  }
-
-  auto group_node = group_node_is_input ? node : node.wrap(node.node[group_name_substr]);
-
-  // Matching the key of the group is at least a partial match.
-  match_entry.state = IO::Internal::MatchEntry::State::partial;
-  match_entry.matched_node = group_node.node.id();
-
-  // Parse into a separate container to avoid side effects if parsing fails.
-  InputParameterContainer subcontainer;
-  bool selector_found = selector_spec.impl().match(
-      group_node, subcontainer, match_entry.append_child(&selector_spec));
-  if (!selector_found) return false;
-
-  auto selector_value = subcontainer.get<T>(based_on.selector);
-  FOUR_C_ASSERT(
-      based_on.choices.contains(selector_value), "Internal error: selector not found in choices.");
-  const auto& selected_spec = based_on.choices.at(selector_value);
-
-  auto choice_matched = selected_spec.impl().match(
-      group_node, subcontainer, match_entry.append_child(&selected_spec));
-  if (!choice_matched) return false;
-
-  // Everything was correctly matched, so mark the whole node as matched.
-  match_entry.state = IO::Internal::MatchEntry::State::matched;
-
-  container.group(group_name) = subcontainer;
-  return true;
+  return spec_for_matching.impl().match(node, container, match_entry);
 }
 
 template <typename T>
@@ -1955,6 +1981,7 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::parameter(
     internal_data.size = data.size;
   }
   internal_data.on_parse_callback = data.on_parse_callback;
+  internal_data.validator = data.validator;
 
   return IO::Internal::make_spec(Internal::ParameterSpec<T>{.name = name, .data = internal_data},
       {
@@ -1981,22 +2008,34 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::selection(
         EnumTools::enum_type_name<T>(), EnumTools::enum_name(e));
   }
 
-  std::size_t max_specs_for_choices = std::ranges::max_element(
-      based_on.choices, {}, [](const auto& spec) { return spec.second.impl().data.n_specs; })
-                                          ->second.impl()
-                                          .data.n_specs;
+  auto one_of_choices = std::vector<InputSpec>{};
+  one_of_choices.reserve(based_on.choices.size());
+  for (const auto& e : EnumTools::enum_values<T>())
+  {
+    one_of_choices.emplace_back(all_of({
+        parameter<T>(based_on.selector,
+            {.validator = [e](const T& val, const InputParameterContainer&) { return val == e; }}),
+        based_on.choices.at(e),
+    }));
+  }
 
-  return IO::Internal::make_spec(Internal::SelectionSpec<T>{.group_name = name,
-                                     .based_on = based_on,
-                                     .data = data,
-                                     .selector_spec = parameter<T>(based_on.selector, {})},
+  auto spec_for_matching = group(name, {one_of(one_of_choices)});
+
+
+  return IO::Internal::make_spec(
+      Internal::SelectionSpec<T>{
+          .group_name = name,
+          .based_on = based_on,
+          .data = data,
+          .selector_spec = parameter<T>(based_on.selector, {}),
+          .spec_for_matching = spec_for_matching,
+      },
       {
           .name = name,
           .description = data.description,
           .required = data.required,
           .has_default_value = false,
-          // one for the group, one for the selector, plus the number of specs for the choices.
-          .n_specs = 2 + max_specs_for_choices,
+          .n_specs = spec_for_matching.impl().data.n_specs,
           .type = Internal::InputSpecType::selection,
       });
 }

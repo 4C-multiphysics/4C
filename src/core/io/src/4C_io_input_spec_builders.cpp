@@ -7,13 +7,15 @@
 
 #include "4C_io_input_spec_builders.hpp"
 
+#include "4C_utils_std23_unreachable.hpp"
 #include "4C_utils_string.hpp"
 
 #include <format>
 #include <numeric>
-#include <set>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
+
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -23,7 +25,7 @@ namespace
       const std::vector<Core::IO::InputSpec>& line, Core::IO::InputParameterContainer& container)
   {
     std::unordered_map<std::string, const Core::IO::InputSpec*> name_to_entry_map;
-    std::set<const Core::IO::InputSpec*> unnamed_entries;
+    std::unordered_set<const Core::IO::InputSpec*> unnamed_entries;
     for (const auto& entry : line)
     {
       const auto& name = entry.impl().name();
@@ -126,7 +128,7 @@ namespace
 
   void assert_unique_or_empty_names(const std::vector<Core::IO::InputSpec>& specs)
   {
-    std::set<std::string> names;
+    std::unordered_set<std::string> names;
     for (const auto& spec : specs)
     {
       if (!spec.impl().name().empty())
@@ -165,21 +167,6 @@ namespace
     return description;
   }
 
-  // Match a vector of specs against a node. Returns true when all specs could be matched.
-  // Does not validate that all content of the node was matched as this differs depending on the
-  // context.
-  bool match_vector_of_specs(const std::vector<Core::IO::InputSpec>& specs,
-      Core::IO::ConstYamlNodeRef node, Core::IO::InputParameterContainer& container,
-      Core::IO::Internal::MatchEntry& vector_matches)
-  {
-    bool all_ok = true;
-    for (const auto& spec : specs)
-    {
-      auto& spec_match = vector_matches.append_child(&spec);
-      all_ok &= spec.impl().match(node, container, spec_match);
-    }
-    return all_ok;
-  }
 
   /**
    * Helper class to remember the child nodes of a node and restore this state at a later point,
@@ -231,6 +218,10 @@ namespace
           // No special meaning for the negative values; this is just debug output.
           switch (entry.state)
           {
+            case MatchEntry::State::not_required:
+              return -5;
+            case MatchEntry::State::unused_entries:
+              return -4;
             case MatchEntry::State::defaulted:
               return -3;
             case MatchEntry::State::unmatched:
@@ -253,14 +244,63 @@ namespace
     }
   }
 
+  void print_node_with_indent(ryml::ConstNodeRef node, std::ostream& out, int depth)
+  {
+    // Break the node content into lines and print each line with the indent.
+    const std::string indent = std::string(depth, ' ');
+
+    std::ostringstream node_content;
+    node_content << node;
+    auto lines = Core::Utils::split(node_content.str(), "\n");
+
+    for (const auto& line : lines)
+      if (!line.empty()) out << indent << line << '\n';
+  }
+
+  void print_unused_entries(const MatchEntry& entry, std::ostream& out, int depth)
+  {
+    if (entry.state != MatchEntry::State::unused_entries) return;
+
+    const auto& tree = *entry.tree;
+    // Unpack the IDs from the additional_data string.
+    std::vector<ryml::id_type> unused_ids;
+    std::vector<std::string> unused_ids_str = Core::Utils::split(entry.additional_info, " ");
+    unused_ids.reserve(unused_ids_str.size());
+    for (const auto& id_str : unused_ids_str)
+    {
+      if (id_str.empty()) continue;  // Skip empty strings.
+      try
+      {
+        unused_ids.push_back(std::stoi(id_str));
+      }
+      catch (const std::invalid_argument&)
+      {
+        FOUR_C_ASSERT(false, "Invalid ID '{}' in unused entries.", id_str);
+      }
+    }
+
+
+    std::string indent = std::string(depth, ' ');
+    out << indent << "[!] The following data remains unused:\n";
+    for (const auto& id : unused_ids)
+    {
+      auto unused_node = tree.node().node.tree()->ref(id);
+      print_node_with_indent(unused_node, out, depth + 2);
+    }
+  }
+
   void recursively_print_match_entries(const MatchEntry& entry, std::ostream& out, int depth)
   {
     std::string indent = std::string(depth, ' ');
-    constexpr std::array state_symbol = {"[X]", "[ ]", "[!]", "[ ]"};
+    constexpr std::array<const char*, magic_enum::enum_count<MatchEntry::State>()> state_symbol = {
+        "[X]", "[ ]", "[!]", "[ ]", "[?]", "[ ]"};
 
     const auto print_match_state = [&]()
     {
-      constexpr std::array state_phrase = {"Expected", "Matched", "Candidate", "Defaulted"};
+      constexpr std::array<const char*, magic_enum::enum_count<MatchEntry::State>()> state_phrase =
+          {"Expected", "Matched", "Candidate", "Defaulted", "Unused entries in",
+              "Skipped optional"};
+
       out << indent;
       out << std::format("{} {} {} '{}'", state_symbol[static_cast<int>(entry.state)],
           state_phrase[static_cast<int>(entry.state)], entry.spec->impl().data.type,
@@ -283,6 +323,7 @@ namespace
       case InputSpecType::selection:
       {
         print_match_state();
+        out << '\n';
         if (entry.state == MatchEntry::State::partial)
         {
           // Selection has the selector and the chosen spec as children.
@@ -350,6 +391,7 @@ namespace
         {
           recursively_print_match_entries(*child, out, depth + 2);
         }
+        print_unused_entries(entry, out, depth + 2);
         out << indent << "}\n";
         break;
       }
@@ -426,11 +468,10 @@ namespace
   }
 
   void recursively_find_unmatched_nodes(ryml::ConstNodeRef node,
-      const std::vector<ryml::id_type>& matched_node_ids,
-      std::set<ryml::id_type>& unmatched_node_ids)
+      const std::unordered_set<ryml::id_type>& matched_node_ids,
+      std::unordered_set<ryml::id_type>& unmatched_node_ids)
   {
-    if (std::find(matched_node_ids.begin(), matched_node_ids.end(), node.id()) ==
-        matched_node_ids.end())
+    if (!matched_node_ids.contains(node.id()))
     {
       unmatched_node_ids.insert(node.id());
     }
@@ -443,9 +484,10 @@ namespace
     }
   }
 
-  void recursively_add_node_ids(ryml::ConstNodeRef node, std::vector<ryml::id_type>& child_ids)
+  void recursively_add_node_ids(
+      ryml::ConstNodeRef node, std::unordered_set<ryml::id_type>& child_ids)
   {
-    child_ids.push_back(node.id());
+    child_ids.insert(node.id());
     if (node.has_children())
     {
       for (const auto& child : node.children())
@@ -455,98 +497,97 @@ namespace
     }
   }
 
-  std::set<ryml::id_type> unmatched_input_nodes(
-      const std::vector<MatchEntry> entries, ryml::ConstNodeRef node)
+  std::unordered_set<ryml::id_type> unmatched_input_nodes(
+      const std::vector<MatchEntry*>& entries, ryml::ConstNodeRef node)
   {
+    // Any of these states indicates that we can at least guess what the input was meant to be, so
+    // consider these nodes as matches for the purpose of this function. We only want to detect
+    // nodes where we have no idea what we are supposed to do with them.
+    const auto used_in_any_way = [](const MatchEntry& entry)
+    {
+      return entry.state == MatchEntry::State::matched ||
+             entry.state == MatchEntry::State::partial ||
+             entry.state == MatchEntry::State::unused_entries;
+    };
+
     // We assume that the top-level node is always matched. If it is not, this must mean that the
     // InputSpec does not fit at all and this check is pointless because we throw before. Fixing
     // this up here allows to treat logical nodes (without associated input nodes) and real nodes
     // uniformly.
-    std::vector<ryml::id_type> matched_node_ids{node.id()};
-    for (const auto& entry : entries)
+    std::unordered_set<ryml::id_type> matched_node_ids{node.id()};
+    for (const auto& entry_ptr : entries)
     {
-      switch (entry.spec->impl().data.type)
+      if (used_in_any_way(*entry_ptr))
       {
-        case InputSpecType::parameter:
-        {
-          if (entry.state == MatchEntry::State::matched)
-          {
-            recursively_add_node_ids(node.tree()->ref(entry.matched_node), matched_node_ids);
-          }
-          break;
-        }
-        case InputSpecType::group:
-        {
-          if (entry.state != MatchEntry::State::unmatched)
-          {
-            // For groups, only add the grouping node, children will be treated by other
-            // MatchEntries.
-            matched_node_ids.push_back(entry.matched_node);
-          }
-          break;
-        }
-        case InputSpecType::list:
-        {
-          if (entry.state == MatchEntry::State::matched)
-          {
-            // If the list is matched, just add all child nodes as well
-            recursively_add_node_ids(node.tree()->ref(entry.matched_node), matched_node_ids);
-          }
-          break;
-        }
-        case InputSpecType::selection:
-        case InputSpecType::deprecated_selection:
-        {
-          if (entry.state == MatchEntry::State::matched)
-          {
-            matched_node_ids.push_back(entry.matched_node);
-          }
-          break;
-        }
-        case InputSpecType::all_of:
-        case InputSpecType::one_of:
-        {
-          // Nothing to do for logical specs. They do not appear in the input tree.
-          break;
-        }
+        recursively_add_node_ids(node.tree()->ref(entry_ptr->matched_node), matched_node_ids);
       }
     }
 
     // Now compare against all the nodes that are in the input yaml tree.
-    std::set<ryml::id_type> unmatched_node_ids;
+    std::unordered_set<ryml::id_type> unmatched_node_ids;
     recursively_find_unmatched_nodes(node, matched_node_ids, unmatched_node_ids);
     return unmatched_node_ids;
   }
 
-  void markup_copy(
-      ryml::ConstNodeRef src, ryml::NodeRef dst, const std::set<ryml::id_type>& marked_ids)
+  // Match a vector of specs against a node. Returns true when all specs could be matched and
+  // the node does not contain any unmatched entries.
+  bool fully_match_specs(std::span<const Core::IO::InputSpec> specs,
+      Core::IO::ConstYamlNodeRef node, Core::IO::InputParameterContainer& container,
+      Core::IO::Internal::MatchEntry& match_entry)
   {
-    dst.set_type(src.type());
-
-    if (src.has_key())
+    bool all_ok = true;
+    for (const auto& spec : specs)
     {
-      if (marked_ids.contains(src.id()))
+      auto& spec_match = match_entry.append_child(&spec);
+      all_ok &= spec.impl().match(node, container, spec_match);
+    }
+
+    if (all_ok)
+    {
+      // Check if nothing unmatched is left in the node.
+      auto unmatched_node_ids = unmatched_input_nodes(match_entry.children, node.node);
+
+      if (unmatched_node_ids.empty())
       {
-        std::string marked_up_key = "[!] " + std::string(src.key().data(), src.key().size());
-        dst << ryml::key(marked_up_key);
-        dst |= ryml::KEY_PLAIN;
+        match_entry.state = Core::IO::Internal::MatchEntry::State::matched;
+        return true;
       }
       else
-        dst.set_key(src.key());
+      {
+        match_entry.state = Core::IO::Internal::MatchEntry::State::unused_entries;
+        for (const auto& id : unmatched_node_ids)
+        {
+          match_entry.additional_info += std::to_string(id) + " ";
+        }
+        match_entry.additional_info.pop_back();  // Remove the last space.
+        return false;
+      }
     }
-    if (src.has_val())
-    {
-      dst.set_val(src.val());
-    }
-    // Recursively copy children
-    for (size_t i = 0; i < src.num_children(); ++i)
-    {
-      c4::yml::ConstNodeRef src_child = src.child(i);
-      c4::yml::NodeRef dst_child = dst.append_child();
-      markup_copy(src_child, dst_child, marked_ids);
-    }
+
+    return false;
   }
+
+  // Check whether a spec can only match partial objects. This means that the spec can never judge
+  // whether parts of the input are unused or not.
+  bool spec_matches_partial_objects(const Core::IO::InputSpec& spec)
+  {
+    switch (spec.impl().data.type)
+    {
+      case InputSpecType::group:
+      case InputSpecType::all_of:
+      case InputSpecType::one_of:
+      case InputSpecType::list:
+        return false;
+      case InputSpecType::parameter:
+      case InputSpecType::selection:
+      case InputSpecType::deprecated_selection:
+        return true;
+    }
+    std23::unreachable();
+  }
+
 }  // namespace
+
 
 Core::IO::Internal::MatchEntry& Core::IO::Internal::MatchTree::append_child(
     const Core::IO::InputSpec* spec)
@@ -575,24 +616,6 @@ void Core::IO::Internal::MatchTree::assert_match() const
     ss << "against the given input specification. ";
     ss << "This was the best attempt to match the input:\n\n";
     recursively_print_match_entries(entries_.front(), ss, 0);
-    FOUR_C_THROW("{}", ss.str());
-  }
-
-  // Check that everything in the input was actually used.
-  auto unmatched_node_ids = unmatched_input_nodes(entries_, node_.node);
-  if (!unmatched_node_ids.empty())
-  {
-    std::stringstream ss;
-    ss << "Matched the following input but the highlighted parts remain unused:\n\n";
-
-    // Create a copy that we can modify with some markup for a better error message.
-    auto copy = ryml::emitrs_yaml<std::string>(node_.node);
-    ryml::Tree copy_tree = init_yaml_tree_with_exceptions();
-    auto copy_root = copy_tree.rootref();
-    copy_root |= ryml::MAP;
-    markup_copy(node_.node, copy_root.append_child(), unmatched_node_ids);
-    ss << copy_tree.rootref().child(0) << "\n";
-
     FOUR_C_THROW("{}", ss.str());
   }
 }
@@ -700,8 +723,17 @@ bool Core::IO::Internal::GroupSpec::match(ConstYamlNodeRef node,
     {
       match_entry.state = IO::Internal::MatchEntry::State::defaulted;
       set_default_value(container);
+      return true;
     }
-    return !data.required.value();
+
+    if (!data.required.value())
+    {
+      // Not present and not required.
+      match_entry.state = IO::Internal::MatchEntry::State::not_required;
+      return true;
+    }
+
+    return false;
   }
 
   auto group_node = group_node_is_input ? node : node.wrap(node.node[group_name]);
@@ -712,16 +744,13 @@ bool Core::IO::Internal::GroupSpec::match(ConstYamlNodeRef node,
 
   // Parse into a separate container to avoid side effects if parsing fails.
   InputParameterContainer subcontainer;
-  bool all_matched = match_vector_of_specs(specs, group_node, subcontainer, match_entry);
+  bool all_matched = fully_match_specs(specs, group_node, subcontainer, match_entry);
 
   if (!all_matched)
   {
     // Match will stay a partial match.
     return false;
   }
-
-  // Everything was correctly matched, so mark the group node as matched.
-  match_entry.state = IO::Internal::MatchEntry::State::matched;
 
   container.group(name) = subcontainer;
   return true;
@@ -817,22 +846,17 @@ void Core::IO::Internal::AllOfSpec::parse(
 bool Core::IO::Internal::AllOfSpec::match(ConstYamlNodeRef node,
     Core::IO::InputParameterContainer& container, IO::Internal::MatchEntry& match_entry) const
 {
-  std::vector<ryml::id_type> parsed_node_ids;
-
   // Parse into a separate container to avoid side effects if parsing fails.
   InputParameterContainer subcontainer;
-  bool all_matched = match_vector_of_specs(specs, node, subcontainer, match_entry);
+  bool all_matched = fully_match_specs(specs, node, subcontainer, match_entry);
 
   if (!all_matched)
   {
     return false;
   }
 
-  // N.B. an all_of does not constitute a full yaml object, so we cannot say anything about the
-  // match state of the node.
-  match_entry.state = IO::Internal::MatchEntry::State::matched;
-
   container.merge(subcontainer);
+  match_entry.matched_node = node.node.id();
 
   return true;
 }
@@ -968,11 +992,22 @@ bool Core::IO::Internal::OneOfSpec::match(ConstYamlNodeRef node,
   std::size_t matched_index = 0;
   for (; matched_index < specs.size(); ++matched_index)
   {
-    auto& spec_match = match_entry.append_child(&specs[matched_index]);
     subcontainer.clear();
-    if (specs[matched_index].impl().match(node, subcontainer, spec_match))
+    const auto& spec = specs[matched_index];
+    if (spec_matches_partial_objects(spec))
     {
-      break;
+      if (fully_match_specs(std::span(&spec, 1), node, subcontainer, match_entry))
+      {
+        break;
+      }
+    }
+    else
+    {
+      auto& spec_match = match_entry.append_child(&spec);
+      if (spec.impl().match(node, subcontainer, spec_match))
+      {
+        break;
+      }
     }
   }
 
@@ -999,6 +1034,7 @@ bool Core::IO::Internal::OneOfSpec::match(ConstYamlNodeRef node,
   // Match succeeded.
   if (on_parse_callback) on_parse_callback(subcontainer, matched_index);
   match_entry.state = IO::Internal::MatchEntry::State::matched;
+  match_entry.matched_node = node.node.id();
   container.merge(subcontainer);
   return true;
 }
@@ -1278,13 +1314,61 @@ namespace
     return std::accumulate(specs.begin(), specs.end(), 0u,
         [](std::size_t acc, const auto& spec) { return acc + spec.impl().data.n_specs; });
   }
+
+  Core::IO::InputSpec make_all_of(std::vector<InputSpec> specs, bool flatten = true)
+  {
+    std::vector<Core::IO::InputSpec> flattened_specs = std::move(specs);
+    if (flatten)
+    {
+      flattened_specs = flatten_nested<Internal::AllOfSpec>(std::move(flattened_specs));
+      flattened_specs = push_all_of_into_one_of(std::move(flattened_specs));
+
+      if (flattened_specs.size() == 1)
+      {
+        return flattened_specs[0];
+      }
+    }
+
+    assert_unique_or_empty_names(flattened_specs);
+
+    const bool any_required = std::ranges::any_of(
+        flattened_specs, [](const auto& spec) { return spec.impl().required(); });
+
+    // Generate a description of the form "group {a, b, c}".
+    std::string description = "all_of " + describe(flattened_specs);
+
+    InputSpecImpl::CommonData common_data{
+        .name = "",
+        .description = description,
+        .required = any_required,
+        .has_default_value = all_have_default_values(flattened_specs),
+        .n_specs = count_contained_specs(flattened_specs) + 1,
+        .type = InputSpecType::all_of,
+    };
+
+    return Internal::make_spec(
+        Internal::AllOfSpec{
+            .data = {.description = description, .required = any_required},
+            .specs = std::move(flattened_specs),
+        },
+        common_data);
+  }
 }  // namespace
+
+Core::IO::InputSpec Internal::wrap_with_all_of(Core::IO::InputSpec spec)
+{
+  if (spec.impl().data.type == InputSpecType::all_of)
+    return spec;
+  else
+    return make_all_of({std::move(spec)}, /*flatten=*/false);
+}
 
 
 Core::IO::InputSpec Core::IO::InputSpecBuilders::group(
     std::string name, std::vector<InputSpec> specs, Core::IO::InputSpecBuilders::GroupData data)
 {
-  auto flattened_specs = flatten_nested<Internal::AllOfSpec>(std::move(specs));
+  auto all_of = make_all_of(std::move(specs), true);
+  auto flattened_specs = flatten_nested<Internal::AllOfSpec>({std::move(all_of)});
 
   assert_unique_or_empty_names(flattened_specs);
 
@@ -1319,40 +1403,9 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::group(
       common_data);
 }
 
-
 Core::IO::InputSpec Core::IO::InputSpecBuilders::all_of(std::vector<InputSpec> specs)
 {
-  auto flattened_specs = flatten_nested<Internal::AllOfSpec>(std::move(specs));
-  flattened_specs = push_all_of_into_one_of(std::move(flattened_specs));
-
-  if (flattened_specs.size() == 1)
-  {
-    return flattened_specs[0];
-  }
-
-  assert_unique_or_empty_names(flattened_specs);
-
-  const bool any_required =
-      std::ranges::any_of(flattened_specs, [](const auto& spec) { return spec.impl().required(); });
-
-  // Generate a description of the form "group {a, b, c}".
-  std::string description = "all_of " + describe(flattened_specs);
-
-  InputSpecImpl::CommonData common_data{
-      .name = "",
-      .description = description,
-      .required = any_required,
-      .has_default_value = all_have_default_values(flattened_specs),
-      .n_specs = count_contained_specs(flattened_specs) + 1,
-      .type = InputSpecType::all_of,
-  };
-
-  return IO::Internal::make_spec(
-      Internal::AllOfSpec{
-          .data = {.description = description, .required = any_required},
-          .specs = std::move(flattened_specs),
-      },
-      common_data);
+  return make_all_of(std::move(specs), /*flatten=*/true);
 }
 
 

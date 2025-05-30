@@ -1400,24 +1400,33 @@ group:
       ryml::Tree tree = init_yaml_tree_with_exceptions();
       ryml::NodeRef root = tree.rootref();
 
-      root |= ryml::MAP;
-      root["a"] << 1;
-      root["b"] |= ryml::SEQ;
-      root["b"].append_child() << "b1";
-      root["b"].append_child() << "b2";
-      root["c"] << 2;
-      root["d"] << 42;
+      ryml::parse_in_arena(R"(a: 1
+b:
+    - b1
+    - b2
+c: 2
+d:
+  d1: 42
+  d2:
+    d3: 43
+)",
+          root);
+
       ConstYamlNodeRef node(root, "");
 
       InputParameterContainer container;
       FOUR_C_EXPECT_THROW_WITH_MESSAGE(spec.match(node, container), Core::Exception,
-          "Matched the following input but the highlighted parts remain unused:\n\n"
-          "a: 1\n"
-          "b:\n"
-          "  - b1\n"
-          "  - b2\n"
-          "c: 2\n"
-          "[!] d: 42");
+          R"({
+  [ ] Matched parameter 'a'
+  [ ] Matched parameter 'b'
+  [ ] Matched parameter 'c'
+  [ ] Skipped optional group 'group'
+  [!] The following data remains unused:
+    d:
+      d1: 42
+      d2:
+        d3: 43
+})");
     }
   }
 
@@ -1465,6 +1474,7 @@ group:
     };
 
     {
+      SCOPED_TRACE("Multiple possible matches.");
       ryml::Tree tree = init_yaml_tree_with_exceptions();
       ryml::NodeRef root = tree.rootref();
 
@@ -1475,18 +1485,20 @@ group:
       ConstYamlNodeRef node(root, "");
 
       InputParameterContainer container;
-      FOUR_C_EXPECT_THROW_WITH_MESSAGE(spec.match(node, container), Core::Exception,
-          "[X] Expected exactly one but matched multiple:\n"
-          "  [!] Candidate:\n"
-          "    {\n"
-          "      [ ] Matched parameter 'a'\n"
-          "      [ ] Matched parameter 'b'\n"
-          "    }\n"
-          "  [!] Candidate:\n"
-          "    {\n"
-          "      [ ] Matched parameter 'a'\n"
-          "      [ ] Matched parameter 'd'\n"
-          "    }");
+      FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+          spec.match(node, container), Core::Exception, R"([X] Expected one of the following:
+    {
+      [ ] Matched parameter 'a'
+      [ ] Matched parameter 'b'
+      [!] The following data remains unused:
+        d: 2
+    }
+    {
+      [ ] Matched parameter 'a'
+      [ ] Matched parameter 'd'
+      [!] The following data remains unused:
+        b: b
+    })");
     }
   }
 
@@ -1969,14 +1981,14 @@ v: [1,2,3]
       InputParameterContainer container;
       FOUR_C_EXPECT_THROW_WITH_MESSAGE(
           spec.match(node, container), Core::Exception, R"([!] Candidate group 'parameters'
-  [ ] Matched parameter 'start'
-  [ ] Defaulted parameter 'write_output'
-  [!] Candidate group 'TimeIntegration'
-    [X] Expected exactly one of a few choices but matched:
-      [!] Candidate group 'OST'
-        [!] Candidate parameter 'theta' (wrong type, expected type: double)
-      [!] Candidate group 'Special'
-        [!] Candidate parameter 'type' (wrong value, possible values: user|gemm))");
+    [ ] Matched parameter 'start'
+    [ ] Defaulted parameter 'write_output'
+    [!] Candidate group 'TimeIntegration'
+      [X] Expected exactly one of a few choices but matched:
+        [!] Candidate group 'OST'
+          [!] Candidate parameter 'theta' (wrong type, expected type: double)
+        [!] Candidate group 'Special'
+          [!] Candidate parameter 'type' (wrong value, possible values: user|gemm))");
     }
     {
       SCOPED_TRACE("Unused parts.");
@@ -1995,16 +2007,59 @@ parameters:
       ConstYamlNodeRef node(root, "");
       InputParameterContainer container;
       FOUR_C_EXPECT_THROW_WITH_MESSAGE(spec.match(node, container), Core::Exception,
-          R"(Matched the following input but the highlighted parts remain unused:
-
-[!] data:
-  a: 1
-parameters:
-  start: 0.0
-  TimeIntegration:
-    OST:
-      theta: 0.5
-    [!] Special: )");
+          R"([ ] Matched group 'parameters'
+  [!] The following data remains unused:
+    data:
+      a: 1)");
     }
   }
+
+  TEST(InputSpecTest, ShouldNotMatchWhenUnusedParameters)
+  {
+    // This is a tricky case, where one_of the choices is a single parameter
+    const auto spec = one_of({parameter<int>("a"), all_of({
+                                                       parameter<int>("a"),
+                                                       parameter<int>("b"),
+                                                   })});
+
+    SCOPED_TRACE("Read in two values should only match the corresponding spec with two inputs");
+    ryml::Tree tree = init_yaml_tree_with_exceptions();
+    ryml::parse_in_arena(R"(a: 1
+b: 2)",
+        &tree);
+    const ConstYamlNodeRef node(tree.rootref(), "");
+
+    InputParameterContainer container;
+    spec.match(node, container);
+    EXPECT_EQ(container.get<int>("a"), 1);
+    EXPECT_EQ(container.get<int>("b"), 2);
+  }
+
+  TEST(InputSpecTest, ShouldNotMatchWhenUnusedParametersDoubleAllOfs)
+  {
+    const auto spec = one_of({
+        all_of({
+            parameter<int>("a"),
+            parameter<int>("b"),
+        }),
+        all_of({
+            parameter<int>("a"),
+            parameter<int>("b"),
+            parameter<int>("c"),
+        }),
+    });
+
+    ryml::Tree tree = init_yaml_tree_with_exceptions();
+    ryml::parse_in_arena(R"(a: 1
+b: 2
+c: 3)",
+        &tree);
+    const ConstYamlNodeRef node(tree.rootref(), "");
+
+    InputParameterContainer container;
+    spec.match(node, container);
+    EXPECT_EQ(container.get<int>("a"), 1);
+    EXPECT_EQ(container.get<int>("b"), 2);
+  }
+
 }  // namespace

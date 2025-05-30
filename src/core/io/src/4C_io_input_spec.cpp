@@ -54,8 +54,9 @@ void Core::IO::InputSpec::match(ConstYamlNodeRef yaml, InputParameterContainer& 
 {
   FOUR_C_ASSERT(pimpl_, "InputSpec is empty.");
 
-  Internal::MatchTree match_tree{*this, yaml};
-  pimpl_->match(yaml, container, match_tree.root());
+  auto spec_for_matching = Internal::wrap_with_all_of(*this);
+  Internal::MatchTree match_tree{spec_for_matching, yaml};
+  spec_for_matching.pimpl_->match(yaml, container, match_tree.root());
 
   match_tree.assert_match();
 }
