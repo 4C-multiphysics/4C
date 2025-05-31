@@ -82,7 +82,7 @@ namespace Constraints
     std::map<int, double> rho_;        ///< map containing rhos for augmented Lagrange
     std::shared_ptr<Epetra_Export>
         errorexport_;  ///< exporter for redundant and non-overlapping maps
-    std::shared_ptr<Epetra_Import>
+    std::shared_ptr<Core::LinAlg::Import>
         errorimport_;  ///< importer for redundant and non-overlapping maps
     std::shared_ptr<Core::LinAlg::Map> rederrormap_;           ///< redundant map of errors
     std::shared_ptr<Core::LinAlg::Map> errormap_;              ///< non-overlapping map of errors

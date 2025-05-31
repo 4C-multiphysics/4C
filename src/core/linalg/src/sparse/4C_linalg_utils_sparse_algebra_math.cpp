@@ -9,10 +9,10 @@
 
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
+#include "4C_linalg_transfer.hpp"
 #include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 
-#include <Epetra_Import.h>
 #include <EpetraExt_MatrixMatrix.h>
 #include <EpetraExt_Transpose_RowMatrix.h>
 #include <Teuchos_SerialQRDenseSolver.hpp>
@@ -345,9 +345,9 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_sparse_inverse(
       std::make_shared<SparseMatrix>(sparsity_pattern, dbc_map);
 
   // gather missing rows from other procs to generate an overlapping map
-  Epetra_Import rowImport = Epetra_Import(sparsity_pattern->col_map().get_epetra_block_map(),
-      sparsity_pattern->row_map().get_epetra_block_map());
-  Epetra_CrsMatrix A_overlap = Epetra_CrsMatrix(*A.epetra_matrix(), rowImport);
+  Core::LinAlg::Import rowImport =
+      Core::LinAlg::Import(sparsity_pattern->col_map(), sparsity_pattern->row_map());
+  Epetra_CrsMatrix A_overlap = Epetra_CrsMatrix(*A.epetra_matrix(), rowImport.get_epetra_import());
 
   // loop over all rows of the inverse sparsity pattern (this can be done in parallel)
   for (int k = 0; k < sparsity_pattern->num_local_rows(); k++)

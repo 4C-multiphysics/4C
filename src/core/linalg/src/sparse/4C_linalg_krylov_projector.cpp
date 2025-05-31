@@ -11,13 +11,13 @@
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_sparsematrix.hpp"
+#include "4C_linalg_transfer.hpp"
 #include "4C_linalg_utils_densematrix_communication.hpp"
 #include "4C_linalg_utils_densematrix_multiply.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_utils_exceptions.hpp"
 
-#include <Epetra_Import.h>
 #include <Teuchos_SerialDenseSolver.hpp>
 
 FOUR_C_NAMESPACE_OPEN
@@ -533,8 +533,7 @@ Core::LinAlg::KrylovProjector::multiply_multi_vector_multi_vector(
   // initialize global mv2 without setting to 0
   Core::LinAlg::MultiVector<double> mv2glob(*redundant_map, nsdim_);
   // create importer with redundant target map and distributed source map
-  Epetra_Import importer(
-      redundant_map->get_epetra_block_map(), mv2->get_map().get_epetra_block_map());
+  Core::LinAlg::Import importer(*redundant_map, mv2->get_map());
   // import values to global mv2
   mv2glob.Import(*mv2, importer, Insert);
 

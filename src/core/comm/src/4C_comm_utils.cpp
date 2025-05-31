@@ -10,10 +10,9 @@
 #include "4C_io_pstream.hpp"
 #include "4C_linalg_multi_vector.hpp"
 #include "4C_linalg_sparsematrix.hpp"
+#include "4C_linalg_transfer.hpp"
 #include "4C_linalg_utils_densematrix_communication.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
-
-#include <Epetra_Import.h>
 
 #include <iomanip>
 #include <sstream>
@@ -505,10 +504,9 @@ namespace Core::Communication
           domainmap, Core::Communication::num_mpi_ranks(lcomm) - 1);
 
     // export full matrices to the two desired processors
-    Epetra_Import serialimporter(
-        serialrowmap->get_epetra_block_map(), rowmap.get_epetra_block_map());
+    Core::LinAlg::Import serialimporter(*serialrowmap, rowmap);
     Core::LinAlg::SparseMatrix serialCrsMatrix(*serialrowmap, 0);
-    serialCrsMatrix.import(matrix, serialimporter, Insert);
+    serialCrsMatrix.import(matrix, serialimporter.get_epetra_import(), Insert);
     serialCrsMatrix.complete(*serialdomainmap, *serialrowmap);
 
     // fill data of matrices to container which can be easily communicated via MPI

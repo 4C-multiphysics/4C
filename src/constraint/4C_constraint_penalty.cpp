@@ -10,6 +10,7 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_global_data.hpp"
+#include "4C_linalg_transfer.hpp"
 #include "4C_linalg_utils_densematrix_communication.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_utils_function_of_time.hpp"
@@ -48,8 +49,7 @@ Constraints::ConstraintPenalty::ConstraintPenalty(
     rederrormap_ = Core::LinAlg::allreduce_e_map(*errormap_);
     errorexport_ = std::make_shared<Epetra_Export>(
         rederrormap_->get_epetra_block_map(), errormap_->get_epetra_block_map());
-    errorimport_ = std::make_shared<Epetra_Import>(
-        rederrormap_->get_epetra_block_map(), errormap_->get_epetra_block_map());
+    errorimport_ = std::make_shared<Core::LinAlg::Import>(*rederrormap_, *errormap_);
     acterror_ = std::make_shared<Core::LinAlg::Vector<double>>(*rederrormap_);
     initerror_ = std::make_shared<Core::LinAlg::Vector<double>>(*rederrormap_);
     lagrvalues_ = std::make_shared<Core::LinAlg::Vector<double>>(*rederrormap_);

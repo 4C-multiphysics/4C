@@ -112,7 +112,7 @@ DealiiWrappers::VectorConverter<VectorType, dim, spacedim>::VectorConverter(
     const Core::FE::Discretization& discretization, const Context<dim, spacedim>& context)
     : dealii_to_four_c_map_(create_dealii_to_four_c_map(dof_handler, discretization, context)),
       dealii_to_four_c_importer_(
-          discretization.dof_row_map()->get_epetra_map(), dealii_to_four_c_map_.get_epetra_map()),
+          Core::LinAlg::Map{discretization.dof_row_map()->get_epetra_map()}, dealii_to_four_c_map_),
       vector_in_dealii_layout_(dealii_to_four_c_map_, false)
 {
 }
@@ -123,8 +123,8 @@ template <typename VectorType, int dim, int spacedim>
 void DealiiWrappers::VectorConverter<VectorType, dim, spacedim>::to_dealii(
     VectorType& dealii_vector, const Core::LinAlg::Vector<double>& four_c_vector) const
 {
-  FOUR_C_ASSERT_ALWAYS(
-      four_c_vector.get_map().point_same_as(dealii_to_four_c_importer_.TargetMap()),
+  FOUR_C_ASSERT_ALWAYS(four_c_vector.get_map().point_same_as(
+                           dealii_to_four_c_importer_.get_epetra_import().TargetMap()),
       "The 4C vector passed to the converter needs to have dof_row_map layout.");
   const int n_local_elements = dealii_vector.locally_owned_size();
   FOUR_C_ASSERT(n_local_elements == dealii_to_four_c_map_.num_my_elements(), "Internal error.");
@@ -141,8 +141,8 @@ template <typename VectorType, int dim, int spacedim>
 void DealiiWrappers::VectorConverter<VectorType, dim, spacedim>::to_four_c(
     Core::LinAlg::Vector<double>& four_c_vector, const VectorType& dealii_vector) const
 {
-  FOUR_C_ASSERT_ALWAYS(
-      four_c_vector.get_map().point_same_as(dealii_to_four_c_importer_.TargetMap()),
+  FOUR_C_ASSERT_ALWAYS(four_c_vector.get_map().point_same_as(
+                           dealii_to_four_c_importer_.get_epetra_import().TargetMap()),
       "The 4C vector passed to the converter needs to have dof_row_map layout.");
   const int n_local_elements = dealii_vector.locally_owned_size();
   FOUR_C_ASSERT(n_local_elements == dealii_to_four_c_map_.num_my_elements(), "Internal error.");

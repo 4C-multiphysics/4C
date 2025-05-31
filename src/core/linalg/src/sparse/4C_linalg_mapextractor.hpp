@@ -13,8 +13,6 @@
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_vector.hpp"
 
-#include <Epetra_Import.h>
-
 #include <algorithm>
 #include <map>
 #include <memory>
@@ -228,7 +226,7 @@ namespace Core::LinAlg
     std::vector<std::shared_ptr<const Core::LinAlg::Map>> maps_;
 
     /// communication between condition dof map and full row dof map
-    std::vector<std::shared_ptr<Epetra_Import>> importer_;
+    std::vector<std::shared_ptr<Core::LinAlg::Import>> importer_;
   };
 
 
@@ -252,8 +250,8 @@ namespace Core::LinAlg
   extract a subvector from a full one, and the insertion methods
   insert_cond_vector() and insert_other_vector(), that copy a subvector into a
   full vector. These extractions and insertions are termed communications,
-  because internally an Epetra_Import class is used, even though there is no
-  communication required once the Epetra_Import object is created.
+  because internally a Core::LinAlg::Import class is used, even though there is no
+  communication required once theCore::LinAlg::Import object is created.
 
   \note The two partial maps (cond and other) are stored in the parent member variable maps_,
   where other has index 0 and cond has index 1.

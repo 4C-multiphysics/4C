@@ -415,7 +415,7 @@ void Constraints::ConstrManager::compute_monitor_values(
   areamonitor3d_->evaluate(p, actmonredundant);
   areamonitor2d_->evaluate(p, actmonredundant);
 
-  Epetra_Import monimpo(monitormap_->get_epetra_block_map(), redmonmap_->get_epetra_block_map());
+  Core::LinAlg::Import monimpo(*monitormap_, *redmonmap_);
   monitorvalues_->export_to(actmonredundant, *monimpo_, Add);
 }
 
@@ -448,7 +448,7 @@ void Constraints::ConstrManager::compute_monitor_values(
   areamonitor3d_->evaluate(p, actmonredundant);
   areamonitor2d_->evaluate(p, actmonredundant);
 
-  Epetra_Import monimpo(monitormap_->get_epetra_block_map(), redmonmap_->get_epetra_block_map());
+  Core::LinAlg::Import monimpo(*monitormap_, *redmonmap_);
   monitorvalues_->export_to(actmonredundant, *monimpo_, Add);
 }
 

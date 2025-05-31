@@ -12,6 +12,7 @@
 #include "4C_config.hpp"
 
 #include "4C_linalg_map.hpp"
+#include "4C_linalg_transfer.hpp"
 
 #include <Epetra_CrsGraph.h>
 #include <Epetra_Export.h>
@@ -126,11 +127,11 @@ namespace Core::LinAlg
     //! If FillComplete() has been called, this query returns true, otherwise it returns false.
     bool filled() const { return (graph_->Filled()); }
 
-    //! Imports an Epetra_DistObject using the Epetra_Import object.
-    int import_from(const Epetra_SrcDistObject& A, const Epetra_Import& Importer,
+    //! Imports an Epetra_DistObject using the Core::LinAlg::Import object.
+    int import_from(const Epetra_SrcDistObject& A, const Core::LinAlg::Import& Importer,
         Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr)
     {
-      return graph_->Import(A, Importer, CombineMode, Indexor);
+      return graph_->Import(A, Importer.get_epetra_import(), CombineMode, Indexor);
     }
 
     //! Enter a list of elements in a specified global row of the graph.

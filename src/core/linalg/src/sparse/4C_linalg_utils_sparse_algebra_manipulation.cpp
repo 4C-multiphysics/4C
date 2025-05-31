@@ -55,8 +55,7 @@ void Core::LinAlg::export_to(
     }
     else if (sourceunique && !targetunique)
     {
-      Epetra_Import importer(
-          target.get_map().get_epetra_block_map(), source.get_map().get_epetra_block_map());
+      Core::LinAlg::Import importer(target.get_map(), source.get_map());
       int err = target.Import(source, importer, Insert);
       if (err) FOUR_C_THROW("Export using importer returned err={}", err);
       return;
@@ -133,8 +132,7 @@ void Core::LinAlg::export_to(
     }
     else if (sourceunique && !targetunique)
     {
-      Epetra_Import importer(
-          target.get_map().get_epetra_block_map(), source.get_map().get_epetra_block_map());
+      Core::LinAlg::Import importer(target.get_map(), source.get_map());
       int err = target.import(source, importer, Insert);
       if (err) FOUR_C_THROW("Export using exporter returned err={}", err);
       return;
@@ -260,8 +258,7 @@ std::shared_ptr<Core::LinAlg::Graph> Core::LinAlg::threshold_matrix_graph(
   A.extract_diagonal_copy(diagonal);
 
   Core::LinAlg::Vector<double> ghosted_diagonal(A.col_map(), true);
-  const Epetra_Import importer =
-      Epetra_Import(A.col_map().get_epetra_block_map(), A.row_map().get_epetra_block_map());
+  const Core::LinAlg::Import importer = Core::LinAlg::Import(A.col_map(), A.row_map());
   ghosted_diagonal.import(
       diagonal.get_ref_of_epetra_vector(), importer, Epetra_CombineMode::Insert);
 

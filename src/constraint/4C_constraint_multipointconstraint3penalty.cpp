@@ -76,8 +76,7 @@ Constraints::MPConstraint3Penalty::MPConstraint3Penalty(
     rederrormap_ = Core::LinAlg::allreduce_e_map(*errormap_);
     errorexport_ = std::make_shared<Epetra_Export>(
         rederrormap_->get_epetra_block_map(), errormap_->get_epetra_block_map());
-    errorimport_ = std::make_shared<Epetra_Import>(
-        rederrormap_->get_epetra_block_map(), errormap_->get_epetra_block_map());
+    errorimport_ = std::make_shared<Core::LinAlg::Import>(*rederrormap_, *errormap_);
     acterror_ = std::make_shared<Core::LinAlg::Vector<double>>(*rederrormap_);
     initerror_ = std::make_shared<Core::LinAlg::Vector<double>>(*rederrormap_);
   }

@@ -12,12 +12,12 @@
 #include "4C_fem_general_node.hpp"
 #include "4C_geometric_search_bounding_volume.hpp"
 #include "4C_geometric_search_distributed_tree.hpp"
+#include "4C_linalg_transfer.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_vector.hpp"
 
-#include <Epetra_Import.h>
 #include <Isorropia_Epetra.hpp>
 #include <Isorropia_EpetraCostDescriber.hpp>
 #include <Isorropia_EpetraPartitioner.hpp>
@@ -383,8 +383,7 @@ std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_monolithic_nod
       my_colliding_primitives.begin(), my_colliding_primitives.end());
   Core::LinAlg::Map my_colliding_primitives_map(-1, my_colliding_primitives_vec.size(),
       my_colliding_primitives_vec.data(), 0, dis.get_comm());
-  Epetra_Import importer(my_colliding_primitives_map.get_epetra_block_map(),
-      dis.element_row_map()->get_epetra_block_map());
+  Core::LinAlg::Import importer(my_colliding_primitives_map, *dis.element_row_map());
   Core::LinAlg::Graph my_colliding_primitives_connectivity(
       Copy, my_colliding_primitives_map, n_nodes_per_element_max, false);
   err = my_colliding_primitives_connectivity.import_from(

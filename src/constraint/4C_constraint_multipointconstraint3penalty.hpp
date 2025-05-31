@@ -128,7 +128,7 @@ namespace Constraints
         eletocondvecindex_;  ///< maps element ID to condition index in vector #constrcond_
     std::map<int, double> penalties_;  ///< maps condition ID to penalty factor
     std::shared_ptr<Epetra_Export> errorexport_;
-    std::shared_ptr<Epetra_Import> errorimport_;
+    std::shared_ptr<Core::LinAlg::Import> errorimport_;
     std::shared_ptr<Core::LinAlg::Map> rederrormap_;
     std::shared_ptr<Core::LinAlg::Map> errormap_;
     std::shared_ptr<Core::LinAlg::Vector<double>> initerror_;

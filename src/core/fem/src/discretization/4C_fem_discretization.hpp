@@ -2175,7 +2175,7 @@ namespace Core::FE
     std::vector<std::map<std::string, std::shared_ptr<const Core::LinAlg::Vector<double>>>> state_;
 
     ///< Map of import objects for states
-    std::vector<std::shared_ptr<Epetra_Import>> stateimporter_;
+    std::vector<std::shared_ptr<Core::LinAlg::Import>> stateimporter_;
 
     ///< Some conditions e.g. boundary conditions
     std::multimap<std::string, std::shared_ptr<Core::Conditions::Condition>> condition_;

@@ -12,6 +12,7 @@
 #include "4C_config.hpp"
 
 #include "4C_linalg_map.hpp"
+#include "4C_linalg_transfer.hpp"
 #include "4C_linalg_view.hpp"
 #include "4C_utils_owner_or_view.hpp"
 
@@ -168,11 +169,11 @@ namespace Core::LinAlg
       return vector_->Multiply(ScalarAB, A, B, ScalarThis);
     }
 
-    //! Imports an Epetra_DistObject using the Epetra_Import object.
-    int Import(const Epetra_SrcDistObject& A, const Epetra_Import& Importer,
+    //! Imports an Epetra_DistObject using the Core::LinAlg::Import object.
+    int Import(const Epetra_SrcDistObject& A, const Core::LinAlg::Import& Importer,
         Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr)
     {
-      return vector_->Import(A, Importer, CombineMode, Indexor);
+      return vector_->Import(A, Importer.get_epetra_import(), CombineMode, Indexor);
     }
 
     //! Imports an Epetra_DistObject using the Epetra_Export object.
@@ -182,10 +183,10 @@ namespace Core::LinAlg
       return vector_->Import(A, Exporter, CombineMode, Indexor);
     }
 
-    int Export(const Epetra_SrcDistObject& A, const Epetra_Import& Importer,
+    int Export(const Epetra_SrcDistObject& A, const Core::LinAlg::Import& Importer,
         Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr)
     {
-      return vector_->Export(A, Importer, CombineMode, Indexor);
+      return vector_->Export(A, Importer.get_epetra_import(), CombineMode, Indexor);
     }
 
     int Export(const Epetra_SrcDistObject& A, const Epetra_Export& Exporter,

@@ -107,9 +107,9 @@ namespace DealiiWrappers
     Core::LinAlg::Map dealii_to_four_c_map_;
 
     /**
-     * Epetra_Import object which can be reused across function calls.
+     * Core::LinAlg::Import object which can be reused across function calls.
      */
-    Epetra_Import dealii_to_four_c_importer_;
+    Core::LinAlg::Import dealii_to_four_c_importer_;
 
     /**
      * A temporary vector which uses #dealii_to_four_c_map and receives/writes the local entries

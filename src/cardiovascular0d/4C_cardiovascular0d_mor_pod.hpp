@@ -71,7 +71,7 @@ namespace Cardiovascular0D
 
     //! Multiply two multi vectors
     void multiply_multi_vectors(Core::LinAlg::MultiVector<double>&, char,
-        Core::LinAlg::MultiVector<double>&, char, Core::LinAlg::Map&, Epetra_Import&,
+        Core::LinAlg::MultiVector<double>&, char, Core::LinAlg::Map&, Core::LinAlg::Import&,
         Core::LinAlg::MultiVector<double>&);
 
     //! Core::LinAlg::MultiVector<double> to Core::LinAlg::SparseMatrix
@@ -98,10 +98,10 @@ namespace Cardiovascular0D
     std::shared_ptr<Core::LinAlg::Map> redstructmapr_;
 
     //! Importer for fully redundant map of structure dofs after POD-MOR into distributed one
-    std::shared_ptr<Epetra_Import> structrimpo_;
+    std::shared_ptr<Core::LinAlg::Import> structrimpo_;
 
     //! Importer for distributed map of structure dofs after POD-MOR into fully redundant one
-    std::shared_ptr<Epetra_Import> structrinvimpo_;
+    std::shared_ptr<Core::LinAlg::Import> structrinvimpo_;
 
   };  // class
 }  // namespace Cardiovascular0D

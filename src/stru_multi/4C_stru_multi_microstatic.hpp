@@ -335,8 +335,8 @@ namespace MultiScale
                                                         //!< coordinates of boundary nodes
     std::shared_ptr<Core::LinAlg::Map> pdof_;           //!< prescribed dofs
     std::shared_ptr<Core::LinAlg::Map> fdof_;           //!< free dofs
-    std::shared_ptr<Epetra_Import> importp_;
-    std::shared_ptr<Epetra_Import> importf_;
+    std::shared_ptr<Core::LinAlg::Import> importp_;
+    std::shared_ptr<Core::LinAlg::Import> importf_;
   };
 
 

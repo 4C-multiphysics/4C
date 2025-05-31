@@ -1101,10 +1101,8 @@ void Coupling::Adapter::CouplingMortar::evaluate(
 
   std::shared_ptr<Core::LinAlg::Map> dofrowmap =
       Core::LinAlg::merge_map(*pmasterdofrowmap_, *pslavedofrowmap_, false);
-  Epetra_Import master_importer(
-      dofrowmap->get_epetra_block_map(), pmasterdofrowmap_->get_epetra_block_map());
-  Epetra_Import slaveImporter(
-      dofrowmap->get_epetra_block_map(), pslavedofrowmap_->get_epetra_block_map());
+  Core::LinAlg::Import master_importer(*dofrowmap, *pmasterdofrowmap_);
+  Core::LinAlg::Import slaveImporter(*dofrowmap, *pslavedofrowmap_);
 
   // Import master and slave displacements into a single vector
   int err = 0;

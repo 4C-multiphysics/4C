@@ -18,9 +18,11 @@
 #include "4C_global_data.hpp"
 #include "4C_io_value_parser.hpp"
 #include "4C_linalg_sparsematrix.hpp"
+#include "4C_linalg_transfer.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_rigidsphere.hpp"
 
+#include <Epetra_Export.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1811,7 +1813,7 @@ void Beam3ContactOctTree::communicate_vector(Core::LinAlg::Vector<double>& InVec
 
   // first, export the values of OutVec on Proc 0 to InVecs of all participating processors
   Epetra_Export exporter(OutVec.get_map().get_epetra_map(), InVec.get_map().get_epetra_block_map());
-  Epetra_Import importer(OutVec.get_map().get_epetra_map(), InVec.get_map().get_epetra_block_map());
+  Core::LinAlg::Import importer(OutVec.get_map(), InVec.get_map());
   if (doexport)
   {
     // zero out all vectors which are not Proc 0. Then, export Proc 0 data to InVec map.
