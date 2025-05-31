@@ -116,7 +116,7 @@ endfunction()
 ###------------------------------------------------------------------ 4C Test
 # Run simulation with input file
 # Usage in tests/lists_of_tests.cmake:
-#            "four_c_test(<input_file> optional: NP <> RESTART_STEP <> TIMEOUT <> OMP_THREADS <> POST_ENSIGHT_STRUCTURE <> LABEL <>
+#            "four_c_test(<input_file> optional: NP <> RESTART_STEP <> TIMEOUT <> OMP_THREADS <> LABEL <>
 #                                                CSV_COMPARISON_RESULT_FILE <> CSV_COMPARISON_REFERENCE_FILE <>
 #                                                CSV_COMPARISON_TOL_R <> CSV_COMPARISON_TOL_A <>)"
 
@@ -130,7 +130,6 @@ endfunction()
 # RESTART_STEP:                   Number of restart step; not defined indicates no restart
 # TIMEOUT:                        Manually defined duration for test timeout; defaults to global timeout if not specified
 # OMP_THREADS:                    Number of OpenMP threads per processor the test should use; defaults to deactivated
-# POST_ENSIGHT_STRUCTURE:         Test post_ensight options in serial and parallel (for structure simulation only!)
 # LABELS:                         Add labels to the test
 # CSV_COMPARISON_RESULT_FILE:     Arbitrary .csv result files to be compared (see `utilites/diff_with_tolerance.py`)
 # CSV_COMPARISON_REFERENCE_FILE:  Reference files to compare with
@@ -140,7 +139,7 @@ endfunction()
 function(four_c_test)
 
   set(options CONVERT_TO_YAML)
-  set(oneValueArgs RESTART_STEP TIMEOUT OMP_THREADS POST_ENSIGHT_STRUCTURE)
+  set(oneValueArgs RESTART_STEP TIMEOUT OMP_THREADS)
   set(multiValueArgs
       TEST_FILE
       NP
@@ -181,10 +180,6 @@ function(four_c_test)
 
   if(NOT DEFINED _parsed_OMP_THREADS)
     set(_parsed_OMP_THREADS 0)
-  endif()
-
-  if(NOT DEFINED _parsed_POST_ENSIGHT_STRUCTURE)
-    set(_parsed_POST_ENSIGHT_STRUCTURE OFF)
   endif()
 
   if(NOT DEFINED _parsed_LABELS)
@@ -394,47 +389,6 @@ function(four_c_test)
     # update additional fixture for possible following post_ensight or csv comparison
     set(additional_fixture "${name_of_test}")
 
-  endif()
-
-  # post_ensight_structure test in serial and parallel
-  if(${_parsed_POST_ENSIGHT_STRUCTURE})
-    # serial run
-    set(name_of_ensight_test "${name_of_test}-post_ensight_serial")
-    set(ensight_command
-        "${FOUR_C_ENABLE_ADDRESS_SANITIZER_TEST_OPTIONS}\ ./post_ensight\ --file=${test_directory}/xxx\ --output=${test_directory}/xxx_serial\ --outputtype=bin\ --stress=ndxyz && ${FOUR_C_PYTHON_VENV_BUILD}/bin/python3 ${PROJECT_SOURCE_DIR}/tests/post_processing_test/ensight_comparison.py ${source_file} ${test_directory}/xxx_serial_structure.case"
-        )
-    _add_test_with_options(
-      NAME_OF_TEST
-      ${name_of_ensight_test}
-      TEST_COMMAND
-      ${ensight_command}
-      ADDITIONAL_FIXTURE
-      ${additional_fixture}
-      TIMEOUT
-      "${_parsed_TIMEOUT}"
-      LABELS
-      "${_parsed_LABELS}"
-      )
-
-    # parallel run
-    set(name_of_ensight_test "${name_of_test}-post_ensight_parallel")
-    set(ensight_command
-        "${MPIEXEC_EXECUTABLE}\ ${_mpiexec_all_args_for_testing}\ -np\ ${_parsed_NP}\ ./post_ensight\ --file=${test_directory}/xxx\ --output=${test_directory}/xxx_parallel --outputtype=bin\ --stress=ndxyz && ${FOUR_C_PYTHON_VENV_BUILD}/bin/python3 ${PROJECT_SOURCE_DIR}/tests/post_processing_test/ensight_comparison.py ${source_file} ${test_directory}/xxx_parallel_structure.case"
-        )
-    _add_test_with_options(
-      NAME_OF_TEST
-      ${name_of_ensight_test}
-      TEST_COMMAND
-      ${ensight_command}
-      ADDITIONAL_FIXTURE
-      ${additional_fixture}
-      NP
-      _parsed_NP
-      TIMEOUT
-      "${_parsed_TIMEOUT}"
-      LABELS
-      "${_parsed_LABELS}"
-      )
   endif()
 
   # csv comparison

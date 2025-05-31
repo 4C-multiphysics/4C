@@ -1,0 +1,394 @@
+TITLE:
+  - "Testcase for testing Mixture toolbox"
+  - "The setup of the test-case are 3 cubes with different elements (HEX8, HEX8FBAR and TET10)."
+  - "The cube fixed on the bottom surface (z=0). On the top surface (z=1), a surface force is applied"
+  - "in x-, y- and z-direction subsequently. The same problem was used in the ElastHyper toolbox and"
+  - "the materials were adapted to represent the same physics but using the Mixture toolbox. The results"
+  - "change within the allowed tolerance."
+  - "Tests:"
+  - "- Mixture toolbox with simplest mixture rule and 2 hyperelastic materials (isotropic and anisotropic)"
+  - "Elements:"
+  - "- HEX8"
+  - "- HEX8FBAR"
+  - "- TET10"
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+IO:
+  STRUCT_STRESS: "2PK"
+  STRUCT_STRAIN: "GL"
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 1
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  DISPLACEMENT: true
+  ELEMENT_OWNER: true
+  NODE_GID: true
+  STRESS_STRAIN: true
+STRUCTURAL DYNAMIC:
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "Statics"
+  TIMESTEP: 0.1
+  NUMSTEP: 30
+  MAXTIME: 3
+  TOLDISP: 1e-09
+  TOLRES: 1e-09
+  ITERNORM: "Inf"
+  LINEAR_SOLVER: 1
+SOLVER 1:
+  SOLVER: "UMFPACK"
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DESIGN SURF NEUMANN CONDITIONS:
+  - E: 2
+    NUMDOF: 6
+    ONOFF: [1, 1, 1, 0, 0, 0]
+    VAL: [10, 10, 10, 0, 0, 0]
+    FUNCT: [1, 2, 3, 1, 1, 1]
+MATERIALS:
+  - MAT: 1
+    MAT_Mixture:
+      NUMCONST: 2
+      MATIDMIXTURERULE: 10
+      MATIDSCONST: [11, 12]
+  - MAT: 10
+    MIX_Rule_Simple:
+      DENS: 0.1
+      NUMCONST: 2
+      MASSFRAC: [0.4, 0.6]
+  - MAT: 11
+    MIX_Constituent_ElastHyper:
+      NUMMAT: 1
+      MATIDS: [101]
+  - MAT: 12
+    MIX_Constituent_ElastHyper:
+      NUMMAT: 1
+      MATIDS: [102]
+  - MAT: 101
+    ELAST_CoupLogNeoHooke:
+      MODE: "YN"
+      C1: 25000
+      C2: 0.27
+  - MAT: 102
+    ELAST_CoupAnisoExpo:
+      K1: 16666.66666666
+      K2: 10
+      GAMMA: 0
+      K1COMP: 8333.33333333
+      K2COMP: 10
+      STR_TENS_ID: 1000
+      INIT: 0
+  - MAT: 1000
+    ELAST_StructuralTensor:
+      STRATEGY: "Standard"
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "a"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: "linearinterpolation"
+    NUMPOINTS: 3
+    TIMES: [0, 1, 3]
+    VALUES: [0, 1, 1]
+FUNCT2:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "a"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: "linearinterpolation"
+    NUMPOINTS: 4
+    TIMES: [0, 1, 2, 3]
+    VALUES: [0, 0, 1, 1]
+FUNCT3:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "a"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: "linearinterpolation"
+    NUMPOINTS: 3
+    TIMES: [0, 2, 3]
+    VALUES: [0, 0, 1]
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 17
+      QUANTITY: "dispx"
+      VALUE: 0.0328978533155475
+      TOLERANCE: 1e-09
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 17
+      QUANTITY: "dispy"
+      VALUE: 0.03289785331554746
+      TOLERANCE: 1e-09
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 17
+      QUANTITY: "dispz"
+      VALUE: 0.012264605628064761
+      TOLERANCE: 1e-09
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 44
+      QUANTITY: "dispx"
+      VALUE: 0.033223021333804406
+      TOLERANCE: 1e-09
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 44
+      QUANTITY: "dispy"
+      VALUE: 0.0332230213338041
+      TOLERANCE: 1e-09
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 44
+      QUANTITY: "dispz"
+      VALUE: 0.013215713538064916
+      TOLERANCE: 1e-09
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 59
+      QUANTITY: "dispx"
+      VALUE: 0.03332338896891649
+      TOLERANCE: 1e-09
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 59
+      QUANTITY: "dispy"
+      VALUE: 0.033323388968916755
+      TOLERANCE: 1e-09
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 59
+      QUANTITY: "dispz"
+      VALUE: 0.013811265080563028
+      TOLERANCE: 1e-09
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 17
+      QUANTITY: "stress_xx"
+      VALUE: 1.5202457977766137
+      TOLERANCE: 1e-07
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 17
+      QUANTITY: "stress_yy"
+      VALUE: 1.520245797776792
+      TOLERANCE: 1e-07
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 17
+      QUANTITY: "stress_zz"
+      VALUE: 39.926597227254675
+      TOLERANCE: 1e-07
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 44
+      QUANTITY: "stress_xx"
+      VALUE: -0.6267419140894336
+      TOLERANCE: 1e-07
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 44
+      QUANTITY: "stress_yy"
+      VALUE: -0.6267419140900033
+      TOLERANCE: 1e-07
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 44
+      QUANTITY: "stress_zz"
+      VALUE: 30.16304096017519
+      TOLERANCE: 1e-07
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 59
+      QUANTITY: "stress_xx"
+      VALUE: -1.2947137139776126
+      TOLERANCE: 1e-07
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 59
+      QUANTITY: "stress_yy"
+      VALUE: -1.2947137139725355
+      TOLERANCE: 1e-07
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 59
+      QUANTITY: "stress_zz"
+      VALUE: 27.3337311565754
+      TOLERANCE: 1e-07
+PROBLEM SIZE:
+  ELEMENTS: 21
+  NODES: 80
+  MATERIALS: 9999
+DNODE-NODE TOPOLOGY:
+  - "NODE 1 DNODE 1"
+  - "NODE 28 DNODE 1"
+  - "NODE 55 DNODE 1"
+  - "NODE 9 DNODE 2"
+  - "NODE 36 DNODE 2"
+  - "NODE 56 DNODE 2"
+  - "NODE 17 DNODE 3"
+  - "NODE 44 DNODE 3"
+  - "NODE 59 DNODE 3"
+DSURF-NODE TOPOLOGY:
+  - "NODE 1 DSURFACE 1"
+  - "NODE 2 DSURFACE 1"
+  - "NODE 3 DSURFACE 1"
+  - "NODE 5 DSURFACE 1"
+  - "NODE 9 DSURFACE 1"
+  - "NODE 10 DSURFACE 1"
+  - "NODE 13 DSURFACE 1"
+  - "NODE 14 DSURFACE 1"
+  - "NODE 21 DSURFACE 1"
+  - "NODE 28 DSURFACE 1"
+  - "NODE 29 DSURFACE 1"
+  - "NODE 30 DSURFACE 1"
+  - "NODE 32 DSURFACE 1"
+  - "NODE 36 DSURFACE 1"
+  - "NODE 37 DSURFACE 1"
+  - "NODE 40 DSURFACE 1"
+  - "NODE 41 DSURFACE 1"
+  - "NODE 48 DSURFACE 1"
+  - "NODE 55 DSURFACE 1"
+  - "NODE 56 DSURFACE 1"
+  - "NODE 57 DSURFACE 1"
+  - "NODE 58 DSURFACE 1"
+  - "NODE 62 DSURFACE 1"
+  - "NODE 63 DSURFACE 1"
+  - "NODE 64 DSURFACE 1"
+  - "NODE 68 DSURFACE 1"
+  - "NODE 69 DSURFACE 1"
+  - "NODE 17 DSURFACE 2"
+  - "NODE 18 DSURFACE 2"
+  - "NODE 19 DSURFACE 2"
+  - "NODE 20 DSURFACE 2"
+  - "NODE 23 DSURFACE 2"
+  - "NODE 24 DSURFACE 2"
+  - "NODE 25 DSURFACE 2"
+  - "NODE 26 DSURFACE 2"
+  - "NODE 27 DSURFACE 2"
+  - "NODE 44 DSURFACE 2"
+  - "NODE 45 DSURFACE 2"
+  - "NODE 46 DSURFACE 2"
+  - "NODE 47 DSURFACE 2"
+  - "NODE 50 DSURFACE 2"
+  - "NODE 51 DSURFACE 2"
+  - "NODE 52 DSURFACE 2"
+  - "NODE 53 DSURFACE 2"
+  - "NODE 54 DSURFACE 2"
+  - "NODE 59 DSURFACE 2"
+  - "NODE 60 DSURFACE 2"
+  - "NODE 61 DSURFACE 2"
+  - "NODE 73 DSURFACE 2"
+  - "NODE 75 DSURFACE 2"
+  - "NODE 76 DSURFACE 2"
+  - "NODE 77 DSURFACE 2"
+  - "NODE 79 DSURFACE 2"
+  - "NODE 80 DSURFACE 2"
+NODE COORDS:
+  - "NODE 1 COORD 0.0 0.0 0.0"
+  - "NODE 2 COORD 0.5 0.0 0.0"
+  - "NODE 3 COORD 0.0 0.5 0.0"
+  - "NODE 4 COORD 0.0 0.0 0.5"
+  - "NODE 5 COORD 0.5 0.5 0.0"
+  - "NODE 6 COORD 0.5 0.0 0.5"
+  - "NODE 7 COORD 0.0 0.5 0.5"
+  - "NODE 8 COORD 0.5 0.5 0.5"
+  - "NODE 9 COORD 1.0 0.0 0.0"
+  - "NODE 10 COORD 1.0 0.5 0.0"
+  - "NODE 11 COORD 1.0 0.0 0.5"
+  - "NODE 12 COORD 1.0 0.5 0.5"
+  - "NODE 13 COORD 0.0 1.0 0.0"
+  - "NODE 14 COORD 0.5 1.0 0.0"
+  - "NODE 15 COORD 0.0 1.0 0.5"
+  - "NODE 16 COORD 0.5 1.0 0.5"
+  - "NODE 17 COORD 0.0 0.0 1.0"
+  - "NODE 18 COORD 0.5 0.0 1.0"
+  - "NODE 19 COORD 0.0 0.5 1.0"
+  - "NODE 20 COORD 0.5 0.5 1.0"
+  - "NODE 21 COORD 1.0 1.0 0.0"
+  - "NODE 22 COORD 1.0 1.0 0.5"
+  - "NODE 23 COORD 1.0 0.0 1.0"
+  - "NODE 24 COORD 1.0 0.5 1.0"
+  - "NODE 25 COORD 0.0 1.0 1.0"
+  - "NODE 26 COORD 0.5 1.0 1.0"
+  - "NODE 27 COORD 1.0 1.0 1.0"
+  - "NODE 28 COORD 2.0 0.0 0.0"
+  - "NODE 29 COORD 2.5 0.0 0.0"
+  - "NODE 30 COORD 2.0 0.5 0.0"
+  - "NODE 31 COORD 2.0 0.0 0.5"
+  - "NODE 32 COORD 2.5 0.5 0.0"
+  - "NODE 33 COORD 2.5 0.0 0.5"
+  - "NODE 34 COORD 2.0 0.5 0.5"
+  - "NODE 35 COORD 2.5 0.5 0.5"
+  - "NODE 36 COORD 3.0 0.0 0.0"
+  - "NODE 37 COORD 3.0 0.5 0.0"
+  - "NODE 38 COORD 3.0 0.0 0.5"
+  - "NODE 39 COORD 3.0 0.5 0.5"
+  - "NODE 40 COORD 2.0 1.0 0.0"
+  - "NODE 41 COORD 2.5 1.0 0.0"
+  - "NODE 42 COORD 2.0 1.0 0.5"
+  - "NODE 43 COORD 2.5 1.0 0.5"
+  - "NODE 44 COORD 2.0 0.0 1.0"
+  - "NODE 45 COORD 2.5 0.0 1.0"
+  - "NODE 46 COORD 2.0 0.5 1.0"
+  - "NODE 47 COORD 2.5 0.5 1.0"
+  - "NODE 48 COORD 3.0 1.0 0.0"
+  - "NODE 49 COORD 3.0 1.0 0.5"
+  - "NODE 50 COORD 3.0 0.0 1.0"
+  - "NODE 51 COORD 3.0 0.5 1.0"
+  - "NODE 52 COORD 2.0 1.0 1.0"
+  - "NODE 53 COORD 2.5 1.0 1.0"
+  - "NODE 54 COORD 3.0 1.0 1.0"
+  - "NODE 55 COORD 4.0 0.0 0.0"
+  - "NODE 56 COORD 5.0 0.0 0.0"
+  - "NODE 57 COORD 5.0 1.0 0.0"
+  - "NODE 58 COORD 4.0 1.0 0.0"
+  - "NODE 59 COORD 4.0 0.0 1.0"
+  - "NODE 60 COORD 5.0 0.0 1.0"
+  - "NODE 61 COORD 4.0 1.0 1.0"
+  - "NODE 62 COORD 4.5 0.0 0.0"
+  - "NODE 63 COORD 5.0 0.5 0.0"
+  - "NODE 64 COORD 4.5 0.5 0.0"
+  - "NODE 65 COORD 4.5 0.0 0.5"
+  - "NODE 66 COORD 5.0 0.0 0.5"
+  - "NODE 67 COORD 5.0 0.5 0.5"
+  - "NODE 68 COORD 4.5 1.0 0.0"
+  - "NODE 69 COORD 4.0 0.5 0.0"
+  - "NODE 70 COORD 4.5 1.0 0.5"
+  - "NODE 71 COORD 4.0 1.0 0.5"
+  - "NODE 72 COORD 4.0 0.5 0.5"
+  - "NODE 73 COORD 4.5 0.5 1.0"
+  - "NODE 74 COORD 4.0 0.0 0.5"
+  - "NODE 75 COORD 4.5 0.0 1.0"
+  - "NODE 76 COORD 4.0 0.5 1.0"
+  - "NODE 77 COORD 5.0 1.0 1.0"
+  - "NODE 78 COORD 5.0 1.0 0.5"
+  - "NODE 79 COORD 4.5 1.0 1.0"
+  - "NODE 80 COORD 5.0 0.5 1.0"
+STRUCTURE ELEMENTS:
+  - "1 SOLID HEX8 1 2 5 3 4 6 8 7 MAT 1 KINEM nonlinear"
+  - "2 SOLID HEX8 2 9 10 5 6 11 12 8 MAT 1 KINEM nonlinear"
+  - "3 SOLID HEX8 5 10 21 14 8 12 22 16 MAT 1 KINEM nonlinear"
+  - "4 SOLID HEX8 3 5 14 13 7 8 16 15 MAT 1 KINEM nonlinear"
+  - "5 SOLID HEX8 4 6 8 7 17 18 20 19 MAT 1 KINEM nonlinear"
+  - "6 SOLID HEX8 6 11 12 8 18 23 24 20 MAT 1 KINEM nonlinear"
+  - "7 SOLID HEX8 8 12 22 16 20 24 27 26 MAT 1 KINEM nonlinear"
+  - "8 SOLID HEX8 7 8 16 15 19 20 26 25 MAT 1 KINEM nonlinear"
+  - "9 SOLID HEX8 28 29 32 30 31 33 35 34 MAT 1 KINEM nonlinear TECH fbar"
+  - "10 SOLID HEX8 29 36 37 32 33 38 39 35 MAT 1 KINEM nonlinear TECH fbar"
+  - "11 SOLID HEX8 32 37 48 41 35 39 49 43 MAT 1 KINEM nonlinear TECH fbar"
+  - "12 SOLID HEX8 30 32 41 40 34 35 43 42 MAT 1 KINEM nonlinear TECH fbar"
+  - "13 SOLID HEX8 31 33 35 34 44 45 47 46 MAT 1 KINEM nonlinear TECH fbar"
+  - "14 SOLID HEX8 33 38 39 35 45 50 51 47 MAT 1 KINEM nonlinear TECH fbar"
+  - "15 SOLID HEX8 35 39 49 43 47 51 54 53 MAT 1 KINEM nonlinear TECH fbar"
+  - "16 SOLID HEX8 34 35 43 42 46 47 53 52 MAT 1 KINEM nonlinear TECH fbar"
+  - "17 SOLID TET10 55 56 57 60 62 63 64 65 66 67 MAT 1 KINEM nonlinear"
+  - "18 SOLID TET10 57 58 55 61 68 69 64 70 71 72 MAT 1 KINEM nonlinear"
+  - "19 SOLID TET10 55 60 61 59 65 73 72 74 75 76 MAT 1 KINEM nonlinear"
+  - "20 SOLID TET10 57 61 60 77 70 73 67 78 79 80 MAT 1 KINEM nonlinear"
+  - "21 SOLID TET10 55 57 61 60 64 70 72 65 67 73 MAT 1 KINEM nonlinear"

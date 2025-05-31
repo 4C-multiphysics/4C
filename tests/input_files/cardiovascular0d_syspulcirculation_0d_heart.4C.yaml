@@ -1,0 +1,299 @@
+PROBLEM SIZE:
+  ELEMENTS: 3
+  NODES: 24
+DISCRETISATION:
+  NUMFLUIDDIS: 0
+  NUMALEDIS: 0
+  NUMARTNETDIS: 0
+  NUMTHERMDIS: 0
+  NUMAIRWAYSDIS: 0
+IO:
+  STRUCT_STRESS: "Cauchy"
+  STRUCT_STRAIN: "GL"
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+SOLVER 1:
+  SOLVER: "UMFPACK"
+CARDIOVASCULAR 0D-STRUCTURE COUPLING:
+  TOL_CARDVASC0D_RES: 1e-06
+  TOL_CARDVASC0D_DOFINCR: 1e-06
+  TIMINT_THETA: 1
+  LINEAR_COUPLED_SOLVER: 1
+CARDIOVASCULAR 0D-STRUCTURE COUPLING/SYS-PUL CIRCULATION PARAMETERS:
+  R_arvalve_max_l: 10
+  R_arvalve_min_l: 1e-06
+  R_atvalve_max_l: 10
+  R_atvalve_min_l: 1e-06
+  R_arvalve_max_r: 10
+  R_arvalve_min_r: 1e-06
+  R_atvalve_max_r: 10
+  R_atvalve_min_r: 1e-06
+  Atrium_act_curve_l: 1
+  Atrium_act_curve_r: 2
+  E_at_max_l: 2.9e-05
+  E_at_min_l: 9e-06
+  E_at_max_r: 1.8e-05
+  E_at_min_r: 8e-06
+  VENTRICLE_MODEL: "0D"
+  Ventricle_act_curve_l: 3
+  Ventricle_act_curve_r: 4
+  E_v_max_l: 7e-05
+  E_v_min_l: 1.2e-05
+  E_v_max_r: 3e-05
+  E_v_min_r: 1e-05
+  C_ar_sys: 8592.86096617
+  R_ar_sys: 0.00012
+  L_ar_sys: 6.67e-07
+  Z_ar_sys: 6e-06
+  C_ar_pul: 20000
+  R_ar_pul: 1.5e-05
+  C_ven_sys: 257785.828985
+  R_ven_sys: 2.4e-05
+  C_ven_pul: 50000
+  R_ven_pul: 1.5e-05
+  p_at_l_0: 0.599950804034
+  p_v_l_0: 0.599950804034
+  p_ar_sys_0: 9.68378038166
+  p_ven_sys_0: 2.13315841434
+  p_at_r_0: 0.0933256806275
+  p_v_r_0: 0.0933256806275
+  p_ar_pul_0: 3.22792679389
+  p_ven_pul_0: 1.59986881076
+  V_at_l_u: 5000
+  V_v_l_u: 10000
+  V_ar_sys_u: 352000
+  V_ven_sys_u: 1.04e+06
+  V_at_r_u: 4000
+  V_v_r_u: 8000
+  V_ar_pul_u: 84900
+  V_ven_pul_u: 93000
+STRUCTURAL DYNAMIC:
+  DYNAMICTYPE: "Statics"
+  PRESTRESSTIME: 0.101
+  TIMESTEP: 0.009
+  NUMSTEP: 100
+  MAXTIME: 0.9
+  M_DAMP: 0
+  K_DAMP: 0.0001
+  TOLDISP: 1e-06
+  TOLRES: 1e-06
+  MAXITER: 500
+  NLNSOL: "newtonlinuzawa"
+  LOADLIN: true
+  LINEAR_SOLVER: 1
+MATERIALS:
+  - MAT: 1
+    MAT_Struct_StVenantKirchhoff:
+      YOUNG: 10
+      NUE: 0.3
+      DENS: 2e-06
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_TIME: "a"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: "multifunction"
+    NUMPOINTS: 3
+    TIMES: [0, 0.36, 0.901]
+    DESCRIPTION: ["0.5*(1.0)*(1.0-cos(pi*(t)/0.18))", "0.0"]
+FUNCT2:
+  - SYMBOLIC_FUNCTION_OF_TIME: "a"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: "multifunction"
+    NUMPOINTS: 3
+    TIMES: [0, 0.36, 0.901]
+    DESCRIPTION: ["0.5*(1.0)*(1.0-cos(pi*(t)/0.18))", "0.0"]
+FUNCT3:
+  - SYMBOLIC_FUNCTION_OF_TIME: "a"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: "multifunction"
+    NUMPOINTS: 4
+    TIMES: [0, 0.36, 0.76, 0.901]
+    DESCRIPTION: ["0", "0.5*(1.0)*(1.0-cos(pi*(t-0.36)/0.2))", "0"]
+FUNCT4:
+  - SYMBOLIC_FUNCTION_OF_TIME: "a"
+  - VARIABLE: 0
+    NAME: "a"
+    TYPE: "multifunction"
+    NUMPOINTS: 4
+    TIMES: [0, 0.36, 0.76, 0.901]
+    DESCRIPTION: ["0", "0.5*(1.0)*(1.0-cos(pi*(t-0.36)/0.2))", "0"]
+RESULT DESCRIPTION:
+  - CARDIOVASCULAR0D:
+      DIS: "cardiovascular0d"
+      SPECIAL: true
+      QUANTITY: "p_at_l"
+      VALUE: 0.7127320117468057
+      TOLERANCE: 1e-06
+  - CARDIOVASCULAR0D:
+      DIS: "cardiovascular0d"
+      SPECIAL: true
+      QUANTITY: "q_vin_l"
+      VALUE: -0.0333322743745307
+      TOLERANCE: 1e-06
+  - CARDIOVASCULAR0D:
+      DIS: "cardiovascular0d"
+      SPECIAL: true
+      QUANTITY: "q_vout_l"
+      VALUE: -0.42212343057960694
+      TOLERANCE: 1e-06
+  - CARDIOVASCULAR0D:
+      DIS: "cardiovascular0d"
+      SPECIAL: true
+      QUANTITY: "p_v_l"
+      VALUE: 1.0460547554921127
+      TOLERANCE: 1e-06
+  - CARDIOVASCULAR0D:
+      DIS: "cardiovascular0d"
+      SPECIAL: true
+      QUANTITY: "p_ar_sys"
+      VALUE: 5.2672890612881815
+      TOLERANCE: 1e-06
+  - CARDIOVASCULAR0D:
+      DIS: "cardiovascular0d"
+      SPECIAL: true
+      QUANTITY: "q_ar_sys"
+      VALUE: 27199.350742243074
+      TOLERANCE: 1e-06
+  - CARDIOVASCULAR0D:
+      DIS: "cardiovascular0d"
+      SPECIAL: true
+      QUANTITY: "p_ven_sys"
+      VALUE: 2.020193559789391
+      TOLERANCE: 1e-06
+  - CARDIOVASCULAR0D:
+      DIS: "cardiovascular0d"
+      SPECIAL: true
+      QUANTITY: "q_ven_sys"
+      VALUE: 67199.68748943538
+      TOLERANCE: 1e-06
+  - CARDIOVASCULAR0D:
+      DIS: "cardiovascular0d"
+      SPECIAL: true
+      QUANTITY: "p_at_r"
+      VALUE: 0.4074010600429418
+      TOLERANCE: 1e-06
+  - CARDIOVASCULAR0D:
+      DIS: "cardiovascular0d"
+      SPECIAL: true
+      QUANTITY: "q_vin_r"
+      VALUE: 35962.42351025709
+      TOLERANCE: 1e-06
+  - CARDIOVASCULAR0D:
+      DIS: "cardiovascular0d"
+      SPECIAL: true
+      QUANTITY: "q_vout_r"
+      VALUE: -0.11518064932704578
+      TOLERANCE: 1e-06
+  - CARDIOVASCULAR0D:
+      DIS: "cardiovascular0d"
+      SPECIAL: true
+      QUANTITY: "p_v_r"
+      VALUE: 0.3714386365326847
+      TOLERANCE: 1e-06
+  - CARDIOVASCULAR0D:
+      DIS: "cardiovascular0d"
+      SPECIAL: true
+      QUANTITY: "p_ar_pul"
+      VALUE: 1.5232451298031424
+      TOLERANCE: 1e-06
+  - CARDIOVASCULAR0D:
+      DIS: "cardiovascular0d"
+      SPECIAL: true
+      QUANTITY: "q_ar_pul"
+      VALUE: 15708.61665360665
+      TOLERANCE: 1e-06
+  - CARDIOVASCULAR0D:
+      DIS: "cardiovascular0d"
+      SPECIAL: true
+      QUANTITY: "p_ven_pul"
+      VALUE: 1.2876158799990427
+      TOLERANCE: 1e-06
+  - CARDIOVASCULAR0D:
+      DIS: "cardiovascular0d"
+      SPECIAL: true
+      QUANTITY: "q_ven_pul"
+      VALUE: 38325.59121681581
+      TOLERANCE: 1e-06
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispx"
+      VALUE: 0
+      TOLERANCE: 1e-06
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 2
+      QUANTITY: "dispx"
+      VALUE: 0
+      TOLERANCE: 1e-06
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 3
+      QUANTITY: "dispx"
+      VALUE: 0
+      TOLERANCE: 1e-06
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 4
+      QUANTITY: "dispx"
+      VALUE: 0
+      TOLERANCE: 1e-06
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispx"
+      VALUE: 0
+      TOLERANCE: 1e-06
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 6
+      QUANTITY: "dispx"
+      VALUE: 0
+      TOLERANCE: 1e-06
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 7
+      QUANTITY: "dispx"
+      VALUE: 0
+      TOLERANCE: 1e-06
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 8
+      QUANTITY: "dispx"
+      VALUE: 0
+      TOLERANCE: 1e-06
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
+DESIGN SURF CARDIOVASCULAR 0D SYS-PUL CIRCULATION CONDITIONS:
+  - E: 1
+    id: 0
+    TYPE: "dummy"
+DESIGN SURF CARDIOVASCULAR 0D-STRUCTURE COUPLING CONDITIONS:
+  - E: 1
+    coupling_id: 0
+DSURF-NODE TOPOLOGY:
+  - "NODE 1 DSURFACE 1"
+  - "NODE 2 DSURFACE 1"
+  - "NODE 3 DSURFACE 1"
+  - "NODE 4 DSURFACE 1"
+  - "NODE 5 DSURFACE 1"
+  - "NODE 6 DSURFACE 1"
+  - "NODE 7 DSURFACE 1"
+  - "NODE 8 DSURFACE 1"
+NODE COORDS:
+  - "NODE 1 COORD -5.0000000000000000e+00 -5.0000000000000000e+00 5.0000000000000000e+00"
+  - "NODE 2 COORD -5.0000000000000000e+00 -5.0000000000000000e+00 -5.0000000000000000e+00"
+  - "NODE 3 COORD -5.0000000000000000e+00 5.0000000000000000e+00 -5.0000000000000000e+00"
+  - "NODE 4 COORD -5.0000000000000000e+00 5.0000000000000000e+00 5.0000000000000000e+00"
+  - "NODE 5 COORD 5.0000000000000000e+00 -5.0000000000000000e+00 5.0000000000000000e+00"
+  - "NODE 6 COORD 5.0000000000000000e+00 -5.0000000000000000e+00 -5.0000000000000000e+00"
+  - "NODE 7 COORD 5.0000000000000000e+00 5.0000000000000000e+00 -5.0000000000000000e+00"
+  - "NODE 8 COORD 5.0000000000000000e+00 5.0000000000000000e+00 5.0000000000000000e+00"
+STRUCTURE ELEMENTS:
+  - "1 SOLID HEX8 1 2 3 4 5 6 7 8 MAT 1 KINEM nonlinear"
