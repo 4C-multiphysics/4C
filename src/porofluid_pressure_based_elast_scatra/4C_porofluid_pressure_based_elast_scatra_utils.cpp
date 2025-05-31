@@ -117,7 +117,7 @@ PoroPressureBased::create_and_init_artery_coupling_strategy(
     case Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::nodal:
     {
       strategy =
-          std::make_shared<PoroPressureBased::PorofluidElastScatraArteryCouplingNodebasedAlgorithm>(
+          std::make_shared<PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm>(
               arterydis, contdis, meshtyingparams, condname, artcoupleddofname, contcoupleddofname);
       break;
     }

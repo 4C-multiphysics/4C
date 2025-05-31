@@ -18,34 +18,35 @@ FOUR_C_NAMESPACE_OPEN
 namespace PoroPressureBased
 {
   //! Node-to-point coupling between artery network and porofluid-elasticity-scatra algorithm
-  class PorofluidElastScatraArteryCouplingNodeToPointAlgorithm
+  class PorofluidElastScatraArteryCouplingNodeToPointAlgorithm final
       : public PorofluidElastScatraArteryCouplingNonConformingAlgorithm
   {
    public:
     //! constructor
     PorofluidElastScatraArteryCouplingNodeToPointAlgorithm(
-        std::shared_ptr<Core::FE::Discretization> arterydis,
-        std::shared_ptr<Core::FE::Discretization> contdis,
-        const Teuchos::ParameterList& couplingparams, const std::string& condname,
-        const std::string& artcoupleddofname, const std::string& contcoupleddofname);
+        std::shared_ptr<Core::FE::Discretization> artery_dis,
+        std::shared_ptr<Core::FE::Discretization> homogenized_dis,
+        const Teuchos::ParameterList& coupling_params, const std::string& condition_name,
+        const std::string& artery_coupled_dof_name,
+        const std::string& homogenized_coupled_dof_name);
 
-    //! set-up of global system of equations of coupled problem
+    //! set up of the global system of equations of the coupled problem
     void setup_system(std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> sysmat,
         std::shared_ptr<Core::LinAlg::Vector<double>> rhs,
-        std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_cont,
-        std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_art,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_cont,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_art,
-        std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmap_cont,
-        std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmap_art) override;
+        std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_homogenized,
+        std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_artery,
+        std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_homogenized,
+        std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_artery,
+        std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmap_homogenized,
+        std::shared_ptr<const Core::LinAlg::MapExtractor> dbcmap_artery) override;
 
-    //! setup the strategy
+    //! set up the strategy
     void setup() override;
 
     //! apply mesh movement (on artery elements)
     void apply_mesh_movement() override;
 
-    //! access to blood vessel volume fraction
+    //! access to the blood vessel volume fraction
     std::shared_ptr<const Core::LinAlg::Vector<double>> blood_vessel_volume_fraction() override;
 
     //! Evaluate the 1D-3D coupling
@@ -77,27 +78,27 @@ namespace PoroPressureBased
      * (Hagen-Poiseuille)
      * \note not possible for node-to-point formulation since variable diameter not yet possible
      */
-    void evaluate_additional_linearizationof_integrated_diam() override
+    void evaluate_additional_linearization_of_integrated_diameter() override
     {
       FOUR_C_THROW(
-          "Function 'evaluate_additional_linearizationof_integrated_diam()' not possible for "
+          "Function 'evaluate_additional_linearization_of_integrated_diameter()' not possible for "
           "node-to-point coupling");
     };
 
     /*!
-     * @brief get the segment lengths of element 'artelegid'
+     * @brief get the segment lengths of element 'artery_ele_gid'
      * \note segment length is set to zero since we have no segments in node-to-point coupling
      */
-    std::vector<double> get_ele_segment_lengths(const int artelegid) override { return {0.0}; };
+    std::vector<double> get_ele_segment_length(const int artery_ele_gid) override { return {0.0}; };
 
    private:
     //! print out the coupling method
     void print_coupling_method() const override;
 
-    //! preevaluate the coupling pairs
+    //! pre-evaluate the coupling pairs
     void pre_evaluate_coupling_pairs();
 
-    //! Output Coupling pairs
+    //! Output coupling pairs
     void output_coupling_pairs() const;
   };
 }  // namespace PoroPressureBased

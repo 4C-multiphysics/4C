@@ -380,7 +380,6 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
   nearby_ele_pairs_.clear();
 }
 
-
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm::
@@ -470,7 +469,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
 
     // get the segment lengths
     const std::vector<double> segment_lengths =
-        get_ele_segment_lengths(coupled_ele_pair->ele1_gid());
+        get_ele_segment_length(coupled_ele_pair->ele1_gid());
 
     // evaluate
     const double integrated_diameter = coupled_ele_pair->evaluate(&(ele_rhs[0]), &(ele_rhs[1]),
@@ -494,7 +493,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
   if (homogenized_dis_->name() == "porofluid" && has_variable_diameter_)
   {
     set_artery_diameter_in_material();
-    evaluate_additional_linearizationof_integrated_diam();
+    evaluate_additional_linearization_of_integrated_diameter();
   }
 
   if (coupling_rhs_vector_->GlobalAssemble(Add, false) != 0)

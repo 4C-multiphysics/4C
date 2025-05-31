@@ -25,16 +25,17 @@ namespace FSI
 
 namespace PoroPressureBased
 {
-  //! Node based coupling between artery network and porofluid-elasticity-scatra algorithm
-  class PorofluidElastScatraArteryCouplingNodebasedAlgorithm
+  //! Node-based coupling between artery network and porofluid-elasticity-scatra algorithm
+  class PorofluidElastScatraArteryCouplingNodeBasedAlgorithm final
       : public PorofluidElastScatraArteryCouplingBaseAlgorithm
   {
    public:
-    PorofluidElastScatraArteryCouplingNodebasedAlgorithm(
-        std::shared_ptr<Core::FE::Discretization> arterydis,
-        std::shared_ptr<Core::FE::Discretization> contdis,
-        const Teuchos::ParameterList& meshtyingparams, const std::string& condname,
-        const std::string& artcoupleddofname, const std::string& contcoupleddofname);
+    PorofluidElastScatraArteryCouplingNodeBasedAlgorithm(
+        std::shared_ptr<Core::FE::Discretization> artery_dis,
+        std::shared_ptr<Core::FE::Discretization> homogenized_dis,
+        const Teuchos::ParameterList& meshtying_params, const std::string& condition_name,
+        const std::string& artery_coupled_dof_name,
+        const std::string& homogenized_coupled_dof_name);
 
     //! Evaluate the 1D-3D coupling
     void evaluate(std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> sysmat,
@@ -43,7 +44,7 @@ namespace PoroPressureBased
       // nothing to do here, is done in SetupSystem for this type of coupling
     }
 
-    //! set-up linear system of equations of coupled problem
+    //! set up the linear system of equations of the coupled problem
     void setup_system(std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> sysmat,
         std::shared_ptr<Core::LinAlg::Vector<double>> rhs,
         std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_cont,
@@ -56,28 +57,32 @@ namespace PoroPressureBased
     /*!
      * @brief setup global vector
      *
-     * @param[out]  vec combined vector containing both artery and continuous field quantities
-     * @param[in]   vec_cont vector containing quantities from continuous field
-     * @param[in]   vec_art vector containing quantities from artery field
+     * @param[out]  global_vector combined vector containing both artery and homogenized field
+     * quantities
+     * @param[in]   homogenized_vector vector containing quantities from homogenized field
+     * @param[in]   artery_vector vector containing quantities from artery field
      */
-    void setup_global_vector(std::shared_ptr<Core::LinAlg::Vector<double>> vec,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> vec_cont,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> vec_art) override;
+    void setup_global_vector(std::shared_ptr<Core::LinAlg::Vector<double>> global_vector,
+        std::shared_ptr<const Core::LinAlg::Vector<double>> homogenized_vector,
+        std::shared_ptr<const Core::LinAlg::Vector<double>> artery_vector) override;
 
     /*!
      * @brief extract single field vectors
      *
-     * @param[out]  globalvec combined vector containing both artery and continuous field quantities
-     * @param[in]   vec_cont vector containing quantities from continuous field
-     * @param[in]   vec_art vector containing quantities from artery field
+     * @param[out]  global_vector combined vector containing both artery and homogenized field
+     * quantities
+     * @param[in]   homogenized_vector vector containing quantities from homogenized field
+     * @param[in]   artery_vector vector containing quantities from artery field
      */
-    void extract_single_field_vectors(std::shared_ptr<const Core::LinAlg::Vector<double>> globalvec,
-        std::shared_ptr<const Core::LinAlg::Vector<double>>& vec_cont,
-        std::shared_ptr<const Core::LinAlg::Vector<double>>& vec_art) override;
+    void extract_single_field_vectors(
+        std::shared_ptr<const Core::LinAlg::Vector<double>> global_vector,
+        std::shared_ptr<const Core::LinAlg::Vector<double>>& homogenized_vector,
+        std::shared_ptr<const Core::LinAlg::Vector<double>>& artery_vector) override;
 
     //! check if initial fields on coupled DOFs are equal
-    void check_initial_fields(std::shared_ptr<const Core::LinAlg::Vector<double>> vec_cont,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> vec_art) override;
+    void check_initial_fields(
+        std::shared_ptr<const Core::LinAlg::Vector<double>> homogenized_vector,
+        std::shared_ptr<const Core::LinAlg::Vector<double>> artery_vector) override;
 
     //! access artery (1D) dof row map
     std::shared_ptr<const Core::LinAlg::Map> artery_dof_row_map() const override;
@@ -88,28 +93,31 @@ namespace PoroPressureBased
     //! init the strategy
     void init() override;
 
-    //! setup the strategy
-    void setup() override;
+    //! set up the strategy
+    void setup() override
+    {
+      // do nothing
+    }
 
     //! apply mesh movement (on artery elements)
     void apply_mesh_movement() override;
 
-    //! access to blood vessel volume fraction
+    //! access to the blood vessel volume fraction
     std::shared_ptr<const Core::LinAlg::Vector<double>> blood_vessel_volume_fraction() override;
 
     //! print out the coupling method
     void print_coupling_method() const override;
 
    private:
-    //! set-up of global rhs vector of coupled problem
+    //! set-up of global rhs vector of the coupled problem
     void setup_rhs(std::shared_ptr<Core::LinAlg::Vector<double>> rhs,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_cont,
-        std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_art);
+        std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_homogenized,
+        std::shared_ptr<const Core::LinAlg::Vector<double>> rhs_artery);
 
-    //! set-up of global matrix of coupled problem
+    //! set-up of global matrix of the coupled problem
     void setup_matrix(std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> sysmat,
-        std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_cont,
-        Core::LinAlg::SparseMatrix& sysmat_art);
+        std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat_homogenized,
+        Core::LinAlg::SparseMatrix& sysmat_artery) const;
 
     /*!
      * @brief setup map extractor for artery mesh tying
@@ -118,40 +126,39 @@ namespace PoroPressureBased
      * maps(0)  -> coupled DOFs
      * maps(1)  -> uncoupled DOFs
      *
-     * @param[in]   mapextractor the map extractor to setup
+     * @param[in]   map_extractor the map extractor to set up
      * @param[in]   dis discretization
-     * @param[in]   coupleddofs vector with DOFs to couple
+     * @param[in]   coupled_dofs vector with DOFs to couple
      */
-    void setup_map_extractor(Core::LinAlg::MultiMapExtractor& mapextractor,
-        Core::FE::Discretization& dis, const std::vector<int>& coupleddofs);
+    void setup_map_extractor(Core::LinAlg::MultiMapExtractor& map_extractor,
+        Core::FE::Discretization& dis, const std::vector<int>& coupled_dofs) const;
 
     /*!
-     * @brief check if dirichlet BC is defined on coupled dofs, which is not possible
+     * @brief check if Dirichlet BC is defined on coupled dofs, which is not possible
      *
-     * @param[in]   dis discretizatiom
-     * @param[in]   coupleddofmap map with coupled DOFs
+     * @param[in]   dis discretization
+     * @param[in]   coupled_dof_map map with coupled DOFs
      */
-    void check_dbc_on_coupled_dofs(Core::FE::Discretization& dis,
-        const std::shared_ptr<const Core::LinAlg::Map>& coupleddofmap);
+    void check_dbc_on_coupled_dofs(const Core::FE::Discretization& dis,
+        const std::shared_ptr<const Core::LinAlg::Map>& coupled_dof_map) const;
 
     //! name of the condition
-    const std::string condname_;
+    const std::string condition_name_;
 
     //! dof row map split in (field) blocks
-    std::shared_ptr<Core::LinAlg::MultiMapExtractor> blockrowdofmap_;
+    std::shared_ptr<Core::LinAlg::MultiMapExtractor> block_row_dof_map_;
 
-    //! extractors for continuous field and artery field, maps(0) -> Coupled Dofs, maps(1) uncoupled
-    //! Dofs
-    std::shared_ptr<Core::LinAlg::MultiMapExtractor> contfieldex_;
-    std::shared_ptr<Core::LinAlg::MultiMapExtractor> artex_;
+    //! extractors for continuous and artery field, maps(0) coupled Dofs, maps(1) uncoupled Dofs
+    std::shared_ptr<Core::LinAlg::MultiMapExtractor> homogenized_field_extractor_;
+    std::shared_ptr<Core::LinAlg::MultiMapExtractor> artery_field_extractor_;
 
     //! coupling adapter
-    std::shared_ptr<Coupling::Adapter::Coupling> artcontfieldcoup_;
+    std::shared_ptr<Coupling::Adapter::Coupling> coupling_artery_homogenized_;
 
     //! needed for matrix transforms
-    std::shared_ptr<Coupling::Adapter::MatrixRowColTransform> sbbtransform_;
-    std::shared_ptr<Coupling::Adapter::MatrixRowTransform> sbitransform_;
-    std::shared_ptr<Coupling::Adapter::MatrixColTransform> sibtransform_;
+    std::shared_ptr<Coupling::Adapter::MatrixRowColTransform> row_col_transform_;
+    std::shared_ptr<Coupling::Adapter::MatrixRowTransform> row_transform_;
+    std::shared_ptr<Coupling::Adapter::MatrixColTransform> col_transform_;
   };
 
 }  // namespace PoroPressureBased
