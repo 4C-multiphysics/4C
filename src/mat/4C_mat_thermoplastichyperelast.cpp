@@ -131,6 +131,11 @@ void Mat::ThermoPlasticHyperElast::pack(Core::Communication::PackBuffer& data) c
     add_to_pack(data, thrplheat_->at(var));
     add_to_pack(data, thrplheat_k_tt_->at(var));
     add_to_pack(data, thrplheat_k_td_->at(var));
+
+    // insert current iteration states
+    add_to_pack(data, defgrdcurr_->at(var));
+    add_to_pack(data, bebarcurr_->at(var));
+    add_to_pack(data, accplstraincurr_->at(var));
   }
 
   add_to_pack(data, plastic_step_);
@@ -227,9 +232,12 @@ void Mat::ThermoPlasticHyperElast::unpack(Core::Communication::UnpackBuffer& buf
     extract_from_pack(buffer, tmp_vect);
     thrplheat_k_td_->push_back(tmp_vect);
 
-    // current vectors have to be initialised
+    // current iteration states are unpacked
+    extract_from_pack(buffer, tmp_matrix);
     defgrdcurr_->push_back(tmp_matrix);
+    extract_from_pack(buffer, tmp_matrix);
     bebarcurr_->push_back(tmp_matrix);
+    extract_from_pack(buffer, tmp_scalar);
     accplstraincurr_->push_back(tmp_scalar);
   }
 

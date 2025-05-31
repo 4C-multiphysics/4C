@@ -10,12 +10,9 @@
 #include "4C_comm_utils.hpp"
 #include "4C_fem_condition.hpp"
 #include "4C_fem_discretization.hpp"
-#include "4C_fem_general_elementtype.hpp"
 #include "4C_global_data.hpp"
-#include "4C_inpar_material.hpp"
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
-#include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
@@ -23,7 +20,10 @@
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_solid_3D_ele.hpp"
 #include "4C_structure_aux.hpp"
+#include "4C_structure_new_timint_base.hpp"
 #include "4C_utils_exceptions.hpp"
+
+#include <ranges>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -171,20 +171,6 @@ MultiScale::MicroStatic::MicroStatic(const int microdisnum, const double V0)
   fresn_ = Core::LinAlg::create_vector(*dofrowmap, false);
 
   // -------------------------------------------------------------------
-  // create "empty" EAS history map
-  //
-  // -------------------------------------------------------------------
-  {
-    lastalpha_ =
-        std::make_shared<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>>();
-    oldalpha_ = std::make_shared<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>>();
-    oldfeas_ = std::make_shared<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>>();
-    oldKaainv_ =
-        std::make_shared<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>>();
-    oldKda_ = std::make_shared<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>>();
-  }
-
-  // -------------------------------------------------------------------
   // call elements to calculate stiffness and mass
   // -------------------------------------------------------------------
   {
@@ -237,7 +223,7 @@ MultiScale::MicroStatic::MicroStatic(const int microdisnum, const double V0)
         "Multiscale simulations are currently only possible with the new solid elements");
 
     solid_ele->for_each_gauss_point(*discret_, la[0].lm_,
-        [&](Mat::So3Material& solid_material, double integration_factor, int gp)
+        [&](const Mat::So3Material& solid_material, const double integration_factor, const int gp)
         {
           // integrate volume
           my_micro_discretization_volume += integration_factor;
@@ -264,7 +250,7 @@ MultiScale::MicroStatic::MicroStatic(const int microdisnum, const double V0)
 }  // MultiScale::MicroStatic::MicroStatic
 
 
-void MultiScale::MicroStatic::predictor(Core::LinAlg::Matrix<3, 3>* defgrd)
+void MultiScale::MicroStatic::predictor(const Core::LinAlg::Matrix<3, 3>* defgrd)
 {
   if (pred_ == Inpar::Solid::pred_constdis)
     predict_const_dis(defgrd);
@@ -279,7 +265,7 @@ void MultiScale::MicroStatic::predictor(Core::LinAlg::Matrix<3, 3>* defgrd)
 /*----------------------------------------------------------------------*
  |  do predictor step (public)                               mwgee 03/07|
  *----------------------------------------------------------------------*/
-void MultiScale::MicroStatic::predict_const_dis(Core::LinAlg::Matrix<3, 3>* defgrd)
+void MultiScale::MicroStatic::predict_const_dis(const Core::LinAlg::Matrix<3, 3>* defgrd)
 {
   // apply new displacements at DBCs -> this has to be done with the
   // mid-displacements since the given macroscopic deformation
@@ -289,13 +275,6 @@ void MultiScale::MicroStatic::predict_const_dis(Core::LinAlg::Matrix<3, 3>* defg
     evaluate_micro_bc(defgrd, *disn_);
     discret_->clear_state();
   }
-
-  //--------------------------------- set EAS internal data if necessary
-
-  // this has to be done only once since the elements will remember
-  // their EAS data until the end of the microscale simulation
-  // (end of macroscopic iteration step)
-  set_eas_data();
 
   //------------- eval fint at interpolated state, eval stiffness matrix
   {
@@ -349,7 +328,7 @@ void MultiScale::MicroStatic::predict_const_dis(Core::LinAlg::Matrix<3, 3>* defg
 /*----------------------------------------------------------------------*
  |  do predictor step (public)                                  lw 01/09|
  *----------------------------------------------------------------------*/
-void MultiScale::MicroStatic::predict_tang_dis(Core::LinAlg::Matrix<3, 3>* defgrd)
+void MultiScale::MicroStatic::predict_tang_dis(const Core::LinAlg::Matrix<3, 3>* defgrd)
 {
   // for displacement increments on Dirichlet boundary
   std::shared_ptr<Core::LinAlg::Vector<double>> dbcinc =
@@ -371,13 +350,6 @@ void MultiScale::MicroStatic::predict_tang_dis(Core::LinAlg::Matrix<3, 3>* defgr
   // DBC-DOFs hold increments of current step
   // free-DOFs hold zeros
   dbcinc->update(-1.0, *disn_, 1.0);
-
-  //--------------------------------- set EAS internal data if necessary
-
-  // this has to be done only once since the elements will remember
-  // their EAS data until the end of the microscale simulation
-  // (end of macroscopic iteration step)
-  set_eas_data();
 
   //------------- eval fint at interpolated state, eval stiffness matrix
   {
@@ -643,6 +615,22 @@ void MultiScale::MicroStatic::prepare_output()
   }
 }
 
+void MultiScale::MicroStatic::update_step_element()
+{
+  // fill parameter list for the discretization
+  Teuchos::ParameterList p;
+  p.set("total time", timen_);
+  p.set("delta time", dt_);
+  p.set("action", "calc_struct_update_istep");
+
+  // set state vectors
+  discret_->clear_state();
+  discret_->set_state("displacement", *disn_);
+
+  // evaluate elements
+  discret_->evaluate(p, nullptr, nullptr, nullptr, nullptr, nullptr);
+  discret_->clear_state();
+}
 
 /*----------------------------------------------------------------------*
  |  write output (public)                                       lw 02/08|
@@ -716,38 +704,19 @@ void MultiScale::MicroStatic::output(
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void MultiScale::MicroStatic::write_restart(std::shared_ptr<Core::IO::DiscretizationWriter> output,
-    const double time, const int step, const double dt)
+    const double time, const int step, const double dt) const
 {
   output->write_mesh(step, time);
   output->new_step(step, time);
   output->write_vector("displacement", dis_);
-
-  std::shared_ptr<Core::LinAlg::SerialDenseMatrix> emptyalpha(
-      new Core::LinAlg::SerialDenseMatrix(1, 1));
-
-  Core::Communication::PackBuffer data;
-
-  for (int i = 0; i < discret_->element_col_map()->num_my_elements(); ++i)
-  {
-    if ((*lastalpha_)[i] != nullptr)
-    {
-      add_to_pack(data, *(*lastalpha_)[i]);
-    }
-    else
-    {
-      add_to_pack(data, *emptyalpha);
-    }
-  }
-  output->write_vector("alpha", data(), *discret_->element_col_map());
 }
 
 /*----------------------------------------------------------------------*
  |  read restart (public)                                       lw 03/08|
  *----------------------------------------------------------------------*/
-void MultiScale::MicroStatic::read_restart(int step,
+void MultiScale::MicroStatic::read_restart(const int step,
     std::shared_ptr<Core::LinAlg::Vector<double>> dis,
-    std::shared_ptr<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>> lastalpha,
-    std::string name)
+    std::map<int, std::shared_ptr<std::vector<char>>>& history_data, const std::string& name)
 {
   std::shared_ptr<Core::IO::InputControl> inputcontrol =
       std::make_shared<Core::IO::InputControl>(name, true);
@@ -768,12 +737,29 @@ void MultiScale::MicroStatic::read_restart(int step,
   step_ = rstep;
   stepn_ = step_ + 1;
 
-  reader.read_serial_dense_matrix(*lastalpha, "alpha");
+  std::map<int, std::vector<char>>* mapdata = new std::map<int, std::vector<char>>();
+  reader.read_map_data_of_char_vector(*mapdata, "history_data");
+
+  // export history to proper element column layout
+  auto ks = std::views::keys(*mapdata);
+  const std::vector<int> keys{ks.begin(), ks.end()};
+
+  const Core::LinAlg::Map read_in_ele_row_map =
+      Core::LinAlg::Map(-1, static_cast<int>(keys.size()), keys.data(), 0, discret_->get_comm());
+
+  Core::Communication::Exporter exporter(
+      read_in_ele_row_map, *discret_->element_col_map(), discret_->get_comm());
+  exporter.do_export<char>(*mapdata);
+
+  for (const auto& [ele_id, data] : *mapdata)
+  {
+    history_data[ele_id] = std::make_shared<std::vector<char>>(data);
+  }
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-double MultiScale::MicroStatic::get_time_to_step(int step, std::string name)
+double MultiScale::MicroStatic::get_time_to_step(const int step, const std::string& name)
 {
   std::shared_ptr<Core::IO::InputControl> inputcontrol(new Core::IO::InputControl(name, true));
   Core::IO::DiscretizationReader reader(discret_, inputcontrol, step);
@@ -781,7 +767,7 @@ double MultiScale::MicroStatic::get_time_to_step(int step, std::string name)
 }
 
 void MultiScale::MicroStatic::evaluate_micro_bc(
-    Core::LinAlg::Matrix<3, 3>* defgrd, Core::LinAlg::Vector<double>& disp)
+    const Core::LinAlg::Matrix<3, 3>* defgrd, Core::LinAlg::Vector<double>& disp)
 {
   std::vector<const Core::Conditions::Condition*> conds;
   discret_->get_condition("MicroBoundary", conds);
@@ -837,12 +823,7 @@ void MultiScale::MicroStatic::evaluate_micro_bc(
 
 void MultiScale::MicroStatic::set_state(std::shared_ptr<Core::LinAlg::Vector<double>> dis,
     std::shared_ptr<Core::LinAlg::Vector<double>> disn, std::shared_ptr<std::vector<char>> stress,
-    std::shared_ptr<std::vector<char>> strain, std::shared_ptr<std::vector<char>> plstrain,
-    std::shared_ptr<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>> lastalpha,
-    std::shared_ptr<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>> oldalpha,
-    std::shared_ptr<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>> oldfeas,
-    std::shared_ptr<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>> oldKaainv,
-    std::shared_ptr<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>> oldKda)
+    std::shared_ptr<std::vector<char>> strain, std::shared_ptr<std::vector<char>> plstrain)
 {
   dis_ = dis;
   disn_ = disn;
@@ -850,13 +831,6 @@ void MultiScale::MicroStatic::set_state(std::shared_ptr<Core::LinAlg::Vector<dou
   stress_ = stress;
   strain_ = strain;
   plstrain_ = plstrain;
-
-  // using std::shared_ptr's here means we do not need to return EAS data explicitly
-  lastalpha_ = lastalpha;
-  oldalpha_ = oldalpha;
-  oldfeas_ = oldfeas;
-  oldKaainv_ = oldKaainv;
-  oldKda_ = oldKda;
 }
 
 void MultiScale::MicroStatic::set_time(
@@ -869,22 +843,15 @@ void MultiScale::MicroStatic::set_time(
   stepn_ = stepn;
 }
 
-// std::shared_ptr<Core::LinAlg::Vector<double>> MultiScale::MicroStatic::ReturnNewDism() { return
-// Teuchos::rcp(new Core::LinAlg::Vector<double>(*dism_)); }
-
 void MultiScale::MicroStatic::clear_state()
 {
   dis_ = nullptr;
   disn_ = nullptr;
 }
 
-void MultiScale::MicroStatic::set_eas_data() {}
-
-
-
 void MultiScale::MicroStatic::static_homogenization(Core::LinAlg::Matrix<6, 1>* stress,
-    Core::LinAlg::Matrix<6, 6>* cmat, Core::LinAlg::Matrix<3, 3>* defgrd, const bool mod_newton,
-    bool& build_stiff)
+    Core::LinAlg::Matrix<6, 6>* cmat, const Core::LinAlg::Matrix<3, 3>* defgrd,
+    const bool mod_newton, bool& build_stiff)
 {
   // determine macroscopic parameters via averaging (homogenization) of
   // microscopic features according to Kouznetsova, Miehe etc.
@@ -1086,7 +1053,6 @@ void MultiScale::MicroStatic::static_homogenization(Core::LinAlg::Matrix<6, 1>* 
   }
 }
 
-
 void MultiScale::stop_np_multiscale()
 {
   MPI_Comm subcomm = Global::Problem::instance(0)->get_communicators()->sub_comm();
@@ -1094,7 +1060,6 @@ void MultiScale::stop_np_multiscale()
       static_cast<int>(MultiScale::MicromaterialNestedParallelismAction::stop_multiscale), -1};
   Core::Communication::broadcast(task, 2, 0, subcomm);
 }
-
 
 void MultiScale::MicroStaticParObject::pack(Core::Communication::PackBuffer& data) const
 {

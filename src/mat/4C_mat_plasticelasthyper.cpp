@@ -215,8 +215,6 @@ void Mat::PlasticElastHyper::unpack(Core::Communication::UnpackBuffer& buffer)
   params_ = nullptr;
   potsum_.clear();
 
-
-
   Core::Communication::extract_and_assert_id(buffer, unique_par_object_id());
 
   // matid and recover MatParams()
@@ -270,7 +268,6 @@ void Mat::PlasticElastHyper::unpack(Core::Communication::UnpackBuffer& buffer)
   extract_from_pack(buffer, last_alpha_kinematic_);
 
   extract_from_pack(buffer, activity_state_);
-
   extract_from_pack(buffer, delta_alpha_i_);
 
   bool tsi;

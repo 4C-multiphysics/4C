@@ -1,15 +1,13 @@
 TITLE:
-  - This test case consists of 8 macro elements. The first six elements use
-  - the microscale specified in sohex8_multiscale_micro1.mat.4C.yaml via their material
-  - definition. Different microscale discretizations can be used for other
-  - elements. This test case uses the same micro file for the last two macro
-  - elements. The microscale files (*.mat.4C.yaml) are expected in the same directory
-  - as the macro file.
+  - This test case consists of 8 macro elements, each of which contains a
+  - microscale that is specified in the material of the macro element via the
+  - corresponding file name. The micro file (here sohex8_multiscale_micro.mat.4C.yaml)
+  - is expected in the same directory.
   - The test case can either run as usual:
-  - 'mpirun -np 2 ./4C /path/to/sohex8_multiscale_macro_2micro.4C.yaml output_name'
+  - 'mpirun -np 2 ./4C /path/to/sohex8_multiscale_macro.dat output_name'
   - or in nested parallelism mode via:
-  - 'mpirun -np 5 ./4C -nptype=separateDatFiles -ngroup=2 -glayout=2,3 /path/to/sohex8_multiscale_macro_2micro.4C.yaml
-    output_name /path/to/sohex8_multiscale_npsupport.4C.yaml dummy_output_name'
+  - 'mpirun -np 5 ./4C -nptype=separateDatFiles -ngroup=2 -glayout=2,3 /path/to/sohex8_multiscale_macro.4C.yaml
+    output_name /path/to/sohex8_multiscale_npsupport.dat dummy_output_name'
   - The nested mode command uses 2 procs (see 1st argument in -glayout) to
   - solve the macro scale and 3 procs (see 2nd argument in -glayout) to support
   - while solving the microscale. The sum of the two proc numbers must
@@ -26,7 +24,6 @@ PROBLEM TYPE:
 IO:
   WRITE_INITIAL_STATE: false
   VERBOSITY: "Minimal"
-  RESTARTEVERY: 1
 STRUCTURAL DYNAMIC:
   INT_STRATEGY: "Standard"
   TIMESTEP: 0.5
@@ -217,17 +214,13 @@ STRUCTURE ELEMENTS:
   - "4 SOLID HEX8 25 18 8 19 23 17 5 15 MAT 1 KINEM nonlinear"
   - "5 SOLID HEX8 20 12 9 16 8 7 2 6 MAT 1 KINEM nonlinear"
   - "6 SOLID HEX8 24 20 16 22 19 8 6 14 MAT 1 KINEM nonlinear"
-  - "7 SOLID HEX8 26 21 12 20 18 13 7 8 MAT 2 KINEM nonlinear"
-  - "8 SOLID HEX8 27 26 20 24 25 18 8 19 MAT 2 KINEM nonlinear"
+  - "7 SOLID HEX8 26 21 12 20 18 13 7 8 MAT 1 KINEM nonlinear"
+  - "8 SOLID HEX8 27 26 20 24 25 18 8 19 MAT 1 KINEM nonlinear"
 MATERIALS:
   - MAT: 1
     MAT_Struct_Multiscale:
-      MICROFILE: "sohex8_multiscale_micro1.mat.4C.yaml"
+      MICROFILE: "sohex8_multiscale_micro.mat.4C.yaml"
       MICRODIS_NUM: 1
-  - MAT: 2
-    MAT_Struct_Multiscale:
-      MICROFILE: "sohex8_multiscale_micro1.mat.4C.yaml"
-      MICRODIS_NUM: 2
 FUNCT1:
   - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t/1.5"
 RESULT DESCRIPTION:

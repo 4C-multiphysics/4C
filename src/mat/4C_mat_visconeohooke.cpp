@@ -83,22 +83,22 @@ void Mat::ViscoNeoHooke::pack(Core::Communication::PackBuffer& data) const
   add_to_pack(data, matid);
 
   //  pack history data
-  int histsize;
-  if (!initialized())
-  {
-    histsize = 0;
-  }
-  else
+  int histsize = 0;
+  if (initialized())
   {
     histsize = histstresslast_->size();
   }
-  add_to_pack(data, 2 * histsize);  // Length of history vector(s)
+  add_to_pack(data, histsize);  // Length of history vector(s)
   for (int var = 0; var < histsize; ++var)
   {
+    // insert last converged states
     add_to_pack(data, histstresslast_->at(var));
     add_to_pack(data, artstresslast_->at(var));
+
+    // insert current iteration states
+    add_to_pack(data, histstresscurr_->at(var));
+    add_to_pack(data, artstresscurr_->at(var));
   }
-  return;
 }
 
 
@@ -108,7 +108,6 @@ void Mat::ViscoNeoHooke::pack(Core::Communication::PackBuffer& data) const
 void Mat::ViscoNeoHooke::unpack(Core::Communication::UnpackBuffer& buffer)
 {
   isinit_ = true;
-
 
   Core::Communication::extract_and_assert_id(buffer, unique_par_object_id());
 
@@ -130,29 +129,31 @@ void Mat::ViscoNeoHooke::unpack(Core::Communication::UnpackBuffer& buffer)
     }
 
   // history data
-  int twicehistsize;
-  extract_from_pack(buffer, twicehistsize);
+  int histsize;
+  extract_from_pack(buffer, histsize);
 
-  if (twicehistsize == 0) isinit_ = false;
+  if (histsize == 0) isinit_ = false;
 
-  histstresscurr_ = std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>();
-  artstresscurr_ = std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>();
   histstresslast_ = std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>();
   artstresslast_ = std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>();
-  for (int var = 0; var < twicehistsize; var += 2)
+  histstresscurr_ = std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>();
+  artstresscurr_ = std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>();
+  for (int var = 0; var < histsize; ++var)
   {
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tmp(Core::LinAlg::Initialization::zero);
-    histstresscurr_->push_back(tmp);
-    artstresscurr_->push_back(tmp);
-    extract_from_pack(buffer, tmp);
-    histstresslast_->push_back(tmp);
-    extract_from_pack(buffer, tmp);
-    artstresslast_->push_back(tmp);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tmp_vector(Core::LinAlg::Initialization::zero);
+
+    // last converged states are unpacked
+    extract_from_pack(buffer, tmp_vector);
+    histstresslast_->push_back(tmp_vector);
+    extract_from_pack(buffer, tmp_vector);
+    artstresslast_->push_back(tmp_vector);
+
+    // current iteration states are unpacked
+    extract_from_pack(buffer, tmp_vector);
+    histstresscurr_->push_back(tmp_vector);
+    extract_from_pack(buffer, tmp_vector);
+    artstresscurr_->push_back(tmp_vector);
   }
-
-
-
-  return;
 }
 
 /*----------------------------------------------------------------------*

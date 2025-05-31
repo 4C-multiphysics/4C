@@ -83,12 +83,11 @@ namespace MultiScale
     \brief Read restart
 
     */
-    void read_restart(int step, std::shared_ptr<Core::LinAlg::Vector<double>> dis,
-        std::shared_ptr<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>> lastalpha,
-        std::string name);
+    void read_restart(const int step, std::shared_ptr<Core::LinAlg::Vector<double>> dis,
+        std::map<int, std::shared_ptr<std::vector<char>>>& history_data, const std::string& name);
 
     /// get corresponding time to step
-    double get_time_to_step(int step, std::string name);
+    double get_time_to_step(const int step, const std::string& name);
 
     /*!
     \brief Return time from parameter list
@@ -100,19 +99,19 @@ namespace MultiScale
     \brief Predictor step
 
     */
-    void predictor(Core::LinAlg::Matrix<3, 3>* defgrd);
+    void predictor(const Core::LinAlg::Matrix<3, 3>* defgrd);
 
     /*!
     \brief Predictor step
 
     */
-    void predict_const_dis(Core::LinAlg::Matrix<3, 3>* defgrd);
+    void predict_const_dis(const Core::LinAlg::Matrix<3, 3>* defgrd);
 
     /*!
    \brief Predictor step
 
    */
-    void predict_tang_dis(Core::LinAlg::Matrix<3, 3>* defgrd);
+    void predict_tang_dis(const Core::LinAlg::Matrix<3, 3>* defgrd);
 
     /*!
     \brief Full Newton iteration
@@ -127,6 +126,12 @@ namespace MultiScale
     void prepare_output();
 
     /*!
+    \brief Update on element level (e.g. internal variables)
+
+    */
+    void update_step_element();
+
+    /*!
     \brief Write output and (possibly) restart
 
     */
@@ -138,7 +143,7 @@ namespace MultiScale
 
     */
     void write_restart(std::shared_ptr<Core::IO::DiscretizationWriter> output, const double time,
-        const int step, const double dt);
+        const int step, const double dt) const;
 
     /*!
     \brief Determine toggle vector identifying prescribed boundary dofs
@@ -151,7 +156,8 @@ namespace MultiScale
     associated macroscale deformation gradient
 
     */
-    void evaluate_micro_bc(Core::LinAlg::Matrix<3, 3>* defgrd, Core::LinAlg::Vector<double>& disp);
+    void evaluate_micro_bc(
+        const Core::LinAlg::Matrix<3, 3>* defgrd, Core::LinAlg::Vector<double>& disp);
 
     /*!
     \brief Set old state given from micromaterialgp
@@ -160,12 +166,7 @@ namespace MultiScale
     void set_state(std::shared_ptr<Core::LinAlg::Vector<double>> dis,
         std::shared_ptr<Core::LinAlg::Vector<double>> disn,
         std::shared_ptr<std::vector<char>> stress, std::shared_ptr<std::vector<char>> strain,
-        std::shared_ptr<std::vector<char>> plstrain,
-        std::shared_ptr<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>> lastalpha,
-        std::shared_ptr<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>> oldalpha,
-        std::shared_ptr<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>> oldfeas,
-        std::shared_ptr<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>> oldKaainv,
-        std::shared_ptr<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>> oldKda);
+        std::shared_ptr<std::vector<char>> plstrain);
 
     /*!
     \brief Set time and step
@@ -193,7 +194,7 @@ namespace MultiScale
 
     */
     void static_homogenization(Core::LinAlg::Matrix<6, 1>* stress, Core::LinAlg::Matrix<6, 6>* cmat,
-        Core::LinAlg::Matrix<3, 3>* defgrd, const bool mod_newton, bool& build_stiff);
+        const Core::LinAlg::Matrix<3, 3>* defgrd, const bool mod_newton, bool& build_stiff);
 
     /*!
     \brief Convert constitutive tensor relating first Piola-Kirchhoff
@@ -235,12 +236,6 @@ namespace MultiScale
     Note that this is currently disabled for the sake of clearness
     */
     void print_predictor();
-
-    /*!
-    \brief Set EAS internal data if necessary
-
-    */
-    void set_eas_data();
 
     double density() const { return density_; };
 
@@ -311,13 +306,6 @@ namespace MultiScale
     std::shared_ptr<std::vector<char>> stress_;
     std::shared_ptr<std::vector<char>> strain_;
     std::shared_ptr<std::vector<char>> plstrain_;
-
-    // EAS history data
-    std::shared_ptr<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>> lastalpha_;
-    std::shared_ptr<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>> oldalpha_;
-    std::shared_ptr<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>> oldfeas_;
-    std::shared_ptr<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>> oldKaainv_;
-    std::shared_ptr<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>> oldKda_;
 
     std::shared_ptr<Core::LinAlg::MultiVector<double>>
         D_;  //!< D Matrix following Miehe et al., 2002

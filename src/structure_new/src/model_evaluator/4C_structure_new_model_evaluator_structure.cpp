@@ -2050,18 +2050,6 @@ void Solid::ModelEvaluator::Structure::params_interface2_parameter_list(
     case Core::Elements::struct_calc_energy:
       action = "calc_struct_energy";
       break;
-    case Core::Elements::multi_init_eas:
-      action = "multi_eas_init";
-      break;
-    case Core::Elements::multi_set_eas:
-      action = "multi_eas_set";
-      break;
-    case Core::Elements::multi_readrestart:
-      action = "multi_readrestart";
-      break;
-    case Core::Elements::multi_calc_dens:
-      action = "multi_calc_dens";
-      break;
     case Core::Elements::struct_postprocess_thickness:
       action = "postprocess_thickness";
       break;

@@ -30,8 +30,6 @@ FOUR_C_NAMESPACE_OPEN
 // compiler. If during postprocessing the MicroMaterial::Evaluate
 // function should be called, an error is invoked.
 //
-// -> see also Makefile.objects and setup-objects.sh
-//
 // In case of any changes of the function prototype make sure that the
 // corresponding prototype in src/filter_common/filter_evaluation.cpp is adapted, too!!
 
@@ -42,46 +40,6 @@ void Mat::MicroMaterial::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
     const int eleGID)
 {
   if (eleGID == -1) FOUR_C_THROW("no element ID provided in material");
-
-  Core::LinAlg::Matrix<3, 3>* defgrd_enh = const_cast<Core::LinAlg::Matrix<3, 3>*>(defgrd);
-
-  if (params.get("EASTYPE", "none") != "none")
-  {
-    // In this case, we have to calculate the "enhanced" deformation gradient
-    // from the enhanced GL strains with the help of two polar decompositions
-
-    // First step: determine enhanced material stretch tensor U_enh from C_enh=U_enh^T*U_enh
-    // -> get C_enh from enhanced GL strains
-    Core::LinAlg::Matrix<3, 3> C_enh;
-    for (int i = 0; i < 3; ++i) C_enh(i, i) = 2.0 * (*glstrain)(i) + 1.0;
-    // off-diagonal terms are already twice in the Voigt-GLstrain-vector
-    C_enh(0, 1) = (*glstrain)(3);
-    C_enh(1, 0) = (*glstrain)(3);
-    C_enh(1, 2) = (*glstrain)(4);
-    C_enh(2, 1) = (*glstrain)(4);
-    C_enh(0, 2) = (*glstrain)(5);
-    C_enh(2, 0) = (*glstrain)(5);
-
-    // -> polar decomposition of (U^mod)^2
-    Core::LinAlg::Matrix<3, 3> Q;
-    Core::LinAlg::Matrix<3, 3> S;
-    Core::LinAlg::Matrix<3, 3> VT;
-    Core::LinAlg::svd<3, 3>(C_enh, Q, S, VT);  // Singular Value Decomposition
-    Core::LinAlg::Matrix<3, 3> U_enh;
-    Core::LinAlg::Matrix<3, 3> temp;
-    for (int i = 0; i < 3; ++i) S(i, i) = sqrt(S(i, i));
-    temp.multiply_nn(Q, S);
-    U_enh.multiply_nn(temp, VT);
-
-    // Second step: determine rotation tensor R from F (F=R*U)
-    // -> polar decomposition of displacement based F
-    Core::LinAlg::svd<3, 3>(*(defgrd_enh), Q, S, VT);  // Singular Value Decomposition
-    Core::LinAlg::Matrix<3, 3> R;
-    R.multiply_nn(Q, VT);
-
-    // Third step: determine "enhanced" deformation gradient (F_enh=R*U_enh)
-    defgrd_enh->multiply_nn(R, U_enh);
-  }
 
   // activate microscale material
 
@@ -117,7 +75,7 @@ void Mat::MicroMaterial::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
   };
 
   MultiScale::MicroStaticParObject::MicroStaticData microdata{};
-  microdata.defgrd_ = convert_to_serial_dense_matrix(*defgrd_enh);
+  microdata.defgrd_ = convert_to_serial_dense_matrix(*defgrd);
   microdata.cmat_ = convert_to_serial_dense_matrix(*cmat);
   microdata.stress_ = convert_to_serial_dense_matrix(*stress);
   microdata.gp_ = gp;
@@ -134,7 +92,7 @@ void Mat::MicroMaterial::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
   exporter.do_export<MultiScale::MicroStaticParObject>(condnamemap);
 
   // standard evaluation of the micro material
-  if (matgp_.find(gp) == matgp_.end())
+  if (not matgp_.contains(gp))
   {
     matgp_[gp] = std::make_shared<MicroMaterialGP>(gp, eleGID, eleowner, microdisnum, V0);
     initialize_density(gp);
@@ -144,7 +102,7 @@ void Mat::MicroMaterial::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
 
   // perform microscale simulation and homogenization (if fint and stiff/mass or stress calculation
   // is required)
-  actmicromatgp->perform_micro_simulation(defgrd_enh, stress, cmat);
+  actmicromatgp->perform_micro_simulation(defgrd, stress, cmat);
 
   // reactivate macroscale material
   Global::Problem::instance()->materials()->reset_read_from_problem();
@@ -152,6 +110,7 @@ void Mat::MicroMaterial::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
 
 double Mat::MicroMaterial::density() const { return density_; }
 
+// post setup for all procs
 void Mat::MicroMaterial::post_setup()
 {
   // get sub communicator including the supporting procs
@@ -179,7 +138,7 @@ void Mat::MicroMaterial::evaluate(Core::LinAlg::Matrix<3, 3>* defgrd,
 {
   Global::Problem::instance()->materials()->set_read_from_problem(microdisnum);
 
-  if (matgp_.find(gp) == matgp_.end())
+  if (not matgp_.contains(gp))
   {
     matgp_[gp] = std::make_shared<MicroMaterialGP>(gp, ele_ID, eleowner, microdisnum, V0);
   }
@@ -209,11 +168,19 @@ void Mat::MicroMaterial::update()
     Core::Communication::broadcast(task, 2, 0, subcomm);
   }
 
+  // broadcast micro dis num to supporting procs to set proper read from problem
+  int micro_dis_num_value = micro_dis_num();
+  Core::Communication::broadcast(&micro_dis_num_value, 1, 0, subcomm);
+  Global::Problem::instance()->materials()->set_read_from_problem(micro_dis_num_value);
+
   for (const auto& micromatgp : matgp_)
   {
     std::shared_ptr<MicroMaterialGP> actmicromatgp = micromatgp.second;
     actmicromatgp->update();
   }
+
+  // reactivate macroscale material
+  Global::Problem::instance()->materials()->reset_read_from_problem();
 }
 
 // prepare output for all procs
@@ -230,11 +197,19 @@ void Mat::MicroMaterial::prepare_output()
     Core::Communication::broadcast(task, 2, 0, subcomm);
   }
 
+  // broadcast micro dis num to supporting procs to set proper read from problem
+  int micro_dis_num_value = micro_dis_num();
+  Core::Communication::broadcast(&micro_dis_num_value, 1, 0, subcomm);
+  Global::Problem::instance()->materials()->set_read_from_problem(micro_dis_num_value);
+
   for (const auto& micromatgp : matgp_)
   {
     std::shared_ptr<MicroMaterialGP> actmicromatgp = micromatgp.second;
     actmicromatgp->prepare_output();
   }
+
+  // reactivate macroscale material
+  Global::Problem::instance()->materials()->reset_read_from_problem();
 }
 
 void Mat::MicroMaterial::initialize_density(const int gp)
@@ -267,7 +242,7 @@ void Mat::MicroMaterial::output_step_state()
   }
 }
 
-// output for all procs
+// write restart for all procs
 void Mat::MicroMaterial::write_restart()
 {
   // get sub communicator including the supporting procs
@@ -281,11 +256,16 @@ void Mat::MicroMaterial::write_restart()
     Core::Communication::broadcast(task, 2, 0, subcomm);
   }
 
+  Global::Problem::instance()->materials()->set_read_from_problem(micro_dis_num());
+
   for (const auto& micromatgp : matgp_)
   {
     std::shared_ptr<MicroMaterialGP> actmicromatgp = micromatgp.second;
     actmicromatgp->write_restart();
   }
+
+  // reactivate macroscale material
+  Global::Problem::instance()->materials()->reset_read_from_problem();
 }
 
 // read restart for master procs
@@ -320,7 +300,7 @@ void Mat::MicroMaterial::read_restart(const int gp, const int eleID, const bool 
   Core::Communication::Exporter exporter(oldmap, newmap, subcomm);
   exporter.do_export<MultiScale::MicroStaticParObject>(condnamemap);
 
-  if (matgp_.find(gp) == matgp_.end())
+  if (not matgp_.contains(gp))
   {
     matgp_[gp] = std::make_shared<MicroMaterialGP>(gp, eleID, eleowner, microdisnum, V0);
     initialize_density(gp);
@@ -330,12 +310,11 @@ void Mat::MicroMaterial::read_restart(const int gp, const int eleID, const bool 
   actmicromatgp->read_restart();
 }
 
-
 // read restart for supporting procs
 void Mat::MicroMaterial::read_restart(
     const int gp, const int eleID, const bool eleowner, int microdisnum, double V0)
 {
-  if (matgp_.find(gp) == matgp_.end())
+  if (not matgp_.contains(gp))
   {
     matgp_[gp] = std::make_shared<MicroMaterialGP>(gp, eleID, eleowner, microdisnum, V0);
     initialize_density(gp);

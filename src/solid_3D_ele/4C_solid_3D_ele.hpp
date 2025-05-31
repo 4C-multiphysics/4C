@@ -89,6 +89,10 @@ namespace Discret::Elements
 
     void unpack(Core::Communication::UnpackBuffer& buffer) override;
 
+    void pack_history(Core::Communication::PackBuffer& data) const override;
+
+    void unpack_history(Core::Communication::UnpackBuffer& buffer) override;
+
     [[nodiscard]] Core::Elements::ElementType& element_type() const override
     {
       return SolidType::instance();

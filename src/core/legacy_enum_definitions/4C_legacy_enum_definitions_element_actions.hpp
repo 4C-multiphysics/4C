@@ -46,10 +46,7 @@ namespace Core::Elements
                                           //!< data
     struct_gauss_point_data_output,       //!< collect material data for vtk runtime output
     struct_update_prestress,
-    multi_readrestart,      //!< multi-scale: read restart on microscale
-    multi_init_eas,         //!< multi-scale: initialize EAS parameters on microscale
-    multi_set_eas,          //!< multi-scale: set EAS parameters on microscale
-    multi_calc_dens,        //!< multi-scale: calculate homogenized density
+
     struct_calc_ptcstiff,   //!< calculate artificial stiffness due to PTC solution strategy
     struct_calc_stifftemp,  //!< TSI specific: mechanical-thermal stiffness
     struct_calc_global_gpstresses_map,  //!< basically calc_struct_stress but with assembly of
@@ -102,14 +99,6 @@ namespace Core::Elements
       return struct_calc_reset_istep;
     else if (action == "calc_struct_energy")
       return struct_calc_energy;
-    else if (action == "multi_eas_init")
-      return multi_init_eas;
-    else if (action == "multi_eas_set")
-      return multi_set_eas;
-    else if (action == "multi_readrestart")
-      return multi_readrestart;
-    else if (action == "multi_calc_dens")
-      return multi_calc_dens;
     else if (action == "struct_init_gauss_point_data_output")
       return struct_init_gauss_point_data_output;
     else if (action == "struct_gauss_point_data_output")
@@ -179,14 +168,6 @@ namespace Core::Elements
         return "struct_gauss_point_data_output";
       case struct_update_prestress:
         return "struct_update_prestress";
-      case multi_readrestart:
-        return "multi_readrestart";
-      case multi_init_eas:
-        return "multi_init_eas";
-      case multi_set_eas:
-        return "multi_set_eas";
-      case multi_calc_dens:
-        return "multi_calc_dens";
       case struct_calc_ptcstiff:
         return "struct_calc_ptcstiff";
       case struct_calc_stifftemp:

@@ -130,8 +130,8 @@ void Core::IO::DiscretizationReader::read_multi_vector(
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Core::IO::DiscretizationReader::read_serial_dense_matrix(
-    std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>& mapdata, std::string name)
+void Core::IO::DiscretizationReader::read_map_data_of_char_vector(
+    std::map<int, std::vector<char>>& mapdata, std::string name) const
 {
   MAP* result = map_read_map(restart_step_, name.c_str());
   std::string id_path = map_read_string(result, "ids");
@@ -148,14 +148,12 @@ void Core::IO::DiscretizationReader::read_serial_dense_matrix(
   std::shared_ptr<std::vector<char>> data =
       reader_->read_result_data_vec_char(id_path, value_path, columns, get_comm(), elemap);
 
-
   Communication::UnpackBuffer buffer(*data);
   for (int i = 0; i < elemap->num_my_elements(); ++i)
   {
-    std::shared_ptr<Core::LinAlg::SerialDenseMatrix> matrix =
-        std::make_shared<Core::LinAlg::SerialDenseMatrix>();
-    extract_from_pack(buffer, *matrix);
-    (mapdata)[elemap->gid(i)] = matrix;
+    std::vector<char> single_entry_data;
+    extract_from_pack(buffer, single_entry_data);
+    (mapdata)[elemap->gid(i)] = single_entry_data;
   }
 }
 

@@ -121,9 +121,9 @@ namespace Core::IO
     void read_multi_vector(
         std::shared_ptr<Core::LinAlg::MultiVector<double>> vec, std::string name);
 
-    /// read into given std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix> >
-    void read_serial_dense_matrix(
-        std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>& mapdata, std::string name);
+    /// read into given data object
+    void read_map_data_of_char_vector(
+        std::map<int, std::vector<char>>& mapdata, std::string name) const;
 
     /// check if an integer value exists in the control file
     int has_int(std::string name);

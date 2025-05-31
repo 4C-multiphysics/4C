@@ -240,9 +240,13 @@ void Mat::PlasticNlnLogNeoHooke::pack(Core::Communication::PackBuffer& data) con
   add_to_pack(data, histsize);  // Length of history vector(s)
   for (int var = 0; var < histsize; ++var)
   {
-    // insert history vectors to add_to_pack
+    // insert last converged states
     add_to_pack(data, accplstrainlast_.at(var));
     add_to_pack(data, invplrcglast_.at(var));
+
+    // insert current iteration states
+    add_to_pack(data, accplstraincurr_.at(var));
+    add_to_pack(data, invplrcgcurr_.at(var));
   }
 }  // pack()
 
@@ -292,19 +296,20 @@ void Mat::PlasticNlnLogNeoHooke::unpack(Core::Communication::UnpackBuffer& buffe
 
   for (int var = 0; var < histsize; ++var)
   {
-    double tmp1 = 0.0;
-    // scalar-valued vector of last converged state are unpacked
-    extract_from_pack(buffer, tmp1);
-    accplstrainlast_.push_back(tmp1);
+    Core::LinAlg::Matrix<3, 3> tmp_matrix(Core::LinAlg::Initialization::zero);
+    double tmp_scalar = 0.0;
 
-    Core::LinAlg::Matrix<3, 3> tmp(Core::LinAlg::Initialization::zero);
-    // vectors of last converged state are unpacked
-    extract_from_pack(buffer, tmp);
-    invplrcglast_.push_back(tmp);
+    // last converged states are unpacked
+    extract_from_pack(buffer, tmp_scalar);
+    accplstrainlast_.push_back(tmp_scalar);
+    extract_from_pack(buffer, tmp_matrix);
+    invplrcglast_.push_back(tmp_matrix);
 
-    // current vectors have to be initialized
-    accplstraincurr_.push_back(tmp1);
-    invplrcgcurr_.push_back(tmp);
+    // current iteration states are unpacked
+    extract_from_pack(buffer, tmp_scalar);
+    accplstraincurr_.push_back(tmp_scalar);
+    extract_from_pack(buffer, tmp_matrix);
+    invplrcgcurr_.push_back(tmp_matrix);
   }
 }  // unpack()
 

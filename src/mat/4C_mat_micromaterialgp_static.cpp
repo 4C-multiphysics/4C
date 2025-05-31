@@ -13,6 +13,7 @@
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
+#include "4C_solid_3D_ele.hpp"
 #include "4C_stru_multi_microstatic.hpp"
 #include "4C_utils_singleton_owner.hpp"
 
@@ -56,11 +57,7 @@ Mat::MicroMaterialGP::MicroMaterialGP(
   std::shared_ptr<Core::FE::Discretization> microdis = microproblem->get_dis("structure");
   dis_ = Core::LinAlg::create_vector(*microdis->dof_row_map(), true);
   disn_ = Core::LinAlg::create_vector(*microdis->dof_row_map(), true);
-  lastalpha_ = std::make_shared<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>>();
-  oldalpha_ = std::make_shared<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>>();
-  oldfeas_ = std::make_shared<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>>();
-  old_kaainv_ = std::make_shared<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>>();
-  old_kda_ = std::make_shared<std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>>();
+  history_data_ = std::make_shared<std::map<int, std::shared_ptr<std::vector<char>>>>();
 
   // data must be consistent between micro and macro input file
   const Teuchos::ParameterList& sdyn_macro =
@@ -92,9 +89,6 @@ Mat::MicroMaterialGP::MicroMaterialGP(
   global_micro_state().microstaticcounter_[microdisnum] += 1;
   density_ = (global_micro_state().microstaticmap_[microdisnum_])->density();
 
-  // create and initialize "empty" EAS history map (if necessary)
-  eas_init();
-
   std::string newfilename;
   new_result_file(eleowner, newfilename);
 
@@ -125,9 +119,7 @@ void Mat::MicroMaterialGP::read_restart()
 {
   step_ = Global::Problem::instance()->restart();
   global_micro_state().microstaticmap_[microdisnum_]->read_restart(
-      step_, dis_, lastalpha_, restartname_);
-
-  *oldalpha_ = *lastalpha_;
+      step_, dis_, *history_data_, restartname_);
 
   disn_->update(1.0, *dis_, 0.0);
 }
@@ -207,7 +199,7 @@ void Mat::MicroMaterialGP::new_result_file(bool eleowner, std::string& newfilena
   }
 }
 
-std::string Mat::MicroMaterialGP::new_result_file_path(const std::string& newprefix)
+std::string Mat::MicroMaterialGP::new_result_file_path(const std::string& newprefix) const
 {
   std::string newfilename;
 
@@ -239,8 +231,6 @@ std::string Mat::MicroMaterialGP::new_result_file_path(const std::string& newpre
   return newfilename;
 }
 
-void Mat::MicroMaterialGP::eas_init() {}
-
 /// Post setup routine which will be called after the end of the setup
 void Mat::MicroMaterialGP::post_setup()
 {
@@ -269,17 +259,44 @@ void Mat::MicroMaterialGP::post_setup()
   timen_ = time_ + dt_;
 }
 
-/// perform microscale simulation
-void Mat::MicroMaterialGP::perform_micro_simulation(Core::LinAlg::Matrix<3, 3>* defgrd,
+void Mat::MicroMaterialGP::extract_and_store_history_data() const
+{
+  std::shared_ptr<Core::FE::Discretization> discret =
+      (Global::Problem::instance(microdisnum_))->get_dis("structure");
+
+  for (Core::Elements::Element* actele : discret->my_col_element_range())
+  {
+    Core::Communication::PackBuffer data;
+    actele->pack_history(data);
+    (*history_data_)[actele->id()] = std::make_shared<std::vector<char>>(data());
+  }
+}
+
+void Mat::MicroMaterialGP::fill_history_data_into_elements() const
+{
+  if (!history_data_->empty())
+  {
+    std::shared_ptr<Core::FE::Discretization> discret =
+        (Global::Problem::instance(microdisnum_))->get_dis("structure");
+
+    for (Core::Elements::Element* actele : discret->my_col_element_range())
+    {
+      Core::Communication::UnpackBuffer buffer((*(*history_data_)[actele->id()]));
+      actele->unpack_history(buffer);
+    }
+  }
+}
+
+void Mat::MicroMaterialGP::perform_micro_simulation(const Core::LinAlg::Matrix<3, 3>* defgrd,
     Core::LinAlg::Matrix<6, 1>* stress, Core::LinAlg::Matrix<6, 6>* cmat)
 {
   // select corresponding "time integration class" for this microstructure
   std::shared_ptr<MultiScale::MicroStatic> microstatic =
       global_micro_state().microstaticmap_[microdisnum_];
 
-  // set displacements and EAS data of last step
-  microstatic->set_state(dis_, disn_, stress_, strain_, plstrain_, lastalpha_, oldalpha_, oldfeas_,
-      old_kaainv_, old_kda_);
+  // set latest displacements and internal history data
+  microstatic->set_state(dis_, disn_, stress_, strain_, plstrain_);
+  fill_history_data_into_elements();
 
   // set current time, time step size and step number
   microstatic->set_time(time_, timen_, dt_, step_, stepn_);
@@ -288,12 +305,10 @@ void Mat::MicroMaterialGP::perform_micro_simulation(Core::LinAlg::Matrix<3, 3>* 
   microstatic->full_newton();
   microstatic->static_homogenization(stress, cmat, defgrd, mod_newton_, build_stiff_);
 
-  // note that it is not necessary to save displacements and EAS data
-  // explicitly since we dealt with std::shared_ptr's -> any update in class
-  // microstatic and the elements, respectively, inherently updates the
-  // micromaterialgp_static data!
+  // save current history data of micro scale elements
+  extract_and_store_history_data();
 
-  // clear displacements in MicroStruGenAlpha for next usage
+  // clear displacements on micro scale
   microstatic->clear_state();
 }
 
@@ -310,17 +325,17 @@ void Mat::MicroMaterialGP::update()
 
   dis_->update(1.0, *disn_, 0.0);
 
-  Global::Problem* microproblem = Global::Problem::instance(microdisnum_);
-  std::shared_ptr<Core::FE::Discretization> microdis = microproblem->get_dis("structure");
-  const Core::LinAlg::Map* elemap = microdis->element_row_map();
-
-  for (int i = 0; i < elemap->num_my_elements(); ++i) (*lastalpha_)[i] = (*oldalpha_)[i];
+  microstatic->set_state(dis_, disn_, stress_, strain_, plstrain_);
+  fill_history_data_into_elements();
+  microstatic->set_time(time_, timen_, dt_, step_, stepn_);
+  // update internal variables on micro scale
+  microstatic->update_step_element();
+  extract_and_store_history_data();
 
   // in case of modified Newton, the stiffness matrix needs to be rebuilt at
   // the beginning of the new time step
   build_stiff_ = true;
 }
-
 
 void Mat::MicroMaterialGP::prepare_output()
 {
@@ -332,12 +347,11 @@ void Mat::MicroMaterialGP::prepare_output()
   strain_ = std::make_shared<std::vector<char>>();
   plstrain_ = std::make_shared<std::vector<char>>();
 
-  microstatic->set_state(dis_, disn_, stress_, strain_, plstrain_, lastalpha_, oldalpha_, oldfeas_,
-      old_kaainv_, old_kda_);
+  microstatic->set_state(dis_, disn_, stress_, strain_, plstrain_);
+  fill_history_data_into_elements();
   microstatic->set_time(time_, timen_, dt_, step_, stepn_);
   microstatic->prepare_output();
 }
-
 
 void Mat::MicroMaterialGP::output_step_state_microscale()
 {
@@ -345,9 +359,8 @@ void Mat::MicroMaterialGP::output_step_state_microscale()
   std::shared_ptr<MultiScale::MicroStatic> microstatic =
       global_micro_state().microstaticmap_[microdisnum_];
 
-  // set displacements and EAS data of last step
-  microstatic->set_state(dis_, disn_, stress_, strain_, plstrain_, lastalpha_, oldalpha_, oldfeas_,
-      old_kaainv_, old_kda_);
+  // set displacements and internal history data of latest converged state
+  microstatic->set_state(dis_, disn_, stress_, strain_, plstrain_);
   microstatic->output(*micro_output_, time_, step_, dt_);
 
   // we don't need these containers anymore
@@ -362,10 +375,23 @@ void Mat::MicroMaterialGP::write_restart()
   std::shared_ptr<MultiScale::MicroStatic> microstatic =
       global_micro_state().microstaticmap_[microdisnum_];
 
-  // set displacements and EAS data of last step
-  microstatic->set_state(dis_, disn_, stress_, strain_, plstrain_, lastalpha_, oldalpha_, oldfeas_,
-      old_kaainv_, old_kda_);
+  microstatic->set_state(dis_, disn_, stress_, strain_, plstrain_);
   microstatic->write_restart(micro_output_, time_, step_, dt_);
+
+  // add element history data to restart output
+  if (!history_data_->empty())
+  {
+    std::shared_ptr<Core::FE::Discretization> discret =
+        (Global::Problem::instance(microdisnum_))->get_dis("structure");
+
+    Core::Communication::PackBuffer data;
+    for (Core::Elements::Element* actele : discret->my_row_element_range())
+    {
+      add_to_pack(data, (*(*history_data_)[actele->id()]));
+    }
+    micro_output_->write_vector(
+        "history_data", data(), *discret->element_row_map(), Core::IO::VectorType::elementvector);
+  }
 
   // we don't need these containers anymore
   stress_ = nullptr;

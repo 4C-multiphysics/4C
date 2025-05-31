@@ -13,8 +13,6 @@
 #include "4C_solid_3D_ele.hpp"
 #include "4C_stru_multi_microstatic.hpp"
 
-#include <Teuchos_ParameterList.hpp>
-
 FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*
@@ -57,7 +55,7 @@ void Solid::ModelEvaluator::Multiscale::read_restart(Core::IO::DiscretizationRea
     if (mat->material_type() == Core::Materials::m_struct_multiscale)
     {
       auto* micro = dynamic_cast<Mat::MicroMaterial*>(mat.get());
-      int eleID = actele->id();
+      const int eleID = actele->id();
       const bool eleowner = my_pid == actele->owner();
 
       Discret::Elements::Solid* solidele = dynamic_cast<Discret::Elements::Solid*>(actele);
