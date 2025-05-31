@@ -33,15 +33,6 @@ namespace Core::Elements
     /// Setup of
     void setup_valid_element_lines();
 
-    /// print all valid element definitions to stream
-    void print_element_dat_header_to_stream(std::ostream& stream);
-
-    /// Print section header to stream
-    void print_section_header(std::ostream& stream, std::string name);
-
-    /// Print valid input lines for given element type
-    void print_element_lines(std::ostream& stream, std::string name);
-
     /// return line definitions for given element type
     const Core::IO::InputSpec& element_lines(std::string name, std::string cell_type);
 
