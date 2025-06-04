@@ -2098,7 +2098,7 @@ four_c_test_vtk(embeddedmesh_two_cubes_nurbs_1_straight_down_vtk.4C.yaml embedde
 four_c_test_vtk(embeddedmesh_two_cubes_nurbs_1_straight_middle_vtk.4C.yaml embeddedmesh_two_cubes_nurbs_1_straight_middle.4C.yaml 1 xxx-structure.pvd ref/embeddedmesh_two_cubes_nurbs_1_straight_middle-structure.pvd 1e-06)
 four_c_test_vtk(embeddedmesh_two_cubes_nurbs_1_straight_up_vtk.4C.yaml embeddedmesh_two_cubes_nurbs_1_straight_up.4C.yaml 1 xxx-structure.pvd ref/embeddedmesh_two_cubes_nurbs_1_straight_up-structure.pvd 1e-06)
 four_c_test_vtk(f3_channel_EOS_hex27_runtime_output.4C.yaml f3_channel_EOS_hex27_10x10x10_quad_inflow.4C.yaml 3 xxx-fluid.pvd ref/fluid_runtime_output-fluid.pvd 1e-08)
-four_c_test_vtk(fsi_runtime_output.4C.yaml fsi_dc_part_ait_ga_ga.4C.yaml 2 xxx-fluid.pvd ref/fsi_runtime_output-fluid.pvd 1e-08 1)
+four_c_test_vtk(fsi_runtime_output_vtk.4C.yaml fsi_dc_part_ait_ga_ga.4C.yaml 2 xxx-fluid.pvd ref/fsi_runtime_output-fluid.pvd 1e-08 1)
 four_c_test_vtk(mat_druckerprager_RetToCone-vtk-plastic.4C.yaml mat_druckerprager_RetToCone.4C.yaml 2 xxx-structure.pvd ref/mat_druckerprager_RetToCone/RetToCone-structure.pvd 1e-08 9.5)
 four_c_test_vtk(membrane_patch_new_struct_vtk.4C.yaml membrane_patch_new_struct.4C.yaml 2 xxx-structure.pvd ref/membrane_patch_new_struct/membrane.pvd 1e-08 0.6)
 four_c_test_vtk(particle_nointer_3d_nopbc_walldiscretcond_nonmoving-vtk-particlewalls.4C.yaml particle_nointer_3d_nopbc_walldiscretcond_nonmoving.4C.yaml 3 xxx-particlewalls.pvd ref/particle_nointer_3d_nopbc_walldiscretcond_nonmoving-particlewalls.pvd 1e-08 0.4)
