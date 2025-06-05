@@ -1350,19 +1350,13 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
       }
     }
   }
-  // TODO: Bug?
-  // Here we fill a data structure, which should be completed at some point, but in doing so we
-  // end up with an error in Zoltan ...
-  // edge_weights->complete();
+  edge_weights->complete();
 
   // 4. setup partitioner and redistribute
-  // TODO: Why does this only work for all tests with ParMETIS?
   Teuchos::ParameterList paramlist;
-  paramlist.set("PARTITIONING METHOD", "GRAPH");
-  Teuchos::ParameterList& sublist = paramlist.sublist("Zoltan");
-  sublist.set("LB_METHOD", "GRAPH");
-  sublist.set("GRAPH_PACKAGE", "ParMETIS");
-  sublist.set("LB_APPROACH", "PARTITION");
+  paramlist.set("algorithm", "zoltan");
+  Teuchos::ParameterList& zparams = paramlist.sublist("zoltan_parameters", false);
+  zparams.set("LB_METHOD", "GRAPH");
 
   auto newnodegraph =
       Core::Rebalance::rebalance_graph(node_graph, paramlist, node_weights, edge_weights);
