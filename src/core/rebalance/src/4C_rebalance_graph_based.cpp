@@ -24,11 +24,11 @@
 #include <Isorropia_EpetraPartitioner.hpp>
 #include <Isorropia_EpetraRedistributor.hpp>
 #include <Isorropia_Exception.hpp>
+#include <Teuchos_TimeMonitor.hpp>
 #include <Zoltan2_PartitioningProblem.hpp>
 #include <Zoltan2_PartitioningSolution.hpp>
 #include <Zoltan2_XpetraCrsGraphAdapter.hpp>
 #include <Zoltan2_XpetraMultiVectorAdapter.hpp>
-#include <Teuchos_TimeMonitor.hpp>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -80,11 +80,13 @@ std::shared_ptr<Core::LinAlg::Graph> Core::Rebalance::rebalance_graph(
   if (initialEdgeWeights != nullptr)
   {
     std::vector<double> edgeWeights;
-    for (int local_row = 0; local_row < initialEdgeWeights->row_map().num_my_elements(); local_row++)
+    for (int local_row = 0; local_row < initialEdgeWeights->row_map().num_my_elements();
+        local_row++)
     {
       int numEntries;
       double* entries;
-      initialEdgeWeights->extract_my_row_view(local_row, numEntries, entries);
+      int* indices;
+      initialEdgeWeights->extract_my_row_view(local_row, numEntries, entries, indices);
       for (int i = 0; i < numEntries; i++) edgeWeights.push_back(entries[i]);
     }
     graphAdapter->setEdgeWeights(edgeWeights.data(), 1, 0);
@@ -96,8 +98,7 @@ std::shared_ptr<Core::LinAlg::Graph> Core::Rebalance::rebalance_graph(
     std::vector<int> stride;
 
     auto* vectorAdapter = new VectorAdapter(
-        Teuchos::rcpFromRef(initialNodeCoordinates->get_epetra_multi_vector()), weights,
-        stride);
+        Teuchos::rcpFromRef(initialNodeCoordinates->get_epetra_multi_vector()), weights, stride);
     graphAdapter->setCoordinateInput(vectorAdapter);
   }
 
@@ -145,8 +146,8 @@ Core::Rebalance::rebalance_coordinates(const Core::LinAlg::MultiVector<double>& 
   Teuchos::RCP<Epetra_MultiVector> balancedCoordinates;
   Teuchos::RCP<Epetra_MultiVector> balancedWeights;
 
-  adapter->applyPartitioningSolution(initialCoordinates.get_epetra_multi_vector(),
-      balancedCoordinates, problem.getSolution());
+  adapter->applyPartitioningSolution(
+      initialCoordinates.get_epetra_multi_vector(), balancedCoordinates, problem.getSolution());
   adapter->applyPartitioningSolution(
       initialWeights.get_epetra_multi_vector(), balancedWeights, problem.getSolution());
 
