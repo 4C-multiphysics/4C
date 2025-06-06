@@ -11,6 +11,8 @@
 #include "4C_global_data.hpp"
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
+#include "4C_linalg_tensor.hpp"
+#include "4C_linalg_tensor_generators.hpp"
 #include "4C_mat_elast_isoneohooke.hpp"
 #include "4C_mat_elast_remodelfiber.hpp"
 #include "4C_mat_elast_summand.hpp"
@@ -543,7 +545,7 @@ void Mat::GrowthRemodelElastHyper::read_dir(const Core::IO::InputParameterContai
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 void Mat::GrowthRemodelElastHyper::setup_axi_cir_rad_cylinder(
-    Core::LinAlg::Matrix<3, 1> elecenter, double const dt)
+    Core::LinAlg::Tensor<double, 3> elecenter, double const dt)
 {
   // Clear dummy directions
   radaxicirc_.clear();
@@ -557,8 +559,9 @@ void Mat::GrowthRemodelElastHyper::setup_axi_cir_rad_cylinder(
   aax_m_.multiply_nt(1.0, axdir, axdir, 0.0);
 
   // Radial direction
-  elecenter(params_->cylinder_ - 1, 0) = 0.0;
-  raddir.update(1. / elecenter.norm2(), elecenter, 0.0);
+  elecenter(params_->cylinder_ - 1) = 0.0;
+  raddir.update(
+      1. / Core::LinAlg::norm2(elecenter), Core::LinAlg::make_matrix_view<3, 1>(elecenter), 0.0);
   for (int i = 0; i < 3; ++i) radaxicirc_(i, 0) = raddir(i);
   arad_m_.multiply_nt(1.0, raddir, raddir, 0.0);
 
@@ -740,15 +743,16 @@ void Mat::GrowthRemodelElastHyper::evaluate_prestretch(
 void Mat::GrowthRemodelElastHyper::setup_g_r_3d(Core::LinAlg::Matrix<3, 3> const* const defgrd,
     Teuchos::ParameterList& params, const double dt, const int gp, const int eleGID)
 {
-  Core::LinAlg::Matrix<3, 1> axdir(Core::LinAlg::Initialization::zero);
-  Core::LinAlg::Matrix<3, 1> raddir(Core::LinAlg::Initialization::zero);
-  const auto& gp_reference_coordinates = params.get<Core::LinAlg::Matrix<3, 1>>("gp_coords_ref");
+  Core::LinAlg::Tensor<double, 3> axdir{};
+  Core::LinAlg::Tensor<double, 3> raddir{};
+  const auto& gp_reference_coordinates =
+      params.get<Core::LinAlg::Tensor<double, 3>>("gp_coords_ref");
 
   if ((params_->cylinder_ == 1 || params_->cylinder_ == 2 || params_->cylinder_ == 3) &&
       (setup_[0] == 1))
   {
     const auto& ele_center_reference_coordinates =
-        params.get<Core::LinAlg::Matrix<3, 1>>("elecenter_coords_ref");
+        params.get<Core::LinAlg::Tensor<double, 3>>("elecenter_coords_ref");
     setup_axi_cir_rad_cylinder(ele_center_reference_coordinates, dt);
     if (params_->growthtype_ == 1) setup_aniso_growth_tensors();
 
@@ -759,11 +763,11 @@ void Mat::GrowthRemodelElastHyper::setup_g_r_3d(Core::LinAlg::Matrix<3, 3> const
   // Evaluate radial and axial distance between origin and current Gauss-Point
   for (int i = 0; i < 3; ++i)
   {
-    axdir(i, 0) = radaxicirc_(i, 1);
-    raddir(i, 0) = radaxicirc_(i, 0);
+    axdir(i) = radaxicirc_(i, 1);
+    raddir(i) = radaxicirc_(i, 0);
   }
-  gp_ax_[gp] = axdir.dot(gp_reference_coordinates);
-  gp_rad_[gp] = raddir.dot(gp_reference_coordinates);
+  gp_ax_[gp] = axdir * gp_reference_coordinates;
+  gp_rad_[gp] = raddir * gp_reference_coordinates;
 
   // TODO: BE CAREFUL! So far, this prestretching procedure is only valid for certain materials and
   // a cylindrical geometry.
@@ -1581,14 +1585,14 @@ void Mat::GrowthRemodelElastHyper::evaluate_growth_def_grad(Core::LinAlg::Matrix
 void Mat::GrowthRemodelElastHyper::setup_g_r_2d(
     Teuchos::ParameterList& params, const double dt, const int gp)
 {
-  Core::LinAlg::Matrix<3, 1> axdir(Core::LinAlg::Initialization::zero);
-  const auto& gp_coords_ref = params.get<Core::LinAlg::Matrix<3, 1>>("gp_coords_ref");
+  Core::LinAlg::Tensor<double, 3> axdir{};
+  const auto& gp_coords_ref = params.get<Core::LinAlg::Tensor<double, 3>>("gp_coords_ref");
 
   if ((params_->cylinder_ == 1 || params_->cylinder_ == 2 || params_->cylinder_ == 3) &&
       (setup_[0] == 1))
   {
     const auto& element_center_reference_coordinates =
-        params.get<Core::LinAlg::Matrix<3, 1>>("elecenter_coords_ref");
+        params.get<Core::LinAlg::Tensor<double, 3>>("elecenter_coords_ref");
     setup_axi_cir_rad_cylinder(element_center_reference_coordinates, dt);
     if (params_->growthtype_ == 1) setup_aniso_growth_tensors();
 
@@ -1596,8 +1600,8 @@ void Mat::GrowthRemodelElastHyper::setup_g_r_2d(
     for (auto& k : potsumrf_) k->update_fiber_dirs(radaxicirc_, dt);
   }
 
-  for (int i = 0; i < 3; ++i) axdir(i, 0) = radaxicirc_(i, 1);
-  gp_ax_[gp] = axdir.dot(gp_coords_ref);
+  for (int i = 0; i < 3; ++i) axdir(i) = radaxicirc_(i, 1);
+  gp_ax_[gp] = axdir * gp_coords_ref;
 
   // update elastin prestretch in radial direction
   gm_[gp].update(params_->lamb_prestretch_cir_, acir_m_, 0.0);

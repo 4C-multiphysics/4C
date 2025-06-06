@@ -26,6 +26,9 @@
 #include "4C_inpar_structure.hpp"
 #include "4C_linalg_fixedsizematrix_generators.hpp"
 #include "4C_linalg_fixedsizematrix_solver.hpp"
+#include "4C_linalg_symmetric_tensor.hpp"
+#include "4C_linalg_tensor.hpp"
+#include "4C_linalg_tensor_generators.hpp"
 #include "4C_linalg_utils_densematrix_eigen.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_mat_so3_material.hpp"
@@ -212,10 +215,10 @@ namespace Discret::Elements
    * parameter space
    */
   template <Core::FE::CellType celltype>
-  Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> evaluate_parameter_coordinate(
+  Core::LinAlg::Tensor<double, Core::FE::dim<celltype>> evaluate_parameter_coordinate(
       const Core::FE::GaussIntegration& intpoints, const int gp)
   {
-    return Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>(intpoints.point(gp), false);
+    return Core::LinAlg::make_tensor_view<Core::FE::dim<celltype>>(intpoints.point(gp));
   }
 
   /*!
@@ -228,11 +231,10 @@ namespace Discret::Elements
    * the parameter space
    */
   template <Core::FE::CellType celltype>
-  Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> evaluate_parameter_coordinate_centroid()
+  Core::LinAlg::Tensor<double, Internal::num_dim<celltype>> evaluate_parameter_coordinate_centroid()
     requires(Core::FE::is_hex<celltype> || Core::FE::is_nurbs<celltype>)
   {
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> xi(Core::LinAlg::Initialization::zero);
-    return xi;
+    return {};
   }
 
   /*!
@@ -245,13 +247,10 @@ namespace Discret::Elements
    * the parameter space
    */
   template <Core::FE::CellType celltype>
-  Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> evaluate_parameter_coordinate_centroid()
+  Core::LinAlg::Tensor<double, Internal::num_dim<celltype>> evaluate_parameter_coordinate_centroid()
     requires(Core::FE::is_tet<celltype>)
   {
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> xi;
-    xi.put_scalar(0.25);
-
-    return xi;
+    return Core::LinAlg::full<double, Internal::num_dim<celltype>>(0.25);
   }
 
   /*!
@@ -264,10 +263,10 @@ namespace Discret::Elements
    * the parameter space
    */
   template <Core::FE::CellType celltype>
-  Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> evaluate_parameter_coordinate_centroid()
+  Core::LinAlg::Tensor<double, Internal::num_dim<celltype>> evaluate_parameter_coordinate_centroid()
     requires(Core::FE::is_pyramid<celltype>)
   {
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> xi(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Tensor<double, Internal::num_dim<celltype>> xi{};
     xi(2) = 0.25;
 
     return xi;
@@ -283,10 +282,10 @@ namespace Discret::Elements
    * the parameter space
    */
   template <Core::FE::CellType celltype>
-  Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> evaluate_parameter_coordinate_centroid()
+  Core::LinAlg::Tensor<double, Internal::num_dim<celltype>> evaluate_parameter_coordinate_centroid()
     requires(Core::FE::is_wedge<celltype>)
   {
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> xi(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Tensor<double, Internal::num_dim<celltype>> xi{};
     xi(0) = 1.0 / 3.0;
     xi(1) = 1.0 / 3.0;
 
@@ -302,7 +301,7 @@ namespace Discret::Elements
    * @return Core::LinAlg::Matrix<Core::FE::dim<celltype>, 1> : point's reference coordinates
    */
   template <Core::FE::CellType celltype>
-  Core::LinAlg::Matrix<Core::FE::dim<celltype>, 1> evaluate_reference_coordinate(
+  Core::LinAlg::Tensor<double, Core::FE::dim<celltype>> evaluate_reference_coordinate(
       const Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_nodes<celltype>>&
           nodal_coordinates_reference,
       const Core::LinAlg::Matrix<Internal::num_nodes<celltype>, 1>& shape_functions_point)
@@ -311,7 +310,7 @@ namespace Discret::Elements
         Core::LinAlg::Initialization::zero);
     coordinates_reference.multiply_nn(nodal_coordinates_reference, shape_functions_point);
 
-    return coordinates_reference;
+    return Core::LinAlg::reinterpret_matrix<Core::FE::dim<celltype>>(coordinates_reference);
   }
 
   /*!
@@ -323,11 +322,11 @@ namespace Discret::Elements
    * reference configuration
    */
   template <Core::FE::CellType celltype>
-  Core::LinAlg::Matrix<Core::FE::dim<celltype>, 1> evaluate_reference_coordinate_centroid(
+  Core::LinAlg::Tensor<double, Core::FE::dim<celltype>> evaluate_reference_coordinate_centroid(
       const ElementNodes<celltype>& nodal_coordinates)
     requires(Core::FE::use_lagrange_shapefnct<celltype>)
   {
-    const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> xi_centroid =
+    const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>> xi_centroid =
         evaluate_parameter_coordinate_centroid<celltype>();
 
     Core::LinAlg::Matrix<Internal::num_nodes<celltype>, 1> shape_functions_centroid(
@@ -339,11 +338,11 @@ namespace Discret::Elements
   }
 
   template <Core::FE::CellType celltype>
-  Core::LinAlg::Matrix<Core::FE::dim<celltype>, 1> evaluate_reference_coordinate_centroid(
+  Core::LinAlg::Tensor<double, Core::FE::dim<celltype>> evaluate_reference_coordinate_centroid(
       const ElementNodes<celltype>& nodal_coordinates)
     requires(Core::FE::is_nurbs<celltype>)
   {
-    const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> xi_centroid =
+    const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>> xi_centroid =
         evaluate_parameter_coordinate_centroid<celltype>();
 
     Core::LinAlg::Matrix<Internal::num_nodes<celltype>, 1> shape_functions_centroid(
@@ -379,7 +378,7 @@ namespace Discret::Elements
    */
   template <Core::FE::CellType celltype>
   ShapeFunctionsAndDerivatives<celltype> evaluate_shape_functions_and_derivs(
-      const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+      const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>>& xi,
       const ElementNodes<celltype>& nodal_coordinates)
     requires(Core::FE::use_lagrange_shapefnct<celltype>)
   {
@@ -392,7 +391,7 @@ namespace Discret::Elements
 
   template <Core::FE::CellType celltype>
   ShapeFunctionsAndDerivatives<celltype> evaluate_shape_functions_and_derivs(
-      const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+      const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>>& xi,
       const ElementNodes<celltype>& nodal_coordinates)
     requires(Core::FE::is_nurbs<celltype>)
   {
@@ -410,10 +409,11 @@ namespace Discret::Elements
     double determinant_;
 
     /// Jacobian matrix at a specific point
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> jacobian_;
+    Core::LinAlg::Tensor<double, Internal::num_dim<celltype>, Internal::num_dim<celltype>>
+        jacobian_;
 
     /// Inverse jacobian matrix at a specific point
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>>
+    Core::LinAlg::Tensor<double, Internal::num_dim<celltype>, Internal::num_dim<celltype>>
         inverse_jacobian_;
 
     /// Derivative of the shape functions w.r.t. the reference coordinates
@@ -439,10 +439,15 @@ namespace Discret::Elements
   {
     JacobianMapping<celltype> jacobian;
 
-    jacobian.jacobian_.multiply_nt(shapefcns.derivatives_, nodal_coordinates.reference_coordinates);
-    jacobian.inverse_jacobian_ = jacobian.jacobian_;
-    jacobian.determinant_ = jacobian.inverse_jacobian_.invert();
-    jacobian.N_XYZ_.multiply(jacobian.inverse_jacobian_, shapefcns.derivatives_);
+    Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> jacobian_matrix(
+        Core::LinAlg::Initialization::uninitialized);
+    jacobian_matrix.multiply_nt(shapefcns.derivatives_, nodal_coordinates.reference_coordinates);
+
+    jacobian.jacobian_ = Core::LinAlg::from_matrix(jacobian_matrix);
+    jacobian.inverse_jacobian_ = Core::LinAlg::inv(jacobian.jacobian_);
+    jacobian.determinant_ = Core::LinAlg::det(jacobian.jacobian_);
+    jacobian.N_XYZ_.multiply(
+        Core::LinAlg::make_matrix_view(jacobian.inverse_jacobian_), shapefcns.derivatives_);
 
     return jacobian;
   }
@@ -476,12 +481,10 @@ namespace Discret::Elements
   void ensure_positive_jacobian_determinant_at_element_nodes(
       const ElementNodes<celltype>& element_nodes)
   {
-    const Core::LinAlg::SerialDenseMatrix rst =
-        Core::FE::get_ele_node_numbering_nodes_paramspace(celltype);
-
     for (const auto& xi : Core::FE::get_element_nodes_in_parameter_space<celltype>())
     {
-      Core::LinAlg::Matrix<3, 1> xi_mat(xi.data(), true);
+      Core::LinAlg::TensorView<const double, Core::FE::dim<celltype>> xi_mat =
+          Core::LinAlg::make_tensor_view<Core::FE::dim<celltype>>(xi.data());
 
       ShapeFunctionsAndDerivatives<celltype> shape_functions =
           evaluate_shape_functions_and_derivs(xi_mat, element_nodes);
@@ -508,7 +511,7 @@ namespace Discret::Elements
     requires(Internal::num_dim<celltype> == 3)
   {
     // set coordinates in parameter space at centroid as zero -> xi = [0; 0; 0]
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> xi_centroid =
+    Core::LinAlg::Tensor<double, Internal::num_dim<celltype>> xi_centroid =
         evaluate_parameter_coordinate_centroid<celltype>();
 
     // shape functions and derivatives evaluated at element centroid
@@ -526,9 +529,9 @@ namespace Discret::Elements
   struct SpatialMaterialMapping
   {
     double determinant_deformation_gradient_{};
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>>
+    Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
         deformation_gradient_{};
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>>
+    Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
         inverse_deformation_gradient_{};
   };
 
@@ -559,10 +562,10 @@ namespace Discret::Elements
           evaluate_deformation_gradient(jacobian_mapping, nodal_coordinates, scale_defgrd);
     }
 
-    spatial_material_mapping.inverse_deformation_gradient_.invert(
-        spatial_material_mapping.deformation_gradient_);
+    spatial_material_mapping.inverse_deformation_gradient_ =
+        Core::LinAlg::inv(spatial_material_mapping.deformation_gradient_);
     spatial_material_mapping.determinant_deformation_gradient_ =
-        spatial_material_mapping.deformation_gradient_.determinant();
+        Core::LinAlg::det(spatial_material_mapping.deformation_gradient_);
 
     return spatial_material_mapping;
   }
@@ -574,10 +577,10 @@ namespace Discret::Elements
    * @param jacobian_mapping
    * @param element_nodes
    * @param scale_defgrd
-   * @return Core::LinAlg::Matrix<3, 3>
+   * @return Core::LinAlg::Tensor<double, 3, 3>
    */
   template <Core::FE::CellType celltype>
-  Core::LinAlg::Matrix<3, 3> evaluate_deformation_gradient(
+  Core::LinAlg::Tensor<double, 3, 3> evaluate_deformation_gradient(
       const JacobianMapping<celltype>& jacobian_mapping,
       const ElementNodes<celltype>& element_nodes, const double scale_defgrd = 1.0)
   {
@@ -601,7 +604,7 @@ namespace Discret::Elements
           scale_defgrd, element_nodes.displacements, jacobian_mapping.N_XYZ_, scale_defgrd);
     }
 
-    return defgrd;
+    return Core::LinAlg::from_matrix(defgrd);
   }
 
   /*!
@@ -636,19 +639,10 @@ namespace Discret::Elements
    * @return Core::LinAlg::Matrix<Internal::num_str<celltype>, 1> : Green-Lagrange strain tensor in
    * strain-like Voigt notation
    */
-  inline Core::LinAlg::Matrix<6, 1> evaluate_green_lagrange_strain(
-      const Core::LinAlg::Matrix<3, 3>& cauchygreen)
+  inline Core::LinAlg::SymmetricTensor<double, 3, 3> evaluate_green_lagrange_strain(
+      const Core::LinAlg::SymmetricTensor<double, 3, 3>& cauchygreen)
   {
-    Core::LinAlg::Matrix<6, 1> gl_strain;
-
-    gl_strain(0) = 0.5 * (cauchygreen(0, 0) - 1.0);
-    gl_strain(1) = 0.5 * (cauchygreen(1, 1) - 1.0);
-    gl_strain(2) = 0.5 * (cauchygreen(2, 2) - 1.0);
-    gl_strain(3) = cauchygreen(0, 1);
-    gl_strain(4) = cauchygreen(1, 2);
-    gl_strain(5) = cauchygreen(2, 0);
-
-    return gl_strain;
+    return 0.5 * (cauchygreen - Core::LinAlg::identity<double, 3, 3>);
   }
 
   /*!
@@ -658,21 +652,18 @@ namespace Discret::Elements
    * @param spatial_material_mapping (in) : An object holding quantities of the spatial material
    * mapping (deformation_gradient, inverse_deformation_gradient,
    * determinant_deformation_gradient)
-   * @return Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> : Right
+   * @return Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>> : Right
    * Cauchy-Green deformation tensor
    */
   template <Core::FE::CellType celltype>
-  Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>>
+  Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
   evaluate_cauchy_green(const SpatialMaterialMapping<celltype>& spatial_material_mapping)
     requires(Internal::num_dim<celltype> == 3)
   {
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> cauchygreen(
-        Core::LinAlg::Initialization::uninitialized);
-
-    cauchygreen.multiply_tn(spatial_material_mapping.deformation_gradient_,
+    // The resulting tensor is symmetric
+    return Core::LinAlg::assume_symmetry(
+        Core::LinAlg::transpose(spatial_material_mapping.deformation_gradient_) *
         spatial_material_mapping.deformation_gradient_);
-
-    return cauchygreen;
   }
 
 
@@ -680,8 +671,8 @@ namespace Discret::Elements
    * @brief Evaluate the Green-Lagrange strain tensor from small displacement assumptions
    */
   template <Core::FE::CellType celltype>
-  Core::LinAlg::Matrix<Internal::num_str<celltype>, 1> evaluate_linear_gl_strain(
-      const ElementNodes<celltype>& nodal_coordinates,
+  Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+  evaluate_linear_gl_strain(const ElementNodes<celltype>& nodal_coordinates,
       const Core::LinAlg::Matrix<Internal::num_str<celltype>,
           Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>>& linear_b_operator)
   {
@@ -691,7 +682,11 @@ namespace Discret::Elements
     Core::LinAlg::Matrix<Internal::num_str<celltype>, 1> gl_strain;
     gl_strain.multiply(linear_b_operator, nodal_displs);
 
-    return gl_strain;
+    Core::LinAlg::Voigt::Strains::to_stress_like(gl_strain, gl_strain);
+    Core::LinAlg::SymmetricTensor<double, 3, 3> gl_strain_tensor;
+    std::ranges::copy_n(gl_strain.data(), 6, gl_strain_tensor.data());
+
+    return gl_strain_tensor;
   }
 
   /*!
@@ -769,7 +764,7 @@ namespace Discret::Elements
    */
   template <Core::FE::CellType celltype>
   Core::LinAlg::Matrix<Internal::num_str<celltype>,
-      Internal::num_dim<celltype> * Internal::num_nodes<celltype>>
+      Internal::num_dim<celltype> * Internal::num_nodes<celltype>>  // TODO
   evaluate_linear_strain_gradient(const JacobianMapping<celltype>& jacobian_mapping)
     requires(Internal::num_dim<celltype> == 3)
   {
@@ -801,12 +796,13 @@ namespace Discret::Elements
   template <Core::FE::CellType celltype>
   struct Stress
   {
-    /// Second Piola-Kirchhoff stress tensor in stress-like voigt notation
-    Core::LinAlg::Matrix<Internal::num_str<celltype>, 1> pk2_;
+    /// Second Piola-Kirchhoff stress tensor
+    Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>> pk2_;
 
-    /// Linearization of the 2. Piola Kirchhoff stress tensor w.r.t. Green-Lagrange strain tensor in
-    /// mixed Voigt notation
-    Core::LinAlg::Matrix<Internal::num_str<celltype>, Internal::num_str<celltype>> cmat_;
+    /// Linearization of the 2. Piola Kirchhoff stress tensor w.r.t. Green-Lagrange strain tensor
+    Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>,
+        Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+        cmat_;
   };
 
   /*!
@@ -828,13 +824,20 @@ namespace Discret::Elements
    */
   template <Core::FE::CellType celltype>
   Stress<celltype> evaluate_material_stress(Mat::So3Material& material,
-      const Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>>& defgrd,
-      const Core::LinAlg::Matrix<Internal::num_str<celltype>, 1>& gl_strain,
+      const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>& defgrd,
+      const Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>&
+          gl_strain,
       Teuchos::ParameterList& params, const int gp, const int eleGID)
   {
-    Stress<celltype> stress;
+    Stress<celltype> stress{};
 
-    material.evaluate(&defgrd, &gl_strain, params, &stress.pk2_, &stress.cmat_, gp, eleGID);
+    auto defgrad_view = Core::LinAlg::make_matrix_view(defgrd);
+    auto gl_strain_data = Core::LinAlg::make_strain_like_voigt_matrix(gl_strain);
+
+    auto pk2_view = Core::LinAlg::make_stress_like_voigt_view(stress.pk2_);
+    auto cmat_view = Core::LinAlg::make_stress_like_voigt_view(stress.cmat_);
+
+    material.evaluate(&defgrad_view, &gl_strain_data, params, &pk2_view, &cmat_view, gp, eleGID);
     return stress;
   }
 
@@ -856,7 +859,8 @@ namespace Discret::Elements
       Core::LinAlg::Matrix<Internal::num_dim<celltype> * Internal::num_nodes<celltype>, 1>&
           force_vector)
   {
-    force_vector.multiply_tn(integration_fac, Bop, stress.pk2_, 1.);
+    force_vector.multiply_tn(
+        integration_fac, Bop, Core::LinAlg::make_stress_like_voigt_view(stress.pk2_), 1.);
   }
 
   /*!
@@ -880,7 +884,7 @@ namespace Discret::Elements
     Core::LinAlg::Matrix<Internal::num_str<celltype>,
         Internal::num_nodes<celltype> * Internal::num_dim<celltype>>
         cb;
-    cb.multiply(stress.cmat_, Bop);
+    cb.multiply(Core::LinAlg::make_stress_like_voigt_view(stress.cmat_), Bop);
     stiffness_matrix.multiply_tn(integration_fac, Bop, cb, 1.0);
   }
 
@@ -906,12 +910,12 @@ namespace Discret::Elements
     // kgeo += (B_L^T . sigma . B_L) * detJ * w(gp)  with B_L = Ni,Xj see NiliFEM-Skript
     for (int inod = 0; inod < Internal::num_nodes<celltype>; ++inod)
     {
-      SmB_L[0] = stress.pk2_(0) * B_L(0, inod) + stress.pk2_(3) * B_L(1, inod) +
-                 stress.pk2_(5) * B_L(2, inod);
-      SmB_L[1] = stress.pk2_(3) * B_L(0, inod) + stress.pk2_(1) * B_L(1, inod) +
-                 stress.pk2_(4) * B_L(2, inod);
-      SmB_L[2] = stress.pk2_(5) * B_L(0, inod) + stress.pk2_(4) * B_L(1, inod) +
-                 stress.pk2_(2) * B_L(2, inod);
+      SmB_L[0] = stress.pk2_.data()[0] * B_L(0, inod) + stress.pk2_.data()[3] * B_L(1, inod) +
+                 stress.pk2_.data()[5] * B_L(2, inod);
+      SmB_L[1] = stress.pk2_.data()[3] * B_L(0, inod) + stress.pk2_.data()[1] * B_L(1, inod) +
+                 stress.pk2_.data()[4] * B_L(2, inod);
+      SmB_L[2] = stress.pk2_.data()[5] * B_L(0, inod) + stress.pk2_.data()[4] * B_L(1, inod) +
+                 stress.pk2_.data()[2] * B_L(2, inod);
 
       for (int jnod = 0; jnod < Internal::num_nodes<celltype>; ++jnod)
       {
@@ -966,7 +970,7 @@ namespace Discret::Elements
    * @param nodal_coordinates (in) : The nodal coordinates of the element
    * @param integration (in) : The integration rule to be used.
    * @param gp_evaluator (in) : A callable object (e.g. lambda-function) with signature void(const
-   * Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi, const
+   * Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi, const
    * ShapeFunctionsAndDerivatives<celltype>& shape_functions, const JacobianMapping<celltype>&
    * jacobian_mapping, double integration_factor, int gp) that will be called for each integration
    * point.
@@ -977,7 +981,7 @@ namespace Discret::Elements
   {
     for (int gp = 0; gp < integration.num_points(); ++gp)
     {
-      const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> xi =
+      const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>> xi =
           evaluate_parameter_coordinate<celltype>(integration, gp);
 
       const ShapeFunctionsAndDerivatives<celltype> shape_functions =
@@ -1025,7 +1029,7 @@ namespace Discret::Elements
 
     AnalyticalDisplacementErrorIntegrationResults error_result;
     Discret::Elements::for_each_gauss_point<celltype>(nodal_coordinates, gauss_integration,
-        [&](const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+        [&](const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>>& xi,
             const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
             const JacobianMapping<celltype>& jacobian_mapping, double integration_factor, int gp)
         {
@@ -1125,8 +1129,9 @@ namespace Discret::Elements
                     stiffness_matrix_integration.num_points());
                 for (int gp = 0; gp < stiffness_matrix_integration.num_points(); ++gp)
                 {
-                  Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> xi(
-                      stiffness_matrix_integration.point(gp), true);
+                  Core::LinAlg::TensorView<const double, Core::FE::dim<celltype>> xi =
+                      Core::LinAlg::make_tensor_view<Core::FE::dim<celltype>>(
+                          stiffness_matrix_integration.point(gp));
                   Core::FE::shape_function<celltype>(xi, shapefcns[gp]);
                 }
                 return shapefcns;
@@ -1254,48 +1259,34 @@ namespace Discret::Elements
    gradient from
    * @return Core::LinAlg::Matrix<dim, dim> : deformation gradient F^{enh} computed from GL strains
    */
-  static inline Core::LinAlg::Matrix<3, 3> compute_deformation_gradient_from_gl_strains(
-      const Core::LinAlg::Matrix<3, 3>& defgrd_disp,
-      const Core::LinAlg::Matrix<6, 1>& enhanced_gl_strain)
+  static inline Core::LinAlg::Tensor<double, 3, 3> compute_deformation_gradient_from_gl_strains(
+      const Core::LinAlg::Tensor<double, 3, 3>& defgrd_disp,
+      const Core::LinAlg::SymmetricTensor<double, 3, 3>& enhanced_gl_strain)
   {
-    Core::LinAlg::Matrix<3, 3> R;       // rotation tensor
-    Core::LinAlg::Matrix<3, 3> U_enh;   // enhanced right stretch tensor
-    Core::LinAlg::Matrix<3, 3> U_disp;  // displacement-based right stretch tensor
-    Core::LinAlg::Matrix<3, 3> EW;      // temporarily store eigenvalues
-    Core::LinAlg::Matrix<3, 3> tmp;     // temporary matrix for matrix matrix matrix products
-    Core::LinAlg::Matrix<3, 3> tmp2;    // temporary matrix for matrix matrix matrix products
-
     // calculate modified right stretch tensor
-    for (unsigned i = 0; i < 3; i++) U_enh(i, i) = 2. * enhanced_gl_strain(i) + 1.;
-    U_enh(0, 1) = enhanced_gl_strain(3);
-    U_enh(1, 0) = enhanced_gl_strain(3);
-    U_enh(1, 2) = enhanced_gl_strain(4);
-    U_enh(2, 1) = enhanced_gl_strain(4);
-    U_enh(0, 2) = enhanced_gl_strain(5);
-    U_enh(2, 0) = enhanced_gl_strain(5);
+    const Core::LinAlg::SymmetricTensor<double, 3, 3> cauchy_green_enh =
+        2 * enhanced_gl_strain + Core::LinAlg::identity<double, 3, 3>;
 
-    Core::LinAlg::syev(U_enh, EW, U_enh);
-    for (unsigned i = 0; i < 3; ++i) EW(i, i) = sqrt(EW(i, i));
-    tmp.multiply(U_enh, EW);
-    tmp2.multiply_nt(tmp, U_enh);
-    U_enh.update(tmp2);
+    const auto compute_pure_stretch_tensor =
+        [](const Core::LinAlg::SymmetricTensor<double, 3, 3>& C)
+    {
+      auto [eigenvalues, eigenvectors] = Core::LinAlg::eig(C);
 
-    // calculate displacement-based right stretch tensor
-    U_disp.multiply_tn(defgrd_disp, defgrd_disp);
+      // compute the sqrt of the eigenvalues
+      std::ranges::for_each(eigenvalues, [](double& val) { val = std::sqrt(val); });
+      const auto eig = Core::LinAlg::diagonal(eigenvalues);
+      return Core::LinAlg::assume_symmetry(
+          eigenvectors * eig * Core::LinAlg::transpose(eigenvectors));
+    };
 
-    Core::LinAlg::syev(U_disp, EW, U_disp);
-    for (unsigned i = 0; i < 3; ++i) EW(i, i) = sqrt(EW(i, i));
-    tmp.multiply(U_disp, EW);
-    tmp2.multiply_nt(tmp, U_disp);
-    U_disp.update(tmp2);
+    // compute rotation tensor from deformation gradient
+    const Core::LinAlg::SymmetricTensor<double, 3, 3> cauchy_green_disp =
+        Core::LinAlg::assume_symmetry(Core::LinAlg::transpose(defgrd_disp) * defgrd_disp);
+    const Core::LinAlg::Tensor<double, 3, 3> R =
+        defgrd_disp * Core::LinAlg::inv(compute_pure_stretch_tensor(cauchy_green_disp));
 
-    // compose consistent deformation gradient
-    U_disp.invert();
-    R.multiply(defgrd_disp, U_disp);
-
-    Core::LinAlg::Matrix<3, 3> defgrd_enh;
-    defgrd_enh.multiply(R, U_enh);
-    return defgrd_enh;
+    // Compute consistent deformation gradient
+    return R * compute_pure_stretch_tensor(cauchy_green_enh);
   }
 
 }  // namespace Discret::Elements

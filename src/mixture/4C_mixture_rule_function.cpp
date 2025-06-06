@@ -9,6 +9,7 @@
 
 #include "4C_global_data.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_linalg_tensor.hpp"
 #include "4C_material_parameter_base.hpp"
 #include "4C_mixture_constituent.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -95,7 +96,8 @@ void Mixture::FunctionMixtureRule::evaluate(const Core::LinAlg::Matrix<3, 3>& F,
     // coordinates (and the current time)
 
     // get gauss point reference coordinates and current time
-    const auto& reference_coordinates = params.get<Core::LinAlg::Matrix<3, 1>>("gp_coords_ref");
+    const auto& reference_coordinates =
+        params.get<Core::LinAlg::Tensor<double, 3>>("gp_coords_ref");
     const double time = params.get<double>("total time");
 
     // evaluate the mass fraction function at the gauss point reference coordinates and current time

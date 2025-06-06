@@ -12,6 +12,8 @@
 
 #include "4C_fem_general_cell_type.hpp"
 #include "4C_fem_general_cell_type_traits.hpp"
+#include "4C_linalg_tensor.hpp"
+#include "4C_linalg_tensor_generators.hpp"
 #include "4C_solid_3D_ele_calc_lib.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -53,7 +55,7 @@ namespace Discret::Elements
   inline Core::LinAlg::Matrix<Internal::num_str<Core::FE::CellType::hex8>,
       Internal::num_dof_per_ele<Core::FE::CellType::hex8>>
   evaluate_local_b_operator(const ElementNodes<Core::FE::CellType::hex8>& element_nodes,
-      const Core::LinAlg::Matrix<Core::FE::dim<Core::FE::CellType::hex8>, 1>& xi,
+      const Core::LinAlg::Tensor<double, Core::FE::dim<Core::FE::CellType::hex8>>& xi,
       const ShapeFunctionsAndDerivatives<Core::FE::CellType::hex8>& shape_functions,
       const JacobianMapping<Core::FE::CellType::hex8>& jacobian_mapping,
       const std::array<SamplingPointData<Core::FE::CellType::hex8>, 8>& sampling_point_data)
@@ -61,7 +63,7 @@ namespace Discret::Elements
     Core::LinAlg::Matrix<Internal::num_str<Core::FE::CellType::hex8>,
         Internal::num_dof_per_ele<Core::FE::CellType::hex8>>
         bop_loc{};
-    Core::LinAlg::Matrix<3, 3> current_jacobian(jacobian_mapping.jacobian_);
+    Core::LinAlg::Matrix<3, 3> current_jacobian(jacobian_mapping.jacobian_.data());
     current_jacobian.multiply_nt(
         1.0, shape_functions.derivatives_, element_nodes.displacements, 1.0);
 
@@ -110,7 +112,7 @@ namespace Discret::Elements
   inline Core::LinAlg::Matrix<Internal::num_str<Core::FE::CellType::wedge6>,
       Internal::num_dof_per_ele<Core::FE::CellType::wedge6>>
   evaluate_local_b_operator(const ElementNodes<Core::FE::CellType::wedge6>& element_nodes,
-      const Core::LinAlg::Matrix<Core::FE::dim<Core::FE::CellType::wedge6>, 1>& xi,
+      const Core::LinAlg::Tensor<double, Core::FE::dim<Core::FE::CellType::wedge6>>& xi,
       const ShapeFunctionsAndDerivatives<Core::FE::CellType::wedge6>& shape_functions,
       const JacobianMapping<Core::FE::CellType::wedge6>& jacobian_mapping,
       const std::array<SamplingPointData<Core::FE::CellType::wedge6>, 5>& sampling_point_data)
@@ -118,7 +120,7 @@ namespace Discret::Elements
     Core::LinAlg::Matrix<Internal::num_str<Core::FE::CellType::wedge6>,
         Internal::num_dof_per_ele<Core::FE::CellType::wedge6>>
         bop_loc{};
-    Core::LinAlg::Matrix<3, 3> current_jacobian(jacobian_mapping.jacobian_);
+    Core::LinAlg::Matrix<3, 3> current_jacobian(jacobian_mapping.jacobian_.data());
     current_jacobian.multiply_nt(
         1.0, shape_functions.derivatives_, element_nodes.displacements, 1.0);
 
@@ -161,12 +163,12 @@ namespace Discret::Elements
 
   inline Core::LinAlg::Matrix<Internal::num_str<Core::FE::CellType::hex8>, 1>
   evaluate_local_glstrain(const ElementNodes<Core::FE::CellType::hex8>& element_nodes,
-      const Core::LinAlg::Matrix<Core::FE::dim<Core::FE::CellType::hex8>, 1>& xi,
+      const Core::LinAlg::Tensor<double, Core::FE::dim<Core::FE::CellType::hex8>>& xi,
       const ShapeFunctionsAndDerivatives<Core::FE::CellType::hex8>& shape_functions,
       const JacobianMapping<Core::FE::CellType::hex8>& jacobian_mapping,
       const std::array<SamplingPointData<Core::FE::CellType::hex8>, 8>& sampling_point_data)
   {
-    Core::LinAlg::Matrix<3, 3> current_jacobian(jacobian_mapping.jacobian_);
+    Core::LinAlg::Matrix<3, 3> current_jacobian(jacobian_mapping.jacobian_.data());
     current_jacobian.multiply_nt(
         1.0, shape_functions.derivatives_, element_nodes.displacements, 1.0);
 
@@ -272,12 +274,12 @@ namespace Discret::Elements
 
   inline Core::LinAlg::Matrix<Internal::num_str<Core::FE::CellType::wedge6>, 1>
   evaluate_local_glstrain(const ElementNodes<Core::FE::CellType::wedge6>& element_nodes,
-      const Core::LinAlg::Matrix<Core::FE::dim<Core::FE::CellType::wedge6>, 1>& xi,
+      const Core::LinAlg::Tensor<double, Core::FE::dim<Core::FE::CellType::wedge6>>& xi,
       const ShapeFunctionsAndDerivatives<Core::FE::CellType::wedge6>& shape_functions,
       const JacobianMapping<Core::FE::CellType::wedge6>& jacobian_mapping,
       const std::array<SamplingPointData<Core::FE::CellType::wedge6>, 5>& sampling_point_data)
   {
-    Core::LinAlg::Matrix<3, 3> current_jacobian(jacobian_mapping.jacobian_);
+    Core::LinAlg::Matrix<3, 3> current_jacobian(jacobian_mapping.jacobian_.data());
     current_jacobian.multiply_nt(
         1.0, shape_functions.derivatives_, element_nodes.displacements, 1.0);
 
@@ -368,7 +370,7 @@ namespace Discret::Elements
     return glstrain;
   }
 
-  inline void add_ans_geometric_stiffness(const Core::LinAlg::Matrix<3, 1>& xi,
+  inline void add_ans_geometric_stiffness(const Core::LinAlg::Tensor<double, 3>& xi,
       const ShapeFunctionsAndDerivatives<Core::FE::CellType::hex8>& shape_functions,
       const Stress<Core::FE::CellType::hex8>& stress, const double integration_factor,
       const Core::LinAlg::Matrix<Internal::num_str<Core::FE::CellType::hex8>,
@@ -437,7 +439,8 @@ namespace Discret::Elements
         G_ij_glob.multiply(TinvT, G_ij);
 
         // Scalar Gij results from product of G_ij with stress, scaled with detJ*weights
-        const double Gij = integration_factor * stress.pk2_.dot(G_ij_glob);
+        const double Gij = integration_factor *
+                           Core::LinAlg::make_stress_like_voigt_view(stress.pk2_).dot(G_ij_glob);
 
         // add "geometric part" Gij times detJ*weights to stiffness matrix
         stiffness_matrix(Core::FE::dim<Core::FE::CellType::hex8> * inod + 0,
@@ -450,7 +453,7 @@ namespace Discret::Elements
     }
   }
 
-  inline void add_ans_geometric_stiffness(const Core::LinAlg::Matrix<3, 1>& xi,
+  inline void add_ans_geometric_stiffness(const Core::LinAlg::Tensor<double, 3>& xi,
       const ShapeFunctionsAndDerivatives<Core::FE::CellType::wedge6>& shape_functions,
       const Stress<Core::FE::CellType::wedge6>& stress, const double integration_factor,
       const Core::LinAlg::Matrix<Internal::num_str<Core::FE::CellType::wedge6>,
@@ -499,7 +502,8 @@ namespace Discret::Elements
         G_ij_glob.multiply(TinvT, G_ij);
 
         // Scalar Gij results from product of G_ij with stress, scaled with detJ*weights
-        const double Gij = integration_factor * stress.pk2_.dot(G_ij_glob);
+        const double Gij = integration_factor *
+                           Core::LinAlg::make_stress_like_voigt_view(stress.pk2_).dot(G_ij_glob);
 
         // add "geometric part" Gij times detJ*weights to stiffness matrix
         stiffness_matrix(Core::FE::dim<Core::FE::CellType::wedge6> * inod + 0,
@@ -521,7 +525,8 @@ namespace Discret::Elements
     std::size_t i = 0;
     for (const std::array<double, 3>& sampling_point : sampling_points)
     {
-      Core::LinAlg::Matrix<3, 1> xi_view(sampling_point.data(), true);
+      Core::LinAlg::Tensor<double, 3> xi_view =
+          Core::LinAlg::make_tensor_view<3>(sampling_point.data());
       // evaluate derivative of the shape functions
       sampling_point_data[i].shape_functions =
           evaluate_shape_functions_and_derivs(xi_view, nodal_coordinates);

@@ -117,7 +117,6 @@ namespace Core::LinAlg
     };
   }  // namespace Internal
 
-
   template <typename IntegerSequence>
   constexpr auto make_tensor_view(auto* data)
   {
@@ -223,6 +222,15 @@ namespace Core::LinAlg
    */
   constexpr auto trace(const SquareTensor auto& A)
     requires(!is_compressed_tensor<decltype(A)>);
+
+  /*!
+   * @brief Computes and returns the L2-norm of a rank 1 tensor
+   *
+   * @param A
+   * @return auto
+   */
+  constexpr auto norm2(const auto& A)
+    requires(!is_compressed_tensor<decltype(A)> && std::remove_cvref_t<decltype(A)>::rank() == 1);
 
   /*!
    * @brief Computes and returns the inverse of a square tensor of rank 2
@@ -375,33 +383,32 @@ namespace Core::LinAlg
    *
    * @tparam OtherTensor
    */
-  template <typename OtherTensor, typename Number, TensorStorageType storage_type,
-      typename Compression, std::size_t... n>
+  template <typename OtherTensor, typename Number, TensorStorageType storage_type, std::size_t... n>
     requires(std::is_same_v<typename OtherTensor::shape_type, typename OtherTensor::shape_type>)
-  constexpr TensorInternal<Number, storage_type, Compression, n...>& operator+=(
-      TensorInternal<Number, storage_type, Compression, n...>& tensor, const OtherTensor& B);
+  constexpr TensorInternal<Number, storage_type, NoCompression<n...>, n...>& operator+=(
+      TensorInternal<Number, storage_type, NoCompression<n...>, n...>& tensor,
+      const OtherTensor& B);
 
   /*!
    * @brief Subtract another tensor from this tensor
    *
    * @tparam OtherTensor
    */
-  template <typename OtherTensor, typename Number, TensorStorageType storage_type,
-      typename Compression, std::size_t... n>
+  template <typename OtherTensor, typename Number, TensorStorageType storage_type, std::size_t... n>
     requires(std::is_same_v<typename OtherTensor::shape_type, typename OtherTensor::shape_type>)
-  constexpr TensorInternal<Number, storage_type, Compression, n...>& operator-=(
-      TensorInternal<Number, storage_type, Compression, n...>& tensor, const OtherTensor& B);
+  constexpr TensorInternal<Number, storage_type, NoCompression<n...>, n...>& operator-=(
+      TensorInternal<Number, storage_type, NoCompression<n...>, n...>& tensor,
+      const OtherTensor& B);
 
   /*!
    * @brief Scale the tensor with a scalar value
    *
    * @tparam OtherTensor
    */
-  template <typename Scalar, typename Number, TensorStorageType storage_type, typename Compression,
-      std::size_t... n>
+  template <typename Scalar, typename Number, TensorStorageType storage_type, std::size_t... n>
     requires(std::is_arithmetic_v<Scalar>)
-  constexpr TensorInternal<Number, storage_type, Compression, n...>& operator*=(
-      TensorInternal<Number, storage_type, Compression, n...>& tensor, const Scalar b);
+  constexpr TensorInternal<Number, storage_type, NoCompression<n...>, n...>& operator*=(
+      TensorInternal<Number, storage_type, NoCompression<n...>, n...>& tensor, const Scalar b);
 
   /*!
    * @brief Scales the tensor with the inverse of the scalar value b
@@ -411,11 +418,10 @@ namespace Core::LinAlg
    * @tparam storage_type
    * @tparam n
    */
-  template <typename Scalar, typename Number, TensorStorageType storage_type, typename Compression,
-      std::size_t... n>
+  template <typename Scalar, typename Number, TensorStorageType storage_type, std::size_t... n>
     requires(std::is_arithmetic_v<Scalar>)
-  constexpr TensorInternal<Number, storage_type, Compression, n...>& operator/=(
-      TensorInternal<Number, storage_type, Compression, n...>& tensor, const Scalar b);
+  constexpr TensorInternal<Number, storage_type, NoCompression<n...>, n...>& operator/=(
+      TensorInternal<Number, storage_type, NoCompression<n...>, n...>& tensor, const Scalar b);
 
   template <typename TensorLeft, typename TensorRight>
     requires(std::is_same_v<typename TensorLeft::shape_type, typename TensorRight::shape_type>)
@@ -492,6 +498,16 @@ namespace Core::LinAlg
     constexpr std::size_t n = Tensor::template extent<0>();
 
     return DenseFunctions::trace<value_type, n, n>(A.data());
+  }
+
+  constexpr auto norm2(const auto& A)
+    requires(!is_compressed_tensor<decltype(A)> && std::remove_cvref_t<decltype(A)>::rank() == 1)
+  {
+    using Tensor = std::remove_cvref_t<decltype(A)>;
+    using value_type = Tensor::value_type;
+    constexpr std::size_t n = Tensor::template extent<0>();
+
+    return DenseFunctions::norm2<value_type, n, 1>(A.data());
   }
 
   auto inv(const SquareTensor auto& A)

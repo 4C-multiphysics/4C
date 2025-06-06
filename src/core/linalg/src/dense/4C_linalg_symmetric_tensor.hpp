@@ -14,6 +14,8 @@
 #include "4C_linalg_tensor_meta_utils.hpp"
 #include "4C_utils_exceptions.hpp"
 
+#include <Teuchos_LAPACK.hpp>
+
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -233,6 +235,28 @@ namespace Core::LinAlg
                                                     // memory
 
   /*!
+   * @brief Creates a SymmetricTensorView from a pointer to data and the tensor shape
+   *
+   * This function creates a SymmetricTensorView from a pointer to data and the tensor shape
+   * specified by the template parameters. The data is expected to be stored in a contiguous memory
+   * block of size @p (n*...) with voigt-like symmetric ordering.
+   *
+   * @tparam n The dimensions of the tensor.
+   * @param data Pointer to the data.
+   * @return A SymmetricTensorView of type TensorView<ValueType, n...>.
+   */
+  template <std::size_t... n>
+  constexpr auto make_symmetric_tensor_view(auto* data)
+  {
+    constexpr std::size_t compressed_size = SymmetricTensorView<double, n...>::compressed_size;
+    using ValueType = std::remove_pointer_t<decltype(data)>;
+
+    std::span<ValueType, compressed_size> data_span(data, compressed_size);
+
+    return SymmetricTensorView<ValueType, n...>(std::move(data_span));
+  }
+
+  /*!
    * @brief Returns true if the given tensor is symmetric according to the definition of the
    * SymmetricTensor
    */
@@ -264,7 +288,7 @@ namespace Core::LinAlg
    * cases) identical to the normal tensor
    */
   template <typename Number, TensorStorageType storage_type, std::size_t... n>
-  constexpr Tensor<Number, n...> get_full(
+  constexpr auto get_full(
       const TensorInternal<Number, storage_type, Internal::SymmetricCompression<n...>, n...>&
           symmetric_tensor);
 
@@ -275,6 +299,57 @@ namespace Core::LinAlg
   std::ostream& operator<<(std::ostream& os,
       const TensorInternal<Number, storage_type, Internal::SymmetricCompression<n...>, n...>&
           tensor);
+
+  /*!
+   * @brief Add another tensor onto this tensor
+   *
+   * @tparam OtherTensor
+   */
+  template <typename OtherTensor, typename Number, TensorStorageType storage_type, std::size_t... n>
+    requires(std::is_same_v<typename OtherTensor::shape_type, typename OtherTensor::shape_type>)
+  constexpr TensorInternal<Number, storage_type, Internal::SymmetricCompression<n...>, n...>&
+  operator+=(
+      TensorInternal<Number, storage_type, Internal::SymmetricCompression<n...>, n...>& tensor,
+      const OtherTensor& B);
+
+  /*!
+   * @brief Subtract another tensor from this tensor
+   *
+   * @tparam OtherTensor
+   */
+  template <typename OtherTensor, typename Number, TensorStorageType storage_type, std::size_t... n>
+    requires(std::is_same_v<typename OtherTensor::shape_type, typename OtherTensor::shape_type>)
+  constexpr TensorInternal<Number, storage_type, Internal::SymmetricCompression<n...>, n...>&
+  operator-=(
+      TensorInternal<Number, storage_type, Internal::SymmetricCompression<n...>, n...>& tensor,
+      const OtherTensor& B);
+
+  /*!
+   * @brief Scale the tensor with a scalar value
+   *
+   * @tparam OtherTensor
+   */
+  template <typename Scalar, typename Number, TensorStorageType storage_type, std::size_t... n>
+    requires(std::is_arithmetic_v<Scalar>)
+  constexpr TensorInternal<Number, storage_type, Internal::SymmetricCompression<n...>, n...>&
+  operator*=(
+      TensorInternal<Number, storage_type, Internal::SymmetricCompression<n...>, n...>& tensor,
+      const Scalar b);
+
+  /*!
+   * @brief Scales the tensor with the inverse of the scalar value b
+   *
+   * @tparam Scalar
+   * @tparam Number
+   * @tparam storage_type
+   * @tparam n
+   */
+  template <typename Scalar, typename Number, TensorStorageType storage_type, std::size_t... n>
+    requires(std::is_arithmetic_v<Scalar>)
+  constexpr TensorInternal<Number, storage_type, Internal::SymmetricCompression<n...>, n...>&
+  operator/=(
+      TensorInternal<Number, storage_type, Internal::SymmetricCompression<n...>, n...>& tensor,
+      const Scalar b);
 
   /*!
    * @brief Compute the determinant of a symmetric tensor
@@ -373,6 +448,13 @@ namespace Core::LinAlg
     requires(TensorConcept<std::remove_cvref_t<decltype(a)>> &&
              std::remove_cvref_t<decltype(a)>::rank() == 1);
 
+  /*!
+   * @brief Computes the eigen decomposition of a symmetric 2-tensor
+   */
+  template <typename Tensor>
+    requires(Internal::is_symmetric_tensor<Tensor> && Tensor::rank() == 2)
+  auto eig(const Tensor& t);
+
 
   // actual implementations
   template <typename Number, TensorStorageType storage_type, std::size_t... n>
@@ -407,14 +489,14 @@ namespace Core::LinAlg
   }
 
   template <typename Number, TensorStorageType storage_type, std::size_t... n>
-  constexpr Tensor<Number, n...> get_full(
+  constexpr auto get_full(
       const TensorInternal<Number, storage_type, Internal::SymmetricCompression<n...>, n...>&
           symmetric_tensor)
   {
     // returns a full tensor of the input tensor
     constexpr std::array index_reorder = Internal::get_index_reorder_from_symmetric_tensor<n...>();
 
-    Tensor<Number, n...> tensor;
+    Tensor<std::remove_cvref_t<Number>, n...> tensor;
     std::transform(index_reorder.begin(), index_reorder.end(), tensor.data(),
         [&symmetric_tensor](const auto& i) { return symmetric_tensor.container()[i]; });
     return tensor;
@@ -452,6 +534,56 @@ namespace Core::LinAlg
     return os;
   }
 
+  template <typename OtherTensor, typename Number, TensorStorageType storage_type, std::size_t... n>
+    requires(std::is_same_v<typename OtherTensor::shape_type, typename OtherTensor::shape_type>)
+  constexpr TensorInternal<Number, storage_type, Internal::SymmetricCompression<n...>, n...>&
+  operator+=(
+      TensorInternal<Number, storage_type, Internal::SymmetricCompression<n...>, n...>& tensor,
+      const OtherTensor& B)
+  {
+    DenseFunctions::update<
+        typename TensorInternal<Number, storage_type, NoCompression<n...>, n...>::value_type,
+        Internal::SymmetricCompression<n...>::compressed_size, 1>(
+        1.0, tensor.data(), 1.0, B.data());
+    return tensor;
+  }
+
+  template <typename OtherTensor, typename Number, TensorStorageType storage_type, std::size_t... n>
+    requires(std::is_same_v<typename OtherTensor::shape_type, typename OtherTensor::shape_type>)
+  constexpr TensorInternal<Number, storage_type, Internal::SymmetricCompression<n...>, n...>&
+  operator-=(
+      TensorInternal<Number, storage_type, Internal::SymmetricCompression<n...>, n...>& tensor,
+      const OtherTensor& B)
+  {
+    DenseFunctions::update<
+        typename TensorInternal<Number, storage_type, NoCompression<n...>, n...>::value_type,
+        Internal::SymmetricCompression<n...>::compressed_size, 1>(
+        1.0, tensor.data(), -1.0, B.data());
+    return tensor;
+  }
+
+  template <typename Scalar, typename Number, TensorStorageType storage_type, std::size_t... n>
+    requires(std::is_arithmetic_v<Scalar>)
+  constexpr TensorInternal<Number, storage_type, Internal::SymmetricCompression<n...>, n...>&
+  operator*=(
+      TensorInternal<Number, storage_type, Internal::SymmetricCompression<n...>, n...>& tensor,
+      const Scalar b)
+  {
+    for (auto& value : tensor.container()) value *= b;
+    return tensor;
+  }
+
+  template <typename Scalar, typename Number, TensorStorageType storage_type, std::size_t... n>
+    requires(std::is_arithmetic_v<Scalar>)
+  constexpr TensorInternal<Number, storage_type, Internal::SymmetricCompression<n...>, n...>&
+  operator/=(
+      TensorInternal<Number, storage_type, Internal::SymmetricCompression<n...>, n...>& tensor,
+      const Scalar b)
+  {
+    tensor *= Scalar(1.0) / b;
+    return tensor;
+  }
+
   namespace Internal
   {
     auto get_reduced_dimensional_symmetric_tensor(
@@ -462,7 +594,7 @@ namespace Core::LinAlg
       using TensorType = std::remove_cvref_t<decltype(tensor)>;
       constexpr std::size_t size = TensorType::template extent<0>();
 
-      using ValueType = TensorType::value_type;
+      using ValueType = std::remove_cv_t<typename TensorType::value_type>;
 
       auto container = tensor.container();
       Tensor<ValueType, TensorType::compressed_size> reduced_tensor(std::move(container));
@@ -485,9 +617,10 @@ namespace Core::LinAlg
       constexpr std::size_t new_size_left = size_left * (size_left + 1) / 2;
       constexpr std::size_t new_size_right = size_right * (size_right + 1) / 2;
 
-      using ValueType = TensorType::value_type;
+      using ValueType = std::remove_cv_t<typename TensorType::value_type>;
 
-      auto container = tensor.container();
+      std::array<ValueType, new_size_left * new_size_right> container;
+      std::ranges::copy(tensor.container(), container.begin());
       Tensor<ValueType, new_size_left, new_size_right> reduced_tensor(std::move(container));
       return reduced_tensor;
     }
@@ -517,7 +650,7 @@ namespace Core::LinAlg
         }
       }(size);
 
-      using ValueType = TensorType::value_type;
+      using ValueType = std::remove_cv_t<typename TensorType::value_type>;
 
       auto container = tensor.container();
       SymmetricTensor<ValueType, symmetric_size, symmetric_size> symmetric_tensor(
@@ -684,6 +817,29 @@ namespace Core::LinAlg
       const auto a_dyadic_a = self_dyadic<2>(a);
       return dyadic(a_dyadic_a, a_dyadic_a);
     }
+  }
+
+  template <typename Tensor>
+    requires(Internal::is_symmetric_tensor<Tensor> && Tensor::rank() == 2)
+  auto eig(const Tensor& t)
+  {
+    // Lapack uses this tensor to compute the eigenvectors
+    auto eigenvectors = get_full(t);
+
+    constexpr std::size_t size = Tensor::template extent<0>();
+
+
+    std::array<double, size> eigenvalues;
+    // ----- perform eigendecomposition ----- //
+    const int lwork = 2 * size * size + 6 * size + 1;
+    std::array<double, lwork> work;
+    int info;
+    Teuchos::LAPACK<int, double> lapack;
+    lapack.SYEV(
+        'V', 'U', size, eigenvectors.data(), size, eigenvalues.data(), work.data(), lwork, &info);
+    FOUR_C_ASSERT_ALWAYS(info == 0, "Eigenvalue decomposition failed with error code {}", info);
+
+    return std::make_tuple(eigenvalues, eigenvectors);
   }
 }  // namespace Core::LinAlg
 

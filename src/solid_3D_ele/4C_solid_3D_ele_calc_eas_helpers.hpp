@@ -14,6 +14,7 @@
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_fixedsizematrix_generators.hpp"
+#include "4C_linalg_tensor_generators.hpp"
 #include "4C_solid_3D_ele_calc_lib.hpp"
 
 #include <cstring>
@@ -254,7 +255,7 @@ namespace Discret::Elements
   Core::LinAlg::Matrix<Discret::Elements::num_str<celltype>,
       Discret::Elements::EasTypeToNumEas<eastype>::num_eas>
   evaluate_eas_shape_functions_parameter_space(
-      const Core::LinAlg::Matrix<Discret::Elements::num_dim<celltype>, 1>& xi)
+      const Core::LinAlg::Tensor<double, Discret::Elements::num_dim<celltype>>& xi)
   {
     Core::LinAlg::Matrix<Discret::Elements::num_str<celltype>,
         Discret::Elements::EasTypeToNumEas<eastype>::num_eas>
@@ -418,7 +419,7 @@ namespace Discret::Elements
       Discret::Elements::EasTypeToNumEas<eastype>::num_eas>
   evaluate_eas_shape_functions_material_config(const double detJ,
       const Discret::Elements::CentroidTransformation<celltype>& centroid_transformation,
-      const Core::LinAlg::Matrix<Discret::Elements::num_dim<celltype>, 1>& xi)
+      const Core::LinAlg::Tensor<double, Discret::Elements::num_dim<celltype>>& xi)
   {
     Core::LinAlg::Matrix<Discret::Elements::num_str<celltype>,
         Discret::Elements::EasTypeToNumEas<eastype>::num_eas>
@@ -443,7 +444,7 @@ namespace Discret::Elements
    * @return Core::LinAlg::Matrix<num_str, 1>  : enhanced Green-Lagrange strains E^{enh}
    */
   template <Core::FE::CellType celltype, Discret::Elements::EasType eastype>
-  Core::LinAlg::Matrix<Discret::Elements::num_str<celltype>, 1>
+  Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
   evaluate_enhanced_assumed_gl_strains(
       const Core::LinAlg::Matrix<Discret::Elements::num_str<celltype>,
           Discret::Elements::EasTypeToNumEas<eastype>::num_eas>& Mtilde,
@@ -452,7 +453,11 @@ namespace Discret::Elements
     Core::LinAlg::Matrix<Discret::Elements::num_str<celltype>, 1> enhanced_gl_strain(
         Core::LinAlg::Initialization::uninitialized);
     enhanced_gl_strain.multiply(Mtilde, alpha);
-    return enhanced_gl_strain;
+
+    Core::LinAlg::Voigt::Strains::to_stress_like(enhanced_gl_strain, enhanced_gl_strain);
+    Core::LinAlg::SymmetricTensor<double, 3, 3> gl_strain_eas_tensor;
+    std::ranges::copy_n(enhanced_gl_strain.data(), 6, gl_strain_eas_tensor.data());
+    return gl_strain_eas_tensor;
   }
 
   /*!
@@ -465,23 +470,22 @@ namespace Discret::Elements
    * @return Core::LinAlg::Matrix<num_str, 1> : Enhanced Green-Lagrange strains E^{enh}
    */
   template <Core::FE::CellType celltype, Discret::Elements::EasType eastype>
-  Core::LinAlg::Matrix<Discret::Elements::num_str<celltype>, 1> evaluate_gl_strains_with_eas(
+  Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+  evaluate_gl_strains_with_eas(
       const Discret::Elements::SpatialMaterialMapping<celltype>& displacement_based_mapping,
       const Core::LinAlg::Matrix<Discret::Elements::num_str<celltype>,
           Discret::Elements::EasTypeToNumEas<eastype>::num_eas>& Mtilde,
       const Core::LinAlg::Matrix<Discret::Elements::EasTypeToNumEas<eastype>::num_eas, 1>& alpha)
   {
-    const Core::LinAlg::Matrix<Discret::Elements::num_dim<celltype>,
+    const Core::LinAlg::SymmetricTensor<double, Discret::Elements::num_dim<celltype>,
         Discret::Elements::num_dim<celltype>>
         displacement_based_cauchygreen =
             Discret::Elements::evaluate_cauchy_green<celltype>(displacement_based_mapping);
 
-    Core::LinAlg::Matrix<Discret::Elements::num_str<celltype>, 1> gl_strain =
-        Discret::Elements::evaluate_green_lagrange_strain(displacement_based_cauchygreen);
-
-    // Add enhanced strains
-    gl_strain.update(
-        1.0, evaluate_enhanced_assumed_gl_strains<celltype, eastype>(Mtilde, alpha), 1.0);
+    Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+        gl_strain =
+            Discret::Elements::evaluate_green_lagrange_strain(displacement_based_cauchygreen) +
+            evaluate_enhanced_assumed_gl_strains<celltype, eastype>(Mtilde, alpha);
 
     return gl_strain;
   }
@@ -512,14 +516,15 @@ namespace Discret::Elements
     Core::LinAlg::Matrix<Discret::Elements::num_str<celltype>,
         Discret::Elements::EasTypeToNumEas<eastype>::num_eas>
         cmatM(Core::LinAlg::Initialization::zero);
-    cmatM.multiply(stress.cmat_, Mtilde);
+    cmatM.multiply(Core::LinAlg::make_stress_like_voigt_view(stress.cmat_), Mtilde);
     eas_iteration_data.invKaa.multiply_tn(integration_factor, Mtilde, cmatM, 1.);
 
     // integrate Kda: Kda += (B^T . cmat . Mtilde) * detJ * w(gp)
     eas_iteration_data.Kda.multiply_tn(integration_factor, Bop, cmatM, 1.);
 
     // integrate s: s += (Mtilde^T . S) * detJ * w(gp)
-    eas_iteration_data.s.multiply_tn(integration_factor, Mtilde, stress.pk2_, 1.);
+    eas_iteration_data.s.multiply_tn(
+        integration_factor, Mtilde, Core::LinAlg::make_stress_like_voigt_view(stress.pk2_), 1.);
   }
 
   /*!
@@ -570,8 +575,9 @@ namespace Discret::Elements
     static constexpr int num_str = Core::FE::dim<celltype> * (Core::FE::dim<celltype> + 1) / 2;
     static constexpr int num_dof_per_ele = Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>;
     Core::LinAlg::Matrix<num_str, num_dof_per_ele> b_op{};
-    Core::LinAlg::Matrix<num_str, 1> enhanced_gl{};
-    Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+    Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+        enhanced_gl{};
+    Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
         enhanced_deformation_gradient{};
     Core::LinAlg::Matrix<num_str, Discret::Elements::EasTypeToNumEas<eastype>::num_eas> m_tilde{};
   };
@@ -581,7 +587,7 @@ namespace Discret::Elements
   EASKinematics<celltype, eastype> evaluate_eas_kinematics(
       const Discret::Elements::ElementNodes<celltype> nodal_coordinates,
       const Discret::Elements::CentroidTransformation<celltype>& centeroid_transformation,
-      const Core::LinAlg::Matrix<Core::FE::dim<celltype>, 1>& xi,
+      const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
       const Discret::Elements::JacobianMapping<celltype>& jacobian_mapping,
       const Discret::Elements::EasIterationData<celltype, eastype>& eas_iteration_data)
   {
@@ -615,15 +621,16 @@ namespace Discret::Elements
       eas_kinematics.m_tilde = evaluate_eas_shape_functions_material_config<celltype, eastype>(
           jacobian_mapping.determinant_, centeroid_transformation, xi);
 
-      Core::LinAlg::Matrix<Discret::Elements::num_str<celltype>, 1> gl_strain_displacement_based =
-          evaluate_linear_gl_strain(nodal_coordinates, eas_kinematics.b_op);
+      Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+          gl_strain_displacement_based =
+              evaluate_linear_gl_strain(nodal_coordinates, eas_kinematics.b_op);
 
       eas_kinematics.enhanced_gl = gl_strain_displacement_based;
       eas_kinematics.enhanced_gl += evaluate_enhanced_assumed_gl_strains<celltype, eastype>(
           eas_kinematics.m_tilde, eas_iteration_data.alpha);
 
-      eas_kinematics.enhanced_deformation_gradient =
-          Core::LinAlg::identity_matrix<Core::FE::dim<celltype>>();
+      eas_kinematics.enhanced_deformation_gradient = Core::LinAlg::get_full(
+          Core::LinAlg::identity<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>);
     }
     else
     {

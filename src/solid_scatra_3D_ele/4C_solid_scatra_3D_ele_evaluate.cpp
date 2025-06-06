@@ -158,8 +158,8 @@ int Discret::Elements::SolidScatra::evaluate_neumann(Teuchos::ParameterList& par
 
 double Discret::Elements::SolidScatra::get_normal_cauchy_stress_at_xi(
     const std::vector<double>& disp, const std::vector<double>& scalars,
-    const Core::LinAlg::Matrix<3, 1>& xi, const Core::LinAlg::Matrix<3, 1>& n,
-    const Core::LinAlg::Matrix<3, 1>& dir,
+    const Core::LinAlg::Tensor<double, 3>& xi, const Core::LinAlg::Tensor<double, 3>& n,
+    const Core::LinAlg::Tensor<double, 3>& dir,
     Discret::Elements::SolidScatraCauchyNDirLinearizations<3>& linearizations)
 {
   return Discret::Elements::get_normal_cauchy_stress_at_xi(solid_scatra_calc_variant_, *this,

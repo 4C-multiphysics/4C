@@ -10,6 +10,7 @@
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_utils_interpolation.hpp"
 #include "4C_legacy_enum_definitions_element_actions.hpp"
+#include "4C_linalg_tensor_generators.hpp"
 #include "4C_solid_3D_ele_calc_lib.hpp"
 #include "4C_solid_3D_ele_factory.hpp"
 #include "4C_solid_poro_3D_ele_calc_lib.hpp"
@@ -321,8 +322,9 @@ int Discret::Elements::SolidPoroPressureVelocityBased::evaluate(Teuchos::Paramet
 
 double Discret::Elements::SolidPoroPressureVelocityBased::get_normal_cauchy_stress_at_xi(
     const std::vector<double>& disp, const std::optional<std::vector<double>>& pressures,
-    const Core::LinAlg::Matrix<3, 1>& xi, const Core::LinAlg::Matrix<3, 1>& n,
-    const Core::LinAlg::Matrix<3, 1>& dir, SolidPoroCauchyNDirLinearizations<3>& linearizations)
+    const Core::LinAlg::Tensor<double, 3>& xi, const Core::LinAlg::Tensor<double, 3>& n,
+    const Core::LinAlg::Tensor<double, 3>& dir,
+    SolidPoroCauchyNDirLinearizations<3>& linearizations)
 {
   double cauchy_stress_n_dir = std::visit(
       [&]<typename Interface>(Interface& solid) -> double
@@ -338,7 +340,7 @@ double Discret::Elements::SolidPoroPressureVelocityBased::get_normal_cauchy_stre
 
   if (!pressures) return cauchy_stress_n_dir;
 
-  const double n_dot_dir = n.dot(dir);
+  const double n_dot_dir = n * dir;
 
   using supported_celltypes = Core::FE::CelltypeSequence<Core::FE::CellType::hex8>;
   Core::FE::cell_type_switch<supported_celltypes>(shape(),
@@ -351,7 +353,8 @@ double Discret::Elements::SolidPoroPressureVelocityBased::get_normal_cauchy_stre
         const ShapeFunctionsAndDerivatives<celltype> shape_functions =
             evaluate_shape_functions_and_derivs<celltype>(xi, element_nodes);
 
-        const double pressure_at_xi = Core::FE::interpolate_to_xi<celltype>(xi, *pressures)[0];
+        const double pressure_at_xi = Core::FE::interpolate_to_xi<celltype>(
+            Core::LinAlg::make_matrix_view<3, 1>(xi), *pressures)[0];
 
         cauchy_stress_n_dir += -pressure_at_xi * n_dot_dir;
 
@@ -368,10 +371,10 @@ double Discret::Elements::SolidPoroPressureVelocityBased::get_normal_cauchy_stre
             for (unsigned dim = 0; dim < 3; ++dim)
             {
               if (linearizations.solid.d_cauchyndir_dn)
-                (*linearizations.solid.d_cauchyndir_dn)(dim, 0) -= pressure_at_xi * dir(dim, 0);
+                (*linearizations.solid.d_cauchyndir_dn)(dim, 0) -= pressure_at_xi * dir(dim);
 
               if (linearizations.solid.d_cauchyndir_ddir)
-                (*linearizations.solid.d_cauchyndir_ddir)(dim, 0) -= pressure_at_xi * n(dim, 0);
+                (*linearizations.solid.d_cauchyndir_ddir)(dim, 0) -= pressure_at_xi * n(dim);
 
               if (linearizations.solid.d_cauchyndir_dxi)
                 (*linearizations.solid.d_cauchyndir_dxi)(dim, 0) -=

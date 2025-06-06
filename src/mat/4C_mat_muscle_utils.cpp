@@ -9,6 +9,7 @@
 
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_linalg_tensor.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_function.hpp"
 
@@ -362,7 +363,7 @@ double Mat::Utils::Muscle::evaluate_time_dependent_active_stress_tanh(const doub
 
 double Mat::Utils::Muscle::evaluate_time_space_dependent_active_stress_by_funct(
     const double sigma_max, const Core::Utils::FunctionOfSpaceTime& activation_function,
-    const double t_current, const Core::LinAlg::Matrix<3, 1>& x)
+    const double t_current, const Core::LinAlg::Tensor<double, 3>& x)
 {
   const std::vector<double> x_vec{x(0), x(1), x(2)};
 

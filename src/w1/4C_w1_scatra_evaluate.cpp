@@ -8,6 +8,7 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_extract_values.hpp"
+#include "4C_linalg_tensor.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_material_base.hpp"
 #include "4C_structure_new_elements_paramsinterface.hpp"
@@ -57,7 +58,7 @@ void Discret::Elements::Wall1Scatra::pre_evaluate(Teuchos::ParameterList& params
         std::dynamic_pointer_cast<Core::Mat::Material>(scatraele->material());
     params.set<std::shared_ptr<Core::Mat::Material>>("scatramat", scatramat);
   }
-  Core::LinAlg::Matrix<2, 1> xrefe(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Tensor<double, 2> xrefe{};
   for (int i = 0; i < numnode; ++i)
   {
     const auto& x = nodes()[i]->x();

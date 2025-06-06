@@ -14,6 +14,8 @@
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_inpar_structure.hpp"
 #include "4C_linalg_sparsematrix.hpp"
+#include "4C_linalg_symmetric_tensor.hpp"
+#include "4C_linalg_tensor.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
@@ -48,8 +50,10 @@ namespace
         Discret::Elements::evaluate_jacobian_mapping_centroid(element_nodes);
 
 
-    Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>> jac0stretch;
-    jac0stretch.multiply_tn(jacobian_mapping.inverse_jacobian_, jacobian_mapping.inverse_jacobian_);
+    Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+        jac0stretch = Core::LinAlg::assume_symmetry(
+            Core::LinAlg::transpose(jacobian_mapping.inverse_jacobian_) *
+            jacobian_mapping.inverse_jacobian_);
     const double r_stretch = sqrt(jac0stretch(0, 0));
     const double s_stretch = sqrt(jac0stretch(1, 1));
     const double t_stretch = sqrt(jac0stretch(2, 2));

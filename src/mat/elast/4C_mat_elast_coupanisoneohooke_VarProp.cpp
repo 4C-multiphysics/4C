@@ -9,6 +9,7 @@
 
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_global_data.hpp"
+#include "4C_linalg_tensor.hpp"
 #include "4C_mat_elast_aniso_structuraltensor_strategy.hpp"
 #include "4C_material_parameter_base.hpp"
 #include "4C_utils_function.hpp"
@@ -134,7 +135,7 @@ void Mat::Elastic::CoupAnisoNeoHookeVarProp::add_stress_aniso_principal(
 {
   double time_ = params.get<double>("total time", 0.0);
   const auto& element_center_coordinates_ref =
-      params.get<Core::LinAlg::Matrix<3, 1>>("elecenter_coords_ref");
+      params.get<Core::LinAlg::Tensor<double, 3>>("elecenter_coords_ref");
   double stressFact_ = Global::Problem::instance()
                            ->function_by_id<Core::Utils::FunctionOfSpaceTime>(params_->sourceactiv_)
                            .evaluate(element_center_coordinates_ref.data(), time_, 0);

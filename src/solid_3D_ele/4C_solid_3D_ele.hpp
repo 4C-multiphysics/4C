@@ -186,8 +186,8 @@ namespace Discret::Elements
      * @return double (out) : The scalar Cauchy stress value
      */
     double get_normal_cauchy_stress_at_xi(const std::vector<double>& disp,
-        const Core::LinAlg::Matrix<3, 1>& xi, const Core::LinAlg::Matrix<3, 1>& n,
-        const Core::LinAlg::Matrix<3, 1>& dir, CauchyNDirLinearizations<3>& linearizations);
+        const Core::LinAlg::Tensor<double, 3>& xi, const Core::LinAlg::Tensor<double, 3>& n,
+        const Core::LinAlg::Tensor<double, 3>& dir, CauchyNDirLinearizations<3>& linearizations);
 
     void for_each_gauss_point(Core::FE::Discretization& discretization, std::vector<int>& lm,
         const std::function<void(Mat::So3Material&, double integration_factor, int gp)>& integrator)

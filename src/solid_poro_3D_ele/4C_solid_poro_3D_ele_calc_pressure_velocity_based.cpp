@@ -14,6 +14,7 @@
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
+#include "4C_linalg_tensor_generators.hpp"
 #include "4C_solid_3D_ele_calc_lib.hpp"
 #include "4C_solid_3D_ele_calc_lib_integration.hpp"
 #include "4C_solid_3D_ele_calc_lib_io.hpp"
@@ -373,7 +374,7 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
 
   // Loop over all Gauss points
   for_each_gauss_point(nodal_coordinates, gauss_integration_,
-      [&](const Core::LinAlg::Matrix<num_dim_, 1>& xi,
+      [&](const Core::LinAlg::Tensor<double, num_dim_>& xi,
           const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
           const JacobianMapping<celltype>& jacobian_mapping, double integration_factor, int gp)
       {
@@ -428,7 +429,9 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
 
         // F^-1 * Grad p
         Core::LinAlg::Matrix<num_dim_, 1> FinvGradp(Core::LinAlg::Initialization::zero);
-        FinvGradp.multiply_tn(spatial_material_mapping.inverse_deformation_gradient_, Gradp);
+        FinvGradp.multiply_tn(
+            Core::LinAlg::make_matrix_view(spatial_material_mapping.inverse_deformation_gradient_),
+            Gradp);
 
         Core::LinAlg::Matrix<num_dim_ * num_dim_, num_dim_ * num_nodes_>
             dInverseDeformationGradient_dDisp_Gradp =
@@ -462,8 +465,9 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
             update_internal_force_vector_for_brinkman_flow<celltype>(integration_factor,
                 porofluidmat.viscosity(),
                 spatial_material_mapping.determinant_deformation_gradient_, porosity, fvelder,
-                spatial_material_mapping.inverse_deformation_gradient_, Bop,
-                cauchygreen.inverse_right_cauchy_green_, fstress, *matrix_views.force_vector);
+                Core::LinAlg::make_matrix_view(
+                    spatial_material_mapping.inverse_deformation_gradient_),
+                Bop, cauchygreen.inverse_right_cauchy_green_, fstress, *matrix_views.force_vector);
           }
 
           update_internal_forcevector_with_structure_fluid_coupling_and_reactive_darcy_terms<
@@ -484,9 +488,11 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
           {
             update_stiffness_matrix_for_brinkman_flow<celltype>(integration_factor,
                 porofluidmat.viscosity(),
+
                 spatial_material_mapping.determinant_deformation_gradient_, porosity, fvelder,
-                spatial_material_mapping.inverse_deformation_gradient_, Bop,
-                cauchygreen.inverse_right_cauchy_green_, dPorosity_dDisp, dDetDefGrad_dDisp,
+                Core::LinAlg::make_matrix_view(
+                    spatial_material_mapping.inverse_deformation_gradient_),
+                Bop, cauchygreen.inverse_right_cauchy_green_, dPorosity_dDisp, dDetDefGrad_dDisp,
                 dInverseRightCauchyGreen_dDisp, dInverseDeformationGradientTransposed_dDisp,
                 fstress, *matrix_views.K_displacement_displacement);
           }
@@ -642,7 +648,7 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
 
   // Loop over all Gauss points
   for_each_gauss_point(nodal_coordinates, gauss_integration_,
-      [&](const Core::LinAlg::Matrix<num_dim_, 1>& xi,
+      [&](const Core::LinAlg::Tensor<double, num_dim_>& xi,
           const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
           const JacobianMapping<celltype>& jacobian_mapping, double integration_factor, int gp)
       {
@@ -696,12 +702,14 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
         // F^-T * grad p
         Core::LinAlg::Matrix<num_dim_, 1> Finvgradp;
         Finvgradp.multiply_tn(
-            spatial_material_mapping.inverse_deformation_gradient_, pressure_gradient);
+            Core::LinAlg::make_matrix_view(spatial_material_mapping.inverse_deformation_gradient_),
+            pressure_gradient);
 
         // F^-T * N_XYZ
         Core::LinAlg::Matrix<num_dim_, num_nodes_> FinvNXYZ;
         FinvNXYZ.multiply_tn(
-            spatial_material_mapping.inverse_deformation_gradient_, jacobian_mapping.N_XYZ_);
+            Core::LinAlg::make_matrix_view(spatial_material_mapping.inverse_deformation_gradient_),
+            jacobian_mapping.N_XYZ_);
 
         Core::LinAlg::Matrix<num_dim_, num_dim_> reatensor(Core::LinAlg::Initialization::zero);
         Core::LinAlg::Matrix<num_dim_, num_dim_> linreac_dporosity(
@@ -780,7 +788,7 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
 
   // Loop over all Gauss points
   for_each_gauss_point(nodal_coordinates, gauss_integration_,
-      [&](const Core::LinAlg::Matrix<num_dim_, 1>& xi,
+      [&](const Core::LinAlg::Tensor<double, num_dim_>& xi,
           const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
           const JacobianMapping<celltype>& jacobian_mapping, double integration_factor, int gp)
       {
@@ -792,26 +800,31 @@ void Discret::Elements::SolidPoroPressureVelocityBasedEleCalc<celltype,
         double fluid_press = shape_functions.shapefunctions_.dot(fluid_variables.fluidpress_nodal);
 
         // coupling part of homogenized 2 Piola-Kirchhoff stress (3D)
-        Core::LinAlg::Matrix<num_str_, 1> pk2_couplstress_gp(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+            pk2_couplstress_gp{};
 
+        auto pk2_couplstress_view = Core::LinAlg::make_stress_like_voigt_view(pk2_couplstress_gp);
         porostructmat.coupl_stress(
-            spatial_material_mapping.deformation_gradient_, fluid_press, pk2_couplstress_gp);
+            Core::LinAlg::make_matrix_view(spatial_material_mapping.deformation_gradient_),
+            fluid_press, pk2_couplstress_view);
 
         // return gp stresses
         switch (couplingstressIO.type)
         {
           case Inpar::Solid::stress_2pk:
           {
-            for (int i = 0; i < num_str_; ++i) (couplstress_data)(gp, i) = pk2_couplstress_gp(i);
+            Internal::assemble_symmetric_tensor_to_matrix_row(
+                pk2_couplstress_gp, couplstress_data, gp);
           }
           break;
           case Inpar::Solid::stress_cauchy:
           {
             // push forward of material stress to the spatial configuration
-            Core::LinAlg::Matrix<num_str_, 1> cauchycouplstressvector;
-            Solid::Utils::pk2_to_cauchy(pk2_couplstress_gp,
-                spatial_material_mapping.deformation_gradient_, cauchycouplstressvector);
-            Internal::assemble_vector_to_matrix_row(cauchycouplstressvector, couplstress_data, gp);
+            Core::LinAlg::SymmetricTensor<double, 3, 3> cauchycouplstress =
+                Solid::Utils::pk2_to_cauchy(
+                    pk2_couplstress_gp, spatial_material_mapping.deformation_gradient_);
+            Internal::assemble_symmetric_tensor_to_matrix_row(
+                cauchycouplstress, couplstress_data, gp);
           }
           break;
           case Inpar::Solid::stress_none:

@@ -8,6 +8,7 @@
 #include "4C_mixture_prestress_strategy_isocyl.hpp"
 
 #include "4C_linalg_fixedsizematrix_generators.hpp"
+#include "4C_linalg_tensor.hpp"
 #include "4C_mat_anisotropy.hpp"
 #include "4C_mat_anisotropy_coordinate_system_provider.hpp"
 #include "4C_mat_elast_isoneohooke.hpp"
@@ -108,7 +109,7 @@ void Mixture::IsotropicCylinderPrestressStrategy::evaluate_prestress(const Mixtu
         "strategy!");
   }
 
-  const auto& reference_coordinates = params.get<Core::LinAlg::Matrix<3, 1>>("gp_coords_ref");
+  const auto& reference_coordinates = params.get<Core::LinAlg::Tensor<double, 3>>("gp_coords_ref");
 
   double r = 0;
   for (unsigned i = 0; i < 3; ++i)

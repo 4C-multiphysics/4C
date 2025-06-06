@@ -12,6 +12,7 @@
 #include "4C_contact_nitsche_utils.hpp"
 #include "4C_contact_node.hpp"
 #include "4C_contact_paramsinterface.hpp"
+#include "4C_linalg_tensor_generators.hpp"
 #include "4C_mat_structporo.hpp"
 #include "4C_solid_3D_ele.hpp"
 #include "4C_solid_poro_3D_ele_pressure_velocity_based.hpp"
@@ -187,8 +188,9 @@ void CONTACT::IntegratorNitschePoro::so_ele_cauchy(Mortar::Element& moEle, doubl
       cauchy_linearizations.d_cauchyndir_ddir = &dsntdt;
       cauchy_linearizations.d_cauchyndir_dxi = &dsntdpxi;
 
-      sigma_nt = solid_ele->get_normal_cauchy_stress_at_xi(
-          moEle.mo_data().parent_disp(), pxsi, normal, direction, cauchy_linearizations);
+      sigma_nt = solid_ele->get_normal_cauchy_stress_at_xi(moEle.mo_data().parent_disp(),
+          Core::LinAlg::reinterpret_matrix<3>(pxsi), Core::LinAlg::reinterpret_matrix<3>(normal),
+          Core::LinAlg::reinterpret_matrix<3>(direction), cauchy_linearizations);
     }
     else if (auto* solid_ele = dynamic_cast<Discret::Elements::SolidPoroPressureVelocityBased*>(
                  moEle.parent_element());
@@ -201,7 +203,9 @@ void CONTACT::IntegratorNitschePoro::so_ele_cauchy(Mortar::Element& moEle, doubl
       cauchy_linearizations.solid.d_cauchyndir_dxi = &dsntdpxi;
 
       sigma_nt = solid_ele->get_normal_cauchy_stress_at_xi(moEle.mo_data().parent_disp(),
-          std::nullopt, pxsi, normal, direction, cauchy_linearizations);
+          std::nullopt, Core::LinAlg::reinterpret_matrix<3>(pxsi),
+          Core::LinAlg::reinterpret_matrix<3>(normal),
+          Core::LinAlg::reinterpret_matrix<3>(direction), cauchy_linearizations);
     }
     else
     {
@@ -222,7 +226,9 @@ void CONTACT::IntegratorNitschePoro::so_ele_cauchy(Mortar::Element& moEle, doubl
       cauchy_linearizations.d_cauchyndir_dp = &dsntdp;
 
       sigma_nt = solid_ele->get_normal_cauchy_stress_at_xi(moEle.mo_data().parent_disp(),
-          moEle.mo_data().parent_pf_pres(), pxsi, normal, direction, cauchy_linearizations);
+          moEle.mo_data().parent_pf_pres(), Core::LinAlg::reinterpret_matrix<3>(pxsi),
+          Core::LinAlg::reinterpret_matrix<3>(normal),
+          Core::LinAlg::reinterpret_matrix<3>(direction), cauchy_linearizations);
     }
     else
     {

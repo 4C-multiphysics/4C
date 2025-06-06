@@ -12,6 +12,8 @@
 #include "4C_fem_general_cell_type.hpp"
 #include "4C_fem_general_cell_type_traits.hpp"
 #include "4C_fem_general_utils_local_connectivity_matrices.hpp"
+#include "4C_linalg_tensor.hpp"
+#include "4C_linalg_tensor_generators.hpp"
 #include "4C_mat_electrode.hpp"
 #include "4C_scatra_ele_boundary_calc_elch_electrode_utils.hpp"
 #include "4C_scatra_ele_parameter_boundary.hpp"
@@ -215,11 +217,13 @@ double CONTACT::IntegratorNitscheSsiElch::calculate_det_f_of_parent_element(
     const ElementDataBundle<dim>& electrode_quantities)
 {
   auto* electrode_ele = electrode_quantities.element;
-  const auto xi_parent = Core::FE::calculate_parent_gp_from_face_element_data<dim>(
-      electrode_quantities.xi, electrode_ele);
+  const Core::LinAlg::Tensor<double, dim> xi_parent =
+      Core::LinAlg::make_tensor_view<dim>(Core::FE::calculate_parent_gp_from_face_element_data<dim>(
+          electrode_quantities.xi, electrode_ele)
+              .data());
 
   // calculate defgrad based on element discretization type
-  const Core::LinAlg::Matrix<dim, dim> defgrd = Core::FE::cell_type_switch<
+  const Core::LinAlg::Tensor<double, dim, dim> defgrd = Core::FE::cell_type_switch<
       Core::FE::CelltypeSequence<Core::FE::CellType::hex8, Core::FE::CellType::tet4>>(
       electrode_ele->parent_element()->shape(),
       [&](auto celltype_t)
@@ -239,7 +243,7 @@ double CONTACT::IntegratorNitscheSsiElch::calculate_det_f_of_parent_element(
         return Discret::Elements::evaluate_deformation_gradient(jacobian_mapping, element_nodes);
       });
 
-  return defgrd.determinant();
+  return Core::LinAlg::det(defgrd);
 }
 
 /*----------------------------------------------------------------------*

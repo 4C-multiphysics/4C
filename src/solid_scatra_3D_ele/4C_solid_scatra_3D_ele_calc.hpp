@@ -88,8 +88,8 @@ namespace Discret::Elements
 
     double get_normal_cauchy_stress_at_xi(const Core::Elements::Element& ele,
         Mat::So3Material& solid_material, const std::vector<double>& disp,
-        const std::vector<double>& scalars, const Core::LinAlg::Matrix<3, 1>& xi,
-        const Core::LinAlg::Matrix<3, 1>& n, const Core::LinAlg::Matrix<3, 1>& dir,
+        const std::vector<double>& scalars, const Core::LinAlg::Tensor<double, 3>& xi,
+        const Core::LinAlg::Tensor<double, 3>& n, const Core::LinAlg::Tensor<double, 3>& dir,
         SolidScatraCauchyNDirLinearizations<3>& linearizations);
 
    private:

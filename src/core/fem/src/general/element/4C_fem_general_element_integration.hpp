@@ -19,6 +19,7 @@
 #include "4C_fem_general_utils_nurbs_shapefunctions.hpp"
 #include "4C_fem_nurbs_discretization_utils.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_linalg_tensor.hpp"
 #include "4C_utils_exceptions.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -99,10 +100,10 @@ namespace Core::Elements
    * parameter space
    */
   template <Core::FE::CellType celltype>
-  Core::LinAlg::Matrix<Core::FE::dim<celltype>, 1> evaluate_parameter_coordinate(
+  Core::LinAlg::Tensor<double, Core::FE::dim<celltype>> evaluate_parameter_coordinate(
       const Core::FE::GaussIntegration& intpoints, const int gp)
   {
-    Core::LinAlg::Matrix<Core::FE::dim<celltype>, 1> xi;
+    Core::LinAlg::Tensor<double, Core::FE::dim<celltype>> xi;
     for (int d = 0; d < Core::FE::dim<celltype>; ++d) xi(d) = intpoints.point(gp)[d];
 
     return xi;
@@ -130,7 +131,7 @@ namespace Core::Elements
    */
   template <Core::FE::CellType celltype, unsigned dim>
   ShapeFunctionsAndDerivatives<celltype> evaluate_shape_functions_and_derivs(
-      const Core::LinAlg::Matrix<Core::FE::dim<celltype>, 1>& xi,
+      const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
       const ElementNodes<celltype, dim>& nodal_coordinates)
     requires(Core::FE::use_lagrange_shapefnct<celltype>)
   {
@@ -143,7 +144,7 @@ namespace Core::Elements
 
   template <Core::FE::CellType celltype, unsigned dim>
   ShapeFunctionsAndDerivatives<celltype> evaluate_shape_functions_and_derivs(
-      const Core::LinAlg::Matrix<Core::FE::dim<celltype>, 1>& xi,
+      const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
       const ElementNodes<celltype, dim>& nodal_coordinates)
     requires(Core::FE::is_nurbs<celltype>)
   {
@@ -196,7 +197,7 @@ namespace Core::Elements
    */
   template <unsigned dim, Core::FE::CellType celltype, typename T>
   concept GaussPointEvaluatable = requires(T gp_evaluator,
-      Core::LinAlg::Matrix<Core::FE::dim<celltype>, 1> xi,
+      Core::LinAlg::Tensor<double, Core::FE::dim<celltype>> xi,
       const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
       const JacobianMapping<celltype, dim>& jacobian_mapping, double integration_factor, int gp) {
     { gp_evaluator(xi, shape_functions, jacobian_mapping, integration_factor, gp) };
@@ -237,7 +238,7 @@ namespace Core::Elements
   {
     for (int gp = 0; gp < integration.num_points(); ++gp)
     {
-      const Core::LinAlg::Matrix<Core::FE::dim<celltype>, 1> xi =
+      const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>> xi =
           evaluate_parameter_coordinate<celltype>(integration, gp);
 
       const ShapeFunctionsAndDerivatives<celltype> shape_functions =

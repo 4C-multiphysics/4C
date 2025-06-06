@@ -49,7 +49,7 @@ namespace Discret::Elements
     template <typename Evaluator>
     static auto evaluate(const Core::Elements::Element& ele,
         const ElementNodes<celltype>& element_nodes,
-        const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+        const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
         const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
         const JacobianMapping<celltype>& jacobian_mapping, MulfHistoryData<celltype>& history_data,
         Evaluator evaluator)
@@ -64,11 +64,11 @@ namespace Discret::Elements
           evaluate_mulf_spatial_material_mapping(
               jacobian_mapping, shape_functions, element_nodes.displacements, history_data);
 
-      const Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>> cauchygreen =
-          evaluate_cauchy_green<celltype>(spatial_material_mapping);
+      const Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+          cauchygreen = evaluate_cauchy_green<celltype>(spatial_material_mapping);
 
-      const Core::LinAlg::Matrix<Internal::num_str<celltype>, 1> gl_strain =
-          evaluate_green_lagrange_strain(cauchygreen);
+      const Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+          gl_strain = evaluate_green_lagrange_strain(cauchygreen);
 
       Core::LinAlg::Matrix<Internal::num_str<celltype>,
           Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>>
@@ -101,7 +101,8 @@ namespace Discret::Elements
           linearization.Bop, stress, integration_factor, force_vector);
     }
 
-    static void add_stiffness_matrix(const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+    static void add_stiffness_matrix(
+        const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
         const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
         const MulfLinearizationContainer<celltype>& linearization,
         const JacobianMapping<celltype>& jacobian_mapping, const Stress<celltype>& stress,
@@ -118,44 +119,35 @@ namespace Discret::Elements
     static void pack(
         const MulfHistoryData<celltype>& history_data, Core::Communication::PackBuffer& data)
     {
-      add_to_pack(data, history_data.inverse_jacobian);
-      add_to_pack(data, history_data.deformation_gradient);
-      add_to_pack(data, history_data.is_setup);
+      add_to_pack(data, history_data);
     }
 
     static void unpack(
         Core::Communication::UnpackBuffer& buffer, MulfHistoryData<celltype>& history_data)
     {
-      extract_from_pack(buffer, history_data.inverse_jacobian);
-      extract_from_pack(buffer, history_data.deformation_gradient);
-      extract_from_pack(buffer, history_data.is_setup);
+      extract_from_pack(buffer, history_data);
     }
 
     static inline void update_prestress(const Core::Elements::Element& ele,
         const ElementNodes<celltype>& element_nodes,
-        const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+        const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
         const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
         const JacobianMapping<celltype>& jacobian_mapping,
-        const Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>>&
-            deformation_gradient,
+        const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>,
+            Internal::num_dim<celltype>>& deformation_gradient,
         MulfHistoryData<celltype>& history_data)
     {
-      Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>> delta_defgrd =
+      Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>> delta_defgrd =
           evaluate_mulf_deformation_gradient_update(
               shape_functions, element_nodes.displacements, history_data);
 
       // update mulf history data only if prestress is active
-      Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>> inv_delta_defgrd(
-          delta_defgrd);
-      inv_delta_defgrd.invert();
-
-
-      Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>> invJ_new;
-
-      invJ_new.multiply_tn(inv_delta_defgrd, history_data.inverse_jacobian);
+      Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+          inv_delta_defgrd = Core::LinAlg::inv(delta_defgrd);
 
       history_data.deformation_gradient = deformation_gradient;
-      history_data.inverse_jacobian = std::move(invJ_new);
+      history_data.inverse_jacobian =
+          Core::LinAlg::transpose(inv_delta_defgrd) * history_data.inverse_jacobian;
     }
   };
 

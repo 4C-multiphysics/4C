@@ -70,7 +70,7 @@ void Discret::Elements::SolidPoroPressureBasedEleCalc<celltype>::evaluate_nonlin
 
   // Loop over all Gauss points
   for_each_gauss_point(nodal_coordinates, gauss_integration_,
-      [&](const Core::LinAlg::Matrix<num_dim_, 1>& xi,
+      [&](const Core::LinAlg::Tensor<double, num_dim_>& xi,
           const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
           const JacobianMapping<celltype>& jacobian_mapping, double integration_factor, int gp)
       {
@@ -190,7 +190,7 @@ void Discret::Elements::SolidPoroPressureBasedEleCalc<
 
   // Loop over all Gauss points
   for_each_gauss_point(nodal_coordinates, gauss_integration_,
-      [&](const Core::LinAlg::Matrix<num_dim_, 1>& xi,
+      [&](const Core::LinAlg::Tensor<double, num_dim_>& xi,
           const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
           const JacobianMapping<celltype>& jacobian_mapping, double integration_factor, int gp
 

@@ -400,9 +400,9 @@ namespace Discret::Elements
       std::void_t<decltype(std::declval<T>()->get_normal_cauchy_stress_at_xi(
           std::declval<const Core::Elements::Element&>(), std::declval<Mat::So3Material&>(),
           std::declval<const std::vector<double>&>(),
-          std::declval<const Core::LinAlg::Matrix<dim, 1>&>(),
-          std::declval<const Core::LinAlg::Matrix<dim, 1>&>(),
-          std::declval<const Core::LinAlg::Matrix<dim, 1>&>(),
+          std::declval<const Core::LinAlg::Tensor<double, dim>&>(),
+          std::declval<const Core::LinAlg::Tensor<double, dim>&>(),
+          std::declval<const Core::LinAlg::Tensor<double, dim>&>(),
           std::declval<CauchyNDirLinearizations<dim>&>()))>> = true;
 
   namespace Internal
@@ -411,9 +411,9 @@ namespace Discret::Elements
     struct EvaluateCauchyNDirAction
     {
       EvaluateCauchyNDirAction(const Core::Elements::Element& e, Mat::So3Material& m,
-          const std::vector<double>& d, const Core::LinAlg::Matrix<dim, 1>& x,
-          const Core::LinAlg::Matrix<dim, 1>& normal, const Core::LinAlg::Matrix<dim, 1>& direction,
-          CauchyNDirLinearizations<dim>& lins)
+          const std::vector<double>& d, const Core::LinAlg::Tensor<double, dim>& x,
+          const Core::LinAlg::Tensor<double, dim>& normal,
+          const Core::LinAlg::Tensor<double, dim>& direction, CauchyNDirLinearizations<dim>& lins)
           : element(e), mat(m), disp(d), xi(x), n(normal), dir(direction), linearizations(lins)
       {
       }
@@ -439,9 +439,9 @@ namespace Discret::Elements
       const Core::Elements::Element& element;
       Mat::So3Material& mat;
       const std::vector<double>& disp;
-      const Core::LinAlg::Matrix<dim, 1>& xi;
-      const Core::LinAlg::Matrix<dim, 1>& n;
-      const Core::LinAlg::Matrix<dim, 1>& dir;
+      const Core::LinAlg::Tensor<double, dim>& xi;
+      const Core::LinAlg::Tensor<double, dim>& n;
+      const Core::LinAlg::Tensor<double, dim>& dir;
       CauchyNDirLinearizations<dim>& linearizations;
     };
   }  // namespace Internal
@@ -455,8 +455,8 @@ namespace Discret::Elements
   template <typename VariantType>
   double get_normal_cauchy_stress_at_xi(VariantType& variant,
       const Core::Elements::Element& element, Mat::So3Material& mat,
-      const std::vector<double>& disp, const Core::LinAlg::Matrix<3, 1>& xi,
-      const Core::LinAlg::Matrix<3, 1>& n, const Core::LinAlg::Matrix<3, 1>& dir,
+      const std::vector<double>& disp, const Core::LinAlg::Tensor<double, 3>& xi,
+      const Core::LinAlg::Tensor<double, 3>& n, const Core::LinAlg::Tensor<double, 3>& dir,
       CauchyNDirLinearizations<3>& linearizations)
   {
     return std::visit(

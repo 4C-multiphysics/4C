@@ -11,72 +11,44 @@
 #include "4C_inpar_structure.hpp"
 #include "4C_io_input_parameter_container.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
+#include "4C_linalg_symmetric_tensor.hpp"
+#include "4C_linalg_tensor_generators.hpp"
 #include "4C_linalg_utils_densematrix_eigen.hpp"
 #include "4C_solid_3D_ele_properties.hpp"
+
+#include <algorithm>
 
 FOUR_C_NAMESPACE_OPEN
 
 
-void Solid::Utils::pk2_to_cauchy(const Core::LinAlg::Matrix<6, 1>& pk2,
-    const Core::LinAlg::Matrix<3, 3>& defgrd, Core::LinAlg::Matrix<6, 1>& cauchy)
+Core::LinAlg::SymmetricTensor<double, 3, 3> Solid::Utils::pk2_to_cauchy(
+    const Core::LinAlg::SymmetricTensor<double, 3, 3>& pk2,
+    const Core::LinAlg::Tensor<double, 3, 3>& defgrd)
 {
-  Core::LinAlg::Matrix<3, 3> S_matrix;
-  Core::LinAlg::Voigt::Stresses::vector_to_matrix(pk2, S_matrix);
-
-  Core::LinAlg::Matrix<3, 3> FS;
-  FS.multiply_nn(defgrd, S_matrix);
-
-  Core::LinAlg::Matrix<3, 3> cauchy_matrix;
-  cauchy_matrix.multiply_nt(1.0 / defgrd.determinant(), FS, defgrd, 0.0);
-
-  Core::LinAlg::Voigt::Stresses::matrix_to_vector(cauchy_matrix, cauchy);
+  return Core::LinAlg::assume_symmetry(defgrd * pk2 * Core::LinAlg::transpose(defgrd)) /
+         Core::LinAlg::det(defgrd);
 }
 
-Core::LinAlg::Matrix<6, 1> Solid::Utils::green_lagrange_to_euler_almansi(
-    const Core::LinAlg::Matrix<6, 1>& gl, const Core::LinAlg::Matrix<3, 3>& defgrd)
+Core::LinAlg::SymmetricTensor<double, 3, 3> Solid::Utils::green_lagrange_to_euler_almansi(
+    const Core::LinAlg::SymmetricTensor<double, 3, 3>& gl,
+    const Core::LinAlg::Tensor<double, 3, 3>& defgrd)
 {
-  Core::LinAlg::Matrix<3, 3> invdefgrd(defgrd);
-  invdefgrd.invert();
+  Core::LinAlg::Tensor<double, 3, 3> invdefgrd = Core::LinAlg::inv(defgrd);
 
-  Core::LinAlg::Matrix<3, 3> E_matrix;
-  Core::LinAlg::Voigt::Strains::vector_to_matrix(gl, E_matrix);
-
-  Core::LinAlg::Matrix<3, 3> iFTE;
-  iFTE.multiply_tn(invdefgrd, E_matrix);
-
-  Core::LinAlg::Matrix<3, 3> ea_matrix;
-  ea_matrix.multiply_nn(iFTE, invdefgrd);
-
-  Core::LinAlg::Matrix<6, 1> ea;
-  Core::LinAlg::Voigt::Strains::matrix_to_vector(ea_matrix, ea);
-  return ea;
+  return Core::LinAlg::assume_symmetry(Core::LinAlg::transpose(invdefgrd) * gl * invdefgrd);
 }
 
-Core::LinAlg::Matrix<6, 1> Solid::Utils::green_lagrange_to_log_strain(
-    const Core::LinAlg::Matrix<6, 1>& gl)
+Core::LinAlg::SymmetricTensor<double, 3, 3> Solid::Utils::green_lagrange_to_log_strain(
+    const Core::LinAlg::SymmetricTensor<double, 3, 3>& gl)
 {
-  Core::LinAlg::Matrix<3, 3> E_matrix;
-  Core::LinAlg::Voigt::Strains::vector_to_matrix(gl, E_matrix);
-
-  Core::LinAlg::Matrix<3, 3> pr_strain(
-      Core::LinAlg::Initialization::zero);  // squared principal strains
-  Core::LinAlg::Matrix<3, 3> pr_dir(Core::LinAlg::Initialization::zero);  // principal directions
-  Core::LinAlg::syev(E_matrix, pr_strain, pr_dir);
+  auto [eigenvalues, eigenvectors] = Core::LinAlg::eig(gl);
 
   // compute principal logarithmic strains
-  Core::LinAlg::Matrix<3, 3> pr_log_strain(Core::LinAlg::Initialization::zero);
-  for (int i = 0; i < 3; ++i) pr_log_strain(i, i) = std::log(std::sqrt(2 * pr_strain(i, i) + 1.0));
+  std::ranges::for_each(
+      eigenvalues, [](double& value) { value = std::log(std::sqrt(2 * value + 1.0)); });
 
-  // create logarithmic strain matrix
-  Core::LinAlg::Matrix<3, 3> log_strain_matrix(Core::LinAlg::Initialization::zero);
-  Core::LinAlg::Matrix<3, 3> VH(Core::LinAlg::Initialization::uninitialized);
-  VH.multiply_nn(pr_dir, pr_log_strain);
-  log_strain_matrix.multiply_nt(VH, pr_dir);
-
-  // convert to strain-like voigt notation
-  Core::LinAlg::Matrix<6, 1> log_strain_voigt(Core::LinAlg::Initialization::zero);
-  Core::LinAlg::Voigt::Strains::matrix_to_vector(log_strain_matrix, log_strain_voigt);
-  return log_strain_voigt;
+  const auto eig = Core::LinAlg::diagonal(eigenvalues);
+  return Core::LinAlg::assume_symmetry(eigenvectors * eig * Core::LinAlg::transpose(eigenvectors));
 }
 
 int Solid::Utils::ReadElement::read_element_material(

@@ -11,6 +11,7 @@
 #include "4C_config.hpp"
 
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_linalg_tensor.hpp"
 #include "4C_utils_function.hpp"
 
 #include <unordered_map>
@@ -266,7 +267,7 @@ namespace Mat::Utils::Muscle
    */
   double evaluate_time_space_dependent_active_stress_by_funct(const double sigma_max,
       const Core::Utils::FunctionOfSpaceTime& activation_function, const double t_current,
-      const Core::LinAlg::Matrix<3, 1>& x);
+      const Core::LinAlg::Tensor<double, 3>& x);
 
   /*!
    * @brief Evaluate the time- and space-dependent optimal (i.e. maximal) active stress through

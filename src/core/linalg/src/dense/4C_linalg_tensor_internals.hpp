@@ -187,9 +187,9 @@ namespace Core::LinAlg
     /*!
      * @brief Create a copy of a view
      */
+    template <typename NumberOther>
     TensorInternal(
-        const TensorInternal<std::remove_cv_t<Number>, TensorStorageType::view, Compression, n...>&
-            other)
+        const TensorInternal<NumberOther, TensorStorageType::view, Compression, n...>& other)
       requires(storage_type == TensorStorageType::owning)
     {
       std::ranges::copy(other.container(), data_.begin());
@@ -233,7 +233,7 @@ namespace Core::LinAlg
      * @param i
      * @return Number&
      */
-    [[nodiscard]] Number& operator()(decltype(n)... i);
+    [[nodiscard]] constexpr Number& operator()(decltype(n)... i);
 
     /*!
      * @brief Indexing operator to access individual values of the tensor in readonly mode
@@ -242,7 +242,7 @@ namespace Core::LinAlg
      * @param i
      * @return Number&
      */
-    [[nodiscard]] const Number& operator()(decltype(n)... i) const;
+    [[nodiscard]] constexpr const Number& operator()(decltype(n)... i) const;
 
     /*!
      * @brief Indexing operator to access individual values of the tensor (with bound checks)
@@ -250,7 +250,7 @@ namespace Core::LinAlg
      * @param i
      * @return Number&
      */
-    [[nodiscard]] Number& at(decltype(n)... i);
+    [[nodiscard]] constexpr Number& at(decltype(n)... i);
 
     /*!
      * @brief Indexing operator to access individual values of the tensor in readonly mode
@@ -259,7 +259,7 @@ namespace Core::LinAlg
      * @param i
      * @return Number&
      */
-    [[nodiscard]] const Number& at(decltype(n)... i) const;
+    [[nodiscard]] constexpr const Number& at(decltype(n)... i) const;
 
     [[nodiscard]] static constexpr std::size_t rank() { return rank_; }
     [[nodiscard]] static constexpr std::size_t size() { return size_; }
@@ -326,26 +326,28 @@ namespace Core::LinAlg
   }
 
   template <typename Number, TensorStorageType storage_type, typename Compression, std::size_t... n>
-  Number& TensorInternal<Number, storage_type, Compression, n...>::operator()(decltype(n)... i)
+  constexpr Number& TensorInternal<Number, storage_type, Compression, n...>::operator()(
+      decltype(n)... i)
   {
     return data_[Compression::template flatten_index<Internal::TensorBoundCheck::no_check>(i...)];
   }
 
   template <typename Number, TensorStorageType storage_type, typename Compression, std::size_t... n>
-  const Number& TensorInternal<Number, storage_type, Compression, n...>::operator()(
+  constexpr const Number& TensorInternal<Number, storage_type, Compression, n...>::operator()(
       decltype(n)... i) const
   {
     return data_[Compression::template flatten_index<Internal::TensorBoundCheck::no_check>(i...)];
   }
 
   template <typename Number, TensorStorageType storage_type, typename Compression, std::size_t... n>
-  Number& TensorInternal<Number, storage_type, Compression, n...>::at(decltype(n)... i)
+  constexpr Number& TensorInternal<Number, storage_type, Compression, n...>::at(decltype(n)... i)
   {
     return data_[Compression::template flatten_index<Internal::TensorBoundCheck::check>(i...)];
   }
 
   template <typename Number, TensorStorageType storage_type, typename Compression, std::size_t... n>
-  const Number& TensorInternal<Number, storage_type, Compression, n...>::at(decltype(n)... i) const
+  constexpr const Number& TensorInternal<Number, storage_type, Compression, n...>::at(
+      decltype(n)... i) const
   {
     return data_[Compression::template flatten_index<Internal::TensorBoundCheck::check>(i...)];
   }

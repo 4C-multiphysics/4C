@@ -14,6 +14,7 @@
 #include "4C_fem_general_utils_gausspoints.hpp"
 #include "4C_fem_general_utils_local_connectivity_matrices.hpp"
 #include "4C_global_data.hpp"
+#include "4C_linalg_tensor.hpp"
 #include "4C_solid_3D_ele_calc_lib_integration.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_function.hpp"
@@ -74,7 +75,7 @@ void Discret::Elements::evaluate_neumann(Core::Elements::Element& element,
       Core::Elements::evaluate_element_nodes<celltype, dim>(discretization, element);
 
   Core::Elements::for_each_gauss_point<celltype, dim>(element_nodes, gauss_integration,
-      [&](const Core::LinAlg::Matrix<Core::FE::dim<celltype>, 1>& xi,
+      [&](const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
           const Core::Elements::ShapeFunctionsAndDerivatives<celltype>& shape_functions,
           const Core::Elements::JacobianMapping<celltype, dim>& jacobian_mapping,
           double integration_factor, int gp)

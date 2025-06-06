@@ -18,6 +18,8 @@
 #include "4C_io_gmsh.hpp"          // for debug plotting with gmsh
 #include "4C_linalg_fixedsizematrix_solver.hpp"
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
+#include "4C_linalg_tensor.hpp"
+#include "4C_linalg_tensor_generators.hpp"
 #include "4C_linalg_utils_densematrix_multiply.hpp"
 #include "4C_mat_constraintmixture_history.hpp"
 #include "4C_mat_par_bundle.hpp"
@@ -751,7 +753,7 @@ void Mat::ConstraintMixture::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
         params_->elastindegrad_ == "Wedge" || params_->elastindegrad_ == "Circles")
     {
       const auto& ele_center_reference_coordinates =
-          params.get<Core::LinAlg::Matrix<3, 1>>("elecenter_coords_ref");
+          params.get<Core::LinAlg::Tensor<double, 3>>("elecenter_coords_ref");
 
       elastin_degradation(ele_center_reference_coordinates, elastin_survival);
     }
@@ -767,7 +769,7 @@ void Mat::ConstraintMixture::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
         params_->elastindegrad_ == "Wedge" || params_->elastindegrad_ == "Circles")
     {
       const auto& gp_reference_coordinates =
-          params.get<Core::LinAlg::Matrix<3, 1>>("gp_coords_ref");
+          params.get<Core::LinAlg::Tensor<double, 3>>("gp_coords_ref");
 
       elastin_degradation(gp_reference_coordinates, elastin_survival);
     }
@@ -2057,7 +2059,7 @@ void Mat::ConstraintMixture::degradation(double t, double& degr)
  |  elastin_degradation                            (private)        05/13|
  *----------------------------------------------------------------------*/
 void Mat::ConstraintMixture::elastin_degradation(
-    Core::LinAlg::Matrix<3, 1> coord, double& elastin_survival) const
+    Core::LinAlg::Tensor<double, 3> coord, double& elastin_survival) const
 {
   if (params_->elastindegrad_ == "Rectangle")
   {
@@ -2192,7 +2194,7 @@ void Mat::ConstraintMixture::elastin_degradation(
     center2(0) = -12.0;
     center2(1) = 0.0;
     center2(2) = -10.0;
-    diff.update_t(coord);
+    diff.update_t(Core::LinAlg::make_matrix_view<3, 1>(coord));
     diff.update(-1.0, center2, 1.0);
     double rad2 = diff.norm2();
     if (rad2 < radmin)
@@ -3070,7 +3072,7 @@ bool Mat::ConstraintMixture::vis_data(
       {
         Core::Nodes::Node* locnode = mynodes[idnodes];
         double elastin_survival = 0.0;
-        Core::LinAlg::Matrix<3, 1> point_refe;
+        Core::LinAlg::Tensor<double, 3> point_refe;
         point_refe(0) = locnode->x()[0];
         point_refe(1) = locnode->x()[1];
         point_refe(2) = locnode->x()[2];

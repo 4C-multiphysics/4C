@@ -14,6 +14,7 @@
 #include "4C_fem_general_cell_type_traits.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
+#include "4C_linalg_tensor_generators.hpp"
 #include "4C_solid_3D_ele_calc_lib.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -33,7 +34,8 @@ namespace Discret::Elements
 
     Core::LinAlg::Matrix<Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>, 1> Hop{};
 
-    Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>> cauchygreen{};
+    Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+        cauchygreen{};
 
     double fbar_factor = 1.0;
   };
@@ -80,12 +82,13 @@ namespace Discret::Elements
     requires(Core::FE::dim<celltype> == 3)
   {
     // inverse deformation gradient at centroid
-    Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>> invdefgrd_centroid;
-    invdefgrd_centroid.invert(spatial_material_mapping_centroid.deformation_gradient_);
+    Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+        invdefgrd_centroid =
+            Core::LinAlg::inv(spatial_material_mapping_centroid.deformation_gradient_);
 
     // inverse deformation gradient at gp
-    Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>> invdefgrd;
-    invdefgrd.invert(spatial_material_mapping.deformation_gradient_);
+    Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>> invdefgrd =
+        Core::LinAlg::inv(spatial_material_mapping.deformation_gradient_);
 
     Core::LinAlg::Matrix<Core::FE::dim<celltype> * Core::FE::num_nodes(celltype), 1> Hop(
         Core::LinAlg::Initialization::zero);
@@ -123,26 +126,25 @@ namespace Discret::Elements
           Core::FE::dim<celltype> * Core::FE::num_nodes(celltype)>& Bop,
       const Core::LinAlg::Matrix<Core::FE::dim<celltype> * Core::FE::num_nodes(celltype), 1>& Hop,
       const double f_bar_factor, const double integration_fac,
-      const Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>> cauchyGreen,
+      const Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+          cauchyGreen,
       const Discret::Elements::Stress<celltype> stress_bar,
       Core::LinAlg::Matrix<Core::FE::dim<celltype> * Core::FE::num_nodes(celltype),
           Core::FE::dim<celltype> * Core::FE::num_nodes(celltype)>& stiffness_matrix)
   {
     constexpr int num_dof_per_ele = Core::FE::dim<celltype> * Core::FE::num_nodes(celltype);
 
-    Core::LinAlg::Matrix<Core::FE::dim<celltype>*(Core::FE::dim<celltype> + 1) / 2, 1>
-        rcg_bar_voigt;
-    Core::LinAlg::Voigt::Strains::matrix_to_vector(cauchyGreen, rcg_bar_voigt);
-
-    Core::LinAlg::Matrix<Core::FE::dim<celltype>*(Core::FE::dim<celltype> + 1) / 2, 1> ccg;
-    ccg.multiply_nn(stress_bar.cmat_, rcg_bar_voigt);
+    Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>> ccg =
+        Core::LinAlg::ddot(stress_bar.cmat_, cauchyGreen);
 
     // auxiliary integrated stress_bar
     Core::LinAlg::Matrix<num_dof_per_ele, 1> bopccg(Core::LinAlg::Initialization::uninitialized);
-    bopccg.multiply_tn(integration_fac * f_bar_factor / 3.0, Bop, ccg);
+    bopccg.multiply_tn(integration_fac * f_bar_factor / 3.0, Bop,
+        Core::LinAlg::make_stress_like_voigt_view(ccg));  // TODO Stress or strain?
 
     Core::LinAlg::Matrix<num_dof_per_ele, 1> bops(Core::LinAlg::Initialization::uninitialized);
-    bops.multiply_tn(-integration_fac / f_bar_factor / 3.0, Bop, stress_bar.pk2_);
+    bops.multiply_tn(-integration_fac / f_bar_factor / 3.0, Bop,
+        Core::LinAlg::make_stress_like_voigt_view(stress_bar.pk2_));
 
     for (int idof = 0; idof < num_dof_per_ele; idof++)
     {
