@@ -17,7 +17,8 @@ namespace
 
   TEST(Exodus, MeshCubeHex)
   {
-    Core::IO::Exodus::Mesh mesh(TESTING::get_support_file_path("test_files/exodus/cube.exo"));
+    Core::IO::Exodus::Mesh mesh(
+        TESTING::get_support_file_path("test_files/exodus/cube.exo"), false);
 
     EXPECT_EQ(mesh.get_num_element_blocks(), 2);
     EXPECT_EQ(mesh.get_node_sets().size(), 1);
@@ -32,7 +33,7 @@ namespace
 
   TEST(Exodus, NodeOffset)
   {
-    Core::IO::Exodus::Mesh mesh(TESTING::get_support_file_path("test_files/exodus/cube.exo"),
+    Core::IO::Exodus::Mesh mesh(TESTING::get_support_file_path("test_files/exodus/cube.exo"), false,
         Core::IO::Exodus::MeshParameters{.node_start_id = 100});
     EXPECT_EQ(mesh.get_node(100), (std::vector<double>{-5.0, 0.0, 0.0}));
     EXPECT_EQ(mesh.get_element_block(1).elements.at(1),

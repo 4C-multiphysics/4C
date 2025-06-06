@@ -1037,6 +1037,7 @@ void Core::IO::MeshReader::read_and_partition()
 
       const auto& geometry_data = data.group(exodus_reader->section_name);
       const auto& exodus_file = geometry_data.get<std::filesystem::path>("FILE");
+      const auto& exodus_verbosity = geometry_data.get<bool>("SHOWINFO");
       if (mesh)
       {
         FOUR_C_ASSERT_ALWAYS(mesh_file == exodus_file,
@@ -1047,11 +1048,11 @@ void Core::IO::MeshReader::read_and_partition()
       else
       {
         mesh_file = exodus_file;
-        mesh = std::make_unique<Core::IO::Exodus::Mesh>(
-            exodus_file.string(), Core::IO::Exodus::MeshParameters{
-                                      // We internally depend on node numbers starting at 0.
-                                      .node_start_id = 0,
-                                  });
+        mesh = std::make_unique<Core::IO::Exodus::Mesh>(exodus_file.string(), exodus_verbosity,
+            Core::IO::Exodus::MeshParameters{
+                // We internally depend on node numbers starting at 0.
+                .node_start_id = 0,
+            });
       }
       exodus_reader->mesh_on_rank_zero = mesh;
     }

@@ -48,7 +48,8 @@ namespace Core::IO::Exodus
      * Read the data from the Exodus file and store it in the class. The optional @p
      * mesh_data can be used to set options documented in the MeshParameters struct.
      */
-    Mesh(std::filesystem::path exodus_file, MeshParameters mesh_parameters = {});
+    Mesh(std::filesystem::path exodus_file, bool exodus_verbosity,
+        MeshParameters mesh_parameters = {});
 
     //! Print mesh info
     void print(std::ostream& os, bool verbose = false) const;
