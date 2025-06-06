@@ -4,6 +4,7 @@ PROBLEM SIZE:
   DIM: 3
 STRUCTURE GEOMETRY:
   FILE: "tutorial_solid_geo.e"
+  SHOWINFO: true
   ELEMENT_BLOCKS:
     - ID: 1
       ELEMENT_NAME: SOLID
