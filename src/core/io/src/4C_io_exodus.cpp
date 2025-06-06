@@ -129,6 +129,11 @@ Core::IO::Exodus::Mesh::Mesh(std::filesystem::path exodus_file, MeshParameters m
   error = ex_get_init(exo_handle, title, &spatial_dimension_, &num_nodes, &num_elem_, &num_elem_blk,
       &num_node_sets, &num_side_sets);
   title_ = std::string(title);
+  std::cout << "Start reading exodus file " << exodus_file.string() << " entitled <<" << title_
+            << ">>,\nmodelled in " << spatial_dimension_ << " dimensions with \n"
+            << num_nodes << " nodes, " << num_elem_ << " elements, " << num_elem_blk
+            << " element blocks, \n"
+            << num_node_sets << " node sets, " << num_side_sets << " side sets" << std::endl;
 
   // get nodal coordinates
   {
@@ -136,7 +141,7 @@ Core::IO::Exodus::Mesh::Mesh(std::filesystem::path exodus_file, MeshParameters m
     std::vector<double> y(num_nodes);
     std::vector<double> z(num_nodes);
     error = ex_get_coord(exo_handle, x.data(), y.data(), z.data());
-    if (error != 0) FOUR_C_THROW("exo error returned");
+    if (error != 0) FOUR_C_THROW("error reading exodus node coordinates");
 
     FOUR_C_ASSERT_ALWAYS(
         mesh_parameters_.node_start_id >= 0, "Node start id must be greater than or equal to 0");
@@ -152,9 +157,9 @@ Core::IO::Exodus::Mesh::Mesh(std::filesystem::path exodus_file, MeshParameters m
     std::vector<int> epropID(num_elem_blk);
     std::vector<int> ebids(num_elem_blk);
     error = ex_get_ids(exo_handle, EX_ELEM_BLOCK, ebids.data());
-    if (error != 0) FOUR_C_THROW("exo error returned");
-    error = ex_get_prop_array(exo_handle, EX_ELEM_BLOCK, "ID", epropID.data());
-    if (error != 0) FOUR_C_THROW("exo error returned");
+    if (error != 0) FOUR_C_THROW("Error reading exodus element block IDs");
+    // error = ex_get_prop_array(exo_handle, EX_ELEM_BLOCK, "ID", epropID.data());
+    // if (error != 0) FOUR_C_THROW("Error reading element block properties");
     for (int i = 0; i < num_elem_blk; ++i)
     {
       // Read Element Blocks into Map
@@ -162,20 +167,20 @@ Core::IO::Exodus::Mesh::Mesh(std::filesystem::path exodus_file, MeshParameters m
       int num_el_in_blk, num_nod_per_elem, num_attr;
       error = ex_get_block(exo_handle, EX_ELEM_BLOCK, ebids[i], mychar, &num_el_in_blk,
           &num_nod_per_elem, nullptr, nullptr, &num_attr);
-      if (error != 0) FOUR_C_THROW("exo error returned");
+      if (error != 0) FOUR_C_THROW("Error reading exodus element block information");
       // prefer std::string to store element type
       std::string ele_type(mychar);
 
       // get ElementBlock name
       error = ex_get_name(exo_handle, EX_ELEM_BLOCK, ebids[i], mychar);
-      if (error != 0) FOUR_C_THROW("exo error returned");
+      if (error != 0) FOUR_C_THROW("Error reading exodus element block name");
       // prefer std::string to store name
       std::string blockname(mychar);
 
       // get element elements
       std::vector<int> allconn(num_nod_per_elem * num_el_in_blk);
       error = ex_get_conn(exo_handle, EX_ELEM_BLOCK, ebids[i], allconn.data(), nullptr, nullptr);
-      if (error != 0) FOUR_C_THROW("exo error returned");
+      if (error != 0) FOUR_C_THROW("Error reading exodus element connection ");
       std::map<int, std::vector<int>> eleconn;
 
       // Compare the desired start ID to Exodus' one-based indexing to get the offset.
@@ -215,6 +220,8 @@ Core::IO::Exodus::Mesh::Mesh(std::filesystem::path exodus_file, MeshParameters m
       error = ex_get_name(exo_handle, EX_NODE_SET, npropID[i], mychar);
       // prefer std::string to store name
       std::string nodesetname(mychar);
+      std::cout << "NodeSet " << i << ": name=" << nodesetname << "," << num_nodes_in_set
+                << " nodes" << std::endl;
 
       // get nodes in node set
       std::vector<int> node_set_node_list(num_nodes_in_set);
@@ -223,7 +230,7 @@ Core::IO::Exodus::Mesh::Mesh(std::filesystem::path exodus_file, MeshParameters m
         std::cout << "'ex_get_set' for EX_NODE_SET returned warning while reading node set "
                   << npropID[i] << std::endl;
       else if (error < 0)
-        FOUR_C_THROW("error reading node set");
+        FOUR_C_THROW("Error reading exodus node set ID {}", npropID[i]);
       std::set<int> nodes_in_set;
       // Compare the desired start ID to Exodus' one-based indexing to get the offset.
       const int node_offset = mesh_parameters_.node_start_id - 1;
@@ -260,7 +267,7 @@ Core::IO::Exodus::Mesh::Mesh(std::filesystem::path exodus_file, MeshParameters m
       std::vector<int> side_set_side_list(num_side_in_set);
       error = ex_get_set(exo_handle, EX_SIDE_SET, spropID[i], side_set_elem_list.data(),
           side_set_side_list.data());
-      if (error != 0) FOUR_C_THROW("error reading side set");
+      if (error != 0) FOUR_C_THROW("Error reading exodus side set ID {}", spropID[i]);
       std::map<int, std::vector<int>> sides_in_set;
       for (int j = 0; j < num_side_in_set; ++j)
       {
