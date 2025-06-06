@@ -52,7 +52,7 @@ PoroPressureBased::setup_discretizations_and_field_coupling_porofluid_elast(MPI_
 
     // get coupling method
     auto arterycoupl =
-        Teuchos::getIntegralValue<Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod>(
+        Teuchos::getIntegralValue<Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod>(
             problem->poro_fluid_multi_phase_dynamic_params().sublist("ARTERY COUPLING"),
             "ARTERY_COUPLING_METHOD");
 
@@ -75,9 +75,9 @@ PoroPressureBased::setup_discretizations_and_field_coupling_porofluid_elast(MPI_
 
     switch (arterycoupl)
     {
-      case Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::gpts:
-      case Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::mp:
-      case Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::ntp:
+      case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::gpts:
+      case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mp:
+      case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp:
       {
         // perform extended ghosting on artery discretization
         nearby_ele_pairs = PoroPressureBased::extended_ghosting_artery_discretization(

@@ -68,14 +68,14 @@ namespace Inpar
       SD
     };
 
-    //! type of coupling between artery network and poromultiphasescatra-framework
-    enum ArteryPoroMultiphaseScatraCouplingMethod
+    //! coupling between artery network and pressure-based porofluid-elasticity-scatra problem
+    enum ArteryPorofluidElastScatraCouplingMethod
     {
       none,   // none
       nodal,  // nodal
-      gpts,   // Gauss-Point-To-Segment
-      mp,     // Mortar-Penalty
-      ntp     // 1Dnode-to-point in 2D/3D
+      gpts,   // Gauss-point-to-segment
+      mp,     // mortar-penalty
+      ntp     // 1D node-to-point in 2D/3D
     };
 
     /// set the artnet parameters

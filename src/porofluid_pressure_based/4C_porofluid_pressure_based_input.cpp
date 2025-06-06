@@ -217,18 +217,18 @@ void PoroPressureBased::set_valid_parameters_porofluid(
                                            .default_value = 1000.0}),
 
 
-          deprecated_selection<Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod>(
+          deprecated_selection<Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod>(
               "ARTERY_COUPLING_METHOD",
               {
-                  {"None", Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::none},
-                  {"Nodal", Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::nodal},
-                  {"GPTS", Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::gpts},
-                  {"MP", Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::mp},
-                  {"NTP", Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::ntp},
+                  {"None", Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::none},
+                  {"Nodal", Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::nodal},
+                  {"GPTS", Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::gpts},
+                  {"MP", Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mp},
+                  {"NTP", Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp},
               },
               {.description = "Coupling method for artery coupling.",
                   .default_value =
-                      Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::none}),
+                      Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::none}),
 
           // coupled artery dofs for mesh tying
           parameter<std::string>("COUPLEDDOFS_ART",

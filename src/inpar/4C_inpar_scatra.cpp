@@ -378,18 +378,18 @@ void Inpar::ScaTra::set_valid_parameters(std::map<std::string, Core::IO::InputSp
       "SCALAR TRANSPORT DYNAMIC/ARTERY COUPLING",
       {
 
-          deprecated_selection<Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod>(
+          deprecated_selection<Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod>(
               "ARTERY_COUPLING_METHOD",
               {
-                  {"None", Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::none},
-                  {"Nodal", Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::nodal},
-                  {"GPTS", Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::gpts},
-                  {"MP", Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::mp},
-                  {"NTP", Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::ntp},
+                  {"None", Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::none},
+                  {"Nodal", Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::nodal},
+                  {"GPTS", Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::gpts},
+                  {"MP", Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mp},
+                  {"NTP", Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp},
               },
               {.description = "Coupling method for artery coupling.",
                   .default_value =
-                      Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::none}),
+                      Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::none}),
 
           // penalty parameter
           parameter<double>("PENALTY", {.description = "Penalty parameter for line-based coupling",

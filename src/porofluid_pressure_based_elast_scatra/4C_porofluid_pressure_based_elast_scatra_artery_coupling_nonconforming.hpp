@@ -29,7 +29,7 @@ namespace Core::LinAlg
 namespace PoroPressureBased
 {
   // forward declaration
-  class PoroMultiPhaseScatraArteryCouplingPairBase;
+  class PorofluidElastScatraArteryCouplingPairBase;
 
   //! Non-conforming coupling between artery network and porofluid-elasticity-scatra algorithm
   class PorofluidElastScatraArteryCouplingNonConformingAlgorithm
@@ -105,13 +105,13 @@ namespace PoroPressureBased
     double threshold_delete_free_hanging_elements_;
 
     //! interacting pairs of artery and continuous-discretization elements
-    std::vector<std::shared_ptr<PoroMultiPhaseScatraArteryCouplingPairBase>> coupled_ele_pairs_;
+    std::vector<std::shared_ptr<PorofluidElastScatraArteryCouplingPairBase>> coupled_ele_pairs_;
 
     //! vector with 1D coupling nodes for node-to-point coupling
     std::vector<int> coupling_nodes_for_node_to_point_;
 
     //! type of coupling method
-    Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod artery_coupling_method_;
+    Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod artery_coupling_method_;
 
     //! phinp for artery discretization
     std::shared_ptr<const Core::LinAlg::Vector<double>> phinp_art_;
@@ -181,7 +181,7 @@ namespace PoroPressureBased
 
     //! return appropriate internal implementation class
     //! (acts as a simple factory to create single pairs)
-    static std::shared_ptr<PoroMultiPhaseScatraArteryCouplingPairBase>
+    static std::shared_ptr<PorofluidElastScatraArteryCouplingPairBase>
     create_new_artery_coupling_pair(std::vector<Core::Elements::Element const*> const& elements);
 
     //! set the artery diameter in material to be able to use it on 1D discretization
