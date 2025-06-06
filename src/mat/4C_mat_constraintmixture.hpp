@@ -12,6 +12,7 @@
 #include "4C_config.hpp"
 
 #include "4C_comm_parobjectfactory.hpp"
+#include "4C_linalg_tensor.hpp"
 #include "4C_mat_so3_material.hpp"
 #include "4C_material_parameter_base.hpp"
 
@@ -427,8 +428,8 @@ namespace Mat
 
     /// function of elastin degradation (initial)
     void elastin_degradation(
-        Core::LinAlg::Matrix<3, 1> coord,  ///< gp coordinate in reference configuration
-        double& elastin_survival           ///< amount of elastin which is still there
+        Core::LinAlg::Tensor<double, 3> coord,  ///< gp coordinate in reference configuration
+        double& elastin_survival                ///< amount of elastin which is still there
     ) const;
 
     /// compute stress and cmat for implicit integration with whole stress as driving force

@@ -239,8 +239,9 @@ double CONTACT::Utils::solid_cauchy_at_xi(CONTACT::Element* cele,
         solid_ele != nullptr)
     {
       Discret::Elements::CauchyNDirLinearizations<3> cauchy_linearizations{};
-      sigma_nt = solid_ele->get_normal_cauchy_stress_at_xi(
-          cele->mo_data().parent_disp(), pxsi, n, dir, cauchy_linearizations);
+      sigma_nt = solid_ele->get_normal_cauchy_stress_at_xi(cele->mo_data().parent_disp(),
+          Core::LinAlg::reinterpret_matrix<3>(pxsi), Core::LinAlg::reinterpret_matrix<3>(n),
+          Core::LinAlg::reinterpret_matrix<3>(dir), cauchy_linearizations);
     }
     else
     {
@@ -256,7 +257,9 @@ double CONTACT::Utils::solid_cauchy_at_xi(CONTACT::Element* cele,
       Discret::Elements::SolidPoroCauchyNDirLinearizations<3> cauchy_linearizations{};
 
       sigma_nt = solid_ele->get_normal_cauchy_stress_at_xi(cele->mo_data().parent_disp(),
-          cele->mo_data().parent_pf_pres(), pxsi, n, dir, cauchy_linearizations);
+          cele->mo_data().parent_pf_pres(), Core::LinAlg::make_tensor_view<3>(pxsi.data()),
+          Core::LinAlg::make_tensor_view<3>(n.data()),
+          Core::LinAlg::make_tensor_view<3>(dir.data()), cauchy_linearizations);
     }
     else
     {

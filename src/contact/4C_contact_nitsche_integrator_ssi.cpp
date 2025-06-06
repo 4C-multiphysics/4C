@@ -218,7 +218,9 @@ void CONTACT::IntegratorNitscheSsi::so_ele_cauchy_struct(Mortar::Element& mortar
             "element)!");
 
         return solid_scatra_ele->get_normal_cauchy_stress_at_xi(mortar_ele.mo_data().parent_disp(),
-            mortar_ele.mo_data().parent_scalar(), parent_xi, gp_normal, test_dir, linearizations);
+            mortar_ele.mo_data().parent_scalar(), Core::LinAlg::reinterpret_matrix<3>(parent_xi),
+            Core::LinAlg::reinterpret_matrix<3>(gp_normal),
+            Core::LinAlg::reinterpret_matrix<3>(test_dir), linearizations);
       });
 
   cauchy_nt_wgt += nitsche_wgt * sigma_nt;

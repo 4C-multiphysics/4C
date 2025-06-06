@@ -9,6 +9,7 @@
 
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_global_data.hpp"
+#include "4C_linalg_tensor.hpp"
 #include "4C_mat_anisotropy_extension.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_material_base.hpp"
@@ -139,7 +140,7 @@ void Mat::Elastic::AnisoActiveStressEvolution::add_stress_aniso_principal(
       FOUR_C_THROW("Parameter 'total time' could not be read!");
     }
     const auto& element_center_coordinates_ref =
-        params.get<Core::LinAlg::Matrix<3, 1>>("elecenter_coords_ref");
+        params.get<Core::LinAlg::Tensor<double, 3>>("elecenter_coords_ref");
     activationFunction =
         Global::Problem::instance()
             ->function_by_id<Core::Utils::FunctionOfSpaceTime>(params_->sourceactiv_)

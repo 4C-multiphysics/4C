@@ -13,6 +13,7 @@
 #include "4C_contact_node.hpp"
 #include "4C_contact_paramsinterface.hpp"
 #include "4C_fem_general_utils_boundary_integration.hpp"
+#include "4C_linalg_tensor_generators.hpp"
 #include "4C_linalg_utils_densematrix_multiply.hpp"
 #include "4C_mat_elasthyper.hpp"
 #include "4C_solid_3D_ele.hpp"
@@ -479,8 +480,10 @@ void CONTACT::IntegratorNitsche::so_ele_cauchy(Mortar::Element& moEle, double* b
 
     auto* solid_ele = dynamic_cast<Discret::Elements::Solid*>(moEle.parent_element());
     FOUR_C_ASSERT_ALWAYS(solid_ele, "Unknown solid element type");
-    const double cauchy_n_dir = solid_ele->get_normal_cauchy_stress_at_xi(
-        moEle.mo_data().parent_disp(), pxsi, normal, direction, linearizations);
+    const double cauchy_n_dir =
+        solid_ele->get_normal_cauchy_stress_at_xi(moEle.mo_data().parent_disp(),
+            Core::LinAlg::reinterpret_matrix<3>(pxsi), Core::LinAlg::reinterpret_matrix<3>(normal),
+            Core::LinAlg::reinterpret_matrix<3>(direction), linearizations);
 
     cauchy_nt += w * cauchy_n_dir;
 

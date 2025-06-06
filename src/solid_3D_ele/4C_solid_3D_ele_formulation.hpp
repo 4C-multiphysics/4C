@@ -327,7 +327,7 @@ namespace Discret::Elements
   template <typename SolidFormulation, Core::FE::CellType celltype, typename Evaluator>
   inline auto evaluate(const Core::Elements::Element& ele,
       const ElementNodes<celltype>& element_nodes,
-      const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+      const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>>& xi,
       const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
       const JacobianMapping<celltype>& jacobian_mapping,
       const PreparationData<SolidFormulation>& preparation_data,
@@ -352,7 +352,7 @@ namespace Discret::Elements
   template <typename SolidFormulation, Core::FE::CellType celltype, typename Evaluator>
   inline auto evaluate(const Core::Elements::Element& ele,
       const ElementNodes<celltype>& element_nodes,
-      const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+      const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
       const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
       const JacobianMapping<celltype>& jacobian_mapping,
       const PreparationData<SolidFormulation>& preparation_data,
@@ -373,10 +373,10 @@ namespace Discret::Elements
   inline Core::LinAlg::Matrix<9, Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>>
   evaluate_d_deformation_gradient_d_displacements(const Core::Elements::Element& ele,
       const ElementNodes<celltype>& element_nodes,
-      const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+      const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>>& xi,
       const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
       const JacobianMapping<celltype>& jacobian_mapping,
-      const Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>>&
+      const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>, Internal::num_dim<celltype>>&
           deformation_gradient,
       const PreparationData<SolidFormulation>& preparation_data,
       SolidFormulationHistory<SolidFormulation>& history_data)
@@ -405,10 +405,10 @@ namespace Discret::Elements
   template <typename SolidFormulation, Core::FE::CellType celltype>
   inline Core::LinAlg::Matrix<9, Core::FE::dim<celltype>> evaluate_d_deformation_gradient_d_xi(
       const Core::Elements::Element& ele, const ElementNodes<celltype>& element_nodes,
-      const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+      const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>>& xi,
       const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
       const JacobianMapping<celltype>& jacobian_mapping,
-      const Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>>&
+      const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>, Internal::num_dim<celltype>>&
           deformation_gradient,
       const PreparationData<SolidFormulation>& preparation_data,
       SolidFormulationHistory<SolidFormulation>& history_data)
@@ -440,10 +440,10 @@ namespace Discret::Elements
       Core::FE::num_nodes(celltype) * Core::FE::dim<celltype> * Core::FE::dim<celltype>>
   evaluate_d_deformation_gradient_d_displacements_d_xi(const Core::Elements::Element& ele,
       const ElementNodes<celltype>& element_nodes,
-      const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+      const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>>& xi,
       const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
       const JacobianMapping<celltype>& jacobian_mapping,
-      const Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>>&
+      const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>, Internal::num_dim<celltype>>&
           deformation_gradient,
       const PreparationData<SolidFormulation>& preparation_data,
       SolidFormulationHistory<SolidFormulation>& history_data)
@@ -501,7 +501,7 @@ namespace Discret::Elements
    */
   template <typename SolidFormulation, Core::FE::CellType celltype>
   static inline void add_stiffness_matrix(
-      const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+      const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>>& xi,
       const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
       const typename SolidFormulation::LinearizationContainer& linearization,
       const JacobianMapping<celltype>& jacobian_mapping, const Stress<celltype>& stress,
@@ -730,10 +730,10 @@ namespace Discret::Elements
   template <typename SolidFormulation, Core::FE::CellType celltype>
   static inline void update_prestress(const Core::Elements::Element& ele,
       const ElementNodes<celltype>& element_nodes,
-      const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+      const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>>& xi,
       const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
       const JacobianMapping<celltype>& jacobian_mapping,
-      const Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>>&
+      const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>, Internal::num_dim<celltype>>&
           deformation_gradient,
       const PreparationData<SolidFormulation>& preparation_data,
       SolidFormulationHistory<SolidFormulation>& history_data, [[maybe_unused]] const int gp)

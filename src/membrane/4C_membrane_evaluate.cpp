@@ -13,6 +13,8 @@
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_fixedsizematrix_solver.hpp"
 #include "4C_linalg_fixedsizematrix_tensor_transformation.hpp"
+#include "4C_linalg_tensor.hpp"
+#include "4C_linalg_tensor_generators.hpp"
 #include "4C_linalg_utils_densematrix_eigen.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_mat_membrane_elasthyper.hpp"
@@ -780,15 +782,15 @@ void Discret::Elements::Membrane<distype>::mem_nlnstiffmass(
     if (material()->material_type() == Core::Materials::m_growthremodel_elasthyper)
     {
       // Gauss-point coordinates in reference configuration
-      Core::LinAlg::Matrix<noddof_, 1> gprefecoord(Core::LinAlg::Initialization::zero);
-      gprefecoord.multiply_tn(xrefe, shapefcts);
+      Core::LinAlg::Tensor<double, noddof_> gprefecoord{};
+      Core::LinAlg::make_matrix_view<noddof_, 1>(gprefecoord).multiply_tn(xrefe, shapefcts);
       params.set("gp_coords_ref", gprefecoord);
 
       // center of element in reference configuration
       Core::LinAlg::Matrix<numnod_, 1> funct_center;
       Core::FE::shape_function_2d(funct_center, 0.0, 0.0, distype);
-      Core::LinAlg::Matrix<noddof_, 1> midpoint;
-      midpoint.multiply_tn(xrefe, funct_center);
+      Core::LinAlg::Tensor<double, noddof_> midpoint;
+      Core::LinAlg::make_matrix_view<3, 1>(midpoint).multiply_tn(xrefe, funct_center);
       params.set("elecenter_coords_ref", midpoint);
     }
 

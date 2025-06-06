@@ -215,8 +215,9 @@ namespace Discret::Elements
      * can be made mandatory.
      */
     double get_normal_cauchy_stress_at_xi(const std::vector<double>& disp,
-        const std::optional<std::vector<double>>& pressures, const Core::LinAlg::Matrix<3, 1>& xi,
-        const Core::LinAlg::Matrix<3, 1>& n, const Core::LinAlg::Matrix<3, 1>& dir,
+        const std::optional<std::vector<double>>& pressures,
+        const Core::LinAlg::Tensor<double, 3>& xi, const Core::LinAlg::Tensor<double, 3>& n,
+        const Core::LinAlg::Tensor<double, 3>& dir,
         SolidPoroCauchyNDirLinearizations<3>& linearizations);
 
     void vis_names(std::map<std::string, int>& names) override;

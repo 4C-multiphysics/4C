@@ -14,6 +14,7 @@
 #include "4C_inpar_structure.hpp"
 #include "4C_io_input_spec.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_linalg_symmetric_tensor.hpp"
 #include "4C_solid_3D_ele_properties.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -24,34 +25,37 @@ namespace Solid::Utils
       Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np);
 
   /*!
-   * @brief Converts the 2nd Piola-Kirchhoff stress tensor in stress like Voigt notation to the
-   * Cauchy stress tensor in stress like Voigt notation
+   * @brief Converts the 2nd Piola-Kirchhoff stress tensor to the
+   * Cauchy stress tensor
    *
-   * @param pk2 (in) : 2nd Piola-Kirchhoff stress tensor in stress like Voigt notation
+   * @param pk2 (in) : 2nd Piola-Kirchhoff stress tensor
    * @param defgrd (in) : Deformation gradient
-   * @param cauchy (out) : Cauchy stress tensor in stress like Voigt notation
+   * @return Cauchy stress tensor
    */
-  void pk2_to_cauchy(const Core::LinAlg::Matrix<6, 1>& pk2,
-      const Core::LinAlg::Matrix<3, 3>& defgrd, Core::LinAlg::Matrix<6, 1>& cauchy);
+  Core::LinAlg::SymmetricTensor<double, 3, 3> pk2_to_cauchy(
+      const Core::LinAlg::SymmetricTensor<double, 3, 3>& pk2,
+      const Core::LinAlg::Tensor<double, 3, 3>& defgrd);
 
   /*!
-   * @brief Convert Green Lagrange strain tensor in strain like Voigt notation to Euler-Almansi
-   * strain tensor in strain like Voigt notation.
+   * @brief Convert Green Lagrange strain tensor to Euler-Almansi
+   * strain tensor.
    *
-   * @param gl (in) : Green Lagrange strain tensor in strain like Voigt notation
-   * @return Core::LinAlg::Matrix<6, 1> : Euler-Almansi strain tensor in strain like Voigt notation
+   * @param gl (in) : Green Lagrange strain tensor
+   * @return Core::LinAlg::Matrix<6, 1> : Euler-Almansi strain tensor
    */
-  Core::LinAlg::Matrix<6, 1> green_lagrange_to_euler_almansi(
-      const Core::LinAlg::Matrix<6, 1>& gl, const Core::LinAlg::Matrix<3, 3>& defgrd);
+  Core::LinAlg::SymmetricTensor<double, 3, 3> green_lagrange_to_euler_almansi(
+      const Core::LinAlg::SymmetricTensor<double, 3, 3>& gl,
+      const Core::LinAlg::Tensor<double, 3, 3>& defgrd);
 
   /*!
-   * @brief Convert Green Lagrange strain tensor in strain like Voigt notation to Lograithmic strain
-   * tensor in strain like Voigt notation.
+   * @brief Convert Green Lagrange strain tensor in strain to Lograithmic strain
+   * tensor.
    *
-   * @param gl (in) : Green Lagrange strain tensor in strain like Voigt notation
-   * @return Core::LinAlg::Matrix<6, 1> : Logarithmic strain tensor in strain like Voigt notation
+   * @param gl (in) : Green Lagrange strain tensor
+   * @return Core::LinAlg::Matrix<6, 1> : Logarithmic strain tensor
    */
-  Core::LinAlg::Matrix<6, 1> green_lagrange_to_log_strain(const Core::LinAlg::Matrix<6, 1>& gl);
+  Core::LinAlg::SymmetricTensor<double, 3, 3> green_lagrange_to_log_strain(
+      const Core::LinAlg::SymmetricTensor<double, 3, 3>& gl);
 
   namespace ReadElement
   {

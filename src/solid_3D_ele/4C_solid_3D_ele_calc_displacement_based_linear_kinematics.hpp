@@ -53,28 +53,31 @@ namespace Discret::Elements
     template <typename Evaluator>
     static inline auto evaluate(const Core::Elements::Element& ele,
         const ElementNodes<celltype>& nodal_coordinates,
-        const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+        const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
         const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
         const JacobianMapping<celltype>& jacobian_mapping, Evaluator evaluator)
     {
       const DisplacementBasedLinearKinematicsLinearizationContainer<celltype> linearization{
           Discret::Elements::evaluate_linear_strain_gradient(jacobian_mapping)};
 
-      Core::LinAlg::Matrix<Internal::num_str<celltype>, 1> gl_strain =
-          evaluate_linear_gl_strain(nodal_coordinates, linearization.linear_b_operator_);
+      Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+          gl_strain =
+              evaluate_linear_gl_strain(nodal_coordinates, linearization.linear_b_operator_);
 
       return evaluator(
-          Core::LinAlg::identity_matrix<Core::FE::dim<celltype>>(), gl_strain, linearization);
+          Core::LinAlg::get_full(
+              Core::LinAlg::identity<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>),
+          gl_strain, linearization);
     }
 
     static inline Core::LinAlg::Matrix<9, Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>>
     evaluate_d_deformation_gradient_d_displacements(const Core::Elements::Element& ele,
         const ElementNodes<celltype>& element_nodes,
-        const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+        const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
         const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
         const JacobianMapping<celltype>& jacobian_mapping,
-        const Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>>&
-            deformation_gradient)
+        const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>,
+            Internal::num_dim<celltype>>& deformation_gradient)
     {
       // linearization is zero for small displacements
       return Core::LinAlg::Matrix<9, Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>>(
@@ -84,11 +87,11 @@ namespace Discret::Elements
     static inline Core::LinAlg::Matrix<9, Core::FE::dim<celltype>>
     evaluate_d_deformation_gradient_d_xi(const Core::Elements::Element& ele,
         const ElementNodes<celltype>& element_nodes,
-        const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+        const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
         const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
         const JacobianMapping<celltype>& jacobian_mapping,
-        const Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>>&
-            deformation_gradient)
+        const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>,
+            Internal::num_dim<celltype>>& deformation_gradient)
     {
       // linearization is zero for small displacements
       return Core::LinAlg::Matrix<9, Core::FE::dim<celltype>>(Core::LinAlg::Initialization::zero);
@@ -98,11 +101,11 @@ namespace Discret::Elements
         Core::FE::num_nodes(celltype) * Core::FE::dim<celltype> * Core::FE::dim<celltype>>
     evaluate_d_deformation_gradient_d_displacements_d_xi(const Core::Elements::Element& ele,
         const ElementNodes<celltype>& element_nodes,
-        const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+        const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
         const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
         const JacobianMapping<celltype>& jacobian_mapping,
-        const Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>>&
-            deformation_gradient)
+        const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>,
+            Internal::num_dim<celltype>>& deformation_gradient)
     {
       // linearization is zero for small displacements
       return Core::LinAlg::Matrix<9,
@@ -129,7 +132,8 @@ namespace Discret::Elements
           linearization.linear_b_operator_, stress, integration_factor, force_vector);
     }
 
-    static void add_stiffness_matrix(const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+    static void add_stiffness_matrix(
+        const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
         const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
         const DisplacementBasedLinearKinematicsLinearizationContainer<celltype>& linearization,
         const JacobianMapping<celltype>& jacobian_mapping, const Stress<celltype>& stress,

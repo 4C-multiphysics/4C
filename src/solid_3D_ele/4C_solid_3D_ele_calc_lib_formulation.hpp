@@ -24,10 +24,10 @@ namespace Discret::Elements
    public:
     ElementFormulationDerivativeEvaluator(const Core::Elements::Element& ele,
         const Discret::Elements::ElementNodes<celltype>& element_nodes,
-        const Core::LinAlg::Matrix<3, 1>& xi,
+        const Core::LinAlg::Tensor<double, 3>& xi,
         const Discret::Elements::ShapeFunctionsAndDerivatives<celltype>& shape_functions,
         const Discret::Elements::JacobianMapping<celltype>& jacobian_mapping,
-        const Core::LinAlg::Matrix<3, 3>& deformation_gradient,
+        const Core::LinAlg::Tensor<double, 3, 3>& deformation_gradient,
         const Discret::Elements::PreparationData<SolidFormulation>& preparation_data,
         Discret::Elements::SolidFormulationHistory<SolidFormulation>& history_data)
         : ele_(ele),
@@ -69,10 +69,10 @@ namespace Discret::Elements
    private:
     const Core::Elements::Element& ele_;
     const Discret::Elements::ElementNodes<celltype>& element_nodes_;
-    const Core::LinAlg::Matrix<3, 1>& xi_;
+    const Core::LinAlg::Tensor<double, 3>& xi_;
     const Discret::Elements::ShapeFunctionsAndDerivatives<celltype>& shape_functions_;
     const Discret::Elements::JacobianMapping<celltype>& jacobian_mapping_;
-    const Core::LinAlg::Matrix<3, 3>& deformation_gradient_;
+    const Core::LinAlg::Tensor<double, 3, 3>& deformation_gradient_;
     const Discret::Elements::PreparationData<SolidFormulation>& preparation_data_;
     Discret::Elements::SolidFormulationHistory<SolidFormulation>& history_data_;
   };

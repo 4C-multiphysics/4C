@@ -12,6 +12,7 @@
 #include "4C_linalg_fixedsizematrix_tensor_derivatives.hpp"
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
+#include "4C_linalg_tensor.hpp"
 #include "4C_mat_elast_aniso_structuraltensor_strategy.hpp"
 #include "4C_mat_muscle_utils.hpp"
 #include "4C_mat_par_bundle.hpp"
@@ -88,7 +89,7 @@ namespace
 
     const double& Popt_;
     const double& t_tot_;
-    const Core::LinAlg::Matrix<3, 1>& element_center_reference_coordinates_;
+    const Core::LinAlg::Tensor<double, 3>& element_center_reference_coordinates_;
     const int& eleGID_;
   };
 }  // namespace
@@ -411,7 +412,7 @@ void Mat::MuscleCombo::evaluate_active_nominal_stress(Teuchos::ParameterList& pa
 
   // get element center coordinates in reference configuration
   const auto& element_center_reference_coordinates =
-      params.get<Core::LinAlg::Matrix<3, 1>>("elecenter_coords_ref");
+      params.get<Core::LinAlg::Tensor<double, 3>>("elecenter_coords_ref");
 
   // compute force-time-space dependency Poptft
   const double Poptft =

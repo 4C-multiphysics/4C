@@ -43,7 +43,7 @@ void Mat::MicroMaterial::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
 {
   if (eleGID == -1) FOUR_C_THROW("no element ID provided in material");
 
-  Core::LinAlg::Matrix<3, 3>* defgrd_enh = const_cast<Core::LinAlg::Matrix<3, 3>*>(defgrd);
+  Core::LinAlg::Matrix<3, 3> defgrd_enh = *defgrd;
 
   if (params.get("EASTYPE", "none") != "none")
   {
@@ -75,12 +75,12 @@ void Mat::MicroMaterial::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
 
     // Second step: determine rotation tensor R from F (F=R*U)
     // -> polar decomposition of displacement based F
-    Core::LinAlg::svd<3, 3>(*(defgrd_enh), Q, S, VT);  // Singular Value Decomposition
+    Core::LinAlg::svd<3, 3>(defgrd_enh, Q, S, VT);  // Singular Value Decomposition
     Core::LinAlg::Matrix<3, 3> R;
     R.multiply_nn(Q, VT);
 
     // Third step: determine "enhanced" deformation gradient (F_enh=R*U_enh)
-    defgrd_enh->multiply_nn(R, U_enh);
+    defgrd_enh.multiply_nn(R, U_enh);
   }
 
   // activate microscale material
@@ -117,7 +117,7 @@ void Mat::MicroMaterial::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
   };
 
   MultiScale::MicroStaticParObject::MicroStaticData microdata{};
-  microdata.defgrd_ = convert_to_serial_dense_matrix(*defgrd_enh);
+  microdata.defgrd_ = convert_to_serial_dense_matrix(defgrd_enh);
   microdata.cmat_ = convert_to_serial_dense_matrix(*cmat);
   microdata.stress_ = convert_to_serial_dense_matrix(*stress);
   microdata.gp_ = gp;
@@ -147,7 +147,7 @@ void Mat::MicroMaterial::evaluate(const Core::LinAlg::Matrix<3, 3>* defgrd,
 
   // perform microscale simulation and homogenization (if fint and stiff/mass or stress calculation
   // is required)
-  actmicromatgp->perform_micro_simulation(defgrd_enh, stress, cmat);
+  actmicromatgp->perform_micro_simulation(&defgrd_enh, stress, cmat);
 
   // reactivate macroscale material
   Global::Problem::instance()->materials()->reset_read_from_problem();

@@ -9,6 +9,7 @@
 
 #include "4C_global_data.hpp"
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
+#include "4C_linalg_tensor.hpp"
 #include "4C_mat_elast_aniso_structuraltensor_strategy.hpp"
 #include "4C_mat_elast_isoneohooke.hpp"
 #include "4C_mat_multiplicative_split_defgrad_elasthyper_service.hpp"
@@ -80,7 +81,7 @@ void Mixture::MixtureConstituentElastHyperDamage::read_element(
 void Mixture::MixtureConstituentElastHyperDamage::update(Core::LinAlg::Matrix<3, 3> const& defgrd,
     Teuchos::ParameterList& params, const int gp, const int eleGID)
 {
-  const auto& reference_coordinates = params.get<Core::LinAlg::Matrix<3, 1>>("gp_coords_ref");
+  const auto& reference_coordinates = params.get<Core::LinAlg::Tensor<double, 3>>("gp_coords_ref");
 
   double totaltime = params.get<double>("total time", -1);
   if (totaltime < 0.0)

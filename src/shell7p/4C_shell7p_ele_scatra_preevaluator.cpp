@@ -10,6 +10,7 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_fem_general_utils_integration.hpp"
+#include "4C_linalg_tensor.hpp"
 #include "4C_shell7p_ele_calc_lib.hpp"
 
 #include <Teuchos_ParameterList.hpp>
@@ -120,7 +121,7 @@ void Discret::Elements::Shell::pre_evaluate_scatra(Core::Elements::Element& ele,
       params.set<std::shared_ptr<std::vector<std::vector<double>>>>("gp_conc", gpscalar);
     }
   }
-  Core::LinAlg::Matrix<2, 1> center(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Tensor<double, 2> center{};
   params.set("elecenter_coords_ref", center);
 }
 

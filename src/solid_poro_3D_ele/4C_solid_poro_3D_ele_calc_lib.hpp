@@ -22,6 +22,7 @@
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
+#include "4C_linalg_tensor_generators.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_mat_fluidporo.hpp"
 #include "4C_mat_fluidporo_multiphase.hpp"
@@ -925,8 +926,11 @@ namespace Discret::Elements
         anisotropy_properties.directions_, anisotropic_permeability_coeffs);
     porofluidmat.compute_lin_mat_reaction_tensor(linreac_dphi, linreac_dJ,
         spatial_material_mapping.determinant_deformation_gradient_, porosity);
-    temp.multiply(1.0, matreatensor, spatial_material_mapping.inverse_deformation_gradient_);
-    reatensor.multiply_tn(spatial_material_mapping.inverse_deformation_gradient_, temp);
+    temp.multiply(1.0, matreatensor,
+        Core::LinAlg::make_matrix_view(spatial_material_mapping.inverse_deformation_gradient_));
+    reatensor.multiply_tn(
+        Core::LinAlg::make_matrix_view(spatial_material_mapping.inverse_deformation_gradient_),
+        temp);
     rea_disp_vel.multiply(reatensor, disp_velocity);
     rea_fluid_vel.multiply(reatensor, fluid_velocity);
 
@@ -1014,8 +1018,11 @@ namespace Discret::Elements
     porofluidmat.compute_lin_mat_reaction_tensor(linreac_dporosity, linreac_ddet_defgrd,
         spatial_material_mapping.determinant_deformation_gradient_, porosity);
 
-    temp.multiply(1.0, matreatensor, spatial_material_mapping.inverse_deformation_gradient_);
-    reatensor.multiply_tn(spatial_material_mapping.inverse_deformation_gradient_, temp);
+    temp.multiply(1.0, matreatensor,
+        Core::LinAlg::make_matrix_view(spatial_material_mapping.inverse_deformation_gradient_));
+    reatensor.multiply_tn(
+        Core::LinAlg::make_matrix_view(spatial_material_mapping.inverse_deformation_gradient_),
+        temp);
     rea_disp_vel.multiply(reatensor, disp_velocity);
     rea_fluid_vel.multiply(reatensor, fluid_velocity);
   }
@@ -1059,7 +1066,8 @@ namespace Discret::Elements
     Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> CinvFvel;
     Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> tmp;
     CinvFvel.multiply(inverse_right_cauchy_green, fvelder);
-    tmp.multiply_nt(CinvFvel, spatial_material_mapping.inverse_deformation_gradient_);
+    tmp.multiply_nt(CinvFvel,
+        Core::LinAlg::make_matrix_view(spatial_material_mapping.inverse_deformation_gradient_));
     Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>> tmp2(tmp);
     tmp.update_t(1.0, tmp2, 1.0);
 
@@ -1076,7 +1084,8 @@ namespace Discret::Elements
     static Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_nodes<celltype>>
         N_XYZ_Finv;
     N_XYZ_Finv.multiply(
-        spatial_material_mapping.inverse_deformation_gradient_, jacobian_mapping.N_XYZ_);
+        Core::LinAlg::make_matrix_view(spatial_material_mapping.inverse_deformation_gradient_),
+        jacobian_mapping.N_XYZ_);
 
     // dfstress/dv^f
     Core::LinAlg::Matrix<Internal::num_str<celltype>, Internal::num_dof_per_ele<celltype>>
@@ -1354,8 +1363,11 @@ namespace Discret::Elements
         anisotropy_properties.directions_, anisotropic_permeability_coeffs);
     porofluidmat.compute_lin_mat_reaction_tensor(linreac_dphi, linreac_dJ,
         spatial_material_mapping.determinant_deformation_gradient_, porosity);
-    temp.multiply(1.0, matreatensor, spatial_material_mapping.inverse_deformation_gradient_);
-    reatensor.multiply_tn(spatial_material_mapping.inverse_deformation_gradient_, temp);
+    temp.multiply(1.0, matreatensor,
+        Core::LinAlg::make_matrix_view(spatial_material_mapping.inverse_deformation_gradient_));
+    reatensor.multiply_tn(
+        Core::LinAlg::make_matrix_view(spatial_material_mapping.inverse_deformation_gradient_),
+        temp);
     reavel.multiply(reatensor, disp_velocity);
     reafvel.multiply(reatensor, fluid_velocity);
     for (int idim = 0; idim < numdim_; idim++)
@@ -2040,8 +2052,8 @@ namespace Discret::Elements
   {
     CauchyGreenAndInverse<celltype> cauchygreen;
 
-    cauchygreen.right_cauchy_green_ =
-        Discret::Elements::evaluate_cauchy_green(spatial_material_mapping);
+    cauchygreen.right_cauchy_green_ = Core::LinAlg::make_matrix(
+        Core::LinAlg::get_full(Discret::Elements::evaluate_cauchy_green(spatial_material_mapping)));
     cauchygreen.inverse_right_cauchy_green_.invert(cauchygreen.right_cauchy_green_);
 
     return cauchygreen;

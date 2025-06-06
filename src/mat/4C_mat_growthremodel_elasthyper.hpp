@@ -13,6 +13,7 @@
 
 #include "4C_comm_parobjectfactory.hpp"
 #include "4C_linalg_FADmatrix_utils.hpp"
+#include "4C_linalg_tensor.hpp"
 #include "4C_mat_anisotropy.hpp"
 #include "4C_mat_membrane_material_interfaces.hpp"
 #include "4C_mat_so3_material.hpp"
@@ -283,7 +284,7 @@ namespace Mat
 
     /// Calculates AXI, CIR and RAD structural tensors and sets new fiber directions in the case of
     /// a cylinder
-    void setup_axi_cir_rad_cylinder(Core::LinAlg::Matrix<3, 1> elecenter, double const dt);
+    void setup_axi_cir_rad_cylinder(Core::LinAlg::Tensor<double, 3> elecenter, double const dt);
 
     /// Setup anisotropic growth tensors. Here we assume that the growth direction corresponds with
     /// the radial/ thickness direction

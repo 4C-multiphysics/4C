@@ -13,6 +13,7 @@
 #include "4C_fem_general_cell_type.hpp"
 #include "4C_fem_general_cell_type_traits.hpp"
 #include "4C_fem_general_element.hpp"
+#include "4C_linalg_tensor_generators.hpp"
 #include "4C_solid_3D_ele_calc.hpp"
 #include "4C_solid_3D_ele_calc_lib.hpp"
 #include "4C_solid_3D_ele_calc_lib_fbar.hpp"
@@ -40,19 +41,20 @@ namespace Discret::Elements
         const ElementNodes<celltype>& nodal_coordinates,
         const MulfHistoryData<celltype>& mulf_data_centeroid)
     {
-      Core::LinAlg::Matrix<3, 3> delta_F = evaluate_mulf_deformation_gradient_update(
+      Core::LinAlg::Tensor<double, 3, 3> delta_F = evaluate_mulf_deformation_gradient_update(
           shape_functions_centeroid, nodal_coordinates.displacements, mulf_data_centeroid);
 
       SpatialMaterialMapping<celltype> spatial_material_mapping_centeroid{};
 
-      spatial_material_mapping_centeroid.deformation_gradient_.multiply(
-          delta_F, mulf_data_centeroid.deformation_gradient);
+      spatial_material_mapping_centeroid.deformation_gradient_ =
+          delta_F * mulf_data_centeroid.deformation_gradient;
 
       spatial_material_mapping_centeroid.inverse_deformation_gradient_ =
-          spatial_material_mapping_centeroid.deformation_gradient_;
+          Core::LinAlg::inv(spatial_material_mapping_centeroid.deformation_gradient_);
 
       spatial_material_mapping_centeroid.determinant_deformation_gradient_ =
-          spatial_material_mapping_centeroid.inverse_deformation_gradient_.invert();
+          Core::LinAlg::det(spatial_material_mapping_centeroid.deformation_gradient_);
+
 
       return spatial_material_mapping_centeroid;
     }
@@ -61,10 +63,10 @@ namespace Discret::Elements
     SpatialMaterialMapping<celltype> get_spatial_material_mapping_bar(
         SpatialMaterialMapping<celltype> spatial_material_mapping, const double fbar_factor)
     {
-      spatial_material_mapping.deformation_gradient_.scale(fbar_factor);
+      spatial_material_mapping.deformation_gradient_ *= fbar_factor;
       spatial_material_mapping.determinant_deformation_gradient_ *=
           Core::FE::dim<celltype> * fbar_factor;
-      spatial_material_mapping.inverse_deformation_gradient_.scale(1.0 / fbar_factor);
+      spatial_material_mapping.inverse_deformation_gradient_ *= 1.0 / fbar_factor;
 
       return spatial_material_mapping;
     }
@@ -77,20 +79,16 @@ namespace Discret::Elements
         const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
         MulfHistoryData<celltype>& mulf_data)
     {
-      Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>> delta_defgrd =
+      Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>> delta_defgrd =
           evaluate_mulf_deformation_gradient_update(
               shape_functions, element_nodes.displacements, mulf_data);
 
-      Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>> inv_delta_defgrd(
-          Core::LinAlg::Initialization::zero);
-      inv_delta_defgrd.invert(delta_defgrd);
+      Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+          inv_delta_defgrd = Core::LinAlg::inv(delta_defgrd);
+      mulf_data.deformation_gradient = delta_defgrd * mulf_data.deformation_gradient;
 
-      Core::LinAlg::Matrix<3, 3> old_defgrd = mulf_data.deformation_gradient;
-      mulf_data.deformation_gradient.multiply(delta_defgrd, old_defgrd);
-
-      Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>> invJ_new;
-      invJ_new.multiply_tn(inv_delta_defgrd, mulf_data.inverse_jacobian);
-      mulf_data.inverse_jacobian = std::move(invJ_new);
+      mulf_data.inverse_jacobian =
+          Core::LinAlg::transpose(inv_delta_defgrd) * mulf_data.inverse_jacobian;
     }
   }  // namespace Internal
 
@@ -128,7 +126,7 @@ namespace Discret::Elements
       }
 
       // set coordinates in parameter space at centroid as zero -> xi = [0; 0; 0]
-      Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> xi_centroid =
+      Core::LinAlg::Tensor<double, Internal::num_dim<celltype>> xi_centroid =
           evaluate_parameter_coordinate_centroid<celltype>();
 
       // shape functions and derivatives evaluated at element centroid
@@ -139,7 +137,8 @@ namespace Discret::Elements
           evaluate_jacobian_mapping_centroid(nodal_coordinates);
 
       Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::num_nodes(celltype)> N_XYZ_0;
-      N_XYZ_0.multiply(jacobian_mapping.inverse_jacobian_, shape_functions_centeroid.derivatives_);
+      N_XYZ_0.multiply(Core::LinAlg::make_matrix_view(jacobian_mapping.inverse_jacobian_),
+          shape_functions_centeroid.derivatives_);
 
       return {N_XYZ_0, Internal::evaluate_mulf_spatial_material_mapping_centroid(
                            shape_functions_centeroid, nodal_coordinates, global_history)};
@@ -148,7 +147,7 @@ namespace Discret::Elements
     template <typename Evaluator>
     static auto evaluate(const Core::Elements::Element& ele,
         const ElementNodes<celltype>& element_nodes,
-        const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+        const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
         const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
         const JacobianMapping<celltype>& jacobian_mapping,
         const MulfFBarPreparationData<celltype>& mapping_center,
@@ -190,11 +189,11 @@ namespace Discret::Elements
       const SpatialMaterialMapping<celltype> spatial_material_mapping_bar =
           Internal::get_spatial_material_mapping_bar(spatial_material_mapping, fbar_factor);
 
-      const Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>> cauchygreen_bar =
-          evaluate_cauchy_green<celltype>(spatial_material_mapping_bar);
+      const Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+          cauchygreen_bar = evaluate_cauchy_green<celltype>(spatial_material_mapping_bar);
 
-      const Core::LinAlg::Matrix<Internal::num_str<celltype>, 1> gl_strain_bar =
-          evaluate_green_lagrange_strain(cauchygreen_bar);
+      const Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+          gl_strain_bar = evaluate_green_lagrange_strain(cauchygreen_bar);
 
       return evaluator(
           spatial_material_mapping_bar.deformation_gradient_, gl_strain_bar, linearization);
@@ -219,7 +218,8 @@ namespace Discret::Elements
           linearization.Bop, stress, integration_factor / linearization.fbar_factor, force_vector);
     }
 
-    static void add_stiffness_matrix(const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+    static void add_stiffness_matrix(
+        const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
         const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
         const FBarLinearizationContainer<celltype>& linearization,
         const JacobianMapping<celltype>& jacobian_mapping, const Stress<celltype>& stress,
@@ -241,17 +241,13 @@ namespace Discret::Elements
     static void pack(
         const MulfHistoryData<celltype>& history_data, Core::Communication::PackBuffer& data)
     {
-      add_to_pack(data, history_data.inverse_jacobian);
-      add_to_pack(data, history_data.deformation_gradient);
-      add_to_pack(data, history_data.is_setup);
+      add_to_pack(data, history_data);
     }
 
     static void unpack(
         Core::Communication::UnpackBuffer& buffer, MulfHistoryData<celltype>& history_data)
     {
-      extract_from_pack(buffer, history_data.inverse_jacobian);
-      extract_from_pack(buffer, history_data.deformation_gradient);
-      extract_from_pack(buffer, history_data.is_setup);
+      extract_from_pack(buffer, history_data);
     }
 
     static inline void update_prestress(const Core::Elements::Element& ele,
@@ -259,7 +255,7 @@ namespace Discret::Elements
         const MulfFBarPreparationData<celltype>& mapping_center,
         MulfHistoryData<celltype>& mulf_data_centeroid)
     {
-      Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1> xi_centroid =
+      Core::LinAlg::Tensor<double, Internal::num_dim<celltype>> xi_centroid =
           evaluate_parameter_coordinate_centroid<celltype>();
 
       ShapeFunctionsAndDerivatives<celltype> shape_functions_centeroid =
@@ -270,11 +266,11 @@ namespace Discret::Elements
 
     static inline void update_prestress(const Core::Elements::Element& ele,
         const ElementNodes<celltype>& element_nodes,
-        const Core::LinAlg::Matrix<Internal::num_dim<celltype>, 1>& xi,
+        const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
         const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
         const JacobianMapping<celltype>& jacobian_mapping,
-        const Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_dim<celltype>>&
-            deformation_gradient,
+        const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>,
+            Internal::num_dim<celltype>>& deformation_gradient,
         const MulfFBarPreparationData<celltype>& mapping_center,
         MulfHistoryData<celltype>& mulf_data_centeroid, MulfHistoryData<celltype>& mulf_data_gp)
     {

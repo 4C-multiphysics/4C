@@ -37,11 +37,13 @@ namespace Discret::Elements
      * @param data (in/out) : Matrix the vector is assembled into
      * @param row (in) : Matrix row
      */
-    template <unsigned num_str>
-    void assemble_vector_to_matrix_row(Core::LinAlg::Matrix<num_str, 1> vector,
+    template <std::size_t size>
+    void assemble_symmetric_tensor_to_matrix_row(
+        Core::LinAlg::SymmetricTensor<double, size, size> tensor,
         Core::LinAlg::SerialDenseMatrix& data, const int row)
     {
-      for (unsigned i = 0; i < num_str; ++i) data(row, static_cast<int>(i)) = vector(i);
+      for (unsigned i = 0; i < tensor.container().size(); ++i)
+        data(row, static_cast<int>(i)) = tensor.data()[i];
     }
   }  // namespace Internal
 
@@ -112,8 +114,9 @@ namespace Discret::Elements
    */
   template <Core::FE::CellType celltype>
   void assemble_strain_type_to_matrix_row(
-      const Core::LinAlg::Matrix<Internal::num_str<celltype>, 1>& gl_strain,
-      const Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>>& defgrd,
+      const Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>&
+          gl_strain,
+      const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>& defgrd,
       const Inpar::Solid::StrainType strain_type, Core::LinAlg::SerialDenseMatrix& data,
       const int row)
   {
@@ -121,27 +124,23 @@ namespace Discret::Elements
     {
       case Inpar::Solid::strain_gl:
       {
-        Core::LinAlg::Matrix<Internal::num_str<celltype>, 1> gl_strain_stress_like;
-        Core::LinAlg::Voigt::Strains::to_stress_like(gl_strain, gl_strain_stress_like);
-        Internal::assemble_vector_to_matrix_row(gl_strain_stress_like, data, row);
+        Internal::assemble_symmetric_tensor_to_matrix_row(gl_strain, data, row);
         return;
       }
       case Inpar::Solid::strain_ea:
       {
-        const Core::LinAlg::Matrix<Internal::num_str<celltype>, 1> ea =
-            Solid::Utils::green_lagrange_to_euler_almansi(gl_strain, defgrd);
-        Core::LinAlg::Matrix<Internal::num_str<celltype>, 1> ea_stress_like;
-        Core::LinAlg::Voigt::Strains::to_stress_like(ea, ea_stress_like);
-        Internal::assemble_vector_to_matrix_row(ea_stress_like, data, row);
+        const Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>,
+            Core::FE::dim<celltype>>
+            ea = Solid::Utils::green_lagrange_to_euler_almansi(gl_strain, defgrd);
+        Internal::assemble_symmetric_tensor_to_matrix_row(ea, data, row);
         return;
       }
       case Inpar::Solid::strain_log:
       {
-        const Core::LinAlg::Matrix<Internal::num_str<celltype>, 1> log_strain =
-            Solid::Utils::green_lagrange_to_log_strain(gl_strain);
-        Core::LinAlg::Matrix<Internal::num_str<celltype>, 1> log_strain_stress_like;
-        Core::LinAlg::Voigt::Strains::to_stress_like(log_strain, log_strain_stress_like);
-        Internal::assemble_vector_to_matrix_row(log_strain_stress_like, data, row);
+        const Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>,
+            Core::FE::dim<celltype>>
+            log_strain = Solid::Utils::green_lagrange_to_log_strain(gl_strain);
+        Internal::assemble_symmetric_tensor_to_matrix_row(log_strain, data, row);
         return;
       }
       case Inpar::Solid::strain_none:
@@ -165,7 +164,7 @@ namespace Discret::Elements
    */
   template <Core::FE::CellType celltype>
   void assemble_stress_type_to_matrix_row(
-      const Core::LinAlg::Matrix<Core::FE::dim<celltype>, Core::FE::dim<celltype>>& defgrd,
+      const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>& defgrd,
       const Stress<celltype>& stress, const Inpar::Solid::StressType stress_type,
       Core::LinAlg::SerialDenseMatrix& data, const int row)
   {
@@ -173,14 +172,14 @@ namespace Discret::Elements
     {
       case Inpar::Solid::stress_2pk:
       {
-        Internal::assemble_vector_to_matrix_row(stress.pk2_, data, row);
+        Internal::assemble_symmetric_tensor_to_matrix_row(stress.pk2_, data, row);
         return;
       }
       case Inpar::Solid::stress_cauchy:
       {
-        Core::LinAlg::Matrix<Internal::num_str<celltype>, 1> cauchy;
-        Solid::Utils::pk2_to_cauchy(stress.pk2_, defgrd, cauchy);
-        Internal::assemble_vector_to_matrix_row(cauchy, data, row);
+        Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>
+            cauchy = Solid::Utils::pk2_to_cauchy(stress.pk2_, defgrd);
+        Internal::assemble_symmetric_tensor_to_matrix_row(cauchy, data, row);
         return;
       }
       case Inpar::Solid::stress_none:
