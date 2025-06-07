@@ -54,16 +54,17 @@ namespace Mat
     void new_result_file(
         bool eleowner, std::string& newfilename, bool initialize_runtime_output_writer);
 
-    //! create path of new result file
-    std::string new_result_file_path(const std::string& newprefix);
+    /// create path of new result file
+    std::string new_result_file_path(const std::string& newprefix) const;
 
     /// Post setup to set time and step properly
     void post_setup();
 
     /// Perform microscale simulation
-    void perform_micro_simulation(Core::LinAlg::Matrix<3, 3>* defgrd,
+    void perform_micro_simulation(const Core::LinAlg::Matrix<3, 3>* defgrd,
         Core::LinAlg::Matrix<6, 1>* stress, Core::LinAlg::Matrix<6, 6>* cmat);
 
+    /// Update time, step, displacement and element internal history data
     void update();
 
     /// Calculate stresses and strains on the micro-scale
@@ -76,8 +77,14 @@ namespace Mat
     /// write restart on the micro-scale
     void write_restart();
 
+    /// save micro scale element history data
+    void extract_and_store_history_data() const;
+
+    /// set micro scale element history data
+    void fill_history_data_into_elements() const;
+
     /// get ele id
-    int ele_id() { return ele_id_; }
+    int ele_id() const { return ele_id_; }
 
     /// get density
     double density() const { return density_; }
@@ -107,6 +114,9 @@ namespace Mat
 
     /// my vector of new displacements
     std::shared_ptr<Core::LinAlg::Vector<double>> disn_;
+
+    /// history data for each column element on microscale
+    std::shared_ptr<std::map<int, std::shared_ptr<std::vector<char>>>> history_data_;
 
     /// my stresses and strains
     std::shared_ptr<std::vector<char>> plstrain_;

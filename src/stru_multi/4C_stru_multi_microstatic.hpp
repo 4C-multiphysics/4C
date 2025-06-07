@@ -84,11 +84,11 @@ namespace MultiScale
     \brief Read restart
 
     */
-    void read_restart(
-        int step, std::shared_ptr<Core::LinAlg::Vector<double>> dis, std::string name);
+    void read_restart(const int step, std::shared_ptr<Core::LinAlg::Vector<double>> dis,
+        std::map<int, std::shared_ptr<std::vector<char>>>& history_data, const std::string& name);
 
     /// get corresponding time to step
-    double get_time_to_step(int step, std::string name);
+    double get_time_to_step(const int step, const std::string& name);
 
     /*!
     \brief Return time from parameter list
@@ -100,19 +100,19 @@ namespace MultiScale
     \brief Predictor step
 
     */
-    void predictor(Core::LinAlg::Matrix<3, 3>* defgrd);
+    void predictor(const Core::LinAlg::Matrix<3, 3>* defgrd);
 
     /*!
     \brief Predictor step
 
     */
-    void predict_const_dis(Core::LinAlg::Matrix<3, 3>* defgrd);
+    void predict_const_dis(const Core::LinAlg::Matrix<3, 3>* defgrd);
 
     /*!
    \brief Predictor step
 
    */
-    void predict_tang_dis(Core::LinAlg::Matrix<3, 3>* defgrd);
+    void predict_tang_dis(const Core::LinAlg::Matrix<3, 3>* defgrd);
 
     /*!
     \brief Full Newton iteration
@@ -135,6 +135,12 @@ namespace MultiScale
         const std::pair<double, int>& output_time_and_step, const std::string& section_name) const;
 
     /*!
+     * \brief Update on element level(e.g.internal variables)
+     *
+     */
+    void update_step_element();
+
+    /*!
     \brief Write restart
 
     */
@@ -152,7 +158,8 @@ namespace MultiScale
     associated macroscale deformation gradient
 
     */
-    void evaluate_micro_bc(Core::LinAlg::Matrix<3, 3>* defgrd, Core::LinAlg::Vector<double>& disp);
+    void evaluate_micro_bc(
+        const Core::LinAlg::Matrix<3, 3>* defgrd, Core::LinAlg::Vector<double>& disp);
 
     /*!
     \brief Set old state given from micromaterialgp
@@ -193,7 +200,7 @@ namespace MultiScale
 
     */
     void static_homogenization(Core::LinAlg::Matrix<6, 1>* stress, Core::LinAlg::Matrix<6, 6>* cmat,
-        Core::LinAlg::Matrix<3, 3>* defgrd, const bool mod_newton, bool& build_stiff);
+        const Core::LinAlg::Matrix<3, 3>* defgrd, const bool mod_newton, bool& build_stiff);
 
     /*!
     \brief Convert constitutive tensor relating first Piola-Kirchhoff

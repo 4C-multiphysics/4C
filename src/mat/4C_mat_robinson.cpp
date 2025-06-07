@@ -123,17 +123,17 @@ void Mat::Robinson::pack(Core::Communication::PackBuffer& data) const
   add_to_pack(data, numgp);  // Length of history vector(s)
   for (int var = 0; var < numgp; ++var)
   {
-    // pack history data
+    // insert last converged states
     add_to_pack(data, strainpllast_->at(var));
     add_to_pack(data, backstresslast_->at(var));
-
     add_to_pack(data, kvarva_->at(var));
     add_to_pack(data, kvakvae_->at(var));
     add_to_pack(data, strain_last_.at(var));
+
+    // insert current iteration states
+    add_to_pack(data, strainplcurr_->at(var));
+    add_to_pack(data, backstresscurr_->at(var));
   }
-
-  return;
-
 }  // pack()
 
 
@@ -143,7 +143,6 @@ void Mat::Robinson::pack(Core::Communication::PackBuffer& data) const
 void Mat::Robinson::unpack(Core::Communication::UnpackBuffer& buffer)
 {
   isinit_ = true;
-
 
   Core::Communication::extract_and_assert_id(buffer, unique_par_object_id());
 
@@ -187,29 +186,31 @@ void Mat::Robinson::unpack(Core::Communication::UnpackBuffer& buffer)
 
   for (int var = 0; var < numgp; ++var)
   {
-    Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> tmp(Core::LinAlg::Initialization::zero);
-    Core::LinAlg::Matrix<2 * Mat::NUM_STRESS_3D, 1> tmp1(Core::LinAlg::Initialization::zero);
-    Core::LinAlg::Matrix<2 * Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> tmp2(
+    Core::LinAlg::Matrix<Mat::NUM_STRESS_3D, 1> tmp_vector(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<2 * Mat::NUM_STRESS_3D, 1> tmp_vector2(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<2 * Mat::NUM_STRESS_3D, Mat::NUM_STRESS_3D> tmp_matrix(
         Core::LinAlg::Initialization::zero);
 
     // unpack strain/stress vectors of last converged state
-    extract_from_pack(buffer, tmp);
-    strainpllast_->push_back(tmp);
-    extract_from_pack(buffer, tmp);
-    backstresslast_->push_back(tmp);
+    extract_from_pack(buffer, tmp_vector);
+    strainpllast_->push_back(tmp_vector);
+    extract_from_pack(buffer, tmp_vector);
+    backstresslast_->push_back(tmp_vector);
 
     // unpack matrices of last converged state
-    extract_from_pack(buffer, tmp1);
-    kvarva_->push_back(tmp1);
-    extract_from_pack(buffer, tmp2);
-    kvakvae_->push_back(tmp2);
+    extract_from_pack(buffer, tmp_vector2);
+    kvarva_->push_back(tmp_vector2);
+    extract_from_pack(buffer, tmp_matrix);
+    kvakvae_->push_back(tmp_matrix);
 
-    extract_from_pack(buffer, tmp);
-    strain_last_.push_back(tmp);
+    extract_from_pack(buffer, tmp_vector);
+    strain_last_.push_back(tmp_vector);
 
-    // current vectors have to be initialised
-    strainplcurr_->push_back(tmp);
-    backstresscurr_->push_back(tmp);
+    // current iteration states are unpacked
+    extract_from_pack(buffer, tmp_vector);
+    strainplcurr_->push_back(tmp_vector);
+    extract_from_pack(buffer, tmp_vector);
+    backstresscurr_->push_back(tmp_vector);
   }
 
 

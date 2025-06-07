@@ -13,6 +13,7 @@
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
+#include "4C_solid_3D_ele.hpp"
 #include "4C_stru_multi_microstatic.hpp"
 #include "4C_utils_singleton_owner.hpp"
 
@@ -57,6 +58,7 @@ Mat::MicroMaterialGP::MicroMaterialGP(const int gp, const int ele_ID, const bool
   std::shared_ptr<Core::FE::Discretization> microdis = microproblem->get_dis("structure");
   dis_ = Core::LinAlg::create_vector(*microdis->dof_row_map(), true);
   disn_ = Core::LinAlg::create_vector(*microdis->dof_row_map(), true);
+  history_data_ = std::make_shared<std::map<int, std::shared_ptr<std::vector<char>>>>();
 
   // data must be consistent between micro and macro input file
   const Teuchos::ParameterList& sdyn_macro =
@@ -117,7 +119,8 @@ Mat::MicroMaterialGP::~MicroMaterialGP()
 void Mat::MicroMaterialGP::read_restart()
 {
   step_ = Global::Problem::instance()->restart();
-  global_micro_state().microstaticmap_[microdisnum_]->read_restart(step_, dis_, restartname_);
+  global_micro_state().microstaticmap_[microdisnum_]->read_restart(
+      step_, dis_, *history_data_, restartname_);
 
   disn_->update(1.0, *dis_, 0.0);
 }
@@ -207,7 +210,7 @@ void Mat::MicroMaterialGP::new_result_file(
   }
 }
 
-std::string Mat::MicroMaterialGP::new_result_file_path(const std::string& newprefix)
+std::string Mat::MicroMaterialGP::new_result_file_path(const std::string& newprefix) const
 {
   std::string newfilename;
 
@@ -268,18 +271,46 @@ void Mat::MicroMaterialGP::post_setup()
   timen_ = time_ + dt_;
 }
 
-/// perform microscale simulation
-void Mat::MicroMaterialGP::perform_micro_simulation(Core::LinAlg::Matrix<3, 3>* defgrd,
+void Mat::MicroMaterialGP::extract_and_store_history_data() const
+{
+  std::shared_ptr<Core::FE::Discretization> discret =
+      (Global::Problem::instance(microdisnum_))->get_dis("structure");
+
+  for (Core::Elements::Element* actele : discret->my_col_element_range())
+  {
+    Core::Communication::PackBuffer data;
+    actele->pack_history(data);
+    (*history_data_)[actele->id()] = std::make_shared<std::vector<char>>(data());
+  }
+}
+
+void Mat::MicroMaterialGP::fill_history_data_into_elements() const
+{
+  if (!history_data_->empty())
+  {
+    std::shared_ptr<Core::FE::Discretization> discret =
+        (Global::Problem::instance(microdisnum_))->get_dis("structure");
+
+    for (Core::Elements::Element* actele : discret->my_col_element_range())
+    {
+      Core::Communication::UnpackBuffer buffer((*(*history_data_)[actele->id()]));
+      actele->unpack_history(buffer);
+    }
+  }
+}
+
+void Mat::MicroMaterialGP::perform_micro_simulation(const Core::LinAlg::Matrix<3, 3>* defgrd,
     Core::LinAlg::Matrix<6, 1>* stress, Core::LinAlg::Matrix<6, 6>* cmat)
 {
   // select corresponding "time integration class" for this microstructure
   std::shared_ptr<MultiScale::MicroStatic> microstatic =
       global_micro_state().microstaticmap_[microdisnum_];
 
-  // set displacements and EAS data of last step
+  // set latest displacements and internal history data
   microstatic->set_state(dis_, disn_, stress_data_node_postprocessed_,
       stress_data_element_postprocessed_, strain_data_node_postprocessed_,
       strain_data_element_postprocessed_, plstrain_, nullptr);
+  fill_history_data_into_elements();
 
   // set current time, time step size and step number
   microstatic->set_time(time_, timen_, dt_, step_, stepn_);
@@ -290,8 +321,10 @@ void Mat::MicroMaterialGP::perform_micro_simulation(Core::LinAlg::Matrix<3, 3>* 
 
   // store matrix for output
   macro_cmat_output_ = std::make_shared<Core::LinAlg::Matrix<6, 6>>(*cmat);
+  // save current history data of micro scale elements
+  extract_and_store_history_data();
 
-  // clear displacements in MicroStruGenAlpha for next usage
+  // clear displacements on micro scale
   microstatic->clear_state();
 }
 
@@ -308,6 +341,15 @@ void Mat::MicroMaterialGP::update()
 
   dis_->update(1.0, *disn_, 0.0);
 
+  microstatic->set_state(dis_, disn_, stress_data_node_postprocessed_,
+      stress_data_element_postprocessed_, strain_data_node_postprocessed_,
+      strain_data_element_postprocessed_, plstrain_, nullptr);
+  fill_history_data_into_elements();
+  microstatic->set_time(time_, timen_, dt_, step_, stepn_);
+  // update internal variables on micro scale
+  microstatic->update_step_element();
+  extract_and_store_history_data();
+
   // in case of modified Newton, the stiffness matrix needs to be rebuilt at
   // the beginning of the new time step
   build_stiff_ = true;
@@ -322,6 +364,7 @@ void Mat::MicroMaterialGP::runtime_pre_output_step_state()
   microstatic->set_state(dis_, disn_, stress_data_node_postprocessed_,
       stress_data_element_postprocessed_, strain_data_node_postprocessed_,
       strain_data_element_postprocessed_, plstrain_, nullptr);
+  fill_history_data_into_elements();
   microstatic->set_time(time_, timen_, dt_, step_, stepn_);
   microstatic->runtime_pre_output_step_state();
 }
@@ -333,7 +376,7 @@ void Mat::MicroMaterialGP::runtime_output_step_state_microscale(
   const std::shared_ptr<MultiScale::MicroStatic> microstatic =
       global_micro_state().microstaticmap_[microdisnum_];
 
-  // set displacements and EAS data of last step
+  // set displacements and internal history data of latest converged state
   microstatic->set_state(dis_, disn_, stress_data_node_postprocessed_,
       stress_data_element_postprocessed_, strain_data_node_postprocessed_,
       strain_data_element_postprocessed_, plstrain_, macro_cmat_output_);
@@ -354,11 +397,26 @@ void Mat::MicroMaterialGP::write_restart()
   std::shared_ptr<MultiScale::MicroStatic> microstatic =
       global_micro_state().microstaticmap_[microdisnum_];
 
-  // set displacements and EAS data of last step
+  // set displacements and history data of last step
   microstatic->set_state(dis_, disn_, stress_data_node_postprocessed_,
       stress_data_element_postprocessed_, strain_data_node_postprocessed_,
       strain_data_element_postprocessed_, plstrain_, nullptr);
   microstatic->write_restart(micro_output_, time_, step_, dt_);
+
+  // add element history data to restart output
+  if (!history_data_->empty())
+  {
+    std::shared_ptr<Core::FE::Discretization> discret =
+        (Global::Problem::instance(microdisnum_))->get_dis("structure");
+
+    Core::Communication::PackBuffer data;
+    for (Core::Elements::Element* actele : discret->my_row_element_range())
+    {
+      add_to_pack(data, (*(*history_data_)[actele->id()]));
+    }
+    micro_output_->write_vector(
+        "history_data", data(), *discret->element_row_map(), Core::IO::VectorType::elementvector);
+  }
 
   // we don't need these containers anymore
   stress_data_node_postprocessed_ = nullptr;

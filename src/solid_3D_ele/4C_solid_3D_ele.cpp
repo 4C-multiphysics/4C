@@ -251,6 +251,26 @@ void Discret::Elements::Solid::unpack(Core::Communication::UnpackBuffer& buffer)
   Discret::Elements::unpack(solid_calc_variant_, buffer);
 }
 
+void Discret::Elements::Solid::pack_history(Core::Communication::PackBuffer& data) const
+{
+  add_to_pack(data, unique_par_object_id());
+
+  //  material may hold history variables
+  Core::Elements::Element::pack_history(data);
+
+  Discret::Elements::pack(solid_calc_variant_, data);
+}
+
+void Discret::Elements::Solid::unpack_history(Core::Communication::UnpackBuffer& buffer)
+{
+  Core::Communication::extract_and_assert_id(buffer, unique_par_object_id());
+
+  // material may hold history variables
+  Core::Elements::Element::unpack_history(buffer);
+
+  Discret::Elements::unpack(solid_calc_variant_, buffer);
+}
+
 void Discret::Elements::Solid::set_params_interface_ptr(const Teuchos::ParameterList& p)
 {
   if (p.isParameter("interface"))

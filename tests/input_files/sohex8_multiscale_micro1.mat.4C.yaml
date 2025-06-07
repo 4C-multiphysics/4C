@@ -1,5 +1,7 @@
 TITLE:
-  - "Default_title"
+  - This is an input file for the micro scale of a multi scale
+  - simulation. It is referenced in the material of the
+  - corresponding macro file. This file cannot be run standalone.
 PROBLEM SIZE:
   ELEMENTS: 27
   NODES: 64
@@ -353,8 +355,6 @@ STRUCTURE ELEMENTS:
   - "25 SOLID HEX8 61 64 62 53 52 63 54 39 MAT 1 KINEM nonlinear"
   - "26 SOLID HEX8 60 61 53 50 48 52 39 28 MAT 1 KINEM nonlinear"
   - "27 SOLID HEX8 56 60 50 41 42 48 28 22 MAT 1 KINEM nonlinear"
-FLUID ELEMENTS: []
-ALE ELEMENTS: []
 MATERIALS:
   - MAT: 1
     MAT_Struct_StVenantKirchhoff:

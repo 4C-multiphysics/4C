@@ -1,12 +1,12 @@
 TITLE:
-  - This test case consists of 8 macro elements, each of which contains a
+  - This test case consists of 8 macro elements, of which 1 contains a
   - microscale that is specified in the material of the macro element via the
-  - corresponding file name. The micro file (here sohex8_multiscale_micro.mat.4C.yaml)
+  - corresponding file name. The micro file (here sohex8_multiscale_micro_plastic.mat.4C.yaml)
   - is expected in the same directory.
   - The test case can either run as usual:
-  - 'mpirun -np 2 ./4C /path/to/sohex8_multiscale_macro.4C.yaml output_name'
+  - 'mpirun -np 2 ./4C /path/to/sohex8_multiscale_macro_plastic.4C.yaml output_name'
   - or in nested parallelism mode via:
-  - 'mpirun -np 5 ./4C -nptype=separateDatFiles -ngroup=2 -glayout=2,3 /path/to/sohex8_multiscale_macro.4C.yaml
+  - 'mpirun -np 5 ./4C -nptype=separateDatFiles -ngroup=2 -glayout=2,3 /path/to/sohex8_multiscale_macro_plastic.4C.yaml
     output_name /path/to/sohex8_multiscale_npsupport.4C.yaml dummy_output_name'
   - The nested mode command uses 2 procs (see 1st argument in -glayout) to
   - solve the macro scale and 3 procs (see 2nd argument in -glayout) to support
@@ -22,21 +22,12 @@ PROBLEM SIZE:
 PROBLEM TYPE:
   PROBLEMTYPE: "Structure"
 IO:
-  OUTPUT_BIN: true
-  STRUCT_DISP: true
+  WRITE_INITIAL_STATE: false
   VERBOSITY: "Minimal"
-  FILESTEPS: 1000000
-IO/RUNTIME VTK OUTPUT:
-  OUTPUT_DATA_FORMAT: ascii
-  INTERVAL_STEPS: 1
-  EVERY_ITERATION: false
-IO/RUNTIME VTK OUTPUT/STRUCTURE:
-  OUTPUT_STRUCTURE: true
-  DISPLACEMENT: true
 STRUCTURAL DYNAMIC:
   INT_STRATEGY: "Standard"
   TIMESTEP: 0.5
-  NUMSTEP: 3
+  NUMSTEP: 10
   MAXTIME: 5000
   M_DAMP: 0.5
   K_DAMP: 0.5
@@ -48,17 +39,23 @@ STRUCTURAL DYNAMIC/GENALPHA:
 SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "Structure_Solver"
-DESIGN SURF NEUMANN CONDITIONS:
-  - E: 2
+DESIGN POINT DIRICH CONDITIONS:
+  - E: 9
     NUMDOF: 3
-    ONOFF: [0, 0, 1]
-    VAL: [0, 0, -1]
-    FUNCT: [0, 0, 1]
-  - E: 4
-    NUMDOF: 3
-    ONOFF: [0, 0, 1]
+    ONOFF: [1, 1, 1]
     VAL: [0, 0, 1]
     FUNCT: [0, 0, 1]
+  - E: 10
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, -1]
+    FUNCT: [0, 0, 1]
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 2
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [0, 0, 0]
 DNODE-NODE TOPOLOGY:
   - "NODE 1 DNODE 1"
   - "NODE 9 DNODE 2"
@@ -68,6 +65,12 @@ DNODE-NODE TOPOLOGY:
   - "NODE 22 DNODE 6"
   - "NODE 27 DNODE 7"
   - "NODE 23 DNODE 8"
+  - "NODE 22 DNODE 9"
+  - "NODE 24 DNODE 9"
+  - "NODE 27 DNODE 9"
+  - "NODE 11 DNODE 10"
+  - "NODE 15 DNODE 10"
+  - "NODE 23 DNODE 10"
 DLINE-NODE TOPOLOGY:
   - "NODE 1 DLINE 1"
   - "NODE 2 DLINE 1"
@@ -217,48 +220,42 @@ NODE COORDS:
   - "NODE 26 COORD 1.000000000000000e+00 1.000000000000000e+00 0.000000000000000e+00"
   - "NODE 27 COORD 1.000000000000000e+00 1.000000000000000e+00 1.000000000000000e+00"
 STRUCTURE ELEMENTS:
-  - "1 SOLID HEX8 8 7 2 6 5 3 1 4 MAT 1 KINEM nonlinear"
-  - "2 SOLID HEX8 19 8 6 14 15 5 4 11 MAT 2 KINEM nonlinear"
-  - "3 SOLID HEX8 18 13 7 8 17 10 3 5 MAT 3 KINEM nonlinear"
-  - "4 SOLID HEX8 25 18 8 19 23 17 5 15 MAT 1 KINEM nonlinear"
-  - "5 SOLID HEX8 20 12 9 16 8 7 2 6 MAT 2 KINEM nonlinear"
-  - "6 SOLID HEX8 24 20 16 22 19 8 6 14 MAT 3 KINEM nonlinear"
-  - "7 SOLID HEX8 26 21 12 20 18 13 7 8 MAT 1 KINEM nonlinear"
-  - "8 SOLID HEX8 27 26 20 24 25 18 8 19 MAT 2 KINEM nonlinear"
+  - "1 SOLID HEX8 8 7 2 6 5 3 1 4 MAT 2 KINEM nonlinear TECH eas_full"
+  - "2 SOLID HEX8 19 8 6 14 15 5 4 11 MAT 2 KINEM nonlinear TECH eas_full"
+  - "3 SOLID HEX8 18 13 7 8 17 10 3 5 MAT 2 KINEM nonlinear TECH eas_full"
+  - "4 SOLID HEX8 25 18 8 19 23 17 5 15 MAT 2 KINEM nonlinear TECH eas_full"
+  - "5 SOLID HEX8 20 12 9 16 8 7 2 6 MAT 2 KINEM nonlinear TECH eas_full"
+  - "6 SOLID HEX8 24 20 16 22 19 8 6 14 MAT 2 KINEM nonlinear TECH eas_full"
+  - "7 SOLID HEX8 26 21 12 20 18 13 7 8 MAT 2 KINEM nonlinear TECH eas_full"
+  - "8 SOLID HEX8 27 26 20 24 25 18 8 19 MAT 1 KINEM nonlinear TECH eas_full"
 MATERIALS:
   - MAT: 1
     MAT_Struct_Multiscale:
-      MICROFILE: "sohex8_multiscale_micro.mat.4C.yaml"
+      MICROFILE: "sohex8_multiscale_micro_plastic.mat.4C.yaml"
       MICRODIS_NUM: 1
-      RUNTIMEOUTPUT_GP: all
   - MAT: 2
-    MAT_Struct_Multiscale:
-      MICROFILE: "sohex8_multiscale_micro.mat.4C.yaml"
-      MICRODIS_NUM: 2
-      RUNTIMEOUTPUT_GP: none
-  - MAT: 3
-    MAT_Struct_Multiscale:
-      MICROFILE: "sohex8_multiscale_micro.mat.4C.yaml"
-      MICRODIS_NUM: 3
-      RUNTIMEOUTPUT_GP: first_gp_only
+    MAT_Struct_StVenantKirchhoff:
+      YOUNG: 100000
+      NUE: 0.2
+      DENS: 1
 FUNCT1:
-  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t/1.5"
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t/500.0"
 RESULT DESCRIPTION:
   - STRUCTURE:
       DIS: "structure"
-      NODE: 1
+      NODE: 19
       QUANTITY: "dispx"
-      VALUE: 0.022344760344273604
-      TOLERANCE: 1e-08
+      VALUE: -0.0009141433434140066
+      TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
-      NODE: 1
+      NODE: 19
       QUANTITY: "dispy"
-      VALUE: 0.022344760344273483
-      TOLERANCE: 1e-08
+      VALUE: 0.0003301388362246062
+      TOLERANCE: 1e-12
   - STRUCTURE:
       DIS: "structure"
-      NODE: 1
+      NODE: 19
       QUANTITY: "dispz"
-      VALUE: -0.09394473492990212
-      TOLERANCE: 1e-08
+      VALUE: -0.0005285325687006223
+      TOLERANCE: 1e-12

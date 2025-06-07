@@ -113,10 +113,9 @@ void Mat::ThermoPlasticLinElast::pack(Core::Communication::PackBuffer& data) con
   add_to_pack(data, histsize);  // Length of history vector(s)
   for (int var = 0; var < histsize; ++var)
   {
-    // insert history vectors to add_to_pack
+    // insert last converged states
     add_to_pack(data, strainpllast_->at(var));
     add_to_pack(data, backstresslast_->at(var));
-
     add_to_pack(data, strainbarpllast_->at(var));
 
     add_to_pack(data, dmech_->at(var));
@@ -124,12 +123,14 @@ void Mat::ThermoPlasticLinElast::pack(Core::Communication::PackBuffer& data) con
 
     add_to_pack(data, incstrainpl_->at(var));
     add_to_pack(data, strainelrate_->at(var));
+
+    // insert current iteration states
+    add_to_pack(data, strainplcurr_->at(var));
+    add_to_pack(data, backstresscurr_->at(var));
+    add_to_pack(data, strainbarplcurr_->at(var));
   }
 
   add_to_pack(data, plastic_step_);
-
-  return;
-
 }  // pack()
 
 
@@ -187,28 +188,31 @@ void Mat::ThermoPlasticLinElast::unpack(Core::Communication::UnpackBuffer& buffe
 
   for (int var = 0; var < histsize; ++var)
   {
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tmp_vect(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tmp_vector(Core::LinAlg::Initialization::zero);
     double tmp_scalar = 0.0;
     // vectors of last converged state are unpacked
-    extract_from_pack(buffer, tmp_vect);
-    strainpllast_->push_back(tmp_vect);
-    extract_from_pack(buffer, tmp_vect);
-    backstresslast_->push_back(tmp_vect);
+    extract_from_pack(buffer, tmp_vector);
+    strainpllast_->push_back(tmp_vector);
+    extract_from_pack(buffer, tmp_vector);
+    backstresslast_->push_back(tmp_vector);
     // scalar-valued vector of last converged state are unpacked
     extract_from_pack(buffer, tmp_scalar);
     strainbarpllast_->push_back(tmp_scalar);
     extract_from_pack(buffer, tmp_scalar);
     dmech_->push_back(tmp_scalar);
-    extract_from_pack(buffer, tmp_vect);
-    dmech_d_->push_back(tmp_vect);
-    extract_from_pack(buffer, tmp_vect);
-    incstrainpl_->push_back(tmp_vect);
-    extract_from_pack(buffer, tmp_vect);
-    strainelrate_->push_back(tmp_vect);
+    extract_from_pack(buffer, tmp_vector);
+    dmech_d_->push_back(tmp_vector);
+    extract_from_pack(buffer, tmp_vector);
+    incstrainpl_->push_back(tmp_vector);
+    extract_from_pack(buffer, tmp_vector);
+    strainelrate_->push_back(tmp_vector);
 
-    // current vectors have to be initialised
-    strainplcurr_->push_back(tmp_vect);
-    backstresscurr_->push_back(tmp_vect);
+    // current iteration states are unpacked
+    extract_from_pack(buffer, tmp_vector);
+    strainplcurr_->push_back(tmp_vector);
+    extract_from_pack(buffer, tmp_vector);
+    backstresscurr_->push_back(tmp_vector);
+    extract_from_pack(buffer, tmp_scalar);
     strainbarplcurr_->push_back(tmp_scalar);
   }
 

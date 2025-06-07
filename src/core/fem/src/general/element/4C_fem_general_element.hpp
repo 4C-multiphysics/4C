@@ -215,6 +215,19 @@ namespace Core::Elements
     */
     void unpack(Core::Communication::UnpackBuffer& buffer) override;
 
+    /*!
+    \brief Pack internal data of this class so it can be restored
+
+    */
+    virtual void pack_history(Core::Communication::PackBuffer& data) const;
+
+    /*!
+    \brief Unpack history data of this class to restore internal states
+
+    */
+    virtual void unpack_history(Core::Communication::UnpackBuffer& buffer);
+
+
     /// return ElementType instance
     virtual Core::Elements::ElementType& element_type() const = 0;
 

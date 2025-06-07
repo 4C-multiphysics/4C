@@ -129,32 +129,39 @@ void Mat::ViscoElastHyper::pack(Core::Communication::PackBuffer& data) const
       potsum_[p]->pack_summand(data);
     }
 
-
-    //  pack history data 09/13
-    int histsize;
-    if (!initialized())
-    {
-      histsize = 0;
-    }
-    else
+    //  pack history data
+    int histsize = 0;
+    if (initialized())
     {
       histsize = histscglast_->size();
     }
     add_to_pack(data, histsize);  // Length of history vector(s)
     for (int var = 0; var < histsize; ++var)
     {
+      // insert last converged states
       add_to_pack(data, histscglast_->at(var));
       add_to_pack(data, histmodrcglast_->at(var));
       add_to_pack(data, histstresslast_->at(var));
       add_to_pack(data, histartstresslast_->at(var));
+
+      // insert current iteration states
+      add_to_pack(data, histscgcurr_->at(var));
+      add_to_pack(data, histmodrcgcurr_->at(var));
+      add_to_pack(data, histstresscurr_->at(var));
+      add_to_pack(data, histartstresscurr_->at(var));
     }
 
     if (viscogeneralizedgenmax_)
     {
       for (int var = 0; var < histsize; ++var)
       {
+        // insert last converged states
         add_to_pack(data, histbranchstresslast_->at(var));
         add_to_pack(data, histbranchelaststresslast_->at(var));
+
+        // insert current iteration states
+        add_to_pack(data, histbranchstresscurr_->at(var));
+        add_to_pack(data, histbranchelaststresscurr_->at(var));
       }
     }
 
@@ -169,8 +176,8 @@ void Mat::ViscoElastHyper::pack(Core::Communication::PackBuffer& data) const
       // pack stepsize
       add_to_pack(data, histfractartstresslastall_->at(0).size());
       // pack history values
-      for (int gp = 0; gp < (int)histfractartstresslastall_->size(); ++gp)
-        for (int step = 0; step < (int)histfractartstresslastall_->at(gp).size(); ++step)
+      for (std::size_t gp = 0; gp < histfractartstresslastall_->size(); ++gp)
+        for (std::size_t step = 0; step < histfractartstresslastall_->at(gp).size(); ++step)
           add_to_pack(data, histfractartstresslastall_->at(gp).at(step));
     }
   }
@@ -190,8 +197,6 @@ void Mat::ViscoElastHyper::unpack(Core::Communication::UnpackBuffer& buffer)
   viscogenmax_ = false;
   viscogeneralizedgenmax_ = false;
   viscofract_ = false;
-
-
 
   Core::Communication::extract_and_assert_id(buffer, unique_par_object_id());
 
@@ -249,15 +254,6 @@ void Mat::ViscoElastHyper::unpack(Core::Communication::UnpackBuffer& buffer)
 
     if (histsize == 0) isinitvis_ = false;
 
-    // initialize current variables
-    histscgcurr_ = std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>(histsize);
-    histmodrcgcurr_ =
-        std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>(histsize);
-    histstresscurr_ =
-        std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>(histsize);
-    histartstresscurr_ =
-        std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>(histsize);
-
     // initialize last variables
     histscglast_ = std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>(histsize);
     histmodrcglast_ =
@@ -267,34 +263,55 @@ void Mat::ViscoElastHyper::unpack(Core::Communication::UnpackBuffer& buffer)
     histartstresslast_ =
         std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>(histsize);
 
+    // initialize current variables
+    histscgcurr_ = std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>(histsize);
+    histmodrcgcurr_ =
+        std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>(histsize);
+    histstresscurr_ =
+        std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>(histsize);
+    histartstresscurr_ =
+        std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>(histsize);
+
 
     for (int gp = 0; gp < histsize; ++gp)
     {
+      // last vectors are unpacked
       extract_from_pack(buffer, histscglast_->at(gp));
       extract_from_pack(buffer, histmodrcglast_->at(gp));
       extract_from_pack(buffer, histstresslast_->at(gp));
       extract_from_pack(buffer, histartstresslast_->at(gp));
+
+      // current iteration states are unpacked
+      extract_from_pack(buffer, histscgcurr_->at(gp));
+      extract_from_pack(buffer, histmodrcgcurr_->at(gp));
+      extract_from_pack(buffer, histstresscurr_->at(gp));
+      extract_from_pack(buffer, histartstresscurr_->at(gp));
     }
 
     if (viscogeneralizedgenmax_)
     {
-      histbranchstresscurr_ =
-          std::make_shared<std::vector<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>>(
-              histsize);
-      histbranchelaststresscurr_ =
-          std::make_shared<std::vector<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>>(
-              histsize);
       histbranchstresslast_ =
           std::make_shared<std::vector<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>>(
               histsize);
       histbranchelaststresslast_ =
           std::make_shared<std::vector<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>>(
               histsize);
+      histbranchstresscurr_ =
+          std::make_shared<std::vector<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>>(
+              histsize);
+      histbranchelaststresscurr_ =
+          std::make_shared<std::vector<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>>(
+              histsize);
 
       for (int gp = 0; gp < histsize; ++gp)
       {
+        // last vectors are unpacked
         extract_from_pack(buffer, histbranchstresslast_->at(gp));
         extract_from_pack(buffer, histbranchelaststresslast_->at(gp));
+
+        // current iteration states are unpacked
+        extract_from_pack(buffer, histbranchstresscurr_->at(gp));
+        extract_from_pack(buffer, histbranchelaststresscurr_->at(gp));
       }
     }
 
@@ -314,7 +331,7 @@ void Mat::ViscoElastHyper::unpack(Core::Communication::UnpackBuffer& buffer)
       histfractartstresslastall_ =
           std::make_shared<std::vector<std::vector<Core::LinAlg::Matrix<6, 1>>>>(
               histsize, std::vector<Core::LinAlg::Matrix<6, 1>>(histfractartstressall_stepsize));
-      for (int gp = 0; gp < histsize; ++gp)
+      for (std::size_t gp = 0; gp < static_cast<std::size_t>(histsize); ++gp)
         for (std::size_t step = 0; step < histfractartstressall_stepsize; ++step)
           extract_from_pack(buffer, histfractartstresslastall_->at(gp).at(step));
     }

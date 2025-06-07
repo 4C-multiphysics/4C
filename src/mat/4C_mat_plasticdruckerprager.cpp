@@ -73,8 +73,13 @@ void Mat::PlasticDruckerPrager::pack(Core::Communication::PackBuffer& data) cons
   add_to_pack(data, histsize);
   for (int var = 0; var < histsize; ++var)
   {
+    // insert last converged states
     add_to_pack(data, strainpllast_.at(var));
     add_to_pack(data, strainbarpllast_.at(var));
+
+    // insert current iteration states
+    add_to_pack(data, strainplcurr_.at(var));
+    add_to_pack(data, strainbarplcurr_.at(var));
   }
 }
 
@@ -113,16 +118,19 @@ void Mat::PlasticDruckerPrager::unpack(Core::Communication::UnpackBuffer& buffer
     strainbarplcurr_ = std::vector<double>();
     for (int var = 0; var < histsize; ++var)
     {
-      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tmp_vect(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tmp_vector(Core::LinAlg::Initialization::zero);
       double tmp_scalar = 0.0;
 
-      extract_from_pack(buffer, tmp_vect);
-      strainpllast_.push_back(tmp_vect);
-
+      // last converged states are unpacked
+      extract_from_pack(buffer, tmp_vector);
+      strainpllast_.push_back(tmp_vector);
       extract_from_pack(buffer, tmp_scalar);
       strainbarpllast_.push_back(tmp_scalar);
 
-      strainplcurr_.push_back(tmp_vect);
+      // current iteration states are unpacked
+      extract_from_pack(buffer, tmp_vector);
+      strainplcurr_.push_back(tmp_vector);
+      extract_from_pack(buffer, tmp_scalar);
       strainbarplcurr_.push_back(tmp_scalar);
     }
   }

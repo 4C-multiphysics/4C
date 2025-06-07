@@ -105,7 +105,9 @@ void Mat::PlasticElastHyperVCU::pack(Core::Communication::PackBuffer& data) cons
   add_to_pack(data, last_plastic_defgrd_inverse_);
   add_to_pack(data, last_alpha_isotropic_);
 
-  return;
+  // insert current iteration states
+  add_to_pack(data, plastic_defgrd_inverse_);
+  add_to_pack(data, delta_alpha_i_);
 }
 
 
@@ -116,8 +118,6 @@ void Mat::PlasticElastHyperVCU::unpack(Core::Communication::UnpackBuffer& buffer
   // make sure we have a pristine material
   params_ = nullptr;
   potsum_.clear();
-
-
 
   Core::Communication::extract_and_assert_id(buffer, unique_par_object_id());
 
@@ -165,15 +165,12 @@ void Mat::PlasticElastHyperVCU::unpack(Core::Communication::UnpackBuffer& buffer
   extract_from_pack(buffer, last_plastic_defgrd_inverse_);
   extract_from_pack(buffer, last_alpha_isotropic_);
 
-  // no need to pack this
-  delta_alpha_i_.resize(last_alpha_isotropic_.size(), 0.);
-  plastic_defgrd_inverse_.resize(last_plastic_defgrd_inverse_.size());
+  // current iteration states
+  extract_from_pack(buffer, plastic_defgrd_inverse_);
+  extract_from_pack(buffer, delta_alpha_i_);
 
   // in the postprocessing mode, we do not unpack everything we have packed
   // -> position check cannot be done in this case
-
-
-  return;
 }
 
 /*----------------------------------------------------------------------*/

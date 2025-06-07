@@ -96,9 +96,13 @@ void Mat::ViscoPlasticNoYieldSurface::pack(Core::Communication::PackBuffer& data
   if (parameter() != nullptr) matid = parameter()->id();
   add_to_pack(data, matid);
 
-  // pack history data
+  // insert last converged states
   add_to_pack(data, last_plastic_defgrd_inverse_);
   add_to_pack(data, last_flowres_isotropic_);
+
+  // insert current iteration states
+  add_to_pack(data, current_plastic_defgrd_inverse_);
+  add_to_pack(data, current_flowres_isotropic_);
 }
 
 /*----------------------------------------------------------------------*
@@ -126,13 +130,13 @@ void Mat::ViscoPlasticNoYieldSurface::unpack(Core::Communication::UnpackBuffer& 
     }
   }
 
-  // history data
+  // last converged states are unpacked
   extract_from_pack(buffer, last_plastic_defgrd_inverse_);
   extract_from_pack(buffer, last_flowres_isotropic_);
 
-  // no need to unpack this, just resize the data members
-  current_flowres_isotropic_.resize(last_flowres_isotropic_.size(), 0.0);
-  current_plastic_defgrd_inverse_.resize(last_plastic_defgrd_inverse_.size());
+  // current iteration states are unpacked
+  extract_from_pack(buffer, current_plastic_defgrd_inverse_);
+  extract_from_pack(buffer, current_flowres_isotropic_);
 }
 
 /*---------------------------------------------------------------------*

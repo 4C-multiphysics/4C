@@ -87,11 +87,19 @@ void Mat::PlasticGTN::pack(Core::Communication::PackBuffer& data) const
   add_to_pack(data, histsize);
   for (int var = 0; var < histsize; ++var)
   {
+    // insert last converged states
     add_to_pack(data, elastic_strain_n_.at(var));
     add_to_pack(data, strain_n_.at(var));
     add_to_pack(data, stress_n_.at(var));
     add_to_pack(data, f_n_.at(var));
     add_to_pack(data, epbar_n_.at(var));
+
+    // insert current iteration states
+    add_to_pack(data, elastic_strain_n1_.at(var));
+    add_to_pack(data, strain_n1_.at(var));
+    add_to_pack(data, stress_n1_.at(var));
+    add_to_pack(data, f_n1_.at(var));
+    add_to_pack(data, epbar_n1_.at(var));
   }
 }
 
@@ -145,27 +153,33 @@ void Mat::PlasticGTN::unpack(Core::Communication::UnpackBuffer& buffer)
     epbar_n1_ = std::vector<double>();
     for (int var = 0; var < histsize; ++var)
     {
-      Core::LinAlg::Matrix<3, 3> tmp_vect(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<3, 3> tmp_vector(Core::LinAlg::Initialization::zero);
       double tmp_scalar = 0.0;
 
-      extract_from_pack(buffer, tmp_vect);
-      elastic_strain_n_.push_back(tmp_vect);
-      elastic_strain_n1_.push_back(tmp_vect);
-
-      extract_from_pack(buffer, tmp_vect);
-      strain_n_.push_back(tmp_vect);
-      strain_n1_.push_back(tmp_vect);
-
-      extract_from_pack(buffer, tmp_vect);
-      stress_n_.push_back(tmp_vect);
-      stress_n1_.push_back(tmp_vect);
+      // last converged states are unpacked
+      extract_from_pack(buffer, tmp_vector);
+      elastic_strain_n_.push_back(tmp_vector);
+      extract_from_pack(buffer, tmp_vector);
+      strain_n_.push_back(tmp_vector);
+      extract_from_pack(buffer, tmp_vector);
+      stress_n_.push_back(tmp_vector);
 
       extract_from_pack(buffer, tmp_scalar);
       f_n_.push_back(tmp_scalar);
-      f_n1_.push_back(tmp_scalar);
-
       extract_from_pack(buffer, tmp_scalar);
       epbar_n_.push_back(tmp_scalar);
+
+      // current iteration states are unpacked
+      extract_from_pack(buffer, tmp_vector);
+      elastic_strain_n1_.push_back(tmp_vector);
+      extract_from_pack(buffer, tmp_vector);
+      strain_n1_.push_back(tmp_vector);
+      extract_from_pack(buffer, tmp_vector);
+      stress_n1_.push_back(tmp_vector);
+
+      extract_from_pack(buffer, tmp_scalar);
+      f_n1_.push_back(tmp_scalar);
+      extract_from_pack(buffer, tmp_scalar);
       epbar_n1_.push_back(tmp_scalar);
     }
   }

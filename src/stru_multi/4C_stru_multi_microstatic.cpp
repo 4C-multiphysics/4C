@@ -12,10 +12,8 @@
 #include "4C_fem_condition.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
-#include "4C_inpar_material.hpp"
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
-#include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
@@ -24,7 +22,10 @@
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_solid_3D_ele.hpp"
 #include "4C_structure_aux.hpp"
+#include "4C_structure_new_timint_base.hpp"
 #include "4C_utils_exceptions.hpp"
+
+#include <ranges>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -256,7 +257,7 @@ MultiScale::MicroStatic::MicroStatic(const int microdisnum, const double V0)
         "Multiscale simulations are currently only possible with the new solid elements");
 
     solid_ele->for_each_gauss_point(*discret_, la[0].lm_,
-        [&](Mat::So3Material& solid_material, double integration_factor, int gp)
+        [&](const Mat::So3Material& solid_material, const double integration_factor, const int gp)
         {
           // integrate volume
           my_micro_discretization_volume += integration_factor;
@@ -285,7 +286,7 @@ MultiScale::MicroStatic::MicroStatic(const int microdisnum, const double V0)
 }  // MultiScale::MicroStatic::MicroStatic
 
 
-void MultiScale::MicroStatic::predictor(Core::LinAlg::Matrix<3, 3>* defgrd)
+void MultiScale::MicroStatic::predictor(const Core::LinAlg::Matrix<3, 3>* defgrd)
 {
   if (pred_ == Inpar::Solid::pred_constdis)
     predict_const_dis(defgrd);
@@ -299,7 +300,7 @@ void MultiScale::MicroStatic::predictor(Core::LinAlg::Matrix<3, 3>* defgrd)
 /*----------------------------------------------------------------------*
  |  do predictor step (public)                               mwgee 03/07|
  *----------------------------------------------------------------------*/
-void MultiScale::MicroStatic::predict_const_dis(Core::LinAlg::Matrix<3, 3>* defgrd)
+void MultiScale::MicroStatic::predict_const_dis(const Core::LinAlg::Matrix<3, 3>* defgrd)
 {
   // apply new displacements at DBCs -> this has to be done with the
   // mid-displacements since the given macroscopic deformation
@@ -362,7 +363,7 @@ void MultiScale::MicroStatic::predict_const_dis(Core::LinAlg::Matrix<3, 3>* defg
 /*----------------------------------------------------------------------*
  |  do predictor step (public)                                  lw 01/09|
  *----------------------------------------------------------------------*/
-void MultiScale::MicroStatic::predict_tang_dis(Core::LinAlg::Matrix<3, 3>* defgrd)
+void MultiScale::MicroStatic::predict_tang_dis(const Core::LinAlg::Matrix<3, 3>* defgrd)
 {
   // for displacement increments on Dirichlet boundary
   std::shared_ptr<Core::LinAlg::Vector<double>> dbcinc =
@@ -746,6 +747,23 @@ void MultiScale::MicroStatic::runtime_pre_output_step_state()
   }
 }
 
+void MultiScale::MicroStatic::update_step_element()
+{
+  // fill parameter list for the discretization
+  Teuchos::ParameterList p;
+  p.set("total time", timen_);
+  p.set("delta time", dt_);
+  p.set("action", "calc_struct_update_istep");
+
+  // set state vectors
+  discret_->clear_state();
+  discret_->set_state("displacement", *disn_);
+
+  // evaluate elements
+  discret_->evaluate(p, nullptr, nullptr, nullptr, nullptr, nullptr);
+  discret_->clear_state();
+}
+
 /*----------------------------------------------------------------------*
  |  write runtime output (public)
  *----------------------------------------------------------------------*/
@@ -858,8 +876,9 @@ void MultiScale::MicroStatic::write_restart(std::shared_ptr<Core::IO::Discretiza
 /*----------------------------------------------------------------------*
  |  read restart (public)                                       lw 03/08|
  *----------------------------------------------------------------------*/
-void MultiScale::MicroStatic::read_restart(
-    int step, std::shared_ptr<Core::LinAlg::Vector<double>> dis, std::string name)
+void MultiScale::MicroStatic::read_restart(const int step,
+    std::shared_ptr<Core::LinAlg::Vector<double>> dis,
+    std::map<int, std::shared_ptr<std::vector<char>>>& history_data, const std::string& name)
 {
   std::shared_ptr<Core::IO::InputControl> inputcontrol =
       std::make_shared<Core::IO::InputControl>(name, true);
@@ -879,11 +898,30 @@ void MultiScale::MicroStatic::read_restart(
   timen_ = time_ + dt_;
   step_ = rstep;
   stepn_ = step_ + 1;
+
+  std::map<int, std::vector<char>> mapdata;
+  reader.read_map_data_of_char_vector(mapdata, "history_data");
+
+  // export history to proper element column layout
+  auto ks = std::views::keys(mapdata);
+  const std::vector<int> keys{ks.begin(), ks.end()};
+
+  const Core::LinAlg::Map read_in_ele_row_map =
+      Core::LinAlg::Map(-1, static_cast<int>(keys.size()), keys.data(), 0, discret_->get_comm());
+
+  Core::Communication::Exporter exporter(
+      read_in_ele_row_map, *discret_->element_col_map(), discret_->get_comm());
+  exporter.do_export<char>(mapdata);
+
+  for (const auto& [ele_id, data] : mapdata)
+  {
+    history_data[ele_id] = std::make_shared<std::vector<char>>(data);
+  }
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-double MultiScale::MicroStatic::get_time_to_step(int step, std::string name)
+double MultiScale::MicroStatic::get_time_to_step(const int step, const std::string& name)
 {
   std::shared_ptr<Core::IO::InputControl> inputcontrol(new Core::IO::InputControl(name, true));
   Core::IO::DiscretizationReader reader(discret_, inputcontrol, step);
@@ -891,7 +929,7 @@ double MultiScale::MicroStatic::get_time_to_step(int step, std::string name)
 }
 
 void MultiScale::MicroStatic::evaluate_micro_bc(
-    Core::LinAlg::Matrix<3, 3>* defgrd, Core::LinAlg::Vector<double>& disp)
+    const Core::LinAlg::Matrix<3, 3>* defgrd, Core::LinAlg::Vector<double>& disp)
 {
   std::vector<const Core::Conditions::Condition*> conds;
   discret_->get_condition("MicroBoundary", conds);
@@ -982,8 +1020,8 @@ void MultiScale::MicroStatic::clear_state()
 }
 
 void MultiScale::MicroStatic::static_homogenization(Core::LinAlg::Matrix<6, 1>* stress,
-    Core::LinAlg::Matrix<6, 6>* cmat, Core::LinAlg::Matrix<3, 3>* defgrd, const bool mod_newton,
-    bool& build_stiff)
+    Core::LinAlg::Matrix<6, 6>* cmat, const Core::LinAlg::Matrix<3, 3>* defgrd,
+    const bool mod_newton, bool& build_stiff)
 {
   // determine macroscopic parameters via averaging (homogenization) of
   // microscopic features according to Kouznetsova, Miehe etc.
@@ -1185,7 +1223,6 @@ void MultiScale::MicroStatic::static_homogenization(Core::LinAlg::Matrix<6, 1>* 
   }
 }
 
-
 void MultiScale::stop_np_multiscale()
 {
   MPI_Comm subcomm = Global::Problem::instance(0)->get_communicators()->sub_comm();
@@ -1193,7 +1230,6 @@ void MultiScale::stop_np_multiscale()
       static_cast<int>(MultiScale::MicromaterialNestedParallelismAction::stop_multiscale), -1};
   Core::Communication::broadcast(task, 2, 0, subcomm);
 }
-
 
 void MultiScale::MicroStaticParObject::pack(Core::Communication::PackBuffer& data) const
 {

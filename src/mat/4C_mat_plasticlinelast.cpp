@@ -96,16 +96,18 @@ void Mat::PlasticLinElast::pack(Core::Communication::PackBuffer& data) const
   add_to_pack(data, histsize);  // Length of history vector(s)
   for (int var = 0; var < histsize; ++var)
   {
-    // insert history vectors to add_to_pack
+    // insert last converged states
     add_to_pack(data, strainpllast_->at(var));
     add_to_pack(data, backstresslast_->at(var));
-
     add_to_pack(data, strainbarpllast_->at(var));
+
+    // insert current iteration states
+    add_to_pack(data, strainplcurr_->at(var));
+    add_to_pack(data, backstresscurr_->at(var));
+    add_to_pack(data, strainbarplcurr_->at(var));
   }
 
   add_to_pack(data, plastic_step_);
-
-  return;
 }  // pack()
 
 
@@ -156,22 +158,23 @@ void Mat::PlasticLinElast::unpack(Core::Communication::UnpackBuffer& buffer)
 
   for (int var = 0; var < histsize; ++var)
   {
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tmp_vect(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tmp_vector(Core::LinAlg::Initialization::zero);
     double tmp_scalar = 0.0;
-    // vectors of last converged state are unpacked
-    extract_from_pack(buffer, tmp_vect);
-    strainpllast_->push_back(tmp_vect);
-    extract_from_pack(buffer, tmp_vect);
-    backstresslast_->push_back(tmp_vect);
 
-    // scalar-valued vector of last converged state are unpacked
+    // last converged states are unpacked
+    extract_from_pack(buffer, tmp_vector);
+    strainpllast_->push_back(tmp_vector);
+    extract_from_pack(buffer, tmp_vector);
+    backstresslast_->push_back(tmp_vector);
     extract_from_pack(buffer, tmp_scalar);
     strainbarpllast_->push_back(tmp_scalar);
 
-    // current vectors have to be initialised
-    strainplcurr_->push_back(tmp_vect);
-    backstresscurr_->push_back(tmp_vect);
-
+    // current iteration states are unpacked
+    extract_from_pack(buffer, tmp_vector);
+    strainplcurr_->push_back(tmp_vector);
+    extract_from_pack(buffer, tmp_vector);
+    backstresscurr_->push_back(tmp_vector);
+    extract_from_pack(buffer, tmp_scalar);
     strainbarplcurr_->push_back(tmp_scalar);
   }
 

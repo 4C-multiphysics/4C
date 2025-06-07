@@ -109,10 +109,14 @@ void Mat::ViscoAnisotropic::pack(Core::Communication::PackBuffer& data) const
   if (numhist != 0) add_to_pack(data, numhist);  // Length of history vector(s)
   for (int var = 0; var < numhist; ++var)
   {
+    // insert last converged states
     add_to_pack(data, histstresslast_->at(var));
     add_to_pack(data, artstresslast_->at(var));
+
+    // insert current iteration states
+    add_to_pack(data, histstresscurr_->at(var));
+    add_to_pack(data, artstresscurr_->at(var));
   }
-  return;
 }
 
 
@@ -122,7 +126,6 @@ void Mat::ViscoAnisotropic::pack(Core::Communication::PackBuffer& data) const
 void Mat::ViscoAnisotropic::unpack(Core::Communication::UnpackBuffer& buffer)
 {
   isinit_ = true;
-
 
   Core::Communication::extract_and_assert_id(buffer, unique_par_object_id());
 
@@ -170,7 +173,6 @@ void Mat::ViscoAnisotropic::unpack(Core::Communication::UnpackBuffer& buffer)
     ca2_->at(gp) = a;
   }
 
-
   // unpack history
   extract_from_pack(buffer, numhist);
   histstresscurr_ = std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>();
@@ -179,16 +181,19 @@ void Mat::ViscoAnisotropic::unpack(Core::Communication::UnpackBuffer& buffer)
   artstresslast_ = std::make_shared<std::vector<Core::LinAlg::Matrix<NUM_STRESS_3D, 1>>>();
   for (int var = 0; var < numhist; var++)
   {
-    // current vectors have to be initialized
-    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tmp(Core::LinAlg::Initialization::zero);
-    histstresscurr_->push_back(tmp);
-    artstresscurr_->push_back(tmp);
+    Core::LinAlg::Matrix<NUM_STRESS_3D, 1> tmp_vector(Core::LinAlg::Initialization::zero);
 
     // last vectors are unpacked
-    extract_from_pack(buffer, tmp);
-    histstresslast_->push_back(tmp);
-    extract_from_pack(buffer, tmp);
-    artstresslast_->push_back(tmp);
+    extract_from_pack(buffer, tmp_vector);
+    histstresslast_->push_back(tmp_vector);
+    extract_from_pack(buffer, tmp_vector);
+    artstresslast_->push_back(tmp_vector);
+
+    // current iteration states are unpacked
+    extract_from_pack(buffer, tmp_vector);
+    histstresscurr_->push_back(tmp_vector);
+    extract_from_pack(buffer, tmp_vector);
+    artstresscurr_->push_back(tmp_vector);
   }
 }
 

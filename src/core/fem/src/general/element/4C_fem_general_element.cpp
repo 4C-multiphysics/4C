@@ -306,6 +306,45 @@ void Core::Elements::Element::unpack(Core::Communication::UnpackBuffer& buffer)
   }
 }
 
+void Core::Elements::Element::pack_history(Core::Communication::PackBuffer& data) const
+{
+  // pack type of this instance of ParObject
+  int type = unique_par_object_id();
+  add_to_pack(data, type);
+
+  // material can potentially hold history variables
+  if (mat_[0] != nullptr)
+  {
+    add_to_pack(data, true);
+    // pack only first material
+    mat_[0]->pack(data);
+  }
+  else
+  {
+    add_to_pack(data, false);
+  }
+}
+
+void Core::Elements::Element::unpack_history(Core::Communication::UnpackBuffer& buffer)
+{
+  Core::Communication::extract_and_assert_id(buffer, unique_par_object_id());
+
+  // restore material with its potential history variables
+  bool have_mat;
+  extract_from_pack(buffer, have_mat);
+  if (have_mat)
+  {
+    Core::Communication::ParObject* o = Core::Communication::factory(buffer);
+    auto* mat = dynamic_cast<Core::Mat::Material*>(o);
+    if (mat == nullptr) FOUR_C_THROW("failed to unpack material");
+    // unpack only first material
+    mat_[0] = std::shared_ptr<Core::Mat::Material>(mat);
+  }
+  else
+  {
+    mat_[0] = nullptr;
+  }
+}
 
 /*----------------------------------------------------------------------*
  |  Build nodal pointers                                    (protected) |
