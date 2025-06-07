@@ -5,8 +5,6 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "4C_config.hpp"
-
 #include "4C_utils_singleton_owner.hpp"
 
 #include <benchmark/benchmark.h>
@@ -24,8 +22,6 @@ int main(int argc, char** argv)
   } cleanup;
   // Kokkos should be initialized right after MPI.
   Kokkos::ScopeGuard kokkos_guard{};
-
-  Core::Utils::SingletonOwnerRegistry::ScopeGuard guard;
 
   benchmark::Initialize(&argc, argv);
   benchmark::RunSpecifiedBenchmarks();

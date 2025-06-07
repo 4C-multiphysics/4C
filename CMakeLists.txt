@@ -195,6 +195,7 @@ add_subdirectory(doc EXCLUDE_FROM_ALL)
 
 # Tests
 add_subdirectory(unittests)
+add_subdirectory(tests/benchmark_tests)
 add_subdirectory(tests/cut_test)
 include(tests/list_of_tests.cmake)
 

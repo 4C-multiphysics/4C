@@ -26,7 +26,8 @@
         "FOUR_C_WITH_BACKTRACE": "ON",
         "FOUR_C_BACKTRACE_ROOT": "/opt/4C-dependencies",
         "FOUR_C_WITH_MIRCO": "ON",
-        "FOUR_C_WITH_DEAL_II": "ON"
+        "FOUR_C_WITH_DEAL_II": "ON",
+        "FOUR_C_WITH_GOOGLE_BENCHMARK": "ON"
       }
     },
     {
@@ -85,7 +86,8 @@
         "FOUR_C_ENABLE_ASSERTIONS": "ON",
         "CMAKE_CXX_COMPILER": "clang++",
         "FOUR_C_BUILD_DOCUMENTATION": "OFF",
-        "CMAKE_UNITY_BUILD": "ON"
+        "CMAKE_UNITY_BUILD": "ON",
+        "FOUR_C_WITH_GOOGLE_BENCHMARK": "OFF"
       }
     },
     {
@@ -112,6 +114,7 @@
       "cacheVariables": {
         "FOUR_C_PVPYTHON": "",
         "FOUR_C_WITH_GOOGLETEST": "OFF",
+        "FOUR_C_WITH_GOOGLE_BENCHMARK": "OFF",
         "FOUR_C_BUILD_DOXYGEN": "OFF",
         "FOUR_C_BUILD_DOCUMENTATION": "OFF",
         "FOUR_C_DOXYGEN_USE_LOCAL_MATHJAX": "OFF"
