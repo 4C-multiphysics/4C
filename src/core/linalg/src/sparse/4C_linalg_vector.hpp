@@ -173,13 +173,6 @@ namespace Core::LinAlg
       return vector_->ReplaceMyValue(MyRow, 0, ScalarValue);
     }
 
-    //! Replace values in a vector with a given indexed list of values, indices are in local index
-    //! space.
-    int replace_local_values(int NumEntries, const double* Values, const int* Indices)
-    {
-      return vector_->ReplaceMyValues(NumEntries, Values, Indices);
-    }
-
     int replace_global_value(int GlobalRow, double ScalarValue)
     {
       return vector_->ReplaceGlobalValue(GlobalRow, 0, ScalarValue);

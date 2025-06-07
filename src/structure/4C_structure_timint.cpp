@@ -1542,8 +1542,8 @@ void Solid::TimInt::update_step_contact_vum()
       for (int i = 0; i < activenodemap->num_my_elements(); ++i)
       {
         x->put_scalar(0.0);
-        (A->epetra_matrix())->ExtractMyRowView(i, NumEntries, Values, Indices);
-        x->replace_local_values(NumEntries, Values, Indices);
+        A->extract_global_row_view(activenodemap->gid(i), NumEntries, Values, Indices);
+        x->replace_global_values(NumEntries, Values, Indices);
         (*f)[i] = (*b)[i] * (*p)[i] + (*w)[i];
         for (int j = 0; j < activenodemap->num_my_elements(); ++j)
         {
@@ -1559,8 +1559,8 @@ void Solid::TimInt::update_step_contact_vum()
       for (int i = 0; i < activenodemap->num_my_elements(); ++i)
       {
         x->put_scalar(0.0);
-        (A->epetra_matrix())->ExtractMyRowView(i, NumEntries, Values, Indices);
-        x->replace_local_values(NumEntries, Values, Indices);
+        A->extract_global_row_view(activenodemap->gid(i), NumEntries, Values, Indices);
+        x->replace_global_values(NumEntries, Values, Indices);
         for (int k = 0; k < activenodemap->num_my_elements(); ++k)
         {
           if (k == i)
@@ -1604,8 +1604,8 @@ void Solid::TimInt::update_step_contact_vum()
         for (int i = 0; i < activenodemap->num_my_elements(); ++i)
         {
           x->put_scalar(0.0);
-          (A->epetra_matrix())->ExtractMyRowView(i, NumEntries, Values, Indices);
-          x->replace_local_values(NumEntries, Values, Indices);
+          A->extract_global_row_view(activenodemap->gid(i), NumEntries, Values, Indices);
+          x->replace_global_values(NumEntries, Values, Indices);
           (*f)[i] = (*b)[i] * (*p)[i] + (*w)[i];
           for (int j = 0; j < activenodemap->num_my_elements(); ++j)
           {
@@ -1622,8 +1622,8 @@ void Solid::TimInt::update_step_contact_vum()
         for (int i = 0; i < activenodemap->num_my_elements(); ++i)
         {
           x->put_scalar(0.0);
-          (A->epetra_matrix())->ExtractMyRowView(i, NumEntries, Values, Indices);
-          x->replace_local_values(NumEntries, Values, Indices);
+          A->extract_global_row_view(activenodemap->gid(i), NumEntries, Values, Indices);
+          x->replace_global_values(NumEntries, Values, Indices);
           for (int k = 0; k < activenodemap->num_my_elements(); ++k)
           {
             if (k == i)

@@ -57,10 +57,11 @@ namespace
       int* indices = new int[numMyEles];
       for (int lid = 0; lid < numMyEles; ++lid)
       {
-        indices[lid] = lid;
-        values[lid] = map->gid(lid);
+        const int gid = map->gid(lid);
+        indices[lid] = gid;
+        values[lid] = gid;
       }
-      vector_->replace_local_values(numMyEles, values, indices);
+      vector_->replace_global_values(numMyEles, values, indices);
     }
 
     void TearDown() override { Core::IO::cout.close(); }
