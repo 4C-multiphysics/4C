@@ -14,7 +14,6 @@
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_mat_cnst_1d_art.hpp"
-#include "4C_porofluid_pressure_based_elast_scatra_artery_coupling_defines.hpp"
 #include "4C_porofluid_pressure_based_elast_scatra_artery_coupling_pair.hpp"
 #include "4C_porofluid_pressure_based_ele_parameter.hpp"
 #include "4C_scatra_ele_parameter_timint.hpp"
@@ -50,7 +49,7 @@ PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm::
               .sublist("ARTERY COUPLING")
               .get<double>("DELETE_SMALL_FREE_HANGING_COMPS")),
       artery_coupling_method_(
-          Teuchos::getIntegralValue<Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod>(
+          Teuchos::getIntegralValue<Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod>(
               coupling_params, "ARTERY_COUPLING_METHOD")),
       timefacrhs_artery_(0.0),
       timefacrhs_homogenized_(0.0),
@@ -117,7 +116,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
 {
   // create the pairs
   if (artery_coupling_method_ ==
-      Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::ntp)
+      Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp)
   {
     get_coupling_nodes_from_input_node_to_point();
     if (coupling_nodes_for_node_to_point_.size() == 0)
@@ -257,7 +256,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
       if (coupled_elements[1]->owner() == my_mpi_rank_)
       {
         // construct, init and setup coupling pairs
-        const std::shared_ptr<PoroMultiPhaseScatraArteryCouplingPairBase> current_pair =
+        const std::shared_ptr<PorofluidElastScatraArteryCouplingPairBase> current_pair =
             create_new_artery_coupling_pair(coupled_elements);
         current_pair->init(coupled_elements, coupling_params_, porofluid_coupling_params,
             coupled_dofs_homogenized_, coupled_dofs_artery_, scale_vector_, function_vector_,
@@ -349,7 +348,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
             if (coupled_elements[1]->owner() == my_mpi_rank_)
             {
               // construct, init and setup coupling pairs
-              const std::shared_ptr<PoroMultiPhaseScatraArteryCouplingPairBase> current_pair =
+              const std::shared_ptr<PorofluidElastScatraArteryCouplingPairBase> current_pair =
                   create_new_artery_coupling_pair(coupled_elements);
               current_pair->init(coupled_elements, coupling_params_, porofluid_coupling_params,
                   coupled_dofs_homogenized_, coupled_dofs_artery_, scale_vector_, function_vector_,
@@ -416,7 +415,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
         const std::shared_ptr<Core::LinAlg::Vector<double>> rhs)
 {
   // reset
-  if (artery_coupling_method_ == Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::mp)
+  if (artery_coupling_method_ == Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mp)
   {
     mortar_matrix_d_->zero();
     mortar_matrix_m_->zero();
@@ -467,7 +466,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
 
     // get the segment lengths
     const std::vector<double> segment_lengths =
-        get_ele_segment_length(coupled_ele_pair->ele1_gid());
+        get_ele_segment_length(coupled_ele_pair->artery_ele_gid());
 
     // evaluate
     const double integrated_diameter = coupled_ele_pair->evaluate(&(ele_rhs[0]), &(ele_rhs[1]),
@@ -475,15 +474,15 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
         &M_ele, &Kappa_ele, segment_lengths);
 
     // assemble
-    assemble(coupled_ele_pair->ele1_gid(), coupled_ele_pair->ele2_gid(), integrated_diameter,
-        ele_rhs, ele_matrix, sysmat, rhs);
+    assemble(coupled_ele_pair->artery_ele_gid(), coupled_ele_pair->homogenized_ele_gid(),
+        integrated_diameter, ele_rhs, ele_matrix, sysmat, rhs);
 
     // in the case of MP, assemble D, M and Kappa
     if (artery_coupling_method_ ==
-            Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::mp and
+            Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mp and
         num_coupled_dofs_ > 0)
-      assemble_mortar_matrices_and_vector(
-          coupled_ele_pair->ele1_gid(), coupled_ele_pair->ele2_gid(), D_ele, M_ele, Kappa_ele);
+      assemble_mortar_matrices_and_vector(coupled_ele_pair->artery_ele_gid(),
+          coupled_ele_pair->homogenized_ele_gid(), D_ele, M_ele, Kappa_ele);
   }
 
   // set artery diameter in material to be able to evaluate the 1D elements with variable diameter
@@ -511,7 +510,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
 
   // assemble D and M contributions into global force and stiffness
   if (artery_coupling_method_ ==
-          Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::mp and
+          Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mp and
       num_coupled_dofs_ > 0)
     sum_mortar_matrices_into_global_matrix(*sysmat, rhs);
 }
@@ -590,7 +589,8 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
     const int artery_dof_gid = artery_dis_->dof_row_map()->gid(i);
     const double kappa_value =
         (*mortar_kappa_inv_)[0][mortar_kappa_inv_->Map().LID(artery_dof_gid)];
-    if (fabs(kappa_value) > KAPPAINVTOL)
+
+    if (fabs(kappa_value) > 1.0e-10)
       mortar_kappa_inv_->ReplaceGlobalValue(artery_dof_gid, 0, 1.0 / kappa_value);
     else
       mortar_kappa_inv_->ReplaceGlobalValue(artery_dof_gid, 0, 0.0);
@@ -662,7 +662,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-std::shared_ptr<PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPairBase> PoroPressureBased::
+std::shared_ptr<PoroPressureBased::PorofluidElastScatraArteryCouplingPairBase> PoroPressureBased::
     PorofluidElastScatraArteryCouplingNonConformingAlgorithm::create_new_artery_coupling_pair(
         std::vector<Core::Elements::Element const*> const& elements)
 {
@@ -679,13 +679,13 @@ std::shared_ptr<PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPairBase> P
           switch (Global::Problem::instance()->n_dim())
           {
             case 1:
-              return std::make_shared<PoroMultiPhaseScatraArteryCouplingPair<
+              return std::make_shared<PorofluidElastScatraArteryCouplingPair<
                   Core::FE::CellType::line2, Core::FE::CellType::quad4, 1>>();
             case 2:
-              return std::make_shared<PoroMultiPhaseScatraArteryCouplingPair<
+              return std::make_shared<PorofluidElastScatraArteryCouplingPair<
                   Core::FE::CellType::line2, Core::FE::CellType::quad4, 2>>();
             case 3:
-              return std::make_shared<PoroMultiPhaseScatraArteryCouplingPair<
+              return std::make_shared<PorofluidElastScatraArteryCouplingPair<
                   Core::FE::CellType::line2, Core::FE::CellType::quad4, 3>>();
             default:
               FOUR_C_THROW("Unsupported dimension {}.", Global::Problem::instance()->n_dim());
@@ -696,13 +696,13 @@ std::shared_ptr<PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPairBase> P
           switch (Global::Problem::instance()->n_dim())
           {
             case 1:
-              return std::make_shared<PoroMultiPhaseScatraArteryCouplingPair<
+              return std::make_shared<PorofluidElastScatraArteryCouplingPair<
                   Core::FE::CellType::line2, Core::FE::CellType::hex8, 1>>();
             case 2:
-              return std::make_shared<PoroMultiPhaseScatraArteryCouplingPair<
+              return std::make_shared<PorofluidElastScatraArteryCouplingPair<
                   Core::FE::CellType::line2, Core::FE::CellType::hex8, 2>>();
             case 3:
-              return std::make_shared<PoroMultiPhaseScatraArteryCouplingPair<
+              return std::make_shared<PorofluidElastScatraArteryCouplingPair<
                   Core::FE::CellType::line2, Core::FE::CellType::hex8, 3>>();
             default:
               FOUR_C_THROW("Unsupported dimension {}.", Global::Problem::instance()->n_dim());
@@ -713,13 +713,13 @@ std::shared_ptr<PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPairBase> P
           switch (Global::Problem::instance()->n_dim())
           {
             case 1:
-              return std::make_shared<PoroMultiPhaseScatraArteryCouplingPair<
+              return std::make_shared<PorofluidElastScatraArteryCouplingPair<
                   Core::FE::CellType::line2, Core::FE::CellType::tet4, 1>>();
             case 2:
-              return std::make_shared<PoroMultiPhaseScatraArteryCouplingPair<
+              return std::make_shared<PorofluidElastScatraArteryCouplingPair<
                   Core::FE::CellType::line2, Core::FE::CellType::tet4, 2>>();
             case 3:
-              return std::make_shared<PoroMultiPhaseScatraArteryCouplingPair<
+              return std::make_shared<PorofluidElastScatraArteryCouplingPair<
                   Core::FE::CellType::line2, Core::FE::CellType::tet4, 3>>();
             default:
               FOUR_C_THROW("Unsupported dimension {}.", Global::Problem::instance()->n_dim());
@@ -730,13 +730,13 @@ std::shared_ptr<PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPairBase> P
           switch (Global::Problem::instance()->n_dim())
           {
             case 1:
-              return std::make_shared<PoroMultiPhaseScatraArteryCouplingPair<
+              return std::make_shared<PorofluidElastScatraArteryCouplingPair<
                   Core::FE::CellType::line2, Core::FE::CellType::tet10, 1>>();
             case 2:
-              return std::make_shared<PoroMultiPhaseScatraArteryCouplingPair<
+              return std::make_shared<PorofluidElastScatraArteryCouplingPair<
                   Core::FE::CellType::line2, Core::FE::CellType::tet10, 2>>();
             case 3:
-              return std::make_shared<PoroMultiPhaseScatraArteryCouplingPair<
+              return std::make_shared<PorofluidElastScatraArteryCouplingPair<
                   Core::FE::CellType::line2, Core::FE::CellType::tet10, 3>>();
             default:
               FOUR_C_THROW("Unsupported dimension {}.", Global::Problem::instance()->n_dim());
@@ -824,10 +824,10 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
     print_coupling_method() const
 {
   std::string coupling_method;
-  if (artery_coupling_method_ == Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::mp)
+  if (artery_coupling_method_ == Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mp)
     coupling_method = "Mortar Penalty";
   else if (artery_coupling_method_ ==
-           Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::gpts)
+           Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::gpts)
     coupling_method = "Gauss-Point-To-Segment";
   else
     FOUR_C_THROW("unknown coupling method");

@@ -17,428 +17,456 @@
 #include "4C_global_data.hpp"
 #include "4C_mat_cnst_1d_art.hpp"
 #include "4C_mat_fluidporo_multiphase.hpp"
-#include "4C_porofluid_pressure_based_elast_scatra_artery_coupling_defines.hpp"
 #include "4C_porofluid_pressure_based_ele_parameter.hpp"
 #include "4C_scatra_ele_parameter_timint.hpp"
 #include "4C_utils_enum.hpp"
 #include "4C_utils_fad.hpp"
 #include "4C_utils_function.hpp"
 
-
 FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::PoroMultiPhaseScatraArteryCouplingPair()
-    : PoroMultiPhaseScatraArteryCouplingPairBase(),
-      coupltype_(CouplingType::undefined),
-      couplmethod_(Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::none),
-      condname_(""),
-      isinit_(false),
-      ispreevaluated_(false),
-      isactive_(false),
-      funct_coupl_active_(false),
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery, dis_type_homogenized,
+    dim>::PorofluidElastScatraArteryCouplingPair()
+    : PorofluidElastScatraArteryCouplingPairBase(),
+      coupling_type_(CouplingType::undefined),
+      coupling_method_(Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::none),
+      condition_name_(""),
+      is_init_(false),
+      is_pre_evaluated_(false),
+      is_active_(false),
+      function_coupling_active_(false),
       variable_diameter_active_(false),
       evaluate_in_ref_config_(true),
       evaluate_on_lateral_surface_(true),
-      element1_(nullptr),
-      element2_(nullptr),
-      arterydiamref_(0.0),
-      arterydiam_at_gp_(0.0),
-      numdof_cont_(0),
-      numdof_art_(0),
-      dim1_(0),
-      dim2_(0),
-      numcoupleddofs_(0),
-      numfluidphases_(0),
-      numvolfrac_(0),
-      numscalcont_(0),
-      numscalart_(0),
+      artery_element_(nullptr),
+      homogenized_element_(nullptr),
+      artery_diameter_ref_(0.0),
+      artery_diameter_at_gp_(0.0),
+      num_dof_homogenized_(0),
+      num_dof_artery_(0),
+      dim_artery_(0),
+      dim_homogenized_(0),
+      num_coupled_dofs_(0),
+      num_fluid_phases_(0),
+      num_volfracs_(0),
+      num_scalars_homogenized_(0),
+      num_scalars_artery_(0),
       nds_porofluid_(-1),
-      n_gp_(0),
-      n_gp_per_patch_(0),
-      arteryelelengthref_(0.0),
-      arteryelelength_(0.0),
-      jacobi_(0.0),
-      pp_(0.0),
-      eta_a_(0.0),
-      eta_b_(0.0),
-      curr_segment_length_(0.0),
+      num_gp_(0),
+      num_gp_per_patch_(0),
+      artery_ele_length_ref_(0.0),
+      artery_ele_length_(0.0),
+      jacobian_determinant_(0.0),
+      penalty_parameter_(0.0),
+      artery_segment_start_(0.0),
+      artery_segment_end_(0.0),
+      current_segment_length_(0.0),
       constant_part_evaluated_(false),
       coupling_element_type_(""),
-      artdiam_funct_(nullptr),
-      porosityname_("porosity"),
-      artpressname_("p_art"),
-      segmentid_(-1),
-      numpatch_axi_(0),
-      numpatch_rad_(0),
-      timefacrhs_art_dens_(0.0),
-      timefacrhs_cont_dens_(0.0),
-      timefacrhs_art_(0.0),
-      timefacrhs_cont_(0.0)
+      artery_diameter_funct_(nullptr),
+      porosity_name_("porosity"),
+      artery_pressure_name_("p_art"),
+      segment_id_(-1),
+      num_patches_axial_(0),
+      num_patches_radial_(0),
+      timefacrhs_artery_density_(0.0),
+      timefacrhs_homogenized_density_(0.0),
+      timefacrhs_artery_(0.0),
+      timefacrhs_homogenized_(0.0)
 {
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::init(std::vector<Core::Elements::Element const*> elements,
-    const Teuchos::ParameterList& couplingparams, const Teuchos::ParameterList& fluidcouplingparams,
-    const std::vector<int>& coupleddofs_cont, const std::vector<int>& coupleddofs_art,
-    const std::vector<std::vector<int>>& scale_vec, const std::vector<std::vector<int>>& funct_vec,
-    const std::string condname, const double penalty, const std::string couplingtype,
-    const int eta_ntp)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::init(const std::vector<Core::Elements::Element const*> elements,
+    const Teuchos::ParameterList& coupling_params,
+    const Teuchos::ParameterList& porofluid_coupling_params,
+    const std::vector<int>& coupled_dofs_homogenized, const std::vector<int>& coupled_dofs_artery,
+    const std::vector<std::vector<int>>& scale_vector,
+    const std::vector<std::vector<int>>& function_id_vector, const std::string condition_name,
+    const double penalty_parameter, const std::string coupling_type, const int eta_ntp)
 {
-  // init stuff
-  couplmethod_ =
-      Teuchos::getIntegralValue<Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod>(
-          couplingparams, "ARTERY_COUPLING_METHOD");
+  coupling_method_ =
+      Teuchos::getIntegralValue<Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod>(
+          coupling_params, "ARTERY_COUPLING_METHOD");
 
-  condname_ = condname;
+  condition_name_ = condition_name;
 
-  evaluate_in_ref_config_ = fluidcouplingparams.get<bool>("EVALUATE_IN_REF_CONFIG");
+  evaluate_in_ref_config_ = porofluid_coupling_params.get<bool>("EVALUATE_IN_REF_CONFIG");
 
-  evaluate_on_lateral_surface_ = fluidcouplingparams.get<bool>("LATERAL_SURFACE_COUPLING");
+  evaluate_on_lateral_surface_ = porofluid_coupling_params.get<bool>("LATERAL_SURFACE_COUPLING");
 
-  coupling_element_type_ = couplingtype;
+  coupling_element_type_ = coupling_type;
 
-  numpatch_axi_ = fluidcouplingparams.get<int>("NUMPATCH_AXI");
-  numpatch_rad_ = fluidcouplingparams.get<int>("NUMPATCH_RAD");
+  num_patches_axial_ = porofluid_coupling_params.get<int>("NUMPATCH_AXI");
+  num_patches_radial_ = porofluid_coupling_params.get<int>("NUMPATCH_RAD");
 
-  element1_ = elements[0];
-  element2_ = elements[1];
+  artery_element_ = elements[0];
+  homogenized_element_ = elements[1];
 
   // set coupling type
-  if (element1_->element_type().name() == "ArteryType" &&
-      element2_->element_type().name() == "PoroFluidMultiPhaseType")
+  if (artery_element_->element_type().name() == "ArteryType" &&
+      homogenized_element_->element_type().name() == "PoroFluidMultiPhaseType")
   {
-    coupltype_ = CouplingType::porofluid;
+    coupling_type_ = CouplingType::porofluid;
     nds_porofluid_ = 0;
   }
-  else if (element1_->element_type().name() == "TransportType" &&
-           element2_->element_type().name() == "TransportType")
+  else if (artery_element_->element_type().name() == "TransportType" &&
+           homogenized_element_->element_type().name() == "TransportType")
   {
-    coupltype_ = CouplingType::scatra;
+    coupling_type_ = CouplingType::scatra;
     nds_porofluid_ = 2;
   }
   else
   {
     FOUR_C_THROW(
-        "Your selected coupling is not possible, type of element1: {}, type of element2: {}",
-        element1_->element_type().name(), element2_->element_type().name());
+        "Your selected coupling is not possible, type of element 1: {}, type of element 2: {}",
+        artery_element_->element_type().name(), homogenized_element_->element_type().name());
   }
 
-  if (couplmethod_ == Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::ntp)
+  if (coupling_method_ == Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp)
   {
     // set eta
-    eta_.resize(1);
-    eta_[0] = eta_ntp;
+    gp_coords_artery_.resize(1);
+    gp_coords_artery_[0] = eta_ntp;
 
-    // check couplingtype
+    // check coupling type
     if (coupling_element_type_ != "ARTERY" && coupling_element_type_ != "AIRWAY")
     {
-      if (coupltype_ == CouplingType::porofluid)
+      if (coupling_type_ == CouplingType::porofluid)
       {
         FOUR_C_THROW(
             "Wrong coupling type in DESIGN 1D ARTERY TO POROFLUID NONCONF COUPLING CONDITIONS.\n "
-            "NTP-coupling is only possible for coupling type: "
-            " 'ARTERY' or 'AIRWAY'. "
-            "Your coupling type "
-            "is: {}",
+            "NTP-coupling is only possible for coupling type: 'ARTERY' or 'AIRWAY'. "
+            "Your coupling type is: {}",
             coupling_element_type_);
       }
       else
       {
         FOUR_C_THROW(
             "Wrong coupling type in DESIGN 1D ARTERY TO SCATRA NONCONF COUPLING CONDITIONS.\n"
-            "NTP-coupling is only possible for coupling type: "
-            "'ARTERY' or 'AIRWAY'. "
-            "Your coupling type "
-            "is: {}",
+            "NTP-coupling is only possible for coupling type: 'ARTERY' or 'AIRWAY'. "
+            "Your coupling type is: {}",
             coupling_element_type_);
       }
     }
   }
 
   // get number of DOFs of artery or artery-scatra
-  const Core::Nodes::Node* const* artnodes;
-  artnodes = element1_->nodes();
+  const Core::Nodes::Node* const* artery_nodes = artery_element_->nodes();
 
-  numdof_art_ = element1_->num_dof_per_node(*artnodes[0]);
-  for (int i = 1; i < element1_->num_node(); i++)
-    if (numdof_art_ != element1_->num_dof_per_node(*artnodes[i]))
+  num_dof_artery_ = artery_element_->num_dof_per_node(*artery_nodes[0]);
+  for (int i = 1; i < artery_element_->num_node(); i++)
+    if (num_dof_artery_ != artery_element_->num_dof_per_node(*artery_nodes[i]))
       FOUR_C_THROW("It is not possible to have different number of Dofs in artery discretization");
-  dim1_ = numdof_art_ * element1_->num_node();
+  dim_artery_ = num_dof_artery_ * artery_element_->num_node();
 
-  // get number of DOFs of continuous ele (scatra or porofluid)
-  const Core::Nodes::Node* const* contnodes;
-  contnodes = element2_->nodes();
+  // get number of DOFs of homogenized ele (scatra or porofluid)
+  const Core::Nodes::Node* const* homogenized_nodes = homogenized_element_->nodes();
 
-  numdof_cont_ = element2_->num_dof_per_node(*contnodes[0]);
-  for (int i = 1; i < element2_->num_node(); i++)
-    if (numdof_cont_ != element2_->num_dof_per_node(*contnodes[i]))
+  num_dof_homogenized_ = homogenized_element_->num_dof_per_node(*homogenized_nodes[0]);
+  for (int i = 1; i < homogenized_element_->num_node(); i++)
+  {
+    if (num_dof_homogenized_ != homogenized_element_->num_dof_per_node(*homogenized_nodes[i]))
       FOUR_C_THROW(
-          "It is not possible to have different number of Dofs in continuous discretization");
-  dim2_ = numdof_cont_ * element2_->num_node();
+          "It is not possible to have different number of Dofs in homogenized discretization");
+  }
+  dim_homogenized_ = num_dof_homogenized_ * homogenized_element_->num_node();
 
   // safety check
-  if (numdof_art_ != (int)(scale_vec[0].size()))
+  if (std::cmp_not_equal(num_dof_artery_, (scale_vector[0].size())))
     FOUR_C_THROW("Wrong size of scale-vector (artery)");
-  if (numdof_art_ != (int)(funct_vec[0].size()))
+  if (std::cmp_not_equal(num_dof_artery_, (function_id_vector[0].size())))
     FOUR_C_THROW("Wrong size of function-vector (artery)");
-  if (numdof_cont_ != (int)(scale_vec[1].size()))
-    FOUR_C_THROW("Wrong size of scale-vector (continuous discretization)");
-  if (numdof_cont_ != (int)(funct_vec[1].size()))
-    FOUR_C_THROW("Wrong size of function-vector (continuous discretization)");
+  if (std::cmp_not_equal(num_dof_homogenized_, (scale_vector[1].size())))
+    FOUR_C_THROW("Wrong size of scale-vector (homogenized discretization)");
+  if (std::cmp_not_equal(num_dof_homogenized_, (function_id_vector[1].size())))
+    FOUR_C_THROW("Wrong size of function-vector (homogenized discretization)");
 
   // fill scale vector
-  scale_vec_ = scale_vec;
+  scale_vector_ = scale_vector;
 
   // fill function vector
-  funct_vec_.resize(2);
-  funct_vec_[0].resize(numdof_art_);
-  funct_vec_[1].resize(numdof_cont_);
-  fill_function_vector(funct_vec_[0], funct_vec[0], scale_vec_[0]);
-  fill_function_vector(funct_vec_[1], funct_vec[1], scale_vec_[1]);
+  function_vector_.resize(2);
+  function_vector_[0].resize(num_dof_artery_);
+  function_vector_[1].resize(num_dof_homogenized_);
+  fill_function_vector(function_vector_[0], function_id_vector[0], scale_vector_[0]);
+  fill_function_vector(function_vector_[1], function_id_vector[1], scale_vector_[1]);
 
   // get the actually coupled dofs
-  coupleddofs_cont_ = coupleddofs_cont;
+  coupled_dofs_homogenized_ = coupled_dofs_homogenized;
   // Note: this will be overwritten in case of arteryscatra-scatra coupling
-  volfracpressid_ = coupleddofs_cont;
-  coupleddofs_art_ = coupleddofs_art;
-  numcoupleddofs_ = coupleddofs_cont.size();
+  volfrac_pressure_id_ = coupled_dofs_homogenized;
+  coupled_dofs_artery_ = coupled_dofs_artery;
+  num_coupled_dofs_ = static_cast<int>(coupled_dofs_homogenized.size());
 
   // safety check
-  for (int icont = 0; icont < numcoupleddofs_; icont++)
+  for (int i_homo = 0; i_homo < num_coupled_dofs_; i_homo++)
   {
-    if (coupleddofs_cont_[icont] >= numdof_cont_)
+    if (coupled_dofs_homogenized_[i_homo] >= num_dof_homogenized_)
     {
       FOUR_C_THROW(
-          "You try to couple DOF {}, which is larger than the number of dofs of the continuous "
-          "discretization",
-          coupleddofs_cont_[icont] + 1);
+          "You try to couple DOF {}, which is larger than the number of dofs of the homogenized "
+          "discretization.",
+          coupled_dofs_homogenized_[i_homo] + 1);
     }
-    if (coupleddofs_cont_[icont] < 0)
+    if (coupled_dofs_homogenized_[i_homo] < 0)
     {
-      FOUR_C_THROW("Your coupling DOF of the continuous discretization must be >= 0, your DOF = {}",
-          coupleddofs_cont_[icont] + 1);
+      FOUR_C_THROW(
+          "Your coupling DOF of the homogenized discretization must be >= 0, your DOF = {}.",
+          coupled_dofs_homogenized_[i_homo] + 1);
     }
   }
-  for (int iart = 0; iart < numcoupleddofs_; iart++)
+  for (int i_art = 0; i_art < num_coupled_dofs_; i_art++)
   {
-    if (coupleddofs_art_[iart] >= numdof_art_)
+    if (coupled_dofs_artery_[i_art] >= num_dof_artery_)
     {
       FOUR_C_THROW(
           "You try to couple DOF {}, which is larger than the number of dofs of the artery "
-          "discretization",
-          coupleddofs_art_[iart] + 1);
+          "discretization.",
+          coupled_dofs_artery_[i_art] + 1);
     }
-    if (coupleddofs_art_[iart] < 0)
+    if (coupled_dofs_artery_[i_art] < 0)
     {
-      FOUR_C_THROW("Your coupling DOF of the reduced discretization must be >= 0, your DOF = {}",
-          coupleddofs_art_[iart] + 1);
+      FOUR_C_THROW("Your coupling DOF of the reduced discretization must be >= 0, your DOF = {}.",
+          coupled_dofs_artery_[i_art] + 1);
     }
   }
 
   // Set reference nodal positions for artery element
-  for (unsigned int n = 0; n < numnodesart_; ++n)
+  for (unsigned int n = 0; n < num_nodes_artery_; ++n)
   {
-    const Core::Nodes::Node* node = element1_->nodes()[n];
-    for (unsigned int d = 0; d < numdim_; ++d) ele1posref_(numdim_ * n + d) = node->x()[d];
+    const Core::Nodes::Node* node = artery_element_->nodes()[n];
+    for (unsigned int d = 0; d < num_dim_; ++d)
+      nodal_coords_artery_ele_ref_(num_dim_ * n + d) = node->x()[d];
   }
 
   // get length of 1D element
-  static Core::LinAlg::Matrix<numdim_, 1> arterypos0;
-  for (unsigned int d = 0; d < numdim_; ++d) arterypos0(d) = ele1posref_(d);
-  static Core::LinAlg::Matrix<numdim_, 1> arterypos1;
-  for (unsigned int d = 0; d < numdim_; ++d) arterypos1(d) = ele1posref_(numdim_ + d);
+  static Core::LinAlg::Matrix<num_dim_, 1> artery_coords_start;
+  for (unsigned int d = 0; d < num_dim_; ++d)
+    artery_coords_start(d) = nodal_coords_artery_ele_ref_(d);
+  static Core::LinAlg::Matrix<num_dim_, 1> artery_coords_end;
+  for (unsigned int d = 0; d < num_dim_; ++d)
+    artery_coords_end(d) = nodal_coords_artery_ele_ref_(num_dim_ + d);
 
-  static Core::LinAlg::Matrix<numdim_, 1> dist;
-  dist.update(-1.0, arterypos0, 1.0, arterypos1, 0.0);
-  arteryelelengthref_ = dist.norm2();
+  static Core::LinAlg::Matrix<num_dim_, 1> distance;
+  distance.update(-1.0, artery_coords_start, 1.0, artery_coords_end, 0.0);
+  artery_ele_length_ref_ = distance.norm2();
 
-  // get initial direction of artery element
-  lambda0_.update(1.0 / arteryelelengthref_, dist, 0.0);
+  // get initial orientation of the artery element
+  initial_artery_orientation.update(1.0 / artery_ele_length_ref_, distance, 0.0);
 
-  // Set reference nodal positions for continuous discretization element
-  for (unsigned int inode = 0; inode < numnodescont_; ++inode)
+  // Set reference nodal positions for homogenized discretization element
+  for (unsigned int inode = 0; inode < num_nodes_homogenized_; ++inode)
   {
-    const Core::Nodes::Node* node = element2_->nodes()[inode];
-    for (unsigned int idim = 0; idim < numdim_; ++idim) ele2posref_(idim, inode) = node->x()[idim];
+    const Core::Nodes::Node* node = homogenized_element_->nodes()[inode];
+    for (unsigned int i_dim = 0; i_dim < num_dim_; ++i_dim)
+      nodal_coords_homogenized_ele_ref_(i_dim, inode) = node->x()[i_dim];
   }
 
-  // set current nodal positions to reference nodal positions for continuous discretization
+  // set current nodal positions to reference nodal positions for homogenized discretization
   // element
-  ele2pos_.update(1.0, ele2posref_, 0.0);
+  nodal_coords_homogenized_ele_.update(1.0, nodal_coords_homogenized_ele_ref_, 0.0);
 
-  // get penalty parameter
-  pp_ = penalty;
+  penalty_parameter_ = penalty_parameter;
 
-  // get out of here
-  isinit_ = true;
+  is_init_ = true;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::setup_fluid_managers_and_materials(const std::string disname,
-    const double& timefacrhs_art, const double& timefacrhs_cont)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::setup_fluid_managers_and_materials(const std::string dis_name,
+    const double& timefacrhs_artery, const double& timefacrhs_homogenized)
 {
   // dummy parameter list
-  Discret::Elements::PoroFluidMultiPhaseEleParameter* para =
-      Discret::Elements::PoroFluidMultiPhaseEleParameter::instance(disname);
+  Discret::Elements::PoroFluidMultiPhaseEleParameter* params =
+      Discret::Elements::PoroFluidMultiPhaseEleParameter::instance(dis_name);
 
-  double arterydens = 0.0;
+  double artery_density = 0.0;
 
-  std::shared_ptr<Mat::FluidPoroMultiPhase> multiphasemat = nullptr;
-  std::shared_ptr<Mat::MatList> contscatramat = nullptr;
-  switch (coupltype_)
+  std::shared_ptr<Mat::FluidPoroMultiPhase> porofluid_material = nullptr;
+  std::shared_ptr<Mat::MatList> homogenized_scatra_material = nullptr;
+  switch (coupling_type_)
   {
     case CouplingType::porofluid:
     {
-      multiphasemat =
-          std::dynamic_pointer_cast<Mat::FluidPoroMultiPhase>(element2_->material(nds_porofluid_));
-      if (multiphasemat == nullptr)
+      porofluid_material = std::dynamic_pointer_cast<Mat::FluidPoroMultiPhase>(
+          homogenized_element_->material(nds_porofluid_));
+      if (porofluid_material == nullptr)
         FOUR_C_THROW("cast to Mat::FluidPoroMultiPhase failed for artery-porofluid coupling!");
-      for (int idof = 0; idof < numcoupleddofs_; idof++)
+      for (int i_dof = 0; i_dof < num_coupled_dofs_; i_dof++)
       {
-        const int matid = multiphasemat->mat_id(coupleddofs_cont_[idof]);
-        std::shared_ptr<Core::Mat::Material> singlemat = multiphasemat->material_by_id(matid);
+        const int material_id = porofluid_material->mat_id(coupled_dofs_homogenized_[i_dof]);
 
         // safety check
-        if (singlemat->material_type() != Core::Materials::m_fluidporo_volfracpressure &&
-            singlemat->material_type() != Core::Materials::m_fluidporo_singlephase)
+        if (const std::shared_ptr<Core::Mat::Material> single_phase_material =
+                porofluid_material->material_by_id(material_id);
+            single_phase_material->material_type() !=
+                Core::Materials::m_fluidporo_volfracpressure &&
+            single_phase_material->material_type() != Core::Materials::m_fluidporo_singlephase)
         {
           FOUR_C_THROW(
-              "You can only couple volume fraction pressures or fluid phases in multiphase "
-              "porespace, your material is of type {}",
-              singlemat->material_type());
+              "You can only couple volume fraction pressures or fluid phases in multi-phase "
+              "pore space. Your material is of type {}.",
+              single_phase_material->material_type());
         }
       }
-      // we have a coupling with scatra -> the scatra-material is the third material in the 2D/3D
-      // element
-      if (element2_->num_material() == 3)
+      // coupling with scatra: the scatra-material is the third material in the 2D/3D element
+      if (homogenized_element_->num_material() == 3)
       {
-        if (element2_->material(2)->material_type() == Core::Materials::m_matlist or
-            element2_->material(2)->material_type() == Core::Materials::m_matlist_reactions)
+        if (const std::shared_ptr<Mat::MatList> scatra_material =
+                std::static_pointer_cast<Mat::MatList>(homogenized_element_->material(2));
+            scatra_material->material_type() == Core::Materials::m_matlist or
+            scatra_material->material_type() == Core::Materials::m_matlist_reactions)
         {
-          std::shared_ptr<Mat::MatList> scatramat =
-              std::static_pointer_cast<Mat::MatList>(element2_->material(2));
-          numscalcont_ = scatramat->num_mat();
+          num_scalars_homogenized_ = scatra_material->num_mat();
         }
         else
-          FOUR_C_THROW("Only MAT_matlist is valid for poromultiphase-scatra material");
+        {
+          FOUR_C_THROW(
+              "Only MAT_matlist or MAT_matlist_reactions are valid as scatra material in the "
+              "homogenized domain with porofluid-artery coupling. Your material is of type {}.",
+              scatra_material->material_type());
+        }
       }
-      // we have a coupling with artery-scatra -> the artery-scatra-material is the second
-      // material in the artery element
-      if (element1_->num_material() == 2)
+      // coupling with artery-scatra: the artery-scatra-material is the second material in the
+      // artery element
+      if (artery_element_->num_material() == 2)
       {
-        if (element1_->material(1)->material_type() == Core::Materials::m_matlist)
+        if (const std::shared_ptr<Mat::MatList> artery_scatra_material =
+                std::static_pointer_cast<Mat::MatList>(artery_element_->material(1));
+            artery_element_->material(1)->material_type() == Core::Materials::m_matlist)
         {
-          std::shared_ptr<Mat::MatList> artscatramat =
-              std::static_pointer_cast<Mat::MatList>(element1_->material(1));
-          numscalart_ = artscatramat->num_mat();
+          num_scalars_artery_ = artery_scatra_material->num_mat();
         }
-        else if (element1_->material(1)->material_type() == Core::Materials::m_scatra)
-          numscalart_ = 1;
+        else if (artery_element_->material(1)->material_type() == Core::Materials::m_scatra)
+        {
+          num_scalars_artery_ = 1;
+        }
         else
-          FOUR_C_THROW("Only MAT_matlist and MAT_scatra are valid for artery-scatra material");
+        {
+          FOUR_C_THROW(
+              "Only MAT_matlist and MAT_scatra are valid as scatra material in the artery domain "
+              "with porofluid-artery coupling. Your material is of type {}.",
+              artery_element_->material(1)->material_type());
+        }
       }
 
-      arterymat_ = std::static_pointer_cast<Mat::Cnst1dArt>(element1_->material(0));
-      if (arterymat_ == nullptr)
+      artery_material_ = std::static_pointer_cast<Mat::Cnst1dArt>(artery_element_->material(0));
+      if (artery_material_ == nullptr)
         FOUR_C_THROW("cast to artery material failed for porofluid-artery coupling!");
-      arterydiam_at_gp_ = arterymat_->diam();
-      arterydiamref_ = arterymat_->diam_initial();
-      arterydens = arterymat_->density();
+      artery_diameter_at_gp_ = artery_material_->diam();
+      artery_diameter_ref_ = artery_material_->diam_initial();
+      artery_density = artery_material_->density();
 
       break;
     }
     case CouplingType::scatra:
     {
       // check if we actually have three materials
-      if (element2_->num_material() < 3) FOUR_C_THROW("no third material available");
+      if (homogenized_element_->num_material() < 3)
+        FOUR_C_THROW("No third material available in Mat::FluidPoroMultiPhase.");
 
-      multiphasemat =
-          std::dynamic_pointer_cast<Mat::FluidPoroMultiPhase>(element2_->material(nds_porofluid_));
-
-      if (multiphasemat == nullptr)
+      porofluid_material = std::dynamic_pointer_cast<Mat::FluidPoroMultiPhase>(
+          homogenized_element_->material(nds_porofluid_));
+      if (porofluid_material == nullptr)
         FOUR_C_THROW("cast to Mat::FluidPoroMultiPhase failed for arteryscatra-scatra coupling!");
 
-      contscatramat = std::static_pointer_cast<Mat::MatList>(element2_->material(0));
-      if (contscatramat == nullptr)
+      homogenized_scatra_material =
+          std::static_pointer_cast<Mat::MatList>(homogenized_element_->material(0));
+      if (homogenized_scatra_material == nullptr)
         FOUR_C_THROW("cast to ScatraMat failed for arteryscatra-scatra coupling!");
 
-      for (int idof = 0; idof < numcoupleddofs_; idof++)
+      for (int i_dof = 0; i_dof < num_coupled_dofs_; i_dof++)
       {
-        const int matid = contscatramat->mat_id(coupleddofs_cont_[idof]);
-        std::shared_ptr<Core::Mat::Material> singlemat = contscatramat->material_by_id(matid);
+        const int material_id =
+            homogenized_scatra_material->mat_id(coupled_dofs_homogenized_[i_dof]);
+        std::shared_ptr<Core::Mat::Material> single_scatra_material =
+            homogenized_scatra_material->material_by_id(material_id);
 
         // safety check
-        if (singlemat->material_type() != Core::Materials::m_scatra_multiporo_volfrac &&
-            singlemat->material_type() != Core::Materials::m_scatra_multiporo_fluid)
+        if (single_scatra_material->material_type() !=
+                Core::Materials::m_scatra_multiporo_volfrac &&
+            single_scatra_material->material_type() != Core::Materials::m_scatra_multiporo_fluid)
         {
           FOUR_C_THROW(
-              "You can only couple Mat::ScatraMatMultiPoroVolFrac or Mat::ScatraMatMultiPoroFluid, "
-              "your material is of type {}",
-              singlemat->material_type());
+              "You can only couple Mat::ScatraMatMultiPoroVolFrac or Mat::ScatraMatMultiPoroFluid. "
+              "Your material on the homogenized domain is of type {}.",
+              single_scatra_material->material_type());
         }
 
-        if (singlemat->material_type() == Core::Materials::m_scatra_multiporo_volfrac)
+        if (single_scatra_material->material_type() == Core::Materials::m_scatra_multiporo_volfrac)
         {
-          const std::shared_ptr<const Mat::ScatraMatMultiPoroVolFrac>& poromat =
-              std::dynamic_pointer_cast<const Mat::ScatraMatMultiPoroVolFrac>(singlemat);
-          volfracpressid_[idof] = poromat->phase_id() + multiphasemat->num_vol_frac();
+          const std::shared_ptr<const Mat::ScatraMatMultiPoroVolFrac>& scatra_volfrac_material =
+              std::dynamic_pointer_cast<const Mat::ScatraMatMultiPoroVolFrac>(
+                  single_scatra_material);
+          volfrac_pressure_id_[i_dof] =
+              scatra_volfrac_material->phase_id() + porofluid_material->num_vol_frac();
         }
       }
+
       // get the artery scatra-material
-      if (element1_->material(0)->material_type() == Core::Materials::m_matlist)
+      const std::shared_ptr<Mat::MatList> artery_scatra_material =
+          std::static_pointer_cast<Mat::MatList>(artery_element_->material(0));
+      if (artery_scatra_material->material_type() == Core::Materials::m_matlist)
       {
-        std::shared_ptr<Mat::MatList> artscatramat =
-            std::static_pointer_cast<Mat::MatList>(element1_->material(0));
-        numscalart_ = artscatramat->num_mat();
+        num_scalars_artery_ = artery_scatra_material->num_mat();
       }
-      else if (element1_->material(0)->material_type() == Core::Materials::m_scatra)
-        numscalart_ = 1;
+      else if (artery_scatra_material->material_type() == Core::Materials::m_scatra)
+      {
+        num_scalars_artery_ = 1;
+      }
       else
-        FOUR_C_THROW("Only MAT_matlist and MAT_scatra are valid for artery-scatra material");
-      numscalcont_ = numdof_cont_;
-      arterymat_ = std::static_pointer_cast<Mat::Cnst1dArt>(element1_->material(1));
-      if (arterymat_ == nullptr)
-        FOUR_C_THROW("cast to artery material failed for arteryscatra-scatra coupling!");
-      arterydiam_at_gp_ = arterymat_->diam();
-      arterydiamref_ = arterymat_->diam_initial();
-      arterydens = arterymat_->density();
+      {
+        FOUR_C_THROW(
+            "Only MAT_matlist and MAT_scatra are valid for artery-scatra material. Your material "
+            "on the artery domain is of type {}.",
+            artery_scatra_material->material_type());
+      }
+
+      num_scalars_homogenized_ = num_dof_homogenized_;
+      artery_material_ = std::static_pointer_cast<Mat::Cnst1dArt>(artery_element_->material(1));
+      if (artery_material_ == nullptr)
+        FOUR_C_THROW("Cast to artery material failed for arteryscatra-scatra coupling!");
+      artery_diameter_at_gp_ = artery_material_->diam();
+      artery_diameter_ref_ = artery_material_->diam_initial();
+      artery_density = artery_material_->density();
       break;
     }
     default:
-      FOUR_C_THROW("Unknown coupling type");
+      FOUR_C_THROW("Unknown coupling type.");
       break;
   }
 
   // take care of diameter function
-  const int diam_funct_num = arterymat_->diameter_function();
-  if (diam_funct_num > -1)
+  if (const int diameter_function_id = artery_material_->diameter_function();
+      diameter_function_id > -1)
   {
     // no real use-case without function coupling
-    if (not funct_coupl_active_)
-      FOUR_C_THROW(
-          "Diameter function has been defined but no exchange function has been set, this is "
-          "currently not possible, if you still want a variable diameter without any exchange "
-          "terms, you can still define a zero exchange term");
-    variable_diameter_active_ = true;
-    artdiam_funct_ = &Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfAnything>(
-        diam_funct_num);
-    if (coupltype_ == CouplingType::porofluid)
+    if (not function_coupling_active_)
     {
-      // cont derivatives + 1 artery pressure derivative
-      diamderivs_ = std::vector<double>(numdof_cont_ + 1, 0.0);
-      diam_stiffmat11_ = Core::LinAlg::SerialDenseMatrix();
-      diam_stiffmat12_ = Core::LinAlg::SerialDenseMatrix();
+      FOUR_C_THROW(
+          "Diameter function has been defined but no exchange function has been set. This is "
+          "currently not possible. If you want a variable diameter without any exchange terms, you "
+          "must define a zero exchange term.");
+    }
+    variable_diameter_active_ = true;
+    artery_diameter_funct_ =
+        &Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfAnything>(
+            diameter_function_id);
+    if (coupling_type_ == CouplingType::porofluid)
+    {
+      // homogenized derivatives + 1 artery pressure derivative
+      diameter_derivs_ = std::vector(num_dof_homogenized_ + 1, 0.0);
+      diameter_ele_matrix_artery_artery_ = Core::LinAlg::SerialDenseMatrix();
+      diameter_ele_matrix_artery_homogenized_ = Core::LinAlg::SerialDenseMatrix();
     }
   }
 
@@ -446,61 +474,66 @@ void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, dist
   if (evaluate_on_lateral_surface_)
   {
     if (!evaluate_in_ref_config_)
+    {
       FOUR_C_THROW(
           "Evaluation in current configuration is not yet possible in combination with lateral "
-          "surface coupling");
+          "surface coupling.");
+    }
     if (variable_diameter_active_)
+    {
       FOUR_C_THROW(
           "Setting a variable diameter is not yet possible in combination with lateral "
-          "surface coupling");
-    if (not(distype_cont == Core::FE::CellType::hex8 or distype_cont == Core::FE::CellType::tet4))
-      FOUR_C_THROW("Only TET4 and HEX8 elements possible for lateral surface coupling");
+          "surface coupling.");
+    }
+    if (dis_type_homogenized != Core::FE::CellType::hex8 &&
+        dis_type_homogenized != Core::FE::CellType::tet4)
+      FOUR_C_THROW("Only TET4 and HEX8 elements possible for lateral surface coupling.");
   }
 
-  numfluidphases_ = multiphasemat->num_fluid_phases();
-  numvolfrac_ = multiphasemat->num_vol_frac();
+  num_fluid_phases_ = porofluid_material->num_fluid_phases();
+  num_volfracs_ = porofluid_material->num_vol_frac();
 
   // create phase-manager
-  phasemanager_ = Discret::Elements::PoroFluidManager::PhaseManagerInterface::create_phase_manager(
-      *para, numdim_, multiphasemat->material_type(),
-      PoroPressureBased::Action::get_access_from_artcoupling, multiphasemat->num_mat(),
-      multiphasemat->num_fluid_phases());
+  phase_manager_ = Discret::Elements::PoroFluidManager::PhaseManagerInterface::create_phase_manager(
+      *params, num_dim_, porofluid_material->material_type(), get_access_from_artcoupling,
+      porofluid_material->num_mat(), porofluid_material->num_fluid_phases());
 
-  // setup phasemanager
-  phasemanager_->setup(element2_, nds_porofluid_);
+  // setup phase-manager
+  phase_manager_->setup(homogenized_element_, nds_porofluid_);
 
-  // create variablemanager
-  variablemanager_ = Discret::Elements::PoroFluidManager::VariableManagerInterface<numdim_,
-      numnodescont_>::create_variable_manager(*para,
-      PoroPressureBased::Action::get_access_from_artcoupling, multiphasemat,
-      multiphasemat->num_mat(), multiphasemat->num_fluid_phases());
+  // create variable-manager
+  variable_manager_ = Discret::Elements::PoroFluidManager::VariableManagerInterface<num_dim_,
+      num_nodes_homogenized_>::create_variable_manager(*params, get_access_from_artcoupling,
+      porofluid_material, porofluid_material->num_mat(), porofluid_material->num_fluid_phases());
 
   // initialize the names used in functions
   initialize_function_names();
 
-  // fill vector where to assemble rhs-(function) coupling into
-  // summed up phase requires special treatment
-  initialize_assemble_into_cont_dof_vector();
+  // fill vector where to assemble rhs-(function) coupling into summed up phase requires special
+  // treatment
+  initialize_assemble_into_homogenized_dof_vector();
 
   // initialize the functions
   for (int i = 0; i < 2; i++)
-    for (unsigned int idof = 0; idof < funct_vec_[i].size(); idof++)
-      if (funct_vec_[i][idof] != nullptr) initialize_function(*funct_vec_[i][idof]);
-  if (variable_diameter_active_) initialize_function(*artdiam_funct_);
+    for (const auto& i_dof : function_vector_[i])
+      if (i_dof != nullptr) initialize_function(*i_dof);
+  if (variable_diameter_active_) initialize_function(*artery_diameter_funct_);
 
-  // set time fac for right hand side evaluation of coupling
-  set_time_fac_rhs(arterydens, *contscatramat, timefacrhs_art, timefacrhs_cont);
+  // set time fac for right-hand side evaluation of coupling
+  set_time_fac_rhs(
+      artery_density, *homogenized_scatra_material, timefacrhs_artery, timefacrhs_homogenized);
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::pre_evaluate(std::shared_ptr<Core::LinAlg::MultiVector<double>> gp_vector)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::pre_evaluate(std::shared_ptr<Core::LinAlg::MultiVector<double>>
+        gp_vector)
 {
-  if (!isinit_) FOUR_C_THROW("MeshTying Pair has not yet been initialized");
+  if (!is_init_) FOUR_C_THROW("MeshTying Pair has not yet been initialized.");
 
-  if (couplmethod_ == Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::ntp)
+  if (coupling_method_ == Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp)
   {
     pre_evaluate_node_to_point_coupling();
   }
@@ -512,352 +545,368 @@ void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, dist
       pre_evaluate_centerline_coupling();
   }
 
-
-  ispreevaluated_ = true;
+  is_pre_evaluated_ = true;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::pre_evaluate_lateral_surface_coupling(Core::LinAlg::MultiVector<double>& gp_vector)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized,
+    dim>::pre_evaluate_lateral_surface_coupling(Core::LinAlg::MultiVector<double>&
+        gauss_point_vector)
 {
-  const int pid =
+  const int my_mpi_rank =
       Core::Communication::my_mpi_rank(Global::Problem::instance()->get_dis("artery")->get_comm());
-  const int mylid = element1_->lid();
-  if (element2_->owner() != pid) return;
+  const int my_lid = artery_element_->lid();
+  if (homogenized_element_->owner() != my_mpi_rank) return;
 
   // unit radial basis vectors
-  Core::LinAlg::Matrix<3, 1> unit_rad_1;
-  Core::LinAlg::Matrix<3, 1> unit_rad_2;
+  Core::LinAlg::Matrix<3, 1> unit_radial_basis_1;
+  Core::LinAlg::Matrix<3, 1> unit_radial_basis_2;
   // unit tangential basis
-  Core::LinAlg::Matrix<3, 1> tang;
-  if (numdim_ != 3) FOUR_C_THROW("surface-based formulation makes only sense in 3D");
-  for (int idim = 0; idim < 3; idim++) tang(idim) = lambda0_(idim);
+  Core::LinAlg::Matrix<3, 1> unit_tangent_basis;
+  if (num_dim_ != 3) FOUR_C_THROW("Surface-based formulation makes only sense in 3D.");
+  for (int i_dim = 0; i_dim < 3; i_dim++)
+    unit_tangent_basis(i_dim) = initial_artery_orientation(i_dim);
 
-  Core::Geo::build_orthonormal_basis_from_unit_vector(tang, unit_rad_1, unit_rad_2);
+  Core::Geo::build_orthonormal_basis_from_unit_vector(
+      unit_tangent_basis, unit_radial_basis_1, unit_radial_basis_2);
 
   // get radius
-  const int artelematerial = coupltype_ == CouplingType::scatra ? 1 : 0;
-  std::shared_ptr<Mat::Cnst1dArt> arterymat =
-      std::static_pointer_cast<Mat::Cnst1dArt>(element1_->material(artelematerial));
-  if (arterymat == nullptr)
-    FOUR_C_THROW("cast to artery material failed for porofluid-artery coupling!");
-  double radius = arterymat->diam() / 2.0;
+  const int artery_ele_material = coupling_type_ == CouplingType::scatra ? 1 : 0;
+  const std::shared_ptr<Mat::Cnst1dArt> artery_material =
+      std::static_pointer_cast<Mat::Cnst1dArt>(artery_element_->material(artery_ele_material));
+  if (artery_material == nullptr)
+    FOUR_C_THROW("Cast to artery material failed for porofluid-artery coupling!");
+  const double radius = artery_material->diam() / 2.0;
 
-  // size of one integration patch: 2*pi*R/numpatch_rad_*L/numpatch_axi_
-  const double patch_size =
-      1.0 / numpatch_axi_ * arteryelelengthref_ * 1.0 / numpatch_rad_ * 2.0 * M_PI * radius;
+  // size of one integration patch: 2 * pi * R/num_patches_radial_ * L/num_patches_axial_
+  const double patch_size = 1.0 / num_patches_axial_ * artery_ele_length_ref_ * 1.0 /
+                            num_patches_radial_ * 2.0 * M_PI * radius;
 
   // Vectors for shape functions and their derivatives
-  static Core::LinAlg::Matrix<1, numnodesart_, double> N1(
-      Core::LinAlg::Initialization::zero);  // = N1
-  static Core::LinAlg::Matrix<1, numnodesart_, double> N1_eta(
-      Core::LinAlg::Initialization::zero);  // = N1,eta
-  // Coords and derivatives of 1D and 2D/3D element
-  static Core::LinAlg::Matrix<numdim_, 1, double> r1(Core::LinAlg::Initialization::zero);  // = r1
-  static Core::LinAlg::Matrix<numdim_, 1, double> r1_eta(
-      Core::LinAlg::Initialization::zero);  // = r1,eta
+  static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery(
+      Core::LinAlg::Initialization::zero);
+  static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery_deriv(
+      Core::LinAlg::Initialization::zero);
+  // Coordinates and derivatives of the artery element
+  static Core::LinAlg::Matrix<num_dim_, 1> coords_artery(Core::LinAlg::Initialization::zero);
+  static Core::LinAlg::Matrix<num_dim_, 1> coords_artery_deriv(Core::LinAlg::Initialization::zero);
 
   // element parameter space coordinates in 3D element
-  std::vector<double> xi(3);
+  std::vector<double> local_coordinate(3);
   // number of GPs
-  n_gp_ = 0;
+  num_gp_ = 0;
 
-  // we use always 25 integration points per integration patch
-  Core::FE::IntegrationPoints2D gaussPointsperPatch =
+  // we always use 25 integration points per integration patch
+  const auto gauss_points_per_patch =
       Core::FE::IntegrationPoints2D(Core::FE::GaussRule2D::quad_25point);
-  n_gp_per_patch_ = gaussPointsperPatch.nquad;
-  n_gp_ = n_gp_per_patch_ * numpatch_axi_ * numpatch_rad_;
+  num_gp_per_patch_ = gauss_points_per_patch.nquad;
+  num_gp_ = num_gp_per_patch_ * num_patches_axial_ * num_patches_radial_;
   // define Gauss points and n_gp-sized quantities
-  eta_.resize(n_gp_);
-  eta_s_.resize(n_gp_);
-  wgp_.resize(n_gp_);
-  xi_.resize(n_gp_);
-  for (int i_gp = 0; i_gp < n_gp_; i_gp++) xi_[i_gp].resize(numdim_);
+  gp_coords_artery_.resize(num_gp_);
+  previous_gp_coords_deformed_.resize(num_gp_);
+  gp_weights_.resize(num_gp_);
+  gp_coords_homogenized_.resize(num_gp_);
+  for (int i_gp = 0; i_gp < num_gp_; i_gp++) gp_coords_homogenized_[i_gp].resize(num_dim_);
 
   // loop over all axial patches
-  for (int i_ax = 0; i_ax < numpatch_axi_; i_ax++)
+  for (int i_ax = 0; i_ax < num_patches_axial_; i_ax++)
   {
     // loop over all radial patches
-    for (int i_rad = 0; i_rad < numpatch_rad_; i_rad++)
+    for (int i_rad = 0; i_rad < num_patches_radial_; i_rad++)
     {
       // loop over all GPs of this patch
-      for (int i_gp = 0; i_gp < n_gp_per_patch_; i_gp++)
+      for (int i_gp = 0; i_gp < num_gp_per_patch_; i_gp++)
       {
-        const int gpid = i_ax * numpatch_rad_ * n_gp_per_patch_ + i_rad * n_gp_per_patch_ + i_gp;
         // axial Gauss point eta lies in [-1; 1]
-        double eta = -1.0 - 1.0 / numpatch_axi_ + (i_ax + 1.0) * 2.0 / numpatch_axi_ +
-                     gaussPointsperPatch.qxg[i_gp][0] * 1.0 / numpatch_axi_;
+        const double eta = -1.0 - 1.0 / num_patches_axial_ +
+                           (i_ax + 1.0) * 2.0 / num_patches_axial_ +
+                           gauss_points_per_patch.qxg[i_gp][0] * 1.0 / num_patches_axial_;
 
         // Update coordinates and derivatives for 1D and 2D/3D element
-        get_1d_shape_functions<double>(N1, N1_eta, eta);
-        compute_artery_coords_and_derivs_ref<double>(r1, r1_eta, N1, N1_eta);
+        get_artery_shape_functions<double>(
+            shape_functions_artery, shape_functions_artery_deriv, eta);
+        compute_artery_coords_and_derivs_ref<double>(coords_artery, coords_artery_deriv,
+            shape_functions_artery, shape_functions_artery_deriv);
 
         // radial Gauss point theta lies in [-pi; pi]
-        double theta = (-1.0 - 1.0 / numpatch_rad_ + (i_rad + 1.0) * 2.0 / numpatch_rad_ +
-                           gaussPointsperPatch.qxg[i_gp][1] * 1.0 / numpatch_rad_) *
-                       M_PI;
+        const double theta =
+            (-1.0 - 1.0 / num_patches_radial_ + (i_rad + 1.0) * 2.0 / num_patches_radial_ +
+                gauss_points_per_patch.qxg[i_gp][1] * 1.0 / num_patches_radial_) *
+            M_PI;
 
         // get point on lateral blood vessel surface
-        for (int idim = 0; idim < 3; idim++)
-          r1(idim) = r1(idim) + unit_rad_1(idim) * radius * cos(theta) +
-                     unit_rad_2(idim) * radius * sin(theta);
+        for (int i_dim = 0; i_dim < 3; i_dim++)
+        {
+          coords_artery(i_dim) = coords_artery(i_dim) +
+                                 unit_radial_basis_1(i_dim) * radius * cos(theta) +
+                                 unit_radial_basis_2(i_dim) * radius * sin(theta);
+        }
 
         // project into 3D domain
         bool projection_valid = false;
-        projection<double>(r1, xi, projection_valid);
-        eta_[gpid] = eta;
-        xi_[gpid] = xi;
-        // projection is valid and GP is so far unclaimed by other pair
-        if (projection_valid && ((gp_vector)(gpid))[mylid] < 0.5)
+        projection<double>(coords_artery, local_coordinate, projection_valid);
+
+        const int gp_id =
+            i_ax * num_patches_radial_ * num_gp_per_patch_ + i_rad * num_gp_per_patch_ + i_gp;
+        gp_coords_artery_[gp_id] = eta;
+        gp_coords_homogenized_[gp_id] = local_coordinate;
+        // the projection is valid and GP is so far unclaimed by another pair
+        if (projection_valid && ((gauss_point_vector)(gp_id))[my_lid] < 0.5)
         {
-          isactive_ = true;
+          is_active_ = true;
           // include jacobian
-          wgp_[gpid] = gaussPointsperPatch.qwgt[i_gp] * patch_size / 4.0;
-          gp_vector.SumIntoMyValue(mylid, gpid, 1.0);
+          gp_weights_[gp_id] = gauss_points_per_patch.qwgt[i_gp] * patch_size / 4.0;
+          gauss_point_vector.SumIntoMyValue(my_lid, gp_id, 1.0);
         }
         else
-          wgp_[gpid] = 0.0;
+        {
+          gp_weights_[gp_id] = 0.0;
+        }
       }
     }
   }
 
   // free memory
-  if (not isactive_)
+  if (not is_active_)
   {
-    std::vector<double>().swap(eta_);
-    std::vector<double>().swap(wgp_);
-    std::vector<std::vector<double>>().swap(xi_);
+    std::vector<double>().swap(gp_coords_artery_);
+    std::vector<double>().swap(gp_weights_);
+    std::vector<std::vector<double>>().swap(gp_coords_homogenized_);
   }
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::pre_evaluate_centerline_coupling()
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::pre_evaluate_centerline_coupling()
 {
-  // Try to create integration segment [eta_a, eta_b]
+  // Try to create the integration segment [eta_start, eta_end]
   create_integration_segment();
 
   // no viable segment found
-  if (!isactive_)
+  if (!is_active_)
   {
     return;
   }
 
-  // choice of optimal Gauss-rule:
-  // basically the N^(2)*N^(2) term is crucial
-  // for (bi-, tri-)linear elements (only considered so far):
-  // in 2D the highest possible polynomial order for this term is 4 since N^(2) can be quadratic
-  // for arbitrary integration in element
-  // --> we need 3 gp for exact integration
-  // in 3D the highest possible polynomial order for this term is 6 since N^(2) can be cubic for
-  // arbitrary integration in element
-  // --> we need 4 gp for exact integration
+  // Choice of optimal Gauss-point rule: basically the N^(2)*N^(2) term is crucial.
+  // For (bi-, tri-)linear elements (only considered so far):
+  // In 2D, the highest possible polynomial order for this term is 4 since N^(2) can be quadratic
+  // for arbitrary integration in the element. --> We need 3 Gauss points for exact integration.
+  // In 3D, the highest possible polynomial order for this term is 6 since N^(2) can be cubic for
+  // arbitrary integration in the element. --> We need 4 Gauss points for exact integration.
 
-  Core::FE::IntegrationPoints1D gaussPoints =
-      Core::FE::IntegrationPoints1D(Core::FE::GaussRule1D::line_3point);
-  if (numdim_ == 3) gaussPoints = Core::FE::IntegrationPoints1D(Core::FE::GaussRule1D::line_4point);
+  auto gauss_points = Core::FE::IntegrationPoints1D(Core::FE::GaussRule1D::line_3point);
+  if (num_dim_ == 3)
+    gauss_points = Core::FE::IntegrationPoints1D(Core::FE::GaussRule1D::line_4point);
 
-  n_gp_ = gaussPoints.nquad;
+  num_gp_ = gauss_points.nquad;
   // define Gauss points and n_gp-sized quantities
-  eta_.resize(n_gp_);
-  eta_s_.resize(n_gp_);
-  wgp_.resize(n_gp_);
-  inv_j_.resize(n_gp_);
-  xi_.resize(n_gp_);
-  for (int i_gp = 0; i_gp < n_gp_; i_gp++) xi_[i_gp].resize(numdim_);
+  gp_coords_artery_.resize(num_gp_);
+  previous_gp_coords_deformed_.resize(num_gp_);
+  gp_weights_.resize(num_gp_);
+  inverse_jacobian_matrix_.resize(num_gp_);
+  gp_coords_homogenized_.resize(num_gp_);
+  for (int i_gp = 0; i_gp < num_gp_; i_gp++) gp_coords_homogenized_[i_gp].resize(num_dim_);
 
   // get jacobian determinant
-  const double determinant = (eta_b_ - eta_a_) / 2.0;
-  jacobi_ = determinant * arteryelelengthref_ / 2.0;
+  const double determinant = (artery_segment_end_ - artery_segment_start_) / 2.0;
+  jacobian_determinant_ = determinant * artery_ele_length_ref_ / 2.0;
 
-  static Core::LinAlg::Matrix<1, numnodescont_> N2(Core::LinAlg::Initialization::zero);  // = N2
-  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(
-      Core::LinAlg::Initialization::zero);  // = N2,xi1
   // Vectors for shape functions and their derivatives
-  static Core::LinAlg::Matrix<1, numnodesart_, double> N1(
-      Core::LinAlg::Initialization::zero);  // = N1
-  static Core::LinAlg::Matrix<1, numnodesart_, double> N1_eta(
-      Core::LinAlg::Initialization::zero);  // = N1,eta
-  // Coords and derivatives of 1D and 2D/3D element
-  static Core::LinAlg::Matrix<numdim_, 1, double> r1(Core::LinAlg::Initialization::zero);  // = r1
-  static Core::LinAlg::Matrix<numdim_, 1, double> r1_eta(
-      Core::LinAlg::Initialization::zero);  // = r1,eta
+  static Core::LinAlg::Matrix<1, num_nodes_homogenized_> shape_functions_homogenized;
+  static Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_> shape_functions_homogenized_deriv;
+  static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery;
+  static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery_deriv;
+  // Coordinates and derivatives of the artery element in reference configuration
+  static Core::LinAlg::Matrix<num_dim_, 1> coords_artery_ref;
+  static Core::LinAlg::Matrix<num_dim_, 1> coords_artery_deriv_ref;
 
-  // project the Gauss points --> those have to able to be projected
-  for (int i_gp = 0; i_gp < n_gp_; i_gp++)
+  // project the Gauss points --> those have to be able to be projected
+  for (int i_gp = 0; i_gp < num_gp_; i_gp++)
   {
-    // compute the coordinate trafo, weights and project Gauss points
-    eta_[i_gp] = (eta_a_ + eta_b_) / 2.0 + gaussPoints.qxg[i_gp][0] * determinant;
-    eta_s_[i_gp] = eta_[i_gp];
-    wgp_[i_gp] = gaussPoints.qwgt[i_gp];
+    // compute the coordinate transformation, Gauss point weights and project Gauss points
+    gp_coords_artery_[i_gp] = (artery_segment_start_ + artery_segment_end_) / 2.0 +
+                              gauss_points.qxg[i_gp][0] * determinant;
+    previous_gp_coords_deformed_[i_gp] = gp_coords_artery_[i_gp];
+    gp_weights_[i_gp] = gauss_points.qwgt[i_gp];
 
     // Update coordinates and derivatives for 1D and 2D/3D element
-    get_1d_shape_functions<double>(N1, N1_eta, eta_[i_gp]);
-    compute_artery_coords_and_derivs_ref<double>(r1, r1_eta, N1, N1_eta);
+    get_artery_shape_functions<double>(
+        shape_functions_artery, shape_functions_artery_deriv, gp_coords_artery_[i_gp]);
+    compute_artery_coords_and_derivs_ref<double>(coords_artery_ref, coords_artery_deriv_ref,
+        shape_functions_artery, shape_functions_artery_deriv);
 
     bool projection_valid = false;
-    projection<double>(r1, xi_[i_gp], projection_valid);
+    projection<double>(coords_artery_ref, gp_coords_homogenized_[i_gp], projection_valid);
     if (!projection_valid) FOUR_C_THROW("Gauss point could not be projected");
 
     // compute (dX/dxi)^-1
-    get_2d_3d_shape_functions<double>(N2, N2_xi, xi_[i_gp]);
-    inv_j_[i_gp].multiply_nt(N2_xi, ele2pos_);
-    inv_j_[i_gp].invert();
+    get_homogenized_shape_functions<double>(shape_functions_homogenized,
+        shape_functions_homogenized_deriv, gp_coords_homogenized_[i_gp]);
+    inverse_jacobian_matrix_[i_gp].multiply_nt(
+        shape_functions_homogenized_deriv, nodal_coords_homogenized_ele_);
+    inverse_jacobian_matrix_[i_gp].invert();
   }
 }
 
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::pre_evaluate_node_to_point_coupling()
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::pre_evaluate_node_to_point_coupling()
 {
-  xi_.resize(1);
-  xi_[0].resize(numdim_);
+  gp_coords_homogenized_.resize(1);
+  gp_coords_homogenized_[0].resize(num_dim_);
 
-  static Core::LinAlg::Matrix<1, numnodescont_> N2(Core::LinAlg::Initialization::zero);  // = N2
-  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(
-      Core::LinAlg::Initialization::zero);  // = N2,xi1
   // Vectors for shape functions and their derivatives
-  static Core::LinAlg::Matrix<1, numnodesart_, double> N1(
-      Core::LinAlg::Initialization::zero);  // = N1
-  static Core::LinAlg::Matrix<1, numnodesart_, double> N1_eta(
-      Core::LinAlg::Initialization::zero);  // = N1,eta
-  // Coords and derivatives of 1D and 2D/3D element
-  static Core::LinAlg::Matrix<numdim_, 1, double> r1(Core::LinAlg::Initialization::zero);  // = r1
-  static Core::LinAlg::Matrix<numdim_, 1, double> r1_eta(
-      Core::LinAlg::Initialization::zero);  // = r1,eta
+  static Core::LinAlg::Matrix<1, num_nodes_homogenized_> shape_functions_homogenized;
+  static Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_> shape_functions_homogenized_deriv;
+  static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery;
+  static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery_deriv;
+  // Coordinates and derivatives of the artery element in reference configuration
+  static Core::LinAlg::Matrix<num_dim_, 1> coords_artery_ref;
+  static Core::LinAlg::Matrix<num_dim_, 1> coords_artery_deriv_ref;
 
   // Update coordinates and derivatives for 1D and 2D/3D element
-  get_1d_shape_functions<double>(N1, N1_eta, eta_[0]);
-  compute_artery_coords_and_derivs_ref<double>(r1, r1_eta, N1, N1_eta);
+  get_artery_shape_functions<double>(
+      shape_functions_artery, shape_functions_artery_deriv, gp_coords_artery_[0]);
+  compute_artery_coords_and_derivs_ref<double>(coords_artery_ref, coords_artery_deriv_ref,
+      shape_functions_artery, shape_functions_artery_deriv);
 
   bool projection_valid = false;
-  projection<double>(r1, xi_[0], projection_valid);
+  projection<double>(coords_artery_ref, gp_coords_homogenized_[0], projection_valid);
 
   // coupling pairs is only active if projection is valid
-  isactive_ = projection_valid;
+  is_active_ = projection_valid;
 
   // compute (dX/dxi)^-1
-  get_2d_3d_shape_functions<double>(N2, N2_xi, xi_[0]);
+  get_homogenized_shape_functions<double>(
+      shape_functions_homogenized, shape_functions_homogenized_deriv, gp_coords_homogenized_[0]);
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::delete_unnecessary_gps(std::shared_ptr<Core::LinAlg::MultiVector<double>> gp_vector)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized,
+    dim>::delete_unnecessary_gps(const std::shared_ptr<Core::LinAlg::MultiVector<double>> gp_vector)
 {
-  const int mylid = element1_->lid();
-  n_gp_ = 0;
-  for (int igp = 0; igp < n_gp_per_patch_ * numpatch_axi_ * numpatch_rad_; igp++)
-    if (wgp_[igp] > 1e-12) n_gp_++;
+  const int my_lid = artery_element_->lid();
+  num_gp_ = 0;
+  for (int igp = 0; igp < num_gp_per_patch_ * num_patches_axial_ * num_patches_radial_; igp++)
+    if (gp_weights_[igp] > 1e-12) num_gp_++;
 
-  std::vector<double> wgp(n_gp_);
-  std::vector<double> eta(n_gp_);
-  std::vector<std::vector<double>> xi(n_gp_);
+  std::vector<double> gp_weights(num_gp_);
+  std::vector<double> gp_coords_artery(num_gp_);
+  std::vector<std::vector<double>> gp_coords_homogenized(num_gp_);
 
-  int mygp = 0;
-  for (int igp = 0; igp < n_gp_per_patch_ * numpatch_axi_ * numpatch_rad_; igp++)
+  int current_gp = 0;
+  for (int igp = 0; igp < num_gp_per_patch_ * num_patches_axial_ * num_patches_radial_; igp++)
   {
-    if (wgp_[igp] > 1e-12)
+    if (gp_weights_[igp] > 1e-12)
     {
-      const double scale = 1.0 / ((*gp_vector)(igp))[mylid];
-      eta[mygp] = eta_[igp];
-      xi[mygp] = xi_[igp];
-      wgp[mygp] = wgp_[igp] * scale;
-      mygp++;
+      const double scale = 1.0 / ((*gp_vector)(igp))[my_lid];
+      gp_coords_artery[current_gp] = gp_coords_artery_[igp];
+      gp_coords_homogenized[current_gp] = gp_coords_homogenized_[igp];
+      gp_weights[current_gp] = gp_weights_[igp] * scale;
+      current_gp++;
     }
   }
-  if (n_gp_ == 0)
-    isactive_ = false;
+  if (num_gp_ == 0)
+    is_active_ = false;
   else
-    isactive_ = true;
+    is_active_ = true;
 
   // overwrite
-  wgp_ = wgp;
-  eta_ = eta;
-  xi_ = xi;
+  gp_weights_ = gp_weights;
+  gp_coords_artery_ = gp_coords_artery;
+  gp_coords_homogenized_ = gp_coords_homogenized;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::reset_state(std::shared_ptr<Core::FE::Discretization> contdis,
-    std::shared_ptr<Core::FE::Discretization> artdis)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::reset_state(const std::shared_ptr<Core::FE::Discretization>
+                                                homogenized_dis,
+    const std::shared_ptr<Core::FE::Discretization> artery_dis)
 {
-  if (!ispreevaluated_) FOUR_C_THROW("MeshTying Pair has not yet been pre-evaluated");
+  if (!is_pre_evaluated_) FOUR_C_THROW("MeshTying Pair has not yet been pre-evaluated.");
 
-  // get location array for continuous ele
-  Core::Elements::LocationArray la_cont(contdis->num_dof_sets());
-  element2_->location_vector(*contdis, la_cont);
+  // get location array of the homogenized element
+  Core::Elements::LocationArray location_array_homogenized(homogenized_dis->num_dof_sets());
+  homogenized_element_->location_vector(*homogenized_dis, location_array_homogenized);
 
-  // get location array for artery ele
-  Core::Elements::LocationArray la_art(artdis->num_dof_sets());
-  element1_->location_vector(*artdis, la_art);
+  // get location array for the artery element
+  Core::Elements::LocationArray location_array_artery(artery_dis->num_dof_sets());
+  artery_element_->location_vector(*artery_dis, location_array_artery);
 
-  switch (coupltype_)
+  switch (coupling_type_)
   {
     case CouplingType::porofluid:
     {
       // extract element and node values of fluid
-      variablemanager_->extract_element_and_node_values(*element2_, *contdis, la_cont, ele2pos_, 0);
+      variable_manager_->extract_element_and_node_values(*homogenized_element_, *homogenized_dis,
+          location_array_homogenized, nodal_coords_homogenized_ele_, 0);
 
-      // get contelephinp_ and artelephinp_
-      contelephinp_ = Core::FE::extract_values(*contdis->get_state("phinp_fluid"), la_cont[0].lm_);
-      artelephinp_ =
-          Core::FE::extract_values(*artdis->get_state("one_d_artery_pressure"), la_art[0].lm_);
+      // get phinp from homogenized and artery elements
+      phi_np_homogenized_ele_ = Core::FE::extract_values(
+          *homogenized_dis->get_state("phinp_fluid"), location_array_homogenized[0].lm_);
+      phi_np_artery_ele_ = Core::FE::extract_values(
+          *artery_dis->get_state("one_d_artery_pressure"), location_array_artery[0].lm_);
 
       // extract velocity of solid phase
-      extract_solid_vel(*contdis);
+      extract_velocity_solid_phase(*homogenized_dis);
 
       // extract values of artery-scatra discretization
-      if (numscalart_ > 0)
+      if (num_scalars_artery_ > 0)
       {
-        std::shared_ptr<const Core::LinAlg::Vector<double>> artscalarnp =
-            artdis->get_state(ndsartery_scatra_, "one_d_artery_phinp");
-        if (artscalarnp != nullptr)
+        const std::shared_ptr<const Core::LinAlg::Vector<double>> artery_scalar_np =
+            artery_dis->get_state(nds_artery_scatra_, "one_d_artery_phinp");
+        if (artery_scalar_np != nullptr)
         {
-          Core::Elements::LocationArray la(artdis->num_dof_sets());
-          element1_->location_vector(*artdis, la);
+          Core::Elements::LocationArray location_array(artery_dis->num_dof_sets());
+          artery_element_->location_vector(*artery_dis, location_array);
           // rebuild scalar vector
-          eartscalarnp_.clear();
-          eartscalarnp_.resize(numscalart_,
-              Core::LinAlg::Matrix<numnodesart_, 1>(Core::LinAlg::Initialization::zero));
+          nodal_artery_scalar_np_.clear();
+          nodal_artery_scalar_np_.resize(num_scalars_artery_,
+              Core::LinAlg::Matrix<num_nodes_artery_, 1>(Core::LinAlg::Initialization::zero));
           // extract local values of artery-scatra field from global state vector
-          Core::FE::extract_my_values<Core::LinAlg::Matrix<numnodesart_, 1>>(
-              *artscalarnp, eartscalarnp_, la[ndsartery_scatra_].lm_);
+          Core::FE::extract_my_values<Core::LinAlg::Matrix<num_nodes_artery_, 1>>(
+              *artery_scalar_np, nodal_artery_scalar_np_, location_array[nds_artery_scatra_].lm_);
         }
         else
-          FOUR_C_THROW("Cannot get artery-scatra from artery discretization");
+        {
+          FOUR_C_THROW("Cannot get artery-scatra from artery discretization.");
+        }
       }
-      // extract values of continuous scatra discretization
-      if (numscalcont_ > 0)
+      // extract values of homogenized scatra discretization
+      if (num_scalars_homogenized_ > 0)
       {
         // get state vector from discretization
-        std::shared_ptr<const Core::LinAlg::Vector<double>> contscalarnp =
-            contdis->get_state(3, "scalars");
-        if (contscalarnp != nullptr)
+        const std::shared_ptr<const Core::LinAlg::Vector<double>> homogenized_scalar_np =
+            homogenized_dis->get_state(3, "scalars");
+        if (homogenized_scalar_np != nullptr)
         {
-          Core::Elements::LocationArray la(contdis->num_dof_sets());
-          element2_->location_vector(*contdis, la);
+          Core::Elements::LocationArray location_array(homogenized_dis->num_dof_sets());
+          homogenized_element_->location_vector(*homogenized_dis, location_array);
           // rebuild scalar vector
-          econtscalarnp_.clear();
-          econtscalarnp_.resize(numscalcont_,
-              Core::LinAlg::Matrix<numnodescont_, 1>(Core::LinAlg::Initialization::zero));
-          // extract local values of continuous-scatra field from global state vector
-          Core::FE::extract_my_values<Core::LinAlg::Matrix<numnodescont_, 1>>(
-              *contscalarnp, econtscalarnp_, la[3].lm_);
+          nodal_homogenized_scalar_np_.clear();
+          nodal_homogenized_scalar_np_.resize(num_scalars_homogenized_,
+              Core::LinAlg::Matrix<num_nodes_homogenized_, 1>(Core::LinAlg::Initialization::zero));
+          // extract local values of homogenized scatra field from global state vector
+          Core::FE::extract_my_values<Core::LinAlg::Matrix<num_nodes_homogenized_, 1>>(
+              *homogenized_scalar_np, nodal_homogenized_scalar_np_, location_array[3].lm_);
         }
         else
         {
-          FOUR_C_THROW("Cannot get state vector 'scalars'");
+          FOUR_C_THROW("Cannot get state vector 'scalars'.");
         }
       }
       break;
@@ -865,105 +914,120 @@ void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, dist
     case CouplingType::scatra:
     {
       // extract element and node values of fluid
-      variablemanager_->extract_element_and_node_values(*element2_, *contdis, la_cont, ele2pos_, 2);
+      variable_manager_->extract_element_and_node_values(*homogenized_element_, *homogenized_dis,
+          location_array_homogenized, nodal_coords_homogenized_ele_, 2);
 
-      // get contelephinp_ and artelephinp_
-      contelephinp_ = Core::FE::extract_values(*contdis->get_state("phinp"), la_cont[0].lm_);
-      artelephinp_ =
-          Core::FE::extract_values(*artdis->get_state("one_d_artery_phinp"), la_art[0].lm_);
+      // get phi_np from homogenized and artery elements
+      phi_np_homogenized_ele_ = Core::FE::extract_values(
+          *homogenized_dis->get_state("phinp"), location_array_homogenized[0].lm_);
+      phi_np_artery_ele_ = Core::FE::extract_values(
+          *artery_dis->get_state("one_d_artery_phinp"), location_array_artery[0].lm_);
 
       // extract artery pressure
-      std::shared_ptr<const Core::LinAlg::Vector<double>> artpressnp =
-          artdis->get_state(ndsscatra_artery_, "one_d_artery_pressure");
-      if (artpressnp != nullptr)
+      const std::shared_ptr<const Core::LinAlg::Vector<double>> artery_pressure_np =
+          artery_dis->get_state(nds_scatra_artery_, "one_d_artery_pressure");
+      if (artery_pressure_np != nullptr)
       {
-        Core::Elements::LocationArray la(artdis->num_dof_sets());
-        element1_->location_vector(*artdis, la);
-        Core::FE::extract_my_values<Core::LinAlg::Matrix<numnodesart_, 1>>(
-            *artpressnp, earterypressurenp_, la[ndsscatra_artery_].lm_);
+        Core::Elements::LocationArray la(artery_dis->num_dof_sets());
+        artery_element_->location_vector(*artery_dis, la);
+        Core::FE::extract_my_values<Core::LinAlg::Matrix<num_nodes_artery_, 1>>(
+            *artery_pressure_np, nodal_artery_pressure_np_, la[nds_scatra_artery_].lm_);
       }
       else
       {
-        FOUR_C_THROW("Cannot get arterypressure from artery-scatra discretization");
+        FOUR_C_THROW("Cannot get artery pressure from artery-scatra discretization.");
       }
       break;
     }
     default:
-      FOUR_C_THROW("Unknown coupling type");
+      FOUR_C_THROW("Unknown coupling type.");
       break;
   }
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-double
-PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont, dim>::evaluate(
-    Core::LinAlg::SerialDenseVector* forcevec1, Core::LinAlg::SerialDenseVector* forcevec2,
-    Core::LinAlg::SerialDenseMatrix* stiffmat11, Core::LinAlg::SerialDenseMatrix* stiffmat12,
-    Core::LinAlg::SerialDenseMatrix* stiffmat21, Core::LinAlg::SerialDenseMatrix* stiffmat22,
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+double PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::evaluate(Core::LinAlg::SerialDenseVector* ele_rhs_artery,
+    Core::LinAlg::SerialDenseVector* ele_rhs_homogenized,
+    Core::LinAlg::SerialDenseMatrix* ele_matrix_artery_artery,
+    Core::LinAlg::SerialDenseMatrix* ele_matrix_artery_homogenized,
+    Core::LinAlg::SerialDenseMatrix* ele_matrix_homogenized_artery,
+    Core::LinAlg::SerialDenseMatrix* ele_matrix_homogenized_homogenized,
     Core::LinAlg::SerialDenseMatrix* D_ele, Core::LinAlg::SerialDenseMatrix* M_ele,
-    Core::LinAlg::SerialDenseVector* Kappa_ele, const std::vector<double>& segmentlengths)
+    Core::LinAlg::SerialDenseVector* Kappa_ele, const std::vector<double>& segment_lengths)
 {
-  if (!ispreevaluated_) FOUR_C_THROW("MeshTying Pair has not yet been pre-evaluated");
+  if (!is_pre_evaluated_) FOUR_C_THROW("MeshTying Pair has not yet been pre-evaluated.");
 
   // resize and initialize variables to zero
-  if (forcevec1 != nullptr) forcevec1->size(dim1_);
-  if (forcevec2 != nullptr) forcevec2->size(dim2_);
+  if (ele_rhs_artery != nullptr) ele_rhs_artery->size(dim_artery_);
+  if (ele_rhs_homogenized != nullptr) ele_rhs_homogenized->size(dim_homogenized_);
 
-  if (stiffmat11 != nullptr) stiffmat11->shape(dim1_, dim1_);
-  if (stiffmat12 != nullptr) stiffmat12->shape(dim1_, dim2_);
-  if (stiffmat21 != nullptr) stiffmat21->shape(dim2_, dim1_);
-  if (stiffmat22 != nullptr) stiffmat22->shape(dim2_, dim2_);
+  if (ele_matrix_artery_artery != nullptr)
+    ele_matrix_artery_artery->shape(dim_artery_, dim_artery_);
+  if (ele_matrix_artery_homogenized != nullptr)
+    ele_matrix_artery_homogenized->shape(dim_artery_, dim_homogenized_);
+  if (ele_matrix_homogenized_artery != nullptr)
+    ele_matrix_homogenized_artery->shape(dim_homogenized_, dim_artery_);
+  if (ele_matrix_homogenized_homogenized != nullptr)
+    ele_matrix_homogenized_homogenized->shape(dim_homogenized_, dim_homogenized_);
 
-  if (arterymat_->is_collapsed()) return 0.0;
+  if (artery_material_->is_collapsed()) return 0.0;
 
-  std::vector<double> myEta;
-  std::vector<std::vector<double>> myXi;
+  std::vector<double> current_gp_coord_artery;
+  std::vector<std::vector<double>> current_gp_coords_homogenized;
 
-  double etaA = 0.0;
-  double etaB = 0.0;
-  double integrated_diam = 0.0;
+  double artery_segment_start = 0.0;
+  double artery_segment_end = 0.0;
+  double integrated_diameter = 0.0;
 
-  switch (couplmethod_)
+  switch (coupling_method_)
   {
-    case Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::gpts:
+    case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::gpts:
     {
-      // initialize eta and xi
-      myEta.assign(n_gp_, double{});
-      myXi.assign(n_gp_, std::vector<double>(numdim_, double{}));
-      // recompute eta and xi --> see note in this function
-      recompute_eta_and_xi_in_deformed_configuration(segmentlengths, myEta, myXi, etaA, etaB);
-      // actual evaluate
-      evaluate_gpts(myEta, myXi, segmentlengths, forcevec1, forcevec2, stiffmat11, stiffmat12,
-          stiffmat21, stiffmat22);
+      // initialize Gauss point coordinates
+      current_gp_coord_artery.assign(num_gp_, double{});
+      current_gp_coords_homogenized.assign(num_gp_, std::vector(num_dim_, double{}));
+      // recompute Gauss point coordinated in deformed configuration --> see notes in this function
+      recompute_gp_coords_in_deformed_configuration(segment_lengths, current_gp_coord_artery,
+          current_gp_coords_homogenized, artery_segment_start, artery_segment_end);
+
+      evaluate_gpts(current_gp_coord_artery, current_gp_coords_homogenized, segment_lengths,
+          ele_rhs_artery, ele_rhs_homogenized, ele_matrix_artery_artery,
+          ele_matrix_artery_homogenized, ele_matrix_homogenized_artery,
+          ele_matrix_homogenized_homogenized);
 
       // case where diameter is constant
-      integrated_diam = arterydiamref_ * segmentlengths[segmentid_];
+      integrated_diameter = artery_diameter_ref_ * segment_lengths[segment_id_];
       break;
     }
-    case Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::mp:
+    case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mp:
     {
-      // initialize eta and xi
-      myEta.assign(n_gp_, double{});
-      myXi.assign(n_gp_, std::vector<double>(numdim_, double{}));
-      // recompute eta and xi --> see note in this function
-      recompute_eta_and_xi_in_deformed_configuration(segmentlengths, myEta, myXi, etaA, etaB);
-      // actual evaluate
-      evaluate_dm_kappa(myEta, myXi, segmentlengths, D_ele, M_ele, Kappa_ele);
+      // initialize Gauss point coordinates
+      current_gp_coord_artery.assign(num_gp_, double{});
+      current_gp_coords_homogenized.assign(num_gp_, std::vector(num_dim_, double{}));
+      // recompute Gauss point coordinated in deformed configuration --> see notes in this function
+      recompute_gp_coords_in_deformed_configuration(segment_lengths, current_gp_coord_artery,
+          current_gp_coords_homogenized, artery_segment_start, artery_segment_end);
+
+      evaluate_mortar_coupling(current_gp_coord_artery, current_gp_coords_homogenized,
+          segment_lengths, D_ele, M_ele, Kappa_ele);
 
       // case where diameter is constant
-      integrated_diam = arterydiamref_ * segmentlengths[segmentid_];
+      integrated_diameter = artery_diameter_ref_ * segment_lengths[segment_id_];
       break;
     }
-    case Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::ntp:
+    case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp:
     {
-      // define eta and xi
-      myEta = eta_;
-      myXi = xi_;
-      // actual evaluate
-      evaluate_ntp(eta_, xi_, forcevec1, forcevec2, stiffmat11, stiffmat12, stiffmat21, stiffmat22);
-      integrated_diam = arterydiamref_ * segmentlengths[0];
+      // define Gauss point coordinates
+      current_gp_coord_artery = gp_coords_artery_;
+      current_gp_coords_homogenized = gp_coords_homogenized_;
+
+      evaluate_ntp(gp_coords_artery_, gp_coords_homogenized_, ele_rhs_artery, ele_rhs_homogenized,
+          ele_matrix_artery_artery, ele_matrix_artery_homogenized, ele_matrix_homogenized_artery,
+          ele_matrix_homogenized_homogenized);
+      integrated_diameter = artery_diameter_ref_ * segment_lengths[0];
       break;
     }
     default:
@@ -972,93 +1036,103 @@ PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_c
   }
 
   // evaluate the function coupling (with possibly variable diameter)
-  if (funct_coupl_active_)
-    evaluate_function_coupling(myEta, myXi, segmentlengths, forcevec1, forcevec2, stiffmat11,
-        stiffmat12, stiffmat21, stiffmat22, integrated_diam);
+  if (function_coupling_active_)
+  {
+    evaluate_function_coupling(current_gp_coord_artery, current_gp_coords_homogenized,
+        segment_lengths, ele_rhs_artery, ele_rhs_homogenized, ele_matrix_artery_artery,
+        ele_matrix_artery_homogenized, ele_matrix_homogenized_artery,
+        ele_matrix_homogenized_homogenized, integrated_diameter);
+  }
 
   // evaluate derivative of 1D shape function times solid velocity
-  evaluated_nds_solid_vel(myEta, myXi, segmentlengths, *forcevec1, etaA, etaB);
+  evaluate_nds_solid_velocity(current_gp_coord_artery, current_gp_coords_homogenized,
+      *ele_rhs_artery, artery_segment_start, artery_segment_end);
 
-  return integrated_diam;
+  return integrated_diameter;
 }
 
 /*------------------------------------------------------------------------*
  *------------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::evaluate_additional_linearizationof_integrated_diam(Core::LinAlg::SerialDenseMatrix*
-                                                                  stiffmat11,
-    Core::LinAlg::SerialDenseMatrix* stiffmat12)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized,
+    dim>::evaluate_additional_linearization_of_integrated_diameter(Core::LinAlg::SerialDenseMatrix*
+                                                                       ele_matrix_artery_artery,
+    Core::LinAlg::SerialDenseMatrix* ele_matrix_artery_homogenized)
 {
-  if (!ispreevaluated_) FOUR_C_THROW("MeshTying Pair has not yet been pre-evaluated");
+  if (!is_pre_evaluated_) FOUR_C_THROW("MeshTying Pair has not yet been pre-evaluated.");
 
-  if (stiffmat11 != nullptr) stiffmat11->shape(dim1_, dim1_);
-  if (stiffmat12 != nullptr) stiffmat12->shape(dim1_, dim2_);
+  if (ele_matrix_artery_artery != nullptr)
+    ele_matrix_artery_artery->shape(dim_artery_, dim_artery_);
+  if (ele_matrix_artery_homogenized != nullptr)
+    ele_matrix_artery_homogenized->shape(dim_artery_, dim_homogenized_);
 
-  // do not evaluate if element is collapsed
-  if (arterymat_->is_collapsed()) return;
+  // do not evaluate if the element is collapsed
+  if (artery_material_->is_collapsed()) return;
 
   // this is the integrated diameter over the entire element (all segments)
-  const double arterydiam = arterymat_->diam();
-  const double prefac = M_PI * std::pow(arterydiam, 3) / 32.0 / arterymat_->viscosity();
-  // TODO: for viscosity law blood, viscosity depends on diameter, this linearization is still
-  // missing
+  const double artery_diameter = artery_material_->diam();
+  const double pre_factor =
+      M_PI * std::pow(artery_diameter, 3) / 32.0 / artery_material_->viscosity();
+  // TODO: for viscosity law blood, viscosity depends on diameter, linearization is still missing
 
-  Core::LinAlg::update(prefac, diam_stiffmat11_, 0.0, *stiffmat11);
-  Core::LinAlg::update(prefac, diam_stiffmat12_, 0.0, *stiffmat12);
+  Core::LinAlg::update(
+      pre_factor, diameter_ele_matrix_artery_artery_, 0.0, *ele_matrix_artery_artery);
+  Core::LinAlg::update(
+      pre_factor, diameter_ele_matrix_artery_homogenized_, 0.0, *ele_matrix_artery_homogenized);
 }
 
 /*------------------------------------------------------------------------*
  *------------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-int PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::ele1_gid() const
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+int PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery, dis_type_homogenized,
+    dim>::artery_ele_gid() const
 {
-  return element1_->id();
+  return artery_element_->id();
 }
 
 /*------------------------------------------------------------------------*
  *------------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-int PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::ele2_gid() const
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+int PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery, dis_type_homogenized,
+    dim>::homogenized_ele_gid() const
 {
-  return element2_->id();
+  return homogenized_element_->id();
 }
 
 /*------------------------------------------------------------------------*
  *------------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-int PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+int PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery, dis_type_homogenized,
     dim>::get_segment_id() const
 {
-  return segmentid_;
+  return segment_id_;
 }
 
 /*------------------------------------------------------------------------*
  *------------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-double PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::calculate_vol_2d_3d() const
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+double PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::calculate_volume_homogenized_element() const
 {
   // use one-point Gauss rule
-  Core::FE::IntPointsAndWeights<numdim_> intpoints_stab(
-      Discret::Elements::DisTypeToStabGaussRule<distype_cont>::rule);
+  Core::FE::IntPointsAndWeights<num_dim_> integration_points_stab(
+      Discret::Elements::DisTypeToStabGaussRule<dis_type_homogenized>::rule);
 
-  const double* gpcoord = intpoints_stab.ip().qxg[0];   // actual integration point (coords)
-  const double gpweight = intpoints_stab.ip().qwgt[0];  // actual integration point (weight)
+  const double* gp_coords =
+      integration_points_stab.ip().qxg[0];  // actual integration point (coords)
+  const double gp_weights =
+      integration_points_stab.ip().qwgt[0];  // actual integration point (weight)
 
-  Core::LinAlg::Matrix<numdim_, 1> xsi(gpcoord, true);
-  static Core::LinAlg::Matrix<numnodescont_, 1> funct;
-  static Core::LinAlg::Matrix<numdim_, numnodescont_> deriv;
-  static Core::LinAlg::Matrix<numdim_, numdim_> xjm;
-  static Core::LinAlg::Matrix<numdim_, numdim_> xji;
+  Core::LinAlg::Matrix<num_dim_, 1> local_coords(gp_coords, true);
+  static Core::LinAlg::Matrix<num_nodes_homogenized_, 1> shape_function;
+  static Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_> shape_function_deriv;
+  static Core::LinAlg::Matrix<num_dim_, num_dim_> jacobian_matrix;
+  static Core::LinAlg::Matrix<num_dim_, num_dim_> inverse_jacobian_matrix;
 
-  // shape functions and their first derivatives
-  Core::FE::shape_function<distype_cont>(xsi, funct);
-  Core::FE::shape_function_deriv1<distype_cont>(xsi, deriv);
-
-  //
+  // evaluate shape functions and their first derivatives at the Gauss point
+  Core::FE::shape_function<dis_type_homogenized>(local_coords, shape_function);
+  Core::FE::shape_function_deriv1<dis_type_homogenized>(local_coords, shape_function_deriv);
 
   // get Jacobian matrix and determinant
   // actually compute its transpose....
@@ -1077,590 +1151,654 @@ double PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, di
     | dr   ds   dt |        | dt   dt   dt |
     +-            -+        +-            -+
   */
-  xjm.multiply_nt(deriv, ele2pos_);
-  double det = xji.invert(xjm);
+  jacobian_matrix.multiply_nt(shape_function_deriv, nodal_coords_homogenized_ele_);
+  double jacobian_determinant = inverse_jacobian_matrix.invert(jacobian_matrix);
 
-  if (det < 1E-16) FOUR_C_THROW("GLOBAL ELEMENT ZERO OR NEGATIVE JACOBIAN DETERMINANT: {}", det);
+  if (jacobian_determinant < 1E-16)
+    FOUR_C_THROW("GLOBAL ELEMENT ZERO OR NEGATIVE JACOBIAN DETERMINANT: {}", jacobian_determinant);
 
   // compute integration factor
-  return gpweight * det;
+  return gp_weights * jacobian_determinant;
 }
 
 /*------------------------------------------------------------------------*
  *------------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::set_segment_id(const int& segmentid)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::set_segment_id(const int& segment_id)
 {
-  segmentid_ = segmentid;
+  segment_id_ = segment_id;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-double PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::apply_mesh_movement(const bool firstcall,
-    std::shared_ptr<Core::FE::Discretization> contdis)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+double PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::apply_mesh_movement(const bool first_call,
+    const std::shared_ptr<Core::FE::Discretization> homogenized_dis)
 {
   // nodal displacement values for ALE
-  Core::LinAlg::Matrix<numdim_, numnodescont_> edispnp(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_> ele_disp_np;
 
-  if (!firstcall)
+  if (!first_call)
   {
-    std::shared_ptr<const Core::LinAlg::Vector<double>> dispnp = contdis->get_state(1, "dispnp");
-    Core::Elements::LocationArray la(contdis->num_dof_sets());
-    element2_->location_vector(*contdis, la);
+    const std::shared_ptr<const Core::LinAlg::Vector<double>> disp_np =
+        homogenized_dis->get_state(1, "dispnp");
+    Core::Elements::LocationArray la(homogenized_dis->num_dof_sets());
+    homogenized_element_->location_vector(*homogenized_dis, la);
 
     // construct location vector for displacement related dofs
-    std::vector<int> lmdisp(numdim_ * numnodescont_, -1);
-    for (unsigned int inode = 0; inode < numnodescont_; ++inode)
-      for (unsigned int idim = 0; idim < numdim_; ++idim)
-        lmdisp[inode * numdim_ + idim] = la[1].lm_[inode * numdim_ + idim];
+    std::vector lm_disp(num_dim_ * num_nodes_homogenized_, -1);
+    for (unsigned int inode = 0; inode < num_nodes_homogenized_; ++inode)
+      for (unsigned int i_dim = 0; i_dim < num_dim_; ++i_dim)
+        lm_disp[inode * num_dim_ + i_dim] = la[1].lm_[inode * num_dim_ + i_dim];
 
     // extract local values of displacement field from global state vector
-    Core::FE::extract_my_values<Core::LinAlg::Matrix<numdim_, numnodescont_>>(
-        *dispnp, edispnp, lmdisp);
+    Core::FE::extract_my_values<Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_>>(
+        *disp_np, ele_disp_np, lm_disp);
   }
   else
-    return (eta_b_ - eta_a_) / 2.0 * arteryelelengthref_;
-
-  // update current configuration
-  ele2pos_.update(1.0, ele2posref_, 1.0, edispnp, 0.0);
-
-  static Core::LinAlg::Matrix<1, numnodescont_> N2(Core::LinAlg::Initialization::zero);  // = N2
-  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(
-      Core::LinAlg::Initialization::zero);  // = N2,xi1
-  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_XYZ(
-      Core::LinAlg::Initialization::zero);  // = N2,X
-  static Core::LinAlg::Matrix<numdim_, numdim_> defgrad(
-      Core::LinAlg::Initialization::zero);      // = dx/dX = F
-  static Core::LinAlg::Matrix<numdim_, 1> Ft0;  // = F*t0
-
-  curr_segment_length_ = 0.0;
-  // current segment length = \int_{\eta_a}^{eta_b} || F*t0 ||_2 ds
-  // all under the assumption that artery element completely follows deformation of
-  // underlying 2D/3D problem
-  for (int i_gp = 0; i_gp < n_gp_; i_gp++)
   {
-    // get shape functions of continuous element
-    const std::vector<double> xi = xi_[i_gp];
-    get_2d_3d_shape_functions<double>(N2, N2_xi, xi);
-    // dN/dX = dN/dxi * dxi/dX = dN/dxi * (dX/dxi)^-1
-    N2_XYZ.multiply(inv_j_[i_gp], N2_xi);
-    // dx/dX = x * N_XYZ^T
-    defgrad.multiply_nt(ele2pos_, N2_XYZ);
-    Ft0.multiply(defgrad, lambda0_);
-    curr_segment_length_ += Ft0.norm2() * wgp_[i_gp] * jacobi_;
+    return (artery_segment_end_ - artery_segment_start_) / 2.0 * artery_ele_length_ref_;
   }
 
-  return curr_segment_length_;
+  // update current configuration
+  nodal_coords_homogenized_ele_.update(
+      1.0, nodal_coords_homogenized_ele_ref_, 1.0, ele_disp_np, 0.0);
+
+  static Core::LinAlg::Matrix<1, num_nodes_homogenized_> shape_functions_homogenized;
+  static Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_> shape_functions_homogenized_deriv;
+  static Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_>
+      shape_functions_homogenized_deriv_xyz;
+  // deformation gradient: dx/dX = F
+  static Core::LinAlg::Matrix<num_dim_, num_dim_> deformation_gradient;
+  // deformed artery orientation: F * initial orientation (t0)
+  static Core::LinAlg::Matrix<num_dim_, 1> deformed_artery_orientation;
+
+  current_segment_length_ = 0.0;
+  // current segment length = \int_{\eta_a}^{eta_b} || F*t0 ||_2 ds
+  // all under the assumption that the artery element completely follows the deformation of
+  // the underlying 2D/3D problem
+  for (int i_gp = 0; i_gp < num_gp_; i_gp++)
+  {
+    // get shape functions of the homogenized element
+    const std::vector<double> gp_coord_homogenized = gp_coords_homogenized_[i_gp];
+    get_homogenized_shape_functions<double>(
+        shape_functions_homogenized, shape_functions_homogenized_deriv, gp_coord_homogenized);
+    // dN/dX = dN/dxi * dxi/dX = dN/dxi * (dX/dxi)^-1
+    shape_functions_homogenized_deriv_xyz.multiply(
+        inverse_jacobian_matrix_[i_gp], shape_functions_homogenized_deriv);
+    // dx/dX = x * N_XYZ^T
+    deformation_gradient.multiply_nt(
+        nodal_coords_homogenized_ele_, shape_functions_homogenized_deriv_xyz);
+    deformed_artery_orientation.multiply(deformation_gradient, initial_artery_orientation);
+    current_segment_length_ +=
+        deformed_artery_orientation.norm2() * gp_weights_[i_gp] * jacobian_determinant_;
+  }
+
+  return current_segment_length_;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::recompute_eta_and_xi_in_deformed_configuration(const std::vector<double>& segmentlengths,
-    std::vector<double>& myEta, std::vector<std::vector<double>>& myXi, double& etaA, double& etaB)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized,
+    dim>::recompute_gp_coords_in_deformed_configuration(const std::vector<double>& segment_lengths,
+    std::vector<double>& gp_coords_artery, std::vector<std::vector<double>>& gp_coords_homogenized,
+    double& artery_coords_start, double& artery_coords_end)
 {
-  // NOTE: we assume that the 1D artery element completely follows the deformation of the
-  // underlying
-  //       porous medium, so its length might change. Interaction between artery element and
-  //       porous medium has to be evaluated in current/deformed configuration. However, Gauss
-  //       points of the original projection (in reference configuration) cannot be used then
-  //       anymore but we must define a new parameter space [-1, 1] which maps into the current
-  //       configuration. First, we determine the new etaA and etaB of this segment as sum of
-  //       segment lengths etaA_new = -1.0 + 2.0* ( \sum_{i=0}_{this_seg-1} l_i / total_ele_length
-  //       ) etaB_new = -1.0 + 2.0* ( \sum_{i=0}_{this_seg} l_i / total_ele_length ) then GPs are
-  //       distributed in the interval [etaA_new, etaB_new] The last step is to get the new
-  //       projected xi_i in the 2D/3D parameter space of the second element For each new GP
-  //       eta_new, this can be done by finding the point in reference configuration which deforms
-  //       to the point in current configuration where the GP now lies as \int_{\eta_a}^{eta_s} ||
-  //       F*t0 ||_2 ds where eta_s is the unknown. Linearization of this nonlinear equation
-  //       within the Newton loop is done with FAD
+  // NOTE: We assume that the 1D artery element completely follows the deformation of the
+  // underlying porous medium and hence its length might change. Interaction between artery element
+  // and porous medium has to be evaluated in current/deformed configuration. However, Gauss points
+  // of the original projection (in reference configuration) cannot be used anymore, but we must
+  // define a new parameter space [-1, 1] which maps into the current configuration.
+  // First, we determine the new start and end coordinates of this segment as sum of segment lengths
+  //     artery_coord_start_new = -1.0 + 2.0 * (\sum_{i=0}_{this_seg-1} l_i / total_ele_length)
+  //     artery_coord_end_new = -1.0 + 2.0 * (\sum_{i=0}_{this_seg} l_i / total_ele_length)
+  // Second, GPs are distributed in this interval.
+  // The last step is to get the new projected coordinates in the 2D/3D parameter space of the
+  // homogenized element. For each new GP, this can be done by finding the point in reference
+  // configuration which deforms to the point in current configuration where the GP now lies as
+  // \int_{\eta_a}^{eta_s} || F*t0 ||_2 ds
+  // where eta_s is unknown. Linearization of this nonlinear equation within the Newton loop is
+  // done with FAD.
 
-  // not necessary if we do not take into account mesh movement or ntp-coupling
+  // not necessary if we do not take into account mesh movement or node-to-point-coupling
   if (evaluate_in_ref_config_)
   {
-    myEta = eta_;
-    myXi = xi_;
-    arteryelelength_ = arteryelelengthref_;
+    gp_coords_artery = gp_coords_artery_;
+    gp_coords_homogenized = gp_coords_homogenized_;
+    artery_ele_length_ = artery_ele_length_ref_;
   }
   else
   {
     // Vectors for shape functions and their derivatives
-    static Core::LinAlg::Matrix<1, numnodesart_, double> N1(
-        Core::LinAlg::Initialization::zero);  // = N1
-    static Core::LinAlg::Matrix<1, numnodesart_, double> N1_eta(
-        Core::LinAlg::Initialization::zero);  // = N1,eta
-    // Coords and derivatives of 1D and 2D/3D element
-    static Core::LinAlg::Matrix<numdim_, 1, double> r1(Core::LinAlg::Initialization::zero);  // = r1
-    static Core::LinAlg::Matrix<numdim_, 1, double> r1_eta(
-        Core::LinAlg::Initialization::zero);  // = r1,eta
+    static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery;
+    static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery_deriv;
+    // Coords and derivatives of the artery element in reference configuration
+    static Core::LinAlg::Matrix<num_dim_, 1> coords_artery_ref;
+    static Core::LinAlg::Matrix<num_dim_, 1> coords_artery_deriv_ref;
 
     // current length of artery
-    arteryelelength_ = std::accumulate(segmentlengths.begin(), segmentlengths.end(), 0.0);
+    artery_ele_length_ = std::accumulate(segment_lengths.begin(), segment_lengths.end(), 0.0);
 
     // length of segments [0, 1, ..., this_seg-1]
     double length_so_far = 0.0;
-    for (int iseg = 0; iseg < segmentid_; iseg++) length_so_far += segmentlengths[iseg];
+    for (int i_seg = 0; i_seg < segment_id_; i_seg++) length_so_far += segment_lengths[i_seg];
 
     // length of this segment
-    const double curr_seg_length = segmentlengths[segmentid_];
+    const double curr_seg_length = segment_lengths[segment_id_];
 
-    // get new etaA and etaB
-    etaA = -1.0 + 2.0 * (length_so_far / arteryelelength_);
-    etaB = -1.0 + 2.0 * ((length_so_far + curr_seg_length) / arteryelelength_);
+    // get new Gauss point coordinates
+    artery_coords_start = -1.0 + 2.0 * (length_so_far / artery_ele_length_);
+    artery_coords_end = -1.0 + 2.0 * ((length_so_far + curr_seg_length) / artery_ele_length_);
 
-    Core::FE::IntegrationPoints1D gaussPoints =
-        Core::FE::IntegrationPoints1D(Core::FE::GaussRule1D::line_3point);
-    if (numdim_ == 3)
-      gaussPoints = Core::FE::IntegrationPoints1D(Core::FE::GaussRule1D::line_4point);
+    auto gauss_points = Core::FE::IntegrationPoints1D(Core::FE::GaussRule1D::line_3point);
+    if (num_dim_ == 3)
+      gauss_points = Core::FE::IntegrationPoints1D(Core::FE::GaussRule1D::line_4point);
 
     // distribute new Gauss points
-    const double determinant = (etaB - etaA) / 2.0;
-    for (int i_gp = 0; i_gp < n_gp_; i_gp++)
-      myEta[i_gp] = (etaA + etaB) / 2.0 + gaussPoints.qxg[i_gp][0] * determinant;
+    const double determinant = (artery_coords_end - artery_coords_start) / 2.0;
+    for (int i_gp = 0; i_gp < num_gp_; i_gp++)
+      gp_coords_artery[i_gp] =
+          (artery_coords_start + artery_coords_end) / 2.0 + gauss_points.qxg[i_gp][0] * determinant;
 
     // solution variable for Newton loop
-    FAD eta_s = 0.0;
-    eta_s.diff(0, 1);  // independent variable 0 out of a total of 1
+    FAD gp_coords_deformed = 0.0;
+    gp_coords_deformed.diff(0, 1);  // independent variable 0 out of a total of 1
 
-    // the GP loop
+    // Gauss point loop
     bool converged = false;
-    for (int i_gp = 0; i_gp < n_gp_; i_gp++)
+    for (int i_gp = 0; i_gp < num_gp_; i_gp++)
     {
-      // start value for Newton: last converged value of previous evaluation (should be pretty
-      // close)
-      eta_s.val() = eta_s_[i_gp];
-      const double desired_length = curr_seg_length * (myEta[i_gp] - etaA) / (etaB - etaA);
-      double val = -1.0;
+      // start value for Newton: last converged value of previous evaluation
+      // (should be pretty close)
+      gp_coords_deformed.val() = previous_gp_coords_deformed_[i_gp];
+      const double desired_length = curr_seg_length *
+                                    (gp_coords_artery[i_gp] - artery_coords_start) /
+                                    (artery_coords_end - artery_coords_start);
+      double value = -1.0;
       // Newton loop
-      for (int istep = 0; istep < MESHMOVEMENTMAXITER; istep++)
+      for (int i_step = 0; i_step < 10; i_step++)
       {
-        // integrate \int_{\eta_a}^{eta_s} || F*t0 ||_2 ds
-        const FAD curr_length = integrate_length_to_eta_s(eta_s);
+        // integrate \int_{\eta_start}^{eta_def} || F*t0 ||_2 ds
+        const FAD current_length = integrate_length_to_deformed_coords(gp_coords_deformed);
 
-        val = curr_length.val() - desired_length;
-        if (fabs(val) < CONVTOLNEWTONMESHMOVEMENT)
+        value = current_length.val() - desired_length;
+
+        if (fabs(value) < 1.0e-9)
         {
           converged = true;
           break;
         }
-        const double deriv = curr_length.fastAccessDx(0);
+        const double deriv = current_length.fastAccessDx(0);
         // Newton update
-        eta_s.val() -= val / deriv;
+        gp_coords_deformed.val() -= value / deriv;
       }
-
       if (!converged)
-        std::cout << "WARNING: could not find Gauss point position in reference configuration";
-      // finally find new xi_i by projection eta_s in reference configuration
+        std::cout << "WARNING: could not find Gauss point position in reference configuration.";
+      // save the converged value
+      previous_gp_coords_deformed_[i_gp] = gp_coords_deformed.val();
+
+      // Finally, find new coordinate in the homogenized domain by projection eta_s in reference
+      // configuration.
 
       // Update coordinates and derivatives for 1D and 2D/3D element
-      get_1d_shape_functions<double>(N1, N1_eta, eta_s.val());
-      compute_artery_coords_and_derivs_ref<double>(r1, r1_eta, N1, N1_eta);
+      get_artery_shape_functions<double>(
+          shape_functions_artery, shape_functions_artery_deriv, gp_coords_deformed.val());
+      compute_artery_coords_and_derivs_ref<double>(coords_artery_ref, coords_artery_deriv_ref,
+          shape_functions_artery, shape_functions_artery_deriv);
 
       bool projection_valid = false;
-      projection<double>(r1, myXi[i_gp], projection_valid);
+      projection<double>(coords_artery_ref, gp_coords_homogenized[i_gp], projection_valid);
       if (!projection_valid) FOUR_C_THROW("Gauss point could not be projected");
-      // save the converged value
-      eta_s_[i_gp] = eta_s.val();
-    }  // GP loop
-  }  // !evaluate_in_ref_config_
-}
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::evaluate_gpts(const std::vector<double>& eta, const std::vector<std::vector<double>>& xi,
-    const std::vector<double>& segmentlengths, Core::LinAlg::SerialDenseVector* forcevec1,
-    Core::LinAlg::SerialDenseVector* forcevec2, Core::LinAlg::SerialDenseMatrix* stiffmat11,
-    Core::LinAlg::SerialDenseMatrix* stiffmat12, Core::LinAlg::SerialDenseMatrix* stiffmat21,
-    Core::LinAlg::SerialDenseMatrix* stiffmat22)
-{
-  if (numcoupleddofs_ > 0)
-  {
-    if (!constant_part_evaluated_)
-    {
-      gpts_ntp_stiffmat11_ = Core::LinAlg::SerialDenseMatrix();
-      gpts_ntp_stiffmat12_ = Core::LinAlg::SerialDenseMatrix();
-      gpts_ntp_stiffmat21_ = Core::LinAlg::SerialDenseMatrix();
-      gpts_ntp_stiffmat22_ = Core::LinAlg::SerialDenseMatrix();
     }
-
-    // we only have to this once if evaluated in reference configuration
-    if (!constant_part_evaluated_ or !evaluate_in_ref_config_)
-    {
-      // Vectors for shape functions and their derivatives
-      static Core::LinAlg::Matrix<1, numnodesart_> N1(Core::LinAlg::Initialization::zero);  // = N1
-      static Core::LinAlg::Matrix<1, numnodesart_> N1_eta(
-          Core::LinAlg::Initialization::zero);  // = N1,eta
-
-      static Core::LinAlg::Matrix<1, numnodescont_> N2(Core::LinAlg::Initialization::zero);  // = N2
-      static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(
-          Core::LinAlg::Initialization::zero);  // = N2,xi1
-
-      gpts_ntp_stiffmat11_.shape(dim1_, dim1_);
-      gpts_ntp_stiffmat12_.shape(dim1_, dim2_);
-      gpts_ntp_stiffmat21_.shape(dim2_, dim1_);
-      gpts_ntp_stiffmat22_.shape(dim2_, dim2_);
-
-      const double curr_seg_length = segmentlengths[segmentid_];
-
-      for (int i_gp = 0; i_gp < n_gp_; i_gp++)
-      {
-        // Get constant values from projection
-        const double w_gp = wgp_[i_gp];
-        const double myeta = eta[i_gp];
-        const double jac = curr_seg_length / 2.0;
-        const std::vector<double> myxi = xi[i_gp];
-
-        // Update shape functions and their derivatives for 1D and 2D/3D element
-        get_1d_shape_functions<double>(N1, N1_eta, myeta);
-        get_2d_3d_shape_functions<double>(N2, N2_xi, myxi);
-
-        // evaluate
-        evaluate_gpts_stiff(w_gp, N1, N2, jac, pp_);
-      }
-    }  //! constant_part_evaluated_ or !evaluate_in_ref_config_
-
-    update_gptsntp_stiff(*stiffmat11, *stiffmat12, *stiffmat21, *stiffmat22);
-    check_valid_volume_fraction_pressure_coupling(
-        *stiffmat11, *stiffmat12, *stiffmat21, *stiffmat22);
-    evaluate_gptsntp_force(
-        *forcevec1, *forcevec2, *stiffmat11, *stiffmat12, *stiffmat21, *stiffmat22);
   }
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::evaluate_ntp(const std::vector<double>& eta, const std::vector<std::vector<double>>& xi,
-    Core::LinAlg::SerialDenseVector* forcevec1, Core::LinAlg::SerialDenseVector* forcevec2,
-    Core::LinAlg::SerialDenseMatrix* stiffmat11, Core::LinAlg::SerialDenseMatrix* stiffmat12,
-    Core::LinAlg::SerialDenseMatrix* stiffmat21, Core::LinAlg::SerialDenseMatrix* stiffmat22)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::evaluate_gpts(const std::vector<double>& gp_coords_artery,
+    const std::vector<std::vector<double>>& gp_coords_homogenized,
+    const std::vector<double>& segment_lengths, Core::LinAlg::SerialDenseVector* ele_rhs_artery,
+    Core::LinAlg::SerialDenseVector* ele_rhs_homogenized,
+    Core::LinAlg::SerialDenseMatrix* ele_matrix_artery_artery,
+    Core::LinAlg::SerialDenseMatrix* ele_matrix_artery_homogenized,
+    Core::LinAlg::SerialDenseMatrix* ele_matrix_homogenized_artery,
+    Core::LinAlg::SerialDenseMatrix* ele_matrix_homogenized_homogenized)
 {
-  if (numcoupleddofs_ > 0)
+  if (num_coupled_dofs_ > 0)
   {
     if (!constant_part_evaluated_)
     {
-      gpts_ntp_stiffmat11_ = Core::LinAlg::SerialDenseMatrix();
-      gpts_ntp_stiffmat12_ = Core::LinAlg::SerialDenseMatrix();
-      gpts_ntp_stiffmat21_ = Core::LinAlg::SerialDenseMatrix();
-      gpts_ntp_stiffmat22_ = Core::LinAlg::SerialDenseMatrix();
+      gpts_ntp_ele_matrix_artery_artery_ = Core::LinAlg::SerialDenseMatrix();
+      gpts_ntp_ele_matrix_artery_homogenized_ = Core::LinAlg::SerialDenseMatrix();
+      gpts_ntp_ele_matrix_homogenized_artery_ = Core::LinAlg::SerialDenseMatrix();
+      gpts_ntp_ele_matrix_homogenized_homogenized_ = Core::LinAlg::SerialDenseMatrix();
+    }
+
+    // we only have to do this once if evaluated in reference configuration
+    if (!constant_part_evaluated_ or !evaluate_in_ref_config_)
+    {
+      // Vectors for shape functions and their derivatives
+      static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery;
+      static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery_deriv;
+
+      static Core::LinAlg::Matrix<1, num_nodes_homogenized_> shape_functions_homogenized;
+      static Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_>
+          shape_functions_homogenized_deriv;
+
+      gpts_ntp_ele_matrix_artery_artery_.shape(dim_artery_, dim_artery_);
+      gpts_ntp_ele_matrix_artery_homogenized_.shape(dim_artery_, dim_homogenized_);
+      gpts_ntp_ele_matrix_homogenized_artery_.shape(dim_homogenized_, dim_artery_);
+      gpts_ntp_ele_matrix_homogenized_homogenized_.shape(dim_homogenized_, dim_homogenized_);
+
+      const double current_segment_length = segment_lengths[segment_id_];
+
+      for (int i_gp = 0; i_gp < num_gp_; i_gp++)
+      {
+        // Get constant values from projection
+        const double current_gp_weight = gp_weights_[i_gp];
+        const double current_gp_coord_artery = gp_coords_artery[i_gp];
+        const std::vector<double>& current_gp_coords_homogenized = gp_coords_homogenized[i_gp];
+        const double jacobian_determinant = current_segment_length / 2.0;
+
+        // Update shape functions of the artery and homogenized element
+        get_artery_shape_functions<double>(
+            shape_functions_artery, shape_functions_artery_deriv, current_gp_coord_artery);
+        get_homogenized_shape_functions<double>(shape_functions_homogenized,
+            shape_functions_homogenized_deriv, current_gp_coords_homogenized);
+
+        evaluate_gpts_element_matrix(current_gp_weight, shape_functions_artery,
+            shape_functions_homogenized, jacobian_determinant, penalty_parameter_);
+      }
+    }
+
+    update_gpts_ntp_element_matrix(*ele_matrix_artery_artery, *ele_matrix_artery_homogenized,
+        *ele_matrix_homogenized_artery, *ele_matrix_homogenized_homogenized);
+    check_valid_volume_fraction_pressure_coupling(*ele_matrix_artery_artery,
+        *ele_matrix_artery_homogenized, *ele_matrix_homogenized_artery,
+        *ele_matrix_homogenized_homogenized);
+    evaluate_gpts_ntp_ele_rhs(*ele_rhs_artery, *ele_rhs_homogenized, *ele_matrix_artery_artery,
+        *ele_matrix_artery_homogenized, *ele_matrix_homogenized_artery,
+        *ele_matrix_homogenized_homogenized);
+  }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::evaluate_ntp(const std::vector<double>& gp_coords_artery,
+    const std::vector<std::vector<double>>& gp_coords_homogenized,
+    Core::LinAlg::SerialDenseVector* ele_rhs_artery,
+    Core::LinAlg::SerialDenseVector* ele_rhs_homogenized,
+    Core::LinAlg::SerialDenseMatrix* ele_matrix_artery_artery,
+    Core::LinAlg::SerialDenseMatrix* ele_matrix_artery_homogenized,
+    Core::LinAlg::SerialDenseMatrix* ele_matrix_homogenized_artery,
+    Core::LinAlg::SerialDenseMatrix* ele_matrix_homogenized_homogenized)
+{
+  if (num_coupled_dofs_ > 0)
+  {
+    if (!constant_part_evaluated_)
+    {
+      gpts_ntp_ele_matrix_artery_artery_ = Core::LinAlg::SerialDenseMatrix();
+      gpts_ntp_ele_matrix_artery_homogenized_ = Core::LinAlg::SerialDenseMatrix();
+      gpts_ntp_ele_matrix_homogenized_artery_ = Core::LinAlg::SerialDenseMatrix();
+      gpts_ntp_ele_matrix_homogenized_homogenized_ = Core::LinAlg::SerialDenseMatrix();
     }
 
     // we only have to this once if evaluated in reference configuration
     if (!constant_part_evaluated_ or !evaluate_in_ref_config_)
     {
       // Vectors for shape functions and their derivatives
-      static Core::LinAlg::Matrix<1, numnodesart_> N1(Core::LinAlg::Initialization::zero);  // = N1
-      static Core::LinAlg::Matrix<1, numnodesart_> N1_eta(
-          Core::LinAlg::Initialization::zero);  // = N1,eta
+      static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery;
+      static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery_deriv;
 
-      static Core::LinAlg::Matrix<1, numnodescont_> N2(Core::LinAlg::Initialization::zero);  // = N2
-      static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(
-          Core::LinAlg::Initialization::zero);  // = N2,xi1
+      static Core::LinAlg::Matrix<1, num_nodes_homogenized_> shape_functions_homogenized;
+      static Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_>
+          shape_functions_homogenized_deriv;
 
-      gpts_ntp_stiffmat11_.shape(dim1_, dim1_);
-      gpts_ntp_stiffmat12_.shape(dim1_, dim2_);
-      gpts_ntp_stiffmat21_.shape(dim2_, dim1_);
-      gpts_ntp_stiffmat22_.shape(dim2_, dim2_);
+      gpts_ntp_ele_matrix_artery_artery_.shape(dim_artery_, dim_artery_);
+      gpts_ntp_ele_matrix_artery_homogenized_.shape(dim_artery_, dim_homogenized_);
+      gpts_ntp_ele_matrix_homogenized_artery_.shape(dim_homogenized_, dim_artery_);
+      gpts_ntp_ele_matrix_homogenized_homogenized_.shape(dim_homogenized_, dim_homogenized_);
 
 
       // Get constant values from projection
-      const double myeta = eta[0];
-      const std::vector<double> myxi = xi[0];
+      const double current_gp_coord_artery = gp_coords_artery[0];
+      const std::vector<double>& current_gp_coords_homogenized = gp_coords_homogenized[0];
 
       // Update shape functions and their derivatives for 1D and 2D/3D element
-      get_1d_shape_functions<double>(N1, N1_eta, myeta);
-      get_2d_3d_shape_functions<double>(N2, N2_xi, myxi);
+      get_artery_shape_functions<double>(
+          shape_functions_artery, shape_functions_artery_deriv, current_gp_coord_artery);
+      get_homogenized_shape_functions<double>(shape_functions_homogenized,
+          shape_functions_homogenized_deriv, current_gp_coords_homogenized);
 
       // evaluate
-      evaluate_ntp_stiff(N1, N2, pp_);
+      evaluate_ntp_element_matrix(
+          shape_functions_artery, shape_functions_homogenized, penalty_parameter_);
     }
-  }  //! constant_part_evaluated_ or !evaluate_in_ref_config_
+  }
 
-  update_gptsntp_stiff(*stiffmat11, *stiffmat12, *stiffmat21, *stiffmat22);
+  update_gpts_ntp_element_matrix(*ele_matrix_artery_artery, *ele_matrix_artery_homogenized,
+      *ele_matrix_homogenized_artery, *ele_matrix_homogenized_homogenized);
+
   //! safety check for coupling with additional porous network (= Artery coupling)
   if (coupling_element_type_ == "ARTERY")
-    check_valid_volume_fraction_pressure_coupling(
-        *stiffmat11, *stiffmat12, *stiffmat21, *stiffmat22);
-  evaluate_gptsntp_force(
-      *forcevec1, *forcevec2, *stiffmat11, *stiffmat12, *stiffmat21, *stiffmat22);
+    check_valid_volume_fraction_pressure_coupling(*ele_matrix_artery_artery,
+        *ele_matrix_artery_homogenized, *ele_matrix_homogenized_artery,
+        *ele_matrix_homogenized_homogenized);
+  evaluate_gpts_ntp_ele_rhs(*ele_rhs_artery, *ele_rhs_homogenized, *ele_matrix_artery_artery,
+      *ele_matrix_artery_homogenized, *ele_matrix_homogenized_artery,
+      *ele_matrix_homogenized_homogenized);
 }
 
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::evaluate_dm_kappa(const std::vector<double>& eta,
-    const std::vector<std::vector<double>>& xi, const std::vector<double>& segmentlengths,
-    Core::LinAlg::SerialDenseMatrix* D_ele, Core::LinAlg::SerialDenseMatrix* M_ele,
-    Core::LinAlg::SerialDenseVector* Kappa_ele)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::evaluate_mortar_coupling(const std::vector<double>&
+                                                             gp_coords_artery,
+    const std::vector<std::vector<double>>& gp_coords_homogenized,
+    const std::vector<double>& segment_lengths, Core::LinAlg::SerialDenseMatrix* mortar_matrix_d,
+    Core::LinAlg::SerialDenseMatrix* mortar_matrix_m,
+    Core::LinAlg::SerialDenseVector* mortar_vector_kappa)
 {
-  if (D_ele != nullptr) D_ele->shape(dim1_, dim1_);
-  if (M_ele != nullptr) M_ele->shape(dim1_, dim2_);
-  if (Kappa_ele != nullptr) Kappa_ele->size(dim1_);
+  if (mortar_matrix_d != nullptr) mortar_matrix_d->shape(dim_artery_, dim_artery_);
+  if (mortar_matrix_m != nullptr) mortar_matrix_m->shape(dim_artery_, dim_homogenized_);
+  if (mortar_vector_kappa != nullptr) mortar_vector_kappa->size(dim_artery_);
 
-  if (numcoupleddofs_ > 0)
+  if (num_coupled_dofs_ > 0)
   {
     // initialize
     if (!constant_part_evaluated_)
     {
-      d_ = Core::LinAlg::SerialDenseMatrix();
-      m_ = Core::LinAlg::SerialDenseMatrix();
+      mortar_matrix_d_ = Core::LinAlg::SerialDenseMatrix();
+      mortar_matrix_m_ = Core::LinAlg::SerialDenseMatrix();
     }
     // we only have to this once if evaluated in reference configuration
     if (!constant_part_evaluated_ or !evaluate_in_ref_config_)
     {
       // Vectors for shape functions and their derivatives
-      static Core::LinAlg::Matrix<1, numnodesart_> N1(Core::LinAlg::Initialization::zero);  // = N1
-      static Core::LinAlg::Matrix<1, numnodesart_> N1_eta(
-          Core::LinAlg::Initialization::zero);  // = N1,eta
+      static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery;
+      static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery_deriv;
 
-      static Core::LinAlg::Matrix<1, numnodescont_> N2(Core::LinAlg::Initialization::zero);  // = N2
-      static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(
-          Core::LinAlg::Initialization::zero);  // = N2,xi1
+      static Core::LinAlg::Matrix<1, num_nodes_homogenized_> shape_functions_homogenized;
+      static Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_>
+          shape_functions_homogenized_deriv;
 
-      d_.shape(dim1_, dim1_);
-      m_.shape(dim1_, dim2_);
-      kappa_.size(dim1_);
+      mortar_matrix_d_.shape(dim_artery_, dim_artery_);
+      mortar_matrix_m_.shape(dim_artery_, dim_homogenized_);
+      mortar_vector_kappa_.size(dim_artery_);
 
-      const double curr_seg_length = segmentlengths[segmentid_];
+      const double current_segment_length = segment_lengths[segment_id_];
 
-      for (int i_gp = 0; i_gp < n_gp_; i_gp++)
+      for (int i_gp = 0; i_gp < num_gp_; i_gp++)
       {
         // Get constant values from projection
-        const double w_gp = wgp_[i_gp];
-        const double myeta = eta[i_gp];
-        const double jac = curr_seg_length / 2.0;
-        const std::vector<double> myxi = xi[i_gp];
+        const double current_gp_weight = gp_weights_[i_gp];
+        const double current_gp_coord_artery = gp_coords_artery[i_gp];
+        const std::vector<double>& current_gp_coords_homogenized = gp_coords_homogenized[i_gp];
+        const double jacobian_determinant = current_segment_length / 2.0;
 
         // Update shape functions and their derivatives for 1D and 2D/3D element
-        get_1d_shape_functions<double>(N1, N1_eta, myeta);
-        get_2d_3d_shape_functions<double>(N2, N2_xi, myxi);
+        get_artery_shape_functions<double>(
+            shape_functions_artery, shape_functions_artery_deriv, current_gp_coord_artery);
+        get_homogenized_shape_functions<double>(shape_functions_homogenized,
+            shape_functions_homogenized_deriv, current_gp_coords_homogenized);
 
-        evaluate_dm_kappa(w_gp, N1, N2, jac);
+        evaluate_mortar_matrices_and_vector(current_gp_weight, shape_functions_artery,
+            shape_functions_homogenized, jacobian_determinant);
       }
-    }  //! constant_part_evaluated_ or !evaluate_in_ref_config_
+    }
 
-    update_dm_kappa(*D_ele, *M_ele, *Kappa_ele);
+    update_mortar_matrices_and_vector(*mortar_matrix_d, *mortar_matrix_m, *mortar_vector_kappa);
   }
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::evaluate_function_coupling(const std::vector<double>& eta,
-    const std::vector<std::vector<double>>& xi, const std::vector<double>& segmentlengths,
-    Core::LinAlg::SerialDenseVector* forcevec1, Core::LinAlg::SerialDenseVector* forcevec2,
-    Core::LinAlg::SerialDenseMatrix* stiffmat11, Core::LinAlg::SerialDenseMatrix* stiffmat12,
-    Core::LinAlg::SerialDenseMatrix* stiffmat21, Core::LinAlg::SerialDenseMatrix* stiffmat22,
-    double& integrated_diam)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::evaluate_function_coupling(const std::vector<double>&
+                                                               gp_coords_artery,
+    const std::vector<std::vector<double>>& gp_coords_homogenized,
+    const std::vector<double>& segment_lengths, Core::LinAlg::SerialDenseVector* ele_rhs_artery,
+    Core::LinAlg::SerialDenseVector* ele_rhs_homogenized,
+    Core::LinAlg::SerialDenseMatrix* ele_matrix_artery_artery,
+    Core::LinAlg::SerialDenseMatrix* ele_matrix_artery_homogenized,
+    Core::LinAlg::SerialDenseMatrix* ele_matrix_homogenized_artery,
+    Core::LinAlg::SerialDenseMatrix* ele_matrix_homogenized_homogenized,
+    double& integrated_diameter)
 {
   // Vectors for shape functions and their derivatives
-  static Core::LinAlg::Matrix<1, numnodesart_> N1(Core::LinAlg::Initialization::zero);  // = N1
-  static Core::LinAlg::Matrix<1, numnodesart_> N1_eta(
-      Core::LinAlg::Initialization::zero);  // = N1,eta
+  static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery;
+  static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery_deriv;
 
-  static Core::LinAlg::Matrix<1, numnodescont_> N2(Core::LinAlg::Initialization::zero);  // = N2
-  static Core::LinAlg::Matrix<numnodescont_, 1> N2_transpose(
-      Core::LinAlg::Initialization::zero);  // = N2^T
+  static Core::LinAlg::Matrix<1, num_nodes_homogenized_> shape_functions_homogenized;
+  static Core::LinAlg::Matrix<num_nodes_homogenized_, 1> shape_functions_homogenized_transpose;
 
-  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(
-      Core::LinAlg::Initialization::zero);  // = N2,xi1
-  static Core::LinAlg::Matrix<numdim_, numnodescont_> derxy(
-      Core::LinAlg::Initialization::zero);  // = N2,xi1
+  static Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_> shape_functions_homogenized_deriv;
+  static Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_>
+      shape_functions_homogenized_deriv_xyz;
 
-  static Core::LinAlg::Matrix<numdim_, numdim_> xjm;
-  static Core::LinAlg::Matrix<numdim_, numdim_> xjm0;
-  static Core::LinAlg::Matrix<numdim_, numdim_> xji;
+  static Core::LinAlg::Matrix<num_dim_, num_dim_> jacobian_matrix;
+  static Core::LinAlg::Matrix<num_dim_, num_dim_> jacobian_matrix_ref;
+  static Core::LinAlg::Matrix<num_dim_, num_dim_> inverse_jacobian_matrix;
 
-  const double curr_seg_length = segmentlengths[segmentid_];
+  const double current_segment_length = segment_lengths[segment_id_];
 
-  // case with variable diameter and type porofluid: (integral and linearizations have to be
-  // calculated) --> reset
-  if (variable_diameter_active_ && coupltype_ == CouplingType::porofluid)
+  // case with variable diameter and type porofluid:
+  // integral and linearizations have to be calculated --> reset
+  if (variable_diameter_active_ && coupling_type_ == CouplingType::porofluid)
   {
-    integrated_diam = 0.0;
-    diam_stiffmat11_.shape(dim1_, dim1_);
-    diam_stiffmat12_.shape(dim1_, dim2_);
+    integrated_diameter = 0.0;
+    diameter_ele_matrix_artery_artery_.shape(dim_artery_, dim_artery_);
+    diameter_ele_matrix_artery_homogenized_.shape(dim_artery_, dim_homogenized_);
   }
 
-  for (int i_gp = 0; i_gp < n_gp_; i_gp++)
+  for (int i_gp = 0; i_gp < num_gp_; i_gp++)
   {
-    // Get constant values from projection
-    const double w_gp = wgp_[i_gp];
-    const double myeta = eta[i_gp];
-    const std::vector<double> myxi = xi[i_gp];
+    // clear current gauss point data for safety
+    phase_manager_->clear_gp_state();
 
-    const double jac = curr_seg_length / 2.0;
+    // Get constant values from projection
+    const double current_gp_weight = gp_weights_[i_gp];
+    const double current_gp_coord_artery = gp_coords_artery[i_gp];
+    const std::vector<double>& current_gp_coords_homogenized = gp_coords_homogenized[i_gp];
 
     // Update shape functions and their derivatives for 1D and 2D/3D element
-    get_1d_shape_functions<double>(N1, N1_eta, myeta);
-    get_2d_3d_shape_functions<double>(N2, N2_xi, myxi);
-    N2_transpose.update_t(N2);
+    get_artery_shape_functions<double>(
+        shape_functions_artery, shape_functions_artery_deriv, current_gp_coord_artery);
+    get_homogenized_shape_functions<double>(shape_functions_homogenized,
+        shape_functions_homogenized_deriv, current_gp_coords_homogenized);
 
-    xjm.multiply_nt(N2_xi, ele2pos_);
-    xjm0.multiply_nt(N2_xi, ele2posref_);
+    jacobian_matrix.multiply_nt(shape_functions_homogenized_deriv, nodal_coords_homogenized_ele_);
+    jacobian_matrix_ref.multiply_nt(
+        shape_functions_homogenized_deriv, nodal_coords_homogenized_ele_ref_);
 
-    const double det = xji.invert(xjm);
+    shape_functions_homogenized_deriv_xyz.multiply(
+        inverse_jacobian_matrix, shape_functions_homogenized_deriv);
+    shape_functions_homogenized_transpose.update_t(shape_functions_homogenized);
+    variable_manager_->evaluate_gp_variables(
+        shape_functions_homogenized_transpose, shape_functions_homogenized_deriv_xyz);
+
+    const double jacobian_determinant = inverse_jacobian_matrix.invert(jacobian_matrix);
     // inverse of transposed jacobian "ds/dX"
-    const double det0 = xjm0.determinant();
-
-    derxy.multiply(xji, N2_xi);
-
-    // determinant of deformationgradient
+    const double jacobian_determinant_ref = jacobian_matrix_ref.determinant();
+    // determinant of deformation gradient
     // det F = det ( d x / d X ) = det (dx/ds) * ( det(dX/ds) )^-1
-    const double JacobianDefGradient = det / det0;
+    const double determinant_deformation_gradient = jacobian_determinant / jacobian_determinant_ref;
+    phase_manager_->evaluate_gp_state(
+        determinant_deformation_gradient, *variable_manager_, nds_porofluid_);
 
-    // clear current gauss point data for safety
-    phasemanager_->clear_gp_state();
-    variablemanager_->evaluate_gp_variables(N2_transpose, derxy);
-
-    phasemanager_->evaluate_gp_state(JacobianDefGradient, *variablemanager_, nds_porofluid_);
-
-    evaluate_function_coupling(w_gp, N1, N2, jac, *forcevec1, *forcevec2, *stiffmat11, *stiffmat12,
-        *stiffmat21, *stiffmat22, integrated_diam);
+    const double jacobian_determinant_artery = current_segment_length / 2.0;
+    evaluate_function_coupling(current_gp_weight, shape_functions_artery,
+        shape_functions_homogenized, jacobian_determinant_artery, *ele_rhs_artery,
+        *ele_rhs_homogenized, *ele_matrix_artery_artery, *ele_matrix_artery_homogenized,
+        *ele_matrix_homogenized_artery, *ele_matrix_homogenized_homogenized, integrated_diameter);
   }
 }
 
 /*---------------------------------------------------------------------------------*
  *---------------------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::evaluated_nds_solid_vel(const std::vector<double>& eta,
-    const std::vector<std::vector<double>>& xi, const std::vector<double>& segmentlengths,
-    Core::LinAlg::SerialDenseVector& forcevec1, const double& etaA, const double& etaB)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::evaluate_nds_solid_velocity(const std::vector<double>&
+                                                                gp_coords_artery,
+    const std::vector<std::vector<double>>& gp_coords_homogenized,
+    Core::LinAlg::SerialDenseVector& ele_rhs_artery, const double& artery_segment_start,
+    const double& artery_segment_end)
 {
-  if (evaluate_in_ref_config_ || coupltype_ == CouplingType::scatra ||
-      couplmethod_ == Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::ntp)
+  if (evaluate_in_ref_config_ || coupling_type_ == CouplingType::scatra ||
+      coupling_method_ == Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp)
     return;
 
   // Vectors for shape functions and their derivatives
-  static Core::LinAlg::Matrix<1, numnodesart_> N1(Core::LinAlg::Initialization::zero);  // = N1
-  static Core::LinAlg::Matrix<1, numnodesart_> N1_eta(
-      Core::LinAlg::Initialization::zero);  // = N1,eta
+  static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery;
+  static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery_deriv;
 
-  static Core::LinAlg::Matrix<1, numnodescont_> N2(Core::LinAlg::Initialization::zero);  // = N2
-  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(
-      Core::LinAlg::Initialization::zero);  // = N2,xi1
-  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_XYZ(
-      Core::LinAlg::Initialization::zero);  // = N2,X
-  static Core::LinAlg::Matrix<numdim_, numdim_> defgrad(
-      Core::LinAlg::Initialization::zero);  // = dx/dX = F
+  static Core::LinAlg::Matrix<1, num_nodes_homogenized_> shape_functions_homogenized;
+  static Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_> shape_functions_homogenized_deriv;
+  static Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_> shape_functions_homogenized_xyz;
+  static Core::LinAlg::Matrix<num_dim_, num_dim_> deformation_gradient;
 
-  static Core::LinAlg::Matrix<numdim_, numdim_> xjm;
-  static Core::LinAlg::Matrix<numdim_, numdim_> xjm0;
-  static Core::LinAlg::Matrix<numdim_, numdim_> invJ;
-  static Core::LinAlg::Matrix<numdim_, numdim_> xji;
+  static Core::LinAlg::Matrix<num_dim_, num_dim_> jacobian_matrix;
+  static Core::LinAlg::Matrix<num_dim_, num_dim_> jacobian_matrix_ref;
+  static Core::LinAlg::Matrix<num_dim_, num_dim_> inverse_jacobian_matrix;
+  static Core::LinAlg::Matrix<num_dim_, num_dim_> inverse_jacobian_matrix_ref;
 
-  static Core::LinAlg::Matrix<numdim_, 1> lambda_t;  // direction in current conf.
+  // artery orientation in current configuration (lambda_t)
+  static Core::LinAlg::Matrix<num_dim_, 1> current_artery_orientation;
 
-  // Evaluate $-\int_a^b d N^(1)/ds*pi*R^2 * lambda_t*v_s ds$
-  //        = $-\int_\eta_a^\eta_b d N^(1)/deta*2/L_ele*pi*R^2 * lambda_t*v_s*L_seg/2.0 d\eta$
-  //        = $-\int_\eta_a^\eta_b d N^(1)/deta*pi*R^2 * lambda_t*v_s*(\eta_a-\eta_b)/2.0 d\eta$
-  const double jac = (etaB - etaA) / 2.0;
-  for (int i_gp = 0; i_gp < n_gp_; i_gp++)
+  // Evaluate
+  // $-\int_a^b d N^(1)/ds*pi*R^2 * lambda_t*v_s ds$
+  //  = $-\int_\eta_a^\eta_b d N^(1)/deta*2/L_ele*pi*R^2 * lambda_t * v_s * L_seg/2.0 d\eta$
+  //  = $-\int_\eta_a^\eta_b d N^(1)/deta*pi*R^2 * lambda_t * v_s * (\eta_a-\eta_b)/2.0 d\eta$
+  const double jacobian_determinant_artery = (artery_segment_end - artery_segment_start) / 2.0;
+
+  for (int i_gp = 0; i_gp < num_gp_; i_gp++)
   {
     // Get constant values from projection
-    const double w_gp = wgp_[i_gp];
-    const double myeta = eta[i_gp];
-    const std::vector<double> myxi = xi[i_gp];
+    const double current_gp_weight = gp_weights_[i_gp];
+    const double current_gp_coord_artery = gp_coords_artery[i_gp];
+    const std::vector<double>& current_gp_coords_homogenized = gp_coords_homogenized[i_gp];
 
     // Update shape functions and their derivatives for 1D and 2D/3D element
-    get_1d_shape_functions<double>(N1, N1_eta, myeta);
-    get_2d_3d_shape_functions<double>(N2, N2_xi, myxi);
+    get_artery_shape_functions<double>(
+        shape_functions_artery, shape_functions_artery_deriv, current_gp_coord_artery);
+    get_homogenized_shape_functions<double>(shape_functions_homogenized,
+        shape_functions_homogenized_deriv, current_gp_coords_homogenized);
 
-    xjm.multiply_nt(N2_xi, ele2pos_);
-    xji.invert(xjm);
+    jacobian_matrix.multiply_nt(shape_functions_homogenized_deriv, nodal_coords_homogenized_ele_);
+    inverse_jacobian_matrix.invert(jacobian_matrix);
 
     // dX/dpsi
-    xjm0.multiply_nt(N2_xi, ele2posref_);
+    jacobian_matrix_ref.multiply_nt(
+        shape_functions_homogenized_deriv, nodal_coords_homogenized_ele_ref_);
     // dpsi/dX
     // note: cannot use invJ_ here -> defined at original Gauss points
-    invJ.invert(xjm0);
+    inverse_jacobian_matrix_ref.invert(jacobian_matrix_ref);
     // dN/dX = dN/dxi * dxi/dX = dN/dxi * (dX/dxi)^-1
-    N2_XYZ.multiply(invJ, N2_xi);
+    shape_functions_homogenized_xyz.multiply(
+        inverse_jacobian_matrix_ref, shape_functions_homogenized_deriv);
     // dx/dX = x * N_XYZ^T
-    defgrad.multiply_nt(ele2pos_, N2_XYZ);
+    deformation_gradient.multiply_nt(
+        nodal_coords_homogenized_ele_, shape_functions_homogenized_xyz);
 
-    // current direction of artery element at GP
-    lambda_t.multiply(defgrad, lambda0_);
-    lambda_t.scale(1.0 / lambda_t.norm2());
+    // current orientation of the artery element at GP
+    current_artery_orientation.multiply(deformation_gradient, initial_artery_orientation);
+    current_artery_orientation.scale(1.0 / current_artery_orientation.norm2());
 
-    std::vector<double> myvel(3, 0.0);
-    for (unsigned int j = 0; j < numnodescont_; j++)
-      for (unsigned int idim = 0; idim < numdim_; idim++) myvel[idim] += N2(j) * ele2vel_(idim, j);
+    std::vector velocity(3, 0.0);
+    for (unsigned int j = 0; j < num_nodes_homogenized_; j++)
+      for (unsigned int i_dim = 0; i_dim < num_dim_; i_dim++)
+        velocity[i_dim] +=
+            shape_functions_homogenized(j) * nodal_velocity_homogenized_ele_(i_dim, j);
 
-    double lambda_t_vel = 0.0;
-    for (unsigned int idim = 0; idim < numdim_; idim++)
-      lambda_t_vel += myvel[idim] * lambda_t(idim);
+    // compute the scalar product of velocity and current artery orientation (lambda_t * v_s)
+    double velocity_x_current_artery_orientation = 0.0;
+    for (unsigned int i_dim = 0; i_dim < num_dim_; i_dim++)
+      velocity_x_current_artery_orientation += velocity[i_dim] * current_artery_orientation(i_dim);
 
-    // TODO: here reference diameter is taken
-    for (unsigned int i = 0; i < numnodesart_; i++)
-      forcevec1(i) +=
-          N1_eta(i) * w_gp * jac * lambda_t_vel * arterydiamref_ * arterydiamref_ * M_PI / 4.0;
+    // TODO: here reference diameter is used
+    for (unsigned int i = 0; i < num_nodes_artery_; i++)
+    {
+      ele_rhs_artery(i) += shape_functions_artery_deriv(i) * current_gp_weight *
+                           jacobian_determinant_artery * velocity_x_current_artery_orientation *
+                           artery_diameter_ref_ * artery_diameter_ref_ * M_PI / 4.0;
+    }
   }
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::evaluate_gpts_stiff(const double& w_gp, const Core::LinAlg::Matrix<1, numnodesart_>& N1,
-    const Core::LinAlg::Matrix<1, numnodescont_>& N2, const double& jacobi, const double& pp)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::evaluate_gpts_element_matrix(const double& gp_weight,
+    const Core::LinAlg::Matrix<1, num_nodes_artery_>& shape_functions_artery,
+    const Core::LinAlg::Matrix<1, num_nodes_homogenized_>& shape_functions_homogenized,
+    const double& jacobian_matrix, const double& penalty_parameter)
 {
-  // Evaluate meshtying stiffness for artery element N_1^T * N_1
-  for (unsigned int i = 0; i < numnodesart_; i++)
+  // Evaluate meshtying element matrix contribution for artery element N_1^T * N_1
+  for (unsigned int i = 0; i < num_nodes_artery_; i++)
   {
-    for (unsigned int j = 0; j < numnodesart_; j++)
+    for (unsigned int j = 0; j < num_nodes_artery_; j++)
     {
-      const double stiff = timefacrhs_art_ * pp * jacobi * w_gp * N1(i) * N1(j);
-      for (int dof = 0; dof < numcoupleddofs_; dof++)
-        gpts_ntp_stiffmat11_(i * numdof_art_ + coupleddofs_art_[dof],
-            j * numdof_art_ + coupleddofs_art_[dof]) += stiff;
+      const double contribution = timefacrhs_artery_ * penalty_parameter * jacobian_matrix *
+                                  gp_weight * shape_functions_artery(i) * shape_functions_artery(j);
+      for (int dof = 0; dof < num_coupled_dofs_; dof++)
+        gpts_ntp_ele_matrix_artery_artery_(i * num_dof_artery_ + coupled_dofs_artery_[dof],
+            j * num_dof_artery_ + coupled_dofs_artery_[dof]) += contribution;
     }
   }
 
-  // Evaluate meshtying stiffness for artery element "mixed" N_1^T * (-N_2)
-  for (unsigned int i = 0; i < numnodesart_; i++)
+  // Evaluate meshtying element matrix contribution for artery element "mixed" N_1^T * (-N_2)
+  for (unsigned int i = 0; i < num_nodes_artery_; i++)
   {
-    for (unsigned int j = 0; j < numnodescont_; j++)
+    for (unsigned int j = 0; j < num_nodes_homogenized_; j++)
     {
-      const double stiff = timefacrhs_art_ * pp * jacobi * w_gp * N1(i) * (-N2(j));
-      for (int dof = 0; dof < numcoupleddofs_; dof++)
-        gpts_ntp_stiffmat12_(i * numdof_art_ + coupleddofs_art_[dof],
-            j * numdof_cont_ + coupleddofs_cont_[dof]) += stiff;
+      const double contribution = timefacrhs_artery_ * penalty_parameter * jacobian_matrix *
+                                  gp_weight * shape_functions_artery(i) *
+                                  (-shape_functions_homogenized(j));
+      for (int dof = 0; dof < num_coupled_dofs_; dof++)
+        gpts_ntp_ele_matrix_artery_homogenized_(i * num_dof_artery_ + coupled_dofs_artery_[dof],
+            j * num_dof_homogenized_ + coupled_dofs_homogenized_[dof]) += contribution;
     }
   }
 
-  // Evaluate meshtying stiffness for continuous element "mixed" N_2^T * (-N_1)
-  for (unsigned int i = 0; i < numnodescont_; i++)
+  // Evaluate meshtying element matrix contribution for homogenized element "mixed" N_2^T * (-N_1)
+  for (unsigned int i = 0; i < num_nodes_homogenized_; i++)
   {
-    for (unsigned int j = 0; j < numnodesart_; j++)
+    for (unsigned int j = 0; j < num_nodes_artery_; j++)
     {
-      const double stiff = timefacrhs_cont_ * pp * jacobi * w_gp * N2(i) * (-N1(j));
-      for (int dof = 0; dof < numcoupleddofs_; dof++)
-        gpts_ntp_stiffmat21_(i * numdof_cont_ + coupleddofs_cont_[dof],
-            j * numdof_art_ + coupleddofs_art_[dof]) += stiff;
+      const double contribution = timefacrhs_homogenized_ * penalty_parameter * jacobian_matrix *
+                                  gp_weight * shape_functions_homogenized(i) *
+                                  (-shape_functions_artery(j));
+      for (int dof = 0; dof < num_coupled_dofs_; dof++)
+        gpts_ntp_ele_matrix_homogenized_artery_(
+            i * num_dof_homogenized_ + coupled_dofs_homogenized_[dof],
+            j * num_dof_artery_ + coupled_dofs_artery_[dof]) += contribution;
     }
   }
 
-  // Evaluate meshtying stiffness for continuous element N_2^T * N_2
-  for (unsigned int i = 0; i < numnodescont_; i++)
+  // Evaluate meshtying element matrix contribution for homogenized element N_2^T * N_2
+  for (unsigned int i = 0; i < num_nodes_homogenized_; i++)
   {
-    for (unsigned int j = 0; j < numnodescont_; j++)
+    for (unsigned int j = 0; j < num_nodes_homogenized_; j++)
     {
-      const double stiff = timefacrhs_cont_ * pp * jacobi * w_gp * N2(i) * N2(j);
-      for (int dof = 0; dof < numcoupleddofs_; dof++)
-        gpts_ntp_stiffmat22_(i * numdof_cont_ + coupleddofs_cont_[dof],
-            j * numdof_cont_ + coupleddofs_cont_[dof]) += stiff;
+      const double contribution = timefacrhs_homogenized_ * penalty_parameter * jacobian_matrix *
+                                  gp_weight * shape_functions_homogenized(i) *
+                                  shape_functions_homogenized(j);
+      for (int dof = 0; dof < num_coupled_dofs_; dof++)
+        gpts_ntp_ele_matrix_homogenized_homogenized_(
+            i * num_dof_homogenized_ + coupled_dofs_homogenized_[dof],
+            j * num_dof_homogenized_ + coupled_dofs_homogenized_[dof]) += contribution;
     }
   }
 
@@ -1669,56 +1807,65 @@ void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, dist
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::evaluate_ntp_stiff(const Core::LinAlg::Matrix<1, numnodesart_>& N1,
-    const Core::LinAlg::Matrix<1, numnodescont_>& N2, const double& pp)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized,
+    dim>::evaluate_ntp_element_matrix(const Core::LinAlg::Matrix<1, num_nodes_artery_>&
+                                          shape_functions_artery,
+    const Core::LinAlg::Matrix<1, num_nodes_homogenized_>& shape_functions_homogenized,
+    const double& penalty_parameter)
 {
-  // Evaluate meshtying stiffness for artery element N_1^T * N_1
-  for (unsigned int i = 0; i < numnodesart_; i++)
+  // Evaluate meshtying element matrix contribution for artery element N_1^T * N_1
+  for (unsigned int i = 0; i < num_nodes_artery_; i++)
   {
-    for (unsigned int j = 0; j < numnodesart_; j++)
+    for (unsigned int j = 0; j < num_nodes_artery_; j++)
     {
-      const double stiff = timefacrhs_art_ * pp * N1(i) * N1(j);
-      for (int dof = 0; dof < numcoupleddofs_; dof++)
-        gpts_ntp_stiffmat11_(i * numdof_art_ + coupleddofs_art_[dof],
-            j * numdof_art_ + coupleddofs_art_[dof]) += stiff;
+      const double contribution = timefacrhs_artery_ * penalty_parameter *
+                                  shape_functions_artery(i) * shape_functions_artery(j);
+      for (int dof = 0; dof < num_coupled_dofs_; dof++)
+        gpts_ntp_ele_matrix_artery_artery_(i * num_dof_artery_ + coupled_dofs_artery_[dof],
+            j * num_dof_artery_ + coupled_dofs_artery_[dof]) += contribution;
     }
   }
 
-  // Evaluate meshtying stiffness for artery element "mixed" N_1^T * (-N_2)
-  for (unsigned int i = 0; i < numnodesart_; i++)
+  // Evaluate meshtying element matrix contribution for artery element "mixed" N_1^T * (-N_2)
+  for (unsigned int i = 0; i < num_nodes_artery_; i++)
   {
-    for (unsigned int j = 0; j < numnodescont_; j++)
+    for (unsigned int j = 0; j < num_nodes_homogenized_; j++)
     {
-      const double stiff = timefacrhs_art_ * pp * N1(i) * (-N2(j));
-      for (int dof = 0; dof < numcoupleddofs_; dof++)
-        gpts_ntp_stiffmat12_(i * numdof_art_ + coupleddofs_art_[dof],
-            j * numdof_cont_ + coupleddofs_cont_[dof]) += stiff;
+      const double contribution = timefacrhs_artery_ * penalty_parameter *
+                                  shape_functions_artery(i) * (-shape_functions_homogenized(j));
+      for (int dof = 0; dof < num_coupled_dofs_; dof++)
+        gpts_ntp_ele_matrix_artery_homogenized_(i * num_dof_artery_ + coupled_dofs_artery_[dof],
+            j * num_dof_homogenized_ + coupled_dofs_homogenized_[dof]) += contribution;
     }
   }
 
-  // Evaluate meshtying stiffness for continuous element "mixed" N_2^T * (-N_1)
-  for (unsigned int i = 0; i < numnodescont_; i++)
+  // Evaluate meshtying element matrix contribution for homogenized element "mixed" N_2^T * (-N_1)
+  for (unsigned int i = 0; i < num_nodes_homogenized_; i++)
   {
-    for (unsigned int j = 0; j < numnodesart_; j++)
+    for (unsigned int j = 0; j < num_nodes_artery_; j++)
     {
-      const double stiff = timefacrhs_cont_ * pp * N2(i) * (-N1(j));
-      for (int dof = 0; dof < numcoupleddofs_; dof++)
-        gpts_ntp_stiffmat21_(i * numdof_cont_ + coupleddofs_cont_[dof],
-            j * numdof_art_ + coupleddofs_art_[dof]) += stiff;
+      const double contribution = timefacrhs_homogenized_ * penalty_parameter *
+                                  shape_functions_homogenized(i) * (-shape_functions_artery(j));
+      for (int dof = 0; dof < num_coupled_dofs_; dof++)
+        gpts_ntp_ele_matrix_homogenized_artery_(
+            i * num_dof_homogenized_ + coupled_dofs_homogenized_[dof],
+            j * num_dof_artery_ + coupled_dofs_artery_[dof]) += contribution;
     }
   }
 
-  // Evaluate meshtying stiffness for continuous element N_2^T * N_2
-  for (unsigned int i = 0; i < numnodescont_; i++)
+  // Evaluate meshtying element matrix contribution for homogenized element N_2^T * N_2
+  for (unsigned int i = 0; i < num_nodes_homogenized_; i++)
   {
-    for (unsigned int j = 0; j < numnodescont_; j++)
+    for (unsigned int j = 0; j < num_nodes_homogenized_; j++)
     {
-      const double stiff = timefacrhs_cont_ * pp * N2(i) * N2(j);
-      for (int dof = 0; dof < numcoupleddofs_; dof++)
-        gpts_ntp_stiffmat22_(i * numdof_cont_ + coupleddofs_cont_[dof],
-            j * numdof_cont_ + coupleddofs_cont_[dof]) += stiff;
+      const double contribution = timefacrhs_homogenized_ * penalty_parameter *
+                                  shape_functions_homogenized(i) * shape_functions_homogenized(j);
+      for (int dof = 0; dof < num_coupled_dofs_; dof++)
+        gpts_ntp_ele_matrix_homogenized_homogenized_(
+            i * num_dof_homogenized_ + coupled_dofs_homogenized_[dof],
+            j * num_dof_homogenized_ + coupled_dofs_homogenized_[dof]) += contribution;
     }
   }
 
@@ -1727,37 +1874,44 @@ void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, dist
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::evaluate_dm_kappa(const double& w_gp, const Core::LinAlg::Matrix<1, numnodesart_>& N1,
-    const Core::LinAlg::Matrix<1, numnodescont_>& N2, const double& jacobi)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::evaluate_mortar_matrices_and_vector(const double& gp_weight,
+    const Core::LinAlg::Matrix<1, num_nodes_artery_>& shape_functions_artery,
+    const Core::LinAlg::Matrix<1, num_nodes_homogenized_>& shape_functions_homogenized,
+    const double& jacobian_matrix)
 {
   // Evaluate element mortar coupling operator kappa = N_1
-  for (unsigned int inode = 0; inode < numnodesart_; inode++)
+  for (unsigned int inode = 0; inode < num_nodes_artery_; inode++)
   {
-    const double mykappa = w_gp * jacobi * N1(inode);
-    for (int dof = 0; dof < numdof_art_; dof++) kappa_(inode * numdof_art_ + dof) += mykappa;
+    const double kappa = gp_weight * jacobian_matrix * shape_functions_artery(inode);
+    for (int dof = 0; dof < num_dof_artery_; dof++)
+      mortar_vector_kappa_(inode * num_dof_artery_ + dof) += kappa;
   }
 
   // Evaluate element mortar coupling operator D = N_1^T * N_1
-  for (unsigned int i = 0; i < numnodesart_; i++)
+  for (unsigned int i = 0; i < num_nodes_artery_; i++)
   {
-    for (unsigned int j = 0; j < numnodesart_; j++)
+    for (unsigned int j = 0; j < num_nodes_artery_; j++)
     {
-      const double D = jacobi * w_gp * N1(i) * N1(j);
-      for (int dof = 0; dof < numcoupleddofs_; dof++)
-        d_(i * numdof_art_ + coupleddofs_art_[dof], j * numdof_art_ + coupleddofs_art_[dof]) += D;
+      const double D =
+          jacobian_matrix * gp_weight * shape_functions_artery(i) * shape_functions_artery(j);
+      for (int dof = 0; dof < num_coupled_dofs_; dof++)
+        mortar_matrix_d_(i * num_dof_artery_ + coupled_dofs_artery_[dof],
+            j * num_dof_artery_ + coupled_dofs_artery_[dof]) += D;
     }
   }
 
   // Evaluate element mortar coupling operator M = N_1^T * N_2
-  for (unsigned int i = 0; i < numnodesart_; i++)
+  for (unsigned int i = 0; i < num_nodes_artery_; i++)
   {
-    for (unsigned int j = 0; j < numnodescont_; j++)
+    for (unsigned int j = 0; j < num_nodes_homogenized_; j++)
     {
-      const double M = jacobi * w_gp * N1(i) * N2(j);
-      for (int dof = 0; dof < numcoupleddofs_; dof++)
-        m_(i * numdof_art_ + coupleddofs_art_[dof], j * numdof_cont_ + coupleddofs_cont_[dof]) += M;
+      const double M =
+          jacobian_matrix * gp_weight * shape_functions_artery(i) * shape_functions_homogenized(j);
+      for (int dof = 0; dof < num_coupled_dofs_; dof++)
+        mortar_matrix_m_(i * num_dof_artery_ + coupled_dofs_artery_[dof],
+            j * num_dof_homogenized_ + coupled_dofs_homogenized_[dof]) += M;
     }
   }
 
@@ -1766,84 +1920,99 @@ void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, dist
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::evaluate_gptsntp_force(Core::LinAlg::SerialDenseVector& forcevec1,
-    Core::LinAlg::SerialDenseVector& forcevec2, const Core::LinAlg::SerialDenseMatrix& stiffmat11,
-    const Core::LinAlg::SerialDenseMatrix& stiffmat12,
-    const Core::LinAlg::SerialDenseMatrix& stiffmat21,
-    const Core::LinAlg::SerialDenseMatrix& stiffmat22)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::evaluate_gpts_ntp_ele_rhs(Core::LinAlg::SerialDenseVector&
+                                                              ele_rhs_artery,
+    Core::LinAlg::SerialDenseVector& ele_rhs_homogenized,
+    const Core::LinAlg::SerialDenseMatrix& ele_matrix_artery_artery,
+    const Core::LinAlg::SerialDenseMatrix& ele_matrix_artery_homogenized,
+    const Core::LinAlg::SerialDenseMatrix& ele_matrix_homogenized_artery,
+    const Core::LinAlg::SerialDenseMatrix& ele_matrix_homogenized_homogenized) const
 {
-  // Evaluate meshtying forces for artery element
-  for (int i = 0; i < dim1_; i++)
-    for (int j = 0; j < dim1_; j++) forcevec1(i) -= stiffmat11(i, j) * artelephinp_[j];
+  // Evaluate meshtying rhs contributions for artery element
+  for (int i = 0; i < dim_artery_; i++)
+    for (int j = 0; j < dim_artery_; j++)
+      ele_rhs_artery(i) -= ele_matrix_artery_artery(i, j) * phi_np_artery_ele_[j];
 
-  for (int i = 0; i < dim1_; i++)
-    for (int j = 0; j < dim2_; j++) forcevec1(i) -= stiffmat12(i, j) * contelephinp_[j];
+  for (int i = 0; i < dim_artery_; i++)
+    for (int j = 0; j < dim_homogenized_; j++)
+      ele_rhs_artery(i) -= ele_matrix_artery_homogenized(i, j) * phi_np_homogenized_ele_[j];
 
-  // Evaluate meshtying forces for continuous-dis element
-  for (int i = 0; i < dim2_; i++)
-    for (int j = 0; j < dim1_; j++) forcevec2(i) -= stiffmat21(i, j) * artelephinp_[j];
+  // Evaluate meshtying rhs contributions for homogenized element
+  for (int i = 0; i < dim_homogenized_; i++)
+    for (int j = 0; j < dim_artery_; j++)
+      ele_rhs_homogenized(i) -= ele_matrix_homogenized_artery(i, j) * phi_np_artery_ele_[j];
 
-  for (int i = 0; i < dim2_; i++)
-    for (int j = 0; j < dim2_; j++) forcevec2(i) -= stiffmat22(i, j) * contelephinp_[j];
-}
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::update_gptsntp_stiff(Core::LinAlg::SerialDenseMatrix& stiffmat11,
-    Core::LinAlg::SerialDenseMatrix& stiffmat12, Core::LinAlg::SerialDenseMatrix& stiffmat21,
-    Core::LinAlg::SerialDenseMatrix& stiffmat22)
-{
-  stiffmat11.assign(gpts_ntp_stiffmat11_);
-  stiffmat12.assign(gpts_ntp_stiffmat12_);
-  stiffmat21.assign(gpts_ntp_stiffmat21_);
-  stiffmat22.assign(gpts_ntp_stiffmat22_);
-}
-
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::check_valid_volume_fraction_pressure_coupling(Core::LinAlg::SerialDenseMatrix& stiffmat11,
-    Core::LinAlg::SerialDenseMatrix& stiffmat12, Core::LinAlg::SerialDenseMatrix& stiffmat21,
-    Core::LinAlg::SerialDenseMatrix& stiffmat22)
-{
-  for (int idof = 0; idof < numcoupleddofs_; idof++)
+  for (int i = 0; i < dim_homogenized_; i++)
   {
-    if (!variablemanager_->element_has_valid_vol_frac_pressure(
-            volfracpressid_[idof] - numfluidphases_ - numvolfrac_))
+    for (int j = 0; j < dim_homogenized_; j++)
+      ele_rhs_homogenized(i) -=
+          ele_matrix_homogenized_homogenized(i, j) * phi_np_homogenized_ele_[j];
+  }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::update_gpts_ntp_element_matrix(Core::LinAlg::SerialDenseMatrix&
+                                                                   ele_matrix_artery_artery,
+    Core::LinAlg::SerialDenseMatrix& ele_matrix_artery_homogenized,
+    Core::LinAlg::SerialDenseMatrix& ele_matrix_homogenized_artery,
+    Core::LinAlg::SerialDenseMatrix& ele_matrix_homogenized_homogenized) const
+{
+  ele_matrix_artery_artery.assign(gpts_ntp_ele_matrix_artery_artery_);
+  ele_matrix_artery_homogenized.assign(gpts_ntp_ele_matrix_artery_homogenized_);
+  ele_matrix_homogenized_artery.assign(gpts_ntp_ele_matrix_homogenized_artery_);
+  ele_matrix_homogenized_homogenized.assign(gpts_ntp_ele_matrix_homogenized_homogenized_);
+}
+
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized,
+    dim>::check_valid_volume_fraction_pressure_coupling(Core::LinAlg::SerialDenseMatrix&
+                                                            ele_matrix_artery_artery,
+    Core::LinAlg::SerialDenseMatrix& ele_matrix_artery_homogenized,
+    Core::LinAlg::SerialDenseMatrix& ele_matrix_homogenized_artery,
+    Core::LinAlg::SerialDenseMatrix& ele_matrix_homogenized_homogenized)
+{
+  for (int i_dof = 0; i_dof < num_coupled_dofs_; i_dof++)
+  {
+    if (!variable_manager_->element_has_valid_vol_frac_pressure(
+            volfrac_pressure_id_[i_dof] - num_fluid_phases_ - num_volfracs_))
     {
       // reset to zero for this dof
-      for (unsigned int i = 0; i < numnodesart_; i++)
+      for (unsigned int i = 0; i < num_nodes_artery_; i++)
       {
-        for (unsigned int j = 0; j < numnodesart_; j++)
-          stiffmat11(i * numdof_art_ + coupleddofs_art_[idof],
-              j * numdof_art_ + coupleddofs_art_[idof]) = 0.0;
+        for (unsigned int j = 0; j < num_nodes_artery_; j++)
+          ele_matrix_artery_artery(i * num_dof_artery_ + coupled_dofs_artery_[i_dof],
+              j * num_dof_artery_ + coupled_dofs_artery_[i_dof]) = 0.0;
       }
 
-      for (unsigned int i = 0; i < numnodesart_; i++)
+      for (unsigned int i = 0; i < num_nodes_artery_; i++)
       {
-        for (unsigned int j = 0; j < numnodescont_; j++)
-          stiffmat12(i * numdof_art_ + coupleddofs_art_[idof],
-              j * numdof_cont_ + coupleddofs_cont_[idof]) = 0.0;
+        for (unsigned int j = 0; j < num_nodes_homogenized_; j++)
+          ele_matrix_artery_homogenized(i * num_dof_artery_ + coupled_dofs_artery_[i_dof],
+              j * num_dof_homogenized_ + coupled_dofs_homogenized_[i_dof]) = 0.0;
       }
 
-      for (unsigned int i = 0; i < numnodescont_; i++)
+      for (unsigned int i = 0; i < num_nodes_homogenized_; i++)
       {
-        for (unsigned int j = 0; j < numnodesart_; j++)
-          stiffmat21(i * numdof_cont_ + coupleddofs_cont_[idof],
-              j * numdof_art_ + coupleddofs_art_[idof]) = 0.0;
+        for (unsigned int j = 0; j < num_nodes_artery_; j++)
+          ele_matrix_homogenized_artery(i * num_dof_homogenized_ + coupled_dofs_homogenized_[i_dof],
+              j * num_dof_artery_ + coupled_dofs_artery_[i_dof]) = 0.0;
       }
 
-      for (unsigned int i = 0; i < numnodescont_; i++)
+      for (unsigned int i = 0; i < num_nodes_homogenized_; i++)
       {
-        for (unsigned int j = 0; j < numnodescont_; j++)
-          stiffmat22(i * numdof_cont_ + coupleddofs_cont_[idof],
-              j * numdof_cont_ + coupleddofs_cont_[idof]) = 0.0;
+        for (unsigned int j = 0; j < num_nodes_homogenized_; j++)
+          ele_matrix_homogenized_homogenized(
+              i * num_dof_homogenized_ + coupled_dofs_homogenized_[i_dof],
+              j * num_dof_homogenized_ + coupled_dofs_homogenized_[i_dof]) = 0.0;
       }
     }
   }
@@ -1852,370 +2021,411 @@ void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, dist
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::update_dm_kappa(Core::LinAlg::SerialDenseMatrix& D_ele,
-    Core::LinAlg::SerialDenseMatrix& M_ele, Core::LinAlg::SerialDenseVector& Kappa_ele)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::update_mortar_matrices_and_vector(Core::LinAlg::SerialDenseMatrix&
+                                                                      mortar_matrix_d,
+    Core::LinAlg::SerialDenseMatrix& mortar_matrix_m,
+    Core::LinAlg::SerialDenseVector& mortar_vector_kappa)
 {
-  D_ele.assign(d_);
-  M_ele.assign(m_);
-  Kappa_ele.assign(kappa_);
+  mortar_matrix_d.assign(mortar_matrix_d_);
+  mortar_matrix_m.assign(mortar_matrix_m_);
+  mortar_vector_kappa.assign(mortar_vector_kappa_);
 
-  for (int idof = 0; idof < numcoupleddofs_; idof++)
+  for (int i_dof = 0; i_dof < num_coupled_dofs_; i_dof++)
   {
-    // this coupling is only possible if we also have an element with a valid volume fraction
-    // pressure, i.e., if we also have a smeared representation of the neovasculature at this
-    // point if not ---> corresponding matrices are set to zero
-    if (!variablemanager_->element_has_valid_vol_frac_pressure(
-            volfracpressid_[idof] - numfluidphases_ - numvolfrac_))
+    // This coupling is only possible if we also have an element with valid volume fraction
+    // pressure, i.e., if we also have a homogenized representation of the neovasculature at this
+    // point. If this is not the case, the corresponding matrices are set to zero.
+    if (!variable_manager_->element_has_valid_vol_frac_pressure(
+            volfrac_pressure_id_[i_dof] - num_fluid_phases_ - num_volfracs_))
     {
       // reset to zero for this dof
-      for (unsigned int i = 0; i < numnodesart_; i++)
-        for (unsigned int j = 0; j < numnodesart_; j++)
-          D_ele(i * numdof_art_ + coupleddofs_art_[idof],
-              j * numdof_art_ + coupleddofs_art_[idof]) = 0.0;
+      for (unsigned int i = 0; i < num_nodes_artery_; i++)
+      {
+        for (unsigned int j = 0; j < num_nodes_artery_; j++)
+          mortar_matrix_d(i * num_dof_artery_ + coupled_dofs_artery_[i_dof],
+              j * num_dof_artery_ + coupled_dofs_artery_[i_dof]) = 0.0;
+      }
 
-      for (unsigned int i = 0; i < numnodesart_; i++)
-        for (unsigned int j = 0; j < numnodescont_; j++)
-          M_ele(i * numdof_art_ + coupleddofs_art_[idof],
-              j * numdof_cont_ + coupleddofs_cont_[idof]) = 0.0;
+      for (unsigned int i = 0; i < num_nodes_artery_; i++)
+      {
+        for (unsigned int j = 0; j < num_nodes_homogenized_; j++)
+          mortar_matrix_m(i * num_dof_artery_ + coupled_dofs_artery_[i_dof],
+              j * num_dof_homogenized_ + coupled_dofs_homogenized_[i_dof]) = 0.0;
+      }
     }
   }
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::evaluate_function_coupling(const double& w_gp,
-    const Core::LinAlg::Matrix<1, numnodesart_>& N1,
-    const Core::LinAlg::Matrix<1, numnodescont_>& N2, const double& jacobi,
-    Core::LinAlg::SerialDenseVector& forcevec1, Core::LinAlg::SerialDenseVector& forcevec2,
-    Core::LinAlg::SerialDenseMatrix& stiffmat11, Core::LinAlg::SerialDenseMatrix& stiffmat12,
-    Core::LinAlg::SerialDenseMatrix& stiffmat21, Core::LinAlg::SerialDenseMatrix& stiffmat22,
-    double& integrated_diam)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::evaluate_function_coupling(const double& gp_weight,
+    const Core::LinAlg::Matrix<1, num_nodes_artery_>& shape_functions_artery,
+    const Core::LinAlg::Matrix<1, num_nodes_homogenized_>& shape_functions_homogenized,
+    const double& jacobi, Core::LinAlg::SerialDenseVector& ele_rhs_artery,
+    Core::LinAlg::SerialDenseVector& ele_rhs_homogenized,
+    Core::LinAlg::SerialDenseMatrix& ele_matrix_artery_artery,
+    Core::LinAlg::SerialDenseMatrix& ele_matrix_artery_homogenized,
+    Core::LinAlg::SerialDenseMatrix& ele_matrix_homogenized_artery,
+    Core::LinAlg::SerialDenseMatrix& ele_matrix_homogenized_homogenized,
+    double& integrated_diameter)
 {
-  // resize
-  std::vector<double> artscalarnpAtGP(numscalart_, 0.0);
-  std::vector<double> contscalarnpAtGP(numscalcont_, 0.0);
-  double artpressAtGP = 0.0;
+  std::vector artery_scalar_np_at_gp(num_scalars_artery_, 0.0);
+  std::vector homogenized_scalar_np_at_gp(num_scalars_homogenized_, 0.0);
+  double artery_pressure_at_gp = 0.0;
 
   // get artery values at GP
-  get_artery_values_at_gp(N1, artpressAtGP, artscalarnpAtGP);
+  get_artery_values_at_gp(shape_functions_artery, artery_pressure_at_gp, artery_scalar_np_at_gp);
   // get scatra values at GP
-  get_cont_scalar_values_at_gp(N2, contscalarnpAtGP);
-  // NOTE: values of fluid held by managers
+  get_homogenized_scalar_values_at_gp(shape_functions_homogenized, homogenized_scalar_np_at_gp);
+  // NOTE: values of fluid phases held by managers
 
   if (variable_diameter_active_)
   {
-    evaluate_diam_function_and_deriv(artpressAtGP, w_gp, N1, N2, jacobi);
+    evaluate_diameter_function_and_deriv(artery_pressure_at_gp, gp_weight, shape_functions_artery,
+        shape_functions_homogenized, jacobi);
     // integral is only calculated in this case
-    if (coupltype_ == CouplingType::porofluid) integrated_diam += w_gp * jacobi * arterydiam_at_gp_;
+    if (coupling_type_ == CouplingType::porofluid)
+      integrated_diameter += gp_weight * jacobi * artery_diameter_at_gp_;
   }
 
   // artery functions
-  for (int i_art = 0; i_art < numdof_art_; i_art++)
+  for (int i_art = 0; i_art < num_dof_artery_; i_art++)
   {
-    if (funct_vec_[0][i_art] != nullptr)
+    if (function_vector_[0][i_art] != nullptr)
     {
-      // resize
-      std::vector<double> artderivs(numdof_art_, 0.0);
-      std::vector<double> contderivs(numdof_cont_, 0.0);
-      double functval = 0.0;
+      std::vector artery_derivs(num_dof_artery_, 0.0);
+      std::vector homogenized_derivs(num_dof_homogenized_, 0.0);
+      double function_value = 0.0;
+
       // evaluate and assemble
-      evaluate_function_and_deriv(*funct_vec_[0][i_art], artpressAtGP, artscalarnpAtGP,
-          contscalarnpAtGP, functval, artderivs, contderivs);
-      assemble_function_coupling_into_force_stiff_art(i_art, w_gp, N1, N2, jacobi,
-          scale_vec_[0][i_art], functval, artderivs, contderivs, forcevec1, stiffmat11, stiffmat12);
+      evaluate_function_and_deriv(*function_vector_[0][i_art], artery_pressure_at_gp,
+          artery_scalar_np_at_gp, homogenized_scalar_np_at_gp, function_value, artery_derivs,
+          homogenized_derivs);
+      assemble_function_coupling_into_ele_matrix_rhs_artery(i_art, gp_weight,
+          shape_functions_artery, shape_functions_homogenized, jacobi, scale_vector_[0][i_art],
+          function_value, artery_derivs, homogenized_derivs, ele_rhs_artery,
+          ele_matrix_artery_artery, ele_matrix_artery_homogenized);
     }
   }
-  // continuous discretization functions
-  for (int i_cont = 0; i_cont < numdof_cont_; i_cont++)
+  // homogenized discretization functions
+  for (int i_homo = 0; i_homo < num_dof_homogenized_; i_homo++)
   {
-    if (funct_vec_[1][i_cont] != nullptr)
+    if (function_vector_[1][i_homo] != nullptr)
     {
-      // resize
-      std::vector<double> artderivs(numdof_art_, 0.0);
-      std::vector<double> contderivs(numdof_cont_, 0.0);
-      double functval = 0.0;
+      std::vector artery_derivs(num_dof_artery_, 0.0);
+      std::vector homogenized_derivs(num_dof_homogenized_, 0.0);
+      double function_value = 0.0;
+
       // evaluate and assemble
-      evaluate_function_and_deriv(*funct_vec_[1][i_cont], artpressAtGP, artscalarnpAtGP,
-          contscalarnpAtGP, functval, artderivs, contderivs);
-      assemble_function_coupling_into_force_stiff_cont(
-          cont_dofs_to_assemble_functions_into_[i_cont], w_gp, N1, N2, jacobi,
-          scale_vec_[1][i_cont], timefacrhs_cont_dens_[i_cont], functval, artderivs, contderivs,
-          forcevec2, stiffmat21, stiffmat22);
+      evaluate_function_and_deriv(*function_vector_[1][i_homo], artery_pressure_at_gp,
+          artery_scalar_np_at_gp, homogenized_scalar_np_at_gp, function_value, artery_derivs,
+          homogenized_derivs);
+      assemble_function_coupling_into_ele_matrix_rhs_homogenized(
+          homogenized_dofs_to_assemble_functions_into_[i_homo], gp_weight, shape_functions_artery,
+          shape_functions_homogenized, jacobi, scale_vector_[1][i_homo],
+          timefacrhs_homogenized_density_[i_homo], function_value, artery_derivs,
+          homogenized_derivs, ele_rhs_homogenized, ele_matrix_homogenized_artery,
+          ele_matrix_homogenized_homogenized);
     }
   }
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::evaluate_diam_function_and_deriv(const double artpressnpAtGP, const double& w_gp,
-    const Core::LinAlg::Matrix<1, numnodesart_>& N1,
-    const Core::LinAlg::Matrix<1, numnodescont_>& N2, const double& jacobi)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::evaluate_diameter_function_and_deriv(const double
+                                                                         artery_pressure_np_at_gp,
+    const double& gp_weight,
+    const Core::LinAlg::Matrix<1, num_nodes_artery_>& shape_functions_artery,
+    const Core::LinAlg::Matrix<1, num_nodes_homogenized_>& shape_functions_homogenized,
+    const double& jacobian_determinant)
 {
   // we have to derive w.r.t. fluid variables
   std::vector<std::pair<std::string, double>> variables;
-  variables.reserve(numfluidphases_ + numfluidphases_ + 1 + numvolfrac_ + numvolfrac_ + 1);
+  variables.reserve(num_fluid_phases_ + num_fluid_phases_ + 1 + num_volfracs_ + num_volfracs_ + 1);
 
   // reference diameter is constant
   std::vector<std::pair<std::string, double>> constants;
   constants.reserve(2);
-  constants.push_back(std::pair<std::string, double>("D0", arterydiamref_));
-  constants.push_back(
-      std::pair<std::string, double>("Dprev", arterymat_->diam_previous_time_step()));
+  constants.emplace_back("D0", artery_diameter_ref_);
+  constants.emplace_back("Dprev", artery_material_->diam_previous_time_step());
 
   // set fluid values as variables
-  set_fluid_values_as_variables(variables, artpressnpAtGP);
+  set_fluid_values_as_variables(variables, artery_pressure_np_at_gp);
 
   // evaluate the diameter at GP by evaluating the function
-  arterydiam_at_gp_ = artdiam_funct_->evaluate(variables, constants, 0);
+  artery_diameter_at_gp_ = artery_diameter_funct_->evaluate(variables, constants, 0);
 
-  // derivatives and linearizations are so far only calculated for coupltype porofluid
-  if (coupltype_ == CouplingType::porofluid)
+  // derivatives and linearizations are so far only calculated for coupling type porofluid
+  if (coupling_type_ == CouplingType::porofluid)
   {
     // function derivatives
-    std::vector<double> curderivs(artdiam_funct_->evaluate_derivative(variables, constants, 0));
+    const std::vector derivs(artery_diameter_funct_->evaluate_derivative(variables, constants, 0));
     // derivatives w.r.t. primary variables
-    std::fill(diamderivs_.begin(), diamderivs_.end(), 0.0);
+    std::ranges::fill(diameter_derivs_.begin(), diameter_derivs_.end(), 0.0);
 
     // diameter derivatives w.r.t. saturations and pressures
-    for (int doftoderive = 0; doftoderive < numfluidphases_; doftoderive++)
+    for (int dof_to_derive = 0; dof_to_derive < num_fluid_phases_; dof_to_derive++)
     {
-      for (int idof = 0; idof < numfluidphases_; idof++)
-        diamderivs_[doftoderive] +=
-            curderivs[idof] * phasemanager_->pressure_deriv(idof, doftoderive) +
-            curderivs[idof + numfluidphases_] * phasemanager_->saturation_deriv(idof, doftoderive);
-      if (phasemanager_->porosity_depends_on_fluid())
-        diamderivs_[doftoderive] +=
-            curderivs[2 * numfluidphases_] * phasemanager_->porosity_deriv(doftoderive);
+      for (int i_dof = 0; i_dof < num_fluid_phases_; i_dof++)
+      {
+        diameter_derivs_[dof_to_derive] +=
+            derivs[i_dof] * phase_manager_->pressure_deriv(i_dof, dof_to_derive) +
+            derivs[i_dof + num_fluid_phases_] *
+                phase_manager_->saturation_deriv(i_dof, dof_to_derive);
+      }
+      if (phase_manager_->porosity_depends_on_fluid())
+        diameter_derivs_[dof_to_derive] +=
+            derivs[2 * num_fluid_phases_] * phase_manager_->porosity_deriv(dof_to_derive);
     }
-    // diameter derivs w.r.t. to volume fraction phases
-    for (int doftoderive = numfluidphases_; doftoderive < numdof_cont_ - numvolfrac_; doftoderive++)
+    // diameter derivatives w.r.t. to volume fraction phases
+    for (int dof_to_derive = num_fluid_phases_;
+        dof_to_derive < num_dof_homogenized_ - num_volfracs_; dof_to_derive++)
     {
-      // diameter derivatives w.r.t. volume fractions directly appearing
-      //                             and porosity (since it depends on volfrac)
-      diamderivs_[doftoderive] +=
-          curderivs[doftoderive + numfluidphases_ + 1] +
-          curderivs[2 * numfluidphases_] * phasemanager_->porosity_deriv(doftoderive);
+      // diameter derivatives w.r.t. volume fractions directly appearing and porosity
+      // (because it depends on volfrac)
+      diameter_derivs_[dof_to_derive] +=
+          derivs[dof_to_derive + num_fluid_phases_ + 1] +
+          derivs[2 * num_fluid_phases_] * phase_manager_->porosity_deriv(dof_to_derive);
     }
-    // diameter derivs w.r.t. to volume fraction pressures
-    for (int doftoderive = numfluidphases_ + numvolfrac_; doftoderive < numdof_cont_; doftoderive++)
-      diamderivs_[doftoderive] += curderivs[doftoderive + numfluidphases_ + 1];
+    // diameter derivatives w.r.t. to volume fraction pressures
+    for (int dof_to_derive = num_fluid_phases_ + num_volfracs_;
+        dof_to_derive < num_dof_homogenized_; dof_to_derive++)
+      diameter_derivs_[dof_to_derive] += derivs[dof_to_derive + num_fluid_phases_ + 1];
 
     // diameter derivs w.r.t. to artery pressure
-    diamderivs_[numfluidphases_ + 2 * numvolfrac_] +=
-        curderivs[numfluidphases_ + numfluidphases_ + 1 + numvolfrac_ + numvolfrac_];
-
+    diameter_derivs_[num_fluid_phases_ + 2 * num_volfracs_] +=
+        derivs[num_fluid_phases_ + num_fluid_phases_ + 1 + num_volfracs_ + num_volfracs_];
 
     // Now the derivative of the integrated (element) diameter needed in the Hagen-Poiseuille
-    // terms is built and stored in the respective stiffness matrices for later use
+    // terms is built and stored in the respective element matrices for later use.
 
     // pre-compute some values
-    const double pressgrad = (artelephinp_[1] - artelephinp_[0]) / arteryelelength_;
-    std::vector<double> dummy = {-1.0, 1.0};
-    const double preprefac = pressgrad * w_gp * jacobi / arteryelelength_;
+    const double pressure_gradient =
+        (phi_np_artery_ele_[1] - phi_np_artery_ele_[0]) / artery_ele_length_;
+    const std::vector sign = {-1.0, 1.0};
+    const double preprefac =
+        pressure_gradient * gp_weight * jacobian_determinant / artery_ele_length_;
 
-    // assemble into the respective stiffness matrices
-    for (unsigned int i = 0; i < numnodesart_; i++)
+    // assemble into the respective element matrices
+    for (unsigned int i = 0; i < num_nodes_artery_; i++)
     {
-      // build diameter stiffness matrix w.r.t. artery primary variables
-      const double prefac_art =
-          dummy[i] * diamderivs_[numfluidphases_ + 2 * numvolfrac_] * preprefac;
-      for (unsigned int j = 0; j < numnodesart_; j++) diam_stiffmat11_(i, j) += prefac_art * N1(j);
+      // build diameter element matrix w.r.t. artery primary variables
+      const double prefac_artery =
+          sign[i] * diameter_derivs_[num_fluid_phases_ + 2 * num_volfracs_] * preprefac;
+      for (unsigned int j = 0; j < num_nodes_artery_; j++)
+        diameter_ele_matrix_artery_artery_(i, j) += prefac_artery * shape_functions_artery(j);
 
-      // build diameter stiffness matrix w.r.t. 2D/3D primary variables
-      const double prefac_cont = dummy[i] * preprefac;
-      for (unsigned int j = 0; j < numnodescont_; j++)
+      // build diameter element matrix w.r.t. 2D/3D primary variables
+      const double prefac_homogenized = sign[i] * preprefac;
+      for (unsigned int j = 0; j < num_nodes_homogenized_; j++)
       {
-        const double prefac_cont2 = prefac_cont * N2(j);
-        for (int j_cont = 0; j_cont < numdof_cont_; j_cont++)
-          diam_stiffmat12_(i, j * numdof_cont_ + j_cont) += prefac_cont2 * diamderivs_[j_cont];
+        const double prefac_homogenized_2 = prefac_homogenized * shape_functions_homogenized(j);
+        for (int j_home = 0; j_home < num_dof_homogenized_; j_home++)
+          diameter_ele_matrix_artery_homogenized_(i, j * num_dof_homogenized_ + j_home) +=
+              prefac_homogenized_2 * diameter_derivs_[j_home];
       }
     }
   }
 }
+
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::set_time_fac_rhs(const double& arterydensity, Mat::MatList& contscatramat,
-    const double& timefacrhs_art, const double& timefacrhs_cont)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::set_time_fac_rhs(const double& artery_density,
+    const Mat::MatList& scatra_material_homogenized, const double& timefacrhs_artery,
+    const double& timefacrhs_homogenized)
 {
-  // set
-  timefacrhs_art_ = timefacrhs_art;
-  timefacrhs_cont_ = timefacrhs_cont;
+  timefacrhs_artery_ = timefacrhs_artery;
+  timefacrhs_homogenized_ = timefacrhs_homogenized;
 
-  // resize
-  timefacrhs_cont_dens_.resize(numdof_cont_);
+  timefacrhs_homogenized_density_.resize(num_dof_homogenized_);
 
   // fill fluid densities vector
-  std::vector<double> fluiddensities(numfluidphases_ + 2 * numvolfrac_);
-  for (int ifluidphase = 0; ifluidphase < numfluidphases_; ifluidphase++)
-    fluiddensities[ifluidphase] = phasemanager_->density(ifluidphase);
-  for (int ivolfrac = 0; ivolfrac < numvolfrac_; ivolfrac++)
+  std::vector<double> fluid_densities(num_fluid_phases_ + 2 * num_volfracs_);
+  for (int i_fluid_phase = 0; i_fluid_phase < num_fluid_phases_; i_fluid_phase++)
+    fluid_densities[i_fluid_phase] = phase_manager_->density(i_fluid_phase);
+  for (int i_volfrac = 0; i_volfrac < num_volfracs_; i_volfrac++)
   {
-    fluiddensities[numfluidphases_ + ivolfrac] = phasemanager_->vol_frac_density(ivolfrac);
-    fluiddensities[numfluidphases_ + numvolfrac_ + ivolfrac] =
-        phasemanager_->vol_frac_density(ivolfrac);
+    fluid_densities[num_fluid_phases_ + i_volfrac] = phase_manager_->vol_frac_density(i_volfrac);
+    fluid_densities[num_fluid_phases_ + num_volfracs_ + i_volfrac] =
+        phase_manager_->vol_frac_density(i_volfrac);
   }
 
-  switch (coupltype_)
+  switch (coupling_type_)
   {
     case CouplingType::porofluid:
     {
       // artery
-      timefacrhs_art_dens_ = timefacrhs_art_ / arterydensity;
-      // continuous
-      for (int idof = 0; idof < numdof_cont_; idof++)
-        timefacrhs_cont_dens_[idof] = timefacrhs_cont_ / fluiddensities[idof];
+      timefacrhs_artery_density_ = timefacrhs_artery_ / artery_density;
+      // homogenized
+      for (int i_dof = 0; i_dof < num_dof_homogenized_; i_dof++)
+        timefacrhs_homogenized_density_[i_dof] = timefacrhs_homogenized_ / fluid_densities[i_dof];
 
       break;
     }
     case CouplingType::scatra:
     {
       // artery
-      timefacrhs_art_dens_ = timefacrhs_art_ / arterydensity;
-      // continuous
-      for (int idof = 0; idof < numdof_cont_; idof++)
+      timefacrhs_artery_density_ = timefacrhs_artery_ / artery_density;
+      // homogenized
+      for (int i_dof = 0; i_dof < num_dof_homogenized_; i_dof++)
       {
-        const int matid = contscatramat.mat_id(idof);
-        std::shared_ptr<Core::Mat::Material> singlemat = contscatramat.material_by_id(matid);
-        int phaseid = -1;
-        if (singlemat->material_type() == Core::Materials::m_scatra_multiporo_fluid)
+        const int material_id = scatra_material_homogenized.mat_id(i_dof);
+        std::shared_ptr<Core::Mat::Material> single_phase_material =
+            scatra_material_homogenized.material_by_id(material_id);
+        int phase_id = -1;
+        if (single_phase_material->material_type() == Core::Materials::m_scatra_multiporo_fluid)
         {
           const std::shared_ptr<const Mat::ScatraMatMultiPoroFluid>& poromat =
-              std::dynamic_pointer_cast<const Mat::ScatraMatMultiPoroFluid>(singlemat);
-          phaseid = poromat->phase_id();
+              std::dynamic_pointer_cast<const Mat::ScatraMatMultiPoroFluid>(single_phase_material);
+          phase_id = poromat->phase_id();
         }
-        else if (singlemat->material_type() == Core::Materials::m_scatra_multiporo_volfrac)
+        else if (single_phase_material->material_type() ==
+                 Core::Materials::m_scatra_multiporo_volfrac)
         {
           const std::shared_ptr<const Mat::ScatraMatMultiPoroVolFrac>& poromat =
-              std::dynamic_pointer_cast<const Mat::ScatraMatMultiPoroVolFrac>(singlemat);
-          phaseid = poromat->phase_id();
+              std::dynamic_pointer_cast<const Mat::ScatraMatMultiPoroVolFrac>(
+                  single_phase_material);
+          phase_id = poromat->phase_id();
         }
         else
+        {
           FOUR_C_THROW(
-              "Only Mat::ScatraMatMultiPoroVolFrac and Mat::ScatraMatMultiPoroFluid, your "
-              "material "
-              "is of type {}",
-              singlemat->material_type());
-        timefacrhs_cont_dens_[idof] = timefacrhs_cont_ / fluiddensities[phaseid];
+              "Only Mat::ScatraMatMultiPoroVolFrac and Mat::ScatraMatMultiPoroFluid. Your material "
+              "is of type {}.",
+              single_phase_material->material_type());
+        }
+        timefacrhs_homogenized_density_[i_dof] =
+            timefacrhs_homogenized_ / fluid_densities[phase_id];
       }
       break;
     }
     default:
-      FOUR_C_THROW("Unknown coupling type");
+      FOUR_C_THROW("Unknown coupling type.");
       break;
   }
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::extract_solid_vel(Core::FE::Discretization& contdis)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::extract_velocity_solid_phase(const Core::FE::Discretization&
+        homogenized_dis)
 {
   // no need for this
   if (evaluate_in_ref_config_) return;
 
-  std::shared_ptr<const Core::LinAlg::Vector<double>> velocity =
-      contdis.get_state(1, "velocity field");
-  Core::Elements::LocationArray la(contdis.num_dof_sets());
-  element2_->location_vector(contdis, la);
+  const std::shared_ptr<const Core::LinAlg::Vector<double>> velocity =
+      homogenized_dis.get_state(1, "velocity field");
+  Core::Elements::LocationArray location_array(homogenized_dis.num_dof_sets());
+  homogenized_element_->location_vector(homogenized_dis, location_array);
 
   // construct location vector for displacement related dofs
-  std::vector<int> lmdisp(numdim_ * numnodescont_, -1);
-  for (unsigned int inode = 0; inode < numnodescont_; ++inode)
-    for (unsigned int idim = 0; idim < numdim_; ++idim)
-      lmdisp[inode * numdim_ + idim] = la[1].lm_[inode * numdim_ + idim];
+  std::vector lm_disp(num_dim_ * num_nodes_homogenized_, -1);
+  for (unsigned int inode = 0; inode < num_nodes_homogenized_; ++inode)
+    for (unsigned int i_dim = 0; i_dim < num_dim_; ++i_dim)
+      lm_disp[inode * num_dim_ + i_dim] = location_array[1].lm_[inode * num_dim_ + i_dim];
 
   // extract local values of displacement field from global state vector
-  Core::FE::extract_my_values<Core::LinAlg::Matrix<numdim_, numnodescont_>>(
-      *velocity, ele2vel_, lmdisp);
+  Core::FE::extract_my_values<Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_>>(
+      *velocity, nodal_velocity_homogenized_ele_, lm_disp);
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-FAD PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::integrate_length_to_eta_s(const FAD& eta_s)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+FAD PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery, dis_type_homogenized,
+    dim>::integrate_length_to_deformed_coords(const FAD& deformed_coords)
 {
   FAD length = 0.0;
 
-  // define GPs
-  Core::FE::IntegrationPoints1D gaussPoints =
-      Core::FE::IntegrationPoints1D(Core::FE::GaussRule1D::line_3point);
-  if (numdim_ == 3) gaussPoints = Core::FE::IntegrationPoints1D(Core::FE::GaussRule1D::line_4point);
+  // define Gauss points
+  auto gauss_points = Core::FE::IntegrationPoints1D(Core::FE::GaussRule1D::line_3point);
+  if (num_dim_ == 3)
+    gauss_points = Core::FE::IntegrationPoints1D(Core::FE::GaussRule1D::line_4point);
 
-  static Core::LinAlg::Matrix<1, numnodescont_, FAD> N2(
-      Core::LinAlg::Initialization::zero);  // = N2
-  static Core::LinAlg::Matrix<numdim_, numnodescont_, FAD> N2_xi(
-      Core::LinAlg::Initialization::zero);  // = N2,xi1
-
-  static Core::LinAlg::Matrix<numdim_, numdim_, FAD> InvJ(
-      Core::LinAlg::Initialization::zero);  // (dX/dxi)^-1
-  static Core::LinAlg::Matrix<numdim_, numdim_, FAD> defGrad(
-      Core::LinAlg::Initialization::zero);  // (dX/dx) = F
-  static Core::LinAlg::Matrix<numdim_, numnodescont_, FAD> N2_XYZ(
-      Core::LinAlg::Initialization::zero);                                               // = N2,X
-  static Core::LinAlg::Matrix<numdim_, 1, FAD> Ft0(Core::LinAlg::Initialization::zero);  // = F*t0
+  static Core::LinAlg::Matrix<1, num_nodes_homogenized_, FAD> shape_functions_homogenized;
+  static Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_, FAD>
+      shape_functions_homogenized_deriv;
 
   // Vectors for shape functions and their derivatives
-  static Core::LinAlg::Matrix<1, numnodesart_, FAD> N1(Core::LinAlg::Initialization::zero);  // = N1
-  static Core::LinAlg::Matrix<1, numnodesart_, FAD> N1_eta(
-      Core::LinAlg::Initialization::zero);  // = N1,eta
-  // Coords and derivatives of 1D and 2D/3D element
-  static Core::LinAlg::Matrix<numdim_, 1, FAD> r1(Core::LinAlg::Initialization::zero);  // = r1
-  static Core::LinAlg::Matrix<numdim_, 1, FAD> r1_eta(
-      Core::LinAlg::Initialization::zero);  // = r1,eta
+  static Core::LinAlg::Matrix<1, num_nodes_artery_, FAD> shape_functions_artery;
+  static Core::LinAlg::Matrix<1, num_nodes_artery_, FAD> shape_functions_artery_deriv;
+  static Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_, FAD>
+      shape_functions_homogenized_xyz;
 
-  // t0
-  static Core::LinAlg::Matrix<numdim_, 1, FAD> t0;
-  for (unsigned int i = 0; i < numdim_; i++) t0(i).val() = lambda0_(i);
-  // ele2posref
-  static Core::LinAlg::Matrix<numdim_, numnodescont_, FAD> ele2posref;
-  for (unsigned int i = 0; i < numdim_; i++)
-    for (unsigned int j = 0; j < numnodescont_; j++) ele2posref(i, j).val() = ele2posref_(i, j);
-  // ele2pos
-  static Core::LinAlg::Matrix<numdim_, numnodescont_, FAD> ele2pos;
-  for (unsigned int i = 0; i < numdim_; i++)
-    for (unsigned int j = 0; j < numnodescont_; j++) ele2pos(i, j).val() = ele2pos_(i, j);
+  static Core::LinAlg::Matrix<num_dim_, num_dim_, FAD> inverse_jacobian_matrix;
+  static Core::LinAlg::Matrix<num_dim_, num_dim_, FAD> deformation_gradient;  // (dX/dx) = F
 
-  const FAD determinant = (eta_s - eta_a_) / 2.0;
-  const FAD jacobi = determinant * arteryelelengthref_ / 2.0;
+  // Coords and derivatives of the artery element in reference configuration
+  static Core::LinAlg::Matrix<num_dim_, 1, FAD> coord_artery_ref;
+  static Core::LinAlg::Matrix<num_dim_, 1, FAD> coord_artery_deriv_ref;
+
+  // initial artery orientation (t0)
+  static Core::LinAlg::Matrix<num_dim_, 1, FAD> t0;
+  for (unsigned int i = 0; i < num_dim_; i++) t0(i).val() = initial_artery_orientation(i);
+
+  // position of the homogenized element in reference configuration
+  static Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_, FAD>
+      homogenized_element_position_ref;
+  for (unsigned int i = 0; i < num_dim_; i++)
+    for (unsigned int j = 0; j < num_nodes_homogenized_; j++)
+      homogenized_element_position_ref(i, j).val() = nodal_coords_homogenized_ele_ref_(i, j);
+
+  // position of the homogenized element in current configuration
+  static Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_, FAD> homogenized_element_position;
+  for (unsigned int i = 0; i < num_dim_; i++)
+    for (unsigned int j = 0; j < num_nodes_homogenized_; j++)
+      homogenized_element_position(i, j).val() = nodal_coords_homogenized_ele_(i, j);
+
+  const FAD determinant = (deformed_coords - artery_segment_start_) / 2.0;
+  const FAD jacobian_determinant = determinant * artery_ele_length_ref_ / 2.0;
 
   // integrate from etaA to eta_s
-  for (int i_gp = 0; i_gp < n_gp_; i_gp++)
+  for (int i_gp = 0; i_gp < num_gp_; i_gp++)
   {
-    const double w_gp = wgp_[i_gp];
-    const FAD eta = (eta_s + eta_a_) / 2.0 + gaussPoints.qxg[i_gp][0] * determinant;
+    const double gp_weight = gp_weights_[i_gp];
+    const FAD eta =
+        (deformed_coords + artery_segment_start_) / 2.0 + gauss_points.qxg[i_gp][0] * determinant;
     // Update coordinates and derivatives for 1D and 2D/3D element
-    get_1d_shape_functions<FAD>(N1, N1_eta, eta);
-    compute_artery_coords_and_derivs_ref<FAD>(r1, r1_eta, N1, N1_eta);
+    get_artery_shape_functions<FAD>(shape_functions_artery, shape_functions_artery_deriv, eta);
+    compute_artery_coords_and_derivs_ref<FAD>(coord_artery_ref, coord_artery_deriv_ref,
+        shape_functions_artery, shape_functions_artery_deriv);
 
     // project
     bool projection_valid = false;
-    std::vector<FAD> xi(numdim_, 0.0);
-    projection<FAD>(r1, xi, projection_valid);
+    std::vector<FAD> coords_homogenized(num_dim_, 0.0);
+    projection<FAD>(coord_artery_ref, coords_homogenized, projection_valid);
     if (!projection_valid) FOUR_C_THROW("Gauss point could not be projected");
 
-    get_2d_3d_shape_functions<FAD>(N2, N2_xi, xi);
+    get_homogenized_shape_functions<FAD>(
+        shape_functions_homogenized, shape_functions_homogenized_deriv, coords_homogenized);
 
-    InvJ.multiply_nt(N2_xi, ele2posref);
-    InvJ.invert();
+    inverse_jacobian_matrix.multiply_nt(
+        shape_functions_homogenized_deriv, homogenized_element_position_ref);
+    inverse_jacobian_matrix.invert();
 
     // dN/dX = dN/dxi * dxi/dX = dN/dxi * (dX/dxi)^-1
-    N2_XYZ.multiply(InvJ, N2_xi);
+    shape_functions_homogenized_xyz.multiply(
+        inverse_jacobian_matrix, shape_functions_homogenized_deriv);
     // dx/dX = x * N_XYZ^T
-    defGrad.multiply_nt(ele2pos, N2_XYZ);
-    Ft0.multiply(defGrad, t0);
-    const FAD Ft0Norm = Core::FADUtils::vector_norm(Ft0);
-    // finally get the length
-    length += Ft0Norm * w_gp * jacobi;
+    deformation_gradient.multiply_nt(homogenized_element_position, shape_functions_homogenized_xyz);
+
+    // deformation gradient * initial orientation of artery (F*t0)
+    static Core::LinAlg::Matrix<num_dim_, 1, FAD> F_t0(Core::LinAlg::Initialization::zero);
+    F_t0.multiply(deformation_gradient, t0);
+    const FAD F_t0_norm = Core::FADUtils::vector_norm(F_t0);
+
+    // finally, get the length
+    length += F_t0_norm * gp_weight * jacobian_determinant;
   }
 
   return length;
@@ -2223,633 +2433,701 @@ FAD PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, disty
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::get_artery_values_at_gp(const Core::LinAlg::Matrix<1, numnodesart_>& N1, double& artpress,
-    std::vector<double>& artscalar)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized,
+    dim>::get_artery_values_at_gp(const Core::LinAlg::Matrix<1, num_nodes_artery_>&
+                                      shape_functions_artery,
+    double& artery_pressure, std::vector<double>& artery_scalars)
 {
-  switch (coupltype_)
+  switch (coupling_type_)
   {
     case CouplingType::porofluid:
     {
-      for (unsigned int i = 0; i < numnodesart_; i++)
+      for (unsigned int i = 0; i < num_nodes_artery_; i++)
       {
-        artpress += N1(i) * artelephinp_[i];
-        for (int i_scal = 0; i_scal < numscalart_; i_scal++)
-          artscalar[i_scal] += N1(i) * eartscalarnp_[i_scal](i);
+        artery_pressure += shape_functions_artery(i) * phi_np_artery_ele_[i];
+        for (int i_scal = 0; i_scal < num_scalars_artery_; i_scal++)
+          artery_scalars[i_scal] += shape_functions_artery(i) * nodal_artery_scalar_np_[i_scal](i);
       }
       break;
     }
     case CouplingType::scatra:
     {
-      for (unsigned int i = 0; i < numnodesart_; i++)
+      for (unsigned int i = 0; i < num_nodes_artery_; i++)
       {
-        artpress += N1(i) * earterypressurenp_(i);
-        for (int i_art = 0; i_art < numdof_art_; i_art++)
-          artscalar[i_art] += N1(i) * artelephinp_[i * numdof_art_ + i_art];
+        artery_pressure += shape_functions_artery(i) * nodal_artery_pressure_np_(i);
+        for (int i_art = 0; i_art < num_dof_artery_; i_art++)
+          artery_scalars[i_art] +=
+              shape_functions_artery(i) * phi_np_artery_ele_[i * num_dof_artery_ + i_art];
       }
       break;
     }
     default:
-      FOUR_C_THROW("Unknown coupling type");
+      FOUR_C_THROW("Unknown coupling type.");
       break;
   }
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::get_cont_scalar_values_at_gp(const Core::LinAlg::Matrix<1, numnodescont_>& N2,
-    std::vector<double>& contscalarnp)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized,
+    dim>::get_homogenized_scalar_values_at_gp(const Core::LinAlg::Matrix<1, num_nodes_homogenized_>&
+                                                  shape_functions_homogenized,
+    std::vector<double>& scalars_homogenized_np)
 {
-  switch (coupltype_)
+  switch (coupling_type_)
   {
     case CouplingType::porofluid:
     {
-      for (unsigned int i = 0; i < numnodescont_; i++)
+      for (unsigned int i = 0; i < num_nodes_homogenized_; i++)
       {
-        for (int i_cont = 0; i_cont < numscalcont_; i_cont++)
-          contscalarnp[i_cont] += N2(i) * econtscalarnp_[i_cont](i);
+        for (int i_homo = 0; i_homo < num_scalars_homogenized_; i_homo++)
+          scalars_homogenized_np[i_homo] +=
+              shape_functions_homogenized(i) * nodal_homogenized_scalar_np_[i_homo](i);
       }
       break;
     }
     case CouplingType::scatra:
     {
-      for (unsigned int i = 0; i < numnodescont_; i++)
+      for (unsigned int i = 0; i < num_nodes_homogenized_; i++)
       {
-        for (int i_cont = 0; i_cont < numdof_cont_; i_cont++)
-          contscalarnp[i_cont] += N2(i) * contelephinp_[i * numdof_cont_ + i_cont];
+        for (int i_homo = 0; i_homo < num_dof_homogenized_; i_homo++)
+        {
+          scalars_homogenized_np[i_homo] +=
+              shape_functions_homogenized(i) *
+              phi_np_homogenized_ele_[i * num_dof_homogenized_ + i_homo];
+        }
       }
       break;
     }
     default:
-      FOUR_C_THROW("Unknown coupling type");
+      FOUR_C_THROW("Unknown coupling type.");
       break;
   }
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::assemble_function_coupling_into_force_stiff_art(const int& i_art, const double& w_gp,
-    const Core::LinAlg::Matrix<1, numnodesart_>& N1,
-    const Core::LinAlg::Matrix<1, numnodescont_>& N2, const double& jacobi, const int& scale,
-    const double& functval, const std::vector<double>& artderivs,
-    const std::vector<double>& contderivs, Core::LinAlg::SerialDenseVector& forcevec1,
-    Core::LinAlg::SerialDenseMatrix& stiffmat11, Core::LinAlg::SerialDenseMatrix& stiffmat12)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::assemble_function_coupling_into_ele_matrix_rhs_artery(const int&
+                                                                                          i_art,
+    const double& gp_weight,
+    const Core::LinAlg::Matrix<1, num_nodes_artery_>& shape_functions_artery,
+    const Core::LinAlg::Matrix<1, num_nodes_homogenized_>& shape_functions_homogenized,
+    const double& jacobian_determinant, const int& scale, const double& function_value,
+    const std::vector<double>& artery_derivs, const std::vector<double>& homogenized_derivs,
+    Core::LinAlg::SerialDenseVector& ele_rhs_artery,
+    Core::LinAlg::SerialDenseMatrix& ele_matrix_artery_artery,
+    Core::LinAlg::SerialDenseMatrix& ele_matrix_artery_homogenized)
 {
-  const double myscale = (double)(scale);
+  const double my_scale = scale;
 
   // rhs ---> +
-  for (unsigned int i = 0; i < numnodesart_; i++)
-    forcevec1(i * numdof_art_ + i_art) +=
-        N1(i) * myscale * w_gp * jacobi * functval * timefacrhs_art_dens_;
-
-  // matrix --> -
-  for (unsigned int i = 0; i < numnodesart_; i++)
-    for (unsigned int j = 0; j < numnodesart_; j++)
-      for (int j_art = 0; j_art < numdof_art_; j_art++)
-        stiffmat11(i * numdof_art_ + i_art, j * numdof_art_ + j_art) -=
-            N1(i) * N1(j) * myscale * w_gp * jacobi * artderivs[j_art] * timefacrhs_art_dens_;
-
-  // matrix --> -
-  for (unsigned int i = 0; i < numnodesart_; i++)
-    for (unsigned int j = 0; j < numnodescont_; j++)
-      for (int j_cont = 0; j_cont < numdof_cont_; j_cont++)
-        stiffmat12(i * numdof_art_ + i_art, j * numdof_cont_ + j_cont) -=
-            N1(i) * N2(j) * myscale * w_gp * jacobi * contderivs[j_cont] * timefacrhs_art_dens_;
-}
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::assemble_function_coupling_into_force_stiff_cont(const std::vector<int>& assembleInto,
-    const double& w_gp, const Core::LinAlg::Matrix<1, numnodesart_>& N1,
-    const Core::LinAlg::Matrix<1, numnodescont_>& N2, const double& jacobi, const int& scale,
-    const double& timefacrhs_cont, const double& functval, const std::vector<double>& artderivs,
-    const std::vector<double>& contderivs, Core::LinAlg::SerialDenseVector& forcevec2,
-    Core::LinAlg::SerialDenseMatrix& stiffmat21, Core::LinAlg::SerialDenseMatrix& stiffmat22)
-{
-  const double myscale = (double)(scale);
-
-  // rhs ---> +
-  for (unsigned int i = 0; i < numnodescont_; i++)
+  for (unsigned int i = 0; i < num_nodes_artery_; i++)
   {
-    const double rhsval = N2(i) * myscale * w_gp * jacobi * functval * timefacrhs_cont;
-    for (unsigned int idof = 0; idof < assembleInto.size(); idof++)
-      forcevec2(i * numdof_cont_ + assembleInto[idof]) += rhsval;
+    ele_rhs_artery(i * num_dof_artery_ + i_art) += shape_functions_artery(i) * my_scale *
+                                                   gp_weight * jacobian_determinant *
+                                                   function_value * timefacrhs_artery_density_;
   }
 
   // matrix --> -
-  for (unsigned int i = 0; i < numnodescont_; i++)
-    for (unsigned int j = 0; j < numnodesart_; j++)
+  for (unsigned int i = 0; i < num_nodes_artery_; i++)
+  {
+    for (unsigned int j = 0; j < num_nodes_artery_; j++)
     {
-      const double massmatrixfac = N2(i) * N1(j) * myscale * w_gp * jacobi * timefacrhs_cont;
-      for (int j_art = 0; j_art < numdof_art_; j_art++)
+      for (int j_art = 0; j_art < num_dof_artery_; j_art++)
       {
-        const double stiffval = massmatrixfac * artderivs[j_art];
-        for (unsigned int idof = 0; idof < assembleInto.size(); idof++)
-          stiffmat21(i * numdof_cont_ + assembleInto[idof], j * numdof_art_ + j_art) -= stiffval;
+        ele_matrix_artery_artery(i * num_dof_artery_ + i_art, j * num_dof_artery_ + j_art) -=
+            shape_functions_artery(i) * shape_functions_artery(j) * my_scale * gp_weight *
+            jacobian_determinant * artery_derivs[j_art] * timefacrhs_artery_density_;
       }
     }
+  }
 
   // matrix --> -
-  for (unsigned int i = 0; i < numnodescont_; i++)
-    for (unsigned int j = 0; j < numnodescont_; j++)
+  for (unsigned int i = 0; i < num_nodes_artery_; i++)
+  {
+    for (unsigned int j = 0; j < num_nodes_homogenized_; j++)
     {
-      const double massmatrixfac = N2(i) * N2(j) * myscale * w_gp * jacobi * timefacrhs_cont;
-      for (int j_cont = 0; j_cont < numdof_cont_; j_cont++)
+      for (int j_home = 0; j_home < num_dof_homogenized_; j_home++)
       {
-        const double stiffval = massmatrixfac * contderivs[j_cont];
-        for (unsigned int idof = 0; idof < assembleInto.size(); idof++)
-          stiffmat22(i * numdof_cont_ + assembleInto[idof], j * numdof_cont_ + j_cont) -= stiffval;
+        ele_matrix_artery_homogenized(
+            i * num_dof_artery_ + i_art, j * num_dof_homogenized_ + j_home) -=
+            shape_functions_artery(i) * shape_functions_homogenized(j) * my_scale * gp_weight *
+            jacobian_determinant * homogenized_derivs[j_home] * timefacrhs_artery_density_;
       }
     }
+  }
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::evaluate_function_and_deriv(const Core::Utils::FunctionOfAnything& funct,
-    const double& artpressnpAtGP, const std::vector<double>& artscalarnpAtGP,
-    const std::vector<double>& scalarnpAtGP, double& functval, std::vector<double>& artderivs,
-    std::vector<double>& contderivs)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized,
+    dim>::assemble_function_coupling_into_ele_matrix_rhs_homogenized(const std::vector<int>&
+                                                                         assemble_into,
+    const double& gp_weight,
+    const Core::LinAlg::Matrix<1, num_nodes_artery_>& shape_functions_artery,
+    const Core::LinAlg::Matrix<1, num_nodes_homogenized_>& shape_functions_homogenized,
+    const double& jacobian_determinant, const int& scale, const double& timefacrhs_homogenized,
+    const double& function_value, const std::vector<double>& artery_derivs,
+    const std::vector<double>& homogenized_derivs,
+    Core::LinAlg::SerialDenseVector& ele_rhs_homogenized,
+    Core::LinAlg::SerialDenseMatrix& ele_matrix_homogenized_artery,
+    Core::LinAlg::SerialDenseMatrix& ele_matrix_homogenized_homogenized)
+{
+  const double my_scale = scale;
+
+  // rhs ---> +
+  for (unsigned int i = 0; i < num_nodes_homogenized_; i++)
+  {
+    const double rhs_value = shape_functions_homogenized(i) * my_scale * gp_weight *
+                             jacobian_determinant * function_value * timefacrhs_homogenized;
+    for (const int i_dof : assemble_into)
+      ele_rhs_homogenized(i * num_dof_homogenized_ + i_dof) += rhs_value;
+  }
+
+  // matrix --> -
+  for (unsigned int i = 0; i < num_nodes_homogenized_; i++)
+  {
+    for (unsigned int j = 0; j < num_nodes_artery_; j++)
+    {
+      const double matrix_fac = shape_functions_homogenized(i) * shape_functions_artery(j) *
+                                my_scale * gp_weight * jacobian_determinant *
+                                timefacrhs_homogenized;
+      for (int j_art = 0; j_art < num_dof_artery_; j_art++)
+      {
+        const double matrix_value = matrix_fac * artery_derivs[j_art];
+        for (const int i_dof : assemble_into)
+          ele_matrix_homogenized_artery(
+              i * num_dof_homogenized_ + i_dof, j * num_dof_artery_ + j_art) -= matrix_value;
+      }
+    }
+  }
+
+  // matrix --> -
+  for (unsigned int i = 0; i < num_nodes_homogenized_; i++)
+  {
+    for (unsigned int j = 0; j < num_nodes_homogenized_; j++)
+    {
+      const double matrix_fac = shape_functions_homogenized(i) * shape_functions_homogenized(j) *
+                                my_scale * gp_weight * jacobian_determinant *
+                                timefacrhs_homogenized;
+      for (int j_home = 0; j_home < num_dof_homogenized_; j_home++)
+      {
+        const double matrix_value = matrix_fac * homogenized_derivs[j_home];
+        for (const int i_dof : assemble_into)
+          ele_matrix_homogenized_homogenized(
+              i * num_dof_homogenized_ + i_dof, j * num_dof_homogenized_ + j_home) -= matrix_value;
+      }
+    }
+  }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::evaluate_function_and_deriv(const Core::Utils::FunctionOfAnything&
+                                                                function,
+    const double& artery_pressure, const std::vector<double>& artery_scalars,
+    const std::vector<double>& homogenized_scalars, double& function_value,
+    std::vector<double>& artery_derivs, std::vector<double>& homogenized_derivs)
 {
   double time = Discret::Elements::ScaTraEleParameterTimInt::instance("scatra")->time();
 
-  switch (coupltype_)
+  switch (coupling_type_)
   {
     case CouplingType::porofluid:
     {
       // we have to derive w.r.t. fluid variables plus diameter
       std::vector<std::pair<std::string, double>> variables;
-      variables.reserve(numfluidphases_ + numfluidphases_ + 1 + numvolfrac_ + numvolfrac_ + 1 + 1);
+      variables.reserve(
+          num_fluid_phases_ + num_fluid_phases_ + 1 + num_volfracs_ + num_volfracs_ + 1 + 1);
 
-      // scalar variables are constants (plus reference artery diameter and diameter of previous
-      // time step)
+      // scalar variables are constants
+      // (plus reference artery diameter and diameter of the previous time step)
       std::vector<std::pair<std::string, double>> constants;
-      constants.reserve(numscalcont_ + numscalart_ + 2);
+      constants.reserve(num_scalars_homogenized_ + num_scalars_artery_ + 2);
 
-      set_scalar_values_as_constants(constants, artscalarnpAtGP, scalarnpAtGP);
+      set_scalar_values_as_constants(constants, artery_scalars, homogenized_scalars);
 
-      set_fluid_values_as_variables(variables, artpressnpAtGP);
+      set_fluid_values_as_variables(variables, artery_pressure);
 
       // set reference artery diameter as constant
-      constants.emplace_back("D0", arterydiamref_);
+      constants.emplace_back("D0", artery_diameter_ref_);
 
-      // set artery diameter of previous time step as constant
-      constants.emplace_back("Dprev", arterymat_->diam_previous_time_step());
+      // set artery diameter of the previous time step as constant
+      constants.emplace_back("Dprev", artery_material_->diam_previous_time_step());
 
       // set artery diameter as variable
-      variables.emplace_back("D", arterydiam_at_gp_);
+      variables.emplace_back("D", artery_diameter_at_gp_);
 
       constants.emplace_back("t", time);
 
       // evaluate the reaction term
-      functval = funct.evaluate(variables, constants, 0);
+      function_value = function.evaluate(variables, constants, 0);
       // evaluate derivatives
-      std::vector<double> curderivs(funct.evaluate_derivative(variables, constants, 0));
+      const std::vector function_derivs(function.evaluate_derivative(variables, constants, 0));
 
-      evaluate_fluid_derivs(artderivs, contderivs, curderivs);
+      evaluate_fluid_derivs(artery_derivs, homogenized_derivs, function_derivs);
 
       break;
     }
     case CouplingType::scatra:
     {
-      // scalars (both cont and art) are variables
+      // scalars (both homogenized and artery) are variables
       std::vector<std::pair<std::string, double>> variables;
-      variables.reserve(numscalcont_ + numscalart_);
+      variables.reserve(num_scalars_homogenized_ + num_scalars_artery_);
 
       // fluid variables are constants
       std::vector<std::pair<std::string, double>> constants;
-      constants.reserve(
-          numfluidphases_ + numfluidphases_ + 1 + numvolfrac_ + numvolfrac_ + 1 + 1 + 1 + 1);
+      constants.reserve(num_fluid_phases_ + num_fluid_phases_ + 1 + num_volfracs_ + num_volfracs_ +
+                        1 + 1 + 1 + 1);
 
-      set_scalar_values_as_variables(variables, artscalarnpAtGP, scalarnpAtGP);
+      set_scalar_values_as_variables(variables, artery_scalars, homogenized_scalars);
 
-      set_fluid_values_as_constants(constants, artpressnpAtGP);
+      set_fluid_values_as_constants(constants, artery_pressure);
 
       constants.emplace_back("t", time);
 
       // evaluate the reaction term
-      functval = funct.evaluate(variables, constants, 0);
+      function_value = function.evaluate(variables, constants, 0);
       // evaluate derivatives
-      std::vector<double> curderivs(funct.evaluate_derivative(variables, constants, 0));
+      const std::vector function_derivs(function.evaluate_derivative(variables, constants, 0));
 
-      evaluate_scalar_derivs(artderivs, contderivs, curderivs);
+      evaluate_scalar_derivs(artery_derivs, homogenized_derivs, function_derivs);
 
       break;
     }
     default:
-      FOUR_C_THROW("Unknown coupling type");
+      FOUR_C_THROW("Unknown coupling type.");
       break;
   }
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized,
     dim>::set_scalar_values_as_constants(std::vector<std::pair<std::string, double>>& constants,
-    const std::vector<double>& artscalarnpAtGP, const std::vector<double>& scalarnpAtGP)
+    const std::vector<double>& artery_scalars, const std::vector<double>& homogenized_scalars)
 {
-  // set scalar values as constant
-  for (int k = 0; k < numscalcont_; k++)
-    constants.push_back(std::pair<std::string, double>(scalarnames_[k], scalarnpAtGP[k]));
+  // set homogenized scalar values as constant
+  for (int k = 0; k < num_scalars_homogenized_; k++)
+    constants.emplace_back(scalar_names_[k], homogenized_scalars[k]);
 
   // set artery-scalar values as constant
-  for (int k = 0; k < numscalart_; k++)
-    constants.push_back(std::pair<std::string, double>(artscalarnames_[k], artscalarnpAtGP[k]));
+  for (int k = 0; k < num_scalars_artery_; k++)
+    constants.emplace_back(artery_scalar_names_[k], artery_scalars[k]);
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized,
     dim>::set_fluid_values_as_variables(std::vector<std::pair<std::string, double>>& variables,
-    const double& artpressnpAtGP)
+    const double& artery_pressure)
 {
   // set pressure values as variable
-  for (int k = 0; k < numfluidphases_; k++)
-    variables.push_back(
-        std::pair<std::string, double>(pressurenames_[k], phasemanager_->pressure(k)));
+  for (int k = 0; k < num_fluid_phases_; k++)
+    variables.emplace_back(pressure_names_[k], phase_manager_->pressure(k));
 
   // set saturation values as variable
-  for (int k = 0; k < numfluidphases_; k++)
-    variables.push_back(
-        std::pair<std::string, double>(saturationnames_[k], phasemanager_->saturation(k)));
+  for (int k = 0; k < num_fluid_phases_; k++)
+    variables.emplace_back(saturation_names_[k], phase_manager_->saturation(k));
 
   // set porosity value as variable
-  variables.push_back(std::pair<std::string, double>(porosityname_, phasemanager_->porosity()));
+  variables.emplace_back(porosity_name_, phase_manager_->porosity());
 
   // set volfrac values as variables
-  for (int k = 0; k < numvolfrac_; k++)
-    variables.push_back(
-        std::pair<std::string, double>(volfracnames_[k], phasemanager_->vol_frac(k)));
+  for (int k = 0; k < num_volfracs_; k++)
+    variables.emplace_back(volfrac_names_[k], phase_manager_->vol_frac(k));
 
   // set volfrac pressure values as variables
-  for (int k = 0; k < numvolfrac_; k++)
-    variables.push_back(std::pair<std::string, double>(
-        volfracpressurenames_[k], phasemanager_->vol_frac_pressure(k)));
+  for (int k = 0; k < num_volfracs_; k++)
+    variables.emplace_back(volfrac_pressure_names_[k], phase_manager_->vol_frac_pressure(k));
 
   // set artery pressure as variable
-  variables.push_back(std::pair<std::string, double>(artpressname_, artpressnpAtGP));
+  variables.emplace_back(artery_pressure_name_, artery_pressure);
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized,
     dim>::set_fluid_values_as_constants(std::vector<std::pair<std::string, double>>& constants,
-    const double& artpressnpAtGP)
+    const double& artery_pressure)
 {
   // set pressure values as constants
-  for (int k = 0; k < numfluidphases_; k++)
-    constants.push_back(
-        std::pair<std::string, double>(pressurenames_[k], phasemanager_->pressure(k)));
+  for (int k = 0; k < num_fluid_phases_; k++)
+    constants.emplace_back(pressure_names_[k], phase_manager_->pressure(k));
 
   // set saturation values as constants
-  for (int k = 0; k < numfluidphases_; k++)
-    constants.push_back(
-        std::pair<std::string, double>(saturationnames_[k], phasemanager_->saturation(k)));
+  for (int k = 0; k < num_fluid_phases_; k++)
+    constants.emplace_back(saturation_names_[k], phase_manager_->saturation(k));
 
   // set porosity value as constants
-  constants.push_back(std::pair<std::string, double>(porosityname_, phasemanager_->porosity()));
+  constants.emplace_back(porosity_name_, phase_manager_->porosity());
 
   // set volfrac values as constants
-  for (int k = 0; k < numvolfrac_; k++)
-    constants.push_back(
-        std::pair<std::string, double>(volfracnames_[k], phasemanager_->vol_frac(k)));
+  for (int k = 0; k < num_volfracs_; k++)
+    constants.emplace_back(volfrac_names_[k], phase_manager_->vol_frac(k));
 
   // set volfrac pressure values as constants
-  for (int k = 0; k < numvolfrac_; k++)
-    constants.push_back(std::pair<std::string, double>(
-        volfracpressurenames_[k], phasemanager_->vol_frac_pressure(k)));
+  for (int k = 0; k < num_volfracs_; k++)
+    constants.emplace_back(volfrac_pressure_names_[k], phase_manager_->vol_frac_pressure(k));
 
   // set artery pressure as constant
-  constants.push_back(std::pair<std::string, double>(artpressname_, artpressnpAtGP));
+  constants.emplace_back(artery_pressure_name_, artery_pressure);
 
   // set artery diameter as constant
-  constants.push_back(std::pair<std::string, double>("D", arterydiam_at_gp_));
+  constants.emplace_back("D", artery_diameter_at_gp_);
 
   // set reference artery diameter as constant
-  constants.push_back(std::pair<std::string, double>("D0", arterydiamref_));
+  constants.emplace_back("D0", artery_diameter_ref_);
 
-  // set artery diameter of previous time step as constant
-  constants.push_back(
-      std::pair<std::string, double>("Dprev", arterymat_->diam_previous_time_step()));
+  // set artery diameter of the previous time step as constant
+  constants.emplace_back("Dprev", artery_material_->diam_previous_time_step());
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized,
     dim>::set_scalar_values_as_variables(std::vector<std::pair<std::string, double>>& variables,
-    const std::vector<double>& artscalarnpAtGP, const std::vector<double>& scalarnpAtGP)
+    const std::vector<double>& artery_scalars, const std::vector<double>& homogenized_scalars)
 {
   // set scalar values as variables
-  for (int k = 0; k < numscalcont_; k++)
-    variables.push_back(std::pair<std::string, double>(scalarnames_[k], scalarnpAtGP[k]));
+  for (int k = 0; k < num_scalars_homogenized_; k++)
+    variables.emplace_back(scalar_names_[k], homogenized_scalars[k]);
 
   // set artery-scalar values as variables
-  for (int k = 0; k < numscalart_; k++)
-    variables.push_back(std::pair<std::string, double>(artscalarnames_[k], artscalarnpAtGP[k]));
+  for (int k = 0; k < num_scalars_artery_; k++)
+    variables.emplace_back(artery_scalar_names_[k], artery_scalars[k]);
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::evaluate_fluid_derivs(std::vector<double>& artderivs, std::vector<double>& contderivs,
-    const std::vector<double>& functderivs)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::evaluate_fluid_derivs(std::vector<double>& artery_derivs,
+    std::vector<double>& homogenized_derivs, const std::vector<double>& function_derivs) const
 {
-  // basically dependency of exchange terms f is as follows:
-  // f(D(p),g(p)) where p are generic 1D and 3D fluid primary variables
-  // so derivative is df/dp = df/dg*dg/dp + df/dD*dD/dp
-  // first part
-  // function derivs w.r.t. to fluid phases: df/dg*dp/dp
-  for (int doftoderive = 0; doftoderive < numfluidphases_; doftoderive++)
+  // Dependency of exchange terms f is as follows:
+  // f(D(p),g(p)) where p are generic 1D and 3D fluid primary variables.
+  // So, the derivative is df/dp = df/dg*dg/dp + df/dD*dD/dp.
+  // First part: function derivs w.r.t. to fluid phases: df/dg * dp/dp.
+  for (int dof_to_derive = 0; dof_to_derive < num_fluid_phases_; dof_to_derive++)
   {
-    for (int idof = 0; idof < numfluidphases_; idof++)
-      contderivs[doftoderive] +=
-          functderivs[idof] * phasemanager_->pressure_deriv(idof, doftoderive) +
-          functderivs[idof + numfluidphases_] * phasemanager_->saturation_deriv(idof, doftoderive);
-    if (phasemanager_->porosity_depends_on_fluid())
-      contderivs[doftoderive] +=
-          functderivs[2 * numfluidphases_] * phasemanager_->porosity_deriv(doftoderive);
+    for (int i_dof = 0; i_dof < num_fluid_phases_; i_dof++)
+    {
+      homogenized_derivs[dof_to_derive] +=
+          function_derivs[i_dof] * phase_manager_->pressure_deriv(i_dof, dof_to_derive) +
+          function_derivs[i_dof + num_fluid_phases_] *
+              phase_manager_->saturation_deriv(i_dof, dof_to_derive);
+    }
+    if (phase_manager_->porosity_depends_on_fluid())
+      homogenized_derivs[dof_to_derive] +=
+          function_derivs[2 * num_fluid_phases_] * phase_manager_->porosity_deriv(dof_to_derive);
   }
   // function derivs w.r.t. to volume fraction phases
-  for (int doftoderive = numfluidphases_; doftoderive < numdof_cont_ - numvolfrac_; doftoderive++)
+  for (int dof_to_derive = num_fluid_phases_; dof_to_derive < num_dof_homogenized_ - num_volfracs_;
+      dof_to_derive++)
   {
-    // derivatives w.r.t. volume fractions directly appearing
-    //                and porosity (since it depends on volfrac)
-    contderivs[doftoderive] +=
-        functderivs[doftoderive + numfluidphases_ + 1] +
-        functderivs[2 * numfluidphases_] * phasemanager_->porosity_deriv(doftoderive);
+    // derivatives w.r.t. volume fractions directly appearing and porosity
+    // (since it depends on volfrac)
+    homogenized_derivs[dof_to_derive] +=
+        function_derivs[dof_to_derive + num_fluid_phases_ + 1] +
+        function_derivs[2 * num_fluid_phases_] * phase_manager_->porosity_deriv(dof_to_derive);
   }
   // function derivs w.r.t. to volume fraction pressures
-  for (int doftoderive = numfluidphases_ + numvolfrac_; doftoderive < numdof_cont_; doftoderive++)
-    contderivs[doftoderive] += functderivs[doftoderive + numfluidphases_ + 1];
+  for (int dof_to_derive = num_fluid_phases_ + num_volfracs_; dof_to_derive < num_dof_homogenized_;
+      dof_to_derive++)
+    homogenized_derivs[dof_to_derive] += function_derivs[dof_to_derive + num_fluid_phases_ + 1];
 
   // function derivs w.r.t. to artery pressure
-  artderivs[0] += functderivs[numfluidphases_ + numfluidphases_ + 1 + numvolfrac_ + numvolfrac_];
+  artery_derivs[0] +=
+      function_derivs[num_fluid_phases_ + num_fluid_phases_ + 1 + num_volfracs_ + num_volfracs_];
 
-  // second part
-  // derivatives w.r.t. to fluid diameter: df/dD*dD/dp
+  // Second part: derivatives w.r.t. to fluid diameter: df/dD * dD/dp.
   if (variable_diameter_active_)
   {
     // df/dD
-    const double functderivdiam =
-        functderivs[numfluidphases_ + numfluidphases_ + 1 + numvolfrac_ + numvolfrac_ + 1];
+    const double funct_deriv_diameter = function_derivs[num_fluid_phases_ + num_fluid_phases_ + 1 +
+                                                        num_volfracs_ + num_volfracs_ + 1];
 
     // now follow the terms df/dD*dD/dp
-    for (int doftoderive = 0; doftoderive < numdof_cont_; doftoderive++)
-      contderivs[doftoderive] += functderivdiam * diamderivs_[doftoderive];
+    for (int dof_to_derive = 0; dof_to_derive < num_dof_homogenized_; dof_to_derive++)
+      homogenized_derivs[dof_to_derive] += funct_deriv_diameter * diameter_derivs_[dof_to_derive];
 
     // diameter derivs w.r.t. to artery pressure
-    artderivs[0] += functderivdiam * diamderivs_[numfluidphases_ + 2 * numvolfrac_];
+    artery_derivs[0] +=
+        funct_deriv_diameter * diameter_derivs_[num_fluid_phases_ + 2 * num_volfracs_];
   }
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::evaluate_scalar_derivs(std::vector<double>& artderivs, std::vector<double>& contderivs,
-    const std::vector<double>& functderivs)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::evaluate_scalar_derivs(std::vector<double>& artery_derivs,
+    std::vector<double>& homogenized_derivs, const std::vector<double>& function_derivs) const
 {
-  // derivatives after continuous scalars
-  for (int doftoderive = 0; doftoderive < numdof_cont_; doftoderive++)
-    contderivs[doftoderive] += functderivs[doftoderive];
+  // derivatives after homogenized scalars
+  for (int dof_to_derive = 0; dof_to_derive < num_dof_homogenized_; dof_to_derive++)
+    homogenized_derivs[dof_to_derive] += function_derivs[dof_to_derive];
 
   // derivatives after artery scalars
-  for (int doftoderive = 0; doftoderive < numdof_art_; doftoderive++)
-    artderivs[doftoderive] += functderivs[doftoderive + numdof_cont_];
+  for (int dof_to_derive = 0; dof_to_derive < num_dof_artery_; dof_to_derive++)
+    artery_derivs[dof_to_derive] += function_derivs[dof_to_derive + num_dof_homogenized_];
 }
+
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::create_integration_segment()
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::create_integration_segment()
 {
-  if (PROJOUTPUT)
+  if (projection_output)
   {
-    std::cout << "========================= getting intersection for artery ele " << ele1_gid()
-              << std::endl;
+    std::cout << "---- Getting intersections for artery element ----" << artery_ele_gid() << "\n";
   }
 
-  // get the intersections
-  std::vector<double> intersections = get_all_inter_sections();
-  const int numintersections = intersections.size();
+  std::vector<double> intersections = get_all_intersections();
+  const auto num_intersections = intersections.size();
 
-  if (PROJOUTPUT)
+  if (projection_output)
   {
-    if (numintersections == 0)
-      std::cout << "no intersections found" << std::endl;
+    if (num_intersections == 0)
+      std::cout << "No intersections found. \n";
     else
     {
-      std::cout << "intersections are:" << std::endl;
-      for (auto i = intersections.begin(); i != intersections.end(); ++i) std::cout << *i << " ";
-      std::cout << " " << std::endl;
+      std::cout << "Intersections are:" << '\n';
+      for (double& intersection : intersections) std::cout << intersection << " ";
+      std::cout << "\n";
     }
   }
 
-  std::vector<double> xi(numdim_);
   // Vectors for shape functions and their derivatives
-  static Core::LinAlg::Matrix<1, numnodesart_, double> N1(
-      Core::LinAlg::Initialization::zero);  // = N1
-  static Core::LinAlg::Matrix<1, numnodesart_, double> N1_eta(
-      Core::LinAlg::Initialization::zero);  // = N1,eta
+  static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery;
+  static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery_deriv;
+
   // Coords and derivatives of 1D and 2D/3D element
-  static Core::LinAlg::Matrix<numdim_, 1, double> r1(Core::LinAlg::Initialization::zero);  // = r1
-  static Core::LinAlg::Matrix<numdim_, 1, double> r1_eta(
-      Core::LinAlg::Initialization::zero);  // = r1,eta
+  static Core::LinAlg::Matrix<num_dim_, 1> coords_artery_ref;
+  static Core::LinAlg::Matrix<num_dim_, 1> coords_artery_deriv_ref;
+  std::vector<double> coords_homogenized(num_dim_);
   bool projection_valid = false;
 
   // 1st case: no intersection found
-  if (numintersections == 0)
+  if (num_intersections == 0)
   {
-    get_1d_shape_functions<double>(N1, N1_eta, 0.0);
-    compute_artery_coords_and_derivs_ref<double>(r1, r1_eta, N1, N1_eta);
-    projection<double>(r1, xi, projection_valid);
+    get_artery_shape_functions<double>(shape_functions_artery, shape_functions_artery_deriv, 0.0);
+    compute_artery_coords_and_derivs_ref<double>(coords_artery_ref, coords_artery_deriv_ref,
+        shape_functions_artery, shape_functions_artery_deriv);
+    projection<double>(coords_artery_ref, coords_homogenized, projection_valid);
+
     // case: completely inside
     if (projection_valid)
     {
-      eta_a_ = -1.0;
-      eta_b_ = 1.0;
-      isactive_ = true;
+      artery_segment_start_ = -1.0;
+      artery_segment_end_ = 1.0;
+      is_active_ = true;
     }
+
     // case: completely outside
     else
-      isactive_ = false;
+    {
+      is_active_ = false;
+    }
   }
   // 2nd case: 1 intersection found
-  else if (numintersections == 1)
+  else if (num_intersections == 1)
   {
-    // special case: eta = -1.0 lies directly at boundary of 3D element:
-    if (fabs(intersections[0] + 1.0) < XIETATOL)
+    // special case: the artery start lies directly at the boundary of 3D element
+    if (fabs(intersections[0] + 1.0) < coords_distance_tol)
     {
       // first possibility: segment goes from [-1; 1], second point lies inside 3D element
-      get_1d_shape_functions<double>(N1, N1_eta, 1.0);
-      compute_artery_coords_and_derivs_ref<double>(r1, r1_eta, N1, N1_eta);
-      projection<double>(r1, xi, projection_valid);
+      get_artery_shape_functions<double>(shape_functions_artery, shape_functions_artery_deriv, 1.0);
+      compute_artery_coords_and_derivs_ref<double>(coords_artery_ref, coords_artery_deriv_ref,
+          shape_functions_artery, shape_functions_artery_deriv);
+      projection<double>(coords_artery_ref, coords_homogenized, projection_valid);
       if (projection_valid)
       {
-        eta_a_ = -1.0;
-        eta_b_ = 1.0;
-        isactive_ = true;
+        artery_segment_start_ = -1.0;
+        artery_segment_end_ = 1.0;
+        is_active_ = true;
       }
       else
       {
-        // we have found a segment between [-1.0; -1.0 +  XIETATOL] --> this can be sorted out
-        if (PROJOUTPUT)
+        // found a segment between [-1.0; -1.0 + projection_tolerance] --> can be neglected
+        if (projection_output)
         {
-          std::cout << "probably found a very small integration segment for artery element "
-                    << ele1_gid() << " and 3D element " << ele2_gid() << " which is sorted out!"
-                    << std::endl;
+          std::cout << "Probably found a very small integration segment for artery element "
+                    << artery_ele_gid() << " and 3D element " << homogenized_ele_gid() << ". "
+                    << "This segment is neglected. \n";
         }
-        isactive_ = false;
+        is_active_ = false;
       }
     }
-    // special case: eta = 1.0 lies directly at boundary of 3D element:
-    else if (fabs(intersections[0] - 1.0) < XIETATOL)
+    // special case: the artery end lies directly at the boundary of 3D element
+    else if (fabs(intersections[0] - 1.0) < coords_distance_tol)
     {
       // first possibility: segment goes from [-1; 1], second point lies inside 3D element
-      get_1d_shape_functions<double>(N1, N1_eta, -1.0);
-      compute_artery_coords_and_derivs_ref<double>(r1, r1_eta, N1, N1_eta);
-      projection<double>(r1, xi, projection_valid);
+      get_artery_shape_functions<double>(
+          shape_functions_artery, shape_functions_artery_deriv, -1.0);
+      compute_artery_coords_and_derivs_ref<double>(coords_artery_ref, coords_artery_deriv_ref,
+          shape_functions_artery, shape_functions_artery_deriv);
+      projection<double>(coords_artery_ref, coords_homogenized, projection_valid);
       if (projection_valid)
       {
-        eta_a_ = -1.0;
-        eta_b_ = 1.0;
-        isactive_ = true;
+        artery_segment_start_ = -1.0;
+        artery_segment_end_ = 1.0;
+        is_active_ = true;
       }
       else
       {
-        // we have found a segment between [1.0 - XIETATOL; 1.0] --> this can be sorted out
-        if (PROJOUTPUT)
+        // found a segment between [1.0 - projection_tolerance; 1.0] --> can be neglected
+        if (projection_output)
         {
-          std::cout << "probably found a very small integration segment for artery element "
-                    << ele1_gid() << " and 3D element " << ele2_gid() << " which is sorted out!"
-                    << std::endl;
+          std::cout << "Probably found a very small integration segment for artery element "
+                    << artery_ele_gid() << " and 3D element " << homogenized_ele_gid() << ". "
+                    << "This segment is neglected. \n";
         }
-        isactive_ = false;
+        is_active_ = false;
       }
     }
     // normal case: found one intersection: check if -1.0 or 1.0 are inside
     else
     {
-      get_1d_shape_functions<double>(N1, N1_eta, -1.0);
-      compute_artery_coords_and_derivs_ref<double>(r1, r1_eta, N1, N1_eta);
-      projection<double>(r1, xi, projection_valid);
-      // case: segment goes from [-1.0; intersections[0]]
+      get_artery_shape_functions<double>(
+          shape_functions_artery, shape_functions_artery_deriv, -1.0);
+      compute_artery_coords_and_derivs_ref<double>(coords_artery_ref, coords_artery_deriv_ref,
+          shape_functions_artery, shape_functions_artery_deriv);
+      projection<double>(coords_artery_ref, coords_homogenized, projection_valid);
+
+      // case: the segment goes from [-1.0; intersections[0]]
       if (projection_valid)
       {
-        eta_a_ = -1.0;
-        eta_b_ = intersections[0];
-        isactive_ = true;
+        artery_segment_start_ = -1.0;
+        artery_segment_end_ = intersections[0];
+        is_active_ = true;
       }
       else
       {
-        // case: segment goes from [intersections[0]; 1.0]
-        get_1d_shape_functions<double>(N1, N1_eta, 1.0);
-        compute_artery_coords_and_derivs_ref<double>(r1, r1_eta, N1, N1_eta);
-        projection<double>(r1, xi, projection_valid);
-        eta_a_ = intersections[0];
-        eta_b_ = 1.0;
-        isactive_ = true;
-        // special case: projection lies directly at corner of element, this can be sorted out
+        // case: the segment goes from [intersections[0]; 1.0]
+        get_artery_shape_functions<double>(
+            shape_functions_artery, shape_functions_artery_deriv, 1.0);
+        compute_artery_coords_and_derivs_ref<double>(coords_artery_ref, coords_artery_deriv_ref,
+            shape_functions_artery, shape_functions_artery_deriv);
+        projection<double>(coords_artery_ref, coords_homogenized, projection_valid);
+        artery_segment_start_ = intersections[0];
+        artery_segment_end_ = 1.0;
+        is_active_ = true;
+
+        // special case: projection lies directly in the corner of element --> can be neglected
         if (!projection_valid)
         {
-          if (PROJOUTPUT)
+          if (projection_output)
           {
-            std::cout << "original point " << intersections[0] << std::endl;
-            std::cout << "Neither -1.0 nor 1.0 could be projected" << std::endl;
+            std::cout << "Original point " << intersections[0] << '\n';
+            std::cout << "Neither -1.0 nor 1.0 could be projected." << '\n';
           }
-          isactive_ = false;
+          is_active_ = false;
         }
       }
     }
   }
   // 3rd case: two intersections found
-  else if (numintersections == 2)
+  else if (num_intersections == 2)
   {
-    eta_a_ = intersections[0];
-    eta_b_ = intersections[1];
-    isactive_ = true;
+    artery_segment_start_ = intersections[0];
+    artery_segment_end_ = intersections[1];
+    is_active_ = true;
   }
-  // rest is not possible
   else
+  {
     FOUR_C_THROW(
-        "Found more than two intersections for artery element {} and 2D/3D element {}, this "
-        "should "
-        "not be possible",
-        ele1_gid(), ele2_gid());
+        "Found more than two intersections for artery element {} and 2D/3D element {}. "
+        "This should not happen.",
+        artery_ele_gid(), homogenized_ele_gid());
+  }
 
   // safety checks
-  if (isactive_)
+  if (is_active_)
   {
-    if (eta_a_ > eta_b_)
+    if (artery_segment_start_ > artery_segment_end_)
+    {
       FOUR_C_THROW(
-          "something went terribly wrong for artery element {} and 2D/3D element {}, eta_a is "
-          "bigger than eta_b",
-          ele1_gid(), ele2_gid());
-    if (fabs(eta_a_ - eta_b_) < XIETATOL)
+          "Something went terribly wrong for artery element {} and 2D/3D element {}: "
+          "artery_start is bigger than artery_end. This should not happen.",
+          artery_ele_gid(), homogenized_ele_gid());
+    }
+    if (fabs(artery_segment_start_ - artery_segment_end_) < coords_distance_tol)
+    {
       FOUR_C_THROW(
-          "something went terribly wrong for artery element {} and 2D/3D element {}, found "
-          "extremely small integration segment",
-          ele1_gid(), ele2_gid());
+          "Something went terribly wrong for artery element {} and 2D/3D element {}."
+          "Extremely small integration segments were detected. This should not happen.",
+          artery_ele_gid(), homogenized_ele_gid());
+    }
   }
-
-  return;
 }
 /*-----------------------------------------------------------------------------*
  *-----------------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-std::vector<double> PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art,
-    distype_cont, dim>::get_all_inter_sections()
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+std::vector<double> PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::get_all_intersections()
 {
   std::vector<double> intersections;
 
-  std::vector<double> xi(numdim_, 0.0);
-  double eta = 0.0;
+  std::vector coords_homogenized(num_dim_, 0.0);
+  double coords_artery = 0.0;
   bool projection_valid = true;
 
-  switch (element2_->shape())
+  switch (homogenized_element_->shape())
   {
     case Core::FE::CellType::quad4:
     {
-      for (unsigned int j = 0; j < numdim_; j++)
+      for (unsigned int j = 0; j < num_dim_; j++)
       {
-        // project edge xi1 or xi2 = 1.0
-        inter_sect_with_2d_3d(xi, eta, j, 1.0, projection_valid);
-        if (projection_valid && projection_not_yet_found(intersections, eta))
-          intersections.push_back(eta);
+        // project edge at coords_homogenized = 1.0
+        intersect_with_homogenized_element(
+            coords_homogenized, coords_artery, j, 1.0, projection_valid);
+        if (projection_valid && projection_not_yet_found(intersections, coords_artery))
+          intersections.push_back(coords_artery);
 
-        // project edge xi1 or xi2 = -1.0
-        inter_sect_with_2d_3d(xi, eta, j, -1.0, projection_valid);
-        if (projection_valid && projection_not_yet_found(intersections, eta))
-          intersections.push_back(eta);
+        // project edge at coords_homogenized = -1.0
+        intersect_with_homogenized_element(
+            coords_homogenized, coords_artery, j, -1.0, projection_valid);
+        if (projection_valid && projection_not_yet_found(intersections, coords_artery))
+          intersections.push_back(coords_artery);
       }
       break;
     }
     case Core::FE::CellType::hex8:
     {
-      for (unsigned int j = 0; j < numdim_; j++)
+      for (unsigned int j = 0; j < num_dim_; j++)
       {
-        // project surface xi1 or xi2 or xi3 = 1.0
-        inter_sect_with_2d_3d(xi, eta, j, 1.0, projection_valid);
-        if (projection_valid && projection_not_yet_found(intersections, eta))
-          intersections.push_back(eta);
+        // project surface at coords_homogenized = 1.0
+        intersect_with_homogenized_element(
+            coords_homogenized, coords_artery, j, 1.0, projection_valid);
+        if (projection_valid && projection_not_yet_found(intersections, coords_artery))
+          intersections.push_back(coords_artery);
 
-        // project surface xi1 or xi2 or xi3 = -1.0
-        inter_sect_with_2d_3d(xi, eta, j, -1.0, projection_valid);
-        if (projection_valid && projection_not_yet_found(intersections, eta))
-          intersections.push_back(eta);
+        // project surface at coords_homogenized = -1.0
+        intersect_with_homogenized_element(
+            coords_homogenized, coords_artery, j, -1.0, projection_valid);
+        if (projection_valid && projection_not_yet_found(intersections, coords_artery))
+          intersections.push_back(coords_artery);
       }
       break;
     }
@@ -2857,37 +3135,41 @@ std::vector<double> PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<di
     {
       for (unsigned int j = 0; j < 3; j++)
       {
-        // project surface xi1 or xi2 or xi3 = 0.0
-        inter_sect_with_2d_3d(xi, eta, j, 0.0, projection_valid);
-        if (projection_valid && projection_not_yet_found(intersections, eta))
-          intersections.push_back(eta);
+        // project surface at coords_homogenized = 0.0
+        intersect_with_homogenized_element(
+            coords_homogenized, coords_artery, j, 0.0, projection_valid);
+        if (projection_valid && projection_not_yet_found(intersections, coords_artery))
+          intersections.push_back(coords_artery);
       }
-      // project fourth surface of tetahedron xi1 + xi2 + xi3 = 1
-      inter_sect_with_2d_3d(xi, eta, 3, 0.0, projection_valid);
-      if (projection_valid && projection_not_yet_found(intersections, eta))
-        intersections.push_back(eta);
+      // project fourth surface of tetrahedron at coords_homogenized =  1.0
+      intersect_with_homogenized_element(
+          coords_homogenized, coords_artery, 3, 0.0, projection_valid);
+      if (projection_valid && projection_not_yet_found(intersections, coords_artery))
+        intersections.push_back(coords_artery);
       break;
     }
     default:
-      FOUR_C_THROW("Only quad4, hex8 and tet4 are valid so far for second element");
+      FOUR_C_THROW(
+          "Only quad4, hex8 and tet4 are valid element types for the homogenized element.");
   }
 
-  std::sort(intersections.begin(), intersections.end());
+  std::ranges::sort(intersections.begin(), intersections.end());
 
   return intersections;
 }
 
 /*-----------------------------------------------------------------------------*
  *-----------------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-bool PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::projection_not_yet_found(const std::vector<double>& intersections, const double& eta)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+bool PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::projection_not_yet_found(const std::vector<double>& intersections,
+    const double& eta)
 {
-  for (unsigned int i = 0; i < intersections.size(); i++)
+  for (const double intersection : intersections)
   {
-    if (fabs(intersections[i] - eta) < XIETATOL)
+    if (fabs(intersection - eta) < coords_distance_tol)
     {
-      if (PROJOUTPUT) std::cout << "duplicate intersection found" << std::endl;
+      if (projection_output) std::cout << "Duplicate intersection found. \n";
       return false;
     }
   }
@@ -2896,732 +3178,776 @@ bool PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, dist
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::inter_sect_with_2d_3d(std::vector<double>& xi, double& eta, const int& fixedPar,
-    const double& fixedAt, bool& projection_valid)
-{
-  projection_valid = true;
-  bool parallel = false;
-
-  // Initialize limit for parameter values (interval [-limit, limit])
-  const double limit = 1.0 + XIETATOL;
-
-  // reset iteration variables
-  eta = 0.0;
-  switch (element2_->shape())
-  {
-    case Core::FE::CellType::quad4:
-    {
-      if (fixedPar == 0)  // xi1 fixed
-      {
-        xi[0] = fixedAt;
-        xi[1] = 0.0;
-      }
-      else if (fixedPar == 1)  // xi2 fixed
-      {
-        xi[0] = 0.0;
-        xi[1] = fixedAt;
-      }
-      else
-        FOUR_C_THROW("wrong input for fixedPar");
-      break;
-    }
-    case Core::FE::CellType::hex8:
-    {
-      if (fixedPar == 0)  // xi1 fixed
-      {
-        xi[0] = fixedAt;
-        xi[1] = 0.0;
-        xi[2] = 0.0;
-      }
-      else if (fixedPar == 1)  // xi2 fixed
-      {
-        xi[0] = 0.0;
-        xi[1] = fixedAt;
-        xi[2] = 0.0;
-      }
-      else if (fixedPar == 2)  // xi3 fixed
-      {
-        xi[0] = 0.0;
-        xi[1] = 0.0;
-        xi[2] = fixedAt;
-      }
-      else
-        FOUR_C_THROW("wrong input for fixedPar");
-      break;
-    }
-    case Core::FE::CellType::tet4:
-    {
-      if (fixedPar == 0)  // xi1 fixed
-      {
-        xi[0] = fixedAt;
-        xi[1] = 0.25;
-        xi[2] = 0.25;
-      }
-      else if (fixedPar == 1)  // xi2 fixed
-      {
-        xi[0] = 0.25;
-        xi[1] = fixedAt;
-        xi[2] = 0.25;
-      }
-      else if (fixedPar == 2)  // xi3 fixed
-      {
-        xi[0] = 0.25;
-        xi[1] = 0.25;
-        xi[2] = fixedAt;
-      }
-      else if (fixedPar == 3)  // fourth surface xi1 + xi2 + xi3 = 1 fixed
-      {
-        xi[0] = 0.25;
-        xi[1] = 0.25;
-        xi[2] = 0.5;
-      }
-      else
-        FOUR_C_THROW(
-            "only fixedPar = 0, fixedPar = 1, fixedPar = 2 or fixedPar = 3 possible (for tet "
-            "elements");
-      break;
-    }
-    default:
-      FOUR_C_THROW("Only quad4, hex8 and tet4 are valid so far for second element");
-  }
-
-  if (PROJOUTPUT)
-  {
-    std::cout << "Projection output:" << std::endl;
-    std::cout << "Start parameters eta: " << eta;
-    switch (element2_->shape())
-    {
-        // 2D case
-      case Core::FE::CellType::quad4:
-      {
-        std::cout << ", xi1: " << xi[0] << ", xi2: " << xi[1] << std::endl;
-        break;
-      }
-        // 3D case
-      case Core::FE::CellType::hex8:
-      case Core::FE::CellType::tet4:
-      {
-        std::cout << ", xi1: " << xi[0] << ", xi2: " << xi[1] << ", xi3: " << xi[2] << std::endl;
-        break;
-      }
-      default:
-        FOUR_C_THROW("Only quad4, hex8 and tet4 are valid so far for second element");
-    }
-  }
-
-  // Initialize function f and Jacobian J for Newton iteration
-  Core::LinAlg::Matrix<numdim_, 1> f(Core::LinAlg::Initialization::zero);
-  Core::LinAlg::Matrix<numdim_, numdim_> J(Core::LinAlg::Initialization::zero);
-  Core::LinAlg::Matrix<numdim_, numdim_> Jinv(Core::LinAlg::Initialization::zero);
-
-  // Vectors for shape functions and their derivatives
-  static Core::LinAlg::Matrix<1, numnodesart_> N1(Core::LinAlg::Initialization::zero);  // = N1
-  static Core::LinAlg::Matrix<1, numnodesart_> N1_eta(
-      Core::LinAlg::Initialization::zero);  // = N1,eta
-
-  static Core::LinAlg::Matrix<1, numnodescont_> N2(Core::LinAlg::Initialization::zero);  // = N2
-  static Core::LinAlg::Matrix<numdim_, numnodescont_> N2_xi(
-      Core::LinAlg::Initialization::zero);  // = N2,xi1
-
-  // Coords and derivatives of for 1D and 2D/3D element
-  static Core::LinAlg::Matrix<numdim_, 1> r1(Core::LinAlg::Initialization::zero);      // = r1
-  static Core::LinAlg::Matrix<numdim_, 1> r1_eta(Core::LinAlg::Initialization::zero);  // = r1,eta
-
-  static Core::LinAlg::Matrix<numdim_, 1> x2(Core::LinAlg::Initialization::zero);  // = x2
-  static Core::LinAlg::Matrix<numdim_, numdim_> x2_xi(
-      Core::LinAlg::Initialization::zero);  // = x2,xi
-
-  // Initial scalar residual (L2-norm of f)
-  double residual;
-
-  // Local newton iteration
-  // -----------------------------------------------------------------
-  int iter;
-  double first_residual = 1.0e-4;  // used for convergence check
-
-  for (iter = 0; iter < PROJMAXITER; iter++)
-  {
-    // Update shape functions and their derivatives for 1D and 2D/3D element
-    get_1d_shape_functions<double>(N1, N1_eta, eta);
-    get_2d_3d_shape_functions<double>(N2, N2_xi, xi);
-
-    // Update coordinates and derivatives for 1D and 2D/3D element
-    compute_artery_coords_and_derivs_ref<double>(r1, r1_eta, N1, N1_eta);
-    compute_2d_3d_coords_and_derivs_ref<double>(x2, x2_xi, N2, N2_xi);
-
-    // Evaluate f at current xi1, xi2, alpha
-    f.clear();
-    for (unsigned int i = 0; i < numdim_; i++) f(i) = x2(i) - r1(i);
-
-    // Compute scalar residuum
-    residual = 0.0;
-    for (unsigned int i = 0; i < numdim_; i++) residual += f(i) * f(i);
-    residual = sqrt(residual);
-    if (iter == 0) first_residual = std::max(first_residual, residual);
-
-    J.clear();
-
-    if (fixedPar == 0)  // xi1 fixed --> we need x_{,xi2} (and x_{,xi3} in case of 3D)
-    {
-      for (unsigned int idim = 0; idim < numdim_; idim++)
-        for (unsigned int jdim = 1; jdim < numdim_; jdim++) J(idim, jdim - 1) = x2_xi(idim, jdim);
-    }
-    else if (fixedPar == 1)  // xi2 fixed --> we need x_{,xi1} (and x_{,xi3} in case of 3D)
-    {
-      switch (element2_->shape())
-      {
-          // 2D case
-        case Core::FE::CellType::quad4:
-        {
-          for (unsigned int jdim = 0; jdim < numdim_; jdim++) J(jdim, 0) = x2_xi(jdim, 0);
-          break;
-        }
-          // 3D case
-        case Core::FE::CellType::hex8:
-        case Core::FE::CellType::tet4:
-        {
-          for (unsigned int jdim = 0; jdim < numdim_; jdim++)
-          {
-            J(jdim, 0) = x2_xi(jdim, 0);
-            J(jdim, 1) = x2_xi(jdim, 2);
-          }
-          break;
-        }
-        default:
-          FOUR_C_THROW("Only quad4, hex8 and tet4 are valid so far for second element");
-      }
-    }
-    else if (fixedPar == 2)  // xi3 fixed  --> we need x_{,xi1} (and x_{,xi2} in case of 3D)
-    {
-      for (unsigned int idim = 0; idim < numdim_; idim++)
-        for (unsigned int jdim = 0; jdim < numdim_ - 1; jdim++) J(idim, jdim) = x2_xi(idim, jdim);
-    }
-    else if (fixedPar == 3)  // xi3 fixed at xi3 = 1.0 - xi1 - xi2
-    {
-      for (unsigned int idim = 0; idim < numdim_; idim++)
-      {
-        // df/dxi1 = df/dxi1 - df/dxi3
-        J(idim, 0) = x2_xi(idim, 0) - x2_xi(idim, 2);
-        // df/dxi_2 = df/dxi2 - df/dxi3
-        J(idim, 1) = x2_xi(idim, 1) - x2_xi(idim, 2);
-      }
-    }
-    else
-      FOUR_C_THROW(
-          "only fixedPar = 0, fixedPar = 1, fixedPar = 2 or fixedPar = 3 possible (for tet "
-          "elements)");
-
-    // fill dr_deta into Jacobian
-    for (unsigned int idim = 0; idim < numdim_; idim++) J(idim, numdim_ - 1) = -r1_eta(idim);
-
-    double jacdet = J.determinant();
-
-    // If det_J = 0 we assume, that the artery and the surface edge are parallel.
-    // These projection is not needed due the fact that the contact interval can also be
-    // identified by other projections
-    parallel = fabs(jacdet) < COLLINEARTOL * first_residual;
-    if (!parallel) jacdet = J.invert();
-
-    // Check if the local Newton iteration has converged
-    if (residual < CONVTOLNEWTONPROJ * first_residual && !parallel)
-    {
-      if (PROJOUTPUT)
-      {
-        std::cout << "Local Newton iteration converged after " << iter << " iterations"
-                  << std::endl;
-        std::cout << "Found point at xi1: " << xi[0] << ", xi2: " << xi[1];
-        if (numdim_ == 3) std::cout << ", xi3: " << xi[2];
-        std::cout << ", eta: " << eta << " with residual: " << residual << std::endl;
-        std::cout << "r1:\n" << r1 << ", x2:\n" << x2 << std::endl;
-      }
-      // Local Newton iteration converged
-      break;
-    }
-    else if (PROJOUTPUT && iter > 0)
-    {
-      std::cout << "New point at xi1: " << xi[0] << ", xi2: " << xi[0];
-      if (numdim_ == 3) std::cout << ", xi3: " << xi[2];
-      std::cout << ", eta: " << eta << " with residual: " << residual << std::endl;
-    }
-
-    // Singular J
-    if (parallel)
-    {
-      // Sort out
-      if (PROJOUTPUT)
-      {
-        std::cout << "elementscolinear: det_J = " << jacdet << std::endl;
-      }
-      break;
-    }
-    // Regular J (inversion possible)
-
-    if (fixedPar == 0)  // xi1 fixed --> we have to update xi2 (and xi3 in case of 3D)
-    {
-      for (unsigned int idim = 1; idim < numdim_; idim++)
-        for (unsigned int jdim = 0; jdim < numdim_; jdim++)
-          xi[idim] += -J(idim - 1, jdim) * f(jdim);
-    }
-    else if (fixedPar == 1)  // xi2 fixed --> we have to update xi1 (and xi3 in case of 3D)
-    {
-      switch (element2_->shape())
-      {
-          // 2D case
-        case Core::FE::CellType::quad4:
-        {
-          for (unsigned int jdim = 0; jdim < numdim_; jdim++) xi[0] += -J(0, jdim) * f(jdim);
-          break;
-        }
-          // 3D case
-        case Core::FE::CellType::hex8:
-        case Core::FE::CellType::tet4:
-        {
-          for (unsigned int jdim = 0; jdim < numdim_; jdim++)
-          {
-            xi[0] += -J(0, jdim) * f(jdim);
-            xi[2] += -J(1, jdim) * f(jdim);
-          }
-          break;
-        }
-        default:
-          FOUR_C_THROW("Only quad4, hex8 and tet4 are valid so far for second element");
-      }
-    }
-    else if (fixedPar == 2)  // xi3 fixed --> we have to update xi1 (and xi2 in case of 3D)
-    {
-      for (unsigned int idim = 0; idim < numdim_ - 1; idim++)
-        for (unsigned int jdim = 0; jdim < numdim_; jdim++) xi[idim] += -J(idim, jdim) * f(jdim);
-    }
-    else if (fixedPar == 3)
-    {
-      // xi3 fixed at 1.0 - xi1 - xi2
-      for (unsigned int idim = 0; idim < numdim_ - 1; idim++)
-        for (unsigned int jdim = 0; jdim < numdim_; jdim++) xi[idim] += -J(idim, jdim) * f(jdim);
-      xi[2] = 1.0 - xi[0] - xi[1];
-    }
-    else
-      FOUR_C_THROW(
-          "only fixedPar = 0, fixedPar = 1, fixedPar = 2 or fixedPar = 3 possible (for tet "
-          "elements)");
-
-    // update also eta
-    for (unsigned int jdim = 0; jdim < numdim_; jdim++) eta += -J(numdim_ - 1, jdim) * f(jdim);
-  }
-
-  // Local Newton iteration unconverged after PROJMAXITER
-  if (residual > CONVTOLNEWTONPROJ * first_residual || parallel)
-  {
-    for (unsigned int idim = 0; idim < numdim_; idim++) xi[idim] = 1e+12;
-    eta = 1e+12;
-
-    if (PROJOUTPUT)
-      std::cout << "Local Newton iteration unconverged (!) after " << iter + 1 << " iterations"
-                << std::endl;
-  }
-
-  switch (element2_->shape())
-  {
-    case Core::FE::CellType::quad4:
-    {
-      if (fabs(xi[0]) > limit || fabs(xi[1]) > limit || fabs(eta) > limit) projection_valid = false;
-      break;
-    }
-    case Core::FE::CellType::hex8:
-    {
-      if (fabs(xi[0]) > limit || fabs(xi[1]) > limit || fabs(xi[2]) > limit || fabs(eta) > limit)
-        projection_valid = false;
-      break;
-    }
-    case Core::FE::CellType::tet4:
-    {
-      if (xi[0] < -XIETATOL || xi[1] < -XIETATOL || xi[2] < -XIETATOL ||
-          xi[0] + xi[1] + xi[2] > limit || fabs(eta) > limit)
-        projection_valid = false;
-      break;
-    }
-    default:
-      FOUR_C_THROW("Only quad4, hex8 and tet4 are valid so far for second element");
-  }
-
-  if (PROJOUTPUT)
-  {
-    if (projection_valid)
-      std::cout << "Projection allowed" << std::endl;
-    else
-      std::cout << "Projection not allowed" << std::endl;
-  }
-
-  return;
-}
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-template <typename T>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::projection(Core::LinAlg::Matrix<numdim_, 1, T>& r1, std::vector<T>& xi,
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::intersect_with_homogenized_element(std::vector<double>&
+                                                                       coords_homogenized,
+    double& coords_artery, const int& fixed_coord_idx, const double& fixed_at,
     bool& projection_valid)
 {
   projection_valid = true;
   bool parallel = false;
 
   // Initialize limit for parameter values (interval [-limit, limit])
-  const double limit = 1.0 + XIETATOL;
+  constexpr double limit = 1.0 + coords_distance_tol;
 
-  switch (element2_->shape())
+  // reset iteration variables
+  coords_artery = 0.0;
+  switch (homogenized_element_->shape())
   {
     case Core::FE::CellType::quad4:
     {
-      xi[0] = 0.0;
-      xi[1] = 0.0;
+      if (fixed_coord_idx == 0)  // xi_1 fixed
+      {
+        coords_homogenized[0] = fixed_at;
+        coords_homogenized[1] = 0.0;
+      }
+      else if (fixed_coord_idx == 1)  // xi_2 fixed
+      {
+        coords_homogenized[0] = 0.0;
+        coords_homogenized[1] = fixed_at;
+      }
+      else
+      {
+        FOUR_C_THROW("Wrong input for fixed_coord_idx.");
+      }
       break;
     }
     case Core::FE::CellType::hex8:
     {
-      xi[0] = 0.0;
-      xi[1] = 0.0;
-      xi[2] = 0.0;
+      if (fixed_coord_idx == 0)  // xi_1 fixed
+      {
+        coords_homogenized[0] = fixed_at;
+        coords_homogenized[1] = 0.0;
+        coords_homogenized[2] = 0.0;
+      }
+      else if (fixed_coord_idx == 1)  // xi_2 fixed
+      {
+        coords_homogenized[0] = 0.0;
+        coords_homogenized[1] = fixed_at;
+        coords_homogenized[2] = 0.0;
+      }
+      else if (fixed_coord_idx == 2)  // xi_3 fixed
+      {
+        coords_homogenized[0] = 0.0;
+        coords_homogenized[1] = 0.0;
+        coords_homogenized[2] = fixed_at;
+      }
+      else
+      {
+        FOUR_C_THROW("Wrong input for fixed_coord_idx.");
+      }
       break;
     }
     case Core::FE::CellType::tet4:
     {
-      xi[0] = 0.25;
-      xi[1] = 0.25;
-      xi[2] = 0.25;
-      break;
-    }
-    case Core::FE::CellType::tet10:
-    {
-      xi[0] = 0.25;
-      xi[1] = 0.25;
-      xi[2] = 0.25;
+      if (fixed_coord_idx == 0)  // xi_1 fixed
+      {
+        coords_homogenized[0] = fixed_at;
+        coords_homogenized[1] = 0.25;
+        coords_homogenized[2] = 0.25;
+      }
+      else if (fixed_coord_idx == 1)  // xi_2 fixed
+      {
+        coords_homogenized[0] = 0.25;
+        coords_homogenized[1] = fixed_at;
+        coords_homogenized[2] = 0.25;
+      }
+      else if (fixed_coord_idx == 2)  // xi_3 fixed
+      {
+        coords_homogenized[0] = 0.25;
+        coords_homogenized[1] = 0.25;
+        coords_homogenized[2] = fixed_at;
+      }
+      else if (fixed_coord_idx == 3)  // fourth surface xi_1 + xi_2 + xi_3 = 1 fixed
+      {
+        coords_homogenized[0] = 0.25;
+        coords_homogenized[1] = 0.25;
+        coords_homogenized[2] = 0.5;
+      }
+      else
+      {
+        FOUR_C_THROW(
+            "For TET elements, only fixed_coord_idx = 0, fixed_coord_idx = 1, fixed_coord_idx = 2 "
+            "or fixed_coord_idx = 3 are possible.");
+      }
       break;
     }
     default:
-      FOUR_C_THROW("Only quad4, hex8, tet4 and tet10 are valid so far for second element");
+      FOUR_C_THROW(
+          "Only quad4, hex8 and tet4 are valid element types for the homogenized element.");
   }
 
-  if (PROJOUTPUT)
+  if (projection_output)
   {
-    std::cout << "Projection output:" << std::endl;
-    std::cout << "Start parameters ";
-    switch (element2_->shape())
+    std::cout << "Projection output:" << '\n';
+    std::cout << "Start parameters coords_artery: " << coords_artery;
+    switch (homogenized_element_->shape())
     {
-        // 2D case
       case Core::FE::CellType::quad4:
       {
-        std::cout << "xi1: " << xi[0] << ", xi2: " << xi[1] << std::endl;
+        // 2D case
+        std::cout << ", coords_homogenized 1: " << coords_homogenized[0]
+                  << ", 2: " << coords_homogenized[1] << '\n';
         break;
       }
         // 3D case
       case Core::FE::CellType::hex8:
       case Core::FE::CellType::tet4:
-      case Core::FE::CellType::tet10:
       {
-        std::cout << "xi1: " << xi[0] << ", xi2: " << xi[1] << ", xi3: " << xi[2] << std::endl;
+        std::cout << ", coords_homogenized 1: " << coords_homogenized[0]
+                  << ", 2: " << coords_homogenized[1] << ", 3: " << coords_homogenized[2] << '\n';
         break;
       }
       default:
-        FOUR_C_THROW("Only quad4, hex8, tet4 and tet10 are valid so far for second element");
+        FOUR_C_THROW(
+            "Only quad4, hex8 and tet4 are valid element types for the homogenized element.");
     }
   }
 
-  // Initialize function f and Jacobian J for Newton iteration
-  Core::LinAlg::Matrix<numdim_, 1, T> f(Core::LinAlg::Initialization::zero);
-  Core::LinAlg::Matrix<numdim_, numdim_, T> J(Core::LinAlg::Initialization::zero);
-  Core::LinAlg::Matrix<numdim_, numdim_, T> Jinv(Core::LinAlg::Initialization::zero);
+  // Initialize distance function and Jacobian for Newton iteration
+  Core::LinAlg::Matrix<num_dim_, 1> distance;
+  Core::LinAlg::Matrix<num_dim_, num_dim_> jacobian_matrix;
+  Core::LinAlg::Matrix<num_dim_, num_dim_> inverse_jacobian_matrix;
 
   // Vectors for shape functions and their derivatives
-  static Core::LinAlg::Matrix<1, numnodesart_, T> N1(Core::LinAlg::Initialization::zero);  // = N1
-  static Core::LinAlg::Matrix<1, numnodesart_, T> N1_eta(
-      Core::LinAlg::Initialization::zero);  // = N1,eta
+  static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery;
+  static Core::LinAlg::Matrix<1, num_nodes_artery_> shape_functions_artery_deriv;
 
-  static Core::LinAlg::Matrix<1, numnodescont_, T> N2(Core::LinAlg::Initialization::zero);  // = N2
-  static Core::LinAlg::Matrix<numdim_, numnodescont_, T> N2_xi(
-      Core::LinAlg::Initialization::zero);  // = N2,xi1
+  static Core::LinAlg::Matrix<1, num_nodes_homogenized_> shape_functions_homogenized;
+  static Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_> shape_functions_homogenized_deriv;
 
-  static Core::LinAlg::Matrix<numdim_, 1, T> x2(Core::LinAlg::Initialization::zero);  // = x2
-  static Core::LinAlg::Matrix<numdim_, numdim_, T> x2_xi(
-      Core::LinAlg::Initialization::zero);  // = x2,xi
+  // Coords and derivatives of for 1D and 2D/3D element in reference configuration
+  static Core::LinAlg::Matrix<num_dim_, 1> coords_artery_ref;
+  static Core::LinAlg::Matrix<num_dim_, 1> coords_artery_deriv_ref;
 
-  // Initial scalar residual (L2-norm of f)
-  T residual;
+  static Core::LinAlg::Matrix<num_dim_, 1> coords_homogenized_ref;
+  static Core::LinAlg::Matrix<num_dim_, num_dim_> coords_homogenized_deriv_ref;
+
+  // Initial scalar residual (L2-norm of distance)
+  double residual;
 
   // Local newton iteration
-  // -----------------------------------------------------------------
-
   int iter;
   double first_residual = 1.0e-4;  // used for convergence check
 
-  for (iter = 0; iter < PROJMAXITER; iter++)
+  for (iter = 0; iter < projection_max_iter; iter++)
   {
     // Update shape functions and their derivatives for 1D and 2D/3D element
-    get_2d_3d_shape_functions<T>(N2, N2_xi, xi);
+    get_artery_shape_functions<double>(
+        shape_functions_artery, shape_functions_artery_deriv, coords_artery);
+    get_homogenized_shape_functions<double>(
+        shape_functions_homogenized, shape_functions_homogenized_deriv, coords_homogenized);
 
     // Update coordinates and derivatives for 1D and 2D/3D element
-    compute_2d_3d_coords_and_derivs_ref<T>(x2, x2_xi, N2, N2_xi);
+    compute_artery_coords_and_derivs_ref<double>(coords_artery_ref, coords_artery_deriv_ref,
+        shape_functions_artery, shape_functions_artery_deriv);
+    compute_homogenized_coords_and_derivs_ref<double>(coords_homogenized_ref,
+        coords_homogenized_deriv_ref, shape_functions_homogenized,
+        shape_functions_homogenized_deriv);
 
-    // Evaluate f at current xi1, xi2, alpha
-    f.clear();
-    for (unsigned int i = 0; i < numdim_; i++) f(i) = x2(i) - r1(i);
+    // Evaluate distance in reference configuration
+    distance.clear();
+    for (unsigned int i = 0; i < num_dim_; i++)
+      distance(i) = coords_homogenized_ref(i) - coords_artery_ref(i);
 
-    residual = Core::FADUtils::vector_norm(f);
+    // Compute scalar residuum
+    residual = 0.0;
+    for (unsigned int i = 0; i < num_dim_; i++) residual += distance(i) * distance(i);
+    residual = sqrt(residual);
+    if (iter == 0) first_residual = std::max(first_residual, residual);
+
+    jacobian_matrix.clear();
+
+    if (fixed_coord_idx == 0)  // xi_1 fixed: we need x_{,xi_2} (and x_{,xi_3} in case of 3D)
+    {
+      for (unsigned int i_dim = 0; i_dim < num_dim_; i_dim++)
+        for (unsigned int j_dim = 1; j_dim < num_dim_; j_dim++)
+          jacobian_matrix(i_dim, j_dim - 1) = coords_homogenized_deriv_ref(i_dim, j_dim);
+    }
+    else if (fixed_coord_idx == 1)  // xi_2 fixed: we need x_{,xi_1} (and x_{,xi_3} in case of 3D)
+    {
+      switch (homogenized_element_->shape())
+      {
+        case Core::FE::CellType::quad4:
+        {
+          for (unsigned int j_dim = 0; j_dim < num_dim_; j_dim++)
+            jacobian_matrix(j_dim, 0) = coords_homogenized_deriv_ref(j_dim, 0);
+          break;
+        }
+        case Core::FE::CellType::hex8:
+        case Core::FE::CellType::tet4:
+        {
+          for (unsigned int j_dim = 0; j_dim < num_dim_; j_dim++)
+          {
+            jacobian_matrix(j_dim, 0) = coords_homogenized_deriv_ref(j_dim, 0);
+            jacobian_matrix(j_dim, 1) = coords_homogenized_deriv_ref(j_dim, 2);
+          }
+          break;
+        }
+        default:
+          FOUR_C_THROW(
+              "Only quad4, hex8 and tet4 are valid element types for the homogenized element.");
+      }
+    }
+    else if (fixed_coord_idx == 2)  // xi_3 fixed: we need x_{,xi_1} (and x_{,xi_2} in case of 3D)
+    {
+      for (unsigned int i_dim = 0; i_dim < num_dim_; i_dim++)
+        for (unsigned int j_dim = 0; j_dim < num_dim_ - 1; j_dim++)
+          jacobian_matrix(i_dim, j_dim) = coords_homogenized_deriv_ref(i_dim, j_dim);
+    }
+    else if (fixed_coord_idx == 3)  // xi_3 fixed at xi_3 = 1.0 - xi_1 - xi_2
+    {
+      for (unsigned int i_dim = 0; i_dim < num_dim_; i_dim++)
+      {
+        // df/dxi1 = df/dxi1 - df/dxi3
+        jacobian_matrix(i_dim, 0) =
+            coords_homogenized_deriv_ref(i_dim, 0) - coords_homogenized_deriv_ref(i_dim, 2);
+        // df/dxi_2 = df/dxi2 - df/dxi3
+        jacobian_matrix(i_dim, 1) =
+            coords_homogenized_deriv_ref(i_dim, 1) - coords_homogenized_deriv_ref(i_dim, 2);
+      }
+    }
+    else
+    {
+      FOUR_C_THROW(
+          "For TET elements, only fixed_coord_idx = 0, fixed_coord_idx = 1, fixed_coord_idx = 2 "
+          "or fixed_coord_idx = 3 are possible.");
+    }
+
+    // fill Jacobian matrix
+    for (unsigned int i_dim = 0; i_dim < num_dim_; i_dim++)
+      jacobian_matrix(i_dim, num_dim_ - 1) = -coords_artery_deriv_ref(i_dim);
+
+    double jacobian_determinant = jacobian_matrix.determinant();
+
+    // If det_J = 0, we assume that the artery and the surface edge are parallel. This projection
+    // is not needed because the contact interval can also be identified by other projections.
+    parallel = fabs(jacobian_determinant) < collinear_tol * first_residual;
+    if (!parallel) jacobian_determinant = jacobian_matrix.invert();
+
+    // Check if the local Newton iteration has converged
+    if (residual < newton_projection_tol * first_residual && !parallel)
+    {
+      if (projection_output)
+      {
+        std::cout << "Local Newton iteration converged after " << iter << " iterations \n";
+        std::cout << "Found point at coords_homogenized 1: " << coords_homogenized[0]
+                  << ", 2: " << coords_homogenized[1];
+        if (num_dim_ == 3) std::cout << ", 3: " << coords_homogenized[2];
+        std::cout << ", coords_artery: " << coords_artery << " with residual: " << residual << '\n';
+        std::cout << "In reference configuration: \n";
+        std::cout << "Coords_artery: " << coords_artery_ref
+                  << ",\n Coords_homogenized: " << coords_homogenized_ref << '\n';
+      }
+      // Local Newton iteration converged
+      break;
+    }
+    if (projection_output && iter > 0)
+    {
+      std::cout << "New point at coords_homogenized 1: " << coords_homogenized[0]
+                << ", 2: " << coords_homogenized[0];
+      if (num_dim_ == 3) std::cout << ", 3: " << coords_homogenized[2];
+      std::cout << ", coords_artery: " << coords_artery << " with residual: " << residual << '\n';
+    }
+
+    // Singular Jacobian matrix
+    if (parallel)
+    {
+      // Sort out
+      if (projection_output)
+      {
+        std::cout << "Elements are collinear: det_J = " << jacobian_determinant << '\n';
+      }
+      break;
+    }
+
+    if (fixed_coord_idx == 0)  // xi_1 fixed: we have to update xi_2 (and xi_3 in case of 3D)
+    {
+      for (unsigned int i_dim = 1; i_dim < num_dim_; i_dim++)
+        for (unsigned int j_dim = 0; j_dim < num_dim_; j_dim++)
+          coords_homogenized[i_dim] += -jacobian_matrix(i_dim - 1, j_dim) * distance(j_dim);
+    }
+    else if (fixed_coord_idx == 1)  // xi_2 fixed: we have to update xi_1 (and xi_3 in case of 3D)
+    {
+      switch (homogenized_element_->shape())
+      {
+        case Core::FE::CellType::quad4:
+        {
+          for (unsigned int j_dim = 0; j_dim < num_dim_; j_dim++)
+            coords_homogenized[0] += -jacobian_matrix(0, j_dim) * distance(j_dim);
+          break;
+        }
+        case Core::FE::CellType::hex8:
+        case Core::FE::CellType::tet4:
+        {
+          for (unsigned int j_dim = 0; j_dim < num_dim_; j_dim++)
+          {
+            coords_homogenized[0] += -jacobian_matrix(0, j_dim) * distance(j_dim);
+            coords_homogenized[2] += -jacobian_matrix(1, j_dim) * distance(j_dim);
+          }
+          break;
+        }
+        default:
+          FOUR_C_THROW(
+              "Only quad4, hex8 and tet4 are valid element types for the homogenized element.");
+      }
+    }
+    else if (fixed_coord_idx == 2)  // xi_3 fixed: we have to update xi_1 (and xi_2 in case of 3D)
+    {
+      for (unsigned int i_dim = 0; i_dim < num_dim_ - 1; i_dim++)
+        for (unsigned int j_dim = 0; j_dim < num_dim_; j_dim++)
+          coords_homogenized[i_dim] += -jacobian_matrix(i_dim, j_dim) * distance(j_dim);
+    }
+    else if (fixed_coord_idx == 3)  // xi_3 fixed at xi_3 = 1.0 - xi_1 - xi_2
+    {
+      for (unsigned int i_dim = 0; i_dim < num_dim_ - 1; i_dim++)
+        for (unsigned int j_dim = 0; j_dim < num_dim_; j_dim++)
+          coords_homogenized[i_dim] += -jacobian_matrix(i_dim, j_dim) * distance(j_dim);
+      coords_homogenized[2] = 1.0 - coords_homogenized[0] - coords_homogenized[1];
+    }
+    else
+    {
+      FOUR_C_THROW(
+          "For TET elements, only fixed_coord_idx = 0, fixed_coord_idx = 1, fixed_coord_idx = 2 "
+          "or fixed_coord_idx = 3 are possible.");
+    }
+
+    // update also coords_artery
+    for (unsigned int j_dim = 0; j_dim < num_dim_; j_dim++)
+      coords_artery += -jacobian_matrix(num_dim_ - 1, j_dim) * distance(j_dim);
+  }
+
+  // Local Newton iteration unconverged
+  if (residual > newton_projection_tol * first_residual || parallel)
+  {
+    for (unsigned int i_dim = 0; i_dim < num_dim_; i_dim++) coords_homogenized[i_dim] = 1e+12;
+    coords_artery = 1e+12;
+
+    if (projection_output)
+      std::cout << "Local Newton iteration unconverged after " << iter + 1 << " iterations. \n";
+  }
+
+  switch (homogenized_element_->shape())
+  {
+    case Core::FE::CellType::quad4:
+    {
+      if (fabs(coords_homogenized[0]) > limit || fabs(coords_homogenized[1]) > limit ||
+          fabs(coords_artery) > limit)
+        projection_valid = false;
+      break;
+    }
+    case Core::FE::CellType::hex8:
+    {
+      if (fabs(coords_homogenized[0]) > limit || fabs(coords_homogenized[1]) > limit ||
+          fabs(coords_homogenized[2]) > limit || fabs(coords_artery) > limit)
+        projection_valid = false;
+      break;
+    }
+    case Core::FE::CellType::tet4:
+    {
+      if (coords_homogenized[0] < -coords_distance_tol ||
+          coords_homogenized[1] < -coords_distance_tol ||
+          coords_homogenized[2] < -coords_distance_tol ||
+          coords_homogenized[0] + coords_homogenized[1] + coords_homogenized[2] > limit ||
+          fabs(coords_artery) > limit)
+        projection_valid = false;
+      break;
+    }
+    default:
+      FOUR_C_THROW(
+          "Only quad4, hex8 and tet4 are valid element types for the homogenized element.");
+  }
+
+  if (projection_output)
+  {
+    if (projection_valid)
+      std::cout << "Projection allowed. \n";
+    else
+      std::cout << "Projection not allowed. \n";
+  }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+template <typename T>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::projection(Core::LinAlg::Matrix<num_dim_, 1, T>& coords_artery_ref,
+    std::vector<T>& coords_homogenized, bool& projection_valid)
+{
+  projection_valid = true;
+  bool parallel = false;
+
+  // Initialize limit for parameter values (interval [-limit, limit])
+  constexpr double limit = 1.0 + coords_distance_tol;
+
+  switch (homogenized_element_->shape())
+  {
+    case Core::FE::CellType::quad4:
+    {
+      coords_homogenized[0] = 0.0;
+      coords_homogenized[1] = 0.0;
+      break;
+    }
+    case Core::FE::CellType::hex8:
+    {
+      coords_homogenized[0] = 0.0;
+      coords_homogenized[1] = 0.0;
+      coords_homogenized[2] = 0.0;
+      break;
+    }
+    case Core::FE::CellType::tet4:
+    case Core::FE::CellType::tet10:
+    {
+      coords_homogenized[0] = 0.25;
+      coords_homogenized[1] = 0.25;
+      coords_homogenized[2] = 0.25;
+      break;
+    }
+    default:
+      FOUR_C_THROW(
+          "Only quad4, hex8 and tet4 are valid element types for the homogenized element.");
+  }
+
+  if constexpr (projection_output)
+  {
+    std::cout << "Gauss point projection output:" << '\n';
+    std::cout << "Start parameters ";
+    switch (homogenized_element_->shape())
+    {
+      case Core::FE::CellType::quad4:
+      {
+        std::cout << "coords_homogenized 1: " << coords_homogenized[0]
+                  << ", 2: " << coords_homogenized[1] << '\n';
+        break;
+      }
+      case Core::FE::CellType::hex8:
+      case Core::FE::CellType::tet4:
+      case Core::FE::CellType::tet10:
+      {
+        std::cout << "coords_homogenized 1: " << coords_homogenized[0]
+                  << ", 2: " << coords_homogenized[1] << ", 3: " << coords_homogenized[2] << '\n';
+        break;
+      }
+      default:
+        FOUR_C_THROW(
+            "Only quad4, hex8 and tet4 are valid element types for the homogenized element.");
+    }
+  }
+
+  // Initialize distance function and Jacobian for Newton iteration
+  Core::LinAlg::Matrix<num_dim_, 1, T> distance;
+  Core::LinAlg::Matrix<num_dim_, num_dim_, T> jacobian_matrix;
+  Core::LinAlg::Matrix<num_dim_, num_dim_, T> inverse_jacobian_matrix;
+
+  // Vectors for shape functions and their derivatives
+  static Core::LinAlg::Matrix<1, num_nodes_artery_, T> shape_functions_artery;
+  static Core::LinAlg::Matrix<1, num_nodes_artery_, T> shape_functions_artery_deriv;
+
+  static Core::LinAlg::Matrix<1, num_nodes_homogenized_, T> shape_functions_homogenized;
+  static Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_, T>
+      shape_functions_homogenized_deriv;
+
+  static Core::LinAlg::Matrix<num_dim_, 1, T> coords_homogenized_ref;
+  static Core::LinAlg::Matrix<num_dim_, num_dim_, T> coords_homogenized_deriv_ref;
+
+  T residual;
+
+  // Local newton iteration
+  int iter;
+  double first_residual = 1.0e-4;  // used for convergence check
+
+  for (iter = 0; iter < projection_max_iter; iter++)
+  {
+    // Update shape functions and their derivatives for 1D and 2D/3D element
+    get_homogenized_shape_functions<T>(
+        shape_functions_homogenized, shape_functions_homogenized_deriv, coords_homogenized);
+
+    // Update coordinates and derivatives for 1D and 2D/3D element in reference configuration
+    compute_homogenized_coords_and_derivs_ref<T>(coords_homogenized_ref,
+        coords_homogenized_deriv_ref, shape_functions_homogenized,
+        shape_functions_homogenized_deriv);
+
+    // Evaluate distance in reference configuration
+    distance.clear();
+    for (unsigned int i = 0; i < num_dim_; i++)
+      distance(i) = coords_homogenized_ref(i) - coords_artery_ref(i);
+
+    residual = Core::FADUtils::vector_norm(distance);
     if (iter == 0)
       first_residual = std::max(first_residual, Core::FADUtils::cast_to_double(residual));
 
     // Reset matrices
-    for (unsigned int i = 0; i < numdim_; i++)
-      for (unsigned int j = 0; j < numdim_; j++) J(i, j) = x2_xi(i, j);
+    for (unsigned int i = 0; i < num_dim_; i++)
+      for (unsigned int j = 0; j < num_dim_; j++)
+        jacobian_matrix(i, j) = coords_homogenized_deriv_ref(i, j);
 
-    const double jacdet = Core::FADUtils::cast_to_double<T, numdim_, numdim_>(J).determinant();
+    const double jacobian_determinant =
+        Core::FADUtils::cast_to_double<T, num_dim_, num_dim_>(jacobian_matrix).determinant();
 
-    // If det_J = 0 we assume, that the artery element and the surface edge are parallel.
-    // These projection is not needed due the fact that the contact interval can also be
-    // identified by two contact interval borders found with the GetContactLines method
-    parallel = fabs(jacdet) < COLLINEARTOL * first_residual;
-    if (!parallel) J.invert();
+    // If det_J = 0, we assume that the artery element and the surface edge are parallel. This
+    // projection is not needed because the contact interval can also be identified by two
+    // contact interval borders found with the GetContactLines method.
+    parallel = fabs(jacobian_determinant) < collinear_tol * first_residual;
+    if (!parallel) jacobian_matrix.invert();
 
-    // Check if the local Newton iteration has converged
-    // If the start point fulfills the orthogonalty conditions (residual < CONVTOLNEWTONPROJ*
+    // Check if the local Newton iteration has converged:
+    // If the start point fulfills the orthogonality conditions (residual < newton_projection_tol *
     // first_residual), we also check if the artery element and the surface edge are parallel.
     // This is done by calculating det_J before checking if the local Newton iteration has
-    // converged by fulfilling the condition residual < CONVTOLNEWTONPROJ*first_residual
-    if (residual < CONVTOLNEWTONPROJ * first_residual && !parallel)
+    // converged by fulfilling the condition residual < newton_projection_tol * first_residual.
+    if (residual < newton_projection_tol * first_residual && !parallel)
     {
-      if (PROJOUTPUT)
+      if (projection_output)
       {
-        std::cout << "Local Newton iteration converged after " << iter << " iterations"
-                  << std::endl;
+        std::cout << "Local Newton iteration converged after " << iter << " iterations. \n";
         std::cout << "Found point at ";
-        switch (element2_->shape())
+        switch (homogenized_element_->shape())
         {
-            // 2D case
           case Core::FE::CellType::quad4:
           {
-            std::cout << "xi1: " << xi[0] << ", xi2: " << xi[1] << std::endl;
+            std::cout << "coords_homogenized 1: " << coords_homogenized[0]
+                      << ", 2: " << coords_homogenized[1] << '\n';
             break;
           }
-            // 3D case
           case Core::FE::CellType::hex8:
           case Core::FE::CellType::tet4:
           case Core::FE::CellType::tet10:
           {
-            std::cout << "xi1: " << xi[0] << ", xi2: " << xi[1] << ", xi3: " << xi[2] << std::endl;
+            std::cout << "coords_homogenized 1: " << coords_homogenized[0]
+                      << ", 2: " << coords_homogenized[1] << ", 3: " << coords_homogenized[2]
+                      << '\n';
             break;
           }
           default:
             FOUR_C_THROW("Only quad4, hex8, tet4 and tet10 are valid so far for second element");
         }
-        std::cout << " with residual: " << residual << std::endl;
-        std::cout << "r1:\n" << r1 << ", x2:\n" << x2 << std::endl;
+        std::cout << "with residual: " << residual << '\n';
+        std::cout << "In reference configuration: \n";
+        std::cout << "Coords_artery: " << coords_artery_ref
+                  << ",\n Coords_homogenized: " << coords_homogenized_ref << '\n';
       }
       // Local Newton iteration converged
       break;
     }
-    else if (PROJOUTPUT && iter > 0)
+
+    if (projection_output && iter > 0)
     {
-      std::cout << "New point at xi1: ";
-      switch (element2_->shape())
+      std::cout << "New point at coords_homogenized: ";
+      switch (homogenized_element_->shape())
       {
-          // 2D case
         case Core::FE::CellType::quad4:
         {
-          std::cout << "xi1: " << xi[0] << ", xi2: " << xi[1] << std::endl;
+          std::cout << "1: " << coords_homogenized[0] << ", 2: " << coords_homogenized[1] << '\n';
           break;
         }
-          // 3D case
         case Core::FE::CellType::hex8:
         case Core::FE::CellType::tet4:
         case Core::FE::CellType::tet10:
         {
-          std::cout << "xi1: " << xi[0] << ", xi2: " << xi[1] << ", xi3: " << xi[2] << std::endl;
+          std::cout << "1: " << coords_homogenized[0] << ", 2: " << coords_homogenized[1]
+                    << ", 3: " << coords_homogenized[2] << '\n';
           break;
         }
         default:
-          FOUR_C_THROW("Only quad4, hex8, tet4 and tet10 are valid so far for second element");
+          FOUR_C_THROW(
+              "Only quad4, hex8 and tet4 are valid element types for the homogenized element.");
       }
-      std::cout << " with residual: " << residual << std::endl;
+      std::cout << " with residual: " << residual << '\n';
     }
 
-    // Singular J
+    // Singular Jacobian matrix
     if (parallel)
     {
       // Sort out
-      if (PROJOUTPUT)
+      if (projection_output)
       {
-        std::cout << "elementscolinear: det_J = " << jacdet << std::endl;
+        std::cout << "Elements are collinear: det_J = " << jacobian_determinant << '\n';
       }
       break;
     }
-    // Regular J (inversion possible)
-    for (unsigned int idim = 0; idim < numdim_; idim++)
-      for (unsigned int jdim = 0; jdim < numdim_; jdim++) xi[idim] += -J(idim, jdim) * f(jdim);
+
+    // Regular Jacobian matrix (inversion possible)
+    for (unsigned int i_dim = 0; i_dim < num_dim_; i_dim++)
+      for (unsigned int j_dim = 0; j_dim < num_dim_; j_dim++)
+        coords_homogenized[i_dim] += -jacobian_matrix(i_dim, j_dim) * distance(j_dim);
 
     // xi1 += -J(0, 0) * f(0) - J(0, 1) * f(1) - J(0, 2) * f(2);
     // xi2 += -J(1, 0) * f(0) - J(1, 1) * f(1) - J(1, 2) * f(2);
     // xi3 += -J(2, 0) * f(0) - J(2, 1) * f(1) - J(2, 2) * f(2);
   }
-  // -----------------------------------------------------------------
-  // End: Local Newton iteration
 
-  // Local Newton iteration unconverged after PROJMAXITER
-  if (residual > CONVTOLNEWTONPROJ * first_residual || parallel)
+  // Local Newton iteration unconverged
+  if (residual > newton_projection_tol * first_residual || parallel)
   {
-    for (unsigned int idim = 0; idim < numdim_; idim++) xi[idim] = 1e+12;
+    for (unsigned int i_dim = 0; i_dim < num_dim_; i_dim++) coords_homogenized[i_dim] = 1e+12;
 
-    if (PROJOUTPUT)
-      std::cout << "Local Newton iteration unconverged (!) after " << iter + 1 << " iterations"
-                << std::endl;
+    if (projection_output)
+      std::cout << "Local Newton iteration unconverged after " << iter + 1 << " iterations. \n";
   }
 
-  // check if xi lies inside element
-  switch (element2_->shape())
+  // check if xi lies inside the element
+  switch (homogenized_element_->shape())
   {
     case Core::FE::CellType::quad4:
     {
-      if (fabs(xi[0]) > limit || fabs(xi[1]) > limit) projection_valid = false;
+      if (fabs(coords_homogenized[0]) > limit || fabs(coords_homogenized[1]) > limit)
+        projection_valid = false;
       break;
     }
     case Core::FE::CellType::hex8:
     {
-      if (fabs(xi[0]) > limit || fabs(xi[1]) > limit || fabs(xi[2]) > limit)
+      if (fabs(coords_homogenized[0]) > limit || fabs(coords_homogenized[1]) > limit ||
+          fabs(coords_homogenized[2]) > limit)
         projection_valid = false;
       break;
     }
     case Core::FE::CellType::tet4:
     {
-      if (xi[0] < -XIETATOL || xi[1] < -XIETATOL || xi[2] < -XIETATOL ||
-          xi[0] + xi[1] + xi[2] > limit)
+      if (coords_homogenized[0] < -coords_distance_tol ||
+          coords_homogenized[1] < -coords_distance_tol ||
+          coords_homogenized[2] < -coords_distance_tol ||
+          coords_homogenized[0] + coords_homogenized[1] + coords_homogenized[2] > limit)
         projection_valid = false;
       break;
     }
     case Core::FE::CellType::tet10:  // TODO: Is this correct?
     {
-      if (xi[0] < -XIETATOL || xi[1] < -XIETATOL || xi[2] < -XIETATOL ||
-          xi[0] + xi[1] + xi[2] > limit)
+      if (coords_homogenized[0] < -coords_distance_tol ||
+          coords_homogenized[1] < -coords_distance_tol ||
+          coords_homogenized[2] < -coords_distance_tol ||
+          coords_homogenized[0] + coords_homogenized[1] + coords_homogenized[2] > limit)
         projection_valid = false;
       break;
     }
     default:
-      FOUR_C_THROW("Only quad4, hex8, tet4 and tet10 are valid so far for second element");
+      FOUR_C_THROW(
+          "Only quad4, hex8 and tet4 are valid element types for the homogenized element.");
   }
 
-  if (PROJOUTPUT)
+  if (projection_output)
   {
     if (projection_valid)
-      std::cout << "Projection allowed" << std::endl;
+      std::cout << "Projection allowed. \n";
     else
-      std::cout << "Projection not allowed" << std::endl;
+      std::cout << "Projection not allowed \n";
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
 template <typename T>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::get_1d_shape_functions(Core::LinAlg::Matrix<1, numnodesart_, T>& N1,
-    Core::LinAlg::Matrix<1, numnodesart_, T>& N1_eta, const T& eta)
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized,
+    dim>::get_artery_shape_functions(Core::LinAlg::Matrix<1, num_nodes_artery_, T>& shape_function,
+    Core::LinAlg::Matrix<1, num_nodes_artery_, T>& shape_function_deriv, const T& coordinate)
 {
   // Clear shape functions and derivatives
-  N1.clear();
-  N1_eta.clear();
+  shape_function.clear();
+  shape_function_deriv.clear();
 
   // Get discretization type
-  const Core::FE::CellType distype = element1_->shape();
+  const Core::FE::CellType dis_type = artery_element_->shape();
 
   // Get values and derivatives of shape functions
-  Core::FE::shape_function_1d(N1, eta, distype);
-  Core::FE::shape_function_1d_deriv1(N1_eta, eta, distype);
-
-  return;
+  Core::FE::shape_function_1d(shape_function, coordinate, dis_type);
+  Core::FE::shape_function_1d_deriv1(shape_function_deriv, coordinate, dis_type);
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
 template <typename T>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::get_2d_3d_shape_functions(Core::LinAlg::Matrix<1, numnodescont_, T>& N2,
-    Core::LinAlg::Matrix<numdim_, numnodescont_, T>& N2_xi, const std::vector<T>& xi)
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized,
+    dim>::get_homogenized_shape_functions(Core::LinAlg::Matrix<1, num_nodes_homogenized_, T>&
+                                              shape_function,
+    Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_, T>& shape_function_deriv,
+    const std::vector<T>& coordinate)
 {
   // Clear shape functions and derivatives
-  N2.clear();
-  N2_xi.clear();
+  shape_function.clear();
+  shape_function_deriv.clear();
 
-  switch (element2_->shape())
+  switch (homogenized_element_->shape())
   {
-      // 2D case
     case Core::FE::CellType::quad4:
     {
-      Core::FE::shape_function_2d(N2, xi[0], xi[1], distype_cont);
-      Core::FE::shape_function_2d_deriv1(N2_xi, xi[0], xi[1], distype_cont);
+      // 2D case
+      Core::FE::shape_function_2d(
+          shape_function, coordinate[0], coordinate[1], dis_type_homogenized);
+      Core::FE::shape_function_2d_deriv1(
+          shape_function_deriv, coordinate[0], coordinate[1], dis_type_homogenized);
       break;
     }
-      // 3D case
     case Core::FE::CellType::hex8:
     case Core::FE::CellType::tet4:
     case Core::FE::CellType::tet10:
     {
-      Core::FE::shape_function_3d(N2, xi[0], xi[1], xi[2], distype_cont);
-      Core::FE::shape_function_3d_deriv1(N2_xi, xi[0], xi[1], xi[2], distype_cont);
+      Core::FE::shape_function_3d(
+          shape_function, coordinate[0], coordinate[1], coordinate[2], dis_type_homogenized);
+      Core::FE::shape_function_3d_deriv1(
+          shape_function_deriv, coordinate[0], coordinate[1], coordinate[2], dis_type_homogenized);
       break;
     }
     default:
-      FOUR_C_THROW("Only quad4, hex8, tet4 and tet10 are valid so far for second element");
+      FOUR_C_THROW(
+          "Only quad4, hex8 and tet4 are valid element types for the homogenized element.");
   }
-
-  return;
 }
 
 /*------------------------------------------------------------------------*
  *------------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
 template <typename T>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::compute_artery_coords_and_derivs_ref(Core::LinAlg::Matrix<numdim_, 1, T>& r1,
-    Core::LinAlg::Matrix<numdim_, 1, T>& r1_eta, const Core::LinAlg::Matrix<1, numnodesart_, T>& N1,
-    const Core::LinAlg::Matrix<1, numnodesart_, T>& N1_eta)
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::compute_artery_coords_and_derivs_ref(Core::LinAlg::Matrix<num_dim_,
+                                                                         1, T>& coordinates_ref,
+    Core::LinAlg::Matrix<num_dim_, 1, T>& coordinates_deriv_ref,
+    const Core::LinAlg::Matrix<1, num_nodes_artery_, T>& shape_function,
+    const Core::LinAlg::Matrix<1, num_nodes_artery_, T>& shape_function_deriv)
 {
-  r1.clear();
-  r1_eta.clear();
+  coordinates_ref.clear();
+  coordinates_deriv_ref.clear();
 
-  for (unsigned int j = 0; j < numnodesart_; j++)
+  for (unsigned int j = 0; j < num_nodes_artery_; j++)
   {
-    for (unsigned int idim = 0; idim < numdim_; idim++)
+    for (unsigned int i_dim = 0; i_dim < num_dim_; i_dim++)
     {
-      r1(idim) += N1(j) * ele1posref_(numdim_ * j + idim);
-      r1_eta(idim) += N1_eta(j) * ele1posref_(numdim_ * j + idim);
+      coordinates_ref(i_dim) +=
+          shape_function(j) * nodal_coords_artery_ele_ref_(num_dim_ * j + i_dim);
+      coordinates_deriv_ref(i_dim) +=
+          shape_function_deriv(j) * nodal_coords_artery_ele_ref_(num_dim_ * j + i_dim);
     }
   }
-  return;
 }
 
 /*------------------------------------------------------------------------*
  *------------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
 template <typename T>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::compute_2d_3d_coords_and_derivs_ref(Core::LinAlg::Matrix<numdim_, 1, T>& x2,
-    Core::LinAlg::Matrix<numdim_, numdim_, T>& x2_xi,
-    const Core::LinAlg::Matrix<1, numnodescont_, T>& N2,
-    const Core::LinAlg::Matrix<numdim_, numnodescont_, T>& N2_xi)
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized,
+    dim>::compute_homogenized_coords_and_derivs_ref(Core::LinAlg::Matrix<num_dim_, 1, T>&
+                                                        coordinates_ref,
+    Core::LinAlg::Matrix<num_dim_, num_dim_, T>& coordinates_deriv_ref,
+    const Core::LinAlg::Matrix<1, num_nodes_homogenized_, T>& shape_function,
+    const Core::LinAlg::Matrix<num_dim_, num_nodes_homogenized_, T>& shape_function_deriv)
 {
-  x2.clear();
-  x2_xi.clear();
+  coordinates_ref.clear();
+  coordinates_deriv_ref.clear();
 
-  for (unsigned int j = 0; j < numnodescont_; j++)
+  for (unsigned int j = 0; j < num_nodes_homogenized_; j++)
   {
-    for (unsigned int idim = 0; idim < numdim_; idim++)
+    for (unsigned int i_dim = 0; i_dim < num_dim_; i_dim++)
     {
-      x2(idim) += N2(j) * ele2posref_(idim, j);
-      for (unsigned int jdim = 0; jdim < numdim_; jdim++)
+      coordinates_ref(i_dim) += shape_function(j) * nodal_coords_homogenized_ele_ref_(i_dim, j);
+      for (unsigned int j_dim = 0; j_dim < num_dim_; j_dim++)
       {
-        x2_xi(idim, jdim) += N2_xi(jdim, j) * ele2posref_(idim, j);
+        coordinates_deriv_ref(i_dim, j_dim) +=
+            shape_function_deriv(j_dim, j) * nodal_coords_homogenized_ele_ref_(i_dim, j);
       }
     }
   }
@@ -3629,128 +3955,128 @@ void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, dist
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::fill_function_vector(std::vector<const Core::Utils::FunctionOfAnything*>& my_funct_vec,
-    const std::vector<int>& funct_vec, const std::vector<int>& scale_vec)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized,
+    dim>::fill_function_vector(std::vector<const Core::Utils::FunctionOfAnything*>& function_vector,
+    const std::vector<int>& function_id_vector, const std::vector<int>& scale_vector)
 {
-  for (unsigned int i = 0; i < funct_vec.size(); i++)
+  for (unsigned int i = 0; i < function_id_vector.size(); i++)
   {
-    if (funct_vec[i] >= 0 && abs(scale_vec[i]) > 0)
+    if (function_id_vector[i] >= 0 && abs(scale_vector[i]) > 0)
     {
-      my_funct_vec.at(i) =
+      function_vector.at(i) =
           &Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfAnything>(
-              funct_vec[i]);
-      funct_coupl_active_ = true;
+              function_id_vector[i]);
+      function_coupling_active_ = true;
     }
     else
-      my_funct_vec.at(i) = nullptr;
+    {
+      function_vector.at(i) = nullptr;
+    }
   }
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::initialize_function(const Core::Utils::FunctionOfAnything& funct)
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::initialize_function(const Core::Utils::FunctionOfAnything& funct)
 {
-  // safety check
   if (funct.number_components() != 1)
-    FOUR_C_THROW("expected only one component for coupling function!");
+    FOUR_C_THROW("Expected only one component for coupling function!");
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::initialize_function_names()
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::initialize_function_names()
 {
-  pressurenames_.resize(numfluidphases_);
-  saturationnames_.resize(numfluidphases_);
-  volfracnames_.resize(numvolfrac_);
-  volfracpressurenames_.resize(numvolfrac_);
-  scalarnames_.resize(numscalcont_);
-  artscalarnames_.resize(numscalart_);
+  pressure_names_.resize(num_fluid_phases_);
+  saturation_names_.resize(num_fluid_phases_);
+  volfrac_names_.resize(num_volfracs_);
+  volfrac_pressure_names_.resize(num_volfracs_);
+  scalar_names_.resize(num_scalars_homogenized_);
+  artery_scalar_names_.resize(num_scalars_artery_);
 
-  for (int k = 0; k < numscalcont_; k++)
+  for (int k = 0; k < num_scalars_homogenized_; k++)
   {
     // add scalar names
     {
       std::ostringstream temp;
       temp << k + 1;
-      scalarnames_[k] = "phi" + temp.str();
+      scalar_names_[k] = "phi" + temp.str();
     }
   }
 
-  for (int k = 0; k < numscalart_; k++)
+  for (int k = 0; k < num_scalars_artery_; k++)
   {
     // add artery-scalar names
     {
       std::ostringstream temp;
       temp << k + 1;
-      artscalarnames_[k] = "phi_art" + temp.str();
+      artery_scalar_names_[k] = "phi_art" + temp.str();
     }
   }
 
-  for (int k = 0; k < numfluidphases_; k++)
+  for (int k = 0; k < num_fluid_phases_; k++)
   {
     // add pressure names
     {
       std::ostringstream temp;
       temp << k + 1;
-      pressurenames_[k] = "p" + temp.str();
+      pressure_names_[k] = "p" + temp.str();
     }
 
     // add saturation names
     {
       std::ostringstream temp;
       temp << k + 1;
-      saturationnames_[k] = "S" + temp.str();
+      saturation_names_[k] = "S" + temp.str();
     }
   }
 
   // add additional volume fractions
-  for (int k = 0; k < numvolfrac_; k++)
+  for (int k = 0; k < num_volfracs_; k++)
   {
     // add volume fraction names
     {
       std::ostringstream temp;
       temp << k + 1;
-      volfracnames_[k] = "VF" + temp.str();
+      volfrac_names_[k] = "VF" + temp.str();
     }
     // add volume fraction pressure names
     {
       std::ostringstream temp;
       temp << k + 1;
-      volfracpressurenames_[k] = "VFP" + temp.str();
+      volfrac_pressure_names_[k] = "VFP" + temp.str();
     }
   }
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-template <Core::FE::CellType distype_art, Core::FE::CellType distype_cont, int dim>
-void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, distype_cont,
-    dim>::initialize_assemble_into_cont_dof_vector()
+template <Core::FE::CellType dis_type_artery, Core::FE::CellType dis_type_homogenized, int dim>
+void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
+    dis_type_homogenized, dim>::initialize_assemble_into_homogenized_dof_vector()
 {
-  cont_dofs_to_assemble_functions_into_.resize(numdof_cont_);
+  homogenized_dofs_to_assemble_functions_into_.resize(num_dof_homogenized_);
 
-  // just standard, each dof assembles into own equation
-  for (int icont = 0; icont < numdof_cont_; icont++)
+  for (int i_homo = 0; i_homo < num_dof_homogenized_; i_homo++)
   {
-    std::vector<int> thisdof = {icont};
-    cont_dofs_to_assemble_functions_into_[icont] = thisdof;
+    const std::vector current_dof = {i_homo};
+    homogenized_dofs_to_assemble_functions_into_[i_homo] = current_dof;
   }
 
-  switch (coupltype_)
+  switch (coupling_type_)
   {
     case CouplingType::porofluid:
     {
-      // special case for phases [0, ..., numfluidphases - 2]:
-      // those have to assemble into the summed up fluid phase
-      // see also porofluid_evaluator
-      for (int curphase = 0; curphase < numfluidphases_ - 1; curphase++)
-        cont_dofs_to_assemble_functions_into_[curphase].push_back(numfluidphases_ - 1);
+      // Special case for phases [0, ..., num_fluid_phases - 2]:
+      // those have to assemble into the summed up fluid phase (see also porofluid_evaluator).
+      for (int cur_phase = 0; cur_phase < num_fluid_phases_ - 1; cur_phase++)
+        homogenized_dofs_to_assemble_functions_into_[cur_phase].push_back(num_fluid_phases_ - 1);
       break;
     }
     case CouplingType::scatra:
@@ -3759,38 +4085,38 @@ void PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<distype_art, dist
       break;
     }
     default:
-      FOUR_C_THROW("Unknown coupling type");
+      FOUR_C_THROW("Unknown coupling type.");
       break;
   }
 }
 
 
 // explicit template instantiations
-template class PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<Core::FE::CellType::line2,
+template class PoroPressureBased::PorofluidElastScatraArteryCouplingPair<Core::FE::CellType::line2,
     Core::FE::CellType::quad4, 1>;
-template class PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<Core::FE::CellType::line2,
+template class PoroPressureBased::PorofluidElastScatraArteryCouplingPair<Core::FE::CellType::line2,
     Core::FE::CellType::hex8, 1>;
-template class PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<Core::FE::CellType::line2,
+template class PoroPressureBased::PorofluidElastScatraArteryCouplingPair<Core::FE::CellType::line2,
     Core::FE::CellType::tet4, 1>;
-template class PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<Core::FE::CellType::line2,
+template class PoroPressureBased::PorofluidElastScatraArteryCouplingPair<Core::FE::CellType::line2,
     Core::FE::CellType::tet10, 1>;
 
-template class PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<Core::FE::CellType::line2,
+template class PoroPressureBased::PorofluidElastScatraArteryCouplingPair<Core::FE::CellType::line2,
     Core::FE::CellType::quad4, 2>;
-template class PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<Core::FE::CellType::line2,
+template class PoroPressureBased::PorofluidElastScatraArteryCouplingPair<Core::FE::CellType::line2,
     Core::FE::CellType::hex8, 2>;
-template class PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<Core::FE::CellType::line2,
+template class PoroPressureBased::PorofluidElastScatraArteryCouplingPair<Core::FE::CellType::line2,
     Core::FE::CellType::tet4, 2>;
-template class PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<Core::FE::CellType::line2,
+template class PoroPressureBased::PorofluidElastScatraArteryCouplingPair<Core::FE::CellType::line2,
     Core::FE::CellType::tet10, 2>;
 
-template class PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<Core::FE::CellType::line2,
+template class PoroPressureBased::PorofluidElastScatraArteryCouplingPair<Core::FE::CellType::line2,
     Core::FE::CellType::quad4, 3>;
-template class PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<Core::FE::CellType::line2,
+template class PoroPressureBased::PorofluidElastScatraArteryCouplingPair<Core::FE::CellType::line2,
     Core::FE::CellType::hex8, 3>;
-template class PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<Core::FE::CellType::line2,
+template class PoroPressureBased::PorofluidElastScatraArteryCouplingPair<Core::FE::CellType::line2,
     Core::FE::CellType::tet4, 3>;
-template class PoroPressureBased::PoroMultiPhaseScatraArteryCouplingPair<Core::FE::CellType::line2,
+template class PoroPressureBased::PorofluidElastScatraArteryCouplingPair<Core::FE::CellType::line2,
     Core::FE::CellType::tet10, 3>;
 
 FOUR_C_NAMESPACE_CLOSE

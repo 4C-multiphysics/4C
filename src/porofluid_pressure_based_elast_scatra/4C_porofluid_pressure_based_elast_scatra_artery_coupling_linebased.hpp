@@ -17,7 +17,7 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace PoroPressureBased
 {
-  class PoroMultiPhaseScatraArteryCouplingPairBase;
+  class PorofluidElastScatraArteryCouplingPairBase;
 
   //! Line-based coupling between artery network and porofluid-elasticity-scatra algorithm
   class PorofluidElastScatraArteryCouplingLineBasedAlgorithm final
@@ -68,7 +68,7 @@ namespace PoroPressureBased
 
     //! fill the GID to segment vector
     void fill_gid_to_segment_vector(
-        const std::vector<std::shared_ptr<PoroMultiPhaseScatraArteryCouplingPairBase>>&
+        const std::vector<std::shared_ptr<PorofluidElastScatraArteryCouplingPairBase>>&
             coupled_ele_pairs,
         std::map<int, std::vector<double>>& gid_to_segment_length) const;
 
@@ -141,13 +141,13 @@ namespace PoroPressureBased
 
     //! check for duplicate segments
     bool is_duplicate_segment(
-        const std::vector<std::shared_ptr<PoroMultiPhaseScatraArteryCouplingPairBase>>&
+        const std::vector<std::shared_ptr<PorofluidElastScatraArteryCouplingPairBase>>&
             coupled_ele_pairs,
-        const PoroMultiPhaseScatraArteryCouplingPairBase& possible_duplicate);
+        const PorofluidElastScatraArteryCouplingPairBase& possible_duplicate);
 
     //! check if segments are identical
     bool is_identical_segment(
-        const std::vector<std::shared_ptr<PoroMultiPhaseScatraArteryCouplingPairBase>>&
+        const std::vector<std::shared_ptr<PorofluidElastScatraArteryCouplingPairBase>>&
             coupled_ele_pairs,
         const int& ele1_gid, const double& etaA, const double& etaB, int& ele_pair_id);
 

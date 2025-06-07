@@ -91,11 +91,11 @@ void ScaTra::MeshtyingStrategyArtery::init_meshtying()
       [&]()
       {
         if (Teuchos::getIntegralValue<
-                Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod>(
+                Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod>(
                 Global::Problem::instance()->poro_fluid_multi_phase_dynamic_params().sublist(
                     "ARTERY COUPLING"),
                 "ARTERY_COUPLING_METHOD") ==
-            Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::ntp)
+            Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp)
         {
           return "ArtScatraCouplConNodeToPoint";
         }

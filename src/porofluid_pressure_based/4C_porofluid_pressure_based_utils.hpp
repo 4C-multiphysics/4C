@@ -85,7 +85,7 @@ namespace PoroPressureBased
   std::map<int, std::set<int>> extended_ghosting_artery_discretization(
       Core::FE::Discretization& contdis, std::shared_ptr<Core::FE::Discretization> artdis,
       const bool evaluate_on_lateral_surface,
-      const Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod couplingmethod);
+      const Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod couplingmethod);
 
   /**
    * \brief get axis-aligned bounding box of element

@@ -195,7 +195,7 @@ std::shared_ptr<Adapter::PoroFluidMultiphase> PoroPressureBased::create_algorith
 std::map<int, std::set<int>> PoroPressureBased::extended_ghosting_artery_discretization(
     Core::FE::Discretization& contdis, std::shared_ptr<Core::FE::Discretization> artdis,
     const bool evaluate_on_lateral_surface,
-    const Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod couplingmethod)
+    const Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod couplingmethod)
 {
   // user output
   if (Core::Communication::my_mpi_rank(contdis.get_comm()) == 0)
@@ -234,7 +234,7 @@ std::map<int, std::set<int>> PoroPressureBased::extended_ghosting_artery_discret
   const std::vector<int> artEleGIDs = std::invoke(
       [&]()
       {
-        if (couplingmethod == Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::ntp)
+        if (couplingmethod == Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp)
         {
           return get_coupling_arteries_node_to_point(artdis, *artsearchdis);
         }

@@ -70,7 +70,7 @@ void porofluid_pressure_based_dyn(int restart)
     arterydis = Global::Problem::instance()->get_dis(artery_disname);
     // get the coupling method
     auto arterycoupl =
-        Teuchos::getIntegralValue<Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod>(
+        Teuchos::getIntegralValue<Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod>(
             porodyn.sublist("ARTERY COUPLING"), "ARTERY_COUPLING_METHOD");
 
     // lateral surface coupling active?
@@ -79,9 +79,9 @@ void porofluid_pressure_based_dyn(int restart)
 
     switch (arterycoupl)
     {
-      case Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::gpts:
-      case Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::mp:
-      case Inpar::ArteryNetwork::ArteryPoroMultiphaseScatraCouplingMethod::ntp:
+      case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::gpts:
+      case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mp:
+      case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp:
       {
         actdis->fill_complete();
         nearby_ele_pairs = PoroPressureBased::extended_ghosting_artery_discretization(
