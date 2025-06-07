@@ -149,8 +149,12 @@ void DealiiWrappers::VectorConverter<VectorType, dim, spacedim>::to_four_c(
 
   std::vector<int> indices(n_local_elements);
   std::iota(indices.begin(), indices.end(), 0);
-  vector_in_dealii_layout_.replace_local_values(
-      n_local_elements, dealii_vector.begin(), indices.data());
+
+  std::vector<int> my_gids(n_local_elements);
+  for (int i = 0; i < n_local_elements; i++) my_gids[i] = four_c_vector_.get_map().gid(indices[i]);
+
+  vector_in_dealii_layout_.replace_global_values(
+      n_local_elements, dealii_vector.begin(), my_gids.data());
 
   four_c_vector.import(vector_in_dealii_layout_, dealii_to_four_c_importer_, Insert);
 }
