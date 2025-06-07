@@ -45,13 +45,27 @@ namespace Core::LinAlg
   concept SquareTensor =
       Rank2TensorConcept<Tensor> && Tensor::template extent<0>() == Tensor::template extent<1>();
 
+
+  template <std::size_t... n>
+  struct NoCompression
+  {
+    static constexpr std::size_t compressed_size = (n * ...);
+
+    template <Internal::TensorBoundCheck bound_check>
+    static constexpr std::size_t flatten_index(decltype(n)... i)
+    {
+      return Internal::get_flat_index<Internal::OrderType::column_major, bound_check, n...>(i...);
+    }
+    // flatten index
+  };
   /*!
    * @brief An owning, dense tensor of arbitrary rank
    *
    * @copydetails TensorInternal
    */
   template <typename T, std::size_t... n>
-  using Tensor = TensorInternal<T, TensorStorageType::owning, n...>;  // owns the memory
+  using Tensor = TensorInternal<T, TensorStorageType::owning, NoCompression<n...>,
+      n...>;  // owns the memory
 
   /*!
    * @brief A dense view to a Tensor of arbitrary rank
@@ -59,15 +73,17 @@ namespace Core::LinAlg
    * @copydetails TensorInternal
    */
   template <typename T, std::size_t... n>
-  using TensorView = TensorInternal<T, TensorStorageType::view, n...>;  // view onto's other
-                                                                        // memory
+  using TensorView = TensorInternal<T, TensorStorageType::view, NoCompression<n...>,
+      n...>;  // view onto's other
+              // memory
 
   /*!
    * @brief Creates a TensorView from a pointer to data and the tensor shape
    *
-   * This function creates a TensorView from a pointer to data and the tensor shape specified by the
-   * template parameters. The data is expected to be stored in a contiguous memory block of size
-   * @p (n*...) with column-major layout.
+   * This function creates a TensorView from a pointer to data and the tensor shape specified by
+   * the template parameters. The data is expected to be stored using NoCompression, i.e., in a
+   * contiguous memory block of size the same size as the underlying tensor (in column-major
+   * layout).
    *
    * @tparam n The dimensions of the tensor.
    * @param data Pointer to the data.
@@ -118,7 +134,7 @@ namespace Core::LinAlg
     template <typename T, std::size_t... s>
     struct SameShapeTensorResult<T, std::integer_sequence<std::size_t, s...>>
     {
-      using type = TensorInternal<T, TensorStorageType::owning, s...>;
+      using type = TensorInternal<T, TensorStorageType::owning, NoCompression<s...>, s...>;
     };
 
 
@@ -129,7 +145,8 @@ namespace Core::LinAlg
     struct DyadicProductTensorResult<T, std::integer_sequence<std::size_t, s1...>,
         std::integer_sequence<std::size_t, s2...>>
     {
-      using type = TensorInternal<T, TensorStorageType::owning, s1..., s2...>;
+      using type =
+          TensorInternal<T, TensorStorageType::owning, NoCompression<s1..., s2...>, s1..., s2...>;
     };
 
     template <typename T, typename Shape, std::size_t... new_order>
@@ -184,7 +201,8 @@ namespace Core::LinAlg
         return index_mapping;
       }
 
-      using result_type = TensorInternal<T, TensorStorageType::owning, get_axis(new_order)...>;
+      using result_type = TensorInternal<T, TensorStorageType::owning,
+          NoCompression<get_axis(new_order)...>, get_axis(new_order)...>;
     };
   }  // namespace Internal
 
@@ -194,7 +212,8 @@ namespace Core::LinAlg
    * @param A
    * @return auto
    */
-  constexpr auto det(const SquareTensor auto& A);
+  constexpr auto det(const SquareTensor auto& A)
+    requires(!is_compressed_tensor<decltype(A)>);
 
   /*!
    * @brief Computes and returns the trace of a square tensor of rank 2
@@ -202,7 +221,8 @@ namespace Core::LinAlg
    * @param A
    * @return auto
    */
-  constexpr auto trace(const SquareTensor auto& A);
+  constexpr auto trace(const SquareTensor auto& A)
+    requires(!is_compressed_tensor<decltype(A)>);
 
   /*!
    * @brief Computes and returns the inverse of a square tensor of rank 2
@@ -210,7 +230,8 @@ namespace Core::LinAlg
    * @param A
    * @return auto
    */
-  auto inv(const SquareTensor auto& A);
+  auto inv(const SquareTensor auto& A)
+    requires(!is_compressed_tensor<decltype(A)>);
 
   /*!
    * @brief Computes and returns the transpose of a rank 2 tensor
@@ -218,7 +239,8 @@ namespace Core::LinAlg
    * @param A
    * @return auto
    */
-  constexpr auto transpose(const Rank2TensorConcept auto& A);
+  constexpr auto transpose(const Rank2TensorConcept auto& A)
+    requires(!is_compressed_tensor<decltype(A)>);
 
   /*!
    * @brief Computes the dot product of two tensors
@@ -232,16 +254,18 @@ namespace Core::LinAlg
    * @return scalar or tensur resulting from the dot product.
    */
   template <typename TensorLeft, typename TensorRight>
-    requires(
-        TensorLeft::rank() >= 1 && TensorRight::rank() >= 1 &&
-        TensorLeft::template extent<TensorLeft::rank() - 1>() == TensorRight::template extent<0>())
+    requires(TensorLeft::rank() >= 1 && TensorRight::rank() >= 1 &&
+             TensorLeft::template extent<TensorLeft::rank() - 1>() ==
+                 TensorRight::template extent<0>() &&
+             !is_compressed_tensor<TensorLeft> && !is_compressed_tensor<TensorRight>)
   constexpr auto dot(const TensorLeft& a, const TensorRight& b);
 
   /*!
    * @brief Computes the double dot product of two tensors.
    *
    * This function computes the double dot product of two tensors @p A and @p B. If @p A and @p B
-   * are rank-2 tensors (matrices), the result is a scalar value, otherwise, the result is a tensor.
+   * are rank-2 tensors (matrices), the result is a scalar value, otherwise, the result is a
+   * tensor.
    *
    * @tparam TensorLeft The type of the first tensor.
    * @tparam TensorRight The type of the second tensor.
@@ -250,11 +274,12 @@ namespace Core::LinAlg
    * @return Scalar or tensor depending on the ranks of @p A and @p B.
    */
   template <typename TensorLeft, typename TensorRight>
-    requires(
-        TensorLeft::rank() >= 2 && TensorRight::rank() >= 2 &&
-        TensorLeft::template extent<TensorLeft::rank() - 2>() ==
-            TensorRight::template extent<0>() &&
-        TensorLeft::template extent<TensorLeft::rank() - 1>() == TensorRight::template extent<1>())
+    requires(TensorLeft::rank() >= 2 && TensorRight::rank() >= 2 &&
+             TensorLeft::template extent<TensorLeft::rank() - 2>() ==
+                 TensorRight::template extent<0>() &&
+             TensorLeft::template extent<TensorLeft::rank() - 1>() ==
+                 TensorRight::template extent<1>() &&
+             !is_compressed_tensor<TensorLeft> && !is_compressed_tensor<TensorRight>)
   constexpr auto ddot(const TensorLeft& A, const TensorRight& B);
 
   /*!
@@ -272,7 +297,8 @@ namespace Core::LinAlg
    * @note The input tensors must have the same shape, as enforced by the `requires` clause.
    */
   template <typename TensorLeft, typename TensorRight>
-    requires(std::is_same_v<typename TensorLeft::shape_type, typename TensorRight::shape_type>)
+    requires(std::is_same_v<typename TensorLeft::shape_type, typename TensorRight::shape_type> &&
+             !is_compressed_tensor<TensorLeft> && !is_compressed_tensor<TensorRight>)
   constexpr auto add(const TensorLeft& A, const TensorRight& B);
 
   /*!
@@ -290,7 +316,8 @@ namespace Core::LinAlg
    * @note The input tensors must have the same shape, as enforced by the `requires` clause.
    */
   template <typename TensorLeft, typename TensorRight>
-    requires(std::is_same_v<typename TensorLeft::shape_type, typename TensorRight::shape_type>)
+    requires(std::is_same_v<typename TensorLeft::shape_type, typename TensorRight::shape_type> &&
+             !is_compressed_tensor<TensorLeft> && !is_compressed_tensor<TensorRight>)
   constexpr auto subtract(const TensorLeft& A, const TensorRight& B);
 
   /*!
@@ -300,7 +327,7 @@ namespace Core::LinAlg
    * @tparam Scalar
    */
   template <typename Tensor, typename Scalar>
-    requires(std::is_arithmetic_v<Scalar>)
+    requires(std::is_arithmetic_v<Scalar> && !is_compressed_tensor<Tensor>)
   constexpr auto scale(const Tensor& tensor, const Scalar& b);
 
   /*!
@@ -310,35 +337,37 @@ namespace Core::LinAlg
    * @tparam TensorRight
    */
   template <typename TensorLeft, typename TensorRight>
-    requires(TensorConcept<TensorLeft> && TensorConcept<TensorRight>)
+    requires(TensorConcept<TensorLeft> && TensorConcept<TensorRight> &&
+             !is_compressed_tensor<TensorLeft> && !is_compressed_tensor<TensorRight>)
   constexpr auto dyadic(const TensorLeft& A, const TensorRight& B);
 
   /*!
    * @brief Reorders the axes of a tensor (generalization of transpose)
    *
-   * Given the tensor A of shape (2, 3, 4), @p reorder_axis<0, 2, 1>(A) will return a tensor of the
-   * shape (2, 4, 3), i.e., the the order given in the template brackets is the new order of the
-   * axes.
+   * For example, given the tensor A of shape (2, 3, 4), @p reorder_axis<0, 2, 1>(A) will return a
+   * tensor of the shape (2, 4, 3). The template arguments specify the new order of the axis, where
+   * each value represents the index of the original axis, in this case, 0, 2, 1.
    *
    * @tparam new_order
    * @return A tensor with the axes reordered according to @p new_order
    */
   template <std::size_t... new_order>
   constexpr auto reorder_axis(auto tensor)
-    requires(TensorConcept<decltype(tensor)> && sizeof...(new_order) == decltype(tensor)::rank());
+    requires(TensorConcept<decltype(tensor)> && sizeof...(new_order) == decltype(tensor)::rank() &&
+             !is_compressed_tensor<decltype(tensor)>);
 
   /*!
    * @brief Write tensor values to an output stream
    */
-  template <typename Number, TensorStorageType storage_type, std::size_t... n>
-  void print_values(std::ostream& os, const TensorInternal<Number, storage_type, n...>& tensor);
+  void print_values(std::ostream& os, const auto& tensor)
+    requires(!is_compressed_tensor<decltype(tensor)>);
 
   /*!
    * @brief Write tensor to an output stream
    */
   template <typename Number, TensorStorageType storage_type, std::size_t... n>
-  std::ostream& operator<<(
-      std::ostream& os, const TensorInternal<Number, storage_type, n...>& tensor);
+  std::ostream& operator<<(std::ostream& os,
+      const TensorInternal<Number, storage_type, NoCompression<n...>, n...>& tensor);
 
 
   /*!
@@ -346,30 +375,33 @@ namespace Core::LinAlg
    *
    * @tparam OtherTensor
    */
-  template <typename OtherTensor, typename Number, TensorStorageType storage_type, std::size_t... n>
+  template <typename OtherTensor, typename Number, TensorStorageType storage_type,
+      typename Compression, std::size_t... n>
     requires(std::is_same_v<typename OtherTensor::shape_type, typename OtherTensor::shape_type>)
-  constexpr TensorInternal<Number, storage_type, n...>& operator+=(
-      TensorInternal<Number, storage_type, n...>& tensor, const OtherTensor& B);
+  constexpr TensorInternal<Number, storage_type, Compression, n...>& operator+=(
+      TensorInternal<Number, storage_type, Compression, n...>& tensor, const OtherTensor& B);
 
   /*!
    * @brief Subtract another tensor from this tensor
    *
    * @tparam OtherTensor
    */
-  template <typename OtherTensor, typename Number, TensorStorageType storage_type, std::size_t... n>
+  template <typename OtherTensor, typename Number, TensorStorageType storage_type,
+      typename Compression, std::size_t... n>
     requires(std::is_same_v<typename OtherTensor::shape_type, typename OtherTensor::shape_type>)
-  constexpr TensorInternal<Number, storage_type, n...>& operator-=(
-      TensorInternal<Number, storage_type, n...>& tensor, const OtherTensor& B);
+  constexpr TensorInternal<Number, storage_type, Compression, n...>& operator-=(
+      TensorInternal<Number, storage_type, Compression, n...>& tensor, const OtherTensor& B);
 
   /*!
    * @brief Scale the tensor with a scalar value
    *
    * @tparam OtherTensor
    */
-  template <typename Scalar, typename Number, TensorStorageType storage_type, std::size_t... n>
+  template <typename Scalar, typename Number, TensorStorageType storage_type, typename Compression,
+      std::size_t... n>
     requires(std::is_arithmetic_v<Scalar>)
-  constexpr TensorInternal<Number, storage_type, n...>& operator*=(
-      TensorInternal<Number, storage_type, n...>& tensor, const Scalar b);
+  constexpr TensorInternal<Number, storage_type, Compression, n...>& operator*=(
+      TensorInternal<Number, storage_type, Compression, n...>& tensor, const Scalar b);
 
   /*!
    * @brief Scales the tensor with the inverse of the scalar value b
@@ -379,10 +411,11 @@ namespace Core::LinAlg
    * @tparam storage_type
    * @tparam n
    */
-  template <typename Scalar, typename Number, TensorStorageType storage_type, std::size_t... n>
+  template <typename Scalar, typename Number, TensorStorageType storage_type, typename Compression,
+      std::size_t... n>
     requires(std::is_arithmetic_v<Scalar>)
-  constexpr TensorInternal<Number, storage_type, n...>& operator/=(
-      TensorInternal<Number, storage_type, n...>& tensor, const Scalar b);
+  constexpr TensorInternal<Number, storage_type, Compression, n...>& operator/=(
+      TensorInternal<Number, storage_type, Compression, n...>& tensor, const Scalar b);
 
   template <typename TensorLeft, typename TensorRight>
     requires(std::is_same_v<typename TensorLeft::shape_type, typename TensorRight::shape_type>)
@@ -397,11 +430,11 @@ namespace Core::LinAlg
     return subtract(A, B);
   }
 
-  template <typename Scalar, typename Tensor>
-    requires(std::is_arithmetic_v<Scalar>)
-  constexpr auto operator+(const Scalar b, const Tensor& tensor)
+  template <typename TensorLeft, typename TensorRight>
+    requires(TensorConcept<TensorLeft> && TensorConcept<TensorRight>)
+  constexpr auto operator*(const TensorLeft& A, const TensorRight& B)
   {
-    return add_scalar(tensor, b);
+    return dot(A, B);
   }
 
   template <typename Scalar, typename Tensor>
@@ -426,13 +459,6 @@ namespace Core::LinAlg
   }
 
   template <typename TensorLeft, typename TensorRight>
-    requires(TensorConcept<TensorLeft> && TensorConcept<TensorRight>)
-  constexpr auto operator*(const TensorLeft& A, const TensorRight& B)
-  {
-    return dot(A, B);
-  }
-
-  template <typename TensorLeft, typename TensorRight>
     requires(std::is_same_v<typename TensorLeft::shape_type, typename TensorRight::shape_type>)
   constexpr bool operator==(const TensorLeft& A, const TensorRight& B)
   {
@@ -449,6 +475,7 @@ namespace Core::LinAlg
 
   // Actual implementations
   constexpr auto det(const SquareTensor auto& A)
+    requires(!is_compressed_tensor<decltype(A)>)
   {
     using Tensor = std::remove_cvref_t<decltype(A)>;
     using value_type = Tensor::value_type;
@@ -458,6 +485,7 @@ namespace Core::LinAlg
   }
 
   constexpr auto trace(const SquareTensor auto& A)
+    requires(!is_compressed_tensor<decltype(A)>)
   {
     using Tensor = std::remove_cvref_t<decltype(A)>;
     using value_type = Tensor::value_type;
@@ -467,6 +495,7 @@ namespace Core::LinAlg
   }
 
   auto inv(const SquareTensor auto& A)
+    requires(!is_compressed_tensor<decltype(A)>)
   {
     using Tensor = std::remove_cvref_t<decltype(A)>;
     using value_type = Tensor::value_type;
@@ -477,7 +506,11 @@ namespace Core::LinAlg
     return dest;
   }
 
-  constexpr auto transpose(const Rank2TensorConcept auto& A) { return reorder_axis<1, 0>(A); }
+  constexpr auto transpose(const Rank2TensorConcept auto& A)
+    requires(!is_compressed_tensor<decltype(A)>)
+  {
+    return reorder_axis<1, 0>(A);
+  }
 
   namespace Internal
   {
@@ -552,9 +585,10 @@ namespace Core::LinAlg
   }  // namespace Internal
 
   template <typename TensorLeft, typename TensorRight>
-    requires(
-        TensorLeft::rank() >= 1 && TensorRight::rank() >= 1 &&
-        TensorLeft::template extent<TensorLeft::rank() - 1>() == TensorRight::template extent<0>())
+    requires(TensorLeft::rank() >= 1 && TensorRight::rank() >= 1 &&
+             TensorLeft::template extent<TensorLeft::rank() - 1>() ==
+                 TensorRight::template extent<0>() &&
+             !is_compressed_tensor<TensorLeft> && !is_compressed_tensor<TensorRight>)
   constexpr auto dot(const TensorLeft& a, const TensorRight& b)
   {
     using value_type = decltype(std::declval<typename TensorLeft::value_type>() *
@@ -612,11 +646,12 @@ namespace Core::LinAlg
   }  // namespace Internal
 
   template <typename TensorLeft, typename TensorRight>
-    requires(
-        TensorLeft::rank() >= 2 && TensorRight::rank() >= 2 &&
-        TensorLeft::template extent<TensorLeft::rank() - 2>() ==
-            TensorRight::template extent<0>() &&
-        TensorLeft::template extent<TensorLeft::rank() - 1>() == TensorRight::template extent<1>())
+    requires(TensorLeft::rank() >= 2 && TensorRight::rank() >= 2 &&
+             TensorLeft::template extent<TensorLeft::rank() - 2>() ==
+                 TensorRight::template extent<0>() &&
+             TensorLeft::template extent<TensorLeft::rank() - 1>() ==
+                 TensorRight::template extent<1>() &&
+             !is_compressed_tensor<TensorLeft> && !is_compressed_tensor<TensorRight>)
   constexpr auto ddot(const TensorLeft& A, const TensorRight& B)
   {
     using value_type = decltype(std::declval<typename TensorLeft::value_type>() *
@@ -648,7 +683,8 @@ namespace Core::LinAlg
   }
 
   template <typename TensorLeft, typename TensorRight>
-    requires(std::is_same_v<typename TensorLeft::shape_type, typename TensorRight::shape_type>)
+    requires(std::is_same_v<typename TensorLeft::shape_type, typename TensorRight::shape_type> &&
+             !is_compressed_tensor<TensorLeft> && !is_compressed_tensor<TensorRight>)
   constexpr auto add(const TensorLeft& A, const TensorRight& B)
   {
     using result_value_type = decltype(std::declval<typename TensorLeft::value_type>() +
@@ -663,7 +699,8 @@ namespace Core::LinAlg
   }
 
   template <typename TensorLeft, typename TensorRight>
-    requires(std::is_same_v<typename TensorLeft::shape_type, typename TensorRight::shape_type>)
+    requires(std::is_same_v<typename TensorLeft::shape_type, typename TensorRight::shape_type> &&
+             !is_compressed_tensor<TensorLeft> && !is_compressed_tensor<TensorRight>)
   constexpr auto subtract(const TensorLeft& A, const TensorRight& B)
   {
     using result_value_type = decltype(std::declval<typename TensorLeft::value_type>() +
@@ -678,7 +715,7 @@ namespace Core::LinAlg
   }
 
   template <typename Tensor, typename Scalar>
-    requires(std::is_arithmetic_v<Scalar>)
+    requires(std::is_arithmetic_v<Scalar> && !is_compressed_tensor<Tensor>)
   constexpr auto scale(const Tensor& tensor, const Scalar& b)
   {
     using result_value_type =
@@ -693,7 +730,8 @@ namespace Core::LinAlg
   }
 
   template <typename TensorLeft, typename TensorRight>
-    requires(TensorConcept<TensorLeft> && TensorConcept<TensorRight>)
+    requires(TensorConcept<TensorLeft> && TensorConcept<TensorRight> &&
+             !is_compressed_tensor<TensorLeft> && !is_compressed_tensor<TensorRight>)
   constexpr auto dyadic(const TensorLeft& A, const TensorRight& B)
   {
     using value_type = decltype(std::declval<typename TensorLeft::value_type>() *
@@ -710,7 +748,8 @@ namespace Core::LinAlg
 
   template <std::size_t... new_order>
   constexpr auto reorder_axis(auto tensor)
-    requires(TensorConcept<decltype(tensor)> && sizeof...(new_order) == decltype(tensor)::rank())
+    requires(TensorConcept<decltype(tensor)> && sizeof...(new_order) == decltype(tensor)::rank() &&
+             !is_compressed_tensor<decltype(tensor)>)
   {
     constexpr std::array new_order_array = {new_order...};
     static_assert(std::ranges::max(new_order_array) < tensor.rank(),
@@ -740,13 +779,17 @@ namespace Core::LinAlg
 
   namespace Internal
   {
-    template <typename Number, TensorStorageType storage_type, std::size_t... n>
-    void print_sub_values_helper(std::ostream& os,
-        const TensorInternal<Number, storage_type, n...>& tensor, auto index_to_print)
+    void print_sub_values_helper(std::ostream& os, const auto& tensor, auto index_to_print)
+      requires(!is_compressed_tensor<decltype(tensor)>)
     {
-      constexpr auto shape = std::array{n...};
+      auto make_array_from_tuple = [](auto&&... args) constexpr
+      { return std::array<std::size_t, sizeof...(args)>{args...}; };
+
+      constexpr std::array shape =
+          std::apply(make_array_from_tuple, std::remove_cvref_t<decltype(tensor)>::shape());
+
       constexpr std::size_t num_indices_to_print = std::tuple_size_v<decltype(index_to_print)>;
-      if constexpr (num_indices_to_print == sizeof...(n) - 1)
+      if constexpr (num_indices_to_print == std::size(shape) - 1)
       {
         os << std::string(num_indices_to_print, ' ') << "[";
         for (std::size_t i = 0; i < shape[num_indices_to_print]; ++i)
@@ -770,15 +813,15 @@ namespace Core::LinAlg
     }
   }  // namespace Internal
 
-  template <typename Number, TensorStorageType storage_type, std::size_t... n>
-  void print_values(std::ostream& os, const TensorInternal<Number, storage_type, n...>& tensor)
+  void print_values(std::ostream& os, const auto& tensor)
+    requires(!is_compressed_tensor<decltype(tensor)>)
   {
     Internal::print_sub_values_helper(os, tensor, std::make_tuple());
   }
 
   template <typename Number, TensorStorageType storage_type, std::size_t... n>
-  std::ostream& operator<<(
-      std::ostream& os, const TensorInternal<Number, storage_type, n...>& tensor)
+  std::ostream& operator<<(std::ostream& os,
+      const TensorInternal<Number, storage_type, NoCompression<n...>, n...>& tensor)
   {
     constexpr auto tensor_type = []() consteval
     {
@@ -789,7 +832,13 @@ namespace Core::LinAlg
       else
         FOUR_C_THROW("Unknown tensor type!");
     }();
-    constexpr std::array shape = {n...};
+
+    auto make_array_from_tuple = [](auto&&... args) constexpr
+    { return std::array<std::size_t, sizeof...(args)>{args...}; };
+
+    constexpr std::array shape =
+        std::apply(make_array_from_tuple, std::remove_cvref_t<decltype(tensor)>::shape());
+
     const std::string shape_str =
         std::accumulate(std::next(shape.begin()), shape.end(), std::to_string(shape[0]),
             [](const std::string& a, const std::size_t b) { return a + ", " + std::to_string(b); });
@@ -803,28 +852,30 @@ namespace Core::LinAlg
 
   template <typename OtherTensor, typename Number, TensorStorageType storage_type, std::size_t... n>
     requires(std::is_same_v<typename OtherTensor::shape_type, typename OtherTensor::shape_type>)
-  constexpr TensorInternal<Number, storage_type, n...>& operator+=(
-      TensorInternal<Number, storage_type, n...>& tensor, const OtherTensor& B)
+  constexpr TensorInternal<Number, storage_type, NoCompression<n...>, n...>& operator+=(
+      TensorInternal<Number, storage_type, NoCompression<n...>, n...>& tensor, const OtherTensor& B)
   {
-    DenseFunctions::update<typename TensorInternal<Number, storage_type, n...>::value_type,
+    DenseFunctions::update<
+        typename TensorInternal<Number, storage_type, NoCompression<n...>, n...>::value_type,
         OtherTensor::size(), 1>(1.0, tensor.data(), 1.0, B.data());
     return tensor;
   }
 
   template <typename OtherTensor, typename Number, TensorStorageType storage_type, std::size_t... n>
     requires(std::is_same_v<typename OtherTensor::shape_type, typename OtherTensor::shape_type>)
-  constexpr TensorInternal<Number, storage_type, n...>& operator-=(
-      TensorInternal<Number, storage_type, n...>& tensor, const OtherTensor& B)
+  constexpr TensorInternal<Number, storage_type, NoCompression<n...>, n...>& operator-=(
+      TensorInternal<Number, storage_type, NoCompression<n...>, n...>& tensor, const OtherTensor& B)
   {
-    DenseFunctions::update<typename TensorInternal<Number, storage_type, n...>::value_type,
+    DenseFunctions::update<
+        typename TensorInternal<Number, storage_type, NoCompression<n...>, n...>::value_type,
         OtherTensor::size(), 1>(1.0, tensor.data(), -1.0, B.data());
     return tensor;
   }
 
   template <typename Scalar, typename Number, TensorStorageType storage_type, std::size_t... n>
     requires(std::is_arithmetic_v<Scalar>)
-  constexpr TensorInternal<Number, storage_type, n...>& operator*=(
-      TensorInternal<Number, storage_type, n...>& tensor, const Scalar b)
+  constexpr TensorInternal<Number, storage_type, NoCompression<n...>, n...>& operator*=(
+      TensorInternal<Number, storage_type, NoCompression<n...>, n...>& tensor, const Scalar b)
   {
     for (auto& value : tensor.container()) value *= b;
     return tensor;
@@ -832,8 +883,8 @@ namespace Core::LinAlg
 
   template <typename Scalar, typename Number, TensorStorageType storage_type, std::size_t... n>
     requires(std::is_arithmetic_v<Scalar>)
-  constexpr TensorInternal<Number, storage_type, n...>& operator/=(
-      TensorInternal<Number, storage_type, n...>& tensor, const Scalar b)
+  constexpr TensorInternal<Number, storage_type, NoCompression<n...>, n...>& operator/=(
+      TensorInternal<Number, storage_type, NoCompression<n...>, n...>& tensor, const Scalar b)
   {
     tensor *= Scalar(1.0) / b;
     return tensor;

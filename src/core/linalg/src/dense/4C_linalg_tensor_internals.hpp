@@ -34,6 +34,9 @@ namespace Core::LinAlg
     view
   };
 
+  template <typename Tensor>
+  constexpr bool is_compressed_tensor = std::remove_cvref_t<Tensor>::is_compressed;
+
   /*!
    * @brief General tensor class for dense tensors of arbitrary rank
    *
@@ -68,17 +71,26 @@ namespace Core::LinAlg
    * @tparam Number Type of the tensor elements (e.g., `double`).
    * @tparam storage_type Specifies whether the tensor owns its data (`TensorStorageType::owning`)
    * or is a view (`TensorStorageType::view`).
+   * @tparam Compression The compression of the tensor defines how the indices of the tensor (i, j,
+   * ...) are mapped to the underlying data storage. With @p NoCompression, the underlying data is
+   * stored in column-major layout. Compression can be used to efficiently store tensors with
+   * internal constraints (like symmetry). Symmetric tensors can be stored in a compact form using
+   * Voigt-like notations, see @p SymmetricCompression.
    * @tparam n Dimensions of the tensor, specified as a variadic template parameter.
    */
-  template <typename Number, TensorStorageType storage_type, std::size_t... n>
+  template <typename Number, TensorStorageType storage_type, typename Compression, std::size_t... n>
   class TensorInternal
   {
    public:
     using value_type = Number;
     using shape_type = std::integer_sequence<std::size_t, n...>;
 
+    static constexpr bool is_compressed = (n * ...) != Compression::compressed_size;
+
+
     static constexpr std::size_t rank_ = sizeof...(n);
     static constexpr std::size_t size_ = (n * ...);
+    static constexpr std::size_t compressed_size = Compression::compressed_size;
 
     static_assert(storage_type == TensorStorageType::view or
                       std::is_same_v<std::remove_cv_t<value_type>, value_type>,
@@ -97,7 +109,8 @@ namespace Core::LinAlg
 
     // Container is either a std::array for an owning tensor or a std::span for a view
     using ContainerType = std::conditional_t<storage_type == TensorStorageType::owning,
-        std::array<Number, size_>, std::span<Number, size_>>;
+        std::array<Number, Compression::compressed_size>,
+        std::span<Number, Compression::compressed_size>>;
 
    private:
     ContainerType data_;
@@ -150,12 +163,12 @@ namespace Core::LinAlg
      *
      */
     TensorInternal(const Internal::TensorInitializerList<Number, n...>::type& lst)
-      requires(std::is_default_constructible_v<ContainerType>);
+      requires(std::is_default_constructible_v<ContainerType> && !is_compressed);
 
     /*!
      * @brief Create a view on an owning tensor
      */
-    TensorInternal(TensorInternal<Number, TensorStorageType::owning, n...>& view_on)
+    TensorInternal(TensorInternal<Number, TensorStorageType::owning, Compression, n...>& view_on)
       requires(storage_type == TensorStorageType::view)
         : data_(view_on.container())
     {
@@ -164,8 +177,8 @@ namespace Core::LinAlg
     /*!
      * @brief Create a constant view on a const owning tensor
      */
-    TensorInternal(
-        const TensorInternal<std::remove_cv_t<Number>, TensorStorageType::owning, n...>& view_on)
+    TensorInternal(const TensorInternal<std::remove_cv_t<Number>, TensorStorageType::owning,
+        Compression, n...>& view_on)
       requires(storage_type == TensorStorageType::view && std::is_const_v<Number>)
         : data_(view_on.container())
     {
@@ -175,7 +188,8 @@ namespace Core::LinAlg
      * @brief Create a copy of a view
      */
     TensorInternal(
-        const TensorInternal<std::remove_cv_t<Number>, TensorStorageType::view, n...>& other)
+        const TensorInternal<std::remove_cv_t<Number>, TensorStorageType::view, Compression, n...>&
+            other)
       requires(storage_type == TensorStorageType::owning)
     {
       std::ranges::copy(other.container(), data_.begin());
@@ -280,12 +294,29 @@ namespace Core::LinAlg
   template <std::size_t... n>
   constexpr auto array_of_tensor_indices = Internal::get_array_of_indices<n...>();
 
+  namespace Internal
+  {
+    template <typename Tensor>
+    struct CompressionTypeHelper;
+
+    template <typename Number, TensorStorageType storage_type, typename Compression,
+        std::size_t... n>
+    struct CompressionTypeHelper<TensorInternal<Number, storage_type, Compression, n...>>
+    {
+      using type = Compression;
+    };
+  }  // namespace Internal
+
+  template <typename Tensor>
+  using TensorCompressionType =
+      typename Internal::CompressionTypeHelper<std::remove_cvref_t<Tensor>>::type;
+
   // actual implementations
 
-  template <typename Number, TensorStorageType storage_type, std::size_t... n>
-  TensorInternal<Number, storage_type, n...>::TensorInternal(
+  template <typename Number, TensorStorageType storage_type, typename Compression, std::size_t... n>
+  TensorInternal<Number, storage_type, Compression, n...>::TensorInternal(
       const Internal::TensorInitializerList<Number, n...>::type& lst)
-    requires(std::is_default_constructible_v<ContainerType>)
+    requires(std::is_default_constructible_v<ContainerType> && !is_compressed)
   {
     constexpr std::array<std::size_t, size()> index_mapping = Internal::order_type_mapping<n...>();
     for (std::size_t i = 0; i < size(); ++i)
@@ -294,32 +325,29 @@ namespace Core::LinAlg
     }
   }
 
-  template <typename Number, TensorStorageType storage_type, std::size_t... n>
-  Number& TensorInternal<Number, storage_type, n...>::operator()(decltype(n)... i)
+  template <typename Number, TensorStorageType storage_type, typename Compression, std::size_t... n>
+  Number& TensorInternal<Number, storage_type, Compression, n...>::operator()(decltype(n)... i)
   {
-    return data_[Internal::get_flat_index<Internal::OrderType::column_major,
-        Internal::TensorBoundCheck::no_check, n...>(i...)];
+    return data_[Compression::template flatten_index<Internal::TensorBoundCheck::no_check>(i...)];
   }
 
-  template <typename Number, TensorStorageType storage_type, std::size_t... n>
-  const Number& TensorInternal<Number, storage_type, n...>::operator()(decltype(n)... i) const
+  template <typename Number, TensorStorageType storage_type, typename Compression, std::size_t... n>
+  const Number& TensorInternal<Number, storage_type, Compression, n...>::operator()(
+      decltype(n)... i) const
   {
-    return data_[Internal::get_flat_index<Internal::OrderType::column_major,
-        Internal::TensorBoundCheck::no_check, n...>(i...)];
+    return data_[Compression::template flatten_index<Internal::TensorBoundCheck::no_check>(i...)];
   }
 
-  template <typename Number, TensorStorageType storage_type, std::size_t... n>
-  Number& TensorInternal<Number, storage_type, n...>::at(decltype(n)... i)
+  template <typename Number, TensorStorageType storage_type, typename Compression, std::size_t... n>
+  Number& TensorInternal<Number, storage_type, Compression, n...>::at(decltype(n)... i)
   {
-    return data_[Internal::get_flat_index<Internal::OrderType::column_major,
-        Internal::TensorBoundCheck::check, n...>(i...)];
+    return data_[Compression::template flatten_index<Internal::TensorBoundCheck::check>(i...)];
   }
 
-  template <typename Number, TensorStorageType storage_type, std::size_t... n>
-  const Number& TensorInternal<Number, storage_type, n...>::at(decltype(n)... i) const
+  template <typename Number, TensorStorageType storage_type, typename Compression, std::size_t... n>
+  const Number& TensorInternal<Number, storage_type, Compression, n...>::at(decltype(n)... i) const
   {
-    return data_[Internal::get_flat_index<Internal::OrderType::column_major,
-        Internal::TensorBoundCheck::check, n...>(i...)];
+    return data_[Compression::template flatten_index<Internal::TensorBoundCheck::check>(i...)];
   }
 }  // namespace Core::LinAlg
 

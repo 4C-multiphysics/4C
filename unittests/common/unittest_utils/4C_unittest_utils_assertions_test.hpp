@@ -290,11 +290,14 @@ namespace TESTING::INTERNAL
    * @note This function is not intended to be used directly. Use FOUR_C_EXPECT_NEAR.
    */
   template <typename ToleranceType, typename T1, Core::LinAlg::TensorStorageType storage_type1,
-      typename T2, Core::LinAlg::TensorStorageType storage_type2, std::size_t... n>
+      typename Compression1, typename T2, Core::LinAlg::TensorStorageType storage_type2,
+      typename Compression2, std::size_t... n>
   inline ::testing::AssertionResult assert_near(const char* mat1Expr,
       const char* t2Expr,  // NOLINT
-      const char* toleranceExpr, const Core::LinAlg::TensorInternal<T1, storage_type1, n...>& t1,
-      const Core::LinAlg::TensorInternal<T2, storage_type2, n...>& t2, ToleranceType tolerance)
+      const char* toleranceExpr,
+      const Core::LinAlg::TensorInternal<T1, storage_type1, Compression1, n...>& t1,
+      const Core::LinAlg::TensorInternal<T2, storage_type2, Compression2, n...>& t2,
+      ToleranceType tolerance)
   {
     // argument is required for the EXPECT_PRED_FORMAT3 macro of GoogleTest for pretty printing
     (void)toleranceExpr;
