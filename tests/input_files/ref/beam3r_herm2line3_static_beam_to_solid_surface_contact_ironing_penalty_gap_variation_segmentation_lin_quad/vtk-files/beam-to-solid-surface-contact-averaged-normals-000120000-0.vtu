@@ -10,34 +10,43 @@
       </DataArray>
     </FieldData>
 
-    <Piece NumberOfPoints="0" NumberOfCells="0" >
+    <Piece NumberOfPoints="32" NumberOfCells="0" >
       <Points>
-        <DataArray type="Float64" NumberOfComponents="3" format="ascii">
+        <DataArray type="Float64" NumberOfComponents="3" format="binary">
+AQAAAAADAAAAAwAAfQAAAA==eAGVkcENgDAMA7MZbF5G6ggI8FnCVSTgE3Jx7FKqrmdud3F9upWjq/2t7zg+dYR+aBJctKbm9tUgOb339B30VHz+Vu9/PU/kZ579Qpf3gy65/eI8HcfHc+Vyb8nR5//tuH3yPPRU5dpHL+R3HH/m6Du+6CLX++JznM9eV8E=
         </DataArray>
       </Points>
 
       <Cells>
-        <DataArray type="Int32" Name="connectivity" format="ascii">
+        <DataArray type="Int32" Name="connectivity" format="binary">
+AQAAAAAAAAAAAAAACAAAAA==eAEDAAAAAAE=
 
         </DataArray>
-        <DataArray type="Int32" Name="offsets" format="ascii">
+        <DataArray type="Int32" Name="offsets" format="binary">
+AQAAAAAAAAAAAAAACAAAAA==eAEDAAAAAAE=
 
         </DataArray>
-        <DataArray type="UInt8" Name="types" format="ascii">
+        <DataArray type="UInt8" Name="types" format="binary">
+AQAAAAAAAAAAAAAACAAAAA==eAEDAAAAAAE=
 
         </DataArray>
       </Cells>
 
   <PointData>
-        <DataArray type="Int32" Name="coupling_id" format="ascii">
+        <DataArray type="Int32" Name="coupling_id" format="binary">
+AQAAAIAAAACAAAAADwAAAA==eAFjZGBgYBxADAAIwAAh
         </DataArray>
-        <DataArray type="Float64" Name="displacement" NumberOfComponents="3" format="ascii">
+        <DataArray type="Float64" Name="displacement" NumberOfComponents="3" format="binary">
+AQAAAAADAAAAAwAArAEAAA==eAFjaAg9fZ7JZX/GgQPZt1i27l/HffbbqRmr9zN4fix+5dRiz+Cqpzz1Rpn9hBXtystZl+9nuOPH5Pui0L6BpcyyR6DdvuCcw27lzuX7G0Su3KxIa9zPsO61DLfKwv3HI3jXXH+0an/D8rkqzmoT7Bk2LLykXuRuzzCd/9m/a837GTSexiRfmWnfMKXt6AG5Dvtj923nMTVO3r9ASPnpK/Y59gfs6gw7dGbsL+hQ5GqOXrRfYbOynLfkQvuEq0V2nL/m73cQXu8quHLZ/mOtljPkzKfYT3hZe3Mh69798nx7U7LOLdv/6/Jyv/AjnfYMzr0Gaq867Dd4nk1knb8Mt79whAMu9zRENCQ2mk+yZ5B4dkLpd4b9ghl/y2U05uK0F5c7cYUDQ0vcAZ6l0+wdZsw6cNZ8mn3Du6xL772n78dlL053vj4t8te50/7HPNUb+3bc3H9gxdvIM8wb9zPg8C+ueFTINDrixrJ0v0L6zvVx22ftf9Dfp31fdBPOeMHlHlzhYO+l9KrsVpN9hVG18qHUW/sfqBsGLTi9fj8ucVzm4PQXjnAAAFAoeus=
         </DataArray>
-        <DataArray type="Float64" Name="normal_averaged" NumberOfComponents="3" format="ascii">
+        <DataArray type="Float64" Name="normal_averaged" NumberOfComponents="3" format="binary">
+AQAAAAADAAAAAwAAvwEAAA==eAF7KpPmZ7R1yf5vftvncMW8t7++xespx+cT+2PlP4tbfDK3ZxK9pWLz8L19v7u9cIzWtv3JU3g1GieV7y+fklF//vt7+9o1nLOnbVq2/4Uxi3gRz8r9JouCuz98eW8fJhUzV+7RxP3PRG8H8u+ab/+t6Gp1++/39vy/llVZlbXvf2+/eWnBz4X2B1qZnlX/em+/reTG+jk3Wvf/6eQInvVvvX3o+rd77797bz9Xiy8t+NGE/aEp07dxLTtpL5lx8P+GyPf2FR53Qk5kV+5PuK+1e3fgbPt99X94vwa8t+fTr/XaJnFq//PvidOLbyXtf2AkcMDswHv7nE3LLv14sB+nv57iCIdfUPeEQN0zB+oe7sOLnT0zi+wPR4lF8f99b3/jRfAfVu7ZOO2Ng7pzP5o7cYXDB+We6YtkJ9v3ip+8rv3vvT17uKVmhUvLflz24go3i3siFmynj+/fbnJo6ouvb+2P6rO/Wit8ef8zHP7FFY/M/WbuIbOv74/cmeZzfc9b+1LG2lU2vyfZ44qX3zjiEVc4tLbUhO05e9R+1Rr/rl027+xd/khdznh8cT8u8Xgc4YkrHnGFAwAH5psn
         </DataArray>
-        <DataArray type="Float64" Name="normal_element" NumberOfComponents="3" format="ascii">
+        <DataArray type="Float64" Name="normal_element" NumberOfComponents="3" format="binary">
+AQAAAAADAAAAAwAACwMAAA==eAEBAAP//KVo2IYh6ai/1yl3Be7X7z8uqbDtcQK2v2eI71GLrne/jxCE7yTh7z+BxWlAGia2v2OUDSiBkne/d5Rof8/37z99rAmblrKmvykgYxt7Aqm/3Dk8FGDu7z8/f5ZHq2Omv+gV21EPup8/+HLVe4f77z8Q+qZ6OnaHvyIDsTOV96E/uiaouGn67z+9aUXN/ImHv3UPq0bhAKI/mrhujbb67z+iXqfbHhJ+vzddRlrC3p8/GIaQHc/77z9Ln+hPeix+vy59gA/az6C/vD7Bg6G77z9axrCeseq/v1fzW/LdcXo/cf18ISHA7z+A1kd8x9y/vwKYBaDOrHo/TK+DZQTh7z8Dx5IAZy62v4VQvNzKsKC/ZMkV1CPd7z+qeTR/BRG2v8Iw++c2/7Y/7CxD3zTc7z9zQNawXxqav1mFJ203noO/mRu+6bz87z+WvLP42S2bv0ofmxMRpoa/lkGnxKy/7z+kPl/qieS/v0og+FhHnLY/DWou7x+h7z8xt/rKQJe/v+aelElL+6E/hhejpIz67z/C9+OXOyeEv+8jjJeiHZM/ixfJ1yv+7z8GVzkpeESEv+pCwZaEA5M/zwNjf8L77z/HI1Hp0uaav+7sGWM71qE/hzJ53zv47z/AOkMbQ7uav65ROaNls9a/6eNZ+wB97D+EliXj+EjSvxLjMR8ir6e/xAbzo+h57j9o5oOHzknTv9h8BI/7Eam/HvLl4dr17z+6oj0whQyCPwOPNkdUm9e/WblmTNe87T91AX2qPPuSP6JsIS3HSNc/9oemcIDO7T8Q8RqyGO5zv0P8VkCFC7c/WatHJore7z98q+ksW598v/M66Pr0f7U/Ys9qZtGV7j8A7CHnIQnSv7RCUFGWKtY/x5M3mw7F7D92ISY8bCTRvxtQdXLaMYe/dES3PUWz7j96ygtBRwrSv6FmIyOGC6G/Wcqu9euv7j8Gqi5glQTSv081/VoPC6G/OQ/8J1V+7j+SC5BC4knTvwYr7sZ0PYe/ovEcv9GC7j+0oKUbH0jTv066lSE=
         </DataArray>
-        <DataArray type="Int32" Name="uid_0_face_id" format="ascii">
+        <DataArray type="Int32" Name="uid_0_face_id" format="binary">
+AQAAAIAAAACAAAAAKgAAAA==eAFVx8ENACAMw8BAS9l/Y/w0kU6KJ8nI4lvTtmkjv13KirZD2wMcIABx
         </DataArray>
       </PointData>
 

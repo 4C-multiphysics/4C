@@ -1552,11 +1552,8 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
 
       // setup partitioner
       Teuchos::ParameterList paramlist;
-      paramlist.set("PARTITIONING METHOD", "GRAPH");
-      Teuchos::ParameterList& sublist = paramlist.sublist("Zoltan");
-      sublist.set("LB_METHOD", "GRAPH");
-      sublist.set("GRAPH_PACKAGE", "ParMETIS");
-      sublist.set("LB_APPROACH", "PARTITION");
+      paramlist.set("partitioning_approach", "partition");
+      paramlist.set("algorithm", "parmetis");
 
       std::shared_ptr<const Core::LinAlg::Graph> const_nodegraph(nodegraph);
 
