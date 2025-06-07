@@ -2161,4 +2161,144 @@ c: 3)",
     EXPECT_EQ(container.get<int>("b"), 2);
     EXPECT_EQ(container.get<int>("c"), 3);
   }
+
+
+
+  TEST(InputSpecTest, StoreStruct)
+  {
+    enum class Option
+    {
+      a,
+      b,
+    };
+
+    struct Inner
+    {
+      int a;
+      Option option;
+      std::string s;
+      bool b_defaulted;
+      std::vector<double> v;
+    };
+
+    struct Outer
+    {
+      double d;
+      Inner inner;
+    };
+
+    auto spec = group_struct<Outer>("outer",
+        {
+            parameter<double>("d", {.store = in_struct(&Outer::d)}),
+            group_struct<Inner>("inner",
+                {
+                    parameter<int>("a", {.store = in_struct(&Inner::a)}),
+                    parameter<Option>("option", {.store = in_struct(&Inner::option)}),
+                    parameter<std::string>("s", {.store = in_struct(&Inner::s)}),
+                    parameter<bool>("b_defaulted",
+                        {.default_value = true, .store = in_struct(&Inner::b_defaulted)}),
+                    parameter<std::vector<double>>("v", {.store = in_struct(&Inner::v), .size = 3}),
+                },
+                {.store = in_struct(&Outer::inner)}),
+        });
+
+    ryml::Tree tree = init_yaml_tree_with_exceptions();
+    ryml::parse_in_arena(R"(outer:
+  d: 1.23
+  inner:
+    option: b
+    a: 1
+    s: "abc"
+    v: [1.0, 2.0, 3.0])",
+        &tree);
+    const ConstYamlNodeRef node(tree.rootref(), "");
+    InputParameterContainer container;
+    spec.match(node, container);
+
+    const auto& outer = container.get<Outer>("outer");
+    EXPECT_EQ(outer.d, 1.23);
+    EXPECT_EQ(outer.inner.a, 1);
+    EXPECT_EQ(outer.inner.option, Option::b);
+    EXPECT_EQ(outer.inner.s, "abc");
+    EXPECT_EQ(outer.inner.b_defaulted, true);
+    EXPECT_EQ(outer.inner.v, (std::vector{1.0, 2.0, 3.0}));
+  }
+
+  TEST(InputSpecTest, StoreStructRejectInconsistent)
+  {
+    struct S
+    {
+      int a;
+      int b;
+    };
+
+    struct Other
+    {
+    };
+
+    {
+      SCOPED_TRACE("Inconsistent fields in group_struct");
+      const auto construct = []()
+      {
+        auto spec = group_struct<S>("inconsistent",
+            {
+                parameter<int>("a", {.store = in_struct(&S::a)}),
+                // here we "forgot" to specify the .store for b and want to receive an error
+                parameter<int>("b"),
+            });
+      };
+
+      FOUR_C_EXPECT_THROW_WITH_MESSAGE(construct(), Core::Exception,
+          "All specs in an all_of must store to the same destination type.");
+      // There is more detailed output but the type names may not be stable across compilers.
+    }
+
+    {
+      SCOPED_TRACE("Wrong type in group_struct");
+      const auto construct = []()
+      {
+        auto spec = group_struct<Other>(
+            "inconsistent", {
+                                parameter<int>("a", {.store = in_struct(&S::a)}),
+                                parameter<int>("b", {.store = in_struct(&S::b)}),
+                            });
+      };
+
+      FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+          construct(), Core::Exception, "contains specs that store to");
+    }
+
+    {
+      SCOPED_TRACE("Missing group_struct but group");
+      const auto construct = []()
+      {
+        auto spec = group("inconsistent", {
+                                              parameter<int>("a", {.store = in_struct(&S::a)}),
+                                              parameter<int>("b", {.store = in_struct(&S::b)}),
+                                          });
+      };
+      FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+          construct(), Core::Exception, "Groups can only store to InputParameterContainer.");
+    }
+
+    {
+      SCOPED_TRACE("Missing group_struct but all_of");
+
+      // This is fine because one could continue to use the all_of in a group_struct later
+      auto spec = all_of({
+          parameter<int>("a", {.store = in_struct(&S::a)}),
+          parameter<int>("b", {.store = in_struct(&S::b)}),
+      });
+      ryml::Tree tree = init_yaml_tree_with_exceptions();
+      ryml::NodeRef root = tree.rootref();
+
+      ConstYamlNodeRef node(root, "");
+      InputParameterContainer container;
+
+      // But matching should not work because the spec does not store to InputParameterContainer
+      FOUR_C_EXPECT_THROW_WITH_MESSAGE(spec.match(node, container), Core::Exception,
+          "the top-level InputSpec that is used for matching must store to the "
+          "InputParameterContainer type");
+    }
+  }
 }  // namespace

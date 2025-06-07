@@ -56,7 +56,20 @@ void Core::IO::InputSpec::match(ConstYamlNodeRef yaml, InputParameterContainer& 
 
   auto spec_for_matching = Internal::wrap_with_all_of(*this);
   Internal::MatchTree match_tree{spec_for_matching, yaml};
-  spec_for_matching.pimpl_->match(yaml, container, match_tree.root());
+
+  if (auto* stores_to = spec_for_matching.impl().data.stores_to;
+      stores_to && *stores_to != typeid(InputParameterContainer))
+  {
+    FOUR_C_THROW(
+        "Not implemented: the top-level InputSpec that is used for matching must store to the "
+        "InputParameterContainer type, but this one stores to '{}'.",
+        Core::Utils::try_demangle(stores_to->name()).c_str());
+  }
+
+  InputSpecBuilders::Storage storage;
+  Internal::init_storage_with_container(storage);
+  spec_for_matching.pimpl_->match(yaml, storage, match_tree.root());
+  container.merge(std::any_cast<InputParameterContainer&&>(std::move(storage)));
 
   match_tree.assert_match();
 }
