@@ -531,7 +531,6 @@ void ScaTra::TimIntHDG::set_initial_field(
       Core::Elements::LocationArray la(discret_->num_dof_sets());
 
       const Core::LinAlg::Map* dofrowmap = discret_->dof_row_map();
-      const Core::LinAlg::Map* intdofrowmap = discret_->dof_row_map(nds_intvar_);
       double error = 0;
 
       for (int iele = 0; iele < discret_->num_my_col_elements(); ++iele)
@@ -551,12 +550,11 @@ void ScaTra::TimIntHDG::set_initial_field(
 
         if (ele->owner() == Core::Communication::my_mpi_rank(discret_->get_comm()))
         {
-          std::vector<int> localDofs = discret_->dof(nds_intvar_, ele);
-          FOUR_C_ASSERT(
-              localDofs.size() == static_cast<std::size_t>(updateVec2.numRows()), "Internal error");
-          for (unsigned int i = 0; i < localDofs.size(); ++i)
-            localDofs[i] = intdofrowmap->lid(localDofs[i]);
-          intphinp_->replace_local_values(localDofs.size(), updateVec2.values(), localDofs.data());
+          std::vector<int> globalDofs = discret_->dof(nds_intvar_, ele);
+          FOUR_C_ASSERT(globalDofs.size() == static_cast<std::size_t>(updateVec2.numRows()),
+              "Internal error");
+          intphinp_->replace_global_values(
+              globalDofs.size(), updateVec2.values(), globalDofs.data());
         }
 
         // now fill the element vector into the discretization
@@ -656,7 +654,6 @@ void ScaTra::TimIntHDG::update_interior_variables(
   Core::LinAlg::SerialDenseVector dummyVec;
   Core::LinAlg::SerialDenseVector updateVec;
   Core::Elements::LocationArray la(discret_->num_dof_sets());
-  const Core::LinAlg::Map* intdofrowmap = discret_->dof_row_map(nds_intvar_);
 
   for (int iele = 0; iele < discret_->num_my_col_elements(); ++iele)
   {
@@ -668,14 +665,10 @@ void ScaTra::TimIntHDG::update_interior_variables(
 
     ele->evaluate(eleparams, *discret_, la, dummyMat, dummyMat, updateVec, dummyVec, dummyVec);
 
-    std::vector<int> localDofs = discret_->dof(nds_intvar_, ele);
+    std::vector<int> globalDofs = discret_->dof(nds_intvar_, ele);
     FOUR_C_ASSERT(
-        localDofs.size() == static_cast<std::size_t>(updateVec.numRows()), "Internal error");
-    for (unsigned int i = 0; i < localDofs.size(); ++i)
-    {
-      localDofs[i] = intdofrowmap->lid(localDofs[i]);
-    }
-    updatevector->replace_local_values(localDofs.size(), updateVec.values(), localDofs.data());
+        globalDofs.size() == static_cast<std::size_t>(updateVec.numRows()), "Internal error");
+    updatevector->replace_global_values(globalDofs.size(), updateVec.values(), globalDofs.data());
   }
 
   discret_->clear_state(true);
@@ -1291,7 +1284,6 @@ void ScaTra::TimIntHDG::adapt_variable_vector(std::shared_ptr<Core::LinAlg::Vect
   eleparams.set<int>("nds_intvar_old", nds_intvar_old);
 
   // dof row map for adapted dofset
-  const Core::LinAlg::Map* intdofrowmap = discret_->dof_row_map(nds_intvar_);
   const Core::LinAlg::Map* dofrowmap = discret_->dof_row_map(0);
 
 
@@ -1342,12 +1334,11 @@ void ScaTra::TimIntHDG::adapt_variable_vector(std::shared_ptr<Core::LinAlg::Vect
     // store projected values of the element on the new state vector for the interior variables
     if (ele->owner() == Core::Communication::my_mpi_rank(discret_->get_comm()))
     {
-      std::vector<int> localDofs = discret_->dof(nds_intvar_, ele);
+      std::vector<int> globalDofs = discret_->dof(nds_intvar_, ele);
       FOUR_C_ASSERT(
-          localDofs.size() == static_cast<std::size_t>(intphi_ele.numRows()), "Internal error");
-      for (unsigned int i = 0; i < localDofs.size(); ++i)
-        localDofs[i] = intdofrowmap->lid(localDofs[i]);
-      (intphi_new)->replace_local_values(localDofs.size(), intphi_ele.values(), localDofs.data());
+          globalDofs.size() == static_cast<std::size_t>(intphi_ele.numRows()), "Internal error");
+      (intphi_new)
+          ->replace_global_values(globalDofs.size(), intphi_ele.values(), globalDofs.data());
     }
 
     // now fill the element vector into the new state vector for the trace values

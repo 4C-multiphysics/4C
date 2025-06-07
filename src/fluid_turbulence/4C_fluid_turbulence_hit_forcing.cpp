@@ -1879,7 +1879,6 @@ namespace FLD
       discret_->set_state(1, "forcing", *forcing_);
 
       // for 2nd evaluate
-      const Core::LinAlg::Map* intdofrowmap = discret_->dof_row_map(1);
       Core::LinAlg::SerialDenseVector elevec1, elevec3;
       Core::LinAlg::SerialDenseMatrix elemat1, elemat2;
       Teuchos::ParameterList initParams;
@@ -1948,12 +1947,10 @@ namespace FLD
 
         if (ele->owner() == Core::Communication::my_mpi_rank(discret_->get_comm()))
         {
-          std::vector<int> localDofs = discret_->dof(1, ele);
+          std::vector<int> globalDofs = discret_->dof(1, ele);
           FOUR_C_ASSERT(
-              localDofs.size() == static_cast<std::size_t>(elevec1.numRows()), "Internal error");
-          for (unsigned int i = 0; i < localDofs.size(); ++i)
-            localDofs[i] = intdofrowmap->lid(localDofs[i]);
-          forcing_->replace_local_values(localDofs.size(), elevec1.values(), localDofs.data());
+              globalDofs.size() == static_cast<std::size_t>(elevec1.numRows()), "Internal error");
+          forcing_->replace_global_values(globalDofs.size(), elevec1.values(), globalDofs.data());
         }
       }
     }
