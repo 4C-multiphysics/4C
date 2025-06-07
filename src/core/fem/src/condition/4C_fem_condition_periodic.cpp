@@ -19,15 +19,8 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
 /*----------------------------------------------------------------------*
- |  Constructor (public)                                     gammi 05/07|
  *----------------------------------------------------------------------*/
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
 Core::Conditions::PeriodicBoundaryConditions::PeriodicBoundaryConditions(
     std::shared_ptr<Core::FE::Discretization> actdis, bool verbose)
     : discret_(actdis), verbose_(verbose), pbcdofset_(nullptr)
@@ -52,49 +45,15 @@ Core::Conditions::PeriodicBoundaryConditions::PeriodicBoundaryConditions(
   // ghosted by this proc
   //       master node -> list of its slave node(s)
   allcoupledcolnodes_ = std::make_shared<std::map<int, std::vector<int>>>();
+}
 
 
-  if (numpbcpairs_ > 0)
-  {
-    // -------------------------------------------------------------------
-    // create timers and time monitor
-    // -------------------------------------------------------------------
-    timepbctot_ = Teuchos::TimeMonitor::getNewTimer("0) pbc routine total");
-    timepbcmidtosid_ = Teuchos::TimeMonitor::getNewTimer("1)   +create midtosid maps");
-    timepbcmidoct_ = Teuchos::TimeMonitor::getNewTimer("2)      +build local octrees");
-    timepbcmidmatch_ =
-        Teuchos::TimeMonitor::getNewTimer("3)      +search closest nodes in octrees on all procs");
-    timepbcaddcon_ =
-        Teuchos::TimeMonitor::getNewTimer("4)   +add connectivity to previous conditions");
-    timepbcreddis_ = Teuchos::TimeMonitor::getNewTimer("5)   +redistribute the nodes");
-    timepbcmakeghostmap_ =
-        Teuchos::TimeMonitor::getNewTimer("6)      +build rowmap and temporary colmap");
-    timepbcghost_ = Teuchos::TimeMonitor::getNewTimer("7)      +repair ghosting");
-    timepbcrenumdofs_ = Teuchos::TimeMonitor::getNewTimer("8)      +call discret->redistribute");
-  }
-
-  return;
-
-}  // PeriodicBoundaryConditions(std::shared_ptr<Core::FE::Discretization> actdis)
-
-
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
 /*----------------------------------------------------------------------*
- | Proceed all pairs of periodic boundary conditions and create         |
- | complete coupling map                         (public)    gammi 05/07|
  *----------------------------------------------------------------------*/
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
 void Core::Conditions::PeriodicBoundaryConditions::update_dofs_for_periodic_boundary_conditions()
 {
   if (numpbcpairs_ > 0)
   {
-    // time measurement --- start TimeMonitor tm0
-    tm0_ref_ = std::make_shared<Teuchos::TimeMonitor>(*timepbctot_);
-
     if (Core::Communication::my_mpi_rank(discret_->get_comm()) == 0 && verbose_)
     {
       std::cout << "Generate new dofset for discretization " << discret_->name();
@@ -104,17 +63,20 @@ void Core::Conditions::PeriodicBoundaryConditions::update_dofs_for_periodic_boun
     // fetch all slaves to the proc of the master
     put_all_slaves_to_masters_proc();
 
+    // eventually  optimally distribute the nodes --- up to
+    // now, a periodic boundary condition might remove all nodes from a proc ...
+    balance_load();
 
-    if (Core::Communication::num_mpi_ranks(discret_->get_comm()) > 1)
+    if (Core::Communication::my_mpi_rank(discret_->get_comm()) == 0 && verbose_)
     {
-      // eventually  optimally distribute the nodes --- up to
-      // now, a periodic boundary condition might remove all nodes from a
-      // proc ...
-      balance_load();
+      std::cout << "---------------------------------------------\n";
+      std::cout << "Repair Master->Slave connection, generate final dofset";
+      std::cout << std::endl << std::endl;
     }
-    // time measurement --- this causes the TimeMonitor tm0 to stop here
-    //                                              (call of destructor)
-    tm0_ref_ = nullptr;
+
+    // assign the new dofs, make absolutely sure that we always have all slaves to a master
+    // the finite edge weights are not a 100% warranty for that...
+    put_all_slaves_to_masters_proc();
 
     if (Core::Communication::my_mpi_rank(discret_->get_comm()) == 0 && verbose_)
     {
@@ -209,31 +171,12 @@ void Core::Conditions::PeriodicBoundaryConditions::update_dofs_for_periodic_boun
         std::cout << std::endl << std::endl;
       }
     }
-  }  // end if numpbcpairs_>0
-  return;
-
-}  // update_dofs_for_periodic_boundary_conditions()
+  }
+}
 
 
-
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
 /*----------------------------------------------------------------------*
- |                                                                      |
- | generate master->slave connectivities                                |
- | o allcoupledrownodes_                                                |
- | o allcoupledcolnodes_ (including ghosted master/slave nodes)         |
- |                                                                      |
- | send slave nodes to master proc.                                     |
- |                                                                      |
- | Generate a new dofset in which slaves do not have their own dofs     |
- | anymore; they just point to the master's dofs                        |
- |                                                           gammi 11/08|
  *----------------------------------------------------------------------*/
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
 void Core::Conditions::PeriodicBoundaryConditions::put_all_slaves_to_masters_proc()
 {
   if (numpbcpairs_ > 0)
@@ -485,9 +428,6 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_slaves_to_masters_pro
           //                        FOR THIS DIRECTION
           //----------------------------------------------------------------------
 
-          // time measurement --- start TimeMonitor tm1
-          tm1_ref_ = std::make_shared<Teuchos::TimeMonitor>(*timepbcmidtosid_);
-
           // clear map from global masternodeids (on this proc) to global
           // slavenodeids --- it belongs to this master slave pair!!!
           midtosid.clear();
@@ -503,8 +443,6 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_slaves_to_masters_pro
           // get map master on this proc -> slave on some proc
           create_node_coupling_for_single_pbc(
               midtosid, masternodeids, slavenodeids, dofsforpbcplane, rotangles[0], abs_tol);
-          // time measurement --- this causes the TimeMonitor tm1 to stop here
-          tm1_ref_ = nullptr;
 
           if (Core::Communication::num_mpi_ranks(discret_->get_comm()) == 1)
           {
@@ -544,9 +482,6 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_slaves_to_masters_pro
             fflush(stdout);
           }
 
-          // time measurement --- start TimeMonitor tm4
-          tm4_ref_ = std::make_shared<Teuchos::TimeMonitor>(*timepbcaddcon_);
-
           //----------------------------------------------------------------------
           //      ADD CONNECTIVITY TO CONNECTIVITY OF ALL PREVIOUS PBCS
           //----------------------------------------------------------------------
@@ -555,9 +490,6 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_slaves_to_masters_pro
           // Redistribute the nodes (rownodes+ghosting)
           // Assign the same degrees of freedom to coupled nodes
           add_connectivity(midtosid, num);
-
-          // time measurement --- this causes the TimeMonitor tm4 to stop here
-          tm4_ref_ = nullptr;
 
           if (Core::Communication::my_mpi_rank(discret_->get_comm()) == 0 && verbose_ &&
               pbcid == numpbcpairs_ - 1)
@@ -574,10 +506,6 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_slaves_to_masters_pro
     //         REDISTRIBUTE ACCORDING TO THE GENERATED CONNECTIVITY
     //----------------------------------------------------------------------
 
-    // time measurement --- start TimeMonitor tm5
-    tm5_ref_ = std::make_shared<Teuchos::TimeMonitor>(*timepbcreddis_);
-
-
     if (Core::Communication::my_mpi_rank(discret_->get_comm()) == 0 && verbose_)
     {
       std::cout << "Redistributing: \n";
@@ -591,23 +519,12 @@ void Core::Conditions::PeriodicBoundaryConditions::put_all_slaves_to_masters_pro
       std::cout << "... done\n";
       fflush(stdout);
     }
+  }
+}
 
-    // time measurement --- this causes the TimeMonitor tm5 to stop here
-    tm5_ref_ = nullptr;
-  }  // if (numpbcpairs_ > 2)
-  return;
-}  // put_all_slaves_to_masters_proc()
 
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
 /*----------------------------------------------------------------------*
- | Couple nodes for specific pair of periodic boundary conditions       |
- |                                                           gammi 05/07|
  *----------------------------------------------------------------------*/
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
 void Core::Conditions::PeriodicBoundaryConditions::create_node_coupling_for_single_pbc(
     std::map<int, std::vector<int>>& midtosid, const std::vector<int> masternodeids,
     const std::vector<int> slavenodeids, const std::vector<int> dofsforpbcplane,
@@ -620,52 +537,33 @@ void Core::Conditions::PeriodicBoundaryConditions::create_node_coupling_for_sing
   //----------------------------------------------------------------------
   //                   BUILD PROCESSOR LOCAL OCTREE
   //----------------------------------------------------------------------
-  // time measurement --- start TimeMonitor tm2
-  tm2_ref_ = std::make_shared<Teuchos::TimeMonitor>(*timepbcmidoct_);
 
   // build processor local octree
   auto nodematchingoctree = Core::GeometricSearch::NodeMatchingOctree();
 
   nodematchingoctree.init(*discret_, masternodeids, maxnodeperleaf, tol);
   nodematchingoctree.setup();
-  // time measurement --- this causes the TimeMonitor tm2 to stop here
-  tm2_ref_ = nullptr;
 
   //----------------------------------------------------------------------
   //  SEARCH CLOSEST NODES IN OCTREES ON ALL PROCESSORS
   //----------------------------------------------------------------------
 
-  // time measurement --- start TimeMonitor tm3
-  tm3_ref_ = std::make_shared<Teuchos::TimeMonitor>(*timepbcmidmatch_);
   // create connectivity for this condition in this direction
   {
     // create map from gid masternode -> gid corresponding slavenode
     nodematchingoctree.create_global_entity_matching(
         slavenodeids, dofsforpbcplane, rotangle, midtosid);
   }
-
-  // time measurement --- this causes the TimeMonitor tm3 to stop here
-  tm3_ref_ = nullptr;
-
-  return;
-}  // Core::Conditions::PeriodicBoundaryConditions::create_node_coupling_for_single_pbc
+}
 
 
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
 /*----------------------------------------------------------------------*
- | Add the connectivity from this condition to the connectivity         |
- | of all previously processed periodic boundary conditions.            |
- |                                                           gammi 05/07|
  *----------------------------------------------------------------------*/
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-
 void Core::Conditions::PeriodicBoundaryConditions::add_connectivity(
     std::map<int, std::vector<int>>& midtosid, const int pbcid)
 {
+  TEUCHOS_FUNC_TIME_MONITOR("Conditions::PeriodicBoundaryConditions::add_connectivity");
+
   // the "inverse" mapping of allcoupled(row/col)nodes
   //       slave node -> its master node (list of size 1)
   std::shared_ptr<std::map<int, std::vector<int>>> inversenodecoupling;
@@ -899,24 +797,16 @@ void Core::Conditions::PeriodicBoundaryConditions::add_connectivity(
       }
     }  // end complete matching
   }
-
-  return;
-}  // Core::Conditions::PeriodicBoundaryConditions::add_connectivity
+}
 
 
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
 /*----------------------------------------------------------------------*
- | Redistribute the nodes and assign the dofs to the                    |
- | current distribution of nodes                             gammi 05/07|
  *----------------------------------------------------------------------*/
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-
 void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_coupling()
 {
+  TEUCHOS_FUNC_TIME_MONITOR(
+      "Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_coupling");
+
   // the "inverse" mapping of allcoupled(row/col)nodes
   //       slave node -> its master node (list of size 1)
   std::shared_ptr<std::map<int, std::vector<int>>> inversenodecoupling;
@@ -926,9 +816,6 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
   std::shared_ptr<Core::LinAlg::Map> newrownodemap;
 
   {
-    // time measurement --- start TimeMonitor tm6
-    tm6_ref_ = std::make_shared<Teuchos::TimeMonitor>(*timepbcmakeghostmap_);
-
     // make sure we have a filled discretisation at this place
     // dofs are not required yet, they are assigned after redistribution
     // accessing the noderowmap requires a 'completed' discretization
@@ -1113,7 +1000,6 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
       }
     }
 
-    //--------------------------------------------------
     // build noderowmap for new distribution of nodes
     newrownodemap = std::make_shared<Core::LinAlg::Map>(discret_->num_global_nodes(),
         nodesonthisproc.size(), nodesonthisproc.data(), 0, discret_->get_comm());
@@ -1140,13 +1026,6 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
 
     newcolnodemap = std::make_shared<Core::LinAlg::Map>(
         -1, cntmp.num_my_elements(), cntmp.my_global_elements(), 0, discret_->get_comm());
-
-    // time measurement --- this causes the TimeMonitor tm6 to stop here
-    tm6_ref_ = nullptr;
-
-
-    // time measurement --- start TimeMonitor tm7
-    tm7_ref_ = std::make_shared<Teuchos::TimeMonitor>(*timepbcghost_);
 
     //----------------------------------------------------------------------
     //       GHOSTED NODES NEED INFORMATION ON THEIR COUPLED NODES
@@ -1272,13 +1151,6 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
       }
     }
 
-    // time measurement --- this causes the TimeMonitor tm7 to stop here
-    tm7_ref_ = nullptr;
-
-
-    // time measurement --- start TimeMonitor tm8
-    tm8_ref_ = std::make_shared<Teuchos::TimeMonitor>(*timepbcrenumdofs_);
-
     // check whether we have already passed a PBCDofSet to the discretization
     // If we did not the regular DofSet is replaced with a PBCDofSet. This will
     // lead to a new offset of the DofGIDs and therefore make exporting of vectors
@@ -1301,66 +1173,34 @@ void Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_c
       pbcdofset_->reset();
     }
 
-    //--------------------------------------------------
     // redistribute the nodes
-    //
     // this contains a call to fill_complete and assigns the same
     // degree of freedom to the matching nodes
-
     discret_->redistribute(*newrownodemap, *newcolnodemap);
-
-    // time measurement --- this causes the TimeMonitor tm8 to stop here
-    tm8_ref_ = nullptr;
-
-    // throw away old nodegraph
-    oldnodegraph = nullptr;
   }
+}
 
-  return;
-}  // Core::Conditions::PeriodicBoundaryConditions::redistribute_and_create_dof_coupling
 
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
 /*----------------------------------------------------------------------*
- | o adjust weights of slavenodes                                       |
- |   they need a small weight since they do not contribute any dofs     |
- |   to the linear system                                               |
- |                                                                      |
- | o compute connectivity                                               |
- |   iterate all elements on this proc including ghosted ones. Include  |
- |   connections between master and slave nodes                         |
- |                                                                      |
- | o set weights of edges between master/slave pairs to a high value    |
- |   in order to keep both on the same proc when redistributing         |
- |                                                                      |
- | o gather all data to proc 1, do partitioning using Zoltan            |
- |                                                                      |
- | o redistribute nodes without assigning dofs                          |
- |                                                                      |
- | o repair master/slave distribution, finally assign dofs              |
- |                                                           gammi 11/08|
  *----------------------------------------------------------------------*/
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
-//<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>//
 void Core::Conditions::PeriodicBoundaryConditions::balance_load()
 {
-  if (Core::Communication::num_mpi_ranks(discret_->get_comm()) > 1)
-  {
-    const Core::LinAlg::Map* noderowmap = discret_->node_row_map();
+  TEUCHOS_FUNC_TIME_MONITOR("Conditions::PeriodicBoundaryConditions::balance_load");
 
-    // weights for graph partition
-    auto node_weights = Core::LinAlg::create_vector(*noderowmap, true);
+  const Core::LinAlg::Map* node_row_map = discret_->node_row_map();
+
+  // 1. set graph node weights
+  auto node_weights = std::make_shared<Core::LinAlg::Vector<double>>(*node_row_map, true);
+  {
+    // set default node weights
     node_weights->put_scalar(1.0);
 
     // apply weight of special elements
-    for (int node_lid = 0; node_lid < noderowmap->num_my_elements(); ++node_lid)
+    for (int node_lid = 0; node_lid < node_row_map->num_my_elements(); ++node_lid)
     {
-      const int node_gid = noderowmap->gid(node_lid);
+      const int node_gid = node_row_map->gid(node_lid);
       Core::Nodes::Node* node = discret_->g_node(node_gid);
-      if (!node) FOUR_C_THROW("cant find node");
-      double weight = 0.0;
+      double weight = 1.0;
 
       // loop over adjacent elements of this node and find element with highest cost
       Core::Elements::Element** surrele = node->elements();
@@ -1369,47 +1209,36 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
 
       node_weights->replace_local_value(node_lid, 0, weight);
     }
-    // ----------------------------------------
+
     // loop masternodes to adjust weights of slavenodes
-    // they need a small weight since they do not contribute any dofs
-    // to the linear system
+    // they need a small weight since they do not contribute any dofs to the linear system
     for (const auto& masterslavepair : *allcoupledcolnodes_)
     {
       const int master_gid = masterslavepair.first;
-      // get masternode
       Core::Nodes::Node* master = discret_->g_node(master_gid);
 
       if (master->owner() != Core::Communication::my_mpi_rank(discret_->get_comm())) continue;
 
-      // loop slavenodes associated with master
       std::vector<int> slave_gids = masterslavepair.second;
       for (const auto slave_gid : slave_gids)
       {
-        const double initval = 1.0;
-
-        node_weights->replace_global_values(1, &initval, &slave_gid);
+        const double weight = 1.0;
+        node_weights->replace_global_values(1, &weight, &slave_gid);
       }
     }
+  }
 
-    // allocate graph
-    auto nodegraph = std::make_shared<Core::LinAlg::Graph>(Copy, *noderowmap, 108, false);
-
-    // -------------------------------------------------------------
-    // iterate all elements on this proc including ghosted ones
-    // compute connectivity
-
+  // 2. allocate graph
+  auto node_graph = std::make_shared<Core::LinAlg::Graph>(Copy, *node_row_map, 108, false);
+  {
+    // iterate all elements on this proc including ghosted ones and compute connectivity
     // standard part without master<->slave coupling
     // Note:
-    // if a proc stores the appropriate ghosted elements, the resulting
-    // graph will be the correct and complete graph of the distributed
-    // discretization even if nodes are not ghosted.
-
+    // if a proc stores the appropriate ghosted elements, the resulting graph will be the correct
+    // and complete graph of the distributed discretization even if nodes are not ghosted.
     for (int ele_lid = 0; ele_lid < discret_->num_my_col_elements(); ++ele_lid)
     {
-      // get the element
       Core::Elements::Element* ele = discret_->l_col_element(ele_lid);
-
-      // get its nodes and nodeids
       const int num_nodes_per_ele = ele->num_node();
       const int* node_gids_per_ele = ele->node_ids();
 
@@ -1417,31 +1246,23 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
       {
         const int node_gid = node_gids_per_ele[row];
 
-        // insert into line of graph only when this proc owns the node
-        if (!noderowmap->my_gid(node_gid)) continue;
+        if (!node_row_map->my_gid(node_gid)) continue;
 
-        // insert all neighbours from element in the graph
         for (int col = 0; col < num_nodes_per_ele; ++col)
         {
           int neighbor_node = node_gids_per_ele[col];
-          const int err = nodegraph->insert_global_indices(node_gid, 1, &neighbor_node);
+          const int err = node_graph->insert_global_indices(node_gid, 1, &neighbor_node);
           if (err < 0) FOUR_C_THROW("nodegraph->InsertGlobalIndices returned err={}", err);
         }
       }
     }
 
-    // -------------------------------------------------------------
     // additional coupling between master and slave
     // we do not only connect master and slave nodes but if a master/slave
-    // is connected to a master/slave, we connect the corresponding slaves/master
-    // as well
-
+    // is connected to a master/slave, we connect the corresponding slaves/master as well
     for (int ele_lid = 0; ele_lid < discret_->num_my_col_elements(); ++ele_lid)
     {
-      // get the element
       Core::Elements::Element* ele = discret_->l_col_element(ele_lid);
-
-      // get its nodes and nodeids
       const int num_nodes_per_ele = ele->num_node();
       const int* node_gids_per_ele = ele->node_ids();
 
@@ -1449,8 +1270,7 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
       {
         const int node_gid = node_gids_per_ele[row];
 
-        // insert into line of graph only when this proc owns the node
-        if (!noderowmap->my_gid(node_gid)) continue;
+        if (!node_row_map->my_gid(node_gid)) continue;
 
         // only, if this node is a coupled node
         if (allcoupledcolnodes_->find(node_gid) != allcoupledcolnodes_->end())
@@ -1467,13 +1287,13 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
               // add connection to all slaves
               for (auto other_slave_gid : other_slave_gids)
               {
-                int err = nodegraph->insert_global_indices(node_gid, 1, &other_slave_gid);
+                int err = node_graph->insert_global_indices(node_gid, 1, &other_slave_gid);
                 if (err < 0) FOUR_C_THROW("nodegraph->InsertGlobalIndices returned err={}", err);
 
-                if (noderowmap->my_gid(other_slave_gid))
+                if (node_row_map->my_gid(other_slave_gid))
                 {
                   int masterindex = node_gid;
-                  err = nodegraph->insert_global_indices(other_slave_gid, 1, &masterindex);
+                  err = node_graph->insert_global_indices(other_slave_gid, 1, &masterindex);
                   if (err < 0) FOUR_C_THROW("nodegraph->InsertGlobalIndices returned err={}", err);
                 }
               }
@@ -1482,112 +1302,86 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
         }
       }
     }
+  }
+  int err = node_graph->fill_complete();
+  if (err) FOUR_C_THROW("graph->FillComplete returned {}", err);
 
-    // finalize construction of initial graph
-    int err = nodegraph->fill_complete();
-    if (err) FOUR_C_THROW("graph->FillComplete returned {}", err);
+  const int myrank = Core::Communication::my_mpi_rank(
+      Core::Communication::unpack_epetra_comm(node_graph->get_comm()));
 
-    //
-    // nodegraph: row for each node, column with nodes from the same element and coupled nodes
-    //
+  // get rowmap of the graph  (from blockmap -> map)
+  const Core::LinAlg::Map& graph_row_map = node_graph->row_map();
+  const Core::LinAlg::Map graph_rowmap(graph_row_map.num_global_elements(),
+      graph_row_map.num_my_elements(), graph_row_map.my_global_elements(), 0,
+      Core::Communication::unpack_epetra_comm(node_graph->get_comm()));
 
-    const int myrank = Core::Communication::my_mpi_rank(
-        Core::Communication::unpack_epetra_comm(nodegraph->get_comm()));
-    const int numproc = Core::Communication::num_mpi_ranks(
-        Core::Communication::unpack_epetra_comm(nodegraph->get_comm()));
-
-    if (numproc > 1)
+  // 3. set graph edge weights
+  auto edge_weights = std::make_shared<Core::LinAlg::SparseMatrix>(graph_rowmap, 15);
+  {
+    // set standard value of edge weight to 1.0
+    for (int i = 0; i < node_graph->num_local_rows(); ++i)
     {
-      // get rowmap of the graph  (from blockmap -> map)
-      const Core::LinAlg::Map& graph_row_map = nodegraph->row_map();
-      const Core::LinAlg::Map graph_rowmap(graph_row_map.num_global_elements(),
-          graph_row_map.num_my_elements(), graph_row_map.my_global_elements(), 0,
-          Core::Communication::unpack_epetra_comm(nodegraph->get_comm()));
+      const int grow = node_graph->row_map().gid(i);
 
-      // set standard value of edge weight to 1.0
-      auto edge_weights = std::make_shared<Core::LinAlg::SparseMatrix>(graph_rowmap, 15);
-      for (int i = 0; i < nodegraph->num_local_rows(); ++i)
+      const int glob_length = node_graph->num_global_indices(grow);
+      int numentries = 0;
+      std::vector<int> indices(glob_length);
+      node_graph->extract_global_row_copy(grow, glob_length, numentries, indices.data());
+
+      std::vector<double> values(numentries, 1.0);
+      edge_weights->insert_global_values(grow, numentries, values.data(), indices.data());
+      if (err < 0) FOUR_C_THROW("edge_weights->insert_global_values returned err={}", err);
+    }
+
+    // loop all master nodes on this proc
+    for (const auto& masterslavepair : *allcoupledcolnodes_)
+    {
+      Core::Nodes::Node* master = discret_->g_node(masterslavepair.first);
+
+      if (master->owner() != myrank) continue;
+
+      // loop slavenodes
+      for (int slave_gids : masterslavepair.second)
       {
-        const int grow = nodegraph->row_map().gid(i);
+        Core::Nodes::Node* slave = discret_->g_node(slave_gids);
 
-        const int glob_length = nodegraph->num_global_indices(grow);
-        int numentries = 0;
-        std::vector<int> indices(glob_length);
-        nodegraph->extract_global_row_copy(grow, glob_length, numentries, indices.data());
+        // connections between master and slavenodes are very strong
+        // we do not want to partition between master and slave nodes
+        std::vector<int> master_gid(1, master->id());
+        std::vector<int> slave_gid(1, slave->id());
+        // add 99 to the initial value of 1.0 to set costs to 100
+        std::vector<double> value(1, 99.0);
 
-        std::vector<double> values(numentries, 1.0);
-        edge_weights->insert_global_values(grow, numentries, values.data(), indices.data());
-        if (err < 0) FOUR_C_THROW("edge_weights->insert_global_values returned err={}", err);
+        err = edge_weights->insert_global_values(master->id(), 1, value.data(), slave_gid.data());
+        if (err < 0) FOUR_C_THROW("insert_global_values returned err={}", err);
+        err = edge_weights->insert_global_values(slave->id(), 1, value.data(), master_gid.data());
+        if (err < 0) FOUR_C_THROW("insert_global_values returned err={}", err);
       }
-
-      // loop all master nodes on this proc
-      for (const auto& masterslavepair : *allcoupledcolnodes_)
-      {
-        // get masternode
-        Core::Nodes::Node* master = discret_->g_node(masterslavepair.first);
-
-        if (master->owner() != myrank) continue;
-
-        // loop slavenodes
-        for (int slave_gids : masterslavepair.second)
-        {
-          Core::Nodes::Node* slave = discret_->g_node(slave_gids);
-
-          // -------------------------------------------------------------
-          // connections between master and slavenodes are very strong
-          // we do not want to partition between master and slave nodes
-
-          // store gids and values as a vector with one entry
-          std::vector<int> master_gid(1, master->id());
-          std::vector<int> slave_gid(1, slave->id());
-          // add 99 to the initial value of 1.0 to set costs to 100
-          std::vector<double> value(1, 99.0);
-
-          err = edge_weights->insert_global_values(master->id(), 1, value.data(), slave_gid.data());
-          if (err < 0) FOUR_C_THROW("insert_global_values returned err={}", err);
-          err = edge_weights->insert_global_values(slave->id(), 1, value.data(), master_gid.data());
-          if (err < 0) FOUR_C_THROW("insert_global_values returned err={}", err);
-        }
-      }
-
-      // setup partitioner
-      Teuchos::ParameterList paramlist;
-      paramlist.set("PARTITIONING METHOD", "GRAPH");
-      Teuchos::ParameterList& sublist = paramlist.sublist("Zoltan");
-      sublist.set("LB_METHOD", "GRAPH");
-      sublist.set("GRAPH_PACKAGE", "ParMETIS");
-      sublist.set("LB_APPROACH", "PARTITION");
-
-      std::shared_ptr<const Core::LinAlg::Graph> const_nodegraph(nodegraph);
-
-      auto newnodegraph =
-          Core::Rebalance::rebalance_graph(*const_nodegraph, paramlist, node_weights, edge_weights);
-      newnodegraph->optimize_storage();
-
-      // the rowmap will become the new distribution of nodes
-      const Core::LinAlg::Map newnoderowmap(-1, newnodegraph->row_map().num_my_elements(),
-          newnodegraph->row_map().my_global_elements(), 0, discret_->get_comm());
-
-      // the column map will become the new ghosted distribution of nodes
-      const Core::LinAlg::Map newnodecolmap(-1, newnodegraph->col_map().num_my_elements(),
-          newnodegraph->col_map().my_global_elements(), 0, discret_->get_comm());
-
-      // do the redistribution without assigning dofs
-      discret_->redistribute(newnoderowmap, newnodecolmap, {.assign_degrees_of_freedom = false});
-
-      if (Core::Communication::my_mpi_rank(discret_->get_comm()) == 0 && verbose_)
-      {
-        std::cout << "---------------------------------------------\n";
-        std::cout << "Repair Master->Slave connection, generate final dofset";
-        std::cout << std::endl << std::endl;
-      }
-
-      // assign the new dofs, make absolutely sure that we always
-      // have all slaves to a master
-      // the finite edge weights are not a 100% warranty for that...
-      put_all_slaves_to_masters_proc();
     }
   }
+  // TODO: Bug?
+  // Here we fill a data structure, which should be completed at some point, but in doing so we
+  // end up with an error in Zoltan ...
+  // edge_weights->complete();
+
+  // 4. setup partitioner and redistribute
+  // TODO: Why does this only work for all tests with ParMETIS?
+  Teuchos::ParameterList paramlist;
+  paramlist.set("PARTITIONING METHOD", "GRAPH");
+  Teuchos::ParameterList& sublist = paramlist.sublist("Zoltan");
+  sublist.set("LB_METHOD", "GRAPH");
+  sublist.set("GRAPH_PACKAGE", "ParMETIS");
+  sublist.set("LB_APPROACH", "PARTITION");
+
+  auto newnodegraph =
+      Core::Rebalance::rebalance_graph(*node_graph, paramlist, node_weights, edge_weights);
+
+  const Core::LinAlg::Map newnoderowmap(-1, newnodegraph->row_map().num_my_elements(),
+      newnodegraph->row_map().my_global_elements(), 0, discret_->get_comm());
+  const Core::LinAlg::Map newnodecolmap(-1, newnodegraph->col_map().num_my_elements(),
+      newnodegraph->col_map().my_global_elements(), 0, discret_->get_comm());
+
+  discret_->redistribute(newnoderowmap, newnodecolmap, {.assign_degrees_of_freedom = false});
 }
 
 FOUR_C_NAMESPACE_CLOSE
