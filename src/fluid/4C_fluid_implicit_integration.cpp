@@ -4147,7 +4147,7 @@ void FLD::FluidImplicitTimeInt::set_initial_flow_field(
                                 ->function_by_id<Core::Utils::FunctionOfSpaceTime>(startfuncno)
                                 .evaluate(lnode->x().data(), time_, index);
 
-        velnp_->replace_global_values(1, &initialval, &gid);
+        velnp_->replace_global_value(gid, initialval);
       }
     }
 
@@ -4394,9 +4394,9 @@ void FLD::FluidImplicitTimeInt::set_initial_flow_field(
       {
         const int gid = nodedofset[nveldof];
         int lid = dofrowmap->lid(gid);
-        err += velnp_->replace_local_values(1, &(u[nveldof]), &lid);
-        err += veln_->replace_local_values(1, &(u[nveldof]), &lid);
-        err += velnm_->replace_local_values(1, &(u[nveldof]), &lid);
+        err += velnp_->replace_local_value(lid, u[nveldof]);
+        err += veln_->replace_local_value(lid, u[nveldof]);
+        err += velnm_->replace_local_value(lid, u[nveldof]);
       }
     }  // end loop nodes lnodeid
 
@@ -4474,23 +4474,23 @@ void FLD::FluidImplicitTimeInt::set_initial_flow_field(
       {
         const int gid = nodedofset[nveldof];
         int lid = dofrowmap->lid(gid);
-        err += velnp_->replace_local_values(1, &(u[nveldof]), &lid);
-        err += veln_->replace_local_values(1, &(u[nveldof]), &lid);
-        err += velnm_->replace_local_values(1, &(u[nveldof]), &lid);
+        err += velnp_->replace_local_value(lid, u[nveldof]);
+        err += veln_->replace_local_value(lid, u[nveldof]);
+        err += velnm_->replace_local_value(lid, u[nveldof]);
 
         // set additionally the values for the time derivative to start with an exact acceleration
         // in case of OST (theta!=1.0) set initial acceleration components
-        err += accnp_->replace_local_values(1, &(acc[nveldof]), &lid);
-        err += accn_->replace_local_values(1, &(acc[nveldof]), &lid);
-        err += accam_->replace_local_values(1, &(acc[nveldof]), &lid);
+        err += accnp_->replace_local_value(lid, acc[nveldof]);
+        err += accn_->replace_local_value(lid, acc[nveldof]);
+        err += accam_->replace_local_value(lid, acc[nveldof]);
       }
 
       // set initial pressure
       const int gid = nodedofset[npredof];
       int lid = dofrowmap->lid(gid);
-      err += velnp_->replace_local_values(1, &p, &lid);
-      err += veln_->replace_local_values(1, &p, &lid);
-      err += velnm_->replace_local_values(1, &p, &lid);
+      err += velnp_->replace_local_value(lid, p);
+      err += veln_->replace_local_value(lid, p);
+      err += velnm_->replace_local_value(lid, p);
     }  // end loop nodes lnodeid
 
     if (err != 0) FOUR_C_THROW("dof not on proc");
@@ -4574,11 +4574,11 @@ void FLD::FluidImplicitTimeInt::set_iter_scalar_fields(
 
       // now copy the values
       value = (*scalaraf)[localscatradofid];
-      err = scaaf_->replace_local_value(localdofid, 0, value);
+      err = scaaf_->replace_local_value(localdofid, value);
       if (err != 0) FOUR_C_THROW("error while inserting value into scaaf_");
 
       value = (*scalaram)[localscatradofid];
-      err = scaam_->replace_local_value(localdofid, 0, value);
+      err = scaam_->replace_local_value(localdofid, value);
       if (err != 0) FOUR_C_THROW("error while inserting value into scaam_");
 
       if (scalardtam != nullptr)
@@ -4589,7 +4589,7 @@ void FLD::FluidImplicitTimeInt::set_iter_scalar_fields(
       {
         value = 0.0;  // for safety reasons: set zeros in accam_
       }
-      err = accam_->replace_local_value(localdofid, 0, value);
+      err = accam_->replace_local_value(localdofid, value);
       if (err != 0) FOUR_C_THROW("error while inserting value into accam_");
     }
   }
@@ -4614,11 +4614,11 @@ void FLD::FluidImplicitTimeInt::set_iter_scalar_fields(
 
       // now copy the values
       value = (*scalaraf)[localdofid];
-      err = scaaf_->replace_local_value(localdofid, 0, value);
+      err = scaaf_->replace_local_value(localdofid, value);
       if (err != 0) FOUR_C_THROW("error while inserting value into scaaf_");
 
       value = (*scalaram)[localdofid];
-      err = scaam_->replace_local_value(localdofid, 0, value);
+      err = scaam_->replace_local_value(localdofid, value);
       if (err != 0) FOUR_C_THROW("error while inserting value into scaam_");
 
       if (scalardtam != nullptr)
@@ -4629,7 +4629,7 @@ void FLD::FluidImplicitTimeInt::set_iter_scalar_fields(
       {
         value = 0.0;  // for safety reasons: set zeros in accam_
       }
-      err = accam_->replace_local_value(localdofid, 0, value);
+      err = accam_->replace_local_value(localdofid, value);
       if (err != 0) FOUR_C_THROW("error while inserting value into accam_");
     }
   }
@@ -4687,7 +4687,7 @@ void FLD::FluidImplicitTimeInt::set_scalar_fields(
     if (localdofid < 0) FOUR_C_THROW("localdofid not found in map for given globaldofid");
 
     value = (*scalarnp)[localscatradofid];
-    err = scaaf_->replace_local_value(localdofid, 0, value);
+    err = scaaf_->replace_local_value(localdofid, value);
     if (err != 0) FOUR_C_THROW("error while inserting value into scaaf_");
 
     //--------------------------------------------------------------------------
@@ -4696,7 +4696,7 @@ void FLD::FluidImplicitTimeInt::set_scalar_fields(
     if (scatraresidual != nullptr)
     {
       value = (*scatraresidual)[localscatradofid];
-      trueresidual_->replace_local_value(localdofid, 0, value);
+      trueresidual_->replace_local_value(localdofid, value);
     }
   }
 

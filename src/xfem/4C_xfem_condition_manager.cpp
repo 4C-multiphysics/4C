@@ -584,7 +584,7 @@ void XFEM::ConditionManager::set_minimum(Core::LinAlg::Vector<double>& vec1,
     if (arg == 2) (node_lsc_coup_idx)[lnodeid] = lsc_index_2;  // else keep the old lsc coupling
 
     // now copy the values
-    err = vec1.replace_local_value(lnodeid, 0, final_val);
+    err = vec1.replace_local_value(lnodeid, final_val);
     if (err != 0) FOUR_C_THROW("error while inserting value into phinp_");
   }
 }
@@ -611,7 +611,7 @@ void XFEM::ConditionManager::set_maximum(Core::LinAlg::Vector<double>& vec1,
     if (arg == 2) (node_lsc_coup_idx)[lnodeid] = lsc_index_2;  // else keep the old lsc coupling
 
     // now copy the values
-    err = vec1.replace_local_value(lnodeid, 0, final_val);
+    err = vec1.replace_local_value(lnodeid, final_val);
     if (err != 0) FOUR_C_THROW("error while inserting value into phinp_");
   }
 }
@@ -638,7 +638,7 @@ void XFEM::ConditionManager::set_difference(Core::LinAlg::Vector<double>& vec1,
     if (arg == 2) (node_lsc_coup_idx)[lnodeid] = lsc_index_2;  // else keep the old lsc coupling
 
     // now copy the values
-    err = vec1.replace_local_value(lnodeid, 0, final_val);
+    err = vec1.replace_local_value(lnodeid, final_val);
     if (err != 0) FOUR_C_THROW("error while inserting value into phinp_");
   }
 }
@@ -675,7 +675,7 @@ void XFEM::ConditionManager::set_symmetric_difference(Core::LinAlg::Vector<doubl
 
 
     // now copy the values
-    err = vec1.replace_local_value(lnodeid, 0, final_val);
+    err = vec1.replace_local_value(lnodeid, final_val);
     if (err != 0) FOUR_C_THROW("error while inserting value into phinp_");
   }
 }

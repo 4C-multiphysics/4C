@@ -536,14 +536,14 @@ void FLD::XWall::init_toggle_vector()
 
       if (fullyenriched == true)
       {
-        int err = xtoggleloc_->replace_local_value(j, 0, 1.0);
+        int err = xtoggleloc_->replace_local_value(j, 1.0);
         if (err != 0) FOUR_C_THROW("something went wrong");
       }
       else
       {
         if (blendingtype_ != Inpar::FLUID::ramp_function)
         {
-          int err = xtoggleloc_->replace_local_value(j, 0, 0.7);
+          int err = xtoggleloc_->replace_local_value(j, 0.7);
           if (err != 0) FOUR_C_THROW("something went wrong");
         }
         count++;
@@ -999,7 +999,7 @@ void FLD::XWall::calc_tau_w(
         // also, the shape functions become singular, if tauw==0
         if (tauw < min_tauw_) tauw = min_tauw_;
         // store in vector
-        int err = newtauw.replace_global_value(gid, 0, tauw);
+        int err = newtauw.replace_global_value(gid, tauw);
         if (err != 0) FOUR_C_THROW("something went wrong during replacemyvalue");
       }
     }
@@ -1086,7 +1086,7 @@ void FLD::XWall::calc_tau_w(
         newtauwsc = sumnewtauw / timesfac;
 
         if (newtauwsc < min_tauw_) newtauwsc = min_tauw_;
-        int err = newtauwxwdis.replace_local_value(l, 0, newtauwsc);
+        int err = newtauwxwdis.replace_local_value(l, newtauwsc);
         if (err != 0) FOUR_C_THROW("something went wrong during replacemyvalue");
       }
     }
@@ -1353,10 +1353,10 @@ std::shared_ptr<Core::LinAlg::Vector<double>> FLD::XWall::get_output_vector(
     int firstglobaldofid = discret_->dof(xwallnode, 0);
     int firstlocaldofid = discret_->dof_row_map()->lid(firstglobaldofid);
 
-    int err = velenr->replace_local_value(firstlocaldofid, 0, (vel)[firstlocaldofid + 4]);
-    err += velenr->replace_local_value(firstlocaldofid + 1, 0, (vel)[firstlocaldofid + 5]);
-    err += velenr->replace_local_value(firstlocaldofid + 2, 0, (vel)[firstlocaldofid + 6]);
-    err += velenr->replace_local_value(firstlocaldofid + 3, 0, (vel)[firstlocaldofid + 7]);
+    int err = velenr->replace_local_value(firstlocaldofid, vel[firstlocaldofid + 4]);
+    err += velenr->replace_local_value(firstlocaldofid + 1, vel[firstlocaldofid + 5]);
+    err += velenr->replace_local_value(firstlocaldofid + 2, vel[firstlocaldofid + 6]);
+    err += velenr->replace_local_value(firstlocaldofid + 3, vel[firstlocaldofid + 7]);
     if (err != 0) FOUR_C_THROW("error during replacemyvalue");
   }
   return velenr;
@@ -1411,8 +1411,8 @@ void FLD::XWall::overwrite_transferred_values()
           const std::string& mytoggle = (*cond)->parameters().get<std::string>("toggle");
           if (mytoggle == "slave")
           {
-            inctauwtmp.replace_local_value(i, 0, (*oldinctauw_)[i]);
-            tauwtmp.replace_local_value(i, 0, (*oldtauw_)[i]);
+            inctauwtmp.replace_local_value(i, (*oldinctauw_)[i]);
+            tauwtmp.replace_local_value(i, (*oldtauw_)[i]);
           }
         }
       }
@@ -1631,9 +1631,9 @@ void FLD::XWallAleFSI::update_w_dist_wale()
     int firstglobaldofid = discret_->dof(xwallnode, 0);
     int firstlocaldofid = discret_->dof_row_map()->lid(firstglobaldofid);
 
-    int err = x.replace_local_value(j, 0, (xwallnode->x())[0] + (*mydispnp_)[firstlocaldofid]);
-    err += y.replace_local_value(j, 0, (xwallnode->x())[1] + (*mydispnp_)[firstlocaldofid + 1]);
-    err += z.replace_local_value(j, 0, (xwallnode->x())[2] + (*mydispnp_)[firstlocaldofid + 2]);
+    int err = x.replace_local_value(j, xwallnode->x()[0] + (*mydispnp_)[firstlocaldofid]);
+    err += y.replace_local_value(j, xwallnode->x()[1] + (*mydispnp_)[firstlocaldofid + 1]);
+    err += z.replace_local_value(j, xwallnode->x()[2] + (*mydispnp_)[firstlocaldofid + 2]);
     if (err > 0) FOUR_C_THROW("something wrong");
   }
 
@@ -1664,7 +1664,7 @@ void FLD::XWallAleFSI::update_w_dist_wale()
     double y = (wdisty)[j];
     double z = (wdistz)[j];
     double newwdist = sqrt(x * x + y * y + z * z);
-    int err = walldist_->replace_local_value(j, 0, newwdist);
+    int err = walldist_->replace_local_value(j, newwdist);
     if (err > 0) FOUR_C_THROW("something wrong");
   }
 

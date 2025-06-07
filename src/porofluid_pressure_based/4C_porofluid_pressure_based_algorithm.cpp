@@ -975,7 +975,7 @@ void PoroPressureBased::PorofluidAlgorithm::apply_additional_dbc_for_vol_frac_pr
                     mydirichdofs.end()))
             {
               mydirichdofs.push_back(dofs[idof]);
-              phinp_->replace_global_value(dofs[idof], 0, 0.0);
+              phinp_->replace_global_value(dofs[idof], 0.0);
             }
         }
       }
@@ -1034,7 +1034,7 @@ void PoroPressureBased::PorofluidAlgorithm::apply_starting_dbc()
                                            ->function_by_id<Core::Utils::FunctionOfSpaceTime>(
                                                starting_dbc_funct_[dof_idx])
                                            .evaluate(current_node->x().data(), time_, 0);
-              phinp_->replace_global_value(gid, 0, dbc_value);
+              phinp_->replace_global_value(gid, dbc_value);
             }
           }
         }
@@ -1922,7 +1922,7 @@ void PoroPressureBased::PorofluidAlgorithm::set_initial_field(
           double initialval = Global::Problem::instance()
                                   ->function_by_id<Core::Utils::FunctionOfSpaceTime>(startfuncno)
                                   .evaluate(lnode->x().data(), time_, k);
-          int err = phin_->replace_local_values(1, &initialval, &doflid);
+          int err = phin_->replace_local_value(doflid, initialval);
           if (err != 0) FOUR_C_THROW("dof not on proc");
         }
       }
@@ -2154,7 +2154,7 @@ void PoroPressureBased::PorofluidAlgorithm::fd_check()
 
     // impose perturbation
     if (phinp_->get_map().my_gid(colgid))
-      if (phinp_->sum_into_global_value(colgid, 0, fdcheckeps_))
+      if (phinp_->sum_into_global_value(colgid, fdcheckeps_))
         FOUR_C_THROW(
             "Perturbation could not be imposed on state vector for finite difference check!");
 

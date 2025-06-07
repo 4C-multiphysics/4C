@@ -707,7 +707,7 @@ void ScaTra::ScaTraTimIntImpl::compute_density()
     const int localdofid = phiafnp()->get_map().lid(globaldofid);
     if (localdofid < 0) FOUR_C_THROW("Local dof ID not found in dof map!");
 
-    int err = densafnp_->replace_local_value(localdofid, 0, density);
+    int err = densafnp_->replace_local_value(localdofid, density);
 
     if (err) FOUR_C_THROW("Error while inserting nodal density value into global density vector!");
   }
@@ -1361,7 +1361,7 @@ void ScaTra::ScaTraTimIntImpl::avm3_scaling(Teuchos::ParameterList& eleparams)
   for (int i = 0; i < length; ++i)
   {
     sgvsqrt[i] = sqrt(sgvsqrt[i]);
-    int err = subgrdiff_->replace_local_values(1, &sgvsqrt[i], &i);
+    int err = subgrdiff_->replace_local_value(i, sgvsqrt[i]);
     if (err != 0) FOUR_C_THROW("index not found");
   }
 
@@ -1824,7 +1824,7 @@ void ScaTra::ScaTraTimIntImpl::fd_check()
     // impose perturbation
     if (phinp_->get_map().my_gid(colgid))
     {
-      if (phinp_->sum_into_global_value(colgid, 0, fdcheckeps_))
+      if (phinp_->sum_into_global_value(colgid, fdcheckeps_))
         FOUR_C_THROW(
             "Perturbation could not be imposed on state vector for finite difference check!");
     }

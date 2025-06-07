@@ -1043,7 +1043,7 @@ void FLD::TransferTurbulentInflowConditionNodal::set_values_available_on_this_pr
       {
         // is this slave id on this proc?
         if (dis_->node_row_map()->my_gid(*sid))
-          outvec->replace_global_value(*sid, 0, (mymasters_vec[0])[nn]);
+          outvec->replace_global_value(*sid, mymasters_vec[0][nn]);
       }
     }
   }

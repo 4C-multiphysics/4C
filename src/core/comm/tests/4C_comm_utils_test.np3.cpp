@@ -57,10 +57,11 @@ namespace
       int* indices = new int[numMyEles];
       for (int lid = 0; lid < numMyEles; ++lid)
       {
-        indices[lid] = lid;
-        values[lid] = map->gid(lid);
+        const int gid = map->gid(lid);
+        indices[lid] = gid;
+        values[lid] = gid;
       }
-      vector_->replace_local_values(numMyEles, values, indices);
+      vector_->replace_global_values(numMyEles, values, indices);
     }
 
     void TearDown() override { Core::IO::cout.close(); }
@@ -232,7 +233,7 @@ namespace
     // disturb one value on each proc which leads to a failure of the comparison
     const int lastLocalIndex = vector_->local_length() - 1;
     double disturbedValue = static_cast<double>(lastLocalIndex);
-    vector_->replace_local_values(1, &disturbedValue, &lastLocalIndex);
+    vector_->replace_local_value(lastLocalIndex, disturbedValue);
 
     EXPECT_THROW(
         Core::Communication::are_distributed_vectors_identical(*communicators_, *vector_, "vector"),

@@ -4546,17 +4546,17 @@ void FLD::XFluid::set_initial_flow_field(
       {
         const int gid = nodedofset[nveldof];
         int lid = dofrowmap->lid(gid);
-        err += state_->velnp_->replace_local_values(1, &(u[nveldof]), &lid);
-        err += state_->veln_->replace_local_values(1, &(u[nveldof]), &lid);
-        err += state_->velnm_->replace_local_values(1, &(u[nveldof]), &lid);
+        err += state_->velnp_->replace_local_value(lid, u[nveldof]);
+        err += state_->veln_->replace_local_value(lid, u[nveldof]);
+        err += state_->velnm_->replace_local_value(lid, u[nveldof]);
       }
 
       // set initial pressure
       const int gid = nodedofset[npredof];
       int lid = dofrowmap->lid(gid);
-      err += state_->velnp_->replace_local_values(1, &p, &lid);
-      err += state_->veln_->replace_local_values(1, &p, &lid);
-      err += state_->velnm_->replace_local_values(1, &p, &lid);
+      err += state_->velnp_->replace_local_value(lid, p);
+      err += state_->veln_->replace_local_value(lid, p);
+      err += state_->velnm_->replace_local_value(lid, p);
     }  // end loop nodes lnodeid
 
     if (err != 0) FOUR_C_THROW("dof not on proc");
@@ -4715,11 +4715,11 @@ void FLD::XFluid::set_initial_flow_field(
           int lid = dofrowmap->lid(gid);
           if (idim == 3)
           {  // pressure dof
-            err += state_->velnp_->replace_local_values(1, &pres, &lid);
+            err += state_->velnp_->replace_local_value(lid, pres);
           }
           else
           {  // velocity dof
-            err += state_->velnp_->replace_local_values(1, &vel(idim), &lid);
+            err += state_->velnp_->replace_local_value(lid, vel(idim));
           }
 
           // set Dirichlet BC for ghost penalty reconstruction

@@ -484,7 +484,7 @@ void FS3I::BiofilmFSI::inner_timeloop()
 
         double lambdai = (*lambdafull)[lid];
         int lnodeid = noderowmap->lid(lnode->id());
-        (lambdanode)(index).replace_local_values(1, &lambdai, &lnodeid);
+        (lambdanode)(index).replace_local_value(lnodeid, lambdai);
       }
     }
     // loop over all local interface nodes of structure discretization

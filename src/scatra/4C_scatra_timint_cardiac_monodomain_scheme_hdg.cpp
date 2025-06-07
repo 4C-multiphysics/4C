@@ -148,7 +148,7 @@ void ScaTra::TimIntCardiacMonodomainHDG::write_restart() const
   for (int i = 0; i < dofphi->local_length(); ++i)
   {
     int dofgid = discret_->node_row_map()->gid(i);
-    dofphi->replace_local_value(discret_->node_row_map()->lid(dofgid), 0, (*interpolatedPhinp_)[i]);
+    dofphi->replace_local_value(discret_->node_row_map()->lid(dofgid), (*interpolatedPhinp_)[i]);
   }
 
   output_->write_vector("phinp", dofphi);

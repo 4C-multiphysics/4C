@@ -351,10 +351,8 @@ void FLD::TimIntHDGWeakComp::iter_update(
     // fill the interior increment vector for all the discretization
     if (ele->owner() == Core::Communication::my_mpi_rank(discret_->get_comm()))
     {
-      std::vector<int> localDofs = discret_->dof(1, ele);
-      for (unsigned int i = 0; i < localDofs.size(); ++i)
-        localDofs[i] = intdofrowmap->lid(localDofs[i]);
-      intvelincnp->replace_local_values(localDofs.size(), elemintinc.values(), localDofs.data());
+      std::vector<int> globalDofs = discret_->dof(1, ele);
+      intvelincnp->replace_global_values(globalDofs.size(), elemintinc.values(), globalDofs.data());
     }
   }
 
@@ -427,7 +425,6 @@ void FLD::TimIntHDGWeakComp::set_initial_flow_field(
     const Inpar::FLUID::InitialField initfield, const int startfuncno)
 {
   const Core::LinAlg::Map* dofrowmap = discret_->dof_row_map();
-  const Core::LinAlg::Map* intdofrowmap = discret_->dof_row_map(1);
   Core::LinAlg::SerialDenseVector elevec1, elevec2, elevec3;
   Core::LinAlg::SerialDenseMatrix elemat1, elemat2;
   Teuchos::ParameterList initParams;
@@ -464,14 +461,12 @@ void FLD::TimIntHDGWeakComp::set_initial_flow_field(
 
     if (ele->owner() == Core::Communication::my_mpi_rank(discret_->get_comm()))
     {
-      std::vector<int> localDofs = discret_->dof(1, ele);
+      std::vector<int> globalDofs = discret_->dof(1, ele);
       FOUR_C_ASSERT(
-          localDofs.size() == static_cast<std::size_t>(elevec2.numRows()), "Internal error");
-      for (unsigned int i = 0; i < localDofs.size(); ++i)
-        localDofs[i] = intdofrowmap->lid(localDofs[i]);
-      intvelnp_->replace_local_values(localDofs.size(), elevec2.values(), localDofs.data());
-      intveln_->replace_local_values(localDofs.size(), elevec2.values(), localDofs.data());
-      intvelnm_->replace_local_values(localDofs.size(), elevec2.values(), localDofs.data());
+          globalDofs.size() == static_cast<std::size_t>(elevec2.numRows()), "Internal error");
+      intvelnp_->replace_global_values(globalDofs.size(), elevec2.values(), globalDofs.data());
+      intveln_->replace_global_values(globalDofs.size(), elevec2.values(), globalDofs.data());
+      intvelnm_->replace_global_values(globalDofs.size(), elevec2.values(), globalDofs.data());
     }
   }
 

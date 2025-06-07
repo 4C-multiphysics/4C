@@ -382,7 +382,7 @@ void EHL::Base::add_couette_force(
     std::shared_ptr<Mat::LubricationMat> lmat = std::dynamic_pointer_cast<Mat::LubricationMat>(mat);
     const double visc = lmat->compute_viscosity(p);
 
-    for (int d = 0; d < ndim; ++d) visc_vec.replace_global_value(lub_dis.dof(1, lnode, d), 0, visc);
+    for (int d = 0; d < ndim; ++d) visc_vec.replace_global_value(lub_dis.dof(1, lnode, d), visc);
   }
   std::shared_ptr<Core::LinAlg::Vector<double>> visc_vec_str =
       ada_strDisp_to_lubDisp_->slave_to_master(visc_vec);
@@ -809,7 +809,7 @@ void EHL::Base::output(bool forced_writerestart)
 
       for (int d = 0; d < ndim; ++d)
         visc_vec.replace_global_value(
-            lubrication_->lubrication_field()->discretization()->dof(1, lnode, d), 0, visc);
+            lubrication_->lubrication_field()->discretization()->dof(1, lnode, d), visc);
     }
 
     Core::LinAlg::Vector<double> visc_vec_ex(*ada_lubPres_to_lubDisp_->slave_dof_map());

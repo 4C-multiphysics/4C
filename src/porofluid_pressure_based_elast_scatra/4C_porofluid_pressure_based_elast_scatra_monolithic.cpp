@@ -1098,7 +1098,7 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::poro_multi_phas
 
   iter_inc->put_scalar(0.0);
 
-  iter_inc->replace_global_value(0, 0, delta);
+  iter_inc->replace_global_value(0, delta);
 
   auto stiff_approx = std::make_shared<Core::LinAlg::SparseMatrix>(*dof_row_map(), 81);
 
@@ -1116,7 +1116,7 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::poro_multi_phas
   {
     if (combined_dbc_map()->my_gid(i))
     {
-      iter_inc->replace_global_value(i, 0, 0.0);
+      iter_inc->replace_global_value(i, 0.0);
     }
 
     if (i == column_id)
@@ -1156,11 +1156,11 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::poro_multi_phas
       }
     }
 
-    if (not combined_dbc_map()->my_gid(i)) iter_inc->replace_global_value(i, 0, -delta);
+    if (not combined_dbc_map()->my_gid(i)) iter_inc->replace_global_value(i, -delta);
 
-    iter_inc->replace_global_value(i - 1, 0, 0.0);
+    iter_inc->replace_global_value(i - 1, 0.0);
 
-    if (i != dofs - 1) iter_inc->replace_global_value(i + 1, 0, delta);
+    if (i != dofs - 1) iter_inc->replace_global_value(i + 1, delta);
 
     if (i == column_id)
       std::cout << "\n******************" << column_id + 1 << "the column end ***************"

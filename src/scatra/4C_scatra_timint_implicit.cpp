@@ -1263,9 +1263,9 @@ void ScaTra::ScaTraTimIntImpl::set_velocity_field_from_function()
           const int lid = convel->get_map().lid(gid);
 
           if (lid < 0) FOUR_C_THROW("Local ID not found in map for given global ID!");
-          err = convel->replace_local_value(lid, 0, value);
+          err = convel->replace_local_value(lid, value);
           if (err != 0) FOUR_C_THROW("error while inserting a value into convel");
-          err = vel->replace_local_value(lid, 0, value);
+          err = vel->replace_local_value(lid, value);
           if (err != 0) FOUR_C_THROW("error while inserting a value into vel");
         }
       }
@@ -1335,17 +1335,17 @@ void ScaTra::ScaTraTimIntImpl::set_external_force() const
 
       if (lid < 0) FOUR_C_THROW("Local ID not found in map for given global ID!");
       const int error_force_velocity =
-          force_velocity->replace_local_value(lid, 0, force_velocity_value);
+          force_velocity->replace_local_value(lid, force_velocity_value);
       if (error_force_velocity != 0)
         FOUR_C_THROW("Error while inserting a force_velocity_value into force_velocity.");
 
       const int error_external_force =
-          external_force->replace_local_value(lid, 0, external_force_value);
+          external_force->replace_local_value(lid, external_force_value);
       if (error_external_force != 0)
         FOUR_C_THROW("Error while inserting a external_force_value into external_force.");
 
       const int error_intrinsic_mobility =
-          intrinsic_mobility->replace_local_value(lid, 0, intrinsic_mobility_value);
+          intrinsic_mobility->replace_local_value(lid, intrinsic_mobility_value);
       if (error_intrinsic_mobility != 0)
         FOUR_C_THROW("Error while inserting a intrinsic_mobility_value into intrinsic_mobility.");
     }
@@ -1938,7 +1938,7 @@ void ScaTra::ScaTraTimIntImpl::set_initial_field(
           double initialval =
               problem_->function_by_id<Core::Utils::FunctionOfSpaceTime>(startfuncno)
                   .evaluate(lnode->x().data(), time_, k);
-          int err = phin_->replace_local_values(1, &initialval, &doflid);
+          int err = phin_->replace_local_value(doflid, initialval);
           if (err != 0) FOUR_C_THROW("dof not on proc");
         }
       }
@@ -1999,8 +1999,8 @@ void ScaTra::ScaTraTimIntImpl::set_initial_field(
         {
           double randomnumber = problem_->random()->uni();
           double noise = perc * range * randomnumber;
-          err += phinp_->sum_into_local_values(1, &noise, &k);
-          err += phin_->sum_into_local_values(1, &noise, &k);
+          err += phinp_->sum_into_local_value(k, noise);
+          err += phin_->sum_into_local_value(k, noise);
           if (err != 0) FOUR_C_THROW("Error while disturbing initial field.");
         }
       }
@@ -2076,10 +2076,10 @@ void ScaTra::ScaTraTimIntImpl::set_initial_field(
           if (x > -1e-10) initialval = 1.0;
 
           int err = 0;
-          err += phin_->replace_local_values(1, &initialval, &doflid);
+          err += phin_->replace_local_value(doflid, initialval);
           // initialize also the solution vector. These values are a pretty good guess for the
           // solution after the first time step (much better than starting with a zero vector)
-          err += phinp_->replace_local_values(1, &initialval, &doflid);
+          err += phinp_->replace_local_value(doflid, initialval);
           if (err != 0) FOUR_C_THROW("dof not on proc");
         }
       }
@@ -2139,10 +2139,10 @@ void ScaTra::ScaTraTimIntImpl::set_initial_field(
             initialval = fac2 * (x2 - trans2) + abs2;
 
           int err = 0;
-          err += phin_->replace_local_values(1, &initialval, &doflid);
+          err += phin_->replace_local_value(doflid, initialval);
           // initialize also the solution vector. These values are a pretty good guess for the
           // solution after the first time step (much better than starting with a zero vector)
-          err += phinp_->replace_local_values(1, &initialval, &doflid);
+          err += phinp_->replace_local_value(doflid, initialval);
           if (err != 0) FOUR_C_THROW("dof not on proc");
         }
       }
@@ -2198,10 +2198,10 @@ void ScaTra::ScaTraTimIntImpl::set_initial_field(
           initialval = 0.5 * (1.0 + (vp - vm) / (vp + vm));
 
           int err = 0;
-          err += phin_->replace_local_values(1, &initialval, &doflid);
+          err += phin_->replace_local_value(doflid, initialval);
           // initialize also the solution vector. These values are a pretty good guess for the
           // solution after the first time step (much better than starting with a zero vector)
-          err += phinp_->replace_local_values(1, &initialval, &doflid);
+          err += phinp_->replace_local_value(doflid, initialval);
           if (err != 0) FOUR_C_THROW("dof not on proc");
         }
       }
@@ -2235,11 +2235,11 @@ void ScaTra::ScaTraTimIntImpl::set_initial_field(
           if ((x1 <= 0.25 and x2 <= 0.5) or (x1 <= 0.5 and x2 <= 0.25)) initialval = 1.0;
 
           int err = 0;
-          err += phin_->replace_local_values(1, &initialval, &doflid);
+          err += phin_->replace_local_value(doflid, initialval);
           // initialize also the solution vector. These values are a pretty good
           // guess for the solution after the first time step (much better than
           // starting with a zero vector)
-          err += phinp_->replace_local_values(1, &initialval, &doflid);
+          err += phinp_->replace_local_value(doflid, initialval);
           if (err != 0) FOUR_C_THROW("dof not on proc");
         }
       }
@@ -2274,10 +2274,10 @@ void ScaTra::ScaTraTimIntImpl::set_initial_field(
             initialval = x1 - 0.75;
 
           int err = 0;
-          err += phin_->replace_local_values(1, &initialval, &doflid);
+          err += phin_->replace_local_value(doflid, initialval);
           // initialize also the solution vector. These values are a pretty good guess for the
           // solution after the first time step (much better than starting with a zero vector)
-          err += phinp_->replace_local_values(1, &initialval, &doflid);
+          err += phinp_->replace_local_value(doflid, initialval);
           if (err != 0) FOUR_C_THROW("dof not on proc");
         }
       }
@@ -2315,10 +2315,10 @@ void ScaTra::ScaTraTimIntImpl::set_initial_field(
           else
             initval = (-0.0354 - x2) - eps;
           int err = 0;
-          err += phin_->replace_local_values(1, &initval, &doflid);
+          err += phin_->replace_local_value(doflid, initval);
           // initialize also the solution vector. These values are a pretty good guess for the
           // solution after the first time step (much better than starting with a zero vector)
-          err += phinp_->replace_local_values(1, &initval, &doflid);
+          err += phinp_->replace_local_value(doflid, initval);
           if (err != 0) FOUR_C_THROW("dof not on proc");
         }
       }
@@ -3834,7 +3834,7 @@ void ScaTra::ScaTraTimIntImpl::calc_mean_micro_concentration()
       {
         const double macro_value = (*phinp_)[dof_lid_macro];
         // Sum, because afterwards it is divided by the number of adjacent nodes
-        phinp_micro_->sum_into_local_value(dof_lid_micro, 0, macro_value);
+        phinp_micro_->sum_into_local_value(dof_lid_micro, macro_value);
       }
     }
   }
@@ -3858,7 +3858,7 @@ void ScaTra::ScaTraTimIntImpl::calc_mean_micro_concentration()
       const double old_value = (*phinp_micro_)[dof_lid];
       const int num_elements = node->num_element();
       const double new_value = old_value / static_cast<double>(num_elements);
-      phinp_micro_->replace_local_value(dof_lid, 0, new_value);
+      phinp_micro_->replace_local_value(dof_lid, new_value);
     }
   }
 
@@ -3932,7 +3932,7 @@ void ScaTra::ScaTraTimIntImpl::calc_mean_micro_concentration()
     {
       const double value = (*phinp_micro_)[lid];
       const double corrected_value = 2.0 * value;
-      phinp_micro_->replace_local_value(lid, 0, corrected_value);
+      phinp_micro_->replace_local_value(lid, corrected_value);
     }
   }
 }

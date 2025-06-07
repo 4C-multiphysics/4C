@@ -375,7 +375,7 @@ void STI::Monolithic::fd_check()
 
     // impose perturbation
     if (statenp->get_map().my_gid(colgid))
-      if (statenp->sum_into_global_value(colgid, 0, scatra_field()->fd_check_eps()))
+      if (statenp->sum_into_global_value(colgid, scatra_field()->fd_check_eps()))
         FOUR_C_THROW(
             "Perturbation could not be imposed on state vector for finite difference check!");
     scatra_field()->phinp()->update(1., *maps_->extract_vector(*statenp, 0), 0.);

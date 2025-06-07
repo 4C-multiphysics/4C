@@ -562,7 +562,7 @@ void Arteries::ArtNetImplStationary::get_radius()
     if (arterymat == nullptr)
       FOUR_C_THROW("cast to Mat::Cnst1dArt failed during output of radius!");
     const double radius = arterymat->diam() / 2.0;
-    ele_radius_->replace_global_value(actele->id(), 0, radius);
+    ele_radius_->replace_global_value(actele->id(), radius);
   }
 }
 
@@ -600,7 +600,7 @@ void Arteries::ArtNetImplStationary::reconstruct_flow()
 
     actele->evaluate(p, *discret_, la, dummyMat, dummyMat, flowVec, dummyVec, dummyVec);
 
-    int err = ele_volflow_->replace_local_value(i, 0, flowVec(0));
+    int err = ele_volflow_->replace_local_value(i, flowVec(0));
     if (err != 0) FOUR_C_THROW("ReplaceMyValue failed with error code {}!", err);
   }
 }
@@ -719,7 +719,7 @@ void Arteries::ArtNetImplStationary::set_initial_field(
           double initialval = Global::Problem::instance()
                                   ->function_by_id<Core::Utils::FunctionOfSpaceTime>(startfuncno)
                                   .evaluate(lnode->x().data(), time_, k);
-          int err = pressurenp_->replace_local_values(1, &initialval, &doflid);
+          int err = pressurenp_->replace_local_value(doflid, initialval);
           if (err != 0) FOUR_C_THROW("dof not on proc");
         }
       }

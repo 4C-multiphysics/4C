@@ -231,17 +231,14 @@ void FSI::Utils::SlideAleUtils::remeshing(Adapter::FSIStructureWrapper& structur
   for (nodeiter = ifluidconfnodes_.begin(); nodeiter != ifluidconfnodes_.end(); ++nodeiter)
   {
     Core::Nodes::Node* node = nodeiter->second;
-    std::vector<int> lids(dim);
-    for (int p = 0; p < dim; p++)
-      // lids of gids of node
-      lids[p] = fluiddofrowmap_->lid((fluiddis.dof(node))[p]);
+    std::vector<int> gids = fluiddis.dof(node);
 
     // current coord of ale node = ref coord + ifluid_
     std::vector<double> finaldxyz(dim);
 
-    for (int p = 0; p < dim; p++) finaldxyz[p] = (idispale)[(lids[p])];
+    for (int p = 0; p < dim; p++) finaldxyz[p] = idispale[fluiddofrowmap_->lid(gids[p])];
 
-    int err = iprojdispale.replace_local_values(dim, finaldxyz.data(), lids.data());
+    int err = iprojdispale.replace_global_values(dim, finaldxyz.data(), gids.data());
     if (err == 1) FOUR_C_THROW("error while replacing values");
   }
 
@@ -492,10 +489,11 @@ void FSI::Utils::SlideAleUtils::slide_projection(
 
 
       Core::Nodes::Node* node = nodeiter->second;
+      std::vector<int> gids = fluiddis.dof(node);
       std::vector<int> lids(dim);
       for (int p = 0; p < dim; p++)
         // lids of gids of node
-        lids[p] = (fluiddofrowmap_)->lid((fluiddis.dof(node))[p]);
+        lids[p] = fluiddofrowmap_->lid(gids[p]);
 
       // current coord of ale node.
       // Initialize as coordinates of current node, which is extremely important for 2D!
@@ -566,7 +564,7 @@ void FSI::Utils::SlideAleUtils::slide_projection(
       }
 
       // store displacement into parallel vector
-      int err = iprojdispale.replace_local_values(dim, finaldxyz.data(), lids.data());
+      int err = iprojdispale.replace_global_values(dim, finaldxyz.data(), gids.data());
       if (err == 1) FOUR_C_THROW("error while replacing values");
     }
   }

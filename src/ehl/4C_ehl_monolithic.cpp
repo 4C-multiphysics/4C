@@ -1684,7 +1684,7 @@ void EHL::Monolithic::lin_couette_force_disp(
     std::shared_ptr<Mat::LubricationMat> lmat = std::dynamic_pointer_cast<Mat::LubricationMat>(mat);
     const double visc = lmat->compute_viscosity(p);
 
-    for (int d = 0; d < ndim; ++d) visc_vec.replace_global_value(lub_dis.dof(1, lnode, d), 0, visc);
+    for (int d = 0; d < ndim; ++d) visc_vec.replace_global_value(lub_dis.dof(1, lnode, d), visc);
   }
   std::shared_ptr<Core::LinAlg::Vector<double>> visc_vec_str =
       ada_strDisp_to_lubDisp_->slave_to_master(visc_vec);
@@ -1913,7 +1913,7 @@ void EHL::Monolithic::apply_dbc()
   if (inf_gap_toggle_lub_ != nullptr)
     for (int i = 0; i < inf_gap_toggle_lub_->local_length(); ++i)
       if (abs(inf_gap_toggle_lub_->operator[](i)) > 1.e-12)
-        rhs_->replace_global_value(inf_gap_toggle_lub_->get_map().gid(i), 0, 0.);
+        rhs_->replace_global_value(inf_gap_toggle_lub_->get_map().gid(i), 0.);
 }
 
 FOUR_C_NAMESPACE_CLOSE

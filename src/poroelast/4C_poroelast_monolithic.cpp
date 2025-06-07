@@ -1173,7 +1173,7 @@ void PoroElast::Monolithic::apply_fluid_coupl_matrix(
 
   iterinc->put_scalar(0.0);
 
-  iterinc->replace_global_value(0, 0, delta);
+  iterinc->replace_global_value(0, delta);
 
   abs_iterinc->update(1.0, *iterinc_, 0.0);
 
@@ -1210,7 +1210,7 @@ void PoroElast::Monolithic::apply_fluid_coupl_matrix(
   {
     if (combined_dbc_map()->my_gid(i))
     {
-      iterinc->replace_global_value(i, 0, 0.0);
+      iterinc->replace_global_value(i, 0.0);
     }
     abs_iterinc->update(1.0, *iterinc, 1.0);
 
@@ -1270,11 +1270,11 @@ void PoroElast::Monolithic::apply_fluid_coupl_matrix(
       }
     }
 
-    if (not combined_dbc_map()->my_gid(i)) iterinc->replace_global_value(i, 0, -delta);
+    if (not combined_dbc_map()->my_gid(i)) iterinc->replace_global_value(i, -delta);
 
-    iterinc->replace_global_value(i - 1, 0, 0.0);
+    iterinc->replace_global_value(i - 1, 0.0);
 
-    if (i != dofs - 1) iterinc->replace_global_value(i + 1, 0, delta);
+    if (i != dofs - 1) iterinc->replace_global_value(i + 1, delta);
 
     if (i == column_number)
       std::cout << "\n******************" << column_number + 1 << ". Column End!!***************"

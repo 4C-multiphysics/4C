@@ -414,7 +414,7 @@ bool XFEM::LevelSetCoupling::set_level_set_field(const double time)
 
     const int gid = lm[0];
     const int lid = cutter_phinp_->get_map().lid(gid);
-    err = cutter_phinp_->replace_local_values(1, &value, &lid);
+    err = cutter_phinp_->replace_local_value(lid, value);
     if (err) FOUR_C_THROW("could not replace values for phi vector");
   }
 
@@ -566,7 +566,7 @@ void XFEM::LevelSetCoupling::map_cutter_to_bg_vector(Core::FE::Discretization& s
 
       // set to a dofrowmap based vector!
       const int lid_target = target_vec_dofbased.get_map().lid(lm_target[0]);
-      const int err = target_vec_dofbased.replace_local_values(1, val_source.data(), &lid_target);
+      const int err = target_vec_dofbased.replace_local_value(lid_target, val_source[0]);
       if (err) FOUR_C_THROW("could not replace values for convective velocity");
     }
   }
@@ -594,7 +594,7 @@ XFEM::LevelSetCoupling::get_level_set_field_as_node_row_vector()
     if (val_source.size() != 1) FOUR_C_THROW("we expect only one dof");
 
     const int lid_target = bg_dis_->node_row_map()->lid(node->id());
-    const int err = bg_phinp_nodemap_->replace_local_values(1, val_source.data(), &lid_target);
+    const int err = bg_phinp_nodemap_->replace_local_value(lid_target, val_source[0]);
     if (err) FOUR_C_THROW("could not replace values for phi vector");
   }
 

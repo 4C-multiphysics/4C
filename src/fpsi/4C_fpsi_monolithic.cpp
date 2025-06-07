@@ -1553,7 +1553,7 @@ void FPSI::Monolithic::fpsifd_check()
       Core::LinAlg::create_vector(*dof_row_map(), true);
   const int dofs = iterinc->global_length();
   iterinc->put_scalar(0.0);
-  iterinc->replace_global_value(0, 0, delta);
+  iterinc->replace_global_value(0, delta);
 
   // build approximated FD stiffness matrix
   auto stiff_approx = std::make_shared<Core::LinAlg::SparseMatrix>(*dof_row_map(), 81);
@@ -1591,7 +1591,7 @@ void FPSI::Monolithic::fpsifd_check()
     std::cout << i << "... " << std::flush;
     if (combined_dbc_map()->my_gid(i) or fluid_field()->interface()->fsi_cond_map()->my_gid(i))
     {
-      iterinc->replace_global_value(i, 0, 0.0);
+      iterinc->replace_global_value(i, 0.0);
     }
     evaluate(iterinc);  // initial iterinc is varied at first dof (0-th element)
     setup_system_matrix();
@@ -1629,11 +1629,11 @@ void FPSI::Monolithic::fpsifd_check()
 
     if (not combined_dbc_map()->my_gid(i) and
         not fluid_field()->interface()->fsi_cond_map()->my_gid(i))
-      iterinc->replace_global_value(i, 0, -delta);
+      iterinc->replace_global_value(i, -delta);
 
-    iterinc->replace_global_value(im1, 0, 0.0);
+    iterinc->replace_global_value(im1, 0.0);
 
-    if (i_loc != dofs - 1) iterinc->replace_global_value(ip1, 0, delta);
+    if (i_loc != dofs - 1) iterinc->replace_global_value(ip1, delta);
 
   }  // i-loop (columns)
   evaluate(iterinc);

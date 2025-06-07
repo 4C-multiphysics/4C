@@ -889,12 +889,12 @@ void Thermo::TimInt::set_initial_field(const Thermo::InitialField init, const in
                                   .evaluate(lnode->x().data(), 0.0, k);
           // extract temperature vector at time t_n (temp_ contains various vectors of
           // old(er) temperatures and is of type TimIntMStep<Core::LinAlg::Vector<double>>)
-          int err1 = (*temp_)(0)->replace_local_values(1, &initialval, &doflid);
+          int err1 = (*temp_)(0)->replace_local_value(doflid, initialval);
           if (err1 != 0) FOUR_C_THROW("dof not on proc");
           // initialise also the solution vector. These values are a pretty good
           // guess for the solution after the first time step (much better than
           // starting with a zero vector)
-          int err2 = tempn_->replace_local_values(1, &initialval, &doflid);
+          int err2 = tempn_->replace_local_value(doflid, initialval);
           if (err2 != 0) FOUR_C_THROW("dof not on proc");
         }  // numdofs
       }

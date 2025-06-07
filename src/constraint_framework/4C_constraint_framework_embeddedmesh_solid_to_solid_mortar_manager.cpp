@@ -515,7 +515,7 @@ Constraints::EmbeddedMesh::SolidToSolidMortarManager::penalty_invert_kappa() con
       // This LID is inactive.
       local_kappa_inv_value = 0.0;
 
-    global_kappa_inv->replace_local_value(lid, 0, local_kappa_inv_value);
+    global_kappa_inv->replace_local_value(lid, local_kappa_inv_value);
   }
 
   return global_kappa_inv;

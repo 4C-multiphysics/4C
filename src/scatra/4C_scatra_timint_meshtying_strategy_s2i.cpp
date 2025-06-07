@@ -545,14 +545,14 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
           if (slavedofgid < 0) FOUR_C_THROW("Couldn't find local ID {} in map!", slavedoflid);
 
           // copy current vector entry into temporary vector
-          if (residualslave.replace_global_value(slavedofgid, 0,
+          if (residualslave.replace_global_value(slavedofgid,
                   (*scatratimint_->residual())[scatratimint_->dof_row_map()->lid(slavedofgid)]))
             FOUR_C_THROW(
                 "Cannot insert residual vector entry with global ID {} into temporary vector!",
                 slavedofgid);
 
           // zero out current vector entry
-          if (scatratimint_->residual()->replace_global_value(slavedofgid, 0, 0.))
+          if (scatratimint_->residual()->replace_global_value(slavedofgid, 0.))
             FOUR_C_THROW(
                 "Cannot insert zero into residual vector entry with global ID {}!", slavedofgid);
         }
@@ -4018,7 +4018,7 @@ void ScaTra::MeshtyingStrategyS2I::fd_check(
 
     // impose perturbation
     if (statenp.get_map().my_gid(colgid))
-      if (statenp.sum_into_global_value(colgid, 0, fdcheckeps))
+      if (statenp.sum_into_global_value(colgid, fdcheckeps))
         FOUR_C_THROW(
             "Perturbation could not be imposed on state vector for finite difference check!");
     scatratimint_->phinp()->update(1., *extendedmaps_->extract_vector(statenp, 0), 0.);

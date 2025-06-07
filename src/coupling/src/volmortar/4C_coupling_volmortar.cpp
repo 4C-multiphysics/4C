@@ -1085,7 +1085,7 @@ void Coupling::VolMortar::VolMortarCoupl::check_initial_residuum()
         int id = discret1()->dof(0, cnode, jdof);
         double val = cnode->x()[jdof];
 
-        var_A->replace_global_value(id, 0, val);
+        var_A->replace_global_value(id, val);
       }
     }
   }
@@ -1105,7 +1105,7 @@ void Coupling::VolMortar::VolMortarCoupl::check_initial_residuum()
         int id = discret2()->dof(1, cnode, jdof);
         double val = cnode->x()[jdof];
 
-        var_B->replace_global_value(id, 0, val);
+        var_B->replace_global_value(id, val);
       }
     }
   }

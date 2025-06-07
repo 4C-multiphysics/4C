@@ -238,7 +238,7 @@ void ScaTra::LevelSetAlgorithm::evaluate_error_compared_to_analytical_sol()
             double initialval =
                 problem_->function_by_id<Core::Utils::FunctionOfSpaceTime>(startfuncno)
                     .evaluate(lnode->x().data(), time_, k);
-            int err = phiref->replace_local_values(1, &initialval, &doflid);
+            int err = phiref->replace_local_value(doflid, initialval);
             if (err != 0) FOUR_C_THROW("dof not on proc");
           }
         }
@@ -424,7 +424,7 @@ void ScaTra::LevelSetAlgorithm::apply_contact_point_boundary_condition()
       const int lid = convel_new->get_map().lid(gid);
       if (lid < 0) FOUR_C_THROW("Local ID not found in map for given global ID!");
       const double convelocity = myvel[index];
-      int err = convel_new->replace_local_value(lid, 0, convelocity);
+      int err = convel_new->replace_local_value(lid, convelocity);
       if (err != 0) FOUR_C_THROW("Error while inserting value into vector convel!");
     }
   }

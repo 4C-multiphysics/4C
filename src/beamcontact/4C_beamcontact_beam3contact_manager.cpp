@@ -600,7 +600,7 @@ void CONTACT::Beam3cmanager::shift_dis_map(
     int btsolcontact_gid = (*bt_sol_discret().dof_row_map()).gid(i);
     int problem_gid = dofoffsetmap_[btsolcontact_gid];
     double disp = disrow[(*problem_discret().dof_row_map()).lid(problem_gid)];
-    discrow.replace_global_value(btsolcontact_gid, 0, disp);
+    discrow.replace_global_value(btsolcontact_gid, disp);
   }
   Core::LinAlg::export_to(discrow, disccol);
 

@@ -89,7 +89,7 @@ void ScaTra::ScaTraTimIntPoroMulti::set_l2_flux_of_multi_fluid(
 
         const double value = ((*multiflux)(curphase * nsd_ + index))[lnodeid];
 
-        int err = phaseflux->replace_local_value(lid, 0, value);
+        int err = phaseflux->replace_local_value(lid, value);
         if (err != 0) FOUR_C_THROW("error while inserting a value into convel");
       }
     }
@@ -209,7 +209,7 @@ void ScaTra::ScaTraTimIntPoroMulti::collect_runtime_output_data()
           PoroPressureBased::get_oxy_partial_pressure_from_concentration<double>(
               Pb, CaO2, CaO2_max, Pb50, n, alpha_eff);
           // replace value
-          oxypartpress.replace_global_value(node->id(), 0, Pb);
+          oxypartpress.replace_global_value(node->id(), Pb);
         }
       }
     }

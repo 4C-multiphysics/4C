@@ -158,7 +158,7 @@ void ALE::Ale::set_initial_displacement(const ALE::InitialDisp init, const int s
                                   ->function_by_id<Core::Utils::FunctionOfSpaceTime>(startfuncno)
                                   .evaluate(lnode->x().data(), 0, d);
 
-          int err = dispn_->replace_local_values(1, &initialval, &doflid);
+          int err = dispn_->replace_local_value(doflid, initialval);
           if (err != 0) FOUR_C_THROW("dof not on proc");
         }
       }
@@ -819,8 +819,8 @@ bool ALE::Ale::evaluate_element_quality()
       actele->evaluate(
           eleparams, *discret_, la, elematrix1, elematrix2, elevector1, elevector2, elevector3);
 
-      eledetjac_->replace_local_value(i, 0, elevector1[0]);
-      elequality_->replace_local_value(i, 0, elevector1[1]);
+      eledetjac_->replace_local_value(i, elevector1[0]);
+      elequality_->replace_local_value(i, elevector1[1]);
 
     }  // loop elements
 

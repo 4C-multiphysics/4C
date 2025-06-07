@@ -2914,7 +2914,7 @@ void ScaTra::ScaTraTimIntElch::apply_dirichlet_bc(const double time,
                 dbcgids.insert(gid);
 
                 // apply cutoff voltage as Dirichlet boundary condition
-                phinp->replace_global_value(gid, 0, cutoff_voltage);
+                phinp->replace_global_value(gid, cutoff_voltage);
               }
             }
           }  // loop over all nodes
@@ -3021,7 +3021,7 @@ void ScaTra::ScaTraTimIntElch::apply_neumann_bc(
                                      ? *node->x().data() * *node->x().data() * four_pi
                                      : 1.0;
 
-              neumann_loads->sum_into_local_value(dof_lid, 0, neumann_value * fac);
+              neumann_loads->sum_into_local_value(dof_lid, neumann_value * fac);
             }
           }
 

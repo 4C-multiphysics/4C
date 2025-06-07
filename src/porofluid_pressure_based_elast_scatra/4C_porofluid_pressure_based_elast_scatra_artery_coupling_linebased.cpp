@@ -152,7 +152,7 @@ std::shared_ptr<Core::LinAlg::Map> PoroPressureBased::
       // incremental form as this will force the value to zero
       for (const auto& current_dof : dofs)
         rhs_artery_with_collapsed.replace_global_value(
-            current_dof, 0, -(*phinp_art_)[dof_row_map->lid(current_dof)]);
+            current_dof, -(*phinp_art_)[dof_row_map->lid(current_dof)]);
     }
   }
 
@@ -753,7 +753,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
                                 (*unaffected_integrated_artery_diameters_col_)[i]) /
                             current_ele_length;
 
-    artery_elements_diameters_col_->replace_local_value(i, 0, diameter);
+    artery_elements_diameters_col_->replace_local_value(i, diameter);
   }
 }
 

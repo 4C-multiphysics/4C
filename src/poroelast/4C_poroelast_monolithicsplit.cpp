@@ -149,7 +149,7 @@ std::shared_ptr<Core::LinAlg::Map> PoroElast::MonolithicSplit::fsidbc_map()
   {
     int gid = mygids[i];
     // FOUR_C_ASSERT(slavemastermap.count(gid),"master gid not found on slave side");
-    int err = gidmarker_struct->replace_global_value(gid, 0, 1.0);
+    int err = gidmarker_struct->replace_global_value(gid, 1.0);
     if (err) FOUR_C_THROW("ReplaceMyValue failed for gid {} error code {}", gid, err);
   }
 

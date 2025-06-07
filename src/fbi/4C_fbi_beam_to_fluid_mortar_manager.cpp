@@ -639,7 +639,7 @@ BeamInteraction::BeamToFluidMortarManager::invert_kappa() const
     else
       local_kappa_inv_value = 0.0;
 
-    global_kappa_inv->replace_local_value(lid, 0, local_kappa_inv_value);
+    global_kappa_inv->replace_local_value(lid, local_kappa_inv_value);
   }
 
   return global_kappa_inv;

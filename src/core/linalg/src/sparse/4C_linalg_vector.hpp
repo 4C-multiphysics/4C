@@ -8,7 +8,6 @@
 #ifndef FOUR_C_LINALG_VECTOR_HPP
 #define FOUR_C_LINALG_VECTOR_HPP
 
-
 #include "4C_config.hpp"
 
 #include "4C_linalg_map.hpp"
@@ -20,7 +19,6 @@
 #include <Epetra_Vector.h>
 
 #include <memory>
-
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -43,7 +41,6 @@ namespace Core::LinAlg
     explicit Vector(const Epetra_Vector& Source);
 
     explicit Vector(const Epetra_FEVector& Source);
-
 
     // Rule of five: We currently need to take care to make a deep copy of the Epetra_Vector.
     Vector(const Vector& other);
@@ -92,9 +89,6 @@ namespace Core::LinAlg
     //! + ScalarB*B.
     int update(double ScalarA, const Epetra_MultiVector& A, double ScalarB,
         const Epetra_MultiVector& B, double ScalarThis);
-
-
-    ///
 
     //! Compute 1-norm of each vector
     int norm_1(double* Result) const;
@@ -163,27 +157,6 @@ namespace Core::LinAlg
     //! Returns the global vector length of vectors in the multi-vector.
     int global_length() const { return vector_->GlobalLength(); }
 
-    //! Replace values in a vector with a given indexed list of values, indices are in local index
-    //! space.
-    int replace_local_values(int NumEntries, const double* Values, const int* Indices)
-    {
-      return vector_->ReplaceMyValues(NumEntries, Values, Indices);
-    }
-
-
-    //! Replace values in a vector with a given indexed list of values at the specified BlockOffset,
-    //! indices are in local index space.
-    int replace_local_values(
-        int NumEntries, int BlockOffset, const double* Values, const int* Indices)
-    {
-      return vector_->ReplaceMyValues(NumEntries, BlockOffset, Values, Indices);
-    }
-
-    int replace_local_value(int MyRow, int VectorIndex, double ScalarValue)
-    {
-      return vector_->ReplaceMyValue(MyRow, VectorIndex, ScalarValue);
-    }
-
     double* get_values() const { return vector_->Values(); }
 
     /**
@@ -195,14 +168,34 @@ namespace Core::LinAlg
      */
     int replace_map(const Map& map);
 
-    int replace_global_value(int GlobalRow, int VectorIndex, double ScalarValue)
+    int replace_local_value(int MyRow, double ScalarValue)
     {
-      return vector_->ReplaceGlobalValue(GlobalRow, VectorIndex, ScalarValue);
+      return vector_->ReplaceMyValue(MyRow, 0, ScalarValue);
     }
 
-    int replace_global_value(long long GlobalRow, int VectorIndex, double ScalarValue)
+    int replace_global_value(int GlobalRow, double ScalarValue)
     {
-      return vector_->ReplaceGlobalValue(GlobalRow, VectorIndex, ScalarValue);
+      return vector_->ReplaceGlobalValue(GlobalRow, 0, ScalarValue);
+    }
+
+    int replace_global_values(int NumEntries, const double* Values, const int* Indices)
+    {
+      return vector_->ReplaceGlobalValues(NumEntries, Values, Indices);
+    }
+
+    int sum_into_local_value(int MyRow, double ScalarValue)
+    {
+      return vector_->SumIntoMyValue(MyRow, 0, ScalarValue);
+    }
+
+    int sum_into_global_value(int GlobalRow, double ScalarValue)
+    {
+      return vector_->SumIntoGlobalValue(GlobalRow, 0, ScalarValue);
+    }
+
+    int sum_into_global_values(int NumEntries, const double* Values, const int* Indices)
+    {
+      return vector_->SumIntoGlobalValues(NumEntries, Values, Indices);
     }
 
     //! Matrix-Matrix multiplication, \e this = ScalarThis*\e this + ScalarAB*A*B.
@@ -212,9 +205,6 @@ namespace Core::LinAlg
       return vector_->Multiply(TransA, TransB, ScalarAB, A, B, ScalarThis);
     }
 
-    //! Puts element-wise reciprocal values of input Multi-vector in target.
-    int reciprocal(const Epetra_MultiVector& A) { return vector_->Reciprocal(A); }
-
     //! Multiply a Core::LinAlg::MultiVector<double> with another, element-by-element.
     int multiply(double ScalarAB, const Epetra_MultiVector& A, const Epetra_MultiVector& B,
         double ScalarThis)
@@ -222,14 +212,13 @@ namespace Core::LinAlg
       return vector_->Multiply(ScalarAB, A, B, ScalarThis);
     }
 
-    int replace_global_values(int NumEntries, const double* Values, const int* Indices)
-    {
-      return vector_->ReplaceGlobalValues(NumEntries, Values, Indices);
-    }
+    //! Puts element-wise reciprocal values of input Multi-vector in target.
+    int reciprocal(const Epetra_MultiVector& A) { return vector_->Reciprocal(A); }
 
-    int replace_global_values(int NumEntries, const double* Values, const long long* Indices)
+    int reciprocal_multiply(double ScalarAB, const Epetra_MultiVector& A,
+        const Epetra_MultiVector& B, double ScalarThis)
     {
-      return vector_->ReplaceGlobalValues(NumEntries, Values, Indices);
+      return vector_->ReciprocalMultiply(ScalarAB, A, B, ScalarThis);
     }
 
     //! Imports an Epetra_DistObject using the Core::LinAlg::Import object.
@@ -258,57 +247,12 @@ namespace Core::LinAlg
       return vector_->Export(A, Exporter, CombineMode, Indexor);
     }
 
-    int sum_into_global_value(int GlobalRow, int VectorIndex, double ScalarValue)
-    {
-      return vector_->SumIntoGlobalValue(GlobalRow, VectorIndex, ScalarValue);
-    }
-
-    int sum_into_global_value(long long GlobalRow, int VectorIndex, double ScalarValue)
-    {
-      return vector_->SumIntoGlobalValue(GlobalRow, VectorIndex, ScalarValue);
-    }
-
-    int sum_into_global_values(
-        int NumEntries, int BlockOffset, const double* Values, const int* Indices)
-    {
-      return vector_->SumIntoGlobalValues(NumEntries, BlockOffset, Values, Indices);
-    }
-
-    int sum_into_global_values(int NumEntries, const double* Values, const int* Indices)
-    {
-      return vector_->SumIntoGlobalValues(NumEntries, Values, Indices);
-    }
-
-    int reciprocal_multiply(double ScalarAB, const Epetra_MultiVector& A,
-        const Epetra_MultiVector& B, double ScalarThis)
-    {
-      return vector_->ReciprocalMultiply(ScalarAB, A, B, ScalarThis);
-    }
-
-    int sum_into_local_value(int MyRow, int VectorIndex, double ScalarValue)
-    {
-      return vector_->SumIntoMyValue(MyRow, VectorIndex, ScalarValue);
-    }
-
-
-    int sum_into_local_value(
-        int MyBlockRow, int BlockRowOffset, int VectorIndex, double ScalarValue)
-    {
-      return vector_->SumIntoMyValue(MyBlockRow, BlockRowOffset, VectorIndex, ScalarValue);
-    }
-
-    int sum_into_local_values(int NumEntries, const double* Values, const int* Indices)
-    {
-      return vector_->SumIntoMyValues(NumEntries, Values, Indices);
-    }
-
     /**
      * View a given Epetra_Vector object under our own Vector wrapper.
      */
     [[nodiscard]] static std::unique_ptr<Vector<T>> create_view(Epetra_Vector& view);
 
     [[nodiscard]] static std::unique_ptr<const Vector<T>> create_view(const Epetra_Vector& view);
-
 
    private:
     Vector() = default;
@@ -403,7 +347,6 @@ namespace Core::LinAlg
     mutable View<const Map> map_;
   };
 
-
   template <>
   struct EnableViewFor<Epetra_Vector>
   {
@@ -411,9 +354,6 @@ namespace Core::LinAlg
   };
 }  // namespace Core::LinAlg
 
-
-
 FOUR_C_NAMESPACE_CLOSE
-
 
 #endif

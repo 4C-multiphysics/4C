@@ -1367,7 +1367,7 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
       for (int k = 0; k < node->num_element(); ++k)
         weight = std::max(weight, surrele[k]->evaluation_cost());
 
-      node_weights->replace_local_value(node_lid, 0, weight);
+      node_weights->replace_local_value(node_lid, weight);
     }
     // ----------------------------------------
     // loop masternodes to adjust weights of slavenodes

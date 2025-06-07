@@ -737,7 +737,7 @@ BeamInteraction::BeamToSolidMortarManager::penalty_invert_kappa() const
       // This LID is inactive.
       local_kappa_inv_value = 0.0;
 
-    kappa_inv->replace_local_value(lid, 0, local_kappa_inv_value);
+    kappa_inv->replace_local_value(lid, local_kappa_inv_value);
   }
 
   return kappa_inv;

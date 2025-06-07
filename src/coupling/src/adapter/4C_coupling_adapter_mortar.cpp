@@ -876,7 +876,7 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
             // get new coordinate value for this spatial direction
             const double value = Xnewglobal[k] - node->x()[k];
             // replace respective value in displacement vector
-            err = idisp->replace_local_values(1, &value, &dofgid);
+            err = idisp->replace_local_value(dofgid, value);
             // check whether there was a problem in the replacement process
             if (err != 0)
               FOUR_C_THROW("error while inserting a value into ALE displacement vector!");

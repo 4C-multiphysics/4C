@@ -756,7 +756,7 @@ void Adapter::CouplingEhlMortar::assemble_normals()
     if (!cnode) FOUR_C_THROW("not a contact node");
 
     for (int d = 0; d < interface_->n_dim(); ++d)
-      normals_->replace_global_value(cnode->dofs()[d], 0, cnode->mo_data().n()[d]);
+      normals_->replace_global_value(cnode->dofs()[d], cnode->mo_data().n()[d]);
   }
 }
 
@@ -804,7 +804,7 @@ void Adapter::CouplingEhlMortar::assemble_real_gap()
             "GetD should be of size 0 (unprojectable) or 1 (projectable). Are you not using "
             "duals?");
     }
-    nodal_gap_->replace_global_value(cnode->id(), 0, real_gap);
+    nodal_gap_->replace_global_value(cnode->id(), real_gap);
   }
 
   static const double offset =
@@ -906,9 +906,9 @@ void Adapter::CouplingEhlMortar::assemble_interface_velocities(const double dt)
     for (int d = 0; d < interface()->n_dim(); ++d)
     {
       relTangVel_->replace_global_value(
-          cnode->dofs()[d], 0, cnode->ehl_data().get_weighted_rel_tang_vel()(d) / d_val);
+          cnode->dofs()[d], cnode->ehl_data().get_weighted_rel_tang_vel()(d) / d_val);
       avTangVel_->replace_global_value(
-          cnode->dofs()[d], 0, cnode->ehl_data().get_weighted_av_tang_vel()(d) / d_val);
+          cnode->dofs()[d], cnode->ehl_data().get_weighted_av_tang_vel()(d) / d_val);
     }
 
     for (auto p = cnode->data().get_deriv_d().at(cnode->id()).begin();

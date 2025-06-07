@@ -410,7 +410,7 @@ void ScaTra::LevelSetAlgorithm::calc_node_based_reinit_vel()
     {
       // store velocity in reinitialization velocity
       const double val = (*velcomp)[lnodeid];
-      (*nb_grad_val_)(idim).replace_local_values(1, &val, &lnodeid);
+      (*nb_grad_val_)(idim).replace_local_value(lnodeid, val);
     }
   }
   return;
@@ -950,7 +950,7 @@ void ScaTra::LevelSetAlgorithm::reinit_geo(
       if ((*phinp_)[doflid] < 0.0) eledistance.front().second = -eledistance.front().second;
     }
 
-    int err = phinp_->replace_local_values(1, &(eledistance.front().second), &doflid);
+    int err = phinp_->replace_local_value(doflid, eledistance.front().second);
     if (err) FOUR_C_THROW("this did not work");
   }
 

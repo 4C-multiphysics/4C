@@ -558,7 +558,7 @@ namespace ReducedLung
               airway.local_element_id, vals.size(), vals.data(), airway.local_dof_ids.data());
         }
         FOUR_C_ASSERT(err == 0, "Internal error: Airway equation assembly did not work.");
-        err = rhs.replace_local_value(airway.local_element_id, 0, res);
+        err = rhs.replace_local_value(airway.local_element_id, res);
         FOUR_C_ASSERT(err == 0, "Internal error: Airway equation calculation did not work.");
       }
 
@@ -587,7 +587,7 @@ namespace ReducedLung
               terminal_unit.local_dof_ids.data());
         }
         FOUR_C_ASSERT(err == 0, "Internal error: Terminal Unit equation assembly did not work.");
-        err = rhs.replace_local_value(terminal_unit.local_element_id, 0, res);
+        err = rhs.replace_local_value(terminal_unit.local_element_id, res);
         FOUR_C_ASSERT(err == 0, "Internal error: Terminal Unit equation calculation did not work.");
       }
 
@@ -613,7 +613,7 @@ namespace ReducedLung
         FOUR_C_ASSERT(
             err == 0, "Internal error: Connection momentum balance assembly did not work.");
         res = -locally_relevant_dofs[local_dof_ids[0]] + locally_relevant_dofs[local_dof_ids[1]];
-        err = rhs.replace_local_value(conn.first_local_equation_id, 0, res);
+        err = rhs.replace_local_value(conn.first_local_equation_id, res);
         FOUR_C_ASSERT(
             err == 0, "Internal error: Connection momentum balance calculation did not work.");
 
@@ -633,7 +633,7 @@ namespace ReducedLung
         }
         FOUR_C_ASSERT(err == 0, "Internal error: Connection mass balance assembly did not work.");
         res = -locally_relevant_dofs[local_dof_ids[0]] + locally_relevant_dofs[local_dof_ids[1]];
-        err = rhs.replace_local_value(conn.first_local_equation_id + 1, 0, res);
+        err = rhs.replace_local_value(conn.first_local_equation_id + 1, res);
         FOUR_C_ASSERT(
             err == 0, "Internal error: Connection mass balance calculation did not work.");
       }
@@ -662,7 +662,7 @@ namespace ReducedLung
             err == 0, "Internal error: Bifurcation momentum balance assembly did not work.");
         res = -locally_relevant_dofs[local_dof_ids_mom_balance[0]] +
               locally_relevant_dofs[local_dof_ids_mom_balance[1]];
-        err = rhs.replace_local_value(bif.first_local_equation_id, 0, res);
+        err = rhs.replace_local_value(bif.first_local_equation_id, res);
         FOUR_C_ASSERT(
             err == 0, "Internal error: Bifurcation momentum balance calculation did not work.");
 
@@ -684,7 +684,7 @@ namespace ReducedLung
             err == 0, "Internal error: Bifurcation momentum balance assembly did not work.");
         res = -locally_relevant_dofs[local_dof_ids_mom_balance[0]] +
               locally_relevant_dofs[local_dof_ids_mom_balance[1]];
-        err = rhs.replace_local_value(bif.first_local_equation_id + 1, 0, res);
+        err = rhs.replace_local_value(bif.first_local_equation_id + 1, res);
         FOUR_C_ASSERT(
             err == 0, "Internal error: Bifurcation momentum balance calculation did not work.");
 
@@ -708,7 +708,7 @@ namespace ReducedLung
         res = -locally_relevant_dofs[local_dof_ids_mass_balance[0]] +
               locally_relevant_dofs[local_dof_ids_mass_balance[1]] +
               locally_relevant_dofs[local_dof_ids_mass_balance[2]];
-        err = rhs.replace_local_value(bif.first_local_equation_id + 2, 0, res);
+        err = rhs.replace_local_value(bif.first_local_equation_id + 2, res);
         FOUR_C_ASSERT(
             err == 0, "Internal error: Bifurcation momentum balance calculation did not work.");
       }
@@ -732,7 +732,7 @@ namespace ReducedLung
         }
         FOUR_C_ASSERT(err == 0, "Internal error: Boundary condition assembly did not work.");
         res = -locally_relevant_dofs[local_dof_id] + bc_value;
-        err = rhs.replace_local_value(bc.local_equation_id, 0, res);
+        err = rhs.replace_local_value(bc.local_equation_id, res);
         FOUR_C_ASSERT(err == 0, "Internal error: Boundary condition evaluation did not work.");
       }
 

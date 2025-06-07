@@ -1235,7 +1235,7 @@ void PoroElastScaTra::PoroScatraMono::fd_check()
 
   iterinc->put_scalar(0.0);
 
-  iterinc->replace_global_value(0, 0, delta);
+  iterinc->replace_global_value(0, delta);
 
   auto stiff_approx = std::make_shared<Core::LinAlg::SparseMatrix>(*dof_row_map(), 81);
 
@@ -1253,7 +1253,7 @@ void PoroElastScaTra::PoroScatraMono::fd_check()
   {
     if (combined_dbc_map()->my_gid(i))
     {
-      iterinc->replace_global_value(i, 0, 0.0);
+      iterinc->replace_global_value(i, 0.0);
     }
 
     if (i == spaltenr)
@@ -1314,11 +1314,11 @@ void PoroElastScaTra::PoroScatraMono::fd_check()
       }
     }
 
-    if (not combined_dbc_map()->my_gid(i)) iterinc->replace_global_value(i, 0, -delta);
+    if (not combined_dbc_map()->my_gid(i)) iterinc->replace_global_value(i, -delta);
 
-    iterinc->replace_global_value(i - 1, 0, 0.0);
+    iterinc->replace_global_value(i - 1, 0.0);
 
-    if (i != dofs - 1) iterinc->replace_global_value(i + 1, 0, delta);
+    if (i != dofs - 1) iterinc->replace_global_value(i + 1, delta);
 
     if (i == spaltenr)
       std::cout << "\n******************" << spaltenr + 1 << ". Spalte End!!***************"

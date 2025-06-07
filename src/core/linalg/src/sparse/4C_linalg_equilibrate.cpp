@@ -361,7 +361,7 @@ void Core::LinAlg::EquilibrationBlock::equilibrate_matrix(
               // add entries of current matrix row to column sums
               for (int ientry = 0; ientry < numentries; ++ientry)
                 invcolsums->sum_into_global_value(
-                    matrix.col_map().gid(indices[ientry]), 0, std::abs(values[ientry]));
+                    matrix.col_map().gid(indices[ientry]), std::abs(values[ientry]));
             }
           }
         }

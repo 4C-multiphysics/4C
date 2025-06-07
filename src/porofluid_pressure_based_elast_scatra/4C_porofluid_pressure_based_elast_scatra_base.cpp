@@ -411,8 +411,7 @@ void PoroPressureBased::PorofluidElastScatraBaseAlgorithm::
                         ->lid(porofluid_dofs[scalar_to_phase_id + num_volfrac])] < 1)
             {
               dirichlet_dofs.push_back(scatra_dofs[idof]);
-              scatra_algo()->scatra_field()->phinp()->replace_global_value(
-                  scatra_dofs[idof], 0, 0.0);
+              scatra_algo()->scatra_field()->phinp()->replace_global_value(scatra_dofs[idof], 0.0);
             }
           }
           else
