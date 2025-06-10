@@ -193,7 +193,7 @@ void Core::LinearSolver::MueLuPreconditioner::setup(Epetra_Operator* matrix,
               .get<Teuchos::RCP<std::map<LO, LO>>>("Interface DualNodeID to PrimalNodeID");
 
       if (dual2primal_map.is_null())
-        FOUR_C_THROW("Interface DualNodeID to PrimalNodeID map is not available!");
+        FOUR_C_THROW("'Interface DualNodeID to PrimalNodeID' map is not available!");
 
       H_->GetLevel(0)->Set("DualNodeID2PrimalNodeID",
           Teuchos::rcp_dynamic_cast<std::map<int, int>>(dual2primal_map, true));
