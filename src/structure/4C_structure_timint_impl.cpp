@@ -3049,7 +3049,7 @@ void Solid::TimIntImpl::cmt_linear_solve()
           "contact innerDofMap", Teuchos::rcpFromRef(innerDofMap->get_epetra_map()));
       mueluParams.set<Teuchos::RCP<Epetra_Map>>(
           "contact activeDofMap", Teuchos::rcpFromRef(activeDofMap->get_epetra_map()));
-      const std::shared_ptr<CONTACT::AbstractStrategy> costrat =
+      std::shared_ptr<CONTACT::AbstractStrategy> costrat =
           std::dynamic_pointer_cast<CONTACT::AbstractStrategy>(strategy);
       if (costrat != nullptr)
         mueluParams.set<std::string>("Core::ProblemType", "contact");
