@@ -3619,14 +3619,21 @@ void ScaTra::ScaTraTimIntImpl::setup_matrix_block_maps()
 
     // build maps associated with blocks of global system matrix
     std::vector<std::shared_ptr<const Core::LinAlg::Map>> dof_block_maps;
-    build_block_maps(partitioningconditions, dof_block_maps);
+    std::vector<std::shared_ptr<const Core::LinAlg::Map>> node_block_maps;
+    build_block_maps(partitioningconditions, dof_block_maps, node_block_maps);
 
     // initialize a full map extractor associated with the degrees of freedom inside the blocks of
     // global system matrix
     dof_block_maps_ = std::make_shared<Core::LinAlg::MultiMapExtractor>(
         *(discret_->dof_row_map()), dof_block_maps);
-    // safety check
+    // initialize a full map extractor associated with the nodes inside the blocks of global system
+    // matrix
+    node_block_maps_ = std::make_shared<Core::LinAlg::MultiMapExtractor>(
+        *discret_->node_row_map(), node_block_maps);
+
+    // safety checks
     dof_block_maps_->check_for_valid_map_extractor();
+    node_block_maps_->check_for_valid_map_extractor();
   }
 }
 
@@ -3634,14 +3641,16 @@ void ScaTra::ScaTraTimIntImpl::setup_matrix_block_maps()
  *-----------------------------------------------------------------------------*/
 void ScaTra::ScaTraTimIntImpl::build_block_maps(
     const std::vector<const Core::Conditions::Condition*>& partitioning_conditions,
-    std::vector<std::shared_ptr<const Core::LinAlg::Map>>& dof_block_maps) const
+    std::vector<std::shared_ptr<const Core::LinAlg::Map>>& dof_block_maps,
+    std::vector<std::shared_ptr<const Core::LinAlg::Map>>& node_block_maps) const
 {
   if (matrixtype_ == Core::LinAlg::MatrixType::block_condition)
   {
     for (const auto& cond : partitioning_conditions)
     {
-      // all global ids of the dofs that form one block map
+      // all dofs and nodes that form one block map
       std::vector<int> dof_gids;
+      std::vector<int> node_gids;
 
       for (const int node_gid : *cond->get_nodes())
       {
@@ -3651,15 +3660,20 @@ void ScaTra::ScaTraTimIntImpl::build_block_maps(
         {
           const std::vector<int> node_dofs = discret_->dof(0, discret_->g_node(node_gid));
           std::ranges::copy(node_dofs, std::inserter(dof_gids, dof_gids.end()));
+          node_gids.push_back(node_gid);
         }
       }
 #ifdef FOUR_C_ENABLE_ASSERTIONS
       std::unordered_set<int> dof_set(dof_gids.begin(), dof_gids.end());
       FOUR_C_ASSERT(dof_set.size() == dof_gids.size(), "The dofs are not unique");
+      std::unordered_set<int> node_set(node_gids.begin(), node_gids.end());
+      FOUR_C_ASSERT(node_set.size() == node_gids.size(), "The nodes are not unique");
 #endif
 
       dof_block_maps.emplace_back(std::make_shared<Core::LinAlg::Map>(
           -1, static_cast<int>(dof_gids.size()), dof_gids.data(), 0, discret_->get_comm()));
+      node_block_maps.emplace_back(std::make_shared<Core::LinAlg::Map>(
+          -1, static_cast<int>(node_gids.size()), node_gids.data(), 0, discret_->get_comm()));
     }
   }
   else

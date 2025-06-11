@@ -686,10 +686,12 @@ namespace ScaTra
      * @param[in]  partitioning_conditions domain partitioning conditions
      * @param[out] dof_block_maps          vector for degrees of freedom maps for each matrix block
      *                                     to be built
+     * @param[out] node_block_maps         vector for node maps for each matrix block to be built
      */
     virtual void build_block_maps(
         const std::vector<const Core::Conditions::Condition*>& partitioning_conditions,
-        std::vector<std::shared_ptr<const Core::LinAlg::Map>>& dof_block_maps) const;
+        std::vector<std::shared_ptr<const Core::LinAlg::Map>>& dof_block_maps,
+        std::vector<std::shared_ptr<const Core::LinAlg::Map>>& node_block_maps) const;
 
     //! Build null spaces associated with blocks of global system matrix. Hand in solver to access
     //! the parameter list and initial number of the block (e.g. for coupled problems)
@@ -1516,6 +1518,9 @@ namespace ScaTra
     //! map extractor associated with the degrees of freedom inside the blocks of global system
     //! matrix
     std::shared_ptr<Core::LinAlg::MultiMapExtractor> dof_block_maps_;
+
+    //! map extractor associated with the nodes inside the blocks of global system matrix
+    std::shared_ptr<Core::LinAlg::MultiMapExtractor> node_block_maps_;
 
     //! a vector of zeros to be used to enforce zero dirichlet boundary conditions
     std::shared_ptr<Core::LinAlg::Vector<double>> zeros_;

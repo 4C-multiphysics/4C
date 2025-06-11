@@ -3156,7 +3156,8 @@ int ScaTra::ScalarHandlerElch::num_scal_in_condition(const Core::Conditions::Con
  *-----------------------------------------------------------------------------*/
 void ScaTra::ScaTraTimIntElch::build_block_maps(
     const std::vector<const Core::Conditions::Condition*>& partitioning_conditions,
-    std::vector<std::shared_ptr<const Core::LinAlg::Map>>& dof_block_maps) const
+    std::vector<std::shared_ptr<const Core::LinAlg::Map>>& dof_block_maps,
+    std::vector<std::shared_ptr<const Core::LinAlg::Map>>& node_block_maps) const
 {
   if (matrix_type() == Core::LinAlg::MatrixType::block_condition_dof)
   {
@@ -3172,6 +3173,7 @@ void ScaTra::ScaTraTimIntElch::build_block_maps(
     {
       // all dofs that form one block map
       std::vector<std::vector<int>> partitioned_dof_gids(num_dof_per_node());
+      std::vector<int> node_gids;
 
       for (const int node_gid : *cond->get_nodes())
       {
@@ -3185,6 +3187,8 @@ void ScaTra::ScaTraTimIntElch::build_block_maps(
 
           for (unsigned dof = 0; dof < nodedofs.size(); ++dof)
             partitioned_dof_gids[dof].emplace_back(nodedofs[dof]);
+
+          node_gids.push_back(node_gid);
         }
       }
 
@@ -3193,15 +3197,20 @@ void ScaTra::ScaTraTimIntElch::build_block_maps(
 #ifdef FOUR_C_ENABLE_ASSERTIONS
         std::unordered_set<int> dof_gids_set(dof_gids.begin(), dof_gids.end());
         FOUR_C_ASSERT(dof_gids_set.size() == dof_gids.size(), "The dofs are not unique");
+        std::unordered_set<int> node_set(node_gids.begin(), node_gids.end());
+        FOUR_C_ASSERT(node_set.size() == node_gids.size(), "The nodes are not unique");
 #endif
         dof_block_maps.emplace_back(std::make_shared<Core::LinAlg::Map>(
             -1, static_cast<int>(dof_gids.size()), dof_gids.data(), 0, discret_->get_comm()));
+        node_block_maps.emplace_back(std::make_shared<Core::LinAlg::Map>(
+            -1, static_cast<int>(node_gids.size()), node_gids.data(), 0, discret_->get_comm()));
       }
     }
   }
   else
   {
-    ScaTra::ScaTraTimIntImpl::build_block_maps(partitioning_conditions, dof_block_maps);
+    ScaTra::ScaTraTimIntImpl::build_block_maps(
+        partitioning_conditions, dof_block_maps, node_block_maps);
   }
 }
 
