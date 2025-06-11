@@ -1328,18 +1328,18 @@ void SSI::SsiMono::calc_initial_time_derivative()
                 Utils::SSIMatrices::setup_sparse_matrix(*scatra_field()->dof_row_map()))
           : std::dynamic_pointer_cast<Core::LinAlg::SparseOperator>(
                 Utils::SSIMatrices::setup_block_matrix(
-                    *scatra_field()->block_maps(), *scatra_field()->block_maps()));
+                    *scatra_field()->dof_block_maps(), *scatra_field()->dof_block_maps()));
 
   auto massmatrix_manifold =
-      is_scatra_manifold()
-          ? (scatra_manifold()->matrix_type() == Core::LinAlg::MatrixType::sparse
-                    ? std::dynamic_pointer_cast<Core::LinAlg::SparseOperator>(
-                          Utils::SSIMatrices::setup_sparse_matrix(
-                              *scatra_manifold()->dof_row_map()))
-                    : std::dynamic_pointer_cast<Core::LinAlg::SparseOperator>(
-                          Utils::SSIMatrices::setup_block_matrix(
-                              *scatra_manifold()->block_maps(), *scatra_manifold()->block_maps())))
-          : nullptr;
+      is_scatra_manifold() ? (scatra_manifold()->matrix_type() == Core::LinAlg::MatrixType::sparse
+                                     ? std::dynamic_pointer_cast<Core::LinAlg::SparseOperator>(
+                                           Utils::SSIMatrices::setup_sparse_matrix(
+                                               *scatra_manifold()->dof_row_map()))
+                                     : std::dynamic_pointer_cast<Core::LinAlg::SparseOperator>(
+                                           Utils::SSIMatrices::setup_block_matrix(
+                                               *scatra_manifold()->dof_block_maps(),
+                                               *scatra_manifold()->dof_block_maps())))
+                           : nullptr;
 
   auto massmatrix_system = matrix_type() == Core::LinAlg::MatrixType::sparse
                                ? std::dynamic_pointer_cast<Core::LinAlg::SparseOperator>(

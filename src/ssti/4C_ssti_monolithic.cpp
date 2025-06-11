@@ -637,7 +637,7 @@ std::vector<int> SSTI::SSTIMono::get_block_positions(Subproblem subproblem) cons
       if (scatra_field()->matrix_type() == Core::LinAlg::MatrixType::sparse)
         block_position.emplace_back(1);
       else
-        block_position.emplace_back(scatra_field()->block_maps()->num_maps());
+        block_position.emplace_back(scatra_field()->dof_block_maps()->num_maps());
       break;
     }
     case Subproblem::scalar_transport:
@@ -647,7 +647,7 @@ std::vector<int> SSTI::SSTIMono::get_block_positions(Subproblem subproblem) cons
       else
 
       {
-        for (int i = 0; i < static_cast<int>(scatra_field()->block_maps()->num_maps()); ++i)
+        for (int i = 0; i < static_cast<int>(scatra_field()->dof_block_maps()->num_maps()); ++i)
           block_position.emplace_back(i);
       }
       break;
@@ -658,15 +658,14 @@ std::vector<int> SSTI::SSTIMono::get_block_positions(Subproblem subproblem) cons
         block_position.emplace_back(2);
       else
       {
-        for (int i = 0; i < static_cast<int>(thermo_field()->block_maps()->num_maps()); ++i)
-          block_position.emplace_back(scatra_field()->block_maps()->num_maps() + 1 + i);
+        for (int i = 0; i < thermo_field()->dof_block_maps()->num_maps(); ++i)
+          block_position.emplace_back(scatra_field()->dof_block_maps()->num_maps() + 1 + i);
       }
       break;
     }
     default:
     {
       FOUR_C_THROW("Unknown type of subproblem");
-      break;
     }
   }
 

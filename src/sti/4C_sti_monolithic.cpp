@@ -163,10 +163,10 @@ STI::Monolithic::Monolithic(MPI_Comm comm, const Teuchos::ParameterList& stidyn,
     case Core::LinAlg::MatrixType::block_condition:
     {
       // extract maps underlying main-diagonal matrix blocks associated with scalar transport field
-      const int nblockmapsscatra = static_cast<int>(scatra_field()->block_maps()->num_maps());
+      const int nblockmapsscatra = static_cast<int>(scatra_field()->dof_block_maps()->num_maps());
       std::vector<std::shared_ptr<const Core::LinAlg::Map>> blockmaps(nblockmapsscatra + 1);
       for (int iblockmap = 0; iblockmap < nblockmapsscatra; ++iblockmap)
-        blockmaps[iblockmap] = scatra_field()->block_maps()->map(iblockmap);
+        blockmaps[iblockmap] = scatra_field()->dof_block_maps()->map(iblockmap);
 
       // extract map underlying single main-diagonal matrix block associated with temperature field
       blockmaps[nblockmapsscatra] = mapthermo;
@@ -265,22 +265,18 @@ STI::Monolithic::Monolithic(MPI_Comm comm, const Teuchos::ParameterList& stidyn,
       // initialize scatra-thermo blocks
       scatrathermoblockdomain_ = std::make_shared<
           Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
-
-          *blockmapthermo_, *scatra_field()->block_maps(), 81, false, true);
+          *blockmapthermo_, *scatra_field()->dof_block_maps(), 81, false, true);
       scatrathermoblockinterface_ = std::make_shared<
           Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
-
           *blockmapthermo_, *blockmapscatrainterface, 81, false, true);
 
       // initialize thermo-scatra blocks
       thermoscatrablockdomain_ = std::make_shared<
           Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
-
-          *scatra_field()->block_maps(), *blockmapthermo_, 81, false, true);
+          *scatra_field()->dof_block_maps(), *blockmapthermo_, 81, false, true);
       thermoscatrablockinterface_ = std::make_shared<
           Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
-
-          *scatra_field()->block_maps(), *blockmapthermointerface, 81, false, true);
+          *scatra_field()->dof_block_maps(), *blockmapthermointerface, 81, false, true);
 
       break;
     }
@@ -305,7 +301,6 @@ STI::Monolithic::Monolithic(MPI_Comm comm, const Teuchos::ParameterList& stidyn,
     default:
     {
       FOUR_C_THROW("Invalid matrix type associated with scalar transport field!");
-      break;
     }
   }
 
@@ -790,7 +785,7 @@ void STI::Monolithic::assemble_mat_and_rhs()
         case Core::LinAlg::MatrixType::block_condition:
         {
           // extract number of matrix row or column blocks associated with scalar transport field
-          const int nblockmapsscatra = static_cast<int>(scatra_field()->block_maps()->num_maps());
+          const int nblockmapsscatra = scatra_field()->dof_block_maps()->num_maps();
 
           // construct global system matrix by assigning matrix blocks
           for (int iblock = 0; iblock < nblockmapsscatra; ++iblock)
@@ -1663,7 +1658,7 @@ void STI::Monolithic::apply_dirichlet_off_diag(
  *----------------------------------------------------------------------*/
 void STI::Monolithic::assemble_domain_interface_off_diag(
     std::shared_ptr<Core::LinAlg::SparseOperator>& scatrathermo_domain_interface,
-    std::shared_ptr<Core::LinAlg::SparseOperator>& thermoscatra_domain_interface)
+    std::shared_ptr<Core::LinAlg::SparseOperator>& thermoscatra_domain_interface) const
 {
   // initialize scatra-thermo blocks
   switch (scatra_field()->matrix_type())
@@ -1672,12 +1667,10 @@ void STI::Monolithic::assemble_domain_interface_off_diag(
     {
       scatrathermo_domain_interface = std::make_shared<
           Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
-
-          *blockmapthermo_, *scatra_field()->block_maps(), 81, false, true);
+          *blockmapthermo_, *scatra_field()->dof_block_maps(), 81, false, true);
       thermoscatra_domain_interface = std::make_shared<
           Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
-
-          *scatra_field()->block_maps(), *blockmapthermo_, 81, false, true);
+          *scatra_field()->dof_block_maps(), *blockmapthermo_, 81, false, true);
 
       break;
     }
@@ -1692,7 +1685,6 @@ void STI::Monolithic::assemble_domain_interface_off_diag(
     default:
     {
       FOUR_C_THROW("Unknown matrix type");
-      break;
     }
   }
 

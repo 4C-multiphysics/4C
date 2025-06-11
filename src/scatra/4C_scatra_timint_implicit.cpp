@@ -3618,51 +3618,54 @@ void ScaTra::ScaTraTimIntImpl::setup_matrix_block_maps()
     }
 
     // build maps associated with blocks of global system matrix
-    std::vector<std::shared_ptr<const Core::LinAlg::Map>> blockmaps;
-    build_block_maps(partitioningconditions, blockmaps);
+    std::vector<std::shared_ptr<const Core::LinAlg::Map>> dof_block_maps;
+    build_block_maps(partitioningconditions, dof_block_maps);
 
-    // initialize full map extractor associated with blocks of global system matrix
-    blockmaps_ =
-        std::make_shared<Core::LinAlg::MultiMapExtractor>(*(discret_->dof_row_map()), blockmaps);
+    // initialize a full map extractor associated with the degrees of freedom inside the blocks of
+    // global system matrix
+    dof_block_maps_ = std::make_shared<Core::LinAlg::MultiMapExtractor>(
+        *(discret_->dof_row_map()), dof_block_maps);
     // safety check
-    blockmaps_->check_for_valid_map_extractor();
+    dof_block_maps_->check_for_valid_map_extractor();
   }
 }
 
 /*-----------------------------------------------------------------------------*
  *-----------------------------------------------------------------------------*/
 void ScaTra::ScaTraTimIntImpl::build_block_maps(
-    const std::vector<const Core::Conditions::Condition*>& partitioningconditions,
-    std::vector<std::shared_ptr<const Core::LinAlg::Map>>& blockmaps) const
+    const std::vector<const Core::Conditions::Condition*>& partitioning_conditions,
+    std::vector<std::shared_ptr<const Core::LinAlg::Map>>& dof_block_maps) const
 {
   if (matrixtype_ == Core::LinAlg::MatrixType::block_condition)
   {
-    for (const auto& cond : partitioningconditions)
+    for (const auto& cond : partitioning_conditions)
     {
-      // all dofs that form one block map
-      std::vector<int> dofs;
+      // all global ids of the dofs that form one block map
+      std::vector<int> dof_gids;
 
-      for (int nodegid : *cond->get_nodes())
+      for (const int node_gid : *cond->get_nodes())
       {
-        if (discret_->have_global_node(nodegid) and
-            discret_->g_node(nodegid)->owner() ==
+        if (discret_->have_global_node(node_gid) and
+            discret_->g_node(node_gid)->owner() ==
                 Core::Communication::my_mpi_rank(discret_->get_comm()))
         {
-          const std::vector<int> nodedofs = discret_->dof(0, discret_->g_node(nodegid));
-          std::copy(nodedofs.begin(), nodedofs.end(), std::inserter(dofs, dofs.end()));
+          const std::vector<int> node_dofs = discret_->dof(0, discret_->g_node(node_gid));
+          std::ranges::copy(node_dofs, std::inserter(dof_gids, dof_gids.end()));
         }
       }
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-      std::unordered_set<int> dof_set(dofs.begin(), dofs.end());
-      FOUR_C_ASSERT(dof_set.size() == dofs.size(), "The dofs are not unique");
+      std::unordered_set<int> dof_set(dof_gids.begin(), dof_gids.end());
+      FOUR_C_ASSERT(dof_set.size() == dof_gids.size(), "The dofs are not unique");
 #endif
 
-      blockmaps.emplace_back(std::make_shared<Core::LinAlg::Map>(
-          -1, static_cast<int>(dofs.size()), dofs.data(), 0, discret_->get_comm()));
+      dof_block_maps.emplace_back(std::make_shared<Core::LinAlg::Map>(
+          -1, static_cast<int>(dof_gids.size()), dof_gids.data(), 0, discret_->get_comm()));
     }
   }
   else
+  {
     FOUR_C_THROW("Invalid type of global system matrix!");
+  }
 }
 
 /*-----------------------------------------------------------------------------*
@@ -3683,7 +3686,7 @@ void ScaTra::ScaTraTimIntImpl::build_block_null_spaces(
     std::shared_ptr<Core::LinAlg::Solver> solver, int init_block_number) const
 {
   // loop over blocks of global system matrix
-  for (int iblock = init_block_number; iblock < block_maps()->num_maps() + init_block_number;
+  for (int iblock = init_block_number; iblock < dof_block_maps()->num_maps() + init_block_number;
       ++iblock)
   {
     // store number of current block as string, starting from 1
@@ -3703,7 +3706,7 @@ void ScaTra::ScaTraTimIntImpl::build_block_null_spaces(
 
     // reduce full null space to match degrees of freedom associated with current matrix block
     Core::LinearSolver::Parameters::fix_null_space("Block " + iblockstr.str(),
-        *discret_->dof_row_map(), *block_maps()->map(iblock - init_block_number),
+        *discret_->dof_row_map(), *dof_block_maps()->map(iblock - init_block_number),
         blocksmootherparams);
   }
 }
@@ -3745,7 +3748,6 @@ void ScaTra::ScaTraTimIntImpl::setup_matrix_block_maps_and_meshtying()
     default:
     {
       FOUR_C_THROW("ScaTra Matrixtype {} not recognised", static_cast<int>(matrix_type()));
-      break;
     }
   }
 }
@@ -3772,8 +3774,7 @@ std::shared_ptr<Core::LinAlg::SparseOperator> ScaTra::ScaTraTimIntImpl::init_sys
       // initialize system matrix and associated strategy
       systemmatrix = std::make_shared<
           Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
-
-          *block_maps(), *block_maps(), 81, false, true);
+          *dof_block_maps(), *dof_block_maps(), 81, false, true);
 
       break;
     }
@@ -3782,7 +3783,6 @@ std::shared_ptr<Core::LinAlg::SparseOperator> ScaTra::ScaTraTimIntImpl::init_sys
     {
       FOUR_C_THROW(
           "Type of global system matrix for scatra-scatra interface coupling not recognized!");
-      break;
     }
   }
 

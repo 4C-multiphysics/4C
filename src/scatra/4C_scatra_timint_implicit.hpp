@@ -455,9 +455,9 @@ namespace ScaTra
     std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> block_system_matrix();
 
     //! return the map extractor associated with blocks of global system matrix
-    [[nodiscard]] std::shared_ptr<const Core::LinAlg::MultiMapExtractor> block_maps() const
+    [[nodiscard]] std::shared_ptr<const Core::LinAlg::MultiMapExtractor> dof_block_maps() const
     {
-      return blockmaps_;
+      return dof_block_maps_;
     }
 
     //! return residual vector
@@ -683,12 +683,13 @@ namespace ScaTra
     /*!
      * @brief build maps associated with blocks of global system matrix
      *
-     * @param[in]  partitioningconditions  domain partitioning conditions
-     * @param[out] blockmaps               empty vector for maps to be built
+     * @param[in]  partitioning_conditions domain partitioning conditions
+     * @param[out] dof_block_maps          vector for degrees of freedom maps for each matrix block
+     *                                     to be built
      */
     virtual void build_block_maps(
-        const std::vector<const Core::Conditions::Condition*>& partitioningconditions,
-        std::vector<std::shared_ptr<const Core::LinAlg::Map>>& blockmaps) const;
+        const std::vector<const Core::Conditions::Condition*>& partitioning_conditions,
+        std::vector<std::shared_ptr<const Core::LinAlg::Map>>& dof_block_maps) const;
 
     //! Build null spaces associated with blocks of global system matrix. Hand in solver to access
     //! the parameter list and initial number of the block (e.g. for coupled problems)
@@ -1512,8 +1513,9 @@ namespace ScaTra
     //! system matrix (either sparse matrix or block sparse matrix)
     std::shared_ptr<Core::LinAlg::SparseOperator> sysmat_;
 
-    //! map extractor associated with blocks of global system matrix
-    std::shared_ptr<Core::LinAlg::MultiMapExtractor> blockmaps_;
+    //! map extractor associated with the degrees of freedom inside the blocks of global system
+    //! matrix
+    std::shared_ptr<Core::LinAlg::MultiMapExtractor> dof_block_maps_;
 
     //! a vector of zeros to be used to enforce zero dirichlet boundary conditions
     std::shared_ptr<Core::LinAlg::Vector<double>> zeros_;

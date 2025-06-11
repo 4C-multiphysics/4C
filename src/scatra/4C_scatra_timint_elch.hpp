@@ -65,8 +65,8 @@ namespace ScaTra
     //! additional, to standard partitioning in scatra, the global system matrix in elch can be
     //! partitioned into concentration and potential dofs
     void build_block_maps(
-        const std::vector<const Core::Conditions::Condition*>& partitioningconditions,
-        std::vector<std::shared_ptr<const Core::LinAlg::Map>>& blockmaps) const override;
+        const std::vector<const Core::Conditions::Condition*>& partitioning_conditions,
+        std::vector<std::shared_ptr<const Core::LinAlg::Map>>& dof_block_maps) const override;
 
     void build_block_null_spaces(
         std::shared_ptr<Core::LinAlg::Solver> solver, int init_block_number) const override;
