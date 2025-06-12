@@ -70,6 +70,8 @@ Don't be overwhelmed by the options you could potentially set.
   optimizes the build setup for iterative development cycles.
 - We try to detect reasonable defaults for you internally.
 
+.. _reference_cmake_variables:
+
 Reference of all CMake variables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
