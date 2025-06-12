@@ -80,9 +80,9 @@ std::shared_ptr<Core::LinAlg::Graph> Core::Rebalance::rebalance_graph(
   if (initialNodeWeights != nullptr)
     graphAdapter->setVertexWeights(initialNodeWeights->get_values(), 1, 0);
 
+  std::vector<double> edgeWeights;
   if (initialEdgeWeights != nullptr)
   {
-    std::vector<double> edgeWeights;
     for (int local_row = 0; local_row < initialEdgeWeights->row_map().num_my_elements();
         local_row++)
     {
