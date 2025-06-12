@@ -96,6 +96,11 @@ namespace BeamInteraction
     }
 
     /**
+     * \brief Returns saddle point formulation flag.
+     */
+    inline bool get_saddle_point_formulation_flag() const { return saddle_point_; }
+
+    /**
      * \brief Returns the shape function for the mortar Lagrange-multiplicators.
      */
     inline Inpar::BeamToSolid::BeamToSolidMortarShapefunctions get_mortar_shape_function_type()
@@ -149,6 +154,9 @@ namespace BeamInteraction
 
     //! Penalty parameter.
     double penalty_parameter_;
+
+    // saddle point flag
+    bool saddle_point_;
 
     //! Gauss rule to be used.
     Core::FE::GaussRule1D gauss_rule_;
