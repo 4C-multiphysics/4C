@@ -82,6 +82,8 @@ namespace Core::IO
 
     std::variant<T, std::unordered_map<IndexType, T>> data_;
   };
+
+
 }  // namespace Core::IO
 
 FOUR_C_NAMESPACE_CLOSE
