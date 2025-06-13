@@ -141,6 +141,8 @@ This script installs `pre-commit <https://pre-commit.com/>`_ and sets up the pre
     However, when changes in the virtual python environment have been made, you **must** generate a new environment locally as well.
     You will be reminded of this when you try to commit with an outdated virtual environment.
 
+.. _installation_configure:
+
 Configure
 ~~~~~~~~~
 
@@ -182,6 +184,7 @@ In a preset within this file, you should define a few options that are important
   ``"binaryDir": "<4C-basedir>/builds/release-build"`` (the folder name is completely up to you).
 
 More information about the cmake presets can be found :ref:`here <developer_cmake>`.
+This section also contains an up-to-date :ref:`reference list<reference_cmake_variables>` of all variables used to configure |FOURC|.
 
 
 .. note::
@@ -233,6 +236,7 @@ CLion
 Let's assume that you already have cloned the repository and created a build directory as outlined above.
 Open CLion and open the 4C source directory. CLion understands CMake preset files, so configuration is easy.
 Consult the CLion documentation for more information on how to set up a project.
+If you want to include a YAML schema for easier writing of input files within the project directory tree, see :ref:`below<clion_yaml_schema>`.
 
 **Enable debugging with CLion**
 
@@ -264,6 +268,23 @@ Make sure you have enabled a debug profile in your cmake settings.
 
 The program will run until it reaches the end, a breakpoint, or a segmentation fault.
 
+.. _clion_yaml_schema:
+
+**Adding yaml Schema to CLion**
+
+In order to use the Yaml schema in CLion, which simplifies editing |FOURC| input files significantly,
+add a JSON schema file, which is automatically created during the build process, to your configuration.
+
+1. In File :math:`\to` Settings, search for "JSON schema", which will bring you to **JSON Schema Mappings**.
+2. Add a new entry by clicking on the "+" sign.
+3. Give it a descriptive name.
+4. Select the Schema file ``4C_schema.json`` from your local build directory.
+5. Select Schema version *JSON Schema v4*.
+6. Add the file name pattern ``\*.4C.yaml``, to which this schema is applied.
+
+Note that this Schema is only valid for the current project, that is, only files in this directory tree are recognized.
+
+
 .. _visualstudiocode:
 
 Visual Studio Code
@@ -272,6 +293,8 @@ Visual Studio Code
 `Visual Studio Code <https://code.visualstudio.com/>`_ is a code editor optimized for building and debugging modern web and cloud applications.
 It can also be used for developing |FOURC|.
 Visual Studio Code can connect to a remote computer so you can work on your home computer via SSH, see `here <https://code.visualstudio.com/docs/remote/remote-overview>`_.
+If you want to include a YAML schema for easier writing of input files within the project directory tree, see :ref:`below<vscode_yaml_schema>`.
+
 
 **Setting up VS Code**
 
@@ -455,6 +478,32 @@ Now you can attach gdb to each process with the following configuration:
 Start it two times and choose in the prompt the respective process id.
 Wait until both instances are connected and then start the computation by pressing any key in the 4C terminal.
 
+.. _vscode_yaml_schema:
+
+**Adding yaml Schema to VS Code**
+
+In order to use the Yaml schema in VS Code, which simplifies editing |FOURC|  input files significantly, is done in two steps.configure
+
+1. install YAML by Red Hat
+
+2. Goto file :math:`\to` Preferences :math:`\to` Settings
+   Search for "schemas".
+   You'll find the entry **JSON: Schemas** containing the link *Edit in settings.json*; click on it.
+
+   In the ``setting.json`` file, you might have entries already; add the following entry to the main dictionary
+   (adjust the directory of the json file to your build directory, where this file is located):
+
+   ::
+
+       "yaml.schemas": {
+         "<path_to>/4C_schema.json": "*.4C.yaml",
+       },
+
+The schema is now automatically applied on Yaml files that end with ``.4C.yaml``.
+
+Since the ``settings.json`` file is by default stored in ``$HOME/.config/Code/User``,
+it affects all files with the respective suffix that you open with VS Code, not only those in the |FOURC| project directory.
+
 .. _build4Cwithcustomtargets:
 
 Build |FOURC| with custom targets
@@ -480,17 +529,17 @@ Here's a list of all valid custom target specifiers with a brief explanation:
 
 Executables:
 
-- ``4C`` generate the main |FOURC| executable only
+- ``4C`` generate the main |FOURC| executable only (this is the default)
 - ``post_processor`` build the post-filters only
 - ``post_monitor`` build a nodal data extraction application
 - ``full`` generate all executable targets of |FOURC|
 
-Documentation:
+Refer to the variable ``FULL_TARGETS`` IN ``<sourcedir>/CMakeLists.txt`` for a definition of all executable targets.
 
-- ``documentation`` create the main documentation
-- ``doxygen`` create the (developer-oriented) Doxygen documentation
+Documentation (for the documentation to be generated, you have to set the respective cmake variables in the presets file described :ref:`above<installation_configure>`):
 
-Refer to ``CMakeLists.txt`` for a definition of all other target specifiers.
+- ``documentation`` create the main documentation (set ``FOUR_C_BUILD_DOCUMENTATION=ON`` in the presets)
+- ``doxygen`` create the (developer-oriented) Doxygen documentation (set ``FOUR_C_BUILD_DOXYGEN=ON`` in the presets)
 
 .. note::
 
