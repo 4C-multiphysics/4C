@@ -107,72 +107,56 @@ void Discret::Elements::Beam3rType::setup_element_definition(
 
   using namespace Core::IO::InputSpecBuilders;
 
-  // note: LINE2 refers to linear Lagrange interpolation of centerline AND triad field
   defs["LINE2"] = all_of({
       parameter<std::vector<int>>("LINE2", {.size = 2}),
       parameter<int>("MAT"),
       parameter<std::vector<double>>("TRIADS", {.size = 6}),
       parameter<bool>("USE_FAD", {.default_value = false}),
+      parameter<bool>("HERMITE_CENTERLINE",
+          {
+              .description = "Use Hermite interpolation for centerline using "
+                             "the two end nodes of the element",
+              .default_value = false,
+          }),
   });
 
-  // note: LINE3 refers to quadratic Lagrange interpolation of centerline AND triad field
   defs["LINE3"] = all_of({
       parameter<std::vector<int>>("LINE3", {.size = 3}),
       parameter<int>("MAT"),
       parameter<std::vector<double>>("TRIADS", {.size = 9}),
       parameter<bool>("USE_FAD", {.default_value = false}),
+      parameter<bool>("HERMITE_CENTERLINE",
+          {
+              .description = "Use Hermite interpolation for centerline using "
+                             "the two end nodes of the element",
+              .default_value = false,
+          }),
   });
 
-  // note: LINE4 refers to cubic Lagrange interpolation of centerline AND triad field
   defs["LINE4"] = all_of({
       parameter<std::vector<int>>("LINE4", {.size = 4}),
       parameter<int>("MAT"),
       parameter<std::vector<double>>("TRIADS", {.size = 12}),
       parameter<bool>("USE_FAD", {.default_value = false}),
+      parameter<bool>("HERMITE_CENTERLINE",
+          {
+              .description = "Use Hermite interpolation for centerline using "
+                             "the two end nodes of the element",
+              .default_value = false,
+          }),
   });
 
-  // note: LINE5 refers to quartic Lagrange interpolation of centerline AND triad field
   defs["LINE5"] = all_of({
       parameter<std::vector<int>>("LINE5", {.size = 5}),
       parameter<int>("MAT"),
       parameter<std::vector<double>>("TRIADS", {.size = 15}),
       parameter<bool>("USE_FAD", {.default_value = false}),
-  });
-
-  /* note: HERM2 refers to cubic Hermite interpolation of centerline (2 nodes)
-   *       LINE2 refers to linear Lagrange interpolation of the triad field*/
-  defs["HERM2LINE2"] = all_of({
-      parameter<std::vector<int>>("HERM2LINE2", {.size = 2}),
-      parameter<int>("MAT"),
-      parameter<std::vector<double>>("TRIADS", {.size = 6}),
-      parameter<bool>("USE_FAD", {.default_value = false}),
-  });
-
-  /* note: HERM2 refers to cubic order Hermite interpolation of centerline (2 nodes)
-   *       LINE3 refers to quadratic Lagrange interpolation of the triad field*/
-  defs["HERM2LINE3"] = all_of({
-      parameter<std::vector<int>>("HERM2LINE3", {.size = 3}),
-      parameter<int>("MAT"),
-      parameter<std::vector<double>>("TRIADS", {.size = 9}),
-      parameter<bool>("USE_FAD", {.default_value = false}),
-  });
-
-  /* note: HERM2 refers to cubic Hermite interpolation of centerline (2 nodes)
-   *       LINE4 refers to cubic Lagrange interpolation of the triad field*/
-  defs["HERM2LINE4"] = all_of({
-      parameter<std::vector<int>>("HERM2LINE4", {.size = 4}),
-      parameter<int>("MAT"),
-      parameter<std::vector<double>>("TRIADS", {.size = 12}),
-      parameter<bool>("USE_FAD", {.default_value = false}),
-  });
-
-  /* note: HERM2 refers to cubic Hermite interpolation of centerline (2 nodes)
-   *       LINE5 refers to quartic Lagrange interpolation of the triad field*/
-  defs["HERM2LINE5"] = all_of({
-      parameter<std::vector<int>>("HERM2LINE5", {.size = 5}),
-      parameter<int>("MAT"),
-      parameter<std::vector<double>>("TRIADS", {.size = 15}),
-      parameter<bool>("USE_FAD", {.default_value = false}),
+      parameter<bool>("HERMITE_CENTERLINE",
+          {
+              .description = "Use Hermite interpolation for centerline using "
+                             "the two end nodes of the element",
+              .default_value = false,
+          }),
   });
 }
 

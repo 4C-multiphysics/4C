@@ -45,13 +45,7 @@ bool Discret::Elements::Beam3r::read_element(const std::string& eletype, const s
       mat_type);
 
 
-  if (container.get_if<std::vector<int>>("HERM2LINE2") != nullptr or
-      container.get_if<std::vector<int>>("HERM2LINE3") != nullptr or
-      container.get_if<std::vector<int>>("HERM2LINE4") != nullptr or
-      container.get_if<std::vector<int>>("HERM2LINE5") != nullptr)
-    centerline_hermite_ = true;
-  else
-    centerline_hermite_ = false;
+  centerline_hermite_ = container.get<bool>("HERMITE_CENTERLINE");
 
   // read whether automatic differentiation via Sacado::Fad package shall be used
   use_fad_ = container.get<bool>("USE_FAD");
