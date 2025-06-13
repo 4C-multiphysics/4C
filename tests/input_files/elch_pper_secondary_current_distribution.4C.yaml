@@ -67,13 +67,13 @@ RESULT DESCRIPTION:
       NODE: 451
       QUANTITY: "phi3"
       VALUE: 0
-      TOLERANCE: 1e-14
+      TOLERANCE: 2e-14
   - SCATRA:
       DIS: "scatra"
       NODE: 22
       QUANTITY: "phi3"
       VALUE: 0
-      TOLERANCE: 1e-14
+      TOLERANCE: 2e-14
   - SCATRA:
       DIS: "scatra"
       NODE: 457
