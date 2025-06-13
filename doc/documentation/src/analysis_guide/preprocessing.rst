@@ -14,7 +14,7 @@ input file.
 There are not so many means to create a valid input file. At this point, we know of the following
 different ways to create an input file. In general, you'll have two options:
 
-#. Either you create the input file in |FOURC|'s native format directly,
+#. Either you create the input file in |FOURC|'s native yaml format directly,
 #. or you create an input file in a general binary format for finite element information, called ``Exodus II``, develeloped by `Sandia National Laboratories
    <https://www.sandia.gov/files/cubit/15.8/help_manual/WebHelp/finite_element_model/exodus/exodus2_file_specification.htm>`_.
    This can be read into |FOURC| via its input file.
@@ -51,6 +51,10 @@ Geometry as well as element and node sets can be created in any finite element p
 However, the preprocessor should be capable of exporting a file format, which can be converted
 by the python toolset meshio (see <https://pypi.org/project/meshio/>) into an exodus file.
 
+.. admonition:: Warning
+
+    The exodus file that is exported by meshio can currently not read in by |FOURC| directly!
+
 Also, the exported input file can probably be imported in Cubit, then further edited and
 eventually exported as an exodus (.e) file.
 
@@ -58,13 +62,11 @@ So the steps are
 
 #. Create finite element model and sets in your favorite preprocessor
 
-#. Export to some format, like ``Exodus II`` or the Gmsh format ``.msh`` file.
+#. Export to ``Exodus II`` format if possible.
 
-#. **Optional:** Read in the model to Cubit for further editing
-
-#. **Optional:** If you are not able to write in ``Exodus II`` format,
-   use the python module meshio (packed in pip) to convert the mesh to an exodus (.e) file
-   (<https://pypi.org/project/meshio/>)
+#. If you can only export to some other format than Exodus II:
+   - **Option 1** Read in the model to Cubit for further editing and write out an Exodus II file.
+   - **Option 2** Currently you should write a python script to convert your format to the |FOURC| input file format.
 
 
 .. _create4Cinput:

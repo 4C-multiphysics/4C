@@ -10,6 +10,7 @@ import pathlib
 import shutil
 import jinja2
 import argparse
+import re
 
 PATH_TO_TESTS = ""
 RECOGNIZED_TYPES = ["rst", "md"]
@@ -18,6 +19,16 @@ RECOGNIZED_TYPES = ["rst", "md"]
 def load_input_file(yaml_file):
     data = yaml.safe_load((PATH_TO_TESTS / pathlib.Path(yaml_file)).read_text())
     return data
+
+
+def load_meta_data():
+    data = yaml.safe_load(
+        (PATH_TO_TESTS / ("../.." / pathlib.Path("4C_metadata.yaml"))).read_text()
+    )
+    section_list = [item["name"] for item in data["sections"]] + data[
+        "legacy_string_sections"
+    ]
+    return section_list
 
 
 def yaml_dump(data, filetype="rst"):
@@ -34,14 +45,27 @@ def yaml_dump(data, filetype="rst"):
         raise TypeError(f"Filetype {filetype} for yaml_dump cannot be recognized yet.")
 
 
-def section_dump(input_file_data, section_names, filetype="rst"):
+def section_dump(section_list, section_names, filetype="rst"):
     # section_dump can take either one section name or a list of section names
     if isinstance(section_names, str):
         section_names = [section_names]
     yaml_dict = {}
     for section in section_names:
-        yaml_dict[section] = input_file_data[section]
+        yaml_dict[section] = section_list[section]
     return yaml_dump(yaml_dict, filetype)
+
+
+def find_sections(input_file_data, section_name_expressions, filetype="rst"):
+    # find_sections can take either one regular expression for a section name or a list of those
+    if isinstance(section_name_expressions, str):
+        section_name_expressions = [section_name_expressions]
+    section_names = {}
+    for section_name_expression in section_name_expressions:
+        reg_expression = re.compile(section_name_expression)
+        section_names = section_names | {
+            k: ["<parameters>"] for k in filter(reg_expression.match, input_file_data)
+        }
+    return yaml_dump(section_names, filetype)
 
 
 def convert(template_path, rendering_path, input_file_path):
@@ -60,6 +84,8 @@ def convert(template_path, rendering_path, input_file_path):
                 section_dump=section_dump,
                 load_input_file=load_input_file,
                 yaml_dump=yaml_dump,
+                find_sections=find_sections,
+                load_meta_data=load_meta_data,
                 len=len,
             )
         )

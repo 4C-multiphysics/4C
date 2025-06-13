@@ -70,7 +70,7 @@ This guide to |FOURC| is structured as follows:
    about/about
    community/4Ccommunity
    installation/installation
-   tutorials/tutorials
+   parsed_files/tutorials
    analysis_guide/analysisguide
    developer_guide/developmentguide
    input_parameter_reference/parameterreference

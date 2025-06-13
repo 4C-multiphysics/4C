@@ -22,6 +22,36 @@ if(FOUR_C_BUILD_DOCUMENTATION)
   set(_sphinx_CONFIG_OUT ${_sphinx_OUT_DIR}/conf.py)
   set(_sphinx_HTML_DIR ${_sphinx_OUT_DIR}/html)
 
+  # Define some extra files that are to be copied to the build directory
+  # This is necessary, since some of the input files are needed for the documentation
+  # (and we don't want to copy all of them blindly)
+  set(_sphinx_files_to_copy
+      ${PROJECT_SOURCE_DIR}/tests/input_files/solid_runtime_hex8.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/xfluid_beltrami_stat_16x16x16_hk_vol_equivalent.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/sohex8_disp_altgeogeneration.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/f3_forced_hit_geogen_hdg.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/fbi_fluid_obstacle.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/tsi_lincompression_iterstaggtemp.4C.yaml
+      )
+  # Create the copy commands to be used in add_custom_target
+  set(COPY_COMMANDS "")
+  foreach(FILE ${_sphinx_files_to_copy})
+    get_filename_component(FILENAME ${FILE} NAME)
+    list(
+      APPEND
+      COPY_COMMANDS
+      COMMAND
+      ${CMAKE_COMMAND}
+      -E
+      copy_if_different
+      ${FILE}
+      ${_sphinx_OUT_DIR}/reference_docs/parsed_files/${FILENAME}
+      )
+    message(
+      "COMMAND ${CMAKE_COMMAND} -E copy_if_different ${FILE} ${_sphinx_OUT_DIR}/reference_docs/parsed_files/${FILENAME}"
+      )
+  endforeach()
+
   #install the python virtual environment with sphinx
   find_package(Sphinx REQUIRED)
 
@@ -34,13 +64,15 @@ if(FOUR_C_BUILD_DOCUMENTATION)
     documentation ALL
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${PROJECT_BINARY_DIR}/doc/tmp"
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${_sphinx_OUT_DIR}/reference_docs"
+    #    COMMAND ${CMAKE_COMMAND} -E remove_directory "${_sphinx_OUT_DIR}/parsed_files"
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${_sphinx_HTML_DIR}"
     # the following command also creates the directory ${_sphinx_OUT_DIR}/reference_docs again
     COMMAND create_rtd
     COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_BINARY_DIR}/doc/tmp"
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${_sphinx_OUT_DIR}/reference_docs/tutorials"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${_sphinx_OUT_DIR}/reference_docs/parsed_files"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_sphinx_OUT_DIR}/reference_docs/reference_images"
-    COMMAND ${FOUR_C_EXECUTABLE_NAME} -h > ${_sphinx_OUT_DIR}/reference_docs/4C-help.txt
+    COMMAND
+      ${FOUR_C_EXECUTABLE_NAME} -h > ${_sphinx_OUT_DIR}/reference_docs/4C-help.txt ${COPY_COMMANDS}
     COMMAND
       ${CMAKE_COMMAND} ${PROJECT_SOURCE_DIR} --list-presets >
       ${_sphinx_OUT_DIR}/reference_docs/4C-cmake-presets.txt

@@ -1,3 +1,8 @@
+{% set input_file1 = "parsed_files/solid_runtime_hex8.4C.yaml" %}
+{% set input_file1_content = load_input_file(input_file1) %}
+{% set input_file2 = "parsed_files/fbi_fluid_obstacle.4C.yaml" %}
+{% set input_file2_content = load_input_file(input_file2) %}
+
 .. _boundaryconditions:
 
 Boundary Conditions
@@ -9,17 +14,17 @@ section format
 
 ::
 
-       --DESIGN [POINT|LINE|SURF|VOL] <condition type> CONDITIONS
+       DESIGN [POINT|LINE|SURF|VOL] <condition type> CONDITIONS:
 
 with subsequent lines defining the region and the specific values of the
 boundary conditions. Note that some boundary condition types do not follow this general structure.
 For each particular condition, refer to the :ref:`boundary condition reference <prescribedconditionreference>`.
 
-A point conditions must be followed by ``DPOINT <num>``, a line condition by ``DLINE <num>``,
-a surface by ``DSURF <num>`` and a volume by ``DVOL <num>``.
-The number to be entered in ``num`` is the number of conditions to follow.
+What follows is a list of condition entries (a dictionary) starting with the entry pair ``E: <set>``, where ``set`` is the number of the TOPOLOGY set defined in terms of points, lines, surfaces and volumes, respectively.
+The subsequent entries depend on the type of condition.
+As an example, namely a Neumann and a Dirichlet boundary condition are given below:
 
-Each subsequent line starts with an ``E <set> -``, where ``set`` is the number of the TOPOLOGY set defined in terms of points, lines, surfaces and volumes, respectively.
+{{ section_dump(input_file1_content, ["DESIGN SURF NEUMANN CONDITIONS", "DESIGN SURF DIRICH CONDITIONS", ]) }}
 
 Note that all boundary conditions are given in terms of node sets.
 Boundary conditions may be applied in arbitrary coordinate directions,
@@ -41,20 +46,37 @@ so that the complete rotation can be entered in three values:
 
 The complete definition of a local coordinate system writes:
 
-::
+.. code-block:: yaml
 
-   ------------------------DESIGN [POINT/VOL] LOCSYS CONDITIONS
-   DPOINT/DVOL    numtotal   //  numtotal is the number of subsequent lines
-   E num - ROTANGLE 0.0 0.0 0.0 FUNCT 0 0 0 USEUPDATEDNODEPOS 0
+   DESIGN [POINT/VOL] LOCSYS CONDITIONS:
+   - E: <num>
+     ROTANGLE:
+     - <angle_x>
+     - <angle_y>
+     - <angle_z
+     FUNCT:
+     - <func_num_x>
+     - <func_num_y>
+     - <func_num_z>
+     USEUPDATEDNODEPOS: 0
    // num corresponds to the set_descriptor_id defined in DNODE/DVOL-NODE TOPOLOGY block
 
 for point and volume definitions, and
 
-::
+.. code-block:: yaml
 
-   ------------------------DESIGN [LINE|SURF] LOCSYS CONDITIONS
-   DPOINT|DLINE|DSURF    numtotal   //  numtotal is the number of subsequent lines
-   E num - ROTANGLE 0.0 0.0 0.0 FUNCT 0 0 0 USEUPDATEDNODEPOS 0  USECONSISTENTNODENORMAL 0
+   DESIGN [LINE|SURF] LOCSYS CONDITIONS:
+   - E: <num>
+     ROTANGLE:
+     - <angle_x>
+     - <angle_y>
+     - <angle_z
+     FUNCT:
+     - <func_num_x>
+     - <func_num_y>
+     - <func_num_z>
+     USEUPDATEDNODEPOS: 0
+     USECONSISTENTNODENORMAL: 0
    // num corresponds to the set_descriptor_id defined in DLINE/DSURF-NODE TOPOLOGY block
 
 for lines and surfaces.
@@ -114,23 +136,25 @@ produces results for forces and moments in a structural analysis.
 
 One needs also to set the corresponding IO, such as
 
-::
+.. code-block:: yaml
 
-   -------------------------------------IO/MONITOR STRUCTURE DBC
-   INTERVAL_STEPS                   1
-   PRECISION_FILE                   16
-   PRECISION_SCREEN                 5
-   FILE_TYPE                        csv
-   WRITE_HEADER                     no
+
+   IO/MONITOR STRUCTURE DBC:
+     INTERVAL_STEPS: 1
+     PRECISION_FILE: 16
+     PRECISION_SCREEN: 5
+     FILE_TYPE: csv
+     WRITE_HEADER: no
 
 , see :ref:`SECio_monitorstructuredbc`,
 and set the right time integration strategy, :ref:`INT_STRATEGY<SECstructuraldynamic>`,
 by which the standard one, i.e. Generalized Newmark Alpha, should always work.
 
-::
+.. code-block:: yaml
 
-   --------------------------------------------STRUCTURAL DYNAMIC
-   INT_STRATEGY                     Standard
+
+   STRUCTURAL DYNAMIC:
+     INT_STRATEGY: Standard
 
 Note that the TAG parameter may only be set for linear elements, not for
 quadratic ones (HEX20, TET10)
@@ -138,27 +162,30 @@ quadratic ones (HEX20, TET10)
 Below is the valid block definition for various types of Dirichlet
 boundary conditions.
 
-::
+.. code-block:: yaml
 
-   ------------------------DESIGN [POINT|LINE|SURF|VOL] DIRICH CONDITIONS
-   DPOINT|DLINE|DSURF|DVOL    numtotal   //  numtotal is the number of subsequent lines
-   E num - NUMDOF 0  ONOFF 0  VAL 0.0  FUNCT none   TAG none
-   // num corresponds to the point_descriptor_id defined in DNODE/DLINE/DSURF/DVOL-NODE TOPOLOGY block
-   --------------------DESIGN [POINT|LINE|SURF|VOL] ALE DIRICH CONDITIONS
-   DPOINT|DLINE|DSURF|DVOL    numtotal   //  numtotal is the number of subsequent lines
-   E num - NUMDOF 0  ONOFF 0  VAL 0.0  FUNCT none   TAG none
-   --------------DESIGN [POINT|LINE|SURF|VOL] TRANSPORT DIRICH CONDITIONS
-   DPOINT|DLINE|DSURF|DVOL    numtotal   //  numtotal is the number of subsequent lines
-   E num - NUMDOF 0  ONOFF 0  VAL 0.0  FUNCT none   TAG none
-   -----------------DESIGN [POINT|LINE|SURF|VOL] THERMO DIRICH CONDITIONS
-   DPOINT|DLINE|DSURF|DVOL    numtotal   //  numtotal is the number of subsequent lines
-   E num - NUMDOF 0  ONOFF 0  VAL 0.0  FUNCT none   TAG none
-   -------------------DESIGN [POINT|LINE|SURF|VOL] PORO DIRICH CONDITIONS
-   DPOINT|DLINE|DSURF|DVOL    numtotal   //  numtotal is the number of subsequent lines
-   E num - NUMDOF 0  ONOFF 0  VAL 0.0  FUNCT none   TAG none
-   ---------------DESIGN [POINT|LINE|SURF|VOL] NURBS LS DIRICH CONDITIONS
-   DPOINT|DLINE|DSURF|DVOL    numtotal   //  numtotal is the number of subsequent lines
-   E num - NUMDOF 0  ONOFF 0  VAL 0.0  FUNCT none   TAG none
+   DESIGN [POINT|LINE|SURF|VOL] DIRICH CONDITIONS:
+   - E: <num>    # num corresponds to the point_descriptor_id defined in DNODE/DLINE/DSURF/DVOL-NODE TOPOLOGY block
+     NUMDOF: <numdof>
+     ONOFF: [ 0|1, 0|1, ... ]
+     VAL: [val_dof1, ... , val_numdof ]
+     FUNCT: [...]
+     TAG: none
+   DESIGN [POINT|LINE|SURF|VOL] ALE DIRICH CONDITIONS:
+   - E: <num>
+     # same parameters as above
+   DESIGN [POINT|LINE|SURF|VOL] TRANSPORT DIRICH CONDITIONS
+   - E: <num>
+     # same parameters as above
+   DESIGN [POINT|LINE|SURF|VOL] THERMO DIRICH CONDITIONS:
+   - E: <num>
+     # same parameters as above
+   DESIGN [POINT|LINE|SURF|VOL] PORO DIRICH CONDITIONS:
+   - E: <num>
+     # same parameters as above
+   DESIGN [POINT|LINE|SURF|VOL] NURBS LS DIRICH CONDITIONS:
+   - E: <num>
+     # same parameters as above
 
 See the respective reference sections for
 :ref:`mechanical <designpointdirichconditions>`, :ref:`ALE <designpointaledirichconditions>`,
@@ -174,23 +201,27 @@ in terms of flux per applied geometry. A POINT NEUMANN condition is, for
 example, a concentrated force or heat flux, while a SURF NEUMANN is a
 pressure or surface heat flux, accordingly.
 
-::
+.. code-block:: yaml
 
-   ----------------------------DESIGN [POINT|LINE|SURF|VOL] NEUMANN CONDITIONS
-   DPOINT|DLINE|DSURF|DVOL     numtotal   //  numtotal is the number of subsequent lines
-   //E num - NUMDOF 0  ONOFF 0  VAL 0.0  FUNCT none   TYPE Live
-   -------------------------------------------DESIGN POINT MOMENT EB CONDITIONS
-   DPOINT|DLINE|DSURF|DVOL     numtotal
-   //E num - NUMDOF 0  ONOFF 0  VAL 0.0  FUNCT none   TYPE Live
-   -----------------------DESIGN [POINT|LINE|SURF] TRANSPORT NEUMANN CONDITIONS
-   DPOINT|DLINE|DSURF          numtotal
-   //E num - NUMDOF 0  ONOFF 0  VAL 0.0  FUNCT none   TYPE Live
-   ----------------------DESIGN [POINT|LINE|SURF|VOL] THERMO NEUMANN CONDITIONS
-   DPOINT|DLINE|DSURF|DVOL     numtotal
-   //E num - NUMDOF 0  ONOFF 0  VAL 0.0  FUNCT none   TYPE Live
-   ------------------------DESIGN [POINT|LINE|SURF|VOL] PORO NEUMANN CONDITIONS
-   DPOINT|DLINE|DSURF|DVOL     numtotal
-   //E num - NUMDOF 0  ONOFF 0  VAL 0.0  FUNCT none   TYPE Live
+   DESIGN [POINT|LINE|SURF|VOL] NEUMANN CONDITIONS:
+   - E: <num>    # num corresponds to the point_descriptor_id defined in DNODE/DLINE/DSURF/DVOL-NODE TOPOLOGY block
+     NUMDOF: <numdof>
+     ONOFF: [ 0|1, 0|1, ... ]
+     VAL: [val_dof1, ... , val_numdof ]
+     FUNCT: [...]
+     TYPE: <parameter>
+   DESIGN POINT MOMENT EB CONDITIONS:
+   - E: <num>
+     # same parameters as above
+   DESIGN [POINT|LINE|SURF] TRANSPORT NEUMANN CONDITIONS:
+   - E: <num>
+     # same parameters as above
+   DESIGN [POINT|LINE|SURF|VOL] THERMO NEUMANN CONDITIONS:
+   - E: <num>
+     # same parameters as above
+   DESIGN [POINT|LINE|SURF|VOL] PORO NEUMANN CONDITIONS:
+   - E: <num>
+     # same parameters as above
 
 See the respective reference sections for :ref:`mechanical <designpointneumannconditions>`,
 :ref:`MOMENT EB <designpointmomentebconditions>`, :ref:`TRANSPORT <designpointtransportneumannconditions>`,
@@ -209,14 +240,27 @@ Also, both stiffness and viscosity may depend on a function definition.
 The Direction can be given in the global coordinate system or with respect to the surface normal.
 The input looks like this:
 
-::
+.. code-block:: yaml
 
-   ------------------------------DESIGN SURF ROBIN SPRING DASHPOT CONDITIONS
-   E <surfset> NUMDOF 3 ONOFF 0 0 0 \
-   STIFF <X_STIFF> <Y_STIFF> <Z_STIFF> TIMEFUNCTSTIFF 0 0 0 \
-   VISCO <X_VISCO> <Y_VISCO> <Z_VISCO> TIMEFUNCTVISCO 0 0 0 \
-   DISPLOFFSET 0.0 0.0 0.0 TIMEFUNCTDISPLOFFSET 0 0 0 FUNCTNONLINSTIFF 0 0 0 \
-   DIRECTION xyz|refsurfnormal|cursurfnormal COUPLING none
+   DESIGN SURF ROBIN SPRING DASHPOT CONDITIONS:
+   - E: <surfset>
+     NUMDOF: <numdof>
+     ONOFF: [0 0 0]
+     STIFF:
+     - <X_STIFF>
+     - <Y_STIFF>
+     - <Z_STIFF>
+     TIMEFUNCTSTIFF: [0, 0, 0]
+     VISCO:
+     - <X_VISCO>
+     - <Y_VISCO>
+     - <Z_VISCO>
+     TIMEFUNCTVISCO: [ 0, 0, 0 ]
+     DISPLOFFSET: [0.0, 0.0, 0.0]
+     TIMEFUNCTDISPLOFFSET: [0, 0, 0]
+     FUNCTNONLINSTIFF: [0, 0, 0 ]
+     DIRECTION: xyz|refsurfnormal|cursurfnormal
+     COUPLING: none|<couplingID>
 
 - Commonly the Robin boundary condition couples the nodes at the surface to its original position.
   However, by giving a value to ``DISPLOFFSET``, one may introduce a prestressing of the spring.
@@ -232,18 +276,11 @@ The input looks like this:
   by specifying a couplingID (``COUPLING <int>``). The coupled surface is then given by a
   ``DESIGN SURF ROBIN SPRING DASHPOT COUPLING CONDITIONS``, see the following input:
 
-::
+.. code-block:: yaml
 
-   ------------------------------DESIGN SURF ROBIN SPRING DASHPOT CONDITIONS
-   E <surfset> NUMDOF 3 ONOFF 0 0 0 \
-   STIFF <X_STIFF> <Y_STIFF> <Z_STIFF> TIMEFUNCTSTIFF 0 0 0 \
-   VISCO <X_VISCO> <Y_VISCO> <Z_VISCO> TIMEFUNCTVISCO 0 0 0 \
-   DISPLOFFSET 0.0 0.0 0.0 TIMEFUNCTDISPLOFFSET 0 0 0 FUNCTNONLINSTIFF 0 0 0 \
-   DIRECTION xyz|refsurfnormal|cursurfnormal COUPLING <couplingID>
-   //
-   ------------------------------DESIGN SURF ROBIN SPRING DASHPOT COUPLING CONDITIONS
-   DSURF <numtotal>
-   E <surfset> - <couplingID>
+   DESIGN SURF ROBIN SPRING DASHPOT COUPLING CONDITIONS:
+   - E: <surfset>
+     COUPLING: <couplingID>
 
 See also :ref:`designpointrobinspringdashpotconditions` and :ref:`designsurfrobinspringdashpotcouplingconditions`.
 
@@ -256,11 +293,12 @@ but rather a displacement relative to other displacements, which is commonly cal
 Several nodes coupled for specific degrees of freedom
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-::
+.. code-block:: yaml
 
-   ----------------------------------DESIGN POINT COUPLING CONDITIONS
-   DPOINT <numtotal>
-   E <pointset> - NUMDOF 6 ONOFF 1 1 1 1 1 1
+   DESIGN POINT COUPLING CONDITIONS:
+   - E: <pointset>
+     NUMDOF: <numdof>
+     ONOFF: [ 0|1, ..., 0|1 ]
 
 Some applications (typically in structural / solid mechanics) require the coupling of certain DoFs of two or more nodes at the same geometrical position, while certain other DoFs of those
 nodes shall remain independent (e.g. joints and hinges in frames).
@@ -287,36 +325,41 @@ NOT included so far:
 - support for special DofSet stuff (e.g. TransparentDofSet, Proxies...)
 - support for bandwidth optimization (#define BW_OPT), which is currently however not used anyway
 
-Example input file snippet for a Y-junction of three beam elements with a pin joint ("Momentengelenk")
+Example input file where two nodes each are coupled in several point coupling conditions:
 
-::
+{{section_dump(input_file2_content, ["DESIGN POINT COUPLING CONDITIONS", "DNODE-NODE TOPOLOGY"]) }}
 
-   ------------------------------------DESIGN POINT COUPLING CONDITIONS
-   E 1 NUMDOF 6 ONOFF 1 1 1 0 0 0
-   -------------------------------------------------DNODE-NODE TOPOLOGY
-   NODE 17 DNODE 1
-   NODE 42 DNODE 1
-   NODE 73 DNODE 1
+The node couples of the given pointset have the same displacements and rotations in all directions;
+see also :ref:`designpointcouplingconditions`.
 
-All nodes of the given pointset have the same displacement in the directions with ONOFF flag 1, that is, here they are coupled for the three translational DoFs, while the rotational DoFs are free; see also :ref:`designpointcouplingconditions`.
-
-.. danger::
-
-   I gave a boundary condition (tried dirichlet and neumann) to a 3D structure in one coordinate direction and coupled the nodes in the other two directions.
-   The results seem to be wrong.
 
 Surface coupled to a node in a given direction
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-::
+.. code-block:: yaml
 
-   -----------------------------DESIGN SURFACE NORMALDIR MULTIPNT CONSTRAINT 3D
-   DSURF <numtotal>
-   E <surfset> - <conditionID> <amplitude> <curveID> <inittime> <masternodeID> <n_x> <n_y> <n_z> [disp|x] [abs|rel]
-   //
-   -----------------------------DESIGN SURFACE NORMALDIR MULTIPNT CONSTRAINT 3D PEN
-   DSURF <numtotal>
-   E <surfset> - <conditionID> <amplitude> <curveID> <inittime> <penalty> <masternodeID> <n_x> <n_y> <n_z> [disp|x] [abs|rel]
+   DESIGN SURFACE NORMALDIR MULTIPNT CONSTRAINT 3D:
+   - E: <surfset>
+     ConditionID: <conditionID>
+     amplitude: <amplitude>
+     curve: <curveID>
+     activeTime <inittime>
+     masterNode: <masternodeID>
+     direction: <n_x> <n_y> <n_z>
+     value: [disp|x]
+     control: [abs|rel]
+   #
+   DESIGN SURFACE NORMALDIR MULTIPNT CONSTRAINT 3D PEN:
+   - E: <surfset>
+     ConditionID: <conditionID>
+     amplitude: <amplitude>
+     curve: <curveID>
+     activeTime <inittime>
+     penalty: <penalty>
+     masterNode: <masternodeID>
+     direction: <n_x> <n_y> <n_z>
+     value: [disp|x]
+     control: [abs|rel]
 
 
 The whole surface is displaced the same amount as a single master node (which is not defined by a DPOINT, but by its ID). The penalty version uses a different algorithm, where one has to provide a penalty parameter.
@@ -325,14 +368,31 @@ See also :ref:`designsurfacenormaldirmultipntconstraint3d` and :ref:`designsurfa
 Node displacement relative to a given surface or line
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   ---------------------------------------DESIGN SURFACE MULTIPNT CONSTRAINT 3D
-   DSURF <numtotal>
-   E <surfset> - ConditionID <conditionID> amplitude <amplitude> curve <curveID> activeTime <inittime> planeNodes <node1> <node2> <node3> control [abs|rel]
-   //
-   ---------------------------------------DESIGN LINE MULTIPNT CONSTRAINT 2D
-   DLINE <numtotal>
-   E <lineset> - ConditionID <conditionID> amplitude <amplitude> curve <curveID> constrNode1 <node1> constrNode2 <node2> constrNode3 <node3> control [dist|angle] activeTime <inittime>
-   //
+.. code-block:: yaml
+
+   DESIGN SURFACE MULTIPNT CONSTRAINT 3D:
+   - E <surfaceset>
+     ConditionID: <conditionID>
+     amplitude: <amplitude>
+     curve: <curveID>
+     activeTime: <inittime>
+     planeNodes:
+     - <node1>
+     - <node2>
+     - <node3>
+     control: [dist|angle]
+   #
+   DESIGN LINE MULTIPNT CONSTRAINT 2D:
+   - E <lineset>
+     ConditionID: <conditionID>
+     amplitude: <amplitude>
+     curve: <curveID>
+     constrNode1: <node1>
+     constrNode2: <node2>
+     constrNode3: <node3>
+     control: [dist|angle]
+     activeTime: <inittime>
+   #
 
 
 This is a rather specific constraint, where a plane (or a line, respectively) is defined by three nodes, which are given as index of the ``<surfset>|<lineset>``
@@ -342,21 +402,43 @@ and the other nodes of this set are displaced with respect to this plane/line. S
 Periodic boundary conditions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-::
+.. code-block:: yaml
 
-   --------------------------DESIGN SURF PERIODIC BOUNDARY CONDITIONS
-   DSURF  <numtotal>
-   // definition of slave surface
-   E <surfset> - ID 1 MASTER_OR_SLAVE Slave PLANE [xy|xz|yz] LAYER 1 ANGLE 0.0 ABSTREETOL 1e-6
-   // definition of master surface
-   E <surfset> - ID 1 MASTER_OR_SLAVE Master PLANE [xy|xz|yz] LAYER 1 ANGLE 0.0 ABSTREETOL 1e-6
-   //
-   --------------------------DESIGN LINE PERIODIC BOUNDARY CONDITIONS
-   DLINE  <numtotal>
-   // definition of slave line
-   E <lineset> - ID 1 MASTER_OR_SLAVE Slave PLANE [xy|xz|yz] LAYER 1 ANGLE 0.0 ABSTREETOL 1e-6
-   // definition of master line
-   E <lineset> - ID 1 MASTER_OR_SLAVE Master PLANE [xy|xz|yz] LAYER 1 ANGLE 0.0 ABSTREETOL 1e-6
+   DESIGN SURF PERIODIC BOUNDARY CONDITIONS:
+   # definition of slave surface
+   - E: <surfset>
+     ID: 1
+     MASTER_OR_SLAVE: Slave
+     PLANE: [xy|xz|yz]
+     LAYER: 1
+     ANGLE: 0.0
+     ABSTREETOL: 1e-6
+   # definition of master surface
+   - E: <surfset>
+     ID: 1
+     MASTER_OR_SLAVE: Master
+     PLANE: [xy|xz|yz]
+     LAYER: 1
+     ANGLE: 0.0
+     ABSTREETOL: 1e-6
+   #
+   DESIGN LINE PERIODIC BOUNDARY CONDITIONS:
+   # definition of slave line
+   - E: <lineset>
+     ID: 1
+     MASTER_OR_SLAVE: Slave
+     PLANE: [xy|xz|yz]
+     LAYER: 1
+     ANGLE: 0.0
+     ABSTREETOL: 1e-6
+   # definition of master line
+   - E: <lineset>
+     ID: 1
+     MASTER_OR_SLAVE: Slave
+     PLANE: [xy|xz|yz]
+     LAYER: 1
+     ANGLE: 0.0
+     ABSTREETOL: 1e-6
 
 
 Periodic boundaries are defined as conditions, where nodes on one surface (normal to any of the cartesian coordinate directions, i.e., xy, yz, or xz),
@@ -376,17 +458,28 @@ Contact conditions, which in |FOURC| are set up by the keyword ``MORTAR``
 are defined along lines (2D) or surfaces (3D). At least one contact pair
 is necessary:
 
-::
+.. code-block:: yaml
 
-   ---------------------------DESIGN LINE|SURF MORTAR CONTACT CONDITIONS 2D|3D
-   DLINE              <numtotal>
-   //E <num> - InterfaceID <interfaceID> Side <Master|Slave|Selfcontact> Initialization <Inactive|Active> [FrCoeffOrBound 0.0] [AdhesionBound 0.0] [Application <Solidcontact|Beamtosolidcontact|Beamtosolidmeshtying>] [DbcHandling <DoNothing|RemoveDBCSlaveNodes>] [TwoHalfPass 0.0] [RefConfCheckNonSmoothSelfContactSurface 0.0] [ConstitutiveLawID 0]
+
+   DESIGN LINE|SURF MORTAR CONTACT CONDITIONS 2D|3D:
+   - E <num>
+     InterfaceID: <interfaceID>
+     Side: <Master|Slave|Selfcontact>
+     Initialization: <Inactive|Active>
+     FrCoeffOrBound: 0.0
+     AdhesionBound: 0.0
+     Application: <Solidcontact|Beamtosolidcontact|Beamtosolidmeshtying>
+     DbcHandling: <DoNothing|RemoveDBCSlaveNodes>
+     TwoHalfPass: 0.0
+     RefConfCheckNonSmoothSelfContactSurface: 0.0
+     ConstitutiveLawID: 0
 
 The parameters
-``FrCoeffOrBound, AdhesionBound, Application, DbcHandling, TwoHalfPass, RefConfCheckNonSmoothSelfContactSurface and ConstitutiveLawID``
+``FrCoeffOrBound, AdhesionBound, Application, DbcHandling, TwoHalfPass, RefConfCheckNonSmoothSelfContactSurface, ConstitutiveLawID``
 are optional. You'll find more information about contact in the
 :ref:`contact and meshtying <contactandmeshtying>` section.
 
+.. _boundaryconditions_from_exodus:
 
 Defining boundary conditions for geometries from EXODUS files
 -------------------------------------------------------------
