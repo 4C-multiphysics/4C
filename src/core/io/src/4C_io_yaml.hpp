@@ -283,12 +283,12 @@ namespace Core::IO
     ryml::NodeRef root = tree.rootref();
     if (!root.has_child(ryml::to_csubstr(key)))
     {
-      throw YamlException(std::format("Key '{}' not found in file '{}'.", key, file_path.string()));
+      throw YamlException(std::format("Key '{}' not found on the top level in file '{}'.", key, file_path.string()));
     }
 
     ryml::NodeRef node = root[ryml::to_csubstr(key)];
-    ConstYamlNodeRef json_key_node(node, file_path);
-    read_value_from_yaml(json_key_node, value);
+    ConstYamlNodeRef key_node(node, file_path);
+    read_value_from_yaml(key_node, value);
   }
 }  // namespace Core::IO
 
