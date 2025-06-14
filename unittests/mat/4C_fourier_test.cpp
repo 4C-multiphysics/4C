@@ -9,6 +9,11 @@
 
 #include "4C_comm_pack_buffer.hpp"
 #include "4C_global_data.hpp"
+#include "4C_global_data_read.hpp"
+#include "4C_global_legacy_module.hpp"
+#include "4C_inpar_material.hpp"
+#include "4C_io_input_file.hpp"
+#include "4C_io_input_parameter_container.templates.hpp"
 #include "4C_mat_fourier.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_mat_par_bundle.hpp"
@@ -41,27 +46,28 @@ namespace
         case TensorType::scalar:
         {
           conduct_para_num_ = 1;
-          conduct_ = {1.0};
+          tensor_ = {1.0};
           break;
         }
         case TensorType::diagonal:
         {
           conduct_para_num_ = 3;
-          conduct_ = {1.0, 1.0, 1.0};
+          tensor_ = {1.0, 1.0, 1.0};
           break;
         }
         case TensorType::full:
         {
           conduct_para_num_ = 9;
-          conduct_ = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
+          tensor_ = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
           break;
         }
       }
 
       Core::IO::InputParameterContainer container;
-      container.add("CONDUCT_PARA_NUM", conduct_para_num_);
       container.add("CAPA", capa_);
-      container.add("CONDUCT", conduct_);
+      container.add("CONDUCT_PARA_NUM", conduct_para_num_);
+      container.add("CONDUCT", Inpar::Mat::ActivationType::tensor);
+      container.add("TENSOR", tensor_);
 
       parameters_fourier_ = std::shared_ptr(
           Mat::make_parameter(1, Core::Materials::MaterialType::m_thermo_fourier, container));
@@ -76,7 +82,7 @@ namespace
 
     const double capa_ = 420.0;
     int conduct_para_num_;
-    std::vector<double> conduct_;
+    std::vector<double> tensor_;
 
     std::shared_ptr<Core::Mat::PAR::Parameter> parameters_fourier_;
     std::shared_ptr<Mat::Fourier> fourier_;
@@ -114,7 +120,7 @@ namespace
     Core::Communication::UnpackBuffer buffer(dataSend);
     aniso.unpack(buffer);
 
-    aniso.evaluate(gradtemp, result_cmat, result_heatflux);
+    aniso.evaluate(gradtemp, result_cmat, result_heatflux, -1);
 
     FOUR_C_EXPECT_NEAR(result_cmat, ref_cmat, 1.0e-12);
     FOUR_C_EXPECT_NEAR(result_heatflux, ref_heatflux, 1.0e-12);
@@ -141,7 +147,7 @@ namespace
     Core::LinAlg::Matrix<3, 1> result_heatflux(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<3, 3> result_cmat(Core::LinAlg::Initialization::zero);
 
-    fourier_->evaluate(gradtemp, result_cmat, result_heatflux);
+    fourier_->evaluate(gradtemp, result_cmat, result_heatflux, -1);
 
     FOUR_C_EXPECT_NEAR(result_cmat, ref_cmat, 1.0e-12);
     FOUR_C_EXPECT_NEAR(result_heatflux, ref_heatflux, 1.0e-12);
@@ -167,21 +173,22 @@ namespace
         case TensorType::diagonal:
         {
           conduct_para_num_ = 3;
-          conduct_ = {1.0, 10.0, 100.0};
+          tensor_ = {1.0, 10.0, 100.0};
           break;
         }
         case TensorType::full:
         {
           conduct_para_num_ = 9;
-          conduct_ = {1.0, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 100.0};
+          tensor_ = {1.0, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 100.0};
           break;
         }
       }
 
       Core::IO::InputParameterContainer container;
-      container.add("CONDUCT_PARA_NUM", conduct_para_num_);
       container.add("CAPA", capa_);
-      container.add("CONDUCT", conduct_);
+      container.add("CONDUCT_PARA_NUM", conduct_para_num_);
+      container.add("CONDUCT", Inpar::Mat::ActivationType::tensor);
+      container.add("TENSOR", tensor_);
 
       parameters_fourier_ = std::shared_ptr(
           Mat::make_parameter(1, Core::Materials::MaterialType::m_thermo_fourier, container));
@@ -196,7 +203,7 @@ namespace
 
     const double capa_ = 420.0;
     int conduct_para_num_;
-    std::vector<double> conduct_;
+    std::vector<double> tensor_;
 
     std::shared_ptr<Core::Mat::PAR::Parameter> parameters_fourier_;
     std::shared_ptr<Mat::Fourier> fourier_;
@@ -234,7 +241,7 @@ namespace
     Core::Communication::UnpackBuffer buffer(dataSend);
     aniso.unpack(buffer);
 
-    aniso.evaluate(gradtemp, result_cmat, result_heatflux);
+    aniso.evaluate(gradtemp, result_cmat, result_heatflux, -1);
 
     FOUR_C_EXPECT_NEAR(result_cmat, ref_cmat, 1.0e-12);
     FOUR_C_EXPECT_NEAR(result_heatflux, ref_heatflux, 1.0e-12);
@@ -261,7 +268,7 @@ namespace
     Core::LinAlg::Matrix<3, 1> result_heatflux(Core::LinAlg::Initialization::zero);
     Core::LinAlg::Matrix<3, 3> result_cmat(Core::LinAlg::Initialization::zero);
 
-    fourier_->evaluate(gradtemp, result_cmat, result_heatflux);
+    fourier_->evaluate(gradtemp, result_cmat, result_heatflux, -1);
 
     FOUR_C_EXPECT_NEAR(result_cmat, ref_cmat, 1.0e-12);
     FOUR_C_EXPECT_NEAR(result_heatflux, ref_heatflux, 1.0e-12);

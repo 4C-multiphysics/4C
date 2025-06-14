@@ -33,7 +33,8 @@ MATERIALS:
     MAT_Fourier:
       CAPA: 0
       CONDUCT_PARA_NUM: 1
-      CONDUCT: [52]
+      CONDUCT: "tensor"
+      TENSOR: [52]
 DESIGN SURF DIRICH CONDITIONS:
   - E: 11
     NUMDOF: 1

@@ -18,6 +18,8 @@
 #include "4C_timestepping_mstep.hpp"
 #include "4C_utils_enum.hpp"
 #include "4C_utils_function.hpp"
+#include "4C_utils_parameter_list.hpp"
+#include "4C_utils_shared_ptr_from_ref.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 #include <Teuchos_TimeMonitor.hpp>

@@ -184,13 +184,13 @@ namespace Mat
     Core::Mat::PAR::Parameter* parameter() const override { return params_; }
 
     void evaluate(const Core::LinAlg::Matrix<3, 1>& gradtemp, Core::LinAlg::Matrix<3, 3>& cmat,
-        Core::LinAlg::Matrix<3, 1>& heatflux) const override;
+        Core::LinAlg::Matrix<3, 1>& heatflux, const int eleGID) const override;
 
     void evaluate(const Core::LinAlg::Matrix<2, 1>& gradtemp, Core::LinAlg::Matrix<2, 2>& cmat,
-        Core::LinAlg::Matrix<2, 1>& heatflux) const override;
+        Core::LinAlg::Matrix<2, 1>& heatflux, const int eleGID) const override;
 
     void evaluate(const Core::LinAlg::Matrix<1, 1>& gradtemp, Core::LinAlg::Matrix<1, 1>& cmat,
-        Core::LinAlg::Matrix<1, 1>& heatflux) const override;
+        Core::LinAlg::Matrix<1, 1>& heatflux, const int eleGID) const override;
 
     void conductivity_deriv_t(Core::LinAlg::Matrix<3, 3>& dCondDT) const override;
 

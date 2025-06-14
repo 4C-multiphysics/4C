@@ -16,7 +16,6 @@
 #include "4C_io_control.hpp"
 #include "4C_io_discretization_visualization_writer_mesh.hpp"
 #include "4C_io_runtime_csv_writer.hpp"
-#include "4C_io_visualization_parameters.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
@@ -472,6 +471,9 @@ namespace Thermo
     std::shared_ptr<Core::LinAlg::SparseMatrix> tang_;
 
     //@}
+
+    std::shared_ptr<Core::LinAlg::MultiVector<double>>
+        conductivity_;  //!< global conducitivity vector
   };
 }  // namespace Thermo
 

@@ -11,6 +11,7 @@
 #include "4C_config.hpp"
 
 #include "4C_comm_parobjectfactory.hpp"
+#include "4C_io_input_field.hpp"
 #include "4C_mat_thermo.hpp"
 #include "4C_material_parameter_base.hpp"
 
@@ -46,11 +47,23 @@ namespace Mat
       /// be careful: capa_ := rho * C_V, e.g contains the density
       const double capa_;
 
-      /// heat conductivity
-      const std::vector<double> conduct_;
-
       /// number of conductivity components
       const int conduct_para_num_;
+
+      //! type of activation prescription
+      const Inpar::Mat::ActivationType conductivity_type_;
+
+      /*!
+       * @brief type-dependent parameters for activation
+       *
+       * Depending on the type of activation prescription this is one of the options below:
+       * - Id of the function in the input file specifying an analytical function
+       * - Map retrieved from the pattern file path in the input file specifying a discrete values.
+       *   The integer key refers to the element ids, the vector bundles time-activation pairs.
+       */
+      using ActivationParameterVariant = std::variant<std::monostate, const std::vector<double>,
+          const Core::IO::InputField<std::vector<double>>>;
+      ActivationParameterVariant conductivityParams_;
 
       //@}
 
@@ -116,8 +129,9 @@ namespace Mat
     /// @name Access material constants
     //@{
 
-    /// conductivity
-    std::vector<double> conductivity() const { return params_->conduct_; }
+    /// get element defined conductivity, defaults back to globally defined one if no element gid is
+    /// given
+    std::vector<double> conductivity(int eleGID = 0) const;
 
     /// volumetric heat capacity
     double capacity() const override { return params_->capa_; }
@@ -137,13 +151,13 @@ namespace Mat
     //@}
 
     void evaluate(const Core::LinAlg::Matrix<1, 1>& gradtemp, Core::LinAlg::Matrix<1, 1>& cmat,
-        Core::LinAlg::Matrix<1, 1>& heatflux) const override;
+        Core::LinAlg::Matrix<1, 1>& heatflux, const int eleGID) const override;
 
     void evaluate(const Core::LinAlg::Matrix<2, 1>& gradtemp, Core::LinAlg::Matrix<2, 2>& cmat,
-        Core::LinAlg::Matrix<2, 1>& heatflux) const override;
+        Core::LinAlg::Matrix<2, 1>& heatflux, const int eleGID) const override;
 
     void evaluate(const Core::LinAlg::Matrix<3, 1>& gradtemp, Core::LinAlg::Matrix<3, 3>& cmat,
-        Core::LinAlg::Matrix<3, 1>& heatflux) const override;
+        Core::LinAlg::Matrix<3, 1>& heatflux, const int eleGID) const override;
 
     void conductivity_deriv_t(Core::LinAlg::Matrix<3, 3>& dCondDT) const override
     {
@@ -178,6 +192,10 @@ namespace Mat
     }
 
     Core::Mat::PAR::Parameter* parameter() const override { return params_; }
+
+    static std::vector<double> get_validate_conductivity_tensor(
+        const Core::IO::InputField<std::vector<double>>& conductivity_field, const int ele_id_key,
+        const std::size_t conduct_para_num);
 
    private:
     Mat::PAR::Fourier* params_;

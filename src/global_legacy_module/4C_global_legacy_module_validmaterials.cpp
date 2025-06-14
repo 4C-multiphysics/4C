@@ -2406,6 +2406,29 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   /*--------------------------------------------------------------------*/
   // Fourier's law for linear and possibly anisotropic heat transport
   {
+    using MapType = std::unordered_map<int, std::vector<double>>;
+
+    auto on_parse = [](Core::IO::InputParameterContainer& container)
+    {
+      const auto& map_file = container.get<std::filesystem::path>("MAPFILE");
+      std::ifstream file_stream(map_file);
+
+      if (file_stream.fail()) FOUR_C_THROW("Invalid file {}!", map_file.string());
+
+      auto map_reduction_operation = [](MapType acc, const MapType& next)
+      {
+        for (const auto& [key, value] : next)
+        {
+          acc[key] = value;
+        }
+        return acc;
+      };
+
+      container.add("MAPFILE_CONTENT",
+          Core::IO::InputField(
+              Core::IO::convert_lines<MapType, MapType>(file_stream, map_reduction_operation)));
+    };
+
     known_materials[Core::Materials::m_thermo_fourier] = group("MAT_Fourier",
         {
             parameter<double>("CAPA", {.description = "volumetric heat capacity"}),
@@ -2415,11 +2438,22 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                         "conductivity tensor. Setting its value to 1 resembles a scalar "
                         "conductivity, 2 or 3 a diagonal conductivity and 4 or 9 the full "
                         "conductivity tensor in two and three dimensions respectively."}),
-            parameter<std::vector<double>>("CONDUCT",
-                {.description =
-                        "Vector of values representing the thermal conductivity tensor in a "
-                        "row-wise ordering, with the vector size given by CONDUCT_PARA_NUM.",
-                    .size = from_parameter<int>("CONDUCT_PARA_NUM")}),
+            deprecated_selection<Inpar::Mat::ActivationType>("CONDUCT",
+                {{"tensor", Inpar::Mat::ActivationType::tensor},
+                    {"map", Inpar::Mat::ActivationType::map}},
+                {.description = "type of field evaluation"}),
+            one_of({
+                parameter<std::vector<double>>("TENSOR",
+                    {.description =
+                            "Vector of values representing the thermal conductivity tensor in a "
+                            "row-wise ordering, with the vector size given by CONDUCT_PARA_NUM.",
+                        .size = from_parameter<int>("CONDUCT_PARA_NUM")}),
+                parameter<std::filesystem::path>("MAPFILE",
+                    {.description =
+                            "pattern file containing a map of elementwise-defined discrete values "
+                            "for time- and space-dependency of muscle activation",
+                        .on_parse_callback = on_parse}),
+            }),
         },
         {.description = "anisotropic linear Fourier's law of heat conduction"});
   }
@@ -2427,6 +2461,29 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   /*----------------------------------------------------------------------*/
   // material for heat transport due to Fourier-type thermal conduction and the Soret effect
   {
+    using MapType = std::unordered_map<int, std::vector<double>>;
+
+    auto on_parse = [](Core::IO::InputParameterContainer& container)
+    {
+      const auto& map_file = container.get<std::filesystem::path>("MAPFILE");
+      std::ifstream file_stream(map_file);
+
+      if (file_stream.fail()) FOUR_C_THROW("Invalid file {}!", map_file.string());
+
+      auto map_reduction_operation = [](MapType acc, const MapType& next)
+      {
+        for (const auto& [key, value] : next)
+        {
+          acc[key] = value;
+        }
+        return acc;
+      };
+
+      container.add("MAPFILE_CONTENT",
+          Core::IO::InputField(
+              Core::IO::convert_lines<MapType, MapType>(file_stream, map_reduction_operation)));
+    };
+
     known_materials[Core::Materials::m_soret] = group("MAT_soret",
         {
             parameter<double>("CAPA", {.description = "volumetric heat capacity"}),
@@ -2436,11 +2493,22 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                         "conductivity tensor. Setting its value to 1 resembles a scalar "
                         "conductivity, 2 or 3 a diagonal conductivity and 4 or 9 the full "
                         "conductivity tensor in two and three dimensions respectively."}),
-            parameter<std::vector<double>>("CONDUCT",
-                {.description =
-                        "Vector of values representing the thermal conductivity tensor in a "
-                        "row-wise ordering, with the vector size given by CONDUCT_PARA_NUM.",
-                    .size = from_parameter<int>("CONDUCT_PARA_NUM")}),
+            deprecated_selection<Inpar::Mat::ActivationType>("CONDUCT",
+                {{"tensor", Inpar::Mat::ActivationType::tensor},
+                    {"map", Inpar::Mat::ActivationType::map}},
+                {.description = "type of field evaluation"}),
+            one_of({
+                parameter<std::vector<double>>("TENSOR",
+                    {.description =
+                            "Vector of values representing the thermal conductivity tensor in a "
+                            "row-wise ordering, with the vector size given by CONDUCT_PARA_NUM.",
+                        .size = from_parameter<int>("CONDUCT_PARA_NUM")}),
+                parameter<std::filesystem::path>("MAPFILE",
+                    {.description =
+                            "pattern file containing a map of elementwise-defined discrete values "
+                            "for time- and space-dependency of muscle activation",
+                        .on_parse_callback = on_parse}),
+            }),
             parameter<double>("SORET", {.description = "Soret coefficient"}),
         },
         {.description = "material for heat transport due to Fourier-type thermal conduction and "

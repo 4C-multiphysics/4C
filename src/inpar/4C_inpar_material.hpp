@@ -47,6 +47,7 @@ namespace Inpar
     //! valid types for prescription of time-/space-dependent muscle activation
     enum ActivationType
     {
+      tensor,                  ///< just use a constant tensor
       function_of_space_time,  ///< analytical activation prescription via a symbolic function of
                                ///< space and time
       map  ///< discrete elementwise-defined activation prescription via an input pattern file
