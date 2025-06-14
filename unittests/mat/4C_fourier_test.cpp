@@ -9,7 +9,11 @@
 
 #include "4C_comm_pack_buffer.hpp"
 #include "4C_global_data.hpp"
+#include "4C_global_data_read.hpp"
+#include "4C_global_legacy_module.hpp"
 #include "4C_inpar_material.hpp"
+#include "4C_io_input_file.hpp"
+#include "4C_io_input_parameter_container.templates.hpp"
 #include "4C_mat_fourier.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_mat_par_bundle.hpp"
