@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_io_input_field.hpp"
 #include "4C_io_input_parameter_container.templates.hpp"
 #include "4C_io_input_spec.hpp"
 #include "4C_io_input_spec_storage.hpp"
@@ -571,6 +572,36 @@ namespace Core::IO
     {
       return !val.has_value() || validate_helper(*val, validator);
     }
+
+    enum class InputFieldType : std::uint8_t
+    {
+      constant,
+      from_file,
+    };
+
+    template <typename T>
+    void input_field_callback(
+        std::string name, const InputParameterContainer& in, InputSpecBuilders::Storage& out)
+    {
+      if (in.get<InputFieldType>("type") == InputFieldType::from_file)
+      {
+        std::unordered_map<int, T> map_data;
+        std::filesystem::path file_path = in.get<std::filesystem::path>("value");
+        IO::read_value_from_yaml(file_path, name, map_data);
+        std::any_cast<InputParameterContainer&>(out).add(
+            name, IO::InputField<T>(std::move(map_data)));
+      }
+      else if (in.get<InputFieldType>("type") == InputFieldType::constant)
+      {
+        double data = in.get<T>("value");
+        std::any_cast<InputParameterContainer&>(out).add(name, IO::InputField<T>(data));
+      }
+      else
+      {
+        FOUR_C_THROW(
+            "Unsupported input field type: {}", in.get<Core::IO::Internal::InputFieldType>("type"));
+      }
+    }
   }  // namespace Internal
 
   /**
@@ -619,6 +650,11 @@ namespace Core::IO
      * Callback function that may be attached to parameter().
      */
     using ParameterCallback = std::function<void(InputParameterContainer&)>;
+
+    /**
+     * Callback function to transform data from a selection.
+     */
+    using SelectionCallback = std::function<void(const DefaultStorage&, Storage&)>;
 
     /**
      * A tag type to indicate that a parameter cannot take default values.
@@ -733,6 +769,11 @@ namespace Core::IO
        * An optional function to store the selection group.
        */
       StoreFunction<StorageType> store{nullptr};
+
+      /**
+       * An optional function to store selection data.
+       */
+      SelectionCallback selection_callback{nullptr};
     };
 
     //! Additional parameters for a group().
@@ -905,6 +946,7 @@ namespace Core::IO
       {
         std::string description;
         bool required;
+        InputSpecBuilders::SelectionCallback selection_callback;
       } data;
       InputSpec selector_spec;
       //! The choices of the selection enhanced by the selector spec to allow full matching.
@@ -1389,6 +1431,45 @@ namespace Core::IO
       requires(std::is_enum_v<Selector>)
     [[nodiscard]] InputSpec selection(std::string name, Internal::BasedOn<Selector> based_on,
         SelectionData<StorageType> data = {});
+
+    /**
+     * Defines an input field for spatially dependent parameters.
+     *
+     * The input field allows a parameter of a certain type to be specified as a function of element
+     * or node IDs, enabling spatially varying input data. This is useful for cases where a
+     * parameter, such as material stiffness, needs to be defined differently for different parts of
+     * a model.
+     *
+     * Example usage:
+     * @code
+     * auto spec = input_field<double>("stiffness");
+     * @endcode
+     *
+     * This will match the following input:
+     * @code
+     *  stiffness:
+     *    type: constant
+     *    value: 100.0
+     * @endcode
+     *  or
+     * @code
+     *  stiffness:
+     *    type: from_file
+     *    value: /some/file.json
+     * @endcode
+     * The json input field json file could look like this:
+     * @code
+     * {
+     *  "stiffness": {
+     *    "1": 2.0,
+     *    "2": 3.5,
+     *    "3": 4.0,
+     *    "4": 5.5
+     *    }
+     * }
+     */
+    template <typename T>
+    [[nodiscard]] InputSpec input_field(std::string name, ParameterDataIn<T> data = {});
 
     /**
      * All of the given InputSpecs are expected, e.g.,
@@ -2087,10 +2168,23 @@ bool Core::IO::Internal::SelectionSpec<T>::match(ConstYamlNodeRef node,
       group_node, subcontainer, match_entry.append_child(&selected_spec));
   if (!choice_matched) return false;
 
+  if (data.selection_callback)
+  {
+    InputSpecBuilders::Storage out;
+    init_my_storage(out);
+
+    data.selection_callback(
+        std::any_cast<const InputSpecBuilders::DefaultStorage&>(subcontainer), out);
+
+    move_my_storage(container, std::move(out));
+  }
+  else
+  {
+    move_my_storage(container, std::move(subcontainer));
+  }
+
   // Everything was correctly matched, so mark the whole node as matched.
   match_entry.state = IO::Internal::MatchEntry::State::matched;
-
-  move_my_storage(container, std::move(subcontainer));
   return true;
 }
 
@@ -2269,7 +2363,7 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::selection(
   selector_spec = parameter<Selector>(based_on.selector, {});
 
   StoreFunction<Storage> move_my_storage;
-  if constexpr (std::is_same_v<StorageType, InputParameterContainer>)
+  if constexpr (std::is_same_v<StorageType, DefaultStorage>)
   {
     move_my_storage = Internal::store_container_in_container(name);
   }
@@ -2302,6 +2396,7 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::selection(
               {
                   .description = data.description,
                   .required = data.required,
+                  .selection_callback = data.selection_callback,
               },
           .selector_spec = std::move(selector_spec),
           .choices_for_matching = std::move(choices_for_matching),
@@ -2310,6 +2405,24 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::selection(
       },
       common_data);
 }
+
+template <typename T>
+Core::IO::InputSpec Core::IO::InputSpecBuilders::input_field(
+    const std::string name, ParameterDataIn<T> data)
+{
+  auto spec = selection<Internal::InputFieldType>(name,
+      {
+          .selector = "type",
+          .choices =
+              {
+                  {Internal::InputFieldType::from_file, parameter<std::filesystem::path>("value")},
+                  {Internal::InputFieldType::constant, parameter<T>("value")},
+              },
+      },
+      {.selection_callback = [name](const InputParameterContainer& in, Storage& out)
+          { Internal::input_field_callback<T>(name, in, out); }});
+  return spec;
+};
 
 
 template <typename T>
