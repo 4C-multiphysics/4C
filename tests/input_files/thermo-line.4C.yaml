@@ -77,7 +77,8 @@ MATERIALS:
     MAT_Fourier:
       CAPA: 420
       CONDUCT_PARA_NUM: 1
-      CONDUCT: [52]
+      CONDUCT: "tensor"
+      TENSOR: [52]
 FUNCT1:
   - COMPONENT: 0
     SYMBOLIC_FUNCTION_OF_SPACE_TIME: "5.0"

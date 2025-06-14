@@ -109,19 +109,22 @@ MATERIALS:
     MAT_soret:
       CAPA: 1050
       CONDUCT_PARA_NUM: 1
-      CONDUCT: [5]
+      CONDUCT: "tensor"
+      TENSOR: [5]
       SORET: 1
   - MAT: 7
     MAT_soret:
       CAPA: 840
       CONDUCT_PARA_NUM: 1
-      CONDUCT: [5]
+      CONDUCT: "tensor"
+      TENSOR: [5]
       SORET: 1
   - MAT: 8
     MAT_soret:
       CAPA: 1750
       CONDUCT_PARA_NUM: 1
-      CONDUCT: [5]
+      CONDUCT: "tensor"
+      TENSOR: [5]
       SORET: 1
 CLONING MATERIAL MAP:
   - SRC_FIELD: "scatra"
