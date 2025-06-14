@@ -96,7 +96,8 @@ MATERIALS:
     MAT_Fourier:
       CAPA: 500
       CONDUCT_PARA_NUM: 1
-      CONDUCT: [1e-07]
+      CONDUCT: "tensor"
+      TENSOR: [1e-07]
   - MAT: 7
     MAT_elchmat:
       NUMDOF: 2
@@ -139,7 +140,8 @@ MATERIALS:
     MAT_Fourier:
       CAPA: 500
       CONDUCT_PARA_NUM: 1
-      CONDUCT: [1e-07]
+      CONDUCT: "tensor"
+      TENSOR: [1e-07]
   - MAT: 15
     MAT_electrode:
       DIFF_COEF_CONC_DEP_FUNCT: -1
@@ -172,7 +174,8 @@ MATERIALS:
     MAT_Fourier:
       CAPA: 500
       CONDUCT_PARA_NUM: 1
-      CONDUCT: [1e-07]
+      CONDUCT: "tensor"
+      TENSOR: [1e-07]
 CLONING MATERIAL MAP:
   - SRC_FIELD: "structure"
     SRC_MAT: 2

@@ -85,12 +85,14 @@ MATERIALS:
     MAT_Fourier:
       CAPA: 3405.49
       CONDUCT_PARA_NUM: 1
-      CONDUCT: [310000]
+      CONDUCT: "tensor"
+      TENSOR: [310000]
   - MAT: 4
     MAT_Fourier:
       CAPA: 3956.04
       CONDUCT_PARA_NUM: 1
-      CONDUCT: [75000]
+      CONDUCT: "tensor"
+      TENSOR: [75000]
 CLONING MATERIAL MAP:
   - SRC_FIELD: "structure"
     SRC_MAT: 1
