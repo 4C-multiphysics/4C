@@ -688,7 +688,7 @@ bool Core::IO::Internal::GroupSpec::match(ConstYamlNodeRef node,
   match_entry.matched_node = group_node.node.id();
 
   // Parse into a separate container to avoid side effects if parsing fails.
-  std::any struct_storage;
+  InputSpecBuilders::Storage struct_storage;
   init_my_storage(struct_storage);
   bool all_matched = spec.impl().match(group_node, struct_storage, match_entry.append_child(&spec));
   if (!all_matched)
