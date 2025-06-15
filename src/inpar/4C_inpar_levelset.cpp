@@ -172,11 +172,7 @@ void Inpar::LevelSet::set_valid_parameters(std::map<std::string, Core::IO::Input
               {.description =
                       "evaluate velocity at integration point or compute node-based velocity",
                   .default_value = Inpar::ScaTra::vel_reinit_integration_point_based}),
-          deprecated_selection<Inpar::ScaTra::LinReinit>("LINEARIZATIONREINIT",
-              {
-                  {"newton", Inpar::ScaTra::newton},
-                  {"fixed_point", Inpar::ScaTra::fixed_point},
-              },
+          parameter<Inpar::ScaTra::LinReinit>("LINEARIZATIONREINIT",
               {.description = "linearization scheme for nonlinear convective term of "
                               "reinitialization equation",
                   .default_value = Inpar::ScaTra::newton}),
@@ -215,15 +211,9 @@ void Inpar::LevelSet::set_valid_parameters(std::map<std::string, Core::IO::Input
           parameter<bool>("LUMPING",
               {.description = "use lumped mass matrix for L2-projection", .default_value = false}),
 
-          deprecated_selection<Inpar::ScaTra::DiffFunc>("DIFF_FUNC",
-              {
-                  {"hyperbolic", Inpar::ScaTra::hyperbolic},
-                  {"hyperbolic_smoothed_positive", Inpar::ScaTra::hyperbolic_smoothed_positive},
-                  {"hyperbolic_clipped_05", Inpar::ScaTra::hyperbolic_clipped_05},
-                  {"hyperbolic_clipped_1", Inpar::ScaTra::hyperbolic_clipped_1},
-              },
-              {.description = "function for diffusivity",
-                  .default_value = Inpar::ScaTra::hyperbolic})},
+          parameter<Inpar::ScaTra::DiffFunc>(
+              "DIFF_FUNC", {.description = "function for diffusivity",
+                               .default_value = Inpar::ScaTra::hyperbolic})},
       {.defaultable = true});
 }
 

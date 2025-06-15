@@ -97,14 +97,9 @@ void Inpar::PARTICLE::set_valid_parameters(std::map<std::string, Core::IO::Input
                   .default_value = "0.0 0.0 0.0"}),
 
           // type of particle wall source
-          deprecated_selection<ParticleWallSource>("PARTICLE_WALL_SOURCE",
-              {
-                  {"NoParticleWall", Inpar::PARTICLE::NoParticleWall},
-                  {"DiscretCondition", Inpar::PARTICLE::DiscretCondition},
-                  {"BoundingBox", Inpar::PARTICLE::BoundingBox},
-              },
-              {.description = "type of particle wall source",
-                  .default_value = Inpar::PARTICLE::NoParticleWall}),
+          parameter<ParticleWallSource>(
+              "PARTICLE_WALL_SOURCE", {.description = "type of particle wall source",
+                                          .default_value = Inpar::PARTICLE::NoParticleWall}),
 
           // material id for particle wall from bounding box source
           parameter<int>("PARTICLE_WALL_MAT",
@@ -192,110 +187,60 @@ void Inpar::PARTICLE::set_valid_parameters(std::map<std::string, Core::IO::Input
               {.description = "write particle-wall interaction output", .default_value = false}),
 
           // type of smoothed particle hydrodynamics kernel
-          deprecated_selection<KernelType>("KERNEL",
-              {
-                  {"CubicSpline", Inpar::PARTICLE::CubicSpline},
-                  {"QuinticSpline", Inpar::PARTICLE::QuinticSpline},
-              },
-              {.description = "type of smoothed particle hydrodynamics kernel",
-                  .default_value = Inpar::PARTICLE::CubicSpline}),
+          parameter<KernelType>(
+              "KERNEL", {.description = "type of smoothed particle hydrodynamics kernel",
+                            .default_value = Inpar::PARTICLE::CubicSpline}),
 
           // kernel space dimension number
-          deprecated_selection<KernelSpaceDimension>("KERNEL_SPACE_DIM",
-              {
-                  {"Kernel1D", Inpar::PARTICLE::Kernel1D},
-                  {"Kernel2D", Inpar::PARTICLE::Kernel2D},
-                  {"Kernel3D", Inpar::PARTICLE::Kernel3D},
-              },
-              {.description = "kernel space dimension number",
-                  .default_value = Inpar::PARTICLE::Kernel3D}),
+          parameter<KernelSpaceDimension>(
+              "KERNEL_SPACE_DIM", {.description = "kernel space dimension number",
+                                      .default_value = Inpar::PARTICLE::Kernel3D}),
 
           parameter<double>("INITIALPARTICLESPACING",
               {.description = "initial spacing of particles", .default_value = 0.0}),
 
           // type of smoothed particle hydrodynamics equation of state
-          deprecated_selection<EquationOfStateType>("EQUATIONOFSTATE",
-              {
-                  {"GenTait", Inpar::PARTICLE::GenTait},
-                  {"IdealGas", Inpar::PARTICLE::IdealGas},
-              },
+          parameter<EquationOfStateType>("EQUATIONOFSTATE",
               {.description = "type of smoothed particle hydrodynamics equation of state",
                   .default_value = Inpar::PARTICLE::GenTait}),
 
           // type of smoothed particle hydrodynamics momentum formulation
-          deprecated_selection<MomentumFormulationType>("MOMENTUMFORMULATION",
-              {
-                  {"AdamiMomentumFormulation", Inpar::PARTICLE::AdamiMomentumFormulation},
-                  {"MonaghanMomentumFormulation", Inpar::PARTICLE::MonaghanMomentumFormulation},
-              },
+          parameter<MomentumFormulationType>("MOMENTUMFORMULATION",
               {.description = "type of smoothed particle hydrodynamics momentum formulation",
                   .default_value = Inpar::PARTICLE::AdamiMomentumFormulation}),
 
           // type of density evaluation scheme
-          deprecated_selection<DensityEvaluationScheme>("DENSITYEVALUATION",
-              {
-                  {"DensitySummation", Inpar::PARTICLE::DensitySummation},
-                  {"DensityIntegration", Inpar::PARTICLE::DensityIntegration},
-                  {"DensityPredictCorrect", Inpar::PARTICLE::DensityPredictCorrect},
-              },
-              {.description = "type of density evaluation scheme",
-                  .default_value = Inpar::PARTICLE::DensitySummation}),
+          parameter<DensityEvaluationScheme>(
+              "DENSITYEVALUATION", {.description = "type of density evaluation scheme",
+                                       .default_value = Inpar::PARTICLE::DensitySummation}),
 
           // type of density correction scheme
-          deprecated_selection<DensityCorrectionScheme>("DENSITYCORRECTION",
-              {
-                  {"NoCorrection", Inpar::PARTICLE::NoCorrection},
-                  {"InteriorCorrection", Inpar::PARTICLE::InteriorCorrection},
-                  {"NormalizedCorrection", Inpar::PARTICLE::NormalizedCorrection},
-                  {"RandlesCorrection", Inpar::PARTICLE::RandlesCorrection},
-              },
-              {.description = "type of density correction scheme",
-                  .default_value = Inpar::PARTICLE::NoCorrection}),
+          parameter<DensityCorrectionScheme>(
+              "DENSITYCORRECTION", {.description = "type of density correction scheme",
+                                       .default_value = Inpar::PARTICLE::NoCorrection}),
 
           // type of boundary particle formulation
-          deprecated_selection<BoundaryParticleFormulationType>("BOUNDARYPARTICLEFORMULATION",
-              {
-                  {"NoBoundaryFormulation", Inpar::PARTICLE::NoBoundaryFormulation},
-                  {"AdamiBoundaryFormulation", Inpar::PARTICLE::AdamiBoundaryFormulation},
-              },
+          parameter<BoundaryParticleFormulationType>("BOUNDARYPARTICLEFORMULATION",
               {.description = "type of boundary particle formulation",
                   .default_value = Inpar::PARTICLE::NoBoundaryFormulation}),
 
           // type of boundary particle interaction
-          deprecated_selection<BoundaryParticleInteraction>("BOUNDARYPARTICLEINTERACTION",
-              {
-                  {"NoSlipBoundaryParticle", Inpar::PARTICLE::NoSlipBoundaryParticle},
-                  {"FreeSlipBoundaryParticle", Inpar::PARTICLE::FreeSlipBoundaryParticle},
-              },
+          parameter<BoundaryParticleInteraction>("BOUNDARYPARTICLEINTERACTION",
               {.description = "type of boundary particle interaction",
                   .default_value = Inpar::PARTICLE::NoSlipBoundaryParticle}),
 
           // type of wall formulation
-          deprecated_selection<WallFormulationType>("WALLFORMULATION",
-              {
-                  {"NoWallFormulation", Inpar::PARTICLE::NoWallFormulation},
-                  {"VirtualParticleWallFormulation",
-                      Inpar::PARTICLE::VirtualParticleWallFormulation},
-              },
-              {.description = "type of wall formulation",
-                  .default_value = Inpar::PARTICLE::NoWallFormulation}),
+          parameter<WallFormulationType>(
+              "WALLFORMULATION", {.description = "type of wall formulation",
+                                     .default_value = Inpar::PARTICLE::NoWallFormulation}),
 
           // type of transport velocity formulation
-          deprecated_selection<TransportVelocityFormulation>("TRANSPORTVELOCITYFORMULATION",
-              {
-                  {"NoTransportVelocity", Inpar::PARTICLE::NoTransportVelocity},
-                  {"StandardTransportVelocity", Inpar::PARTICLE::StandardTransportVelocity},
-                  {"GeneralizedTransportVelocity", Inpar::PARTICLE::GeneralizedTransportVelocity},
-              },
+          parameter<TransportVelocityFormulation>("TRANSPORTVELOCITYFORMULATION",
               {.description = "type of transport velocity formulation",
                   .default_value = Inpar::PARTICLE::NoTransportVelocity}),
 
           // type of temperature evaluation scheme
-          deprecated_selection<TemperatureEvaluationScheme>("TEMPERATUREEVALUATION",
-              {
-                  {"NoTemperatureEvaluation", Inpar::PARTICLE::NoTemperatureEvaluation},
-                  {"TemperatureIntegration", Inpar::PARTICLE::TemperatureIntegration},
-              },
+          parameter<TemperatureEvaluationScheme>("TEMPERATUREEVALUATION",
               {.description = "type of temperature evaluation scheme",
                   .default_value = Inpar::PARTICLE::NoTemperatureEvaluation}),
 
@@ -303,14 +248,9 @@ void Inpar::PARTICLE::set_valid_parameters(std::map<std::string, Core::IO::Input
               {.description = "evaluate temperature gradient", .default_value = false}),
 
           // type of heat source
-          deprecated_selection<HeatSourceType>("HEATSOURCETYPE",
-              {
-                  {"NoHeatSource", Inpar::PARTICLE::NoHeatSource},
-                  {"VolumeHeatSource", Inpar::PARTICLE::VolumeHeatSource},
-                  {"SurfaceHeatSource", Inpar::PARTICLE::SurfaceHeatSource},
-              },
-              {.description = "type of heat source",
-                  .default_value = Inpar::PARTICLE::NoHeatSource}),
+          parameter<HeatSourceType>(
+              "HEATSOURCETYPE", {.description = "type of heat source",
+                                    .default_value = Inpar::PARTICLE::NoHeatSource}),
 
           parameter<int>("HEATSOURCE_FUNCT",
               {.description = "number of function governing heat source", .default_value = -1}),
@@ -345,13 +285,9 @@ void Inpar::PARTICLE::set_valid_parameters(std::map<std::string, Core::IO::Input
                                        .default_value = 0.0}),
 
           // type of surface tension formulation
-          deprecated_selection<SurfaceTensionFormulation>("SURFACETENSIONFORMULATION",
-              {
-                  {"NoSurfaceTension", Inpar::PARTICLE::NoSurfaceTension},
-                  {"ContinuumSurfaceForce", Inpar::PARTICLE::ContinuumSurfaceForce},
-              },
-              {.description = "type of surface tension formulation",
-                  .default_value = Inpar::PARTICLE::NoSurfaceTension}),
+          parameter<SurfaceTensionFormulation>(
+              "SURFACETENSIONFORMULATION", {.description = "type of surface tension formulation",
+                                               .default_value = Inpar::PARTICLE::NoSurfaceTension}),
 
           parameter<int>("SURFACETENSION_RAMP_FUNCT",
               {.description = "number of function governing surface tension ramp",
@@ -434,11 +370,7 @@ void Inpar::PARTICLE::set_valid_parameters(std::map<std::string, Core::IO::Input
                   .default_value = 0.0}),
 
           // type of dirichlet open boundary
-          deprecated_selection<DirichletOpenBoundaryType>("DIRICHLETBOUNDARYTYPE",
-              {
-                  {"NoDirichletOpenBoundary", Inpar::PARTICLE::NoDirichletOpenBoundary},
-                  {"DirichletNormalToPlane", Inpar::PARTICLE::DirichletNormalToPlane},
-              },
+          parameter<DirichletOpenBoundaryType>("DIRICHLETBOUNDARYTYPE",
               {.description = "type of dirichlet open boundary",
                   .default_value = Inpar::PARTICLE::NoDirichletOpenBoundary}),
 
@@ -455,13 +387,9 @@ void Inpar::PARTICLE::set_valid_parameters(std::map<std::string, Core::IO::Input
                                            .default_value = "0.0 0.0 0.0"}),
 
           // type of neumann open boundary
-          deprecated_selection<NeumannOpenBoundaryType>("NEUMANNBOUNDARYTYPE",
-              {
-                  {"NoNeumannOpenBoundary", Inpar::PARTICLE::NoNeumannOpenBoundary},
-                  {"NeumannNormalToPlane", Inpar::PARTICLE::NeumannNormalToPlane},
-              },
-              {.description = "type of neumann open boundary",
-                  .default_value = Inpar::PARTICLE::NoNeumannOpenBoundary}),
+          parameter<NeumannOpenBoundaryType>(
+              "NEUMANNBOUNDARYTYPE", {.description = "type of neumann open boundary",
+                                         .default_value = Inpar::PARTICLE::NoNeumannOpenBoundary}),
 
           parameter<int>("NEUMANN_FUNCT",
               {.description =
@@ -476,28 +404,16 @@ void Inpar::PARTICLE::set_valid_parameters(std::map<std::string, Core::IO::Input
                                          .default_value = "0.0 0.0 0.0"}),
 
           // type of phase change
-          deprecated_selection<PhaseChangeType>("PHASECHANGETYPE",
-              {
-                  {"NoPhaseChange", Inpar::PARTICLE::NoPhaseChange},
-                  {"OneWayScalarBelowToAbovePhaseChange",
-                      Inpar::PARTICLE::OneWayScalarBelowToAbovePhaseChange},
-                  {"OneWayScalarAboveToBelowPhaseChange",
-                      Inpar::PARTICLE::OneWayScalarAboveToBelowPhaseChange},
-                  {"TwoWayScalarPhaseChange", Inpar::PARTICLE::TwoWayScalarPhaseChange},
-              },
-              {.description = "type of phase change",
-                  .default_value = Inpar::PARTICLE::NoPhaseChange}),
+          parameter<PhaseChangeType>(
+              "PHASECHANGETYPE", {.description = "type of phase change",
+                                     .default_value = Inpar::PARTICLE::NoPhaseChange}),
 
           // definition of phase change
           parameter<std::string>("PHASECHANGEDEFINITION",
               {.description = "phase change definition", .default_value = "none"}),
 
           // type of rigid particle contact
-          deprecated_selection<RigidParticleContactType>("RIGIDPARTICLECONTACTTYPE",
-              {
-                  {"NoRigidParticleContact", Inpar::PARTICLE::NoRigidParticleContact},
-                  {"ElasticRigidParticleContact", Inpar::PARTICLE::ElasticRigidParticleContact},
-              },
+          parameter<RigidParticleContactType>("RIGIDPARTICLECONTACTTYPE",
               {.description = "type of rigid particle contact",
                   .default_value = Inpar::PARTICLE::NoRigidParticleContact}),
 
@@ -535,43 +451,22 @@ void Inpar::PARTICLE::set_valid_parameters(std::map<std::string, Core::IO::Input
                   .default_value = Inpar::PARTICLE::NormalLinSpring}),
 
           // type of tangential contact law
-          deprecated_selection<TangentialContact>("TANGENTIALCONTACTLAW",
-              {
-                  {"NoTangentialContact", Inpar::PARTICLE::NoTangentialContact},
-                  {"TangentialLinSpringDamp", Inpar::PARTICLE::TangentialLinSpringDamp},
-              },
-              {.description = "tangential contact law for particles",
-                  .default_value = Inpar::PARTICLE::NoTangentialContact}),
+          parameter<TangentialContact>(
+              "TANGENTIALCONTACTLAW", {.description = "tangential contact law for particles",
+                                          .default_value = Inpar::PARTICLE::NoTangentialContact}),
 
           // type of rolling contact law
-          deprecated_selection<RollingContact>("ROLLINGCONTACTLAW",
-              {
-                  {"NoRollingContact", Inpar::PARTICLE::NoRollingContact},
-                  {"RollingViscous", Inpar::PARTICLE::RollingViscous},
-                  {"RollingCoulomb", Inpar::PARTICLE::RollingCoulomb},
-              },
-              {.description = "rolling contact law for particles",
-                  .default_value = Inpar::PARTICLE::NoRollingContact}),
+          parameter<RollingContact>(
+              "ROLLINGCONTACTLAW", {.description = "rolling contact law for particles",
+                                       .default_value = Inpar::PARTICLE::NoRollingContact}),
 
           // type of normal adhesion law
-          deprecated_selection<AdhesionLaw>("ADHESIONLAW",
-              {
-                  {"NoAdhesion", Inpar::PARTICLE::NoAdhesion},
-                  {"AdhesionVdWDMT", Inpar::PARTICLE::AdhesionVdWDMT},
-                  {"AdhesionRegDMT", Inpar::PARTICLE::AdhesionRegDMT},
-              },
-              {.description = "type of adhesion law for particles",
-                  .default_value = Inpar::PARTICLE::NoAdhesion}),
+          parameter<AdhesionLaw>(
+              "ADHESIONLAW", {.description = "type of adhesion law for particles",
+                                 .default_value = Inpar::PARTICLE::NoAdhesion}),
 
           // type of (random) surface energy distribution
-          deprecated_selection<SurfaceEnergyDistribution>("ADHESION_SURFACE_ENERGY_DISTRIBUTION",
-              {
-                  {"ConstantSurfaceEnergy", Inpar::PARTICLE::ConstantSurfaceEnergy},
-                  {"NormalSurfaceEnergyDistribution",
-                      Inpar::PARTICLE::NormalSurfaceEnergyDistribution},
-                  {"LogNormalSurfaceEnergyDistribution",
-                      Inpar::PARTICLE::LogNormalSurfaceEnergyDistribution},
-              },
+          parameter<SurfaceEnergyDistribution>("ADHESION_SURFACE_ENERGY_DISTRIBUTION",
               {.description = "type of (random) surface energy distribution",
                   .default_value = Inpar::PARTICLE::ConstantSurfaceEnergy}),
 
@@ -583,15 +478,9 @@ void Inpar::PARTICLE::set_valid_parameters(std::map<std::string, Core::IO::Input
               {.description = "maximum expected particle velocity", .default_value = -1.0}),
 
           // type of initial particle radius assignment
-          deprecated_selection<InitialRadiusAssignment>("INITIAL_RADIUS",
-              {
-                  {"RadiusFromParticleMaterial", Inpar::PARTICLE::RadiusFromParticleMaterial},
-                  {"RadiusFromParticleInput", Inpar::PARTICLE::RadiusFromParticleInput},
-                  {"NormalRadiusDistribution", Inpar::PARTICLE::NormalRadiusDistribution},
-                  {"LogNormalRadiusDistribution", Inpar::PARTICLE::LogNormalRadiusDistribution},
-              },
-              {.description = "type of initial particle radius assignment",
-                  .default_value = Inpar::PARTICLE::RadiusFromParticleMaterial}),
+          parameter<InitialRadiusAssignment>(
+              "INITIAL_RADIUS", {.description = "type of initial particle radius assignment",
+                                    .default_value = Inpar::PARTICLE::RadiusFromParticleMaterial}),
 
           parameter<double>("RADIUSDISTRIBUTION_SIGMA",
               {.description = "sigma of random particle radius distribution",

@@ -81,13 +81,9 @@ void PoroPressureBased::set_valid_parameters_porofluid_elast(
                   .default_value = -1}),
 
           // parameters for finite difference check
-          deprecated_selection<FdCheck>("FDCHECK",
-              {
-                  {"none", FdCheck::none},
-                  {"global", FdCheck::global},
-              },
-              {.description = "flag for finite difference check: none or global",
-                  .default_value = FdCheck::none}),
+          parameter<FdCheck>(
+              "FDCHECK", {.description = "flag for finite difference check: none or global",
+                             .default_value = FdCheck::none}),
 
           deprecated_selection<VectorNorm>("VECTORNORM_RESF",
               {

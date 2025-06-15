@@ -82,9 +82,8 @@ namespace
     auto spec = all_of({
         deprecated_selection<EnumClass>("enum",
             {
-                {"A", EnumClass::A},
-                {"B", EnumClass::B},
-                {"C", EnumClass::C},
+                {"A", EnumClass::A}, {"B", EnumClass::B},
+                // Leave one out. Otherwise, we get an error to use a parameter<EnumClass> instead.
             }),
     });
 

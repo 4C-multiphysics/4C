@@ -111,15 +111,9 @@ void Inpar::XFEM::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
                   .default_value = Inpar::XFEM::XFFSI_FixedALE_Partitioned}),
 
           // xfluidfluid time integration approach
-          deprecated_selection<XFluidFluidTimeInt>("XFLUIDFLUID_TIMEINT",
-              {
-                  {"Xff_TimeInt_FullProj", Inpar::XFEM::Xff_TimeInt_FullProj},
-                  {"Xff_TimeInt_ProjIfMoved", Inpar::XFEM::Xff_TimeInt_ProjIfMoved},
-                  {"Xff_TimeInt_KeepGhostValues", Inpar::XFEM::Xff_TimeInt_KeepGhostValues},
-                  {"Xff_TimeInt_IncompProj", Inpar::XFEM::Xff_TimeInt_IncompProj},
-              },
-              {.description = "The xfluidfluid-timeintegration approach",
-                  .default_value = Inpar::XFEM::Xff_TimeInt_FullProj}),
+          parameter<XFluidFluidTimeInt>(
+              "XFLUIDFLUID_TIMEINT", {.description = "The xfluidfluid-timeintegration approach",
+                                         .default_value = Inpar::XFEM::Xff_TimeInt_FullProj}),
 
           deprecated_selection<XFluidTimeIntScheme>("XFLUID_TIMEINT",
               {
@@ -142,11 +136,7 @@ void Inpar::XFEM::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
 
           // for new OST-implementation: which interface terms to be evaluated for previous time
           // step
-          deprecated_selection<InterfaceTermsPreviousState>("INTERFACE_TERMS_PREVIOUS_STATE",
-              {
-                  {"PreviousState_only_consistency", Inpar::XFEM::PreviousState_only_consistency},
-                  {"PreviousState_full", Inpar::XFEM::PreviousState_full},
-              },
+          parameter<InterfaceTermsPreviousState>("INTERFACE_TERMS_PREVIOUS_STATE",
               {.description = "how to treat interface terms from previous time step (new OST)",
                   .default_value = Inpar::XFEM::PreviousState_only_consistency}),
 
@@ -164,12 +154,7 @@ void Inpar::XFEM::set_valid_parameters(std::map<std::string, Core::IO::InputSpec
       {
 
           // Boundary-Coupling options
-          deprecated_selection<CouplingMethod>("COUPLING_METHOD",
-              {
-                  {"Hybrid_LM_Cauchy_stress", Inpar::XFEM::Hybrid_LM_Cauchy_stress},
-                  {"Hybrid_LM_viscous_stress", Inpar::XFEM::Hybrid_LM_viscous_stress},
-                  {"Nitsche", Inpar::XFEM::Nitsche},
-              },
+          parameter<CouplingMethod>("COUPLING_METHOD",
               {.description = "method how to enforce embedded boundary/coupling conditions at the "
                               "interface",
                   .default_value = Inpar::XFEM::Nitsche}),

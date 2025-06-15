@@ -2318,6 +2318,25 @@ Core::IO::InputSpec Core::IO::Internal::selection_internal(std::string name,
 {
   FOUR_C_ASSERT_ALWAYS(!choices.empty(), "Selection must have at least one choice.");
 
+  // In case all strings match the enum values, we can use the enum type directly.
+  if constexpr (std::is_enum_v<RemoveOptional<T>>)
+  {
+    using Enum = RemoveOptional<T>;
+    if (EnumTools::enum_count<Enum>() == choices.size())
+    {
+      const bool all_enum_values_match = std::ranges::all_of(EnumTools::enum_names<Enum>(),
+          [&choices](const auto& enum_name) { return choices.contains(std::string(enum_name)); });
+      if (all_enum_values_match)
+      {
+        FOUR_C_THROW(
+            "All choices for selection '{}' match enum values of type '{}'. "
+            "Use parameter<{}>() instead.",
+            name, EnumTools::enum_type_name<Enum>(), EnumTools::enum_type_name<Enum>());
+      }
+    }
+  }
+
+
   // If we have a std::optional type, we need to convert the choices.
   typename DeprecatedSelectionSpec<T>::ChoiceMap modified_choices;
   std::string choices_string;

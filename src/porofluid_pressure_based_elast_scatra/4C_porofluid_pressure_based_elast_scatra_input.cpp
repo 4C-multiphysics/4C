@@ -46,14 +46,7 @@ void PoroPressureBased::set_valid_parameters_porofluid_elast_scatra(
               {.description = "minimal number of iterations over fields", .default_value = 1}),
 
           // Coupling strategy for poroscatra solvers
-          deprecated_selection<SolutionSchemePorofluidElastScatra>("COUPALGO",
-              {
-                  {"twoway_partitioned_nested",
-                      SolutionSchemePorofluidElastScatra::twoway_partitioned_nested},
-                  {"twoway_partitioned_sequential",
-                      SolutionSchemePorofluidElastScatra::twoway_partitioned_sequential},
-                  {"twoway_monolithic", SolutionSchemePorofluidElastScatra::twoway_monolithic},
-              },
+          parameter<SolutionSchemePorofluidElastScatra>("COUPALGO",
               {.description = "Coupling strategies for poroscatra solvers",
                   .default_value = SolutionSchemePorofluidElastScatra::twoway_partitioned_nested}),
 
@@ -122,13 +115,9 @@ void PoroPressureBased::set_valid_parameters_porofluid_elast_scatra(
                   .default_value = -1}),
 
           // parameters for finite difference check
-          deprecated_selection<FdCheck>("FDCHECK",
-              {
-                  {"none", FdCheck::none},
-                  {"global", FdCheck::global},
-              },
-              {.description = "flag for finite difference check: none or global",
-                  .default_value = FdCheck::none}),
+          parameter<FdCheck>(
+              "FDCHECK", {.description = "flag for finite difference check: none or global",
+                             .default_value = FdCheck::none}),
 
           // flag for equilibration of global system of equations
           parameter<Core::LinAlg::EquilibrationMethod>("EQUILIBRATION",

@@ -135,12 +135,7 @@ void Inpar::NlnSol::set_valid_parameters(std::map<std::string, Core::IO::InputSp
 
 
 
-          deprecated_selection<::NOX::StatusTest::CheckType>("Inner Status Test Check Type",
-              {
-                  {"Complete", ::NOX::StatusTest::Complete},
-                  {"Minimal", ::NOX::StatusTest::Minimal},
-                  {"None", ::NOX::StatusTest::None},
-              },
+          parameter<::NOX::StatusTest::CheckType>("Inner Status Test Check Type",
               {.description = "Specify the check type for the inner status tests.",
                   .default_value = ::NOX::StatusTest::Minimal})},
       {.defaultable = true});

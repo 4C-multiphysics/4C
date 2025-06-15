@@ -231,11 +231,7 @@ void Inpar::FSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
               "KRYLOV_SIZE", {.description = "Size of Krylov Subspace.", .default_value = 50}),
 
 
-          deprecated_selection<Inpar::FSI::LinearBlockSolver>("LINEARBLOCKSOLVER",
-              {
-                  {"PreconditionedKrylov", Inpar::FSI::PreconditionedKrylov},
-                  {"LinalgSolver", Inpar::FSI::LinalgSolver},
-              },
+          parameter<Inpar::FSI::LinearBlockSolver>("LINEARBLOCKSOLVER",
               {.description = "Linear block preconditioner for block system in monolithic FSI.",
                   .default_value = Inpar::FSI::PreconditionedKrylov}),
 
@@ -480,14 +476,8 @@ void Inpar::FSI::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>
 
   /* ----------------------------------------------------------------------- */
   list["FSI DYNAMIC/CONSTRAINT"] = group("FSI DYNAMIC/CONSTRAINT",
-      {
-
-          deprecated_selection<Inpar::FSI::PrecConstr>("PRECONDITIONER",
-              {
-                  {"Simple", Inpar::FSI::Simple},
-                  {"Simplec", Inpar::FSI::Simplec},
-              },
-              {.description = "preconditioner to use", .default_value = Inpar::FSI::Simple}),
+      {parameter<Inpar::FSI::PrecConstr>("PRECONDITIONER",
+           {.description = "preconditioner to use", .default_value = Inpar::FSI::Simple}),
           parameter<int>("SIMPLEITER",
               {.description = "Number of iterations for simple pc", .default_value = 2}),
           parameter<double>(

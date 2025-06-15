@@ -80,14 +80,9 @@ void Inpar::Plasticity::set_valid_parameters(std::map<std::string, Core::IO::Inp
               {.description = "tolerance in the EAS increment norm for the Newton iteration",
                   .default_value = 1.0E-8}),
 
-          deprecated_selection<TSI::DissipationMode>("DISSIPATION_MODE",
-              {
-                  {"pl_multiplier", TSI::pl_multiplier},
-                  {"pl_flow", TSI::pl_flow},
-                  {"Taylor_Quinney", TSI::Taylor_Quinney},
-              },
-              {.description = "method to calculate the plastic dissipation",
-                  .default_value = TSI::pl_multiplier})},
+          parameter<TSI::DissipationMode>(
+              "DISSIPATION_MODE", {.description = "method to calculate the plastic dissipation",
+                                      .default_value = TSI::pl_multiplier})},
       {.defaultable = true});
 }
 

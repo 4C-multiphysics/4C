@@ -635,14 +635,8 @@ namespace Inpar
             "TIMEFUNCTDISPLOFFSET", {.description = "", .size = from_parameter<int>("NUMDOF")}));
         cond.add_component(parameter<std::vector<int>>(
             "FUNCTNONLINSTIFF", {.description = "", .size = from_parameter<int>("NUMDOF")}));
-        cond.add_component(
-            deprecated_selection<Constraints::SpringDashpot::RobinSpringDashpotType>("DIRECTION",
-                {{"xyz", Constraints::SpringDashpot::RobinSpringDashpotType::xyz},
-                    {"refsurfnormal",
-                        Constraints::SpringDashpot::RobinSpringDashpotType::refsurfnormal},
-                    {"cursurfnormal",
-                        Constraints::SpringDashpot::RobinSpringDashpotType::cursurfnormal}},
-                {.description = "Direction of the spring-dashpot boundary conditions"}));
+        cond.add_component(parameter<Constraints::SpringDashpot::RobinSpringDashpotType>(
+            "DIRECTION", {.description = "Direction of the spring-dashpot boundary conditions"}));
         cond.add_component(parameter<std::optional<int>>("COUPLING", {.description = ""}));
         condlist.emplace_back(cond);
       };

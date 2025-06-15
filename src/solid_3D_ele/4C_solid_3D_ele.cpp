@@ -75,21 +75,7 @@ void Discret::Elements::SolidType::setup_element_definition(
 
   defsgeneral[Core::FE::cell_type_to_string(Core::FE::CellType::hex8)] = all_of({
       get_default_input_spec<Core::FE::CellType::hex8>(),
-      deprecated_selection<ElementTechnology>("TECH",
-          {
-              {element_technology_string(ElementTechnology::none), ElementTechnology::none},
-              {element_technology_string(ElementTechnology::fbar), ElementTechnology::fbar},
-              {element_technology_string(ElementTechnology::eas_mild), ElementTechnology::eas_mild},
-              {element_technology_string(ElementTechnology::eas_full), ElementTechnology::eas_full},
-              {element_technology_string(ElementTechnology::shell_ans),
-                  ElementTechnology::shell_ans},
-              {element_technology_string(ElementTechnology::shell_eas),
-                  ElementTechnology::shell_eas},
-              {element_technology_string(ElementTechnology::shell_eas_ans),
-                  ElementTechnology::shell_eas_ans},
-              {element_technology_string(ElementTechnology::fbar), ElementTechnology::fbar},
-          },
-          {.default_value = ElementTechnology::none}),
+      parameter<ElementTechnology>("TECH", {.default_value = ElementTechnology::none}),
   });
 
   defsgeneral[Core::FE::cell_type_to_string(Core::FE::CellType::hex18)] =
