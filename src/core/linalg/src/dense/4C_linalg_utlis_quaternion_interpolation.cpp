@@ -13,14 +13,14 @@
 #include "4C_linalg_utils_scalar_interpolation.hpp"
 #include "4C_utils_exceptions.hpp"
 
+#include <algorithm>
 #include <cassert>
-#include <vector>
 
 FOUR_C_NAMESPACE_OPEN
 
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
-Core::LinAlg::Matrix<4, 1> Core::LinAlg::QuaternionInterpolation::spherical_linear_interpolation(
+Core::LinAlg::Matrix<4, 1> Core::LinAlg::spherical_linear_interpolation(
     const Core::LinAlg::Matrix<4, 1>& q1, const Core::LinAlg::Matrix<4, 1>& q2, double t)
 {
   // Compute the dot product
@@ -35,14 +35,14 @@ Core::LinAlg::Matrix<4, 1> Core::LinAlg::QuaternionInterpolation::spherical_line
     dot = -dot;
   }
 
-  const double DOT_THRESHOLD = 0.9995;
-  if (dot > DOT_THRESHOLD)
+  const double linear_interpolation_threshold = 0.9995;
+  if (dot > linear_interpolation_threshold)
   {
     // If the quaternions are close, use linear interpolation
     Core::LinAlg::Matrix<4, 1> result;
     for (int i = 0; i < 4; ++i) result(i, 0) = (1.0 - t) * q1(i, 0) + t * q2_mod(i, 0);
     // Normalize
-    normalize_vector(result);
+    result.normalize();
     return result;
   }
 
@@ -56,7 +56,7 @@ Core::LinAlg::Matrix<4, 1> Core::LinAlg::QuaternionInterpolation::spherical_line
   for (int i = 0; i < 4; ++i) result(i, 0) = s0 * q1(i, 0) + s1 * q2_mod(i, 0);
 
   // Normalize
-  normalize_vector(result);
+  result.normalize();
 
   return result;
 }
@@ -64,7 +64,7 @@ Core::LinAlg::Matrix<4, 1> Core::LinAlg::QuaternionInterpolation::spherical_line
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
 template <unsigned int loc_dim>
-Core::LinAlg::QuaternionInterpolation::GeneralizedSphericalLinearInterpolator<loc_dim>::
+Core::LinAlg::GeneralizedSphericalLinearInterpolator<loc_dim>::
     GeneralizedSphericalLinearInterpolator(
         const std::vector<Core::LinAlg::Matrix<4, 1>>& unit_quaternions,
         const std::vector<Core::LinAlg::Matrix<loc_dim, 1>>& ref_locs,
@@ -76,37 +76,37 @@ Core::LinAlg::QuaternionInterpolation::GeneralizedSphericalLinearInterpolator<lo
       interp_params_(interp_params)
 {
   // Check if reference locations same dimension
-  assert(!ref_locs.empty() &&
-         "Reference locations must have the same dimension as the interpolation location.");
+  FOUR_C_ASSERT_ALWAYS(!ref_locs.empty(),
+      "Reference locations must have the same dimension as the interpolation location.");
 
   // Check if the number of reference locations matches the number of quaternions
-  if (unit_quaternions_.size() != ref_locs.size())
-    FOUR_C_THROW("Number of quaternions must match number of reference locations.");
+  FOUR_C_ASSERT_ALWAYS(unit_quaternions_.size() == ref_locs.size(),
+      "Number of quaternions must match number of reference locations.");
 
-  // Check if all quaternions are normalized
-  for (const auto& quat : unit_quaternions_)
-    if (std::abs(quat.norm2() - 1.0) > 1e-6)
-      FOUR_C_THROW("All quaternions must be normalized (norm should be close to 1).");
+  // Check if all quaternions are unit quaternions
+  FOUR_C_ASSERT_ALWAYS(std::all_of(unit_quaternions_.begin(), unit_quaternions_.end(),
+                           [](const auto& quat) { return std::abs(quat.norm2() - 1.0) < 1e-6; }),
+      "All quaternions must be normalized (norm should be close to 1).");
 }
 
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
 template <unsigned int loc_dim>
-Core::LinAlg::QuaternionInterpolation::GeneralizedSphericalLinearInterpolator<loc_dim>::
+Core::LinAlg::GeneralizedSphericalLinearInterpolator<loc_dim>::
     GeneralizedSphericalLinearInterpolator(
         const std::vector<Core::LinAlg::Matrix<4, 1>>& unit_quaternions,
         const std::vector<double>& normalized_weights)
     : unit_quaternions_(unit_quaternions), normalized_weights_(normalized_weights)
 {
-  if (unit_quaternions_.size() != normalized_weights_.size())
-    FOUR_C_THROW("Number of quaternions and weights must match.");
-  assert(!unit_quaternions_.empty() && "No quaternions provided for interpolation.");
-  assert(!normalized_weights_.empty() && "No weights provided for interpolation.");
+  FOUR_C_ASSERT_ALWAYS(unit_quaternions_.size() == normalized_weights_.size(),
+      "Number of quaternions and weights must match.");
+  FOUR_C_ASSERT_ALWAYS(!unit_quaternions_.empty(), "No quaternions provided for interpolation.");
+  FOUR_C_ASSERT_ALWAYS(!normalized_weights_.empty(), "No weights provided for interpolation.");
 
   // Check if all quaternions are normalized
-  for (const auto& quat : unit_quaternions_)
-    if (std::abs(quat.norm2() - 1.0) > 1e-6)
-      FOUR_C_THROW("All quaternions must be normalized (norm should be close to 1).");
+  FOUR_C_ASSERT_ALWAYS(std::all_of(unit_quaternions_.begin(), unit_quaternions_.end(),
+                           [](const auto& quat) { return std::abs(quat.norm2() - 1.0) < 1e-6; }),
+      "All quaternions must be normalized (norm should be close to 1).");
 
   // Check if weights are non-negative and sum to 1
   double weight_sum = 0.0;
@@ -121,11 +121,36 @@ Core::LinAlg::QuaternionInterpolation::GeneralizedSphericalLinearInterpolator<lo
 }
 
 /*--------------------------------------------------------------------*
+ * @brief Computes the spherical weighted average of points on the unit sphere $\mathbb{S}^3$ using
+ * Algorithm A2 from Buss and Fillmore, 2001.
+ *
+ * @details
+ * **Inputs:** Points $q_1, \ldots, q_n$ on $S^3$ and nonnegative weights $w_1, \dots, w_n$ with
+ * $\sum_{i=1}^n w_i = 1$.
+ *
+ * **Initialization:**
+ * Set $q$ to the normalized weighted sum: $q := \frac{\sum_{i=1}^n w_i q_i}{\left\| \sum_{i=1}^n
+ * w_i q_i \right\|}$.
+ *
+ * **Main Iteration:**
+ * - Construct a local Euclidean coordinate system $C$ at the current $q$.
+ * - For each $i = 1, \ldots, n$:
+ *   - Compute $q_i^* := \log_q(q_i)$ (the logarithmic map at $q$ of $q_i$).
+ *   - Let $\rho_i := \| q_i^* - q \|$.
+ *   - Define a local coordinate system $C_i$ at $q$ with the first axis pointing away from $q_i$.
+ *   - Let $M_i$ be the transformation matrix from $C_i$ to $C$.
+ *   - Let $H_i$ be a $d \times d$ diagonal matrix with first entry 1, others $\rho_i \cot(\rho_i)$.
+ * - Compute:
+ *   - $u := \sum_{i=1}^n w_i (q_i^* - q)$
+ *   - $H := \sum_{i=1}^n M_i H_i M_i^T$
+ *   - $v := H^{-1} u$
+ *   - Update $q := \exp_q(q + v)$ (using the exponential map).
+ * - Repeat until $\|v\|$ is sufficiently small, then return $q$.
  *--------------------------------------------------------------------*/
 template <unsigned int loc_dim>
-Core::LinAlg::Matrix<4, 1> Core::LinAlg::QuaternionInterpolation::
-    GeneralizedSphericalLinearInterpolator<loc_dim>::get_interpolated_quaternion(
-        Core::LinAlg::Matrix<loc_dim, 1>* interp_loc)
+Core::LinAlg::Matrix<4, 1>
+Core::LinAlg::GeneralizedSphericalLinearInterpolator<loc_dim>::get_interpolated_quaternion(
+    Core::LinAlg::Matrix<loc_dim, 1>* interp_loc)
 {
   if (interp_loc != nullptr and normalized_weights_.empty())
   {
@@ -133,16 +158,16 @@ Core::LinAlg::Matrix<4, 1> Core::LinAlg::QuaternionInterpolation::
         ref_locs_, *interp_loc, weight_func_, interp_params_);
   }
 
-  assert(!normalized_weights_.empty() &&
-         "No weights calculated for the given interpolation location.");
-  if (normalized_weights_.size() != unit_quaternions_.size())
-    FOUR_C_THROW("Number of weights must match number of quaternions.");
+  FOUR_C_ASSERT_ALWAYS(
+      !normalized_weights_.empty(), "No weights calculated for the given interpolation location.");
+  FOUR_C_ASSERT_ALWAYS(normalized_weights_.size() == unit_quaternions_.size(),
+      "Number of weights must match number of quaternions.");
 
   // compute initial estimate
   Core::LinAlg::Matrix<4, 1> q_interp(initial_estimate());
 
   if (q_interp(3) < 0.) q_interp.scale(-1.);
-  Core::LinAlg::normalize_vector(q_interp);
+  q_interp.normalize();
 
   // Basis and local coordinate system
   Core::LinAlg::Matrix<4, 4> basis4x4(Core::LinAlg::Initialization::zero);
@@ -182,15 +207,15 @@ Core::LinAlg::Matrix<4, 1> Core::LinAlg::QuaternionInterpolation::
       e2(i) = basis4x4(i, 2);
       e3(i) = basis4x4(i, 3);
     }
-    Core::LinAlg::normalize_vector(e1);
-    Core::LinAlg::normalize_vector(e2);
-    Core::LinAlg::normalize_vector(e3);
+    e1.normalize();
+    e2.normalize();
+    e3.normalize();
 
     grad.put_scalar(0.);
     hessian.put_scalar(0.);
 
     double tt = 0.;
-    // Next approximation approximation
+    // Next approximation
     for (size_t i = 0; i < unit_quaternions_.size(); ++i)  // Loop over all quaternion
     {
       double weight = normalized_weights_[i];
@@ -225,7 +250,7 @@ Core::LinAlg::Matrix<4, 1> Core::LinAlg::QuaternionInterpolation::
 
         tmp3x1.put_scalar(0.);
         tmp3x1.update(grad_local);
-        Core::LinAlg::normalize_vector(tmp3x1);
+        tmp3x1.normalize();
 
         rotmat.put_scalar(0.);
         for (int i = 0; i < 3; ++i)
@@ -272,7 +297,7 @@ Core::LinAlg::Matrix<4, 1> Core::LinAlg::QuaternionInterpolation::
     q_interpold.update(q_interp);
 
     rotate_quaternion(q_interp, x_disp);
-    Core::LinAlg::normalize_vector(q_interp);
+    q_interp.normalize();
 
     // Convergence check
     dq_interp.put_scalar(0.);
@@ -298,15 +323,14 @@ Core::LinAlg::Matrix<4, 1> Core::LinAlg::QuaternionInterpolation::
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
 template <unsigned int loc_dim>
-Core::LinAlg::Matrix<4, 1> Core::LinAlg::QuaternionInterpolation::
-    GeneralizedSphericalLinearInterpolator<loc_dim>::weighted_sum(
-        const std::vector<Core::LinAlg::Matrix<4, 1>>& quaternions,
-        const std::vector<double>& weights)
+Core::LinAlg::Matrix<4, 1>
+Core::LinAlg::GeneralizedSphericalLinearInterpolator<loc_dim>::weighted_sum(
+    const std::vector<Core::LinAlg::Matrix<4, 1>>& quaternions, const std::vector<double>& weights)
 {
-  assert(!quaternions.empty() && "No quaternions provided for weighted sum.");
-  assert(!weights.empty() && "No weights provided for weighted sum.");
-  if (quaternions.size() != weights.size())
-    FOUR_C_THROW("Number of quaternions and weights must match.");
+  FOUR_C_ASSERT_ALWAYS(!quaternions.empty(), "No quaternions provided for weighted sum.");
+  FOUR_C_ASSERT_ALWAYS(!weights.empty(), "No weights provided for weighted sum.");
+  FOUR_C_ASSERT_ALWAYS(
+      quaternions.size() == weights.size(), "Number of quaternions and weights must match.");
 
   Core::LinAlg::Matrix<4, 1> weighted_sum(Core::LinAlg::Initialization::zero);
 
@@ -317,15 +341,15 @@ Core::LinAlg::Matrix<4, 1> Core::LinAlg::QuaternionInterpolation::
   }
   if (weighted_sum.norm2() < 1e-8)
     FOUR_C_THROW("Weighted sum of quaternions is too close to zero, cannot normalize.");
-  Core::LinAlg::normalize_vector(weighted_sum);
+  weighted_sum.normalize();
   return weighted_sum;
 }
 
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
 template <unsigned int loc_dim>
-Core::LinAlg::Matrix<4, 1> Core::LinAlg::QuaternionInterpolation::
-    GeneralizedSphericalLinearInterpolator<loc_dim>::initial_estimate()
+Core::LinAlg::Matrix<4, 1>
+Core::LinAlg::GeneralizedSphericalLinearInterpolator<loc_dim>::initial_estimate()
 {
   // Find the coordinate with the max. total absolute value.
   double abs_sum_x = 0, abs_sum_y = 0, abs_sum_z = 0, abs_sum_w = 0;
@@ -391,10 +415,9 @@ Core::LinAlg::Matrix<4, 1> Core::LinAlg::QuaternionInterpolation::
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
 template <unsigned int loc_dim>
-Core::LinAlg::Matrix<4, 1> Core::LinAlg::QuaternionInterpolation::
-    GeneralizedSphericalLinearInterpolator<loc_dim>::project_quaternion(
-        const Core::LinAlg::Matrix<4, 1>& quaternion_1,
-        const Core::LinAlg::Matrix<4, 1>& quaternion_2)
+Core::LinAlg::Matrix<4, 1>
+Core::LinAlg::GeneralizedSphericalLinearInterpolator<loc_dim>::project_quaternion(
+    const Core::LinAlg::Matrix<4, 1>& quaternion_1, const Core::LinAlg::Matrix<4, 1>& quaternion_2)
 {
   Core::LinAlg::Matrix<4, 1> projection(quaternion_1);
   projection.update(-1., quaternion_2, 1.);
@@ -408,13 +431,13 @@ Core::LinAlg::Matrix<4, 1> Core::LinAlg::QuaternionInterpolation::
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
 template <unsigned int loc_dim>
-void Core::LinAlg::QuaternionInterpolation::GeneralizedSphericalLinearInterpolator<
-    loc_dim>::rotate_quaternion(Core::LinAlg::Matrix<4, 1>& quaternion,
-    const Core::LinAlg::Matrix<4, 1>& direction)
+void Core::LinAlg::GeneralizedSphericalLinearInterpolator<loc_dim>::rotate_quaternion(
+    Core::LinAlg::Matrix<4, 1>& quaternion, const Core::LinAlg::Matrix<4, 1>& direction)
 {
-  assert(quaternion.norm2() < 1.0 + 1e-8 && quaternion.norm2() > 1.0 - 1e-8 &&
-         (direction.dot(quaternion)) < 1e-8 && (direction.dot(quaternion)) > -1e-8 &&
-         "ERROR: check input quaternion and direction for validity.");
+  FOUR_C_ASSERT_ALWAYS(quaternion.norm2() < 1.0 + 1e-8 && quaternion.norm2() > 1.0 - 1e-8 &&
+                           (direction.dot(quaternion)) < 1e-8 &&
+                           (direction.dot(quaternion)) > -1e-8,
+      "ERROR: check input quaternion and direction for validity.");
 
   double thetasq = direction.norm2() * direction.norm2();
 
@@ -440,14 +463,14 @@ void Core::LinAlg::QuaternionInterpolation::GeneralizedSphericalLinearInterpolat
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
 template <unsigned int loc_dim>
-Core::LinAlg::Matrix<4, 4> Core::LinAlg::QuaternionInterpolation::
-    GeneralizedSphericalLinearInterpolator<loc_dim>::gram_schmidt_orthonormal_basis(
-        const Core::LinAlg::Matrix<4, 1>& quaternion)
+Core::LinAlg::Matrix<4, 4>
+Core::LinAlg::GeneralizedSphericalLinearInterpolator<loc_dim>::gram_schmidt_orthonormal_basis(
+    const Core::LinAlg::Matrix<4, 1>& quaternion)
 {
   Core::LinAlg::Matrix<4, 1> quaternion_copy(quaternion);
 
   Core::LinAlg::Matrix<4, 4> gs_basis(Core::LinAlg::Initialization::zero);
-  Core::LinAlg::normalize_vector<4>(quaternion_copy);
+  quaternion_copy.normalize();
 
   // set first column
   for (int i = 0; i < 4; ++i) gs_basis(i, 0) = quaternion_copy(i);
@@ -491,7 +514,7 @@ Core::LinAlg::Matrix<4, 4> Core::LinAlg::QuaternionInterpolation::
     basis_3(3) = d13;
   }
 
-  Core::LinAlg::normalize_vector<4>(basis_3);
+  basis_3.normalize();
 
   for (int i = 0; i < 4; ++i) gs_basis(i, 2) = basis_3(i);
 
@@ -509,9 +532,8 @@ Core::LinAlg::Matrix<4, 4> Core::LinAlg::QuaternionInterpolation::
 /*--------------------------------------------------------------------*
  *--------------------------------------------------------------------*/
 template <unsigned int loc_dim>
-void Core::LinAlg::QuaternionInterpolation::GeneralizedSphericalLinearInterpolator<
-    loc_dim>::right_orthonormal_basis(Core::LinAlg::Matrix<3, 1>& u, Core::LinAlg::Matrix<3, 1>& v,
-    Core::LinAlg::Matrix<3, 1>& w)
+void Core::LinAlg::GeneralizedSphericalLinearInterpolator<loc_dim>::right_orthonormal_basis(
+    Core::LinAlg::Matrix<3, 1>& u, Core::LinAlg::Matrix<3, 1>& v, Core::LinAlg::Matrix<3, 1>& w)
 {
   v.clear();
   w.clear();
@@ -530,35 +552,13 @@ void Core::LinAlg::QuaternionInterpolation::GeneralizedSphericalLinearInterpolat
     v(1) = u(2);
     v(2) = -u(1);
   }
-  Core::LinAlg::normalize_vector(v);
-  Core::LinAlg::vector_cross_product(u, v, w);
-  Core::LinAlg::normalize_vector(w);
-}
-
-/*--------------------------------------------------------------------*
- *--------------------------------------------------------------------*/
-void Core::LinAlg::vector_cross_product(const Core::LinAlg::Matrix<3, 1>& u,
-    const Core::LinAlg::Matrix<3, 1>& v, Core::LinAlg::Matrix<3, 1>& result)
-{
-  result(0, 0) = u(1, 0) * v(2, 0) - u(2, 0) * v(1, 0);
-  result(1, 0) = u(2, 0) * v(0, 0) - u(0, 0) * v(2, 0);
-  result(2, 0) = u(0, 0) * v(1, 0) - u(1, 0) * v(0, 0);
-}
-
-/*--------------------------------------------------------------------*
- *--------------------------------------------------------------------*/
-template <unsigned int loc_dim>
-void Core::LinAlg::normalize_vector(Core::LinAlg::Matrix<loc_dim, 1>& vector)
-{
-  double magnitude = vector.norm2();
-  if (magnitude > 0.)
-    vector.scale(1. / magnitude);
-  else
-    FOUR_C_THROW("Vector has zero magnitude, cannot normalize. Check input for validity.");
+  v.normalize();
+  w.cross_product(u, v);
+  w.normalize();
 }
 
 // Explicit instantiations
-template class Core::LinAlg::QuaternionInterpolation::GeneralizedSphericalLinearInterpolator<1>;
-template class Core::LinAlg::QuaternionInterpolation::GeneralizedSphericalLinearInterpolator<2>;
-template class Core::LinAlg::QuaternionInterpolation::GeneralizedSphericalLinearInterpolator<3>;
+template class Core::LinAlg::GeneralizedSphericalLinearInterpolator<1>;
+template class Core::LinAlg::GeneralizedSphericalLinearInterpolator<2>;
+template class Core::LinAlg::GeneralizedSphericalLinearInterpolator<3>;
 FOUR_C_NAMESPACE_CLOSE

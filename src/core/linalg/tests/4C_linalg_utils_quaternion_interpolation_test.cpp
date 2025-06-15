@@ -42,8 +42,7 @@ TEST(QuaternionInterpolationTest, SlerpIdentity)
   std::vector<Core::LinAlg::Matrix<4, 1>> quats = {q, q};
   std::vector<double> weights = {0.5, 0.5};
 
-  Core::LinAlg::QuaternionInterpolation::GeneralizedSphericalLinearInterpolator interpolator(
-      quats, weights);
+  Core::LinAlg::GeneralizedSphericalLinearInterpolator interpolator(quats, weights);
   Core::LinAlg::Matrix<4, 1> result = interpolator.get_interpolated_quaternion();
 
   ASSERT_NEAR(result(0, 0), 0.0, 1e-12);  // x
@@ -70,8 +69,7 @@ TEST(QuaternionInterpolationTest, SlerpHalfway)
 
   // Use the SLERP function directly
   double t = 0.5;
-  Core::LinAlg::Matrix<4, 1> slerp_result =
-      Core::LinAlg::QuaternionInterpolation::spherical_linear_interpolation(q1, q2, t);
+  Core::LinAlg::Matrix<4, 1> slerp_result = Core::LinAlg::spherical_linear_interpolation(q1, q2, t);
 
   // Analytical result for SLERP between (0,0,0,1) and (0,0,1,0) at t=0.5:
   // angle = acos(0) = pi/2
@@ -79,7 +77,7 @@ TEST(QuaternionInterpolationTest, SlerpHalfway)
   // theta = pi/2, sin(theta) = 1
   // sin((1-t)*theta) = sin(0.5*pi/2) = sin(pi/4)
   // sin(t*theta) = sin(0.5*pi/2) = sin(pi/4)
-  double theta = M_PI / 2.0;
+  double theta = std::numbers::pi_v<double> / 2.0;
   double sin_theta = std::sin(theta);
   double sin_1mt_theta = std::sin((1.0 - t) * theta);
   double sin_t_theta = std::sin(t * theta);
@@ -99,8 +97,7 @@ TEST(QuaternionInterpolationTest, SlerpHalfway)
   // Also check the GeneralizedSphericalLinearInterpolator result matches
   std::vector<Core::LinAlg::Matrix<4, 1>> quats = {q1, q2};
   std::vector<double> weights = {0.5, 0.5};
-  Core::LinAlg::QuaternionInterpolation::GeneralizedSphericalLinearInterpolator interpolator(
-      quats, weights);
+  Core::LinAlg::GeneralizedSphericalLinearInterpolator interpolator(quats, weights);
   Core::LinAlg::Matrix<4, 1> result = interpolator.get_interpolated_quaternion();
 
   ASSERT_NEAR(result(0, 0), 0.0, 1e-12);         // x
@@ -128,8 +125,7 @@ TEST(QuaternionInterpolationTest, SlerpWeighted)
   std::vector<Core::LinAlg::Matrix<4, 1>> quats = {q1, q2};
   std::vector<double> weights = {0.75, 0.25};
 
-  Core::LinAlg::QuaternionInterpolation::GeneralizedSphericalLinearInterpolator interpolator(
-      quats, weights);
+  Core::LinAlg::GeneralizedSphericalLinearInterpolator interpolator(quats, weights);
   Core::LinAlg::Matrix<4, 1> result = interpolator.get_interpolated_quaternion();
 
   double norm = std::sqrt(result(0, 0) * result(0, 0) + result(1, 0) * result(1, 0) +
@@ -168,8 +164,7 @@ TEST(QuaternionInterpolationTest, SlerpThreeQuaternions)
   std::vector<Core::LinAlg::Matrix<4, 1>> quats = {q1, q2, q3};
   std::vector<double> weights = {1.0 / 3, 1.0 / 3, 1.0 / 3};
 
-  Core::LinAlg::QuaternionInterpolation::GeneralizedSphericalLinearInterpolator<2> interpolator(
-      quats, weights);
+  Core::LinAlg::GeneralizedSphericalLinearInterpolator<2> interpolator(quats, weights);
   Core::LinAlg::Matrix<4, 1> result = interpolator.get_interpolated_quaternion();
 
   // For three orthogonal quaternions with equal weights, the result should be close to normalized
@@ -215,7 +210,7 @@ TEST(QuaternionInterpolationTest, SlerpThreeQuaternions_2DRefLoc_EquidistantInte
   auto weight_func = Core::LinAlg::ScalarInterpolation::WeightingFunction::inverse_distance;
   Core::LinAlg::ScalarInterpolation::InterpParams interp_params;
 
-  Core::LinAlg::QuaternionInterpolation::GeneralizedSphericalLinearInterpolator<2> interpolator(
+  Core::LinAlg::GeneralizedSphericalLinearInterpolator<2> interpolator(
       quats, ref_locs, weight_func, interp_params);
 
   Core::LinAlg::Matrix<4, 1> result = interpolator.get_interpolated_quaternion(&interp_loc);
@@ -267,8 +262,7 @@ TEST(QuaternionInterpolationTest, SlerpFourQuaternions)
   std::vector<Core::LinAlg::Matrix<4, 1>> quats = {q1, q2, q3, q4};
   std::vector<double> weights = {0.25, 0.25, 0.25, 0.25};
 
-  Core::LinAlg::QuaternionInterpolation::GeneralizedSphericalLinearInterpolator<3> interpolator(
-      quats, weights);
+  Core::LinAlg::GeneralizedSphericalLinearInterpolator<3> interpolator(quats, weights);
   Core::LinAlg::Matrix<4, 1> result = interpolator.get_interpolated_quaternion();
 
   // For four orthogonal quaternions with equal weights, the result should be close to normalized
@@ -315,7 +309,7 @@ TEST(QuaternionInterpolationTest, SlerpFourQuaternions_2DRefLoc_EquidistantInter
   auto weight_func = Core::LinAlg::ScalarInterpolation::WeightingFunction::inverse_distance;
   Core::LinAlg::ScalarInterpolation::InterpParams interp_params;
 
-  Core::LinAlg::QuaternionInterpolation::GeneralizedSphericalLinearInterpolator<2> interpolator(
+  Core::LinAlg::GeneralizedSphericalLinearInterpolator<2> interpolator(
       quats, ref_locs, weight_func, interp_params);
 
   Core::LinAlg::Matrix<4, 1> result = interpolator.get_interpolated_quaternion(&interp_loc);
@@ -340,7 +334,7 @@ TEST(QuaternionInterpolationTest, SlerpFourQuaternions_2DRefLoc_EquidistantInter
  *
  * The test performs the following checks:
  * 1. Computes the SLERP result at t = 0.25 (weighted interpolation: 75% q1, 25% q2) using the
- *    `Core::LinAlg::QuaternionInterpolation::spherical_linear_interpolation` function.
+ *    `Core::LinAlg::spherical_linear_interpolation` function.
  * 2. Calculates the expected analytical result for this interpolation using the SLERP formula.
  * 3. Asserts that the computed SLERP result matches the analytical result within a tight tolerance.
  * 4. Uses the `GeneralizedSphericalLinearInterpolator` with the same weights and verifies that its
@@ -359,8 +353,7 @@ TEST(QuaternionInterpolationTest, SlerpWeighted_AnalyticalCheck)
 
   // Use the SLERP function directly
   double t = 0.25;
-  Core::LinAlg::Matrix<4, 1> slerp_result =
-      Core::LinAlg::QuaternionInterpolation::spherical_linear_interpolation(q1, q2, t);
+  Core::LinAlg::Matrix<4, 1> slerp_result = Core::LinAlg::spherical_linear_interpolation(q1, q2, t);
 
   // Analytical result for SLERP between (0,0,0,1) and (1,0,0,0) at t=0.25:
   // angle = acos(0) = pi/2, so
@@ -368,7 +361,7 @@ TEST(QuaternionInterpolationTest, SlerpWeighted_AnalyticalCheck)
   // theta = pi/2, sin(theta) = 1
   // sin((1-t)*theta) = sin(0.75*pi/2) = sin(3*pi/8)
   // sin(t*theta) = sin(0.25*pi/2) = sin(pi/8)
-  double theta = M_PI / 2.0;
+  double theta = std::numbers::pi_v<double> / 2.0;
   double sin_theta = std::sin(theta);
   double sin_1mt_theta = std::sin((1.0 - t) * theta);
   double sin_t_theta = std::sin(t * theta);
@@ -388,8 +381,7 @@ TEST(QuaternionInterpolationTest, SlerpWeighted_AnalyticalCheck)
   // Also check the GeneralizedSphericalLinearInterpolator result matches
   std::vector<Core::LinAlg::Matrix<4, 1>> quats = {q1, q2};
   std::vector<double> weights = {0.75, 0.25};
-  Core::LinAlg::QuaternionInterpolation::GeneralizedSphericalLinearInterpolator interpolator(
-      quats, weights);
+  Core::LinAlg::GeneralizedSphericalLinearInterpolator interpolator(quats, weights);
   Core::LinAlg::Matrix<4, 1> result = interpolator.get_interpolated_quaternion();
 
   ASSERT_NEAR(result(0, 0), x_expected, 1e-12);  // x
