@@ -272,29 +272,22 @@ namespace Core::Conditions
     //@}
 
     /*!
-    \brief generate a better distribution of nodes for more efficiency
-    in a parallel setting
+    \brief generate a better distribution of nodes for more efficiency in a parallel setting
 
-     o adjust weights of slavenodes
-       they need a small weight since they do not contribute any dofs
+     o adjust weights of slavenodes they need a small weight since they do not contribute any dofs
        to the linear system
 
-     o compute connectivity
-       iterate all elements on this proc including ghosted ones. Include
+     o compute connectivity iterate all elements on this proc including ghosted ones. Include
        additional connections between master and slave nodes
 
      o set weights of edges between master/slave pairs to a high value
        in order to keep both on the same proc when redistributing
 
-     o gather all data to proc 1, do partitioning using METIS with
-       both, weights for edges and nodes
+     o gather all data to proc 1, do partitioning using METIS with both, weights for edges and nodes
 
      o redistribute nodes without assigning dofs
 
      o repair master/slave distribution, finally assign dofs
-
-     \return void
-
     */
     void balance_load();
 
@@ -323,45 +316,6 @@ namespace Core::Conditions
     //!\brief map connecting master to slave nodes owned or ghosted by this proc
     //       master node -> list of its slave node(s)
     std::shared_ptr<std::map<int, std::vector<int>>> allcoupledcolnodes_;
-
-    //!\brief time measurement (total)
-    Teuchos::RCP<Teuchos::Time> timepbctot_;
-    //!\brief time measurement (create master slave matching for pairs)
-    Teuchos::RCP<Teuchos::Time> timepbcmidtosid_;
-    //!\brief time measurement (create octree)
-    Teuchos::RCP<Teuchos::Time> timepbcmidoct_;
-    //!\brief time measurement (search in octree)
-    Teuchos::RCP<Teuchos::Time> timepbcmidmatch_;
-    //!\brief time measurement (redistribute nodes)
-    Teuchos::RCP<Teuchos::Time> timepbcreddis_;
-    //!\brief time measurement (add connectivity to previous pbcs)
-    Teuchos::RCP<Teuchos::Time> timepbcaddcon_;
-    //!\brief time measurement (repair ghosting)
-    Teuchos::RCP<Teuchos::Time> timepbcghost_;
-    //!\brief time measurement (make colmap for ghosting)
-    Teuchos::RCP<Teuchos::Time> timepbcmakeghostmap_;
-    //!\brief time measurement (discret->redistribute)
-    Teuchos::RCP<Teuchos::Time> timepbcrenumdofs_;
-
-
-    //!\brief time measurement (total)
-    std::shared_ptr<Teuchos::TimeMonitor> tm0_ref_;
-    //!\brief time measurement (create master slave matching for pairs)
-    std::shared_ptr<Teuchos::TimeMonitor> tm1_ref_;
-    //!\brief time measurement (create octree)
-    std::shared_ptr<Teuchos::TimeMonitor> tm2_ref_;
-    //!\brief time measurement (search in octree)
-    std::shared_ptr<Teuchos::TimeMonitor> tm3_ref_;
-    //!\brief time measurement (add connectivity to previous pbcs)
-    std::shared_ptr<Teuchos::TimeMonitor> tm4_ref_;
-    //!\brief time measurement (redistribute nodes)
-    std::shared_ptr<Teuchos::TimeMonitor> tm5_ref_;
-    //!\brief time measurement (make row and colmap for ghosting)
-    std::shared_ptr<Teuchos::TimeMonitor> tm6_ref_;
-    //!\brief time measurement (repair ghosting)
-    std::shared_ptr<Teuchos::TimeMonitor> tm7_ref_;
-    //!\brief time measurement (discret->redistribute)
-    std::shared_ptr<Teuchos::TimeMonitor> tm8_ref_;
   };
 }  // namespace Core::Conditions
 
