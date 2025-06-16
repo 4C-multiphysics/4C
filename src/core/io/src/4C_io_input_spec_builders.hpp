@@ -593,7 +593,7 @@ namespace Core::IO
       }
       else if (in.get<InputFieldType>("type") == InputFieldType::constant)
       {
-        double data = in.get<T>("value");
+        T data = in.get<T>("value");
         std::any_cast<InputParameterContainer&>(out).add(name, IO::InputField<T>(data));
       }
       else
