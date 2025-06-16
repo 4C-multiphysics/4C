@@ -429,6 +429,7 @@ namespace PoroPressureBased
     //! evaluate the function coupling
     void evaluate_function_coupling(const double& gp_weight,
         const Core::LinAlg::Matrix<1, num_nodes_artery_>& shape_functions_artery,
+        const Core::LinAlg::Matrix<1, num_nodes_artery_>& shape_functions_artery_deriv,
         const Core::LinAlg::Matrix<1, num_nodes_homogenized_>& shape_functions_homogenized,
         const double& jacobi, Core::LinAlg::SerialDenseVector& ele_rhs_artery,
         Core::LinAlg::SerialDenseVector& ele_rhs_homogenized,
@@ -451,7 +452,9 @@ namespace PoroPressureBased
     //! get values of artery at GP
     void get_artery_values_at_gp(
         const Core::LinAlg::Matrix<1, num_nodes_artery_>& shape_functions_artery,
-        double& artery_pressure, std::vector<double>& artery_scalars);
+        const Core::LinAlg::Matrix<1, num_nodes_artery_>& shape_functions_artery_deriv,
+        double& artery_pressure, double& artery_pressure_gradient,
+        std::vector<double>& artery_scalars);
 
     //! get scalar values of homogenized discretization at GP
     void get_homogenized_scalar_values_at_gp(
@@ -482,11 +485,14 @@ namespace PoroPressureBased
         Core::LinAlg::SerialDenseMatrix& ele_matrix_homogenized_homogenized);
 
     //! evaluate function and its derivative
-
     void evaluate_function_and_deriv(const Core::Utils::FunctionOfAnything& function,
-        const double& artery_pressure, const std::vector<double>& artery_scalars,
-        const std::vector<double>& homogenized_scalars, double& function_value,
-        std::vector<double>& artery_derivs, std::vector<double>& homogenized_derivs);
+        const double& artery_pressure, const double& flow_rate,
+        const std::vector<double>& artery_scalars, const std::vector<double>& homogenized_scalars,
+        double& function_value, std::vector<double>& artery_derivs,
+        std::vector<double>& homogenized_derivs);
+
+    //! evaluate artery flow rate based on Hagen-Poiseuille law
+    double evaluate_artery_flow_rate(double artery_pressure_gradient) const;
 
     //! set scalar as constants into function
     void set_scalar_values_as_constants(std::vector<std::pair<std::string, double>>& constants,
