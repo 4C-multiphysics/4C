@@ -37,17 +37,15 @@ SCALAR TRANSPORT DYNAMIC/S2I COUPLING:
   INTLAYERGROWTH_EVALUATION: "monolithic"
   INTLAYERGROWTH_LINEAR_SOLVER: 1
 SOLVER 1:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AZSUB: 1000
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "elch_3D_tet4_s2i_butlervolmer_plating_monolithic_reg_trig_BGS-AMG_4x4.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/electrochemistry_BGS-AMG_4x4.xml"
 SOLVER 2:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AZSUB: 1000
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "elch_3D_tet4_s2i_butlervolmer_plating_monolithic_reg_trig_BGS-AMG_4x4_scatra.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/electrochemistry_BGS-AMG_3x3.xml"
 MATERIALS:
   - MAT: 1
     MAT_electrode:
@@ -131,116 +129,116 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 40
       QUANTITY: "phi1"
-      VALUE: 10.116393322465147
-      TOLERANCE: 1e-08
+      VALUE: 1.01163933195352307e+01
+      TOLERANCE: 1.0e-07
   - SCATRA:
       DIS: "scatra"
       NODE: 40
       QUANTITY: "phi2"
-      VALUE: 8.81124394062338e-09
-      TOLERANCE: 1e-16
+      VALUE: 8.81124488154558789e-09
+      TOLERANCE: 1.0e-16
   - SCATRA:
       DIS: "scatra"
       NODE: 277
       QUANTITY: "phi1"
-      VALUE: 1.1981573635136438
-      TOLERANCE: 1e-09
+      VALUE: 1.19815736353609203e+00
+      TOLERANCE: 1.2e-08
   - SCATRA:
       DIS: "scatra"
       NODE: 277
       QUANTITY: "phi2"
-      VALUE: 0.020883111576655327
-      TOLERANCE: 2e-11
+      VALUE: 2.08831112534465409e-02
+      TOLERANCE: 2.1e-10
   - SCATRA:
       DIS: "scatra"
       NODE: 391
       QUANTITY: "phi1"
-      VALUE: 1.2007370098685548
-      TOLERANCE: 1e-09
+      VALUE: 1.20073700988201204e+00
+      TOLERANCE: 1.2e-08
   - SCATRA:
       DIS: "scatra"
       NODE: 391
       QUANTITY: "phi2"
-      VALUE: 0.020971182167582494
-      TOLERANCE: 2e-11
+      VALUE: 2.09711818440370297e-02
+      TOLERANCE: 2.1e-10
   - SCATRA:
       DIS: "scatra"
       NODE: 452
       QUANTITY: "phi1"
-      VALUE: 11.803890369430286
-      TOLERANCE: 1e-08
+      VALUE: 1.18038903721802537e+01
+      TOLERANCE: 1.2e-07
   - SCATRA:
       DIS: "scatra"
       NODE: 452
       QUANTITY: "phi2"
-      VALUE: 4.250943539854905
-      TOLERANCE: 4e-09
+      VALUE: 4.25094353933915858e+00
+      TOLERANCE: 4.3e-08
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "soc1"
-      VALUE: 0.7969820133139943
-      TOLERANCE: 8e-10
+      VALUE: 7.96982013063774142e-01
+      TOLERANCE: 8.0e-09
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "soc2"
-      VALUE: 0.7972222222209195
-      TOLERANCE: 8e-10
+      VALUE: 7.97222221977362810e-01
+      TOLERANCE: 8.0e-09
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "cellvoltage"
-      VALUE: 4.250943848883916
-      TOLERANCE: 4e-09
+      VALUE: 4.25094384836817163e+00
+      TOLERANCE: 4.3e-08
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "numiterlastnewton"
-      VALUE: 4
+      VALUE: 5
       TOLERANCE: 1e-20
   - SCATRA:
       DIS: "scatra"
       NODE: 108
       QUANTITY: "s2ilayerthickness"
-      VALUE: 1.2179192319738582e-08
-      TOLERANCE: 1e-16
+      VALUE: 1.21791920308242860e-08
+      TOLERANCE: 1.2e-16
   - SCATRA:
       DIS: "scatra"
       NODE: 22
       QUANTITY: "s2ilayerthickness"
-      VALUE: 1.2125559705149215e-08
-      TOLERANCE: 1e-16
+      VALUE: 1.21255594157590702e-08
+      TOLERANCE: 1.2e-16
   - SCATRA:
       DIS: "scatra"
       NODE: 106
       QUANTITY: "s2ilayerthickness"
-      VALUE: 1.2091574588280679e-08
-      TOLERANCE: 1e-16
+      VALUE: 1.20915742991286810e-08
+      TOLERANCE: 1.2e-16
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "meanphi1"
-      VALUE: 5.507402275806944
-      TOLERANCE: 6e-09
+      VALUE: 5.50740227579966124e+00
+      TOLERANCE: 5.5e-08
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "meanphi1_0"
-      VALUE: 10.066058803315762
-      TOLERANCE: 1e-08
+      VALUE: 1.00660588005696976e+01
+      TOLERANCE: 1.0e-07
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "meanphi1_1"
-      VALUE: 1.2000000000034743
-      TOLERANCE: 1e-09
+      VALUE: 1.20000000001939156e+00
+      TOLERANCE: 1.2e-08
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "meanphi1_2"
-      VALUE: 11.824805000014297
-      TOLERANCE: 1e-08
+      VALUE: 1.18248050026872331e+01
+      TOLERANCE: 1.2e-07
 DESIGN SURF NEUMANN CONDITIONS:
   - E: 6
     NUMDOF: 2

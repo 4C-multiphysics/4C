@@ -3217,18 +3217,18 @@ void ScaTra::ScaTraTimIntElch::build_block_maps(
 /*-----------------------------------------------------------------------------*
  *-----------------------------------------------------------------------------*/
 void ScaTra::ScaTraTimIntElch::build_block_null_spaces(
-    std::shared_ptr<Core::LinAlg::Solver> solver, int init_block_number) const
+    const Core::LinAlg::Solver& solver, const int init_block_number) const
 {
   ScaTra::ScaTraTimIntImpl::build_block_null_spaces(solver, init_block_number);
 
-  if (matrix_type() == Core::LinAlg::MatrixType::block_condition_dof)
-    reduce_dimension_null_space_blocks(*solver, init_block_number);
+  /*if (matrix_type() == Core::LinAlg::MatrixType::block_condition_dof)
+    reduce_dimension_null_space_blocks(solver, init_block_number);*/
 }
 
 /*-----------------------------------------------------------------------------*
  *-----------------------------------------------------------------------------*/
 void ScaTra::ScaTraTimIntElch::reduce_dimension_null_space_blocks(
-    Core::LinAlg::Solver& solver, int init_block_number) const
+    const Core::LinAlg::Solver& solver, const int init_block_number) const
 {
   // loop over blocks of global system matrix
   for (int iblock = 0; iblock < dof_block_maps()->num_maps(); ++iblock)

@@ -380,11 +380,11 @@ void SSI::SsiMono::build_null_spaces() const
     {
       // equip smoother for scatra matrix blocks with null space
       scatra_field()->build_block_null_spaces(
-          solver_, ssi_maps_->get_block_positions(Subproblem::scalar_transport).at(0));
+          *solver_, ssi_maps_->get_block_positions(Subproblem::scalar_transport).at(0));
       if (is_scatra_manifold())
       {
         scatra_manifold()->build_block_null_spaces(
-            solver_, ssi_maps_->get_block_positions(Subproblem::manifold).at(0));
+            *solver_, ssi_maps_->get_block_positions(Subproblem::manifold).at(0));
       }
       break;
     }

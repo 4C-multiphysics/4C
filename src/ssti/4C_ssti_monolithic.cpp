@@ -136,9 +136,9 @@ void SSTI::SSTIMono::build_null_spaces()
     case Core::LinAlg::MatrixType::block_condition_dof:
     {
       scatra_field()->build_block_null_spaces(
-          solver_, get_block_positions(Subproblem::scalar_transport).at(0));
+          *solver_, get_block_positions(Subproblem::scalar_transport).at(0));
       thermo_field()->build_block_null_spaces(
-          solver_, get_block_positions(Subproblem::thermo).at(0));
+          *solver_, get_block_positions(Subproblem::thermo).at(0));
       break;
     }
     case Core::LinAlg::MatrixType::sparse:

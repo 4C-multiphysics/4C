@@ -1176,7 +1176,7 @@ void STI::Monolithic::build_null_spaces() const
   {
     case Core::LinAlg::MatrixType::block_condition:
     {
-      scatra_field()->build_block_null_spaces(solver_, 0);
+      scatra_field()->build_block_null_spaces(*solver_, 0);
       break;
     }
 

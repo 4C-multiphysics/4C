@@ -70,7 +70,7 @@ namespace ScaTra
         std::vector<std::shared_ptr<const Core::LinAlg::Map>>& node_block_maps) const override;
 
     void build_block_null_spaces(
-        std::shared_ptr<Core::LinAlg::Solver> solver, int init_block_number) const override;
+        const Core::LinAlg::Solver& solver, int init_block_number) const override;
 
     /*========================================================================*/
     //! @name general framework
@@ -274,7 +274,7 @@ namespace ScaTra
     //! dimension. Thus, the dimension of each null space is decreased by one, and the corresponding
     //! zero null space vector is removed from the null space.
     void reduce_dimension_null_space_blocks(
-        Core::LinAlg::Solver& solver, int init_block_number) const;
+        const Core::LinAlg::Solver& solver, int init_block_number) const;
 
     /*--- calculate and update -----------------------------------------------*/
 

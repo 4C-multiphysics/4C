@@ -33,7 +33,6 @@
 #include "4C_scatra_ele_parameter_std.hpp"
 #include "4C_scatra_ele_parameter_timint.hpp"
 #include "4C_scatra_ele_parameter_turbulence.hpp"
-#include "4C_scatra_functions.hpp"
 #include "4C_scatra_resulttest.hpp"
 #include "4C_scatra_timint_heterogeneous_reaction_strategy.hpp"
 #include "4C_scatra_timint_meshtying_strategy_artery.hpp"
@@ -3687,7 +3686,7 @@ void ScaTra::ScaTraTimIntImpl::build_block_maps(
 void ScaTra::ScaTraTimIntImpl::post_setup_matrix_block_maps() const
 {
   // now build the null spaces
-  build_block_null_spaces(solver(), 0);
+  build_block_null_spaces(*solver(), 0);
 
   // in case of an extended solver for scatra-scatra interface meshtying including interface growth
   // we need to equip it with the null space information generated above
@@ -3697,7 +3696,7 @@ void ScaTra::ScaTraTimIntImpl::post_setup_matrix_block_maps() const
 /*-----------------------------------------------------------------------------*
  *-----------------------------------------------------------------------------*/
 void ScaTra::ScaTraTimIntImpl::build_block_null_spaces(
-    std::shared_ptr<Core::LinAlg::Solver> solver, int init_block_number) const
+    const Core::LinAlg::Solver& solver, const int init_block_number) const
 {
   // loop over blocks of global system matrix
   for (int iblock = init_block_number; iblock < dof_block_maps()->num_maps() + init_block_number;
@@ -3707,16 +3706,19 @@ void ScaTra::ScaTraTimIntImpl::build_block_null_spaces(
     std::ostringstream iblockstr;
     iblockstr << iblock + 1;
 
-    // equip smoother for current matrix block with empty parameter sublists to trigger null space
-    // computation
     Teuchos::ParameterList& blocksmootherparams =
-        solver->params().sublist("Inverse" + iblockstr.str());
-    blocksmootherparams.sublist("Belos Parameters");
-    blocksmootherparams.sublist("MueLu Parameters");
+        solver.params().sublist("Inverse" + iblockstr.str());
+    // add null space map to extract relevant coordinates of the current block
+    auto node_block_map =
+        std::make_shared<Core::LinAlg::Map>(*node_block_maps()->map(iblock - init_block_number));
+    auto dof_block_map =
+        std::make_shared<Core::LinAlg::Map>(*dof_block_maps()->map(iblock - init_block_number));
+    blocksmootherparams.set<std::shared_ptr<Core::LinAlg::Map>>(
+        "null space: node map", node_block_map);
+    blocksmootherparams.set<std::shared_ptr<Core::LinAlg::Map>>(
+        "null space: dof map", dof_block_map);
 
-    // equip smoother for current matrix block with null space associated with all degrees of
-    // freedom on discretization
-    discret_->compute_null_space_if_necessary(blocksmootherparams);
+    Core::LinearSolver::Parameters::compute_solver_parameters(*discret_, blocksmootherparams);
 
     // reduce full null space to match degrees of freedom associated with current matrix block
     Core::LinearSolver::Parameters::fix_null_space("Block " + iblockstr.str(),
@@ -3742,11 +3744,6 @@ void ScaTra::ScaTraTimIntImpl::setup_matrix_block_maps_and_meshtying()
     case Core::LinAlg::MatrixType::block_condition:
     case Core::LinAlg::MatrixType::block_condition_dof:
     {
-      // safety check
-      if (!solver()->params().isSublist("AMGnxn Parameters"))
-        FOUR_C_THROW(
-            "Global system matrix with block structure requires AMGnxn block preconditioner!");
-
       // setup the matrix block maps
       setup_matrix_block_maps();
 

@@ -2755,11 +2755,6 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
     case Core::LinAlg::MatrixType::block_condition:
     case Core::LinAlg::MatrixType::block_condition_dof:
     {
-      // safety check
-      if (!scatratimint_->solver()->params().isSublist("AMGnxn Parameters"))
-        FOUR_C_THROW(
-            "Global system matrix with block structure requires AMGnxn block preconditioner!");
-
       // initialize map extractors associated with blocks of global system matrix
       build_block_map_extractors();
 
@@ -3544,9 +3539,8 @@ void ScaTra::MeshtyingStrategyS2I::init_meshtying()
     // provide scalar transport discretization with additional dofset for scatra-scatra interface
     // layer thickness
     const auto& col_map = *scatratimint_->discretization()->node_col_map();
-    const std::shared_ptr<Core::LinAlg::Vector<int>> numdofpernode =
-        std::make_shared<Core::LinAlg::Vector<int>>(col_map);
-    auto conditioned_node_ids =
+    const auto numdofpernode = std::make_shared<Core::LinAlg::Vector<int>>(col_map);
+    const auto conditioned_node_ids =
         Core::Conditions::find_conditioned_node_ids(*scatratimint_->discretization(),
             "S2IKineticsGrowth", Core::Conditions::LookFor::locally_owned_and_ghosted);
     const std::span<const int> my_col_nodes(
@@ -3565,7 +3559,6 @@ void ScaTra::MeshtyingStrategyS2I::init_meshtying()
     if (scatratimint_->discretization()->add_dof_set(dofset) != ++number_dofsets)
       FOUR_C_THROW("Scalar transport discretization exhibits invalid number of dofsets!");
     scatratimint_->set_number_of_dof_set_growth(number_dofsets);
-
     // initialize linear solver for monolithic scatra-scatra interface coupling involving interface
     // layer growth
     if (intlayergrowth_evaluation_ == Inpar::S2I::growth_evaluation_monolithic)
@@ -3652,7 +3645,7 @@ void ScaTra::MeshtyingStrategyS2I::build_block_map_extractors()
         *interfacemaps_->map(2), blockmaps_master);
     blockmaps_master_->check_for_valid_map_extractor();
   }
-}  // ScaTra::meshtying_strategy_s2_i::build_block_map_extractors
+}
 
 /*-------------------------------------------------------------------------------*
  *-------------------------------------------------------------------------------*/
@@ -3678,23 +3671,28 @@ void ScaTra::MeshtyingStrategyS2I::equip_extended_solver_with_null_space_info() 
 
     // equip smoother for extra matrix block with null space associated with all degrees of freedom
     // for scatra-scatra interface layer growth
-    Teuchos::ParameterList& mllist =
-        extendedsolver_->params().sublist("Inverse" + iblockstr.str()).sublist("MueLu Parameters");
+    Teuchos::ParameterList& mllist = extendedsolver_->params().sublist("Inverse" + iblockstr.str());
     mllist.set("PDE equations", 1);
     mllist.set("null space: dimension", 1);
     mllist.set("null space: type", "pre-computed");
     mllist.set("null space: add default vectors", false);
 
-    const std::shared_ptr<Core::LinAlg::MultiVector<double>> nullspace =
-        std::make_shared<Core::LinAlg::MultiVector<double>>(
-            *(scatratimint_->dof_row_map(2)), 1, true);
+    const auto nullspace = std::make_shared<Core::LinAlg::MultiVector<double>>(
+        *(scatratimint_->dof_row_map(2)), 1, true);
     nullspace->PutScalar(1.0);
+
+    // build the coordinate object related to the growth dofs
+    const auto growth_cond_node_row_map = Core::Conditions::condition_node_row_map(
+        *scatratimint_->discretization(), "S2IKineticsGrowth");
+    const auto coordinates =
+        scatratimint_->discretization()->build_node_coordinates(growth_cond_node_row_map);
+    mllist.set<std::shared_ptr<Core::LinAlg::MultiVector<double>>>("Coordinates", coordinates);
 
     mllist.set<std::shared_ptr<Core::LinAlg::MultiVector<double>>>("nullspace", nullspace);
     mllist.set("null space: vectors", nullspace->Values());
     mllist.set("ML validate parameter list", false);
   }
-}  // ScaTra::meshtying_strategy_s2_i::build_block_null_spaces
+}
 
 /*------------------------------------------------------------------------------------*
  *------------------------------------------------------------------------------------*/

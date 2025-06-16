@@ -460,6 +460,12 @@ namespace ScaTra
       return dof_block_maps_;
     }
 
+    //! return the map extractor associated with the nodes inside the blocks of global system matrix
+    [[nodiscard]] std::shared_ptr<const Core::LinAlg::MultiMapExtractor> node_block_maps() const
+    {
+      return node_block_maps_;
+    }
+
     //! return residual vector
     [[nodiscard]] std::shared_ptr<Core::LinAlg::Vector<double>> residual() const
     {
@@ -696,7 +702,7 @@ namespace ScaTra
     //! Build null spaces associated with blocks of global system matrix. Hand in solver to access
     //! the parameter list and initial number of the block (e.g. for coupled problems)
     virtual void build_block_null_spaces(
-        std::shared_ptr<Core::LinAlg::Solver> solver, int init_block_number) const;
+        const Core::LinAlg::Solver& solver, int init_block_number) const;
 
     /*--- calculate and update -----------------------------------------------*/
 
