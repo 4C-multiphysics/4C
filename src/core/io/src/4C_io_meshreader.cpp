@@ -1016,11 +1016,8 @@ void Core::IO::MeshReader::read_and_partition()
 
   for (auto& element_reader : element_readers)
   {
-    if (Core::Communication::num_mpi_ranks(comm_) > 1)
-    {
-      rebalance_discretization(
-          *element_reader.get_dis(), *element_reader.get_row_elements(), parameters_, comm_);
-    }
+    rebalance_discretization(
+        *element_reader.get_dis(), *element_reader.get_row_elements(), parameters_, comm_);
   }
 
   Core::Communication::broadcast(max_node_id, 0, comm_);
