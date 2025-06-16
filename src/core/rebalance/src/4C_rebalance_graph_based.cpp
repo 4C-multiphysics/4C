@@ -105,7 +105,8 @@ std::shared_ptr<Core::LinAlg::Graph> Core::Rebalance::rebalance_graph(
     graphAdapter->setCoordinateInput(vectorAdapter);
   }
 
-  Zoltan2::PartitioningProblem<GraphAdapter> problem(graphAdapter, &rebalanceParams);
+  Zoltan2::PartitioningProblem<GraphAdapter> problem(graphAdapter, &rebalanceParams,
+      Core::Communication::unpack_epetra_comm(initialGraph.get_comm()));
   problem.solve();
 
   const auto solution = problem.getSolution();
@@ -194,6 +195,8 @@ Core::Rebalance::build_weights(const Core::FE::Discretization& dis)
     Core::LinAlg::assemble(*crs_ge_weights, edgeweigths_ele, lm, lmrowowner, lm);
     Core::LinAlg::assemble(*vweights, nodeweights_ele, lm, lmrowowner);
   }
+
+  crs_ge_weights->complete();
 
   return {vweights, crs_ge_weights};
 }
