@@ -124,7 +124,6 @@ endfunction()
 #                         If two files are provided the second input file is restarted based on the results of the first input file.
 
 # optional:
-# CONVERT_TO_YAML:                If set, convert the input file to YAML format before running the test
 # NP:                             Number of processors the test should use. Fallback to 1 if not specified.
 #                                 For two input files two NP's are required.
 # RESTART_STEP:                   Number of restart step; not defined indicates no restart
@@ -138,7 +137,7 @@ endfunction()
 
 function(four_c_test)
 
-  set(options CONVERT_TO_YAML)
+  set(options "")
   set(oneValueArgs RESTART_STEP TIMEOUT OMP_THREADS)
   set(multiValueArgs
       TEST_FILE
@@ -275,25 +274,10 @@ function(four_c_test)
     set(test_directory ${PROJECT_BINARY_DIR}/framework_test_output/${name_of_test})
   endif()
 
-  if(_parsed_CONVERT_TO_YAML)
-    if(num_TEST_FILE GREATER 1)
-      message(FATAL_ERROR "Conversion to YAML is only supported for single test files!")
-    endif()
-    # update test name and directory
-    set(name_of_test ${name_of_test}-converted-to-yaml)
-    set(test_directory ${PROJECT_BINARY_DIR}/framework_test_output/${name_of_test})
-
-    set(test_command
-        "mkdir -p ${test_directory} \
-                && ${FOUR_C_ENABLE_ADDRESS_SANITIZER_TEST_OPTIONS} $<TARGET_FILE:${FOUR_C_EXECUTABLE_NAME}> --to-yaml ${base_test_file} ${test_directory}/converted_input.yaml \
-                && ${MPIEXEC_EXECUTABLE} ${_mpiexec_all_args_for_testing} -np ${base_NP} $<TARGET_FILE:${FOUR_C_EXECUTABLE_NAME}> ${test_directory}/converted_input.yaml ${test_directory}/xxx"
-        )
-  else()
-    set(test_command
-        "mkdir -p ${test_directory} \
+  set(test_command
+      "mkdir -p ${test_directory} \
                 && ${MPIEXEC_EXECUTABLE} ${_mpiexec_all_args_for_testing} -np ${base_NP} $<TARGET_FILE:${FOUR_C_EXECUTABLE_NAME}> ${base_test_file} ${test_directory}/xxx"
-        )
-  endif()
+      )
 
   # Optional timeout
   if(NOT "${_parsed_TIMEOUT}" STREQUAL "")
@@ -604,7 +588,7 @@ function(
       )
 
   # remove file ending of input file for reference file
-  get_filename_component(name_of_reference_file ${name_of_input_file} NAME_WLE)
+  get_filename_component(name_of_reference_file ${name_of_input_file} NAME_WE)
 
   # specify test case
   add_test(

@@ -1,0 +1,121 @@
+PROBLEM TYPE:
+  PROBLEMTYPE: "Particle"
+IO:
+  STDOUTEVERY: 100
+  VERBOSITY: "Standard"
+BINNING STRATEGY:
+  BIN_SIZE_LOWER_BOUND: 0.1
+  PERIODICONOFF: "1 1 1"
+  DOMAINBOUNDINGBOX: "-0.4 -0.4 -0.4 0.4 0.4 0.4"
+PARTICLE DYNAMIC:
+  RESULTSEVERY: 10
+  RESTARTEVERY: 100
+  TIMESTEP: 0.001
+  NUMSTEP: 1000
+  GRAVITY_RAMP_FUNCT: 0
+  PHASE_TO_DYNLOADBALFAC: "phase1 1.0 phase2 1.0"
+PARTICLE DYNAMIC/INITIAL AND BOUNDARY CONDITIONS:
+  INITIAL_VELOCITY_FIELD: "phase1 1 phase2 2"
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.8"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.5"
+  - COMPONENT: 2
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "-0.2"
+FUNCT2:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "0.35"
+  - COMPONENT: 1
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "-0.3"
+  - COMPONENT: 2
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "-0.9"
+RESULT DESCRIPTION:
+  - PARTICLE:
+      ID: 3
+      QUANTITY: "posx"
+      VALUE: -0.24999999999999364
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 3
+      QUANTITY: "posy"
+      VALUE: -0.29999999999999966
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 3
+      QUANTITY: "posz"
+      VALUE: 0.35000000000002207
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 3
+      QUANTITY: "velx"
+      VALUE: 0.8
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 3
+      QUANTITY: "vely"
+      VALUE: 0.5
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 3
+      QUANTITY: "velz"
+      VALUE: -0.2
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 25
+      QUANTITY: "posx"
+      VALUE: -0.19999999999998705
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 25
+      QUANTITY: "posy"
+      VALUE: -0.04999999999999714
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 25
+      QUANTITY: "posz"
+      VALUE: -0.10000000000000672
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 25
+      QUANTITY: "velx"
+      VALUE: 0.35
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 25
+      QUANTITY: "vely"
+      VALUE: -0.3
+      TOLERANCE: 1e-12
+  - PARTICLE:
+      ID: 25
+      QUANTITY: "velz"
+      VALUE: -0.9
+      TOLERANCE: 1e-12
+PARTICLES:
+  - "TYPE phase1 POS -0.25 -0.25 -0.25"
+  - "TYPE phase1 POS -0.25 -0.25 0.0"
+  - "TYPE phase1 POS -0.25 -0.25 0.25"
+  - "TYPE phase1 POS -0.25 0.0 -0.25"
+  - "TYPE phase1 POS -0.25 0.0 0.0"
+  - "TYPE phase1 POS -0.25 0.0 0.25"
+  - "TYPE phase1 POS -0.25 0.25 -0.25"
+  - "TYPE phase1 POS -0.25 0.25 0.0"
+  - "TYPE phase1 POS -0.25 0.25 0.25"
+  - "TYPE phase1 POS 0.0 -0.25 -0.25"
+  - "TYPE phase1 POS 0.0 -0.25 0.0"
+  - "TYPE phase1 POS 0.0 -0.25 0.25"
+  - "TYPE phase1 POS 0.0 0.0 -0.25"
+  - "TYPE phase1 POS 0.0 0.0 0.0"
+  - "TYPE phase1 POS 0.0 0.0 0.25"
+  - "TYPE phase1 POS 0.0 0.25 -0.25"
+  - "TYPE phase1 POS 0.0 0.25 0.0"
+  - "TYPE phase1 POS 0.0 0.25 0.25"
+  - "TYPE phase2 POS 0.25 -0.25 -0.25"
+  - "TYPE phase2 POS 0.25 -0.25 0.0"
+  - "TYPE phase2 POS 0.25 -0.25 0.25"
+  - "TYPE phase2 POS 0.25 0.0 -0.25"
+  - "TYPE phase2 POS 0.25 0.0 0.0"
+  - "TYPE phase2 POS 0.25 0.0 0.25"
+  - "TYPE phase2 POS 0.25 0.25 -0.25"
+  - "TYPE phase2 POS 0.25 0.25 0.0"
+  - "TYPE phase2 POS 0.25 0.25 0.25"

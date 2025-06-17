@@ -1,0 +1,141 @@
+PROBLEM TYPE:
+  PROBLEMTYPE: "Fluid_Structure_Interaction_XFEM"
+STRUCTURAL DYNAMIC:
+  DYNAMICTYPE: "OneStepTheta"
+  LINEAR_SOLVER: 2
+FSI DYNAMIC:
+  COUPALGO: "iter_xfem_monolithic"
+  NUMSTEP: 1
+  TIMESTEP: 0.05
+FSI DYNAMIC/MONOLITHIC SOLVER:
+  INFNORMSCALING: false
+  ITEMAX: 10
+  TOL_DIS_RES_L2: 1e-07
+  TOL_DIS_RES_INF: 1e+10
+  TOL_DIS_INC_L2: 1e+10
+  TOL_DIS_INC_INF: 1e+10
+  TOL_PRE_RES_INF: 1e+10
+  TOL_PRE_INC_L2: 1e+10
+  TOL_PRE_INC_INF: 1e+10
+  TOL_VEL_RES_L2: 1e-07
+  TOL_VEL_RES_INF: 1e+10
+  TOL_VEL_INC_L2: 1e+10
+  TOL_VEL_INC_INF: 1e+10
+FLUID DYNAMIC:
+  LINEAR_SOLVER: 3
+  NONLINITER: Newton
+  TIMESTEP: 0.05
+  THETA: 1
+FLUID DYNAMIC/RESIDUAL-BASED STABILIZATION:
+  STABTYPE: "edge_based"
+FLUID DYNAMIC/EDGE-BASED STABILIZATION:
+  EOS_PRES: "std_eos"
+  EOS_CONV_STREAM: "std_eos"
+  EOS_DIV: "div_jump_std_eos"
+  EOS_DEFINITION_TAU: "Schott_Massing_Burman_DAngelo_Zunino"
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "XFSI_SOLVER"
+SOLVER 2:
+  SOLVER: "UMFPACK"
+  NAME: "Structural_Solver"
+SOLVER 3:
+  SOLVER: "UMFPACK"
+  NAME: "Fluid_Solver"
+XFEM GENERAL:
+  NODAL_DOFSET_STRATEGY: "OneDofset_PerNodeAndPosition"
+  VOLUME_GAUSS_POINTS_BY: "DirectDivergence"
+CUT GENERAL:
+  GENERAL_POSITION_DISTANCE_FLOATTYPE: "double"
+  GENERAL_POSITION_POSITION_FLOATTYPE: "double"
+  DO_SELFCUT: false
+XFLUID DYNAMIC/STABILIZATION:
+  VISC_ADJOINT_SYMMETRY: "no"
+  GHOST_PENALTY_STAB: true
+  GHOST_PENALTY_FAC: 0.05
+  GHOST_PENALTY_TRANSIENT_FAC: 0.005
+MATERIALS:
+  - MAT: 1
+    MAT_fluid:
+      DYNVISCOSITY: 0.1
+      DENSITY: 1
+      GAMMA: 1
+  - MAT: 2
+    MAT_Struct_StVenantKirchhoff:
+      YOUNG: 5000
+      NUE: 0
+      DENS: 100
+DESIGN SURF NEUMANN CONDITIONS:
+  - E: 1
+    NUMDOF: 3
+    ONOFF: [1, 0, 0]
+    VAL: [1, 0, 0]
+    FUNCT: [0, 0, 0]
+DESIGN XFEM FSI MONOLITHIC SURF CONDITIONS:
+  - E: 2
+    COUPLINGID: 1
+DSURF-NODE TOPOLOGY:
+  - "SIDE fluid x- DSURFACE 1"
+  - "SIDE structure y+ DSURFACE 2"
+  - "SIDE structure y- DSURFACE 2"
+  - "SIDE structure x- DSURFACE 2"
+  - "SIDE structure x+ DSURFACE 2"
+  - "SIDE structure z+ DSURFACE 2"
+  - "SIDE structure z- DSURFACE 2"
+STRUCTURE DOMAIN:
+  - "LOWER_BOUND -0.14 -0.14 -0.14"
+  - "UPPER_BOUND 0.14 0.14 0.14"
+  - "INTERVALS 1 1 1"
+  - "ROTATION 0 45 45"
+  - "ELEMENTS SOLID HEX8 MAT 2 KINEM nonlinear"
+  - "PARTITION structured"
+FLUID DOMAIN:
+  - "LOWER_BOUND -0.3 -0.3 -0.3"
+  - "UPPER_BOUND 0.3 0.3 0.3"
+  - "INTERVALS 2 2 3"
+  - "ROTATION 0 0 0"
+  - "ELEMENTS FLUID HEX8 MAT 1 NA Euler"
+  - "PARTITION structured"
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 19
+      QUANTITY: "dispx"
+      VALUE: 8.890372478419686e-05
+      TOLERANCE: 1e-11
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 19
+      QUANTITY: "dispy"
+      VALUE: 2.0019671205849147e-05
+      TOLERANCE: 1e-11
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 19
+      QUANTITY: "dispz"
+      VALUE: 0
+      TOLERANCE: 1e-11
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 28
+      QUANTITY: "velx"
+      VALUE: 0.28332785979337066
+      TOLERANCE: 1e-08
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 28
+      QUANTITY: "vely"
+      VALUE: -0.11229049666257995
+      TOLERANCE: 1e-08
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 28
+      QUANTITY: "velz"
+      VALUE: -0.16051600018024134
+      TOLERANCE: 1e-08
+  - XFLUID:
+      DIS: "fluid"
+      NODE: 28
+      QUANTITY: "pressure"
+      VALUE: 0.30416477155569444
+      TOLERANCE: 1e-08
