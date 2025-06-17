@@ -12,6 +12,7 @@
 
 #include "4C_io_discretization_visualization_writer_mesh.hpp"
 #include "4C_linalg_map.hpp"
+#include "4C_reduced_lung_terminal_unit.hpp"
 
 #include <mpi.h>
 
@@ -110,27 +111,6 @@ namespace ReducedLung
     std::vector<int> local_dof_ids{};
   };
 
-  enum class TerminalUnitType
-  {
-    kelvin_voigt,
-    four_element_maxwell
-  };
-
-  // Save rheological model and (non-)linear elasticity separately
-  struct TerminalUnit
-  {
-    int global_element_id;
-    int local_element_id;
-    int local_terminal_unit_id;
-    TerminalUnitType tu_type;
-    double E;
-    double eta;
-    std::vector<int> global_dof_ids{};
-    int n_state_equations = 1;
-    // local dof ids in locally relevant dof map!
-    std::vector<int> local_dof_ids{};
-  };
-
   /*!
    * @brief Create the map with the locally owned dofs spanning the computation domain that
    * are necessary for the solution vector.
@@ -143,11 +123,11 @@ namespace ReducedLung
    *
    * @param comm Communicator of the 4C discretization.
    * @param airways Vector of locally owned airways.
-   * @param terminal_units Vector of locally owned terminal units.
+   * @param terminal_units Locally owned terminal units.
    * @return map specifying the dof-distribution over all ranks.
    */
   Core::LinAlg::Map create_domain_map(const MPI_Comm& comm, const std::vector<Airway>& airways,
-      const std::vector<TerminalUnit>& terminal_units);
+      const TerminalUnits& terminal_units);
 
   /*!
    * @brief Create the map with the locally owned row indices of the system matrix, i.e. the
@@ -165,7 +145,7 @@ namespace ReducedLung
    *
    * @param comm Communicator of the 4C discretization.
    * @param airways Vector of locally owned airways.
-   * @param terminal_units Vector of locally owned terminal units.
+   * @param terminal_units Locally owned terminal units.
    * @param connections Vector with Connection type entries (parent element id and child
    * element id).
    * @param bifurcations Vector with Bifurcation type entries (parent element id and two
@@ -175,13 +155,12 @@ namespace ReducedLung
    * @return map with locally owned rows.
    */
   Core::LinAlg::Map create_row_map(const MPI_Comm& comm, const std::vector<Airway>& airways,
-      const std::vector<TerminalUnit>& terminal_units, const std::vector<Connection>& connections,
+      const TerminalUnits& terminal_units, const std::vector<Connection>& connections,
       const std::vector<Bifurcation>& bifurcations,
       const std::vector<BoundaryCondition>& boundary_conditions);
 
   /*!
-   * @brief Create the map with the dof indices relevant for the locally owned
-   * equations/rows.
+   * @brief Create the map with the dof indices relevant for the locally owned equations/rows.
    *
    * This map connects the equations (rows of matrix and rhs vector) with their relevant dofs.
    * Therefore, it needs explicit knowledge of the different equation types in the row map and the
@@ -190,7 +169,7 @@ namespace ReducedLung
    *
    * @param comm Communicator of the 4C discretization.
    * @param airways Vector of locally owned airways.
-   * @param terminal_units Vector of locally owned terminal units
+   * @param terminal_units Locally owned terminal units
    * @param global_dof_per_ele Map from global element id to associated dofs (over all processors).
    * @param first_global_dof_of_ele Map from global element id to its first global dof id.
    * @param connections Vector with Connection type entries (parent element id and child
@@ -202,14 +181,14 @@ namespace ReducedLung
    * @return map with distribution of column indices for the system matrix.
    */
   Core::LinAlg::Map create_column_map(const MPI_Comm& comm, const std::vector<Airway>& airways,
-      const std::vector<TerminalUnit>& terminal_units, const std::map<int, int>& global_dof_per_ele,
+      const TerminalUnits& terminal_units, const std::map<int, int>& global_dof_per_ele,
       const std::map<int, int>& first_global_dof_of_ele, const std::vector<Connection>& connections,
       const std::vector<Bifurcation>& bifurcations,
       const std::vector<BoundaryCondition>& boundary_conditions);
 
   void collect_runtime_output_data(
       Core::IO::DiscretizationVisualizationWriterMesh& visualization_writer,
-      const std::vector<Airway>& airways, const std::vector<TerminalUnit>& terminal_units,
+      const std::vector<Airway>& airways, const TerminalUnits& terminal_units,
       const Core::LinAlg::Vector<double>& locally_relevant_dofs,
       const Core::LinAlg::Map* element_row_map);
 }  // namespace ReducedLung

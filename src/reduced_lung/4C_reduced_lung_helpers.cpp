@@ -20,8 +20,8 @@ FOUR_C_NAMESPACE_OPEN
 namespace ReducedLung
 {
 
-  Core::LinAlg::Map create_domain_map(const MPI_Comm& comm, const std::vector<Airway>& airways,
-      const std::vector<TerminalUnit>& terminal_units)
+  Core::LinAlg::Map create_domain_map(
+      const MPI_Comm& comm, const std::vector<Airway>& airways, const TerminalUnits& terminal_units)
   {
     std::vector<int> locally_owned_dof_indices;
     for (const auto& airway : airways)
@@ -29,10 +29,14 @@ namespace ReducedLung
       locally_owned_dof_indices.insert(locally_owned_dof_indices.end(),
           airway.global_dof_ids.begin(), airway.global_dof_ids.end());
     }
-    for (const auto& terminal_unit : terminal_units)
+    for (const auto& tu_model : terminal_units.models)
     {
       locally_owned_dof_indices.insert(locally_owned_dof_indices.end(),
-          terminal_unit.global_dof_ids.begin(), terminal_unit.global_dof_ids.end());
+          tu_model.data.gid_p1.begin(), tu_model.data.gid_p1.end());
+      locally_owned_dof_indices.insert(locally_owned_dof_indices.end(),
+          tu_model.data.gid_p2.begin(), tu_model.data.gid_p2.end());
+      locally_owned_dof_indices.insert(
+          locally_owned_dof_indices.end(), tu_model.data.gid_q.begin(), tu_model.data.gid_q.end());
     }
     const Core::LinAlg::Map domain_map(
         -1, locally_owned_dof_indices.size(), locally_owned_dof_indices.data(), 0, comm);
@@ -41,7 +45,7 @@ namespace ReducedLung
   }
 
   Core::LinAlg::Map create_row_map(const MPI_Comm& comm, const std::vector<Airway>& airways,
-      const std::vector<TerminalUnit>& terminal_units, const std::vector<Connection>& connections,
+      const TerminalUnits& terminal_units, const std::vector<Connection>& connections,
       const std::vector<Bifurcation>& bifurcations,
       const std::vector<BoundaryCondition>& boundary_conditions)
   {
@@ -50,9 +54,9 @@ namespace ReducedLung
     {
       n_local_state_equations += airway.n_state_equations;
     }
-    for (const auto& terminal_unit : terminal_units)
+    for (const auto& tu_model : terminal_units.models)
     {
-      n_local_state_equations += terminal_unit.n_state_equations;
+      n_local_state_equations += tu_model.data.number_of_elements();
     }
     // Intermediate maps for the different equation types
     const Core::LinAlg::Map state_equations(-1, n_local_state_equations, 0, comm);
@@ -79,7 +83,7 @@ namespace ReducedLung
   }
 
   Core::LinAlg::Map create_column_map(const MPI_Comm& comm, const std::vector<Airway>& airways,
-      const std::vector<TerminalUnit>& terminal_units, const std::map<int, int>& global_dof_per_ele,
+      const TerminalUnits& terminal_units, const std::map<int, int>& global_dof_per_ele,
       const std::map<int, int>& first_global_dof_of_ele, const std::vector<Connection>& connections,
       const std::vector<Bifurcation>& bifurcations,
       const std::vector<BoundaryCondition>& boundary_conditions)
@@ -93,10 +97,14 @@ namespace ReducedLung
       locally_relevant_dof_indices.insert(locally_relevant_dof_indices.end(),
           airway.global_dof_ids.begin(), airway.global_dof_ids.end());
     }
-    for (const auto& terminal_unit : terminal_units)
+    for (const auto& tu_model : terminal_units.models)
     {
       locally_relevant_dof_indices.insert(locally_relevant_dof_indices.end(),
-          terminal_unit.global_dof_ids.begin(), terminal_unit.global_dof_ids.end());
+          tu_model.data.gid_p1.begin(), tu_model.data.gid_p1.end());
+      locally_relevant_dof_indices.insert(locally_relevant_dof_indices.end(),
+          tu_model.data.gid_p2.begin(), tu_model.data.gid_p2.end());
+      locally_relevant_dof_indices.insert(locally_relevant_dof_indices.end(),
+          tu_model.data.gid_q.begin(), tu_model.data.gid_q.end());
     }
 
     // Loop over all connections of two elements and add relevant dof ids (p and q associated with
@@ -179,7 +187,7 @@ namespace ReducedLung
 
   void collect_runtime_output_data(
       Core::IO::DiscretizationVisualizationWriterMesh& visualization_writer,
-      const std::vector<Airway>& airways, const std::vector<TerminalUnit>& terminal_units,
+      const std::vector<Airway>& airways, const TerminalUnits& terminal_units,
       const Core::LinAlg::Vector<double>& locally_relevant_dofs,
       const Core::LinAlg::Map* element_row_map)
   {
@@ -204,26 +212,26 @@ namespace ReducedLung
           "Internal error: replace_local_value for runtime output (q_in from airways) did not "
           "work.");
     }
-    for (const auto& terminal_unit : terminal_units)
+    for (const auto& model : terminal_units.models)
     {
-      [[maybe_unused]] int err = pressure_in.replace_local_value(
-          terminal_unit.local_element_id, locally_relevant_dofs[terminal_unit.local_dof_ids[p_in]]);
-      FOUR_C_ASSERT(err == 0,
-          "Internal error: replace_local_value for runtime output (p_in from terminal units) did "
-          "not "
-          "work.");
-      err = pressure_out.replace_local_value(terminal_unit.local_element_id,
-          locally_relevant_dofs[terminal_unit.local_dof_ids[p_out]]);
-      FOUR_C_ASSERT(err == 0,
-          "Internal error: replace_local_value for runtime output (p_out from terminal units) did "
-          "not "
-          "work.");
-      err = flow_in.replace_local_value(
-          terminal_unit.local_element_id, locally_relevant_dofs[terminal_unit.local_dof_ids[q_in]]);
-      FOUR_C_ASSERT(err == 0,
-          "Internal error: replace_local_value for runtime output (q_in from terminal units) did "
-          "not "
-          "work.");
+      for (size_t i = 0; i < model.data.number_of_elements(); i++)
+      {
+        [[maybe_unused]] int err = pressure_in.replace_local_value(
+            model.data.local_element_id[i], locally_relevant_dofs[model.data.lid_p1[i]]);
+        FOUR_C_ASSERT(err == 0,
+            "Internal error: replace_local_value for runtime output (p_in from terminal units) did "
+            "not work.");
+        err = pressure_out.replace_local_value(
+            model.data.local_element_id[i], locally_relevant_dofs[model.data.lid_p2[i]]);
+        FOUR_C_ASSERT(err == 0,
+            "Internal error: replace_local_value for runtime output (p_out from terminal units) "
+            "did not work.");
+        err = flow_in.replace_local_value(
+            model.data.local_element_id[i], locally_relevant_dofs[model.data.lid_q[i]]);
+        FOUR_C_ASSERT(err == 0,
+            "Internal error: replace_local_value for runtime output (q_in from terminal units) did "
+            "not work.");
+      }
     }
     visualization_writer.append_result_data_vector_with_context(
         pressure_in, Core::IO::OutputEntity::element, {"p_1"});
