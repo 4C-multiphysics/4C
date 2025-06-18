@@ -78,6 +78,11 @@ Other ways to create a |FOURC| input directly
 
 **ABAQUS**
 
+.. admonition:: Outdated content
+
+    The abaqus converter produces only the old proprietary input file format.
+    If an update is desired, an issue should be opened.
+
 There is an in-house Python module ``abaqus_meshio`` for the conversion from an ABAQUS input file (``.inp``) to dat file.
 This python module is available in the `scripts gitlab <https://gitlab.lrz.de/baci/scripts>`_.
 Since the ``.inp`` file can also be generated using Cubit, this submodule can be used in conjunction with Cubit as well, see above.

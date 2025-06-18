@@ -5,11 +5,7 @@ Life is nonlinear, and so are most of the simulations. Thus, the simulation soft
 
 Since the theory of nonlinear finite element simulations is complex, we will only give an introduction of the necessary input parameters here.
 
-The basic details of the nonlinear solver are given in the section
-
-::
-
-   ----------------------STRUCTURAL DYNAMICS
+The basic details of the nonlinear solver are given in the section ``STRUCTURAL DYNAMICS``.
 
 
 First of all: since in contrast to a linear simulation,
@@ -18,11 +14,13 @@ the load history is crucial in nonlinear simulations, and we commonly divide the
 
 Users may give the time step size, the maximum time at the end of the simulation, and the maximum number of steps to be conducted by these parameters (the values behind the keywords show the default values):
 
-::
+.. code-block:: yaml
 
-   TIMESTEP  0.05
-   MAXTIME   5
-   NUMSTEP   200
+   STRUCTURAL DYNAMICS:
+     INT_STRATEGY: "Standard"
+     TIMESTEP: 0.05
+     MAXTIME: 5
+     NUMSTEP: 200
 
 Note that the simulation stops after NUMSTEP steps or at time=MAXTIME, whatever comes first.
 
@@ -35,6 +33,14 @@ The time stepping in dynamic simulations may be implicit or explicit. While an i
 
 Explicit time stepping procedure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The explicit scheme is requested with the parameter
+
+.. code-block:: yaml
+
+   STRUCTURAL DYNAMICS:
+     INT_STRATEGY: "Standard"
+     DYNAMICTYPE: "ExplicitEuler"
 
 While it sounds much easier (and thus faster) to base the solution of the current time step on the previous step without iteration, the main drawback is that the time step must be in general much smaller than for an implicit solver.  In order to get a correct solution, the time step in an explicit procedure must be small enough that a stress wave cannot travel farther than the smallest element characteristic length in a single time-step. This is called the Courant-Friedrichs-Lewy (CFL) condition. One may calculate this maximum time step size by
 
@@ -53,8 +59,8 @@ Implicit time stepping procedure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 For implicit analyses, a number of time stepping methods exist, the most common of which are
 
-- ``GenAlpha``: generalized alpha method with up to four parameters, :math:`\beta, \alpha_M, \alpha_F, \rho_\infty`, see the reference section :ref:`--Structural dynamic/GenAlpha<SECstructuraldynamic_genalpha>`
-- ``OneStepTheta``: one-step theta method (a special version of generalized alpha with :math:`\alpha_M=\alpha_F=1`,
+- ``DYNAMICTYPE: GenAlpha``: generalized alpha method with up to four parameters, :math:`\beta, \alpha_M, \alpha_F, \rho_\infty`, see the reference section :ref:`--Structural dynamic/GenAlpha<SECstructuraldynamic_genalpha>`
+- ``DYNAMICTYPE: OneStepTheta``: one-step theta method (a special version of generalized alpha with :math:`\alpha_M=\alpha_F=1`,
   see section :ref:`--Structural dynamic/OneStepTheta<SECstructuraldynamic_onesteptheta>`
 
 More in-depth information about some time stepping details are given in the :ref:`theory section<structdynamics_theory>` below.

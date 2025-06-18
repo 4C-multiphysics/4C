@@ -1,7 +1,7 @@
-{% set input_file1 = "parsed_files/solid_runtime_hex8.4C.yaml" %}
-{% set input_file1_content = load_input_file(input_file1) %}
-{% set input_file2 = "parsed_files/fbi_fluid_obstacle.4C.yaml" %}
-{% set input_file2_content = load_input_file(input_file2) %}
+{% set input_file1 = "solid_runtime_hex8.4C.yaml" %}
+{% set input_file1_content = load_input_file("parsed_files/" + input_file1) %}
+{% set input_file2 = "fbi_fluid_obstacle.4C.yaml" %}
+{% set input_file2_content = load_input_file("parsed_files/" + input_file2) %}
 
 .. _boundaryconditions:
 
@@ -49,7 +49,7 @@ The complete definition of a local coordinate system writes:
 .. code-block:: yaml
 
    DESIGN [POINT/VOL] LOCSYS CONDITIONS:
-   - E: <num>
+   - E: <num>   #  num corresponds to the set_descriptor_id defined in DNODE/DVOL-NODE TOPOLOGY block
      ROTANGLE:
      - <angle_x>
      - <angle_y>
@@ -59,14 +59,13 @@ The complete definition of a local coordinate system writes:
      - <func_num_y>
      - <func_num_z>
      USEUPDATEDNODEPOS: 0
-   // num corresponds to the set_descriptor_id defined in DNODE/DVOL-NODE TOPOLOGY block
 
 for point and volume definitions, and
 
 .. code-block:: yaml
 
    DESIGN [LINE|SURF] LOCSYS CONDITIONS:
-   - E: <num>
+   - E: <num>   #  num corresponds to the set_descriptor_id defined in DLINE/DSURF-NODE TOPOLOGY block
      ROTANGLE:
      - <angle_x>
      - <angle_y>
@@ -77,7 +76,6 @@ for point and volume definitions, and
      - <func_num_z>
      USEUPDATEDNODEPOS: 0
      USECONSISTENTNODENORMAL: 0
-   // num corresponds to the set_descriptor_id defined in DLINE/DSURF-NODE TOPOLOGY block
 
 for lines and surfaces.
 
@@ -325,7 +323,7 @@ NOT included so far:
 - support for special DofSet stuff (e.g. TransparentDofSet, Proxies...)
 - support for bandwidth optimization (#define BW_OPT), which is currently however not used anyway
 
-Example input file where two nodes each are coupled in several point coupling conditions:
+Example input file where two nodes each are coupled in several point coupling conditions, taken from {{ input_file2 }}:
 
 {{section_dump(input_file2_content, ["DESIGN POINT COUPLING CONDITIONS", "DNODE-NODE TOPOLOGY"]) }}
 

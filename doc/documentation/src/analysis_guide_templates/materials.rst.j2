@@ -20,8 +20,8 @@ The explicit definition of a material model is in general given by a single line
 
    MATERIALS:
    - MAT: <id>
-   <materialname>:
-     <parameters...>
+     <materialname>:
+       <parameters...>
 
 One may also define a material by summation of several potentials.
 
@@ -72,7 +72,7 @@ However, since each discretization belongs to a single physics representation an
 the other material has to be connected to the same discretization by cloning the discretization to the other physics.
 
 In |FOURC|, we use a material mapping section, which connects two material models to a single representation.
-One can see it here in for a simple Thermo-Structure-Interaction problem:
+One can see it here in for a simple Thermo-Structure-Interaction problem, taken from {{ input_file1 }}:
 
 {{section_dump(input_file1_content, ["MATERIALS", "CLONING MATERIAL MAP", "STRUCTURE ELEMENTS"]) }}
 

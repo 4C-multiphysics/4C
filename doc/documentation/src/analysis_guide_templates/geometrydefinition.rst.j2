@@ -48,7 +48,7 @@ meshed by 27 cube-shaped elements by
 
 This meshing strategy can be used for the following discretizations:
 
-{{ find_sections(meta_file_content, ".* DOMAIN$") }}
+{{ find_sections_in_meta(meta_file_content, ".* DOMAIN$") }}
 
 
 .. _nodedefinition:
@@ -82,7 +82,7 @@ Element definition
 Elements depend strongly on the discretization. They can be defined element by element with their specific nodal
 connectivity in the following sections:
 
-{{ find_sections(meta_file_content, ".* ELEMENTS$") }}
+{{ find_sections_in_meta(meta_file_content, ".* ELEMENTS$", section_details="none") }}
 
 The general structure of each element line is the same for all of them:
 

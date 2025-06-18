@@ -32,6 +32,7 @@ if(FOUR_C_BUILD_DOCUMENTATION)
       ${PROJECT_SOURCE_DIR}/tests/input_files/f3_forced_hit_geogen_hdg.4C.yaml
       ${PROJECT_SOURCE_DIR}/tests/input_files/fbi_fluid_obstacle.4C.yaml
       ${PROJECT_SOURCE_DIR}/tests/input_files/tsi_lincompression_iterstaggtemp.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/porofluidmulti_2D_quad4.4C.yaml
       )
   # Create the copy commands to be used in add_custom_target
   set(COPY_COMMANDS "")

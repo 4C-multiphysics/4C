@@ -17,21 +17,54 @@ RECOGNIZED_TYPES = ["rst", "md"]
 
 
 def load_input_file(yaml_file):
+    """Returns the dictionary of parameters for the given yaml file."""
     data = yaml.safe_load((PATH_TO_TESTS / pathlib.Path(yaml_file)).read_text())
     return data
 
 
 def load_meta_data():
-    data = yaml.safe_load(
+    """Returns a dictionary of sections and their parameters from the meta file 4C_metadata.yaml."""
+    metafile_data = yaml.safe_load(
         (PATH_TO_TESTS / ("../.." / pathlib.Path("4C_metadata.yaml"))).read_text()
     )
-    section_list = [item["name"] for item in data["sections"]] + data[
-        "legacy_string_sections"
-    ]
-    return section_list
+    section_dict = {}
+    for section in metafile_data["sections"]:
+        if "spec" in section:
+            params_avail = section["spec"]["specs"]
+        elif "specs" in section:
+            params_avail = section["specs"][0]["specs"]
+        else:
+            print("Parameters in section ", section["name"], " not found. Skipping.")
+            continue
+        parameter_dict = {}
+        for item in params_avail:
+            parameter_string = ""
+            if "name" not in item:
+                print(
+                    "section ",
+                    section["name"],
+                    " with ",
+                    item.keys(),
+                    " is too complex. Skipping.",
+                )
+                continue
+            if item["required"]:
+                parameter_string += " # required parameter"
+            else:
+                parameter_string += (
+                    f"{item['default']} # optional, the given value is the default"
+                )
+            parameter_dict[item["name"]] = parameter_string
+        section_dict[section["name"]] = parameter_dict
+    for section in metafile_data["legacy_string_sections"]:
+        section_dict[section] = "legacy section, no parameters available."
+    return section_dict
 
 
 def yaml_dump(data, filetype="rst"):
+    """Returns a string of the yaml file in the given filetype.
+    As of now I can return markdown and restructuredText code blocks.
+    """
     if filetype == "rst":
         rststring = ""
         yaml_data = yaml.safe_dump(data, sort_keys=False).split("\n")
@@ -45,26 +78,49 @@ def yaml_dump(data, filetype="rst"):
         raise TypeError(f"Filetype {filetype} for yaml_dump cannot be recognized yet.")
 
 
-def section_dump(section_list, section_names, filetype="rst"):
+def section_dump(input_file_section, section_names, filetype="rst"):
+    """Returns a string of the given sections from the given dictionary of sections."""
     # section_dump can take either one section name or a list of section names
     if isinstance(section_names, str):
         section_names = [section_names]
     yaml_dict = {}
     for section in section_names:
-        yaml_dict[section] = section_list[section]
+        yaml_dict[section] = input_file_section[section]
     return yaml_dump(yaml_dict, filetype)
 
 
-def find_sections(input_file_data, section_name_expressions, filetype="rst"):
-    # find_sections can take either one regular expression for a section name or a list of those
+def find_sections_in_meta(
+    meta_file_data,
+    section_name_expressions,
+    section_details="<parameters>",
+    filetype="rst",
+):
+    """Returns a string of the given section name expressions from the given dictionary of sections.
+    Besides the section names, the section_details can be specified. The default is just to print the string "<parameters>".
+    It can take either one regular expression for a section name or a list of those
+    """
     if isinstance(section_name_expressions, str):
         section_name_expressions = [section_name_expressions]
-    section_names = {}
-    for section_name_expression in section_name_expressions:
-        reg_expression = re.compile(section_name_expression)
-        section_names = section_names | {
-            k: ["<parameters>"] for k in filter(reg_expression.match, input_file_data)
-        }
+    if section_details == "none":
+        section_names = []
+        for section_name_expression in section_name_expressions:
+            reg_expression = re.compile(section_name_expression)
+            for section_name in filter(reg_expression.match, meta_file_data.keys()):
+                section_names.append(section_name)
+    elif section_details == "all":
+        section_names = {}
+        for section_name_expression in section_name_expressions:
+            reg_expression = re.compile(section_name_expression)
+            for section_name in filter(reg_expression.match, meta_file_data.keys()):
+                section_names[section_name] = meta_file_data[section_name]
+    else:
+        section_names = {}
+        for section_name_expression in section_name_expressions:
+            reg_expression = re.compile(section_name_expression)
+            section_names = section_names | {
+                k: [section_details]
+                for k in filter(reg_expression.match, meta_file_data.keys())
+            }
     return yaml_dump(section_names, filetype)
 
 
@@ -84,7 +140,7 @@ def convert(template_path, rendering_path, input_file_path):
                 section_dump=section_dump,
                 load_input_file=load_input_file,
                 yaml_dump=yaml_dump,
-                find_sections=find_sections,
+                find_sections_in_meta=find_sections_in_meta,
                 load_meta_data=load_meta_data,
                 len=len,
             )
