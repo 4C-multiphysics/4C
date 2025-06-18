@@ -13,7 +13,7 @@ Analysis Guide
    elements
    ../parsed_files/functions
    ../parsed_files/boundaryconditions
-   contact
+   ../parsed_files/contact
    ../parsed_files/materials
    struct_dynamics
    linear_solvers

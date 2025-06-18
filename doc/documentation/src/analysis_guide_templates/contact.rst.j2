@@ -1,3 +1,13 @@
+{% set input_file1 = "contact2D_centrdiff.4C.yaml" %}
+{% set input_file1_content = load_input_file(input_file1) %}
+{% set input_file2 = "contact2D_multibody.4C.yaml" %}
+{% set input_file2_content = load_input_file(input_file2) %}
+{% set input_file3 = "contact3D_unbiased_self_hex8_nitsche.4C.yaml" %}
+{% set input_file3_content = load_input_file(input_file3) %}
+{% set input_file4 = "meshtying2D_inf_plate.4C.yaml" %}
+{% set input_file4_content = load_input_file(input_file4) %}
+{% set meta_file_content = load_meta_data() %}
+
 .. _contactandmeshtying:
 
 Contact and Mesh tying
@@ -13,59 +23,18 @@ or surfaces (3D). Two types of contact can be defined: Master/Slave contact and 
 
 - 2D:
 
-  .. code-block:: yaml
+{{ section_dump(input_file1_content, "DESIGN LINE MORTAR CONTACT CONDITIONS 2D") }}
 
-     DESIGN LINE MORTAR CONTACT CONDITIONS 2D:
-     - E: 1
-       InterfaceID: 1
-       Side: Master
-       <further parameters>
-     - E: 2
-       InterfaceID: 1
-       Side: Slave
-       <further parameters>
+for master/slave contact (taken from {{ input_file1}}), or
 
-for master/slave contact, or
+{{ section_dump(input_file2_content, "DESIGN LINE MORTAR CONTACT CONDITIONS 2D") }}
 
-  .. code-block:: yaml
-
-     DESIGN LINE MORTAR CONTACT CONDITIONS 2D:
-     - E: 1
-       InterfaceID: 1
-       Side: Selfcontact
-       <further parameters>
-
-for self contact, see also :ref:`DESIGN MORTAR CONTACT CONDITIONS 2D<designlinemortarcontactconditions2d>`.
-
+for self contact (taken from {{input_file2}}).
+There may be also further parameters attached, see also :ref:`DESIGN MORTAR CONTACT CONDITIONS 2D<designlinemortarcontactconditions2d>`.
 
 - 3D:
 
-  The 3D case is analogous, for master/slave contact:
-
-  .. code-block:: yaml
-
-     DESIGN SURF MORTAR CONTACT CONDITIONS 3D:
-      - E: 1
-        InterfaceID: 1
-        Side: Master
-        <further parameters>
-     - E: 2
-       InterfaceID: 1
-       Side: Slave
-       <further parameters>
-
-  and for self contact:
-
-  .. code-block:: yaml
-
-     DESIGN SURF MORTAR CONTACT CONDITIONS 3D:
-     - E: 1
-       InterfaceID: 1
-       Side: Selfcontact
-       <further parameters>
-
-
-  see see :ref:`DESIGN MORTAR CONTACT CONDITIONS 3D<designsurfmortarcontactconditions3d>`.
+  The 3D case is analogous, just the condition name is different, see see :ref:`DESIGN SURF MORTAR CONTACT CONDITIONS 3D<designsurfmortarcontactconditions3d>`.
 
 The further parameters are:
 
@@ -116,16 +85,10 @@ where all dirichlet boundary conditions are removed.
 
 For the third option one can tell |FOURC| that a line belongs to the symmetry plane / dirichlet boundary condition *and* the contact surface.
 This is done using the so-called mortar symmetry conditions (Note that the word *symmetry* does not mean that it must be a symmetry condition,
-it can be any any dirichlet boundary condition, even with non-zero displacement value):
+it can be any any dirichlet boundary condition, even with non-zero displacement value).
+See the symmetry conditions from the example {{input_file3}}:
 
-.. code-block:: yaml
-
-   DESIGN LINE MORTAR SYMMETRY CONDITIONS 3D:
-   - E: <num>
-     ONOFF: [ 0 0 0 ]
-   DESIGN POINT MORTAR SYMMETRY CONDITIONS 2D/3D:
-   - E: <num>
-     ONOFF: [ 0 0 0 ]
+{{ section_dump(input_file3_content, ["DESIGN LINE MORTAR SYMMETRY CONDITIONS 3D", "DESIGN POINT MORTAR SYMMETRY CONDITIONS 2D/3D"]) }}
 
 The ONOFF value has to be set to one in the direction of the dirichlet boundary condition.
 If a contact surface touches two planes with dirchlet conditions,
@@ -150,23 +113,15 @@ Different meshes can be connected with the `MORTAR COUPLING` definition. Two dif
 
 - Incompatible meshes of two geometrical regions in one simulation are tied. This may be useful if a very coarse mesh shall be connected to a much finer region.
 
-- In multiphysics simulations, two different meshes can be used for the different physical parts (e.g. temperature and structure, since high temperature gradients may occur in other regions than high highly stressed regions).
+- In multiphysics simulations, two different meshes can be used for the different physical parts
+  (e.g. temperature and structure, since high temperature gradients may occur in other regions than high highly stressed regions).
 
-.. code-block:: yaml
+See for example the conditions in {{ input_file4 }}, where incompatible meshes are glued together:
 
-   DESIGN LINE MORTAR COUPLING CONDITIONS 2D:
-   - E: num
-     InterfaceID: 0
-     Side: Master
-     Initialization: Inactive
-   DESIGN SURF MORTAR COUPLING CONDITIONS 3D:
-   - E: num
-     # parameters accordingly
-   DESIGN LINE MORTAR MULTI-COUPLING CONDITIONS 2D:
-   - E: num
-     # parameters accordingly
-   DESIGN SURF MORTAR MULTI-COUPLING CONDITIONS 3D:
-   - E: num
-     # parameters accordingly
+{{ section_dump(input_file4_content, "DESIGN LINE MORTAR COUPLING CONDITIONS 2D") }}
+
+Similar couplings can be defined in the following conditions:
+
+{{ find_sections_in_meta(meta_file_content, ".* MORTAR COUPLING CONDITION.*") }}
 
 See the reference :ref:`DESIGN MORTAR COUPLING CONDITIONS 3D<designsurfmortarcouplingconditions3d>`, :ref:`DESIGN MORTAR COUPLING CONDITIONS 2D<designlinemortarcouplingconditions2d>`, :ref:`DESIGN MORTAR MULTI-COUPLING CONDITIONS 3D<designsurfmortarmulti-couplingconditions3d>`, :ref:`DESIGN MORTAR MULTI-COUPLING CONDITIONS 2D<designlinemortarmulti-couplingconditions2d>`

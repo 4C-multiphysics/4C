@@ -79,13 +79,15 @@ def yaml_dump(data, filetype="rst"):
 
 
 def section_dump(input_file_section, section_names, filetype="rst"):
-    """Returns a string of the given sections from the given dictionary of sections."""
-    # section_dump can take either one section name or a list of section names
+    """Returns a string of the given sections from the given dictionary of sections.
+    The parameter section_names can be either a string (one section name) or a list of section names
+    """
     if isinstance(section_names, str):
         section_names = [section_names]
     yaml_dict = {}
     for section in section_names:
         yaml_dict[section] = input_file_section[section]
+
     return yaml_dump(yaml_dict, filetype)
 
 
@@ -121,6 +123,8 @@ def find_sections_in_meta(
                 k: [section_details]
                 for k in filter(reg_expression.match, meta_file_data.keys())
             }
+    if len(section_names) == 0:
+        exit("No sections found for the given regular expressions.")
     return yaml_dump(section_names, filetype)
 
 
@@ -131,7 +135,11 @@ def convert(template_path, rendering_path, input_file_path):
 
     for template_file in pathlib.Path(template_path).glob("*.j2"):
 
-        template = jinja2.Template(template_file.read_text())
+        try:
+            template = jinja2.Template(template_file.read_text())
+        except jinja2.exceptions.TemplateSyntaxError as e:
+            print(f"Warning: Could not read {template_file}: {e}")
+            continue
         tutorial_name = template_file.stem
         tutorial_rst = target_dir / tutorial_name
         print(f"source: {tutorial_name}, target: {tutorial_rst}")
