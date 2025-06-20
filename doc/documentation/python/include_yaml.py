@@ -34,18 +34,14 @@ def load_meta_data():
         elif "specs" in section:
             params_avail = section["specs"][0]["specs"]
         else:
-            print("Parameters in section ", section["name"], " not found. Skipping.")
-            continue
+            print(f"Parameters in section {section["name"]} not found.")
         parameter_dict = {}
         for item in params_avail:
             parameter_string = ""
             if "name" not in item:
                 print(
-                    "section ",
-                    section["name"],
-                    " with ",
-                    item.keys(),
-                    " is too complex. Skipping.",
+                    f"Currently, parameters in section {section["name"]}"
+                    " cannot be parsed."
                 )
                 continue
             if item["required"]:
@@ -132,15 +128,19 @@ def convert(template_path, rendering_path, input_file_path):
     global PATH_TO_TESTS
     PATH_TO_TESTS = input_file_path
     target_dir = pathlib.Path(rendering_path)
-
-    for template_file in pathlib.Path(template_path).glob("*.j2"):
+    template_list = []
+    for suffix in ["*.j2", "*.rst", "*.md"]:
+        template_list += list(pathlib.Path(template_path).glob(suffix))
+    for template_file in template_list:
 
         try:
             template = jinja2.Template(template_file.read_text())
         except jinja2.exceptions.TemplateSyntaxError as e:
             print(f"Warning: Could not read {template_file}: {e}")
             continue
-        tutorial_name = template_file.stem
+        tutorial_name = (
+            template_file.stem if template_file.suffix == ".j2" else template_file
+        )
         tutorial_rst = target_dir / tutorial_name
         print(f"source: {tutorial_name}, target: {tutorial_rst}")
         tutorial_rst.write_text(

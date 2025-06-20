@@ -38,17 +38,15 @@ if(FOUR_C_BUILD_DOCUMENTATION)
       ${PROJECT_SOURCE_DIR}/tests/input_files/contact3D_unbiased_self_hex8_nitsche.4C.yaml
       ${PROJECT_SOURCE_DIR}/tests/input_files/meshtying2D_inf_plate.4C.yaml
       ${PROJECT_SOURCE_DIR}/tests/input_files/contact3D_slidingblock_penalty_new_struct.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/tsi_locsys_monolithic.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/prestress_new.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/one_d_3_artery_network.4C.yaml
       )
 
   set(_sphinx_FILES_FROM_TESTS_DIR "${_sphinx_OUT_DIR}/testfiles")
   file(MAKE_DIRECTORY ${_sphinx_FILES_FROM_TESTS_DIR})
-  file(
-    GLOB
-    _sphinx_YAML_FILES
-    "${PROJECT_SOURCE_DIR}/tests/tutorials/*.4C.yaml"
-    "${PROJECT_SOURCE_DIR}/tests/tutorials/*.jou"
-    )
-  # file(GLOB _sphinx_JOU_FILES "${PROJECT_SOURCE_DIR}/tests/tutorials/*.jou")
+  file(GLOB _sphinx_YAML_FILES "${PROJECT_SOURCE_DIR}/tests/tutorials/*.4C.yaml")
+  file(GLOB _sphinx_JOU_FILES "${PROJECT_SOURCE_DIR}/tests/tutorials/*.jou")
 
   foreach(FILE ${_sphinx_TEST_INPUT_FILES} ${_sphinx_YAML_FILES} ${_sphinx_JOU_FILES})
     get_filename_component(FILENAME ${FILE} NAME)
@@ -71,7 +69,8 @@ if(FOUR_C_BUILD_DOCUMENTATION)
     # the following command also creates the directory ${_sphinx_OUT_DIR}/reference_docs again
     COMMAND create_rtd
     COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_BINARY_DIR}/doc/tmp"
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${_sphinx_OUT_DIR}/reference_docs/parsed_files"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${_sphinx_OUT_DIR}/reference_docs/tutorials"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${_sphinx_OUT_DIR}/reference_docs/analysis_guide"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_sphinx_OUT_DIR}/reference_docs/reference_images"
     COMMAND ${FOUR_C_EXECUTABLE_NAME} -h > ${_sphinx_OUT_DIR}/reference_docs/4C-help.txt
     COMMAND

@@ -1,5 +1,11 @@
 {% set input_file1 = "porofluidmulti_2D_quad4.4C.yaml" %}
 {% set input_file1_content = load_input_file(input_file1) %}
+{% set input_file2 = "tsi_locsys_monolithic.4C.yaml" %}
+{% set input_file2_content = load_input_file(input_file2) %}
+{% set input_file3 = "prestress_new.4C.yaml" %}
+{% set input_file3_content = load_input_file(input_file3) %}
+{% set input_file4 = "one_d_3_artery_network.4C.yaml" %}
+{% set input_file4_content = load_input_file(input_file4) %}
 
 .. _functiondefinitions:
 
@@ -108,50 +114,19 @@ where
      - SYMBOLIC-FUNCTION_OF_SPACE_TIME: 50*t
 
 - **linearinterpolation** defines a table with a given number of sampling points leading to
-  multilinear expression. For example, one can define a trapezoidal amplitude:
+  multilinear expression. For example, one can define an amplitude curve with several hold states as done in example {{ input_file3 }}:
 
-.. code-block:: yaml
-
-     FUNCT1:
-     - SYMBOLIC-FUNCTION_OF_SPACE_TIME: myvar
-     - VARIABLE: 0
-       NAME: myvar
-       TYPE: linearinterpolation
-       NUMPOINTS: 5
-       TIMES: [ 0, 1, 2, 3, 10 ]
-       VALUES: [ 0.0, 1.0, 1.0, 0.0, 0.0 ]
+  {{ section_dump(input_file3_content, "FUNCT1") }}
 
 - **multifunction** is similar to expression, but a number of symbolic functions can be entered,
-  which are  only valid in a specific time range. therefore, one has to define one point in time more than functions. As an example, see:
+  which are  only valid in a specific time range. therefore, one has to define one point in time more than functions.
+  As an example, see the trapezoidal temperature progression in {{ input_file2 }}:
 
-.. code-block:: yaml
+  {{ section_dump(input_file2_content, "FUNCT2") }}
 
-     FUNCT1:
-     - SYMBOLIC-FUNCTION_OF_SPACE_TIME: myvar
-     - VARIABLE: 0
-       NAME: myvar
-       TYPE: multifunction
-       NUMPOINTS: 3
-       TIMES: [ 0.0, 1.0, 10.0 ]
-       DESCRIPTION: [ 5*t, 5*exp(-(t-1.0))
+- **fourierinterpolation** defines a Fourier series with a given number of sampling points. An example is taken from {{ input_file4 }}
 
-- **fourierinterpolation** defines a Fourier series with a given number of sampling points.
-
-.. code-block:: yaml
-
-   # fourier interpolation
-   FUNCT1:
-   - SYMBOLIC-FUNCTION_OF_SPACE_TIME: 10*myvar
-   - VARIABLE: 0
-     NAME: myvar
-     TYPE: fourierinterpolation
-     NUMPOINTS: <num_points>
-     BYNUM:
-       TIMERANGE: [ <start_time>, <end_time> ]
-     VALUES: [ <val_1>, ... , <val_num_points> ]
-     PERIODIC:
-       T1: <time_1>
-       T2: <time_2>
+  {{ section_dump(input_file4_content, "FUNCT1") }}
 
 
 
@@ -272,20 +247,11 @@ The parameters of this function is then given after the subsection ``PARAMS``:
 Functions depending on simulation variables
 -----------------------------------------------
 
-If one needs to define a function for some material behavior, which depends on simulation variables, the option ``VARFUNCTION`` is the one to be used.
-
-.. code-block:: yaml
-
-   FUNCT<n>:
-   - VARFUNCTION: <functiondefinition>
-     NUMCONSTANTS: <num>
-     CONSTANTS:
-       <VAR1>: <VALUE1>
-       ...
-
-It is crucial that the independent variables used in the function must exactly be named as defined in the code for the specific behavior.
+If one needs to define a function for some material behavior, which depends on simulation variables,
+the option ``VARFUNCTION`` is the one to be used.
+Here, it is crucial that the independent variables used in the function must exactly be named as defined in the code for the specific behavior.
 The definition of constants is optional. An example is shown in the test file {{ input_file1 }}:
 
 {{section_dump(input_file1_content, ["FUNCT2", "FUNCT3"]) }}
 
-Here, the variable ``S`` is used in function 2, and ``dp`` in function 3. The latter uses the additional constant ``S0`` and the predefined constant ``pi``.
+For this case, the variable ``S`` is used in function 2, and ``dp`` in function 3. The latter uses the additional constant ``S0`` and the predefined constant ``pi``.

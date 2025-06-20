@@ -136,5 +136,3 @@ favorite text editor. You can see all possible parameters and keywords in the
 .. However, sometimes you might want some more
 .. modifications (e.g. modifying many nodes coordinates) that might be better
 .. done by a script. And indeed there is a python script that can help you editing input files.
-
-

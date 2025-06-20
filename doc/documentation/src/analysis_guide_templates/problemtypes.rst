@@ -386,4 +386,3 @@ Tutorial
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 One has to define solvers for the following dynamics:
-
