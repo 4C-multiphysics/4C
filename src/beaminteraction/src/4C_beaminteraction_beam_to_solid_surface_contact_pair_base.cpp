@@ -20,6 +20,8 @@
 #include "4C_geometry_pair_factory.hpp"
 #include "4C_geometry_pair_line_to_surface.hpp"
 #include "4C_geometry_pair_scalar_types.hpp"
+#include "4C_mat_shell_kl.hpp"
+#include "4C_shell_kl_nurbs.hpp"
 
 #include <Epetra_FEVector.h>
 
@@ -248,7 +250,29 @@ BeamInteraction::BeamToSolidSurfaceContactPairBase<ScalarType, Beam, Surface>::
   Core::LinAlg::Matrix<3, 1, ScalarType> r_rel;
   r_rel = r_beam;
   r_rel -= r_surface;
-  ScalarType gap = r_rel.dot(surface_normal) - beam_cross_section_radius;
+  ScalarType gap = r_rel.dot(surface_normal);
+  if constexpr (std::is_same<Surface, GeometryPair::t_nurbs9>::value)
+  {
+    const auto* kl_shell =
+        dynamic_cast<const Discret::Elements::KirchhoffLoveShellNurbs*>(this->element2());
+    if (kl_shell != nullptr)
+    {
+      // For shell elements we need to check which side of the shell the beam interacts with. And
+      // account for the shell thickness.
+      if (gap < 0)
+      {
+        // In this case we switch the normal direction, because the contact is happening on the
+        // "negative" side of the face.
+        surface_normal.scale(-1.0);
+        gap *= -1.0;
+      }
+      const double shell_thickness =
+          std::dynamic_pointer_cast<const Mat::KirchhoffLoveShell>(kl_shell->material())
+              ->thickness();
+      gap -= 0.5 * shell_thickness;
+    }
+  }
+  gap -= beam_cross_section_radius;
 
   return {r_beam, r_surface, surface_normal, gap};
 }
