@@ -196,5 +196,3 @@ Of course, it's again Blender which can do it all, but if it's only about combin
 
 Here, the framerate is set to 25 per second, and all pictures should be ordered by its number,
 which then of course must be given by 3 digits.
-
-

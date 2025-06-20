@@ -22,6 +22,37 @@ if(FOUR_C_BUILD_DOCUMENTATION)
   set(_sphinx_CONFIG_OUT ${_sphinx_OUT_DIR}/conf.py)
   set(_sphinx_HTML_DIR ${_sphinx_OUT_DIR}/html)
 
+  # Define some extra files that are to be copied to the build directory
+  # This is necessary, since some of the input files are needed for the documentation
+  # (and we don't want to copy all of them blindly)
+  set(_sphinx_TEST_INPUT_FILES
+      ${PROJECT_SOURCE_DIR}/tests/input_files/solid_runtime_hex8.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/xfluid_beltrami_stat_16x16x16_hk_vol_equivalent.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/sohex8_disp_altgeogeneration.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/f3_forced_hit_geogen_hdg.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/fbi_fluid_obstacle.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/tsi_lincompression_iterstaggtemp.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/porofluidmulti_2D_quad4.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/contact2D_centrdiff.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/contact2D_multibody.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/contact3D_unbiased_self_hex8_nitsche.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/meshtying2D_inf_plate.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/contact3D_slidingblock_penalty_new_struct.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/tsi_locsys_monolithic.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/prestress_new.4C.yaml
+      ${PROJECT_SOURCE_DIR}/tests/input_files/one_d_3_artery_network.4C.yaml
+      )
+
+  set(_sphinx_FILES_FROM_TESTS_DIR "${_sphinx_OUT_DIR}/testfiles")
+  file(MAKE_DIRECTORY ${_sphinx_FILES_FROM_TESTS_DIR})
+  file(GLOB _sphinx_YAML_FILES "${PROJECT_SOURCE_DIR}/tests/tutorials/*.4C.yaml")
+  file(GLOB _sphinx_JOU_FILES "${PROJECT_SOURCE_DIR}/tests/tutorials/*.jou")
+
+  foreach(FILE ${_sphinx_TEST_INPUT_FILES} ${_sphinx_YAML_FILES} ${_sphinx_JOU_FILES})
+    get_filename_component(FILENAME ${FILE} NAME)
+    configure_file(${FILE} ${_sphinx_FILES_FROM_TESTS_DIR}/${FILENAME} COPYONLY)
+  endforeach()
+
   #install the python virtual environment with sphinx
   find_package(Sphinx REQUIRED)
 
@@ -39,6 +70,7 @@ if(FOUR_C_BUILD_DOCUMENTATION)
     COMMAND create_rtd
     COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_BINARY_DIR}/doc/tmp"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_sphinx_OUT_DIR}/reference_docs/tutorials"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${_sphinx_OUT_DIR}/reference_docs/analysis_guide"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_sphinx_OUT_DIR}/reference_docs/reference_images"
     COMMAND ${FOUR_C_EXECUTABLE_NAME} -h > ${_sphinx_OUT_DIR}/reference_docs/4C-help.txt
     COMMAND
@@ -51,8 +83,8 @@ if(FOUR_C_BUILD_DOCUMENTATION)
     COMMAND
       ${SPHINX_EXECUTABLE} -W -n -q -b html # warnings are errors and be nit-picky
       -i "${CMAKE_CURRENT_SOURCE_DIR}/src" -i "${_sphinx_OUT_DIR}/reference_docs" -i
-      "${PROJECT_SOURCE_DIR}/tests/tutorials" -i "${_sphinx_TPLDEPEND_DIR}" -o "${_sphinx_HTML_DIR}"
-      -c "${_sphinx_OUT_DIR}" -s "${PROJECT_BINARY_DIR}/doc/tmp"
+      "${_sphinx_FILES_FROM_TESTS_DIR}" -i "${_sphinx_TPLDEPEND_DIR}" -o "${_sphinx_HTML_DIR}" -c
+      "${_sphinx_OUT_DIR}" -s "${PROJECT_BINARY_DIR}/doc/tmp"
     DEPENDS create_rtd ${FOUR_C_EXECUTABLE_NAME}
     COMMENT "Build documentation"
     )

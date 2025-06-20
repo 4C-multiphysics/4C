@@ -56,13 +56,13 @@ def setup(app):
 
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ["tutorial_templates"]
+templates_path = ["tutorial_templates", "analysis_guide_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 source_suffix = [".rst", ".md"]
-exclude_patterns = ["tutorial_templates"]
+exclude_patterns = templates_path
 
 rst_prolog = """
 .. |break| raw:: html
@@ -116,6 +116,7 @@ mathjax_path = (
 # -- Additional scripts to generate more fancy output -------------------------------------------------
 # Now generate the tutorial files
 include_yaml.convert("@_sphinx_SOURCE_DIR@/src/tutorial_templates", "@_sphinx_OUT_DIR@/reference_docs/tutorials", "@PROJECT_BINARY_DIR@/doc/tmp")
+include_yaml.convert("@_sphinx_SOURCE_DIR@/src/analysis_guide_templates", "@_sphinx_OUT_DIR@/reference_docs/analysis_guide", "@PROJECT_BINARY_DIR@/doc/tmp")
 
 # Create figures for the element node and face numbers
 plot.generate_figures("@_sphinx_OUT_DIR@/reference_docs/elementinformation.yaml",

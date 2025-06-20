@@ -1,0 +1,257 @@
+{% set input_file1 = "porofluidmulti_2D_quad4.4C.yaml" %}
+{% set input_file1_content = load_input_file(input_file1) %}
+{% set input_file2 = "tsi_locsys_monolithic.4C.yaml" %}
+{% set input_file2_content = load_input_file(input_file2) %}
+{% set input_file3 = "prestress_new.4C.yaml" %}
+{% set input_file3_content = load_input_file(input_file3) %}
+{% set input_file4 = "one_d_3_artery_network.4C.yaml" %}
+{% set input_file4_content = load_input_file(input_file4) %}
+
+.. _functiondefinitions:
+
+Function definitions
+====================
+
+Function are particularly useful for the application of boundary conditions, but they can also
+be used for other definitions. The definition of a function is extremely versatile and may be
+accomplished in various manners. Any number of different function definitions are allowed, and the
+respective section always starts with ``FUNCT``, followed by a number, which is referred in other sections,
+e.g., ``FUNCT1:, FUNCT2:``, etc.
+
+Two different applications for functions exist: One case is a spatial and temporal variation of a condition.
+The other one is a function of some (result or internal) variable, which is mainly used in combination with materials.
+
+Functions for spatial and/or temporal variation
+-----------------------------------------------
+
+These functions allow to define spatial and temporal conditions in terms of mathematical
+functions, e.g., in sine form etc.
+
+The respective input line for defining a symbolic function is of the following form in the easiest case:
+
+.. code-block:: yaml
+
+   FUNCT<n>:
+   - SYMBOLIC_FUNCTION_OF_SPACE_TIME|SYMBOLIC_FUNCTION_OF_TIME: <functiondefinition>
+
+or, if one needs a function expression for several components of a vector (here for 3 components, only available for ``SYMBOLIC_FUNCTION_OF_SPACE_TIME``):
+
+.. code-block:: yaml
+
+   FUNCT<n>:
+   - COMPONENT: 0
+     SYMBOLIC_FUNCTION_OF_SPACE_TIME: <functiondefinition>
+   - COMPONENT: 1
+     SYMBOLIC_FUNCTION_OF_SPACE_TIME: <functiondefinition>
+   - COMPONENT: 2
+     SYMBOLIC_FUNCTION_OF_SPACE_TIME: <functiondefinition>
+
+As the name says, ``functiondefinition`` can be a function :math:`f`
+
+#. of space and time, that is, :math:`f(x,y,z,t)`, or
+#. only of time, :math:`f(t)`
+
+|FOURC| has its own function parser, which recognises variables, algebraic terms, brackets and a number of functions, namely the following: :math:`\mathrm{acos}, \mathrm{asin}, \mathrm{atan}`, :math:`\cos, \sin, \tan`, :math:`\cosh, \sinh, \tanh`, :math:`\exp, \log, \log10`, :math:`\mathrm{sqrt}`, :math:`\mathrm{heaviside}`, :math:`\mathrm{fabs}, \mathrm{atan2}`.
+Additionally, the constant :math:`pi` is known.
+
+If the function cannot easily be given as a symbolic expression, the function may depend on additional user defined variables, which are given in the following way:
+
+.. code-block:: yaml
+
+   # multi-linear representation
+   FUNCT<n>:
+   - SYMBOLIC_FUNCTION_OF_SPACE_TIME: <>
+   - VARIABLE: <num>
+     NAME: <varname>
+     TYPE: linearinterpolation
+     NUMPOINTS: <num_points>
+     TIMES: [ <time_1>, ... , <time_num_points> ]
+     VALUES: [ <val_1>, ... , <val_num_points> ]
+     # further variables possible
+   #
+   # concatenating several functions
+   FUNCT<n>:
+   - VARIABLE: <num>
+     NAME: <varname>
+     TYPE: multifunction
+     NUMPOINTS: <num_points>
+     TIMES: [ <time_1>, ... , <time_num_points> ]
+     DESCRIPTION: [ <expression_1>, ... , <expression_num_points-1> ]
+     # since expressions are defined between the time values, only n-1 expressions are to be defined
+   #
+   # fourier interpolation
+   FUNCT<n>:
+   - VARIABLE: <num>
+     NAME: <varname>
+     TYPE: fourierinterpolation
+     NUMPOINTS: <num_points>
+     BYNUM:
+       TIMERANGE: [ <start_time>, <end_time> ]
+     VALUES: [ <val_1>, ... , <val_num_points> ]
+     PERIODIC:
+       T1: <time_1>
+       T2: <time_2>
+
+where
+
+- **expression** is simply a symbolic expression similar to the function definition itself.
+  That is,
+
+.. code-block:: yaml
+
+     FUNCT1:
+     - SYMBOLIC-FUNCTION_OF_SPACE_TIME: 10*myvar
+     - VARIABLE: 0
+       NAME: myvar
+       TYPE: expression
+       DESCRIPTION: 5*t
+
+  is completely equivalent to
+
+.. code-block:: yaml
+
+     FUNCT1:
+     - SYMBOLIC-FUNCTION_OF_SPACE_TIME: 50*t
+
+- **linearinterpolation** defines a table with a given number of sampling points leading to
+  multilinear expression. For example, one can define an amplitude curve with several hold states as done in example {{ input_file3 }}:
+
+  {{ section_dump(input_file3_content, "FUNCT1") }}
+
+- **multifunction** is similar to expression, but a number of symbolic functions can be entered,
+  which are  only valid in a specific time range. therefore, one has to define one point in time more than functions.
+  As an example, see the trapezoidal temperature progression in {{ input_file2 }}:
+
+  {{ section_dump(input_file2_content, "FUNCT2") }}
+
+- **fourierinterpolation** defines a Fourier series with a given number of sampling points. An example is taken from {{ input_file4 }}
+
+  {{ section_dump(input_file4_content, "FUNCT1") }}
+
+
+
+**Fluid**
+
+For fluids some other keywords are available beside the ones given above:
+
+.. code-block:: yaml
+
+   FUNCT1:
+   - FLUID_FUNCTION: BELTRAMI
+     c1: <value>
+   FUNCT2:
+   - FLUID_FUNCTION: KIMMOIN-RHS
+     MAT: <num>
+     ISSTAT: [0|1]
+     ISSTOKES: [0|1]
+   FUNCT3:
+   - FLUID_FUNCTION: KIMMOIN-UP
+     MAT: <num>
+     ISSTAT: [0|1]
+   FUNCT4:
+   - FLUID_FUNCTION: KIMMOIN-STRESS
+     MAT: <num>
+     ISSTAT: [0|1]
+   AMPLITUDE: <value>
+   FUNCT5:
+   - FLUID_FUNCTION: CHANNELWEAKLYCOMPRESSIBLE
+   FUNCT6:
+   - FLUID_FUNCTION: WEAKLYCOMPRESSIBLE_ETIENNE_FSI_FLUID
+     MAT_FLUID: <num>
+     MAT_STRUCT: <num>
+   FUNCT7:
+   - FLUID_FUNCTION: WEAKLYCOMPRESSIBLE_ETIENNE_FSI_FLUID_FORCE
+     MAT_FLUID: <num>
+     MAT_STRUCT: <num>
+   FUNCT8:
+   - FLUID_FUNCTION: WEAKLYCOMPRESSIBLE_ETIENNE_FSI_FLUID_VISCOSITY
+     MAT_FLUID: <num>
+     MAT_STRUCT: <num>
+   FUNCT9:
+   - FLUID_FUNCTION: WEAKLYCOMPRESSIBLE_ETIENNE_FSI_STRUCTURE
+     MAT_STRUCT: <num>
+   FUNCT10:
+   - FLUID_FUNCTION: WEAKLYCOMPRESSIBLE_ETIENNE_FSI_STRUCTURE_FORCE
+     MAT_STRUCT: <num>
+   FUNCT11:
+   - FLUID_FUNCTION: WEAKLYCOMPRESSIBLE_ETIENNE_CFD
+     MAT: <num>
+   FUNCT12:
+   - FLUID_FUNCTION: WEAKLYCOMPRESSIBLE_ETIENNE_CFD_FORCE
+     MAT: <num>
+   FUNCT13:
+   - FLUID_FUNCTION: WEAKLYCOMPRESSIBLE_ETIENNE_CFD_VISCOSITY
+     MAT: <num>
+   FUNCT14:
+   - FLUID_FUNCTION: WEAKLYCOMPRESSIBLE_MANUFACTUREDFLOW
+     MAT: <num>
+   FUNCT15:
+   - FLUID_FUNCTION: WEAKLYCOMPRESSIBLE_MANUFACTUREDFLOW_FORCE
+     MAT: <num>
+   FUNCT16:
+   - FLUID_FUNCTION: WEAKLYCOMPRESSIBLE_POISEUILLE
+     MAT: <num>
+   FUNCT17:
+   - FLUID_FUNCTION: WEAKLYCOMPRESSIBLE_POISEUILLE_FORCE
+     MAT: <num>
+   FUNCT18:
+   - FLUID_FUNCTION: ZALESAKSDISK
+
+   FUNCT19:
+   - XFLUID_FUNCTION:    FORWARDFACINGSTEP
+     <further_paramters>
+   FUNCT20:
+   - XFLUID_FUNCTION: MOVINGLEVELSETCYLINDER
+     <further_paramters>
+   FUNCT21:
+   - XFLUID_FUNCTION: MOVINGLEVELSETTORUS
+     <further_paramters>
+   FUNCT22:
+   - XFLUID_FUNCTION: MOVINGLEVELSETTORUSVELOCITY
+     <further_paramters>
+   FUNCT23:
+   - XFLUID_FUNCTION: MOVINGLEVELSETTORUSSLIPLENGTH
+     <further_paramters>
+   FUNCT24:
+   - XFLUID_FUNCTION: URQUIZABOXFLOW
+     <further_paramters>
+   FUNCT25:
+   - XFLUID_FUNCTION: URQUIZABOXFLOW_TRACTION
+     <further_paramters>
+   FUNCT26:
+   - XFLUID_FUNCTION: URQUIZABOXFLOW_FORCE
+     <further_paramters>
+   FUNCT27:
+   - XFLUID_FUNCTION: TAYLORCOUETTEFLOW
+     <further_paramters>
+   FUNCT28:
+   - XFLUID_FUNCTION: COLLAPSINGWATERCOLUMN
+     <further_paramters>
+   FUNCT29:
+   - XFLUID_FUNCTION: CORRECTIONTERMCHANNELWEAKLYCOMPRESSIBLE
+     <further_paramters>
+
+**Porous materials**
+
+Here, we can also consider the keyword ``POROMULTIPHASESCATRA_FUNCTION``, which needs a specific function name as a value.
+The parameters of this function is then given after the subsection ``PARAMS``:
+
+.. code-block:: yaml
+
+   FUNCT1:
+   - POROMULTIPHASESCATRA_FUNCTION: <specific_name>
+     PARAMS:
+       <param_name>: value
+       ...
+
+Functions depending on simulation variables
+-----------------------------------------------
+
+If one needs to define a function for some material behavior, which depends on simulation variables,
+the option ``VARFUNCTION`` is the one to be used.
+Here, it is crucial that the independent variables used in the function must exactly be named as defined in the code for the specific behavior.
+The definition of constants is optional. An example is shown in the test file {{ input_file1 }}:
+
+{{section_dump(input_file1_content, ["FUNCT2", "FUNCT3"]) }}
+
+For this case, the variable ``S`` is used in function 2, and ``dp`` in function 3. The latter uses the additional constant ``S0`` and the predefined constant ``pi``.

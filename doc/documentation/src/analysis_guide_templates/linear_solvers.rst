@@ -412,4 +412,3 @@ A little bit of damping will probably improve convergence (also from the beginni
 
 For the multigrid preconditioner, one can also find a :download:`comprehensive documentation <https://trilinos.github.io/pdfs/mueluguide.pdf>`
 on the trilinos website, explaining all the parameters, their meaning and the default values.
-
