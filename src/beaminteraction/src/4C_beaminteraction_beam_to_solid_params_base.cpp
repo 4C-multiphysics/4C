@@ -26,7 +26,8 @@ BeamInteraction::BeamToSolidParamsBase::BeamToSolidParamsBase()
       mortar_shape_function_(Inpar::BeamToSolid::BeamToSolidMortarShapefunctions::none),
       penalty_parameter_(-1.0),
       gauss_rule_(Core::FE::GaussRule1D::undefined),
-      rotational_coupling_(false)
+      rotational_coupling_(false),
+      saddle_point_(false)
 {
   // Empty Constructor.
 }
@@ -44,6 +45,9 @@ void BeamInteraction::BeamToSolidParamsBase::set_base_params(
     constraint_enforcement_ =
         Teuchos::getIntegralValue<Inpar::BeamToSolid::BeamToSolidConstraintEnforcement>(
             beam_to_solid_params_list, "CONSTRAINT_STRATEGY");
+
+    // Saddle point formulation flag
+    saddle_point_ = beam_to_solid_params_list.get<bool>("SADDLE_POINT_FORMULATION");
 
     // Contact discretization to be used.
     contact_discretization_ =
