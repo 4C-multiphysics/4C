@@ -489,6 +489,10 @@ beam_to_solid_surface_contact_pair_mortar_factory_template_beam(
     case Core::FE::CellType::quad4:
       return beam_to_solid_surface_contact_pair_mortar_factory_template_beam_surface<Beam, t_quad4,
           line_to_surface_patch_scalar_type_1st_order>(beam_to_surface_contact_params);
+    case Core::FE::CellType::nurbs9:
+      return beam_to_solid_surface_contact_pair_mortar_factory_template_beam_surface<Beam, t_nurbs9,
+          line_to_surface_patch_scalar_type_fixed_size_1st_order<Beam, t_nurbs9>>(
+          beam_to_surface_contact_params);
     default:
       FOUR_C_THROW("Got unexpected surface shape");
   }
