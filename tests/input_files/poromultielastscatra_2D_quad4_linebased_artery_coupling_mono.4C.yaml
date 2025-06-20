@@ -273,13 +273,13 @@ FUNCT8:
 FUNCT9:
   - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "x*y*t"
 FUNCT10:
-  - VARFUNCTION: "pi*D*0.1*(p_art-p3)"
+  - VARFUNCTION: "pi*D*0.1*(p_art-p3)+Q*1.0e-7"
 FUNCT11:
-  - VARFUNCTION: "pi*D*0.8*(phi_art1-phi1)+pi*D*0.001*(p_art-p3)*(phi_art1-phi1)"
+  - VARFUNCTION: "pi*D*0.8*(phi_art1-phi1)+pi*D*0.001*(p_art-p3)*(phi_art1-phi1)+Q*1.0e-7"
 FUNCT12:
-  - VARFUNCTION: "pi*D*1.0*(p_art-p3)"
+  - VARFUNCTION: "pi*D*1.0*(p_art-p3)+Q*1.0e-7"
 FUNCT13:
-  - VARFUNCTION: "pi*D*8.0*(phi_art1-phi1)+pi*D*0.01*(p_art-p3)*(phi_art1-phi1)"
+  - VARFUNCTION: "pi*D*8.0*(phi_art1-phi1)+pi*D*0.01*(p_art-p3)*(phi_art1-phi1)+Q*1.0e-7"
 FUNCT14:
   - VARFUNCTION: "D0"
 DESIGN SURF PORO DIRICH CONDITIONS:
@@ -657,95 +657,95 @@ RESULT DESCRIPTION:
       DIS: "artery"
       NODE: 66
       QUANTITY: "pressure"
-      VALUE: 68.85394773275169
+      VALUE: 6.88539474204398942e+01
       TOLERANCE: 1e-08
   - ARTNET:
       DIS: "artery"
       NODE: 67
       QUANTITY: "pressure"
-      VALUE: 48.24751595102863
+      VALUE: 4.82475155073472877e+01
       TOLERANCE: 1e-08
   - ARTNET:
       DIS: "artery"
       NODE: 68
       QUANTITY: "pressure"
-      VALUE: 33.06302924217277
+      VALUE: 3.30630287716203739e+01
       TOLERANCE: 1e-08
   - POROFLUIDMULTIPHASE:
       DIS: "porofluid"
       NODE: 12
       QUANTITY: "pressure3"
-      VALUE: 5.569410071518632
+      VALUE: 5.56941001760523946
       TOLERANCE: 1e-08
   - POROFLUIDMULTIPHASE:
       DIS: "porofluid"
       NODE: 22
       QUANTITY: "pressure3"
-      VALUE: 5.244129870589827
+      VALUE: 5.24412979342100893
       TOLERANCE: 1e-08
   - POROFLUIDMULTIPHASE:
       DIS: "porofluid"
       NODE: 21
       QUANTITY: "pressure3"
-      VALUE: 5.15672152241522
+      VALUE: 5.15672144618893480
       TOLERANCE: 1e-08
   - POROFLUIDMULTIPHASE:
       DIS: "porofluid"
       NODE: 29
       QUANTITY: "pressure3"
-      VALUE: 5.378127296213489
+      VALUE: 5.37812718975774384
       TOLERANCE: 1e-08
   - POROFLUIDMULTIPHASE:
       DIS: "porofluid"
       NODE: 44
       QUANTITY: "pressure3"
-      VALUE: 1.7867759892960327
+      VALUE: 1.78677591959180448
       TOLERANCE: 1e-08
   - SCATRA:
       DIS: "artery_scatra"
       NODE: 67
       QUANTITY: "phi1"
-      VALUE: 0.9809431561793567
+      VALUE: 9.80943146493071350e-01
       TOLERANCE: 1e-10
   - SCATRA:
       DIS: "artery_scatra"
       NODE: 69
       QUANTITY: "phi1"
-      VALUE: 0.9524822296114175
+      VALUE: 9.52482214153308027e-01
       TOLERANCE: 1e-10
   - SCATRA:
       DIS: "artery_scatra"
       NODE: 71
       QUANTITY: "phi1"
-      VALUE: 0.9141179546944582
+      VALUE: 9.14117936526582131e-01
       TOLERANCE: 1e-10
   - SCATRA:
       DIS: "artery_scatra"
       NODE: 73
       QUANTITY: "phi1"
-      VALUE: 0.8728506582471492
+      VALUE: 8.72850639527837258e-01
       TOLERANCE: 1e-10
   - SCATRA:
       DIS: "scatra"
       NODE: 14
       QUANTITY: "phi1"
-      VALUE: 0.9028716904247225
+      VALUE: 9.02871683138080749e-01
       TOLERANCE: 1e-10
   - SCATRA:
       DIS: "scatra"
       NODE: 21
       QUANTITY: "phi1"
-      VALUE: 0.9226385957858885
+      VALUE: 9.22638589059604275e-01
       TOLERANCE: 1e-10
   - SCATRA:
       DIS: "scatra"
       NODE: 35
       QUANTITY: "phi1"
-      VALUE: 0.8710774571527193
+      VALUE: 8.71077446196721450e-01
       TOLERANCE: 1e-10
   - SCATRA:
       DIS: "scatra"
       NODE: 29
       QUANTITY: "phi1"
-      VALUE: 0.9206215345430621
+      VALUE: 9.20621524260734070e-01
       TOLERANCE: 1e-10
