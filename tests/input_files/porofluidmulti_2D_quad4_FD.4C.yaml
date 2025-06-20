@@ -4,13 +4,21 @@ TITLE:
 PROBLEM SIZE:
   DIM: 2
 PROBLEM TYPE:
-  PROBLEMTYPE: "Multiphase_Porous_Flow"
-POROFLUIDMULTIPHASE DYNAMIC:
-  LINEAR_SOLVER: 1
-  FDCHECK: "global"
-  FDCHECKTOL: 1e-05
-  INITIALFIELD: "field_by_function"
-  INITFUNCNO: 1
+  PROBLEMTYPE: "porofluid_pressure_based"
+porofluid_dynamic:
+  total_simulation_time: 2.0
+  time_integration:
+    theta: 0.5
+    time_step: 0.1
+    number_of_time_steps: 20
+  nonlinear_solver:
+    linear_solver_id: 1
+  fd_check:
+    active: true
+    tolerance: 1e-05
+  initial_condition:
+    type: "by_function"
+    function_id: 1
 SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "Solver"

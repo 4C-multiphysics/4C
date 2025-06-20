@@ -127,8 +127,8 @@ namespace PoroPressureBased
     //! underlying scatra problem
     std::shared_ptr<Adapter::ScaTraBaseAlgorithm> scatra_algo_;
 
-    //! flux-reconstruction method
-    PoroPressureBased::FluxReconstructionMethod flux_reconstruction_method_;
+    //! flux-reconstruction active
+    bool flux_reconstruction_active_;
 
     //! dofset of scatra field on fluid dis
     //! TODO: find a better way to do this. Perhaps this should be moved to the adapter?

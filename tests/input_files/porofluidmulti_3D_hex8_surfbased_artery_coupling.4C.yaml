@@ -8,31 +8,37 @@ TITLE:
   - "tic problems with inclusions. Mathematical Models and Methods in"
   - "Applied Sciences, 28(05):953-978, 2018. DOI: 10.1142/S0218202518500252."
 PROBLEM TYPE:
-  PROBLEMTYPE: "Multiphase_Porous_Flow"
+  PROBLEMTYPE: "porofluid_pressure_based"
 DISCRETISATION:
   NUMSTRUCDIS: 0
   NUMALEDIS: 0
   NUMTHERMDIS: 0
-POROFLUIDMULTIPHASE DYNAMIC:
-  MAXTIME: 0.1
-  NUMSTEP: 1
-  THETA: 1
-  LINEAR_SOLVER: 1
-  FDCHECKEPS: 1e-07
-  FDCHECKTOL: 1e-05
-  OUTPUT_POROSITY: false
-  INITIALFIELD: "field_by_function"
-  INITFUNCNO: 1
-  FLUX_PROJ_SOLVER: 2
-  ARTERY_COUPLING: true
-POROFLUIDMULTIPHASE DYNAMIC/ARTERY COUPLING:
-  ARTERY_COUPLING_METHOD: "MP"
-  REACFUNCT_ART: "6"
-  SCALEREAC_ART: "-1"
-  REACFUNCT_CONT: "0 6"
-  SCALEREAC_CONT: "0 1"
-  LATERAL_SURFACE_COUPLING: true
-  NUMPATCH_RAD: 5
+porofluid_dynamic:
+  total_simulation_time: 0.1
+  time_integration:
+    number_of_time_steps: 1
+    time_step: 0.1
+    theta: 1
+  nonlinear_solver:
+    linear_solver_id: 1
+  output:
+    porosity: false
+  initial_condition:
+    type: by_function
+    function_id: 1
+  artery_coupling_active: true
+porofluid_dynamic/artery_coupling:
+  coupling_method: mortar_penalty
+  penalty_parameter: 1000
+  reaction_terms:
+    artery_function_ids: "6"
+    artery_scaling: "-1"
+    homogenized_function_ids: "0 6"
+    homogenized_scaling: "0 1"
+  evaluate_in_reference_configuration: true
+  lateral_surface_coupling: true
+  integration_patches:
+    number_of_patches_radial: 5
 ARTERIAL DYNAMIC:
   DYNAMICTYPE: "Stationary"
   TIMESTEP: 0.1

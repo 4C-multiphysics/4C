@@ -13,35 +13,39 @@ TITLE:
 PROBLEM SIZE:
   DIM: 2
 PROBLEM TYPE:
-  PROBLEMTYPE: "Multiphase_Poroelasticity_ScaTra"
-POROMULTIPHASESCATRA DYNAMIC:
-  RESTARTEVERY: 2
-  NUMSTEP: 10
-  MAXTIME: 1
-  TIMESTEP: 0.1
-  RESULTSEVERY: 2
-  COUPALGO: "twoway_monolithic"
-  ARTERY_COUPLING: true
-POROMULTIPHASESCATRA DYNAMIC/MONOLITHIC:
-  LINEAR_SOLVER: 1
+  PROBLEMTYPE: "porofluid_pressure_based_elasticity_scatra"
+porofluid_elasticity_scatra_dynamic:
+  total_simulation_time: 1
+  time_integration:
+    number_of_time_steps: 10
+    time_step: 0.1
+    theta: 1
+  output:
+    restart_data_every: 2
+    results_every: 2
+  coupling_scheme: twoway_monolithic
+  artery_coupling_active: true
+porofluid_elasticity_scatra_dynamic/monolithic:
+  nonlinear_solver:
+    linear_solver_id: 1
 STRUCTURAL DYNAMIC:
   INT_STRATEGY: "Standard"
   DYNAMICTYPE: "OneStepTheta"
   LINEAR_SOLVER: 1
 STRUCTURAL DYNAMIC/ONESTEPTHETA:
   THETA: 1
-POROFLUIDMULTIPHASE DYNAMIC:
-  THETA: 1
-  LINEAR_SOLVER: 1
-  INITIALFIELD: "field_by_function"
-  INITFUNCNO: 1
-  FLUX_PROJ_SOLVER: 2
-POROFLUIDMULTIPHASE DYNAMIC/ARTERY COUPLING:
-  ARTERY_COUPLING_METHOD: "Nodal"
-  COUPLEDDOFS_ART: "1"
-  COUPLEDDOFS_PORO: "5"
-POROMULTIPHASE DYNAMIC:
-  COUPALGO: "twoway_monolithic"
+porofluid_dynamic:
+  initial_condition:
+    type: by_function
+    function_id: 1
+porofluid_dynamic/artery_coupling:
+  coupling_method: nodal
+  coupled_dofs:
+    artery: "1"
+    homogenized: "5"
+  evaluate_in_reference_configuration: true
+porofluid_elasticity_dynamic:
+  coupling_scheme: twoway_monolithic
 SCALAR TRANSPORT DYNAMIC:
   SOLVERTYPE: "nonlinear"
   MAXTIME: 1
@@ -59,9 +63,10 @@ SCALAR TRANSPORT DYNAMIC/NONLINEAR:
   CONVTOL: 1e-08
   ABSTOLRES: -1
 SCALAR TRANSPORT DYNAMIC/ARTERY COUPLING:
-  ARTERY_COUPLING_METHOD: "Nodal"
-  COUPLEDDOFS_ARTSCATRA: "2 4"
-  COUPLEDDOFS_SCATRA: "1 2"
+  coupling_method: nodal
+  coupled_dofs:
+    artery: "2 4"
+    homogenized: "1 2"
 ARTERIAL DYNAMIC:
   DYNAMICTYPE: "Stationary"
   SOLVESCATRA: true

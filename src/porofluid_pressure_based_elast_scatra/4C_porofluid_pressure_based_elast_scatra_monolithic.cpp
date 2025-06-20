@@ -77,7 +77,7 @@ PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::PorofluidElastScatra
       timernewton_("", true),
       dtsolve_(0.0),
       dtele_(0.0),
-      fdcheck_(PoroPressureBased::FdCheck::none)
+      fdcheck_(false)
 {
 }
 
@@ -98,24 +98,35 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::init(
       nearby_ele_pairs);
 
   // read input variables
-  iter_max_ = algoparams.get<int>("ITEMAX");
-  iter_tol_inc_ = algoparams.sublist("MONOLITHIC").get<double>("TOLINC_GLOBAL");
-  iter_tol_res_ = algoparams.sublist("MONOLITHIC").get<double>("TOLRES_GLOBAL");
+  iter_max_ = algoparams.sublist("nonlinear_solver").get<int>("maximum_number_of_iterations");
+  iter_tol_inc_ = algoparams.sublist("monolithic")
+                      .sublist("nonlinear_solver")
+                      .sublist("increment")
+                      .get<double>("global_tolerance");
+  iter_tol_res_ = algoparams.sublist("monolithic")
+                      .sublist("nonlinear_solver")
+                      .sublist("residual")
+                      .get<double>("global_tolerance");
 
   blockrowdofmap_ = std::make_shared<Core::LinAlg::MultiMapExtractor>();
 
-  fdcheck_ = Teuchos::getIntegralValue<PoroPressureBased::FdCheck>(
-      algoparams.sublist("MONOLITHIC"), "FDCHECK");
+  fdcheck_ = algoparams.sublist("monolithic").get<bool>("fd_check");
 
   equilibration_method_ = Teuchos::getIntegralValue<Core::LinAlg::EquilibrationMethod>(
-      algoparams.sublist("MONOLITHIC"), "EQUILIBRATION");
+      algoparams.sublist("monolithic").sublist("nonlinear_solver"), "equilibration");
 
-  solveradaptolbetter_ = algoparams.sublist("MONOLITHIC").get<double>("ADAPTCONV_BETTER");
-  solveradapttol_ = algoparams.sublist("MONOLITHIC").get<bool>("ADAPTCONV");
+  solveradaptolbetter_ = algoparams.sublist("monolithic")
+                             .sublist("nonlinear_solver")
+                             .sublist("convergence_criteria_adaptivity")
+                             .get<double>("nonlinear_to_linear_tolerance_ratio");
+  solveradapttol_ = algoparams.sublist("monolithic")
+                        .sublist("nonlinear_solver")
+                        .sublist("convergence_criteria_adaptivity")
+                        .get<bool>("active");
 
   // do we also solve the structure, this is helpful in case of fluid-scatra coupling without mesh
   // deformation
-  solve_structure_ = poroparams.get<bool>("SOLVE_STRUCTURE");
+  solve_structure_ = poroparams.get<bool>("solve_structure");
   if (!solve_structure_) struct_offset_ = 0;
 }
 
@@ -251,7 +262,9 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::setup_solver()
   const Teuchos::ParameterList& poromultscatradyn =
       Global::Problem::instance()->poro_multi_phase_scatra_dynamic_params();
   // get the solver number used for linear poroelasticity solver
-  const int linsolvernumber = poromultscatradyn.sublist("MONOLITHIC").get<int>("LINEAR_SOLVER");
+  const int linsolvernumber = poromultscatradyn.sublist("monolithic")
+                                  .sublist("nonlinear_solver")
+                                  .get<int>("linear_solver_id");
   // check if the poroelasticity solver has a valid solver number
   if (linsolvernumber == (-1))
     FOUR_C_THROW(
@@ -265,9 +278,11 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::setup_solver()
   create_linear_solver(solverparams, solvertype);
 
   vector_norm_res_ = Teuchos::getIntegralValue<PoroPressureBased::VectorNorm>(
-      poromultscatradyn.sublist("MONOLITHIC"), "VECTORNORM_RESF");
+      poromultscatradyn.sublist("monolithic").sublist("nonlinear_solver").sublist("residual"),
+      "vector_norm");
   vector_norm_inc_ = Teuchos::getIntegralValue<PoroPressureBased::VectorNorm>(
-      poromultscatradyn.sublist("MONOLITHIC"), "VECTORNORM_INC");
+      poromultscatradyn.sublist("monolithic").sublist("nonlinear_solver").sublist("increment"),
+      "vector_norm");
 }
 
 /*-----------------------------------------------------------------------------------*
@@ -345,7 +360,7 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::time_step()
     {
       evaluate(iter_inc_);
       // perform FD Check of monolithic system matrix
-      if (fdcheck_ == FdCheck::global) poro_multi_phase_scatra_fd_check();
+      if (fdcheck_) poro_multi_phase_scatra_fd_check();
     }
     else
     {

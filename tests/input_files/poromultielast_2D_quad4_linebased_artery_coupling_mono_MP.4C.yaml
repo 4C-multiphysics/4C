@@ -5,51 +5,54 @@ TITLE:
 PROBLEM SIZE:
   DIM: 2
 PROBLEM TYPE:
-  PROBLEMTYPE: "Multiphase_Poroelasticity"
+  PROBLEMTYPE: "porofluid_pressure_based_elasticity"
 STRUCTURAL DYNAMIC:
   INT_STRATEGY: "Standard"
   DYNAMICTYPE: "OneStepTheta"
   LINEAR_SOLVER: 1
-POROMULTIPHASE DYNAMIC:
-  NUMSTEP: 5
-  MAXTIME: 0.5
-  TIMESTEP: 0.1
-  COUPALGO: "twoway_monolithic"
-  ARTERY_COUPLING: true
-POROMULTIPHASE DYNAMIC/MONOLITHIC:
-  TOLRES_GLOBAL: 1e-06
-  TOLINC_GLOBAL: 1e-06
-  LINEAR_SOLVER: 1
+porofluid_elasticity_dynamic:
+  total_simulation_time: 0.5
+  time_integration:
+    time_step: 0.1
+    number_of_time_steps: 5
+    theta: 1
+  output:
+    results_every: 2
+    restart_data_every: 2
+  coupling_scheme: twoway_monolithic
+  artery_coupling_active: true
+porofluid_elasticity_dynamic/monolithic:
+  nonlinear_solver:
+    linear_solver_id: 1
+    residual:
+      global_tolerance: 1e-06
+    increment:
+      global_tolerance: 1e-06
 STRUCTURAL DYNAMIC/ONESTEPTHETA:
   THETA: 1
 DISCRETISATION:
   NUMSTRUCDIS: 0
   NUMALEDIS: 0
   NUMTHERMDIS: 0
-POROFLUIDMULTIPHASE DYNAMIC:
-  MAXTIME: 2
-  NUMSTEP: 15
-  RESULTSEVERY: 2
-  RESTARTEVERY: 2
-  THETA: 1
-  LINEAR_SOLVER: 1
-  ITEMAX: 50
-  FDCHECKEPS: 1e-07
-  FDCHECKTOL: 1e-05
-  OUTPUT_POROSITY: false
-  INITIALFIELD: "field_by_function"
-  INITFUNCNO: 1
-  FLUX_PROJ_SOLVER: 2
-POROFLUIDMULTIPHASE DYNAMIC/ARTERY COUPLING:
-  PENALTY: 1e+07
-  ARTERY_COUPLING_METHOD: "MP"
-  COUPLEDDOFS_ART: "1"
-  COUPLEDDOFS_PORO: "5"
-  REACFUNCT_ART: "0"
-  REACFUNCT_CONT: "6 0 0 0 0"
-  SCALEREAC_CONT: "1 0 0 0 0"
-  EVALUATE_IN_REF_CONFIG: false
-  PRINT_OUT_SUMMARY_PAIRS: true
+porofluid_dynamic:
+  output:
+    porosity: true
+  initial_condition:
+    type: by_function
+    function_id: 1
+porofluid_dynamic/artery_coupling:
+  coupling_method: mortar_penalty
+  penalty_parameter: 1e+07
+  coupled_dofs:
+    artery: "1"
+    homogenized: "5"
+  reaction_terms:
+    artery_function_ids: "0"
+    artery_scaling: "0"
+    homogenized_function_ids: "6 0 0 0 0"
+    homogenized_scaling: "1 0 0 0 0"
+  evaluate_in_reference_configuration: false
+  print_coupling_pairs_summary: true
 ARTERIAL DYNAMIC:
   DYNAMICTYPE: "Stationary"
   TIMESTEP: 0.1

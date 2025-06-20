@@ -73,9 +73,11 @@ std::map<std::string, Core::ProblemType> Inpar::PROBLEMTYPE::string_to_problem_t
     string2prbtype["Polymer_Network"] = Core::ProblemType::polymernetwork;
     string2prbtype["Poroelastic_scalar_transport"] = Core::ProblemType::poroscatra;
     string2prbtype["Poroelasticity"] = Core::ProblemType::poroelast;
-    string2prbtype["Multiphase_Poroelasticity"] = Core::ProblemType::poromultiphase;
-    string2prbtype["Multiphase_Poroelasticity_ScaTra"] = Core::ProblemType::poromultiphasescatra;
-    string2prbtype["Multiphase_Porous_Flow"] = Core::ProblemType::porofluidmultiphase;
+    string2prbtype["porofluid_pressure_based_elasticity"] =
+        Core::ProblemType::porofluid_pressure_based_elast;
+    string2prbtype["porofluid_pressure_based_elasticity_scatra"] =
+        Core::ProblemType::porofluid_pressure_based_elast_scatra;
+    string2prbtype["porofluid_pressure_based"] = Core::ProblemType::porofluid_pressure_based;
     string2prbtype["ReducedDimensionalAirWays"] = Core::ProblemType::red_airways;
     string2prbtype["Reduced_Lung"] = Core::ProblemType::reduced_lung;
     string2prbtype["Scalar_Thermo_Interaction"] = Core::ProblemType::sti;

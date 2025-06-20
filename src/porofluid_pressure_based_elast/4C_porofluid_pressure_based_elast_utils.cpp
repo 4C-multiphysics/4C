@@ -53,18 +53,18 @@ PoroPressureBased::setup_discretizations_and_field_coupling_porofluid_elast(MPI_
     // get coupling method
     auto arterycoupl =
         Teuchos::getIntegralValue<Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod>(
-            problem->poro_fluid_multi_phase_dynamic_params().sublist("ARTERY COUPLING"),
-            "ARTERY_COUPLING_METHOD");
+            problem->porofluid_pressure_based_dynamic_params().sublist("artery_coupling"),
+            "coupling_method");
 
     // lateral surface coupling active?
-    const bool evaluate_on_lateral_surface = problem->poro_fluid_multi_phase_dynamic_params()
-                                                 .sublist("ARTERY COUPLING")
-                                                 .get<bool>("LATERAL_SURFACE_COUPLING");
+    const bool evaluate_on_lateral_surface = problem->porofluid_pressure_based_dynamic_params()
+                                                 .sublist("artery_coupling")
+                                                 .get<bool>("lateral_surface_coupling");
 
     // get MAXNUMSEGPERARTELE
-    const int maxnumsegperele = problem->poro_fluid_multi_phase_dynamic_params()
-                                    .sublist("ARTERY COUPLING")
-                                    .get<int>("MAXNUMSEGPERARTELE");
+    const int maxnumsegperele = problem->porofluid_pressure_based_dynamic_params()
+                                    .sublist("artery_coupling")
+                                    .get<int>("maximum_number_of_segments_per_artery_element");
 
     // curr_seg_lengths: defined as element-wise quantity
     std::shared_ptr<Core::DOFSets::DofSetInterface> dofsetaux;
@@ -75,9 +75,9 @@ PoroPressureBased::setup_discretizations_and_field_coupling_porofluid_elast(MPI_
 
     switch (arterycoupl)
     {
-      case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::gpts:
-      case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mp:
-      case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp:
+      case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::gauss_point_to_segment:
+      case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mortar_penalty:
+      case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::node_to_point:
       {
         // perform extended ghosting on artery discretization
         nearby_ele_pairs = PoroPressureBased::extended_ghosting_artery_discretization(
@@ -160,31 +160,40 @@ PoroPressureBased::create_algorithm_porofluid_elast(
     const Teuchos::ParameterList& timeparams, MPI_Comm comm)
 {
   // Creation of Coupled Problem algorithm.
-  std::shared_ptr<PoroPressureBased::PorofluidElastAlgorithm> algo = nullptr;
+  std::shared_ptr<PoroPressureBased::PorofluidElastAlgorithm> algo;
+
+  // Translate updated porofluid input format to old adapter format
+  Teuchos::ParameterList adapter_global_time_params;
+  adapter_global_time_params.set<double>(
+      "TIMESTEP", timeparams.sublist("time_integration").get<double>("time_step"));
+  adapter_global_time_params.set<int>(
+      "NUMSTEP", timeparams.sublist("time_integration").get<int>("number_of_time_steps"));
+  adapter_global_time_params.set<double>(
+      "MAXTIME", timeparams.get<double>("total_simulation_time"));
 
   switch (solscheme)
   {
     case SolutionSchemePorofluidElast::twoway_partitioned:
     {
       // call constructor
-      algo =
-          std::make_shared<PoroPressureBased::PorofluidElastPartitionedAlgorithm>(comm, timeparams);
+      algo = std::make_shared<PoroPressureBased::PorofluidElastPartitionedAlgorithm>(
+          comm, adapter_global_time_params);
       break;
     }
     case SolutionSchemePorofluidElast::twoway_monolithic:
     {
-      const bool artery_coupl = timeparams.get<bool>("ARTERY_COUPLING");
+      const bool artery_coupl = timeparams.get<bool>("artery_coupling_active");
       if (!artery_coupl)
       {
         // call constructor
         algo = std::make_shared<PoroPressureBased::PorofluidElastMonolithicAlgorithm>(
-            comm, timeparams);
+            comm, adapter_global_time_params);
       }
       else
       {
         // call constructor
         algo = std::make_shared<PoroPressureBased::PorofluidElastArteryCouplingAlgorithm>(
-            comm, timeparams);
+            comm, adapter_global_time_params);
       }
       break;
     }

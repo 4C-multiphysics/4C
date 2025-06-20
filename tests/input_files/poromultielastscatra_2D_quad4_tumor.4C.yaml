@@ -6,17 +6,21 @@ TITLE:
 PROBLEM SIZE:
   DIM: 2
 PROBLEM TYPE:
-  PROBLEMTYPE: "Multiphase_Poroelasticity_ScaTra"
+  PROBLEMTYPE: "porofluid_pressure_based_elasticity_scatra"
 IO/RUNTIME VTK OUTPUT:
   OUTPUT_DATA_FORMAT: ascii
-POROMULTIPHASESCATRA DYNAMIC:
-  RESTARTEVERY: 100
-  NUMSTEP: 2
-  MAXTIME: 600
-  TIMESTEP: 300
-  RESULTSEVERY: 2
-POROMULTIPHASESCATRA DYNAMIC/PARTITIONED:
-  CONVTOL: 0.001
+porofluid_elasticity_scatra_dynamic:
+  total_simulation_time: 600
+  time_integration:
+    time_step: 300
+    number_of_time_steps: 2
+    theta: 1
+  output:
+    results_every: 2
+    restart_data_every: 100
+  coupling_scheme: twoway_partitioned_nested
+porofluid_elasticity_scatra_dynamic/partitioned:
+  convergence_tolerance: 0.001
 STRUCTURAL DYNAMIC:
   INT_STRATEGY: "Standard"
   DYNAMICTYPE: "OneStepTheta"
@@ -25,18 +29,23 @@ STRUCTURAL DYNAMIC:
   LINEAR_SOLVER: 1
 STRUCTURAL DYNAMIC/ONESTEPTHETA:
   THETA: 1
-POROFLUIDMULTIPHASE DYNAMIC:
-  THETA: 1
-  LINEAR_SOLVER: 1
-  ITEMAX: 50
-  ABSTOLRES: -1
-  TOLRES: 1e-08
-  TOLINC: 1e-08
-  INITIALFIELD: "field_by_condition"
-  FLUX_PROJ_SOLVER: 2
-  FLUX_PROJ_METHOD: "L2_projection"
-POROMULTIPHASE DYNAMIC/PARTITIONED:
-  CONVTOL: 0.01
+porofluid_dynamic:
+  nonlinear_solver:
+    linear_solver_id: 1
+    maximum_number_of_iterations: 50
+    residual:
+      tolerance: 1e-08
+    increment:
+      tolerance: 1e-08
+  initial_condition:
+    type: by_condition
+  flux_reconstruction:
+    active: true
+    solver_id: 2
+porofluid_elasticity_dynamic:
+  coupling_scheme: twoway_partitioned
+porofluid_elasticity_dynamic/partitioned:
+  convergence_tolerance: 0.01
 SCALAR TRANSPORT DYNAMIC:
   SOLVERTYPE: "nonlinear"
   THETA: 1

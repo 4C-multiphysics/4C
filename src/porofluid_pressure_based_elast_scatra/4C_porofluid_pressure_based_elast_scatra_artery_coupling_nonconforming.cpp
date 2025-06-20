@@ -31,10 +31,8 @@ PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm::
     PorofluidElastScatraArteryCouplingNonConformingAlgorithm(
         const std::shared_ptr<Core::FE::Discretization> artery_dis,
         const std::shared_ptr<Core::FE::Discretization> homogenized_dis,
-        const Teuchos::ParameterList& coupling_params, const std::string& condition_name,
-        const std::string& artery_coupled_dof_name, const std::string& homogenized_coupled_dof_name)
-    : PorofluidElastScatraArteryCouplingBaseAlgorithm(artery_dis, homogenized_dis, coupling_params,
-          artery_coupled_dof_name, homogenized_coupled_dof_name),
+        const Teuchos::ParameterList& coupling_params, const std::string& condition_name)
+    : PorofluidElastScatraArteryCouplingBaseAlgorithm(artery_dis, homogenized_dis, coupling_params),
       coupling_params_(coupling_params),
       condition_name_(condition_name),
       porofluid_managers_initialized_(false),
@@ -42,19 +40,19 @@ PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm::
       pure_porofluid_problem_(false),
       has_variable_diameter_(false),
       delete_free_hanging_elements_(Global::Problem::instance()
-              ->poro_fluid_multi_phase_dynamic_params()
-              .sublist("ARTERY COUPLING")
-              .get<bool>("DELETE_FREE_HANGING_ELES")),
+              ->porofluid_pressure_based_dynamic_params()
+              .sublist("artery_coupling")
+              .get<bool>("delete_free_hanging_elements")),
       threshold_delete_free_hanging_elements_(Global::Problem::instance()
-              ->poro_fluid_multi_phase_dynamic_params()
-              .sublist("ARTERY COUPLING")
-              .get<double>("DELETE_SMALL_FREE_HANGING_COMPS")),
+              ->porofluid_pressure_based_dynamic_params()
+              .sublist("artery_coupling")
+              .get<double>("delete_small_components_fraction")),
       artery_coupling_method_(
           Teuchos::getIntegralValue<Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod>(
-              coupling_params, "ARTERY_COUPLING_METHOD")),
+              coupling_params, "coupling_method")),
       timefacrhs_artery_(0.0),
       timefacrhs_homogenized_(0.0),
-      penalty_parameter_(coupling_params_.get<double>("PENALTY"))
+      penalty_parameter_(coupling_params_.get<double>("penalty_parameter"))
 {
 }
 
@@ -63,7 +61,8 @@ PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm::
 void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm::init()
 {
   // we do not have a moving mesh
-  if (Global::Problem::instance()->get_problem_type() == Core::ProblemType::porofluidmultiphase)
+  if (Global::Problem::instance()->get_problem_type() ==
+      Core::ProblemType::porofluid_pressure_based)
   {
     evaluate_in_ref_config_ = true;
     pure_porofluid_problem_ = true;
@@ -117,7 +116,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
 {
   // create the pairs
   if (artery_coupling_method_ ==
-      Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp)
+      Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::node_to_point)
   {
     get_coupling_nodes_from_input_node_to_point();
     if (coupling_nodes_for_node_to_point_.size() == 0)
@@ -139,7 +138,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
     get_coupling_nodes_from_input_node_to_point()
 {
   FOUR_C_ASSERT(artery_coupling_method_ ==
-                    Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp,
+                    Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::node_to_point,
       "This method should only be called for node-to-point coupling.");
 
   // get the node IDs of coupled 1D nodes from the input file
@@ -228,8 +227,8 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
     create_coupling_pairs_line_surface_based()
 {
   const Teuchos::ParameterList& porofluid_coupling_params =
-      Global::Problem::instance()->poro_fluid_multi_phase_dynamic_params().sublist(
-          "ARTERY COUPLING");
+      Global::Problem::instance()->porofluid_pressure_based_dynamic_params().sublist(
+          "artery_coupling");
 
   // loop over pairs found by search
   std::map<int, std::set<int>>::const_iterator nearby_ele_iter;
@@ -290,12 +289,12 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
     create_coupling_pairs_node_to_point()
 {
   FOUR_C_ASSERT(artery_coupling_method_ ==
-                    Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp,
+                    Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::node_to_point,
       "This method should only be called for node-to-point coupling.");
 
   const Teuchos::ParameterList& porofluid_coupling_params =
-      Global::Problem::instance()->poro_fluid_multi_phase_dynamic_params().sublist(
-          "ARTERY COUPLING");
+      Global::Problem::instance()->porofluid_pressure_based_dynamic_params().sublist(
+          "artery_coupling");
 
   int num_active_pairs = std::accumulate(nearby_ele_pairs_.begin(), nearby_ele_pairs_.end(), 0,
       [](int a, auto b) { return a + (static_cast<int>(b.second.size())); });
@@ -416,7 +415,8 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
         const std::shared_ptr<Core::LinAlg::Vector<double>> rhs)
 {
   // reset
-  if (artery_coupling_method_ == Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mp)
+  if (artery_coupling_method_ ==
+      Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mortar_penalty)
   {
     mortar_matrix_d_->zero();
     mortar_matrix_m_->zero();
@@ -480,7 +480,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
 
     // in the case of MP, assemble D, M and Kappa
     if (artery_coupling_method_ ==
-            Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mp and
+            Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mortar_penalty and
         num_coupled_dofs_ > 0)
       assemble_mortar_matrices_and_vector(coupled_ele_pair->artery_ele_gid(),
           coupled_ele_pair->homogenized_ele_gid(), D_ele, M_ele, Kappa_ele);
@@ -511,7 +511,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
 
   // assemble D and M contributions into global force and stiffness
   if (artery_coupling_method_ ==
-          Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mp and
+          Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mortar_penalty and
       num_coupled_dofs_ > 0)
     sum_mortar_matrices_into_global_matrix(*sysmat, rhs);
 }
@@ -825,10 +825,11 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
     print_coupling_method() const
 {
   std::string coupling_method;
-  if (artery_coupling_method_ == Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mp)
+  if (artery_coupling_method_ ==
+      Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mortar_penalty)
     coupling_method = "Mortar Penalty";
   else if (artery_coupling_method_ ==
-           Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::gpts)
+           Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::gauss_point_to_segment)
     coupling_method = "Gauss-Point-To-Segment";
   else
     FOUR_C_THROW("unknown coupling method");
@@ -851,24 +852,25 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
   scale_vector_.resize(2);
   function_vector_.resize(2);
 
-  // get the actual coupled DOFs  ----------------------------------------------------
+  // get the actual coupled DOFs
   // 1) 1D artery discretization
+  const auto reaction_terms_params = coupling_params_.sublist("reaction_terms");
   int value;
   std::istringstream scale_artery_stream(
-      Teuchos::getNumericStringParameter(coupling_params_, "SCALEREAC_ART"));
+      Teuchos::getNumericStringParameter(reaction_terms_params, "artery_scaling"));
   while (scale_artery_stream >> value) scale_vector_[0].push_back(value);
 
   std::istringstream function_artery_stream(
-      Teuchos::getNumericStringParameter(coupling_params_, "REACFUNCT_ART"));
+      Teuchos::getNumericStringParameter(reaction_terms_params, "artery_function_ids"));
   while (function_artery_stream >> value) function_vector_[0].push_back(value);
 
   // 2) 2D, 3D homogenized field discretization
   std::istringstream scale_homogenized_stream(
-      Teuchos::getNumericStringParameter(coupling_params_, "SCALEREAC_CONT"));
+      Teuchos::getNumericStringParameter(reaction_terms_params, "homogenized_scaling"));
   while (scale_homogenized_stream >> value) scale_vector_[1].push_back(value);
 
   std::istringstream function_homogenized_stream(
-      Teuchos::getNumericStringParameter(coupling_params_, "REACFUNCT_CONT"));
+      Teuchos::getNumericStringParameter(reaction_terms_params, "homogenized_function_ids"));
   while (function_homogenized_stream >> value) function_vector_[1].push_back(value);
 }
 

@@ -29,13 +29,6 @@ namespace PoroPressureBased
     one_step_theta
   };
 
-  /// compute error compared to analytical solution
-  enum class CalcError
-  {
-    no,
-    by_function
-  };
-
   //! type of vector norm used for error/residual vectors
   enum class VectorNorm
   {
@@ -45,13 +38,6 @@ namespace PoroPressureBased
     l2,         //!< L2/Euclidean norm
     rms,        //!< root mean square (RMS) norm
     inf         //!< Maximum/infinity norm
-  };
-
-  /// type of finite difference check
-  enum class FdCheck
-  {
-    none,
-    global
   };
 
   /// initial field
@@ -67,14 +53,6 @@ namespace PoroPressureBased
   {
     stop,            ///< abort simulation
     continue_anyway  ///< continue anyway
-  };
-
-  //! reconstruction type of gradients (e.g. velocity gradient)
-  enum class FluxReconstructionMethod
-  {
-    none,
-    // gradreco_spr, super-convergent patch recovery not activated yet
-    l2
   };
 
   /// set the valid parameters

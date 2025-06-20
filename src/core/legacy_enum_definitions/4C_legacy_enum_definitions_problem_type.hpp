@@ -45,22 +45,23 @@ namespace Core
     np_support,   ///< supporting procs for nested parallelism
     particle,     ///< particle simulation
     pasi,         ///< particle structure interaction
-    polymernetwork,        ///< polymer network
-    poroelast,             ///< poroelasticity
-    poroscatra,            ///< passive scalar transport in porous media
-    porofluidmultiphase,   ///< multiphase flow in porous media
-    poromultiphase,        ///< multiphase flow in elastic porous media
-    poromultiphasescatra,  ///< multiphase flow in elastic porous media with transport of species
-    red_airways,           ///< reduced dimensional airways
-    reduced_lung,          ///< New implementation of red_airways with Newton-iteration
-    scatra,                ///< scalar transport problem (e.g. convection-diffusion)
-    ssi,                   ///< scalar structure interaction
-    ssti,                  ///< scalar structure thermo interaction
-    sti,                   ///< scalar-thermo interaction
-    structure,             ///< structural problem
-    thermo,                ///< thermal problem
-    thermo_fsi,            ///< thermo-fluid-structure-interaction problem
-    tsi,                   ///< thermal structure interaction
+    polymernetwork,                         ///< polymer network
+    poroelast,                              ///< poroelasticity
+    poroscatra,                             ///< passive scalar transport in porous media
+    porofluid_pressure_based,               ///< pressure-based flow in porous media
+    porofluid_pressure_based_elast,         ///< pressure-based flow in elastic porous media
+    porofluid_pressure_based_elast_scatra,  ///< pressure-based flow in elastic porous media with
+                                            ///< transport of species
+    red_airways,                            ///< reduced dimensional airways
+    reduced_lung,  ///< New implementation of red_airways with Newton-iteration
+    scatra,        ///< scalar transport problem (e.g. convection-diffusion)
+    ssi,           ///< scalar structure interaction
+    ssti,          ///< scalar structure thermo interaction
+    sti,           ///< scalar-thermo interaction
+    structure,     ///< structural problem
+    thermo,        ///< thermal problem
+    thermo_fsi,    ///< thermo-fluid-structure-interaction problem
+    tsi,           ///< thermal structure interaction
   };
 }  // namespace Core
 

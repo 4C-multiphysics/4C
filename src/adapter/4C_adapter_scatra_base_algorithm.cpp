@@ -326,7 +326,7 @@ Adapter::ScaTraBaseAlgorithm::ScaTraBaseAlgorithm(const Teuchos::ParameterList& 
       }  // switch(timintscheme)
     }
   }
-  else if (probtype == Core::ProblemType::poromultiphasescatra)
+  else if (probtype == Core::ProblemType::porofluid_pressure_based_elast_scatra)
   {
     switch (timintscheme)
     {

@@ -138,13 +138,13 @@ void ntacal()
     case Core::ProblemType::poroscatra:
       poro_scatra_drt();
       break;
-    case Core::ProblemType::porofluidmultiphase:
+    case Core::ProblemType::porofluid_pressure_based:
       porofluid_pressure_based_dyn(restart);
       break;
-    case Core::ProblemType::poromultiphase:
+    case Core::ProblemType::porofluid_pressure_based_elast:
       porofluid_elast_dyn(restart);
       break;
-    case Core::ProblemType::poromultiphasescatra:
+    case Core::ProblemType::porofluid_pressure_based_elast_scatra:
       porofluid_pressure_based_elast_scatra_dyn(restart);
       break;
     case Core::ProblemType::fpsi:

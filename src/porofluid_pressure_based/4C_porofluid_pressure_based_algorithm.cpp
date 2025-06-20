@@ -45,44 +45,44 @@ PoroPressureBased::PorofluidAlgorithm::PorofluidAlgorithm(
       myrank_(Core::Communication::my_mpi_rank(actdis->get_comm())),
       nsd_(Global::Problem::instance()->n_dim()),
       isale_(false),
-      skipinitder_(poroparams_.get<bool>("SKIPINITDER")),
-      output_satpress_(poroparams_.get<bool>("OUTPUT_SATANDPRESS")),
-      output_solidpress_(poroparams_.get<bool>("OUTPUT_SOLIDPRESS")),
-      output_porosity_(poroparams_.get<bool>("OUTPUT_POROSITY")),
-      output_phase_velocities_(poroparams_.get<bool>("OUTPUT_PHASE_VELOCITIES")),
-      output_bloodvesselvolfrac_(
-          poroparams_.sublist("ARTERY COUPLING").get<bool>("OUTPUT_BLOODVESSELVOLFRAC")),
-      stab_biot_(poroparams_.get<bool>("STAB_BIOT")),
+      skipinitder_(poroparams_.get<bool>("skip_initial_time_derivative")),
+      output_satpress_(poroparams_.sublist("output").get<bool>("saturation_and_pressure")),
+      output_solidpress_(poroparams_.sublist("output").get<bool>("solid_pressure")),
+      output_porosity_(poroparams_.sublist("output").get<bool>("porosity")),
+      output_phase_velocities_(poroparams_.sublist("output").get<bool>("phase_velocities")),
+      output_bloodvesselvolfrac_(false),
+      stab_biot_(poroparams_.sublist("biot_stabilization").get<bool>("active")),
       domainint_funct_(std::vector<int>()),
       num_domainint_funct_(0),
-      calcerr_(Teuchos::getIntegralValue<PoroPressureBased::CalcError>(poroparams_, "CALCERROR")),
-      fluxrecon_(Teuchos::getIntegralValue<PoroPressureBased::FluxReconstructionMethod>(
-          poroparams_, "FLUX_PROJ_METHOD")),
-      fluxreconsolvernum_(poroparams_.get<int>("FLUX_PROJ_SOLVER")),
-      divcontype_(
-          Teuchos::getIntegralValue<PoroPressureBased::DivergenceAction>(poroparams_, "DIVERCONT")),
-      fdcheck_(Teuchos::getIntegralValue<PoroPressureBased::FdCheck>(poroparams_, "FDCHECK")),
-      fdcheckeps_(poroparams_.get<double>("FDCHECKEPS")),
-      fdchecktol_(poroparams_.get<double>("FDCHECKTOL")),
-      stab_biot_scaling_(poroparams_.get<double>("STAB_BIOT_SCALING")),
+      calcerr_(poroparams_.sublist("calculate_error_to_analytical_solution").get<bool>("active")),
+      flux_reconstruction_active_(poroparams_.sublist("flux_reconstruction").get<bool>("active")),
+      fluxreconsolvernum_(poroparams_.sublist("flux_reconstruction").get<int>("solver_id")),
+      divcontype_(Teuchos::getIntegralValue<PoroPressureBased::DivergenceAction>(
+          poroparams_, "divergence_action")),
+      fdcheck_(poroparams_.sublist("fd_check").get<bool>("active")),
+      fdcheckeps_(poroparams_.sublist("fd_check").get<double>("epsilon")),
+      fdchecktol_(poroparams_.sublist("fd_check").get<double>("tolerance")),
+      stab_biot_scaling_(poroparams_.sublist("biot_stabilization").get<double>("scaling_factor")),
       time_(0.0),
-      maxtime_(params_.get<double>("MAXTIME")),
+      maxtime_(params_.get<double>("total_simulation_time")),
       step_(0),
-      stepmax_(params_.get<int>("NUMSTEP")),
-      dt_(params_.get<double>("TIMESTEP")),
+      stepmax_(params_.sublist("time_integration").get<int>("number_of_time_steps")),
+      dt_(params_.sublist("time_integration").get<double>("time_step")),
       dtele_(0.0),
       dtsolve_(0.0),
       iternum_(0),
-      itemax_(poroparams_.get<int>("ITEMAX")),
-      upres_(params_.get<int>("RESULTSEVERY")),
-      uprestart_(params_.get<int>("RESTARTEVERY")),
-      vectornormfres_(
-          Teuchos::getIntegralValue<PoroPressureBased::VectorNorm>(poroparams_, "VECTORNORM_RESF")),
-      vectornorminc_(
-          Teuchos::getIntegralValue<PoroPressureBased::VectorNorm>(poroparams_, "VECTORNORM_INC")),
-      ittolres_(poroparams_.get<double>("TOLRES")),
-      ittolinc_(poroparams_.get<double>("TOLINC")),
-      artery_coupling_active_(params_.get<bool>("ARTERY_COUPLING")),
+      itemax_(poroparams_.sublist("nonlinear_solver").get<int>("maximum_number_of_iterations")),
+      upres_(params_.sublist("output").get<int>("results_every")),
+      uprestart_(params_.sublist("output").get<int>("restart_data_every")),
+      vectornormfres_(Teuchos::getIntegralValue<PoroPressureBased::VectorNorm>(
+          poroparams_.sublist("nonlinear_solver").sublist("residual"), "vector_norm")),
+      vectornorminc_(Teuchos::getIntegralValue<PoroPressureBased::VectorNorm>(
+          poroparams_.sublist("nonlinear_solver").sublist("increment"), "vector_norm")),
+      ittolres_(
+          poroparams_.sublist("nonlinear_solver").sublist("residual").get<double>("tolerance")),
+      ittolinc_(
+          poroparams_.sublist("nonlinear_solver").sublist("increment").get<double>("tolerance")),
+      artery_coupling_active_(params_.get<bool>("artery_coupling_active")),
       // Initialization of degrees of freedom variables
       phin_(nullptr),
       phinp_(nullptr),
@@ -110,10 +110,10 @@ PoroPressureBased::PorofluidAlgorithm::PorofluidAlgorithm(
       residual_(nullptr),
       trueresidual_(nullptr),
       increment_(nullptr),
-      starting_dbc_time_end_(poroparams_.get<double>("STARTING_DBC_TIME_END")),
+      starting_dbc_time_end_(poroparams_.sublist("starting_DBC").get<double>("time_end")),
       starting_dbc_onoff_(std::vector<bool>()),
       starting_dbc_funct_(std::vector<int>()),
-      theta_(poroparams_.get<double>("THETA")),
+      theta_(params_.sublist("time_integration").get<double>("theta")),
       visualization_writer_(nullptr)
 {
   const int restart_step = Global::Problem::instance()->restart();
@@ -219,11 +219,11 @@ void PoroPressureBased::PorofluidAlgorithm::init(bool isale, int nds_disp, int n
 
   int stream;
   std::istringstream stream_dbc_onoff(
-      Teuchos::getNumericStringParameter(poroparams_, "STARTING_DBC_ONOFF"));
+      Teuchos::getNumericStringParameter(poroparams_.sublist("starting_DBC"), "active"));
   while (stream_dbc_onoff >> stream) starting_dbc_onoff_.push_back(static_cast<bool>(stream));
 
   std::istringstream stream_dbc_funct(
-      Teuchos::getNumericStringParameter(poroparams_, "STARTING_DBC_FUNCT"));
+      Teuchos::getNumericStringParameter(poroparams_.sublist("starting_DBC"), "function_ids"));
   while (stream_dbc_funct >> stream) starting_dbc_funct_.push_back(static_cast<int>(stream));
 
   // object holds maps/subsets for DOFs subjected to Dirichlet BCs and otherwise
@@ -256,13 +256,13 @@ void PoroPressureBased::PorofluidAlgorithm::init(bool isale, int nds_disp, int n
   // incremental solution vector
   increment_ = Core::LinAlg::create_vector(*dofrowmap, true);
 
-  set_initial_field(
-      Teuchos::getIntegralValue<PoroPressureBased::InitialField>(poroparams_, "INITIALFIELD"),
-      poroparams_.get<int>("INITFUNCNO"));
+  set_initial_field(Teuchos::getIntegralValue<PoroPressureBased::InitialField>(
+                        poroparams_.sublist("initial_condition"), "type"),
+      poroparams_.sublist("initial_condition").get<int>("function_id"));
 
   int word1;
   std::istringstream coupled_art_dof_stream(
-      Teuchos::getNumericStringParameter(poroparams_, "DOMAININT_FUNCT"));
+      Teuchos::getNumericStringParameter(poroparams_, "domain_integrals_function_ids"));
   while (coupled_art_dof_stream >> word1) domainint_funct_.push_back((int)(word1));
   // no domain integration function selected by user
   if (domainint_funct_.size() == 1 and domainint_funct_[0] < 0) domainint_funct_.resize(0);
@@ -276,6 +276,8 @@ void PoroPressureBased::PorofluidAlgorithm::init(bool isale, int nds_disp, int n
   // build mesh tying strategy
   if (artery_coupling_active_)
   {
+    output_bloodvesselvolfrac_ =
+        poroparams_.sublist("artery_coupling").get<bool>("output_blood_vessel_volume_fraction");
     meshtying_ = std::make_shared<PoroPressureBased::MeshtyingArtery>(this, params_, poroparams_);
     meshtying_->check_initial_fields(phinp_);
     meshtying_->set_nearby_ele_pairs(nearby_ele_pairs);
@@ -479,7 +481,7 @@ void PoroPressureBased::PorofluidAlgorithm::time_loop()
     // update solution: current solution becomes old solution of next timestep
     update();
 
-    if (calcerr_ != CalcError::no) evaluate_error_compared_to_analytical_sol();
+    if (calcerr_) evaluate_error_compared_to_analytical_sol();
 
     output();
   }
@@ -1151,10 +1153,16 @@ void PoroPressureBased::PorofluidAlgorithm::nonlinear_solve()
   // print header of convergence table to screen
   print_convergence_header();
 
-  //------------------------------ turn adaptive solver tolerance on/off
-  const bool isadapttol = poroparams_.get<bool>("ADAPTCONV");
-  const double adaptolbetter = poroparams_.get<double>("ADAPTCONV_BETTER");
-  const double abstolres = poroparams_.get<double>("ABSTOLRES");
+  // turn adaptive solver tolerance on/off
+  const bool isadapttol = poroparams_.sublist("nonlinear_solver")
+                              .sublist("convergence_criteria_adaptivity")
+                              .get<bool>("active");
+  const double adaptolbetter = poroparams_.sublist("nonlinear_solver")
+                                   .sublist("convergence_criteria_adaptivity")
+                                   .get<double>("nonlinear_to_linear_tolerance_ratio");
+
+  const double abstolres =
+      poroparams_.sublist("nonlinear_solver").get<double>("absolute_tolerance_residual");
   double actresidual(0.0);
 
   // prepare Newton-Raphson iteration
@@ -1445,33 +1453,24 @@ void PoroPressureBased::PorofluidAlgorithm::reconstruct_solid_pressures()
 
 void PoroPressureBased::PorofluidAlgorithm::reconstruct_flux()
 {
-  if (fluxrecon_ == FluxReconstructionMethod::none) return;
-
-  // create the parameters for the discretization
-  Teuchos::ParameterList eleparams;
-
-  // action for elements
-  eleparams.set<PoroPressureBased::Action>("action", PoroPressureBased::recon_flux_at_nodes);
-
-  const int dim = Global::Problem::instance()->n_dim();
-  // we assume same number of dofs per node in the whole dis here
-  const int totalnumdof = discret_->num_dof(0, discret_->l_row_node(0));
-  const int numvec = totalnumdof * dim;
-
-  // add state vectors according to time-integration scheme
-  add_time_integration_specific_vectors();
-
-  switch (fluxrecon_)
+  if (flux_reconstruction_active_)
   {
-    case FluxReconstructionMethod::l2:
-    {
-      const auto& solverparams = Global::Problem::instance()->solver_params(fluxreconsolvernum_);
-      flux_ = Core::FE::compute_nodal_l2_projection(*discret_, "phinp_fluid", numvec, eleparams,
-          solverparams, Global::Problem::instance()->solver_params_callback());
-      break;
-    }
-    default:
-      FOUR_C_THROW("unknown method for recovery of fluxes!");
+    // create the parameters for the discretization
+    Teuchos::ParameterList eleparams;
+
+    // action for elements
+    eleparams.set<PoroPressureBased::Action>("action", PoroPressureBased::recon_flux_at_nodes);
+
+    const int dim = Global::Problem::instance()->n_dim();
+    // we assume same number of dofs per node in the whole dis here
+    const int totalnumdof = discret_->num_dof(0, discret_->l_row_node(0));
+    const int numvec = totalnumdof * dim;
+
+    // add state vectors according to time-integration scheme
+    add_time_integration_specific_vectors();
+    const auto& solverparams = Global::Problem::instance()->solver_params(fluxreconsolvernum_);
+    flux_ = Core::FE::compute_nodal_l2_projection(*discret_, "phinp_fluid", numvec, eleparams,
+        solverparams, Global::Problem::instance()->solver_params_callback());
   }
 }
 
@@ -1707,28 +1706,21 @@ inline void PoroPressureBased::PorofluidAlgorithm::increment_time_and_step()
 
 void PoroPressureBased::PorofluidAlgorithm::evaluate_error_compared_to_analytical_sol()
 {
-  if (calcerr_ == CalcError::no) return;
+  if (!calcerr_) return;
 
   // create the parameters for the error calculation
   Teuchos::ParameterList eleparams;
   eleparams.set<PoroPressureBased::Action>("action", PoroPressureBased::calc_error);
   eleparams.set("total time", time_);
-  eleparams.set<PoroPressureBased::CalcError>("calcerrorflag", calcerr_);
+  eleparams.set<bool>("calcerrorflag", calcerr_);
 
-  switch (calcerr_)
+  if (calcerr_)
   {
-    case CalcError::by_function:
-    {
-      const int errorfunctnumber = poroparams_.get<int>("CALCERRORNO");
-      if (errorfunctnumber < 1)
-        FOUR_C_THROW("invalid value of parameter CALCERRORNO for error function evaluation!");
+    const int errorfunctnumber = poroparams_.get<int>("CALCERRORNO");
+    if (errorfunctnumber < 1)
+      FOUR_C_THROW("invalid value of parameter CALCERRORNO for error function evaluation!");
 
-      eleparams.set<int>("error function number", errorfunctnumber);
-      break;
-    }
-    default:
-      FOUR_C_THROW("Cannot calculate error. Unknown type of analytical test problem");
-      break;
+    eleparams.set<int>("error function number", errorfunctnumber);
   }
 
   // set vector values needed by elements
@@ -1795,7 +1787,7 @@ void PoroPressureBased::PorofluidAlgorithm::evaluate()
   assemble_mat_and_rhs();
 
   // perform finite difference check on time integrator level
-  if (fdcheck_ == FdCheck::global) fd_check();
+  if (fdcheck_) fd_check();
 
   // Apply Dirichlet Boundary Condition
   prepare_system_for_newton_solve();

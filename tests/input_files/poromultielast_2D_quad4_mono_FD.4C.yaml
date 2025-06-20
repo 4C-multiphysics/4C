@@ -5,29 +5,32 @@ TITLE:
 PROBLEM SIZE:
   DIM: 2
 PROBLEM TYPE:
-  PROBLEMTYPE: "Multiphase_Poroelasticity"
+  PROBLEMTYPE: "porofluid_pressure_based_elasticity"
 STRUCTURAL DYNAMIC:
   INT_STRATEGY: "Standard"
   DYNAMICTYPE: "OneStepTheta"
   LINEAR_SOLVER: 1
 STRUCTURAL DYNAMIC/ONESTEPTHETA:
   THETA: 1
-POROFLUIDMULTIPHASE DYNAMIC:
-  THETA: 1
-  LINEAR_SOLVER: 1
-  FDCHECKTOL: 1e-05
-  INITIALFIELD: "field_by_function"
-  INITFUNCNO: 1
-POROMULTIPHASE DYNAMIC:
-  NUMSTEP: 30
-  MAXTIME: 0.3
-  TIMESTEP: 0.01
-  COUPALGO: "twoway_monolithic"
-POROMULTIPHASE DYNAMIC/MONOLITHIC:
-  TOLRES_GLOBAL: 1e-06
-  TOLINC_GLOBAL: 1e-06
-  LINEAR_SOLVER: 1
-  FDCHECK: "global"
+porofluid_elasticity_dynamic:
+  total_simulation_time: 0.3
+  time_integration:
+    number_of_time_steps: 30
+    time_step: 0.01
+    theta: 1
+  coupling_scheme: twoway_monolithic
+porofluid_elasticity_dynamic/monolithic:
+  fd_check: true
+  nonlinear_solver:
+    linear_solver_id: 1
+    residual:
+      global_tolerance: 1e-06
+    increment:
+      global_tolerance: 1e-06
+porofluid_dynamic:
+  initial_condition:
+    type: by_function
+    function_id: 1
 SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "Solver"

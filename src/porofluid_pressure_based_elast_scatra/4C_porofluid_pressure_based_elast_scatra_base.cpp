@@ -32,13 +32,13 @@ PoroPressureBased::PorofluidElastScatraBaseAlgorithm::PorofluidElastScatraBaseAl
     : AlgorithmBase(comm, globaltimeparams),
       porofluid_elast_algo_(nullptr),
       scatra_algo_(nullptr),
-      flux_reconstruction_method_(FluxReconstructionMethod::none),
+      flux_reconstruction_active_(false),
       nds_porofluid_scatra_(-1),
       timer_timestep_("PorofluidElastScatraBaseAlgorithm", true),
       dt_timestep_(0.0),
       divergence_action_(Teuchos::getIntegralValue<PoroPressureBased::DivergenceAction>(
-          globaltimeparams, "DIVERCONT")),
-      artery_coupling_(globaltimeparams.get<bool>("ARTERY_COUPLING"))
+          globaltimeparams, "divergence_action")),
+      artery_coupling_(globaltimeparams.get<bool>("artery_coupling_active"))
 {
 }
 
@@ -67,11 +67,11 @@ void PoroPressureBased::PorofluidElastScatraBaseAlgorithm::init(
   // algorithm construction depending on coupling scheme
   // -------------------------------------------------------------------
   // first of all check for possible couplings
-  auto solution_scheme_porofluid_elast =
-      Teuchos::getIntegralValue<SolutionSchemePorofluidElast>(porofluid_elast_params, "COUPALGO");
+  auto solution_scheme_porofluid_elast = Teuchos::getIntegralValue<SolutionSchemePorofluidElast>(
+      porofluid_elast_params, "coupling_scheme");
   auto solution_scheme_porofluid_elast_scatra =
       Teuchos::getIntegralValue<SolutionSchemePorofluidElastScatra>(
-          porofluid_elast_scatra_params, "COUPALGO");
+          porofluid_elast_scatra_params, "coupling_scheme");
 
   // partitioned -- monolithic not possible --> error
   if (solution_scheme_porofluid_elast != SolutionSchemePorofluidElast::twoway_monolithic &&
@@ -99,13 +99,11 @@ void PoroPressureBased::PorofluidElastScatraBaseAlgorithm::init(
         "YOUR CHOICE                       : monolithic  -- partitioned_sequential");
   }
 
-  flux_reconstruction_method_ =
-      Teuchos::getIntegralValue<PoroPressureBased::FluxReconstructionMethod>(
-          porofluid_params, "FLUX_PROJ_METHOD");
+  flux_reconstruction_active_ = porofluid_params.sublist("flux_reconstruction").get<bool>("active");
 
   if (solution_scheme_porofluid_elast_scatra ==
           SolutionSchemePorofluidElastScatra::twoway_monolithic &&
-      flux_reconstruction_method_ == PoroPressureBased::FluxReconstructionMethod::l2)
+      flux_reconstruction_active_)
   {
     FOUR_C_THROW(
         "Monolithic porofluid-elasticity-scatra coupling does not work with L2-projection!\n"
@@ -124,9 +122,22 @@ void PoroPressureBased::PorofluidElastScatraBaseAlgorithm::init(
   // get the solver number used for ScalarTransport solver
   const int linsolvernumber = scatra_params.get<int>("LINEAR_SOLVER");
 
+  // Translate updated porofluid input format to old scatra format
+  Teuchos::ParameterList scatra_global_time_params;
+  scatra_global_time_params.set<double>(
+      "TIMESTEP", global_time_params.sublist("time_integration").get<double>("time_step"));
+  scatra_global_time_params.set<double>(
+      "MAXTIME", global_time_params.get<double>("total_simulation_time"));
+  scatra_global_time_params.set<int>(
+      "NUMSTEP", global_time_params.sublist("time_integration").get<int>("number_of_time_steps"));
+  scatra_global_time_params.set<int>(
+      "RESTARTEVERY", global_time_params.sublist("output").get<int>("restart_data_every"));
+  scatra_global_time_params.set<int>(
+      "RESULTSEVERY", global_time_params.sublist("output").get<int>("results_every"));
+
   // scatra problem
-  scatra_algo_ = std::make_shared<Adapter::ScaTraBaseAlgorithm>(global_time_params, scatra_params,
-      problem->solver_params(linsolvernumber), scatra_disname, true);
+  scatra_algo_ = std::make_shared<Adapter::ScaTraBaseAlgorithm>(scatra_global_time_params,
+      scatra_params, problem->solver_params(linsolvernumber), scatra_disname, true);
 
   // initialize the base algo.
   // scatra time integrator is constructed and initialized inside.
@@ -309,7 +320,7 @@ void PoroPressureBased::PorofluidElastScatraBaseAlgorithm::set_porofluid_elast_s
       porofluid_elast_algo_->porofluid_algo()->phin());
 
   // additionally, set nodal flux if L2-projection is desired
-  if (flux_reconstruction_method_ == PoroPressureBased::FluxReconstructionMethod::l2)
+  if (flux_reconstruction_active_)
     scatra_field->set_l2_flux_of_multi_fluid(porofluid_elast_algo_->fluid_flux());
 
   if (artery_coupling_)

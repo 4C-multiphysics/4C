@@ -1549,7 +1549,7 @@ void PoroFluidMultiMonWriter::field_error(int node)
 /*----------------------------------------------------------------------*/
 void PoroFluidMultiMonWriter::write_header(std::ofstream& outfile)
 {
-  outfile << "# porofluidmultiphase problem, writing nodal data of node ";
+  outfile << "# pressure-based porofluid problem, writing nodal data of node ";
 }
 
 /*----------------------------------------------------------------------*/
@@ -1828,13 +1828,13 @@ int main(int argc, char** argv)
       }
       break;
     }
-    case Core::ProblemType::porofluidmultiphase:
+    case Core::ProblemType::porofluid_pressure_based:
     {
       PoroFluidMultiMonWriter mymonwriter(problem, infieldtype, node);
       mymonwriter.write_mon_file(problem, infieldtype, node);
       break;
     }
-    case Core::ProblemType::poromultiphase:
+    case Core::ProblemType::porofluid_pressure_based_elast:
     {
       if (infieldtype == "structure")
       {
@@ -1851,7 +1851,7 @@ int main(int argc, char** argv)
             "Unsupported field type {} for problem-type Multiphase_Poroelasticity", infieldtype);
       break;
     }
-    case Core::ProblemType::poromultiphasescatra:
+    case Core::ProblemType::porofluid_pressure_based_elast_scatra:
     {
       if (infieldtype == "structure")
       {

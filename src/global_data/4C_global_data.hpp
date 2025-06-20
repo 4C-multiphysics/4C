@@ -339,17 +339,17 @@ namespace Global
     {
       return parameters_->sublist("POROELASTICITY DYNAMIC");
     }
-    const Teuchos::ParameterList& poro_fluid_multi_phase_dynamic_params() const
+    const Teuchos::ParameterList& porofluid_pressure_based_dynamic_params() const
     {
-      return parameters_->sublist("POROFLUIDMULTIPHASE DYNAMIC");
+      return parameters_->sublist("porofluid_dynamic");
     }
     const Teuchos::ParameterList& poro_multi_phase_scatra_dynamic_params() const
     {
-      return parameters_->sublist("POROMULTIPHASESCATRA DYNAMIC");
+      return parameters_->sublist("porofluid_elasticity_scatra_dynamic");
     }
     const Teuchos::ParameterList& poro_multi_phase_dynamic_params() const
     {
-      return parameters_->sublist("POROMULTIPHASE DYNAMIC");
+      return parameters_->sublist("porofluid_elasticity_dynamic");
     }
     const Teuchos::ParameterList& poro_scatra_control_params() const
     {

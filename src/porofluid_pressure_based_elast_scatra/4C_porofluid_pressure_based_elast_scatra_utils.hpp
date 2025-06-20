@@ -58,7 +58,6 @@ namespace PoroPressureBased
   create_and_init_artery_coupling_strategy(std::shared_ptr<Core::FE::Discretization> arterydis,
       std::shared_ptr<Core::FE::Discretization> contdis,
       const Teuchos::ParameterList& meshtyingparams, const std::string& condname,
-      const std::string& artcoupleddofname, const std::string& contcoupleddofname,
       const bool evaluate_on_lateral_surface);
 
   /**

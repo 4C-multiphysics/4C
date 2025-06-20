@@ -21,10 +21,9 @@ PoroPressureBased::PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm::
     PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm(
         std::shared_ptr<Core::FE::Discretization> artery_dis,
         std::shared_ptr<Core::FE::Discretization> homogenized_dis,
-        const Teuchos::ParameterList& coupling_params, const std::string& condition_name,
-        const std::string& artery_coupled_dof_name, const std::string& homogenized_coupled_dof_name)
-    : PorofluidElastScatraArteryCouplingNonConformingAlgorithm(artery_dis, homogenized_dis,
-          coupling_params, condition_name, artery_coupled_dof_name, homogenized_coupled_dof_name)
+        const Teuchos::ParameterList& coupling_params, const std::string& condition_name)
+    : PorofluidElastScatraArteryCouplingNonConformingAlgorithm(
+          artery_dis, homogenized_dis, coupling_params, condition_name)
 {
   // user info
   if (my_mpi_rank_ == 0)
@@ -43,13 +42,15 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm:
     pre_evaluate_coupling_pairs()
 {
   const int num_patches_axial = Global::Problem::instance()
-                                    ->poro_fluid_multi_phase_dynamic_params()
-                                    .sublist("ARTERY COUPLING")
-                                    .get<int>("NUMPATCH_AXI");
+                                    ->porofluid_pressure_based_dynamic_params()
+                                    .sublist("artery_coupling")
+                                    .sublist("integration_patches")
+                                    .get<int>("number_of_patches_axial");
   const int num_patches_radial = Global::Problem::instance()
-                                     ->poro_fluid_multi_phase_dynamic_params()
-                                     .sublist("ARTERY COUPLING")
-                                     .get<int>("NUMPATCH_RAD");
+                                     ->porofluid_pressure_based_dynamic_params()
+                                     .sublist("artery_coupling")
+                                     .sublist("integration_patches")
+                                     .get<int>("number_of_patches_radial");
   const int num_artery_ele = artery_dis_->num_global_elements();
   const int num_gp_per_artery_ele = num_patches_axial * num_patches_radial * 25;
   const int num_gp_desired = num_gp_per_artery_ele * num_artery_ele;
@@ -154,7 +155,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm:
 
   // print summary of pairs
   if (homogenized_dis_->name() == "porofluid" &&
-      coupling_params_.get<bool>("PRINT_OUT_SUMMARY_PAIRS"))
+      coupling_params_.get<bool>("print_coupling_pairs_summary"))
   {
     if (my_mpi_rank_ == 0)
       std::cout << "In total " << num_gp_desired << " GPs (" << num_gp_per_artery_ele

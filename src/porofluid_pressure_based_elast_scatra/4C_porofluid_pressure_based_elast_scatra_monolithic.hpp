@@ -288,7 +288,7 @@ namespace PoroPressureBased
     double dtele_;               //!< time for element evaluation + build-up of system matrix
 
     //! flag for finite difference check
-    PoroPressureBased::FdCheck fdcheck_;
+    bool fdcheck_;
   };
 
   //! Monolithic solution scheme for porofluid-elasticity problems with scalar transport and

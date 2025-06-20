@@ -78,7 +78,7 @@ ScaTra::ScaTraTimIntImpl::ScaTraTimIntImpl(std::shared_ptr<Core::FE::Discretizat
       s2ikinetics_(actdis->has_condition("S2IKinetics")),
       s2imeshtying_(actdis->has_condition("S2IMeshtying")),
       arterycoupling_(
-          problem_->poro_multi_phase_scatra_dynamic_params().get<bool>("ARTERY_COUPLING") &&
+          problem_->poro_multi_phase_scatra_dynamic_params().get<bool>("artery_coupling_active") &&
           actdis->name() == "scatra"),
       heteroreaccoupling_(actdis->has_condition("ScatraHeteroReactionSlave")),
       macro_scale_(

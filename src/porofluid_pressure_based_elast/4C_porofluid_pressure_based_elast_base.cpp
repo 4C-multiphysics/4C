@@ -53,17 +53,32 @@ void PoroPressureBased::PorofluidElastAlgorithm::init(
   // build underlying structure algorithm
   std::shared_ptr<Adapter::StructureBaseAlgorithmNew> structure_adapter_algo =
       Adapter::build_structure_algorithm(structure_params);
-  structure_adapter_algo->init(
-      global_time_params, const_cast<Teuchos::ParameterList&>(structure_params), structure_dis);
+
+  // Translate updated porofluid input format to old structure format
+  Teuchos::ParameterList structure_global_time_params;
+  structure_global_time_params.set<double>(
+      "TIMESTEP", global_time_params.sublist("time_integration").get<double>("time_step"));
+  structure_global_time_params.set(
+      "MAXTIME", global_time_params.get<double>("total_simulation_time"));
+  structure_global_time_params.set(
+      "NUMSTEP", global_time_params.sublist("time_integration").get<int>("number_of_time_steps"));
+  structure_global_time_params.set(
+      "RESULTSEVERY", global_time_params.sublist("output").get<int>("results_every"));
+  structure_global_time_params.set(
+      "RESTARTEVERY", global_time_params.sublist("output").get<int>("restart_data_every"));
+
+  structure_adapter_algo->init(structure_global_time_params,
+      const_cast<Teuchos::ParameterList&>(structure_params), structure_dis);
   structure_adapter_algo->setup();
   structure_algo_ = structure_adapter_algo->structure_field();
 
   // true if we solve the structure field
   // (false in case of porofluid-scatra coupling without mesh deformation)
-  solve_structure_ = porofluid_elast_params.get<bool>("SOLVE_STRUCTURE");
+  solve_structure_ = porofluid_elast_params.get<bool>("solve_structure");
 
   // get the solver number used for ScalarTransport solver
-  const int linsolvernumber = porofluid_params.get<int>("LINEAR_SOLVER");
+  const int linsolvernumber =
+      porofluid_elast_params.sublist("nonlinear_solver").get<int>("linear_solver_id");
 
   // access the fluid discretization
   std::shared_ptr<Core::FE::Discretization> porofluid_dis =
@@ -79,7 +94,7 @@ void PoroPressureBased::PorofluidElastAlgorithm::init(
   // algorithm construction depending on time-integration scheme
   auto time_integration_scheme =
       Teuchos::getIntegralValue<PoroPressureBased::TimeIntegrationScheme>(
-          porofluid_params, "TIMEINTEGR");
+          porofluid_params.sublist("time_integration"), "scheme");
 
   // build porofluid algorithm
   std::shared_ptr<Adapter::PoroFluidMultiphase> porofluid_algo =

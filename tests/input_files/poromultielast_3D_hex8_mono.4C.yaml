@@ -5,28 +5,32 @@ TITLE:
   - "Also locsys functionality is tested by simply rotating the DVOL"
   - "condition 90 degree around the global Z-axis"
 PROBLEM TYPE:
-  PROBLEMTYPE: "Multiphase_Poroelasticity"
+  PROBLEMTYPE: "porofluid_pressure_based_elasticity"
 STRUCTURAL DYNAMIC:
   INT_STRATEGY: "Standard"
   DYNAMICTYPE: "OneStepTheta"
   LINEAR_SOLVER: 1
 STRUCTURAL DYNAMIC/ONESTEPTHETA:
   THETA: 1
-POROFLUIDMULTIPHASE DYNAMIC:
-  THETA: 1
-  LINEAR_SOLVER: 1
-  INITIALFIELD: "field_by_function"
-  INITFUNCNO: 1
-POROMULTIPHASE DYNAMIC:
-  NUMSTEP: 5
-  MAXTIME: 2
-  TIMESTEP: 0.1
-  COUPALGO: "twoway_monolithic"
-POROMULTIPHASE DYNAMIC/MONOLITHIC:
-  TOLRES_GLOBAL: 1e-06
-  TOLINC_GLOBAL: 1e-06
-  LINEAR_SOLVER: 2
-  EQUILIBRATION: rows_full
+porofluid_elasticity_dynamic:
+  total_simulation_time: 0.5
+  time_integration:
+    number_of_time_steps: 5
+    time_step: 0.1
+    theta: 1
+  coupling_scheme: twoway_monolithic
+porofluid_elasticity_dynamic/monolithic:
+  nonlinear_solver:
+    linear_solver_id: 2
+    equilibration: rows_full
+    residual:
+      global_tolerance: 1e-06
+    increment:
+      global_tolerance: 1e-06
+porofluid_dynamic:
+  initial_condition:
+    type: by_function
+    function_id: 1
 SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "solver"

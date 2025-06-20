@@ -3,31 +3,32 @@ TITLE:
   - "Minimal test for monolithic framework also testing finite difference check"
   - "of monolithic system matrix"
 PROBLEM TYPE:
-  PROBLEMTYPE: "Multiphase_Poroelasticity_ScaTra"
-POROMULTIPHASESCATRA DYNAMIC:
-  RESTARTEVERY: 10
-  NUMSTEP: 20
-  MAXTIME: 0.2
-  TIMESTEP: 0.01
-  RESULTSEVERY: 10
-  COUPALGO: "twoway_monolithic"
-POROMULTIPHASESCATRA DYNAMIC/MONOLITHIC:
-  LINEAR_SOLVER: 1
-  FDCHECK: "global"
+  PROBLEMTYPE: "porofluid_pressure_based_elasticity_scatra"
+porofluid_elasticity_scatra_dynamic:
+  total_simulation_time: 0.2
+  time_integration:
+    time_step: 0.01
+    number_of_time_steps: 20
+    theta: 1
+  output:
+    results_every: 10
+  coupling_scheme: twoway_monolithic
+porofluid_elasticity_scatra_dynamic/monolithic:
+  fd_check: true
+  nonlinear_solver:
+    linear_solver_id: 1
 STRUCTURAL DYNAMIC:
   INT_STRATEGY: "Standard"
   DYNAMICTYPE: "OneStepTheta"
   LINEAR_SOLVER: 1
 STRUCTURAL DYNAMIC/ONESTEPTHETA:
   THETA: 1
-POROFLUIDMULTIPHASE DYNAMIC:
-  THETA: 1
-  LINEAR_SOLVER: 1
-  INITIALFIELD: "field_by_function"
-  INITFUNCNO: 1
-  FLUX_PROJ_SOLVER: 2
-POROMULTIPHASE DYNAMIC:
-  COUPALGO: "twoway_monolithic"
+porofluid_dynamic:
+  initial_condition:
+    type: by_function
+    function_id: 1
+porofluid_elasticity_dynamic:
+  coupling_scheme: twoway_monolithic
 SCALAR TRANSPORT DYNAMIC:
   SOLVERTYPE: "nonlinear"
   THETA: 1

@@ -499,10 +499,10 @@ namespace PoroPressureBased
     std::shared_ptr<Core::LinAlg::SerialDenseVector> domain_integrals_;
 
     //! flag for error calculation
-    const PoroPressureBased::CalcError calcerr_;
+    const bool calcerr_;
 
     //! flag for flux reconstruction
-    const PoroPressureBased::FluxReconstructionMethod fluxrecon_;
+    const bool flux_reconstruction_active_;
 
     //! solver number for flux reconstruction
     const int fluxreconsolvernum_;
@@ -511,7 +511,7 @@ namespace PoroPressureBased
     enum PoroPressureBased::DivergenceAction divcontype_;
 
     //! flag for finite difference check
-    const PoroPressureBased::FdCheck fdcheck_;
+    const bool fdcheck_;
 
     //! perturbation magnitude for finite difference check
     const double fdcheckeps_;
