@@ -1922,6 +1922,20 @@ namespace Core::LinAlg
       for (unsigned int c = 1; c < i * j; ++c) result += *(++mat);
       return result / (i * j);
     }
+
+    template <class ValueType, unsigned int i, unsigned int j>
+    constexpr inline void normalize(ValueType* vector)
+    {
+      FOUR_C_ASSERT_ALWAYS(j == 1, "normalize() is only available for column vectors");
+
+      ValueType norm2 = DenseFunctions::norm2<ValueType, i, j>(vector);
+      if (norm2 < 1e-10)
+      {
+        FOUR_C_THROW("Cannot normalize vector with norm2 close to zero");
+      }
+
+      DenseFunctions::scale_matrix<ValueType, i, j>(1.0 / norm2, vector);
+    }
   }  // namespace DenseFunctions
 
   namespace Internal
@@ -2314,6 +2328,15 @@ namespace Core::LinAlg
     {
       DenseFunctions::scale_matrix<ValueType, rows, cols>(scalar, data());
     }
+
+    /// Normalize vector
+    /*!
+      Normalize this matrix, i.e. scale it to have a norm2 of 1.
+      This only works for column vectors, i.e. matrices with one column.
+
+      \note This function will throw an exception if the matrix is not a column vector.
+     */
+    inline void normalize() { DenseFunctions::normalize<ValueType, rows, cols>(data()); }
 
     /// Copy: \e this = \e other
     /*!
