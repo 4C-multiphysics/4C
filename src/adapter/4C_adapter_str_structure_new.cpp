@@ -19,9 +19,9 @@
 #include "4C_beam3_reissner.hpp"
 #include "4C_beamcontact_input.hpp"
 #include "4C_binstrategy.hpp"
-#include "4C_comm_utils.hpp"
 #include "4C_contact_input.hpp"
 #include "4C_fem_condition.hpp"
+#include "4C_fem_condition_point_coupling_redistribution.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
 #include "4C_inpar_beam_to_solid.hpp"
@@ -29,7 +29,6 @@
 #include "4C_inpar_fsi.hpp"
 #include "4C_inpar_poroelast.hpp"
 #include "4C_io.hpp"
-#include "4C_io_control.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_rebalance_binning_based.hpp"
@@ -38,7 +37,6 @@
 #include "4C_solid_3D_ele.hpp"
 #include "4C_solver_nonlin_nox_group.hpp"
 #include "4C_solver_nonlin_nox_group_prepostoperator.hpp"
-#include "4C_structure_new_model_evaluator_manager.hpp"
 #include "4C_structure_new_solver_factory.hpp"
 #include "4C_structure_new_timint_base.hpp"
 #include "4C_structure_new_timint_factory.hpp"
@@ -190,6 +188,57 @@ void Adapter::StructureBaseAlgorithmNew::setup_tim_int()
     Core::Rebalance::rebalance_discretizations_by_binning(binning_params,
         Global::Problem::instance()->output_control_file(), actdis_vec, correct_node,
         determine_relevant_points, true);
+
+    // check whether point coupled nodes include non-matching positions
+    std::vector<const Core::Conditions::Condition*> point_coupling_conditions;
+    actdis_->get_condition("PointCoupling", point_coupling_conditions);
+    int conditionend_node_which_require_redistribution = 0;
+    for (const auto& pcc : point_coupling_conditions)
+    {
+      size_t count_conditioned_node_on_this_proc = 0;
+      const std::vector<int>* conditioned_nodes = pcc->get_nodes();
+      std::vector<double> last_node_position;
+      for (int node_id : (*conditioned_nodes))
+      {
+        if (actdis_->have_global_node(node_id))
+        {
+          ++count_conditioned_node_on_this_proc;
+          const Core::Nodes::Node* node = actdis_->g_node(node_id);
+
+          // check if all conditioned nodes reside on the same spatial position
+          const std::vector<double>& node_position = node->x();
+          if (last_node_position.empty()) last_node_position = node_position;
+          if ((node_position[0] - last_node_position[0]) *
+                      (node_position[0] - last_node_position[0]) +
+                  (node_position[1] - last_node_position[1]) *
+                      (node_position[1] - last_node_position[1]) +
+                  (node_position[2] - last_node_position[2]) *
+                      (node_position[2] - last_node_position[2]) >
+              1.0e-16)
+          {
+            conditionend_node_which_require_redistribution = 1;
+            break;
+          }
+          last_node_position = node_position;
+        }
+      }
+
+      // all conditioned nodes need to reside on the same processor
+      if (count_conditioned_node_on_this_proc > 0 &&
+          count_conditioned_node_on_this_proc != conditioned_nodes->size())
+      {
+        conditionend_node_which_require_redistribution = 1;
+      }
+    }
+
+    int conditionend_node_at_solid_element_global;
+    Core::Communication::max_all(&conditionend_node_which_require_redistribution,
+        &conditionend_node_at_solid_element_global, 1, actdis_->get_comm());
+
+    if (conditionend_node_at_solid_element_global == 1)
+    {
+      Core::Conditions::redistribute_for_point_coupling_conditions(*actdis_);
+    }
   }
   else if (not actdis_->filled() || not actdis_->have_dofs())
   {
