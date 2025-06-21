@@ -1438,10 +1438,9 @@ namespace Core::IO
     /**
      * Defines an input field for spatially dependent parameters.
      *
-     * The input field allows a parameter of a certain type to be specified as a function of element
-     * or node IDs, enabling spatially varying input data. This is useful for cases where a
-     * parameter, such as material stiffness, needs to be defined differently for different parts of
-     * a model.
+     * The input field allows a parameter of a certain type to be specified as either a constant
+     * or an element-wise value. This is useful for cases where a parameter, such as material
+     * stiffness, needs to be defined differently for different parts of a model.
      *
      * Example usage:
      * @code
@@ -1451,15 +1450,14 @@ namespace Core::IO
      * This will match the following input:
      * @code
      *  stiffness:
-     *    type: constant
-     *    value: 100.0
+     *    constant: 100.0
      * @endcode
      *  or
      * @code
      *  stiffness:
-     *    type: from_file
-     *    value: /some/file.json
+     *    from_file: /some/file.json
      * @endcode
+     *
      * The json input field json file could look like this:
      * @code
      * {
@@ -1470,6 +1468,11 @@ namespace Core::IO
      *    "4": 5.5
      *    }
      * }
+     * @endcode
+     *
+     * After matching, the data can be retrieved as an InputField<T>, either from an
+     * InputParameterContainer or from a struct. For the latter, you need use the
+     * in_struct() function to store the InputField in an appropriate struct member.
      */
     template <typename T>
     [[nodiscard]] InputSpec input_field(std::string name, InputFieldData<T> data = {});
