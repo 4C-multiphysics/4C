@@ -47,22 +47,20 @@ ELCH CONTROL:
 SCALAR TRANSPORT DYNAMIC/S2I COUPLING:
   COUPLINGTYPE: "MatchingNodes"
 SOLVER 1:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AZOUTPUT: 10
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssi_mono_3D_hex8_elch_s2i_butlervolmercapacity_BGS-AMG_4x4.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/solid_scatra_BGS-AMG_4x4.xml"
 SOLVER 2:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AZOUTPUT: 10
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssi_mono_3D_hex8_elch_s2i_butlervolmercapacity_BGS-AMG_4x4_scatra.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/electrochemistry_BGS-AMG_3x3.xml"
 SOLVER 3:
-  SOLVER: "Belos"
-  AZPREC: "MueLu"
-  AZOUTPUT: 10
-  MUELU_XML_FILE: "ssi_mono_3D_hex8_elch_s2i_butlervolmercapacity_BGS-AMG_4x4_structure.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: MueLu
+  MUELU_XML_FILE: "xml/multigrid/elasticity_template.xml"
 MATERIALS:
   - MAT: 1
     MAT_MultiplicativeSplitDefgradElastHyper:
