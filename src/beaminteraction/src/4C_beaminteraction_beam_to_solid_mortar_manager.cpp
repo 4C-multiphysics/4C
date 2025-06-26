@@ -22,6 +22,7 @@
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linalg_vector.hpp"
+#include "4C_mortar_utils.hpp"
 #include "4C_structure_new_timint_base.hpp"
 #include "4C_structure_new_timint_basedataglobalstate.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -865,23 +866,27 @@ void BeamInteraction::BeamToSolidMortarManager::assemble_stiff(
         Solid::MatBlockType::lm_lm);
   }
 
-
   Core::LinAlg::SparseMatrix lm_displ =
       Core::LinAlg::SparseMatrix(*lambda_dof_rowmap_, 81, true, true);
-  lm_displ.add(*constraint_lin_beam_, false, 1.0, 1.0);
+  lm_displ.add(*constraint_lin_beam_, false, 1.0, 0.0);
   lm_displ.add(*constraint_lin_solid_, false, 1.0, 1.0);
   lm_displ.complete(*discret_->dof_row_map(), *lambda_dof_rowmap_);
-  gstate.assign_model_block(
-      jac, lm_displ, Inpar::Solid::model_beaminteraction, Solid::MatBlockType::lm_displ);
 
+  std::shared_ptr<Core::LinAlg::SparseMatrix> lm_displ_in_global_layout =
+      Mortar::matrix_col_transform(lm_displ, *gstate.dof_row_map());
+  gstate.assign_model_block(jac, *lm_displ_in_global_layout, Inpar::Solid::model_beaminteraction,
+      Solid::MatBlockType::lm_displ);
 
   Core::LinAlg::SparseMatrix displ_lm =
       Core::LinAlg::SparseMatrix(*discret_->dof_row_map(), 81, true, true);
   displ_lm.add(*force_beam_lin_lambda_, false, 1.0, 1.0);
   displ_lm.add(*force_solid_lin_lambda_, false, 1.0, 1.0);
   displ_lm.complete(*lambda_dof_rowmap_, *discret_->dof_row_map());
-  gstate.assign_model_block(
-      jac, displ_lm, Inpar::Solid::model_beaminteraction, Solid::MatBlockType::displ_lm);
+
+  std::shared_ptr<Core::LinAlg::SparseMatrix> displ_lm_in_global_layout =
+      Mortar::matrix_row_transform(displ_lm, lm_displ.row_map());
+  gstate.assign_model_block(jac, *displ_lm_in_global_layout, Inpar::Solid::model_beaminteraction,
+      Solid::MatBlockType::displ_lm);
 }
 
 
