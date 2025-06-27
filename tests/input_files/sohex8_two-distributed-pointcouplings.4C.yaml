@@ -1,8 +1,7 @@
 TITLE:
   - "elastic strip made of two materials, pulled at ymax"
   - "dirichlet surface boundary conditions: symmetry at xmin, ymin, zmin "
-  - "point couplings (plane surface conditions) at xmax, zmax"
-  - "only runs on a single process (as of now)!"
+  - "point couplings (plane surface conditions) at xmax, zmax which have common nodes"
 PROBLEM TYPE:
   PROBLEMTYPE: "Structure"
 IO:

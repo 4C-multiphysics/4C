@@ -244,6 +244,7 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
       masterIds.push_back(*conditioned_node_ids->begin());
     }
 
+    int allononeproc = 1;
     for (int i = 0; i < numrownodes; ++i)
     {
       const int gid = dis.l_row_node(i)->id();
@@ -271,10 +272,8 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
           }
         }
       }
-      // check if all nodes in this condition are on the same processor
-      // (otherwise throw a FOUR_C_THROW for now - not yet implemented)
-      bool allononeproc = true;
 
+      // check if all nodes in this condition are on the same processor
       for (int k_on = 0; k_on < maxnodenumdf; ++k_on)
       {
         if (applied_condition[k_on] == -1) continue;
@@ -284,16 +283,15 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
         {
           if (!dis.node_row_map()->my_gid(nd))
           {
-            allononeproc = false;
+            allononeproc = 0;
             std::cout << "Node " << nd << " (LID " << dis.node_row_map()->lid(nd)
                       << ") in condition " << condition_id << "(" << k_on
                       << ") is not in the current row map!\n";
           }
         }
       }
-      if (!allononeproc)
-        FOUR_C_THROW(
-            "ERROR: Nodes in point coupling condition must all be on same processor (for now).");
+      // leave loop here in case of corrupt node distribution and inform remaining procs
+      if (allononeproc == 0) break;
 
       // check for node coupling condition and slave/master status
 
@@ -357,6 +355,16 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
       // **********************************************************************
     }
 
+    // communication to ensure that all procs know if an error occurred on certain procs
+    int allononeproc_global;
+    Core::Communication::min_all(&allononeproc, &allononeproc_global, 1, dis.get_comm());
+    if (allononeproc_global == 0)
+    {
+      throw NodalDistributionException(
+          "ERROR: Nodes in point coupling condition must all be on same processor.");
+    }
+
+    // fill ghost node entries
     Core::LinAlg::Import nodeimporter(numdfcolnodes_->get_map(), num_dof_rownodes.get_map());
     int err = numdfcolnodes_->import(num_dof_rownodes, nodeimporter, Insert);
     if (err) FOUR_C_THROW("Import using importer returned err={}", err);
@@ -637,6 +645,14 @@ int Core::DOFSets::DofSet::get_minimal_node_gid_if_relevant(
     const Core::FE::Discretization& dis) const
 {
   return dis.node_row_map()->min_all_gid();
+}
+
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+Core::DOFSets::NodalDistributionException::NodalDistributionException(const std::string& message)
+    : Core::Exception(message)
+{
 }
 
 FOUR_C_NAMESPACE_CLOSE

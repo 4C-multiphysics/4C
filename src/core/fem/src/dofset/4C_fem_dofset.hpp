@@ -417,8 +417,16 @@ namespace Core::DOFSets
     //***************************************************************************
 
   };  // class DofSet
-}  // namespace Core::DOFSets
 
+  /**
+   * An exception thrown when an error in nodal distribution occurs.
+   */
+  class NodalDistributionException : public Core::Exception
+  {
+   public:
+    explicit NodalDistributionException(const std::string& message);
+  };
+}  // namespace Core::DOFSets
 
 // << operator
 std::ostream& operator<<(std::ostream& os, const Core::DOFSets::DofSet& dofset);

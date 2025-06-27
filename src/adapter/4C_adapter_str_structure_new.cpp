@@ -19,17 +19,17 @@
 #include "4C_beam3_reissner.hpp"
 #include "4C_beamcontact_input.hpp"
 #include "4C_binstrategy.hpp"
-#include "4C_comm_utils.hpp"
 #include "4C_contact_input.hpp"
 #include "4C_fem_condition.hpp"
+#include "4C_fem_condition_point_coupling_redistribution.hpp"
 #include "4C_fem_discretization.hpp"
+#include "4C_fem_dofset.hpp"
 #include "4C_global_data.hpp"
 #include "4C_inpar_beam_to_solid.hpp"
 #include "4C_inpar_beaminteraction.hpp"
 #include "4C_inpar_fsi.hpp"
 #include "4C_inpar_poroelast.hpp"
 #include "4C_io.hpp"
-#include "4C_io_control.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_rebalance_binning_based.hpp"
@@ -38,7 +38,6 @@
 #include "4C_solid_3D_ele.hpp"
 #include "4C_solver_nonlin_nox_group.hpp"
 #include "4C_solver_nonlin_nox_group_prepostoperator.hpp"
-#include "4C_structure_new_model_evaluator_manager.hpp"
 #include "4C_structure_new_solver_factory.hpp"
 #include "4C_structure_new_timint_base.hpp"
 #include "4C_structure_new_timint_factory.hpp"
@@ -187,9 +186,17 @@ void Adapter::StructureBaseAlgorithmNew::setup_tim_int()
         return Core::Binstrategy::DefaultRelevantPoints{}(discret, ele, disnp);
     };
 
-    Core::Rebalance::rebalance_discretizations_by_binning(binning_params,
-        Global::Problem::instance()->output_control_file(), actdis_vec, correct_node,
-        determine_relevant_points, true);
+    try
+    {
+      Core::Rebalance::rebalance_discretizations_by_binning(binning_params,
+          Global::Problem::instance()->output_control_file(), actdis_vec, correct_node,
+          determine_relevant_points, true);
+    }
+    catch (const Core::DOFSets::NodalDistributionException& e)
+    {
+      // this can happen due to improper node distribution in assign degrees of freedom
+      Core::Conditions::redistribute_for_point_coupling_conditions(*actdis_);
+    }
   }
   else if (not actdis_->filled() || not actdis_->have_dofs())
   {
