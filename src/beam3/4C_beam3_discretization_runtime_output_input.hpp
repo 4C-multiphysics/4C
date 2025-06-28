@@ -5,8 +5,8 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#ifndef FOUR_C_INPAR_IO_RUNTIME_OUTPUT_STRUCTURE_BEAMS_HPP
-#define FOUR_C_INPAR_IO_RUNTIME_OUTPUT_STRUCTURE_BEAMS_HPP
+#ifndef FOUR_C_BEAM3_DISCRETIZATION_RUNTIME_OUTPUT_INPUT_HPP
+#define FOUR_C_BEAM3_DISCRETIZATION_RUNTIME_OUTPUT_INPUT_HPP
 
 
 /*----------------------------------------------------------------------*/
@@ -22,18 +22,15 @@ FOUR_C_NAMESPACE_OPEN
 
 
 /*----------------------------------------------------------------------*/
-namespace Inpar
+namespace IORuntimeOutput
 {
-  namespace IORuntimeOutput
+  namespace Beam
   {
-    namespace Beam
-    {
-      /// set the valid parameters related to writing of output at runtime
-      void set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list);
+    /// set the valid parameters related to writing of output at runtime
+    void set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list);
 
-    }  // namespace Beam
-  }  // namespace IORuntimeOutput
-}  // namespace Inpar
+  }  // namespace Beam
+}  // namespace IORuntimeOutput
 
 FOUR_C_NAMESPACE_CLOSE
 

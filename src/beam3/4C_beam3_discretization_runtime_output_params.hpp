@@ -11,7 +11,7 @@
 
 #include "4C_config.hpp"
 
-#include "4C_inpar_IO_runtime_output_structure_beams.hpp"
+#include "4C_beam3_discretization_runtime_output_input.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
 FOUR_C_NAMESPACE_OPEN

@@ -5,8 +5,8 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#ifndef FOUR_C_INPAR_BINNINGSTRATEGY_HPP
-#define FOUR_C_INPAR_BINNINGSTRATEGY_HPP
+#ifndef FOUR_C_BINSTRATEGY_INPUT_HPP
+#define FOUR_C_BINSTRATEGY_INPUT_HPP
 
 #include "4C_config.hpp"
 
@@ -16,17 +16,13 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-namespace Inpar
+namespace Core::Binstrategy
 {
-  namespace BINSTRATEGY
-  {
 
-    /// set the binning strategy parameters
-    void set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list);
+  /// set the binning strategy parameters
+  void set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list);
 
-  }  // namespace BINSTRATEGY
-
-}  // namespace Inpar
+}  // namespace Core::Binstrategy
 
 /*----------------------------------------------------------------------*/
 FOUR_C_NAMESPACE_CLOSE

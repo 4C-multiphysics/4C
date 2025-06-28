@@ -5,7 +5,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "4C_inpar_binningstrategy.hpp"
+#include "4C_binstrategy_input.hpp"
 
 #include "4C_binstrategy.hpp"
 #include "4C_io_input_spec_builders.hpp"
@@ -13,7 +13,7 @@ FOUR_C_NAMESPACE_OPEN
 
 
 
-void Inpar::BINSTRATEGY::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
+void Core::Binstrategy::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using namespace Core::IO::InputSpecBuilders;
 

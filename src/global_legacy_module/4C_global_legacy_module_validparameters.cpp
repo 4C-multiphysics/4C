@@ -8,8 +8,10 @@
 #include "4C_global_legacy_module_validparameters.hpp"
 
 #include "4C_ale_input.hpp"
+#include "4C_beam3_discretization_runtime_output_input.hpp"
 #include "4C_beamcontact_input.hpp"
 #include "4C_beaminteraction_potential_input.hpp"
+#include "4C_binstrategy_input.hpp"
 #include "4C_browniandyn_input.hpp"
 #include "4C_contact_input.hpp"
 #include "4C_cut_input.hpp"
@@ -18,7 +20,6 @@
 #include "4C_fbi_input.hpp"
 #include "4C_geometric_search_input.hpp"
 #include "4C_inpar_beaminteraction.hpp"
-#include "4C_inpar_binningstrategy.hpp"
 #include "4C_inpar_bio.hpp"
 #include "4C_inpar_cardiac_monodomain.hpp"
 #include "4C_inpar_cardiovascular0d.hpp"
@@ -28,10 +29,8 @@
 #include "4C_inpar_fs3i.hpp"
 #include "4C_inpar_fsi.hpp"
 #include "4C_inpar_io.hpp"
-#include "4C_inpar_IO_monitor_structure_dbc.hpp"
 #include "4C_inpar_IO_runtime_output.hpp"
 #include "4C_inpar_IO_runtime_output_fluid.hpp"
-#include "4C_inpar_IO_runtime_output_structure_beams.hpp"
 #include "4C_inpar_IO_runtime_vtk_output_structure.hpp"
 #include "4C_inpar_IO_runtime_vtp_output_structure.hpp"
 #include "4C_inpar_levelset.hpp"
@@ -65,6 +64,7 @@
 #include "4C_porofluid_pressure_based_elast_scatra_input.hpp"
 #include "4C_porofluid_pressure_based_input.hpp"
 #include "4C_red_airways_input.hpp"
+#include "4C_structure_new_monitor_dbc_input.hpp"
 #include "4C_thermo_input.hpp"
 #include "4C_tsi_input.hpp"
 
@@ -183,7 +183,7 @@ std::map<std::string, Core::IO::InputSpec> Global::valid_parameters()
 
   Inpar::Solid::set_valid_parameters(specs);
   Inpar::IO::set_valid_parameters(specs);
-  Inpar::IOMonitorStructureDBC::set_valid_parameters(specs);
+  IOMonitorStructureDBC::set_valid_parameters(specs);
   Inpar::IORuntimeOutput::set_valid_parameters(specs);
   Inpar::IORuntimeVTPStructure::set_valid_parameters(specs);
   Inpar::Mortar::set_valid_parameters(specs);
@@ -192,7 +192,7 @@ std::map<std::string, Core::IO::InputSpec> Global::valid_parameters()
   Inpar::Wear::set_valid_parameters(specs);
   Inpar::IORuntimeOutput::FLUID::set_valid_parameters(specs);
   Inpar::IORuntimeOutput::Solid::set_valid_parameters(specs);
-  Inpar::IORuntimeOutput::Beam::set_valid_parameters(specs);
+  IORuntimeOutput::Beam::set_valid_parameters(specs);
   BeamContact::set_valid_parameters(specs);
   BeamPotential::set_valid_parameters(specs);
   Inpar::BeamInteraction::set_valid_parameters(specs);
@@ -241,7 +241,7 @@ std::map<std::string, Core::IO::InputSpec> Global::valid_parameters()
   Inpar::PARTICLE::set_valid_parameters(specs);
 
   Inpar::Geo::set_valid_parameters(specs);
-  Inpar::BINSTRATEGY::set_valid_parameters(specs);
+  Core::Binstrategy::set_valid_parameters(specs);
   Core::GeometricSearch::set_valid_parameters(specs);
   Inpar::PaSI::set_valid_parameters(specs);
 

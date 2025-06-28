@@ -7,7 +7,7 @@
 
 #include "4C_structure_new_timint_basedataio_monitor_dbc.hpp"
 
-#include "4C_inpar_IO_monitor_structure_dbc.hpp"
+#include "4C_structure_new_monitor_dbc_input.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_parameter_list.hpp"
 
@@ -45,7 +45,7 @@ void Solid::TimeInt::ParamsMonitorDBC::init(
   os_precision_ = IO_monitor_dbc_structure_paramslist.get<int>("PRECISION_SCREEN");
 
   // file type
-  file_type_ = to_string(Teuchos::getIntegralValue<Inpar::IOMonitorStructureDBC::FileType>(
+  file_type_ = to_string(Teuchos::getIntegralValue<IOMonitorStructureDBC::FileType>(
       IO_monitor_dbc_structure_paramslist, "FILE_TYPE"));
 
   // write header in csv file

@@ -11,13 +11,13 @@
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_fem_geometry_element_volume.hpp"
 #include "4C_global_data.hpp"
-#include "4C_inpar_IO_monitor_structure_dbc.hpp"
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
 #include "4C_io_every_iteration_writer.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_structure_new_dbc.hpp"
+#include "4C_structure_new_monitor_dbc_input.hpp"
 #include "4C_structure_new_timint_basedataglobalstate.hpp"
 #include "4C_structure_new_timint_basedataio.hpp"
 #include "4C_structure_new_timint_basedataio_monitor_dbc.hpp"
@@ -129,7 +129,7 @@ void Solid::MonitorDbc::setup()
   const Teuchos::ParameterList& sublist_IO_monitor_structure_dbc =
       Global::Problem::instance()->io_params().sublist("MONITOR STRUCTURE DBC");
 
-  auto filetype = Teuchos::getIntegralValue<Inpar::IOMonitorStructureDBC::FileType>(
+  auto filetype = Teuchos::getIntegralValue<IOMonitorStructureDBC::FileType>(
       sublist_IO_monitor_structure_dbc, "FILE_TYPE");
   if (isempty_)
   {
