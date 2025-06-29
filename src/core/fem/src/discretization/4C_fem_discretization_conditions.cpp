@@ -299,11 +299,11 @@ bool Core::FE::Discretization::build_lines_in_condition(
 
 
   // Lines be added to the condition: (line_id) -> (line).
-  auto finallines = std::make_shared<std::map<int, std::shared_ptr<Core::Elements::Element>>>();
+  std::map<int, std::shared_ptr<Core::Elements::Element>> finallines;
 
-  assign_global_ids(get_comm(), linemap, *finallines);
+  assign_global_ids(get_comm(), linemap, finallines);
 
-  cond->set_geometry(finallines);
+  cond->set_geometry(std::move(finallines));
 
   // elements were created that need new unique ids
   return true;
@@ -413,11 +413,10 @@ bool Core::FE::Discretization::build_surfaces_in_condition(
   }  // loop over all conditioned row nodes
 
   // surfaces be added to the condition: (surf_id) -> (surface).
-  std::shared_ptr<std::map<int, std::shared_ptr<Core::Elements::Element>>> final_geometry =
-      std::make_shared<std::map<int, std::shared_ptr<Core::Elements::Element>>>();
+  std::map<int, std::shared_ptr<Core::Elements::Element>> final_geometry;
 
-  assign_global_ids(get_comm(), surfmap, *final_geometry);
-  cond->set_geometry(final_geometry);
+  assign_global_ids(get_comm(), surfmap, final_geometry);
+  cond->set_geometry(std::move(final_geometry));
 
   // elements were created that need new unique ids
   return true;
@@ -439,7 +438,7 @@ bool Core::FE::Discretization::build_volumes_in_condition(
       std::not_fn(Core::Conditions::MyGID(colmap)));
 
   // this is the map we want to construct
-  auto geom = std::make_shared<std::map<int, std::shared_ptr<Core::Elements::Element>>>();
+  std::map<int, std::shared_ptr<Core::Elements::Element>> geom;
 
   for (const auto& [ele_id, actele] : element_)
   {
@@ -460,11 +459,11 @@ bool Core::FE::Discretization::build_volumes_in_condition(
 
     if (allin)
     {
-      (*geom)[ele_id] = actele;
+      geom[ele_id] = actele;
     }
   }
 
-  cond->set_geometry(geom);
+  cond->set_geometry(std::move(geom));
 
   // no elements where created to assign new unique ids to
   return false;

@@ -78,24 +78,19 @@ namespace Core::Conditions
 
     //! @name Constructors and destructors
 
-    /*!
-    \brief Standard Constructor
-
-    The way a condition is treated later on depends on the type of the
-    condition. E.g. Dirichlet conditions are treated differently from
-    Neumann conditions. How they are treated is not described here but in
-    Core::FE::Discretization.
-
-    \note In case you might wonder where this condition class actually stores
-          data necessary for the condition: This class implements Core::IO::InputParameterContainer.
-
-    \param id (in): a unique id for this condition
-    \param type (in): type of the condition
-    \param buildgeometry (in): flag indicating whether explicit condition geometry
-                               (elements) have to be build
-    \param gtype (in): type of geometric entity this condition lives on
-    \param entity_type (in): type of entity this condition is associated with
-    */
+    /**
+     * The way a condition is treated later on depends on the type of the
+     * condition. E.g. Dirichlet conditions are treated differently from
+     * Neumann conditions. How they are treated is not described here but in
+     * Core::FE::Discretization.
+     *
+     * \param id (in): a unique id for this condition
+     * \param type (in): type of the condition
+     * \param buildgeometry (in): flag indicating whether explicit condition geometry
+     *                            (elements) have to be build
+     * \param gtype (in): type of geometric entity this condition lives on
+     * \param entity_type (in): type of entity this condition is associated with
+     */
     Condition(const int id, const Core::Conditions::ConditionType type, const bool buildgeometry,
         const Core::Conditions::GeometryType gtype, EntityType entity_type);
 
@@ -178,11 +173,11 @@ namespace Core::Conditions
     \brief Get a reference to the geometry description of the condition
 
     */
-    std::map<int, std::shared_ptr<Core::Elements::Element>>& geometry() { return *geometry_; }
+    std::map<int, std::shared_ptr<Core::Elements::Element>>& geometry() { return geometry_; }
 
     [[nodiscard]] const std::map<int, std::shared_ptr<Core::Elements::Element>>& geometry() const
     {
-      return *geometry_;
+      return geometry_;
     }
 
     //! Access the container that stores the input parameters.
@@ -231,15 +226,15 @@ namespace Core::Conditions
                       Do not mess with their std::shared_ptr!
 
     */
-    void set_geometry(std::shared_ptr<std::map<int, std::shared_ptr<Core::Elements::Element>>> geom)
+    void set_geometry(std::map<int, std::shared_ptr<Core::Elements::Element>>&& geom)
     {
-      geometry_ = geom;
+      geometry_ = std::move(geom);
     }
 
     /*!
     \brief Delete a geometry description of the condition
     */
-    void clear_geometry() { geometry_ = nullptr; }
+    void clear_geometry() { geometry_.clear(); }
 
     //@}
 
@@ -266,7 +261,7 @@ namespace Core::Conditions
     EntityType entity_type_{};
 
     //! Geometry description of this condition
-    std::shared_ptr<std::map<int, std::shared_ptr<Core::Elements::Element>>> geometry_{};
+    std::map<int, std::shared_ptr<Core::Elements::Element>> geometry_;
 
     Core::IO::InputParameterContainer container_;
   };  // class Condition

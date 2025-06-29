@@ -38,15 +38,6 @@
 FOUR_C_NAMESPACE_OPEN
 
 
-void Global::print_empty_condition_definitions(
-    std::ostream& stream, std::vector<Core::Conditions::ConditionDefinition>& condlist)
-{
-  for (auto& i : condlist)
-  {
-    i.print(stream);
-  }
-}
-
 namespace
 {
   // collect some problem-specific conditions that do not fit in the generic sections

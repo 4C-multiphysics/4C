@@ -38,10 +38,10 @@ void Core::Conditions::Condition::print(std::ostream& os) const
     for (const auto& node_gid : nodes_) os << " " << node_gid;
     os << std::endl;
   }
-  if (geometry_ != nullptr and (int) geometry_->size())
+  if (!geometry_.empty())
   {
     os << "Elements of this condition:";
-    for (const auto& [ele_id, ele] : *geometry_) os << " " << ele_id;
+    for (const auto& [ele_id, ele] : geometry_) os << " " << ele_id;
     os << std::endl;
   }
 }
@@ -49,15 +49,14 @@ void Core::Conditions::Condition::print(std::ostream& os) const
 void Core::Conditions::Condition::adjust_id(const int shift)
 {
   std::map<int, std::shared_ptr<Core::Elements::Element>> geometry;
-  std::map<int, std::shared_ptr<Core::Elements::Element>>::iterator iter;
 
-  for (const auto& [ele_id, ele] : *geometry_)
+  for (const auto& [ele_id, ele] : geometry_)
   {
     ele->set_id(ele_id + shift);
-    geometry[ele_id + shift] = (*geometry_)[ele_id];
+    geometry[ele_id + shift] = (geometry_)[ele_id];
   }
 
-  swap(*geometry_, geometry);
+  swap(geometry_, geometry);
 }
 
 std::shared_ptr<Core::Conditions::Condition> Core::Conditions::Condition::copy_without_geometry()

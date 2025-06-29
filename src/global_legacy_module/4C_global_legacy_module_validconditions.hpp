@@ -10,28 +10,16 @@
 
 #include "4C_config.hpp"
 
-#include <Teuchos_Array.hpp>
+#include "4C_fem_condition_definition.hpp"
 
-#include <iostream>
-#include <memory>
-#include <string>
 #include <vector>
 
 FOUR_C_NAMESPACE_OPEN
-
-namespace Core::Conditions
-{
-  class ConditionDefinition;
-}
-
 
 namespace Global
 {
   /// construct list with all conditions and documentation
   std::vector<Core::Conditions::ConditionDefinition> valid_conditions();
-  /// print all known condition sections without contents
-  void print_empty_condition_definitions(
-      std::ostream& stream, std::vector<Core::Conditions::ConditionDefinition>& condlist);
 }  // namespace Global
 
 FOUR_C_NAMESPACE_CLOSE

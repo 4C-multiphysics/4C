@@ -38,26 +38,11 @@ namespace Core::IO
 namespace Core::Conditions
 {
 
-  //--------------------------------------------------------------
-
-  /// definition of a valid condition in 4C input
-  /*!
-
-    A ConditionDefinition is the definition of a condition input file
-    section. This definition includes the knowledge what this section looks
-    like, how to read it and how to write it. In particular given a
-    ConditionDefinition object it is possible to (a) write an empty input file
-    section that describes this condition, (b) read an input file and create
-    Core::Conditions::Condition objects for each line in this section and (c) write the input
-    file section filled with all corresponding conditions from a given
-    Core::FE::Discretization.
-
-    So this is quite sophisticated internal stuff here. If you want to
-    introduce a new condition to 4C, all you have to do is add an
-    appropriate definition in valid_conditions(). This will take care of the
-    reading part and you will get your Core::FE::Discretization filled with proper
-    Core::Conditions::Condition objects.
-
+  /**
+   * @brief Definition of a condition.
+   *
+   * This class groups all data that is needed to create a Condition. It contains the InputSpec
+   * defining the parameters of the condition and information about the associated geometry.
    */
   class ConditionDefinition
   {
@@ -75,14 +60,11 @@ namespace Core::Conditions
         Core::Conditions::ConditionType condtype, bool buildgeometry,
         Core::Conditions::GeometryType gtype);
 
-    /// add a concrete component to the condition line definition
-    /*!
-      Add new components to the input line. One at a time. Form left to
-      right. The order is important! On reading we try and read component
-      after component.
+    /**
+     * Add an InputSpec @p spec as another component of this condition. The ordering of the
+     * components is irrelevant.
      */
     void add_component(Core::IO::InputSpec&& spec);
-
     void add_component(const Core::IO::InputSpec& spec);
 
     /// read all conditions from my input file section
@@ -93,9 +75,6 @@ namespace Core::Conditions
      */
     void read(Core::IO::InputFile& input,
         std::multimap<int, std::shared_ptr<Core::Conditions::Condition>>& cmap) const;
-
-    /// print my input file section
-    std::ostream& print(std::ostream& stream);
 
     /// name of my section in input file
     std::string section_name() const { return sectionname_; }

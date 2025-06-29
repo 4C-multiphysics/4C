@@ -72,37 +72,19 @@ void Core::Conditions::ConditionDefinition::read(Core::IO::InputFile& input,
   for (const auto& condition_data :
       container.get_or<std::vector<Core::IO::InputParameterContainer>>(section_name(), {}))
   {
-    // Read a one-based condition number but convert it to zero-based for internal use.
-    const int dobjid = condition_data.get<int>("E") - 1;
     auto entity_type = condition_data.get<EntityType>("ENTITY_TYPE");
+
+    int id = condition_data.get<int>("E");
+    // Legacy IDs are read as 1-based, but internally we use 0-based IDs.
+    if (entity_type == EntityType::legacy_id) id -= 1;
 
     std::shared_ptr<Core::Conditions::Condition> condition =
         std::make_shared<Core::Conditions::Condition>(
-            dobjid, condtype_, buildgeometry_, gtype_, entity_type);
+            id, condtype_, buildgeometry_, gtype_, entity_type);
     condition->parameters() = condition_data;
 
-    //------------------------------- put condition in map of conditions
-    cmap.insert(std::pair<int, std::shared_ptr<Core::Conditions::Condition>>(dobjid, condition));
+    cmap.emplace(id, condition);
   }
-}
-
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-std::ostream& Core::Conditions::ConditionDefinition::print(std::ostream& stream)
-{
-  Core::IO::print_section_header(stream, sectionname_);
-
-  using namespace Core::IO::InputSpecBuilders;
-  auto condition_spec = all_of({
-      parameter<int>("E"),
-      all_of(specs_),
-  });
-
-  condition_spec.print_as_dat(stream);
-
-  stream << "\n";
-  return stream;
 }
 
 FOUR_C_NAMESPACE_CLOSE

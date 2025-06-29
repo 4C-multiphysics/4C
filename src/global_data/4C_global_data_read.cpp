@@ -1612,24 +1612,19 @@ void Global::read_conditions(
         }
         case Core::Conditions::EntityType::node_set_id:
         {
-          // We are rather inconsistent with +/-1 here. The condition internally subtracts 1 from
-          // the ID but this is wrong for the node set ID. For node sets, the ID is meant to
-          // exactly refer to the ID in the mesh file, so we need to add the 1 back.
-          const int node_set_id = entity_id + 1;
-          FOUR_C_ASSERT_ALWAYS(node_sets.contains(node_set_id),
+          FOUR_C_ASSERT_ALWAYS(node_sets.contains(entity_id),
               "Cannot apply condition '{}' to node set {} which is not specified in the mesh file.",
-              condition_definition.name(), node_set_id);
-          condition->set_nodes(node_sets[node_set_id]);
+              condition_definition.name(), entity_id);
+          condition->set_nodes(node_sets[entity_id]);
           break;
         }
         case Core::Conditions::EntityType::element_block_id:
         {
-          const int eb_id = entity_id + 1;
-          FOUR_C_ASSERT_ALWAYS(element_block_nodes.contains(eb_id),
+          FOUR_C_ASSERT_ALWAYS(element_block_nodes.contains(entity_id),
               "Cannot apply condition '{}' to element block {} which is not specified in the mesh "
               "file.",
-              condition_definition.name(), eb_id);
-          condition->set_nodes(element_block_nodes[eb_id]);
+              condition_definition.name(), entity_id);
+          condition->set_nodes(element_block_nodes[entity_id]);
           break;
         }
       }
