@@ -71,11 +71,11 @@ namespace Inpar
     //! coupling between artery network and pressure-based porofluid-elasticity-scatra problem
     enum class ArteryPorofluidElastScatraCouplingMethod
     {
-      none,   // none
-      nodal,  // nodal
-      gpts,   // Gauss-point-to-segment
-      mp,     // mortar-penalty
-      ntp     // 1D node-to-point in 2D/3D
+      none,                    // none
+      nodal,                   // nodal
+      gauss_point_to_segment,  // Gauss-point-to-segment
+      mortar_penalty,          // mortar-penalty
+      node_to_point            // 1D node-to-point in 2D/3D
     };
 
     /// set the artnet parameters

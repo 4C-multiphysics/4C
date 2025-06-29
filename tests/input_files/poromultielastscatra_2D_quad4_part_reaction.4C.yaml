@@ -4,25 +4,31 @@ TITLE:
 PROBLEM SIZE:
   DIM: 2
 PROBLEM TYPE:
-  PROBLEMTYPE: "Multiphase_Poroelasticity_ScaTra"
-POROMULTIPHASESCATRA DYNAMIC:
-  RESTARTEVERY: 4
-  NUMSTEP: 5
-  MAXTIME: 2
-  TIMESTEP: 0.1
+  PROBLEMTYPE: "porofluid_pressure_based_elasticity_scatra"
+porofluid_elasticity_scatra_dynamic:
+  total_simulation_time: 0.5
+  time_integration:
+    theta: 1
+    number_of_time_steps: 5
+    time_step: 0.1
+  output:
+    restart_data_every: 4
+  coupling_scheme: twoway_partitioned_nested
 STRUCTURAL DYNAMIC:
   INT_STRATEGY: "Standard"
   DYNAMICTYPE: "OneStepTheta"
   LINEAR_SOLVER: 1
 STRUCTURAL DYNAMIC/ONESTEPTHETA:
   THETA: 1
-POROFLUIDMULTIPHASE DYNAMIC:
-  THETA: 1
-  LINEAR_SOLVER: 1
-  INITIALFIELD: "field_by_function"
-  INITFUNCNO: 1
-  FLUX_PROJ_SOLVER: 2
-  FLUX_PROJ_METHOD: "L2_projection"
+porofluid_dynamic:
+  initial_condition:
+    type: by_function
+    function_id: 1
+  flux_reconstruction:
+    active: true
+    solver_id: 2
+porofluid_elasticity_dynamic:
+  coupling_scheme: twoway_partitioned
 SCALAR TRANSPORT DYNAMIC:
   SOLVERTYPE: "nonlinear"
   THETA: 0.66

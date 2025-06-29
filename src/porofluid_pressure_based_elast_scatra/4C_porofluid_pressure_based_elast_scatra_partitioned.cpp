@@ -51,10 +51,10 @@ void PoroPressureBased::PorofluidElastScatraPartitionedAlgorithm::init(
       nearby_ele_pairs);
 
   // read input variables
-  iter_max_ = algoparams.get<int>("ITEMAX");
-  iter_tol_ = algoparams.sublist("PARTITIONED").get<double>("CONVTOL");
+  iter_max_ = algoparams.sublist("nonlinear_solver").get<int>("maximum_number_of_iterations");
+  iter_tol_ = algoparams.sublist("partitioned").get<double>("convergence_tolerance");
 
-  artery_coupling_active_ = algoparams.get<bool>("ARTERY_COUPLING");
+  artery_coupling_active_ = algoparams.get<bool>("artery_coupling_active");
 
   // initialize increment vectors
   scatra_inc_np_ = std::make_shared<Core::LinAlg::Vector<double>>(

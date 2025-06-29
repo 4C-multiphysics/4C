@@ -93,18 +93,21 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
 {
   coupling_method_ =
       Teuchos::getIntegralValue<Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod>(
-          coupling_params, "ARTERY_COUPLING_METHOD");
+          coupling_params, "coupling_method");
 
   condition_name_ = condition_name;
 
-  evaluate_in_ref_config_ = porofluid_coupling_params.get<bool>("EVALUATE_IN_REF_CONFIG");
+  evaluate_in_ref_config_ =
+      porofluid_coupling_params.get<bool>("evaluate_in_reference_configuration");
 
-  evaluate_on_lateral_surface_ = porofluid_coupling_params.get<bool>("LATERAL_SURFACE_COUPLING");
+  evaluate_on_lateral_surface_ = porofluid_coupling_params.get<bool>("lateral_surface_coupling");
 
   coupling_element_type_ = coupling_type;
 
-  num_patches_axial_ = porofluid_coupling_params.get<int>("NUMPATCH_AXI");
-  num_patches_radial_ = porofluid_coupling_params.get<int>("NUMPATCH_RAD");
+  num_patches_axial_ =
+      porofluid_coupling_params.sublist("integration_patches").get<int>("number_of_patches_axial");
+  num_patches_radial_ =
+      porofluid_coupling_params.sublist("integration_patches").get<int>("number_of_patches_radial");
 
   artery_element_ = elements[0];
   homogenized_element_ = elements[1];
@@ -129,7 +132,8 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
         artery_element_->element_type().name(), homogenized_element_->element_type().name());
   }
 
-  if (coupling_method_ == Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp)
+  if (coupling_method_ ==
+      Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::node_to_point)
   {
     // set eta
     gp_coords_artery_.resize(1);
@@ -533,7 +537,8 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
 {
   if (!is_init_) FOUR_C_THROW("MeshTying Pair has not yet been initialized.");
 
-  if (coupling_method_ == Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp)
+  if (coupling_method_ ==
+      Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::node_to_point)
   {
     pre_evaluate_node_to_point_coupling();
   }
@@ -984,7 +989,7 @@ double PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery
 
   switch (coupling_method_)
   {
-    case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::gpts:
+    case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::gauss_point_to_segment:
     {
       // initialize Gauss point coordinates
       current_gp_coord_artery.assign(num_gp_, double{});
@@ -1002,7 +1007,7 @@ double PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery
       integrated_diameter = artery_diameter_ref_ * segment_lengths[segment_id_];
       break;
     }
-    case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mp:
+    case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mortar_penalty:
     {
       // initialize Gauss point coordinates
       current_gp_coord_artery.assign(num_gp_, double{});
@@ -1018,7 +1023,7 @@ double PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery
       integrated_diameter = artery_diameter_ref_ * segment_lengths[segment_id_];
       break;
     }
-    case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp:
+    case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::node_to_point:
     {
       // define Gauss point coordinates
       current_gp_coord_artery = gp_coords_artery_;
@@ -1652,7 +1657,8 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
     const double& artery_segment_end)
 {
   if (evaluate_in_ref_config_ || coupling_type_ == CouplingType::scatra ||
-      coupling_method_ == Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp)
+      coupling_method_ ==
+          Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::node_to_point)
     return;
 
   // Vectors for shape functions and their derivatives

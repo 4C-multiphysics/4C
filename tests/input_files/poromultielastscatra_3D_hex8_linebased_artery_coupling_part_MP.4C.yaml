@@ -4,43 +4,45 @@ TITLE:
   - "Mortar penalty coupling method is employed with partitioned"
   - "algorithm"
 PROBLEM TYPE:
-  PROBLEMTYPE: "Multiphase_Poroelasticity_ScaTra"
-POROMULTIPHASESCATRA DYNAMIC:
-  NUMSTEP: 5
-  MAXTIME: 0.5
-  TIMESTEP: 0.1
-  ITEMAX: 25
-  COUPALGO: "twoway_partitioned_sequential"
-  ARTERY_COUPLING: true
-POROMULTIPHASESCATRA DYNAMIC/MONOLITHIC:
-  TOLRES_GLOBAL: 1e-07
-  TOLINC_GLOBAL: 1e-07
-  LINEAR_SOLVER: 1
+  PROBLEMTYPE: "porofluid_pressure_based_elasticity_scatra"
+porofluid_elasticity_scatra_dynamic:
+  total_simulation_time: 0.5
+  time_integration:
+    time_step: 0.1
+    number_of_time_steps: 5
+    theta: 1
+  nonlinear_solver:
+    maximum_number_of_iterations: 25
+  coupling_scheme: twoway_partitioned_sequential
+  artery_coupling_active: true
 STRUCTURAL DYNAMIC:
   INT_STRATEGY: "Standard"
   DYNAMICTYPE: "OneStepTheta"
   LINEAR_SOLVER: 1
 STRUCTURAL DYNAMIC/ONESTEPTHETA:
   THETA: 1
-POROFLUIDMULTIPHASE DYNAMIC:
-  THETA: 1
-  LINEAR_SOLVER: 1
-  INITIALFIELD: "field_by_function"
-  INITFUNCNO: 1
-  FLUX_PROJ_SOLVER: 2
-POROFLUIDMULTIPHASE DYNAMIC/ARTERY COUPLING:
-  ARTERY_COUPLING_METHOD: "MP"
-  COUPLEDDOFS_ART: "1"
-  COUPLEDDOFS_PORO: "5"
-  REACFUNCT_ART: "10"
-  SCALEREAC_ART: "-1"
-  REACFUNCT_CONT: "0 0 12 0 0"
-  SCALEREAC_CONT: "0 0 1 0 0"
-  EVALUATE_IN_REF_CONFIG: false
-  PRINT_OUT_SUMMARY_PAIRS: true
-POROMULTIPHASE DYNAMIC/PARTITIONED:
-  RELAXATION: "Aitken"
-  MINOMEGA: 0.01
+porofluid_dynamic:
+  initial_condition:
+    type: by_function
+    function_id: 1
+porofluid_dynamic/artery_coupling:
+  coupling_method: mortar_penalty
+  coupled_dofs:
+    artery: "1"
+    homogenized: "5"
+  reaction_terms:
+    artery_function_ids: "10"
+    artery_scaling: "-1"
+    homogenized_function_ids: "0 0 12 0 0"
+    homogenized_scaling: "0 0 1 0 0"
+  evaluate_in_reference_configuration: false
+  print_coupling_pairs_summary: true
+porofluid_elasticity_dynamic:
+  coupling_scheme: twoway_partitioned
+porofluid_elasticity_dynamic/partitioned:
+  relaxation:
+    type: aitken
+    minimum_omega: 0.01
 SCALAR TRANSPORT DYNAMIC:
   SOLVERTYPE: "nonlinear"
   MAXTIME: 1
@@ -57,13 +59,15 @@ SCALAR TRANSPORT DYNAMIC/NONLINEAR:
   CONVTOL: 1e-08
   ABSTOLRES: -1
 SCALAR TRANSPORT DYNAMIC/ARTERY COUPLING:
-  ARTERY_COUPLING_METHOD: "MP"
-  COUPLEDDOFS_ARTSCATRA: "2"
-  COUPLEDDOFS_SCATRA: "2"
-  REACFUNCT_ART: "11 0"
-  SCALEREAC_ART: "-1 0"
-  REACFUNCT_CONT: "13 0"
-  SCALEREAC_CONT: "1 0"
+  coupling_method: mortar_penalty
+  coupled_dofs:
+    artery: "2"
+    homogenized: "2"
+  reaction_terms:
+    artery_function_ids: "11 0"
+    artery_scaling: "-1 0"
+    homogenized_function_ids: "13 0"
+    homogenized_scaling: "1 0"
 ARTERIAL DYNAMIC:
   DYNAMICTYPE: "Stationary"
   SOLVESCATRA: true

@@ -41,18 +41,31 @@ void ScaTra::MeshtyingStrategyArtery::init_meshtying()
   // instantiate strategy for Newton-Raphson convergence check
   init_conv_check_strategy();
 
-  const Teuchos::ParameterList& globaltimeparams =
+  const Teuchos::ParameterList& global_time_params =
       Global::Problem::instance()->poro_multi_phase_scatra_dynamic_params();
-  const Teuchos::ParameterList& myscatraparams =
+  const Teuchos::ParameterList& scatra_params =
       Global::Problem::instance()->scalar_transport_dynamic_params();
-  if (Teuchos::getIntegralValue<Inpar::ScaTra::VelocityField>(myscatraparams, "VELOCITYFIELD") !=
+  if (Teuchos::getIntegralValue<Inpar::ScaTra::VelocityField>(scatra_params, "VELOCITYFIELD") !=
       Inpar::ScaTra::velocity_zero)
     FOUR_C_THROW("set your velocity field to zero!");
 
+  // Translate updated porofluid input format to old scatra format
+  Teuchos::ParameterList scatra_global_time_params;
+  scatra_global_time_params.set<double>(
+      "TIMESTEP", global_time_params.sublist("time_integration").get<double>("time_step"));
+  scatra_global_time_params.set<double>(
+      "MAXTIME", global_time_params.get<double>("total_simulation_time"));
+  scatra_global_time_params.set<int>(
+      "NUMSTEP", global_time_params.sublist("time_integration").get<int>("number_of_time_steps"));
+  scatra_global_time_params.set<int>(
+      "RESTARTEVERY", global_time_params.sublist("output").get<int>("restart_data_every"));
+  scatra_global_time_params.set<int>(
+      "RESULTSEVERY", global_time_params.sublist("output").get<int>("results_every"));
+
   // construct artery scatra problem
   std::shared_ptr<Adapter::ScaTraBaseAlgorithm> art_scatra =
-      std::make_shared<Adapter::ScaTraBaseAlgorithm>(globaltimeparams, myscatraparams,
-          Global::Problem::instance()->solver_params(myscatraparams.get<int>("LINEAR_SOLVER")),
+      std::make_shared<Adapter::ScaTraBaseAlgorithm>(scatra_global_time_params, scatra_params,
+          Global::Problem::instance()->solver_params(scatra_params.get<int>("LINEAR_SOLVER")),
           "artery_scatra", false);
 
   // initialize the base algo.
@@ -82,9 +95,9 @@ void ScaTra::MeshtyingStrategyArtery::init_meshtying()
   }
 
   const bool evaluate_on_lateral_surface = Global::Problem::instance()
-                                               ->poro_fluid_multi_phase_dynamic_params()
-                                               .sublist("ARTERY COUPLING")
-                                               .get<bool>("LATERAL_SURFACE_COUPLING");
+                                               ->porofluid_pressure_based_dynamic_params()
+                                               .sublist("artery_coupling")
+                                               .get<bool>("lateral_surface_coupling");
 
   // set coupling condition name
   const std::string couplingcondname = std::invoke(
@@ -92,10 +105,10 @@ void ScaTra::MeshtyingStrategyArtery::init_meshtying()
       {
         if (Teuchos::getIntegralValue<
                 Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod>(
-                Global::Problem::instance()->poro_fluid_multi_phase_dynamic_params().sublist(
-                    "ARTERY COUPLING"),
-                "ARTERY_COUPLING_METHOD") ==
-            Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp)
+                Global::Problem::instance()->porofluid_pressure_based_dynamic_params().sublist(
+                    "artery_coupling"),
+                "coupling_method") ==
+            Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::node_to_point)
         {
           return "ArtScatraCouplConNodeToPoint";
         }
@@ -106,11 +119,11 @@ void ScaTra::MeshtyingStrategyArtery::init_meshtying()
       });
 
   // init the mesh tying object, which does all the work
-  arttoscatracoupling_ = PoroPressureBased::create_and_init_artery_coupling_strategy(artscatradis_,
-      scatradis_, myscatraparams.sublist("ARTERY COUPLING"), couplingcondname,
-      "COUPLEDDOFS_ARTSCATRA", "COUPLEDDOFS_SCATRA", evaluate_on_lateral_surface);
+  arttoscatracoupling_ =
+      PoroPressureBased::create_and_init_artery_coupling_strategy(artscatradis_, scatradis_,
+          scatra_params.sublist("ARTERY COUPLING"), couplingcondname, evaluate_on_lateral_surface);
 
-  initialize_linear_solver(myscatraparams);
+  initialize_linear_solver(scatra_params);
 }
 
 /*----------------------------------------------------------------------*

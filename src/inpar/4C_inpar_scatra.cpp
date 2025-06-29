@@ -377,47 +377,51 @@ void Inpar::ScaTra::set_valid_parameters(std::map<std::string, Core::IO::InputSp
   list["SCALAR TRANSPORT DYNAMIC/ARTERY COUPLING"] = group(
       "SCALAR TRANSPORT DYNAMIC/ARTERY COUPLING",
       {
-
-          deprecated_selection<Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod>(
-              "ARTERY_COUPLING_METHOD",
-              {
-                  {"None", Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::none},
-                  {"Nodal", Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::nodal},
-                  {"GPTS", Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::gpts},
-                  {"MP", Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mp},
-                  {"NTP", Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp},
-              },
+          parameter<Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod>(
+              "coupling_method",
               {.description = "Coupling method for artery coupling.",
                   .default_value =
                       Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::none}),
 
           // penalty parameter
-          parameter<double>("PENALTY", {.description = "Penalty parameter for line-based coupling",
-                                           .default_value = 1000.0}),
+          parameter<double>(
+              "penalty_parameter", {.description = "Penalty parameter for line-based coupling",
+                                       .default_value = 1000.0}),
 
-          // coupled artery dofs for mesh tying
-          parameter<std::string>("COUPLEDDOFS_ARTSCATRA",
-              {.description = "coupled artery dofs for mesh tying", .default_value = "-1.0"}),
+          // coupled dofs for meshtying
+          group("coupled_dofs",
+              {
+                  parameter<std::string>(
+                      "artery", {.description = "coupled artery dofs for meshtying",
+                                    .default_value = "-1.0"}),
+                  parameter<std::string>(
+                      "homogenized", {.description = "coupled homogenized dofs for meshtying",
+                                         .default_value = "-1.0"}),
+              },
+              {.required = false}),
 
-          // coupled porofluid dofs for mesh tying
-          parameter<std::string>("COUPLEDDOFS_SCATRA",
-              {.description = "coupled porofluid dofs for mesh tying", .default_value = "-1.0"}),
+          // reactions for transfer from artery to homogenized part and vice versa
+          group("reaction_terms",
+              {
+                  // functions for coupling (artery part)
+                  parameter<std::string>(
+                      "artery_function_ids", {.description = "functions for coupling (artery part)",
+                                                 .default_value = "-1"}),
+                  // scale for coupling (artery part)
+                  parameter<std::string>("artery_scaling",
+                      {.description = "scale for coupling (artery part)", .default_value = "1"}),
 
-          // functions for coupling (arteryscatra part)
-          parameter<std::string>("REACFUNCT_ART",
-              {.description = "functions for coupling (arteryscatra part)", .default_value = "-1"}),
-
-          // scale for coupling (arteryscatra part)
-          parameter<std::string>("SCALEREAC_ART",
-              {.description = "scale for coupling (arteryscatra part)", .default_value = "0"}),
-
-          // functions for coupling (scatra part)
-          parameter<std::string>("REACFUNCT_CONT",
-              {.description = "functions for coupling (scatra part)", .default_value = "-1"}),
-
-          // scale for coupling (scatra part)
-          parameter<std::string>("SCALEREAC_CONT",
-              {.description = "scale for coupling (scatra part)", .default_value = "0"})},
+                  // functions for coupling (porofluid part)
+                  parameter<std::string>("homogenized_function_ids",
+                      {.description = "functions for coupling (homogenized part)",
+                          .default_value = "-1"}),
+                  // scale for coupling (porofluid part)
+                  parameter<std::string>("homogenized_scaling",
+                      {.description = "scale for coupling (homogenized part)",
+                          .default_value = "1"}),
+              },
+              {.required = false}),
+      },
       {.required = false});
 
   // ----------------------------------------------------------------------

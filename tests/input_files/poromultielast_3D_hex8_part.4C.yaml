@@ -3,24 +3,27 @@ TITLE:
   - "Partitioned algorithm"
   - "Basically a 3D extension of the 2D input-file poromultielast_2D_quad4_mono.4C.yaml"
 PROBLEM TYPE:
-  PROBLEMTYPE: "Multiphase_Poroelasticity"
+  PROBLEMTYPE: "porofluid_pressure_based_elasticity"
 STRUCTURAL DYNAMIC:
   INT_STRATEGY: "Standard"
   DYNAMICTYPE: "OneStepTheta"
   LINEAR_SOLVER: 1
 STRUCTURAL DYNAMIC/ONESTEPTHETA:
   THETA: 1
-POROFLUIDMULTIPHASE DYNAMIC:
-  THETA: 1
-  LINEAR_SOLVER: 1
-  INITIALFIELD: "field_by_function"
-  INITFUNCNO: 1
-POROMULTIPHASE DYNAMIC:
-  NUMSTEP: 5
-  MAXTIME: 2
-  TIMESTEP: 0.1
-POROMULTIPHASE DYNAMIC/PARTITIONED:
-  RELAXATION: "Aitken"
+porofluid_elasticity_dynamic:
+  total_simulation_time: 0.5
+  time_integration:
+    time_step: 0.1
+    theta: 1
+    number_of_time_steps: 5
+  coupling_scheme: twoway_partitioned
+porofluid_dynamic:
+  initial_condition:
+    type: by_function
+    function_id: 1
+porofluid_elasticity_dynamic/partitioned:
+  relaxation:
+    type: aitken
 SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "solver"

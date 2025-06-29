@@ -21,10 +21,9 @@ PoroPressureBased::PorofluidElastScatraArteryCouplingNodeToPointAlgorithm::
     PorofluidElastScatraArteryCouplingNodeToPointAlgorithm(
         std::shared_ptr<Core::FE::Discretization> artery_dis,
         std::shared_ptr<Core::FE::Discretization> homogenized_dis,
-        const Teuchos::ParameterList& coupling_params, const std::string& condition_name,
-        const std::string& artery_coupled_dof_name, const std::string& homogenized_coupled_dof_name)
-    : PorofluidElastScatraArteryCouplingNonConformingAlgorithm(artery_dis, homogenized_dis,
-          coupling_params, condition_name, artery_coupled_dof_name, homogenized_coupled_dof_name)
+        const Teuchos::ParameterList& coupling_params, const std::string& condition_name)
+    : PorofluidElastScatraArteryCouplingNonConformingAlgorithm(
+          artery_dis, homogenized_dis, coupling_params, condition_name)
 {
   // user info
   if (my_mpi_rank_ == 0)
@@ -50,7 +49,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNodeToPointAlgorithm::
 
   // print out summary of pairs
   if (homogenized_dis_->name() == "porofluid" &&
-      coupling_params_.get<bool>("PRINT_OUT_SUMMARY_PAIRS"))
+      coupling_params_.get<bool>("print_coupling_pairs_summary"))
     output_coupling_pairs();
 
   // error-checks

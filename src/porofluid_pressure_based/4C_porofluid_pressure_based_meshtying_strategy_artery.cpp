@@ -33,8 +33,10 @@ PoroPressureBased::MeshtyingArtery::MeshtyingArtery(PorofluidAlgorithm* poroflui
     : porofluid_algorithm_(porofluid_algorithm),
       params_(problem_params),
       porofluid_params_(porofluid_params),
-      vector_norm_res_(Teuchos::getIntegralValue<VectorNorm>(porofluid_params_, "VECTORNORM_RESF")),
-      vector_norm_inc_(Teuchos::getIntegralValue<VectorNorm>(porofluid_params_, "VECTORNORM_INC"))
+      vector_norm_res_(Teuchos::getIntegralValue<VectorNorm>(
+          porofluid_params_.sublist("nonlinear_solver").sublist("residual"), "vector_norm")),
+      vector_norm_inc_(Teuchos::getIntegralValue<VectorNorm>(
+          porofluid_params_.sublist("nonlinear_solver").sublist("increment"), "vector_norm"))
 {
   const Teuchos::ParameterList& artery_params =
       Global::Problem::instance()->arterial_dynamic_params();
@@ -49,9 +51,21 @@ PoroPressureBased::MeshtyingArtery::MeshtyingArtery(PorofluidAlgorithm* poroflui
   std::shared_ptr<Core::IO::DiscretizationWriter> artery_output = artery_dis_->writer();
   artery_output->write_mesh(0, 0.0);
 
+  // Translate updated porofluid input format to old artery format
+  Teuchos::ParameterList artery_problem_params;
+  artery_problem_params.set<int>(
+      "RESTARTEVERY", problem_params.sublist("output").get<int>("restart_data_every"));
+  artery_problem_params.set<int>(
+      "RESULTSEVERY", problem_params.sublist("output").get<int>("results_every"));
+  artery_problem_params.set<double>(
+      "TIMESTEP", problem_params.sublist("time_integration").get<double>("time_step"));
+  artery_problem_params.set<int>(
+      "NUMSTEP", problem_params.sublist("time_integration").get<int>("number_of_time_steps"));
+
   // build artery network algorithm
   artery_algorithm_ = Arteries::Utils::create_algorithm(time_integration_scheme, artery_dis_,
-      artery_params.get<int>("LINEAR_SOLVER"), problem_params, artery_params, *artery_output);
+      artery_params.get<int>("LINEAR_SOLVER"), artery_problem_params, artery_params,
+      *artery_output);
 
   // set to false
   artery_algorithm_->set_solve_scatra(false);
@@ -69,17 +83,17 @@ PoroPressureBased::MeshtyingArtery::MeshtyingArtery(PorofluidAlgorithm* poroflui
   }
 
   const bool evaluate_on_lateral_surface =
-      porofluid_params.sublist("ARTERY COUPLING").get<bool>("LATERAL_SURFACE_COUPLING");
+      porofluid_params.sublist("artery_coupling").get<bool>("lateral_surface_coupling");
 
   const std::string coupling_condition_name = std::invoke(
       [&]()
       {
         if (Teuchos::getIntegralValue<
                 Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod>(
-                Global::Problem::instance()->poro_fluid_multi_phase_dynamic_params().sublist(
-                    "ARTERY COUPLING"),
-                "ARTERY_COUPLING_METHOD") ==
-            Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp)
+                Global::Problem::instance()->porofluid_pressure_based_dynamic_params().sublist(
+                    "artery_coupling"),
+                "coupling_method") ==
+            Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::node_to_point)
         {
           return "ArtPorofluidCouplConNodeToPoint";
         }
@@ -91,8 +105,8 @@ PoroPressureBased::MeshtyingArtery::MeshtyingArtery(PorofluidAlgorithm* poroflui
 
   // initialize meshtying object
   artery_porofluid_coupling_algorithm_ = create_and_init_artery_coupling_strategy(artery_dis_,
-      porofluid_algorithm->discretization(), porofluid_params.sublist("ARTERY COUPLING"),
-      coupling_condition_name, "COUPLEDDOFS_ART", "COUPLEDDOFS_PORO", evaluate_on_lateral_surface);
+      porofluid_algorithm->discretization(), porofluid_params.sublist("artery_coupling"),
+      coupling_condition_name, evaluate_on_lateral_surface);
 
   // Initialize rhs vector
   global_rhs_ = std::make_shared<Core::LinAlg::Vector<double>>(
@@ -138,8 +152,9 @@ void PoroPressureBased::MeshtyingArtery::initialize_linear_solver(
     const std::shared_ptr<Core::LinAlg::Solver> solver) const
 {
   const Teuchos::ParameterList& porofluid_params =
-      Global::Problem::instance()->poro_fluid_multi_phase_dynamic_params();
-  const int linear_solver_num = porofluid_params.get<int>("LINEAR_SOLVER");
+      Global::Problem::instance()->porofluid_pressure_based_dynamic_params();
+  const int linear_solver_num =
+      porofluid_params.sublist("nonlinear_solver").get<int>("linear_solver_id");
   const Teuchos::ParameterList& solver_params =
       Global::Problem::instance()->solver_params(linear_solver_num);
   const auto solver_type =

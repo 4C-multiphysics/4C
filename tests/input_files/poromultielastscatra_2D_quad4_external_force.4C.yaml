@@ -5,20 +5,24 @@ TITLE:
 PROBLEM SIZE:
   DIM: 2
 PROBLEM TYPE:
-  PROBLEMTYPE: "Multiphase_Poroelasticity_ScaTra"
-POROMULTIPHASESCATRA DYNAMIC:
-  RESTARTEVERY: 4
-  NUMSTEP: 30
-  MAXTIME: 30
-  TIMESTEP: 1
-  COUPALGO: "twoway_monolithic"
-  DIVERCONT: "continue"
-POROMULTIPHASESCATRA DYNAMIC/MONOLITHIC:
-  VECTORNORM_RESF: "Rms"
-  TOLRES_GLOBAL: 0.002
-  TOLINC_GLOBAL: 0.002
-  LINEAR_SOLVER: 1
-  EQUILIBRATION: rows_full
+  PROBLEMTYPE: "porofluid_pressure_based_elasticity_scatra"
+porofluid_elasticity_scatra_dynamic:
+  total_simulation_time: 30
+  time_integration:
+    theta: 1
+    time_step: 1
+    number_of_time_steps: 30
+  coupling_scheme: twoway_monolithic
+  divergence_action: continue_anyway
+porofluid_elasticity_scatra_dynamic/monolithic:
+  nonlinear_solver:
+    linear_solver_id: 1
+    equilibration: rows_full
+    residual:
+      vector_norm: rms
+      global_tolerance: 0.002
+    increment:
+      global_tolerance: 0.002
 STRUCTURAL DYNAMIC:
   INT_STRATEGY: "Standard"
   DYNAMICTYPE: "OneStepTheta"
@@ -27,17 +31,12 @@ STRUCTURAL DYNAMIC:
   LINEAR_SOLVER: 1
 STRUCTURAL DYNAMIC/ONESTEPTHETA:
   THETA: 1
-POROFLUIDMULTIPHASE DYNAMIC:
-  THETA: 1
-  LINEAR_SOLVER: 1
-  ITEMAX: 50
-  ABSTOLRES: -1
-  INITIALFIELD: "field_by_condition"
-  FLUX_PROJ_SOLVER: 1
-POROMULTIPHASE DYNAMIC:
-  ITEMAX: 20
-  SOLVE_STRUCTURE: false
-  COUPALGO: "twoway_monolithic"
+porofluid_elasticity_dynamic:
+  solve_structure: false
+  coupling_scheme: twoway_monolithic
+porofluid_dynamic:
+  initial_condition:
+    type: by_condition
 SCALAR TRANSPORT DYNAMIC:
   SOLVERTYPE: "nonlinear"
   THETA: 1

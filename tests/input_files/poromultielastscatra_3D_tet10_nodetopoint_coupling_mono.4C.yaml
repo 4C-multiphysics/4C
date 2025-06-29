@@ -4,40 +4,42 @@ TITLE:
   - "3D PoroMultiphaseScatra-Framework with TET10 elements. Structure is"
   - "fixed."
 PROBLEM TYPE:
-  PROBLEMTYPE: "Multiphase_Poroelasticity_ScaTra"
-POROMULTIPHASESCATRA DYNAMIC:
-  RESTARTEVERY: 3
-  NUMSTEP: 25
-  MAXTIME: 2.5
-  TIMESTEP: 0.1
-  RESULTSEVERY: 2
-  ITEMAX: 20
-  COUPALGO: "twoway_monolithic"
-  ARTERY_COUPLING: true
-POROMULTIPHASESCATRA DYNAMIC/MONOLITHIC:
-  LINEAR_SOLVER: 1
+  PROBLEMTYPE: "porofluid_pressure_based_elasticity_scatra"
+porofluid_elasticity_scatra_dynamic:
+  total_simulation_time: 2.5
+  time_integration:
+    time_step: 0.1
+    number_of_time_steps: 25
+    theta: 1
+  output:
+    results_every: 2
+    restart_data_every: 3
+  coupling_scheme: twoway_monolithic
+  artery_coupling_active: true
+porofluid_elasticity_scatra_dynamic/monolithic:
+  nonlinear_solver:
+    linear_solver_id: 1
 STRUCTURAL DYNAMIC:
   INT_STRATEGY: "Standard"
   DYNAMICTYPE: "OneStepTheta"
   LINEAR_SOLVER: 1
 STRUCTURAL DYNAMIC/ONESTEPTHETA:
   THETA: 1
-POROFLUIDMULTIPHASE DYNAMIC:
-  THETA: 1
-  LINEAR_SOLVER: 1
-  INITIALFIELD: "field_by_condition"
-  INITFUNCNO: 1
-  FLUX_PROJ_SOLVER: 2
-POROFLUIDMULTIPHASE DYNAMIC/ARTERY COUPLING:
-  ARTERY_COUPLING_METHOD: "NTP"
-  REACFUNCT_ART: "0"
-  REACFUNCT_CONT: "0 0 0"
-  SCALEREAC_CONT: "0 0 0"
-  PRINT_OUT_SUMMARY_PAIRS: true
-POROMULTIPHASE DYNAMIC:
-  ITEMAX: 20
-  SOLVE_STRUCTURE: false
-  COUPALGO: "twoway_monolithic"
+porofluid_dynamic:
+  initial_condition:
+    type: by_condition
+porofluid_dynamic/artery_coupling:
+  coupling_method: node_to_point
+  reaction_terms:
+    artery_function_ids: "0"
+    artery_scaling: "0"
+    homogenized_function_ids: "0 0 0"
+    homogenized_scaling: "0 0 0"
+  evaluate_in_reference_configuration: true
+  print_coupling_pairs_summary: true
+porofluid_elasticity_dynamic:
+  solve_structure: false
+  coupling_scheme: twoway_monolithic
 SCALAR TRANSPORT DYNAMIC:
   SOLVERTYPE: "nonlinear"
   MAXTIME: 2.5
@@ -55,9 +57,7 @@ SCALAR TRANSPORT DYNAMIC/NONLINEAR:
   CONVTOL: 1e-08
   ABSTOLRES: -1
 SCALAR TRANSPORT DYNAMIC/ARTERY COUPLING:
-  ARTERY_COUPLING_METHOD: "NTP"
-  REACFUNCT_ART: "0"
-  REACFUNCT_CONT: "0"
+  coupling_method: node_to_point
 ARTERIAL DYNAMIC:
   DYNAMICTYPE: "Stationary"
   SOLVESCATRA: true

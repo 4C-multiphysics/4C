@@ -287,7 +287,7 @@ namespace PoroPressureBased
     std::shared_ptr<Core::Conditions::LocsysManager> locsysman_;
 
     //! flag for finite difference check
-    FdCheck fdcheck_;
+    bool fdcheck_;
   };
 }  // namespace PoroPressureBased
 

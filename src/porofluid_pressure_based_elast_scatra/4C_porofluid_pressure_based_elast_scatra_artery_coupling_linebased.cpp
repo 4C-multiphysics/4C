@@ -29,14 +29,13 @@ PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
     PorofluidElastScatraArteryCouplingLineBasedAlgorithm(
         std::shared_ptr<Core::FE::Discretization> artery_dis,
         std::shared_ptr<Core::FE::Discretization> homogenized_dis,
-        const Teuchos::ParameterList& coupling_params, const std::string& condition_name,
-        const std::string& artery_coupled_dof_name, const std::string& homogenized_coupled_dof_name)
-    : PorofluidElastScatraArteryCouplingNonConformingAlgorithm(artery_dis, homogenized_dis,
-          coupling_params, condition_name, artery_coupled_dof_name, homogenized_coupled_dof_name),
+        const Teuchos::ParameterList& coupling_params, const std::string& condition_name)
+    : PorofluidElastScatraArteryCouplingNonConformingAlgorithm(
+          artery_dis, homogenized_dis, coupling_params, condition_name),
       max_num_segments_per_artery_element_(Global::Problem::instance()
-              ->poro_fluid_multi_phase_dynamic_params()
-              .sublist("ARTERY COUPLING")
-              .get<int>("MAXNUMSEGPERARTELE"))
+              ->porofluid_pressure_based_dynamic_params()
+              .sublist("artery_coupling")
+              .get<int>("maximum_number_of_segments_per_artery_element"))
 {
   // user info
   if (my_mpi_rank_ == 0)
@@ -72,12 +71,12 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::se
 
   // calculate the blood vessel volume fraction (only porofluid needs to do this)
   if (homogenized_dis_->name() == "porofluid" &&
-      coupling_params_.get<bool>("OUTPUT_BLOODVESSELVOLFRAC"))
+      coupling_params_.get<bool>("output_blood_vessel_volume_fraction"))
     calculate_blood_vessel_volume_fraction();
 
   // print summary of pairs
   if (homogenized_dis_->name() == "porofluid" &&
-      coupling_params_.get<bool>("PRINT_OUT_SUMMARY_PAIRS"))
+      coupling_params_.get<bool>("print_coupling_pairs_summary"))
     output_summary();
 
   is_setup_ = true;

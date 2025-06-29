@@ -38,13 +38,26 @@ PoroPressureBased::create_algorithm_porofluid_elast_scatra(
   // Creation of Coupled Problem algorithm.
   std::shared_ptr<PoroPressureBased::PorofluidElastScatraBaseAlgorithm> algo;
 
+  // Translate updated porofluid input format to old adapter format
+  Teuchos::ParameterList adapter_global_time_params;
+  adapter_global_time_params.set<double>(
+      "TIMESTEP", timeparams.sublist("time_integration").get<double>("time_step"));
+  adapter_global_time_params.set<int>(
+      "NUMSTEP", timeparams.sublist("time_integration").get<int>("number_of_time_steps"));
+  adapter_global_time_params.set<double>(
+      "MAXTIME", timeparams.get<double>("total_simulation_time"));
+  adapter_global_time_params.set<bool>(
+      "artery_coupling_active", timeparams.get<bool>("artery_coupling_active"));
+  adapter_global_time_params.set<DivergenceAction>(
+      "divergence_action", timeparams.get<DivergenceAction>("divergence_action"));
+
   switch (solscheme)
   {
     case SolutionSchemePorofluidElastScatra::twoway_partitioned_nested:
     {
       // call constructor
       algo = std::make_shared<PoroPressureBased::PorofluidElastScatraNestedPartitionedAlgorithm>(
-          comm, timeparams);
+          comm, adapter_global_time_params);
       break;
     }
     case SolutionSchemePorofluidElastScatra::twoway_partitioned_sequential:
@@ -52,17 +65,17 @@ PoroPressureBased::create_algorithm_porofluid_elast_scatra(
       // call constructor
       algo =
           std::make_shared<PoroPressureBased::PorofluidElastScatraSequentialPartitionedAlgorithm>(
-              comm, timeparams);
+              comm, adapter_global_time_params);
       break;
     }
     case SolutionSchemePorofluidElastScatra::twoway_monolithic:
     {
-      const bool artery_coupl = timeparams.get<bool>("ARTERY_COUPLING");
+      const bool artery_coupl = timeparams.get<bool>("artery_coupling_active");
       if (!artery_coupl)
       {
         // call constructor
         algo = std::make_shared<PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm>(
-            comm, timeparams);
+            comm, adapter_global_time_params);
       }
       else
       {
@@ -70,7 +83,7 @@ PoroPressureBased::create_algorithm_porofluid_elast_scatra(
         algo = std::make_shared<
             PoroPressureBased::PorofluidElastScatraMonolithicArteryCouplingAlgorithm>(
 
-            comm, timeparams);
+            comm, adapter_global_time_params);
       }
       break;
     }
@@ -89,7 +102,6 @@ PoroPressureBased::create_and_init_artery_coupling_strategy(
     std::shared_ptr<Core::FE::Discretization> arterydis,
     std::shared_ptr<Core::FE::Discretization> contdis,
     const Teuchos::ParameterList& meshtyingparams, const std::string& condname,
-    const std::string& artcoupleddofname, const std::string& contcoupleddofname,
     const bool evaluate_on_lateral_surface)
 {
   // Creation of coupling strategy.
@@ -97,35 +109,35 @@ PoroPressureBased::create_and_init_artery_coupling_strategy(
 
   auto arterycoupl =
       Teuchos::getIntegralValue<Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod>(
-          meshtyingparams, "ARTERY_COUPLING_METHOD");
+          meshtyingparams, "coupling_method");
 
   switch (arterycoupl)
   {
-    case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::gpts:
-    case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mp:
+    case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::gauss_point_to_segment:
+    case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mortar_penalty:
     {
       if (evaluate_on_lateral_surface)
         strategy = std::make_shared<
             PoroPressureBased::PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm>(
-            arterydis, contdis, meshtyingparams, condname, artcoupleddofname, contcoupleddofname);
+            arterydis, contdis, meshtyingparams, condname);
       else
         strategy = std::make_shared<
             PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm>(
-            arterydis, contdis, meshtyingparams, condname, artcoupleddofname, contcoupleddofname);
+            arterydis, contdis, meshtyingparams, condname);
       break;
     }
     case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::nodal:
     {
       strategy =
           std::make_shared<PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm>(
-              arterydis, contdis, meshtyingparams, condname, artcoupleddofname, contcoupleddofname);
+              arterydis, contdis, meshtyingparams, condname);
       break;
     }
-    case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp:
+    case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::node_to_point:
     {
       strategy = std::make_shared<
           PoroPressureBased::PorofluidElastScatraArteryCouplingNodeToPointAlgorithm>(
-          arterydis, contdis, meshtyingparams, condname, artcoupleddofname, contcoupleddofname);
+          arterydis, contdis, meshtyingparams, condname);
       break;
     }
     default:
@@ -213,9 +225,9 @@ PoroPressureBased::setup_discretizations_and_field_coupling_porofluid_elast_scat
         artscatradis->get_dof_set_proxy();
 
     // get MAXNUMSEGPERARTELE
-    const int maxnumsegperele = problem->poro_fluid_multi_phase_dynamic_params()
-                                    .sublist("ARTERY COUPLING")
-                                    .get<int>("MAXNUMSEGPERARTELE");
+    const int maxnumsegperele = problem->porofluid_pressure_based_dynamic_params()
+                                    .sublist("artery_coupling")
+                                    .get<int>("maximum_number_of_segments_per_artery_element");
 
     // curr_seg_lengths: defined as element-wise quantity
     std::shared_ptr<Core::DOFSets::DofSetInterface> dofsetaux;

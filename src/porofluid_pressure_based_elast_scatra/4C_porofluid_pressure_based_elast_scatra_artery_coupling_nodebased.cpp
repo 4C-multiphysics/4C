@@ -22,10 +22,9 @@ PoroPressureBased::PorofluidElastScatraArteryCouplingNodeBasedAlgorithm::
     PorofluidElastScatraArteryCouplingNodeBasedAlgorithm(
         std::shared_ptr<Core::FE::Discretization> artery_dis,
         std::shared_ptr<Core::FE::Discretization> homogenized_dis,
-        const Teuchos::ParameterList& meshtying_params, const std::string& condition_name,
-        const std::string& artery_coupled_dof_name, const std::string& homogenized_coupled_dof_name)
-    : PorofluidElastScatraArteryCouplingBaseAlgorithm(artery_dis, homogenized_dis, meshtying_params,
-          artery_coupled_dof_name, homogenized_coupled_dof_name),
+        const Teuchos::ParameterList& meshtying_params, const std::string& condition_name)
+    : PorofluidElastScatraArteryCouplingBaseAlgorithm(
+          artery_dis, homogenized_dis, meshtying_params),
       condition_name_(condition_name)
 {
   // user info

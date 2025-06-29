@@ -98,7 +98,7 @@ void ScaTra::MeshtyingStrategyStd::init_conv_check_strategy()
     convcheckstrategy_ = std::make_shared<ScaTra::ConvCheckStrategyStdMicroScale>(
         scatratimint_->scatra_parameter_list()->sublist("NONLINEAR"));
   else if (Global::Problem::instance()->get_problem_type() ==
-           Core::ProblemType::poromultiphasescatra)
+           Core::ProblemType::porofluid_pressure_based_elast_scatra)
     convcheckstrategy_ = std::make_shared<ScaTra::ConvCheckStrategyPoroMultiphaseScatra>(
         scatratimint_->scatra_parameter_list()->sublist("NONLINEAR"));
   else

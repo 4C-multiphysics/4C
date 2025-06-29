@@ -19,140 +19,152 @@ void PoroPressureBased::set_valid_parameters_porofluid_elast(
 {
   using namespace Core::IO::InputSpecBuilders;
 
-  // ----------------------------------------------------------------------
-  // (1) general control parameters
-  list["POROMULTIPHASE DYNAMIC"] = group("POROMULTIPHASE DYNAMIC",
+  // general control parameters
+  list["porofluid_elasticity_dynamic"] = group("porofluid_elasticity_dynamic",
       {
+          parameter<double>("total_simulation_time",
+              {.description = "total simulation time", .default_value = -1.0}),
 
-          // Output type
-          parameter<int>(
-              "RESTARTEVERY", {.description = "write restart possibility every RESTARTEVERY steps",
-                                  .default_value = 1}),
-          // Time loop control
-          parameter<int>(
-              "NUMSTEP", {.description = "maximum number of Timesteps", .default_value = 200}),
-          parameter<double>(
-              "MAXTIME", {.description = "total simulation time", .default_value = 1000.0}),
+          // output
+          group("output",
+              {
+                  parameter<int>("results_every",
+                      {.description = "increment for writing solution", .default_value = 1}),
+                  parameter<int>("restart_data_every",
+                      {.description = "write restart data every nth steps", .default_value = 1}),
+              },
+              {.required = false}),
 
-          parameter<double>(
-              "TIMESTEP", {.description = "time step size dt", .default_value = -1.0}),
-          parameter<int>("RESULTSEVERY",
-              {.description = "increment for writing solution", .default_value = 1}),
-          parameter<int>("ITEMAX",
-              {.description = "maximum number of iterations over fields", .default_value = 10}),
+          // time integration
+          group("time_integration",
+              {
+                  parameter<int>("number_of_time_steps",
+                      {.description = "maximum number of time steps", .default_value = -1}),
+                  parameter<double>(
+                      "theta", {.description = "One-step-theta time integration factor",
+                                   .default_value = 0.5}),
+                  parameter<double>(
+                      "time_step", {.description = "time step size dt", .default_value = -1.0}),
+              },
+              {.required = false}),
 
-          // here the computation of the structure can be skipped, this is helpful if only
-          // fluid-scatra
-          // coupling should be calculated
+          // nonlinear solver
+          group("nonlinear_solver",
+              {
+                  parameter<int>("maximum_number_of_iterations",
+                      {.description = "maximum number of iterations over fields",
+                          .default_value = 10}),
+                  parameter<int>("linear_solver_id",
+                      {.description = "ID of linear solver", .default_value = 1}),
+              },
+              {.required = false}),
+
+          // solve or not structure
+          // this is helpful if only porofluid-scatra coupling should be calculated
           parameter<bool>(
-              "SOLVE_STRUCTURE", {.description = "Flag to skip computation of structural field",
+              "solve_structure", {.description = "Whether or not to solve the structure problem",
                                      .default_value = true}),
 
-
           // Coupling strategy for solvers
-          deprecated_selection<SolutionSchemePorofluidElast>("COUPALGO",
-              {
-                  {"twoway_partitioned", SolutionSchemePorofluidElast::twoway_partitioned},
-                  {"twoway_monolithic", SolutionSchemePorofluidElast::twoway_monolithic},
-              },
+          parameter<SolutionSchemePorofluidElast>("coupling_scheme",
               {.description = "Coupling strategies for porofluid-elasticity solvers",
                   .default_value = SolutionSchemePorofluidElast::twoway_partitioned}),
 
           // coupling with 1D artery network active
-          parameter<bool>("ARTERY_COUPLING",
-              {.description = "Coupling with 1D blood vessels.", .default_value = false})},
-      {.required =
-              false});  // ----------------------------------------------------------------------
-  // (2) monolithic parameters
-  list["POROMULTIPHASE DYNAMIC/MONOLITHIC"] = group("POROMULTIPHASE DYNAMIC/MONOLITHIC",
-      {
-
-          // convergence tolerances for monolithic coupling
-          parameter<double>("TOLRES_GLOBAL",
-              {.description = "tolerance in the residual norm for the Newton iteration",
-                  .default_value = 1e-8}),
-          parameter<double>("TOLINC_GLOBAL",
-              {.description = "tolerance in the increment norm for the Newton iteration",
-                  .default_value = 1e-8}),
-
-          // number of linear solver used for poroelasticity
-          parameter<int>("LINEAR_SOLVER",
-              {.description = "number of linear solver used for poroelasticity problems",
-                  .default_value = -1}),
-
-          // parameters for finite difference check
-          parameter<FdCheck>(
-              "FDCHECK", {.description = "flag for finite difference check: none or global",
-                             .default_value = FdCheck::none}),
-
-          deprecated_selection<VectorNorm>("VECTORNORM_RESF",
-              {
-                  {"L1", VectorNorm::l1},
-                  {"L1_Scaled", VectorNorm::l1_scaled},
-                  {"L2", VectorNorm::l2},
-                  {"Rms", VectorNorm::rms},
-                  {"Inf", VectorNorm::inf},
-              },
-              {.description = "type of norm to be applied to residuals",
-                  .default_value = VectorNorm::l2}),
-
-          deprecated_selection<VectorNorm>("VECTORNORM_INC",
-              {
-                  {"L1", VectorNorm::l1},
-                  {"L1_Scaled", VectorNorm::l1_scaled},
-                  {"L2", VectorNorm::l2},
-                  {"Rms", VectorNorm::rms},
-                  {"Inf", VectorNorm::inf},
-              },
-              {.description = "type of norm to be applied to residuals",
-                  .default_value = VectorNorm::l2}),
-
-          // flag for equilibration of global system of equations
-          parameter<Core::LinAlg::EquilibrationMethod>("EQUILIBRATION",
-              {.description = "flag for equilibration of global system of equations",
-                  .default_value = Core::LinAlg::EquilibrationMethod::none}),
-
-          // convergence criteria adaptivity --> note ADAPTCONV_BETTER set pretty small
-          parameter<bool>("ADAPTCONV", {.description = "Switch on adaptive control of linear "
-                                                       "solver tolerance for nonlinear solution",
-                                           .default_value = false}),
-          parameter<double>("ADAPTCONV_BETTER",
-              {.description =
-                      "The linear solver shall be this much better than the current nonlinear "
-                      "residual in the nonlinear convergence limit",
-                  .default_value = 0.001})},
+          parameter<bool>("artery_coupling_active",
+              {.description = "Coupling with 1D blood vessels.", .default_value = false}),
+      },
       {.required = false});
 
-  // ----------------------------------------------------------------------
-  // (3) partitioned parameters
-  list["POROMULTIPHASE DYNAMIC/PARTITIONED"] = group("POROMULTIPHASE DYNAMIC/PARTITIONED",
+  // monolithic parameters
+  list["porofluid_elasticity_dynamic/monolithic"] = group("porofluid_elasticity_dynamic/monolithic",
       {
-
-          // convergence tolerance of outer iteration loop
-          parameter<double>(
-              "CONVTOL", {.description = "tolerance for convergence check of outer iteration",
-                             .default_value = 1e-6}),
-
-          // flag for relaxation of partitioned scheme
-          deprecated_selection<RelaxationMethods>("RELAXATION",
+          // nonlinear solver
+          group("nonlinear_solver",
               {
-                  {"none", RelaxationMethods::none},
-                  {"Constant", RelaxationMethods::constant},
-                  {"Aitken", RelaxationMethods::aitken},
-              },
-              {.description = "flag for relaxation of partitioned scheme",
-                  .default_value = RelaxationMethods::none}),
+                  parameter<int>("linear_solver_id",
+                      {.description = "number of linear solver used for poroelasticity problems",
+                          .default_value = -1}),
 
-          // parameters for relaxation of partitioned coupling
-          parameter<double>(
-              "STARTOMEGA", {.description = "fixed relaxation parameter", .default_value = 1.0}),
-          parameter<double>(
-              "MINOMEGA", {.description = "smallest omega allowed for Aitken relaxation",
+                  // flag for equilibration of global system of equations
+                  parameter<Core::LinAlg::EquilibrationMethod>("equilibration",
+                      {.description = "flag for equilibration of global system of equations",
+                          .default_value = Core::LinAlg::EquilibrationMethod::none}),
+
+                  group("residual",
+                      {
+                          parameter<double>("global_tolerance",
+                              {.description = "Tolerance for residual norm of the nonlinear solver",
+                                  .default_value = 1e-8}),
+                          parameter<VectorNorm>("vector_norm",
+                              {.description = "type of norm to be applied to residuals",
+                                  .default_value = VectorNorm::l2}),
+                      },
+                      {.required = false}),
+
+                  group("increment",
+                      {
+                          parameter<double>("global_tolerance",
+                              {.description =
+                                      "Tolerance for increment norm of the nonlinear solver",
+                                  .default_value = 1e-8}),
+                          parameter<VectorNorm>("vector_norm",
+                              {.description = "type of norm to be applied to residuals",
+                                  .default_value = VectorNorm::l2}),
+                      },
+                      {.required = false}),
+
+                  // convergence criteria adaptivity
+                  group("convergence_criteria_adaptivity",
+                      {
+                          parameter<bool>(
+                              "active", {.description = "Activate adaptive control of linear "
+                                                        "solver tolerance for nonlinear solution",
+                                            .default_value = false}),
+                          parameter<double>("nonlinear_to_linear_tolerance_ratio",
+                              {.description = "The linear solver shall be this much better than "
+                                              "the current nonlinear residual in the nonlinear "
+                                              "convergence limit",
+                                  .default_value = 0.1}),
+                      },
+                      {.required = false}),
+              },
+              {.required = false}),
+
+          // finite difference check
+          parameter<bool>("fd_check", {.description = "FD check active", .default_value = false}),
+      },
+      {.required = false});
+
+  // partitioned parameters
+  list["porofluid_elasticity_dynamic/partitioned"] =
+      group("porofluid_elasticity_dynamic/partitioned",
+          {
+              // convergence tolerance of outer iteration loop
+              parameter<double>("convergence_tolerance",
+                  {.description = "tolerance for convergence check of outer iteration",
+                      .default_value = 1e-6}),
+
+              // relaxation of partitioned scheme
+              group("relaxation",
+                  {
+                      parameter<RelaxationMethods>(
+                          "type", {.description = "type relaxation of partitioned scheme",
+                                      .default_value = RelaxationMethods::none}),
+
+                      // parameters for relaxation of partitioned coupling
+                      parameter<double>("start_omega",
+                          {.description = "fixed relaxation parameter", .default_value = 1.0}),
+                      parameter<double>("minimum_omega",
+                          {.description = "smallest omega allowed for Aitken relaxation",
                               .default_value = 0.1}),
-          parameter<double>(
-              "MAXOMEGA", {.description = "largest omega allowed for Aitken relaxation",
-                              .default_value = 10.0})},
-      {.required = false});
+                      parameter<double>("maximum_omega",
+                          {.description = "largest omega allowed for Aitken relaxation",
+                              .default_value = 10.0}),
+                  },
+                  {.required = false}),
+          },
+          {.required = false});
 }
 
 FOUR_C_NAMESPACE_CLOSE

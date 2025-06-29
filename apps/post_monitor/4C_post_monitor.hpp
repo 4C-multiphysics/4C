@@ -458,7 +458,7 @@ class TsiThermoMonWriter : public ThermoMonWriter
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 /**
- * \brief monitoring for porofluidmultiphase-problems
+ * \brief monitoring for pressure-based porofluid-problems
  */
 class PoroFluidMultiMonWriter : public FieldMonWriter
 {
@@ -492,8 +492,8 @@ class PoroFluidMultiMonWriter : public FieldMonWriter
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 /**
- * \brief monitoring for porofluidmultiphase-quantities as part of a
- *        Poromultiphase(Scatra)-problem
+ * \brief monitoring for pressure-based porofluid-quantities as part of a
+ *        porofluid-elasticity problem potentially with scalar transport
  */
 class PoroMultiElastScatraFluidMonWriter : public PoroFluidMultiMonWriter
 {

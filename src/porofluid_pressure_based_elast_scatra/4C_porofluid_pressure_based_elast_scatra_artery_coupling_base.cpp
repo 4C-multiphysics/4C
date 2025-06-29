@@ -20,15 +20,14 @@ PoroPressureBased::PorofluidElastScatraArteryCouplingBaseAlgorithm::
     PorofluidElastScatraArteryCouplingBaseAlgorithm(
         const std::shared_ptr<Core::FE::Discretization> artery_dis,
         const std::shared_ptr<Core::FE::Discretization> homogenized_dis,
-        const Teuchos::ParameterList& coupling_params, const std::string& artery_coupled_dof_name,
-        const std::string& homogenized_coupled_dof_name)
+        const Teuchos::ParameterList& coupling_params)
     : artery_dis_(artery_dis),
       homogenized_dis_(homogenized_dis),
       my_mpi_rank_(Core::Communication::my_mpi_rank(artery_dis->get_comm())),
       evaluate_in_ref_config_(Global::Problem::instance()
-              ->poro_fluid_multi_phase_dynamic_params()
-              .sublist("ARTERY COUPLING")
-              .get<bool>("EVALUATE_IN_REF_CONFIG")),
+              ->porofluid_pressure_based_dynamic_params()
+              .sublist("artery_coupling")
+              .get<bool>("evaluate_in_reference_configuration")),
       comm_(artery_dis->get_comm())
 {
   // safety check
@@ -40,7 +39,7 @@ PoroPressureBased::PorofluidElastScatraArteryCouplingBaseAlgorithm::
   int dof_value;
   size_t index = 0;
   std::istringstream coupled_artery_dof_stream(
-      Teuchos::getNumericStringParameter(coupling_params, artery_coupled_dof_name));
+      Teuchos::getNumericStringParameter(coupling_params.sublist("coupled_dofs"), "artery"));
   while (coupled_artery_dof_stream >> dof_value)
   {
     // check ascending order
@@ -54,7 +53,7 @@ PoroPressureBased::PorofluidElastScatraArteryCouplingBaseAlgorithm::
   // 2) 2D, 3D continuous field discretization
   index = 0;
   std::istringstream coupled_homogenized_dof_stream(
-      Teuchos::getNumericStringParameter(coupling_params, homogenized_coupled_dof_name));
+      Teuchos::getNumericStringParameter(coupling_params.sublist("coupled_dofs"), "homogenized"));
   while (coupled_homogenized_dof_stream >> dof_value)
   {
     // check ascending order
@@ -74,7 +73,7 @@ PoroPressureBased::PorofluidElastScatraArteryCouplingBaseAlgorithm::
   }
 
   if (coupled_dofs_homogenized_.size() != coupled_dofs_artery_.size())
-    FOUR_C_THROW("size mismatch between COUPLEDDOFS_ART and COUPLEDDOFS_PORO");
+    FOUR_C_THROW("size mismatch between the coupled DOFs in the artery and the homogenized domain");
 
   num_coupled_dofs_ = coupled_dofs_homogenized_.size();
 }

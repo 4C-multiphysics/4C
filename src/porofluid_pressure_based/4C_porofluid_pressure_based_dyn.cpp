@@ -49,10 +49,10 @@ void porofluid_pressure_based_dyn(int restart)
   // Parameter reading
   // access structural dynamic params list which will be possibly modified while creating the time
   // integrator
-  const Teuchos::ParameterList& porodyn = problem->poro_fluid_multi_phase_dynamic_params();
+  const Teuchos::ParameterList& porodyn = problem->porofluid_pressure_based_dynamic_params();
 
   // get the solver number used for poro fluid solver
-  const int linsolvernumber = porodyn.get<int>("LINEAR_SOLVER");
+  const int linsolvernumber = porodyn.sublist("nonlinear_solver").get<int>("linear_solver_id");
 
   // -------------------------------------------------------------------
   // access the discretization(s)
@@ -71,17 +71,17 @@ void porofluid_pressure_based_dyn(int restart)
     // get the coupling method
     auto arterycoupl =
         Teuchos::getIntegralValue<Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod>(
-            porodyn.sublist("ARTERY COUPLING"), "ARTERY_COUPLING_METHOD");
+            porodyn.sublist("artery_coupling"), "coupling_method");
 
     // lateral surface coupling active?
     const bool evaluate_on_lateral_surface =
-        porodyn.sublist("ARTERY COUPLING").get<bool>("LATERAL_SURFACE_COUPLING");
+        porodyn.sublist("artery_coupling").get<bool>("lateral_surface_coupling");
 
     switch (arterycoupl)
     {
-      case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::gpts:
-      case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mp:
-      case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp:
+      case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::gauss_point_to_segment:
+      case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::mortar_penalty:
+      case Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::node_to_point:
       {
         actdis->fill_complete();
         nearby_ele_pairs = PoroPressureBased::extended_ghosting_artery_discretization(
@@ -118,7 +118,7 @@ void porofluid_pressure_based_dyn(int restart)
   // time-integration (or stationary) scheme
   // -------------------------------------------------------------------
   auto timintscheme =
-      Teuchos::getIntegralValue<PoroPressureBased::TimeIntegrationScheme>(porodyn, "TIMEINTEGR");
+      porodyn.sublist("time_integration").get<PoroPressureBased::TimeIntegrationScheme>("scheme");
 
   // build poro fluid time integrator
   std::shared_ptr<Adapter::PoroFluidMultiphase> algo = PoroPressureBased::create_algorithm(

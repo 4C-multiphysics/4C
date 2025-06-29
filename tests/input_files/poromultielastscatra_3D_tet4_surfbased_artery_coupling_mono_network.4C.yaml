@@ -5,48 +5,55 @@ TITLE:
   - "publicly available from"
   - "https:"
 PROBLEM TYPE:
-  PROBLEMTYPE: "Multiphase_Poroelasticity_ScaTra"
-POROMULTIPHASESCATRA DYNAMIC:
-  RESTARTEVERY: 3
-  NUMSTEP: 4
-  MAXTIME: 0.024
-  TIMESTEP: 0.006
-  RESULTSEVERY: 2
-  COUPALGO: "twoway_monolithic"
-  ARTERY_COUPLING: true
-POROMULTIPHASESCATRA DYNAMIC/MONOLITHIC:
-  TOLRES_GLOBAL: 1e-07
-  TOLINC_GLOBAL: 1e-07
-  LINEAR_SOLVER: 1
+  PROBLEMTYPE: "porofluid_pressure_based_elasticity_scatra"
+porofluid_elasticity_scatra_dynamic:
+  total_simulation_time: 0.024
+  time_integration:
+    time_step: 0.006
+    number_of_time_steps: 4
+    theta: 1
+  output:
+    results_every: 2
+    restart_data_every: 3
+  coupling_scheme: twoway_monolithic
+  artery_coupling_active: true
+porofluid_elasticity_scatra_dynamic/monolithic:
+  nonlinear_solver:
+    linear_solver_id: 1
+    residual:
+      global_tolerance: 1e-07
+    increment:
+      global_tolerance: 1e-07
 STRUCTURAL DYNAMIC:
   INT_STRATEGY: "Standard"
   DYNAMICTYPE: "OneStepTheta"
   LINEAR_SOLVER: 1
 STRUCTURAL DYNAMIC/ONESTEPTHETA:
   THETA: 1
-POROFLUIDMULTIPHASE DYNAMIC:
-  THETA: 1
-  LINEAR_SOLVER: 1
-  OUTPUT_SATANDPRESS: false
-  OUTPUT_SOLIDPRESS: false
-  OUTPUT_POROSITY: false
-  INITIALFIELD: "field_by_condition"
-  INITFUNCNO: 1
-  FLUX_PROJ_SOLVER: 2
-POROFLUIDMULTIPHASE DYNAMIC/ARTERY COUPLING:
-  MAXNUMSEGPERARTELE: 7
-  ARTERY_COUPLING_METHOD: "GPTS"
-  REACFUNCT_ART: "10"
-  SCALEREAC_ART: "-1"
-  REACFUNCT_CONT: "0 10"
-  SCALEREAC_CONT: "0 1"
-  LATERAL_SURFACE_COUPLING: true
-  NUMPATCH_AXI: 2
-  NUMPATCH_RAD: 4
-  PRINT_OUT_SUMMARY_PAIRS: true
-POROMULTIPHASE DYNAMIC:
-  SOLVE_STRUCTURE: false
-  COUPALGO: "twoway_monolithic"
+porofluid_dynamic:
+  output:
+    saturation_and_pressure: false
+    solid_pressure: false
+    porosity: false
+  initial_condition:
+    type: by_condition
+porofluid_dynamic/artery_coupling:
+  coupling_method: gauss_point_to_segment
+  maximum_number_of_segments_per_artery_element: 7
+  reaction_terms:
+    artery_function_ids: "10"
+    artery_scaling: "-1"
+    homogenized_function_ids: "0 10"
+    homogenized_scaling: "0 1"
+  lateral_surface_coupling: true
+  integration_patches:
+    number_of_patches_axial: 2
+    number_of_patches_radial: 4
+  evaluate_in_reference_configuration: true
+  print_coupling_pairs_summary: true
+porofluid_elasticity_dynamic:
+  solve_structure: false
+  coupling_scheme: twoway_monolithic
 SCALAR TRANSPORT DYNAMIC:
   SOLVERTYPE: "nonlinear"
   MAXTIME: 1
@@ -64,12 +71,12 @@ SCALAR TRANSPORT DYNAMIC/NONLINEAR:
   CONVTOL: 1e-08
   ABSTOLRES: -1
 SCALAR TRANSPORT DYNAMIC/ARTERY COUPLING:
-  ARTERY_COUPLING_METHOD: "GPTS"
-  PENALTY: 0
-  REACFUNCT_ART: "11"
-  SCALEREAC_ART: "-1"
-  REACFUNCT_CONT: "11"
-  SCALEREAC_CONT: "1"
+  coupling_method: gauss_point_to_segment
+  reaction_terms:
+    artery_function_ids: "11"
+    artery_scaling: "-1"
+    homogenized_function_ids: "11"
+    homogenized_scaling: "1"
 ARTERIAL DYNAMIC:
   DYNAMICTYPE: "Stationary"
   SOLVESCATRA: true

@@ -234,7 +234,8 @@ std::map<int, std::set<int>> PoroPressureBased::extended_ghosting_artery_discret
   const std::vector<int> artEleGIDs = std::invoke(
       [&]()
       {
-        if (couplingmethod == Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::ntp)
+        if (couplingmethod ==
+            Inpar::ArteryNetwork::ArteryPorofluidElastScatraCouplingMethod::node_to_point)
         {
           return get_coupling_arteries_node_to_point(artdis, *artsearchdis);
         }

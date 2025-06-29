@@ -71,7 +71,7 @@ PoroPressureBased::PorofluidElastMonolithicAlgorithm::PorofluidElastMonolithicAl
       timernewton_("", true),
       dtsolve_(0.0),
       dtele_(0.0),
-      fdcheck_(PoroPressureBased::FdCheck::none)
+      fdcheck_(false)
 {
 }
 
@@ -94,20 +94,31 @@ void PoroPressureBased::PorofluidElastMonolithicAlgorithm::init(
   if (not solve_structure_) print_structure_disabled_info();
 
   // Get the parameters for the convergence_check
-  itmax_ = algoparams.get<int>("ITEMAX");
-  ittolres_ = algoparams.sublist("MONOLITHIC").get<double>("TOLRES_GLOBAL");
-  ittolinc_ = algoparams.sublist("MONOLITHIC").get<double>("TOLINC_GLOBAL");
+  itmax_ = algoparams.sublist("nonlinear_solver").get<int>("maximum_number_of_iterations");
+  ittolres_ = algoparams.sublist("monolithic")
+                  .sublist("nonlinear_solver")
+                  .sublist("residual")
+                  .get<double>("global_tolerance");
+  ittolinc_ = algoparams.sublist("monolithic")
+                  .sublist("nonlinear_solver")
+                  .sublist("increment")
+                  .get<double>("global_tolerance");
 
   blockrowdofmap_ = std::make_shared<Core::LinAlg::MultiMapExtractor>();
 
-  fdcheck_ = Teuchos::getIntegralValue<PoroPressureBased::FdCheck>(
-      algoparams.sublist("MONOLITHIC"), "FDCHECK");
+  fdcheck_ = algoparams.sublist("monolithic").get<bool>("fd_check");
 
   equilibration_method_ = Teuchos::getIntegralValue<Core::LinAlg::EquilibrationMethod>(
-      algoparams.sublist("MONOLITHIC"), "EQUILIBRATION");
+      algoparams.sublist("monolithic").sublist("nonlinear_solver"), "equilibration");
 
-  solveradaptolbetter_ = algoparams.sublist("MONOLITHIC").get<double>("ADAPTCONV_BETTER");
-  solveradapttol_ = algoparams.sublist("MONOLITHIC").get<bool>("ADAPTCONV");
+  solveradaptolbetter_ = algoparams.sublist("monolithic")
+                             .sublist("nonlinear_solver")
+                             .sublist("convergence_criteria_adaptivity")
+                             .get<double>("nonlinear_to_linear_tolerance_ratio");
+  solveradapttol_ = algoparams.sublist("monolithic")
+                        .sublist("nonlinear_solver")
+                        .sublist("convergence_criteria_adaptivity")
+                        .get<bool>("active");
 }
 
 /*----------------------------------------------------------------------*
@@ -209,7 +220,7 @@ void PoroPressureBased::PorofluidElastMonolithicAlgorithm::time_step()
       evaluate(iterinc_);
 
       // perform FD Check of monolithic system matrix
-      if (fdcheck_ == FdCheck::global) poro_fd_check();
+      if (fdcheck_) poro_fd_check();
     }
     else
     {
@@ -594,7 +605,8 @@ bool PoroPressureBased::PorofluidElastMonolithicAlgorithm::setup_solver()
   const Teuchos::ParameterList& poromultdyn =
       Global::Problem::instance()->poro_multi_phase_dynamic_params();
   // get the solver number used for linear poroelasticity solver
-  const int linsolvernumber = poromultdyn.sublist("MONOLITHIC").get<int>("LINEAR_SOLVER");
+  const int linsolvernumber =
+      poromultdyn.sublist("monolithic").sublist("nonlinear_solver").get<int>("linear_solver_id");
   // check if the poroelasticity solver has a valid solver number
   if (linsolvernumber == (-1))
     FOUR_C_THROW(
@@ -608,9 +620,11 @@ bool PoroPressureBased::PorofluidElastMonolithicAlgorithm::setup_solver()
   create_linear_solver(solverparams, solvertype);
 
   vectornormfres_ = Teuchos::getIntegralValue<PoroPressureBased::VectorNorm>(
-      poromultdyn.sublist("MONOLITHIC"), "VECTORNORM_RESF");
+      poromultdyn.sublist("monolithic").sublist("nonlinear_solver").sublist("residual"),
+      "vector_norm");
   vectornorminc_ = Teuchos::getIntegralValue<PoroPressureBased::VectorNorm>(
-      poromultdyn.sublist("MONOLITHIC"), "VECTORNORM_INC");
+      poromultdyn.sublist("monolithic").sublist("nonlinear_solver").sublist("increment"),
+      "vector_norm");
 
   return true;
 }

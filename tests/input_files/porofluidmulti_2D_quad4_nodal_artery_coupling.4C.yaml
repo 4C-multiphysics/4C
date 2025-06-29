@@ -9,31 +9,36 @@ TITLE:
 PROBLEM SIZE:
   DIM: 2
 PROBLEM TYPE:
-  PROBLEMTYPE: "Multiphase_Porous_Flow"
+  PROBLEMTYPE: "porofluid_pressure_based"
 DISCRETISATION:
   NUMSTRUCDIS: 0
   NUMALEDIS: 0
   NUMTHERMDIS: 0
-POROFLUIDMULTIPHASE DYNAMIC:
-  MAXTIME: 2
-  NUMSTEP: 15
-  RESULTSEVERY: 2
-  RESTARTEVERY: 2
-  THETA: 1
-  LINEAR_SOLVER: 1
-  ITEMAX: 50
-  FDCHECKEPS: 1e-07
-  FDCHECKTOL: 1e-05
-  OUTPUT_POROSITY: false
-  INITIALFIELD: "field_by_function"
-  INITFUNCNO: 1
-  FLUX_PROJ_SOLVER: 2
-  FLUX_PROJ_METHOD: "L2_projection"
-  ARTERY_COUPLING: true
-POROFLUIDMULTIPHASE DYNAMIC/ARTERY COUPLING:
-  ARTERY_COUPLING_METHOD: "Nodal"
-  COUPLEDDOFS_ART: "1"
-  COUPLEDDOFS_PORO: "5"
+porofluid_dynamic:
+  total_simulation_time: 1.5
+  time_integration:
+    number_of_time_steps: 15
+    time_step: 0.1
+    theta: 1
+  nonlinear_solver:
+    linear_solver_id: 1
+  output:
+    results_every: 2
+    restart_data_every: 2
+    porosity: false
+  initial_condition:
+    type: by_function
+    function_id: 1
+  flux_reconstruction:
+    active: true
+    solver_id: 2
+  artery_coupling_active: true
+porofluid_dynamic/artery_coupling:
+  coupling_method: nodal
+  coupled_dofs:
+    artery: "1"
+    homogenized: "5"
+  evaluate_in_reference_configuration: true
 ARTERIAL DYNAMIC:
   DYNAMICTYPE: "Stationary"
   TIMESTEP: 0.1

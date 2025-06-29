@@ -3,28 +3,32 @@ TITLE:
   - "Minimal test for monolithic framework also testing finite difference check"
   - "of monolithic system matrix"
 PROBLEM TYPE:
-  PROBLEMTYPE: "Multiphase_Poroelasticity"
+  PROBLEMTYPE: "porofluid_pressure_based_elasticity"
 STRUCTURAL DYNAMIC:
   INT_STRATEGY: "Standard"
   DYNAMICTYPE: "OneStepTheta"
   LINEAR_SOLVER: 1
 STRUCTURAL DYNAMIC/ONESTEPTHETA:
   THETA: 1
-POROFLUIDMULTIPHASE DYNAMIC:
-  THETA: 1
-  LINEAR_SOLVER: 1
-  INITIALFIELD: "field_by_function"
-  INITFUNCNO: 1
-POROMULTIPHASE DYNAMIC:
-  NUMSTEP: 40
-  MAXTIME: 0.2
-  TIMESTEP: 0.005
-  COUPALGO: "twoway_monolithic"
-POROMULTIPHASE DYNAMIC/MONOLITHIC:
-  TOLRES_GLOBAL: 1e-06
-  TOLINC_GLOBAL: 1e-06
-  LINEAR_SOLVER: 1
-  FDCHECK: "global"
+porofluid_elasticity_dynamic:
+  total_simulation_time: 0.2
+  time_integration:
+    theta: 1
+    number_of_time_steps: 40
+    time_step: 0.005
+  coupling_scheme: twoway_monolithic
+porofluid_dynamic:
+  initial_condition:
+    type: by_function
+    function_id: 1
+porofluid_elasticity_dynamic/monolithic:
+  fd_check: true
+  nonlinear_solver:
+    linear_solver_id: 1
+    residual:
+      global_tolerance: 1e-06
+    increment:
+      global_tolerance: 1e-06
 SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "Solver"

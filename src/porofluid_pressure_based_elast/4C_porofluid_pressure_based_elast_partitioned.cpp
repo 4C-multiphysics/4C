@@ -58,7 +58,7 @@ void PoroPressureBased::PorofluidElastPartitionedAlgorithm::init(
       struct_disname, fluid_disname, isale, nds_disp, nds_vel, nds_solidpressure,
       ndsporofluid_scatra, nearby_ele_pairs);
 
-  artery_coupling_active_ = fluidparams.get<bool>("ARTERY_COUPLING");
+  artery_coupling_active_ = fluidparams.get<bool>("artery_coupling_active");
 
   // initialize increment vectors
   phiincnp_ = Core::LinAlg::create_vector(*porofluid_algo()->dof_row_map(0), true);
@@ -77,19 +77,19 @@ void PoroPressureBased::PorofluidElastPartitionedAlgorithm::init(
       Core::LinAlg::create_vector(*porofluid_algo()->discretization()->dof_row_map(), true);
 
   // Get the parameters for the convergence_check
-  itmax_ = algoparams.get<int>("ITEMAX");
-  ittol_ = algoparams.sublist("PARTITIONED").get<double>("CONVTOL");
+  itmax_ = algoparams.sublist("nonlinear_solver").get<int>("maximum_number_of_iterations");
+  ittol_ = algoparams.sublist("partitioned").get<double>("convergence_tolerance");
 
   // restart
-  writerestartevery_ = globaltimeparams.get<int>("RESTARTEVERY");
+  writerestartevery_ = globaltimeparams.sublist("output").get<int>("restart_data_every");
 
   // relaxation parameters
-  startomega_ = algoparams.sublist("PARTITIONED").get<double>("STARTOMEGA");
-  omegamin_ = algoparams.sublist("PARTITIONED").get<double>("MINOMEGA");
-  omegamax_ = algoparams.sublist("PARTITIONED").get<double>("MAXOMEGA");
+  startomega_ = algoparams.sublist("partitioned").sublist("relaxation").get<double>("start_omega");
+  omegamin_ = algoparams.sublist("partitioned").sublist("relaxation").get<double>("minimum_omega");
+  omegamax_ = algoparams.sublist("partitioned").sublist("relaxation").get<double>("maximum_omega");
 
   relaxationmethod_ = Teuchos::getIntegralValue<PoroPressureBased::RelaxationMethods>(
-      algoparams.sublist("PARTITIONED"), "RELAXATION");
+      algoparams.sublist("partitioned").sublist("relaxation"), "type");
 }
 
 /*----------------------------------------------------------------------*

@@ -56,14 +56,14 @@ void porofluid_elast_dyn(int restart)
   // access scatra params list
   const Teuchos::ParameterList& structdyn = problem->structural_dynamic_params();
   // access poro fluid dynamic params list
-  const Teuchos::ParameterList& fluiddyn = problem->poro_fluid_multi_phase_dynamic_params();
+  const Teuchos::ParameterList& fluiddyn = problem->porofluid_pressure_based_dynamic_params();
 
   // -------------------------------------------------------------------
   // algorithm construction depending on
   // coupling scheme
   // -------------------------------------------------------------------
   auto solscheme = Teuchos::getIntegralValue<PoroPressureBased::SolutionSchemePorofluidElast>(
-      poroparams, "COUPALGO");
+      poroparams, "coupling_scheme");
 
   std::shared_ptr<PoroPressureBased::PorofluidElastAlgorithm> algo =
       PoroPressureBased::create_algorithm_porofluid_elast(solscheme, poroparams, comm);

@@ -33,9 +33,7 @@ namespace PoroPressureBased
     PorofluidElastScatraArteryCouplingNodeBasedAlgorithm(
         std::shared_ptr<Core::FE::Discretization> artery_dis,
         std::shared_ptr<Core::FE::Discretization> homogenized_dis,
-        const Teuchos::ParameterList& meshtying_params, const std::string& condition_name,
-        const std::string& artery_coupled_dof_name,
-        const std::string& homogenized_coupled_dof_name);
+        const Teuchos::ParameterList& meshtying_params, const std::string& condition_name);
 
     //! Evaluate the 1D-3D coupling
     void evaluate(std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> sysmat,

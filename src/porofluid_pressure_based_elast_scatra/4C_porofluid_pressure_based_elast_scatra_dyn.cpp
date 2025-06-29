@@ -49,12 +49,13 @@ void porofluid_pressure_based_elast_scatra_dyn(int restart)
   // access structure params list
   const Teuchos::ParameterList& structure_params = problem->structural_dynamic_params();
   // access porofluid dynamic params list
-  const Teuchos::ParameterList& porofluid_params = problem->poro_fluid_multi_phase_dynamic_params();
+  const Teuchos::ParameterList& porofluid_params =
+      problem->porofluid_pressure_based_dynamic_params();
   // access scatra dynamic params list
   const Teuchos::ParameterList& scatra_params = problem->scalar_transport_dynamic_params();
 
   // do we perform coupling with 1D artery
-  const bool artery_coupling = porofluid_elast_scatra_params.get<bool>("ARTERY_COUPLING");
+  const bool artery_coupling = porofluid_elast_scatra_params.get<bool>("artery_coupling_active");
 
   // initialize variables for dof set numbers
   int nds_disp(-1);
@@ -74,7 +75,7 @@ void porofluid_pressure_based_elast_scatra_dyn(int restart)
   // -------------------------------------------------------------------
   auto solution_scheme =
       Teuchos::getIntegralValue<PoroPressureBased::SolutionSchemePorofluidElastScatra>(
-          porofluid_elast_scatra_params, "COUPALGO");
+          porofluid_elast_scatra_params, "coupling_scheme");
 
   std::shared_ptr<PoroPressureBased::PorofluidElastScatraBaseAlgorithm> algo =
       PoroPressureBased::create_algorithm_porofluid_elast_scatra(
