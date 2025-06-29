@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_io_yaml.hpp"
 #include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 
@@ -41,25 +42,30 @@ namespace Core::IO::InputSpecBuilders::Validators
   {
     using Predicate = std::function<bool(const T&)>;
     using Describe = std::function<void(std::ostream&)>;
+    using EmitMetadata = std::function<void(YamlNodeRef)>;
 
     struct Concept
     {
       Predicate pred;
       Describe desc;
-
-      Concept(Predicate p, Describe d) : pred(std::move(p)), desc(std::move(d)) {}
+      EmitMetadata emit;
 
       bool operator()(const T& v) const { return pred(v); }
       void describe(std::ostream& os) const { desc(os); }
+      void emit_metadata(YamlNodeRef node) const { emit(node); }
     };
 
-    std::shared_ptr<const Concept> impl_;
+    Concept impl_;
 
    public:
     //! Type-erasing constructor.
-    template <typename FPredicate, typename FDescribe>
-    Validator(FPredicate p, FDescribe d)
-        : impl_(std::make_shared<Concept>(Predicate(std::move(p)), Describe(std::move(d))))
+    template <typename FPredicate, typename FDescribe, typename FEmitMetadata>
+    Validator(FPredicate p, FDescribe d, FEmitMetadata em)
+        : impl_{
+              .pred = Predicate(std::move(p)),
+              .desc = Describe(std::move(d)),
+              .emit = EmitMetadata(std::move(em)),
+          }
     {
     }
 
@@ -74,13 +80,18 @@ namespace Core::IO::InputSpecBuilders::Validators
       requires(std::same_as<T, std::decay_t<U>>)
     [[nodiscard]] bool operator()(const U& v) const
     {
-      return (*impl_)(v);
+      return impl_(v);
     }
 
     /**
      * Describes what this validator expects from the value in human-readable form .
      */
-    void describe(std::ostream& os) const { impl_->describe(os); }
+    void describe(std::ostream& os) const { impl_.describe(os); }
+
+    /**
+     * Emits metadata about this validator into the given YAML node.
+     */
+    void emit_metadata(YamlNodeRef node) const { impl_.emit_metadata(node); }
 
     friend std::ostream& operator<<(std::ostream& os, const Validator& v)
     {
@@ -239,7 +250,20 @@ template <typename Low, typename High, typename T>
         return ((lt == Internal::InclExclType::incl) ? (v >= lv) : (v > lv)) &&
                ((ht == Internal::InclExclType::incl) ? (v <= hv) : (v < hv));
       },
-      [description](std::ostream& os) { os << description; });
+      [description](std::ostream& os) { os << description; },
+      [lv = low_val, hv = high_val, lt = low_type, ht = high_type](YamlNodeRef yaml)
+      {
+        auto& node = yaml.node;
+        node |= ryml::MAP;
+        auto range_node = node["range"];
+        range_node |= ryml::MAP;
+        emit_value_as_yaml(yaml.wrap(range_node["minimum"]), lv);
+        emit_value_as_yaml(yaml.wrap(range_node["maximum"]), hv);
+        const bool min_excl = (lt == Internal::InclExclType::excl);
+        emit_value_as_yaml(yaml.wrap(range_node["minimum_exclusive"]), min_excl);
+        const bool max_excl = (ht == Internal::InclExclType::excl);
+        emit_value_as_yaml(yaml.wrap(range_node["maximum_exclusive"]), max_excl);
+      });
 }
 
 template <Core::IO::InputSpecBuilders::Validators::Internal::Numeric T>
@@ -275,7 +299,18 @@ template <typename T>
   set_description_str += "}";
 
   return Validator<T>([set](const T& v) { return set.contains(v); },
-      [set_description_str](std::ostream& os) { os << set_description_str; });
+      [set_description_str](std::ostream& os) { os << set_description_str; },
+      [set](YamlNodeRef yaml)
+      {
+        auto& node = yaml.node;
+        node |= ryml::MAP;
+        auto set_node = node["set"];
+        set_node |= ryml::SEQ;
+        for (const auto& val : set)
+        {
+          emit_value_as_yaml(yaml.wrap(set_node.append_child()), val);
+        }
+      });
 }
 
 template <typename T>

@@ -1796,6 +1796,10 @@ void Core::IO::Internal::ParameterSpec<T>::emit_metadata(YamlNodeRef node) const
   {
     emit_value_as_yaml(node.wrap(node.node["default"]), std::get<1>(data.default_value));
   }
+  if (data.validator)
+  {
+    data.validator->emit_metadata(node.wrap(node.node["validator"]));
+  }
 }
 
 template <Core::IO::SupportedType T>

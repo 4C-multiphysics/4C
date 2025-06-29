@@ -730,11 +730,13 @@ specs:
                 },
                 {.description = "A group"}),
         }),
-        parameter<EnumClass>("e", {.default_value = EnumClass::A}),
+        parameter<EnumClass>(
+            "e", {.default_value = EnumClass::A,
+                     .validator = Validators::in_set({EnumClass::A, EnumClass::C})}),
         parameter<std::optional<EnumClass>>("eo"),
         group("group2",
             {
-                parameter<int>("g"),
+                parameter<int>("g", {.validator = Validators::positive<int>()}),
             },
             {.required = false}),
         list("list",
@@ -797,6 +799,10 @@ specs:
               - name: C
             required: false
             default: A
+            validator:
+              set:
+                - A
+                - C
           - name: eo
             noneable: true
             type: enum
@@ -815,6 +821,12 @@ specs:
                   - name: g
                     type: int
                     required: true
+                    validator:
+                      range:
+                        minimum: 0
+                        maximum: 2147483647
+                        minimum_exclusive: true
+                        maximum_exclusive: false
           - name: list
             type: list
             required: true
@@ -879,6 +891,10 @@ specs:
               - name: C
             required: false
             default: A
+            validator:
+              set:
+                - A
+                - C
           - name: eo
             noneable: true
             type: enum
@@ -897,6 +913,12 @@ specs:
                   - name: g
                     type: int
                     required: true
+                    validator:
+                      range:
+                        minimum: 0
+                        maximum: 2147483647
+                        minimum_exclusive: true
+                        maximum_exclusive: false
           - name: list
             type: list
             required: true
@@ -965,6 +987,10 @@ specs:
               - name: C
             required: false
             default: A
+            validator:
+              set:
+                - A
+                - C
           - name: eo
             noneable: true
             type: enum
@@ -983,6 +1009,12 @@ specs:
                   - name: g
                     type: int
                     required: true
+                    validator:
+                      range:
+                        minimum: 0
+                        maximum: 2147483647
+                        minimum_exclusive: true
+                        maximum_exclusive: false
           - name: list
             type: list
             required: true
