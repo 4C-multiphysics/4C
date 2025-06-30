@@ -47,6 +47,11 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
+      - id: pretty-format-json
+        name: Format JSON
+        # Only run on 4C input files in JSON format for human readability.
+        files: \.4C.json$
+        args: [--autofix, --no-ensure-ascii, --no-sort-keys]
       - id: trailing-whitespace
         name: Trim trailing whitespace
         # Do not modify reference vtu files, since we generate these and do not hand-edit them.
