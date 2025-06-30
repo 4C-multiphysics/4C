@@ -3219,14 +3219,13 @@ void ScaTra::ScaTraTimIntElch::build_block_maps(
 void ScaTra::ScaTraTimIntElch::build_block_null_spaces(
     const Core::LinAlg::Solver& solver, const int init_block_number) const
 {
+  // TODO, if it stays like this it can be removed to overwrite this method
   ScaTra::ScaTraTimIntImpl::build_block_null_spaces(solver, init_block_number);
-
-  /*if (matrix_type() == Core::LinAlg::MatrixType::block_condition_dof)
-    reduce_dimension_null_space_blocks(solver, init_block_number);*/
 }
 
 /*-----------------------------------------------------------------------------*
  *-----------------------------------------------------------------------------*/
+// TODO probably can also be removed completely
 void ScaTra::ScaTraTimIntElch::reduce_dimension_null_space_blocks(
     const Core::LinAlg::Solver& solver, const int init_block_number) const
 {

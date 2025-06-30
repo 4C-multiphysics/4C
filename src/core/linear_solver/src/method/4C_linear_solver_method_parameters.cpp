@@ -75,6 +75,18 @@ void Core::LinearSolver::Parameters::compute_solver_parameters(
     numdf = gdata[0];
     dimns = gdata[1];
 
+    // for dof split within one field the number of global elements in the dof map and the node map
+    // have to be equal
+    if (nullspace_node_map != nullptr and nullspace_dof_map != nullptr)
+    {
+      // TODO Discuss with Max if this should work
+      if (nullspace_dof_map->num_global_elements() == nullspace_node_map->num_global_elements())
+      {
+        numdf = 1;
+        dimns = 1;
+      }
+    }
+
     // store nullspace information in solver list
     solverlist.set("PDE equations", numdf);
     solverlist.set("null space: dimension", dimns);
