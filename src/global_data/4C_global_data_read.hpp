@@ -26,8 +26,15 @@ namespace Global
    */
   [[nodiscard]] Core::IO::InputFile set_up_input_file(MPI_Comm comm);
 
-  /// Read the discretization. This mainly means the mesh. The MeshReader is returned to the caller
-  /// in case it needs to be used for further processing.
+  /**
+   * Write the metadata that is not tied to any specific input of a physical problem and thus
+   * not modified by developers of physics modules. This includes version information or general
+   * definitions of cell geometries.
+   */
+  void emit_general_metadata(Core::IO::YamlNodeRef node);
+
+  /// Read the discretization. This mainly means the mesh. The MeshReader is returned to the
+  /// caller in case it needs to be used for further processing.
   std::unique_ptr<Core::IO::MeshReader> read_discretization(
       Global::Problem& problem, Core::IO::InputFile& input, const bool read_mesh = true);
 

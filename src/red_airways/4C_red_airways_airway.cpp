@@ -66,7 +66,6 @@ void Discret::Elements::RedAirwayType::setup_element_definition(
   using namespace Core::IO::InputSpecBuilders;
 
   defs["LINE2"] = all_of({
-      parameter<std::vector<int>>("LINE2", {.size = 2}),
       parameter<int>("MAT"),
       parameter<std::string>("ElemSolvingType"),
       deprecated_selection<std::string>("TYPE",

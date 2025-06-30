@@ -108,7 +108,6 @@ void Discret::Elements::Beam3rType::setup_element_definition(
   using namespace Core::IO::InputSpecBuilders;
 
   defs["LINE2"] = all_of({
-      parameter<std::vector<int>>("LINE2", {.size = 2}),
       parameter<int>("MAT"),
       parameter<std::vector<double>>("TRIADS", {.size = 6}),
       parameter<bool>("USE_FAD", {.default_value = false}),
@@ -121,7 +120,6 @@ void Discret::Elements::Beam3rType::setup_element_definition(
   });
 
   defs["LINE3"] = all_of({
-      parameter<std::vector<int>>("LINE3", {.size = 3}),
       parameter<int>("MAT"),
       parameter<std::vector<double>>("TRIADS", {.size = 9}),
       parameter<bool>("USE_FAD", {.default_value = false}),
@@ -134,7 +132,6 @@ void Discret::Elements::Beam3rType::setup_element_definition(
   });
 
   defs["LINE4"] = all_of({
-      parameter<std::vector<int>>("LINE4", {.size = 4}),
       parameter<int>("MAT"),
       parameter<std::vector<double>>("TRIADS", {.size = 12}),
       parameter<bool>("USE_FAD", {.default_value = false}),
@@ -147,7 +144,6 @@ void Discret::Elements::Beam3rType::setup_element_definition(
   });
 
   defs["LINE5"] = all_of({
-      parameter<std::vector<int>>("LINE5", {.size = 5}),
       parameter<int>("MAT"),
       parameter<std::vector<double>>("TRIADS", {.size = 15}),
       parameter<bool>("USE_FAD", {.default_value = false}),

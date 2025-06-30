@@ -31,8 +31,6 @@ namespace
   auto get_default_input_spec()
   {
     return all_of({
-        parameter<std::vector<int>>(
-            Core::FE::cell_type_to_string(celltype), {.size = Core::FE::num_nodes(celltype)}),
         parameter<int>("MAT"),
         deprecated_selection<Inpar::Solid::KinemType>("KINEM",
             {

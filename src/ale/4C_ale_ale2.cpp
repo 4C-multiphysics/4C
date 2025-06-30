@@ -86,27 +86,22 @@ void Discret::Elements::Ale2Type::setup_element_definition(
   using namespace Core::IO::InputSpecBuilders;
 
   defs["QUAD4"] = all_of({
-      parameter<std::vector<int>>("QUAD4", {.size = 4}),
       parameter<int>("MAT"),
   });
 
   defs["QUAD8"] = all_of({
-      parameter<std::vector<int>>("QUAD8", {.size = 8}),
       parameter<int>("MAT"),
   });
 
   defs["QUAD9"] = all_of({
-      parameter<std::vector<int>>("QUAD9", {.size = 9}),
       parameter<int>("MAT"),
   });
 
   defs["TRI3"] = all_of({
-      parameter<std::vector<int>>("TRI3", {.size = 3}),
       parameter<int>("MAT"),
   });
 
   defs["TRI6"] = all_of({
-      parameter<std::vector<int>>("TRI6", {.size = 6}),
       parameter<int>("MAT"),
   });
 }

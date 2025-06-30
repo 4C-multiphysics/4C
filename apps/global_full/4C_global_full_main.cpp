@@ -335,8 +335,20 @@ int main(int argc, char* argv[])
   {
     if (Core::Communication::my_mpi_rank(lcomm) == 0)
     {
+      ryml::Tree tree = Core::IO::init_yaml_tree_with_exceptions();
+      ryml::NodeRef root = tree.rootref();
+      root |= ryml::MAP;
+      Core::IO::YamlNodeRef root_ref(root, "");
+
+      // Write the non-user input metadata that is defined globally for 4C.
+      Global::emit_general_metadata(root_ref);
+
+      // Write the user input defined for various physics module.
       Core::IO::InputFile input_file = Global::set_up_input_file(lcomm);
-      input_file.emit_metadata(std::cout);
+      input_file.emit_metadata(root_ref);
+
+      // Finally, dump everything.
+      std::cout << tree;
     }
   }
   else if ((argc >= 3) && (strcmp(argv[1], "--to-yaml") == 0))

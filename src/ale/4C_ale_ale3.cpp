@@ -85,42 +85,34 @@ void Discret::Elements::Ale3Type::setup_element_definition(
   using namespace Core::IO::InputSpecBuilders;
 
   defs["HEX8"] = all_of({
-      parameter<std::vector<int>>("HEX8", {.size = 8}),
       parameter<int>("MAT"),
   });
 
   defs["HEX20"] = all_of({
-      parameter<std::vector<int>>("HEX20", {.size = 20}),
       parameter<int>("MAT"),
   });
 
   defs["HEX27"] = all_of({
-      parameter<std::vector<int>>("HEX27", {.size = 27}),
       parameter<int>("MAT"),
   });
 
   defs["TET4"] = all_of({
-      parameter<std::vector<int>>("TET4", {.size = 4}),
       parameter<int>("MAT"),
   });
 
   defs["TET10"] = all_of({
-      parameter<std::vector<int>>("TET10", {.size = 10}),
       parameter<int>("MAT"),
   });
 
   defs["WEDGE6"] = all_of({
-      parameter<std::vector<int>>("WEDGE6", {.size = 6}),
       parameter<int>("MAT"),
   });
 
   defs["WEDGE15"] = all_of({
-      parameter<std::vector<int>>("WEDGE15", {.size = 15}),
       parameter<int>("MAT"),
   });
 
   defs["PYRAMID5"] = all_of({
-      parameter<std::vector<int>>("PYRAMID5", {.size = 5}),
       parameter<int>("MAT"),
   });
 }

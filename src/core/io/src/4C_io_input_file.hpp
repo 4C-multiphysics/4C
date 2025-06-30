@@ -11,23 +11,20 @@
 #include "4C_config.hpp"
 
 #include "4C_comm_mpi_utils.hpp"
-#include "4C_comm_pack_buffer.hpp"
 #include "4C_io_input_parameter_container.hpp"
+#include "4C_io_yaml.hpp"
 
 #include <filesystem>
-#include <list>
 #include <map>
 #include <memory>
-#include <optional>
 #include <ranges>
-#include <set>
 #include <string>
-#include <variant>
 
 FOUR_C_NAMESPACE_OPEN
 
 namespace Core::IO
 {
+  class YamlNodeRef;
   class InputSpec;
 
   namespace Internal
@@ -94,6 +91,9 @@ namespace Core::IO
   class InputFile
   {
    public:
+    //! Name of the special section that can contain arbitrary data.
+    static constexpr auto description_section_name = "TITLE";
+
     /**
      * A Fragment is a part of the input file. Fragments are used to store the content of a section.
      * and are used to match() against an InputSpec. Instead of using a concrete data type, the
@@ -152,17 +152,6 @@ namespace Core::IO
     InputFile(std::map<std::string, InputSpec> valid_sections,
         std::vector<std::string> legacy_section_names, MPI_Comm comm);
 
-    /**
-     * Like the other constructor, but also accepts partial specs for legacy sections. This is
-     * useful to provide at least some partial information about the expected format of a legacy
-     * section in the metadata output. 4C will not do anything with the partial specs.
-     *
-     * @note This constructor is meant to ease the transition from legacy sections to fully
-     * parseable sections.
-     */
-    InputFile(std::map<std::string, InputSpec> valid_sections,
-        std::vector<std::string> legacy_section_names,
-        std::map<std::string, InputSpec> legacy_partial_specs, MPI_Comm comm);
 
     /**
      * Destructor.
@@ -232,12 +221,12 @@ namespace Core::IO
     [[nodiscard]] MPI_Comm get_comm() const;
 
     /**
-     * Emit metadata about the input file to the given output stream @p out. The metadata
+     * Emit metadata about the input file to the given @p node in a YAML tree. The metadata
      * contains information about all sections and parameters that are known to this object. The
      * metadata information can be useful for additional tools that generate schema files or
-     * documentation. The output is formatted as YAML.
+     * documentation.
      */
-    void emit_metadata(std::ostream& out) const;
+    void emit_metadata(YamlNodeRef node) const;
 
     /**
      * Write the content of the input file to the given output stream @p out. The content is

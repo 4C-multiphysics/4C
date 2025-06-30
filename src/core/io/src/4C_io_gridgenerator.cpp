@@ -153,23 +153,6 @@ namespace Core::IO::GridGenerator
           std::make_shared<Core::LinAlg::Map>(-1, nummynewele, mynewele.data(), 0, comm);
     }
 
-    // Build an input line that matches what is expected from an input file.
-    // Prepend the distype which is not part of the user-supplied arguments but must be parsed.
-    // The distype is followed by nodal ids, which are set to dummy values of -1 here.
-    const std::string argument_line = std::invoke(
-        [&]()
-        {
-          std::ostringstream eleargstream;
-          eleargstream << inputData.distype_;
-          const int num_nodes = Core::FE::num_nodes(distype_enum);
-          for (int i = 0; i < num_nodes; ++i)
-          {
-            eleargstream << " " << -1;
-          }
-          eleargstream << " " << inputData.elearguments_;
-          return eleargstream.str();
-        });
-
     // Create the actual elements according to the row map
     for (int lid = 0; lid < elementRowMap->num_my_elements(); ++lid)
     {
@@ -179,7 +162,8 @@ namespace Core::IO::GridGenerator
       const auto& linedef = ed.element_lines(inputData.elementtype_, inputData.distype_);
 
       Core::IO::InputParameterContainer ele_data;
-      Core::IO::ValueParser parser(argument_line, {.user_scope_message = "GridGenerator: "});
+      Core::IO::ValueParser parser(
+          inputData.elearguments_, {.user_scope_message = "GridGenerator: "});
       linedef.fully_parse(parser, ele_data);
 
       // Create specified elements

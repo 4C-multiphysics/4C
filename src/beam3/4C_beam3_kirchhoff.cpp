@@ -97,7 +97,6 @@ void Discret::Elements::Beam3kType::setup_element_definition(
   using namespace Core::IO::InputSpecBuilders;
 
   defs["LINE2"] = all_of({
-      parameter<std::vector<int>>("LINE2", {.size = 2}),
       parameter<int>("WK"),
       parameter<int>("ROTVEC"),
       parameter<int>("MAT"),
@@ -106,7 +105,6 @@ void Discret::Elements::Beam3kType::setup_element_definition(
   });
 
   defs["LINE3"] = all_of({
-      parameter<std::vector<int>>("LINE3", {.size = 3}),
       parameter<int>("WK"),
       parameter<int>("ROTVEC"),
       parameter<int>("MAT"),
@@ -115,7 +113,6 @@ void Discret::Elements::Beam3kType::setup_element_definition(
   });
 
   defs["LINE4"] = all_of({
-      parameter<std::vector<int>>("LINE4", {.size = 4}),
       parameter<int>("WK"),
       parameter<int>("ROTVEC"),
       parameter<int>("MAT"),

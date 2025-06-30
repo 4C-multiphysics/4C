@@ -96,7 +96,6 @@ void Discret::Elements::KirchhoffLoveShellNurbsType::setup_element_definition(
   using namespace Core::IO::InputSpecBuilders;
 
   defs["NURBS9"] = all_of({
-      parameter<std::vector<int>>("NURBS9", {.size = 9}),
       parameter<int>("MAT"),
       parameter<std::vector<int>>("GP", {.size = 2}),
   });

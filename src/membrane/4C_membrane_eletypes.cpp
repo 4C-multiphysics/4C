@@ -75,7 +75,6 @@ void Discret::Elements::MembraneTri3Type::setup_element_definition(
   using namespace Core::IO::InputSpecBuilders;
 
   defs["TRI3"] = all_of({
-      parameter<std::vector<int>>("TRI3", {.size = 3}),
       parameter<int>("MAT"),
       parameter<std::string>("KINEM"),
       parameter<double>("THICK"),
@@ -150,7 +149,6 @@ void Discret::Elements::MembraneTri6Type::setup_element_definition(
   using namespace Core::IO::InputSpecBuilders;
 
   defs["TRI6"] = all_of({
-      parameter<std::vector<int>>("TRI6", {.size = 6}),
       parameter<int>("MAT"),
       parameter<std::string>("KINEM"),
       parameter<double>("THICK"),
@@ -225,7 +223,6 @@ void Discret::Elements::MembraneQuad4Type::setup_element_definition(
   using namespace Core::IO::InputSpecBuilders;
 
   defs["QUAD4"] = all_of({
-      parameter<std::vector<int>>("QUAD4", {.size = 4}),
       parameter<int>("MAT"),
       parameter<std::string>("KINEM"),
       parameter<double>("THICK"),
@@ -300,7 +297,6 @@ void Discret::Elements::MembraneQuad9Type::setup_element_definition(
   using namespace Core::IO::InputSpecBuilders;
 
   defs["QUAD9"] = all_of({
-      parameter<std::vector<int>>("QUAD9", {.size = 9}),
       parameter<int>("MAT"),
       parameter<std::string>("KINEM"),
       parameter<double>("THICK"),

@@ -71,7 +71,6 @@ void Discret::Elements::Nurbs::Wall1NurbsType::setup_element_definition(
   using namespace Core::IO::InputSpecBuilders;
 
   defs["NURBS4"] = all_of({
-      parameter<std::vector<int>>("NURBS4", {.size = 4}),
       parameter<int>("MAT"),
       parameter<std::string>("KINEM"),
       parameter<std::string>("EAS"),
@@ -81,7 +80,6 @@ void Discret::Elements::Nurbs::Wall1NurbsType::setup_element_definition(
   });
 
   defs["NURBS9"] = all_of({
-      parameter<std::vector<int>>("NURBS9", {.size = 9}),
       parameter<int>("MAT"),
       parameter<std::string>("KINEM"),
       parameter<std::string>("EAS"),

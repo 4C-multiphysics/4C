@@ -5,6 +5,8 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
+#include "4C_config_revision.hpp"
+
 #include "4C_global_data_read.hpp"
 
 #include "4C_comm_utils.hpp"
@@ -156,39 +158,75 @@ Core::IO::InputFile Global::set_up_input_file(MPI_Comm comm)
       "THERMO KNOTVECTORS",
   };
 
-  std::map<std::string, Core::IO::InputSpec> legacy_partial_specs;
-  // We know quite a lot about the legacy sections. Even though we cannot parse them via
-  // the InputSpec engine, we can still emit as much information as possible to the metadata.
-  //
-  // A parameter named "_positional_<index>_<name>" implies that the parameter needs to appear
-  // at the specified position without a key. This is very useful for the geometry information
-  // which often contains enumerators.
+  return Core::IO::InputFile{std::move(valid_sections), std::move(legacy_section_names), comm};
+}
+
+void Global::emit_general_metadata(Core::IO::YamlNodeRef node)
+{
+  auto& root = node.node;
+
+  // Basic information.
   {
-    using namespace Core::IO::InputSpecBuilders;
-    std::vector<Core::IO::InputSpec> all_element_specs;
-    Core::Elements::ElementDefinition element_definition;
-    element_definition.setup_valid_element_lines();
-    for (const auto& [element_type, cell_specs] : element_definition.definitions())
-    {
-      std::vector<Core::IO::InputSpec> element_specs;
-      for (const auto& [cell_type, spec] : cell_specs)
-      {
-        element_specs.emplace_back(group(cell_type, {spec}));
-      }
-      all_element_specs.emplace_back(group(element_type, {one_of(std::move(element_specs))}));
-    }
-
-    legacy_partial_specs["legacy_element_specs"] = all_of({
-        parameter<int>("_positional_0_id"),
-        one_of(std::move(all_element_specs)),
-    });
-
-    legacy_partial_specs["legacy_particle_specs"] = PARTICLEENGINE::create_particle_spec();
+    auto metadata = root["metadata"];
+    metadata |= ryml::MAP;
+    metadata["commit_hash"] << VersionControl::git_hash;
+    metadata["version"] << FOUR_C_VERSION_FULL;
+    metadata["description_section_name"] = Core::IO::InputFile::description_section_name;
   }
 
-  return Core::IO::InputFile{std::move(valid_sections), std::move(legacy_section_names),
-      std::move(legacy_partial_specs), comm};
+  // Element types.
+  {
+    Core::Elements::ElementDefinition element_definition;
+    element_definition.setup_valid_element_lines();
+
+    auto legacy_element_specs = root["legacy_element_specs"];
+    legacy_element_specs |= ryml::MAP;
+
+    for (const auto& [element_type, cell_specs] : element_definition.definitions())
+    {
+      auto element_specs = legacy_element_specs.append_child();
+      element_specs << ryml::key(element_type);
+
+      element_specs |= ryml::SEQ;
+      for (const auto& [cell_type, spec] : cell_specs)
+      {
+        auto cell_spec = element_specs.append_child();
+        cell_spec |= ryml::MAP;
+        cell_spec["cell_type"] << ryml::to_csubstr(cell_type);
+        auto spec_node = cell_spec["spec"];
+        spec.emit_metadata(Core::IO::YamlNodeRef(spec_node, ""));
+      }
+    }
+  }
+
+  // Particle types.
+  {
+    auto legacy_particle_spec = root["legacy_particle_specs"];
+    legacy_particle_spec |= ryml::MAP;
+
+    Core::IO::YamlNodeRef spec_emitter{legacy_particle_spec, ""};
+    PARTICLEENGINE::create_particle_spec().emit_metadata(spec_emitter);
+  }
+
+  // Cell types.
+  {
+    auto cell_types = root["cell_types"];
+    cell_types |= ryml::MAP;
+
+    for (const auto cell_type : EnumTools::enum_values<Core::FE::CellType>())
+    {
+      if (cell_type != Core::FE::CellType::dis_none && cell_type != Core::FE::CellType::max_distype)
+      {
+        auto cell_type_node = cell_types.append_child();
+        auto cell_type_str = Core::FE::cell_type_to_string(cell_type);
+        cell_type_node << ryml::key(cell_type_str);
+        cell_type_node |= ryml::MAP;
+        cell_type_node["number_of_nodes"] << Core::FE::num_nodes(cell_type);
+      }
+    }
+  }
 }
+
 
 std::unique_ptr<Core::IO::MeshReader> Global::read_discretization(
     Global::Problem& problem, Core::IO::InputFile& input, const bool read_mesh)

@@ -14,11 +14,11 @@
 #include "4C_io_input_spec.hpp"
 #include "4C_io_input_spec_builders.hpp"
 #include "4C_io_value_parser.hpp"
-#include "4C_io_yaml.hpp"
 #include "4C_utils_string.hpp"
 
 #include <filesystem>
 #include <fstream>
+#include <list>
 #include <sstream>
 #include <utility>
 
@@ -26,9 +26,6 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace Core::IO
 {
-
-  //! Name of the special section that can contain arbitrary data.
-  constexpr const char* description_section_name = "TITLE";
 
   namespace
   {
@@ -281,18 +278,13 @@ namespace Core::IO
       std::map<std::string, InputSpec> valid_sections_;
       std::vector<std::string> legacy_section_names_;
 
-      /**
-       * Additional specs for legacy sections that are not fully known.
-       */
-      std::map<std::string, InputSpec> legacy_partial_specs_;
-
       bool is_section_known(const std::string& section_name) const
       {
         return is_hacky_function_section(section_name) ||
                (valid_sections_.find(section_name) != valid_sections_.end()) ||
                std::ranges::any_of(
                    legacy_section_names_, [&](const auto& name) { return name == section_name; }) ||
-               (section_name == description_section_name);
+               (section_name == InputFile::description_section_name);
       }
 
       // The input for functions might introduce an arbitrary number of sections called
@@ -591,15 +583,6 @@ namespace Core::IO
                 .description = "Path to files that should be included into this file. "
                                "The paths can be either absolute or relative to the file.",
             });
-  }
-
-
-  InputFile::InputFile(std::map<std::string, InputSpec> valid_sections,
-      std::vector<std::string> legacy_section_names,
-      std::map<std::string, InputSpec> legacy_partial_specs, MPI_Comm comm)
-      : InputFile(std::move(valid_sections), std::move(legacy_section_names), comm)
-  {
-    pimpl_->legacy_partial_specs_ = std::move(legacy_partial_specs);
   }
 
 
@@ -931,19 +914,9 @@ namespace Core::IO
   }
 
 
-  void InputFile::emit_metadata(std::ostream& out) const
+  void InputFile::emit_metadata(YamlNodeRef node) const
   {
-    ryml::Tree tree = init_yaml_tree_with_exceptions();
-    ryml::NodeRef root = tree.rootref();
-    root |= ryml::MAP;
-
-    {
-      auto metadata = root["metadata"];
-      metadata |= ryml::MAP;
-      metadata["commit_hash"] << VersionControl::git_hash;
-      metadata["version"] << FOUR_C_VERSION_FULL;
-      metadata["description_section_name"] = description_section_name;
-    }
+    auto& root = node.node;
 
     {
       auto sections = root["sections"];
@@ -964,19 +937,6 @@ namespace Core::IO
         legacy_string_sections.append_child() << name;
       }
     }
-
-    if (pimpl_->legacy_partial_specs_.size() > 0)
-    {
-      for (const auto& [name, spec] : pimpl_->legacy_partial_specs_)
-      {
-        auto legacy_partial_spec = root[ryml::to_csubstr(name)];
-        legacy_partial_spec |= ryml::MAP;
-        YamlNodeRef spec_emitter{legacy_partial_spec, ""};
-        spec.emit_metadata(spec_emitter);
-      }
-    }
-
-    out << tree;
   }
 
   void InputFile::write_as_yaml(std::ostream& out, const std::filesystem::path& file_name) const

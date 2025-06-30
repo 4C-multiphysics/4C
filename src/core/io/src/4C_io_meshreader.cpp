@@ -58,6 +58,26 @@ namespace Core::IO::Internal
 namespace
 {
 
+  struct CellInfo
+  {
+    Core::FE::CellType cell_type;
+    std::string cell_type_str;
+    std::vector<int> nodal_ids;
+  };
+
+  //! Get a primitive cell type with number of nodes + the nodal ids from the parser.
+  //! e.g. reads a line like `HEX8 1 2 3 4 5 6 7 8`
+  void read_cell_info(Core::IO::ValueParser& parser, CellInfo& cell_info)
+  {
+    cell_info.cell_type_str = parser.read<std::string>();
+    cell_info.cell_type = Core::FE::string_to_cell_type(cell_info.cell_type_str);
+
+    const auto num_nodes = Core::FE::num_nodes(cell_info.cell_type);
+
+    // Read the nodal ids
+    cell_info.nodal_ids = parser.read<std::vector<int>>(num_nodes);
+  }
+
   class ElementReader
   {
    public:
@@ -269,6 +289,7 @@ namespace
       int bcount = 0;
       int block = 0;
 
+      CellInfo cell_info;
       for (const auto& element_line : input_.in_section_rank_0_only(sectionname_))
       {
         Core::IO::ValueParser parser{element_line.get_as_dat_style_string(),
@@ -277,27 +298,20 @@ namespace
         gidlist.push_back(elenumber);
 
         const auto eletype = parser.read<std::string>();
-
-        // Only peek at the distype since the elements later want to parse this value themselves.
-        const std::string distype = std::string(parser.peek());
+        read_cell_info(parser, cell_info);
 
         // let the factory create a matching empty element
         std::shared_ptr<Core::Elements::Element> ele =
-            Core::Communication::factory(eletype, distype, elenumber, 0);
+            Core::Communication::factory(eletype, cell_info.cell_type_str, elenumber, 0);
         if (!ele) FOUR_C_THROW("element creation failed");
 
-        // For the time being we support old and new input facilities. To
-        // smooth transition.
+        const auto& linedef = ed.element_lines(eletype, cell_info.cell_type_str);
 
-        const auto& linedef = ed.element_lines(eletype, distype);
-
-        Core::IO::ValueParser element_parser{parser.get_unparsed_remainder(),
-            {.user_scope_message = "While reading element data: "}};
         Core::IO::InputParameterContainer data;
-        linedef.fully_parse(element_parser, data);
+        linedef.fully_parse(parser, data);
 
-        ele->set_node_ids_one_based_index(distype, data);
-        ele->read_element(eletype, distype, data);
+        ele->set_node_ids_one_based_index(cell_info.nodal_ids);
+        ele->read_element(eletype, cell_info.cell_type_str, data);
 
         // add element to discretization
         dis_->add_element(ele);
@@ -847,16 +861,8 @@ namespace
         ed.setup_valid_element_lines();
         const auto& linedef = ed.element_lines(element_name, cell_type_string);
 
-        // The spec for elements also contains the nodes for the legacy input.
-        // Thus, we fake a string here that contains the cell_type followed by the appropriate
-        // number of dummy nodes (that we are not going to use).
-        std::stringstream ss;
-        ss << cell_type_string;
-        const int numnodes = Core::FE::num_nodes(cell_type);
-        for (int i = 0; i < numnodes; ++i) ss << " " << 0;  // dummy node id
-        ss << " " << current_block_data->get<std::string>("ELEMENT_DATA");
-        std::string element_string = ss.str();
 
+        const auto& element_string = current_block_data->get<std::string>("ELEMENT_DATA");
         Core::IO::ValueParser element_parser{
             element_string, {.user_scope_message = "While reading element data: "}};
         Core::IO::InputParameterContainer element_data;

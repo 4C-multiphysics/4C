@@ -47,8 +47,6 @@ namespace
   auto get_default_input_spec()
   {
     return all_of({
-        parameter<std::vector<int>>(
-            Core::FE::cell_type_to_string(celltype), {.size = Core::FE::num_nodes(celltype)}),
         parameter<int>("MAT"),
         get_kinem_type_input_spec(),
         parameter<Discret::Elements::PrestressTechnology>(
@@ -117,7 +115,6 @@ void Discret::Elements::SolidType::setup_element_definition(
   });
 
   defsgeneral["NURBS27"] = all_of({
-      parameter<std::vector<int>>("NURBS27", {.size = 27}),
       parameter<int>("MAT"),
       get_kinem_type_input_spec(),
   });

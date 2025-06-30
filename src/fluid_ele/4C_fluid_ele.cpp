@@ -76,104 +76,87 @@ void Discret::Elements::FluidType::setup_element_definition(
   using namespace Core::IO::InputSpecBuilders;
 
   defsgeneral["HEX8"] = all_of({
-      parameter<std::vector<int>>("HEX8", {.size = 8}),
       parameter<int>("MAT"),
       parameter<std::string>("NA"),
   });
 
   defsgeneral["HEX20"] = all_of({
-      parameter<std::vector<int>>("HEX20", {.size = 20}),
       parameter<int>("MAT"),
       parameter<std::string>("NA"),
   });
 
   defsgeneral["HEX27"] = all_of({
-      parameter<std::vector<int>>("HEX27", {.size = 27}),
       parameter<int>("MAT"),
       parameter<std::string>("NA"),
   });
 
   defsgeneral["TET4"] = all_of({
-      parameter<std::vector<int>>("TET4", {.size = 4}),
       parameter<int>("MAT"),
       parameter<std::string>("NA"),
   });
 
   defsgeneral["TET10"] = all_of({
-      parameter<std::vector<int>>("TET10", {.size = 10}),
       parameter<int>("MAT"),
       parameter<std::string>("NA"),
   });
 
   defsgeneral["WEDGE6"] = all_of({
-      parameter<std::vector<int>>("WEDGE6", {.size = 6}),
       parameter<int>("MAT"),
       parameter<std::string>("NA"),
   });
 
   defsgeneral["WEDGE15"] = all_of({
-      parameter<std::vector<int>>("WEDGE15", {.size = 15}),
       parameter<int>("MAT"),
       parameter<std::string>("NA"),
   });
 
   defsgeneral["PYRAMID5"] = all_of({
-      parameter<std::vector<int>>("PYRAMID5", {.size = 5}),
       parameter<int>("MAT"),
       parameter<std::string>("NA"),
   });
 
   defsgeneral["NURBS8"] = all_of({
-      parameter<std::vector<int>>("NURBS8", {.size = 8}),
       parameter<int>("MAT"),
       parameter<std::string>("NA"),
   });
 
   defsgeneral["NURBS27"] = all_of({
-      parameter<std::vector<int>>("NURBS27", {.size = 27}),
       parameter<int>("MAT"),
       parameter<std::string>("NA"),
   });
 
   // 2D elements
   defsgeneral["QUAD4"] = all_of({
-      parameter<std::vector<int>>("QUAD4", {.size = 4}),
       parameter<int>("MAT"),
       parameter<std::string>("NA"),
   });
 
   defsgeneral["QUAD8"] = all_of({
-      parameter<std::vector<int>>("QUAD8", {.size = 8}),
       parameter<int>("MAT"),
       parameter<std::string>("NA"),
   });
 
   defsgeneral["QUAD9"] = all_of({
-      parameter<std::vector<int>>("QUAD9", {.size = 9}),
       parameter<int>("MAT"),
       parameter<std::string>("NA"),
   });
 
   defsgeneral["TRI3"] = all_of({
-      parameter<std::vector<int>>("TRI3", {.size = 3}),
       parameter<int>("MAT"),
       parameter<std::string>("NA"),
   });
 
   defsgeneral["TRI6"] = all_of({
-      parameter<std::vector<int>>("TRI6", {.size = 6}),
       parameter<int>("MAT"),
       parameter<std::string>("NA"),
   });
 
   defsgeneral["NURBS4"] = all_of({
-      parameter<std::vector<int>>("NURBS4", {.size = 4}),
       parameter<int>("MAT"),
       parameter<std::string>("NA"),
   });
 
   defsgeneral["NURBS9"] = all_of({
-      parameter<std::vector<int>>("NURBS9", {.size = 9}),
       parameter<int>("MAT"),
       parameter<std::string>("NA"),
   });
