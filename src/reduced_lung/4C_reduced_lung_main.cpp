@@ -17,9 +17,9 @@
 #include "4C_io_discretization_visualization_writer_mesh.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
-#include "4C_mat_maxwell_0d_acinus_NeoHookean.hpp"
 #include "4C_red_airways_elementbase.hpp"
 #include "4C_reduced_lung_helpers.hpp"
+#include "4C_reduced_lung_terminal_unit.hpp"
 #include "4C_utils_function_of_time.hpp"
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
@@ -61,7 +61,7 @@ namespace ReducedLung
     // Create vectors of local entities (equations acting on the dofs).
     // Physical "elements" of the lung tree introducing the dofs.
     std::vector<Airway> airways;
-    std::vector<TerminalUnit> terminal_units;
+    TerminalUnits terminal_units;
     std::map<int, int> dof_per_ele;  // Map global element id -> dof.
     int n_airways = 0;
     int n_terminal_units = 0;
@@ -81,21 +81,16 @@ namespace ReducedLung
       }
       else if (ele->element_type() == Discret::Elements::RedAcinusType::instance())
       {
-        double E;
-        double eta;
         if (ele->material(0)->material_type() == Core::Materials::m_0d_maxwell_acinus_neohookean)
         {
-          auto* param = ele->material(0)->parameter();
-          auto* mat = static_cast<Mat::PAR::Maxwell0dAcinus*>(param);
-          E = mat->stiffness1_;
-          eta = mat->viscosity1_;
+          // Default terminal unit model until the new input is available.
+          add_terminal_unit_ele<KelvinVoigt, LinearElasticity>(
+              terminal_units, ele, local_element_id);
         }
         else
         {
           FOUR_C_THROW("Material not implemented.");
         }
-        terminal_units.push_back(TerminalUnit{element_id, local_element_id, n_terminal_units,
-            TerminalUnitType::kelvin_voigt, E, eta});
         dof_per_ele[element_id] = 3;
         n_terminal_units++;
       }
@@ -137,13 +132,14 @@ namespace ReducedLung
         airway.global_dof_ids.insert(airway.global_dof_ids.end(), first_dof_gid + i);
       }
     }
-    for (auto& terminal_unit : terminal_units)
+    for (auto& model : terminal_units.models)
     {
-      int first_dof_gid = first_global_dof_of_ele[terminal_unit.global_element_id];
-      int n_dof = dof_per_ele[terminal_unit.global_element_id];
-      for (int i = 0; i < n_dof; i++)
+      for (size_t i = 0; i < model.data.number_of_elements(); i++)
       {
-        terminal_unit.global_dof_ids.insert(terminal_unit.global_dof_ids.end(), first_dof_gid + i);
+        int first_dof_gid = first_global_dof_of_ele[model.data.global_element_id[i]];
+        model.data.gid_p1.push_back(first_dof_gid);
+        model.data.gid_p2.push_back(first_dof_gid + 1);
+        model.data.gid_q.push_back(first_dof_gid + 2);
       }
     }
 
@@ -166,8 +162,9 @@ namespace ReducedLung
       }
       return result;
     };
-    auto global_ele_ids_per_node = Core::Communication::all_reduce<std::map<int, std::vector<int>>>(
-        ele_ids_per_node, merge_maps, comm);
+    FourC::Core::Communication::IsCommunicatable auto global_ele_ids_per_node =
+        Core::Communication::all_reduce<std::map<int, std::vector<int>>>(
+            ele_ids_per_node, merge_maps, comm);
 
     // Create entities with equations connecting elements (acting on "nodes" of the lung tree).
     std::vector<BoundaryCondition> boundary_conditions;
@@ -176,16 +173,15 @@ namespace ReducedLung
     int n_boundary_conditions = 0;
     int n_connections = 0;
     int n_bifurcations = 0;
-    // Loop over all local elements, get their nodes, create associated entity. This way, they are
-    // created on the same ranks as at least one of their connected elements. This reduces the
-    // amount of communication of dofs between ranks.
-
+    // Find all nodes with boundary conditions
     std::vector<const Core::Conditions::Condition*> conditions;
     actdis->get_condition("RedAirwayPrescribedCond", conditions);
     const auto red_airway_prescribed_conditions =
         Core::Conditions::find_conditioned_node_ids_and_conditions(
             *actdis, conditions, Core::Conditions::LookFor::locally_owned_and_ghosted);
-
+    // Loop over all local elements, get their nodes, create associated entity. This way, they are
+    // created on the same ranks as at least one of their connected elements. This reduces the
+    // amount of communication of dofs between ranks.
     for (const auto* ele : actdis->my_row_element_range())
     {
       const auto* nodes = ele->nodes();
@@ -347,21 +343,25 @@ namespace ReducedLung
       }
     }
 
-    // Calculate local and global number of "element" equations
+    // Calculate local and global number of "element" equations and assign local row IDs to define
+    // the structure of the system of equations.
     int n_local_equations = 0;
     for (const auto& airway : airways)
     {
       n_local_equations += airway.n_state_equations;
     }
-    for (const auto& terminal_unit : terminal_units)
+    for (auto& tu_model : terminal_units.models)
     {
-      n_local_equations += terminal_unit.n_state_equations;
+      for (size_t i = 0; i < tu_model.data.number_of_elements(); i++)
+      {
+        tu_model.data.local_row_id.push_back(n_local_equations);
+        n_local_equations++;
+      }
     }
-
     // Assign local equation ids to connections, bifurcations, and boundary conditions.
     for (Connection& conn : connections)
     {
-      // Every connection adds 1 momentum  and 1 mass balance equation.
+      // Every connection adds 1 momentum and 1 mass balance equation.
       conn.first_local_equation_id = n_local_equations;
       n_local_equations += 2;
     }
@@ -414,11 +414,13 @@ namespace ReducedLung
         airway.local_dof_ids.push_back(locally_relevant_dof_map.lid(gid));
       }
     }
-    for (TerminalUnit& terminal_unit : terminal_units)
+    for (auto& tu_model : terminal_units.models)
     {
-      for (const int& gid : terminal_unit.global_dof_ids)
+      for (size_t i = 0; i < tu_model.data.number_of_elements(); i++)
       {
-        terminal_unit.local_dof_ids.push_back(locally_relevant_dof_map.lid(gid));
+        tu_model.data.lid_p1.push_back(locally_relevant_dof_map.lid(tu_model.data.gid_p1[i]));
+        tu_model.data.lid_p2.push_back(locally_relevant_dof_map.lid(tu_model.data.gid_p2[i]));
+        tu_model.data.lid_q.push_back(locally_relevant_dof_map.lid(tu_model.data.gid_q[i]));
       }
     }
     for (Connection& conn : connections)
@@ -472,24 +474,6 @@ namespace ReducedLung
                                          current_length / (airway_params.area * airway_params.area);
     }
 
-    // Local terminal unit vectors. Potentially add to terminal unit objects in the future.
-    std::vector<double> volume(n_terminal_units);
-    std::vector<double> volume_0(n_terminal_units);
-
-    // Fill terminal unit data.
-    for (const TerminalUnit& terminal_unit : terminal_units)
-    {
-      const int terminal_unit_id = terminal_unit.local_terminal_unit_id;
-      const auto* terminal_unit_ele = static_cast<Discret::Elements::RedAcinus*>(
-          actdis->g_element(terminal_unit.global_element_id));
-      const std::vector<double>& coords_1 = terminal_unit_ele->nodes()[0]->x();
-      const std::vector<double>& coords_2 = terminal_unit_ele->nodes()[1]->x();
-      const double radius = std::sqrt((coords_1[0] - coords_2[0]) * (coords_1[0] - coords_2[0]) +
-                                      (coords_1[1] - coords_2[1]) * (coords_1[1] - coords_2[1]) +
-                                      (coords_1[2] - coords_2[2]) * (coords_1[2] - coords_2[2]));
-      volume[terminal_unit_id] = volume_0[terminal_unit_id] = radius * radius * M_PI;
-    }
-
     // Create system matrix and vectors:
     // Vector with all degrees of freedom (p1, p2, q, ...) associated to the elements.
     auto dofs = Core::LinAlg::Vector<double>(locally_owned_dof_map, true);
@@ -507,6 +491,7 @@ namespace ReducedLung
     // Jacobian of the system equations.
     auto sysmat = Core::LinAlg::SparseMatrix(row_map, locally_relevant_dof_map, 3);
 
+    // Write results every ... time steps.
     const int results_every = rawdyn.get<int>("RESULTSEVERY");
     // Time integration parameters.
     const double dt = rawdyn.get<double>("TIMESTEP");
@@ -563,33 +548,8 @@ namespace ReducedLung
       }
 
       // Assemble terminal unit equations.
-      for (const TerminalUnit& terminal_unit : terminal_units)
-      {
-        // Momentum balance: p_in - p_pl - E*(V-V0)/V0 - nu*q/V0 = 0.
-        const double& V_tu = volume[terminal_unit.local_terminal_unit_id];
-        const double& V0_tu = volume_0[terminal_unit.local_terminal_unit_id];
-        const double& E = terminal_unit.E;
-        const double& eta = terminal_unit.eta;
-        const std::array<double, 3> vals{1.0, -1.0, -(E * dt + eta) / V0_tu};
-        const double res =
-            -locally_relevant_dofs[terminal_unit.local_dof_ids[p_in]] +
-            locally_relevant_dofs[terminal_unit.local_dof_ids[p_out]] +
-            (E * dt + eta) / V0_tu * locally_relevant_dofs[terminal_unit.local_dof_ids[q_in]] +
-            E * (V_tu - V0_tu) / V0_tu;
-        if (!sysmat.filled())
-        {
-          err = sysmat.insert_my_values(terminal_unit.local_element_id, vals.size(), vals.data(),
-              terminal_unit.local_dof_ids.data());
-        }
-        else
-        {
-          err = sysmat.replace_my_values(terminal_unit.local_element_id, vals.size(), vals.data(),
-              terminal_unit.local_dof_ids.data());
-        }
-        FOUR_C_ASSERT(err == 0, "Internal error: Terminal Unit equation assembly did not work.");
-        err = rhs.replace_local_value(terminal_unit.local_element_id, res);
-        FOUR_C_ASSERT(err == 0, "Internal error: Terminal Unit equation calculation did not work.");
-      }
+      update_terminal_unit_negative_residual_vector(rhs, terminal_units, locally_relevant_dofs, dt);
+      update_terminal_unit_jacobian(sysmat, terminal_units, locally_relevant_dofs, dt);
 
       // Assemble connection equations.
       for (const Connection& conn : connections)
@@ -751,14 +711,8 @@ namespace ReducedLung
       dofs.update(1.0, x_mapped_to_dofs, 1.0);
       export_to(dofs, locally_relevant_dofs);
 
-      // Update variable parameters depending on dofs.
-      for (const auto& terminal_unit : terminal_units)
-      {
-        const int& q_id = terminal_unit.local_dof_ids[2];
-        const int& tu_id = terminal_unit.local_terminal_unit_id;
-        // Backwards Euler: V_n+1 = V_n + q_n+1 * dt.
-        volume[tu_id] += locally_relevant_dofs[q_id] * dt;
-      }
+      // Update variable parameters depending on converged dofs.
+      update_terminal_unit_internal_state_vectors(terminal_units, locally_relevant_dofs, dt);
 
       // Runtime output
       if (n % results_every == 0)
