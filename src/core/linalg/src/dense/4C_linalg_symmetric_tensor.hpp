@@ -275,6 +275,12 @@ namespace Core::LinAlg
       const TensorInternal<Number, storage_type, NoCompression<n...>, n...>& tensor);
 
   /*!
+   * @brief Returns the symmetric part of the given tensor.
+   */
+  template <typename Number, TensorStorageType storage_type, std::size_t... n>
+  constexpr SymmetricTensor<Number, n...> symmetrify(
+      const TensorInternal<Number, storage_type, NoCompression<n...>, n...>& tensor);
+  /*!
    * @brief Convert a tensor to a symmetric tensor and throw if it is not symmetric.
    */
   template <typename Number, TensorStorageType storage_type, std::size_t... n>
@@ -465,6 +471,13 @@ namespace Core::LinAlg
     std::transform(index_reorder.begin(), index_reorder.end(), symmetric_tensor.data(),
         [&tensor](const auto& i) { return tensor.container()[i]; });
     return symmetric_tensor;
+  }
+
+  template <typename Number, TensorStorageType storage_type, std::size_t... n>
+  constexpr SymmetricTensor<Number, n...> symmetrify(
+      const TensorInternal<Number, storage_type, NoCompression<n...>, n...>& tensor)
+  {
+    return 0.5 * assume_symmetry(tensor + transpose(tensor));
   }
 
   template <typename Number, TensorStorageType storage_type, std::size_t... n>

@@ -163,14 +163,8 @@ namespace Discret::Elements
           "not implemented");
     }
 
-    static Core::LinAlg::Matrix<Internal::num_str<celltype>,
-        Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>>
-    get_linear_b_operator(const ShellANSLinearizationContainer<celltype>& linearization)
-    {
-      return linearization.Bop_;
-    }
-
-    static void add_internal_force_vector(
+    static void add_internal_force_vector(const JacobianMapping<celltype>& jacobian_mapping,
+        const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>& F,
         const ShellANSLinearizationContainer<celltype>& linearization,
         const Stress<celltype>& stress, const double integration_factor,
         const ShellANSPreparationData<ans_sampling_points.size(), celltype>& preparation_data,
@@ -181,12 +175,12 @@ namespace Discret::Elements
           linearization.Bop_, stress, integration_factor, force_vector);
     }
 
-    static void add_stiffness_matrix(
+    static void add_stiffness_matrix(const JacobianMapping<celltype>& jacobian_mapping,
+        const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>& F,
         const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
         const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
         const ShellANSLinearizationContainer<celltype>& linearization,
-        const JacobianMapping<celltype>& jacobian_mapping, const Stress<celltype>& stress,
-        const double integration_factor,
+        const Stress<celltype>& stress, const double integration_factor,
         const ShellANSPreparationData<ans_sampling_points.size(), celltype>& preparation_data,
         Core::LinAlg::Matrix<Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>,
             Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>>& stiffness_matrix)
