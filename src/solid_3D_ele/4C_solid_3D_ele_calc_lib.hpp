@@ -405,14 +405,17 @@ namespace Discret::Elements
 
     /// Jacobian matrix at a specific point
     Core::LinAlg::Tensor<double, Internal::num_dim<celltype>, Internal::num_dim<celltype>>
-        jacobian_;
+        jacobian_{};
 
     /// Inverse jacobian matrix at a specific point
     Core::LinAlg::Tensor<double, Internal::num_dim<celltype>, Internal::num_dim<celltype>>
-        inverse_jacobian_;
+        inverse_jacobian_{};
 
     /// Derivative of the shape functions w.r.t. the reference coordinates
-    Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_nodes<celltype>> N_XYZ_;
+    Core::LinAlg::Matrix<Internal::num_dim<celltype>, Internal::num_nodes<celltype>> N_XYZ_{};
+
+    std::array<Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>, Core::FE::num_nodes(celltype)>
+        dNdX{};
   };
 
   /*!
@@ -441,6 +444,14 @@ namespace Discret::Elements
     jacobian.determinant_ = Core::LinAlg::det(jacobian.jacobian_);
     jacobian.N_XYZ_.multiply(
         Core::LinAlg::make_matrix_view(jacobian.inverse_jacobian_), shapefcns.derivatives_);
+
+    for (int dim = 0; dim < Internal::num_dim<celltype>; ++dim)
+    {
+      for (int inode = 0; inode < Internal::num_nodes<celltype>; ++inode)
+      {
+        jacobian.dNdX[inode](dim) = jacobian.N_XYZ_(dim, inode);
+      }
+    }
 
     return jacobian;
   }
@@ -545,7 +556,7 @@ namespace Discret::Elements
   SpatialMaterialMapping<celltype> evaluate_spatial_material_mapping(
       const JacobianMapping<celltype>& jacobian_mapping,
       const ElementNodes<celltype>& nodal_coordinates, const double scale_defgrd = 1.0,
-      const Inpar::Solid::KinemType& kinematictype = Inpar::Solid::KinemType::nonlinearTotLag)
+      const Inpar::Solid::KinemType kinematictype = Inpar::Solid::KinemType::nonlinearTotLag)
   {
     SpatialMaterialMapping<celltype> spatial_material_mapping;
 
@@ -553,6 +564,12 @@ namespace Discret::Elements
     {
       spatial_material_mapping.deformation_gradient_ =
           evaluate_deformation_gradient(jacobian_mapping, nodal_coordinates, scale_defgrd);
+    }
+    else
+    {
+      spatial_material_mapping.deformation_gradient_ =
+          Core::LinAlg::get_full(Core::LinAlg::TensorGenerators::identity<double,
+              Core::FE::dim<celltype>, Core::FE::dim<celltype>>);
     }
 
     spatial_material_mapping.inverse_deformation_gradient_ =
@@ -829,6 +846,103 @@ namespace Discret::Elements
     return stress;
   }
 
+  template <Core::FE::CellType celltype>
+  static inline void add_nodal_contribution(std::size_t element_node_id,
+      const Core::LinAlg::Tensor<double, 3>& nodal_contribution,
+      Core::LinAlg::Matrix<Core::FE::dim<celltype> * Core::FE::num_nodes(celltype), 1>&
+          element_vector)
+  {
+    for (unsigned int j = 0; j < Core::FE::dim<celltype>; ++j)
+    {
+      element_vector(Core::FE::dim<celltype> * element_node_id + j) += nodal_contribution(j);
+    }
+  }
+
+  template <Core::FE::CellType celltype>
+  static inline void add_nodal_contribution(std::size_t row_node_id, std::size_t column_node_id,
+      const Core::LinAlg::Tensor<double, 3, 3>& nodal_contribution,
+      Core::LinAlg::Matrix<Core::FE::dim<celltype> * Core::FE::num_nodes(celltype),
+          Core::FE::dim<celltype> * Core::FE::num_nodes(celltype)>& symmetric_element_matrix)
+  {
+    FOUR_C_ASSERT(row_node_id <= column_node_id,
+        "This function already assumes symmetry and assembles the respective block already! Please "
+        "use this function only for i <= j. You passed i = {}, j = {}",
+        row_node_id, column_node_id);
+
+    for (unsigned int i = 0; i < Core::FE::dim<celltype>; ++i)
+    {
+      for (unsigned int j = 0; j < Core::FE::dim<celltype>; ++j)
+      {
+        symmetric_element_matrix(Core::FE::dim<celltype> * row_node_id + i,
+            Core::FE::dim<celltype> * column_node_id + j) += nodal_contribution(i, j);
+      }
+    }
+
+    // also assemble other block (symmetry of element matrix)
+    if (row_node_id != column_node_id)
+    {
+      for (unsigned int i = 0; i < Core::FE::dim<celltype>; ++i)
+      {
+        for (unsigned int j = 0; j < Core::FE::dim<celltype>; ++j)
+        {
+          symmetric_element_matrix(Core::FE::dim<celltype> * column_node_id + j,
+              Core::FE::dim<celltype> * row_node_id + i) += nodal_contribution(i, j);
+        }
+      }
+    }
+  }
+
+  template <Core::FE::CellType celltype>
+  static inline void add_nodal_contribution(std::size_t row_node_id, std::size_t column_node_id,
+      const Core::LinAlg::SymmetricTensor<double, 3, 3>& nodal_contribution,
+      Core::LinAlg::Matrix<Core::FE::dim<celltype> * Core::FE::num_nodes(celltype),
+          Core::FE::dim<celltype> * Core::FE::num_nodes(celltype)>& symmetric_element_matrix)
+  {
+    FOUR_C_ASSERT(row_node_id <= column_node_id,
+        "This function already assumes symmetry and assembles the respective block already! Please "
+        "use this function only for i <= j. You passed i = {}, j = {}",
+        row_node_id, column_node_id);
+
+    // add diagonal contributions
+    for (unsigned int i = 0; i < Core::FE::dim<celltype>; ++i)
+    {
+      symmetric_element_matrix(Core::FE::dim<celltype> * row_node_id + i,
+          Core::FE::dim<celltype> * column_node_id + i) += nodal_contribution(i, i);
+    }
+
+    // Add off-diagonal contributions
+    for (unsigned int i = 0; i < Core::FE::dim<celltype>; ++i)
+    {
+      for (unsigned int j = i + 1; j < Core::FE::dim<celltype>; ++j)
+      {
+        symmetric_element_matrix(Core::FE::dim<celltype> * row_node_id + i,
+            Core::FE::dim<celltype> * column_node_id + j) += nodal_contribution(i, j);
+        symmetric_element_matrix(Core::FE::dim<celltype> * row_node_id + j,
+            Core::FE::dim<celltype> * column_node_id + i) += nodal_contribution(i, j);
+      }
+    }
+
+    // also assemble other block (symmetry of element matrix)
+    if (row_node_id != column_node_id)
+    {
+      for (unsigned int i = 0; i < Core::FE::dim<celltype>; ++i)
+      {
+        symmetric_element_matrix(Core::FE::dim<celltype> * column_node_id + i,
+            Core::FE::dim<celltype> * row_node_id + i) += nodal_contribution(i, i);
+      }
+      for (unsigned int i = 0; i < Core::FE::dim<celltype>; ++i)
+      {
+        for (unsigned int j = i + 1; j < Core::FE::dim<celltype>; ++j)
+        {
+          symmetric_element_matrix(Core::FE::dim<celltype> * column_node_id + j,
+              Core::FE::dim<celltype> * row_node_id + i) += nodal_contribution(i, j);
+          symmetric_element_matrix(Core::FE::dim<celltype> * column_node_id + i,
+              Core::FE::dim<celltype> * row_node_id + j) += nodal_contribution(i, j);
+        }
+      }
+    }
+  }
+
   /*!
    * @brief Adds the internal force vector contribution of one Gauss point
    *
@@ -849,6 +963,78 @@ namespace Discret::Elements
   {
     force_vector.multiply_tn(
         integration_fac, Bop, Core::LinAlg::make_stress_like_voigt_view(stress.pk2_), 1.);
+  }
+
+  template <Core::FE::CellType celltype>
+  void add_internal_force_vector(const JacobianMapping<celltype>& jacobian_mapping,
+      const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>& F,
+      const Core::LinAlg::SymmetricTensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>&
+          pk2,
+      const double integration_fac,
+      Core::LinAlg::Matrix<Internal::num_dim<celltype> * Internal::num_nodes<celltype>, 1>&
+          force_vector)
+  {
+    const auto PK1 = F * pk2;
+    for (std::size_t i = 0; i < Core::FE::num_nodes(celltype); ++i)
+    {
+      add_nodal_contribution<celltype>(
+          i, PK1 * jacobian_mapping.dNdX[i] * integration_fac, force_vector);
+    }
+  }
+
+  template <Core::FE::CellType celltype>
+  void add_stiffness_matrix(const JacobianMapping<celltype>& jacobian_mapping,
+      const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>& F,
+      const Stress<celltype>& stress, const double integration_fac,
+      Core::LinAlg::Matrix<Internal::num_dim<celltype> * Internal::num_nodes<celltype>,
+          Internal::num_dim<celltype> * Internal::num_nodes<celltype>>& stiffness_matrix)
+  {
+    auto elastic_stiffness_integrand = [&F, &jacobian_mapping, &stress](
+                                           std::size_t row_node_id, std::size_t col_node_id)
+    {
+      return F *
+             (jacobian_mapping.dNdX[row_node_id] * stress.cmat_ *
+                 jacobian_mapping.dNdX[col_node_id]) *
+             Core::LinAlg::transpose(F);
+    };
+
+    auto geometric_stiffness_integrand = [&jacobian_mapping, &stress](
+                                             std::size_t row_node_id, std::size_t col_node_id)
+    {
+      return jacobian_mapping.dNdX[row_node_id] * stress.pk2_ * jacobian_mapping.dNdX[col_node_id];
+    };
+
+
+    // make diagonal first
+    for (std::size_t i = 0; i < Core::FE::num_nodes(celltype); ++i)
+    {
+      // elastic stiffness (on the diagonal, it is a symmetric tensor)
+      add_nodal_contribution<celltype>(i, i,
+          Core::LinAlg::assume_symmetry(elastic_stiffness_integrand(i, i)) * integration_fac,
+          stiffness_matrix);
+
+      // geometric stiffness
+      add_nodal_contribution<celltype>(i, i,
+          geometric_stiffness_integrand(i, i) * integration_fac *
+              Core::LinAlg::TensorGenerators::identity<double, 3, 3>,
+          stiffness_matrix);
+    }
+
+    for (std::size_t i = 0; i < Core::FE::num_nodes(celltype); ++i)
+    {
+      //  use symmetry of stiffness matrix and leave out the diagonal (already added above)
+      for (std::size_t j = i + 1; j < Core::FE::num_nodes(celltype); ++j)
+      {
+        add_nodal_contribution<celltype>(
+            i, j, elastic_stiffness_integrand(i, j) * integration_fac, stiffness_matrix);
+
+        // geometric stiffness
+        add_nodal_contribution<celltype>(i, j,
+            geometric_stiffness_integrand(i, j) * integration_fac *
+                Core::LinAlg::TensorGenerators::identity<double, 3, 3>,
+            stiffness_matrix);
+      }
+    }
   }
 
   /*!

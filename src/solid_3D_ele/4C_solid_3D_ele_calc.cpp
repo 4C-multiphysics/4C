@@ -182,15 +182,15 @@ void Discret::Elements::SolidEleCalc<celltype,
               if (force.has_value())
               {
                 Discret::Elements::add_internal_force_vector<ElementFormulation, celltype>(
-                    linearization, stress, integration_factor, preparation_data, history_data_, gp,
-                    *force);
+                    jacobian_mapping, deformation_gradient, linearization, stress,
+                    integration_factor, preparation_data, history_data_, gp, *force);
               }
 
               if (stiff.has_value())
               {
-                add_stiffness_matrix<ElementFormulation, celltype>(xi, shape_functions,
-                    linearization, jacobian_mapping, stress, integration_factor, preparation_data,
-                    history_data_, gp, *stiff);
+                add_stiffness_matrix<ElementFormulation, celltype>(jacobian_mapping,
+                    deformation_gradient, xi, shape_functions, linearization, stress,
+                    integration_factor, preparation_data, history_data_, gp, *stiff);
               }
 
               if (mass.has_value())
