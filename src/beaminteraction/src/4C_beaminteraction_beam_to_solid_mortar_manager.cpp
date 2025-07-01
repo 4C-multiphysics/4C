@@ -876,8 +876,9 @@ void BeamInteraction::BeamToSolidMortarManager::assemble_stiff(
   std::shared_ptr<const Core::LinAlg::BlockSparseMatrixBase> jac_block_sparse_matrix_base =
       Core::LinAlg::cast_to_const_block_sparse_matrix_base_and_check_success(jac_ptr);
   std::shared_ptr<Core::LinAlg::SparseMatrix> lm_displ_in_global_layout =
-      Mortar::matrix_row_col_transform(lm_displ, jac_block_sparse_matrix_base->range_map(1),
-          jac_block_sparse_matrix_base->range_map(0));
+      Mortar::matrix_row_col_transform(lm_displ,
+          jac_block_sparse_matrix_base->matrix(1, 0).row_map(),
+          jac_block_sparse_matrix_base->domain_map(0));
   gstate.assign_model_block(jac, *lm_displ_in_global_layout, Inpar::Solid::model_beaminteraction,
       Solid::MatBlockType::lm_displ);
 
@@ -887,8 +888,9 @@ void BeamInteraction::BeamToSolidMortarManager::assemble_stiff(
   displ_lm.add(*force_solid_lin_lambda_, false, 1.0, 1.0);
   displ_lm.complete(*lambda_dof_rowmap_, *discret_->dof_row_map());
   std::shared_ptr<Core::LinAlg::SparseMatrix> displ_lm_in_global_layout =
-      Mortar::matrix_row_col_transform(displ_lm, jac_block_sparse_matrix_base->range_map(0),
-          jac_block_sparse_matrix_base->range_map(1));
+      Mortar::matrix_row_col_transform(displ_lm,
+          jac_block_sparse_matrix_base->matrix(0, 1).row_map(),
+          jac_block_sparse_matrix_base->domain_map(1));
   gstate.assign_model_block(jac, *displ_lm_in_global_layout, Inpar::Solid::model_beaminteraction,
       Solid::MatBlockType::displ_lm);
 }
