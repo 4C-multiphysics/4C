@@ -112,7 +112,7 @@ namespace SSTI
     void assemble_mat_and_rhs();
 
     //! build null spaces associated with blocks of global system matrix
-    void build_null_spaces();
+    void build_null_spaces() const;
 
     //! Get Matrix and Right-Hand-Side for all subproblems incl. coupling
     void evaluate_subproblems();
