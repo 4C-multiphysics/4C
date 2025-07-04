@@ -101,8 +101,7 @@ $CMAKE_COMMAND \
     -D ParMETIS_INCLUDE_DIRS:PATH="/usr/include" \
     -D ParMETIS_LIBRARY_DIRS:PATH="/usr/lib/libparmetis.so.4.0.3" \
   -D TPL_ENABLE_UMFPACK:BOOL=ON \
-    -D UMFPACK_INCLUDE_DIRS:FILEPATH="$INSTALL_DIR/include" \
-    -D UMFPACK_LIBRARY_DIRS:FILEPATH="$INSTALL_DIR/lib" \
+    -D UMFPACK_INCLUDE_DIRS:FILEPATH="/usr/include/suitesparse" \
   -D TPL_ENABLE_SuperLUDist:BOOL=ON \
     -D SuperLUDist_INCLUDE_DIRS:PATH="$INSTALL_DIR/include" \
     -D SuperLUDist_LIBRARY_DIRS:PATH="$INSTALL_DIR/lib" \
