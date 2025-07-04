@@ -279,6 +279,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
       numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
   forces_pot_gp_2_.resize(
       numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
+  // note: no moments appear in this approach, vectors are initialized to zero
   moments_pot_gp_1_.resize(
       numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
   moments_pot_gp_2_.resize(
@@ -689,6 +690,7 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
       numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
   forces_pot_gp_2_.resize(
       numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
+  // note: no moments appear in this approach, vectors are initialized to zero
   moments_pot_gp_1_.resize(
       numgp_perelement, Core::LinAlg::Matrix<3, 1, double>(Core::LinAlg::Initialization::zero));
   moments_pot_gp_2_.resize(
@@ -2909,7 +2911,19 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
   }
 
 
-  // store for vtk visualization
+  /* store for visualization
+   * note: contributions to the force vector can either be visualized as distributed forces (in
+   * combination with the variation of the centerline) or distributed moments (in combination with
+   * the variation of the centerline derivative with respect to the parameter coordinate xi).
+   */
+
+  /* note on distributed force visualization
+   * contrary to the distributed moment visualization, the distributed force does not need any form
+   * of transformation, since the contribution to the force vector in combination with the variation
+   * of the centerline is already a distributed force
+   */
+
+  // distributed force on slave
   vtk_force_pot_slave_GP.update(
       prefactor_visualization_data * Core::FADUtils::cast_to_double(pot_ia_partial_gap_bl),
       Core::FADUtils::cast_to_double<T, 3, 1>(gap_bl_partial_r_slave), 1.0);
@@ -2933,33 +2947,7 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
           Core::FADUtils::cast_to_double(pot_ia_partial_x * x_partial_xi_master),
       Core::FADUtils::cast_to_double<T, 1, 3>(xi_master_partial_r_slave), 1.0);
 
-  Core::LinAlg::Matrix<3, 1, double> moment_pot_tmp(Core::LinAlg::Initialization::zero);
-
-  moment_pot_tmp.update(Core::FADUtils::cast_to_double(pot_ia_partial_gap_bl),
-      Core::FADUtils::cast_to_double<T, 3, 1>(gap_bl_partial_r_xi_slave));
-
-  moment_pot_tmp.update(Core::FADUtils::cast_to_double(pot_ia_partial_cos_alpha),
-      Core::FADUtils::cast_to_double<T, 3, 1>(cos_alpha_partial_r_xi_slave), 1.0);
-
-  moment_pot_tmp.update(Core::FADUtils::cast_to_double(pot_ia_partial_x),
-      Core::FADUtils::cast_to_double<T, 3, 1>(x_partial_r_xi_slave), 1.0);
-
-  /* note: relation between variation of tangent vector r_xi and variation of (transversal part
-   *       of) rotation vector theta_perp describing cross-section orientation can be used to
-   *       identify (distributed) moments as follows: m_pot = 1/|r_xi| * ( m_pot_pseudo x g1 )
-   */
-  Core::LinAlg::Matrix<3, 3, double> spin_pseudo_moment_tmp(Core::LinAlg::Initialization::zero);
-
-  Core::LargeRotations::computespin(spin_pseudo_moment_tmp, moment_pot_tmp);
-
-  T norm_r_xi_slave = Core::FADUtils::vector_norm(r_xi_slave);
-
-  moment_pot_tmp.multiply(1.0 / Core::FADUtils::cast_to_double(norm_r_xi_slave),
-      spin_pseudo_moment_tmp, Core::FADUtils::cast_to_double<T, 3, 1>(t1_slave));
-
-  vtk_moment_pot_slave_GP.update(prefactor_visualization_data, moment_pot_tmp, 1.0);
-
-
+  // distributed force on master
   vtk_force_pot_master_GP.update(
       prefactor_visualization_data * Core::FADUtils::cast_to_double(pot_ia_partial_gap_bl),
       Core::FADUtils::cast_to_double<T, 3, 1>(gap_bl_partial_r_master), 1.0);
@@ -2983,36 +2971,75 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
           Core::FADUtils::cast_to_double(pot_ia_partial_x * x_partial_xi_master),
       Core::FADUtils::cast_to_double<T, 1, 3>(xi_master_partial_r_master), 1.0);
 
+  /* note on distributed moment visualization
+   * Contrary to the distributed force visualization, the distributed moment can not be directly
+   * visualized from the force vector because this only represents a pseudo-moment. This
+   * pseudo-moment can be transformed into a distributed moment as follows:
+   *
+   * \f[
+   *    \delta W = \delta \boldsymbol{r}_2^{\shortmid T} \cdot \boldsymbol{m}_{\text{pseudo}}
+   *             = \delta \boldsymbol{\theta}_\perp^T \cdot \boldsymbol{m}
+   * \f]
+   * where \f$\boldsymbol{m}_{\text{pseudo}}\f$ is the contribution from the force vector and
+   * \f$\boldsymbol{m}\f$ is the distributed moment for visualization.
+   *
+   * Note: Here we only consider bending moments which are perpendicular to the tangent vector
+   *       r_xi. That's why we only consider the transversal part of the rotation vector
+   *       theta_perp which is perpendicular to the tangent vector r_xi.
+   *
+   * The variation of the rotation vector \f$\delta \boldsymbol{\theta}_\perp\f$ can be found,
+   * for example, in "Meier, C.: Geometrically exact finite element formulations for slender
+   * beams and their contact interaction, Technical University of Munich, Germany, 2016",
+   * formula (2.26).
+   *
+   * Rearranging the equation above results in the actual distributed moment we want to visualize:
+   * \f[
+   *    \boldsymbol{m} = \boldsymbol{r}_2^{\shortmid T} \cross \boldsymbol{m}_{\text{pseudo}}
+   * \f]
+   * or in direct notation => m = r_xi x m_pseudo)
+   */
 
-  moment_pot_tmp.update(Core::FADUtils::cast_to_double(pot_ia_partial_gap_bl),
+  Core::LinAlg::Matrix<3, 1, double> m_pseudo(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> m(Core::LinAlg::Initialization::zero);
+
+  // distributed moment on slave
+  m_pseudo.update(Core::FADUtils::cast_to_double(pot_ia_partial_gap_bl),
+      Core::FADUtils::cast_to_double<T, 3, 1>(gap_bl_partial_r_xi_slave));
+
+  m_pseudo.update(Core::FADUtils::cast_to_double(pot_ia_partial_cos_alpha),
+      Core::FADUtils::cast_to_double<T, 3, 1>(cos_alpha_partial_r_xi_slave), 1.0);
+
+  m_pseudo.update(Core::FADUtils::cast_to_double(pot_ia_partial_x),
+      Core::FADUtils::cast_to_double<T, 3, 1>(x_partial_r_xi_slave), 1.0);
+
+  m.cross_product(Core::FADUtils::cast_to_double<T, 3, 1>(r_xi_slave), m_pseudo);
+
+  vtk_moment_pot_slave_GP.update(prefactor_visualization_data, m, 1.0);
+
+  // distributed moment on master
+  m_pseudo.update(Core::FADUtils::cast_to_double(pot_ia_partial_gap_bl),
       Core::FADUtils::cast_to_double<T, 3, 1>(gap_bl_partial_r_xi_master));
 
-  moment_pot_tmp.update_t(
+  m_pseudo.update_t(
       Core::FADUtils::cast_to_double(pot_ia_partial_gap_bl * gap_bl_partial_xi_master),
       Core::FADUtils::cast_to_double<T, 1, 3>(xi_master_partial_r_xi_master), 1.0);
 
-  moment_pot_tmp.update(Core::FADUtils::cast_to_double(pot_ia_partial_cos_alpha),
+  m_pseudo.update(Core::FADUtils::cast_to_double(pot_ia_partial_cos_alpha),
       Core::FADUtils::cast_to_double<T, 3, 1>(cos_alpha_partial_r_xi_master), 1.0);
 
-  moment_pot_tmp.update_t(
+  m_pseudo.update_t(
       Core::FADUtils::cast_to_double(pot_ia_partial_cos_alpha * cos_alpha_partial_xi_master),
       Core::FADUtils::cast_to_double<T, 1, 3>(xi_master_partial_r_xi_master), 1.0);
 
-  moment_pot_tmp.update(Core::FADUtils::cast_to_double(pot_ia_partial_x),
+  m_pseudo.update(Core::FADUtils::cast_to_double(pot_ia_partial_x),
       Core::FADUtils::cast_to_double<T, 3, 1>(x_partial_r_xi_master), 1.0);
 
-  moment_pot_tmp.update_t(Core::FADUtils::cast_to_double(pot_ia_partial_x * x_partial_xi_master),
+  m_pseudo.update_t(Core::FADUtils::cast_to_double(pot_ia_partial_x * x_partial_xi_master),
       Core::FADUtils::cast_to_double<T, 1, 3>(xi_master_partial_r_xi_master), 1.0);
 
-  Core::LargeRotations::computespin(spin_pseudo_moment_tmp, moment_pot_tmp);
+  m.cross_product(Core::FADUtils::cast_to_double<T, 3, 1>(r_xi_master), m_pseudo);
 
-  T norm_r_xi_master = Core::FADUtils::vector_norm(r_xi_master);
-
-  moment_pot_tmp.multiply(1.0 / Core::FADUtils::cast_to_double(norm_r_xi_master),
-      spin_pseudo_moment_tmp, Core::FADUtils::cast_to_double<T, 3, 1>(t1_master));
-
-  vtk_moment_pot_master_GP.update(prefactor_visualization_data, moment_pot_tmp, 1.0);
-
+  vtk_moment_pot_master_GP.update(prefactor_visualization_data, m, 1.0);
 
   // integration factor
   interaction_potential_GP *= rho1rho2_JacFac_GaussWeight;
@@ -3395,8 +3422,19 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
   gap_ul_deriv_r_master.update(-1.0, normal_ul);
 
 
+  /* store for visualization
+   * note: contributions to the force vector can either be visualized as distributed forces (in
+   * combination with the variation of the centerline) or distributed moments (in combination with
+   * the variation of the centerline derivative with respect to the parameter coordinate xi).
+   */
 
-  // store for visualization
+  /* note on distributed force visualization
+   * contrary to the distributed moment visualization, the distributed force does not need any form
+   * of transformation, since the contribution to the force vector in combination with the variation
+   * of the centerline is already a distributed force
+   */
+
+  // distributed force on slave
   vtk_force_pot_slave_GP.update_t(prefactor_visualization_data *
                                       Core::FADUtils::cast_to_double(pot_red_fac_deriv_xi_master) *
                                       Core::FADUtils::cast_to_double(interaction_potential_GP),
@@ -3412,28 +3450,7 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
                                     Core::FADUtils::cast_to_double(pot_ia_deriv_cos_alpha),
       Core::FADUtils::cast_to_double<T, 3, 1>(cos_alpha_deriv_r_slave), 1.0);
 
-
-  Core::LinAlg::Matrix<3, 1, double> moment_pot_tmp(Core::LinAlg::Initialization::zero);
-  Core::LinAlg::Matrix<3, 3, double> spin_pseudo_moment_tmp(Core::LinAlg::Initialization::zero);
-
-
-  moment_pot_tmp.update(Core::FADUtils::cast_to_double(potential_reduction_factor_GP) *
-                            Core::FADUtils::cast_to_double(pot_ia_deriv_cos_alpha),
-      Core::FADUtils::cast_to_double<T, 3, 1>(cos_alpha_deriv_r_xi_slave));
-
-  // TODO understand definition of distributed moments on cross-section
-  /* note: relation between variation of tangent vector r_xi and variation of (transversal
-   * part of) rotation vector theta_perp describing cross-section orientation can be used to
-   *       identify (distributed) moments as follows: m_pot = 1/|r_xi| * ( m_pot_pseudo x g1 )
-   */
-  Core::LargeRotations::computespin(spin_pseudo_moment_tmp, moment_pot_tmp);
-
-  moment_pot_tmp.multiply(1.0 / Core::FADUtils::cast_to_double(norm_r_xi_slave),
-      spin_pseudo_moment_tmp, Core::FADUtils::cast_to_double<T, 3, 1>(t_slave));
-
-  vtk_moment_pot_slave_GP.update(prefactor_visualization_data, moment_pot_tmp, 1.0);
-
-
+  // distributed force on master
   vtk_force_pot_master_GP.update_t(prefactor_visualization_data *
                                        Core::FADUtils::cast_to_double(pot_red_fac_deriv_xi_master) *
                                        Core::FADUtils::cast_to_double(interaction_potential_GP),
@@ -3449,21 +3466,59 @@ bool BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues,
                                      Core::FADUtils::cast_to_double(pot_ia_deriv_cos_alpha),
       Core::FADUtils::cast_to_double<T, 3, 1>(cos_alpha_deriv_r_master), 1.0);
 
-  moment_pot_tmp.update_t(Core::FADUtils::cast_to_double(pot_red_fac_deriv_xi_master) *
-                              Core::FADUtils::cast_to_double(interaction_potential_GP),
+  /* note on distributed moment visualization
+   * Contrary to the distributed force visualization, the distributed moment can not be directly
+   * visualized from the force vector because this only represents a pseudo-moment. This
+   * pseudo-moment can be transformed into a distributed moment as follows:
+   *
+   * \f[
+   *    \delta W = \delta \boldsymbol{r}_2^{\shortmid T} \cdot \boldsymbol{m}_{\text{pseudo}}
+   *             = \delta \boldsymbol{\theta}_\perp^T \cdot \boldsymbol{m}
+   * \f]
+   * where \f$\boldsymbol{m}_{\text{pseudo}}\f$ is the contribution from the force vector and
+   * \f$\boldsymbol{m}\f$ is the distributed moment for visualization.
+   *
+   * Note: Here we only consider bending moments which are perpendicular to the tangent vector
+   *       r_xi. That's why we only consider the transversal part of the rotation vector
+   *       theta_perp which is perpendicular to the tangent vector r_xi.
+   *
+   * The variation of the rotation vector \f$\delta \boldsymbol{\theta}_\perp\f$ can be found,
+   * for example, in "Meier, C.: Geometrically exact finite element formulations for slender
+   * beams and their contact interaction, Technical University of Munich, Germany, 2016",
+   * formula (2.26).
+   *
+   * Rearranging the equation above results in the actual distributed moment we want to visualize:
+   * \f[
+   *    \boldsymbol{m} = \boldsymbol{r}_2^{\shortmid T} \cross \boldsymbol{m}_{\text{pseudo}}
+   * \f]
+   * or in direct notation => m = r_xi x m_pseudo)
+   */
+
+  Core::LinAlg::Matrix<3, 1, double> m_pseudo(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<3, 1, double> m(Core::LinAlg::Initialization::zero);
+
+  // distributed moment on slave
+  m_pseudo.update(Core::FADUtils::cast_to_double(potential_reduction_factor_GP) *
+                      Core::FADUtils::cast_to_double(pot_ia_deriv_cos_alpha),
+      Core::FADUtils::cast_to_double<T, 3, 1>(cos_alpha_deriv_r_xi_slave));
+
+  m.cross_product(Core::FADUtils::cast_to_double<T, 3, 1>(r_xi_slave), m_pseudo);
+
+  vtk_moment_pot_slave_GP.update(prefactor_visualization_data, m, 1.0);
+
+
+  // distributed moment on master
+  m_pseudo.update_t(Core::FADUtils::cast_to_double(pot_red_fac_deriv_xi_master) *
+                        Core::FADUtils::cast_to_double(interaction_potential_GP),
       Core::FADUtils::cast_to_double<T, 1, 3>(xi_master_partial_r_xi_master));
 
-  moment_pot_tmp.update(Core::FADUtils::cast_to_double(potential_reduction_factor_GP) *
-                            Core::FADUtils::cast_to_double(pot_ia_deriv_cos_alpha),
+  m_pseudo.update(Core::FADUtils::cast_to_double(potential_reduction_factor_GP) *
+                      Core::FADUtils::cast_to_double(pot_ia_deriv_cos_alpha),
       Core::FADUtils::cast_to_double<T, 3, 1>(cos_alpha_deriv_r_xi_master), 1.0);
 
-  Core::LargeRotations::computespin(spin_pseudo_moment_tmp, moment_pot_tmp);
+  m.cross_product(Core::FADUtils::cast_to_double<T, 3, 1>(r_xi_master), m_pseudo);
 
-  moment_pot_tmp.multiply(1.0 / Core::FADUtils::cast_to_double(norm_r_xi_master),
-      spin_pseudo_moment_tmp, Core::FADUtils::cast_to_double<T, 3, 1>(t_master));
-
-  vtk_moment_pot_master_GP.update(prefactor_visualization_data, moment_pot_tmp, 1.0);
-
+  vtk_moment_pot_master_GP.update(prefactor_visualization_data, m, 1.0);
 
 
   // now apply scalar integration factor
