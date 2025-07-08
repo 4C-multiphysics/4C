@@ -1364,6 +1364,9 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
   Teuchos::ParameterList paramlist;
   paramlist.set("algorithm", "parmetis");
   paramlist.set("partitioning_approach", "repartition");
+  paramlist.set("error_check_level", "debug_mode_assertions");
+  paramlist.set("debug_level", "verbose_detailed_status");
+  paramlist.set("debug_output_stream", "std::cout");
 
   auto newnodegraph =
       Core::Rebalance::rebalance_graph(*node_graph, paramlist, node_weights, edge_weights);
