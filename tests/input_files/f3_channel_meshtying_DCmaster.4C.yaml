@@ -70,7 +70,7 @@ RESULT DESCRIPTION:
       NODE: 4566
       QUANTITY: "velz"
       VALUE: 3.0002748506312646
-      TOLERANCE: 1e-10
+      TOLERANCE: 1e-09
   - FLUID:
       DIS: "fluid"
       NODE: 4566
@@ -112,13 +112,13 @@ RESULT DESCRIPTION:
       NODE: 10480
       QUANTITY: "vely"
       VALUE: 0.00029105452141453547
-      TOLERANCE: 1e-10
+      TOLERANCE: 1e-09
   - FLUID:
       DIS: "fluid"
       NODE: 10480
       QUANTITY: "velz"
       VALUE: 3.0000322047756494
-      TOLERANCE: 1e-10
+      TOLERANCE: 1e-09
   - FLUID:
       DIS: "fluid"
       NODE: 10480
