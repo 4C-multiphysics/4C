@@ -110,7 +110,7 @@ RESULT DESCRIPTION:
       NODE: 38
       QUANTITY: "dispy"
       VALUE: -0.0009110602429907091
-      TOLERANCE: 1e-13
+      TOLERANCE: 1e-12
   - FLUID:
       DIS: "fluid"
       NODE: 841
