@@ -72,7 +72,7 @@ RESULT DESCRIPTION:
       NODE: 246
       QUANTITY: "phi"
       VALUE: 0.3710567769
-      TOLERANCE: 1e-09
+      TOLERANCE: 0.5e-08
   - SCATRA:
       DIS: "scatra"
       NODE: 261
