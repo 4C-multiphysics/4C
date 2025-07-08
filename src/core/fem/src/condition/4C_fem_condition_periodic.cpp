@@ -1192,7 +1192,7 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
   auto node_weights = std::make_shared<Core::LinAlg::Vector<double>>(*node_row_map, true);
   {
     // set default node weights
-    node_weights->put_scalar(1.0);
+    node_weights->put_scalar(10.0);
 
     // apply weight of special elements
     for (int node_lid = 0; node_lid < node_row_map->num_my_elements(); ++node_lid)
@@ -1348,7 +1348,7 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
         std::vector<int> master_gid(1, master->id());
         std::vector<int> slave_gid(1, slave->id());
         // add 99 to the initial value of 1.0 to set costs to 100
-        std::vector<double> value(1, 99.0);
+        std::vector<double> value(1, 100.0);
 
         err = edge_weights->insert_global_values(master->id(), 1, value.data(), slave_gid.data());
         if (err < 0) FOUR_C_THROW("insert_global_values returned err={}", err);
@@ -1361,9 +1361,8 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
 
   // 4. setup partitioner and redistribute
   Teuchos::ParameterList paramlist;
-  paramlist.set("algorithm", "zoltan");
-  Teuchos::ParameterList& zparams = paramlist.sublist("zoltan_parameters", false);
-  zparams.set("LB_METHOD", "GRAPH");
+  paramlist.set("algorithm", "parmetis");
+  paramlist.set("partitioning_approach", "repartition");
 
   auto newnodegraph =
       Core::Rebalance::rebalance_graph(*node_graph, paramlist, node_weights, edge_weights);
