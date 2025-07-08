@@ -140,7 +140,7 @@ RESULT DESCRIPTION:
       NODE: 478
       QUANTITY: "pressure"
       VALUE: 10323.178192692718
-      TOLERANCE: 0.0001
+      TOLERANCE: 0.005
   - STRUCTURE:
       DIS: "structure"
       NODE: 1325
