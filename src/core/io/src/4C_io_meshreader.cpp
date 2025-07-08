@@ -561,7 +561,11 @@ namespace
         if (!Core::Communication::my_mpi_rank(comm))
           std::cout << "Redistributing using hypergraph .........\n";
 
-        rebalanceParams.set("algorithm", "phg");
+        rebalanceParams.set("algorithm", "parmetis");
+        rebalanceParams.set("partitioning_approach", "partition");
+        rebalanceParams.set("error_check_level", "debug_mode_assertions");
+        rebalanceParams.set("debug_level", "verbose_detailed_status");
+        rebalanceParams.set("debug_output_stream", "std::cout");
 
         std::tie(rowmap, colmap) = Core::Rebalance::rebalance_node_maps(*graph, rebalanceParams);
         break;
