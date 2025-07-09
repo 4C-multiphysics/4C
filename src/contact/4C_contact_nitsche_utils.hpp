@@ -12,12 +12,11 @@
 
 #include "4C_contact_utils.hpp"
 #include "4C_fem_general_utils_local_connectivity_matrices.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_mortar_element.hpp"
-
-#include <Epetra_FEVector.h>
 
 #include <memory>
 #include <unordered_map>
@@ -39,7 +38,7 @@ namespace Mortar
     virtual void clear() = 0;
 
     virtual void assemble_rhs(Mortar::Element* mele, CONTACT::VecBlockType row,
-        std::shared_ptr<Epetra_FEVector> fc) const = 0;
+        std::shared_ptr<Core::LinAlg::FEVector<double>> fc) const = 0;
 
     virtual void assemble_matrix(Mortar::Element* mele, CONTACT::MatBlockType block,
         std::shared_ptr<Core::LinAlg::SparseMatrix> kc) const = 0;
@@ -198,7 +197,7 @@ namespace Mortar
     double* kde(int col) override { return ssi_elch_data_.k_de_[col].data(); }
 
     void assemble_rhs(Mortar::Element* mele, CONTACT::VecBlockType row,
-        std::shared_ptr<Epetra_FEVector> fc) const override;
+        std::shared_ptr<Core::LinAlg::FEVector<double>> fc) const override;
 
     void assemble_matrix(Mortar::Element* mele, CONTACT::MatBlockType block,
         std::shared_ptr<Core::LinAlg::SparseMatrix> kc) const override;
@@ -206,7 +205,7 @@ namespace Mortar
     template <int num_dof_per_node>
     void assemble_rhs(Mortar::Element* mele,
         const Core::LinAlg::Matrix<Core::FE::num_nodes(parent_distype) * num_dof_per_node, 1>& rhs,
-        std::vector<int>& dofs, std::shared_ptr<Epetra_FEVector> fc) const;
+        std::vector<int>& dofs, std::shared_ptr<Core::LinAlg::FEVector<double>> fc) const;
 
     template <int num_dof_per_node>
     void assemble_matrix(Mortar::Element* mele,

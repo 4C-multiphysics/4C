@@ -12,19 +12,20 @@
 
 #include "4C_constraint_framework_embeddedmesh_params.hpp"
 #include "4C_fem_discretization.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <memory>
 
 // Forward declarations.
 class Map;
-class Epetra_FEVector;
 
 FOUR_C_NAMESPACE_OPEN
 
 namespace Core::LinAlg
 {
   class SparseMatrix;
+  class FE_Vector;
 }  // namespace Core::LinAlg
 namespace Core::IO
 {
@@ -248,7 +249,7 @@ namespace Constraints::EmbeddedMesh
     std::vector<int> ids_cut_elements_col_;
 
     //! Global constraint vector.
-    std::shared_ptr<Epetra_FEVector> global_constraint_ = nullptr;
+    std::shared_ptr<Core::LinAlg::FEVector<double>> global_constraint_ = nullptr;
 
     //! Number of Lagrange multiplier DOFs on a node.
     unsigned int n_lambda_node_ = 0;
@@ -291,12 +292,12 @@ namespace Constraints::EmbeddedMesh
     //! al: Two dimensional mortar contact methods for large deformation frictional sliding (eq.
     //! 37). With this scaling correct units and pass patch tests are achieved (in the penalty
     //! case).
-    std::shared_ptr<Epetra_FEVector> global_kappa_ = nullptr;
+    std::shared_ptr<Core::LinAlg::FEVector<double>> global_kappa_ = nullptr;
 
     //! This vector keeps tack of all Lagrange multipliers that are active. This is needed when
     //! the kappa vector is inverted and some entries are zero, because no active contributions
     //! act on that Lagrange multiplier.
-    std::shared_ptr<Epetra_FEVector> global_active_lambda_ = nullptr;
+    std::shared_ptr<Core::LinAlg::FEVector<double>> global_active_lambda_ = nullptr;
 
     //! Vector with all contact pairs to be evaluated by this mortar manager.
     std::vector<std::shared_ptr<Constraints::EmbeddedMesh::SolidInteractionPair>>

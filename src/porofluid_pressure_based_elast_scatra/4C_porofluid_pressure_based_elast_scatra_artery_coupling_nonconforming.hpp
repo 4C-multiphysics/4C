@@ -11,9 +11,8 @@
 #include "4C_config.hpp"
 
 #include "4C_art_net_input.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_porofluid_pressure_based_elast_scatra_artery_coupling_base.hpp"
-
-#include <Epetra_FEVector.h>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -225,13 +224,13 @@ namespace PoroPressureBased
     //! mortar coupling matrices
     std::shared_ptr<Core::LinAlg::SparseMatrix> mortar_matrix_d_;
     std::shared_ptr<Core::LinAlg::SparseMatrix> mortar_matrix_m_;
-    std::shared_ptr<Epetra_FEVector> mortar_kappa_inv_;
+    std::shared_ptr<Core::LinAlg::FEVector<double>> mortar_kappa_inv_;
 
     //! penalty parameter
     double penalty_parameter_;
 
     //! coupling rhs-vector (FE)
-    std::shared_ptr<Epetra_FEVector> coupling_rhs_vector_;
+    std::shared_ptr<Core::LinAlg::FEVector<double>> coupling_rhs_vector_;
   };
 }  // namespace PoroPressureBased
 

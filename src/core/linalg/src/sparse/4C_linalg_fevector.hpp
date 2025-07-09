@@ -20,7 +20,6 @@
 
 #include <memory>
 
-
 FOUR_C_NAMESPACE_OPEN
 
 namespace Core::LinAlg
@@ -35,6 +34,8 @@ namespace Core::LinAlg
    public:
     /// Basic vector constructor to create vector based on a map and initialize memory with zeros
     explicit FEVector(const Epetra_BlockMap& Map, bool zeroOut = true);
+
+    explicit FEVector(const Epetra_BlockMap& Map, int numVectors, bool ignoreNonLocalEntries);
 
     explicit FEVector(const Map& Map, bool zeroOut = true);
 
@@ -51,6 +52,10 @@ namespace Core::LinAlg
 
     ~FEVector() = default;
 
+    //! Element access function
+    double& operator[](int index) { return *(*vector_)[index]; }
+
+    double operator[](int const index) const { return *(*vector_)[index]; }
     // Implicit conversion to MultiVector: the MultiVector will view the same content and only have
     // a single column.
     operator const MultiVector<T>&() const;
@@ -179,11 +184,11 @@ namespace Core::LinAlg
       return vector_->ReplaceGlobalValue(GlobalRow, FEVectorIndex, ScalarValue);
     }
 
-    int replace_global_value(long long GlobalRow, int FEVectorIndex, double ScalarValue)
-    {
-      return vector_->ReplaceGlobalValue(GlobalRow, FEVectorIndex, ScalarValue);
-    }
 
+    int ReplaceGlobalValues(int numIDs, const int* GIDs, const double* values, int vectorIndex = 0)
+    {
+      return vector_->ReplaceGlobalValues(numIDs, GIDs, values, vectorIndex);
+    }
     //! Matrix-Matrix multiplication, \e this = ScalarThis*\e this + ScalarAB*A*B.
     int multiply(char TransA, char TransB, double ScalarAB, const Epetra_MultiVector& A,
         const Epetra_MultiVector& B, double ScalarThis)
@@ -232,18 +237,28 @@ namespace Core::LinAlg
       return vector_->SumIntoGlobalValue(GlobalRow, FEVectorIndex, ScalarValue);
     }
 
-    int GlobalAssemble(void) { vector_->GlobalAssemble(); };
+    int global_assemble(Epetra_CombineMode mode = Add, bool reuse_map_and_exporter = false)
+    {
+      return vector_->GlobalAssemble(mode, reuse_map_and_exporter);
+    };
 
     int sum_into_global_value(long long GlobalRow, int FEVectorIndex, double ScalarValue)
     {
       return vector_->SumIntoGlobalValue(GlobalRow, FEVectorIndex, ScalarValue);
     }
 
-    int SumIntoGlobalValues(int numIDs, const int* GIDs, const int* numValuesPerID,
+    int sum_into_global_values(int numIDs, const int* GIDs, const int* numValuesPerID,
         const double* values, int vectorIndex = 0)
     {
-      vector_->SumIntoGlobalValues(numIDs, GIDs, numValuesPerID, values, vectorIndex);
-    };
+      return vector_->SumIntoGlobalValues(numIDs, GIDs, numValuesPerID, values, vectorIndex);
+    }
+
+    int sum_into_global_values(
+        int numIDs, const int* GIDs, const double* values, int vectorIndex = 0)
+    {
+      return vector_->SumIntoGlobalValues(numIDs, GIDs, values, vectorIndex);
+    }
+
 
     int reciprocal_multiply(double ScalarAB, const Epetra_MultiVector& A,
         const Epetra_MultiVector& B, double ScalarThis)

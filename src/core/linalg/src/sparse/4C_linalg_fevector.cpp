@@ -8,10 +8,9 @@
 #include "4C_linalg_fevector.hpp"
 
 #include "4C_comm_mpi_utils.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_multi_vector.hpp"
 #include "4C_utils_exceptions.hpp"
-
-#include <Epetra_FEVector.h>
 
 
 FOUR_C_NAMESPACE_OPEN
@@ -27,6 +26,13 @@ Core::LinAlg::FEVector<T>::FEVector(const Map& Map, bool zeroOut)
 template <typename T>
 Core::LinAlg::FEVector<T>::FEVector(const Epetra_BlockMap& Map, bool zeroOut)
     : vector_(Utils::make_owner<Epetra_FEVector>(Map, zeroOut))
+{
+}
+
+template <typename T>
+Core::LinAlg::FEVector<T>::FEVector(
+    const Epetra_BlockMap& Map, int numVectors, bool ignoreNonLocalEntries)
+    : vector_(Utils::make_owner<Epetra_FEVector>(Map, numVectors, ignoreNonLocalEntries))
 {
 }
 
@@ -51,6 +57,7 @@ Core::LinAlg::FEVector<T>& Core::LinAlg::FEVector<T>::operator=(const FEVector& 
   *vector_ = other.get_ref_of_epetra_fevector();
   return *this;
 }
+
 
 
 template <typename T>

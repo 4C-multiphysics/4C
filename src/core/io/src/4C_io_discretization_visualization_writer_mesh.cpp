@@ -13,13 +13,12 @@
 #include "4C_io.hpp"
 #include "4C_io_element_vtk_cell_type_register.hpp"
 #include "4C_io_visualization_manager.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_multi_vector.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_material_base.hpp"
 #include "4C_material_parameter_base.hpp"
 #include "4C_utils_exceptions.hpp"
-
-#include <Epetra_FEVector.h>
 
 #include <utility>
 FOUR_C_NAMESPACE_OPEN

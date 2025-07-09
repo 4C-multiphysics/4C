@@ -11,11 +11,11 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_node.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_gauss.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 
-#include <Epetra_FEVector.h>
 #include <Teuchos_ParameterList.hpp>
 
 FOUR_C_NAMESPACE_OPEN
@@ -153,7 +153,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
 
   // step 2: use precalculated (velocity) gradient for patch-recovery of gradient
   // solution vector based on reduced node row map
-  Epetra_FEVector nodevec(noderowmap.get_epetra_block_map(), numvec);
+  Core::LinAlg::FEVector<double> nodevec(noderowmap.get_epetra_block_map(), numvec);
 
   std::vector<const Core::Conditions::Condition*> conds;
   dis.get_condition("SPRboundary", conds);
@@ -538,12 +538,13 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
   }  // end loop over all nodes
 
   // call global assemble
-  const int err = nodevec.GlobalAssemble(Insert, false);
+  const int err = nodevec.global_assemble(Insert, false);
   if (err < 0) FOUR_C_THROW("global assemble into nodevec failed");
 
   // if no pbc are involved leave here
   if (noderowmap.point_same_as(*fullnoderowmap))
-    return std::make_shared<Core::LinAlg::MultiVector<double>>(nodevec);
+    return std::make_shared<Core::LinAlg::MultiVector<double>>(
+        nodevec.get_ref_of_epetra_fevector());
 
   // solution vector based on full row map in which the solution of the master node is inserted into
   // slave nodes
@@ -560,12 +561,13 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
       const int mastergid = slavemasterpair->second;
       const int masterlid = noderowmap.lid(mastergid);
       for (int j = 0; j < numvec; ++j)
-        fullnodevec->ReplaceMyValue(i, j, ((*(nodevec)(j))[masterlid]));
+        fullnodevec->ReplaceMyValue(
+            i, j, ((*(nodevec.get_ref_of_epetra_fevector())(j))[masterlid]));
     }
     else
     {
       const int lid = noderowmap.lid(nodeid);
-      for (int j = 0; j < numvec; ++j) fullnodevec->ReplaceMyValue(i, j, ((*(nodevec)(j))[lid]));
+      for (int j = 0; j < numvec; ++j) fullnodevec->ReplaceMyValue(i, j, (((nodevec))[lid]));
     }
   }
 

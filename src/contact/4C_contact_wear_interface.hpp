@@ -13,8 +13,7 @@
 #include "4C_contact_input.hpp"
 #include "4C_contact_interface.hpp"
 #include "4C_inpar_wear.hpp"
-
-#include <Epetra_FEVector.h>
+#include "4C_linalg_fevector.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -261,7 +260,7 @@ namespace Wear
     /*!
     \brief Assemble inactive rhs (incremental delta_w_)
     */
-    virtual void assemble_inactive_wear_rhs_master(Epetra_FEVector& inactiverhs);
+    virtual void assemble_inactive_wear_rhs_master(Core::LinAlg::FEVector<double>& inactiverhs);
 
     /*!
     \brief Assemble wear-cond. rhs
@@ -271,7 +270,7 @@ namespace Wear
     /*!
     \brief Assemble wear-cond. rhs
     */
-    virtual void assemble_wear_cond_rhs_master(Epetra_FEVector& rhs);
+    virtual void assemble_wear_cond_rhs_master(Core::LinAlg::FEVector<double>& rhs);
 
     /*!
     \brief Initialize / reset interface for contact

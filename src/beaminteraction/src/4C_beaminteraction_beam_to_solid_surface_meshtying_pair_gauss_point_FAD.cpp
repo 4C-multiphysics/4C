@@ -11,8 +11,7 @@
 #include "4C_geometry_pair_element_faces.hpp"
 #include "4C_geometry_pair_line_to_surface.hpp"
 #include "4C_geometry_pair_scalar_types.hpp"
-
-#include <Epetra_FEVector.h>
+#include "4C_linalg_fevector.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -34,7 +33,7 @@ BeamInteraction::BeamToSolidSurfaceMeshtyingPairGaussPointFAD<ScalarType, Beam,
 template <typename ScalarType, typename Beam, typename Surface>
 void BeamInteraction::BeamToSolidSurfaceMeshtyingPairGaussPointFAD<ScalarType, Beam,
     Surface>::evaluate_and_assemble(const std::shared_ptr<const Core::FE::Discretization>& discret,
-    const std::shared_ptr<Epetra_FEVector>& force_vector,
+    const std::shared_ptr<Core::LinAlg::FEVector<double>>& force_vector,
     const std::shared_ptr<Core::LinAlg::SparseMatrix>& stiffness_matrix,
     const std::shared_ptr<const Core::LinAlg::Vector<double>>& displacement_vector)
 {
@@ -62,7 +61,8 @@ void BeamInteraction::BeamToSolidSurfaceMeshtyingPairGaussPointFAD<ScalarType, B
     std::vector<double> force_pair_double(pair_gid.size());
     for (unsigned int j_dof = 0; j_dof < pair_gid.size(); j_dof++)
       force_pair_double[j_dof] = Core::FADUtils::cast_to_double(potential.dx(j_dof));
-    force_vector->SumIntoGlobalValues(pair_gid.size(), pair_gid.data(), force_pair_double.data());
+    force_vector->sum_into_global_values(
+        pair_gid.size(), pair_gid.data(), force_pair_double.data());
   }
 
   // If given, assemble force terms into the global stiffness matrix.

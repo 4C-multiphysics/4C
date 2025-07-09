@@ -12,11 +12,10 @@
 #include "4C_constraint_framework_embeddedmesh_solid_to_solid_utils.hpp"
 #include "4C_cut_cutwizard.hpp"
 #include "4C_io_visualization_manager.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linalg_vector.hpp"
-
-#include <Epetra_FEVector.h>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -176,7 +175,7 @@ void Constraints::EmbeddedMesh::SolidToSolidMortarManager::setup(
 
   // Create the global coupling matrices.
   global_constraint_ =
-      std::make_shared<Epetra_FEVector>(lambda_dof_rowmap_->get_epetra_block_map());
+      std::make_shared<Core::LinAlg::FEVector<double>>(lambda_dof_rowmap_->get_epetra_block_map());
   global_g_bl_ = std::make_shared<Core::LinAlg::SparseMatrix>(
       *lambda_dof_rowmap_, 30, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
   global_g_bg_ = std::make_shared<Core::LinAlg::SparseMatrix>(
@@ -185,9 +184,10 @@ void Constraints::EmbeddedMesh::SolidToSolidMortarManager::setup(
       *boundary_layer_interface_dof_rowmap_, 30, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
   global_fbg_l_ = std::make_shared<Core::LinAlg::SparseMatrix>(
       *background_dof_rowmap_, 100, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
-  global_kappa_ = std::make_shared<Epetra_FEVector>(lambda_dof_rowmap_->get_epetra_block_map());
+  global_kappa_ =
+      std::make_shared<Core::LinAlg::FEVector<double>>(lambda_dof_rowmap_->get_epetra_block_map());
   global_active_lambda_ =
-      std::make_shared<Epetra_FEVector>(lambda_dof_rowmap_->get_epetra_block_map());
+      std::make_shared<Core::LinAlg::FEVector<double>>(lambda_dof_rowmap_->get_epetra_block_map());
 
   // Set flag for successful setup.
   is_setup_ = true;
@@ -349,13 +349,13 @@ void Constraints::EmbeddedMesh::SolidToSolidMortarManager::evaluate_global_coupl
   set_state(disp_col_vec);
 
   // Reset the global data structures.
-  global_constraint_->PutScalar(0.);
+  global_constraint_->put_scalar(0.);
   global_g_bl_->put_scalar(0.);
   global_g_bg_->put_scalar(0.);
   global_fbl_l_->put_scalar(0.);
   global_fbg_l_->put_scalar(0.);
-  global_kappa_->PutScalar(0.);
-  global_active_lambda_->PutScalar(0.);
+  global_kappa_->put_scalar(0.);
+  global_active_lambda_->put_scalar(0.);
 
   for (auto& elepairptr : embedded_mesh_solid_pairs_)
   {
@@ -372,10 +372,9 @@ void Constraints::EmbeddedMesh::SolidToSolidMortarManager::evaluate_global_coupl
   global_fbg_l_->complete(*lambda_dof_rowmap_, *background_dof_rowmap_);
 
   // Complete the global scaling vector.
-  if (0 != global_kappa_->GlobalAssemble(Add, false)) FOUR_C_THROW("Error in GlobalAssemble!");
-  if (0 != global_active_lambda_->GlobalAssemble(Add, false))
-    FOUR_C_THROW("Error in GlobalAssemble!");
-  if (0 != global_constraint_->GlobalAssemble(Add, false)) FOUR_C_THROW("Error in GlobalAssemble!");
+  if (0 != global_kappa_->global_assemble()) FOUR_C_THROW("Error in GlobalAssemble!");
+  if (0 != global_active_lambda_->global_assemble()) FOUR_C_THROW("Error in GlobalAssemble!");
+  if (0 != global_constraint_->global_assemble()) FOUR_C_THROW("Error in GlobalAssemble!");
 }
 
 void Constraints::EmbeddedMesh::SolidToSolidMortarManager::
@@ -501,7 +500,7 @@ Constraints::EmbeddedMesh::SolidToSolidMortarManager::penalty_invert_kappa() con
   double local_kappa_inv_value = 0.;
   for (int lid = 0; lid < lambda_dof_rowmap_->num_my_elements(); lid++)
   {
-    if (global_active_lambda_->Values()[lid] > 0.1)
+    if (global_active_lambda_->get_values()[lid] > 0.1)
     {
       const int gid = lambda_dof_rowmap_->gid(lid);
       if (lambda_dof_rowmap_->lid(gid) != -1)
@@ -509,7 +508,7 @@ Constraints::EmbeddedMesh::SolidToSolidMortarManager::penalty_invert_kappa() con
       else
         FOUR_C_THROW("Could not find the GID {} in translation map", gid);
 
-      local_kappa_inv_value = penalty / global_kappa_->Values()[lid];
+      local_kappa_inv_value = penalty / global_kappa_->get_values()[lid];
     }
     else
       // This LID is inactive.
@@ -616,7 +615,7 @@ double Constraints::EmbeddedMesh::SolidToSolidMortarManager::get_energy() const
   // Calculate the penalty potential.
   std::shared_ptr<Core::LinAlg::Vector<double>> lambda = get_global_lambda();
   double dot_product = 0.0;
-  global_constraint_->Dot(*lambda, &dot_product);
+  global_constraint_->dot(*lambda, &dot_product);
   return 0.5 * dot_product;
 }
 

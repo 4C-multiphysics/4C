@@ -12,8 +12,7 @@
 #include "4C_config.hpp"
 
 #include "4C_inpar_beaminteraction.hpp"
-
-#include <Epetra_FEVector.h>
+#include "4C_linalg_fevector.hpp"
 
 #include <memory>
 
@@ -156,7 +155,8 @@ namespace BeamInteraction
      */
     void evaluate_force_stiff_penalty_regularization(
         const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state,
-        std::shared_ptr<Core::LinAlg::SparseMatrix> stiff, std::shared_ptr<Epetra_FEVector> force);
+        std::shared_ptr<Core::LinAlg::SparseMatrix> stiff,
+        std::shared_ptr<Core::LinAlg::FEVector<double>> force);
 
     /**
      * \brief Get the global vector of Lagrange multipliers.
@@ -230,7 +230,7 @@ namespace BeamInteraction
     virtual void add_global_force_stiffness_penalty_contributions(
         const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state,
         std::shared_ptr<Core::LinAlg::SparseMatrix> stiff,
-        std::shared_ptr<Epetra_FEVector> force) const;
+        std::shared_ptr<Core::LinAlg::FEVector<double>> force) const;
 
     /**
      * \brief Get the penalty regularization of the constraint vector
@@ -329,7 +329,7 @@ namespace BeamInteraction
     std::map<int, std::vector<int>> element_gid_to_lambda_gid_map_;
 
     //! Global constraint vector.
-    std::shared_ptr<Epetra_FEVector> constraint_;
+    std::shared_ptr<Core::LinAlg::FEVector<double>> constraint_;
 
     //! Derivative of constraint vector w.r.t the beam DOF.
     std::shared_ptr<Core::LinAlg::SparseMatrix> constraint_lin_beam_;
@@ -347,7 +347,7 @@ namespace BeamInteraction
     //! al: Two dimensional mortar contact methods for large deformation frictional sliding (eq.
     //! 37). With this scaling correct units and pass patch tests are achieved (in the penalty
     //! case).
-    std::shared_ptr<Epetra_FEVector> kappa_;
+    std::shared_ptr<Core::LinAlg::FEVector<double>> kappa_;
 
     //! Derivative of the scaling vector w.r.t the beam DOF.
     std::shared_ptr<Core::LinAlg::SparseMatrix> kappa_lin_beam_;
@@ -358,7 +358,7 @@ namespace BeamInteraction
     //! This vector keeps tack of all Lagrange multipliers that are active. This is needed when the
     //! kappa vector is inverted and some entries are zero, because no active contributions act on
     //! that Lagrange multiplier.
-    std::shared_ptr<Epetra_FEVector> lambda_active_;
+    std::shared_ptr<Core::LinAlg::FEVector<double>> lambda_active_;
 
     //! Vector with all contact pairs to be evaluated by this mortar manager.
     std::vector<std::shared_ptr<BeamInteraction::BeamContactPair>> contact_pairs_;

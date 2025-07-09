@@ -38,8 +38,10 @@ BeamInteraction::SubmodelEvaluator::PartitionedBeamInteractionAssemblyManagerDir
  */
 void BeamInteraction::SubmodelEvaluator::PartitionedBeamInteractionAssemblyManagerDirect::
     evaluate_force_stiff(const Core::FE::Discretization& discretization1,
-        const Core::FE::Discretization& discretization2, std::shared_ptr<Epetra_FEVector>& ff,
-        std::shared_ptr<Epetra_FEVector>& fb, std::shared_ptr<Core::LinAlg::SparseOperator> cff,
+        const Core::FE::Discretization& discretization2,
+        std::shared_ptr<Core::LinAlg::FEVector<double>>& ff,
+        std::shared_ptr<Core::LinAlg::FEVector<double>>& fb,
+        std::shared_ptr<Core::LinAlg::SparseOperator> cff,
         std::shared_ptr<Core::LinAlg::SparseMatrix>& cbb,
         std::shared_ptr<Core::LinAlg::SparseMatrix>& cfb,
         std::shared_ptr<Core::LinAlg::SparseMatrix>& cbf,
@@ -98,9 +100,9 @@ void BeamInteraction::SubmodelEvaluator::PartitionedBeamInteractionAssemblyManag
           ff, cbb, cff, cbf, cfb);
     }
   }
-  int err = fb->GlobalAssemble();
+  int err = fb->global_assemble();
   if (err) printf("Global assembly failed with error %i", err);
-  err = ff->GlobalAssemble();
+  err = ff->global_assemble();
   if (err) printf("Global assembly failed with error %i", err);
 }
 

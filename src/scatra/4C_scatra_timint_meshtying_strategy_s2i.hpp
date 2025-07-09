@@ -19,10 +19,9 @@
 #include "4C_inpar_s2i.hpp"
 #include "4C_inpar_scatra.hpp"
 #include "4C_io_runtime_csv_writer.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_scatra_timint_meshtying_strategy_base.hpp"
-
-#include <Epetra_FEVector.h>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -393,7 +392,7 @@ namespace ScaTra
     std::shared_ptr<Core::LinAlg::Vector<double>> islaveresidual_;
 
     //! auxiliary residual vector for master residuals
-    std::shared_ptr<Epetra_FEVector> imasterresidual_;
+    std::shared_ptr<Core::LinAlg::FEVector<double>> imasterresidual_;
 
     //! time derivative of slave dofs of scatra-scatra interface
     std::shared_ptr<Core::LinAlg::Vector<double>> islavephidtnp_;
@@ -618,7 +617,7 @@ namespace ScaTra
         const Inpar::S2I::InterfaceSides matrix4_side_cols,
         const std::shared_ptr<Core::LinAlg::MultiVector<double>>& systemvector1,
         const Inpar::S2I::InterfaceSides vector1_side,
-        const std::shared_ptr<Epetra_FEVector>& systemvector2,
+        const std::shared_ptr<Core::LinAlg::FEVector<double>>& systemvector2,
         const Inpar::S2I::InterfaceSides vector2_side) const;
 
     /*!
@@ -666,7 +665,7 @@ namespace ScaTra
         const Inpar::S2I::InterfaceSides matrix4_side_cols,
         const std::shared_ptr<Core::LinAlg::MultiVector<double>>& systemvector1,
         const Inpar::S2I::InterfaceSides vector1_side,
-        const std::shared_ptr<Epetra_FEVector>& systemvector2,
+        const std::shared_ptr<Core::LinAlg::FEVector<double>>& systemvector2,
         const Inpar::S2I::InterfaceSides vector2_side) const;
 
     /*!
@@ -710,7 +709,7 @@ namespace ScaTra
         const Inpar::S2I::InterfaceSides matrix4_side_cols,
         const std::shared_ptr<Core::LinAlg::MultiVector<double>>& systemvector1,
         const Inpar::S2I::InterfaceSides vector1_side,
-        const std::shared_ptr<Epetra_FEVector>& systemvector2,
+        const std::shared_ptr<Core::LinAlg::FEVector<double>>& systemvector2,
         const Inpar::S2I::InterfaceSides vector2_side) const;
 
     //! flag indicating if we have capacitive interface flux contributions
@@ -1124,7 +1123,7 @@ namespace ScaTra
         std::shared_ptr<Core::LinAlg::MultiVector<double>> systemvector1,  //!< system vector 1
         const Inpar::S2I::InterfaceSides
             vector1_side,  //!< interface side associated with system vector 1
-        std::shared_ptr<Epetra_FEVector> systemvector2,
+        std::shared_ptr<Core::LinAlg::FEVector<double>> systemvector2,
         const Inpar::S2I::InterfaceSides
             vector2_side,        //!< interface side associated with system vector 2
         const int nds_rows = 0,  //!< number of dofset associated with matrix rows
@@ -1217,7 +1216,7 @@ namespace ScaTra
         Core::Elements::LocationArray& la_slave, Core::Elements::LocationArray& la_master,
         const int assembler_pid_master) const;
 
-    void assemble_cell_vector(const std::shared_ptr<Epetra_FEVector>& systemvector,
+    void assemble_cell_vector(const std::shared_ptr<Core::LinAlg::FEVector<double>>& systemvector,
         const Core::LinAlg::SerialDenseVector& cellvector, const Inpar::S2I::InterfaceSides side,
         Core::Elements::LocationArray& la_slave, Core::Elements::LocationArray& la_master,
         const int assembler_pid_master) const;
@@ -1305,7 +1304,7 @@ namespace ScaTra
     const std::shared_ptr<Core::LinAlg::MultiVector<double>> systemvector1_;
 
     //! system vector 2
-    const std::shared_ptr<Epetra_FEVector> systemvector2_;
+    const std::shared_ptr<Core::LinAlg::FEVector<double>> systemvector2_;
 
     //! interface side associated with system vector 1
     const Inpar::S2I::InterfaceSides vector1_side_;

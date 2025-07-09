@@ -21,8 +21,7 @@
 #include "4C_geometry_pair_factory.hpp"
 #include "4C_geometry_pair_line_to_surface.hpp"
 #include "4C_geometry_pair_scalar_types.hpp"
-
-#include <Epetra_FEVector.h>
+#include "4C_linalg_fevector.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -44,7 +43,7 @@ BeamInteraction::BeamToSolidSurfaceContactPairGapVariation<ScalarType, Beam,
 template <typename ScalarType, typename Beam, typename Surface>
 void BeamInteraction::BeamToSolidSurfaceContactPairGapVariation<ScalarType, Beam,
     Surface>::evaluate_and_assemble(const std::shared_ptr<const Core::FE::Discretization>& discret,
-    const std::shared_ptr<Epetra_FEVector>& force_vector,
+    const std::shared_ptr<Core::LinAlg::FEVector<double>>& force_vector,
     const std::shared_ptr<Core::LinAlg::SparseMatrix>& stiffness_matrix,
     const std::shared_ptr<const Core::LinAlg::Vector<double>>& displacement_vector)
 {
@@ -141,7 +140,8 @@ void BeamInteraction::BeamToSolidSurfaceContactPairGapVariation<ScalarType, Beam
     std::vector<double> force_pair_double(pair_gid.size(), 0.0);
     for (unsigned int j_dof = 0; j_dof < pair_force_vector.num_rows(); j_dof++)
       force_pair_double[j_dof] = Core::FADUtils::cast_to_double(pair_force_vector(j_dof));
-    force_vector->SumIntoGlobalValues(pair_gid.size(), pair_gid.data(), force_pair_double.data());
+    force_vector->sum_into_global_values(
+        pair_gid.size(), pair_gid.data(), force_pair_double.data());
   }
 
   // If given, assemble force terms into the global stiffness matrix.
@@ -171,7 +171,7 @@ BeamInteraction::BeamToSolidSurfaceContactPairPotential<ScalarType, Beam,
 template <typename ScalarType, typename Beam, typename Surface>
 void BeamInteraction::BeamToSolidSurfaceContactPairPotential<ScalarType, Beam,
     Surface>::evaluate_and_assemble(const std::shared_ptr<const Core::FE::Discretization>& discret,
-    const std::shared_ptr<Epetra_FEVector>& force_vector,
+    const std::shared_ptr<Core::LinAlg::FEVector<double>>& force_vector,
     const std::shared_ptr<Core::LinAlg::SparseMatrix>& stiffness_matrix,
     const std::shared_ptr<const Core::LinAlg::Vector<double>>& displacement_vector)
 {
@@ -235,7 +235,8 @@ void BeamInteraction::BeamToSolidSurfaceContactPairPotential<ScalarType, Beam,
     std::vector<double> force_pair_double(pair_gid.size(), 0.0);
     for (unsigned int j_dof = 0; j_dof < pair_gid.size(); j_dof++)
       force_pair_double[j_dof] = Core::FADUtils::cast_to_double(potential.dx(j_dof));
-    force_vector->SumIntoGlobalValues(pair_gid.size(), pair_gid.data(), force_pair_double.data());
+    force_vector->sum_into_global_values(
+        pair_gid.size(), pair_gid.data(), force_pair_double.data());
   }
 
   // If given, assemble force terms into the global stiffness matrix.

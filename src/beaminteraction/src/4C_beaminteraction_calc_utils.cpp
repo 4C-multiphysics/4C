@@ -19,6 +19,7 @@
 #include "4C_global_data.hpp"
 #include "4C_io_input_parameter_container.hpp"
 #include "4C_io_pstream.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_utils_densematrix_communication.hpp"
@@ -29,8 +30,6 @@
 #include "4C_shell_kl_nurbs.hpp"
 #include "4C_solid_3D_ele.hpp"
 #include "4C_utils_exceptions.hpp"
-
-#include <Epetra_FEVector.h>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -596,7 +595,7 @@ namespace BeamInteraction
         const Core::FE::Discretization& discret, std::vector<int> const& elegid,
         std::vector<Core::LinAlg::SerialDenseVector> const& elevec,
         std::vector<std::vector<Core::LinAlg::SerialDenseMatrix>> const& elemat,
-        std::shared_ptr<Epetra_FEVector> fe_sysvec,
+        std::shared_ptr<Core::LinAlg::FEVector<double>> fe_sysvec,
         std::shared_ptr<Core::LinAlg::SparseMatrix> fe_sysmat)
     {
       // the entries of elevecX  belong to the Dofs of the element with GID elegidX
@@ -618,8 +617,8 @@ namespace BeamInteraction
       // assemble both element vectors into global system vector
       if (fe_sysvec != nullptr)
       {
-        fe_sysvec->SumIntoGlobalValues(elevec[0].length(), lmrow1.data(), elevec[0].values());
-        fe_sysvec->SumIntoGlobalValues(elevec[1].length(), lmrow2.data(), elevec[1].values());
+        fe_sysvec->sum_into_global_values(elevec[0].length(), lmrow1.data(), elevec[0].values());
+        fe_sysvec->sum_into_global_values(elevec[1].length(), lmrow2.data(), elevec[1].values());
       }
 
       // and finally also assemble stiffness contributions

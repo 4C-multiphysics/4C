@@ -22,6 +22,7 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_graph.hpp"
 #include "4C_linalg_utils_densematrix_communication.hpp"
 #include "4C_linalg_utils_densematrix_multiply.hpp"
@@ -34,7 +35,6 @@
 #include "4C_rebalance_graph_based.hpp"
 #include "4C_scatra_ele_parameter_boundary.hpp"
 
-#include <Epetra_FEVector.h>
 #include <Teuchos_Time.hpp>
 #include <Teuchos_TimeMonitor.hpp>
 
@@ -1800,7 +1800,7 @@ void CONTACT::Interface::store_lt_svalues()
 /*----------------------------------------------------------------------*
  |  Add line to line penalty forces                         farah 10/16 |
  *----------------------------------------------------------------------*/
-void CONTACT::Interface::add_ltl_forces_friction(Epetra_FEVector& feff)
+void CONTACT::Interface::add_ltl_forces_friction(Core::LinAlg::FEVector<double>& feff)
 {
   const double penalty = interface_params().get<double>("PENALTYPARAM");
   const double penaltytan = interface_params().get<double>("PENALTYPARAMTAN");
@@ -1895,7 +1895,7 @@ void CONTACT::Interface::add_ltl_forces_friction(Epetra_FEVector& feff)
           {
             double value = (p.second) * ftan[dim];
             const int ltlid = csnode->dofs()[dim];
-            int err = feff.SumIntoGlobalValues(1, &ltlid, &value);
+            int err = feff.sum_into_global_values(1, &ltlid, &value);
             if (err < 0) FOUR_C_THROW("stop");
           }
         }
@@ -1922,7 +1922,7 @@ void CONTACT::Interface::add_ltl_forces_friction(Epetra_FEVector& feff)
           {
             double value = -(p.second) * ftan[dim];
             const int ltlid = csnode->dofs()[dim];
-            int err = feff.SumIntoGlobalValues(1, &ltlid, &value);
+            int err = feff.sum_into_global_values(1, &ltlid, &value);
             if (err < 0) FOUR_C_THROW("stop");
           }
         }
@@ -2369,7 +2369,7 @@ void CONTACT::Interface::add_ltl_stiffness_friction(Core::LinAlg::SparseMatrix& 
 /*----------------------------------------------------------------------*
  |  Add nts penalty forces master                           farah 11/16 |
  *----------------------------------------------------------------------*/
-void CONTACT::Interface::add_nts_forces_master(Epetra_FEVector& feff)
+void CONTACT::Interface::add_nts_forces_master(Core::LinAlg::FEVector<double>& feff)
 {
   const double penalty = interface_params().get<double>("PENALTYPARAM");
 
@@ -2405,7 +2405,7 @@ void CONTACT::Interface::add_nts_forces_master(Epetra_FEVector& feff)
             double value =
                 penalty * (p.second) * cnode->data().getgnts() * cnode->mo_data().n()[dim];
             int ltlid = csnode->dofs()[dim];
-            int err = feff.SumIntoGlobalValues(1, &ltlid, &value);
+            int err = feff.sum_into_global_values(1, &ltlid, &value);
             if (err < 0) FOUR_C_THROW("stop");
           }
         }
@@ -2433,7 +2433,7 @@ void CONTACT::Interface::add_nts_forces_master(Epetra_FEVector& feff)
             double value =
                 -penalty * (p.second) * cnode->data().getgnts() * cnode->mo_data().n()[dim];
             int ltlid = csnode->dofs()[dim];
-            int err = feff.SumIntoGlobalValues(1, &ltlid, &value);
+            int err = feff.sum_into_global_values(1, &ltlid, &value);
             if (err < 0) FOUR_C_THROW("stop");
           }
         }
@@ -2449,7 +2449,7 @@ void CONTACT::Interface::add_nts_forces_master(Epetra_FEVector& feff)
 /*----------------------------------------------------------------------*
  |  Add line to line penalty forces master                  farah 11/16 |
  *----------------------------------------------------------------------*/
-void CONTACT::Interface::add_lts_forces_master(Epetra_FEVector& feff)
+void CONTACT::Interface::add_lts_forces_master(Core::LinAlg::FEVector<double>& feff)
 {
   const double penalty = interface_params().get<double>("PENALTYPARAM");
 
@@ -2489,7 +2489,7 @@ void CONTACT::Interface::add_lts_forces_master(Epetra_FEVector& feff)
             double value =
                 penaltyLts * (p.second) * cnode->data().getglts() * cnode->mo_data().n()[dim];
             int ltlid = csnode->dofs()[dim];
-            int err = feff.SumIntoGlobalValues(1, &ltlid, &value);
+            int err = feff.sum_into_global_values(1, &ltlid, &value);
             if (err < 0) FOUR_C_THROW("stop");
           }
         }
@@ -2517,7 +2517,7 @@ void CONTACT::Interface::add_lts_forces_master(Epetra_FEVector& feff)
             double value =
                 -penaltyLts * (p.second) * cnode->data().getglts() * cnode->mo_data().n()[dim];
             int ltlid = csnode->dofs()[dim];
-            int err = feff.SumIntoGlobalValues(1, &ltlid, &value);
+            int err = feff.sum_into_global_values(1, &ltlid, &value);
             if (err < 0) FOUR_C_THROW("stop");
           }
         }
@@ -2533,7 +2533,7 @@ void CONTACT::Interface::add_lts_forces_master(Epetra_FEVector& feff)
 /*----------------------------------------------------------------------*
  |  Add line to line penalty forces                         farah 10/16 |
  *----------------------------------------------------------------------*/
-void CONTACT::Interface::add_ltl_forces(Epetra_FEVector& feff)
+void CONTACT::Interface::add_ltl_forces(Core::LinAlg::FEVector<double>& feff)
 {
   // gap = g_n * n
   // D/M = sval/mval
@@ -2568,7 +2568,7 @@ void CONTACT::Interface::add_ltl_forces(Epetra_FEVector& feff)
           {
             double value = penalty * (p.second) * cnode->data().getgltl()[dim];
             int ltlid = csnode->dofs()[dim];
-            int err = feff.SumIntoGlobalValues(1, &ltlid, &value);
+            int err = feff.sum_into_global_values(1, &ltlid, &value);
             if (err < 0) FOUR_C_THROW("stop");
           }
         }
@@ -2595,7 +2595,7 @@ void CONTACT::Interface::add_ltl_forces(Epetra_FEVector& feff)
           {
             double value = -penalty * (p.second) * cnode->data().getgltl()[dim];
             int ltlid = {csnode->dofs()[dim]};
-            int err = feff.SumIntoGlobalValues(1, &ltlid, &value);
+            int err = feff.sum_into_global_values(1, &ltlid, &value);
             if (err < 0) FOUR_C_THROW("stop");
           }
         }

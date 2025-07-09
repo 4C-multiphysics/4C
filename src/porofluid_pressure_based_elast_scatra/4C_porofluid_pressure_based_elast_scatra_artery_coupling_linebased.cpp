@@ -11,13 +11,12 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_global_data.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_utils_densematrix_communication.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_mat_cnst_1d_art.hpp"
 #include "4C_porofluid_pressure_based_elast_scatra_artery_coupling_pair.hpp"
 #include "4C_porofluid_pressure_based_utils.hpp"
-
-#include <Epetra_FEVector.h>
 
 #include <utility>
 
@@ -336,10 +335,10 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
   // If the above quantity is bigger than zero, a 1D element protrudes.
 
   // initialize the unaffected and current lengths
-  unaffected_artery_segment_lengths_ =
-      std::make_shared<Epetra_FEVector>(artery_dis_->dof_row_map(1)->get_epetra_map(), true);
-  current_artery_segment_lengths_ =
-      std::make_shared<Epetra_FEVector>(artery_dis_->dof_row_map(1)->get_epetra_map());
+  unaffected_artery_segment_lengths_ = std::make_shared<Core::LinAlg::FEVector<double>>(
+      artery_dis_->dof_row_map(1)->get_epetra_map(), true);
+  current_artery_segment_lengths_ = std::make_shared<Core::LinAlg::FEVector<double>>(
+      artery_dis_->dof_row_map(1)->get_epetra_map());
 
   // set segment ID on coupling pairs and fill the unaffected artery length
   for (int iele = 0; iele < artery_dis_->element_col_map()->num_my_elements(); ++iele)
@@ -363,7 +362,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
       {
         // build the location array
         std::vector<int> segment_length_dofs = artery_dis_->dof(1, current_element);
-        unaffected_artery_segment_lengths_->SumIntoGlobalValues(
+        unaffected_artery_segment_lengths_->sum_into_global_values(
             1, &segment_length_dofs[iseg], &segment_length);
       }
 
@@ -374,7 +373,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
     }
   }
 
-  if (unaffected_artery_segment_lengths_->GlobalAssemble(Add, false) != 0)
+  if (unaffected_artery_segment_lengths_->global_assemble() != 0)
     FOUR_C_THROW("GlobalAssemble of unaffected_artery_segment_lengths_ failed.");
 
   // subtract the segment lengths only if we evaluate in current configuration
@@ -392,16 +391,16 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
       std::vector<int> segment_length_dofs = artery_dis_->dof(1, current_element);
       const int segment_id = coupled_ele_pair->get_segment_id();
 
-      unaffected_artery_segment_lengths_->SumIntoGlobalValues(
+      unaffected_artery_segment_lengths_->sum_into_global_values(
           1, &segment_length_dofs[segment_id], &(initial_segment_length));
     }
-    if (unaffected_artery_segment_lengths_->GlobalAssemble(Add, false) != 0)
+    if (unaffected_artery_segment_lengths_->global_assemble() != 0)
       FOUR_C_THROW("GlobalAssemble of unaffected_seg_lengths_artery_ failed");
   }
   // the current length is simply the unaffected length
   else
   {
-    current_artery_segment_lengths_->Update(1.0, *unaffected_artery_segment_lengths_, 0.0);
+    current_artery_segment_lengths_->update(1.0, *unaffected_artery_segment_lengths_, 0.0);
   }
 }
 
@@ -410,7 +409,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
 void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
     fill_unaffected_integrated_diameter() const
 {
-  Epetra_FEVector unaffected_artery_diameters_row(
+  Core::LinAlg::FEVector<double> unaffected_artery_diameters_row(
       artery_dis_->element_row_map()->get_epetra_map(), true);
 
   for (int i = 0; i < artery_dis_->element_row_map()->num_my_elements(); ++i)
@@ -426,7 +425,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
         std::dynamic_pointer_cast<Mat::Cnst1dArt>(current_element->material());
     if (artery_material == nullptr) FOUR_C_THROW("cast to artery material failed");
     const double length_x_diameter = initial_length * artery_material->diam();
-    unaffected_artery_diameters_row.SumIntoGlobalValues(1, &artery_ele_gid, &length_x_diameter);
+    unaffected_artery_diameters_row.sum_into_global_values(1, &artery_ele_gid, &length_x_diameter);
   }
   // then, subtract the coupling pairs to detect protruding parts
   for (const auto& coupled_ele_pair : coupled_ele_pairs_)
@@ -442,11 +441,11 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
         std::dynamic_pointer_cast<Mat::Cnst1dArt>(current_element->material());
     if (artery_material == nullptr) FOUR_C_THROW("cast to artery material failed");
     const double length_x_diameter = initial_segment_length * artery_material->diam();
-    unaffected_artery_diameters_row.SumIntoGlobalValues(1, &artery_ele_gid, &length_x_diameter);
+    unaffected_artery_diameters_row.sum_into_global_values(1, &artery_ele_gid, &length_x_diameter);
   }
 
   // global assembly and export
-  if (unaffected_artery_diameters_row.GlobalAssemble(Add, false) != 0)
+  if (unaffected_artery_diameters_row.global_assemble() != 0)
     FOUR_C_THROW("GlobalAssemble of unaffected_artery_diameters_row failed");
   Core::LinAlg::export_to(Core::LinAlg::Vector<double>(unaffected_artery_diameters_row),
       *unaffected_integrated_artery_diameters_col_);
@@ -515,8 +514,8 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
   // set up the required vectors
   if (has_variable_diameter_)
   {
-    integrated_artery_diameters_row_ =
-        std::make_shared<Epetra_FEVector>(artery_dis_->element_row_map()->get_epetra_map(), true);
+    integrated_artery_diameters_row_ = std::make_shared<Core::LinAlg::FEVector<double>>(
+        artery_dis_->element_row_map()->get_epetra_map(), true);
     unaffected_integrated_artery_diameters_col_ =
         std::make_shared<Core::LinAlg::Vector<double>>(*artery_dis_->element_col_map(), true);
     integrated_artery_diameters_col_ =
@@ -659,7 +658,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::as
 
   // also assemble the diameter if necessary
   if (homogenized_dis_->name() == "porofluid" && has_variable_diameter_)
-    integrated_artery_diameters_row_->SumIntoGlobalValues(1, &ele1_gid, &(integrated_diameter));
+    integrated_artery_diameters_row_->sum_into_global_values(1, &ele1_gid, &(integrated_diameter));
 }
 
 /*----------------------------------------------------------------------*
@@ -668,7 +667,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
     set_artery_diameter_in_material()
 {
   // assemble
-  if (integrated_artery_diameters_row_->GlobalAssemble(Add, false) != 0)
+  if (integrated_artery_diameters_row_->global_assemble() != 0)
     FOUR_C_THROW("GlobalAssemble of integrated_integrated_diams_artery_row_ failed");
 
   // export to column format
@@ -725,7 +724,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
 void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
     reset_integrated_diameter_to_zero()
 {
-  integrated_artery_diameters_row_->PutScalar(0.0);
+  integrated_artery_diameters_row_->put_scalar(0.0);
 }
 
 /*----------------------------------------------------------------------*
@@ -1061,7 +1060,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::ap
     if (!homogenized_dis_->has_state(1, "dispnp")) FOUR_C_THROW("cannot get displacement state");
 
     // update with unaffected length
-    current_artery_segment_lengths_->Update(1.0, *unaffected_artery_segment_lengths_, 0.0);
+    current_artery_segment_lengths_->update(1.0, *unaffected_artery_segment_lengths_, 0.0);
 
     // apply movement on pairs and fill gid-to-segment-length and current_seg_lengths_artery_
     for (const auto& coupled_ele_pair : coupled_ele_pairs_)
@@ -1075,11 +1074,11 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::ap
       // build the location array
       std::vector<int> segment_length_dofs = artery_dis_->dof(1, artery_element);
 
-      current_artery_segment_lengths_->SumIntoGlobalValues(
+      current_artery_segment_lengths_->sum_into_global_values(
           1, &segment_length_dofs[segment_id], &(new_segment_length));
     }
 
-    if (current_artery_segment_lengths_->GlobalAssemble(Add, false) != 0)
+    if (current_artery_segment_lengths_->global_assemble() != 0)
       FOUR_C_THROW("GlobalAssemble of current_seg_lengths_artery_ failed");
   }
 

@@ -38,6 +38,7 @@
 #include "4C_io_control.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_io_visualization_manager.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
@@ -47,7 +48,6 @@
 #include "4C_structure_new_timint_basedataio.hpp"
 #include "4C_utils_exceptions.hpp"
 
-#include <Epetra_FEVector.h>
 #include <NOX_Solver_Generic.H>
 #include <Teuchos_TimeMonitor.hpp>
 

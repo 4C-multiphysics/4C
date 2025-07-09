@@ -18,6 +18,7 @@
 #include "4C_global_data.hpp"
 #include "4C_inpar_wear.hpp"
 #include "4C_io.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_utils_densematrix_communication.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
@@ -26,7 +27,6 @@
 #include "4C_mortar_utils.hpp"
 #include "4C_structure_new_timint_base.hpp"
 
-#include <Epetra_FEVector.h>
 #include <Teuchos_Time.hpp>
 
 FOUR_C_NAMESPACE_OPEN
@@ -547,8 +547,10 @@ void Wear::LagrangeStrategyWear::initialize()
           *gmslipn_, 100, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
       // w - rhs
-      inactive_wear_rhs_m_ = std::make_shared<Epetra_FEVector>(gwminact_->get_epetra_block_map());
-      wear_cond_rhs_m_ = std::make_shared<Epetra_FEVector>(gmslipn_->get_epetra_block_map());
+      inactive_wear_rhs_m_ =
+          std::make_shared<Core::LinAlg::FEVector<double>>(gwminact_->get_epetra_block_map());
+      wear_cond_rhs_m_ =
+          std::make_shared<Core::LinAlg::FEVector<double>>(gmslipn_->get_epetra_block_map());
     }
   }
 
@@ -3773,12 +3775,12 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     // ***************************************************************************************************
     // export inactive wear rhs
     Core::LinAlg::Vector<double> WearCondRhsexpM(*gmdofnrowmap_);
-    Core::LinAlg::View wear_cond_rhs_m_view(*wear_cond_rhs_m_);
+    Core::LinAlg::View wear_cond_rhs_m_view(wear_cond_rhs_m_->get_ref_of_epetra_fevector());
     Core::LinAlg::export_to(wear_cond_rhs_m_view, WearCondRhsexpM);
 
     // export inactive wear rhs
     Core::LinAlg::Vector<double> inactiveWearRhsexpM(*gmdofnrowmap_);
-    Core::LinAlg::View inactive_wear_rhs_m_view(*inactive_wear_rhs_m_);
+    Core::LinAlg::View inactive_wear_rhs_m_view(inactive_wear_rhs_m_->get_ref_of_epetra_fevector());
     Core::LinAlg::export_to(inactive_wear_rhs_m_view, inactiveWearRhsexpM);
 
     wearrhsM->update(1.0, WearCondRhsexpM, 1.0);

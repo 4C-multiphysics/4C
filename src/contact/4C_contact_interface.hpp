@@ -12,19 +12,19 @@
 
 #include "4C_contact_input.hpp"
 #include "4C_coupling_adapter.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_mortar_interface.hpp"
 #include "4C_mortar_strategy_base.hpp"
 
 // forward declarations
-class Epetra_FEVector;
 
 FOUR_C_NAMESPACE_OPEN
 
 namespace Core::LinAlg
 {
   class SerialDenseMatrix;
-}
+}  // namespace Core::LinAlg
 
 
 namespace Core::Nodes
@@ -1308,25 +1308,25 @@ namespace CONTACT
     \brief Add line to line penalty forces
 
     */
-    void add_ltl_forces(Epetra_FEVector& feff);
+    void add_ltl_forces(Core::LinAlg::FEVector<double>& feff);
 
     /*!
     \brief Add line to line penalty forces
 
     */
-    void add_lts_forces_master(Epetra_FEVector& feff);
+    void add_lts_forces_master(Core::LinAlg::FEVector<double>& feff);
 
     /*!
     \brief Add line to line penalty forces
 
     */
-    void add_nts_forces_master(Epetra_FEVector& feff);
+    void add_nts_forces_master(Core::LinAlg::FEVector<double>& feff);
 
     /*!
     \brief Add line to line penalty forces - friction
 
     */
-    void add_ltl_forces_friction(Epetra_FEVector& feff);
+    void add_ltl_forces_friction(Core::LinAlg::FEVector<double>& feff);
 
     /*!
     \brief Add line to line penalty stiffness contribution

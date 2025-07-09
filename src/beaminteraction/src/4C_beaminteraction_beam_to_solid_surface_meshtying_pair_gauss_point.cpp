@@ -15,8 +15,7 @@
 #include "4C_geometry_pair_element_faces.hpp"
 #include "4C_geometry_pair_factory.hpp"
 #include "4C_geometry_pair_line_to_surface.hpp"
-
-#include <Epetra_FEVector.h>
+#include "4C_linalg_fevector.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -38,7 +37,7 @@ BeamInteraction::BeamToSolidSurfaceMeshtyingPairGaussPoint<Beam,
 template <typename Beam, typename Surface>
 void BeamInteraction::BeamToSolidSurfaceMeshtyingPairGaussPoint<Beam,
     Surface>::evaluate_and_assemble(const std::shared_ptr<const Core::FE::Discretization>& discret,
-    const std::shared_ptr<Epetra_FEVector>& force_vector,
+    const std::shared_ptr<Core::LinAlg::FEVector<double>>& force_vector,
     const std::shared_ptr<Core::LinAlg::SparseMatrix>& stiffness_matrix,
     const std::shared_ptr<const Core::LinAlg::Vector<double>>& displacement_vector)
 {
@@ -119,7 +118,7 @@ void BeamInteraction::BeamToSolidSurfaceMeshtyingPairGaussPoint<Beam,
   if (force_vector != nullptr)
   {
     const auto force_pair_double = Core::FADUtils::cast_to_double(force_pair);
-    force_vector->SumIntoGlobalValues(
+    force_vector->sum_into_global_values(
         Beam::n_dof_ + Surface::n_dof_, pair_gid.data(), force_pair_double.data());
   }
 

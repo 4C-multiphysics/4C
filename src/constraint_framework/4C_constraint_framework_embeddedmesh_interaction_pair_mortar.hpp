@@ -72,8 +72,9 @@ namespace Constraints::EmbeddedMesh
         const Constraints::EmbeddedMesh::SolidToSolidMortarManager* mortar_manager,
         Core::LinAlg::SparseMatrix& global_g_bl, Core::LinAlg::SparseMatrix& global_g_bg,
         Core::LinAlg::SparseMatrix& global_fbl_l, Core::LinAlg::SparseMatrix& global_fbg_l,
-        Epetra_FEVector& global_constraint, Epetra_FEVector& global_kappa,
-        Epetra_FEVector& global_lambda_active) override;
+        Core::LinAlg::FEVector<double>& global_constraint,
+        Core::LinAlg::FEVector<double>& global_kappa,
+        Core::LinAlg::FEVector<double>& global_lambda_active) override;
 
     /**
      * \brief Set the Gauss rule over the interface for element1_ and element2_.

@@ -14,6 +14,7 @@
 #include "4C_contact_node.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_inpar_mortar.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_utils_densematrix_communication.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
@@ -22,8 +23,6 @@
 #include "4C_mortar_dofset.hpp"
 #include "4C_mortar_element.hpp"
 #include "4C_mortar_node.hpp"
-
-#include <Epetra_FEVector.h>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -3535,7 +3534,8 @@ void Wear::WearInterface::assemble_inactive_wear_rhs(Core::LinAlg::Vector<double
 /*----------------------------------------------------------------------*
  |  Assemble inactive wear right hand side                   farah 11/13|
  *----------------------------------------------------------------------*/
-void Wear::WearInterface::assemble_inactive_wear_rhs_master(Epetra_FEVector& inactiverhs)
+void Wear::WearInterface::assemble_inactive_wear_rhs_master(
+    Core::LinAlg::FEVector<double>& inactiverhs)
 {
   /************************************************
    *  This function is only for discrete Wear !!! *
@@ -3594,7 +3594,7 @@ void Wear::WearInterface::assemble_inactive_wear_rhs_master(Epetra_FEVector& ina
   }
 
   Core::LinAlg::Export exp(*allredi, *inactivedofs);
-  inactiverhs.Export(*rhs, exp.get_epetra_export(), Add);
+  inactiverhs.export_to(*rhs, exp.get_epetra_export(), Add);
 
 
   return;
@@ -3706,7 +3706,7 @@ void Wear::WearInterface::assemble_wear_cond_rhs(Core::LinAlg::Vector<double>& r
 /*----------------------------------------------------------------------*
  |  Assemble wear-cond. right hand side (discr)              farah 11/13|
  *----------------------------------------------------------------------*/
-void Wear::WearInterface::assemble_wear_cond_rhs_master(Epetra_FEVector& RHS)
+void Wear::WearInterface::assemble_wear_cond_rhs_master(Core::LinAlg::FEVector<double>& RHS)
 {
   /************************************************
    *  This function is only for discrete Wear !!! *
@@ -3793,7 +3793,7 @@ void Wear::WearInterface::assemble_wear_cond_rhs_master(Epetra_FEVector& RHS)
   }
 
   Core::LinAlg::Export exp(*slmastern, *slipmn_);
-  RHS.Export(*rhs, exp.get_epetra_export(), Add);
+  RHS.export_to(*rhs, exp.get_epetra_export(), Add);
 
   return;
 }

@@ -18,11 +18,10 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_geometry_pair.hpp"
 #include "4C_global_data.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_utils_exceptions.hpp"
-
-#include <Epetra_FEVector.h>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -224,7 +223,8 @@ void BeamInteraction::BeamToSolidMortarManager::setup()
   set_global_maps();
 
   // Create the global coupling matrices.
-  constraint_ = std::make_shared<Epetra_FEVector>(lambda_dof_rowmap_->get_epetra_block_map());
+  constraint_ =
+      std::make_shared<Core::LinAlg::FEVector<double>>(lambda_dof_rowmap_->get_epetra_block_map());
   constraint_lin_beam_ = std::make_shared<Core::LinAlg::SparseMatrix>(
       *lambda_dof_rowmap_, 30, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
   constraint_lin_solid_ = std::make_shared<Core::LinAlg::SparseMatrix>(
@@ -233,12 +233,14 @@ void BeamInteraction::BeamToSolidMortarManager::setup()
       *beam_dof_rowmap_, 30, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
   force_solid_lin_lambda_ = std::make_shared<Core::LinAlg::SparseMatrix>(
       *solid_dof_rowmap_, 100, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
-  kappa_ = std::make_shared<Epetra_FEVector>(lambda_dof_rowmap_->get_epetra_block_map());
+  kappa_ =
+      std::make_shared<Core::LinAlg::FEVector<double>>(lambda_dof_rowmap_->get_epetra_block_map());
   kappa_lin_beam_ = std::make_shared<Core::LinAlg::SparseMatrix>(
       *lambda_dof_rowmap_, 30, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
   kappa_lin_solid_ = std::make_shared<Core::LinAlg::SparseMatrix>(
       *lambda_dof_rowmap_, 100, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
-  lambda_active_ = std::make_shared<Epetra_FEVector>(lambda_dof_rowmap_->get_epetra_block_map());
+  lambda_active_ =
+      std::make_shared<Core::LinAlg::FEVector<double>>(lambda_dof_rowmap_->get_epetra_block_map());
 
   // Set flag for successful setup.
   is_setup_ = true;
@@ -461,7 +463,8 @@ BeamInteraction::BeamToSolidMortarManager::location_vector(
  */
 void BeamInteraction::BeamToSolidMortarManager::evaluate_force_stiff_penalty_regularization(
     const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state,
-    std::shared_ptr<Core::LinAlg::SparseMatrix> stiff, std::shared_ptr<Epetra_FEVector> force)
+    std::shared_ptr<Core::LinAlg::SparseMatrix> stiff,
+    std::shared_ptr<Core::LinAlg::FEVector<double>> force)
 {
   // Evaluate the global coupling terms
   evaluate_and_assemble_global_coupling_contributions(data_state->get_dis_col_np());
@@ -506,7 +509,7 @@ double BeamInteraction::BeamToSolidMortarManager::get_energy() const
   // Calculate the penalty potential.
   std::shared_ptr<Core::LinAlg::Vector<double>> lambda = get_global_lambda();
   double dot_product = 0.0;
-  constraint_->Dot(*lambda, &dot_product);
+  constraint_->dot(*lambda, &dot_product);
   return 0.5 * dot_product;
 }
 
@@ -520,15 +523,15 @@ void BeamInteraction::BeamToSolidMortarManager::evaluate_and_assemble_global_cou
   check_global_maps();
 
   // Reset the global data structures.
-  constraint_->PutScalar(0.);
+  constraint_->put_scalar(0.);
   constraint_lin_beam_->put_scalar(0.);
   constraint_lin_solid_->put_scalar(0.);
   force_beam_lin_lambda_->put_scalar(0.);
   force_solid_lin_lambda_->put_scalar(0.);
-  kappa_->PutScalar(0.);
+  kappa_->put_scalar(0.);
   kappa_lin_beam_->put_scalar(0.);
   kappa_lin_solid_->put_scalar(0.);
-  lambda_active_->PutScalar(0.);
+  lambda_active_->put_scalar(0.);
 
   for (auto& elepairptr : contact_pairs_)
   {
@@ -548,11 +551,10 @@ void BeamInteraction::BeamToSolidMortarManager::evaluate_and_assemble_global_cou
   kappa_lin_solid_->complete(*solid_dof_rowmap_, *lambda_dof_rowmap_);
 
   // Complete the global scaling vector.
-  if (0 != kappa_->GlobalAssemble(Add, false))
-    FOUR_C_THROW("Failed to perform FE assembly of kappa_.");
-  if (0 != lambda_active_->GlobalAssemble(Add, false))
+  if (0 != kappa_->global_assemble()) FOUR_C_THROW("Failed to perform FE assembly of kappa_.");
+  if (0 != lambda_active_->global_assemble())
     FOUR_C_THROW("Failed to perform FE assembly of lambda_active_.");
-  if (0 != constraint_->GlobalAssemble(Add, false))
+  if (0 != constraint_->global_assemble())
     FOUR_C_THROW("Failed to perform FE assembly of constraint_.");
 }
 
@@ -561,7 +563,8 @@ void BeamInteraction::BeamToSolidMortarManager::evaluate_and_assemble_global_cou
  */
 void BeamInteraction::BeamToSolidMortarManager::add_global_force_stiffness_penalty_contributions(
     const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state,
-    std::shared_ptr<Core::LinAlg::SparseMatrix> stiff, std::shared_ptr<Epetra_FEVector> force) const
+    std::shared_ptr<Core::LinAlg::SparseMatrix> stiff,
+    std::shared_ptr<Core::LinAlg::FEVector<double>> force) const
 {
   check_setup();
   check_global_maps();
@@ -642,7 +645,7 @@ void BeamInteraction::BeamToSolidMortarManager::add_global_force_stiffness_penal
     Core::LinAlg::export_to(solid_force, global_temp);
 
     // Add force contributions to global vector.
-    linalg_error = force->Update(-1.0 * rhs_factor, global_temp, 1.0);
+    linalg_error = force->update(-1.0 * rhs_factor, global_temp, 1.0);
     if (linalg_error != 0) FOUR_C_THROW("Error in Update");
   }
 
@@ -720,7 +723,7 @@ BeamInteraction::BeamToSolidMortarManager::penalty_invert_kappa() const
   double local_kappa_inv_value = 0.;
   for (int lid = 0; lid < lambda_dof_rowmap_->num_my_elements(); lid++)
   {
-    if (lambda_active_->Values()[lid] > 0.1)
+    if (lambda_active_->get_values()[lid] > 0.1)
     {
       const int gid = lambda_dof_rowmap_->gid(lid);
       if (lambda_dof_rowmap_translations_->lid(gid) != -1)
@@ -730,7 +733,7 @@ BeamInteraction::BeamToSolidMortarManager::penalty_invert_kappa() const
       else
         FOUR_C_THROW("Could not find the GID {} in translation or rotation map", gid);
 
-      local_kappa_inv_value = penalty / kappa_->Values()[lid];
+      local_kappa_inv_value = penalty / kappa_->get_values()[lid];
     }
 
     else

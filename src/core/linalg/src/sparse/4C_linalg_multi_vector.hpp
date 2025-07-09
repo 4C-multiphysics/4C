@@ -22,6 +22,8 @@
 
 #include <memory>
 
+
+
 // Do not lint the file for identifier names, since the naming of the Wrapper functions follow the
 // naming of the Core::LinAlg::MultiVector<double>
 
@@ -47,6 +49,9 @@ namespace Core::LinAlg
     explicit MultiVector(const Map& Map, int num_columns, bool zeroOut = true);
 
     explicit MultiVector(const Epetra_MultiVector& source);
+
+    explicit MultiVector(const Epetra_FEVector& source);
+
 
     MultiVector(const MultiVector& other);
 

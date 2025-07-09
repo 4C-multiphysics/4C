@@ -10,6 +10,7 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_node.hpp"
 #include "4C_global_data.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
@@ -18,8 +19,6 @@
 #include "4C_porofluid_pressure_based_ele_parameter.hpp"
 #include "4C_scatra_ele_parameter_timint.hpp"
 #include "4C_utils_exceptions.hpp"
-
-#include <Epetra_FEVector.h>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -89,8 +88,8 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
       *(artery_dis_->dof_row_map()), 27, false, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
   mortar_matrix_m_ = std::make_shared<Core::LinAlg::SparseMatrix>(
       *(artery_dis_->dof_row_map()), 27, false, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
-  mortar_kappa_inv_ =
-      std::make_shared<Epetra_FEVector>(artery_dis_->dof_row_map()->get_epetra_map(), true);
+  mortar_kappa_inv_ = std::make_shared<Core::LinAlg::FEVector<double>>(
+      artery_dis_->dof_row_map()->get_epetra_map(), true);
 
   // full map of homogenized and artery dofs
   std::vector<std::shared_ptr<const Core::LinAlg::Map>> maps;
@@ -105,7 +104,8 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
   coupling_matrix_ = std::make_shared<Core::LinAlg::SparseMatrix>(
       *fullmap_, 81, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
-  coupling_rhs_vector_ = std::make_shared<Epetra_FEVector>(fullmap_->get_epetra_map());
+  coupling_rhs_vector_ =
+      std::make_shared<Core::LinAlg::FEVector<double>>(fullmap_->get_epetra_map());
 
   global_extractor_->check_for_valid_map_extractor();
 }
@@ -420,11 +420,11 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
   {
     mortar_matrix_d_->zero();
     mortar_matrix_m_->zero();
-    mortar_kappa_inv_->PutScalar(0.0);
+    mortar_kappa_inv_->put_scalar(0.0);
   }
 
   coupling_matrix_->zero();
-  coupling_rhs_vector_->PutScalar(0.0);
+  coupling_rhs_vector_->put_scalar(0.0);
 
   // resulting discrete element force vectors of the two interacting elements
   std::vector<Core::LinAlg::SerialDenseVector> ele_rhs(2);
@@ -494,7 +494,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
     evaluate_additional_linearization_of_integrated_diameter();
   }
 
-  if (coupling_rhs_vector_->GlobalAssemble(Add, false) != 0)
+  if (coupling_rhs_vector_->global_assemble() != 0)
     FOUR_C_THROW("GlobalAssemble of right hand side failed");
   rhs->update(1.0, *coupling_rhs_vector_, 0.0);
 
@@ -543,9 +543,9 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
   coupling_matrix_->fe_assemble(ele_matrix[1][0], lm_row_2, lm_row_1);
   coupling_matrix_->fe_assemble(ele_matrix[1][1], lm_row_2, lm_row_2);
 
-  coupling_rhs_vector_->SumIntoGlobalValues(
+  coupling_rhs_vector_->sum_into_global_values(
       ele_rhs[0].length(), lm_row_1.data(), ele_rhs[0].values());
-  coupling_rhs_vector_->SumIntoGlobalValues(
+  coupling_rhs_vector_->sum_into_global_values(
       ele_rhs[1].length(), lm_row_2.data(), ele_rhs[1].values());
 }
 
@@ -571,7 +571,8 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
 
   mortar_matrix_d_->fe_assemble(D_ele, lm_row_1, lm_row_1);
   mortar_matrix_m_->fe_assemble(M_ele, lm_row_1, lm_row_2);
-  mortar_kappa_inv_->SumIntoGlobalValues(Kappa_ele.length(), lm_row_1.data(), Kappa_ele.values());
+  mortar_kappa_inv_->sum_into_global_values(
+      Kappa_ele.length(), lm_row_1.data(), Kappa_ele.values());
 }
 
 /*----------------------------------------------------------------------*
@@ -581,20 +582,19 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
         const std::shared_ptr<Core::LinAlg::Vector<double>> rhs) const
 {
   // invert kappa
-  if (mortar_kappa_inv_->GlobalAssemble(Add, false) != 0)
-    FOUR_C_THROW("GlobalAssemble of kappaInv_ failed");
+  if (mortar_kappa_inv_->global_assemble() != 0) FOUR_C_THROW("GlobalAssemble of kappaInv_ failed");
 
   // invert (pay attention to protruding elements)
   for (int i = 0; i < artery_dis_->dof_row_map()->num_my_elements(); ++i)
   {
     const int artery_dof_gid = artery_dis_->dof_row_map()->gid(i);
-    const double kappa_value =
-        (*mortar_kappa_inv_)[0][mortar_kappa_inv_->Map().LID(artery_dof_gid)];
+    const double kappa_value = (mortar_kappa_inv_
+            ->get_ref_of_epetra_fevector())[0][mortar_kappa_inv_->get_map().lid(artery_dof_gid)];
 
     if (fabs(kappa_value) > 1.0e-10)
-      mortar_kappa_inv_->ReplaceGlobalValue(artery_dof_gid, 0, 1.0 / kappa_value);
+      mortar_kappa_inv_->replace_global_value(artery_dof_gid, 0, 1.0 / kappa_value);
     else
-      mortar_kappa_inv_->ReplaceGlobalValue(artery_dof_gid, 0, 0.0);
+      mortar_kappa_inv_->replace_global_value(artery_dof_gid, 0, 0.0);
   }
 
   // complete

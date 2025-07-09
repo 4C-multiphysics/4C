@@ -11,9 +11,8 @@
 #include "4C_config.hpp"
 
 #include "4C_contact_integrator.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_utils_pairedvector.hpp"
-
-#include <Epetra_FEVector.h>
 
 FOUR_C_NAMESPACE_OPEN
 

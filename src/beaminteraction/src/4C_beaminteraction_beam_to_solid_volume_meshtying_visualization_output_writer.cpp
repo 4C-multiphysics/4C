@@ -180,8 +180,9 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingVisualizationOutputWriter::
   if (visualization != nullptr)
     add_beam_interaction_nodal_forces(visualization, beam_contact->discret_ptr(),
         beam_contact->beam_interaction_data_state().get_dis_np()->as_multi_vector(),
-        Core::LinAlg::MultiVector<double>(
-            *beam_contact->beam_interaction_data_state().get_force_np()),
+        Core::LinAlg::MultiVector<double>(beam_contact->beam_interaction_data_state()
+                .get_force_np()
+                ->get_ref_of_epetra_fevector()),
         output_params_ptr_->get_write_unique_ids_flag());
 
 

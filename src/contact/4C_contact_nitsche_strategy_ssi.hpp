@@ -88,7 +88,7 @@ namespace CONTACT
     NitscheStrategySsi(const NitscheStrategySsi& old) = delete;
 
    protected:
-    std::shared_ptr<Epetra_FEVector> setup_rhs_block_vec(
+    std::shared_ptr<Core::LinAlg::FEVector<double>> setup_rhs_block_vec(
         const enum CONTACT::VecBlockType& bt) const override;
 
     std::shared_ptr<Core::LinAlg::SparseMatrix> setup_matrix_block_ptr(
@@ -100,7 +100,7 @@ namespace CONTACT
     //! current scalar state vector
     std::shared_ptr<Core::LinAlg::Vector<double>> curr_state_scalar_;
     //! ScaTra residual
-    std::shared_ptr<Epetra_FEVector> fs_;
+    std::shared_ptr<Core::LinAlg::FEVector<double>> fs_;
     //! linearization of ScaTra residual w.r.t ScaTra dofs
     std::shared_ptr<Core::LinAlg::SparseMatrix> kss_;
     //! linearization of ScaTra residual w.r.t displacement dofs

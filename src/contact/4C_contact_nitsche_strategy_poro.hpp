@@ -79,7 +79,7 @@ namespace CONTACT
 
    protected:
     // create an appropriate vector for the RHS
-    std::shared_ptr<Epetra_FEVector> setup_rhs_block_vec(
+    std::shared_ptr<Core::LinAlg::FEVector<double>> setup_rhs_block_vec(
         const enum CONTACT::VecBlockType& bt) const override;
 
     // create an appropriate matrix block
@@ -92,7 +92,7 @@ namespace CONTACT
 
     bool no_penetration_;
 
-    std::shared_ptr<Epetra_FEVector> fp_;
+    std::shared_ptr<Core::LinAlg::FEVector<double>> fp_;
     std::shared_ptr<Core::LinAlg::SparseMatrix> kpp_;
     std::shared_ptr<Core::LinAlg::SparseMatrix> kpd_;
     std::shared_ptr<Core::LinAlg::SparseMatrix> kdp_;

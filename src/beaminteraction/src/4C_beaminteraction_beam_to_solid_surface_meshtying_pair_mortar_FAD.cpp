@@ -21,8 +21,7 @@
 #include "4C_geometry_pair_line_to_surface.hpp"
 #include "4C_inpar_beam_to_solid.hpp"
 #include "4C_inpar_geometry_pair.hpp"
-
-#include <Epetra_FEVector.h>
+#include "4C_linalg_fevector.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -44,7 +43,7 @@ template <typename ScalarType, typename Beam, typename Surface, typename Mortar>
 void BeamInteraction::BeamToSolidSurfaceMeshtyingPairMortarFAD<ScalarType, Beam, Surface,
     Mortar>::evaluate_and_assemble(const Core::FE::Discretization& discret,
     const BeamToSolidMortarManager* mortar_manager,
-    const std::shared_ptr<Epetra_FEVector>& force_vector,
+    const std::shared_ptr<Core::LinAlg::FEVector<double>>& force_vector,
     const std::shared_ptr<Core::LinAlg::SparseMatrix>& stiffness_matrix,
     const Core::LinAlg::Vector<double>& global_lambda,
     const Core::LinAlg::Vector<double>& displacement_vector)
@@ -130,9 +129,11 @@ void BeamInteraction::BeamToSolidSurfaceMeshtyingPairMortarFAD<ScalarType, Beam,
     Core::LinAlg::SparseMatrix& global_constraint_lin_beam,
     Core::LinAlg::SparseMatrix& global_constraint_lin_solid,
     Core::LinAlg::SparseMatrix& global_force_beam_lin_lambda,
-    Core::LinAlg::SparseMatrix& global_force_solid_lin_lambda, Epetra_FEVector& global_constraint,
-    Epetra_FEVector& global_kappa, Core::LinAlg::SparseMatrix& global_kappa_lin_beam,
-    Core::LinAlg::SparseMatrix& global_kappa_lin_solid, Epetra_FEVector& global_lambda_active,
+    Core::LinAlg::SparseMatrix& global_force_solid_lin_lambda,
+    Core::LinAlg::FEVector<double>& global_constraint, Core::LinAlg::FEVector<double>& global_kappa,
+    Core::LinAlg::SparseMatrix& global_kappa_lin_beam,
+    Core::LinAlg::SparseMatrix& global_kappa_lin_solid,
+    Core::LinAlg::FEVector<double>& global_lambda_active,
     const std::shared_ptr<const Core::LinAlg::Vector<double>>& displacement_vector)
 {
   // Call Evaluate on the geometry Pair. Only do this once for meshtying.
@@ -236,16 +237,16 @@ void BeamInteraction::BeamToSolidSurfaceMeshtyingPairMortarFAD<ScalarType, Beam,
   // Assemble into global coupling vector.
   Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> constraint_vector_double =
       Core::FADUtils::cast_to_double(constraint_vector);
-  global_constraint.SumIntoGlobalValues(
+  global_constraint.sum_into_global_values(
       lambda_gid_pos.size(), lambda_gid_pos.data(), constraint_vector_double.data());
 
   // Assemble into global kappa vector.
-  global_kappa.SumIntoGlobalValues(
+  global_kappa.sum_into_global_values(
       lambda_gid_pos.size(), lambda_gid_pos.data(), local_kappa.data());
 
   // Assemble into global lambda active vector.
   local_kappa.put_scalar(1.0);
-  global_lambda_active.SumIntoGlobalValues(
+  global_lambda_active.sum_into_global_values(
       lambda_gid_pos.size(), lambda_gid_pos.data(), local_kappa.data());
 }
 
@@ -467,7 +468,7 @@ template <typename ScalarType, typename Beam, typename Surface, typename Mortar>
 void BeamInteraction::BeamToSolidSurfaceMeshtyingPairMortarRotationFAD<ScalarType, Beam, Surface,
     Mortar>::evaluate_and_assemble(const Core::FE::Discretization& discret,
     const BeamToSolidMortarManager* mortar_manager,
-    const std::shared_ptr<Epetra_FEVector>& force_vector,
+    const std::shared_ptr<Core::LinAlg::FEVector<double>>& force_vector,
     const std::shared_ptr<Core::LinAlg::SparseMatrix>& stiffness_matrix,
     const Core::LinAlg::Vector<double>& global_lambda,
     const Core::LinAlg::Vector<double>& displacement_vector)
@@ -737,9 +738,11 @@ void BeamInteraction::BeamToSolidSurfaceMeshtyingPairMortarRotationFAD<ScalarTyp
     Core::LinAlg::SparseMatrix& global_constraint_lin_beam,
     Core::LinAlg::SparseMatrix& global_constraint_lin_solid,
     Core::LinAlg::SparseMatrix& global_force_beam_lin_lambda,
-    Core::LinAlg::SparseMatrix& global_force_solid_lin_lambda, Epetra_FEVector& global_constraint,
-    Epetra_FEVector& global_kappa, Core::LinAlg::SparseMatrix& global_kappa_lin_beam,
-    Core::LinAlg::SparseMatrix& global_kappa_lin_solid, Epetra_FEVector& global_lambda_active,
+    Core::LinAlg::SparseMatrix& global_force_solid_lin_lambda,
+    Core::LinAlg::FEVector<double>& global_constraint, Core::LinAlg::FEVector<double>& global_kappa,
+    Core::LinAlg::SparseMatrix& global_kappa_lin_beam,
+    Core::LinAlg::SparseMatrix& global_kappa_lin_solid,
+    Core::LinAlg::FEVector<double>& global_lambda_active,
     const std::shared_ptr<const Core::LinAlg::Vector<double>>& displacement_vector)
 {
   base_class::evaluate_and_assemble_mortar_contributions(discret, mortar_manager,
@@ -962,12 +965,12 @@ void BeamInteraction::BeamToSolidSurfaceMeshtyingPairMortarRotationFAD<ScalarTyp
   const auto& [_, lambda_gid_rot] = mortar_manager->location_vector(*this);
 
   // Assemble into the global vectors
-  global_constraint.SumIntoGlobalValues(
+  global_constraint.sum_into_global_values(
       lambda_gid_rot.size(), lambda_gid_rot.data(), local_g.data());
-  global_kappa.SumIntoGlobalValues(
+  global_kappa.sum_into_global_values(
       lambda_gid_rot.size(), lambda_gid_rot.data(), local_kappa.data());
   local_kappa.put_scalar(1.0);
-  global_lambda_active.SumIntoGlobalValues(
+  global_lambda_active.sum_into_global_values(
       lambda_gid_rot.size(), lambda_gid_rot.data(), local_kappa.data());
 
   // Assemble into global matrices.

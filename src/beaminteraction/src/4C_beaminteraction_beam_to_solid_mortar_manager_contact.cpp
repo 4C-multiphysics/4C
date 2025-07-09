@@ -56,12 +56,12 @@ BeamInteraction::BeamToSolidMortarManagerContact::get_penalty_regularization(
   auto lambda_lin_kappa = create_lambda_row_vector_with_zeros();
   for (int lid = 0; lid < lambda_dof_rowmap_->num_my_elements(); lid++)
   {
-    if (lambda_active_->Values()[lid] > 0.1)
+    if (lambda_active_->get_values()[lid] > 0.1)
     {
-      const fad_type weighted_gap =
-          Core::FADUtils::HigherOrderFadValue<fad_type>::apply(2, 0, constraint_->Values()[lid]);
+      const fad_type weighted_gap = Core::FADUtils::HigherOrderFadValue<fad_type>::apply(
+          2, 0, constraint_->get_values()[lid]);
       const fad_type kappa =
-          Core::FADUtils::HigherOrderFadValue<fad_type>::apply(2, 1, kappa_->Values()[lid]);
+          Core::FADUtils::HigherOrderFadValue<fad_type>::apply(2, 1, kappa_->get_values()[lid]);
       const fad_type scaled_gap = weighted_gap / kappa;
 
       // The -1 here is due to the way the lagrange multipliers are defined in the coupling

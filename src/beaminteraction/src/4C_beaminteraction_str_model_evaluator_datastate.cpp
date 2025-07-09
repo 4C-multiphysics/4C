@@ -9,12 +9,11 @@
 
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_geometry_periodic_boundingbox.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linalg_vector.hpp"
-
-#include <Epetra_FEVector.h>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -72,8 +71,10 @@ void Solid::ModelEvaluator::BeamInteractionDataState::setup(
   discolnp_ = std::make_shared<Core::LinAlg::Vector<double>>(*ia_discret->dof_col_map());
 
   // force
-  forcen_ = std::make_shared<Epetra_FEVector>(ia_discret->dof_row_map()->get_epetra_block_map());
-  forcenp_ = std::make_shared<Epetra_FEVector>(ia_discret->dof_row_map()->get_epetra_block_map());
+  forcen_ = std::make_shared<Core::LinAlg::FEVector<double>>(
+      ia_discret->dof_row_map()->get_epetra_block_map());
+  forcenp_ = std::make_shared<Core::LinAlg::FEVector<double>>(
+      ia_discret->dof_row_map()->get_epetra_block_map());
 
   stiff_ = std::make_shared<Core::LinAlg::SparseMatrix>(
       *ia_discret->dof_row_map(), 81, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);

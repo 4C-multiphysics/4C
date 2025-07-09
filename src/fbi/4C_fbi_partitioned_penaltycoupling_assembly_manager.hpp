@@ -10,9 +10,8 @@
 
 #include "4C_config.hpp"
 
+#include "4C_linalg_fevector.hpp"
 #include "4C_utils_exceptions.hpp"
-
-#include <Epetra_FEVector.h>
 
 #include <memory>
 #include <vector>
@@ -72,8 +71,10 @@ namespace BeamInteraction
        * \param[inout] cbf  Global stiffness matrix coupling fluid to beam DOFs
        */
       virtual void evaluate_force_stiff(const Core::FE::Discretization& discretization1,
-          const Core::FE::Discretization& discretization2, std::shared_ptr<Epetra_FEVector>& ff,
-          std::shared_ptr<Epetra_FEVector>& fb, std::shared_ptr<Core::LinAlg::SparseOperator> cff,
+          const Core::FE::Discretization& discretization2,
+          std::shared_ptr<Core::LinAlg::FEVector<double>>& ff,
+          std::shared_ptr<Core::LinAlg::FEVector<double>>& fb,
+          std::shared_ptr<Core::LinAlg::SparseOperator> cff,
           std::shared_ptr<Core::LinAlg::SparseMatrix>& cbb,
           std::shared_ptr<Core::LinAlg::SparseMatrix>& cfb,
           std::shared_ptr<Core::LinAlg::SparseMatrix>& cbf,

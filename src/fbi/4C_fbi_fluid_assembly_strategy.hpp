@@ -10,10 +10,9 @@
 
 #include "4C_config.hpp"
 
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_utils_exceptions.hpp"
-
-#include <Epetra_FEVector.h>
 
 #include <memory>
 #include <vector>
@@ -94,7 +93,8 @@ namespace FBI
           const Core::FE::Discretization& discretization2, std::vector<int> const& elegid,
           std::vector<Core::LinAlg::SerialDenseVector> const& elevec,
           std::vector<std::vector<Core::LinAlg::SerialDenseMatrix>> const& elemat,
-          std::shared_ptr<Epetra_FEVector>& f1, std::shared_ptr<Epetra_FEVector>& f2,
+          std::shared_ptr<Core::LinAlg::FEVector<double>>& f1,
+          std::shared_ptr<Core::LinAlg::FEVector<double>>& f2,
           std::shared_ptr<Core::LinAlg::SparseMatrix>& c11,
           std::shared_ptr<Core::LinAlg::SparseOperator> c22,
           std::shared_ptr<Core::LinAlg::SparseMatrix>& c12,
