@@ -23,7 +23,6 @@
 #include "4C_mat_shell_kl.hpp"
 #include "4C_shell_kl_nurbs.hpp"
 
-#include <Epetra_FEVector.h>
 
 FOUR_C_NAMESPACE_OPEN
 

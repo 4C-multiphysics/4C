@@ -20,8 +20,6 @@
 #include "4C_solid_3D_ele_calc_lib_nitsche.hpp"
 #include "4C_utils_exceptions.hpp"
 
-#include <Epetra_FEVector.h>
-
 #include <memory>
 
 FOUR_C_NAMESPACE_OPEN
