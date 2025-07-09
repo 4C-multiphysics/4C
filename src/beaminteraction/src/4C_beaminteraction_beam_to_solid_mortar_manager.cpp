@@ -841,9 +841,16 @@ void BeamInteraction::BeamToSolidMortarManager::assemble_stiff(
     Solid::TimeInt::BaseDataGlobalState& gstate, Core::LinAlg::SparseOperator& jac,
     const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state) const
 {
+  std::shared_ptr<const Core::LinAlg::SparseOperator> jac_ptr(
+      &jac, [](Core::LinAlg::SparseOperator*) {});
+  std::shared_ptr<const Core::LinAlg::BlockSparseMatrixBase> jac_block_sparse_matrix_base =
+      Core::LinAlg::cast_to_const_block_sparse_matrix_base_and_check_success(jac_ptr);
+  auto block_lm_displ_row_map = jac_block_sparse_matrix_base->matrix(1, 0).row_map();
+  auto block_displ_lm_row_map = jac_block_sparse_matrix_base->matrix(0, 1).row_map();
+
   // Set penalty entry
   const double penalty_translation = beam_to_solid_params_->get_penalty_parameter();
-  auto kappa_vector = Core::LinAlg::Vector<double>(*lambda_dof_rowmap_);
+  auto kappa_vector = Core::LinAlg::Vector<double>(block_lm_displ_row_map);
   Core::LinAlg::Vector<double> kappa = Core::LinAlg::Vector<double>(*kappa_);
   Core::LinAlg::export_to(kappa, kappa_vector);
   Teuchos::RCP<Core::LinAlg::SparseMatrix> kappa_penalty_inv_mat2 =
@@ -872,14 +879,10 @@ void BeamInteraction::BeamToSolidMortarManager::assemble_stiff(
   lm_displ.add(*constraint_lin_beam_, false, 1.0, 0.0);
   lm_displ.add(*constraint_lin_solid_, false, 1.0, 1.0);
   lm_displ.complete(*discret_->dof_row_map(), *lambda_dof_rowmap_);
-  std::shared_ptr<const Core::LinAlg::SparseOperator> jac_ptr(
-      &jac, [](Core::LinAlg::SparseOperator*) {});
-  std::shared_ptr<const Core::LinAlg::BlockSparseMatrixBase> jac_block_sparse_matrix_base =
-      Core::LinAlg::cast_to_const_block_sparse_matrix_base_and_check_success(jac_ptr);
+
   std::shared_ptr<Core::LinAlg::SparseMatrix> lm_displ_in_global_layout =
-      Mortar::matrix_row_col_transform(lm_displ,
-          jac_block_sparse_matrix_base->matrix(1, 0).row_map(),
-          jac_block_sparse_matrix_base->domain_map(0));
+      Mortar::matrix_row_col_transform(lm_displ, block_lm_displ_row_map,
+          jac_block_sparse_matrix_base->matrix(1, 0).domain_map());
   gstate.assign_model_block(jac, *lm_displ_in_global_layout, Inpar::Solid::model_beaminteraction,
       Solid::MatBlockType::lm_displ);
 
@@ -889,9 +892,8 @@ void BeamInteraction::BeamToSolidMortarManager::assemble_stiff(
   displ_lm.add(*force_solid_lin_lambda_, false, 1.0, 1.0);
   displ_lm.complete(*lambda_dof_rowmap_, *discret_->dof_row_map());
   std::shared_ptr<Core::LinAlg::SparseMatrix> displ_lm_in_global_layout =
-      Mortar::matrix_row_col_transform(displ_lm,
-          jac_block_sparse_matrix_base->matrix(0, 1).row_map(),
-          jac_block_sparse_matrix_base->domain_map(1));
+      Mortar::matrix_row_col_transform(displ_lm, block_displ_lm_row_map,
+          jac_block_sparse_matrix_base->matrix(0, 1).domain_map());
   gstate.assign_model_block(jac, *displ_lm_in_global_layout, Inpar::Solid::model_beaminteraction,
       Solid::MatBlockType::displ_lm);
 }
