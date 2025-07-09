@@ -222,7 +222,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
           const double recoveredgradient = p(0) * x(0);
 
           // write solution vector
-          nodevec.ReplaceGlobalValues(1, &nodegid, &recoveredgradient, j);
+          nodevec.replace_global_values(1, &nodegid, &recoveredgradient, j);
         }
       }  // end normal inner node
       else
@@ -293,7 +293,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
           const double recoveredgradient = p(0) * x(0);
 
           // write solution vector
-          nodevec.ReplaceGlobalValues(1, &nodegid, &recoveredgradient, j);
+          nodevec.replace_global_values(1, &nodegid, &recoveredgradient, j);
         }
       }  // end inner pbc master node
     }  // end inner nodes
@@ -388,7 +388,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
           }
 
           // write solution vector
-          nodevec.ReplaceGlobalValues(1, &nodegid, &recoveredgradient, j);
+          nodevec.replace_global_values(1, &nodegid, &recoveredgradient, j);
         }
       }  // end normal boundary node
       else
@@ -530,7 +530,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
           }
 
           // write solution vector
-          nodevec.ReplaceGlobalValues(1, &nodegid, &recoveredgradient, j);
+          nodevec.replace_global_values(1, &nodegid, &recoveredgradient, j);
         }
       }  // end boundary master pbc node
     }  // end boundary nodes

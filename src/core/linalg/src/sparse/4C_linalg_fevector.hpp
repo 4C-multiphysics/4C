@@ -185,7 +185,8 @@ namespace Core::LinAlg
     }
 
 
-    int ReplaceGlobalValues(int numIDs, const int* GIDs, const double* values, int vectorIndex = 0)
+    int replace_global_values(
+        int numIDs, const int* GIDs, const double* values, int vectorIndex = 0)
     {
       return vector_->ReplaceGlobalValues(numIDs, GIDs, values, vectorIndex);
     }
@@ -301,12 +302,6 @@ namespace Core::LinAlg
     friend class MultiVector<T>;
   };
 
-
-  /*template <>
-  struct EnableViewFor<Epetra_FEVector>
-  {
-    using type = FEVector<double>;
-  };*/
 }  // namespace Core::LinAlg
 
 
