@@ -79,6 +79,17 @@ namespace Core::LinAlg
 
     operator const Epetra_FEVector&() const { return *vector_; }
 
+    Epetra_Vector* operator()(int i)
+    {
+      return (*vector_)(i);  // Forward to underlying Epetra_FEVector
+    }
+
+    const Epetra_Vector* operator()(int i) const
+    {
+      return (*vector_)(i);  // Forward to const version
+    }
+
+
     //! Computes dot product of each corresponding pair of vectors.
     int dot(const Epetra_MultiVector& A, double* Result) const;
 
