@@ -13,10 +13,9 @@
 #include "4C_constraint_framework_embeddedmesh_params.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_io_visualization_data.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
-
-#include <Epetra_FEVector.h>
 
 #include <memory>
 #include <unordered_set>
@@ -123,8 +122,9 @@ namespace Constraints::EmbeddedMesh
         const Constraints::EmbeddedMesh::SolidToSolidMortarManager* mortar_manager,
         Core::LinAlg::SparseMatrix& global_g_bl_, Core::LinAlg::SparseMatrix& global_g_bg_,
         Core::LinAlg::SparseMatrix& global_fbl_l_, Core::LinAlg::SparseMatrix& global_fbg_l_,
-        Epetra_FEVector& global_constraint, Epetra_FEVector& global_kappa,
-        Epetra_FEVector& global_lambda_active) = 0;
+        Core::LinAlg::FEVector<double>& global_constraint,
+        Core::LinAlg::FEVector<double>& global_kappa,
+        Core::LinAlg::FEVector<double>& global_lambda_active) = 0;
 
     /**
      * \brief Set the current element displacement.

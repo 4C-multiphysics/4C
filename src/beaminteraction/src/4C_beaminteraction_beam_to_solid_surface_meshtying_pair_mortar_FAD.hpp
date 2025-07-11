@@ -70,7 +70,7 @@ namespace BeamInteraction
      */
     void evaluate_and_assemble(const Core::FE::Discretization& discret,
         const BeamToSolidMortarManager* mortar_manager,
-        const std::shared_ptr<Epetra_FEVector>& force_vector,
+        const std::shared_ptr<Core::LinAlg::FEVector<double>>& force_vector,
         const std::shared_ptr<Core::LinAlg::SparseMatrix>& stiffness_matrix,
         const Core::LinAlg::Vector<double>& global_lambda,
         const Core::LinAlg::Vector<double>& displacement_vector) override;
@@ -84,9 +84,11 @@ namespace BeamInteraction
         Core::LinAlg::SparseMatrix& global_constraint_lin_solid,
         Core::LinAlg::SparseMatrix& global_force_beam_lin_lambda,
         Core::LinAlg::SparseMatrix& global_force_solid_lin_lambda,
-        Epetra_FEVector& global_constraint, Epetra_FEVector& global_kappa,
+        Core::LinAlg::FEVector<double>& global_constraint,
+        Core::LinAlg::FEVector<double>& global_kappa,
         Core::LinAlg::SparseMatrix& global_kappa_lin_beam,
-        Core::LinAlg::SparseMatrix& global_kappa_lin_solid, Epetra_FEVector& global_lambda_active,
+        Core::LinAlg::SparseMatrix& global_kappa_lin_solid,
+        Core::LinAlg::FEVector<double>& global_lambda_active,
         const std::shared_ptr<const Core::LinAlg::Vector<double>>& displacement_vector) override;
   };
 
@@ -136,7 +138,7 @@ namespace BeamInteraction
      */
     void evaluate_and_assemble(const Core::FE::Discretization& discret,
         const BeamToSolidMortarManager* mortar_manager,
-        const std::shared_ptr<Epetra_FEVector>& force_vector,
+        const std::shared_ptr<Core::LinAlg::FEVector<double>>& force_vector,
         const std::shared_ptr<Core::LinAlg::SparseMatrix>& stiffness_matrix,
         const Core::LinAlg::Vector<double>& global_lambda,
         const Core::LinAlg::Vector<double>& displacement_vector) override;
@@ -150,9 +152,11 @@ namespace BeamInteraction
         Core::LinAlg::SparseMatrix& global_constraint_lin_solid,
         Core::LinAlg::SparseMatrix& global_force_beam_lin_lambda,
         Core::LinAlg::SparseMatrix& global_force_solid_lin_lambda,
-        Epetra_FEVector& global_constraint, Epetra_FEVector& global_kappa,
+        Core::LinAlg::FEVector<double>& global_constraint,
+        Core::LinAlg::FEVector<double>& global_kappa,
         Core::LinAlg::SparseMatrix& global_kappa_lin_beam,
-        Core::LinAlg::SparseMatrix& global_kappa_lin_solid, Epetra_FEVector& global_lambda_active,
+        Core::LinAlg::SparseMatrix& global_kappa_lin_solid,
+        Core::LinAlg::FEVector<double>& global_lambda_active,
         const std::shared_ptr<const Core::LinAlg::Vector<double>>& displacement_vector) override;
 
    private:

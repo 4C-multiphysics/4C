@@ -38,6 +38,12 @@ Core::LinAlg::MultiVector<T>::MultiVector(const Epetra_MultiVector& source)
 }
 
 template <typename T>
+Core::LinAlg::MultiVector<T>::MultiVector(const Epetra_FEVector& source)
+    : vector_(Utils::make_owner<Epetra_MultiVector>(source))
+{
+}
+
+template <typename T>
 Core::LinAlg::MultiVector<T>::MultiVector(const MultiVector& other)
     : vector_(Utils::make_owner<Epetra_MultiVector>(*other.vector_))
 {

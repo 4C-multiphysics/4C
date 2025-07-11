@@ -17,6 +17,7 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
 #include "4C_inpar_structure.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
@@ -24,7 +25,6 @@
 #include "4C_mortar_defines.hpp"
 #include "4C_mortar_utils.hpp"
 
-#include <Epetra_FEVector.h>
 #include <Epetra_Operator.h>
 
 FOUR_C_NAMESPACE_OPEN

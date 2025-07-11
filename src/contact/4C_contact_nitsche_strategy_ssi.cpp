@@ -142,14 +142,14 @@ void CONTACT::NitscheStrategySsi::set_parent_state(const enum Mortar::StateType&
 
 /*------------------------------------------------------------------------*
 /-------------------------------------------------------------------------*/
-std::shared_ptr<Epetra_FEVector> CONTACT::NitscheStrategySsi::setup_rhs_block_vec(
+std::shared_ptr<Core::LinAlg::FEVector<double>> CONTACT::NitscheStrategySsi::setup_rhs_block_vec(
     const enum CONTACT::VecBlockType& bt) const
 {
   switch (bt)
   {
     case CONTACT::VecBlockType::elch:
     case CONTACT::VecBlockType::scatra:
-      return std::make_shared<Epetra_FEVector>(
+      return std::make_shared<Core::LinAlg::FEVector<double>>(
           Global::Problem::instance()->get_dis("scatra")->dof_row_map()->get_epetra_block_map());
     default:
       return CONTACT::NitscheStrategy::setup_rhs_block_vec(bt);
@@ -171,7 +171,8 @@ std::shared_ptr<const Core::LinAlg::Vector<double>> CONTACT::NitscheStrategySsi:
   {
     case CONTACT::VecBlockType::elch:
     case CONTACT::VecBlockType::scatra:
-      return std::make_shared<Core::LinAlg::Vector<double>>(*(*fs_)(0));
+      return std::make_shared<Core::LinAlg::Vector<double>>(
+          *(fs_->get_ref_of_epetra_fevector())(0));
     default:
       return CONTACT::NitscheStrategy::get_rhs_block_ptr(bp);
   }

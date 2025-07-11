@@ -550,14 +550,15 @@ std::shared_ptr<Core::LinAlg::Vector<double>> Coupling::Adapter::Coupling::slave
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-std::shared_ptr<Epetra_FEVector> Coupling::Adapter::Coupling::master_to_slave(
-    const Epetra_FEVector& mv) const
+std::shared_ptr<Core::LinAlg::FEVector<double>> Coupling::Adapter::Coupling::master_to_slave(
+    const Core::LinAlg::FEVector<double>& mv) const
 {
-  std::shared_ptr<Epetra_FEVector> sv =
-      std::make_shared<Epetra_FEVector>(slavedofmap_->get_epetra_block_map(), mv.NumVectors());
+  std::shared_ptr<Core::LinAlg::FEVector<double>> sv =
+      std::make_shared<Core::LinAlg::FEVector<double>>(
+          slavedofmap_->get_epetra_block_map(), mv.num_vectors());
 
-  Core::LinAlg::View sv_view(*sv);
-  Core::LinAlg::View mv_view(mv);
+  Core::LinAlg::View sv_view(sv->get_ref_of_epetra_fevector());
+  Core::LinAlg::View mv_view(mv.get_ref_of_epetra_fevector());
   master_to_slave(mv_view, sv_view);
 
   return sv;
@@ -566,14 +567,15 @@ std::shared_ptr<Epetra_FEVector> Coupling::Adapter::Coupling::master_to_slave(
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-std::shared_ptr<Epetra_FEVector> Coupling::Adapter::Coupling::slave_to_master(
-    const Epetra_FEVector& sv) const
+std::shared_ptr<Core::LinAlg::FEVector<double>> Coupling::Adapter::Coupling::slave_to_master(
+    const Core::LinAlg::FEVector<double>& sv) const
 {
-  std::shared_ptr<Epetra_FEVector> mv =
-      std::make_shared<Epetra_FEVector>(masterdofmap_->get_epetra_block_map(), sv.NumVectors());
+  std::shared_ptr<Core::LinAlg::FEVector<double>> mv =
+      std::make_shared<Core::LinAlg::FEVector<double>>(
+          masterdofmap_->get_epetra_block_map(), sv.num_vectors());
 
-  Core::LinAlg::View sv_view(sv);
-  Core::LinAlg::View mv_view(*mv);
+  Core::LinAlg::View sv_view(sv.get_ref_of_epetra_fevector());
+  Core::LinAlg::View mv_view(mv->get_ref_of_epetra_fevector());
   slave_to_master(sv_view, mv_view);
 
   return mv;

@@ -47,7 +47,7 @@ namespace BeamInteraction
      * matrix (derived).
      */
     void evaluate_and_assemble(const std::shared_ptr<const Core::FE::Discretization>& discret,
-        const std::shared_ptr<Epetra_FEVector>& force_vector,
+        const std::shared_ptr<Core::LinAlg::FEVector<double>>& force_vector,
         const std::shared_ptr<Core::LinAlg::SparseMatrix>& stiffness_matrix,
         const std::shared_ptr<const Core::LinAlg::Vector<double>>& displacement_vector) override;
   };
@@ -78,7 +78,7 @@ namespace BeamInteraction
      * matrix (derived).
      */
     void evaluate_and_assemble(const std::shared_ptr<const Core::FE::Discretization>& discret,
-        const std::shared_ptr<Epetra_FEVector>& force_vector,
+        const std::shared_ptr<Core::LinAlg::FEVector<double>>& force_vector,
         const std::shared_ptr<Core::LinAlg::SparseMatrix>& stiffness_matrix,
         const std::shared_ptr<const Core::LinAlg::Vector<double>>& displacement_vector) override;
   };

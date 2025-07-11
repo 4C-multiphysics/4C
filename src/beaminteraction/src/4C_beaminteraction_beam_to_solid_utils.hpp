@@ -14,8 +14,7 @@
 #include "4C_beaminteraction_calc_utils.hpp"
 #include "4C_geometry_pair_element.hpp"
 #include "4C_geometry_pair_element_faces.hpp"
-
-#include <Epetra_FEVector.h>
+#include "4C_linalg_fevector.hpp"
 
 #include <memory>
 #include <vector>
@@ -307,8 +306,10 @@ namespace BeamInteraction
       Core::LinAlg::SparseMatrix& global_constraint_lin_beam,
       Core::LinAlg::SparseMatrix& global_constraint_lin_solid,
       Core::LinAlg::SparseMatrix& global_force_beam_lin_lambda,
-      Core::LinAlg::SparseMatrix& global_force_solid_lin_lambda, Epetra_FEVector& global_constraint,
-      Epetra_FEVector& global_kappa, Epetra_FEVector& global_lambda_active,
+      Core::LinAlg::SparseMatrix& global_force_solid_lin_lambda,
+      Core::LinAlg::FEVector<double>& global_constraint,
+      Core::LinAlg::FEVector<double>& global_kappa,
+      Core::LinAlg::FEVector<double>& global_lambda_active,
       const Core::LinAlg::Matrix<Mortar::n_dof_, Beam::n_dof_, double>& local_D,
       const Core::LinAlg::Matrix<Mortar::n_dof_, Other::n_dof_, double>& local_M,
       const Core::LinAlg::Matrix<Mortar::n_dof_, 1, double>& local_kappa,

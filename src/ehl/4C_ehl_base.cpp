@@ -500,7 +500,8 @@ void EHL::Base::setup_unprojectable_dbc()
   if (not Global::Problem::instance()->elasto_hydro_dynamic_params().get<bool>("UNPROJ_ZERO_DBC"))
     return;
 
-  Epetra_FEVector inf_gap_toggle(mortaradapter_->slave_dof_map()->get_epetra_block_map(), true);
+  Core::LinAlg::FEVector<double> inf_gap_toggle(
+      mortaradapter_->slave_dof_map()->get_epetra_block_map(), true);
   for (int i = 0; i < mortaradapter_->interface()->slave_row_nodes()->num_my_elements(); ++i)
   {
     Core::Nodes::Node* node = mortaradapter_->interface()->discret().g_node(
@@ -521,20 +522,21 @@ void EHL::Base::setup_unprojectable_dbc()
           {
             const int row = cnn->dofs()[j];
             const double one = 1.;
-            inf_gap_toggle.SumIntoGlobalValues(1, &row, &one, 0);
+            inf_gap_toggle.sum_into_global_values(1, &row, &one, 0);
           }
         }
       }
     }
   }
-  if (inf_gap_toggle.GlobalAssemble(Epetra_Max, false) != 0) FOUR_C_THROW("global_assemble failed");
-  for (int i = 0; i < inf_gap_toggle.Map().NumMyElements(); ++i)
-    if (inf_gap_toggle.operator()(0)->operator[](i) > 0.5)
-      inf_gap_toggle.operator()(0)->operator[](i) = 1.;
+  if (inf_gap_toggle.global_assemble(Epetra_Max, false) != 0)
+    FOUR_C_THROW("global_assemble failed");
+  for (int i = 0; i < inf_gap_toggle.get_map().num_my_elements(); ++i)
+    if (inf_gap_toggle.get_ref_of_epetra_fevector().operator()(0)->operator[](i) > 0.5)
+      inf_gap_toggle.get_ref_of_epetra_fevector().operator()(0)->operator[](i) = 1.;
 
   std::shared_ptr<Core::LinAlg::Vector<double>> exp =
       std::make_shared<Core::LinAlg::Vector<double>>(*ada_strDisp_to_lubPres_->master_dof_map());
-  Core::LinAlg::View inf_gap_toggle_view(inf_gap_toggle);
+  Core::LinAlg::View inf_gap_toggle_view(inf_gap_toggle.get_ref_of_epetra_fevector());
   Core::LinAlg::export_to(inf_gap_toggle_view, *exp);
   inf_gap_toggle_lub_ = ada_strDisp_to_lubPres_->master_to_slave(*exp);
 

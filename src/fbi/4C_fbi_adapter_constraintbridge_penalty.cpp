@@ -13,10 +13,9 @@
 #include "4C_fbi_partitioned_penaltycoupling_assembly_manager_direct.hpp"
 #include "4C_fbi_partitioned_penaltycoupling_assembly_manager_indirect.hpp"
 #include "4C_fem_discretization.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_sparseoperator.hpp"
-
-#include <Epetra_FEVector.h>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -26,8 +25,8 @@ void Adapter::FBIConstraintBridgePenalty::setup(const Core::LinAlg::Map* beam_ma
 {
   // Initialize all necessary vectors and matrices
   FBIConstraintBridge::setup(beam_map, fluid_map, fluidmatrix, fluidmeshtying);
-  fs_ = std::make_shared<Epetra_FEVector>(beam_map->get_epetra_block_map());
-  ff_ = std::make_shared<Epetra_FEVector>(fluid_map->get_epetra_block_map());
+  fs_ = std::make_shared<Core::LinAlg::FEVector<double>>(beam_map->get_epetra_block_map());
+  ff_ = std::make_shared<Core::LinAlg::FEVector<double>>(fluid_map->get_epetra_block_map());
   cff_ = fluidmatrix;
 }
 /*----------------------------------------------------------------------*/
@@ -55,9 +54,9 @@ void Adapter::FBIConstraintBridgePenalty::evaluate(
 /*----------------------------------------------------------------------*/
 void Adapter::FBIConstraintBridgePenalty::reset_bridge()
 {
-  fs_->PutScalar(0.0);
+  fs_->put_scalar(0.0);
   cff_->reset();
-  ff_->PutScalar(0.0);
+  ff_->put_scalar(0.0);
   fluid_scaled_ = false;
   structure_scaled_ = false;
 }
@@ -80,7 +79,7 @@ void Adapter::FBIConstraintBridgePenalty::scale_penalty_structure_contributions(
 {
   if (!structure_scaled_)
   {
-    if (fs_->Scale(get_params()->get_penalty_parameter()))
+    if (fs_->scale(get_params()->get_penalty_parameter()))
       FOUR_C_THROW("Scaling of the penalty force was unsuccessful!\n");
     structure_scaled_ = true;
   }
@@ -93,7 +92,7 @@ void Adapter::FBIConstraintBridgePenalty::scale_penalty_fluid_contributions()
   if (!fluid_scaled_)
   {
     if (cff_->scale(get_params()->get_penalty_parameter()) ||
-        ff_->Scale(get_params()->get_penalty_parameter()))
+        ff_->scale(get_params()->get_penalty_parameter()))
       FOUR_C_THROW("Scaling of the penalty force was unsuccessful!\n");
     fluid_scaled_ = true;
   }

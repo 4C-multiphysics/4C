@@ -409,8 +409,8 @@ void Constraints::EmbeddedMesh::assemble_local_mortar_contributions(
     const Constraints::EmbeddedMesh::SolidToSolidMortarManager* mortar_manager,
     Core::LinAlg::SparseMatrix& global_g_bl, Core::LinAlg::SparseMatrix& global_g_bg,
     Core::LinAlg::SparseMatrix& global_fbl_l, Core::LinAlg::SparseMatrix& global_fbg_l,
-    Epetra_FEVector& global_constraint, Epetra_FEVector& global_kappa,
-    Epetra_FEVector& global_lambda_active,
+    Core::LinAlg::FEVector<double>& global_constraint, Core::LinAlg::FEVector<double>& global_kappa,
+    Core::LinAlg::FEVector<double>& global_lambda_active,
     const Core::LinAlg::Matrix<Mortar::n_dof_, Interface::n_dof_, double>& local_D,
     const Core::LinAlg::Matrix<Mortar::n_dof_, Background::n_dof_, double>& local_M,
     const Core::LinAlg::Matrix<Mortar::n_dof_, 1, double>& local_kappa,
@@ -451,13 +451,13 @@ void Constraints::EmbeddedMesh::assemble_local_mortar_contributions(
           -local_M(i_lambda, i_background), background_row[i_background], lambda_row[i_lambda]);
     }
   }
-  global_kappa.SumIntoGlobalValues(Mortar::n_dof_, &lambda_row[0], local_kappa.data());
-  global_constraint.SumIntoGlobalValues(Mortar::n_dof_, &lambda_row[0], local_constraint.data());
+  global_kappa.sum_into_global_values(Mortar::n_dof_, &lambda_row[0], local_kappa.data());
+  global_constraint.sum_into_global_values(Mortar::n_dof_, &lambda_row[0], local_constraint.data());
 
   // Set all entries in the local kappa vector to 1 and add them to the active vector
   Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_kappa_active;
   local_kappa_active.put_scalar(1.0);
-  global_lambda_active.SumIntoGlobalValues(
+  global_lambda_active.sum_into_global_values(
       Mortar::n_dof_, &lambda_row[0], local_kappa_active.data());
 }
 
@@ -511,8 +511,9 @@ namespace Constraints::EmbeddedMesh
       const Constraints::EmbeddedMesh::SolidToSolidMortarManager* mortar_manager,              \
       Core::LinAlg::SparseMatrix& global_g_bl, Core::LinAlg::SparseMatrix& global_g_bg,        \
       Core::LinAlg::SparseMatrix& global_fbl_l, Core::LinAlg::SparseMatrix& global_fbg_l,      \
-      Epetra_FEVector& global_constraint, Epetra_FEVector& global_kappa,                       \
-      Epetra_FEVector& global_lambda_active,                                                   \
+      Core::LinAlg::FEVector<double>& global_constraint,                                       \
+      Core::LinAlg::FEVector<double>& global_kappa,                                            \
+      Core::LinAlg::FEVector<double>& global_lambda_active,                                    \
       const Core::LinAlg::Matrix<Mortar::n_dof_, Interface::n_dof_, double>& local_D,          \
       const Core::LinAlg::Matrix<Mortar::n_dof_, Background::n_dof_, double>& local_M,         \
       const Core::LinAlg::Matrix<Mortar::n_dof_, 1, double>& local_kappa,                      \

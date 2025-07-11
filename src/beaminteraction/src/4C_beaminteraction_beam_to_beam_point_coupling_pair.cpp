@@ -13,11 +13,10 @@
 #include "4C_beaminteraction_calc_utils.hpp"
 #include "4C_beaminteraction_geometry_pair_access_traits.hpp"
 #include "4C_geometry_pair_element_evaluation_functions.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_sparsematrix.hpp"
-
-#include <Epetra_FEVector.h>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -62,7 +61,7 @@ void BeamInteraction::BeamToBeamPointCouplingPair<Beam>::setup()
 template <typename Beam>
 void BeamInteraction::BeamToBeamPointCouplingPair<Beam>::evaluate_and_assemble(
     const std::shared_ptr<const Core::FE::Discretization>& discret,
-    const std::shared_ptr<Epetra_FEVector>& force_vector,
+    const std::shared_ptr<Core::LinAlg::FEVector<double>>& force_vector,
     const std::shared_ptr<Core::LinAlg::SparseMatrix>& stiffness_matrix,
     const std::shared_ptr<const Core::LinAlg::Vector<double>>& displacement_vector)
 {
@@ -77,7 +76,8 @@ void BeamInteraction::BeamToBeamPointCouplingPair<Beam>::evaluate_and_assemble(
  */
 template <typename Beam>
 void BeamInteraction::BeamToBeamPointCouplingPair<Beam>::evaluate_and_assemble_positional_coupling(
-    const Core::FE::Discretization& discret, const std::shared_ptr<Epetra_FEVector>& force_vector,
+    const Core::FE::Discretization& discret,
+    const std::shared_ptr<Core::LinAlg::FEVector<double>>& force_vector,
     const std::shared_ptr<Core::LinAlg::SparseMatrix>& stiffness_matrix,
     const Core::LinAlg::Vector<double>& displacement_vector) const
 {
@@ -142,7 +142,7 @@ void BeamInteraction::BeamToBeamPointCouplingPair<Beam>::evaluate_and_assemble_p
 
     // Add the coupling force to the global force vector.
     if (force_vector != nullptr)
-      force_vector->SumIntoGlobalValues(gid_pos[i_beam].num_rows(), gid_pos[i_beam].data(),
+      force_vector->sum_into_global_values(gid_pos[i_beam].num_rows(), gid_pos[i_beam].data(),
           Core::FADUtils::cast_to_double(force_element[i_beam]).data());
   }
 
@@ -168,7 +168,8 @@ void BeamInteraction::BeamToBeamPointCouplingPair<Beam>::evaluate_and_assemble_p
  */
 template <typename Beam>
 void BeamInteraction::BeamToBeamPointCouplingPair<Beam>::evaluate_and_assemble_rotational_coupling(
-    const Core::FE::Discretization& discret, const std::shared_ptr<Epetra_FEVector>& force_vector,
+    const Core::FE::Discretization& discret,
+    const std::shared_ptr<Core::LinAlg::FEVector<double>>& force_vector,
     const std::shared_ptr<Core::LinAlg::SparseMatrix>& stiffness_matrix,
     const Core::LinAlg::Vector<double>& displacement_vector) const
 {
@@ -262,7 +263,7 @@ void BeamInteraction::BeamToBeamPointCouplingPair<Beam>::evaluate_and_assemble_r
     }
 
     if (force_vector != nullptr)
-      force_vector->SumIntoGlobalValues(gid_rot[i_beam].size(), gid_rot[i_beam].data(),
+      force_vector->sum_into_global_values(gid_rot[i_beam].size(), gid_rot[i_beam].data(),
           Core::FADUtils::cast_to_double(moment_nodal_load[i_beam]).data());
   }
 

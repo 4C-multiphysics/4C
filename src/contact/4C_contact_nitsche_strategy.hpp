@@ -12,8 +12,7 @@
 
 #include "4C_contact_abstract_strategy.hpp"
 #include "4C_contact_utils.hpp"
-
-#include <Epetra_FEVector.h>
+#include "4C_linalg_fevector.hpp"
 
 #include <utility>
 
@@ -236,7 +235,7 @@ namespace CONTACT
      * @param[in] bt  vector block type
      * @return the filled RHS vector of given vector block type
      */
-    virtual std::shared_ptr<Epetra_FEVector> create_rhs_block_ptr(
+    virtual std::shared_ptr<Core::LinAlg::FEVector<double>> create_rhs_block_ptr(
         const enum CONTACT::VecBlockType& bt) const;
 
     /*!
@@ -245,7 +244,7 @@ namespace CONTACT
      * @param[in] bt  block type
      * @return  vector for given vector block type
      */
-    virtual std::shared_ptr<Epetra_FEVector> setup_rhs_block_vec(
+    virtual std::shared_ptr<Core::LinAlg::FEVector<double>> setup_rhs_block_vec(
         const enum CONTACT::VecBlockType& bt) const;
 
     /*!
@@ -280,7 +279,7 @@ namespace CONTACT
     std::shared_ptr<Core::LinAlg::Vector<double>> curr_state_;
     bool curr_state_eval_;
 
-    std::shared_ptr<Epetra_FEVector> fc_;
+    std::shared_ptr<Core::LinAlg::FEVector<double>> fc_;
     std::shared_ptr<Core::LinAlg::SparseMatrix> kc_;
   };
 }  // namespace CONTACT

@@ -20,10 +20,9 @@
 #include "4C_geometry_pair_element_evaluation_functions.hpp"
 #include "4C_geometry_pair_scalar_types.hpp"
 #include "4C_inpar_beam_to_solid.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_utils_fad.hpp"
-
-#include <Epetra_FEVector.h>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -772,8 +771,9 @@ void BeamInteraction::assemble_local_mortar_contributions(
     Core::LinAlg::SparseMatrix& global_constraint_lin_beam,
     Core::LinAlg::SparseMatrix& global_constraint_lin_solid,
     Core::LinAlg::SparseMatrix& global_force_beam_lin_lambda,
-    Core::LinAlg::SparseMatrix& global_force_solid_lin_lambda, Epetra_FEVector& global_constraint,
-    Epetra_FEVector& global_kappa, Epetra_FEVector& global_lambda_active,
+    Core::LinAlg::SparseMatrix& global_force_solid_lin_lambda,
+    Core::LinAlg::FEVector<double>& global_constraint, Core::LinAlg::FEVector<double>& global_kappa,
+    Core::LinAlg::FEVector<double>& global_lambda_active,
     const Core::LinAlg::Matrix<Mortar::n_dof_, Beam::n_dof_, double>& local_D,
     const Core::LinAlg::Matrix<Mortar::n_dof_, Other::n_dof_, double>& local_M,
     const Core::LinAlg::Matrix<Mortar::n_dof_, 1, double>& local_kappa,
@@ -814,14 +814,14 @@ void BeamInteraction::assemble_local_mortar_contributions(
           -local_M(i_lambda, i_other), other_row[i_other], lambda_gid_pos[i_lambda]);
     }
   }
-  global_kappa.SumIntoGlobalValues(Mortar::n_dof_, lambda_gid_pos.data(), local_kappa.data());
-  global_constraint.SumIntoGlobalValues(
+  global_kappa.sum_into_global_values(Mortar::n_dof_, lambda_gid_pos.data(), local_kappa.data());
+  global_constraint.sum_into_global_values(
       Mortar::n_dof_, lambda_gid_pos.data(), local_constraint.data());
 
   // Set all entries in the local kappa vector to 1 and add them to the active vector.
   Core::LinAlg::Matrix<Mortar::n_dof_, 1, double> local_kappa_active;
   local_kappa_active.put_scalar(1.0);
-  global_lambda_active.SumIntoGlobalValues(
+  global_lambda_active.sum_into_global_values(
       Mortar::n_dof_, lambda_gid_pos.data(), local_kappa_active.data());
 }
 
@@ -916,8 +916,8 @@ namespace BeamInteraction
   template void assemble_local_mortar_contributions<beam, other, mortar>(                        \
       const BeamInteraction::BeamContactPair*, const Core::FE::Discretization&,                  \
       const BeamToSolidMortarManager*, Core::LinAlg::SparseMatrix&, Core::LinAlg::SparseMatrix&, \
-      Core::LinAlg::SparseMatrix&, Core::LinAlg::SparseMatrix&, Epetra_FEVector&,                \
-      Epetra_FEVector&, Epetra_FEVector&,                                                        \
+      Core::LinAlg::SparseMatrix&, Core::LinAlg::SparseMatrix&, Core::LinAlg::FEVector<double>&, \
+      Core::LinAlg::FEVector<double>&, Core::LinAlg::FEVector<double>&,                          \
       const Core::LinAlg::Matrix<mortar::n_dof_, beam::n_dof_, double>&,                         \
       const Core::LinAlg::Matrix<mortar::n_dof_, other::n_dof_, double>&,                        \
       const Core::LinAlg::Matrix<mortar::n_dof_, 1, double>&,                                    \

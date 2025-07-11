@@ -58,8 +58,10 @@ namespace BeamInteraction
        * @param disp (in) Current displacement vector.
        */
       void evaluate_force_stiff(const Core::FE::Discretization& discretization1,
-          const Core::FE::Discretization& discretization2, std::shared_ptr<Epetra_FEVector>& ff,
-          std::shared_ptr<Epetra_FEVector>& fb, std::shared_ptr<Core::LinAlg::SparseOperator> cff,
+          const Core::FE::Discretization& discretization2,
+          std::shared_ptr<Core::LinAlg::FEVector<double>>& ff,
+          std::shared_ptr<Core::LinAlg::FEVector<double>>& fb,
+          std::shared_ptr<Core::LinAlg::SparseOperator> cff,
           std::shared_ptr<Core::LinAlg::SparseMatrix>& cbb,
           std::shared_ptr<Core::LinAlg::SparseMatrix>& cfb,
           std::shared_ptr<Core::LinAlg::SparseMatrix>& cbf,

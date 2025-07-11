@@ -14,8 +14,7 @@
 #include "4C_config.hpp"
 
 #include "4C_contact_lagrange_strategy.hpp"
-
-#include <Epetra_FEVector.h>
+#include "4C_linalg_fevector.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -457,8 +456,10 @@ namespace Wear
     std::shared_ptr<Core::LinAlg::SparseMatrix> linedis_m_;   // Lin E w.r.t. displ: Lin(E*w)
     std::shared_ptr<Core::LinAlg::SparseMatrix>
         linslip_wm_;  // global matrix containing derivatives (LM) of slip condition
-    std::shared_ptr<Epetra_FEVector> inactive_wear_rhs_m_;  // inactive wear rhs: -w_i
-    std::shared_ptr<Epetra_FEVector> wear_cond_rhs_m_;  // rhs wear condition: -E*w_i + k*T*n*lm_i
+    std::shared_ptr<Core::LinAlg::FEVector<double>>
+        inactive_wear_rhs_m_;  // inactive wear rhs: -w_i
+    std::shared_ptr<Core::LinAlg::FEVector<double>>
+        wear_cond_rhs_m_;  // rhs wear condition: -E*w_i + k*T*n*lm_i
 
     // matrix blocks for recovering
     std::shared_ptr<Core::LinAlg::SparseMatrix> dnblock_;

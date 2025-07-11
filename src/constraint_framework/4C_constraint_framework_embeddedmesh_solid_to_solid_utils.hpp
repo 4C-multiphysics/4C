@@ -13,11 +13,11 @@
 #include "4C_constraint_framework_embeddedmesh_params.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_utils_gausspoints.hpp"
+#include "4C_linalg_fevector.hpp"
 
 #include <memory>
 #include <vector>
 
-class Epetra_FEVector;
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -147,8 +147,9 @@ namespace Constraints::EmbeddedMesh
       const Constraints::EmbeddedMesh::SolidToSolidMortarManager* mortar_manager,
       Core::LinAlg::SparseMatrix& global_g_bl, Core::LinAlg::SparseMatrix& global_g_bg,
       Core::LinAlg::SparseMatrix& global_fbl_l, Core::LinAlg::SparseMatrix& global_fbg_l,
-      Epetra_FEVector& global_constraint, Epetra_FEVector& global_kappa,
-      Epetra_FEVector& global_lambda_active,
+      Core::LinAlg::FEVector<double>& global_constraint,
+      Core::LinAlg::FEVector<double>& global_kappa,
+      Core::LinAlg::FEVector<double>& global_lambda_active,
       const Core::LinAlg::Matrix<Mortar::n_dof_, Interface::n_dof_, double>& local_D,
       const Core::LinAlg::Matrix<Mortar::n_dof_, Background::n_dof_, double>& local_M,
       const Core::LinAlg::Matrix<Mortar::n_dof_, 1, double>& local_kappa,

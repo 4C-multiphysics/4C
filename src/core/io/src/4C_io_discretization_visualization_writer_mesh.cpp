@@ -13,13 +13,12 @@
 #include "4C_io.hpp"
 #include "4C_io_element_vtk_cell_type_register.hpp"
 #include "4C_io_visualization_manager.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_multi_vector.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_material_base.hpp"
 #include "4C_material_parameter_base.hpp"
 #include "4C_utils_exceptions.hpp"
-
-#include <Epetra_FEVector.h>
 
 #include <utility>
 FOUR_C_NAMESPACE_OPEN
@@ -497,8 +496,8 @@ namespace Core::IO
     const int my_proc = Core::Communication::my_mpi_rank(comm);
 
     // Create Vectors to store the ghosting information.
-    Epetra_FEVector ghosting_information(
-        discretization.element_row_map()->get_epetra_block_map(), n_proc);
+    LinAlg::FEVector<double> ghosting_information(
+        discretization.element_row_map()->get_epetra_block_map(), n_proc, false);
 
     // Get elements ghosted by this rank.
     std::vector<int> my_ghost_elements;
@@ -515,11 +514,11 @@ namespace Core::IO
 
     // Add to the multi vector.
     std::vector<double> values(my_ghost_elements.size(), 1.0);
-    ghosting_information.SumIntoGlobalValues(
+    ghosting_information.sum_into_global_values(
         my_ghost_elements.size(), my_ghost_elements.data(), values.data(), my_proc);
 
     // Assemble over all processors.
-    ghosting_information.GlobalAssemble();
+    ghosting_information.global_assemble();
 
     // Output the ghosting data of the elements owned by this proc.
     std::vector<double> ghosted_elements;
@@ -528,10 +527,11 @@ namespace Core::IO
     {
       if (element_predicate(ele))
       {
-        const int local_row = ghosting_information.Map().LID(ele->id());
+        const int local_row = ghosting_information.get_map().lid(ele->id());
         if (local_row == -1) FOUR_C_THROW("The element has to exist in the row map.");
         for (int i_proc = 0; i_proc < n_proc; i_proc++)
-          ghosted_elements.push_back(ghosting_information[i_proc][local_row]);
+          ghosted_elements.push_back(
+              (ghosting_information.get_ref_of_epetra_fevector())[i_proc][local_row]);
       }
     }
 

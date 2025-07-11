@@ -10,11 +10,10 @@
 
 #include "4C_config.hpp"
 
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_vector.hpp"
-
-#include <Epetra_FEVector.h>
 
 #include <memory>
 #include <vector>
@@ -158,10 +157,12 @@ namespace Adapter
     virtual std::shared_ptr<const Core::LinAlg::SparseMatrix> get_csf() const = 0;
 
     /// Force vector acting on the fluid side \f$f_f\f$
-    virtual std::shared_ptr<const Epetra_FEVector> get_fluid_coupling_residual() const = 0;
+    virtual std::shared_ptr<const Core::LinAlg::FEVector<double>> get_fluid_coupling_residual()
+        const = 0;
 
     /// Force vector acting on the structure side \f$f_s\f$
-    virtual std::shared_ptr<const Epetra_FEVector> get_structure_coupling_residual() const = 0;
+    virtual std::shared_ptr<const Core::LinAlg::FEVector<double>> get_structure_coupling_residual()
+        const = 0;
 
    protected:
     /** \brief You will have to use the Adapter::ConstraintEnforcerFactory

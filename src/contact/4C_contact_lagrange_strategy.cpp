@@ -18,6 +18,7 @@
 #include "4C_contact_utils.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_io.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
@@ -27,7 +28,6 @@
 #include "4C_structure_new_model_evaluator_contact.hpp"
 #include "4C_utils_epetra_exceptions.hpp"
 
-#include <Epetra_FEVector.h>
 #include <Teuchos_TimeMonitor.hpp>
 
 FOUR_C_NAMESPACE_OPEN
@@ -1706,7 +1706,7 @@ void CONTACT::LagrangeStrategy::add_master_contributions(Core::LinAlg::SparseOpe
     Core::LinAlg::Vector<double>& feff, bool add_time_integration)
 {
   // create new contact force vector for LTL contact
-  auto fc = std::make_shared<Epetra_FEVector>(feff.get_map().get_epetra_block_map());
+  auto fc = std::make_shared<Core::LinAlg::FEVector<double>>(feff.get_map().get_epetra_block_map());
 
   // create new contact stiffness matric for LTL contact
   auto kc = std::make_shared<Core::LinAlg::SparseMatrix>(
@@ -1725,10 +1725,10 @@ void CONTACT::LagrangeStrategy::add_master_contributions(Core::LinAlg::SparseOpe
   }
 
   // force
-  if (fc->GlobalAssemble(Add, false) != 0) FOUR_C_THROW("GlobalAssemble failed");
+  if (fc->global_assemble() != 0) FOUR_C_THROW("GlobalAssemble failed");
 
   // store fLTL values for time integration
-  fLTL_ = std::make_shared<Core::LinAlg::Vector<double>>(fc->Map());
+  fLTL_ = std::make_shared<Core::LinAlg::Vector<double>>(fc->get_map());
   if (fLTL_->update(1.0, *fc, 0.0)) FOUR_C_THROW("Update went wrong");
 
   if (add_time_integration)
@@ -1760,7 +1760,8 @@ void CONTACT::LagrangeStrategy::add_line_to_lin_contributions(Core::LinAlg::Spar
     std::shared_ptr<Core::LinAlg::Vector<double>>& feff, bool add_time_integration)
 {
   // create new contact force vector for LTL contact
-  auto fc = std::make_shared<Epetra_FEVector>(feff->get_map().get_epetra_block_map());
+  auto fc =
+      std::make_shared<Core::LinAlg::FEVector<double>>(feff->get_map().get_epetra_block_map());
 
   fconservation_ = std::make_shared<Core::LinAlg::Vector<double>>(feff->get_map());
 
@@ -1780,10 +1781,10 @@ void CONTACT::LagrangeStrategy::add_line_to_lin_contributions(Core::LinAlg::Spar
   fconservation_->update(1.0, *fc, 0.0);
 
   // force
-  if (fc->GlobalAssemble(Add, false) != 0) FOUR_C_THROW("GlobalAssemble failed");
+  if (fc->global_assemble() != 0) FOUR_C_THROW("GlobalAssemble failed");
 
   // store fLTL values for time integration
-  fLTL_ = std::make_shared<Core::LinAlg::Vector<double>>(fc->Map());
+  fLTL_ = std::make_shared<Core::LinAlg::Vector<double>>(fc->get_map());
   if (fLTL_->update(1.0, *fc, 0.0)) FOUR_C_THROW("Update went wrong");
 
   if (add_time_integration)
@@ -1815,7 +1816,8 @@ void CONTACT::LagrangeStrategy::add_line_to_lin_contributions_friction(
     bool add_time_integration)
 {
   // create new contact force vector for LTL contact
-  auto fc = std::make_shared<Epetra_FEVector>(feff->get_map().get_epetra_block_map());
+  auto fc =
+      std::make_shared<Core::LinAlg::FEVector<double>>(feff->get_map().get_epetra_block_map());
 
   fconservation_ = std::make_shared<Core::LinAlg::Vector<double>>(feff->get_map());
 
@@ -1832,7 +1834,7 @@ void CONTACT::LagrangeStrategy::add_line_to_lin_contributions_friction(
   }
 
   // store normal forces
-  fLTLn_ = std::make_shared<Core::LinAlg::Vector<double>>(fc->Map());
+  fLTLn_ = std::make_shared<Core::LinAlg::Vector<double>>(fc->get_map());
   if (fLTLn_->update(1.0, *fc, 0.0)) FOUR_C_THROW("Update went wrong");
 
   // loop over interface and assemble force and stiffness
@@ -1846,15 +1848,15 @@ void CONTACT::LagrangeStrategy::add_line_to_lin_contributions_friction(
   fconservation_->update(1.0, *fc, 0.0);
 
   // store tangential forces
-  fLTLt_ = std::make_shared<Core::LinAlg::Vector<double>>(fc->Map());
+  fLTLt_ = std::make_shared<Core::LinAlg::Vector<double>>(fc->get_map());
   if (fLTLt_->update(1.0, *fc, 0.0)) FOUR_C_THROW("Update went wrong");
   if (fLTLt_->update(-1.0, *fLTLn_, 1.0)) FOUR_C_THROW("Update went wrong");
 
   // force
-  if (fc->GlobalAssemble(Add, false) != 0) FOUR_C_THROW("GlobalAssemble failed");
+  if (fc->global_assemble() != 0) FOUR_C_THROW("GlobalAssemble failed");
 
   // store fLTL values for time integration
-  fLTL_ = std::make_shared<Core::LinAlg::Vector<double>>(fc->Map());
+  fLTL_ = std::make_shared<Core::LinAlg::Vector<double>>(fc->get_map());
   if (fLTL_->update(1.0, *fc, 0.0)) FOUR_C_THROW("Update went wrong");
 
   if (add_time_integration)

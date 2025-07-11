@@ -162,14 +162,14 @@ namespace PoroPressureBased
     int max_num_segments_per_artery_element_;
 
     //! lengths of artery elements unaffected by deformation
-    std::shared_ptr<Epetra_FEVector> unaffected_artery_segment_lengths_;
+    std::shared_ptr<Core::LinAlg::FEVector<double>> unaffected_artery_segment_lengths_;
 
     //! lengths of artery elements in current configuration
-    std::shared_ptr<Epetra_FEVector> current_artery_segment_lengths_;
+    std::shared_ptr<Core::LinAlg::FEVector<double>> current_artery_segment_lengths_;
 
     //! diameters of artery elements integrated over the length of the elements (row format
     //! and FE vector due to non-local assembly)
-    std::shared_ptr<Epetra_FEVector> integrated_artery_diameters_row_;
+    std::shared_ptr<Core::LinAlg::FEVector<double>> integrated_artery_diameters_row_;
 
     //! diameters of artery elements integrated over the length of the elements (col format)
     std::shared_ptr<Core::LinAlg::Vector<double>> integrated_artery_diameters_col_;

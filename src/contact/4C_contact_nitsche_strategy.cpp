@@ -13,9 +13,9 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_global_data.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 
-#include <Epetra_FEVector.h>
 #include <Teuchos_Time.hpp>
 
 FOUR_C_NAMESPACE_OPEN
@@ -33,8 +33,8 @@ void CONTACT::NitscheStrategy::apply_force_stiff_cmt(
   set_state(Mortar::state_new_displacement, *dis);
 
   // just a Nitsche-version
-  std::shared_ptr<Epetra_FEVector> fc =
-      std::make_shared<Epetra_FEVector>(f->get_map().get_epetra_block_map());
+  std::shared_ptr<Core::LinAlg::FEVector<double>> fc =
+      std::make_shared<Core::LinAlg::FEVector<double>>(f->get_map().get_epetra_block_map());
   std::shared_ptr<Core::LinAlg::SparseMatrix> kc = std::make_shared<Core::LinAlg::SparseMatrix>(
       Core::LinAlg::Map(dynamic_cast<Core::LinAlg::SparseMatrix*>(&(*kt))->row_map()), 100, true,
       false, Core::LinAlg::SparseMatrix::FE_MATRIX);
@@ -56,7 +56,7 @@ void CONTACT::NitscheStrategy::apply_force_stiff_cmt(
   // now we also did this state
   curr_state_eval_ = true;
 
-  if (fc->GlobalAssemble(Add, false) != 0) FOUR_C_THROW("GlobalAssemble failed");
+  if (fc->global_assemble() != 0) FOUR_C_THROW("GlobalAssemble failed");
   // add negative contact force here since the time integrator handed me a rhs!
   if (f->update(-1., *fc, 1.)) FOUR_C_THROW("update went wrong");
   kc->complete();
@@ -243,13 +243,13 @@ void CONTACT::NitscheStrategy::integrate(const CONTACT::ParamsInterface& cparams
   kc_ = create_matrix_block_ptr(CONTACT::MatBlockType::displ_displ);
 }
 
-std::shared_ptr<Epetra_FEVector> CONTACT::NitscheStrategy::setup_rhs_block_vec(
+std::shared_ptr<Core::LinAlg::FEVector<double>> CONTACT::NitscheStrategy::setup_rhs_block_vec(
     const enum CONTACT::VecBlockType& bt) const
 {
   switch (bt)
   {
     case CONTACT::VecBlockType::displ:
-      return std::make_shared<Epetra_FEVector>(
+      return std::make_shared<Core::LinAlg::FEVector<double>>(
           Global::Problem::instance()->get_dis("structure")->dof_row_map()->get_epetra_block_map());
     default:
       FOUR_C_THROW("you should not be here");
@@ -258,12 +258,12 @@ std::shared_ptr<Epetra_FEVector> CONTACT::NitscheStrategy::setup_rhs_block_vec(
   return nullptr;
 }
 
-std::shared_ptr<Epetra_FEVector> CONTACT::NitscheStrategy::create_rhs_block_ptr(
+std::shared_ptr<Core::LinAlg::FEVector<double>> CONTACT::NitscheStrategy::create_rhs_block_ptr(
     const enum CONTACT::VecBlockType& bt) const
 {
   if (!curr_state_eval_) FOUR_C_THROW("you didn't evaluate this contact state first");
 
-  std::shared_ptr<Epetra_FEVector> fc = setup_rhs_block_vec(bt);
+  std::shared_ptr<Core::LinAlg::FEVector<double>> fc = setup_rhs_block_vec(bt);
 
   for (const auto& interface : interface_)
   {
@@ -275,7 +275,7 @@ std::shared_ptr<Epetra_FEVector> CONTACT::NitscheStrategy::create_rhs_block_ptr(
       nitsche_container.assemble_rhs(mele, bt, fc);
     }
   }
-  if (fc->GlobalAssemble(Add, false) != 0) FOUR_C_THROW("GlobalAssemble failed");
+  if (fc->global_assemble() != 0) FOUR_C_THROW("GlobalAssemble failed");
 
   return fc;
 }

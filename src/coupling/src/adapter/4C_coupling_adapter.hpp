@@ -11,9 +11,8 @@
 #include "4C_config.hpp"
 
 #include "4C_coupling_adapter_base.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_map.hpp"
-
-#include <Epetra_FEVector.h>
 
 #include <map>
 #include <memory>
@@ -23,6 +22,7 @@ FOUR_C_NAMESPACE_OPEN
 namespace Core::LinAlg
 {
   class SparseMatrix;
+
 }  // namespace Core::LinAlg
 
 namespace Core::FE
@@ -264,16 +264,16 @@ namespace Coupling::Adapter
     /// idea is the same for all of them.
 
     /// transfer a dof vector from master to slave
-    std::shared_ptr<Epetra_FEVector> master_to_slave(
-        std::shared_ptr<Epetra_FEVector> mv  ///< master vector (to be transferred)
+    std::shared_ptr<Core::LinAlg::FEVector<double>> master_to_slave(
+        std::shared_ptr<Core::LinAlg::FEVector<double>> mv  ///< master vector (to be transferred)
     ) const
     {
       return master_to_slave(*mv);
     }
 
     /// transfer a dof vector from slave to master
-    std::shared_ptr<Epetra_FEVector> slave_to_master(
-        std::shared_ptr<Epetra_FEVector> sv  ///< slave vector (to be transferred)
+    std::shared_ptr<Core::LinAlg::FEVector<double>> slave_to_master(
+        std::shared_ptr<Core::LinAlg::FEVector<double>> sv  ///< slave vector (to be transferred)
     ) const
     {
       return slave_to_master(*sv);
@@ -290,13 +290,13 @@ namespace Coupling::Adapter
     ) const override;
 
     /// transfer a dof vector from master to slave
-    std::shared_ptr<Epetra_FEVector> master_to_slave(
-        const Epetra_FEVector& mv  ///< master vector (to be transferred)
+    std::shared_ptr<Core::LinAlg::FEVector<double>> master_to_slave(
+        const Core::LinAlg::FEVector<double>& mv  ///< master vector (to be transferred)
     ) const;
 
     /// transfer a dof vector from slave to master
-    std::shared_ptr<Epetra_FEVector> slave_to_master(
-        const Epetra_FEVector& sv  ///< slave vector (to be transferred)
+    std::shared_ptr<Core::LinAlg::FEVector<double>> slave_to_master(
+        const Core::LinAlg::FEVector<double>& sv  ///< slave vector (to be transferred)
     ) const;
 
     /// transfer a dof vector from master to slave

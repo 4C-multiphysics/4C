@@ -87,7 +87,7 @@ namespace BeamInteraction
      * @param displacement_vector (in) Global displacement vector.
      */
     void evaluate_and_assemble(const std::shared_ptr<const Core::FE::Discretization>& discret,
-        const std::shared_ptr<Epetra_FEVector>& force_vector,
+        const std::shared_ptr<Core::LinAlg::FEVector<double>>& force_vector,
         const std::shared_ptr<Core::LinAlg::SparseMatrix>& stiffness_matrix,
         const std::shared_ptr<const Core::LinAlg::Vector<double>>& displacement_vector) override;
 
@@ -176,7 +176,7 @@ namespace BeamInteraction
      * @param displacement_vector (in) Global displacement vector.
      */
     void evaluate_and_assemble_positional_coupling(const Core::FE::Discretization& discret,
-        const std::shared_ptr<Epetra_FEVector>& force_vector,
+        const std::shared_ptr<Core::LinAlg::FEVector<double>>& force_vector,
         const std::shared_ptr<Core::LinAlg::SparseMatrix>& stiffness_matrix,
         const Core::LinAlg::Vector<double>& displacement_vector) const;
 
@@ -190,7 +190,7 @@ namespace BeamInteraction
      * @param displacement_vector (in) Global displacement vector.
      */
     void evaluate_and_assemble_rotational_coupling(const Core::FE::Discretization& discret,
-        const std::shared_ptr<Epetra_FEVector>& force_vector,
+        const std::shared_ptr<Core::LinAlg::FEVector<double>>& force_vector,
         const std::shared_ptr<Core::LinAlg::SparseMatrix>& stiffness_matrix,
         const Core::LinAlg::Vector<double>& displacement_vector) const;
 

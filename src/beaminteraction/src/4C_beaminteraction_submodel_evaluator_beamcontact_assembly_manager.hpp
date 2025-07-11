@@ -11,10 +11,9 @@
 
 #include "4C_config.hpp"
 
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_utils_exceptions.hpp"
-
-#include <Epetra_FEVector.h>
 
 #include <memory>
 #include <vector>
@@ -73,7 +72,7 @@ namespace BeamInteraction
        */
       virtual void evaluate_force_stiff(std::shared_ptr<Core::FE::Discretization> discret,
           const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state,
-          std::shared_ptr<Epetra_FEVector> fe_sysvec,
+          std::shared_ptr<Core::LinAlg::FEVector<double>> fe_sysvec,
           std::shared_ptr<Core::LinAlg::SparseMatrix> fe_sysmat)
       {
         FOUR_C_THROW("Not implemented!");

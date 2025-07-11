@@ -250,7 +250,8 @@ void ScaTra::MeshtyingStrategyS2I::condense_mat_and_rhs(
           FOUR_C_THROW("Matrix-vector multiplication failed!");
         interfacemaps_->insert_vector(Q_residualmaster, 2, *scatratimint_->residual());
         interfacemaps_->add_vector(
-            Core::LinAlg::MultiVector<double>(*imasterresidual_), 2, *scatratimint_->residual());
+            Core::LinAlg::MultiVector<double>(imasterresidual_->get_ref_of_epetra_fevector()), 2,
+            *scatratimint_->residual());
 
         // add projected master-side entries to slave-side entries of global residual vector
         Core::LinAlg::Vector<double> P_residualmaster(*interfacemaps_->map(1));
@@ -588,7 +589,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
           lmside_ == Inpar::S2I::side_master or couplingtype_ == Inpar::S2I::coupling_nts_standard)
       {
         imastermatrix_->zero();
-        imasterresidual_->PutScalar(0.);
+        imasterresidual_->put_scalar(0.);
       }
 
       // loop over all scatra-scatra coupling interfaces
@@ -659,7 +660,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
           lmside_ == Inpar::S2I::side_master or couplingtype_ == Inpar::S2I::coupling_nts_standard)
       {
         imastermatrix_->complete(*interfacemaps_->full_map(), *interfacemaps_->map(2));
-        if (imasterresidual_->GlobalAssemble(Add, true))
+        if (imasterresidual_->global_assemble(Add, true))
           FOUR_C_THROW(
               "Assembly of auxiliary residual vector for master residuals not successful!");
       }
@@ -691,8 +692,9 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
               systemmatrix->add(*islavematrix, false, 1., 1.);
               systemmatrix->add(*imastermatrix, false, 1., 1.);
               interfacemaps_->add_vector(*islaveresidual_, 1, *scatratimint_->residual());
-              interfacemaps_->add_vector(Core::LinAlg::MultiVector<double>(*imasterresidual_), 2,
-                  *scatratimint_->residual());
+              interfacemaps_->add_vector(
+                  Core::LinAlg::MultiVector<double>(imasterresidual_->get_ref_of_epetra_fevector()),
+                  2, *scatratimint_->residual());
 
               break;
             }
@@ -771,12 +773,15 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
                     false, -1., 1.);
                 systemmatrix->add(*imastermatrix_, false, 1., 1.);
                 Core::LinAlg::Vector<double> islaveresidual(*interfacemaps_->map(1));
-                if (P_->multiply(
-                        true, Core::LinAlg::MultiVector<double>(*imasterresidual_), islaveresidual))
+                if (P_->multiply(true,
+                        Core::LinAlg::MultiVector<double>(
+                            imasterresidual_->get_ref_of_epetra_fevector()),
+                        islaveresidual))
                   FOUR_C_THROW("Matrix-vector multiplication failed!");
                 interfacemaps_->add_vector(islaveresidual, 1, *scatratimint_->residual(), -1.);
-                interfacemaps_->add_vector(Core::LinAlg::MultiVector<double>(*imasterresidual_), 2,
-                    *scatratimint_->residual());
+                interfacemaps_->add_vector(Core::LinAlg::MultiVector<double>(
+                                               imasterresidual_->get_ref_of_epetra_fevector()),
+                    2, *scatratimint_->residual());
               }
 
               break;
@@ -845,8 +850,9 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
 
               // assemble interface residual vectors into global residual vector
               interfacemaps_->add_vector(*islaveresidual_, 1, *scatratimint_->residual());
-              interfacemaps_->add_vector(Core::LinAlg::MultiVector<double>(*imasterresidual_), 2,
-                  *scatratimint_->residual());
+              interfacemaps_->add_vector(
+                  Core::LinAlg::MultiVector<double>(imasterresidual_->get_ref_of_epetra_fevector()),
+                  2, *scatratimint_->residual());
 
               break;
             }
@@ -1585,7 +1591,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_mortar_cells(const Core::FE::Discret
     const Inpar::S2I::InterfaceSides matrix4_side_cols,
     const std::shared_ptr<Core::LinAlg::MultiVector<double>>& systemvector1,
     const Inpar::S2I::InterfaceSides vector1_side,
-    const std::shared_ptr<Epetra_FEVector>& systemvector2,
+    const std::shared_ptr<Core::LinAlg::FEVector<double>>& systemvector2,
     const Inpar::S2I::InterfaceSides vector2_side) const
 {
   // instantiate assembly strategy for mortar integration cells
@@ -1677,7 +1683,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_nts(
     const Inpar::S2I::InterfaceSides matrix4_side_cols,
     const std::shared_ptr<Core::LinAlg::MultiVector<double>>& systemvector1,
     const Inpar::S2I::InterfaceSides vector1_side,
-    const std::shared_ptr<Epetra_FEVector>& systemvector2,
+    const std::shared_ptr<Core::LinAlg::FEVector<double>>& systemvector2,
     const Inpar::S2I::InterfaceSides vector2_side) const
 {
   // instantiate assembly strategy for node-to-segment coupling
@@ -1751,7 +1757,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_mortar_elements(const Core::LinAlg::
     const Inpar::S2I::InterfaceSides matrix4_side_cols,
     const std::shared_ptr<Core::LinAlg::MultiVector<double>>& systemvector1,
     const Inpar::S2I::InterfaceSides vector1_side,
-    const std::shared_ptr<Epetra_FEVector>& systemvector2,
+    const std::shared_ptr<Core::LinAlg::FEVector<double>>& systemvector2,
     const Inpar::S2I::InterfaceSides vector2_side) const
 {
   // instantiate assembly strategy for mortar elements
@@ -2538,8 +2544,8 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
             *interfacemaps_->map(2), 81, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
         // initialize auxiliary residual vector for master side
-        imasterresidual_ =
-            std::make_shared<Epetra_FEVector>(interfacemaps_->map(2)->get_epetra_block_map());
+        imasterresidual_ = std::make_shared<Core::LinAlg::FEVector<double>>(
+            interfacemaps_->map(2)->get_epetra_block_map());
       }
 
       switch (couplingtype_)
@@ -4811,7 +4817,8 @@ ScaTra::MortarCellAssemblyStrategy::MortarCellAssemblyStrategy(
     const Inpar::S2I::InterfaceSides matrix4_side_rows,
     const Inpar::S2I::InterfaceSides matrix4_side_cols,
     std::shared_ptr<Core::LinAlg::MultiVector<double>> systemvector1,
-    const Inpar::S2I::InterfaceSides vector1_side, std::shared_ptr<Epetra_FEVector> systemvector2,
+    const Inpar::S2I::InterfaceSides vector1_side,
+    std::shared_ptr<Core::LinAlg::FEVector<double>> systemvector2,
     const Inpar::S2I::InterfaceSides vector2_side, const int nds_rows, const int nds_cols)
     : matrix1_side_rows_(matrix1_side_rows),
       matrix1_side_cols_(matrix1_side_cols),
@@ -4956,7 +4963,7 @@ void ScaTra::MortarCellAssemblyStrategy::assemble_cell_vector(
 /*----------------------------------------------------------------------------------*
  *----------------------------------------------------------------------------------*/
 void ScaTra::MortarCellAssemblyStrategy::assemble_cell_vector(
-    const std::shared_ptr<Epetra_FEVector>& systemvector,
+    const std::shared_ptr<Core::LinAlg::FEVector<double>>& systemvector,
     const Core::LinAlg::SerialDenseVector& cellvector, const Inpar::S2I::InterfaceSides side,
     Core::Elements::LocationArray& la_slave, Core::Elements::LocationArray& la_master,
     const int assembler_pid_master) const
@@ -4972,12 +4979,10 @@ void ScaTra::MortarCellAssemblyStrategy::assemble_cell_vector(
 
     case Inpar::S2I::side_master:
     {
-      if (assembler_pid_master ==
-          Core::Communication::my_mpi_rank(
-              Core::Communication::unpack_epetra_comm(systemvector->Comm())))
+      if (assembler_pid_master == Core::Communication::my_mpi_rank(systemvector->get_comm()))
       {
-        if (std::dynamic_pointer_cast<Epetra_FEVector>(systemvector)
-                ->SumIntoGlobalValues(static_cast<int>(la_master[nds_rows_].lm_.size()),
+        if (std::dynamic_pointer_cast<Core::LinAlg::FEVector<double>>(systemvector)
+                ->sum_into_global_values(static_cast<int>(la_master[nds_rows_].lm_.size()),
                     la_master[nds_rows_].lm_.data(), cellvector.values()))
           FOUR_C_THROW("Assembly into master-side system vector not successful!");
       }

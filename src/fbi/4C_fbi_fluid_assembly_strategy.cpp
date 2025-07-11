@@ -25,7 +25,8 @@ void FBI::Utils::FBIAssemblyStrategy::assemble(const Core::FE::Discretization& d
     const Core::FE::Discretization& discretization2, std::vector<int> const& elegid,
     std::vector<Core::LinAlg::SerialDenseVector> const& elevec,
     std::vector<std::vector<Core::LinAlg::SerialDenseMatrix>> const& elemat,
-    std::shared_ptr<Epetra_FEVector>& f1, std::shared_ptr<Epetra_FEVector>& f2,
+    std::shared_ptr<Core::LinAlg::FEVector<double>>& f1,
+    std::shared_ptr<Core::LinAlg::FEVector<double>>& f2,
     std::shared_ptr<Core::LinAlg::SparseMatrix>& c11,
     std::shared_ptr<Core::LinAlg::SparseOperator> c22,
     std::shared_ptr<Core::LinAlg::SparseMatrix>& c12,
@@ -50,11 +51,11 @@ void FBI::Utils::FBIAssemblyStrategy::assemble(const Core::FE::Discretization& d
   // assemble both element vectors into global system vector
   if (f1 != nullptr)
   {
-    f1->SumIntoGlobalValues(elevec[0].length(), lmrow1.data(), elevec[0].values());
+    f1->sum_into_global_values(elevec[0].length(), lmrow1.data(), elevec[0].values());
   }
   if (f2 != nullptr)
   {
-    f2->SumIntoGlobalValues(elevec[1].length(), lmrow2.data(), elevec[1].values());
+    f2->sum_into_global_values(elevec[1].length(), lmrow2.data(), elevec[1].values());
   }
 
   // and finally also assemble stiffness contributions

@@ -46,7 +46,7 @@ namespace BeamInteraction
        */
       void evaluate_force_stiff(std::shared_ptr<Core::FE::Discretization> discret,
           const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state,
-          std::shared_ptr<Epetra_FEVector> fe_sysvec,
+          std::shared_ptr<Core::LinAlg::FEVector<double>> fe_sysvec,
           std::shared_ptr<Core::LinAlg::SparseMatrix> fe_sysmat) override;
 
       /**

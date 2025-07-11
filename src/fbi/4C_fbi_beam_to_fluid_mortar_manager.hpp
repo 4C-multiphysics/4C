@@ -12,8 +12,7 @@
 #include "4C_config.hpp"
 
 #include "4C_inpar_beaminteraction.hpp"
-
-#include <Epetra_FEVector.h>
+#include "4C_linalg_fevector.hpp"
 
 #include <memory>
 
@@ -159,8 +158,9 @@ namespace BeamInteraction
      * @param[out] fluid_force Global force vector acting on the fluid
      * @param[out] beam_force Global force vector acting on the beam
      */
-    void add_global_force_stiffness_contributions(std::shared_ptr<Epetra_FEVector> fluid_force,
-        Epetra_FEVector& beam_force, std::shared_ptr<Core::LinAlg::SparseMatrix> kbb,
+    void add_global_force_stiffness_contributions(
+        std::shared_ptr<Core::LinAlg::FEVector<double>> fluid_force,
+        Core::LinAlg::FEVector<double>& beam_force, std::shared_ptr<Core::LinAlg::SparseMatrix> kbb,
         std::shared_ptr<Core::LinAlg::SparseMatrix> kbf,
         std::shared_ptr<Core::LinAlg::SparseMatrix> kff,
         std::shared_ptr<Core::LinAlg::SparseMatrix> kfb,
@@ -289,12 +289,12 @@ namespace BeamInteraction
     //! al: Two dimensional mortar contact methods for large deformation frictional sliding (eq.
     //! 37).
     //! With this scaling correct units and pass patch tests are achieved (in the penalty case).
-    std::shared_ptr<Epetra_FEVector> global_kappa_;
+    std::shared_ptr<Core::LinAlg::FEVector<double>> global_kappa_;
 
     //! This vector keeps tack of all Lagrange multipliers that are active. This is needed when the
     //! kappa vector is inverted and some entries are zero, because no active contributions act on
     //! that Lagrange multiplier.
-    std::shared_ptr<Epetra_FEVector> global_active_lambda_;
+    std::shared_ptr<Core::LinAlg::FEVector<double>> global_active_lambda_;
   };
 }  // namespace BeamInteraction
 

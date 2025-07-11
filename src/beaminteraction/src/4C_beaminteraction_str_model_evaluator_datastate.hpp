@@ -10,9 +10,8 @@
 
 #include "4C_config.hpp"
 
+#include "4C_linalg_fevector.hpp"
 #include "4C_timestepping_mstep.hpp"
-
-#include <Epetra_FEVector.h>
 
 #include <map>
 #include <set>
@@ -182,14 +181,14 @@ namespace Solid
       }
 
       /// Return internal force \f$fint_{n}\f$
-      std::shared_ptr<const Epetra_FEVector> get_force_n() const
+      std::shared_ptr<const Core::LinAlg::FEVector<double>> get_force_n() const
       {
         check_init_setup();
         return forcen_;
       }
 
       /// Return internal force \f$fint_{n+1}\f$
-      std::shared_ptr<const Epetra_FEVector> get_force_np() const
+      std::shared_ptr<const Core::LinAlg::FEVector<double>> get_force_np() const
       {
         check_init_setup();
         return forcenp_;
@@ -251,14 +250,14 @@ namespace Solid
       }
 
       /// Return internal force \f$fint_{n}\f$
-      std::shared_ptr<Epetra_FEVector>& get_force_n()
+      std::shared_ptr<Core::LinAlg::FEVector<double>>& get_force_n()
       {
         check_init_setup();
         return forcen_;
       }
 
       /// Return internal force \f$fint_{n+1}\f$
-      std::shared_ptr<Epetra_FEVector>& get_force_np()
+      std::shared_ptr<Core::LinAlg::FEVector<double>>& get_force_np()
       {
         check_init_setup();
         return forcenp_;
@@ -348,10 +347,10 @@ namespace Solid
       std::shared_ptr<Core::LinAlg::Vector<double>> discolnp_;
 
       /// global internal force vector at \f$t_{n}\f$
-      std::shared_ptr<Epetra_FEVector> forcen_;
+      std::shared_ptr<Core::LinAlg::FEVector<double>> forcen_;
 
       /// global internal force vector at \f$t_{n+1}\f$
-      std::shared_ptr<Epetra_FEVector> forcenp_;
+      std::shared_ptr<Core::LinAlg::FEVector<double>> forcenp_;
       ///@}
 
       /// @name System matrices

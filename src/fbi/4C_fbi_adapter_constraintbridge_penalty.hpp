@@ -11,8 +11,7 @@
 #include "4C_config.hpp"
 
 #include "4C_fbi_adapter_constraintbridge.hpp"
-
-#include <Epetra_FEVector.h>
+#include "4C_linalg_fevector.hpp"
 
 #include <memory>
 
@@ -81,13 +80,15 @@ namespace Adapter
     std::shared_ptr<const Core::LinAlg::SparseMatrix> get_csf() const override { return csf_; };
 
     /// Negative RHS coupling contribution for the fluid partition \f$f_f\f$
-    std::shared_ptr<const Epetra_FEVector> get_fluid_coupling_residual() const override
+    std::shared_ptr<const Core::LinAlg::FEVector<double>> get_fluid_coupling_residual()
+        const override
     {
       return ff_;
     };
 
     /// Force vector acting on the structure side \f$f_s\f$
-    std::shared_ptr<const Epetra_FEVector> get_structure_coupling_residual() const override
+    std::shared_ptr<const Core::LinAlg::FEVector<double>> get_structure_coupling_residual()
+        const override
     {
       return fs_;
     };
@@ -138,10 +139,10 @@ namespace Adapter
     std::shared_ptr<Core::LinAlg::SparseMatrix> csf_;
 
     /// Force vector acting on the fluid side \f$f_f\f$
-    std::shared_ptr<Epetra_FEVector> ff_;
+    std::shared_ptr<Core::LinAlg::FEVector<double>> ff_;
 
     /// Force vector acting on the structure side \f$f_s\f$
-    std::shared_ptr<Epetra_FEVector> fs_;
+    std::shared_ptr<Core::LinAlg::FEVector<double>> fs_;
 
     /// Bool to keep track if the fluid coupling contributions were already scaled with the penalty
     /// parameter

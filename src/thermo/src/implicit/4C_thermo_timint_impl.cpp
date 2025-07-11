@@ -11,6 +11,7 @@
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_node.hpp"
 #include "4C_io_pstream.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linear_solver_method_parameters.hpp"
 #include "4C_mat_fourier.hpp"
@@ -19,7 +20,6 @@
 #include "4C_thermo_timint.hpp"
 #include "4C_utils_enum.hpp"
 
-#include <Epetra_FEVector.h>
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
 #include <sstream>
@@ -73,8 +73,9 @@ Thermo::TimIntImpl::TimIntImpl(const Teuchos::ParameterList& ioparams,
   // Here we just grab the first local element we can find and initialize our data structures
   auto material = std::dynamic_pointer_cast<Mat::Fourier>(discret_->l_row_element(0)->material());
   const size_t columns = material->conductivity(discret_->l_row_element(0)->id()).size();
-  Epetra_FEVector overlapping_element_material_vector =
-      Epetra_FEVector(discret_->element_col_map()->get_epetra_block_map(), columns, true);
+  Core::LinAlg::FEVector<double> overlapping_element_material_vector =
+      Core::LinAlg::FEVector<double>(
+          discret_->element_col_map()->get_epetra_block_map(), columns, true);
 
   auto get_element_material_vector = [&](Core::Elements::Element& ele)
   {
@@ -85,10 +86,10 @@ Thermo::TimIntImpl::TimIntImpl(const Teuchos::ParameterList& ioparams,
         "Number of material vectors has to be the same size as conductivity values given.");
 
     for (size_t col = 0; col < conductivity.size(); col++)
-      overlapping_element_material_vector.ReplaceGlobalValue(ele.id(), col, conductivity[col]);
+      overlapping_element_material_vector.replace_global_value(ele.id(), col, conductivity[col]);
   };
   discret_->evaluate(get_element_material_vector);
-  overlapping_element_material_vector.GlobalAssemble();
+  overlapping_element_material_vector.global_assemble();
 
   conductivity_ = std::make_shared<Core::LinAlg::MultiVector<double>>(
       Core::LinAlg::MultiVector<double>(*discret_->node_row_map(), columns, true));
@@ -100,7 +101,8 @@ Thermo::TimIntImpl::TimIntImpl(const Teuchos::ParameterList& ioparams,
 
     for (size_t col = 0; col < columns; col++)
     {
-      Core::LinAlg::Vector<double> element_material(*overlapping_element_material_vector(col));
+      Core::LinAlg::Vector<double> element_material(
+          *overlapping_element_material_vector.get_ref_of_epetra_fevector()(col));
       double nodal_material = 0.0;
 
       for (int k = 0; k < num_elements; k++)

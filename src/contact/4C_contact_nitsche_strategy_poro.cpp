@@ -14,9 +14,9 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_extract_values.hpp"
 #include "4C_global_data.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 
-#include <Epetra_FEVector.h>
 #include <Epetra_Operator.h>
 
 FOUR_C_NAMESPACE_OPEN
@@ -126,13 +126,13 @@ void CONTACT::NitscheStrategyPoro::set_parent_state(const enum Mortar::StateType
     CONTACT::NitscheStrategy::set_parent_state(statename, vec, dis);
 }
 
-std::shared_ptr<Epetra_FEVector> CONTACT::NitscheStrategyPoro::setup_rhs_block_vec(
+std::shared_ptr<Core::LinAlg::FEVector<double>> CONTACT::NitscheStrategyPoro::setup_rhs_block_vec(
     const enum CONTACT::VecBlockType& bt) const
 {
   switch (bt)
   {
     case CONTACT::VecBlockType::porofluid:
-      return std::make_shared<Epetra_FEVector>(
+      return std::make_shared<Core::LinAlg::FEVector<double>>(
           Global::Problem::instance()->get_dis("porofluid")->dof_row_map()->get_epetra_block_map());
     default:
       return CONTACT::NitscheStrategy::setup_rhs_block_vec(bt);

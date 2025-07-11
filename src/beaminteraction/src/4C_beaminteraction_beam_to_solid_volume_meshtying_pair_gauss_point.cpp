@@ -14,11 +14,10 @@
 #include "4C_beaminteraction_contact_params.hpp"
 #include "4C_geometry_pair_element_evaluation_functions.hpp"
 #include "4C_geometry_pair_line_to_volume.hpp"
+#include "4C_linalg_fevector.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_linalg_utils_densematrix_inverse.hpp"
-
-#include <Epetra_FEVector.h>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -183,7 +182,7 @@ bool BeamInteraction::BeamToSolidVolumeMeshtyingPairGaussPoint<Beam, Solid>::eva
 template <typename Beam, typename Solid>
 void BeamInteraction::BeamToSolidVolumeMeshtyingPairGaussPoint<Beam, Solid>::evaluate_and_assemble(
     const std::shared_ptr<const Core::FE::Discretization>& discret,
-    const std::shared_ptr<Epetra_FEVector>& force_vector,
+    const std::shared_ptr<Core::LinAlg::FEVector<double>>& force_vector,
     const std::shared_ptr<Core::LinAlg::SparseMatrix>& stiffness_matrix,
     const std::shared_ptr<const Core::LinAlg::Vector<double>>& displacement_vector)
 {
@@ -256,7 +255,7 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingPairGaussPoint<Beam, Solid>::eva
 
   // If given, assemble force terms into the global force vector.
   if (force_vector != nullptr)
-    force_vector->SumIntoGlobalValues(gid_pair.num_rows(), gid_pair.data(), local_force.data());
+    force_vector->sum_into_global_values(gid_pair.num_rows(), gid_pair.data(), local_force.data());
 
   // If given, assemble force terms into the global stiffness matrix.
   if (stiffness_matrix != nullptr)
