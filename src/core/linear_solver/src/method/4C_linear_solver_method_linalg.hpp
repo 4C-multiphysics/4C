@@ -164,7 +164,7 @@ namespace Core::LinAlg
 
     \sa adapt_tolerance
     */
-    void reset_tolerance();
+    void reset_tolerance() const;
 
     //@}
     //! @name Input of parameters
@@ -270,10 +270,10 @@ namespace Core::LinAlg
 
     */
     void adapt_tolerance(
-        const double desirednlnres, const double currentnlnres, const double better);
+        const double desirednlnres, const double currentnlnres, const double better) const;
 
     //! set tolerance to Belos solver
-    void set_tolerance(double tolerance);
+    void set_tolerance(double tolerance) const;
 
     //! a communicator
     MPI_Comm comm_;

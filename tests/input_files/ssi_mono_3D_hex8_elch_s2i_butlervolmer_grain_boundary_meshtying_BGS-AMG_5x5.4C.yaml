@@ -59,23 +59,22 @@ SSI CONTROL/MANIFOLD:
 SSI CONTROL/ELCH:
   INITPOTCALC: true
 SOLVER 1:
-  SOLVER: "UMFPACK"
+  SOLVER: UMFPACK
 SOLVER 2:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AZSUB: 100
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssi_mono_3D_hex8_elch_s2i_butlervolmer_grain_boundary_meshtying_BGS-AMG_5x5.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/solid_scatra_BGS-AMG_5x5.xml"
 SOLVER 3:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssi_mono_3D_hex8_elch_s2i_butlervolmer_grain_boundary_meshtying_BGS-AMG_5x5_scatra.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/electrochemistry_BGS-AMG_3x3.xml"
 SOLVER 4:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssi_mono_3D_hex8_elch_s2i_butlervolmer_grain_boundary_meshtying_BGS-AMG_5x5_manifold.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: MueLu
+  MUELU_XML_FILE: "xml/multigrid/scatra_template.xml"
 MATERIALS:
   - MAT: 1
     MAT_electrode:

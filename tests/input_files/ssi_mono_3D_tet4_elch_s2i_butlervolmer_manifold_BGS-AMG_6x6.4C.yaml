@@ -64,22 +64,22 @@ SSI CONTROL/MANIFOLD:
 SSI CONTROL/ELCH:
   INITPOTCALC: true
 SOLVER 1:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssi_mono_3D_tet4_elch_s2i_butlervolmer_manifold_BGS-AMG_6x6.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/solid_scatra_manifold_BGS-AMG_6x6.xml"
 SOLVER 2:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssi_mono_3D_tet4_elch_s2i_butlervolmer_manifold_BGS-AMG_6x6_scatra.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/electrochemistry_BGS-AMG_3x3.xml"
 SOLVER 3:
-  SOLVER: "UMFPACK"
+  SOLVER: UMFPACK
 SOLVER 4:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssi_mono_3D_tet4_elch_s2i_butlervolmer_manifold_BGS-AMG_6x6_manifold.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/electrochemistry_BGS-AMG_2x2.xml"
 MATERIALS:
   - MAT: 1
     MAT_MultiplicativeSplitDefgradElastHyper:

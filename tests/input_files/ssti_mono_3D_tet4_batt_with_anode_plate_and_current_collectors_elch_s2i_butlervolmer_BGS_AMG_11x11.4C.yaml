@@ -63,28 +63,25 @@ SSTI CONTROL/THERMO:
   INITTHERMOFUNCT: 6
   LINEAR_SOLVER: 4
 SOLVER 1:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AZSUB: 10
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssti_mono_3D_tet4_batt_with_anode_plate_and_current_collectors_elch_s2i_butlervolmer_BGS_AMG_11x11.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/solid_scatra_thermo_BGS-AMG_11x11.xml"
 SOLVER 2:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AZSUB: 20
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssti_mono_3D_tet4_batt_with_anode_plate_and_current_collectors_elch_s2i_butlervolmer_BGS_AMG_11x11_scatra.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/scatra_BGS-AMG_5x5.xml"
 SOLVER 3:
-  SOLVER: "Belos"
-  AZPREC: "MueLu"
-  AZSUB: 20
-  MUELU_XML_FILE: "ssti_mono_3D_tet4_batt_with_anode_plate_and_current_collectors_elch_s2i_butlervolmer_BGS_AMG_11x11_structure.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: MueLu
+  MUELU_XML_FILE: "xml/multigrid/elasticity_template.xml"
 SOLVER 4:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AZSUB: 20
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssti_mono_3D_tet4_batt_with_anode_plate_and_current_collectors_elch_s2i_butlervolmer_BGS_AMG_11x11_thermo.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/scatra_BGS-AMG_5x5.xml"
 MATERIALS:
   - MAT: 1
     MAT_electrode:

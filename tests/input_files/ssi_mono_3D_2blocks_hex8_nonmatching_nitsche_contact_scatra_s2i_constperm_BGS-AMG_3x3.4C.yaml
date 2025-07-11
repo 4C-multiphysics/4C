@@ -41,20 +41,20 @@ SSI CONTROL:
 SSI CONTROL/MONOLITHIC:
   ABSTOLRES: 0
   LINEAR_SOLVER: 1
-  MATRIXTYPE: "block"
+  MATRIXTYPE: block
   EQUILIBRATION: rows_maindiag
 SOLVER 1:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssi_mono_3D_2blocks_hex8_nonmatching_nitsche_contact_scatra_s2i_constperm_BGS-AMG_3x3.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/solid_scatra_BGS-AMG_3x3.xml"
 SOLVER 2:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssi_mono_3D_2blocks_hex8_nonmatching_nitsche_contact_scatra_s2i_constperm_BGS-AMG_3x3_scatra.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/electrochemistry_BGS-AMG_2x2.xml"
 SOLVER 3:
-  SOLVER: "UMFPACK"
+  SOLVER: UMFPACK
 MATERIALS:
   - MAT: 1
     MAT_scatra:

@@ -47,16 +47,13 @@ std::shared_ptr<Core::LinAlg::SparseOperator> ScaTra::MeshtyingStrategyStdElch::
     {
       systemmatrix = std::make_shared<
           Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
-
-          *scatratimint_->block_maps(), *scatratimint_->block_maps(), 81, false, true);
-
+          *scatratimint_->dof_block_maps(), *scatratimint_->dof_block_maps(), 81, false, true);
       break;
     }
 
     default:
     {
       FOUR_C_THROW("Unknown matrix type of ScaTra field");
-      break;
     }
   }
 

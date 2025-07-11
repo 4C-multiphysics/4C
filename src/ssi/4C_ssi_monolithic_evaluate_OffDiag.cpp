@@ -239,7 +239,7 @@ void SSI::ScatraStructureOffDiagCoupling::
     case Core::LinAlg::MatrixType::block_condition:
     case Core::LinAlg::MatrixType::block_condition_dof:
     {
-      const int numberscatrablocks = scatra_field()->block_maps()->num_maps();
+      const int numberscatrablocks = scatra_field()->dof_block_maps()->num_maps();
 
       // cast master and slave matrix
       auto blockslavematrix =
@@ -277,7 +277,7 @@ void SSI::ScatraStructureOffDiagCoupling::
       // split auxiliary system matrix and assemble into scatra-structure matrix block
       auto mastermatrix_split =
           Core::LinAlg::split_matrix<Core::LinAlg::DefaultBlockMatrixStrategy>(
-              mastermatrixsparse, *block_map_structure_, *scatra_field()->block_maps());
+              mastermatrixsparse, *block_map_structure_, *scatra_field()->dof_block_maps());
       mastermatrix_split->complete();
       blockmastermatrix->add(*mastermatrix_split, false, 1.0, 1.0);
 
@@ -513,8 +513,9 @@ void SSI::ScatraStructureOffDiagCoupling::
 
         // old slave dofs from input
         auto slave_map = slave_slave_transformation->slave_dof_map();
+        auto master_map = slave_slave_transformation->master_dof_map();
 
-        for (int iblock = 0; iblock < scatra_field()->block_maps()->num_maps(); ++iblock)
+        for (int iblock = 0; iblock < scatra_field()->dof_block_maps()->num_maps(); ++iblock)
         {
           auto scatra_slave_flux_structure_slave_dofs_on_scatra_slave_iblock =
               scatra_slave_flux_structure_slave_dofs_on_scatra_slave_matrix_block->matrix(
@@ -529,7 +530,7 @@ void SSI::ScatraStructureOffDiagCoupling::
                   iblock, 0);
 
           auto scatra_block_mapi =
-              Core::LinAlg::intersect_map(*scatra_field()->block_maps()->map(iblock),
+              Core::LinAlg::intersect_map(*scatra_field()->dof_block_maps()->map(iblock),
                   *meshtying_strategy_s2i_->coupling_adapter()->slave_dof_map());
 
           Coupling::Adapter::MatrixLogicalSplitAndTransform()(
@@ -540,7 +541,8 @@ void SSI::ScatraStructureOffDiagCoupling::
               *scatra_block_mapi, *slave_map, 1.0, nullptr, &slave_slave_converter,
               scatra_master_flux_on_scatra_slave_dofs_structure_slave_dofs_iblock, true, true);
 
-          scatra_master_flux_on_scatra_slave_dofs_structure_slave_dofs_iblock.complete();
+          scatra_master_flux_on_scatra_slave_dofs_structure_slave_dofs_iblock.complete(
+              *master_map, *scatra_block_mapi);
 
           auto slave_dof_map = meshtying->slave_master_coupling()->slave_dof_map();
           auto slave_side_converter_struct = meshtying->slave_side_converter();
@@ -561,7 +563,7 @@ void SSI::ScatraStructureOffDiagCoupling::
       // split auxiliary system matrix and assemble into scatra-structure matrix block
       auto mastermatrix_split =
           Core::LinAlg::split_matrix<Core::LinAlg::DefaultBlockMatrixStrategy>(
-              mastermatrixsparse, *block_map_structure_, *scatra_field()->block_maps());
+              mastermatrixsparse, *block_map_structure_, *scatra_field()->dof_block_maps());
       mastermatrix_split->complete();
       mastermatrix_block->add(*mastermatrix_split, false, 1.0, 1.0);
 
@@ -663,13 +665,13 @@ void SSI::ScatraStructureOffDiagCoupling::
         // old slave dofs from input
         auto slave_map = slave_slave_transformation->slave_dof_map();
 
-        for (int iblock = 0; iblock < scatra_field()->block_maps()->num_maps(); ++iblock)
+        for (int iblock = 0; iblock < scatra_field()->dof_block_maps()->num_maps(); ++iblock)
         {
           auto evaluate_iblock = evaluate_matrix_block->matrix(iblock, 0);
           auto slave_iblock = slavematrix_block->matrix(iblock, 0);
 
           auto scatra_slave_block_mapi =
-              Core::LinAlg::intersect_map(*scatra_field()->block_maps()->map(iblock),
+              Core::LinAlg::intersect_map(*scatra_field()->dof_block_maps()->map(iblock),
                   *meshtying_strategy_s2i_->coupling_adapter()->slave_dof_map());
 
           Coupling::Adapter::MatrixLogicalSplitAndTransform()(evaluate_iblock,

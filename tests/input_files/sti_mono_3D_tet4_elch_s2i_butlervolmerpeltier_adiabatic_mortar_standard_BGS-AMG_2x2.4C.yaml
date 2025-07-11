@@ -44,10 +44,10 @@ STI DYNAMIC:
 STI DYNAMIC/MONOLITHIC:
   LINEAR_SOLVER: 1
 SOLVER 1:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "sti_mono_2D_quad4_elch_s2i_butlervolmerpeltier_diabatic_BGS-AMG_2x2.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/electrochemistry_BGS-AMG_2x2.xml"
 SOLVER 2:
   SOLVER: "UMFPACK"
 MATERIALS:
