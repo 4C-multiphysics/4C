@@ -32,9 +32,6 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace Discret
 {
-  // Forward declarations
-  class Discretization;
-
   namespace Elements
   {
     class KirchhoffLoveShellNurbsType : public Core::Elements::ElementType

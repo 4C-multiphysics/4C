@@ -95,6 +95,8 @@ void setup_global_problem(Core::IO::InputFile& input_file, const CommandlineArgu
   // read all knot information for isogeometric analysis
   // and add it to the (derived) nurbs discretization
   Global::read_knots(*problem, input_file);
+
+  Global::read_fields(*problem, input_file);
 }
 
 double walltime_in_seconds()

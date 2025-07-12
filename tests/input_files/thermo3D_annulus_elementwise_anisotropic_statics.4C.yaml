@@ -31,7 +31,14 @@ MATERIALS:
     MAT_Fourier:
       CAPA: 420
       CONDUCT:
-        from_file: conductivity_input_field.json
+        field: spatially_varying_conductivity
+
+fields:
+  - name: spatially_varying_conductivity
+    discretization: "thermo"
+    file: conductivity_input_field.json
+    key: "CONDUCT"
+
 FUNCT1:
   - COMPONENT: 0
     SYMBOLIC_FUNCTION_OF_SPACE_TIME: "100"

@@ -201,6 +201,16 @@ namespace Core::IO
     }
   }
 
+  template <typename T1, typename T2>
+  void read_value_from_yaml(ConstYamlNodeRef node, std::pair<T1, T2>& value)
+  {
+    FOUR_C_ASSERT_ALWAYS(node.node.is_seq(), "Expected a sequence node for a pair.");
+    FOUR_C_ASSERT_ALWAYS(node.node.num_children() == 2,
+        "Expected exactly two children in the sequence node for a pair.");
+    read_value_from_yaml(node.wrap(node.node[0]), value.first);
+    read_value_from_yaml(node.wrap(node.node[1]), value.second);
+  }
+
   void read_value_from_yaml(ConstYamlNodeRef node, std::filesystem::path& value);
 
   template <typename U>

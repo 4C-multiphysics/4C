@@ -181,7 +181,26 @@ std::map<std::string, Core::IO::InputSpec> Global::valid_parameters()
     add_geometry_section(specs, field);
   }
 
-
+  specs["fields"] = list("fields",
+      all_of({
+          parameter<std::string>("name",
+              {.description =
+                      "Name of the field. This is used to refer to the field in other places. "
+                      "It is recommended to choose a descriptive name. The name must be unique "
+                      "across all fields."}),
+          parameter<std::string>("discretization",
+              {.description = "Name of the discretization to which this field belongs."}),
+          parameter<std::filesystem::path>(
+              "file", {.description = "(Relative) path to the file containing the field data."}),
+          parameter<std::optional<std::string>>("key",
+              {.description = "The key under which the field data is stored in the file. "
+                              "If not specified, the key is assumed to be equal to the name."}),
+      }),
+      {
+          .description = "Define a field that can be used in the simulation. "
+                         "You can refer to a field by its name in other places.",
+          .required = false,
+      });
 
   Inpar::Solid::set_valid_parameters(specs);
   Inpar::IO::set_valid_parameters(specs);

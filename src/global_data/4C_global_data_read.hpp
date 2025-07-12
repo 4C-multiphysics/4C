@@ -67,6 +67,9 @@ namespace Global
 
   /// input of particles
   void read_particles(Global::Problem& problem, Core::IO::InputFile& input);
+
+  /// input of spatial fields
+  void read_fields(Global::Problem& problem, Core::IO::InputFile& input);
 }  // namespace Global
 
 FOUR_C_NAMESPACE_CLOSE

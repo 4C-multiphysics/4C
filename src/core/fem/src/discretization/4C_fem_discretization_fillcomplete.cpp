@@ -325,6 +325,9 @@ int Core::FE::Discretization::assign_degrees_of_freedom(int start)
 
   for (unsigned i = 0; i < dofsets_.size(); ++i)
     start = dofsets_[i]->assign_degrees_of_freedom(*this, i, start);
+
+  callbacks().post_assign_dofs.call_all(*this);
+
   return start;
 }
 

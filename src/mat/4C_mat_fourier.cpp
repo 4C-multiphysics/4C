@@ -91,7 +91,7 @@ void Mat::Fourier::unpack(Core::Communication::UnpackBuffer& buffer)
  *----------------------------------------------------------------------*/
 std::vector<double> Mat::Fourier::conductivity(int eleGID) const
 {
-  return params_->conductivity_.at(eleGID + 1);
+  return params_->conductivity_.at(eleGID);
 }
 
 /*----------------------------------------------------------------------*

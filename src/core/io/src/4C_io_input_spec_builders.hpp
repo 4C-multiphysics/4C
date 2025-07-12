@@ -569,6 +569,7 @@ namespace Core::IO
     {
       constant,
       from_file,
+      field,
     };
 
     template <typename T>
@@ -578,24 +579,39 @@ namespace Core::IO
       return InputSpecBuilders::StoreFunction<InputSpecBuilders::DefaultStorage>(
           [=](InputSpecBuilders::Storage& out, InputSpecBuilders::DefaultStorage&& in)
           {
-            if (in.get<InputFieldType>("_selector") == InputFieldType::from_file)
+            auto selector = in.get<InputFieldType>("_selector");
+            switch (selector)
             {
-              std::unordered_map<int, T> map_data;
-              std::filesystem::path file_path = in.get<std::filesystem::path>("from_file");
-              IO::read_value_from_yaml(file_path, name, map_data);
-              auto field = IO::InputField<T>(std::move(map_data));
-              return store(out, std::move(field));
-            }
-            else if (in.get<InputFieldType>("_selector") == InputFieldType::constant)
-            {
-              T data = in.get<T>("constant");
-              auto field = IO::InputField<T>(data);
-              return store(out, std::move(field));
-            }
-            else
-            {
-              FOUR_C_THROW("Unsupported input field type: {}",
-                  in.get<Core::IO::Internal::InputFieldType>("type"));
+              case InputFieldType::from_file:
+              {
+                std::unordered_map<int, T> map_data;
+                std::filesystem::path file_path = in.get<std::filesystem::path>("from_file");
+                IO::read_value_from_yaml(file_path, name, map_data);
+                auto field = IO::InputField<T>(std::move(map_data));
+                return store(out, std::move(field));
+                break;
+              }
+              case InputFieldType::constant:
+              {
+                T data = in.get<T>("constant");
+                auto field = IO::InputField<T>(data);
+                return store(out, std::move(field));
+                break;
+              }
+              case InputFieldType::field:
+              {
+                std::string field_name = in.get<std::string>("field");
+                InputFieldReference ref =
+                    global_input_field_registry().register_field_reference(field_name);
+                auto field = IO::InputField<T>(ref);
+                return store(out, std::move(field));
+                break;
+              }
+              default:
+              {
+                FOUR_C_THROW("Unsupported input field type: {}",
+                    in.get<Core::IO::Internal::InputFieldType>("type"));
+              }
             }
           },
           store.stores_to());
@@ -2500,8 +2516,11 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::input_field(
   auto store = data.store ? data.store : in_container<InputField<T>>(name);
   auto spec = selection<Internal::InputFieldType>(name,
       {
-          parameter<std::filesystem::path>("from_file"),
-          parameter<T>("constant"),
+          parameter<std::filesystem::path>(
+              "from_file", {.description = "Path to a file containing the input field data."}),
+          parameter<T>("constant", {.description = "Constant value for the field."}),
+          parameter<std::string>(
+              "field", {.description = "Refer to a globally defined field by a name."}),
       },
       {
           .description = data.description,

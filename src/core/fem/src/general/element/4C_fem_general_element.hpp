@@ -691,7 +691,7 @@ might become invalid after a redistribution of the discretization.
     /*!
     \brief Set ownership
 
-    This method is used by the Discret::Discretiztion to change the ownership of
+    This method is used by the Discretization to change the ownership of
     an element that got communicated from one processor to another.
 
     \param owner: Proc owning this node

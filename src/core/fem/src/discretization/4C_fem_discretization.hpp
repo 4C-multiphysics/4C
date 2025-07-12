@@ -15,6 +15,7 @@
 #include "4C_linalg_graph.hpp"
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_vector.hpp"
+#include "4C_utils_callbacks.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
@@ -171,6 +172,15 @@ namespace Core::FE
   class Discretization
   {
    public:
+    /**
+     * Various callbacks to hook into the discretization.
+     */
+    struct Callbacks
+    {
+      //! Called after DOFs have been assigned.
+      Core::Utils::CallbackList<const Discretization&> post_assign_dofs;
+    };
+
     /*!
     \brief Standard Constructor
 
@@ -1962,6 +1972,11 @@ namespace Core::FE
     */
     int assign_degrees_of_freedom(int start);
 
+    /**
+     * Access the callbacks that this discretization provides.
+     */
+    Callbacks& callbacks() { return callbacks_; }
+
    private:
     /*!
     \brief Build noderowmap_ (Filled()==true NOT prerequisite)
@@ -2185,6 +2200,8 @@ namespace Core::FE
 
     //! number of space dimension
     const unsigned int n_dim_;
+
+    Callbacks callbacks_;
   };  // class Discretization
 }  // namespace Core::FE
 

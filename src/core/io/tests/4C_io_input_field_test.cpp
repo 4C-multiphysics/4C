@@ -16,6 +16,7 @@
 #include "4C_legacy_enum_definitions_conditions.hpp"
 #include "4C_unittest_utils_assertions_test.hpp"
 #include "4C_unittest_utils_support_files_test.hpp"
+#include "4C_utils_singleton_owner.hpp"
 
 #include <iostream>
 #include <map>
@@ -64,15 +65,14 @@ namespace
       ryml::Tree tree = init_yaml_tree_with_exceptions();
       ryml::NodeRef root = tree.rootref();
       ryml::parse_in_arena(("stiffness:\n    from_file: " + input_field_file).c_str(), root);
-      std::flush(std::cout);
       ConstYamlNodeRef node(root, "");
       InputParameterContainer container;
       spec.match(node, container);
       InputField<double> input_field_stiffness = container.get<InputField<double>>("stiffness");
-      EXPECT_EQ(input_field_stiffness.at(1), 2.0);
-      EXPECT_EQ(input_field_stiffness.at(2), 3.5);
-      EXPECT_EQ(input_field_stiffness.at(3), 4.0);
-      EXPECT_EQ(input_field_stiffness.at(4), 5.5);
+      EXPECT_EQ(input_field_stiffness.at(0), 2.0);
+      EXPECT_EQ(input_field_stiffness.at(1), 3.5);
+      EXPECT_EQ(input_field_stiffness.at(2), 4.0);
+      EXPECT_EQ(input_field_stiffness.at(3), 5.5);
     }
   }
 
@@ -101,13 +101,12 @@ namespace
       ryml::parse_in_arena(R"(CONDUCT:
               constant: [1.0, 2.0, 3.0])",
           root);
-      std::flush(std::cout);
       ConstYamlNodeRef node(root, "");
       InputParameterContainer container;
       spec.match(node, container);
       auto input_field_conductivity = container.get<InputField<std::vector<double>>>("CONDUCT");
       std::vector<double> expected_conductivity{1.0, 2.0, 3.0};
-      EXPECT_EQ(input_field_conductivity.at(1), expected_conductivity);
+      EXPECT_EQ(input_field_conductivity.at(0), expected_conductivity);
     }
 
     {
@@ -115,17 +114,16 @@ namespace
       ryml::Tree tree = init_yaml_tree_with_exceptions();
       ryml::NodeRef root = tree.rootref();
       ryml::parse_in_arena(("CONDUCT:\n    from_file: " + input_field_file).c_str(), root);
-      std::flush(std::cout);
       ConstYamlNodeRef node(root, "");
       InputParameterContainer container;
       spec.match(node, container);
       auto input_field_conductivity = container.get<InputField<std::vector<double>>>("CONDUCT");
       std::vector<std::vector<double>> expected_conductivity{
           {1.0, 2.0, 3.0}, {3.0, 2.0, 1.0}, {1.0, 2.0, 3.0}, {3.0, 2.0, 1.0}};
-      EXPECT_EQ(input_field_conductivity.at(1), expected_conductivity[0]);
-      EXPECT_EQ(input_field_conductivity.at(2), expected_conductivity[1]);
-      EXPECT_EQ(input_field_conductivity.at(3), expected_conductivity[2]);
-      EXPECT_EQ(input_field_conductivity.at(4), expected_conductivity[3]);
+      EXPECT_EQ(input_field_conductivity.at(0), expected_conductivity[0]);
+      EXPECT_EQ(input_field_conductivity.at(1), expected_conductivity[1]);
+      EXPECT_EQ(input_field_conductivity.at(2), expected_conductivity[2]);
+      EXPECT_EQ(input_field_conductivity.at(3), expected_conductivity[3]);
     }
   }
 
@@ -154,7 +152,7 @@ namespace
       InputParameterContainer container;
       spec.match(node, container);
       const auto& data = container.get<Data>("data");
-      EXPECT_EQ(data.stiffness.at(1), 1.0);
+      EXPECT_EQ(data.stiffness.at(0), 1.0);
     }
 
     {
@@ -170,10 +168,10 @@ namespace
       InputParameterContainer container;
       spec.match(node, container);
       const auto& data = container.get<Data>("data");
-      EXPECT_EQ(data.stiffness.at(1), 2.0);
-      EXPECT_EQ(data.stiffness.at(2), 3.5);
-      EXPECT_EQ(data.stiffness.at(3), 4.0);
-      EXPECT_EQ(data.stiffness.at(4), 5.5);
+      EXPECT_EQ(data.stiffness.at(0), 2.0);
+      EXPECT_EQ(data.stiffness.at(1), 3.5);
+      EXPECT_EQ(data.stiffness.at(2), 4.0);
+      EXPECT_EQ(data.stiffness.at(3), 5.5);
     }
   }
 }  // namespace
