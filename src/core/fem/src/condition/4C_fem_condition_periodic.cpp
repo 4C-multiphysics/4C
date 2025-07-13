@@ -1192,7 +1192,7 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
   auto node_weights = std::make_shared<Core::LinAlg::Vector<double>>(*node_row_map, true);
   {
     // set default node weights
-    node_weights->put_scalar(1.0);
+    node_weights->put_scalar(10.0);
 
     // apply weight of special elements
     for (int node_lid = 0; node_lid < node_row_map->num_my_elements(); ++node_lid)
@@ -1349,7 +1349,7 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
         std::vector<int> master_gid(1, master->id());
         std::vector<int> slave_gid(1, slave->id());
         // add 99 to the initial value of 1.0 to set costs to 100
-        std::vector<double> value(1, 99.0);
+        std::vector<double> value(1, 100.0);
 
         err = edge_weights->insert_global_values(master->id(), 1, value.data(), slave_gid.data());
         if (err < 0) FOUR_C_THROW("insert_global_values returned err={}", err);
@@ -1358,19 +1358,15 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
       }
     }
   }
-  // TODO: Bug?
-  // Here we fill a data structure, which should be completed at some point, but in doing so we
-  // end up with an error in Zoltan ...
-  // edge_weights->complete();
+  edge_weights->complete();
 
   // 4. setup partitioner and redistribute
-  // TODO: Why does this only work for all tests with ParMETIS?
   Teuchos::ParameterList paramlist;
-  paramlist.set("PARTITIONING METHOD", "GRAPH");
-  Teuchos::ParameterList& sublist = paramlist.sublist("Zoltan");
-  sublist.set("LB_METHOD", "GRAPH");
-  sublist.set("GRAPH_PACKAGE", "ParMETIS");
-  sublist.set("LB_APPROACH", "PARTITION");
+  paramlist.set("algorithm", "parmetis");
+  paramlist.set("partitioning_approach", "repartition");
+  paramlist.set("error_check_level", "debug_mode_assertions");
+  paramlist.set("debug_level", "verbose_detailed_status");
+  paramlist.set("debug_output_stream", "std::cout");
 
   auto newnodegraph =
       Core::Rebalance::rebalance_graph(*node_graph, paramlist, node_weights, edge_weights);

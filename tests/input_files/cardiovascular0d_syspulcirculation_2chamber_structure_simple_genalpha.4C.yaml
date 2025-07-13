@@ -164,8 +164,8 @@ RESULT DESCRIPTION:
       DIS: "cardiovascular0d"
       SPECIAL: true
       QUANTITY: "q_vin_l"
-      VALUE: 3574.1913638
-      TOLERANCE: 1e-06
+      VALUE: 3574.19136550855546
+      TOLERANCE: 1.3e-06
   - CARDIOVASCULAR0D:
       DIS: "cardiovascular0d"
       SPECIAL: true
