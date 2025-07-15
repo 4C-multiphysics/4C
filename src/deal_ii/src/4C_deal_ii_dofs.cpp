@@ -7,14 +7,9 @@
 
 #include "4C_deal_ii_dofs.hpp"
 
-#include "4C_deal_ii_context_implementation.hpp"
 #include "4C_deal_ii_element_conversion.hpp"
 #include "4C_fem_discretization.hpp"
 
-#include <deal.II/fe/fe_system.h>
-#include <deal.II/fe/fe_tools.h>
-#include <deal.II/fe/mapping_q.h>
-#include <deal.II/hp/mapping_collection.h>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -22,43 +17,32 @@ namespace DealiiWrappers
 {
 
   template <int dim, int spacedim>
-  void assign_fes_and_dofs(dealii::DoFHandler<dim, spacedim>& dof_handler,
-      const Core::FE::Discretization& discretization, Context<dim, spacedim>& context)
+  void assign_fes_and_dofs(
+      const Context<dim, spacedim>& context, dealii::DoFHandler<dim, spacedim>& dof_handler)
   {
-    const auto& fe_collection = context.pimpl_->finite_elements;
-    const auto& fe_names = context.pimpl_->finite_element_names;
-
     // Loop all cells again and set the correct fe index within the collection
     for (const auto& cell : dof_handler.active_cell_iterators())
     {
       if (!cell->is_locally_owned()) continue;
-
-      const auto four_c_element_lid = context.pimpl_->cell_index_to_element_lid[cell->index()];
-      const auto* four_c_element = discretization.l_row_element(four_c_element_lid);
-
-      auto iter = std::find(fe_names.begin(), fe_names.end(),
-          ElementConversion::dealii_fe_name(four_c_element->shape()));
-      FOUR_C_ASSERT(iter != fe_names.end(),
-          "The finite element name '{}' is not in the list of finite element names.",
-          ElementConversion::dealii_fe_name(four_c_element->shape()));
-
-      const unsigned index = std::distance(fe_names.begin(), iter);
-      cell->set_active_fe_index(index);
+      // this is necessary since we can only set active_fe_indices for
+      // cell_iterators from a DoFHandler. While it refers to the same cell as in the triangulation
+      // (and actually decays to it), it has capabilities that the usual tria_cell_iterator does
+      // not. since we don't build a DofHandler for the triangulation we cannot set it there,
+      // instead we store the information manually within the context as it is needed to understand
+      // which finite element is used on which cell. We thus can use that information here
+      cell->set_active_fe_index(context.get_active_fe_index(cell));
     }
-
     // Now distribute the dofs, which will use the previously set index
-    dof_handler.distribute_dofs(fe_collection);
-
+    dof_handler.distribute_dofs(context.get_finite_elements());
     // Depending on the element types we need to construct an appropriate mapping collection
-    FOUR_C_ASSERT(fe_collection.size() == 1,
+    FOUR_C_ASSERT(context.get_finite_elements().size() == 1,
         "The current implementation only supports a single finite element type per "
         "discretization.");
   }
 
 
   // explicit instantiation
-  template void assign_fes_and_dofs(dealii::DoFHandler<3, 3>&,
-      const Core::FE::Discretization& discretization, Context<3, 3>& context);
+  template void assign_fes_and_dofs(const Context<3, 3>& context, dealii::DoFHandler<3, 3>&);
 }  // namespace DealiiWrappers
 
 FOUR_C_NAMESPACE_CLOSE
