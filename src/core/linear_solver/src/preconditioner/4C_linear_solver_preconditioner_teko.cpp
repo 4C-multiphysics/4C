@@ -123,6 +123,16 @@ void Core::LinearSolver::TekoPreconditioner::setup(Epetra_Operator* matrix,
                       .get<std::shared_ptr<Core::LinAlg::MultiVector<double>>>("Coordinates")
                       ->get_epetra_multi_vector()));
 
+          // TODO Do temporary printing here
+          Teuchos::RCP<Teuchos::FancyOStream> out =
+              Teuchos::fancyOStream(Teuchos::rcpFromRef(std::cout));
+          std::cout << "Teko: " << inverse << '\n';
+          std::cout << "Nullspace: size: " << nullspace->getGlobalLength() << '\n';
+          nullspace->describe(*out, Teuchos::VERB_EXTREME);
+          std::cout << "Coordinates: size: " << coordinates->getGlobalLength() << '\n';
+          coordinates->describe(*out, Teuchos::VERB_EXTREME);
+          std::cout << "Number of equations: " << number_of_equations << '\n' << "\n";
+
           tekoParams.sublist("Inverse Factory Library")
               .sublist(inverse)
               .set("number of equations", number_of_equations);

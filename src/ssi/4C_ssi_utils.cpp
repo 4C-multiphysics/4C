@@ -575,12 +575,12 @@ SSI::Utils::SSIMaps::SSIMaps(const SsiMono& ssi_mono_algorithm)
         case Core::LinAlg::MatrixType::block_condition_dof:
         {
           block_maps_sub_problems_.insert(std::make_pair(
-              Subproblem::scalar_transport, ssi_mono_algorithm.scatra_field()->block_maps()));
+              Subproblem::scalar_transport, ssi_mono_algorithm.scatra_field()->dof_block_maps()));
 
           if (ssi_mono_algorithm.is_scatra_manifold())
           {
             block_maps_sub_problems_.insert(std::make_pair(
-                Subproblem::manifold, ssi_mono_algorithm.scatra_manifold()->block_maps()));
+                Subproblem::manifold, ssi_mono_algorithm.scatra_manifold()->dof_block_maps()));
           }
           else
           {

@@ -29,12 +29,12 @@ SSI CONTROL:
   COUPALGO: ssi_Monolithic
 SSI CONTROL/MONOLITHIC:
   LINEAR_SOLVER: 1
-  MATRIXTYPE: "block"
+  MATRIXTYPE: block
 SOLVER 1:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssi_mono_3D_27hex8_scatra_BGS-AMG_2x2.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/solid_scatra_BGS-AMG_2x2.xml"
 SOLVER 2:
   SOLVER: "UMFPACK"
 MATERIALS:

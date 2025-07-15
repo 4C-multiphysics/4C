@@ -36,10 +36,10 @@ SCALAR TRANSPORT DYNAMIC/S2I COUPLING:
 SOLVER 1:
   SOLVER: "UMFPACK"
 SOLVER 2:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "elch_3D_hex8_line2_scl_2dof_BGS_AMG_2x2.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/electrochemistry_BGS-AMG_2x2.xml"
 MATERIALS:
   - MAT: 1
     MAT_electrode:
@@ -181,7 +181,7 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 14
       QUANTITY: "phi2"
-      VALUE: 1.8201144845046522
+      VALUE: 1.82011448450358304e+00
       TOLERANCE: 1.8e-08
   - SCATRA:
       DIS: "scatra"
@@ -199,49 +199,49 @@ RESULT DESCRIPTION:
       DIS: "scatra_micro"
       NODE: 500
       QUANTITY: "phi1"
-      VALUE: 9475.999997097853
+      VALUE: 9.47599999709785152e+03
       TOLERANCE: 9.5e-05
   - SCATRA:
       DIS: "scatra_micro"
       NODE: 500
       QUANTITY: "phi2"
-      VALUE: 1.8946513212923595
+      VALUE: 1.89465132129168468e+00
       TOLERANCE: 1.9e-08
   - SCATRA:
       DIS: "scatra_micro"
       NODE: 1000
       QUANTITY: "phi1"
-      VALUE: 9469.937376159349
+      VALUE: 9.46993737615937971e+03
       TOLERANCE: 9.5e-05
   - SCATRA:
       DIS: "scatra_micro"
       NODE: 1000
       QUANTITY: "phi2"
-      VALUE: 1.9494796901759794
+      VALUE: 1.94947969017628364e+00
       TOLERANCE: 1.9e-08
   - SCATRA:
       DIS: "scatra_micro"
       NODE: 1500
       QUANTITY: "phi1"
-      VALUE: 9475.999999999996
+      VALUE: 9.47599999999999636e+03
       TOLERANCE: 9.5e-05
   - SCATRA:
       DIS: "scatra_micro"
       NODE: 1500
       QUANTITY: "phi1"
-      VALUE: 9475.999999999996
+      VALUE: 9.47599999999999636e+03
       TOLERANCE: 9.5e-05
   - SCATRA:
       DIS: "scatra_micro"
       NODE: 200
       QUANTITY: "phi1"
-      VALUE: 9475.999997097855
+      VALUE: 9.47599999709785334e+03
       TOLERANCE: 9.5e-05
   - SCATRA:
       DIS: "scatra_micro"
       NODE: 200
       QUANTITY: "phi2"
-      VALUE: 1.8946513212922662
+      VALUE: 1.89465132129409564e+00
       TOLERANCE: 1.9e-08
 DESIGN VOL DIRICH CONDITIONS:
   - E: 1
