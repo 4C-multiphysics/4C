@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include <algorithm>
 #include <concepts>
 #include <functional>
 #include <type_traits>
@@ -92,10 +93,10 @@ namespace Core::FADUtils
     template <>
     struct OperationDeducer<std::plus<>>
     {
-      template <typename T1, typename T2>
-      static constexpr auto apply(const T1& a, const T2& b)
+      template <typename... Ts>
+      static constexpr auto apply(const Ts&... a)
       {
-        return a + b;
+        return (a + ...);
       }
     };
 
@@ -112,10 +113,10 @@ namespace Core::FADUtils
     template <>
     struct OperationDeducer<std::multiplies<>>
     {
-      template <typename T1, typename T2>
-      static constexpr auto apply(const T1& a, const T2& b)
+      template <typename... Ts>
+      static constexpr auto apply(const Ts&... a)
       {
-        return a * b;
+        return (a * ...);
       }
     };
 
@@ -129,36 +130,40 @@ namespace Core::FADUtils
       }
     };
 
-    template <typename T1, typename T2, typename Operation>
+    template <typename Operation, typename... Ts>
     struct ScalarOperationResultType;
 
-    template <typename T1, typename T2, typename Operation>
-      requires(std::is_arithmetic_v<T1> && std::is_arithmetic_v<T2>)
-    struct ScalarOperationResultType<T1, T2, Operation>
+    // standard arithmetic types
+    template <typename Operation, typename... Ts>
+      requires(std::is_arithmetic_v<Ts> && ...)
+    struct ScalarOperationResultType<Operation, Ts...>
     {
-      using type =
-          decltype(OperationDeducer<Operation>::apply(std::declval<T1>(), std::declval<T2>()));
+      using type = decltype(OperationDeducer<Operation>::apply(std::declval<Ts>()...));
     };
 
-    template <typename T1, SacadoFadType T2, typename Operation>
-      requires(std::is_arithmetic_v<T1> && std::is_same_v<T1, typename T2::value_type>)
-    struct ScalarOperationResultType<T1, T2, Operation>
+
+    template <typename... Ts>
+    struct FindSacadoBaseType;
+
+    template <SacadoFadType T, typename... Ts>
+    struct FindSacadoBaseType<T, Ts...>
     {
-      using type = AutoDiffBaseType<T2>;
+      using type = AutoDiffBaseType<T>;
     };
 
-    template <SacadoFadType T1, typename T2, typename Operation>
-      requires(std::is_arithmetic_v<T2> && std::is_same_v<T2, typename T1::value_type>)
-    struct ScalarOperationResultType<T1, T2, Operation>
+    template <typename T, typename... Ts>
+      requires(std::is_arithmetic_v<T>)
+    struct FindSacadoBaseType<T, Ts...>
     {
-      using type = AutoDiffBaseType<T1>;
+      using type = typename FindSacadoBaseType<Ts...>::type;
     };
 
-    template <SacadoFadType T1, SacadoFadType T2, typename Operation>
-      requires(std::is_same_v<typename T1::value_type, typename T2::value_type>)
-    struct ScalarOperationResultType<T1, T2, Operation>
+    // case if at least on of the types is a FAD type
+    template <typename Operation, typename... Ts>
+      requires(std::ranges::any_of(std::array{SacadoFadType<Ts>...}, [](bool b) { return b; }))
+    struct ScalarOperationResultType<Operation, Ts...>
     {
-      using type = AutoDiffBaseType<T1>;
+      using type = FindSacadoBaseType<Ts...>::type;
     };
   }  // namespace Internal
 
@@ -173,9 +178,9 @@ namespace Core::FADUtils
    * @tparam Operation The operation to be applied to the scalar types (std::plus, std::minus,
    * std::multiplies, std::divides).
    */
-  template <typename Scalar1, typename Scalar2, typename Operation>
+  template <typename Operation, typename... Scalars>
   using ScalarOperationResultType =
-      Internal::ScalarOperationResultType<Scalar1, Scalar2, Operation>::type;
+      Internal::ScalarOperationResultType<Operation, Scalars...>::type;
 }  // namespace Core::FADUtils
 
 FOUR_C_NAMESPACE_CLOSE
