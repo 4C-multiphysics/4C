@@ -373,9 +373,7 @@ void Mat::MatListReactions::calc_rea_body_force_deriv_matrix_add_variables(const
   // add scalar values as constants
   for (unsigned iscal = 0; iscal < phinp.size(); iscal++)
   {
-    std::ostringstream temp;
-    temp << iscal + 1;
-    constants_mod.emplace_back("phi" + temp.str(), phinp[iscal]);
+    constants_mod.emplace_back("phi" + std::to_string(iscal + 1), phinp[iscal]);
   }
   constants_mod.emplace_back("t", time);
   constants_mod.emplace_back("x", gpcoord[0]);

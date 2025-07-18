@@ -1191,10 +1191,8 @@ void ScaTra::ScaTraTimIntElch::post_process_single_electrode_info(
         currentintegral / boundaryint_porous + currentdlintegral / boundaryint_porous);
 
     // write results to file
-    std::ostringstream temp;
-    temp << id;
-    const std::string fname =
-        problem_->output_control_file()->file_name() + ".electrode_status_" + temp.str() + ".txt";
+    const std::string fname = problem_->output_control_file()->file_name() + ".electrode_status_" +
+                              std::to_string(id) + ".txt";
 
     std::ofstream f;
     if (step() == 0)

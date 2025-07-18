@@ -272,9 +272,7 @@ void FluidFilter::write_all_results(PostField* field)
 
   for (int k = 0; k < num_levelsets; k++)
   {
-    std::ostringstream temp;
-    temp << k;
-    std::string name = "phinp_" + temp.str();
+    std::string name = "phinp_" + std::to_string(k);
     writer_->write_result(name, name, nodebased, 1);
   }
 

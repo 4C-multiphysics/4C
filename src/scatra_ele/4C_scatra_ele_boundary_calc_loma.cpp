@@ -141,9 +141,7 @@ void Discret::Elements::ScaTraEleBoundaryCalcLoma<distype, probdim>::calc_loma_t
   Core::LinAlg::SerialDenseMatrix eflux(3, nenparent);
   Core::Elements::Element* peleptr = (Core::Elements::Element*)parentele;
   int k = my::numscal_ - 1;  // temperature is always last degree of freedom!!
-  std::ostringstream temp;
-  temp << k;
-  std::string name = "flux_phi_" + temp.str();
+  std::string name = "flux_phi_" + std::to_string(k);
   // try to get the pointer to the entry (and check if type is
   // std::shared_ptr<Core::LinAlg::MultiVector<double>>)
   std::shared_ptr<Core::LinAlg::MultiVector<double>>* f =

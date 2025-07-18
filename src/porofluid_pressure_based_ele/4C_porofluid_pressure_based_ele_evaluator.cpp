@@ -2955,13 +2955,12 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDomainIntegrals<nsd,
   // set pressure, saturation and density values as constants
   for (int k = 0; k < numfluidphases; k++)
   {
-    std::ostringstream temp;
-    temp << k + 1;
-    constants.push_back(std::pair<std::string, double>("p" + temp.str(), phasemanager.pressure(k)));
     constants.push_back(
-        std::pair<std::string, double>("S" + temp.str(), phasemanager.saturation(k)));
+        std::pair<std::string, double>("p" + std::to_string(k + 1), phasemanager.pressure(k)));
     constants.push_back(
-        std::pair<std::string, double>("DENS" + temp.str(), phasemanager.density(k)));
+        std::pair<std::string, double>("S" + std::to_string(k + 1), phasemanager.saturation(k)));
+    constants.push_back(
+        std::pair<std::string, double>("DENS" + std::to_string(k + 1), phasemanager.density(k)));
   }
 
   // set porosity value as constant
@@ -2970,23 +2969,19 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDomainIntegrals<nsd,
   // set volfrac, volfrac pressure and volfrac density values as constants
   for (int k = 0; k < numvolfrac; k++)
   {
-    std::ostringstream temp;
-    temp << k + 1;
     constants.push_back(
-        std::pair<std::string, double>("VF" + temp.str(), phasemanager.vol_frac(k)));
-    constants.push_back(
-        std::pair<std::string, double>("VFP" + temp.str(), phasemanager.vol_frac_pressure(k)));
-    constants.push_back(
-        std::pair<std::string, double>("VFDENS" + temp.str(), phasemanager.vol_frac_density(k)));
+        std::pair<std::string, double>("VF" + std::to_string(k + 1), phasemanager.vol_frac(k)));
+    constants.push_back(std::pair<std::string, double>(
+        "VFP" + std::to_string(k + 1), phasemanager.vol_frac_pressure(k)));
+    constants.push_back(std::pair<std::string, double>(
+        "VFDENS" + std::to_string(k + 1), phasemanager.vol_frac_density(k)));
   }
 
   // set scalar values as constants
   for (int k = 0; k < numscal_; k++)
   {
-    std::ostringstream temp;
-    temp << k + 1;
-    constants.push_back(
-        std::pair<std::string, double>("phi" + temp.str(), variablemanager.scalarnp()->at(k)));
+    constants.push_back(std::pair<std::string, double>(
+        "phi" + std::to_string(k + 1), variablemanager.scalarnp()->at(k)));
   }
 
   // calculate the coordinates of the gauss point

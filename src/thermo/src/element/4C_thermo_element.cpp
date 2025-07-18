@@ -297,22 +297,6 @@ std::vector<std::shared_ptr<Core::Elements::Element>> Thermo::Element::surfaces(
 }  // Surfaces()
 
 /*----------------------------------------------------------------------*
- | return names of visualization data (public)               dano 09/09 |
- *----------------------------------------------------------------------*/
-void Thermo::Element::vis_names(std::map<std::string, int>& names)
-{
-  // see whether we have additional data for visualization in our container
-  for (int k = 0; k < numdofpernode_; k++)
-  {
-    std::ostringstream temp;
-    temp << k;
-  }  // loop over temperatures
-
-  return;
-}  // vis_names()
-
-
-/*----------------------------------------------------------------------*
  | return visualization data (public)                        dano 09/09 |
  *----------------------------------------------------------------------*/
 bool Thermo::Element::vis_data(const std::string& name, std::vector<double>& data)

@@ -668,9 +668,7 @@ void PoroPressureBased::PorofluidAlgorithm::collect_runtime_output_data()
     {
       Core::LinAlg::MultiVector<double> flux_k(*noderowmap, 3, true);
 
-      std::ostringstream temp;
-      temp << k + 1;
-      std::string name = "flux_" + temp.str();
+      std::string name = "flux_" + std::to_string(k + 1);
       for (int i = 0; i < flux_k.MyLength(); ++i)
       {
         // get value for each component of flux vector

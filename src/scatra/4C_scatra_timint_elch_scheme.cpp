@@ -119,24 +119,21 @@ void ScaTra::ScaTraTimIntElchOST::write_restart() const
       // galvanostatic mode: only applied potential of cathode is adapted
       if (condid_cathode == condid or dlcapexists_)
       {
-        std::stringstream temp;
-        temp << condid;
-
         // electrode potential of the adjusted electrode kinetics BC at time n+1
         auto pot = mycond->parameters().get<double>("POT");
-        output_->write_double("pot_" + temp.str(), pot);
+        output_->write_double("pot_" + std::to_string(condid), pot);
 
         // electrode potential of the adjusted electrode kinetics BC at time n
         auto pot0n = mycond->parameters().get<double>("pot0n");
-        output_->write_double("pot0n_" + temp.str(), pot0n);
+        output_->write_double("pot0n_" + std::to_string(condid), pot0n);
 
         // electrode potential time derivative of the adjusted electrode kinetics BC at time n
         auto pot0dtn = mycond->parameters().get<double>("pot0dtn");
-        output_->write_double("pot0dtn_" + temp.str(), pot0dtn);
+        output_->write_double("pot0dtn_" + std::to_string(condid), pot0dtn);
 
         // history of electrode potential of the adjusted electrode kinetics BC
         auto pothist = mycond->parameters().get<double>("pot0hist");
-        output_->write_double("pot0hist_" + temp.str(), pothist);
+        output_->write_double("pot0hist_" + std::to_string(condid), pothist);
       }
     }
   }
@@ -181,16 +178,13 @@ void ScaTra::ScaTraTimIntElchOST::read_restart(
       // galvanostatic mode: only applied potential of cathode is adapted
       if (condid_cathode == condid or dlcapexists_)
       {
-        std::stringstream temp;
-        temp << condid;
-
-        double pot = reader->read_double("pot_" + temp.str());
+        double pot = reader->read_double("pot_" + std::to_string(condid));
         const_cast<Core::Conditions::Condition*>(mycond)->parameters().add("POT", pot);
-        double pot0n = reader->read_double("pot0n_" + temp.str());
+        double pot0n = reader->read_double("pot0n_" + std::to_string(condid));
         const_cast<Core::Conditions::Condition*>(mycond)->parameters().add("pot0n", pot0n);
-        double pot0hist = reader->read_double("pot0hist_" + temp.str());
+        double pot0hist = reader->read_double("pot0hist_" + std::to_string(condid));
         const_cast<Core::Conditions::Condition*>(mycond)->parameters().add("pot0hist", pot0hist);
-        double pot0dtn = reader->read_double("pot0dtn_" + temp.str());
+        double pot0dtn = reader->read_double("pot0dtn_" + std::to_string(condid));
         const_cast<Core::Conditions::Condition*>(mycond)->parameters().add("pot0dtn", pot0dtn);
         read_pot = true;
         if (myrank_ == 0)

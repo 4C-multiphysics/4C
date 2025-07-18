@@ -611,10 +611,7 @@ void Mat::PAR::REACTIONCOUPLING::ByFunction::initialize_internal(
         for (int k = 0; k < numscal; k++)
         {
           // construct the strings for scalar
-          std::ostringstream temp;
-          temp << k + 1;
-          std::string name = "phi" + temp.str();
-
+          std::string name = "phi" + std::to_string(k + 1);
 
           // save the phi values with correct name
           variables_.emplace_back(name, 0.0);

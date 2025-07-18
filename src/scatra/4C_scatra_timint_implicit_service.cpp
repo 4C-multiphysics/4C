@@ -490,11 +490,9 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> ScaTra::ScaTraTimIntImpl::cal
     // print out results to file as well (only if really desired)
     if ((myrank_ == 0) and writetofile)
     {
-      std::ostringstream temp;
-      temp << icond;
-      temp << discret_->name();
       const std::string fname = problem_->output_control_file()->file_name() +
-                                ".boundaryflux_ScaTraFluxCalc_" + temp.str() + ".txt";
+                                ".boundaryflux_ScaTraFluxCalc_" + std::to_string(icond) +
+                                discret_->name() + ".txt";
 
       std::ofstream f;
       if (step() <= 1)
@@ -852,9 +850,7 @@ void ScaTra::ScaTraTimIntImpl::add_flux_approx_to_parameter_list(Teuchos::Parame
       std::make_shared<Core::LinAlg::MultiVector<double>>(*noderowmap, 3, true);
   for (int k = 0; k < num_scal(); ++k)
   {
-    std::ostringstream temp;
-    temp << k;
-    std::string name = "flux_phi_" + temp.str();
+    const std::string name = "flux_phi_" + std::to_string(k);
     for (int i = 0; i < fluxk->MyLength(); ++i)
     {
       Core::Nodes::Node* actnode = discret_->l_row_node(i);
@@ -1162,9 +1158,7 @@ void ScaTra::ScaTraTimIntImpl::collect_output_flux_data(
   auto fluxk = Core::LinAlg::MultiVector<double>(*noderowmap, 3, true);
   for (int writefluxid : *writefluxids_)
   {
-    std::ostringstream temp;
-    temp << writefluxid;
-    std::string name = "flux_" + fluxtype + "_phi_" + temp.str();
+    std::string name = "flux_" + fluxtype + "_phi_" + std::to_string(writefluxid);
     for (int i = 0; i < fluxk.MyLength(); ++i)
     {
       Core::Nodes::Node* actnode = discret_->l_row_node(i);
@@ -2015,10 +2009,8 @@ void ScaTra::ScaTraTimIntImpl::evaluate_error_compared_to_analytical_sol()
 
         if (myrank_ == 0)
         {
-          std::ostringstream temp;
-          temp << k;
           const std::string simulation = problem_->output_control_file()->file_name();
-          const std::string fname = simulation + "_c" + temp.str() + "_time.relerror";
+          const std::string fname = simulation + "_c" + std::to_string(k) + "_time.relerror";
           std::ofstream f;
 
           // create new error file and write initial error
@@ -2107,10 +2099,8 @@ void ScaTra::ScaTraTimIntImpl::evaluate_error_compared_to_analytical_sol()
         for (int k = 0; k < num_dof_per_node(); ++k)
         {
           // determine name of file associated with current degree of freedom
-          std::ostringstream temp;
-          temp << k;
-          const std::string fname =
-              problem_->output_control_file()->file_name() + "_dof_" + temp.str() + ".relerror";
+          const std::string fname = problem_->output_control_file()->file_name() + "_dof_" +
+                                    std::to_string(k) + ".relerror";
 
           // initialize output file stream
           std::ofstream f;

@@ -72,27 +72,17 @@ void Mat::PAR::FluidPoroSingleReaction::initialize_internal()
   {
     // add scalar names
     {
-      std::ostringstream temp;
-      temp << k + 1;
-      scalarnames_[k] = "phi" + temp.str();
+      scalarnames_[k] = "phi" + std::to_string(k + 1);
     }
   }
 
   for (int k = 0; k < numfluidphases_; k++)
   {
     // add pressure names
-    {
-      std::ostringstream temp;
-      temp << k + 1;
-      pressurenames_[k] = "p" + temp.str();
-    }
+    pressurenames_[k] = "p" + std::to_string(k + 1);
 
     // add saturation names
-    {
-      std::ostringstream temp;
-      temp << k + 1;
-      saturationnames_[k] = "S" + temp.str();
-    }
+    saturationnames_[k] = "S" + std::to_string(k + 1);
   }
 
 
@@ -100,17 +90,10 @@ void Mat::PAR::FluidPoroSingleReaction::initialize_internal()
   for (int k = 0; k < numvolfrac_; k++)
   {
     // add volume fraction names
-    {
-      std::ostringstream temp;
-      temp << k + 1;
-      volfracnames_[k] = "VF" + temp.str();
-    }
+    volfracnames_[k] = "VF" + std::to_string(k + 1);
+
     // add volume fraction pressure names
-    {
-      std::ostringstream temp;
-      temp << k + 1;
-      volfracpressurenames_[k] = "VFP" + temp.str();
-    }
+    volfracpressurenames_[k] = "VFP" + std::to_string(k + 1);
   }
 
   isinit_ = true;

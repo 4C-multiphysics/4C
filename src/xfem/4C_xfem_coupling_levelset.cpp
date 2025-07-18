@@ -269,18 +269,13 @@ void XFEM::LevelSetCoupling::output(
 {
   // output for level-set interface
   // written for fluid fields
-
-  std::ostringstream temp;
-  temp << lsc_idx;
-  std::string name = "phinp_" + temp.str();
-
+  const std::string name = "phinp_" + std::to_string(lsc_idx);
   bg_output_->write_vector(name, phinp_);
 
   // write restart
   if (write_restart_data)
   {
-    std::string name_restart = "phinp_res_" + temp.str();
-
+    const std::string name_restart = "phinp_res_" + std::to_string(lsc_idx);
     bg_output_->write_vector(name_restart, phinp_);
   }
 
@@ -290,10 +285,7 @@ void XFEM::LevelSetCoupling::output(
   // write restart
   if (write_restart_data)
   {
-    std::ostringstream temp2;
-    temp2 << lsc_idx;
-    std::string name_restart = "cutter_phinp_res_" + temp.str();
-
+    const std::string name_restart = "cutter_phinp_res_" + std::to_string(lsc_idx);
     cutter_output_->write_vector(name_restart, cutter_phinp_);
   }
 }

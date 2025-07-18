@@ -4031,55 +4031,32 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
   for (int k = 0; k < num_scalars_homogenized_; k++)
   {
     // add scalar names
-    {
-      std::ostringstream temp;
-      temp << k + 1;
-      scalar_names_[k] = "phi" + temp.str();
-    }
+    scalar_names_[k] = "phi" + std::to_string(k + 1);
   }
 
   for (int k = 0; k < num_scalars_artery_; k++)
   {
     // add artery-scalar names
-    {
-      std::ostringstream temp;
-      temp << k + 1;
-      artery_scalar_names_[k] = "phi_art" + temp.str();
-    }
+    artery_scalar_names_[k] = "phi_art" + std::to_string(k + 1);
   }
 
   for (int k = 0; k < num_fluid_phases_; k++)
   {
     // add pressure names
-    {
-      std::ostringstream temp;
-      temp << k + 1;
-      pressure_names_[k] = "p" + temp.str();
-    }
+    pressure_names_[k] = "p" + std::to_string(k + 1);
 
     // add saturation names
-    {
-      std::ostringstream temp;
-      temp << k + 1;
-      saturation_names_[k] = "S" + temp.str();
-    }
+    saturation_names_[k] = "S" + std::to_string(k + 1);
   }
 
   // add additional volume fractions
   for (int k = 0; k < num_volfracs_; k++)
   {
     // add volume fraction names
-    {
-      std::ostringstream temp;
-      temp << k + 1;
-      volfrac_names_[k] = "VF" + temp.str();
-    }
+    volfrac_names_[k] = "VF" + std::to_string(k + 1);
+
     // add volume fraction pressure names
-    {
-      std::ostringstream temp;
-      temp << k + 1;
-      volfrac_pressure_names_[k] = "VFP" + temp.str();
-    }
+    volfrac_pressure_names_[k] = "VFP" + std::to_string(k + 1);
   }
 }
 

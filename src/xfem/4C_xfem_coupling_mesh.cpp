@@ -106,10 +106,7 @@ void XFEM::MeshCoupling::create_cutter_dis_from_condition(std::string suffix)
   // "boundary_of_fluid_2")
   std::string cutterdis_name("boundary_of_");
   cutterdis_name += cond_dis_->name() + suffix;
-
-  std::ostringstream temp;
-  temp << coupling_id_;
-  cutterdis_name += "_" + temp.str();
+  cutterdis_name += "_" + std::to_string(coupling_id_);
 
   //--------------------------------
   // create the new cutter discretization form the conditioned coupling discretization
