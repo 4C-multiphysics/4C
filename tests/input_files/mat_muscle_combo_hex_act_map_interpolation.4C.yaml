@@ -1,12 +1,12 @@
 TITLE:
   - "Testcase for testing MAT_Muscle_Combo material and usage of activation type map."
-  - "Activation values are supplied via a pattern file for two timesteps (t=0.0 and t=0.01) and the given
+  - "Activation values are supplied via a json file for two timesteps (t=0.0 and t=0.01) and the given
     element ids."
   - "Results are evaluated at t=0.005 to test whether linearly interpolating between the times given in
-    the pattern file works correctly."
+    the json file works correctly."
   - "The setup of the test-case are 2 cubes."
-  - "For cube 1, the activation in the pattern file are set to 0 to mimic a passive material as in the
-    original test case mat_muscle_combo_hex.4C.yaml"
+  - "For cube 1, the activation in the json file are set to 0 to mimic a passive material as in the original
+    test case mat_muscle_combo_hex.4C.yaml"
   - "For cube 2, the activation values are given at the discrete time steps t=0.0 and t=0.01."
   - "Results were verified against a computation using a SYMBOLIC_FUNCTION_OF_SPACE_TIME interpolating
     between the same times and activation values."
@@ -122,7 +122,8 @@ MATERIALS:
       LAMBDAMIN: 0.682
       LAMBDAOPT: 1.192
       ACTEVALTYPE: "map"
-      MAPFILE: "mat_muscle_combo_hex_act_map_interpolation.pattern"
+      MAP:
+        from_file: "mat_muscle_combo_hex_act_map_interpolation.json"
       DENS: 1
   - MAT: 2
     MAT_Muscle_Combo:
@@ -135,7 +136,8 @@ MATERIALS:
       LAMBDAMIN: 0.682
       LAMBDAOPT: 1.192
       ACTEVALTYPE: "map"
-      MAPFILE: "mat_muscle_combo_hex_act_map_interpolation.pattern"
+      MAP:
+        from_file: "mat_muscle_combo_hex_act_map_interpolation.json"
       DENS: 1
 FUNCT1:
   - COMPONENT: 0

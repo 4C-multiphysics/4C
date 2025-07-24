@@ -43,7 +43,7 @@ namespace
     }
     else if (activation_type == Mat::PAR::MuscleCombo::ActivationType::map)
     {
-      return matdata.parameters.get<ActivationFieldType>("MAPFILE_CONTENT");
+      return matdata.parameters.get<ActivationFieldType>("MAP");
     }
     else
       return std::monostate{};
