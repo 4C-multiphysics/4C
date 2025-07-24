@@ -22,6 +22,8 @@
 #include "4C_utils_string.hpp"
 #include "4C_utils_symbolic_expression.hpp"
 
+#include <Sacado_tradvec.hpp>
+
 #include <algorithm>
 #include <functional>
 #include <optional>
@@ -83,6 +85,13 @@ namespace Core::IO
           out << " ";
         }
       }
+
+      template <typename T1, typename T2>
+      void operator()(std::ostream& out, const std::pair<T1, T2>& val) const
+      {
+        using EnumTools::operator<<;
+        out << val.first << " " << val.second << " ";
+      }
     };
 
     template <typename T>
@@ -136,6 +145,15 @@ namespace Core::IO
       std::string operator()()
       {
         return "map<" + PrettyTypeName<T>{}() + ", " + PrettyTypeName<U>{}() + ">";
+      }
+    };
+
+    template <typename T1, typename T2>
+    struct PrettyTypeName<std::pair<T1, T2>>
+    {
+      std::string operator()()
+      {
+        return "pair<" + PrettyTypeName<T1>{}() + ", " + PrettyTypeName<T2>{}() + ">";
       }
     };
 
@@ -208,6 +226,20 @@ namespace Core::IO
         }
         node["value_type"] |= ryml::MAP;
         YamlTypeEmitter<T>{}(node["value_type"], size + 1);
+      }
+    };
+
+    template <typename T1, typename T2>
+    struct YamlTypeEmitter<std::pair<T1, T2>>
+    {
+      void operator()(ryml::NodeRef node, size_t*)
+      {
+        FOUR_C_ASSERT(node.is_map(), "Expected a map node.");
+        node["type"] = "pair";
+        node["first_type"] |= ryml::MAP;
+        YamlTypeEmitter<T1>{}(node["first_type"], nullptr);
+        node["second_type"] |= ryml::MAP;
+        YamlTypeEmitter<T2>{}(node["second_type"], nullptr);
       }
     };
 
@@ -423,7 +455,7 @@ namespace Core::IO
       //! insert keys and values into the yaml emitter.
       virtual void emit_metadata(YamlNodeRef node) const = 0;
 
-      virtual bool emit(YamlNodeRef node, const InputParameterContainer&,
+      [[nodiscard]] virtual bool emit(YamlNodeRef node, const InputParameterContainer&,
           const InputSpecEmitOptions& options) const = 0;
 
       [[nodiscard]] virtual std::string pretty_type_name() const = 0;
@@ -485,7 +517,7 @@ namespace Core::IO
 
       void emit_metadata(YamlNodeRef node) const override { wrapped.emit_metadata(node); }
 
-      bool emit(YamlNodeRef node, const InputParameterContainer& container,
+      [[nodiscard]] bool emit(YamlNodeRef node, const InputParameterContainer& container,
           const InputSpecEmitOptions& options) const override
       {
         return wrapped.emit(node, container, options);
@@ -519,7 +551,7 @@ namespace Core::IO
         }
       }
 
-      std::string pretty_type_name() const override
+      [[nodiscard]] std::string pretty_type_name() const override
       {
         if constexpr (StoresType<T>)
         {

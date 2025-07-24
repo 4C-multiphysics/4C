@@ -129,6 +129,22 @@ class Map(Primitive):
 
 
 @dataclass
+class Pair(Primitive):
+    """Pair parameter."""
+
+    size: int = None
+    first_type: str = None
+    second_type: str = None
+
+    def __post_init__(self):
+        # If dict create object
+        if isinstance(self.first_type, dict):
+            self.first_type = _metadata_object_from_dict(self.first_type)
+        if isinstance(self.second_type, dict):
+            self.second_type = _metadata_object_from_dict(self.second_type)
+
+
+@dataclass
 class Enum(Primitive):
     """Enum parameter."""
 
@@ -382,6 +398,8 @@ def _metadata_object_from_dict(metadata_dict):
             cls = Vector
         case "map":
             cls = Map
+        case "pair":
+            cls = Pair
         # Collections
         case "selection":
             cls = Selection

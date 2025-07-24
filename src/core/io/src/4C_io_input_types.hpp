@@ -76,6 +76,12 @@ namespace Core::IO
     {
     };
 
+    template <typename T1, typename T2>
+    struct SupportedTypeHelper<std::pair<T1, T2>>
+        : std::bool_constant<SupportedTypeHelper<T1>::value && SupportedTypeHelper<T2>::value>
+    {
+    };
+
     template <typename U>
     struct SupportedTypeHelper<std::map<std::string, U>> : SupportedTypeHelper<U>
     {
