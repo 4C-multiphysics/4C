@@ -39,6 +39,8 @@
 #include "4C_structure_new_timint_base.hpp"
 #include "4C_structure_new_utils.hpp"
 #include "4C_utils_parameter_list.hpp"
+// #include <4C_beaminteraction_beam_to_solid_params_base.hpp>
+#include "4C_beaminteraction_beam_to_solid_volume_meshtying_params.hpp"
 
 #include <Teuchos_TimeMonitor.hpp>
 
@@ -96,6 +98,13 @@ void Solid::ModelEvaluator::BeamInteraction::setup()
   beaminteraction_params_ptr_ = std::make_shared<FourC::BeamInteraction::BeamInteractionParams>();
   beaminteraction_params_ptr_->init();
   beaminteraction_params_ptr_->setup();
+
+
+  beam_to_solid_params_ptr_ =
+      std::make_shared<FourC::BeamInteraction::BeamToSolidVolumeMeshtyingParams>();
+  ;
+  beam_to_solid_params_ptr_->init();
+  beam_to_solid_params_ptr_->setup();
 
   // print logo
   logo();
@@ -725,14 +734,21 @@ bool Solid::ModelEvaluator::BeamInteraction::evaluate_force_stiff()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
+
+bool Solid::ModelEvaluator::BeamInteraction::have_lagrange_dofs() const
+{
+  return beam_to_solid_params_ptr_->get_constraint_enforcement() ==
+         Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::lagrange;
+}
+
 bool Solid::ModelEvaluator::BeamInteraction::assemble_force(
     Core::LinAlg::Vector<double>& f, const double& timefac_np) const
 {
   check_init_setup();
 
   Core::LinAlg::assemble_my_vector(1.0, f, timefac_np, *force_beaminteraction_);
+  if (have_lagrange_dofs()) (*me_vec_ptr_)[0]->assemble_force(f);
 
-  (*me_vec_ptr_)[0]->assemble_force(f);
   return true;
 }
 
@@ -746,8 +762,10 @@ bool Solid::ModelEvaluator::BeamInteraction::assemble_jacobian(
   std::shared_ptr<Core::LinAlg::SparseMatrix> jac_dd_ptr = global_state().extract_displ_block(jac);
   jac_dd_ptr->add(*stiff_beaminteraction_, false, timefac_np, 1.0);
 
-  (*me_vec_ptr_)[0]->assemble_stiff(jac);
-
+  if (have_lagrange_dofs())
+  {
+    (*me_vec_ptr_)[0]->assemble_stiff(jac);
+  }
 
 
   // no need to keep it
@@ -849,8 +867,9 @@ void Solid::ModelEvaluator::BeamInteraction::run_pre_compute_x(
     const Core::LinAlg::Vector<double>& xold, Core::LinAlg::Vector<double>& dir_mutable,
     const NOX::Nln::Group& curr_grp)
 {
-  Core::LinAlg::View a_view_const(*ia_state_ptr_->get_lambda());
-  Core::LinAlg::export_to(dir_mutable, a_view_const);
+  Core::LinAlg::Vector<double> lambda_vector =
+      Core::LinAlg::Vector<double>(*ia_state_ptr_->get_lambda());
+  Core::LinAlg::export_to(dir_mutable, lambda_vector);
 };
 
 /*----------------------------------------------------------------------------*
@@ -1122,7 +1141,11 @@ std::shared_ptr<const Core::LinAlg::Map>
 Solid::ModelEvaluator::BeamInteraction::get_block_dof_row_map_ptr() const
 {
   check_init_setup();
-  return (*me_vec_ptr_)[0]->get_lagrange_map();
+
+  if (have_lagrange_dofs())
+    return (*me_vec_ptr_)[0]->get_lagrange_map();
+  else
+    return global_state().dof_row_map();
 }
 
 /*----------------------------------------------------------------------------*

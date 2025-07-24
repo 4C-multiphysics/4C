@@ -7,6 +7,7 @@
 
 #include "4C_beaminteraction_beam_to_solid_mortar_manager.hpp"
 
+#include "4C_beaminteraction_beam_to_solid_params_base.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_contact_params.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_meshtying_params.hpp"
 #include "4C_beaminteraction_beam_to_solid_utils.hpp"
@@ -27,7 +28,6 @@
 #include "4C_structure_new_timint_basedataglobalstate.hpp"
 #include "4C_utils_exceptions.hpp"
 
-#include <Epetra_FEVector.h>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -507,16 +507,25 @@ BeamInteraction::BeamToSolidMortarManager::get_global_lambda_col() const
 {
   std::shared_ptr<Core::LinAlg::Vector<double>> lambda_col =
       std::make_shared<Core::LinAlg::Vector<double>>(*lambda_dof_colmap_);
-  const auto lambda = get_global_lambda();
-  if (lambda == nullptr)
+  if (beam_to_solid_params_->get_constraint_enforcement() ==
+      Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::penalty)
   {
-    lambda_col->put_scalar(0.0);
+    Core::LinAlg::export_to(*get_global_lambda(), *lambda_col);
   }
-  else
+  if (beam_to_solid_params_->get_constraint_enforcement() ==
+      Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::penalty)
   {
-    Core::LinAlg::Vector<double> global_lambda_container =
-        Core::LinAlg::Vector<double>(*global_lambda_container_);
-    Core::LinAlg::export_to(global_lambda_container, *lambda_col);
+    const auto lambda = get_global_lambda();
+    if (lambda == nullptr)
+    {
+      lambda_col->put_scalar(0.0);
+    }
+    else
+    {
+      Core::LinAlg::Vector<double> global_lambda_container =
+          Core::LinAlg::Vector<double>(*global_lambda_container_);
+      Core::LinAlg::export_to(global_lambda_container, *lambda_col);
+    }
   }
 
   return lambda_col;
@@ -776,7 +785,7 @@ BeamInteraction::BeamToSolidMortarManager::penalty_invert_kappa() const
 }
 
 void BeamInteraction::BeamToSolidMortarManager::assemble_force(
-    Solid::TimeInt::BaseDataGlobalState& gstate, Epetra_Vector& f,
+    Solid::TimeInt::BaseDataGlobalState& gstate, Core::LinAlg::Vector<double>& f,
     const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state) const
 {
   // // Lambda stuff?
@@ -802,7 +811,7 @@ void BeamInteraction::BeamToSolidMortarManager::assemble_force(
   // Epetra_Vector meins(*maplambda, true);
   // meins.ReplaceGlobalValue(103, 0, 69.69);
 
-  auto tmp = Core::LinAlg::Vector<double>(f.Map());
+  auto tmp = Core::LinAlg::Vector<double>(f.get_map());
   Core::LinAlg::Vector<double> constraint = Core::LinAlg::Vector<double>(*constraint_);
   Core::LinAlg::export_to(constraint, tmp);
 
@@ -834,7 +843,7 @@ void BeamInteraction::BeamToSolidMortarManager::assemble_force(
   // if (linalg_error != 0) FOUR_C_THROW("Error in Update");
 
 
-  f.Update(1., tmp, 1.);
+  f.update(1., tmp, 1.);
 }
 
 void BeamInteraction::BeamToSolidMortarManager::assemble_stiff(
@@ -853,8 +862,8 @@ void BeamInteraction::BeamToSolidMortarManager::assemble_stiff(
   auto kappa_vector = Core::LinAlg::Vector<double>(block_lm_displ_row_map);
   Core::LinAlg::Vector<double> kappa = Core::LinAlg::Vector<double>(*kappa_);
   Core::LinAlg::export_to(kappa, kappa_vector);
-  Teuchos::RCP<Core::LinAlg::SparseMatrix> kappa_penalty_inv_mat2 =
-      Teuchos::rcp(new Core::LinAlg::SparseMatrix(kappa_vector));
+  std::shared_ptr<Core::LinAlg::SparseMatrix> kappa_penalty_inv_mat2 =
+      std::make_shared<Core::LinAlg::SparseMatrix>(kappa_vector);
   kappa_penalty_inv_mat2->scale(-1.0 / penalty_translation);
   kappa_penalty_inv_mat2->complete();
 
@@ -867,8 +876,8 @@ void BeamInteraction::BeamToSolidMortarManager::assemble_stiff(
   // kappa_penalty_inv_mat2->set_value(1.0, 104, 104);
 
 
-  const bool saddle_point_bool = beam_to_solid_params_->get_saddle_point_formulation_flag();
-  if (!saddle_point_bool)
+  const auto lagrange_formulation = beam_to_solid_params_->get_lagrange_formulation();
+  if (lagrange_formulation == Inpar::BeamToSolid::BeamToSolidLagrangeFormulation::regularized)
   {
     gstate.assign_model_block(jac, *kappa_penalty_inv_mat2, Inpar::Solid::model_beaminteraction,
         Solid::MatBlockType::lm_lm);

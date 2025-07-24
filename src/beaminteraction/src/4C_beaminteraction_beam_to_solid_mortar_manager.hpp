@@ -187,7 +187,8 @@ namespace BeamInteraction
      */
     double get_energy() const;
 
-    void assemble_force(Solid::TimeInt::BaseDataGlobalState& gstate, Epetra_Vector& f,
+    void assemble_force(Solid::TimeInt::BaseDataGlobalState& gstate,
+        Core::LinAlg::Vector<double>& f,
         const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state)
         const;
 
@@ -376,7 +377,7 @@ namespace BeamInteraction
     std::vector<std::shared_ptr<BeamInteraction::BeamContactPair>> contact_pairs_;
 
    private:
-    std::shared_ptr<const Epetra_FEVector> global_lambda_container_;
+    std::shared_ptr<const Core::LinAlg::FEVector<double>> global_lambda_container_;
   };
 }  // namespace BeamInteraction
 

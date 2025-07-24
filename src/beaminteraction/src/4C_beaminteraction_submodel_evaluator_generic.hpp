@@ -242,7 +242,7 @@ namespace BeamInteraction
 
       virtual std::shared_ptr<const FourC::Core::LinAlg::Map> get_lagrange_map() { return nullptr; }
 
-      virtual void assemble_force(Epetra_Vector& f) {};
+      virtual void assemble_force(Core::LinAlg::Vector<double>& f) {};
 
       virtual void assemble_stiff(Core::LinAlg::SparseOperator& jac) {};
 

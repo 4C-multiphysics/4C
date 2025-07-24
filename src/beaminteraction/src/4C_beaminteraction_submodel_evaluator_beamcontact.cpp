@@ -837,7 +837,8 @@ BeamInteraction::SubmodelEvaluator::BeamContact::get_lagrange_map()
   return indirect_assembly_manager->get_mortar_manager()->lambda_dof_rowmap_;
 }
 
-void BeamInteraction::SubmodelEvaluator::BeamContact::assemble_force(Epetra_Vector& f)
+void BeamInteraction::SubmodelEvaluator::BeamContact::assemble_force(
+    Core::LinAlg::Vector<double>& f)
 {
   auto indirect_assembly_manager =
       std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_managers_[0]);
@@ -1104,14 +1105,14 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::create_beam_contact_elemen
       discret_ptr(), assembly_managers_);
 
   // Set the lagrange multiplier vector in the data state
+
   if (beam_interaction_data_state().get_lambda() == nullptr)
   {
     auto indirect_assembly_manager =
         std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_managers_[0]);
-    // std::shared_ptr<Epetra_FEVector>& help =
-    beam_interaction_data_state()
-        .get_lambda() = std::shared_ptr<Epetra_FEVector>(new Epetra_FEVector(
-        (indirect_assembly_manager->get_mortar_manager()->lambda_dof_rowmap_->get_epetra_map())));
+    beam_interaction_data_state().get_lambda() = std::shared_ptr<Core::LinAlg::FEVector<double>>(
+        new Core::LinAlg::FEVector<double>((indirect_assembly_manager->get_mortar_manager()
+                ->lambda_dof_rowmap_->get_epetra_map())));
   }
 
   Core::IO::cout(Core::IO::standard)

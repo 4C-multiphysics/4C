@@ -167,7 +167,7 @@ namespace BeamInteraction
 
       std::shared_ptr<const FourC::Core::LinAlg::Map> get_lagrange_map() override;
 
-      void assemble_force(Epetra_Vector& f) override;
+      void assemble_force(Core::LinAlg::Vector<double>& f) override;
 
       void assemble_stiff(Core::LinAlg::SparseOperator& jac) override;
 
@@ -265,6 +265,8 @@ namespace BeamInteraction
 
       //! data container holding all beam interactions defined by conditions
       std::shared_ptr<BeamInteraction::BeamInteractionConditions> beam_interaction_conditions_ptr_;
+
+      std::shared_ptr<FourC::BeamInteraction::BeamToSolidParamsBase> beam_to_solid_params_ptr_;
 
       //! data container holding all geometric search related parameters
       std::shared_ptr<Core::GeometricSearch::GeometricSearchParams> geometric_search_params_ptr_;
