@@ -121,14 +121,13 @@ RESULT DESCRIPTION:
 MATERIALS:
   - MAT: 1
     MAT_Mixture:
-      NUMCONST: 2
       MATIDMIXTURERULE: 10
       MATIDSCONST: [11, 12]
   - MAT: 10
     MIX_Rule_Simple:
       DENS: 1
-      NUMCONST: 2
-      MASSFRAC: [0.5, 0.5]
+      MASSFRAC:
+        constant: [0.5, 0.5]
   - MAT: 11
     MIX_Constituent_SolidMaterial:
       MATID: 101
@@ -187,14 +186,13 @@ MATERIALS:
       DENS: 1
   - MAT: 2
     MAT_Mixture:
-      NUMCONST: 2
       MATIDMIXTURERULE: 20
       MATIDSCONST: [21, 22]
   - MAT: 20
     MIX_Rule_Simple:
       DENS: 1
-      NUMCONST: 2
-      MASSFRAC: [0.5, 0.5]
+      MASSFRAC:
+        constant: [0.5, 0.5]
   - MAT: 21
     MIX_Constituent_SolidMaterial:
       MATID: 201

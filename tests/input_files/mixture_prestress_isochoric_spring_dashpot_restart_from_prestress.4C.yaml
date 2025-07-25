@@ -36,14 +36,12 @@ STRUCT NOX/Printing:
 MATERIALS:
   - MAT: 1
     MAT_Mixture:
-      NUMCONST: 4
       MATIDMIXTURERULE: 10
       MATIDSCONST: [11, 12, 13, 14]
   - MAT: 10
     MIX_GrowthRemodelMixtureRule:
       GROWTH_STRATEGY: 100
       DENS: 1
-      NUMCONST: 4
       MASSFRAC: [0.1, 0.05, 0.05, 0.8]
   - MAT: 100
     MIX_GrowthStrategy_Stiffness:

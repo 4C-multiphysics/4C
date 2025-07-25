@@ -164,7 +164,6 @@
 #include "4C_mixture_prestress_strategy_iterative.hpp"
 #include "4C_mixture_rule_function.hpp"
 #include "4C_mixture_rule_growthremodel.hpp"
-#include "4C_mixture_rule_map.hpp"
 #include "4C_mixture_rule_simple.hpp"
 #include "4C_utils_enum.hpp"
 
@@ -598,10 +597,6 @@ std::unique_ptr<Core::Mat::PAR::Parameter> Mat::make_parameter(
     case Core::Materials::mix_rule_function:
     {
       return make_parameter_impl<FourC::Mixture::PAR::FunctionMixtureRule>(id, type, input_data);
-    }
-    case Core::Materials::mix_rule_map:
-    {
-      return make_parameter_impl<FourC::Mixture::PAR::MapMixtureRule>(id, type, input_data);
     }
     case Core::Materials::mix_rule_simple:
     {

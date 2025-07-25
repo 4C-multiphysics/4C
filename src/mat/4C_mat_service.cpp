@@ -23,7 +23,6 @@
 #include "4C_mixture_prestress_strategy_iterative.hpp"
 #include "4C_mixture_rule_function.hpp"
 #include "4C_mixture_rule_growthremodel.hpp"
-#include "4C_mixture_rule_map.hpp"
 #include "4C_mixture_rule_simple.hpp"
 #include "4C_utils_enum.hpp"
 

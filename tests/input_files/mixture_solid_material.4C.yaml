@@ -52,14 +52,13 @@ DESIGN SURF NEUMANN CONDITIONS:
 MATERIALS:
   - MAT: 1
     MAT_Mixture:
-      NUMCONST: 2
       MATIDMIXTURERULE: 10
       MATIDSCONST: [11, 12]
   - MAT: 10
     MIX_Rule_Simple:
       DENS: 1
-      NUMCONST: 2
-      MASSFRAC: [0.5, 0.5]
+      MASSFRAC:
+        constant: [0.5, 0.5]
   - MAT: 11
     MIX_Constituent_SolidMaterial:
       MATID: 101

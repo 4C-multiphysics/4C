@@ -21,24 +21,12 @@ FOUR_C_NAMESPACE_OPEN
 Mat::PAR::Mixture::Mixture(const Core::Mat::PAR::Parameter::Data& matdata)
     : Parameter(matdata), constituents_(0)
 {
-  const int num_constituents = matdata.parameters.get<int>("NUMCONST");
   const auto& constituent_matids = matdata.parameters.get<std::vector<int>>("MATIDSCONST");
 
-  // check, if size of constituents fits to the number of constituents
-  if (num_constituents != (int)constituent_matids.size())
+  // Create constituent materials according to their material IDs
+  for (const auto& matid : constituent_matids)
   {
-    FOUR_C_THROW(
-        "number of constituents {} does not fit to the size of the constituents material vector"
-        " {}",
-        num_constituents, constituent_matids.size());
-  }
-
-  // Create constituents
-  for (int i = 0; i < num_constituents; ++i)
-  {
-    // Create constituent material
-    constituents_.emplace_back(
-        FourC::Mixture::PAR::MixtureConstituent::factory(constituent_matids[i]));
+    constituents_.emplace_back(FourC::Mixture::PAR::MixtureConstituent::factory(matid));
   }
 
   // Create mixture rule

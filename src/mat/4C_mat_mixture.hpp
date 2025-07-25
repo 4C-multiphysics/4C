@@ -75,17 +75,6 @@ namespace Mat
    * and constituents (Mixture::MixtureConstituent). This class manages the interplay between
    * the mixture rule and the constituents defining an clear interface if an extension of the
    * mixture framework is needed.
-   *
-   * Example input lines:
-   * MAT 1 MAT_Mixture NUMCONST 2 MATIDSCONST 11 12 MATIDMIXTURERULE 10
-   *  DENS 0.1
-   * MAT 10 MIX_Rule_Base NUMCONST 2 MASSFRAC 0.4 0.6
-   * MAT 11 MIX_Constituent_ElastHyper NUMMAT 1 MATIDS 101 MAT 12
-   * MAT 101 ELAST_CoupLogNeoHooke MODE YN C1 2.5e4 C2 0.27
-   * MAT 102 ELAST_CoupAnisoExpo K1 1.666666666666e4 K2 10.0 GAMMA 0.0 K1COMP
-   *  0.833333333333e4 K2COMP 10.0 ADAPT_ANGLE No INIT 0 STR_TENS_ID 1000
-   * MAT 1000 ELAST_StructuralTensor STRATEGY Standard
-   *
    */
   class Mixture : public So3Material
   {

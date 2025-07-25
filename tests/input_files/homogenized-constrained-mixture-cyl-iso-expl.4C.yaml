@@ -24,14 +24,12 @@ SOLVER 1:
 MATERIALS:
   - MAT: 1
     MAT_Mixture:
-      NUMCONST: 6
       MATIDMIXTURERULE: 10
       MATIDSCONST: [11, 12, 13, 14, 15, 16]
   - MAT: 10
     MIX_GrowthRemodelMixtureRule:
       GROWTH_STRATEGY: 100
       DENS: 1050
-      NUMCONST: 6
       MASSFRAC: [0.062, 0.248, 0.248, 0.062, 0.15, 0.23]
   - MAT: 100
     MIX_GrowthStrategy_Isotropic: {}

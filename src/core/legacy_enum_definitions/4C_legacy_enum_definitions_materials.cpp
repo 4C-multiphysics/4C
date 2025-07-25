@@ -383,8 +383,6 @@ std::string_view Core::Materials::to_string(Core::Materials::MaterialType materi
       return "MIX_Constituent_RemodelFiber_Material_Exponential_Active";
     case mix_rule_function:
       return "MIX_Rule_Function";
-    case mix_rule_map:
-      return "MIX_Rule_Map";
     case mix_rule_simple:
       return "MIX_Rule_Simple";
     case mix_rule_growthremodel:

@@ -6,7 +6,7 @@ TITLE:
   - "Tests:"
   - "- Mixture toolbox with function mixture rule and 2 hyperelastic materials (both isotropic with different
     Youngs moduli)"
-  - "- Mass fractions are defined element-wise as discrete values through the pattern file mixture_elast_hyper_map.pattern"
+  - "- Mass fractions are defined element-wise as discrete values through the json file mixture_elast_hyper_map.pattern"
   - "- for cube 1 the mass fractions vary between elements"
   - "- for cube 2 the mass fractions are uniformly 0.5 for each element and each constituent"
   - "Elements:"
@@ -52,14 +52,13 @@ DESIGN SURF NEUMANN CONDITIONS:
 MATERIALS:
   - MAT: 1
     MAT_Mixture:
-      NUMCONST: 2
       MATIDMIXTURERULE: 10
       MATIDSCONST: [11, 12]
   - MAT: 10
-    MIX_Rule_Map:
+    MIX_Rule_Simple:
       DENS: 0.1
-      NUMCONST: 2
-      MASSFRACMAPFILE: "mixture_elast_hyper_map.pattern"
+      MASSFRAC:
+        from_file: "mixture_elast_hyper_input_field.json"
   - MAT: 11
     MIX_Constituent_ElastHyper:
       NUMMAT: 1

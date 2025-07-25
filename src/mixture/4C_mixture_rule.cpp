@@ -15,7 +15,6 @@
 #include "4C_material_parameter_base.hpp"
 #include "4C_mixture_rule_function.hpp"
 #include "4C_mixture_rule_growthremodel.hpp"
-#include "4C_mixture_rule_map.hpp"
 #include "4C_mixture_rule_simple.hpp"
 #include "4C_utils_exceptions.hpp"
 
@@ -57,10 +56,6 @@ Mixture::PAR::MixtureRule* Mixture::PAR::MixtureRule::factory(int matid)
     case Core::Materials::mix_rule_function:
     {
       return Mat::create_material_parameter_instance<Mixture::PAR::FunctionMixtureRule>(curmat);
-    }
-    case Core::Materials::mix_rule_map:
-    {
-      return Mat::create_material_parameter_instance<Mixture::PAR::MapMixtureRule>(curmat);
     }
     case Core::Materials::mix_rule_simple:
     {
