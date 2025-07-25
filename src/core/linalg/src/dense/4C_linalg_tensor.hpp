@@ -593,8 +593,8 @@ namespace Core::LinAlg
 
     template <typename TensorLeft, typename TensorRight>
     using DotProductResultType = TensorTypeFromIntegerSequence<
-        FADUtils::ScalarOperationResultType<typename TensorLeft::value_type,
-            typename TensorRight::value_type, std::multiplies<>>,
+        FADUtils::ScalarOperationResultType<std::multiplies<>, typename TensorLeft::value_type,
+            typename TensorRight::value_type>,
         decltype(make_integer_sequence<get_dot_product_result_shape(
                 TensorLeft::shape(), TensorRight::shape())>())>::type;
 
@@ -623,8 +623,8 @@ namespace Core::LinAlg
              !is_compressed_tensor<TensorLeft> && !is_compressed_tensor<TensorRight>)
   constexpr auto dot(const TensorLeft& a, const TensorRight& b)
   {
-    using value_type = FADUtils::ScalarOperationResultType<typename TensorLeft::value_type,
-        typename TensorRight::value_type, std::multiplies<>>;
+    using value_type = FADUtils::ScalarOperationResultType<std::multiplies<>,
+        typename TensorLeft::value_type, typename TensorRight::value_type>;
     constexpr std::size_t k = TensorLeft::template extent<TensorLeft::rank() - 1>();
 
     if constexpr (TensorLeft::rank() == 1 && TensorRight::rank() == 1)
@@ -687,8 +687,8 @@ namespace Core::LinAlg
              !is_compressed_tensor<TensorLeft> && !is_compressed_tensor<TensorRight>)
   constexpr auto ddot(const TensorLeft& A, const TensorRight& B)
   {
-    using value_type = FADUtils::ScalarOperationResultType<typename TensorLeft::value_type,
-        typename TensorRight::value_type, std::multiplies<>>;
+    using value_type = FADUtils::ScalarOperationResultType<std::multiplies<>,
+        typename TensorLeft::value_type, typename TensorRight::value_type>;
 
     if constexpr (TensorLeft::rank() == 2 && TensorRight::rank() == 2)
     {
@@ -721,8 +721,8 @@ namespace Core::LinAlg
              !is_compressed_tensor<TensorLeft> && !is_compressed_tensor<TensorRight>)
   constexpr auto add(const TensorLeft& A, const TensorRight& B)
   {
-    using result_value_type = FADUtils::ScalarOperationResultType<typename TensorLeft::value_type,
-        typename TensorRight::value_type, std::plus<>>;
+    using result_value_type = FADUtils::ScalarOperationResultType<std::plus<>,
+        typename TensorLeft::value_type, typename TensorRight::value_type>;
     OwningTensorType<TensorLeft, result_value_type> tens_out{};
     DenseFunctions::update<result_value_type, TensorLeft::size(), 1>(
         tens_out.data(), A.data(), B.data());
@@ -736,8 +736,8 @@ namespace Core::LinAlg
              !is_compressed_tensor<TensorLeft> && !is_compressed_tensor<TensorRight>)
   constexpr auto subtract(const TensorLeft& A, const TensorRight& B)
   {
-    using result_value_type = FADUtils::ScalarOperationResultType<typename TensorLeft::value_type,
-        typename TensorRight::value_type, std::minus<>>;
+    using result_value_type = FADUtils::ScalarOperationResultType<std::minus<>,
+        typename TensorLeft::value_type, typename TensorRight::value_type>;
 
     OwningTensorType<TensorLeft, result_value_type> tens_out{};
     DenseFunctions::update<result_value_type, TensorLeft::size(), 1>(
@@ -751,7 +751,7 @@ namespace Core::LinAlg
   constexpr auto scale(const Tensor& tensor, const Scalar& b)
   {
     using result_value_type =
-        FADUtils::ScalarOperationResultType<Scalar, typename Tensor::value_type, std::multiplies<>>;
+        FADUtils::ScalarOperationResultType<std::multiplies<>, Scalar, typename Tensor::value_type>;
 
     OwningTensorType<Tensor, result_value_type> tens_out;
 
@@ -766,8 +766,8 @@ namespace Core::LinAlg
              !is_compressed_tensor<TensorRight>)
   constexpr auto dyadic(const TensorLeft& A, const TensorRight& B)
   {
-    using value_type = FADUtils::ScalarOperationResultType<typename TensorLeft::value_type,
-        typename TensorRight::value_type, std::multiplies<>>;
+    using value_type = FADUtils::ScalarOperationResultType<std::multiplies<>,
+        typename TensorLeft::value_type, typename TensorRight::value_type>;
 
     typename Internal::DyadicProductTensorResult<value_type, typename TensorLeft::shape_type,
         typename TensorRight::shape_type>::type dest{};

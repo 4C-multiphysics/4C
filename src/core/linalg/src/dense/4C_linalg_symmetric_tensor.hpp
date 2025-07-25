@@ -766,7 +766,7 @@ namespace Core::LinAlg
   constexpr auto scale(const Tensor& tensor, const Scalar& b)
   {
     using result_value_type =
-        FADUtils::ScalarOperationResultType<Scalar, typename Tensor::value_type, std::multiplies<>>;
+        FADUtils::ScalarOperationResultType<std::multiplies<>, Scalar, typename Tensor::value_type>;
 
     OwningTensorType<Tensor, result_value_type> tens_out;
 
@@ -781,8 +781,8 @@ namespace Core::LinAlg
              is_symmetric_tensor<TensorLeft> && is_symmetric_tensor<TensorRight>)
   constexpr auto add(const TensorLeft& A, const TensorRight& B)
   {
-    using result_value_type = FADUtils::ScalarOperationResultType<typename TensorLeft::value_type,
-        typename TensorRight::value_type, std::plus<>>;
+    using result_value_type = FADUtils::ScalarOperationResultType<std::plus<>,
+        typename TensorLeft::value_type, typename TensorRight::value_type>;
 
     OwningTensorType<TensorLeft, result_value_type> tens_out;
 
@@ -797,8 +797,8 @@ namespace Core::LinAlg
              is_symmetric_tensor<TensorLeft> && is_symmetric_tensor<TensorRight>)
   constexpr auto subtract(const TensorLeft& A, const TensorRight& B)
   {
-    using result_value_type = FADUtils::ScalarOperationResultType<typename TensorLeft::value_type,
-        typename TensorRight::value_type, std::minus<>>;
+    using result_value_type = FADUtils::ScalarOperationResultType<std::minus<>,
+        typename TensorLeft::value_type, typename TensorRight::value_type>;
 
     OwningTensorType<TensorLeft, result_value_type> tens_out;
 
