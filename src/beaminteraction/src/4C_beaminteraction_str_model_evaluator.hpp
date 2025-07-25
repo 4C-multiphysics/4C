@@ -38,6 +38,7 @@ namespace Core::Binstrategy
 
 namespace BeamInteraction
 {
+  class BeamToSolidParamsBase;
   class BeamInteractionParams;
 
   class BeamCrosslinkerHandler;
@@ -114,10 +115,7 @@ namespace Solid
 
       //! derived
       void run_pre_compute_x(const Core::LinAlg::Vector<double>& xold,
-          Core::LinAlg::Vector<double>& dir_mutable, const NOX::Nln::Group& curr_grp) override
-      {
-        return;
-      };
+          Core::LinAlg::Vector<double>& dir_mutable, const NOX::Nln::Group& curr_grp) override;
 
       //! derived
       void run_post_compute_x(const Core::LinAlg::Vector<double>& xold,
@@ -175,6 +173,9 @@ namespace Solid
      public:
       /// check if the given model type is active.
       bool have_sub_model_type(Inpar::BeamInteraction::SubModelType const& submodeltype) const;
+
+      //! check if lagrange formulation is active
+      bool have_lagrange_dofs() const;
 
      private:
       void partition_problem();
@@ -238,6 +239,8 @@ namespace Solid
 
       //! data container holding all beaminteraction related parameters
       std::shared_ptr<FourC::BeamInteraction::BeamInteractionParams> beaminteraction_params_ptr_;
+
+      std::shared_ptr<FourC::BeamInteraction::BeamToSolidParamsBase> beam_to_solid_params_ptr_;
 
       //!@name data for submodel management
       //! @{

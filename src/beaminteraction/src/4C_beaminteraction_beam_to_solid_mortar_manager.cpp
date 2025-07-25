@@ -7,6 +7,7 @@
 
 #include "4C_beaminteraction_beam_to_solid_mortar_manager.hpp"
 
+#include "4C_beaminteraction_beam_to_solid_params_base.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_contact_params.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_meshtying_params.hpp"
 #include "4C_beaminteraction_beam_to_solid_utils.hpp"
@@ -21,7 +22,12 @@
 #include "4C_linalg_fevector.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
+#include "4C_linalg_vector.hpp"
+#include "4C_mortar_utils.hpp"
+#include "4C_structure_new_timint_base.hpp"
+#include "4C_structure_new_timint_basedataglobalstate.hpp"
 #include "4C_utils_exceptions.hpp"
+
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -169,6 +175,8 @@ void BeamInteraction::BeamToSolidMortarManager::setup()
       my_lambda_gid_rotational.size(), my_lambda_gid_rotational.data(), 0, discret_->get_comm());
   lambda_dof_rowmap_ =
       Core::LinAlg::merge_map(lambda_dof_rowmap_translations_, lambda_dof_rowmap_rotations_, false);
+
+  std::cout << "\nSet new lambda dof row map\n";
 
   // We need to be able to get the global ids for a Lagrange multiplier DOF from the global id
   // of a node or element. To do so, we 'abuse' the Core::LinAlg::MultiVector<double> as map between
@@ -471,6 +479,8 @@ void BeamInteraction::BeamToSolidMortarManager::evaluate_force_stiff_penalty_reg
 
   // Add the penalty terms to the global force and stiffness matrix
   add_global_force_stiffness_penalty_contributions(data_state, stiff, force);
+
+  global_lambda_container_ = data_state->get_lambda();
 }
 
 /**
@@ -491,7 +501,27 @@ BeamInteraction::BeamToSolidMortarManager::get_global_lambda_col() const
 {
   std::shared_ptr<Core::LinAlg::Vector<double>> lambda_col =
       std::make_shared<Core::LinAlg::Vector<double>>(*lambda_dof_colmap_);
-  Core::LinAlg::export_to(*get_global_lambda(), *lambda_col);
+  if (beam_to_solid_params_->get_constraint_enforcement() ==
+      Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::penalty)
+  {
+    Core::LinAlg::export_to(*get_global_lambda(), *lambda_col);
+  }
+  if (beam_to_solid_params_->get_constraint_enforcement() ==
+      Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::penalty)
+  {
+    const auto lambda = get_global_lambda();
+    if (lambda == nullptr)
+    {
+      lambda_col->put_scalar(0.0);
+    }
+    else
+    {
+      Core::LinAlg::Vector<double> global_lambda_container =
+          Core::LinAlg::Vector<double>(*global_lambda_container_);
+      Core::LinAlg::export_to(global_lambda_container, *lambda_col);
+    }
+  }
+
   return lambda_col;
 }
 
@@ -567,6 +597,8 @@ void BeamInteraction::BeamToSolidMortarManager::add_global_force_stiffness_penal
 {
   check_setup();
   check_global_maps();
+
+  return;
 
   // Get the penalty regularization
   const bool is_stiff = stiff != nullptr;
@@ -651,6 +683,7 @@ void BeamInteraction::BeamToSolidMortarManager::add_global_force_stiffness_penal
   // Add the force and stiffness contributions that are assembled directly by the pairs.
   Core::LinAlg::Vector<double> lambda_col(*lambda_dof_colmap_);
   Core::LinAlg::export_to(*lambda, lambda_col);
+
   for (const auto& elepairptr : contact_pairs_)
     elepairptr->evaluate_and_assemble(
         *discret_, this, force, stiff, lambda_col, *data_state->get_dis_col_np());
@@ -744,5 +777,129 @@ BeamInteraction::BeamToSolidMortarManager::penalty_invert_kappa() const
 
   return kappa_inv;
 }
+
+void BeamInteraction::BeamToSolidMortarManager::assemble_force(
+    Solid::TimeInt::BaseDataGlobalState& gstate, Core::LinAlg::Vector<double>& f,
+    const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state) const
+{
+  // // Lambda stuff?
+  // auto ll = Epetra_Vector(*lagrange_map_);
+  // ll.ReplaceGlobalValue(100, 0, 69.69);
+
+  // auto tmp = Epetra_Vector(f.Map());
+  // Core::LinAlg::export_to(ll, tmp);
+  // f.Update(1., tmp, 1.);
+
+
+  // {  // --- displ. - block ---------------------------------------------------
+  //    // block_vec_ptr = strategy().get_rhs_block_ptr(CONTACT::VecBlockType::displ);
+  //    // // if there are no active contact contributions, we can skip this...
+  //    // if (block_vec_ptr.is_null()) return true;
+
+  //   // Core::LinAlg::AssembleMyVector(1.0, f, timefac_np, *block_vec_ptr);
+  // }
+
+
+
+  // const auto maplambda = lambda_dof_rowmap_;
+  // Epetra_Vector meins(*maplambda, true);
+  // meins.ReplaceGlobalValue(103, 0, 69.69);
+
+  auto tmp = Core::LinAlg::Vector<double>(f.get_map());
+  Core::LinAlg::Vector<double> constraint = Core::LinAlg::Vector<double>(*constraint_);
+  Core::LinAlg::export_to(constraint, tmp);
+
+
+
+  // // Add the forces
+  // // Factor for right hand side (forces). 1 corresponds to the mesh-tying forces being added to
+  // // the right hand side, -1 to the left hand side.
+  // const double rhs_factor = -1.0;
+
+  // // Multiply the lambda vector with FB_L and FS_L to get the forces on the beam and solid,
+  // // respectively.
+  // Teuchos::RCP<Epetra_Vector> beam_force = Teuchos::rcp(new Epetra_Vector(*beam_dof_rowmap_));
+  // Teuchos::RCP<Epetra_Vector> solid_force = Teuchos::rcp(new Epetra_Vector(*solid_dof_rowmap_));
+  // beam_force->PutScalar(0.);
+  // solid_force->PutScalar(0.);
+  // int linalg_error =
+  //     force_beam_lin_lambda_->multiply(false, *(data_state->get_lambda()), *beam_force);
+  // if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
+  // linalg_error =
+  //     force_solid_lin_lambda_->multiply(false, *(data_state->get_lambda()), *solid_force);
+  // if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
+  // Teuchos::RCP<Epetra_Vector> global_temp = Teuchos::rcp(new Epetra_Vector(f.Map()));
+  // Core::LinAlg::export_to(*beam_force, *global_temp);
+  // Core::LinAlg::export_to(*solid_force, *global_temp);
+
+  // // Add force contributions to global vector.
+  // linalg_error = tmp.Update(-1.0 * rhs_factor, *global_temp, 1.0);
+  // if (linalg_error != 0) FOUR_C_THROW("Error in Update");
+
+
+  f.update(1., tmp, 1.);
+}
+
+void BeamInteraction::BeamToSolidMortarManager::assemble_stiff(
+    Solid::TimeInt::BaseDataGlobalState& gstate, Core::LinAlg::SparseOperator& jac,
+    const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state) const
+{
+  std::shared_ptr<const Core::LinAlg::SparseOperator> jac_ptr(
+      &jac, [](Core::LinAlg::SparseOperator*) {});
+  std::shared_ptr<const Core::LinAlg::BlockSparseMatrixBase> jac_block_sparse_matrix_base =
+      Core::LinAlg::cast_to_const_block_sparse_matrix_base_and_check_success(jac_ptr);
+  auto block_lm_displ_row_map = jac_block_sparse_matrix_base->matrix(1, 0).row_map();
+  auto block_displ_lm_row_map = jac_block_sparse_matrix_base->matrix(0, 1).row_map();
+
+  // Set penalty entry
+  const double penalty_translation = beam_to_solid_params_->get_penalty_parameter();
+  auto kappa_vector = Core::LinAlg::Vector<double>(block_lm_displ_row_map);
+  Core::LinAlg::Vector<double> kappa = Core::LinAlg::Vector<double>(*kappa_);
+  Core::LinAlg::export_to(kappa, kappa_vector);
+  std::shared_ptr<Core::LinAlg::SparseMatrix> kappa_penalty_inv_mat2 =
+      std::make_shared<Core::LinAlg::SparseMatrix>(kappa_vector);
+  kappa_penalty_inv_mat2->scale(-1.0 / penalty_translation);
+  kappa_penalty_inv_mat2->complete();
+
+
+  // kappa_penalty_inv_mat2->set_value(1.0, 99, 99);
+  // kappa_penalty_inv_mat2->set_value(1.0, 100, 100);
+  // kappa_penalty_inv_mat2->set_value(1.0, 101, 101);
+  // kappa_penalty_inv_mat2->set_value(1.0, 102, 102);
+  // kappa_penalty_inv_mat2->set_value(1.0, 103, 103);
+  // kappa_penalty_inv_mat2->set_value(1.0, 104, 104);
+
+
+  const auto lagrange_formulation = beam_to_solid_params_->get_lagrange_formulation();
+  if (lagrange_formulation == Inpar::BeamToSolid::BeamToSolidLagrangeFormulation::regularized)
+  {
+    gstate.assign_model_block(jac, *kappa_penalty_inv_mat2, Inpar::Solid::model_beaminteraction,
+        Solid::MatBlockType::lm_lm);
+  }
+
+  Core::LinAlg::SparseMatrix lm_displ =
+      Core::LinAlg::SparseMatrix(*lambda_dof_rowmap_, 81, true, true);
+  lm_displ.add(*constraint_lin_beam_, false, 1.0, 0.0);
+  lm_displ.add(*constraint_lin_solid_, false, 1.0, 1.0);
+  lm_displ.complete(*discret_->dof_row_map(), *lambda_dof_rowmap_);
+
+  std::shared_ptr<Core::LinAlg::SparseMatrix> lm_displ_in_global_layout =
+      Mortar::matrix_row_col_transform(
+          lm_displ, block_lm_displ_row_map, jac_block_sparse_matrix_base->domain_map(0));
+  gstate.assign_model_block(jac, *lm_displ_in_global_layout, Inpar::Solid::model_beaminteraction,
+      Solid::MatBlockType::lm_displ);
+
+  Core::LinAlg::SparseMatrix displ_lm =
+      Core::LinAlg::SparseMatrix(*discret_->dof_row_map(), 81, true, true);
+  displ_lm.add(*force_beam_lin_lambda_, false, 1.0, 0.0);
+  displ_lm.add(*force_solid_lin_lambda_, false, 1.0, 1.0);
+  displ_lm.complete(*lambda_dof_rowmap_, *discret_->dof_row_map());
+  std::shared_ptr<Core::LinAlg::SparseMatrix> displ_lm_in_global_layout =
+      Mortar::matrix_row_col_transform(
+          displ_lm, block_displ_lm_row_map, jac_block_sparse_matrix_base->domain_map(1));
+  gstate.assign_model_block(jac, *displ_lm_in_global_layout, Inpar::Solid::model_beaminteraction,
+      Solid::MatBlockType::displ_lm);
+}
+
 
 FOUR_C_NAMESPACE_CLOSE

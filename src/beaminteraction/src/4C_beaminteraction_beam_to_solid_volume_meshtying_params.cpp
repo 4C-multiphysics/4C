@@ -63,6 +63,12 @@ void BeamInteraction::BeamToSolidVolumeMeshtyingParams::init()
     rotational_coupling_ = rotational_coupling_triad_construction_ !=
                            Inpar::BeamToSolid::BeamToSolidRotationCoupling::none;
 
+    // Type of constraint enforcement
+    constraint_enforcement_ =
+        Teuchos::getIntegralValue<Inpar::BeamToSolid::BeamToSolidConstraintEnforcement>(
+            beam_to_solid_contact_params_list, "CONSTRAINT_STRATEGY");
+
+
     // Mortar contact discretization to be used.
     mortar_shape_function_rotation_ =
         Teuchos::getIntegralValue<Inpar::BeamToSolid::BeamToSolidMortarShapefunctions>(
