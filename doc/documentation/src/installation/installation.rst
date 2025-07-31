@@ -18,7 +18,7 @@ External dependencies
 
 - git
 - C++ compiler with C++20 compatibility (e.g. gcc 13, clang 18)
-- MPI installation
+- MPI
 - CMake
 - Ninja
 
@@ -29,7 +29,7 @@ The following list shows the most important ones:
 External solver and linear algebra:
 
 - :ref:`Trilinos <trilinos>` (supported versions are listed in ``dependencies/supported_version/Trilinos.txt``)
-- :ref:`SuiteSparse <suitesparse>` including Umfpack (recommended version: 5.4)
+- :ref:`SuiteSparse <suitesparse>`
 - :ref:`SuperLUDist <superludist>` (recommended version: 7.2.0)
 - BLAS
 - LAPACK
@@ -41,11 +41,18 @@ Graph and domain partitioner:
 
 Miscellaneous:
 
-- Qhull (recommended version: 2012.1, :download:`install script </qhull/install.sh>`
-- CLN (recommended version: 1.3.4),
+- :ref:`ArborX <arborx>` (optional)
+- Backtrace
+- Boost
+- CLN
+- dealii (optional)
 - FFTW
 - HDF5
-- ArborX (optional)
+- magic_enum
+- :ref:`MIRCO <mirco>` (optional)
+- Qhull
+- ryml
+- zlib
 
 Post processing:
 
@@ -58,35 +65,46 @@ For many external dependencies, you'll find an installation file for the recomme
 Additionally, some dependencies are accepted in multiple versions. During configuration, |FOURC| will check the version of the installed dependency
 and warn you if it is not a supported version.
 
-.. _suitesparse:
-
-**SuiteSparse**
-
-|FOURC| uses SuiteSparse indirectly via the Trilinos package Amesos/Amesos2 for directly solving linear systems of equations.
-See the `SuiteSparse repository <https://github.com/DrTimothyAldenDavis/SuiteSparse>`_ for details and downloads.
-
-After downloading the package, the configure file can be found in ``SuiteSparse-5.4.0/SuiteSparse_config/SuiteSparse_config.mk``.
-As |FOURC| uses BLAS/LAPACK in forms of libblas and liblapack, the respective linker flags need to be changed!
-
-
-.. _superludist:
-
-**SuperLUDist**
-
-|FOURC| uses SuperLUDist indirectly via the Trilinos package Amesos/Amesos2 for directly solving linear systems of equations in distributed memory fashion.
-See the `superLU repository <https://github.com/xiaoyeli/superlu_dist>`_ for details and downloads.
-
-**ArborX**
-
-ArborX can be used as optional dependency inside |FOURC| for utilizing it's tree-based search algorithms.
-See the `ArborX repository <https://github.com/arborx/ArborX>`_ for details and downloads.
-
 .. _trilinos:
 
 **Trilinos**
 
 This external dependency can be downloaded from the `Trilinos Github repository <https://github.com/trilinos/Trilinos>`_ .
 Currently supported versions are listed in ``<4C_sourceDir>/dependencies/supported_version/Trilinos.txt``.
+
+.. _suitesparse:
+
+**SuiteSparse**
+
+|FOURC| uses SuiteSparse indirectly via the Trilinos package Amesos2 for directly solving linear systems of equations.
+See the `SuiteSparse repository <https://github.com/DrTimothyAldenDavis/SuiteSparse>`_ for details and downloads.
+
+On Linux based systems the package can be installed using ``sudo apt install libsuitesparse-dev``.
+
+.. _superludist:
+
+**SuperLUDist**
+
+|FOURC| uses SuperLUDist indirectly via the Trilinos package Amesos2 for directly solving linear systems of equations in distributed memory fashion.
+See the `superLU repository <https://github.com/xiaoyeli/superlu_dist>`_ for details and downloads.
+
+.. _arborx:
+
+**ArborX**
+
+ArborX can be used as optional dependency inside |FOURC| for utilizing it's tree-based search algorithms.
+See the `ArborX repository <https://github.com/arborx/ArborX>`_ for details and downloads.
+
+Building |FOURC| with ArborX enabled automatically fetches the repository during the configure stage and later builds the library as dependency.
+
+.. _mirco:
+
+**MIRCO**
+
+MIRCO can be used as optional dependency inside |FOURC| to be used for linear elastic frictionless normal contact between a rigid rough indentor and an elastic half-space.
+See the `MIRCO repository <https://github.com/imcs-compsim/MIRCO>`_ for details and downloads.
+
+Building |FOURC| with MIRCO enabled automatically fetches the repository during the configure stage and later builds the library as dependency.
 
 .. _4Cinstallation:
 

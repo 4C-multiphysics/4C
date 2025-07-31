@@ -1859,7 +1859,7 @@ four_c_test(TEST_FILE xfluid_shearflow_2D_OST_theta1_16x16x1_ale_zerodisp.4C.yam
 four_c_test(TEST_FILE xfluid_stat_sliver_cut_instat_EOS_GP.4C.yaml)
 four_c_test(TEST_FILE xfluid_stat_sliver_cut_instat.4C.yaml)
 four_c_test(TEST_FILE xfluid_stat_sliver_cut_instatDiv.4C.yaml NP 2)
-four_c_test(TEST_FILE xfluid_taylor_couette_NavSlip_eps1.0_25x25_krylov_levelset_altgeogeneration.4C.yaml NP 2)
+four_c_test(TEST_FILE xfluid_taylor_couette_NavSlip_eps1.0_25x25_krylov_levelset_altgeogeneration.4C.yaml NP 3 TIMEOUT 600)
 four_c_test(TEST_FILE xfluid_taylor_couette_NavSlip_eps1.0_50x50_krylov_levelset.4C.yaml NP 2)
 four_c_test(TEST_FILE xfluid_taylor_couette_NavSlip_ri0.19_ro0.49_epsi1.0_epso1e-5_ti-2.5_to0.5_8x8_levelset_hex27.4C.yaml NP 3)
 four_c_test(TEST_FILE xfluid_thin_struct_hex8_EOS_itsolver_MLprec_NIT.4C.yaml NP 2)

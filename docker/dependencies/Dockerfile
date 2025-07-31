@@ -61,6 +61,8 @@ RUN apt-get update && apt-get install -y \
       clang-tidy \
       clang-tools \
       libomp-dev \
+      libqhull-dev \
+      libsuitesparse-dev \
   && rm -rf /var/lib/apt/lists/*
 
 # Create directory for dependencies
@@ -73,14 +75,8 @@ COPY dependencies /dependencies
 # Install cmake
 RUN /dependencies/current/cmake/install.sh /usr/local
 
-# Install SuiteSparse 5.4.0
-RUN /dependencies/current/suitesparse/install.sh ${INSTALL_DIR}
-
 # Install superLU_dist 7.2.0
 RUN /dependencies/current/superlu_dist/install.sh ${INSTALL_DIR}
-
-# Install qhull 2012.1
-RUN /dependencies/current/qhull/install.sh ${INSTALL_DIR}
 
 # Install Trilinos 2022_Q1
 RUN /dependencies/current/trilinos/install.sh ${INSTALL_DIR}
