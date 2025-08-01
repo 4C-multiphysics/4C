@@ -21,6 +21,7 @@ SOLVER 1:
   AZTOL: 1e-06
   AZOUTPUT: 5
   AZREUSE: 3
+  REUSE_STALL_ITER: 5
   TEKO_XML_FILE: "xml/block_preconditioner/beam_solid.xml"
   NAME: "Structure_Solver"
 BEAM INTERACTION:

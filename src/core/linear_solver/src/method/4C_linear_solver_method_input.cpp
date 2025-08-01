@@ -91,8 +91,15 @@ namespace Core::LinearSolver
                             .default_value = 0}),
 
         parameter<int>("AZREUSE",
-            {.description = "The number specifying how often to recompute some preconditioners",
+            {.description = "Update preconditioner after this many nonlinear iterations. The "
+                            "preconditioner is recomputed at every start of a nonlinear solve.",
                 .default_value = 0}),
+
+        parameter<int>("REUSE_STALL_ITER",
+            {.description =
+                    " Maximum number of linear iterations that triggers a nonlinear iteration to "
+                    "be declared stalled and thus force recomputation of the preconditioner.",
+                .default_value = 50}),
 
         parameter<int>(
             "AZSUB", {.description = "The maximum size of the Krylov subspace used with \"GMRES\" "
