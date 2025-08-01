@@ -75,7 +75,7 @@ in the [GitHub discussions](https://github.com/4C-multiphysics/4C/discussions).
 Please cite 4C as follows:
 
 ```
-4C: A Comprehensive Multiphysics Simulation Framework, https://www.4c-multiphysics.org
+4C: An Open-Source Framework for Comprehensive Multiphysics Simulations, https://www.4c-multiphysics.org
 ```
 
 You could use the following BibTeX entry:
@@ -83,7 +83,7 @@ You could use the following BibTeX entry:
 ```bibtex
 @misc{4C,
   author       = {{4C}},
-  title        = {{4C}: A {C}omprehensive {M}ultiphysics {S}imulation {F}ramework},
+  title        = {{4C}: An {O}pen-{S}ource {F}ramework for {C}omprehensive {M}ultiphysics {S}imulations},
   howpublished = {\url{https://www.4c-multiphysics.org}},
   year         = {YEAR},
   note         = {Accessed: DATE}
