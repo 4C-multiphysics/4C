@@ -22,7 +22,6 @@
 #include <BelosLinearProblem.hpp>
 #include <BelosPseudoBlockCGSolMgr.hpp>
 #include <BelosPseudoBlockGmresSolMgr.hpp>
-#include <Epetra_CrsMatrix.h>
 #include <Teuchos_RCPStdSharedPtrConversions.hpp>
 #include <Teuchos_TimeMonitor.hpp>
 #include <Teuchos_XMLParameterListHelpers.hpp>
@@ -50,6 +49,9 @@ void Core::LinearSolver::IterativeSolver<MatrixType, VectorType>::setup(
   if (!params().isSublist("Belos Parameters")) FOUR_C_THROW("Do not have belos parameter list");
   Teuchos::ParameterList& belist = params().sublist("Belos Parameters");
 
+  if (Core::Communication::my_mpi_rank(comm_) == 0)
+    std::cout << "*******************************************************" << std::endl;
+
   const int reuse = belist.get("reuse", 0);
   const bool create = !allow_reuse_preconditioner(reuse, reset);
   if (create)
@@ -62,7 +64,24 @@ void Core::LinearSolver::IterativeSolver<MatrixType, VectorType>::setup(
   x_ = x;
   b_ = b;
 
-  if (create) preconditioner_->setup(a_.get(), x_.get(), b_.get());
+  if (create)
+  {
+    if (Core::Communication::my_mpi_rank(comm_) == 0)
+    {
+      std::cout << "Compute preconditioner " << std::endl;
+      std::cout << "*******************************************************" << std::endl;
+    }
+
+    preconditioner_->setup(a_.get(), x_.get(), b_.get());
+  }
+  else
+  {
+    if (Core::Communication::my_mpi_rank(comm_) == 0)
+    {
+      std::cout << "Reuse preconditioner (reused for " << ncall() << " steps)" << std::endl;
+      std::cout << "*******************************************************" << std::endl;
+    }
+  }
 }
 
 //----------------------------------------------------------------------------------
@@ -198,9 +217,34 @@ bool Core::LinearSolver::IterativeSolver<MatrixType, VectorType>::allow_reuse_pr
   Teuchos::ParameterList& linSysParams = params().sublist("Belos Parameters");
 
   bool bAllowReuse = linSysParams.get<bool>("reuse preconditioner", true);
+  int max_stall_iter = linSysParams.get<int>("max linear iterations for stall");
 
-  const bool create = reset or not ncall() or not reuse or (ncall() % reuse) == 0;
-  if (create) bAllowReuse = false;
+  // 1. check if we are allowed to reuse the preconditioner over several nonlinear solves
+  if (not ncall() or not reuse or ncall() % reuse == 0)
+  {
+    if (Core::Communication::my_mpi_rank(comm_) == 0)
+      std::cout << "Recomputation due to reaching " << ncall() << " nonlinear steps." << std::endl;
+
+    bAllowReuse = false;
+  }
+
+  // 2. check if the number of iterations exceeds the given one for stalling of the solver
+  if (bAllowReuse and get_num_iters() > max_stall_iter)
+  {
+    if (Core::Communication::my_mpi_rank(comm_) == 0)
+      std::cout << "Recomputation due to linear solver stalling." << std::endl;
+
+    bAllowReuse = false;
+  }
+
+  // 3. check if there's an external reset
+  if (reset)
+  {
+    if (Core::Communication::my_mpi_rank(comm_) == 0)
+      std::cout << "Recomputation due to reset." << std::endl;
+
+    bAllowReuse = false;
+  }
 
   // here, each processor has its own local decision made
   // bAllowReuse = true -> preconditioner can be reused
