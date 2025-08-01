@@ -356,7 +356,7 @@ template <typename T>
         auto& node = yaml.node;
         node |= ryml::MAP;
         auto all_node = node["all_elements"];
-        validator.emit_metadata(yaml.wrap(all_node.append_child()));
+        validator.emit_metadata(yaml.wrap(all_node));
       }));
 }
 

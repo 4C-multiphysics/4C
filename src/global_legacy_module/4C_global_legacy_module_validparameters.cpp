@@ -215,7 +215,7 @@ std::map<std::string, Core::IO::InputSpec> Global::valid_parameters()
   Inpar::IORuntimeOutput::Solid::set_valid_parameters(specs);
   Beam::IORuntimeOutput::set_valid_parameters(specs);
   BeamContact::set_valid_parameters(specs);
-  BeamPotential::set_valid_parameters(specs);
+  BeamInteraction::Potential::set_valid_parameters(specs);
   Inpar::BeamInteraction::set_valid_parameters(specs);
   Inpar::RveMpc::set_valid_parameters(specs);
   BrownianDynamics::set_valid_parameters(specs);

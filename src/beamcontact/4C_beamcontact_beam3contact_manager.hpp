@@ -236,14 +236,6 @@ namespace CONTACT
     //! Flag from input file indicating if beam-to-solid contact is applied or not (default: false)
     bool btsol_;
 
-    //! Flag from input file indicating if beam-to-solid potential-based interaction is applied or
-    //! not (default: false)
-    bool potbtsol_;
-
-    //! Flag from input file indicating if beam-to-sphere potential-based interaction is applied or
-    //! not (default: false)
-    bool potbtsph_;
-
     //! number of nodes of applied element type
     int numnodes_;
 
@@ -273,9 +265,6 @@ namespace CONTACT
 
     //! occtree for contact search
     std::shared_ptr<Beam3ContactOctTree> tree_;
-
-    //! occtree for search of potential-based interaction pairs
-    std::shared_ptr<Beam3ContactOctTree> pottree_;
 
     //! vector of contact pairs (pairs of elements, which might get in contact)
     std::vector<std::shared_ptr<Beam3contactinterface>> pairs_;
@@ -321,9 +310,6 @@ namespace CONTACT
     //! parameter list for beam contact options
     Teuchos::ParameterList sbeamcontact_;
 
-    //! parameter list for beam potential interaction options
-    Teuchos::ParameterList sbeampotential_;
-
     //! parameter list for general contact options
     Teuchos::ParameterList scontact_;
 
@@ -335,9 +321,6 @@ namespace CONTACT
 
     //! search radius for spherical intersection
     double sphericalsearchradius_;
-
-    //! search radius for potential-based interactions
-    double searchradiuspot_;
 
     //! additive searchbox increment prescribed in input file
     double searchboxinc_;
@@ -412,10 +395,6 @@ namespace CONTACT
     double maxdeltadisp_;
 
     double totalmaxdeltadisp_;
-
-    //! parameters of the potential law to be applied: Phi(r)~ \sum_i (k_i * r^(-m_i))
-    std::shared_ptr<std::vector<double>> ki_;
-    std::shared_ptr<std::vector<double>> mi_;
 
     //! line charge conditions
     std::vector<const Core::Conditions::Condition*> linechargeconds_;
@@ -568,8 +547,7 @@ namespace CONTACT
         const Core::LinAlg::Vector<double>& disccol);
 
     /*!
-    \brief Evaluate all pairs stored in the different pairs vectors (BTB, BTSPH, BTSOL; contact and
-    potential)
+    \brief Evaluate all pairs stored in the different pairs vectors (BTB, BTSPH, BTSOL; contact)
 
     */
     void evaluate_all_pairs(Teuchos::ParameterList timeintparams);
@@ -580,14 +558,6 @@ namespace CONTACT
     */
     void fill_contact_pairs_vectors(
         const std::vector<std::vector<Core::Elements::Element*>> elementpairs);
-
-    /*!
-    \brief Sort found element pairs and fill vectors of potential pairs (BTB, BTSOL and BTSPH)
-
-    */
-    void fill_potential_pairs_vectors(
-        const std::vector<std::vector<Core::Elements::Element*>> elementpairs);
-    //@}
 
   };  // class Beam3cmanager
 }  // namespace CONTACT

@@ -11,8 +11,8 @@
 #include "4C_beaminteraction_beam_to_beam_contact_utils.hpp"
 #include "4C_beaminteraction_calc_utils.hpp"
 #include "4C_beaminteraction_crosslinker_handler.hpp"
+#include "4C_beaminteraction_potential_input.hpp"
 #include "4C_beaminteraction_potential_pair_base.hpp"
-#include "4C_beaminteraction_potential_params.hpp"
 #include "4C_beaminteraction_str_model_evaluator_datastate.hpp"
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_comm_utils_gid_vector.hpp"
@@ -123,13 +123,15 @@ void BeamInteraction::SubmodelEvaluator::BeamPotential::setup()
   check_init();
 
   // init and setup beam to beam contact data container
-  beam_potential_params_ptr_ = std::make_shared<BeamInteraction::BeamPotentialParams>();
-  BeamInteraction::initialize_validate_beam_potential_params(
+  beam_potential_params_ptr_ =
+      std::make_shared<BeamInteraction::Potential::BeamPotentialParameters>();
+  BeamInteraction::Potential::initialize_validate_beam_potential_params(
       beam_potential_params(), g_state().get_time_n());
   print_console_welcome_message(std::cout);
 
   // build runtime visualization writer if desired
-  if (beam_potential_params().write_visualization_output) init_output_runtime_beam_potential();
+  if (beam_potential_params().runtime_output_params.output_interval.has_value())
+    init_output_runtime_beam_potential();
 
   // set flag
   issetup_ = true;
@@ -471,8 +473,6 @@ bool BeamInteraction::SubmodelEvaluator::BeamPotential::evaluate_force_stiff()
     }
   }
 
-  //  print_active_beam_potential_set(std::cout);
-
   return true;
 }
 
@@ -497,7 +497,9 @@ bool BeamInteraction::SubmodelEvaluator::BeamPotential::pre_update_step_element(
    * move this to runtime_output_step_state as soon as we keep element pairs
    * from previous time step */
   if (visualization_manager_ != nullptr and
-      g_state().get_step_n() % beam_potential_params().runtime_output_params.output_interval == 0)
+      g_state().get_step_n() %
+              beam_potential_params().runtime_output_params.output_interval.value() ==
+          0)
   {
     write_time_step_output_runtime_beam_potential();
   }
@@ -610,7 +612,7 @@ void BeamInteraction::SubmodelEvaluator::BeamPotential::run_post_iterate(
   check_init_setup();
 
   if (visualization_manager_ != nullptr and
-      beam_potential_params().runtime_output_params.write_all_iterations)
+      beam_potential_params().runtime_output_params.write_every_iteration)
   {
     write_iteration_output_runtime_beam_potential(solver.getNumIterations());
   }
@@ -900,24 +902,6 @@ void BeamInteraction::SubmodelEvaluator::BeamPotential::print_all_beam_potential
 
 /*-----------------------------------------------------------------------------------------------*
  *-----------------------------------------------------------------------------------------------*/
-void BeamInteraction::SubmodelEvaluator::BeamPotential::print_active_beam_potential_set(
-    std::ostream& out) const
-{
-  // Todo
-  out << "\n    Active BeamToBeam Potential Set (PID " << g_state().get_my_rank()
-      << "):-----------------------------------------\n";
-  out << "    ID1            ID2              T xi       eta      angle    gap         force\n";
-
-  std::vector<std::shared_ptr<BeamInteraction::BeamPotentialPair>>::const_iterator iter;
-  for (iter = beam_potential_element_pairs_.begin(); iter != beam_potential_element_pairs_.end();
-      ++iter)
-    (*iter)->print_summary_one_line_per_active_segment_pair(out);
-
-  out << std::endl;
-}
-
-/*-----------------------------------------------------------------------------------------------*
- *-----------------------------------------------------------------------------------------------*/
 void BeamInteraction::SubmodelEvaluator::BeamPotential::
     get_beam_potential_conditions_applied_to_this_element_pair(
         BeamInteraction::BeamPotentialPair const& elementpair,
@@ -961,14 +945,14 @@ void BeamInteraction::SubmodelEvaluator::BeamPotential::print_console_welcome_me
   {
     std::cout << "=============== Beam Potential-Based Interaction ===============" << std::endl;
 
-    switch (beam_potential_params().potential_type)
+    switch (beam_potential_params().type)
     {
-      case FourC::BeamPotential::Type::surface:
+      case FourC::BeamInteraction::Potential::Type::surface:
       {
         std::cout << "Potential Type:      Surface" << std::endl;
         break;
       }
-      case FourC::BeamPotential::Type::volume:
+      case FourC::BeamInteraction::Potential::Type::volume:
       {
         std::cout << "Potential Type:      Volume" << std::endl;
         break;

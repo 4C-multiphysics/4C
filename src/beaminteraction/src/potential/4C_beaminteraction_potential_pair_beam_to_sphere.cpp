@@ -10,7 +10,6 @@
 #include "4C_beam3_base.hpp"
 #include "4C_beaminteraction_beam_to_beam_contact_utils.hpp"
 #include "4C_beaminteraction_potential_input.hpp"
-#include "4C_beaminteraction_potential_params.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
 #include "4C_global_data.hpp"
@@ -121,7 +120,9 @@ bool BeamInteraction::BeamToSpherePotentialPair<numnodes, numnodalvalues>::evalu
     if (chargeconds[0]->type() == Core::Conditions::BeamPotential_LineChargeDensity)
       chargeconds_[0] = chargeconds[0];
     else
-      FOUR_C_THROW("Provided condition is not of correct type BeamPotential_LineChargeDensity!");
+      FOUR_C_THROW(
+          "Provided condition is not of correct type "
+          "BeamInteraction::Potential::_LineChargeDensity!");
 
     if (chargeconds[1]->type() == Core::Conditions::RigidspherePotential_PointCharge)
       chargeconds_[1] = chargeconds[1];
@@ -152,7 +153,7 @@ bool BeamInteraction::BeamToSpherePotentialPair<numnodes, numnodalvalues>::evalu
   // Todo allow for independent choice of strategy for beam-to-sphere potentials
   switch (params()->strategy)
   {
-    case BeamPotential::Strategy::double_length_specific_large_separations:
+    case BeamInteraction::Potential::Strategy::double_length_specific_large_separations:
     {
       evaluate_fpotand_stiffpot_large_sep_approx();
       break;
@@ -270,12 +271,12 @@ void BeamInteraction::BeamToSpherePotentialPair<numnodes,
   // determine prefactor of the integral (depends on whether surface or volume potential is applied)
   double prefactor = k_ * m_;
 
-  switch (params()->potential_type)  // Todo do we need a own Beam-to-sphere potential type here?
+  switch (params()->type)  // Todo do we need a own Beam-to-sphere potential type here?
   {
-    case BeamPotential::Type::surface:
+    case BeamInteraction::Potential::Type::surface:
       prefactor *= 2 * radius1_ * M_PI;
       break;
-    case BeamPotential::Type::volume:
+    case BeamInteraction::Potential::Type::volume:
       prefactor *= std::pow(radius1_, 2) * M_PI;
       break;
     default:
