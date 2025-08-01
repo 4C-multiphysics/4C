@@ -7,12 +7,12 @@
 
 #include <gtest/gtest.h>
 
+#include "4C_deal_ii_context.hpp"
 #include "4C_deal_ii_create_discretization_helper_test.hpp"
 #include "4C_deal_ii_triangulation.hpp"
 #include "4C_fem_discretization.hpp"
 
 #include <deal.II/numerics/data_out.h>
-#include <Epetra_MpiComm.h>
 #include <Epetra_SerialComm.h>
 
 namespace
