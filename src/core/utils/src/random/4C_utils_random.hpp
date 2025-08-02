@@ -40,8 +40,8 @@ namespace Core::Utils
     /// set the range for the uniform rng
     void set_rand_range(const double lower, const double upper);
 
-    /// set the mean and variance for the normal rng
-    void set_mean_variance(const double mean, const double var);
+    /// Set the mean and standard deviation for the normal rng
+    void set_mean_stddev(const double mean, const double stddev);
 
    private:
     /// @name Random number generation

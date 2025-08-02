@@ -1874,7 +1874,7 @@ void BeamInteraction::SubmodelEvaluator::Crosslinking::diffuse_unbound_crosslink
   double meanvalue = 0.0;
   // Set mean value and standard deviation of normal distribution
   // FixMe standard deviation = sqrt(variance) check this for potential error !!!
-  Global::Problem::instance()->random()->set_mean_variance(meanvalue, standarddev);
+  Global::Problem::instance()->random()->set_mean_stddev(meanvalue, standarddev);
 
   // diffuse crosslinker according to brownian dynamics
   Core::LinAlg::Matrix<3, 1> newclpos(Core::LinAlg::Initialization::zero);

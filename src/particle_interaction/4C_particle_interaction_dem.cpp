@@ -391,7 +391,7 @@ void ParticleInteraction::ParticleInteractionDEM::set_initial_radius()
                               : std::log(material->initRadius_);
 
         // initialize random number generator
-        Global::Problem::instance()->random()->set_mean_variance(mu, sigma);
+        Global::Problem::instance()->random()->set_mean_stddev(mu, sigma);
 
         // iterate over particles stored in container
         for (int i = 0; i < particlestored; ++i)
