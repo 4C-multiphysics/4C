@@ -19303,7 +19303,7 @@ RESULT DESCRIPTION:
       NODE: 3043
       QUANTITY: "velz"
       VALUE: -0.00039141791315922816
-      TOLERANCE: 1e-10
+      TOLERANCE: 1.5e-10
   - FLUID:
       DIS: "fluid"
       NODE: 3043

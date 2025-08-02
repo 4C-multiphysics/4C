@@ -23,8 +23,6 @@
       <Parameter name="Graph" type="string" value="myCoalesceDropFact1"/>
       <Parameter name="DofsPerNode" type="string" value="myCoalesceDropFact1"/>
       <Parameter name="aggregation: max selected neighbors" type="int" value="0"/>
-      <Parameter name="aggregation: min agg size" type="int" value="9"/>
-      <Parameter name="aggregation: min agg size" type="int" value="27"/>
     </ParameterList>
     <ParameterList name="myCoarseMap1">
       <Parameter name="factory" type="string" value="CoarseMapFactory"/>
@@ -68,8 +66,6 @@
       <Parameter name="Graph" type="string" value="myCoalesceDropFact2"/>
       <Parameter name="DofsPerNode" type="string" value="myCoalesceDropFact2"/>
       <Parameter name="aggregation: max selected neighbors" type="int" value="0"/>
-      <Parameter name="aggregation: min agg size" type="int" value="9"/>
-      <Parameter name="aggregation: min agg size" type="int" value="27"/>
     </ParameterList>
     <ParameterList name="myCoarseMap2">
       <Parameter name="factory" type="string" value="BlockedCoarseMapFactory"/>
@@ -114,8 +110,6 @@
       <Parameter name="Graph" type="string" value="myCoalesceDropFact3"/>
       <Parameter name="DofsPerNode" type="string" value="myCoalesceDropFact3"/>
       <Parameter name="aggregation: max selected neighbors" type="int" value="0"/>
-      <Parameter name="aggregation: min agg size" type="int" value="9"/>
-      <Parameter name="aggregation: min agg size" type="int" value="27"/>
     </ParameterList>
     <ParameterList name="myCoarseMap3">
       <Parameter name="factory" type="string" value="BlockedCoarseMapFactory"/>
