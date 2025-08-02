@@ -17,6 +17,7 @@ FOUR_C_NAMESPACE_OPEN
 void Inpar::PARTICLE::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
   using namespace Core::IO::InputSpecBuilders;
+  using namespace Core::IO::InputSpecBuilders::Validators;
 
   /*-------------------------------------------------------------------------*
    | general control parameters for particle simulations                     |
@@ -482,9 +483,11 @@ void Inpar::PARTICLE::set_valid_parameters(std::map<std::string, Core::IO::Input
               "INITIAL_RADIUS", {.description = "type of initial particle radius assignment",
                                     .default_value = Inpar::PARTICLE::RadiusFromParticleMaterial}),
 
-          parameter<double>("RADIUSDISTRIBUTION_SIGMA",
-              {.description = "sigma of random particle radius distribution",
-                  .default_value = -1.0}),
+          parameter<std::optional<double>>("RADIUSDISTRIBUTION_SIGMA",
+              {
+                  .description = "Standard deviation sigma of random particle radius distribution",
+                  .validator = null_or(positive<double>()),
+              }),
 
           parameter<double>("REL_PENETRATION",
               {.description = "maximum allowed relative penetration", .default_value = -1.0}),
