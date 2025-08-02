@@ -1946,10 +1946,11 @@ parameters:
 
   TEST(InputSpecTest, ParameterValidation)
   {
+    using namespace Core::IO::InputSpecBuilders::Validators;
     auto spec = group("parameters",
         {
-            parameter<int>("a", {.default_value = 42, .validator = Validators::in_range(0, 50)}),
-            parameter<std::optional<double>>("b", {.validator = Validators::positive<double>()}),
+            parameter<int>("a", {.default_value = 42, .validator = in_range(0, 50)}),
+            parameter<std::optional<double>>("b", {.validator = null_or(positive<double>())}),
         });
 
     {
@@ -1998,7 +1999,7 @@ parameters:
       InputParameterContainer container;
       FOUR_C_EXPECT_THROW_WITH_MESSAGE(spec.match(node, container), Core::Exception, R"(
     [!] Candidate parameter 'a' does not pass validation: in_range[0,50]
-    [!] Candidate parameter 'b' does not pass validation: in_range(0,1.7976931348623157e+308]
+    [!] Candidate parameter 'b' does not pass validation: null_or{in_range(0,1.7976931348623157e+308]}
 )");
     }
   }
@@ -2013,6 +2014,75 @@ parameters:
     };
     FOUR_C_EXPECT_THROW_WITH_MESSAGE(construct(), Core::Exception,
         "Default value '42' does not pass validation: in_range(0,10]");
+  }
+
+  TEST(InputSpecTest, OptionalParameterValidation)
+  {
+    using namespace Core::IO::InputSpecBuilders::Validators;
+    auto spec = parameter<std::optional<int>>("a", {.validator = null_or(in_range(0, 10))});
+
+    {
+      SCOPED_TRACE("Valid input");
+      ryml::Tree tree = init_yaml_tree_with_exceptions();
+      ryml::NodeRef root = tree.rootref();
+      ryml::parse_in_arena(R"(a: 5)", root);
+
+      ConstYamlNodeRef node(root, "");
+      InputParameterContainer container;
+      spec.match(node, container);
+      EXPECT_EQ(container.get<std::optional<int>>("a"), 5);
+    }
+
+    {
+      SCOPED_TRACE("Invalid input");
+      ryml::Tree tree = init_yaml_tree_with_exceptions();
+      ryml::NodeRef root = tree.rootref();
+      ryml::parse_in_arena(R"(a: 15)", root);
+      ConstYamlNodeRef node(root, "");
+      InputParameterContainer container;
+      FOUR_C_EXPECT_THROW_WITH_MESSAGE(spec.match(node, container), Core::Exception,
+          "Candidate parameter 'a' does not pass validation: null_or{in_range[0,10]}");
+    }
+  }
+
+  TEST(InputSpecTest, OptionalParameterValidationComplex)
+  {
+    using namespace Core::IO::InputSpecBuilders::Validators;
+    using Type = std::optional<std::vector<std::optional<int>>>;
+    auto spec =
+        parameter<Type>("v", {
+                                 .validator = null_or(all_elements(null_or(in_range(0, 10)))),
+                                 .size = 3,
+                             });
+
+    {
+      SCOPED_TRACE("Valid input");
+      ryml::Tree tree = init_yaml_tree_with_exceptions();
+      ryml::NodeRef root = tree.rootref();
+      ryml::parse_in_arena(R"(v: [null, 2, 3])", root);
+
+      ConstYamlNodeRef node(root, "");
+      InputParameterContainer container;
+      spec.match(node, container);
+      const auto& v = container.get<Type>("v");
+      EXPECT_TRUE(v.has_value());
+      EXPECT_EQ(v->size(), 3);
+      EXPECT_EQ((*v)[0], std::nullopt);
+      EXPECT_EQ((*v)[1], 2);
+      EXPECT_EQ((*v)[2], 3);
+    }
+
+    {
+      SCOPED_TRACE("Invalid input");
+      ryml::Tree tree = init_yaml_tree_with_exceptions();
+      ryml::NodeRef root = tree.rootref();
+      ryml::parse_in_arena(R"(v: [-1, null])", root);
+      ConstYamlNodeRef node(root, "");
+      InputParameterContainer container;
+      FOUR_C_EXPECT_THROW_WITH_MESSAGE(spec.match(node, container), Core::Exception,
+          "Candidate parameter 'v' does not pass validation: "
+          "null_or{all_elements{null_or{in_range[0,10]}}}");
+    }
   }
 
   TEST(InputSpecTest, OneOfOverlappingOptionsSingleParameter)

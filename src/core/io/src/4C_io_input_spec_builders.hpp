@@ -715,7 +715,7 @@ namespace Core::IO
        * conditions such as assuring that a value is within a certain range of values. See the
        * Validators namespace for some available validators.
        */
-      std::optional<Validators::Validator<RemoveOptional<T>>> validator{std::nullopt};
+      std::optional<Validators::Validator<T>> validator{std::nullopt};
 
       /**
        * An optional function to store a parsed value. See the in_struct() function for more
@@ -736,7 +736,7 @@ namespace Core::IO
 
       ParameterCallback on_parse_callback{nullptr};
 
-      std::optional<Validators::Validator<RemoveOptional<T>>> validator{std::nullopt};
+      std::optional<Validators::Validator<T>> validator{std::nullopt};
 
       StoreFunction<T> store{nullptr};
 
@@ -759,7 +759,7 @@ namespace Core::IO
 
       ParameterCallback on_parse_callback{nullptr};
 
-      std::optional<Validators::Validator<RemoveOptional<T>>> validator{std::nullopt};
+      std::optional<Validators::Validator<T>> validator{std::nullopt};
 
       StoreFunction<T> store{nullptr};
 
@@ -880,8 +880,7 @@ namespace Core::IO
 
       InputSpecBuilders::ParameterCallback on_parse_callback{nullptr};
 
-      std::optional<InputSpecBuilders::Validators::Validator<RemoveOptional<T>>> validator{
-          std::nullopt};
+      std::optional<InputSpecBuilders::Validators::Validator<T>> validator{std::nullopt};
 
       InputSpecBuilders::StoreFunction<T> store;
 
@@ -1783,7 +1782,7 @@ bool Core::IO::Internal::ParameterSpec<T>::match(ConstYamlNodeRef node,
     }
     return false;
   }
-  // Perform validation of the value here if necessary. Currently, we only validate sizes.
+
   if constexpr (rank<T>() > 0)
   {
     if (!has_correct_size(value, container))
