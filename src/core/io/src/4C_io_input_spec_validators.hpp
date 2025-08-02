@@ -232,8 +232,14 @@ namespace Core::IO::InputSpecBuilders::Validators
    *
    */
   template <typename T>
-  [[nodiscard]] auto all_elements(Validator<T> validator);
+  [[nodiscard]] Validator<std::vector<T>> all_elements(Validator<T> validator);
 
+  /**
+   * A validator that allows an empty optional "null" value or a value that satisfies the given @p
+   * validator.
+   */
+  template <typename T>
+  [[nodiscard]] Validator<std::optional<T>> null_or(Validator<T> validator);
 }  // namespace Core::IO::InputSpecBuilders::Validators
 
 // --- template definitions --- //
@@ -334,7 +340,8 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] auto Core::IO::InputSpecBuilders::Validators::all_elements(Validator<T> validator)
+[[nodiscard]] Core::IO::InputSpecBuilders::Validators::Validator<std::vector<T>>
+Core::IO::InputSpecBuilders::Validators::all_elements(Validator<T> validator)
 {
   return (Validator<std::vector<T>>(
       [validator](const std::vector<T>& vec)
@@ -356,8 +363,27 @@ template <typename T>
         auto& node = yaml.node;
         node |= ryml::MAP;
         auto all_node = node["all_elements"];
-        validator.emit_metadata(yaml.wrap(all_node.append_child()));
+        validator.emit_metadata(yaml.wrap(all_node));
       }));
+}
+
+template <typename T>
+[[nodiscard]] Core::IO::InputSpecBuilders::Validators::Validator<std::optional<T>>
+Core::IO::InputSpecBuilders::Validators::null_or(Validator<T> validator)
+{
+  return Validator<std::optional<T>>(
+      [validator](const std::optional<T>& opt)
+      {
+        if (!opt.has_value()) return true;
+        return validator(*opt);
+      },
+      [validator](std::ostream& os)
+      {
+        os << "null_or{";
+        validator.describe(os);
+        os << "}";
+      },
+      [validator](YamlNodeRef yaml) { validator.emit_metadata(yaml); });
 }
 
 FOUR_C_NAMESPACE_CLOSE

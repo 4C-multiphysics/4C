@@ -505,17 +505,17 @@ DESIGN SURF MANIFOLD DIRICH CONDITIONS:
     NUMDOF: 2
     ONOFF: [0, 1]
     VAL: [0, 1]
-    FUNCT: [0, 0]
+    FUNCT: [null, null]
   - E: 4
     NUMDOF: 2
     ONOFF: [0, 1]
     VAL: [0, 1]
-    FUNCT: [0, 0]
+    FUNCT: [null, null]
   - E: 6
     NUMDOF: 2
     ONOFF: [0, 1]
     VAL: [0, 1]
-    FUNCT: [0, 0]
+    FUNCT: [null, null]
 DNODE-NODE TOPOLOGY:
   - "NODE 54 DNODE 1"
   - "NODE 9 DNODE 2"

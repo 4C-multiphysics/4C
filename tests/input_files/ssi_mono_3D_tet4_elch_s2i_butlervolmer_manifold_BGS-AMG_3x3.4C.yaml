@@ -541,12 +541,12 @@ DESIGN POINT MANIFOLD DIRICH CONDITIONS:
     NUMDOF: 2
     ONOFF: [0, 1]
     VAL: [0, 1]
-    FUNCT: [0, 0]
+    FUNCT: [null, null]
   - E: 4
     NUMDOF: 2
     ONOFF: [0, 1]
     VAL: [0, 2]
-    FUNCT: [0, 0]
+    FUNCT: [null, null]
 DNODE-NODE TOPOLOGY:
   - "NODE 36 DNODE 1"
   - "NODE 163 DNODE 1"
