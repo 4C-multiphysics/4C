@@ -7,6 +7,8 @@
 
 #include "4C_utils_random.hpp"
 
+#include "4C_utils_exceptions.hpp"
+
 FOUR_C_NAMESPACE_OPEN
 
 /// get a random number
@@ -49,10 +51,11 @@ void Core::Utils::Random::set_rand_range(const double lower, const double upper)
   uni_dist_.param(parameters);
 }
 
-/// set the mean and variance for the normal rng
-void Core::Utils::Random::set_mean_variance(const double mean, const double var)
+void Core::Utils::Random::set_mean_stddev(const double mean, const double stddev)
 {
-  std::normal_distribution<double>::param_type parameters(mean, var);
+  FOUR_C_ASSERT_ALWAYS(stddev > 0.0,
+      "Standard deviation of normal distribution must be positive, but is {}.", stddev);
+  std::normal_distribution<double>::param_type parameters(mean, stddev);
   norm_dist_.param(parameters);
 }
 

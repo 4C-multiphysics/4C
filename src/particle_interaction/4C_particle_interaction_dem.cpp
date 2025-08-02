@@ -359,11 +359,11 @@ void ParticleInteraction::ParticleInteractionDEM::set_initial_radius()
     case Inpar::PARTICLE::LogNormalRadiusDistribution:
     {
       // get sigma of random particle radius distribution
-      double sigma = params_dem_.get<double>("RADIUSDISTRIBUTION_SIGMA");
+      auto sigma = params_dem_.get<std::optional<double>>("RADIUSDISTRIBUTION_SIGMA");
 
       // safety check
-      if (not(sigma > 0.0))
-        FOUR_C_THROW("non-positive sigma of random particle radius distribution!");
+      if (!sigma.has_value())
+        FOUR_C_THROW("RADIUSDISTRIBUTION_SIGMA is not set but required for a radius distribution.");
 
       // iterate over particle types
       for (const auto& type_i : particlecontainerbundle_->get_particle_types())
@@ -391,7 +391,7 @@ void ParticleInteraction::ParticleInteractionDEM::set_initial_radius()
                               : std::log(material->initRadius_);
 
         // initialize random number generator
-        Global::Problem::instance()->random()->set_mean_variance(mu, sigma);
+        Global::Problem::instance()->random()->set_mean_stddev(mu, *sigma);
 
         // iterate over particles stored in container
         for (int i = 0; i < particlestored; ++i)

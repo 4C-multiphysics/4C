@@ -667,7 +667,7 @@ void Solid::ModelEvaluator::BrownianDyn::generate_gaussian_random_numbers()
       pow(2.0 * eval_browniandyn_ptr_->kt() / brown_dyn_state_data_.browndyn_dt, 0.5);
 
   // Set mean value and standard deviation of normal distribution
-  Global::Problem::instance()->random()->set_mean_variance(meanvalue, standarddeviation);
+  Global::Problem::instance()->random()->set_mean_stddev(meanvalue, standarddeviation);
   Global::Problem::instance()->random()->set_rand_range(0.0, 1.0);
 
   // multivector for stochastic forces evaluated by each element based on row map

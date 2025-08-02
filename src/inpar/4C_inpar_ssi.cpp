@@ -436,13 +436,18 @@ void Inpar::SSI::set_valid_conditions(std::vector<Core::Conditions::ConditionDef
   const auto add_dirichlet_manifold_components =
       [](Core::Conditions::ConditionDefinition& definition)
   {
+    using namespace Core::IO::InputSpecBuilders::Validators;
     definition.add_component(parameter<int>("NUMDOF"));
     definition.add_component(parameter<std::vector<int>>(
         "ONOFF", {.description = "", .size = from_parameter<int>("NUMDOF")}));
     definition.add_component(parameter<std::vector<double>>(
         "VAL", {.description = "", .size = from_parameter<int>("NUMDOF")}));
     definition.add_component(parameter<std::vector<std::optional<int>>>(
-        "FUNCT", {.description = "", .size = from_parameter<int>("NUMDOF")}));
+        "FUNCT", {
+                     .description = "",
+                     .validator = all_elements(null_or(positive<int>())),
+                     .size = from_parameter<int>("NUMDOF"),
+                 }));
   };
 
   {
