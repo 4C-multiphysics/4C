@@ -226,12 +226,23 @@ if(${FOUR_C_BUILD_TYPE_UPPER} MATCHES RELWITHDEBINFO)
   enable_compiler_flag_if_supported("-funroll-loops")
 endif()
 
-# Evaluate this option now to get the correct output in case it is force ON in DEBUG mode.
+# Evaluate this option now to get the correct output in case it is forced ON in DEBUG mode.
 four_c_process_global_option(
   FOUR_C_ENABLE_ASSERTIONS
-  "Turn on assertions and debug sections in code. Automatically turned on for DEBUG as CMAKE_BUILD_TYPE."
+  "Turn on assertions and debug sections in 4C code, and turn on assertions in the standard library."
+  "Automatically turned on for DEBUG as CMAKE_BUILD_TYPE."
   OFF
   )
+
+if(FOUR_C_ENABLE_ASSERTIONS)
+  # In case we enable assertions, ensure that we also enable the standard library assertions.
+  # Note that starting from GCC 15, they are turned on in unoptimized -O0 builds. Since we
+  # usually use optimization in testing, we need to explicitly turn them on when requesting
+  # 4C's own assertions.
+  # Note that we can happily define this libstdc++ macro regardless of the standard library
+  # implementation, as it will just be ignored by other implementations.
+  target_compile_options(four_c_private_compile_interface INTERFACE "-D_GLIBCXX_ASSERTIONS")
+endif()
 
 four_c_process_global_option(
   FOUR_C_ENABLE_METADATA_GENERATION
