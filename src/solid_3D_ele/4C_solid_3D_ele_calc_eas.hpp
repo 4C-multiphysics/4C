@@ -128,16 +128,10 @@ namespace Discret::Elements
           "implemented");
     }
 
-    static Core::LinAlg::Matrix<Internal::num_str<celltype>,
-        Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>>
-    get_linear_b_operator(const EASKinematics<celltype, eastype>& eas_kinematics)
-    {
-      return eas_kinematics.b_op;
-    }
-
-    static void add_internal_force_vector(const EASKinematics<celltype, eastype>& eas_kinematics,
-        const Stress<celltype>& stress, const double integration_factor,
-        const PreparationData& centeroid_transformation,
+    static void add_internal_force_vector(const JacobianMapping<celltype>& jacobian_mapping,
+        const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>& F,
+        const EASKinematics<celltype, eastype>& eas_kinematics, const Stress<celltype>& stress,
+        const double integration_factor, const PreparationData& centeroid_transformation,
         EASHistoryData<celltype, eastype>& eas_data,
         Core::LinAlg::Matrix<Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>, 1>&
             force_vector)
@@ -146,11 +140,11 @@ namespace Discret::Elements
           eas_kinematics.b_op, stress, integration_factor, force_vector);
     }
 
-    static void add_stiffness_matrix(
+    static void add_stiffness_matrix(const JacobianMapping<celltype>& jacobian_mapping,
+        const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>& F,
         const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
         const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
-        const EASKinematics<celltype, eastype>& eas_kinematics,
-        const JacobianMapping<celltype>& jacobian_mapping, const Stress<celltype>& stress,
+        const EASKinematics<celltype, eastype>& eas_kinematics, const Stress<celltype>& stress,
         const double integration_factor, const PreparationData& preparation_data,
         EASHistoryData<celltype, eastype>& eas_data,
         Core::LinAlg::Matrix<Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>,
@@ -159,7 +153,7 @@ namespace Discret::Elements
       add_elastic_stiffness_matrix(
           eas_kinematics.b_op, stress, integration_factor, stiffness_matrix);
       add_geometric_stiffness_matrix(
-          jacobian_mapping.N_XYZ, stress, integration_factor, stiffness_matrix);
+          jacobian_mapping, stress, integration_factor, stiffness_matrix);
     }
 
     static void reset_condensed_variable_integration(const Core::Elements::Element& ele,
