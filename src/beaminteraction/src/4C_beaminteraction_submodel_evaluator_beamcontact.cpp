@@ -75,6 +75,13 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::setup()
   beam_interaction_params_ptr_->init();
   beam_interaction_params_ptr_->setup();
 
+
+  beam_to_solid_params_ptr_ =
+      std::make_shared<FourC::BeamInteraction::BeamToSolidVolumeMeshtyingParams>();
+  ;
+  beam_to_solid_params_ptr_->init();
+  beam_to_solid_params_ptr_->setup();
+
   // build a new data container to manage geometric search parameters
   geometric_search_params_ptr_ = std::make_shared<Core::GeometricSearch::GeometricSearchParams>(
       Global::Problem::instance()->geometric_search_params(),
@@ -1105,8 +1112,9 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::create_beam_contact_elemen
       discret_ptr(), assembly_managers_);
 
   // Set the lagrange multiplier vector in the data state
-
-  if (beam_interaction_data_state().get_lambda() == nullptr)
+  if (beam_interaction_data_state().get_lambda() == nullptr &&
+      beam_to_solid_params_ptr_->get_constraint_enforcement() ==
+          Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::lagrange)
   {
     auto indirect_assembly_manager =
         std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_managers_[0]);

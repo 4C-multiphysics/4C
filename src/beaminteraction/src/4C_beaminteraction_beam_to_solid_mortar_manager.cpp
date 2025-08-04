@@ -513,7 +513,7 @@ BeamInteraction::BeamToSolidMortarManager::get_global_lambda_col() const
     Core::LinAlg::export_to(*get_global_lambda(), *lambda_col);
   }
   if (beam_to_solid_params_->get_constraint_enforcement() ==
-      Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::penalty)
+      Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::lagrange)
   {
     const auto lambda = get_global_lambda();
     if (lambda == nullptr)

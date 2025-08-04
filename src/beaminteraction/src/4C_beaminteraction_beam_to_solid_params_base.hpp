@@ -96,7 +96,7 @@ namespace BeamInteraction
     }
 
     /**
-     * \brief Returns saddle point formulation flag.
+     * \brief Returns lagrange formulation.
      */
     inline Inpar::BeamToSolid::BeamToSolidLagrangeFormulation get_lagrange_formulation() const
     {
@@ -158,14 +158,14 @@ namespace BeamInteraction
     //! Penalty parameter.
     double penalty_parameter_;
 
-    // saddle point flag
-    Inpar::BeamToSolid::BeamToSolidLagrangeFormulation lagrange_formulation_;
-
     //! Gauss rule to be used.
     Core::FE::GaussRule1D gauss_rule_;
 
     //! Flag for rotational coupling
     bool rotational_coupling_;
+
+    //! type of lagrange formulation
+    Inpar::BeamToSolid::BeamToSolidLagrangeFormulation lagrange_formulation_;
   };
 
 }  // namespace BeamInteraction

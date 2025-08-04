@@ -393,22 +393,9 @@ int Solid::TimeInt::BaseDataGlobalState::setup_block_information(
     case Inpar::Solid::model_springdashpot:
     case Inpar::Solid::model_beam_interaction_old:
     case Inpar::Solid::model_browniandyn:
-    case Inpar::Solid::model_beaminteraction:
     case Inpar::Solid::model_constraints:
     {
-      // structural block
-      const Solid::ModelEvaluator::BeamInteraction& beaminteraction_evaluator =
-          dynamic_cast<const Solid::ModelEvaluator::BeamInteraction&>(me);
-      if (beaminteraction_evaluator.have_lagrange_dofs())
-      {
-        model_block_id_[mt] = max_block_num_;
-        ++max_block_num_;
-      }
-      else
-      {
-        model_block_id_[mt] = 0;
-      }
-
+      model_block_id_[mt] = 0;
       break;
     }
     case Inpar::Solid::model_basic_coupling:
@@ -416,6 +403,20 @@ int Solid::TimeInt::BaseDataGlobalState::setup_block_information(
     case Inpar::Solid::model_partitioned_coupling:
     {
       // do nothing
+      break;
+    }
+    case Inpar::Solid::model_beaminteraction:
+    {
+      std::cout << "Reached here2" << std::endl;
+      std::cout << "Static type of `me` is " << typeid(me).name() << '\n';
+      const Solid::ModelEvaluator::BeamInteraction& beaminteraction_evaluator =
+          dynamic_cast<const Solid::ModelEvaluator::BeamInteraction&>(me);
+      if (beaminteraction_evaluator.have_lagrange_dofs())
+      {
+        std::cout << "Reached here3" << std::endl;
+        model_block_id_[mt] = max_block_num_;
+        ++max_block_num_;
+      }
       break;
     }
     case Inpar::Solid::model_multiscale:
