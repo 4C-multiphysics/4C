@@ -340,14 +340,15 @@ void Discret::Elements::SolidScatraEleCalc<celltype,
 
               if (force.has_value())
               {
-                add_internal_force_vector(linearization, stress, integration_factor,
-                    preparation_data, history_data_, gp, *force);
+                add_internal_force_vector(jacobian_mapping, deformation_gradient, linearization,
+                    stress, integration_factor, preparation_data, history_data_, gp, *force);
               }
 
               if (stiff.has_value())
               {
-                add_stiffness_matrix(xi, shape_functions, linearization, jacobian_mapping, stress,
-                    integration_factor, preparation_data, history_data_, gp, *stiff);
+                add_stiffness_matrix(jacobian_mapping, deformation_gradient, xi, shape_functions,
+                    linearization, stress, integration_factor, preparation_data, history_data_, gp,
+                    *stiff);
               }
 
               if (mass.has_value())
@@ -461,19 +462,14 @@ void Discret::Elements::SolidScatraEleCalc<celltype, SolidFormulation>::evaluate
                   evaluate_d_material_stress_d_scalar<celltype>(
                       solid_material, deformation_gradient, gl_strain, params, gp, ele.id());
 
-              // linear B-operator
-              const Core::LinAlg::Matrix<Internal::num_str<celltype>,
-                  Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>>
-                  bop = SolidFormulation::get_linear_b_operator(linearization);
-
               constexpr int num_dof_per_ele =
                   Core::FE::dim<celltype> * Core::FE::num_nodes(celltype);
 
               // Assemble matrix
-              // k_dS = B^T . dS/dc * detJ * N * w(gp)
+              // k_dS = dNdxi . F . dS/dc * detJ * N * w(gp) (analogous to force vector)
               Core::LinAlg::Matrix<num_dof_per_ele, 1> BdSdc(Core::LinAlg::Initialization::zero);
-              BdSdc.multiply_tn(
-                  integration_factor, bop, Core::LinAlg::make_stress_like_voigt_view(dSdc));
+              Discret::Elements::add_internal_force_vector(
+                  jacobian_mapping, deformation_gradient, dSdc, integration_factor, BdSdc);
 
               // loop over rows
               for (int rowi = 0; rowi < num_dof_per_ele; ++rowi)
