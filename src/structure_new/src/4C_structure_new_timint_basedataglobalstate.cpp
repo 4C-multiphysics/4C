@@ -407,13 +407,10 @@ int Solid::TimeInt::BaseDataGlobalState::setup_block_information(
     }
     case Inpar::Solid::model_beaminteraction:
     {
-      std::cout << "Reached here2" << std::endl;
-      std::cout << "Static type of `me` is " << typeid(me).name() << '\n';
       const Solid::ModelEvaluator::BeamInteraction& beaminteraction_evaluator =
           dynamic_cast<const Solid::ModelEvaluator::BeamInteraction&>(me);
       if (beaminteraction_evaluator.have_lagrange_dofs())
       {
-        std::cout << "Reached here3" << std::endl;
         model_block_id_[mt] = max_block_num_;
         ++max_block_num_;
       }

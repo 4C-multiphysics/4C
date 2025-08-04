@@ -46,10 +46,13 @@ void BeamInteraction::BeamToSolidParamsBase::set_base_params(
         Teuchos::getIntegralValue<Inpar::BeamToSolid::BeamToSolidConstraintEnforcement>(
             beam_to_solid_params_list, "CONSTRAINT_STRATEGY");
 
-    // Saddle point formulation flag
-    lagrange_formulation_ =
-        Teuchos::getIntegralValue<Inpar::BeamToSolid::BeamToSolidLagrangeFormulation>(
-            beam_to_solid_params_list, "LAGRANGE_FORMULATION");
+    //  Type of lagrange formulation used
+    if (beam_to_solid_params_list.isParameter("LAGRANGE_FORMULATION"))
+    {
+      lagrange_formulation_ =
+          Teuchos::getIntegralValue<Inpar::BeamToSolid::BeamToSolidLagrangeFormulation>(
+              beam_to_solid_params_list, "LAGRANGE_FORMULATION");
+    }
 
     // Contact discretization to be used.
     contact_discretization_ =

@@ -96,7 +96,7 @@ namespace BeamInteraction
     }
 
     /**
-     * \brief Returns lagrange formulation.
+     * \brief Returns the type of lagrange formulation used.
      */
     inline Inpar::BeamToSolid::BeamToSolidLagrangeFormulation get_lagrange_formulation() const
     {
@@ -164,7 +164,7 @@ namespace BeamInteraction
     //! Flag for rotational coupling
     bool rotational_coupling_;
 
-    //! type of lagrange formulation
+    //! Type of lagrange formulation
     Inpar::BeamToSolid::BeamToSolidLagrangeFormulation lagrange_formulation_;
   };
 

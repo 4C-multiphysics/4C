@@ -53,7 +53,7 @@ namespace Inpar
       none,
       //! Penalty method.
       penalty,
-      //! Lagrange Multiplier method
+      //! Lagrange Multiplier approach
       lagrange
     };
 

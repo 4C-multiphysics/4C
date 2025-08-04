@@ -78,7 +78,6 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::setup()
 
   beam_to_solid_params_ptr_ =
       std::make_shared<FourC::BeamInteraction::BeamToSolidVolumeMeshtyingParams>();
-  ;
   beam_to_solid_params_ptr_->init();
   beam_to_solid_params_ptr_->setup();
 
@@ -298,12 +297,6 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::reset()
 
   // Update the geometry pair evaluation data.
   beam_interaction_conditions_ptr_->set_state(discret_ptr(), beam_interaction_data_state_ptr());
-
-  // Update the map of the lambda vector
-  // std::cout << "\nbeaminteraction reset:\n";
-  // auto indirect_assembly_manager =
-  //     std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_managers_[0]);
-  // indirect_assembly_manager->get_mortar_manager()->lambda_dof_rowmap_->Print(std::cout);
 }
 
 /*----------------------------------------------------------------------*
@@ -838,8 +831,6 @@ BeamInteraction::SubmodelEvaluator::BeamContact::get_lagrange_map()
 
   auto indirect_assembly_manager =
       std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_managers_[0]);
-
-  // indirect_assembly_manager->get_mortar_manager()->lambda_dof_rowmap_->Print(std::cout);
 
   return indirect_assembly_manager->get_mortar_manager()->lambda_dof_rowmap_;
 }

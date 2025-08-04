@@ -9,6 +9,7 @@
 
 #include "4C_beam3_base.hpp"
 #include "4C_beamcontact_input.hpp"
+#include "4C_beaminteraction_beam_to_solid_volume_meshtying_params.hpp"
 #include "4C_beaminteraction_calc_utils.hpp"
 #include "4C_beaminteraction_crosslinker_handler.hpp"
 #include "4C_beaminteraction_crosslinker_node.hpp"
@@ -39,8 +40,6 @@
 #include "4C_structure_new_timint_base.hpp"
 #include "4C_structure_new_utils.hpp"
 #include "4C_utils_parameter_list.hpp"
-// #include <4C_beaminteraction_beam_to_solid_params_base.hpp>
-#include "4C_beaminteraction_beam_to_solid_volume_meshtying_params.hpp"
 
 #include <Teuchos_TimeMonitor.hpp>
 
@@ -102,7 +101,6 @@ void Solid::ModelEvaluator::BeamInteraction::setup()
 
   beam_to_solid_params_ptr_ =
       std::make_shared<FourC::BeamInteraction::BeamToSolidVolumeMeshtyingParams>();
-  ;
   beam_to_solid_params_ptr_->init();
   beam_to_solid_params_ptr_->setup();
 
@@ -608,7 +606,6 @@ void Solid::ModelEvaluator::BeamInteraction::extend_ghosting()
  *----------------------------------------------------------------------------*/
 void Solid::ModelEvaluator::BeamInteraction::reset(const Core::LinAlg::Vector<double>& x)
 {
-  // indirect_assembly_manager->get_mortar_manager()->lambda_dof_rowmap_
   check_init_setup();
 
   // todo: somewhat illegal as of const correctness
@@ -870,10 +867,8 @@ void Solid::ModelEvaluator::BeamInteraction::run_pre_compute_x(
   if (beam_to_solid_params_ptr_->get_constraint_enforcement() !=
       Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::lagrange)
     return;
-  Core::LinAlg::Vector<double> lambda_vector =
-      Core::LinAlg::Vector<double>(*ia_state_ptr_->get_lambda());
-  Core::LinAlg::export_to(dir_mutable, lambda_vector);
-};
+  Core::LinAlg::export_to(dir_mutable, *ia_state_ptr_->get_lambda());
+}
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
@@ -881,28 +876,6 @@ void Solid::ModelEvaluator::BeamInteraction::run_post_compute_x(
     const Core::LinAlg::Vector<double>& xold, const Core::LinAlg::Vector<double>& dir,
     const Core::LinAlg::Vector<double>& xnew)
 {
-  // std::cout << "\nSolid::MODELEVALUATOR::BeamInteraction::run_post_compute_x  max gid of xold: "
-  //           << xold.Map().MaxAllGID();
-  // std::cout << "\nSolid::MODELEVALUATOR::BeamInteraction::run_post_compute_x  max gid of dir: "
-  //           << dir.Map().MaxAllGID();
-  // std::cout << "\nSolid::MODELEVALUATOR::BeamInteraction::run_post_compute_x  max gid of xnew: "
-  //           << xnew.Map().MaxAllGID();
-
-  // auto print_vector = Teuchos::rcp(new Epetra_Vector(*lagrange_map_));
-
-  // Core::LinAlg::export_to(xold, *print_vector);
-  // std::cout << "\nSolid::MODELEVALUATOR::BeamInteraction::run_post_compute_x  print xold:\n ";
-  // print_vector->Print(std::cout);
-
-  // Core::LinAlg::export_to(dir, *print_vector);
-  // std::cout << "\nSolid::MODELEVALUATOR::BeamInteraction::run_post_compute_x  print dir:\n ";
-  // print_vector->Print(std::cout);
-
-  // Core::LinAlg::export_to(xnew, *print_vector);
-  // std::cout << "\nSolid::MODELEVALUATOR::BeamInteraction::run_post_compute_x  print xnew:\n ";
-  // print_vector->Print(std::cout);
-
-  // empty
 }
 
 /*----------------------------------------------------------------------------*
