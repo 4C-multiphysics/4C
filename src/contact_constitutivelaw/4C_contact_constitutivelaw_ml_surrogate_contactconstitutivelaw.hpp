@@ -1,0 +1,91 @@
+// This file is part of 4C multiphysics licensed under the
+// GNU Lesser General Public License v3.0 or later.
+//
+// See the LICENSE.md file in the top-level for license information.
+//
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
+#ifndef FOUR_C_CONTACT_CONSTITUTIVELAW_ML_SURROGATE_CONTACTCONSTITUTIVELAW_HPP
+#define FOUR_C_CONTACT_CONSTITUTIVELAW_ML_SURROGATE_CONTACTCONSTITUTIVELAW_HPP
+
+#include "4C_config.hpp"
+
+#include "4C_contact_constitutivelaw_contactconstitutivelaw.hpp"
+#include "4C_contact_constitutivelaw_contactconstitutivelaw_parameter.hpp"
+#include "4C_linalg_serialdensematrix.hpp"
+
+#include <Teuchos_Ptr.hpp>
+
+FOUR_C_NAMESPACE_OPEN
+
+namespace CONTACT
+{
+  namespace CONSTITUTIVELAW
+  {
+    /*----------------------------------------------------------------------*/
+    /** \brief constitutive law parameters for machine-learning-based surrogate contact law to the
+     * contact pressure
+     *
+     */
+    class MLSurrogateConstitutiveLawParams : public Parameter
+    {
+     public:
+      /** \brief standard constructor
+       * \param[in] container containing the law parameter from the input file
+       */
+      MLSurrogateConstitutiveLawParams(const Core::IO::InputParameterContainer& container);
+
+     private:
+    };  // class
+
+    /*----------------------------------------------------------------------*/
+    /** \brief implements a mirco contact constitutive law relating the gap to the
+     * contact pressure
+     */
+    class MLSurrogateConstitutiveLaw : public ConstitutiveLaw
+    {
+     public:
+      /// construct the constitutive law object given a set of parameters
+      explicit MLSurrogateConstitutiveLaw(
+          CONTACT::CONSTITUTIVELAW::MLSurrogateConstitutiveLawParams params);
+
+      //! @name Access methods
+      //@{
+
+      /// Return quick accessible contact constitutive law parameter data
+      const CONTACT::CONSTITUTIVELAW::Parameter* parameter() const override { return &params_; }
+
+      //@}
+
+      //! @name Evaluation methods
+      //@{
+      /** \brief Evaluate the constitutive law
+       *
+       * The pressure response for a given gap is estimated through a machine learning model.
+       *
+       * \param gap contact gap at the mortar node
+       * \return The pressure response from MIRCO
+       */
+      double evaluate(double gap, CONTACT::Node* cnode) override;
+
+      /** \brief Evaluate derivative of the constitutive law
+       *
+       * The derivative of the pressure response is drawn from a differentiable machine learning
+       * model.
+       *
+       * \param gap contact gap at the mortar node
+       * \return Derivative of the pressure response
+       */
+      double evaluate_derivative(double gap, CONTACT::Node* cnode) override;
+      //@}
+
+     private:
+      /// my constitutive law parameters
+      CONTACT::CONSTITUTIVELAW::MLSurrogateConstitutiveLawParams params_;
+    };
+  }  // namespace CONSTITUTIVELAW
+}  // namespace CONTACT
+
+FOUR_C_NAMESPACE_CLOSE
+
+#endif
