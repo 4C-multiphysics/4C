@@ -250,15 +250,6 @@ bool Solid::TimeInt::BaseDataIO::should_write_reaction_forces_for_this_step(cons
 }
 
 
-bool Solid::TimeInt::BaseDataIO::should_write_stress_strain_for_this_step(const int step) const
-{
-  return write_results_for_this_step(step) &&
-         ((get_stress_output_type() != Inpar::Solid::stress_none) ||
-             (get_coupling_stress_output_type() != Inpar::Solid::stress_none) ||
-             (get_strain_output_type() != Inpar::Solid::strain_none) ||
-             (get_plastic_strain_output_type() != Inpar::Solid::strain_none));
-}
-
 bool Solid::TimeInt::BaseDataIO::should_write_energy_for_this_step(const int step) const
 {
   return get_write_energy_every_n_step() > 0 &&
