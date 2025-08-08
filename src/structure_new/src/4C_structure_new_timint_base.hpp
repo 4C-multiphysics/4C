@@ -806,13 +806,10 @@ namespace Solid
           Core::IO::DiscretizationWriter& iowriter, bool write_owner) const override;
 
       /// output during runtime
-      void runtime_output_state();
+      void runtime_output_state() const;
 
       /// output reaction forces
       void output_reaction_forces();
-
-      /// output stress and/or strain state
-      void output_stress_strain();
 
       /// output energy
       void output_energy() const;
