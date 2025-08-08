@@ -46,6 +46,11 @@ namespace Core::GeometricSearch
    * @param comm Communicator object of the discretization
    * @param verbosity Enabling printout of the geometric search information
    * @return pairs Vector of the found interaction pairs
+   *
+   * D. Lebrun-Grandie, A. Prokopenko, B. Turcksin, and S. R. Slattery. 2020.
+   * ArborX: A Performance Portable Geometric Search Library. ACM Trans. Math. Softw. 47, 1,
+   * Article 2 (2021), https://doi.org/10.1145/3412558
+   *
    */
   std::vector<CollisionSearchResult> collision_search(
       const std::vector<std::pair<int, BoundingVolume>>& primitives,
