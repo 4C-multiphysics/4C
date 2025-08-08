@@ -52,7 +52,22 @@ namespace Inpar
       //! Default value.
       none,
       //! Penalty method.
-      penalty
+      penalty,
+      //! Lagrange Multiplier approach
+      lagrange
+    };
+
+    /**
+     * \brief Lagrange Formulation type for Lagrange Multiplier constraint enforcement approach
+     */
+    enum class BeamToSolidLagrangeFormulation
+    {
+      //! Default value.
+      none,
+      //! Saddle point variant
+      saddlepoint,
+      //! Regularized penalty method
+      regularized
     };
 
     /**

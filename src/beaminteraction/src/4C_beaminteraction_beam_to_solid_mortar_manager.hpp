@@ -43,6 +43,7 @@ namespace BeamInteraction
 namespace Core::LinAlg
 {
   class SparseMatrix;
+  class SparseOperator;
 }  // namespace Core::LinAlg
 
 
@@ -186,6 +187,16 @@ namespace BeamInteraction
      */
     double get_energy() const;
 
+    void assemble_force(Solid::TimeInt::BaseDataGlobalState& gstate,
+        Core::LinAlg::Vector<double>& f,
+        const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state)
+        const;
+
+    void assemble_stiff(Solid::TimeInt::BaseDataGlobalState& gstate,
+        Core::LinAlg::SparseOperator& jac,
+        const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state)
+        const;
+
    protected:
     /**
      * \brief Throw an error if setup was not called on the object prior to this function call.
@@ -296,12 +307,14 @@ namespace BeamInteraction
     //! Row map of the additional Lagrange multiplier DOFs for rotations.
     std::shared_ptr<Core::LinAlg::Map> lambda_dof_rowmap_rotations_;
 
+   public:
     //! Row map of the additional Lagrange multiplier DOFs.
     std::shared_ptr<Core::LinAlg::Map> lambda_dof_rowmap_;
 
     //! Column map of the additional Lagrange multiplier DOFs.
     std::shared_ptr<Core::LinAlg::Map> lambda_dof_colmap_;
 
+   protected:
     //! Row map of the beam DOFs.
     std::shared_ptr<Core::LinAlg::Map> beam_dof_rowmap_;
 
@@ -362,6 +375,9 @@ namespace BeamInteraction
 
     //! Vector with all contact pairs to be evaluated by this mortar manager.
     std::vector<std::shared_ptr<BeamInteraction::BeamContactPair>> contact_pairs_;
+
+   private:
+    std::shared_ptr<const Core::LinAlg::FEVector<double>> global_lambda_container_;
   };
 }  // namespace BeamInteraction
 
