@@ -231,6 +231,7 @@ namespace Core::IO
   {
     FOUR_C_ASSERT_ALWAYS(node.node.is_map(), "Expected a map node for a map.");
     value.clear();
+    value.reserve(node.node.num_children());
     for (auto child : node.node.children())
     {
       FOUR_C_ASSERT_ALWAYS(child.has_key(), "Expected a key in the map node.");
@@ -252,6 +253,7 @@ namespace Core::IO
   {
     FOUR_C_ASSERT_ALWAYS(node.node.is_seq(), "Expected a sequence node for a vector.");
     value.clear();
+    value.reserve(node.node.num_children());
     for (auto child : node.node.children())
     {
       T v;
