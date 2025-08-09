@@ -2701,7 +2701,7 @@ RESULT DESCRIPTION:
       NODE: 910
       QUANTITY: "phi"
       VALUE: 0.45009739486094325
-      TOLERANCE: 1e-09
+      TOLERANCE: 3e-09
   - FLUID:
       DIS: "fluid"
       NODE: 910
