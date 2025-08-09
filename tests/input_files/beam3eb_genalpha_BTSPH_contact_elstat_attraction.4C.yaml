@@ -39,8 +39,11 @@ BEAM INTERACTION:
 BEAM INTERACTION/BEAM TO SPHERE CONTACT:
   STRATEGY: "Penalty"
   PENALTY_PARAMETER: 1000
-BEAM POTENTIAL:
-  POT_LAW_PREFACTOR: "4e-3"
+beam_potential:
+  potential_law_prefactors: [4.0e-3]
+  potential_law_exponents: [1.0]
+  strategy: double_length_specific_large_separations
+  type: surface
 SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "Structure_Solver"

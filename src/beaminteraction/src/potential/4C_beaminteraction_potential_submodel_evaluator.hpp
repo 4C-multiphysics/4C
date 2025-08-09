@@ -11,9 +11,11 @@
 
 #include "4C_config.hpp"
 
+#include "4C_beaminteraction_potential_input.hpp"
 #include "4C_beaminteraction_submodel_evaluator_generic.hpp"
 #include "4C_binstrategy_utils.hpp"
 #include "4C_fem_condition.hpp"
+#include "4C_io_input_parameter_container.hpp"
 #include "4C_io_visualization_manager.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -26,7 +28,7 @@ namespace Core::Elements
 
 namespace BeamInteraction
 {
-  struct BeamPotentialParams;
+  struct BeamPotentialParameters;
   class BeamPotentialPair;
 
   namespace SubmodelEvaluator
@@ -126,29 +128,20 @@ namespace BeamInteraction
       //! @{
       /// print
       void print_all_beam_potential_element_pairs(std::ostream& out) const;
-
-      /// print
-      void print_active_beam_potential_set(std::ostream& out) const;
-
       //! @}
 
      private:
-      inline BeamInteraction::BeamPotentialParams const& beam_potential_params() const
+      inline BeamInteraction::Potential::BeamPotentialParameters const& beam_potential_parameters()
+          const
       {
         check_init();
-        return *beam_potential_params_ptr_;
+        return beam_potential_parameters_;
       }
 
-      inline BeamInteraction::BeamPotentialParams& beam_potential_params()
+      inline BeamInteraction::Potential::BeamPotentialParameters& beam_potential_parameters()
       {
         check_init();
-        return *beam_potential_params_ptr_;
-      }
-
-      inline std::shared_ptr<BeamInteraction::BeamPotentialParams> beam_potential_params_ptr() const
-      {
-        check_init();
-        return beam_potential_params_ptr_;
+        return beam_potential_parameters_;
       }
 
       //!@name routines that are not derived and handle beam potential-based interactions
@@ -200,7 +193,7 @@ namespace BeamInteraction
 
      private:
       //! data container holding all beam contact related parameters
-      std::shared_ptr<BeamInteraction::BeamPotentialParams> beam_potential_params_ptr_;
+      BeamInteraction::Potential::BeamPotentialParameters beam_potential_parameters_;
 
       //! type of eles in bins  // Todo kept line for future improvement
       //    Core::Binstrategy::Utils::BinContentType bin_beamcontent_;

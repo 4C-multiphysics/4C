@@ -834,7 +834,7 @@ std::vector<Core::Conditions::ConditionDefinition> Global::valid_conditions()
   Inpar::SSTI::set_valid_conditions(condlist);
   Inpar::PARTICLE::set_valid_conditions(condlist);
   Inpar::LevelSet::set_valid_conditions(condlist);
-  BeamPotential::set_valid_conditions(condlist);
+  BeamInteraction::Potential::set_valid_conditions(condlist);
   Inpar::RveMpc::set_valid_conditions(condlist);
   Inpar::BeamInteraction::set_valid_conditions(condlist);
   EHL::set_valid_conditions(condlist);

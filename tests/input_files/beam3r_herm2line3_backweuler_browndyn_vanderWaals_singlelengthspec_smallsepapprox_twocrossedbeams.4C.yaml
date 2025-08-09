@@ -44,17 +44,17 @@ BROWNIAN DYNAMICS:
   VISCOSITY: 0.001
 BEAM INTERACTION:
   REPARTITIONSTRATEGY: "Everydt"
-BEAM POTENTIAL:
-  POT_LAW_EXPONENT: "6.0 6.0"
-  POT_LAW_PREFACTOR: "-7.0685834705770340e-5 0.0"
-  TYPE: volume
-  STRATEGY: single_length_specific_small_separations
-  N_GAUSS_POINTS: 32
-  AUTOMATIC_DIFFERENTIATION: true
-BEAM POTENTIAL/RUNTIME VTK OUTPUT:
-  VTK_OUTPUT_BEAM_POTENTIAL: true
-  FORCES: true
-  MOMENTS: true
+beam_potential:
+  potential_law_exponents: [6.0, 6.0]
+  potential_law_prefactors: [-7.0685834705770340e-5, 0.0]
+  type: volume
+  strategy: single_length_specific_small_separations
+  n_gauss_points: 32
+  automatic_differentiation: true
+  runtime_output:
+    interval_steps: 1
+    force: true
+    moment: true
 DESIGN LINE BEAM POTENTIAL CHARGE CONDITIONS:
   - E: 1
     POTLAW: 1
