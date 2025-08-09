@@ -900,7 +900,6 @@ void NOX::Nln::LinearSystem::convert_sparse_to_dense_matrix(
     const Core::LinAlg::Map& full_rangemap, const Core::LinAlg::Map& full_domainmap) const
 {
   if (not sparse.filled()) FOUR_C_THROW("The sparse matrix must be filled!");
-  auto crs_mat = sparse.epetra_matrix();
 
   if (dense.numCols() == 0 or dense.numRows() == 0)
   {
@@ -922,7 +921,7 @@ void NOX::Nln::LinearSystem::convert_sparse_to_dense_matrix(
     // local indices
     int* indices = nullptr;
 
-    crs_mat->ExtractMyRowView(rlid, numentries, rvals, indices);
+    sparse.extract_my_row_view(rlid, numentries, rvals, indices);
 
     const int rgid = rgids[rlid];
     const int full_rlid = full_rangemap.lid(rgid);

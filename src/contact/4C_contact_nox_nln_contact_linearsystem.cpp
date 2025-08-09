@@ -307,12 +307,11 @@ void NOX::Nln::CONTACT::LinearSystem::LinearSubProblem::extract_active_blocks(
     for (int c = 0; c < numcols; ++c)
     {
       if (block_mat(r, c).epetra_matrix()->GlobalMaxNumEntries() == 0 or
-          block_mat(r, c).epetra_matrix()->NormFrobenius() == 0.0)
+          block_mat(r, c).norm_frobenius() == 0.0)
         isempty[r][c] = true;
     }
 
-    if (block_mat(r, r).epetra_matrix()->NumGlobalDiagonals() ==
-            block_mat(r, r).epetra_matrix()->NumGlobalNonzeros() &&
+    if (block_mat(r, r).num_global_diagonals() == block_mat(r, r).num_global_nonzeros() &&
         !isempty[r][r])
       isdiagonal[r] = true;
   }
@@ -418,7 +417,7 @@ void NOX::Nln::CONTACT::LinearSystem::LinearSubProblem::extract_active_blocks(
 void NOX::Nln::CONTACT::LinearSystem::apply_diagonal_inverse(Core::LinAlg::SparseMatrix& mat,
     Core::LinAlg::Vector<double>& lhs, const Core::LinAlg::Vector<double>& rhs) const
 {
-  if (mat.epetra_matrix()->NumGlobalDiagonals() != mat.epetra_matrix()->NumGlobalNonzeros())
+  if (mat.num_global_diagonals() != mat.num_global_nonzeros())
     FOUR_C_THROW("The given matrix seems to be no diagonal matrix!");
 
   Core::LinAlg::Vector<double> lhs_block(mat.domain_map(), true);
@@ -429,10 +428,10 @@ void NOX::Nln::CONTACT::LinearSystem::apply_diagonal_inverse(Core::LinAlg::Spars
 
   Core::LinAlg::Vector<double> diag_mat(mat.range_map(), true);
   int err = mat.extract_diagonal_copy(diag_mat);
-  if (err) FOUR_C_THROW("ExtractDiagonalCopy failed! (err={})", err);
+  if (err) FOUR_C_THROW("extract_diagonal_copy failed with error code {}", err);
 
   err = lhs_block.reciprocal_multiply(1.0, diag_mat, rhs_block, 0.0);
-  if (err) FOUR_C_THROW("ReciprocalMultiply failed! (err={})", err);
+  if (err) FOUR_C_THROW("reciprocal_multiply failed with error code {}", err);
 
   Core::LinAlg::assemble_my_vector(0.0, lhs, 1.0, lhs_block);
 }

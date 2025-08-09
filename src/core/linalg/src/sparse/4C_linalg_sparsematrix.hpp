@@ -463,6 +463,7 @@ namespace Core::LinAlg
     /// Returns the number of rows locally owned.
     int num_my_rows() const { return sysmat_->NumMyRows(); }
 
+    /// Returns the current number of nonzero entries in specified local row on this processor.
     int num_my_entries(int my_row) const { return sysmat_->NumMyEntries(my_row); }
 
     /// Returns the number of global rows.
@@ -471,7 +472,7 @@ namespace Core::LinAlg
     /// Returns the number of global rows.
     int num_global_cols() const { return sysmat_->NumGlobalCols(); }
 
-    // Returns the number of nonzero entries in a global row.
+    /// Returns the number of nonzero entries in a global row.
     int num_global_entries(int global_row) const { return sysmat_->NumGlobalEntries(global_row); }
 
     /// Returns the maximum number of nonzero entries across all rows on this processor.
@@ -488,6 +489,10 @@ namespace Core::LinAlg
     {
       return sysmat_->NumAllocatedGlobalEntries(global_row);
     }
+
+    /// Returns the number of global nonzero diagonal entries, based on global row/column index
+    /// comparisons.
+    int num_global_diagonals() const { return sysmat_->NumGlobalDiagonals(); };
 
     /// Returns the global row index for give local row index, returns IndexBase-1 if we don't have
     /// this local row.
@@ -573,6 +578,10 @@ namespace Core::LinAlg
     /// Replaces values in a local row.
     int replace_my_values(
         int my_row, int num_entries, const double* values, const int* indices) const;
+
+    /// Replaces values in a global row.
+    int replace_global_values(
+        int global_row, int num_entries, const double* values, const int* indices) const;
 
     /// Inserts values into a global row.
     int insert_global_values(

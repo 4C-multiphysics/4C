@@ -303,7 +303,7 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::KrylovProjector::proje
   // here: matvec = A c_;
   std::shared_ptr<Core::LinAlg::MultiVector<double>> matvec =
       std::make_shared<Core::LinAlg::MultiVector<double>>(c_->get_map(), nsdim_, false);
-  A.epetra_matrix()->Multiply(false, *c_, *matvec);
+  A.multiply(false, *c_, *matvec);
 
   // compute serial dense matrix c^T A c
   std::shared_ptr<Core::LinAlg::SerialDenseMatrix> cTAc =
@@ -320,7 +320,7 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::KrylovProjector::proje
   {
     // put in brackets to delete mat2 immediately after being added to mat1
     // here: matvec = A^T c_;
-    A.epetra_matrix()->Multiply(true, *c_, *matvec);
+    A.multiply(true, *c_, *matvec);
     std::shared_ptr<Core::LinAlg::SparseMatrix> mat2 =
         multiply_multi_vector_multi_vector(w_invwTc, matvec, 2, true);
     mat1->add(*mat2, false, 1.0, 1.0);
@@ -379,10 +379,10 @@ void Core::LinAlg::KrylovProjector::create_projector(std::shared_ptr<Core::LinAl
     const int grid = P->global_row_index(rr);
 
     // add identity matrix by adding 1 on diagonal entries
-    int err = P->epetra_matrix()->InsertGlobalValues(grid, 1, &one, &grid);
+    int err = P->insert_global_values(grid, 1, &one, &grid);
     if (err < 0)
     {
-      err = P->epetra_matrix()->SumIntoGlobalValues(grid, 1, &one, &grid);
+      err = P->sum_into_global_values(grid, 1, &one, &grid);
       if (err < 0)
       {
         FOUR_C_THROW("insertion error when trying to computekrylov projection matrix.");
@@ -573,8 +573,7 @@ Core::LinAlg::KrylovProjector::multiply_multi_vector_multi_vector(
     }
 
     // insert values in mat
-    int err = mat->epetra_matrix()->InsertGlobalValues(
-        grid, indices.size(), rowvals.data(), indices.data());
+    int err = mat->insert_global_values(grid, indices.size(), rowvals.data(), indices.data());
     if (err < 0)
     {
       FOUR_C_THROW(

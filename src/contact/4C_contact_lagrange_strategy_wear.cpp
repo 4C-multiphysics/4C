@@ -4170,7 +4170,7 @@ void Wear::LagrangeStrategyWear::output_wear()
 
       // extract diagonal of data
       Core::LinAlg::Vector<double> diagD(*gactivedofs_);
-      data->epetra_matrix()->ExtractDiagonalCopy(diagD.get_ref_of_epetra_vector());
+      data->extract_diagonal_copy(diagD);
 
       // solve by dividing through diagonal elements of data. Do not divide by 0.
       for (int i = 0; i < lNumActiveDOFs; ++i)
@@ -4248,7 +4248,7 @@ void Wear::LagrangeStrategyWear::output_wear()
 
         // extract diagonal of d2ii
         Core::LinAlg::Vector<double> diagD(*wear2_vectori);
-        d2ii->epetra_matrix()->ExtractDiagonalCopy(diagD.get_ref_of_epetra_vector());
+        d2ii->extract_diagonal_copy(diagD);
 
         // solve by dividing through diagonal elements of data. Do not divide by 0.
         for (int i = 0; i < lNumActiveDOFs; ++i)

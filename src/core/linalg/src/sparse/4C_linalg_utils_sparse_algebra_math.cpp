@@ -218,8 +218,8 @@ void Core::LinAlg::matrix_put(const Core::LinAlg::SparseMatrix& A, const double 
     if (err) FOUR_C_THROW("ExtractGlobalRowCopy returned err={}", err);
     if (scalarA != 1.0)
       for (int j = 0; j < NumEntries; ++j) Values[j] *= scalarA;
-    err = B.epetra_matrix()->ReplaceGlobalValues(Row, NumEntries, Values.data(), Indices.data());
-    if (err) FOUR_C_THROW("ReplaceGlobalValues returned err={}", err);
+    err = B.replace_global_values(Row, NumEntries, Values.data(), Indices.data());
+    if (err) FOUR_C_THROW("replace_global_values() failed with error code {}", err);
   }
 }
 
@@ -403,7 +403,7 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_sparse_inverse(
     if (err != 0) FOUR_C_THROW("Error in serial QR solve.");
 
     // 6. set calculated row into Ainv
-    A_inverse->epetra_matrix()->ReplaceMyValues(k, localX.length(), localX.values(), Ik);
+    A_inverse->replace_my_values(k, localX.length(), localX.values(), Ik);
   }
   A_inverse->complete();
 

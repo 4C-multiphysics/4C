@@ -6458,24 +6458,22 @@ void CONTACT::Interface::evaluate_relative_movement(
         {
           int NumEntries = 0;
           int NumEntriesOld = 0;
-          std::vector<double> Values((dmatrixmod->epetra_matrix())->MaxNumEntries());
-          std::vector<int> Indices((dmatrixmod->epetra_matrix())->MaxNumEntries());
-          std::vector<double> ValuesOld((dmatrixmod->epetra_matrix())->MaxNumEntries());
-          std::vector<int> IndicesOld((dmatrixmod->epetra_matrix())->MaxNumEntries());
+          std::vector<double> Values((dmatrixmod->max_num_entries()));
+          std::vector<int> Indices((dmatrixmod->max_num_entries()));
+          std::vector<double> ValuesOld((dmatrixmod->max_num_entries()));
+          std::vector<int> IndicesOld((dmatrixmod->max_num_entries()));
 
           // row
           int row = cnode->dofs()[dim];
 
           // extract entries of this row from matrix
-          int err = (dmatrixmod->epetra_matrix())
-                        ->ExtractGlobalRowCopy(row, (dmatrixmod->epetra_matrix())->MaxNumEntries(),
-                            NumEntries, Values.data(), Indices.data());
-          if (err) FOUR_C_THROW("ExtractMyRowView failed: err={}", err);
+          int err = dmatrixmod->extract_global_row_copy(
+              row, dmatrixmod->max_num_entries(), NumEntries, Values.data(), Indices.data());
+          if (err) FOUR_C_THROW("extract_global_row_copy() failed with error code {}", err);
 
-          int errold = (doldmod->epetra_matrix())
-                           ->ExtractGlobalRowCopy(row, (doldmod->epetra_matrix())->MaxNumEntries(),
-                               NumEntriesOld, ValuesOld.data(), IndicesOld.data());
-          if (errold) FOUR_C_THROW("ExtractMyRowView failed: err={}", err);
+          int errold = doldmod->extract_global_row_copy(
+              row, doldmod->max_num_entries(), NumEntriesOld, ValuesOld.data(), IndicesOld.data());
+          if (errold) FOUR_C_THROW("extract_global_row_copy() failed with error code {}", errold);
 
           // loop over entries of this vector
           for (int j = 0; j < NumEntries; ++j)

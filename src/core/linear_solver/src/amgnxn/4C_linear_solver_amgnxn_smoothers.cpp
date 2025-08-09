@@ -2215,8 +2215,8 @@ Core::LinearSolver::AMGNxN::SimpleSmootherFactory::approximate_inverse(
   }
   else if (method == "row sums" or method == "row sums diagonal blocks")
   {
-    int err = A.epetra_matrix()->InvRowSums(invAVector.get_ref_of_epetra_vector());
-    if (err) FOUR_C_THROW("Epetra_CrsMatrix::InvRowSums returned {}, are we dividing by 0?", err);
+    int err = A.inv_row_sums(invAVector);
+    if (err) FOUR_C_THROW("inv_row_sums() returned {}, are we dividing by 0?", err);
   }
   else
     FOUR_C_THROW("Invalid value for \"predictor inverse\". Fix your xml file.");

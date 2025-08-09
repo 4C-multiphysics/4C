@@ -1300,11 +1300,11 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet_with_trafo(const Core::LinAlg::
         {
           // extract values of trafo at the inclined dbc dof
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-          int err = trafo.epetra_matrix()->ExtractGlobalRowCopy(
+          int err = trafo.extract_global_row_copy(
               row, trafomaxnumentries, trafonumentries, trafovalues.data(), trafoindices.data());
           if (err < 0) FOUR_C_THROW("Epetra_CrsMatrix::ExtractGlobalRowCopy returned err={}", err);
 #else
-          trafo.epetra_matrix()->ExtractGlobalRowCopy(
+          trafo.extract_global_row_copy(
               row, trafomaxnumentries, trafonumentries, trafovalues.data(), trafoindices.data());
 #endif
         }
@@ -1369,11 +1369,11 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet_with_trafo(const Core::LinAlg::
         if (diagonalblock)
         {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-          err = trafo.epetra_matrix()->ExtractMyRowCopy(
+          err = trafo.extract_my_row_copy(
               i, trafomaxnumentries, trafonumentries, trafovalues.data(), trafoindices.data());
           if (err < 0) FOUR_C_THROW("Epetra_CrsMatrix::ExtractGlobalRowCopy returned err={}", err);
 #else
-          trafo.epetra_matrix()->ExtractMyRowCopy(
+          trafo.extract_my_row_copy(
               i, trafomaxnumentries, trafonumentries, trafovalues.data(), trafoindices.data());
 #endif
 
@@ -1686,6 +1686,14 @@ int Core::LinAlg::SparseMatrix::replace_my_values(
     int my_row, int num_entries, const double* values, const int* indices) const
 {
   return sysmat_->ReplaceMyValues(my_row, num_entries, values, indices);
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+int Core::LinAlg::SparseMatrix::replace_global_values(
+    int global_row, int num_entries, const double* values, const int* indices) const
+{
+  return sysmat_->ReplaceGlobalValues(global_row, num_entries, values, indices);
 }
 
 /*----------------------------------------------------------------------*

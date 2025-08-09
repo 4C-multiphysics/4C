@@ -4081,15 +4081,12 @@ void CONTACT::Interface::fd_check_stick_deriv(
       // ************************************************************************
 
       // ********************************* TXI
-      std::shared_ptr<Epetra_CrsMatrix> sparse_crs = linstickDISglobal.epetra_matrix();
-      sparse_crs->FillComplete();
       double sparse_ij = 0.0;
       int sparsenumentries = 0;
-      int sparselength = sparse_crs->NumGlobalEntries(kcnode->dofs()[1]);
+      const int sparselength = linstickDISglobal.num_global_entries(kcnode->dofs()[1]);
       std::vector<double> sparsevalues(sparselength);
       std::vector<int> sparseindices(sparselength);
-      // int sparseextractionstatus =
-      sparse_crs->ExtractGlobalRowCopy(kcnode->dofs()[1], sparselength, sparsenumentries,
+      linstickDISglobal.extract_global_row_copy(kcnode->dofs()[1], sparselength, sparsenumentries,
           sparsevalues.data(), sparseindices.data());
 
       for (int h = 0; h < sparselength; ++h)
@@ -4105,15 +4102,12 @@ void CONTACT::Interface::fd_check_stick_deriv(
       double analyt_txi = sparse_ij;
 
       // ********************************* TETA
-      std::shared_ptr<Epetra_CrsMatrix> sparse_crs2 = linstickDISglobal.epetra_matrix();
-      sparse_crs2->FillComplete();
       double sparse_2 = 0.0;
       int sparsenumentries2 = 0;
-      int sparselength2 = sparse_crs2->NumGlobalEntries(kcnode->dofs()[2]);
+      const int sparselength2 = linstickDISglobal.num_global_entries(kcnode->dofs()[2]);
       std::vector<double> sparsevalues2(sparselength2);
       std::vector<int> sparseindices2(sparselength2);
-      // int sparseextractionstatus =
-      sparse_crs->ExtractGlobalRowCopy(kcnode->dofs()[2], sparselength2, sparsenumentries2,
+      linstickDISglobal.extract_global_row_copy(kcnode->dofs()[2], sparselength2, sparsenumentries2,
           sparsevalues2.data(), sparseindices2.data());
 
       for (int h = 0; h < sparselength2; ++h)
@@ -4296,15 +4290,12 @@ void CONTACT::Interface::fd_check_stick_deriv(
       // ************************************************************************
 
       // ********************************* TXI
-      std::shared_ptr<Epetra_CrsMatrix> sparse_crs = linstickDISglobal.epetra_matrix();
-      sparse_crs->FillComplete();
       double sparse_ij = 0.0;
       int sparsenumentries = 0;
-      int sparselength = sparse_crs->NumGlobalEntries(kcnode->dofs()[1]);
+      const int sparselength = linstickDISglobal.num_global_entries(kcnode->dofs()[1]);
       std::vector<double> sparsevalues(sparselength);
       std::vector<int> sparseindices(sparselength);
-      // int sparseextractionstatus =
-      sparse_crs->ExtractGlobalRowCopy(kcnode->dofs()[1], sparselength, sparsenumentries,
+      linstickDISglobal.extract_global_row_copy(kcnode->dofs()[1], sparselength, sparsenumentries,
           sparsevalues.data(), sparseindices.data());
 
       for (int h = 0; h < sparselength; ++h)
@@ -4320,15 +4311,12 @@ void CONTACT::Interface::fd_check_stick_deriv(
       double analyt_txi = sparse_ij;
 
       // ********************************* TETA
-      std::shared_ptr<Epetra_CrsMatrix> sparse_crs2 = linstickDISglobal.epetra_matrix();
-      sparse_crs2->FillComplete();
       double sparse_2 = 0.0;
       int sparsenumentries2 = 0;
-      int sparselength2 = sparse_crs2->NumGlobalEntries(kcnode->dofs()[2]);
+      const int sparselength2 = linstickDISglobal.num_global_entries(kcnode->dofs()[2]);
       std::vector<double> sparsevalues2(sparselength2);
       std::vector<int> sparseindices2(sparselength2);
-      // int sparseextractionstatus =
-      sparse_crs->ExtractGlobalRowCopy(kcnode->dofs()[2], sparselength2, sparsenumentries2,
+      linstickDISglobal.extract_global_row_copy(kcnode->dofs()[2], sparselength2, sparsenumentries2,
           sparsevalues2.data(), sparseindices2.data());
 
       for (int h = 0; h < sparselength2; ++h)
@@ -4659,15 +4647,12 @@ void CONTACT::Interface::fd_check_slip_deriv(
       // ************************************************************************
 
       // ********************************* TXI
-      std::shared_ptr<Epetra_CrsMatrix> sparse_crs = linslipLMglobal.epetra_matrix();
-      sparse_crs->FillComplete();
       double sparse_ij = 0.0;
       int sparsenumentries = 0;
-      int sparselength = sparse_crs->NumGlobalEntries(kcnode->dofs()[1]);
+      const int sparselength = linslipLMglobal.num_global_entries(kcnode->dofs()[1]);
       std::vector<double> sparsevalues(sparselength);
       std::vector<int> sparseindices(sparselength);
-      // int sparseextractionstatus =
-      sparse_crs->ExtractGlobalRowCopy(kcnode->dofs()[1], sparselength, sparsenumentries,
+      linslipLMglobal.extract_global_row_copy(kcnode->dofs()[1], sparselength, sparsenumentries,
           sparsevalues.data(), sparseindices.data());
 
       for (int h = 0; h < sparselength; ++h)
@@ -4683,15 +4668,12 @@ void CONTACT::Interface::fd_check_slip_deriv(
       double analyt_txi = sparse_ij;
 
       // ********************************* TETA
-      std::shared_ptr<Epetra_CrsMatrix> sparse_crs2 = linslipLMglobal.epetra_matrix();
-      sparse_crs2->FillComplete();
       double sparse_2 = 0.0;
       int sparsenumentries2 = 0;
-      int sparselength2 = sparse_crs2->NumGlobalEntries(kcnode->dofs()[2]);
+      const int sparselength2 = linslipLMglobal.num_global_entries(kcnode->dofs()[2]);
       std::vector<double> sparsevalues2(sparselength2);
       std::vector<int> sparseindices2(sparselength2);
-      // int sparseextractionstatus =
-      sparse_crs->ExtractGlobalRowCopy(kcnode->dofs()[2], sparselength2, sparsenumentries2,
+      linslipLMglobal.extract_global_row_copy(kcnode->dofs()[2], sparselength2, sparsenumentries2,
           sparsevalues2.data(), sparseindices2.data());
 
       for (int h = 0; h < sparselength2; ++h)
@@ -4898,15 +4880,12 @@ void CONTACT::Interface::fd_check_slip_deriv(
       // ************************************************************************
 
       // ********************************* TXI
-      std::shared_ptr<Epetra_CrsMatrix> sparse_crs = linslipDISglobal.epetra_matrix();
-      sparse_crs->FillComplete();
       double sparse_ij = 0.0;
       int sparsenumentries = 0;
-      int sparselength = sparse_crs->NumGlobalEntries(kcnode->dofs()[1]);
+      const int sparselength = linslipDISglobal.num_global_entries(kcnode->dofs()[1]);
       std::vector<double> sparsevalues(sparselength);
       std::vector<int> sparseindices(sparselength);
-      // int sparseextractionstatus =
-      sparse_crs->ExtractGlobalRowCopy(kcnode->dofs()[1], sparselength, sparsenumentries,
+      linslipDISglobal.extract_global_row_copy(kcnode->dofs()[1], sparselength, sparsenumentries,
           sparsevalues.data(), sparseindices.data());
 
       for (int h = 0; h < sparselength; ++h)
@@ -4922,15 +4901,12 @@ void CONTACT::Interface::fd_check_slip_deriv(
       double analyt_txi = sparse_ij;
 
       // ********************************* TETA
-      std::shared_ptr<Epetra_CrsMatrix> sparse_crs2 = linslipDISglobal.epetra_matrix();
-      sparse_crs2->FillComplete();
       double sparse_2 = 0.0;
       int sparsenumentries2 = 0;
-      int sparselength2 = sparse_crs2->NumGlobalEntries(kcnode->dofs()[2]);
+      const int sparselength2 = linslipDISglobal.num_global_entries(kcnode->dofs()[2]);
       std::vector<double> sparsevalues2(sparselength2);
       std::vector<int> sparseindices2(sparselength2);
-      // int sparseextractionstatus =
-      sparse_crs->ExtractGlobalRowCopy(kcnode->dofs()[2], sparselength2, sparsenumentries2,
+      linslipDISglobal.extract_global_row_copy(kcnode->dofs()[2], sparselength2, sparsenumentries2,
           sparsevalues2.data(), sparseindices2.data());
 
       for (int h = 0; h < sparselength2; ++h)
@@ -5136,15 +5112,12 @@ void CONTACT::Interface::fd_check_slip_deriv(
       // ************************************************************************
 
       // ********************************* TXI
-      std::shared_ptr<Epetra_CrsMatrix> sparse_crs = linslipDISglobal.epetra_matrix();
-      sparse_crs->FillComplete();
       double sparse_ij = 0.0;
       int sparsenumentries = 0;
-      int sparselength = sparse_crs->NumGlobalEntries(kcnode->dofs()[1]);
+      const int sparselength = linslipDISglobal.num_global_entries(kcnode->dofs()[1]);
       std::vector<double> sparsevalues(sparselength);
       std::vector<int> sparseindices(sparselength);
-      // int sparseextractionstatus =
-      sparse_crs->ExtractGlobalRowCopy(kcnode->dofs()[1], sparselength, sparsenumentries,
+      linslipDISglobal.extract_global_row_copy(kcnode->dofs()[1], sparselength, sparsenumentries,
           sparsevalues.data(), sparseindices.data());
 
       for (int h = 0; h < sparselength; ++h)
@@ -5160,15 +5133,12 @@ void CONTACT::Interface::fd_check_slip_deriv(
       double analyt_txi = sparse_ij;
 
       // ********************************* TETA
-      std::shared_ptr<Epetra_CrsMatrix> sparse_crs2 = linslipDISglobal.epetra_matrix();
-      sparse_crs2->FillComplete();
       double sparse_2 = 0.0;
       int sparsenumentries2 = 0;
-      int sparselength2 = sparse_crs2->NumGlobalEntries(kcnode->dofs()[2]);
+      const int sparselength2 = linslipDISglobal.num_global_entries(kcnode->dofs()[2]);
       std::vector<double> sparsevalues2(sparselength2);
       std::vector<int> sparseindices2(sparselength2);
-      // int sparseextractionstatus =
-      sparse_crs->ExtractGlobalRowCopy(kcnode->dofs()[2], sparselength2, sparsenumentries2,
+      linslipDISglobal.extract_global_row_copy(kcnode->dofs()[2], sparselength2, sparsenumentries2,
           sparsevalues2.data(), sparseindices2.data());
 
       for (int h = 0; h < sparselength2; ++h)

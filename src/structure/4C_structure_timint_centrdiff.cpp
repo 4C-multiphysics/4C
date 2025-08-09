@@ -222,7 +222,7 @@ int Solid::TimIntCentrDiff::integrate_step()
       std::shared_ptr<Core::LinAlg::Vector<double>> diagonal =
           Core::LinAlg::create_vector(*dof_row_map_view(), true);
       int error = massmatrix->extract_diagonal_copy(*diagonal);
-      if (error != 0) FOUR_C_THROW("ERROR: ExtractDiagonalCopy went wrong");
+      if (error != 0) FOUR_C_THROW("extract_diagonal_copy failed with error code {}", error);
       accn_->reciprocal_multiply(1.0, *diagonal, *frimpn_, 0.0);
     }
   }
