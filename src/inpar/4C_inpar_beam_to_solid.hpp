@@ -64,9 +64,9 @@ namespace Inpar
     {
       //! Default value.
       none,
-      //! Saddle point variant
+      //!  Lagrange multiplier preserving the saddlepoint nature of the system
       saddlepoint,
-      //! Regularized penalty method
+      //!  Penalty regularized approach assembled into a 2x2 block system.
       regularized
     };
 

@@ -1109,9 +1109,9 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::create_beam_contact_elemen
   {
     auto indirect_assembly_manager =
         std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_managers_[0]);
-    beam_interaction_data_state().get_lambda() = std::shared_ptr<Core::LinAlg::FEVector<double>>(
-        new Core::LinAlg::FEVector<double>((indirect_assembly_manager->get_mortar_manager()
-                ->lambda_dof_rowmap_->get_epetra_map())));
+    beam_interaction_data_state().get_lambda() =
+        std::shared_ptr<Core::LinAlg::FEVector<double>>(new Core::LinAlg::FEVector<double>(
+            (*indirect_assembly_manager->get_mortar_manager()->lambda_dof_rowmap_)));
   }
 
   Core::IO::cout(Core::IO::standard)

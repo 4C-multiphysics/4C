@@ -505,31 +505,25 @@ BeamInteraction::BeamToSolidMortarManager::get_global_lambda_col() const
 {
   std::shared_ptr<Core::LinAlg::Vector<double>> lambda_col =
       std::make_shared<Core::LinAlg::Vector<double>>(*lambda_dof_colmap_);
-  switch (beam_to_solid_params_->get_constraint_enforcement())
+
+  if (beam_to_solid_params_->get_constraint_enforcement() ==
+      Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::lagrange)
   {
-    case Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::penalty:
+    const auto lambda = get_global_lambda();
+    if (lambda == nullptr)
     {
-      Core::LinAlg::export_to(*get_global_lambda(), *lambda_col);
-      break;
+      lambda_col->put_scalar(0.0);
     }
-    case Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::lagrange:
+    else
     {
-      const auto lambda = get_global_lambda();
-      if (lambda == nullptr)
-      {
-        lambda_col->put_scalar(0.0);
-      }
-      else
-      {
-        Core::LinAlg::export_to(*global_lambda_container_, *lambda_col);
-      }
-      break;
-    }
-    case Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::none:
-    {
-      break;
+      Core::LinAlg::export_to(*global_lambda_container_, *lambda_col);
     }
   }
+  else
+  {
+    Core::LinAlg::export_to(*get_global_lambda(), *lambda_col);
+  }
+
 
   return lambda_col;
 }

@@ -12,7 +12,6 @@
 #include "4C_inpar_beaminteraction.hpp"
 #include "4C_io_input_spec_builders.hpp"
 #include "4C_utils_exceptions.hpp"
-#include "4C_utils_parameter_list.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -67,9 +66,10 @@ void Inpar::BeamToSolid::set_valid_parameters(std::map<std::string, Core::IO::In
           {.description = "Shape function for the mortar Lagrange-multipliers",
               .default_value = BeamToSolidMortarShapefunctions::none}),
 
-      parameter<BeamToSolidLagrangeFormulation>(
-          "LAGRANGE_FORMULATION", {.description = "Type of employed Lagrange Formulation",
-                                      .default_value = BeamToSolidLagrangeFormulation::none}),
+      parameter<BeamToSolidLagrangeFormulation>("LAGRANGE_FORMULATION",
+          {.description = "Type of employed Lagrange Formulation while using Lagrange Multipliers "
+                          "for constraint enforcement ",
+              .default_value = BeamToSolidLagrangeFormulation::none}),
 
 
       parameter<int>("MORTAR_FOURIER_MODES",
