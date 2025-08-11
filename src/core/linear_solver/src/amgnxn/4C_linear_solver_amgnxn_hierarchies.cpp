@@ -148,7 +148,8 @@ void Core::LinearSolver::AMGNxN::Hierarchies::setup()
   for (int block = 0; block < num_blocks_; block++)
   {
     int offsetFineLevel = a_->get_matrix(block, block)->row_map().min_all_gid();
-    Teuchos::RCP<Epetra_Operator> A_eop = Teuchos::rcpFromRef(*a_->get_matrix(block, block));
+    Teuchos::RCP<Epetra_Operator> A_eop =
+        Teuchos::rcpFromRef(*a_->get_matrix(block, block)->epetra_operator());
     h_block_[block] =
         build_mue_lu_hierarchy(muelu_params_[block], num_pdes_[block], null_spaces_dim_[block],
             null_spaces_data_[block], A_eop, block, num_blocks_, offsets, offsetFineLevel);
