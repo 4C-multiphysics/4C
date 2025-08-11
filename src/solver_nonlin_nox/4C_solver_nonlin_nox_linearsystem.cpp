@@ -338,7 +338,7 @@ bool NOX::Nln::LinearSystem::applyJacobianInverse(Teuchos::ParameterList& linear
     solver_params.refactor = true;
     solver_params.reset = iter == 0;
 
-    auto matrix = Core::Utils::shared_ptr_from_ref(*linProblem.GetOperator());
+    auto matrix = Core::Utils::shared_ptr_from_ref(jacobian());
 
     Core::LinAlg::View x(*linProblem.GetLHS());
     Core::LinAlg::View b(*linProblem.GetRHS());

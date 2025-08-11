@@ -933,7 +933,7 @@ void PoroPressureBased::PorofluidElastMonolithicAlgorithm::linear_solve()
 
   solver_params.refactor = true;
   solver_params.reset = itnum_ == 1;
-  solver_->solve(systemmatrix_->epetra_operator(), iterinc_, rhs_, solver_params);
+  solver_->solve(systemmatrix_, iterinc_, rhs_, solver_params);
 
   equilibration_->unequilibrate_increment(iterinc_);
 

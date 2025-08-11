@@ -513,7 +513,7 @@ void Adapter::FluidFSI::proj_vel_to_div_zero()
   Core::LinAlg::SolverParams solver_params;
   solver_params.refactor = true;
   solver_params.reset = true;
-  solver->solve(BTB->epetra_operator(), x, BTvR, solver_params);
+  solver->solve(BTB, x, BTvR, solver_params);
 
   std::shared_ptr<Core::LinAlg::Vector<double>> vmod =
       std::make_shared<Core::LinAlg::Vector<double>>(velnp()->get_map(), true);

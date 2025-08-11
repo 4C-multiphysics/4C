@@ -1033,7 +1033,7 @@ void Airway::RedAirwayImplicitTimeInt::solve(
     Core::LinAlg::SolverParams solver_params;
     solver_params.refactor = true;
     solver_params.reset = true;
-    solver_->solve(sysmat_->epetra_operator(), pnp_, rhs_, solver_params);
+    solver_->solve(sysmat_, pnp_, rhs_, solver_params);
   }
 
   // end time measurement for solver

@@ -252,7 +252,7 @@ CONTACT::MtLagrangeStrategy::mesh_initialization()
 
       Core::LinAlg::SolverParams solver_params;
       solver_params.refactor = true;
-      solver.solve(lhs.epetra_operator(), Xslavemod, rhs, solver_params);
+      solver.solve(Core::Utils::shared_ptr_from_ref(lhs), Xslavemod, rhs, solver_params);
     }
     else
     {
@@ -289,7 +289,7 @@ CONTACT::MtLagrangeStrategy::mesh_initialization()
 
       Core::LinAlg::SolverParams solver_params;
       solver_params.refactor = true;
-      solver.solve(dmatrix_->epetra_operator(), Xslavemod, rhs, solver_params);
+      solver.solve(dmatrix_, Xslavemod, rhs, solver_params);
     }
   }
 

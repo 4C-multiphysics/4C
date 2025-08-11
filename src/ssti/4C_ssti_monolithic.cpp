@@ -586,8 +586,7 @@ void SSTI::SSTIMono::linear_solve()
   solver_params.refactor = true;
   solver_params.reset = iter() == 1;
 
-  solver_->solve(
-      ssti_matrices_->system_matrix()->epetra_operator(), increment_, residual_, solver_params);
+  solver_->solve(ssti_matrices_->system_matrix(), increment_, residual_, solver_params);
 
   strategy_equilibration_->unequilibrate_increment(increment_);
 

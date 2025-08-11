@@ -662,7 +662,7 @@ void Solid::TimIntImpl::predict_tang_dis_consist_vel_acc()
     Core::LinAlg::SolverParams solver_params;
     solver_params.refactor = true;
     solver_params.reset = true;
-    solver_->solve(stiff_->epetra_operator(), disi_, fres_, solver_params);
+    solver_->solve(stiff_, disi_, fres_, solver_params);
   }
 
   // recover contact / meshtying Lagrange multipliers
@@ -1507,7 +1507,7 @@ int Solid::TimIntImpl::newton_full()
       solver_params.refactor = true;
       solver_params.reset = iter_ == 1;
       solver_params.projector = projector_;
-      linsolve_error = solver_->solve(stiff_->epetra_operator(), disi_, fres_, solver_params);
+      linsolve_error = solver_->solve(stiff_, disi_, fres_, solver_params);
       // check for problems in linear solver
       // however we only care about this if we have a fancy divcont action (meaning function will
       // return 0 )
@@ -2095,7 +2095,7 @@ int Solid::TimIntImpl::ls_solve_newton_step()
   solver_params.refactor = iter_ == 1;
   solver_params.reset = true;
   solver_params.projector = projector_;
-  linsolve_error = solver_->solve(stiff_->epetra_operator(), disi_, fres_, solver_params);
+  linsolve_error = solver_->solve(stiff_, disi_, fres_, solver_params);
   // check for problems in linear solver
   // however we only care about this if we have a fancy divcont action (meaning function will return
   // 0 )
@@ -3109,7 +3109,7 @@ void Solid::TimIntImpl::cmt_linear_solve()
         !cmtbridge_->get_strategy().was_in_contact() &&
         !cmtbridge_->get_strategy().was_in_contact_last_time_step())
     {
-      solver_->solve(stiff_->epetra_operator(), disi_, fres_, solver_params);
+      solver_->solve(stiff_, disi_, fres_, solver_params);
     }
     else
     {
@@ -3123,6 +3123,13 @@ void Solid::TimIntImpl::cmt_linear_solve()
       cmtbridge_->get_strategy().build_saddle_point_system(
           stiff_, fres_, disi_, dbcmaps_, blockMat, blocksol, blockrhs);
 
+      // create wrapper
+      auto sparse_operator = std::dynamic_pointer_cast<Core::LinAlg::SparseOperator>(
+          Core::Utils::shared_ptr_from_ref(*blockMat.get()));
+
+      if (!sparse_operator)
+        FOUR_C_THROW("Unexpected operator created by build_saddle_point_system()");
+
       // compute the nullspace vectors for the Lagrange multiplier field for MueLu
       if (contactsolver_->params().isSublist("Belos Parameters"))
         if (contactsolver_->params()
@@ -3135,10 +3142,13 @@ void Solid::TimIntImpl::cmt_linear_solve()
                                   .get<int>("PDE equations", -1);
 
           // get the degree of freedom map from the block matrix
-          Epetra_Operator* raw_block_mat = blockMat.get();
           auto block_mat_blocked_operator =
               std::dynamic_pointer_cast<Core::LinAlg::BlockSparseMatrixBase>(
-                  Core::Utils::shared_ptr_from_ref(*raw_block_mat));
+                  Core::Utils::shared_ptr_from_ref(*blockMat.get()));
+
+          if (!block_mat_blocked_operator)
+            FOUR_C_THROW("Failed to cast blockMat to BlockSparseMatrixBase");
+
           auto mat11 = block_mat_blocked_operator->matrix(1, 1);
           const Core::LinAlg::Map& dofmap = mat11.domain_map();
 
@@ -3158,7 +3168,7 @@ void Solid::TimIntImpl::cmt_linear_solve()
         }
 
       // solve the linear system
-      contactsolver_->solve(blockMat, blocksol, blockrhs, solver_params);
+      contactsolver_->solve(sparse_operator, blocksol, blockrhs, solver_params);
 
       // split vector and update internal displacement and Lagrange multipliers
       cmtbridge_->get_strategy().update_displacements_and_l_mincrements(disi_, blocksol);
@@ -3175,7 +3185,7 @@ void Solid::TimIntImpl::cmt_linear_solve()
     if (cmtbridge_->have_meshtying())
     {
       // solve with contact solver
-      contactsolver_->solve(stiff_->epetra_operator(), disi_, fres_, solver_params);
+      contactsolver_->solve(stiff_, disi_, fres_, solver_params);
     }
     else if (cmtbridge_->have_contact())
     {
@@ -3186,12 +3196,12 @@ void Solid::TimIntImpl::cmt_linear_solve()
           !cmtbridge_->get_strategy().was_in_contact_last_time_step())
       {
         // standard solver call (fallback solver for pure structure problem)
-        solver_->solve(stiff_->epetra_operator(), disi_, fres_, solver_params);
+        solver_->solve(stiff_, disi_, fres_, solver_params);
         return;
       }
 
       // solve with contact solver
-      contactsolver_->solve(stiff_->epetra_operator(), disi_, fres_, solver_params);
+      contactsolver_->solve(stiff_, disi_, fres_, solver_params);
     }
   }
 
@@ -3334,7 +3344,7 @@ int Solid::TimIntImpl::ptc()
     {
       solver_params.refactor = true;
       solver_params.reset = iter_ == 1;
-      linsolve_error = solver_->solve(stiff_->epetra_operator(), disi_, fres_, solver_params);
+      linsolve_error = solver_->solve(stiff_, disi_, fres_, solver_params);
       // check for problems in linear solver
       // however we only care about this if we have a fancy divcont action  (meaning function will
       // return 0 )
@@ -4050,7 +4060,7 @@ std::shared_ptr<Core::LinAlg::Vector<double>> Solid::TimIntImpl::solve_relaxatio
   Core::LinAlg::SolverParams solver_params;
   solver_params.refactor = true;
   solver_params.reset = true;
-  solver_->solve(stiff_->epetra_operator(), disi_, fres_, solver_params);
+  solver_->solve(stiff_, disi_, fres_, solver_params);
 
   // go back
   return disi_;

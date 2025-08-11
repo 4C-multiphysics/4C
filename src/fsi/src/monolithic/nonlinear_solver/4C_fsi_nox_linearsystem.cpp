@@ -28,12 +28,14 @@ FOUR_C_NAMESPACE_OPEN
 NOX::FSI::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
     Teuchos::ParameterList& linearSolverParams,
     const std::shared_ptr<::NOX::Epetra::Interface::Jacobian>& iJac,
-    const std::shared_ptr<Epetra_Operator>& J, const ::NOX::Epetra::Vector& cloneVector,
-    std::shared_ptr<Core::LinAlg::Solver> solver, const Teuchos::RCP<::NOX::Epetra::Scaling> s)
+    const std::shared_ptr<Core::LinAlg::SparseOperator>& J,
+    const ::NOX::Epetra::Vector& cloneVector, std::shared_ptr<Core::LinAlg::Solver> solver,
+    const Teuchos::RCP<::NOX::Epetra::Scaling> s)
     : utils_(printParams),
       jac_interface_ptr_(iJac),
       jac_type_(EpetraOperator),
       jac_ptr_(J),
+      operator_(J),
       scaling_(s),
       callcount_(0),
       solver_(solver),
@@ -133,7 +135,7 @@ bool NOX::FSI::LinearSystem::applyJacobianInverse(
   solver_params.refactor = true;
   solver_params.reset = callcount_ == 0;
   solver_->solve(
-      jac_ptr_, Core::Utils::shared_ptr_from_ref(disi.underlying()), fres, solver_params);
+      operator_, Core::Utils::shared_ptr_from_ref(disi.underlying()), fres, solver_params);
 
   callcount_ += 1;
 

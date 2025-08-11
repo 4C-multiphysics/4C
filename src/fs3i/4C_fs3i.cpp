@@ -740,8 +740,7 @@ void FS3I::FS3IBase::linear_solve_scatra()
   Core::LinAlg::SolverParams solver_params;
   solver_params.refactor = true;
   solver_params.reset = true;
-  scatrasolver_->solve(
-      scatrasystemmatrix_->epetra_operator(), scatraincrement_, scatrarhs_, solver_params);
+  scatrasolver_->solve(scatrasystemmatrix_, scatraincrement_, scatrarhs_, solver_params);
 }
 
 /*----------------------------------------------------------------------*/

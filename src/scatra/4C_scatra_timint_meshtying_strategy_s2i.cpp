@@ -3735,7 +3735,7 @@ void ScaTra::MeshtyingStrategyS2I::solve(const std::shared_ptr<Core::LinAlg::Sol
           // solve global system of equations
           solver_params.refactor = true;
           solver_params.reset = iteration == 1;
-          solver->solve(systemmatrix->epetra_operator(), increment, residual, solver_params);
+          solver->solve(systemmatrix, increment, residual, solver_params);
 
           // unequilibrate global increment vector if necessary
           equilibration_->unequilibrate_increment(increment);
@@ -3790,8 +3790,8 @@ void ScaTra::MeshtyingStrategyS2I::solve(const std::shared_ptr<Core::LinAlg::Sol
           // solve extended system of equations
           solver_params.refactor = true;
           solver_params.reset = iteration == 1;
-          solver->solve(extendedsystemmatrix.epetra_operator(), extendedincrement, extendedresidual,
-              solver_params);
+          solver->solve(Core::Utils::shared_ptr_from_ref(extendedsystemmatrix), extendedincrement,
+              extendedresidual, solver_params);
 
           // store solution
           extendedmaps_->extract_vector(*extendedincrement, 0, *increment);
@@ -3911,8 +3911,8 @@ void ScaTra::MeshtyingStrategyS2I::solve(const std::shared_ptr<Core::LinAlg::Sol
           // solve extended system of equations
           solver_params.refactor = true;
           solver_params.reset = iteration == 1;
-          extendedsolver_->solve(extendedsystemmatrix_->epetra_operator(), extendedincrement,
-              extendedresidual, solver_params);
+          extendedsolver_->solve(
+              extendedsystemmatrix_, extendedincrement, extendedresidual, solver_params);
 
           // unequilibrate global increment vector if necessary
           equilibration_->unequilibrate_increment(extendedincrement);

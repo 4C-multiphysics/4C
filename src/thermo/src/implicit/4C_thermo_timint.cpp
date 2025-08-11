@@ -247,7 +247,7 @@ void Thermo::TimInt::determine_capa_consist_temp_rate()
     Core::LinAlg::SolverParams solver_params;
     solver_params.refactor = true;
     solver_params.reset = true;
-    solver_->solve(tang_->epetra_operator(), (*rate_)(0), rhs, solver_params);
+    solver_->solve(tang_, (*rate_)(0), rhs, solver_params);
   }
 
   // We need to reset the tangent matrix because its graph (topology)

@@ -814,7 +814,7 @@ void SSI::SsiMono::solve_linear_system() const
       solver_params.tolerance = solver_->get_tolerance() * relax_lin_solver_tolerance_;
     }
   }
-  solver_->solve(ssi_matrices_->system_matrix()->epetra_operator(), ssi_vectors_->increment(),
+  solver_->solve(ssi_matrices_->system_matrix(), ssi_vectors_->increment(),
       ssi_vectors_->residual(), solver_params);
 
   strategy_equilibration_->unequilibrate_increment(ssi_vectors_->increment());
@@ -1520,7 +1520,7 @@ void SSI::SsiMono::calc_initial_time_derivative()
   Core::LinAlg::SolverParams solver_params;
   solver_params.refactor = true;
   solver_params.reset = true;
-  solver_->solve(massmatrix_system->epetra_operator(), phidtnp_system, rhs_system, solver_params);
+  solver_->solve(massmatrix_system, phidtnp_system, rhs_system, solver_params);
 
   // copy solution to sub problems
   auto phidtnp_scatra = maps_sub_problems()->extract_vector(

@@ -725,7 +725,7 @@ int ALE::Meshtying::solve_meshtying(Core::LinAlg::Solver& solver,
 
     Core::LinAlg::SolverParams solver_params;
     solver_params.refactor = true;
-    errorcode = solver_.solve(mergedmatrix->epetra_operator(), dis, res, solver_params);
+    errorcode = solver_.solve(mergedmatrix, dis, res, solver_params);
 
     Core::LinAlg::export_to(*dis, *disi);
     Core::LinAlg::export_to(*res, *residual);

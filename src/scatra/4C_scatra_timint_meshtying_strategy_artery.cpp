@@ -253,7 +253,7 @@ void ScaTra::MeshtyingStrategyArtery::solve(
   comb_increment_->put_scalar(0.0);
   solver_params.refactor = true;
   solver_params.reset = iteration == 1;
-  solver->solve(comb_systemmatrix_->epetra_operator(), comb_increment_, rhs_, solver_params);
+  solver->solve(comb_systemmatrix_, comb_increment_, rhs_, solver_params);
 
   // extract increments of scatra and artery-scatra field
   std::shared_ptr<const Core::LinAlg::Vector<double>> artscatrainc;

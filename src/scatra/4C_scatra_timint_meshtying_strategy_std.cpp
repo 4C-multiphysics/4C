@@ -73,7 +73,7 @@ void ScaTra::MeshtyingStrategyStd::solve(
 {
   solver_params.refactor = true;
   solver_params.reset = iteration == 1;
-  solver->solve(systemmatrix->epetra_operator(), increment, residual, solver_params);
+  solver->solve(systemmatrix, increment, residual, solver_params);
 
   return;
 }  // ScaTra::MeshtyingStrategyStd::Solve

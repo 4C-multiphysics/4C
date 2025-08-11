@@ -211,7 +211,7 @@ int Solid::TimIntCentrDiff::integrate_step()
       // in TimInt::determine_mass_damp_consist_accel
       Core::LinAlg::SolverParams solver_params;
       solver_params.reset = true;
-      solver_->solve(mass_->epetra_operator(), accn_, frimpn_, solver_params);
+      solver_->solve(mass_, accn_, frimpn_, solver_params);
     }
 
     // direct inversion based on lumped mass matrix

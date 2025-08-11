@@ -793,7 +793,7 @@ void LowMach::Algorithm::mono_loma_system_solve()
   Core::LinAlg::SolverParams solver_params;
   solver_params.refactor = true;
   solver_params.reset = true;
-  lomasolver_->solve(lomasystemmatrix_->epetra_operator(), lomaincrement_, lomarhs_, solver_params);
+  lomasolver_->solve(lomasystemmatrix_, lomaincrement_, lomarhs_, solver_params);
 }
 
 

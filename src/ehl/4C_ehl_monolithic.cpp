@@ -720,7 +720,7 @@ void EHL::Monolithic::linear_solve()
   // standard solver call
   solver_params.refactor = true;
   solver_params.reset = iter_ == 1;
-  solver_->solve(sparse->epetra_operator(), iterinc_, rhs_, solver_params);
+  solver_->solve(sparse, iterinc_, rhs_, solver_params);
 
   // Infnormscaling: unscale system after solving
   unscale_solution(*systemmatrix_, *iterinc_, *rhs_);

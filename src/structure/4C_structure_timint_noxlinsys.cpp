@@ -144,7 +144,7 @@ bool NOX::Solid::LinearSystem::applyJacobianInverse(
     Core::LinAlg::SolverParams solver_params;
     solver_params.refactor = true;
     solver_params.reset = callcount_ == 0;
-    structureSolver_->solve(J->epetra_operator(),
+    structureSolver_->solve(Core::Utils::shared_ptr_from_ref(*J),
         Core::Utils::shared_ptr_from_ref(result_view.underlying()), fres, solver_params);
     callcount_ += 1;
   }

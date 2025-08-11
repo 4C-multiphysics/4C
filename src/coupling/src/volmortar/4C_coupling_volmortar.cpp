@@ -1394,7 +1394,7 @@ void Coupling::VolMortar::VolMortarCoupl::mesh_init()
 
     Core::LinAlg::SolverParams solver_params;
     solver_params.refactor = true;
-    solver.solve(k.epetra_operator(), mergedsol, mergedX, solver_params);
+    solver.solve(Core::Utils::shared_ptr_from_ref(k), mergedsol, mergedX, solver_params);
 
     std::shared_ptr<Core::LinAlg::Vector<double>> sola =
         Core::LinAlg::create_vector(*discret1()->dof_row_map(dofseta));

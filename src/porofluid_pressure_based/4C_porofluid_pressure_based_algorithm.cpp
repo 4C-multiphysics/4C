@@ -1233,7 +1233,7 @@ void PoroPressureBased::PorofluidAlgorithm::linear_solve(
   {
     solver_params.refactor = true;
     solver_params.reset = true;
-    solver_->solve(sysmat_->epetra_operator(), increment_, residual_, solver_params);
+    solver_->solve(sysmat_, increment_, residual_, solver_params);
   }
 
   solver_->reset_tolerance();
@@ -2055,7 +2055,7 @@ void PoroPressureBased::PorofluidAlgorithm::calc_initial_time_derivative()
   Core::LinAlg::SolverParams solver_params;
   solver_params.refactor = true;
   solver_params.reset = true;
-  solver_->solve(sysmat_->epetra_operator(), phidtnp_, residual_, solver_params);
+  solver_->solve(sysmat_, phidtnp_, residual_, solver_params);
 
   // copy solution
   phidtn_->update(1.0, *phidtnp_, 0.0);

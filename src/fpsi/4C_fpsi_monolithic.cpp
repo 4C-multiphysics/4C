@@ -784,7 +784,7 @@ void FPSI::Monolithic::linear_solve()
       // standard solver call
       solver_params.refactor = true;
       solver_params.reset = iter_ == 1;
-      solver_->solve(sparse->epetra_operator(), iterinc_, rhs_, solver_params);
+      solver_->solve(sparse, iterinc_, rhs_, solver_params);
     }
   }
   else
@@ -803,7 +803,7 @@ void FPSI::Monolithic::linear_solve()
     Core::LinAlg::SolverParams solver_params;
     solver_params.refactor = true;
     solver_params.reset = iter_ == 1;
-    solver_->solve(systemmatrix_->epetra_operator(), iterinc_, rhs_, solver_params);
+    solver_->solve(systemmatrix_, iterinc_, rhs_, solver_params);
   }
 }
 
@@ -906,7 +906,7 @@ void FPSI::Monolithic::line_search(Core::LinAlg::SparseMatrix& sparse)
     Core::LinAlg::SolverParams solver_params;
     solver_params.refactor = true;
     solver_params.reset = iter_ == 1;
-    solver_->solve(sparse.epetra_operator(), iterinc_, rhs_, solver_params);
+    solver_->solve(Core::Utils::shared_ptr_from_ref(sparse), iterinc_, rhs_, solver_params);
   }
 
   if (islinesearch_ == false)

@@ -204,7 +204,7 @@ void PoroPressureBased::MeshtyingArtery::linear_solve(
   // system is ready to solve since Dirichlet Boundary conditions have been applied in
   // setup_system_matrix or Evaluate
   solver_params.refactor = true;
-  solver->solve(global_sysmat_->epetra_operator(), global_increment_, global_rhs_, solver_params);
+  solver->solve(global_sysmat_, global_increment_, global_rhs_, solver_params);
 }
 
 /*----------------------------------------------------------------------*

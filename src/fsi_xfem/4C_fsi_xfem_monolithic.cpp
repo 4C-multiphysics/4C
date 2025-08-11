@@ -2282,7 +2282,7 @@ void FSI::MonolithicXFEM::linear_solve()
     // solve the problem, work is done here!
     solver_params.refactor = true;
     solver_params.reset = iter_ == 1;
-    solver_->solve(systemmatrix_->epetra_operator(), iterinc_, rhs_, solver_params);
+    solver_->solve(systemmatrix_, iterinc_, rhs_, solver_params);
 
     // Infnormscaling: unscale system after solving
     unscale_solution(*systemmatrix_, *iterinc_, *rhs_);
@@ -2307,7 +2307,7 @@ void FSI::MonolithicXFEM::linear_solve()
     Core::LinAlg::SolverParams solver_params;
     solver_params.refactor = true;
     solver_params.reset = iter_ == 1;
-    solver_->solve(sparse->epetra_operator(), iterinc_, rhs_, solver_params);
+    solver_->solve(sparse, iterinc_, rhs_, solver_params);
   }  // MergeBlockMatrix
 
   apply_newton_damping();

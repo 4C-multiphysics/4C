@@ -395,7 +395,7 @@ void ScaTra::LevelSetAlgorithm::calc_node_based_reinit_vel()
       Core::LinAlg::SolverParams solver_params;
       solver_params.refactor = true;
       solver_params.reset = true;
-      solver_->solve(sysmat_->epetra_operator(), velcomp, residual_, solver_params);
+      solver_->solve(sysmat_, velcomp, residual_, solver_params);
 
       system_matrix()->reset();
       // reset the solver as well
@@ -477,7 +477,7 @@ void ScaTra::LevelSetAlgorithm::correction_reinit()
   Core::LinAlg::SolverParams solver_params;
   solver_params.refactor = true;
   solver_params.reset = true;
-  solver_->solve(sysmat_->epetra_operator(), phinp_, residual_, solver_params);
+  solver_->solve(sysmat_, phinp_, residual_, solver_params);
 
   // phinp_->print(std::cout);
 

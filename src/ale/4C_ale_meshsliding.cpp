@@ -417,7 +417,7 @@ int ALE::Meshsliding::solve_meshtying(Core::LinAlg::Solver& solver,
 
     Core::LinAlg::SolverParams solver_params;
     solver_params.refactor = true;
-    errorcode = solver_.solve(mergedmatrix->epetra_operator(), disi, residual, solver_params);
+    errorcode = solver_.solve(mergedmatrix, disi, residual, solver_params);
 
     recover(disi);
   }
