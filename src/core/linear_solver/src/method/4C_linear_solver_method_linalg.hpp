@@ -11,6 +11,7 @@
 #include "4C_config.hpp"
 
 #include "4C_io_pstream.hpp"
+#include "4C_linalg_sparseoperator.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_utils_exceptions.hpp"
 
@@ -115,7 +116,7 @@ namespace Core::LinAlg
                                to matrix kernel.
     \param params  (in)    : parameters for the solver. See documentation of SolverParams
     */
-    void setup(std::shared_ptr<Epetra_Operator> matrix,
+    void setup(std::shared_ptr<Core::LinAlg::SparseOperator> matrix,
         std::shared_ptr<Core::LinAlg::MultiVector<double>> x,
         std::shared_ptr<Core::LinAlg::MultiVector<double>> b, const SolverParams& params);
 
@@ -132,11 +133,11 @@ namespace Core::LinAlg
                                to matrix kernel.
     \param params  (in)    : parameters for the solver. See documentation of SolverParams
     */
-    int solve_with_multi_vector(std::shared_ptr<Epetra_Operator> matrix,
+    int solve_with_multi_vector(std::shared_ptr<Core::LinAlg::SparseOperator> matrix,
         std::shared_ptr<Core::LinAlg::MultiVector<double>> x,
         std::shared_ptr<Core::LinAlg::MultiVector<double>> b, const SolverParams& params);
 
-    int solve(std::shared_ptr<Epetra_Operator> matrix,
+    int solve(std::shared_ptr<Core::LinAlg::SparseOperator> matrix,
         std::shared_ptr<Core::LinAlg::Vector<double>> x,
         std::shared_ptr<Core::LinAlg::Vector<double>> b, const SolverParams& params);
 
