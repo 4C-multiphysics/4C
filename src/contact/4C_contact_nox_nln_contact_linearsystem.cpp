@@ -149,23 +149,23 @@ Core::LinAlg::SolverParams NOX::Nln::CONTACT::LinearSystem::set_solver_options(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void NOX::Nln::CONTACT::LinearSystem::set_linear_problem_for_solve(
-    Epetra_LinearProblem& linear_problem, Core::LinAlg::SparseOperator& jac,
-    Core::LinAlg::Vector<double>& lhs, Core::LinAlg::Vector<double>& rhs) const
+std::shared_ptr<Core::LinAlg::SparseOperator>
+NOX::Nln::CONTACT::LinearSystem::set_linear_problem_for_solve(Epetra_LinearProblem& linear_problem,
+    Core::LinAlg::SparseOperator& jac, Core::LinAlg::Vector<double>& lhs,
+    Core::LinAlg::Vector<double>& rhs) const
 {
   switch (jacType_)
   {
     case NOX::Nln::LinSystem::LinalgSparseMatrix:
-      NOX::Nln::LinearSystem::set_linear_problem_for_solve(linear_problem, jac, lhs, rhs);
+      return NOX::Nln::LinearSystem::set_linear_problem_for_solve(linear_problem, jac, lhs, rhs);
 
-      break;
     case NOX::Nln::LinSystem::LinalgBlockSparseMatrix:
     {
       p_lin_prob_.extract_active_blocks(jac, lhs, rhs);
       NOX::Nln::LinearSystem::set_linear_problem_for_solve(
           linear_problem, *p_lin_prob_.p_jac_, *p_lin_prob_.p_lhs_, *p_lin_prob_.p_rhs_);
 
-      break;
+      return Core::Utils::shared_ptr_from_ref(*p_lin_prob_.p_jac_);
     }
     default:
     {
