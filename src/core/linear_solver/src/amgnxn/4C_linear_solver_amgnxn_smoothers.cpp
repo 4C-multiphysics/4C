@@ -763,11 +763,11 @@ void Core::LinearSolver::AMGNxN::DirectSolverWrapper::setup(
 {
   // Set matrix
   matrix_ = Core::Utils::shared_ptr_from_ref(*matrix);
-  a_ = std::dynamic_pointer_cast<Epetra_CrsMatrix>(matrix->epetra_matrix());
+  auto a = std::dynamic_pointer_cast<Epetra_CrsMatrix>(matrix->epetra_matrix());
 
   // Set sol vector and rhs
-  x_ = std::make_shared<Core::LinAlg::MultiVector<double>>(a_->OperatorDomainMap(), 1);
-  b_ = std::make_shared<Core::LinAlg::MultiVector<double>>(a_->OperatorRangeMap(), 1);
+  x_ = std::make_shared<Core::LinAlg::MultiVector<double>>(a->OperatorDomainMap(), 1);
+  b_ = std::make_shared<Core::LinAlg::MultiVector<double>>(a->OperatorRangeMap(), 1);
 
   // Create linear solver. Default solver: UMFPACK
   const auto solvertype = params->get<std::string>("solver", "umfpack");
@@ -786,7 +786,7 @@ void Core::LinearSolver::AMGNxN::DirectSolverWrapper::setup(
     FOUR_C_THROW("Solver type not supported as direct solver in AMGNXN framework");
 
   solver_ = std::make_shared<Core::LinAlg::Solver>(*params,
-      Core::Communication::unpack_epetra_comm(a_->Comm()), nullptr,
+      Core::Communication::unpack_epetra_comm(a->Comm()), nullptr,
       Core::IO::Verbositylevel::standard);
 
   // Set up solver
