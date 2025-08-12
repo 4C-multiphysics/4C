@@ -41,6 +41,23 @@ Core::IO::InputSpec CONTACT::CONSTITUTIVELAW::valid_contact_constitutive_laws()
     group_index_to_type.push_back(
         CONTACT::CONSTITUTIVELAW::ConstitutiveLawType::colaw_brokenrational);
   }
+
+  // ML Surrogate law function
+  {
+    specs.emplace_back(group("CoConstLaw_ml_surrogate",
+        {
+            parameter<double>("A", {.description = "scaling factor"}),
+            parameter<double>("B", {.description = "power coefficient"}),
+            parameter<double>(
+                "Offset", {.description = "offset for contact to start", .default_value = 0.0}),
+        },
+        {
+            .description = "ML Surrogate model",
+        }));
+    group_index_to_type.push_back(
+        CONTACT::CONSTITUTIVELAW::ConstitutiveLawType::colaw_ml_surrogate);
+  }
+
   // power law function
   {
     specs.emplace_back(group("CoConstLaw_power",

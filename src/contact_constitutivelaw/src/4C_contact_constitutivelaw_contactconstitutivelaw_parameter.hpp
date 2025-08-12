@@ -30,7 +30,8 @@ namespace CONTACT::CONSTITUTIVELAW
     colaw_linear,          ///< linear constitutive law
     colaw_cubic,           ///< cubic constitutive law
     colaw_power,           ///< simple power law as constitutive law
-    colaw_mirco            ///< mirco constitutive law
+    colaw_mirco,           ///< mirco constitutive law
+    colaw_ml_surrogate,    ///< machine-learning-based surrogate contact lawpressure
   };
 
   /**

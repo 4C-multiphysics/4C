@@ -23,7 +23,7 @@ namespace CONTACT
   namespace CONSTITUTIVELAW
   {
     /*----------------------------------------------------------------------*/
-    /** \brief constitutive law parameters for machine-learning-based surrogate contact law to the
+    /** \brief constitutive law parameters for Python-based surrogate of the contact law to the
      * contact pressure
      *
      */
@@ -35,12 +35,26 @@ namespace CONTACT
        */
       MLSurrogateConstitutiveLawParams(const Core::IO::InputParameterContainer& container);
 
+      /// @name get-functions for the Constitutive Law parameters of a power law function
+      //@{
+      /// Get the scaling factor
+      double getdata() const { return a_; };
+      /// Get the power coefficient
+      double get_b() const { return b_; };
+      //@}
+
      private:
+      /// @name Constitutive Law parameters of a power function
+      //@{
+      /// scaling factor
+      const double a_;
+      /// power coefficient
+      const double b_;
     };  // class
 
     /*----------------------------------------------------------------------*/
-    /** \brief implements a mirco contact constitutive law relating the gap to the
-     * contact pressure
+    /** \brief implements a Python-based surrogate for the contact constitutive law relating the gap
+     * to the contact pressure
      */
     class MLSurrogateConstitutiveLaw : public ConstitutiveLaw
     {
@@ -51,6 +65,11 @@ namespace CONTACT
 
       //! @name Access methods
       //@{
+
+      /// Get scaling factor of power law
+      double getdata() { return params_.getdata(); }
+      /// Get power coefficient of power law
+      double get_b() { return params_.get_b(); }
 
       /// Return quick accessible contact constitutive law parameter data
       const CONTACT::CONSTITUTIVELAW::Parameter* parameter() const override { return &params_; }
