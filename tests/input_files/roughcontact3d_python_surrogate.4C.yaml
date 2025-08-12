@@ -22,6 +22,7 @@ STRUCTURAL DYNAMIC:
   M_DAMP: 1e-05
   K_DAMP: 1e-05
   LINEAR_SOLVER: 1
+  RESTARTEVERY: 1
 CONTACT DYNAMIC:
   LINEAR_SOLVER: 2
   STRATEGY: "MultiScale"
@@ -29,15 +30,10 @@ MORTAR COUPLING:
   SEARCH_ALGORITHM: "BruteForce"
   LM_DUAL_CONSISTENT: "none"
 CONTACT CONSTITUTIVE LAWS:
-  # - LAW: 1
-  #   CoConstLaw_ml_surrogate:
-  #     A: 1.017e-06
-  #     B: 3.32
-  #     Offset: 2
   - LAW: 1
-    CoConstLaw_ml_surrogate:
-      A: 20000
-      B: 0
+    CoConstLaw_python_surrogate:
+      Python_Filename: "roughcontact3D_python_surrogate_lin.py"
+      Offset: 0.0
 SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "Structure_Solver"

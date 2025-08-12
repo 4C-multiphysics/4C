@@ -5,16 +5,15 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#ifndef FOUR_C_CONTACT_CONSTITUTIVELAW_ML_SURROGATE_CONTACTCONSTITUTIVELAW_HPP
-#define FOUR_C_CONTACT_CONSTITUTIVELAW_ML_SURROGATE_CONTACTCONSTITUTIVELAW_HPP
+#ifndef FOUR_C_CONTACT_CONSTITUTIVELAW_PYTHON_SURROGATE_CONTACTCONSTITUTIVELAW_HPP
+#define FOUR_C_CONTACT_CONSTITUTIVELAW_PYTHON_SURROGATE_CONTACTCONSTITUTIVELAW_HPP
 
 #include "4C_config.hpp"
 
 #include "4C_contact_constitutivelaw_contactconstitutivelaw.hpp"
 #include "4C_contact_constitutivelaw_contactconstitutivelaw_parameter.hpp"
-#include "4C_linalg_serialdensematrix.hpp"
 
-#include <Teuchos_Ptr.hpp>
+#include <filesystem>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -27,49 +26,39 @@ namespace CONTACT
      * contact pressure
      *
      */
-    class MLSurrogateConstitutiveLawParams : public Parameter
+    class PythonSurrogateConstitutiveLawParams : public Parameter
     {
      public:
       /** \brief standard constructor
-       * \param[in] container containing the law parameter from the input file
+       * \param[in] container Contains the law parameters from the input file
        */
-      MLSurrogateConstitutiveLawParams(const Core::IO::InputParameterContainer& container);
+      PythonSurrogateConstitutiveLawParams(const Core::IO::InputParameterContainer& container);
 
-      /// @name get-functions for the Constitutive Law parameters of a power law function
-      //@{
-      /// Get the scaling factor
-      double getdata() const { return a_; };
-      /// Get the power coefficient
-      double get_b() const { return b_; };
-      //@}
+      /// Get the filename of the Python script
+      std::filesystem::path get_python_filepath() const { return python_filename_; }
 
      private:
-      /// @name Constitutive Law parameters of a power function
-      //@{
-      /// scaling factor
-      const double a_;
-      /// power coefficient
-      const double b_;
+      /// File name of python file defining the surrogate model
+      std::filesystem::path python_filename_;
+
     };  // class
 
     /*----------------------------------------------------------------------*/
     /** \brief implements a Python-based surrogate for the contact constitutive law relating the gap
      * to the contact pressure
      */
-    class MLSurrogateConstitutiveLaw : public ConstitutiveLaw
+    class PythonSurrogateConstitutiveLaw : public ConstitutiveLaw
     {
      public:
       /// construct the constitutive law object given a set of parameters
-      explicit MLSurrogateConstitutiveLaw(
-          CONTACT::CONSTITUTIVELAW::MLSurrogateConstitutiveLawParams params);
+      explicit PythonSurrogateConstitutiveLaw(
+          CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLawParams params);
 
       //! @name Access methods
       //@{
 
-      /// Get scaling factor of power law
-      double getdata() { return params_.getdata(); }
-      /// Get power coefficient of power law
-      double get_b() { return params_.get_b(); }
+      /// Get the filename of the Python script
+      std::filesystem::path get_python_filepath() { return params_.get_python_filepath(); }
 
       /// Return quick accessible contact constitutive law parameter data
       const CONTACT::CONSTITUTIVELAW::Parameter* parameter() const override { return &params_; }
@@ -80,27 +69,28 @@ namespace CONTACT
       //@{
       /** \brief Evaluate the constitutive law
        *
-       * The pressure response for a given gap is estimated through a machine learning model.
+       * The pressure response for a given gap is evaluated in a Python-based model specified in the
+       * input file.
        *
-       * \param gap contact gap at the mortar node
-       * \return The pressure response from MIRCO
+       * \param[in] gap Contact gap at the mortar node
+       * \return The pressure response from the Python surrogate model
        */
       double evaluate(double gap, CONTACT::Node* cnode) override;
 
       /** \brief Evaluate derivative of the constitutive law
        *
-       * The derivative of the pressure response is drawn from a differentiable machine learning
-       * model.
+       * The derivative of the pressure response is evaluated in a Python-based model specified in
+       * the input file.
        *
-       * \param gap contact gap at the mortar node
-       * \return Derivative of the pressure response
+       * \param[in] gap Contact gap at the mortar node
+       * \return Derivative of the pressure response from the Python surrogate model
        */
       double evaluate_derivative(double gap, CONTACT::Node* cnode) override;
       //@}
 
      private:
       /// my constitutive law parameters
-      CONTACT::CONSTITUTIVELAW::MLSurrogateConstitutiveLawParams params_;
+      CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLawParams params_;
     };
   }  // namespace CONSTITUTIVELAW
 }  // namespace CONTACT

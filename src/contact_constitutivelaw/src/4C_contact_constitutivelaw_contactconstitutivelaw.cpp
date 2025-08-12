@@ -12,8 +12,8 @@
 #include "4C_contact_constitutivelaw_contactconstitutivelaw_parameter.hpp"
 #include "4C_contact_constitutivelaw_cubic_contactconstitutivelaw.hpp"
 #include "4C_contact_constitutivelaw_linear_contactconstitutivelaw.hpp"
-#include "4C_contact_constitutivelaw_ml_surrogate_contactconstitutivelaw.hpp"
 #include "4C_contact_constitutivelaw_power_contactconstitutivelaw.hpp"
+#include "4C_contact_constitutivelaw_python_surrogate_contactconstitutivelaw.hpp"
 #include "4C_global_data.hpp"
 #include "4C_utils_enum.hpp"
 
@@ -83,12 +83,12 @@ CONTACT::CONSTITUTIVELAW::ConstitutiveLaw::factory(const int id)
           "off. Please enable this flag and configure & build 4C again.");
 #endif
     }
-    case CONTACT::CONSTITUTIVELAW::ConstitutiveLawType::colaw_ml_surrogate:
+    case CONTACT::CONSTITUTIVELAW::ConstitutiveLawType::colaw_python_surrogate:
     {
 #ifdef FOUR_C_WITH_PYBIND11
-      CONTACT::CONSTITUTIVELAW::MLSurrogateConstitutiveLawParams params(
-          coconstlawdata.group("CoConstLaw_ml_surrogate"));
-      return std::make_unique<CONTACT::CONSTITUTIVELAW::MLSurrogateConstitutiveLaw>(params);
+      CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLawParams params(
+          coconstlawdata.group("CoConstLaw_python_surrogate"));
+      return std::make_unique<CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw>(params);
 #else
       FOUR_C_THROW(
           "You are trying to use a contact consitutive law via Python, however with "

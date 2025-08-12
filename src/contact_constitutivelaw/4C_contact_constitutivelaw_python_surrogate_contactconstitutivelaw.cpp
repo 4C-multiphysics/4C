@@ -5,7 +5,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "4C_contact_constitutivelaw_ml_surrogate_contactconstitutivelaw.hpp"
+#include "4C_contact_constitutivelaw_python_surrogate_contactconstitutivelaw.hpp"
 
 #include "4C_contact_rough_node.hpp"
 #include "4C_global_data.hpp"
@@ -24,25 +24,26 @@ FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-CONTACT::CONSTITUTIVELAW::MLSurrogateConstitutiveLawParams::MLSurrogateConstitutiveLawParams(
-    const Core::IO::InputParameterContainer& container)
+CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLawParams::
+    PythonSurrogateConstitutiveLawParams(const Core::IO::InputParameterContainer& container)
     : CONTACT::CONSTITUTIVELAW::Parameter(container),
-      a_(container.get<double>("A")),
-      b_(container.get<double>("B"))
+      python_filename_(container.get<std::filesystem::path>("Python_Filename"))
 {
+  if (!std::filesystem::exists(python_filename_))
+    FOUR_C_THROW("File {} does not exist.", python_filename_.string());
 }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-CONTACT::CONSTITUTIVELAW::MLSurrogateConstitutiveLaw::MLSurrogateConstitutiveLaw(
-    CONTACT::CONSTITUTIVELAW::MLSurrogateConstitutiveLawParams params)
+CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw::PythonSurrogateConstitutiveLaw(
+    CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLawParams params)
     : params_(std::move(params))
 {
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-double CONTACT::CONSTITUTIVELAW::MLSurrogateConstitutiveLaw::evaluate(
+double CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw::evaluate(
     const double gap, CONTACT::Node* cnode)
 {
   if (gap + params_.get_offset() > 0.0)
@@ -53,20 +54,18 @@ double CONTACT::CONSTITUTIVELAW::MLSurrogateConstitutiveLaw::evaluate(
   py::scoped_interpreter guard{};
 
   py::module sys = py::module::import("sys");
-  sys.attr("path").attr("insert")(
-      0, "/home/a11bmama/codes/mayrmt_baci/src-baci/src/contact_constitutivelaw");
-  py::module model = py::module::import("model_lin");
+  sys.attr("path").attr("insert")(0, params_.get_python_filepath().parent_path().string());
+  py::module model = py::module::import(params_.get_python_filepath().stem().c_str());
   py::object evaluate = model.attr("evaluate");
 
-  const double pressure =
-      evaluate(gap, params_.get_offset(), params_.getdata(), params_.get_b()).cast<double>();
+  const double pressure = evaluate(gap, params_.get_offset()).cast<double>();
 
   return pressure;
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-double CONTACT::CONSTITUTIVELAW::MLSurrogateConstitutiveLaw::evaluate_derivative(
+double CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw::evaluate_derivative(
     const double gap, CONTACT::Node* cnode)
 {
   if (gap + params_.get_offset() > 0.0)
@@ -77,14 +76,11 @@ double CONTACT::CONSTITUTIVELAW::MLSurrogateConstitutiveLaw::evaluate_derivative
   py::scoped_interpreter guard{};
 
   py::module sys = py::module::import("sys");
-  sys.attr("path").attr("insert")(
-      0, "/home/a11bmama/codes/mayrmt_baci/src-baci/src/contact_constitutivelaw");
-  py::module model = py::module::import("model_lin");
+  sys.attr("path").attr("insert")(0, params_.get_python_filepath().parent_path().string());
+  py::module model = py::module::import(params_.get_python_filepath().stem().c_str());
   py::object evaluate_derivative = model.attr("evaluate_derivative");
 
-  const double derivative =
-      evaluate_derivative(gap, params_.get_offset(), params_.getdata(), params_.get_b())
-          .cast<double>();
+  const double derivative = evaluate_derivative(gap, params_.get_offset()).cast<double>();
 
   return derivative;
 }

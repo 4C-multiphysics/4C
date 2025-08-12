@@ -5,10 +5,13 @@
 #
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
+slope = 1.5
+intercept = 0.0
 
-def evaluate(gap, offset, slope, intercept):
+
+def evaluate(gap, offset):
     return slope * (gap + offset) + intercept
 
 
-def evaluate_derivative(gap, offset, slope, intercept):
+def evaluate_derivative(gap, offset):
     return slope

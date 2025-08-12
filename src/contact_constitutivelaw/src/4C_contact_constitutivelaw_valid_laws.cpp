@@ -42,20 +42,18 @@ Core::IO::InputSpec CONTACT::CONSTITUTIVELAW::valid_contact_constitutive_laws()
         CONTACT::CONSTITUTIVELAW::ConstitutiveLawType::colaw_brokenrational);
   }
 
-  // ML Surrogate law function
+  // Python surrogate law function
   {
-    specs.emplace_back(group("CoConstLaw_ml_surrogate",
-        {
-            parameter<double>("A", {.description = "scaling factor"}),
-            parameter<double>("B", {.description = "power coefficient"}),
+    specs.emplace_back(group("CoConstLaw_python_surrogate",
+        {parameter<std::filesystem::path>("Python_Filename",
+             {.description = "Path to the Python surrogate model file / script"}),
             parameter<double>(
-                "Offset", {.description = "offset for contact to start", .default_value = 0.0}),
-        },
+                "Offset", {.description = "offset for contact to start", .default_value = 0.0})},
         {
-            .description = "ML Surrogate model",
+            .description = "Python surrogate model",
         }));
     group_index_to_type.push_back(
-        CONTACT::CONSTITUTIVELAW::ConstitutiveLawType::colaw_ml_surrogate);
+        CONTACT::CONSTITUTIVELAW::ConstitutiveLawType::colaw_python_surrogate);
   }
 
   // power law function
