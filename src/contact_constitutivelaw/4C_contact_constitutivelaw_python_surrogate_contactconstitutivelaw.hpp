@@ -15,6 +15,11 @@
 
 #include <filesystem>
 
+#ifdef FOUR_C_WITH_PYBIND11
+
+#include <pybind11/embed.h>
+#include <pybind11/numpy.h>
+
 FOUR_C_NAMESPACE_OPEN
 
 namespace CONTACT
@@ -89,6 +94,11 @@ namespace CONTACT
       //@}
 
      private:
+      std::unique_ptr<pybind11::scoped_interpreter> guard_ = nullptr;
+
+      pybind11::object evaluate_;
+      pybind11::object evaluate_derivative_;
+
       /// my constitutive law parameters
       CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLawParams params_;
     };
@@ -97,4 +107,5 @@ namespace CONTACT
 
 FOUR_C_NAMESPACE_CLOSE
 
+#endif
 #endif

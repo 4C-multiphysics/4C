@@ -15,11 +15,6 @@
 
 #ifdef FOUR_C_WITH_PYBIND11
 
-#include <pybind11/embed.h>
-#include <pybind11/numpy.h>
-
-namespace py = pybind11;
-
 FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*/
@@ -39,6 +34,13 @@ CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw::PythonSurrogateConstit
     CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLawParams params)
     : params_(std::move(params))
 {
+  guard_ = std::make_unique<pybind11::scoped_interpreter>();
+
+  pybind11::module sys = pybind11::module::import("sys");
+  sys.attr("path").attr("insert")(0, params_.get_python_filepath().parent_path().string());
+  pybind11::module model = pybind11::module::import(params_.get_python_filepath().stem().c_str());
+  evaluate_ = model.attr("evaluate");
+  evaluate_derivative_ = model.attr("evaluate_derivative");
 }
 
 /*----------------------------------------------------------------------*
@@ -51,14 +53,7 @@ double CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw::evaluate(
     FOUR_C_THROW("You should not be here. The Evaluate function is only tested for active nodes. ");
   }
 
-  py::scoped_interpreter guard{};
-
-  py::module sys = py::module::import("sys");
-  sys.attr("path").attr("insert")(0, params_.get_python_filepath().parent_path().string());
-  py::module model = py::module::import(params_.get_python_filepath().stem().c_str());
-  py::object evaluate = model.attr("evaluate");
-
-  const double pressure = evaluate(gap, params_.get_offset()).cast<double>();
+  const double pressure = evaluate_(gap, params_.get_offset()).cast<double>();
 
   return pressure;
 }
@@ -73,14 +68,7 @@ double CONTACT::CONSTITUTIVELAW::PythonSurrogateConstitutiveLaw::evaluate_deriva
     FOUR_C_THROW("You should not be here. The Evaluate function is only tested for active nodes.");
   }
 
-  py::scoped_interpreter guard{};
-
-  py::module sys = py::module::import("sys");
-  sys.attr("path").attr("insert")(0, params_.get_python_filepath().parent_path().string());
-  py::module model = py::module::import(params_.get_python_filepath().stem().c_str());
-  py::object evaluate_derivative = model.attr("evaluate_derivative");
-
-  const double derivative = evaluate_derivative(gap, params_.get_offset()).cast<double>();
+  const double derivative = evaluate_derivative_(gap, params_.get_offset()).cast<double>();
 
   return derivative;
 }
