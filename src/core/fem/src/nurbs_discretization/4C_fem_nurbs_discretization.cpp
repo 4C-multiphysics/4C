@@ -487,13 +487,13 @@ void Core::FE::DbcNurbs::do_dirichlet_condition(const Teuchos::ParameterList& pa
   Core::LinAlg::SolverParams solver_params;
   solver_params.refactor = true;
   solver_params.reset = true;
-  solver.solve(massmatrix->epetra_operator(), dbcvector, rhs, solver_params);
+  solver.solve(massmatrix, dbcvector, rhs, solver_params);
 
   // solve for first derivatives in time
-  if (assemblevecd) solver.solve(massmatrix->epetra_operator(), dbcvectord, rhsd, solver_params);
+  if (assemblevecd) solver.solve(massmatrix, dbcvectord, rhsd, solver_params);
 
   // solve for second derivatives in time
-  if (assemblevecdd) solver.solve(massmatrix->epetra_operator(), dbcvectordd, rhsdd, solver_params);
+  if (assemblevecdd) solver.solve(massmatrix, dbcvectordd, rhsdd, solver_params);
 
   // perform resets for solver and matrix
   solver.reset();

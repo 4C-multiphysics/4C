@@ -2518,8 +2518,7 @@ void FLD::XFluid::solve()
       solver_params.refactor = true;
       solver_params.reset = itnum == 1;
       solver_params.projector = projector_;
-      solver_->solve(state_->system_matrix()->epetra_operator(), state_->inc_vel(),
-          state_->residual(), solver_params);
+      solver_->solve(state_->system_matrix(), state_->inc_vel(), state_->residual(), solver_params);
 
       // TODO: here needed because of apply Dirichlet with explicit Dirichlet flag!? CHECK THIS
       solver_->reset();
@@ -4238,7 +4237,7 @@ void FLD::XFluid::x_timint_reconstruct_ghost_values(
     Core::LinAlg::SolverParams solver_params;
     solver_params.refactor = true;
     solver_params.reset = true;
-    solver_gp.solve(sysmat_gp->epetra_operator(), incvel_gp, residual_gp, solver_params);
+    solver_gp.solve(sysmat_gp, incvel_gp, residual_gp, solver_params);
 
     // end time measurement for solver
     dtsolve_ = Teuchos::Time::wallTime() - tcpusolve;
@@ -5038,8 +5037,7 @@ void FLD::XFluid::predict_tang_vel_consist_acc()
   Core::LinAlg::SolverParams solver_params;
   solver_params.refactor = true;
   solver_params.reset = true;
-  solver_->solve(
-      state_->sysmat_->epetra_operator(), state_->incvel_, state_->residual_, solver_params);
+  solver_->solve(state_->sysmat_, state_->incvel_, state_->residual_, solver_params);
 
   // set Dirichlet increments in solution increments
   state_->incvel_->update(1.0, *dbcinc, 1.0);

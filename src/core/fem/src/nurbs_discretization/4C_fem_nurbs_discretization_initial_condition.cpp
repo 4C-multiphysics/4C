@@ -533,7 +533,7 @@ namespace
     Core::LinAlg::SolverParams solver_params;
     solver_params.refactor = true;
     solver_params.reset = true;
-    solver.solve(massmatrix->epetra_operator(), initialvals, rhs, solver_params);
+    solver.solve(massmatrix, initialvals, rhs, solver_params);
 
     // perform resets for solver and matrix
     solver.reset();

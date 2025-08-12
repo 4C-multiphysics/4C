@@ -173,7 +173,7 @@ CONTACT::MtPenaltyStrategy::mesh_initialization()
 
   Core::LinAlg::SolverParams solver_params;
   solver_params.refactor = true;
-  solver.solve(dmatrix_->epetra_operator(), Xslavemod, rhs, solver_params);
+  solver.solve(dmatrix_, Xslavemod, rhs, solver_params);
 
   //**********************************************************************
   // (3) perform mesh initialization node by node

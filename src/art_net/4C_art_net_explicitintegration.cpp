@@ -413,7 +413,7 @@ void Arteries::ArtNetExplicitTimeInt::solve(
     Core::LinAlg::SolverParams solver_params;
     solver_params.refactor = true;
     solver_params.reset = true;
-    solver_->solve(sysmat_->epetra_operator(), qanp_, rhs_, solver_params);
+    solver_->solve(sysmat_, qanp_, rhs_, solver_params);
   }
   // end time measurement for solver
   dtsolve_ = Teuchos::Time::wallTime() - tcpusolve;

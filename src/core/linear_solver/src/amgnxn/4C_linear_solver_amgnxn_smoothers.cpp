@@ -206,7 +206,7 @@ void Core::LinearSolver::AMGNxN::MergeAndSolve::setup(BlockedMatrix matrix)
   Core::LinAlg::SolverParams solver_params;
   solver_params.refactor = true;
   solver_params.reset = true;
-  solver_->setup(a_, x_, b_, solver_params);
+  solver_->setup(sparse_matrix_, x_, b_, solver_params);
 
   is_set_up_ = true;
 }
@@ -234,7 +234,7 @@ void Core::LinearSolver::AMGNxN::MergeAndSolve::solve(
 
   b_->Update(1., Xmv, 0.);
   Core::LinAlg::SolverParams solver_params;
-  solver_->solve_with_multi_vector(a_, x_, b_, solver_params);
+  solver_->solve_with_multi_vector(sparse_matrix_, x_, b_, solver_params);
   Ymv.Update(1., *x_, 0.);
 
   for (int i = 0; i < X.get_num_blocks(); i++) domain_ex.extract_vector(Ymv, i, *(Y.get_vector(i)));
@@ -762,11 +762,12 @@ void Core::LinearSolver::AMGNxN::DirectSolverWrapper::setup(
     Teuchos::RCP<Core::LinAlg::SparseMatrix> matrix, Teuchos::RCP<Teuchos::ParameterList> params)
 {
   // Set matrix
-  a_ = std::dynamic_pointer_cast<Epetra_CrsMatrix>(matrix->epetra_matrix());
+  matrix_ = Core::Utils::shared_ptr_from_ref(*matrix);
+  auto a = std::dynamic_pointer_cast<Epetra_CrsMatrix>(matrix->epetra_matrix());
 
   // Set sol vector and rhs
-  x_ = std::make_shared<Core::LinAlg::MultiVector<double>>(a_->OperatorDomainMap(), 1);
-  b_ = std::make_shared<Core::LinAlg::MultiVector<double>>(a_->OperatorRangeMap(), 1);
+  x_ = std::make_shared<Core::LinAlg::MultiVector<double>>(a->OperatorDomainMap(), 1);
+  b_ = std::make_shared<Core::LinAlg::MultiVector<double>>(a->OperatorRangeMap(), 1);
 
   // Create linear solver. Default solver: UMFPACK
   const auto solvertype = params->get<std::string>("solver", "umfpack");
@@ -785,14 +786,14 @@ void Core::LinearSolver::AMGNxN::DirectSolverWrapper::setup(
     FOUR_C_THROW("Solver type not supported as direct solver in AMGNXN framework");
 
   solver_ = std::make_shared<Core::LinAlg::Solver>(*params,
-      Core::Communication::unpack_epetra_comm(a_->Comm()), nullptr,
+      Core::Communication::unpack_epetra_comm(a->Comm()), nullptr,
       Core::IO::Verbositylevel::standard);
 
   // Set up solver
   Core::LinAlg::SolverParams solver_params;
   solver_params.refactor = true;
   solver_params.reset = true;
-  solver_->setup(a_, x_, b_, solver_params);
+  solver_->setup(matrix_, x_, b_, solver_params);
 
   is_set_up_ = true;
 }
@@ -809,7 +810,7 @@ void Core::LinearSolver::AMGNxN::DirectSolverWrapper::apply(
 
   b_->Update(1., X, 0.);
   Core::LinAlg::SolverParams solver_params;
-  solver_->solve_with_multi_vector(a_, x_, b_, solver_params);
+  solver_->solve_with_multi_vector(matrix_, x_, b_, solver_params);
   Y.Update(1., *x_, 0.);
 }
 

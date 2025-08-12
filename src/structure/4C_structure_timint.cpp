@@ -1104,7 +1104,7 @@ void Solid::TimInt::determine_mass_damp_consist_accel()
     Core::LinAlg::SolverParams solver_params;
     solver_params.refactor = true;
     solver_params.reset = true;
-    solver_->solve(mass->epetra_operator(), (*acc_)(0), rhs, solver_params);
+    solver_->solve(mass, (*acc_)(0), rhs, solver_params);
 
     //*) Add contributions of inhomogeneous DBCs
     (*acc_)(0)->update(1.0, *acc_aux, 1.0);
@@ -1597,7 +1597,7 @@ void Solid::TimInt::update_step_contact_vum()
         mf->update(-1.0, *f, 0.0);
         Core::LinAlg::SolverParams solver_params;
         solver_params.refactor = true;
-        solver_->solve(DF.epetra_operator(), dp, mf, solver_params);
+        solver_->solve(Core::Utils::shared_ptr_from_ref(DF), dp, mf, solver_params);
 
         // Update solution p_n = p_n-1 + dp
         p->update(1.0, *dp, 1.0);

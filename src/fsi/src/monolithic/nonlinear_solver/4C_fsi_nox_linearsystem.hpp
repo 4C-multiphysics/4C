@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_linalg_sparseoperator.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
 #include <NOX.H>
@@ -53,9 +54,10 @@ namespace NOX::FSI
     LinearSystem(Teuchos::ParameterList& printParams,  ///< printing parameters
         Teuchos::ParameterList& linearSolverParams,    ///< parameters for linear solution
         const std::shared_ptr<::NOX::Epetra::Interface::Jacobian>&
-            iJac,                                   ///< NOX interface to Jacobian
-        const std::shared_ptr<Epetra_Operator>& J,  ///< the Jacobian or stiffness matrix
-        const ::NOX::Epetra::Vector& cloneVector,   ///< initial guess of the solution process
+            iJac,  ///< NOX interface to Jacobian
+        const std::shared_ptr<Core::LinAlg::SparseOperator>&
+            J,                                     ///< the Jacobian or stiffness matrix
+        const ::NOX::Epetra::Vector& cloneVector,  ///< initial guess of the solution process
         std::shared_ptr<Core::LinAlg::Solver>
             structure_solver,  ///< (used-defined) linear algebraic solver
         const Teuchos::RCP<::NOX::Epetra::Scaling> scalingObject =
@@ -144,6 +146,7 @@ namespace NOX::FSI
     OperatorType jac_type_;
     mutable std::shared_ptr<Epetra_Operator> jac_ptr_;
     mutable std::shared_ptr<Epetra_Operator> prec_ptr_;
+    mutable std::shared_ptr<Core::LinAlg::SparseOperator> operator_;
     Teuchos::RCP<::NOX::Epetra::Scaling> scaling_;
     mutable std::shared_ptr<::NOX::Epetra::Vector> tmp_vector_ptr_;
 

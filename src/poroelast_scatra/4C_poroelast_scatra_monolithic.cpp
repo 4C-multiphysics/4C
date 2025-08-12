@@ -538,7 +538,7 @@ void PoroElastScaTra::PoroScatraMono::linear_solve()
     // standard solver call
     solver_params.refactor = true;
     solver_params.reset = iter_ == 1;
-    solver_->solve(sparse->epetra_operator(), iterinc_, rhs_, solver_params);
+    solver_->solve(sparse, iterinc_, rhs_, solver_params);
     //  if ( Core::Communication::my_mpi_rank(Comm())==0 ) { cout << " Solved" << endl; }
   }
   else
@@ -549,7 +549,7 @@ void PoroElastScaTra::PoroScatraMono::linear_solve()
         *systemmatrix_, *iterinc_, *rhs_, *zeros_, *combined_dbc_map());
     solver_params.refactor = true;
     solver_params.reset = iter_ == 1;
-    solver_->solve(systemmatrix_->epetra_operator(), iterinc_, rhs_, solver_params);
+    solver_->solve(systemmatrix_, iterinc_, rhs_, solver_params);
   }
 }
 

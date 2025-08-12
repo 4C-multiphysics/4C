@@ -1252,8 +1252,7 @@ void FLD::XWall::l2_project_vector(Core::LinAlg::Vector<double>& veln,
   Core::LinAlg::SolverParams solver_params;
   solver_params.refactor = true;
   solver_params.reset = true;
-  solver_->solve_with_multi_vector(
-      massmatrix_->epetra_operator(), resultvec, rhsassemble, solver_params);
+  solver_->solve_with_multi_vector(massmatrix_, resultvec, rhsassemble, solver_params);
 
   // now copy result in original vector: the result is an increment of the velocity/ acceleration
   Core::LinAlg::export_to(((*resultvec)(0)), *incveln_);

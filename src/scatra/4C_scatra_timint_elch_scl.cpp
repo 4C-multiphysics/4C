@@ -307,8 +307,8 @@ void ScaTra::ScaTraTimIntElchSCL::nonlinear_solve()
       Core::LinAlg::SolverParams solver_params;
       solver_params.refactor = true;
       solver_params.reset = iternum_ == 1;
-      solver_elch_scl_->solve(system_matrix_elch_scl_->epetra_operator(), increment_elch_scl_,
-          residual_elch_scl_, solver_params);
+      solver_elch_scl_->solve(
+          system_matrix_elch_scl_, increment_elch_scl_, residual_elch_scl_, solver_params);
       equilibration->unequilibrate_increment(increment_elch_scl_);
     }
 
@@ -1239,8 +1239,8 @@ void ScaTra::ScaTraTimIntElchSCL::calc_initial_potential_field()
     Core::LinAlg::SolverParams solver_params;
     solver_params.refactor = true;
     solver_params.reset = iternum_ == 1;
-    solver_elch_scl_->solve(system_matrix_elch_scl_->epetra_operator(), increment_elch_scl_,
-        residual_elch_scl_, solver_params);
+    solver_elch_scl_->solve(
+        system_matrix_elch_scl_, increment_elch_scl_, residual_elch_scl_, solver_params);
 
     update_iter_micro_macro();
 

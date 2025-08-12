@@ -1266,7 +1266,7 @@ void ScaTra::MeshtyingStrategyS2IElchSCL::solve(const std::shared_ptr<Core::LinA
 {
   solver_params.refactor = true;
   solver_params.reset = iteration == 1;
-  solver->solve(systemmatrix->epetra_operator(), increment, residual, solver_params);
+  solver->solve(systemmatrix, increment, residual, solver_params);
 }
 
 

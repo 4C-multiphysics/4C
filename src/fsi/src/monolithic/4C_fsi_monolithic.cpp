@@ -1226,8 +1226,8 @@ std::shared_ptr<::NOX::Epetra::LinearSystem> FSI::BlockMonolithic::create_linear
     }
   }
 
-  linSys = std::make_shared<NOX::FSI::LinearSystem>(
-      printParams, lsParams, Core::Utils::shared_ptr_from_ref(*iJac), J, noxSoln, solver);
+  linSys = std::make_shared<NOX::FSI::LinearSystem>(printParams, lsParams,
+      Core::Utils::shared_ptr_from_ref(*iJac), system_matrix(), noxSoln, solver);
 
   return linSys;
 }

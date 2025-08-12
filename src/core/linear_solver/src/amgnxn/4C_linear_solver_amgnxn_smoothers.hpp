@@ -296,7 +296,7 @@ namespace Core::LinearSolver::AMGNxN
 
    private:
     std::shared_ptr<Core::LinAlg::Solver> solver_;
-    std::shared_ptr<Epetra_Operator> a_;
+    std::shared_ptr<Core::LinAlg::SparseMatrix> matrix_;
     mutable std::shared_ptr<Core::LinAlg::MultiVector<double>> x_;
     mutable std::shared_ptr<Core::LinAlg::MultiVector<double>> b_;
     bool is_set_up_{false};

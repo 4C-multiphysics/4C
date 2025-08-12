@@ -254,13 +254,15 @@ bool NOX::Nln::LinearSystem::applyJacobianTranspose(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void NOX::Nln::LinearSystem::set_linear_problem_for_solve(Epetra_LinearProblem& linear_problem,
-    Core::LinAlg::SparseOperator& jac, Core::LinAlg::Vector<double>& lhs,
-    Core::LinAlg::Vector<double>& rhs) const
+std::shared_ptr<Core::LinAlg::SparseOperator> NOX::Nln::LinearSystem::set_linear_problem_for_solve(
+    Epetra_LinearProblem& linear_problem, Core::LinAlg::SparseOperator& jac,
+    Core::LinAlg::Vector<double>& lhs, Core::LinAlg::Vector<double>& rhs) const
 {
   linear_problem.SetOperator(jac.epetra_operator().get());
   linear_problem.SetLHS(&lhs.get_ref_of_epetra_vector());
   linear_problem.SetRHS(&rhs.get_ref_of_epetra_vector());
+
+  return Core::Utils::shared_ptr_from_ref(jac);
 }
 
 /*----------------------------------------------------------------------*
@@ -301,7 +303,9 @@ bool NOX::Nln::LinearSystem::applyJacobianInverse(Teuchos::ParameterList& linear
   {
     Core::LinAlg::View result_view(result.getEpetraVector());
     Core::LinAlg::View nonConstInput_view(nonConstInput.getEpetraVector());
-    set_linear_problem_for_solve(linProblem, jacobian(), result_view, nonConstInput_view);
+
+    auto matrix =
+        set_linear_problem_for_solve(linProblem, jacobian(), result_view, nonConstInput_view);
 
     // ************* Begin linear system scaling *****************
     if (!!(scaling_))
@@ -337,8 +341,6 @@ bool NOX::Nln::LinearSystem::applyJacobianInverse(Teuchos::ParameterList& linear
 
     solver_params.refactor = true;
     solver_params.reset = iter == 0;
-
-    auto matrix = Core::Utils::shared_ptr_from_ref(*linProblem.GetOperator());
 
     Core::LinAlg::View x(*linProblem.GetLHS());
     Core::LinAlg::View b(*linProblem.GetRHS());

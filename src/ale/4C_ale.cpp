@@ -290,7 +290,7 @@ int ALE::Ale::solve()
   {
     Core::LinAlg::SolverParams solver_params;
     solver_params.refactor = true;
-    errorcode = solver_->solve(sysmat_->epetra_operator(), disi_, rhs, solver_params);
+    errorcode = solver_->solve(sysmat_, disi_, rhs, solver_params);
   }
   else
     errorcode = meshtying_->solve_meshtying(*solver_, sysmat_, disi_, rhs, dispnp_);

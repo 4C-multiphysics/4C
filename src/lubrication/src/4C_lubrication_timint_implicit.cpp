@@ -737,7 +737,7 @@ void Lubrication::TimIntImpl::nonlinear_solve()
       // strategy_->Solve(solver_,sysmat_,increment_,residual_,prenp_,iternum_,projector_);
       solver_params.refactor = true;
       solver_params.reset = true;
-      solver_->solve(sysmat_->epetra_operator(), increment_, residual_, solver_params);
+      solver_->solve(sysmat_, increment_, residual_, solver_params);
 
       solver_->reset_tolerance();
 

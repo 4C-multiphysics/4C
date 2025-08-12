@@ -702,7 +702,7 @@ namespace ReducedLung
       }
 
       // Solve.
-      solver->solve(sysmat.epetra_operator(), Core::Utils::shared_ptr_from_ref(x),
+      solver->solve(Core::Utils::shared_ptr_from_ref(sysmat), Core::Utils::shared_ptr_from_ref(x),
           Core::Utils::shared_ptr_from_ref(rhs), {});
 
       // Update dofs with solution vector.

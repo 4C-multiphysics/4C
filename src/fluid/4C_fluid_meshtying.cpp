@@ -617,7 +617,7 @@ void FLD::Meshtying::solve_meshtying(Core::LinAlg::Solver& solver,
 
       {
         TEUCHOS_FUNC_TIME_MONITOR("Meshtying:  3.2)   - Solve");
-        solver_.solve(sysmatsolve->epetra_operator(), inc, res, solver_params);
+        solver_.solve(sysmatsolve, inc, res, solver_params);
       }
 
       {
@@ -667,7 +667,7 @@ void FLD::Meshtying::solve_meshtying(Core::LinAlg::Solver& solver,
       {
         TEUCHOS_FUNC_TIME_MONITOR("Meshtying:  3.2)   - Solve");
 
-        solver_.solve(mergedmatrix->epetra_operator(), inc, res, solver_params);
+        solver_.solve(mergedmatrix, inc, res, solver_params);
 
         Core::LinAlg::export_to(*inc, *incvel);
         Core::LinAlg::export_to(*res, *residual);
@@ -680,7 +680,7 @@ void FLD::Meshtying::solve_meshtying(Core::LinAlg::Solver& solver,
     {
       {
         TEUCHOS_FUNC_TIME_MONITOR("Meshtying:  3.3)   - Solve");
-        solver_.solve(sysmat->epetra_operator(), incvel, residual, solver_params);
+        solver_.solve(sysmat, incvel, residual, solver_params);
       }
 
       {

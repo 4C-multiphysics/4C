@@ -269,10 +269,17 @@ namespace NOX
           const std::map<NOX::Nln::SolutionType, Teuchos::RCP<Core::LinAlg::Solver>>& solvers,
           Teuchos::RCP<Core::LinAlg::Solver>& currSolver) = 0;
 
-      //! Set-up the linear problem object
-      virtual void set_linear_problem_for_solve(Epetra_LinearProblem& linear_problem,
-          Core::LinAlg::SparseOperator& jac, Core::LinAlg::Vector<double>& lhs,
-          Core::LinAlg::Vector<double>& rhs) const;
+      /*! Set-up the linear problem object
+       *
+       * This function now returns a pointer to the actual SparseOperator that was used to fill
+       * up linProblem since it can differ from that returned by jacobian(). This is a temporary
+       * solution and should be refactored when Epetra and Epetra_LinearProblem in particular have
+       * been removed.
+       *
+       *  */
+      virtual std::shared_ptr<Core::LinAlg::SparseOperator> set_linear_problem_for_solve(
+          Epetra_LinearProblem& linear_problem, Core::LinAlg::SparseOperator& jac,
+          Core::LinAlg::Vector<double>& lhs, Core::LinAlg::Vector<double>& rhs) const;
 
       /*! \brief Complete the solution vector after a linear solver attempt
        *

@@ -607,7 +607,7 @@ void PoroElast::Monolithic::linear_solve()
 
     solver_params.refactor = true;
     solver_params.reset = iter_ == 1;
-    solver_->solve(sparse->epetra_operator(), iterinc_, rhs_, solver_params);
+    solver_->solve(sparse, iterinc_, rhs_, solver_params);
   }
   else  // use bgs2x2_operator
   {
@@ -618,7 +618,7 @@ void PoroElast::Monolithic::linear_solve()
     // standard solver call
     solver_params.refactor = true;
     solver_params.reset = iter_ == 1;
-    solver_->solve(systemmatrix_->epetra_operator(), iterinc_, rhs_, solver_params);
+    solver_->solve(systemmatrix_, iterinc_, rhs_, solver_params);
   }
 
   equilibration_->unequilibrate_increment(iterinc_);

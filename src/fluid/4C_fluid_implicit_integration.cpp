@@ -893,7 +893,7 @@ void FLD::FluidImplicitTimeInt::solve()
         solver_params.refactor = true;
         solver_params.reset = itnum == 1;
         solver_params.projector = projector_;
-        solver_->solve(sysmat_->epetra_operator(), incvel_, residual_, solver_params);
+        solver_->solve(sysmat_, incvel_, residual_, solver_params);
 
         // unscale solution
         if (fluid_infnormscaling_ != nullptr)
@@ -5354,7 +5354,7 @@ void FLD::FluidImplicitTimeInt::linear_relaxation_solve(
   Core::LinAlg::SolverParams solver_params;
   solver_params.refactor = !inrelaxation_;
   solver_params.reset = !inrelaxation_;
-  solver_->solve(sysmat_->epetra_operator(), incvel_, residual_, solver_params);
+  solver_->solve(sysmat_, incvel_, residual_, solver_params);
 
   // and now we need the reaction forces
 
@@ -6316,7 +6316,7 @@ void FLD::FluidImplicitTimeInt::predict_tang_vel_consist_acc()
   Core::LinAlg::SolverParams solver_params;
   solver_params.refactor = true;
   solver_params.reset = true;
-  solver_->solve(sysmat_->epetra_operator(), incvel_, residual_, solver_params);
+  solver_->solve(sysmat_, incvel_, residual_, solver_params);
 
   // set Dirichlet increments in solution increments
   incvel_->update(1.0, *dbcinc, 1.0);

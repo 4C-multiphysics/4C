@@ -1560,7 +1560,7 @@ void STI::Monolithic::solve()
     Core::LinAlg::SolverParams solver_params;
     solver_params.refactor = true;
     solver_params.reset = iter_ == 1;
-    solver_->solve(systemmatrix_->epetra_operator(), increment_, residual_, solver_params);
+    solver_->solve(systemmatrix_, increment_, residual_, solver_params);
 
     equilibration_->unequilibrate_increment(increment_);
 

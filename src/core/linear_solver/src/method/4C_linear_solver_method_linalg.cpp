@@ -146,7 +146,7 @@ void Core::LinAlg::Solver::reset_tolerance()
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void Core::LinAlg::Solver::setup(std::shared_ptr<Epetra_Operator> matrix,
+void Core::LinAlg::Solver::setup(std::shared_ptr<Core::LinAlg::SparseOperator> matrix,
     std::shared_ptr<Core::LinAlg::MultiVector<double>> x,
     std::shared_ptr<Core::LinAlg::MultiVector<double>> b, const SolverParams& params)
 {
@@ -194,13 +194,14 @@ void Core::LinAlg::Solver::setup(std::shared_ptr<Epetra_Operator> matrix,
       FOUR_C_THROW("Unknown type of solver");
   }
 
-  solver_->setup(matrix, x, b, refactor, params.reset, params.projector);
+  solver_->setup(matrix->epetra_operator(), x, b, refactor, params.reset, params.projector);
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 
-int Core::LinAlg::Solver::solve_with_multi_vector(std::shared_ptr<Epetra_Operator> matrix,
+int Core::LinAlg::Solver::solve_with_multi_vector(
+    std::shared_ptr<Core::LinAlg::SparseOperator> matrix,
     std::shared_ptr<Core::LinAlg::MultiVector<double>> x,
     std::shared_ptr<Core::LinAlg::MultiVector<double>> b, const Core::LinAlg::SolverParams& params)
 {
@@ -215,7 +216,7 @@ int Core::LinAlg::Solver::solve_with_multi_vector(std::shared_ptr<Epetra_Operato
   return error_value;
 }
 
-int Core::LinAlg::Solver::solve(std::shared_ptr<Epetra_Operator> matrix,
+int Core::LinAlg::Solver::solve(std::shared_ptr<Core::LinAlg::SparseOperator> matrix,
     std::shared_ptr<Core::LinAlg::Vector<double>> x,
     std::shared_ptr<Core::LinAlg::Vector<double>> b, const SolverParams& params)
 {
