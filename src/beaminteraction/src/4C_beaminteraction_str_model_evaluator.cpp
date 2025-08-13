@@ -744,7 +744,7 @@ bool Solid::ModelEvaluator::BeamInteraction::assemble_force(
   check_init_setup();
 
   Core::LinAlg::assemble_my_vector(1.0, f, timefac_np, *force_beaminteraction_);
-  if (have_lagrange_dofs()) (*me_vec_ptr_->begin())->assemble_force(f);
+  if (have_lagrange_dofs()) (*me_vec_ptr_)[0]->assemble_force(f);
 
   return true;
 }
@@ -761,7 +761,7 @@ bool Solid::ModelEvaluator::BeamInteraction::assemble_jacobian(
 
   if (have_lagrange_dofs())
   {
-    (*me_vec_ptr_->begin())->assemble_stiff(jac);
+    (*me_vec_ptr_)[0]->assemble_stiff(jac);
   }
 
 
@@ -1120,7 +1120,7 @@ Solid::ModelEvaluator::BeamInteraction::get_block_dof_row_map_ptr() const
 
   if (have_lagrange_dofs())
   {
-    return (*me_vec_ptr_->begin())->get_lagrange_map();
+    return (*me_vec_ptr_)[0]->get_lagrange_map();
   }
   else
     return global_state().dof_row_map();

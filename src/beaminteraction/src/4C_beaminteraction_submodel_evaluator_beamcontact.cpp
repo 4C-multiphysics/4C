@@ -309,8 +309,6 @@ bool BeamInteraction::SubmodelEvaluator::BeamContact::evaluate_force()
   // Loop over the assembly manager and assemble contributions into the global force vector.
   for (auto& assembly_manager : assembly_managers_)
   {
-    std::cout << "-------------------assembly manager-------------------" << std::endl;
-    std::cout << "There are " << assembly_managers_.size() << " assembly managers\n";
     assembly_manager->evaluate_force_stiff(discret_ptr(), beam_interaction_data_state_ptr(),
         beam_interaction_data_state_ptr()->get_force_np(), nullptr);
   }
@@ -826,41 +824,28 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::get_half_interaction_dista
 std::shared_ptr<const FourC::Core::LinAlg::Map>
 BeamInteraction::SubmodelEvaluator::BeamContact::get_lagrange_map()
 {
-  // if (assembly_managers_.size() != 1) FOUR_C_THROW("Only working for single assembly manager");
-  std::vector<std::shared_ptr<const Core::LinAlg::Map>> lagrange_maps_vector;
-  for (auto& assembly_manager : assembly_managers_)
-  {
-    auto indirect_assembly_manager =
-        std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_manager);
-
-    lagrange_maps_vector.push_back(
-        indirect_assembly_manager->get_mortar_manager()->lambda_dof_rowmap_);
-  }
-  return Core::LinAlg::MultiMapExtractor::merge_maps(lagrange_maps_vector);
+  if (assembly_managers_.size() != 1) FOUR_C_THROW("Only working for single assembly manager");
+  auto indirect_assembly_manager =
+      std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_managers_[0]);
+  return indirect_assembly_manager->get_mortar_manager()->lambda_dof_rowmap_;
 }
 
 void BeamInteraction::SubmodelEvaluator::BeamContact::assemble_force(
     Core::LinAlg::Vector<double>& f)
 {
-  for (auto& assembly_manager : assembly_managers_)
-  {
-    auto indirect_assembly_manager =
-        std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_manager);
-    indirect_assembly_manager->get_mortar_manager()->assemble_force(
-        g_state(), f, beam_interaction_data_state_ptr());
-  }
+  auto indirect_assembly_manager =
+      std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_managers_[0]);
+  indirect_assembly_manager->get_mortar_manager()->assemble_force(
+      g_state(), f, beam_interaction_data_state_ptr());
 };
 
 void BeamInteraction::SubmodelEvaluator::BeamContact::assemble_stiff(
     Core::LinAlg::SparseOperator& jac)
 {
-  for (auto& assembly_manager : assembly_managers_)
-  {
-    auto indirect_assembly_manager =
-        std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_manager);
-    indirect_assembly_manager->get_mortar_manager()->assemble_stiff(
-        g_state(), jac, beam_interaction_data_state_ptr());
-  }
+  auto indirect_assembly_manager =
+      std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_managers_[0]);
+  indirect_assembly_manager->get_mortar_manager()->assemble_stiff(
+      g_state(), jac, beam_interaction_data_state_ptr());
 }
 
 /*----------------------------------------------------------------------------*
