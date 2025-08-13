@@ -65,6 +65,7 @@
 #include "4C_porofluid_pressure_based_input.hpp"
 #include "4C_rebalance_input.hpp"
 #include "4C_red_airways_input.hpp"
+#include "4C_reduced_lung_input.hpp"
 #include "4C_solver_nonlin_nox_input.hpp"
 #include "4C_structure_new_monitor_dbc_input.hpp"
 #include "4C_thermo_input.hpp"
@@ -257,6 +258,7 @@ std::map<std::string, Core::IO::InputSpec> Global::valid_parameters()
   ArteryNetwork::set_valid_parameters(specs);
   Inpar::BioFilm::set_valid_parameters(specs);
   Airway::set_valid_parameters(specs);
+  ReducedLung::set_valid_parameters(specs);
   Inpar::Cardiovascular0D::set_valid_parameters(specs);
   Inpar::FPSI::set_valid_parameters(specs);
   FBI::set_valid_parameters(specs);

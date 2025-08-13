@@ -4,6 +4,44 @@ TITLE:
   - "Test full configuration of airways and terminal units."
 PROBLEM TYPE:
   PROBLEMTYPE: "Reduced_Lung"
+REDUCED DIMENSIONAL LUNG:
+  AIR_PROPERTIES:
+    DENSITY: 1.176e-06
+    DYNAMIC_VISCOSITY: 1.79105e-05
+  DYNAMICS:
+    DYNAMIC_TYPE: BackwardEuler
+    LINEAR_SOLVER: 1
+    NUM_STEP: 1
+    RESTART_EVERY: 1
+    RESULTS_EVERY: 1
+    TIMESTEP: 1
+  LUNG_TREE:
+    ELEMENT_TYPE:
+      from_file: "reduced_lung_3_aw_2_tu_fields.json"
+    GENERATION:
+      from_file: "reduced_lung_3_aw_2_tu_fields.json"
+    AIRWAYS:
+      AIRWAY_MODEL:
+        constant: Resistive
+      RESISTIVE:
+        GAMMA:
+          constant: 1.0
+      RADIUS:
+        from_file: "reduced_lung_3_aw_2_tu_fields.json"
+    TERMINAL_UNITS:
+      RHEOLOGICAL_MODEL:
+        RHEOLOGICAL_MODEL_TYPE:
+          constant: KelvinVoigt
+        KELVIN_VOIGT:
+          ETA:
+            constant: 0.0
+      ELASTICITY_MODEL:
+        ELASTICITY_MODEL_TYPE:
+          constant: Linear
+        LINEAR:
+          ELASTICITY:
+            constant: 1.0
+
 REDUCED DIMENSIONAL AIRWAYS DYNAMIC:
   TIMESTEP: 1
   NUMSTEP: 1
