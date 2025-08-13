@@ -348,36 +348,14 @@ namespace
     }
   }
 
-  class DomainReader
+  struct DomainReader
   {
-   public:
-    DomainReader(std::shared_ptr<Core::FE::Discretization> dis, const Core::IO::InputFile& input,
-        std::string sectionname);
+    Core::FE::Discretization& target_discretization;
 
-    std::shared_ptr<Core::FE::Discretization> my_dis() const { return dis_; }
+    std::string section_name;
 
-    void create_partitioned_mesh(int nodeGIdOfFirstNewNode) const;
-
-    Core::IO::GridGenerator::RectangularCuboidInputs read_rectangular_cuboid_input_data() const;
-
-    /// finalize reading. fill_complete(false,false,false), that is, do not
-    /// initialize elements. This is done later after reading boundary conditions.
-    void complete() const;
-
-    /// discretization name
-    std::string name_;
-
-    /// the main input file
-    const Core::IO::InputFile& input_;
-
-    /// my comm
-    MPI_Comm comm_;
-
-    /// my section to read
-    std::string sectionname_;
-
-    /// my discretization
-    std::shared_ptr<Core::FE::Discretization> dis_;
+    [[nodiscard]] Core::IO::GridGenerator::RectangularCuboidInputs
+    read_rectangular_cuboid_input_data(const Core::IO::InputFile& input) const;
   };
 
   void broadcast_input_data_to_all_procs(
@@ -419,77 +397,39 @@ namespace
     }
   }
 
-  DomainReader::DomainReader(std::shared_ptr<Core::FE::Discretization> dis,
-      const Core::IO::InputFile& input, std::string sectionname)
-      : name_(dis->name()),
-        input_(input),
-        comm_(dis->get_comm()),
-        sectionname_(sectionname),
-        dis_(dis)
+
+  /*----------------------------------------------------------------------*/
+  /*----------------------------------------------------------------------*/
+  Core::IO::GridGenerator::RectangularCuboidInputs DomainReader::read_rectangular_cuboid_input_data(
+      const Core::IO::InputFile& input) const
   {
-  }
-
-  /*----------------------------------------------------------------------*/
-  /*----------------------------------------------------------------------*/
-  void DomainReader::create_partitioned_mesh(int nodeGIdOfFirstNewNode) const
-  {
-    const int myrank = Core::Communication::my_mpi_rank(comm_);
-
-    Teuchos::Time time("", true);
-
-    if (myrank == 0)
-      Core::IO::cout << "Entering domain generation mode for " << name_
-                     << " discretization ...\nCreate and partition elements      in...."
-                     << Core::IO::endl;
-
-    Core::IO::GridGenerator::RectangularCuboidInputs inputData =
-        DomainReader::read_rectangular_cuboid_input_data();
-    inputData.node_gid_of_first_new_node_ = nodeGIdOfFirstNewNode;
-
-    Core::IO::GridGenerator::create_rectangular_cuboid_discretization(*dis_, inputData, false);
-
-    if (!myrank)
-      Core::IO::cout << "............................................... " << std::setw(10)
-                     << std::setprecision(5) << std::scientific << time.totalElapsedTime(true)
-                     << " secs" << Core::IO::endl;
-
-    return;
-  }
-
-  /*----------------------------------------------------------------------*/
-  /*----------------------------------------------------------------------*/
-  Core::IO::GridGenerator::RectangularCuboidInputs
-  DomainReader::read_rectangular_cuboid_input_data() const
-  {
-    Core::IO::GridGenerator::RectangularCuboidInputs inputData;
+    Core::IO::GridGenerator::RectangularCuboidInputs data;
     // all reading is done on proc 0
-    if (Core::Communication::my_mpi_rank(comm_) == 0)
+    if (Core::Communication::my_mpi_rank(input.get_comm()) == 0)
     {
       bool any_lines_read = false;
       // read domain info
-      for (const auto& line : input_.in_section_rank_0_only(sectionname_))
+      for (const auto& line : input.in_section_rank_0_only(section_name))
       {
         any_lines_read = true;
         std::istringstream t{std::string{line.get_as_dat_style_string()}};
         std::string key;
         t >> key;
         if (key == "LOWER_BOUND")
-          t >> inputData.bottom_corner_point_[0] >> inputData.bottom_corner_point_[1] >>
-              inputData.bottom_corner_point_[2];
+          t >> data.bottom_corner_point_[0] >> data.bottom_corner_point_[1] >>
+              data.bottom_corner_point_[2];
         else if (key == "UPPER_BOUND")
-          t >> inputData.top_corner_point_[0] >> inputData.top_corner_point_[1] >>
-              inputData.top_corner_point_[2];
+          t >> data.top_corner_point_[0] >> data.top_corner_point_[1] >> data.top_corner_point_[2];
         else if (key == "INTERVALS")
-          t >> inputData.interval_[0] >> inputData.interval_[1] >> inputData.interval_[2];
+          t >> data.interval_[0] >> data.interval_[1] >> data.interval_[2];
         else if (key == "ROTATION")
-          t >> inputData.rotation_angle_[0] >> inputData.rotation_angle_[1] >>
-              inputData.rotation_angle_[2];
+          t >> data.rotation_angle_[0] >> data.rotation_angle_[1] >> data.rotation_angle_[2];
         else if (key == "ELEMENTS")
         {
           std::string temp_str;
-          t >> inputData.elementtype_ >> temp_str;
-          inputData.cell_type = Core::FE::string_to_cell_type(temp_str);
-          getline(t, inputData.elearguments_);
+          t >> data.elementtype_ >> temp_str;
+          data.cell_type = Core::FE::string_to_cell_type(temp_str);
+          getline(t, data.elearguments_);
         }
         else if (key == "PARTITION")
         {
@@ -498,9 +438,9 @@ namespace
           std::transform(
               tmp.begin(), tmp.end(), tmp.begin(), [](unsigned char c) { return std::tolower(c); });
           if (tmp == "auto")
-            inputData.autopartition_ = true;
+            data.autopartition_ = true;
           else if (tmp == "structured")
-            inputData.autopartition_ = false;
+            data.autopartition_ = false;
           else
             FOUR_C_THROW(
                 "Invalid argument for PARTITION in DOMAIN reader. Valid options are \"auto\" "
@@ -517,34 +457,14 @@ namespace
     }
 
     // broadcast if necessary
-    if (Core::Communication::num_mpi_ranks(comm_) > 1)
+    if (Core::Communication::num_mpi_ranks(input.get_comm()) > 1)
     {
-      broadcast_input_data_to_all_procs(comm_, inputData);
+      broadcast_input_data_to_all_procs(input.get_comm(), data);
     }
 
-    return inputData;
+    return data;
   }
 
-
-  /*----------------------------------------------------------------------*/
-  /*----------------------------------------------------------------------*/
-  void DomainReader::complete() const
-  {
-    const int myrank = Core::Communication::my_mpi_rank(comm_);
-
-    Teuchos::Time time("", true);
-
-    if (!myrank)
-      Core::IO::cout << "Complete discretization " << std::left << std::setw(16) << name_
-                     << " in...." << Core::IO::flush;
-
-    int err = dis_->fill_complete(false, false, false);
-    if (err) FOUR_C_THROW("dis_->fill_complete() returned {}", err);
-
-    if (!myrank) Core::IO::cout << time.totalElapsedTime(true) << " secs" << Core::IO::endl;
-
-    Core::Rebalance::Utils::print_parallel_distribution(*dis_);
-  }
 
   std::pair<std::shared_ptr<Core::LinAlg::Map>, std::shared_ptr<Core::LinAlg::Map>>
   do_rebalance_discretization(const std::shared_ptr<const Core::LinAlg::Graph>& graph,
@@ -813,6 +733,49 @@ namespace
     }
   }
 
+  void generate_mesh(
+      const Core::IO::InputFile& input, const DomainReader& domain_reader, int& node_count)
+  {
+    const int myrank = Core::Communication::my_mpi_rank(input.get_comm());
+    auto& target_discretization = domain_reader.target_discretization;
+
+    {
+      Teuchos::Time time("", true);
+
+      if (myrank == 0)
+        Core::IO::cout << "Entering domain generation mode for " << target_discretization.name()
+                       << " discretization ...\nCreate and partition elements      in...."
+                       << Core::IO::endl;
+
+      Core::IO::GridGenerator::RectangularCuboidInputs inputData =
+          domain_reader.read_rectangular_cuboid_input_data(input);
+      inputData.node_gid_of_first_new_node_ = node_count;
+
+      Core::IO::GridGenerator::create_rectangular_cuboid_discretization(
+          target_discretization, inputData, false);
+
+      if (!myrank)
+        Core::IO::cout << "............................................... " << std::setw(10)
+                       << std::setprecision(5) << std::scientific << time.totalElapsedTime(true)
+                       << " secs" << Core::IO::endl;
+    }
+
+    {
+      Teuchos::Time time("", true);
+
+      if (!myrank)
+        Core::IO::cout << "Complete discretization " << std::left << std::setw(16)
+                       << target_discretization.name() << " in...." << Core::IO::flush;
+
+      int err = target_discretization.fill_complete(false, false, false);
+      if (err) FOUR_C_THROW("dis_->fill_complete() returned {}", err);
+
+      if (!myrank) Core::IO::cout << time.totalElapsedTime(true) << " secs" << Core::IO::endl;
+
+      Core::Rebalance::Utils::print_parallel_distribution(target_discretization);
+    }
+  }
+
   void read_mesh_from_exodus(const Core::IO::InputFile& input,
       Core::IO::Internal::ExodusReader& exodus_reader,
       const Core::IO::MeshReader::MeshReaderParameters& parameters, int& ele_count, MPI_Comm comm)
@@ -991,7 +954,10 @@ void Core::IO::MeshReader::read_and_partition()
     }
     else if (available_section[section_name + " DOMAIN"])
     {
-      domain_readers.emplace_back(DomainReader(dis, input_, section_name + " DOMAIN"));
+      domain_readers.emplace_back(DomainReader{
+          .target_discretization = *dis,
+          .section_name = section_name + " DOMAIN",
+      });
     }
     else if (available_section[section_name + " GEOMETRY"])
     {
@@ -1018,9 +984,8 @@ void Core::IO::MeshReader::read_and_partition()
   Core::Communication::broadcast(max_node_id, 0, comm_);
   for (auto& domain_reader : domain_readers)
   {
-    domain_reader.create_partitioned_mesh(max_node_id);
-    domain_reader.complete();
-    max_node_id = domain_reader.my_dis()->node_row_map()->max_all_gid() + 1;
+    generate_mesh(input_, domain_reader, max_node_id);
+    max_node_id = domain_reader.target_discretization.node_row_map()->max_all_gid() + 1;
   }
 
   // First, we look at all the mesh files we are going to read and determine if they are
