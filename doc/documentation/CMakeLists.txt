@@ -53,14 +53,8 @@ if(FOUR_C_BUILD_DOCUMENTATION)
       )
 
   set(_sphinx_FILES_FROM_TESTS_DIR "${_sphinx_OUT_DIR}/testfiles")
-  file(MAKE_DIRECTORY ${_sphinx_FILES_FROM_TESTS_DIR})
   file(GLOB _sphinx_YAML_FILES "${PROJECT_SOURCE_DIR}/tests/tutorials/*.4C.yaml")
   file(GLOB _sphinx_JOU_FILES "${PROJECT_SOURCE_DIR}/tests/tutorials/*.jou")
-
-  foreach(FILE ${_sphinx_TEST_INPUT_FILES} ${_sphinx_YAML_FILES} ${_sphinx_JOU_FILES})
-    get_filename_component(FILENAME ${FILE} NAME)
-    configure_file(${FILE} ${_sphinx_FILES_FROM_TESTS_DIR}/${FILENAME} COPYONLY)
-  endforeach()
 
   #install the python virtual environment with sphinx
   find_package(Sphinx REQUIRED)
@@ -75,16 +69,31 @@ if(FOUR_C_BUILD_DOCUMENTATION)
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${PROJECT_BINARY_DIR}/doc/tmp"
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${_sphinx_OUT_DIR}/reference_docs"
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${_sphinx_HTML_DIR}"
-    # the following command also creates the directory ${_sphinx_OUT_DIR}/reference_docs again
+    COMMAND ${CMAKE_COMMAND} -E remove_directory "${_sphinx_OUT_DIR}/testfiles"
+    # create_rtd is used to generate some element information
+    # that is later used to create element plots for the documentation.
+    # It also creates the directory ${_sphinx_OUT_DIR}/reference_docs again
     COMMAND create_rtd
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${_sphinx_OUT_DIR}/testfiles"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_BINARY_DIR}/doc/tmp"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_sphinx_OUT_DIR}/reference_docs/tutorials"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_sphinx_OUT_DIR}/reference_docs/analysis_guide"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_sphinx_OUT_DIR}/reference_docs/reference_images"
+    # Copy files specified above from _sphinx_TEST_INPUT_FILES
+    COMMAND
+      ${CMAKE_COMMAND} -E copy_if_different ${_sphinx_TEST_INPUT_FILES}
+      "${_sphinx_OUT_DIR}/testfiles"
+    # Copy tutorial files
+    COMMAND
+      ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/tests/tutorials"
+      "${_sphinx_OUT_DIR}/testfiles"
+    # Run 4C to generate a help file
     COMMAND ${FOUR_C_EXECUTABLE_NAME} -h > ${_sphinx_OUT_DIR}/reference_docs/4C-help.txt
+    # Generate a cmake preset list which is used in the documentation
     COMMAND
       ${CMAKE_COMMAND} ${PROJECT_SOURCE_DIR} --list-presets >
       ${_sphinx_OUT_DIR}/reference_docs/4C-cmake-presets.txt
+    # A list of cmake variables will also be given in the documentation.
     COMMAND
       bash ${CMAKE_CURRENT_SOURCE_DIR}/scripts/extract_cmake_variables.sh
       ${PROJECT_BINARY_DIR}/CMakeCache.txt >

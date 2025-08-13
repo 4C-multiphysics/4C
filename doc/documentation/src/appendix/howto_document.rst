@@ -97,12 +97,12 @@ I also like `this doc <https://books.dehlia.in/writing-with-ratatouille/toc/>`_.
   ::
 
      .. list-table::
-     :header-rows: 1
+         :header-rows: 1
 
-     * - Header 1
-       - Header 2
-     * - Left col
-       - Right col
+         * - Header 1
+           - Header 2
+         * - Left col
+           - Right col
 
 
 - **Images** can be entered in the following way:

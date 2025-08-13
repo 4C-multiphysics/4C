@@ -20,9 +20,10 @@ The following tutorials are available to show different features of |FOURC|.
    :maxdepth: 2
 
    tutorial_introduction
+   tutorial_poisson
    tutorial_fluid
-   tutorial_fsi_2d
-   tutorial_fsi_3d
    tutorial_solid
    tutorial_contact_3d
+   tutorial_fsi_2d
+   tutorial_fsi_3d
    tutorial_battery

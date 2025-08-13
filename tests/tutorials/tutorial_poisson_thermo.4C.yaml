@@ -1,0 +1,71 @@
+TITLE:
+  - "Thermo problem for testing the thermo element"
+PROBLEM SIZE:
+  DIM: 2
+PROBLEM TYPE:
+  PROBLEMTYPE: "Thermo"
+#IO:
+#  THERM_TEMPERATURE: true
+#  THERM_HEATFLUX: Current
+#  THERM_TEMPGRAD: None
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 1
+THERMAL DYNAMIC/RUNTIME VTK OUTPUT:
+  OUTPUT_THERMO: true
+  TEMPERATURE: true
+
+THERMAL DYNAMIC:
+  DYNAMICTYPE: Statics
+  TIMESTEP: 1
+  NUMSTEP: 1
+  MAXTIME: 1
+  LINEAR_SOLVER: 1
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "THERMAL_SOLVER"
+DESIGN LINE DIRICH CONDITIONS:
+  - E: 1
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [0]
+    FUNCT: [0]
+  - E: 2
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [0]
+    FUNCT: [0]
+  - E: 3
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [0]
+    FUNCT: [0]
+  - E: 4
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [0]
+    FUNCT: [0]
+DESIGN SURF NEUMANN CONDITIONS:
+  - E: 1
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [1]
+    FUNCT: [0]
+MATERIALS:
+  - MAT: 1
+    MAT_Fourier:
+      CAPA: 1
+      CONDUCT:
+        constant: [1]
+THERMO GEOMETRY:
+  ELEMENT_BLOCKS:
+    - ID: 1
+      THERMO:
+        QUAD4:
+          MAT: 1
+  FILE: poisson_problem_geo.e
+  SHOW_INFO: detailed_summary

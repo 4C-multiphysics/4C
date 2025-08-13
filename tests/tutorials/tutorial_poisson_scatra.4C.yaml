@@ -1,0 +1,63 @@
+TITLE:
+  - "Straight Convection"
+PROBLEM SIZE:
+  ELEMENTS: 361
+  NODES: 400
+  MATERIALS: 1
+PROBLEM TYPE:
+  PROBLEMTYPE: "Scalar_Transport"
+SCALAR TRANSPORT DYNAMIC:
+  TIMEINTEGR: "Stationary"
+  TIMESTEP: 1
+  MAXTIME: 1
+  NUMSTEP: 1
+  LINEAR_SOLVER: 1
+
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Sca_Tra_Solver"
+DESIGN LINE DIRICH CONDITIONS:
+  - E: 1
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [0]
+    FUNCT: [0]
+  - E: 2
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [0]
+    FUNCT: [0]
+  - E: 3
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [0]
+    FUNCT: [0]
+  - E: 4
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [0]
+    FUNCT: [0]
+DESIGN SURF NEUMANN CONDITIONS:
+  - E: 1
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 1
+    ONOFF: [1]
+    VAL: [1]
+    FUNCT: [0]
+MATERIALS:
+  - MAT: 1
+    MAT_scatra:
+      DIFFUSIVITY: 1
+TRANSPORT GEOMETRY:
+  ELEMENT_BLOCKS:
+    - ID: 1
+      TRANSP:
+        QUAD4:
+          MAT: 1
+          TYPE: Std
+  FILE: poisson_problem_geo.e
+  SHOW_INFO: detailed_summary
