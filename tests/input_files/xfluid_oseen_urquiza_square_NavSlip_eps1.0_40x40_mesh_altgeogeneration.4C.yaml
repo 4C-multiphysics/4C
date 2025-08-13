@@ -338,8 +338,12 @@ STRUCTURE ELEMENTS:
   - "3 SOLID HEX8 9 10 14 13 12 11 15 16 MAT 2 KINEM nonlinear"
   - "4 SOLID HEX8 3 12 16 7 11 15 8 4 MAT 2 KINEM nonlinear"
 FLUID DOMAIN:
-  - "LOWER_BOUND -1.6 -1.6 -.04"
-  - "UPPER_BOUND 1.6 1.6 .04"
-  - "INTERVALS 40 40 1"
-  - "ELEMENTS FLUID HEX8 MAT 1 NA Euler"
-  - "PARTITION auto"
+  bottom_corner_point: [-1.6, -1.6, -.04]
+  top_corner_point: [1.6, 1.6, .04]
+  subdivisions: [40, 40, 1]
+  elements:
+    FLUID:
+      HEX8:
+        MAT: 1
+        NA: Euler
+  auto_partition: true

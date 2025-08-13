@@ -140,9 +140,6 @@ Core::IO::InputFile Global::set_up_input_file(MPI_Comm comm)
       "REDUCED D AIRWAYS ELEMENTS",
       "PARTICLES",
       "PERIODIC BOUNDINGBOX ELEMENTS",
-      // domains
-      "FLUID DOMAIN",
-      "STRUCTURE DOMAIN",
       // general geometry
       "NODE COORDS",
       "DNODE-NODE TOPOLOGY",

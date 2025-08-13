@@ -55,6 +55,7 @@
 #include "4C_inpar_wear.hpp"
 #include "4C_inpar_xfem.hpp"
 #include "4C_io_exodus.hpp"
+#include "4C_io_gridgenerator.hpp"
 #include "4C_io_input_file_utils.hpp"
 #include "4C_io_input_spec_builders.hpp"
 #include "4C_io_pstream.hpp"
@@ -176,11 +177,20 @@ std::map<std::string, Core::IO::InputSpec> Global::valid_parameters()
             .required = false});
   };
 
+  const auto add_domain_section = [spec = Core::IO::GridGenerator::RectangularCuboidInputs::spec()](
+                                      auto& specs, const std::string& field_identifier)
+  {
+    specs[field_identifier + " DOMAIN"] = group(field_identifier + " DOMAIN", {spec},
+        {.description = "Generate a mesh for discretization " + field_identifier,
+            .required = false});
+  };
+
   const std::vector known_fields = {"STRUCTURE", "FLUID", "LUBRICATION", "TRANSPORT", "TRANSPORT2",
       "ALE", "ARTERY", "REDUCED D AIRWAYS", "THERMO", "PERIODIC BOUNDINGBOX"};
   for (const auto& field : known_fields)
   {
     add_geometry_section(specs, field);
+    add_domain_section(specs, field);
   }
 
   specs["fields"] = list("fields",

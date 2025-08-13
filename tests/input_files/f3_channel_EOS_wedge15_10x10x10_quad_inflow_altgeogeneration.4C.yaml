@@ -280,8 +280,12 @@ DVOL-NODE TOPOLOGY:
   - "VOLUME fluid DVOL 1"
   - "VOLUME fluid DVOL 2"
 FLUID DOMAIN:
-  - "LOWER_BOUND -0.5 -0.5 -0.5"
-  - "UPPER_BOUND 0.5 0.5 0.5"
-  - "INTERVALS 10 10 10"
-  - "ELEMENTS FLUID WEDGE15 MAT 1 NA Euler"
-  - "PARTITION auto"
+  bottom_corner_point: [-0.5, -0.5, -0.5]
+  top_corner_point: [0.5, 0.5, 0.5]
+  subdivisions: [10, 10, 10]
+  elements:
+    FLUID:
+      WEDGE15:
+        MAT: 1
+        NA: Euler
+  auto_partition: true

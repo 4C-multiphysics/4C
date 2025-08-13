@@ -91,8 +91,12 @@ DSURF-NODE TOPOLOGY:
   - "SIDE structure x- DSURFACE 1"
   - "SIDE structure x+ DSURFACE 2"
 STRUCTURE DOMAIN:
-  - "LOWER_BOUND 0.0 0.0 0.0"
-  - "UPPER_BOUND 4.0 4.0 4.0"
-  - "INTERVALS 3 3 3"
-  - "ELEMENTS SOLID HEX8 MAT 1 KINEM nonlinear"
-  - "PARTITION structured"
+  bottom_corner_point: [0.0, 0.0, 0.0]
+  top_corner_point: [4.0, 4.0, 4.0]
+  subdivisions: [3, 3, 3]
+  auto_partition: false
+  elements:
+    SOLID:
+      HEX8:
+        MAT: 1
+        KINEM: linear

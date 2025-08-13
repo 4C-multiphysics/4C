@@ -11,7 +11,9 @@
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_node.hpp"
 #include "4C_global_data.hpp"
+#include "4C_inpar_structure.hpp"
 #include "4C_io_gridgenerator.hpp"
+#include "4C_io_input_parameter_container.templates.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_mat_par_bundle.hpp"
@@ -68,7 +70,8 @@ namespace
   {
     inputData_.elementtype_ = "SOLID";
     inputData_.cell_type = Core::FE::CellType::hex8;
-    inputData_.elearguments_ = "MAT 1 KINEM nonlinear";
+    inputData_.element_arguments.add("MAT", 1);
+    inputData_.element_arguments.add("KINEM", Inpar::Solid::KinemType::nonlinearTotLag);
 
     Core::IO::GridGenerator::create_rectangular_cuboid_discretization(*testdis_, inputData_, true);
 
@@ -89,7 +92,8 @@ namespace
   {
     inputData_.elementtype_ = "SOLID";
     inputData_.cell_type = Core::FE::CellType::hex8;
-    inputData_.elearguments_ = "MAT 1 KINEM nonlinear";
+    inputData_.element_arguments.add("MAT", 1);
+    inputData_.element_arguments.add("KINEM", Inpar::Solid::KinemType::nonlinearTotLag);
     inputData_.rotation_angle_ = std::array<double, 3>{30.0, 10.0, 7.0};
 
     Core::IO::GridGenerator::create_rectangular_cuboid_discretization(*testdis_, inputData_, true);
@@ -111,7 +115,8 @@ namespace
   {
     inputData_.elementtype_ = "SOLID";
     inputData_.cell_type = Core::FE::CellType::hex27;
-    inputData_.elearguments_ = "MAT 1 KINEM nonlinear";
+    inputData_.element_arguments.add("MAT", 1);
+    inputData_.element_arguments.add("KINEM", Inpar::Solid::KinemType::nonlinearTotLag);
 
     Core::IO::GridGenerator::create_rectangular_cuboid_discretization(*testdis_, inputData_, true);
 
@@ -132,7 +137,8 @@ namespace
   {
     inputData_.elementtype_ = "SOLID";
     inputData_.cell_type = Core::FE::CellType::wedge6;
-    inputData_.elearguments_ = "MAT 1 KINEM nonlinear";
+    inputData_.element_arguments.add("MAT", 1);
+    inputData_.element_arguments.add("KINEM", Inpar::Solid::KinemType::nonlinearTotLag);
     inputData_.autopartition_ = true;
 
     Core::IO::GridGenerator::create_rectangular_cuboid_discretization(*testdis_, inputData_, true);

@@ -353,117 +353,7 @@ namespace
     Core::FE::Discretization& target_discretization;
 
     std::string section_name;
-
-    [[nodiscard]] Core::IO::GridGenerator::RectangularCuboidInputs
-    read_rectangular_cuboid_input_data(const Core::IO::InputFile& input) const;
   };
-
-  void broadcast_input_data_to_all_procs(
-      MPI_Comm comm, Core::IO::GridGenerator::RectangularCuboidInputs& inputData)
-  {
-    const int myrank = Core::Communication::my_mpi_rank(comm);
-
-    std::vector<char> data;
-    if (myrank == 0)
-    {
-      Core::Communication::PackBuffer buffer;
-      add_to_pack(buffer, inputData.bottom_corner_point_);
-      add_to_pack(buffer, inputData.top_corner_point_);
-      add_to_pack(buffer, inputData.interval_);
-      add_to_pack(buffer, inputData.rotation_angle_);
-      add_to_pack(buffer, inputData.autopartition_);
-      add_to_pack(buffer, inputData.elementtype_);
-      add_to_pack(buffer, inputData.cell_type);
-      add_to_pack(buffer, inputData.elearguments_);
-      std::swap(data, buffer());
-    }
-
-    ssize_t data_size = data.size();
-    Core::Communication::broadcast(&data_size, 1, 0, comm);
-    if (myrank != 0) data.resize(data_size, 0);
-    Core::Communication::broadcast(data.data(), data.size(), 0, comm);
-
-    Core::Communication::UnpackBuffer buffer(data);
-    if (myrank != 0)
-    {
-      extract_from_pack(buffer, inputData.bottom_corner_point_);
-      extract_from_pack(buffer, inputData.top_corner_point_);
-      extract_from_pack(buffer, inputData.interval_);
-      extract_from_pack(buffer, inputData.rotation_angle_);
-      extract_from_pack(buffer, inputData.autopartition_);
-      extract_from_pack(buffer, inputData.elementtype_);
-      extract_from_pack(buffer, inputData.cell_type);
-      extract_from_pack(buffer, inputData.elearguments_);
-    }
-  }
-
-
-  /*----------------------------------------------------------------------*/
-  /*----------------------------------------------------------------------*/
-  Core::IO::GridGenerator::RectangularCuboidInputs DomainReader::read_rectangular_cuboid_input_data(
-      const Core::IO::InputFile& input) const
-  {
-    Core::IO::GridGenerator::RectangularCuboidInputs data;
-    // all reading is done on proc 0
-    if (Core::Communication::my_mpi_rank(input.get_comm()) == 0)
-    {
-      bool any_lines_read = false;
-      // read domain info
-      for (const auto& line : input.in_section_rank_0_only(section_name))
-      {
-        any_lines_read = true;
-        std::istringstream t{std::string{line.get_as_dat_style_string()}};
-        std::string key;
-        t >> key;
-        if (key == "LOWER_BOUND")
-          t >> data.bottom_corner_point_[0] >> data.bottom_corner_point_[1] >>
-              data.bottom_corner_point_[2];
-        else if (key == "UPPER_BOUND")
-          t >> data.top_corner_point_[0] >> data.top_corner_point_[1] >> data.top_corner_point_[2];
-        else if (key == "INTERVALS")
-          t >> data.interval_[0] >> data.interval_[1] >> data.interval_[2];
-        else if (key == "ROTATION")
-          t >> data.rotation_angle_[0] >> data.rotation_angle_[1] >> data.rotation_angle_[2];
-        else if (key == "ELEMENTS")
-        {
-          std::string temp_str;
-          t >> data.elementtype_ >> temp_str;
-          data.cell_type = Core::FE::string_to_cell_type(temp_str);
-          getline(t, data.elearguments_);
-        }
-        else if (key == "PARTITION")
-        {
-          std::string tmp;
-          t >> tmp;
-          std::transform(
-              tmp.begin(), tmp.end(), tmp.begin(), [](unsigned char c) { return std::tolower(c); });
-          if (tmp == "auto")
-            data.autopartition_ = true;
-          else if (tmp == "structured")
-            data.autopartition_ = false;
-          else
-            FOUR_C_THROW(
-                "Invalid argument for PARTITION in DOMAIN reader. Valid options are \"auto\" "
-                "and \"structured\".");
-        }
-        else
-          FOUR_C_THROW("Unknown Key in DOMAIN section");
-      }
-
-      if (!any_lines_read)
-      {
-        FOUR_C_THROW("No DOMAIN specified but box geometry selected!");
-      }
-    }
-
-    // broadcast if necessary
-    if (Core::Communication::num_mpi_ranks(input.get_comm()) > 1)
-    {
-      broadcast_input_data_to_all_procs(input.get_comm(), data);
-    }
-
-    return data;
-  }
 
 
   std::pair<std::shared_ptr<Core::LinAlg::Map>, std::shared_ptr<Core::LinAlg::Map>>
@@ -747,8 +637,10 @@ namespace
                        << " discretization ...\nCreate and partition elements      in...."
                        << Core::IO::endl;
 
-      Core::IO::GridGenerator::RectangularCuboidInputs inputData =
-          domain_reader.read_rectangular_cuboid_input_data(input);
+      Core::IO::InputParameterContainer container;
+      input.match_section(domain_reader.section_name, container);
+      auto inputData = Core::IO::GridGenerator::RectangularCuboidInputs::from_input(
+          container.group(domain_reader.section_name));
       inputData.node_gid_of_first_new_node_ = node_count;
 
       Core::IO::GridGenerator::create_rectangular_cuboid_discretization(
