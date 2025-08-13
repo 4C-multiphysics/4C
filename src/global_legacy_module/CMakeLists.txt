@@ -30,6 +30,7 @@ set(_dependencies
     porofluid_pressure_based_elast_scatra
     porofluid_pressure_based_ele
     red_airways
+    reduced_lung
     rigidsphere
     scatra_ele
     shell7p
