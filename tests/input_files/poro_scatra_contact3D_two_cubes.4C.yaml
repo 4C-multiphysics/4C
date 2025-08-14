@@ -403,7 +403,7 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 23
       QUANTITY: "dispz"
-      VALUE: 1.096025534030374e-09
+      VALUE: 1.096025e-09
       TOLERANCE: 1e-15
   - FLUID:
       DIS: "porofluid"
