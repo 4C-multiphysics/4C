@@ -601,6 +601,12 @@ namespace
         colmap = std::make_shared<Core::LinAlg::Map>(
             -1, graph->col_map().num_my_elements(), graph->col_map().my_global_elements(), 0, comm);
 
+        if (Core::Communication::num_mpi_ranks(comm) == 1)
+        {
+          // In the case of a single MPI rank we don't have to perform the redistribution.
+          break;
+        }
+
         discret.redistribute(*rowmap, *colmap, {.do_boundary_conditions = false});
 
         std::shared_ptr<const Core::LinAlg::Graph> enriched_graph =
