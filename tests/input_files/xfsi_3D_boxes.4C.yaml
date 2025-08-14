@@ -83,19 +83,27 @@ DSURF-NODE TOPOLOGY:
   - "SIDE structure z+ DSURFACE 2"
   - "SIDE structure z- DSURFACE 2"
 STRUCTURE DOMAIN:
-  - "LOWER_BOUND -0.14 -0.14 -0.14"
-  - "UPPER_BOUND 0.14 0.14 0.14"
-  - "INTERVALS 1 1 1"
-  - "ROTATION 0 45 45"
-  - "ELEMENTS SOLID HEX8 MAT 2 KINEM nonlinear"
-  - "PARTITION structured"
+  bottom_corner_point: [-0.14, -0.14, -0.14]
+  top_corner_point: [0.14, 0.14, 0.14]
+  subdivisions: [1, 1, 1]
+  rotation_angle: [0, 45, 45]
+  auto_partition: false
+  elements:
+    SOLID:
+      HEX8:
+        MAT: 2
+        KINEM: nonlinear
 FLUID DOMAIN:
-  - "LOWER_BOUND -0.3 -0.3 -0.3"
-  - "UPPER_BOUND 0.3 0.3 0.3"
-  - "INTERVALS 2 2 3"
-  - "ROTATION 0 0 0"
-  - "ELEMENTS FLUID HEX8 MAT 1 NA Euler"
-  - "PARTITION structured"
+  bottom_corner_point: [-0.3, -0.3, -0.3]
+  top_corner_point: [0.3, 0.3, 0.3]
+  subdivisions: [2, 2, 3]
+  rotation_angle: [0, 0, 0]
+  auto_partition: false
+  elements:
+    FLUID:
+      HEX8:
+        MAT: 1
+        NA: Euler
 RESULT DESCRIPTION:
   - STRUCTURE:
       DIS: "structure"

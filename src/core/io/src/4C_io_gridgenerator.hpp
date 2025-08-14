@@ -11,6 +11,8 @@
 #include "4C_config.hpp"
 
 #include "4C_fem_general_cell_type.hpp"
+#include "4C_io_input_parameter_container.hpp"
+#include "4C_io_input_spec.hpp"
 
 #include <array>
 #include <string>
@@ -61,13 +63,24 @@ namespace Core::IO::GridGenerator
     Core::FE::CellType cell_type;
 
     /// further arguments to the elements to be created
-    std::string elearguments_;
+    InputParameterContainer element_arguments;
 
     /// global id of the first newly created node
     int node_gid_of_first_new_node_{0};
 
     /// decide on partitioning strategy
     bool autopartition_{false};
+
+    /**
+     * Return the InputSpec containing the parameters encoded in this struct.
+     */
+    static InputSpec spec();
+
+    /**
+     * Given an InputParameterContainer that matches the spec(), create a
+     * RectangularCuboidInputs object.
+     */
+    static RectangularCuboidInputs from_input(const Core::IO::InputParameterContainer& input);
   };
 
 }  // namespace Core::IO::GridGenerator

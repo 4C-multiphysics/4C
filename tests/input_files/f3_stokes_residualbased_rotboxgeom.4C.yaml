@@ -75,9 +75,13 @@ DSURF-NODE TOPOLOGY:
   - "SIDE fluid z- DSURFACE 5"
   - "SIDE fluid z+ DSURFACE 6"
 FLUID DOMAIN:
-  - "LOWER_BOUND -1 -1 -1"
-  - "UPPER_BOUND 1 1 1"
-  - "INTERVALS 5 5 5"
-  - "ROTATION 10 20 30"
-  - "ELEMENTS FLUID HEX8 MAT 1 NA Euler"
-  - "PARTITION structured"
+  bottom_corner_point: [-1, -1, -1]
+  top_corner_point: [1, 1, 1]
+  subdivisions: [5, 5, 5]
+  rotation_angle: [10, 20, 30]
+  elements:
+    FLUID:
+      HEX8:
+        MAT: 1
+        NA: Euler
+  auto_partition: false

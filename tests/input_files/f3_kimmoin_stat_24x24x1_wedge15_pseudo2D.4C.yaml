@@ -153,8 +153,12 @@ DSURF-NODE TOPOLOGY:
 DVOL-NODE TOPOLOGY:
   - "VOLUME fluid DVOL 1"
 FLUID DOMAIN:
-  - "LOWER_BOUND -0.5 -0.5 -0.01"
-  - "UPPER_BOUND 0.5 0.5 0.01"
-  - "INTERVALS 24 24 1"
-  - "ELEMENTS FLUID WEDGE15 MAT 1 NA Euler"
-  - "PARTITION auto"
+  bottom_corner_point: [-0.5, -0.5, -0.01]
+  top_corner_point: [0.5, 0.5, 0.01]
+  subdivisions: [24, 24, 1]
+  elements:
+    FLUID:
+      WEDGE15:
+        MAT: 1
+        NA: Euler
+  auto_partition: true

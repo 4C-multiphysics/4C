@@ -224,34 +224,35 @@ void Core::IO::read_design(InputFile& input, const std::string& name,
       const Core::FE::Discretization& actdis = get_discretization(disname);
 
       std::vector<double> box_specifications;
+      box_specifications.reserve(9);
       {
-        for (int init = 0; init < 9; ++init) box_specifications.push_back(0.0);
         if (Core::Communication::my_mpi_rank(input.get_comm()) == 0)  // Reading is done by proc 0
         {
           // get original domain section from the input file
-          std::string dommarker = disname + " DOMAIN";
-          std::transform(dommarker.begin(), dommarker.end(), dommarker.begin(), ::toupper);
+          std::string domain_section_name = disname + " DOMAIN";
+          std::ranges::transform(domain_section_name, domain_section_name.begin(), ::toupper);
 
-          for (const auto& line : input.in_section_rank_0_only(dommarker))
+          InputParameterContainer container;
+          input.match_section(domain_section_name, container);
+          const auto& domain_data = container.group(domain_section_name);
+
+          const auto append_to_box_specifications = [&box_specifications](
+                                                        const std::vector<double>& values)
           {
-            std::istringstream t{std::string{line.get_as_dat_style_string()}};
-            std::string key;
-            t >> key;
+            FOUR_C_ASSERT_ALWAYS(
+                values.size() == 3, "Internal error: exactly three values expected.");
+            box_specifications.insert(box_specifications.end(), values.begin(), values.end());
+          };
 
-            if (key == "LOWER_BOUND")
-            {
-              t >> box_specifications[0] >> box_specifications[1] >> box_specifications[2];
-            }
-            else if (key == "UPPER_BOUND")
-            {
-              t >> box_specifications[3] >> box_specifications[4] >> box_specifications[5];
-            }
-            else if (key == "ROTATION")
-            {
-              t >> box_specifications[6] >> box_specifications[7] >> box_specifications[8];
-            }
-          }
+          append_to_box_specifications(domain_data.get<std::vector<double>>("bottom_corner_point"));
+          append_to_box_specifications(domain_data.get<std::vector<double>>("top_corner_point"));
+          append_to_box_specifications(domain_data.get<std::vector<double>>("rotation_angle"));
         }
+        else  // All other processors get an empty vector
+        {
+          box_specifications.resize(9, 0.0);
+        }
+
         // All other processors get this info broadcasted
         Core::Communication::broadcast(box_specifications.data(),
             static_cast<int>(box_specifications.size()), 0, input.get_comm());

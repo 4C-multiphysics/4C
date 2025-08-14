@@ -143,11 +143,15 @@ DSURF-NODE TOPOLOGY:
   - "SIDE fluid x- DSURFACE 3"
   - "SIDE fluid x+ DSURFACE 4"
 FLUID DOMAIN:
-  - "LOWER_BOUND -0.5 -0.5 -0.5"
-  - "UPPER_BOUND 0.5 0.5 0.5"
-  - "INTERVALS 4 4 4"
-  - "ELEMENTS FLUID HEX8 MAT 1 NA Euler"
-  - "PARTITION structured"
+  bottom_corner_point: [-0.5, -0.5, -0.5]
+  top_corner_point: [0.5, 0.5, 0.5]
+  subdivisions: [4, 4, 4]
+  elements:
+    FLUID:
+      HEX8:
+        MAT: 1
+        NA: Euler
+  auto_partition: false
 NODE COORDS:
   - "NODE 1 COORD 0.0 -0.5 0"
   - "NODE 2 COORD 0.0 0.0 0"

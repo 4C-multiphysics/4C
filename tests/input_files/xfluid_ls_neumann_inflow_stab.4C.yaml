@@ -72,12 +72,16 @@ DESIGN XFEM LEVELSET NEUMANN VOL CONDITIONS:
 DVOL-NODE TOPOLOGY:
   - "VOLUME fluid DVOL 1"
 FLUID DOMAIN:
-  - "LOWER_BOUND -0.5 -0.5 -.03"
-  - "UPPER_BOUND 0.5 0.5 .03"
-  - "INTERVALS 16 16 1"
-  - "ROTATION 0 0 0"
-  - "ELEMENTS FLUID HEX8 MAT 1 NA Euler"
-  - "PARTITION structured"
+  bottom_corner_point: [-0.5, -0.5, -.03]
+  top_corner_point: [0.5, 0.5, .03]
+  subdivisions: [16, 16, 1]
+  rotation_angle: [0, 0, 0]
+  elements:
+    FLUID:
+      HEX8:
+        MAT: 1
+        NA: Euler
+  auto_partition: false
 RESULT DESCRIPTION:
   - XFLUID:
       DIS: "fluid"
