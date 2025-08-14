@@ -580,7 +580,7 @@ namespace Core::IO
           InputSpecBuilders::all_of(std::vector(all_sections.begin(), all_sections.end()));
 
       YamlNodeRef spec_emitter{sections, ""};
-      combined_spec.emit_metadata(spec_emitter);
+      combined_spec.emit_metadata(spec_emitter, {.condense_duplicated_specs_threshold = 5});
     }
 
     {

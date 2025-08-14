@@ -175,6 +175,52 @@ namespace
     ryml::id_type num_children_before;
   };
 
+  /**
+   * This function emits metadata or inserts a reference to an already existing metadata node.
+   */
+  void emit_metadata_helper(const Core::IO::InputSpec& spec, Core::IO::YamlNodeRef node,
+      Core::IO::Internal::EmitMetadataContext& context)
+  {
+    if (spec.use_count() > context.options.condense_duplicated_specs_threshold &&
+        !context.currently_emitting_to_references &&
+        spec.impl().data.type == Core::IO::Internal::InputSpecType::group)
+    {
+      // We have not yet written the reference metadata for this spec, so create it first.
+      if (!context.emitted_specs.contains(&spec.impl()))
+      {
+        // Make a new reference node in the yaml tree and emit the metadata into it.
+        auto references_node =
+            node.node.tree()->rootref()[ryml::to_csubstr(context.options.references_node_name)];
+        // Ensure that the name of the reference node is serialized into the YAML tree.
+        references_node << ryml::key(context.options.references_node_name);
+        references_node |= ryml::MAP;
+
+
+        auto next_id = references_node.num_children();
+        std::string ref_name = std::to_string(next_id);
+        FOUR_C_ASSERT(!references_node.has_child(ryml::to_csubstr(ref_name)),
+            "Internal error: duplicate reference name {}.", ref_name);
+        auto target_node = references_node.append_child();
+        target_node << ryml::key(ref_name);
+        target_node |= ryml::MAP;
+
+        context.currently_emitting_to_references = true;
+        spec.impl().emit_metadata(node.wrap(target_node), context);
+        context.currently_emitting_to_references = false;
+
+        context.emitted_specs.emplace(&spec.impl(), ref_name);
+      }
+
+      // Use the reference instead of the full metadata.
+      auto dst = node.node.append_child();
+      dst << ryml::key(context.options.reference_key);
+      dst << context.emitted_specs[&spec.impl()];
+    }
+    else
+    {
+      spec.impl().emit_metadata(node, context);
+    }
+  }
 }  // namespace
 
 
@@ -727,7 +773,8 @@ void Core::IO::Internal::GroupSpec::print(std::ostream& stream, std::size_t inde
   spec.impl().print(stream, indent);
 }
 
-void Core::IO::Internal::GroupSpec::emit_metadata(YamlNodeRef node) const
+void Core::IO::Internal::GroupSpec::emit_metadata(
+    YamlNodeRef node, EmitMetadataContext& context) const
 {
   node.node |= ryml::MAP;
   node.node["name"] << name;
@@ -742,7 +789,7 @@ void Core::IO::Internal::GroupSpec::emit_metadata(YamlNodeRef node) const
   {
     auto child = node.node["specs"].append_child();
     child |= ryml::MAP;
-    spec.impl().emit_metadata(node.wrap(child));
+    emit_metadata_helper(spec, node.wrap(child), context);
   }
 }
 
@@ -817,7 +864,8 @@ void Core::IO::Internal::AllOfSpec::print(std::ostream& stream, std::size_t inde
   }
 }
 
-void Core::IO::Internal::AllOfSpec::emit_metadata(YamlNodeRef node) const
+void Core::IO::Internal::AllOfSpec::emit_metadata(
+    YamlNodeRef node, EmitMetadataContext& context) const
 {
   node.node |= ryml::MAP;
 
@@ -828,7 +876,7 @@ void Core::IO::Internal::AllOfSpec::emit_metadata(YamlNodeRef node) const
     {
       auto child = node.node["specs"].append_child();
       child |= ryml::MAP;
-      spec.impl().emit_metadata(node.wrap(child));
+      emit_metadata_helper(spec, node.wrap(child), context);
     }
   }
 }
@@ -969,7 +1017,8 @@ void Core::IO::Internal::OneOfSpec::print(std::ostream& stream, std::size_t inde
   }
 }
 
-void Core::IO::Internal::OneOfSpec::emit_metadata(YamlNodeRef node) const
+void Core::IO::Internal::OneOfSpec::emit_metadata(
+    YamlNodeRef node, EmitMetadataContext& context) const
 {
   node.node |= ryml::MAP;
 
@@ -978,7 +1027,7 @@ void Core::IO::Internal::OneOfSpec::emit_metadata(YamlNodeRef node) const
   for (const auto& spec : specs)
   {
     auto child = node.node["specs"].append_child();
-    spec.impl().emit_metadata(node.wrap(child));
+    emit_metadata_helper(spec, node.wrap(child), context);
   }
 }
 
@@ -1104,7 +1153,8 @@ void Core::IO::Internal::ListSpec::print(std::ostream& stream, std::size_t inden
   spec.impl().print(stream, indent + 2);
 }
 
-void Core::IO::Internal::ListSpec::emit_metadata(YamlNodeRef node) const
+void Core::IO::Internal::ListSpec::emit_metadata(
+    YamlNodeRef node, EmitMetadataContext& context) const
 {
   node.node |= ryml::MAP;
 
@@ -1118,7 +1168,7 @@ void Core::IO::Internal::ListSpec::emit_metadata(YamlNodeRef node) const
   emit_value_as_yaml(node.wrap(node.node["required"]), data.required);
   if (data.size > 0) node.node["size"] << data.size;
   node.node["spec"] |= ryml::MAP;
-  spec.impl().emit_metadata(node.wrap(node.node["spec"]));
+  emit_metadata_helper(spec, node.wrap(node.node["spec"]), context);
 }
 
 
