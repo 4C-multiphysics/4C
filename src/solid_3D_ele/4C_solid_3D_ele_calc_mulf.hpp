@@ -83,16 +83,10 @@ namespace Discret::Elements
       return evaluator(spatial_material_mapping.deformation_gradient_, gl_strain, linearization);
     }
 
-    static Core::LinAlg::Matrix<Internal::num_str<celltype>,
-        Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>>
-    get_linear_b_operator(const MulfLinearizationContainer<celltype>& linearization)
-    {
-      return linearization.Bop;
-    }
-
-    static void add_internal_force_vector(const MulfLinearizationContainer<celltype>& linearization,
-        const Stress<celltype>& stress, const double integration_factor,
-        MulfHistoryData<celltype>& history_data,
+    static void add_internal_force_vector(const JacobianMapping<celltype>& jacobian_mapping,
+        const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>& F,
+        const MulfLinearizationContainer<celltype>& linearization, const Stress<celltype>& stress,
+        const double integration_factor, MulfHistoryData<celltype>& history_data,
         Core::LinAlg::Matrix<Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>, 1>&
             force_vector)
     {
@@ -100,11 +94,11 @@ namespace Discret::Elements
           linearization.Bop, stress, integration_factor, force_vector);
     }
 
-    static void add_stiffness_matrix(
+    static void add_stiffness_matrix(const JacobianMapping<celltype>& jacobian_mapping,
+        const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>& F,
         const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
         const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
-        const MulfLinearizationContainer<celltype>& linearization,
-        const JacobianMapping<celltype>& jacobian_mapping, const Stress<celltype>& stress,
+        const MulfLinearizationContainer<celltype>& linearization, const Stress<celltype>& stress,
         const double integration_factor, MulfHistoryData<celltype>& history_data,
         Core::LinAlg::Matrix<Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>,
             Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>>& stiffness_matrix)
@@ -112,7 +106,7 @@ namespace Discret::Elements
       Discret::Elements::add_elastic_stiffness_matrix(
           linearization.Bop, stress, integration_factor, stiffness_matrix);
       Discret::Elements::add_geometric_stiffness_matrix(
-          jacobian_mapping.N_XYZ, stress, integration_factor, stiffness_matrix);
+          jacobian_mapping, stress, integration_factor, stiffness_matrix);
     }
 
     static void pack(

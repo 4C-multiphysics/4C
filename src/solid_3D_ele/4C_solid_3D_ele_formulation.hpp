@@ -467,21 +467,11 @@ namespace Discret::Elements
   }
 
   /*!
-   * @brief Evaluate the linear B-Operator
-   */
-  template <typename SolidFormulation, Core::FE::CellType celltype>
-  static Core::LinAlg::Matrix<Core::FE::dim<celltype>*(Core::FE::dim<celltype> + 1) / 2,
-      Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>>
-  get_linear_b_operator(const typename SolidFormulation::LinearizationContainer& linearization)
-  {
-    return SolidFormulation::get_linear_b_operator(linearization);
-  }
-
-  /*!
    * @brief Add the internal force vector contribution of the Gauss point to @p force_vector
    */
   template <typename SolidFormulation, Core::FE::CellType celltype>
-  static inline void add_internal_force_vector(
+  static inline void add_internal_force_vector(const JacobianMapping<celltype>& jacobian_mapping,
+      const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>& F,
       const typename SolidFormulation::LinearizationContainer& linearization,
       const Stress<celltype>& stress, const double integration_factor,
       const PreparationData<SolidFormulation>& preparation_data,
@@ -491,7 +481,8 @@ namespace Discret::Elements
   {
     std::apply([](auto&&... args)
         { SolidFormulation::add_internal_force_vector(std::forward<decltype(args)>(args)...); },
-        std::tuple_cat(std::forward_as_tuple(linearization, stress, integration_factor),
+        std::tuple_cat(
+            std::forward_as_tuple(jacobian_mapping, F, linearization, stress, integration_factor),
             Internal::get_additional_tuple(preparation_data, history_data, gp),
             std::forward_as_tuple(force_vector)));
   }
@@ -500,20 +491,21 @@ namespace Discret::Elements
    * @brief Add stiffness matrix contribution of the Gauss point to @p stiffness_matrix
    */
   template <typename SolidFormulation, Core::FE::CellType celltype>
-  static inline void add_stiffness_matrix(
+  static inline void add_stiffness_matrix(const JacobianMapping<celltype>& jacobian_mapping,
+      const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>& F,
       const Core::LinAlg::Tensor<double, Internal::num_dim<celltype>>& xi,
       const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
       const typename SolidFormulation::LinearizationContainer& linearization,
-      const JacobianMapping<celltype>& jacobian_mapping, const Stress<celltype>& stress,
-      const double integration_factor, const PreparationData<SolidFormulation>& preparation_data,
+      const Stress<celltype>& stress, const double integration_factor,
+      const PreparationData<SolidFormulation>& preparation_data,
       SolidFormulationHistory<SolidFormulation>& history_data, const int gp,
       Core::LinAlg::Matrix<Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>,
           Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>>& stiffness_matrix)
   {
     std::apply([](auto&&... args)
         { SolidFormulation::add_stiffness_matrix(std::forward<decltype(args)>(args)...); },
-        std::tuple_cat(std::forward_as_tuple(xi, shape_functions, linearization, jacobian_mapping,
-                           stress, integration_factor),
+        std::tuple_cat(std::forward_as_tuple(jacobian_mapping, F, xi, shape_functions,
+                           linearization, stress, integration_factor),
             Internal::get_additional_tuple(preparation_data, history_data, gp),
             std::forward_as_tuple(stiffness_matrix)));
   }

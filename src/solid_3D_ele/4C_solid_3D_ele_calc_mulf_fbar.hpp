@@ -204,17 +204,10 @@ namespace Discret::Elements
           spatial_material_mapping_bar.deformation_gradient_, gl_strain_bar, linearization);
     }
 
-
-    static Core::LinAlg::Matrix<Internal::num_str<celltype>,
-        Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>>
-    get_linear_b_operator(const FBarLinearizationContainer<celltype>& linearization)
-    {
-      return linearization.Bop;
-    }
-
-    static void add_internal_force_vector(const FBarLinearizationContainer<celltype>& linearization,
-        const Stress<celltype>& stress, const double integration_factor,
-        const MulfFBarPreparationData<celltype>& mapping_center,
+    static void add_internal_force_vector(const JacobianMapping<celltype>& jacobian_mapping,
+        const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>& F,
+        const FBarLinearizationContainer<celltype>& linearization, const Stress<celltype>& stress,
+        const double integration_factor, const MulfFBarPreparationData<celltype>& mapping_center,
         MulfHistoryData<celltype>& mulf_data_centeroid, MulfHistoryData<celltype>& mulf_data_gp,
         Core::LinAlg::Matrix<Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>, 1>&
             force_vector)
@@ -223,11 +216,11 @@ namespace Discret::Elements
           linearization.Bop, stress, integration_factor / linearization.fbar_factor, force_vector);
     }
 
-    static void add_stiffness_matrix(
+    static void add_stiffness_matrix(const JacobianMapping<celltype>& jacobian_mapping,
+        const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>, Core::FE::dim<celltype>>& F,
         const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
         const ShapeFunctionsAndDerivatives<celltype>& shape_functions,
-        const FBarLinearizationContainer<celltype>& linearization,
-        const JacobianMapping<celltype>& jacobian_mapping, const Stress<celltype>& stress,
+        const FBarLinearizationContainer<celltype>& linearization, const Stress<celltype>& stress,
         const double integration_factor, const MulfFBarPreparationData<celltype>& mapping_center,
         MulfHistoryData<celltype>& mulf_data_centeroid, MulfHistoryData<celltype>& mulf_data_gp,
         Core::LinAlg::Matrix<Core::FE::num_nodes(celltype) * Core::FE::dim<celltype>,
@@ -235,7 +228,7 @@ namespace Discret::Elements
     {
       Discret::Elements::add_elastic_stiffness_matrix(linearization.Bop, stress,
           integration_factor * linearization.fbar_factor, stiffness_matrix);
-      Discret::Elements::add_geometric_stiffness_matrix(jacobian_mapping.N_XYZ, stress,
+      Discret::Elements::add_geometric_stiffness_matrix(jacobian_mapping, stress,
           integration_factor / linearization.fbar_factor, stiffness_matrix);
 
       // additional stiffness matrix needed for fbar method
