@@ -8,9 +8,9 @@
 #include "4C_beaminteraction_potential_pair_base.hpp"
 
 #include "4C_beam3_base.hpp"
+#include "4C_beaminteraction_potential_input.hpp"
 #include "4C_beaminteraction_potential_pair_beam_to_beam.hpp"
 #include "4C_beaminteraction_potential_pair_beam_to_sphere.hpp"
-#include "4C_beaminteraction_potential_params.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_rigidsphere.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -24,7 +24,7 @@ FOUR_C_NAMESPACE_OPEN
 BeamInteraction::BeamPotentialPair::BeamPotentialPair()
     : isinit_(false),
       issetup_(false),
-      beam_potential_params_(nullptr),
+      beam_potential_parameters_(nullptr),
       element1_(nullptr),
       element2_(nullptr)
 {
@@ -34,12 +34,12 @@ BeamInteraction::BeamPotentialPair::BeamPotentialPair()
 /*-----------------------------------------------------------------------------------------------*
  *-----------------------------------------------------------------------------------------------*/
 void BeamInteraction::BeamPotentialPair::init(
-    const std::shared_ptr<BeamInteraction::BeamPotentialParams> params_ptr,
+    const BeamInteraction::Potential::BeamPotentialParameters* params_ptr,
     const Core::Elements::Element* element1, const Core::Elements::Element* element2)
 {
   issetup_ = false;
 
-  beam_potential_params_ = params_ptr;
+  beam_potential_parameters_ = params_ptr;
 
   element1_ = element1;
   element2_ = element2;
@@ -61,7 +61,7 @@ void BeamInteraction::BeamPotentialPair::setup()
  *-----------------------------------------------------------------------------------------------*/
 std::shared_ptr<BeamInteraction::BeamPotentialPair> BeamInteraction::BeamPotentialPair::create(
     std::vector<Core::Elements::Element const*> const& ele_ptrs,
-    BeamInteraction::BeamPotentialParams const& beam_potential_params)
+    BeamInteraction::Potential::BeamPotentialParameters const& beam_potential_params)
 {
   // note: numnodes is to be interpreted as number of nodes used for centerline interpolation.
   // numnodalvalues = 1: only positions as primary nodal DoFs ==> Lagrange interpolation
@@ -86,7 +86,7 @@ std::shared_ptr<BeamInteraction::BeamPotentialPair> BeamInteraction::BeamPotenti
             return std::make_shared<BeamInteraction::BeamToSpherePotentialPair<2, 1>>();
           else
           {
-            if (beam_potential_params.use_fad)
+            if (beam_potential_params.automatic_differentiation)
               return std::make_shared<
                   BeamInteraction::BeamToBeamPotentialPair<2, 1, Sacado::Fad::DFad<double>>>();
             else
@@ -99,7 +99,7 @@ std::shared_ptr<BeamInteraction::BeamPotentialPair> BeamInteraction::BeamPotenti
             return std::make_shared<BeamInteraction::BeamToSpherePotentialPair<3, 1>>();
           else
           {
-            if (beam_potential_params.use_fad)
+            if (beam_potential_params.automatic_differentiation)
               return std::make_shared<
                   BeamInteraction::BeamToBeamPotentialPair<3, 1, Sacado::Fad::DFad<double>>>();
             else
@@ -112,7 +112,7 @@ std::shared_ptr<BeamInteraction::BeamPotentialPair> BeamInteraction::BeamPotenti
             return std::make_shared<BeamInteraction::BeamToSpherePotentialPair<4, 1>>();
           else
           {
-            if (beam_potential_params.use_fad)
+            if (beam_potential_params.automatic_differentiation)
               return std::make_shared<
                   BeamInteraction::BeamToBeamPotentialPair<4, 1, Sacado::Fad::DFad<double>>>();
             else
@@ -125,7 +125,7 @@ std::shared_ptr<BeamInteraction::BeamPotentialPair> BeamInteraction::BeamPotenti
             return std::make_shared<BeamInteraction::BeamToSpherePotentialPair<5, 1>>();
           else
           {
-            if (beam_potential_params.use_fad)
+            if (beam_potential_params.automatic_differentiation)
               return std::make_shared<
                   BeamInteraction::BeamToBeamPotentialPair<5, 1, Sacado::Fad::DFad<double>>>();
             else
@@ -154,7 +154,7 @@ std::shared_ptr<BeamInteraction::BeamPotentialPair> BeamInteraction::BeamPotenti
             return std::make_shared<BeamInteraction::BeamToSpherePotentialPair<2, 2>>();
           else
           {
-            if (beam_potential_params.use_fad)
+            if (beam_potential_params.automatic_differentiation)
               return std::make_shared<
                   BeamInteraction::BeamToBeamPotentialPair<2, 2, Sacado::Fad::DFad<double>>>();
             else

@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_beaminteraction_potential_input.hpp"
 #include "4C_fem_condition.hpp"
 #include "4C_fem_general_utils_integration.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
@@ -33,7 +34,7 @@ namespace Core::Elements
 namespace BeamInteraction
 {
   // forward declaration ...
-  struct BeamPotentialParams;
+  struct BeamPotentialParameters;
 
 
   /*!
@@ -58,7 +59,7 @@ namespace BeamInteraction
     */
     virtual ~BeamPotentialPair() = default;
     //! Initialization
-    void init(const std::shared_ptr<BeamInteraction::BeamPotentialParams> params_ptr,
+    void init(const BeamInteraction::Potential::BeamPotentialParameters* params_ptr,
         Core::Elements::Element const* element1, Core::Elements::Element const* element2);
 
     //! Setup
@@ -67,7 +68,7 @@ namespace BeamInteraction
     //! return appropriate derived (templated) class (acts as a simple factory)
     static std::shared_ptr<BeamPotentialPair> create(
         std::vector<Core::Elements::Element const*> const& ele_ptrs,
-        BeamInteraction::BeamPotentialParams const& beam_potential_params);
+        BeamInteraction::Potential::BeamPotentialParameters const& beam_potential_params);
 
     //@}
 
@@ -95,9 +96,9 @@ namespace BeamInteraction
 
     //! @name Access methods
 
-    inline std::shared_ptr<BeamInteraction::BeamPotentialParams> params() const
+    inline BeamInteraction::Potential::BeamPotentialParameters const* params() const
     {
-      return beam_potential_params_;
+      return beam_potential_parameters_;
     }
 
     /*!
@@ -191,7 +192,7 @@ namespace BeamInteraction
 
    private:
     //! beam potential parameter data container
-    std::shared_ptr<BeamInteraction::BeamPotentialParams> beam_potential_params_;
+    const BeamInteraction::Potential::BeamPotentialParameters* beam_potential_parameters_;
 
     //! first element of interacting pair
     Core::Elements::Element const* element1_;

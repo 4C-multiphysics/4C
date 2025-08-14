@@ -40,19 +40,19 @@ BINNING STRATEGY:
   DOMAINBOUNDINGBOX: "-2 -2 -1 2 2 1"
 BEAM INTERACTION:
   REPARTITIONSTRATEGY: "Everydt"
-BEAM POTENTIAL:
-  POT_LAW_EXPONENT: "6.0 12.0"
-  POT_LAW_PREFACTOR: "-2.356194490192345e-7 1.8948417228819560e-24"
-  TYPE: volume
-  STRATEGY: single_length_specific_small_separations_simple
-  CUTOFF_RADIUS: 0.1
-  N_INTEGRATION_SEGMENTS: 10
-  N_GAUSS_POINTS: 50
-  AUTOMATIC_DIFFERENTIATION: true
-BEAM POTENTIAL/RUNTIME VTK OUTPUT:
-  VTK_OUTPUT_BEAM_POTENTIAL: true
-  FORCES: true
-  MOMENTS: true
+beam_potential:
+  potential_law_exponents: [6.0, 12.0]
+  potential_law_prefactors: [-2.356194490192345e-7, 1.8948417228819560e-24]
+  type: volume
+  strategy: single_length_specific_small_separations_simple
+  cutoff_radius: 0.1
+  n_integration_segments: 10
+  n_gauss_points: 50
+  automatic_differentiation: true
+  runtime_output:
+    interval_steps: 1
+    force: true
+    moment: true
 DESIGN LINE BEAM POTENTIAL CHARGE CONDITIONS:
   - E: 1
     POTLAW: 1

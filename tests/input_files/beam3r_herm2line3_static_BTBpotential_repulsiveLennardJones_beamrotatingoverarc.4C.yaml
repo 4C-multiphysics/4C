@@ -32,17 +32,17 @@ STRUCTURAL DYNAMIC:
 SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "Structure_Solver"
-BEAM POTENTIAL:
-  POT_LAW_EXPONENT: "12"
-  POT_LAW_PREFACTOR: "1.0e-14"
-  TYPE: volume
-  STRATEGY: double_length_specific_small_separations
-  CUTOFF_RADIUS: 0.2
-  N_INTEGRATION_SEGMENTS: 10
-BEAM POTENTIAL/RUNTIME VTK OUTPUT:
-  VTK_OUTPUT_BEAM_POTENTIAL: true
-  FORCES: true
-  WRITE_FORCE_MOMENT_PER_ELEMENTPAIR: true
+beam_potential:
+  potential_law_exponents: [12]
+  potential_law_prefactors: [1.0e-14]
+  type: volume
+  strategy: double_length_specific_small_separations
+  cutoff_radius: 0.2
+  n_integration_segments: 10
+  runtime_output:
+    interval_steps: 1
+    force: true
+    write_force_moment_per_elementpair: true
 BINNING STRATEGY:
   BIN_SIZE_LOWER_BOUND: 5
   DOMAINBOUNDINGBOX: "-5 -5 -5 5 5 5"

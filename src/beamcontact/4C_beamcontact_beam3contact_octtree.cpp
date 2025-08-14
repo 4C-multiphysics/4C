@@ -53,7 +53,7 @@ Beam3ContactOctTree::Beam3ContactOctTree(Teuchos::ParameterList& params,
 
   BeamContact::OctreeType bboxtype_input = BeamContact::boct_none;
 
-  // This OctTree may be used for contact search as well as search for potential-based interaction
+  // This OctTree may be used for contact search
   // it will thus be called with slightly different parameter sets
   // first find out which params we got and extract octtree specifications
 
@@ -90,18 +90,6 @@ Beam3ContactOctTree::Beam3ContactOctTree(Teuchos::ParameterList& params,
     minbboxesinoctant_ = params.get<int>("BEAMS_BOXESINOCT", 8);
 
     btsol_ = params.get<bool>("BEAMS_BTSOL");
-  }
-  else if (params.name() == "ROOT->BEAM POTENTIAL")
-  {
-    bboxtype_input = Teuchos::getIntegralValue<BeamContact::OctreeType>(params, "BEAMPOT_OCTREE");
-
-    additiveextrusion_ = true;
-    extrusionvalue_->push_back(Teuchos::getDoubleParameter(params, "CUTOFFRADIUS"));
-    maxtreedepth_ = params.get<int>("BEAMPOT_TREEDEPTH", 6);
-    // max number of bounding boxes per leaf octant
-    minbboxesinoctant_ = params.get<int>("BEAMPOT_BOXESINOCT", 8);
-
-    btsol_ = params.get<bool>("BEAMPOT_BTSOL");
   }
   else
   {
