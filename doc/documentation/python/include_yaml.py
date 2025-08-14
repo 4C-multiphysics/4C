@@ -28,7 +28,7 @@ def load_meta_data():
         (PATH_TO_TESTS / ("../.." / pathlib.Path("4C_metadata.yaml"))).read_text()
     )
     section_dict = {}
-    for section in metafile_data["sections"]:
+    for section in metafile_data["sections"]["specs"]:
         params_avail = {}
         if "spec" in section:
             params_avail = section["spec"]["specs"]

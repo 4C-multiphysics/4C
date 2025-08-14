@@ -425,30 +425,30 @@ def metadata_object_from_file(metadata_4C_path):
         metadata_description = f"Schema for 4C\nCommit hash: {metadata['metadata']['commit_hash']}\nVersion: {metadata['metadata']['version']}"
 
         # Legacy section
-        sections = metadata["sections"]
-        legacy_sections = [
-            {
-                "name": name,
-                "description": name + " [legacy section] ",
-                "type": "vector",
-                "value_type": {"type": "string"},
-            }
-            for name in metadata["legacy_string_sections"]
-        ]
-
-        # Combine sections with legacy sections
-        all_of = All_Of(
-            description=metadata_description,
-            specs=sections + legacy_sections,
-            name="Sections",
+        sections = All_Of(**metadata["sections"])
+        legacy_sections = All_Of(
+            specs=[
+                {
+                    "name": name,
+                    "description": name + " [legacy section] ",
+                    "type": "vector",
+                    "value_type": {"type": "string"},
+                }
+                for name in metadata["legacy_string_sections"]
+            ]
         )
+
+        sections.specs.extend(legacy_sections.specs)
+        sections.description = metadata_description
+        sections.name = "Sections"
+
     except Exception as exception:
         raise ValueError(
             "Could not read the 4C metadata file.\nThis generally indicates that input parameters"
             " were added or modified in a non-conforming way."
         ) from exception
 
-    return all_of, description_section_name, metadata["metadata"]
+    return sections, description_section_name, metadata["metadata"]
 
 
 @dataclass

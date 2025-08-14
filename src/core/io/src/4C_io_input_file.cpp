@@ -573,13 +573,14 @@ namespace Core::IO
 
     {
       auto sections = root["sections"];
-      sections |= ryml::SEQ;
-      for (const auto& [name, spec] : pimpl_->valid_sections_)
-      {
-        auto section = sections.append_child();
-        YamlNodeRef spec_emitter{section, ""};
-        spec.emit_metadata(spec_emitter);
-      }
+      sections |= ryml::MAP;
+
+      auto all_sections = pimpl_->valid_sections_ | std::views::values;
+      auto combined_spec =
+          InputSpecBuilders::all_of(std::vector(all_sections.begin(), all_sections.end()));
+
+      YamlNodeRef spec_emitter{sections, ""};
+      combined_spec.emit_metadata(spec_emitter);
     }
 
     {
