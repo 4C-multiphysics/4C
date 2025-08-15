@@ -1923,6 +1923,7 @@ four_c_test(TEST_FILE xfsi_push_1D_1st_order.4C.yaml)
 four_c_test(TEST_FILE xfsi_push_1D_2nd_order.4C.yaml)
 
 if (FOUR_C_WITH_ARBORX)
+    four_c_test(TEST_FILE beam3eb_static_beam_to_solid_volume_meshtying_beam_to_beam_contact_boundingvolume.4C.yaml NP 1)
     four_c_test(TEST_FILE beam3eb_static_beam_to_solid_volume_meshtying_beam_to_beam_contact_boundingvolume.4C.yaml NP 2 RESTART_STEP 3)
     four_c_test(TEST_FILE beam3eb_static_beam_to_solid_volume_meshtying_monolithic_partitioning.4C.yaml NP 3)
     four_c_test(TEST_FILE beam3r_herm2line3_static_beam_to_solid_surface_coupling_gpts_reference_forced_boundingvolume.4C.yaml NP 3 RESTART_STEP 2)
