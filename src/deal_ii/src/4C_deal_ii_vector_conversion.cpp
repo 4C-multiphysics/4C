@@ -8,7 +8,6 @@
 #include "4C_deal_ii_vector_conversion.hpp"
 
 #include "4C_comm_mpi_utils.hpp"
-#include "4C_deal_ii_context_implementation.hpp"
 #include "4C_deal_ii_element_conversion.hpp"
 
 #include <deal.II/base/exceptions.h>
@@ -17,10 +16,11 @@
 
 FOUR_C_NAMESPACE_OPEN
 
+
+
 template <int dim, int spacedim>
 Core::LinAlg::Map DealiiWrappers::create_dealii_to_four_c_map(
-    const dealii::DoFHandler<dim, spacedim>& dof_handler,
-    const Core::FE::Discretization& discretization, const Context<dim, spacedim>& context)
+    const dealii::DoFHandler<dim, spacedim>& dof_handler, const Context<dim, spacedim>& context)
 {
   const auto& locally_owned_dofs = dof_handler.locally_owned_dofs();
 
@@ -38,13 +38,14 @@ Core::LinAlg::Map DealiiWrappers::create_dealii_to_four_c_map(
     std::vector<dealii::types::global_dof_index> dof_indices(fe.n_dofs_per_cell());
     cell->get_dof_indices(dof_indices);
 
-    const int element_lid = context.pimpl_->cell_index_to_element_lid.at(cell->index());
     Core::Elements::LocationArray location_array{1};
-    const auto* four_c_ele = discretization.l_row_element(element_lid);
-    four_c_ele->location_vector(discretization, location_array);
+    const auto* four_c_ele = context.to_element(cell);
+    four_c_ele->location_vector(context.get_discretization(), location_array);
 
 
-    auto reindexing = ElementConversion::reindex_dealii_to_four_c(four_c_ele->shape());
+    auto reindexing =
+        ConversionTools::DealToFourC::reindex_shape_functions_scalar(four_c_ele->shape());
+
     FOUR_C_ASSERT(location_array[0].lm_.size() == dof_indices.size(), "Internal error.");
 
     for (unsigned i = 0; i < dof_indices.size(); ++i)
@@ -99,7 +100,7 @@ Core::LinAlg::Map DealiiWrappers::create_dealii_to_four_c_map(
   }
 
   Core::LinAlg::Map dealii_to_four_c_map(dof_handler.n_dofs(), locally_owned_dofs.n_elements(),
-      my_gids.data(), 0, discretization.get_comm());
+      my_gids.data(), 0, context.get_discretization().get_comm());
 
   return dealii_to_four_c_map;
 }
@@ -108,11 +109,11 @@ Core::LinAlg::Map DealiiWrappers::create_dealii_to_four_c_map(
 
 template <typename VectorType, int dim, int spacedim>
 DealiiWrappers::VectorConverter<VectorType, dim, spacedim>::VectorConverter(
-    const dealii::DoFHandler<dim, spacedim>& dof_handler,
-    const Core::FE::Discretization& discretization, const Context<dim, spacedim>& context)
-    : dealii_to_four_c_map_(create_dealii_to_four_c_map(dof_handler, discretization, context)),
+    const dealii::DoFHandler<dim, spacedim>& dof_handler, const Context<dim, spacedim>& context)
+    : dealii_to_four_c_map_(create_dealii_to_four_c_map(dof_handler, context)),
       dealii_to_four_c_importer_(
-          Core::LinAlg::Map{discretization.dof_row_map()->get_epetra_map()}, dealii_to_four_c_map_),
+          Core::LinAlg::Map{context.get_discretization().dof_row_map()->get_epetra_map()},
+          dealii_to_four_c_map_),
       vector_in_dealii_layout_(dealii_to_four_c_map_, false)
 {
 }
@@ -158,8 +159,7 @@ void DealiiWrappers::VectorConverter<VectorType, dim, spacedim>::to_four_c(
 
 // --- explicit instantiations --- //
 template Core::LinAlg::Map DealiiWrappers::create_dealii_to_four_c_map(
-    const dealii::DoFHandler<3, 3>& dof_handler, const Core::FE::Discretization& discretization,
-    const Context<3, 3>& context);
+    const dealii::DoFHandler<3, 3>& dof_handler, const Context<3, 3>& context);
 
 template class DealiiWrappers::VectorConverter<dealii::LinearAlgebra::distributed::Vector<double>,
     3, 3>;
