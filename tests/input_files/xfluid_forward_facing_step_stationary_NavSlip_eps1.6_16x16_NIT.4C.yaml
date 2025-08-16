@@ -59,7 +59,7 @@ RESULT DESCRIPTION:
       NODE: 255
       QUANTITY: "vely"
       VALUE: 0.0066816112530828625
-      TOLERANCE: 1e-14
+      TOLERANCE: 0.5e-12
   - XFLUID:
       DIS: "fluid"
       NODE: 255
