@@ -9,6 +9,7 @@
 
 #include "4C_beam3_base.hpp"
 #include "4C_beamcontact_input.hpp"
+#include "4C_beaminteraction_beam_to_solid_mortar_manager.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_contact_params.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_meshtying_params.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_visualization_output_params.hpp"
@@ -72,6 +73,12 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::setup()
   beam_interaction_params_ptr_ = std::make_shared<BeamInteraction::BeamInteractionParams>();
   beam_interaction_params_ptr_->init();
   beam_interaction_params_ptr_->setup();
+
+
+  beam_to_solid_params_ptr_ =
+      std::make_shared<FourC::BeamInteraction::BeamToSolidVolumeMeshtyingParams>();
+  beam_to_solid_params_ptr_->init();
+  beam_to_solid_params_ptr_->setup();
 
   // build a new data container to manage geometric search parameters
   geometric_search_params_ptr_ = std::make_shared<Core::GeometricSearch::GeometricSearchParams>(
@@ -814,6 +821,33 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::get_half_interaction_dista
   }
 }
 
+std::shared_ptr<const FourC::Core::LinAlg::Map>
+BeamInteraction::SubmodelEvaluator::BeamContact::get_lagrange_map()
+{
+  if (assembly_managers_.size() != 1) FOUR_C_THROW("Only working for single assembly manager");
+  auto indirect_assembly_manager =
+      std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_managers_[0]);
+  return indirect_assembly_manager->get_mortar_manager()->lambda_dof_rowmap_;
+}
+
+void BeamInteraction::SubmodelEvaluator::BeamContact::assemble_force(
+    Core::LinAlg::Vector<double>& f)
+{
+  auto indirect_assembly_manager =
+      std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_managers_[0]);
+  indirect_assembly_manager->get_mortar_manager()->assemble_force(
+      g_state(), f, beam_interaction_data_state_ptr());
+};
+
+void BeamInteraction::SubmodelEvaluator::BeamContact::assemble_stiff(
+    Core::LinAlg::SparseOperator& jac)
+{
+  auto indirect_assembly_manager =
+      std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_managers_[0]);
+  indirect_assembly_manager->get_mortar_manager()->assemble_stiff(
+      g_state(), jac, beam_interaction_data_state_ptr());
+}
+
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 bool BeamInteraction::SubmodelEvaluator::BeamContact::have_contact_type(
@@ -1062,6 +1096,18 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::create_beam_contact_elemen
   // Each indirect assembly manager depends on a beam interaction.
   beam_interaction_conditions_ptr_->create_indirect_assembly_managers(
       discret_ptr(), assembly_managers_);
+
+  // Set the lagrange multiplier vector in the data state
+  if (beam_interaction_data_state().get_lambda() == nullptr &&
+      beam_to_solid_params_ptr_->get_constraint_enforcement() ==
+          Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::lagrange)
+  {
+    auto indirect_assembly_manager =
+        std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_managers_[0]);
+    beam_interaction_data_state().get_lambda() =
+        std::shared_ptr<Core::LinAlg::FEVector<double>>(new Core::LinAlg::FEVector<double>(
+            (*indirect_assembly_manager->get_mortar_manager()->lambda_dof_rowmap_)));
+  }
 
   Core::IO::cout(Core::IO::standard)
       << "PID " << std::setw(2) << std::right << g_state().get_my_rank() << " currently monitors "

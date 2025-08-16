@@ -8,6 +8,7 @@
 #include "4C_structure_new_timint_basedataglobalstate.hpp"
 
 #include "4C_beam3_base.hpp"
+#include "4C_beaminteraction_str_model_evaluator.hpp"
 #include "4C_contact_input.hpp"
 #include "4C_contact_meshtying_abstract_strategy.hpp"
 #include "4C_fem_discretization_utils.hpp"
@@ -21,9 +22,12 @@
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_solver_nonlin_nox_group.hpp"
 #include "4C_solver_nonlin_nox_group_prepostoperator.hpp"
+#include "4C_structure_new_factory.hpp"
+#include "4C_structure_new_integrator.hpp"
 #include "4C_structure_new_model_evaluator_generic.hpp"
 #include "4C_structure_new_model_evaluator_manager.hpp"
 #include "4C_structure_new_model_evaluator_meshtying.hpp"
+#include "4C_structure_new_timint_base.hpp"
 #include "4C_structure_new_timint_basedatasdyn.hpp"
 #include "4C_structure_new_utils.hpp"
 #include "4C_utils_enum.hpp"
@@ -389,10 +393,8 @@ int Solid::TimeInt::BaseDataGlobalState::setup_block_information(
     case Inpar::Solid::model_springdashpot:
     case Inpar::Solid::model_beam_interaction_old:
     case Inpar::Solid::model_browniandyn:
-    case Inpar::Solid::model_beaminteraction:
     case Inpar::Solid::model_constraints:
     {
-      // structural block
       model_block_id_[mt] = 0;
       break;
     }
@@ -401,6 +403,17 @@ int Solid::TimeInt::BaseDataGlobalState::setup_block_information(
     case Inpar::Solid::model_partitioned_coupling:
     {
       // do nothing
+      break;
+    }
+    case Inpar::Solid::model_beaminteraction:
+    {
+      const Solid::ModelEvaluator::BeamInteraction& beaminteraction_evaluator =
+          dynamic_cast<const Solid::ModelEvaluator::BeamInteraction&>(me);
+      if (beaminteraction_evaluator.have_lagrange_dofs())
+      {
+        model_block_id_[mt] = max_block_num_;
+        ++max_block_num_;
+      }
       break;
     }
     case Inpar::Solid::model_multiscale:
