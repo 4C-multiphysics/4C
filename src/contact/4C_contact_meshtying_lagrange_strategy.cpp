@@ -155,7 +155,7 @@ void CONTACT::MtLagrangeStrategy::mortar_coupling(
       temp = constrmt;
 
     // always transform column GIDs of constraint matrix
-    conmatrix_ = Mortar::matrix_col_transform_gids(*temp, *glmdofrowmap_);
+    conmatrix_ = Core::LinAlg::matrix_col_transform_gids(*temp, *glmdofrowmap_);
     conmatrix_->scale(1. - alphaf_);
   }
 
@@ -1038,7 +1038,7 @@ bool CONTACT::MtLagrangeStrategy::evaluate_stiff(
     temp = constrmt;
 
   // always transform column GIDs of constraint matrix
-  dm_matrix_ = Mortar::matrix_col_transform_gids(*temp, *lm_dof_row_map_ptr());
+  dm_matrix_ = Core::LinAlg::matrix_col_transform_gids(*temp, *lm_dof_row_map_ptr());
   dm_matrix_t_ =
       std::make_shared<Core::LinAlg::SparseMatrix>(*lm_dof_row_map_ptr(), 100, false, true);
   dm_matrix_t_->add(*dm_matrix_, true, 1., 0.);

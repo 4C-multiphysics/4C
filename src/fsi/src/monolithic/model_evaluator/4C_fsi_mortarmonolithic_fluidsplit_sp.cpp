@@ -25,6 +25,7 @@
 #include "4C_linalg_blocksparsematrix.hpp"
 #include "4C_linalg_mapextractor.hpp"
 #include "4C_linalg_sparsematrix.hpp"
+#include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_utils_sparse_algebra_print.hpp"
 #include "4C_mortar_utils.hpp"
 #include "4C_structure_aux.hpp"
@@ -611,13 +612,13 @@ void FSI::MortarMonolithicFluidSplitSaddlePoint::setup_rhs_lambda(Core::LinAlg::
   const std::shared_ptr<Core::LinAlg::SparseMatrix> mortar_m =
       coupling_solid_fluid_mortar_->get_mortar_matrix_m();
   std::shared_ptr<Core::LinAlg::SparseMatrix> mortar_m_transf =
-      Mortar::matrix_row_transform_gids(*mortar_m, *lag_mult_dof_map_);
+      Core::LinAlg::matrix_row_transform_gids(*mortar_m, *lag_mult_dof_map_);
 
   // get the mortar fluid to structure coupling matrix D
   const std::shared_ptr<Core::LinAlg::SparseMatrix> mortar_d =
       coupling_solid_fluid_mortar_->get_mortar_matrix_d();
   std::shared_ptr<Core::LinAlg::SparseMatrix> mortar_d_transf =
-      Mortar::matrix_row_transform_gids(*mortar_d, *lag_mult_dof_map_);
+      Core::LinAlg::matrix_row_transform_gids(*mortar_d, *lag_mult_dof_map_);
 
   Core::LinAlg::Vector<double> lag_mult_step_increment(*lag_mult_dof_map_, true);
   lag_mult_step_increment.update(1.0, *lag_mult_, -1.0, *lag_mult_old_, 0.0);
@@ -680,13 +681,13 @@ void FSI::MortarMonolithicFluidSplitSaddlePoint::setup_rhs_firstiter(
   const std::shared_ptr<Core::LinAlg::SparseMatrix> mortar_m =
       coupling_solid_fluid_mortar_->get_mortar_matrix_m();
   std::shared_ptr<Core::LinAlg::SparseMatrix> mortar_m_transf =
-      Mortar::matrix_row_transform_gids(*mortar_m, *lag_mult_dof_map_);
+      Core::LinAlg::matrix_row_transform_gids(*mortar_m, *lag_mult_dof_map_);
 
   // get the mortar fluid to structure coupling matrix D
   const std::shared_ptr<Core::LinAlg::SparseMatrix> mortar_d =
       coupling_solid_fluid_mortar_->get_mortar_matrix_d();
   std::shared_ptr<Core::LinAlg::SparseMatrix> mortar_d_transf =
-      Mortar::matrix_row_transform_gids(*mortar_d, *lag_mult_dof_map_);
+      Core::LinAlg::matrix_row_transform_gids(*mortar_d, *lag_mult_dof_map_);
 
   // get fluid shape derivatives matrix
   const std::shared_ptr<const Core::LinAlg::BlockSparseMatrixBase> fluid_shape_deriv =
@@ -879,13 +880,13 @@ void FSI::MortarMonolithicFluidSplitSaddlePoint::setup_system_matrix(
 
   // ---------Addressing contribution to block (6,2)
   std::shared_ptr<Core::LinAlg::SparseMatrix> aux_mortar_m =
-      Mortar::matrix_row_transform_gids(*mortar_m, *lag_mult_dof_map_);
+      Core::LinAlg::matrix_row_transform_gids(*mortar_m, *lag_mult_dof_map_);
   aux_mortar_m->complete(solidblock->domain_map(), *lag_mult_dof_map_, true);
 
   mat.assign(3, 0, Core::LinAlg::DataAccess::View, *aux_mortar_m);
 
   // ---------Addressing contribution to block (2,6)
-  aux_mortar_m = Mortar::matrix_row_transform_gids(*mortar_m, *lag_mult_dof_map_);
+  aux_mortar_m = Core::LinAlg::matrix_row_transform_gids(*mortar_m, *lag_mult_dof_map_);
   Core::LinAlg::SparseMatrix aux_mortar_m_trans(solidblock->row_map(), 81, false);
   aux_mortar_m_trans.add(*aux_mortar_m, true, -1.0 * (1.0 - solid_time_int_param), 0.0);
   aux_mortar_m_trans.complete(*lag_mult_dof_map_, solidblock->range_map(), true);
@@ -894,7 +895,7 @@ void FSI::MortarMonolithicFluidSplitSaddlePoint::setup_system_matrix(
 
   // ---------Addressing contribution to block (6,4)
   std::shared_ptr<Core::LinAlg::SparseMatrix> aux_mortar_d =
-      Mortar::matrix_row_transform_gids(*mortar_d, *lag_mult_dof_map_);
+      Core::LinAlg::matrix_row_transform_gids(*mortar_d, *lag_mult_dof_map_);
 
   aux_mortar_d->scale(-1.0 / fluid_timescale);
   aux_mortar_d->complete(fluidblock->full_domain_map(), *lag_mult_dof_map_, true);
@@ -902,7 +903,7 @@ void FSI::MortarMonolithicFluidSplitSaddlePoint::setup_system_matrix(
   mat.assign(3, 1, Core::LinAlg::DataAccess::View, *aux_mortar_d);
 
   // ---------Addressing contribution to block (4,6)
-  aux_mortar_d = Mortar::matrix_row_transform_gids(*mortar_d, *lag_mult_dof_map_);
+  aux_mortar_d = Core::LinAlg::matrix_row_transform_gids(*mortar_d, *lag_mult_dof_map_);
   Core::LinAlg::SparseMatrix aux_mortar_d_trans(fluidblock->full_row_map(), 81, false);
   aux_mortar_d_trans.add(
       *aux_mortar_d, true, 1.0 * (1.0 - fluid_time_int_param) / fluid_res_scale, 0.0);
@@ -1178,13 +1179,13 @@ void FSI::MortarMonolithicFluidSplitSaddlePoint::extract_field_vectors(
   const std::shared_ptr<Core::LinAlg::SparseMatrix> mortar_m =
       coupling_solid_fluid_mortar_->get_mortar_matrix_m();
   std::shared_ptr<Core::LinAlg::SparseMatrix> mortar_m_transf =
-      Mortar::matrix_row_transform_gids(*mortar_m, *lag_mult_dof_map_);
+      Core::LinAlg::matrix_row_transform_gids(*mortar_m, *lag_mult_dof_map_);
 
   // get the mortar fluid to structure coupling matrix D
   const std::shared_ptr<Core::LinAlg::SparseMatrix> mortar_d =
       coupling_solid_fluid_mortar_->get_mortar_matrix_d();
   std::shared_ptr<Core::LinAlg::SparseMatrix> mortar_d_transf =
-      Mortar::matrix_row_transform_gids(*mortar_d, *lag_mult_dof_map_);
+      Core::LinAlg::matrix_row_transform_gids(*mortar_d, *lag_mult_dof_map_);
 
   // ---------------------------------------------------------------------------
   // process structure unknowns

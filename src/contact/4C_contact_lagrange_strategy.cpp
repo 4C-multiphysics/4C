@@ -3084,13 +3084,13 @@ void CONTACT::LagrangeStrategy::build_saddle_point_system(
    */
   {
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
-    trkzd = Mortar::matrix_row_transform_gids(kzd, *glmdofrowmap_);
+    trkzd = Core::LinAlg::matrix_row_transform_gids(kzd, *glmdofrowmap_);
 
     // transform constraint matrix kzz to lmdofmap (matrix_row_col_transform)
-    trkzz = Mortar::matrix_row_col_transform_gids(kzz, *glmdofrowmap_, *glmdofrowmap_);
+    trkzz = Core::LinAlg::matrix_row_col_transform_gids(kzz, *glmdofrowmap_, *glmdofrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (matrix_col_transform)
-    trkdz = Mortar::matrix_col_transform_gids(kdz, *glmdofrowmap_);
+    trkdz = Core::LinAlg::matrix_col_transform_gids(kdz, *glmdofrowmap_);
   }
 
   /* Step 2: Transform matrix blocks back to original dof_row_map as it was prior to the
@@ -4187,7 +4187,7 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> CONTACT::LagrangeStrategy::get_matri
       kdz_ptr.complete(*gsdofrowmap_, *gdisprowmap_);
 
       // transform constraint matrix kzd to lmdofmap (matrix_col_transform)
-      mat_ptr = Mortar::matrix_col_transform_gids(kdz_ptr, *lm_dof_row_map_ptr(true));
+      mat_ptr = Core::LinAlg::matrix_col_transform_gids(kdz_ptr, *lm_dof_row_map_ptr(true));
 
       // transform parallel row/column distribution of matrix kdz
       // (only necessary in the parallel redistribution case)
@@ -4220,7 +4220,7 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> CONTACT::LagrangeStrategy::get_matri
       kzd_ptr.complete(*gdisprowmap_, *gsdofrowmap_);
 
       // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
-      mat_ptr = Mortar::matrix_row_transform_gids(kzd_ptr, *lm_dof_row_map_ptr(true));
+      mat_ptr = Core::LinAlg::matrix_row_transform_gids(kzd_ptr, *lm_dof_row_map_ptr(true));
 
       // transform parallel row/column distribution of matrix kzd
       // (only necessary in the parallel redistribution case)
@@ -4276,13 +4276,13 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> CONTACT::LagrangeStrategy::get_matri
       if (is_self_contact())
       {
         kzz_ptr->complete(*gsmdofrowmap_, *gsmdofrowmap_);
-        mat_ptr = Mortar::matrix_row_col_transform_gids(
+        mat_ptr = Core::LinAlg::matrix_row_col_transform_gids(
             *kzz_ptr, *lin_system_lm_dof_row_map_ptr(), *lin_system_lm_dof_row_map_ptr());
       }
       else
       {
         kzz_ptr->complete(*gsdofrowmap_, *gsdofrowmap_);
-        mat_ptr = Mortar::matrix_row_col_transform_gids(
+        mat_ptr = Core::LinAlg::matrix_row_col_transform_gids(
             *kzz_ptr, *lm_dof_row_map_ptr(true), *lm_dof_row_map_ptr(true));
       }
 

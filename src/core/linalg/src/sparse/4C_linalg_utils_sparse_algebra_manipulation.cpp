@@ -7,6 +7,7 @@
 
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 
+#include "4C_comm_exporter.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -835,6 +836,153 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::redistribute(
 
   permsrc->complete(permdomainmap, permrowmap);
   return permsrc;
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_row_transform_gids(
+    const Core::LinAlg::SparseMatrix& inmat, const Core::LinAlg::Map& newrowmap)
+{
+  // initialize output matrix
+  std::shared_ptr<Core::LinAlg::SparseMatrix> outmat =
+      std::make_shared<Core::LinAlg::SparseMatrix>(newrowmap, 100, false, true);
+
+  // transform input matrix to newrowmap
+  for (int i = 0; i < inmat.num_my_rows(); ++i)
+  {
+    int NumEntries = 0;
+    double* Values;
+    int* Indices;
+    int err = inmat.extract_my_row_view(i, NumEntries, Values, Indices);
+    if (err != 0) FOUR_C_THROW("extract_my_row_view error: {}", err);
+
+    // pull indices back to global
+    std::vector<int> idx(NumEntries);
+    for (int j = 0; j < NumEntries; ++j)
+    {
+      idx[j] = (inmat.col_map()).gid(Indices[j]);
+    }
+
+    err = outmat->insert_global_values(newrowmap.gid(i), NumEntries, Values, idx.data());
+    if (err < 0) FOUR_C_THROW("insert_global_values error: {}", err);
+  }
+
+  // complete output matrix
+  outmat->complete(inmat.domain_map(), newrowmap);
+
+  return outmat;
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_col_transform_gids(
+    const Core::LinAlg::SparseMatrix& inmat, const Core::LinAlg::Map& newdomainmap)
+{
+  // initialize output matrix
+  std::shared_ptr<Core::LinAlg::SparseMatrix> outmat =
+      std::make_shared<Core::LinAlg::SparseMatrix>(inmat.row_map(), 100, false, true);
+
+  // mapping of column gids
+  std::map<int, int> gidmap;
+  Core::Communication::Exporter ex(
+      inmat.domain_map(), inmat.col_map(), Core::Communication::unpack_epetra_comm(inmat.Comm()));
+  for (int i = 0; i < inmat.domain_map().num_my_elements(); ++i)
+    gidmap[inmat.domain_map().gid(i)] = newdomainmap.gid(i);
+  ex.do_export(gidmap);
+
+  // transform input matrix to newdomainmap
+  for (int i = 0; i < inmat.num_my_rows(); ++i)
+  {
+    int NumEntries = 0;
+    double* Values;
+    int* Indices;
+    int err = inmat.extract_my_row_view(i, NumEntries, Values, Indices);
+    if (err != 0) FOUR_C_THROW("extract_my_row_view error: {}", err);
+    std::vector<int> idx;
+    std::vector<double> vals;
+    idx.reserve(NumEntries);
+    vals.reserve(NumEntries);
+
+    for (int j = 0; j < NumEntries; ++j)
+    {
+      int gid = (inmat.col_map()).gid(Indices[j]);
+      std::map<int, int>::const_iterator iter = gidmap.find(gid);
+      if (iter != gidmap.end())
+      {
+        idx.push_back(iter->second);
+        vals.push_back(Values[j]);
+      }
+      else
+        FOUR_C_THROW("gid {} not found in map for lid {} at {}", gid, Indices[j], j);
+    }
+
+    Values = vals.data();
+    NumEntries = vals.size();
+    err = outmat->insert_global_values(inmat.row_map().gid(i), NumEntries, Values, idx.data());
+    if (err < 0) FOUR_C_THROW("insert_global_values error: {}", err);
+  }
+
+  // complete output matrix
+  outmat->complete(newdomainmap, inmat.row_map());
+
+  return outmat;
+}
+
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_row_col_transform_gids(
+    const Core::LinAlg::SparseMatrix& inmat, const Core::LinAlg::Map& newrowmap,
+    const Core::LinAlg::Map& newdomainmap)
+{
+  // initialize output matrix
+  std::shared_ptr<Core::LinAlg::SparseMatrix> outmat =
+      std::make_shared<Core::LinAlg::SparseMatrix>(newrowmap, 100, true, true);
+
+  // mapping of column gids
+  std::map<int, int> gidmap;
+  Core::Communication::Exporter ex(
+      inmat.domain_map(), inmat.col_map(), Core::Communication::unpack_epetra_comm(inmat.Comm()));
+  for (int i = 0; i < inmat.domain_map().num_my_elements(); ++i)
+    gidmap[inmat.domain_map().gid(i)] = newdomainmap.gid(i);
+  ex.do_export(gidmap);
+
+  // transform input matrix to newrowmap and newdomainmap
+  for (int i = 0; i < inmat.num_my_rows(); ++i)
+  {
+    int NumEntries = 0;
+    double* Values;
+    int* Indices;
+    int err = inmat.extract_my_row_view(i, NumEntries, Values, Indices);
+    if (err != 0) FOUR_C_THROW("extract_my_row_view error: {}", err);
+    std::vector<int> idx;
+    std::vector<double> vals;
+    idx.reserve(NumEntries);
+    vals.reserve(NumEntries);
+
+    for (int j = 0; j < NumEntries; ++j)
+    {
+      int gid = (inmat.col_map()).gid(Indices[j]);
+      std::map<int, int>::const_iterator iter = gidmap.find(gid);
+      if (iter != gidmap.end())
+      {
+        idx.push_back(iter->second);
+        vals.push_back(Values[j]);
+      }
+      else
+        FOUR_C_THROW("gid {} not found in map for lid {} at {}", gid, Indices[j], j);
+    }
+
+    Values = vals.data();
+    NumEntries = vals.size();
+    err = outmat->insert_global_values(newrowmap.gid(i), NumEntries, Values, idx.data());
+    if (err < 0) FOUR_C_THROW("insert_global_values error: {}", err);
+  }
+
+  // complete output matrix
+  outmat->complete(newdomainmap, newrowmap);
+
+  return outmat;
 }
 
 FOUR_C_NAMESPACE_CLOSE

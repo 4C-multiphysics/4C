@@ -2705,20 +2705,20 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
 
               // transform range map of mortar matrices D and M from slave-side dofrowmap to
               // Lagrange multiplier dofrowmap
-              D_ = Mortar::matrix_row_transform_gids(*D_, *lmdofrowmap);
-              M_ = Mortar::matrix_row_transform_gids(*M_, *lmdofrowmap);
+              D_ = Core::LinAlg::matrix_row_transform_gids(*D_, *lmdofrowmap);
+              M_ = Core::LinAlg::matrix_row_transform_gids(*M_, *lmdofrowmap);
 
               if (couplingtype_ == Inpar::S2I::coupling_mortar_saddlepoint_petrov)
               {
                 // transform domain map of mortar matrix D from slave-side dofrowmap to Lagrange
                 // multiplier dofrowmap and store transformed matrix as mortar matrix E
-                E_ = Mortar::matrix_col_transform_gids(*D_, *lmdofrowmap);
+                E_ = Core::LinAlg::matrix_col_transform_gids(*D_, *lmdofrowmap);
               }
               else
               {
                 // transform domain and range maps of mortar matrix E from slave-side dofrowmap to
                 // Lagrange multiplier dofrowmap
-                E_ = Mortar::matrix_row_col_transform_gids(*E_, *lmdofrowmap, *lmdofrowmap);
+                E_ = Core::LinAlg::matrix_row_col_transform_gids(*E_, *lmdofrowmap, *lmdofrowmap);
               }
 
               break;
@@ -3761,16 +3761,16 @@ void ScaTra::MeshtyingStrategyS2I::solve(const std::shared_ptr<Core::LinAlg::Sol
             extendedsystemmatrix.matrix(0, 1).add(*D_, true, 1., 0.);
             extendedsystemmatrix.matrix(0, 1).add(*M_, true, -1., 1.);
             extendedsystemmatrix.matrix(1, 0).add(
-                *Mortar::matrix_row_transform_gids(*islavematrix_, *extendedmaps_->map(1)), false,
-                1., 0.);
+                *Core::LinAlg::matrix_row_transform_gids(*islavematrix_, *extendedmaps_->map(1)),
+                false, 1., 0.);
           }
           else
           {
             extendedsystemmatrix.matrix(0, 1).add(*M_, true, -1., 0.);
             extendedsystemmatrix.matrix(0, 1).add(*D_, true, 1., 1.);
             extendedsystemmatrix.matrix(1, 0).add(
-                *Mortar::matrix_row_transform_gids(*imastermatrix_, *extendedmaps_->map(1)), false,
-                1., 0.);
+                *Core::LinAlg::matrix_row_transform_gids(*imastermatrix_, *extendedmaps_->map(1)),
+                false, 1., 0.);
           }
           extendedsystemmatrix.matrix(1, 1).add(*E_, true, -1., 0.);
           extendedsystemmatrix.complete();

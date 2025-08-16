@@ -3266,7 +3266,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     kdz.complete(*gsdofrowmap_, *gdisprowmap_);
 
     // transform constraint matrix kzd to lmdofmap (matrix_col_transform)
-    trkdz = Mortar::matrix_col_transform_gids(kdz, *glmdofrowmap_);
+    trkdz = Core::LinAlg::matrix_col_transform_gids(kdz, *glmdofrowmap_);
 
     // transform parallel row distribution of constraint matrix kdz
     // (only necessary in the parallel redistribution case)
@@ -3281,7 +3281,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     kzd.complete(*gdisprowmap_, *gsdofrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
-    trkzd = Mortar::matrix_row_transform_gids(kzd, *glmdofrowmap_);
+    trkzd = Core::LinAlg::matrix_row_transform_gids(kzd, *glmdofrowmap_);
 
     // transform parallel column distribution of constraint matrix kzd
     // (only necessary in the parallel redistribution case)
@@ -3315,7 +3315,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     kzz.complete(*gsdofrowmap_, *gsdofrowmap_);
 
     // transform constraint matrix kzz to lmdofmap (matrix_row_col_transform)
-    trkzz = Mortar::matrix_row_col_transform_gids(kzz, *glmdofrowmap_, *glmdofrowmap_);
+    trkzz = Core::LinAlg::matrix_row_col_transform_gids(kzz, *glmdofrowmap_, *glmdofrowmap_);
 
     /****************************************************************************************
      ***                RIGHT-HAND SIDE                   ***
@@ -3376,7 +3376,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     kdz.complete(*gsdofrowmap_, *gdisprowmap_);
 
     // transform constraint matrix kzd to lmdofmap (matrix_col_transform)
-    trkdz = Mortar::matrix_col_transform_gids(kdz, *glmdofrowmap_);
+    trkdz = Core::LinAlg::matrix_col_transform_gids(kdz, *glmdofrowmap_);
 
     // transform parallel row distribution of constraint matrix kdz
     // (only necessary in the parallel redistribution case)
@@ -3391,7 +3391,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     kzd.complete(*gdisprowmap_, *gsdofrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
-    trkzd = Mortar::matrix_row_transform_gids(kzd, *glmdofrowmap_);
+    trkzd = Core::LinAlg::matrix_row_transform_gids(kzd, *glmdofrowmap_);
 
     // transform parallel column distribution of constraint matrix kzd
     // (only necessary in the parallel redistribution case)
@@ -3415,7 +3415,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     kzz.complete(*gsdofrowmap_, *gsdofrowmap_);
 
     // transform constraint matrix kzz to lmdofmap (matrix_row_col_transform)
-    trkzz = Mortar::matrix_row_col_transform_gids(kzz, *glmdofrowmap_, *glmdofrowmap_);
+    trkzz = Core::LinAlg::matrix_row_col_transform_gids(kzz, *glmdofrowmap_, *glmdofrowmap_);
 
 
     // ***************************************************************************************************
@@ -3437,7 +3437,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     }
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
-    trkwd = Mortar::matrix_row_transform_gids(kwd, *gwdofrowmap_);
+    trkwd = Core::LinAlg::matrix_row_transform_gids(kwd, *gwdofrowmap_);
 
     // transform parallel column distribution of constraint matrix kzd
     // (only necessary in the parallel redistribution case)
@@ -3459,7 +3459,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     kwz.complete(*gsdofrowmap_, *gsdofnrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
-    trkwz = Mortar::matrix_row_col_transform_gids(kwz, *gwdofrowmap_, *glmdofrowmap_);
+    trkwz = Core::LinAlg::matrix_row_col_transform_gids(kwz, *gwdofrowmap_, *glmdofrowmap_);
 
     // *********************************
     // build wear matrix kww
@@ -3484,7 +3484,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     kww.complete(*gsdofnrowmap_, *gsdofnrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
-    trkww = Mortar::matrix_row_col_transform_gids(kww, *gwdofrowmap_, *gwdofrowmap_);
+    trkww = Core::LinAlg::matrix_row_col_transform_gids(kww, *gwdofrowmap_, *gwdofrowmap_);
 
     // *********************************
     // build wear matrix kzw
@@ -3494,7 +3494,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     kzw.complete(*gsdofnrowmap_, *gsdofrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
-    trkzw = Mortar::matrix_row_col_transform_gids(kzw, *glmdofrowmap_, *gwdofrowmap_);
+    trkzw = Core::LinAlg::matrix_row_col_transform_gids(kzw, *glmdofrowmap_, *gwdofrowmap_);
 
     /****************************************************************************************
      ***                RIGHT-HAND SIDE                   ***
@@ -3573,7 +3573,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     kdz.complete(*gsdofrowmap_, *gdisprowmap_);
 
     // transform constraint matrix kzd to lmdofmap (matrix_col_transform)
-    trkdz = Mortar::matrix_col_transform_gids(kdz, *glmdofrowmap_);
+    trkdz = Core::LinAlg::matrix_col_transform_gids(kdz, *glmdofrowmap_);
 
     // transform parallel row distribution of constraint matrix kdz
     // (only necessary in the parallel redistribution case)
@@ -3588,7 +3588,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     kzd.complete(*gdisprowmap_, *gsdofrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
-    trkzd = Mortar::matrix_row_transform_gids(kzd, *glmdofrowmap_);
+    trkzd = Core::LinAlg::matrix_row_transform_gids(kzd, *glmdofrowmap_);
 
     // transform parallel column distribution of constraint matrix kzd
     // (only necessary in the parallel redistribution case)
@@ -3612,7 +3612,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     kzz.complete(*gsdofrowmap_, *gsdofrowmap_);
 
     // transform constraint matrix kzz to lmdofmap (matrix_row_col_transform)
-    trkzz = Mortar::matrix_row_col_transform_gids(kzz, *glmdofrowmap_, *glmdofrowmap_);
+    trkzz = Core::LinAlg::matrix_row_col_transform_gids(kzz, *glmdofrowmap_, *glmdofrowmap_);
 
 
     // ***************************************************************************************************
@@ -3625,7 +3625,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     if (gslipn_->num_global_elements()) kwd.complete(*gdisprowmap_, *gsdofnrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
-    trkwd = Mortar::matrix_row_transform_gids(kwd, *gwdofrowmap_);
+    trkwd = Core::LinAlg::matrix_row_transform_gids(kwd, *gwdofrowmap_);
 
     // transform parallel column distribution of constraint matrix kzd
     // (only necessary in the parallel redistribution case)
@@ -3639,7 +3639,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     kwz.complete(*gsdofrowmap_, *gsdofnrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
-    trkwz = Mortar::matrix_row_col_transform_gids(kwz, *gwdofrowmap_, *glmdofrowmap_);
+    trkwz = Core::LinAlg::matrix_row_col_transform_gids(kwz, *gwdofrowmap_, *glmdofrowmap_);
 
     // *********************************
     // build wear matrix kww
@@ -3657,7 +3657,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     kww.complete(*gsdofnrowmap_, *gsdofnrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
-    trkww = Mortar::matrix_row_col_transform_gids(kww, *gwdofrowmap_, *gwdofrowmap_);
+    trkww = Core::LinAlg::matrix_row_col_transform_gids(kww, *gwdofrowmap_, *gwdofrowmap_);
 
     // FOR SLAVE AND MASTER
     // ********************************* S+M
@@ -3668,7 +3668,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     kzw.complete(*galldofnrowmap_, *gsdofrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
-    trkzw = Mortar::matrix_row_col_transform_gids(kzw, *glmdofrowmap_, *gwalldofrowmap_);
+    trkzw = Core::LinAlg::matrix_row_col_transform_gids(kzw, *glmdofrowmap_, *gwalldofrowmap_);
 
     // ***************************************************************************************************
     // additional wear MASTER
@@ -3680,7 +3680,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     if (gmslipn_->num_global_elements()) kwmd.complete(*gdisprowmap_, *gmdofnrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
-    trkwmd = Mortar::matrix_row_transform_gids(kwmd, *gwmdofrowmap_);
+    trkwmd = Core::LinAlg::matrix_row_transform_gids(kwmd, *gwmdofrowmap_);
 
     // transform parallel column distribution of constraint matrix kzd
     // (only necessary in the parallel redistribution case)
@@ -3694,7 +3694,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     kwmz.complete(*gsdofrowmap_, *gmdofnrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
-    trkwmz = Mortar::matrix_row_col_transform_gids(kwmz, *gwmdofrowmap_, *glmdofrowmap_);
+    trkwmz = Core::LinAlg::matrix_row_col_transform_gids(kwmz, *gwmdofrowmap_, *glmdofrowmap_);
 
     // *********************************
     // build wear matrix kwmwm
@@ -3712,7 +3712,7 @@ void Wear::LagrangeStrategyWear::build_saddle_point_system(
     kwmwm.complete(*gmdofnrowmap_, *gmdofnrowmap_);
 
     // transform constraint matrix kzd to lmdofmap (MatrixRowTransform)
-    trkwmwm = Mortar::matrix_row_col_transform_gids(kwmwm, *gwmdofrowmap_, *gwmdofrowmap_);
+    trkwmwm = Core::LinAlg::matrix_row_col_transform_gids(kwmwm, *gwmdofrowmap_, *gwmdofrowmap_);
 
     /****************************************************************************************
     ***                                   RIGHT-HAND SIDE                                 ***
@@ -4439,24 +4439,24 @@ void Wear::LagrangeStrategyWear::recover(std::shared_ptr<Core::LinAlg::Vector<do
       Core::LinAlg::Vector<double> modw(*gsdofnrowmap_);
 
       // neutral part
-      dnblock_ = Mortar::matrix_row_transform_gids(*dnblock_, *gsdofnrowmap_);
+      dnblock_ = Core::LinAlg::matrix_row_transform_gids(*dnblock_, *gsdofnrowmap_);
       dnblock_->multiply(false, disin, modw);
       wincr_->update(1.0, modw, 1.0);
 
       // master part
-      dmblock_ = Mortar::matrix_row_transform_gids(*dmblock_, *gsdofnrowmap_);
+      dmblock_ = Core::LinAlg::matrix_row_transform_gids(*dmblock_, *gsdofnrowmap_);
       dmblock_->multiply(false, disim, modw);
       wincr_->update(1.0, modw, 1.0);
 
       // active part (stick and slip)
-      dablock_ = Mortar::matrix_row_transform_gids(*dablock_, *gsdofnrowmap_);
+      dablock_ = Core::LinAlg::matrix_row_transform_gids(*dablock_, *gsdofnrowmap_);
       dablock_->multiply(false, disia, modw);
       wincr_->update(1.0, modw, 1.0);
 
       // inactive part
       if (gidofs_->num_global_elements() > 0)
       {
-        diblock_ = Mortar::matrix_row_transform_gids(*diblock_, *gsdofnrowmap_);
+        diblock_ = Core::LinAlg::matrix_row_transform_gids(*diblock_, *gsdofnrowmap_);
         diblock_->multiply(false, disii, modw);
         wincr_->update(1.0, modw, 1.0);
       }
