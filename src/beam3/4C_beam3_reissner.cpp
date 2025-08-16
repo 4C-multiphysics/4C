@@ -447,6 +447,27 @@ void Discret::Elements::Beam3r::pack(Core::Communication::PackBuffer& data) cons
   add_to_pack(data, rnew_gp_mass_);
   add_to_pack(data, qconv_gp_dampstoch_);
   add_to_pack(data, qnew_gp_dampstoch_);
+
+  // We don't communicate the following arrays, but we have to set their correct size.
+  add_to_pack(data, axial_strain_gp_elastf_.size());
+  add_to_pack(data, shear_strain_2_gp_elastf_.size());
+  add_to_pack(data, shear_strain_3_gp_elastf_.size());
+  add_to_pack(data, twist_gp_elastm_.size());
+  add_to_pack(data, curvature_2_gp_elastm_.size());
+  add_to_pack(data, curvature_3_gp_elastm_.size());
+  add_to_pack(data, material_axial_force_gp_elastf_.size());
+  add_to_pack(data, material_shear_force_2_gp_elastf_.size());
+  add_to_pack(data, material_shear_force_3_gp_elastf_.size());
+  add_to_pack(data, material_torque_gp_elastm_.size());
+  add_to_pack(data, material_bending_moment_2_gp_elastm_.size());
+  add_to_pack(data, material_bending_moment_3_gp_elastm_.size());
+  add_to_pack(data, spatial_x_force_gp_elastf_.size());
+  add_to_pack(data, spatial_y_force_2_gp_elastf_.size());
+  add_to_pack(data, spatial_z_force_3_gp_elastf_.size());
+  add_to_pack(data, spatial_x_moment_gp_elastm_.size());
+  add_to_pack(data, spatial_y_moment_2_gp_elastm_.size());
+  add_to_pack(data, spatial_z_moment_3_gp_elastm_.size());
+
   return;
 }
 
@@ -497,6 +518,45 @@ void Discret::Elements::Beam3r::unpack(Core::Communication::UnpackBuffer& buffer
   extract_from_pack(buffer, qconv_gp_dampstoch_);
   extract_from_pack(buffer, qnew_gp_dampstoch_);
 
+  // NOT communicated, but initialized with correct size
+  size_t vector_size = 0;
+  extract_from_pack(buffer, vector_size);
+  axial_strain_gp_elastf_.resize(vector_size, 0.0);
+  extract_from_pack(buffer, vector_size);
+  shear_strain_2_gp_elastf_.resize(vector_size, 0.0);
+  extract_from_pack(buffer, vector_size);
+  shear_strain_3_gp_elastf_.resize(vector_size, 0.0);
+  extract_from_pack(buffer, vector_size);
+  twist_gp_elastm_.resize(vector_size, 0.0);
+  extract_from_pack(buffer, vector_size);
+  curvature_2_gp_elastm_.resize(vector_size, 0.0);
+  extract_from_pack(buffer, vector_size);
+  curvature_3_gp_elastm_.resize(vector_size, 0.0);
+  extract_from_pack(buffer, vector_size);
+  material_axial_force_gp_elastf_.resize(vector_size, 0.0);
+  extract_from_pack(buffer, vector_size);
+  material_shear_force_2_gp_elastf_.resize(vector_size, 0.0);
+  extract_from_pack(buffer, vector_size);
+  material_shear_force_3_gp_elastf_.resize(vector_size, 0.0);
+  extract_from_pack(buffer, vector_size);
+  material_torque_gp_elastm_.resize(vector_size, 0.0);
+  extract_from_pack(buffer, vector_size);
+  material_bending_moment_2_gp_elastm_.resize(vector_size, 0.0);
+  extract_from_pack(buffer, vector_size);
+  material_bending_moment_3_gp_elastm_.resize(vector_size, 0.0);
+  extract_from_pack(buffer, vector_size);
+  spatial_x_force_gp_elastf_.resize(vector_size, 0.0);
+  extract_from_pack(buffer, vector_size);
+  spatial_y_force_2_gp_elastf_.resize(vector_size, 0.0);
+  extract_from_pack(buffer, vector_size);
+  spatial_z_force_3_gp_elastf_.resize(vector_size, 0.0);
+  extract_from_pack(buffer, vector_size);
+  spatial_x_moment_gp_elastm_.resize(vector_size, 0.0);
+  extract_from_pack(buffer, vector_size);
+  spatial_y_moment_2_gp_elastm_.resize(vector_size, 0.0);
+  extract_from_pack(buffer, vector_size);
+  spatial_z_moment_3_gp_elastm_.resize(vector_size, 0.0);
+
   // NOT communicated
   eint_ = 0.0;
   ekin_ = 0.0;
@@ -506,24 +566,6 @@ void Discret::Elements::Beam3r::unpack(Core::Communication::UnpackBuffer& buffer
   l_.clear();
   p_.clear();
   kmax_ = 0.0;
-  axial_strain_gp_elastf_.clear();
-  shear_strain_2_gp_elastf_.clear();
-  shear_strain_3_gp_elastf_.clear();
-  twist_gp_elastm_.clear();
-  curvature_2_gp_elastm_.clear();
-  curvature_3_gp_elastm_.clear();
-  material_axial_force_gp_elastf_.clear();
-  material_shear_force_2_gp_elastf_.clear();
-  material_shear_force_3_gp_elastf_.clear();
-  material_torque_gp_elastm_.clear();
-  material_bending_moment_2_gp_elastm_.clear();
-  material_bending_moment_3_gp_elastm_.clear();
-  spatial_x_force_gp_elastf_.clear();
-  spatial_y_force_2_gp_elastf_.clear();
-  spatial_z_force_3_gp_elastf_.clear();
-  spatial_x_moment_gp_elastm_.clear();
-  spatial_y_moment_2_gp_elastm_.clear();
-  spatial_z_moment_3_gp_elastm_.clear();
 
 
   return;
