@@ -464,7 +464,7 @@ namespace Core::IO
         // Take the special spec of FUNCT<n> because it is the same for all function sections.
         // Make a copy and replace the name. This is a pretty insane hack and should be removed when
         // the input of the functions is restructured.
-        auto spec = pimpl_->valid_sections_.at("FUNCT<n>");
+        auto spec = InputSpec(pimpl_->valid_sections_.at("FUNCT<n>").impl().clone());
         spec.impl().data.name = name;
         dynamic_cast<Internal::InputSpecTypeErasedImplementation<Internal::ListSpec>&>(spec.impl())
             .wrapped.name = name;

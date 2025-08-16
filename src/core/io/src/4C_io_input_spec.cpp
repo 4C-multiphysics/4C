@@ -18,22 +18,6 @@ Core::IO::InputSpec::InputSpec(std::unique_ptr<Internal::InputSpecImpl> pimpl)
 {
 }
 
-Core::IO::InputSpec::~InputSpec() = default;
-
-Core::IO::InputSpec::InputSpec(const InputSpec& other)
-    : pimpl_(other.pimpl_ ? other.pimpl_->clone() : nullptr)
-{
-}
-
-Core::IO::InputSpec& Core::IO::InputSpec::operator=(const InputSpec& other)
-{
-  if (this == &other) return *this;
-
-  pimpl_ = other.pimpl_ ? other.pimpl_->clone() : nullptr;
-
-  return *this;
-}
-
 void Core::IO::InputSpec::fully_parse(
     ValueParser& parser, Core::IO::InputParameterContainer& container) const
 {

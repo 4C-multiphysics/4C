@@ -46,15 +46,7 @@ namespace Core::IO
    public:
     InputSpec() = default;
 
-    ~InputSpec();
-
     InputSpec(std::unique_ptr<Internal::InputSpecImpl> pimpl);
-
-    InputSpec(const InputSpec& other);
-    InputSpec& operator=(const InputSpec& other);
-
-    InputSpec(InputSpec&&) noexcept = default;
-    InputSpec& operator=(InputSpec&&) noexcept = default;
 
     /**
      * Use the @p parser to parse whatever this InputSpec expects. The results are stored in the
@@ -103,7 +95,7 @@ namespace Core::IO
     [[nodiscard]] const Internal::InputSpecImpl& impl() const;
 
    private:
-    std::unique_ptr<Internal::InputSpecImpl> pimpl_;
+    std::shared_ptr<Internal::InputSpecImpl> pimpl_;
   };
 }  // namespace Core::IO
 

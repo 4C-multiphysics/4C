@@ -1166,9 +1166,12 @@ namespace
                   &spec.impl());
           nested && (!predicate || predicate(nested->wrapped)))
       {
-        for (auto&& sub_spec : nested->wrapped.specs)
+        // Copy the specs from the nested spec into the flattened list.
+        // Note that we do not move the internals out of the spec since more (internal) references
+        // to the spec may be held elsewhere.
+        for (const auto& sub_spec : nested->wrapped.specs)
         {
-          flattened_specs.emplace_back(std::move(sub_spec));
+          flattened_specs.emplace_back(sub_spec);
         }
       }
       else
