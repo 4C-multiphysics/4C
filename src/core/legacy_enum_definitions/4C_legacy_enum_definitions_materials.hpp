@@ -70,6 +70,9 @@ namespace Core::Materials
                                   ///< through porous medium
     m_fluidporo_singlereaction,   ///< single phase material for multiphase flow through porous
                                   ///< medium
+    m_fluidporo_volfrac_pressure_blood_lung,  ///<  volume fraction material, with the pressure as
+                                              ///<  primary variable and a closing relation defined
+                                              ///<  for the vascular units in the lungs
     m_fluidporo_multiphase,  ///< collection of single phase materials for multiphase flow through
                              ///< porous medium
     m_fluidporo_multiphase_reactions,   ///< collection of single phase materials for reavcitve

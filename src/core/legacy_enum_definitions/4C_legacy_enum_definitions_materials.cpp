@@ -303,6 +303,8 @@ std::string_view Core::Materials::to_string(Core::Materials::MaterialType materi
       return "MAT_FluidPoroSinglePhaseDofDiffPressure";
     case m_fluidporo_phasedof_pressure:
       return "MAT_FluidPoroSinglePhaseDofPressure";
+    case m_fluidporo_volfrac_pressure_blood_lung:
+      return "MAT_FluidPoroVolFracPressureBloodLung";
     case m_fluidporo_phasedof_saturation:
       return "MAT_FluidPoroSinglePhaseDofSaturation";
     case m_fluidporo_phaselaw_linear:

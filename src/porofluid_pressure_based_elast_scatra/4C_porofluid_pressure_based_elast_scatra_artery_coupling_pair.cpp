@@ -313,7 +313,10 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
                 porofluid_material->material_by_id(material_id);
             single_phase_material->material_type() !=
                 Core::Materials::m_fluidporo_volfracpressure &&
-            single_phase_material->material_type() != Core::Materials::m_fluidporo_singlephase)
+            single_phase_material->material_type() != Core::Materials::m_fluidporo_singlephase &&
+            single_phase_material->material_type() !=
+                Core::Materials::m_fluidporo_volfrac_pressure_blood_lung)
+
         {
           FOUR_C_THROW(
               "You can only couple volume fraction pressures or fluid phases in multi-phase "
@@ -412,8 +415,20 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
           const std::shared_ptr<const Mat::ScatraMatMultiPoroVolFrac>& scatra_volfrac_material =
               std::dynamic_pointer_cast<const Mat::ScatraMatMultiPoroVolFrac>(
                   single_scatra_material);
-          volfrac_pressure_id_[i_dof] =
-              scatra_volfrac_material->phase_id() + porofluid_material->num_vol_frac();
+
+          if (porofluid_material->num_mat() ==
+              porofluid_material->num_fluid_phases() + porofluid_material->num_vol_frac())
+          {
+            volfrac_pressure_id_[i_dof] = scatra_volfrac_material->phase_id();
+          }
+          else if (porofluid_material->num_mat() ==
+                   porofluid_material->num_fluid_phases() + 2 * porofluid_material->num_vol_frac())
+          {
+            volfrac_pressure_id_[i_dof] =
+                scatra_volfrac_material->phase_id() + porofluid_material->num_vol_frac();
+          }
+          else
+            FOUR_C_THROW("Internal Error!");
         }
       }
 
@@ -501,7 +516,8 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
   // create phase-manager
   phase_manager_ = Discret::Elements::PoroFluidManager::PhaseManagerInterface::create_phase_manager(
       *params, num_dim_, porofluid_material->material_type(), get_access_from_artcoupling,
-      porofluid_material->num_mat(), porofluid_material->num_fluid_phases());
+      porofluid_material->num_mat(), porofluid_material->num_fluid_phases(),
+      porofluid_material->num_vol_frac());
 
   // setup phase-manager
   phase_manager_->setup(homogenized_element_, nds_porofluid_);
@@ -509,7 +525,8 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
   // create variable-manager
   variable_manager_ = Discret::Elements::PoroFluidManager::VariableManagerInterface<num_dim_,
       num_nodes_homogenized_>::create_variable_manager(*params, get_access_from_artcoupling,
-      porofluid_material, porofluid_material->num_mat(), porofluid_material->num_fluid_phases());
+      porofluid_material, porofluid_material->num_mat(), porofluid_material->num_fluid_phases(),
+      porofluid_material->num_vol_frac());
 
   // initialize the names used in functions
   initialize_function_names();
@@ -1489,11 +1506,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
   update_gpts_ntp_element_matrix(*ele_matrix_artery_artery, *ele_matrix_artery_homogenized,
       *ele_matrix_homogenized_artery, *ele_matrix_homogenized_homogenized);
 
-  //! safety check for coupling with additional porous network (= Artery coupling)
-  if (coupling_element_type_ == "ARTERY")
-    check_valid_volume_fraction_pressure_coupling(*ele_matrix_artery_artery,
-        *ele_matrix_artery_homogenized, *ele_matrix_homogenized_artery,
-        *ele_matrix_homogenized_homogenized);
+
   evaluate_gpts_ntp_ele_rhs(*ele_rhs_artery, *ele_rhs_homogenized, *ele_matrix_artery_artery,
       *ele_matrix_artery_homogenized, *ele_matrix_homogenized_artery,
       *ele_matrix_homogenized_homogenized);
@@ -2254,15 +2267,37 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
   timefacrhs_homogenized_density_.resize(num_dof_homogenized_);
 
   // fill fluid densities vector
-  std::vector<double> fluid_densities(num_fluid_phases_ + 2 * num_volfracs_);
-  for (int i_fluid_phase = 0; i_fluid_phase < num_fluid_phases_; i_fluid_phase++)
-    fluid_densities[i_fluid_phase] = phase_manager_->density(i_fluid_phase);
-  for (int i_volfrac = 0; i_volfrac < num_volfracs_; i_volfrac++)
+  std::vector<double> fluid_densities{};
+
+  if (phase_manager_->total_num_dof() ==
+      phase_manager_->num_fluid_phases() + 2 * phase_manager_->num_vol_frac())
   {
-    fluid_densities[num_fluid_phases_ + i_volfrac] = phase_manager_->vol_frac_density(i_volfrac);
-    fluid_densities[num_fluid_phases_ + num_volfracs_ + i_volfrac] =
-        phase_manager_->vol_frac_density(i_volfrac);
+    fluid_densities.resize(num_fluid_phases_ + 2 * num_volfracs_);
+    for (int i_fluid_phase = 0; i_fluid_phase < num_fluid_phases_; i_fluid_phase++)
+      fluid_densities[i_fluid_phase] = phase_manager_->density(i_fluid_phase);
+    for (int i_volfrac = 0; i_volfrac < num_volfracs_; i_volfrac++)
+    {
+      fluid_densities[num_fluid_phases_ + i_volfrac] = phase_manager_->vol_frac_density(i_volfrac);
+      fluid_densities[num_fluid_phases_ + num_volfracs_ + i_volfrac] =
+          phase_manager_->vol_frac_density(i_volfrac);
+    }
   }
+
+  else if (phase_manager_->total_num_dof() ==
+           phase_manager_->num_fluid_phases() + phase_manager_->num_vol_frac())
+  {
+    fluid_densities.resize(num_fluid_phases_ + num_volfracs_);
+    for (int i_fluid_phase = 0; i_fluid_phase < num_fluid_phases_; i_fluid_phase++)
+      fluid_densities[i_fluid_phase] = phase_manager_->density(i_fluid_phase);
+
+    fluid_densities[num_fluid_phases_] = phase_manager_->vol_frac_density(0);
+  }
+  else
+  {
+    FOUR_C_THROW("Internal Error!");
+  }
+
+
 
   switch (coupling_type_)
   {

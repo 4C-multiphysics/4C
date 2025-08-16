@@ -26,18 +26,17 @@ namespace
     void SetUp() override
     {
       // function parameters
-      const auto& parameters = PoroPressureBased::LungOxygenExchangeLawParameters{
-          .rho_oxy = 1.429e-9,
-          .DiffAdVTLC = 5.36,
-          .alpha_oxy = 2.1e-4,
-          .rho_air = 1.0e-9,
-          .rho_bl = 1.03e-6,
-          .n = 3,
-          .P_oB50 = 3.6,
-          .NC_Hb = 0.25,
-          .P_atmospheric = 101.3,
-          .volfrac_blood_ref = 0.1,
-      };
+      const auto& parameters =
+          PoroPressureBased::LungOxygenExchangeLawParameters{.rho_oxy = 1.429e-9,
+              .DiffAdVTLC = 5.36,
+              .alpha_oxy = 2.1e-4,
+              .rho_air = 1.0e-9,
+              .rho_bl = 1.03e-6,
+              .n = 3,
+              .P_oB50 = 3.6,
+              .NC_Hb = 0.25,
+              .P_atmospheric = 101.3,
+              .volfrac_blood_ref = 0.1};
 
       // construct LungOxygenExchangeLaw
       LungOxygenExchangeLaw_ =
@@ -53,22 +52,21 @@ namespace
     void SetUp() override
     {
       // function parameters
-      const auto& parameters = PoroPressureBased::LungCarbonDioxideExchangeLawParameters{
-          .rho_CO2 = 1.98e-9,
-          .DiffsolAdVTLC = 4.5192e-3,
-          .pH = 7.352,
-          .rho_air = 1.0e-9,
-          .rho_bl = 1.03e-6,
-          .rho_oxy = 1.429e-9,
-          .n = 3,
-          .P_oB50 = 3.6,
-          .C_Hb = 18.2,
-          .NC_Hb = 0.25,
-          .alpha_oxy = 2.1e-4,
-          .P_atmospheric = 101.3,
-          .ScalingFormmHg = 133.3e-3,
-          .volfrac_blood_ref = 0.1,
-      };
+      const auto& parameters =
+          PoroPressureBased::LungCarbonDioxideExchangeLawParameters{.rho_CO2 = 1.98e-9,
+              .DiffsolAdVTLC = 4.5192e-3,
+              .pH = 7.352,
+              .rho_air = 1.0e-9,
+              .rho_bl = 1.03e-6,
+              .rho_oxy = 1.429e-9,
+              .n = 3,
+              .P_oB50 = 3.6,
+              .C_Hb = 18.2,
+              .NC_Hb = 0.25,
+              .alpha_oxy = 2.1e-4,
+              .P_atmospheric = 101.3,
+              .ScalingFormmHg = 133.3e-3,
+              .volfrac_blood_ref = 0.1};
 
       // construct LungCarbonDioxideExchangeLaw
       LungCarbonDioxideExchangeLaw_ =
@@ -85,7 +83,7 @@ namespace
     const int component = 0;
     const std::vector<std::pair<std::string, double>> variables = {{"phi1", 0.19}, {"phi2", 0.0}};
     const std::vector<std::pair<std::string, double>> constants = {
-        {"p1", 0.005}, {"S1", 0.005}, {"porosity", 0.2}, {"VF1", 0.3}};
+        {"p1", 0.005}, {"S1", 0.005}, {"porosity", 0.2}, {"VF1", 0.3}, {"VFP1", 1.0}};
 
     // test Evaluate
     EXPECT_NEAR(LungOxygenExchangeLaw_->evaluate(variables, constants, component),
@@ -107,7 +105,7 @@ namespace
     const std::vector<std::pair<std::string, double>> variables = {
         {"phi1", 0.19}, {"phi2", 1.5e-4}};
     const std::vector<std::pair<std::string, double>> constants = {
-        {"p1", 0.005}, {"S1", 0.005}, {"porosity", 0.2}, {"VF1", 0.2}};
+        {"p1", 0.005}, {"S1", 0.005}, {"porosity", 0.2}, {"VF1", 0.2}, {"VFP1", 1.0}};
 
     // test Evaluate
     EXPECT_NEAR(LungOxygenExchangeLaw_->evaluate(variables, constants, component),
@@ -129,7 +127,7 @@ namespace
     const std::vector<std::pair<std::string, double>> variables = {
         {"phi1", 0.19}, {"phi2", 3.0e-4}};
     const std::vector<std::pair<std::string, double>> constants = {
-        {"p1", 0.005}, {"S1", 0.005}, {"porosity", 0.2}, {"VF1", 0.03}};
+        {"p1", 0.005}, {"S1", 0.005}, {"porosity", 0.2}, {"VF1", 0.03}, {"VFP1", 1.0}};
 
     // test Evaluate
     EXPECT_NEAR(LungOxygenExchangeLaw_->evaluate(variables, constants, component),
@@ -152,7 +150,7 @@ namespace
     const std::vector<std::pair<std::string, double>> variables = {
         {"phi1", 0.19}, {"phi2", 1.88e-4}, {"phi3", 0.06}, {"phi4", 0.0894}};
     const std::vector<std::pair<std::string, double>> constants = {
-        {"p1", 0.005}, {"S1", 0.0}, {"porosity", 0.0}, {"VF1", 0.4}};
+        {"p1", 0.005}, {"S1", 0.0}, {"porosity", 0.0}, {"VF1", 0.4}, {"VFP1", 1.0}};
 
     // test Evaluate
     EXPECT_NEAR(LungCarbonDioxideExchangeLaw_->evaluate(variables, constants, component),
@@ -176,7 +174,7 @@ namespace
     const std::vector<std::pair<std::string, double>> variables = {
         {"phi1", 0.19}, {"phi2", 1.88e-4}, {"phi3", 0.06}, {"phi4", 0.08760}};
     const std::vector<std::pair<std::string, double>> constants = {
-        {"p1", 0.005}, {"S1", 0.0}, {"porosity", 0.0}, {"VF1", 0.4}};
+        {"p1", 0.005}, {"S1", 0.0}, {"porosity", 0.0}, {"VF1", 0.4}, {"VFP1", 1.0}};
 
     // test Evaluate
     EXPECT_NEAR(LungCarbonDioxideExchangeLaw_->evaluate(variables, constants, component),
