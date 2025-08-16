@@ -1,0 +1,24 @@
+# This file is part of 4C multiphysics licensed under the
+# GNU Lesser General Public License v3.0 or later.
+#
+# See the LICENSE.md file in the top-level for license information.
+#
+# SPDX-License-Identifier: LGPL-3.0-or-later
+
+# Available at setup time due to pyproject.toml
+from setuptools import setup
+
+__version__ = "@FOUR_C_VERSION_FULL@"
+
+setup(
+    name="@FOUR_C_PYTHON_BINDINGS_PROJECT_NAME@",
+    version=__version__,
+    author="The 4C authors",
+    description="Python bindings for 4C",
+    long_description="",
+    extras_require={},
+    zip_safe=False,
+    python_requires=">=3.10",
+    include_package_data=True,
+    py_modules=[ '@FOUR_C_PYTHON_BINDINGS_PROJECT_NAME@' ],
+)
