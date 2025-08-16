@@ -333,6 +333,26 @@ namespace Core::IO
       ConstYamlNodeRef node_;
     };
 
+    /**
+     * Track information about the metadata that is emitted for an InputSpec.
+     */
+    struct EmitMetadataContext
+    {
+      InputSpecEmitMetadataOptions options;
+
+      /**
+       * Track which specs that are duplicated have already been emitted and remember the reference
+       * name.
+       */
+      std::unordered_map<const InputSpecImpl*, std::string> emitted_specs{};
+
+      /**
+       * Track whether we are currently emitting into a reference node. This is used to avoid
+       * nesting references.
+       */
+      bool currently_emitting_to_references{false};
+    };
+
 
     /**
      * Distinguish between different types of specs in the implementation.
@@ -421,14 +441,12 @@ namespace Core::IO
 
       //! Emit metadata. This function always emits into a map, i.e., the implementation must
       //! insert keys and values into the yaml emitter.
-      virtual void emit_metadata(YamlNodeRef node) const = 0;
+      virtual void emit_metadata(YamlNodeRef node, EmitMetadataContext& context) const = 0;
 
       virtual bool emit(YamlNodeRef node, const InputParameterContainer&,
           const InputSpecEmitOptions& options) const = 0;
 
       [[nodiscard]] virtual std::string pretty_type_name() const = 0;
-
-      [[nodiscard]] virtual std::unique_ptr<InputSpecImpl> clone() const = 0;
 
       void print(std::ostream& stream, std::size_t indent) const { do_print(stream, indent); }
 
@@ -483,7 +501,10 @@ namespace Core::IO
         wrapped.set_default_value(container);
       }
 
-      void emit_metadata(YamlNodeRef node) const override { wrapped.emit_metadata(node); }
+      void emit_metadata(YamlNodeRef node, EmitMetadataContext& context) const override
+      {
+        wrapped.emit_metadata(node, context);
+      }
 
       bool emit(YamlNodeRef node, const InputParameterContainer& container,
           const InputSpecEmitOptions& options) const override
@@ -532,11 +553,6 @@ namespace Core::IO
               "types that store a type.");
           return "unknown";
         }
-      }
-
-      [[nodiscard]] std::unique_ptr<InputSpecImpl> clone() const override
-      {
-        return std::make_unique<InputSpecTypeErasedImplementation<T>>(wrapped, data);
       }
 
       T wrapped;
@@ -940,7 +956,7 @@ namespace Core::IO
       void parse(ValueParser& parser, InputParameterContainer& container) const;
       bool match(ConstYamlNodeRef node, InputSpecBuilders::Storage& container,
           IO::Internal::MatchEntry& match_entry) const;
-      void emit_metadata(YamlNodeRef node) const;
+      void emit_metadata(YamlNodeRef node, EmitMetadataContext& context) const;
       bool emit(YamlNodeRef node, const InputParameterContainer& container,
           const InputSpecEmitOptions& options) const;
       void set_default_value(InputSpecBuilders::Storage& container) const;
@@ -969,7 +985,7 @@ namespace Core::IO
       bool match(ConstYamlNodeRef node, InputSpecBuilders::Storage& container,
           IO::Internal::MatchEntry& match_entry) const;
       void print(std::ostream& stream, std::size_t indent) const;
-      void emit_metadata(YamlNodeRef node) const;
+      void emit_metadata(YamlNodeRef node, EmitMetadataContext& context) const;
       bool emit(YamlNodeRef node, const InputParameterContainer& container,
           const InputSpecEmitOptions& options) const;
       void set_default_value(InputSpecBuilders::Storage& container) const;
@@ -996,7 +1012,7 @@ namespace Core::IO
       bool match(ConstYamlNodeRef node, InputSpecBuilders::Storage& container,
           IO::Internal::MatchEntry& match_entry) const;
       void print(std::ostream& stream, std::size_t indent) const;
-      void emit_metadata(YamlNodeRef node) const;
+      void emit_metadata(YamlNodeRef node, EmitMetadataContext& context) const;
       bool emit(YamlNodeRef node, const InputParameterContainer& container,
           const InputSpecEmitOptions& options) const;
       void set_default_value(InputSpecBuilders::Storage& container) const;
@@ -1011,7 +1027,7 @@ namespace Core::IO
           IO::Internal::MatchEntry& match_entry) const;
       void set_default_value(InputSpecBuilders::Storage& container) const;
       void print(std::ostream& stream, std::size_t indent) const;
-      void emit_metadata(YamlNodeRef node) const;
+      void emit_metadata(YamlNodeRef node, EmitMetadataContext& context) const;
       bool emit(YamlNodeRef node, const InputParameterContainer& container,
           const InputSpecEmitOptions& options) const;
     };
@@ -1036,7 +1052,7 @@ namespace Core::IO
           IO::Internal::MatchEntry& match_entry) const;
       void set_default_value(InputSpecBuilders::Storage& container) const;
       void print(std::ostream& stream, std::size_t indent) const;
-      void emit_metadata(YamlNodeRef node) const;
+      void emit_metadata(YamlNodeRef node, EmitMetadataContext& context) const;
       bool emit(YamlNodeRef node, const InputParameterContainer& container,
           const InputSpecEmitOptions& options) const;
     };
@@ -1059,7 +1075,7 @@ namespace Core::IO
 
       void print(std::ostream& stream, std::size_t indent) const;
 
-      void emit_metadata(YamlNodeRef node) const;
+      void emit_metadata(YamlNodeRef node, EmitMetadataContext& context) const;
       bool emit(YamlNodeRef node, const InputParameterContainer& container,
           const InputSpecEmitOptions& options) const;
     };
@@ -1078,7 +1094,7 @@ namespace Core::IO
           IO::Internal::MatchEntry& match_entry) const;
       void set_default_value(InputSpecBuilders::Storage& container) const;
       void print(std::ostream& stream, std::size_t indent) const;
-      void emit_metadata(YamlNodeRef node) const;
+      void emit_metadata(YamlNodeRef node, EmitMetadataContext& context) const;
       bool emit(YamlNodeRef node, const InputParameterContainer& container,
           const InputSpecEmitOptions& options) const;
     };
@@ -1845,7 +1861,8 @@ bool Core::IO::Internal::ParameterSpec<T>::match(ConstYamlNodeRef node,
 
 
 template <Core::IO::SupportedType T>
-void Core::IO::Internal::ParameterSpec<T>::emit_metadata(YamlNodeRef node) const
+void Core::IO::Internal::ParameterSpec<T>::emit_metadata(
+    YamlNodeRef node, EmitMetadataContext& context) const
 {
   node.node |= ryml::MAP;
   node.node["name"] << name;
@@ -2120,7 +2137,8 @@ void Core::IO::Internal::DeprecatedSelectionSpec<T>::print(
 }
 
 template <typename T>
-void Core::IO::Internal::DeprecatedSelectionSpec<T>::emit_metadata(YamlNodeRef node) const
+void Core::IO::Internal::DeprecatedSelectionSpec<T>::emit_metadata(
+    YamlNodeRef node, EmitMetadataContext& context) const
 {
   node.node |= ryml::MAP;
   node.node["name"] << name;
@@ -2321,7 +2339,8 @@ void Core::IO::Internal::SelectionSpec<T>::print(std::ostream& stream, std::size
 
 template <typename T>
   requires(std::is_enum_v<T>)
-void Core::IO::Internal::SelectionSpec<T>::emit_metadata(YamlNodeRef node) const
+void Core::IO::Internal::SelectionSpec<T>::emit_metadata(
+    YamlNodeRef node, EmitMetadataContext& context) const
 {
   node.node |= ryml::MAP;
   node.node["name"] << group_name;
@@ -2341,7 +2360,7 @@ void Core::IO::Internal::SelectionSpec<T>::emit_metadata(YamlNodeRef node) const
     auto entry = node.node["choices"].append_child();
     entry |= ryml::MAP;
     emit_value_as_yaml(node.wrap(entry["name"]), choice);
-    spec.impl().emit_metadata(node.wrap(entry["spec"]));
+    spec.impl().emit_metadata(node.wrap(entry["spec"]), context);
   }
 }
 

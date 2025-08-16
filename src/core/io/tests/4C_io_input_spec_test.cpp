@@ -1042,6 +1042,77 @@ specs:
     }
   }
 
+
+  TEST(InputSpecTest, EmitMetadataCondense)
+  {
+    auto spec_inner = group("inner", {
+                                         parameter<int>("a", {.default_value = 42}),
+                                         parameter<double>("b"),
+                                     });
+    auto spec_outer = group("outer", {spec_inner});
+
+    // The outer group is duplicated and should be shared. The inner group is also duplicated
+    // but it will not be shared since it is part of the already shared outer group.
+    auto spec = all_of({
+        group("first", {spec_outer}),
+        group("second", {spec_outer}),
+    });
+
+
+    std::ostringstream out;
+    ryml::Tree tree = init_yaml_tree_with_exceptions();
+    ryml::NodeRef root = tree.rootref();
+    YamlNodeRef yaml(root, "");
+    spec.emit_metadata(yaml, {.condense_duplicated_specs_threshold = 1});
+    out << tree;
+
+    std::string expected = R"(type: all_of
+specs:
+  - name: first
+    type: group
+    required: true
+    specs:
+      - type: all_of
+        specs:
+          - $ref: 0
+  - name: second
+    type: group
+    required: true
+    specs:
+      - type: all_of
+        specs:
+          - $ref: 0
+$references:
+  0:
+    name: outer
+    type: group
+    required: true
+    specs:
+      - type: all_of
+        specs:
+          - name: inner
+            type: group
+            required: true
+            specs:
+              - type: all_of
+                specs:
+                  - name: a
+                    type: int
+                    required: false
+                    default: 42
+                  - name: b
+                    type: double
+                    required: true
+)";
+
+    std::cout << out.str() << std::endl;
+    EXPECT_EQ(out.str(), expected);
+
+    // Verify that the inner group is not duplicated.
+    std::ostringstream out_inner;
+    spec_inner.print_as_dat(out_inner);
+  }
+
   TEST(InputSpecTest, Copyable)
   {
     InputSpec spec;

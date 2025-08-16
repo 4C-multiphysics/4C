@@ -147,31 +147,29 @@ std::map<std::string, Core::IO::InputSpec> Global::valid_parameters()
       {.required = false});
 
   const Core::Elements::ElementDefinition element_definition;
-  auto all_possible_elements_spec = element_definition.element_data_spec();
+  auto geometry_specs = all_of({
+      parameter<std::filesystem::path>(
+          "FILE", {.description = "Path to the exodus geometry file. Either absolute or "
+                                  "relative to the input file."}),
+      parameter<Core::IO::Exodus::VerbosityLevel>("SHOW_INFO",
+          {
+              .description = "Choose verbosity of reporting element, node and set info for "
+                             "the exodus file after reading.",
+              .enum_value_description = Core::IO::Exodus::describe,
+              .default_value = Core::IO::Exodus::VerbosityLevel::none,
+          }),
+
+      // Once we support more formats, we should add a "TYPE" parameter for the file format.
+      list("ELEMENT_BLOCKS",
+          all_of({
+              parameter<int>("ID", {.description = "ID of the element block in the exodus file."}),
+              element_definition.element_data_spec(),
+          })),
+  });
 
   const auto add_geometry_section = [&](auto& specs, const std::string& field_identifier)
   {
-    specs[field_identifier + " GEOMETRY"] = group(field_identifier + " GEOMETRY",
-        {
-            parameter<std::filesystem::path>(
-                "FILE", {.description = "Path to the exodus geometry file. Either absolute or "
-                                        "relative to the input file."}),
-            parameter<Core::IO::Exodus::VerbosityLevel>("SHOW_INFO",
-                {
-                    .description = "Choose verbosity of reporting element, node and set info for "
-                                   "the exodus file after reading.",
-                    .enum_value_description = Core::IO::Exodus::describe,
-                    .default_value = Core::IO::Exodus::VerbosityLevel::none,
-                }),
-
-            // Once we support more formats, we should add a "TYPE" parameter for the file format.
-            list("ELEMENT_BLOCKS",
-                all_of({
-                    parameter<int>(
-                        "ID", {.description = "ID of the element block in the exodus file."}),
-                    all_possible_elements_spec,
-                })),
-        },
+    specs[field_identifier + " GEOMETRY"] = group(field_identifier + " GEOMETRY", {geometry_specs},
         {.description = "Settings related to the geometry of discretization " + field_identifier,
             .required = false});
   };

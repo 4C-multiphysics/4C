@@ -102,11 +102,13 @@ void Core::IO::InputSpec::print_as_dat(std::ostream& stream) const
   pimpl_->print(stream, 0u);
 }
 
-void Core::IO::InputSpec::emit_metadata(YamlNodeRef yaml) const
+void Core::IO::InputSpec::emit_metadata(
+    YamlNodeRef yaml, InputSpecEmitMetadataOptions options) const
 {
   FOUR_C_ASSERT(pimpl_, "InputSpec is empty.");
 
-  pimpl_->emit_metadata(yaml);
+  Internal::EmitMetadataContext context{.options = options};
+  pimpl_->emit_metadata(yaml, context);
 }
 
 Core::IO::Internal::InputSpecImpl& Core::IO::InputSpec::impl()
@@ -120,5 +122,7 @@ const Core::IO::Internal::InputSpecImpl& Core::IO::InputSpec::impl() const
   FOUR_C_ASSERT(pimpl_, "InputSpec is empty.");
   return *pimpl_;
 }
+
+std::size_t Core::IO::InputSpec::use_count() const { return pimpl_.use_count(); }
 
 FOUR_C_NAMESPACE_CLOSE
