@@ -3153,8 +3153,9 @@ int ScaTra::ScalarHandlerElch::num_scal_in_condition(const Core::Conditions::Con
 /*-----------------------------------------------------------------------------*
  *-----------------------------------------------------------------------------*/
 void ScaTra::ScaTraTimIntElch::build_block_maps(
-    const std::vector<const Core::Conditions::Condition*>& partitioningconditions,
-    std::vector<std::shared_ptr<const Core::LinAlg::Map>>& blockmaps) const
+    const std::vector<const Core::Conditions::Condition*>& partitioning_conditions,
+    std::vector<std::shared_ptr<const Core::LinAlg::Map>>& dof_block_maps,
+    std::vector<std::shared_ptr<const Core::LinAlg::Map>>& node_block_maps) const
 {
   if (matrix_type() == Core::LinAlg::MatrixType::block_condition_dof)
   {
@@ -3166,10 +3167,11 @@ void ScaTra::ScaTraTimIntElch::build_block_maps(
           "variable!");
     }
 
-    for (const auto& cond : partitioningconditions)
+    for (const auto& cond : partitioning_conditions)
     {
       // all dofs that form one block map
-      std::vector<std::vector<int>> partitioned_dofs(num_dof_per_node());
+      std::vector<std::vector<int>> partitioned_dof_gids(num_dof_per_node());
+      std::vector<int> node_gids;
 
       for (const int node_gid : *cond->get_nodes())
       {
@@ -3182,89 +3184,31 @@ void ScaTra::ScaTraTimIntElch::build_block_maps(
               "Global number of dofs per node is not equal the number of dofs of this node.");
 
           for (unsigned dof = 0; dof < nodedofs.size(); ++dof)
-            partitioned_dofs[dof].emplace_back(nodedofs[dof]);
+            partitioned_dof_gids[dof].emplace_back(nodedofs[dof]);
+
+          node_gids.push_back(node_gid);
         }
       }
 
-      for (const auto& dofs : partitioned_dofs)
+      for (const auto& dof_gids : partitioned_dof_gids)
       {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-        std::unordered_set<int> dof_set(dofs.begin(), dofs.end());
-        FOUR_C_ASSERT(dof_set.size() == dofs.size(), "The dofs are not unique");
+        std::unordered_set<int> dof_gids_set(dof_gids.begin(), dof_gids.end());
+        FOUR_C_ASSERT(dof_gids_set.size() == dof_gids.size(), "The dofs are not unique");
+        std::unordered_set<int> node_set(node_gids.begin(), node_gids.end());
+        FOUR_C_ASSERT(node_set.size() == node_gids.size(), "The nodes are not unique");
 #endif
-        blockmaps.emplace_back(std::make_shared<Core::LinAlg::Map>(
-            -1, static_cast<int>(dofs.size()), dofs.data(), 0, discret_->get_comm()));
+        dof_block_maps.emplace_back(std::make_shared<Core::LinAlg::Map>(
+            -1, static_cast<int>(dof_gids.size()), dof_gids.data(), 0, discret_->get_comm()));
+        node_block_maps.emplace_back(std::make_shared<Core::LinAlg::Map>(
+            -1, static_cast<int>(node_gids.size()), node_gids.data(), 0, discret_->get_comm()));
       }
     }
   }
   else
-    ScaTra::ScaTraTimIntImpl::build_block_maps(partitioningconditions, blockmaps);
-}
-
-/*-----------------------------------------------------------------------------*
- *-----------------------------------------------------------------------------*/
-void ScaTra::ScaTraTimIntElch::build_block_null_spaces(
-    std::shared_ptr<Core::LinAlg::Solver> solver, int init_block_number) const
-{
-  ScaTra::ScaTraTimIntImpl::build_block_null_spaces(solver, init_block_number);
-
-  if (matrix_type() == Core::LinAlg::MatrixType::block_condition_dof)
-    reduce_dimension_null_space_blocks(*solver, init_block_number);
-}
-
-/*-----------------------------------------------------------------------------*
- *-----------------------------------------------------------------------------*/
-void ScaTra::ScaTraTimIntElch::reduce_dimension_null_space_blocks(
-    Core::LinAlg::Solver& solver, int init_block_number) const
-{
-  // loop over blocks of global system matrix
-  for (int iblock = 0; iblock < block_maps()->num_maps(); ++iblock)
   {
-    std::ostringstream iblockstr;
-    iblockstr << init_block_number + iblock + 1;
-
-    // access parameter sublist associated with smoother for current matrix block
-    Teuchos::ParameterList& mueluparams =
-        solver.params().sublist("Inverse" + iblockstr.str()).sublist("MueLu Parameters");
-
-    // extract already reduced null space associated with current matrix block
-    std::shared_ptr<Core::LinAlg::MultiVector<double>> nspVector =
-        mueluparams.get<std::shared_ptr<Core::LinAlg::MultiVector<double>>>("nullspace", nullptr);
-
-    const int dimns = mueluparams.get<int>("null space: dimension");
-    std::vector<double> nullspace(nspVector->MyLength() * nspVector->NumVectors());
-    Core::LinAlg::multi_vector_to_std_vector(*nspVector, nullspace, dimns);
-
-    // null space associated with concentration dofs
-    if (iblock % 2 == 0)
-    {
-      // remove zero null space vector associated with electric potential dofs by truncating
-      // null space
-      nullspace.resize(block_maps()->map(iblock)->num_my_elements());
-    }
-    // null space associated with electric potential dofs
-    else
-    {
-      // remove zero null space vector(s) associated with concentration dofs and retain only
-      // the last null space vector associated with electric potential dofs
-      nullspace.erase(
-          nullspace.begin(), nullspace.end() - block_maps()->map(iblock)->num_my_elements());
-    }
-
-    // decrease null space dimension and number of partial differential equations by one
-    --mueluparams.get<int>("null space: dimension");
-    --mueluparams.get<int>("PDE equations");
-
-    // TODO:
-    // Above a reference is used to directly modify the nullspace vector
-    // This can be done more elegant as writing it back in a different container!
-    const int dimnsnew = mueluparams.get<int>("null space: dimension");
-    std::shared_ptr<Core::LinAlg::MultiVector<double>> nspVectornew =
-        std::make_shared<Core::LinAlg::MultiVector<double>>(
-            *(block_maps()->map(iblock)), dimnsnew, true);
-    Core::LinAlg::std_vector_to_multi_vector(nullspace, *nspVectornew, dimnsnew);
-
-    mueluparams.set<std::shared_ptr<Core::LinAlg::MultiVector<double>>>("nullspace", nspVectornew);
+    ScaTra::ScaTraTimIntImpl::build_block_maps(
+        partitioning_conditions, dof_block_maps, node_block_maps);
   }
 }
 

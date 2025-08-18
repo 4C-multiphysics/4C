@@ -21,6 +21,7 @@
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
+#include "4C_linear_solver_method_parameters.hpp"
 #include "4C_scatra_ele_action.hpp"
 #include "4C_scatra_resulttest_elch.hpp"
 #include "4C_scatra_timint_elch_service.hpp"
@@ -179,25 +180,22 @@ void ScaTra::ScaTraTimIntElchSCL::setup()
       scatrablockstr << 1;
       Teuchos::ParameterList& blocksmootherparamsscatra =
           solver_elch_scl_->params().sublist("Inverse" + scatrablockstr.str());
-      blocksmootherparamsscatra.sublist("Belos Parameters");
-      blocksmootherparamsscatra.sublist("MueLu Parameters");
 
-      discretization()->compute_null_space_if_necessary(blocksmootherparamsscatra);
+      Core::LinearSolver::Parameters::compute_solver_parameters(
+          *discretization(), blocksmootherparamsscatra);
 
       std::ostringstream microblockstr;
       microblockstr << 2;
       Teuchos::ParameterList& blocksmootherparamsmicro =
           solver_elch_scl_->params().sublist("Inverse" + microblockstr.str());
-      blocksmootherparamsmicro.sublist("Belos Parameters");
-      blocksmootherparamsmicro.sublist("MueLu Parameters");
-      micro_scatra_field()->discretization()->compute_null_space_if_necessary(
-          blocksmootherparamsmicro);
+
+      Core::LinearSolver::Parameters::compute_solver_parameters(
+          *micro_scatra_field()->discretization(), blocksmootherparamsmicro);
 
       break;
     }
     default:
       FOUR_C_THROW("not supported");
-      break;
   }
 }
 

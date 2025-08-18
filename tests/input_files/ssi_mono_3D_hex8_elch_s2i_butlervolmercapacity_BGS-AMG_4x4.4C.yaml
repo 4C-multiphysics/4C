@@ -17,7 +17,8 @@ SSI CONTROL:
 SSI CONTROL/MONOLITHIC:
   ABSTOLRES: 0
   LINEAR_SOLVER: 1
-  MATRIXTYPE: "block"
+  MATRIXTYPE: block
+  EQUILIBRATION: rows_maindiag
 SSI CONTROL/ELCH:
   INITPOTCALC: true
 STRUCTURAL DYNAMIC:
@@ -47,22 +48,20 @@ ELCH CONTROL:
 SCALAR TRANSPORT DYNAMIC/S2I COUPLING:
   COUPLINGTYPE: "MatchingNodes"
 SOLVER 1:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AZOUTPUT: 10
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssi_mono_3D_hex8_elch_s2i_butlervolmercapacity_BGS-AMG_4x4.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/solid_scatra_BGS-AMG_4x4.xml"
 SOLVER 2:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AZOUTPUT: 10
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssi_mono_3D_hex8_elch_s2i_butlervolmercapacity_BGS-AMG_4x4_scatra.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/electrochemistry_BGS-AMG_3x3.xml"
 SOLVER 3:
-  SOLVER: "Belos"
-  AZPREC: "MueLu"
-  AZOUTPUT: 10
-  MUELU_XML_FILE: "ssi_mono_3D_hex8_elch_s2i_butlervolmercapacity_BGS-AMG_4x4_structure.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: MueLu
+  MUELU_XML_FILE: "xml/multigrid/elasticity_template.xml"
 MATERIALS:
   - MAT: 1
     MAT_MultiplicativeSplitDefgradElastHyper:
@@ -203,127 +202,127 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 2
       QUANTITY: "phi1"
-      VALUE: 10.154694795702161
-      TOLERANCE: 1e-07
+      VALUE: 1.01546947954325617e+01
+      TOLERANCE: 1.0e-07
   - SCATRA:
       DIS: "scatra"
       NODE: 11
       QUANTITY: "phi1"
-      VALUE: 7.272103790422015
+      VALUE: 7.27210379019138742e+00
       TOLERANCE: 7.3e-08
   - SCATRA:
       DIS: "scatra"
       NODE: 14
       QUANTITY: "phi1"
-      VALUE: 1.1724064707502895
+      VALUE: 1.17240647072279214e+00
       TOLERANCE: 1.2e-08
   - SCATRA:
       DIS: "scatra"
       NODE: 26
       QUANTITY: "phi1"
-      VALUE: 13.666465082425065
+      VALUE: 1.36664650177738753e+01
       TOLERANCE: 1.4e-07
   - SCATRA:
       DIS: "scatra"
       NODE: 26
       QUANTITY: "phi2"
-      VALUE: 3.599952643511229
+      VALUE: 3.59995261091682428e+00
       TOLERANCE: 3.6e-08
   - SCATRA:
       DIS: "scatra"
       NODE: 34
       QUANTITY: "phi1"
-      VALUE: 10.787322547330822
+      VALUE: 1.07873225418829115e+01
       TOLERANCE: 1.1e-07
   - SCATRA:
       DIS: "scatra"
       NODE: 34
       QUANTITY: "phi2"
-      VALUE: 3.5999526435112292
+      VALUE: 3.59995261091682428e+00
       TOLERANCE: 3.6e-08
   - STRUCTURE:
       DIS: "structure"
       NODE: 2
       QUANTITY: "dispy"
-      VALUE: 1.1017035269350355e-05
+      VALUE: 1.10170353115635823e-05
       TOLERANCE: 1.1e-13
   - STRUCTURE:
       DIS: "structure"
       NODE: 2
       QUANTITY: "dispz"
-      VALUE: 1.1017035269356539e-05
+      VALUE: 1.10170352189833352e-05
       TOLERANCE: 1.1e-13
   - STRUCTURE:
       DIS: "structure"
       NODE: 11
       QUANTITY: "dispx"
-      VALUE: 0.00014035087719394153
+      VALUE: 1.40350877193940365e-04
       TOLERANCE: 1.4e-12
   - STRUCTURE:
       DIS: "structure"
       NODE: 11
       QUANTITY: "dispy"
-      VALUE: -1.1017035269325224e-05
+      VALUE: -1.10170352271114210e-05
       TOLERANCE: 1.1e-13
   - STRUCTURE:
       DIS: "structure"
       NODE: 11
       QUANTITY: "dispz"
-      VALUE: 1.1017035269328087e-05
+      VALUE: 1.10170352183166931e-05
       TOLERANCE: 1.1e-13
   - STRUCTURE:
       DIS: "structure"
       NODE: 14
       QUANTITY: "dispx"
-      VALUE: 0.0001403508771939407
+      VALUE: 1.40350877193941856e-04
       TOLERANCE: 1.4e-12
   - STRUCTURE:
       DIS: "structure"
       NODE: 14
       QUANTITY: "dispy"
-      VALUE: 1.1017035269320606e-05
+      VALUE: 1.10170352183166931e-05
       TOLERANCE: 1.1e-13
   - STRUCTURE:
       DIS: "structure"
       NODE: 14
       QUANTITY: "dispz"
-      VALUE: 1.1017035269327265e-05
+      VALUE: 1.10170352189532147e-05
       TOLERANCE: 1.1e-13
   - STRUCTURE:
       DIS: "structure"
       NODE: 26
       QUANTITY: "dispx"
-      VALUE: 0.00028070175438715795
+      VALUE: 2.80701754387158273e-04
       TOLERANCE: 2.8e-12
   - STRUCTURE:
       DIS: "structure"
       NODE: 26
       QUANTITY: "dispy"
-      VALUE: 1.101703526923111e-05
+      VALUE: 1.10170353114456431e-05
       TOLERANCE: 1.1e-13
   - STRUCTURE:
       DIS: "structure"
       NODE: 26
       QUANTITY: "dispz"
-      VALUE: 1.1017035269237939e-05
+      VALUE: 1.10170352188648336e-05
       TOLERANCE: 1.1e-13
   - STRUCTURE:
       DIS: "structure"
       NODE: 34
       QUANTITY: "dispx"
-      VALUE: 0.00042105263157894723
+      VALUE: 4.21052631578947229e-04
       TOLERANCE: 4.2e-12
   - STRUCTURE:
       DIS: "structure"
       NODE: 34
       QUANTITY: "dispy"
-      VALUE: 1.1017035269114001e-05
+      VALUE: 1.10170353113288830e-05
       TOLERANCE: 1.1e-13
   - STRUCTURE:
       DIS: "structure"
       NODE: 34
       QUANTITY: "dispz"
-      VALUE: 1.1017035269120687e-05
+      VALUE: 1.10170352187477363e-05
       TOLERANCE: 1.1e-13
   - SSI:
       SPECIAL: true
@@ -333,7 +332,7 @@ RESULT DESCRIPTION:
   - SSI:
       SPECIAL: true
       QUANTITY: "numiterlastnonlinearsolve"
-      VALUE: 6
+      VALUE: 4
       TOLERANCE: 1e-16
 DESIGN SURF TRANSPORT NEUMANN CONDITIONS:
   - E: 6

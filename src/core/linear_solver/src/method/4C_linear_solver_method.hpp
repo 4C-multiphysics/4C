@@ -62,8 +62,7 @@ namespace Core::LinearSolver
   {
     ilu,              ///< incomplete LU factorization with fill in levels (Ifpack package)
     multigrid_muelu,  ///< multigrid preconditioner (MueLu package, recommended!)
-    multigrid_nxn,  ///< multigrid preconditioner for a nxn block matrix (indirectly MueLu package)
-    block_teko      ///< block preconditioning (Teko package, recommended!)
+    block_teko        ///< block preconditioning (Teko package, recommended!)
   };
 
   /// linear solver type base class
@@ -90,11 +89,10 @@ namespace Core::LinearSolver
     virtual int solve() = 0;
 
     /// return number of iterations performed by solver
-    virtual int get_num_iters() const
+    [[nodiscard]] virtual int get_num_iters() const
     {
       FOUR_C_THROW("Not implemented in base class!");
-      return -1;
-    };
+    }
   };
 }  // namespace Core::LinearSolver
 

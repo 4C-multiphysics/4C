@@ -575,12 +575,12 @@ SSI::Utils::SSIMaps::SSIMaps(const SsiMono& ssi_mono_algorithm)
         case Core::LinAlg::MatrixType::block_condition_dof:
         {
           block_maps_sub_problems_.insert(std::make_pair(
-              Subproblem::scalar_transport, ssi_mono_algorithm.scatra_field()->block_maps()));
+              Subproblem::scalar_transport, ssi_mono_algorithm.scatra_field()->dof_block_maps()));
 
           if (ssi_mono_algorithm.is_scatra_manifold())
           {
             block_maps_sub_problems_.insert(std::make_pair(
-                Subproblem::manifold, ssi_mono_algorithm.scatra_manifold()->block_maps()));
+                Subproblem::manifold, ssi_mono_algorithm.scatra_manifold()->dof_block_maps()));
           }
           else
           {
@@ -619,7 +619,7 @@ SSI::Utils::SSIMaps::SSIMaps(const SsiMono& ssi_mono_algorithm)
 
 /*--------------------------------------------------------------------------------------*
  *--------------------------------------------------------------------------------------*/
-std::vector<int> SSI::Utils::SSIMaps::get_block_positions(Subproblem subproblem) const
+std::vector<int> SSI::Utils::SSIMaps::get_block_positions(const Subproblem subproblem) const
 {
   FOUR_C_ASSERT(
       ssi_matrixtype_ != Core::LinAlg::MatrixType::sparse, "Sparse matrices have just one block");
@@ -630,19 +630,16 @@ std::vector<int> SSI::Utils::SSIMaps::get_block_positions(Subproblem subproblem)
   {
     case Subproblem::structure:
     {
-      if (scatra_matrixtype_ == Core::LinAlg::MatrixType::sparse)
-        block_position.emplace_back(1);
-      else
-        block_position.emplace_back(block_map_scatra()->num_maps());
+      block_position.emplace_back(0);
       break;
     }
     case Subproblem::scalar_transport:
     {
       if (scatra_matrixtype_ == Core::LinAlg::MatrixType::sparse)
-        block_position.emplace_back(0);
+        block_position.emplace_back(1);
       else
       {
-        for (int i = 0; i < block_map_scatra()->num_maps(); ++i) block_position.emplace_back(i);
+        for (int i = 0; i < block_map_scatra()->num_maps(); ++i) block_position.emplace_back(i + 1);
       }
       break;
     }
@@ -670,15 +667,15 @@ std::vector<int> SSI::Utils::SSIMaps::get_block_positions(Subproblem subproblem)
 
 /*--------------------------------------------------------------------------------------*
  *--------------------------------------------------------------------------------------*/
-int SSI::Utils::SSIMaps::get_problem_position(Subproblem subproblem)
+int SSI::Utils::SSIMaps::get_problem_position(const Subproblem subproblem)
 {
   switch (subproblem)
   {
-    case Subproblem::scalar_transport:
+    case Subproblem::structure:
     {
       return 0;
     }
-    case Subproblem::structure:
+    case Subproblem::scalar_transport:
     {
       return 1;
     }
@@ -806,7 +803,7 @@ void SSI::Utils::check_consistency_of_ssi_interface_contact_condition(
     }
 
     // loop over all scatra-scatra interface conditions and add them to the vector, if IDs match
-    for (auto* s2ikinetics_cond : s2ikinetics_conditions)
+    for (const auto* s2ikinetics_cond : s2ikinetics_conditions)
     {
       if (s2ikinetics_cond->parameters().get<int>("ConditionID") != S2IKineticsID) continue;
 
@@ -814,7 +811,7 @@ void SSI::Utils::check_consistency_of_ssi_interface_contact_condition(
     }
 
     // loop over all contact conditions and add them to the vector, if IDs match
-    for (auto* contactcondition : contactconditions)
+    for (const auto* contactcondition : contactconditions)
     {
       if (contactcondition->parameters().get<int>("InterfaceID") != contactconditionID) continue;
 
@@ -1066,9 +1063,9 @@ void SSI::Utils::SSIMeshTying::find_matching_node_pairs(const Core::FE::Discreti
   dis.get_condition(name_meshtying_condition, meshtying_conditions);
 
   // match nodes between all mesh tying conditions (named with "a" and "b")
-  for (int a = 0; a < static_cast<int>(meshtying_conditions.size()); ++a)
+  for (std::size_t a = 0; a < meshtying_conditions.size(); ++a)
   {
-    auto* meshtying_condition_a = meshtying_conditions.at(a);
+    const auto* meshtying_condition_a = meshtying_conditions.at(a);
 
     // nodes of meshtying_condition_a owned by this proc
     std::vector<int> inodegidvec_a;
@@ -1081,9 +1078,9 @@ void SSI::Utils::SSIMeshTying::find_matching_node_pairs(const Core::FE::Discreti
     tree.setup();
 
     // find nodes from condition b that match nodes from condition a
-    for (int b = a + 1; b < static_cast<int>(meshtying_conditions.size()); ++b)
+    for (std::size_t b = a + 1; b < meshtying_conditions.size(); ++b)
     {
-      auto* meshtying_condition_b = meshtying_conditions.at(b);
+      const auto* meshtying_condition_b = meshtying_conditions.at(b);
 
       // nodes of meshtying_condition_b owned by this proc
       std::vector<int> inodegidvec_b;

@@ -199,7 +199,7 @@ void SSTI::ThermoStructureOffDiagCoupling::copy_slave_to_master_thermo_structure
   {
     case Core::LinAlg::MatrixType::block_condition:
     {
-      const int numberthermoblocks = thermo_->scatra_field()->block_maps()->num_maps();
+      const int numberthermoblocks = thermo_->scatra_field()->dof_block_maps()->num_maps();
 
       auto blockslavematrix =
           std::dynamic_pointer_cast<const Core::LinAlg::BlockSparseMatrixBase>(slavematrix);
@@ -356,13 +356,14 @@ void SSTI::ThermoStructureOffDiagCoupling::evaluate_thermo_structure_interface_s
         // old slave dofs from input
         auto slave_map = slave_slave_transformation->slave_dof_map();
 
-        for (int iblock = 0; iblock < thermo_->scatra_field()->block_maps()->num_maps(); ++iblock)
+        for (int iblock = 0; iblock < thermo_->scatra_field()->dof_block_maps()->num_maps();
+            ++iblock)
         {
           auto evaluate_iblock = evaluate_matrix_block->matrix(iblock, 0);
           auto slave_iblock = slavematrix_block->matrix(iblock, 0);
 
           auto scatra_slave_block_mapi =
-              Core::LinAlg::intersect_map(*thermo_->scatra_field()->block_maps()->map(iblock),
+              Core::LinAlg::intersect_map(*thermo_->scatra_field()->dof_block_maps()->map(iblock),
                   *meshtying_strategy_thermo_->coupling_adapter()->slave_dof_map());
 
           Coupling::Adapter::MatrixLogicalSplitAndTransform()(evaluate_iblock,

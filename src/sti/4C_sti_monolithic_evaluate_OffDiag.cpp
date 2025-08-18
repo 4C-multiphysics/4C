@@ -385,7 +385,7 @@ void STI::ScatraThermoOffDiagCouplingMatchingNodes::copy_slave_to_master_scatra_
 
       // split auxiliary system matrix and assemble into scatra-thermo matrix block
       blockmastermatrix = Core::LinAlg::split_matrix<Core::LinAlg::DefaultBlockMatrixStrategy>(
-          mastermatrixsparse, *block_map_thermo(), *scatra_field()->block_maps());
+          mastermatrixsparse, *block_map_thermo(), *scatra_field()->dof_block_maps());
 
       // finalize master matrix
       mastermatrix->complete();
@@ -772,8 +772,7 @@ void STI::ScatraThermoOffDiagCouplingMortarStandard::
     {
       slavematrix = std::make_shared<
           Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
-
-          *scatra_field()->block_maps(), *block_map_thermo_interface(), 81, false, true);
+          *scatra_field()->dof_block_maps(), *block_map_thermo_interface(), 81, false, true);
       break;
     }
 
@@ -787,7 +786,6 @@ void STI::ScatraThermoOffDiagCouplingMortarStandard::
     default:
     {
       FOUR_C_THROW("Invalid matrix type associated with scalar transport field!");
-      break;
     }
   }
 

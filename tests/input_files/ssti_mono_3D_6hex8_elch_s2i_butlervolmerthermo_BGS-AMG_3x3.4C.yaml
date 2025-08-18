@@ -55,12 +55,12 @@ SSTI CONTROL/THERMO:
   LINEAR_SOLVER: 2
   INITIALFIELD: "field_by_condition"
 SOLVER 1:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssti_mono_3D_6hex8_elch_s2i_butlervolmerthermo_BGS-AMG_3x3.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/solid_scatra_thermo_BGS-AMG_3x3.xml"
 SOLVER 2:
-  SOLVER: "UMFPACK"
+  SOLVER: UMFPACK
 MATERIALS:
   - MAT: 1
     MAT_electrode:
@@ -236,73 +236,73 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 10
       QUANTITY: "dispx"
-      VALUE: -0.00020000000000097005
-      TOLERANCE: 2e-12
+      VALUE: -2.00000000000976957e-04
+      TOLERANCE: 2.0e-12
   - STRUCTURE:
       DIS: "structure"
       NODE: 20
       QUANTITY: "dispx"
-      VALUE: -0.00030000000000133105
-      TOLERANCE: 3e-12
+      VALUE: -3.00000000001341782e-04
+      TOLERANCE: 3.0e-12
   - STRUCTURE:
       DIS: "structure"
       NODE: 20
       QUANTITY: "dispy"
-      VALUE: 0
-      TOLERANCE: 1e-16
+      VALUE: 0.0
+      TOLERANCE: 1.0e-16
   - STRUCTURE:
       DIS: "structure"
       NODE: 20
       QUANTITY: "dispz"
-      VALUE: 0
-      TOLERANCE: 1e-16
+      VALUE: 0.0
+      TOLERANCE: 1.0e-16
   - STRUCTURE:
       DIS: "structure"
       NODE: 30
       QUANTITY: "dispx"
-      VALUE: -0.0005000000000011547
-      TOLERANCE: 5e-12
+      VALUE: -5.00000000001177346e-04
+      TOLERANCE: 5.0e-12
   - SCATRA:
       DIS: "scatra"
       NODE: 5
       QUANTITY: "phi1"
-      VALUE: 5.555555240408839
+      VALUE: 5.55555524019221814e+00
       TOLERANCE: 5.6e-08
   - SCATRA:
       DIS: "scatra"
       NODE: 15
       QUANTITY: "phi2"
-      VALUE: 0.11895972634957745
+      VALUE: 1.18959726357723811e-01
       TOLERANCE: 1.2e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 25
       QUANTITY: "phi1"
-      VALUE: 11080.024764954202
-      TOLERANCE: 0.00011
+      VALUE: 1.10800247624795466e+04
+      TOLERANCE: 1.1e-04
   - SCATRA:
       DIS: "thermo"
       NODE: 8
       QUANTITY: "phi"
-      VALUE: 277.89433753650445
+      VALUE: 2.77894337507482874e+02
       TOLERANCE: 2.8e-06
   - SCATRA:
       DIS: "thermo"
       NODE: 18
       QUANTITY: "phi"
-      VALUE: 318.1976740850454
+      VALUE: 3.18197674159618202e+02
       TOLERANCE: 3.2e-06
   - SCATRA:
       DIS: "thermo"
       NODE: 28
       QUANTITY: "phi"
-      VALUE: 334.5695847386304
+      VALUE: 3.34569584861273995e+02
       TOLERANCE: 3.3e-06
   - SSTI:
       SPECIAL: true
       QUANTITY: "numiterlastnonlinearsolve"
       VALUE: 3
-      TOLERANCE: 1e-16
+      TOLERANCE: 1.0e-16
 DESIGN SURF TRANSPORT NEUMANN CONDITIONS:
   - E: 6
     NUMDOF: 2

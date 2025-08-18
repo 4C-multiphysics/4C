@@ -51,7 +51,7 @@ int Core::LinAlg::Solver::get_num_iters() const { return solver_->get_num_iters(
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Core::LinAlg::Solver::adapt_tolerance(
-    const double desirednlnres, const double currentnlnres, const double better)
+    const double desirednlnres, const double currentnlnres, const double better) const
 {
   if (!params().isSublist("Belos Parameters")) FOUR_C_THROW("Adaptive tolerance only for Belos.");
 
@@ -112,7 +112,7 @@ void Core::LinAlg::Solver::adapt_tolerance(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void Core::LinAlg::Solver::set_tolerance(const double tolerance)
+void Core::LinAlg::Solver::set_tolerance(const double tolerance) const
 {
   if (!params().isSublist("Belos Parameters"))
     FOUR_C_THROW("Set tolerance of linear solver only for Belos solver.");
@@ -123,7 +123,7 @@ void Core::LinAlg::Solver::set_tolerance(const double tolerance)
   if (!have_saved_value)
   {
     solver_params.set<double>(
-        "Convergence Tolerance Saved", solver_params.get<double>("Convergence Tolerance", 1.0e-8));
+        "Convergence Tolerance Saved", solver_params.get<double>("Convergence Tolerance"));
   }
 
   solver_params.set<double>("Convergence Tolerance", tolerance);
@@ -131,7 +131,7 @@ void Core::LinAlg::Solver::set_tolerance(const double tolerance)
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-void Core::LinAlg::Solver::reset_tolerance()
+void Core::LinAlg::Solver::reset_tolerance() const
 {
   if (!params().isSublist("Belos Parameters")) return;
 
@@ -191,7 +191,9 @@ void Core::LinAlg::Solver::setup(std::shared_ptr<Epetra_Operator> matrix,
           solvertype);
     }
     else
+    {
       FOUR_C_THROW("Unknown type of solver");
+    }
   }
 
   solver_->setup(matrix, x, b, refactor, params.reset, params.projector);
@@ -290,6 +292,12 @@ Teuchos::ParameterList translate_four_c_to_belos(const Teuchos::ParameterList& i
   if (xmlfile)
   {
     beloslist.set("SOLVER_XML_FILE", xmlfile->string());
+
+    // required for adaptive linear solver tolerance
+    beloslist.set("Convergence Tolerance", inparams.get<double>("AZTOL"));
+    beloslist.set("Implicit Residual Scaling",
+        Belos::convertScaleTypeToString(
+            Teuchos::getIntegralValue<Belos::ScaleType>(inparams, "AZCONV")));
   }
   else
   {
@@ -341,7 +349,6 @@ Teuchos::ParameterList translate_four_c_to_belos(const Teuchos::ParameterList& i
         FOUR_C_THROW("Flag '{}'! \nUnknown solver for Belos.",
             Teuchos::getIntegralValue<Core::LinearSolver::IterativeSolverType>(
                 inparams, "AZSOLVE"));
-        break;
       }
     }
   }
@@ -358,15 +365,11 @@ Teuchos::ParameterList translate_four_c_to_belos(const Teuchos::ParameterList& i
     case Core::LinearSolver::PreconditionerType::multigrid_muelu:
       beloslist.set("Preconditioner Type", "ML");
       break;
-    case Core::LinearSolver::PreconditionerType::multigrid_nxn:
-      beloslist.set("Preconditioner Type", "AMGnxn");
-      break;
     case Core::LinearSolver::PreconditionerType::block_teko:
       beloslist.set("Preconditioner Type", "Teko");
       break;
     default:
       FOUR_C_THROW("Unknown preconditioner for Belos");
-      break;
   }
 
   // set parameters for Ifpack if used
@@ -386,14 +389,6 @@ Teuchos::ParameterList translate_four_c_to_belos(const Teuchos::ParameterList& i
   {
     Teuchos::ParameterList& tekolist = outparams.sublist("Teko Parameters");
     tekolist = translate_four_c_to_teko(inparams, &beloslist);
-  }
-  if (azprectype == Core::LinearSolver::PreconditionerType::multigrid_nxn)
-  {
-    Teuchos::ParameterList& amgnxnlist = outparams.sublist("AMGnxn Parameters");
-    auto amgnxn_xml = inparams.get<std::optional<std::filesystem::path>>("AMGNXN_XML_FILE");
-    amgnxnlist.set("AMGNXN_XML_FILE", amgnxn_xml);
-    std::string amgnxn_type = inparams.get<std::string>("AMGNXN_TYPE");
-    amgnxnlist.set<std::string>("AMGNXN_TYPE", amgnxn_type);
   }
 
   return outparams;
@@ -415,10 +410,8 @@ Teuchos::ParameterList Core::LinAlg::Solver::translate_solver_parameters(
   switch (Teuchos::getIntegralValue<Core::LinearSolver::SolverType>(inparams, "SOLVER"))
   {
     case Core::LinearSolver::SolverType::undefined:
-      std::cout << "undefined solver! Set " << inparams.name() << "  in your input file!"
-                << std::endl;
+      std::cout << "undefined solver! Set " << inparams.name() << "  in your input file!" << '\n';
       FOUR_C_THROW("fix your input file");
-      break;
     case Core::LinearSolver::SolverType::umfpack:
       outparams.set("solver", "umfpack");
       break;
@@ -430,7 +423,6 @@ Teuchos::ParameterList Core::LinAlg::Solver::translate_solver_parameters(
       break;
     default:
       FOUR_C_THROW("Unsupported type of solver");
-      break;
   }
 
   return outparams;

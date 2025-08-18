@@ -47,7 +47,6 @@ namespace Core::LinearSolver
             {
                 {"ILU", Core::LinearSolver::PreconditionerType::ilu},
                 {"MueLu", Core::LinearSolver::PreconditionerType::multigrid_muelu},
-                {"AMGnxn", Core::LinearSolver::PreconditionerType::multigrid_nxn},
                 {"Teko", Core::LinearSolver::PreconditionerType::block_teko},
             },
             {.description =
@@ -129,15 +128,6 @@ namespace Core::LinearSolver
         // user-given name of solver block (just for beauty)
         parameter<std::string>("NAME",
             {.description = "User specified name for solver block", .default_value = "No_name"}),
-
-        // Parameters for AMGnxn Preconditioner
-        parameter<std::string>("AMGNXN_TYPE",
-            {.description = "Name of the pre-built preconditioner to be used. If set "
-                            "to\"XML\" the preconditioner is defined using a xml file",
-                .default_value = "AMG(BGS)"}),
-
-        Core::IO::InputSpecBuilders::parameter<std::optional<std::filesystem::path>>(
-            "AMGNXN_XML_FILE", {.description = "xml file defining the AMGnxn preconditioner"}),
     });
   }
 

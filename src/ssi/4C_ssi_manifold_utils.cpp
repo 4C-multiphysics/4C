@@ -544,7 +544,7 @@ void SSI::ScaTraManifoldScaTraFluxEvaluator::add_condition_contribution()
     case Core::LinAlg::MatrixType::block_condition:
     case Core::LinAlg::MatrixType::block_condition_dof:
     {
-      auto blockmaps_manifold = *scatra_manifold_->scatra_field()->block_maps();
+      auto blockmaps_manifold = *scatra_manifold_->scatra_field()->dof_block_maps();
 
       /*
        * m: manifold

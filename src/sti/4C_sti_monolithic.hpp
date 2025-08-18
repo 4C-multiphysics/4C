@@ -80,7 +80,7 @@ namespace STI
     //! Assemble interface and domain contributions of OD blocks
     void assemble_domain_interface_off_diag(
         std::shared_ptr<Core::LinAlg::SparseOperator>& scatrathermo_domain_interface,
-        std::shared_ptr<Core::LinAlg::SparseOperator>& thermoscatra_domain_interface);
+        std::shared_ptr<Core::LinAlg::SparseOperator>& thermoscatra_domain_interface) const;
 
     //! assemble global system of equations
     void assemble_mat_and_rhs();

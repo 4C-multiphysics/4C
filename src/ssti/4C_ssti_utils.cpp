@@ -69,14 +69,13 @@ SSTI::SSTIMaps::SSTIMaps(const SSTI::SSTIMono& ssti_mono_algorithm)
     }
     case Core::LinAlg::MatrixType::block_condition:
     {
-      block_map_scatra_ = ssti_mono_algorithm.scatra_field()->block_maps();
-      block_map_thermo_ = ssti_mono_algorithm.thermo_field()->block_maps();
+      block_map_scatra_ = ssti_mono_algorithm.scatra_field()->dof_block_maps();
+      block_map_thermo_ = ssti_mono_algorithm.thermo_field()->dof_block_maps();
       break;
     }
     default:
     {
       FOUR_C_THROW("Matrix type not supported");
-      break;
     }
   }
 

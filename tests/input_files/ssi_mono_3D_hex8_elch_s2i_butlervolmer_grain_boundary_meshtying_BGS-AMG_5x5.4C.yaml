@@ -50,6 +50,7 @@ SSI CONTROL/MONOLITHIC:
   ABSTOLRES: 0
   LINEAR_SOLVER: 2
   MATRIXTYPE: "block"
+  EQUILIBRATION: rows_maindiag
 SSI CONTROL/MANIFOLD:
   ADD_MANIFOLD: true
   MESHTYING_MANIFOLD: true
@@ -59,23 +60,22 @@ SSI CONTROL/MANIFOLD:
 SSI CONTROL/ELCH:
   INITPOTCALC: true
 SOLVER 1:
-  SOLVER: "UMFPACK"
+  SOLVER: UMFPACK
 SOLVER 2:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AZSUB: 100
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssi_mono_3D_hex8_elch_s2i_butlervolmer_grain_boundary_meshtying_BGS-AMG_5x5.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/solid_scatra_BGS-AMG_5x5.xml"
 SOLVER 3:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssi_mono_3D_hex8_elch_s2i_butlervolmer_grain_boundary_meshtying_BGS-AMG_5x5_scatra.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/electrochemistry_BGS-AMG_3x3.xml"
 SOLVER 4:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssi_mono_3D_hex8_elch_s2i_butlervolmer_grain_boundary_meshtying_BGS-AMG_5x5_manifold.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: MueLu
+  MUELU_XML_FILE: "xml/multigrid/scatra_template.xml"
 MATERIALS:
   - MAT: 1
     MAT_electrode:
@@ -250,66 +250,66 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 75
       QUANTITY: "dispx"
-      VALUE: 0.30594725193543454
+      VALUE: 3.05947251944047094e-01
       TOLERANCE: 3.1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 75
       QUANTITY: "dispy"
-      VALUE: 0.10198241731182944
+      VALUE: 1.01982417303702555e-01
       TOLERANCE: 1e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 75
       QUANTITY: "dispz"
-      VALUE: 0
-      TOLERANCE: 1e-16
+      VALUE: 1.95904422692352139e-12
+      TOLERANCE: 1.0e-16
   - SCATRA:
       DIS: "scatra"
       NODE: 75
       QUANTITY: "phi1"
-      VALUE: 100
-      TOLERANCE: 1e-06
+      VALUE: 100.0
+      TOLERANCE: 1.0e-06
   - SCATRA:
       DIS: "scatra"
       NODE: 75
       QUANTITY: "phi2"
-      VALUE: 1
-      TOLERANCE: 1e-08
+      VALUE: 1.0
+      TOLERANCE: 1.0e-08
   - SCATRA:
       DIS: "scatra_manifold"
       NODE: 34
       QUANTITY: "phi1"
-      VALUE: 7.713448781684904
+      VALUE: 7.71344878167256809e+00
       TOLERANCE: 7.7e-08
   - SCATRA:
       DIS: "scatra_manifold"
       NODE: 34
       QUANTITY: "phi2"
       VALUE: 1
-      TOLERANCE: 1e-08
+      TOLERANCE: 1.0e-08
   - SCATRA:
       DIS: "scatra_manifold"
       NODE: 83
       QUANTITY: "phi1"
-      VALUE: 10.785945923000973
+      VALUE: 1.07859459233504449e+01
       TOLERANCE: 1.1e-07
   - SCATRA:
       DIS: "scatra_manifold"
       NODE: 83
       QUANTITY: "phi2"
-      VALUE: 1
-      TOLERANCE: 1e-08
+      VALUE: 1.0
+      TOLERANCE: 1.0e-08
   - SSI:
       SPECIAL: true
       QUANTITY: "numiterlastlinearsolve"
-      VALUE: 2
-      TOLERANCE: 1e-16
+      VALUE: 9
+      TOLERANCE: 1.0e-16
   - SSI:
       SPECIAL: true
       QUANTITY: "numiterlastnonlinearsolve"
       VALUE: 3
-      TOLERANCE: 1e-16
+      TOLERANCE: 1.0e-16
 DESIGN POINT DIRICH CONDITIONS:
   - E: 1
     NUMDOF: 3

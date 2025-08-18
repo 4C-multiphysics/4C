@@ -29,12 +29,12 @@ SSI CONTROL:
   COUPALGO: ssi_Monolithic
 SSI CONTROL/MONOLITHIC:
   LINEAR_SOLVER: 1
-  MATRIXTYPE: "block"
+  MATRIXTYPE: block
 SOLVER 1:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssi_mono_3D_27hex8_scatra_BGS-AMG_2x2.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/solid_scatra_BGS-AMG_2x2.xml"
 SOLVER 2:
   SOLVER: "UMFPACK"
 MATERIALS:
@@ -69,61 +69,61 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 1
       QUANTITY: "phi"
-      VALUE: 0.7805414313374839
+      VALUE: 7.80541431337483993e-01
       TOLERANCE: 7.8e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 5
       QUANTITY: "phi"
-      VALUE: 0.815611743752666
+      VALUE: 8.15611743752666096e-01
       TOLERANCE: 8.2e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 33
       QUANTITY: "phi"
-      VALUE: 0.9078208876488945
+      VALUE: 9.07820887648894570e-01
       TOLERANCE: 9.1e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 49
       QUANTITY: "phi"
-      VALUE: 0.787737549795188
+      VALUE: 7.87737549795188063e-01
       TOLERANCE: 7.9e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 5
       QUANTITY: "dispx"
-      VALUE: 0.32873912576010955
+      VALUE: 3.28739125760109441e-01
       TOLERANCE: 3.3e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 5
       QUANTITY: "dispy"
-      VALUE: 0.1778135988133057
+      VALUE: 1.77813598813305523e-01
       TOLERANCE: 1.8e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 5
       QUANTITY: "dispz"
-      VALUE: -0.17781359881330552
+      VALUE: -1.77813598813305662e-01
       TOLERANCE: 1.8e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 33
       QUANTITY: "dispx"
-      VALUE: 0.6815587275238988
+      VALUE: 6.81558727523898789e-01
       TOLERANCE: 6.8e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 33
       QUANTITY: "dispy"
-      VALUE: 0.17812121565168004
+      VALUE: 1.78121215651679876e-01
       TOLERANCE: 1.8e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 33
       QUANTITY: "dispz"
-      VALUE: -0.17812121565168
+      VALUE: -1.78121215651679987e-01
       TOLERANCE: 1.8e-09
 DESIGN SURF DIRICH CONDITIONS:
   - E: 1

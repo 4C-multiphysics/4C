@@ -163,10 +163,10 @@ STI::Monolithic::Monolithic(MPI_Comm comm, const Teuchos::ParameterList& stidyn,
     case Core::LinAlg::MatrixType::block_condition:
     {
       // extract maps underlying main-diagonal matrix blocks associated with scalar transport field
-      const int nblockmapsscatra = static_cast<int>(scatra_field()->block_maps()->num_maps());
+      const int nblockmapsscatra = static_cast<int>(scatra_field()->dof_block_maps()->num_maps());
       std::vector<std::shared_ptr<const Core::LinAlg::Map>> blockmaps(nblockmapsscatra + 1);
       for (int iblockmap = 0; iblockmap < nblockmapsscatra; ++iblockmap)
-        blockmaps[iblockmap] = scatra_field()->block_maps()->map(iblockmap);
+        blockmaps[iblockmap] = scatra_field()->dof_block_maps()->map(iblockmap);
 
       // extract map underlying single main-diagonal matrix block associated with temperature field
       blockmaps[nblockmapsscatra] = mapthermo;
@@ -216,19 +216,14 @@ STI::Monolithic::Monolithic(MPI_Comm comm, const Teuchos::ParameterList& stidyn,
   {
     case Core::LinAlg::MatrixType::block_condition:
     {
-      // safety check
-      if (!solver_->params().isSublist("AMGnxn Parameters"))
-        FOUR_C_THROW(
-            "Global system matrix with block structure requires AMGnxn block preconditioner!");
-
       // initialize global system matrix
       systemmatrix_ = std::make_shared<
           Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
 
           *blockmaps_, *blockmaps_, 81, false, true);
 
-      // feed AMGnxn block preconditioner with null space information for each block of global block
-      // system matrix
+      // feed block preconditioner with null space information for each block of global block system
+      // matrix
       build_null_spaces();
 
       break;
@@ -265,22 +260,18 @@ STI::Monolithic::Monolithic(MPI_Comm comm, const Teuchos::ParameterList& stidyn,
       // initialize scatra-thermo blocks
       scatrathermoblockdomain_ = std::make_shared<
           Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
-
-          *blockmapthermo_, *scatra_field()->block_maps(), 81, false, true);
+          *blockmapthermo_, *scatra_field()->dof_block_maps(), 81, false, true);
       scatrathermoblockinterface_ = std::make_shared<
           Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
-
           *blockmapthermo_, *blockmapscatrainterface, 81, false, true);
 
       // initialize thermo-scatra blocks
       thermoscatrablockdomain_ = std::make_shared<
           Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
-
-          *scatra_field()->block_maps(), *blockmapthermo_, 81, false, true);
+          *scatra_field()->dof_block_maps(), *blockmapthermo_, 81, false, true);
       thermoscatrablockinterface_ = std::make_shared<
           Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
-
-          *scatra_field()->block_maps(), *blockmapthermointerface, 81, false, true);
+          *scatra_field()->dof_block_maps(), *blockmapthermointerface, 81, false, true);
 
       break;
     }
@@ -305,7 +296,6 @@ STI::Monolithic::Monolithic(MPI_Comm comm, const Teuchos::ParameterList& stidyn,
     default:
     {
       FOUR_C_THROW("Invalid matrix type associated with scalar transport field!");
-      break;
     }
   }
 
@@ -790,7 +780,7 @@ void STI::Monolithic::assemble_mat_and_rhs()
         case Core::LinAlg::MatrixType::block_condition:
         {
           // extract number of matrix row or column blocks associated with scalar transport field
-          const int nblockmapsscatra = static_cast<int>(scatra_field()->block_maps()->num_maps());
+          const int nblockmapsscatra = scatra_field()->dof_block_maps()->num_maps();
 
           // construct global system matrix by assigning matrix blocks
           for (int iblock = 0; iblock < nblockmapsscatra; ++iblock)
@@ -1181,21 +1171,15 @@ void STI::Monolithic::build_null_spaces() const
   {
     case Core::LinAlg::MatrixType::block_condition:
     {
-      scatra_field()->build_block_null_spaces(solver_, 0);
+      scatra_field()->build_block_null_spaces(*solver_, 0);
       break;
     }
 
     case Core::LinAlg::MatrixType::sparse:
     {
-      // equip smoother for scatra matrix block with empty parameter sublists to trigger null space
-      // computation
       Teuchos::ParameterList& blocksmootherparams = solver_->params().sublist("Inverse1");
-      blocksmootherparams.sublist("Belos Parameters");
-      blocksmootherparams.sublist("MueLu Parameters");
-
-      // equip smoother for scatra matrix block with null space associated with all degrees of
-      // freedom on scatra discretization
-      scatra_field()->discretization()->compute_null_space_if_necessary(blocksmootherparams);
+      Core::LinearSolver::Parameters::compute_solver_parameters(
+          *scatra_field()->discretization(), blocksmootherparams);
 
       break;
     }
@@ -1211,23 +1195,27 @@ void STI::Monolithic::build_null_spaces() const
   std::stringstream iblockstr;
   iblockstr << blockmaps_->num_maps();
 
-  // equip smoother for thermo matrix block with empty parameter sublists to trigger null space
-  // computation
-  Teuchos::ParameterList& blocksmootherparams =
-      solver_->params().sublist("Inverse" + iblockstr.str());
-  blocksmootherparams.sublist("Belos Parameters");
-  blocksmootherparams.sublist("MueLu Parameters");
+  if (solver_->params().isSublist("MueLu Parameters"))
+  {
+    solver_->params()
+        .sublist("Inverse" + iblockstr.str())
+        .set("MueLu Parameters", solver_->params().sublist("MueLu Parameters"));
+  }
 
-  // equip smoother for thermo matrix block with null space associated with all degrees of freedom
-  // on thermo discretization
-  thermo_field()->discretization()->compute_null_space_if_necessary(blocksmootherparams);
+  Teuchos::ParameterList& blocksmootherparams =
+      solver_->params().isSublist("MueLu Parameters")
+          ? solver_->params().sublist("Inverse" + iblockstr.str()).sublist("MueLu Parameters")
+          : solver_->params().sublist("Inverse" + iblockstr.str());
+
+  Core::LinearSolver::Parameters::compute_solver_parameters(
+      *thermo_field()->discretization(), blocksmootherparams);
 
   // reduce full null space to match degrees of freedom associated with thermo matrix block if
   // necessary
   if (condensationthermo_)
     Core::LinearSolver::Parameters::fix_null_space("Block " + iblockstr.str(),
         *thermo_field()->discretization()->dof_row_map(), *maps_->map(1), blocksmootherparams);
-}  // STI::Monolithic::build_block_null_spaces
+}
 
 /*--------------------------------------------------------------------------------*
  *--------------------------------------------------------------------------------*/
@@ -1663,7 +1651,7 @@ void STI::Monolithic::apply_dirichlet_off_diag(
  *----------------------------------------------------------------------*/
 void STI::Monolithic::assemble_domain_interface_off_diag(
     std::shared_ptr<Core::LinAlg::SparseOperator>& scatrathermo_domain_interface,
-    std::shared_ptr<Core::LinAlg::SparseOperator>& thermoscatra_domain_interface)
+    std::shared_ptr<Core::LinAlg::SparseOperator>& thermoscatra_domain_interface) const
 {
   // initialize scatra-thermo blocks
   switch (scatra_field()->matrix_type())
@@ -1672,12 +1660,10 @@ void STI::Monolithic::assemble_domain_interface_off_diag(
     {
       scatrathermo_domain_interface = std::make_shared<
           Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
-
-          *blockmapthermo_, *scatra_field()->block_maps(), 81, false, true);
+          *blockmapthermo_, *scatra_field()->dof_block_maps(), 81, false, true);
       thermoscatra_domain_interface = std::make_shared<
           Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
-
-          *scatra_field()->block_maps(), *blockmapthermo_, 81, false, true);
+          *scatra_field()->dof_block_maps(), *blockmapthermo_, 81, false, true);
 
       break;
     }
@@ -1692,7 +1678,6 @@ void STI::Monolithic::assemble_domain_interface_off_diag(
     default:
     {
       FOUR_C_THROW("Unknown matrix type");
-      break;
     }
   }
 

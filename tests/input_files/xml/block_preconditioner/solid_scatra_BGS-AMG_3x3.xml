@@ -1,0 +1,63 @@
+<ParameterList name="Teko">
+  <!--
+              For electrochemistry problems, these are the recommended settings for the block preconditioner
+              containing a block Gauss-Seidel from Teko, using MueLu as multigrid preconditioner for the single
+              field inverses.
+              -->
+  <!-- ===========  BLOCK PRECONDITIONER ================ -->
+  <!-- Definition of the block preconditioner, which has to be defined under sub-list "Preconditioner",
+                   which is used by Teko. The single field inverse approximation methods have to be given under
+                   sub-lists "Inverse<1..n>". -->
+  <Parameter name="Inverse Type" type="string" value="Preconditioner"/>
+  <ParameterList name="Inverse Factory Library">
+    <ParameterList name="Preconditioner">
+      <Parameter name="Type" type="string" value="Block Gauss-Seidel"/>
+      <Parameter name="Use Upper Triangle" type="bool" value="false"/>
+      <Parameter name="Inverse Type 1" type="string" value="Inverse1"/>
+      <Parameter name="Inverse Type 2" type="string" value="Inverse2"/>
+      <Parameter name="Inverse Type 3" type="string" value="Inverse3"/>
+    </ParameterList>
+    <!-- ===========  SINGLE FIELD PRECONDITIONER FOR STRUCTURE ============= -->
+    <ParameterList name="Inverse1">
+      <Parameter name="Type" type="string" value="MueLu"/>
+      <Parameter name="multigrid algorithm" type="string" value="sa"/>
+      <Parameter name="verbosity" type="string" value="None"/>
+      <Parameter name="coarse: max size" type="int" value="200"/>
+      <Parameter name="smoother: type" type="string" value="CHEBYSHEV"/>
+      <ParameterList name="smoother: params">
+        <Parameter name="chebyshev: degree" type="int" value="3"/>
+        <Parameter name="chebyshev: min eigenvalue" type="double" value="1.0"/>
+        <Parameter name="chebyshev: zero starting solution" type="bool" value="true"/>
+      </ParameterList>
+    </ParameterList>
+    <!-- ===========  SINGLE FIELD PRECONDITIONER FOR SCATRA ================ -->
+    <ParameterList name="Inverse2">
+      <Parameter name="Type" type="string" value="MueLu"/>
+      <Parameter name="multigrid algorithm" type="string" value="pg"/>
+      <Parameter name="problem: symmetric" type="bool" value="false"/>
+      <Parameter name="verbosity" type="string" value="None"/>
+      <Parameter name="coarse: max size" type="int" value="200"/>
+      <Parameter name="smoother: type" type="string" value="RILUK"/>
+      <ParameterList name="smoother: params">
+        <Parameter name="fact: iluk level-of-fill" type="int" value="1"/>
+        <Parameter name="fact: absolute threshold" type="double" value="0.0"/>
+        <Parameter name="fact: relative threshold" type="double" value="1.0"/>
+        <Parameter name="fact: relax value" type="double" value="0.0"/>
+      </ParameterList>
+    </ParameterList>
+    <ParameterList name="Inverse3">
+      <Parameter name="Type" type="string" value="MueLu"/>
+      <Parameter name="multigrid algorithm" type="string" value="pg"/>
+      <Parameter name="problem: symmetric" type="bool" value="false"/>
+      <Parameter name="verbosity" type="string" value="None"/>
+      <Parameter name="coarse: max size" type="int" value="200"/>
+      <Parameter name="smoother: type" type="string" value="RILUK"/>
+      <ParameterList name="smoother: params">
+        <Parameter name="fact: iluk level-of-fill" type="int" value="1"/>
+        <Parameter name="fact: absolute threshold" type="double" value="0.0"/>
+        <Parameter name="fact: relative threshold" type="double" value="1.0"/>
+        <Parameter name="fact: relax value" type="double" value="0.0"/>
+      </ParameterList>
+    </ParameterList>
+  </ParameterList>
+</ParameterList>

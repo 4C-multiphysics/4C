@@ -9,13 +9,13 @@
 
 #include "4C_adapter_scatra_base_algorithm.hpp"
 #include "4C_adapter_str_ssiwrapper.hpp"
-#include "4C_adapter_str_structure_new.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
 #include "4C_io_control.hpp"
 #include "4C_linalg_equilibrate.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
+#include "4C_linear_solver_method_parameters.hpp"
 #include "4C_scatra_timint_implicit.hpp"
 #include "4C_scatra_timint_meshtying_strategy_s2i.hpp"
 #include "4C_ssi_monolithic_evaluate_OffDiag.hpp"
@@ -127,7 +127,7 @@ void SSTI::SSTIMono::assemble_mat_and_rhs()
 
 /*-------------------------------------------------------------------------------*
  *-------------------------------------------------------------------------------*/
-void SSTI::SSTIMono::build_null_spaces()
+void SSTI::SSTIMono::build_null_spaces() const
 {
   // build null spaces for scatra and thermo
   switch (scatra_field()->matrix_type())
@@ -136,9 +136,9 @@ void SSTI::SSTIMono::build_null_spaces()
     case Core::LinAlg::MatrixType::block_condition_dof:
     {
       scatra_field()->build_block_null_spaces(
-          solver_, get_block_positions(Subproblem::scalar_transport).at(0));
+          *solver_, get_block_positions(Subproblem::scalar_transport).at(0));
       thermo_field()->build_block_null_spaces(
-          solver_, get_block_positions(Subproblem::thermo).at(0));
+          *solver_, get_block_positions(Subproblem::thermo).at(0));
       break;
     }
     case Core::LinAlg::MatrixType::sparse:
@@ -150,29 +150,21 @@ void SSTI::SSTIMono::build_null_spaces()
       Teuchos::ParameterList& blocksmootherparamsscatra =
           solver_->params().sublist("Inverse" + scatrablockstr.str());
 
-      blocksmootherparamsscatra.sublist("Belos Parameters");
-      blocksmootherparamsscatra.sublist("MueLu Parameters");
-
-      // equip smoother for scatra matrix block with null space associated with all degrees of
-      // freedom on scatra discretization
-      scatra_field()->discretization()->compute_null_space_if_necessary(blocksmootherparamsscatra);
+      Core::LinearSolver::Parameters::compute_solver_parameters(
+          *scatra_field()->discretization(), blocksmootherparamsscatra);
 
       std::ostringstream thermoblockstr;
       thermoblockstr << get_block_positions(Subproblem::thermo).at(0) + 1;
       Teuchos::ParameterList& blocksmootherparamsthermo =
           solver_->params().sublist("Inverse" + thermoblockstr.str());
-      blocksmootherparamsthermo.sublist("Belos Parameters");
-      blocksmootherparamsthermo.sublist("MueLu Parameters");
 
-      // equip smoother for scatra matrix block with null space associated with all degrees of
-      // freedom on scatra discretization
-      thermo_field()->discretization()->compute_null_space_if_necessary(blocksmootherparamsthermo);
+      Core::LinearSolver::Parameters::compute_solver_parameters(
+          *thermo_field()->discretization(), blocksmootherparamsthermo);
       break;
     }
     default:
     {
       FOUR_C_THROW("Invalid matrix type associated with scalar transport field!");
-      break;
     }
   }
   // build null spaces for structure
@@ -181,18 +173,13 @@ void SSTI::SSTIMono::build_null_spaces()
     std::stringstream iblockstr;
     iblockstr << get_block_positions(Subproblem::structure).at(0) + 1;
 
-    // equip smoother for structural matrix block with empty parameter sub lists to trigger null
-    // space computation
     Teuchos::ParameterList& blocksmootherparams =
         solver_->params().sublist("Inverse" + iblockstr.str());
-    blocksmootherparams.sublist("Belos Parameters");
-    blocksmootherparams.sublist("MueLu Parameters");
 
-    // equip smoother for structural matrix block with null space associated with all degrees of
-    // freedom on structural discretization
-    structure_field()->discretization()->compute_null_space_if_necessary(blocksmootherparams);
+    Core::LinearSolver::Parameters::compute_solver_parameters(
+        *structure_field()->discretization(), blocksmootherparams);
   }
-}  // SSTI::SSTI_Mono::build_null_spaces
+}
 
 /*--------------------------------------------------------------------------*
  *--------------------------------------------------------------------------*/
@@ -344,12 +331,6 @@ void SSTI::SSTIMono::setup_system()
 
   if (matrixtype_ == Core::LinAlg::MatrixType::block_field)
   {
-    if (!solver_->params().isSublist("AMGnxn Parameters"))
-      FOUR_C_THROW(
-          "Global system matrix with block structure requires AMGnxn block preconditioner!");
-
-    // feed AMGnxn block preconditioner with null space information for each block of global
-    // block system matrix
     build_null_spaces();
   }
 
@@ -634,21 +615,18 @@ std::vector<int> SSTI::SSTIMono::get_block_positions(Subproblem subproblem) cons
   {
     case Subproblem::structure:
     {
-      if (scatra_field()->matrix_type() == Core::LinAlg::MatrixType::sparse)
-        block_position.emplace_back(1);
-      else
-        block_position.emplace_back(scatra_field()->block_maps()->num_maps());
+      block_position.emplace_back(0);
       break;
     }
     case Subproblem::scalar_transport:
     {
       if (scatra_field()->matrix_type() == Core::LinAlg::MatrixType::sparse)
-        block_position.emplace_back(0);
+        block_position.emplace_back(1);
       else
 
       {
-        for (int i = 0; i < static_cast<int>(scatra_field()->block_maps()->num_maps()); ++i)
-          block_position.emplace_back(i);
+        for (int i = 0; i < scatra_field()->dof_block_maps()->num_maps(); ++i)
+          block_position.emplace_back(i + 1);
       }
       break;
     }
@@ -658,15 +636,14 @@ std::vector<int> SSTI::SSTIMono::get_block_positions(Subproblem subproblem) cons
         block_position.emplace_back(2);
       else
       {
-        for (int i = 0; i < static_cast<int>(thermo_field()->block_maps()->num_maps()); ++i)
-          block_position.emplace_back(scatra_field()->block_maps()->num_maps() + 1 + i);
+        for (int i = 0; i < thermo_field()->dof_block_maps()->num_maps(); ++i)
+          block_position.emplace_back(scatra_field()->dof_block_maps()->num_maps() + 1 + i);
       }
       break;
     }
     default:
     {
       FOUR_C_THROW("Unknown type of subproblem");
-      break;
     }
   }
 
@@ -675,7 +652,7 @@ std::vector<int> SSTI::SSTIMono::get_block_positions(Subproblem subproblem) cons
 
 /*--------------------------------------------------------------------------------------*
  *--------------------------------------------------------------------------------------*/
-int SSTI::SSTIMono::get_problem_position(Subproblem subproblem) const
+int SSTI::SSTIMono::get_problem_position(const Subproblem subproblem) const
 {
   int position = -1;
 
@@ -683,12 +660,12 @@ int SSTI::SSTIMono::get_problem_position(Subproblem subproblem) const
   {
     case Subproblem::structure:
     {
-      position = 1;
+      position = 0;
       break;
     }
     case Subproblem::scalar_transport:
     {
-      position = 0;
+      position = 1;
       break;
     }
     case Subproblem::thermo:
@@ -699,7 +676,6 @@ int SSTI::SSTIMono::get_problem_position(Subproblem subproblem) const
     default:
     {
       FOUR_C_THROW("Unknown type of subproblem");
-      break;
     }
   }
 
@@ -708,7 +684,7 @@ int SSTI::SSTIMono::get_problem_position(Subproblem subproblem) const
 
 /*--------------------------------------------------------------------------------------*
  *--------------------------------------------------------------------------------------*/
-std::vector<Core::LinAlg::EquilibrationMethod> SSTI::SSTIMono::get_block_equilibration()
+std::vector<Core::LinAlg::EquilibrationMethod> SSTI::SSTIMono::get_block_equilibration() const
 {
   std::vector<Core::LinAlg::EquilibrationMethod> equilibration_method_vector;
   switch (matrixtype_)
@@ -759,7 +735,6 @@ std::vector<Core::LinAlg::EquilibrationMethod> SSTI::SSTIMono::get_block_equilib
     default:
     {
       FOUR_C_THROW("Invalid matrix type associated with system matrix field!");
-      break;
     }
   }
 

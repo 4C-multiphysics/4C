@@ -45,18 +45,26 @@ void Core::LinearSolver::Parameters::compute_solver_parameters(
     else
     {
       // if a map is given, grab the block information of the first element in that map
+      bool exit_loops(false);
       for (int i = 0; i < dis.num_my_row_nodes(); ++i)
       {
-        Core::Nodes::Node* actnode = dis.l_row_node(i);
-        std::vector<int> dofs = dis.dof(0, actnode);
+        const auto* current_node = dis.l_row_node(i);
+        const auto node_gid = current_node->id();
+        for (int j = 0; j < dis.num_my_row_elements(); ++j)
+        {
+          auto* element = dis.l_row_element(j);
 
-        const int localIndex = nullspace_node_map->lid(dofs[0]);
-
-        if (localIndex == -1) continue;
-
-        Core::Elements::Element* dwele = dis.l_row_element(localIndex);
-        actnode->elements()[0]->element_type().nodal_block_information(dwele, numdf, dimns, nv, np);
-        break;
+          if (const auto* const element_node_gids = element->node_ids();
+              std::find(element_node_gids, element_node_gids + element->num_node(), node_gid) !=
+              element_node_gids + element->num_node())
+          {
+            current_node->elements()[0]->element_type().nodal_block_information(
+                element, numdf, dimns, nv, np);
+            exit_loops = true;
+            break;
+          }
+        }
+        if (exit_loops) break;
       }
     }
 
@@ -66,6 +74,18 @@ void Core::LinearSolver::Parameters::compute_solver_parameters(
     Core::Communication::max_all(ldata.data(), gdata.data(), 4, dis.get_comm());
     numdf = gdata[0];
     dimns = gdata[1];
+
+    // for dof split within one field the number of global elements in the dof map and the node map
+    // have to be equal
+    if (nullspace_node_map != nullptr and nullspace_dof_map != nullptr)
+    {
+      // TODO Discuss with Max if this should work
+      if (nullspace_dof_map->num_global_elements() == nullspace_node_map->num_global_elements())
+      {
+        numdf = 1;
+        dimns = 1;
+      }
+    }
 
     // store nullspace information in solver list
     solverlist.set("PDE equations", numdf);

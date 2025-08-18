@@ -62,12 +62,12 @@ SSI CONTROL/MANIFOLD:
 SSI CONTROL/ELCH:
   INITPOTCALC: true
 SOLVER 1:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssi_mono_3D_tet4_elch_s2i_butlervolmer_manifold_BGS-AMG_3x3.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/solid_scatra_manifold_BGS-AMG_3x3.xml"
 SOLVER 2:
-  SOLVER: "UMFPACK"
+  SOLVER: UMFPACK
 MATERIALS:
   - MAT: 1
     MAT_MultiplicativeSplitDefgradElastHyper:
@@ -229,14 +229,14 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 10
       QUANTITY: "phi1"
-      VALUE: 10.366528932671297
-      TOLERANCE: 1e-07
+      VALUE: 1.03665289327030816e+01
+      TOLERANCE: 1.0e-07
   - SCATRA:
       DIS: "scatra"
       NODE: 10
       QUANTITY: "phi2"
-      VALUE: -7.578777606753094e-09
-      TOLERANCE: 1e-16
+      VALUE: -7.57877760723693848e-09
+      TOLERANCE: 1.0e-16
   - SCATRA:
       DIS: "scatra"
       NODE: 140
@@ -247,7 +247,7 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 140
       QUANTITY: "phi2"
-      VALUE: -0.08581577066773036
+      VALUE: -8.58157706681251103e-02
       TOLERANCE: 8.6e-10
   - SCATRA:
       DIS: "scatra"
@@ -259,108 +259,108 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 160
       QUANTITY: "phi2"
-      VALUE: -0.08581545925395953
+      VALUE: -8.58154592543536876e-02
       TOLERANCE: 8.6e-10
   - SCATRA:
       DIS: "scatra"
       NODE: 200
       QUANTITY: "phi1"
-      VALUE: 11.084308839582825
+      VALUE: 1.10843088390186253e+01
       TOLERANCE: 1.1e-07
   - SCATRA:
       DIS: "scatra"
       NODE: 200
       QUANTITY: "phi2"
-      VALUE: 3.8611908143259055
+      VALUE: 3.86119081431284572e+00
       TOLERANCE: 3.9e-08
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "soc1"
-      VALUE: 0.9791596479127181
+      VALUE: 9.79159647914122910e-01
       TOLERANCE: 9.8e-09
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "soc2"
-      VALUE: 0.9843322484153225
+      VALUE: 9.84332248399542808e-01
       TOLERANCE: 9.8e-09
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "cellvoltage"
-      VALUE: 3.861190732786001
+      VALUE: 3.86119073277294156e+00
       TOLERANCE: 3.9e-08
   - STRUCTURE:
       DIS: "structure"
       NODE: 140
       QUANTITY: "dispx"
-      VALUE: -2.1844077048289474e-05
+      VALUE: -2.18440770480099056e-05
       TOLERANCE: 2.2e-13
   - STRUCTURE:
       DIS: "structure"
       NODE: 160
       QUANTITY: "dispx"
-      VALUE: -2.2890922659101645e-06
+      VALUE: -2.28909226648945283e-06
       TOLERANCE: 2.3e-14
   - SCATRA:
       DIS: "scatra_manifold"
       NODE: 26
       QUANTITY: "phi1"
-      VALUE: 1.4951289013245168
+      VALUE: 1.49512890132812348e+00
       TOLERANCE: 1.5e-08
   - SCATRA:
       DIS: "scatra_manifold"
       NODE: 26
       QUANTITY: "phi2"
-      VALUE: 1.4299284711569662
+      VALUE: 1.42992847115761301e+00
       TOLERANCE: 1.4e-08
   - SCATRA:
       DIS: "scatra_manifold"
       NODE: 45
       QUANTITY: "phi1"
-      VALUE: 1.5078082136451474
+      VALUE: 1.50780821363974704e+00
       TOLERANCE: 1.5e-08
   - SCATRA:
       DIS: "scatra_manifold"
       NODE: 45
       QUANTITY: "phi2"
       VALUE: 2
-      TOLERANCE: 2e-08
+      TOLERANCE: 2.0e-08
   - SCATRA:
       DIS: "scatra_manifold"
       NODE: 190
       QUANTITY: "phi1"
-      VALUE: 3.0030839106215304
+      VALUE: 3.00308391061097124e+00
       TOLERANCE: 3e-08
   - SCATRA:
       DIS: "scatra_manifold"
       NODE: 190
       QUANTITY: "phi2"
-      VALUE: 1.458637958094429
+      VALUE: 1.45863795809465557e+00
       TOLERANCE: 1.5e-08
   - SCATRA:
       DIS: "scatra_manifold"
       NODE: 208
       QUANTITY: "phi1"
-      VALUE: 3.0057146932571146
+      VALUE: 3.00571469325148088e+00
       TOLERANCE: 3e-08
   - SCATRA:
       DIS: "scatra_manifold"
       NODE: 208
       QUANTITY: "phi2"
-      VALUE: 1.569771804130394
+      VALUE: 1.56977180413071471e+00
       TOLERANCE: 1.6e-08
   - SSI:
       SPECIAL: true
       QUANTITY: "numiterlastlinearsolve"
-      VALUE: 1
-      TOLERANCE: 1e-16
+      VALUE: 42
+      TOLERANCE: 1.0e-16
   - SSI:
       SPECIAL: true
       QUANTITY: "numiterlastnonlinearsolve"
-      VALUE: 3
-      TOLERANCE: 1e-16
+      VALUE: 4
+      TOLERANCE: 1.0e-16
 DESIGN SURF TRANSPORT NEUMANN CONDITIONS:
   - E: 6
     NUMDOF: 2

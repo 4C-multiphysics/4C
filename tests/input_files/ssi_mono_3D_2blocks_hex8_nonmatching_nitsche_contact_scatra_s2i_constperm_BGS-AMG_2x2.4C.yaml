@@ -40,15 +40,15 @@ SSI CONTROL:
 SSI CONTROL/MONOLITHIC:
   ABSTOLRES: 0
   LINEAR_SOLVER: 1
-  MATRIXTYPE: "block"
+  MATRIXTYPE: block
   EQUILIBRATION: rows_full
 SOLVER 1:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "ssi_mono_3D_2blocks_hex8_nonmatching_nitsche_contact_scatra_s2i_constperm_BGS-AMG_2x2.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/solid_scatra_BGS-AMG_2x2.xml"
 SOLVER 2:
-  SOLVER: "UMFPACK"
+  SOLVER: UMFPACK
 MATERIALS:
   - MAT: 1
     MAT_scatra:
@@ -104,55 +104,55 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 12
       QUANTITY: "phi"
-      VALUE: 0.22731538145642124
+      VALUE: 2.27315381456712068e-01
       TOLERANCE: 2.3e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 41
       QUANTITY: "phi"
-      VALUE: 0.22915357535425807
+      VALUE: 2.29153575354550693e-01
       TOLERANCE: 2.3e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 54
       QUANTITY: "phi"
-      VALUE: 0.23118389509464346
+      VALUE: 2.31183895094938335e-01
       TOLERANCE: 2.3e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 57
       QUANTITY: "phi"
-      VALUE: 0.23172022747149548
+      VALUE: 2.31720227471789969e-01
       TOLERANCE: 2.3e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 74
       QUANTITY: "phi"
-      VALUE: 0.8214325898949177
+      VALUE: 8.21432589895827459e-01
       TOLERANCE: 8.2e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 81
       QUANTITY: "phi"
-      VALUE: 0.8205309690625566
+      VALUE: 8.20530969063466786e-01
       TOLERANCE: 8.2e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 89
       QUANTITY: "phi"
-      VALUE: 0.8263614036660646
+      VALUE: 8.26361403666966754e-01
       TOLERANCE: 8.3e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 54
       QUANTITY: "dispx"
-      VALUE: -0.04913346857615847
+      VALUE: -4.91334685772375837e-02
       TOLERANCE: 4.9e-10
   - STRUCTURE:
       DIS: "structure"
       NODE: 74
       QUANTITY: "dispx"
-      VALUE: -0.04909832310226208
+      VALUE: -4.90983231011846571e-02
       TOLERANCE: 4.9e-10
   - SSI:
       SPECIAL: true
