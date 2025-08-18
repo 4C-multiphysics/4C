@@ -13,6 +13,8 @@
 #include <memory>
 #include <optional>
 
+#include <c++/14/limits>
+
 FOUR_C_NAMESPACE_OPEN
 
 namespace Core::IO
@@ -34,6 +36,33 @@ namespace Core::IO
      * to the default.
      */
     bool emit_defaulted_values{false};
+  };
+
+  struct InputSpecEmitMetadataOptions
+  {
+    /**
+     * If an InputSpec is duplicated more often than this number, condense all occurrences into a
+     * single shared reference in the metadata. This means that if multiple InputSpecs have the same
+     * content, they will not be emitted separately, but instead a single reference is created in
+     * the metadata and the place where the InputSpec is used will point to that reference.
+     *
+     * By default, this is set to the maximum value of an unsigned integer, which means that no
+     * condensation is done. A useful value is around 5, as a trade-off between condensing too
+     * much and not condensing enough.
+     */
+    unsigned condense_duplicated_specs_threshold{std::numeric_limits<unsigned>::max()};
+
+    /**
+     * The name under which the metadata of duplicated InputSpecs is stored as a shared reference in
+     * the metadata. This key will _always_ be placed in the root of the YAML tree.
+     */
+    std::string references_node_name{"$references"};
+
+    /**
+     * The key under which a reference to a shared InputSpec is stored in the YAML tree. This is the
+     * key used in place of the full InputSpec metadata when a shared reference is used.
+     */
+    std::string reference_key{"$ref"};
   };
 
   /**
@@ -86,7 +115,7 @@ namespace Core::IO
     /**
      * Emit metadata about the InputSpec to the @p yaml emitter.
      */
-    void emit_metadata(YamlNodeRef yaml) const;
+    void emit_metadata(YamlNodeRef yaml, InputSpecEmitMetadataOptions options = {}) const;
 
     /**
      * Access the opaque implementation class. This is used in the implementation files where the
@@ -101,6 +130,12 @@ namespace Core::IO
      * code.
      */
     [[nodiscard]] const Internal::InputSpecImpl& impl() const;
+
+    /**
+     * Returns the number of times this exact InputSpec is used. Since InputSpecs are copied
+     * shallowly, this function is useful to export knowledge about shared specs to the metadata.
+     */
+    [[nodiscard]] std::size_t use_count() const;
 
    private:
     std::unique_ptr<Internal::InputSpecImpl> pimpl_;
