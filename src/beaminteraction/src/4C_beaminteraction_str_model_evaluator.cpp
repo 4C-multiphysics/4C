@@ -734,8 +734,14 @@ bool Solid::ModelEvaluator::BeamInteraction::evaluate_force_stiff()
 
 bool Solid::ModelEvaluator::BeamInteraction::have_lagrange_dofs() const
 {
-  return beam_to_solid_params_ptr_->get_constraint_enforcement() ==
-         Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::lagrange;
+  if (std::dynamic_pointer_cast<::FourC::BeamInteraction::SubmodelEvaluator::BeamContact const>(
+          (*me_vec_ptr_)[0]))
+  {
+    return beam_to_solid_params_ptr_->get_constraint_enforcement() ==
+           Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::lagrange;
+  }
+  else
+    return false;
 }
 
 bool Solid::ModelEvaluator::BeamInteraction::assemble_force(
@@ -744,7 +750,13 @@ bool Solid::ModelEvaluator::BeamInteraction::assemble_force(
   check_init_setup();
 
   Core::LinAlg::assemble_my_vector(1.0, f, timefac_np, *force_beaminteraction_);
-  if (have_lagrange_dofs()) (*me_vec_ptr_)[0]->assemble_force(f);
+  if (have_lagrange_dofs())
+  {
+    if (!std::dynamic_pointer_cast<::FourC::BeamInteraction::SubmodelEvaluator::BeamContact const>(
+            (*me_vec_ptr_)[0]))
+      FOUR_C_THROW("Model Evaluator not of type Beam Contact");
+    (*me_vec_ptr_)[0]->assemble_force(f);
+  }
 
   return true;
 }
@@ -761,6 +773,9 @@ bool Solid::ModelEvaluator::BeamInteraction::assemble_jacobian(
 
   if (have_lagrange_dofs())
   {
+    if (!std::dynamic_pointer_cast<::FourC::BeamInteraction::SubmodelEvaluator::BeamContact const>(
+            (*me_vec_ptr_)[0]))
+      FOUR_C_THROW("Model Evaluator not of type Beam Contact");
     (*me_vec_ptr_)[0]->assemble_stiff(jac);
   }
 
@@ -1120,6 +1135,9 @@ Solid::ModelEvaluator::BeamInteraction::get_block_dof_row_map_ptr() const
 
   if (have_lagrange_dofs())
   {
+    if (!std::dynamic_pointer_cast<::FourC::BeamInteraction::SubmodelEvaluator::BeamContact const>(
+            (*me_vec_ptr_)[0]))
+      FOUR_C_THROW("Model Evaluator not of type Beam Contact");
     return (*me_vec_ptr_)[0]->get_lagrange_map();
   }
   else

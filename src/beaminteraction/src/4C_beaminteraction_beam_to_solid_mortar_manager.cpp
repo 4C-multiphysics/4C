@@ -484,7 +484,7 @@ void BeamInteraction::BeamToSolidMortarManager::evaluate_force_stiff_penalty_reg
 
   if (beam_to_solid_params_->get_constraint_enforcement() ==
       Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::lagrange)
-    global_lambda_container_ = data_state->get_lambda();
+    global_lambda_ = data_state->get_lambda();
 }
 
 /**
@@ -516,7 +516,7 @@ BeamInteraction::BeamToSolidMortarManager::get_global_lambda_col() const
     }
     else
     {
-      Core::LinAlg::export_to(*global_lambda_container_, *lambda_col);
+      Core::LinAlg::export_to(*global_lambda_, *lambda_col);
     }
   }
   else
@@ -600,6 +600,10 @@ void BeamInteraction::BeamToSolidMortarManager::add_global_force_stiffness_penal
 {
   check_setup();
   check_global_maps();
+
+  if (beam_to_solid_params_->get_constraint_enforcement() ==
+      Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::lagrange)
+    return;
 
   // Get the penalty regularization
   const bool is_stiff = stiff != nullptr;
@@ -782,16 +786,22 @@ void BeamInteraction::BeamToSolidMortarManager::assemble_force(
     Solid::TimeInt::BaseDataGlobalState& gstate, Core::LinAlg::Vector<double>& f,
     const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state) const
 {
-  auto tmp = Core::LinAlg::Vector<double>(f.get_map());
-  Core::LinAlg::export_to(*constraint_, tmp);
+  if (beam_to_solid_params_->get_constraint_enforcement() !=
+      Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::lagrange)
+    FOUR_C_THROW("Does not use Langrange type of constraint enforcement ");
+  auto constraint_rhs_map = Core::LinAlg::Vector<double>(f.get_map());
+  Core::LinAlg::export_to(*constraint_, constraint_rhs_map);
 
-  f.update(1., tmp, 1.);
+  f.update(1., constraint_rhs_map, 1.);
 }
 
 void BeamInteraction::BeamToSolidMortarManager::assemble_stiff(
     Solid::TimeInt::BaseDataGlobalState& gstate, Core::LinAlg::SparseOperator& jac,
     const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state) const
 {
+  if (beam_to_solid_params_->get_constraint_enforcement() !=
+      Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::lagrange)
+    FOUR_C_THROW("Does not use Langrange type of constraint enforcement ");
   std::shared_ptr<const Core::LinAlg::SparseOperator> jac_ptr(
       &jac, [](Core::LinAlg::SparseOperator*) {});
   std::shared_ptr<const Core::LinAlg::BlockSparseMatrixBase> jac_block_sparse_matrix_base =
@@ -799,19 +809,18 @@ void BeamInteraction::BeamToSolidMortarManager::assemble_stiff(
   auto block_lm_displ_row_map = jac_block_sparse_matrix_base->matrix(1, 0).row_map();
   auto block_displ_lm_row_map = jac_block_sparse_matrix_base->matrix(0, 1).row_map();
 
-  // Set penalty entry
-  const double penalty_translation = beam_to_solid_params_->get_penalty_parameter();
-  auto kappa_vector = Core::LinAlg::Vector<double>(block_lm_displ_row_map);
-  Core::LinAlg::export_to(*kappa_, kappa_vector);
-  std::shared_ptr<Core::LinAlg::SparseMatrix> kappa_penalty_inv_mat2 =
-      std::make_shared<Core::LinAlg::SparseMatrix>(kappa_vector);
-  kappa_penalty_inv_mat2->scale(-1.0 / penalty_translation);
-  kappa_penalty_inv_mat2->complete();
-
   const auto lagrange_formulation = beam_to_solid_params_->get_lagrange_formulation();
   if (lagrange_formulation == Inpar::BeamToSolid::BeamToSolidLagrangeFormulation::regularized)
   {
-    gstate.assign_model_block(jac, *kappa_penalty_inv_mat2, Inpar::Solid::model_beaminteraction,
+    // Set penalty entry
+    const double penalty_translation = beam_to_solid_params_->get_penalty_parameter();
+    auto kappa_vector = Core::LinAlg::Vector<double>(block_lm_displ_row_map);
+    Core::LinAlg::export_to(*kappa_, kappa_vector);
+    std::shared_ptr<Core::LinAlg::SparseMatrix> kappa_penalty_inv_mat =
+        std::make_shared<Core::LinAlg::SparseMatrix>(kappa_vector);
+    kappa_penalty_inv_mat->scale(-1.0 / penalty_translation);
+    kappa_penalty_inv_mat->complete();
+    gstate.assign_model_block(jac, *kappa_penalty_inv_mat, Inpar::Solid::model_beaminteraction,
         Solid::MatBlockType::lm_lm);
   }
 
@@ -822,7 +831,7 @@ void BeamInteraction::BeamToSolidMortarManager::assemble_stiff(
   lm_displ.complete(*discret_->dof_row_map(), *lambda_dof_rowmap_);
 
   std::shared_ptr<Core::LinAlg::SparseMatrix> lm_displ_in_global_layout =
-      Mortar::matrix_row_col_transform(
+      Core::LinAlg::matrix_row_col_transform(
           lm_displ, block_lm_displ_row_map, jac_block_sparse_matrix_base->domain_map(0));
   gstate.assign_model_block(jac, *lm_displ_in_global_layout, Inpar::Solid::model_beaminteraction,
       Solid::MatBlockType::lm_displ);
@@ -833,7 +842,7 @@ void BeamInteraction::BeamToSolidMortarManager::assemble_stiff(
   displ_lm.add(*force_solid_lin_lambda_, false, 1.0, 1.0);
   displ_lm.complete(*lambda_dof_rowmap_, *discret_->dof_row_map());
   std::shared_ptr<Core::LinAlg::SparseMatrix> displ_lm_in_global_layout =
-      Mortar::matrix_row_col_transform(
+      Core::LinAlg::matrix_row_col_transform(
           displ_lm, block_displ_lm_row_map, jac_block_sparse_matrix_base->domain_map(1));
   gstate.assign_model_block(jac, *displ_lm_in_global_layout, Inpar::Solid::model_beaminteraction,
       Solid::MatBlockType::displ_lm);

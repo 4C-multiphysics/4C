@@ -165,6 +165,9 @@ namespace BeamInteraction
         return beam_interaction_conditions_ptr_;
       }
 
+      /**
+       * \brief Return the dof rowmap of the lagrange multipliers.
+       */
       std::shared_ptr<const FourC::Core::LinAlg::Map> get_lagrange_map() override;
 
       void assemble_force(Core::LinAlg::Vector<double>& f) override;
@@ -248,8 +251,11 @@ namespace BeamInteraction
           std::set<Core::Elements::Element*>& neighbors) const;
 
       /// create instances of class BeamContactPair that will be evaluated
-      //  to get force and stiffness contributions from beam interactions
+      ///  to get force and stiffness contributions from beam interactions
       void create_beam_contact_element_pairs();
+
+      /// sets the lagrange multiplier vector in the datastate vector
+      void set_lagrange_multiplier_vector();
 
       /// Add the restart displacement to the pairs, if the coupling should be evaluated with
       /// respect to the restart state.

@@ -239,6 +239,7 @@ namespace BeamInteraction
       std::shared_ptr<BeamInteraction::Utils::MapExtractor>& ele_type_map_extractor_ptr();
       BeamInteraction::Utils::MapExtractor const& ele_type_map_extractor() const;
 
+      //! \brief returns the dof row map of the Lagrange Multipliers
       virtual std::shared_ptr<const FourC::Core::LinAlg::Map> get_lagrange_map() { return nullptr; }
 
       virtual void assemble_force(Core::LinAlg::Vector<double>& f) {};

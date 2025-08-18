@@ -74,7 +74,6 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::setup()
   beam_interaction_params_ptr_->init();
   beam_interaction_params_ptr_->setup();
 
-
   beam_to_solid_params_ptr_ =
       std::make_shared<FourC::BeamInteraction::BeamToSolidVolumeMeshtyingParams>();
   beam_to_solid_params_ptr_->init();
@@ -243,6 +242,9 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::post_setup()
   nearby_elements_map_.clear();
   find_and_store_neighboring_elements();
   create_beam_contact_element_pairs();
+  if (beam_to_solid_params_ptr_->get_constraint_enforcement() ==
+      Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::lagrange)
+    set_lagrange_multiplier_vector();
 }
 
 /*----------------------------------------------------------------------*
@@ -827,12 +829,13 @@ BeamInteraction::SubmodelEvaluator::BeamContact::get_lagrange_map()
   if (assembly_managers_.size() != 1) FOUR_C_THROW("Only working for single assembly manager");
   auto indirect_assembly_manager =
       std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_managers_[0]);
-  return indirect_assembly_manager->get_mortar_manager()->lambda_dof_rowmap_;
+  return indirect_assembly_manager->get_mortar_manager()->get_lambda_dof_row_map();
 }
 
 void BeamInteraction::SubmodelEvaluator::BeamContact::assemble_force(
     Core::LinAlg::Vector<double>& f)
 {
+  if (assembly_managers_.size() != 1) FOUR_C_THROW("Only working for single assembly manager");
   auto indirect_assembly_manager =
       std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_managers_[0]);
   indirect_assembly_manager->get_mortar_manager()->assemble_force(
@@ -842,6 +845,7 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::assemble_force(
 void BeamInteraction::SubmodelEvaluator::BeamContact::assemble_stiff(
     Core::LinAlg::SparseOperator& jac)
 {
+  if (assembly_managers_.size() != 1) FOUR_C_THROW("Only working for single assembly manager");
   auto indirect_assembly_manager =
       std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_managers_[0]);
   indirect_assembly_manager->get_mortar_manager()->assemble_stiff(
@@ -1097,22 +1101,26 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::create_beam_contact_elemen
   beam_interaction_conditions_ptr_->create_indirect_assembly_managers(
       discret_ptr(), assembly_managers_);
 
-  // Set the lagrange multiplier vector in the data state
-  if (beam_interaction_data_state().get_lambda() == nullptr &&
-      beam_to_solid_params_ptr_->get_constraint_enforcement() ==
-          Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::lagrange)
-  {
-    auto indirect_assembly_manager =
-        std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_managers_[0]);
-    beam_interaction_data_state().get_lambda() =
-        std::shared_ptr<Core::LinAlg::FEVector<double>>(new Core::LinAlg::FEVector<double>(
-            (*indirect_assembly_manager->get_mortar_manager()->lambda_dof_rowmap_)));
-  }
-
   Core::IO::cout(Core::IO::standard)
       << "PID " << std::setw(2) << std::right << g_state().get_my_rank() << " currently monitors "
       << std::setw(5) << std::right << contact_elepairs_.size() << " beam contact pairs"
       << Core::IO::endl;
+}
+
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void BeamInteraction::SubmodelEvaluator::BeamContact::set_lagrange_multiplier_vector()
+{
+  if (beam_interaction_data_state().get_lambda() == nullptr)
+  {
+    if (assembly_managers_.size() != 1) FOUR_C_THROW("Only working for single assembly manager");
+    auto indirect_assembly_manager =
+        std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_managers_[0]);
+    beam_interaction_data_state().get_lambda() =
+        std::shared_ptr<Core::LinAlg::FEVector<double>>(new Core::LinAlg::FEVector<double>(
+            *indirect_assembly_manager->get_mortar_manager()->get_lambda_dof_row_map()));
+  }
 }
 
 /*----------------------------------------------------------------------------*
