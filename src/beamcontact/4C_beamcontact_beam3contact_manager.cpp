@@ -15,7 +15,6 @@
 #include "4C_beamcontact_input.hpp"
 #include "4C_beaminteraction_beam_to_beam_contact_defines.hpp"
 #include "4C_beaminteraction_beam_to_beam_contact_utils.hpp"
-#include "4C_beaminteraction_potential_input.hpp"
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_contact_element.hpp"
 #include "4C_contact_node.hpp"
@@ -46,7 +45,6 @@ CONTACT::Beam3cmanager::Beam3cmanager(Core::FE::Discretization& discret, double 
       pdiscomm_(discret.get_comm()),
       searchradius_(0.0),
       sphericalsearchradius_(0.0),
-      searchradiuspot_(0.0),
       alphaf_(alphaf),
       constrnorm_(0.0),
       btsolconstrnorm_(0.0),
@@ -86,7 +84,6 @@ CONTACT::Beam3cmanager::Beam3cmanager(Core::FE::Discretization& discret, double 
 
   // read parameter lists from Global::Problem
   sbeamcontact_ = Global::Problem::instance()->beam_contact_params();
-  sbeampotential_ = Global::Problem::instance()->beam_potential_params();
   scontact_ = Global::Problem::instance()->contact_dynamic_params();
   sstructdynamic_ = Global::Problem::instance()->structural_dynamic_params();
 
@@ -249,136 +246,6 @@ CONTACT::Beam3cmanager::Beam3cmanager(Core::FE::Discretization& discret, double 
   dis_ = Core::LinAlg::create_vector(*problem_discret().dof_row_map(), true);
   dis_old_ = Core::LinAlg::create_vector(*problem_discret().dof_row_map(), true);
 
-
-
-  // read the DLINE conditions specifying charge density of beams
-  linechargeconds_.clear();
-  problem_discret().get_condition("BeamPotentialLineCharge", linechargeconds_);
-
-  // read the DPOINT conditions specifying charge/particle density of rigid spheres
-  problem_discret().get_condition("RigidspherePotentialPointCharge", pointchargeconds_);
-
-  // initialization stuff for potential-based interaction
-  if (linechargeconds_.size() != 0)
-  {
-    // safety check
-    if (Core::Communication::num_mpi_ranks(pdiscret_.get_comm()) != 1)
-      FOUR_C_THROW("potential-based beam interactions not implemented in parallel yet!");
-
-    // initialize parameters of applied potential law
-    ki_ = std::make_shared<std::vector<double>>();
-    mi_ = std::make_shared<std::vector<double>>();
-    ki_->clear();
-    mi_->clear();
-    // read potential law parameters from input and check
-    {
-      std::string potential_law_exponents_in(
-          Teuchos::getNumericStringParameter(sbeampotential_, "POT_LAW_EXPONENT"));
-
-      Core::IO::ValueParser potential_law_exponents_parser(potential_law_exponents_in,
-          {.user_scope_message = "While reading potential law exponents: "});
-
-      while (!potential_law_exponents_parser.at_end())
-      {
-        mi_->push_back(potential_law_exponents_parser.read<double>());
-      }
-    }
-    {
-      std::string potential_law_prefactors_in(
-          Teuchos::getNumericStringParameter(sbeampotential_, "POT_LAW_PREFACTOR"));
-
-      Core::IO::ValueParser potential_law_prefactors_parser(potential_law_prefactors_in,
-          {.user_scope_message = "While reading potential law prefactors: "});
-
-      while (!potential_law_prefactors_parser.at_end())
-      {
-        ki_->push_back(potential_law_prefactors_parser.read<double>());
-      }
-    }
-    if (!ki_->empty())
-    {
-      if (ki_->size() != mi_->size())
-        FOUR_C_THROW(
-            "number of potential law prefactors does not match number of potential law exponents. "
-            "Check your input file!");
-
-      for (unsigned int i = 0; i < mi_->size(); ++i)
-        if (mi_->at(i) <= 0)
-          FOUR_C_THROW(
-              "only positive values are allowed for potential law exponent. Check your input file");
-    }
-
-    if (!Core::Communication::my_mpi_rank(pdiscret_.get_comm()))
-    {
-      std::cout << "=============== Beam Potential-Based Interaction ===============" << std::endl;
-
-      switch (Teuchos::getIntegralValue<BeamPotential::Type>(sbeampotential_, "TYPE"))
-      {
-        case BeamPotential::Type::surface:
-        {
-          std::cout << "Potential Type:      Surface" << std::endl;
-          break;
-        }
-        case BeamPotential::Type::volume:
-        {
-          std::cout << "Potential Type:      Volume" << std::endl;
-          break;
-        }
-        default:
-          FOUR_C_THROW("Potential type not supported!");
-      }
-
-      std::cout << "Potential Law:       Phi(r) = ";
-      for (unsigned int i = 0; i < ki_->size(); ++i)
-      {
-        if (i > 0) std::cout << " + ";
-        std::cout << "(" << ki_->at(i) << ") * r^(-" << mi_->at(i) << ")";
-      }
-      std::cout << std::endl;
-    }
-    // read cutoff radius for search of potential-based interaction pairs
-    searchradiuspot_ = sbeampotential_.get<double>("CUTOFFRADIUS", -1.0);
-
-    // initialize octtree for search of potential-based interaction pairs
-    if (Teuchos::getIntegralValue<BeamContact::OctreeType>(sbeampotential_, "BEAMPOT_OCTREE") !=
-        BeamContact::boct_none)
-    {
-      if (searchradiuspot_ <= 0)
-        FOUR_C_THROW(
-            "no/invalid value for cutoff radius for Octree search for potential-based interaction "
-            "pairs. Check your input file!");
-
-      pottree_ = std::make_shared<Beam3ContactOctTree>(sbeampotential_, pdiscret_, *btsoldiscret_);
-    }
-    else
-    {
-      if (searchradiuspot_ <= 0 and searchradiuspot_ != -1.0)
-        FOUR_C_THROW(
-            "no/invalid value for cutoff radius of potential-based interaction pairs specified. "
-            "Check your input file!");
-
-      // Compute the search radius for searching possible contact pairs
-      compute_search_radius();
-      pottree_ = nullptr;
-      if (!Core::Communication::my_mpi_rank(pdiscret_.get_comm()))
-      {
-        std::cout << "\nSearch Strategy:     Brute Force Search" << std::endl;
-        std::cout << "Search Radius:       " << searchradiuspot_ << std::endl;
-      }
-    }
-
-    if (!Core::Communication::my_mpi_rank(pdiscret_.get_comm()))
-    {
-      std::cout << "================================================================\n"
-                << std::endl;
-    }
-
-    // flags to indicate, if beam-to-solid or beam-to-sphere potential-based interaction is applied
-    potbtsol_ = sbeampotential_.get<bool>("BEAMPOT_BTSOL");
-    potbtsph_ = sbeampotential_.get<bool>("BEAMPOT_BTSPH");
-
-  }  // end: at least one beam potential line charge condition applied
-
   return;
 }
 
@@ -463,43 +330,6 @@ void CONTACT::Beam3cmanager::evaluate(Core::LinAlg::SparseMatrix& stiffmatrix,
   // process the found element pairs and fill the BTB, BTSOL, BTSPH interaction pair vectors
   fill_contact_pairs_vectors(elementpairs);
 
-  if (linechargeconds_.size() != 0)
-  {
-    //**********************************************************************
-    // Potential-based interaction: Octree search
-    //**********************************************************************
-    if (pottree_ != nullptr)
-    {
-      double t_start = Teuchos::Time::wallTime();
-      elementpairspot = pottree_->oct_tree_search(currentpositions);
-
-      double t_end = Teuchos::Time::wallTime() - t_start;
-      Teuchos::ParameterList ioparams = Global::Problem::instance()->io_params();
-      if (!Core::Communication::my_mpi_rank(pdiscret_.get_comm()) &&
-          ioparams.get<int>("STDOUTEVERY", 0))
-        Core::IO::cout(Core::IO::standard)
-            << "      OctTree Search (Potential): " << t_end << " seconds" << Core::IO::endl;
-    }
-    //**********************************************************************
-    // Potential-based interaction: brute-force search
-    //**********************************************************************
-    else
-    {
-      double t_start = Teuchos::Time::wallTime();
-
-      elementpairspot = brute_force_search(currentpositions, searchradiuspot_,
-          searchradiuspot_);  // TODO do we need a sphericalsearchradius here as well?
-      double t_end = Teuchos::Time::wallTime() - t_start;
-      Teuchos::ParameterList ioparams = Global::Problem::instance()->io_params();
-      if (!Core::Communication::my_mpi_rank(pdiscret_.get_comm()) &&
-          ioparams.get<int>("STDOUTEVERY", 0))
-        Core::IO::cout(Core::IO::standard)
-            << "      Brute Force Search (Potential): " << t_end << " seconds" << Core::IO::endl;
-    }
-
-    fill_potential_pairs_vectors(elementpairspot);
-  }
-
   // update element state of all pairs with current positions (already calculated in
   // set_current_positions) and current tangents (will be calculated in set_state)
   set_state(currentpositions, disccol);
@@ -534,7 +364,7 @@ void CONTACT::Beam3cmanager::evaluate(Core::LinAlg::SparseMatrix& stiffmatrix,
         << "      Pair management: " << t_end << " seconds. " << Core::IO::endl;
   t_start = Teuchos::Time::wallTime();
 
-  // evaluate all element pairs (BTB, BTSOL, BTSPH; Contact and Potential)
+  // evaluate all element pairs (BTB, BTSOL, BTSPH; Contact)
   evaluate_all_pairs(timeintparams);
 
   t_end = Teuchos::Time::wallTime() - t_start;
@@ -1471,115 +1301,6 @@ void CONTACT::Beam3cmanager::fill_contact_pairs_vectors(
     if (Core::Communication::my_mpi_rank(pdiscret_.get_comm()) == 0)
       Core::IO::cout(Core::IO::standard)
           << "\t Total number of BTSOL contact pairs:    " << numpairs << Core::IO::endl;
-  }
-}
-
-/*----------------------------------------------------------------------*
- |  process the found element pairs and fill the corresponding
- |  BTB, BTSOL and BTSPH potential pair vectors              grill 09/14|
- *----------------------------------------------------------------------*/
-void CONTACT::Beam3cmanager::fill_potential_pairs_vectors(
-    const std::vector<std::vector<Core::Elements::Element*>> elementpairs)
-{
-  std::vector<std::vector<Core::Elements::Element*>> formattedelementpairs;
-  formattedelementpairs.clear();
-
-  // Besides beam-to-beam potentials, we can also handle beam to sphere potentials
-  // In all cases element 1 has to be the beam element.
-
-  // All other element pairs (sphere-sphere, solid-solid, sphere-solid etc.) will be sorted out
-  // later.
-  for (int i = 0; i < (int)elementpairs.size(); i++)
-  {
-    // if ele1 is a beam element we take the pair directly
-    if (BeamInteraction::Utils::is_beam_element(*(elementpairs[i])[0]))
-    {
-      formattedelementpairs.push_back(elementpairs[i]);
-    }
-    // if ele1 is no beam element, but ele2 is one, we have to change the order
-    else if (BeamInteraction::Utils::is_beam_element(*(elementpairs[i])[1]))
-    {
-      std::vector<Core::Elements::Element*> elementpairaux;
-      elementpairaux.clear();
-      elementpairaux.push_back((elementpairs[i])[1]);
-      elementpairaux.push_back((elementpairs[i])[0]);
-      formattedelementpairs.push_back(elementpairaux);
-    }
-  }
-
-  /* Determine type of applied beam elements and set the corresponding values for the member
-   * variables numnodes_ and numnodaldofs_. This has only to be done once in the beginning, since
-   * beam contact simulations are only possible when using beam elements of one type! */
-  if (numnodalvalues_ == 0 and formattedelementpairs.size() > 0)
-    set_element_type_and_distype((formattedelementpairs[0])[0]);
-
-  // Create Beam3tobeampotentialinterface instances in the btbpotpairs_ vector
-  for (int k = 0; k < (int)formattedelementpairs.size(); k++)
-  {
-    Core::Elements::Element* ele1 = (formattedelementpairs[k])[0];
-    Core::Elements::Element* ele2 = (formattedelementpairs[k])[1];
-
-    // get the conditions applied to both elements of the pair and decide whether they need to be
-    // evaluated
-    std::vector<Core::Conditions::Condition*> conds1, conds2;
-
-    // since only the nodes know about their conditions, we need this workaround
-    // we assume that a linecharge condition is always applied to the entire physical beam, i.e. it
-    // is sufficient to check only one node
-    Core::Nodes::Node** nodes1;
-    Core::Nodes::Node** nodes2;
-    nodes1 = ele1->nodes();
-    nodes2 = ele2->nodes();
-
-    FOUR_C_ASSERT(nodes1 != nullptr and nodes2 != nullptr, "pointer to nodes is nullptr!");
-    FOUR_C_ASSERT(nodes1[0] != nullptr and nodes2[0] != nullptr, "pointer to nodes is nullptr!");
-
-    nodes1[0]->get_condition("BeamPotentialLineCharge", conds1);
-
-    // get correct condition for beam or rigid sphere element
-    if (BeamInteraction::Utils::is_beam_element(*(formattedelementpairs[k])[1]))
-      nodes2[0]->get_condition("BeamPotentialLineCharge", conds2);
-    else if (BeamInteraction::Utils::is_rigid_sphere_element(*(formattedelementpairs[k])[1]) and
-             potbtsph_)
-      nodes2[0]->get_condition("RigidspherePotentialPointCharge", conds2);
-
-    // validinteraction == true includes: both eles "loaded" by a charge condition of same potential
-    // law
-    bool validinteraction = false;
-
-    for (unsigned int i = 0; i < conds1.size(); ++i)
-    {
-      int npotlaw1 = conds1[i]->parameters().get<int>("POTLAW");
-
-      for (unsigned int j = 0; j < conds2.size(); ++j)
-      {
-        int npotlaw2 = conds2[j]->parameters().get<int>("POTLAW");
-
-        // here, we also exclude "self-interaction", i.e. a pair of elements on the same physical
-        // beam
-        // TODO introduce flag for self-interaction in input file
-        if (conds1[i] != conds2[j] and npotlaw1 == npotlaw2) validinteraction = true;
-      }
-    }
-
-    if (validinteraction)
-    {
-      // beam-to-beam pair
-      if (BeamInteraction::Utils::is_beam_element(*(formattedelementpairs[k])[1]))
-      {
-        // Add new potential pair object: The auxiliary_instance of the abstract class
-        // Beam3tobeampotentialinterface is only needed here in order to call the function Impl()
-        // which creates an instance of the templated class Beam3tobeampotential<numnodes,
-        // numnodalvalues> !
-      }
-      // beam-to-solid pair, beam-to-??? pair
-      else
-      {
-        FOUR_C_THROW(
-            "Only beam-to-beam and beam-to-sphere potential-based interaction is implemented yet. "
-            "No other types of elements allowed!");
-      }
-    }
   }
 }
 

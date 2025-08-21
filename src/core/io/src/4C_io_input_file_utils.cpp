@@ -106,11 +106,15 @@ void Core::IO::read_parameters_in_section(
   InputParameterContainer container;
   input.match_section(section_name, container);
 
-  // If there is no group with the given name, we don't need to do anything. The InputFile
-  // made sure this is legal and the group is not required and empty.
-  if (!container.has_group(section_name)) return;
-
-  container.group(section_name).to_teuchos_parameter_list(find_sublist(section_name, list));
+  if (container.has_group(section_name))
+  {
+    // This special case should go away when sections with "/" are no longer present
+    container.group(section_name).to_teuchos_parameter_list(find_sublist(section_name, list));
+  }
+  else
+  {
+    container.to_teuchos_parameter_list(list);
+  }
 }
 
 /*----------------------------------------------------------------------*/

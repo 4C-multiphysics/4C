@@ -59,9 +59,11 @@ BEAM INTERACTION/BEAM TO BEAM CONTACT CONDITIONS:
     COUPLING_ID: 1
   - E: 3
     COUPLING_ID: 1
-BEAM POTENTIAL:
-  POT_LAW_EXPONENT: "1.0 1.0"
-  POT_LAW_PREFACTOR: "0.3 0.1"
+beam_potential:
+  potential_law_exponents: [1.0, 1.0]
+  potential_law_prefactors: [0.3, 0.1]
+  strategy: double_length_specific_large_separations
+  type: surface
 BINNING STRATEGY:
   BIN_SIZE_LOWER_BOUND: 3
   DOMAINBOUNDINGBOX: "-0.5 -0.5 -0.5 5.5 5.5 5.5"

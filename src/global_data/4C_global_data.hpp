@@ -397,10 +397,7 @@ namespace Global
     {
       return parameters_->sublist("BEAM CONTACT");
     }
-    const Teuchos::ParameterList& beam_potential_params() const
-    {
-      return parameters_->sublist("BEAM POTENTIAL");
-    }
+    const Teuchos::ParameterList& parameters() const { return *parameters_; }
     const Teuchos::ParameterList& semi_smooth_plast_params() const
     {
       return parameters_->sublist("SEMI-SMOOTH PLASTICITY");
