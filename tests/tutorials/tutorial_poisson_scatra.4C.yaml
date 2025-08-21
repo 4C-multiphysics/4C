@@ -1,8 +1,8 @@
 TITLE:
-  - "Straight Convection"
+  - "Tutorial on the solution of the Poisson equation using the scalar transport solver"
 PROBLEM SIZE:
-  ELEMENTS: 361
-  NODES: 400
+  ELEMENTS: 1024
+  NODES: 1089
   MATERIALS: 1
 PROBLEM TYPE:
   PROBLEMTYPE: "Scalar_Transport"
@@ -12,10 +12,9 @@ SCALAR TRANSPORT DYNAMIC:
   MAXTIME: 1
   NUMSTEP: 1
   LINEAR_SOLVER: 1
-
 SOLVER 1:
   SOLVER: "UMFPACK"
-  NAME: "Sca_Tra_Solver"
+  NAME: "direct linear solver"
 DESIGN LINE DIRICH CONDITIONS:
   - E: 1
     ENTITY_TYPE: node_set_id
@@ -42,7 +41,7 @@ DESIGN LINE DIRICH CONDITIONS:
     VAL: [0]
     FUNCT: [0]
 DESIGN SURF NEUMANN CONDITIONS:
-  - E: 1
+  - E: 5
     ENTITY_TYPE: node_set_id
     NUMDOF: 1
     ONOFF: [1]
@@ -59,5 +58,12 @@ TRANSPORT GEOMETRY:
         QUAD4:
           MAT: 1
           TYPE: Std
-  FILE: poisson_problem_geo.e
+  FILE: tutorial_poisson_geo.e
   SHOW_INFO: detailed_summary
+RESULT DESCRIPTION:
+  - SCATRA:
+      DIS: "scatra"
+      NODE: 545
+      QUANTITY: "phi"
+      VALUE: 0.29491246771747137
+      TOLERANCE: 1e-05

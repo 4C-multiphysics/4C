@@ -11,16 +11,12 @@
 #### import the simple module from the paraview
 from paraview.simple import *
 
-# For scalar transport:
-resultVariable = "phi_1"
-# For thermal simulation:
-resultVariable = "temperature"
-
 # get layout
 layout1 = GetLayout()
 
 # find source
 simulation_input = GetActiveSource()
+resultVariable = simulation_input.PointArrays[0]
 
 # get active view
 renderView = GetActiveViewOrCreate("RenderView")
@@ -88,5 +84,4 @@ SaveScreenshot(
     "scatra_resultsurface_" + resultVariable + ".png",
     renderView,
     TransparentBackground=True,
-    CompressenLevel=3,
 )

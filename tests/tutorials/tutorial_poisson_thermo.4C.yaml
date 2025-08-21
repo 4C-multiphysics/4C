@@ -1,19 +1,11 @@
 TITLE:
-  - "Thermo problem for testing the thermo element"
+  - "Tutorial on the solution of the Poisson equation using the thermal solver"
 PROBLEM SIZE:
-  DIM: 2
+  ELEMENTS: 1024
+  NODES: 1089
+  MATERIALS: 1
 PROBLEM TYPE:
   PROBLEMTYPE: "Thermo"
-#IO:
-#  THERM_TEMPERATURE: true
-#  THERM_HEATFLUX: Current
-#  THERM_TEMPGRAD: None
-IO/RUNTIME VTK OUTPUT:
-  INTERVAL_STEPS: 1
-THERMAL DYNAMIC/RUNTIME VTK OUTPUT:
-  OUTPUT_THERMO: true
-  TEMPERATURE: true
-
 THERMAL DYNAMIC:
   DYNAMICTYPE: Statics
   TIMESTEP: 1
@@ -22,7 +14,12 @@ THERMAL DYNAMIC:
   LINEAR_SOLVER: 1
 SOLVER 1:
   SOLVER: "UMFPACK"
-  NAME: "THERMAL_SOLVER"
+  NAME: "direct linear solver"
+THERMAL DYNAMIC/RUNTIME VTK OUTPUT:
+  OUTPUT_THERMO: true
+  TEMPERATURE: true
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 1
 DESIGN LINE DIRICH CONDITIONS:
   - E: 1
     ENTITY_TYPE: node_set_id
@@ -49,7 +46,7 @@ DESIGN LINE DIRICH CONDITIONS:
     VAL: [0]
     FUNCT: [0]
 DESIGN SURF NEUMANN CONDITIONS:
-  - E: 1
+  - E: 5
     ENTITY_TYPE: node_set_id
     NUMDOF: 1
     ONOFF: [1]
@@ -67,5 +64,12 @@ THERMO GEOMETRY:
       THERMO:
         QUAD4:
           MAT: 1
-  FILE: poisson_problem_geo.e
+  FILE: tutorial_poisson_geo.e
   SHOW_INFO: detailed_summary
+RESULT DESCRIPTION:
+  - THERMAL:
+      DIS: "thermo"
+      NODE: 545
+      QUANTITY: "temp"
+      VALUE: 0.29491246771747137
+      TOLERANCE: 1e-05
