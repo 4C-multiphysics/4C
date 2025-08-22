@@ -272,7 +272,6 @@ namespace BeamInteraction
       //! data container holding all beam interactions defined by conditions
       std::shared_ptr<BeamInteraction::BeamInteractionConditions> beam_interaction_conditions_ptr_;
 
-      std::shared_ptr<FourC::BeamInteraction::BeamToSolidParamsBase> beam_to_solid_params_ptr_;
 
       //! data container holding all geometric search related parameters
       std::shared_ptr<Core::GeometricSearch::GeometricSearchParams> geometric_search_params_ptr_;

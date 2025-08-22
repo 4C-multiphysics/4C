@@ -74,11 +74,6 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::setup()
   beam_interaction_params_ptr_->init();
   beam_interaction_params_ptr_->setup();
 
-  beam_to_solid_params_ptr_ =
-      std::make_shared<FourC::BeamInteraction::BeamToSolidVolumeMeshtyingParams>();
-  beam_to_solid_params_ptr_->init();
-  beam_to_solid_params_ptr_->setup();
-
   // build a new data container to manage geometric search parameters
   geometric_search_params_ptr_ = std::make_shared<Core::GeometricSearch::GeometricSearchParams>(
       Global::Problem::instance()->geometric_search_params(),
@@ -242,7 +237,9 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::post_setup()
   nearby_elements_map_.clear();
   find_and_store_neighboring_elements();
   create_beam_contact_element_pairs();
-  if (beam_to_solid_params_ptr_->get_constraint_enforcement() ==
+  beam_contact_params_ptr_->build_beam_to_solid_volume_meshtying_params();
+  if (beam_contact_params_ptr_->beam_to_solid_volume_meshtying_params()
+          ->get_constraint_enforcement() ==
       Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::lagrange)
     set_lagrange_multiplier_vector();
 }
