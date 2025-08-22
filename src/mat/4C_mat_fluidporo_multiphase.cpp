@@ -28,6 +28,7 @@ Mat::PAR::FluidPoroMultiPhase::FluidPoroMultiPhase(const Core::Mat::PAR::Paramet
       permeability_(matdata.parameters.get<double>("PERMEABILITY")),
       numfluidphases_(matdata.parameters.get<int>("NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE")),
       numvolfrac_(-1),
+      closing_relation_volfrac_(Mat::PAR::PoroFluidPressureBased::cr_undefined),
       dof2pres_(nullptr),
       constraintphaseID_(-1),
       isinit_(false)
@@ -55,22 +56,84 @@ void Mat::PAR::FluidPoroMultiPhase::initialize()
   dof2pres_->putScalar(0.0);
 
   // get number of volume fractions
-  numvolfrac_ = (int)(((int)matids_.size() - numfluidphases_) / 2);
+  // check which type of volume fraction we have: so far it is only possible to have volume
+  // fractions with closing relation "blood_lung" or "homogenized_vasculature_tumor"
+  // It is not possible to have both volume fractions in the same problem so far.
+  if ((int)matids_.size() > numfluidphases_)
+  {
+    const int volfracmatid = (matids_)[numfluidphases_];
+    std::shared_ptr<Core::Mat::Material> volfracmat = material_by_id(volfracmatid);
+    if (volfracmat->material_type() == Core::Materials::m_fluidporo_volfrac_pressure_blood_lung)
+    {
+      closing_relation_volfrac_ = Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_blood_lung;
+      numvolfrac_ = (int)(((int)matids_.size() - numfluidphases_));
+    }
+    else if (volfracmat->material_type() == Core::Materials::m_fluidporo_singlevolfrac)
+    {
+      closing_relation_volfrac_ =
+          Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_homogenized_vasculature_tumor;
+      numvolfrac_ = (int)(((int)matids_.size() - numfluidphases_) / 2);
+    }
+    else
+    {
+      FOUR_C_THROW("Internal Error!");
+    }
+  }
+  else
+  {
+    numvolfrac_ = 0;
+  }
 
-  // safety check
-  if ((int)matids_.size() != (int)(numvolfrac_ * 2 + numfluidphases_))
-    FOUR_C_THROW(
-        "You have chosen {} materials, {} fluidphases and {} volume fractions, check your input "
-        "definition\n"
-        "Your Input should always look like (for example: 4 fluid phases, 2 volume fractions):\n"
-        "MAT 0 MAT_FluidPoroMultiPhase LOCAL No PERMEABILITY 1.0 NUMMAT 8 MATIDS    1 2 3 4 5 6 7 "
-        "8 NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE 4 END\n"
-        "with: 4 fluid phases in multiphase pore space: materials have to be "
-        "MAT_FluidPoroSinglePhase \n"
-        "      2 volume fractions: materials have to be MAT_FluidPoroSingleVolFrac \n"
-        "      2 volume fraction pressures: materials have to be MAT_FluidPoroVolFracPressure ",
-        (int)matids_.size(), numfluidphases_,
-        (double)(((double)matids_.size() - (double)numfluidphases_) / 2.0));
+  if (numvolfrac_)
+  {
+    if (closing_relation_volfrac_ ==
+        Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_blood_lung)
+    {
+      // safety check
+      if ((int)matids_.size() != (int)(numvolfrac_ + numfluidphases_))
+        FOUR_C_THROW(
+            "You have chosen {} materials, {} fluidphases and {} volume fractions, check your "
+            "input "
+            "definition\n"
+            "Your Input should always look like (for example: 4 fluid phases, 1 volume "
+            "fractions):\n"
+            "MAT 0 MAT_FluidPoroMultiPhase LOCAL No PERMEABILITY 1.0 NUMMAT 5 MATIDS    1 2 3 4 5  "
+            " NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE 4 END\n"
+            "with: 4 fluid phases in multiphase pore space: materials have to be "
+            "MAT_FluidPoroSinglePhase \n"
+            "      1 volume fractions: materials have to be MAT_FluidPoroVolFracPressureBloodLung "
+            "\n",
+            (int)matids_.size(), numfluidphases_,
+            (double)(((double)matids_.size() - (double)numfluidphases_)));
+    }
+    else if (closing_relation_volfrac_ ==
+             Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_homogenized_vasculature_tumor)
+    {
+      // safety check
+      if ((int)matids_.size() != (int)(numvolfrac_ * 2 + numfluidphases_))
+        FOUR_C_THROW(
+            "You have chosen {} materials, {} fluidphases and {} volume fractions, check your "
+            "input "
+            "definition\n"
+            "Your Input should always look like (for example: 4 fluid phases, 2 volume "
+            "fractions):\n"
+            "MAT 0 MAT_FluidPoroMultiPhase LOCAL No PERMEABILITY 1.0 NUMMAT 8 MATIDS    1 2 3 4 5 "
+            "6 "
+            "7 "
+            "8 NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE 4 END\n"
+            "with: 4 fluid phases in multiphase pore space: materials have to be "
+            "MAT_FluidPoroSinglePhase \n"
+            "      2 volume fractions: materials have to be MAT_FluidPoroSingleVolFrac \n"
+            "      2 volume fraction pressures: materials have to be MAT_FluidPoroVolFracPressure ",
+            (int)matids_.size(), numfluidphases_,
+            (double)(((double)matids_.size() - (double)numfluidphases_) / 2.0));
+    }
+    else
+    {
+      FOUR_C_THROW("Internal error!");
+    }
+  }
+
 
   for (int iphase = 0; iphase < (int)matids_.size(); iphase++)
   {
@@ -113,38 +176,74 @@ void Mat::PAR::FluidPoroMultiPhase::initialize()
     // volume fractions at [numfluidphases-1...numfluidphases-1+numvolfrac]
     else if (iphase < numfluidphases_ + numvolfrac_)
     {
-      // safety check
-      if (singlemat->material_type() != Core::Materials::m_fluidporo_singlevolfrac)
-        FOUR_C_THROW(
-            "You have chosen {} fluid phases and {} volume fractions, however your material number "
-            "{} is no poro volume fraction material\n"
-            "Your Input should always look like (for example: 4 fluid phases, 2 volume "
-            "fractions):\n"
-            "MAT 0 MAT_FluidPoroMultiPhase LOCAL No PERMEABILITY 1.0 NUMMAT 8 MATIDS    1 2 3 4 5 "
-            "6 7 8 NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE 4 END\n"
-            "with: 4 fluid phases in multiphase pore space: materials have to be "
-            "MAT_FluidPoroSinglePhase \n"
-            "      2 volume fractions: materials have to be MAT_FluidPoroSingleVolFrac \n"
-            "      2 volume fraction pressures: materials have to be MAT_FluidPoroVolFracPressure ",
-            numfluidphases_, (int)matids_.size() - numfluidphases_, iphase + 1);
+      if (closing_relation_volfrac_ ==
+          Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_blood_lung)
+      {
+        // safety check
+        if (singlemat->material_type() != Core::Materials::m_fluidporo_volfrac_pressure_blood_lung)
+          FOUR_C_THROW(
+              "You have chosen {} fluid phases and {} volume fractions, however your material "
+              "number "
+              "{} is no poro volume fraction material\n"
+              "Your Input should always look like (for example: 4 fluid phases, 1 volume "
+              "fractions):\n"
+              "MAT 0 MAT_FluidPoroMultiPhase LOCAL No PERMEABILITY 1.0 NUMMAT 8 MATIDS    1 2 3 4 "
+              "5  NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE 4 END\n"
+              "with: 4 fluid phases in multiphase pore space: materials have to be "
+              "MAT_FluidPoroSinglePhase \n"
+              "     1 volume fractions: materials have to be MAT_FluidPoroVolFracPressureBloodLung",
+              numfluidphases_, (int)matids_.size() - numfluidphases_, iphase + 1);
+      }
+      else if (closing_relation_volfrac_ ==
+               Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_homogenized_vasculature_tumor)
+      {
+        // safety check
+        if (singlemat->material_type() != Core::Materials::m_fluidporo_singlevolfrac)
+          FOUR_C_THROW(
+              "You have chosen {} fluid phases and {} volume fractions, however your material "
+              "number "
+              "{} is no poro volume fraction material\n"
+              "Your Input should always look like (for example: 4 fluid phases, 2 volume "
+              "fractions):\n"
+              "MAT 0 MAT_FluidPoroMultiPhase LOCAL No PERMEABILITY 1.0 NUMMAT 8 MATIDS    1 2 3 4 "
+              "5 "
+              "6 7 8 NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE 4 END\n"
+              "with: 4 fluid phases in multiphase pore space: materials have to be "
+              "MAT_FluidPoroSinglePhase \n"
+              "      2 volume fractions: materials have to be MAT_FluidPoroSingleVolFrac \n"
+              "      2 volume fraction pressures: materials have to be "
+              "MAT_FluidPoroVolFracPressure ",
+              numfluidphases_, (int)matids_.size() - numfluidphases_, iphase + 1);
+      }
+      else
+      {
+        FOUR_C_THROW("Internal error!");
+      }
     }
     // volume fraction pressures at [numfluidphases-1+numvolfrac...numfluidphases-1+2*numvolfrac]
     else if (iphase < numfluidphases_ + 2 * numvolfrac_)
     {
-      // safety check
-      if (singlemat->material_type() != Core::Materials::m_fluidporo_volfracpressure)
-        FOUR_C_THROW(
-            "You have chosen {} fluid phases and {} volume fractions, however your material number "
-            "{} is no poro volume fraction pressure material\n"
-            "Your Input should always look like (for example: 4 fluid phases, 2 volume "
-            "fractions):\n"
-            "MAT 0 MAT_FluidPoroMultiPhase LOCAL No PERMEABILITY 1.0 NUMMAT 8 MATIDS    1 2 3 4 5 "
-            "6 7 8 NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE 4 END\n"
-            "with: 4 fluid phases in multiphase pore space: materials have to be "
-            "MAT_FluidPoroSinglePhase \n"
-            "      2 volume fractions: materials have to be MAT_FluidPoroSingleVolFrac \n"
-            "      2 volume fraction pressures: materials have to be MAT_FluidPoroVolFracPressure ",
-            numfluidphases_, (int)matids_.size() - numfluidphases_, iphase + 1);
+      if (closing_relation_volfrac_ ==
+          Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_homogenized_vasculature_tumor)
+      {
+        // safety check
+        if (singlemat->material_type() != Core::Materials::m_fluidporo_volfracpressure)
+          FOUR_C_THROW(
+              "You have chosen {} fluid phases and {} volume fractions, however your material "
+              "number "
+              "{} is no poro volume fraction pressure material\n"
+              "Your Input should always look like (for example: 4 fluid phases, 2 volume "
+              "fractions):\n"
+              "MAT 0 MAT_FluidPoroMultiPhase LOCAL No PERMEABILITY 1.0 NUMMAT 8 MATIDS    1 2 3 4 "
+              "5 "
+              "6 7 8 NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE 4 END\n"
+              "with: 4 fluid phases in multiphase pore space: materials have to be "
+              "MAT_FluidPoroSinglePhase \n"
+              "      2 volume fractions: materials have to be MAT_FluidPoroSingleVolFrac \n"
+              "      2 volume fraction pressures: materials have to be "
+              "MAT_FluidPoroVolFracPressure ",
+              numfluidphases_, (int)matids_.size() - numfluidphases_, iphase + 1);
+      }
     }
     else
       FOUR_C_THROW("something went wrong here, why is iphase = {}", iphase);
