@@ -227,6 +227,7 @@ namespace
       << " " << Mat::FluidPoroSinglePhaseType::instance().name() << " "
       << Mat::FluidPoroSingleVolFracType::instance().name() << " "
       << Mat::FluidPoroVolFracPressureType::instance().name() << " "
+      << Mat::FluidPoroVolFracPressureBloodLungType::instance().name() << " "
       << Mat::FluidPoroSingleReactionType::instance().name() << " "
       << Mat::FluidPoroMultiPhaseType::instance().name() << " "
       << Mat::FluidPoroMultiPhaseReactionsType::instance().name() << " "

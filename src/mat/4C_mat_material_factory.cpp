@@ -394,6 +394,10 @@ std::unique_ptr<Core::Mat::PAR::Parameter> Mat::make_parameter(
     {
       return make_parameter_impl<Mat::PAR::FluidPoroVolFracPressure>(id, type, input_data);
     }
+    case Core::Materials::m_fluidporo_volfrac_pressure_blood_lung:
+    {
+      return make_parameter_impl<Mat::PAR::FluidPoroVolFracPressureBloodLung>(id, type, input_data);
+    }
     case Core::Materials::m_poro_law_linear:
     {
       return make_parameter_impl<Mat::PAR::PoroLawLinear>(id, type, input_data);

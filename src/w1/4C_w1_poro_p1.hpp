@@ -230,11 +230,10 @@ namespace Discret
 
       //! compute porosity at gausspoint and linearization of porosity w.r.t. structural
       //! displacements
-      void compute_porosity_and_linearization(Teuchos::ParameterList& params, const double& press,
-          const double& J, const int& gp, const Core::LinAlg::Matrix<Base::numnod_, 1>& shapfct,
-          const Core::LinAlg::Matrix<Base::numnod_, 1>* myporosity,
-          const Core::LinAlg::Matrix<1, Base::numdof_>& dJ_dus, double& porosity,
-          Core::LinAlg::Matrix<1, Base::numdof_>& dphi_dus) override;
+      void compute_porosity_and_linearization(const Core::LinAlg::Matrix<Base::numnod_, 1>& shapfct,
+          const Core::LinAlg::Matrix<Base::numnod_, 1>* myporosity, double& porosity,
+          Core::LinAlg::Matrix<1, Base::numdof_>& dphi_dus);
+
 
       //! compute porosity at gausspoint and linearization of porosity w.r.t. fluid pressure
       void compute_porosity_and_linearization_od(Teuchos::ParameterList& params,

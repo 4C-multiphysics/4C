@@ -107,6 +107,11 @@ namespace Mat
       Mat::PAR::FluidPoroSingleReaction::PorofluidReactionCoupling set_coupling_type(
           const Core::Mat::PAR::Parameter::Data& matdata);
 
+      // get number of fluid phases in multiphase porespace from closing relation type of volfrac
+      // material
+      int get_numfluidphases_from_closing_relation_of_additional_porous_network_type(
+          const Core::Mat::PAR::Parameter::Data& matdata);
+
       //! templated internal Initialize implementation
       template <int dim>
       void initialize_internal();

@@ -38,6 +38,23 @@ Discret::Elements::PoroFluidEvaluator::EvaluatorInterface<nsd, nen>::create_eval
   // check if we also have to evaluate additional volume fraction terms
   const bool hasvolfracs = (numdofpernode - numfluidphases > 0);
 
+  const bool hasvolfrac_blood_lung = std::invoke(
+      [&]()
+      {
+        if (phasemanager.total_num_dof() ==
+            phasemanager.num_fluid_phases() + phasemanager.num_vol_frac())
+        {
+          return true;
+        }
+        else if (phasemanager.total_num_dof() ==
+                 phasemanager.num_fluid_phases() + 2 * phasemanager.num_vol_frac())
+        {
+          return false;
+        }
+        else
+          FOUR_C_THROW("unknown action for evaluation class!");
+      });
+
   // determine action
   switch (action)
   {
@@ -128,22 +145,47 @@ Discret::Elements::PoroFluidEvaluator::EvaluatorInterface<nsd, nen>::create_eval
           // fractions
           if (hasvolfracs)
           {
-            // add evaluators for the instationary terms
-            if (not para.is_stationary())
+            if (hasvolfrac_blood_lung)
             {
-              // add evaluator for the instationary solid pressure term
-              assembler = std::make_shared<AssembleStandard>(curphase, inittimederiv);
-              tmpevaluator = std::make_shared<EvaluatorVolFracAddInstatTermsSat<nsd, nen>>(
-                  assembler, curphase);
-              evaluator_phase->add_evaluator(tmpevaluator);
-            }
+              // add evaluators for the instationary terms
+              if (not para.is_stationary())
+              {
+                // add evaluator for the instationary solid pressure term
+                assembler = std::make_shared<AssembleStandard>(curphase, inittimederiv);
+                tmpevaluator =
+                    std::make_shared<EvaluatorVolFracBloodLungAddInstatTermsSat<nsd, nen>>(
+                        assembler, curphase);
+                evaluator_phase->add_evaluator(tmpevaluator);
+              }
 
-            if (para.is_ale())
+              if (para.is_ale())
+              {
+                assembler = std::make_shared<AssembleStandard>(curphase, inittimederiv);
+                tmpevaluator =
+                    std::make_shared<EvaluatorVolFracBloodLungAddDivVelTermSat<nsd, nen>>(
+                        assembler, curphase);
+                evaluator_phase->add_evaluator(tmpevaluator);
+              }
+            }
+            else
             {
-              assembler = std::make_shared<AssembleStandard>(curphase, inittimederiv);
-              tmpevaluator =
-                  std::make_shared<EvaluatorVolFracAddDivVelTermSat<nsd, nen>>(assembler, curphase);
-              evaluator_phase->add_evaluator(tmpevaluator);
+              // add evaluators for the instationary terms
+              if (not para.is_stationary())
+              {
+                // add evaluator for the instationary solid pressure term
+                assembler = std::make_shared<AssembleStandard>(curphase, inittimederiv);
+                tmpevaluator = std::make_shared<EvaluatorVolFracAddInstatTermsSat<nsd, nen>>(
+                    assembler, curphase);
+                evaluator_phase->add_evaluator(tmpevaluator);
+              }
+
+              if (para.is_ale())
+              {
+                assembler = std::make_shared<AssembleStandard>(curphase, inittimederiv);
+                tmpevaluator = std::make_shared<EvaluatorVolFracAddDivVelTermSat<nsd, nen>>(
+                    assembler, curphase);
+                evaluator_phase->add_evaluator(tmpevaluator);
+              }
             }
           }
 
@@ -210,22 +252,45 @@ Discret::Elements::PoroFluidEvaluator::EvaluatorInterface<nsd, nen>::create_eval
           // fractions
           if (hasvolfracs)
           {
-            // add evaluators for the instationary terms
-            if (not para.is_stationary())
+            if (hasvolfrac_blood_lung)
             {
-              // add evaluator for the instationary solid pressure term
-              assembler = std::make_shared<AssembleStandard>(curphase, inittimederiv);
-              tmpevaluator =
-                  std::make_shared<EvaluatorVolFracAddInstatTerms<nsd, nen>>(assembler, curphase);
-              evaluator_lastphase->add_evaluator(tmpevaluator);
-            }
+              // add evaluators for the instationary terms
+              if (not para.is_stationary())
+              {
+                // add evaluator for the instationary solid pressure term
+                assembler = std::make_shared<AssembleStandard>(curphase, inittimederiv);
+                tmpevaluator = std::make_shared<EvaluatorVolFracBloodLungAddInstatTerms<nsd, nen>>(
+                    assembler, curphase);
+                evaluator_lastphase->add_evaluator(tmpevaluator);
+              }
 
-            if (para.is_ale())
+              if (para.is_ale())
+              {
+                assembler = std::make_shared<AssembleStandard>(curphase, inittimederiv);
+                tmpevaluator = std::make_shared<EvaluatorVolFracBloodLungAddDivVelTerm<nsd, nen>>(
+                    assembler, curphase);
+                evaluator_lastphase->add_evaluator(tmpevaluator);
+              }
+            }
+            else
             {
-              assembler = std::make_shared<AssembleStandard>(curphase, inittimederiv);
-              tmpevaluator =
-                  std::make_shared<EvaluatorVolFracAddDivVelTerm<nsd, nen>>(assembler, curphase);
-              evaluator_lastphase->add_evaluator(tmpevaluator);
+              // add evaluators for the instationary terms
+              if (not para.is_stationary())
+              {
+                // add evaluator for the instationary solid pressure term
+                assembler = std::make_shared<AssembleStandard>(curphase, inittimederiv);
+                tmpevaluator =
+                    std::make_shared<EvaluatorVolFracAddInstatTerms<nsd, nen>>(assembler, curphase);
+                evaluator_lastphase->add_evaluator(tmpevaluator);
+              }
+
+              if (para.is_ale())
+              {
+                assembler = std::make_shared<AssembleStandard>(curphase, inittimederiv);
+                tmpevaluator =
+                    std::make_shared<EvaluatorVolFracAddDivVelTerm<nsd, nen>>(assembler, curphase);
+                evaluator_lastphase->add_evaluator(tmpevaluator);
+              }
             }
           }
 
@@ -245,49 +310,85 @@ Discret::Elements::PoroFluidEvaluator::EvaluatorInterface<nsd, nen>::create_eval
         std::shared_ptr<EvaluatorInterface<nsd, nen>> tmpevaluator = nullptr;
         std::shared_ptr<AssembleInterface> assembler = nullptr;
 
-        // 1) volume fraction terms
-        // ----------------------------------------------------------------- add evaluators for the
-        // instationary terms
-        if (not para.is_stationary())
+        if (hasvolfrac_blood_lung)
         {
+          // ----------------------------------------------------------------- add evaluators for
+          // the instationary terms
+          if (not para.is_stationary())
+          {
+            assembler = std::make_shared<AssembleStandard>(-1, inittimederiv);
+            tmpevaluator =
+                std::make_shared<EvaluatorVolFracBloodLungInstat<nsd, nen>>(assembler, -1);
+            evaluator_volfrac->add_evaluator(tmpevaluator);
+          }
+
+          // add evaluators for the mesh-divergence term
+          if (para.is_ale())
+          {
+            assembler = std::make_shared<AssembleStandard>(-1, inittimederiv);
+            tmpevaluator =
+                std::make_shared<EvaluatorVolFracBloodLungDivVel<nsd, nen>>(assembler, -1);
+            evaluator_volfrac->add_evaluator(tmpevaluator);
+          }
+          // 2) volume fraction pressure terms
+          // -------------------------------------------------------- diffusive term
           assembler = std::make_shared<AssembleStandard>(-1, inittimederiv);
-          tmpevaluator = std::make_shared<EvaluatorVolFracInstat<nsd, nen>>(assembler, -1);
+          tmpevaluator =
+              std::make_shared<EvaluatorVolFracBloodLungPressureDiff<nsd, nen>>(assembler, -1);
+          evaluator_volfrac->add_evaluator(tmpevaluator);
+
+          // reactive term
+          assembler = std::make_shared<AssembleStandard>(-1, inittimederiv);
+          tmpevaluator =
+              std::make_shared<EvaluatorVolFracBloodLungPressureReac<nsd, nen>>(assembler, -1);
           evaluator_volfrac->add_evaluator(tmpevaluator);
         }
-
-        // add evaluators for the mesh-divergence term
-        if (para.is_ale())
+        else
         {
+          // 1) volume fraction terms
+          // ----------------------------------------------------------------- add evaluators for
+          // the instationary terms
+          if (not para.is_stationary())
+          {
+            assembler = std::make_shared<AssembleStandard>(-1, inittimederiv);
+            tmpevaluator = std::make_shared<EvaluatorVolFracInstat<nsd, nen>>(assembler, -1);
+            evaluator_volfrac->add_evaluator(tmpevaluator);
+          }
+
+          // add evaluators for the mesh-divergence term
+          if (para.is_ale())
+          {
+            assembler = std::make_shared<AssembleStandard>(-1, inittimederiv);
+            tmpevaluator = std::make_shared<EvaluatorVolFracDivVel<nsd, nen>>(assembler, -1);
+            evaluator_volfrac->add_evaluator(tmpevaluator);
+          }
+
+          // diffusive term
           assembler = std::make_shared<AssembleStandard>(-1, inittimederiv);
-          tmpevaluator = std::make_shared<EvaluatorVolFracDivVel<nsd, nen>>(assembler, -1);
+          tmpevaluator = std::make_shared<EvaluatorVolFracDiff<nsd, nen>>(assembler, -1);
+          evaluator_volfrac->add_evaluator(tmpevaluator);
+
+          // reactive term
+          assembler = std::make_shared<AssembleStandard>(-1, inittimederiv);
+          tmpevaluator = std::make_shared<EvaluatorVolFracReac<nsd, nen>>(assembler, -1);
+          evaluator_volfrac->add_evaluator(tmpevaluator);
+
+          // additional flux term
+          assembler = std::make_shared<AssembleStandard>(-1, inittimederiv);
+          tmpevaluator = std::make_shared<EvaluatorVolFracAddFlux<nsd, nen>>(assembler, -1);
+          evaluator_volfrac->add_evaluator(tmpevaluator);
+
+          // 2) volume fraction pressure terms
+          // -------------------------------------------------------- diffusive term
+          assembler = std::make_shared<AssembleStandard>(-1, inittimederiv);
+          tmpevaluator = std::make_shared<EvaluatorVolFracPressureDiff<nsd, nen>>(assembler, -1);
+          evaluator_volfrac->add_evaluator(tmpevaluator);
+
+          // reactive term
+          assembler = std::make_shared<AssembleStandard>(-1, inittimederiv);
+          tmpevaluator = std::make_shared<EvaluatorVolFracPressureReac<nsd, nen>>(assembler, -1);
           evaluator_volfrac->add_evaluator(tmpevaluator);
         }
-
-        // diffusive term
-        assembler = std::make_shared<AssembleStandard>(-1, inittimederiv);
-        tmpevaluator = std::make_shared<EvaluatorVolFracDiff<nsd, nen>>(assembler, -1);
-        evaluator_volfrac->add_evaluator(tmpevaluator);
-
-        // reactive term
-        assembler = std::make_shared<AssembleStandard>(-1, inittimederiv);
-        tmpevaluator = std::make_shared<EvaluatorVolFracReac<nsd, nen>>(assembler, -1);
-        evaluator_volfrac->add_evaluator(tmpevaluator);
-
-        // additional flux term
-        assembler = std::make_shared<AssembleStandard>(-1, inittimederiv);
-        tmpevaluator = std::make_shared<EvaluatorVolFracAddFlux<nsd, nen>>(assembler, -1);
-        evaluator_volfrac->add_evaluator(tmpevaluator);
-
-        // 2) volume fraction pressure terms
-        // -------------------------------------------------------- diffusive term
-        assembler = std::make_shared<AssembleStandard>(-1, inittimederiv);
-        tmpevaluator = std::make_shared<EvaluatorVolFracPressureDiff<nsd, nen>>(assembler, -1);
-        evaluator_volfrac->add_evaluator(tmpevaluator);
-
-        // reactive term
-        assembler = std::make_shared<AssembleStandard>(-1, inittimederiv);
-        tmpevaluator = std::make_shared<EvaluatorVolFracPressureReac<nsd, nen>>(assembler, -1);
-        evaluator_volfrac->add_evaluator(tmpevaluator);
 
         // add the evaluator of the volfractions to the multiphase evaluator
         evaluator_multiphase->add_evaluator(evaluator_volfrac);
@@ -313,8 +414,16 @@ Discret::Elements::PoroFluidEvaluator::EvaluatorInterface<nsd, nen>::create_eval
       for (int iphase = 0; iphase < numdofpernode; iphase++)
       {
         assembler = std::make_shared<AssembleStandard>(iphase, false);
-        tmpevaluator =
-            std::make_shared<EvaluatorPressureAndSaturation<nsd, nen>>(assembler, iphase);
+        if (hasvolfrac_blood_lung)
+        {
+          tmpevaluator = std::make_shared<EvaluatorPressureAndSaturationBloodLung<nsd, nen>>(
+              assembler, iphase);
+        }
+        else
+        {
+          tmpevaluator =
+              std::make_shared<EvaluatorPressureAndSaturation<nsd, nen>>(assembler, iphase);
+        }
         evaluator_multiphase->add_evaluator(tmpevaluator);
       }
       evaluator = evaluator_multiphase;
@@ -370,14 +479,29 @@ Discret::Elements::PoroFluidEvaluator::EvaluatorInterface<nsd, nen>::create_eval
       std::shared_ptr<EvaluatorInterface<nsd, nen>> tmpevaluator = nullptr;
       std::shared_ptr<AssembleInterface> assembler = nullptr;
 
-      // build evaluators for all phases
-      for (int iphase = 0; iphase < numdofpernode; iphase++)
+      if (hasvolfrac_blood_lung)
       {
-        assembler = std::make_shared<AssembleStandard>(iphase, false);
-        tmpevaluator =
-            std::make_shared<EvaluatorPhaseVelocities<nsd, nen>>(assembler, iphase, para.is_ale());
-        evaluator_multiphase->add_evaluator(tmpevaluator);
+        // build evaluators for all phases
+        for (int iphase = 0; iphase < numdofpernode; iphase++)
+        {
+          assembler = std::make_shared<AssembleStandard>(iphase, false);
+          tmpevaluator = std::make_shared<EvaluatorPhaseVelocitiesBloodLung<nsd, nen>>(
+              assembler, iphase, para.is_ale());
+          evaluator_multiphase->add_evaluator(tmpevaluator);
+        }
       }
+      else
+      {
+        // build evaluators for all phases
+        for (int iphase = 0; iphase < numdofpernode; iphase++)
+        {
+          assembler = std::make_shared<AssembleStandard>(iphase, false);
+          tmpevaluator = std::make_shared<EvaluatorPhaseVelocities<nsd, nen>>(
+              assembler, iphase, para.is_ale());
+          evaluator_multiphase->add_evaluator(tmpevaluator);
+        }
+      }
+
       evaluator = evaluator_multiphase;
 
       break;
@@ -385,7 +509,15 @@ Discret::Elements::PoroFluidEvaluator::EvaluatorInterface<nsd, nen>::create_eval
     case PoroPressureBased::calc_valid_dofs:
     {
       std::shared_ptr<AssembleInterface> assembler = std::make_shared<AssembleStandard>(-1, false);
-      evaluator = std::make_shared<EvaluatorValidVolFracPressures<nsd, nen>>(assembler, -1);
+      if (hasvolfrac_blood_lung)
+      {
+        evaluator =
+            std::make_shared<EvaluatorValidVolFracPressuresBloodLung<nsd, nen>>(assembler, -1);
+      }
+      else
+      {
+        evaluator = std::make_shared<EvaluatorValidVolFracPressures<nsd, nen>>(assembler, -1);
+      }
 
       break;
     }
@@ -434,8 +566,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorBase<nsd, nen>::saturation_
       }
     }
   }
-
-  return;
 }
 /*-----------------------------------------------------------------------------------*
  | linearization of a term scaled with porosity after fluid dofs    kremheller 03/18 |
@@ -462,8 +592,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorBase<nsd, nen>::porosity_li
       }
     }
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -478,7 +606,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorBase<nsd, nen>::calc_div_ve
     const double timefacfac, const double fac, const double det, const int numdofpernode,
     const int phasetoadd)
 {
-  // d (div v_s)/d d_n+1 = derxy * 1.0/theta/dt * d_n+1
+  // d (div v_s)/d d_n+1 = derxy * 1.0/theta/dt
   // prefactor is fac since timefacfac/theta/dt = fac
   calc_lin_fac_od_mesh(mymat, funct, derxy, fac, numdofpernode, phasetoadd);
 
@@ -587,8 +715,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorBase<nsd, nen>::calc_div_ve
   }
   else
     FOUR_C_THROW("shapederivatives not implemented for 1D!");
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -623,8 +749,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorBase<nsd, nen>::calc_lin_fa
       }
     }
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -811,8 +935,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorBase<nsd, nen>::calc_diff_o
   }
   else
     FOUR_C_THROW("shapederivatives not implemented for 1D!");
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -862,7 +984,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorConv<nsd, nen>::evaluate_ma
         mymat(fvi, fui) += v * conv(ui) * phasemanager.saturation_deriv(curphase, idof);
       }
   }
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -894,8 +1015,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorConv<nsd, nen>::evaluate_ve
 
     myvec[fvi] -= conv_sat * funct(vi);
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -913,7 +1032,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorConv<nsd,
     double fac, double det)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -930,7 +1048,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorConv<nsd,
     double fac)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -949,7 +1066,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDivVel<nsd, nen>::evaluate_
     double fac, bool inittimederiv)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -975,8 +1091,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDivVel<nsd, nen>::evaluate_
 
     myvec[fvi] -= vrhs * funct(vi);
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1002,8 +1116,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDivVel<nsd,
   // OD mesh - div vel term
   EvaluatorBase<nsd, nen>::calc_div_vel_od_mesh(mymat, funct, deriv, derxy, xjm, gridvelderiv,
       timefacfac, fac, det, numdofpernode, phasetoadd);
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1020,7 +1132,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDivVel<nsd,
     double fac)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1055,8 +1166,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorSatDivVel<nsd,
     EvaluatorBase<nsd, nen>::saturation_linearization_fluid(
         mymat, funct, consfac, numdofpernode, numfluidphases, curphase, phasetoadd, phasemanager);
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1076,8 +1185,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorSatDivVel<nsd,
       phasetoadd, numdofpernode, phasemanager, variablemanager,
       phasemanager.saturation(curphase) * rhsfac, phasemanager.saturation(curphase) * fac,
       inittimederiv);
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1098,8 +1205,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorSatDivVel<nsd,
   EvaluatorDivVel<nsd, nen>::evaluate_matrix_od_struct_and_assemble(elemat, funct, deriv, derxy,
       xjm, curphase, phasetoadd, numdofpernode, phasemanager, variablemanager,
       phasemanager.saturation(curphase) * timefacfac, phasemanager.saturation(curphase) * fac, det);
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1116,7 +1221,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorSatDivVel<nsd,
     double fac)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1135,7 +1239,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorBiotStab<nsd,
     double fac, bool inittimederiv)
 {
   FOUR_C_THROW("Biot stabilization is still missing");
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1151,8 +1254,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorBiotStab<nsd,
     double fac, bool inittimederiv)
 {
   FOUR_C_THROW("Biot stabilization is still missing");
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1170,7 +1271,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorBiotStab<nsd,
     double fac, double det)
 {
   FOUR_C_THROW("Biot stabilization is still missing");
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1187,7 +1287,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorBiotStab<nsd,
     double fac)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1321,8 +1420,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd, nen>::evaluate_ma
       }
     }
   }  // !inittimederiv
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1374,8 +1471,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd, nen>::evaluate_ve
     for (int j = 0; j < nsd; j++) laplawf += derxy(j, vi) * diffflux(j);
     myvec[fvi] -= rhsfac * laplawf;
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1443,8 +1538,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd,
   // OD mesh - diffusive term
   EvaluatorBase<nsd, nen>::calc_diff_od_mesh(mymat, deriv, derxy, xjm, diffflux, refgradpres,
       gradpres, timefacfac, v, numdofpernode, phasetoadd);
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1461,7 +1554,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd,
     double fac)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1509,8 +1601,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorReac<nsd, nen>::evaluate_ma
       }
     }
   }  // !inittimederiv
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1541,7 +1631,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorReac<nsd, nen>::evaluate_ve
     // rhs ---> +
     myvec[fvi] += vrhs * funct(vi);
   }
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1585,8 +1674,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorReac<nsd,
   // rhs ---> -
   EvaluatorBase<nsd, nen>::calc_lin_fac_od_mesh(
       mymat, funct, derxy, -1.0 * vrhs, numdofpernode, phasetoadd);
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1628,8 +1715,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorReac<nsd,
       }
     }
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1740,8 +1825,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassPressure<nsd,
           mymat, funct, facfacmass, numdofpernode, phasetoadd, phasemanager);
     }
   }  // !inittimederiv
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1775,7 +1858,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassPressure<nsd,
       myvec[fvi] -= vtrans * funct(vi);
     }
   }  // !inittimederiv
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1817,8 +1899,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassPressure<nsd,
   // 2) possible linearization w.r.t porosity
   EvaluatorBase<nsd, nen>::calc_lin_fac_od_mesh(
       mymat, funct, derxy, vtrans, numdofpernode, phasetoadd);
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1835,7 +1915,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassPressure<nsd,
     double fac)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2022,7 +2101,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressure<nsd,
       }
     }
   }  // !inittimederiv
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2056,8 +2134,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressure<nsd,
       myvec[fvi] -= vtrans * funct(vi);
     }
   }  // !inittimederiv
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2099,8 +2175,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressure<nsd,
   // 2) possible linearization w.r.t porosity
   EvaluatorBase<nsd, nen>::calc_lin_fac_od_mesh(
       mymat, funct, derxy, vtrans, numdofpernode, phasetoadd);
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2117,7 +2191,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressure<nsd,
     double fac)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2218,8 +2291,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressureSat<nsd,
           numdofpernode, numfluidphases, curphase, phasetoadd, phasemanager);
     }
   }  // !inittimederiv
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2239,8 +2310,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressureSat<nsd,
       curphase, phasetoadd, numdofpernode, phasemanager, variablemanager,
       phasemanager.saturation(curphase) * rhsfac, phasemanager.saturation(curphase) * fac,
       inittimederiv);
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2261,8 +2330,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressureSat<nsd,
   EvaluatorMassSolidPressure<nsd, nen>::evaluate_matrix_od_struct_and_assemble(elemat, funct, deriv,
       derxy, xjm, curphase, phasetoadd, numdofpernode, phasemanager, variablemanager,
       phasemanager.saturation(curphase) * timefacfac, phasemanager.saturation(curphase) * fac, det);
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2279,7 +2346,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressureSat<nsd,
     double fac)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2401,8 +2467,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSaturation<nsd,
       }
     }
   }  // !inittimederiv
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2433,8 +2497,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSaturation<nsd,
       myvec[fvi] -= vtrans * funct(vi);
     }
   }  // !inittimederiv
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2473,8 +2535,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSaturation<nsd,
   // 2) possible linearization w.r.t porosity
   EvaluatorBase<nsd, nen>::calc_lin_fac_od_mesh(
       mymat, funct, derxy, vtrans, numdofpernode, phasetoadd);
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2491,7 +2551,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSaturation<nsd,
     double fac)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2545,7 +2604,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPressureAndSaturation<nsd,
     double fac, bool inittimederiv)
 {
   // do nothing
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2637,7 +2695,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPressureAndSaturation<nsd,
     double fac, double det)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2654,7 +2711,107 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPressureAndSaturation<nsd,
     double fac)
 {
   // nothing to do
-  return;
+}
+
+/*----------------------------------------------------------------------*
+ * **********************************************************************
+ *----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorPressureAndSaturationBloodLung<nsd,
+    nen>::evaluate_matrix_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac, bool inittimederiv)
+{
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorPressureAndSaturationBloodLung<nsd,
+    nen>::evaluate_vector_and_assemble(std::vector<Core::LinAlg::SerialDenseVector*>& elevec,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    const Core::LinAlg::Matrix<nsd, nen>& xyze, int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double rhsfac,
+    double fac, bool inittimederiv)
+{
+  // get vectors to be filled
+  // pressure
+  Core::LinAlg::SerialDenseVector& pressure = *elevec[0];
+  // saturation
+  Core::LinAlg::SerialDenseVector& saturation = *elevec[1];
+  // counter
+  Core::LinAlg::SerialDenseVector& counter = *elevec[2];
+
+  const int numfluidphases = phasemanager.num_fluid_phases();
+
+  // FLUID Phases:
+  if (curphase < numfluidphases)
+  {
+    for (int inode = 0; inode < nen; inode++)
+    {
+      // save the pressure value
+      pressure[inode * numdofpernode + curphase] +=
+          fac * funct(inode) * phasemanager.pressure(curphase);
+      // save the saturation value
+      saturation[inode * numdofpernode + curphase] +=
+          fac * funct(inode) * phasemanager.saturation(curphase);
+      // mark the evaluated node
+      counter[inode * numdofpernode + curphase] += fac * funct(inode);
+    }
+  }
+  // VOLFRAC PRESSURE Phases:
+  else if (curphase < numdofpernode)
+  {
+    // dummy way: set saturations to -1
+    // TODO: is there a better way to do it ??
+    for (int inode = 0; inode < nen; inode++)
+    {
+      // save the pressure value
+      pressure[inode * numdofpernode + curphase] +=
+          fac * funct(inode) * phasemanager.vol_frac_pressure(curphase - numfluidphases);
+      // save the saturation value
+      saturation[inode * numdofpernode + curphase] += fac * funct(inode) * (-1.0);
+      // mark the evaluated node
+      counter[inode * numdofpernode + curphase] += fac * funct(inode);
+    }
+  }
+  else
+    FOUR_C_THROW("wrong value for curphase: {}", curphase);
+};
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorPressureAndSaturationBloodLung<nsd,
+    nen>::evaluate_matrix_od_struct_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>&
+                                                     elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& deriv,
+    const Core::LinAlg::Matrix<nsd, nen>& derxy, const Core::LinAlg::Matrix<nsd, nsd>& xjm,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac, double det)
+{
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorPressureAndSaturationBloodLung<nsd,
+    nen>::evaluate_matrix_od_scatra_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>&
+                                                     elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac)
+{
 }
 
 /*----------------------------------------------------------------------*
@@ -2673,7 +2830,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorSolidPressure<nsd,
     double fac, bool inittimederiv)
 {
   // do nothing
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2716,7 +2872,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorSolidPressure<nsd,
     double fac, double det)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2733,7 +2888,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorSolidPressure<nsd,
     double fac)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2752,7 +2906,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorValidVolFracPressures<nsd,
     double fac, bool inittimederiv)
 {
   // do nothing
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2789,8 +2942,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorValidVolFracPressures<nsd,
       if (evaluatevolfracspec) valid_volfracspec[fvi] = 1.0;
     }
   }
-
-  return;
 };
 
 /*----------------------------------------------------------------------*
@@ -2808,7 +2959,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorValidVolFracPressures<nsd,
     double fac, double det)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2825,8 +2975,89 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorValidVolFracPressures<nsd,
     double fac)
 {
   // nothing to do
-  return;
 }
+
+
+
+/*----------------------------------------------------------------------*
+ * **********************************************************************
+ *----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorValidVolFracPressuresBloodLung<nsd,
+    nen>::evaluate_matrix_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac, bool inittimederiv)
+{
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorValidVolFracPressuresBloodLung<nsd,
+    nen>::evaluate_vector_and_assemble(std::vector<Core::LinAlg::SerialDenseVector*>& elevec,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    const Core::LinAlg::Matrix<nsd, nen>& xyze, int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double rhsfac,
+    double fac, bool inittimederiv)
+{
+  const int numfluidphases = phasemanager.num_fluid_phases();
+
+  Core::LinAlg::SerialDenseVector& valid_volfracpress = *elevec[1];
+  Core::LinAlg::SerialDenseVector& valid_volfracspec = *elevec[2];
+
+  for (int inode = 0; inode < nen; inode++)
+  {
+    for (int idof = numfluidphases; idof < numdofpernode; idof++)
+    {
+      const int fvi = inode * numdofpernode + idof;
+
+      const bool evaluatevolfracpress =
+          variablemanager.element_has_valid_vol_frac_pressure(idof - numfluidphases);
+
+      const bool evaluatevolfracspec =
+          variablemanager.element_has_valid_vol_frac_species(idof - numfluidphases);
+
+      if (evaluatevolfracpress) valid_volfracpress[fvi] = 1.0;
+      if (evaluatevolfracspec) valid_volfracspec[fvi] = 1.0;
+    }
+  }
+};
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorValidVolFracPressuresBloodLung<nsd,
+    nen>::evaluate_matrix_od_struct_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>&
+                                                     elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& deriv,
+    const Core::LinAlg::Matrix<nsd, nen>& derxy, const Core::LinAlg::Matrix<nsd, nsd>& xjm,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac, double det)
+{
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorValidVolFracPressuresBloodLung<nsd,
+    nen>::evaluate_matrix_od_scatra_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>&
+                                                     elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac)
+{
+}
+
 
 /*----------------------------------------------------------------------*
  * **********************************************************************
@@ -2844,7 +3075,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPorosity<nsd,
     double fac, bool inittimederiv)
 {
   // do nothing
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2887,7 +3117,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPorosity<nsd,
     double fac, double det)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2904,7 +3133,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPorosity<nsd,
     double fac)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -2923,7 +3151,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDomainIntegrals<nsd,
     double fac, bool inittimederiv)
 {
   // do nothing
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -3036,7 +3263,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDomainIntegrals<nsd,
     double fac, double det)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -3053,7 +3279,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDomainIntegrals<nsd,
     double fac)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -3082,7 +3307,6 @@ void Discret::Elements::PoroFluidEvaluator::ReconstructFluxLinearization<nsd,
       linearization(vi, ui) += v * funct(ui);
     }
   }
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -3095,10 +3319,9 @@ void Discret::Elements::PoroFluidEvaluator::ReconstructFluxLinearization<nsd,
     const Core::LinAlg::Matrix<nsd, nen>& xyze, int curphase, int phasetoadd, int numdofpernode,
     const PoroFluidManager::PhaseManagerInterface& phasemanager,
     const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double rhsfac,
-    double fac, bool inittimederiv)
-{
+    double fac, bool inittimederiv) {
   // nothing to do
-  return;
+
 };
 
 /*----------------------------------------------------------------------*
@@ -3116,7 +3339,6 @@ void Discret::Elements::PoroFluidEvaluator::ReconstructFluxLinearization<nsd,
     double fac, double det)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -3133,7 +3355,6 @@ void Discret::Elements::PoroFluidEvaluator::ReconstructFluxLinearization<nsd,
     double fac)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -3188,7 +3409,6 @@ void Discret::Elements::PoroFluidEvaluator::ReconstructFluxRHS<nsd,
       rhs(node_i, nsd * curphase + j) += funct(node_i) * fac * diffflux(j);
     }
   }
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -3201,10 +3421,9 @@ void Discret::Elements::PoroFluidEvaluator::ReconstructFluxRHS<nsd,
     const Core::LinAlg::Matrix<nsd, nen>& xyze, int curphase, int phasetoadd, int numdofpernode,
     const PoroFluidManager::PhaseManagerInterface& phasemanager,
     const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double rhsfac,
-    double fac, bool inittimederiv)
-{
+    double fac, bool inittimederiv) {
   // nothing to do
-  return;
+
 };
 
 /*----------------------------------------------------------------------*
@@ -3222,7 +3441,6 @@ void Discret::Elements::PoroFluidEvaluator::ReconstructFluxRHS<nsd,
     double fac, double det)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -3239,7 +3457,6 @@ void Discret::Elements::PoroFluidEvaluator::ReconstructFluxRHS<nsd,
     double fac)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -3308,7 +3525,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPhaseVelocities<nsd,
     // The VOLFRAC phases only have the volume fraction as primary variable and not the pressure.
     // Hence, no velocity can be computed for these phases.
     // The corresponding velocity is computed in the VOLFRAC_PRESSURE phases (see below).
-    return;
   }
   // VOLFRAC PRESSURE phases
   else if (curphase < numdofpernode)
@@ -3331,6 +3547,100 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPhaseVelocities<nsd,
         Core::LinAlg::Matrix<nsd, nsd> diffusion_tensor(Core::LinAlg::Initialization::zero);
         phasemanager.permeability_tensor_vol_frac_pressure(i_volfrac_pressure, diffusion_tensor);
         diffusion_tensor.scale(1.0 / phasemanager.dyn_viscosity_vol_frac_pressure(
+                                         i_volfrac_pressure, pressure_gradient.norm2()));
+
+        static Core::LinAlg::Matrix<nsd, 1> diffusive_velocity(Core::LinAlg::Initialization::zero);
+        diffusive_velocity.multiply(
+            -1.0 / phase_volume_fraction, diffusion_tensor, pressure_gradient);
+
+        phase_velocity(nsd * curphase + j) += diffusive_velocity(j) + structure_velocity(j);
+      }
+    }
+  }
+  else
+    FOUR_C_THROW("Invalid phase index for current phase: {}", curphase);
+}
+
+/*----------------------------------------------------------------------*
+ * **********************************************************************
+ *----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorPhaseVelocitiesBloodLung<nsd,
+    nen>::evaluate_vector_and_assemble(std::vector<Core::LinAlg::SerialDenseVector*>& elevec,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    const Core::LinAlg::Matrix<nsd, nen>& xyze, int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double rhsfac,
+    double fac, bool inittimederiv)
+{
+  Core::LinAlg::SerialDenseVector& phase_velocity = *elevec[0];
+
+  const int numfluidphases = phasemanager.num_fluid_phases();
+
+  const std::vector<Core::LinAlg::Matrix<nsd, 1>>& gradient_phi = *variablemanager.grad_phinp();
+
+  Core::LinAlg::Matrix<nsd, 1> structure_velocity(Core::LinAlg::Initialization::zero);
+  if (is_ale_) structure_velocity = *variablemanager.con_velnp();
+
+  // FLUID phases
+  if (curphase < numfluidphases)
+  {
+    const double phase_volume_fraction =
+        phasemanager.porosity() * phasemanager.saturation(curphase);
+
+    for (int j = 0; j < nsd; j++)
+    {
+      if (phase_volume_fraction == 0)
+      {
+        phase_velocity(nsd * curphase + j) += structure_velocity(j);
+      }
+      else
+      {
+        // Compute the pressure gradient from the gradient of the generic primary variable:
+        // the generic primary variable psi can be pressure, pressure difference or saturation, and
+        // hence we need to employ the chain rule:
+        // d p(psi_1, psi_2, psi_3)/dx = sum_i ( (p(psi_1, psi_2, psi_3)/d psi_i) * (d psi_i/dx) )
+        Core::LinAlg::Matrix<nsd, 1> pressure_gradient(Core::LinAlg::Initialization::zero);
+        pressure_gradient.clear();
+        for (int i = 0; i < numfluidphases; ++i)
+          pressure_gradient.update(phasemanager.pressure_deriv(curphase, i), gradient_phi[i], 1.0);
+
+        Core::LinAlg::Matrix<nsd, nsd> diffusion_tensor(Core::LinAlg::Initialization::zero);
+        phasemanager.permeability_tensor(curphase, diffusion_tensor);
+        diffusion_tensor.scale(phasemanager.rel_permeability(curphase) /
+                               phasemanager.dyn_viscosity(curphase, pressure_gradient.norm2()));
+
+        static Core::LinAlg::Matrix<nsd, 1> diffusive_velocity(Core::LinAlg::Initialization::zero);
+        diffusive_velocity.multiply(
+            -1.0 / phase_volume_fraction, diffusion_tensor, pressure_gradient);
+
+        phase_velocity(nsd * curphase + j) += diffusive_velocity(j) + structure_velocity(j);
+      }
+    }
+  }
+  // VOLFRAC PRESSURE phases
+  else if (curphase < numdofpernode)
+  {
+    const int i_volfrac_pressure = curphase - numfluidphases;
+    const double phase_volume_fraction = phasemanager.vol_frac(i_volfrac_pressure);
+
+    for (int j = 0; j < nsd; j++)
+    {
+      if (phase_volume_fraction == 0)
+      {
+        phase_velocity(nsd * curphase + j) += structure_velocity(j);
+      }
+      else
+      {
+        // For the volume fraction, pressure is always the primary variable, and hence the gradient
+        // of the primary variable directly is the pressure gradient.
+        auto pressure_gradient = gradient_phi[curphase];
+
+        Core::LinAlg::Matrix<nsd, nsd> diffusion_tensor(Core::LinAlg::Initialization::zero);
+        phasemanager.permeability_tensor_vol_frac_pressure(i_volfrac_pressure, diffusion_tensor);
+        diffusion_tensor.scale(1.0 / phasemanager.dyn_viscosity_vol_frac_pressure_blood_lung(
                                          i_volfrac_pressure, pressure_gradient.norm2()));
 
         static Core::LinAlg::Matrix<nsd, 1> diffusive_velocity(Core::LinAlg::Initialization::zero);
@@ -3431,8 +3741,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddInstatTerms<nsd,
         // if(curphase==phasetoadd) //bugfix??
         hist = (*variablemanager.hist())[phasetoadd];
 
-        const double sumaddvolfrac = phasemanager.sum_add_vol_frac();
-
         double facfacmass3 = -sumaddvolfrac * invsolidbulkmodulus;
 
         std::vector<double> val(numfluidphases, 0.0);
@@ -3506,8 +3814,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddInstatTerms<nsd,
       }
     }
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -3538,9 +3844,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddInstatTerms<nsd,
       myvec[fvi] -= vrhs * funct(vi);
     }
   }
-
-  return;
-};
+}
 
 /*----------------------------------------------------------------------*
  | evaluate off-diagonal coupling matrix with structure kremheller 09/17 |
@@ -3565,8 +3869,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddInstatTerms<nsd,
   // linearization of mesh motion (Jacobian)
   EvaluatorBase<nsd, nen>::calc_lin_fac_od_mesh(
       mymat, funct, derxy, vrhs, numdofpernode, phasetoadd);
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -3583,7 +3885,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddInstatTerms<nsd,
     double fac)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -3642,6 +3943,445 @@ double Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddInstatTerms<nsd
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddInstatTerms<nsd,
+    nen>::evaluate_matrix_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac, bool inittimederiv)
+{
+  // get matrix to fill
+  Core::LinAlg::SerialDenseMatrix& mymat = *elemat[0];
+
+  const int numfluidphases = phasemanager.num_fluid_phases();
+  const std::vector<double>& phi = *variablemanager.phinp();
+  const std::vector<double>& phidt = *variablemanager.phidtnp();
+  double scaling_factor = phasemanager.initial_volfrac() *
+                          pow(phasemanager.jacobian_def_grad(),
+                              phasemanager.volfrac_blood_lung_parameter_deformation_dependence());
+  double pA = phi[0];
+  double pB = phi[numfluidphases];
+  double ratio_pApB = pA / pB;  // for this closing relation: air must be the first phase in
+                                // multiphase porespace and blood must be the first phase in
+                                // the additional porous network
+  double dpAdt = phidt[0];
+  double dpBdt = phidt[numfluidphases];
+
+  if (ratio_pApB > 1.0)  // collapse of blood vessels active, pA > pB
+  {
+    for (int vi = 0; vi < nen; ++vi)
+    {
+      const double v = -timefacfac * scaling_factor * funct(vi);
+      const int fvi = vi * numdofpernode + phasetoadd;
+
+      for (int ui = 0; ui < nen; ++ui)
+      {
+        const double vfunct = v * funct(ui);
+
+        const int fuiAir = ui * numdofpernode + 0;
+        const int fuiBlood = ui * numdofpernode + numfluidphases;
+
+        mymat(fvi, fuiAir) +=
+            vfunct *
+            (variablemanager.div_con_velnp() *
+                    (phasemanager.volfrac_blood_lung_parameter_deformation_dependence() *
+                        phasemanager.volfrac_blood_lung_parameter_pressure_dependence()) *
+                    pow(ratio_pApB,
+                        phasemanager.volfrac_blood_lung_parameter_pressure_dependence() - 1.0) *
+                    (1.0 / pB) +
+                (phasemanager.volfrac_blood_lung_parameter_pressure_dependence() *
+                    (phasemanager.volfrac_blood_lung_parameter_pressure_dependence() - 1.0)) *
+                    pow(ratio_pApB,
+                        phasemanager.volfrac_blood_lung_parameter_pressure_dependence() - 2.0) *
+                    pow(pB, -2.0) * dpAdt +
+                (phasemanager.volfrac_blood_lung_parameter_pressure_dependence()) *
+                    pow(ratio_pApB,
+                        phasemanager.volfrac_blood_lung_parameter_pressure_dependence() - 1.0) *
+                    pow(pB, -1.0) * (fac / timefacfac) -
+                (phasemanager.volfrac_blood_lung_parameter_pressure_dependence() *
+                    (phasemanager.volfrac_blood_lung_parameter_pressure_dependence() - 1.0)) *
+                    pow(ratio_pApB,
+                        phasemanager.volfrac_blood_lung_parameter_pressure_dependence() - 1.0) *
+                    pow(pB, -2.0) * dpBdt -
+                (phasemanager.volfrac_blood_lung_parameter_pressure_dependence()) *
+                    pow(ratio_pApB,
+                        phasemanager.volfrac_blood_lung_parameter_pressure_dependence() - 1.0) *
+                    pow(pB, -2.0) * dpBdt);
+
+        mymat(fvi, fuiBlood) +=
+            vfunct *
+            (variablemanager.div_con_velnp() * (-1.0) *
+                    (phasemanager.volfrac_blood_lung_parameter_pressure_dependence() *
+                        phasemanager.volfrac_blood_lung_parameter_deformation_dependence()) *
+                    pow(ratio_pApB,
+                        phasemanager.volfrac_blood_lung_parameter_pressure_dependence()) *
+                    pow(pB, -1.0) +
+                (-1.0) *
+                    ((phasemanager.volfrac_blood_lung_parameter_pressure_dependence() - 1.0) *
+                        phasemanager.volfrac_blood_lung_parameter_pressure_dependence()) *
+                    pow(ratio_pApB,
+                        phasemanager.volfrac_blood_lung_parameter_pressure_dependence() - 1.0) *
+                    pow(pB, -2.0) * dpAdt +
+                (-1.0) * (phasemanager.volfrac_blood_lung_parameter_pressure_dependence()) *
+                    pow(ratio_pApB,
+                        phasemanager.volfrac_blood_lung_parameter_pressure_dependence() - 1.0) *
+                    pow(pB, -2.0) * dpAdt +
+                ((phasemanager.volfrac_blood_lung_parameter_pressure_dependence() - 1.0) *
+                    phasemanager.volfrac_blood_lung_parameter_pressure_dependence()) *
+                    pow(ratio_pApB,
+                        phasemanager.volfrac_blood_lung_parameter_pressure_dependence()) *
+                    pow(pB, -2.0) * dpBdt +
+                (phasemanager.volfrac_blood_lung_parameter_pressure_dependence() * 2.0) *
+                    pow(ratio_pApB,
+                        phasemanager.volfrac_blood_lung_parameter_pressure_dependence()) *
+                    pow(pB, -2.0) * dpBdt -
+                (phasemanager.volfrac_blood_lung_parameter_pressure_dependence()) *
+                    pow(ratio_pApB,
+                        phasemanager.volfrac_blood_lung_parameter_pressure_dependence()) *
+                    pow(pB, -1.0) * (fac / timefacfac));
+      }
+    }
+  }
+  else
+  {
+    return;
+  }
+}
+
+
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddInstatTerms<nsd,
+    nen>::evaluate_matrix_od_struct_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>&
+                                                     elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& deriv,
+    const Core::LinAlg::Matrix<nsd, nen>& derxy, const Core::LinAlg::Matrix<nsd, nsd>& xjm,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac, double det)
+
+{
+  // first step!
+  // get matrix to fill
+  Core::LinAlg::SerialDenseMatrix& mymat = *elemat[0];
+
+  const int numfluidphases = phasemanager.num_fluid_phases();
+  const std::vector<double>& phi = *variablemanager.phinp();
+  const std::vector<double>& phidt = *variablemanager.phidtnp();
+  double pA = phi[0];
+  double pB = phi[numfluidphases];
+  double dpAdt = phidt[0];
+  double dpBdt = phidt[numfluidphases];
+  double ratio_pApB = phi[0] / phi[numfluidphases];
+
+  static Core::LinAlg::Matrix<nsd, nsd> gridvelderiv(Core::LinAlg::Initialization::zero);
+  gridvelderiv.multiply_nt(*(variablemanager.e_con_velnp()), deriv);
+
+  double scalingfacor = phasemanager.initial_volfrac() *
+                        phasemanager.volfrac_blood_lung_parameter_deformation_dependence() *
+                        pow(phasemanager.jacobian_def_grad(),
+                            phasemanager.volfrac_blood_lung_parameter_deformation_dependence());
+
+  if (ratio_pApB > 1.0)  // collapse of blood vessels active, pA > pB
+  {
+    double scalingfacormodified =
+        scalingfacor *
+        pow(ratio_pApB, phasemanager.volfrac_blood_lung_parameter_pressure_dependence());
+
+    // OD mesh - div vel term
+    EvaluatorBase<nsd, nen>::calc_div_vel_od_mesh(mymat, funct, deriv, derxy, xjm, gridvelderiv,
+        timefacfac * scalingfacormodified * (-1.0), fac * scalingfacormodified * (-1.0), det,
+        numdofpernode, phasetoadd);
+
+    double helper =
+        phasemanager.initial_volfrac() *
+        pow(phasemanager.jacobian_def_grad(),
+            phasemanager.volfrac_blood_lung_parameter_deformation_dependence()) *
+        (variablemanager.div_con_velnp() *
+                pow(ratio_pApB, phasemanager.volfrac_blood_lung_parameter_pressure_dependence()) *
+                (phasemanager.volfrac_blood_lung_parameter_deformation_dependence()) +
+            ((phasemanager.volfrac_blood_lung_parameter_pressure_dependence()) *
+                pow(ratio_pApB,
+                    phasemanager.volfrac_blood_lung_parameter_pressure_dependence() - 1.0)) *
+                (pow(pB, -1.0) * dpAdt - pA * pow(pB, -2.0) * dpBdt));
+
+    // OD mesh - rest term
+    EvaluatorBase<nsd, nen>::calc_lin_fac_od_mesh(
+        mymat, funct, derxy, -1.0 * helper, numdofpernode, phasetoadd);
+
+    // derivative of scaling factor w.r.t. mesh motion
+    double scalingderiv =
+        (-1.0) *
+        (phasemanager.initial_volfrac() *
+            phasemanager.volfrac_blood_lung_parameter_deformation_dependence() *
+            pow(phasemanager.jacobian_def_grad(),
+                phasemanager.volfrac_blood_lung_parameter_deformation_dependence()) *
+            timefacfac *
+            (variablemanager.div_con_velnp() *
+                    pow(ratio_pApB,
+                        phasemanager.volfrac_blood_lung_parameter_pressure_dependence()) *
+                    (phasemanager.volfrac_blood_lung_parameter_deformation_dependence()) +
+                (phasemanager.volfrac_blood_lung_parameter_pressure_dependence()) *
+                    pow(ratio_pApB,
+                        phasemanager.volfrac_blood_lung_parameter_pressure_dependence() - 1.0) *
+                    pow(pB, -1.0) * dpAdt +
+                (phasemanager.volfrac_blood_lung_parameter_pressure_dependence()) *
+                    pow(ratio_pApB,
+                        phasemanager.volfrac_blood_lung_parameter_pressure_dependence()) *
+                    pow(pB, -1.0) * dpBdt));
+
+    for (int vi = 0; vi < nen; ++vi)
+    {
+      const int fvi = vi * numdofpernode + phasetoadd;
+      const double v = scalingderiv * funct(vi);
+
+      for (int ui = 0; ui < nen; ++ui)
+      {
+        for (int idim = 0; idim < nsd; ++idim)
+        {
+          const int fui = ui * nsd + idim;
+          mymat(fvi, fui) += v * derxy(idim, ui);
+        }
+      }
+    }
+  }
+  else  // no collapse of blood vessels
+  {
+    // OD mesh - div vel term
+    EvaluatorBase<nsd, nen>::calc_div_vel_od_mesh(mymat, funct, deriv, derxy, xjm, gridvelderiv,
+        timefacfac * scalingfacor * (-1.0), fac * scalingfacor * (-1.0), det, numdofpernode,
+        phasetoadd);
+
+    double scalingfactorderiv =
+        (1.0) * phasemanager.initial_volfrac() *
+        (phasemanager.volfrac_blood_lung_parameter_deformation_dependence() *
+            phasemanager.volfrac_blood_lung_parameter_deformation_dependence()) *
+        pow(phasemanager.jacobian_def_grad(),
+            phasemanager.volfrac_blood_lung_parameter_deformation_dependence()) *
+        variablemanager.div_con_velnp() * timefacfac;
+
+    for (int vi = 0; vi < nen; ++vi)
+    {
+      const int fvi = vi * numdofpernode + phasetoadd;
+      const double v = scalingfactorderiv * funct(vi);
+
+      for (int ui = 0; ui < nen; ++ui)
+      {
+        for (int idim = 0; idim < nsd; ++idim)
+        {
+          const int fui = ui * nsd + idim;
+          mymat(fvi, fui) -= v * derxy(idim, ui);
+        }
+      }
+    }
+  }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddInstatTerms<nsd,
+    nen>::evaluate_matrix_od_scatra_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>&
+                                                     elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac)
+{
+  // nothing to do
+}
+
+
+template <int nsd, int nen>
+double
+Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddInstatTerms<nsd, nen>::get_rhs(
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double rhsfac,
+    double fac)
+{
+  // - \frac{\partial phi_volfrac}{\partial t}
+  double divvel = variablemanager.div_con_velnp();
+
+  const int numfluidphases = phasemanager.num_fluid_phases();
+  const std::vector<double>& phi = *variablemanager.phinp();
+  double vrhs = 0.0;
+  double scaling_factor = phasemanager.initial_volfrac() *
+                          pow(phasemanager.jacobian_def_grad(),
+                              phasemanager.volfrac_blood_lung_parameter_deformation_dependence());
+
+  if (phi[0] / phi[numfluidphases] > 1.0)
+  {
+    vrhs = (-1.0) *
+           ((phasemanager.volfrac_blood_lung_parameter_deformation_dependence()) *
+                   pow(phi[0] / phi[numfluidphases],
+                       phasemanager.volfrac_blood_lung_parameter_pressure_dependence()) *
+                   divvel +
+               phasemanager.volfrac_blood_lung_parameter_pressure_dependence() *
+                   pow(phi[0] / phi[numfluidphases],
+                       phasemanager.volfrac_blood_lung_parameter_pressure_dependence() - 1.0) *
+                   (1.0 / phi[numfluidphases]) * (*variablemanager.phidtnp())[0] +
+               (phasemanager.volfrac_blood_lung_parameter_pressure_dependence()) *
+                   pow(phi[0] / phi[numfluidphases],
+                       phasemanager.volfrac_blood_lung_parameter_pressure_dependence() - 1.0) *
+                   phi[0] * pow(phi[numfluidphases], -2.0) *
+                   (*variablemanager.phidtnp())[numfluidphases]) *
+           rhsfac * scaling_factor;
+  }
+  else
+  {
+    vrhs = (-1.0) * phasemanager.volfrac_blood_lung_parameter_deformation_dependence() *
+           scaling_factor * divvel * rhsfac;
+  }
+
+  if (not phasemanager.incompressible_solid())
+  {
+    FOUR_C_THROW(
+        "CompressibleSolid not yet implemented for deformation dependent closing relation!");
+  }
+
+  return vrhs;
+}
+
+
+
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddInstatTerms<nsd,
+    nen>::evaluate_vector_and_assemble(std::vector<Core::LinAlg::SerialDenseVector*>& elevec,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    const Core::LinAlg::Matrix<nsd, nen>& xyze, int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double rhsfac,
+    double fac, bool inittimederiv)
+
+{
+  // get matrix to fill
+  Core::LinAlg::SerialDenseVector& myvec = *elevec[0];
+
+  // for the initial time derivative calculation no transient terms enter the rhs
+  if (!inittimederiv)
+  {
+    const double vrhs =
+        get_rhs(curphase, phasetoadd, numdofpernode, phasemanager, variablemanager, rhsfac, fac);
+
+    for (int vi = 0; vi < nen; ++vi)
+    {
+      const int fvi = vi * numdofpernode + phasetoadd;
+
+      myvec[fvi] -= vrhs * funct(vi);
+    }
+  }
+}
+
+
+
+/*----------------------------------------------------------------------*
+ * **********************************************************************
+ *----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddInstatTermsSat<nsd,
+    nen>::evaluate_matrix_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac, bool inittimederiv)
+{
+  EvaluatorVolFracBloodLungAddInstatTerms<nsd, nen>::evaluate_matrix_and_assemble(elemat, funct,
+      derxy, curphase, phasetoadd, numdofpernode, phasemanager, variablemanager,
+      timefacfac * phasemanager.saturation(curphase), fac * phasemanager.saturation(curphase),
+      inittimederiv);
+
+  // we do not need additional linearizations if we calculate the initial time derivative
+  if (!inittimederiv)
+  {
+    const int numfluidphases = phasemanager.num_fluid_phases();
+    // get matrix to fill
+    Core::LinAlg::SerialDenseMatrix& mymat = *elemat[0];
+
+    //----------------------------------------------------------------
+    // linearization of saturation w.r.t. dof
+    //----------------------------------------------------------------
+
+    // first: get rhs
+    const double vrhs = EvaluatorVolFracBloodLungAddInstatTerms<nsd, nen>::get_rhs(
+        curphase, phasetoadd, numdofpernode, phasemanager, variablemanager, timefacfac, fac);
+
+    // call base class for saturation linearization
+    EvaluatorBase<nsd, nen>::saturation_linearization_fluid(
+        mymat, funct, vrhs, numdofpernode, numfluidphases, curphase, phasetoadd, phasemanager);
+  }
+}
+
+
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddInstatTermsSat<nsd,
+    nen>::evaluate_matrix_od_struct_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>&
+                                                     elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& deriv,
+    const Core::LinAlg::Matrix<nsd, nen>& derxy, const Core::LinAlg::Matrix<nsd, nsd>& xjm,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac, double det)
+
+{
+  // call base class with scaled factors
+  EvaluatorVolFracBloodLungAddInstatTerms<nsd, nen>::evaluate_matrix_od_struct_and_assemble(elemat,
+      funct, deriv, derxy, xjm, curphase, phasetoadd, numdofpernode, phasemanager, variablemanager,
+      phasemanager.saturation(curphase) * timefacfac, phasemanager.saturation(curphase) * fac, det);
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddInstatTermsSat<nsd,
+    nen>::evaluate_matrix_od_scatra_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>&
+                                                     elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac)
+{
+}
+
+
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddInstatTermsSat<nsd,
+    nen>::evaluate_vector_and_assemble(std::vector<Core::LinAlg::SerialDenseVector*>& elevec,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    const Core::LinAlg::Matrix<nsd, nen>& xyze, int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double rhsfac,
+    double fac, bool inittimederiv)
+
+{
+  // call base class with scaled factors
+  EvaluatorVolFracBloodLungAddInstatTerms<nsd, nen>::evaluate_vector_and_assemble(elevec, funct,
+      derxy, xyze, curphase, phasetoadd, numdofpernode, phasemanager, variablemanager,
+      phasemanager.saturation(curphase) * rhsfac, phasemanager.saturation(curphase) * fac,
+      inittimederiv);
+}
+
+
+
+/*----------------------------------------------------------------------*
+ * **********************************************************************
+ *----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*
  | evaluate element matrix                             kremheller 09/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
@@ -3684,8 +4424,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddDivVelTerm<nsd,
       }
     }
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -3711,9 +4449,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddDivVelTerm<nsd,
 
     myvec[fvi] -= vrhs * funct(vi);
   }
-
-  return;
-};
+}
 
 /*----------------------------------------------------------------------*
  | evaluate off-diagonal coupling matrix with structure kremheller 09/17 |
@@ -3741,8 +4477,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddDivVelTerm<nsd,
   EvaluatorBase<nsd, nen>::calc_div_vel_od_mesh(mymat, funct, deriv, derxy, xjm, gridvelderiv,
       timefacfac * sumaddvolfrac * (-1.0), fac * sumaddvolfrac * (-1.0), det, numdofpernode,
       phasetoadd);
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -3759,8 +4493,224 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddDivVelTerm<nsd,
     double fac)
 {
   // nothing to do
-  return;
 }
+
+/*----------------------------------------------------------------------*
+ * **********************************************************************
+ *----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddDivVelTerm<nsd,
+    nen>::evaluate_matrix_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac, bool inittimederiv)
+{
+  // get matrix to fill
+  Core::LinAlg::SerialDenseMatrix& mymat = *elemat[0];
+  const int numfluidphases = phasemanager.num_fluid_phases();
+  double pA = (*variablemanager.phinp())[0];
+  double pB = (*variablemanager.phinp())[numfluidphases];
+  double ratio_pApB = pA / pB;
+  if (ratio_pApB > 1.0)
+  {
+    double scalingfacor = phasemanager.initial_volfrac() *
+                          pow(phasemanager.jacobian_def_grad(),
+                              phasemanager.volfrac_blood_lung_parameter_deformation_dependence());
+    const double prefac = -timefacfac * variablemanager.div_con_velnp() * scalingfacor;
+    for (int vi = 0; vi < nen; ++vi)
+    {
+      const double v = prefac * funct(vi);
+      const int fvi = vi * numdofpernode + phasetoadd;
+      for (int ui = 0; ui < nen; ++ui)
+      {
+        const double vfunct = v * funct(ui);
+        const int fuiAir = ui * numdofpernode + 0;
+        const int fuiBlood = ui * numdofpernode + numfluidphases;
+        mymat(fvi, fuiAir) +=
+            vfunct *
+            pow(ratio_pApB,
+                phasemanager.volfrac_blood_lung_parameter_deformation_dependence() - 1.0) *
+            (phasemanager.volfrac_blood_lung_parameter_deformation_dependence()) * (1.0 / pB);
+        mymat(fvi, fuiBlood) +=
+            vfunct * (-1.0) * (phasemanager.volfrac_blood_lung_parameter_deformation_dependence()) *
+            pow(ratio_pApB,
+                phasemanager.volfrac_blood_lung_parameter_deformation_dependence() - 1.0) *
+            pA * pow(pB, -2.0);
+      }
+    }
+  }
+  else
+  {
+    return;
+  }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddDivVelTerm<nsd,
+    nen>::evaluate_vector_and_assemble(std::vector<Core::LinAlg::SerialDenseVector*>& elevec,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    const Core::LinAlg::Matrix<nsd, nen>& xyze, int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double rhsfac,
+    double fac, bool inittimederiv)
+{
+  // call base class
+  EvaluatorVolFracAddDivVelTerm<nsd, nen>::evaluate_vector_and_assemble(elevec, funct, derxy, xyze,
+      curphase, phasetoadd, numdofpernode, phasemanager, variablemanager, rhsfac, fac,
+      inittimederiv);
+}
+
+
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddDivVelTerm<nsd,
+    nen>::evaluate_matrix_od_struct_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>&
+                                                     elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& deriv,
+    const Core::LinAlg::Matrix<nsd, nen>& derxy, const Core::LinAlg::Matrix<nsd, nsd>& xjm,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac, double det)
+{
+  // d(sumvolfrac * divvel)dd = sumvolfrac * ddivveldd + dsumvolfracdd * divvel
+  // class Based class for sumvolfrac * ddivveldd
+  EvaluatorVolFracAddDivVelTerm<nsd, nen>::evaluate_matrix_od_struct_and_assemble(elemat, funct,
+      deriv, derxy, xjm, curphase, phasetoadd, numdofpernode, phasemanager, variablemanager,
+      timefacfac, fac, det);
+
+
+  // get matrix to fill for dsumvolfracdd * divvel
+  Core::LinAlg::SerialDenseMatrix& mymat = *elemat[0];
+
+  for (int vi = 0; vi < nen; ++vi)
+  {
+    const int fvi = vi * numdofpernode + phasetoadd;
+    const double v = -timefacfac * phasemanager.sum_add_vol_frac() *
+                     (phasemanager.volfrac_blood_lung_parameter_deformation_dependence()) *
+                     variablemanager.div_con_velnp() * funct(vi);
+
+    for (int ui = 0; ui < nen; ++ui)
+    {
+      for (int idim = 0; idim < nsd; ++idim)
+      {
+        const int fui = ui * nsd + idim;
+        mymat(fvi, fui) += v * derxy(idim, ui);
+      }
+    }
+  }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddDivVelTerm<nsd,
+    nen>::evaluate_matrix_od_scatra_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>&
+                                                     elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac)
+{
+  // nothing to do
+}
+
+/*----------------------------------------------------------------------*
+ * **********************************************************************
+ *----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddDivVelTermSat<nsd,
+    nen>::evaluate_matrix_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac, bool inittimederiv)
+{
+  // call base class with scaled factors
+  EvaluatorVolFracBloodLungAddDivVelTerm<nsd, nen>::evaluate_matrix_and_assemble(elemat, funct,
+      derxy, curphase, phasetoadd, numdofpernode, phasemanager, variablemanager,
+      timefacfac * phasemanager.saturation(curphase), fac * phasemanager.saturation(curphase),
+      inittimederiv);
+
+  // we do not need additional linearizations if we calculate the initial time derivative
+  if (!inittimederiv)
+  {
+    const int numfluidphases = phasemanager.num_fluid_phases();
+    // get matrix to fill
+    Core::LinAlg::SerialDenseMatrix& mymat = *elemat[0];
+
+    const double vrhs =
+        -timefacfac * phasemanager.sum_add_vol_frac() * variablemanager.div_con_velnp();
+
+    // call base class for saturation linearization
+    EvaluatorBase<nsd, nen>::saturation_linearization_fluid(
+        mymat, funct, vrhs, numdofpernode, numfluidphases, curphase, phasetoadd, phasemanager);
+  }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddDivVelTermSat<nsd,
+    nen>::evaluate_vector_and_assemble(std::vector<Core::LinAlg::SerialDenseVector*>& elevec,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    const Core::LinAlg::Matrix<nsd, nen>& xyze, int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double rhsfac,
+    double fac, bool inittimederiv)
+{
+  // call base class with scaled factors
+  EvaluatorVolFracBloodLungAddDivVelTerm<nsd, nen>::evaluate_vector_and_assemble(elevec, funct,
+      derxy, xyze, curphase, phasetoadd, numdofpernode, phasemanager, variablemanager,
+      phasemanager.saturation(curphase) * rhsfac, phasemanager.saturation(curphase) * fac,
+      inittimederiv);
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddDivVelTermSat<nsd,
+    nen>::evaluate_matrix_od_struct_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>&
+                                                     elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& deriv,
+    const Core::LinAlg::Matrix<nsd, nen>& derxy, const Core::LinAlg::Matrix<nsd, nsd>& xjm,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac, double det)
+{
+  // call base class with scaled factors
+  EvaluatorVolFracBloodLungAddDivVelTerm<nsd, nen>::evaluate_matrix_od_struct_and_assemble(elemat,
+      funct, deriv, derxy, xjm, curphase, phasetoadd, numdofpernode, phasemanager, variablemanager,
+      phasemanager.saturation(curphase) * timefacfac, phasemanager.saturation(curphase) * fac, det);
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddDivVelTermSat<nsd,
+    nen>::evaluate_matrix_od_scatra_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>&
+                                                     elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac)
+{
+}
+
 
 /*----------------------------------------------------------------------*
  * **********************************************************************
@@ -3802,8 +4752,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddInstatTermsSat<ns
     EvaluatorBase<nsd, nen>::saturation_linearization_fluid(
         mymat, funct, vrhs, numdofpernode, numfluidphases, curphase, phasetoadd, phasemanager);
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -3823,8 +4771,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddInstatTermsSat<ns
       curphase, phasetoadd, numdofpernode, phasemanager, variablemanager,
       phasemanager.saturation(curphase) * rhsfac, phasemanager.saturation(curphase) * fac,
       inittimederiv);
-
-  return;
 };
 
 /*----------------------------------------------------------------------*
@@ -3845,8 +4791,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddInstatTermsSat<ns
   EvaluatorVolFracAddInstatTerms<nsd, nen>::evaluate_matrix_od_struct_and_assemble(elemat, funct,
       deriv, derxy, xjm, curphase, phasetoadd, numdofpernode, phasemanager, variablemanager,
       phasemanager.saturation(curphase) * timefacfac, phasemanager.saturation(curphase) * fac, det);
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -3863,7 +4807,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddInstatTermsSat<ns
     double fac)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -3901,8 +4844,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddDivVelTermSat<nsd
     EvaluatorBase<nsd, nen>::saturation_linearization_fluid(
         mymat, funct, vrhs, numdofpernode, numfluidphases, curphase, phasetoadd, phasemanager);
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -3922,8 +4863,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddDivVelTermSat<nsd
       curphase, phasetoadd, numdofpernode, phasemanager, variablemanager,
       phasemanager.saturation(curphase) * rhsfac, phasemanager.saturation(curphase) * fac,
       inittimederiv);
-
-  return;
 };
 
 /*----------------------------------------------------------------------*
@@ -3944,8 +4883,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddDivVelTermSat<nsd
   EvaluatorVolFracAddDivVelTerm<nsd, nen>::evaluate_matrix_od_struct_and_assemble(elemat, funct,
       deriv, derxy, xjm, curphase, phasetoadd, numdofpernode, phasemanager, variablemanager,
       phasemanager.saturation(curphase) * timefacfac, phasemanager.saturation(curphase) * fac, det);
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -3962,7 +4899,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddDivVelTermSat<nsd
     double fac)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -4010,9 +4946,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracInstat<nsd,
       }
     }
   }
-
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -4056,8 +4989,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracInstat<nsd,
       }
     }
   }
-
-  return;
 };
 
 /*----------------------------------------------------------------------*
@@ -4091,11 +5022,12 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracInstat<nsd,
         variablemanager.element_has_valid_vol_frac_pressure(ivolfrac - numfluidphases);
 
     // linearization of mesh motion
-    //------------------------------------------------dJ/dd = dJ/dF : dF/dd = J * F^-T . N_{\psi} =
+    //------------------------------------------------dJ/dd = dJ/dF : dF/dd = J * F^-T . N_{\psi}
+    //=
     // J * N_x
-    // J denotes the determinant of the Jacobian of the mapping between current and parameter space,
-    // i.e. det(dx/ds) in our case: timefacfac = J * dt * theta --> d(timefacfac)/dd = timefacfac *
-    // N_x
+    // J denotes the determinant of the Jacobian of the mapping between current and parameter
+    // space, i.e. det(dx/ds) in our case: timefacfac = J * dt * theta --> d(timefacfac)/dd =
+    // timefacfac * N_x
     //              fac        = J              --> d(fac)/dd        = fac * N_x
     for (int vi = 0; vi < nen; ++vi)
     {
@@ -4116,12 +5048,9 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracInstat<nsd,
       }
     }
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 08/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracInstat<nsd,
@@ -4134,8 +5063,124 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracInstat<nsd,
     double fac)
 {
   // nothing to do
-  return;
 }
+
+
+
+/*----------------------------------------------------------------------*
+ * **********************************************************************
+ *----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungInstat<nsd,
+    nen>::evaluate_matrix_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac, bool inittimederiv)
+{
+  const int numfluidphases = phasemanager.num_fluid_phases();
+  const int numvolfrac = phasemanager.num_vol_frac();
+
+  // loop over all volume fractions
+  for (int ivolfrac = numfluidphases; ivolfrac < numfluidphases + numvolfrac; ivolfrac++)
+  {
+    const bool evaluatevolfracpress =
+        variablemanager.element_has_valid_vol_frac_pressure(ivolfrac - numfluidphases);
+
+    if (evaluatevolfracpress)
+    {
+      EvaluatorVolFracBloodLungAddInstatTerms<nsd, nen>::evaluate_matrix_and_assemble(elemat, funct,
+          derxy, curphase, ivolfrac, numdofpernode, phasemanager, variablemanager,
+          timefacfac * (-1.0), fac * (-1.0), inittimederiv);
+    }
+  }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungInstat<nsd,
+    nen>::evaluate_vector_and_assemble(std::vector<Core::LinAlg::SerialDenseVector*>& elevec,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    const Core::LinAlg::Matrix<nsd, nen>& xyze, int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double rhsfac,
+    double fac, bool inittimederiv)
+{
+  // for the initial time derivative calculation no transient terms enter the rhs
+  if (!inittimederiv)
+  {
+    // get vector to fill
+    Core::LinAlg::SerialDenseVector& myvec = *elevec[0];
+
+    const int numfluidphases = phasemanager.num_fluid_phases();
+
+    // currently only one volfrac blood ung material possible
+    int ivolfrac = numfluidphases;
+    // - \frac{\partial phi_volfrac}{\partial t}
+    const double vtrans = EvaluatorVolFracBloodLungAddInstatTerms<nsd, nen>::get_rhs(
+        curphase, phasetoadd, numdofpernode, phasemanager, variablemanager, rhsfac, fac);
+
+    const bool evaluatevolfracpress =
+        variablemanager.element_has_valid_vol_frac_pressure(ivolfrac - numfluidphases);
+
+    for (int vi = 0; vi < nen; ++vi)
+    {
+      const int fvi_volfracpress = vi * numdofpernode + ivolfrac;
+
+      if (evaluatevolfracpress) myvec[fvi_volfracpress] += vtrans * funct(vi);
+    }
+  }
+};
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungInstat<nsd,
+    nen>::evaluate_matrix_od_struct_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>&
+                                                     elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& deriv,
+    const Core::LinAlg::Matrix<nsd, nen>& derxy, const Core::LinAlg::Matrix<nsd, nsd>& xjm,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac, double det)
+{
+  const int numfluidphases = phasemanager.num_fluid_phases();
+  const int numvolfrac = phasemanager.num_vol_frac();
+
+  // loop over all volume fractions
+  for (int ivolfrac = numfluidphases; ivolfrac < numfluidphases + numvolfrac; ivolfrac++)
+  {
+    const bool evaluatevolfracpress =
+        variablemanager.element_has_valid_vol_frac_pressure(ivolfrac - numfluidphases);
+
+    if (evaluatevolfracpress)
+    {
+      EvaluatorVolFracBloodLungAddInstatTerms<nsd, nen>::evaluate_matrix_od_struct_and_assemble(
+          elemat, funct, deriv, derxy, xjm, curphase, ivolfrac, numdofpernode, phasemanager,
+          variablemanager, timefacfac * (-1.0), fac * (-1.0), det);
+    }
+  }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungInstat<nsd,
+    nen>::evaluate_matrix_od_scatra_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>&
+                                                     elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac)
+{
+}
+
 
 /*----------------------------------------------------------------------*
  * **********************************************************************
@@ -4183,9 +5228,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracDivVel<nsd,
       }
     }
   }
-
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -4225,7 +5267,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracDivVel<nsd,
       if (evaluatevolfracpress) myvec[fvi_volfracpress] -= v * funct(vi);
     }
   }
-  return;
 };
 
 /*----------------------------------------------------------------------*
@@ -4371,7 +5412,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracDivVel<nsd,
     else
       FOUR_C_THROW("shapederivatives not implemented for 1D!");
   }
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -4388,7 +5428,142 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracDivVel<nsd,
     double fac)
 {
   // nothing to do
-  return;
+}
+
+/*----------------------------------------------------------------------*
+ * **********************************************************************
+ *----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungDivVel<nsd,
+    nen>::evaluate_matrix_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac, bool inittimederiv)
+{
+  const int numfluidphases = phasemanager.num_fluid_phases();
+
+
+  // currently only one volfrac blood lung material possible
+  int ivolfrac = numfluidphases;
+  const bool evaluatevolfracpress =
+      variablemanager.element_has_valid_vol_frac_pressure(ivolfrac - numfluidphases);
+
+  if (evaluatevolfracpress)
+  {
+    EvaluatorVolFracBloodLungAddDivVelTerm<nsd, nen>::evaluate_matrix_and_assemble(elemat, funct,
+        derxy, ivolfrac, ivolfrac, numdofpernode, phasemanager, variablemanager, timefacfac, fac,
+        inittimederiv);
+  }
+}
+
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungDivVel<nsd,
+    nen>::evaluate_vector_and_assemble(std::vector<Core::LinAlg::SerialDenseVector*>& elevec,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    const Core::LinAlg::Matrix<nsd, nen>& xyze, int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double rhsfac,
+    double fac, bool inittimederiv)
+{
+  // get matrix to fill
+  Core::LinAlg::SerialDenseVector& myvec = *elevec[0];
+
+  const int numfluidphases = phasemanager.num_fluid_phases();
+
+  double vrhs = rhsfac * variablemanager.div_con_velnp();
+
+  // currently only one volfrac blood lung material possible
+  const int ivolfrac = numfluidphases;
+  const double v = vrhs * phasemanager.vol_frac(ivolfrac - numfluidphases);
+  const bool evaluatevolfracpress =
+      variablemanager.element_has_valid_vol_frac_pressure(ivolfrac - numfluidphases);
+
+
+  for (int vi = 0; vi < nen; ++vi)
+  {
+    const int fvi_volfracpress = vi * numdofpernode + ivolfrac;
+
+    if (evaluatevolfracpress) myvec[fvi_volfracpress] -= v * funct(vi);
+  }
+};
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungDivVel<nsd,
+    nen>::evaluate_matrix_od_struct_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>&
+                                                     elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& deriv,
+    const Core::LinAlg::Matrix<nsd, nen>& derxy, const Core::LinAlg::Matrix<nsd, nsd>& xjm,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac, double det)
+{
+  // get matrix to fill
+  Core::LinAlg::SerialDenseMatrix& mymat = *elemat[0];
+
+  const int numfluidphases = phasemanager.num_fluid_phases();
+
+  // currently only one volfrac blood lung material possible
+  int ivolfrac = numfluidphases;
+
+  const bool evaluatevolfracpress =
+      variablemanager.element_has_valid_vol_frac_pressure(ivolfrac - numfluidphases);
+
+  if (evaluatevolfracpress)
+  {
+    // d(sumvolfrac * divvel)dd = sumvolfrac * ddivveldd + dsumvolfracdd * divvel
+    // class Based class for sumvolfrac * ddivveldd
+
+    Core::LinAlg::Matrix<nsd, nsd> gridvelderiv(Core::LinAlg::Initialization::zero);
+    gridvelderiv.multiply_nt(*(variablemanager.e_con_velnp()), deriv);
+
+    // OD mesh - div vel term
+    EvaluatorBase<nsd, nen>::calc_div_vel_od_mesh(mymat, funct, deriv, derxy, xjm, gridvelderiv,
+        timefacfac * phasemanager.vol_frac(ivolfrac - numfluidphases) * (-1.0),
+        fac * phasemanager.vol_frac(ivolfrac - numfluidphases) * (-1.0), det, numdofpernode,
+        ivolfrac);
+
+    // get matrix to fill for dsumvolfracdd * divvel
+    for (int vi = 0; vi < nen; ++vi)
+    {
+      const int fvi = vi * numdofpernode + ivolfrac;
+      const double v = -timefacfac * phasemanager.vol_frac(ivolfrac - numfluidphases) *
+                       (phasemanager.volfrac_blood_lung_parameter_deformation_dependence()) *
+                       variablemanager.div_con_velnp() * funct(vi);
+
+      for (int ui = 0; ui < nen; ++ui)
+      {
+        for (int idim = 0; idim < nsd; ++idim)
+        {
+          const int fui = ui * nsd + idim;
+          mymat(fvi, fui) += v * derxy(idim, ui);
+        }
+      }
+    }
+  }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungDivVel<nsd,
+    nen>::evaluate_matrix_od_scatra_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>&
+                                                     elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac)
+{
 }
 
 /*----------------------------------------------------------------------*
@@ -4441,9 +5616,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracDiff<nsd,
       }
     }
   }
-
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -4486,8 +5658,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracDiff<nsd,
       myvec[fvi] -= rhsfac * laplawf;
     }
   }
-
-  return;
 };
 
 /*----------------------------------------------------------------------*
@@ -4533,7 +5703,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracDiff<nsd,
     EvaluatorBase<nsd, nen>::calc_diff_od_mesh(mymat, deriv, derxy, xjm, diffflux, refgradphi,
         gradphi[ivolfrac], timefacfac, v, numdofpernode, ivolfrac);
   }
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -4550,7 +5719,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracDiff<nsd,
     double fac)
 {
   // nothing to do
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -4607,8 +5775,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracReac<nsd,
       }
     }
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -4646,8 +5812,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracReac<nsd,
       }
     }
   }
-
-  return;
 };
 
 /*----------------------------------------------------------------------*
@@ -4683,8 +5847,8 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracReac<nsd,
       // linearization of porosity (may appear in reaction term)
       //-------------dreac/dd = dreac/dporosity * dporosity/dd = dreac/dporosity * dporosity/dJ *
       // dJ/dd = dreac/dporosity * dporosity/dJ * J * N_x
-      // J denotes the determinant of the deformation gradient, i.e. det F = det ( d x / d X ) = det
-      // (dx/ds) * ( det(dX/ds) )^-1
+      // J denotes the determinant of the deformation gradient, i.e. det F = det ( d x / d X ) =
+      // det (dx/ds) * ( det(dX/ds) )^-1
 
       if (phasemanager.porosity_depends_on_struct())
       {
@@ -4701,7 +5865,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracReac<nsd,
           mymat, funct, derxy, -1.0 * vrhs, numdofpernode, ivolfrac);
     }
   }
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -4750,8 +5913,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracReac<nsd,
       }
     }
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -4854,7 +6015,8 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddFlux<nsd,
                     if (ivolfrac == jvolfrac)
                       mymat(fvi, fui) += vfunct * (1.0 - phasemanager.porosity() -
                                                       phasemanager.sum_add_vol_frac());
-                    // 2) derivative of solid phase volume fraction w.r.t. all volume fractions = 0
+                    // 2) derivative of solid phase volume fraction w.r.t. all volume fractions =
+                    // 0
                   }
                   // chemotaxis
                   else if (phasemanager.scalar_to_phase(iscal).species_type ==
@@ -4884,8 +6046,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddFlux<nsd,
       }
     }
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -4960,7 +6120,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddFlux<nsd,
       }
     }
   }
-  return;
 };
 
 /*----------------------------------------------------------------------*
@@ -5058,10 +6217,11 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddFlux<nsd,
           // 2)
           // -----------------------------------------------------------------------------------------------------------------------------------------
           // linearization of porosity
-          //-------------dreac/dd = dreac/dporosity * dporosity/dd = dreac/dporosity * dporosity/dJ
+          //-------------dreac/dd = dreac/dporosity * dporosity/dd = dreac/dporosity *
+          // dporosity/dJ
           //* dJ/dd = dreac/dporosity * dporosity/dJ * J * N_x
-          // J denotes the determinant of the deformation gradient, i.e. det F = det ( d x / d X ) =
-          // det (dx/ds) * ( det(dX/ds) )^-1
+          // J denotes the determinant of the deformation gradient, i.e. det F = det ( d x / d X )
+          // = det (dx/ds) * ( det(dX/ds) )^-1
 
           if (phasemanager.porosity_depends_on_struct())
           {
@@ -5111,8 +6271,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddFlux<nsd,
       }
     }
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -5219,7 +6377,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracAddFlux<nsd,
       }
     }
   }
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -5289,9 +6446,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracPressureDiff<nsd,
       }
     }
   }
-
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -5351,8 +6505,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracPressureDiff<nsd,
       }
     }
   }
-
-  return;
 };
 
 /*----------------------------------------------------------------------*
@@ -5410,7 +6562,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracPressureDiff<nsd,
           gradphi[ivolfracpress], timefacfac, v, numdofpernode, ivolfracpress);
     }
   }
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -5427,8 +6578,195 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracPressureDiff<nsd,
     double fac)
 {
   // nothing to do
-  return;
 }
+
+/*----------------------------------------------------------------------*
+ * **********************************************************************
+ *----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungPressureDiff<nsd,
+    nen>::evaluate_matrix_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac, bool inittimederiv)
+{
+  // we do not need the matrix if we calculate the initial time derivative
+  if (!inittimederiv)
+  {
+    // get matrix to fill
+    Core::LinAlg::SerialDenseMatrix& mymat = *elemat[0];
+
+    const int numfluidphases = phasemanager.num_fluid_phases();
+
+    // currently only one volfrac blood lung material possible
+    int ivolfracpress = numfluidphases;
+    const bool evaluatevolfracpress =
+        variablemanager.element_has_valid_vol_frac_pressure(ivolfracpress - numfluidphases);
+
+    if (evaluatevolfracpress)
+    {
+      // get permeability tensor and diffusive flux
+      Core::LinAlg::Matrix<nsd, nsd> permeabilitytensorvolfracpress(
+          Core::LinAlg::Initialization::zero);
+      phasemanager.permeability_tensor_vol_frac_pressure(
+          ivolfracpress - numfluidphases, permeabilitytensorvolfracpress);
+      permeabilitytensorvolfracpress.scale(
+          1.0 / phasemanager.dyn_viscosity_vol_frac_pressure_blood_lung(
+                    ivolfracpress - numfluidphases, -1.0));  // TODO: change -1.0
+
+      static Core::LinAlg::Matrix<nsd, nen> diffflux(Core::LinAlg::Initialization::zero);
+      diffflux.multiply(permeabilitytensorvolfracpress, derxy);
+
+      // diffusive term
+      for (int vi = 0; vi < nen; ++vi)
+      {
+        const int fvi = vi * numdofpernode + ivolfracpress;
+
+        for (int ui = 0; ui < nen; ++ui)
+        {
+          double laplawf(0.0);
+          for (int j = 0; j < nsd; j++) laplawf += derxy(j, vi) * diffflux(j, ui);
+
+          const int fui = ui * numdofpernode + ivolfracpress;
+          mymat(fvi, fui) += timefacfac * laplawf;
+        }
+      }
+
+      if (not phasemanager.has_constant_dyn_viscosity_vol_frac_pressure(
+              ivolfracpress - numfluidphases))
+        FOUR_C_THROW(
+            "only constant dynamic viscosities possible for volume fraction pressures so far");
+    }
+  }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungPressureDiff<nsd,
+    nen>::evaluate_vector_and_assemble(std::vector<Core::LinAlg::SerialDenseVector*>& elevec,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    const Core::LinAlg::Matrix<nsd, nen>& xyze, int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double rhsfac,
+    double fac, bool inittimederiv)
+{
+  // get matrix to fill
+  Core::LinAlg::SerialDenseVector& myvec = *elevec[0];
+
+  const int numfluidphases = phasemanager.num_fluid_phases();
+
+  const std::vector<Core::LinAlg::Matrix<nsd, 1>>& gradphi = *variablemanager.grad_phinp();
+
+  // currently only one volfrac blood lung material possible
+  const int ivolfracpress = numfluidphases;
+  double absgradphi = 0.0;
+  for (int idim = 0; idim < nsd; idim++)
+  {
+    absgradphi += gradphi[ivolfracpress](idim, 0) * gradphi[ivolfracpress](idim, 0);
+  }
+  const bool evaluatevolfracpress =
+      variablemanager.element_has_valid_vol_frac_pressure(ivolfracpress - numfluidphases);
+
+  if (evaluatevolfracpress)
+  {
+    // get permeability tensor
+    Core::LinAlg::Matrix<nsd, nsd> permeabilitytensorvolfracpress(
+        Core::LinAlg::Initialization::zero);
+    phasemanager.permeability_tensor_vol_frac_pressure(
+        ivolfracpress - numfluidphases, permeabilitytensorvolfracpress);
+    permeabilitytensorvolfracpress.scale(
+        1.0 / phasemanager.dyn_viscosity_vol_frac_pressure_blood_lung(
+                  ivolfracpress - numfluidphases, -1.0));
+
+
+    static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
+    diffflux.multiply(permeabilitytensorvolfracpress, gradphi[ivolfracpress]);
+
+    for (int vi = 0; vi < nen; ++vi)
+    {
+      const int fvi = vi * numdofpernode + ivolfracpress;
+
+      // laplacian in weak form
+      double laplawf(0.0);
+      for (int j = 0; j < nsd; j++) laplawf += derxy(j, vi) * diffflux(j);
+      myvec[fvi] -= rhsfac * laplawf;
+    }
+  }
+};
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungPressureDiff<nsd,
+    nen>::evaluate_matrix_od_struct_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>&
+                                                     elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& deriv,
+    const Core::LinAlg::Matrix<nsd, nen>& derxy, const Core::LinAlg::Matrix<nsd, nsd>& xjm,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac, double det)
+{
+  // get matrix to fill
+  Core::LinAlg::SerialDenseMatrix& mymat = *elemat[0];
+
+  const int numfluidphases = phasemanager.num_fluid_phases();
+
+  const std::vector<Core::LinAlg::Matrix<nsd, 1>>& gradphi = *variablemanager.grad_phinp();
+
+  // currently only one volfrac blood lung material possible
+  int ivolfracpress = numfluidphases;
+
+  const bool evaluatevolfracpress =
+      variablemanager.element_has_valid_vol_frac_pressure(ivolfracpress - numfluidphases);
+
+  if (evaluatevolfracpress)
+  {
+    // get permeability tensor
+    Core::LinAlg::Matrix<nsd, nsd> permeabilitytensorvolfracpress(
+        Core::LinAlg::Initialization::zero);
+    phasemanager.permeability_tensor_vol_frac_pressure(
+        ivolfracpress - numfluidphases, permeabilitytensorvolfracpress);
+    permeabilitytensorvolfracpress.scale(
+        1.0 / phasemanager.dyn_viscosity_vol_frac_pressure_blood_lung(
+                  ivolfracpress - numfluidphases, -1.0));
+
+    static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
+    diffflux.multiply(permeabilitytensorvolfracpress, gradphi[ivolfracpress]);
+
+    // TODO: anisotropic difftensor
+    const double v = permeabilitytensorvolfracpress(0, 0) * timefacfac / det;
+
+    // gradient of phi w.r.t. reference coordinates
+    Core::LinAlg::Matrix<nsd, 1> refgradphi(Core::LinAlg::Initialization::zero);
+    refgradphi.multiply(xjm, gradphi[ivolfracpress]);
+
+    // OD mesh - diffusive term
+    EvaluatorBase<nsd, nen>::calc_diff_od_mesh(mymat, deriv, derxy, xjm, diffflux, refgradphi,
+        gradphi[ivolfracpress], timefacfac, v, numdofpernode, ivolfracpress);
+  }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungPressureDiff<nsd,
+    nen>::evaluate_matrix_od_scatra_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>&
+                                                     elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac)
+{
+}
+
+
 
 /*----------------------------------------------------------------------*
  * **********************************************************************
@@ -5489,8 +6827,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracPressureReac<nsd,
       }
     }
   }
-
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -5534,8 +6870,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracPressureReac<nsd,
       }
     }
   }
-
-  return;
 };
 
 /*----------------------------------------------------------------------*
@@ -5577,8 +6911,8 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracPressureReac<nsd,
       // linearization of porosity (may appear in reaction term)
       //-------------dreac/dd = dreac/dporosity * dporosity/dd = dreac/dporosity * dporosity/dJ *
       // dJ/dd = dreac/dporosity * dporosity/dJ * J * N_x
-      // J denotes the determinant of the deformation gradient, i.e. det F = det ( d x / d X ) = det
-      // (dx/ds) * ( det(dX/ds) )^-1
+      // J denotes the determinant of the deformation gradient, i.e. det F = det ( d x / d X ) =
+      // det (dx/ds) * ( det(dX/ds) )^-1
 
       if (phasemanager.porosity_depends_on_struct())
       {
@@ -5595,7 +6929,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracPressureReac<nsd,
           mymat, funct, derxy, -1.0 * vrhs, numdofpernode, ivolfracpress);
     }
   }
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -5650,8 +6983,203 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracPressureReac<nsd,
       }
     }
   }
+}
 
-  return;
+
+/*----------------------------------------------------------------------*
+ * **********************************************************************
+ *----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungPressureReac<nsd,
+    nen>::evaluate_matrix_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac, bool inittimederiv)
+{
+  // we do not need the matrix if we calculate the initial time derivative
+  if (!inittimederiv)
+  {
+    // get matrix to fill
+    Core::LinAlg::SerialDenseMatrix& mymat = *elemat[0];
+
+    const int numfluidphases = phasemanager.num_fluid_phases();
+
+    // currently only one volfrac blood lung material possible
+    int ivolfracpress = numfluidphases;
+
+    const bool evaluatevolfracpress =
+        variablemanager.element_has_valid_vol_frac_pressure(ivolfracpress - numfluidphases);
+
+
+    if (phasemanager.is_reactive(ivolfracpress) && evaluatevolfracpress)
+    {
+      double scaledtimefacfac =
+          timefacfac / phasemanager.vol_frac_density(ivolfracpress - numfluidphases);
+      //----------------------------------------------------------------
+      // reaction terms
+      //----------------------------------------------------------------
+      for (int vi = 0; vi < nen; ++vi)
+      {
+        const double v = scaledtimefacfac * funct(vi);
+        const int fvi = vi * numdofpernode + ivolfracpress;
+
+        for (int ui = 0; ui < nen; ++ui)
+        {
+          const double vfunct = v * funct(ui);
+          for (int idof = 0; idof < numdofpernode; ++idof)
+          {
+            const int fui = ui * numdofpernode + idof;
+
+            // rhs ---> -
+            mymat(fvi, fui) -= vfunct * phasemanager.reac_deriv(ivolfracpress, idof);
+          }
+        }
+      }
+    }
+  }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungPressureReac<nsd,
+    nen>::evaluate_vector_and_assemble(std::vector<Core::LinAlg::SerialDenseVector*>& elevec,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    const Core::LinAlg::Matrix<nsd, nen>& xyze, int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double rhsfac,
+    double fac, bool inittimederiv)
+{
+  // get matrix to fill
+  Core::LinAlg::SerialDenseVector& myvec = *elevec[0];
+
+  const int numfluidphases = phasemanager.num_fluid_phases();
+
+  // currently only one volfrac blood lung material possible
+  const int ivolfracpress = numfluidphases;
+
+  const bool evaluatevolfracpress =
+      variablemanager.element_has_valid_vol_frac_pressure(ivolfracpress - numfluidphases);
+
+
+  if (phasemanager.is_reactive(ivolfracpress) && evaluatevolfracpress)
+  {
+    double scale = 1.0 / phasemanager.vol_frac_density(ivolfracpress - numfluidphases);
+
+    double vrhs = scale * rhsfac * phasemanager.reac_term(ivolfracpress);
+
+    for (int vi = 0; vi < nen; ++vi)
+    {
+      const int fvi = vi * numdofpernode + ivolfracpress;
+      // rhs ---> +
+      myvec[fvi] += vrhs * funct(vi);
+    }
+  }
+};
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungPressureReac<nsd,
+    nen>::evaluate_matrix_od_struct_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>&
+                                                     elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& deriv,
+    const Core::LinAlg::Matrix<nsd, nen>& derxy, const Core::LinAlg::Matrix<nsd, nsd>& xjm,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac, double det)
+{
+  // get matrix to fill
+  Core::LinAlg::SerialDenseMatrix& mymat = *elemat[0];
+
+  const int numfluidphases = phasemanager.num_fluid_phases();
+
+
+  // currently only one volfrac blood lung material possible
+  int ivolfracpress = numfluidphases;
+  const bool evaluatevolfracpress =
+      variablemanager.element_has_valid_vol_frac_pressure(ivolfracpress - numfluidphases);
+
+
+  if (phasemanager.is_reactive(ivolfracpress) && evaluatevolfracpress)
+  {
+    // TODO a constant density is assumed here
+    double scale = 1.0 / phasemanager.vol_frac_density(ivolfracpress - numfluidphases);
+
+    double vrhs = scale * timefacfac * phasemanager.reac_term(ivolfracpress);
+
+    // linearization of porosity (may appear in reaction term)
+    //-------------dreac/dd = dreac/dporosity * dporosity/dd = dreac/dporosity * dporosity/dJ *
+    // dJ/dd = dreac/dporosity * dporosity/dJ * J * N_x
+    // J denotes the determinant of the deformation gradient, i.e. det F = det ( d x / d X ) =
+    // det (dx/ds) * ( det(dX/ds) )^-1
+
+    if (phasemanager.porosity_depends_on_struct())
+    {
+      vrhs += timefacfac * scale * phasemanager.reac_deriv_porosity(ivolfracpress) *
+              phasemanager.jacobian_def_grad() *
+              phasemanager.porosity_deriv_wrt_jacobian_def_grad();
+    }
+
+    // linearization of mesh motion (Jacobian)
+    // 1) linearization of fac +
+    // 2) possible linearization w.r.t porosity
+    // rhs ---> -
+    EvaluatorBase<nsd, nen>::calc_lin_fac_od_mesh(
+        mymat, funct, derxy, -1.0 * vrhs, numdofpernode, ivolfracpress);
+  }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+template <int nsd, int nen>
+void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungPressureReac<nsd,
+    nen>::evaluate_matrix_od_scatra_and_assemble(std::vector<Core::LinAlg::SerialDenseMatrix*>&
+                                                     elemat,
+    const Core::LinAlg::Matrix<nen, 1>& funct, const Core::LinAlg::Matrix<nsd, nen>& derxy,
+    int curphase, int phasetoadd, int numdofpernode,
+    const PoroFluidManager::PhaseManagerInterface& phasemanager,
+    const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double timefacfac,
+    double fac)
+{
+  // get matrix to fill
+  Core::LinAlg::SerialDenseMatrix& mymat = *elemat[0];
+
+  const int numfluidphases = phasemanager.num_fluid_phases();
+  const int numscal = phasemanager.num_scal();
+
+  // currently only one volfrac blood lung material possible
+  int ivolfracpress = numfluidphases;
+  const bool evaluatevolfracpress =
+      variablemanager.element_has_valid_vol_frac_pressure(ivolfracpress - numfluidphases);
+
+  if (phasemanager.is_reactive(ivolfracpress) && evaluatevolfracpress)
+  {
+    double vrhs = 1.0 / phasemanager.vol_frac_density(ivolfracpress - numfluidphases) * timefacfac;
+
+    // linearization of reaction term w.r.t scalars
+    for (int vi = 0; vi < nen; ++vi)
+    {
+      const int fvi = vi * numdofpernode + ivolfracpress;
+      const double v = vrhs * funct(vi);
+
+      for (int ui = 0; ui < nen; ++ui)
+      {
+        const double vfunct = v * funct(ui);
+        for (int iscal = 0; iscal < numscal; ++iscal)
+        {
+          const int fui = ui * numscal + iscal;
+          // rhs ---> -
+          mymat(fvi, fui) -= vfunct * phasemanager.reac_deriv_scalar(ivolfracpress, iscal);
+        }
+      }
+    }
+  }
 }
 
 /*----------------------------------------------------------------------*
