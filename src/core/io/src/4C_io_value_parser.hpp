@@ -247,6 +247,13 @@ namespace Core::IO
       }
     }
 
+    template <typename T1, typename T2>
+    void read_internal(std::pair<T1, T2>& value)
+    {
+      read_internal(value.first);
+      read_internal(value.second);
+    }
+
     template <typename U>
     void read_internal(std::map<std::string, U>& value)
     {

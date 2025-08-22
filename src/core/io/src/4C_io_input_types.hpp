@@ -77,6 +77,12 @@ namespace Core::IO
     {
     };
 
+    template <typename T1, typename T2>
+    struct SupportedTypeHelper<std::pair<T1, T2>>
+        : std::bool_constant<SupportedTypeHelper<T1>::value && SupportedTypeHelper<T2>::value>
+    {
+    };
+
     template <typename U>
     struct SupportedTypeHelper<std::map<std::string, U>> : SupportedTypeHelper<U>
     {
@@ -103,6 +109,12 @@ namespace Core::IO
     struct RankHelper<std::map<std::string, T>>
     {
       static constexpr std::size_t value = 1 + RankHelper<T>::value;
+    };
+
+    template <typename T1, typename T2>
+    struct RankHelper<std::pair<T1, T2>>
+    {
+      static constexpr std::size_t value = RankHelper<T1>::value + RankHelper<T2>::value;
     };
 
     template <typename T>
@@ -162,6 +174,7 @@ namespace Core::IO
    * - `std::optional<T>`, where `T` is one of the supported types
    * - `std::vector<T>`, where `T` is one of the supported types
    * - `std::map<std::string, T>`, where `T` is one of the supported types
+   * - `std::pair<T1, T2>`, where `T1` and `T2` are both one of the supported types
    */
   template <typename T>
   concept SupportedType = Internal::SupportedTypeHelper<T>::value;

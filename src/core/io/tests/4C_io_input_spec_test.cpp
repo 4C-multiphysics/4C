@@ -212,7 +212,6 @@ choices:
           "Could not parse 'c' as a double value");
     }
   }
-
   TEST(InputSpecTest, Optional)
   {
     auto spec = all_of({
@@ -1127,6 +1126,40 @@ specs:
     }
   }
 
+  TEST(InputSpecTest, MatchYamlComplicatedParameter)
+  {
+    using ComplicatedType =
+        std::pair<std::vector<double>, std::pair<std::vector<double>, std::map<std::string, bool>>>;
+    auto spec = parameter<ComplicatedType>("c", {.description = "", .size = {2, 3, 4}});
+
+    auto tree = init_yaml_tree_with_exceptions();
+    ryml::NodeRef root = tree.rootref();
+    ryml::parse_in_arena(R"(
+c: [[1.0, 2.0], [[1.0, 2.0, 8.0], {a: true, b: false, c: true, d: false}]])",
+        root);
+
+    ConstYamlNodeRef node(root, "");
+    InputParameterContainer container;
+    spec.match(node, container);
+
+    const auto& pair = container.get<ComplicatedType>("c");
+    ASSERT_EQ(pair.first.size(), 2);
+    EXPECT_EQ(pair.first[0], 1.0);
+    EXPECT_EQ(pair.first[1], 2.0);
+
+    ASSERT_EQ(pair.second.first.size(), 3);
+    EXPECT_EQ(pair.second.first[0], 1.0);
+    EXPECT_EQ(pair.second.first[1], 2.0);
+    EXPECT_EQ(pair.second.first[2], 8.0);
+
+    const auto& map = pair.second.second;
+    ASSERT_EQ(map.size(), 4);
+    EXPECT_EQ(map.at("a"), true);
+    EXPECT_EQ(map.at("b"), false);
+    EXPECT_EQ(map.at("c"), true);
+    EXPECT_EQ(map.at("d"), false);
+  }
+
   TEST(InputSpecTest, MatchYamlGroup)
   {
     auto spec = group("group", {
@@ -1602,22 +1635,23 @@ specs:
 
   TEST(InputSpecTest, MatchYamlSizes)
   {
-    using ComplicatedType = std::vector<std::map<std::string, std::vector<int>>>;
+    using ComplicatedType =
+        std::vector<std::map<std::string, std::pair<std::vector<int>, std::vector<double>>>>;
     auto spec = group("data", {
                                   parameter<int>("num"),
-                                  parameter<ComplicatedType>(
-                                      "v", {.size = {2, dynamic_size, from_parameter<int>("num")}}),
+                                  parameter<ComplicatedType>("v",
+                                      {.size = {2, dynamic_size, from_parameter<int>("num"), 1}}),
                               });
 
     {
       SCOPED_TRACE("Expected sizes");
       ryml::Tree tree = init_yaml_tree_with_exceptions();
       ryml::parse_in_arena(R"(data:
-  num: 2
+  num: 3
   v:
-    - key1: [1, 2]
-      key2: [3, 4]
-    - key1: [5, 6])",
+    - key1: [[1, 2, 1], [9.876]]
+      key2: [[3, 4, 5], [9.876]]
+    - key1: [[5, 6, 9], [9.876]])",
           &tree);
       ryml::NodeRef root = tree.rootref();
       ConstYamlNodeRef node(root, "");
@@ -1626,6 +1660,8 @@ specs:
       spec.match(node, container);
       const auto& v = container.group("data").get<ComplicatedType>("v");
       EXPECT_EQ(v.size(), 2);
+      EXPECT_EQ(v[0].at("key1").first.size(), 3);
+      EXPECT_EQ(v[0].at("key1").second.size(), 1);
     }
 
     {
@@ -1634,9 +1670,9 @@ specs:
       ryml::parse_in_arena(R"(data:
   num: 2
   v:
-    - key1: [1, 2, 3]
-      key2: [3, 4]
-    - key1: [5, 6])",
+    - key1: [[1, 2, 3], [9.876]]
+      key2: [[3, 4], [9.876]]
+    - key1: [[5, 6], [9.876]])",
           &tree);
       ryml::NodeRef root = tree.rootref();
       ConstYamlNodeRef node(root, "");
@@ -1651,16 +1687,34 @@ specs:
       ryml::parse_in_arena(R"(data:
   num: 2
   v:
-    - key1: [1, 2]
-    - key1: [5, 6]
-    - key1: [7, 8])",
+    - key1: [1, 2], [9.876]]
+    - key1: [5, 6], [9.876]]
+    - key1: [7, 8], [9.876]])",
           &tree);
       ryml::NodeRef root = tree.rootref();
       ConstYamlNodeRef node(root, "");
 
       InputParameterContainer container;
       FOUR_C_EXPECT_THROW_WITH_MESSAGE(
-          spec.match(node, container), Core::Exception, "Candidate parameter 'v'");
+          spec.match(node, container), Core::Exception, "value has incorrect size");
+    }
+
+    {
+      SCOPED_TRACE("Wrong size explicitly set inner.");
+      ryml::Tree tree = init_yaml_tree_with_exceptions();
+      ryml::parse_in_arena(R"(data:
+  num: 2
+  v:
+    - key1: [1, 2], [9.876]]
+      key1: [5, 6], [9.876, 4.244]]
+    - key1: [7, 8], [9.876]])",
+          &tree);
+      ryml::NodeRef root = tree.rootref();
+      ConstYamlNodeRef node(root, "");
+
+      InputParameterContainer container;
+      FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+          spec.match(node, container), Core::Exception, "value has incorrect size");
     }
   }
 
