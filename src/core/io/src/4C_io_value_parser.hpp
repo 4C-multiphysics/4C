@@ -247,6 +247,15 @@ namespace Core::IO
       }
     }
 
+    template <typename T1, typename T2, typename... SizeInfo>
+    void read_internal(std::pair<T1, T2>& value)
+    {
+      FOUR_C_ASSERT_ALWAYS(size_info_ != nullptr && size_info_[0] == 2,
+          "Expected exactly two elements in the pair, but got {}.", size_info_[0]);
+      read_internal(value.first);
+      read_internal(value.second);
+    }
+
     template <typename U, typename... SizeInfo>
     void read_internal(std::map<std::string, U>& value)
     {

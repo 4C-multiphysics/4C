@@ -149,6 +149,9 @@ namespace Core::IO
   template <typename T>
   void emit_value_as_yaml(YamlNodeRef node, const std::vector<T>& value);
 
+  template <typename T1, typename T2>
+  void emit_value_as_yaml(YamlNodeRef node, const std::pair<T1, T2>& value);
+
   template <YamlSupportedType T>
     requires(!std::is_enum_v<T>)
   void read_value_from_yaml(ConstYamlNodeRef node, T& value)
@@ -351,6 +354,18 @@ void Core::IO::emit_value_as_yaml(YamlNodeRef node, const std::vector<T>& value)
     auto child = node.wrap(node.node.append_child());
     emit_value_as_yaml(child, v);
   }
+}
+
+template <typename T1, typename T2>
+void Core::IO::emit_value_as_yaml(YamlNodeRef node, const std::pair<T1, T2>& value)
+{
+  node.node |= ryml::SEQ;
+
+  auto first_child = node.wrap(node.node.append_child());
+  emit_value_as_yaml(first_child, value.first);
+
+  auto second_child = node.wrap(node.node.append_child());
+  emit_value_as_yaml(second_child, value.second);
 }
 
 FOUR_C_NAMESPACE_CLOSE
