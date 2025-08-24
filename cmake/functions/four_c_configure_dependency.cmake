@@ -231,7 +231,11 @@ function(four_c_configure_dependency _package_name)
 
   # Add a cache entry to turn the option ON or OFF.
   four_c_process_global_option(
-    FOUR_C_WITH_${_package_name_sanitized} "Build 4C with ${_package_name}" ${_parsed_DEFAULT}
+    FOUR_C_WITH_${_package_name_sanitized}
+    DESCRIPTION
+    "Build 4C with ${_package_name}"
+    DEFAULT
+    ${_parsed_DEFAULT}
     )
   # Add a cache entry to set the root directory of the package.
   four_c_process_cache_variable(

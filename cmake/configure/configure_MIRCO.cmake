@@ -5,7 +5,13 @@
 #
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
-option(FOUR_C_MIRCO_FIND_INSTALLED "Use installed MIRCO instead of fetching sources" OFF)
+four_c_process_global_option(
+  FOUR_C_MIRCO_FIND_INSTALLED
+  DESCRIPTION
+  "Use installed MIRCO instead of fetching sources"
+  DEFAULT
+  OFF
+  )
 if(FOUR_C_MIRCO_FIND_INSTALLED)
 
   message(STATUS "FOUR_C_MIRCO_FIND_INSTALLED is enabled")

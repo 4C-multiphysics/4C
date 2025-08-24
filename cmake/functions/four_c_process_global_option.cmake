@@ -6,14 +6,63 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
 # Declare an option with given name, description and default value (ON or OFF).
-# This function is almost equivalent to the builtin CMake option() command,
-# except that it also prints info on whether the option is set.
 # Options need to start with "FOUR_C_".
-function(four_c_process_global_option option_name description default)
+#
+# Usage:
+#   four_c_process_global_option(FOUR_C_OPTION_NAME
+#       DESCRIPTION "Description of the option"
+#       DEFAULT "ON|OFF"
+#       [DEPRECATED_NAMES "NAME1" "NAME2"])
+#
+function(four_c_process_global_option option_name)
   if(NOT option_name MATCHES "FOUR_C_.*")
     message(FATAL_ERROR "Disallowed option '${option_name}'. Option needs to start with 'FOUR_C_'.")
   endif()
-  option("${option_name}" "${description} (default: ${default})" "${default}")
+
+  set(options "")
+  set(oneValueArgs DESCRIPTION DEFAULT)
+  set(multiValueArgs DEPRECATED_NAMES)
+  cmake_parse_arguments(
+    _parsed
+    "${options}"
+    "${oneValueArgs}"
+    "${multiValueArgs}"
+    ${ARGN}
+    )
+
+  if(DEFINED _parsed_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "There are unparsed arguments: ${_parsed_UNPARSED_ARGUMENTS}")
+  endif()
+
+  if(NOT _parsed_DESCRIPTION)
+    message(FATAL_ERROR "Description for option '${option_name}' is not set.")
+  endif()
+
+  if(NOT _parsed_DEFAULT MATCHES "ON|OFF")
+    message(FATAL_ERROR "Default value for option '${option_name}' must be ON or OFF.")
+  endif()
+
+  # Check if any of the deprecated names are set. Warn if so and set the option to the new name.
+  if(DEFINED _parsed_DEPRECATED_NAMES)
+    foreach(deprecated_name ${_parsed_DEPRECATED_NAMES})
+      if(DEFINED ${deprecated_name})
+        message(
+          WARNING
+            "Option '${deprecated_name}' is deprecated. Please use '${option_name}' instead.\n"
+            "I will now set '${option_name}' to the value of '${deprecated_name}', i.e., ${${deprecated_name}}."
+          )
+        set(${option_name}
+            ${${deprecated_name}}
+            CACHE BOOL "${_parsed_DESCRIPTION} (default: ${_parsed_DEFAULT})" FORCE
+            )
+        unset(${deprecated_name} CACHE)
+      endif()
+    endforeach()
+  endif()
+
+  option(
+    "${option_name}" "${_parsed_DESCRIPTION} (default: ${_parsed_DEFAULT})" "${_parsed_DEFAULT}"
+    )
   if(${option_name})
     message(STATUS "Option ${option_name} = ON")
   else()

@@ -8,11 +8,19 @@
 #
 # Set up the main documentation based on Sphinx
 
-four_c_process_global_option(FOUR_C_BUILD_DOCUMENTATION "Build the documentation" OFF)
-if(FOUR_C_BUILD_DOCUMENTATION)
+four_c_process_global_option(
+  FOUR_C_ENABLE_DOCUMENTATION
+  DESCRIPTION
+  "Build the documentation"
+  DEFAULT
+  OFF
+  DEPRECATED_NAMES
+  "FOUR_C_BUILD_DOCUMENTATION"
+  )
+if(FOUR_C_ENABLE_DOCUMENTATION)
 
   if(NOT FOUR_C_WITH_PYTHON)
-    message(FATAL_ERROR "FOUR_C_BUILD_DOCUMENTATION requires FOUR_C_WITH_PYTHON to be enabled.")
+    message(FATAL_ERROR "FOUR_C_ENABLE_DOCUMENTATION requires FOUR_C_WITH_PYTHON to be enabled.")
   endif()
 
   # add doc-specific cmake modules

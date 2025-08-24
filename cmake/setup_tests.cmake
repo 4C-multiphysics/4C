@@ -34,7 +34,13 @@ four_c_process_cache_variable(
   )
 
 # Fetch GoogleTest and setup the unit tests if option is enabled
-four_c_process_global_option(FOUR_C_WITH_GOOGLETEST "Use GoogleTest for unit testing" ON)
+four_c_process_global_option(
+  FOUR_C_WITH_GOOGLETEST
+  DESCRIPTION
+  "Use GoogleTest for unit testing"
+  DEFAULT
+  ON
+  )
 if(FOUR_C_WITH_GOOGLETEST)
   # Define a convenience target for all unit tests and add it to 'full'
   # All unit test executables should add themselves as a dependency to 'unittests'
@@ -65,7 +71,11 @@ endif()
 
 # Fetch Google Benchmark and setup benchmark tests if option is enabled
 four_c_process_global_option(
-  FOUR_C_WITH_GOOGLE_BENCHMARK "Use Google Benchmark for micro benchmark tests" OFF
+  FOUR_C_WITH_GOOGLE_BENCHMARK
+  DESCRIPTION
+  "Use Google Benchmark for micro benchmark tests"
+  DEFAULT
+  OFF
   )
 if(FOUR_C_WITH_GOOGLE_BENCHMARK)
   # Define a convenience target for all benchmark tests and add it to 'full'

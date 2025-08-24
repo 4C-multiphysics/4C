@@ -10,18 +10,29 @@
 #
 
 # The following options may be disabled by users. In this case, we do not search for a linker and use the user flags.
-option(FOUR_C_DETECT_LINKER "Detect a fast linker" ON)
+four_c_process_global_option(
+  FOUR_C_ENABLE_LINKER_DETECTION
+  DESCRIPTION
+  "Detect a fast linker"
+  DEFAULT
+  ON
+  DEPRECATED_NAMES
+  "FOUR_C_DETECT_LINKER"
+  )
 
-if(FOUR_C_DETECT_LINKER)
+if(FOUR_C_ENABLE_LINKER_DETECTION)
   # The order of the linkers here is the order in which we prefer to use the linkers.
   # As soon as a linker works, skip the rest.
   set(_linkers "mold" "lld" "gold" "bfd")
   set(_no_linker_found True)
   foreach(_linker_name ${_linkers})
     # Check that the linker exists
-    find_program(FOUR_C_HAVE_LINKER_PROGRAM_${_linker_name} "ld.${_linker_name}")
+    find_program(
+      FOUR_C_LINKER_PROGRAM_${_linker_name} "ld.${_linker_name}"
+      DOC "Path to the ${_linker_name} linker. Auto-detected when FOUR_C_ENABLE_LINKER_DETECTION is ON."
+      )
 
-    if(FOUR_C_HAVE_LINKER_PROGRAM_${_linker_name})
+    if(FOUR_C_LINKER_PROGRAM_${_linker_name})
       # Check if the linker works out of the box.
       four_c_check_compiles(
         FOUR_C_LINKER_FUNCTIONAL_${_linker_name}

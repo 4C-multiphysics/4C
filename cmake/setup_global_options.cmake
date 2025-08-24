@@ -47,7 +47,11 @@ if(NOT DEFINED FOUR_C_BUILD_SHARED_LIBS AND DEFINED BUILD_SHARED_LIBS)
 endif()
 
 four_c_process_global_option(
-  FOUR_C_BUILD_SHARED_LIBS "Build shared libraries instead of static ones" ON
+  FOUR_C_BUILD_SHARED_LIBS
+  DESCRIPTION
+  "Build shared libraries instead of static ones"
+  DEFAULT
+  ON
   )
 set(BUILD_SHARED_LIBS
     ${FOUR_C_BUILD_SHARED_LIBS}
@@ -59,7 +63,9 @@ set(BUILD_SHARED_LIBS
 
 four_c_process_global_option(
   FOUR_C_ENABLE_DEVELOPER_MODE
+  DESCRIPTION
   "Enable developer mode (tries to optimize setup for iterative development cycles)"
+  DEFAULT
   OFF
   )
 
@@ -93,19 +99,35 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
 
 four_c_process_global_option(
-  FOUR_C_ENABLE_WARNINGS_AS_ERRORS "Treat warnings as errors when compiling" OFF
+  FOUR_C_ENABLE_WARNINGS_AS_ERRORS
+  DESCRIPTION
+  "Treat warnings as errors when compiling"
+  DEFAULT
+  OFF
   )
 if(FOUR_C_ENABLE_WARNINGS_AS_ERRORS)
   enable_compiler_flag_if_supported("-Werror")
 endif()
 
-four_c_process_global_option(FOUR_C_ENABLE_NATIVE_OPTIMIZATIONS "Optimize for current hardware" OFF)
+four_c_process_global_option(
+  FOUR_C_ENABLE_NATIVE_OPTIMIZATIONS
+  DESCRIPTION
+  "Optimize for current hardware"
+  DEFAULT
+  OFF
+  )
 if(FOUR_C_ENABLE_NATIVE_OPTIMIZATIONS)
   enable_compiler_flag_if_supported("-march=native")
 endif()
 
 # If enabled, build all targets with address sanitizer
-four_c_process_global_option(FOUR_C_ENABLE_ADDRESS_SANITIZER "Compile with address sanitizer" OFF)
+four_c_process_global_option(
+  FOUR_C_ENABLE_ADDRESS_SANITIZER
+  DESCRIPTION
+  "Compile with address sanitizer"
+  DEFAULT
+  OFF
+  )
 if(FOUR_C_ENABLE_ADDRESS_SANITIZER)
   # We get better stack traces in ASAN with this flag.
   enable_compiler_flag_if_supported("-fno-omit-frame-pointer")
@@ -131,7 +153,9 @@ endif()
 
 four_c_process_global_option(
   FOUR_C_ENABLE_COVERAGE
+  DESCRIPTION
   "Set up a build to gather coverage information with LLVM source based coverage"
+  DEFAULT
   OFF
   )
 if(FOUR_C_ENABLE_COVERAGE)
@@ -155,10 +179,20 @@ if(FOUR_C_ENABLE_COVERAGE)
   endif()
 endif()
 
-four_c_process_global_option(FOUR_C_ENABLE_CORE_DUMP "Uncaught exceptions create a core file" OFF)
+four_c_process_global_option(
+  FOUR_C_ENABLE_CORE_DUMP
+  DESCRIPTION
+  "Uncaught exceptions create a core file"
+  DEFAULT
+  OFF
+  )
 
 four_c_process_global_option(
-  FOUR_C_ENABLE_FE_TRAPPING "Crash the program if a nan or inf would occur" ON
+  FOUR_C_ENABLE_FE_TRAPPING
+  DESCRIPTION
+  "Crash the program if a nan or inf would occur"
+  DEFAULT
+  ON
   )
 # We need to let the compiler know that we intend to use the floating-point trapping mechanism.
 if(FOUR_C_ENABLE_FE_TRAPPING)
@@ -176,7 +210,13 @@ else()
   enable_compiler_flag_if_supported("-fno-trapping-math")
 endif()
 
-four_c_process_global_option(FOUR_C_ENABLE_IWYU "Enable include-what-you-use" OFF)
+four_c_process_global_option(
+  FOUR_C_ENABLE_IWYU
+  DESCRIPTION
+  "Enable include-what-you-use"
+  DEFAULT
+  OFF
+  )
 if(FOUR_C_ENABLE_IWYU)
   find_program(FOUR_C_IWYU_EXECUTABLE NAMES include-what-you-use iwyu)
   if(NOT FOUR_C_IWYU_EXECUTABLE)
@@ -229,8 +269,9 @@ endif()
 # Evaluate this option now to get the correct output in case it is forced ON in DEBUG mode.
 four_c_process_global_option(
   FOUR_C_ENABLE_ASSERTIONS
-  "Turn on assertions and debug sections in 4C code, and turn on assertions in the standard library."
-  "Automatically turned on for DEBUG as CMAKE_BUILD_TYPE."
+  DESCRIPTION
+  "Turn on assertions and debug sections in 4C code, and turn on assertions in the standard library. Automatically turned on for DEBUG as CMAKE_BUILD_TYPE."
+  DEFAULT
   OFF
   )
 
@@ -246,7 +287,9 @@ endif()
 
 four_c_process_global_option(
   FOUR_C_ENABLE_METADATA_GENERATION
+  DESCRIPTION
   "Generate metadata after building 4C. Requires python and invokes 4C."
+  DEFAULT
   ON
   )
 
@@ -259,8 +302,7 @@ four_c_process_cache_variable(
   TYPE
   STRING
   DESCRIPTION
-  "Expert setting. Additional C++ compiler flags to use for all 4C targets.
-  Note that these flags are added at the very end and can override various other flags."
+  "Expert setting. Additional C++ compiler flags to use for all 4C targets. Note that these flags are added at the very end and can override various other flags."
   DEFAULT
   ""
   )
@@ -269,8 +311,7 @@ four_c_process_cache_variable(
   TYPE
   STRING
   DESCRIPTION
-  "Expert setting. Additional C++ linker flags to use for all 4C targets.
-  Note that these flags are added at the very end and can override various other flags."
+  "Expert setting. Additional C++ linker flags to use for all 4C targets. Note that these flags are added at the very end and can override various other flags."
   DEFAULT
   ""
   )
