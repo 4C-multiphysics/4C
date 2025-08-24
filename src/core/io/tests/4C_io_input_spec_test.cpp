@@ -1687,9 +1687,9 @@ c: [[1.0, 2.0], [[1.0, 2.0, 8.0], {a: true, b: false, c: true, d: false}]])",
       ryml::parse_in_arena(R"(data:
   num: 2
   v:
-    - key1: [1, 2], [9.876]]
-    - key1: [5, 6], [9.876]]
-    - key1: [7, 8], [9.876]])",
+    - key1: [[1, 2], [9.876]]
+    - key1: [[5, 6], [9.876]]
+    - key1: [[7, 8], [9.876]])",
           &tree);
       ryml::NodeRef root = tree.rootref();
       ConstYamlNodeRef node(root, "");
@@ -1705,9 +1705,9 @@ c: [[1.0, 2.0], [[1.0, 2.0, 8.0], {a: true, b: false, c: true, d: false}]])",
       ryml::parse_in_arena(R"(data:
   num: 2
   v:
-    - key1: [1, 2], [9.876]]
-      key1: [5, 6], [9.876, 4.244]]
-    - key1: [7, 8], [9.876]])",
+    - key1: [[1, 2], [9.876]]
+      key1: [[5, 6], [9.876, 4.244]]
+    - key1: [[7, 8], [9.876]])",
           &tree);
       ryml::NodeRef root = tree.rootref();
       ConstYamlNodeRef node(root, "");
