@@ -67,13 +67,14 @@ namespace Core::Utils::SymbolicExpressionDetails
     sqrt,
     heaviside,
     fabs,
+    logical_not,
   };
 
   template <typename T>
   using UnaryFunction = T (*)(const T&);
 
   template <typename T>
-  constexpr std::array<UnaryFunction<T>, 15> unary_function_table = {
+  constexpr std::array<UnaryFunction<T>, 16> unary_function_table = {
       [](const T& arg) -> T { return acos(arg); },
       [](const T& arg) -> T { return asin(arg); },
       [](const T& arg) -> T { return atan(arg); },
@@ -89,6 +90,7 @@ namespace Core::Utils::SymbolicExpressionDetails
       [](const T& arg) -> T { return sqrt(arg); },
       [](const T& arg) -> T { return arg > 0 ? 1.0 : 0.0; },
       [](const T& arg) -> T { return fabs(arg); },
+      [](const T& arg) -> T { return arg == 0.0 ? 1.0 : 0.0; },
   };
 
   enum class BinaryFunctionType : std::uint8_t
@@ -99,19 +101,31 @@ namespace Core::Utils::SymbolicExpressionDetails
     div,
     atan2,
     pow,
+    gt,
+    ge,
+    lt,
+    le,
+    logical_or,
+    logical_and,
   };
 
   template <typename T>
   using BinaryFunction = T (*)(const T&, const T&);
 
   template <typename T>
-  constexpr std::array<BinaryFunction<T>, 6> binary_function_table = {
-      [](const T& lhs, const T& rhs) -> T { return lhs + rhs; },        // add
-      [](const T& lhs, const T& rhs) -> T { return lhs - rhs; },        // sub
-      [](const T& lhs, const T& rhs) -> T { return lhs * rhs; },        // mul
-      [](const T& lhs, const T& rhs) -> T { return lhs / rhs; },        // div
-      [](const T& lhs, const T& rhs) -> T { return atan2(lhs, rhs); },  // atan2
-      [](const T& lhs, const T& rhs) -> T { return pow(lhs, rhs); },    // pow
+  constexpr std::array<BinaryFunction<T>, 12> binary_function_table = {
+      [](const T& lhs, const T& rhs) -> T { return lhs + rhs; },               // add
+      [](const T& lhs, const T& rhs) -> T { return lhs - rhs; },               // sub
+      [](const T& lhs, const T& rhs) -> T { return lhs * rhs; },               // mul
+      [](const T& lhs, const T& rhs) -> T { return lhs / rhs; },               // div
+      [](const T& lhs, const T& rhs) -> T { return atan2(lhs, rhs); },         // atan2
+      [](const T& lhs, const T& rhs) -> T { return pow(lhs, rhs); },           // pow
+      [](const T& lhs, const T& rhs) -> T { return lhs > rhs ? 1.0 : 0.0; },   // gt
+      [](const T& lhs, const T& rhs) -> T { return lhs >= rhs ? 1.0 : 0.0; },  // ge
+      [](const T& lhs, const T& rhs) -> T { return lhs < rhs ? 1.0 : 0.0; },   // lt
+      [](const T& lhs, const T& rhs) -> T { return lhs <= rhs ? 1.0 : 0.0; },  // le
+      [](const T& lhs, const T& rhs) -> T { return (lhs != 0.0) || (rhs != 0.0) ? 1.0 : 0.0; },
+      [](const T& lhs, const T& rhs) -> T { return (lhs != 0.0) && (rhs != 0.0) ? 1.0 : 0.0; },
   };
 
 
@@ -172,12 +186,9 @@ namespace Core::Utils::SymbolicExpressionDetails
   };
 
 
-
-  /*----------------------------------------------------------------------*/
-  /*!
-  \brief Class holds auxiliary variables for Lexan method which steps through
-         the string destilling the function tokens
-  */
+  /**
+   * A lexer to tokenize the input string.
+   */
   class Lexer
   {
    public:
@@ -187,25 +198,32 @@ namespace Core::Utils::SymbolicExpressionDetails
     //! delivers funct_ character at position pos_++
     int get_next();
 
-    //! identifies a token (value and kind) in the funct_ string
-    void lexan();
+    //! Advance to the next token.
+    void advance();
 
     //! type of identifiable tokens in string funct_
     enum TokenType
     {
       tok_none,
       tok_done,
-      tok_name,  // operator name, e.g. 'sin'
-      tok_int,   // integer number
-      tok_real,  // reals number
-      tok_add,   // addition '+'
-      tok_sub,   // subtraction and negation '-'
-      tok_mul,   // multiplication '*'
-      tok_div,   // division '/'
-      tok_pow,   // power '^'
-      tok_lpar,  // left parenthesis '('
-      tok_rpar,  // right parenthesis ')'
-      tok_comma  // comma ',' (used to separate function arguments)
+      tok_name,   // operator name, e.g. 'sin'
+      tok_int,    // integer number
+      tok_real,   // reals number
+      tok_add,    // addition '+'
+      tok_sub,    // subtraction and negation '-'
+      tok_mul,    // multiplication '*'
+      tok_div,    // division '/'
+      tok_pow,    // power '^'
+      tok_lpar,   // left parenthesis '('
+      tok_rpar,   // right parenthesis ')'
+      tok_comma,  // comma ',' (used to separate function arguments)
+      tok_gt,     // greater than '>'
+      tok_ge,     // greater than or equal '>='
+      tok_lt,     // less than '<'
+      tok_le,     // less than or equal '<='
+      tok_and,    // logical and '&&'
+      tok_or,     // logical or '||'
+      tok_bang,   // unary logical not '!'
     };
 
     std::string_view funct_;  // function description as string, i.e. "t^2", "sin(t)", etc
@@ -219,6 +237,7 @@ namespace Core::Utils::SymbolicExpressionDetails
 
   /**
    * Parse symbolic expressions into a syntax tree.
+   * This is a handwritten recursive descent parser.
    */
   template <class T>
   class Parser
@@ -247,12 +266,26 @@ namespace Core::Utils::SymbolicExpressionDetails
     std::vector<std::string_view> allowed_variable_names_;
 
    private:
+    //! Entry point to parse the expression.
     void parse();
-    IndexType parse_primary(Lexer& lexer);
-    IndexType parse_pow(Lexer& lexer);
-    IndexType parse_term(Lexer& lexer);
+
+    //! Any expression.
     IndexType parse_expr(Lexer& lexer);
-    IndexType parse(Lexer& lexer);
+
+    //! A logical OR expression.
+    IndexType parse_logical_or(Lexer& lexer);
+    //! A logical AND expression.
+    IndexType parse_logical_and(Lexer& lexer);
+    //! A comparison expression.
+    IndexType parse_comparison(Lexer& lexer);
+    //! Addition and subtraction.
+    IndexType parse_term(Lexer& lexer);
+    //! Multiplication and division.
+    IndexType parse_factor(Lexer& lexer);
+    //! Power operator.
+    IndexType parse_pow(Lexer& lexer);
+    //! Number, variable, parentheses, unary operators, function call.
+    IndexType parse_primary(Lexer& lexer);
 
     //! Create a new node in the node arena and return a pointer to it.
     //! Optionally, a left-hand side and right-hand side node index can be provided.
@@ -394,16 +427,19 @@ namespace Core::Utils::SymbolicExpressionDetails
     Lexer lexer{expression_};
 
     //! retrieve first token of funct
-    lexer.lexan();
+    lexer.advance();
 
     //! create syntax tree equivalent to funct
-    root_ = parse(lexer);
+    root_ = parse_expr(lexer);
+
+    // check if parsing ended before processing the entire string
+    if (lexer.tok_ != Lexer::tok_done)
+    {
+      FOUR_C_THROW("Invalid syntax: The remaining string '{}' is not parsed.",
+          lexer.funct_.data() + lexer.pos_);
+    }
   }
 
-  /*!
-  \brief Parse primary entities, i.e. literals and unary operators,
-         such as numbers, parentheses, independent variables, operator names
-  */
   template <class T>
   IndexType Parser<T>::parse_primary(Lexer& lexer)
   {
@@ -411,23 +447,28 @@ namespace Core::Utils::SymbolicExpressionDetails
     switch (lexer.tok_)
     {
       case Lexer::tok_lpar:
-        lexer.lexan();
+        lexer.advance();
         lhs = parse_expr(lexer);
         if (lexer.tok_ != Lexer::tok_rpar) FOUR_C_THROW("')' expected");
-        lexer.lexan();
+        lexer.advance();
         break;
       case Lexer::tok_int:
         lhs = create_node(NodeType::number, {.number = static_cast<double>(lexer.integer_)});
-        lexer.lexan();
+        lexer.advance();
         break;
       case Lexer::tok_real:
         lhs = create_node(NodeType::number, {.number = lexer.real_});
-        lexer.lexan();
+        lexer.advance();
+        break;
+      case Lexer::tok_bang:
+        lexer.advance();
+        lhs = create_node(NodeType::unary_function,
+            {.unary_function = UnaryFunctionType::logical_not}, parse_primary(lexer));
         break;
       case Lexer::tok_sub:
       {
         // This is a unary minus operator.
-        lexer.lexan();
+        lexer.advance();
         IndexType rhs = parse_pow(lexer);
         auto& rhs_node = node_arena_[rhs];
         if (rhs_node.type == NodeType::number)
@@ -450,7 +491,7 @@ namespace Core::Utils::SymbolicExpressionDetails
         if (name == "pi")
         {
           lhs = create_node(NodeType::number, {.number = M_PI});
-          lexer.lexan();
+          lexer.advance();
           break;
         }
         else
@@ -459,17 +500,17 @@ namespace Core::Utils::SymbolicExpressionDetails
           if (maybe_unary_function)
           {
             // Consume opening parenthesis
-            lexer.lexan();
+            lexer.advance();
             if (lexer.tok_ != Lexer::tok_lpar)
               FOUR_C_THROW("'(' expected after function name '{}'", name);
 
-            lexer.lexan();
+            lexer.advance();
             lhs = create_node(NodeType::unary_function, {.unary_function = *maybe_unary_function},
                 parse_expr(lexer));
 
             // Consume closing parenthesis
             if (lexer.tok_ != Lexer::tok_rpar) FOUR_C_THROW("')' expected");
-            lexer.lexan();
+            lexer.advance();
             break;
           }
 
@@ -477,16 +518,16 @@ namespace Core::Utils::SymbolicExpressionDetails
           if (maybe_binary_function)
           {
             // Consume opening parenthesis
-            lexer.lexan();
+            lexer.advance();
             if (lexer.tok_ != Lexer::tok_lpar)
               FOUR_C_THROW("'(' expected after function name '{}'", name);
 
-            lexer.lexan();
+            lexer.advance();
             auto first_arg = parse_expr(lexer);
 
             // Consume comma separating the two arguments
             if (lexer.tok_ != Lexer::tok_comma) FOUR_C_THROW("',' expected");
-            lexer.lexan();
+            lexer.advance();
             auto second_arg = parse_expr(lexer);
 
             lhs = create_node(NodeType::binary_function,
@@ -495,7 +536,7 @@ namespace Core::Utils::SymbolicExpressionDetails
             // Consume closing parenthesis
             if (lexer.tok_ != Lexer::tok_rpar)
               FOUR_C_THROW("')' expected for function name '{}'", name);
-            lexer.lexan();
+            lexer.advance();
             break;
           }
 
@@ -503,7 +544,7 @@ namespace Core::Utils::SymbolicExpressionDetails
           else
           {
             lhs = create_node(NodeType::variable, {.var_index = create_variable(name)});
-            lexer.lexan();
+            lexer.advance();
           }
         }
         break;
@@ -517,10 +558,6 @@ namespace Core::Utils::SymbolicExpressionDetails
   }
 
 
-  /*----------------------------------------------------------------------*/
-  /*!
-  \brief Parse entities connected by power: a^b
-  */
   template <class T>
   IndexType Parser<T>::parse_pow(Lexer& lexer)
   {
@@ -532,7 +569,7 @@ namespace Core::Utils::SymbolicExpressionDetails
     {
       if (lexer.tok_ == Lexer::tok_pow)
       {
-        lexer.lexan();
+        lexer.advance();
         rhs = parse_primary(lexer);
         lhs = create_node(
             NodeType::binary_function, {.binary_function = BinaryFunctionType::pow}, lhs, rhs);
@@ -547,12 +584,8 @@ namespace Core::Utils::SymbolicExpressionDetails
   }
 
 
-  /*----------------------------------------------------------------------*/
-  /*!
-  \brief Parse entities connected by multiplication or division: a*b, a/b
-  */
   template <class T>
-  IndexType Parser<T>::parse_term(Lexer& lexer)
+  IndexType Parser<T>::parse_factor(Lexer& lexer)
   {
     IndexType lhs;
     IndexType rhs;
@@ -562,14 +595,14 @@ namespace Core::Utils::SymbolicExpressionDetails
     {
       if (lexer.tok_ == Lexer::tok_mul)
       {
-        lexer.lexan();
+        lexer.advance();
         rhs = parse_pow(lexer);
         lhs = create_node(
             NodeType::binary_function, {.binary_function = BinaryFunctionType::mul}, lhs, rhs);
       }
       else if (lexer.tok_ == Lexer::tok_div)
       {
-        lexer.lexan();
+        lexer.advance();
         rhs = parse_pow(lexer);
         lhs = create_node(
             NodeType::binary_function, {.binary_function = BinaryFunctionType::div}, lhs, rhs);
@@ -583,24 +616,98 @@ namespace Core::Utils::SymbolicExpressionDetails
     return lhs;
   }
 
-  /*----------------------------------------------------------------------*/
-  /*!
-  \brief Parse entity
-  */
   template <class T>
-  IndexType Parser<T>::parse(Lexer& lexer)
+  IndexType Parser<T>::parse_comparison(Lexer& lexer)
   {
-    IndexType lhs = parse_expr(lexer);
-
-    // check if parsing ended before processing the entire string
-    if (lexer.tok_ != Lexer::tok_done)
+    IndexType lhs = parse_term(lexer);
+    for (;;)
     {
-      FOUR_C_THROW("Invalid syntax: The remaining string '{}' is not parsed.",
-          lexer.funct_.data() + lexer.pos_);
+      if (lexer.tok_ == Lexer::tok_gt)
+      {
+        lexer.advance();
+        IndexType rhs = parse_term(lexer);
+        lhs = create_node(
+            NodeType::binary_function, {.binary_function = BinaryFunctionType::gt}, lhs, rhs);
+      }
+      else if (lexer.tok_ == Lexer::tok_lt)
+      {
+        lexer.advance();
+        IndexType rhs = parse_term(lexer);
+        lhs = create_node(
+            NodeType::binary_function, {.binary_function = BinaryFunctionType::lt}, lhs, rhs);
+      }
+      else if (lexer.tok_ == Lexer::tok_ge)
+      {
+        lexer.advance();
+        IndexType rhs = parse_term(lexer);
+        lhs = create_node(
+            NodeType::binary_function, {.binary_function = BinaryFunctionType::ge}, lhs, rhs);
+      }
+      else if (lexer.tok_ == Lexer::tok_le)
+      {
+        lexer.advance();
+        IndexType rhs = parse_term(lexer);
+        lhs = create_node(
+            NodeType::binary_function, {.binary_function = BinaryFunctionType::le}, lhs, rhs);
+      }
+      else
+      {
+        break;
+      }
     }
 
     return lhs;
   }
+
+  template <class T>
+  IndexType Parser<T>::parse_logical_and(Lexer& lexer)
+  {
+    IndexType lhs = parse_comparison(lexer);
+    for (;;)
+    {
+      if (lexer.tok_ == Lexer::tok_and)
+      {
+        lexer.advance();
+        IndexType rhs = parse_comparison(lexer);
+        lhs = create_node(NodeType::binary_function,
+            {.binary_function = BinaryFunctionType::logical_and}, lhs, rhs);
+      }
+      else
+      {
+        break;
+      }
+    }
+    return lhs;
+  }
+
+  template <class T>
+  IndexType Parser<T>::parse_logical_or(Lexer& lexer)
+  {
+    IndexType lhs = parse_logical_and(lexer);
+    for (;;)
+    {
+      if (lexer.tok_ == Lexer::tok_or)
+      {
+        lexer.advance();
+        IndexType rhs = parse_logical_and(lexer);
+        lhs = create_node(NodeType::binary_function,
+            {.binary_function = BinaryFunctionType::logical_or}, lhs, rhs);
+      }
+      else
+      {
+        break;
+      }
+    }
+    return lhs;
+  }
+
+
+  template <class T>
+  IndexType Parser<T>::parse_expr(Lexer& lexer)
+  {
+    return parse_logical_or(lexer);
+  }
+
 
   template <class T>
   IndexType Parser<T>::create_node(NodeType type, Value value, IndexType lhs, IndexType rhs)
@@ -643,27 +750,23 @@ namespace Core::Utils::SymbolicExpressionDetails
     }
   }
 
-  /*----------------------------------------------------------------------*/
-  /*!
-  \brief Parse entities connected by addition or subtraction: a+b, a-b
-  */
   template <class T>
-  IndexType Parser<T>::parse_expr(Lexer& lexer)
+  IndexType Parser<T>::parse_term(Lexer& lexer)
   {
-    IndexType lhs = parse_term(lexer);
+    IndexType lhs = parse_factor(lexer);
     for (;;)
     {
       if (lexer.tok_ == Lexer::tok_add)
       {
-        lexer.lexan();
-        IndexType rhs = parse_term(lexer);
+        lexer.advance();
+        IndexType rhs = parse_factor(lexer);
         lhs = create_node(
             NodeType::binary_function, {.binary_function = BinaryFunctionType::add}, lhs, rhs);
       }
       else if (lexer.tok_ == Lexer::tok_sub)
       {
-        lexer.lexan();
-        IndexType rhs = parse_term(lexer);
+        lexer.advance();
+        IndexType rhs = parse_factor(lexer);
         lhs = create_node(
             NodeType::binary_function, {.binary_function = BinaryFunctionType::sub}, lhs, rhs);
       }
