@@ -355,8 +355,8 @@ void Core::IO::read_design(InputFile& input, const std::string& name,
 }
 
 
-void Core::IO::read_knots(InputFile& input, const std::string& name,
-    std::shared_ptr<Core::FE::Nurbs::Knotvector>& disknots)
+std::unique_ptr<Core::FE::Nurbs::Knotvector> Core::IO::read_knots(
+    InputFile& input, const std::string& name)
 {
   const int myrank = Core::Communication::my_mpi_rank(input.get_comm());
   Teuchos::Time time("", true);
@@ -407,9 +407,9 @@ void Core::IO::read_knots(InputFile& input, const std::string& name,
     printf("                        %8d patches", npatches);
     fflush(stdout);
 
-    disknots = std::make_shared<Core::FE::Nurbs::Knotvector>(nurbs_dim, npatches);
+    auto disknots = std::make_unique<Core::FE::Nurbs::Knotvector>(nurbs_dim, npatches);
 
-    std::vector<std::shared_ptr<std::vector<double>>> patch_knots(nurbs_dim);
+    std::vector<std::vector<double>> patch_knots(nurbs_dim);
     std::vector<int> n_x_m_x_l(nurbs_dim), degree(nurbs_dim), count_vals(nurbs_dim);
     std::vector<std::string> knotvectortype(nurbs_dim);
 
@@ -427,7 +427,7 @@ void Core::IO::read_knots(InputFile& input, const std::string& name,
       {
         read = true;
         actdim = -1;
-        for (auto& knots : patch_knots) knots = std::make_shared<std::vector<double>>();
+        for (auto& knots : patch_knots) knots.clear();
         std::fill(count_vals.begin(), count_vals.end(), 0);
       }
       else if (tmp == "ID")
@@ -467,7 +467,7 @@ void Core::IO::read_knots(InputFile& input, const std::string& name,
       }
       else if (read)
       {
-        patch_knots[actdim]->push_back(std::stod(tmp));
+        patch_knots[actdim].push_back(std::stod(tmp));
         count_vals[actdim]++;
       }
     }
@@ -484,13 +484,16 @@ void Core::IO::read_knots(InputFile& input, const std::string& name,
     Core::IO::cout << " in...." << time.totalElapsedTime(true) << " secs\n";
     time.reset();
     fflush(stdout);
+
+    return disknots;
   }
   else
   {
     std::cout << "Rank " << myrank << " waiting for knot vectors from rank 0" << std::endl;
     // All other ranks receive the knot vectors from rank 0.
-    disknots = std::make_shared<Core::FE::Nurbs::Knotvector>();
+    auto disknots = std::make_unique<Core::FE::Nurbs::Knotvector>();
     Core::Communication::broadcast(*disknots, 0, input.get_comm());
+    return disknots;
   }
 }
 

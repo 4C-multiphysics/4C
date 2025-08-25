@@ -81,15 +81,15 @@ namespace Core::IO
           get_discretization);
 
   /**
-   * \brief read the knotvector section (for isogeometric analysis)
+   * @brief Read the knot vector section (for isogeometric analysis)
    *
-   * \param  reader         (in ): InputFile object
-   * \param  name           (in ): Name/type of discretisation
-   * \param  disknots       (out): node vector coordinates
+   * @param  input         (in ): InputFile object
+   * @param  name           (in ): Name/type of discretisation
    *
+   * @return The Knotvector object read from the input file.
    */
-  void read_knots(InputFile& input, const std::string& name,
-      std::shared_ptr<Core::FE::Nurbs::Knotvector>& disknots);
+  std::unique_ptr<Core::FE::Nurbs::Knotvector> read_knots(
+      InputFile& input, const std::string& name);
 
 }  // namespace Core::IO
 

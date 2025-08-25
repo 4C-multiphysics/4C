@@ -1718,11 +1718,8 @@ void Global::read_knots(Global::Problem& problem, Core::IO::InputFile& input)
       if (nurbsdis == nullptr)
         FOUR_C_THROW("discretization {} is not a NurbsDiscretization! Panic.", dis->name());
 
-      // define an empty knot vector object
-      std::shared_ptr<Core::FE::Nurbs::Knotvector> disknots = nullptr;
-
       // read the knotvector data from the input
-      Core::IO::read_knots(input, dis->name(), disknots);
+      auto disknots = Core::IO::read_knots(input, dis->name());
 
       if (disknots == nullptr)
       {
@@ -1746,7 +1743,7 @@ void Global::read_knots(Global::Problem& problem, Core::IO::InputFile& input)
       disknots->finish_knots(smallest_gid_in_dis);
 
       // add knots to discretisation
-      nurbsdis->set_knot_vector(disknots);
+      nurbsdis->set_knot_vector(std::move(disknots));
     }
   }  // loop fields
 }

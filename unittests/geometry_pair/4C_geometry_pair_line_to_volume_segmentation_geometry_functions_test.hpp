@@ -504,15 +504,13 @@ namespace
     const std::string knotvectortype = "Interpolated";
     for (unsigned int dir = 0; dir < 3; dir++)
     {
-      std::shared_ptr<std::vector<double>> directions_knots =
-          std::make_shared<std::vector<double>>();
-      directions_knots->clear();
-      directions_knots->push_back(0.);
-      directions_knots->push_back(0.);
-      directions_knots->push_back(0.);
-      directions_knots->push_back(1.);
-      directions_knots->push_back(1.);
-      directions_knots->push_back(1.);
+      std::vector<double> directions_knots;
+      directions_knots.push_back(0.);
+      directions_knots.push_back(0.);
+      directions_knots.push_back(0.);
+      directions_knots.push_back(1.);
+      directions_knots.push_back(1.);
+      directions_knots.push_back(1.);
       knot_vector->set_knots(dir, 0, 2, 6, knotvectortype, directions_knots);
     }
     knot_vector->finish_knots(0);

@@ -73,40 +73,12 @@ Core::FE::Nurbs::Knotvector::Knotvector(const int dim, const int npatches)
     (knot_values_[rr]).resize(dim_);
 
     // initialize interpolation type
-    for (int mm = 0; mm < dim_; ++mm) (interpolation_[rr])[mm] = knotvector_is_not_defined;
+    for (int mm = 0; mm < dim_; ++mm) (interpolation_[rr])[mm] = KnotvectorType::Undefined;
   }
 
   return;
 }  // Core::FE::Nurbs::Knotvector::Knotvector (standard)
 
-/*----------------------------------------------------------------------*
- |  copy ctor (public)                                       gammi 05/08|
- *----------------------------------------------------------------------*/
-Core::FE::Nurbs::Knotvector::Knotvector(const Core::FE::Nurbs::Knotvector& old)
-    : ParObject(old),
-      dim_(old.dim_),
-      npatches_(old.npatches_),
-      filled_(false),
-      degree_(old.degree_),
-      n_x_m_x_l_(old.n_x_m_x_l_),
-      nele_x_mele_x_lele_(old.nele_x_mele_x_lele_),
-      interpolation_(old.interpolation_),
-      offsets_(old.offsets_),
-      knot_values_(old.npatches_)
-{
-  // deep copy knot vectors
-
-  for (int np = 0; np < npatches_; ++np)
-  {
-    (knot_values_[np]).resize(dim_);
-    for (int rr = 0; rr < dim_; ++rr)
-    {
-      ((knot_values_[np])[rr]) = std::make_shared<std::vector<double>>();
-      *((knot_values_[np])[rr]) = *((old.knot_values_[np])[rr]);
-    }
-  }
-  return;
-}  // Core::FE::Nurbs::Knotvector::Knotvector (copy)
 
 
 /*----------------------------------------------------------------------*
@@ -220,7 +192,7 @@ bool Core::FE::Nurbs::Knotvector::get_ele_knots(
 
     for (int mm = 0; mm < 2 * (degree_[npatch])[rr] + 2; ++mm)
     {
-      (eleknots[rr])(mm) = (*((knot_values_[npatch])[rr]))[cartids[rr] + mm];
+      (eleknots[rr])(mm) = (knot_values_[npatch][rr])[cartids[rr] + mm];
     }
   }
 
@@ -525,7 +497,7 @@ bool Core::FE::Nurbs::Knotvector::get_boundary_ele_and_parent_knots(
  *----------------------------------------------------------------------*/
 void Core::FE::Nurbs::Knotvector::set_knots(const int& direction, const int& npatch,
     const int& degree, const int& numknots, const std::string& knotvectortype,
-    std::shared_ptr<std::vector<double>> directions_knots)
+    const std::vector<double>& directions_knots)
 {
   // filled is false now since new add new knots
   filled_ = false;
@@ -543,11 +515,11 @@ void Core::FE::Nurbs::Knotvector::set_knots(const int& direction, const int& npa
   // set the type
   if (knotvectortype == "Interpolated")
   {
-    (interpolation_[npatch])[direction] = knotvector_is_interpolating;
+    (interpolation_[npatch])[direction] = KnotvectorType::Interpolated;
   }
   else if (knotvectortype == "Periodic")
   {
-    (interpolation_[npatch])[direction] = knotvector_is_periodic;
+    (interpolation_[npatch])[direction] = KnotvectorType::Periodic;
   }
   else
   {
@@ -638,35 +610,34 @@ void Core::FE::Nurbs::Knotvector::finish_knots(const int smallest_gid_in_dis)
     for (int rr = 0; rr < dim_; ++rr)
     {
       // is the knotvector of this dimension nonempty?
-      if ((knot_values_[np])[rr] == nullptr)
+      if (knot_values_[np][rr].empty())
       {
         FOUR_C_THROW("no knotvector available in this direction\n");
       }
 
       // has it the correct size?
-      if ((int)(*((knot_values_[np])[rr])).size() != (n_x_m_x_l_[np])[rr])
+      if ((int)(knot_values_[np][rr]).size() != (n_x_m_x_l_[np])[rr])
       {
         FOUR_C_THROW("knotvector size mismatch to n_x_m_x_l_ {}!={}\n",
-            (*((knot_values_[np])[rr])).size(), (n_x_m_x_l_[np])[rr]);
+            (knot_values_[np][rr]).size(), (n_x_m_x_l_[np])[rr]);
       }
 
       // is interpolation/periodicity assigned correctly?
-      if ((interpolation_[np])[rr] == knotvector_is_not_defined)
+      if ((interpolation_[np])[rr] == KnotvectorType::Undefined)
       {
         FOUR_C_THROW("undefined knotvector type\n");
       }
-      else if ((interpolation_[np])[rr] == knotvector_is_interpolating)
+      else if ((interpolation_[np])[rr] == KnotvectorType::Interpolated)
       {
         // for interpolating knot vectors, the first and last
         // knots have to be repeated degree+1 times
-        double firstval = (*((knot_values_[np])[rr]))[0];
-        double lastval = (*((knot_values_[np])[rr]))[(n_x_m_x_l_[np])[rr] - 1];
+        double firstval = (knot_values_[np][rr])[0];
+        double lastval = (knot_values_[np][rr])[(n_x_m_x_l_[np])[rr] - 1];
 
         for (int mm = 1; mm < (degree_[np])[rr] + 1; ++mm)
         {
-          double db = std::abs((*((knot_values_[np])[rr]))[mm] - firstval);
-          double de =
-              std::abs((*((knot_values_[np])[rr]))[(n_x_m_x_l_[np])[rr] - 1 - mm] - lastval);
+          double db = std::abs((knot_values_[np][rr])[mm] - firstval);
+          double de = std::abs((knot_values_[np][rr])[(n_x_m_x_l_[np])[rr] - 1 - mm] - lastval);
 
           if (de > 1e-9 || db > 1e-9)
           {
@@ -675,15 +646,15 @@ void Core::FE::Nurbs::Knotvector::finish_knots(const int smallest_gid_in_dis)
           }
         }
       }
-      else if ((interpolation_[np])[rr] == knotvector_is_periodic)
+      else if ((interpolation_[np])[rr] == KnotvectorType::Periodic)
       {
         // for periodic knot vectors, distances between the
         // degree+1 first and last nodes have to be equal
         for (int mm = 1; mm < (degree_[np])[rr] + 1; ++mm)
         {
-          double db = (*((knot_values_[np])[rr]))[mm] - (*((knot_values_[np])[rr]))[mm - 1];
-          double de = (*((knot_values_[np])[rr]))[(n_x_m_x_l_[np])[rr] - mm] -
-                      (*((knot_values_[np])[rr]))[(n_x_m_x_l_[np])[rr] - 1 - mm];
+          double db = (knot_values_[np][rr])[mm] - (knot_values_[np][rr])[mm - 1];
+          double de = (knot_values_[np][rr])[(n_x_m_x_l_[np])[rr] - mm] -
+                      (knot_values_[np][rr])[(n_x_m_x_l_[np])[rr] - 1 - mm];
           if (std::abs(de - db) > 1e-9)
           {
             FOUR_C_THROW("periodic knotvector doesn't obey periodicity\n");
@@ -776,16 +747,8 @@ void Core::FE::Nurbs::Knotvector::pack(Core::Communication::PackBuffer& data) co
   add_to_pack(data, offsets_);
 
   // add Knotvector coordinates itself
-  for (int np = 0; np < npatches_; ++np)
-  {
-    for (int rr = 0; rr < dim_; ++rr)
-    {
-      add_to_pack(data, (*((knot_values_[np])[rr])));
-    }
-  }
-
-  return;
-}  // Core::FE::Nurbs::Knotvector::Pack
+  add_to_pack(data, knot_values_);
+}
 
 /*----------------------------------------------------------------------*
  |  Unpack Knotvectors data                                    (public) |
@@ -851,18 +814,8 @@ void Core::FE::Nurbs::Knotvector::unpack(Core::Communication::UnpackBuffer& buff
   extract_from_pack(buffer, offsets_);
 
   // extract knotvector coordinates itself
-  for (int np = 0; np < npatches_; ++np)
-  {
-    for (int rr = 0; rr < dim_; ++rr)
-    {
-      (knot_values_[np])[rr] = std::make_shared<std::vector<double>>((n_x_m_x_l_[np])[rr]);
-
-      extract_from_pack(buffer, (*((knot_values_[np])[rr])));
-    }
-  }
-
-  return;
-}  // Core::FE::Nurbs::Knotvector::Unpack
+  extract_from_pack(buffer, knot_values_);
+}
 
 
 /*----------------------------------------------------------------------*
@@ -887,7 +840,7 @@ std::vector<int> Core::FE::Nurbs::Knotvector::return_n_zerosize_ele(const int np
       {
         double size = 1.0;
 
-        size *= (*(knot_values_[npatch])[0])[rr + 1] - (*(knot_values_[npatch])[0])[rr];
+        size *= knot_values_[npatch][0][rr + 1] - knot_values_[npatch][0][rr];
 
         if (fabs(size) < 1e-12)
         {
@@ -903,7 +856,7 @@ std::vector<int> Core::FE::Nurbs::Knotvector::return_n_zerosize_ele(const int np
       for (int rr = (degree_[npatch])[0]; rr < (n_x_m_x_l_[npatch])[0] - (degree_[npatch])[0] - 1;
           ++rr)
       {
-        size = (*(knot_values_[npatch])[0])[rr + 1] - (*(knot_values_[npatch])[0])[rr];
+        size = knot_values_[npatch][0][rr + 1] - knot_values_[npatch][0][rr];
         if (fabs(size) < 1e-12)
         {
           ++(num_zero_sized[0]);
@@ -912,7 +865,7 @@ std::vector<int> Core::FE::Nurbs::Knotvector::return_n_zerosize_ele(const int np
       for (int mm = (degree_[npatch])[1]; mm < (n_x_m_x_l_[npatch])[1] - (degree_[npatch])[1] - 1;
           ++mm)
       {
-        size = (*(knot_values_[npatch])[1])[mm + 1] - (*(knot_values_[npatch])[1])[mm];
+        size = knot_values_[npatch][1][mm + 1] - knot_values_[npatch][1][mm];
 
         if (fabs(size) < 1e-12)
         {
@@ -928,7 +881,7 @@ std::vector<int> Core::FE::Nurbs::Knotvector::return_n_zerosize_ele(const int np
       for (int rr = (degree_[npatch])[0]; rr < (n_x_m_x_l_[npatch])[0] - (degree_[npatch])[0] - 1;
           ++rr)
       {
-        size = (*(knot_values_[npatch])[0])[rr + 1] - (*(knot_values_[npatch])[0])[rr];
+        size = knot_values_[npatch][0][rr + 1] - knot_values_[npatch][0][rr];
         if (fabs(size) < 1e-12)
         {
           ++(num_zero_sized[0]);
@@ -937,7 +890,7 @@ std::vector<int> Core::FE::Nurbs::Knotvector::return_n_zerosize_ele(const int np
       for (int mm = (degree_[npatch])[1]; mm < (n_x_m_x_l_[npatch])[1] - (degree_[npatch])[1] - 1;
           ++mm)
       {
-        size = (*(knot_values_[npatch])[1])[mm + 1] - (*(knot_values_[npatch])[1])[mm];
+        size = knot_values_[npatch][1][mm + 1] - knot_values_[npatch][1][mm];
 
         if (fabs(size) < 1e-12)
         {
@@ -948,7 +901,7 @@ std::vector<int> Core::FE::Nurbs::Knotvector::return_n_zerosize_ele(const int np
       for (int kk = (degree_[npatch])[2]; kk < (n_x_m_x_l_[npatch])[2] - (degree_[npatch])[2] - 1;
           ++kk)
       {
-        size = (*(knot_values_[npatch])[2])[kk + 1] - (*(knot_values_[npatch])[2])[kk];
+        size = knot_values_[npatch][2][kk + 1] - knot_values_[npatch][2][kk];
 
         if (fabs(size) < 1e-12)
         {
@@ -990,8 +943,7 @@ int Core::FE::Nurbs::Knotvector::return_next_nonzero_ele_gid(const int zero_ele_
     double size = 0.0;
     while (fabs(size) < 1e-12)
     {
-      size =
-          (*(knot_values_[npatch])[dir])[location + 1] - (*(knot_values_[npatch])[dir])[location];
+      size = knot_values_[npatch][dir][location + 1] - knot_values_[npatch][dir][location];
       ++location;
       ++count[dir];
     }
@@ -1078,8 +1030,8 @@ void Core::FE::Nurbs::Knotvector::print(std::ostream& os) const
     for (int direction = 0; direction < dim_; ++direction)
     {
       os << "  direction " << direction << ": ";
-      for (std::size_t i = 0; i < knot_values_[patch][direction]->size(); ++i)
-        os << (*(knot_values_[patch][direction]))[i] << ", ";
+      for (std::size_t i = 0; i < knot_values_[patch][direction].size(); ++i)
+        os << ((knot_values_[patch][direction]))[i] << ", ";
       os << "\n";
     }
     os << std::endl;

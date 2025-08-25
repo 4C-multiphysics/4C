@@ -51,9 +51,6 @@ namespace Core::FE
     class Knotvector : public Core::Communication::ParObject
     {
      public:
-      //! @name Construction, destruction and copying
-      //! @{
-
       /*!
       \brief standard constructor
 
@@ -68,14 +65,6 @@ namespace Core::FE
        */
       Knotvector();
 
-      /*!
-      \brief copy constructor
-
-      \param old const Knotvector (i)
-      */
-      Knotvector(const Knotvector& old);
-
-      //! @}
 
       //! @name Access methods for shapefunction evaluation
       //! @{
@@ -274,7 +263,7 @@ namespace Core::FE
       */
       void set_knots(const int& direction, const int& npatch, const int& degree,
           const int& numknots, const std::string& knotvectortype,
-          std::shared_ptr<std::vector<double>> directions_knots);
+          const std::vector<double>& directions_knots);
 
       //! @}
 
@@ -460,11 +449,11 @@ namespace Core::FE
 
      private:
       //! Knotvector types
-      enum KnotvectorType
+      enum class KnotvectorType
       {
-        knotvector_is_interpolating,
-        knotvector_is_periodic,
-        knotvector_is_not_defined
+        Undefined,
+        Interpolated,
+        Periodic,
       };
 
       //! Spatial dimension
@@ -501,7 +490,7 @@ namespace Core::FE
       std::vector<int> offsets_;
 
       //! the actual values
-      std::vector<std::vector<std::shared_ptr<std::vector<double>>>> knot_values_;
+      std::vector<std::vector<std::vector<double>>> knot_values_;
 
       //! @}
     };
