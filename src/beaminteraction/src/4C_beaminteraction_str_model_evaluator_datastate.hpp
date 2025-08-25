@@ -187,6 +187,19 @@ namespace Solid
         return forcen_;
       }
 
+      /// Return lagrange multiplier vector
+      std::shared_ptr<Core::LinAlg::FEVector<double>>& get_lambda()
+      {
+        check_init_setup();
+        return lambda_;
+      }
+      /// Return lagrange multiplier vector
+      std::shared_ptr<const Core::LinAlg::FEVector<double>> get_lambda() const
+      {
+        check_init_setup();
+        return lambda_;
+      }
+
       /// Return internal force \f$fint_{n+1}\f$
       std::shared_ptr<const Core::LinAlg::FEVector<double>> get_force_np() const
       {
@@ -358,6 +371,8 @@ namespace Solid
       /// supposed to hold the entire jacobian (saddle point system if desired)
       std::shared_ptr<Core::LinAlg::SparseMatrix> stiff_;
 
+      /// holds the lagrange multipliers lambda
+      std::shared_ptr<Core::LinAlg::FEVector<double>> lambda_;
       ///@}
     };
   }  // namespace ModelEvaluator
