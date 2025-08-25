@@ -27,10 +27,12 @@ namespace Core::Utils
    * The class constructs a SymbolicExpression from an expression string. The expression must only
    * contain supported functions ("acos", "asin", "atan", "cos", "sin", "tan", "cosh", "sinh",
    * "tanh", "exp", "log", "log10", "sqrt", "heaviside", "fabs", "atan2") literals
-   * ('1.0', 'pi', 'e', 'E', etc) and supported operators ("+", "-", "*", "/", "^"). In
-   * addition, an arbitrary number of variables can be contained. Any substring that is not a number
-   * or supported function is parsed as a variable. When calling value(), first_derivative() or
-   * second_derivative(), the variables that have been parsed need to be supplied with a value.
+   * ('1.0', 'pi', 'e', 'E', etc) and supported operators ("+", "-", "*", "/", "^", ">", "<", "!",
+   * "&&", "||"). In addition, an arbitrary number of variables can be contained. Any substring that
+   * is not a number or supported function is parsed as a variable. When calling value(),
+   * first_derivative() or second_derivative(), the variables that have been parsed need to be
+   * supplied with a value. Note that the expression is parsed and compiled only once, so evaluating
+   * the same expression multiple times is efficient.
    *
    * There are two ways to use this class:
    *
@@ -59,7 +61,8 @@ namespace Core::Utils
    * expression only needs to be parsed and compiled once.
    *
    * @tparam Number: Only an arithmetic type is allowed for template parameter. So far only double
-   * is supported.
+   * is supported. In case you use logical operators like ">" or "<" in the expression, you will
+   * obtain 1.0 for true and 0.0 for false.
    */
 
   template <typename Number, CompileTimeString... variables>

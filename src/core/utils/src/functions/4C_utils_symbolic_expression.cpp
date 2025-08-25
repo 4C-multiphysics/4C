@@ -32,14 +32,8 @@ namespace Core::Utils::SymbolicExpressionDetails
     }
   }
 
-  /*----------------------------------------------------------------------*/
-  /*!
-  \brief Identify current token
-         type: tok_,
-         value: integer_, real_,
-         operator name: str_
-  */
-  void Lexer::lexan()
+
+  void Lexer::advance()
   {
     for (;;)
     {
@@ -171,6 +165,67 @@ namespace Core::Utils::SymbolicExpressionDetails
         else if (t == ',')
         {
           tok_ = Lexer::tok_comma;
+          return;
+        }
+        else if (t == '>')
+        {
+          t = get_next();
+          if (t == '=')
+          {
+            tok_ = Lexer::tok_ge;
+            return;
+          }
+          if (t != EOF)
+          {
+            pos_--;
+          }
+          tok_ = Lexer::tok_gt;
+          return;
+        }
+        else if (t == '<')
+        {
+          t = get_next();
+          if (t == '=')
+          {
+            tok_ = Lexer::tok_le;
+            return;
+          }
+          if (t != EOF)
+          {
+            pos_--;
+          }
+          tok_ = Lexer::tok_lt;
+          return;
+        }
+        else if (t == '&')
+        {
+          t = get_next();
+          if (t == '&')
+          {
+            tok_ = Lexer::tok_and;
+            return;
+          }
+          else
+          {
+            FOUR_C_THROW("unexpected char '{}' at pos {}", t, pos_);
+          }
+        }
+        else if (t == '|')
+        {
+          t = get_next();
+          if (t == '|')
+          {
+            tok_ = Lexer::tok_or;
+            return;
+          }
+          else
+          {
+            FOUR_C_THROW("unexpected char '{}' at pos {}", t, pos_);
+          }
+        }
+        else if (t == '!')
+        {
+          tok_ = Lexer::tok_bang;
           return;
         }
         else
