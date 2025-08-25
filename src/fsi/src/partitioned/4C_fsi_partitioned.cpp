@@ -507,7 +507,6 @@ Teuchos::RCP<::NOX::Epetra::LinearSystem> FSI::Partitioned::create_linear_system
   Teuchos::RCP<::NOX::Epetra::BroydenOperator> B;
 
   Teuchos::RCP<::NOX::Epetra::Interface::Jacobian> iJac;
-  Teuchos::RCP<::NOX::Epetra::Interface::Preconditioner> iPrec;
 
   Teuchos::RCP<Epetra_Operator> J;
   Teuchos::RCP<Epetra_Operator> M;

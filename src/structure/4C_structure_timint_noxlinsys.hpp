@@ -20,7 +20,6 @@
 #include <NOX_Common.H>
 #include <NOX_Epetra_Group.H>
 #include <NOX_Epetra_Interface_Jacobian.H>
-#include <NOX_Epetra_Interface_Preconditioner.H>
 #include <NOX_Epetra_Interface_Required.H>
 #include <NOX_Epetra_Vector.H>
 #include <NOX_Utils.H>
@@ -114,11 +113,8 @@ namespace NOX
       ::NOX::Utils utils_;
 
       std::shared_ptr<::NOX::Epetra::Interface::Jacobian> jacInterfacePtr_;
-      std::shared_ptr<::NOX::Epetra::Interface::Preconditioner> precInterfacePtr_;
       OperatorType jacType_;
-      OperatorType precType_;
       mutable std::shared_ptr<Epetra_Operator> jacPtr_;
-      mutable std::shared_ptr<Epetra_Operator> precPtr_;
       std::shared_ptr<NOX::Nln::Scaling> scaling_;
       mutable std::shared_ptr<::NOX::Epetra::Vector> tmpVectorPtr_;
       mutable double conditionNumberEstimate_;

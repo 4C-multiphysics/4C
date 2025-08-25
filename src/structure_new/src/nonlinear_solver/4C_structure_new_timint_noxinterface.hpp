@@ -14,8 +14,6 @@
 #include "4C_solver_nonlin_nox_interface_jacobian.hpp"  // (2) base class: jacobian
 #include "4C_solver_nonlin_nox_interface_required.hpp"  // (1) base class: rhs, status tests and more
 
-#include <NOX_Epetra_Interface_Preconditioner.H>  // (3) base class: preconditioner stuff
-
 FOUR_C_NAMESPACE_OPEN
 
 // forward declaration ...
@@ -47,8 +45,7 @@ namespace Solid
     class Base;
     class BaseDataGlobalState;
     class NoxInterface : virtual public NOX::Nln::Interface::Required,
-                         virtual public NOX::Nln::Interface::Jacobian,
-                         virtual public ::NOX::Epetra::Interface::Preconditioner
+                         virtual public NOX::Nln::Interface::Jacobian
     {
      public:
       //! constructor
@@ -79,11 +76,6 @@ namespace Solid
       bool compute_correction_system(const enum NOX::Nln::CorrectionType type,
           const ::NOX::Abstract::Group& grp, const Epetra_Vector& x, Epetra_Vector& rhs,
           Epetra_Operator& jac) override;
-
-      /*! compute preconditioner
-       *  (derived from ::NOX::Epetra::Interface::Preconditioner) */
-      bool computePreconditioner(const Epetra_Vector& x, Epetra_Operator& M,
-          Teuchos::ParameterList* precParams = nullptr) override;
 
       /*! Get the norm of right hand side rows/entries related to
        *  primary DoFs (derived from NOX::Nln::Interface::Required) */

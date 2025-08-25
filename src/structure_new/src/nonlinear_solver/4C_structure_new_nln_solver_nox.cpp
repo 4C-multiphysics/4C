@@ -55,10 +55,6 @@ Solid::Nln::SOLVER::Nox::Nox(const Teuchos::ParameterList& default_params,
   const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian> ijac =
       Teuchos::rcpFromRef(*nox_interface_ptr());
 
-  // pre-conditioner interface
-  Teuchos::RCP<::NOX::Epetra::Interface::Preconditioner> iprec =
-      Teuchos::rcpFromRef(*nox_interface_ptr());
-
   // vector of currently present solution types
   std::vector<enum NOX::Nln::SolutionType> soltypes;
   // map of linear solvers, the key is the solution type
@@ -92,7 +88,7 @@ Solid::Nln::SOLVER::Nox::Nox(const Teuchos::ParameterList& default_params,
 
   // build the global data container for the nox_nln_solver
   nlnglobaldata_ = Teuchos::make_rcp<NOX::Nln::GlobalData>(data_global_state().get_comm(),
-      nox_params, linsolvers, ireq, ijac, opttype, iconstr, iprec, iconstr_prec, iscale);
+      nox_params, linsolvers, ireq, ijac, opttype, iconstr, iconstr_prec, iscale);
 
   // -------------------------------------------------------------------------
   // Create NOX control class: NoxProblem()

@@ -53,30 +53,12 @@ namespace NOX
      public:
       using SolverMap = std::map<NOX::Nln::SolutionType, Teuchos::RCP<Core::LinAlg::Solver>>;
 
-     protected:
-      //! Source of the RowMatrix if using a native preconditioner
-      enum PreconditionerMatrixSourceType
-      {
-        UseJacobian,
-        SeparateMatrix
-      };
-
-      enum PreconditionerType
-      {
-        None,
-        Ifpack,
-        NewIfpack,
-        ML,
-        UserDefined
-      };
-
      public:
       //! Standard constructor with full functionality.
       LinearSystem(Teuchos::ParameterList& printParams, Teuchos::ParameterList& linearSolverParams,
           const SolverMap& solvers, const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
           const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
           const Teuchos::RCP<Core::LinAlg::SparseOperator>& J,
-          const Teuchos::RCP<::NOX::Epetra::Interface::Preconditioner>& iPrec,
           const Teuchos::RCP<Core::LinAlg::SparseOperator>& preconditioner,
           const ::NOX::Epetra::Vector& cloneVector,
           const std::shared_ptr<NOX::Nln::Scaling> scalingObject);
@@ -86,7 +68,6 @@ namespace NOX
           const SolverMap& solvers, const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
           const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
           const Teuchos::RCP<Core::LinAlg::SparseOperator>& J,
-          const Teuchos::RCP<::NOX::Epetra::Interface::Preconditioner>& iPrec,
           const Teuchos::RCP<Core::LinAlg::SparseOperator>& preconditioner,
           const ::NOX::Epetra::Vector& cloneVector);
 
@@ -144,10 +125,6 @@ namespace NOX
 
       //! ::NOX::Epetra::Interface::Jacobian accessor
       Teuchos::RCP<const ::NOX::Epetra::Interface::Jacobian> get_jacobian_interface() const;
-
-      //! ::NOX::Epetra::Interface::Preconditioner accessor
-      Teuchos::RCP<const ::NOX::Epetra::Interface::Preconditioner> get_preconditioner_interface()
-          const;
 
       /** \brief return the Jacobian range map
        *
@@ -308,17 +285,6 @@ namespace NOX
 
       //! Type of operator for the Jacobian.
       NOX::Nln::LinSystem::OperatorType jacType_;
-
-      //! Reference to the user supplied preconditioner interface functions
-      Teuchos::RCP<::NOX::Epetra::Interface::Preconditioner> precInterfacePtr_;
-
-      //! Type of operator for the preconditioner.
-      NOX::Nln::LinSystem::OperatorType precType_;
-
-      //! Pointer to the preconditioner operator.
-      Teuchos::RCP<Epetra_Operator> precPtr_;
-
-      PreconditionerMatrixSourceType precMatrixSource_;
 
       //! Scaling object supplied by the user
       std::shared_ptr<NOX::Nln::Scaling> scaling_;

@@ -210,16 +210,4 @@ void LAGPENCONSTRAINT::NoxInterfacePrec::fill_maps_for_preconditioner(
 {
 }
 
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
-bool LAGPENCONSTRAINT::NoxInterfacePrec::computePreconditioner(
-    const Epetra_Vector& x, Epetra_Operator& M, Teuchos::ParameterList* precParams)
-{
-  //  std::cout << "computePreconditioner" << std::endl;
-  check_init_setup();
-  // currently not supported
-  // ToDo add the scaled thickness conditioning (STC) approach here
-  return false;
-}
-
 FOUR_C_NAMESPACE_CLOSE

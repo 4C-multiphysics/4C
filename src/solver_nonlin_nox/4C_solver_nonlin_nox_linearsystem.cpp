@@ -22,7 +22,6 @@
 #include "4C_structure_new_nln_linearsystem_scaling.hpp"
 #include "4C_utils_epetra_exceptions.hpp"
 
-#include <NOX_Epetra_Interface_Preconditioner.H>
 #include <Teuchos_LAPACK.hpp>
 #include <Teuchos_ParameterList.hpp>
 
@@ -38,7 +37,6 @@ NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
     const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
     const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& jacobian_op,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Preconditioner>& iPrec,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& preconditioner,
     const ::NOX::Epetra::Vector& cloneVector,
     const std::shared_ptr<NOX::Nln::Scaling> scalingObject)
@@ -47,10 +45,6 @@ NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
       reqInterfacePtr_(iReq),
       jacInterfacePtr_(iJac),
       jacType_(NOX::Nln::LinSystem::LinalgSparseOperator),
-      precInterfacePtr_(iPrec),
-      precType_(NOX::Nln::LinSystem::LinalgSparseOperator),
-      precPtr_(preconditioner),
-      precMatrixSource_(SeparateMatrix),
       scaling_(scalingObject),
       conditionNumberEstimate_(0.0),
       timer_("", true),
@@ -73,7 +67,6 @@ NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
     const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
     const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& jacobian_op,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Preconditioner>& iPrec,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& preconditioner,
     const ::NOX::Epetra::Vector& cloneVector)
     : utils_(printParams),
@@ -81,10 +74,6 @@ NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
       reqInterfacePtr_(iReq),
       jacInterfacePtr_(iJac),
       jacType_(NOX::Nln::LinSystem::LinalgSparseOperator),
-      precInterfacePtr_(iPrec),
-      precType_(NOX::Nln::LinSystem::LinalgSparseOperator),
-      precPtr_(preconditioner),
-      precMatrixSource_(SeparateMatrix),
       scaling_(nullptr),
       conditionNumberEstimate_(0.0),
       timer_("", true),
@@ -114,10 +103,6 @@ NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
       reqInterfacePtr_(iReq),
       jacInterfacePtr_(iJac),
       jacType_(NOX::Nln::LinSystem::LinalgSparseOperator),
-      precInterfacePtr_(Teuchos::null),
-      precType_(NOX::Nln::LinSystem::LinalgSparseOperator),
-      precPtr_(Teuchos::null),
-      precMatrixSource_(SeparateMatrix),
       scaling_(scalingObject),
       conditionNumberEstimate_(0.0),
       timer_("", true),
@@ -146,10 +131,6 @@ NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
       reqInterfacePtr_(iReq),
       jacInterfacePtr_(iJac),
       jacType_(NOX::Nln::LinSystem::LinalgSparseOperator),
-      precInterfacePtr_(Teuchos::null),
-      precType_(NOX::Nln::LinSystem::LinalgSparseOperator),
-      precPtr_(Teuchos::null),
-      precMatrixSource_(SeparateMatrix),
       scaling_(nullptr),
       conditionNumberEstimate_(0.0),
       timer_("", true),
@@ -512,14 +493,6 @@ Teuchos::RCP<const ::NOX::Epetra::Interface::Jacobian>
 NOX::Nln::LinearSystem::get_jacobian_interface() const
 {
   return jacInterfacePtr_;
-}
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-Teuchos::RCP<const ::NOX::Epetra::Interface::Preconditioner>
-NOX::Nln::LinearSystem::get_preconditioner_interface() const
-{
-  return precInterfacePtr_;
 }
 
 /*----------------------------------------------------------------------*

@@ -290,7 +290,6 @@ namespace FSI
                      public MonolithicInterface,
                      public ::NOX::Epetra::Interface::Required,
                      public ::NOX::Epetra::Interface::Jacobian,
-                     public ::NOX::Epetra::Interface::Preconditioner,
                      public ::NOX::Direction::UserDefinedFactory
   {
    public:
@@ -343,10 +342,6 @@ namespace FSI
 
     /// compute FSI block matrix
     bool computeJacobian(const Epetra_Vector& x, Epetra_Operator& Jac) override;
-
-    /// preconditioner
-    bool computePreconditioner(const Epetra_Vector& x, Epetra_Operator& M,
-        Teuchos::ParameterList* precParams = nullptr) override;
 
     /// request NOX convergence from outside (needed for coupled problems)
     ::NOX::StatusTest::StatusType nox_status() const { return noxstatus_; };
@@ -988,10 +983,6 @@ namespace FSI
 
     /// compute FSI block matrix (not for standard FSI)
     bool computeJacobian(const Epetra_Vector& x, Epetra_Operator& Jac) override;
-
-    /// preconditioner
-    bool computePreconditioner(const Epetra_Vector& x, Epetra_Operator& M,
-        Teuchos::ParameterList* precParams = nullptr) override;
 
     //@}
 

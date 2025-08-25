@@ -995,14 +995,6 @@ bool FSI::Monolithic::computeJacobian(const Epetra_Vector& x, Epetra_Operator& J
 
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
-bool FSI::Monolithic::computePreconditioner(
-    const Epetra_Vector& x, Epetra_Operator& M, Teuchos::ParameterList* precParams)
-{
-  return true;
-}
-
-/*----------------------------------------------------------------------------*/
-/*----------------------------------------------------------------------------*/
 void FSI::Monolithic::setup_rhs(Core::LinAlg::Vector<double>& f, bool firstcall)
 {
   TEUCHOS_FUNC_TIME_MONITOR("FSI::Monolithic::setup_rhs");
@@ -1097,29 +1089,6 @@ bool FSI::BlockMonolithic::computeJacobian(const Epetra_Vector& x, Epetra_Operat
   Core::LinAlg::BlockSparseMatrixBase& mat =
       Teuchos::dyn_cast<Core::LinAlg::BlockSparseMatrixBase>(Jac);
   setup_system_matrix(mat);
-  return true;
-}
-
-/*----------------------------------------------------------------------------*/
-/*----------------------------------------------------------------------------*/
-bool FSI::BlockMonolithic::computePreconditioner(
-    const Epetra_Vector& x, Epetra_Operator& M, Teuchos::ParameterList* precParams)
-{
-  TEUCHOS_FUNC_TIME_MONITOR("FSI::BlockMonolithic::computePreconditioner");
-
-  if (precondreusecount_ <= 0)
-  {
-    // Create preconditioner operator. The blocks are already there. This is
-    // the perfect place to initialize the block preconditioners.
-    system_matrix()->setup_preconditioner();
-
-    const Teuchos::ParameterList& fsidyn = Global::Problem::instance()->fsi_dynamic_params();
-    const Teuchos::ParameterList& fsimono = fsidyn.sublist("MONOLITHIC SOLVER");
-    precondreusecount_ = fsimono.get<int>("PRECONDREUSE");
-  }
-
-  precondreusecount_ -= 1;
-
   return true;
 }
 

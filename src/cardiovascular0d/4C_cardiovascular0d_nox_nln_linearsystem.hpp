@@ -30,7 +30,6 @@ namespace NOX
             const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
             const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
             const Teuchos::RCP<Core::LinAlg::SparseOperator>& J,
-            const Teuchos::RCP<::NOX::Epetra::Interface::Preconditioner>& iPrec,
             const Teuchos::RCP<Core::LinAlg::SparseOperator>& M,
             const ::NOX::Epetra::Vector& cloneVector,
             const std::shared_ptr<NOX::Nln::Scaling> scalingObject);
@@ -42,7 +41,6 @@ namespace NOX
             const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
             const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
             const Teuchos::RCP<Core::LinAlg::SparseOperator>& J,
-            const Teuchos::RCP<::NOX::Epetra::Interface::Preconditioner>& iPrec,
             const Teuchos::RCP<Core::LinAlg::SparseOperator>& M,
             const ::NOX::Epetra::Vector& cloneVector);
 

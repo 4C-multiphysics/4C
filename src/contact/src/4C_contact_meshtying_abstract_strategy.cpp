@@ -980,15 +980,6 @@ void CONTACT::MtAbstractStrategy::fill_maps_for_preconditioner(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool CONTACT::MtAbstractStrategy::computePreconditioner(
-    const Epetra_Vector& x, Epetra_Operator& M, Teuchos::ParameterList* precParams)
-{
-  FOUR_C_THROW("Not implemented!");
-  return false;
-}
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
 void CONTACT::MtAbstractStrategy::postprocess_quantities_per_interface(
     std::shared_ptr<Teuchos::ParameterList> outputParams) const
 {

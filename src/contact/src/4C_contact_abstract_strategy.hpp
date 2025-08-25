@@ -785,10 +785,6 @@ namespace CONTACT
     void fill_maps_for_preconditioner(
         std::vector<Teuchos::RCP<Core::LinAlg::Map>>& maps) const override;
 
-    //! compute the preconditioner operator
-    bool computePreconditioner(const Epetra_Vector& x, Epetra_Operator& M,
-        Teuchos::ParameterList* precParams = nullptr) override;
-
     //!@}
 
     //! @name Quantity control methods

@@ -172,16 +172,6 @@ bool Solid::TimeInt::NoxInterface::compute_correction_system(
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-bool Solid::TimeInt::NoxInterface::computePreconditioner(
-    const Epetra_Vector& x, Epetra_Operator& M, Teuchos::ParameterList* precParams)
-{
-  check_init_setup();
-  // currently not supported
-  return false;
-}
-
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
 double Solid::TimeInt::NoxInterface::get_primary_rhs_norms(const Epetra_Vector& F,
     const NOX::Nln::StatusTest::QuantityType& checkquantity,
     const ::NOX::Abstract::Vector::NormType& type, const bool& isscaled) const

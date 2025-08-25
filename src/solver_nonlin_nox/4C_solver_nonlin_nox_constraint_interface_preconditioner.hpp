@@ -13,7 +13,6 @@
 #include "4C_solver_nonlin_nox_enum_lists.hpp"
 #include "4C_solver_nonlin_nox_forward_decl.hpp"
 
-#include <NOX_Epetra_Interface_Preconditioner.H>
 #include <Teuchos_RCP.hpp>
 
 #include <vector>
@@ -42,9 +41,12 @@ namespace NOX
 
       namespace Interface
       {
-        class Preconditioner : public ::NOX::Epetra::Interface::Preconditioner
+        class Preconditioner
         {
          public:
+          //! Virtual destructor
+          virtual ~Preconditioner() = default;
+
           /*! \brief Is the (CURRENT) system to solve a saddle-point system?
            *
            *  This check is supposed to return TRUE, only if the CURRENT system

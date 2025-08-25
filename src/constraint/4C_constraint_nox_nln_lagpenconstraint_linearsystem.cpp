@@ -25,12 +25,11 @@ NOX::Nln::LAGPENCONSTRAINT::LinearSystem::LinearSystem(Teuchos::ParameterList& p
     const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
     const NOX::Nln::CONSTRAINT::ReqInterfaceMap& iConstr,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& J,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Preconditioner>& iPrec,
     const NOX::Nln::CONSTRAINT::PrecInterfaceMap& iConstrPrec,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& M, const ::NOX::Epetra::Vector& cloneVector,
     const std::shared_ptr<NOX::Nln::Scaling> scalingObject)
-    : NOX::Nln::LinearSystem(printParams, linearSolverParams, solvers, iReq, iJac, J, iPrec, M,
-          cloneVector, scalingObject),
+    : NOX::Nln::LinearSystem(
+          printParams, linearSolverParams, solvers, iReq, iJac, J, M, cloneVector, scalingObject),
       i_constr_(iConstr),
       i_constr_prec_(iConstrPrec)
 {
@@ -45,11 +44,10 @@ NOX::Nln::LAGPENCONSTRAINT::LinearSystem::LinearSystem(Teuchos::ParameterList& p
     const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
     const NOX::Nln::CONSTRAINT::ReqInterfaceMap& iConstr,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& J,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Preconditioner>& iPrec,
     const NOX::Nln::CONSTRAINT::PrecInterfaceMap& iConstrPrec,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& M, const ::NOX::Epetra::Vector& cloneVector)
     : NOX::Nln::LinearSystem(
-          printParams, linearSolverParams, solvers, iReq, iJac, J, iPrec, M, cloneVector),
+          printParams, linearSolverParams, solvers, iReq, iJac, J, M, cloneVector),
       i_constr_(iConstr),
       i_constr_prec_(iConstrPrec)
 {

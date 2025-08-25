@@ -32,7 +32,6 @@ namespace NOX
             const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
             const NOX::Nln::CONSTRAINT::ReqInterfaceMap& iConstr,
             const Teuchos::RCP<Core::LinAlg::SparseOperator>& J,
-            const Teuchos::RCP<::NOX::Epetra::Interface::Preconditioner>& iPrec,
             const NOX::Nln::CONSTRAINT::PrecInterfaceMap& iConstrPrec,
             const Teuchos::RCP<Core::LinAlg::SparseOperator>& M,
             const ::NOX::Epetra::Vector& cloneVector,
@@ -45,7 +44,6 @@ namespace NOX
             const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
             const NOX::Nln::CONSTRAINT::ReqInterfaceMap& iConstr,
             const Teuchos::RCP<Core::LinAlg::SparseOperator>& J,
-            const Teuchos::RCP<::NOX::Epetra::Interface::Preconditioner>& iPrec,
             const NOX::Nln::CONSTRAINT::PrecInterfaceMap& iConstrPrec,
             const Teuchos::RCP<Core::LinAlg::SparseOperator>& M,
             const ::NOX::Epetra::Vector& cloneVector);

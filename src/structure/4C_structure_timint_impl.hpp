@@ -20,7 +20,6 @@
 #include <NOX_Epetra.H>
 #include <NOX_Epetra_Group.H>
 #include <NOX_Epetra_Interface_Jacobian.H>
-#include <NOX_Epetra_Interface_Preconditioner.H>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -59,8 +58,7 @@ namespace Solid
    */
   class TimIntImpl : public TimInt,
                      public ::NOX::Epetra::Interface::Required,
-                     public ::NOX::Epetra::Interface::Jacobian,
-                     public ::NOX::Epetra::Interface::Preconditioner
+                     public ::NOX::Epetra::Interface::Jacobian
   {
    public:
     //! @name Construction
@@ -536,25 +534,6 @@ namespace Solid
                                                   //!< \f$\frac{\partial F}{\partial x}\f$
                                                   //!< that the user supplied in the
                                                   //!< ::NOX::Epetra::Group constructor.
-        ) override;
-
-    /*! \brief Compute preconditioner
-     *
-     *  This method allows a user to supply their own preconditioner.
-     *  The method should compute a preconditioner based upon the solution
-     *  vector x and store it in the Epetra_Operator M. Subsequent calls to the
-     *  Epetra_Operator::Apply method will apply this user supplied
-     *  preconditioner to epetra vectors. The Epetra_Operator M can also be an
-     *  Epetra_RowMatrix that can be used by internally constructed
-     *  preconditioner objects such as Ifpack, and ML.
-     */
-    bool computePreconditioner(const Epetra_Vector& x,  //!< solution vector \f$x\f$ specified from
-                                                        //!< NOX i.e. total displacements
-        Epetra_Operator& M,  //!< a reference to the operator that is to be filled.
-                             //!< This operator should be updated to correspond to the current
-                             //!< solution vector x.
-        Teuchos::ParameterList* precParams  //!< a pointer to a parameter list
-                                            //!< that can be used by the preconditioner.
         ) override;
 
     //! Setup for solution with NOX

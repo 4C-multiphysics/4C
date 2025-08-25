@@ -2881,15 +2881,6 @@ void CONTACT::AbstractStrategy::fill_maps_for_preconditioner(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool CONTACT::AbstractStrategy::computePreconditioner(
-    const Epetra_Vector& x, Epetra_Operator& M, Teuchos::ParameterList* precParams)
-{
-  FOUR_C_THROW("Not implemented!");
-  return false;
-}
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
 std::shared_ptr<const Core::LinAlg::Vector<double>>
 CONTACT::AbstractStrategy::lagrange_multiplier_np(const bool& redist) const
 {

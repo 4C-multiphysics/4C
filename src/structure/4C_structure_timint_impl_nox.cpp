@@ -320,15 +320,6 @@ bool Solid::TimIntImpl::computeJacobian(const Epetra_Vector& x, Epetra_Operator&
 
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
-bool Solid::TimIntImpl::computePreconditioner(
-    const Epetra_Vector& x, Epetra_Operator& M, Teuchos::ParameterList* precParams)
-{
-  // deliver
-  return true;
-}
-
-/*----------------------------------------------------------------------------*/
-/*----------------------------------------------------------------------------*/
 std::shared_ptr<::NOX::Epetra::LinearSystem> Solid::TimIntImpl::nox_create_linear_system(
     Teuchos::ParameterList& nlParams, ::NOX::Epetra::Vector& noxSoln, ::NOX::Utils& utils)
 {

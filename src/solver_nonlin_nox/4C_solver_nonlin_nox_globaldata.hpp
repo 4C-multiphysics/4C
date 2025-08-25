@@ -52,7 +52,6 @@ namespace NOX
           const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
           const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
           const OptimizationProblemType& type, const NOX::Nln::CONSTRAINT::ReqInterfaceMap& iConstr,
-          const Teuchos::RCP<::NOX::Epetra::Interface::Preconditioner>& iPrec,
           const NOX::Nln::CONSTRAINT::PrecInterfaceMap& iConstrPrec,
           const std::shared_ptr<NOX::Nln::Scaling>& iscale);
 
@@ -66,16 +65,6 @@ namespace NOX
           const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
           const OptimizationProblemType& type,
           const NOX::Nln::CONSTRAINT::ReqInterfaceMap& iConstr);
-
-      /*! UNCONSTRAINED OPTIMIZATION
-       *  constructor without the constraint interface map (pure unconstrained optimization)
-       *  inclusive the pre-conditioner interface */
-      GlobalData(MPI_Comm comm, Teuchos::ParameterList& noxParams,
-          const std::map<enum NOX::Nln::SolutionType, Teuchos::RCP<Core::LinAlg::Solver>>&
-              linSolvers,
-          const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
-          const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
-          const Teuchos::RCP<::NOX::Epetra::Interface::Preconditioner>& iPrec);
 
       /*! UNCONSTRAINED OPTIMIZATION
        *  constructor without the constraint interface map (pure unconstrained optimization)
@@ -114,14 +103,11 @@ namespace NOX
       const std::map<enum NOX::Nln::SolutionType, Teuchos::RCP<Core::LinAlg::Solver>>&
       get_linear_solvers();
 
-      //! return the user-defined preconditioner interface
+      //! return the user-defined required interface
       Teuchos::RCP<::NOX::Epetra::Interface::Required> get_required_interface();
 
-      //! return the user-defined preconditioner interface
+      //! return the user-defined jacobian interface
       Teuchos::RCP<::NOX::Epetra::Interface::Jacobian> get_jacobian_interface();
-
-      //! return the user-defined preconditioner interface
-      Teuchos::RCP<::NOX::Epetra::Interface::Preconditioner> get_preconditioner_interface();
 
       //! return the user-defined constraint interface map
       const NOX::Nln::CONSTRAINT::ReqInterfaceMap& get_constraint_interfaces();
@@ -168,9 +154,6 @@ namespace NOX
 
       /// jacobian interface pointer
       Teuchos::RCP<::NOX::Epetra::Interface::Jacobian> i_jac_ptr_;
-
-      /// preconditioner interface pointer
-      Teuchos::RCP<::NOX::Epetra::Interface::Preconditioner> i_prec_ptr_;
 
       /// map of required interface pointer for constrained problems
       NOX::Nln::CONSTRAINT::ReqInterfaceMap i_constr_;

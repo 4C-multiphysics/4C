@@ -112,9 +112,6 @@ namespace LAGPENCONSTRAINT
 
     void fill_maps_for_preconditioner(
         std::vector<Teuchos::RCP<Core::LinAlg::Map>>& maps) const override;
-
-    bool computePreconditioner(const Epetra_Vector& x, Epetra_Operator& M,
-        Teuchos::ParameterList* precParams = nullptr) override;
     /// @}
 
    protected:
