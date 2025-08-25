@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+# vtk DataFile Version 3.0
+-->
+<VTKFile type="Collection" version="0.1" ByteOrder="LittleEndian">
+  <Collection>
+    <DataSet timestep="1.00000000000000e-02" group="" part="0" file="xxx-vtk-files/structure-00001.pvtu"/>
+    <DataSet timestep="2.00000000000000e-02" group="" part="0" file="xxx-vtk-files/structure-00002.pvtu"/>
+    <DataSet timestep="3.00000000000000e-02" group="" part="0" file="xxx-vtk-files/structure-00003.pvtu"/>
+    <DataSet timestep="4.00000000000000e-02" group="" part="0" file="xxx-vtk-files/structure-00004.pvtu"/>
+    <DataSet timestep="5.00000000000000e-02" group="" part="0" file="xxx-vtk-files/structure-00005.pvtu"/>
+    <DataSet timestep="6.00000000000000e-02" group="" part="0" file="xxx-vtk-files/structure-00006.pvtu"/>
+    <DataSet timestep="7.00000000000000e-02" group="" part="0" file="xxx-vtk-files/structure-00007.pvtu"/>
+    <DataSet timestep="8.00000000000000e-02" group="" part="0" file="xxx-vtk-files/structure-00008.pvtu"/>
+    <DataSet timestep="9.00000000000000e-02" group="" part="0" file="xxx-vtk-files/structure-00009.pvtu"/>
+    <DataSet timestep="1.00000000000000e-01" group="" part="0" file="xxx-vtk-files/structure-00010.pvtu"/>
+  </Collection>
+</VTKFile>

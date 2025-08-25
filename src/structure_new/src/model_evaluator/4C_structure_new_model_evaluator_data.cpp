@@ -180,7 +180,9 @@ Solid::ModelEvaluator::Data::Data()
       straindata_postprocessed_nodal_ptr_(nullptr),
       straindata_postprocessed_element_ptr_(nullptr),
       plastic_straindata_ptr_(nullptr),
-      couplstressdata_ptr_(nullptr),
+      coupling_stressdata_ptr_(nullptr),
+      coupling_stressdata_postprocessed_nodal_ptr_(nullptr),
+      coupling_stressdata_postprocessed_element_ptr_(nullptr),
       gauss_point_data_manager_ptr_(nullptr),
       sdyn_ptr_(nullptr),
       io_ptr_(nullptr),
@@ -563,15 +565,15 @@ const std::vector<char>& Solid::ModelEvaluator::Data::plastic_strain_data() cons
 std::shared_ptr<std::vector<char>>& Solid::ModelEvaluator::Data::coupling_stress_data_ptr()
 {
   check_init_setup();
-  return couplstressdata_ptr_;
+  return coupling_stressdata_ptr_;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 const std::vector<char>& Solid::ModelEvaluator::Data::coupling_stress_data() const
 {
-  FOUR_C_ASSERT(couplstressdata_ptr_, "Undefined reference to the stress data!");
-  return *couplstressdata_ptr_;
+  FOUR_C_ASSERT(coupling_stressdata_ptr_, "Undefined reference to the stress data!");
+  return *coupling_stressdata_ptr_;
 }
 
 /*----------------------------------------------------------------------------*

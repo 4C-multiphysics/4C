@@ -131,9 +131,6 @@ namespace Solid
       /// \brief return TRUE if reaction forces shall be written for this load/time step
       bool should_write_reaction_forces_for_this_step(int step) const;
 
-      /// \brief return TRUE if stress and strain data shall be written for this load/time step
-      bool should_write_stress_strain_for_this_step(int step) const;
-
       /// \brief return TRUE if energy data shall be written for this load/time step
       bool should_write_energy_for_this_step(int step) const;
 

@@ -547,11 +547,39 @@ namespace Solid
         return stressdata_postprocessed_element_ptr_;
       }
 
-      //! set stress data vector
-      inline void set_coupling_stress_data(
-          const std::shared_ptr<std::vector<char>>& couplstressdata)
+      //! get nodal postprocessed coupling stress data vector
+      inline const std::shared_ptr<Core::LinAlg::MultiVector<double>>&
+      get_coupling_stress_data_node_postprocessed() const
       {
-        couplstressdata_ptr_ = couplstressdata;
+        return coupling_stressdata_postprocessed_nodal_ptr_;
+      }
+
+      //! get nodal postprocessed coupling stress data vector
+      inline std::shared_ptr<Core::LinAlg::MultiVector<double>>&
+      get_coupling_stress_data_node_postprocessed()
+      {
+        return coupling_stressdata_postprocessed_nodal_ptr_;
+      }
+
+      //! get element postprocessed coupling stress data vector
+      inline const std::shared_ptr<Core::LinAlg::MultiVector<double>>&
+      get_coupling_stress_data_element_postprocessed() const
+      {
+        return coupling_stressdata_postprocessed_element_ptr_;
+      }
+
+      //! get element postprocessed coupling stress data vector
+      inline std::shared_ptr<Core::LinAlg::MultiVector<double>>&
+      get_coupling_stress_data_element_postprocessed()
+      {
+        return coupling_stressdata_postprocessed_element_ptr_;
+      }
+
+      //! set coupling stress data vector
+      inline void set_coupling_stress_data(
+          const std::shared_ptr<std::vector<char>>& coupling_stressdata)
+      {
+        coupling_stressdata_ptr_ = coupling_stressdata;
       }
 
       //! set strain data vector
@@ -902,8 +930,16 @@ namespace Solid
       std::shared_ptr<std::vector<char>> plastic_straindata_ptr_;
 
       //! coupling stress data vector
-      //! e.g. in TSI: couplstress corresponds to thermal stresses
-      std::shared_ptr<std::vector<char>> couplstressdata_ptr_;
+      //! e.g. in TSI: coupling stress corresponds to thermal stresses
+      std::shared_ptr<std::vector<char>> coupling_stressdata_ptr_;
+
+      //! postprocessed nodal coupling stress data vector
+      std::shared_ptr<Core::LinAlg::MultiVector<double>>
+          coupling_stressdata_postprocessed_nodal_ptr_;
+
+      //! postprocessed element coupling stress data vector
+      std::shared_ptr<Core::LinAlg::MultiVector<double>>
+          coupling_stressdata_postprocessed_element_ptr_;
 
       //! optional quantity data vector
       std::shared_ptr<std::vector<char>> opt_quantity_data_ptr_;
