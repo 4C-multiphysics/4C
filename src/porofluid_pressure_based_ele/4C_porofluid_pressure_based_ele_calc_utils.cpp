@@ -89,6 +89,25 @@ PoroPressureBased::ElementUtils::get_single_vol_frac_mat_from_multi_material(
   return static_cast<const Mat::FluidPoroSingleVolFrac&>(*singlemat);
 }
 
+/*---------------------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------------------*/
+const Mat::FluidPoroVolFracPressureBloodLung&
+PoroPressureBased::ElementUtils::get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+    const Mat::FluidPoroMultiPhase& multiphasemat, int volfracnum)
+{
+  // get the single phase material by its ID
+  const int matid = multiphasemat.mat_id(volfracnum);
+  std::shared_ptr<Core::Mat::Material> singlemat = multiphasemat.material_by_id(matid);
+
+  // safety check and cast
+  if (singlemat->material_type() != Core::Materials::m_fluidporo_volfrac_pressure_blood_lung)
+    FOUR_C_THROW("check at position {}/{} failed, only poro single vol fraction material valid",
+        volfracnum + 1, multiphasemat.num_mat());
+
+  return static_cast<const Mat::FluidPoroVolFracPressureBloodLung&>(*singlemat);
+}
+
+
 /*-------------------------------------------------------------------------------*
  *  get the single volfrac material from the element material   kremheller 08/17 |
  *--------------------------------------------------------------------------------*/
@@ -106,6 +125,24 @@ PoroPressureBased::ElementUtils::get_single_vol_frac_mat_from_material(
       static_cast<const Mat::FluidPoroMultiPhase&>(material);
 
   return get_single_vol_frac_mat_from_multi_material(multiphasemat, volfracnum);
+}
+
+/*-------------------------------------------------------------------------------*
+ *--------------------------------------------------------------------------------*/
+const Mat::FluidPoroVolFracPressureBloodLung&
+PoroPressureBased::ElementUtils::get_single_vol_frac_pressure_blood_lung_mat_from_material(
+    const Core::Mat::Material& material, int volfracnum)
+{
+  // safety check
+  if (material.material_type() != Core::Materials::m_fluidporo_multiphase and
+      material.material_type() != Core::Materials::m_fluidporo_multiphase_reactions)
+    FOUR_C_THROW("only poro multiphase material valid");
+
+  // cast
+  const Mat::FluidPoroMultiPhase& multiphasemat =
+      static_cast<const Mat::FluidPoroMultiPhase&>(material);
+
+  return get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(multiphasemat, volfracnum);
 }
 
 /*-------------------------------------------------------------------------------------------------*

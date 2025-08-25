@@ -18,10 +18,8 @@ FOUR_C_NAMESPACE_OPEN
 
 template <Core::FE::CellType distype>
 void Discret::Elements::Wall1PoroP1<distype>::compute_porosity_and_linearization(
-    Teuchos::ParameterList& params, const double& press, const double& J, const int& gp,
     const Core::LinAlg::Matrix<Base::numnod_, 1>& shapfct,
-    const Core::LinAlg::Matrix<Base::numnod_, 1>* myporosity,
-    const Core::LinAlg::Matrix<1, Base::numdof_>& dJ_dus, double& porosity,
+    const Core::LinAlg::Matrix<Base::numnod_, 1>* myporosity, double& porosity,
     Core::LinAlg::Matrix<1, Base::numdof_>& dphi_dus)
 {
   if (myporosity == nullptr)
@@ -608,8 +606,7 @@ void Discret::Elements::Wall1PoroP1<distype>::gauss_point_loop_p1(Teuchos::Param
     Core::LinAlg::Matrix<1, Base::numdof_> dphi_dus;
     double porosity = 0.0;
 
-    compute_porosity_and_linearization(
-        params, press, volchange, gp, shapefct, porosity_dof, dvolchange_dus, porosity, dphi_dus);
+    compute_porosity_and_linearization(shapefct, porosity_dof, porosity, dphi_dus);
 
     double dW_dphi = 0.0;
     double dW_dJ = 0.0;

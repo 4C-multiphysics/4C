@@ -682,7 +682,7 @@ namespace Discret::Elements
     //! Setup phase manager and variable manager of fluid
     void setup_porofluid_managers(const Core::Elements::Element* element,
         const Core::FE::Discretization& discretization, int number_of_fluid_phases,
-        int total_number_of_porofluid_dofs);
+        int total_number_of_porofluid_dofs, const int number_volfracs);
 
     //! extract the element and node values of the porofluid from variable manager
     void extract_element_and_node_values_of_porofluid(Core::Elements::Element* element,

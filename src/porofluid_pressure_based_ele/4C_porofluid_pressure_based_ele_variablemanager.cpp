@@ -24,15 +24,41 @@ std::shared_ptr<Discret::Elements::PoroFluidManager::VariableManagerInterface<ns
 Discret::Elements::PoroFluidManager::VariableManagerInterface<nsd, nen>::create_variable_manager(
     const Discret::Elements::PoroFluidMultiPhaseEleParameter& para,
     const PoroPressureBased::Action& action, std::shared_ptr<Core::Mat::Material> mat,
-    int numdofpernode, int numfluidphases)
+    int numdofpernode, int numfluidphases, int numvolfrac)
 {
   std::shared_ptr<VariableManagerInterface<nsd, nen>> varmanager = nullptr;
 
   // get the number of volume fractions
   // the check for correct input definition is performed in
   // Mat::PAR::FluidPoroMultiPhase::initialize()
-  const int numvolfrac = (int)((numdofpernode - numfluidphases) / 2);
 
+  // determine closing relation of volume fraction material
+
+  const Mat::PAR::PoroFluidPressureBased::ClosingRelation volfrac_closing_relation = std::invoke(
+      [&]()
+      {
+        if (numvolfrac)
+        {
+          if (numdofpernode - numfluidphases == numvolfrac)
+          {
+            return Mat::PAR::PoroFluidPressureBased::ClosingRelation::
+                cr_evolutionequation_blood_lung;
+          }
+          else if (numdofpernode - numfluidphases == numvolfrac * 2)
+          {
+            return Mat::PAR::PoroFluidPressureBased::ClosingRelation::
+                cr_evolutionequation_homogenized_vasculature_tumor;
+          }
+          else
+          {
+            FOUR_C_THROW("You have an invalid number of volfracs in the variable manager!");
+          }
+        }
+        else
+        {
+          return Mat::PAR::PoroFluidPressureBased::ClosingRelation::cr_undefined;
+        }
+      });
   // determine action
   switch (action)
   {
@@ -66,7 +92,7 @@ Discret::Elements::PoroFluidManager::VariableManagerInterface<nsd, nen>::create_
 
       if (numvolfrac > 0)
         varmanager = std::make_shared<VariableManagerMaximumNodalVolFracValue<nsd, nen>>(
-            numvolfrac, varmanager, mat);
+            numvolfrac, varmanager, mat, volfrac_closing_relation);
 
       break;
     }
@@ -95,7 +121,7 @@ Discret::Elements::PoroFluidManager::VariableManagerInterface<nsd, nen>::create_
 
       if (numvolfrac > 0)
         varmanager = std::make_shared<VariableManagerMaximumNodalVolFracValue<nsd, nen>>(
-            numvolfrac, varmanager, mat);
+            numvolfrac, varmanager, mat, volfrac_closing_relation);
 
       break;
     }
@@ -113,7 +139,7 @@ Discret::Elements::PoroFluidManager::VariableManagerInterface<nsd, nen>::create_
 
       if (numvolfrac > 0)
         varmanager = std::make_shared<VariableManagerMaximumNodalVolFracValue<nsd, nen>>(
-            numvolfrac, varmanager, mat);
+            numvolfrac, varmanager, mat, volfrac_closing_relation);
 
       break;
     }
@@ -449,29 +475,56 @@ void Discret::Elements::PoroFluidManager::VariableManagerMaximumNodalVolFracValu
   std::vector<Core::LinAlg::Matrix<nen, 1>> ephin(this->num_dof_per_node());
   Core::FE::extract_my_values<Core::LinAlg::Matrix<nen, 1>>(*phin, ephin, lm);
 
-  const int numfluidphases = (int)(this->num_dof_per_node() - 2 * numvolfrac_);
+  const int numfluidphases = std::invoke(
+      [&]()
+      {
+        if (volfrac_closing_relation_ ==
+            Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_blood_lung)
+          return (int)(this->num_dof_per_node() - numvolfrac_);
+        else if (volfrac_closing_relation_ ==
+                 Mat::PAR::PoroFluidPressureBased::
+                     cr_evolutionequation_homogenized_vasculature_tumor)
+          return (int)(this->num_dof_per_node() - (2 * numvolfrac_));
+        else
+        {
+          FOUR_C_THROW("Internal error!");
+        }
+      });
 
-  // loop over DOFs
-  for (int k = 0; k < numvolfrac_; ++k)
+  if (volfrac_closing_relation_ ==
+      Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_homogenized_vasculature_tumor)
   {
-    // get the volfrac pressure material
-    const Mat::FluidPoroVolFracPressure& volfracpressmat =
-        PoroPressureBased::ElementUtils::get_vol_frac_pressure_mat_from_material(
-            *multiphasemat_, k + numvolfrac_ + numfluidphases);
+    // loop over DOFs
+    for (int k = 0; k < numvolfrac_; ++k)
+    {
+      // get the volfrac pressure material
+      const Mat::FluidPoroVolFracPressure& volfracpressmat =
+          PoroPressureBased::ElementUtils::get_vol_frac_pressure_mat_from_material(
+              *multiphasemat_, k + numvolfrac_ + numfluidphases);
 
-    // this approach proved to be the most stable one
-    // we evaluate the volume fraction pressure if at least one volfrac value is bigger than
-    // minvolfrac
-    ele_has_valid_volfrac_press_[k] =
-        ephin[k + numfluidphases].max_value() > volfracpressmat.min_vol_frac();
+      // this approach proved to be the most stable one
+      // we evaluate the volume fraction pressure if at least one volfrac value is bigger than
+      // minvolfrac
+      ele_has_valid_volfrac_press_[k] =
+          ephin[k + numfluidphases].max_value() > volfracpressmat.min_vol_frac();
 
-    // and we evaluate the volume fraction species if all volfrac values are bigger than
-    // minvolfrac
-    ele_has_valid_volfrac_spec_[k] =
-        ephin[k + numfluidphases].min_value() > volfracpressmat.min_vol_frac();
+      // and we evaluate the volume fraction species if all volfrac values are bigger than
+      // minvolfrac
+      ele_has_valid_volfrac_spec_[k] =
+          ephin[k + numfluidphases].min_value() > volfracpressmat.min_vol_frac();
+    }
   }
-
-  return;
+  else if (volfrac_closing_relation_ ==
+           Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_blood_lung)
+  {
+    // sofar every dof is valid no minimal volfrac necessary
+    ele_has_valid_volfrac_press_[0] = true;
+    ele_has_valid_volfrac_spec_[0] = true;
+  }
+  else
+  {
+    FOUR_C_THROW("Internal error!");
+  }
 }
 
 /*----------------------------------------------------------------------*

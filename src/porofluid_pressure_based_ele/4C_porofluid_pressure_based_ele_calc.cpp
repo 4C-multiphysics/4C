@@ -514,13 +514,15 @@ int Discret::Elements::PoroFluidMultiPhaseEleCalc<distype>::setup_calc(Core::Ele
 
   // build the phase manager
   phasemanager_ = Discret::Elements::PoroFluidManager::PhaseManagerInterface::create_phase_manager(
-      *para_, nsd_, ele->material()->material_type(), action, totalnumdofpernode_, numfluidphases_);
+      *para_, nsd_, ele->material()->material_type(), action, totalnumdofpernode_, numfluidphases_,
+      actmat->num_vol_frac());
   // setup the manager
   phasemanager_->setup(ele);
 
   // rebuild the phase manager
   variablemanager_ = Discret::Elements::PoroFluidManager::VariableManagerInterface<nsd_,
-      nen_>::create_variable_manager(*para_, action, actmat, totalnumdofpernode_, numfluidphases_);
+      nen_>::create_variable_manager(*para_, action, actmat, totalnumdofpernode_, numfluidphases_,
+      actmat->num_vol_frac());
 
   // build the evaluator
   evaluator_ =
