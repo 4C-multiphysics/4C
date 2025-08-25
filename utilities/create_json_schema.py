@@ -24,6 +24,7 @@ from metadata_utils import (
     Map,
     NotSet,
     One_Of,
+    Pair,
     Primitive,
     RangeValidator,
     PatternValidator,
@@ -93,6 +94,7 @@ def json_schema(
     patternProperties=None,
     additionalProperties=False,
     items=None,
+    prefixItems=None,
     minItems=None,
     maxItems=None,
     validator=None,
@@ -145,6 +147,7 @@ def json_schema(
     # Arrays
     if schema_type == "array":
         set_if_not_none(schema, "items", items)
+        set_if_not_none(schema, "prefixItems", prefixItems)
         set_if_not_none(schema, "maxItems", maxItems)
         set_if_not_none(schema, "minItems", minItems)
 
@@ -285,6 +288,27 @@ def array_schema(parameter, items):
         maxItems=parameter.size,
         minItems=parameter.size,
         noneable=parameter.noneable,
+    )
+
+    return schema
+
+
+def schema_from_pair(pair):
+    """Create schema from pair.
+    Args:
+        pair (Pair): Pair parameter
+    Returns:
+        dict: JSON schema data
+    """
+    schema = json_schema(
+        title=pair.short_description(),
+        description=pair.description,
+        schema_type="array",
+        prefixItems=[
+            get_schema(pair.first_type),
+            get_schema(pair.second_type),
+        ],
+        noneable=pair.noneable,
     )
 
     return schema
@@ -498,6 +522,8 @@ def get_schema(parameter):
             schema = schema_from_enum(parameter)
         case Vector():
             schema = schema_from_vector(parameter)
+        case Pair():
+            schema = schema_from_pair(parameter)
         case Map():
             schema = schema_from_map(parameter)
         case Primitive():

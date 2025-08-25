@@ -210,7 +210,7 @@ namespace Core::IO
       }
     }
 
-    template <typename T, typename... SizeInfo>
+    template <typename T>
     void read_internal(std::optional<T>& value)
     {
       auto next = peek();
@@ -225,7 +225,7 @@ namespace Core::IO
       }
     }
 
-    template <typename T, typename... SizeInfo>
+    template <typename T>
     void read_internal(std::vector<T>& value)
     {
       const std::size_t my_size = size_info_[0];
@@ -238,7 +238,7 @@ namespace Core::IO
       size_info_--;
     }
 
-    template <typename T, std::size_t n, typename... SizeInfo>
+    template <typename T, std::size_t n>
     void read_internal(std::array<T, n>& value)
     {
       for (std::size_t i = 0; i < n; ++i)
@@ -247,7 +247,14 @@ namespace Core::IO
       }
     }
 
-    template <typename U, typename... SizeInfo>
+    template <typename T1, typename T2>
+    void read_internal(std::pair<T1, T2>& value)
+    {
+      read_internal(value.first);
+      read_internal(value.second);
+    }
+
+    template <typename U>
     void read_internal(std::map<std::string, U>& value)
     {
       const std::size_t my_size = size_info_[0];
