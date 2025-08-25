@@ -1539,11 +1539,13 @@ namespace Discret
       This class implements the post processing of pressures and saturation at the nodes.
       */
       template <int nsd, int nen>
-      class EvaluatorPressureAndSaturation : public EvaluatorBase<nsd, nen>
+      class EvaluatorPressureAndSaturationHomogenizedVasculatureTumor
+          : public EvaluatorBase<nsd, nen>
       {
        public:
         //! constructor
-        EvaluatorPressureAndSaturation(std::shared_ptr<AssembleInterface> assembler, int curphase)
+        EvaluatorPressureAndSaturationHomogenizedVasculatureTumor(
+            std::shared_ptr<AssembleInterface> assembler, int curphase)
             : EvaluatorBase<nsd, nen>(assembler, curphase) {};
 
        protected:
@@ -1809,11 +1811,13 @@ namespace Discret
       These are identified here be setting ones into the valid_volfracpress_dofs_-vector
       */
       template <int nsd, int nen>
-      class EvaluatorValidVolFracPressures : public EvaluatorBase<nsd, nen>
+      class EvaluatorValidVolFracHomogenizedVasculatureTumorPressures
+          : public EvaluatorBase<nsd, nen>
       {
        public:
         //! constructor
-        EvaluatorValidVolFracPressures(std::shared_ptr<AssembleInterface> assembler, int curphase)
+        EvaluatorValidVolFracHomogenizedVasculatureTumorPressures(
+            std::shared_ptr<AssembleInterface> assembler, int curphase)
             : EvaluatorBase<nsd, nen>(assembler, curphase) {};
 
        protected:
@@ -2354,11 +2358,11 @@ namespace Discret
       relation "homogenized_vasculature_tumor"
       */
       template <int nsd, int nen>
-      class EvaluatorPhaseVelocities : public EvaluatorBase<nsd, nen>
+      class EvaluatorPhaseVelocitiesHomogenizedVasculatureTumor : public EvaluatorBase<nsd, nen>
       {
        public:
         //! constructor
-        EvaluatorPhaseVelocities(
+        EvaluatorPhaseVelocitiesHomogenizedVasculatureTumor(
             std::shared_ptr<AssembleInterface> assembler, int curphase, bool isAle)
             : EvaluatorBase<nsd, nen>(assembler, curphase), is_ale_(isAle) {};
 
@@ -2540,11 +2544,13 @@ namespace Discret
                                           -\sum^volfrac \frac{\partial\phi_volfrac) }{\partial t})
       */
       template <int nsd, int nen>
-      class EvaluatorVolFracAddInstatTerms : public EvaluatorBase<nsd, nen>
+      class EvaluatorVolFracHomogenizedVasculatureTumorAddInstatTerms
+          : public EvaluatorBase<nsd, nen>
       {
        public:
         //! constructor
-        EvaluatorVolFracAddInstatTerms(std::shared_ptr<AssembleInterface> assembler, int curphase)
+        EvaluatorVolFracHomogenizedVasculatureTumorAddInstatTerms(
+            std::shared_ptr<AssembleInterface> assembler, int curphase)
             : EvaluatorBase<nsd, nen>(assembler, curphase) {};
 
        protected:
@@ -2840,11 +2846,13 @@ namespace Discret
       This class implements the term \f$(w, -\sum^volfrac \phi_volfrac \nabla \cdot v^s )\f$.
       */
       template <int nsd, int nen>
-      class EvaluatorVolFracAddDivVelTerm : public EvaluatorBase<nsd, nen>
+      class EvaluatorVolFracHomogenizedVasculatureTumorAddDivVelTerm
+          : public EvaluatorBase<nsd, nen>
       {
        public:
         //! constructor
-        EvaluatorVolFracAddDivVelTerm(std::shared_ptr<AssembleInterface> assembler, int curphase)
+        EvaluatorVolFracHomogenizedVasculatureTumorAddDivVelTerm(
+            std::shared_ptr<AssembleInterface> assembler, int curphase)
             : EvaluatorBase<nsd, nen>(assembler, curphase) {};
 
        protected:
@@ -2930,13 +2938,15 @@ namespace Discret
       This class implements the term \f$(w, -\sum^volfrac \phi_volfrac \nabla \cdot v^s )\f$.
               */
       template <int nsd, int nen>
-      class EvaluatorVolFracBloodLungAddDivVelTerm : public EvaluatorVolFracAddDivVelTerm<nsd, nen>
+      class EvaluatorVolFracBloodLungAddDivVelTerm
+          : public EvaluatorVolFracHomogenizedVasculatureTumorAddDivVelTerm<nsd, nen>
       {
        public:
         //! constructor
         EvaluatorVolFracBloodLungAddDivVelTerm(
             std::shared_ptr<AssembleInterface> assembler, int curphase)
-            : EvaluatorVolFracAddDivVelTerm<nsd, nen>(assembler, curphase) {};
+            : EvaluatorVolFracHomogenizedVasculatureTumorAddDivVelTerm<nsd, nen>(
+                  assembler, curphase) {};
 
        protected:
         //! evaluate element matrix
@@ -3117,12 +3127,15 @@ namespace Discret
       This class implements the term \f$(w, S* -\sum^volfrac \phi_volfrac \nabla \cdot v^s )\f$.
       */
       template <int nsd, int nen>
-      class EvaluatorVolFracAddDivVelTermSat : public EvaluatorVolFracAddDivVelTerm<nsd, nen>
+      class EvaluatorVolFracHomogenizedVasculatureTumorAddDivVelTermSat
+          : public EvaluatorVolFracHomogenizedVasculatureTumorAddDivVelTerm<nsd, nen>
       {
        public:
         //! constructor
-        EvaluatorVolFracAddDivVelTermSat(std::shared_ptr<AssembleInterface> assembler, int curphase)
-            : EvaluatorVolFracAddDivVelTerm<nsd, nen>(assembler, curphase) {};
+        EvaluatorVolFracHomogenizedVasculatureTumorAddDivVelTermSat(
+            std::shared_ptr<AssembleInterface> assembler, int curphase)
+            : EvaluatorVolFracHomogenizedVasculatureTumorAddDivVelTerm<nsd, nen>(
+                  assembler, curphase) {};
 
        protected:
         //! evaluate element matrix
@@ -3209,13 +3222,15 @@ namespace Discret
                                           -\sum^volfrac \frac{\partial\phi_volfrac) }{\partial t}) )
       */
       template <int nsd, int nen>
-      class EvaluatorVolFracAddInstatTermsSat : public EvaluatorVolFracAddInstatTerms<nsd, nen>
+      class EvaluatorVolFracHomogenizedVasculatureTumorAddInstatTermsSat
+          : public EvaluatorVolFracHomogenizedVasculatureTumorAddInstatTerms<nsd, nen>
       {
        public:
         //! constructor
-        EvaluatorVolFracAddInstatTermsSat(
+        EvaluatorVolFracHomogenizedVasculatureTumorAddInstatTermsSat(
             std::shared_ptr<AssembleInterface> assembler, int curphase)
-            : EvaluatorVolFracAddInstatTerms<nsd, nen>(assembler, curphase) {};
+            : EvaluatorVolFracHomogenizedVasculatureTumorAddInstatTerms<nsd, nen>(
+                  assembler, curphase) {};
 
        protected:
         //! evaluate element matrix
@@ -3300,11 +3315,12 @@ namespace Discret
       It is assembled into the equation for volume fractions and for volume fraction pressures
       */
       template <int nsd, int nen>
-      class EvaluatorVolFracInstat : public EvaluatorBase<nsd, nen>
+      class EvaluatorVolFracHomogenizedVasculatureTumorInstat : public EvaluatorBase<nsd, nen>
       {
        public:
         //! constructor
-        EvaluatorVolFracInstat(std::shared_ptr<AssembleInterface> assembler, int curphase)
+        EvaluatorVolFracHomogenizedVasculatureTumorInstat(
+            std::shared_ptr<AssembleInterface> assembler, int curphase)
             : EvaluatorBase<nsd, nen>(assembler, curphase) {};
 
        protected:
@@ -3481,11 +3497,12 @@ namespace Discret
       It is assembled into the equation for volume fractions and for volume fraction pressures
       */
       template <int nsd, int nen>
-      class EvaluatorVolFracDivVel : public EvaluatorBase<nsd, nen>
+      class EvaluatorVolFracHomogenizedVasculatureTumorDivVel : public EvaluatorBase<nsd, nen>
       {
        public:
         //! constructor
-        EvaluatorVolFracDivVel(std::shared_ptr<AssembleInterface> assembler, int curphase)
+        EvaluatorVolFracHomogenizedVasculatureTumorDivVel(
+            std::shared_ptr<AssembleInterface> assembler, int curphase)
             : EvaluatorBase<nsd, nen>(assembler, curphase) {};
 
        protected:
@@ -3661,11 +3678,12 @@ namespace Discret
       This class implements the term \f$( \nabla w, D \nabla volfrac )\f$.
       */
       template <int nsd, int nen>
-      class EvaluatorVolFracDiff : public EvaluatorBase<nsd, nen>
+      class EvaluatorVolFracHomogenizedVasculatureTumorDiff : public EvaluatorBase<nsd, nen>
       {
        public:
         //! constructor
-        EvaluatorVolFracDiff(std::shared_ptr<AssembleInterface> assembler, int curphase)
+        EvaluatorVolFracHomogenizedVasculatureTumorDiff(
+            std::shared_ptr<AssembleInterface> assembler, int curphase)
             : EvaluatorBase<nsd, nen>(assembler, curphase) {};
 
        protected:
@@ -3750,11 +3768,12 @@ namespace Discret
       This class implements the term $(  w, reac )$.
       */
       template <int nsd, int nen>
-      class EvaluatorVolFracReac : public EvaluatorBase<nsd, nen>
+      class EvaluatorVolFracHomogenizedVasculatureTumorReac : public EvaluatorBase<nsd, nen>
       {
        public:
         //! constructor
-        EvaluatorVolFracReac(std::shared_ptr<AssembleInterface> assembler, int curphase)
+        EvaluatorVolFracHomogenizedVasculatureTumorReac(
+            std::shared_ptr<AssembleInterface> assembler, int curphase)
             : EvaluatorBase<nsd, nen>(assembler, curphase) {};
 
        protected:
@@ -3839,11 +3858,12 @@ namespace Discret
       This class implements the term \f$( \nabla w, D \nabla phi_scatra )\f$.
       */
       template <int nsd, int nen>
-      class EvaluatorVolFracAddFlux : public EvaluatorBase<nsd, nen>
+      class EvaluatorVolFracHomogenizedVasculatureTumorAddFlux : public EvaluatorBase<nsd, nen>
       {
        public:
         //! constructor
-        EvaluatorVolFracAddFlux(std::shared_ptr<AssembleInterface> assembler, int curphase)
+        EvaluatorVolFracHomogenizedVasculatureTumorAddFlux(
+            std::shared_ptr<AssembleInterface> assembler, int curphase)
             : EvaluatorBase<nsd, nen>(assembler, curphase) {};
 
        protected:
@@ -3928,11 +3948,12 @@ namespace Discret
       This class implements the term \f$( \nabla w, k/\mu \nabla volfrac_pressure )\f$.
       */
       template <int nsd, int nen>
-      class EvaluatorVolFracPressureDiff : public EvaluatorBase<nsd, nen>
+      class EvaluatorVolFracHomogenizedVasculatureTumorPressureDiff : public EvaluatorBase<nsd, nen>
       {
        public:
         //! constructor
-        EvaluatorVolFracPressureDiff(std::shared_ptr<AssembleInterface> assembler, int curphase)
+        EvaluatorVolFracHomogenizedVasculatureTumorPressureDiff(
+            std::shared_ptr<AssembleInterface> assembler, int curphase)
             : EvaluatorBase<nsd, nen>(assembler, curphase) {};
 
        protected:
@@ -4108,11 +4129,12 @@ namespace Discret
       This class implements the term $(  w, reac )$.
       */
       template <int nsd, int nen>
-      class EvaluatorVolFracPressureReac : public EvaluatorBase<nsd, nen>
+      class EvaluatorVolFracHomogenizedVasculatureTumorPressureReac : public EvaluatorBase<nsd, nen>
       {
        public:
         //! constructor
-        EvaluatorVolFracPressureReac(std::shared_ptr<AssembleInterface> assembler, int curphase)
+        EvaluatorVolFracHomogenizedVasculatureTumorPressureReac(
+            std::shared_ptr<AssembleInterface> assembler, int curphase)
             : EvaluatorBase<nsd, nen>(assembler, curphase) {};
 
        protected:
