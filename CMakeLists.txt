@@ -69,6 +69,24 @@ set(FOUR_C_VERSION_PATCH ${CMAKE_MATCH_3})
 
 message(STATUS "Configuring 4C version ${FOUR_C_VERSION_FULL}")
 
+# The input version is used to determine the compatibility of input files.
+# Syntax: major.minor.patch
+file(
+  STRINGS "${PROJECT_SOURCE_DIR}/input_version/INPUT_VERSION" FOUR_C_INPUT_VERSION_FULL
+  LIMIT_COUNT 1
+  )
+string(REGEX MATCH "([0-9]+)\\.([0-9]+)\\.([0-9]+)" _dummy ${FOUR_C_INPUT_VERSION_FULL})
+if(NOT _dummy)
+  message(
+    FATAL_ERROR
+      "The input version string ${FOUR_C_INPUT_VERSION_FULL} does not match the expected format MAJOR.MINOR.PATCH"
+    )
+endif()
+set(FOUR_C_INPUT_VERSION_MAJOR ${CMAKE_MATCH_1})
+set(FOUR_C_INPUT_VERSION_MINOR ${CMAKE_MATCH_2})
+set(FOUR_C_INPUT_VERSION_PATCH ${CMAKE_MATCH_3})
+message(STATUS "The 4C input version is ${FOUR_C_INPUT_VERSION_FULL}")
+
 # Assert a valid build configuration
 set(_allowed_build_types "DEBUG" "RELEASE" "RELWITHDEBINFO")
 if(NOT CMAKE_BUILD_TYPE)

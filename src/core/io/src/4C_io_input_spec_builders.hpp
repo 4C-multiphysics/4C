@@ -1761,12 +1761,7 @@ bool Core::IO::Internal::ParameterSpec<T>::match(ConstYamlNodeRef node,
 {
   auto spec_name = ryml::to_csubstr(name);
 
-  // If we are not even in a map, we refuse to do anything and let the MatchTree handle this case.
-  // Setting a default would confuse the user, since something fundamental must be wrong in the
-  // input file.
-  if (!node.node.is_map()) return false;
-
-  if (!node.node.has_child(spec_name))
+  if (!node.node.is_map() || !node.node.has_child(spec_name))
   {
     // It is OK to not encounter an optional parameter
     if (data.default_value.index() == 1)
@@ -2029,12 +2024,7 @@ bool Core::IO::Internal::DeprecatedSelectionSpec<T>::match(ConstYamlNodeRef node
 {
   auto spec_name = ryml::to_csubstr(name);
 
-  // If we are not even in a map, we refuse to do anything and let the MatchTree handle this case.
-  // Setting a default would confuse the user, since something fundamental must be wrong in the
-  // input file.
-  if (!node.node.is_map()) return false;
-
-  if (!node.node.has_child(spec_name))
+  if (!node.node.is_map() || !node.node.has_child(spec_name))
   {
     // It is OK to not encounter an optional parameter
     if (data.default_value.index() == 1)

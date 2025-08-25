@@ -18,6 +18,7 @@ namespace VersionControl
   constexpr const char* git_hash = "@FOUR_C_GIT_HASH@";
   constexpr const char* git_hash_short = "@FOUR_C_GIT_HASH_SHORT@";
   constexpr const char* git_branch = "@FOUR_C_GIT_BRANCH@";
+  constexpr const char* input_version = "@FOUR_C_INPUT_VERSION_FULL@";
 }  // namespace VersionControl
 
 FOUR_C_NAMESPACE_CLOSE

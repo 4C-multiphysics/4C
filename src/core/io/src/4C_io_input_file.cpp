@@ -13,6 +13,7 @@
 #include "4C_io_input_file_utils.hpp"
 #include "4C_io_input_spec.hpp"
 #include "4C_io_input_spec_builders.hpp"
+#include "4C_io_pstream.hpp"
 #include "4C_io_value_parser.hpp"
 #include "4C_utils_string.hpp"
 
@@ -110,16 +111,32 @@ namespace Core::IO
         fragments_impl.reserve(node.num_children());
         fragments.reserve(node.num_children());
 
-        FOUR_C_ASSERT(node.is_seq() || node.is_map(),
-            "Section '{}' is neither a sequence nor a map.", to_string(node.key()));
 
-        for (auto child : node.children())
+        if (node.is_seq() || node.is_map())
         {
+          for (auto child : node.children())
+          {
+            auto& ref = fragments_impl.emplace_back(InputFileFragmentImpl{
+                .fragment = child,
+                .section = this,
+            });
+            fragments.emplace_back(&ref);
+          }
+        }
+        else if (node.is_keyval())
+        {
+          // If the node is a key-value pair, we treat it as a single fragment.
           auto& ref = fragments_impl.emplace_back(InputFileFragmentImpl{
-              .fragment = child,
+              .fragment = node.parent(),
               .section = this,
           });
           fragments.emplace_back(&ref);
+          content.node = content.node.parent();
+        }
+        else
+        {
+          FOUR_C_THROW("Top-level key '{}' must either contain a value, a sequence or a map.",
+              to_string(node.key()));
         }
       }
 
@@ -163,13 +180,17 @@ namespace Core::IO
       std::map<std::string, InputSpec> valid_sections_;
       std::vector<std::string> legacy_section_names_;
 
-      bool is_section_known(const std::string& section_name) const
+      bool is_user_section(const std::string& section_name) const
       {
         return is_hacky_function_section(section_name) ||
                (valid_sections_.find(section_name) != valid_sections_.end()) ||
-               std::ranges::any_of(
-                   legacy_section_names_, [&](const auto& name) { return name == section_name; }) ||
-               (section_name == InputFile::description_section_name);
+               is_legacy_section(section_name);
+      }
+
+      bool is_reserved_section(const std::string& section_name) const
+      {
+        return section_name == InputFile::description_section_name ||
+               section_name == InputFile::includes_section_name;
       }
 
       // The input for functions might introduce an arbitrary number of sections called
@@ -207,15 +228,6 @@ namespace Core::IO
 
   namespace
   {
-    //! The different ways we want to handle sections in the input file.
-    enum class SectionType
-    {
-      //! A section that is read directly.
-      normal,
-      //! A section that mentions other files that are included and need to be read.
-      include,
-    };
-
 
     std::filesystem::path get_include_path(
         const std::string& include_line, const std::filesystem::path& current_file)
@@ -317,14 +329,32 @@ namespace Core::IO
     pimpl_->valid_sections_ = std::move(valid_sections);
     pimpl_->legacy_section_names_ = std::move(legacy_section_names);
 
-    FOUR_C_ASSERT_ALWAYS(!pimpl_->is_section_known("INCLUDES"),
-        "Section 'INCLUDES' is a reserved section name with special meaning. Please choose a "
-        "different name.");
-    pimpl_->valid_sections_["INCLUDES"] =
-        InputSpecBuilders::parameter<std::optional<std::vector<std::filesystem::path>>>("INCLUDES",
+    using namespace Core::IO::InputSpecBuilders;
+    using namespace Core::IO::InputSpecBuilders::Validators;
+
+    FOUR_C_ASSERT_ALWAYS(!pimpl_->is_user_section(includes_section_name),
+        "Section '{}' is a reserved section name with special meaning. Please choose a "
+        "different name for the respective InputSpec.",
+        includes_section_name);
+
+    pimpl_->valid_sections_[includes_section_name] =
+        parameter<std::optional<std::vector<std::filesystem::path>>>(includes_section_name,
             {
                 .description = "Path to files that should be included into this file. "
                                "The paths can be either absolute or relative to the file.",
+            });
+
+    FOUR_C_ASSERT_ALWAYS(!pimpl_->is_user_section(input_version_key),
+        "Key '{}' is a reserved key with special meaning. Please choose a different name for the "
+        "respective InputSpec.",
+        input_version_key);
+
+    pimpl_->valid_sections_[input_version_key] =
+        parameter<std::optional<std::string>>(input_version_key,
+            {
+                .description = "Version of the input file. This is used to warn when the "
+                               "input file is incompatible with the current input version of 4C.",
+                .validator = null_or(pattern(R"(^\d+\.\d+\.\d+$)")),
             });
   }
 
@@ -474,16 +504,33 @@ namespace Core::IO
       content.set_up_fragments();
     }
 
-    // All content has been read. Now validate. In the first iteration of this new feature,
-    // we only validate the section names, not the content.
+    // All content has been read. Now validate.
     if (Core::Communication::my_mpi_rank(pimpl_->comm_) == 0)
     {
-      for (const auto& [section_name, content] : pimpl_->content_by_section_)
+      InputParameterContainer version_data;
+      match_section(input_version_key, version_data);
+
+      if (auto opt_version = version_data.get<std::optional<std::string>>(input_version_key);
+          opt_version.has_value())
       {
-        if (!pimpl_->is_section_known(section_name))
+        if (*opt_version != VersionControl::input_version)
+          std::cout << std::format(
+              "Warning: version mismatch: "
+              "The input file requires input version {}, but the input version of 4C is {}. "
+              "Your input file may be incompatible with 4C.\n",
+              *opt_version, VersionControl::input_version);
+        else
         {
-          FOUR_C_THROW("Section '{}' is not a valid section name.", section_name);
+          std::cout << "Compatible input file version " << *opt_version << " detected.\n";
         }
+      }
+
+      // Check that all top-level keys correspond to something valid.
+      for (const auto& section_name : pimpl_->content_by_section_ | std::views::keys)
+      {
+        FOUR_C_ASSERT_ALWAYS(
+            pimpl_->is_user_section(section_name) || pimpl_->is_reserved_section(section_name),
+            "Section '{}' is not a valid section name.", section_name);
       }
     }
   }
