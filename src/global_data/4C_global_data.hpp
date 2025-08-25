@@ -331,6 +331,10 @@ namespace Global
     {
       return parameters_->sublist("REDUCED DIMENSIONAL AIRWAYS DYNAMIC");
     }
+    const Teuchos::ParameterList& reduced_d_lung_params() const
+    {
+      return parameters_->sublist("REDUCED DIMENSIONAL LUNG");
+    }
     const Teuchos::ParameterList& red_airway_tissue_dynamic_params() const
     {
       return parameters_->sublist("COUPLED REDUCED-D AIRWAYS AND TISSUE DYNAMIC");

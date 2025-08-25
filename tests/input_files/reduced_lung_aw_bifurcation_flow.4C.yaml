@@ -3,10 +3,43 @@ TITLE:
   - "Tests bifurcation equations and pressure gradient with flow."
 PROBLEM TYPE:
   PROBLEMTYPE: "Reduced_Lung"
-REDUCED DIMENSIONAL AIRWAYS DYNAMIC:
-  TIMESTEP: 1
-  NUMSTEP: 1
-  LINEAR_SOLVER: 1
+REDUCED DIMENSIONAL LUNG:
+  AIR_PROPERTIES:
+    DENSITY: 1.176e-06
+    DYNAMIC_VISCOSITY: 1.79105e-05
+  DYNAMICS:
+    DYNAMIC_TYPE: BackwardEuler
+    LINEAR_SOLVER: 1
+    NUM_STEP: 1
+    RESTART_EVERY: 1
+    RESULTS_EVERY: 1
+    TIMESTEP: 1
+  LUNG_TREE:
+    ELEMENT_TYPE:
+      constant: Airway
+    GENERATION:
+      from_file: "reduced_lung_aw_bifurcation_fields.json"
+    AIRWAYS:
+      AIRWAY_MODEL:
+        constant: Resistive
+      RESISTIVE:
+        GAMMA:
+          constant: 1.0
+      RADIUS:
+        from_file: "reduced_lung_aw_bifurcation_fields.json"
+    TERMINAL_UNITS: # These parameters are not used as there are no terminal units in this test
+      RHEOLOGICAL_MODEL:
+        RHEOLOGICAL_MODEL_TYPE:
+          constant: KelvinVoigt
+        KELVIN_VOIGT:
+          ETA:
+            constant: 0.0
+      ELASTICITY_MODEL:
+        ELASTICITY_MODEL_TYPE:
+          constant: Linear
+        LINEAR:
+          ELASTICITY:
+            constant: 1.0
 SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "Reduced_dimensional_Airways_Solver"

@@ -15,10 +15,12 @@
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
 #include "4C_io_discretization_visualization_writer_mesh.hpp"
+#include "4C_io_input_field.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_red_airways_elementbase.hpp"
 #include "4C_reduced_lung_helpers.hpp"
+#include "4C_reduced_lung_input.hpp"
 #include "4C_reduced_lung_terminal_unit.hpp"
 #include "4C_utils_function_of_time.hpp"
 
@@ -40,9 +42,17 @@ namespace ReducedLung
     {
       actdis->fill_complete();
     }
-    const Teuchos::ParameterList& rawdyn =
-        Global::Problem::instance()->reduced_d_airway_dynamic_params();
-    const int linear_solver_number = rawdyn.get<int>("LINEAR_SOLVER");
+    const Teuchos::ParameterList& redlung_params =
+        Global::Problem::instance()->reduced_d_lung_params();
+
+    const Teuchos::ParameterList& dyn_params = redlung_params.sublist("DYNAMICS");
+    const Teuchos::ParameterList& tu_params =
+        redlung_params.sublist("LUNG_TREE").sublist("TERMINAL_UNITS");
+    const Teuchos::ParameterList& [[maybe_unused]] aw_params =
+        redlung_params.sublist("LUNG_TREE")
+            .sublist("AIRWAYS");  // TODO this will be used later when the airways are reimplemented
+
+    const int linear_solver_number = dyn_params.get<int>("LINEAR_SOLVER");
     std::unique_ptr<Core::LinAlg::Solver> solver = std::make_unique<Core::LinAlg::Solver>(
         Global::Problem::instance()->solver_params(linear_solver_number), actdis->get_comm(),
         Global::Problem::instance()->solver_params_callback(),
@@ -83,9 +93,42 @@ namespace ReducedLung
       {
         if (ele->material(0)->material_type() == Core::Materials::m_0d_maxwell_acinus_neohookean)
         {
-          // Default terminal unit model until the new input is available.
-          add_terminal_unit_ele<KelvinVoigt, LinearElasticity>(
-              terminal_units, ele, local_element_id);
+          IO::RheologicalModel rheological_model_name =
+              tu_params.sublist("RHEOLOGICAL_MODEL")
+                  .get<Core::IO::InputField<IO::RheologicalModel>>("RHEOLOGICAL_MODEL_TYPE")
+                  .at(ele->id(), "RHEOLOGICAL_MODEL_TYPE");
+
+          IO::ElasticityModel elasticity_model_name =
+              tu_params.sublist("ELASTICITY_MODEL")
+                  .get<Core::IO::InputField<IO::ElasticityModel>>("ELASTICITY_MODEL_TYPE")
+                  .at(ele->id(), "ELASTICITY_MODEL_TYPE");
+
+          if (rheological_model_name == IO::RheologicalModel::KelvinVoigt)
+          {
+            if (elasticity_model_name == IO::ElasticityModel::Linear)
+            {
+              add_terminal_unit_ele<KelvinVoigt, LinearElasticity>(
+                  terminal_units, ele, local_element_id, tu_params);
+            }
+            else if (elasticity_model_name == IO::ElasticityModel::Ogden)
+            {
+              add_terminal_unit_ele<KelvinVoigt, OgdenHyperelasticity>(
+                  terminal_units, ele, local_element_id, tu_params);
+            }
+          }
+          else if (rheological_model_name == IO::RheologicalModel::FourElementMaxwell)
+          {
+            if (elasticity_model_name == IO::ElasticityModel::Linear)
+            {
+              add_terminal_unit_ele<FourElementMaxwell, LinearElasticity>(
+                  terminal_units, ele, local_element_id, tu_params);
+            }
+            else if (elasticity_model_name == IO::ElasticityModel::Ogden)
+            {
+              add_terminal_unit_ele<FourElementMaxwell, OgdenHyperelasticity>(
+                  terminal_units, ele, local_element_id, tu_params);
+            }
+          }
         }
         else
         {
@@ -185,9 +228,9 @@ namespace ReducedLung
     {
       const auto* nodes = ele->nodes();
       // WARNING: if node ordering is wrong (inlet in nodes[1]), the whole logic doesn't apply in
-      // the same way as assumed throughout this implementation! A top-down ordering of nodes needs
-      // to be enforced during tree creation. This is to a large amount asserted during creation of
-      // the coupling entities. However, special cases might slip through.
+      // the same way as assumed throughout this implementation! A top-down ordering of nodes
+      // needs to be enforced during tree creation. This is to a large amount asserted during
+      // creation of the coupling entities. However, special cases might slip through.
       const auto& node_in = *nodes[0];
       const auto& node_out = *nodes[1];
       const auto node_in_n_eles = global_ele_ids_per_node[node_in.id()].size();
@@ -381,8 +424,8 @@ namespace ReducedLung
     // Map with all dof ids belonging to the local elements (airways and terminal units).
     const Core::LinAlg::Map locally_owned_dof_map =
         create_domain_map(comm, airways, terminal_units);
-    // Map with row ids for the equations of local elements, connections, bifurcations, and boundary
-    // conditions.
+    // Map with row ids for the equations of local elements, connections, bifurcations, and
+    // boundary conditions.
     const Core::LinAlg::Map row_map = create_row_map(
         comm, airways, terminal_units, connections, bifurcations, boundary_conditions);
     // Map with all relevant dof ids for the local equations.
@@ -390,8 +433,8 @@ namespace ReducedLung
         create_column_map(comm, airways, terminal_units, global_dof_per_ele,
             first_global_dof_of_ele, connections, bifurcations, boundary_conditions);
 
-    // Assign global equation ids to connections, bifurcations, and boundary conditions based on the
-    // row map. Maybe not necessary, but helps with debugging.
+    // Assign global equation ids to connections, bifurcations, and boundary conditions based on
+    // the row map. Maybe not necessary, but helps with debugging.
     for (Connection& conn : connections)
     {
       conn.first_global_equation_id = row_map.gid(conn.first_local_equation_id);
@@ -491,10 +534,10 @@ namespace ReducedLung
     auto sysmat = Core::LinAlg::SparseMatrix(row_map, locally_relevant_dof_map, 3);
 
     // Write results every ... time steps.
-    const int results_every = rawdyn.get<int>("RESULTSEVERY");
+    const int results_every = dyn_params.get<int>("RESULTS_EVERY");
     // Time integration parameters.
-    const double dt = rawdyn.get<double>("TIMESTEP");
-    const int n_timesteps = rawdyn.get<int>("NUMSTEP");
+    const double dt = dyn_params.get<double>("TIMESTEP");
+    const int n_timesteps = dyn_params.get<int>("NUM_STEP");
     // Time loop
     if (Core::Communication::my_mpi_rank(comm) == 0)
     {

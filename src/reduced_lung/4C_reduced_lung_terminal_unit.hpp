@@ -14,9 +14,12 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_fem_general_node.hpp"
+#include "4C_io_input_field.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_mat_maxwell_0d_acinus.hpp"
+
+#include <Teuchos_ParameterList.hpp>
 
 #include <variant>
 #include <vector>
@@ -506,29 +509,35 @@ namespace ReducedLung
   {
     void operator()(KelvinVoigt& kelvin_voigt_model) const
     {
-      kelvin_voigt_model.viscosity_eta.push_back(
-          static_cast<Mat::PAR::Maxwell0dAcinus*>(ele->material(0)->parameter())->viscosity1_);
+      kelvin_voigt_model.viscosity_eta.push_back(params.sublist("KELVIN_VOIGT")
+              .get<Core::IO::InputField<double>>("ETA")
+              .at(ele->id(), "ETA"));
     }
     void operator()(FourElementMaxwell& model) const
     {
-      model.elasticity_E_m.push_back(
-          static_cast<Mat::PAR::Maxwell0dAcinus*>(ele->material(0)->parameter())->stiffness2_);
-      model.viscosity_eta.push_back(
-          static_cast<Mat::PAR::Maxwell0dAcinus*>(ele->material(0)->parameter())->viscosity1_);
-      model.viscosity_eta_m.push_back(
-          static_cast<Mat::PAR::Maxwell0dAcinus*>(ele->material(0)->parameter())->viscosity2_);
+      model.elasticity_E_m.push_back(params.sublist("FOUR_ELEMENT_MAXWELL")
+              .get<Core::IO::InputField<double>>("ELASTICITY_M")
+              .at(ele->id(), "ELASTICITY_M"));
+      model.viscosity_eta.push_back(params.sublist("FOUR_ELEMENT_MAXWELL")
+              .get<Core::IO::InputField<double>>("ETA")
+              .at(ele->id(), "ETA"));
+      model.viscosity_eta_m.push_back(params.sublist("FOUR_ELEMENT_MAXWELL")
+              .get<Core::IO::InputField<double>>("ETA_M")
+              .at(ele->id(), "ETA_M"));
       model.maxwell_pressure_p_m.push_back(0.0);
     }
 
     Core::Elements::Element* ele;
+    const Teuchos::ParameterList& params;
   };
 
   struct AddElasticityModelParameter
   {
     void operator()(LinearElasticity& linear_elasticity_model) const
     {
-      linear_elasticity_model.elasticity_E.push_back(
-          static_cast<Mat::PAR::Maxwell0dAcinus*>(ele->material(0)->parameter())->stiffness1_);
+      linear_elasticity_model.elasticity_E.push_back(params.sublist("LINEAR")
+              .get<Core::IO::InputField<double>>("ELASTICITY")
+              .at(ele->id(), "ELASTICITY"));
       // Vector initialization for internal pressure state.
       linear_elasticity_model.elastic_pressure_p_el.push_back(0.0);
       linear_elasticity_model.elastic_pressure_grad_dp_el.push_back(0.0);
@@ -536,6 +545,7 @@ namespace ReducedLung
     void operator()(OgdenHyperelasticity& ogden_model) const {}
 
     Core::Elements::Element* ele;
+    const Teuchos::ParameterList& params;
   };
 
   /**
@@ -550,8 +560,8 @@ namespace ReducedLung
    * @param local_element_id Local identifier in 4C discretization.
    */
   template <typename R, typename E>
-  void add_terminal_unit_ele(
-      TerminalUnits& terminal_units, Core::Elements::Element* ele, int local_element_id)
+  void add_terminal_unit_ele(TerminalUnits& terminal_units, Core::Elements::Element* ele,
+      int local_element_id, const Teuchos::ParameterList& tu_params)
   {
     TerminalUnitModel& model = register_or_access_terminal_unit_model<R, E>(terminal_units);
 
@@ -566,8 +576,12 @@ namespace ReducedLung
     const double volume = (4.0 / 3.0) * M_PI * radius * radius * radius;
     model.data.volume_v.push_back(volume);
     model.data.reference_volume_v0.push_back(volume);
-    std::visit(AddRheologicalModelParameter{ele}, model.rheological_model);
-    std::visit(AddElasticityModelParameter{ele}, model.elasticity_model);
+    std::visit(
+        AddRheologicalModelParameter{.ele = ele, .params = tu_params.sublist("RHEOLOGICAL_MODEL")},
+        model.rheological_model);
+    std::visit(
+        AddElasticityModelParameter{.ele = ele, .params = tu_params.sublist("ELASTICITY_MODEL")},
+        model.elasticity_model);
   }
 
   /**
