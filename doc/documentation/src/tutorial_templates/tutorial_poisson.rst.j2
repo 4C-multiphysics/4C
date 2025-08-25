@@ -1,0 +1,225 @@
+{% set tutorial_file_scatra = "tutorial_poisson_scatra.4C.yaml" %}
+{% set scatra_file_content = load_input_file(tutorial_file_scatra) %}
+{% set tutorial_file_thermo = "tutorial_poisson_thermo.4C.yaml" %}
+{% set thermo_file_content = load_input_file(tutorial_file_thermo) %}
+
+.. _poissontutorial:
+
+Tutorial: Solving the Poisson Problem
+=====================================
+
+Introduction
+------------
+
+The Poisson equation is a partial differential equation with a wide range of engineering applications.
+For an overview, see the `Wikipedia article <https://en.wikipedia.org/wiki/Poisson%27s_equation>`_.
+
+The problem, including its boundary conditions, is defined as:
+
+.. math::
+
+    -\Delta \varphi = f \qquad & \mathrm{in}~\Omega \\
+    \varphi = 0 \qquad & \mathrm{on}~\Gamma_D = \partial \Omega \\
+    f = 1 \qquad & \mathrm{in}~\Omega
+
+In |FOURC|, the Poisson problem can be solved either as a diffusion problem or as a thermal conduction problem,
+since both are governed by similar equations. The table below compares the key features of these problem types:
+
+.. list-table::
+    :header-rows: 1
+    :stub-columns: 1
+
+    * - Feature / Problem Type
+      - Poisson Problem
+      - Thermal Conduction
+      - Diffusion Problem
+    * - Physical Context
+      - Electrostatics, elasticity, etc.
+      - Heat transfer
+      - Mass/heat transport, chemical diffusion, etc.
+    * - Governing Equation
+      - :math:`−\Delta \varphi = f`
+      - :math:`\frac{\partial T}{\partial t} − \nabla \cdot (k\nabla T) = Q`
+      - :math:`\frac{\partial C}{\partial t} − \nabla \cdot (D\nabla C) = f`
+    * - Unknown Variable
+      - :math:`\varphi` (interpretation depends on context)
+      - :math:`T` (temperature)
+      - :math:`C` (concentration, etc.)
+    * - Time Dependence
+      - ❌ Steady-state only
+      - ✅ Time-dependent (transient)
+      - ✅ Time-dependent (transient)
+    * - Diffusivity
+      - Implicitly defined as 1
+      - :math:`k` (thermal conductivity)
+      - :math:`D` (diffusion coefficient)
+    * - Source Term
+      - :math:`f`
+      - :math:`Q`
+      - :math:`f`
+    * - Boundary Conditions
+      - Dirichlet/Neumann
+      - Dirichlet/Neumann
+      - Dirichlet/Neumann + Initial condition
+
+From a physical point of view, the thermal conduction problem describes the heat distribution in a solid body after a long time (steady-state),
+with the temperature kept at zero on the boundary and a constant internal heat source.
+Analogously, the diffusion problem can be interpreted as the steady-state distribution of a chemical species in a domain,
+with the concentration set to zero at the boundary and a constant internal source.
+
+In the following sections, we demonstrate how to set up and solve the problem using both the scalar transport and thermal solvers.
+In |FOURC|, diffusion is treated as a form of *scalar transport*, so we’ll use that term throughout.
+
+For further theoretical background, refer to the
+`deal.II tutorial <https://dealii.org/current/doxygen/deal.II/step_3.html>`_.
+
+In both solver types, we consider only the steady-state case, meaning the time derivative is omitted.
+
+Mesh Setup
+----------
+
+The mesh can be generated using any pre-processor. For this tutorial, we created the Exodus file `poisson_problem_geo.e`
+using Cubit. The domain is a square in the x-y plane: :math:`\Omega = [-1, 1]^2`.
+
+The mesh is shown below. Node sets 1 to 4 represent the boundary lines, and the entire surface is defined as node set 5.
+
+.. figure:: /_assets/tutorial_scatra_mesh.png
+   :alt: tutorial_scatra mesh
+   :width: 500px
+   :align: center
+
+   2D mesh for the Poisson problem.
+
+The mesh consists of 32×32 linear elements and 1089 nodes. Since there is one variable per node,
+the resulting linear system has 1089 degrees of freedom (DOFs).
+
+We solve the system using the direct solver ``UMFPACK`` for simplicity. This is a robust serial solver
+that does not support MPI parallelization. However, for this small problem, parallelization or iterative solvers
+would not offer a performance benefit.
+
+Boundary and Source Conditions
+------------------------------
+
+For both solver types, the **boundary condition** is that the primary variable (:math:`T` or :math:`C`) is zero at the boundary.
+This corresponds to a Dirichlet condition applied to all four boundary lines, defined identically in both cases:
+
+{{ section_dump(scatra_file_content, "DESIGN LINE DIRICH CONDITIONS") }}
+
+The **source term** is constant throughout the domain, representing the right-hand side of the equation.
+This is implemented as a Neumann (flux) condition:
+
+{{ section_dump(scatra_file_content, "DESIGN SURF NEUMANN CONDITIONS") }}
+
+Simulation is performed in a single step for both problem types.
+Note that the initial conditions are irrelevant for steady-state simulations.
+However, for a time-dependent simulation, you would need to define an initial condition, i.e., an initial concentration or temperature.
+
+Poisson Problem Solved with the Scalar Transport Solver
+--------------------------------------------------------
+
+As mentioned earlier, the diffusion problem is treated as a *scalar transport* problem in |FOURC|.
+Therefore, the ``PROBLEM TYPE`` section is set to ``Scalar_Transport``,
+which determines the structure of most other sections in the input file and is thus particularly important:
+
+{{ section_dump(scatra_file_content, "PROBLEM TYPE") }}
+
+The time stepping and steady-state configuration are defined in the ``SCALAR TRANSPORT DYNAMIC`` section.
+Although the time step is irrelevant for a steady-state simulation, a value for ``TIMESTEP`` must still be provided.
+The simulation runs in a single step, so ``NUMSTEP: 1`` is used.
+The solver is selected via ``LINEAR_SOLVER: 1``, which refers to the corresponding ``SOLVER 1`` section.
+The ``NAME`` parameter in the solver section is optional and can be any string.
+
+{{ section_dump(scatra_file_content, ["SCALAR TRANSPORT DYNAMIC", "SOLVER 1"]) }}
+
+The only material parameter in this model is the diffusivity, which is defined in the ``MATERIALS`` section:
+
+{{ section_dump(scatra_file_content, "MATERIALS") }}
+
+The geometry, defined in the Exodus file (see above), is read using:
+
+{{ section_dump(scatra_file_content, "TRANSPORT GEOMETRY") }}
+
+In the ``ELEMENT_BLOCK`` section, the cell type, material, and transport formulation (here: *Standard*) are specified.
+
+For scalar transport simulations, the primary variable is written to VTK files as ``phi_1``.
+Currently, the flux is not included in the VTK output.
+Therefore, no explicit output section is required in this input file.
+
+Poisson Problem Solved with the Thermal Solver
+----------------------------------------------
+
+Similar to the scalar transport solveer, the ``PROBLEM TYPE`` section - this time set to ``Thermo`` - defines the sections for the thermal solver to be used in the input file:
+
+{{ section_dump(thermo_file_content, "PROBLEM TYPE") }}
+
+The steady-state configuration is declared in the ``THERMAL DYNAMIC`` section.
+Unlike scalar transport, the steady-state condition is specified using ``DYNAMICTYPE: Statics``.
+Again, the same direct linear solver is used.
+
+{{ section_dump(thermo_file_content, ["THERMAL DYNAMIC", "SOLVER 1"]) }}
+
+Thermal conduction models always require two material parameters: heat capacity and conductivity.
+Although heat capacity is not relevant for steady-state simulations, both parameters must be defined:
+
+{{ section_dump(thermo_file_content, "MATERIALS") }}
+
+The geometry is read from the Exodus file using:
+
+{{ section_dump(thermo_file_content, "THERMO GEOMETRY") }}
+
+The ``ELEMENT_BLOCK`` section then defines the cell type and material.
+
+Unlike scalar transport, thermal simulations do not produce VTK output unless explicitly requested.
+To enable output, the following two sections must be included:
+
+{{ section_dump(thermo_file_content, ["IO/RUNTIME VTK OUTPUT", "THERMAL DYNAMIC/RUNTIME VTK OUTPUT"]) }}
+
+In addition to temperature, you may also choose to output conductivity (useful if it's not constant), heat flux, and temperature gradient.
+
+Post-Processing
+---------------
+After running either simulation, you can load the resulting ``.pvd`` file into ParaView.
+You can visualize the primary variable (``phi_1`` or temperature) on the surface,
+or apply the *Warp by Scalar* filter. By default, the structure is displayed in the x-y plane,
+so warping (which occurs in the z-direction) is not immediately visible.
+To view the deformation, rotate the structure accordingly.
+
+The thermal simulation results are shown in the Warp plot (aka relief plot) below.
+The scalar transport results are nearly identical and are therefore omitted.
+
+.. figure:: /_assets/tutorial_thermo_resultsurface.png
+   :alt: Scalar transport tutorial result relief of phi_1
+   :align: center
+   :width: 90%
+
+   Relief plot of temperature from the thermal simulation.
+   The scalar transport solution is visually identical, as is the result from the deal.II tutorial.
+
+For comparison, we generate an x-y plot of the primary variables from both simulations along a path at :math:`y=0`.
+These results can be compared with `deal.II tutorial step 3 <https://dealii.org/current/doxygen/deal.II/step_3.html>`_.
+Since the mesh is identical, the evaluated paths are indistinguishable.
+
+.. figure:: /_assets/poisson_result_plot.png
+   :alt: Poisson tutorial result graph at y=0
+   :align: center
+   :width: 90%
+
+   Results along a line through the structure at :math:`y=0` (center).
+
+The error between the scalar transport and thermal conduction simulations is below :math:`10^{-14}`.
+The deal.II tutorial uses an iterative solver (conjugate gradient) with a tolerance of :math:`10^{-6}`.
+Thus, the error between the |FOURC| and deal.II solutions is within this range, as shown below:
+
+.. figure:: /_assets/poisson_error_plot.png
+   :alt: Error between deal.ii and thermal simulation
+   :align: center
+   :width: 90%
+
+   Error between diffusion and thermal conduction,
+   and between deal.II and thermal conduction along the line at :math:`y=0`.
+
+The following Python script generates the figure for the structure loaded in ParaView (visible in the current RenderView):
+
+.. literalinclude::  /_assets/tutorial_poisson_pvscript.py
+   :linenos:
+

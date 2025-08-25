@@ -1969,6 +1969,8 @@ four_c_test_nested_parallelism(sohex8_multiscale_macro_2micro.4C.yaml sohex8_mul
 four_c_test_nested_parallelism(tsi_heatconvection_monolithic.4C.json tsi_heatconvection_monolithic.4C.json "")
 
 four_c_test_tutorial(PREFIX tutorial_battery NP 2 COPY_FILES ${PROJECT_SOURCE_DIR}/tests/tutorials/tutorial_battery.e)
+four_c_test_tutorial(PREFIX tutorial_poisson_scatra NP 2 COPY_FILES ${PROJECT_SOURCE_DIR}/tests/tutorials/tutorial_poisson_geo.e)
+four_c_test_tutorial(PREFIX tutorial_poisson_thermo NP 2 COPY_FILES ${PROJECT_SOURCE_DIR}/tests/tutorials/tutorial_poisson_geo.e)
 four_c_test_tutorial(PREFIX tutorial_contact_3d NP 2 COPY_FILES ${PROJECT_SOURCE_DIR}/tests/tutorials/tutorial_contact_3d.e)
 four_c_test_tutorial(PREFIX tutorial_fluid NP 2 COPY_FILES ${PROJECT_SOURCE_DIR}/tests/tutorials/tutorial_fluid.e)
 four_c_test_tutorial(PREFIX tutorial_fsi_2d NP 2 COPY_FILES ${PROJECT_SOURCE_DIR}/tests/tutorials/tutorial_fsi_2d.e)
