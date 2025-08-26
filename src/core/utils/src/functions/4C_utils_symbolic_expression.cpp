@@ -11,15 +11,7 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace Core::Utils::SymbolicExpressionDetails
 {
-  /*======================================================================*/
-  /* Lexer methods */
-
-  /*----------------------------------------------------------------------*/
-  /*!
-  \brief method used to step through std::string funct_
-         delivers its character at position pos_++
-  */
-  int Lexer::get_next()
+  char Lexer::get_next()
   {
     if (pos_ < funct_.length())
     {
@@ -31,236 +23,205 @@ namespace Core::Utils::SymbolicExpressionDetails
     }
   }
 
+  char Lexer::peek() const { return (pos_ < funct_.length()) ? funct_[pos_] : EOF; }
 
-  void Lexer::advance()
+
+  Lexer::Lexer(std::string_view funct) : funct_(funct), pos_(0) {}
+
+
+  std::vector<Token> Lexer::tokenize()
+  {
+    std::vector<Token> tokens;
+    while (true)
+    {
+      tokens.emplace_back(advance());
+      if (tokens.back().type == tok_done)
+      {
+        break;
+      }
+    }
+    return tokens;
+  }
+
+  Token Lexer::advance()
   {
     for (;;)
     {
-      int t = get_next();
-      if ((t == ' ') || (t == '\t'))
+      char c = get_next();
+      auto start = pos_ - 1;
+      const auto make_token = [&](TokenType type)
+      { return Token{type, funct_.substr(start, pos_ - start), start}; };
+
+      //! skip whitespace
+      if ((c == ' ') || (c == '\t'))
       {
-        /* ignore whitespaces */
+        continue;
       }
-      else if (t == '\n')
+
+      if (c == '\n')
       {
-        FOUR_C_THROW("newline in function definition");
+        throw_at_pos(pos_ - 1, "Unexpected newline.");
       }
-      else if (t == EOF)
+
+      if (c == EOF)
       {
-        tok_ = Lexer::Lexer::tok_done;
-        return;
+        return make_token(tok_done);
       }
-      else
+
+      if (isdigit(c))
       {
-        if (isdigit(t))
+        while (isdigit(c))
         {
-          str_ = &(funct_[pos_ - 1]);
-          while (isdigit(t))
+          c = get_next();
+        }
+        if ((c != '.') && (c != 'E') && (c != 'e'))
+        {
+          if (c != EOF) pos_--;
+          return make_token(tok_real);
+        }
+        if (c == '.')
+        {
+          c = get_next();
+          if (isdigit(c))
           {
-            t = get_next();
-          }
-          if ((t != '.') && (t != 'E') && (t != 'e'))
-          {
-            if (t != EOF)
+            while (isdigit(c))
             {
-              pos_--;
+              c = get_next();
             }
-            integer_ = atoi(str_);
-            tok_ = Lexer::tok_int;
-            return;
-          }
-          if (t == '.')
-          {
-            t = get_next();
-            if (isdigit(t))
-            {
-              while (isdigit(t))
-              {
-                t = get_next();
-              }
-            }
-            else
-            {
-              FOUR_C_THROW("no digits after point at pos {}", pos_);
-            }
-          }
-          if ((t == 'E') || (t == 'e'))
-          {
-            t = get_next();
-            if ((t == '-') || (t == '+'))
-            {
-              t = get_next();
-            }
-            if (isdigit(t))
-            {
-              while (isdigit(t))
-              {
-                t = get_next();
-              }
-            }
-            else
-            {
-              FOUR_C_THROW("no digits after exponent at pos {}", pos_);
-            }
-          }
-          if (t != EOF)
-          {
-            pos_--;
-          }
-          real_ = strtod(str_, nullptr);
-          tok_ = Lexer::tok_real;
-          return;
-        }
-        else if (isalpha(t) || (t == '_'))
-        {
-          str_ = &(funct_[pos_ - 1]);
-          while (isalnum(t) || (t == '_'))
-          {
-            t = get_next();
-          }
-          if (t != EOF)
-          {
-            pos_--;
-          }
-          tok_ = Lexer::tok_name;
-          integer_ = funct_.data() + pos_ - str_;  // length of operator name, e.g. 'sin' has '3'
-          return;
-        }
-        else if (t == '+')
-        {
-          tok_ = Lexer::tok_add;
-          return;
-        }
-        else if (t == '-')
-        {
-          tok_ = Lexer::tok_sub;
-          return;
-        }
-        else if (t == '*')
-        {
-          tok_ = Lexer::tok_mul;
-          return;
-        }
-        else if (t == '/')
-        {
-          tok_ = Lexer::tok_div;
-          return;
-        }
-        else if (t == '^')
-        {
-          tok_ = Lexer::tok_pow;
-          return;
-        }
-        else if (t == '(')
-        {
-          tok_ = Lexer::tok_lpar;
-          return;
-        }
-        else if (t == ')')
-        {
-          tok_ = Lexer::tok_rpar;
-          return;
-        }
-        else if (t == ',')
-        {
-          tok_ = Lexer::tok_comma;
-          return;
-        }
-        else if (t == '>')
-        {
-          t = get_next();
-          if (t == '=')
-          {
-            tok_ = Lexer::tok_ge;
-            return;
-          }
-          if (t != EOF)
-          {
-            pos_--;
-          }
-          tok_ = Lexer::tok_gt;
-          return;
-        }
-        else if (t == '<')
-        {
-          t = get_next();
-          if (t == '=')
-          {
-            tok_ = Lexer::tok_le;
-            return;
-          }
-          if (t != EOF)
-          {
-            pos_--;
-          }
-          tok_ = Lexer::tok_lt;
-          return;
-        }
-        else if (t == '=')
-        {
-          t = get_next();
-          if (t == '=')
-          {
-            tok_ = Lexer::tok_eq;
-            return;
           }
           else
           {
-            FOUR_C_THROW("unexpected char '{}' at pos {}", t, pos_);
+            throw_at_pos(pos_ - 1, "No digits after decimal.");
           }
         }
-        else if (t == '&')
+        if ((c == 'E') || (c == 'e'))
         {
-          t = get_next();
-          if (t == '&')
+          c = get_next();
+          if ((c == '-') || (c == '+'))
           {
-            tok_ = Lexer::tok_and;
-            return;
+            c = get_next();
+          }
+          if (isdigit(c))
+          {
+            while (isdigit(c))
+            {
+              c = get_next();
+            }
           }
           else
           {
-            FOUR_C_THROW("unexpected char '{}' at pos {}", t, pos_);
+            throw_at_pos(pos_ - 1, "No digits in exponent.");
           }
         }
-        else if (t == '|')
+        if (c != EOF) pos_--;
+        return make_token(tok_real);
+      }
+
+      if (isalpha(c) || (c == '_'))
+      {
+        while (isalnum(c) || (c == '_'))
         {
-          t = get_next();
-          if (t == '|')
+          c = get_next();
+        }
+        if (c != EOF) pos_--;
+        return make_token(tok_name);
+      }
+      switch (c)
+      {
+        case '+':
+          return make_token(tok_add);
+        case '-':
+          return make_token(tok_sub);
+        case '*':
+          return make_token(tok_mul);
+        case '/':
+          return make_token(tok_div);
+        case '^':
+          return make_token(tok_pow);
+        case '(':
+          return make_token(tok_lpar);
+        case ')':
+          return make_token(tok_rpar);
+        case ',':
+          return make_token(tok_comma);
+        case '>':
+        {
+          if (peek() == '=')
           {
-            tok_ = Lexer::tok_or;
-            return;
+            get_next();
+            return make_token(tok_ge);
           }
           else
           {
-            FOUR_C_THROW("unexpected char '{}' at pos {}", t, pos_);
+            return make_token(tok_gt);
           }
         }
-        else if (t == '!')
+        case '<':
         {
-          t = get_next();
-          if (t == '=')
+          if (peek() == '=')
           {
-            tok_ = Lexer::tok_ne;
-            return;
+            get_next();
+            return make_token(tok_le);
           }
-          if (t != EOF)
-          {
-            pos_--;
-          }
-          tok_ = Lexer::tok_bang;
-          return;
-        }
-        else
-        {
-          if (t >= 32)
-            FOUR_C_THROW("unexpected char '{}' at pos {}", t, pos_);
           else
-            FOUR_C_THROW("unexpected char '{}' at pos {}", t, pos_);
-          tok_ = Lexer::tok_none;
-          return;
+          {
+            return make_token(tok_lt);
+          }
         }
+        case '=':
+        {
+          char next = get_next();
+          if (next == '=')
+          {
+            return make_token(tok_eq);
+          }
+          throw_at_pos(pos_ - 1, "Unexpected character.");
+        }
+        case '&':
+        {
+          char next = get_next();
+          if (next == '&')
+          {
+            return make_token(tok_and);
+          }
+          throw_at_pos(pos_ - 1, "Unexpected character.");
+        }
+        case '|':
+        {
+          char next = get_next();
+          if (next == '|')
+          {
+            return make_token(tok_or);
+          }
+          throw_at_pos(pos_ - 1, "Unexpected character.");
+        }
+        case '!':
+        {
+          if (peek() == '=')
+          {
+            get_next();
+            return make_token(tok_ne);
+          }
+          else
+          {
+            return make_token(tok_bang);
+          }
+        }
+        default:
+          throw_at_pos(pos_ - 1, "Unknown character.");
       }
     }
+  }
+
+  void Lexer::throw_at_pos(std::size_t pos, const std::string& msg) const
+  {
+    // Construct a string with the position of the error marked by a caret.
+    FOUR_C_THROW(
+        "Error while reading:\n"
+        "{}\n"
+        "{:>{}}\n"
+        "{:>{}}{}",
+        funct_, "^", pos + 1, " ", pos, msg);
   }
 }  // namespace Core::Utils::SymbolicExpressionDetails
 

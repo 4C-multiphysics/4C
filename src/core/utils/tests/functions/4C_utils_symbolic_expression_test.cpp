@@ -160,7 +160,10 @@ namespace
   {
     FOUR_C_EXPECT_THROW_WITH_MESSAGE(
         Core::Utils::SymbolicExpression<double> symbolicexpression("2 ** 4"), Core::Exception,
-        "unexpected token tok_mul");
+        R"(Error while parsing:
+2 ** 4
+   ^
+   Expected a primary expression.)");
   }
 
 
@@ -168,14 +171,20 @@ namespace
   {
     FOUR_C_EXPECT_THROW_WITH_MESSAGE(
         Core::Utils::SymbolicExpression<double> symbolicexpression("2*4 - (3 + 1"), Core::Exception,
-        "')' expected");
+        R"(Error while parsing:
+2*4 - (3 + 1
+           ^
+           Expected closing parenthesis.)");
   }
 
   TEST(SymbolicExpressionTest, IncompleteFunctionThrows)
   {
     FOUR_C_EXPECT_THROW_WITH_MESSAGE(
         Core::Utils::SymbolicExpression<double> symbolicexpression("2*4 - (3 + "), Core::Exception,
-        "unexpected token tok_done");
+        R"(Error while parsing:
+2*4 - (3 + 
+          ^
+          Expected a primary expression.)");
   }
 
   TEST(SymbolicExpressionTest, Copyable)
@@ -267,6 +276,16 @@ namespace
     EXPECT_DOUBLE_EQ(expr.value(Core::Utils::var<"x">(-2.0), Core::Utils::var<"y">(-3.0)), 1.0);
     EXPECT_DOUBLE_EQ(expr.value(Core::Utils::var<"x">(2.0), Core::Utils::var<"y">(-3.0)), 0.0);
     EXPECT_DOUBLE_EQ(expr.value(Core::Utils::var<"x">(0.0), Core::Utils::var<"y">(3.0)), 0.0);
+  }
+
+  TEST(SymbolicExpressionTest, LexerError)
+  {
+    FOUR_C_EXPECT_THROW_WITH_MESSAGE(
+        Core::Utils::SymbolicExpression<double> symbolicexpression("2*x % y"), Core::Exception,
+        R"(Error while reading:
+2*x % y
+    ^
+    Unknown character.)");
   }
 
 
