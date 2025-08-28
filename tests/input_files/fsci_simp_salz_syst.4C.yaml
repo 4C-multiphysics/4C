@@ -133,64 +133,64 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 20057
       QUANTITY: "dispx"
-      VALUE: -1.2731210209948393e-05
+      VALUE: -1.27316214002097786e-05
       TOLERANCE: 1e-10
   - STRUCTURE:
       DIS: "structure"
       NODE: 20057
       QUANTITY: "dispz"
-      VALUE: 4.539968931794919e-05
+      VALUE: 4.53994471400328146e-05
       TOLERANCE: 1e-10
   - FLUID:
       DIS: "fluid"
       NODE: 405
       QUANTITY: "velx"
-      VALUE: 6.4226862227086554e-09
+      VALUE: 6.27283537849021683e-09
       TOLERANCE: 1e-10
   - FLUID:
       DIS: "fluid"
       NODE: 405
       QUANTITY: "vely"
-      VALUE: 5.856614701034259e-09
+      VALUE: 6.08384848801829190e-09
       TOLERANCE: 1e-10
   - FLUID:
       DIS: "fluid"
       NODE: 405
       QUANTITY: "velz"
-      VALUE: 2.2577637282748143e-05
+      VALUE: 2.25248570970191682e-05
       TOLERANCE: 1e-10
   - FLUID:
       DIS: "fluid"
       NODE: 405
       QUANTITY: "pressure"
-      VALUE: 0.045206336987531
+      VALUE: 4.49146106006150098e-02
       TOLERANCE: 1e-08
   - ALE:
       DIS: "ale"
       NODE: 14120
       QUANTITY: "dispx"
-      VALUE: -5.973163320063649e-06
+      VALUE: -5.97464496458539166e-06
       TOLERANCE: 1e-10
   - ALE:
       DIS: "ale"
       NODE: 14120
       QUANTITY: "dispz"
-      VALUE: 9.991939975592032e-06
+      VALUE: 9.99225093893584831e-06
       TOLERANCE: 1e-10
   - FSI:
       NODE: 14122
       QUANTITY: "lambdax"
-      VALUE: -0.1460341504521504
+      VALUE: -1.44222453438554665e-01
       TOLERANCE: 1e-08
   - FSI:
       NODE: 14122
       QUANTITY: "lambday"
-      VALUE: -9.298597402998008e-06
+      VALUE: -2.07262302205042444e-06
       TOLERANCE: 1e-08
   - FSI:
       NODE: 14122
       QUANTITY: "lambdaz"
-      VALUE: 0.00954593992897133
+      VALUE: 9.55766389575453054e-03
       TOLERANCE: 1e-08
 DESIGN LINE DIRICH CONDITIONS:
   - E: 1
