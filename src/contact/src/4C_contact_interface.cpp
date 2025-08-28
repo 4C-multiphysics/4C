@@ -903,7 +903,7 @@ void CONTACT::Interface::redistribute()
   Teuchos::ParameterList slaveCloseRebalanceParams;
   slaveCloseRebalanceParams.set<std::string>("num_global_parts", std::to_string(scproc));
   slaveCloseRebalanceParams.set<std::string>("imbalance_tolerance", std::to_string(imbalance_tol));
-  slaveCloseRebalanceParams.set("algorithm", "parmetis");
+  slaveCloseRebalanceParams.set<std::string>("algorithm", "parmetis");
 
   const auto& [slaveCloseRowNodes, slaveCloseColNodes] =
       Core::Rebalance::rebalance_node_maps(*slaveCloseNodeGraph, slaveCloseRebalanceParams);
@@ -932,7 +932,7 @@ void CONTACT::Interface::redistribute()
   slaveNonCloseRebalanceParams.set<std::string>("num_global_parts", std::to_string(sncproc));
   slaveNonCloseRebalanceParams.set<std::string>(
       "imbalance_tolerance", std::to_string(imbalance_tol));
-  slaveNonCloseRebalanceParams.set("algorithm", "parmetis");
+  slaveNonCloseRebalanceParams.set<std::string>("algorithm", "parmetis");
 
   const auto& [slaveNonCloseRowNodes, snccolnodes] =
       Core::Rebalance::rebalance_node_maps(*slaveNonCloseNodeGraph, slaveNonCloseRebalanceParams);

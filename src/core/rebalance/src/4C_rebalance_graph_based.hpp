@@ -54,7 +54,7 @@ namespace Core::Rebalance
   */
   std::pair<std::shared_ptr<Core::LinAlg::Map>, std::shared_ptr<Core::LinAlg::Map>>
   rebalance_node_maps(const Core::LinAlg::Graph& initialGraph,
-      Teuchos::ParameterList rebalanceParams,
+      Teuchos::ParameterList& rebalanceParams,
       const std::shared_ptr<Core::LinAlg::Vector<double>>& initialNodeWeights = nullptr,
       const std::shared_ptr<Core::LinAlg::SparseMatrix>& initialEdgeWeights = nullptr,
       const std::shared_ptr<Core::LinAlg::MultiVector<double>>& initialNodeCoordinates = nullptr);
@@ -80,7 +80,7 @@ namespace Core::Rebalance
   @return std::shared_ptr<Core::LinAlg::Graph>
   */
   std::shared_ptr<Core::LinAlg::Graph> rebalance_graph(const Core::LinAlg::Graph& initialGraph,
-      Teuchos::ParameterList rebalanceParams,
+      Teuchos::ParameterList& rebalanceParams,
       const std::shared_ptr<Core::LinAlg::Vector<double>>& initialNodeWeights = nullptr,
       const std::shared_ptr<Core::LinAlg::SparseMatrix>& initialEdgeWeights = nullptr,
       const std::shared_ptr<Core::LinAlg::MultiVector<double>>& initialNodeCoordinates = nullptr);
@@ -100,7 +100,7 @@ namespace Core::Rebalance
   std::pair<std::shared_ptr<Core::LinAlg::MultiVector<double>>,
       std::shared_ptr<Core::LinAlg::MultiVector<double>>>
   rebalance_coordinates(const Core::LinAlg::MultiVector<double>& initialCoordinates,
-      Teuchos::ParameterList rebalanceParams,
+      Teuchos::ParameterList& rebalanceParams,
       const Core::LinAlg::MultiVector<double>& initialWeights);
 
   /*!
