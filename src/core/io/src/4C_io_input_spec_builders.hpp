@@ -327,14 +327,14 @@ namespace Core::IO
     };
 
     template <typename T>
-      requires(rank<T>() == 0)
+      requires(dynamic_rank<T>() == 0)
     void emit_type_as_yaml(ryml::NodeRef node)
     {
       YamlTypeEmitter<T>{}(node, nullptr);
     }
 
     template <typename T>
-    void emit_type_as_yaml(ryml::NodeRef node, std::array<std::size_t, rank<T>()> size)
+    void emit_type_as_yaml(ryml::NodeRef node, std::array<std::size_t, dynamic_rank<T>()> size)
     {
       YamlTypeEmitter<T>{}(node, size.data());
     }
@@ -892,7 +892,7 @@ namespace Core::IO
 
       StoreFunction<T> store{nullptr};
 
-      std::array<Size, rank<T>()> size;
+      std::array<Size, dynamic_rank<T>()> size;
     };
 
     template <typename Selector, typename StorageType>
@@ -1015,7 +1015,7 @@ namespace Core::IO
 
       InputSpecBuilders::StoreFunction<T> store;
 
-      std::array<InputSpecBuilders::Size, rank<T>()> size{};
+      std::array<InputSpecBuilders::Size, dynamic_rank<T>()> size{};
     };
 
     template <typename T>
@@ -1197,7 +1197,7 @@ namespace Core::IO
     {
       constexpr bool operator()(const auto& val, std::size_t* size_info) const
       {
-        static_assert(rank<decltype(val)>() == 0, "Missing overload.");
+        static_assert(dynamic_rank<decltype(val)>() == 0, "Missing overload.");
         return true;
       }
 
@@ -1234,7 +1234,7 @@ namespace Core::IO
               std::size_t offset = 0;
 
               ((result = result && this->operator()(std::get<is>(t), size_info + offset),
-                   offset += rank<std::tuple_element_t<is, std::tuple<Ts...>>>()),
+                   offset += dynamic_rank<std::tuple_element_t<is, std::tuple<Ts...>>>()),
                   ...);
 
               return result;
@@ -1246,7 +1246,7 @@ namespace Core::IO
       constexpr bool operator()(const std::pair<T1, T2>& p, std::size_t* size_info) const
       {
         return this->operator()(p.first, size_info) &&
-               this->operator()(p.second, size_info + rank<T1>());
+               this->operator()(p.second, size_info + dynamic_rank<T1>());
       }
 
       template <typename T>
@@ -1868,7 +1868,7 @@ void Core::IO::Internal::ParameterSpec<T>::parse(
     FOUR_C_THROW("Could not parse '{}'. Next token is '{}'.", name, next_token);
   }
 
-  if constexpr (rank<T>() == 0)
+  if constexpr (dynamic_rank<T>() == 0)
   {
     container.add(name, parser.read<T>());
   }
@@ -1889,10 +1889,10 @@ void Core::IO::Internal::ParameterSpec<T>::parse(
       InputParameterContainer& container;
     };
 
-    if constexpr (rank<T>() > 0)
+    if constexpr (dynamic_rank<T>() > 0)
     {
-      std::array<std::size_t, rank<T>()> size_info;
-      for (std::size_t i = 0; i < rank<T>(); ++i)
+      std::array<std::size_t, dynamic_rank<T>()> size_info;
+      for (std::size_t i = 0; i < dynamic_rank<T>(); ++i)
       {
         size_info[i] = std::visit(SizeVisitor{container}, data.size[i]);
       }
@@ -1958,7 +1958,7 @@ bool Core::IO::Internal::ParameterSpec<T>::match(ConstYamlNodeRef node,
     return false;
   }
 
-  if constexpr (rank<T>() > 0)
+  if constexpr (dynamic_rank<T>() > 0)
   {
     if (!has_correct_size(value, container))
     {
@@ -1995,7 +1995,7 @@ void Core::IO::Internal::ParameterSpec<T>::emit_metadata(YamlNodeRef node) const
   node.node |= ryml::MAP;
   node.node["name"] << name;
 
-  if constexpr (rank<T>() == 0)
+  if constexpr (dynamic_rank<T>() == 0)
     IO::Internal::emit_type_as_yaml<StoredType>(node.node);
   else
   {
@@ -2008,8 +2008,8 @@ void Core::IO::Internal::ParameterSpec<T>::emit_metadata(YamlNodeRef node) const
       }
     };
 
-    std::array<std::size_t, rank<T>()> size_info;
-    for (std::size_t i = 0; i < rank<T>(); ++i)
+    std::array<std::size_t, dynamic_rank<T>()> size_info;
+    for (std::size_t i = 0; i < dynamic_rank<T>(); ++i)
     {
       size_info[i] = std::visit(DynamicSizeVisitor{}, data.size[i]);
     }
@@ -2105,7 +2105,7 @@ template <Core::IO::SupportedType T>
 bool Core::IO::Internal::ParameterSpec<T>::has_correct_size(
     const T& val, const InputSpecBuilders::Storage& container) const
 {
-  if constexpr (rank<T>() == 0)
+  if constexpr (dynamic_rank<T>() == 0)
   {
     return true;
   }
@@ -2123,8 +2123,8 @@ bool Core::IO::Internal::ParameterSpec<T>::has_correct_size(
       const InputSpecBuilders::Storage& container;
     };
 
-    std::array<std::size_t, rank<T>()> size_info;
-    for (std::size_t i = 0; i < rank<T>(); ++i)
+    std::array<std::size_t, dynamic_rank<T>()> size_info;
+    for (std::size_t i = 0; i < dynamic_rank<T>(); ++i)
     {
       size_info[i] = std::visit(SizeVisitor{container}, data.size[i]);
     }
@@ -2549,11 +2549,11 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::parameter(
   {
     internal_data.default_value = data.default_value;
   }
-  if constexpr (rank<T>() == 1)
+  if constexpr (dynamic_rank<T>() == 1)
   {
     internal_data.size[0] = data.size;
   }
-  else if constexpr (rank<T>() > 1)
+  else if constexpr (dynamic_rank<T>() > 1)
   {
     internal_data.size = data.size;
   }

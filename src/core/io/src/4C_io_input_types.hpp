@@ -206,11 +206,16 @@ namespace Core::IO
   concept SupportedType = Internal::SupportedTypeHelper<T>::value;
 
   /**
-   * Determine the rank of a type, i.e., how many levels of nested containers are present.
+   * Determine the dynamic rank of a type, i.e., how many dynamic extents a type has.
+   *
+   * Examples:
+   *   std::vector<int>: 1
+   *   std::vector<std::vector<int>>: 2
+   *   std::array<int, 3>: 0
    */
   template <typename T>
     requires SupportedType<std::decay_t<T>>
-  constexpr std::size_t rank()
+  constexpr std::size_t dynamic_rank()
   {
     return Internal::RankHelper<std::decay_t<T>>::value;
   }

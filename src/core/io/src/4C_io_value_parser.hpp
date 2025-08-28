@@ -119,7 +119,7 @@ namespace Core::IO
      * @endcode
      */
     template <typename T>
-      requires(rank<T>() == 0)
+      requires(dynamic_rank<T>() == 0)
     T read()
     {
       T val;
@@ -128,7 +128,7 @@ namespace Core::IO
     }
 
     template <typename T>
-      requires(rank<T>() == 1)
+      requires(dynamic_rank<T>() == 1)
     T read(std::size_t size)
     {
       size_info_ = &size;
@@ -140,8 +140,8 @@ namespace Core::IO
 
 
     template <typename T>
-      requires(rank<T>() > 0)
-    T read(const std::array<std::size_t, rank<T>()>& size)
+      requires(dynamic_rank<T>() > 0)
+    T read(const std::array<std::size_t, dynamic_rank<T>()>& size)
     {
       size_info_ = size.data();
       T val;
