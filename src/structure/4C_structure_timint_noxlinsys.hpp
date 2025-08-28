@@ -72,10 +72,6 @@ namespace NOX
               structure_solver,  ///< (used-defined) linear algebraic solver
           const std::shared_ptr<NOX::Nln::Scaling> scalingObject = nullptr);
 
-
-      /// provide storage pattern of tangent matrix, i.e. the operator
-      virtual OperatorType get_operator_type(const Epetra_Operator& Op);
-
       ///
       virtual void reset(Teuchos::ParameterList& linearSolverParams);
 
@@ -109,7 +105,6 @@ namespace NOX
       ::NOX::Utils utils_;
 
       std::shared_ptr<::NOX::Epetra::Interface::Jacobian> jacInterfacePtr_;
-      OperatorType jacType_;
       mutable std::shared_ptr<Epetra_Operator> jacPtr_;
       std::shared_ptr<NOX::Nln::Scaling> scaling_;
       mutable std::shared_ptr<::NOX::Epetra::Vector> tmpVectorPtr_;

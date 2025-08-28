@@ -38,17 +38,6 @@ namespace NOX::FSI
 {
   class LinearSystem : public NOX::Nln::LinearSystemBase
   {
-   private:
-    enum OperatorType
-    {
-      EpetraOperator,
-      EpetraRowMatrix,
-      EpetraVbrMatrix,
-      EpetraCrsMatrix,
-      SparseMatrix,
-      BlockSparseMatrix
-    };
-
    public:
     LinearSystem(Teuchos::ParameterList& printParams,  ///< printing parameters
         Teuchos::ParameterList& linearSolverParams,    ///< parameters for linear solution
@@ -61,9 +50,6 @@ namespace NOX::FSI
             structure_solver,  ///< (used-defined) linear algebraic solver
         const std::shared_ptr<NOX::Nln::Scaling> scalingObject =
             nullptr);  ///< scaling of the linear system
-
-    /// provide storage pattern of tangent matrix, i.e. the operator
-    OperatorType get_operator_type(const Epetra_Operator& Op);
 
     ///
     void reset(Teuchos::ParameterList& linearSolverParams);
@@ -97,7 +83,6 @@ namespace NOX::FSI
     ::NOX::Utils utils_;
 
     std::shared_ptr<::NOX::Epetra::Interface::Jacobian> jac_interface_ptr_;
-    OperatorType jac_type_;
     mutable std::shared_ptr<Epetra_Operator> jac_ptr_;
     mutable std::shared_ptr<Core::LinAlg::SparseOperator> operator_;
     std::shared_ptr<NOX::Nln::Scaling> scaling_;

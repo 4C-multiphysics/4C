@@ -43,9 +43,6 @@ NOX::FSI::LinearSystemGCR::LinearSystemGCR(Teuchos::ParameterList& printParams,
   // Allocate solver
   tmpVectorPtr = std::make_shared<::NOX::Epetra::Vector>(cloneVector);
 
-  // Jacobian operator is supplied
-  jacType = get_operator_type(*jacPtr);
-
   reset(linearSolverParams);
 }
 
@@ -415,30 +412,5 @@ void NOX::FSI::LinearSystemGCR::throw_error(
   throw "NOX Error";
 }
 
-
-NOX::FSI::LinearSystemGCR::OperatorType NOX::FSI::LinearSystemGCR::get_operator_type(
-    const Epetra_Operator& Op)
-{
-  //***************
-  //*** NOTE: The order in which the following tests occur is important!
-  //***************
-
-  const Epetra_Operator* testOperator = nullptr;
-
-  // Is it an Epetra_CrsMatrix ?
-  testOperator = dynamic_cast<const Epetra_CrsMatrix*>(&Op);
-  if (testOperator != nullptr) return EpetraCrsMatrix;
-
-  // Is it an Epetra_VbrMatrix ?
-  testOperator = dynamic_cast<const Epetra_VbrMatrix*>(&Op);
-  if (testOperator != nullptr) return EpetraVbrMatrix;
-
-  // Is it an Epetra_RowMatrix ?
-  testOperator = dynamic_cast<const Epetra_RowMatrix*>(&Op);
-  if (testOperator != nullptr) return EpetraRowMatrix;
-
-  // Otherwise it must be an Epetra_Operator!
-  return EpetraOperator;
-}
 
 FOUR_C_NAMESPACE_CLOSE

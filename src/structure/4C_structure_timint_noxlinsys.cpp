@@ -35,7 +35,6 @@ NOX::Solid::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
     const std::shared_ptr<NOX::Nln::Scaling> s)
     : utils_(printParams),
       jacInterfacePtr_(iJac),
-      jacType_(EpetraOperator),
       jacPtr_(J),
       scaling_(s),
       conditionNumberEstimate_(0.0),
@@ -48,41 +47,7 @@ NOX::Solid::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
 
   // std::cout << "STRUCTURE SOLVER: " << *structureSolver_ << " " << structureSolver_ << std::endl;
 
-  // Jacobian operator is supplied.
-  // get type of it
-  jacType_ = get_operator_type(*jacPtr_);
-
   reset(linearSolverParams);
-}
-
-
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-NOX::Solid::LinearSystem::OperatorType NOX::Solid::LinearSystem::get_operator_type(
-    const Epetra_Operator& Op)
-{
-  // check per dynamik cast, which type of Jacobian was broadcast
-
-  const Epetra_Operator* testOperator = nullptr;
-
-  testOperator = dynamic_cast<
-      const Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>*>(&Op);
-  if (testOperator != nullptr) return BlockSparseMatrix;
-
-  testOperator = dynamic_cast<const Core::LinAlg::SparseMatrix*>(&Op);
-  if (testOperator != nullptr) return SparseMatrix;
-
-  testOperator = dynamic_cast<const Epetra_CrsMatrix*>(&Op);
-  if (testOperator != nullptr) return EpetraCrsMatrix;
-
-  testOperator = dynamic_cast<const Epetra_VbrMatrix*>(&Op);
-  if (testOperator != nullptr) return EpetraVbrMatrix;
-
-  testOperator = dynamic_cast<const Epetra_RowMatrix*>(&Op);
-  if (testOperator != nullptr) return EpetraRowMatrix;
-
-  return EpetraOperator;
 }
 
 
@@ -133,23 +98,19 @@ bool NOX::Solid::LinearSystem::applyJacobianInverse(
   double tol = p.get("Tolerance", 1.0e-10);
 
   // Structure
-  if (jacType_ == SparseMatrix)
-  {
-    std::shared_ptr<Core::LinAlg::Vector<double>> fres =
-        std::make_shared<Core::LinAlg::Vector<double>>(input.getEpetraVector());
-    Core::LinAlg::View result_view(result.getEpetraVector());
-    Core::LinAlg::SparseMatrix* J = dynamic_cast<Core::LinAlg::SparseMatrix*>(jacPtr_.get());
-    Core::LinAlg::SolverParams solver_params;
-    solver_params.refactor = true;
-    solver_params.reset = callcount_ == 0;
-    structureSolver_->solve(Core::Utils::shared_ptr_from_ref(*J),
-        Core::Utils::shared_ptr_from_ref(result_view.underlying()), fres, solver_params);
-    callcount_ += 1;
-  }
-  else
-  {
-    FOUR_C_THROW("Cannot deal with Epetra_Operator of type {}", jacType_);
-  }
+  std::shared_ptr<Core::LinAlg::Vector<double>> fres =
+      std::make_shared<Core::LinAlg::Vector<double>>(input.getEpetraVector());
+  Core::LinAlg::View result_view(result.getEpetraVector());
+  Core::LinAlg::SparseOperator* J = dynamic_cast<Core::LinAlg::SparseOperator*>(jacPtr_.get());
+
+  FOUR_C_ASSERT(J, "NOX::Solid::LinearSystem works only with Core::LinAlg::SparseOperator");
+
+  Core::LinAlg::SolverParams solver_params;
+  solver_params.refactor = true;
+  solver_params.reset = callcount_ == 0;
+  structureSolver_->solve(Core::Utils::shared_ptr_from_ref(*J),
+      Core::Utils::shared_ptr_from_ref(result_view.underlying()), fres, solver_params);
+  callcount_ += 1;
 
   // Set the output parameters in the "Output" sublist
   if (outputSolveDetails_)
