@@ -110,8 +110,8 @@ std::shared_ptr<Core::LinAlg::Graph> Core::Rebalance::rebalance_graph(
     graphAdapter->setCoordinateInput(vectorAdapter);
   }
 
-  Zoltan2::PartitioningProblem<GraphAdapter> problem(graphAdapter, &rebalanceParams,
-      Core::Communication::unpack_epetra_comm(initialGraph.get_comm()));
+  Zoltan2::PartitioningProblem<GraphAdapter> problem(
+      graphAdapter, &rebalanceParams, initialGraph.get_comm());
   problem.solve();
 
   const auto solution = problem.getSolution();
