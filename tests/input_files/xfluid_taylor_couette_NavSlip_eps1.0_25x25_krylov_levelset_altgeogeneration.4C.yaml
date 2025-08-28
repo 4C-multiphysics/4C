@@ -25,6 +25,7 @@ PROBLEM TYPE:
   PROBLEMTYPE: "Fluid_XFEM"
 IO:
   STRUCT_DISP: false
+  VERBOSITY: standard
 FLUID DYNAMIC:
   LINEAR_SOLVER: 1
   TIMEINTEGR: "Stationary"
@@ -73,19 +74,14 @@ SCALAR TRANSPORT DYNAMIC:
 SCALAR TRANSPORT DYNAMIC/STABILIZATION:
   DEFINITION_TAU: "Taylor_Hughes_Zarins_wo_dt"
 SOLVER 1:
-  SOLVER: "Belos"
-  IFPACK_XML_FILE: "xfluid_ifpack.xml"
-  AZTOL: 1e-05
-  AZOUTPUT: 50
-  AZREUSE: 1
-  THROW_IF_UNCONVERGED: false
   NAME: "Fluid_Solver"
+  SOLVER: "Superlu"
 SOLVER 2:
-  SOLVER: "UMFPACK"
   NAME: "Scatra_Solver"
+  SOLVER: "Superlu"
 SOLVER 3:
-  SOLVER: "UMFPACK"
   NAME: "L2_Projection"
+  SOLVER: "Superlu"
 MATERIALS:
   - MAT: 1
     MAT_fluid:

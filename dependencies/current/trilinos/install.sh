@@ -17,7 +17,7 @@ INSTALL_DIR="$1"
 # Number of procs for building (default 4)
 NPROCS=${NPROCS:=4}
 # git sha from Trilinos repository:
-VERSION="06db4c850654feacabdaed61ee8308219266b6a5"
+VERSION="ff9c94e50ea889848ceaa3ce6598e81c3996fcfb"
 #CHECKSUM=""
 
 
@@ -99,8 +99,7 @@ $CMAKE_COMMAND \
     -D ParMETIS_INCLUDE_DIRS:PATH="/usr/include" \
     -D ParMETIS_LIBRARY_DIRS:PATH="/usr/lib/libparmetis.so.4.0.3" \
   -D TPL_ENABLE_UMFPACK:BOOL=ON \
-    -D UMFPACK_INCLUDE_DIRS:FILEPATH="$INSTALL_DIR/include" \
-    -D UMFPACK_LIBRARY_DIRS:FILEPATH="$INSTALL_DIR/lib" \
+    -D UMFPACK_INCLUDE_DIRS:FILEPATH="/usr/include/suitesparse" \
   -D TPL_ENABLE_SuperLUDist:BOOL=ON \
     -D SuperLUDist_INCLUDE_DIRS:PATH="$INSTALL_DIR/include" \
     -D SuperLUDist_LIBRARY_DIRS:PATH="$INSTALL_DIR/lib" \
