@@ -549,13 +549,6 @@ void Solid::TimeInt::Base::output_step(bool forced_writerestart)
     output_reaction_forces();
   }
 
-  // output stress, strain and optional quantity
-  if (dataio_->should_write_stress_strain_for_this_step(dataglobalstate_->get_step_n()))
-  {
-    new_io_step(datawritten);
-    output_stress_strain();
-  }
-
   // output energy
   if (dataio_->should_write_energy_for_this_step(dataglobalstate_->get_step_n()))
   {
@@ -612,7 +605,7 @@ void Solid::TimeInt::Base::output_state(
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-void Solid::TimeInt::Base::runtime_output_state()
+void Solid::TimeInt::Base::runtime_output_state() const
 {
   check_init_setup();
   int_ptr_->runtime_output_step_state();
@@ -625,113 +618,6 @@ void Solid::TimeInt::Base::output_reaction_forces()
   check_init_setup();
   Core::IO::DiscretizationWriter& iowriter = *(dataio_->get_output_ptr());
   int_ptr_->monitor_dbc(iowriter);
-}
-
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
-void Solid::TimeInt::Base::output_stress_strain()
-{
-  check_init_setup();
-
-  Solid::ModelEvaluator::Data& evaldata = int_ptr_->eval_data();
-  std::shared_ptr<Core::IO::DiscretizationWriter> output_ptr = dataio_->get_output_ptr();
-
-  // ---------------------------------------------------------------------------
-  // write stress output
-  // ---------------------------------------------------------------------------
-  std::string text = "";
-  if (dataio_->get_stress_output_type() != Inpar::Solid::stress_none)
-  {
-    switch (dataio_->get_stress_output_type())
-    {
-      case Inpar::Solid::stress_cauchy:
-        text = "gauss_cauchy_stresses_xyz";
-        break;
-      case Inpar::Solid::stress_2pk:
-        text = "gauss_2PK_stresses_xyz";
-        break;
-      default:
-        FOUR_C_THROW("Requested stress type is not supported!");
-        break;
-    }
-    output_ptr->write_vector(text, evaldata.stress_data(), *(discretization()->element_row_map()));
-  }
-  // we don't need this anymore
-  evaldata.stress_data_ptr() = nullptr;
-
-  // ---------------------------------------------------------------------------
-  // write coupling stress output
-  // ---------------------------------------------------------------------------
-  text.clear();
-  if (dataio_->get_coupling_stress_output_type() != Inpar::Solid::stress_none)
-  {
-    switch (dataio_->get_coupling_stress_output_type())
-    {
-      case Inpar::Solid::stress_cauchy:
-        text = "gauss_cauchy_coupling_stresses_xyz";
-        break;
-      case Inpar::Solid::stress_2pk:
-        text = "gauss_2PK_coupling_stresses_xyz";
-        break;
-      default:
-        FOUR_C_THROW("Requested coupling stress type is not supported!");
-        break;
-    }
-    output_ptr->write_vector(
-        text, evaldata.coupling_stress_data(), *(discretization()->element_row_map()));
-  }
-
-  // ---------------------------------------------------------------------------
-  // write strain output
-  // ---------------------------------------------------------------------------
-  text.clear();
-  if (dataio_->get_strain_output_type() != Inpar::Solid::strain_none)
-  {
-    switch (dataio_->get_strain_output_type())
-    {
-      case Inpar::Solid::strain_none:
-        break;
-      case Inpar::Solid::strain_ea:
-        text = "gauss_EA_strains_xyz";
-        break;
-      case Inpar::Solid::strain_gl:
-        text = "gauss_GL_strains_xyz";
-        break;
-      case Inpar::Solid::strain_log:
-        text = "gauss_LOG_strains_xyz";
-        break;
-      default:
-        FOUR_C_THROW("Requested strain type is not supported!");
-        break;
-    }
-    output_ptr->write_vector(text, evaldata.strain_data(), *(discretization()->element_row_map()));
-  }
-  // we don't need this anymore
-  evaldata.strain_data_ptr() = nullptr;
-
-  // ---------------------------------------------------------------------------
-  // write plastic strain output
-  // ---------------------------------------------------------------------------
-  text.clear();
-  if (dataio_->get_plastic_strain_output_type() != Inpar::Solid::strain_none)
-  {
-    switch (dataio_->get_plastic_strain_output_type())
-    {
-      case Inpar::Solid::strain_ea:
-        text = "gauss_pl_EA_strains_xyz";
-        break;
-      case Inpar::Solid::strain_gl:
-        text = "gauss_pl_GL_strains_xyz";
-        break;
-      default:
-        FOUR_C_THROW("Requested plastic strain type is not supported!");
-        break;
-    }
-    output_ptr->write_vector(
-        text, evaldata.plastic_strain_data(), *(discretization()->element_row_map()));
-  }
-  // we don't need this anymore
-  evaldata.plastic_strain_data_ptr() = nullptr;
 }
 
 /*----------------------------------------------------------------------------*
