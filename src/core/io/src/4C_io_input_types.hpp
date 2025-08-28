@@ -12,6 +12,7 @@
 
 #include "4C_utils_enum.hpp"
 
+#include <array>
 #include <filesystem>
 #include <map>
 #include <optional>
@@ -77,6 +78,11 @@ namespace Core::IO
     {
     };
 
+    template <typename T, std::size_t n>
+    struct SupportedTypeHelper<std::array<T, n>> : SupportedTypeHelper<T>
+    {
+    };
+
     template <typename... Ts>
     struct SupportedTypeHelper<std::tuple<Ts...>>
         : std::bool_constant<(SupportedTypeHelper<Ts>::value && ...)>
@@ -109,6 +115,12 @@ namespace Core::IO
     struct RankHelper<std::vector<T>>
     {
       static constexpr std::size_t value = 1 + RankHelper<T>::value;
+    };
+
+    template <typename T, std::size_t n>
+    struct RankHelper<std::array<T, n>>
+    {
+      static constexpr std::size_t value = RankHelper<T>::value;
     };
 
     template <typename T>
@@ -185,6 +197,7 @@ namespace Core::IO
    * - any enum type
    * - `std::optional<T>`, where `T` is one of the supported types
    * - `std::vector<T>`, where `T` is one of the supported types
+   * -  std::array<T, n>, where `T` is one of the supported types and `n` is the array size
    * - `std::map<std::string, T>`, where `T` is one of the supported types
    * - `std::tuple<Ts...>`, where all `Ts` are one of the supported types
    * - `std::pair<T1, T2>`, where `T1` and `T2` are both one of the supported types

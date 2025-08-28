@@ -74,6 +74,16 @@ namespace Core::IO
         }
       }
 
+      template <typename T, std::size_t n>
+      void operator()(std::ostream& out, const std::array<T, n>& val) const
+      {
+        for (const auto& v : val)
+        {
+          (*this)(out, v);
+          out << " ";
+        }
+      }
+
       template <typename T>
       void operator()(std::ostream& out, const std::map<std::string, T>& val) const
       {
@@ -231,6 +241,20 @@ namespace Core::IO
         {
           node["size"] << *size;
         }
+        node["value_type"] |= ryml::MAP;
+        YamlTypeEmitter<T>{}(node["value_type"], size + 1);
+      }
+    };
+
+    template <typename T, std::size_t size_n>
+    struct YamlTypeEmitter<std::array<T, size_n>>
+    {
+      void operator()(ryml::NodeRef node, size_t* size)
+      {
+        FOUR_C_ASSERT(node.is_map(), "Expected a map node.");
+        // In the schema we do not distinguish between arrays and vectors, so we use the same type.
+        node["type"] = "vector";
+        node["size"] << size_n;
         node["value_type"] |= ryml::MAP;
         YamlTypeEmitter<T>{}(node["value_type"], size + 1);
       }
@@ -1183,6 +1207,13 @@ namespace Core::IO
         return ((*size_info == InputSpecBuilders::dynamic_size) || (v.size() == *size_info)) &&
                std::ranges::all_of(
                    v, [&](const auto& val) { return this->operator()(val, size_info + 1); });
+      }
+
+      template <typename T, std::size_t n>
+      constexpr bool operator()(const std::array<T, n>& arr, std::size_t* size_info) const
+      {
+        return std::ranges::all_of(
+            arr, [&](const auto& val) { return this->operator()(val, size_info); });
       }
 
       template <typename U>
@@ -2527,7 +2558,9 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::parameter(
     internal_data.size = data.size;
   }
   internal_data.on_parse_callback = data.on_parse_callback;
+
   internal_data.validator = data.validator;
+
   internal_data.store = data.store ? data.store : in_container<T>(name);
 
   if constexpr (std::is_enum_v<T>)

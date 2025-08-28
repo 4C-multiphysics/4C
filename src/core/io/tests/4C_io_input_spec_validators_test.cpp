@@ -67,13 +67,27 @@ namespace
 
   TEST(InputSpecValidators, AllElements)
   {
-    const auto validator = all_elements(in_range(1, 4));
-    EXPECT_TRUE(validator(std::vector<int>{1, 2, 3}));
-    EXPECT_FALSE(validator(std::vector<int>{1, -2, 3}));
+    {
+      SCOPED_TRACE("all elements validator for a vector");
+      const auto validator = all_elements(in_range(1, 4));
+      EXPECT_TRUE(validator(std::vector<int>{1, 2, 3}));
+      EXPECT_FALSE(validator(std::vector<int>{1, -2, 3}));
 
-    std::stringstream ss;
-    ss << validator;
-    EXPECT_EQ(ss.str(), "all_elements{in_range[1,4]}");
+      std::stringstream ss;
+      ss << validator;
+      EXPECT_EQ(ss.str(), "all_elements{in_range[1,4]}");
+    }
+
+    {
+      SCOPED_TRACE("all elements validator for an array");
+      const auto validator = all_elements(in_range(1, 4));
+      EXPECT_TRUE(validator(std::array<int, 3>{1, 2, 3}));
+      EXPECT_FALSE(validator(std::array<int, 3>{1, -2, 3}));
+
+      std::stringstream ss;
+      ss << validator;
+      EXPECT_EQ(ss.str(), "all_elements{in_range[1,4]}");
+    }
   }
 
   TEST(InputSpecValidators, Pattern)

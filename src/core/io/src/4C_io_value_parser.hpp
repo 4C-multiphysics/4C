@@ -150,14 +150,6 @@ namespace Core::IO
       return val;
     }
 
-    template <Internal::IsStdArray T>
-    T read()
-    {
-      T val;
-      read_internal(val);
-      return val;
-    }
-
     /**
      * Return the next token without consuming it. The return token may be empty if the parser has
      * reached the end of the input string.

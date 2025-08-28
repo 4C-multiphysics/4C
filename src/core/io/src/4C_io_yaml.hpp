@@ -16,6 +16,7 @@
 #include <ryml.hpp>      // IWYU pragma: export
 #include <ryml_std.hpp>  // IWYU pragma: export
 
+#include <array>
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -150,6 +151,9 @@ namespace Core::IO
   template <typename T>
   void emit_value_as_yaml(YamlNodeRef node, const std::vector<T>& value);
 
+  template <typename T, std::size_t n>
+  void emit_value_as_yaml(YamlNodeRef node, const std::array<T, n>& value);
+
   template <typename... Ts>
   void emit_value_as_yaml(YamlNodeRef node, const std::tuple<Ts...>& value);
 
@@ -282,6 +286,18 @@ namespace Core::IO
     }
   }
 
+  template <typename T, std::size_t n>
+  void read_value_from_yaml(ConstYamlNodeRef node, std::array<T, n>& value)
+  {
+    FOUR_C_ASSERT_ALWAYS(node.node.is_seq(), "Expected a sequence node for an array.");
+    value.fill(T{});
+    std::size_t index = 0;
+    for (auto child : node.node.children())
+    {
+      read_value_from_yaml(node.wrap(child), value[index++]);
+    }
+  }
+
   /**
    * Reads a value from a yaml (or json) file at @p file_path which has a top-level @p key.
    */
@@ -364,6 +380,17 @@ void Core::IO::emit_value_as_yaml(YamlNodeRef node, const std::map<std::string, 
 
 template <typename T>
 void Core::IO::emit_value_as_yaml(YamlNodeRef node, const std::vector<T>& value)
+{
+  node.node |= ryml::SEQ | ryml::FLOW_SL;
+  for (const auto& v : value)
+  {
+    auto child = node.wrap(node.node.append_child());
+    emit_value_as_yaml(child, v);
+  }
+}
+
+template <typename T, std::size_t n>
+void Core::IO::emit_value_as_yaml(YamlNodeRef node, const std::array<T, n>& value)
 {
   node.node |= ryml::SEQ | ryml::FLOW_SL;
   for (const auto& v : value)

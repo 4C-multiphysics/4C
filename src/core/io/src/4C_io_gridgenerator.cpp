@@ -15,6 +15,7 @@
 #include "4C_fem_general_node.hpp"
 #include "4C_io_input_parameter_container.hpp"
 #include "4C_io_input_spec_builders.hpp"
+#include "4C_io_input_spec_validators.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_io_value_parser.hpp"
 #include "4C_rebalance_binning_based.hpp"
@@ -311,23 +312,24 @@ namespace Core::IO::GridGenerator
     Elements::ElementDefinition element_definition;
 
     return all_of({
-        parameter<std::vector<double>>("bottom_corner_point",
-            {.description = "Coordinates of the first point specifying the cuboid.", .size = 3}),
-        parameter<std::vector<double>>("top_corner_point",
+        parameter<std::array<double, 3>>("bottom_corner_point",
+            {.description = "Coordinates of the first point specifying the cuboid."}),
+        parameter<std::array<double, 3>>("top_corner_point",
             {.description = "Coordinates of the second point specifying the cuboid. Every "
                             "coordinate should be strictly greater than the corresponding "
-                            "one in bottom_corner_point.",
-                .size = 3}),
-        parameter<std::vector<int>>(
-            "subdivisions", {.description = "The number of elements to generate per dimension.",
-                                .validator = all_elements(positive<int>()),
-                                .size = 3}),
-        parameter<std::vector<double>>(
-            "rotation_angle", {.description = "Optional rotation in Euler angles, i.e., rotation "
-                                              "about the x-, y-, and z-axis (in that order).",
-                                  .default_value = std::vector{0.0, 0.0, 0.0},
-                                  .validator = all_elements(in_range(0.0, excl(360.0))),
-                                  .size = 3}),
+                            "one in bottom_corner_point."}),
+        parameter<std::array<int, 3>>("subdivisions",
+            {
+                .description = "The number of elements to generate per dimension.",
+                .validator = all_elements(positive<int>()),
+            }),
+        parameter<std::array<double, 3>>("rotation_angle",
+            {
+                .description = "Optional rotation in Euler angles, i.e., rotation "
+                               "about the x-, y-, and z-axis (in that order).",
+                .default_value = std::array{0.0, 0.0, 0.0},
+                .validator = all_elements(in_range(0.0, excl(360.0))),
+            }),
         parameter<bool>("auto_partition",
             {.description = "Partition the geometry with 4C's standard rebalancing "
                             "techniques (when true) or manually partition based on the knowledge "
@@ -344,19 +346,11 @@ namespace Core::IO::GridGenerator
   {
     RectangularCuboidInputs result;
 
-    const auto vector_to_array = []<typename T>(const std::vector<T>& vec) -> std::array<T, 3>
-    {
-      if (vec.size() != 3) FOUR_C_THROW("Expected a vector of size 3.");
-      return {vec[0], vec[1], vec[2]};
-    };
-
-    result.bottom_corner_point_ =
-        vector_to_array(input.get<std::vector<double>>("bottom_corner_point"));
-    result.top_corner_point_ = vector_to_array(input.get<std::vector<double>>("top_corner_point"));
-    result.interval_ = vector_to_array(input.get<std::vector<int>>("subdivisions"));
-    result.rotation_angle_ = vector_to_array(input.get<std::vector<double>>("rotation_angle"));
+    result.bottom_corner_point_ = input.get<std::array<double, 3>>("bottom_corner_point");
+    result.top_corner_point_ = input.get<std::array<double, 3>>("top_corner_point");
+    result.interval_ = input.get<std::array<int, 3>>("subdivisions");
+    result.rotation_angle_ = input.get<std::array<double, 3>>("rotation_angle");
     result.autopartition_ = input.get<bool>("auto_partition");
-
 
     Elements::ElementDefinition element_definition;
     std::tie(result.elementtype_, result.cell_type, result.element_arguments) =
