@@ -354,9 +354,6 @@ namespace Solid
     //! CAUTION: The VUM is only available for GenAlpha and GEMM.
     void update_step_contact_vum();
 
-    //! Update step for beam contact
-    void update_step_beam_contact();
-
     //! Reset configuration after time step
     //!
     //! Thus the last converged state is copied back on the predictor
@@ -665,9 +662,6 @@ namespace Solid
     //! Read and set restart values for contact / meshtying
     void read_restart_contact_meshtying();
 
-    //! Read and set restart values for beam contact
-    void read_restart_beam_contact();
-
     //! initial guess of Newton's method
     std::shared_ptr<const Core::LinAlg::Vector<double>> initial_guess() override = 0;
 
@@ -960,21 +954,6 @@ namespace Solid
 
     /// wrapper for things that should be done after the actual time loop is finished
     void post_time_loop() final {};
-
-    //@}
-
-    //! @name Beam contact specific methods
-    //@{
-
-    //! return bool indicating if beam contact is defined
-    bool have_beam_contact() { return (beamcman_ != nullptr); }
-
-    //! return beam contact manager
-    std::shared_ptr<CONTACT::Beam3cmanager> beam_contact_manager() { return beamcman_; }
-
-    //! Check if beam contact is chosen in input file and
-    //! create manager object + initialize all relevant stuff if so
-    void prepare_beam_contact(const Teuchos::ParameterList& sdynparams);
 
     //@}
 

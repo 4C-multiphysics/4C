@@ -385,9 +385,6 @@ void Solid::TimIntOneStepTheta::evaluate_force_stiff_residual(Teuchos::Parameter
     stiff_->add(*damp_, false, 1.0 / (*dt_)[0], 1.0);
   }
 
-  // apply forces and stiffness due to beam contact
-  apply_force_stiff_beam_contact(*stiff_, *fres_, *disn_, predict);
-
   // apply forces and stiffness due to contact / meshtying
   // Note that we ALWAYS use a TR-like approach to compute the interface
   // forces. This means we never explicitly compute fc at the generalized
@@ -627,9 +624,6 @@ void Solid::TimIntOneStepTheta::update_step_state()
 
   // update contact / meshtying
   update_step_contact_meshtying();
-
-  // update beam contact
-  update_step_beam_contact();
 
   // look out
   return;

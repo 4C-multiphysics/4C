@@ -311,19 +311,6 @@ namespace Solid
         bool predict                                           //!< flag indicating predictor step
     );
 
-    //! Evaluate forces and stiffness due to beam contact
-    void apply_force_stiff_beam_contact(
-        Core::LinAlg::SparseOperator& stiff,  //!< stiffness is modified
-        Core::LinAlg::Vector<double>& fres,   //!< residual forces are modified
-        Core::LinAlg::Vector<double>& dis,    //!< current displacement state
-        bool predict                          //!< flag indicating predictor step
-    );
-
-    //! Check residual displacement and scale it if necessary
-    void limit_stepsize_beam_contact(
-        Core::LinAlg::Vector<double>& disi  //!< residual displacement vector
-    );
-
     //! Evaluate forces and stiffness due to spring dash-pot boundary condition
     void apply_force_stiff_spring_dashpot(
         std::shared_ptr<Core::LinAlg::SparseOperator> stiff,  //!< stiffness is modified
@@ -484,10 +471,6 @@ namespace Solid
 
     int cmt_windk_constr_nonlinear_solve();
     int cmt_windk_constr_linear_solve(const double k_ptc);
-
-    //! Do nonlinear iteration for beam contact
-    //!
-    int beam_contact_nonlinear_solve();
 
     //@}
 

@@ -7,7 +7,6 @@
 
 #include "4C_structure_timint.hpp"
 
-#include "4C_beamcontact_beam3contact_manager.hpp"
 #include "4C_beamcontact_input.hpp"
 #include "4C_cardiovascular0d_manager.hpp"
 #include "4C_cardiovascular0d_mor_pod.hpp"
@@ -248,13 +247,6 @@ void Solid::TimInt::setup()
         std::make_shared<Constraints::ConstraintSolver>(discret_, *solver_, dbcmaps_, sdynparams_);
   }
 
-  // check for beam contact
-  {
-    // If beam contact (no statistical mechanics) is chosen in the input file, then a
-    // corresponding manager object stored via #beamcman_ is created and all relevant
-    // stuff is initialized. Else, #beamcman_ remains a nullptr pointer.
-    prepare_beam_contact(sdynparams_);
-  }
   // check for mortar contact or meshtying
   {
     // If mortar contact or meshtying is chosen in the input file, then a
@@ -410,34 +402,6 @@ void Solid::TimInt::set_initial_fields()
 
   discret_->evaluate_initial_field(Global::Problem::instance()->function_manager(), porosityfield,
       *(*dis_)(0), porositylocaldofs);
-}
-
-/*----------------------------------------------------------------------*/
-/* Check for beam contact and do preparations */
-void Solid::TimInt::prepare_beam_contact(const Teuchos::ParameterList& sdynparams)
-{
-  // some parameters
-  const Teuchos::ParameterList& beamcontact = Global::Problem::instance()->beam_contact_params();
-  auto strategy = Teuchos::getIntegralValue<BeamContact::Strategy>(beamcontact, "BEAMS_STRATEGY");
-
-  // conditions for potential-based beam interaction
-  std::vector<const Core::Conditions::Condition*> beampotconditions;
-  discret_->get_condition("BeamPotentialLineCharge", beampotconditions);
-
-  // only continue if beam contact unmistakably chosen in input file or beam potential conditions
-  // applied
-  if (strategy != BeamContact::bstr_none or (int) beampotconditions.size() != 0)
-  {
-    // store integration parameter alphaf into beamcman_ as well
-    // (for all cases except OST, GenAlpha and GEMM this is zero)
-    // (note that we want to hand in theta in the OST case, which
-    // is defined just the other way round as alphaf in GenAlpha schemes.
-    // Thus, we have to hand in 1.0-theta for OST!!!)
-    double alphaf = tim_int_param();
-
-    // create beam contact manager
-    beamcman_ = std::make_shared<CONTACT::Beam3cmanager>(*discret_, alphaf);
-  }
 }
 
 /*----------------------------------------------------------------------*/
@@ -1057,17 +1021,6 @@ void Solid::TimInt::determine_mass_damp_consist_accel()
     // Contribution to rhs due to internal and external forces
     rhs->update(-1.0, *fint, 1.0, *fext, -1.0);
 
-    // Contribution to rhs due to beam contact
-    if (have_beam_contact())
-    {
-      // create empty parameter list
-      Teuchos::ParameterList beamcontactparams;
-      beamcontactparams.set("iter", 0);
-      beamcontactparams.set("dt", (*dt_)[0]);
-      beamcontactparams.set("numstep", step_);
-      beamcman_->evaluate(*system_matrix(), *rhs, (*dis_)[0], beamcontactparams, true, timen_);
-    }
-
     // Contribution to rhs due to inertia forces of inhomogeneous Dirichlet conditions
     std::shared_ptr<Core::LinAlg::Vector<double>> finert0 =
         std::make_shared<Core::LinAlg::Vector<double>>(*dof_row_map_view(), true);
@@ -1215,13 +1168,6 @@ void Solid::TimInt::update_step_contact_meshtying()
   {
     cmtbridge_->update(disn_);
   }
-}
-
-/*----------------------------------------------------------------------*/
-/* Update beam contact */
-void Solid::TimInt::update_step_beam_contact()
-{
-  if (have_beam_contact()) beamcman_->update(*disn_, stepn_, 99);
 }
 
 /*----------------------------------------------------------------------*/
@@ -1731,7 +1677,6 @@ void Solid::TimInt::read_restart(const int step)
   read_restart_constraint();
   read_restart_cardiovascular0_d();
   read_restart_contact_meshtying();
-  read_restart_beam_contact();
   read_restart_spring_dashpot();
 
   read_restart_force();
@@ -1765,9 +1710,6 @@ void Solid::TimInt::set_restart(int step, double time,
 
   // contact / meshtying
   if (have_contact_meshtying()) FOUR_C_THROW("Set restart not implemented for contact / meshtying");
-
-  // beam contact
-  if (have_beam_contact()) FOUR_C_THROW("Set restart not implemented for beam contact");
 
   // biofilm growth
   if (have_biofilm_growth()) FOUR_C_THROW("Set restart not implemented for biofilm growth");
@@ -1869,18 +1811,6 @@ void Solid::TimInt::read_restart_contact_meshtying()
       *discret_, Global::Problem::instance()->input_control_file(), step_);
 
   if (have_contact_meshtying()) cmtbridge_->read_restart(reader, (*dis_)(0), zeros_);
-}
-
-/*----------------------------------------------------------------------*/
-/* Read and set restart values for beam contact */
-void Solid::TimInt::read_restart_beam_contact()
-{
-  if (have_beam_contact())
-  {
-    Core::IO::DiscretizationReader reader(
-        *discret_, Global::Problem::instance()->input_control_file(), step_);
-    beamcman_->read_restart(reader);
-  }
 }
 
 /*----------------------------------------------------------------------*/
@@ -2002,9 +1932,6 @@ void Solid::TimInt::get_restart_data(std::shared_ptr<int> step, std::shared_ptr<
   if (have_contact_meshtying())
     FOUR_C_THROW("Get restart data not implemented for contact / meshtying");
 
-  // beam contact
-  if (have_beam_contact()) FOUR_C_THROW("Get restart data not implemented for beam contact");
-
   // biofilm growth
   if (have_biofilm_growth()) FOUR_C_THROW("Get restart data not implemented for biofilm growth");
 }
@@ -2061,12 +1988,6 @@ void Solid::TimInt::output_restart(bool& datawritten)
           "displacement", (*dis_)(0));
       cmtbridge_->postprocess_quantities_per_interface(cmtOutputParams);
     }
-  }
-
-  // beam contact
-  if (have_beam_contact())
-  {
-    beamcman_->write_restart(*output_);
   }
 
   // biofilm growth
@@ -2173,10 +2094,6 @@ void Solid::TimInt::add_restart_to_output_state()
   if (have_contact_meshtying()) cmtbridge_->write_restart(*output_, true);
 
   // TODO: add missing restart data for surface stress and contact/meshtying here
-
-  // beam contact
-  if (have_beam_contact()) beamcman_->write_restart(*output_);
-
 
   // finally add the missing mesh information, order is important here
   output_->write_mesh(step_, (*time_)[0]);
