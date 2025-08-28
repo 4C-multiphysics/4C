@@ -33,7 +33,6 @@ NOX::FSI::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
     const std::shared_ptr<NOX::Nln::Scaling> s)
     : utils_(printParams),
       jac_interface_ptr_(iJac),
-      jac_type_(EpetraOperator),
       jac_ptr_(J),
       operator_(J),
       scaling_(s),
@@ -43,36 +42,7 @@ NOX::FSI::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
 {
   tmp_vector_ptr_ = std::make_shared<::NOX::Epetra::Vector>(cloneVector);
 
-  jac_type_ = get_operator_type(*jac_ptr_);
-
   reset(linearSolverParams);
-}
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-NOX::FSI::LinearSystem::OperatorType NOX::FSI::LinearSystem::get_operator_type(
-    const Epetra_Operator& Op)
-{
-  // check via dynamic cast, which type of Jacobian was broadcast
-  const Epetra_Operator* testOperator = nullptr;
-
-  testOperator = dynamic_cast<
-      const Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>*>(&Op);
-  if (testOperator != nullptr) return BlockSparseMatrix;
-
-  testOperator = dynamic_cast<const Core::LinAlg::SparseMatrix*>(&Op);
-  if (testOperator != nullptr) return SparseMatrix;
-
-  testOperator = dynamic_cast<const Epetra_CrsMatrix*>(&Op);
-  if (testOperator != nullptr) return EpetraCrsMatrix;
-
-  testOperator = dynamic_cast<const Epetra_VbrMatrix*>(&Op);
-  if (testOperator != nullptr) return EpetraVbrMatrix;
-
-  testOperator = dynamic_cast<const Epetra_RowMatrix*>(&Op);
-  if (testOperator != nullptr) return EpetraRowMatrix;
-
-  return EpetraOperator;
 }
 
 

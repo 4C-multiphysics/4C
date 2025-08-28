@@ -44,7 +44,7 @@ NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
       solvers_(solvers),
       reqInterfacePtr_(iReq),
       jacInterfacePtr_(iJac),
-      jacType_(NOX::Nln::LinSystem::LinalgSparseOperator),
+      jacType_(NOX::Nln::Aux::get_operator_type(*jacobian_op)),
       scaling_(scalingObject),
       conditionNumberEstimate_(0.0),
       timer_("", true),
@@ -53,9 +53,6 @@ NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
       prePostOperatorPtr_(Teuchos::null),
       jac_ptr_(jacobian_op)
 {
-  // Jacobian operator is supplied
-  jacType_ = NOX::Nln::Aux::get_operator_type(jacobian());
-
   reset(linearSolverParams);
 }
 
@@ -73,7 +70,7 @@ NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
       solvers_(solvers),
       reqInterfacePtr_(iReq),
       jacInterfacePtr_(iJac),
-      jacType_(NOX::Nln::LinSystem::LinalgSparseOperator),
+      jacType_(NOX::Nln::Aux::get_operator_type(*jacobian_op)),
       scaling_(nullptr),
       conditionNumberEstimate_(0.0),
       timer_("", true),
@@ -82,9 +79,6 @@ NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
       prePostOperatorPtr_(Teuchos::null),
       jac_ptr_(jacobian_op)
 {
-  // Jacobian operator is supplied
-  jacType_ = NOX::Nln::Aux::get_operator_type(jacobian());
-
   reset(linearSolverParams);
 }
 
@@ -102,7 +96,7 @@ NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
       solvers_(solvers),
       reqInterfacePtr_(iReq),
       jacInterfacePtr_(iJac),
-      jacType_(NOX::Nln::LinSystem::LinalgSparseOperator),
+      jacType_(NOX::Nln::Aux::get_operator_type(*jacobian_op)),
       scaling_(scalingObject),
       conditionNumberEstimate_(0.0),
       timer_("", true),
@@ -111,9 +105,6 @@ NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
       prePostOperatorPtr_(Teuchos::null),
       jac_ptr_(jacobian_op)
 {
-  // Jacobian operator is supplied
-  jacType_ = NOX::Nln::Aux::get_operator_type(jacobian());
-
   reset(linearSolverParams);
 }
 
@@ -130,7 +121,7 @@ NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
       solvers_(solvers),
       reqInterfacePtr_(iReq),
       jacInterfacePtr_(iJac),
-      jacType_(NOX::Nln::LinSystem::LinalgSparseOperator),
+      jacType_(NOX::Nln::Aux::get_operator_type(*jacobian_op)),
       scaling_(nullptr),
       conditionNumberEstimate_(0.0),
       timer_("", true),
@@ -139,9 +130,6 @@ NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
       prePostOperatorPtr_(Teuchos::null),
       jac_ptr_(jacobian_op)
 {
-  // Jacobian operator is supplied
-  jacType_ = NOX::Nln::Aux::get_operator_type(jacobian());
-
   reset(linearSolverParams);
 }
 
@@ -515,18 +503,6 @@ const enum NOX::Nln::LinSystem::OperatorType& NOX::Nln::LinearSystem::get_jacobi
     const
 {
   return jacType_;
-}
-
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-void NOX::Nln::LinearSystem::set_jacobian_operator_for_solve(
-    const Teuchos::RCP<const Core::LinAlg::SparseOperator>& solveJacOp)
-{
-  if (jacType_ != NOX::Nln::Aux::get_operator_type(*solveJacOp))
-    throw_error("set_jacobian_operator_for_solve", "wrong operator type!");
-
-  jac_ptr_ = Teuchos::rcp_const_cast<Core::LinAlg::SparseOperator>(solveJacOp);
-  return;
 }
 
 /*----------------------------------------------------------------------*
