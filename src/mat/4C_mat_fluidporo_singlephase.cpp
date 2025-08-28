@@ -514,4 +514,118 @@ void Mat::FluidPoroVolFracPressure::initialize()
   return;
 }
 
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+Mat::PAR::FluidPoroVolFracPressureBloodLung::FluidPoroVolFracPressureBloodLung(
+    const Core::Mat::PAR::Parameter::Data& matdata)
+    : Parameter(matdata),
+      density_(matdata.parameters.get<double>("DENSITY")),
+      permeability_(matdata.parameters.get<double>("PERMEABILITY")),
+      initial_volfrac_(matdata.parameters.get<double>("INITIALVOLFRAC")),
+      scaling_parameter_deformation_(
+          matdata.parameters.get<double>("SCALING_PARAMETER_DEFORMATION")),
+      scaling_parameter_pressure_(
+          (matdata.parameters.get<std::optional<double>>("SCALING_PARAMETER_PRESSURE")
+                  .value_or(double(0.0)))),
+      isinit_(false)
+{
+  // retrieve problem instance to read from
+  const int probinst = Global::Problem::instance()->materials()->get_read_from_problem();
+
+  // for the sake of safety
+  if (Global::Problem::instance(probinst)->materials() == nullptr)
+    FOUR_C_THROW("List of materials cannot be accessed in the global problem instance.");
+  // yet another safety check
+  if (Global::Problem::instance(probinst)->materials()->num() == 0)
+    FOUR_C_THROW("List of materials in the global problem instance is empty.");
+
+  // create viscosity law
+  viscositylaw_ = Mat::PAR::FluidPoroViscosityLaw::create_viscosity_law(
+      matdata.parameters.get<int>("VISCOSITYLAWID"));
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+std::shared_ptr<Core::Mat::Material> Mat::PAR::FluidPoroVolFracPressureBloodLung::create_material()
+{
+  return std::make_shared<Mat::FluidPoroVolFracPressureBloodLung>(this);
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void Mat::PAR::FluidPoroVolFracPressureBloodLung::initialize() { isinit_ = true; }
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+Mat::FluidPoroVolFracPressureBloodLungType Mat::FluidPoroVolFracPressureBloodLungType::instance_;
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+
+Core::Communication::ParObject* Mat::FluidPoroVolFracPressureBloodLungType::create(
+    Core::Communication::UnpackBuffer& buffer)
+{
+  Mat::FluidPoroVolFracPressure* fluid_poro = new Mat::FluidPoroVolFracPressure();
+  fluid_poro->unpack(buffer);
+  return fluid_poro;
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+Mat::FluidPoroVolFracPressureBloodLung::FluidPoroVolFracPressureBloodLung() : params_(nullptr) {}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+Mat::FluidPoroVolFracPressureBloodLung::FluidPoroVolFracPressureBloodLung(
+    Mat::PAR::FluidPoroVolFracPressureBloodLung* params)
+    : params_(params)
+{
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void Mat::FluidPoroVolFracPressureBloodLung::pack(Core::Communication::PackBuffer& data) const
+{
+  // pack type of this instance of ParObject
+  int type = unique_par_object_id();
+  add_to_pack(data, type);
+
+  // matid
+  int matid = -1;
+  if (params_ != nullptr) matid = params_->id();  // in case we are in post-process mode
+  add_to_pack(data, matid);
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void Mat::FluidPoroVolFracPressureBloodLung::unpack(Core::Communication::UnpackBuffer& buffer)
+{
+  Core::Communication::extract_and_assert_id(buffer, unique_par_object_id());
+
+  // matid
+  int matid;
+  extract_from_pack(buffer, matid);
+  params_ = nullptr;
+  if (Global::Problem::instance()->materials() != nullptr)
+    if (Global::Problem::instance()->materials()->num() != 0)
+    {
+      const int probinst = Global::Problem::instance()->materials()->get_read_from_problem();
+      Core::Mat::PAR::Parameter* mat =
+          Global::Problem::instance(probinst)->materials()->parameter_by_id(matid);
+      if (mat->type() == material_type())
+        params_ = static_cast<Mat::PAR::FluidPoroVolFracPressureBloodLung*>(mat);
+      else
+        FOUR_C_THROW("Type of parameter material {} does not fit to calling type {}", mat->type(),
+            material_type());
+    }
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void Mat::FluidPoroVolFracPressureBloodLung::initialize()
+{
+  params_->initialize();
+  return;
+}
+
 FOUR_C_NAMESPACE_CLOSE

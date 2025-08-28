@@ -12,6 +12,7 @@
 
 #include "4C_fem_general_element.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_mat_fluidporo_singlephase.hpp"
 #include "4C_porofluid_pressure_based_ele_action.hpp"
 
 #include <memory>
@@ -105,7 +106,7 @@ namespace Discret
         static std::shared_ptr<VariableManagerInterface<nsd, nen>> create_variable_manager(
             const Discret::Elements::PoroFluidMultiPhaseEleParameter& para,
             const PoroPressureBased::Action& action, std::shared_ptr<Core::Mat::Material> mat,
-            const int numdofpernode, const int numfluidphases);
+            const int numdofpernode, const int numfluidphases, const int numvolfrac);
 
         //! extract element and node values from the discretization
         //! dofsetnum is the number of the porofluid-dofset on the current element
@@ -143,6 +144,7 @@ namespace Discret
         virtual const Core::LinAlg::Matrix<nsd, 1>* dispnp() const = 0;
         const std::vector<double>* scalarnp() const override = 0;
         virtual const std::vector<Core::LinAlg::Matrix<nsd, 1>>* grad_scalarnp() const = 0;
+
         //@}
       };
 
@@ -165,7 +167,8 @@ namespace Discret
             : VariableManagerInterface<nsd, nen>(),
               numdofpernode_(numdofpernode),
               isextracted_(false),
-              isevaluated_(false) {};
+              isevaluated_(false),
+              volfrac_closing_relation_(Mat::PAR::PoroFluidPressureBased::cr_undefined) {};
 
         //! check if evaluate_gp_variables has been called
         void check_is_evaluated() const override
@@ -266,6 +269,9 @@ namespace Discret
         bool isextracted_;
         //! flag if evaluate_gp_variables was called
         bool isevaluated_;
+        //! type of volume fractioin closing relation
+        Mat::PAR::PoroFluidPressureBased::ClosingRelation volfrac_closing_relation_{
+            Mat::PAR::PoroFluidPressureBased::cr_undefined};
       };
 
 
@@ -679,12 +685,14 @@ namespace Discret
         //! constructor
         VariableManagerMaximumNodalVolFracValue(const int numvolfrac,
             std::shared_ptr<VariableManagerInterface<nsd, nen>> varmanager,
-            std::shared_ptr<Core::Mat::Material> multiphasemat)
+            std::shared_ptr<Core::Mat::Material> multiphasemat,
+            Mat::PAR::PoroFluidPressureBased::ClosingRelation volfrac_closing_relation)
             : VariableManagerDecorator<nsd, nen>(varmanager),
               numvolfrac_(numvolfrac),
-              ele_has_valid_volfrac_press_(numvolfrac_, false),
-              ele_has_valid_volfrac_spec_(numvolfrac_, false),
-              multiphasemat_(multiphasemat) {};
+              ele_has_valid_volfrac_press_(numvolfrac_, true),
+              ele_has_valid_volfrac_spec_(numvolfrac_, true),
+              multiphasemat_(multiphasemat),
+              volfrac_closing_relation_(volfrac_closing_relation) {};
 
         //! extract node values related to time derivatives
         //! dofsetnum is the number of the porofluid-dofset on the current element
@@ -736,6 +744,9 @@ namespace Discret
         std::vector<bool> ele_has_valid_volfrac_spec_;
 
         std::shared_ptr<Core::Mat::Material> multiphasemat_;
+
+        //! type of volume fractioin closing relation
+        Mat::PAR::PoroFluidPressureBased::ClosingRelation volfrac_closing_relation_;
       };
 
     }  // namespace PoroFluidManager
