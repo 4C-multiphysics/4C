@@ -18,12 +18,6 @@
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_vector.hpp"
 
-#include <Epetra_FECrsGraph.h>
-#include <Isorropia_Epetra.hpp>
-#include <Isorropia_EpetraCostDescriber.hpp>
-#include <Isorropia_EpetraPartitioner.hpp>
-#include <Isorropia_EpetraRedistributor.hpp>
-#include <Isorropia_Exception.hpp>
 #include <Teuchos_TimeMonitor.hpp>
 #include <Zoltan2_PartitioningProblem.hpp>
 #include <Zoltan2_PartitioningSolution.hpp>
@@ -36,7 +30,7 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------*/
 std::pair<std::shared_ptr<Core::LinAlg::Map>, std::shared_ptr<Core::LinAlg::Map>>
 Core::Rebalance::rebalance_node_maps(const Core::LinAlg::Graph& initialGraph,
-    Teuchos::ParameterList rebalanceParams,
+    Teuchos::ParameterList& rebalanceParams,
     const std::shared_ptr<Core::LinAlg::Vector<double>>& initialNodeWeights,
     const std::shared_ptr<Core::LinAlg::SparseMatrix>& initialEdgeWeights,
     const std::shared_ptr<Core::LinAlg::MultiVector<double>>& initialNodeCoordinates)
@@ -61,7 +55,7 @@ Core::Rebalance::rebalance_node_maps(const Core::LinAlg::Graph& initialGraph,
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 std::shared_ptr<Core::LinAlg::Graph> Core::Rebalance::rebalance_graph(
-    const Core::LinAlg::Graph& initialGraph, Teuchos::ParameterList rebalanceParams,
+    const Core::LinAlg::Graph& initialGraph, Teuchos::ParameterList& rebalanceParams,
     const std::shared_ptr<Core::LinAlg::Vector<double>>& initialNodeWeights,
     const std::shared_ptr<Core::LinAlg::SparseMatrix>& initialEdgeWeights,
     const std::shared_ptr<Core::LinAlg::MultiVector<double>>& initialNodeCoordinates)
@@ -120,11 +114,10 @@ std::shared_ptr<Core::LinAlg::Graph> Core::Rebalance::rebalance_graph(
   graphAdapter->applyPartitioningSolution(
       initialGraph.get_epetra_crs_graph(), balancedGraph, solution);
 
-  auto graph = std::make_shared<Core::LinAlg::Graph>(*balancedGraph);
-  graph->fill_complete();
-  graph->optimize_storage();
+  balancedGraph->FillComplete();
+  balancedGraph->OptimizeStorage();
 
-  return graph;
+  return std::make_shared<Core::LinAlg::Graph>(*balancedGraph);
 }
 
 /*----------------------------------------------------------------------*/
@@ -132,7 +125,8 @@ std::shared_ptr<Core::LinAlg::Graph> Core::Rebalance::rebalance_graph(
 std::pair<std::shared_ptr<Core::LinAlg::MultiVector<double>>,
     std::shared_ptr<Core::LinAlg::MultiVector<double>>>
 Core::Rebalance::rebalance_coordinates(const Core::LinAlg::MultiVector<double>& initialCoordinates,
-    Teuchos::ParameterList rebalanceParams, const Core::LinAlg::MultiVector<double>& initialWeights)
+    Teuchos::ParameterList& rebalanceParams,
+    const Core::LinAlg::MultiVector<double>& initialWeights)
 {
   TEUCHOS_FUNC_TIME_MONITOR("Rebalance::rebalance_coordinates");
 
@@ -142,9 +136,7 @@ Core::Rebalance::rebalance_coordinates(const Core::LinAlg::MultiVector<double>& 
   for (int weight_num = 0; weight_num < initialWeights.NumVectors(); weight_num++)
     weights[weight_num] = initialWeights(weight_num).get_values();
 
-  std::vector<int> stride(initialWeights.NumVectors());
-  for (int stride_num = 0; stride_num < initialWeights.NumVectors(); stride_num++)
-    stride[stride_num] = initialWeights.NumVectors();
+  std::vector<int> stride(initialWeights.NumVectors(), initialWeights.NumVectors());
 
   auto* adapter = new VectorAdapter(
       Teuchos::rcpFromRef(initialCoordinates.get_epetra_multi_vector()), weights, stride);
