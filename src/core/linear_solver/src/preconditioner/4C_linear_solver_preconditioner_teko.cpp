@@ -36,7 +36,7 @@ Core::LinearSolver::TekoPreconditioner::TekoPreconditioner(Teuchos::ParameterLis
 
 //----------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------
-void Core::LinearSolver::TekoPreconditioner::setup(Epetra_Operator* matrix,
+void Core::LinearSolver::TekoPreconditioner::setup(Core::LinAlg::SparseOperator* matrix,
     Core::LinAlg::MultiVector<double>* x, Core::LinAlg::MultiVector<double>* b)
 {
   using EpetraMultiVector = Xpetra::EpetraMultiVectorT<GlobalOrdinal, Node>;
@@ -77,8 +77,9 @@ void Core::LinearSolver::TekoPreconditioner::setup(Epetra_Operator* matrix,
   // wrap linear operators
   if (!A)
   {
-    auto A_crs = Teuchos::rcp_dynamic_cast<Epetra_CrsMatrix>(Teuchos::rcpFromRef(*matrix));
-    pmatrix_ = Thyra::epetraLinearOp(A_crs);
+    auto A_crs =
+        Teuchos::rcp_dynamic_cast<Core::LinAlg::SparseMatrix>(Teuchos::rcpFromRef(*matrix));
+    pmatrix_ = Thyra::epetraLinearOp(Teuchos::rcpFromRef(*A_crs->epetra_matrix()));
   }
   else
   {

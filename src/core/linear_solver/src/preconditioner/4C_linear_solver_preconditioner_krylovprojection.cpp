@@ -22,7 +22,7 @@ Core::LinearSolver::KrylovProjectionPreconditioner::KrylovProjectionPrecondition
 
 //----------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------
-void Core::LinearSolver::KrylovProjectionPreconditioner::setup(Epetra_Operator* matrix,
+void Core::LinearSolver::KrylovProjectionPreconditioner::setup(Core::LinAlg::SparseOperator* matrix,
     Core::LinAlg::MultiVector<double>* x, Core::LinAlg::MultiVector<double>* b)
 {
   projector_->apply_pt(*b);

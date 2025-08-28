@@ -30,7 +30,7 @@ namespace Core::LinearSolver
     KrylovProjectionPreconditioner(std::shared_ptr<PreconditionerTypeBase> preconditioner,
         std::shared_ptr<Core::LinAlg::KrylovProjector> projector);
 
-    void setup(Epetra_Operator* matrix, Core::LinAlg::MultiVector<double>* x,
+    void setup(Core::LinAlg::SparseOperator* matrix, Core::LinAlg::MultiVector<double>* x,
         Core::LinAlg::MultiVector<double>* b) override;
 
     /// linear operator used for preconditioning

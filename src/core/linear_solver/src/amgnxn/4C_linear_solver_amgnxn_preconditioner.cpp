@@ -44,7 +44,7 @@ std::shared_ptr<Epetra_Operator> Core::LinearSolver::AmGnxnPreconditioner::prec_
 /*------------------------------------------------------------------------------*/
 /*------------------------------------------------------------------------------*/
 
-void Core::LinearSolver::AmGnxnPreconditioner::setup(Epetra_Operator* matrix,
+void Core::LinearSolver::AmGnxnPreconditioner::setup(Core::LinAlg::SparseOperator* matrix,
     Core::LinAlg::MultiVector<double>* x, Core::LinAlg::MultiVector<double>* b)
 {
   // Check whether this is a block sparse matrix

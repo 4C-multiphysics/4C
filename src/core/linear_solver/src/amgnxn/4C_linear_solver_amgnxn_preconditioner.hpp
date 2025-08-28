@@ -35,7 +35,7 @@ namespace Core::LinearSolver
    public:
     AmGnxnPreconditioner(Teuchos::ParameterList& params);
 
-    void setup(Epetra_Operator* matrix, Core::LinAlg::MultiVector<double>* x,
+    void setup(Core::LinAlg::SparseOperator* matrix, Core::LinAlg::MultiVector<double>* x,
         Core::LinAlg::MultiVector<double>* b) override;
 
     virtual void setup(std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> A);

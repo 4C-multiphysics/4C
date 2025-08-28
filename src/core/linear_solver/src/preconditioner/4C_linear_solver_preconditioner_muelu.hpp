@@ -56,7 +56,7 @@ namespace Core::LinearSolver
      * @param x Solution of the linear system
      * @param b Right-hand side of the linear system
      */
-    void setup(Epetra_Operator* matrix, Core::LinAlg::MultiVector<double>* x,
+    void setup(Core::LinAlg::SparseOperator* matrix, Core::LinAlg::MultiVector<double>* x,
         Core::LinAlg::MultiVector<double>* b) override;
 
     //! linear operator used for preconditioning

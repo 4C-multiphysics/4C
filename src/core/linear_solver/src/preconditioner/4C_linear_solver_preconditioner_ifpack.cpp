@@ -26,11 +26,11 @@ Core::LinearSolver::IFPACKPreconditioner::IFPACKPreconditioner(
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-void Core::LinearSolver::IFPACKPreconditioner::setup(Epetra_Operator* matrix,
+void Core::LinearSolver::IFPACKPreconditioner::setup(Core::LinAlg::SparseOperator* matrix,
     Core::LinAlg::MultiVector<double>* x, Core::LinAlg::MultiVector<double>* b)
 {
-  std::shared_ptr<Epetra_CrsMatrix> A_crs =
-      std::dynamic_pointer_cast<Epetra_CrsMatrix>(Core::Utils::shared_ptr_from_ref(*matrix));
+  auto A_crs = std::dynamic_pointer_cast<Core::LinAlg::SparseMatrix>(
+      Core::Utils::shared_ptr_from_ref(*matrix));
 
   if (!A_crs)
   {
@@ -39,10 +39,10 @@ void Core::LinearSolver::IFPACKPreconditioner::setup(Epetra_Operator* matrix,
             Core::Utils::shared_ptr_from_ref(*matrix));
 
     std::cout << "\n WARNING: IFPACK preconditioner is merging matrix, this is very expensive! \n";
-    A_crs = A->merge()->epetra_matrix();
+    A_crs = A->merge();
   }
 
-  pmatrix_ = std::make_shared<Epetra_CrsMatrix>(*A_crs);
+  pmatrix_ = std::make_shared<Epetra_CrsMatrix>(*A_crs->epetra_matrix());
 
   std::string prectype;
   int overlap = 0;
