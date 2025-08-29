@@ -21,25 +21,21 @@ Core::LinearSolver::IFPACKPreconditioner::IFPACKPreconditioner(
     Teuchos::ParameterList& ifpacklist, Teuchos::ParameterList& solverlist)
     : ifpacklist_(ifpacklist), solverlist_(solverlist)
 {
-  return;
 }
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-void Core::LinearSolver::IFPACKPreconditioner::setup(Core::LinAlg::SparseOperator* matrix,
-    Core::LinAlg::MultiVector<double>* x, Core::LinAlg::MultiVector<double>* b)
+void Core::LinearSolver::IFPACKPreconditioner::setup(Core::LinAlg::SparseOperator& matrix,
+    const Core::LinAlg::MultiVector<double>& x, Core::LinAlg::MultiVector<double>& b)
 {
-  auto A_crs = std::dynamic_pointer_cast<Core::LinAlg::SparseMatrix>(
-      Core::Utils::shared_ptr_from_ref(*matrix));
+  auto* A_crs = dynamic_cast<Core::LinAlg::SparseMatrix*>(&matrix);
 
-  if (!A_crs)
+  if (A_crs == nullptr)
   {
-    std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> A =
-        std::dynamic_pointer_cast<Core::LinAlg::BlockSparseMatrixBase>(
-            Core::Utils::shared_ptr_from_ref(*matrix));
+    auto* A = dynamic_cast<Core::LinAlg::BlockSparseMatrixBase*>(&matrix);
 
     std::cout << "\n WARNING: IFPACK preconditioner is merging matrix, this is very expensive! \n";
-    A_crs = A->merge();
+    A_crs = A->merge().get();
   }
 
   pmatrix_ = std::make_shared<Epetra_CrsMatrix>(*A_crs->epetra_matrix());

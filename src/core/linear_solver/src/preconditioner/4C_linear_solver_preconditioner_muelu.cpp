@@ -49,19 +49,19 @@ Core::LinearSolver::MueLuPreconditioner::MueLuPreconditioner(Teuchos::ParameterL
 
 //----------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------
-void Core::LinearSolver::MueLuPreconditioner::setup(Core::LinAlg::SparseOperator* matrix,
-    Core::LinAlg::MultiVector<double>* x, Core::LinAlg::MultiVector<double>* b)
+void Core::LinearSolver::MueLuPreconditioner::setup(Core::LinAlg::SparseOperator& matrix,
+    const Core::LinAlg::MultiVector<double>& x, Core::LinAlg::MultiVector<double>& b)
 {
   using EpetraCrsMatrix = Xpetra::EpetraCrsMatrixT<GO, NO>;
   using EpetraMap = Xpetra::EpetraMapT<GO, NO>;
   using EpetraMultiVector = Xpetra::EpetraMultiVectorT<GO, NO>;
 
   Teuchos::RCP<Core::LinAlg::BlockSparseMatrixBase> A =
-      Teuchos::rcp_dynamic_cast<Core::LinAlg::BlockSparseMatrixBase>(Teuchos::rcpFromRef(*matrix));
+      Teuchos::rcp_dynamic_cast<Core::LinAlg::BlockSparseMatrixBase>(Teuchos::rcpFromRef(matrix));
 
   if (A.is_null())
   {
-    auto crsA = Teuchos::rcp_dynamic_cast<Core::LinAlg::SparseMatrix>(Teuchos::rcpFromRef(*matrix));
+    auto crsA = Teuchos::rcp_dynamic_cast<Core::LinAlg::SparseMatrix>(Teuchos::rcpFromRef(matrix));
 
     Teuchos::RCP<Xpetra::CrsMatrix<SC, LO, GO, NO>> mueluA =
         Teuchos::make_rcp<EpetraCrsMatrix>(Teuchos::rcp(crsA->epetra_matrix()));
