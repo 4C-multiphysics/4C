@@ -1312,7 +1312,7 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
   // 3. set graph edge weights
   auto edge_weights = std::make_shared<Core::LinAlg::SparseMatrix>(graph_rowmap, 15);
   {
-    // set standard value of edge weight to 1.0
+    // set standard value of edge weight to 10.0
     for (int i = 0; i < node_graph.num_local_rows(); ++i)
     {
       const int grow = node_graph.row_map().gid(i);
@@ -1342,7 +1342,7 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
         // we do not want to partition between master and slave nodes
         std::vector<int> master_gid(1, master->id());
         std::vector<int> slave_gid(1, slave->id());
-        // add 99 to the initial value of 1.0 to set costs to 100
+        // set cost of strong edges to 100.0
         std::vector<double> value(1, 100.0);
 
         edge_weights->insert_global_values(master->id(), 1, value.data(), slave_gid.data());
