@@ -45,12 +45,12 @@ STI DYNAMIC:
 STI DYNAMIC/MONOLITHIC:
   LINEAR_SOLVER: 1
 SOLVER 1:
-  SOLVER: "Belos"
-  AZPREC: "AMGnxn"
-  AMGNXN_TYPE: "XML"
-  AMGNXN_XML_FILE: "sti_mono_2D_quad4_elch_s2i_butlervolmerpeltier_diabatic_BGS-AMG_2x2.xml"
+  SOLVER: Belos
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_template.xml"
+  AZPREC: Teko
+  TEKO_XML_FILE: "xml/block_preconditioner/electrochemistry_BGS-AMG_2x2.xml"
 SOLVER 2:
-  SOLVER: "UMFPACK"
+  SOLVER: UMFPACK
 MATERIALS:
   - MAT: 1
     MAT_electrode:
@@ -171,174 +171,174 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 41
       QUANTITY: "phi1"
-      VALUE: 8.398590018566795
+      VALUE: 8.39858998731889628e+00
       TOLERANCE: 8.4e-08
   - SCATRA:
       DIS: "scatra"
       NODE: 41
       QUANTITY: "phi2"
-      VALUE: -7.530541253589192e-08
+      VALUE: -7.53054122246012521e-08
       TOLERANCE: 7.5e-16
   - SCATRA:
       DIS: "thermo"
       NODE: 41
       QUANTITY: "phi"
-      VALUE: 300.3932240411181
-      TOLERANCE: 3e-06
+      VALUE: 3.00393224038291066e+02
+      TOLERANCE: 3.0e-06
   - SCATRA:
       DIS: "scatra"
       NODE: 41
       QUANTITY: "flux_boundary_1_x"
-      VALUE: 2.071770652475217e-06
-      TOLERANCE: 2.1e-11
+      VALUE: 2.07177066659308179e-06
+      TOLERANCE: 2.1e-12
   - SCATRA:
       DIS: "scatra"
       NODE: 41
       QUANTITY: "flux_boundary_1_y"
-      VALUE: -1.475660918400638e-05
-      TOLERANCE: 1.5e-10
+      VALUE: -1.47566092845637509e-05
+      TOLERANCE: 1.5e-11
   - SCATRA:
       DIS: "scatra"
       NODE: 41
       QUANTITY: "flux_boundary_1_z"
-      VALUE: 4.054480303796971e-06
-      TOLERANCE: 4.1e-11
+      VALUE: 4.05448033142580326e-06
+      TOLERANCE: 4.1e-12
   - SCATRA:
       DIS: "thermo"
       NODE: 41
       QUANTITY: "flux_boundary_1_x"
-      VALUE: 0.0032589617104316097
-      TOLERANCE: 3.3e-08
+      VALUE: 3.25895371996888419e-03
+      TOLERANCE: 3.3e-09
   - SCATRA:
       DIS: "thermo"
       NODE: 41
       QUANTITY: "flux_boundary_1_y"
-      VALUE: -0.023212619721697456
-      TOLERANCE: 2.3e-07
+      VALUE: -2.32125628079963668e-02
+      TOLERANCE: 2.3e-08
   - SCATRA:
       DIS: "thermo"
       NODE: 41
       QUANTITY: "flux_boundary_1_z"
-      VALUE: 0.006377827608469567
-      TOLERANCE: 6.4e-08
+      VALUE: 6.37781197103706472e-03
+      TOLERANCE: 6.4e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 244
       QUANTITY: "phi1"
-      VALUE: 1.2000440243926658
+      VALUE: 1.20004402706301216e+00
       TOLERANCE: 1.2e-08
   - SCATRA:
       DIS: "scatra"
       NODE: 244
       QUANTITY: "phi2"
-      VALUE: -0.09998614414161139
-      TOLERANCE: 1e-09
+      VALUE: -9.99861443108224640e-02
+      TOLERANCE: 1.0e-09
   - SCATRA:
       DIS: "thermo"
       NODE: 244
       QUANTITY: "phi"
-      VALUE: 300.39322102025835
-      TOLERANCE: 3e-06
+      VALUE: 3.00393221017431074e+02
+      TOLERANCE: 3.0e-06
   - SCATRA:
       DIS: "scatra"
       NODE: 239
       QUANTITY: "phi1"
-      VALUE: 1.1999559734419964
+      VALUE: 1.19995597611230154e+00
       TOLERANCE: 1.2e-08
   - SCATRA:
       DIS: "scatra"
       NODE: 239
       QUANTITY: "phi2"
-      VALUE: -0.09999183237917204
-      TOLERANCE: 1e-09
+      VALUE: -9.99918325483625803e-02
+      TOLERANCE: 1.0e-09
   - SCATRA:
       DIS: "thermo"
       NODE: 239
       QUANTITY: "phi"
-      VALUE: 300.3932561377747
-      TOLERANCE: 3e-06
+      VALUE: 3.00393256134947364e+02
+      TOLERANCE: 3.0e-06
   - SCATRA:
       DIS: "scatra"
       NODE: 239
       QUANTITY: "flux_boundary_1_x"
-      VALUE: -5.60509851228176e-06
+      VALUE: -5.60509851305128607e-06
       TOLERANCE: 5.6e-12
   - SCATRA:
       DIS: "scatra"
       NODE: 239
       QUANTITY: "flux_boundary_1_y"
-      VALUE: 4.032336825107581e-06
-      TOLERANCE: 4e-12
+      VALUE: 4.03233682566118162e-06
+      TOLERANCE: 4.0e-12
   - SCATRA:
       DIS: "scatra"
       NODE: 239
       QUANTITY: "flux_boundary_1_z"
-      VALUE: -1.1494406191568633e-06
+      VALUE: -1.14944061931467043e-06
       TOLERANCE: 1.1e-12
   - SCATRA:
       DIS: "thermo"
       NODE: 239
       QUANTITY: "flux_boundary_1_x"
-      VALUE: 0.01273040956136366
+      VALUE: 1.27304144082695022e-02
       TOLERANCE: 1.3e-08
   - SCATRA:
       DIS: "thermo"
       NODE: 239
       QUANTITY: "flux_boundary_1_y"
-      VALUE: -0.009158322402453413
+      VALUE: -9.15832588934251297e-03
       TOLERANCE: 9.2e-09
   - SCATRA:
       DIS: "thermo"
       NODE: 239
       QUANTITY: "flux_boundary_1_z"
-      VALUE: 0.002610632055131795
+      VALUE: 2.61063304908942849e-03
       TOLERANCE: 2.6e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 390
       QUANTITY: "phi1"
-      VALUE: 12.719531193480227
+      VALUE: 1.27195311935026893e+01
       TOLERANCE: 1.3e-07
   - SCATRA:
       DIS: "scatra"
       NODE: 390
       QUANTITY: "phi2"
-      VALUE: 3.7662569370044308
+      VALUE: 3.76625693683635099e+00
       TOLERANCE: 3.8e-08
   - SCATRA:
       DIS: "thermo"
       NODE: 390
       QUANTITY: "phi"
-      VALUE: 300.3932558131424
-      TOLERANCE: 3e-06
+      VALUE: 3.00393255810314713e+02
+      TOLERANCE: 3.0e-06
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "soc1"
-      VALUE: 0.9444443867647571
+      VALUE: 9.44444385987382895e-01
       TOLERANCE: 9.4e-09
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "soc2"
-      VALUE: 0.9583846118901532
+      VALUE: 9.58384611890158888e-01
       TOLERANCE: 9.6e-09
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "cellvoltage"
-      VALUE: 3.7662561007879174
+      VALUE: 3.76625610061983718e+00
       TOLERANCE: 3.8e-08
   - STI:
       SPECIAL: true
       QUANTITY: "numiterlastnonlinearsolve"
       VALUE: 4
-      TOLERANCE: 1e-16
+      TOLERANCE: 1.0e-16
   - STI:
       SPECIAL: true
       QUANTITY: "numiterlastlinearsolve"
-      VALUE: 2
-      TOLERANCE: 1e-16
+      VALUE: 17
+      TOLERANCE: 1.0e-16
 DESIGN SURF NEUMANN CONDITIONS:
   - E: 6
     NUMDOF: 2
