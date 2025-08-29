@@ -1,0 +1,26 @@
+# Known memory leaks to suppress for AddressSanitizer leak detection
+
+###
+# Leaks from other libraries (not our fault)
+###
+
+# MPI
+# Note: this list was done for OpenMPI which we use in CI
+leak:MPI_Init
+leak:libevent
+leak:event_base_loop
+# MPI_Finalize does not necessarily show up in the stack trace, but this destructor does
+leak:~CleanUpMPI
+
+# CLN
+# leak:base/cl_malloc.cc
+
+# Catch all remaining leaks from other libraries
+# A more specific suppression would be better, but the originating function or lib names are not symbolized.
+# At least it is better to only ignore leaks coming from strdup, than ignoring all leaks.
+leak:strdup
+
+
+###
+# Leaks from our code that we have chosen to ignore (including link to respective GitHub issue or reason)
+###
