@@ -1228,7 +1228,7 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
   }
 
   // 2. allocate graph
-  FourC::Core::LinAlg::Graph node_graph(Copy, *node_row_map, 108, false);
+  Core::LinAlg::Graph node_graph(Copy, *node_row_map, 108, false);
   {
     // iterate all elements on this proc including ghosted ones and compute connectivity
     // standard part without master<->slave coupling

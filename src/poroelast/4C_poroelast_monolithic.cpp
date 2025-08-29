@@ -1179,7 +1179,7 @@ void PoroElast::Monolithic::apply_fluid_coupl_matrix(
 
   abs_iterinc->update(1.0, *iterinc_, 0.0);
 
-  FourC::Core::LinAlg::SparseMatrix stiff_approx(*dof_row_map(), 81);
+  Core::LinAlg::SparseMatrix stiff_approx(*dof_row_map(), 81);
 
   Core::LinAlg::Vector<double> rhs_old(*dof_row_map(), true);
   rhs_old.update(1.0, *rhs_, 0.0);
@@ -1287,7 +1287,7 @@ void PoroElast::Monolithic::apply_fluid_coupl_matrix(
 
   stiff_approx.complete();
 
-  FourC::Core::LinAlg::SparseMatrix stiff_approx_sparse(stiff_approx);
+  Core::LinAlg::SparseMatrix stiff_approx_sparse(stiff_approx);
   stiff_approx_sparse.add(sparse, false, -1.0, 1.0);
 
   stiff_approx_sparse.complete();

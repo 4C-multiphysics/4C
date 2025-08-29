@@ -1560,7 +1560,7 @@ void FPSI::Monolithic::fpsifd_check()
   iterinc->replace_global_value(0, delta);
 
   // build approximated FD stiffness matrix
-  FourC::Core::LinAlg::SparseMatrix stiff_approx(*dof_row_map(), 81);
+  Core::LinAlg::SparseMatrix stiff_approx(*dof_row_map(), 81);
 
   // store old rhs
   Core::LinAlg::Vector<double> rhs_old(*dof_row_map(), true);
@@ -1645,7 +1645,7 @@ void FPSI::Monolithic::fpsifd_check()
 
   stiff_approx.complete();
 
-  FourC::Core::LinAlg::SparseMatrix stiff_approx_sparse(stiff_approx);
+  Core::LinAlg::SparseMatrix stiff_approx_sparse(stiff_approx);
 
   // calc error (subtraction of sparse_crs and stiff_approx_sparse)
   for (int i_loc = 0; i_loc < dofs; i_loc++)

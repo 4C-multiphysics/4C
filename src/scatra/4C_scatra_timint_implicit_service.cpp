@@ -2764,8 +2764,7 @@ void ScaTra::OutputScalarsStrategyCondition::evaluate_integrals(
     // first components = scalar integrals, last component = domain integral
     const int num_active_scalars = output_mean_grad_ ? numscalpernode : 0;
     const int num_micro_dis = output_micro_dis_ ? 1 : 0;
-    FourC::Core::LinAlg::SerialDenseVector scalars(
-        numdofpernode + 1 + num_active_scalars + num_micro_dis);
+    Core::LinAlg::SerialDenseVector scalars(numdofpernode + 1 + num_active_scalars + num_micro_dis);
 
     // perform integration
     scatratimint->discret_->evaluate_scalars(eleparams, scalars, "TotalAndMeanScalar", condid);

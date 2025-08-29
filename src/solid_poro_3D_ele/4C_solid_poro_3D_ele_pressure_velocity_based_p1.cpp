@@ -190,7 +190,7 @@ void Discret::Elements::SolidPoroPressureVelocityBasedP1::set_params_interface_p
   {
     interface_ptr_ = p.get<std::shared_ptr<Core::Elements::ParamsInterface>>("interface");
     solid_interface_ptr_ =
-        std::dynamic_pointer_cast<FourC::Solid::Elements::ParamsInterface>(interface_ptr_);
+        std::dynamic_pointer_cast<Solid::Elements::ParamsInterface>(interface_ptr_);
   }
   else
   {
@@ -211,7 +211,7 @@ bool Discret::Elements::SolidPoroPressureVelocityBasedP1::read_element(const std
   anisotropic_permeability_property_.nodal_coeffs_.resize(3);
 
   // read number of material model
-  set_material(0, Mat::factory(FourC::Solid::Utils::ReadElement::read_element_material(container)));
+  set_material(0, Mat::factory(Solid::Utils::ReadElement::read_element_material(container)));
 
   // read kinematic type
   solid_ele_property_.kintype = container.get<Inpar::Solid::KinemType>("KINEM");

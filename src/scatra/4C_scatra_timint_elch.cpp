@@ -1372,7 +1372,7 @@ void ScaTra::ScaTraTimIntElch::evaluate_electrode_info_interior()
       // fourth component = integral of velocity divergence (ALE only)
       // fifth component  = integral of concentration times velocity divergence (ALE only)
       // sixth component  = integral of velocity times concentration gradient (ALE only)
-      FourC::Core::LinAlg::SerialDenseVector scalars(isale_ ? 6 : 3);
+      Core::LinAlg::SerialDenseVector scalars(isale_ ? 6 : 3);
 
       // evaluate current condition for electrode state of charge
       discret_->evaluate_scalars(condparams, scalars, "ElectrodeSOC", condid);

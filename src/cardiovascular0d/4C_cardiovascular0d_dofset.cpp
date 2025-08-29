@@ -38,7 +38,7 @@ void Utils::Cardiovascular0DDofSet::reset()
  *----------------------------------------------------------------------*/
 int Utils::Cardiovascular0DDofSet::assign_degrees_of_freedom(
     const std::shared_ptr<Core::FE::Discretization> dis, const int ndofs, const int start,
-    const std::shared_ptr<FourC::Cardiovascular0D::ProperOrthogonalDecomposition> mor)
+    const std::shared_ptr<Cardiovascular0D::ProperOrthogonalDecomposition> mor)
 {
   // A definite offset is currently not supported.
   if (start != 0) FOUR_C_THROW("right now user specified dof offsets are not supported");

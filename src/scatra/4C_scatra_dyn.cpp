@@ -113,7 +113,7 @@ void scatra_dyn(int restart)
       }
 
       // create instance of scalar transport basis algorithm (empty fluid discretization)
-      FourC::Adapter::ScaTraBaseAlgorithm scatraonly(
+      Adapter::ScaTraBaseAlgorithm scatraonly(
           scatradyn, scatradyn, Global::Problem::instance()->solver_params(linsolvernumber));
 
       // add proxy of velocity related degrees of freedom to scatra discretization
@@ -221,7 +221,7 @@ void scatra_dyn(int restart)
       }
 
       // create a scalar transport algorithm instance
-      FourC::ScaTra::ScaTraAlgorithm algo(comm, scatradyn, fdyn, "scatra",
+      ScaTra::ScaTraAlgorithm algo(comm, scatradyn, fdyn, "scatra",
           Global::Problem::instance()->solver_params(linsolvernumber));
 
       // create scatra elements by cloning from fluid dis in matching case

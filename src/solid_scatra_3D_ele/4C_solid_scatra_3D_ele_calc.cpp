@@ -493,9 +493,8 @@ void Discret::Elements::SolidScatraEleCalc<celltype, SolidFormulation>::recover(
 {
   if constexpr (has_condensed_contribution<SolidFormulation>)
   {
-    FourC::Solid::Elements::ParamsInterface& params_interface =
-        *std::dynamic_pointer_cast<FourC::Solid::Elements::ParamsInterface>(
-            ele.params_interface_ptr());
+    Solid::Elements::ParamsInterface& params_interface =
+        *std::dynamic_pointer_cast<Solid::Elements::ParamsInterface>(ele.params_interface_ptr());
 
     const double step_length = params_interface.get_step_length();
 

@@ -249,9 +249,8 @@ void Discret::Elements::SolidEleCalc<celltype, ElementFormulation>::recover(
 {
   if constexpr (has_condensed_contribution<ElementFormulation>)
   {
-    FourC::Solid::Elements::ParamsInterface& params_interface =
-        *std::dynamic_pointer_cast<FourC::Solid::Elements::ParamsInterface>(
-            ele.params_interface_ptr());
+    Solid::Elements::ParamsInterface& params_interface =
+        *std::dynamic_pointer_cast<Solid::Elements::ParamsInterface>(ele.params_interface_ptr());
 
     const double step_length = params_interface.get_step_length();
 
@@ -466,7 +465,7 @@ template <Core::FE::CellType celltype, typename ElementFormulation>
 void Discret::Elements::SolidEleCalc<celltype,
     ElementFormulation>::initialize_gauss_point_data_output(const Core::Elements::Element& ele,
     const Mat::So3Material& solid_material,
-    FourC::Solid::ModelEvaluator::GaussPointDataOutputManager& gp_data_output_manager) const
+    Solid::ModelEvaluator::GaussPointDataOutputManager& gp_data_output_manager) const
 {
   FOUR_C_ASSERT(ele.is_params_interface(),
       "This action type should only be called from the new time integration framework!");
@@ -479,7 +478,7 @@ template <Core::FE::CellType celltype, typename ElementFormulation>
 void Discret::Elements::SolidEleCalc<celltype,
     ElementFormulation>::evaluate_gauss_point_data_output(const Core::Elements::Element& ele,
     const Mat::So3Material& solid_material,
-    FourC::Solid::ModelEvaluator::GaussPointDataOutputManager& gp_data_output_manager) const
+    Solid::ModelEvaluator::GaussPointDataOutputManager& gp_data_output_manager) const
 {
   FOUR_C_ASSERT(ele.is_params_interface(),
       "This action type should only be called from the new time integration framework!");

@@ -9,7 +9,9 @@
 
 #include "4C_utils_exceptions.hpp"
 
-void FourC::Core::Utils::SingletonOwnerRegistry::finalize()
+FOUR_C_NAMESPACE_OPEN
+
+void Core::Utils::SingletonOwnerRegistry::finalize()
 {
   for (const auto& [_, deleter] : instance().deleters_)
   {
@@ -17,21 +19,23 @@ void FourC::Core::Utils::SingletonOwnerRegistry::finalize()
   }
 }
 
-void FourC::Core::Utils::SingletonOwnerRegistry::register_deleter(
+void Core::Utils::SingletonOwnerRegistry::register_deleter(
     void* owner, std::function<void()> deleter)
 {
   instance().deleters_.emplace(owner, std::move(deleter));
 }
 
-void FourC::Core::Utils::SingletonOwnerRegistry::unregister(void* owner)
+void Core::Utils::SingletonOwnerRegistry::unregister(void* owner)
 {
   instance().deleters_.erase(owner);
 }
 
-void FourC::Core::Utils::SingletonOwnerRegistry::initialize() { instance(); }
+void Core::Utils::SingletonOwnerRegistry::initialize() { instance(); }
 
-FourC::Core::Utils::SingletonOwnerRegistry& FourC::Core::Utils::SingletonOwnerRegistry::instance()
+Core::Utils::SingletonOwnerRegistry& Core::Utils::SingletonOwnerRegistry::instance()
 {
   static SingletonOwnerRegistry instance;
   return instance;
 }
+
+FOUR_C_NAMESPACE_CLOSE

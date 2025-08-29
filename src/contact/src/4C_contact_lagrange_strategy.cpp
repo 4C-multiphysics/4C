@@ -1711,8 +1711,8 @@ void CONTACT::LagrangeStrategy::add_master_contributions(Core::LinAlg::SparseOpe
   auto fc = std::make_shared<Core::LinAlg::FEVector<double>>(feff.get_map());
 
   // create new contact stiffness matric for LTL contact
-  FourC::Core::LinAlg::SparseMatrix kc(dynamic_cast<Core::LinAlg::SparseMatrix*>(&kteff)->row_map(),
-      100, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
+  Core::LinAlg::SparseMatrix kc(dynamic_cast<Core::LinAlg::SparseMatrix*>(&kteff)->row_map(), 100,
+      true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
   // loop over interface and assemble force and stiffness
   for (int i = 0; i < (int)interface_.size(); ++i)
@@ -1766,8 +1766,8 @@ void CONTACT::LagrangeStrategy::add_line_to_lin_contributions(Core::LinAlg::Spar
   fconservation_ = std::make_shared<Core::LinAlg::Vector<double>>(feff->get_map());
 
   // create new contact stiffness matric for LTL contact
-  FourC::Core::LinAlg::SparseMatrix kc(dynamic_cast<Core::LinAlg::SparseMatrix*>(&kteff)->row_map(),
-      100, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
+  Core::LinAlg::SparseMatrix kc(dynamic_cast<Core::LinAlg::SparseMatrix*>(&kteff)->row_map(), 100,
+      true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
   // loop over interface and assemble force and stiffness
   for (int i = 0; i < (int)interface_.size(); ++i)
@@ -1820,8 +1820,8 @@ void CONTACT::LagrangeStrategy::add_line_to_lin_contributions_friction(
   fconservation_ = std::make_shared<Core::LinAlg::Vector<double>>(feff->get_map());
 
   // create new contact stiffness matric for LTL contact
-  FourC::Core::LinAlg::SparseMatrix kc(dynamic_cast<Core::LinAlg::SparseMatrix*>(&kteff)->row_map(),
-      100, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
+  Core::LinAlg::SparseMatrix kc(dynamic_cast<Core::LinAlg::SparseMatrix*>(&kteff)->row_map(), 100,
+      true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
   // loop over interface and assemble force and stiffness
   for (int i = 0; i < (int)interface_.size(); ++i)

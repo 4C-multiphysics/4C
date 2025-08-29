@@ -119,7 +119,7 @@ PoroPressureBased::PorofluidAlgorithm::PorofluidAlgorithm(
   const int restart_step = Global::Problem::instance()->restart();
   if (restart_step > 0)
   {
-    FourC::Core::IO::DiscretizationReader reader(
+    Core::IO::DiscretizationReader reader(
         discret_, Global::Problem::instance()->input_control_file(), restart_step);
 
     time_ = reader.read_double("time");

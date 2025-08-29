@@ -1236,7 +1236,7 @@ void PoroElastScaTra::PoroScatraMono::fd_check()
 
   iterinc->replace_global_value(0, delta);
 
-  FourC::Core::LinAlg::SparseMatrix stiff_approx(*dof_row_map(), 81);
+  Core::LinAlg::SparseMatrix stiff_approx(*dof_row_map(), 81);
 
   Core::LinAlg::Vector<double> rhs_old(*dof_row_map(), true);
   rhs_old.update(1.0, *rhs_, 0.0);
@@ -1329,12 +1329,12 @@ void PoroElastScaTra::PoroScatraMono::fd_check()
 
   stiff_approx.complete();
 
-  FourC::Core::LinAlg::SparseMatrix stiff_approx_sparse(stiff_approx);
+  Core::LinAlg::SparseMatrix stiff_approx_sparse(stiff_approx);
 
   stiff_approx_sparse.add(sparse_copy, false, -1.0, 1.0);
 
-  FourC::Core::LinAlg::SparseMatrix sparse_crs(sparse_copy);
-  FourC::Core::LinAlg::SparseMatrix error_crs(stiff_approx_sparse);
+  Core::LinAlg::SparseMatrix sparse_crs(sparse_copy);
+  Core::LinAlg::SparseMatrix error_crs(stiff_approx_sparse);
 
   error_crs.complete();
   sparse_crs.complete();

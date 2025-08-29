@@ -361,7 +361,7 @@ void Core::LinAlg::SparseMatrix::reset()
   const Core::LinAlg::Map rowmap = Map(sysmat_->RowMap());
   std::vector<int> numentries(rowmap.num_my_elements());
 
-  FourC::Core::LinAlg::Graph graph(sysmat_->Graph());
+  Core::LinAlg::Graph graph(sysmat_->Graph());
 
   if (filled())
   {
@@ -882,7 +882,7 @@ void Core::LinAlg::SparseMatrix::un_complete()
 
   if (not filled()) return;
 
-  FourC::Core::LinAlg::Graph graph(sysmat_->Graph());
+  Core::LinAlg::Graph graph(sysmat_->Graph());
 
   std::vector<int> nonzeros(graph.num_local_rows());
   for (std::size_t i = 0; i < nonzeros.size(); ++i)

@@ -18,11 +18,6 @@
 class Epetra_Operator;
 class Epetra_RowMatrix;
 
-namespace FourC::Core::LinAlg
-{
-  class Map;
-}
-
 namespace NOX
 {
   class GlobalData;
@@ -67,8 +62,6 @@ namespace NOX
     class Generic;
   }  // namespace StatusTest
 }  // namespace NOX
-
-#include "4C_utils_parameter_list.fwd.hpp"
 
 // NOLINTEND(readability-identifier-naming)
 

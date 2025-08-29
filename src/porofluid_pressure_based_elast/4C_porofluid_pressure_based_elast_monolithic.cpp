@@ -1069,7 +1069,7 @@ void PoroPressureBased::PorofluidElastMonolithicAlgorithm::poro_fd_check()
 
   abs_iterinc->update(1.0, *iterinc_, 0.0);
 
-  FourC::Core::LinAlg::SparseMatrix stiff_approx(*dof_row_map(), 81);
+  Core::LinAlg::SparseMatrix stiff_approx(*dof_row_map(), 81);
 
   Core::LinAlg::Vector<double> rhs_old(*dof_row_map(), true);
   rhs_old.update(1.0, *rhs_, 0.0);
@@ -1098,7 +1098,7 @@ void PoroPressureBased::PorofluidElastMonolithicAlgorithm::poro_fd_check()
     iterinc_->put_scalar(0.0);  // Useful? depends on solver and more
     Core::LinAlg::apply_dirichlet_to_system(
         sparse_copy, *iterinc_, rhs_copy, *zeros_, *combined_dbc_map());
-    FourC::Core::LinAlg::SparseMatrix test_crs(sparse_copy);
+    Core::LinAlg::SparseMatrix test_crs(sparse_copy);
     int sparsenumentries;
     int sparselength = test_crs.num_global_entries(i);
     std::vector<double> sparsevalues(sparselength);
@@ -1165,7 +1165,7 @@ void PoroPressureBased::PorofluidElastMonolithicAlgorithm::poro_fd_check()
 
   stiff_approx_sparse->add(sparse_copy, false, -1.0, 1.0);
 
-  FourC::Core::LinAlg::SparseMatrix sparse_crs(sparse_copy);
+  Core::LinAlg::SparseMatrix sparse_crs(sparse_copy);
   std::shared_ptr<Core::LinAlg::SparseMatrix> error_crs = stiff_approx_sparse;
 
   error_crs->complete();

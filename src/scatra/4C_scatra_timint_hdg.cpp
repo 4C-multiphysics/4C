@@ -740,7 +740,7 @@ void ScaTra::TimIntHDG::fd_check()
   }
   strategy.complete();
 
-  FourC::Core::LinAlg::SparseMatrix sysmatcopy(
+  Core::LinAlg::SparseMatrix sysmatcopy(
       *(std::static_pointer_cast<Core::LinAlg::SparseMatrix>(systemmatrix1)));
   sysmatcopy.complete();
 

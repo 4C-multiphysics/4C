@@ -1115,7 +1115,7 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::poro_multi_phas
 
   iter_inc->replace_global_value(0, delta);
 
-  FourC::Core::LinAlg::SparseMatrix stiff_approx(*dof_row_map(), 81);
+  Core::LinAlg::SparseMatrix stiff_approx(*dof_row_map(), 81);
 
   Core::LinAlg::Vector<double> rhs_old(*dof_row_map(), true);
   rhs_old.update(1.0, *rhs_, 0.0);
@@ -1191,7 +1191,7 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::poro_multi_phas
 
   stiff_approx_sparse->add(sparse_copy, false, -1.0, 1.0);
 
-  FourC::Core::LinAlg::SparseMatrix sparse_crs(sparse_copy);
+  Core::LinAlg::SparseMatrix sparse_crs(sparse_copy);
   std::shared_ptr<Core::LinAlg::SparseMatrix> error_crs = stiff_approx_sparse;
 
   error_crs->complete();

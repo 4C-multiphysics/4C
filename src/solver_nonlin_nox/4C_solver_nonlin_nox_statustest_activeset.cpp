@@ -78,10 +78,9 @@ NOX::Nln::StatusTest::ActiveSet::ActiveSet(
         cycle_size_ = 0;
         if (status_ != ::NOX::StatusTest::Converged)
         {
-          std::deque<Teuchos::RCP<const Core::LinAlg::Map>>::const_iterator citer;
           int count = 1;
           // reset the detected cycle size
-          for (citer = cycling_maps_.begin(); citer != cycling_maps_.end(); ++citer)
+          for (auto citer = cycling_maps_.begin(); citer != cycling_maps_.end(); ++citer)
           {
             if ((activeset->num_global_elements() != 0) and (*citer)->same_as(*activeset))
               cycle_size_ = count;

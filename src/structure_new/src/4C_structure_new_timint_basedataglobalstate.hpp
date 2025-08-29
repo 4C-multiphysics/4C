@@ -18,6 +18,7 @@
 #include "4C_structure_new_enum_lists.hpp"
 #include "4C_timestepping_mstep.hpp"
 #include "4C_utils_exceptions.hpp"
+#include "4C_utils_parameter_list.fwd.hpp"
 
 #include <memory>
 

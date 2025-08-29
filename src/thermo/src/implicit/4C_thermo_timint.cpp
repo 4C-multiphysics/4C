@@ -601,7 +601,7 @@ void Thermo::TimInt::output_heatflux_tempgrad(bool& datawritten)
   discret_->set_state(0, "residual temperature", *zeros_);
   discret_->set_state(0, "temperature", *temp_(0));
 
-  FourC::Core::LinAlg::Vector<double> heatflux(*discret_->dof_row_map(), true);
+  Core::LinAlg::Vector<double> heatflux(*discret_->dof_row_map(), true);
 
   discret_->evaluate(p, nullptr, nullptr, nullptr, nullptr, nullptr);
   discret_->clear_state();

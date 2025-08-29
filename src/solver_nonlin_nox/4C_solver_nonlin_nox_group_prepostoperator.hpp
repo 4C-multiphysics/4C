@@ -12,6 +12,7 @@
 
 #include "4C_solver_nonlin_nox_abstract_prepostoperator.hpp"
 #include "4C_solver_nonlin_nox_forward_decl.hpp"
+#include "4C_utils_parameter_list.fwd.hpp"
 
 #include <Teuchos_RCP.hpp>
 

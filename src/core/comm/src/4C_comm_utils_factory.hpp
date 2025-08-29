@@ -14,16 +14,16 @@
 #include "4C_utils_shared_ptr_from_ref.hpp"
 
 
+FOUR_C_NAMESPACE_OPEN
 
-namespace FourC::Core::Nodes
+namespace Core::Nodes
 {
   class Node;
 }
-namespace FourC::Core::Elements
+namespace Core::Elements
 {
   class Element;
 }
-FOUR_C_NAMESPACE_OPEN
 
 namespace Core::Communication
 {

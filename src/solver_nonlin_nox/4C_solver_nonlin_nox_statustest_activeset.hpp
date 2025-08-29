@@ -11,7 +11,7 @@
 #include "4C_config.hpp"
 
 #include "4C_solver_nonlin_nox_enum_lists.hpp"
-#include "4C_solver_nonlin_nox_forward_decl.hpp"
+#include "4C_utils_parameter_list.fwd.hpp"
 
 #include <NOX_StatusTest_Generic.H>  // base class
 #include <Teuchos_RCP.hpp>
@@ -19,6 +19,11 @@
 #include <deque>
 
 FOUR_C_NAMESPACE_OPEN
+
+namespace Core::LinAlg
+{
+  class Map;
+}  // namespace Core::LinAlg
 
 namespace NOX
 {

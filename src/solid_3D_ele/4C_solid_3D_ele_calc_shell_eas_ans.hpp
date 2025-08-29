@@ -255,7 +255,7 @@ namespace Discret::Elements
     }
 
     static void update_condensed_variables(const Core::Elements::Element& ele,
-        FourC::Solid::Elements::ParamsInterface* params_interface,
+        Solid::Elements::ParamsInterface* params_interface,
         const ElementNodes<celltype>& element_nodes,
         const Core::LinAlg::Matrix<Internal::num_dof_per_ele<celltype>, 1>& displacement_increments,
         const double linesearch_step_length, const PreparationData& preparation_data,
@@ -284,9 +284,8 @@ namespace Discret::Elements
     }
 
     static void correct_condensed_variables_for_linesearch(const Core::Elements::Element& ele,
-        FourC::Solid::Elements::ParamsInterface* params_interface,
-        const double linesearch_step_length, const PreparationData& preparation_data,
-        GlobalHistory& eas_data)
+        Solid::Elements::ParamsInterface* params_interface, const double linesearch_step_length,
+        const PreparationData& preparation_data, GlobalHistory& eas_data)
     {
       correct_alpha(eas_data.eas_iteration_data, linesearch_step_length, eas_data.old_step_length);
 

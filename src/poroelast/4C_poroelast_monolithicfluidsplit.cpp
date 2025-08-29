@@ -304,7 +304,7 @@ void PoroElast::MonolithicFluidSplit::extract_field_vectors(
         fluid_field()->interface()->insert_other_vector(*fox);
     fluid_field()->interface()->insert_fsi_cond_vector(*fcx, *f);
 
-    FourC::Core::LinAlg::Vector<double> zeros(f->get_map(), true);
+    Core::LinAlg::Vector<double> zeros(f->get_map(), true);
     Core::LinAlg::apply_dirichlet_to_system(
         *f, zeros, *(fluid_field()->get_dbc_map_extractor()->cond_map()));
 

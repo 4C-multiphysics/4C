@@ -49,7 +49,7 @@ namespace ReducedLung
             Global::Problem::instance()->io_params(), "VERBOSITY"));
     actdis->compute_null_space_if_necessary(solver.params());
     // Create runtime output writer
-    FourC::Core::IO::DiscretizationVisualizationWriterMesh visualization_writer(
+    Core::IO::DiscretizationVisualizationWriterMesh visualization_writer(
         actdis, Core::IO::visualization_parameters_factory(
                     Global::Problem::instance()->io_params().sublist("RUNTIME VTK OUTPUT"),
                     *Global::Problem::instance()->output_control_file(), 0));

@@ -15,13 +15,12 @@
 #include "4C_linalg_serialdensevector.hpp"
 #include "4C_utils_exceptions.hpp"
 
-#include <memory>
+FOUR_C_NAMESPACE_OPEN
 
-namespace FourC::Core::IO
+namespace Core::IO
 {
   class InputParameterContainer;
 }
-FOUR_C_NAMESPACE_OPEN
 
 namespace Core::FE
 {

@@ -1584,7 +1584,7 @@ Core::LinAlg::Matrix<9, 9> Core::LinAlg::matrix_3x3_log_1st_deriv(
       FOUR_C_THROW(
           "For the computation methods based on the Pade approximation, you have to specify the "
           "Pade order for the computation as either input or output!");
-    case FourC::Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::taylor_series:
+    case Core::LinAlg::GenMatrixLogFirstDerivCalcMethod::taylor_series:
       return matrix_3x3_log_1st_deriv_taylor_series(input, err_status, 1.0e-10);
     case GenMatrixLogFirstDerivCalcMethod::gregory_series:
       return matrix_3x3_log_1st_deriv_gregory_series(input, err_status, 1.0e-10);
