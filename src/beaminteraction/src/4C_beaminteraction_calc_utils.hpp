@@ -443,8 +443,7 @@ namespace BeamInteraction
     /*----------------------------------------------------------------------------*
      *----------------------------------------------------------------------------*/
     void setup_ele_type_map_extractor(
-        std::shared_ptr<const Core::FE::Discretization> const& discret,
-        std::shared_ptr<Core::LinAlg::MultiMapExtractor>& eletypeextractor);
+        const Core::FE::Discretization& discret, Core::LinAlg::MultiMapExtractor& eletypeextractor);
 
     /*----------------------------------------------------------------------------*
      *----------------------------------------------------------------------------*/

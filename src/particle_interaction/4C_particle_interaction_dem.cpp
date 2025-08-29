@@ -100,7 +100,7 @@ void ParticleInteraction::ParticleInteractionDEM::read_restart(
   ParticleInteractionBase::read_restart(reader);
 
   // read restart of history pair handler
-  historypairs_->read_restart(reader);
+  historypairs_->read_restart(*reader);
 }
 
 void ParticleInteraction::ParticleInteractionDEM::insert_particle_states_of_particle_types(

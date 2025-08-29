@@ -144,7 +144,7 @@ void ScaTra::TimIntLomaGenAlpha::compute_therm_pressure()
       std::make_shared<Core::LinAlg::SerialDenseVector>(2);
 
   // evaluate domain and bodyforce integral
-  discret_->evaluate_scalars(eleparams, scalars);
+  discret_->evaluate_scalars(eleparams, *scalars);
 
   // get global integral values
   double pardomint = (*scalars)[0];

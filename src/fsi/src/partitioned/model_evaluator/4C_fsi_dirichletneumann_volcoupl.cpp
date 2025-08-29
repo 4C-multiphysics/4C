@@ -107,8 +107,7 @@ std::shared_ptr<Core::LinAlg::Vector<double>> FSI::DirichletNeumannVolCoupl::flu
   FSI::Partitioned::fluid_op(idisp, fillFlag);
 
   // TODO cant this be done better?
-  std::shared_ptr<Core::LinAlg::Vector<double>> vdisp =
-      std::make_shared<Core::LinAlg::Vector<double>>(*structure_field()->dispnp());
+  Core::LinAlg::Vector<double> vdisp(*structure_field()->dispnp());
 
   if (fillFlag == User)
   {
@@ -132,7 +131,7 @@ std::shared_ptr<Core::LinAlg::Vector<double>> FSI::DirichletNeumannVolCoupl::flu
 
     // important difference to dirichletneumann.cpp: vdisp is mapped from structure to ale here
     fluidale->nonlinear_solve_vol_coupl(
-        structure_to_ale(*vdisp), struct_to_fluid(ivel), icorrector_);
+        structure_to_ale(vdisp), struct_to_fluid(ivel), icorrector_);
 
     mb_fluid_field()->set_itemax(itemax);
 

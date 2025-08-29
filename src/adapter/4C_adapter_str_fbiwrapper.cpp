@@ -32,7 +32,7 @@ Adapter::FBIStructureWrapper::FBIStructureWrapper(std::shared_ptr<Structure> str
   }
   eletypeextractor_ = std::make_shared<BeamInteraction::Utils::MapExtractor>();
   BeamInteraction::Utils::setup_ele_type_map_extractor(
-      structure_->discretization(), eletypeextractor_);
+      *structure_->discretization(), *eletypeextractor_);
 }
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/

@@ -200,7 +200,7 @@ void FLD::TimIntRedModels::update_3d_to_reduced_mat_and_rhs()
   // add the traction velocity component
   //----------------------------------------------------------------------
 
-  traction_vel_comp_adder_bc_->evaluate_velocities(velnp_, time_, theta_, dta_);
+  traction_vel_comp_adder_bc_->evaluate_velocities(*velnp_, time_, theta_, dta_);
   traction_vel_comp_adder_bc_->update_residual(*residual_);
 
   discret_->clear_state();

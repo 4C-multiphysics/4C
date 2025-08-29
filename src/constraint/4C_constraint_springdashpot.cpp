@@ -296,7 +296,7 @@ Constraints::SpringDashpot::SpringDashpot(
 void Constraints::SpringDashpot::evaluate_robin(std::shared_ptr<Core::LinAlg::SparseMatrix> stiff,
     std::shared_ptr<Core::LinAlg::Vector<double>> fint,
     const std::shared_ptr<const Core::LinAlg::Vector<double>> disp,
-    const std::shared_ptr<const Core::LinAlg::Vector<double>> velo, Teuchos::ParameterList p)
+    const Core::LinAlg::Vector<double>& velo, Teuchos::ParameterList p)
 {
   // reset last Newton step
   springstress_.clear();
@@ -313,7 +313,7 @@ void Constraints::SpringDashpot::evaluate_robin(std::shared_ptr<Core::LinAlg::Sp
   Core::LinAlg::Vector<double> offset_with_ghosted(*actdisc_->dof_col_map(), true);
 
   Core::LinAlg::export_to(*disp, disp_with_ghosted);
-  Core::LinAlg::export_to(*velo, velo_with_ghosted);
+  Core::LinAlg::export_to(velo, velo_with_ghosted);
   Core::LinAlg::export_to(*offset_prestr_new_, offset_with_ghosted);
 
   // get values and switches from the condition
@@ -554,7 +554,7 @@ void Constraints::SpringDashpot::evaluate_robin(std::shared_ptr<Core::LinAlg::Sp
           const int dof_lid = actdisc_->dof_row_map()->lid(dof_gid);
 
           const double dof_disp = (*disp)[dof_lid];
-          const double dof_vel = (*velo)[dof_lid];
+          const double dof_vel = (velo)[dof_lid];
 
           // compute stiffness, viscosity, and initial offset from functions
           const double dof_stiffness =

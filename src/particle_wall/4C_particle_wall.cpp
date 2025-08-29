@@ -737,18 +737,17 @@ void PARTICLEWALL::WallHandlerBoundingBox::init_wall_discretization()
   }
 
   // node row map of wall elements
-  std::shared_ptr<Core::LinAlg::Map> noderowmap = std::make_shared<Core::LinAlg::Map>(
+  Core::LinAlg::Map noderowmap(
       -1, nodeids.size(), nodeids.data(), 0, walldiscretization_->get_comm());
 
   // fully overlapping node column map
-  std::shared_ptr<Core::LinAlg::Map> nodecolmap = Core::LinAlg::allreduce_e_map(*noderowmap);
+  std::shared_ptr<Core::LinAlg::Map> nodecolmap = Core::LinAlg::allreduce_e_map(noderowmap);
 
   // element row map of wall elements
-  std::shared_ptr<Core::LinAlg::Map> elerowmap = std::make_shared<Core::LinAlg::Map>(
-      -1, eleids.size(), eleids.data(), 0, walldiscretization_->get_comm());
+  Core::LinAlg::Map elerowmap(-1, eleids.size(), eleids.data(), 0, walldiscretization_->get_comm());
 
   // fully overlapping element column map
-  std::shared_ptr<Core::LinAlg::Map> elecolmap = Core::LinAlg::allreduce_e_map(*elerowmap);
+  std::shared_ptr<Core::LinAlg::Map> elecolmap = Core::LinAlg::allreduce_e_map(elerowmap);
 
   // fully overlapping ghosting of the wall elements to have everything redundant
   walldiscretization_->export_column_nodes(*nodecolmap);

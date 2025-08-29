@@ -70,9 +70,9 @@ void Core::FE::Discretization::add_node(std::shared_ptr<Core::Nodes::Node> node)
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Core::FE::Discretization::delete_node(std::shared_ptr<Core::Nodes::Node> node)
+bool Core::FE::Discretization::delete_node(Core::Nodes::Node& node)
 {
-  auto it_node = node_.find(node->id());
+  auto it_node = node_.find(node.id());
   if (it_node == node_.end()) return false;
   node_.erase(it_node);
   reset();
@@ -112,9 +112,9 @@ bool Core::FE::Discretization::delete_elements()
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool Core::FE::Discretization::delete_element(std::shared_ptr<Core::Elements::Element> ele)
+bool Core::FE::Discretization::delete_element(Core::Elements::Element& ele)
 {
-  auto it_ele = element_.find(ele->id());
+  auto it_ele = element_.find(ele.id());
   if (it_ele == element_.end()) return false;
   element_.erase(it_ele);
   reset();

@@ -600,10 +600,9 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
             icoupmortar_[kinetics_slave_cond.first]->interface()->discret();
 
         // export global state vector to mortar interface
-        std::shared_ptr<Core::LinAlg::Vector<double>> iphinp =
-            std::make_shared<Core::LinAlg::Vector<double>>(*idiscret.dof_col_map(), false);
-        Core::LinAlg::export_to(*scatratimint_->phiafnp(), *iphinp);
-        idiscret.set_state("iphinp", *iphinp);
+        Core::LinAlg::Vector<double> iphinp(*idiscret.dof_col_map(), false);
+        Core::LinAlg::export_to(*scatratimint_->phiafnp(), iphinp);
+        idiscret.set_state("iphinp", iphinp);
 
         // create parameter list for mortar integration cells
         Teuchos::ParameterList params;

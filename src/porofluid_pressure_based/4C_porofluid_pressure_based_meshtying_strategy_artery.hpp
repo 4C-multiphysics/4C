@@ -45,7 +45,7 @@ namespace PoroPressureBased
     void output() const;
 
     //! Initialize the linear solver
-    void initialize_linear_solver(std::shared_ptr<Core::LinAlg::Solver> solver) const;
+    void initialize_linear_solver(Core::LinAlg::Solver& solver) const;
 
     //! solve the linear system of equations
     void linear_solve(std::shared_ptr<Core::LinAlg::Solver> solver,

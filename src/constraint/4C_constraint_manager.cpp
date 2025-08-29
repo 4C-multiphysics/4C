@@ -261,8 +261,8 @@ void Constraints::ConstrManager::evaluate_force_stiff(const double time,
   volconstr3d_->evaluate(p, stiff, constr_matrix_, fint, refbaseredundant, actredundant);
   areaconstr3d_->evaluate(p, stiff, constr_matrix_, fint, refbaseredundant, actredundant);
   areaconstr2d_->evaluate(p, stiff, constr_matrix_, fint, refbaseredundant, actredundant);
-  volconstr3dpen_->evaluate(p, stiff, nullptr, fint, nullptr, nullptr);
-  areaconstr3dpen_->evaluate(p, stiff, nullptr, fint, nullptr, nullptr);
+  volconstr3dpen_->evaluate(p, stiff, fint);
+  areaconstr3dpen_->evaluate(p, stiff, fint);
 
   mpconplane3d_->set_constr_state("displacement", *disp);
   mpconplane3d_->evaluate(p, stiff, constr_matrix_, fint, refbaseredundant, actredundant);
@@ -419,13 +419,12 @@ void Constraints::ConstrManager::compute_monitor_values(
 
 /*-----------------------------------------------------------------------*
  *-----------------------------------------------------------------------*/
-void Constraints::ConstrManager::compute_monitor_values(
-    std::shared_ptr<const Core::LinAlg::Vector<double>> disp)
+void Constraints::ConstrManager::compute_monitor_values(const Core::LinAlg::Vector<double>& disp)
 {
   std::vector<const Core::Conditions::Condition*> monitcond;
   monitorvalues_->put_scalar(0.0);
   Teuchos::ParameterList p;
-  if (not actdisc_->dof_row_map()->same_as(disp->get_map()))
+  if (not actdisc_->dof_row_map()->same_as(disp.get_map()))
   {
     // build merged dof row map
     std::shared_ptr<Core::LinAlg::Map> largemap =
@@ -434,10 +433,10 @@ void Constraints::ConstrManager::compute_monitor_values(
     Core::LinAlg::MapExtractor conmerger;
     conmerger.setup(
         *largemap, Core::Utils::shared_ptr_from_ref(*actdisc_->dof_row_map()), constrmap_);
-    actdisc_->set_state("displacement", *conmerger.extract_cond_vector(*disp));
+    actdisc_->set_state("displacement", *conmerger.extract_cond_vector(disp));
   }
   else
-    actdisc_->set_state("displacement", *disp);
+    actdisc_->set_state("displacement", disp);
 
   Core::LinAlg::Vector<double> actmonredundant(*redmonmap_);
   p.set("OffsetID", min_monitor_id_);

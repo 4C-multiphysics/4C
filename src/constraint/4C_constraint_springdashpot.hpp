@@ -82,7 +82,7 @@ namespace Constraints
     void evaluate_robin(std::shared_ptr<Core::LinAlg::SparseMatrix> stiff,
         std::shared_ptr<Core::LinAlg::Vector<double>> fint,
         const std::shared_ptr<const Core::LinAlg::Vector<double>> disp,
-        const std::shared_ptr<const Core::LinAlg::Vector<double>> velo, Teuchos::ParameterList p);
+        const Core::LinAlg::Vector<double>& velo, Teuchos::ParameterList p);
 
     //! reset after Newton step
     void reset_newton();

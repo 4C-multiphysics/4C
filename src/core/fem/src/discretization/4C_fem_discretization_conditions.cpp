@@ -68,16 +68,16 @@ void Core::FE::Discretization::boundary_conditions_geometry()
     //  - surface conditions in 2D
     //  - volume conditions in 3D
     else if (Core::Conditions::geometry_type_to_dim.at(condition->g_type()) == n_dim_)
-      havenewelements = build_volumes_in_condition(name, condition);
+      havenewelements = build_volumes_in_condition(name, *condition);
     // dimension of condition must not larger than the one of the problem itself
     else if (Core::Conditions::geometry_type_to_dim.at(condition->g_type()) > n_dim_)
       FOUR_C_THROW("Dimension of condition is larger than the problem dimension.");
     // build a line element geometry description
     else if (condition->g_type() == Core::Conditions::geometry_type_line)
-      havenewelements = build_lines_in_condition(name, condition);
+      havenewelements = build_lines_in_condition(name, *condition);
     // build a surface element geometry description
     else if (condition->g_type() == Core::Conditions::geometry_type_surface)
-      havenewelements = build_surfaces_in_condition(name, condition);
+      havenewelements = build_surfaces_in_condition(name, *condition);
     // this should be it. if not: FOUR_C_THROW.
     else
       FOUR_C_THROW("Somehow the condition geometry does not fit to the problem dimension.");
@@ -218,12 +218,12 @@ void Core::FE::Discretization::assign_global_ids(MPI_Comm comm,
 
 
 bool Core::FE::Discretization::build_lines_in_condition(
-    const std::string& name, std::shared_ptr<Core::Conditions::Condition> cond)
+    const std::string& name, Core::Conditions::Condition& cond)
 {
   /* First: Create the line objects that belong to the condition. */
 
   // get ptrs to all node ids that have this condition
-  const std::vector<int>* nodeids = cond->get_nodes();
+  const std::vector<int>* nodeids = cond.get_nodes();
   if (!nodeids) FOUR_C_THROW("Cannot find array 'Node Ids' in condition");
 
   // ptrs to my row/column nodes of those
@@ -303,7 +303,7 @@ bool Core::FE::Discretization::build_lines_in_condition(
 
   assign_global_ids(get_comm(), linemap, finallines);
 
-  cond->set_geometry(std::move(finallines));
+  cond.set_geometry(std::move(finallines));
 
   // elements were created that need new unique ids
   return true;
@@ -311,12 +311,12 @@ bool Core::FE::Discretization::build_lines_in_condition(
 
 
 bool Core::FE::Discretization::build_surfaces_in_condition(
-    const std::string& name, std::shared_ptr<Core::Conditions::Condition> cond)
+    const std::string& name, Core::Conditions::Condition& cond)
 {
   /* First: Create the surface objects that belong to the condition. */
 
   // get ptrs to all node ids that have this condition
-  const std::vector<int>* nodeids = cond->get_nodes();
+  const std::vector<int>* nodeids = cond.get_nodes();
   if (!nodeids) FOUR_C_THROW("Cannot find array 'Node Ids' in condition");
 
   // ptrs to my row/column nodes of those
@@ -416,7 +416,7 @@ bool Core::FE::Discretization::build_surfaces_in_condition(
   std::map<int, std::shared_ptr<Core::Elements::Element>> final_geometry;
 
   assign_global_ids(get_comm(), surfmap, final_geometry);
-  cond->set_geometry(std::move(final_geometry));
+  cond.set_geometry(std::move(final_geometry));
 
   // elements were created that need new unique ids
   return true;
@@ -424,10 +424,10 @@ bool Core::FE::Discretization::build_surfaces_in_condition(
 
 
 bool Core::FE::Discretization::build_volumes_in_condition(
-    const std::string& name, std::shared_ptr<Core::Conditions::Condition> cond)
+    const std::string& name, Core::Conditions::Condition& cond)
 {
   // get ptrs to all node ids that have this condition
-  const std::vector<int>* nodeids = cond->get_nodes();
+  const std::vector<int>* nodeids = cond.get_nodes();
   if (!nodeids) FOUR_C_THROW("Cannot find array 'Node Ids' in condition");
 
   // extract colnodes on this proc from condition
@@ -463,7 +463,7 @@ bool Core::FE::Discretization::build_volumes_in_condition(
     }
   }
 
-  cond->set_geometry(std::move(geom));
+  cond.set_geometry(std::move(geom));
 
   // no elements where created to assign new unique ids to
   return false;

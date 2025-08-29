@@ -197,7 +197,7 @@ void Solid::TimIntStatics::evaluate_force_stiff_residual(Teuchos::ParameterList&
 
   // build new external forces
   fextn_->put_scalar(0.0);
-  apply_force_stiff_external(timen_, (*dis_)(0), disn_, (*vel_)(0), *fextn_, stiff_);
+  apply_force_stiff_external(timen_, (*dis_)(0), *disn_, *(*vel_)(0), *fextn_, stiff_);
 
   // additional external forces are added (e.g. interface forces)
   fextn_->update(1.0, *fifc_, 1.0);
@@ -208,7 +208,7 @@ void Solid::TimIntStatics::evaluate_force_stiff_residual(Teuchos::ParameterList&
   fintn_->put_scalar(0.0);
 
   // ordinary internal force and stiffness
-  apply_force_stiff_internal(timen_, (*dt_)[0], disn_, disi_, veln_, fintn_, stiff_, params);
+  apply_force_stiff_internal(timen_, (*dt_)[0], disn_, disi_, *veln_, fintn_, stiff_, params);
 
   // apply forces and stiffness due to constraints
   Teuchos::ParameterList pcon;  // apply empty parameterlist, no scaling necessary
@@ -280,7 +280,7 @@ void Solid::TimIntStatics::evaluate_force_residual()
 
   // build new external forces
   fextn_->put_scalar(0.0);
-  apply_force_external(timen_, (*dis_)(0), disn_, (*vel_)(0), *fextn_);
+  apply_force_external(timen_, (*dis_)(0), disn_, *(*vel_)(0), *fextn_);
 
   // additional external forces are added (e.g. interface forces)
   fextn_->update(1.0, *fifc_, 1.0);
@@ -291,7 +291,7 @@ void Solid::TimIntStatics::evaluate_force_residual()
   fintn_->put_scalar(0.0);
 
   // ordinary internal force and stiffness
-  apply_force_internal(timen_, (*dt_)[0], disn_, disi_, veln_, fintn_);
+  apply_force_internal(timen_, (*dt_)[0], disn_, disi_, *veln_, fintn_);
 
   // ************************** (3) INERTIAL FORCES ***************************
   // This is statics, so there are no inertial forces.

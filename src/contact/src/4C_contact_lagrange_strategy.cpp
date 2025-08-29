@@ -1711,19 +1711,18 @@ void CONTACT::LagrangeStrategy::add_master_contributions(Core::LinAlg::SparseOpe
   auto fc = std::make_shared<Core::LinAlg::FEVector<double>>(feff.get_map());
 
   // create new contact stiffness matric for LTL contact
-  auto kc = std::make_shared<Core::LinAlg::SparseMatrix>(
-      dynamic_cast<Core::LinAlg::SparseMatrix*>(&kteff)->row_map(), 100, true, false,
-      Core::LinAlg::SparseMatrix::FE_MATRIX);
+  FourC::Core::LinAlg::SparseMatrix kc(dynamic_cast<Core::LinAlg::SparseMatrix*>(&kteff)->row_map(),
+      100, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
   // loop over interface and assemble force and stiffness
   for (int i = 0; i < (int)interface_.size(); ++i)
   {
     // line to segment
     interface_[i]->add_lts_forces_master(*fc);
-    interface_[i]->add_lts_stiffness_master(*kc);
+    interface_[i]->add_lts_stiffness_master(kc);
     // node to segment
     interface_[i]->add_nts_forces_master(*fc);
-    interface_[i]->add_nts_stiffness_master(*kc);
+    interface_[i]->add_nts_stiffness_master(kc);
   }
 
   // force
@@ -1745,9 +1744,9 @@ void CONTACT::LagrangeStrategy::add_master_contributions(Core::LinAlg::SparseOpe
   if (feff.update(fac, *fc, 1.)) FOUR_C_THROW("Update went wrong");
 
   // stiffness
-  kc->complete();
+  kc.complete();
   kteff.un_complete();
-  kteff.add(*kc, false, fac, 1.);
+  kteff.add(kc, false, fac, 1.);
   kteff.complete();
 
   // bye bye
@@ -1767,15 +1766,14 @@ void CONTACT::LagrangeStrategy::add_line_to_lin_contributions(Core::LinAlg::Spar
   fconservation_ = std::make_shared<Core::LinAlg::Vector<double>>(feff->get_map());
 
   // create new contact stiffness matric for LTL contact
-  auto kc = std::make_shared<Core::LinAlg::SparseMatrix>(
-      dynamic_cast<Core::LinAlg::SparseMatrix*>(&kteff)->row_map(), 100, true, false,
-      Core::LinAlg::SparseMatrix::FE_MATRIX);
+  FourC::Core::LinAlg::SparseMatrix kc(dynamic_cast<Core::LinAlg::SparseMatrix*>(&kteff)->row_map(),
+      100, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
   // loop over interface and assemble force and stiffness
   for (int i = 0; i < (int)interface_.size(); ++i)
   {
     interface_[i]->add_ltl_forces(*fc);
-    interface_[i]->add_ltl_stiffness(*kc);
+    interface_[i]->add_ltl_stiffness(kc);
   }
 
   // get info for conservation check
@@ -1800,9 +1798,9 @@ void CONTACT::LagrangeStrategy::add_line_to_lin_contributions(Core::LinAlg::Spar
   if (feff->update(fac, *fc, 1.)) FOUR_C_THROW("Update went wrong");
 
   // stiffness
-  kc->complete();
+  kc.complete();
   kteff.un_complete();
-  kteff.add(*kc, false, fac, 1.);
+  kteff.add(kc, false, fac, 1.);
   kteff.complete();
 
   // bye bye
@@ -1822,15 +1820,14 @@ void CONTACT::LagrangeStrategy::add_line_to_lin_contributions_friction(
   fconservation_ = std::make_shared<Core::LinAlg::Vector<double>>(feff->get_map());
 
   // create new contact stiffness matric for LTL contact
-  auto kc = std::make_shared<Core::LinAlg::SparseMatrix>(
-      dynamic_cast<Core::LinAlg::SparseMatrix*>(&kteff)->row_map(), 100, true, false,
-      Core::LinAlg::SparseMatrix::FE_MATRIX);
+  FourC::Core::LinAlg::SparseMatrix kc(dynamic_cast<Core::LinAlg::SparseMatrix*>(&kteff)->row_map(),
+      100, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
   // loop over interface and assemble force and stiffness
   for (int i = 0; i < (int)interface_.size(); ++i)
   {
     interface_[i]->add_ltl_forces(*fc);
-    interface_[i]->add_ltl_stiffness(*kc);
+    interface_[i]->add_ltl_stiffness(kc);
   }
 
   // store normal forces
@@ -1841,7 +1838,7 @@ void CONTACT::LagrangeStrategy::add_line_to_lin_contributions_friction(
   for (int i = 0; i < (int)interface_.size(); ++i)
   {
     interface_[i]->add_ltl_forces_friction(*fc);
-    interface_[i]->add_ltl_stiffness_friction(*kc);
+    interface_[i]->add_ltl_stiffness_friction(kc);
   }
 
   // get info for conservation check
@@ -1871,9 +1868,9 @@ void CONTACT::LagrangeStrategy::add_line_to_lin_contributions_friction(
   if (feff->update(fac, *fc, 1.)) FOUR_C_THROW("Update went wrong");
 
   // stiffness
-  kc->complete();
+  kc.complete();
   kteff.un_complete();
-  kteff.add(*kc, false, fac, 1.);
+  kteff.add(kc, false, fac, 1.);
   kteff.complete();
 
   // bye bye

@@ -72,7 +72,7 @@ void PARTICLEENGINE::ParticleContainerBundle::setup(
 }
 
 void PARTICLEENGINE::ParticleContainerBundle::get_packed_particle_objects_of_all_containers(
-    std::shared_ptr<std::vector<char>>& particlebuffer) const
+    std::vector<char>& particlebuffer) const
 {
   // iterate over particle types
   for (const auto& type : storedtypes_)
@@ -92,7 +92,7 @@ void PARTICLEENGINE::ParticleContainerBundle::get_packed_particle_objects_of_all
       // pack data for writing
       Core::Communication::PackBuffer data;
       particleobject->pack(data);
-      particlebuffer->insert(particlebuffer->end(), data().begin(), data().end());
+      particlebuffer.insert(particlebuffer.end(), data().begin(), data().end());
     }
   }
 }

@@ -35,84 +35,80 @@ void XFEM::XFieldField::Coupling::init(const enum MinDofDiscretization& min_dof_
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 std::shared_ptr<Core::LinAlg::Vector<double>> XFEM::XFieldField::Coupling::master_to_slave(
-    const std::shared_ptr<const Core::LinAlg::Vector<double>>& mv,
-    const enum XFEM::MapType& map_type) const
+    const Core::LinAlg::Vector<double>& mv, const enum XFEM::MapType& map_type) const
 {
   std::shared_ptr<Core::LinAlg::Vector<double>> sv = nullptr;
   switch (map_type)
   {
     case XFEM::map_dofs:
-      return ::FourC::Coupling::Adapter::Coupling::master_to_slave(*mv);
+      return ::FourC::Coupling::Adapter::Coupling::master_to_slave(mv);
       break;
     case XFEM::map_nodes:
       sv = std::make_shared<Core::LinAlg::Vector<double>>(*slavenodemap_);
       break;
   }
 
-  master_to_slave(mv->as_multi_vector(), map_type, sv->as_multi_vector());
+  master_to_slave(mv.as_multi_vector(), map_type, sv->as_multi_vector());
   return sv;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 std::shared_ptr<Core::LinAlg::Vector<double>> XFEM::XFieldField::Coupling::slave_to_master(
-    const std::shared_ptr<const Core::LinAlg::Vector<double>>& sv,
-    const enum XFEM::MapType& map_type) const
+    const Core::LinAlg::Vector<double>& sv, const enum XFEM::MapType& map_type) const
 {
   std::shared_ptr<Core::LinAlg::Vector<double>> mv = nullptr;
   switch (map_type)
   {
     case XFEM::map_dofs:
-      return ::FourC::Coupling::Adapter::Coupling::slave_to_master(*sv);
+      return ::FourC::Coupling::Adapter::Coupling::slave_to_master(sv);
       break;
     case XFEM::map_nodes:
       mv = std::make_shared<Core::LinAlg::Vector<double>>(*masternodemap_);
       break;
   }
 
-  slave_to_master(sv->as_multi_vector(), map_type, mv->as_multi_vector());
+  slave_to_master(sv.as_multi_vector(), map_type, mv->as_multi_vector());
   return mv;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 std::shared_ptr<Core::LinAlg::MultiVector<double>> XFEM::XFieldField::Coupling::master_to_slave(
-    const std::shared_ptr<const Core::LinAlg::MultiVector<double>>& mv,
-    const enum XFEM::MapType& map_type) const
+    const Core::LinAlg::MultiVector<double>& mv, const enum XFEM::MapType& map_type) const
 {
   std::shared_ptr<Core::LinAlg::MultiVector<double>> sv = nullptr;
   switch (map_type)
   {
     case XFEM::map_dofs:
-      return ::FourC::Coupling::Adapter::Coupling::master_to_slave(*mv);
+      return ::FourC::Coupling::Adapter::Coupling::master_to_slave(mv);
       break;
     case XFEM::map_nodes:
-      sv = std::make_shared<Core::LinAlg::MultiVector<double>>(*slavenodemap_, mv->NumVectors());
+      sv = std::make_shared<Core::LinAlg::MultiVector<double>>(*slavenodemap_, mv.NumVectors());
       break;
   }
 
-  master_to_slave(*mv, map_type, *sv);
+  master_to_slave(mv, map_type, *sv);
   return sv;
 }
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 std::shared_ptr<Core::LinAlg::MultiVector<double>> XFEM::XFieldField::Coupling::slave_to_master(
-    const std::shared_ptr<const Core::LinAlg::MultiVector<double>>& sv,
-    const enum XFEM::MapType& map_type) const
+    const Core::LinAlg::MultiVector<double>& sv, const enum XFEM::MapType& map_type) const
 {
   std::shared_ptr<Core::LinAlg::MultiVector<double>> mv = nullptr;
   switch (map_type)
   {
     case XFEM::map_dofs:
-      return ::FourC::Coupling::Adapter::Coupling::slave_to_master(*sv);
+      return ::FourC::Coupling::Adapter::Coupling::slave_to_master(sv);
       break;
     case XFEM::map_nodes:
-      mv = std::make_shared<Core::LinAlg::MultiVector<double>>(*masternodemap_, sv->NumVectors());
+      mv = std::make_shared<Core::LinAlg::MultiVector<double>>(*masternodemap_, sv.NumVectors());
       break;
   }
 
-  slave_to_master(*sv, map_type, *mv);
+  slave_to_master(sv, map_type, *mv);
   return mv;
 }
 

@@ -1068,8 +1068,8 @@ namespace ScaTra
 
     //! Calculate the reconstructed nodal gradient of phi by means of SPR
     std::shared_ptr<Core::LinAlg::MultiVector<double>> compute_superconvergent_patch_recovery(
-        std::shared_ptr<const Core::LinAlg::Vector<double>> state, const std::string& statename,
-        int numvec, Teuchos::ParameterList& params, int dim) const;
+        const Core::LinAlg::Vector<double>& state, const std::string& statename, int numvec,
+        Teuchos::ParameterList& params, int dim) const;
 
     //! compute contributions of solution-depending boundary and interface conditions to global
     //! system of equations

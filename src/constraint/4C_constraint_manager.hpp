@@ -248,8 +248,7 @@ namespace Constraints
     /*!
        \brief Compute values described by a monitor boundary condition
     */
-    void compute_monitor_values(
-        std::shared_ptr<const Core::LinAlg::Vector<double>> disp  ///< current displacement
+    void compute_monitor_values(const Core::LinAlg::Vector<double>& disp  ///< current displacement
     );
 
     /// Reset reference base values for restart computations

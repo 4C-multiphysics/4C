@@ -1606,31 +1606,31 @@ void ScaTra::ScaTraTimIntImpl::set_sc_str_gr_disp(
  *-------------------------------------------------------------------------*/
 std::shared_ptr<Core::LinAlg::MultiVector<double>>
 ScaTra::ScaTraTimIntImpl::compute_superconvergent_patch_recovery(
-    std::shared_ptr<const Core::LinAlg::Vector<double>> state, const std::string& statename,
-    const int numvec, Teuchos::ParameterList& eleparams, const int dim) const
+    const Core::LinAlg::Vector<double>& state, const std::string& statename, const int numvec,
+    Teuchos::ParameterList& eleparams, const int dim) const
 {
   // Warning, this is only tested so far for 1 scalar field!!!
 
   // dependent on the desired projection, just remove this line
-  if (not state->get_map().same_as(*discret_->dof_row_map()))
+  if (not state.get_map().same_as(*discret_->dof_row_map()))
     FOUR_C_THROW("input map is not a dof row map of the fluid");
 
   // set given state for element evaluation
-  discret_->set_state(statename, *state);
+  discret_->set_state(statename, state);
 
   switch (dim)
   {
     case 3:
       return Core::FE::compute_superconvergent_patch_recovery<3>(
-          *discret_, *state, statename, numvec, eleparams);
+          *discret_, state, statename, numvec, eleparams);
       break;
     case 2:
       return Core::FE::compute_superconvergent_patch_recovery<2>(
-          *discret_, *state, statename, numvec, eleparams);
+          *discret_, state, statename, numvec, eleparams);
       break;
     case 1:
       return Core::FE::compute_superconvergent_patch_recovery<1>(
-          *discret_, *state, statename, numvec, eleparams);
+          *discret_, state, statename, numvec, eleparams);
       break;
     default:
       FOUR_C_THROW("only 1/2/3D implementation available for superconvergent patch recovery");
@@ -1993,7 +1993,7 @@ void ScaTra::ScaTraTimIntImpl::evaluate_error_compared_to_analytical_sol()
       // get (squared) error values
       std::shared_ptr<Core::LinAlg::SerialDenseVector> errors =
           std::make_shared<Core::LinAlg::SerialDenseVector>(4 * num_dof_per_node());
-      discret_->evaluate_scalars(eleparams, errors);
+      discret_->evaluate_scalars(eleparams, *errors);
 
       for (int k = 0; k < num_dof_per_node(); ++k)
       {
@@ -2446,7 +2446,7 @@ void ScaTra::OutputScalarsStrategyDomain::evaluate_integrals(
       std::make_shared<Core::LinAlg::SerialDenseVector>(numdofpernode_ + 1 + num_active_scalars);
 
   // perform integration
-  scatratimint->discret_->evaluate_scalars(eleparams, scalars);
+  scatratimint->discret_->evaluate_scalars(eleparams, *scalars);
 
   // extract domain integral
   domainintegral_[dummy_domain_id_] = (*scalars)[numdofpernode_];

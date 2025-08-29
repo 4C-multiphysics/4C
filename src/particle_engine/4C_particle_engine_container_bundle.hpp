@@ -264,8 +264,7 @@ namespace PARTICLEENGINE
      *
      * \param[out] particlebuffer buffer of packed particle objects of all containers
      */
-    void get_packed_particle_objects_of_all_containers(
-        std::shared_ptr<std::vector<char>>& particlebuffer) const;
+    void get_packed_particle_objects_of_all_containers(std::vector<char>& particlebuffer) const;
 
     /*!
      * \brief get particle objects of all containers

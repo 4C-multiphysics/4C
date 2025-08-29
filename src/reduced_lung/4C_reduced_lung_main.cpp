@@ -43,18 +43,16 @@ namespace ReducedLung
     const Teuchos::ParameterList& rawdyn =
         Global::Problem::instance()->reduced_d_airway_dynamic_params();
     const int linear_solver_number = rawdyn.get<int>("LINEAR_SOLVER");
-    std::unique_ptr<Core::LinAlg::Solver> solver = std::make_unique<Core::LinAlg::Solver>(
-        Global::Problem::instance()->solver_params(linear_solver_number), actdis->get_comm(),
-        Global::Problem::instance()->solver_params_callback(),
+    Core::LinAlg::Solver solver(Global::Problem::instance()->solver_params(linear_solver_number),
+        actdis->get_comm(), Global::Problem::instance()->solver_params_callback(),
         Teuchos::getIntegralValue<Core::IO::Verbositylevel>(
             Global::Problem::instance()->io_params(), "VERBOSITY"));
-    actdis->compute_null_space_if_necessary(solver->params());
+    actdis->compute_null_space_if_necessary(solver.params());
     // Create runtime output writer
-    const auto visualization_writer =
-        std::make_unique<Core::IO::DiscretizationVisualizationWriterMesh>(
-            actdis, Core::IO::visualization_parameters_factory(
-                        Global::Problem::instance()->io_params().sublist("RUNTIME VTK OUTPUT"),
-                        *Global::Problem::instance()->output_control_file(), 0));
+    FourC::Core::IO::DiscretizationVisualizationWriterMesh visualization_writer(
+        actdis, Core::IO::visualization_parameters_factory(
+                    Global::Problem::instance()->io_params().sublist("RUNTIME VTK OUTPUT"),
+                    *Global::Problem::instance()->output_control_file(), 0));
     // The existing mpi communicator is recycled for the new data layout.
     const auto& comm = actdis->get_comm();
 
@@ -702,7 +700,7 @@ namespace ReducedLung
       }
 
       // Solve.
-      solver->solve(Core::Utils::shared_ptr_from_ref(sysmat), Core::Utils::shared_ptr_from_ref(x),
+      solver.solve(Core::Utils::shared_ptr_from_ref(sysmat), Core::Utils::shared_ptr_from_ref(x),
           Core::Utils::shared_ptr_from_ref(rhs), {});
 
       // Update dofs with solution vector.
@@ -716,10 +714,10 @@ namespace ReducedLung
       // Runtime output
       if (n % results_every == 0)
       {
-        visualization_writer->reset();
-        collect_runtime_output_data(*visualization_writer, airways, terminal_units,
+        visualization_writer.reset();
+        collect_runtime_output_data(visualization_writer, airways, terminal_units,
             locally_relevant_dofs, actdis->element_row_map());
-        visualization_writer->write_to_disk(dt * n, n);
+        visualization_writer.write_to_disk(dt * n, n);
       }
     }
     // Print time monitor

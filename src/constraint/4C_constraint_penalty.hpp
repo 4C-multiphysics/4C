@@ -63,18 +63,9 @@ namespace Constraints
         std::shared_ptr<Core::LinAlg::SparseOperator>
             systemmatrix1,  ///< sparse matrix that may be filled by assembly of element
                             ///< contributions
-        std::shared_ptr<Core::LinAlg::SparseOperator>
-            systemmatrix2,  ///< sparse (rectangular) matrix that may be filled by assembly of
-                            ///< element contributions
         std::shared_ptr<Core::LinAlg::Vector<double>>
-            systemvector1,  ///< distributed vector that may be filled by
-                            ///< assembly of element contributions
-        std::shared_ptr<Core::LinAlg::Vector<double>>
-            systemvector2,  ///< distributed vector that may be filled by
-                            ///< assembly of element contributions
-        std::shared_ptr<Core::LinAlg::Vector<double>>
-            systemvector3  ///< distributed vector that may be filled
-                           ///< by assembly of element contributions
+            systemvector1  ///< distributed vector that may be filled by
+                           ///< assembly of element contributions
     );
 
    protected:

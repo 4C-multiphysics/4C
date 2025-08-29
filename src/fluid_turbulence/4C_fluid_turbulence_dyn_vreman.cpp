@@ -147,7 +147,7 @@ double FLD::Vreman::dyn_vreman_compute_cv()
 
 
   // call loop over elements (assemble nothing)
-  discret_->evaluate_scalars(calc_vreman_params, Cv_num_denom);
+  discret_->evaluate_scalars(calc_vreman_params, *Cv_num_denom);
   discret_->clear_state();
 
 
@@ -200,7 +200,7 @@ void FLD::Vreman::dyn_vreman_compute_dt(Teuchos::ParameterList& extraparams)
   std::shared_ptr<Core::LinAlg::SerialDenseVector> Dt_num_denom =
       std::make_shared<Core::LinAlg::SerialDenseVector>(2);
   // call loop over elements (assemble nothing)
-  scatradiscret_->evaluate_scalars(calc_vreman_params_scatra, Dt_num_denom);
+  scatradiscret_->evaluate_scalars(calc_vreman_params_scatra, *Dt_num_denom);
   scatradiscret_->clear_state();
   dt_numerator_volumeav = (*Dt_num_denom)[0];
   dt_denominator_volumeav = (*Dt_num_denom)[1];

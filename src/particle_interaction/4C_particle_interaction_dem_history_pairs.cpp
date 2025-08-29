@@ -107,8 +107,7 @@ void ParticleInteraction::DEMHistoryPairs::write_restart() const
   }
 }
 
-void ParticleInteraction::DEMHistoryPairs::read_restart(
-    const std::shared_ptr<Core::IO::DiscretizationReader> reader)
+void ParticleInteraction::DEMHistoryPairs::read_restart(Core::IO::DiscretizationReader& reader)
 {
   // prepare buffer
   std::shared_ptr<std::vector<char>> buffer;
@@ -117,7 +116,7 @@ void ParticleInteraction::DEMHistoryPairs::read_restart(
   {
     buffer = std::make_shared<std::vector<char>>();
 
-    reader->read_char_vector(buffer, "ParticleTangentialHistoryData");
+    reader.read_char_vector(buffer, "ParticleTangentialHistoryData");
 
     if (buffer->size() > 0) unpack_history_pairs(*buffer, particletangentialhistorydata_);
   }
@@ -126,7 +125,7 @@ void ParticleInteraction::DEMHistoryPairs::read_restart(
   {
     buffer = std::make_shared<std::vector<char>>();
 
-    reader->read_char_vector(buffer, "ParticleWallTangentialHistoryData");
+    reader.read_char_vector(buffer, "ParticleWallTangentialHistoryData");
 
     if (buffer->size() > 0) unpack_history_pairs(*buffer, particlewalltangentialhistorydata_);
   }
@@ -135,7 +134,7 @@ void ParticleInteraction::DEMHistoryPairs::read_restart(
   {
     buffer = std::make_shared<std::vector<char>>();
 
-    reader->read_char_vector(buffer, "ParticleRollingHistoryData");
+    reader.read_char_vector(buffer, "ParticleRollingHistoryData");
 
     if (buffer->size() > 0) unpack_history_pairs(*buffer, particlerollinghistorydata_);
   }
@@ -144,7 +143,7 @@ void ParticleInteraction::DEMHistoryPairs::read_restart(
   {
     buffer = std::make_shared<std::vector<char>>();
 
-    reader->read_char_vector(buffer, "ParticleWallRollingHistoryData");
+    reader.read_char_vector(buffer, "ParticleWallRollingHistoryData");
 
     if (buffer->size() > 0) unpack_history_pairs(*buffer, particlewallrollinghistorydata_);
   }
@@ -153,7 +152,7 @@ void ParticleInteraction::DEMHistoryPairs::read_restart(
   {
     buffer = std::make_shared<std::vector<char>>();
 
-    reader->read_char_vector(buffer, "ParticleAdhesionHistoryData");
+    reader.read_char_vector(buffer, "ParticleAdhesionHistoryData");
 
     if (buffer->size() > 0) unpack_history_pairs(*buffer, particleadhesionhistorydata_);
   }
@@ -162,7 +161,7 @@ void ParticleInteraction::DEMHistoryPairs::read_restart(
   {
     buffer = std::make_shared<std::vector<char>>();
 
-    reader->read_char_vector(buffer, "ParticleWallAdhesionHistoryData");
+    reader.read_char_vector(buffer, "ParticleWallAdhesionHistoryData");
 
     if (buffer->size() > 0) unpack_history_pairs(*buffer, particlewalladhesionhistorydata_);
   }

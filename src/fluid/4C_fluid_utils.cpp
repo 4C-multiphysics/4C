@@ -803,14 +803,13 @@ std::map<int, double> FLD::Utils::compute_flow_rates(Core::FE::Discretization& d
     const std::shared_ptr<Core::LinAlg::Vector<double>>& velnp, const std::string& condstring,
     const Inpar::FLUID::PhysicalType physicaltype)
 {
-  return compute_flow_rates(dis, velnp, nullptr, nullptr, condstring, physicaltype);
+  return compute_flow_rates(dis, *velnp, nullptr, nullptr, condstring, physicaltype);
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 std::map<int, double> FLD::Utils::compute_flow_rates(Core::FE::Discretization& dis,
-    const std::shared_ptr<Core::LinAlg::Vector<double>>& velnp,
-    const std::shared_ptr<Core::LinAlg::Vector<double>>& gridv,
+    Core::LinAlg::Vector<double>& velnp, const std::shared_ptr<Core::LinAlg::Vector<double>>& gridv,
     const std::shared_ptr<Core::LinAlg::Vector<double>>& dispnp, const std::string& condstring,
     const Inpar::FLUID::PhysicalType physicaltype)
 {
@@ -844,7 +843,7 @@ std::map<int, double> FLD::Utils::compute_flow_rates(Core::FE::Discretization& d
     // call loop over elements
     dis.clear_state();
 
-    dis.set_state("velaf", *velnp);
+    dis.set_state("velaf", velnp);
     if (dispnp != nullptr) dis.set_state("dispnp", *dispnp);
     if (gridv != nullptr) dis.set_state("gridv", *gridv);
 
@@ -895,7 +894,7 @@ std::map<int, double> FLD::Utils::compute_volume(Core::FE::Discretization& dis,
       std::make_shared<Core::LinAlg::SerialDenseVector>(1);
 
   // call loop over elements (assemble nothing)
-  dis.evaluate_scalars(eleparams, volumes);
+  dis.evaluate_scalars(eleparams, *volumes);
   dis.clear_state();
 
   volumeperline[0] = (*volumes)(0);
@@ -948,7 +947,7 @@ void FLD::Utils::project_gradient_and_set_param(Core::FE::Discretization& discre
 {
   // project gradient
   std::shared_ptr<Core::LinAlg::MultiVector<double>> projected_velgrad =
-      FLD::Utils::project_gradient(discret, vel, alefluid);
+      FLD::Utils::project_gradient(discret, *vel, alefluid);
 
   // store multi vector in parameter list after export to col layout
   if (projected_velgrad != nullptr)
@@ -962,8 +961,7 @@ void FLD::Utils::project_gradient_and_set_param(Core::FE::Discretization& discre
  | Project velocity gradient                                    bk 05/15 |
  *----------------------------------------------------------------------*/
 std::shared_ptr<Core::LinAlg::MultiVector<double>> FLD::Utils::project_gradient(
-    Core::FE::Discretization& discret, std::shared_ptr<const Core::LinAlg::Vector<double>> vel,
-    bool alefluid)
+    Core::FE::Discretization& discret, const Core::LinAlg::Vector<double>& vel, bool alefluid)
 {
   // reconstruction of second derivatives for fluid residual
   auto recomethod = Teuchos::getIntegralValue<Inpar::FLUID::GradientReconstructionMethod>(
@@ -975,7 +973,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> FLD::Utils::project_gradient(
   std::shared_ptr<Core::LinAlg::MultiVector<double>> projected_velgrad = nullptr;
 
   // dependent on the desired projection, just remove this line
-  if (not vel->get_map().same_as(*discret.dof_row_map()))
+  if (not vel.get_map().same_as(*discret.dof_row_map()))
     FOUR_C_THROW("input map is not a dof row map of the fluid");
 
   switch (recomethod)
@@ -997,15 +995,15 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> FLD::Utils::project_gradient(
       {
         case 3:
           projected_velgrad = Core::FE::compute_superconvergent_patch_recovery<3>(
-              discret, *vel, "vel", numvec, params);
+              discret, vel, "vel", numvec, params);
           break;
         case 2:
           projected_velgrad = Core::FE::compute_superconvergent_patch_recovery<2>(
-              discret, *vel, "vel", numvec, params);
+              discret, vel, "vel", numvec, params);
           break;
         case 1:
           projected_velgrad = Core::FE::compute_superconvergent_patch_recovery<1>(
-              discret, *vel, "vel", numvec, params);
+              discret, vel, "vel", numvec, params);
           break;
         default:
           FOUR_C_THROW("only 1/2/3D implementation available for superconvergent patch recovery");
@@ -1024,7 +1022,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> FLD::Utils::project_gradient(
 
       // set given state for element evaluation
       discret.clear_state();
-      discret.set_state("vel", *vel);
+      discret.set_state("vel", vel);
 
       // project velocity gradient of fluid to nodal level via L2 projection
       projected_velgrad = Core::FE::compute_nodal_l2_projection(discret, "vel", numvec, params,

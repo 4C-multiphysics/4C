@@ -148,7 +148,7 @@ void PoroPressureBased::MeshtyingArtery::update() const { artery_algorithm_->tim
 /*--------------------------------------------------------------------------*
  *--------------------------------------------------------------------------*/
 void PoroPressureBased::MeshtyingArtery::initialize_linear_solver(
-    const std::shared_ptr<Core::LinAlg::Solver> solver) const
+    Core::LinAlg::Solver& solver) const
 {
   const Teuchos::ParameterList& porofluid_params =
       Global::Problem::instance()->porofluid_pressure_based_dynamic_params();
@@ -182,11 +182,11 @@ void PoroPressureBased::MeshtyingArtery::initialize_linear_solver(
       FOUR_C_THROW("Block Gauss-Seidel preconditioner expected.");
   }
 
-  Teuchos::ParameterList& block_smoother_params_1 = solver->params().sublist("Inverse1");
+  Teuchos::ParameterList& block_smoother_params_1 = solver.params().sublist("Inverse1");
   Core::LinearSolver::Parameters::compute_solver_parameters(
       *porofluid_algorithm_->discretization(), block_smoother_params_1);
 
-  Teuchos::ParameterList& block_smoother_params_2 = solver->params().sublist("Inverse2");
+  Teuchos::ParameterList& block_smoother_params_2 = solver.params().sublist("Inverse2");
   Core::LinearSolver::Parameters::compute_solver_parameters(*artery_dis_, block_smoother_params_2);
 }
 

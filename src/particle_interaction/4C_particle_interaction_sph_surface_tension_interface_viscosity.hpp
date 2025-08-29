@@ -73,7 +73,7 @@ namespace ParticleInteraction
     void setup(
         const std::shared_ptr<PARTICLEENGINE::ParticleEngineInterface> particleengineinterface,
         const std::shared_ptr<ParticleInteraction::SPHKernelBase> kernel,
-        const std::shared_ptr<ParticleInteraction::MaterialHandler> particlematerial,
+        ParticleInteraction::MaterialHandler& particlematerial,
         const std::shared_ptr<ParticleInteraction::SPHEquationOfStateBundle> equationofstatebundle,
         const std::shared_ptr<ParticleInteraction::SPHNeighborPairs> neighborpairs);
 

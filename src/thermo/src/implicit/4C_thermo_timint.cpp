@@ -426,7 +426,7 @@ void Thermo::TimInt::write_runtime_output()
 
       std::shared_ptr<Core::LinAlg::SerialDenseVector> energies =
           std::make_shared<Core::LinAlg::SerialDenseVector>(1);
-      discret_->evaluate_scalars(p, energies);
+      discret_->evaluate_scalars(p, *energies);
       discret_->clear_state();
       energy = (*energies)(0);
 
@@ -601,7 +601,7 @@ void Thermo::TimInt::output_heatflux_tempgrad(bool& datawritten)
   discret_->set_state(0, "residual temperature", *zeros_);
   discret_->set_state(0, "temperature", *temp_(0));
 
-  auto heatflux = std::make_shared<Core::LinAlg::Vector<double>>(*discret_->dof_row_map(), true);
+  FourC::Core::LinAlg::Vector<double> heatflux(*discret_->dof_row_map(), true);
 
   discret_->evaluate(p, nullptr, nullptr, nullptr, nullptr, nullptr);
   discret_->clear_state();
@@ -972,7 +972,7 @@ std::shared_ptr<std::vector<double>> Thermo::TimInt::evaluate_error_compared_to_
       Core::LinAlg::MultiVector<double> normvec(*discret_->element_row_map(), 7);
 
       // call loop over elements (assemble nothing)
-      discret_->evaluate_scalars(eleparams, errors);
+      discret_->evaluate_scalars(eleparams, *errors);
       discret_->evaluate_scalars(eleparams, normvec);
       discret_->clear_state();
 

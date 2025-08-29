@@ -980,7 +980,7 @@ namespace Core::FE
 
     \note Sets Filled()=false and calls reset() upon discretization.
     */
-    bool delete_node(std::shared_ptr<Core::Nodes::Node> node);
+    bool delete_node(Core::Nodes::Node& node);
 
     /*!
     \brief Delete an node with global id gid from the discretization
@@ -1035,7 +1035,7 @@ namespace Core::FE
 
     \note Sets Filled()=false and calls reset() upon discretization.
     */
-    bool delete_element(std::shared_ptr<Core::Elements::Element> ele);
+    bool delete_element(Core::Elements::Element& ele);
 
     /*!
     \brief Delete an element with global id gid from the discretization
@@ -1854,8 +1854,7 @@ namespace Core::FE
      * Example: strain energy in structures
      *
      */
-    void evaluate_scalars(
-        Teuchos::ParameterList& params, std::shared_ptr<Core::LinAlg::SerialDenseVector> scalars);
+    void evaluate_scalars(Teuchos::ParameterList& params, Core::LinAlg::SerialDenseVector& scalars);
 
     /*!
      * \brief Assemble scalar quantities across conditioned elements
@@ -2051,8 +2050,7 @@ namespace Core::FE
     \brief Build the geometry of lines for a certain line condition
 
     */
-    bool build_lines_in_condition(
-        const std::string& name, std::shared_ptr<Core::Conditions::Condition> cond);
+    bool build_lines_in_condition(const std::string& name, Core::Conditions::Condition& cond);
 
     /*!
     \brief Build the geometry of surfaces for a certain surface condition.
@@ -2063,15 +2061,13 @@ namespace Core::FE
 
 
     \version rework by Andreas Rauch ( rauch 10/16 )       */
-    bool build_surfaces_in_condition(
-        const std::string& name, std::shared_ptr<Core::Conditions::Condition> cond);
+    bool build_surfaces_in_condition(const std::string& name, Core::Conditions::Condition& cond);
 
     /*!
     \brief Build the geometry of volumes for a certain volume condition
 
     */
-    bool build_volumes_in_condition(
-        const std::string& name, std::shared_ptr<Core::Conditions::Condition> cond);
+    bool build_volumes_in_condition(const std::string& name, Core::Conditions::Condition& cond);
 
     /*!
     \brief Reset all maps and set Filled()=false (Filled()==true NOT prerequisite)

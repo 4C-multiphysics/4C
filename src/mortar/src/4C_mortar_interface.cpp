@@ -2019,12 +2019,11 @@ void Mortar::Interface::set_state(
     case state_new_displacement:
     {
       // alternative method to get vec to full overlap
-      std::shared_ptr<Core::LinAlg::Vector<double>> global =
-          std::make_shared<Core::LinAlg::Vector<double>>(*idiscret_->dof_col_map(), false);
-      Core::LinAlg::export_to(vec, *global);
+      Core::LinAlg::Vector<double> global(*idiscret_->dof_col_map(), false);
+      Core::LinAlg::export_to(vec, global);
 
       // set displacements in interface discretization
-      idiscret_->set_state(state_type_to_string(statetype), *global);
+      idiscret_->set_state(state_type_to_string(statetype), global);
 
       // loop over all nodes to set current displacement
       // (use fully overlapping column map)
@@ -2036,7 +2035,7 @@ void Mortar::Interface::set_state(
 
         for (int j = 0; j < numdof; ++j) lm[j] = node->dofs()[j];
 
-        std::vector<double> mydisp = Core::FE::extract_values(*global, lm);
+        std::vector<double> mydisp = Core::FE::extract_values(global, lm);
 
         // add mydisp[2]=0 for 2D problems
         if (mydisp.size() < 3) mydisp.resize(3);
@@ -2078,12 +2077,11 @@ void Mortar::Interface::set_state(
     case state_old_displacement:
     {
       // alternative method to get vec to full overlap
-      std::shared_ptr<Core::LinAlg::Vector<double>> global =
-          std::make_shared<Core::LinAlg::Vector<double>>(*idiscret_->dof_col_map(), false);
-      Core::LinAlg::export_to(vec, *global);
+      Core::LinAlg::Vector<double> global(*idiscret_->dof_col_map(), false);
+      Core::LinAlg::export_to(vec, global);
 
       // set displacements in interface discretization
-      idiscret_->set_state(state_type_to_string(statetype), *global);
+      idiscret_->set_state(state_type_to_string(statetype), global);
 
       // loop over all nodes to set current displacement
       // (use fully overlapping column map)
@@ -2095,7 +2093,7 @@ void Mortar::Interface::set_state(
 
         for (int j = 0; j < numdof; ++j) lm[j] = node->dofs()[j];
 
-        std::vector<double> myolddisp = Core::FE::extract_values(*global, lm);
+        std::vector<double> myolddisp = Core::FE::extract_values(global, lm);
 
         // add mydisp[2]=0 for 2D problems
         if (myolddisp.size() < 3) myolddisp.resize(3);

@@ -967,7 +967,7 @@ void Solid::TimInt::determine_mass_damp_consist_accel()
 
   /* get external force (no linearization since we assume Rayleigh damping
    * to be independent of follower loads) */
-  apply_force_external((*time_)[0], (*dis_)(0), disn_, (*vel_)(0), *fext);
+  apply_force_external((*time_)[0], (*dis_)(0), disn_, *(*vel_)(0), *fext);
 
   // get initial internal force and stiffness and mass
   {
@@ -2321,7 +2321,7 @@ void Solid::TimInt::determine_energy()
       // get energies
       std::shared_ptr<Core::LinAlg::SerialDenseVector> energies =
           std::make_shared<Core::LinAlg::SerialDenseVector>(1);
-      discret_->evaluate_scalars(p, energies);
+      discret_->evaluate_scalars(p, *energies);
       discret_->clear_state();
       intergy_ = (*energies)(0);
     }
@@ -2482,8 +2482,8 @@ void Solid::TimInt::output_contact()
 /* evaluate external forces at t_{n+1} */
 void Solid::TimInt::apply_force_external(const double time,
     const std::shared_ptr<Core::LinAlg::Vector<double>> dis,
-    const std::shared_ptr<Core::LinAlg::Vector<double>> disn,
-    const std::shared_ptr<Core::LinAlg::Vector<double>> vel, Core::LinAlg::Vector<double>& fext)
+    const std::shared_ptr<Core::LinAlg::Vector<double>> disn, Core::LinAlg::Vector<double>& vel,
+    Core::LinAlg::Vector<double>& fext)
 {
   Teuchos::ParameterList p;
   // other parameters needed by the elements
@@ -2496,7 +2496,7 @@ void Solid::TimInt::apply_force_external(const double time,
   discret_->set_state(0, "displacement", *dis);
   discret_->set_state(0, "displacement new", *disn);
 
-  if (damping_ == Inpar::Solid::damp_material) discret_->set_state(0, "velocity", *vel);
+  if (damping_ == Inpar::Solid::damp_material) discret_->set_state(0, "velocity", vel);
 
   discret_->evaluate_neumann(p, fext);
 }
@@ -2578,8 +2578,7 @@ void Solid::TimInt::nonlinear_mass_sanity_check(
 void Solid::TimInt::apply_force_internal(const double time, const double dt,
     std::shared_ptr<const Core::LinAlg::Vector<double>> dis,
     std::shared_ptr<const Core::LinAlg::Vector<double>> disi,
-    std::shared_ptr<const Core::LinAlg::Vector<double>> vel,
-    std::shared_ptr<Core::LinAlg::Vector<double>> fint)
+    const Core::LinAlg::Vector<double>& vel, std::shared_ptr<Core::LinAlg::Vector<double>> fint)
 {
   // create the parameters for the discretization
   Teuchos::ParameterList p;
@@ -2597,7 +2596,7 @@ void Solid::TimInt::apply_force_internal(const double time, const double dt,
   discret_->set_state("residual displacement", *disi);  // these are incremental
   discret_->set_state("displacement", *dis);
 
-  if (damping_ == Inpar::Solid::damp_material) discret_->set_state("velocity", *vel);
+  if (damping_ == Inpar::Solid::damp_material) discret_->set_state("velocity", vel);
   // fintn_->PutScalar(0.0);  // initialise internal force vector
   discret_->evaluate(p, nullptr, nullptr, fint, nullptr, nullptr);
 

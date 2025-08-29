@@ -98,7 +98,7 @@ void PARTICLEENGINE::ParticleEngine::write_restart(const int step, const double 
 
   // pack particles of all containers
   std::shared_ptr<std::vector<char>> particlebuffer = std::make_shared<std::vector<char>>();
-  particlecontainerbundle_->get_packed_particle_objects_of_all_containers(particlebuffer);
+  particlecontainerbundle_->get_packed_particle_objects_of_all_containers(*particlebuffer);
 
   // write particle data
   binwriter->write_char_data("ParticleData", *Teuchos::rcp(particlebuffer));

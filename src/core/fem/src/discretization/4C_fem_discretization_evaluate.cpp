@@ -465,13 +465,13 @@ void Core::FE::Discretization::evaluate_condition(
  |  evaluate/assemble scalars across elements (public)       bborn 08/08|
  *----------------------------------------------------------------------*/
 void Core::FE::Discretization::evaluate_scalars(
-    Teuchos::ParameterList& params, std::shared_ptr<Core::LinAlg::SerialDenseVector> scalars)
+    Teuchos::ParameterList& params, Core::LinAlg::SerialDenseVector& scalars)
 {
   if (!filled()) FOUR_C_THROW("fill_complete() was not called");
   if (!have_dofs()) FOUR_C_THROW("assign_degrees_of_freedom() was not called");
 
   // number of scalars
-  const int numscalars = scalars->length();
+  const int numscalars = scalars.length();
   if (numscalars <= 0) FOUR_C_THROW("scalars vector of interest has size <=0");
   // intermediate sum of each scalar on each processor
   Core::LinAlg::SerialDenseVector cpuscalars(numscalars);
@@ -507,8 +507,8 @@ void Core::FE::Discretization::evaluate_scalars(
   }
 
   // reduce
-  for (int i = 0; i < numscalars; ++i) (*scalars)(i) = 0.0;
-  Core::Communication::sum_all(cpuscalars.values(), scalars->values(), numscalars, get_comm());
+  for (int i = 0; i < numscalars; ++i) (scalars)(i) = 0.0;
+  Core::Communication::sum_all(cpuscalars.values(), scalars.values(), numscalars, get_comm());
 }  // Core::FE::Discretization::EvaluateScalars
 
 

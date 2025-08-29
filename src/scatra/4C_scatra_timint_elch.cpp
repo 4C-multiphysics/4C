@@ -705,7 +705,7 @@ void ScaTra::ScaTraTimIntElch::evaluate_error_compared_to_analytical_sol()
       // get (squared) error values
       std::shared_ptr<Core::LinAlg::SerialDenseVector> errors =
           std::make_shared<Core::LinAlg::SerialDenseVector>(3);
-      discret_->evaluate_scalars(eleparams, errors);
+      discret_->evaluate_scalars(eleparams, *errors);
 
       double conerr1 = 0.0;
       double conerr2 = 0.0;
@@ -753,7 +753,7 @@ void ScaTra::ScaTraTimIntElch::evaluate_error_compared_to_analytical_sol()
       // get (squared) error values
       std::shared_ptr<Core::LinAlg::SerialDenseVector> errors =
           std::make_shared<Core::LinAlg::SerialDenseVector>(3);
-      discret_->evaluate_scalars(eleparams, errors);
+      discret_->evaluate_scalars(eleparams, *errors);
 
       // for the L2 norm, we need the square root
       double conerr1 = sqrt((*errors)[0]);
@@ -785,7 +785,7 @@ void ScaTra::ScaTraTimIntElch::evaluate_error_compared_to_analytical_sol()
       // get (squared) error values
       std::shared_ptr<Core::LinAlg::SerialDenseVector> errors =
           std::make_shared<Core::LinAlg::SerialDenseVector>(1);
-      discret_->evaluate_scalars(eleparams, errors);
+      discret_->evaluate_scalars(eleparams, *errors);
 
       // for the L2 norm, we need the square root
       double err = sqrt((*errors)[0]);
@@ -1672,7 +1672,7 @@ void ScaTra::ScaTraTimIntElch::setup_nat_conv()
   // evaluate integrals of concentrations and domain
   std::shared_ptr<Core::LinAlg::SerialDenseVector> scalars =
       std::make_shared<Core::LinAlg::SerialDenseVector>(num_dof_per_node() + 1);
-  discret_->evaluate_scalars(eleparams, scalars);
+  discret_->evaluate_scalars(eleparams, *scalars);
 
   // calculate mean concentration
   const double domint = (*scalars)[num_dof_per_node()];
@@ -2130,7 +2130,7 @@ double ScaTra::ScaTraTimIntElch::compute_conductivity(
   // evaluate integrals of scalar(s) and domain
   std::shared_ptr<Core::LinAlg::SerialDenseVector> sigma_domint =
       std::make_shared<Core::LinAlg::SerialDenseVector>(num_scal() + 2);
-  discret_->evaluate_scalars(eleparams, sigma_domint);
+  discret_->evaluate_scalars(eleparams, *sigma_domint);
   const double domint = (*sigma_domint)[num_scal() + 1];
 
   if (!specresist)

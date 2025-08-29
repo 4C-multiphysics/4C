@@ -58,7 +58,7 @@ void Constraints::SpringDashpotManager::stiffness_and_internal_forces(
 
     if (stype == Constraints::SpringDashpot::RobinSpringDashpotType::xyz or
         stype == Constraints::SpringDashpot::RobinSpringDashpotType::refsurfnormal)
-      springs_[i]->evaluate_robin(stiff, fint, disn, veln, parlist);
+      springs_[i]->evaluate_robin(stiff, fint, disn, *veln, parlist);
     if (stype == Constraints::SpringDashpot::RobinSpringDashpotType::cursurfnormal)
       springs_[i]->evaluate_force_stiff(*stiff, *fint, disn, *veln, parlist);
   }

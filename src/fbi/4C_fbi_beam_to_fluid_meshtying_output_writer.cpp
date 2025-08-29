@@ -131,12 +131,11 @@ void BeamInteraction::BeamToFluidMeshtyingVtkOutputWriter::write_output_beam_to_
         couplingenforcer.get_structure()->get_discretization()->get_comm());
 
     // Extract the forces and add them to the discretization.
-    std::shared_ptr<Core::LinAlg::Vector<double>> force_beam =
-        std::make_shared<Core::LinAlg::Vector<double>>(beam_dof_map, true);
-    Core::LinAlg::export_to(*couplingenforcer.assemble_structure_coupling_residual(), *force_beam);
+    Core::LinAlg::Vector<double> force_beam(beam_dof_map, true);
+    Core::LinAlg::export_to(*couplingenforcer.assemble_structure_coupling_residual(), force_beam);
 
 
-    visualization->add_discretization_nodal_data("force", *force_beam);
+    visualization->add_discretization_nodal_data("force", force_beam);
   }
 
   // Add the pair specific visualization by looping over the individual contact pairs.

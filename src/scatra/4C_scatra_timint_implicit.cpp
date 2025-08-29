@@ -698,7 +698,7 @@ void ScaTra::ScaTraTimIntImpl::setup_nat_conv()
   // evaluate integrals of concentrations and domain
   std::shared_ptr<Core::LinAlg::SerialDenseVector> scalars =
       std::make_shared<Core::LinAlg::SerialDenseVector>(num_scal() + 1);
-  discret_->evaluate_scalars(eleparams, scalars);
+  discret_->evaluate_scalars(eleparams, *scalars);
 
   // calculate mean concentrations
   const double domint = (*scalars)[num_scal()];

@@ -1236,7 +1236,7 @@ void PoroElastScaTra::PoroScatraMono::fd_check()
 
   iterinc->replace_global_value(0, delta);
 
-  auto stiff_approx = std::make_shared<Core::LinAlg::SparseMatrix>(*dof_row_map(), 81);
+  FourC::Core::LinAlg::SparseMatrix stiff_approx(*dof_row_map(), 81);
 
   Core::LinAlg::Vector<double> rhs_old(*dof_row_map(), true);
   rhs_old.update(1.0, *rhs_, 0.0);
@@ -1282,7 +1282,7 @@ void PoroElastScaTra::PoroScatraMono::fd_check()
     for (int j = 0; j < dofs; ++j)
     {
       double value = (rhs_copy)[j];
-      stiff_approx->insert_global_values(j, 1, &value, index);
+      stiff_approx.insert_global_values(j, 1, &value, index);
 
       if ((j == zeilennr) and (i == spaltenr))
       {
@@ -1327,17 +1327,17 @@ void PoroElastScaTra::PoroScatraMono::fd_check()
   evaluate(iterinc);
   setup_rhs();
 
-  stiff_approx->complete();
+  stiff_approx.complete();
 
-  auto stiff_approx_sparse = std::make_shared<Core::LinAlg::SparseMatrix>(*stiff_approx);
+  FourC::Core::LinAlg::SparseMatrix stiff_approx_sparse(stiff_approx);
 
-  stiff_approx_sparse->add(sparse_copy, false, -1.0, 1.0);
+  stiff_approx_sparse.add(sparse_copy, false, -1.0, 1.0);
 
-  auto sparse_crs = std::make_shared<Core::LinAlg::SparseMatrix>(sparse_copy);
-  auto error_crs = std::make_shared<Core::LinAlg::SparseMatrix>(*stiff_approx_sparse);
+  FourC::Core::LinAlg::SparseMatrix sparse_crs(sparse_copy);
+  FourC::Core::LinAlg::SparseMatrix error_crs(stiff_approx_sparse);
 
-  error_crs->complete();
-  sparse_crs->complete();
+  error_crs.complete();
+  sparse_crs.complete();
 
   bool success = true;
   double error_max_rel = 0.0;
@@ -1357,11 +1357,11 @@ void PoroElastScaTra::PoroScatraMono::fd_check()
           {
             // get error_crs entry ij
             int errornumentries;
-            int errorlength = error_crs->num_global_entries(i);
+            int errorlength = error_crs.num_global_entries(i);
             std::vector<double> errorvalues(errorlength);
             std::vector<int> errorindices(errorlength);
             // int errorextractionstatus =
-            error_crs->extract_global_row_copy(
+            error_crs.extract_global_row_copy(
                 i, errorlength, errornumentries, errorvalues.data(), errorindices.data());
             for (int k = 0; k < errorlength; ++k)
             {
@@ -1378,11 +1378,11 @@ void PoroElastScaTra::PoroScatraMono::fd_check()
           // get sparse_ij entry ij
           {
             int sparsenumentries;
-            int sparselength = sparse_crs->num_global_entries(i);
+            int sparselength = sparse_crs.num_global_entries(i);
             std::vector<double> sparsevalues(sparselength);
             std::vector<int> sparseindices(sparselength);
             // int sparseextractionstatus =
-            sparse_crs->extract_global_row_copy(
+            sparse_crs.extract_global_row_copy(
                 i, sparselength, sparsenumentries, sparsevalues.data(), sparseindices.data());
             for (int k = 0; k < sparselength; ++k)
             {
@@ -1399,11 +1399,11 @@ void PoroElastScaTra::PoroScatraMono::fd_check()
           // get stiff_approx entry ij
           {
             int approxnumentries;
-            int approxlength = stiff_approx->num_global_entries(i);
+            int approxlength = stiff_approx.num_global_entries(i);
             std::vector<double> approxvalues(approxlength);
             std::vector<int> approxindices(approxlength);
             // int approxextractionstatus =
-            stiff_approx->extract_global_row_copy(
+            stiff_approx.extract_global_row_copy(
                 i, approxlength, approxnumentries, approxvalues.data(), approxindices.data());
             for (int k = 0; k < approxlength; ++k)
             {
