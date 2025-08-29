@@ -1209,6 +1209,37 @@ c: [[1.0, 2.0], [[1.0, 2.0, 8.0], {a: true, b: false, c: true, d: false}]])",
     EXPECT_EQ(map.at("d"), false);
   }
 
+  TEST(InputSpecTest, MatchYamlVectorOfArraysOfVectorsOfArrays)
+  {
+    using ComplicatedType = std::vector<std::array<std::array<std::vector<int>, 3>, 2>>;
+
+    auto spec = parameter<ComplicatedType>("t", {.description = "", .size = {2, 3}});
+    auto tree = init_yaml_tree_with_exceptions();
+    ryml::NodeRef root = tree.rootref();
+
+    // YAML input matching the nested structure:
+    ryml::parse_in_arena(R"(
+t: [[[[1,1,1],[1,1,2],[1,3,1]], [[2,2,2],[2,2,1],[2,2,9]]], [[[3,3,3],[3,2,3],[3,1,3]], [[4,4,4],[4,4,5],[4,4,6]]]])",
+        root);
+
+    ConstYamlNodeRef node(root, "");
+    InputParameterContainer container;
+    spec.match(node, container);
+
+    const auto& outer_vector = container.get<ComplicatedType>("t");
+    ASSERT_EQ(outer_vector.size(), 2);
+    const auto& outer_array = outer_vector[0];
+    ASSERT_EQ(outer_array.size(), 2);
+    const auto& inner_array = outer_array[1];
+    ASSERT_EQ(inner_array.size(), 3);
+    const auto& inner_vector = inner_array[2];
+    ASSERT_EQ(inner_vector.size(), 3);
+
+    ASSERT_EQ(outer_vector[0][0][0][0], 1);
+    ASSERT_EQ(outer_vector[0][1][2][1], 2);
+    ASSERT_EQ(outer_vector[1][1][2][2], 6);
+  }
+
   TEST(InputSpecTest, MatchYamlGroup)
   {
     auto spec = group("group", {

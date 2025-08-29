@@ -223,16 +223,18 @@ namespace Core::IO::InputSpecBuilders::Validators
 
 
   /**
-   * A validator that checks if all elements in a vector satisfy the given @p validator, e.g.,
+   * A validator that checks if all elements in a contiguous sequence of elements (e.g., an
+   * std::vector or an std::array) satisfy the given
+   * @p validator, e.g.,
    *
    * @code
-   * // check that all vector elements are positive
+   * // check that all elements are positive
    * all_elements(positive<int>()):
    * @endcode
    *
    */
   template <typename T>
-  [[nodiscard]] Validator<std::vector<T>> all_elements(Validator<T> validator);
+  [[nodiscard]] Validator<std::span<T>> all_elements(Validator<T> validator);
 
   /**
    * A validator that allows an empty optional "null" value or a value that satisfies the given @p
@@ -351,16 +353,17 @@ template <typename T>
   return in_set(std::set<T>(set.begin(), set.end()));
 }
 
+
 template <typename T>
-[[nodiscard]] Core::IO::InputSpecBuilders::Validators::Validator<std::vector<T>>
+[[nodiscard]] Core::IO::InputSpecBuilders::Validators::Validator<std::span<T>>
 Core::IO::InputSpecBuilders::Validators::all_elements(Validator<T> validator)
 {
-  return (Validator<std::vector<T>>(
-      [validator](const std::vector<T>& vec)
+  return (Validator<std::span<T>>(
+      [validator](const std::span<T>& span)
       {
-        for (const auto& v : vec)
+        for (const auto& s : span)
         {
-          if (!validator(v)) return false;
+          if (!validator(s)) return false;
         }
         return true;
       },
