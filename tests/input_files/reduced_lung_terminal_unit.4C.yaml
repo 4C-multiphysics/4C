@@ -2,10 +2,44 @@ TITLE:
   - "1 terminal unit with linear Kelvin-Voigt material and pressure bc"
 PROBLEM TYPE:
   PROBLEMTYPE: "Reduced_Lung"
-REDUCED DIMENSIONAL AIRWAYS DYNAMIC:
-  TIMESTEP: 1
-  NUMSTEP: 3
-  LINEAR_SOLVER: 1
+reduced_dimensional_lung:
+  air_properties:
+    density: 1.176e-06
+    dynamic_viscosity: 1.79105e-05
+  dynamics:
+    linear_solver: 1
+    number_of_steps: 1
+    restart_every: 1
+    results_every: 1
+    time_increment: 1
+  lung_tree:
+    element_type:
+      constant: Airway
+    generation:
+      constant: -1
+    airways: # These values won't be used since there are no airways in the model
+      radius:
+        constant: 1.0
+      flow_model:
+        resistance_type:
+          constant: Linear
+        include_inertia:
+          constant: false
+      wall_model_type:
+        constant: Rigid
+    terminal_units:
+      rheological_model:
+        rheological_model_type:
+          constant: KelvinVoigt
+        kelvin_voigt:
+          viscosity_kelvin_voigt_eta:
+            constant: 0.0
+      elasticity_model:
+        elasticity_model_type:
+          constant: Linear
+        linear:
+          elasticity_e:
+            constant: 1.0
 SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "Reduced_dimensional_Airways_Solver"

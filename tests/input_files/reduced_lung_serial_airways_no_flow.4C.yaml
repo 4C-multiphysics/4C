@@ -3,10 +3,44 @@ TITLE:
   - "Tests connection equations and pressure distribution without flow."
 PROBLEM TYPE:
   PROBLEMTYPE: "Reduced_Lung"
-REDUCED DIMENSIONAL AIRWAYS DYNAMIC:
-  TIMESTEP: 1
-  NUMSTEP: 1
-  LINEAR_SOLVER: 1
+reduced_dimensional_lung:
+  air_properties:
+    density: 1.176e-06
+    dynamic_viscosity: 1.79105e-05
+  dynamics:
+    linear_solver: 1
+    number_of_steps: 1
+    restart_every: 1
+    results_every: 1
+    time_increment: 1
+  lung_tree:
+    element_type:
+      constant: Airway
+    generation:
+      from_file: "reduced_lung_serial_airways_fields.json"
+    airways:
+      radius:
+        from_file: "reduced_lung_serial_airways_fields.json"
+      flow_model:
+        resistance_type:
+          constant: Linear
+        include_inertia:
+          constant: false
+      wall_model_type:
+        constant: Rigid
+    terminal_units: # These parameters are not used as there are no terminal units in this test
+      rheological_model:
+        rheological_model_type:
+          constant: KelvinVoigt
+        kelvin_voigt:
+          viscosity_kelvin_voigt_eta:
+            constant: 0.0
+      elasticity_model:
+        elasticity_model_type:
+          constant: Linear
+        linear:
+          elasticity_e:
+            constant: 1.0
 SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "Reduced_dimensional_Airways_Solver"
