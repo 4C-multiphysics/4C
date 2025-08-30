@@ -269,10 +269,7 @@ std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_graph(
       std::vector<int> cols;
       std::set<int>::iterator setfool = fool->second.begin();
       for (; setfool != fool->second.end(); ++setfool) cols.push_back(*setfool);
-      int err = graph->insert_global_indices(grid, (int)cols.size(), cols.data());
-      if (err < 0)
-        FOUR_C_THROW(
-            "Core::LinAlg::Graph::InsertGlobalIndices returned {} for global row {}", err, grid);
+      graph->insert_global_indices(grid, (int)cols.size(), cols.data());
     }
     locals.clear();
   }
@@ -311,8 +308,7 @@ std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_graph(
         // see whether I have grid in my row map
         if (rownodes->lid(grid) != -1)  // I have it, put stuff in my graph
         {
-          int err = graph->insert_global_indices(grid, num - 1, (ptr + 2));
-          if (err < 0) FOUR_C_THROW("Core::LinAlg::Graph::InsertGlobalIndices returned {}", err);
+          graph->insert_global_indices(grid, num - 1, (ptr + 2));
           ptr += (num + 1);
         }
         else  // I don't have it so I don't care for entries of this row, goto next row
@@ -355,7 +351,6 @@ std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_monolithic_nod
 
   // 2. Get nodal connectivity of each element
   const int n_nodes_per_element_max = 27;  // element with highest node count is hex27
-  int err;
   Core::LinAlg::Graph element_connectivity(
       Copy, *dis.element_row_map(), n_nodes_per_element_max, false);
   for (int rowele_i = 0; rowele_i < dis.num_my_row_elements(); ++rowele_i)
@@ -366,9 +361,8 @@ std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_monolithic_nod
     {
       element_node_ids[i_node] = element->nodes()[i_node]->id();
     }
-    err = element_connectivity.insert_global_indices(
+    element_connectivity.insert_global_indices(
         element->id(), element_node_ids.size(), element_node_ids.data());
-    if (err != 0) FOUR_C_THROW("Core::LinAlg::Graph::InsertGlobalIndices returned {}", err);
   }
   element_connectivity.fill_complete(*dis.node_row_map(), *dis.element_row_map());
 
@@ -385,9 +379,8 @@ std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_monolithic_nod
   Core::LinAlg::Import importer(my_colliding_primitives_map, *dis.element_row_map());
   Core::LinAlg::Graph my_colliding_primitives_connectivity(
       Copy, my_colliding_primitives_map, n_nodes_per_element_max, false);
-  err = my_colliding_primitives_connectivity.import_from(
+  my_colliding_primitives_connectivity.import_from(
       element_connectivity.get_epetra_crs_graph(), importer, Insert);
-  if (err != 0) FOUR_C_THROW("Core::LinAlg::Graph::Import returned {}", err);
 
   // 4. Build and fill the graph with element internal connectivities
   auto my_graph = std::make_shared<Core::LinAlg::Graph>(
@@ -404,10 +397,7 @@ std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_monolithic_nod
         const auto* node_inner = element->nodes()[j_node];
         int index = node_inner->id();
 
-        int err = my_graph->insert_global_indices(1, &index_main, 1, &index);
-        if (err != 0)
-          FOUR_C_THROW("Core::LinAlg::Graph::InsertGlobalIndices returned {} for global row {}",
-              err, node_main->id());
+        my_graph->insert_global_indices(1, &index_main, 1, &index);
       }
     }
   }
@@ -433,15 +423,10 @@ std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_monolithic_nod
 
       int primitive_num_nodes;
       int* primitive_node_indices;
-      err = my_colliding_primitives_connectivity.extract_global_row_view(
+      my_colliding_primitives_connectivity.extract_global_row_view(
           primitive_gid, primitive_num_nodes, primitive_node_indices);
-      if (err != 0) FOUR_C_THROW("Core::LinAlg::Graph::ExtractGlobalRowView returned {}", err);
 
-      int err = my_graph->insert_global_indices(
-          1, &index_main, primitive_num_nodes, primitive_node_indices);
-      if (err != 0)
-        FOUR_C_THROW("Core::LinAlg::Graph::InsertGlobalIndices returned {} for global row {}", err,
-            node_main->id());
+      my_graph->insert_global_indices(1, &index_main, primitive_num_nodes, primitive_node_indices);
     }
   }
 

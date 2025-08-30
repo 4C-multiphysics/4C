@@ -7,10 +7,9 @@
 
 #include "4C_linalg_graph.hpp"
 
-#include "4C_utils_exceptions.hpp"
+#include "4C_utils_epetra_exceptions.hpp"
 
 FOUR_C_NAMESPACE_OPEN
-
 
 Core::LinAlg::Graph::Graph(const Epetra_CrsGraph& Source)
     : graphtype_(CRS_GRAPH), graph_(std::make_unique<Epetra_CrsGraph>(Source))
@@ -57,28 +56,82 @@ Core::LinAlg::Graph& Core::LinAlg::Graph::operator=(const Graph& other)
   return *this;
 }
 
-int Core::LinAlg::Graph::insert_global_indices(int GlobalRow, int NumIndices, int* Indices)
+void Core::LinAlg::Graph::fill_complete()
 {
-  return graph_->InsertGlobalIndices(GlobalRow, NumIndices, Indices);
+  if (graphtype_ == CRS_GRAPH)
+  {
+    CHECK_EPETRA_CALL(graph_->FillComplete());
+  }
+  else if (graphtype_ == FE_GRAPH)
+  {
+    CHECK_EPETRA_CALL(static_cast<Epetra_FECrsGraph*>(graph_.get())->GlobalAssemble());
+  }
 }
 
-int Core::LinAlg::Graph::insert_global_indices(
+void Core::LinAlg::Graph::fill_complete(const Map& domain_map, const Map& range_map)
+{
+  if (graphtype_ == CRS_GRAPH)
+  {
+    CHECK_EPETRA_CALL(
+        graph_->FillComplete(domain_map.get_epetra_block_map(), range_map.get_epetra_block_map()));
+  }
+  else if (graphtype_ == FE_GRAPH)
+  {
+    CHECK_EPETRA_CALL(static_cast<Epetra_FECrsGraph*>(graph_.get())
+            ->GlobalAssemble(domain_map.get_epetra_map(), range_map.get_epetra_map()));
+  }
+}
+
+void Core::LinAlg::Graph::optimize_storage() { CHECK_EPETRA_CALL(graph_->OptimizeStorage()); }
+
+void Core::LinAlg::Graph::export_to(const Epetra_SrcDistObject& A,
+    const Core::LinAlg::Export& Exporter, Epetra_CombineMode CombineMode,
+    const Epetra_OffsetIndex* Indexor)
+{
+  CHECK_EPETRA_CALL(graph_->Export(A, Exporter.get_epetra_export(), CombineMode, Indexor));
+}
+
+void Core::LinAlg::Graph::import_from(const Epetra_SrcDistObject& A,
+    const Core::LinAlg::Import& Importer, Epetra_CombineMode CombineMode,
+    const Epetra_OffsetIndex* Indexor)
+{
+  CHECK_EPETRA_CALL(graph_->Import(A, Importer.get_epetra_import(), CombineMode, Indexor));
+}
+
+void Core::LinAlg::Graph::insert_global_indices(int GlobalRow, int NumIndices, int* Indices)
+{
+  CHECK_EPETRA_CALL(graph_->InsertGlobalIndices(GlobalRow, NumIndices, Indices));
+}
+
+void Core::LinAlg::Graph::insert_global_indices(
     int numRows, const int* rows, int numCols, const int* cols)
 {
-  int err = 0;
-
   if (graphtype_ == CRS_GRAPH)
-    FOUR_C_THROW("This type of insert_global_indices() only available for FE_GRAPH type.");
+  {
+    FOUR_C_THROW("This type of insert_global_indices() is only available for FE_GRAPH type.");
+  }
   else if (graphtype_ == FE_GRAPH)
-    err = static_cast<Epetra_FECrsGraph*>(graph_.get())
-              ->InsertGlobalIndices(numRows, rows, numCols, cols);
-
-  return err;
+  {
+    CHECK_EPETRA_CALL(static_cast<Epetra_FECrsGraph*>(graph_.get())
+            ->InsertGlobalIndices(numRows, rows, numCols, cols));
+  }
 }
 
-int Core::LinAlg::Graph::remove_global_indices(int GlobalRow, int NumIndices, int* Indices)
+void Core::LinAlg::Graph::extract_local_row_view(int LocalRow, int& NumIndices, int*& Indices) const
 {
-  return graph_->RemoveGlobalIndices(GlobalRow, NumIndices, Indices);
+  CHECK_EPETRA_CALL(graph_->ExtractMyRowView(LocalRow, NumIndices, Indices));
+}
+
+void Core::LinAlg::Graph::extract_global_row_view(
+    int GlobalRow, int& NumIndices, int*& Indices) const
+{
+  CHECK_EPETRA_CALL(graph_->ExtractGlobalRowView(GlobalRow, NumIndices, Indices));
+}
+
+void Core::LinAlg::Graph::extract_global_row_copy(
+    int GlobalRow, int LenOfIndices, int& NumIndices, int* Indices) const
+{
+  CHECK_EPETRA_CALL(graph_->ExtractGlobalRowCopy(GlobalRow, LenOfIndices, NumIndices, Indices));
 }
 
 FOUR_C_NAMESPACE_CLOSE

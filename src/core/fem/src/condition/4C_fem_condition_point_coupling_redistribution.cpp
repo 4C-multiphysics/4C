@@ -226,8 +226,7 @@ void redistribute(const std::vector<int>& rank_to_hold_condition,
   // export nodal graph to new row node layout
   {
     const Core::LinAlg::Export exporter(*discret.node_row_map(), new_row_node_map);
-    int err = node_graph.export_to(old_node_graph->get_epetra_crs_graph(), exporter, Add);
-    if (err < 0) FOUR_C_THROW("Graph export returned err={}", err);
+    node_graph.export_to(old_node_graph->get_epetra_crs_graph(), exporter, Add);
   }
   node_graph.fill_complete();
   node_graph.optimize_storage();

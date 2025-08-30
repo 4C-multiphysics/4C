@@ -12,36 +12,20 @@
 
 #include "4C_utils_exceptions.hpp"
 
-/// set and restore the trace back mode during the macro execution
-void set_trace_back_mode(int tracebackmode);
-
-
-/** \brief Macro to wrap any Epetra method which returns an error code
+/**
+ * Epetra has a C-style interface returning integer error codes. This macro is meant to be wrapped
+ * around a call to an Epetra function and asserts that the integer return value is equal to zero.
+ * Otherwise, an exception is thrown.
  *
- *  This macro can be used to wrap a Epetra function. At the beginning the
- *  internal stack trace of the Epetra_Object is temporally activated. If an
- *  error or a warning is detected (return value is negative or positive), this
- *  stack trace will be printed to the screen. Additionally the program is
- *  interrupted in an error case.
- *
- *  \note Any previously set trace back mode (i.e. before this macro is
- *  executed the very first time) is in the end of this macro
- *  recovered.                                               hiermeier 02/17 */
-#define CATCH_EPETRA_ERROR(a)                                                                     \
-  {                                                                                               \
-    set_trace_back_mode(2);                                                                       \
-    int epetra_error = a;                                                                         \
-    if (epetra_error < 0)                                                                         \
-    {                                                                                             \
-      FOUR_C_THROW("EPETRA_ERROR {} caught!", epetra_error);                                      \
-    }                                                                                             \
-    else if (epetra_error > 0)                                                                    \
-    {                                                                                             \
-      std::cout << __FILE__ ", " << __LINE__ << ": EPETRA_WARNING " << epetra_error << " caught!" \
-                << std::endl;                                                                     \
-    }                                                                                             \
-    set_trace_back_mode(0);                                                                       \
-  }
-
+ * @code
+ *    CHECK_EPETRA_CALL(graph_->insert_global_value(...));
+ * @endcode
+ */
+#define CHECK_EPETRA_CALL(expr)                                     \
+  do                                                                \
+  {                                                                 \
+    int err = (expr);                                               \
+    FOUR_C_ASSERT_ALWAYS(err == 0, "Epetra error (code {}).", err); \
+  } while (0)
 
 #endif

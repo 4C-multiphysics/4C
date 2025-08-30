@@ -388,15 +388,12 @@ std::shared_ptr<Core::LinAlg::Graph> Core::FE::Discretization::build_node_graph(
       for (int col = 0; col < nnode; ++col)
       {
         int colnode = nodeids[col];
-        int err = graph->insert_global_indices(rownode, 1, &colnode);
-        if (err < 0) FOUR_C_THROW("graph->InsertGlobalIndices returned err={}", err);
+        graph->insert_global_indices(rownode, 1, &colnode);
       }
     }
   }
-  int err = graph->fill_complete();
-  if (err) FOUR_C_THROW("graph->FillComplete() returned err={}", err);
-  err = graph->optimize_storage();
-  if (err) FOUR_C_THROW("graph->OptimizeStorage() returned err={}", err);
+  graph->fill_complete();
+  graph->optimize_storage();
 
   return graph;
 }
@@ -861,8 +858,7 @@ void Core::FE::Discretization::setup_ghosting(
     row.assign(rowset.begin(), rowset.end());
     rowset.clear();
 
-    int err = graph->insert_global_indices(1, &i->first, row.size(), row.data());
-    if (err < 0) FOUR_C_THROW("graph->InsertGlobalIndices returned {}", err);
+    graph->insert_global_indices(1, &i->first, row.size(), row.data());
   }
 
   localgraph.clear();
@@ -870,8 +866,7 @@ void Core::FE::Discretization::setup_ghosting(
   // Finalize construction of this graph. Here the communication
   // happens. The ghosting problem is solved at this point.
 
-  int err = graph->fill_complete(rownodes, rownodes);
-  if (err) FOUR_C_THROW("graph->GlobalAssemble returned {}", err);
+  graph->fill_complete(rownodes, rownodes);
 
   // replace rownodes, colnodes with row and column maps from the graph
   const Core::LinAlg::Map& brow = graph->row_map();

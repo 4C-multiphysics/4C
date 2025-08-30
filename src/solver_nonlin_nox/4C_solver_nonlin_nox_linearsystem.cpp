@@ -607,7 +607,7 @@ void NOX::Nln::LinearSystem::replace_diagonal_of_jacobian(
   const Core::LinAlg::SparseMatrix& diag_block = get_jacobian_block(diag_bid, diag_bid);
   Core::LinAlg::SparseMatrix& mod_diag_block = const_cast<Core::LinAlg::SparseMatrix&>(diag_block);
 
-  CATCH_EPETRA_ERROR(mod_diag_block.replace_diagonal_values(new_diag));
+  CHECK_EPETRA_CALL(mod_diag_block.replace_diagonal_values(new_diag));
 }
 
 /*----------------------------------------------------------------------*

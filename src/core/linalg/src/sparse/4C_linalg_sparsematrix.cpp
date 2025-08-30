@@ -368,8 +368,7 @@ void Core::LinAlg::SparseMatrix::reset()
     for (std::size_t i = 0; i < numentries.size(); ++i)
     {
       int* indices;
-      int err = graph->extract_local_row_view(i, numentries[i], indices);
-      if (err != 0) FOUR_C_THROW("ExtractMyRowView failed");
+      graph->extract_local_row_view(i, numentries[i], indices);
     }
   }
   else

@@ -1157,11 +1157,7 @@ Core::Binstrategy::BinningStrategy::weighted_distribution_of_bins_to_procs(
 
       std::vector<int> neighbors;
       get_neighbor_bin_ids(binId, neighbors);
-
-      int err = bingraph->insert_global_indices(binId, (int)neighbors.size(), neighbors.data());
-      if (err < 0)
-        FOUR_C_THROW(
-            "Core::LinAlg::Graph::InsertGlobalIndices returned {} for global row {}", err, binId);
+      bingraph->insert_global_indices(binId, (int)neighbors.size(), neighbors.data());
     }
   }
   else
@@ -1222,19 +1218,12 @@ Core::Binstrategy::BinningStrategy::weighted_distribution_of_bins_to_procs(
     // (if active, periodic boundary conditions are considered here)
     std::vector<int> neighbors;
     get_neighbor_bin_ids(rowbinid, neighbors);
-
-    int err = bingraph->insert_global_indices(
-        rowbinid, static_cast<int>(neighbors.size()), neighbors.data());
-    if (err < 0)
-      FOUR_C_THROW(
-          "Core::LinAlg::Graph::InsertGlobalIndices returned {} for global row {}", err, rowbinid);
+    bingraph->insert_global_indices(rowbinid, static_cast<int>(neighbors.size()), neighbors.data());
   }
 
   // complete graph
-  int err = bingraph->fill_complete();
-  if (err) FOUR_C_THROW("graph->FillComplete() returned err={}", err);
-  err = bingraph->optimize_storage();
-  if (err) FOUR_C_THROW("graph->OptimizeStorage() returned err={}", err);
+  bingraph->fill_complete();
+  bingraph->optimize_storage();
 
   Teuchos::ParameterList paramlist;
   paramlist.set("PARTITIONING METHOD", "GRAPH");
@@ -1437,8 +1426,7 @@ void Core::Binstrategy::BinningStrategy::standard_discretization_ghosting(
 
   newnodegraph = std::make_shared<Core::LinAlg::Graph>(Copy, *newnoderowmap, 108, false);
   Core::LinAlg::Export exporter(initgraph->row_map(), *newnoderowmap);
-  int err = newnodegraph->export_to(initgraph->get_epetra_crs_graph(), exporter, Add);
-  if (err < 0) FOUR_C_THROW("Graph export returned err={}", err);
+  newnodegraph->export_to(initgraph->get_epetra_crs_graph(), exporter, Add);
   newnodegraph->fill_complete();
   newnodegraph->optimize_storage();
 

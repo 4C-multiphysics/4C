@@ -866,15 +866,7 @@ void CONTACT::Interface::redistribute()
         nodeids[n] = ele->node_ids()[n];
       }
 
-      int err = graph->insert_global_indices(gid, numnode, nodeids.data());
-      if (err < 0)
-      {
-        FOUR_C_THROW("graph->InsertGlobalIndices returned {}", err);
-      }
-      if (err == 1)
-      {
-        FOUR_C_THROW("graph->InsertGlobalIndices returned {}", err);
-      }
+      graph->insert_global_indices(gid, numnode, nodeids.data());
     }
   }
 
@@ -1021,8 +1013,7 @@ void CONTACT::Interface::redistribute()
   std::shared_ptr<Core::LinAlg::Graph> outgraph =
       std::make_shared<Core::LinAlg::Graph>(Copy, *srownodes, 108, false);
   Core::LinAlg::Export exporter(graph->row_map(), *srownodes);
-  int err = outgraph->export_to(graph->get_epetra_crs_graph(), exporter, Add);
-  if (err < 0) FOUR_C_THROW("Graph export returned err={}", err);
+  outgraph->export_to(graph->get_epetra_crs_graph(), exporter, Add);
 
   // trash old graph
   graph = nullptr;
