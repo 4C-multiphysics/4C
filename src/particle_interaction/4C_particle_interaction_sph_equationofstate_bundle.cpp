@@ -27,20 +27,20 @@ ParticleInteraction::SPHEquationOfStateBundle::SPHEquationOfStateBundle(
 }
 
 void ParticleInteraction::SPHEquationOfStateBundle::init(
-    const std::shared_ptr<ParticleInteraction::MaterialHandler> particlematerial)
+    ParticleInteraction::MaterialHandler& particlematerial)
 {
   // get type of smoothed particle hydrodynamics equation of state
   auto equationofstatetype = Teuchos::getIntegralValue<Inpar::PARTICLE::EquationOfStateType>(
       params_sph_, "EQUATIONOFSTATE");
 
   // determine size of vector indexed by particle types
-  const int typevectorsize = *(--particlematerial->get_particle_types().end()) + 1;
+  const int typevectorsize = *(--particlematerial.get_particle_types().end()) + 1;
 
   // allocate memory to hold particle types
   phasetypetoequationofstate_.resize(typevectorsize);
 
   // iterate over particle types
-  for (const auto& type_i : particlematerial->get_particle_types())
+  for (const auto& type_i : particlematerial.get_particle_types())
   {
     // no equation of state for boundary or rigid particles
     if (type_i == PARTICLEENGINE::BoundaryPhase or type_i == PARTICLEENGINE::RigidPhase) continue;
@@ -51,7 +51,7 @@ void ParticleInteraction::SPHEquationOfStateBundle::init(
     // get material for current particle type
     const Mat::PAR::ParticleMaterialSPHFluid* material =
         dynamic_cast<const Mat::PAR::ParticleMaterialSPHFluid*>(
-            particlematerial->get_ptr_to_particle_mat_parameter(type_i));
+            particlematerial.get_ptr_to_particle_mat_parameter(type_i));
 
     // create equation of state handler
     switch (equationofstatetype)

@@ -559,7 +559,7 @@ namespace Core::IO
 
 
   void InputFile::match_section(
-      const std::string& section_name, FourC::Core::IO::InputParameterContainer& container) const
+      const std::string& section_name, Core::IO::InputParameterContainer& container) const
   {
     if (!pimpl_->valid_sections_.contains(section_name))
     {

@@ -946,12 +946,12 @@ void BeamInteraction::SubmodelEvaluator::BeamPotential::print_console_welcome_me
 
     switch (beam_potential_parameters().type)
     {
-      case FourC::BeamInteraction::Potential::Type::surface:
+      case BeamInteraction::Potential::Type::surface:
       {
         std::cout << "Potential Type:      Surface" << std::endl;
         break;
       }
-      case FourC::BeamInteraction::Potential::Type::volume:
+      case BeamInteraction::Potential::Type::volume:
       {
         std::cout << "Potential Type:      Volume" << std::endl;
         break;

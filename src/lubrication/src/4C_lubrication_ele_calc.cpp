@@ -350,7 +350,7 @@ void Discret::Elements::LubricationEleCalc<distype, probdim>::sysmat(
   //----------------------------------------------------------------------
   // integration points and weights
   const Core::FE::IntPointsAndWeights<nsd_ele_> intpoints(
-      FourC::Lubrication::DisTypeToOptGaussRule<distype>::rule);
+      Lubrication::DisTypeToOptGaussRule<distype>::rule);
 
   for (int iquad = 0; iquad < intpoints.ip().nquad; ++iquad)
   {
@@ -465,7 +465,7 @@ void Discret::Elements::LubricationEleCalc<distype, probdim>::matrixfor_ehl_mon(
   //----------------------------------------------------------------------
   // integration points and weights
   const Core::FE::IntPointsAndWeights<nsd_ele_> intpoints(
-      FourC::Lubrication::DisTypeToOptGaussRule<distype>::rule);
+      Lubrication::DisTypeToOptGaussRule<distype>::rule);
 
   for (int iquad = 0; iquad < intpoints.ip().nquad; ++iquad)
   {
@@ -1228,7 +1228,7 @@ int Discret::Elements::LubricationEleCalc<distype, probdim>::evaluate_service(
   if (setup_calc(ele, discretization) == -1) return 0;
 
   // check for the action parameter
-  const auto action = Teuchos::getIntegralValue<FourC::Lubrication::Action>(params, "action");
+  const auto action = Teuchos::getIntegralValue<Lubrication::Action>(params, "action");
 
   // evaluate action
   evaluate_action(
@@ -1243,7 +1243,7 @@ int Discret::Elements::LubricationEleCalc<distype, probdim>::evaluate_service(
 template <Core::FE::CellType distype, int probdim>
 int Discret::Elements::LubricationEleCalc<distype, probdim>::evaluate_action(
     Core::Elements::Element* ele, Teuchos::ParameterList& params,
-    Core::FE::Discretization& discretization, const FourC::Lubrication::Action& action,
+    Core::FE::Discretization& discretization, const Lubrication::Action& action,
     Core::Elements::LocationArray& la, Core::LinAlg::SerialDenseMatrix& elemat1,
     Core::LinAlg::SerialDenseMatrix& elemat2, Core::LinAlg::SerialDenseVector& elevec1,
     Core::LinAlg::SerialDenseVector& elevec2, Core::LinAlg::SerialDenseVector& elevec3)
@@ -1253,7 +1253,7 @@ int Discret::Elements::LubricationEleCalc<distype, probdim>::evaluate_action(
   // determine and evaluate action
   switch (action)
   {
-    case FourC::Lubrication::calc_error:
+    case Lubrication::calc_error:
     {
       // check if length suffices
       if (elevec1.length() < 1) FOUR_C_THROW("Result vector too short");
@@ -1268,7 +1268,7 @@ int Discret::Elements::LubricationEleCalc<distype, probdim>::evaluate_action(
       break;
     }
 
-    case FourC::Lubrication::calc_mean_pressures:
+    case Lubrication::calc_mean_pressures:
     {
       // get flag for inverting
       bool inverting = params.get<bool>("inverting");
@@ -1303,8 +1303,7 @@ void Discret::Elements::LubricationEleCalc<distype, probdim>::cal_error_compared
     const Core::Elements::Element* ele, Teuchos::ParameterList& params,
     Core::LinAlg::SerialDenseVector& errors)
 {
-  if (Teuchos::getIntegralValue<FourC::Lubrication::Action>(params, "action") !=
-      FourC::Lubrication::calc_error)
+  if (Teuchos::getIntegralValue<Lubrication::Action>(params, "action") != Lubrication::calc_error)
     FOUR_C_THROW("How did you get here?");
 
   // -------------- prepare common things first ! -----------------------
@@ -1314,13 +1313,12 @@ void Discret::Elements::LubricationEleCalc<distype, probdim>::cal_error_compared
   // integration points and weights
   // more GP than usual due to (possible) cos/exp fcts in analytical solutions
   const Core::FE::IntPointsAndWeights<nsd_ele_> intpoints(
-      FourC::Lubrication::DisTypeToGaussRuleForExactSol<distype>::rule);
+      Lubrication::DisTypeToGaussRuleForExactSol<distype>::rule);
 
-  const auto errortype =
-      Teuchos::getIntegralValue<FourC::Lubrication::CalcError>(params, "calcerrorflag");
+  const auto errortype = Teuchos::getIntegralValue<Lubrication::CalcError>(params, "calcerrorflag");
   switch (errortype)
   {
-    case FourC::Lubrication::calcerror_byfunction:
+    case Lubrication::calcerror_byfunction:
     {
       const int errorfunctno = params.get<int>("error function number");
 
@@ -1424,7 +1422,7 @@ void Discret::Elements::LubricationEleCalc<distype, probdim>::calculate_pressure
 {
   // integration points and weights
   const Core::FE::IntPointsAndWeights<nsd_ele_> intpoints(
-      FourC::Lubrication::DisTypeToOptGaussRule<distype>::rule);
+      Lubrication::DisTypeToOptGaussRule<distype>::rule);
 
   // integration loop
   for (int iquad = 0; iquad < intpoints.ip().nquad; ++iquad)

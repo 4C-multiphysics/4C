@@ -89,7 +89,7 @@ void Core::IO::read_value_from_yaml(Core::IO::ConstYamlNodeRef node, double& val
   }
 }
 
-void Core::IO::read_value_from_yaml(FourC::Core::IO::ConstYamlNodeRef node, bool& value)
+void Core::IO::read_value_from_yaml(Core::IO::ConstYamlNodeRef node, bool& value)
 {
   FOUR_C_ASSERT_ALWAYS(node.node.has_val(), "Expected a value node.");
 

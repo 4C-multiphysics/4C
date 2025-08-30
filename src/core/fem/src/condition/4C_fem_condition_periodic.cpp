@@ -1229,7 +1229,7 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
   }
 
   // 2. allocate graph
-  auto node_graph = std::make_shared<Core::LinAlg::Graph>(Copy, *node_row_map, 108, false);
+  Core::LinAlg::Graph node_graph(Copy, *node_row_map, 108, false);
   {
     // iterate all elements on this proc including ghosted ones and compute connectivity
     // standard part without master<->slave coupling
@@ -1251,7 +1251,7 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
         for (int col = 0; col < num_nodes_per_ele; ++col)
         {
           int neighbor_node = node_gids_per_ele[col];
-          const int err = node_graph->insert_global_indices(node_gid, 1, &neighbor_node);
+          const int err = node_graph.insert_global_indices(node_gid, 1, &neighbor_node);
           if (err < 0) FOUR_C_THROW("nodegraph->InsertGlobalIndices returned err={}", err);
         }
       }
@@ -1287,13 +1287,13 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
               // add connection to all slaves
               for (auto other_slave_gid : other_slave_gids)
               {
-                int err = node_graph->insert_global_indices(node_gid, 1, &other_slave_gid);
+                int err = node_graph.insert_global_indices(node_gid, 1, &other_slave_gid);
                 if (err < 0) FOUR_C_THROW("nodegraph->InsertGlobalIndices returned err={}", err);
 
                 if (node_row_map->my_gid(other_slave_gid))
                 {
                   int masterindex = node_gid;
-                  err = node_graph->insert_global_indices(other_slave_gid, 1, &masterindex);
+                  err = node_graph.insert_global_indices(other_slave_gid, 1, &masterindex);
                   if (err < 0) FOUR_C_THROW("nodegraph->InsertGlobalIndices returned err={}", err);
                 }
               }
@@ -1303,29 +1303,29 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
       }
     }
   }
-  int err = node_graph->fill_complete();
+  int err = node_graph.fill_complete();
   if (err) FOUR_C_THROW("graph->FillComplete returned {}", err);
 
-  const int myrank = Core::Communication::my_mpi_rank(node_graph->get_comm());
+  const int myrank = Core::Communication::my_mpi_rank(node_graph.get_comm());
 
   // get rowmap of the graph  (from blockmap -> map)
-  const Core::LinAlg::Map& graph_row_map = node_graph->row_map();
+  const Core::LinAlg::Map& graph_row_map = node_graph.row_map();
   const Core::LinAlg::Map graph_rowmap(graph_row_map.num_global_elements(),
       graph_row_map.num_my_elements(), graph_row_map.my_global_elements(), 0,
-      node_graph->get_comm());
+      node_graph.get_comm());
 
   // 3. set graph edge weights
   auto edge_weights = std::make_shared<Core::LinAlg::SparseMatrix>(graph_rowmap, 15);
   {
     // set standard value of edge weight to 1.0
-    for (int i = 0; i < node_graph->num_local_rows(); ++i)
+    for (int i = 0; i < node_graph.num_local_rows(); ++i)
     {
-      const int grow = node_graph->row_map().gid(i);
+      const int grow = node_graph.row_map().gid(i);
 
-      const int glob_length = node_graph->num_global_indices(grow);
+      const int glob_length = node_graph.num_global_indices(grow);
       int numentries = 0;
       std::vector<int> indices(glob_length);
-      node_graph->extract_global_row_copy(grow, glob_length, numentries, indices.data());
+      node_graph.extract_global_row_copy(grow, glob_length, numentries, indices.data());
 
       std::vector<double> values(numentries, 1.0);
       edge_weights->insert_global_values(grow, numentries, values.data(), indices.data());
@@ -1373,7 +1373,7 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
   sublist.set("LB_APPROACH", "PARTITION");
 
   auto newnodegraph =
-      Core::Rebalance::rebalance_graph(*node_graph, paramlist, node_weights, edge_weights);
+      Core::Rebalance::rebalance_graph(node_graph, paramlist, node_weights, edge_weights);
 
   const Core::LinAlg::Map newnoderowmap(-1, newnodegraph->row_map().num_my_elements(),
       newnodegraph->row_map().my_global_elements(), 0, discret_->get_comm());

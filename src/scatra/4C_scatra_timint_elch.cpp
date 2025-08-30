@@ -705,7 +705,7 @@ void ScaTra::ScaTraTimIntElch::evaluate_error_compared_to_analytical_sol()
       // get (squared) error values
       std::shared_ptr<Core::LinAlg::SerialDenseVector> errors =
           std::make_shared<Core::LinAlg::SerialDenseVector>(3);
-      discret_->evaluate_scalars(eleparams, errors);
+      discret_->evaluate_scalars(eleparams, *errors);
 
       double conerr1 = 0.0;
       double conerr2 = 0.0;
@@ -753,7 +753,7 @@ void ScaTra::ScaTraTimIntElch::evaluate_error_compared_to_analytical_sol()
       // get (squared) error values
       std::shared_ptr<Core::LinAlg::SerialDenseVector> errors =
           std::make_shared<Core::LinAlg::SerialDenseVector>(3);
-      discret_->evaluate_scalars(eleparams, errors);
+      discret_->evaluate_scalars(eleparams, *errors);
 
       // for the L2 norm, we need the square root
       double conerr1 = sqrt((*errors)[0]);
@@ -785,7 +785,7 @@ void ScaTra::ScaTraTimIntElch::evaluate_error_compared_to_analytical_sol()
       // get (squared) error values
       std::shared_ptr<Core::LinAlg::SerialDenseVector> errors =
           std::make_shared<Core::LinAlg::SerialDenseVector>(1);
-      discret_->evaluate_scalars(eleparams, errors);
+      discret_->evaluate_scalars(eleparams, *errors);
 
       // for the L2 norm, we need the square root
       double err = sqrt((*errors)[0]);
@@ -1372,7 +1372,7 @@ void ScaTra::ScaTraTimIntElch::evaluate_electrode_info_interior()
       // fourth component = integral of velocity divergence (ALE only)
       // fifth component  = integral of concentration times velocity divergence (ALE only)
       // sixth component  = integral of velocity times concentration gradient (ALE only)
-      FourC::Core::LinAlg::SerialDenseVector scalars(isale_ ? 6 : 3);
+      Core::LinAlg::SerialDenseVector scalars(isale_ ? 6 : 3);
 
       // evaluate current condition for electrode state of charge
       discret_->evaluate_scalars(condparams, scalars, "ElectrodeSOC", condid);
@@ -1672,7 +1672,7 @@ void ScaTra::ScaTraTimIntElch::setup_nat_conv()
   // evaluate integrals of concentrations and domain
   std::shared_ptr<Core::LinAlg::SerialDenseVector> scalars =
       std::make_shared<Core::LinAlg::SerialDenseVector>(num_dof_per_node() + 1);
-  discret_->evaluate_scalars(eleparams, scalars);
+  discret_->evaluate_scalars(eleparams, *scalars);
 
   // calculate mean concentration
   const double domint = (*scalars)[num_dof_per_node()];
@@ -2130,7 +2130,7 @@ double ScaTra::ScaTraTimIntElch::compute_conductivity(
   // evaluate integrals of scalar(s) and domain
   std::shared_ptr<Core::LinAlg::SerialDenseVector> sigma_domint =
       std::make_shared<Core::LinAlg::SerialDenseVector>(num_scal() + 2);
-  discret_->evaluate_scalars(eleparams, sigma_domint);
+  discret_->evaluate_scalars(eleparams, *sigma_domint);
   const double domint = (*sigma_domint)[num_scal() + 1];
 
   if (!specresist)

@@ -343,10 +343,9 @@ void STI::Algorithm::transfer_scatra_to_thermo(
             Core::FE::Discretization& thermodis = strategythermo_->mortar_discretization(condid);
 
             // pass interfacial scatra degrees of freedom to thermo discretization
-            const std::shared_ptr<Core::LinAlg::Vector<double>> iscatra =
-                std::make_shared<Core::LinAlg::Vector<double>>(*thermodis.dof_row_map(1));
-            Core::LinAlg::export_to(*scatra, *iscatra);
-            thermodis.set_state(1, "scatra", *iscatra);
+            Core::LinAlg::Vector<double> iscatra(*thermodis.dof_row_map(1));
+            Core::LinAlg::export_to(*scatra, iscatra);
+            thermodis.set_state(1, "scatra", iscatra);
           }
         }
 
@@ -392,10 +391,9 @@ void STI::Algorithm::transfer_thermo_to_scatra(
         Core::FE::Discretization& scatradis = strategyscatra_->mortar_discretization(condid);
 
         // pass interfacial thermo degrees of freedom to scatra discretization
-        const std::shared_ptr<Core::LinAlg::Vector<double>> ithermo =
-            std::make_shared<Core::LinAlg::Vector<double>>(*scatradis.dof_row_map(1));
-        Core::LinAlg::export_to(*thermo, *ithermo);
-        scatradis.set_state(1, "thermo", *ithermo);
+        Core::LinAlg::Vector<double> ithermo(*scatradis.dof_row_map(1));
+        Core::LinAlg::export_to(*thermo, ithermo);
+        scatradis.set_state(1, "thermo", ithermo);
       }
     }
   }

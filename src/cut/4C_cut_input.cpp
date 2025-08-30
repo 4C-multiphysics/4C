@@ -17,14 +17,14 @@ FOUR_C_NAMESPACE_OPEN
 
 void Cut::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 {
-  using namespace FourC::Cut;
+  using namespace Cut;
   using namespace Core::IO::InputSpecBuilders;
 
   list["CUT GENERAL"] = group("CUT GENERAL",
       {
 
           // intersection precision (double or cln)
-          deprecated_selection<FourC::Cut::CutFloatType>("KERNEL_INTERSECTION_FLOATTYPE",
+          deprecated_selection<Cut::CutFloatType>("KERNEL_INTERSECTION_FLOATTYPE",
               {
                   {"cln", floattype_cln},
                   {"double", floattype_double},
@@ -33,7 +33,7 @@ void Cut::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
                   .default_value = floattype_double}),
 
           // Computing disctance surface to point precision (double or cln)
-          deprecated_selection<FourC::Cut::CutFloatType>("KERNEL_DISTANCE_FLOATTYPE",
+          deprecated_selection<Cut::CutFloatType>("KERNEL_DISTANCE_FLOATTYPE",
               {
                   {"cln", floattype_cln},
                   {"double", floattype_double},
@@ -44,7 +44,7 @@ void Cut::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
           // A general floattype for Cut::Position for Embedded Elements (compute_distance)
           // If specified this floattype is used for all computations of Cut::Position with
           // embedded elements
-          deprecated_selection<FourC::Cut::CutFloatType>("GENERAL_POSITION_DISTANCE_FLOATTYPE",
+          deprecated_selection<Cut::CutFloatType>("GENERAL_POSITION_DISTANCE_FLOATTYPE",
               {
                   {"none", floattype_none},
                   {"cln", floattype_cln},
@@ -56,7 +56,7 @@ void Cut::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
 
           // A general floattype for Cut::Position for Elements (ComputePosition)
           // If specified this floattype is used for all computations of Cut::Position
-          deprecated_selection<FourC::Cut::CutFloatType>("GENERAL_POSITION_POSITION_FLOATTYPE",
+          deprecated_selection<Cut::CutFloatType>("GENERAL_POSITION_POSITION_FLOATTYPE",
               {
                   {"none", floattype_none},
                   {"cln", floattype_cln},
@@ -66,8 +66,7 @@ void Cut::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list)
                   .default_value = floattype_none}),
 
           // Specify which Referenceplanes are used in DirectDivergence
-          deprecated_selection<FourC::Cut::CutDirectDivergenceRefplane>(
-              "DIRECT_DIVERGENCE_REFPLANE",
+          deprecated_selection<Cut::CutDirectDivergenceRefplane>("DIRECT_DIVERGENCE_REFPLANE",
               {
                   {"all", DirDiv_refplane_all},
                   {"diagonal_side", DirDiv_refplane_diagonal_side},

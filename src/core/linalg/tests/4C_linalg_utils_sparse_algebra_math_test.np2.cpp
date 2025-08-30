@@ -161,8 +161,7 @@ namespace
       const double tol = 1e-10;
       const int power = 3;
 
-      std::shared_ptr<Core::LinAlg::Graph> sparsity_pattern =
-          std::make_shared<Core::LinAlg::Graph>(A->Graph());
+      Core::LinAlg::Graph sparsity_pattern(A->Graph());
 
       std::shared_ptr<Core::LinAlg::SparseMatrix> A_thresh =
           Core::LinAlg::threshold_matrix(A_sparse, tol);

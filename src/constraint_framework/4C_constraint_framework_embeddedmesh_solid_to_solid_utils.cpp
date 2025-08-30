@@ -164,7 +164,7 @@ std::shared_ptr<Constraints::EmbeddedMesh::SolidInteractionPair> coupling_pair_m
 
 std::vector<Constraints::EmbeddedMesh::BackgroundInterfaceInfo>
 Constraints::EmbeddedMesh::get_information_background_and_interface_elements(
-    const std::shared_ptr<Cut::CutWizard>& cutwizard, Core::FE::Discretization& discret,
+    Cut::CutWizard& cutwizard, Core::FE::Discretization& discret,
     std::vector<int>& ids_cut_elements_col,
     std::vector<Core::Elements::Element*>& cut_elements_col_vector)
 {
@@ -174,10 +174,10 @@ Constraints::EmbeddedMesh::get_information_background_and_interface_elements(
   std::set<int> ids_cut_elements;
 
   // Perform checks before building the coupling pairs
-  cutwizard->check_if_mesh_intersection_and_cut();
+  cutwizard.check_if_mesh_intersection_and_cut();
 
   // Get the mesh that represents the background mesh
-  Cut::Mesh background_mesh = (cutwizard->get_intersection())->normal_mesh();
+  Cut::Mesh background_mesh = (cutwizard.get_intersection())->normal_mesh();
 
   // Get the elements inside the background mesh
   const std::map<int, std::shared_ptr<Cut::Element>>& background_elements =

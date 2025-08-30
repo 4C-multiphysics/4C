@@ -142,7 +142,7 @@ void ScaTra::ScaTraTimIntLoma::compute_initial_mass()
   // evaluate integral of inverse temperature
   std::shared_ptr<Core::LinAlg::SerialDenseVector> scalars =
       std::make_shared<Core::LinAlg::SerialDenseVector>(num_scal() + 1);
-  discret_->evaluate_scalars(eleparams, scalars);
+  discret_->evaluate_scalars(eleparams, *scalars);
   discret_->clear_state();  // clean up
 
   // compute initial mass times gas constant: R*M_0 = int(1/T_0)*tp
@@ -184,7 +184,7 @@ void ScaTra::ScaTraTimIntLoma::compute_therm_pressure_from_mass_cons()
   // evaluate integral of inverse temperature
   std::shared_ptr<Core::LinAlg::SerialDenseVector> scalars =
       std::make_shared<Core::LinAlg::SerialDenseVector>(num_scal() + 1);
-  discret_->evaluate_scalars(eleparams, scalars);
+  discret_->evaluate_scalars(eleparams, *scalars);
   discret_->clear_state();  // clean up
 
   // compute thermodynamic pressure: tp = R*M_0/int(1/T)

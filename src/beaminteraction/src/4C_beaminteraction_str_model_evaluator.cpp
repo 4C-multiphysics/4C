@@ -213,7 +213,7 @@ void Solid::ModelEvaluator::BeamInteraction::setup()
 
   // extract map for each eletype that is in discretization
   eletypeextractor_ = std::make_shared<FourC::BeamInteraction::Utils::MapExtractor>();
-  FourC::BeamInteraction::Utils::setup_ele_type_map_extractor(ia_discret_, eletypeextractor_);
+  FourC::BeamInteraction::Utils::setup_ele_type_map_extractor(*ia_discret_, *eletypeextractor_);
 
   // initialize and setup submodel evaluators
   init_and_setup_sub_model_evaluators();
@@ -1209,7 +1209,7 @@ void Solid::ModelEvaluator::BeamInteraction::update_maps()
   ia_state_ptr_->get_stiff() = std::make_shared<Core::LinAlg::SparseMatrix>(
       *ia_discret_->dof_row_map(), 81, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
-  FourC::BeamInteraction::Utils::setup_ele_type_map_extractor(ia_discret_, eletypeextractor_);
+  FourC::BeamInteraction::Utils::setup_ele_type_map_extractor(*ia_discret_, *eletypeextractor_);
 }
 
 /*-----------------------------------------------------------------------------*

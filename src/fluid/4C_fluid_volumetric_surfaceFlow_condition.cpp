@@ -928,7 +928,7 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::evaluate_traction_velocity_comp(
 
 
   // Export and set state
-  export_and_set_boundary_values(*cond_velocities_, drt_velocities_, "velaf");
+  export_and_set_boundary_values(*cond_velocities_, *drt_velocities_, "velaf");
 
   eleparams.set("flowrate", flowrate);
   eleparams.set("area", area_);
@@ -1187,7 +1187,7 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::correct_flow_rate(
   // calculate flow rate
   // -------------------------------------------------------------------
   // Export and set state
-  export_and_set_boundary_values(*cond_velocities_, drt_velocities_, "velaf");
+  export_and_set_boundary_values(*cond_velocities_, *drt_velocities_, "velaf");
 
   double actflowrate = this->flow_rate_calculation(eleparams, time, ds_condname, action, condid_);
 
@@ -1243,7 +1243,7 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::correct_flow_rate(
       *border_radii_, *vnormal_, *params);
 
   // Export and set state
-  export_and_set_boundary_values(*correction_velnp, drt_velocities_, "velaf");
+  export_and_set_boundary_values(*correction_velnp, *drt_velocities_, "velaf");
 
   double corrective_flowrate =
       this->flow_rate_calculation(eleparams, time, ds_condname, action, condid_);
@@ -1844,7 +1844,7 @@ FLD::Utils::TotalTractionCorrector::TotalTractionCorrector(
  | extractor of boundary condition                                      |
  *----------------------------------------------------------------------*/
 void FLD::Utils::TotalTractionCorrector::evaluate_velocities(
-    std::shared_ptr<Core::LinAlg::Vector<double>> velocities, double time, double theta, double dta)
+    Core::LinAlg::Vector<double>& velocities, double time, double theta, double dta)
 {
   std::map<const int, std::shared_ptr<class FluidVolumetricSurfaceFlowBc>>::iterator mapiter;
 
@@ -1860,7 +1860,7 @@ void FLD::Utils::TotalTractionCorrector::evaluate_velocities(
     {
       Teuchos::ParameterList eleparams;
 
-      discret_->set_state("velaf", *velocities);
+      discret_->set_state("velaf", velocities);
 
       flowrate = mapiter->second->FluidVolumetricSurfaceFlowBc::flow_rate_calculation(
           eleparams, time, "TotalTractionCorrectionCond", FLD::calc_flowrate, mapiter->first);
@@ -1933,34 +1933,32 @@ void FLD::Utils::TotalTractionCorrector::read_restart(Core::IO::DiscretizationRe
  |  Export boundary values and setstate                     ismail 07/14|
  *----------------------------------------------------------------------*/
 void FLD::Utils::FluidVolumetricSurfaceFlowBc::export_and_set_boundary_values(
-    Core::LinAlg::Vector<double>& source, std::shared_ptr<Core::LinAlg::Vector<double>> target,
-    std::string name)
+    Core::LinAlg::Vector<double>& source, Core::LinAlg::Vector<double>& target, std::string name)
 {
   // define the exporter
-  Core::LinAlg::Export exporter(source.get_map(), target->get_map());
+  Core::LinAlg::Export exporter(source.get_map(), target.get_map());
   // Export source vector to target vector
-  int err = target->export_to(source, exporter, Zero);
+  int err = target.export_to(source, exporter, Zero);
   // check if the exporting was successful
   if (err) FOUR_C_THROW("Export using exporter returned err={}", err);
   // Set state
-  discret_->set_state(name, *target);
+  discret_->set_state(name, target);
 }
 
 /*----------------------------------------------------------------------*
  |  Export boundary values and setstate                     ismail 07/14|
  *----------------------------------------------------------------------*/
 void FLD::Utils::TotalTractionCorrector::export_and_set_boundary_values(
-    Core::LinAlg::Vector<double>& source, std::shared_ptr<Core::LinAlg::Vector<double>> target,
-    std::string name)
+    Core::LinAlg::Vector<double>& source, Core::LinAlg::Vector<double>& target, std::string name)
 {
   // define the exporter
-  Core::LinAlg::Export exporter(source.get_map(), target->get_map());
+  Core::LinAlg::Export exporter(source.get_map(), target.get_map());
   // Export source vector to target vector
-  int err = target->export_to(source, exporter, Zero);
+  int err = target.export_to(source, exporter, Zero);
   // check if the exporting was successful
   if (err) FOUR_C_THROW("Export using exporter returned err={}", err);
   // Set state
-  discret_->set_state(name, *target);
+  discret_->set_state(name, target);
 }
 
 FOUR_C_NAMESPACE_CLOSE

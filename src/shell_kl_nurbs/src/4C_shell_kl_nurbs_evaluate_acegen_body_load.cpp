@@ -12,7 +12,7 @@ FOUR_C_NAMESPACE_OPEN
 
 
 
-void FourC::Discret::Elements::KirchhoffLoveShellNurbs::evaluate_body_load_auto_generated(
+void Discret::Elements::KirchhoffLoveShellNurbs::evaluate_body_load_auto_generated(
     const Core::FE::IntegrationPoints1D& intpoints,
     const std::vector<Core::LinAlg::SerialDenseVector>& knots,
     const Core::LinAlg::Matrix<9, 1>& weights, const Core::LinAlg::Matrix<9, 3>& X,

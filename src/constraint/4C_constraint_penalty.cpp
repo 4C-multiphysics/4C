@@ -115,10 +115,7 @@ void Constraints::ConstraintPenalty::initialize(const double& time)
  *-----------------------------------------------------------------------*/
 void Constraints::ConstraintPenalty::evaluate(Teuchos::ParameterList& params,
     std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix1,
-    std::shared_ptr<Core::LinAlg::SparseOperator> systemmatrix2,
-    std::shared_ptr<Core::LinAlg::Vector<double>> systemvector1,
-    std::shared_ptr<Core::LinAlg::Vector<double>> systemvector2,
-    std::shared_ptr<Core::LinAlg::Vector<double>> systemvector3)
+    std::shared_ptr<Core::LinAlg::Vector<double>> systemvector1)
 {
   // choose action
   switch (constrtype_)

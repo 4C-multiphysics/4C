@@ -812,8 +812,8 @@ void Solid::TimIntImpl::update_krylov_space_projection()
 /* evaluate external forces and its linearization at t_{n+1} */
 void Solid::TimIntImpl::apply_force_stiff_external(const double time,  //!< evaluation time
     const std::shared_ptr<Core::LinAlg::Vector<double>> dis,           //!< old displacement state
-    const std::shared_ptr<Core::LinAlg::Vector<double>> disn,          //!< new displacement state
-    const std::shared_ptr<Core::LinAlg::Vector<double>> vel,           //!< velocity state
+    Core::LinAlg::Vector<double>& disn,                                //!< new displacement state
+    Core::LinAlg::Vector<double>& vel,                                 //!< velocity state
     Core::LinAlg::Vector<double>& fext,                                //!< external force
     std::shared_ptr<Core::LinAlg::SparseOperator>& fextlin  //!< linearization of external force
 )
@@ -828,7 +828,7 @@ void Solid::TimIntImpl::apply_force_stiff_external(const double time,  //!< eval
   discret_->clear_state();
   discret_->set_state(0, "displacement", *dis);
 
-  if (damping_ == Inpar::Solid::damp_material) discret_->set_state(0, "velocity", *vel);
+  if (damping_ == Inpar::Solid::damp_material) discret_->set_state(0, "velocity", vel);
   // get load vector
   const Teuchos::ParameterList& sdyn = Global::Problem::instance()->structural_dynamic_params();
   bool loadlin = (sdyn.get<bool>("LOADLIN"));
@@ -837,7 +837,7 @@ void Solid::TimIntImpl::apply_force_stiff_external(const double time,  //!< eval
     discret_->evaluate_neumann(p, fext);
   else
   {
-    discret_->set_state(0, "displacement new", *disn);
+    discret_->set_state(0, "displacement new", disn);
     discret_->evaluate_neumann(p, fext, fextlin.get());
   }
 
@@ -849,8 +849,7 @@ void Solid::TimIntImpl::apply_force_stiff_external(const double time,  //!< eval
 /* evaluate ordinary internal force, its stiffness at state */
 void Solid::TimIntImpl::apply_force_stiff_internal(const double time, const double dt,
     const std::shared_ptr<Core::LinAlg::Vector<double>> dis,
-    const std::shared_ptr<Core::LinAlg::Vector<double>> disi,
-    const std::shared_ptr<Core::LinAlg::Vector<double>> vel,
+    const std::shared_ptr<Core::LinAlg::Vector<double>> disi, Core::LinAlg::Vector<double>& vel,
     std::shared_ptr<Core::LinAlg::Vector<double>> fint,
     std::shared_ptr<Core::LinAlg::SparseOperator> stiff, Teuchos::ParameterList& params,
     std::shared_ptr<Core::LinAlg::SparseOperator> damp)
@@ -872,7 +871,7 @@ void Solid::TimIntImpl::apply_force_stiff_internal(const double time, const doub
   discret_->clear_state();
   discret_->set_state(0, "residual displacement", *disi);
   discret_->set_state(0, "displacement", *dis);
-  if (damping_ == Inpar::Solid::damp_material) discret_->set_state(0, "velocity", *vel);
+  if (damping_ == Inpar::Solid::damp_material) discret_->set_state(0, "velocity", vel);
   // fintn_->PutScalar(0.0);  // initialise internal force vector
 
   /* Additionally we hand in "fint_str_"
@@ -2490,13 +2489,12 @@ int Solid::TimIntImpl::uzawa_linear_newton_full()
       // get constraint matrix with and without Dirichlet zeros
       std::shared_ptr<Core::LinAlg::SparseMatrix> constr =
           (std::dynamic_pointer_cast<Core::LinAlg::SparseMatrix>(conman_->get_constr_matrix()));
-      std::shared_ptr<Core::LinAlg::SparseMatrix> constrT =
-          std::make_shared<Core::LinAlg::SparseMatrix>(*constr);
+      Core::LinAlg::SparseMatrix constrT(*constr);
 
       constr->apply_dirichlet(*(dbcmaps_->cond_map()), false);
 
       // Call constraint solver to solve system with zeros on diagonal
-      consolv_->solve(*system_matrix(), *constr, *constrT, disi_, lagrincr, *fres_, *conrhs);
+      consolv_->solve(*system_matrix(), *constr, constrT, disi_, lagrincr, *fres_, *conrhs);
 
       // *********** time measurement ***********
       dtsolve_ = timer_->wallTime() - dtcpu;

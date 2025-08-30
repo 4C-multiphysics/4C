@@ -264,22 +264,6 @@ namespace Coupling::Adapter
     /// idea is the same for all of them.
 
     /// transfer a dof vector from master to slave
-    std::shared_ptr<Core::LinAlg::FEVector<double>> master_to_slave(
-        std::shared_ptr<Core::LinAlg::FEVector<double>> mv  ///< master vector (to be transferred)
-    ) const
-    {
-      return master_to_slave(*mv);
-    }
-
-    /// transfer a dof vector from slave to master
-    std::shared_ptr<Core::LinAlg::FEVector<double>> slave_to_master(
-        std::shared_ptr<Core::LinAlg::FEVector<double>> sv  ///< slave vector (to be transferred)
-    ) const
-    {
-      return slave_to_master(*sv);
-    }
-
-    /// transfer a dof vector from master to slave
     std::shared_ptr<Core::LinAlg::Vector<double>> master_to_slave(
         const Core::LinAlg::Vector<double>& mv  ///< master vector (to be transferred)
     ) const override;

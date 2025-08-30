@@ -4781,7 +4781,7 @@ FLD::FluidImplicitTimeInt::evaluate_error_compared_to_analytical_sol()
           std::make_shared<Core::LinAlg::SerialDenseVector>(3 + 3);
 
       // call loop over elements (assemble nothing)
-      discret_->evaluate_scalars(eleparams, errors);
+      discret_->evaluate_scalars(eleparams, *errors);
       discret_->clear_state();
 
       (*relerror)[0] = sqrt((*errors)[0]) / sqrt((*errors)[3]);
@@ -5111,7 +5111,7 @@ void FLD::FluidImplicitTimeInt::compute_flow_rates() const
   if (alefluid_)
   {
     const std::map<int, double> flowrates = FLD::Utils::compute_flow_rates(
-        *discret_, velnp_, gridv_, dispnp_, condstring, physicaltype_);
+        *discret_, *velnp_, gridv_, dispnp_, condstring, physicaltype_);
     // const std::map<int,double> volume = FLD::Utils::compute_volume(*discret_,
     // velnp_,gridv_,dispnp_,physicaltype_);
 

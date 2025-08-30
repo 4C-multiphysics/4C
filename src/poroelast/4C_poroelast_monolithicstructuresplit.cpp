@@ -262,7 +262,7 @@ void PoroElast::MonolithicStructureSplit::extract_field_vectors(
         structure_field()->interface()->insert_other_vector(*sox);
     structure_field()->interface()->insert_fsi_cond_vector(*scx, *s);
 
-    FourC::Core::LinAlg::Vector<double> zeros(s->get_map(), true);
+    Core::LinAlg::Vector<double> zeros(s->get_map(), true);
     Core::LinAlg::apply_dirichlet_to_system(
         *s, zeros, *(structure_field()->get_dbc_map_extractor()->cond_map()));
 

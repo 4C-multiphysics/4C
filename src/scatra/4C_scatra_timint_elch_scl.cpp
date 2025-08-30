@@ -750,7 +750,7 @@ void ScaTra::ScaTraTimIntElchSCL::setup_coupling()
       my_micro_permuted_node_gids.data(), 0, comm);
 
   // setup coupling adapter between micro (slave) and macro (master) for all dof of the nodes
-  FourC::Coupling::Adapter::Coupling macro_micro_coupling_adapter_temp;
+  Coupling::Adapter::Coupling macro_micro_coupling_adapter_temp;
   macro_micro_coupling_adapter_temp.setup_coupling(*discret_, *microdis, master_node_map,
       slave_node_map, perm_slave_node_map, num_dof_per_node());
 
@@ -933,7 +933,7 @@ void ScaTra::ScaTraTimIntElchSCL::assemble_and_apply_mesh_tying()
 
       sparse_systemmatrix->add(*system_matrix(), false, 1.0, 1.0);
 
-      FourC::Coupling::Adapter::CouplingSlaveConverter micro_side_converter(
+      Coupling::Adapter::CouplingSlaveConverter micro_side_converter(
           *macro_micro_coupling_adapter_);
 
       // micro: interior - interior
@@ -964,7 +964,7 @@ void ScaTra::ScaTraTimIntElchSCL::assemble_and_apply_mesh_tying()
 
       block_systemmatrix->matrix(0, 0).add(*system_matrix(), false, 1.0, 1.0);
 
-      FourC::Coupling::Adapter::CouplingSlaveConverter micro_side_converter(
+      Coupling::Adapter::CouplingSlaveConverter micro_side_converter(
           *macro_micro_coupling_adapter_);
 
       // micro: interior - interior

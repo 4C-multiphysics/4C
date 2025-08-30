@@ -136,7 +136,7 @@ Core::Communication::ParObject* Discret::Elements::SolidPoroPressureVelocityBase
 void Discret::Elements::SolidPoroPressureVelocityBasedType::nodal_block_information(
     Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
 {
-  FourC::Solid::Utils::nodal_block_information_solid(dwele, numdf, dimns, nv, np);
+  Solid::Utils::nodal_block_information_solid(dwele, numdf, dimns, nv, np);
 }
 
 Core::LinAlg::SerialDenseMatrix
@@ -192,7 +192,7 @@ void Discret::Elements::SolidPoroPressureVelocityBased::set_params_interface_ptr
   {
     interface_ptr_ = p.get<std::shared_ptr<Core::Elements::ParamsInterface>>("interface");
     solid_interface_ptr_ =
-        std::dynamic_pointer_cast<FourC::Solid::Elements::ParamsInterface>(interface_ptr_);
+        std::dynamic_pointer_cast<Solid::Elements::ParamsInterface>(interface_ptr_);
   }
   else
   {
@@ -213,7 +213,7 @@ bool Discret::Elements::SolidPoroPressureVelocityBased::read_element(const std::
   anisotropic_permeability_property_.nodal_coeffs_.resize(3);
 
   // read number of material model
-  set_material(0, Mat::factory(FourC::Solid::Utils::ReadElement::read_element_material(container)));
+  set_material(0, Mat::factory(Solid::Utils::ReadElement::read_element_material(container)));
 
   // read kinematic type
   solid_ele_property_.kintype = container.get<Inpar::Solid::KinemType>("KINEM");

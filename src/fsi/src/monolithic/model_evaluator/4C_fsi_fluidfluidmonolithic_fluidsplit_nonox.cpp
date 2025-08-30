@@ -781,7 +781,7 @@ void FSI::FluidFluidMonolithicFluidSplitNoNOX::output()
   if (structure_field()->get_constraint_manager()->have_monitor())
   {
     structure_field()->get_constraint_manager()->compute_monitor_values(
-        structure_field()->dispnp());
+        *structure_field()->dispnp());
     if (Core::Communication::my_mpi_rank(get_comm()) == 0)
       structure_field()->get_constraint_manager()->print_monitor_values();
   }

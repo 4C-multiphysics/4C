@@ -361,14 +361,14 @@ void Core::LinAlg::SparseMatrix::reset()
   const Core::LinAlg::Map rowmap = Map(sysmat_->RowMap());
   std::vector<int> numentries(rowmap.num_my_elements());
 
-  auto graph = std::make_shared<Core::LinAlg::Graph>(sysmat_->Graph());
+  Core::LinAlg::Graph graph(sysmat_->Graph());
 
   if (filled())
   {
     for (std::size_t i = 0; i < numentries.size(); ++i)
     {
       int* indices;
-      int err = graph->extract_local_row_view(i, numentries[i], indices);
+      int err = graph.extract_local_row_view(i, numentries[i], indices);
       if (err != 0) FOUR_C_THROW("ExtractMyRowView failed");
     }
   }
@@ -378,7 +378,7 @@ void Core::LinAlg::SparseMatrix::reset()
     // otherwise assembly would be extremely expensive!
     for (std::size_t i = 0; i < numentries.size(); ++i)
     {
-      numentries[i] = graph->num_allocated_local_indices(i);
+      numentries[i] = graph.num_allocated_local_indices(i);
     }
   }
   // Remove old matrix before creating a new one so we do not have old and
@@ -882,12 +882,12 @@ void Core::LinAlg::SparseMatrix::un_complete()
 
   if (not filled()) return;
 
-  auto graph = std::make_shared<Core::LinAlg::Graph>(sysmat_->Graph());
+  Core::LinAlg::Graph graph(sysmat_->Graph());
 
-  std::vector<int> nonzeros(graph->num_local_rows());
+  std::vector<int> nonzeros(graph.num_local_rows());
   for (std::size_t i = 0; i < nonzeros.size(); ++i)
   {
-    nonzeros[i] = graph->num_local_indices(i);
+    nonzeros[i] = graph.num_local_indices(i);
   }
 
   const Core::LinAlg::Map& rowmap = Map(sysmat_->RowMap());

@@ -190,7 +190,7 @@ void Solid::TimIntGenAlpha::setup()
   // external force vector F_{n+1} at new time
   fextn_ = Core::LinAlg::create_vector(*dof_row_map_view(), true);
   // set initial external force vector
-  apply_force_external((*time_)[0], (*dis_)(0), disn_, (*vel_)(0), *fext_);
+  apply_force_external((*time_)[0], (*dis_)(0), disn_, *(*vel_)(0), *fext_);
 
   // inertial force vector F_{int;n} at last time
   finert_ = Core::LinAlg::create_vector(*dof_row_map_view(), true);
@@ -226,7 +226,7 @@ void Solid::TimIntGenAlpha::setup()
   {
     // set initial internal force vector
     apply_force_stiff_internal(
-        (*time_)[0], (*dt_)[0], (*dis_)(0), zeros_, (*vel_)(0), fint_, stiff_, params);
+        (*time_)[0], (*dt_)[0], (*dis_)(0), zeros_, *(*vel_)(0), fint_, stiff_, params);
   }
   else
   {
@@ -342,7 +342,7 @@ void Solid::TimIntGenAlpha::evaluate_force_stiff_residual(Teuchos::ParameterList
 
   // build new external forces
   fextn_->put_scalar(0.0);
-  apply_force_stiff_external(timen_, (*dis_)(0), disn_, (*vel_)(0), *fextn_, stiff_);
+  apply_force_stiff_external(timen_, (*dis_)(0), *disn_, *(*vel_)(0), *fextn_, stiff_);
 
   // additional external forces are added (e.g. interface forces)
   fextn_->update(1.0, *fifc_, 1.0);
@@ -357,7 +357,7 @@ void Solid::TimIntGenAlpha::evaluate_force_stiff_residual(Teuchos::ParameterList
   if (have_nonlinear_mass() == Inpar::Solid::MassLin::ml_none)
   {
     apply_force_stiff_internal(
-        timen_, (*dt_)[0], disn_, disi_, veln_, fintn_, stiff_, params, damp_);
+        timen_, (*dt_)[0], disn_, disi_, *veln_, fintn_, stiff_, params, damp_);
   }
   else
   {
@@ -536,7 +536,7 @@ void Solid::TimIntGenAlpha::evaluate_force_residual()
 
   // build new external forces
   fextn_->put_scalar(0.0);
-  apply_force_external(timen_, (*dis_)(0), disn_, (*vel_)(0), *fextn_);
+  apply_force_external(timen_, (*dis_)(0), disn_, *(*vel_)(0), *fextn_);
 
   // additional external forces are added (e.g. interface forces)
   fextn_->update(1.0, *fifc_, 1.0);
@@ -552,7 +552,7 @@ void Solid::TimIntGenAlpha::evaluate_force_residual()
   // build new internal forces and stiffness
   if (have_nonlinear_mass() == Inpar::Solid::MassLin::ml_none)
   {
-    apply_force_internal(timen_, (*dt_)[0], disn_, disi_, veln_, fintn_);
+    apply_force_internal(timen_, (*dt_)[0], disn_, disi_, *veln_, fintn_);
   }
   else
   {

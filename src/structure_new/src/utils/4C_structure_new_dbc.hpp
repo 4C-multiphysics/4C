@@ -16,11 +16,6 @@
 
 #include <memory>
 
-// forward declarations
-class Map;
-
-#include "4C_utils_parameter_list.fwd.hpp"
-
 FOUR_C_NAMESPACE_OPEN
 
 namespace Core::FE
@@ -33,6 +28,7 @@ namespace Core::LinAlg
   class SparseOperator;
   class SparseMatrix;
   class MapExtractor;
+  class Map;
 }  // namespace Core::LinAlg
 
 namespace Core::Conditions

@@ -201,7 +201,7 @@ ScaTra::ScaTraTimIntImpl::ScaTraTimIntImpl(std::shared_ptr<Core::FE::Discretizat
   const int restart_step = problem_->restart();
   if (restart_step > 0)
   {
-    FourC::Core::IO::DiscretizationReader reader(
+    Core::IO::DiscretizationReader reader(
         discret_, Global::Problem::instance()->input_control_file(), restart_step);
 
     time_ = reader.read_double("time");
@@ -234,7 +234,7 @@ void ScaTra::ScaTraTimIntImpl::init()
   // connect degrees of freedom for periodic boundary conditions
   // -------------------------------------------------------------------
   // note: pbcs have to be correctly set up before extended ghosting is applied
-  FourC::Core::Conditions::PeriodicBoundaryConditions pbc(discret_, false);
+  Core::Conditions::PeriodicBoundaryConditions pbc(discret_, false);
   if (pbc.has_pbc() and not isinit_)
   {
     pbc.update_dofs_for_periodic_boundary_conditions();
@@ -698,7 +698,7 @@ void ScaTra::ScaTraTimIntImpl::setup_nat_conv()
   // evaluate integrals of concentrations and domain
   std::shared_ptr<Core::LinAlg::SerialDenseVector> scalars =
       std::make_shared<Core::LinAlg::SerialDenseVector>(num_scal() + 1);
-  discret_->evaluate_scalars(eleparams, scalars);
+  discret_->evaluate_scalars(eleparams, *scalars);
 
   // calculate mean concentrations
   const double domint = (*scalars)[num_scal()];

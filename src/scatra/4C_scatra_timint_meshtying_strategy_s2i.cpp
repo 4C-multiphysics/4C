@@ -600,10 +600,9 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
             icoupmortar_[kinetics_slave_cond.first]->interface()->discret();
 
         // export global state vector to mortar interface
-        std::shared_ptr<Core::LinAlg::Vector<double>> iphinp =
-            std::make_shared<Core::LinAlg::Vector<double>>(*idiscret.dof_col_map(), false);
-        Core::LinAlg::export_to(*scatratimint_->phiafnp(), *iphinp);
-        idiscret.set_state("iphinp", *iphinp);
+        Core::LinAlg::Vector<double> iphinp(*idiscret.dof_col_map(), false);
+        Core::LinAlg::export_to(*scatratimint_->phiafnp(), iphinp);
+        idiscret.set_state("iphinp", iphinp);
 
         // create parameter list for mortar integration cells
         Teuchos::ParameterList params;
@@ -1466,7 +1465,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_and_assemble_capacitive_contribution
       blockkss->complete();
 
       // prepare linearizations of slave fluxes due to capacitance w.r.t. master dofs
-      FourC::Core::LinAlg::SparseMatrix ksm(*icoup_->slave_dof_map(), 81, false);
+      Core::LinAlg::SparseMatrix ksm(*icoup_->slave_dof_map(), 81, false);
       Coupling::Adapter::MatrixColTransform()(islavematrix_->row_map(), islavematrix_->col_map(),
           *islavematrix_, -1.0, Coupling::Adapter::CouplingSlaveConverter(*icoup_), ksm);
       ksm.complete(*icoup_->master_dof_map(), *icoup_->slave_dof_map());
@@ -1475,7 +1474,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_and_assemble_capacitive_contribution
       blockksm->complete();
 
       // prepare linearizations of master fluxes due to capacitance w.r.t. slave dofs
-      FourC::Core::LinAlg::SparseMatrix kms(*icoup_->master_dof_map(), 81, false);
+      Core::LinAlg::SparseMatrix kms(*icoup_->master_dof_map(), 81, false);
       Coupling::Adapter::MatrixRowTransform()(
           *imasterslavematrix_, 1.0, Coupling::Adapter::CouplingSlaveConverter(*icoup_), kms);
       kms.complete(*icoup_->slave_dof_map(), *icoup_->master_dof_map());
@@ -1484,7 +1483,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_and_assemble_capacitive_contribution
       blockkms->complete();
 
       // derive linearizations of master fluxes w.r.t. master dofs
-      FourC::Core::LinAlg::SparseMatrix kmm(*icoup_->master_dof_map(), 81, false);
+      Core::LinAlg::SparseMatrix kmm(*icoup_->master_dof_map(), 81, false);
       Coupling::Adapter::MatrixRowColTransform()(*imasterslavematrix_, -1.0,
           Coupling::Adapter::CouplingSlaveConverter(*icoup_),
           Coupling::Adapter::CouplingSlaveConverter(*icoup_), kmm);
@@ -3366,7 +3365,7 @@ void ScaTra::MeshtyingStrategyS2I::output_interface_flux() const
       const int condition_id = s2ikinetics_cond->parameters().get<int>("ConditionID");
       auto s2i_flux =
           std::make_shared<Core::LinAlg::SerialDenseVector>(scatratimint_->num_dof_per_node());
-      FourC::Core::LinAlg::SerialDenseVector boundaryint_vector(1);
+      Core::LinAlg::SerialDenseVector boundaryint_vector(1);
       {
         Teuchos::ParameterList condparams;
 

@@ -78,7 +78,7 @@ namespace ParticleInteraction
     void write_restart() const;
 
     //! read restart of history pair handler
-    void read_restart(const std::shared_ptr<Core::IO::DiscretizationReader> reader);
+    void read_restart(Core::IO::DiscretizationReader& reader);
 
     //! get reference to particle tangential history pair data
     inline DEMHistoryPairTangentialData& get_ref_to_particle_tangential_history_data()

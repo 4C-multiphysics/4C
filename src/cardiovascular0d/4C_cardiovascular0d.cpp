@@ -495,10 +495,9 @@ void Utils::Cardiovascular0D::evaluate_d_struct_dp(
 
 /*-----------------------------------------------------------------------*
  *-----------------------------------------------------------------------*/
-void Utils::Cardiovascular0D::set_state(
-    const std::string& state, std::shared_ptr<Core::LinAlg::Vector<double>> V)
+void Utils::Cardiovascular0D::set_state(const std::string& state, Core::LinAlg::Vector<double>& V)
 {
-  actdisc_->set_state(state, *V);
+  actdisc_->set_state(state, V);
 }
 
 FOUR_C_NAMESPACE_CLOSE

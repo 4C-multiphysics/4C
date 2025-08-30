@@ -1070,7 +1070,7 @@ void Lubrication::TimIntImpl::evaluate_error_compared_to_analytical_sol()
   // get (squared) error values
   std::shared_ptr<Core::LinAlg::SerialDenseVector> errors =
       std::make_shared<Core::LinAlg::SerialDenseVector>(4);
-  discret_->evaluate_scalars(eleparams, errors);
+  discret_->evaluate_scalars(eleparams, *errors);
   discret_->clear_state();
 
   // std::vector containing
@@ -1169,7 +1169,7 @@ void Lubrication::TimIntImpl::output_mean_pressures(const int num)
     // evaluate integrals of pressure(s) and domain
     std::shared_ptr<Core::LinAlg::SerialDenseVector> pressures =
         std::make_shared<Core::LinAlg::SerialDenseVector>(2);
-    discret_->evaluate_scalars(eleparams, pressures);
+    discret_->evaluate_scalars(eleparams, *pressures);
     discret_->clear_state();  // clean up
 
     // extract domain integral

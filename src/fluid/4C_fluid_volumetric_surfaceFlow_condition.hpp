@@ -113,14 +113,14 @@ namespace FLD
       /*!
       \brief Wrapper for FluidVolumetricSurfaceFlowBc::EvaluateVelocities
       */
-      void evaluate_velocities(std::shared_ptr<Core::LinAlg::Vector<double>> velocities,
-          double time, double theta, double dta);
+      void evaluate_velocities(
+          Core::LinAlg::Vector<double>& velocities, double time, double theta, double dta);
 
       /*!
       \brief export and set boundary values
       */
       void export_and_set_boundary_values(Core::LinAlg::Vector<double>& source,
-          std::shared_ptr<Core::LinAlg::Vector<double>> target, std::string name);
+          Core::LinAlg::Vector<double>& target, std::string name);
 
       /*!
       \brief Wrapper for FluidVolumetricSurfaceFlowBc::update_residual
@@ -282,7 +282,7 @@ namespace FLD
       \brief export and set boundary values
       */
       void export_and_set_boundary_values(Core::LinAlg::Vector<double>& source,
-          std::shared_ptr<Core::LinAlg::Vector<double>> target, std::string name);
+          Core::LinAlg::Vector<double>& target, std::string name);
 
       /*!
       \brief reset traction velocity components

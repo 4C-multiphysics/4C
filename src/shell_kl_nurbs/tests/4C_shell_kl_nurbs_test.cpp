@@ -350,7 +350,7 @@ namespace
 
     // Evaluate residuum
     res.putScalar(0.0);
-    FourC::Discret::Elements::KirchhoffLoveShellNurbs::evaluate_residuum_auto_generated(
+    Discret::Elements::KirchhoffLoveShellNurbs::evaluate_residuum_auto_generated(
         young, nu, thickness, intpoints_xi, intpoints_eta, knots, weights, X, q, res);
     FOUR_C_EXPECT_NEAR(res, res_ref, 1e-12);
   }

@@ -479,7 +479,7 @@ void ParticleInteraction::ParticleInteractionSPH::init_equation_of_state_bundle(
       std::make_shared<ParticleInteraction::SPHEquationOfStateBundle>(params_sph_);
 
   // init equation of state bundle
-  equationofstatebundle_->init(particlematerial_);
+  equationofstatebundle_->init(*particlematerial_);
 }
 
 void ParticleInteraction::ParticleInteractionSPH::init_neighbor_pair_handler()

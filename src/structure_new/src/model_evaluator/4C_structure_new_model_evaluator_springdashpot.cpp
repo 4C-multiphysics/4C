@@ -109,7 +109,8 @@ bool Solid::ModelEvaluator::SpringDashpot::evaluate_force()
         stype == Constraints::SpringDashpot::RobinSpringDashpotType::refsurfnormal)
     {
       springdashpotparams.set("total time", eval_data().get_total_time());
-      spring->evaluate_robin(nullptr, fspring_np_ptr_, disnp_ptr_, velnp_ptr_, springdashpotparams);
+      spring->evaluate_robin(
+          nullptr, fspring_np_ptr_, disnp_ptr_, *velnp_ptr_, springdashpotparams);
     }
     if (stype == Constraints::SpringDashpot::RobinSpringDashpotType::cursurfnormal)
     {
@@ -148,7 +149,7 @@ bool Solid::ModelEvaluator::SpringDashpot::evaluate_stiff()
     {
       springdashpotparams.set("total time", eval_data().get_total_time());
       spring->evaluate_robin(
-          stiff_spring_ptr_, nullptr, disnp_ptr_, velnp_ptr_, springdashpotparams);
+          stiff_spring_ptr_, nullptr, disnp_ptr_, *velnp_ptr_, springdashpotparams);
     }
     if (stype == Constraints::SpringDashpot::RobinSpringDashpotType::cursurfnormal)
     {
@@ -192,7 +193,7 @@ bool Solid::ModelEvaluator::SpringDashpot::evaluate_force_stiff()
     {
       springdashpotparams.set("total time", eval_data().get_total_time());
       spring->evaluate_robin(
-          stiff_spring_ptr_, fspring_np_ptr_, disnp_ptr_, velnp_ptr_, springdashpotparams);
+          stiff_spring_ptr_, fspring_np_ptr_, disnp_ptr_, *velnp_ptr_, springdashpotparams);
     }
     if (stype == Constraints::SpringDashpot::RobinSpringDashpotType::cursurfnormal)
     {

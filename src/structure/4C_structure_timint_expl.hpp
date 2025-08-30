@@ -257,7 +257,7 @@ namespace Solid
     //! Apply external force
     void apply_force_external(const double time,                  //!< evaluation time
         const std::shared_ptr<Core::LinAlg::Vector<double>> dis,  //!< displacement state
-        const std::shared_ptr<Core::LinAlg::Vector<double>> vel,  // velocity state
+        Core::LinAlg::Vector<double>& vel,                        // velocity state
         Core::LinAlg::Vector<double>& fext                        //!< external force
     );
 

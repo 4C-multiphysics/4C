@@ -126,7 +126,7 @@ int Solid::TimIntCentrDiff::integrate_step()
 
   // build new external forces
   fextn_->put_scalar(0.0);
-  apply_force_external(timen_, disn_, veln_, *fextn_);
+  apply_force_external(timen_, disn_, *veln_, *fextn_);
 
   // TIMING
   // double dtcpu = timer_->wallTime();
@@ -141,7 +141,7 @@ int Solid::TimIntCentrDiff::integrate_step()
     disinc.update(-1.0, *(*dis_)(0), 1.0);
     // internal force
     apply_force_internal(
-        timen_, dt, disn_, Core::Utils::shared_ptr_from_ref(disinc), veln_, fintn_);
+        timen_, dt, disn_, Core::Utils::shared_ptr_from_ref(disinc), *veln_, fintn_);
   }
 
   // *********** time measurement ***********

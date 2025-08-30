@@ -1179,7 +1179,7 @@ void PoroElast::Monolithic::apply_fluid_coupl_matrix(
 
   abs_iterinc->update(1.0, *iterinc_, 0.0);
 
-  auto stiff_approx = std::make_shared<Core::LinAlg::SparseMatrix>(*dof_row_map(), 81);
+  Core::LinAlg::SparseMatrix stiff_approx(*dof_row_map(), 81);
 
   Core::LinAlg::Vector<double> rhs_old(*dof_row_map(), true);
   rhs_old.update(1.0, *rhs_, 0.0);
@@ -1242,7 +1242,7 @@ void PoroElast::Monolithic::apply_fluid_coupl_matrix(
     for (int j = 0; j < dofs; ++j)
     {
       double value = (rhs_copy)[j];
-      stiff_approx->insert_global_values(j, 1, &value, index);
+      stiff_approx.insert_global_values(j, 1, &value, index);
 
       if ((j == row_number) and (i == column_number))
       {
@@ -1285,12 +1285,12 @@ void PoroElast::Monolithic::apply_fluid_coupl_matrix(
 
   evaluate(iterinc, iter_ == 1);
 
-  stiff_approx->complete();
+  stiff_approx.complete();
 
-  auto stiff_approx_sparse = std::make_shared<Core::LinAlg::SparseMatrix>(*stiff_approx);
-  stiff_approx_sparse->add(sparse, false, -1.0, 1.0);
+  Core::LinAlg::SparseMatrix stiff_approx_sparse(stiff_approx);
+  stiff_approx_sparse.add(sparse, false, -1.0, 1.0);
 
-  stiff_approx_sparse->complete();
+  stiff_approx_sparse.complete();
   sparse.complete();
 
   bool success = true;
@@ -1311,11 +1311,11 @@ void PoroElast::Monolithic::apply_fluid_coupl_matrix(
           {
             // get error_crs entry ij
             int errornumentries;
-            int errorlength = stiff_approx_sparse->num_global_entries(i);
+            int errorlength = stiff_approx_sparse.num_global_entries(i);
             std::vector<double> errorvalues(errorlength);
             std::vector<int> errorindices(errorlength);
             // int errorextractionstatus =
-            stiff_approx_sparse->extract_global_row_copy(
+            stiff_approx_sparse.extract_global_row_copy(
                 i, errorlength, errornumentries, errorvalues.data(), errorindices.data());
             for (int k = 0; k < errorlength; ++k)
             {
@@ -1353,11 +1353,11 @@ void PoroElast::Monolithic::apply_fluid_coupl_matrix(
           // get stiff_approx entry ij
           {
             int approxnumentries;
-            int approxlength = stiff_approx->num_global_entries(i);
+            int approxlength = stiff_approx.num_global_entries(i);
             std::vector<double> approxvalues(approxlength);
             std::vector<int> approxindices(approxlength);
             // int approxextractionstatus =
-            stiff_approx->extract_global_row_copy(
+            stiff_approx.extract_global_row_copy(
                 i, approxlength, approxnumentries, approxvalues.data(), approxindices.data());
             for (int k = 0; k < approxlength; ++k)
             {

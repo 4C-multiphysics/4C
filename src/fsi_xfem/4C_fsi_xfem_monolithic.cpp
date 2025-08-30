@@ -935,7 +935,7 @@ void FSI::MonolithicXFEM::output()
   //--------------------------------
   if (structure_poro()->get_constraint_manager()->have_monitor())
   {
-    structure_poro()->get_constraint_manager()->compute_monitor_values(structure_poro()->dispnp());
+    structure_poro()->get_constraint_manager()->compute_monitor_values(*structure_poro()->dispnp());
     if (Core::Communication::my_mpi_rank(get_comm()) == 0)
       structure_poro()->get_constraint_manager()->print_monitor_values();
   }

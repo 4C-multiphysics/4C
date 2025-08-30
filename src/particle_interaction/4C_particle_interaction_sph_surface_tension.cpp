@@ -123,7 +123,7 @@ void ParticleInteraction::SPHSurfaceTension::setup(
   // setup interface viscosity handler
   if (interfaceviscosity_)
     interfaceviscosity_->setup(
-        particleengineinterface, kernel, particlematerial, equationofstatebundle, neighborpairs);
+        particleengineinterface, kernel, *particlematerial, equationofstatebundle, neighborpairs);
 
   // setup evaporation induced recoil pressure handler
   if (recoilpressureevaporation_) recoilpressureevaporation_->setup(particleengineinterface);

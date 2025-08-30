@@ -239,11 +239,11 @@ namespace Solid
     virtual void evaluate_force_residual() = 0;
 
     //! Apply external force, its stiffness at state
-    void apply_force_stiff_external(const double time,             //!< evaluation time
-        const std::shared_ptr<Core::LinAlg::Vector<double>> dis,   //!< old displacement state
-        const std::shared_ptr<Core::LinAlg::Vector<double>> disn,  //!< new displacement state
-        const std::shared_ptr<Core::LinAlg::Vector<double>> vel,   // velocity state
-        Core::LinAlg::Vector<double>& fext,                        //!< external force
+    void apply_force_stiff_external(const double time,            //!< evaluation time
+        const std::shared_ptr<Core::LinAlg::Vector<double>> dis,  //!< old displacement state
+        Core::LinAlg::Vector<double>& disn,                       //!< new displacement state
+        Core::LinAlg::Vector<double>& vel,                        // velocity state
+        Core::LinAlg::Vector<double>& fext,                       //!< external force
         std::shared_ptr<Core::LinAlg::SparseOperator>& fextlin  //!< linearization of external force
     );
 
@@ -252,7 +252,7 @@ namespace Solid
         const double dt,                                           //!< step size
         const std::shared_ptr<Core::LinAlg::Vector<double>> dis,   //!< displacement state
         const std::shared_ptr<Core::LinAlg::Vector<double>> disi,  //!< residual displacements
-        const std::shared_ptr<Core::LinAlg::Vector<double>> vel,   // velocity state
+        Core::LinAlg::Vector<double>& vel,                         // velocity state
         std::shared_ptr<Core::LinAlg::Vector<double>> fint,        //!< internal force
         std::shared_ptr<Core::LinAlg::SparseOperator> stiff,       //!< stiffness matrix
         Teuchos::ParameterList& params,  //!< parameters from nonlinear solver

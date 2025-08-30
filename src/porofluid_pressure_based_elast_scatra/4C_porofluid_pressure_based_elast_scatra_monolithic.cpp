@@ -1115,7 +1115,7 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::poro_multi_phas
 
   iter_inc->replace_global_value(0, delta);
 
-  auto stiff_approx = std::make_shared<Core::LinAlg::SparseMatrix>(*dof_row_map(), 81);
+  Core::LinAlg::SparseMatrix stiff_approx(*dof_row_map(), 81);
 
   Core::LinAlg::Vector<double> rhs_old(*dof_row_map(), true);
   rhs_old.update(1.0, *rhs_, 0.0);
@@ -1161,7 +1161,7 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::poro_multi_phas
     for (int j = 0; j < dofs; ++j)
     {
       double value = (rhs_copy)[j];
-      stiff_approx->insert_global_values(j, 1, &value, index);
+      stiff_approx.insert_global_values(j, 1, &value, index);
 
       if ((j == row_id) and (i == column_id))
       {
@@ -1185,17 +1185,17 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::poro_multi_phas
   evaluate(iter_inc);
   setup_rhs();
 
-  stiff_approx->complete();
+  stiff_approx.complete();
 
-  auto stiff_approx_sparse = std::make_shared<Core::LinAlg::SparseMatrix>(*stiff_approx);
+  auto stiff_approx_sparse = std::make_shared<Core::LinAlg::SparseMatrix>(stiff_approx);
 
   stiff_approx_sparse->add(sparse_copy, false, -1.0, 1.0);
 
-  auto sparse_crs = std::make_shared<Core::LinAlg::SparseMatrix>(sparse_copy);
+  Core::LinAlg::SparseMatrix sparse_crs(sparse_copy);
   std::shared_ptr<Core::LinAlg::SparseMatrix> error_crs = stiff_approx_sparse;
 
   error_crs->complete();
-  sparse_crs->complete();
+  sparse_crs.complete();
 
   bool success = true;
   double error_max_rel = 0.0;
@@ -1236,11 +1236,11 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::poro_multi_phas
           // get sparse_ij entry ij
           {
             int sparse_num_entries;
-            int sparse_length = sparse_crs->num_global_entries(i);
+            int sparse_length = sparse_crs.num_global_entries(i);
             std::vector<double> sparse_values(sparse_length);
             std::vector<int> sparse_indices(sparse_length);
 
-            sparse_crs->extract_global_row_copy(
+            sparse_crs.extract_global_row_copy(
                 i, sparse_length, sparse_num_entries, sparse_values.data(), sparse_indices.data());
             for (int k = 0; k < sparse_length; ++k)
             {
@@ -1257,11 +1257,11 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::poro_multi_phas
           // get stiff_approx entry ij
           {
             int approx_num_entries;
-            int approx_length = stiff_approx->num_global_entries(i);
+            int approx_length = stiff_approx.num_global_entries(i);
             std::vector<double> approx_values(approx_length);
             std::vector<int> approx_indices(approx_length);
 
-            stiff_approx->extract_global_row_copy(
+            stiff_approx.extract_global_row_copy(
                 i, approx_length, approx_num_entries, approx_values.data(), approx_indices.data());
             for (int k = 0; k < approx_length; ++k)
             {

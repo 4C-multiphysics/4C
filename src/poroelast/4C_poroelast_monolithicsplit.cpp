@@ -136,9 +136,8 @@ std::shared_ptr<Core::LinAlg::Map> PoroElast::MonolithicSplit::fsidbc_map()
   std::shared_ptr<Core::LinAlg::Map> structfsibcmap =
       Core::LinAlg::MultiMapExtractor::intersect_maps(structmaps);
 
-  std::shared_ptr<Core::LinAlg::Vector<double>> gidmarker_struct =
-      std::make_shared<Core::LinAlg::Vector<double>>(
-          *structure_field()->interface()->fsi_cond_map(), true);
+  Core::LinAlg::Vector<double> gidmarker_struct(
+      *structure_field()->interface()->fsi_cond_map(), true);
 
   // Todo this is ugly, fix it!
   const int mylength = structfsibcmap->num_my_elements();  // on each processor (lids)
@@ -149,13 +148,13 @@ std::shared_ptr<Core::LinAlg::Map> PoroElast::MonolithicSplit::fsidbc_map()
   {
     int gid = mygids[i];
     // FOUR_C_ASSERT(slavemastermap.count(gid),"master gid not found on slave side");
-    int err = gidmarker_struct->replace_global_value(gid, 1.0);
+    int err = gidmarker_struct.replace_global_value(gid, 1.0);
     if (err) FOUR_C_THROW("ReplaceMyValue failed for gid {} error code {}", gid, err);
   }
 
   // transfer to fluid side
   std::shared_ptr<Core::LinAlg::Vector<double>> gidmarker_fluid =
-      structure_to_fluid_at_interface(*gidmarker_struct);
+      structure_to_fluid_at_interface(gidmarker_struct);
 
   std::vector<int> structfsidbcvector;
   const int numgids = gidmarker_fluid->local_length();  // on each processor (lids)

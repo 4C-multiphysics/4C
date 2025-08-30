@@ -11,8 +11,8 @@
 #include "4C_config.hpp"
 
 #include "4C_solver_nonlin_nox_forward_decl.hpp"
+#include "4C_utils_parameter_list.fwd.hpp"
 
-#include <NOX_Common.H>
 #include <Teuchos_RCP.hpp>
 
 FOUR_C_NAMESPACE_OPEN

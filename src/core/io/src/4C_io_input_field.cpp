@@ -9,7 +9,9 @@
 
 #include "4C_utils_singleton_owner.hpp"
 
-FourC::Core::IO::InputFieldReference FourC::Core::IO::InputFieldRegistry::register_field_reference(
+FOUR_C_NAMESPACE_OPEN
+
+Core::IO::InputFieldReference Core::IO::InputFieldRegistry::register_field_reference(
     const std::string& ref_name)
 {
   // Access the field data, with the side-effect of creating it if it does not exist.
@@ -21,7 +23,7 @@ FourC::Core::IO::InputFieldReference FourC::Core::IO::InputFieldRegistry::regist
 }
 
 
-void FourC::Core::IO::InputFieldRegistry::attach_input_field(
+void Core::IO::InputFieldRegistry::attach_input_field(
     InputFieldReference ref, InitFunction init, void* field_ptr)
 {
   FOUR_C_ASSERT(ref.registry == this,
@@ -34,8 +36,7 @@ void FourC::Core::IO::InputFieldRegistry::attach_input_field(
 }
 
 
-void FourC::Core::IO::InputFieldRegistry::detach_input_field(
-    InputFieldReference ref, void* field_ptr)
+void Core::IO::InputFieldRegistry::detach_input_field(InputFieldReference ref, void* field_ptr)
 {
   FOUR_C_ASSERT(ref.registry == this,
       "Internal error: InputFieldReference does not refer to this InputFieldRegistry.");
@@ -50,9 +51,11 @@ void FourC::Core::IO::InputFieldRegistry::detach_input_field(
 }
 
 
-FourC::Core::IO::InputFieldRegistry& FourC::Core::IO::global_input_field_registry()
+Core::IO::InputFieldRegistry& Core::IO::global_input_field_registry()
 {
   static auto singleton_owner =
       Core::Utils::make_singleton_owner([]() { return std::make_unique<InputFieldRegistry>(); });
   return *singleton_owner.instance(Utils::SingletonAction::create);
 }
+
+FOUR_C_NAMESPACE_CLOSE

@@ -62,8 +62,8 @@ void Core::IO::InputSpec::match(ConstYamlNodeRef yaml, InputParameterContainer& 
   match_tree.assert_match();
 }
 
-void Core::IO::InputSpec::emit(YamlNodeRef yaml,
-    FourC::Core::IO::InputParameterContainer& container, InputSpecEmitOptions options) const
+void Core::IO::InputSpec::emit(YamlNodeRef yaml, Core::IO::InputParameterContainer& container,
+    InputSpecEmitOptions options) const
 {
   FOUR_C_ASSERT(pimpl_, "InputSpec is empty.");
 

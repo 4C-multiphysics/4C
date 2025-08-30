@@ -153,10 +153,9 @@ void Constraints::Monitor::evaluate_monitor(
 
 /*-----------------------------------------------------------------------*
  *-----------------------------------------------------------------------*/
-void Constraints::Monitor::set_state(
-    const std::string& state, std::shared_ptr<Core::LinAlg::Vector<double>> V)
+void Constraints::Monitor::set_state(const std::string& state, Core::LinAlg::Vector<double>& V)
 {
-  actdisc_->set_state(state, *V);
+  actdisc_->set_state(state, V);
 }
 
 FOUR_C_NAMESPACE_CLOSE

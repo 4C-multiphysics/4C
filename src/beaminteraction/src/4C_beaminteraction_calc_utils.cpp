@@ -1220,15 +1220,14 @@ namespace BeamInteraction
     /*----------------------------------------------------------------------------*
      *----------------------------------------------------------------------------*/
     void setup_ele_type_map_extractor(
-        std::shared_ptr<const Core::FE::Discretization> const& discret,
-        std::shared_ptr<Core::LinAlg::MultiMapExtractor>& eletypeextractor)
+        const Core::FE::Discretization& discret, Core::LinAlg::MultiMapExtractor& eletypeextractor)
     {
       std::vector<std::set<int>> eletypeset(3);
 
-      for (int i = 0; i < discret->num_my_row_elements(); ++i)
+      for (int i = 0; i < discret.num_my_row_elements(); ++i)
       {
         // get ele pointer
-        Core::Elements::Element* eleptr = discret->l_row_element(i);
+        Core::Elements::Element* eleptr = discret.l_row_element(i);
 
         if (dynamic_cast<Discret::Elements::Beam3Base const*>(eleptr) != nullptr)
         {
@@ -1255,10 +1254,10 @@ namespace BeamInteraction
         std::vector<int> mapvec(eletypeset[i].begin(), eletypeset[i].end());
         eletypeset[i].clear();
         maps[i] = std::make_shared<Core::LinAlg::Map>(
-            -1, mapvec.size(), mapvec.data(), 0, discret->get_comm());
+            -1, mapvec.size(), mapvec.data(), 0, discret.get_comm());
       }
 
-      eletypeextractor->setup(*discret->element_row_map(), maps);
+      eletypeextractor.setup(*discret.element_row_map(), maps);
     }
 
     /*----------------------------------------------------------------------------*

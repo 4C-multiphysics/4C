@@ -119,7 +119,7 @@ PoroPressureBased::PorofluidAlgorithm::PorofluidAlgorithm(
   const int restart_step = Global::Problem::instance()->restart();
   if (restart_step > 0)
   {
-    FourC::Core::IO::DiscretizationReader reader(
+    Core::IO::DiscretizationReader reader(
         discret_, Global::Problem::instance()->input_control_file(), restart_step);
 
     time_ = reader.read_double("time");
@@ -303,7 +303,7 @@ void PoroPressureBased::PorofluidAlgorithm::init(bool isale, int nds_disp, int n
           Global::Problem::instance()->io_params(), "VERBOSITY"));
   if (artery_coupling_active_)
   {
-    meshtying_->initialize_linear_solver(solver_);
+    meshtying_->initialize_linear_solver(*solver_);
   }
   discretization()->compute_null_space_if_necessary(solver_->params());
 }
@@ -1559,7 +1559,7 @@ void PoroPressureBased::PorofluidAlgorithm::evaluate_domain_integrals()
   add_time_integration_specific_vectors();
 
   // evaluate
-  discret_->evaluate_scalars(eleparams, domain_integrals_);
+  discret_->evaluate_scalars(eleparams, *domain_integrals_);
 
   // check for csv writer
   FOUR_C_ASSERT(runtime_csvwriter_domain_integrals_.has_value(),
@@ -1714,7 +1714,7 @@ void PoroPressureBased::PorofluidAlgorithm::evaluate_error_compared_to_analytica
   // get (squared) error values
   std::shared_ptr<Core::LinAlg::SerialDenseVector> errors =
       std::make_shared<Core::LinAlg::SerialDenseVector>(4);
-  discret_->evaluate_scalars(eleparams, errors);
+  discret_->evaluate_scalars(eleparams, *errors);
   discret_->clear_state();
 
   // std::vector containing

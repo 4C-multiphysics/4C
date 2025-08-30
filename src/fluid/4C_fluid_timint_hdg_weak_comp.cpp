@@ -534,7 +534,7 @@ FLD::TimIntHDGWeakComp::evaluate_error_compared_to_analytical_sol()
           std::make_shared<Core::LinAlg::SerialDenseVector>(3 + 3);
 
       // call loop over elements (assemble nothing)
-      discret_->evaluate_scalars(eleparams, errors);
+      discret_->evaluate_scalars(eleparams, *errors);
       discret_->clear_state();
 
       // evaluate absolute L2 error

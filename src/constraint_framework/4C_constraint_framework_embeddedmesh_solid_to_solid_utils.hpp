@@ -78,7 +78,7 @@ namespace Constraints::EmbeddedMesh
    * @param cut_elements_col_vector (out) vector of column cut elements
    */
   std::vector<BackgroundInterfaceInfo> get_information_background_and_interface_elements(
-      const std::shared_ptr<Cut::CutWizard>& cutwizard, Core::FE::Discretization& discret,
+      Cut::CutWizard& cutwizard, Core::FE::Discretization& discret,
       std::vector<int>& ids_cut_elements_col,
       std::vector<Core::Elements::Element*>& cut_elements_col_vector);
 

@@ -25,8 +25,8 @@
 namespace
 {
   using namespace FourC;
-  using namespace FourC::Core::IO;
-  using namespace FourC::Core::IO::InputSpecBuilders;
+  using namespace Core::IO;
+  using namespace Core::IO::InputSpecBuilders;
 
   TEST(InputField, ReadFieldRegistry)
   {

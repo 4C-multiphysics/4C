@@ -91,8 +91,8 @@ namespace Core
  *    FOUR_C_THROW("An error occurred in iteration {}.", iter);
  * @endcode
  */
-#define FOUR_C_THROW(fmt, ...)                   \
-  FourC::Core::Internal::format_and_throw_error( \
+#define FOUR_C_THROW(fmt, ...)            \
+  Core::Internal::format_and_throw_error( \
       std::source_location::current(), (fmt)__VA_OPT__(, ) __VA_ARGS__)
 
 /**
@@ -114,7 +114,7 @@ namespace Core
   {                                                                          \
     if (!static_cast<bool>(test))                                            \
     {                                                                        \
-      FourC::Core::Internal::format_and_throw_error(                         \
+      Core::Internal::format_and_throw_error(                                \
           std::source_location::current(), (fmt)__VA_OPT__(, ) __VA_ARGS__); \
     }                                                                        \
   } while (0)

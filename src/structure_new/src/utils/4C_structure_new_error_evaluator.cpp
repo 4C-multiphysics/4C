@@ -51,7 +51,7 @@ void Solid::ErrorEvaluator::evaluate_error(const Parameters& error_evaluator_par
       error_evaluator_parameters.evaluate_error_analytical_displacement_function_id);
 
   // Evaluate error on all elements and broadcast (and sum up) results to all processors
-  discretization.evaluate_scalars(discretization_evaluation_parameters, error_squared);
+  discretization.evaluate_scalars(discretization_evaluation_parameters, *error_squared);
 
   // Write result to csv file
   const int csv_precision = 16;

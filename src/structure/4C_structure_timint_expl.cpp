@@ -98,7 +98,7 @@ void Solid::TimIntExpl::setup()
 /* evaluate external forces at t_{n+1} */
 void Solid::TimIntExpl::apply_force_external(const double time,  //!< evaluation time
     const std::shared_ptr<Core::LinAlg::Vector<double>> dis,     //!< displacement state
-    const std::shared_ptr<Core::LinAlg::Vector<double>> vel,     //!< velocity state
+    Core::LinAlg::Vector<double>& vel,                           //!< velocity state
     Core::LinAlg::Vector<double>& fext                           //!< external force
 )
 {
@@ -111,7 +111,7 @@ void Solid::TimIntExpl::apply_force_external(const double time,  //!< evaluation
   discret_->set_state(0, "displacement", *dis);
   discret_->set_state(0, "displacement new", *dis);
 
-  if (damping_ == Inpar::Solid::damp_material) discret_->set_state(0, "velocity", *vel);
+  if (damping_ == Inpar::Solid::damp_material) discret_->set_state(0, "velocity", vel);
   // get load vector
   discret_->evaluate_neumann(p, fext);
 

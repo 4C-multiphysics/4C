@@ -1560,7 +1560,7 @@ void FPSI::Monolithic::fpsifd_check()
   iterinc->replace_global_value(0, delta);
 
   // build approximated FD stiffness matrix
-  auto stiff_approx = std::make_shared<Core::LinAlg::SparseMatrix>(*dof_row_map(), 81);
+  Core::LinAlg::SparseMatrix stiff_approx(*dof_row_map(), 81);
 
   // store old rhs
   Core::LinAlg::Vector<double> rhs_old(*dof_row_map(), true);
@@ -1628,7 +1628,7 @@ void FPSI::Monolithic::fpsifd_check()
     {
       int j = dof_row_map()->gid(j_loc);
       double value = (rhs_copy)[j_loc];
-      stiff_approx->insert_global_values(j, 1, &value, index);
+      stiff_approx.insert_global_values(j, 1, &value, index);
     }  // j-loop (rows)
 
     if (not combined_dbc_map()->my_gid(i) and
@@ -1643,9 +1643,9 @@ void FPSI::Monolithic::fpsifd_check()
   evaluate(iterinc);
   setup_system_matrix();
 
-  stiff_approx->complete();
+  stiff_approx.complete();
 
-  auto stiff_approx_sparse = std::make_shared<Core::LinAlg::SparseMatrix>(*stiff_approx);
+  Core::LinAlg::SparseMatrix stiff_approx_sparse(stiff_approx);
 
   // calc error (subtraction of sparse_crs and stiff_approx_sparse)
   for (int i_loc = 0; i_loc < dofs; i_loc++)
@@ -1662,9 +1662,9 @@ void FPSI::Monolithic::fpsifd_check()
       values[k] = -values[k];
     }
 
-    stiff_approx_sparse->sum_into_global_values(i, numentries, values.data(), indices.data());
+    stiff_approx_sparse.sum_into_global_values(i, numentries, values.data(), indices.data());
   }
-  stiff_approx_sparse->complete();
+  stiff_approx_sparse.complete();
   sparse_crs.complete();
 
   bool success = true;
@@ -1688,10 +1688,10 @@ void FPSI::Monolithic::fpsifd_check()
 
           // get error_crs entry ij
           int errornumentries;
-          int errorlength = stiff_approx_sparse->num_global_entries(i);
+          int errorlength = stiff_approx_sparse.num_global_entries(i);
           std::vector<double> errorvalues(errorlength);
           std::vector<int> errorindices(errorlength);
-          stiff_approx_sparse->extract_global_row_copy(
+          stiff_approx_sparse.extract_global_row_copy(
               i, errorlength, errornumentries, errorvalues.data(), errorindices.data());
           for (int k = 0; k < errorlength; ++k)
           {
@@ -1723,10 +1723,10 @@ void FPSI::Monolithic::fpsifd_check()
           }
           // get stiff_approx entry ijs
           int approxnumentries;
-          int approxlength = stiff_approx->num_global_entries(i);
+          int approxlength = stiff_approx.num_global_entries(i);
           std::vector<double> approxvalues(approxlength);
           std::vector<int> approxindices(approxlength);
-          stiff_approx->extract_global_row_copy(
+          stiff_approx.extract_global_row_copy(
               i, approxlength, approxnumentries, approxvalues.data(), approxindices.data());
           for (int k = 0; k < approxlength; ++k)
           {

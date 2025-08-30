@@ -64,8 +64,8 @@ namespace Constraints
     bool have_monitor() { return montype_ != none; };
 
     /// Set state of the underlying discretization
-    void set_state(const std::string& state,             ///< name of state to set
-        std::shared_ptr<Core::LinAlg::Vector<double>> V  ///< values to set
+    void set_state(const std::string& state,  ///< name of state to set
+        Core::LinAlg::Vector<double>& V       ///< values to set
     );
 
     //! Evaluate routine to call from outside. In here the right action is determined and the

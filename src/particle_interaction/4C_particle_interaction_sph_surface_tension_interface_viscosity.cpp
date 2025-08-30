@@ -64,7 +64,7 @@ void ParticleInteraction::SPHInterfaceViscosity::init()
 void ParticleInteraction::SPHInterfaceViscosity::setup(
     const std::shared_ptr<PARTICLEENGINE::ParticleEngineInterface> particleengineinterface,
     const std::shared_ptr<ParticleInteraction::SPHKernelBase> kernel,
-    const std::shared_ptr<ParticleInteraction::MaterialHandler> particlematerial,
+    ParticleInteraction::MaterialHandler& particlematerial,
     const std::shared_ptr<ParticleInteraction::SPHEquationOfStateBundle> equationofstatebundle,
     const std::shared_ptr<ParticleInteraction::SPHNeighborPairs> neighborpairs)
 {
@@ -108,7 +108,7 @@ void ParticleInteraction::SPHInterfaceViscosity::setup(
   for (const auto& type_i : fluidtypes_)
   {
     fluidmaterial_[type_i] = dynamic_cast<const Mat::PAR::ParticleMaterialSPHFluid*>(
-        particlematerial->get_ptr_to_particle_mat_parameter(type_i));
+        particlematerial.get_ptr_to_particle_mat_parameter(type_i));
   }
 }
 

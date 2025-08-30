@@ -214,8 +214,7 @@ void ScaTra::LevelSetAlgorithm::evaluate_error_compared_to_analytical_sol()
 
         // get initial field
         const Core::LinAlg::Map* dofrowmap = discret_->dof_row_map();
-        std::shared_ptr<Core::LinAlg::Vector<double>> phiref =
-            std::make_shared<Core::LinAlg::Vector<double>>(*dofrowmap, true);
+        Core::LinAlg::Vector<double> phiref(*dofrowmap, true);
 
         // get function
         int startfuncno = params_->get<int>("INITFUNCNO");
@@ -238,7 +237,7 @@ void ScaTra::LevelSetAlgorithm::evaluate_error_compared_to_analytical_sol()
             double initialval =
                 problem_->function_by_id<Core::Utils::FunctionOfSpaceTime>(startfuncno)
                     .evaluate(lnode->x().data(), time_, k);
-            int err = phiref->replace_local_value(doflid, initialval);
+            int err = phiref.replace_local_value(doflid, initialval);
             if (err != 0) FOUR_C_THROW("dof not on proc");
           }
         }
@@ -246,18 +245,18 @@ void ScaTra::LevelSetAlgorithm::evaluate_error_compared_to_analytical_sol()
         // set vector values needed by elements
         discret_->clear_state();
         discret_->set_state("phinp", *phinp_);
-        discret_->set_state("phiref", *phiref);
+        discret_->set_state("phiref", phiref);
 
         // get error and volume
         std::shared_ptr<Core::LinAlg::SerialDenseVector> errors =
             std::make_shared<Core::LinAlg::SerialDenseVector>(2);
-        discret_->evaluate_scalars(eleparams, errors);
+        discret_->evaluate_scalars(eleparams, *errors);
         discret_->clear_state();
 
         // division by thickness of element layer for 2D problems with domain size 1
         double errL1 = (*errors)[0] / (*errors)[1];
         Core::LinAlg::Vector<double> phidiff(*phinp_);
-        phidiff.update(-1.0, *phiref, 1.0);
+        phidiff.update(-1.0, phiref, 1.0);
         double errLinf = 0.0;
         phidiff.norm_inf(&errLinf);
 
@@ -461,7 +460,7 @@ void ScaTra::LevelSetAlgorithm::mass_center_using_smoothing()
   // get masscenter and volume, last entry of vector is total volume of minus domain.
   std::shared_ptr<Core::LinAlg::SerialDenseVector> masscenter_and_volume =
       std::make_shared<Core::LinAlg::SerialDenseVector>(nsd_ + 1);
-  discret_->evaluate_scalars(eleparams, masscenter_and_volume);
+  discret_->evaluate_scalars(eleparams, *masscenter_and_volume);
   discret_->clear_state();
 
   std::vector<double> center(nsd_);
