@@ -27,7 +27,14 @@ void BeamInteraction::SubmodelEvaluator::BeamContactAssemblyManagerInDirect::eva
     std::shared_ptr<Core::LinAlg::FEVector<double>> fe_sysvec,
     std::shared_ptr<Core::LinAlg::SparseMatrix> fe_sysmat)
 {
-  mortar_manager_->evaluate_force_stiff_penalty_regularization(data_state, fe_sysmat, fe_sysvec);
+  if (mortar_manager_->have_lagrange_dofs())
+  {
+    mortar_manager_->evaluate_coupling_terms_lagrange(data_state);
+  }
+  else
+  {
+    mortar_manager_->evaluate_force_stiff_penalty_regularization(data_state, fe_sysmat, fe_sysvec);
+  }
 }
 
 

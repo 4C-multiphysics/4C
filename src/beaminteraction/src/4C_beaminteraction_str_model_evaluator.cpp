@@ -9,7 +9,9 @@
 
 #include "4C_beam3_base.hpp"
 #include "4C_beamcontact_input.hpp"
+#include "4C_beaminteraction_beam_to_solid_volume_meshtying_params.hpp"
 #include "4C_beaminteraction_calc_utils.hpp"
+#include "4C_beaminteraction_contact_params.hpp"
 #include "4C_beaminteraction_crosslinker_handler.hpp"
 #include "4C_beaminteraction_crosslinker_node.hpp"
 #include "4C_beaminteraction_data.hpp"
@@ -722,12 +724,44 @@ bool Solid::ModelEvaluator::BeamInteraction::evaluate_force_stiff()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
+
+bool Solid::ModelEvaluator::BeamInteraction::have_lagrange_dofs() const
+{
+  bool lagrange_flag = false;
+  for (std::size_t i = 0; i < me_vec_ptr_->size(); ++i)
+  {
+    auto beam_contact_model =
+        std::dynamic_pointer_cast<FourC::BeamInteraction::SubmodelEvaluator::BeamContact const>(
+            (*me_vec_ptr_)[i]);
+    if (!beam_contact_model) continue;
+
+    auto params = beam_contact_model->beam_contact_params().beam_to_solid_volume_meshtying_params();
+    if (params && params->get_constraint_enforcement() ==
+                      Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::lagrange)
+    {
+      lagrange_flag = true;
+      if (me_vec_ptr_->size() > 1)
+        FOUR_C_THROW(
+            "Currently Lagrange multipliers within beam interaction are exclusively supported for "
+            "beam-to-solid interactions.");
+    }
+  }
+
+
+  return lagrange_flag;
+}
+
+
 bool Solid::ModelEvaluator::BeamInteraction::assemble_force(
     Core::LinAlg::Vector<double>& f, const double& timefac_np) const
 {
   check_init_setup();
 
   Core::LinAlg::assemble_my_vector(1.0, f, timefac_np, *force_beaminteraction_);
+  if (have_lagrange_dofs())
+  {
+    (*me_vec_ptr_)[0]->assemble_force(f);
+  }
 
   return true;
 }
@@ -741,6 +775,12 @@ bool Solid::ModelEvaluator::BeamInteraction::assemble_jacobian(
 
   std::shared_ptr<Core::LinAlg::SparseMatrix> jac_dd_ptr = global_state().extract_displ_block(jac);
   jac_dd_ptr->add(*stiff_beaminteraction_, false, timefac_np, 1.0);
+
+  if (have_lagrange_dofs())
+  {
+    (*me_vec_ptr_)[0]->assemble_stiff(jac);
+  }
+
 
   // no need to keep it
   stiff_beaminteraction_->zero();
@@ -837,13 +877,19 @@ void Solid::ModelEvaluator::BeamInteraction::read_restart(Core::IO::Discretizati
   }
 }
 
+void Solid::ModelEvaluator::BeamInteraction::run_pre_compute_x(
+    const Core::LinAlg::Vector<double>& xold, Core::LinAlg::Vector<double>& dir_mutable,
+    const NOX::Nln::Group& curr_grp)
+{
+  if (have_lagrange_dofs()) Core::LinAlg::export_to(dir_mutable, *ia_state_ptr_->get_lambda());
+}
+
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 void Solid::ModelEvaluator::BeamInteraction::run_post_compute_x(
     const Core::LinAlg::Vector<double>& xold, const Core::LinAlg::Vector<double>& dir,
     const Core::LinAlg::Vector<double>& xnew)
 {
-  // empty
 }
 
 /*----------------------------------------------------------------------------*
@@ -1085,7 +1131,15 @@ std::shared_ptr<const Core::LinAlg::Map>
 Solid::ModelEvaluator::BeamInteraction::get_block_dof_row_map_ptr() const
 {
   check_init_setup();
-  return global_state().dof_row_map();
+
+  if (have_lagrange_dofs())
+  {
+    return (*me_vec_ptr_)[0]->get_lagrange_map();
+  }
+  else
+  {
+    return global_state().dof_row_map();
+  }
 }
 
 /*----------------------------------------------------------------------------*

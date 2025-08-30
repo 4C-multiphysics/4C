@@ -7,6 +7,7 @@
 
 #include "4C_beaminteraction_beam_to_solid_mortar_manager.hpp"
 
+#include "4C_beaminteraction_beam_to_solid_params_base.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_contact_params.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_meshtying_params.hpp"
 #include "4C_beaminteraction_beam_to_solid_utils.hpp"
@@ -21,6 +22,9 @@
 #include "4C_linalg_fevector.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
+#include "4C_linalg_vector.hpp"
+#include "4C_structure_new_timint_base.hpp"
+#include "4C_structure_new_timint_basedataglobalstate.hpp"
 #include "4C_utils_exceptions.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -169,7 +173,6 @@ void BeamInteraction::BeamToSolidMortarManager::setup()
       my_lambda_gid_rotational.size(), my_lambda_gid_rotational.data(), 0, discret_->get_comm());
   lambda_dof_rowmap_ =
       Core::LinAlg::merge_map(lambda_dof_rowmap_translations_, lambda_dof_rowmap_rotations_, false);
-
   // We need to be able to get the global ids for a Lagrange multiplier DOF from the global id
   // of a node or element. To do so, we 'abuse' the Core::LinAlg::MultiVector<double> as map between
   // the global node / element ids and the global Lagrange multiplier DOF ids.
@@ -482,9 +485,42 @@ void BeamInteraction::BeamToSolidMortarManager::evaluate_force_stiff_penalty_reg
 /**
  *
  */
+void BeamInteraction::BeamToSolidMortarManager::evaluate_coupling_terms_lagrange(
+    const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state)
+{
+  // Evaluate the global coupling terms
+  evaluate_and_assemble_global_coupling_contributions(data_state->get_dis_col_np());
+
+  // For now we need to set a link to the global Lagrange multiplier vector in the beam interaction
+  // data state.
+  global_lambda_ = data_state->get_lambda();
+}
+
+/**
+ *
+ */
+bool BeamInteraction::BeamToSolidMortarManager::have_lagrange_dofs() const
+{
+  return beam_to_solid_params_ &&
+         beam_to_solid_params_->get_constraint_enforcement() ==
+             Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::lagrange;
+}
+
+/**
+ *
+ */
 std::shared_ptr<Core::LinAlg::Vector<double>>
 BeamInteraction::BeamToSolidMortarManager::get_global_lambda() const
 {
+  if (have_lagrange_dofs())
+  {
+    auto global_lambda_current_rowmap =
+        std::make_shared<Core::LinAlg::Vector<double>>(*lambda_dof_rowmap_);
+
+    Core::LinAlg::export_to(*global_lambda_, *global_lambda_current_rowmap);
+    return global_lambda_current_rowmap;
+  }
+
   auto penalty_regularization = get_penalty_regularization(false);
   return std::get<0>(penalty_regularization);
 }
@@ -750,5 +786,76 @@ BeamInteraction::BeamToSolidMortarManager::penalty_invert_kappa() const
 
   return kappa_inv;
 }
+
+/**
+ *
+ */
+void BeamInteraction::BeamToSolidMortarManager::assemble_force(
+    const Solid::TimeInt::BaseDataGlobalState& gstate, Core::LinAlg::Vector<double>& f,
+    const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state) const
+{
+  if (!have_lagrange_dofs())
+    FOUR_C_THROW("assemble_force only possible with Langrange multiplier constraint enforcement");
+  auto constraint_rhs_map = Core::LinAlg::Vector<double>(f.get_map());
+  Core::LinAlg::export_to(*constraint_, constraint_rhs_map);
+
+  f.update(1., constraint_rhs_map, 1.);
+}
+
+/**
+ *
+ */
+void BeamInteraction::BeamToSolidMortarManager::assemble_stiff(
+    const Solid::TimeInt::BaseDataGlobalState& gstate, Core::LinAlg::SparseOperator& jac,
+    const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state) const
+{
+  if (!have_lagrange_dofs())
+    FOUR_C_THROW("assemble_stiff only possible with Langrange multiplier constraint enforcement");
+  std::shared_ptr<const Core::LinAlg::SparseOperator> jac_ptr(
+      &jac, [](Core::LinAlg::SparseOperator*) {});
+  std::shared_ptr<const Core::LinAlg::BlockSparseMatrixBase> jac_block_sparse_matrix_base =
+      Core::LinAlg::cast_to_const_block_sparse_matrix_base_and_check_success(jac_ptr);
+  auto block_lm_displ_row_map = jac_block_sparse_matrix_base->matrix(1, 0).row_map();
+  auto block_displ_lm_row_map = jac_block_sparse_matrix_base->matrix(0, 1).row_map();
+
+  const auto lagrange_formulation = beam_to_solid_params_->get_lagrange_formulation();
+  if (lagrange_formulation == Inpar::BeamToSolid::BeamToSolidLagrangeFormulation::regularized)
+  {
+    // Set penalty entry
+    const double penalty_translation = beam_to_solid_params_->get_penalty_parameter();
+    auto kappa_vector = Core::LinAlg::Vector<double>(block_lm_displ_row_map);
+    Core::LinAlg::export_to(*kappa_, kappa_vector);
+    std::shared_ptr<Core::LinAlg::SparseMatrix> kappa_penalty_inv_mat =
+        std::make_shared<Core::LinAlg::SparseMatrix>(kappa_vector);
+    kappa_penalty_inv_mat->scale(-1.0 / penalty_translation);
+    kappa_penalty_inv_mat->complete();
+    gstate.assign_model_block(jac, *kappa_penalty_inv_mat, Inpar::Solid::model_beaminteraction,
+        Solid::MatBlockType::lm_lm);
+  }
+
+  Core::LinAlg::SparseMatrix lm_displ =
+      Core::LinAlg::SparseMatrix(*lambda_dof_rowmap_, 81, true, true);
+  lm_displ.add(*constraint_lin_beam_, false, 1.0, 0.0);
+  lm_displ.add(*constraint_lin_solid_, false, 1.0, 1.0);
+  lm_displ.complete(*discret_->dof_row_map(), *lambda_dof_rowmap_);
+
+  std::shared_ptr<Core::LinAlg::SparseMatrix> lm_displ_in_global_layout =
+      Core::LinAlg::matrix_row_col_transform(
+          lm_displ, block_lm_displ_row_map, jac_block_sparse_matrix_base->domain_map(0));
+  gstate.assign_model_block(jac, *lm_displ_in_global_layout, Inpar::Solid::model_beaminteraction,
+      Solid::MatBlockType::lm_displ);
+
+  Core::LinAlg::SparseMatrix displ_lm =
+      Core::LinAlg::SparseMatrix(*discret_->dof_row_map(), 81, true, true);
+  displ_lm.add(*force_beam_lin_lambda_, false, 1.0, 0.0);
+  displ_lm.add(*force_solid_lin_lambda_, false, 1.0, 1.0);
+  displ_lm.complete(*lambda_dof_rowmap_, *discret_->dof_row_map());
+  std::shared_ptr<Core::LinAlg::SparseMatrix> displ_lm_in_global_layout =
+      Core::LinAlg::matrix_row_col_transform(
+          displ_lm, block_displ_lm_row_map, jac_block_sparse_matrix_base->domain_map(1));
+  gstate.assign_model_block(jac, *displ_lm_in_global_layout, Inpar::Solid::model_beaminteraction,
+      Solid::MatBlockType::displ_lm);
+}
+
 
 FOUR_C_NAMESPACE_CLOSE

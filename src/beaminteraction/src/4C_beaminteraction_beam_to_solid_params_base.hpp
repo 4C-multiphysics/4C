@@ -96,6 +96,14 @@ namespace BeamInteraction
     }
 
     /**
+     * \brief Returns the type of lagrange formulation used.
+     */
+    inline Inpar::BeamToSolid::BeamToSolidLagrangeFormulation get_lagrange_formulation() const
+    {
+      return lagrange_formulation_;
+    }
+
+    /**
      * \brief Returns the shape function for the mortar Lagrange-multiplicators.
      */
     inline Inpar::BeamToSolid::BeamToSolidMortarShapefunctions get_mortar_shape_function_type()
@@ -155,6 +163,9 @@ namespace BeamInteraction
 
     //! Flag for rotational coupling
     bool rotational_coupling_;
+
+    //! Type of lagrange formulation
+    Inpar::BeamToSolid::BeamToSolidLagrangeFormulation lagrange_formulation_;
   };
 
 }  // namespace BeamInteraction

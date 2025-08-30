@@ -43,6 +43,7 @@ namespace BeamInteraction
 namespace Core::LinAlg
 {
   class SparseMatrix;
+  class SparseOperator;
 }  // namespace Core::LinAlg
 
 
@@ -159,6 +160,20 @@ namespace BeamInteraction
         std::shared_ptr<Core::LinAlg::FEVector<double>> force);
 
     /**
+     * \brief Evaluate the coupling contributions resulting from a lagrange
+     * type of constraint enforcement.
+     * @param data_state (in) Beam interaction data state.
+     */
+    void evaluate_coupling_terms_lagrange(
+        const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state);
+
+    /**
+     * \brief Check if the model uses Lagrange multipliers.
+     */
+    bool have_lagrange_dofs() const;
+
+
+    /**
      * \brief Get the global vector of Lagrange multipliers.
      * @return Global vector of Lagrange multipliers.
      */
@@ -181,10 +196,35 @@ namespace BeamInteraction
     }
 
     /**
+     * \brief Returns  a const reference to the Lagrange Multiplier dof row map
+     * @return Reference to the lambda dof rowmap.
+     */
+    std::shared_ptr<const Core::LinAlg::Map> get_lambda_dof_row_map() const
+    {
+      return lambda_dof_rowmap_;
+    }
+
+    /**
      * \brief Calculate the internal mortar penalty energy.
      * @return Global mortar energy.
      */
     double get_energy() const;
+
+    /**
+     * \brief  Assembles the LM constraint into the global RHS vector
+     */
+    void assemble_force(const Solid::TimeInt::BaseDataGlobalState& gstate,
+        Core::LinAlg::Vector<double>& f,
+        const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state)
+        const;
+
+    /**
+     * \brief Assemble the coupling blocks in the global stiffness matrix
+     */
+    void assemble_stiff(const Solid::TimeInt::BaseDataGlobalState& gstate,
+        Core::LinAlg::SparseOperator& jac,
+        const std::shared_ptr<const Solid::ModelEvaluator::BeamInteractionDataState>& data_state)
+        const;
 
    protected:
     /**
@@ -362,6 +402,10 @@ namespace BeamInteraction
 
     //! Vector with all contact pairs to be evaluated by this mortar manager.
     std::vector<std::shared_ptr<BeamInteraction::BeamContactPair>> contact_pairs_;
+
+   private:
+    //! Vector containing the lambda vector in the global state.
+    std::shared_ptr<const Core::LinAlg::FEVector<double>> global_lambda_;
   };
 }  // namespace BeamInteraction
 

@@ -207,6 +207,15 @@ BeamInteraction::SubmodelEvaluator::Generic::beam_interaction_data_state_ptr()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
+const std::shared_ptr<Solid::ModelEvaluator::BeamInteractionDataState>&
+BeamInteraction::SubmodelEvaluator::Generic::beam_interaction_data_state_ptr() const
+{
+  check_init();
+  return beaminteractiondatastate_;
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
 Solid::ModelEvaluator::BeamInteractionDataState const&
 BeamInteraction::SubmodelEvaluator::Generic::beam_interaction_data_state() const
 {

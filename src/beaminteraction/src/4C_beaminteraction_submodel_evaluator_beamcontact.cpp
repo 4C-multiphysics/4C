@@ -9,6 +9,7 @@
 
 #include "4C_beam3_base.hpp"
 #include "4C_beamcontact_input.hpp"
+#include "4C_beaminteraction_beam_to_solid_mortar_manager.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_contact_params.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_meshtying_params.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_visualization_output_params.hpp"
@@ -60,7 +61,6 @@ BeamInteraction::SubmodelEvaluator::BeamContact::BeamContact()
   // clear stl stuff
   nearby_elements_map_.clear();
 }
-
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
@@ -227,6 +227,17 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::setup()
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
+std::shared_ptr<const BeamInteraction::SubmodelEvaluator::BeamContactAssemblyManagerInDirect>
+BeamInteraction::SubmodelEvaluator::BeamContact::get_lagrange_multiplier_assembly_manager() const
+{
+  if (!std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_managers_[0]))
+    FOUR_C_THROW("Expected a BeamContact Assembly Manager");
+  if (assembly_managers_.size() != 1) FOUR_C_THROW("Only working for single assembly manager");
+  return std::dynamic_pointer_cast<BeamContactAssemblyManagerInDirect>(assembly_managers_[0]);
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
 void BeamInteraction::SubmodelEvaluator::BeamContact::post_setup()
 {
   check_init_setup();
@@ -236,6 +247,21 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::post_setup()
   nearby_elements_map_.clear();
   find_and_store_neighboring_elements();
   create_beam_contact_element_pairs();
+
+  // The following section is specific to lagrange multiplier constraint enforcement
+  if (beam_interaction_data_state().get_lambda() == nullptr &&
+      beam_contact_params_ptr()->beam_to_solid_volume_meshtying_params() &&
+      beam_contact_params_ptr()
+              ->beam_to_solid_volume_meshtying_params()
+              ->get_constraint_enforcement() ==
+          Inpar::BeamToSolid::BeamToSolidConstraintEnforcement::lagrange)
+  {
+    auto lambda_dof_row_map =
+        get_lagrange_multiplier_assembly_manager()->get_mortar_manager()->get_lambda_dof_row_map();
+
+    beam_interaction_data_state().get_lambda() =
+        std::make_shared<Core::LinAlg::FEVector<double>>(*lambda_dof_row_map);
+  }
 }
 
 /*----------------------------------------------------------------------*
@@ -246,7 +272,6 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::init_submodel_dependencies
   check_init_setup();
   // no active influence on other submodels
 }
-
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
@@ -812,6 +837,26 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::get_half_interaction_dista
   {
     FOUR_C_THROW("Not yet implemented for beam to solid contact");
   }
+}
+
+std::shared_ptr<const FourC::Core::LinAlg::Map>
+BeamInteraction::SubmodelEvaluator::BeamContact::get_lagrange_map() const
+{
+  return get_lagrange_multiplier_assembly_manager()->get_mortar_manager()->get_lambda_dof_row_map();
+}
+
+void BeamInteraction::SubmodelEvaluator::BeamContact::assemble_force(
+    Core::LinAlg::Vector<double>& f) const
+{
+  get_lagrange_multiplier_assembly_manager()->get_mortar_manager()->assemble_force(
+      g_state(), f, beam_interaction_data_state_ptr());
+};
+
+void BeamInteraction::SubmodelEvaluator::BeamContact::assemble_stiff(
+    Core::LinAlg::SparseOperator& jac) const
+{
+  get_lagrange_multiplier_assembly_manager()->get_mortar_manager()->assemble_stiff(
+      g_state(), jac, beam_interaction_data_state_ptr());
 }
 
 /*----------------------------------------------------------------------------*

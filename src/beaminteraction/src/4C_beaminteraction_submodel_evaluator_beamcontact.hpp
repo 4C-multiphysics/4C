@@ -38,6 +38,7 @@ namespace BeamInteraction
 
   namespace SubmodelEvaluator
   {
+    class BeamContactAssemblyManagerInDirect;
     class BeamContactAssemblyManager;
 
     class BeamContact : public Generic
@@ -148,6 +149,12 @@ namespace BeamInteraction
       }
 
       /**
+       * \brief Lagrange Multiplier specific function returning the first assembly manager.
+       */
+      std::shared_ptr<const BeamInteraction::SubmodelEvaluator::BeamContactAssemblyManagerInDirect>
+      get_lagrange_multiplier_assembly_manager() const;
+
+      /**
        * \brief Return the geometry pairs in this submodel evaluator.
        */
       inline const std::vector<std::shared_ptr<BeamInteraction::BeamContactPair>>&
@@ -165,6 +172,21 @@ namespace BeamInteraction
         return beam_interaction_conditions_ptr_;
       }
 
+      /**
+       * \brief Return the dof rowmap of the lagrange multipliers.
+       */
+      std::shared_ptr<const FourC::Core::LinAlg::Map> get_lagrange_map() const override;
+
+      /**
+       * \brief Method used to assemble the force vector when using Lagrange Multipliers
+       */
+      void assemble_force(Core::LinAlg::Vector<double>& f) const override;
+
+      /**
+       * \brief Method used to assemble the stiffness matrix when using Lagrange Multipliers
+       */
+      void assemble_stiff(Core::LinAlg::SparseOperator& jac) const override;
+
       //! @}
 
      protected:
@@ -181,19 +203,21 @@ namespace BeamInteraction
 
       //! @}
 
-     private:
+     public:
       inline BeamInteraction::BeamContactParams const& beam_contact_params() const
       {
         check_init();
         return *beam_contact_params_ptr_;
       }
 
+     private:
       inline BeamInteraction::BeamContactParams& beam_contact_params()
       {
         check_init();
         return *beam_contact_params_ptr_;
       }
 
+     public:
       inline std::shared_ptr<BeamInteraction::BeamContactParams> beam_contact_params_ptr() const
       {
         check_init();
@@ -242,7 +266,7 @@ namespace BeamInteraction
           std::set<Core::Elements::Element*>& neighbors) const;
 
       /// create instances of class BeamContactPair that will be evaluated
-      //  to get force and stiffness contributions from beam interactions
+      ///  to get force and stiffness contributions from beam interactions
       void create_beam_contact_element_pairs();
 
       /// Add the restart displacement to the pairs, if the coupling should be evaluated with

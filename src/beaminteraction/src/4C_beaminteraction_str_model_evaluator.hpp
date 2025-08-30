@@ -114,10 +114,7 @@ namespace Solid
 
       //! derived
       void run_pre_compute_x(const Core::LinAlg::Vector<double>& xold,
-          Core::LinAlg::Vector<double>& dir_mutable, const NOX::Nln::Group& curr_grp) override
-      {
-        return;
-      };
+          Core::LinAlg::Vector<double>& dir_mutable, const NOX::Nln::Group& curr_grp) override;
 
       //! derived
       void run_post_compute_x(const Core::LinAlg::Vector<double>& xold,
@@ -175,6 +172,9 @@ namespace Solid
      public:
       /// check if the given model type is active.
       bool have_sub_model_type(Inpar::BeamInteraction::SubModelType const& submodeltype) const;
+
+      //! check if lagrange formulation is active
+      bool have_lagrange_dofs() const;
 
      private:
       void partition_problem();
