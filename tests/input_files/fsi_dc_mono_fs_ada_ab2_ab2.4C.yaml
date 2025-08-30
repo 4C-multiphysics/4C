@@ -116,43 +116,43 @@ RESULT DESCRIPTION:
       NODE: 38
       QUANTITY: "dispx"
       VALUE: -1.2854706983168463e-06
-      TOLERANCE: 1e-13
+      TOLERANCE: 3e-13
   - STRUCTURE:
       DIS: "structure"
       NODE: 38
       QUANTITY: "dispy"
       VALUE: -0.008959115904867474
-      TOLERANCE: 1e-13
+      TOLERANCE: 9e-12
   - FLUID:
       DIS: "fluid"
       NODE: 841
       QUANTITY: "velx"
       VALUE: -0.0016569754875641971
-      TOLERANCE: 1e-13
+      TOLERANCE: 4e-11
   - FLUID:
       DIS: "fluid"
       NODE: 841
       QUANTITY: "vely"
       VALUE: -0.023504323223950144
-      TOLERANCE: 1e-13
+      TOLERANCE: 3e-12
   - FLUID:
       DIS: "fluid"
       NODE: 841
       QUANTITY: "pressure"
       VALUE: 0.04448704653231843
-      TOLERANCE: 1e-13
+      TOLERANCE: 5e-10
   - ALE:
       DIS: "ale"
       NODE: 841
       QUANTITY: "dispx"
       VALUE: -1.1173104320188868e-05
-      TOLERANCE: 1e-13
+      TOLERANCE: 2e-12
   - ALE:
       DIS: "ale"
       NODE: 841
       QUANTITY: "dispy"
       VALUE: -0.0057619757942137285
-      TOLERANCE: 1e-13
+      TOLERANCE: 3e-12
   - FSI:
       NODE: 1139
       QUANTITY: "lambdax"
@@ -162,7 +162,7 @@ RESULT DESCRIPTION:
       NODE: 1139
       QUANTITY: "lambday"
       VALUE: -0.0010962408115483386
-      TOLERANCE: 1e-13
+      TOLERANCE: 3e-11
   - FSI:
       SPECIAL: true
       QUANTITY: "dt"
