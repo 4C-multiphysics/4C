@@ -7,7 +7,6 @@
 
 #include "4C_structure_new_model_evaluator_factory.hpp"
 
-#include "4C_beamcontact_str_model_evaluator_beaminteraction_old.hpp"
 #include "4C_beaminteraction_str_model_evaluator.hpp"
 #include "4C_browniandyn_str_model_evaluator.hpp"
 #include "4C_cardiovascular0d_structure_new_model_evaluator.hpp"
@@ -64,9 +63,6 @@ Solid::ModelEvaluator::Factory::build_model_evaluators(
         (*model_map)[*mt_iter] = build_contact_model_evaluator();
         break;
       }
-      case Inpar::Solid::model_beam_interaction_old:
-        (*model_map)[*mt_iter] = std::make_shared<Solid::ModelEvaluator::BeamInteractionOld>();
-        break;
       case Inpar::Solid::model_lag_pen_constraint:
         (*model_map)[*mt_iter] = std::make_shared<Solid::ModelEvaluator::LagPenConstraint>();
         break;

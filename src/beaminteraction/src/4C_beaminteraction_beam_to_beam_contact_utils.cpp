@@ -10,7 +10,7 @@
 #include "4C_beam3_euler_bernoulli.hpp"
 #include "4C_beam3_kirchhoff.hpp"
 #include "4C_beam3_reissner.hpp"
-#include "4C_beamcontact_beam3contact_manager.hpp"
+#include "4C_contact_element.hpp"
 #include "4C_io_value_parser.hpp"
 #include "4C_rigidsphere.hpp"
 #include "4C_utils_fad.hpp"

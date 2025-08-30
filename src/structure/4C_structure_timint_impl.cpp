@@ -7,7 +7,6 @@
 
 #include "4C_structure_timint_impl.hpp"
 
-#include "4C_beamcontact_beam3contact_manager.hpp"
 #include "4C_beamcontact_input.hpp"
 #include "4C_cardiovascular0d_manager.hpp"
 #include "4C_cardiovascular0d_mor_pod.hpp"
@@ -1050,66 +1049,12 @@ void Solid::TimIntImpl::apply_force_stiff_contact_meshtying(
 void Solid::TimIntImpl::apply_force_stiff_beam_contact(Core::LinAlg::SparseOperator& stiff,
     Core::LinAlg::Vector<double>& fresm, Core::LinAlg::Vector<double>& dis, bool predict)
 {
-  if (have_beam_contact())
-  {
-    // *********** time measurement ***********
-    double dtcpu = timer_->wallTime();
-    // *********** time measurement ***********
-
-    // contact / meshtying modifications need -fres
-    fresm.scale(-1.0);
-
-    // create empty parameter list
-    Teuchos::ParameterList beamcontactparams;
-    beamcontactparams.set("iter", iter_);
-    beamcontactparams.set("dt", (*dt_)[0]);
-    beamcontactparams.set("numstep", step_);
-
-    // make contact / meshtying modifications to lhs and rhs
-    // (set boolean flag 'newsti' to true, which activates
-    // scaling of contact stiffness with appropriate scaling
-    // factor, e.g. (1.0-alphaf), internally)
-    beamcman_->evaluate(*system_matrix(), fresm, dis, beamcontactparams, true, timen_);
-
-    // scaling back
-    fresm.scale(-1.0);
-
-    // *********** time measurement ***********
-    dtcmt_ = timer_->wallTime() - dtcpu;
-    // *********** time measurement ***********
-  }
-
   return;
 }
 
 /*----------------------------------------------------------------------*/
 /* Check residual displacement and limit it if necessary*/
-void Solid::TimIntImpl::limit_stepsize_beam_contact(Core::LinAlg::Vector<double>& disi)
-{
-  if (have_beam_contact())
-  {
-    double minimal_radius = beamcman_->get_min_ele_radius();
-    double maxdisiscalefac =
-        beamcman_->beam_contact_parameters().get<double>("BEAMS_MAXDISISCALEFAC");
-    if (maxdisiscalefac > 0)
-    {
-      double disi_infnorm = 0.0;
-      disi.norm_inf(&disi_infnorm);
-
-      while (disi_infnorm > maxdisiscalefac * minimal_radius)
-      {
-        if (myrank_ == 0)
-          std::cout << "      Residual displacement scaled! (Minimal element radius: "
-                    << minimal_radius << ")" << std::endl;
-
-        disi.scale(0.5);
-        disi.norm_inf(&disi_infnorm);
-      }
-    }
-  }
-
-  return;
-}
+void Solid::TimIntImpl::limit_stepsize_beam_contact(Core::LinAlg::Vector<double>& disi) { return; }
 
 /*----------------------------------------------------------------------*/
 /* calculate characteristic/reference norms for displacements
@@ -3205,39 +3150,7 @@ void Solid::TimIntImpl::cmt_linear_solve()
 /* solution with nonlinear iteration for beam contact */
 int Solid::TimIntImpl::beam_contact_nonlinear_solve()
 {
-  //********************************************************************
-  // get some parameters
-  //********************************************************************
-  // strategy type
-  auto strategy = Teuchos::getIntegralValue<BeamContact::Strategy>(
-      beamcman_->beam_contact_parameters(), "BEAMS_STRATEGY");
-
-  // unknown types of nonlinear iteration schemes
-  if (itertype_ != Inpar::Solid::soltech_newtonfull)
-    FOUR_C_THROW("Unknown type of equilibrium iteration");
-
-  //**********************************************************************
-  // solving strategy using regularization with penalty method
-  // (nonlinear solution approach: ordinary NEWTON)
-  //**********************************************************************
-  if (strategy == BeamContact::bstr_penalty)
-  {
-    // nonlinear iteration (Newton)
-    int error = newton_full();
-    if (error) return error;
-
-    // update constraint norm
-    beamcman_->update_constr_norm();
-  }
-  //**********************************************************************
-
-  //**********************************************************************
-  // unknown solving strategy
-  //**********************************************************************
-  else
-  {
-    FOUR_C_THROW("ERROR: Chosen strategy not yet available for beam contact");
-  }
+  FOUR_C_THROW("ERROR: Chosen strategy not yet available for beam contact");
 
   return 0;
 }
