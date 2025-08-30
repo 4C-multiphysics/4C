@@ -29,8 +29,8 @@ namespace Core::LinearSolver
     IFPACKPreconditioner(Teuchos::ParameterList& ifpacklist, Teuchos::ParameterList& solverlist);
 
     //! Setup
-    void setup(Epetra_Operator* matrix, Core::LinAlg::MultiVector<double>* x,
-        Core::LinAlg::MultiVector<double>* b) override;
+    void setup(Core::LinAlg::SparseOperator& matrix, const Core::LinAlg::MultiVector<double>& x,
+        Core::LinAlg::MultiVector<double>& b) override;
 
     /// linear operator used for preconditioning
     std::shared_ptr<Epetra_Operator> prec_operator() const override { return prec_; }
