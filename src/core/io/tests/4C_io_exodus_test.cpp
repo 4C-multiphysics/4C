@@ -17,25 +17,26 @@ namespace
 
   TEST(Exodus, MeshCubeHex)
   {
-    Core::IO::Exodus::Mesh mesh(TESTING::get_support_file_path("test_files/exodus/cube.exo"));
+    Core::IO::MeshInput::Mesh mesh = Core::IO::Exodus::read_exodus_file(
+        TESTING::get_support_file_path("test_files/exodus/cube.exo"));
 
-    EXPECT_EQ(mesh.get_num_element_blocks(), 2);
-    EXPECT_EQ(mesh.get_node_sets().size(), 1);
-    EXPECT_EQ(mesh.get_side_sets().size(), 1);
-    EXPECT_EQ(mesh.get_num_nodes(), 27);
-    EXPECT_EQ(mesh.get_num_elements(), 8);
-    EXPECT_EQ(mesh.get_element_block(1).elements.size(), 4);
-    EXPECT_EQ(mesh.get_element_block(2).elements.size(), 4);
+    EXPECT_EQ(mesh.cell_blocks.size(), 2);
+    EXPECT_EQ(mesh.point_sets.size(), 1);
+    EXPECT_EQ(mesh.side_sets.size(), 1);
+    EXPECT_EQ(mesh.points.size(), 27);
+    EXPECT_EQ(mesh.cell_blocks[1].cell_connectivities.size(), 4);
+    EXPECT_EQ(mesh.cell_blocks[2].cell_connectivities.size(), 4);
 
-    mesh.print(std::cout, Core::IO::Exodus::VerbosityLevel::none);
+    Core::IO::MeshInput::print(mesh, std::cout, Core::IO::MeshInput::VerbosityLevel::none);
   }
 
   TEST(Exodus, NodeOffset)
   {
-    Core::IO::Exodus::Mesh mesh(TESTING::get_support_file_path("test_files/exodus/cube.exo"),
+    Core::IO::MeshInput::Mesh mesh = Core::IO::Exodus::read_exodus_file(
+        TESTING::get_support_file_path("test_files/exodus/cube.exo"),
         Core::IO::Exodus::MeshParameters{.node_start_id = 100});
-    EXPECT_EQ(mesh.get_node(100), (std::vector<double>{-5.0, 0.0, 0.0}));
-    EXPECT_EQ(mesh.get_element_block(1).elements.at(1),
+    EXPECT_EQ(mesh.points[100], (std::vector<double>{-5.0, 0.0, 0.0}));
+    EXPECT_EQ(mesh.cell_blocks[1].cell_connectivities.at(1),
         (std::vector<int>{108, 100, 103, 109, 110, 104, 107, 111}));
   }
 }  // namespace

@@ -25,14 +25,14 @@ namespace Core::IO
 {
   class InputFile;
 
-  namespace Exodus
+  namespace MeshInput
   {
-    class Mesh;
+    struct Mesh;
   }
 
   namespace Internal
   {
-    struct ExodusReader;
+    struct MeshReader;
   }
 
 
@@ -100,17 +100,17 @@ namespace Core::IO
     [[nodiscard]] MPI_Comm get_comm() const;
 
     /**
-     * Access the exodus mesh on rank 0. This is only available if an exodus file was actually read.
-     * On ranks other than 0, this will always return a nullptr.
+     * Access the external mesh on rank 0. This is only available if an external mesh was actually
+     * read. On ranks other than 0, this will always return a nullptr.
      */
-    [[nodiscard]] const Exodus::Mesh* get_exodus_mesh_on_rank_zero() const;
+    [[nodiscard]] const MeshInput::Mesh* get_external_mesh_on_rank_zero() const;
 
    private:
     /// Communicator for this mesh reader.
     MPI_Comm comm_;
 
-    /// Internal exodus readers.
-    std::vector<std::unique_ptr<Internal::ExodusReader>> exodus_readers_;
+    /// Internal mesh readers.
+    std::vector<std::unique_ptr<Internal::MeshReader>> mesh_readers_;
 
     /// The input file to read the mesh from.
     const Core::IO::InputFile& input_;

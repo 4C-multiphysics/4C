@@ -11,6 +11,7 @@
 #include "4C_config.hpp"
 
 #include "4C_fem_general_element.hpp"
+#include "4C_io_mesh.hpp"
 
 #include <filesystem>
 #include <string>
@@ -20,29 +21,6 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace Core::IO::Exodus
 {
-  enum class VerbosityLevel : int
-  {
-    none = 0,              ///< no output,
-    summary = 1,           ///< output of summary for blocks and sets,
-    detailed_summary = 2,  ///< output of summary for each block and set,
-    detailed = 3,          ///< detailed output for each block and set,
-    full = 4               ///< detailed output, even for nodes and element connectivities
-  };
-  constexpr bool operator>(VerbosityLevel lhs, VerbosityLevel rhs)
-  {
-    return static_cast<int>(lhs) > static_cast<int>(rhs);
-  }
-
-  /**
-   * Describe each of the VerbosityLevel options.
-   */
-  std::string describe(VerbosityLevel level);
-
-
-  struct ElementBlock;
-  struct NodeSet;
-  struct SideSet;
-
   /**
    * Additional parameters that are used in the constructor.
    */
@@ -55,156 +33,8 @@ namespace Core::IO::Exodus
     int node_start_id{1};
   };
 
-  /**
-   * A class that stores the mesh information read from an Exodus file.
-   */
-  class Mesh
-  {
-   public:
-    /**
-     * @brief Read a mesh from an Exodus file.
-     *
-     * Read the data from the Exodus file and store it in the class. The optional @p
-     * mesh_data can be used to set options documented in the MeshParameters struct.
-     */
-    Mesh(std::filesystem::path exodus_file, MeshParameters mesh_parameters = {});
-
-    /** Print mesh info
-     *  parameter:
-     *  os (std::ostream): output stream
-     *  verbose (VerbosityLevel): verbosity
-     */
-    void print(std::ostream& os, VerbosityLevel verbose) const;
-
-    //! Get number of nodes in mesh
-    [[nodiscard]] std::size_t get_num_nodes() const { return nodes_.size(); }
-
-    //! Get number of elements in mesh
-    [[nodiscard]] std::size_t get_num_elements() const { return num_elem_; }
-
-    //! Get ElementBlock map
-    [[nodiscard]] const std::map<int, ElementBlock>& get_element_blocks() const
-    {
-      return element_blocks_;
-    }
-
-    //! Get Number of ElementBlocks
-    [[nodiscard]] std::size_t get_num_element_blocks() const { return element_blocks_.size(); }
-
-    //! Get one ElementBlock
-    [[nodiscard]] const ElementBlock& get_element_block(const int id) const;
-
-    //! Get NodeSet map
-    [[nodiscard]] const std::map<int, NodeSet>& get_node_sets() const { return node_sets_; }
-
-    //! Get one NodeSet
-    [[nodiscard]] NodeSet get_node_set(const int id) const;
-
-    //! Get SideSet map
-    [[nodiscard]] std::map<int, SideSet> get_side_sets() const { return side_sets_; }
-
-    //! Get one SideSet
-    [[nodiscard]] const SideSet& get_side_set(const int id) const;
-
-    //! Get Node map
-    [[nodiscard]] const std::map<int, std::vector<double>>& get_nodes() const { return nodes_; }
-
-    //! Get one nodal coords
-    [[nodiscard]] const std::vector<double>& get_node(const int node_id) const;
-
-   private:
-    MeshParameters mesh_parameters_;
-
-    std::map<int, std::vector<double>> nodes_;
-
-    std::map<int, ElementBlock> element_blocks_;
-
-    std::map<int, NodeSet> node_sets_;
-
-    std::map<int, SideSet> side_sets_;
-
-    //! Number of spatial dimensions in the mesh file.
-    int spatial_dimension_{};
-
-    //! number of elements
-    std::size_t num_elem_{};
-
-    //! title
-    std::string title_;
-
-    //! exodus filename
-    std::filesystem::path exodus_filename_;
-  };
-
-
-  /**
-   * An EXODUS element block. This encodes a collection of elements of the same type.
-   */
-  struct ElementBlock
-  {
-    /**
-     * The type of the elements in the element block.
-     */
-    FE::CellType cell_type;
-
-    /**
-     * Elements in this block. The keys are the element IDs, and the values are the IDs of the nodes
-     * making up the element.
-     */
-    std::map<int, std::vector<int>> elements;
-
-    /**
-     * The name of the element block. This may be an empty string.
-     */
-    std::string name;
-
-    /**
-     * Pretty-print information about the element block.
-     */
-    void print(std::ostream& os, VerbosityLevel verbose = VerbosityLevel::none) const;
-  };
-
-  /**
-   * An EXODUS node set. This encodes a collection of nodes.
-   */
-  struct NodeSet
-  {
-    /**
-     *  The IDs of the nodes in the node set.
-     */
-    std::vector<int> node_ids;
-
-    /**
-     * The name of the node set. This may be an empty string.
-     */
-    std::string name;
-
-    /**
-     * Pretty-print information about the node set.
-     */
-    void print(std::ostream& os, VerbosityLevel verbose = VerbosityLevel::none) const;
-  };
-
-  /**
-   * An EXODUS side set. This encodes a collection of sides/faces of elements.
-   */
-  struct SideSet
-  {
-    /**
-     * The IDs of the nodes making up the sides of the side set.
-     */
-    std::map<int, std::vector<int>> sides;
-
-    /**
-     * The name of the side set. This may be an empty string.
-     */
-    std::string name;
-
-    /**
-     * Pretty-print information about the side set.
-     */
-    void print(std::ostream& os, VerbosityLevel verbose = VerbosityLevel::none) const;
-  };
+  MeshInput::Mesh read_exodus_file(
+      const std::filesystem::path& exodus_file, MeshParameters mesh_parameters = {});
 }  // namespace Core::IO::Exodus
 
 FOUR_C_NAMESPACE_CLOSE

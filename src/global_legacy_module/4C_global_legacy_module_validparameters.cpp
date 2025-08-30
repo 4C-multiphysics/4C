@@ -50,10 +50,10 @@
 #include "4C_inpar_volmortar.hpp"
 #include "4C_inpar_wear.hpp"
 #include "4C_inpar_xfem.hpp"
-#include "4C_io_exodus.hpp"
 #include "4C_io_gridgenerator.hpp"
 #include "4C_io_input_file_utils.hpp"
 #include "4C_io_input_spec_builders.hpp"
+#include "4C_io_mesh.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_linear_solver_method_input.hpp"
 #include "4C_lubrication_input.hpp"
@@ -156,14 +156,14 @@ std::map<std::string, Core::IO::InputSpec> Global::valid_parameters()
     specs[field_identifier + " GEOMETRY"] = group(field_identifier + " GEOMETRY",
         {
             parameter<std::filesystem::path>(
-                "FILE", {.description = "Path to the exodus geometry file. Either absolute or "
+                "FILE", {.description = "Path to the external geometry file. Either absolute or "
                                         "relative to the input file."}),
-            parameter<Core::IO::Exodus::VerbosityLevel>("SHOW_INFO",
+            parameter<Core::IO::MeshInput::VerbosityLevel>("SHOW_INFO",
                 {
                     .description = "Choose verbosity of reporting element, node and set info for "
                                    "the exodus file after reading.",
-                    .enum_value_description = Core::IO::Exodus::describe,
-                    .default_value = Core::IO::Exodus::VerbosityLevel::none,
+                    .enum_value_description = Core::IO::MeshInput::describe,
+                    .default_value = Core::IO::MeshInput::VerbosityLevel::none,
                 }),
 
             // Once we support more formats, we should add a "TYPE" parameter for the file format.

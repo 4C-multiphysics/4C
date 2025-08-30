@@ -128,33 +128,16 @@ namespace
 }  // namespace
 
 
-std::string Core::IO::Exodus::describe(VerbosityLevel level)
-{
-  switch (level)
-  {
-    case VerbosityLevel::none:
-      return "no output";
-    case VerbosityLevel::summary:
-      return "output of summary for blocks and sets";
-    case VerbosityLevel::detailed_summary:
-      return "output of summary for each block and set";
-    case VerbosityLevel::detailed:
-      return "detailed output for each block and set";
-    case VerbosityLevel::full:
-      return "detailed output, even for nodes and element connectivities";
-  }
-  std23::unreachable();
-}
 
-
-Core::IO::Exodus::Mesh::Mesh(std::filesystem::path exodus_file, MeshParameters mesh_parameters)
-    : mesh_parameters_(mesh_parameters)
+Core::IO::MeshInput::Mesh Core::IO::Exodus::read_exodus_file(
+    const std::filesystem::path& exodus_file, MeshParameters mesh_parameters)
 {
+  Core::IO::MeshInput::Mesh mesh{};
+
   int CPU_word_size, IO_word_size;
   float exoversion;               /* version of exodus */
   CPU_word_size = sizeof(double); /* size of a double */
   IO_word_size = 0;               /* use what is stored in file */
-  exodus_filename_ = exodus_file;
 
   if (!std::filesystem::exists(exodus_file))
     FOUR_C_THROW("File {} does not exist.", exodus_file.string());
@@ -164,11 +147,10 @@ Core::IO::Exodus::Mesh::Mesh(std::filesystem::path exodus_file, MeshParameters m
   if (exo_handle <= 0) FOUR_C_THROW("Error while opening EXODUS II file {}.", exodus_file.string());
 
   // read database parameters
-  int num_elem_blk, num_node_sets, num_side_sets, num_nodes;
+  int num_elem_blk, num_node_sets, num_side_sets, num_nodes, spatial_dimension, num_elements;
   char title[MAX_LINE_LENGTH + 1];
-  CHECK_EXODUS_CALL(ex_get_init(exo_handle, title, &spatial_dimension_, &num_nodes, &num_elem_,
+  CHECK_EXODUS_CALL(ex_get_init(exo_handle, title, &spatial_dimension, &num_nodes, &num_elements,
       &num_elem_blk, &num_node_sets, &num_side_sets));
-  title_ = std::string(title);
 
   // get nodal coordinates
   {
@@ -178,11 +160,11 @@ Core::IO::Exodus::Mesh::Mesh(std::filesystem::path exodus_file, MeshParameters m
     CHECK_EXODUS_CALL(ex_get_coord(exo_handle, x.data(), y.data(), z.data()));
 
     FOUR_C_ASSERT_ALWAYS(
-        mesh_parameters_.node_start_id >= 0, "Node start id must be greater than or equal to 0");
+        mesh_parameters.node_start_id >= 0, "Node start id must be greater than or equal to 0");
 
     for (int i = 0; i < num_nodes; ++i)
     {
-      nodes_[i + mesh_parameters_.node_start_id] = {x[i], y[i], z[i]};
+      mesh.points[i + mesh_parameters.node_start_id] = {x[i], y[i], z[i]};
     }
   }
 
@@ -215,7 +197,7 @@ Core::IO::Exodus::Mesh::Mesh(std::filesystem::path exodus_file, MeshParameters m
       std::map<int, std::vector<int>> eleconn;
 
       // Compare the desired start ID to Exodus' one-based indexing to get the offset.
-      const int node_offset = mesh_parameters_.node_start_id - 1;
+      const int node_offset = mesh_parameters.node_start_id - 1;
       for (int j = 0; j < num_el_in_blk; ++j)
       {
         std::vector<int>& actconn = eleconn[j];
@@ -227,11 +209,10 @@ Core::IO::Exodus::Mesh::Mesh(std::filesystem::path exodus_file, MeshParameters m
         reorder_nodes_exodus_to_four_c(actconn, cell_type_from_exodus_string(ele_type));
       }
 
-      element_blocks_.emplace(ebids[i], ElementBlock{
-                                            .cell_type = cell_type_from_exodus_string(ele_type),
-                                            .elements = eleconn,
-                                            .name = blockname,
-                                        });
+      mesh.cell_blocks.emplace(ebids[i], MeshInput::CellBlock{
+                                             .cell_type = cell_type_from_exodus_string(ele_type),
+                                             .cell_connectivities = eleconn,
+                                         });
     }
   }  // end of element section
 
@@ -259,13 +240,13 @@ Core::IO::Exodus::Mesh::Mesh(std::filesystem::path exodus_file, MeshParameters m
           ex_get_set(exo_handle, EX_NODE_SET, npropID[i], node_set_node_list.data(), nullptr));
       std::set<int> nodes_in_set;
       // Compare the desired start ID to Exodus' one-based indexing to get the offset.
-      const int node_offset = mesh_parameters_.node_start_id - 1;
+      const int node_offset = mesh_parameters.node_start_id - 1;
       for (int j = 0; j < num_nodes_in_set; ++j)
         nodes_in_set.insert(node_set_node_list[j] + node_offset);
       std::vector<int> nodes_in_set_vec(nodes_in_set.begin(), nodes_in_set.end());
-      NodeSet actNodeSet{.node_ids = nodes_in_set_vec, .name = nodesetname};
+      MeshInput::PointSet actNodeSet{.point_ids = nodes_in_set_vec};
 
-      node_sets_.insert(std::pair<int, NodeSet>(npropID[i], actNodeSet));
+      mesh.point_sets.insert(std::pair<int, MeshInput::PointSet>(npropID[i], actNodeSet));
     }
   }  // end of nodeset section
   // ***************************************************************************
@@ -302,185 +283,16 @@ Core::IO::Exodus::Mesh::Mesh(std::filesystem::path exodus_file, MeshParameters m
         sides_in_set.insert(std::pair<int, std::vector<int>>(j, side));
       }
 
-      SideSet actSideSet(sides_in_set, sidesetname);
+      MeshInput::SideSet actSideSet{.sides = sides_in_set};
 
       // Add this SideSet into Mesh map
-      side_sets_.insert(std::pair<int, SideSet>(spropID[i], actSideSet));
+      mesh.side_sets.insert(std::pair<int, MeshInput::SideSet>(spropID[i], actSideSet));
     }
   }  // end of sideset section
 
   CHECK_EXODUS_CALL(ex_close(exo_handle));
-}
 
-
-/*----------------------------------------------------------------------*
- |  Print method (public)                                      maf 12/07|
- *----------------------------------------------------------------------*/
-void Core::IO::Exodus::Mesh::print(std::ostream& os, VerbosityLevel verbose) const
-{
-  os << "Mesh read in from " << exodus_filename_ << "\n";
-  if (verbose >= VerbosityLevel::summary)
-  {
-    os << "  consists of " << get_num_nodes() << " Nodes and " << num_elem_ << " Elements; \n"
-       << "  organized in " << get_num_element_blocks() << " ElementBlocks, ";
-    os << node_sets_.size() << " NodeSets and ";
-    os << side_sets_.size() << " SideSets. ";
-    os << std::endl << std::endl;
-  }
-  if (verbose >= VerbosityLevel::detailed_summary)
-  {
-    if (verbose == VerbosityLevel::full)
-    {
-      for (const auto& [node_id, coords] : get_nodes())
-      {
-        os << "Node " << node_id << ": ";
-        for (const auto& coord : coords)
-        {
-          os << std::format("{:10.6g},", coord);
-        }
-        os << "\n";
-      }
-      os << std::endl;
-    }
-    os << "ElementBlocks\n";
-    os << "-------------\n";
-    for (const auto& [eb_id, eb] : get_element_blocks())
-    {
-      os << "Block " << eb_id << ": ";
-      eb.print(os, verbose);
-    }
-
-    os << "\nNodeSets\n";
-    os << "--------\n";
-    for (const auto& [ns_id, ns] : get_node_sets())
-    {
-      os << "NodeSet " << ns_id << ": ";
-      ns.print(os, verbose);
-    }
-
-    os << "\nSideSets\n";
-    os << "--------\n";
-    for (const auto& [ss_id, ss] : get_side_sets())
-    {
-      os << "SideSet " << ss_id << ": ";
-      ss.print(os, verbose);
-    }
-  }
-}
-
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-const Core::IO::Exodus::ElementBlock& Core::IO::Exodus::Mesh::get_element_block(const int id) const
-{
-  if (element_blocks_.find(id) == element_blocks_.end())
-    FOUR_C_THROW("ElementBlock {} not found.", id);
-
-  return (element_blocks_.find(id))->second;
-}
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-Core::IO::Exodus::NodeSet Core::IO::Exodus::Mesh::get_node_set(const int id) const
-{
-  if (node_sets_.find(id) == node_sets_.end()) FOUR_C_THROW("NodeSet {} not found.", id);
-
-  return (node_sets_.find(id))->second;
-}
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-const Core::IO::Exodus::SideSet& Core::IO::Exodus::Mesh::get_side_set(const int id) const
-{
-  if (side_sets_.find(id) == side_sets_.end()) FOUR_C_THROW("SideSet {} not found.", id);
-
-  return (side_sets_.find(id))->second;
-}
-
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-const std::vector<double>& Core::IO::Exodus::Mesh::get_node(const int node_id) const
-{
-  return nodes_.at(node_id);
-}
-
-
-
-void Core::IO::Exodus::ElementBlock::print(std::ostream& os, VerbosityLevel verbose) const
-{
-  using EnumTools::operator<<;
-
-  os << elements.size() << " Elements of Shape " << cell_type;
-  if (not name.empty()) os << " (block name: " << name << ")";
-  os << std::endl;
-
-  if (verbose == VerbosityLevel::detailed)
-  {
-    int nline = 0;
-    os << "Element numbers:";
-    for (const auto& element : elements)
-    {
-      if (nline++ % 12 == 0) os << "\n  ";
-      os << element.first << ",";
-    }
-    if (nline % 12 != 0) os << std::endl;
-    os << std::endl;
-  }
-  else if (verbose == VerbosityLevel::full)
-  {
-    for (const auto& [id, conn] : elements)
-    {
-      os << "  Element " << id << ": ";
-      for (const auto& node : conn)
-      {
-        os << node << ",";
-      }
-      os << std::endl;
-    }
-    os << std::endl;
-  }
-}
-
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-void Core::IO::Exodus::NodeSet::print(std::ostream& os, VerbosityLevel verbose) const
-{
-  if (not name.empty()) os << "(" << name << ")";
-  os << " contains " << node_ids.size() << " Nodes";
-  if (verbose == VerbosityLevel::full)
-  {
-    os << ": ";
-    int nline = 0;
-    int nodelength = std::to_string(*std::max_element(node_ids.begin(), node_ids.end())).size();
-    for (const int id : node_ids)
-    {
-      if (nline++ % 12 == 0) os << "\n  ";
-      os << std::setw(nodelength) << id << ",";
-    }
-    if (nline % 12 != 0) os << std::endl;
-  }
-  else
-    os << "\n";
-}
-
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-void Core::IO::Exodus::SideSet::print(std::ostream& os, VerbosityLevel verbose) const
-{
-  if (not name.empty()) os << ", named: " << name << ",";
-  os << " contains " << sides.size() << " sides" << std::endl;
-
-  if (verbose == VerbosityLevel::full)
-  {
-    for (const auto& [side, ele_side] : sides)
-    {
-      os << "Side " << side << ": ";
-      os << "  Ele: " << ele_side.at(0) << ", Side: " << ele_side.at(1) << std::endl;
-    }
-  }
+  return mesh;
 }
 
 FOUR_C_NAMESPACE_CLOSE

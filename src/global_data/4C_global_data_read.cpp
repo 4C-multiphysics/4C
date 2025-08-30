@@ -1470,13 +1470,12 @@ namespace
     // Data is available on rank zero: bring it into the right shape and broadcast it.
     if (my_rank == 0)
     {
-      auto* exodus_mesh = mesh_reader.get_exodus_mesh_on_rank_zero();
-      if (exodus_mesh)
+      if (const auto* external_mesh = mesh_reader.get_external_mesh_on_rank_zero(); external_mesh)
       {
-        const auto& node_sets_from_mesh = exodus_mesh->get_node_sets();
+        const auto& node_sets_from_mesh = external_mesh->point_sets;
         for (const auto& [id, node_set] : node_sets_from_mesh)
         {
-          const auto& set = node_set.node_ids;
+          const auto& set = node_set.point_ids;
           node_sets[id] = std::vector<int>(set.begin(), set.end());
         }
       }
@@ -1497,14 +1496,13 @@ namespace
     // Data is available on rank zero: bring it into the right shape and broadcast it.
     if (my_rank == 0)
     {
-      auto* exodus_mesh = mesh_reader.get_exodus_mesh_on_rank_zero();
-      if (exodus_mesh)
+      if (const auto* external_mesh = mesh_reader.get_external_mesh_on_rank_zero(); external_mesh)
       {
-        const auto& element_blocks = exodus_mesh->get_element_blocks();
+        const auto& element_blocks = external_mesh->cell_blocks;
         for (const auto& [id, eb] : element_blocks)
         {
           std::set<int> nodes;
-          for (const auto& connectivity : eb.elements | std::views::values)
+          for (const auto& connectivity : eb.cell_connectivities | std::views::values)
           {
             nodes.insert(connectivity.begin(), connectivity.end());
           }
