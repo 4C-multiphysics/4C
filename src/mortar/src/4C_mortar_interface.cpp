@@ -1168,6 +1168,7 @@ void Mortar::Interface::redistribute()
     Teuchos::ParameterList rebalanceParams;
     rebalanceParams.set<std::string>("num parts", std::to_string(sproc));
     rebalanceParams.set<std::string>("imbalance tol", std::to_string(imbalance_tol));
+    rebalanceParams.set("partitioning method", "graph");
 
     std::tie(srownodes, scolnodes) =
         Core::Rebalance::rebalance_node_maps(*snodegraph, rebalanceParams);
@@ -1231,6 +1232,7 @@ void Mortar::Interface::redistribute_master_side(std::shared_ptr<Core::LinAlg::M
   Teuchos::ParameterList rebalanceParams;
   rebalanceParams.set<std::string>("num parts", std::to_string(parts));
   rebalanceParams.set<std::string>("imbalance tol", std::to_string(imbalance));
+  rebalanceParams.set("partitioning method", "graph");
 
   std::tie(rownodes, colnodes) = Core::Rebalance::rebalance_node_maps(*nodegraph, rebalanceParams);
 }
