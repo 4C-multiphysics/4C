@@ -63,6 +63,9 @@ std::shared_ptr<Core::LinAlg::Graph> Core::Rebalance::rebalance_graph(
 {
   TEUCHOS_FUNC_TIME_MONITOR("Rebalance::RebalanceGraph");
 
+  if (!initialGraph.filled())
+    FOUR_C_THROW("The graph needs to be fill completed before being able to be rebalanced.");
+
   Isorropia::Epetra::CostDescriber costs = Isorropia::Epetra::CostDescriber();
   if (initialNodeWeights != nullptr)
     costs.setVertexWeights(Teuchos::rcpFromRef(initialNodeWeights->get_ref_of_epetra_vector()));
@@ -339,6 +342,11 @@ std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_graph(
 std::shared_ptr<const Core::LinAlg::Graph> Core::Rebalance::build_monolithic_node_graph(
     const Core::FE::Discretization& dis, const Core::GeometricSearch::GeometricSearchParams& params)
 {
+  if (!dis.filled())
+    FOUR_C_THROW(
+        "The discretization needs to be fill completed to be able to construct the monolithic "
+        "graph.");
+
   // 1. Do a global geometric search
   Core::LinAlg::Vector<double> zero_vector =
       Core::LinAlg::Vector<double>(*(dis.dof_col_map()), true);

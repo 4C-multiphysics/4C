@@ -67,7 +67,9 @@ namespace Core::Rebalance
 
   @note Use Isorropia package to access Zoltan. By default, Isorropia will use Zoltan hypergraph
   partitioning, treating the graph columns as hyper-edges and the graph rows as vertices. The
-   rebalanced graph will be fill_complete().
+  rebalanced graph will be fill_complete().
+
+  \pre The initialGraph has to be filled()==true.
 
   @param[in] initialGraph Initial graph to be rebalanced
   @param[in] rebalanceParams Parameter list with rebalancing options
@@ -132,7 +134,7 @@ namespace Core::Rebalance
   to obtain information about close elements. Based on this information, additional edges are
   build into the graph.
 
-  \pre discretization has to be fill_complete()!
+  \pre The discretization has to be filled()==true.
 
   @param[in] dis discretization whose monolithic node graph will be build
 
