@@ -27,7 +27,8 @@
         "FOUR_C_WITH_MIRCO": "ON",
         "FOUR_C_WITH_DEAL_II": "ON",
         "FOUR_C_WITH_PYBIND11": "ON",
-        "FOUR_C_WITH_GOOGLE_BENCHMARK": "ON"
+        "FOUR_C_WITH_GOOGLE_BENCHMARK": "ON",
+        "FOUR_C_WITH_VTK": "ON"
       }
     },
     {
@@ -135,7 +136,8 @@
         "FOUR_C_WITH_PYTHON": "OFF",
         "FOUR_C_WITH_PYBIND11": "OFF",
         "FOUR_C_ENABLE_METADATA_GENERATION": "OFF",
-        "FOUR_C_BUILD_DOCUMENTATION": "OFF"
+        "FOUR_C_BUILD_DOCUMENTATION": "OFF",
+        "FOUR_C_WITH_VTK": "OFF"
       }
     }
   ]

@@ -26,6 +26,10 @@ if(FOUR_C_WITH_DEAL_II)
   find_package(deal.II REQUIRED CONFIG HINTS ${FOUR_C_DEAL_II_ROOT})
 endif()
 
+if(FOUR_C_WITH_VTK)
+  find_package(VTK REQUIRED COMPONENTS CommonCore CommonDataModel IOXML CONFIG HINTS ${FOUR_C_VTK_ROOT})
+endif()
+
 if(FOUR_C_WITH_BOOST)
   find_package(
     Boost
