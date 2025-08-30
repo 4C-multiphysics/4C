@@ -32,8 +32,8 @@ namespace DealiiWrappers
    * the @p discretization object.
    */
   template <int dim, int spacedim>
-  void assign_fes_and_dofs(dealii::DoFHandler<dim, spacedim>& dof_handler,
-      const Core::FE::Discretization& discretization, Context<dim, spacedim>& context);
+  void assign_fes_and_dofs(
+      const Context<dim, spacedim>& context, dealii::DoFHandler<dim, spacedim>& dof_handler);
 
 }  // namespace DealiiWrappers
 
