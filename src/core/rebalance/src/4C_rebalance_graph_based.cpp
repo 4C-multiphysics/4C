@@ -114,11 +114,10 @@ std::shared_ptr<Core::LinAlg::Graph> Core::Rebalance::rebalance_graph(
   graphAdapter->applyPartitioningSolution(
       initialGraph.get_epetra_crs_graph(), balancedGraph, solution);
 
-  auto graph = std::make_shared<Core::LinAlg::Graph>(*balancedGraph);
-  graph->fill_complete();
-  graph->optimize_storage();
+  balancedGraph->FillComplete();
+  balancedGraph->OptimizeStorage();
 
-  return graph;
+  return std::make_shared<Core::LinAlg::Graph>(*balancedGraph);
 }
 
 /*----------------------------------------------------------------------*/
