@@ -505,51 +505,53 @@ namespace
     const int myrank = Core::Communication::my_mpi_rank(input.get_comm());
     if (myrank > 0) return;
 
-    int line_count = 0;
+    int expected_node_id = 0;
     for (const auto& node_line : input.in_section_rank_0_only(node_section_name))
     {
       Core::IO::ValueParser parser{
           node_line.get_as_dat_style_string(), {.user_scope_message = "While reading node data: "}};
       auto type = parser.read<std::string>();
 
+      int id = parser.read<int>() - 1;
+      FOUR_C_ASSERT_ALWAYS(id == expected_node_id,
+          "4C internally expects node IDs to be consecutive starting at 1! Expecting node id {} "
+          "but got {}",
+          expected_node_id + 1, id + 1);
+      ++expected_node_id;
+
       if (type == "NODE")
       {
-        int nodeid = parser.read<int>() - 1;
         parser.consume("COORD");
         auto coords = parser.read<std::vector<double>>(3);
 
-        max_node_id = std::max(max_node_id, nodeid) + 1;
+        max_node_id = std::max(max_node_id, id) + 1;
         std::vector<std::shared_ptr<Core::FE::Discretization>> dis =
-            find_dis_node(element_readers, nodeid);
+            find_dis_node(element_readers, id);
 
         for (const auto& di : dis)
         {
           // create node and add to discretization
           std::shared_ptr<Core::Nodes::Node> node =
-              std::make_shared<Core::Nodes::Node>(nodeid, coords, myrank);
+              std::make_shared<Core::Nodes::Node>(id, coords, myrank);
           di->add_node(node);
         }
       }
       // this node is a Nurbs control point
       else if (type == "CP")
       {
-        int cpid = parser.read<int>() - 1;
         parser.consume("COORD");
         auto coords = parser.read<std::vector<double>>(3);
         double weight = parser.read<double>();
 
-        max_node_id = std::max(max_node_id, cpid) + 1;
-        if (cpid != line_count)
-          FOUR_C_THROW(
-              "Reading of control points {} failed: They must be numbered consecutive!!", cpid);
+        max_node_id = std::max(max_node_id, id) + 1;
         std::vector<std::shared_ptr<Core::FE::Discretization>> diss =
-            find_dis_node(element_readers, cpid);
+            find_dis_node(element_readers, id);
 
         for (auto& dis : diss)
         {
           // create node/control point and add to discretization
           std::shared_ptr<Core::FE::Nurbs::ControlPoint> node =
-              std::make_shared<Core::FE::Nurbs::ControlPoint>(cpid, coords, weight, myrank);
+              std::make_shared<Core::FE::Nurbs::ControlPoint>(id, coords, weight, myrank);
           dis->add_node(node);
         }
       }
@@ -569,10 +571,9 @@ namespace
         std::vector<std::array<double, 3>> fibers;
         std::map<Core::Nodes::AngleType, double> angles;
 
-        int nodeid = parser.read<int>() - 1;
         parser.consume("COORD");
         auto coords = parser.read<std::vector<double>>(3);
-        max_node_id = std::max(max_node_id, nodeid) + 1;
+        max_node_id = std::max(max_node_id, id) + 1;
 
         while (!parser.at_end())
         {
@@ -609,18 +610,16 @@ namespace
 
         // add fiber information to node
         std::vector<std::shared_ptr<Core::FE::Discretization>> discretizations =
-            find_dis_node(element_readers, nodeid);
+            find_dis_node(element_readers, id);
         for (auto& dis : discretizations)
         {
           auto node = std::make_shared<Core::Nodes::FiberNode>(
-              nodeid, coords, cosyDirections, fibers, angles, myrank);
+              id, coords, cosyDirections, fibers, angles, myrank);
           dis->add_node(node);
         }
       }
       else
         FOUR_C_THROW("Unknown node type '{}'", type);
-
-      ++line_count;
     }
   }
 
