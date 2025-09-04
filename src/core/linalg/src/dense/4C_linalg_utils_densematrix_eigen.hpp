@@ -64,15 +64,24 @@ namespace Core::LinAlg
       bool eval_eigenvectors, bool postproc = false);
 
   /*!
-   \brief Compute all eigenvalues the generalized Eigenvalue problem
-   Ax = lambda Bx via QZ-algorithm (B is singular) and returns the
-   maximum Eigenvalue.
+   \brief Compute and return all eigenvalues of the generalized eigenvalue problem
+   Ax = lambda Bx via QZ-algorithm (B is singular).
 
    \param A (in):    A Matrix
    \param B (in):    B Matrix
-
    */
-  double generalized_eigen(Core::LinAlg::SerialDenseMatrix& A, Core::LinAlg::SerialDenseMatrix& B);
+  std::vector<std::complex<double>> generalized_eigen(
+      Core::LinAlg::SerialDenseMatrix& A, Core::LinAlg::SerialDenseMatrix& B);
+
+  /*!
+   \brief Compute and return the maximum eigenvalue (only real part) of the generalized eigenvalue
+   problem Ax = lambda Bx via QZ-algorithm (B is singular).
+
+   \param A (in):    A Matrix
+   \param B (in):    B Matrix
+   */
+  double generalized_eigen_max_real_eigenvalue(
+      Core::LinAlg::SerialDenseMatrix& A, Core::LinAlg::SerialDenseMatrix& B);
 
   /*!
    \brief Compute all eigenvalues and eigenvectors of a real symmetric matrix A

@@ -4236,7 +4236,8 @@ void Discret::Elements::FluidBoundaryParent<distype>::estimate_nitsche_trace_max
 
   // Solve the local eigen value problem Ax = lambda Bx. The function generalized_eigen
   // returns the maximum Eigenvalue of the problem.
-  const double maxeigenvalue = Core::LinAlg::generalized_eigen(elemat1, elemat2);
+  const double maxeigenvalue =
+      Core::LinAlg::generalized_eigen_max_real_eigenvalue(elemat1, elemat2);
 
   // fill the map: every side id has it's own parameter beta
   (*params.get<std::shared_ptr<std::map<int, double>>>(
