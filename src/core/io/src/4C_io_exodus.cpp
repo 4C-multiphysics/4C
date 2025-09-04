@@ -129,10 +129,10 @@ namespace
 
 
 
-Core::IO::MeshInput::Mesh Core::IO::Exodus::read_exodus_file(
-    const std::filesystem::path& exodus_file, MeshParameters mesh_parameters)
+Core::IO::MeshInput::Mesh<3> Core::IO::Exodus::read_exodus_file(
+    const std::filesystem::path& exodus_file)
 {
-  Core::IO::MeshInput::Mesh mesh{};
+  Core::IO::MeshInput::Mesh<3> mesh{};
 
   int CPU_word_size, IO_word_size;
   float exoversion;               /* version of exodus */
@@ -152,27 +152,37 @@ Core::IO::MeshInput::Mesh Core::IO::Exodus::read_exodus_file(
   CHECK_EXODUS_CALL(ex_get_init(exo_handle, title, &spatial_dimension, &num_nodes, &num_elements,
       &num_elem_blk, &num_node_sets, &num_side_sets));
 
+  mesh.points.reserve(num_nodes);
   // get nodal coordinates
   {
+    std::vector<int> external_ids(num_nodes);
+    CHECK_EXODUS_CALL(ex_get_id_map(exo_handle, EX_NODE_MAP, external_ids.data()));
+
     std::vector<double> x(num_nodes);
     std::vector<double> y(num_nodes);
     std::vector<double> z(num_nodes);
     CHECK_EXODUS_CALL(ex_get_coord(exo_handle, x.data(), y.data(), z.data()));
 
-    FOUR_C_ASSERT_ALWAYS(
-        mesh_parameters.node_start_id >= 0, "Node start id must be greater than or equal to 0");
-
     for (int i = 0; i < num_nodes; ++i)
     {
-      mesh.points[i + mesh_parameters.node_start_id] = {x[i], y[i], z[i]};
+      mesh.points.emplace_back(
+          MeshInput::Point<3>{.external_id = external_ids[i], .coords = {x[i], y[i], z[i]}});
     }
   }
 
   // Get all ElementBlocks
   {
+    // get all element ids
+    int num_elem = ex_inquire_int(exo_handle, EX_INQ_ELEM);
+    std::vector<int> elem_ids(num_elem);
+    CHECK_EXODUS_CALL(ex_get_id_map(exo_handle, EX_ELEM_MAP, elem_ids.data()));
+
+
     std::vector<int> epropID(num_elem_blk);
     std::vector<int> ebids(num_elem_blk);
     CHECK_EXODUS_CALL(ex_get_ids(exo_handle, EX_ELEM_BLOCK, ebids.data()));
+
+    int element_offset = 0;
     for (int i = 0; i < num_elem_blk; ++i)
     {
       // Read Element Blocks into Map
@@ -194,25 +204,24 @@ Core::IO::MeshInput::Mesh Core::IO::Exodus::read_exodus_file(
       CHECK_EXODUS_CALL(
           ex_get_conn(exo_handle, EX_ELEM_BLOCK, ebids[i], allconn.data(), nullptr, nullptr));
 
-      std::map<int, std::vector<int>> eleconn;
+      MeshInput::CellBlock cell_block(cell_type_from_exodus_string(ele_type));
 
-      // Compare the desired start ID to Exodus' one-based indexing to get the offset.
-      const int node_offset = mesh_parameters.node_start_id - 1;
       for (int j = 0; j < num_el_in_blk; ++j)
       {
-        std::vector<int>& actconn = eleconn[j];
-        actconn.reserve(num_nod_per_elem);
+        std::vector<int> cell_connectivity;
+        cell_connectivity.reserve(num_nod_per_elem);
         for (int k = 0; k < num_nod_per_elem; ++k)
         {
-          actconn.push_back(allconn[k + j * num_nod_per_elem] + node_offset);
+          // Exodus has one-based indexing, thus we need to subtract 1
+          cell_connectivity.push_back(allconn[k + j * num_nod_per_elem] - 1);
         }
-        reorder_nodes_exodus_to_four_c(actconn, cell_type_from_exodus_string(ele_type));
+        reorder_nodes_exodus_to_four_c(cell_connectivity, cell_type_from_exodus_string(ele_type));
+
+        cell_block.add_cell(elem_ids[element_offset + j], cell_connectivity);
       }
 
-      mesh.cell_blocks.emplace(ebids[i], MeshInput::CellBlock{
-                                             .cell_type = cell_type_from_exodus_string(ele_type),
-                                             .cell_connectivities = eleconn,
-                                         });
+      mesh.cell_blocks.emplace(ebids[i], std::move(cell_block));
+      element_offset += num_el_in_blk;
     }
   }  // end of element section
 
@@ -238,57 +247,15 @@ Core::IO::MeshInput::Mesh Core::IO::Exodus::read_exodus_file(
       std::vector<int> node_set_node_list(num_nodes_in_set);
       CHECK_EXODUS_CALL(
           ex_get_set(exo_handle, EX_NODE_SET, npropID[i], node_set_node_list.data(), nullptr));
-      std::set<int> nodes_in_set;
-      // Compare the desired start ID to Exodus' one-based indexing to get the offset.
-      const int node_offset = mesh_parameters.node_start_id - 1;
-      for (int j = 0; j < num_nodes_in_set; ++j)
-        nodes_in_set.insert(node_set_node_list[j] + node_offset);
-      std::vector<int> nodes_in_set_vec(nodes_in_set.begin(), nodes_in_set.end());
-      MeshInput::PointSet actNodeSet{.point_ids = nodes_in_set_vec};
+      std::unordered_set<int> nodes_in_set;
+      // Exodus has one-based indexing, thus we need to subtract 1
+      for (int j = 0; j < num_nodes_in_set; ++j) nodes_in_set.insert(node_set_node_list[j] - 1);
+      MeshInput::PointSet actNodeSet{.point_ids = std::move(nodes_in_set)};
 
       mesh.point_sets.insert(std::pair<int, MeshInput::PointSet>(npropID[i], actNodeSet));
     }
   }  // end of nodeset section
   // ***************************************************************************
-
-  // get all SideSets
-  if (num_side_sets > 0)
-  {
-    std::vector<int> spropID(num_side_sets);
-    CHECK_EXODUS_CALL(ex_get_prop_array(exo_handle, EX_SIDE_SET, "ID", spropID.data()));
-    for (int i = 0; i < num_side_sets; ++i)
-    {
-      // get SideSet name
-      char mychar[exodus_max_str_length + 1];
-      CHECK_EXODUS_CALL(ex_get_name(exo_handle, EX_SIDE_SET, spropID[i], mychar));
-      // prefer std::string to store name
-      std::string sidesetname(mychar);
-
-      // Read SideSet params
-      int num_side_in_set, num_dist_fact_in_set;
-      CHECK_EXODUS_CALL(ex_get_set_param(
-          exo_handle, EX_SIDE_SET, spropID[i], &num_side_in_set, &num_dist_fact_in_set));
-
-      // get SideSet
-      std::vector<int> side_set_elem_list(num_side_in_set);
-      std::vector<int> side_set_side_list(num_side_in_set);
-      CHECK_EXODUS_CALL(ex_get_set(exo_handle, EX_SIDE_SET, spropID[i], side_set_elem_list.data(),
-          side_set_side_list.data()));
-      std::map<int, std::vector<int>> sides_in_set;
-      for (int j = 0; j < num_side_in_set; ++j)
-      {
-        std::vector<int> side(2);  // first entry is element, second side
-        side[0] = side_set_elem_list[j];
-        side[1] = side_set_side_list[j];
-        sides_in_set.insert(std::pair<int, std::vector<int>>(j, side));
-      }
-
-      MeshInput::SideSet actSideSet{.sides = sides_in_set};
-
-      // Add this SideSet into Mesh map
-      mesh.side_sets.insert(std::pair<int, MeshInput::SideSet>(spropID[i], actSideSet));
-    }
-  }  // end of sideset section
 
   CHECK_EXODUS_CALL(ex_close(exo_handle));
 

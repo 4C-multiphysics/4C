@@ -10,31 +10,15 @@
 
 #include "4C_config.hpp"
 
-#include "4C_fem_general_element.hpp"
 #include "4C_io_mesh.hpp"
 
 #include <filesystem>
-#include <string>
-#include <vector>
 
 FOUR_C_NAMESPACE_OPEN
 
 namespace Core::IO::Exodus
 {
-  /**
-   * Additional parameters that are used in the constructor.
-   */
-  struct MeshParameters
-  {
-    /**
-     * The ID of the first node in the mesh. This defaults to 1, since this is the default in
-     * the Exodus II mesh format.
-     */
-    int node_start_id{1};
-  };
-
-  MeshInput::Mesh read_exodus_file(
-      const std::filesystem::path& exodus_file, MeshParameters mesh_parameters = {});
+  MeshInput::Mesh<3> read_exodus_file(const std::filesystem::path& exodus_file);
 }  // namespace Core::IO::Exodus
 
 FOUR_C_NAMESPACE_CLOSE

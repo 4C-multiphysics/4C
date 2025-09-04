@@ -22,21 +22,29 @@ namespace
 
     EXPECT_EQ(mesh.cell_blocks.size(), 2);
     EXPECT_EQ(mesh.point_sets.size(), 1);
-    EXPECT_EQ(mesh.side_sets.size(), 1);
     EXPECT_EQ(mesh.points.size(), 27);
-    EXPECT_EQ(mesh.cell_blocks[1].cell_connectivities.size(), 4);
-    EXPECT_EQ(mesh.cell_blocks[2].cell_connectivities.size(), 4);
+    EXPECT_EQ(mesh.cell_blocks.at(1).size(), 4);
+    EXPECT_EQ(mesh.cell_blocks.at(2).size(), 4);
 
-    Core::IO::MeshInput::print(mesh, std::cout, Core::IO::MeshInput::VerbosityLevel::none);
-  }
+    EXPECT_EQ(mesh.points[0].coords, (std::array{-5.0, 0.0, 0.0}));
+    EXPECT_EQ(mesh.points[0].external_id, 23);
 
-  TEST(Exodus, NodeOffset)
-  {
-    Core::IO::MeshInput::Mesh mesh = Core::IO::Exodus::read_exodus_file(
-        TESTING::get_support_file_path("test_files/exodus/cube.exo"),
-        Core::IO::Exodus::MeshParameters{.node_start_id = 100});
-    EXPECT_EQ(mesh.points[100], (std::vector<double>{-5.0, 0.0, 0.0}));
-    EXPECT_EQ(mesh.cell_blocks[1].cell_connectivities.at(1),
-        (std::vector<int>{108, 100, 103, 109, 110, 104, 107, 111}));
+    std::vector<std::vector<int>> expected_cells = {{
+        {0, 1, 2, 3, 4, 5, 6, 7},
+        {8, 0, 3, 9, 10, 4, 7, 11},
+        {12, 13, 1, 0, 14, 15, 5, 4},
+        {16, 12, 0, 8, 17, 14, 4, 10},
+    }};
+
+    std::size_t i = 0;
+    for (const auto& cell : mesh.cell_blocks.at(1).cells())
+    {
+      std::vector cell_vec(cell.connectivity.begin(), cell.connectivity.end());
+      EXPECT_EQ(cell_vec, expected_cells[i]);
+      ++i;
+    }
+
+    std::stringstream ss;
+    Core::IO::MeshInput::print(mesh, ss, Core::IO::MeshInput::VerbosityLevel::full);
   }
 }  // namespace

@@ -10,6 +10,7 @@
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_comm_utils_factory.hpp"
 #include "4C_fem_discretization.hpp"
+#include "4C_fem_general_element.hpp"
 #include "4C_fem_general_element_definition.hpp"
 #include "4C_fem_general_fiber_node.hpp"
 #include "4C_fem_general_node.hpp"
@@ -53,7 +54,7 @@ namespace Core::IO::Internal
     /**
      * The mesh intermediate representation. This is only created on rank 0.
      */
-    std::shared_ptr<Core::IO::MeshInput::Mesh> mesh_on_rank_zero{};
+    std::shared_ptr<Core::IO::MeshInput::Mesh<3>> mesh_on_rank_zero{};
   };
 }  // namespace Core::IO::Internal
 
@@ -721,11 +722,13 @@ namespace
             "cell type '{}'.",
             eb_id, eb.cell_type, element_name, cell_type);
 
-        for (const auto& ele_nodes : eb.cell_connectivities | std::views::values)
+        for (const auto& cell : eb.cells())
         {
+          // Do not yet use the external cell ID. 4C is not yet prepared to deal with this!
+          // replace ele_count with cell.external_id once possible
           auto ele = Core::Communication::factory(element_name, cell_type_string, ele_count, 0);
           if (!ele) FOUR_C_THROW("element creation failed");
-          ele->set_node_ids(ele_nodes.size(), ele_nodes.data());
+          ele->set_node_ids(cell.connectivity.size(), cell.connectivity.data());
           ele->read_element(element_name, cell_type_string, specific_data);
           mesh_reader.target_discretization.add_element(ele);
 
@@ -751,10 +754,14 @@ namespace
 
       // Now add all the nodes to the discretization on rank 0. They are distributed later during
       // the rebalancing process.
-      for (const auto& [id, coords] : mesh.points)
+      std::size_t id = 0;
+      for (const auto& point : mesh.points)
       {
-        auto node = std::make_shared<Core::Nodes::Node>(id, coords, 0);
+        // for now, discard external id of the node. 4C is not yet prepared to deal with this!
+        // replace id with point.external_id once possible
+        auto node = std::make_shared<Core::Nodes::Node>(id, point.coords, 0);
         mesh_reader.target_discretization.add_node(node);
+        ++id;
       }
     }
     // Other ranks
@@ -886,7 +893,7 @@ void Core::IO::MeshReader::read_and_partition()
   if (Core::Communication::my_mpi_rank(comm_) == 0)
   {
     // We only support one mesh file at the moment. We check if all the files are the same.
-    std::shared_ptr<MeshInput::Mesh> mesh{};
+    std::shared_ptr<MeshInput::Mesh<3>> mesh{};
     std::filesystem::path previous_mesh_file;
     for (auto& mesh_reader : mesh_readers_)
     {
@@ -914,14 +921,11 @@ void Core::IO::MeshReader::read_and_partition()
         if (this_file_path.extension() == ".e" || this_file_path.extension() == ".exo" ||
             this_file_path.extension() == ".exii")
         {
-          mesh = std::make_shared<MeshInput::Mesh>(
-              Exodus::read_exodus_file(this_file_path, Core::IO::Exodus::MeshParameters{
-                                                           .node_start_id = 0,
-                                                       }));
+          mesh = std::make_shared<MeshInput::Mesh<3>>(Exodus::read_exodus_file(this_file_path));
         }
         else if (this_file_path.extension() == ".vtu" || this_file_path.extension() == ".vtk")
         {
-          mesh = std::make_shared<MeshInput::Mesh>(VTU::read_vtu_file(this_file_path));
+          mesh = std::make_shared<MeshInput::Mesh<3>>(VTU::read_vtu_file(this_file_path));
         }
         else
         {
@@ -949,7 +953,7 @@ Core::IO::MeshReader::~MeshReader() = default;
 MPI_Comm Core::IO::MeshReader::get_comm() const { return comm_; }
 
 
-const Core::IO::MeshInput::Mesh* Core::IO::MeshReader::get_external_mesh_on_rank_zero() const
+const Core::IO::MeshInput::Mesh<3>* Core::IO::MeshReader::get_external_mesh_on_rank_zero() const
 {
   if (mesh_readers_.empty()) return nullptr;
 
