@@ -2114,4 +2114,12 @@ four_c_test_vtk(structure_solid_beam_element_gid_runtime_output-vtk-beam.4C.yaml
 four_c_test_vtk(structure_solid_beam_element_gid_runtime_output-vtk-solid.4C.yaml structure_solid_beam_element_gid_runtime_output.4C.yaml 2 xxx-structure.pvd ref/structure_solid_beam_element_gid_runtime_output-vtk/structure.pvd 1e-08 1e-08 1.0)
 four_c_test_vtk(thermo3D_annulus_anisotropic_statics_vtk_thermo.4C.yaml thermo3D_annulus_anisotropic_statics.4C.yaml 3 xxx-thermo.pvd ref/thermo3D_annulus_anisotropic_statics-thermo.pvd 1e-08)
 four_c_test_vtk(thermo3D_annulus_elementwise_anisotropic_statics_vtk_thermo.4C.yaml thermo3D_annulus_elementwise_anisotropic_statics.4C.yaml 3 xxx-thermo.pvd ref/thermo3D_annulus_elementwise_anisotropic_statics-thermo.pvd 1e-08)
+four_c_test_restarted_vtk(TESTNAME correct-restarted-vtk-files-for-solid_runtime_tet4
+        FILE solid_runtime_tet4.4C.yaml
+        RESTART_STEP 1
+        PVD_RESULTFILENAME xxx-structure.pvd
+        PVD_REFERENCEFILENAME ref/solid_runtime_tet4-vtk/structure.pvd
+        TOLERANCE 1e-06
+        TIMEOUT 10
+        TIME_STEPS 0.5)
 # cmake-format: on
