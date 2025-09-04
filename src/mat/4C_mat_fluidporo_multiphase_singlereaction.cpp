@@ -26,7 +26,8 @@ Mat::PAR::FluidPoroSingleReaction::FluidPoroSingleReaction(
       numscal_(matdata.parameters.get<int>("NUMSCAL")),
       numvolfrac_(matdata.parameters.get<int>("NUMVOLFRAC")),
       totalnummultiphasedof_(matdata.parameters.get<int>("TOTALNUMDOF")),
-      numfluidphases_(totalnummultiphasedof_ - 2 * numvolfrac_),
+      numfluidphases_(
+          get_numfluidphases_from_closing_relation_of_additional_porous_network_type(matdata)),
       scale_(matdata.parameters.get<std::vector<int>>("SCALE")),
       coupling_(set_coupling_type(matdata)),
       functID_(matdata.parameters.get<int>("FUNCTID")),
@@ -336,6 +337,28 @@ Mat::PAR::FluidPoroSingleReaction::set_coupling_type(const Core::Mat::PAR::Param
   else
   {
     return porofluid_reac_coup_none;
+  }
+}
+
+int Mat::PAR::FluidPoroSingleReaction::
+    get_numfluidphases_from_closing_relation_of_additional_porous_network_type(
+        const Core::Mat::PAR::Parameter::Data& matdata)
+{
+  if ((matdata.parameters.get<std::string>("VOLFRAC_CLOSING_RELATION")) == "blood_lung")
+  {
+    return (matdata.parameters.get<int>("TOTALNUMDOF") - matdata.parameters.get<int>("NUMVOLFRAC"));
+  }
+  else if ((matdata.parameters.get<std::string>("VOLFRAC_CLOSING_RELATION")) ==
+           "homogenized_vasculature_tumor")
+  {
+    return (
+        matdata.parameters.get<int>("TOTALNUMDOF") - 2 * matdata.parameters.get<int>("NUMVOLFRAC"));
+  }
+  else
+  {
+    FOUR_C_THROW(
+        "Your number of volfracs and number of fluidphases in multiphase porespace does not "
+        "match!");
   }
 }
 

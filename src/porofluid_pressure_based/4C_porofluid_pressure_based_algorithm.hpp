@@ -614,12 +614,12 @@ namespace PoroPressureBased
     //! vector with valid volume fraction pressure dofs, this vector identifies volume fraction
     //! pressure DOFs,
     //  which actually have to be evaluated with a double >= 1.0, see also
-    //  EvaluatorValidVolFracPressures: if at least one nodal volume fraction value of an element is
-    //  bigger than a threshold (min volfrac), the volume fraction pressure is a valid (physically
-    //  meaningful) quantity in this element and the respective Darcy equation has to be solved
-    //  for volume fraction species we only evaluate if all nodal volume fraction values of the
-    //  element are bigger than the threshold (min volfrac), this turned out to be the most stable
-    //  approach
+    //  EvaluatorValidVolFracPressuresHomogenizedVasculatureTumor: if at least one nodal volume
+    //  fraction value of an element is bigger than a threshold (min volfrac), the volume fraction
+    //  pressure is a valid (physically meaningful) quantity in this element and the respective
+    //  Darcy equation has to be solved for volume fraction species we only evaluate if all nodal
+    //  volume fraction values of the element are bigger than the threshold (min volfrac), this
+    //  turned out to be the most stable approach
     std::shared_ptr<Core::LinAlg::Vector<double>> valid_volfracpress_dofs_;
     std::shared_ptr<Core::LinAlg::Vector<double>> valid_volfracspec_dofs_;
 

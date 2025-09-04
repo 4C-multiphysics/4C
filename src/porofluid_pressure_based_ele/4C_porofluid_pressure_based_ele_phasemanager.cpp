@@ -34,12 +34,12 @@ std::shared_ptr<Discret::Elements::PoroFluidManager::PhaseManagerInterface>
 Discret::Elements::PoroFluidManager::PhaseManagerInterface::create_phase_manager(
     const Discret::Elements::PoroFluidMultiPhaseEleParameter& para, int nsd,
     Core::Materials::MaterialType mattype, const PoroPressureBased::Action& action,
-    int totalnumdofpernode, int numfluidphases)
+    int totalnumdofpernode, int numfluidphases, int numvolfrac)
 {
   std::shared_ptr<PhaseManagerInterface> phasemanager = nullptr;
 
   // build the standard phase manager
-  phasemanager = std::make_shared<PhaseManagerCore>(totalnumdofpernode, numfluidphases);
+  phasemanager = std::make_shared<PhaseManagerCore>(totalnumdofpernode, numfluidphases, numvolfrac);
 
   return wrap_phase_manager(para, nsd, mattype, action, phasemanager);
 }
@@ -162,7 +162,8 @@ Discret::Elements::PoroFluidManager::PhaseManagerInterface::wrap_phase_manager(
         // enhance by scalar handling capability
         phasemanager = std::make_shared<PhaseManagerReaction>(phasemanager);
 
-      if (corephasemanager->total_num_dof() > corephasemanager->num_fluid_phases())
+      if (corephasemanager->total_num_dof() >
+          corephasemanager->num_fluid_phases() + corephasemanager->num_vol_frac())
       {
         switch (nsd)
         {
@@ -225,12 +226,10 @@ Discret::Elements::PoroFluidManager::PhaseManagerInterface::wrap_phase_manager(
  | constructor                                              vuong 08/16 |
  *----------------------------------------------------------------------*/
 Discret::Elements::PoroFluidManager::PhaseManagerCore::PhaseManagerCore(
-    int totalnumdofpernode, int numfluidphases)
+    int totalnumdofpernode, int numfluidphases, int numvolfrac)
     : totalnumdofpernode_(totalnumdofpernode),
       numfluidphases_(numfluidphases),
-      numvolfrac_(
-          (int)((totalnumdofpernode - numfluidphases) /
-                2)),  // note: check is performed in Mat::PAR::FluidPoroMultiPhase::initialize()
+      numvolfrac_(numvolfrac),
       genpressure_(numfluidphases, 0.0),
       volfrac_(numvolfrac_, 0.0),
       volfracpressure_(numvolfrac_, 0.0),
@@ -244,9 +243,11 @@ Discret::Elements::PoroFluidManager::PhaseManagerCore::PhaseManagerCore(
       invbulkmodulussolid_(0.0),
       ele_(nullptr),
       isevaluated_(false),
-      issetup_(false)
+      issetup_(false),
+      initialvolfrac_(0.0),
+      volfrac_deformationbased_scaling_parameter_deformation_(0.0),
+      volfrac_deformationbased_scaling_parameter_pressure_(0.0)
 {
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -269,7 +270,12 @@ Discret::Elements::PoroFluidManager::PhaseManagerCore::PhaseManagerCore(const Ph
       invbulkmodulussolid_(old.invbulkmodulussolid_),
       ele_(nullptr),
       isevaluated_(old.isevaluated_),
-      issetup_(old.issetup_)
+      issetup_(old.issetup_),
+      initialvolfrac_(old.initialvolfrac_),
+      volfrac_deformationbased_scaling_parameter_deformation_(
+          old.volfrac_deformationbased_scaling_parameter_deformation_),
+      volfrac_deformationbased_scaling_parameter_pressure_(
+          old.volfrac_deformationbased_scaling_parameter_pressure_)
 {
   return;
 }
@@ -334,13 +340,34 @@ void Discret::Elements::PoroFluidManager::PhaseManagerCore::setup(
 
   for (int ivolfrac = 0; ivolfrac < numvolfrac_; ivolfrac++)
   {
-    // get the single phase material
-    const Mat::FluidPoroSingleVolFrac& singlevolfracmat =
-        PoroPressureBased::ElementUtils::get_single_vol_frac_mat_from_material(
-            material, ivolfrac + numfluidphases_);
+    if (totalnumdofpernode_ - numfluidphases_ == numvolfrac_ * 2)
+    {
+      // get the single phase material
+      const Mat::FluidPoroSingleVolFrac& singlevolfracmat =
+          PoroPressureBased::ElementUtils::get_single_vol_frac_mat_from_material(
+              material, ivolfrac + numfluidphases_);
 
-    // get constant values
-    volfracdensity_[ivolfrac] = singlevolfracmat.density();
+      // get constant values
+      volfracdensity_[ivolfrac] = singlevolfracmat.density();
+    }
+    // is volfrac for blood lung
+    else if (totalnumdofpernode_ - numfluidphases_ == numvolfrac_)
+    {
+      // get the single phase material
+      const Mat::FluidPoroVolFracPressureBloodLung& singlevolfracbloodlungmat = PoroPressureBased::
+          ElementUtils::get_single_vol_frac_pressure_blood_lung_mat_from_material(
+              material, ivolfrac + numfluidphases_);
+
+      // get constant values
+      volfracdensity_[ivolfrac] = singlevolfracbloodlungmat.density();
+      initialvolfrac_ = singlevolfracbloodlungmat.initial_volfrac();
+      volfrac_deformationbased_scaling_parameter_deformation_ =
+          singlevolfracbloodlungmat.scaling_parameter_deformation();
+      volfrac_deformationbased_scaling_parameter_pressure_ =
+          singlevolfracbloodlungmat.scaling_parameter_pressure();
+    }
+    else
+      FOUR_C_THROW("You have an invalid number of volume fractions in the phasemanager!");
   }
 
   issetup_ = true;
@@ -369,13 +396,45 @@ void Discret::Elements::PoroFluidManager::PhaseManagerCore::evaluate_gp_state(
 
   // fluid primary variables at phinp[0 ... numfluidphases - 1]
   const std::vector<double> fluid_phinp(phinp.data(), phinp.data() + numfluidphases_);
-  // volume fractions at phinp[numfluidphases ... numfluidphases - 1 + numvolfrac]
-  const std::vector<double> volfrac(
-      phinp.data() + numfluidphases_, phinp.data() + numfluidphases_ + numvolfrac_);
-  // volume fraction pressures at phinp[numfluidphases + numvolfrac ... numfluidphases - 1 +
-  // 2*numvolfrac]
-  const std::vector<double> volfracpressure(phinp.data() + numfluidphases_ + numvolfrac_,
-      phinp.data() + numfluidphases_ + numvolfrac_ + numvolfrac_);
+
+  std::vector<double> volfrac(numvolfrac_, 0.0);
+  std::vector<double> volfracpressure(numvolfrac_, 0.0);
+
+  if (numvolfrac_)
+  {
+    if (totalnumdofpernode_ == numfluidphases_ + numvolfrac_ * 2)
+    {
+      // volume fractions at phinp[numfluidphases ... numfluidphases - 1 + numvolfrac]
+      volfrac.assign(phinp.data() + numfluidphases_, phinp.data() + numfluidphases_ + numvolfrac_);
+      // volume fraction pressures at phinp[numfluidphases + numvolfrac ... numfluidphases - 1 +
+      // 2*numvolfrac]
+      volfracpressure.assign(phinp.data() + numfluidphases_ + numvolfrac_,
+          phinp.data() + numfluidphases_ + numvolfrac_ + numvolfrac_);
+    }
+    else if (totalnumdofpernode_ == numfluidphases_ + numvolfrac_)
+    {
+      // volume fraction pressures at phinp[numfluidphases ... numfluidphases - 1 + numvolfrac]
+      volfracpressure.assign(
+          phinp.data() + numfluidphases_, phinp.data() + numfluidphases_ + numvolfrac_);
+
+      // not a primary variable anymore
+      if (fluid_phinp[0] / volfracpressure[0] > 1.0)
+      {
+        // sofar only one volfrac possible
+        volfrac[0] =
+            (initialvolfrac_ * pow(J, volfrac_deformationbased_scaling_parameter_deformation_) *
+                pow(fluid_phinp[0] / volfracpressure[0],
+                    volfrac_deformationbased_scaling_parameter_pressure_));
+      }
+      else
+      {
+        volfrac[0] =
+            (initialvolfrac_ * pow(J, volfrac_deformationbased_scaling_parameter_deformation_));
+      }
+    }
+    else
+      FOUR_C_THROW("You have an invalid number of volume fractions in the phasemanager!");
+  }
 
   if (numfluidphases_ != (int)fluid_phinp.size())
     FOUR_C_THROW("Length of fluid-phinp vector is not equal to the number of phases");
@@ -401,7 +460,6 @@ void Discret::Elements::PoroFluidManager::PhaseManagerCore::evaluate_gp_state(
   if (numvolfrac_ != (int)volfracpressure.size())
     FOUR_C_THROW(
         "Length of volfrac pressure vector is not equal to the number of volume fractions");
-
   // evaluate the pressures
   multiphasemat.evaluate_gen_pressure(genpressure_, fluid_phinp);
 
@@ -416,6 +474,7 @@ void Discret::Elements::PoroFluidManager::PhaseManagerCore::evaluate_gp_state(
       std::inner_product(saturation_.begin(), saturation_.end(), pressure_.begin(), 0.0);
 
   // done
+
   isevaluated_ = true;
 
   return;
@@ -479,7 +538,7 @@ double Discret::Elements::PoroFluidManager::PhaseManagerCore::saturation(int pha
 {
   check_is_evaluated();
 
-  return saturation_[phasenum];
+  return saturation_.at(phasenum);
 }
 
 /*----------------------------------------------------------------------*
@@ -489,7 +548,7 @@ double Discret::Elements::PoroFluidManager::PhaseManagerCore::pressure(int phase
 {
   check_is_evaluated();
 
-  return pressure_[phasenum];
+  return pressure_.at(phasenum);
 }
 
 /*----------------------------------------------------------------------*
@@ -519,7 +578,7 @@ double Discret::Elements::PoroFluidManager::PhaseManagerCore::vol_frac(int volfr
 {
   check_is_evaluated();
 
-  return volfrac_[volfracnum];
+  return volfrac_.at(volfracnum);
 }
 
 /*----------------------------------------------------------------------*
@@ -541,7 +600,7 @@ double Discret::Elements::PoroFluidManager::PhaseManagerCore::vol_frac_pressure(
 {
   check_is_evaluated();
 
-  return volfracpressure_[volfracnum];
+  return volfracpressure_.at(volfracnum);
 }
 
 /*----------------------------------------------------------------------*
@@ -571,7 +630,7 @@ double Discret::Elements::PoroFluidManager::PhaseManagerCore::inv_bulkmodulus(in
 {
   check_is_evaluated();
 
-  return invbulkmodulifluid_[phasenum];
+  return invbulkmodulifluid_.at(phasenum);
 }
 
 /*----------------------------------------------------------------------*
@@ -582,7 +641,7 @@ bool Discret::Elements::PoroFluidManager::PhaseManagerCore::incompressible_fluid
 {
   check_is_evaluated();
 
-  return invbulkmodulifluid_[phasenum] < 1.0e-14;
+  return invbulkmodulifluid_.at(phasenum) < 1.0e-14;
 }
 
 /*----------------------------------------------------------------------*
@@ -612,7 +671,7 @@ double Discret::Elements::PoroFluidManager::PhaseManagerCore::density(int phasen
 {
   check_is_setup();
 
-  return density_[phasenum];
+  return density_.at(phasenum);
 }
 
 /*---------------------------------------------------------------------------*
@@ -622,7 +681,7 @@ double Discret::Elements::PoroFluidManager::PhaseManagerCore::vol_frac_density(i
 {
   check_is_setup();
 
-  return volfracdensity_[volfracnum];
+  return volfracdensity_.at(volfracnum);
 }
 
 /*---------------------------------------------------------------------------*
@@ -633,6 +692,29 @@ double Discret::Elements::PoroFluidManager::PhaseManagerCore::solid_density() co
   check_is_evaluated();
 
   return soliddensity_;
+}
+
+double Discret::Elements::PoroFluidManager::PhaseManagerCore::initial_volfrac() const
+{
+  check_is_evaluated();
+
+  return initialvolfrac_;
+}
+
+double Discret::Elements::PoroFluidManager::PhaseManagerCore::
+    volfrac_blood_lung_parameter_deformation_dependence() const
+{
+  check_is_evaluated();
+
+  return volfrac_deformationbased_scaling_parameter_deformation_;
+}
+
+double Discret::Elements::PoroFluidManager::PhaseManagerCore::
+    volfrac_blood_lung_parameter_pressure_dependence() const
+{
+  check_is_evaluated();
+
+  return volfrac_deformationbased_scaling_parameter_pressure_;
 }
 
 /*----------------------------------------------------------------------*
@@ -1346,7 +1428,6 @@ Discret::Elements::PoroFluidManager::PhaseManagerDiffusion<nsd>::PhaseManagerDif
     std::shared_ptr<PoroFluidManager::PhaseManagerInterface> phasemanager)
     : PhaseManagerDecorator(phasemanager)
 {
-  return;
 }
 
 /*----------------------------------------------------------------------*
@@ -1362,6 +1443,8 @@ void Discret::Elements::PoroFluidManager::PhaseManagerDiffusion<nsd>::setup(
   // get number of phases
   const int numfluidphases = phasemanager_->num_fluid_phases();
   const int numvolfrac = phasemanager_->num_vol_frac();
+  const int totalnumdof = phasemanager_->total_num_dof();
+
 
   // resize vectors to numfluidphases and numvolfrac resp.
   permeabilitytensors_.resize(numfluidphases);
@@ -1397,24 +1480,47 @@ void Discret::Elements::PoroFluidManager::PhaseManagerDiffusion<nsd>::setup(
   }
 
   // volfrac pressure phases
-  for (int ivolfrac = 0; ivolfrac < numvolfrac; ivolfrac++)
+
+  if (totalnumdof - numfluidphases == numvolfrac * 2)
   {
-    // get the volfrac pressure material
-    const Mat::FluidPoroVolFracPressure& volfracpressmat =
-        PoroPressureBased::ElementUtils::get_vol_frac_pressure_mat_from_material(
-            material, ivolfrac + numvolfrac + numfluidphases);
+    for (int ivolfrac = 0; ivolfrac < numvolfrac; ivolfrac++)
+    {
+      // get the volfrac pressure material
+      const Mat::FluidPoroVolFracPressure& volfracpressmat =
+          PoroPressureBased::ElementUtils::get_vol_frac_pressure_mat_from_material(
+              material, ivolfrac + numvolfrac + numfluidphases);
 
-    constdynviscosityvolfracpress_[ivolfrac] = volfracpressmat.has_constant_viscosity();
-    // clear
-    permeabilitytensorsvolfracpress_[ivolfrac].clear();
+      constdynviscosityvolfracpress_[ivolfrac] = volfracpressmat.has_constant_viscosity();
+      // clear
+      permeabilitytensorsvolfracpress_[ivolfrac].clear();
 
-    // TODO only isotropic, constant permeability for now
-    const double permeability = volfracpressmat.permeability();
-    for (int i = 0; i < nsd; i++) (permeabilitytensorsvolfracpress_[ivolfrac])(i, i) = permeability;
+      // TODO only isotropic, constant permeability for now
+      const double permeability = volfracpressmat.permeability();
+      for (int i = 0; i < nsd; i++)
+        (permeabilitytensorsvolfracpress_[ivolfrac])(i, i) = permeability;
+    }
   }
+  else if (totalnumdof - numfluidphases == numvolfrac)
+  {
+    // only one volfrac material n the case of blood lung possible
+    // get the volfrac pressure material
+    const Mat::FluidPoroVolFracPressureBloodLung& volfracpressuremat_bloodlung =
+        PoroPressureBased::ElementUtils::get_single_vol_frac_pressure_blood_lung_mat_from_material(
+            material, numfluidphases);
 
-  return;
+    constdynviscosityvolfracpress_[0] = volfracpressuremat_bloodlung.has_constant_viscosity();
+    // clear
+    permeabilitytensorsvolfracpress_[0].clear();
+    // TODO only isotropic, constant permeability for now
+    const double permeability = volfracpressuremat_bloodlung.permeability();
+    for (int i = 0; i < nsd; i++) (permeabilitytensorsvolfracpress_[0])(i, i) = permeability;
+  }
+  else
+  {
+    FOUR_C_THROW("You have an invalid volfracclosingrelation in the PhasemanagerDiffusion!");
+  }
 }
+
 /*----------------------------------------------------------------------*
  | constructor                                              vuong 08/16 |
  *----------------------------------------------------------------------*/
@@ -1630,6 +1736,34 @@ Discret::Elements::PoroFluidManager::PhaseManagerDiffusion<nsd>::dyn_viscosity_v
   return volfracpressmat.viscosity(abspressgrad);
 }
 
+/*----------------------------------------------------------------------------------*
+ *-----------------------------------------------------------------------------------*/
+template <int nsd>
+double Discret::Elements::PoroFluidManager::PhaseManagerDiffusion<
+    nsd>::dyn_viscosity_vol_frac_pressure_blood_lung(int volfracpressnum, double abspressgrad,
+    int matnum) const
+{
+  phasemanager_->check_is_evaluated();
+
+  return dyn_viscosity_vol_frac_pressure_blood_lung(
+      *element()->material(matnum), volfracpressnum, abspressgrad);
+}
+
+/*-------------------------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------------- --------*/
+template <int nsd>
+double Discret::Elements::PoroFluidManager::PhaseManagerDiffusion<
+    nsd>::dyn_viscosity_vol_frac_pressure_blood_lung(const Core::Mat::Material& material,
+    int volfracpressnum, double abspressgrad) const
+{
+  // get the single phase material
+  const Mat::FluidPoroVolFracPressureBloodLung& volfracpressmat =
+      PoroPressureBased::ElementUtils::get_single_vol_frac_pressure_blood_lung_mat_from_material(
+          material, volfracpressnum + phasemanager_->num_fluid_phases());
+
+  return volfracpressmat.viscosity(abspressgrad);
+}
+
 /*------------------------------------------------------------------------------------------------*
  * get derivative of dynamic viscosity of volume fraction pressure 'volfracnum'  kremheller 02/18 |
  *-------------------------------------------------------------------------------------------------*/
@@ -1654,6 +1788,35 @@ double Discret::Elements::PoroFluidManager::PhaseManagerDiffusion<
   // get the single phase material
   const Mat::FluidPoroVolFracPressure& volfracpressmat =
       PoroPressureBased::ElementUtils::get_vol_frac_pressure_mat_from_material(material,
+          volfracpressnum + phasemanager_->num_fluid_phases() + phasemanager_->num_vol_frac());
+
+  return volfracpressmat.viscosity_deriv(abspressgrad);
+}
+
+/*------------------------------------------------------------------------------------------------*
+ *-------------------------------------------------------------------------------------------------*/
+template <int nsd>
+double Discret::Elements::PoroFluidManager::PhaseManagerDiffusion<
+    nsd>::dyn_viscosity_deriv_vol_frac_pressure_blood_lung(int volfracpressnum,
+    double abspressgrad) const
+{
+  phasemanager_->check_is_evaluated();
+
+  return dyn_viscosity_deriv_vol_frac_pressure_blood_lung(
+      *element()->material(), volfracpressnum, abspressgrad);
+}
+
+/*------------------------------------------------------------------------------------------------*
+ *-------------------------------------------------------------------------------------------------*/
+template <int nsd>
+double Discret::Elements::PoroFluidManager::PhaseManagerDiffusion<
+    nsd>::dyn_viscosity_deriv_vol_frac_pressure_blood_lung(const Core::Mat::Material& material,
+    int volfracpressnum, double abspressgrad) const
+{
+  // get the single phase material
+  const Mat::FluidPoroVolFracPressureBloodLung& volfracpressmat =
+      PoroPressureBased::ElementUtils::get_single_vol_frac_pressure_blood_lung_mat_from_material(
+          material,
           volfracpressnum + phasemanager_->num_fluid_phases() + phasemanager_->num_vol_frac());
 
   return volfracpressmat.viscosity_deriv(abspressgrad);
