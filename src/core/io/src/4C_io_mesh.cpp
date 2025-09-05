@@ -64,17 +64,21 @@ void Core::IO::MeshInput::print(const Mesh<dim>& mesh, std::ostream& os, Verbosi
       os << "\n";
     }
     os << "cell-blocks:\n";
-    for (const auto& [id, connectivity] : mesh.cell_blocks)
+    for (const auto& [id, cell_block] : mesh.cell_blocks)
     {
-      os << "  cell-block " << id << ": ";
-      print(connectivity, os, verbose);
+      os << "  cell-block " << id;
+      if (cell_block.name.has_value()) os << " (" << *cell_block.name << ")";
+      os << ": ";
+      print(cell_block, os, verbose);
     }
     os << "\n";
 
     os << "point-sets:\n";
     for (const auto& [ps_id, ps] : mesh.point_sets)
     {
-      os << "  point-set " << ps_id << ": ";
+      os << "  point-set " << ps_id;
+      if (ps.name.has_value()) os << " (" << *ps.name << ")";
+      os << ": ";
       print(ps, os, verbose);
     }
   }

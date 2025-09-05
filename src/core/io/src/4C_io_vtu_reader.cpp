@@ -165,7 +165,6 @@ Core::IO::MeshInput::Mesh<3> Core::IO::VTU::read_vtu_file(const std::filesystem:
 
     const auto cell_type = get_celltype_from_vtk(vtk_mesh->GetCellType(i));
 
-    // Try to emplace the cell block into the mesh
     const auto [emplaced_item, inserted] =
         mesh.cell_blocks.try_emplace(block_id, MeshInput::CellBlock{cell_type});
 

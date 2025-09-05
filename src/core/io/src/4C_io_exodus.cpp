@@ -7,18 +7,14 @@
 
 #include "4C_io_exodus.hpp"
 
-#include "4C_fem_general_utils_local_connectivity_matrices.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_utils_enum.hpp"
-#include "4C_utils_std23_unreachable.hpp"
 
 #include <exodusII.h>
 #include <Teuchos_Time.hpp>
 #include <Teuchos_TimeMonitor.hpp>
 
-#include <fstream>
-#include <ranges>
-#include <set>
+#include <utility>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -205,6 +201,7 @@ Core::IO::MeshInput::Mesh<3> Core::IO::Exodus::read_exodus_file(
           ex_get_conn(exo_handle, EX_ELEM_BLOCK, ebids[i], allconn.data(), nullptr, nullptr));
 
       MeshInput::CellBlock cell_block(cell_type_from_exodus_string(ele_type));
+      cell_block.name = std::move(blockname);
 
       for (int j = 0; j < num_el_in_blk; ++j)
       {
@@ -250,7 +247,8 @@ Core::IO::MeshInput::Mesh<3> Core::IO::Exodus::read_exodus_file(
       std::unordered_set<int> nodes_in_set;
       // Exodus has one-based indexing, thus we need to subtract 1
       for (int j = 0; j < num_nodes_in_set; ++j) nodes_in_set.insert(node_set_node_list[j] - 1);
-      MeshInput::PointSet actNodeSet{.point_ids = std::move(nodes_in_set)};
+      MeshInput::PointSet actNodeSet{
+          .point_ids = std::move(nodes_in_set), .name = std::move(nodesetname)};
 
       mesh.point_sets.insert(std::pair<int, MeshInput::PointSet>(npropID[i], actNodeSet));
     }

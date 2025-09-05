@@ -44,6 +44,15 @@ namespace
       ++i;
     }
 
+    ASSERT_TRUE(mesh.cell_blocks.at(1).name.has_value());
+    EXPECT_EQ(*mesh.cell_blocks.at(1).name, "left");
+
+    ASSERT_TRUE(mesh.cell_blocks.at(2).name.has_value());
+    EXPECT_EQ(*mesh.cell_blocks.at(2).name, "right");
+
+    ASSERT_TRUE(mesh.point_sets.at(1).name.has_value());
+    EXPECT_EQ(*mesh.point_sets.at(1).name, "node_set_top");
+
     std::stringstream ss;
     Core::IO::MeshInput::print(mesh, ss, Core::IO::MeshInput::VerbosityLevel::full);
   }
