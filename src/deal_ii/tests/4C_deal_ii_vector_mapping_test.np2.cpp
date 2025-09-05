@@ -52,29 +52,30 @@ namespace
     {
       const auto& generator = GetParam();
       generator(discret, MPI_COMM_WORLD);
-
-      context = DealiiWrappers::create_triangulation(tria, discret);
-
-      DealiiWrappers::assign_fes_and_dofs(dof_handler, discret, context);
+      context = std::make_unique<DealiiWrappers::Context<dim>>(
+          DealiiWrappers::create_triangulation(tria, discret));
+      DealiiWrappers::assign_fes_and_dofs(*context, dof_handler);
     }
+
 
     dealii::parallel::fullydistributed::Triangulation<dim> tria{MPI_COMM_WORLD};
     Core::FE::Discretization discret{"empty", MPI_COMM_WORLD, dim};
     dealii::DoFHandler<dim> dof_handler{tria};
-    DealiiWrappers::Context<dim> context;
+    std::unique_ptr<DealiiWrappers::Context<dim>> context;
   };
 
   TEST_P(VectorMappingTest, VectorOfOnesDealiiToFourCToDealii)
   {
     VectorType dealii_vector;
-    dealii::IndexSet locally_relevant_dofs;
-    dealii::DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
+    dealii::IndexSet locally_relevant_dofs =
+        dealii::DoFTools::extract_locally_relevant_dofs(dof_handler);
     dealii_vector.reinit(dof_handler.locally_owned_dofs(), locally_relevant_dofs, MPI_COMM_WORLD);
     dealii_vector = 1.0;
 
     const auto four_c_vector = Core::LinAlg::create_vector(*discret.dof_row_map());
 
-    DealiiWrappers::VectorConverter<VectorType, dim> vector_mapping{dof_handler, discret, context};
+
+    DealiiWrappers::VectorConverter<VectorType, dim> vector_mapping{dof_handler, *context};
     vector_mapping.to_four_c(*four_c_vector, dealii_vector);
 
     {
@@ -99,8 +100,8 @@ namespace
   TEST_P(VectorMappingTest, ComplicatedVectorDealiiToFourCToDealii)
   {
     VectorType dealii_vector;
-    dealii::IndexSet locally_relevant_dofs;
-    dealii::DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
+    dealii::IndexSet locally_relevant_dofs =
+        dealii::DoFTools::extract_locally_relevant_dofs(dof_handler);
     dealii_vector.reinit(dof_handler.locally_owned_dofs(), locally_relevant_dofs, MPI_COMM_WORLD);
     dealii_vector = 1.0;
 
@@ -110,7 +111,7 @@ namespace
     const auto four_c_vector = Core::LinAlg::create_vector(*discret.dof_row_map());
     ASSERT_EQ(four_c_vector->global_length(), dealii_vector.size());
 
-    DealiiWrappers::VectorConverter<VectorType, dim> vector_mapping{dof_handler, discret, context};
+    DealiiWrappers::VectorConverter<VectorType, dim> vector_mapping{dof_handler, *context};
     vector_mapping.to_four_c(*four_c_vector, dealii_vector);
 
     // check that every dof as seen by Discretization has the value prescribed in the Function
