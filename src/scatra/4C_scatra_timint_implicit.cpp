@@ -3706,7 +3706,11 @@ void ScaTra::ScaTraTimIntImpl::build_block_null_spaces(
     const int block_id = iblock + 1;
 
     Teuchos::ParameterList& block_smoother_parameters =
-        solver.params().sublist("Inverse" + std::to_string(block_id));
+        solver.params().isSublist("MueLu Parameters")
+            ? solver.params()
+                  .sublist("Inverse" + std::to_string(block_id))
+                  .sublist("MueLu Parameters")
+            : solver.params().sublist("Inverse" + std::to_string(block_id));
 
     // Implementation for AMGnxn: needs to stay until dof split can be tackled differently
     if (solver.params().isSublist("AMGnxn Parameters"))
