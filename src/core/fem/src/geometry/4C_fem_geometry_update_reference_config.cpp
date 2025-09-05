@@ -55,7 +55,7 @@ void Core::Geo::update_reference_config_with_disp(
       nvector[i] = (coldisp)[lid];
     }
 
-    mynode.user_data()->change_pos(nvector);
+    mynode.user_node()->change_pos(nvector);
   }
 }
 

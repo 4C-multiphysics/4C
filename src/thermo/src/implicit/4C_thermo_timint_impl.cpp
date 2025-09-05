@@ -95,22 +95,20 @@ Thermo::TimIntImpl::TimIntImpl(const Teuchos::ParameterList& ioparams,
 
   for (const auto& node : discret_->my_row_node_range())
   {
-    auto* adjacent_elements = node.user_data()->elements();
-    const int num_elements = node.user_data()->num_element();
-
     for (size_t col = 0; col < columns; col++)
     {
       Core::LinAlg::Vector<double> element_material(
           *overlapping_element_material_vector.get_ref_of_epetra_fevector()(col));
       double nodal_material = 0.0;
 
-      for (int k = 0; k < num_elements; k++)
+      for (auto ele : node.adjacent_elements())
       {
-        const int global_element_id = adjacent_elements[k]->id();
+        const int global_element_id = ele.global_id();
         const int local_element_id = element_material.get_map().lid(global_element_id);
         nodal_material = nodal_material + element_material[local_element_id];
       }
 
+      const int num_elements = node.adjacent_elements().size();
       conductivity_->ReplaceGlobalValue(node.global_id(), col, nodal_material / num_elements);
     }
   }
