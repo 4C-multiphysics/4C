@@ -35,16 +35,6 @@ Mat::Elastic::PAR::IsoMuscleBlemker::IsoMuscleBlemker(
       beta_(matdata.parameters.get<double>("BETA")),
       t_act_start_(matdata.parameters.get<double>("ACTSTARTTIME"))
 {
-  // error handling for parameter ranges
-  if (G1_ < 0.0) FOUR_C_THROW("Material parameter G1 must be positive or zero");
-  if (G2_ < 0.0) FOUR_C_THROW("Material parameter G2 must be positive or zero");
-  if (P1_ <= 0.0) FOUR_C_THROW("Material parameter P1 must be greater zero");
-  if (P2_ <= 0.0) FOUR_C_THROW("Material parameter P2 must be greater zero");
-  if (sigma_max_ < 0.0) FOUR_C_THROW("Material parameter SIGMA_MAX must be positive or zero");
-  if (lambda_ofl_ <= 0.0) FOUR_C_THROW("Material parameter LAMBDA_OFL must be greater zero");
-  if (lambda_star_ <= 0.0) FOUR_C_THROW("Material parameter LAMBDA_STAR must be greater zero");
-  if (alpha_ < 0.0) FOUR_C_THROW("Material parameter ALPHA must be positive or zero");
-  if (beta_ < 0.0) FOUR_C_THROW("Material parameter BETA must be positive or zero");
 }
 
 

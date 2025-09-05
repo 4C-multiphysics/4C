@@ -112,25 +112,6 @@ Mat::PAR::MuscleCombo::MuscleCombo(const Core::Mat::PAR::Parameter::Data& matdat
       activationParams_(get_activation_params(matdata)),
       density_(matdata.parameters.get<double>("DENS"))
 {
-  // error handling for parameter ranges
-  // passive material parameters
-  if (alpha_ <= 0.0) FOUR_C_THROW("Material parameter ALPHA must be greater zero");
-  if (beta_ <= 0.0) FOUR_C_THROW("Material parameter BETA must be greater zero");
-  if (gamma_ <= 0.0) FOUR_C_THROW("Material parameter GAMMA must be greater zero");
-  if (omega0_ < 0.0 || omega0_ > 1.0) FOUR_C_THROW("Material parameter OMEGA0 must be in [0;1]");
-
-  // active material parameters
-  if (Popt_ < 0.0)
-  {
-    FOUR_C_THROW("Material parameter POPT must be positive or zero");
-  }
-
-  // stretch dependent parameters
-  if (lambdaMin_ <= 0.0) FOUR_C_THROW("Material parameter LAMBDAMIN must be positive");
-  if (lambdaOpt_ <= 0.0) FOUR_C_THROW("Material parameter LAMBDAOPT must be positive");
-
-  // density
-  if (density_ < 0.0) FOUR_C_THROW("DENS should be positive");
 }
 
 std::shared_ptr<Core::Mat::Material> Mat::PAR::MuscleCombo::create_material()
