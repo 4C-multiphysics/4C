@@ -20,8 +20,9 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace Core::IO
 {
+  class RuntimeCsvWriter;
   class DiscretizationWriter;
-}
+}  // namespace Core::IO
 namespace Core::FE
 {
   class Discretization;
@@ -90,9 +91,6 @@ namespace Solid
         const Core::Conditions::Condition& rcond,
         std::shared_ptr<Core::LinAlg::Map>* react_maps) const;
 
-    void read_results_prior_restart_step_and_write_to_file(
-        const std::vector<std::string>& full_restart_filepaths, int restart_step) const;
-
     void get_area(double area_ref[], const Core::Conditions::Condition* rcond) const;
 
     double get_reaction_force(Core::LinAlg::Matrix<3, 1>& rforce_xyz,
@@ -102,20 +100,12 @@ namespace Solid
         const std::shared_ptr<Core::LinAlg::Map>* react_maps,
         const Core::Conditions::Condition* rcond) const;
 
-    std::vector<std::string> create_file_paths(
-        const std::vector<const Core::Conditions::Condition*>& rconds,
-        const std::string& full_dirpath, const std::string& filename_only_prefix,
-        const std::string& file_type) const;
-
-    void clear_files_and_write_header(const std::vector<const Core::Conditions::Condition*>& rconds,
-        std::vector<std::string>& full_filepaths, bool do_write_condition_header);
-
     void write_condition_header(std::ostream& os, const int col_width,
         const Core::Conditions::Condition* cond = nullptr) const;
 
     void write_column_header(std::ostream& os, const int col_width) const;
 
-    void write_results_to_file(const std::string& full_filepath,
+    void write_results_to_csv_file(const Core::IO::RuntimeCsvWriter& csv_writer,
         const Core::LinAlg::Matrix<DIM, 1>& rforce, const Core::LinAlg::Matrix<DIM, 1>& rmoment,
         const double& area_ref, const double& area_curr) const;
 
@@ -134,7 +124,6 @@ namespace Solid
 
     inline void throw_if_not_setup() const { FOUR_C_ASSERT(issetup_, "Call setup() first!"); }
 
-   private:
     Core::FE::Discretization* discret_ptr_ = nullptr;
     Solid::TimeInt::BaseDataGlobalState* gstate_ptr_ = nullptr;
     Solid::Dbc* dbc_ptr_ = nullptr;
@@ -143,8 +132,9 @@ namespace Solid
 
     /// extract the dofs of the reaction forces which shall be monitored
     std::map<int, std::vector<std::shared_ptr<Core::LinAlg::Map>>> react_maps_;
-    unsigned of_precision_ = -1;
-    unsigned os_precision_ = -1;
+    int of_precision_ = -1;
+    int os_precision_ = -1;
+    std::vector<std::unique_ptr<Core::IO::RuntimeCsvWriter>> dbc_monitor_csvwriter_;
 
     bool isempty_ = true;
     bool isinit_ = false;

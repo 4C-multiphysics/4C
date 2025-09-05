@@ -12,112 +12,48 @@
 
 #include "4C_utils_parameter_list.fwd.hpp"
 
-#include <string>
-
 FOUR_C_NAMESPACE_OPEN
 
-namespace Solid
+
+namespace Solid::TimeInt
 {
-  namespace TimeInt
+  /** \brief Input data container for monitoring reaction forces for structural (time) integration
+   *
+   * */
+  class ParamsMonitorDBC
   {
-    /** \brief Input data container for monitoring reaction forces for structural (time) integration
-     *
-     * */
-    class ParamsMonitorDBC
-    {
-     public:
-      /// constructor
-      ParamsMonitorDBC();
+   public:
+    /// constructor
+    explicit ParamsMonitorDBC(const Teuchos::ParameterList& IO_monitor_dbc_structure_paramslist);
 
-      /// destructor
-      virtual ~ParamsMonitorDBC() = default;
+    /// destructor
+    virtual ~ParamsMonitorDBC() = default;
 
-      /// initialize the class variables
-      void init(const Teuchos::ParameterList& IO_monitor_dbc_structure_paramslist);
+    /// output interval regarding steps: write output every INTERVAL_STEPS steps
+    [[nodiscard]] int output_interval_in_steps() const { return output_interval_steps_; }
 
-      /// setup new class variables
-      void setup();
+    /// precision for file output
+    [[nodiscard]] unsigned file_precision() const { return of_precision_; }
 
+    /// precision for screen output
+    [[nodiscard]] unsigned screen_precision() const { return os_precision_; }
 
-      /// output interval regarding steps: write output every INTERVAL_STEPS steps
-      int output_interval_in_steps() const
-      {
-        check_init_setup();
-        return output_interval_steps_;
-      };
+   private:
+    /// @name variables controlling output
+    /// @{
+    /// output interval regarding steps: write output every INTERVAL_STEPS steps
+    int output_interval_steps_;
 
-      /// precision for file output
-      int file_precision() const
-      {
-        check_init_setup();
-        return of_precision_;
-      };
+    /// precision for file output
+    unsigned of_precision_;
 
-      /// precision for screen output
-      int screen_precision() const
-      {
-        check_init_setup();
-        return os_precision_;
-      };
+    /// precision for screen output
+    unsigned os_precision_;
+    /// @}
+  };
 
-      /// file type ending
-      std::string const& file_type() const
-      {
-        check_init_setup();
-        return file_type_;
-      };
+}  // namespace Solid::TimeInt
 
-      /// whether to write header in csv files
-      bool write_header() const
-      {
-        check_init_setup();
-        return write_header_;
-      }
-
-
-     private:
-      /// get the init indicator status
-      const bool& is_init() const { return isinit_; };
-
-      /// get the setup indicator status
-      const bool& is_setup() const { return issetup_; };
-
-      /// Check if init() and setup() have been called, yet.
-      void check_init_setup() const;
-
-
-     private:
-      /// @name variables for internal use only
-      /// @{
-      ///
-      bool isinit_;
-
-      bool issetup_;
-      /// @}
-
-      /// @name variables controlling output
-      /// @{
-
-      /// output interval regarding steps: write output every INTERVAL_STEPS steps
-      int output_interval_steps_;
-
-      /// precision for file output
-      unsigned of_precision_;
-
-      /// precision for screen output
-      unsigned os_precision_;
-
-      /// file type
-      std::string file_type_;
-
-      /// write header in csv files
-      bool write_header_;
-
-      /// @}
-    };
-
-  }  // namespace TimeInt
-}  // namespace Solid
 
 FOUR_C_NAMESPACE_CLOSE
 
