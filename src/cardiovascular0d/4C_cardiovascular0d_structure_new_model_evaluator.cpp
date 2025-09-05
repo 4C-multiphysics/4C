@@ -158,11 +158,7 @@ bool Solid::ModelEvaluator::Cardiovascular0D::assemble_force(
         "the structural part indicates, that 0D cardiovascular model contributions \n"
         "are present!");
 
-  const int elements_f = f.get_map().num_global_elements();
-  const int max_gid = get_block_dof_row_map_ptr()->max_all_gid();
-  // only call when f is the full rhs of the coupled problem (not for structural
-  // equilibriate initial state call)
-  if (elements_f == max_gid + 1) Core::LinAlg::assemble_my_vector(1.0, f, 1.0, *block_vec_ptr);
+  Core::LinAlg::assemble_my_vector(1.0, f, 1.0, *block_vec_ptr);
 
   return true;
 }

@@ -177,13 +177,11 @@ void Solid::Integrator::compute_mass_matrix_and_init_acc()
   check_init();
 
   // temporary right-hand-side
-  std::shared_ptr<Core::LinAlg::Vector<double>> rhs_ptr =
-      std::make_shared<Core::LinAlg::Vector<double>>(*global_state().dof_row_map_view(), true);
+  Core::LinAlg::Vector<double> rhs_full =
+      Core::LinAlg::Vector<double>(global_state().global_problem_map(), /*zero_out=*/true);
 
-  // initialize a temporal structural stiffness matrix
-  Teuchos::RCP<Core::LinAlg::SparseOperator> stiff_ptr =
-      Teuchos::make_rcp<Core::LinAlg::SparseMatrix>(
-          *global_state().dof_row_map_view(), 81, true, true);
+  // initialize a temporal matrix
+  Core::LinAlg::SparseMatrix matrix(*global_state().dof_row_map_view(), 81, true, true);
 
 
   // overwrite initial state vectors with Dirichlet BCs
@@ -204,7 +202,7 @@ void Solid::Integrator::compute_mass_matrix_and_init_acc()
   eval_data().set_total_time(gstate_ptr_->get_time_n());
 
   // initialize the mass matrix and the Rayleigh damping matrix (optional)
-  if (not model_eval().initialize_inertia_and_damping(*disnp_ptr, *stiff_ptr))
+  if (not model_eval().initialize_inertia_and_damping(*disnp_ptr, matrix))
     FOUR_C_THROW("initialize_inertia_and_damping failed!");
 
   /* If we are restarting the simulation, we do not have to calculate a
@@ -221,23 +219,23 @@ void Solid::Integrator::compute_mass_matrix_and_init_acc()
   }
 
   // build the entire initial right-hand-side
-  if (not model_eval().apply_initial_force(*disnp_ptr, *rhs_ptr))
+  if (not model_eval().apply_initial_force(*disnp_ptr, rhs_full))
     FOUR_C_THROW("apply_initial_force failed!");
 
   // add inertial and viscous contributions to rhs
   /* note: this needs to be done 'manually' here because in the RHS evaluation
    * routine of an ordinary time step, these contributions are scaled by weighting
    * factors inside the time integration scheme (e.g. alpha_f/m for GenAlpha) */
-  rhs_ptr->update(1.0, *global_state().get_finertial_np(), 1.0);
-  rhs_ptr->update(1.0, *global_state().get_fvisco_np(), 1.0);
+  rhs_full.update(1.0, *global_state().get_finertial_np(), 1.0);
+  rhs_full.update(1.0, *global_state().get_fvisco_np(), 1.0);
 
   /* Meier 2015: Here, we copy the mass matrix in the stiffness block in order to
    * not perform the Dirichlet conditions on the constant mass matrix later on.
    * This is necessary since we need the original mass matrix (without blanked
    * rows) on the Dirichlet DoFs in order to calculate correct reaction
    * forces.*/
-  stiff_ptr->add(*global_state().get_mass_matrix(), false, 1.0, 0.0);
-  stiff_ptr->complete();
+  matrix.add(*global_state().get_mass_matrix(), false, 1.0, 0.0);
+  matrix.complete();
 
   // ---------------------------------------------------------------------------
   // build a NOX::Nln::Solid::LinearSystem
@@ -252,10 +250,10 @@ void Solid::Integrator::compute_mass_matrix_and_init_acc()
   NOX::Nln::Aux::set_printing_parameters(p_nox, global_state().get_comm());
 
   // create a copy of the initial displacement vector
-  Core::LinAlg::Vector<double> soln_ptr(*global_state().dof_row_map_view(), true);
+  Core::LinAlg::Vector<double> soln(*global_state().dof_row_map_view(), true);
   // wrap the soln_ptr in a nox_epetra_Vector
-  Teuchos::RCP<::NOX::Epetra::Vector> nox_soln_ptr = Teuchos::make_rcp<::NOX::Epetra::Vector>(
-      Teuchos::rcpFromRef(soln_ptr.get_ref_of_epetra_vector()), ::NOX::Epetra::Vector::CreateView);
+  ::NOX::Epetra::Vector nox_soln(
+      Teuchos::rcpFromRef(soln.get_ref_of_epetra_vector()), ::NOX::Epetra::Vector::CreateView);
 
   // Check if we are using a Newton direction
   std::string dir_str = p_nox.sublist("Direction").get<std::string>("Method");
@@ -273,9 +271,8 @@ void Solid::Integrator::compute_mass_matrix_and_init_acc()
   Teuchos::ParameterList& p_ls =
       p_nox.sublist("Direction", true).sublist("Newton", true).sublist("Linear Solver", true);
 
-  Teuchos::RCP<NOX::Nln::LinearSystem> linsys_ptr =
-      Teuchos::make_rcp<NOX::Nln::Solid::LinearSystem>(
-          p_print, p_ls, str_linsolver, Teuchos::null, Teuchos::null, stiff_ptr, *nox_soln_ptr);
+  NOX::Nln::Solid::LinearSystem linsys(p_print, p_ls, str_linsolver, Teuchos::null, Teuchos::null,
+      Teuchos::rcpFromRef(matrix), nox_soln);
 
   // (re)set the linear solver parameters
   p_ls.set<int>("Number of Nonlinear Iterations", 0);
@@ -290,16 +287,21 @@ void Solid::Integrator::compute_mass_matrix_and_init_acc()
    * added above. */
   // ---------------------------------------------------------------------------
   // solve the linear system
-  if (stiff_ptr->NormInf() == 0.0) FOUR_C_THROW("You are about to invert a singular matrix!");
+  if (matrix.NormInf() == 0.0) FOUR_C_THROW("You are about to invert a singular matrix!");
 
-  linsys_ptr->applyJacobianInverse(p_ls, rhs_ptr->get_ref_of_epetra_vector(), *nox_soln_ptr);
-  nox_soln_ptr->scale(-1.0);
+
+  // extract the solid part of the rhs
+  std::shared_ptr rhs_solid =
+      global_state().extract_model_entries(Inpar::Solid::model_structure, rhs_full);
+
+  linsys.applyJacobianInverse(p_ls, rhs_solid->get_ref_of_epetra_vector(), nox_soln);
+  nox_soln.scale(-1.0);
 
   // get the solution vector and add it into the acceleration vector
-  accnp_ptr->update(1.0, nox_soln_ptr->getEpetraVector(), 1.0);
+  accnp_ptr->update(1.0, nox_soln.getEpetraVector(), 1.0);
 
   // re-build the entire initial right-hand-side with correct accelerations
-  model_eval().apply_initial_force(*disnp_ptr, *rhs_ptr);
+  model_eval().apply_initial_force(*disnp_ptr, rhs_full);
 
   // call update routines to copy states from t_{n+1} to t_{n}
   // note that the time step is not incremented
@@ -316,7 +318,7 @@ bool Solid::Integrator::current_state_is_equilibrium(const double& tol)
   check_init();
 
   // temporary right-hand-side
-  Core::LinAlg::Vector<double> rhs_ptr(*global_state().dof_row_map_view(), true);
+  Core::LinAlg::Vector<double> rhs_ptr(global_state().global_problem_map(), /*zero_out=*/true);
 
   // overwrite initial state vectors with Dirichlet BCs
   const double& timen = global_state().get_multi_time()[0];
