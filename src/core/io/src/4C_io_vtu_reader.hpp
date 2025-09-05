@@ -32,7 +32,7 @@ namespace Core::IO::VTU
    * @param vtu_file (in) : Path to the file
    * @return Core::IO::MeshInput::Mesh
    */
-  Core::IO::MeshInput::Mesh read_vtu_file(const std::filesystem::path& vtu_file);
+  Core::IO::MeshInput::Mesh<3> read_vtu_file(const std::filesystem::path& vtu_file);
 }  // namespace Core::IO::VTU
 
 FOUR_C_NAMESPACE_CLOSE

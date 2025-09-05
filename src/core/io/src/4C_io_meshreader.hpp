@@ -27,6 +27,7 @@ namespace Core::IO
 
   namespace MeshInput
   {
+    template <unsigned dim>
     struct Mesh;
   }
 
@@ -103,7 +104,7 @@ namespace Core::IO
      * Access the external mesh on rank 0. This is only available if an external mesh was actually
      * read. On ranks other than 0, this will always return a nullptr.
      */
-    [[nodiscard]] const MeshInput::Mesh* get_external_mesh_on_rank_zero() const;
+    [[nodiscard]] const MeshInput::Mesh<3>* get_external_mesh_on_rank_zero() const;
 
    private:
     /// Communicator for this mesh reader.

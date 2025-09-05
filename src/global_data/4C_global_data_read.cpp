@@ -1498,13 +1498,12 @@ namespace
     {
       if (const auto* external_mesh = mesh_reader.get_external_mesh_on_rank_zero(); external_mesh)
       {
-        const auto& element_blocks = external_mesh->cell_blocks;
-        for (const auto& [id, eb] : element_blocks)
+        for (const auto& [id, eb] : external_mesh->cell_blocks)
         {
           std::set<int> nodes;
-          for (const auto& connectivity : eb.cell_connectivities | std::views::values)
+          for (const auto& cell : eb.cells())
           {
-            nodes.insert(connectivity.begin(), connectivity.end());
+            nodes.insert(cell.connectivity.begin(), cell.connectivity.end());
           }
           element_block_nodes[id] = std::vector<int>(nodes.begin(), nodes.end());
         }

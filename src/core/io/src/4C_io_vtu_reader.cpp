@@ -10,6 +10,7 @@
 #include "4C_fem_general_cell_type.hpp"
 #include "4C_fem_general_cell_type_traits.hpp"
 #include "4C_io_element_vtk_cell_type_register.hpp"
+#include "4C_io_mesh.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #ifdef FOUR_C_WITH_VTK
@@ -120,12 +121,12 @@ namespace
   }
 }  // namespace
 
-Core::IO::MeshInput::Mesh Core::IO::VTU::read_vtu_file(const std::filesystem::path& vtu_file)
+Core::IO::MeshInput::Mesh<3> Core::IO::VTU::read_vtu_file(const std::filesystem::path& vtu_file)
 {
   FOUR_C_ASSERT_ALWAYS(
       std::filesystem::exists(vtu_file), "File {} does not exist.", vtu_file.string());
 
-  Core::IO::MeshInput::Mesh mesh{};
+  Core::IO::MeshInput::Mesh<3> mesh{};
 
   // Read the VTU file
   vtkSmartPointer<vtkXMLUnstructuredGridReader> reader =
@@ -136,11 +137,11 @@ Core::IO::MeshInput::Mesh Core::IO::VTU::read_vtu_file(const std::filesystem::pa
 
   // first read the points of the mesh and the point-sets
   auto point_sets = get_numbered_arrays_with_prefix(vtk_mesh->GetPointData(), "point_set");
+  mesh.points.resize(vtk_mesh->GetNumberOfPoints());
   for (vtkIdType i = 0; i < vtk_mesh->GetNumberOfPoints(); ++i)
   {
-    std::array<double, 3> coords;
-    vtk_mesh->GetPoint(i, coords.data());
-    mesh.points[static_cast<int>(i)] = {coords[0], coords[1], coords[2]};
+    vtk_mesh->GetPoint(i, mesh.points[static_cast<int>(i)].coords.data());
+    mesh.points[static_cast<int>(i)].external_id = static_cast<int>(i);
 
     // check whether this point is part of a point-set
     for (const auto& [set_id, array_ref] : point_sets)
@@ -150,7 +151,7 @@ Core::IO::MeshInput::Mesh Core::IO::VTU::read_vtu_file(const std::filesystem::pa
 
       if (is_part_of_point_set)
       {
-        mesh.point_sets[set_id].point_ids.emplace_back(i);
+        mesh.point_sets[set_id].point_ids.emplace(i);
       }
     }
   }
@@ -163,23 +164,16 @@ Core::IO::MeshInput::Mesh Core::IO::VTU::read_vtu_file(const std::filesystem::pa
     const int block_id = extract_component_from_integral_array<int>(cell_block_info, i, 0);
 
     const auto cell_type = get_celltype_from_vtk(vtk_mesh->GetCellType(i));
-    if (!mesh.cell_blocks.contains(block_id))
-    {
-      // add new block
-      MeshInput::CellBlock new_block{};
-      new_block.cell_type = cell_type;
-      mesh.cell_blocks[block_id] = new_block;
-    }
-    else
-    {
-      // verify that the cell type is the same as the ones from all cells in this block
-      const auto existing_cell_type = mesh.cell_blocks[block_id].cell_type;
 
-      FOUR_C_ASSERT_ALWAYS(existing_cell_type == cell_type,
-          "Cell block {} has mixed cell types: {} and {}.", block_id,
-          Core::FE::cell_type_to_string(existing_cell_type),
-          Core::FE::cell_type_to_string(cell_type));
-    }
+    const auto [emplaced_item, inserted] =
+        mesh.cell_blocks.try_emplace(block_id, MeshInput::CellBlock{cell_type});
+
+    MeshInput::CellBlock& cell_block = emplaced_item->second;
+
+    FOUR_C_ASSERT_ALWAYS(emplaced_item->second.cell_type == cell_type,
+        "Cell block {} has mixed cell types: {} and {}.", block_id,
+        Core::FE::cell_type_to_string(emplaced_item->second.cell_type),
+        Core::FE::cell_type_to_string(cell_type));
 
     // extract connectivity (note that we need to adapt the node-ordering according to our
     // convention)
@@ -188,16 +182,16 @@ Core::IO::MeshInput::Mesh Core::IO::VTU::read_vtu_file(const std::filesystem::pa
     vtk_mesh->GetCellPoints(i, number_of_points, connectivity);
 
     // add to cell_block
-    mesh.cell_blocks[block_id].cell_connectivities[static_cast<int>(i)] =
-        translate_vtk_connectivity(
-            cell_type, std::span{connectivity, static_cast<std::size_t>(number_of_points)});
+    cell_block.add_cell(
+        i, translate_vtk_connectivity(
+               cell_type, std::span{connectivity, static_cast<std::size_t>(number_of_points)}));
   }
 
   return mesh;
 }
 
 #else
-Core::IO::MeshInput::Mesh Core::IO::VTU::read_vtu_file(const std::filesystem::path& vtu_file)
+Core::IO::MeshInput::Mesh<3> Core::IO::VTU::read_vtu_file(const std::filesystem::path& vtu_file)
 {
   FOUR_C_THROW(
       "You have to enable VTK to support vtu mesh file input. Reconfigure 4C with the CMake option "
