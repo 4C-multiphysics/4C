@@ -818,41 +818,39 @@ namespace Core::FE
     */
     [[nodiscard]] Core::Elements::Element* g_element(int gid) const;
 
-    /*!
-    \brief Get the element with local row id lid (Filled()==true prerequisite)
-
-    Returns the element with local row index lid.
-    Will not return any ghosted element.
-    This is an individual call and Filled()=true is a prerequisite
-
-    \return Address of element if element is owned by calling proc
-    */
-    [[nodiscard]] Core::Elements::Element* l_row_element(int lid) const
+    /**
+     * @brief Return the row element with local @p row_id
+     *
+     * @warning This call is dangerous since the @p row_id does not have any special meaning. To
+     * iterate over all elements, use my_row_element_range() instead.
+     *
+     * @pre filled()==true
+     */
+    [[nodiscard]] Core::Elements::Element* l_row_element(int row_id) const
     {
-      FOUR_C_ASSERT(filled(), "Discretization {} not Filled()!", name_);
-      return elerowptr_[lid];
+      FOUR_C_ASSERT(filled(), "Discretization {} not filled", name_);
+      return elerowptr_[row_id];
     }
 
-    /*!
-    \brief Get the element with local column id lid (Filled()==true prerequisite)
-
-    Returns the element with local column index lid.
-    Will also return any ghosted element.
-    This is an individual call and Filled()=true is a prerequisite
-
-    \return Address of element if element is stored by calling proc
-    */
-    Core::Elements::Element* l_col_element(int lid) const
+    /**
+     * @brief Return the column element with local @p col_id
+     *
+     * @warning This call is dangerous since the @p col_id does not have any special meaning. To
+     * iterate over all elements, use my_col_element_range() instead.
+     *
+     * @pre filled()==true
+     */
+    [[nodiscard]] Core::Elements::Element* l_col_element(int col_id) const
     {
-      FOUR_C_ASSERT(filled(), "Discretization {} not Filled()!", name_);
-      return elecolptr_[lid];
+      FOUR_C_ASSERT(filled(), "Discretization {} not filled", name_);
+      return elecolptr_[col_id];
     }
 
     /**
      * This function is useful for range based for-loops over all row elements.
      *
      * \code
-     *      for (Core::Elements::Element* actele : MyRowElementRange()) {}
+     *      for (Core::Elements::Element* actele : my_row_element_range()) {}
      * \endcode
      *
      * \return A range of all local row elements.
@@ -864,7 +862,7 @@ namespace Core::FE
     }
 
     /**
-     * This function is equivalent to MyRowElementRange(), but applied to column elements
+     * This function is equivalent to my_row_element_range(), but applied to column elements
      */
     [[nodiscard]] auto my_col_element_range() const
     {
@@ -893,37 +891,49 @@ namespace Core::FE
     */
     [[nodiscard]] Core::Nodes::Node* g_node(int gid) const;
 
-    /*!
-    \brief Get the node with local row id lid (Filled()==true prerequisite)
 
-    Returns the node with local row index lid.
-    Will not return any ghosted node.
-    This is an individual call and Filled()=true is a prerequisite
-
-    \return Address of node if node is owned and stored by calling proc
-    */
-    [[nodiscard]] Core::Nodes::Node* l_row_node(int lid) const
+    /**
+     * @brief Return the row node with local @p row_id
+     *
+     * @warning This call is dangerous since the @p row_id does not have any special meaning. To
+     * iterate over all nodes, use my_row_node_range() instead.
+     *
+     * @pre filled()==true
+     */
+    [[nodiscard]] Core::Nodes::Node* l_row_node(int row_id) const
     {
-      FOUR_C_ASSERT(filled(), "Discretization {} not Filled()!", name_);
-      return noderowptr_[lid];
+      FOUR_C_ASSERT(filled(), "Discretization {} not filled", name_);
+      return noderowptr_[row_id];
     }
 
-    /*!
-    \brief Get the node with local column id lid (Filled()==true prerequisite)
-
-    Returns the node with local column index lid.
-    Will return any node stored on this proc.
-    This is an individual call and Filled()=true is a prerequisite
-
-    \return Address of node if node is stored by calling proc
-    */
-    [[nodiscard]] Core::Nodes::Node* l_col_node(int lid) const
+    /**
+     * @brief Return the column node with local @p col_id
+     *
+     * @warning This call is dangerous since the @p col_id does not have any special meaning. To
+     * iterate over all nodes, use my_col_node_range() instead.
+     *
+     * @pre filled()==true
+     */
+    [[nodiscard]] Core::Nodes::Node* l_col_node(int col_id) const
     {
-      FOUR_C_ASSERT(filled(), "Discretization {} not Filled()!", name_);
-      return nodecolptr_[lid];
+      FOUR_C_ASSERT(filled(), "Discretization {} not filled", name_);
+      return nodecolptr_[col_id];
     }
 
 
+    /**
+     * @brief A range providing access to all local row nodes.
+     *
+     * You may directly use this function in range based for-loops, e.g.
+     *
+     * @code
+     * for (auto node : my_row_node_range())
+     * {
+     *   ...
+     * }
+     * @endcode
+     *
+     */
     [[nodiscard]] auto my_row_node_range() const
     {
       FOUR_C_ASSERT(filled(), "Discretization {} not Filled()!", name_);
@@ -933,6 +943,11 @@ namespace Core::FE
               this, locally_owned_local_node_ids_.data() + locally_owned_local_node_ids_.size()));
     }
 
+    /**
+     * @brief A range providing access to all local row nodes.
+     *
+     * See the const overload for an example.
+     */
     [[nodiscard]] auto my_row_node_range()
     {
       FOUR_C_ASSERT(filled(), "Discretization {} not Filled()!", name_);
@@ -942,6 +957,11 @@ namespace Core::FE
               this, locally_owned_local_node_ids_.data() + locally_owned_local_node_ids_.size()));
     }
 
+    /**
+     * @brief A range providing access to all local column nodes.
+     *
+     * See my_row_node_range() for an example.
+     */
     [[nodiscard]] auto my_col_node_range() const
     {
       FOUR_C_ASSERT(filled(), "Discretization {} not Filled()!", name_);
@@ -951,6 +971,11 @@ namespace Core::FE
               this, all_local_node_ids_.data() + all_local_node_ids_.size()));
     }
 
+    /**
+     * @brief A range providing access to all local column nodes.
+     *
+     * See my_row_node_range() for an example.
+     */
     [[nodiscard]] auto my_col_node_range()
     {
       FOUR_C_ASSERT(filled(), "Discretization {} not Filled()!", name_);
