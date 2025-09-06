@@ -10,21 +10,14 @@
 
 #include "4C_config.hpp"
 
-#include <concepts>
 #include <iterator>
+#include <span>
 
 FOUR_C_NAMESPACE_OPEN
 
 namespace Core::FE
 {
   class Discretization;
-
-  /**
-   * Check whether T is a type that can be constructed from a Discretization pointer and an int.
-   */
-  template <typename T>
-  concept DiscretizationReferenceType = std::constructible_from<T, Discretization*, int> ||
-                                        std::constructible_from<T, const Discretization*, int>;
 
   /**
    * @brief A proxy object that behaves like a reference for iterator dereferencing.
@@ -60,41 +53,112 @@ namespace Core::FE
     using IndexType = int;
     using DiscretizationType = typename RefType::DiscretizationType;
 
-    using iterator_category = std::forward_iterator_tag;
+    using iterator_category = std::random_access_iterator_tag;
     using value_type = RefType;
     using difference_type = std::ptrdiff_t;
     using reference = value_type;
     using pointer = IteratorProxy<value_type>;
 
-    DiscretizationIterator(DiscretizationType* discretization, const IndexType* index_ptr)
+    constexpr DiscretizationIterator() noexcept : discretization_(nullptr), index_ptr_(nullptr) {}
+
+    constexpr DiscretizationIterator(
+        DiscretizationType* discretization, const IndexType* index_ptr) noexcept
         : discretization_(discretization), index_ptr_(index_ptr)
     {
     }
 
-    reference operator*() const { return RefType(discretization_, *index_ptr_); }
+    constexpr reference operator*() const { return RefType(discretization_, *index_ptr_); }
+    constexpr pointer operator->() const { return pointer(RefType(discretization_, *index_ptr_)); }
 
-    pointer operator->() const { return pointer(RefType(discretization_, *index_ptr_)); }
-
-    DiscretizationIterator& operator++()
+    constexpr DiscretizationIterator& operator++() noexcept
     {
       ++index_ptr_;
       return *this;
     }
-
-    DiscretizationIterator operator++(int)
+    constexpr DiscretizationIterator operator++(int) noexcept
     {
-      DiscretizationIterator tmp = *this;
+      auto tmp = *this;
       ++(*this);
       return tmp;
     }
 
-
-    bool operator==(const DiscretizationIterator& other) const
+    constexpr DiscretizationIterator& operator--() noexcept
     {
-      return (discretization_ == other.discretization_) && (index_ptr_ == other.index_ptr_);
+      --index_ptr_;
+      return *this;
+    }
+    constexpr DiscretizationIterator operator--(int) noexcept
+    {
+      auto tmp = *this;
+      --(*this);
+      return tmp;
     }
 
-    bool operator!=(const DiscretizationIterator& other) const { return !(*this == other); }
+    constexpr DiscretizationIterator& operator+=(difference_type n) noexcept
+    {
+      index_ptr_ += n;
+      return *this;
+    }
+    constexpr DiscretizationIterator& operator-=(difference_type n) noexcept
+    {
+      index_ptr_ -= n;
+      return *this;
+    }
+
+    constexpr DiscretizationIterator operator+(difference_type n) const noexcept
+    {
+      return DiscretizationIterator(discretization_, index_ptr_ + n);
+    }
+    friend constexpr DiscretizationIterator operator+(
+        difference_type n, const DiscretizationIterator& it) noexcept
+    {
+      return it + n;
+    }
+
+    constexpr DiscretizationIterator operator-(difference_type n) const noexcept
+    {
+      return DiscretizationIterator(discretization_, index_ptr_ - n);
+    }
+    constexpr difference_type operator-(const DiscretizationIterator& other) const noexcept
+    {
+      return index_ptr_ - other.index_ptr_;
+    }
+
+    constexpr reference operator[](difference_type n) const
+    {
+      return RefType(discretization_, *(index_ptr_ + n));
+    }
+
+    friend constexpr bool operator==(
+        const DiscretizationIterator& a, const DiscretizationIterator& b) noexcept
+    {
+      return a.discretization_ == b.discretization_ && a.index_ptr_ == b.index_ptr_;
+    }
+    friend constexpr bool operator!=(
+        const DiscretizationIterator& a, const DiscretizationIterator& b) noexcept
+    {
+      return !(a == b);
+    }
+    friend constexpr bool operator<(
+        const DiscretizationIterator& a, const DiscretizationIterator& b) noexcept
+    {
+      return a.index_ptr_ < b.index_ptr_;
+    }
+    friend constexpr bool operator>(
+        const DiscretizationIterator& a, const DiscretizationIterator& b) noexcept
+    {
+      return b < a;
+    }
+    friend constexpr bool operator<=(
+        const DiscretizationIterator& a, const DiscretizationIterator& b) noexcept
+    {
+      return !(b < a);
+    }
+    friend constexpr bool operator>=(
+        const DiscretizationIterator& a, const DiscretizationIterator& b) noexcept
+    {
+      return !(a < b);
+    }
 
    private:
     //! Discretization containing the entities being iterated over
@@ -107,18 +171,36 @@ namespace Core::FE
    * A range of Iterator objects for use in range-based expressions.
    */
   template <typename Iterator>
-  class IteratorRange
+  class IteratorRange : public std::ranges::view_interface<IteratorRange<Iterator>>
   {
    public:
     IteratorRange(Iterator begin, Iterator end) : begin_(begin), end_(end) {}
 
-    Iterator begin() const { return begin_; }
-    Iterator end() const { return end_; }
+    constexpr Iterator begin() const { return begin_; }
+    constexpr Iterator end() const { return end_; }
+
+    [[nodiscard]] constexpr size_t size() const { return end_ - begin_; }
 
    private:
     Iterator begin_;
     Iterator end_;
   };
+
+  namespace Internal
+  {
+    /**
+     * @brief Create an iterator range over @p RefType entities in a @p discretization.
+     *
+     * The range iterates over the entities specified by the given @p indices. The iterators
+     * are only valid as long as the @p discretization and the @p indices are valid.
+     */
+    template <typename RefType, typename DiscretizationType = typename RefType::DiscretizationType>
+    auto make_iterator_range(DiscretizationType* discretization, std::span<const int> indices)
+    {
+      return IteratorRange(DiscretizationIterator<RefType>(discretization, indices.data()),
+          DiscretizationIterator<RefType>(discretization, indices.data() + indices.size()));
+    }
+  }  // namespace Internal
 }  // namespace Core::FE
 
 FOUR_C_NAMESPACE_CLOSE

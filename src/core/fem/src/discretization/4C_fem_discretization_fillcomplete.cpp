@@ -227,12 +227,24 @@ void Core::FE::Discretization::build_element_to_node_pointers()
     bool success = ele->build_nodal_pointers(node_);
     if (!success) FOUR_C_THROW("Building element <-> node topology failed");
   }
+
+  std::vector<std::vector<int>> element_connectivity(element_.size());
+  for (const auto& ele : element_ | std::views::values)
+  {
+    const int nnode = ele->num_node();
+    element_connectivity[ele->lid()].resize(nnode);
+    const int* nodes = ele->node_ids();
+    for (int j = 0; j < nnode; ++j) element_connectivity[ele->lid()][j] = nodes[j];
+  }
+  element_connectivity_.from_nested(element_connectivity);
 }
 
 
 void Core::FE::Discretization::build_node_to_element_pointers()
 {
   for (const auto& node : node_ | std::views::values) node->clear_my_element_topology();
+
+  std::vector<std::vector<int>> node_to_element_ids(node_.size());
 
   for (const auto& ele : element_ | std::views::values)
   {
@@ -241,13 +253,15 @@ void Core::FE::Discretization::build_node_to_element_pointers()
     for (int j = 0; j < nnode; ++j)
     {
       Core::Nodes::Node* node = g_node(nodes[j]);
-      if (!node)
-        FOUR_C_THROW(
-            "Node {} is not on this proc {}", j, Core::Communication::my_mpi_rank(get_comm()));
-      else
-        node->add_element_ptr(ele.get());
+      FOUR_C_ASSERT_ALWAYS(
+          node, "Node {} is not on this proc {}", j, Core::Communication::my_mpi_rank(get_comm()));
+
+      node->add_element_ptr(ele.get());
+      node_to_element_ids[node->lid()].push_back(ele->lid());
     }
   }
+
+  node_to_element_lids_.from_nested(node_to_element_ids);
 }
 
 

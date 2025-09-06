@@ -188,9 +188,9 @@ namespace ReducedLung
     std::map<int, std::vector<int>> ele_ids_per_node;
     for (const auto& node : actdis->my_row_node_range())
     {
-      for (int i = 0; i < node.user_data()->num_element(); i++)
+      for (int i = 0; i < node.user_node()->num_element(); i++)
       {
-        ele_ids_per_node[node.global_id()].push_back(node.user_data()->elements()[i]->id());
+        ele_ids_per_node[node.global_id()].push_back(node.user_node()->elements()[i]->id());
       }
     }
     auto merge_maps =

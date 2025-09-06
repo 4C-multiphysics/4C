@@ -19,6 +19,7 @@
 #include "4C_linalg_vector.hpp"
 #include "4C_utils_callbacks.hpp"
 #include "4C_utils_exceptions.hpp"
+#include "4C_utils_flat_vector_vector.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
 #include <functional>
@@ -76,6 +77,217 @@ namespace Core::IO
 
 namespace Core::FE
 {
+
+  class ElementRef;
+  class ConstElementRef;
+
+  /**
+   * Implementation helper for NodeRef and ConstNodeRef.
+   */
+  template <bool is_const>
+  class NodeRefImpl
+  {
+   public:
+    template <typename T>
+    using MaybeConst = std::conditional_t<is_const, const T, T>;
+
+    using ElementRefType = std::conditional_t<is_const, ConstElementRef, ElementRef>;
+
+    //! The discretization type, const or non-const depending on is_const.
+    using DiscretizationType = MaybeConst<Discretization>;
+
+    /**
+     * There is usually no need to call this constructor. You will receive objects of this type
+     * from Discretization methods.
+     */
+    NodeRefImpl(DiscretizationType* dis, int local_id) : discretization_(dis), local_id_(local_id)
+    {
+      FOUR_C_ASSERT(dis, "NodeRefImpl needs a valid discretization");
+    }
+
+    /**
+     * Return the spatial coordinates of the node.
+     */
+    [[nodiscard]] std::span<const double, 3> x() const
+    {
+      const auto& coord = discretization_->nodecolptr_[local_id_]->x();
+      FOUR_C_ASSERT(coord.size() == 3, "NodeRef only supports 3D coordinates");
+      return std::span<const double, 3>(coord.data(), 3);
+    }
+
+    /**
+     * Return the owning MPI rank of the node.
+     */
+    [[nodiscard]] int owner() const { return discretization_->nodecolptr_[local_id_]->owner(); }
+
+    /**
+     * Return the local id of the node in the discretization.
+     */
+    [[nodiscard]] int local_id() const { return local_id_; }
+
+    /**
+     * Return the global id of the node in the discretization.
+     */
+    [[nodiscard]] int global_id() const { return discretization_->nodecolptr_[local_id_]->id(); }
+
+    /**
+     * Return a pointer to user data of type Node. This may be nullptr.
+     */
+    [[nodiscard]] MaybeConst<Nodes::Node>* user_node() const
+    {
+      return discretization_->nodecolptr_[local_id_];
+    }
+
+    [[nodiscard]] IteratorRange<DiscretizationIterator<ElementRefType>> adjacent_elements() const
+    {
+      return Internal::make_iterator_range<ElementRefType>(
+          discretization_, discretization_->node_to_element_lids_[local_id_]);
+    }
+
+    /**
+     * The discretization this node belongs to.
+     */
+    [[nodiscard]] MaybeConst<DiscretizationType>& discretization() const
+    {
+      return *discretization_;
+    }
+
+   private:
+    DiscretizationType* discretization_{nullptr};
+    int local_id_;
+  };
+
+
+  /**
+   * @brief Reference to a node in a Discretization.
+   *
+   * This class is a lightweight reference to a node in a Discretization. It does not own any
+   * data and only refers to data in the Discretization. Thus, it can only be used as long as the
+   * corresponding Discretization is alive.
+   *
+   * This type has reference semantics and can be copied cheaply.
+   */
+  class NodeRef : public NodeRefImpl<false>
+  {
+   public:
+    /**
+     * There is usually no need to call this constructor. You will receive objects of this type
+     * from Discretization methods.
+     */
+    NodeRef(FE::Discretization* dis, int local_id) : NodeRefImpl(dis, local_id) {}
+  };
+
+
+  /**
+   * @brief Const reference to a node in a Discretization.
+   *
+   * Refer to NodeRef for details of this type.
+   */
+  class ConstNodeRef : public NodeRefImpl<true>
+  {
+   public:
+    /**
+     * There is usually no need to call this constructor. You will receive objects of this type
+     * from Discretization methods.
+     */
+    ConstNodeRef(const FE::Discretization* dis, int local_id) : NodeRefImpl(dis, local_id) {}
+
+    //! Allow implicit conversion from NodeRef to ConstNodeRef.
+    ConstNodeRef(const NodeRef& other) : ConstNodeRef(&other.discretization(), other.local_id()) {}
+  };
+
+
+  template <bool is_const>
+  class ElementRefImpl
+  {
+   public:
+    template <typename T>
+    using MaybeConst = std::conditional_t<is_const, const T, T>;
+
+    using NodeRefType = std::conditional_t<is_const, ConstNodeRef, NodeRef>;
+
+    //! The discretization type, const or non-const depending on is_const.
+    using DiscretizationType = MaybeConst<FE::Discretization>;
+
+    /**
+     * There is usually no need to call this constructor. You will receive objects of this type
+     * from Discretization methods.
+     */
+    ElementRefImpl(DiscretizationType* dis, int local_id)
+        : discretization_(dis), local_id_(local_id)
+    {
+      FOUR_C_ASSERT(dis, "ElementRefImpl needs a valid discretization");
+    }
+
+    /**
+     * Return the local id of the element in the discretization.
+     */
+    [[nodiscard]] int local_id() const { return local_id_; }
+
+    /**
+     * Return the global id of the element in the discretization.
+     */
+    [[nodiscard]] int global_id() const { return discretization_->elecolptr_[local_id_]->id(); }
+
+    /**
+     * Return a pointer to user data of type Element. This may be nullptr.
+     */
+    [[nodiscard]] MaybeConst<Elements::Element>* user_element() const
+    {
+      return discretization_->elecolptr_[local_id_];
+    }
+
+    [[nodiscard]] IteratorRange<DiscretizationIterator<NodeRefType>> nodes() const
+    {
+      return Internal::make_iterator_range<NodeRefType>(
+          discretization_, discretization_->element_connectivity_[local_id_]);
+    }
+
+    /**
+     * The discretization this element belongs to.
+     */
+    [[nodiscard]] MaybeConst<DiscretizationType>& discretization() const
+    {
+      return *discretization_;
+    }
+
+   private:
+    DiscretizationType* discretization_{nullptr};
+    int local_id_;
+  };
+
+  /**
+   * @brief Reference to an element in a Discretization.
+   *
+   * This class is a lightweight reference to an element in a Discretization. It does not own any
+   * data and only refers to data in the Discretization. Thus, it can only be used as long as the
+   * corresponding Discretization is alive.
+   *
+   * This type has reference semantics and can be copied cheaply.
+   */
+  class ElementRef : public ElementRefImpl<false>
+  {
+   public:
+    ElementRef(FE::Discretization* dis, int local_id) : ElementRefImpl(dis, local_id) {}
+  };
+
+  /**
+   * @brief Const reference to an element in a Discretization.
+   *
+   * Refer to ElementRef for details of this type.
+   */
+  class ConstElementRef : public ElementRefImpl<true>
+  {
+   public:
+    ConstElementRef(const FE::Discretization* dis, int local_id) : ElementRefImpl(dis, local_id) {}
+
+    //! Allow implicit conversion from ElementRef to ConstElementRef.
+    ConstElementRef(const ElementRef& other)
+        : ConstElementRef(&other.discretization(), other.local_id())
+    {
+    }
+  };
+
   /*!
     \brief Options for parallel (re)distribution
   */
@@ -517,11 +729,11 @@ namespace Core::FE
     /**
      * Overload taking a ConstNodeRef.
      */
-    [[nodiscard]] std::vector<int> dof(unsigned nds, Nodes::ConstNodeRef node) const
+    [[nodiscard]] std::vector<int> dof(unsigned nds, ConstNodeRef node) const
     {
       FOUR_C_ASSERT(nds < dofsets_.size(), "undefined dof set found in discretization {}!", name_);
       FOUR_C_ASSERT(havedof_, "no dofs assigned in discretization {}!", name_);
-      return dofsets_[nds]->dof(node.user_data());
+      return dofsets_[nds]->dof(node.user_node());
     }
 
     /*!
@@ -818,41 +1030,39 @@ namespace Core::FE
     */
     [[nodiscard]] Core::Elements::Element* g_element(int gid) const;
 
-    /*!
-    \brief Get the element with local row id lid (Filled()==true prerequisite)
-
-    Returns the element with local row index lid.
-    Will not return any ghosted element.
-    This is an individual call and Filled()=true is a prerequisite
-
-    \return Address of element if element is owned by calling proc
-    */
-    [[nodiscard]] Core::Elements::Element* l_row_element(int lid) const
+    /**
+     * @brief Return the row element with local @p row_id
+     *
+     * @warning This call is dangerous since the @p row_id does not have any special meaning. To
+     * iterate over all elements, use my_row_element_range() instead.
+     *
+     * @pre filled()==true
+     */
+    [[nodiscard]] Core::Elements::Element* l_row_element(int row_id) const
     {
-      FOUR_C_ASSERT(filled(), "Discretization {} not Filled()!", name_);
-      return elerowptr_[lid];
+      FOUR_C_ASSERT(filled(), "Discretization {} not filled", name_);
+      return elerowptr_[row_id];
     }
 
-    /*!
-    \brief Get the element with local column id lid (Filled()==true prerequisite)
-
-    Returns the element with local column index lid.
-    Will also return any ghosted element.
-    This is an individual call and Filled()=true is a prerequisite
-
-    \return Address of element if element is stored by calling proc
-    */
-    Core::Elements::Element* l_col_element(int lid) const
+    /**
+     * @brief Return the column element with local @p col_id
+     *
+     * @warning This call is dangerous since the @p col_id does not have any special meaning. To
+     * iterate over all elements, use my_col_element_range() instead.
+     *
+     * @pre filled()==true
+     */
+    [[nodiscard]] Core::Elements::Element* l_col_element(int col_id) const
     {
-      FOUR_C_ASSERT(filled(), "Discretization {} not Filled()!", name_);
-      return elecolptr_[lid];
+      FOUR_C_ASSERT(filled(), "Discretization {} not filled", name_);
+      return elecolptr_[col_id];
     }
 
     /**
      * This function is useful for range based for-loops over all row elements.
      *
      * \code
-     *      for (Core::Elements::Element* actele : MyRowElementRange()) {}
+     *      for (Core::Elements::Element* actele : my_row_element_range()) {}
      * \endcode
      *
      * \return A range of all local row elements.
@@ -864,7 +1074,7 @@ namespace Core::FE
     }
 
     /**
-     * This function is equivalent to MyRowElementRange(), but applied to column elements
+     * This function is equivalent to my_row_element_range(), but applied to column elements
      */
     [[nodiscard]] auto my_col_element_range() const
     {
@@ -893,70 +1103,86 @@ namespace Core::FE
     */
     [[nodiscard]] Core::Nodes::Node* g_node(int gid) const;
 
-    /*!
-    \brief Get the node with local row id lid (Filled()==true prerequisite)
 
-    Returns the node with local row index lid.
-    Will not return any ghosted node.
-    This is an individual call and Filled()=true is a prerequisite
-
-    \return Address of node if node is owned and stored by calling proc
-    */
-    [[nodiscard]] Core::Nodes::Node* l_row_node(int lid) const
+    /**
+     * @brief Return the row node with local @p row_id
+     *
+     * @warning This call is dangerous since the @p row_id does not have any special meaning. To
+     * iterate over all nodes, use my_row_node_range() instead.
+     *
+     * @pre filled()==true
+     */
+    [[nodiscard]] Core::Nodes::Node* l_row_node(int row_id) const
     {
-      FOUR_C_ASSERT(filled(), "Discretization {} not Filled()!", name_);
-      return noderowptr_[lid];
+      FOUR_C_ASSERT(filled(), "Discretization {} not filled", name_);
+      return noderowptr_[row_id];
     }
 
-    /*!
-    \brief Get the node with local column id lid (Filled()==true prerequisite)
-
-    Returns the node with local column index lid.
-    Will return any node stored on this proc.
-    This is an individual call and Filled()=true is a prerequisite
-
-    \return Address of node if node is stored by calling proc
-    */
-    [[nodiscard]] Core::Nodes::Node* l_col_node(int lid) const
+    /**
+     * @brief Return the column node with local @p col_id
+     *
+     * @warning This call is dangerous since the @p col_id does not have any special meaning. To
+     * iterate over all nodes, use my_col_node_range() instead.
+     *
+     * @pre filled()==true
+     */
+    [[nodiscard]] Core::Nodes::Node* l_col_node(int col_id) const
     {
-      FOUR_C_ASSERT(filled(), "Discretization {} not Filled()!", name_);
-      return nodecolptr_[lid];
+      FOUR_C_ASSERT(filled(), "Discretization {} not filled", name_);
+      return nodecolptr_[col_id];
     }
 
 
+    /**
+     * @brief A range providing access to all local row nodes.
+     *
+     * You may directly use this function in range based for-loops, e.g.
+     *
+     * @code
+     * for (auto node : my_row_node_range())
+     * {
+     *   ...
+     * }
+     * @endcode
+     *
+     */
     [[nodiscard]] auto my_row_node_range() const
     {
       FOUR_C_ASSERT(filled(), "Discretization {} not Filled()!", name_);
-      return IteratorRange(
-          DiscretizationIterator<Nodes::ConstNodeRef>(this, locally_owned_local_node_ids_.data()),
-          DiscretizationIterator<Nodes::ConstNodeRef>(
-              this, locally_owned_local_node_ids_.data() + locally_owned_local_node_ids_.size()));
+      return Internal::make_iterator_range<ConstNodeRef>(this, locally_owned_local_node_ids_);
     }
 
+    /**
+     * @brief A range providing access to all local row nodes.
+     *
+     * See the const overload for an example.
+     */
     [[nodiscard]] auto my_row_node_range()
     {
       FOUR_C_ASSERT(filled(), "Discretization {} not Filled()!", name_);
-      return IteratorRange(
-          DiscretizationIterator<Nodes::NodeRef>(this, locally_owned_local_node_ids_.data()),
-          DiscretizationIterator<Nodes::NodeRef>(
-              this, locally_owned_local_node_ids_.data() + locally_owned_local_node_ids_.size()));
+      return Internal::make_iterator_range<NodeRef>(this, locally_owned_local_node_ids_);
     }
 
+    /**
+     * @brief A range providing access to all local column nodes.
+     *
+     * See my_row_node_range() for an example.
+     */
     [[nodiscard]] auto my_col_node_range() const
     {
       FOUR_C_ASSERT(filled(), "Discretization {} not Filled()!", name_);
-      return IteratorRange(
-          DiscretizationIterator<Nodes::ConstNodeRef>(this, all_local_node_ids_.data()),
-          DiscretizationIterator<Nodes::ConstNodeRef>(
-              this, all_local_node_ids_.data() + all_local_node_ids_.size()));
+      return Internal::make_iterator_range<ConstNodeRef>(this, all_local_node_ids_);
     }
 
+    /**
+     * @brief A range providing access to all local column nodes.
+     *
+     * See my_row_node_range() for an example.
+     */
     [[nodiscard]] auto my_col_node_range()
     {
       FOUR_C_ASSERT(filled(), "Discretization {} not Filled()!", name_);
-      return IteratorRange(DiscretizationIterator<Nodes::NodeRef>(this, all_local_node_ids_.data()),
-          DiscretizationIterator<Nodes::NodeRef>(
-              this, all_local_node_ids_.data() + all_local_node_ids_.size()));
+      return Internal::make_iterator_range<NodeRef>(this, all_local_node_ids_);
     }
 
     unsigned int n_dim() const { return n_dim_; }
@@ -2209,6 +2435,12 @@ namespace Core::FE
     //! Local IDs of the nodes in nodecolptr_ (!) that are owned by this rank.
     std::vector<int> locally_owned_local_node_ids_;
 
+    //! Local IDs (inner index) of the elements attached to a node (outer index)
+    Utils::FlatVectorVector<int> node_to_element_lids_;
+
+    //! The nodes (inner index) making up an element (outer index)
+    Utils::FlatVectorVector<int> element_connectivity_;
+
     //! Map from nodal Gid to node pointers
     std::map<int, std::shared_ptr<Core::Nodes::Node>> node_;
 
@@ -2232,7 +2464,10 @@ namespace Core::FE
     Callbacks callbacks_;
 
     template <bool is_const>
-    friend class Nodes::NodeRefImpl;
+    friend class NodeRefImpl;
+
+    template <bool is_const>
+    friend class ElementRefImpl;
   };  // class Discretization
 }  // namespace Core::FE
 

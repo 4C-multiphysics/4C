@@ -510,16 +510,16 @@ void Solid::Utils::Shell::Director::export_director_map_from_row_to_col_map(
   {
     auto curr = director_map.find(actnode.global_id());
     FOUR_C_ASSERT(curr != director_map.end(), "Cannot find director map entry");
-    for (int j = 0; j < actnode.user_data()->num_element(); ++j)
+    for (int j = 0; j < actnode.user_node()->num_element(); ++j)
     {
-      Core::Elements::Element* tmpele = actnode.user_data()->elements()[j];
+      Core::Elements::Element* tmpele = actnode.user_node()->elements()[j];
       if (!tmpele) continue;
       if (tmpele->element_type() != eletype) continue;
       if (auto* scatra_ele = dynamic_cast<Discret::Elements::Shell7pScatra*>(tmpele))
       {
         for (int k = 0; k < scatra_ele->num_node(); ++k)
         {
-          if (scatra_ele->nodes()[k] == actnode.user_data())
+          if (scatra_ele->nodes()[k] == actnode.user_node())
           {
             scatra_ele->set_nodal_director(k, curr->second);
             break;
@@ -530,7 +530,7 @@ void Solid::Utils::Shell::Director::export_director_map_from_row_to_col_map(
       {
         for (int k = 0; k < shell_ele->num_node(); ++k)
         {
-          if (shell_ele->nodes()[k] == actnode.user_data())
+          if (shell_ele->nodes()[k] == actnode.user_node())
           {
             shell_ele->set_nodal_director(k, curr->second);
             break;
@@ -556,15 +556,15 @@ void Solid::Utils::Shell::Director::average_directors_at_nodes(
   for (const auto& act_node : dis.my_row_node_range())
   {
     int num_directors = 0;
-    for (int j = 0; j < act_node.user_data()->num_element(); ++j)
+    for (int j = 0; j < act_node.user_node()->num_element(); ++j)
     {
-      const Core::Elements::Element* tmpele = act_node.user_data()->elements()[j];
+      const Core::Elements::Element* tmpele = act_node.user_node()->elements()[j];
       if (tmpele->element_type() != eletype) continue;
       if (auto* scatra_ele = dynamic_cast<const Discret::Elements::Shell7pScatra*>(tmpele))
       {
         for (int k = 0; k < scatra_ele->num_node(); ++k)
         {
-          if (scatra_ele->nodes()[k] == act_node.user_data())
+          if (scatra_ele->nodes()[k] == act_node.user_node())
           {
             const auto nodal_directors = scatra_ele->get_directors();
             for (int dim = 0; dim < num_dim; ++dim)
@@ -579,7 +579,7 @@ void Solid::Utils::Shell::Director::average_directors_at_nodes(
       {
         for (int k = 0; k < shell_ele->num_node(); ++k)
         {
-          if (shell_ele->nodes()[k] == act_node.user_data())
+          if (shell_ele->nodes()[k] == act_node.user_node())
           {
             const auto nodal_directors = shell_ele->get_directors();
             for (int dim = 0; dim < num_dim; ++dim)

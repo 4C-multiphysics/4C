@@ -51,7 +51,7 @@ namespace Core::IO
 
 
     // loop over my nodes and collect the geometry/grid data, i.e. reference positions of nodes
-    for (const Nodes::ConstNodeRef node : discretization_->my_row_node_range())
+    for (const FE::ConstNodeRef node : discretization_->my_row_node_range())
     {
       for (unsigned int idim = 0; idim < num_spatial_dimensions; ++idim)
       {

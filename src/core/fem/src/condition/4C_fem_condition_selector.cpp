@@ -67,7 +67,7 @@ void Core::Conditions::setup_extractor(const Core::FE::Discretization& dis,
 
   const auto select_dofs = [&](const Selector& selector,
                                std::span<const Core::Conditions::Condition*> conditions,
-                               Core::Nodes::ConstNodeRef node, std::set<int>& conddofset) -> bool
+                               FE::ConstNodeRef node, std::set<int>& conddofset) -> bool
   {
     const bool contains_node = std::ranges::any_of(conditions,
         [gid = node.global_id()](const auto* cond) { return cond->contains_node(gid); });
