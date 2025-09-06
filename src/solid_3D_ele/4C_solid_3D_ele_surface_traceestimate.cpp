@@ -105,7 +105,7 @@ double Discret::Elements::SolidSurface::estimate_nitsche_trace_max_eigenvalue(
   Core::LinAlg::SerialDenseMatrix surf_red_sd(
       Teuchos::View, surf_red.data(), dim_image, dim_image, dim_image);
 
-  return Core::LinAlg::generalized_eigen(surf_red_sd, vol_red_sd);
+  return Core::LinAlg::generalized_eigen_max_real_eigenvalue(surf_red_sd, vol_red_sd);
 }
 
 
@@ -483,7 +483,7 @@ double Discret::Elements::SolidSurface::estimate_nitsche_trace_max_eigenvalue_ts
   Core::LinAlg::SerialDenseMatrix surf_red_sd(
       Teuchos::View, surf_red.data(), dim_image, dim_image, dim_image);
 
-  return Core::LinAlg::generalized_eigen(surf_red_sd, vol_red_sd);
+  return Core::LinAlg::generalized_eigen_max_real_eigenvalue(surf_red_sd, vol_red_sd);
 }
 
 template <Core::FE::CellType dt_vol>

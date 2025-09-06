@@ -84,12 +84,7 @@ void Core::LinAlg::symmetric_eigen(Core::LinAlg::SerialDenseMatrix& A,
   }
 }
 
-/*----------------------------------------------------------------------*
- |  compute all eigenvalues for the generalized eigenvalue problem
- |  Ax =  lambda Bx via QZ-algorithm (B is singular) and returns the
- |  maximum eigenvalue                              shahmiri  05/13
- *----------------------------------------------------------------------*/
-double Core::LinAlg::generalized_eigen(
+std::vector<std::complex<double>> Core::LinAlg::generalized_eigen(
     Core::LinAlg::SerialDenseMatrix& A, Core::LinAlg::SerialDenseMatrix& B)
 {
   Core::LinAlg::SerialDenseMatrix tmpA(A);
@@ -275,21 +270,40 @@ double Core::LinAlg::generalized_eigen(
    std::cout << std::setprecision(16) << "Q 2 " << Q_2 << std::endl;
    std::cout << std::setprecision(16) << "Z 2 " << Z_2 << std::endl;*/
 
-  double maxlambda = 0.;
+  std::vector<std::complex<double>> eigenvalues;
+  eigenvalues.reserve(N);
+  int num_inf = 0;
+
   for (int i = 0; i < N; ++i)
   {
-    if (BETA[i] > 1e-13)
+    if (std::abs(BETA[i]) < 1e-13)
     {
-      // Eigenvalues:
-      // std::cout << "lambda " << i << ":  " <<  ALPHAR[i]/BETA[i] << std::endl;
-      maxlambda = std::max(ALPHAR[i] / BETA[i], maxlambda);
+      ++num_inf;
+      continue;  // skip infinite eigenvalue
     }
     if (ALPHAI[i] > 1e-12)
     {
-      std::cout << " Warning: you have an imaginary EW " << ALPHAI[i] << std::endl;
+      std::cout << " Warning: you have an imaginary EW " << ALPHAI[i] << '\n';
     }
+    eigenvalues.emplace_back(ALPHAR[i] / BETA[i], ALPHAI[i] / BETA[i]);
   }
-  return maxlambda;
+  if (num_inf > 0)
+    std::cout << "Generalized eigenvalue computation: " << num_inf
+              << " infinite eigenvalue(s) discarded." << '\n';
+
+  return eigenvalues;
+}
+
+double Core::LinAlg::generalized_eigen_max_real_eigenvalue(
+    Core::LinAlg::SerialDenseMatrix& A, Core::LinAlg::SerialDenseMatrix& B)
+{
+  const auto eigs = generalized_eigen(A, B);
+  double max_lambda = 0.;
+  for (const auto eig : eigs)
+  {
+    max_lambda = std::max(eig.real(), max_lambda);
+  }
+  return max_lambda;
 }
 
 FOUR_C_NAMESPACE_CLOSE
