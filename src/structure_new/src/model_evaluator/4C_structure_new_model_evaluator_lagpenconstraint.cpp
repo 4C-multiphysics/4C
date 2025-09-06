@@ -162,12 +162,7 @@ bool Solid::ModelEvaluator::LagPenConstraint::assemble_force(
           "the structural part indicates, that constraint contributions \n"
           "are present!");
 
-    const int elements_f = f.get_map().num_global_elements();
-    const int max_gid = get_block_dof_row_map_ptr()->max_all_gid();
-    // only call when f is the rhs of the full problem (not for structural
-    // equilibriate initial state call)
-    if (elements_f == max_gid + 1)
-      Core::LinAlg::assemble_my_vector(1.0, f, timefac_np, *block_vec_ptr);
+    Core::LinAlg::assemble_my_vector(1.0, f, timefac_np, *block_vec_ptr);
   }
 
   return true;
