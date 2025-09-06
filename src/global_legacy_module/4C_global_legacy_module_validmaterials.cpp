@@ -12,6 +12,7 @@
 #include "4C_io_file_reader.hpp"
 #include "4C_io_input_field.hpp"
 #include "4C_io_input_spec_builders.hpp"
+#include "4C_io_input_spec_validators.hpp"
 #include "4C_mat_electrode.hpp"
 #include "4C_mat_micromaterial.hpp"
 #include "4C_mat_muscle_combo.hpp"
@@ -402,48 +403,65 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   /*----------------------------------------------------------------------*/
   // Weickenmeier muscle material
   {
+    using namespace Core::IO::InputSpecBuilders::Validators;
+
     known_materials[Core::Materials::m_muscle_weickenmeier] = group("MAT_Muscle_Weickenmeier",
         {
-            parameter<double>("ALPHA", {.description = "experimentally fitted material parameter"}),
-            parameter<double>("BETA", {.description = "experimentally fitted material parameter"}),
-            parameter<double>("GAMMA", {.description = "experimentally fitted material parameter"}),
+            parameter<double>("ALPHA", {.description = "experimentally fitted material parameter",
+                                           .validator = positive<double>()}),
+            parameter<double>("BETA", {.description = "experimentally fitted material parameter",
+                                          .validator = positive<double>()}),
+            parameter<double>("GAMMA", {.description = "experimentally fitted material parameter",
+                                           .validator = positive<double>()}),
             parameter<double>(
                 "KAPPA", {.description = "material parameter for coupled volumetric contribution"}),
             parameter<double>(
-                "OMEGA0", {.description = "weighting factor for isotropic tissue constituents"}),
+                "OMEGA0", {.description = "weighting factor for isotropic tissue constituents",
+                              .validator = in_range<double>(0.0, 1.0)}),
             parameter<double>("ACTMUNUM",
                 {.description =
-                        "number of active motor units per undeformed muscle cross-sectional area"}),
+                        "number of active motor units per undeformed muscle cross-sectional area",
+                    .validator = positive_or_zero<double>()}),
             parameter<int>("MUTYPESNUM", {.description = "number of motor unit types"}),
             parameter<std::vector<double>>(
                 "INTERSTIM", {.description = "interstimulus interval",
+                                 .validator = all_elements(positive_or_zero<double>()),
                                  .size = from_parameter<int>("MUTYPESNUM")}),
             parameter<std::vector<double>>(
                 "FRACACTMU", {.description = "fraction of motor unit type",
+                                 .validator = all_elements(positive_or_zero<double>()),
                                  .size = from_parameter<int>("MUTYPESNUM")}),
             parameter<std::vector<double>>(
                 "FTWITCH", {.description = "twitch force of motor unit type",
+                               .validator = all_elements(positive_or_zero<double>()),
                                .size = from_parameter<int>("MUTYPESNUM")}),
             parameter<std::vector<double>>(
                 "TTWITCH", {.description = "twitch contraction time of motor unit type",
+                               .validator = all_elements(positive_or_zero<double>()),
                                .size = from_parameter<int>("MUTYPESNUM")}),
-            parameter<double>("LAMBDAMIN", {.description = "minimal active fiber stretch"}),
+            parameter<double>("LAMBDAMIN",
+                {.description = "minimal active fiber stretch", .validator = positive<double>()}),
             parameter<double>("LAMBDAOPT",
                 {.description =
-                        "optimal active fiber stretch related to active nominal stress maximum"}),
+                        "optimal active fiber stretch related to active nominal stress maximum",
+                    .validator = positive<double>()}),
             parameter<double>("DOTLAMBDAMIN", {.description = "minimal stretch rate"}),
             parameter<double>(
                 "KE", {.description = "parameter controlling the curvature of the velocity "
-                                      "dependent activation function in the eccentric case"}),
+                                      "dependent activation function in the eccentric case",
+                          .validator = positive_or_zero<double>()}),
             parameter<double>(
                 "KC", {.description = "parameter controlling the curvature of the velocity "
-                                      "dependent activation function in the concentric case"}),
+                                      "dependent activation function in the concentric case",
+                          .validator = positive_or_zero<double>()}),
             parameter<double>(
                 "DE", {.description = "parameter controlling the amplitude of the velocity "
-                                      "dependent activation function in the eccentric case"}),
+                                      "dependent activation function in the eccentric case",
+                          .validator = positive_or_zero<double>()}),
             parameter<double>(
                 "DC", {.description = "parameter controlling the amplitude of the velocity "
-                                      "dependent activation function in the concentric case"}),
+                                      "dependent activation function in the concentric case",
+                          .validator = positive_or_zero<double>()}),
             parameter<int>("ACTTIMESNUM",
                 {.description = "number of time boundaries to prescribe activation"}),
             parameter<std::vector<double>>(
@@ -454,7 +472,8 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<std::vector<double>>("ACTVALUES",
                 {.description = "scaling factor in intervals (1=full activation, 0=no activation)",
                     .size = from_parameter<int>("ACTINTERVALSNUM")}),
-            parameter<double>("DENS", {.description = "density"}),
+            parameter<double>(
+                "DENS", {.description = "density", .validator = positive_or_zero<double>()}),
         },
         {.description = "Weickenmeier muscle material"});
   }
@@ -462,20 +481,30 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   /*----------------------------------------------------------------------*/
   // Combo muscle material
   {
+    using namespace Core::IO::InputSpecBuilders::Validators;
+
     known_materials[Core::Materials::m_muscle_combo] = group("MAT_Muscle_Combo",
         {
-            parameter<double>("ALPHA", {.description = "experimentally fitted material parameter"}),
-            parameter<double>("BETA", {.description = "experimentally fitted material parameter"}),
-            parameter<double>("GAMMA", {.description = "experimentally fitted material parameter"}),
+            parameter<double>("ALPHA", {.description = "experimentally fitted material parameter",
+                                           .validator = positive<double>()}),
+            parameter<double>("BETA", {.description = "experimentally fitted material parameter",
+                                          .validator = positive<double>()}),
+            parameter<double>("GAMMA", {.description = "experimentally fitted material parameter",
+                                           .validator = positive<double>()}),
             parameter<double>(
                 "KAPPA", {.description = "material parameter for coupled volumetric contribution"}),
             parameter<double>(
-                "OMEGA0", {.description = "weighting factor for isotropic tissue constituents"}),
-            parameter<double>("POPT", {.description = "tetanised optimal (maximal) active stress"}),
-            parameter<double>("LAMBDAMIN", {.description = "minimal active fiber stretch"}),
+                "OMEGA0", {.description = "weighting factor for isotropic tissue constituents",
+                              .validator = in_range<double>(0.0, 1.0)}),
+            parameter<double>("POPT",
+                {.description = "tetanised optimal (maximal) active stress",
+                    .validator = in_range<double>(0.0, std::numeric_limits<double>::max())}),
+            parameter<double>("LAMBDAMIN",
+                {.description = "minimal active fiber stretch", .validator = positive<double>()}),
             parameter<double>("LAMBDAOPT",
                 {.description =
-                        "optimal active fiber stretch related to active nominal stress maximum"}),
+                        "optimal active fiber stretch related to active nominal stress maximum",
+                    .validator = positive<double>()}),
             one_of({
                 parameter<int>("ACTIVATION_FUNCTION_ID",
                     {.description =
@@ -485,7 +514,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                                     "elementwise-defined discrete values "
                                     "for time- and space-dependency of muscle activation"}),
             }),
-            parameter<double>("DENS", {.description = "density"}),
+            parameter<double>("DENS",
+                {.description = "density",
+                    .validator = in_range<double>(0.0, std::numeric_limits<double>::max())}),
         },
         {.description = "Combo muscle material"});
   }
@@ -493,48 +524,65 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   /*----------------------------------------------------------------------*/
   // Active strain Giantesio muscle material
   {
+    using namespace Core::IO::InputSpecBuilders::Validators;
+
     known_materials[Core::Materials::m_muscle_giantesio] = group("MAT_Muscle_Giantesio",
         {
-            parameter<double>("ALPHA", {.description = "experimentally fitted material parameter"}),
-            parameter<double>("BETA", {.description = "experimentally fitted material parameter"}),
-            parameter<double>("GAMMA", {.description = "experimentally fitted material parameter"}),
+            parameter<double>("ALPHA", {.description = "experimentally fitted material parameter",
+                                           .validator = positive<double>()}),
+            parameter<double>("BETA", {.description = "experimentally fitted material parameter",
+                                          .validator = positive<double>()}),
+            parameter<double>("GAMMA", {.description = "experimentally fitted material parameter",
+                                           .validator = positive<double>()}),
             parameter<double>(
                 "KAPPA", {.description = "material parameter for coupled volumetric contribution"}),
             parameter<double>(
-                "OMEGA0", {.description = "weighting factor for isotropic tissue constituents"}),
+                "OMEGA0", {.description = "weighting factor for isotropic tissue constituents",
+                              .validator = in_range<double>(0.0, 1.0)}),
             parameter<double>("ACTMUNUM",
                 {.description =
-                        "number of active motor units per undeformed muscle cross-sectional area"}),
+                        "number of active motor units per undeformed muscle cross-sectional area",
+                    .validator = positive_or_zero<double>()}),
             parameter<int>("MUTYPESNUM", {.description = "number of motor unit types"}),
             parameter<std::vector<double>>(
                 "INTERSTIM", {.description = "interstimulus interval",
+                                 .validator = all_elements(positive_or_zero<double>()),
                                  .size = from_parameter<int>("MUTYPESNUM")}),
             parameter<std::vector<double>>(
                 "FRACACTMU", {.description = "fraction of motor unit type",
+                                 .validator = all_elements(positive_or_zero<double>()),
                                  .size = from_parameter<int>("MUTYPESNUM")}),
             parameter<std::vector<double>>(
                 "FTWITCH", {.description = "twitch force of motor unit type",
+                               .validator = all_elements(positive_or_zero<double>()),
                                .size = from_parameter<int>("MUTYPESNUM")}),
             parameter<std::vector<double>>(
                 "TTWITCH", {.description = "twitch contraction time of motor unit type",
+                               .validator = all_elements(positive_or_zero<double>()),
                                .size = from_parameter<int>("MUTYPESNUM")}),
-            parameter<double>("LAMBDAMIN", {.description = "minimal active fiber stretch"}),
+            parameter<double>("LAMBDAMIN",
+                {.description = "minimal active fiber stretch", .validator = positive<double>()}),
             parameter<double>("LAMBDAOPT",
                 {.description =
-                        "optimal active fiber stretch related to active nominal stress maximum"}),
+                        "optimal active fiber stretch related to active nominal stress maximum",
+                    .validator = positive<double>()}),
             parameter<double>("DOTLAMBDAMIN", {.description = "minimal stretch rate"}),
             parameter<double>(
                 "KE", {.description = "parameter controlling the curvature of the velocity "
-                                      "dependent activation function in the eccentric case"}),
+                                      "dependent activation function in the eccentric case",
+                          .validator = positive_or_zero<double>()}),
             parameter<double>(
                 "KC", {.description = "parameter controlling the curvature of the velocity "
-                                      "dependent activation function in the concentric case"}),
+                                      "dependent activation function in the concentric case",
+                          .validator = positive_or_zero<double>()}),
             parameter<double>(
                 "DE", {.description = "parameter controlling the amplitude of the velocity "
-                                      "dependent activation function in the eccentric case"}),
+                                      "dependent activation function in the eccentric case",
+                          .validator = positive_or_zero<double>()}),
             parameter<double>(
                 "DC", {.description = "parameter controlling the amplitude of the velocity "
-                                      "dependent activation function in the concentric case"}),
+                                      "dependent activation function in the concentric case",
+                          .validator = positive_or_zero<double>()}),
             parameter<int>("ACTTIMESNUM",
                 {.description = "number of time boundaries to prescribe activation"}),
             parameter<std::vector<double>>(
@@ -545,7 +593,8 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<std::vector<double>>("ACTVALUES",
                 {.description = "scaling factor in intervals (1=full activation, 0=no activation)",
                     .size = from_parameter<int>("ACTINTERVALSNUM")}),
-            parameter<double>("DENS", {.description = "density"}),
+            parameter<double>(
+                "DENS", {.description = "density", .validator = positive_or_zero<double>()}),
         },
         {.description = "Giantesio active strain muscle material"});
   }
@@ -1044,10 +1093,14 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   /*--------------------------------------------------------------------*/
   // St.Venant--Kirchhoff
   {
+    using namespace Core::IO::InputSpecBuilders::Validators;
+
     known_materials[Core::Materials::m_stvenant] = group("MAT_Struct_StVenantKirchhoff",
         {
-            parameter<double>("YOUNG", {.description = "Young's modulus"}),
-            parameter<double>("NUE", {.description = "Poisson's ratio"}),
+            parameter<double>(
+                "YOUNG", {.description = "Young's modulus", .validator = positive<double>()}),
+            parameter<double>("NUE",
+                {.description = "Poisson's ratio", .validator = in_range<double>(-1.0, excl(0.5))}),
             parameter<double>("DENS", {.description = "mass density"}),
         },
         {.description = "St.Venant--Kirchhoff material"});
@@ -1862,24 +1915,35 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   /*--------------------------------------------------------------------*/
   // isochoric anisotropic material with one exponential fiber family
   {
+    using namespace Core::IO::InputSpecBuilders::Validators;
+
     known_materials[Core::Materials::mes_isomuscleblemker] = group("ELAST_IsoMuscle_Blemker",
         {
-            parameter<double>("G1", {.description = "muscle along fiber shear modulus"}),
-            parameter<double>("G2", {.description = "muscle cross fiber shear modulus"}),
-            parameter<double>("P1",
-                {.description = "linear material parameter for passive along-fiber response"}),
+            parameter<double>("G1", {.description = "muscle along fiber shear modulus",
+                                        .validator = positive_or_zero<double>()}),
+            parameter<double>("G2", {.description = "muscle cross fiber shear modulus",
+                                        .validator = positive_or_zero<double>()}),
+            parameter<double>(
+                "P1", {.description = "linear material parameter for passive along-fiber response",
+                          .validator = positive<double>()}),
             parameter<double>("P2",
-                {.description = "exponential material parameter for passive along-fiber response"}),
-            parameter<double>("SIGMAMAX", {.description = "maximal active isometric stress"}),
-            parameter<double>("LAMBDAOFL", {.description = "optimal fiber stretch"}),
+                {.description = "exponential material parameter for passive along-fiber response",
+                    .validator = positive<double>()}),
+            parameter<double>("SIGMAMAX", {.description = "maximal active isometric stress",
+                                              .validator = positive_or_zero<double>()}),
+            parameter<double>("LAMBDAOFL",
+                {.description = "optimal fiber stretch", .validator = positive<double>()}),
             parameter<double>("LAMBDASTAR",
                 {.description =
-                        "stretch at which the normalized passive fiber force becomes linear"}),
-            parameter<double>("ALPHA", {.description = "tetanised activation level,"}),
+                        "stretch at which the normalized passive fiber force becomes linear",
+                    .validator = positive<double>()}),
+            parameter<double>("ALPHA", {.description = "tetanised activation level,",
+                                           .validator = positive_or_zero<double>()}),
             parameter<double>(
-                "BETA", {.description = "constant scaling tanh-type activation function"}),
-            parameter<double>(
-                "ACTSTARTTIME", {.description = "starting time of muscle activation"}),
+                "BETA", {.description = "constant scaling tanh-type activation function",
+                            .validator = positive_or_zero<double>()}),
+            parameter<double>("ACTSTARTTIME", {.description = "starting time of muscle activation",
+                                                  .validator = positive_or_zero<double>()}),
         },
         {.description = "anisotropic Blemker muscle material"});
   }

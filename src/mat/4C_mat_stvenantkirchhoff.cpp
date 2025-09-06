@@ -25,9 +25,6 @@ Mat::PAR::StVenantKirchhoff::StVenantKirchhoff(const Core::Mat::PAR::Parameter::
       poissonratio_(matdata.parameters.get<double>("NUE")),
       density_(matdata.parameters.get<double>("DENS"))
 {
-  if (youngs_ <= 0.) FOUR_C_THROW("Young's modulus must be greater zero");
-  if (poissonratio_ >= 0.5 || poissonratio_ < -1.)
-    FOUR_C_THROW("Poisson's ratio must be in [-1;0.5)");
 }
 
 std::shared_ptr<Core::Mat::Material> Mat::PAR::StVenantKirchhoff::create_material()

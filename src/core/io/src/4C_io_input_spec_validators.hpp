@@ -363,6 +363,14 @@ namespace Core::IO::InputSpecBuilders::Validators
   template <Internal::Numeric T>
   [[nodiscard]] auto positive();
 
+  /**
+   * A shorthand for creating a Validator that checks if a value is in the range [0, max].
+   *
+   * @note You need to specify the type of the value to be checked explicitly, since there are no
+   * arguments to deduce the type from.
+   */
+  template <Internal::Numeric T>
+  [[nodiscard]] auto positive_or_zero();
 
   /**
    * A validator that checks if all elements in a range-like object satisfy the given @p validator:
@@ -456,6 +464,12 @@ template <Core::IO::InputSpecBuilders::Validators::Internal::Numeric T>
 [[nodiscard]] auto Core::IO::InputSpecBuilders::Validators::positive()
 {
   return in_range(excl(static_cast<T>(0)), std::numeric_limits<T>::max());
+}
+
+template <Core::IO::InputSpecBuilders::Validators::Internal::Numeric T>
+[[nodiscard]] auto Core::IO::InputSpecBuilders::Validators::positive_or_zero()
+{
+  return in_range(static_cast<T>(0), std::numeric_limits<T>::max());
 }
 
 template <typename T>

@@ -1384,7 +1384,7 @@ namespace Core::IO
      * The remaining parameterization options follow the same rules as for the parameter() function.
      *
      * @note If you want to store the choices as strings and not map them to another type, use the
-     * other selection() function.
+     * other deprecated_selection() function.
      *
      * @deprecated If you want to select from a set of enum constants use the parameter() function
      * with the enum type.
@@ -1398,8 +1398,8 @@ namespace Core::IO
 
 
     /**
-     * Like the other selection() function, but the choices are stored as strings and not mapped
-     * to another type.
+     * Like the other deprecated_selection() function, but the choices are stored as strings and not
+     * mapped to another type.
      *
      * @note Although this function only works with strings, you still need to provide a type for
      * the first template parameter for consistency with the other functions.

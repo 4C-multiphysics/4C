@@ -241,42 +241,15 @@ Mat::PAR::MuscleGiantesio::MuscleGiantesio(const Core::Mat::PAR::Parameter::Data
       actValues_((matdata.parameters.get<std::vector<double>>("ACTVALUES"))),
       density_(matdata.parameters.get<double>("DENS"))
 {
-  // error handling for parameter ranges
-  // passive material parameters
-  if (alpha_ <= 0.0) FOUR_C_THROW("Material parameter ALPHA must be greater zero");
-  if (beta_ <= 0.0) FOUR_C_THROW("Material parameter BETA must be greater zero");
-  if (gamma_ <= 0.0) FOUR_C_THROW("Material parameter GAMMA must be greater zero");
-  if (omega0_ < 0.0 || omega0_ > 1.0) FOUR_C_THROW("Material parameter OMEGA0 must be in [0;1]");
-
   // active material parameters
   // stimulation frequency dependent parameters
-  if (Na_ < 0.0)
-  {
-    FOUR_C_THROW("Material parameter ACTMUNUM must be positive or zero");
-  }
-
   double sumrho = 0.0;
   for (int iMU = 0; iMU < muTypesNum_; ++iMU)
   {
-    if (I_[iMU] < 0.0) FOUR_C_THROW("Material parameter INTERSTIM must be positive or zero");
-    if (rho_[iMU] < 0.0) FOUR_C_THROW("Material parameter FRACACTMU must be positive or zero");
-
     sumrho += rho_[iMU];
-    if (F_[iMU] < 0.0) FOUR_C_THROW("Material parameter FTWITCH must be positive or zero");
-    if (T_[iMU] < 0.0) FOUR_C_THROW("Material parameter TTWITCH must be positive or zero");
   }
 
   if (muTypesNum_ > 1 && sumrho != 1.0) FOUR_C_THROW("Sum of fractions of MU types must equal one");
-
-  // stretch dependent parameters
-  if (lambdaMin_ <= 0.0) FOUR_C_THROW("Material parameter LAMBDAMIN must be positive");
-  if (lambdaOpt_ <= 0.0) FOUR_C_THROW("Material parameter LAMBDAOPT must be positive");
-
-  // velocity dependent parameters
-  if (ke_ < 0.0) FOUR_C_THROW("Material parameter KE should be positive or zero");
-  if (kc_ < 0.0) FOUR_C_THROW("Material parameter KC should be positive or zero");
-  if (de_ < 0.0) FOUR_C_THROW("Material parameter DE should be positive or zero");
-  if (dc_ < 0.0) FOUR_C_THROW("Material parameter DC should be positive or zero");
 
   // prescribed activation in time intervals
   if (actTimesNum_ != int(actTimes_.size()))
@@ -285,9 +258,6 @@ Mat::PAR::MuscleGiantesio::MuscleGiantesio(const Core::Mat::PAR::Parameter::Data
     FOUR_C_THROW("Number of activation values ACTVALUES must equal ACTINTERVALSNUM");
   if (actTimesNum_ != actIntervalsNum_ + 1)
     FOUR_C_THROW("ACTTIMESNUM must be one smaller than ACTINTERVALSNUM");
-
-  // density
-  if (density_ < 0.0) FOUR_C_THROW("DENS should be positive");
 }
 
 std::shared_ptr<Core::Mat::Material> Mat::PAR::MuscleGiantesio::create_material()
