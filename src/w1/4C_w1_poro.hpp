@@ -354,17 +354,6 @@ namespace Discret
           Teuchos::ParameterList& params              //!< algorithmic parameters e.g. time
       );
 
-      //! Calculate coupling stress for poroelasticity problems
-      virtual void coupling_stress_poroelast(
-          Core::LinAlg::Matrix<numdim_, numnod_>& disp,    //!< current displacements
-          Core::LinAlg::Matrix<numdim_, numnod_>& evelnp,  //!< fluid velocity of element
-          Core::LinAlg::Matrix<numnod_, 1>& epreaf,        //!< fluid pressure of element
-          Core::LinAlg::SerialDenseMatrix* elestress,      //!< stresses at GP
-          Core::LinAlg::SerialDenseMatrix* elestrain,      //!< strains at GP
-          Teuchos::ParameterList& params,                  //!< algorithmic parameters e.g. time
-          const Inpar::Solid::StressType iostress          //!< stress output option
-      );
-
       //! Gauss Point Loop evaluating stiffness and force
       void gauss_point_loop(Teuchos::ParameterList& params,
           const Core::LinAlg::Matrix<numdim_, numnod_>& xrefe,

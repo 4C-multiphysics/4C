@@ -299,52 +299,6 @@ double Mat::StructPoro::porosity_av() const
   return porosityav;
 }
 
-void Mat::StructPoro::coupl_stress(const Core::LinAlg::Matrix<3, 3>& defgrd, const double& press,
-    Core::LinAlg::Matrix<6, 1>& couplstress) const
-{
-  const double J = defgrd.determinant();
-
-  // Right Cauchy-Green tensor = F^T * F
-  Core::LinAlg::Matrix<3, 3> cauchygreen;
-  cauchygreen.multiply_tn(defgrd, defgrd);
-
-  // inverse Right Cauchy-Green tensor
-  Core::LinAlg::Matrix<3, 3> C_inv;
-  C_inv.invert(cauchygreen);
-
-  // inverse Right Cauchy-Green tensor as vector
-  Core::LinAlg::Matrix<6, 1> C_inv_vec;
-  for (int i = 0, k = 0; i < 3; i++)
-    for (int j = 0; j < 3 - i; j++, k++) C_inv_vec(k) = C_inv(i + j, j);
-
-  for (int i = 0; i < 6; i++) couplstress(i) = -1.0 * J * press * C_inv_vec(i);
-}
-
-void Mat::StructPoro::coupl_stress(const Core::LinAlg::Matrix<2, 2>& defgrd, const double& press,
-    Core::LinAlg::Matrix<4, 1>& couplstress) const
-{
-  const double J = defgrd.determinant();
-
-  // Right Cauchy-Green tensor = F^T * F
-  Core::LinAlg::Matrix<2, 2> cauchygreen;
-  cauchygreen.multiply_tn(defgrd, defgrd);
-
-  // inverse Right Cauchy-Green tensor
-  Core::LinAlg::Matrix<2, 2> C_inv;
-  C_inv.invert(cauchygreen);
-
-  // inverse Right Cauchy-Green tensor as vector
-  Core::LinAlg::Matrix<3, 1> C_inv_vec;
-  for (int i = 0, k = 0; i < 2; i++)
-    for (int j = 0; j < 2 - i; j++, k++) C_inv_vec(k) = C_inv(i + j, j);
-
-  couplstress(0) = -1.0 * J * press * C_inv_vec(0);
-  couplstress(1) = -1.0 * J * press * C_inv_vec(1);
-  couplstress(2) =
-      0.0;  // this is needed to be compatible with the implementation of the wall element
-  couplstress(3) = -1.0 * J * press * C_inv_vec(2);
-}
-
 void Mat::StructPoro::constitutive_derivatives(const Teuchos::ParameterList& params, double press,
     double J, double porosity, double* dW_dp, double* dW_dphi, double* dW_dJ, double* dW_dphiref,
     double* W)

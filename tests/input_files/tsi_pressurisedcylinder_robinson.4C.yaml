@@ -11,7 +11,6 @@ TITLE:
   - "constant temperature of the body = 800 degrees Fahrenheit = 699.81667 K"
 IO:
   STRUCT_STRESS: "2PK"
-  STRUCT_COUPLING_STRESS: "2PK"
   STRUCT_STRAIN: "GL"
   THERM_TEMPERATURE: true
   THERM_HEATFLUX: "Initial"

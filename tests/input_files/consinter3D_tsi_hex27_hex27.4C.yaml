@@ -2,7 +2,6 @@ TITLE:
   - "3D consistent interpolation in monolithic TSI"
 IO:
   STRUCT_STRESS: "2PK"
-  STRUCT_COUPLING_STRESS: "2PK"
   STRUCT_STRAIN: "GL"
   THERM_TEMPERATURE: true
   THERM_HEATFLUX: "Current"

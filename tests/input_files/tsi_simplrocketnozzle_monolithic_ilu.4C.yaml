@@ -16,7 +16,6 @@ TITLE:
   - "discretisation: circumferential x radial(Cu) x radial(Ni) x depth = 100x10x10x2"
 IO:
   STRUCT_STRESS: "2PK"
-  STRUCT_COUPLING_STRESS: "2PK"
   STRUCT_STRAIN: "GL"
   THERM_TEMPERATURE: true
   THERM_HEATFLUX: "Initial"

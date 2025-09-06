@@ -155,8 +155,6 @@ namespace Solid
 
       virtual std::shared_ptr<std::vector<char>>& plastic_strain_data_ptr() = 0;
 
-      virtual std::shared_ptr<std::vector<char>>& coupling_stress_data_ptr() = 0;
-
       virtual std::shared_ptr<std::vector<char>> opt_quantity_data_ptr() = 0;
 
       //! get the current stress type
@@ -167,9 +165,6 @@ namespace Solid
 
       //! get the current plastic strain type
       virtual enum Inpar::Solid::StrainType get_plastic_strain_output_type() const = 0;
-
-      //! get the current coupling stress type
-      virtual enum Inpar::Solid::StressType get_coupling_stress_output_type() const = 0;
 
       virtual std::shared_ptr<ModelEvaluator::GaussPointDataOutputManager>&
       gauss_point_data_output_manager_ptr() = 0;

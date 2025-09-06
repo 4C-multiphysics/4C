@@ -60,22 +60,6 @@ void Inpar::IO::set_valid_parameters(std::map<std::string, Core::IO::InputSpec>&
                   {"2pk", Inpar::Solid::stress_2pk},
               },
               {.description = "Output of stress", .default_value = Inpar::Solid::stress_none}),
-          // in case of a coupled problem (e.g. TSI) the additional stresses are
-          // (TSI: thermal stresses) are printed here
-          deprecated_selection<Inpar::Solid::StressType>("STRUCT_COUPLING_STRESS",
-              {
-                  {"No", Inpar::Solid::stress_none},
-                  {"no", Inpar::Solid::stress_none},
-                  {"NO", Inpar::Solid::stress_none},
-                  {"Yes", Inpar::Solid::stress_2pk},
-                  {"yes", Inpar::Solid::stress_2pk},
-                  {"YES", Inpar::Solid::stress_2pk},
-                  {"Cauchy", Inpar::Solid::stress_cauchy},
-                  {"cauchy", Inpar::Solid::stress_cauchy},
-                  {"2PK", Inpar::Solid::stress_2pk},
-                  {"2pk", Inpar::Solid::stress_2pk},
-              },
-              {.description = "", .default_value = Inpar::Solid::stress_none}),
           deprecated_selection<Inpar::Solid::StrainType>("STRUCT_STRAIN",
               {
                   {"No", Inpar::Solid::strain_none},

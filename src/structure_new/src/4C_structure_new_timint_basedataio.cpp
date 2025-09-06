@@ -56,7 +56,6 @@ Solid::TimeInt::BaseDataIO::BaseDataIO()
       writeenergyevery_(-1),
       lastwrittenresultsstep_(-1),
       writestress_(Inpar::Solid::stress_none),
-      writecouplstress_(Inpar::Solid::stress_none),
       writestrain_(Inpar::Solid::strain_none),
       writeplstrain_(Inpar::Solid::strain_none),
       conditionnumbertype_(Inpar::Solid::ConditionNumber::none)
@@ -94,8 +93,6 @@ void Solid::TimeInt::BaseDataIO::init(const Teuchos::ParameterList& ioparams,
     firstoutputofrun_ = true;
     writeresultsevery_ = sdynparams.get<int>("RESULTSEVERY");
     writestress_ = Teuchos::getIntegralValue<Inpar::Solid::StressType>(ioparams, "STRUCT_STRESS");
-    writecouplstress_ =
-        Teuchos::getIntegralValue<Inpar::Solid::StressType>(ioparams, "STRUCT_COUPLING_STRESS");
     writestrain_ = Teuchos::getIntegralValue<Inpar::Solid::StrainType>(ioparams, "STRUCT_STRAIN");
     writeplstrain_ =
         Teuchos::getIntegralValue<Inpar::Solid::StrainType>(ioparams, "STRUCT_PLASTIC_STRAIN");
@@ -249,15 +246,6 @@ bool Solid::TimeInt::BaseDataIO::should_write_reaction_forces_for_this_step(cons
              get_monitor_dbc_params()->output_interval_in_steps());
 }
 
-
-bool Solid::TimeInt::BaseDataIO::should_write_stress_strain_for_this_step(const int step) const
-{
-  return write_results_for_this_step(step) &&
-         ((get_stress_output_type() != Inpar::Solid::stress_none) ||
-             (get_coupling_stress_output_type() != Inpar::Solid::stress_none) ||
-             (get_strain_output_type() != Inpar::Solid::strain_none) ||
-             (get_plastic_strain_output_type() != Inpar::Solid::strain_none));
-}
 
 bool Solid::TimeInt::BaseDataIO::should_write_energy_for_this_step(const int step) const
 {

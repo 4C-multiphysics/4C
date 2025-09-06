@@ -3,7 +3,6 @@ PROBLEM TYPE:
   PROBLEMTYPE: "Poroelastic_scalar_transport"
 IO:
   STRUCT_STRESS: "Cauchy"
-  STRUCT_COUPLING_STRESS: "2PK"
   FLUID_STRESS: true
 STRUCTURAL DYNAMIC:
   DYNAMICTYPE: "OneStepTheta"
