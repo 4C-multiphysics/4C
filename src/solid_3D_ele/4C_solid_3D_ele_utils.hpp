@@ -21,8 +21,7 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace Solid::Utils
 {
-  void nodal_block_information_solid(
-      Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np);
+  void nodal_block_information_solid(Core::Elements::Element* dwele, int& numdf, int& dimns);
 
   /*!
    * @brief Converts the 2nd Piola-Kirchhoff stress tensor to the

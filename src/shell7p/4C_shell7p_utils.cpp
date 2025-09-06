@@ -382,11 +382,10 @@ Core::LinAlg::SerialDenseMatrix Solid::Utils::Shell::compute_shell_null_space(
 }
 
 void Solid::Utils::Shell::nodal_block_information_shell(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = 6;
   dimns = 6;
-  nv = 3;
 }
 
 void Solid::Utils::Shell::Director::setup_director_for_element(

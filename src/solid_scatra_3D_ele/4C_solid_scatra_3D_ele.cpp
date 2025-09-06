@@ -104,9 +104,9 @@ Core::Communication::ParObject* Discret::Elements::SolidScatraType::create(
 }
 
 void Discret::Elements::SolidScatraType::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
-  Solid::Utils::nodal_block_information_solid(dwele, numdf, dimns, nv, np);
+  Solid::Utils::nodal_block_information_solid(dwele, numdf, dimns);
 }
 
 Core::LinAlg::SerialDenseMatrix Discret::Elements::SolidScatraType::compute_null_space(

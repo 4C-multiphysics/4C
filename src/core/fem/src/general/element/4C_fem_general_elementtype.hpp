@@ -79,12 +79,9 @@ namespace Core::Elements
     @param[in] dwele Element pointer
     @param[out] numdf Number of degrees of freedom per node
     @param[out] dimns Nullspace dimension
-    @param[out] nv Number of degrees of freedom for balance of linear momentum (e.g. solid
-                displacement, fluid velocity)
-    @param[out] np Number of degrees of freedom for local constraints (e.g. fluid pressure)
     */
     virtual void nodal_block_information(
-        Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np) = 0;
+        Core::Elements::Element* dwele, int& numdf, int& dimns) = 0;
 
     /// do the null space computation
     virtual Core::LinAlg::SerialDenseMatrix compute_null_space(

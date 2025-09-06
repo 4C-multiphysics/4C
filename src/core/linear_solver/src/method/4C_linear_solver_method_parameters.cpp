@@ -23,6 +23,13 @@ FOUR_C_NAMESPACE_OPEN
 void Core::LinearSolver::Parameters::compute_solver_parameters(
     const Core::FE::Discretization& dis, Teuchos::ParameterList& solverlist)
 {
+  if (!dis.filled() or !dis.have_dofs())
+  {
+    FOUR_C_THROW(
+        "Solver parameters can only be calculated on a filled discretization with assigned degrees "
+        "of freedom.");
+  }
+
   const auto nullspace_node_map =
       solverlist.get<std::shared_ptr<Core::LinAlg::Map>>("null space: node map", nullptr);
   auto nullspace_dof_map =
@@ -33,14 +40,11 @@ void Core::LinearSolver::Parameters::compute_solver_parameters(
 
   // set parameter information for solver
   {
-    int nv = 0;
-    int np = 0;
-
     if (nullspace_node_map == nullptr and dis.num_my_row_nodes() > 0)
     {
       // no map given, just grab the block information on the first element that appears
       Core::Elements::Element* dwele = dis.l_row_element(0);
-      dwele->element_type().nodal_block_information(dwele, numdf, dimns, nv, np);
+      dwele->element_type().nodal_block_information(dwele, numdf, dimns);
     }
     else
     {
@@ -55,15 +59,15 @@ void Core::LinearSolver::Parameters::compute_solver_parameters(
         if (localIndex == -1) continue;
 
         Core::Elements::Element* dwele = dis.l_row_element(localIndex);
-        actnode->elements()[0]->element_type().nodal_block_information(dwele, numdf, dimns, nv, np);
+        actnode->elements()[0]->element_type().nodal_block_information(dwele, numdf, dimns);
         break;
       }
     }
 
     // communicate data to procs without row element
-    std::array<int, 4> ldata{numdf, dimns, nv, np};
-    std::array<int, 4> gdata{0, 0, 0, 0};
-    Core::Communication::max_all(ldata.data(), gdata.data(), 4, dis.get_comm());
+    std::array<int, 2> ldata{numdf, dimns};
+    std::array<int, 2> gdata{0, 0};
+    Core::Communication::max_all(ldata.data(), gdata.data(), ldata.size(), dis.get_comm());
     numdf = gdata[0];
     dimns = gdata[1];
 

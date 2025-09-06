@@ -47,14 +47,12 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::FluidXWallType::crea
 }
 
 void Discret::Elements::FluidXWallType::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   // this is necessary here! Otherwise it would not be consistent with the non-enriched nodes
   // since we are assuming that all elements are equal during nullspace computation
   numdf = 4;
   dimns = numdf;
-  nv = numdf - 1;
-  np = 1;
 }
 
 Core::LinAlg::SerialDenseMatrix Discret::Elements::FluidXWallType::compute_null_space(

@@ -51,7 +51,7 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::Vele3Type::create(
 
 
 void Discret::Elements::Vele3Type::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
 }
 

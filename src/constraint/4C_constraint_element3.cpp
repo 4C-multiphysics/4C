@@ -53,7 +53,7 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::ConstraintElement3Ty
 
 
 void Discret::Elements::ConstraintElement3Type::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
 }
 

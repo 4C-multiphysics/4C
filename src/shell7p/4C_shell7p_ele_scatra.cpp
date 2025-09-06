@@ -181,9 +181,9 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::Shell7pScatraType::compute_nu
 }
 
 void Discret::Elements::Shell7pScatraType::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
-  Solid::Utils::Shell::nodal_block_information_shell(dwele, numdf, dimns, nv, np);
+  Solid::Utils::Shell::nodal_block_information_shell(dwele, numdf, dimns);
 }
 
 

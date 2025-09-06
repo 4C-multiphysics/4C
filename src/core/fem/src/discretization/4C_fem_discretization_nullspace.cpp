@@ -77,12 +77,12 @@ namespace Core::FE
             if (actnode->elements()[i + 1]->element_type() !=
                 actnode->elements()[i]->element_type())
             {
-              int numdof1, dimnsp1, nv1, np1;
+              int numdof1, dimnsp1;
               actnode->elements()[i]->element_type().nodal_block_information(
-                  actnode->elements()[i], numdof1, dimnsp1, nv1, np1);
-              int numdof2, dimnsp2, nv2, np2;
+                  actnode->elements()[i], numdof1, dimnsp1);
+              int numdof2, dimnsp2;
               actnode->elements()[i + 1]->element_type().nodal_block_information(
-                  actnode->elements()[i + 1], numdof2, dimnsp2, nv2, np2);
+                  actnode->elements()[i + 1], numdof2, dimnsp2);
 
               if (numdof1 != numdof2 || dimnsp1 != dimnsp2)
                 FOUR_C_THROW(

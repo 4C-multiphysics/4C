@@ -69,11 +69,10 @@ void Discret::Elements::WallQuad4PoroP1Type::setup_element_definition(
 }
 
 void Discret::Elements::WallQuad4PoroP1Type::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = 3;
   dimns = 3;
-  nv = 2;
 }
 
 Core::LinAlg::SerialDenseMatrix Discret::Elements::WallQuad4PoroP1Type::compute_null_space(
@@ -152,11 +151,10 @@ void Discret::Elements::WallQuad9PoroP1Type::setup_element_definition(
 }
 
 void Discret::Elements::WallQuad9PoroP1Type::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = 3;
   dimns = 3;
-  nv = 2;
 }
 
 Core::LinAlg::SerialDenseMatrix Discret::Elements::WallQuad9PoroP1Type::compute_null_space(
@@ -236,11 +234,10 @@ void Discret::Elements::WallTri3PoroP1Type::setup_element_definition(
 }
 
 void Discret::Elements::WallTri3PoroP1Type::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = 3;
   dimns = 3;
-  nv = 2;
 }
 
 Core::LinAlg::SerialDenseMatrix Discret::Elements::WallTri3PoroP1Type::compute_null_space(

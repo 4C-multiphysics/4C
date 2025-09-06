@@ -71,7 +71,7 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::KirchhoffLoveShellNu
  *
  */
 void Discret::Elements::KirchhoffLoveShellNurbsType::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   FOUR_C_THROW("NodalBlockInformation not implemented");
 }

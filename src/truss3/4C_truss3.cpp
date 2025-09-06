@@ -54,11 +54,10 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::Truss3Type::create(
 
 
 void Discret::Elements::Truss3Type::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = 3;
   dimns = 6;
-  nv = 3;
 }
 
 Core::LinAlg::SerialDenseMatrix Discret::Elements::Truss3Type::compute_null_space(

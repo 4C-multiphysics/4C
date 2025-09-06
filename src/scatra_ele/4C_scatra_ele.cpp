@@ -66,20 +66,10 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::TransportType::creat
 
 
 void Discret::Elements::TransportType::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = dwele->num_dof_per_node(*(dwele->nodes()[0]));
   dimns = numdf;
-  nv = numdf;
-
-  if (Global::Problem::instance(0)->get_problem_type() == Core::ProblemType::elch)
-  {
-    if (nv > 1)  // only when we have more than 1 dof per node!
-    {
-      nv -= 1;  // ion concentrations
-      np = 1;   // electric potential
-    }
-  }
 }
 
 Core::LinAlg::SerialDenseMatrix Discret::Elements::TransportType::compute_null_space(

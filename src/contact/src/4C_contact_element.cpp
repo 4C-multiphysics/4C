@@ -35,7 +35,7 @@ std::shared_ptr<Core::Elements::Element> CONTACT::ElementType::create(const int 
 }
 
 void CONTACT::ElementType::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
 }
 

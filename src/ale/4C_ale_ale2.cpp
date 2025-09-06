@@ -61,11 +61,10 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::Ale2Type::create(
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
 void Discret::Elements::Ale2Type::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = 2;
   dimns = 3;
-  nv = 2;
 }
 
 /*----------------------------------------------------------------------------*/

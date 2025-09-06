@@ -69,7 +69,7 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::Beam3rType::create(
 /*------------------------------------------------------------------------------------------------*
  *------------------------------------------------------------------------------------------------*/
 void Discret::Elements::Beam3rType::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   Discret::Elements::Beam3r* currele = dynamic_cast<Discret::Elements::Beam3r*>(dwele);
   if (!currele) FOUR_C_THROW("cast to Beam3r* failed");
@@ -84,7 +84,6 @@ void Discret::Elements::Beam3rType::nodal_block_information(
   {
     numdf = 6;
     dimns = 6;
-    nv = 6;
   }
 }
 

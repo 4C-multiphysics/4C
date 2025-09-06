@@ -55,11 +55,10 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::Nurbs::Ale3NurbsType
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
 void Discret::Elements::Nurbs::Ale3NurbsType::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = 3;
   dimns = 6;
-  nv = 3;
 }
 
 /*----------------------------------------------------------------------------*/

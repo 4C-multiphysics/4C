@@ -54,11 +54,10 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::MembraneTri3Type::cr
 }
 
 void Discret::Elements::MembraneTri3Type::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = 3;  // number of degrees of freedom per node
   dimns = 3;  // number of nullspace vectors
-  nv = 3;     // default value for no. of velocity dofs
 }
 
 Core::LinAlg::SerialDenseMatrix Discret::Elements::MembraneTri3Type::compute_null_space(
@@ -128,11 +127,10 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::MembraneTri6Type::cr
 }
 
 void Discret::Elements::MembraneTri6Type::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = 3;  // number of degrees of freedom per node
   dimns = 3;  // number of nullspace vectors
-  nv = 3;     // default value for no. of velocity dofs
 }
 
 Core::LinAlg::SerialDenseMatrix Discret::Elements::MembraneTri6Type::compute_null_space(
@@ -202,11 +200,10 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::MembraneQuad4Type::c
 }
 
 void Discret::Elements::MembraneQuad4Type::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = 3;  // number of degrees of freedom per node
   dimns = 3;  // number of nullspace vectors
-  nv = 3;     // default value for no. of velocity dofs
 }
 
 Core::LinAlg::SerialDenseMatrix Discret::Elements::MembraneQuad4Type::compute_null_space(
@@ -276,11 +273,10 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::MembraneQuad9Type::c
 }
 
 void Discret::Elements::MembraneQuad9Type::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = 3;  // number of degrees of freedom per node
   dimns = 3;  // number of nullspace vectors
-  nv = 3;     // default value for no. of velocity dofs
 }
 
 Core::LinAlg::SerialDenseMatrix Discret::Elements::MembraneQuad9Type::compute_null_space(

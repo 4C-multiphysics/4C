@@ -66,12 +66,11 @@ std::shared_ptr<Core::Elements::Element> Thermo::ElementType::create(const int i
  |                                                           dano 08/12 |
  *----------------------------------------------------------------------*/
 void Thermo::ElementType::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = dwele->num_dof_per_node(*(dwele->nodes()[0]));
   dimns = numdf;
-  nv = numdf;
-}  // nodal_block_information()
+}
 
 
 /*----------------------------------------------------------------------*

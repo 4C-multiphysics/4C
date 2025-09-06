@@ -51,8 +51,7 @@ namespace Discret
 
       std::string name() const override { return "Truss3Type"; }
 
-      void nodal_block_information(
-          Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np) override;
+      void nodal_block_information(Core::Elements::Element* dwele, int& numdf, int& dimns) override;
 
       void setup_element_definition(
           std::map<std::string, std::map<Core::FE::CellType, Core::IO::InputSpec>>& definitions)

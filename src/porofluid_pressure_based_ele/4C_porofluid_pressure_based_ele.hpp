@@ -40,8 +40,7 @@ namespace Discret
       std::shared_ptr<Core::Elements::Element> create(const int id, const int owner) override;
 
       /// nodal block information to create a null space description
-      void nodal_block_information(
-          Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np) override;
+      void nodal_block_information(Core::Elements::Element* dwele, int& numdf, int& dimns) override;
 
       /// do the null space computation
       Core::LinAlg::SerialDenseMatrix compute_null_space(
@@ -321,8 +320,7 @@ namespace Discret
 
       std::shared_ptr<Core::Elements::Element> create(const int id, const int owner) override;
 
-      void nodal_block_information(
-          Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np) override
+      void nodal_block_information(Core::Elements::Element* dwele, int& numdf, int& dimns) override
       {
       }
 

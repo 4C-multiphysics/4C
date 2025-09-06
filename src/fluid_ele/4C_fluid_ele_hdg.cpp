@@ -65,12 +65,10 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::FluidHDGType::create
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Discret::Elements::FluidHDGType::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = Core::FE::get_dimension(dwele->shape()) + 1;
   dimns = numdf;
-  nv = numdf - 1;
-  np = 1;
 }
 
 

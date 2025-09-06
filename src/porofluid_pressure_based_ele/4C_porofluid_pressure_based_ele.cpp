@@ -61,11 +61,10 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::PoroFluidMultiPhaseT
 }
 
 void Discret::Elements::PoroFluidMultiPhaseType::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = dwele->num_dof_per_node(*(dwele->nodes()[0]));
   dimns = numdf;
-  nv = numdf;
 }
 
 Core::LinAlg::SerialDenseMatrix Discret::Elements::PoroFluidMultiPhaseType::compute_null_space(

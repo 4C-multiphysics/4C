@@ -47,10 +47,7 @@ namespace Core::FE::MeshFree
     //!< create element of this element type
     std::shared_ptr<Core::Elements::Element> create(const int id, const int owner) override;
 
-    void nodal_block_information(
-        Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np) override
-    {
-    }
+    void nodal_block_information(Core::Elements::Element* dwele, int& numdf, int& dimns) override {}
 
     Core::LinAlg::SerialDenseMatrix compute_null_space(
         Core::Nodes::Node& node, const double* x0, const int numdof, const int dimnsp) override

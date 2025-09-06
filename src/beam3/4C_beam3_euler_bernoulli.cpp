@@ -62,10 +62,9 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::Beam3ebType::create(
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Discret::Elements::Beam3ebType::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = 6;  // 3 translations, 3 tangent DOFs per node
-  nv = 6;     // obsolete, just needed for fluid
   dimns = 5;  // 3 translations + 2 rotations
 }
 

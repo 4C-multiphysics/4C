@@ -95,8 +95,7 @@ namespace Solid::Utils::Shell
   Core::LinAlg::SerialDenseMatrix compute_shell_null_space(
       Core::Nodes::Node& node, const double* x0, const Core::LinAlg::Matrix<3, 1>& dir);
 
-  void nodal_block_information_shell(
-      Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np);
+  void nodal_block_information_shell(Core::Elements::Element* dwele, int& numdf, int& dimns);
 
   void lump_mass_matrix(Core::LinAlg::SerialDenseMatrix& mass_matrix);
 

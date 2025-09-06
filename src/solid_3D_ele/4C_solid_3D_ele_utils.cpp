@@ -80,12 +80,10 @@ Discret::Elements::SolidElementProperties Solid::Utils::ReadElement::read_solid_
 }
 
 void Solid::Utils::nodal_block_information_solid(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = 3;
   dimns = 6;
-
-  nv = 3;
 }
 
 FOUR_C_NAMESPACE_CLOSE

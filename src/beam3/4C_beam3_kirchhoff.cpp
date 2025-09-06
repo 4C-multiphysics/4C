@@ -72,7 +72,7 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::Beam3kType::create(
 /*------------------------------------------------------------------------------------------------*
  *------------------------------------------------------------------------------------------------*/
 void Discret::Elements::Beam3kType::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   FOUR_C_THROW("method 'nodal_block_information' not implemented for element type beam3k!");
 }

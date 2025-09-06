@@ -53,12 +53,10 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::FluidType::create(
 
 
 void Discret::Elements::FluidType::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = dwele->num_dof_per_node(*(dwele->nodes()[0]));
   dimns = numdf;
-  nv = numdf - 1;
-  np = 1;
 }
 
 

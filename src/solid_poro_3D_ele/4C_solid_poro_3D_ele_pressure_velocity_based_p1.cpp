@@ -129,11 +129,10 @@ Core::Communication::ParObject* Discret::Elements::SolidPoroPressureVelocityBase
 }
 
 void Discret::Elements::SolidPoroPressureVelocityBasedP1Type::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = 4;
   dimns = 4;
-  nv = 3;
 }
 
 Core::LinAlg::SerialDenseMatrix

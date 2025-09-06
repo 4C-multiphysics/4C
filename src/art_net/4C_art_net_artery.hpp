@@ -46,12 +46,10 @@ namespace Discret
 
       std::shared_ptr<Core::Elements::Element> create(const int id, const int owner) override;
 
-      void nodal_block_information(
-          Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np) override
+      void nodal_block_information(Core::Elements::Element* dwele, int& numdf, int& dimns) override
       {
         numdf = dwele->num_dof_per_node(*(dwele->nodes()[0]));
         dimns = numdf;
-        nv = numdf;
       }
 
       Core::LinAlg::SerialDenseMatrix compute_null_space(

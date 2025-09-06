@@ -701,49 +701,12 @@ void Core::FE::Discretization::compute_null_space_if_necessary(
     return;
   }
 
-  int numdf = 1;  // default value for no. of degrees of freedom per node
-  int dimns = 1;  // default value for no. of nullspace vectors
-  int nv = 0;     // default value for no. of velocity dofs
-  int np = 0;     // default value for no. of pressure dofs
-
-  // downwinding needs nodal block information, compute it
-  if (num_my_row_elements())
-  {
-    // We assume that all elements are of equal type
-    Core::Elements::Element* dwele = l_row_element(0);
-    dwele->element_type().nodal_block_information(dwele, numdf, dimns, nv, np);
-  }
-
-  // communicate data to procs without row element
-  std::array<int, 4> ldata = {numdf, dimns, nv, np};
-  std::array<int, 4> gdata = {0, 0, 0, 0};
-  Core::Communication::max_all(ldata.data(), gdata.data(), 4, get_comm());
-  numdf = gdata[0];
-  dimns = gdata[1];
-  nv = gdata[2];
-  np = gdata[3];
-
-  if (!(nv + np)) FOUR_C_THROW("Cannot determine nodal block size");
-
-  // store nv and np at unique location in solver parameter list
-  solveparams.sublist("nodal_block_information").set("number of momentum dofs", nv);
-  solveparams.sublist("nodal_block_information").set("number of constraint dofs", np);
-  solveparams.sublist("nodal_block_information").set("number of dofs per node", numdf);
-  solveparams.sublist("nodal_block_information").set("nullspace dimension", dimns);
-
   // adapt multigrid settings (if a multigrid preconditioner is used)
-  // see whether we have a sublist indicating usage of Trilinos::ML or Trilinos::MueLu
-  if (!solveparams.isSublist("ML Parameters") && !solveparams.isSublist("MueLu Parameters") &&
-      !solveparams.isSublist("MueLu (BeamSolid) Parameters") &&
-      !solveparams.isSublist("Teko Parameters"))
+  if (!solveparams.isSublist("MueLu Parameters") && !solveparams.isSublist("Teko Parameters"))
     return;
   Teuchos::ParameterList* mllist_ptr = nullptr;
-  if (solveparams.isSublist("ML Parameters"))
-    mllist_ptr = &(solveparams.sublist("ML Parameters"));
-  else if (solveparams.isSublist("MueLu Parameters"))
+  if (solveparams.isSublist("MueLu Parameters"))
     mllist_ptr = &(solveparams.sublist("MueLu Parameters"));
-  else if (solveparams.isSublist("MueLu (BeamSolid) Parameters"))
-    mllist_ptr = &(solveparams);
   else if (solveparams.isSublist("Teko Parameters"))
     mllist_ptr = &(solveparams);
   else
@@ -755,13 +718,6 @@ void Core::FE::Discretization::compute_null_space_if_necessary(
   std::shared_ptr<Core::LinAlg::MultiVector<double>> ns =
       mllist.get<std::shared_ptr<Core::LinAlg::MultiVector<double>>>("nullspace", nullptr);
   if (ns != nullptr && !recompute) return;
-
-  // no, we have not previously computed the nullspace
-  // or want to recompute it anyway
-  // -> compute nullspace
-  // do the usual tests
-  if (!filled()) FOUR_C_THROW("fill_complete was not called on discretization");
-  if (!have_dofs()) FOUR_C_THROW("discretization has no dofs assigned");
 
   // compute solver parameters and set them into list
   Core::LinearSolver::Parameters::compute_solver_parameters(*this, mllist);

@@ -45,8 +45,7 @@ namespace TESTING
 
 
 
-    void nodal_block_information(
-        Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np) override
+    void nodal_block_information(Core::Elements::Element* dwele, int& numdf, int& dimns) override
     {
       FOUR_C_THROW("Not implemented.");
     }

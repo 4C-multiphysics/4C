@@ -51,9 +51,9 @@ Core::Communication::ParObject* Discret::Elements::Shell7pType::create(
 }
 
 void Discret::Elements::Shell7pType::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
-  Solid::Utils::Shell::nodal_block_information_shell(dwele, numdf, dimns, nv, np);
+  Solid::Utils::Shell::nodal_block_information_shell(dwele, numdf, dimns);
 }
 
 Core::LinAlg::SerialDenseMatrix Discret::Elements::Shell7pType::compute_null_space(

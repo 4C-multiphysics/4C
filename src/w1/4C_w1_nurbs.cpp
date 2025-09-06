@@ -50,11 +50,10 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::Nurbs::Wall1NurbsTyp
 }
 
 void Discret::Elements::Nurbs::Wall1NurbsType::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = 2;
   dimns = 3;
-  nv = 2;
 }
 
 Core::LinAlg::SerialDenseMatrix Discret::Elements::Nurbs::Wall1NurbsType::compute_null_space(

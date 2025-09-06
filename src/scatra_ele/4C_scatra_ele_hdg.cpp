@@ -89,20 +89,10 @@ std::shared_ptr<Core::Elements::Element> Discret::Elements::ScaTraHDGType::creat
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Discret::Elements::ScaTraHDGType::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
   numdf = 1;  // Only one scalar (so far) is the unknown that is solved for
   dimns = numdf;
-  nv = numdf;
-
-  if (Global::Problem::instance(0)->get_problem_type() == Core::ProblemType::elch)
-  {
-    if (nv > 1)  // only when we have more than 1 dof per node!
-    {
-      nv -= 1;  // ion concentrations
-      np = 1;   // electric potential
-    }
-  }
 }
 
 

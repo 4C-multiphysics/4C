@@ -137,9 +137,9 @@ Core::Communication::ParObject* Discret::Elements::SolidType::create(
 }
 
 void Discret::Elements::SolidType::nodal_block_information(
-    Core::Elements::Element* dwele, int& numdf, int& dimns, int& nv, int& np)
+    Core::Elements::Element* dwele, int& numdf, int& dimns)
 {
-  FourC::Solid::Utils::nodal_block_information_solid(dwele, numdf, dimns, nv, np);
+  FourC::Solid::Utils::nodal_block_information_solid(dwele, numdf, dimns);
 }
 
 Core::LinAlg::SerialDenseMatrix Discret::Elements::SolidType::compute_null_space(
