@@ -227,8 +227,10 @@ void Core::IO::read_design(InputFile& input, const std::string& name,
 
       const Core::FE::Discretization& actdis = get_discretization(disname);
 
-      std::vector<double> box_specifications;
-      box_specifications.reserve(9);  // 3 coords, 3 coords, 3 rotations
+      std::array<double, 3> bottom_corner{};
+      std::array<double, 3> top_corner{};
+      std::array<double, 3> rotation_angle{};
+
       {
         if (Core::Communication::my_mpi_rank(input.get_comm()) == 0)  // Reading is done by proc 0
         {
@@ -240,31 +242,24 @@ void Core::IO::read_design(InputFile& input, const std::string& name,
           input.match_section(domain_section_name, container);
           const auto& domain_data = container.group(domain_section_name);
 
-          const auto append_to_box_specifications = [&box_specifications](
-                                                        const std::vector<double>& values)
-          {
-            FOUR_C_ASSERT_ALWAYS(
-                values.size() == 3, "Internal error: exactly three values expected.");
-            box_specifications.insert(box_specifications.end(), values.begin(), values.end());
-          };
-
-          append_to_box_specifications(domain_data.get<std::vector<double>>("bottom_corner_point"));
-          append_to_box_specifications(domain_data.get<std::vector<double>>("top_corner_point"));
-          append_to_box_specifications(domain_data.get<std::vector<double>>("rotation_angle"));
-        }
-        else  // All other processors get an empty vector
-        {
-          box_specifications.resize(9, 0.0);
+          bottom_corner = domain_data.get<std::array<double, 3>>("bottom_corner_point");
+          top_corner = domain_data.get<std::array<double, 3>>("top_corner_point");
+          rotation_angle = domain_data.get<std::array<double, 3>>("rotation_angle");
         }
 
         // All other processors get this info broadcasted
-        Core::Communication::broadcast(box_specifications.data(),
-            static_cast<int>(box_specifications.size()), 0, input.get_comm());
+        Core::Communication::broadcast(bottom_corner, 0, input.get_comm());
+        Core::Communication::broadcast(top_corner, 0, input.get_comm());
+        Core::Communication::broadcast(rotation_angle, 0, input.get_comm());
       }
 
       // determine the active discretizations bounding box
       std::array<double, 6> bbox;
-      for (size_t i = 0; i < sizeof(bbox) / sizeof(bbox[0]); ++i) bbox[i] = box_specifications[i];
+      for (int i = 0; i < 3; ++i)
+      {
+        bbox[i] = bottom_corner[i];
+        bbox[i + 3] = top_corner[i];
+      }
 
       constexpr double tolerance_n = 1.0e-14;
       // manipulate the bounding box according to the specified condition
@@ -294,28 +289,21 @@ void Core::IO::read_design(InputFile& input, const std::string& name,
       for (const auto& node : actdis.my_row_node_range())
       {
         const auto& coord = node.x();
-        std::array<double, 3> coords;
-        coords[0] = coord[0];
-        coords[1] = coord[1];
-        coords[2] = coord[2];
+        std::array<double, 3> coords = {coord[0], coord[1], coord[2]};
+
         // rotate back to identify condition, if a rotation is defined
-        static const int rotoffset = 6;
         for (int rotaxis = 2; rotaxis > -1; --rotaxis)
         {
-          if (box_specifications[rotaxis + rotoffset] != 0.0)
+          if (rotation_angle[rotaxis] != 0.0)
           {
-            std::array<double, 3> coordm;
-            coordm[0] = (box_specifications[0] + box_specifications[3]) / 2.;
-            coordm[1] = (box_specifications[1] + box_specifications[4]) / 2.;
-            coordm[2] = (box_specifications[2] + box_specifications[5]) / 2.;
+            std::array<double, 3> coordm = {
+                (bbox[0] + bbox[3]) / 2., (bbox[1] + bbox[4]) / 2., (bbox[2] + bbox[5]) / 2.};
             // add rotation around mitpoint here.
-            std::array<double, 3> dx;
-            dx[0] = coords[0] - coordm[0];
-            dx[1] = coords[1] - coordm[1];
-            dx[2] = coords[2] - coordm[2];
+            std::array<double, 3> dx = {
+                coords[0] - coordm[0], coords[1] - coordm[1], coords[2] - coordm[2]};
 
-            double calpha = cos(-box_specifications[rotaxis + rotoffset] * std::numbers::pi / 180);
-            double salpha = sin(-box_specifications[rotaxis + rotoffset] * std::numbers::pi / 180);
+            double calpha = cos(-rotation_angle[rotaxis] * std::numbers::pi / 180);
+            double salpha = sin(-rotation_angle[rotaxis] * std::numbers::pi / 180);
 
             coords[0] = coordm[0];  //+ calpha*dx[0] + salpha*dx[1];
             coords[1] = coordm[1];  //+ -salpha*dx[0] + calpha*dx[1];
@@ -334,9 +322,9 @@ void Core::IO::read_design(InputFile& input, const std::string& name,
             (coords[2] <= bbox[2] || coords[2] >= bbox[5]))
           dnodes.insert(node.global_id());
       }
+
       Core::LinAlg::gather_all(dnodes, input.get_comm());
       topology[dobj - 1].insert(dnodes.begin(), dnodes.end());
-
 
       if (dname.substr(0, name.length()) != name)
         FOUR_C_THROW("Illegal line in section '{}': '{}'\n{} found, where {} was expected",
