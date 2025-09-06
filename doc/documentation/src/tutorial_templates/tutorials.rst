@@ -30,6 +30,10 @@ The other tutorials are more advanced and show some of the multiphysics capabili
 - Battery simulation: Coupled thermal, mechanical and electrochemical simulation of a battery
   (:ref:`battery tutorial <batterytutorial>`).
 
+Preconditioning and iterative solvers:
+learn how to efficiently solve large linear systems in |FOURC| by comparing different preconditioner options
+(:ref:`preconditioning tutorial <preconditioningtutorial>`).
+
 Here is the outline of all available tutorials:
 
 .. toctree::
@@ -43,3 +47,4 @@ Here is the outline of all available tutorials:
    tutorial_fsi_2d
    tutorial_fsi_3d
    tutorial_battery
+   tutorial_preconditioning

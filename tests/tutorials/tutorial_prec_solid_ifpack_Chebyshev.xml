@@ -1,0 +1,5 @@
+<ParameterList name="Ifpack">
+  <Parameter name="Preconditioner type" type="string" value="Chebyshev"/>
+  <Parameter name="Overlap" type="int" value="0"/>
+  <Parameter name="chebyshev: degree" type="int" value="2"/>
+</ParameterList>

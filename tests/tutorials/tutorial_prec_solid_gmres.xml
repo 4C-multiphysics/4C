@@ -1,0 +1,21 @@
+<ParameterList name="Belos">
+  <!--
+  For iterative solver using the generalized minimal residual method, these are the recommended settings for Belos.
+  -->
+  <ParameterList name="GMRES">
+    <!-- ===========  GENERAL ================ -->
+    <!-- Recommendation max iterations for practice: 200 -->
+    <Parameter name="Maximum Iterations" type="int" value="2000"/>
+    <Parameter name="Convergence Tolerance" type="double" value="1e-10"/>
+    <Parameter name="Implicit Residual Scaling" type="string" value="Norm of Preconditioned Initial Residual"/>
+    <!-- ===========  OUTPUT ================ -->
+    <!--
+    Verbosity        - Integer value specifying the verbosity level (0 > none, 5 > minimal, 33 > high, ...).
+    Output Style     - Integer value specifying the style of output (0 - detailed, 1 - medium, 2 - high).
+    Output Frequency - Integer value specifying how often convergence information should be outputted (e.g. after each 5th iteration).
+    -->
+    <Parameter name="Verbosity" type="int" value="33"/>
+    <Parameter name="Output Style" type="int" value="2"/>
+    <Parameter name="Output Frequency" type="int" value="1"/>
+  </ParameterList>
+</ParameterList>

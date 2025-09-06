@@ -63,6 +63,8 @@ templates_path = ["tutorial_templates", "analysis_guide_templates"]
 # This pattern also affects html_static_path and html_extra_path.
 source_suffix = [".rst", ".md"]
 exclude_patterns = templates_path
+# Allow $..$ and $$...$$, and LaTeX amsmath environments (for markdown files)
+myst_enable_extensions = ["dollarmath", "amsmath"]
 
 rst_prolog = """
 .. |break| raw:: html
@@ -108,10 +110,7 @@ html_css_files = ['html_extensions.css']
 # for finding headers as internal link targets, we have to set the variable myst_heading_anchors
 myst_heading_anchors = 4
 #
-# mathjax extension:
-mathjax_path = (
-    "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
-)
+# mathjax extension: let sphinx load automatically
 
 # -- Additional scripts to generate more fancy output -------------------------------------------------
 # Now generate the tutorial files

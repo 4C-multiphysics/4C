@@ -1,0 +1,65 @@
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+STRUCTURAL DYNAMIC:
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "Statics"
+  TIMESTEP: 1.0
+  NUMSTEP: 1
+  MAXTIME: 1
+  MAXITER: 1
+  RESULTSEVERY: 0
+  RESTARTEVERY: 0
+  NORMCOMBI_RESFDISP: "Or"
+  DIVERCONT: "continue"
+  LINEAR_SOLVER: 4
+
+SOLVER 1:
+  SOLVER: "UMFPACK"
+  NAME: "Direct Solver"
+SOLVER 2:
+  NAME: "GMRES with Jacobi from Ifpack"
+  SOLVER: "Belos"
+  SOLVER_XML_FILE: "tutorial_prec_solid_gmres.xml"
+  IFPACK_XML_FILE: "tutorial_prec_solid_ifpack_Jacobi.xml"
+SOLVER 3:
+  NAME: "GMRES with Chebyshev from Ifpack"
+  SOLVER: "Belos"
+  SOLVER_XML_FILE: "tutorial_prec_solid_gmres.xml"
+  IFPACK_XML_FILE: "tutorial_prec_solid_ifpack_Chebyshev.xml"
+SOLVER 4:
+  NAME: "GMRES with ILU from Ifpack"
+  SOLVER: "Belos"
+  SOLVER_XML_FILE: "tutorial_prec_solid_gmres.xml"
+  IFPACK_XML_FILE: "tutorial_prec_solid_ifpack_ILU.xml"
+SOLVER 5:
+  NAME: "GMRES with SA-AMG from MueLu"
+  SOLVER: "Belos"
+  SOLVER_XML_FILE: "tutorial_prec_solid_gmres.xml"
+  AZPREC: "MueLu"
+  MUELU_XML_FILE: "tutorial_prec_solid_muelu_sa_amg.xml"
+
+MATERIALS:
+  - MAT: 1
+    MAT_Struct_StVenantKirchhoff:
+      YOUNG: 1
+      NUE: 0.3
+      DENS: 1
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 1
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0, 0, 0]
+    FUNCT: [null, null, null]
+  - E: 2
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0.01, 0.01, 0.01]
+    FUNCT: [null, null, null]
+STRUCTURE GEOMETRY:
+  FILE: "tutorial_prec_solid_2.exo"
+  ELEMENT_BLOCKS:
+    - ID: 1
+      ELEMENT_NAME: SOLID
+      ELEMENT_DATA: "MAT 1 KINEM linear"

@@ -1981,6 +1981,16 @@ four_c_test_tutorial(PREFIX tutorial_fluid NP 2 COPY_FILES ${PROJECT_SOURCE_DIR}
 four_c_test_tutorial(PREFIX tutorial_fsi_2d NP 2 COPY_FILES ${PROJECT_SOURCE_DIR}/tests/tutorials/tutorial_fsi_2d.e)
 four_c_test_tutorial(PREFIX tutorial_fsi_3d NP 2 COPY_FILES ${PROJECT_SOURCE_DIR}/tests/input_files/fsi_part_struct_solver.xml ${PROJECT_SOURCE_DIR}/tests/tutorials/tutorial_fsi_3d.e)
 four_c_test_tutorial(PREFIX tutorial_solid NP 3 COPY_FILES ${PROJECT_SOURCE_DIR}/tests/input_files/xml/multigrid/elasticity_template.xml ${PROJECT_SOURCE_DIR}/tests/tutorials/tutorial_solid_geo.e)
+# Test use case solid with Jacobi preconditioner on mesh 2 with 2 MPI ranks
+four_c_test_tutorial(PREFIX tutorial_prec_solid_jacobi NP 2 COPY_FILES
+        ${PROJECT_SOURCE_DIR}/tests/tutorials/tutorial_prec_solid_2.exo
+        ${PROJECT_SOURCE_DIR}/tests/tutorials/tutorial_prec_solid_gmres.xml
+        ${PROJECT_SOURCE_DIR}/tests/tutorials/tutorial_prec_solid_ifpack_Jacobi.xml)
+# Test use case solid with Chebyshev preconditioner on mesh 3 with 4 MPI ranks
+four_c_test_tutorial(PREFIX tutorial_prec_solid_chebyshev NP 4 COPY_FILES
+        ${PROJECT_SOURCE_DIR}/tests/tutorials/tutorial_prec_solid_3.exo
+        ${PROJECT_SOURCE_DIR}/tests/tutorials/tutorial_prec_solid_gmres.xml
+        ${PROJECT_SOURCE_DIR}/tests/tutorials/tutorial_prec_solid_ifpack_Chebyshev.xml)
 
 four_c_test_post_processing(constr3D_MPC_direct.4C.yaml 2 2 ndxyz ndxyz 25)
 four_c_test_post_processing(contact2D_onlylin_stdlagr.4C.yaml 2 2 ndxyz ndxyz 50)
