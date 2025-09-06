@@ -122,7 +122,7 @@ std::shared_ptr<Core::LinAlg::Solver> Solid::SOLVER::Factory::build_structure_li
     for (int icond = 0; icond < numcond; icond++)
     {
       const std::string& name = KSPcond[icond]->parameters().get<std::string>("DIS");
-      if (name == "solid")
+      if (name == "structure")
       {
         numsolid++;
         kspcond = KSPcond[icond];

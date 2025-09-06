@@ -163,7 +163,7 @@ RESULT DESCRIPTION:
       TOLERANCE: 1e-09
 DESIGN VOL MODE FOR KRYLOV SPACE PROJECTION:
   - E: 1
-    DIS: "solid"
+    DIS: "structure"
     NUMMODES: 6
     ONOFF: [1, 1, 1, 1, 1, 1]
     WEIGHTVECDEF: "pointvalues"
