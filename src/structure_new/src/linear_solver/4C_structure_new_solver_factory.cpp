@@ -10,7 +10,9 @@
 #include "4C_beam3_euler_bernoulli.hpp"
 #include "4C_beaminteraction_calc_utils.hpp"
 #include "4C_contact_input.hpp"
+#include "4C_fem_condition.hpp"
 #include "4C_fem_discretization.hpp"
+#include "4C_fem_discretization_nullspace.hpp"
 #include "4C_global_data.hpp"
 #include "4C_inpar_cardiovascular0d.hpp"
 #include "4C_inpar_structure.hpp"
@@ -101,6 +103,98 @@ std::shared_ptr<Core::LinAlg::Solver> Solid::SOLVER::Factory::build_structure_li
       linsolverparams, actdis.get_comm(), Global::Problem::instance()->solver_params_callback(),
       Teuchos::getIntegralValue<Core::IO::Verbositylevel>(
           Global::Problem::instance()->io_params(), "VERBOSITY"));
+
+
+  // setup Krylov projection if necessary
+  std::shared_ptr<Core::LinAlg::KrylovProjector> projector = nullptr;
+  {
+    // sysmat might be singular, e.g. when solid is not fully supported
+    // in this case, we need a basis vector for the nullspace/kernel
+
+    // get condition "KrylovSpaceProjection" from discretization
+    std::vector<const Core::Conditions::Condition*> KSPcond;
+    actdis.get_condition("KrylovSpaceProjection", KSPcond);
+    int numcond = KSPcond.size();
+    int numsolid = 0;
+
+    const Core::Conditions::Condition* kspcond = nullptr;
+    // check if for solid Krylov projection is required
+    for (int icond = 0; icond < numcond; icond++)
+    {
+      const std::string& name = KSPcond[icond]->parameters().get<std::string>("DIS");
+      if (name == "solid")
+      {
+        numsolid++;
+        kspcond = KSPcond[icond];
+      }
+    }
+
+    if (numsolid == 1)
+    {
+      if (Core::Communication::my_mpi_rank(actdis.get_comm()) == 0)
+        std::cout << "\nSetup of KrylovSpaceProjection in solid field.\n";
+
+      const int nummodes = kspcond->parameters().get<int>("NUMMODES");
+
+      // get rigid body mode flags for a 3-D solid: [transx transy transz rotx roty rotz]
+      const auto* modeflags = &kspcond->parameters().get<std::vector<int>>("ONOFF");
+
+      // get actual active mode ids given in input file
+      std::vector<int> activemodeids;
+      for (int rr = 0; rr < nummodes; ++rr)
+      {
+        if (((*modeflags)[rr]) != 0)
+        {
+          activemodeids.push_back(rr);
+        }
+      }
+
+      const std::string* weighttype = &kspcond->parameters().get<std::string>("WEIGHTVECDEF");
+
+      projector = std::make_shared<Core::LinAlg::KrylovProjector>(
+          activemodeids, weighttype, actdis.dof_row_map());
+      weighttype = projector->weight_type();
+
+      if (*weighttype == "integration")
+        FOUR_C_THROW("Krylov projection an currently only be done pointwise.");
+
+      std::shared_ptr<Core::LinAlg::MultiVector<double>> c = projector->get_non_const_kernel();
+      c->PutScalar(0.0);
+
+      Core::LinAlg::Map nullspace_map(*actdis.dof_row_map());
+
+      std::shared_ptr<Core::LinAlg::MultiVector<double>> nullspace =
+          Core::FE::compute_null_space(actdis, 3, 6, nullspace_map);
+
+      if (nullspace == nullptr) FOUR_C_THROW("Nullspace could not be computed successfully.");
+
+      // sort vector of nullspace data into kernel vector c_
+      std::vector<int> mode_ids = projector->modes();
+
+      for (size_t i = 0; i < Teuchos::as<size_t>(mode_ids.size()); i++)
+      {
+        auto& ci = (*c)(i);
+        auto& ni = (*nullspace)(mode_ids[i]);
+        const size_t myLength = ci.local_length();
+        for (size_t j = 0; j < myLength; j++)
+        {
+          ci.get_values()[j] = ni.get_values()[j];
+        }
+      }
+
+      projector->fill_complete();
+    }
+    else if (numsolid == 0)
+    {
+      projector = nullptr;
+    }
+    else
+    {
+      FOUR_C_THROW("Received more than one KrylovSpaceCondition for solid field");
+    }
+
+    linsolver->params().set("Projector", projector);
+  }
 
   const auto azprectype =
       Teuchos::getIntegralValue<Core::LinearSolver::PreconditionerType>(linsolverparams, "AZPREC");

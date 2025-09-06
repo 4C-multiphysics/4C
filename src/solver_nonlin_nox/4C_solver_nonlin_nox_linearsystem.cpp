@@ -311,6 +311,13 @@ bool NOX::Nln::LinearSystem::applyJacobianInverse(Teuchos::ParameterList& linear
     solver_params.refactor = true;
     solver_params.reset = iter == 0;
 
+    if (currSolver->params().isParameter("Projector"))
+    {
+      auto projector =
+          currSolver->params().get<std::shared_ptr<Core::LinAlg::KrylovProjector>>("Projector");
+      solver_params.projector = projector;
+    }
+
     linsol_status =
         currSolver->solve(linProblem.jac, linProblem.lhs, linProblem.rhs, solver_params);
 
