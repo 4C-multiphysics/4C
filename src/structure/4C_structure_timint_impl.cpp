@@ -257,7 +257,7 @@ void Solid::TimIntImpl::setup()
   for (int icond = 0; icond < numcond; icond++)
   {
     const std::string& name = KSPcond[icond]->parameters().get<std::string>("DIS");
-    if (name == "solid")
+    if (name == "structure")
     {
       numsolid++;
       kspcond = KSPcond[icond];

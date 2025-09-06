@@ -798,7 +798,7 @@ std::vector<Core::Conditions::ConditionDefinition> Global::valid_conditions()
   const auto make_rigidbody_mode_condition = [&condlist](auto& cond)
   {
     cond.add_component(deprecated_selection<std::string>(
-        "DIS", {"fluid", "scatra", "solid"}, {.description = "discretization"}));
+        "DIS", {"fluid", "scatra", "structure"}, {.description = "discretization"}));
     cond.add_component(parameter<int>("NUMMODES"));
     cond.add_component(parameter<std::vector<int>>(
         "ONOFF", {.description = "", .size = from_parameter<int>("NUMMODES")}));
