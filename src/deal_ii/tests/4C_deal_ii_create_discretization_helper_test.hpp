@@ -18,6 +18,7 @@
 #include "4C_fem_general_node.hpp"
 #include "4C_rebalance_graph_based.hpp"
 
+#include <deal.II/base/point.h>
 #include <mpi.h>
 #include <Teuchos_ParameterList.hpp>
 
@@ -107,6 +108,9 @@ namespace TESTING
     }
 
     Core::FE::CellType shape() const override { return data_.cell_type; }
+
+
+
     int evaluate_neumann(Teuchos::ParameterList& params, Core::FE::Discretization& discretization,
         const Core::Conditions::Condition& condition, std::vector<int>& lm,
         Core::LinAlg::SerialDenseVector& elevec1, Core::LinAlg::SerialDenseMatrix* elemat1) override
@@ -139,13 +143,17 @@ namespace TESTING
     return object;
   }
 
+
+
   /**
    * Fill the given @p discretization with a hypercube mesh. A total of `subdivisions^3` elements
    * are created and partitioned among all processes in @p comm.
    * */
-  inline void fill_discretization_hyper_cube(
-      Core::FE::Discretization& discretization, int subdivisions, MPI_Comm comm)
+  inline void fill_discretization_hyper_cube(Core::FE::Discretization& discretization,
+      int subdivisions, MPI_Comm comm, bool vector_valued = true,
+      const std::function<dealii::Point<3>(const dealii::Point<3>&)>& node_transform = {})
   {
+    constexpr int dim = 3;
     discretization.clear_discret();
 
     const int my_rank = Core::Communication::my_mpi_rank(comm);
@@ -177,8 +185,8 @@ namespace TESTING
 
             PureGeometryElementType::instance();
             auto ele = std::make_unique<PureGeometryElement>(ele_id, my_rank,
-                PureGeometryElement::Data{
-                    .cell_type = Core::FE::CellType::hex8, .num_dof_per_node = 3});
+                PureGeometryElement::Data{.cell_type = Core::FE::CellType::hex8,
+                    .num_dof_per_node = vector_valued ? dim : 1});
             ele->set_node_ids(8, nodeids.begin());
 
             discretization.add_element(std::move(ele));
@@ -218,9 +226,14 @@ namespace TESTING
             const int node_lid = lid(i, j, k);
             if (row_nodes->lid(node_lid) != -1)
             {
-              const std::vector<double> coords = {i * increment, j * increment, k * increment};
+              std::vector<double> coord = {i * increment, j * increment, k * increment};
+              if (node_transform)
+              {
+                auto new_point = node_transform(dealii::Point<3>(coord[0], coord[1], coord[2]));
+                coord = {new_point[0], new_point[1], new_point[2]};
+              }
               discretization.add_node(
-                  std::make_shared<Core::Nodes::Node>(lid(i, j, k), coords, my_rank));
+                  std::make_shared<Core::Nodes::Node>(lid(i, j, k), coord, my_rank));
             }
           }
         }
@@ -430,7 +443,9 @@ namespace TESTING
     discretization.fill_complete();
   }
 
-  inline void fill_undeformed_hex27(Core::FE::Discretization& discretization, MPI_Comm comm)
+  inline void fill_undeformed_hex27(Core::FE::Discretization& discretization, MPI_Comm comm,
+      const bool vector_valued = true,
+      const std::function<dealii::Point<3>(const dealii::Point<3>&)>& node_transform = {})
   {
     if (Core::Communication::my_mpi_rank(comm) == 0)
     {
@@ -439,7 +454,8 @@ namespace TESTING
 
       PureGeometryElementType::instance();
       auto ele = std::make_unique<PureGeometryElement>(0, 0,
-          PureGeometryElement::Data{.cell_type = Core::FE::CellType::hex27, .num_dof_per_node = 3});
+          PureGeometryElement::Data{
+              .cell_type = Core::FE::CellType::hex27, .num_dof_per_node = vector_valued ? 3 : 1});
       ele->set_node_ids(27, nodeids.begin());
 
       discretization.add_element(std::move(ele));
@@ -447,7 +463,7 @@ namespace TESTING
       const auto add_node = [&](int id, std::vector<double> coords)
       { discretization.add_node(std::make_shared<Core::Nodes::Node>(id, coords, 0)); };
 
-      const std::vector<std::vector<double>> coords{{-1.0, -1.0, -1.0}, {1.0, -1.0, -1.0},
+      std::vector<std::vector<double>> coords{{-1.0, -1.0, -1.0}, {1.0, -1.0, -1.0},
           {1.0, 1.0, -1.0}, {-1.0, 1.0, -1.0}, {-1.0, -1.0, 1.0}, {1.0, -1.0, 1.0}, {1.0, 1.0, 1.0},
           {-1.0, 1.0, 1.0}, {0.0, -1.0, -1.0}, {1.0, 0.0, -1.0}, {0.0, 1.0, -1.0},
           {-1.0, 0.0, -1.0}, {-1.0, -1.0, 0.0}, {1.0, -1.0, 0.0}, {1.0, 1.0, 0.0}, {-1.0, 1.0, 0.0},
@@ -455,12 +471,22 @@ namespace TESTING
           {0.0, -1.0, 0.0}, {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {-1.0, 0.0, 0.0}, {0.0, 0.0, 1.0},
           {0.0, 0.0, 0.0}};
 
+      if (node_transform)
+      {
+        for (auto& coord : coords)
+        {
+          auto new_point = node_transform(dealii::Point<3>(coord[0], coord[1], coord[2]));
+          coord = {new_point[0], new_point[1], new_point[2]};
+        }
+      }
       int counter = 0;
       for (const auto& coord : coords) add_node(counter++, coord);
     }
 
     discretization.fill_complete();
   }
+
+
 
   inline void fill_deformed_hex27(Core::FE::Discretization& discretization, MPI_Comm comm)
   {
@@ -473,7 +499,7 @@ namespace TESTING
 
       PureGeometryElementType::instance();
       auto ele = std::make_unique<PureGeometryElement>(0, 0,
-          PureGeometryElement::Data{.cell_type = Core::FE::CellType::hex27, .num_dof_per_node = 3});
+          PureGeometryElement::Data{.cell_type = Core::FE::CellType::hex27, .num_dof_per_node = 1});
       ele->set_node_ids(27, nodeids.begin());
 
       discretization.add_element(std::move(ele));

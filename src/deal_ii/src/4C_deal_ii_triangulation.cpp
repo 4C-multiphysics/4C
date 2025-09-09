@@ -7,7 +7,7 @@
 
 #include "4C_deal_ii_triangulation.hpp"
 
-#include "4C_deal_ii_context_implementation.hpp"
+#include "4C_deal_ii_context.hpp"
 #include "4C_deal_ii_element_conversion.hpp"
 #include "4C_utils_exceptions.hpp"
 
@@ -22,11 +22,17 @@ namespace DealiiWrappers
   Context<dim, spacedim> create_triangulation(
       dealii::Triangulation<dim, spacedim>& tria, const Core::FE::Discretization& discretization)
   {
-    static_assert(spacedim == 3);
-
     FOUR_C_ASSERT_ALWAYS(discretization.filled(), "Discretization must be filled.");
-
     const MPI_Comm comm = discretization.get_comm();
+
+    // Now build up the actual context object that will be used to map between the
+    // Core::FE::Discretization and the deal.II Triangulation.
+    Context<dim, spacedim> context(tria, discretization);
+
+    // Determine all FiniteElement objects that are required.
+    std::vector<std::string> finite_element_names;
+    std::tie(context.finite_elements_, finite_element_names) =
+        create_required_finite_element_collection<dim, spacedim>(discretization);
 
 
     // Step 1)
@@ -98,8 +104,8 @@ namespace DealiiWrappers
       my_element_gids[i_ele] = element->id();
 
 
-      my_element_centers[i_ele] =
-          ElementConversion::vertices_to_dealii<spacedim>(element, my_cell_vertices[i_ele]);
+      my_element_centers[i_ele] = ConversionTools::FourCToDeal::vertices_to_dealii<spacedim>(
+          element, my_cell_vertices[i_ele]);
     }
 
     const auto all_cell_vertices =
@@ -130,6 +136,9 @@ namespace DealiiWrappers
     }
 #endif
 
+    // add bool to check if we only have standard hex cells
+    // since otherwise some functionality in deal.II does not work
+    bool only_standard_hex_cells = true;
     {
       construction_data.coarse_cells.reserve(discretization.num_global_elements());
       for (const auto& cell_vertices_for_rank : all_cell_vertices)
@@ -138,13 +147,15 @@ namespace DealiiWrappers
         {
           auto& cell_data = construction_data.coarse_cells.emplace_back(dealii::CellData<dim>{});
           cell_data.vertices = std::move(vertices);
+          if (cell_data.vertices.size() != dealii::GeometryInfo<dim>::vertices_per_cell)
+          {
+            only_standard_hex_cells = false;
+          }
         }
       }
     }
 
 
-    Context<dim, spacedim> context{
-        std::make_shared<Internal::ContextImplementation<dim, spacedim>>()};
 
     // Step 2)
     //
@@ -155,7 +166,12 @@ namespace DealiiWrappers
       dealii::GridTools::invert_all_negative_measure_cells(
           construction_data.coarse_cell_vertices, construction_data.coarse_cells);
 
-      dealii::GridTools::consistently_order_cells(construction_data.coarse_cells);
+
+      // check if we have a hex mesh and if so, consistently order the cells.
+      // The deal.II function below only works for hexahedral meshes
+      // TODO: handle tet meshes as well
+      if (only_standard_hex_cells)
+        dealii::GridTools::consistently_order_cells(construction_data.coarse_cells);
 
       if (const auto fully_distributed_tria =
               dynamic_cast<dealii::parallel::fullydistributed::Triangulation<dim, spacedim>*>(
@@ -199,6 +215,9 @@ namespace DealiiWrappers
         // ... and construct the actual fully distributed Triangulation with the correct data
         fully_distributed_tria->create_triangulation(fully_partitioned_description);
 
+        context.active_cell_index_to_element_lid_.resize(tria.n_active_cells());
+        context.active_fe_indices_.resize(tria.n_active_cells());
+
         // This only works for a p:f:T with identical partitioning of cells
         for (const auto& cell : tria.active_cell_iterators())
         {
@@ -212,14 +231,14 @@ namespace DealiiWrappers
               "The cell center does not match any of the element centers. This should not happen.");
 
           const auto local_index = std::distance(my_element_centers.begin(), found);
+          context.active_cell_index_to_element_lid_[cell->active_cell_index()] = local_index;
 
-          context.pimpl_->cell_index_to_element_lid[cell->index()] = local_index;
+          const auto* local_element = discretization.l_row_element(local_index);
+          auto fe_iter = std::find(finite_element_names.begin(), finite_element_names.end(),
+              ConversionTools::FourCToDeal::dealii_fe_name(local_element->shape()));
+          context.active_fe_indices_[cell->active_cell_index()] =
+              static_cast<unsigned int>(std::distance(finite_element_names.begin(), fe_iter));
         }
-
-        // Determine all FiniteElement objects that are required.
-        std::tie(context.pimpl_->finite_elements, context.pimpl_->finite_element_names) =
-            ElementConversion::create_required_finite_element_collection<dim, spacedim>(
-                discretization);
       }
       // We cannot handle any other parallel Triangulation types yet.
       else if (dynamic_cast<dealii::parallel::TriangulationBase<dim, spacedim>*>(&tria) != nullptr)
@@ -232,6 +251,66 @@ namespace DealiiWrappers
       {
         // If we have a plain serial Triangulation, just pass the fully redundant data.
         tria.create_triangulation(construction_data);
+
+        context.active_cell_index_to_element_lid_.resize(tria.n_active_cells());
+        context.active_fe_indices_.resize(tria.n_active_cells());
+
+        // Now setup the cell data for the serial Triangulation.
+        // Since the 4C discretization is partitioned it does not make sens to set global indices
+        // on the cells that correspond to elements that are not locally owned, instead we set all
+        // the relevant data there to invalid values.
+        // namely this concerns:
+        // - the active_cell_index_to_element_lid_ (-1)
+        // - the active_fe_indices_ (dealii::numbers::invalid_unsigned_int)
+        for (const auto& cell : tria.active_cell_iterators())
+        {
+          FOUR_C_ASSERT(cell->is_locally_owned(),
+              "The cell is not locally owned, but should be since we have a serial Triangulation.");
+          const auto& cell_center = cell->center();
+          const auto found = std::find_if(my_element_centers.begin(), my_element_centers.end(),
+              [&](const auto& center) { return center.distance(cell_center) < 1e-14; });
+
+          // If we dont find the cell center as a local element we have to set the
+          // data to invalid values.
+          if (found == my_element_centers.end())
+          {
+            // If the cell center does not match any of the element centers, we set the
+            // cell_index_to_element_lid to -1 and the active_fe_indices to
+            // dealii::numbers::invalid_unsigned_int.
+            context.active_cell_index_to_element_lid_[cell->active_cell_index()] = -1;
+            context.active_fe_indices_[cell->active_cell_index()] =
+                dealii::numbers::invalid_unsigned_int;
+            continue;
+          }
+          // Assert that the cell center is physically located in the discretization
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+          bool found_center = false;
+          for (unsigned rank = 0; rank < all_element_centers.size(); ++rank)
+          {
+            const auto found_on_rank =
+                std::find_if(all_element_centers[rank].begin(), all_element_centers[rank].end(),
+                    [&](const auto& center) { return center.distance(cell_center) < 1e-14; });
+            if (found_on_rank != all_element_centers[rank].end())
+            {
+              found_center = true;
+              break;
+            }
+          }
+          FOUR_C_ASSERT(found_center,
+              "The cell center does not match any of the element centers on any rank. This should "
+              "not happen.");
+#endif
+
+          // now set the data for the cell
+          const auto local_index = std::distance(my_element_centers.begin(), found);
+          context.active_cell_index_to_element_lid_[cell->active_cell_index()] = local_index;
+
+          const auto* local_element = discretization.l_row_element(local_index);
+          auto fe_iter = std::find(finite_element_names.begin(), finite_element_names.end(),
+              ConversionTools::FourCToDeal::dealii_fe_name(local_element->shape()));
+          context.active_fe_indices_[cell->active_cell_index()] =
+              static_cast<unsigned int>(std::distance(finite_element_names.begin(), fe_iter));
+        }
       }
     }
     FOUR_C_ASSERT(tria.n_global_coarse_cells() ==
@@ -241,13 +320,97 @@ namespace DealiiWrappers
     return context;
   }
 
+
+
+  template <int dim, int spacedim>
+  std::pair<dealii::hp::FECollection<dim, spacedim>, std::vector<std::string>>
+  create_required_finite_element_collection(const Core::FE::Discretization& discretization)
+  {
+    // First, determine all FEs we require locally
+    int max_num_dof_per_node{};
+    std::set<std::string> local_dealii_fes;
+
+    const MPI_Comm comm = discretization.get_comm();
+
+    for (int i = 0; i < discretization.num_my_row_elements(); ++i)
+    {
+      const auto* four_c_element = discretization.l_row_element(i);
+      max_num_dof_per_node = std::max(
+          max_num_dof_per_node, four_c_element->num_dof_per_node(*four_c_element->nodes()[0]));
+      local_dealii_fes.emplace(
+          ConversionTools::FourCToDeal::dealii_fe_name(four_c_element->shape()));
+    }
+
+    max_num_dof_per_node = dealii::Utilities::MPI::max(max_num_dof_per_node, comm);
+
+    // Communicate the required deal.II FEs
+    const auto all_dealii_fe_names = std::invoke(
+        [&]()
+        {
+          std::vector<std::string> local_dealii_fes_vector(
+              local_dealii_fes.begin(), local_dealii_fes.end());
+          std::vector<std::vector<std::string>> all_dealii_fes_vector =
+              dealii::Utilities::MPI::all_gather(comm, local_dealii_fes_vector);
+
+          std::set<std::string> all_dealii_fes;
+          for (const auto& my : all_dealii_fes_vector)
+          {
+            for (const auto& fe : my)
+            {
+              all_dealii_fes.emplace(fe);
+            }
+          }
+          return std::vector<std::string>(all_dealii_fes.begin(), all_dealii_fes.end());
+        });
+
+    // create the deal.II FiniteElement as a collection
+    dealii::hp::FECollection<dim, spacedim> fe_collection;
+
+    for (const auto& fe_string : all_dealii_fe_names)
+    {
+      const auto fe = std::invoke(
+          [&]() -> std::unique_ptr<dealii::FiniteElement<dim, spacedim>>
+          {
+            // NOTE: work around a limitation in deal.II: the convenience getter is not
+            // implemented for simplex
+            if (fe_string == "FE_SimplexP(1)")
+            {
+              return std::make_unique<dealii::FE_SimplexP<dim, spacedim>>(1);
+            }
+            else
+            {
+              return dealii::FETools::get_fe_by_name<dim, spacedim>(fe_string);
+            }
+          });
+
+      if (max_num_dof_per_node == 1)
+        fe_collection.push_back(*fe);
+      else
+        fe_collection.push_back(dealii::FESystem<dim, spacedim>(*fe, max_num_dof_per_node));
+    }
+
+    return {fe_collection, all_dealii_fe_names};
+  }
+
+
+
   // --- explicit instantiations --- //
+
+  template Context<2, 2> create_triangulation<2, 2>(
+      dealii::Triangulation<2, 2>&, const Core::FE::Discretization&);
 
   template Context<3, 3> create_triangulation<3, 3>(
       dealii::Triangulation<3, 3>&, const Core::FE::Discretization&);
 
   template Context<1, 3> create_triangulation<1, 3>(
       dealii::Triangulation<1, 3>&, const Core::FE::Discretization&);
+
+  template std::pair<dealii::hp::FECollection<2, 2>, std::vector<std::string>>
+  create_required_finite_element_collection(const Core::FE::Discretization& discretization);
+  template std::pair<dealii::hp::FECollection<3, 3>, std::vector<std::string>>
+  create_required_finite_element_collection(const Core::FE::Discretization& discretization);
+  template std::pair<dealii::hp::FECollection<1, 3>, std::vector<std::string>>
+  create_required_finite_element_collection(const Core::FE::Discretization& discretization);
 
 }  // namespace DealiiWrappers
 

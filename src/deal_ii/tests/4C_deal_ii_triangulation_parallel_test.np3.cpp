@@ -7,13 +7,12 @@
 
 #include <gtest/gtest.h>
 
+#include "4C_deal_ii_context.hpp"
 #include "4C_deal_ii_create_discretization_helper_test.hpp"
 #include "4C_deal_ii_triangulation.hpp"
 
 #include <deal.II/distributed/fully_distributed_tria.h>
-#include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/mapping_fe.h>
-#include <deal.II/fe/mapping_q.h>
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/hp/mapping_collection.h>
 #include <deal.II/numerics/data_out.h>
