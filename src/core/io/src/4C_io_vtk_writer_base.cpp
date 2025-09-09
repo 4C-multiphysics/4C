@@ -724,22 +724,22 @@ void VtkWriterBase::create_restarted_initial_collection_file_mid_section(
 
       if (readtime <= (restart_time + 1e-12))
       {
-        std::string filename = get_xml_option_value(line, "file");
         std::filesystem::path p_restart(restartfilename);
+        std::filesystem::path p_filename(get_xml_option_value(line, "file"));
 
-        if (p_restart.is_absolute())
-        {
-          // Do not modify the path if the restart is given with an absolute path (we don't want to
-          // have absolute paths in the collection file)
-          write_master_file_and_time_value_into_given_vtk_collection_file_stream(
-              collection_file_midsection_cumulated_content_, filename, readtime);
-        }
-        else
-        {
-          std::filesystem::path p_new_filename = "." / p_restart.parent_path() / filename;
-          write_master_file_and_time_value_into_given_vtk_collection_file_stream(
-              collection_file_midsection_cumulated_content_, p_new_filename.string(), readtime);
-        }
+        // Choose base directory: on absolute restart select its parent directory
+        // otherwise keep relative with ".")
+        const std::filesystem::path base_dir =
+            p_restart.is_absolute() ? p_restart.parent_path()
+                                    : (std::filesystem::path(".") / p_restart.parent_path());
+
+        // Resolve final path: select absolute file paths, otherwise anchor at base directory
+        const std::filesystem::path resolved =
+            p_filename.is_absolute() ? p_filename : (base_dir / p_filename);
+
+        write_master_file_and_time_value_into_given_vtk_collection_file_stream(
+            collection_file_midsection_cumulated_content_,
+            resolved.lexically_normal().generic_string(), readtime);
       }
       else
         break;
