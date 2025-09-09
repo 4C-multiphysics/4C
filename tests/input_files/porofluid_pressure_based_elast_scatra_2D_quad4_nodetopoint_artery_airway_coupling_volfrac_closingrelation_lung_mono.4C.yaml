@@ -33,6 +33,9 @@ STRUCTURAL DYNAMIC:
 STRUCTURAL DYNAMIC/ONESTEPTHETA:
   THETA: 1
 porofluid_dynamic:
+  output:
+    volfrac_blood_lung: true
+    determinant_of_deformation_gradient: true
   initial_condition:
     type: by_condition
 porofluid_elasticity_dynamic:

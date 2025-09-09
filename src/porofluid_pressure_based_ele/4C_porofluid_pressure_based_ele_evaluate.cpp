@@ -42,6 +42,8 @@ int Discret::Elements::PoroFluidMultiPhase::evaluate(Teuchos::ParameterList& par
     case PoroPressureBased::calc_pres_and_sat:
     case PoroPressureBased::calc_solidpressure:
     case PoroPressureBased::calc_porosity:
+    case PoroPressureBased::calc_determinant_of_deformationgradient:
+    case PoroPressureBased::calc_volfrac_blood_lung:
     case PoroPressureBased::recon_flux_at_nodes:
     case PoroPressureBased::calc_phase_velocities:
     case PoroPressureBased::calc_initial_time_deriv:

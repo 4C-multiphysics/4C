@@ -32,6 +32,8 @@ namespace PoroPressureBased
     calc_porosity,                // calculate porosity
     calc_pres_and_sat,            // calculate pressure and saturation
     calc_solidpressure,           // calculate solid pressure
+    calc_determinant_of_deformationgradient,  // calculate determinant of derformation gradient
+    calc_volfrac_blood_lung,      // calculate volume fraction of additional pore space with
     calc_valid_dofs,              // calculate the valid volume fraction pressure and species dofs
     get_access_from_artcoupling,  // get access from artery-coupling to evaluate variables
     get_access_from_scatra,       // get access from scatra-framework to evaluate variables

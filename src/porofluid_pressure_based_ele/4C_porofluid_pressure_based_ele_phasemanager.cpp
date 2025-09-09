@@ -208,6 +208,8 @@ Discret::Elements::PoroFluidManager::PhaseManagerInterface::wrap_phase_manager(
     }
     case PoroPressureBased::calc_porosity:
     case PoroPressureBased::get_access_from_artcoupling:
+    case PoroPressureBased::calc_volfrac_blood_lung:
+    case PoroPressureBased::calc_determinant_of_deformationgradient:
     {
       // porosity (includes derivatves) needed
       phasemanager = std::make_shared<PhaseManagerDerivAndPorosity>(corephasemanager);

@@ -70,9 +70,11 @@ Discret::Elements::PoroFluidManager::VariableManagerInterface<nsd, nen>::create_
 
       break;
     }
-    // calculate solid pressure
+    // calculate variables for output
     case PoroPressureBased::calc_solidpressure:
     case PoroPressureBased::calc_porosity:
+    case PoroPressureBased::calc_determinant_of_deformationgradient:
+    case PoroPressureBased::calc_volfrac_blood_lung:
     {
       // only phi values are needed
       varmanager = std::make_shared<VariableManagerPhi<nsd, nen>>(numdofpernode);

@@ -139,6 +139,8 @@ int Discret::Elements::PoroFluidMultiPhaseEleCalc<distype>::evaluate_action(
     }
     case PoroPressureBased::calc_porosity:
     case PoroPressureBased::calc_solidpressure:
+    case PoroPressureBased::calc_determinant_of_deformationgradient:
+    case PoroPressureBased::calc_volfrac_blood_lung:
     {
       // loop over nodes and evaluate terms
       node_loop(ele, elemat, elevec, discretization, la,
