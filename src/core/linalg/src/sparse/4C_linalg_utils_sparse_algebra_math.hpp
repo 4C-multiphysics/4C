@@ -136,6 +136,26 @@ namespace Core::LinAlg
   std::shared_ptr<SparseMatrix> matrix_transpose(const SparseMatrix& A);
 
   /**
+   * \brief Options for sparse matrix inverse
+   *
+   * A well-known disadvantage of incomplete factorizations is that the two factors can be unstable.
+   * This may occur, for instance, if matrix A is badly scaled, or if one of the pivotal elements
+   * occurs to be very small. In this case, a-priori diagonal perturbations may be effective.
+   *
+   * A_perturbed(i,j) = A(i,j)  i~=j
+   * A_perturbed(i,i) = alpha*sign(A(i,i))+rho*A(i,i)
+   *
+   */
+  struct OptionsSparseMatrixInverse
+  {
+    //! Absolute diagonal scaling factor
+    double alpha = 0.0;
+
+    //! Relative diagonal scaling factor
+    double rho = 1.0;
+  };
+
+  /**
    * \brief Compute sparse inverse matrix of a sparse matrix explicitly
    *
    * \warning This is an expensive operation depending on the density of the sparse operator!
@@ -152,8 +172,9 @@ namespace Core::LinAlg
    *
    * \return Sparse inverse A^(-1) of the input matrix A.
    */
-  std::shared_ptr<SparseMatrix> matrix_sparse_inverse(
-      const SparseMatrix& A, std::shared_ptr<Core::LinAlg::Graph> sparsity_pattern);
+  std::shared_ptr<SparseMatrix> matrix_sparse_inverse(const SparseMatrix& A,
+      std::shared_ptr<Core::LinAlg::Graph> sparsity_pattern,
+      OptionsSparseMatrixInverse options = {});
 
 }  // namespace Core::LinAlg
 

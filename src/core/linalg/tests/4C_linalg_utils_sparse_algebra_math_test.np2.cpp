@@ -111,7 +111,7 @@ namespace
   }
 
   /** The test setup is based on a beam discretization with the given block-diagonal matrix
-   * "beam.mm", as they appear in beam-solid volume meshtying.
+   * "beamI.mm", as they appear in beam-solid volume meshtying regularized by a penalty approach.
    *
    * In a first step the matrix graph of A is sparsified, then a sparse inverse of A is calculated
    * on that sparsity pattern and finally the inverse matrix is again filtered. The algorithmic
@@ -131,7 +131,7 @@ namespace
     Epetra_CrsMatrix* A;
 
     int err = EpetraExt::MatrixMarketFileToCrsMatrix(
-        TESTING::get_support_file_path("test_matrices/beam.mm").c_str(),
+        TESTING::get_support_file_path("test_matrices/beamI.mm").c_str(),
         Core::Communication::as_epetra_comm(comm_), A);
     if (err != 0) FOUR_C_THROW("Matrix read failed.");
     std::shared_ptr<Epetra_CrsMatrix> A_crs = Core::Utils::shared_ptr_from_ref(*A);
@@ -178,6 +178,88 @@ namespace
 
       // Check for overall norm of matrix inverse
       constexpr double expected_frobenius_norm = 1.1473820881252188e+07;
+      EXPECT_NEAR(
+          A_thresh->norm_frobenius(), expected_frobenius_norm, expected_frobenius_norm * 1e-10);
+    }
+  }
+
+  /** The test setup is based on a beam discretization with Euler-Bernoulli beam elements.
+   * The underlying discretized operator is singular as it stemms from a pure Neumann problem.
+   * A normal calculation of a sparse inverse on such kind of matrix is ill-defined and thus throws.
+   * By projecting the operator in a space explicitly not containing the rigid body modes / null
+   * space the problem can be shifted to be non-singular, but highly ill-conditioned. By introducing
+   * an a-priori diagonal perturbation, the Eigenvalues are shifted minimally to provide better
+   * conditioning and thus be able to calculate an inverse of the operator.
+   */
+  TEST_F(SparseAlgebraMathTest, MatrixSparseInverse4)
+  {
+    // Try to invert pure Neumann problem, this should fail as the matrix is singular.
+    {
+      Epetra_CrsMatrix* A;
+
+      int err = EpetraExt::MatrixMarketFileToCrsMatrix(
+          TESTING::get_support_file_path("test_matrices/beamII.mm").c_str(),
+          Core::Communication::as_epetra_comm(comm_), A);
+      if (err != 0) FOUR_C_THROW("Matrix read failed.");
+      std::shared_ptr<Epetra_CrsMatrix> A_crs = Core::Utils::shared_ptr_from_ref(*A);
+      Core::LinAlg::SparseMatrix A_sparse(A_crs, Core::LinAlg::DataAccess::Copy);
+
+      const double tol = 1e-06;
+      const int power = 2;
+
+      Core::LinAlg::Graph sparsity_pattern(A->Graph());
+
+      std::shared_ptr<Core::LinAlg::SparseMatrix> A_thresh =
+          Core::LinAlg::threshold_matrix(A_sparse, tol);
+      std::shared_ptr<Core::LinAlg::Graph> sparsity_pattern_enriched =
+          Core::LinAlg::enrich_matrix_graph(*A_thresh, power);
+
+      Core::LinAlg::OptionsSparseMatrixInverse options;
+      options.alpha = 1e-5;
+      options.rho = 1.01;
+
+      EXPECT_ANY_THROW(
+          Core::LinAlg::matrix_sparse_inverse(A_sparse, sparsity_pattern_enriched, options));
+    }
+
+    // Try to invert pure Neumann problem, this should succeed as we use a projected operator and
+    // a-priori diagonal perturbation
+    {
+      Epetra_CrsMatrix* A;
+
+      int err = EpetraExt::MatrixMarketFileToCrsMatrix(
+          TESTING::get_support_file_path("test_matrices/beamII_projected.mm").c_str(),
+          Core::Communication::as_epetra_comm(comm_), A);
+      if (err != 0) FOUR_C_THROW("Matrix read failed.");
+      std::shared_ptr<Epetra_CrsMatrix> A_crs = Core::Utils::shared_ptr_from_ref(*A);
+      Core::LinAlg::SparseMatrix A_sparse(A_crs, Core::LinAlg::DataAccess::Copy);
+
+      const double tol = 1e-14;
+      const int power = 4;
+
+      Core::LinAlg::Graph sparsity_pattern(A->Graph());
+
+      std::shared_ptr<Core::LinAlg::SparseMatrix> A_thresh =
+          Core::LinAlg::threshold_matrix(A_sparse, tol);
+      std::shared_ptr<Core::LinAlg::Graph> sparsity_pattern_enriched =
+          Core::LinAlg::enrich_matrix_graph(*A_thresh, power);
+
+      Core::LinAlg::OptionsSparseMatrixInverse options;
+      options.alpha = 1e-5;
+      options.rho = 1.01;
+
+      std::shared_ptr<Core::LinAlg::SparseMatrix> A_inverse = Core::LinAlg::matrix_sparse_inverse(
+          A_sparse, std::make_shared<Core::LinAlg::Graph>(sparsity_pattern), options);
+
+      A_thresh = Core::LinAlg::threshold_matrix(*A_inverse, tol);
+
+      // Check for global entries
+      const int A_inverse_nnz = A_thresh->num_global_nonzeros();
+      // Note: the number of entries lower than a tolerance is not necessarily deterministic
+      EXPECT_NEAR(A_inverse_nnz, 29139, 10);
+
+      // Check for overall norm of matrix inverse
+      constexpr double expected_frobenius_norm = 7.448506913184814e+03;
       EXPECT_NEAR(
           A_thresh->norm_frobenius(), expected_frobenius_norm, expected_frobenius_norm * 1e-10);
     }
