@@ -17,27 +17,16 @@
 #include "4C_utils_exceptions.hpp"
 
 #include <map>
-#include <memory>
 
 FOUR_C_NAMESPACE_OPEN
 
-namespace Solid
 
+namespace Solid::IOMonitorStructureDBC
 {
-  namespace IOMonitorStructureDBC
-  {
-    /// data format for written numeric data
-    enum FileType
-    {
-      csv,
-      data
-    };
+  /// set the valid parameters related to writing of output at runtime
+  void set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list);
 
-    /// set the valid parameters related to writing of output at runtime
-    void set_valid_parameters(std::map<std::string, Core::IO::InputSpec>& list);
-
-  }  // namespace IOMonitorStructureDBC
-}  // namespace Solid
+}  // namespace Solid::IOMonitorStructureDBC
 
 FOUR_C_NAMESPACE_CLOSE
 
