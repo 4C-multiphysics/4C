@@ -237,7 +237,7 @@ namespace Core::Elements
     /*!
     \brief Return owner of this element
     */
-    virtual int owner() const { return owner_; }
+    int owner() const { return owner_; }
 
     /*!
     \brief Get shape type of element
@@ -247,7 +247,7 @@ namespace Core::Elements
     /*!
     \brief Return number of nodes to this element
     */
-    virtual int num_node() const { return nodeid_.size(); }
+    int num_node() const { return nodeid_.size(); }
 
     /*!
      * \brief Return number of points forming the geometry of this element
@@ -256,7 +256,7 @@ namespace Core::Elements
      * discretization where the integration cell (i.e. the "element") is not
      * formed by the nodes and many more nodes can have influence.
      */
-    virtual int num_point() const { return nodeid_.size(); }
+    int num_point() const { return nodeid_.size(); }
 
     /*!
     \brief Return number of lines to this element
@@ -279,12 +279,12 @@ namespace Core::Elements
      * As opposed to NumLine(), NumSurface(), etc which have fixed dimension,
      * this is always the object one dimension less than the element dimension.
      */
-    virtual int num_face() const;
+    int num_face() const;
 
     /*!
-    \brief Return id's of nodes adjacent to this element
+    \brief Return _global_ id's of nodes adjacent to this element
     */
-    virtual const int* node_ids() const
+    const int* node_ids() const
     {
       if (nodeid_.size())
         return nodeid_.data();
@@ -343,7 +343,7 @@ namespace Core::Elements
      * discretization where the integration cell (i.e. the "element") is not
      * formed by the nodes and many more nodes can have influence.
      */
-    virtual const int* point_ids() const { return node_ids(); }
+    const int* point_ids() const { return node_ids(); }
 
     /*!
      * \brief Get vector of ptrs to points forming the geometry of this element
@@ -352,7 +352,7 @@ namespace Core::Elements
      * discretization where the integration cell (i.e. the "element") is not
      * formed by the nodes and many more nodes can have influence.
      */
-    virtual Core::Nodes::Node** points() { return nodes(); }
+    Core::Nodes::Node** points() { return nodes(); }
 
     /*!
      * \brief Get const vector of ptrs to points forming the geometry of this element
@@ -361,7 +361,7 @@ namespace Core::Elements
      * discretization where the integration cell (i.e. the "element") is not
      * formed by the nodes and many more nodes can have influence.
      */
-    virtual const Core::Nodes::Node* const* points() const { return nodes(); }
+    const Core::Nodes::Node* const* points() const { return nodes(); }
 
 
     /*!
@@ -433,12 +433,6 @@ might become invalid after a redistribution of the discretization.
     }
 
     /*!
-    \brief Get a pointer to the neighboring element behind the given face. Returns 0 if at boundary
-    or faces are not created
-    */
-    Element* neighbor(const int face) const;
-
-    /*!
     \brief Construct a face element between this element and the given slave element
 
     This is a base class routine that constructs a plain element without association to physics,
@@ -475,7 +469,7 @@ might become invalid after a redistribution of the discretization.
     nodes \param nodeweights (out): A Core::LinAlg::SerialDenseVector containing weights of all
     nodes
     */
-    virtual void nodal_connectivity(
+    void nodal_connectivity(
         Core::LinAlg::SerialDenseMatrix& edgeweights, Core::LinAlg::SerialDenseVector& nodeweights);
 
     /*!
@@ -583,7 +577,7 @@ might become invalid after a redistribution of the discretization.
 
     \param nummat (in): number of requested material
     */
-    virtual std::shared_ptr<Core::Mat::Material> material(int nummat = 0) const
+    std::shared_ptr<Core::Mat::Material> material(int nummat = 0) const
     {
       FOUR_C_ASSERT(nummat < (int)mat_.size(), "invalid material number");
       return mat_[nummat];
@@ -600,7 +594,7 @@ might become invalid after a redistribution of the discretization.
 
     \param mypid (in): id of calling processor
     */
-    virtual bool has_only_ghost_nodes(const int mypid) const;
+    bool has_only_ghost_nodes(const int mypid) const;
 
     /*!
     \brief Query names of element data to be visualized using BINIO
@@ -741,20 +735,6 @@ might become invalid after a redistribution of the discretization.
     */
     void set_face(const int faceindex, FaceElement* faceelement);
 
-    /*!
-    \brief Set a the face with index faceindex this element is connected to
-
-    Sets the face pointer of the face adjacent to this element, using NumFace() as
-    number of faces.
-
-    Faces, that are set via this method copy the incoming RCP so strong and weak
-    RCPs in the std::vector face_ can be created.
-
-    \param faceindex   : index of the given face
-    \param faceelement : face object
-    */
-    void set_face(const int faceindex, std::shared_ptr<FaceElement> faceelement);
-
     /// @brief Set specific element material
     /*!
       Store Material object in element's list of materials at given index.
@@ -814,7 +794,7 @@ might become invalid after a redistribution of the discretization.
     \param la (out)      : location data for all dofsets of the discretization
 
     */
-    virtual void location_vector(
+    void location_vector(
         const Core::FE::Discretization& dis, const std::vector<int>& nds, LocationArray& la) const;
 
     /*!
@@ -840,7 +820,7 @@ might become invalid after a redistribution of the discretization.
     \param la (out)      : location data for all dofsets of the discretization
 
     */
-    virtual void location_vector(const Core::FE::Discretization& dis, LocationArray& la) const;
+    void location_vector(const Core::FE::Discretization& dis, LocationArray& la) const;
 
 
     /*!
@@ -1008,7 +988,7 @@ might become invalid after a redistribution of the discretization.
 
     \param nodes (in): A map of all nodes of a discretization
     */
-    virtual bool build_nodal_pointers(std::map<int, std::shared_ptr<Core::Nodes::Node>>& nodes);
+    bool build_nodal_pointers(std::map<int, std::shared_ptr<Core::Nodes::Node>>& nodes);
 
     /*!
     \brief Build pointer vector from vector of nodal pointers
@@ -1022,25 +1002,7 @@ might become invalid after a redistribution of the discretization.
                        is implicitly expected to be of length num_node() and contain pointers
                        to nodes in the correct element local ordering scheme.
     */
-    virtual bool build_nodal_pointers(Core::Nodes::Node** nodes);
-
-    /*!
-    \brief Build pointer vector from map of elements
-
-    \warning (public, but to be used by Core::FE::Discretization ONLY!)
-
-    The method is used to build the element connectivity in this element. For standard elements this
-    procedure returns true and does nothing. For interface-elements a connection is made between the
-    interface and it's left and right element. It is called from Core::FE::Discretization
-    in Core::FE::Discretization::fill_complete() to create the pointers from elements to
-    elements (next to the node-element and nodes-elements connectivity).
-
-    \param elements (in): A map of all elements of a discretization
-    */
-    virtual bool build_element_pointers(std::map<int, std::shared_ptr<Element>>& elements)
-    {
-      return true;
-    }
+    bool build_nodal_pointers(Core::Nodes::Node** nodes);
 
     //@}
 
@@ -1090,7 +1052,7 @@ might become invalid after a redistribution of the discretization.
      * @param point_coordinates (in/out) point coordinates for the representation of this element
      * @return Number of added points
      */
-    virtual unsigned int append_visualization_geometry(const Core::FE::Discretization& discret,
+    unsigned int append_visualization_geometry(const Core::FE::Discretization& discret,
         std::vector<uint8_t>& cell_types, std::vector<double>& point_coordinates) const;
 
     /**
@@ -1105,7 +1067,7 @@ might become invalid after a redistribution of the discretization.
      * @param vtu_point_result_data (in/out) Result data vector.
      * @return Number of points added by this element.
      */
-    virtual unsigned int append_visualization_dof_based_result_data_vector(
+    unsigned int append_visualization_dof_based_result_data_vector(
         const Core::FE::Discretization& discret,
         const Core::LinAlg::Vector<double>& result_data_dofbased,
         unsigned int result_num_dofs_per_node, unsigned int read_result_data_from_dofindex,
@@ -1121,7 +1083,7 @@ might become invalid after a redistribution of the discretization.
      * @param point_result_data (in/out) Result data vector.
      * @return Number of points added by this element.
      */
-    virtual unsigned int append_visualization_node_based_result_data_vector(
+    unsigned int append_visualization_node_based_result_data_vector(
         const Core::FE::Discretization& discret,
         const Core::LinAlg::MultiVector<double>& result_data_nodebased,
         int result_num_components_per_node, std::vector<double>& point_result_data) const;
