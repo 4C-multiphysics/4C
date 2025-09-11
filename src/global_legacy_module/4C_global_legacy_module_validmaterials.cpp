@@ -3107,10 +3107,15 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 "NUMSCAL", {.description = "number of scalars coupled with this problem"}),
             parameter<int>("TOTALNUMDOF", {.description = "total number of multiphase-dofs"}),
             parameter<int>("NUMVOLFRAC", {.description = "number of volfracs"}),
+            parameter<std::string>("VOLFRAC_CLOSING_RELATION",
+                {.description = "type of closing relation for volume fraction material: "
+                                "blood_lung, homogenized_vasculature_tumor (default)",
+                    .default_value = "homogenized_vasculature_tumor"}),
             parameter<std::vector<int>>("SCALE", {.description = "advanced reaction list",
                                                      .size = from_parameter<int>("TOTALNUMDOF")}),
             parameter<std::string>("COUPLING",
-                {.description = "type of coupling: scalar_by_function, no_coupling (default)"}),
+                {.description = "type of coupling: scalar_by_function, no_coupling (default)",
+                    .default_value = "no_coupling"}),
             parameter<int>("FUNCTID", {.description = "function ID defining the reaction"}),
         },
         {.description = "advanced reaction material"});
@@ -3168,6 +3173,28 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             },
             {.description =
                     "one volume fraction pressure for multiphase flow in deformable porous media"});
+  }
+
+  /*----------------------------------------------------------------------*/
+  // one volume fraction pressure material for vascular units in the lungs for multiphase flow in a
+  // poroelastic material
+  {
+    known_materials[Core::Materials::m_fluidporo_volfrac_pressure_blood_lung] =
+        group("MAT_FluidPoroVolFracPressureBloodLung",
+            {
+                parameter<double>("DENSITY", {.description = "density of phase"}),
+                parameter<double>("PERMEABILITY", {.description = "permeability of phase"}),
+                parameter<int>("VISCOSITYLAWID", {.description = "ID of viscosity law"}),
+                parameter<double>("INITIALVOLFRAC",
+                    {.description = "Initial volume fraction (usually at end-expiration)"}),
+                parameter<double>("SCALING_PARAMETER_DEFORMATION",
+                    {.description = "scaling parameter for deformation dependency"}),
+                parameter<std::optional<double>>("SCALING_PARAMETER_PRESSURE",
+                    {.description = "scaling parameter for pressure dependency"}),
+
+            },
+            {.description = "one volume fraction pressure material for vascular units in the lungs "
+                            "for multiphase flow in deformable porous media"});
   }
 
   /*----------------------------------------------------------------------*/

@@ -124,8 +124,7 @@ namespace
               .P_oB50 = parameters.get<double>("P_oB50"),
               .NC_Hb = parameters.get<double>("NC_Hb"),
               .P_atmospheric = parameters.get<double>("P_atmospheric"),
-              .volfrac_blood_ref = parameters.get<double>("volfrac_blood_ref"),
-          });
+              .volfrac_blood_ref = parameters.get<double>("volfrac_blood_ref")});
     }
     if (type == "LUNG_CARBONDIOXIDE_EXCHANGE_LAW")
     {
@@ -144,8 +143,7 @@ namespace
               .alpha_oxy = parameters.get<double>("alpha_oxy"),
               .P_atmospheric = parameters.get<double>("P_atmospheric"),
               .ScalingFormmHg = parameters.get<double>("ScalingFormmHg"),
-              .volfrac_blood_ref = parameters.get<double>("volfrac_blood_ref"),
-          });
+              .volfrac_blood_ref = parameters.get<double>("volfrac_blood_ref")});
     }
     FOUR_C_THROW("Wrong type of POROMULTIPHASESCATRA_FUNCTION");
   }
@@ -272,39 +270,23 @@ void PoroPressureBased::add_valid_poro_functions(Core::Utils::FunctionManager& f
           deprecated_selection<std::string>(
               "POROMULTIPHASESCATRA_FUNCTION", {"LUNG_OXYGEN_EXCHANGE_LAW"}),
           group("PARAMS",
-              {
-                  parameter<double>("rho_oxy"),
-                  parameter<double>("DiffAdVTLC"),
-                  parameter<double>("alpha_oxy"),
-                  parameter<double>("rho_air"),
-                  parameter<double>("rho_bl"),
-                  parameter<double>("n"),
-                  parameter<double>("P_oB50"),
-                  parameter<double>("NC_Hb"),
-                  parameter<double>("P_atmospheric"),
-                  parameter<double>("volfrac_blood_ref"),
-              }),
+              {parameter<double>("rho_oxy"), parameter<double>("DiffAdVTLC"),
+                  parameter<double>("alpha_oxy"), parameter<double>("rho_air"),
+                  parameter<double>("rho_bl"), parameter<double>("n"), parameter<double>("P_oB50"),
+                  parameter<double>("NC_Hb"), parameter<double>("P_atmospheric"),
+                  parameter<double>("volfrac_blood_ref")}),
       }),
       all_of({
           deprecated_selection<std::string>(
               "POROMULTIPHASESCATRA_FUNCTION", {"LUNG_CARBONDIOXIDE_EXCHANGE_LAW"}),
           group("PARAMS",
-              {
-                  parameter<double>("rho_CO2"),
-                  parameter<double>("DiffsolAdVTLC"),
-                  parameter<double>("pH"),
-                  parameter<double>("rho_air"),
-                  parameter<double>("rho_bl"),
-                  parameter<double>("rho_oxy"),
-                  parameter<double>("n"),
-                  parameter<double>("P_oB50"),
-                  parameter<double>("C_Hb"),
-                  parameter<double>("NC_Hb"),
-                  parameter<double>("alpha_oxy"),
-                  parameter<double>("P_atmospheric"),
-                  parameter<double>("ScalingFormmHg"),
-                  parameter<double>("volfrac_blood_ref"),
-              }),
+              {parameter<double>("rho_CO2"), parameter<double>("DiffsolAdVTLC"),
+                  parameter<double>("pH"), parameter<double>("rho_air"),
+                  parameter<double>("rho_bl"), parameter<double>("rho_oxy"), parameter<double>("n"),
+                  parameter<double>("P_oB50"), parameter<double>("C_Hb"),
+                  parameter<double>("NC_Hb"), parameter<double>("alpha_oxy"),
+                  parameter<double>("P_atmospheric"), parameter<double>("ScalingFormmHg"),
+                  parameter<double>("volfrac_blood_ref")}),
       }),
   });
 
@@ -1257,6 +1239,13 @@ void PoroPressureBased::LungOxygenExchangeLaw<dim>::check_order(
       FOUR_C_THROW(
           "wrong order in constants vector, VF1 (volume fraction of additional porous network "
           "(blood phase)) not at position 4");
+    if (constants[4].first != "VFP1")
+    {
+      FOUR_C_THROW(
+          "wrong order in variable vector, p2 (volume fraction pressure of additional porous "
+          "network "
+          "(blood)) not at position 5");
+    }
     if (variables[1].first != "phi2")
       FOUR_C_THROW(
           "wrong order in variable vector, phi2 (oxygen mass fraction in blood) not at position "
@@ -1270,6 +1259,14 @@ void PoroPressureBased::LungOxygenExchangeLaw<dim>::check_order(
           "wrong order in variable vector, VF1 (volume fraction of additional porous network "
           "(blood)) not at position 4");
     }
+    if (variables[4].first != "VFP1")
+    {
+      FOUR_C_THROW(
+          "wrong order in variable vector, p2 (volume fraction pressure of additional porous "
+          "network "
+          "(blood)) not at position 5");
+    }
+
     if (constants[0].first != "phi1")
       FOUR_C_THROW(
           "wrong order in variable vector, phi1 (oxygen mass fraction in air) not at position 1");
@@ -1380,6 +1377,7 @@ std::vector<double> PoroPressureBased::LungOxygenExchangeLaw<dim>::evaluate_deri
   // volfrac relation
   const double volfrac_relation = (volfrac_blood / parameters_.volfrac_blood_ref);
 
+
   FAD P_oB = 0.0;
   FAD C_oB_total = oxy_mass_frac_bl * parameters_.rho_bl / parameters_.rho_oxy;
 
@@ -1397,13 +1395,15 @@ std::vector<double> PoroPressureBased::LungOxygenExchangeLaw<dim>::evaluate_deri
   }
   else if (variables[0].first == "p1")  // OD-derivative
   {
+    // derivatives of dvolfrac/dPressure_fluid not yet included
+    // partial pressure of oxygen in air
+    const double P_oA = oxy_mass_frac_air * (P_air + parameters_.P_atmospheric) *
+                        parameters_.rho_air / parameters_.rho_oxy;
     deriv[0] =
         (parameters_.rho_oxy * parameters_.DiffAdVTLC * volfrac_relation * parameters_.alpha_oxy) *
         ((oxy_mass_frac_air * parameters_.rho_air) /
             parameters_.rho_oxy);  // derivative wrt P_air (dFunc/dP_oA * dP_oA/P_air)
-    // partial pressure of oxygen in air
-    const double P_oA = oxy_mass_frac_air * (P_air + parameters_.P_atmospheric) *
-                        parameters_.rho_air / parameters_.rho_oxy;
+
     deriv[3] = parameters_.rho_oxy * parameters_.DiffAdVTLC * parameters_.alpha_oxy *
                (1 / parameters_.volfrac_blood_ref) * (P_oA - P_oB.val());
   }
@@ -1440,6 +1440,8 @@ void PoroPressureBased::LungCarbonDioxideExchangeLaw<dim>::check_order(
       FOUR_C_THROW("wrong order in constants vector, S1 (Saturation of air) not at position 2");
     if (constants[3].first != "VF1")
       FOUR_C_THROW("wrong order in constants vector, VF1 (volfrac 1) not at position 4");
+    if (constants[4].first != "VFP1")
+      FOUR_C_THROW("wrong order in constants vector, p2 (pressure of blood) not at position 5");
     if (variables[1].first != "phi2")
       FOUR_C_THROW(
           "wrong order in variable vector, phi2 (oxygen mass fraction in blood) not at position "
@@ -1456,12 +1458,20 @@ void PoroPressureBased::LungCarbonDioxideExchangeLaw<dim>::check_order(
           "2");
     if (constants[2].first != "phi3")
       FOUR_C_THROW(
-          "wrong order in variable vector, phi3 (oxygen mass fraction in blood) not at position "
+          "wrong order in variable vector, phi3 (carbon dioxide mass fraction in blood) not at "
+          "position "
           "3");
     if (constants[3].first != "phi4")
       FOUR_C_THROW(
-          "wrong order in variable vector, phi4 (oxygen mass fraction in blood) not at position "
+          "wrong order in variable vector, phi4 (carbon dioxide mass fraction in blood) not at "
+          "position "
           "4");
+    if (variables[4].first != "VFP1")
+      FOUR_C_THROW(
+          "wrong order in variable vector, p2 (pressure of blood) not at "
+          "position 5");
+    if (variables[3].first != "VF1")
+      FOUR_C_THROW("wrong order in variable vector, VF1 (volfrac 1) not at position 4");
   }
   else
   {
@@ -1627,16 +1637,18 @@ std::vector<double> PoroPressureBased::LungCarbonDioxideExchangeLaw<dim>::evalua
   }
   else if (variables[0].first == "p1")  // OD-derivative
   {
-    // derivative w.r.t. P_air (dFunc/dP_CO2A * dP_CO2A/P_air)
-    deriv[0] = (-1.0) * (parameters_.rho_CO2 * parameters_.DiffsolAdVTLC * volfrac_relation) *
-               ((CO2_mass_frac_air * parameters_.rho_air) / parameters_.rho_CO2);
-
+    // derivatives of dvolfrac/dPressure_fluid not yet included
     // partial pressure of carbon dioxide in air
     const double P_CO2A = CO2_mass_frac_air * (P_air + parameters_.P_atmospheric) *
                           parameters_.rho_air / parameters_.rho_CO2;
     // partial pressure of carbon dioxide in blood
     double P_CO2B = ((CO2_mass_frac_bl * parameters_.rho_bl / parameters_.rho_CO2) / temp) *
                     parameters_.ScalingFormmHg;
+
+    // derivative w.r.t. P_air (dFunc/dP_CO2A * dP_CO2A/P_air) +  (dFunc/dvolfrac * dvolfrac/dP_air)
+    deriv[0] = (-1.0) * (parameters_.rho_CO2 * parameters_.DiffsolAdVTLC * volfrac_relation) *
+               ((CO2_mass_frac_air * parameters_.rho_air) / parameters_.rho_CO2);
+
     deriv[3] = parameters_.rho_CO2 * parameters_.DiffsolAdVTLC *
                (1 / parameters_.volfrac_blood_ref) * (P_CO2B - P_CO2A);
   }

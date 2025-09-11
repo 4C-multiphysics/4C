@@ -24,6 +24,7 @@ namespace Mat
   class FluidPoroMultiPhase;
   class FluidPoroMultiPhaseReactions;
   class FluidPoroSingleReaction;
+  class FluidPoroVolFracPressureBloodLung;
 }  // namespace Mat
 
 namespace PoroPressureBased
@@ -44,6 +45,17 @@ namespace PoroPressureBased
 
     //! get the single volume fraction material from the element multiphase material
     const Mat::FluidPoroSingleVolFrac& get_single_vol_frac_mat_from_multi_material(
+        const Mat::FluidPoroMultiPhase& multiphasemat, int volfracnum);
+
+    //! get the single volume fraction pressure blood lung material from the element material
+    const Mat::FluidPoroVolFracPressureBloodLung&
+    get_single_vol_frac_pressure_blood_lung_mat_from_material(
+        const Core::Mat::Material& material, int volfracnum);
+
+    //! get the single volume fraction pressure blood lung material from the element multiphase
+    //! material
+    const Mat::FluidPoroVolFracPressureBloodLung&
+    get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
         const Mat::FluidPoroMultiPhase& multiphasemat, int volfracnum);
 
     //! get the volume fraction pressure material from the element material

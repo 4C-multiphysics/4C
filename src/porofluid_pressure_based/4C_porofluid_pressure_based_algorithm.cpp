@@ -49,6 +49,9 @@ PoroPressureBased::PorofluidAlgorithm::PorofluidAlgorithm(
       output_satpress_(poroparams_.sublist("output").get<bool>("saturation_and_pressure")),
       output_solidpress_(poroparams_.sublist("output").get<bool>("solid_pressure")),
       output_porosity_(poroparams_.sublist("output").get<bool>("porosity")),
+      output_volfrac_blood_lung_(poroparams_.sublist("output").get<bool>("volfrac_blood_lung")),
+      output_det_def_grad_(
+          poroparams_.sublist("output").get<bool>("determinant_of_deformation_gradient")),
       output_phase_velocities_(poroparams_.sublist("output").get<bool>("phase_velocities")),
       output_bloodvesselvolfrac_(false),
       stab_biot_(poroparams_.sublist("biot_stabilization").get<bool>("active")),
@@ -205,6 +208,15 @@ void PoroPressureBased::PorofluidAlgorithm::init(bool isale, int nds_disp, int n
   // porosity at time n+1 (lives on same dofset as solid pressure)
   if (output_porosity_)
     porosity_ = Core::LinAlg::create_vector(*discret_->dof_row_map(nds_solidpressure_), true);
+
+  //! volfrac blood lung at time n+1 (lives on same dofset as solid pressure)
+  if (output_volfrac_blood_lung_)
+    volfrac_blood_lung_ =
+        Core::LinAlg::create_vector(*discret_->dof_row_map(nds_solidpressure_), true);
+
+  //! determinant of derformation gradient at time n+1 (lives on same dofset as solid pressure)
+  if (output_det_def_grad_)
+    det_def_grad_ = Core::LinAlg::create_vector(*discret_->dof_row_map(nds_solidpressure_), true);
 
   if (output_phase_velocities_)
   {
@@ -724,6 +736,30 @@ void PoroPressureBased::PorofluidAlgorithm::collect_runtime_output_data()
     visualization_writer_->append_result_data_vector_with_context(
         *porosity_multi, Core::IO::OutputEntity::node, {"porosity"});
   }
+
+  //! determinant of deformation gradient
+  if (output_det_def_grad_)
+  {
+    //! convert dof-based vector into node-based multi-vector for postprocessing
+    std::shared_ptr<Core::LinAlg::MultiVector<double>> det_def_grad_multi =
+        PoroPressureBased::convert_dof_vector_to_node_based_multi_vector(
+            *discret_, *det_def_grad_, nds_solidpressure_, 1);
+
+    visualization_writer_->append_result_data_vector_with_context(
+        *det_def_grad_multi, Core::IO::OutputEntity::node, {"det_def_grad"});
+  }
+
+  //! volfrac blood lung
+  if (output_volfrac_blood_lung_)
+  {
+    //! convert dof-based vector into node-based multi-vector for postprocessing
+    std::shared_ptr<Core::LinAlg::MultiVector<double>> volfrac_blood_lung_multi =
+        PoroPressureBased::convert_dof_vector_to_node_based_multi_vector(
+            *discret_, *volfrac_blood_lung_, nds_solidpressure_, 1);
+
+    visualization_writer_->append_result_data_vector_with_context(
+        *volfrac_blood_lung_multi, Core::IO::OutputEntity::node, {"volfrac_blood_lung"});
+  }
 }
 
 
@@ -738,6 +774,13 @@ void PoroPressureBased::PorofluidAlgorithm::output()
     // reconstruct porosity for output; porosity is only needed for output and does not have to be
     // transferred between fields
     if (output_porosity_) reconstruct_porosity();
+
+    //! reconstruct volfrac of additional porous network with closing relation blood lung for
+    //! output; it is only needed for output and does not have to be transferred between fields
+    if (output_volfrac_blood_lung_) reconstruct_volfrac_blood_lung();
+
+    //! reconstruct determinant of deformation gradient
+    if (output_det_def_grad_) reconstruct_determinant_of_derformation_gradient();
 
     if (output_phase_velocities_) calculate_phase_velocities();
 
@@ -1411,8 +1454,8 @@ void PoroPressureBased::PorofluidAlgorithm::reconstruct_pressures_and_saturation
     // evaluations
     for (int i = 0; i < discret_->dof_row_map()->num_my_elements(); i++)
     {
-      (*pressure_).get_values()[i] *= 1.0 / (*counter)[i];
-      (*saturation_).get_values()[i] *= 1.0 / (*counter)[i];
+      pressure_->get_values()[i] *= 1.0 / (*counter)[i];
+      saturation_->get_values()[i] *= 1.0 / (*counter)[i];
     }
   }
 
@@ -1536,7 +1579,91 @@ void PoroPressureBased::PorofluidAlgorithm::reconstruct_porosity()
   // evaluations
   for (int i = 0; i < discret_->dof_row_map(nds_solidpressure_)->num_my_elements(); i++)
   {
-    (*porosity_).get_values()[i] *= 1.0 / (*counter)[i];
+    porosity_->get_values()[i] *= 1.0 / (*counter)[i];
+  }
+}
+
+void PoroPressureBased::PorofluidAlgorithm::reconstruct_volfrac_blood_lung()
+{
+  // time measurement: reconstruction of volfrac
+  TEUCHOS_FUNC_TIME_MONITOR("POROFLUIDMULTIPHASE:    + reconstruct volfrac blood lung");
+
+  // reset
+  volfrac_blood_lung_->put_scalar(0.0);
+
+  // create parameter list for elements
+  Teuchos::ParameterList eleparams;
+
+  // action for elements
+  eleparams.set<PoroPressureBased::Action>("action", PoroPressureBased::calc_volfrac_blood_lung);
+
+  // set vector values needed by elements
+  discret_->clear_state();
+
+  // add state vectors according to time-integration scheme
+  add_time_integration_specific_vectors();
+
+  // initialize counter vector (will store how many times the node has been evaluated)
+  std::shared_ptr<Core::LinAlg::Vector<double>> counter =
+      Core::LinAlg::create_vector(*discret_->dof_row_map(nds_solidpressure_), true);
+
+  // create strategy for assembly of volfrac
+  Core::FE::AssembleStrategy strategyvolfrac(
+      nds_solidpressure_, 0, nullptr, nullptr, volfrac_blood_lung_, counter, nullptr);
+
+  // call loop over elements
+  discret_->evaluate(eleparams, strategyvolfrac);
+
+  discret_->clear_state();
+
+  // dummy way: the values have been assembled too many times -> just divide by number of
+  // evaluations
+  for (int i = 0; i < discret_->dof_row_map(nds_solidpressure_)->num_my_elements(); i++)
+  {
+    volfrac_blood_lung_->get_values()[i] *= 1.0 / (*counter)[i];
+  }
+}
+
+void PoroPressureBased::PorofluidAlgorithm::reconstruct_determinant_of_derformation_gradient()
+{
+  // time measurement: reconstruction of volfrac
+  TEUCHOS_FUNC_TIME_MONITOR(
+      "POROFLUIDMULTIPHASE:    + reconstruct determinant of deformation gradient");
+
+  // reset
+  det_def_grad_->put_scalar(0.0);
+
+  // create parameter list for elements
+  Teuchos::ParameterList eleparams;
+
+  // action for elements
+  eleparams.set<PoroPressureBased::Action>(
+      "action", PoroPressureBased::calc_determinant_of_deformationgradient);
+
+  // set vector values needed by elements
+  discret_->clear_state();
+
+  // add state vectors according to time-integration scheme
+  add_time_integration_specific_vectors();
+
+  // initialize counter vector (will store how many times the node has been evaluated)
+  std::shared_ptr<Core::LinAlg::Vector<double>> counter =
+      Core::LinAlg::create_vector(*discret_->dof_row_map(nds_solidpressure_), true);
+
+  // create strategy for assembly of volfrac
+  Core::FE::AssembleStrategy strategydetdefgrad(
+      nds_solidpressure_, 0, nullptr, nullptr, det_def_grad_, counter, nullptr);
+
+  // call loop over elements
+  discret_->evaluate(eleparams, strategydetdefgrad);
+
+  discret_->clear_state();
+
+  // dummy way: the values have been assembled too many times -> just divide by number of
+  // evaluations
+  for (int i = 0; i < discret_->dof_row_map(nds_solidpressure_)->num_my_elements(); i++)
+  {
+    det_def_grad_->get_values()[i] *= 1.0 / (*counter)[i];
   }
 }
 
