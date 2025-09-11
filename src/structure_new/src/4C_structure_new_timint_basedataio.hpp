@@ -131,9 +131,6 @@ namespace Solid
       /// \brief return TRUE if reaction forces shall be written for this load/time step
       bool should_write_reaction_forces_for_this_step(int step) const;
 
-      /// \brief return TRUE if stress and strain data shall be written for this load/time step
-      bool should_write_stress_strain_for_this_step(int step) const;
-
       /// \brief return TRUE if energy data shall be written for this load/time step
       bool should_write_energy_for_this_step(int step) const;
 
@@ -267,13 +264,6 @@ namespace Solid
         return writestress_;
       }
 
-      /// get output type of coupling stress
-      const Inpar::Solid::StressType& get_coupling_stress_output_type() const
-      {
-        check_init_setup();
-        return writecouplstress_;
-      }
-
       /// get strain output type
       const Inpar::Solid::StrainType& get_strain_output_type() const
       {
@@ -380,9 +370,6 @@ namespace Solid
 
       /// stress output type
       Inpar::Solid::StressType writestress_;
-
-      /// output type of coupling stress
-      Inpar::Solid::StressType writecouplstress_;
 
       /// strain output type
       Inpar::Solid::StrainType writestrain_;

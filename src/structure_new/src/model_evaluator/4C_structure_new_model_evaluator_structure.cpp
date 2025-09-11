@@ -981,129 +981,119 @@ void Solid::ModelEvaluator::Structure::output_runtime_structure_postprocess_stre
 {
   check_init_setup();
 
-  if (not(global_in_output().get_stress_output_type() == Inpar::Solid::stress_none and
-          global_in_output().get_strain_output_type() == Inpar::Solid::strain_none))
+  // Set all parameters in the evaluation data container.
+  eval_data().set_action_type(Core::Elements::struct_calc_stress);
+  eval_data().set_total_time(global_state().get_time_np());
+  eval_data().set_delta_time((global_state().get_delta_time())[0]);
+  eval_data().set_stress_data(std::make_shared<std::vector<char>>());
+  eval_data().set_strain_data(std::make_shared<std::vector<char>>());
+  eval_data().set_plastic_strain_data(std::make_shared<std::vector<char>>());
+
+  // Set vector values needed by elements.
+  discret().clear_state();
+  discret().set_state(0, "displacement", *global_state().get_dis_np());
+  discret().set_state(0, "residual displacement", *dis_incr_ptr_);
+
+  // Set dummy evaluation vectors and matrices.
+  std::array<std::shared_ptr<Core::LinAlg::Vector<double>>, 3> eval_vec = {
+      nullptr, nullptr, nullptr};
+  std::array<std::shared_ptr<Core::LinAlg::SparseOperator>, 2> eval_mat = {nullptr, nullptr};
+
+  evaluate_internal_specified_elements(
+      eval_mat.data(), eval_vec.data(), discret().element_row_map());
+
+  auto do_postprocessing_on_element = [](const Core::Elements::Element& ele)
   {
-    // Set all parameters in the evaluation data container.
-    eval_data().set_action_type(Core::Elements::struct_calc_stress);
-    eval_data().set_total_time(global_state().get_time_np());
-    eval_data().set_delta_time(global_state().get_delta_time()[0]);
-    eval_data().set_stress_data(std::make_shared<std::vector<char>>());
-    eval_data().set_coupling_stress_data(std::make_shared<std::vector<char>>());
-    eval_data().set_strain_data(std::make_shared<std::vector<char>>());
-    eval_data().set_plastic_strain_data(std::make_shared<std::vector<char>>());
+    // If it is not a beam element, we post-process it.
+    return dynamic_cast<const Discret::Elements::Beam3Base*>(&ele) == nullptr;
+  };
 
-    // Set vector values needed by elements.
-    discret().clear_state();
-    discret().set_state(0, "displacement", *global_state().get_dis_np());
-    discret().set_state(0, "residual displacement", *dis_incr_ptr_);
+  auto evaluate_gauss_point_data = [&](const std::vector<char>& raw_data)
+  {
+    // Get the values at the Gauss-points.
+    std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>> mapdata{};
 
-    // global_state().get_dis_np()->print(std::cout);
-
-    // Set dummy evaluation vectors and matrices.
-    std::array<std::shared_ptr<Core::LinAlg::Vector<double>>, 3> eval_vec = {
-        nullptr, nullptr, nullptr};
-    std::array<std::shared_ptr<Core::LinAlg::SparseOperator>, 2> eval_mat = {nullptr, nullptr};
-
-    evaluate_internal_specified_elements(
-        eval_mat.data(), eval_vec.data(), discret().element_row_map());
-
-    auto DoPostprocessingOnElement = [](const Core::Elements::Element& ele)
+    Core::Communication::UnpackBuffer buffer(raw_data);
+    for (int i = 0; i < discret_ptr()->element_row_map()->num_my_elements(); ++i)
     {
-      // If it is not a beam element, we post-process it.
-      return dynamic_cast<const Discret::Elements::Beam3Base*>(&ele) == nullptr;
-    };
-
-    auto EvaluateGaussPointData = [&](const std::vector<char>& raw_data)
-    {
-      // Get the values at the Gauss-points.
-      std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>> mapdata{};
-
-      Core::Communication::UnpackBuffer buffer(raw_data);
-      for (int i = 0; i < discret_ptr()->element_row_map()->num_my_elements(); ++i)
+      if (do_postprocessing_on_element(*discret().l_row_element(i)))
       {
-        if (DoPostprocessingOnElement(*discret().l_row_element(i)))
-        {
-          std::shared_ptr<Core::LinAlg::SerialDenseMatrix> gpstress =
-              std::make_shared<Core::LinAlg::SerialDenseMatrix>();
-          extract_from_pack(buffer, *gpstress);
-          mapdata[discret_ptr()->element_row_map()->gid(i)] = gpstress;
-        }
+        auto gpstress = std::make_shared<Core::LinAlg::SerialDenseMatrix>();
+        extract_from_pack(buffer, *gpstress);
+        mapdata[discret_ptr()->element_row_map()->gid(i)] = gpstress;
       }
-      return mapdata;
-    };
-
-    auto PostprocessGaussPointDataToNodes =
-        [&](const std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>& map_data,
-            Core::LinAlg::MultiVector<double>& assembled_data)
-    {
-      discret_ptr()->evaluate(
-          [&](Core::Elements::Element& ele)
-          {
-            if (DoPostprocessingOnElement(ele))
-              Core::FE::extrapolate_gauss_point_quantity_to_nodes(
-                  ele, *map_data.at(ele.id()), discret(), assembled_data);
-          });
-    };
-
-    auto PostprocessGaussPointDataToElementCenter =
-        [&](const std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>& map_data,
-            Core::LinAlg::MultiVector<double>& assembled_data)
-    {
-      discret_ptr()->evaluate(
-          [&](Core::Elements::Element& ele)
-          {
-            if (DoPostprocessingOnElement(ele))
-              Core::FE::evaluate_gauss_point_quantity_at_element_center(
-                  ele, *map_data.at(ele.id()), assembled_data);
-          });
-    };
-
-    if (global_in_output().get_stress_output_type() != Inpar::Solid::stress_none)
-    {
-      std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>> gp_stress_data =
-          EvaluateGaussPointData(*eval_data().get_stress_data());
-
-      Core::Communication::Exporter ex(
-          *(discret().element_row_map()), *(discret().element_col_map()), discret().get_comm());
-      ex.do_export(gp_stress_data);
-
-      eval_data().get_stress_data_node_postprocessed() =
-          std::make_shared<Core::LinAlg::MultiVector<double>>(*discret().node_col_map(), 6, true);
-      eval_data().get_stress_data_element_postprocessed() =
-          std::make_shared<Core::LinAlg::MultiVector<double>>(
-              *discret().element_row_map(), 6, true);
-
-
-      Core::LinAlg::MultiVector<double> row_nodal_data(*discret().node_row_map(), 6, true);
-      PostprocessGaussPointDataToNodes(gp_stress_data, row_nodal_data);
-      Core::LinAlg::export_to(row_nodal_data, *eval_data().get_stress_data_node_postprocessed());
-
-      PostprocessGaussPointDataToElementCenter(
-          gp_stress_data, *eval_data().get_stress_data_element_postprocessed());
     }
-    if (global_in_output().get_strain_output_type() != Inpar::Solid::strain_none)
-    {
-      std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>> gp_strain_data =
-          EvaluateGaussPointData(*eval_data().get_strain_data());
+    return mapdata;
+  };
 
-      Core::Communication::Exporter ex(
-          *(discret().element_row_map()), *(discret().element_col_map()), discret().get_comm());
-      ex.do_export(gp_strain_data);
+  auto postprocess_gauss_point_data_to_nodes =
+      [&](const std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>& map_data,
+          Core::LinAlg::MultiVector<double>& assembled_data)
+  {
+    discret_ptr()->evaluate(
+        [&](Core::Elements::Element& ele)
+        {
+          if (do_postprocessing_on_element(ele))
+            Core::FE::extrapolate_gauss_point_quantity_to_nodes(
+                ele, *map_data.at(ele.id()), discret(), assembled_data);
+        });
+  };
 
-      eval_data().get_strain_data_node_postprocessed() =
-          std::make_shared<Core::LinAlg::MultiVector<double>>(*discret().node_col_map(), 6, true);
-      eval_data().get_strain_data_element_postprocessed() =
-          std::make_shared<Core::LinAlg::MultiVector<double>>(
-              *discret().element_row_map(), 6, true);
+  auto postprocess_gauss_point_data_to_element_center =
+      [&](const std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>>& map_data,
+          Core::LinAlg::MultiVector<double>& assembled_data)
+  {
+    discret_ptr()->evaluate(
+        [&](Core::Elements::Element& ele)
+        {
+          if (do_postprocessing_on_element(ele))
+            Core::FE::evaluate_gauss_point_quantity_at_element_center(
+                ele, *map_data.at(ele.id()), assembled_data);
+        });
+  };
 
-      Core::LinAlg::MultiVector<double> row_nodal_data(*discret().node_row_map(), 6, true);
-      PostprocessGaussPointDataToNodes(gp_strain_data, row_nodal_data);
-      Core::LinAlg::export_to(row_nodal_data, *eval_data().get_strain_data_node_postprocessed());
+  if (global_in_output().get_stress_output_type() != Inpar::Solid::stress_none)
+  {
+    std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>> gp_stress_data =
+        evaluate_gauss_point_data(*eval_data().get_stress_data());
 
-      PostprocessGaussPointDataToElementCenter(
-          gp_strain_data, *eval_data().get_strain_data_element_postprocessed());
-    }
+    Core::Communication::Exporter ex(
+        *(discret().element_row_map()), *(discret().element_col_map()), discret().get_comm());
+    ex.do_export(gp_stress_data);
+
+    eval_data().get_stress_data_node_postprocessed() =
+        std::make_shared<Core::LinAlg::MultiVector<double>>(*discret().node_col_map(), 6, true);
+    eval_data().get_stress_data_element_postprocessed() =
+        std::make_shared<Core::LinAlg::MultiVector<double>>(*discret().element_row_map(), 6, true);
+
+
+    Core::LinAlg::MultiVector<double> row_nodal_data(*discret().node_row_map(), 6, true);
+    postprocess_gauss_point_data_to_nodes(gp_stress_data, row_nodal_data);
+    Core::LinAlg::export_to(row_nodal_data, *eval_data().get_stress_data_node_postprocessed());
+
+    postprocess_gauss_point_data_to_element_center(
+        gp_stress_data, *eval_data().get_stress_data_element_postprocessed());
+  }
+  if (global_in_output().get_strain_output_type() != Inpar::Solid::strain_none)
+  {
+    std::map<int, std::shared_ptr<Core::LinAlg::SerialDenseMatrix>> gp_strain_data =
+        evaluate_gauss_point_data(*eval_data().get_strain_data());
+
+    Core::Communication::Exporter ex(
+        *(discret().element_row_map()), *(discret().element_col_map()), discret().get_comm());
+    ex.do_export(gp_strain_data);
+
+    eval_data().get_strain_data_node_postprocessed() =
+        std::make_shared<Core::LinAlg::MultiVector<double>>(*discret().node_col_map(), 6, true);
+    eval_data().get_strain_data_element_postprocessed() =
+        std::make_shared<Core::LinAlg::MultiVector<double>>(*discret().element_row_map(), 6, true);
+
+    Core::LinAlg::MultiVector<double> row_nodal_data(*discret().node_row_map(), 6, true);
+    postprocess_gauss_point_data_to_nodes(gp_strain_data, row_nodal_data);
+    Core::LinAlg::export_to(row_nodal_data, *eval_data().get_strain_data_node_postprocessed());
+
+    postprocess_gauss_point_data_to_element_center(
+        gp_strain_data, *eval_data().get_strain_data_element_postprocessed());
   }
 }
 
@@ -1472,7 +1462,12 @@ void Solid::ModelEvaluator::Structure::run_post_iterate(const ::NOX::Solver::Gen
   if (vtu_writer_ptr_ != nullptr and
       global_in_output().get_runtime_output_params()->output_every_iteration())
   {
-    output_runtime_structure_postprocess_stress_strain();
+    if (not(global_in_output().get_stress_output_type() == Inpar::Solid::stress_none and
+            global_in_output().get_strain_output_type() == Inpar::Solid::strain_none))
+    {
+      output_runtime_structure_postprocess_stress_strain();
+    }
+
     output_runtime_structure_gauss_point_data();
     output_runtime_structure_postprocess_optional_data();
     write_iteration_output_runtime_structure();
@@ -1608,7 +1603,6 @@ void Solid::ModelEvaluator::Structure::determine_stress_strain()
   check_init_setup();
 
   if (global_in_output().get_stress_output_type() == Inpar::Solid::stress_none and
-      global_in_output().get_coupling_stress_output_type() == Inpar::Solid::stress_none and
       global_in_output().get_strain_output_type() == Inpar::Solid::strain_none and
       global_in_output().get_plastic_strain_output_type() == Inpar::Solid::strain_none)
     return;
@@ -1618,7 +1612,6 @@ void Solid::ModelEvaluator::Structure::determine_stress_strain()
   eval_data().set_total_time(global_state().get_time_np());
   eval_data().set_delta_time(global_state().get_delta_time()[0]);
   eval_data().set_stress_data(std::make_shared<std::vector<char>>());
-  eval_data().set_coupling_stress_data(std::make_shared<std::vector<char>>());
   eval_data().set_strain_data(std::make_shared<std::vector<char>>());
   eval_data().set_plastic_strain_data(std::make_shared<std::vector<char>>());
 
@@ -1739,7 +1732,11 @@ void Solid::ModelEvaluator::Structure::runtime_pre_output_step_state()
 
   if (vtu_writer_ptr_ != nullptr)
   {
-    output_runtime_structure_postprocess_stress_strain();
+    if (not(global_in_output().get_stress_output_type() == Inpar::Solid::stress_none and
+            global_in_output().get_strain_output_type() == Inpar::Solid::strain_none))
+    {
+      output_runtime_structure_postprocess_stress_strain();
+    }
     output_runtime_structure_gauss_point_data();
     output_runtime_structure_postprocess_optional_data();
   }

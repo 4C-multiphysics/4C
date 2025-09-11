@@ -98,8 +98,6 @@ Solid::TimInt::TimInt(const Teuchos::ParameterList& timeparams,
       writestate_(ioparams.get<bool>("STRUCT_DISP")),
       writeresultsevery_(timeparams.get<int>("RESULTSEVERY")),
       writestress_(Teuchos::getIntegralValue<Inpar::Solid::StressType>(ioparams, "STRUCT_STRESS")),
-      writecouplstress_(
-          Teuchos::getIntegralValue<Inpar::Solid::StressType>(ioparams, "STRUCT_COUPLING_STRESS")),
       writestrain_(Teuchos::getIntegralValue<Inpar::Solid::StrainType>(ioparams, "STRUCT_STRAIN")),
       writeplstrain_(
           Teuchos::getIntegralValue<Inpar::Solid::StrainType>(ioparams, "STRUCT_PLASTIC_STRAIN")),
@@ -1981,9 +1979,7 @@ void Solid::TimInt::output_step(const bool forced_writerestart)
 
   // output stress & strain
   if (writeresultsevery_ and
-      ((writestress_ != Inpar::Solid::stress_none) or
-          (writecouplstress_ != Inpar::Solid::stress_none) or
-          (writestrain_ != Inpar::Solid::strain_none) or
+      ((writestress_ != Inpar::Solid::stress_none) or (writestrain_ != Inpar::Solid::strain_none) or
           (writeplstrain_ != Inpar::Solid::strain_none)) and
       (step_ % writeresultsevery_ == 0))
   {
@@ -2250,9 +2246,7 @@ void Solid::TimInt::add_restart_to_output_state()
 void Solid::TimInt::determine_stress_strain()
 {
   if (writeresultsevery_ and
-      ((writestress_ != Inpar::Solid::stress_none) or
-          (writecouplstress_ != Inpar::Solid::stress_none) or
-          (writestrain_ != Inpar::Solid::strain_none) or
+      ((writestress_ != Inpar::Solid::stress_none) or (writestrain_ != Inpar::Solid::strain_none) or
           (writeplstrain_ != Inpar::Solid::strain_none)) and
       (stepn_ % writeresultsevery_ == 0))
   {
@@ -2269,12 +2263,6 @@ void Solid::TimInt::determine_stress_strain()
     p.set("stress", stressdata_);
 
     p.set<Inpar::Solid::StressType>("iostress", writestress_);
-
-    // write stress data that arise from the coupling with another field, e.g.
-    // in TSI: couplstress corresponds to thermal stresses
-    couplstressdata_ = std::make_shared<std::vector<char>>();
-    p.set("couplstress", couplstressdata_);
-    p.set<Inpar::Solid::StressType>("iocouplstress", writecouplstress_);
 
     straindata_ = std::make_shared<std::vector<char>>();
     p.set("strain", straindata_);
@@ -2376,27 +2364,6 @@ void Solid::TimInt::output_stress_strain(bool& datawritten)
     output_->write_vector(stresstext, *stressdata_, *(discret_->element_row_map()));
     // we don't need this anymore
     stressdata_ = nullptr;
-  }
-
-  // write coupling stress
-  if (writecouplstress_ != Inpar::Solid::stress_none)
-  {
-    std::string couplstresstext = "";
-    if (writecouplstress_ == Inpar::Solid::stress_cauchy)
-    {
-      couplstresstext = "gauss_cauchy_coupling_stresses_xyz";
-    }
-    else if (writecouplstress_ == Inpar::Solid::stress_2pk)
-    {
-      couplstresstext = "gauss_2PK_coupling_stresses_xyz";
-    }
-    else
-    {
-      FOUR_C_THROW("requested stress type not supported");
-    }
-    output_->write_vector(couplstresstext, *couplstressdata_, *(discret_->element_row_map()));
-    // we don't need this anymore
-    couplstressdata_ = nullptr;
   }
 
   // write strain

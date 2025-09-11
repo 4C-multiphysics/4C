@@ -8,7 +8,6 @@ TITLE:
   - "additionaly the body deforms."
 IO:
   STRUCT_STRESS: "Cauchy"
-  STRUCT_COUPLING_STRESS: "Cauchy"
   STRUCT_STRAIN: "EA"
   THERM_TEMPERATURE: true
   THERM_HEATFLUX: "Current"

@@ -1041,7 +1041,6 @@ namespace Solid
     bool writestate_;                            //!< write state on/off
     int writeresultsevery_;                      //!< write state/stress/strain every given step
     Inpar::Solid::StressType writestress_;       //!< stress output type
-    Inpar::Solid::StressType writecouplstress_;  //!< output type of coupling stress
     Inpar::Solid::StrainType writestrain_;       //!< strain output type
     Inpar::Solid::StrainType writeplstrain_;     //!< plastic strain output type
     int writeenergyevery_;                       //!< write system energy every given step
@@ -1049,10 +1048,8 @@ namespace Solid
     bool writerotation_;                         //!< write strutural rotation tensor output
     std::shared_ptr<std::ofstream> energyfile_;  //!< outputfile for energy
 
-    std::shared_ptr<std::vector<char>> stressdata_;  //!< container for element GP stresses
-    std::shared_ptr<std::vector<char>>
-        couplstressdata_;                            //!< container for element GP coupling stresses
-    std::shared_ptr<std::vector<char>> straindata_;  //!< container for element GP strains
+    std::shared_ptr<std::vector<char>> stressdata_;    //!< container for element GP stresses
+    std::shared_ptr<std::vector<char>> straindata_;    //!< container for element GP strains
     std::shared_ptr<std::vector<char>> plstraindata_;  //!< container for element GP plastic strains
     std::shared_ptr<std::vector<char>> rotdata_;       //!< container for element rotation tensor
     double kinergy_;                                   //!< kinetic energy

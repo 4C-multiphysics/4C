@@ -14,7 +14,6 @@
 #include "4C_solid_3D_ele_calc_lib.hpp"
 #include "4C_solid_3D_ele_factory.hpp"
 #include "4C_solid_poro_3D_ele_calc_lib.hpp"
-#include "4C_solid_poro_3D_ele_calc_lib_io.hpp"
 #include "4C_solid_poro_3D_ele_pressure_velocity_based.hpp"
 #include "4C_solid_scatra_3D_ele_factory.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -260,25 +259,6 @@ int Discret::Elements::SolidPoroPressureVelocityBased::evaluate(Teuchos::Paramet
                 discretization, get_location_array<decltype(interface)>(la), params);
           },
           solid_calc_variant_);
-
-
-      if (discretization.has_state(1, "fluidvel"))
-      {
-        const SolidPoroPrimaryVariables primary_variables =
-            extract_solid_poro_primary_variables(discretization, la, shape());
-        std::visit(
-            [&](auto& interface)
-            {
-              interface->coupling_stress_poroelast(*this, this->struct_poro_material(),
-                  this->kinematic_type(),
-                  CouplStressIO{.type = get_io_couplstress_type(*this, params),
-                      .mutable_data = get_couplstress_data(*this, params)},
-                  discretization, primary_variables, params);
-            },
-            solidporo_press_vel_based_calc_variant_);
-      }
-
-
 
       return 0;
     }

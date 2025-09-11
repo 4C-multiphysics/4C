@@ -235,26 +235,6 @@ namespace Mat
         const Discret::Elements::Fibers& fibers,
         const std::optional<Discret::Elements::CoordinateSystem>& coord_system);
 
-    /*!
-     * @brief Calculate coupling part of homogenized 2 Piola-Kirchhoff stress (3D)
-     *
-     * @param[in] defgrad       deformation gradient
-     * @param[in] press         pressure at gauss point
-     * @param[out] couplstress  coupling stress at gauss point
-     */
-    void coupl_stress(const Core::LinAlg::Matrix<3, 3>& defgrd, const double& press,
-        Core::LinAlg::Matrix<6, 1>& couplstress) const;
-
-    /*!
-     * @brief Calculate coupling part of homogenized 2 Piola-Kirchhoff stress (2D)
-     *
-     * @param[in] defgrad       deformation gradient
-     * @param[in] press         pressure at gauss point
-     * @param[out] couplstress  coupling stress at gauss point
-     */
-    void coupl_stress(const Core::LinAlg::Matrix<2, 2>& defgrd, const double& press,
-        Core::LinAlg::Matrix<4, 1>& couplstress) const;
-
     //! evaluate constitutive relation for porosity and compute derivatives
     virtual void constitutive_derivatives(
         const Teuchos::ParameterList& params,  //!< (i) parameter list

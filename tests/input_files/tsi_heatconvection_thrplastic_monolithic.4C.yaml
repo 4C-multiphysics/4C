@@ -16,7 +16,6 @@ TITLE:
   - "use small strain thermoelastoplastic material with mixed linear hardening"
 IO:
   STRUCT_STRESS: "2PK"
-  STRUCT_COUPLING_STRESS: "2PK"
   STRUCT_STRAIN: "GL"
   STRUCT_PLASTIC_STRAIN: "GL"
   THERM_TEMPERATURE: true
