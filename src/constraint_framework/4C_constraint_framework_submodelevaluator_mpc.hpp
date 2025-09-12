@@ -70,9 +70,6 @@ namespace Constraints::SubmodelEvaluator
     //! Tolerance for the opposing edge node search
     double node_search_toler_ = 0.25;  // #ToDo: Add input parameter
 
-    //! Parameter List for the rveType
-    Teuchos::ParameterList mpc_parameter_list_;
-
     //! Dimension of the rve boundary
     enum Constraints::MultiPoint::RveDimension rve_dim_;
 

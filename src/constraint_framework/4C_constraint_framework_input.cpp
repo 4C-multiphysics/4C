@@ -21,46 +21,37 @@ std::vector<Core::IO::InputSpec> Constraints::valid_parameters()
   std::vector<Core::IO::InputSpec> spec;
 
   /*----------------------------------------------------------------------*/
+  /* parameters for constraint model */
+
+  spec.push_back(group("CONSTRAINT",
+      {parameter<EnforcementStrategy>(
+           "CONSTRAINT_ENFORCEMENT", {.description = "Type of constraint enforcement"}),
+
+          parameter<double>("PENALTY_PARAM",
+              {.description = "Value of the penalty parameter", .default_value = 1e5})},
+      {.required = false}));
+
+  /*----------------------------------------------------------------------*/
   /* parameters for embedded mesh constraint submodel */
 
-  spec.push_back(group("EMBEDDED MESH COUPLING",
+  spec.push_back(group("CONSTRAINT/EMBEDDED MESH COUPLING",
       {
-
           parameter<EmbeddedMesh::CouplingStrategy>("COUPLING_STRATEGY",
               {.description = "Strategy to couple background and overlapping mesh"}),
-
 
           parameter<EmbeddedMesh::SolidToSolidMortarShapefunctions>("MORTAR_SHAPE_FUNCTION",
               {.description = "Shape functions that should be use in case of coupling using the "
                               "Mortar/Lagrange  Multiplier method "}),
-
-
-          parameter<EnforcementStrategy>("CONSTRAINT_ENFORCEMENT",
-              {.description =
-                      "Apply a constraint enforcement in the embedded mesh coupling strategy"}),
-
-          parameter<double>("CONSTRAINT_ENFORCEMENT_PENALTYPARAM",
-              {.description =
-                      "Penalty parameter for the constraint enforcement in embedded mesh coupling",
-                  .default_value = 0.0})},
+      },
       {.required = false}));
 
   /*----------------------------------------------------------------------*/
   /* parameters for multi point constraint submodel */
 
-  spec.push_back(group("MULTI POINT CONSTRAINTS",
-      {
-
-          parameter<MultiPoint::RveReferenceDeformationDefinition>("RVE_REFERENCE_POINTS",
-              {.description = "Method of definition of the reference points of an RVE",
-                  .default_value = MultiPoint::RveReferenceDeformationDefinition::automatic}),
-
-          parameter<EnforcementStrategy>(
-              "ENFORCEMENT", {.description = "Method to enforce the multi point constraint",
-                                 .default_value = EnforcementStrategy::penalty}),
-
-          parameter<double>("PENALTY_PARAM",
-              {.description = "Value of the penalty parameter", .default_value = 1e5})},
+  spec.push_back(group("CONSTRAINT/MULTI POINT",
+      {parameter<MultiPoint::RveReferenceDeformationDefinition>("RVE_REFERENCE_POINTS",
+          {.description = "Method of definition of the reference points of an RVE",
+              .default_value = MultiPoint::RveReferenceDeformationDefinition::automatic})},
       {.required = false}));
 
   return spec;

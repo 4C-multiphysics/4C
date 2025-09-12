@@ -22,24 +22,26 @@ Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::EmbeddedMeshConst
     const Core::LinAlg::Vector<double>& dispnp)
 {
   // Get the parameter lists and get information from them
-  auto embedded_mesh_parameter_list = Global::Problem::instance()->embedded_mesh_params();
+  auto constraint_parameter_list = Global::Problem::instance()->constraint_params();
   auto xfem_parameter_list = Global::Problem::instance()->xfem_general_params();
   auto cut_parameter_list = Global::Problem::instance()->cut_general_params();
+
+  auto embedded_mesh_constraint_enforcement =
+      Teuchos::getIntegralValue<Constraints::EnforcementStrategy>(
+          constraint_parameter_list, "CONSTRAINT_ENFORCEMENT");
+
+  auto embedded_mesh_constraint_penalty_parameter =
+      constraint_parameter_list.get<double>("PENALTY_PARAM");
+
+  auto embedded_mesh_parameter_list = constraint_parameter_list.sublist("EMBEDDED MESH COUPLING");
 
   auto embedded_mesh_coupling_strategy =
       Teuchos::getIntegralValue<Constraints::EmbeddedMesh::CouplingStrategy>(
           embedded_mesh_parameter_list, "COUPLING_STRATEGY");
 
-  auto embedded_mesh_constraint_enforcement =
-      Teuchos::getIntegralValue<Constraints::EnforcementStrategy>(
-          embedded_mesh_parameter_list, "CONSTRAINT_ENFORCEMENT");
-
   auto embedded_mesh_mortar_shape_function =
       Teuchos::getIntegralValue<Constraints::EmbeddedMesh::SolidToSolidMortarShapefunctions>(
           embedded_mesh_parameter_list, "MORTAR_SHAPE_FUNCTION");
-
-  auto embedded_mesh_constraint_penalty_parameter =
-      embedded_mesh_parameter_list.get<double>("CONSTRAINT_ENFORCEMENT_PENALTYPARAM");
 
   auto nodal_dofset_strategy = Teuchos::getIntegralValue<Cut::NodalDofSetStrategy>(
       xfem_parameter_list, "NODAL_DOFSET_STRATEGY");

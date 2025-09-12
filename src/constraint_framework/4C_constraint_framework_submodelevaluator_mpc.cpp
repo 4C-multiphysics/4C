@@ -120,16 +120,16 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::check_input
   if (Core::Communication::num_mpi_ranks(discret_ptr_->get_comm()) > 1)
     FOUR_C_THROW("periodic boundary conditions for RVEs are not implemented in parallel.");
 
+  auto constraint_parameter_list = Global::Problem::instance()->constraint_params();
 
-  mpc_parameter_list_ = Global::Problem::instance()->rve_multi_point_constraint_params();
+  strategy_ = Teuchos::getIntegralValue<Constraints::EnforcementStrategy>(
+      constraint_parameter_list, "CONSTRAINT_ENFORCEMENT");
+
+  auto mpc_parameter_list = constraint_parameter_list.sublist("MULTI POINT");
 
   rve_ref_type_ =
       Teuchos::getIntegralValue<Constraints::MultiPoint::RveReferenceDeformationDefinition>(
-          mpc_parameter_list_, "RVE_REFERENCE_POINTS");
-
-  strategy_ = Teuchos::getIntegralValue<Constraints::EnforcementStrategy>(
-      mpc_parameter_list_, "ENFORCEMENT");
-
+          mpc_parameter_list, "RVE_REFERENCE_POINTS");
 
   // Check the enforcement strategy
   switch (strategy_)
@@ -143,9 +143,8 @@ void Constraints::SubmodelEvaluator::RveMultiPointConstraintManager::check_input
     {
       Core::IO::cout(Core::IO::minimal)
           << "Constraint enforcement strategy: Penalty method" << Core::IO::endl;
-      const Teuchos::ParameterList& MpcList =
-          Global::Problem::instance()->rve_multi_point_constraint_params();
-      get_penalty_parameter_ptr() = MpcList.get<double>("PENALTY_PARAM");
+
+      get_penalty_parameter_ptr() = constraint_parameter_list.get<double>("PENALTY_PARAM");
       Core::IO::cout(Core::IO::verbose)
           << "Penalty weight used: " << get_penalty_parameter_ptr() << Core::IO::endl;
 

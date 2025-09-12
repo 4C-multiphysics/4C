@@ -235,13 +235,13 @@ namespace Global
     {
       return parameters_->sublist("CONTACT DYNAMIC");
     }
+    const Teuchos::ParameterList& constraint_params() const
+    {
+      return parameters_->sublist("CONSTRAINT");
+    }
     const Teuchos::ParameterList& beam_interaction_params() const
     {
       return parameters_->sublist("BEAM INTERACTION");
-    }
-    const Teuchos::ParameterList& rve_multi_point_constraint_params() const
-    {
-      return parameters_->sublist("MULTI POINT CONSTRAINTS");
     }
     const Teuchos::ParameterList& brownian_dynamics_params() const
     {
@@ -294,10 +294,6 @@ namespace Global
     const Teuchos::ParameterList& xfem_general_params() const
     {
       return parameters_->sublist("XFEM GENERAL");
-    }
-    const Teuchos::ParameterList& embedded_mesh_coupling_params() const
-    {
-      return parameters_->sublist("EMBEDDED MESH COUPLING");
     }
     const Teuchos::ParameterList& x_fluid_dynamic_params() const
     {
@@ -401,10 +397,6 @@ namespace Global
     const Teuchos::ParameterList& semi_smooth_plast_params() const
     {
       return parameters_->sublist("SEMI-SMOOTH PLASTICITY");
-    }
-    const Teuchos::ParameterList& embedded_mesh_params() const
-    {
-      return parameters_->sublist("EMBEDDED MESH COUPLING");
     }
     const Teuchos::ParameterList& volmortar_params() const
     {
