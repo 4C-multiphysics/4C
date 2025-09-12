@@ -10,7 +10,6 @@
 #include "4C_beamcontact_beam3contact_manager.hpp"
 #include "4C_beamcontact_input.hpp"
 #include "4C_cardiovascular0d_manager.hpp"
-#include "4C_cardiovascular0d_mor_pod.hpp"
 #include "4C_constraint_manager.hpp"
 #include "4C_constraint_solver.hpp"
 #include "4C_constraint_springdashpot_manager.hpp"
@@ -26,6 +25,7 @@
 #include "4C_io_pstream.hpp"
 #include "4C_linalg_krylov_projector.hpp"
 #include "4C_linalg_mapextractor.hpp"
+#include "4C_linalg_sparse_pod.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
@@ -1159,7 +1159,7 @@ bool Solid::TimIntImpl::converged()
   switch (normtypedisi_)
   {
     case Inpar::Solid::convnorm_abs:
-      if (mor_->have_mor())
+      if (mor_)
         convdis = normdisir_ < toldisi_;
       else
         convdis = normdisi_ < toldisi_;
@@ -1179,7 +1179,7 @@ bool Solid::TimIntImpl::converged()
   switch (normtypefres_)
   {
     case Inpar::Solid::convnorm_abs:
-      if (mor_->have_mor())
+      if (mor_)
         convfres = normfresr_ < tolfres_;
       else
         convfres = normfres_ < tolfres_;
@@ -2738,15 +2738,15 @@ int Solid::TimIntImpl::uzawa_linear_newton_full()
       }
       else
       {
-        if (mor_->have_mor())
+        if (mor_)
         {
           // build residual force norm with reduced force residual
-          std::shared_ptr<Core::LinAlg::Vector<double>> fres_r = mor_->reduce_residual(*fres_);
-          normfresr_ = Solid::calculate_vector_norm(iternorm_, *fres_r);
+          Core::LinAlg::Vector<double> fres_r = mor_->reduce(*fres_);
+          normfresr_ = Solid::calculate_vector_norm(iternorm_, fres_r);
 
           // build residual displacement norm with reduced residual displacements
-          std::shared_ptr<Core::LinAlg::Vector<double>> disi_r = mor_->reduce_residual(*disi_);
-          normdisir_ = Solid::calculate_vector_norm(iternorm_, *disi_r);
+          Core::LinAlg::Vector<double> disi_r = mor_->reduce(*disi_);
+          normdisir_ = Solid::calculate_vector_norm(iternorm_, disi_r);
         }
 
         // build residual force norm
@@ -3598,7 +3598,7 @@ void Solid::TimIntImpl::print_newton_iter_header(FILE* ofile)
       break;
     case Inpar::Solid::convnorm_abs:
       oss << std::setw(16) << "abs-res-norm";
-      if (mor_->have_mor()) oss << std::setw(16) << "abs-res-norm-r";
+      if (mor_) oss << std::setw(16) << "abs-res-norm-r";
       break;
     case Inpar::Solid::convnorm_mix:
       oss << std::setw(16) << "mix-res-norm";
@@ -3628,7 +3628,7 @@ void Solid::TimIntImpl::print_newton_iter_header(FILE* ofile)
       break;
     case Inpar::Solid::convnorm_abs:
       oss << std::setw(16) << "abs-dis-norm";
-      if (mor_->have_mor()) oss << std::setw(16) << "abs-dis-norm-r";
+      if (mor_) oss << std::setw(16) << "abs-dis-norm-r";
       break;
     case Inpar::Solid::convnorm_mix:
       oss << std::setw(16) << "mix-dis-norm";
@@ -3775,8 +3775,7 @@ void Solid::TimIntImpl::print_newton_iter_text(FILE* ofile)
       break;
     case Inpar::Solid::convnorm_abs:
       oss << std::setw(16) << std::setprecision(5) << std::scientific << normfres_;
-      if (mor_->have_mor())
-        oss << std::setw(16) << std::setprecision(5) << std::scientific << normfresr_;
+      if (mor_) oss << std::setw(16) << std::setprecision(5) << std::scientific << normfresr_;
       break;
     case Inpar::Solid::convnorm_mix:
       oss << std::setw(16) << std::setprecision(5) << std::scientific
@@ -3807,8 +3806,7 @@ void Solid::TimIntImpl::print_newton_iter_text(FILE* ofile)
       break;
     case Inpar::Solid::convnorm_abs:
       oss << std::setw(16) << std::setprecision(5) << std::scientific << normdisi_;
-      if (mor_->have_mor())
-        oss << std::setw(16) << std::setprecision(5) << std::scientific << normdisir_;
+      if (mor_) oss << std::setw(16) << std::setprecision(5) << std::scientific << normdisir_;
       break;
     case Inpar::Solid::convnorm_mix:
       oss << std::setw(16) << std::setprecision(5) << std::scientific

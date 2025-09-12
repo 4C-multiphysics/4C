@@ -1,5 +1,5 @@
 MOR:
-  POD_MATRIX: "cardiovascular0d_arterialproxdist_structure_direct_genalpha_mor_pod100.bin"
+  POD_MATRIX: "cardiovascular0d_arterialproxdist_structure_direct_genalpha_mor_pod100.mtx"
 IO:
   STRUCT_STRESS: "Cauchy"
   STRUCT_STRAIN: "GL"

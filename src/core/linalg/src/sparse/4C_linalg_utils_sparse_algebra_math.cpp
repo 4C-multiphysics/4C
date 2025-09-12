@@ -381,4 +381,22 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_sparse_inverse(
   return A_inverse;
 }
 
+void Core::LinAlg::multiply_multi_vectors(const Core::LinAlg::MultiVector<double>& v1,
+    bool trans_v1, const Core::LinAlg::MultiVector<double>& v2, bool trans_v2,
+    const Core::LinAlg::Map& red_map, const Core::LinAlg::Import& importer,
+    Core::LinAlg::MultiVector<double>& result)
+{
+  // initialize temporary Core::LinAlg::MultiVector<double> (red_map: all procs hold all
+  // elements/rows)
+  Core::LinAlg::MultiVector<double> multivect_temp(red_map, v2.NumVectors(), true);
+
+  // do the multiplication: (all procs hold the full result)
+  int err = multivect_temp.Multiply(trans_v1 ? 'T' : 'N', trans_v2 ? 'T' : 'N', 1.0, v1, v2, 0.0);
+  FOUR_C_ASSERT_ALWAYS(!err, "Multiplication failed.");
+
+  // import the result to a Core::LinAlg::MultiVector<double> whose elements/rows are distributed
+  // over all procs
+  result.Import(multivect_temp, importer, Insert, nullptr);
+}
+
 FOUR_C_NAMESPACE_CLOSE

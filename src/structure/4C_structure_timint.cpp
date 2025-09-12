@@ -10,7 +10,6 @@
 #include "4C_beamcontact_beam3contact_manager.hpp"
 #include "4C_beamcontact_input.hpp"
 #include "4C_cardiovascular0d_manager.hpp"
-#include "4C_cardiovascular0d_mor_pod.hpp"
 #include "4C_comm_utils.hpp"
 #include "4C_constraint_manager.hpp"
 #include "4C_constraint_solver.hpp"
@@ -28,6 +27,7 @@
 #include "4C_io_pstream.hpp"
 #include "4C_linalg_blocksparsematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
+#include "4C_linalg_sparse_pod.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_utils_densematrix_communication.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
@@ -232,9 +232,12 @@ void Solid::TimInt::setup()
   conman_->setup((*dis_)(0), sdynparams_);
 
   // model order reduction
-  mor_ = std::make_shared<Cardiovascular0D::ProperOrthogonalDecomposition>(dof_row_map(),
-      Global::Problem::instance()->mor_params().get<std::string>("POD_MATRIX"),
-      Global::Problem::instance()->output_control_file()->input_file_name());
+
+  if (std::optional<std::filesystem::path> param =
+          Global::Problem::instance()->mor_params().get<std::optional<std::filesystem::path>>(
+              "POD_MATRIX");
+      param.has_value())
+    mor_ = std::make_shared<Core::LinAlg::ProperOrthogonalDecomposition>(dof_row_map(), *param);
 
   // initialize 0D cardiovascular manager
   cardvasc0dman_ =

@@ -12,7 +12,6 @@
 #include "4C_cardiovascular0d_4elementwindkessel.hpp"
 #include "4C_cardiovascular0d_arterialproxdist.hpp"
 #include "4C_cardiovascular0d_dofset.hpp"
-#include "4C_cardiovascular0d_mor_pod.hpp"
 #include "4C_cardiovascular0d_respiratory_syspulperiphcirculation.hpp"
 #include "4C_cardiovascular0d_resulttest.hpp"
 #include "4C_cardiovascular0d_syspulcirculation.hpp"
@@ -20,6 +19,7 @@
 #include "4C_global_data.hpp"
 #include "4C_io.hpp"
 #include "4C_linalg_mapextractor.hpp"
+#include "4C_linalg_sparse_pod.hpp"
 #include "4C_linalg_utils_densematrix_communication.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
@@ -44,7 +44,7 @@ Utils::Cardiovascular0DManager::Cardiovascular0DManager(
     std::shared_ptr<Core::FE::Discretization> discr,
     std::shared_ptr<const Core::LinAlg::Vector<double>> disp, Teuchos::ParameterList strparams,
     Teuchos::ParameterList cv0dparams, Core::LinAlg::Solver& solver,
-    std::shared_ptr<FourC::Cardiovascular0D::ProperOrthogonalDecomposition> mor)
+    std::shared_ptr<Core::LinAlg::ProperOrthogonalDecomposition> mor)
     : actdisc_(discr),
       myrank_(Core::Communication::my_mpi_rank(actdisc_->get_comm())),
       dbcmaps_(std::make_shared<Core::LinAlg::MapExtractor>()),
@@ -190,8 +190,7 @@ Utils::Cardiovascular0DManager::Cardiovascular0DManager(
   }
 
   // are we using model order reduction?
-  if (mor_ != nullptr)
-    if (mor_->have_mor()) have_mor_ = true;
+  if (mor_ != nullptr) have_mor_ = true;
 
   if (cardvasc0d_4elementwindkessel_->have_cardiovascular0_d() or
       cardvasc0d_arterialproxdist_->have_cardiovascular0_d() or
@@ -988,13 +987,12 @@ int Utils::Cardiovascular0DManager::solve(Core::LinAlg::SparseMatrix& mat_struct
   if (have_mor_)
   {
     // reduce linear system
-    std::shared_ptr<Core::LinAlg::SparseMatrix> mat_structstiff_R =
-        mor_->reduce_diagonal(mat_structstiff);
-    std::shared_ptr<Core::LinAlg::SparseMatrix> mat_dcardvasc0d_dd_R =
+    Core::LinAlg::SparseMatrix mat_structstiff_R = mor_->reduce_diagonal(mat_structstiff);
+    Core::LinAlg::SparseMatrix mat_dcardvasc0d_dd_R =
         mor_->reduce_off_diagonal(*mat_dcardvasc0d_dd);
-    std::shared_ptr<Core::LinAlg::SparseMatrix> mat_dstruct_dcv0ddof_R =
+    Core::LinAlg::SparseMatrix mat_dstruct_dcv0ddof_R =
         mor_->reduce_off_diagonal(*mat_dstruct_dcv0ddof);
-    std::shared_ptr<Core::LinAlg::MultiVector<double>> rhsstruct_R = mor_->reduce_rhs(rhsstruct);
+    Core::LinAlg::MultiVector<double> rhsstruct_R = mor_->reduce(rhsstruct);
 
     // define maps of reduced standard dofs and additional pressures
     Core::LinAlg::Map structmap_R(mor_->get_red_dim(), 0, actdisc_->get_comm());
@@ -1020,10 +1018,10 @@ int Utils::Cardiovascular0DManager::solve(Core::LinAlg::SparseMatrix& mat_struct
     mergedsol = std::make_shared<Core::LinAlg::Vector<double>>(*mergedmap_R);
 
     // use BlockMatrix
-    blockmat->assign(0, 0, Core::LinAlg::DataAccess::Share, *mat_structstiff_R);
-    blockmat->assign(1, 0, Core::LinAlg::DataAccess::Share, *mat_dcardvasc0d_dd_R);
+    blockmat->assign(0, 0, Core::LinAlg::DataAccess::Share, mat_structstiff_R);
+    blockmat->assign(1, 0, Core::LinAlg::DataAccess::Share, mat_dcardvasc0d_dd_R);
     blockmat->assign(0, 1, Core::LinAlg::DataAccess::Share,
-        *Core::LinAlg::matrix_transpose(*mat_dstruct_dcv0ddof_R));
+        *Core::LinAlg::matrix_transpose(mat_dstruct_dcv0ddof_R));
     blockmat->assign(1, 1, Core::LinAlg::DataAccess::Share, *mat_cardvasc0dstiff);
     blockmat->complete();
 
@@ -1033,7 +1031,7 @@ int Utils::Cardiovascular0DManager::solve(Core::LinAlg::SparseMatrix& mat_struct
     mergedrhs->scale(-1.0);
     // export reduced structure part of rhs -> no need to make it negative since this has been done
     // by the structural time integrator already!
-    Core::LinAlg::export_to(*rhsstruct_R, *mergedrhs);
+    Core::LinAlg::export_to(rhsstruct_R, *mergedrhs);
   }
   else
   {
@@ -1144,10 +1142,10 @@ int Utils::Cardiovascular0DManager::solve(Core::LinAlg::SparseMatrix& mat_struct
     cv0ddof.replace_map(*cardvasc0drowmap);
 
     // extend reduced displacement dofs to high dimension
-    std::shared_ptr<Core::LinAlg::Vector<double>> disp_full = mor_->extend_solution(disp_R);
+    Core::LinAlg::Vector<double> disp_full = mor_->extend(disp_R);
 
     // assemble displacement and pressure dofs
-    mergedsol_full = mapext.insert_vector(*disp_full, 0);
+    mergedsol_full = mapext.insert_vector(disp_full, 0);
     mapext.add_vector(cv0ddof, 1, *mergedsol_full, 1);
   }
   else
