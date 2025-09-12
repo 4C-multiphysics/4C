@@ -155,6 +155,41 @@ namespace Core::LinAlg
   std::shared_ptr<SparseMatrix> matrix_sparse_inverse(
       const SparseMatrix& A, std::shared_ptr<Core::LinAlg::Graph> sparsity_pattern);
 
+  /**
+   * @brief Multiply two MultiVectors and store the result in a distributed MultiVector.
+   *
+   * This function performs a (possibly transposed) matrix multiplication of two MultiVectors
+   * (v1 and v2) and stores the result in a target MultiVector with a distributed row layout.
+   * The multiplication is performed first on a temporary fully-replicated MultiVector, then
+   * the result is imported (distributed) to the final target MultiVector using an Import operation.
+   *
+   * Mathematically:
+   *   result = (v1^T?) * (v2^T?)
+   * where the optional transpositions are controlled by trans_v1 and trans_v2.
+   *
+   * @param v1        The first input MultiVector.
+   * @param trans_v1  If true, use the transpose of v1 in the multiplication.
+   * @param v2        The second input MultiVector.
+   * @param trans_v2  If true, use the transpose of v2 in the multiplication.
+   * @param red_map The Map defining the layout of the temporary fully-replicated MultiVector
+   *                   used during multiplication (all processes hold all elements).
+   * @param importer  An Import object used to distribute the fully-replicated result to the
+   *                  final MultiVector.
+   * @param result    The output MultiVector with distributed rows/elements.
+   *
+   * @note
+   * - The temporary MultiVector is fully replicated across all MPI ranks.
+   * - After multiplication, the result is redistributed according to `importer` using the
+   *   Insert combine mode.
+   * - This approach ensures that multiplication can be performed without worrying about
+   *   parallel distribution of input MultiVectors, at the cost of temporary memory usage.
+   *
+   * @throws Throws an assertion if the internal Multiply operation fails.
+   */
+  void multiply_multi_vectors(const Core::LinAlg::MultiVector<double>& v1, bool trans_v1,
+      const Core::LinAlg::MultiVector<double>& v2, bool trans_v2, const Core::LinAlg::Map& red_map,
+      const Core::LinAlg::Import& importer, Core::LinAlg::MultiVector<double>& result);
+
 }  // namespace Core::LinAlg
 
 FOUR_C_NAMESPACE_CLOSE

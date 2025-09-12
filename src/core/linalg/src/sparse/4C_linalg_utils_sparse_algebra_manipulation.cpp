@@ -986,4 +986,32 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_row_col_transfo
   return outmat;
 }
 
+Core::LinAlg::SparseMatrix Core::LinAlg::make_sparse_matrix(
+    const Core::LinAlg::MultiVector<double>& multivect, const Core::LinAlg::Map& rangemap,
+    const std::optional<Core::LinAlg::Map>& domainmap)
+{
+  // pointer to values of the Core::LinAlg::MultiVector<double>
+  double* Values;
+  Values = multivect.Values();
+
+  Core::LinAlg::SparseMatrix sparsemat(rangemap, 0, false, true);
+  // loop over columns of the Core::LinAlg::MultiVector<double>
+  for (int i = 0; i < multivect.NumVectors(); i++)
+  {
+    // loop over rows of the Core::LinAlg::MultiVector<double>
+    for (int j = 0; j < multivect.MyLength(); j++)
+    {
+      // assemble the values into the Core::LinAlg::SparseMatrix (value by value)
+      sparsemat.assemble(Values[i * multivect.MyLength() + j], rangemap.gid(j), i);
+    }
+  }
+
+  // Complete the Core::LinAlg::SparseMatrix
+  if (domainmap.has_value())
+    sparsemat.complete(domainmap.value(), rangemap);
+  else
+    sparsemat.complete();
+  return sparsemat;
+}
+
 FOUR_C_NAMESPACE_CLOSE

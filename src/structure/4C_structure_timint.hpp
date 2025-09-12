@@ -15,6 +15,7 @@
 #include "4C_adapter_str_structure.hpp"
 #include "4C_fem_general_elements_paramsinterface.hpp"
 #include "4C_inpar_structure.hpp"
+#include "4C_linalg_sparse_pod.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_timestepping_mstep.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
@@ -71,11 +72,6 @@ namespace Core::Conditions
 namespace Core::IO
 {
   class DiscretizationWriter;
-}
-
-namespace Cardiovascular0D
-{
-  class ProperOrthogonalDecomposition;
 }
 
 /*----------------------------------------------------------------------*/
@@ -1188,8 +1184,7 @@ namespace Solid
     std::shared_ptr<Core::LinAlg::MapExtractor> porositysplitter_;
     //@}
 
-    std::shared_ptr<Cardiovascular0D::ProperOrthogonalDecomposition>
-        mor_;  //!< model order reduction
+    std::shared_ptr<Core::LinAlg::ProperOrthogonalDecomposition> mor_;  //!< model order reduction
 
    private:
     //! flag indicating if class is setup
