@@ -298,11 +298,7 @@ void Core::Elements::Element::unpack(Core::Communication::UnpackBuffer& buffer)
 
   // node_, face_, parent_master_, parent_slave_ are NOT communicated
   node_.resize(0);
-  if (!face_.empty())
-  {
-    std::vector<std::shared_ptr<Core::Elements::FaceElement>> empty;
-    std::swap(face_, empty);
-  }
+  face_.clear();
 }
 
 
@@ -626,20 +622,6 @@ int Core::Elements::Element::num_face() const
   }
 }
 
-/*----------------------------------------------------------------------*
- |  returns neighbor of element (public)               kronbichler 05/13|
- *----------------------------------------------------------------------*/
-Core::Elements::Element* Core::Elements::Element::neighbor(const int face) const
-{
-  if (face_.empty()) return nullptr;
-  FOUR_C_ASSERT(face < num_face(), "there is no face with the given index");
-  Core::Elements::FaceElement* faceelement = face_[face].get();
-  if (faceelement->parent_master_element() == this)
-    return faceelement->parent_slave_element();
-  else if (faceelement->parent_slave_element() == this)
-    return faceelement->parent_master_element();
-  return nullptr;
-}
 
 /*----------------------------------------------------------------------*
  |  set faces (public)                                 kronbichler 05/13|
@@ -653,17 +635,6 @@ void Core::Elements::Element::set_face(
   face_[faceindex] = Core::Utils::shared_ptr_from_ref<Core::Elements::FaceElement>(*faceelement);
 }
 
-/*----------------------------------------------------------------------*
- |  set faces (public)                                       seitz 12/16|
- *----------------------------------------------------------------------*/
-void Core::Elements::Element::set_face(
-    const int faceindex, std::shared_ptr<Core::Elements::FaceElement> faceelement)
-{
-  const int nface = num_face();
-  if (face_.empty()) face_.resize(nface, nullptr);
-  FOUR_C_ASSERT(faceindex < num_face(), "there is no face with the given index");
-  face_[faceindex] = std::move(faceelement);
-}
 
 
 /*----------------------------------------------------------------------*
