@@ -137,6 +137,7 @@ std::shared_ptr<Core::LinAlg::Solver> Solid::SOLVER::Factory::build_structure_li
       const int nummodes = kspcond->parameters().get<int>("NUMMODES");
 
       // get rigid body mode flags for a 3-D solid: [transx transy transz rotx roty rotz]
+      // Euler-Bernoulli beams have a similar ordering: [transx transy transz rot1 rot2]
       const auto* modeflags = &kspcond->parameters().get<std::vector<int>>("ONOFF");
 
       // get actual active mode ids given in input file
@@ -163,8 +164,16 @@ std::shared_ptr<Core::LinAlg::Solver> Solid::SOLVER::Factory::build_structure_li
 
       Core::LinAlg::Map nullspace_map(*actdis.dof_row_map());
 
+      int numdof;
+      int dimns;
+      {
+        // just grab the block information on the first element that appears
+        Core::Elements::Element* dwele = actdis.l_row_element(0);
+        dwele->element_type().nodal_block_information(dwele, numdof, dimns);
+      }
+
       std::shared_ptr<Core::LinAlg::MultiVector<double>> nullspace =
-          Core::FE::compute_null_space(actdis, 3, 6, nullspace_map);
+          Core::FE::compute_null_space(actdis, numdof, dimns, nullspace_map);
 
       if (nullspace == nullptr) FOUR_C_THROW("Nullspace could not be computed successfully.");
 

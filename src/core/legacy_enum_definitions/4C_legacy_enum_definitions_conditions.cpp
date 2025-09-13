@@ -336,6 +336,8 @@ std::string_view Core::Conditions::to_string(const Core::Conditions::ConditionTy
       return "scatra coupling condition";
     case Core::Conditions::ParticleWall:
       return "particle wall condition";
+    case Core::Conditions::LineModeKrylovProjection:
+      return "Line mode for Krylov space projection";
     case Core::Conditions::SurfaceModeKrylovProjection:
       return "Surface mode for Krylov space projection";
     case Core::Conditions::VolumeModeKrylovProjection:

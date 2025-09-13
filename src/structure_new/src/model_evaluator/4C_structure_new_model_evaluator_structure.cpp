@@ -381,12 +381,15 @@ bool Solid::ModelEvaluator::Structure::apply_force_stiff_external()
   if (eval_data().get_damping_type() == Inpar::Solid::damp_material)
     discret().set_state(0, "velocity", *global_state().get_vel_n());
 
+  // TODO: is it okay to move the set_state() outside of the if-else?
+  discret().set_state(0, "displacement new", *global_state().get_dis_np());
+
   // get load vector
   if (!tim_int().get_data_sdyn().get_load_lin())
     evaluate_neumann(*global_state().get_fext_np(), nullptr);
   else
   {
-    discret().set_state(0, "displacement new", *global_state().get_dis_np());
+    // discret().set_state(0, "displacement new", *global_state().get_dis_np());
 
     /* Add the linearization of the external force to the stiffness
      * matrix. */

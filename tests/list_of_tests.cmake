@@ -41,6 +41,8 @@ four_c_test(TEST_FILE beam3eb_static_contact_penalty_linposquadpen_beamrotatingo
 four_c_test(TEST_FILE beam3eb_static_contact_penalty_linposquadpen_beamslidingoverarc.4C.yaml NP 2)
 four_c_test(TEST_FILE beam3eb_static_contact_penalty_newgap_twocrossedbeams.4C.yaml NP 2)
 four_c_test(TEST_FILE beam3eb_static_endmoment_quartercircle.4C.yaml NP 2)
+four_c_test(TEST_FILE beam3eb_static_one_element_pure_neumann.4C.yaml NP 1)
+four_c_test(TEST_FILE beam3eb_static_pure_neumann.4C.yaml NP 2)
 four_c_test(TEST_FILE beam3r_herm2line2_static_test1.4C.yaml NP 2)
 four_c_test(TEST_FILE beam3r_herm2line3_backweuler_browndyn_crosslinking_beam3rline2.4C.yaml NP 2 RESTART_STEP 70)
 four_c_test(TEST_FILE beam3r_herm2line3_backweuler_browndyn_crosslinking_beam3rline2_additional_fixed_crosslink.4C.yaml)
