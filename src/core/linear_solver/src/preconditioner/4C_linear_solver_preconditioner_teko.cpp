@@ -37,8 +37,8 @@ Core::LinearSolver::TekoPreconditioner::TekoPreconditioner(Teuchos::ParameterLis
 
 //----------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------
-void Core::LinearSolver::TekoPreconditioner::setup(Epetra_Operator* matrix,
-    Core::LinAlg::MultiVector<double>* x, Core::LinAlg::MultiVector<double>* b)
+void Core::LinearSolver::TekoPreconditioner::setup(Core::LinAlg::SparseOperator& matrix,
+    const Core::LinAlg::MultiVector<double>& x, Core::LinAlg::MultiVector<double>& b)
 {
   using EpetraMultiVector = Xpetra::EpetraMultiVectorT<GlobalOrdinal, Node>;
   using XpetraMultiVector = Xpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>;
@@ -49,12 +49,11 @@ void Core::LinearSolver::TekoPreconditioner::setup(Epetra_Operator* matrix,
 
   Teuchos::ParameterList tekoParams;
   auto comm = Core::Communication::to_teuchos_comm<int>(
-      Core::Communication::unpack_epetra_comm(matrix->Comm()));
+      Core::Communication::unpack_epetra_comm(matrix.Comm()));
   Teuchos::updateParametersFromXmlFileAndBroadcast(xmlFileName, Teuchos::Ptr(&tekoParams), *comm);
 
-  std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> A =
-      std::dynamic_pointer_cast<Core::LinAlg::BlockSparseMatrixBase>(
-          Core::Utils::shared_ptr_from_ref(*matrix));
+  auto A = std::dynamic_pointer_cast<Core::LinAlg::BlockSparseMatrixBase>(
+      Core::Utils::shared_ptr_from_ref(matrix));
 
   if (!A)
   {
@@ -64,13 +63,12 @@ void Core::LinearSolver::TekoPreconditioner::setup(Epetra_Operator* matrix,
           tekolist_.sublist("Teko Parameters")
               .get<std::shared_ptr<Core::LinAlg::MultiMapExtractor>>("extractor");
 
-      auto crsA =
-          std::dynamic_pointer_cast<Epetra_CrsMatrix>(Core::Utils::shared_ptr_from_ref(*matrix));
-      Core::LinAlg::SparseMatrix sparseA =
-          Core::LinAlg::SparseMatrix(crsA, LinAlg::DataAccess::Share);
+      auto A_sparse = std::dynamic_pointer_cast<Core::LinAlg::SparseMatrix>(
+          Core::Utils::shared_ptr_from_ref(matrix));
 
       A = Core::LinAlg::split_matrix<Core::LinAlg::DefaultBlockMatrixStrategy>(
-          sparseA, *extractor, *extractor);
+          *A_sparse, *extractor, *extractor);
+
       A->complete();
     }
   }
@@ -78,8 +76,8 @@ void Core::LinearSolver::TekoPreconditioner::setup(Epetra_Operator* matrix,
   // wrap linear operators
   if (!A)
   {
-    auto A_crs = Teuchos::rcp_dynamic_cast<Epetra_CrsMatrix>(Teuchos::rcpFromRef(*matrix));
-    pmatrix_ = Thyra::epetraLinearOp(A_crs);
+    auto A_crs = Teuchos::rcp_dynamic_cast<Core::LinAlg::SparseMatrix>(Teuchos::rcpFromRef(matrix));
+    pmatrix_ = Thyra::epetraLinearOp(Teuchos::rcpFromRef(A_crs->epetra_matrix()));
   }
   else
   {

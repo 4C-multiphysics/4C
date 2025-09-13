@@ -72,7 +72,7 @@ void Core::LinearSolver::IterativeSolver::setup(std::shared_ptr<Core::LinAlg::Sp
       std::cout << "*******************************************************" << std::endl;
     }
 
-    preconditioner_->setup(&a_->epetra_operator(), x_.get(), b_.get());
+    preconditioner_->setup(*a_, *x_, *b_);
   }
   else
   {

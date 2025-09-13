@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_linalg_sparseoperator.hpp"
 #include "4C_linalg_vector.hpp"
 
 #include <Epetra_Operator.h>
@@ -39,8 +40,8 @@ namespace Core::LinearSolver
     virtual ~PreconditionerTypeBase() = default;
 
     /// Setup preconditioner with a given linear system.
-    virtual void setup(Epetra_Operator* matrix, Core::LinAlg::MultiVector<double>* x,
-        Core::LinAlg::MultiVector<double>* b) = 0;
+    virtual void setup(Core::LinAlg::SparseOperator& matrix,
+        const Core::LinAlg::MultiVector<double>& x, Core::LinAlg::MultiVector<double>& b) = 0;
 
     /// linear operator used for preconditioning
     virtual std::shared_ptr<Epetra_Operator> prec_operator() const = 0;
