@@ -151,6 +151,9 @@ namespace Core::LinAlg
     /// Assignment operator. Makes a deep copy.
     SparseMatrix& operator=(const SparseMatrix& mat);
 
+    SparseMatrix(SparseMatrix&&) noexcept = default;
+    SparseMatrix& operator=(SparseMatrix&&) noexcept = default;
+
     /// Assignment method. Deep copy or view on matrix.
     /*!
       Explicit method for the assignment operator. You can make an explicit

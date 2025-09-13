@@ -132,8 +132,8 @@ namespace Core::LinAlg
     View(const View& other) = default;
     View& operator=(const View& other) = default;
 
-    View(View&& other) = default;
-    View& operator=(View&& other) = default;
+    View(View&& other) noexcept = default;
+    View& operator=(View&& other) noexcept = default;
 
     ~View() = default;
 
