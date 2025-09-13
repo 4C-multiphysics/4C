@@ -185,7 +185,7 @@ namespace
     Epetra_CrsMatrix* A;
 
     int err = EpetraExt::MatrixMarketFileToCrsMatrix(
-        TESTING::get_support_file_path("test_matrices/beam.mm").c_str(),
+        TESTING::get_support_file_path("test_matrices/beamI.mm").c_str(),
         Core::Communication::as_epetra_comm(comm_), A);
     if (err != 0) FOUR_C_THROW("Matrix read failed.");
     std::shared_ptr<Epetra_CrsMatrix> A_crs = Core::Utils::shared_ptr_from_ref(*A);

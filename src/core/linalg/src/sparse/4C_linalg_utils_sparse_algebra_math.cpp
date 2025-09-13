@@ -308,8 +308,27 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_transpose(const
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_sparse_inverse(
-    const SparseMatrix& A, std::shared_ptr<Core::LinAlg::Graph> sparsity_pattern)
+    const SparseMatrix& A, std::shared_ptr<Core::LinAlg::Graph> sparsity_pattern,
+    OptionsSparseMatrixInverse options)
 {
+  Core::LinAlg::Vector<double> diagonal(A.row_map());
+  A.extract_diagonal_copy(diagonal);
+
+  Core::LinAlg::Vector<double> sign(A.row_map());
+  for (int row = 0; row < sign.local_length(); row++)
+  {
+    if (diagonal.get_values()[row] < 0)
+      sign.get_values()[row] = -1.0;
+    else
+      sign.get_values()[row] = 1.0;
+  }
+
+  diagonal.update(options.alpha, sign, options.rho);
+
+  Core::LinAlg::SparseMatrix A_perturbed(A);
+  A_perturbed.replace_diagonal_values(diagonal);
+  A_perturbed.complete();
+
   // construct the inverse matrix with the given sparsity pattern
   std::shared_ptr<Core::LinAlg::MultiMapExtractor> dbc_map = nullptr;
   std::shared_ptr<SparseMatrix> A_inverse =
@@ -318,7 +337,8 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_sparse_inverse(
   // gather missing rows from other procs to generate an overlapping map
   Core::LinAlg::Import rowImport =
       Core::LinAlg::Import(sparsity_pattern->col_map(), sparsity_pattern->row_map());
-  Epetra_CrsMatrix A_overlap = Epetra_CrsMatrix(A.epetra_matrix(), rowImport.get_epetra_import());
+  Epetra_CrsMatrix A_overlap =
+      Epetra_CrsMatrix(A_perturbed.epetra_matrix(), rowImport.get_epetra_import());
 
   // loop over all rows of the inverse sparsity pattern (this can be done in parallel)
   for (int k = 0; k < sparsity_pattern->num_local_rows(); k++)
@@ -370,6 +390,7 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::matrix_sparse_inverse(
     Teuchos::SerialQRDenseSolver<int, double> qrSolver;
     qrSolver.setMatrix(Teuchos::rcpFromRef(localA.base()));
     qrSolver.setVectors(Teuchos::rcpFromRef(localX), Teuchos::rcpFromRef(ek));
+    qrSolver.factorWithEquilibration(true);
     const int err = qrSolver.solve();
     if (err != 0) FOUR_C_THROW("Error in serial QR solve.");
 
