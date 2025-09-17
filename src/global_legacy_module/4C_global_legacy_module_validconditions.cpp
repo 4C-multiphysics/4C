@@ -771,12 +771,12 @@ std::vector<Core::Conditions::ConditionDefinition> Global::valid_conditions()
   // that is not excited by the body force
   //
   // examples are:
-  // fluid:  pure Dirichlet (i.e. velocity) boundary conditions - pressure
-  //         level is undetermined
-  // scatra: pure Neumann boundary condition - level of scalar quantity is
-  //         undetermined
-  // solid:  insufficient support of translational or rotational rigid body
-  //         modes
+  // fluid:     pure Dirichlet (i.e. velocity) boundary conditions - pressure
+  //            level is undetermined
+  // scatra:    pure Neumann boundary condition - level of scalar quantity is
+  //            undetermined
+  // structure: insufficient support of translational or rotational rigid body
+  //            modes
   //
   // for fluid and scatra, NUMDOF needs to be the number of dofs per node. the
   // following ONOFF values trigger the fixation of the quantity level (for
@@ -784,6 +784,11 @@ std::vector<Core::Conditions::ConditionDefinition> Global::valid_conditions()
   // for solid NUMDOF is the number of potential rigid body modes (e.g. 6 for
   // 3-D solid, 3 for 2-D solid), where ONOFF triggers first the
   // translational followed by the rotational modes, each in/around x to z
+
+  Core::Conditions::ConditionDefinition linerigidbodymode(
+      "DESIGN LINE MODE FOR KRYLOV SPACE PROJECTION", "KrylovSpaceProjection",
+      "Line mode for Krylov space projection", Core::Conditions::LineModeKrylovProjection, true,
+      Core::Conditions::geometry_type_line);
 
   Core::Conditions::ConditionDefinition surfrigidbodymode(
       "DESIGN SURF MODE FOR KRYLOV SPACE PROJECTION", "KrylovSpaceProjection",
@@ -810,6 +815,7 @@ std::vector<Core::Conditions::ConditionDefinition> Global::valid_conditions()
     condlist.emplace_back(cond);
   };
 
+  make_rigidbody_mode_condition(linerigidbodymode);
   make_rigidbody_mode_condition(surfrigidbodymode);
   make_rigidbody_mode_condition(volrigidbodymode);
 

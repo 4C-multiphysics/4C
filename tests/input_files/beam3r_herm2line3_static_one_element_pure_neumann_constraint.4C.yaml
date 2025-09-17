@@ -1,0 +1,204 @@
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+IO:
+  VERBOSITY: "standard"
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 1
+IO/RUNTIME VTK OUTPUT/BEAMS:
+  OUTPUT_BEAMS: true
+  DISPLACEMENT: true
+  ELEMENT_GID: true
+STRUCTURAL DYNAMIC:
+  LINEAR_SOLVER: 1
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "Statics"
+  LOADLIN: false
+  NLNSOL: "fullnewton"
+  PREDICT: "ConstDis"
+  TIMESTEP: 0.5
+  NUMSTEP: 2
+  MAXTIME: 1.0
+  TOLRES: 1e-04
+  TOLDISP: 1e-06
+  MAXITER: 20
+CONSTRAINT:
+  CONSTRAINT_ENFORCEMENT: lagrange
+SOLVER 1:
+  NAME: "Structure_Solver"
+  SOLVER: "Superlu"
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t"
+FUNCT2:
+  - SYMBOLIC_FUNCTION_OF_TIME: "t"
+MATERIALS:
+  - MAT: 1
+    MAT_BeamReissnerElastHyper:
+      YOUNG: 100
+      POISSONRATIO: 0.0
+      DENS: 0.0
+      CROSSAREA: 0.007853981633974483
+      SHEARCORR: 1
+      MOMINPOL: 9.817477042468105e-06
+      MOMIN2: 4.9087385212340526e-06
+      MOMIN3: 4.9087385212340526e-06
+DESIGN POINT NEUMANN CONDITIONS:
+  - E: 1
+    NUMDOF: 9
+    ONOFF:
+      - 0
+      - 1
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    VAL:
+      - 0
+      - -5e-06
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    FUNCT:
+      - 0
+      - 2
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+  - E: 2
+    NUMDOF: 9
+    ONOFF:
+      - 0
+      - 1
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    VAL:
+      - 0
+      - -5e-06
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    FUNCT:
+      - 0
+      - 2
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+DESIGN LINE NEUMANN CONDITIONS:
+  - E: 1
+    NUMDOF: 9
+    ONOFF:
+      - 0
+      - 1
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    VAL:
+      - 0
+      - 1e-05
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    FUNCT:
+      - 0
+      - 1
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+DESIGN LINE MODE FOR KRYLOV SPACE PROJECTION:
+  - E: 1
+    DIS: "structure"
+    NUMMODES: 6
+    ONOFF:
+      - 1
+      - 1
+      - 1
+      - 1
+      - 1
+      - 1
+    WEIGHTVECDEF: "pointvalues"
+    TYPE: constraint
+DNODE-NODE TOPOLOGY:
+  - "NODE 1 DNODE 1"
+  - "NODE 3 DNODE 2"
+DLINE-NODE TOPOLOGY:
+  - "NODE 1 DLINE 1"
+  - "NODE 2 DLINE 1"
+  - "NODE 3 DLINE 1"
+NODE COORDS:
+  - "NODE 1 COORD 0.0 0.0 0.0"
+  - "NODE 2 COORD 1.0 0.0 0.0"
+  - "NODE 3 COORD 2.0 0.0 0.0"
+STRUCTURE ELEMENTS:
+  - "1 BEAM3R LINE3 1 3 2 HERMITE_CENTERLINE true MAT 1 TRIADS 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0"
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispx"
+      VALUE: 0.0
+      TOLERANCE: 1e-5
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispy"
+      VALUE: 0.0
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispz"
+      VALUE: 0.0
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 3
+      QUANTITY: "dispx"
+      VALUE: 0.0
+      TOLERANCE: 1e-5
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 3
+      QUANTITY: "dispy"
+      VALUE: 0.0
+      TOLERANCE: 1e-12
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 3
+      QUANTITY: "dispz"
+      VALUE: 0.0
+      TOLERANCE: 1e-12

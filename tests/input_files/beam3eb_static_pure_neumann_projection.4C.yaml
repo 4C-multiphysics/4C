@@ -1,0 +1,295 @@
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+STRUCTURAL DYNAMIC:
+  LINEAR_SOLVER: 1
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "Statics"
+  LOADLIN: true
+  NLNSOL: "fullnewton"
+  PREDICT: "ConstDis"
+  TIMESTEP: 0.5
+  NUMSTEP: 2
+  MAXTIME: 1.0
+  TOLRES: 1e-04
+  TOLDISP: 1e-06
+  MAXITER: 20
+SOLVER 1:
+  NAME: "Structure_Solver"
+  SOLVER: "Superlu"
+FUNCT1:
+  - SYMBOLIC_FUNCTION_OF_SPACE_TIME: "t"
+FUNCT2:
+  - SYMBOLIC_FUNCTION_OF_TIME: "t"
+MATERIALS:
+  - MAT: 1
+    MAT_BeamKirchhoffTorsionFreeElastHyper:
+      YOUNG: 100
+      DENS: 0.0
+      CROSSAREA: 0.007853981633974483
+      MOMIN: 4.9087385212340526e-06
+DESIGN POINT NEUMANN CONDITIONS:
+  - E: 1
+    NUMDOF: 6
+    ONOFF:
+      - 0
+      - 1
+      - 0
+      - 0
+      - 0
+      - 0
+    VAL:
+      - 0
+      - -5e-06
+      - 0
+      - 0
+      - 0
+      - 0
+    FUNCT:
+      - 0
+      - 2
+      - 0
+      - 0
+      - 0
+      - 0
+  - E: 2
+    NUMDOF: 6
+    ONOFF:
+      - 0
+      - 1
+      - 0
+      - 0
+      - 0
+      - 0
+    VAL:
+      - 0
+      - -5e-06
+      - 0
+      - 0
+      - 0
+      - 0
+    FUNCT:
+      - 0
+      - 2
+      - 0
+      - 0
+      - 0
+      - 0
+DESIGN LINE NEUMANN CONDITIONS:
+  - E: 1
+    NUMDOF: 6
+    ONOFF:
+      - 0
+      - 1
+      - 0
+      - 0
+      - 0
+      - 0
+    VAL:
+      - 0
+      - 1e-05
+      - 0
+      - 0
+      - 0
+      - 0
+    FUNCT:
+      - 0
+      - 1
+      - 0
+      - 0
+      - 0
+      - 0
+DESIGN LINE MODE FOR KRYLOV SPACE PROJECTION:
+  - E: 1
+    DIS: "structure"
+    NUMMODES: 5
+    ONOFF:
+      - 1
+      - 1
+      - 1
+      - 1
+      - 1
+    WEIGHTVECDEF: "pointvalues"
+    TYPE: projection
+DNODE-NODE TOPOLOGY:
+  - "NODE 1 DNODE 1"
+  - "NODE 41 DNODE 2"
+DLINE-NODE TOPOLOGY:
+  - "NODE 1 DLINE 1"
+  - "NODE 2 DLINE 1"
+  - "NODE 3 DLINE 1"
+  - "NODE 4 DLINE 1"
+  - "NODE 5 DLINE 1"
+  - "NODE 6 DLINE 1"
+  - "NODE 7 DLINE 1"
+  - "NODE 8 DLINE 1"
+  - "NODE 9 DLINE 1"
+  - "NODE 10 DLINE 1"
+  - "NODE 11 DLINE 1"
+  - "NODE 12 DLINE 1"
+  - "NODE 13 DLINE 1"
+  - "NODE 14 DLINE 1"
+  - "NODE 15 DLINE 1"
+  - "NODE 16 DLINE 1"
+  - "NODE 17 DLINE 1"
+  - "NODE 18 DLINE 1"
+  - "NODE 19 DLINE 1"
+  - "NODE 20 DLINE 1"
+  - "NODE 21 DLINE 1"
+  - "NODE 22 DLINE 1"
+  - "NODE 23 DLINE 1"
+  - "NODE 24 DLINE 1"
+  - "NODE 25 DLINE 1"
+  - "NODE 26 DLINE 1"
+  - "NODE 27 DLINE 1"
+  - "NODE 28 DLINE 1"
+  - "NODE 29 DLINE 1"
+  - "NODE 30 DLINE 1"
+  - "NODE 31 DLINE 1"
+  - "NODE 32 DLINE 1"
+  - "NODE 33 DLINE 1"
+  - "NODE 34 DLINE 1"
+  - "NODE 35 DLINE 1"
+  - "NODE 36 DLINE 1"
+  - "NODE 37 DLINE 1"
+  - "NODE 38 DLINE 1"
+  - "NODE 39 DLINE 1"
+  - "NODE 40 DLINE 1"
+  - "NODE 41 DLINE 1"
+NODE COORDS:
+  - "NODE 1 COORD 0.0 0.0 0.0"
+  - "NODE 2 COORD 0.5 0.0 0.0"
+  - "NODE 3 COORD 1.0 0.0 0.0"
+  - "NODE 4 COORD 1.5 0.0 0.0"
+  - "NODE 5 COORD 2.0 0.0 0.0"
+  - "NODE 6 COORD 2.5 0.0 0.0"
+  - "NODE 7 COORD 3.0 0.0 0.0"
+  - "NODE 8 COORD 3.5 0.0 0.0"
+  - "NODE 9 COORD 4.0 0.0 0.0"
+  - "NODE 10 COORD 4.5 0.0 0.0"
+  - "NODE 11 COORD 5.0 0.0 0.0"
+  - "NODE 12 COORD 5.5 0.0 0.0"
+  - "NODE 13 COORD 6.0 0.0 0.0"
+  - "NODE 14 COORD 6.5 0.0 0.0"
+  - "NODE 15 COORD 7.0 0.0 0.0"
+  - "NODE 16 COORD 7.5 0.0 0.0"
+  - "NODE 17 COORD 8.0 0.0 0.0"
+  - "NODE 18 COORD 8.5 0.0 0.0"
+  - "NODE 19 COORD 9.0 0.0 0.0"
+  - "NODE 20 COORD 9.5 0.0 0.0"
+  - "NODE 21 COORD 10.0 0.0 0.0"
+  - "NODE 22 COORD 10.5 0.0 0.0"
+  - "NODE 23 COORD 11.0 0.0 0.0"
+  - "NODE 24 COORD 11.5 0.0 0.0"
+  - "NODE 25 COORD 12.0 0.0 0.0"
+  - "NODE 26 COORD 12.5 0.0 0.0"
+  - "NODE 27 COORD 13.0 0.0 0.0"
+  - "NODE 28 COORD 13.5 0.0 0.0"
+  - "NODE 29 COORD 14.0 0.0 0.0"
+  - "NODE 30 COORD 14.5 0.0 0.0"
+  - "NODE 31 COORD 15.0 0.0 0.0"
+  - "NODE 32 COORD 15.5 0.0 0.0"
+  - "NODE 33 COORD 16.0 0.0 0.0"
+  - "NODE 34 COORD 16.5 0.0 0.0"
+  - "NODE 35 COORD 17.0 0.0 0.0"
+  - "NODE 36 COORD 17.5 0.0 0.0"
+  - "NODE 37 COORD 18.0 0.0 0.0"
+  - "NODE 38 COORD 18.5 0.0 0.0"
+  - "NODE 39 COORD 19.0 0.0 0.0"
+  - "NODE 40 COORD 19.5 0.0 0.0"
+  - "NODE 41 COORD 20.0 0.0 0.0"
+STRUCTURE ELEMENTS:
+  - "1 BEAM3EB LINE2 1 2 MAT 1"
+  - "2 BEAM3EB LINE2 2 3 MAT 1"
+  - "3 BEAM3EB LINE2 3 4 MAT 1"
+  - "4 BEAM3EB LINE2 4 5 MAT 1"
+  - "5 BEAM3EB LINE2 5 6 MAT 1"
+  - "6 BEAM3EB LINE2 6 7 MAT 1"
+  - "7 BEAM3EB LINE2 7 8 MAT 1"
+  - "8 BEAM3EB LINE2 8 9 MAT 1"
+  - "9 BEAM3EB LINE2 9 10 MAT 1"
+  - "10 BEAM3EB LINE2 10 11 MAT 1"
+  - "11 BEAM3EB LINE2 11 12 MAT 1"
+  - "12 BEAM3EB LINE2 12 13 MAT 1"
+  - "13 BEAM3EB LINE2 13 14 MAT 1"
+  - "14 BEAM3EB LINE2 14 15 MAT 1"
+  - "15 BEAM3EB LINE2 15 16 MAT 1"
+  - "16 BEAM3EB LINE2 16 17 MAT 1"
+  - "17 BEAM3EB LINE2 17 18 MAT 1"
+  - "18 BEAM3EB LINE2 18 19 MAT 1"
+  - "19 BEAM3EB LINE2 19 20 MAT 1"
+  - "20 BEAM3EB LINE2 20 21 MAT 1"
+  - "21 BEAM3EB LINE2 21 22 MAT 1"
+  - "22 BEAM3EB LINE2 22 23 MAT 1"
+  - "23 BEAM3EB LINE2 23 24 MAT 1"
+  - "24 BEAM3EB LINE2 24 25 MAT 1"
+  - "25 BEAM3EB LINE2 25 26 MAT 1"
+  - "26 BEAM3EB LINE2 26 27 MAT 1"
+  - "27 BEAM3EB LINE2 27 28 MAT 1"
+  - "28 BEAM3EB LINE2 28 29 MAT 1"
+  - "29 BEAM3EB LINE2 29 30 MAT 1"
+  - "30 BEAM3EB LINE2 30 31 MAT 1"
+  - "31 BEAM3EB LINE2 31 32 MAT 1"
+  - "32 BEAM3EB LINE2 32 33 MAT 1"
+  - "33 BEAM3EB LINE2 33 34 MAT 1"
+  - "34 BEAM3EB LINE2 34 35 MAT 1"
+  - "35 BEAM3EB LINE2 35 36 MAT 1"
+  - "36 BEAM3EB LINE2 36 37 MAT 1"
+  - "37 BEAM3EB LINE2 37 38 MAT 1"
+  - "38 BEAM3EB LINE2 38 39 MAT 1"
+  - "39 BEAM3EB LINE2 39 40 MAT 1"
+  - "40 BEAM3EB LINE2 40 41 MAT 1"
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispx"
+      VALUE: 5.07773128771854987e-01
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispy"
+      VALUE: -1.74680284085847171e+00
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 1
+      QUANTITY: "dispz"
+      VALUE: 0.0
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 41
+      QUANTITY: "dispx"
+      VALUE: -5.07773128771853544e-01
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 41
+      QUANTITY: "dispy"
+      VALUE: -1.74680284085847215e+00
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 41
+      QUANTITY: "dispz"
+      VALUE: 0.0
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 21
+      QUANTITY: "dispx"
+      VALUE: 0.0
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 21
+      QUANTITY: "dispy"
+      VALUE: 1.06622602978520220e+00
+      TOLERANCE: 1e-10
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 21
+      QUANTITY: "dispz"
+      VALUE: 0.0
+      TOLERANCE: 1e-10
