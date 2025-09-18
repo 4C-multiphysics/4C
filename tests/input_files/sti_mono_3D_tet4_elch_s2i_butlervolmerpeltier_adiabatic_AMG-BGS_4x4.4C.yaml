@@ -335,7 +335,7 @@ RESULT DESCRIPTION:
   - STI:
       SPECIAL: true
       QUANTITY: "numiterlastlinearsolve"
-      VALUE: 32
+      VALUE: 50
       TOLERANCE: 1e-16
 DESIGN SURF NEUMANN CONDITIONS:
   - E: 6
