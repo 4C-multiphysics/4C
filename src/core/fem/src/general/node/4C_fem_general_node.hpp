@@ -136,7 +136,7 @@ namespace Core::Nodes
     /*!
     \brief Return coordinates vector
     */
-    inline std::span<const double, 3> x() const { return std::span<const double, 3>(x_.data(), 3); }
+    inline std::span<const double> x() const { return std::span<const double>(x_); }
 
     /*!
     \brief return spatial dimension of node coordinates

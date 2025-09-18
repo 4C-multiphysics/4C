@@ -66,15 +66,17 @@ void Core::FE::Discretization::check_filled_globally()
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Core::FE::Discretization::add_node(
-    std::span<const double, 3> x, GlobalIndexType gid, std::shared_ptr<Core::Nodes::Node> user_node)
+    std::span<const double> x, GlobalIndexType gid, std::shared_ptr<Core::Nodes::Node> user_node)
 {
+  FOUR_C_ASSERT(x.size() == n_dim_, "Node coordinate dimension mismatch in discretization.");
+
   // As long as user nodes are required, we need to ensure that a node exists, so we create one.
   // Once we can live without user nodes, this fixup may be removed.
   if (user_node == nullptr)
     user_node = std::make_shared<Core::Nodes::Node>(gid, x, Communication::my_mpi_rank(comm_));
 
   node_[gid] = user_node;
-  FOUR_C_ASSERT(node_gid_.size() * 3 == node_coordinates_.size(),
+  FOUR_C_ASSERT(node_gid_.size() * n_dim_ == node_coordinates_.size(),
       "Internal error: mismatch in size of node data.");
 
   node_gid_.emplace_back() = gid;

@@ -119,11 +119,10 @@ namespace Core::FE
     /**
      * Return the spatial coordinates of the node.
      */
-    [[nodiscard]] std::span<const double, 3> x() const
+    [[nodiscard]] std::span<const double> x() const
     {
       const auto& coord = discretization_->nodecolptr_[local_id_]->x();
-      FOUR_C_ASSERT(coord.size() == 3, "NodeRef only supports 3D coordinates");
-      return std::span<const double, 3>(coord.data(), 3);
+      return std::span<const double>(coord.data(), 3);
     }
 
     /**
@@ -1286,7 +1285,7 @@ namespace Core::FE
 
     \note Sets Filled()=false
     */
-    void add_node(std::span<const double, 3> x, GlobalIndexType gid,
+    void add_node(std::span<const double> x, GlobalIndexType gid,
         std::shared_ptr<Core::Nodes::Node> user_node);
 
     /**
