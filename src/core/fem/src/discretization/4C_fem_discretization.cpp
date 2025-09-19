@@ -75,6 +75,21 @@ void Core::FE::Discretization::add_node(
   if (user_node == nullptr)
     user_node = std::make_shared<Core::Nodes::Node>(gid, x, Communication::my_mpi_rank(comm_));
 
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  FOUR_C_ASSERT(user_node->id() == gid,
+      "Node GID mismatch in discretization (user node). Expected {}, got {}.", gid,
+      user_node->id());
+
+  const auto user_x = user_node->x();
+  FOUR_C_ASSERT(
+      user_x.size() == n_dim_, "Node coordinate dimension mismatch in discretization (user node).");
+  for (unsigned int i = 0; i < n_dim_; i++)
+    FOUR_C_ASSERT(user_x[i] == x[i],
+        "Node coordinate mismatch in discretization (user node). Expected {}, got {}.", x[i],
+        user_x[i]);
+
+#endif
+
   node_[gid] = user_node;
   FOUR_C_ASSERT(node_gid_.size() * n_dim_ == node_coordinates_.size(),
       "Internal error: mismatch in size of node data.");
