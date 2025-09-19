@@ -41,10 +41,29 @@ void Core::IO::MeshInput::assert_valid(const Mesh<dim>& mesh)
 {
   FOUR_C_ASSERT_ALWAYS(!mesh.points.empty(), "The mesh has no points.");
 
+  if (!mesh.point_data.empty())
+  {
+    for (const auto& [key, data] : mesh.point_data)
+    {
+      // Avoid capturing structured binding for clang OpenMP
+      const std::string_view field_name = key;
+      std::visit(
+          [&](const auto& vec)
+          {
+            FOUR_C_ASSERT_ALWAYS(vec.size() == mesh.points.size(),
+                "Point data field '{}' has {} entries, but the mesh has {} points.", field_name,
+                vec.size(), mesh.points.size());
+          },
+          data);
+    }
+  }
+
   FOUR_C_ASSERT_ALWAYS(!mesh.cell_blocks.empty(), "The mesh has no cell blocks.");
 
   for (const auto& [id, cell_block] : mesh.cell_blocks)
   {
+    // Avoid capturing structured binding for clang OpenMP
+    const CellBlock<dim>& cell_block_ref = cell_block;
     FOUR_C_ASSERT_ALWAYS(cell_block.size() > 0, "Cell block {} has no cells.", id);
 
     if (cell_block.external_ids_.has_value())
@@ -60,6 +79,23 @@ void Core::IO::MeshInput::assert_valid(const Mesh<dim>& mesh)
       {
         FOUR_C_ASSERT_ALWAYS(node_id >= 0 && static_cast<std::size_t>(node_id) < mesh.points.size(),
             "Cell block {} has a cell with invalid node ID {}.", id, node_id);
+      }
+    }
+
+    if (!cell_block.cell_data.empty())
+    {
+      for (const auto& [key, data] : cell_block.cell_data)
+      {
+        // Avoid capturing structured binding for clang OpenMP
+        const std::string_view field_name = key;
+        std::visit(
+            [&](const auto& vec)
+            {
+              FOUR_C_ASSERT_ALWAYS(vec.size() == cell_block_ref.size(),
+                  "Cell data field '{}' has {} entries, but the block has {} cells.", field_name,
+                  vec.size(), cell_block_ref.size());
+            },
+            data);
       }
     }
   }
@@ -134,7 +170,9 @@ void Core::IO::MeshInput::print(const Mesh<dim>& mesh, std::ostream& os, Verbosi
   }
 }
 
-void Core::IO::MeshInput::print(const CellBlock& block, std::ostream& os, VerbosityLevel verbose)
+template <unsigned dim>
+void Core::IO::MeshInput::print(
+    const CellBlock<dim>& block, std::ostream& os, VerbosityLevel verbose)
 {
   using EnumTools::operator<<;
 
@@ -183,5 +221,7 @@ void Core::IO::MeshInput::print(const PointSet& point_set, std::ostream& os, Ver
 template void Core::IO::MeshInput::assert_valid(const Mesh<3>& mesh);
 template void Core::IO::MeshInput::print(
     const Mesh<3>& mesh, std::ostream& os, VerbosityLevel verbose);
+template void Core::IO::MeshInput::print(
+    const CellBlock<3>& block, std::ostream& os, VerbosityLevel verbose);
 
 FOUR_C_NAMESPACE_CLOSE

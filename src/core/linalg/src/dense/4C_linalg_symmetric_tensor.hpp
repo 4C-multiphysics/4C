@@ -193,9 +193,15 @@ namespace Core::LinAlg
   }  // namespace Internal
 
   template <typename T>
-  constexpr bool is_symmetric_tensor =
-      is_tensor<T> && Internal::IsSymmetricCompressionTypeHelper<
-                          TensorCompressionType<std::remove_cvref_t<T>>>::value;
+  constexpr bool is_symmetric_tensor = []() consteval
+  {
+    if constexpr (is_tensor<T>)
+    {
+      return Internal::IsSymmetricCompressionTypeHelper<
+          TensorCompressionType<std::remove_cvref_t<T>>>::value;
+    }
+    return false;
+  }();
 
   /*!
    * @brief An owning, dense tensor of arbitrary rank with symmetry
