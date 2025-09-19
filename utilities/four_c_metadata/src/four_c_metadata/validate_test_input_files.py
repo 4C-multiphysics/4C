@@ -6,34 +6,13 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
 import argparse
-import ryml
-import pathlib
-import json
-import re
 import jsonschema_rs
+import json
+import pathlib
+from four_c_metadata.utils import load_yaml
 
 
-def load_yaml(path_to_yaml_file):
-    """
-    Duplicated from fourcipp.
-    """
-
-    json_str = ryml.emit_json(
-        ryml.parse_in_arena(pathlib.Path(path_to_yaml_file).read_bytes())
-    )
-
-    # Convert `inf` to a string to avoid JSON parsing errors, see https://github.com/biojppm/rapidyaml/issues/312
-    json_str = re.sub(r":\s*(-?)inf\b", r': "\1inf"', json_str)
-    # Convert floats that are missing digits on either side of the decimal point
-    json_str = re.sub(r":\s*(-?)\.([0-9]+)", r": \g<1>0.\2", json_str)
-    json_str = re.sub(r":\s*(-?)([0-9]+)\.(\D)", r": \1\2.0\3", json_str)
-
-    data = json.loads(json_str)
-
-    return data
-
-
-def main():
+def cli():
     parser = argparse.ArgumentParser(
         description="Validate files against a JSON schema file.",
     )
@@ -68,7 +47,6 @@ def main():
         except jsonschema_rs.ValidationError as e:
             print(format_dotted(yaml_file, "failed"))
             print(f"{e}")
-
             files_with_errors.append(yaml_file)
         except Exception as e:
             print(format_dotted(yaml_file, "error"))
@@ -86,4 +64,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    cli()

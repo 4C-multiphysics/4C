@@ -12,7 +12,6 @@ This script compares two files with a tolerance.
 
 # Import python modules.
 import os
-import sys
 import numpy as np
 import argparse
 

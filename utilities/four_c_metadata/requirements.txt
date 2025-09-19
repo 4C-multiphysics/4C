@@ -1,0 +1,15 @@
+# for creating the yaml schemata during build:
+rapidyaml
+jsonschema-rs
+
+# for testing:
+numpy
+vtk
+
+# for sphinx documentation:
+matplotlib
+myst-parser
+nbsphinx
+scipy
+sphinx-multibuild
+sphinx-rtd-theme
