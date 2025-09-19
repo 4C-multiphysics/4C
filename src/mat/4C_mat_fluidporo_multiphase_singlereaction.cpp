@@ -10,6 +10,7 @@
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_global_data.hpp"
 #include "4C_mat_par_bundle.hpp"
+#include "4C_porofluid_pressure_based_elast_scatra_input.hpp"
 #include "4C_utils_enum.hpp"
 #include "4C_utils_function.hpp"
 
@@ -326,11 +327,13 @@ std::shared_ptr<Core::Mat::Material> Mat::PAR::FluidPoroSingleReaction::create_m
 Mat::PAR::FluidPoroSingleReaction::PorofluidReactionCoupling
 Mat::PAR::FluidPoroSingleReaction::set_coupling_type(const Core::Mat::PAR::Parameter::Data& matdata)
 {
-  if ((matdata.parameters.get<std::string>("COUPLING")) == "scalar_by_function")
+  if ((matdata.parameters.get<PoroPressureBased::fluidporo_reaction_coupling>("COUPLING")) ==
+      PoroPressureBased::fluidporo_reaction_coupling::scalar_by_function)
   {
     return porofluid_reac_coup_scalarsbyfunction;
   }
-  else if ((matdata.parameters.get<std::string>("COUPLING")) == "no_coupling")
+  else if ((matdata.parameters.get<PoroPressureBased::fluidporo_reaction_coupling>("COUPLING")) ==
+           PoroPressureBased::fluidporo_reaction_coupling::no_coupling)
   {
     return porofluid_reac_coup_none;
   }
@@ -344,12 +347,14 @@ int Mat::PAR::FluidPoroSingleReaction::
     get_numfluidphases_from_closing_relation_of_additional_porous_network_type(
         const Core::Mat::PAR::Parameter::Data& matdata)
 {
-  if ((matdata.parameters.get<std::string>("VOLFRAC_CLOSING_RELATION")) == "blood_lung")
+  if ((matdata.parameters.get<PoroPressureBased::volfrac_closing_relation>(
+          "VOLFRAC_CLOSING_RELATION")) == PoroPressureBased::volfrac_closing_relation::blood_lung)
   {
     return (matdata.parameters.get<int>("TOTALNUMDOF") - matdata.parameters.get<int>("NUMVOLFRAC"));
   }
-  else if ((matdata.parameters.get<std::string>("VOLFRAC_CLOSING_RELATION")) ==
-           "homogenized_vasculature_tumor")
+  else if ((matdata.parameters.get<PoroPressureBased::volfrac_closing_relation>(
+               "VOLFRAC_CLOSING_RELATION")) ==
+           PoroPressureBased::volfrac_closing_relation::homogenized_vasculature_tumor)
   {
     return (
         matdata.parameters.get<int>("TOTALNUMDOF") - 2 * matdata.parameters.get<int>("NUMVOLFRAC"));

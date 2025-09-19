@@ -41,13 +41,12 @@ Discret::Elements::PoroFluidManager::VariableManagerInterface<nsd, nen>::create_
         {
           if (numdofpernode - numfluidphases == numvolfrac)
           {
-            return Mat::PAR::PoroFluidPressureBased::ClosingRelation::
-                cr_evolutionequation_blood_lung;
+            return Mat::PAR::PoroFluidPressureBased::ClosingRelation::evolutionequation_blood_lung;
           }
           else if (numdofpernode - numfluidphases == numvolfrac * 2)
           {
             return Mat::PAR::PoroFluidPressureBased::ClosingRelation::
-                cr_evolutionequation_homogenized_vasculature_tumor;
+                evolutionequation_homogenized_vasculature_tumor;
           }
           else
           {
@@ -56,7 +55,7 @@ Discret::Elements::PoroFluidManager::VariableManagerInterface<nsd, nen>::create_
         }
         else
         {
-          return Mat::PAR::PoroFluidPressureBased::ClosingRelation::cr_undefined;
+          return Mat::PAR::PoroFluidPressureBased::ClosingRelation::undefined;
         }
       });
   // determine action
@@ -481,11 +480,10 @@ void Discret::Elements::PoroFluidManager::VariableManagerMaximumNodalVolFracValu
       [&]()
       {
         if (volfrac_closing_relation_ ==
-            Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_blood_lung)
+            Mat::PAR::PoroFluidPressureBased::ClosingRelation::evolutionequation_blood_lung)
           return (int)(this->num_dof_per_node() - numvolfrac_);
-        else if (volfrac_closing_relation_ ==
-                 Mat::PAR::PoroFluidPressureBased::
-                     cr_evolutionequation_homogenized_vasculature_tumor)
+        else if (volfrac_closing_relation_ == Mat::PAR::PoroFluidPressureBased::ClosingRelation::
+                                                  evolutionequation_homogenized_vasculature_tumor)
           return (int)(this->num_dof_per_node() - (2 * numvolfrac_));
         else
         {
@@ -493,8 +491,8 @@ void Discret::Elements::PoroFluidManager::VariableManagerMaximumNodalVolFracValu
         }
       });
 
-  if (volfrac_closing_relation_ ==
-      Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_homogenized_vasculature_tumor)
+  if (volfrac_closing_relation_ == Mat::PAR::PoroFluidPressureBased::ClosingRelation::
+                                       evolutionequation_homogenized_vasculature_tumor)
   {
     // loop over DOFs
     for (int k = 0; k < numvolfrac_; ++k)
@@ -517,7 +515,7 @@ void Discret::Elements::PoroFluidManager::VariableManagerMaximumNodalVolFracValu
     }
   }
   else if (volfrac_closing_relation_ ==
-           Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_blood_lung)
+           Mat::PAR::PoroFluidPressureBased::ClosingRelation::evolutionequation_blood_lung)
   {
     // sofar every dof is valid no minimal volfrac necessary
     ele_has_valid_volfrac_press_[0] = true;

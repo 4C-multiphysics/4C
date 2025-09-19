@@ -47,7 +47,7 @@ MATERIALS:
       DENSITYLAWID: 102
       DENSITY: 1
       RELPERMEABILITYLAWID: 103
-      VISCOSITYLAWID: 104
+      VISCOSITY_LAW_ID: 104
       DOFTYPEID: 100
   - MAT: 100
     MAT_FluidPoroSinglePhaseDofPressure:
@@ -73,7 +73,7 @@ MATERIALS:
       DENSITYLAWID: 202
       DENSITY: 1
       RELPERMEABILITYLAWID: 203
-      VISCOSITYLAWID: 104
+      VISCOSITY_LAW_ID: 104
       DOFTYPEID: 200
   - MAT: 200
     MAT_FluidPoroSinglePhaseDofPressure:
@@ -95,7 +95,7 @@ MATERIALS:
       DENSITYLAWID: 301
       DENSITY: 1
       RELPERMEABILITYLAWID: 303
-      VISCOSITYLAWID: 104
+      VISCOSITY_LAW_ID: 104
       DOFTYPEID: 300
   - MAT: 300
     MAT_FluidPoroSinglePhaseDofPressure:
@@ -121,11 +121,11 @@ MATERIALS:
   - MAT: 60
     MAT_FluidPoroVolFracPressure:
       PERMEABILITY: 0.8
-      VISCOSITYLAWID: 601
+      VISCOSITY_LAW_ID: 601
   - MAT: 70
     MAT_FluidPoroVolFracPressure:
       PERMEABILITY: 0.3
-      VISCOSITYLAWID: 602
+      VISCOSITY_LAW_ID: 602
   - MAT: 601
     MAT_FluidPoroViscosityLawConstant:
       VALUE: 0.5

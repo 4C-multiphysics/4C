@@ -36,6 +36,18 @@ namespace PoroPressureBased
     twoway_monolithic
   };
 
+  enum class volfrac_closing_relation
+  {
+    blood_lung,
+    homogenized_vasculature_tumor
+  };
+
+  enum class fluidporo_reaction_coupling
+  {
+    scalar_by_function,
+    no_coupling
+  };
+
   /// set valid parameters for porofluid-elasticity with scalar transport problems
   void set_valid_parameters_porofluid_elast_scatra(
       std::map<std::string, Core::IO::InputSpec>& list);

@@ -483,14 +483,12 @@ namespace Discret
         double porosity() const override
         {
           FOUR_C_THROW("Porosity not available for this phase manager!");
-          return 0.0;
         };
 
         //! get porosity
         double jacobian_def_grad() const override
         {
           FOUR_C_THROW("JacobianDefGrad not available for this phase manager!");
-          return 0.0;
         };
 
         //! get derivative of porosity wrt JacobianDefGrad
@@ -499,35 +497,30 @@ namespace Discret
           FOUR_C_THROW(
               "Derivative of Porosity w.r.t. JacobianDefGrad not available for this phase "
               "manager!");
-          return 0.0;
         };
 
         //! get derivative of porosity w.r.t. DOF 'doftoderive'
         double porosity_deriv(int doftoderive) const override
         {
           FOUR_C_THROW("Derivative of porosity not available for this phase manager!");
-          return 0.0;
         };
 
         //! check if porosity depends on fluid (pressure)
         bool porosity_depends_on_fluid() const override
         {
           FOUR_C_THROW("porosity_depends_on_fluid() not available for this phase manager!");
-          return false;
         };
 
         //! check if porosity depends on structure (basically Jacobian of def. gradient)
         bool porosity_depends_on_struct() const override
         {
           FOUR_C_THROW("porosity_depends_on_struct() not available for this phase manager!");
-          return false;
         };
 
         //! get derivative of saturation of phase 'phasenum' w.r.t. DOF 'doftoderive'
         double saturation_deriv(int phasenum, int doftoderive) const override
         {
           FOUR_C_THROW("Derivative of saturation not available for this phase manager!");
-          return 0.0;
         };
 
         //! get 2nd derivative of saturation of phase 'phasenum' w.r.t. DOF 'doftoderive'
@@ -535,21 +528,18 @@ namespace Discret
             int phasenum, int firstdoftoderive, int seconddoftoderive) const override
         {
           FOUR_C_THROW("2nd Derivative of saturation not available for this phase manager!");
-          return 0.0;
         };
 
         //! get derivative of pressure of phase 'phasenum' w.r.t. DOF 'doftoderive'
         double pressure_deriv(int phasenum, int doftoderive) const override
         {
           FOUR_C_THROW("Derivative of pressure not available for this phase manager!");
-          return 0.0;
         };
 
         //! get derivative of solid pressure  w.r.t. DOF 'doftoderive'
         double solid_pressure_deriv(int doftoderive) const override
         {
           FOUR_C_THROW("Derivative of solid pressure not available for this phase manager!");
-          return 0.0;
         };
 
         //! get derivative of pressure of phase 'phasenum'
@@ -558,14 +548,12 @@ namespace Discret
         double solid_pressure_deriv_deriv(int doftoderive, int doftoderive2) const override
         {
           FOUR_C_THROW("Second derivative of solid pressure not available for this phase manager!");
-          return 0.0;
         };
 
         //! get the reaction term
         double reac_term(int phasenum) const override
         {
           FOUR_C_THROW("Reaction term not available for this phase manager!");
-          return 0.0;
         };
 
         //! get total number of scalars in system
@@ -579,21 +567,18 @@ namespace Discret
         double reac_deriv(int phasenum, int doftoderive) const override
         {
           FOUR_C_THROW("Reaction term derivative not available for this phase manager!");
-          return 0.0;
         };
 
         //! get the derivative of the reaction term w.r.t. scalar 'scaltoderive'
         double reac_deriv_scalar(int phasenum, int scaltoderive) const override
         {
           FOUR_C_THROW("Reaction term derivative (scalar) not available for this phase manager!");
-          return 0.0;
         };
 
         //! get the derivative of the reaction term w.r.t. porosity
         double reac_deriv_porosity(int phasenum) const override
         {
           FOUR_C_THROW("Reaction term derivative (porosity) not available for this phase manager!");
-          return 0.0;
         };
 
         //! get the diffusion tensor
@@ -620,19 +605,16 @@ namespace Discret
         {
           FOUR_C_THROW(
               "Check for Constant Relative Permeability not available for this phase manager!");
-          return false;
         };
         //! get relative diffusivity of phase
         double rel_permeability(int phasenum) const override
         {
           FOUR_C_THROW("Relative Diffusivity not available for this phase manager!");
-          return 0.0;
         };
         //! get derivative of relative permeability of phase
         double rel_permeability_deriv(int phasenum) const override
         {
           FOUR_C_THROW("Derivative of relative permeability not available for this phase manager!");
-          return 0.0;
         };
 
         //! check for constant dynamic viscosity
@@ -640,33 +622,28 @@ namespace Discret
         {
           FOUR_C_THROW(
               "Check for Constant Dynamic Viscosity not available for this phase manager!");
-          return false;
         };
         //! get relative diffusivity of phase
         double dyn_viscosity(int phasenum, double abspressgrad, int matnum = 0) const override
         {
           FOUR_C_THROW("Dynamic Viscosity not available for this phase manager!");
-          return 0.0;
         };
         //! get dynamic viscosity of phase
         double dyn_viscosity(
             const Core::Mat::Material& material, int phasenum, double abspressgrad) const override
         {
           FOUR_C_THROW("Dynamic Viscosity not available for this phase manager!");
-          return 0.0;
         };
         //! get derivative of dynamic viscosity of phase
         double dyn_viscosity_deriv(int phasenum, double abspressgrad) const override
         {
           FOUR_C_THROW("Derivative of dynamic Viscosity not available for this phase manager!");
-          return 0.0;
         };
         //! get derivative dynamic viscosity of phase
         double dyn_viscosity_deriv(
             const Core::Mat::Material& material, int phasenum, double abspressgrad) const override
         {
           FOUR_C_THROW("Derivative of dynamic Viscosity not available for this phase manager!");
-          return 0.0;
         };
 
         //! check for constant dynamic viscosity of volume fraction pressure
@@ -675,21 +652,18 @@ namespace Discret
           FOUR_C_THROW(
               "Check for Constant Dynamic Viscosity (VolFracPressure) not available for this phase "
               "manager!");
-          return false;
         };
         //! get relative diffusivity of volume fraction pressure
         double dyn_viscosity_vol_frac_pressure(
             int volfracpressnum, double abspressgrad, int matnum = 0) const override
         {
           FOUR_C_THROW("Dynamic Viscosity (VolFracPressure) not available for this phase manager!");
-          return 0.0;
         };
         //! get dynamic viscosity of volume fraction pressure
         double dyn_viscosity_vol_frac_pressure(const Core::Mat::Material& material,
             int volfracpressnum, double abspressgrad) const override
         {
           FOUR_C_THROW("Dynamic Viscosity (VolFracPressure) not available for this phase manager!");
-          return 0.0;
         };
         //! get relative diffusivity of volume fraction pressure
         double dyn_viscosity_vol_frac_pressure_blood_lung(
@@ -698,7 +672,6 @@ namespace Discret
           FOUR_C_THROW(
               "Dynamic Viscosity (VolFracPressure in the lungs) not available for this phase "
               "manager!");
-          return 0.0;
         };
         //! get dynamic viscosity of volume fraction pressure
         double dyn_viscosity_vol_frac_pressure_blood_lung(const Core::Mat::Material& material,
@@ -707,7 +680,6 @@ namespace Discret
           FOUR_C_THROW(
               "Dynamic Viscosity (VolFracPressure in the lungs) not available for this phase "
               "manager!");
-          return 0.0;
         };
         //! get derivative of dynamic viscosity of volume fraction pressure
         double dyn_viscosity_deriv_vol_frac_pressure(
@@ -716,7 +688,6 @@ namespace Discret
           FOUR_C_THROW(
               "Derivative of dynamic Viscosity (VolFracPressure) not available for this phase "
               "manager!");
-          return 0.0;
         };
         //! get derivative dynamic viscosity of volume fraction pressure
         double dyn_viscosity_deriv_vol_frac_pressure(const Core::Mat::Material& material,
@@ -725,7 +696,6 @@ namespace Discret
           FOUR_C_THROW(
               "Derivative of dynamic Viscosity (VolFracPressure) not available for this phase "
               "manager!");
-          return 0.0;
         };
         //! get derivative of dynamic viscosity of volume fraction pressure
         double dyn_viscosity_deriv_vol_frac_pressure_blood_lung(
@@ -734,7 +704,6 @@ namespace Discret
           FOUR_C_THROW(
               "Derivative of dynamic Viscosity (VolFracPressure) not available for this phase "
               "manager!");
-          return 0.0;
         };
         //! get derivative dynamic viscosity of volume fraction pressure
         double dyn_viscosity_deriv_vol_frac_pressure_blood_lung(const Core::Mat::Material& material,
@@ -743,7 +712,6 @@ namespace Discret
           FOUR_C_THROW(
               "Derivative of dynamic Viscosity (VolFracPressure) not available for this phase "
               "manager!");
-          return 0.0;
         };
 
         //! get the diffusion tensor
@@ -797,14 +765,12 @@ namespace Discret
         bool has_add_scalar_dependent_flux(int volfracnum) const override
         {
           FOUR_C_THROW("has_add_scalar_dependent_flux not available for this phase manager!");
-          return false;
         };
 
         //! check if volume frac 'volfracnum' has additional scalar dependent flux of scalar 'iscal'
         bool has_add_scalar_dependent_flux(int volfracnum, int iscal) const override
         {
           FOUR_C_THROW("has_add_scalar_dependent_flux not available for this phase manager!");
-          return false;
         };
 
         //! check if volume frac 'volfracnum' has receptor kinetic-law of scalar 'iscal'
@@ -813,14 +779,12 @@ namespace Discret
         bool has_receptor_kinetic_law(int volfracnum, int iscal) const override
         {
           FOUR_C_THROW("has_receptor_kinetic_law not available for this phase manager!");
-          return false;
         };
 
         //! return scalar diffusivities of scalar 'iscal' of volume fraction 'volfracnum'
         double scalar_diff(int volfracnum, int iscal) const override
         {
           FOUR_C_THROW("ScalarDiff not available for this phase manager!");
-          return 0.0;
         };
 
         //! return omega half of scalar 'iscal' of volume fraction 'volfracnum' for receptor kinetic
@@ -829,7 +793,6 @@ namespace Discret
         double omega_half(int volfracnum, int iscal) const override
         {
           FOUR_C_THROW("OmegaHalf not available for this phase manager!");
-          return 0.0;
         };
 
         //! get scalar to phase mapping

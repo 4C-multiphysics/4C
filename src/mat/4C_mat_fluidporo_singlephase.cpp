@@ -44,7 +44,7 @@ Mat::PAR::FluidPoroSinglePhase::FluidPoroSinglePhase(const Core::Mat::PAR::Param
 
   // create viscosity law
   viscositylaw_ = Mat::PAR::FluidPoroViscosityLaw::create_viscosity_law(
-      matdata.parameters.get<int>("VISCOSITYLAWID"));
+      matdata.parameters.get<int>("VISCOSITY_LAW_ID"));
 
   auto* curmat = Global::Problem::instance(probinst)->materials()->parameter_by_id(
       matdata.parameters.get<int>("DOFTYPEID"));
@@ -415,7 +415,7 @@ Mat::PAR::FluidPoroVolFracPressure::FluidPoroVolFracPressure(
 
   // create viscosity law
   viscositylaw_ = Mat::PAR::FluidPoroViscosityLaw::create_viscosity_law(
-      matdata.parameters.get<int>("VISCOSITYLAWID"));
+      matdata.parameters.get<int>("VISCOSITY_LAW_ID"));
 }
 
 /*----------------------------------------------------------------------*
@@ -541,7 +541,7 @@ Mat::PAR::FluidPoroVolFracPressureBloodLung::FluidPoroVolFracPressureBloodLung(
 
   // create viscosity law
   viscositylaw_ = Mat::PAR::FluidPoroViscosityLaw::create_viscosity_law(
-      matdata.parameters.get<int>("VISCOSITYLAWID"));
+      matdata.parameters.get<int>("VISCOSITY_LAW_ID"));
 }
 
 /*----------------------------------------------------------------------*

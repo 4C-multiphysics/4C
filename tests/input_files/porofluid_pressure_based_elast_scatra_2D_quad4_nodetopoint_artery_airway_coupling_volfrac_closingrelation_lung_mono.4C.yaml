@@ -100,7 +100,7 @@ MATERIALS:
       DENSITYLAWID: 122
       DENSITY: 1e-09
       RELPERMEABILITYLAWID: 125
-      VISCOSITYLAWID: 124
+      VISCOSITY_LAW_ID: 124
       DOFTYPEID: 121
   - MAT: 121
     MAT_FluidPoroSinglePhaseDofPressure:
@@ -120,7 +120,7 @@ MATERIALS:
     MAT_FluidPoroVolFracPressureBloodLung:
       DENSITY: 1.03e-06
       PERMEABILITY: 0.00015
-      VISCOSITYLAWID: 141
+      VISCOSITY_LAW_ID: 141
       INITIALVOLFRAC: 0.1
       SCALING_PARAMETER_DEFORMATION: -0.3
   - MAT: 141
@@ -283,6 +283,30 @@ RESULT DESCRIPTION:
       NODE: 23
       QUANTITY: "phi1"
       VALUE: 1.40467727617359633e-02
+      TOLERANCE: 1e-08
+  - POROFLUIDMULTIPHASE:
+      DIS: "porofluid"
+      NODE: 8
+      QUANTITY: "det_def_grad"
+      VALUE: 1.02954297733447486e+00
+      TOLERANCE: 1e-08
+  - POROFLUIDMULTIPHASE:
+      DIS: "porofluid"
+      NODE: 3
+      QUANTITY: "det_def_grad"
+      VALUE: 1.02733986975627234e+00
+      TOLERANCE: 1e-08
+  - POROFLUIDMULTIPHASE:
+      DIS: "porofluid"
+      NODE: 8
+      QUANTITY: "volfrac_blood_lung"
+      VALUE: 9.91303541813164935e-02
+      TOLERANCE: 1e-08
+  - POROFLUIDMULTIPHASE:
+      DIS: "porofluid"
+      NODE: 3
+      QUANTITY: "volfrac_blood_lung"
+      VALUE: 9.91940858042239804e-02
       TOLERANCE: 1e-08
   - SCATRA:
       DIS: "scatra"

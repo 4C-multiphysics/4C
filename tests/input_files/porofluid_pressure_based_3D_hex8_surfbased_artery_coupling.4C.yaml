@@ -65,7 +65,7 @@ MATERIALS:
   - MAT: 14
     MAT_FluidPoroVolFracPressure:
       PERMEABILITY: 1
-      VISCOSITYLAWID: 141
+      VISCOSITY_LAW_ID: 141
   - MAT: 141
     MAT_FluidPoroViscosityLawConstant:
       VALUE: 1

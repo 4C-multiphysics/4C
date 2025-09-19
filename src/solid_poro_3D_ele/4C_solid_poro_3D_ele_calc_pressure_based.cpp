@@ -105,21 +105,21 @@ void Discret::Elements::SolidPoroPressureBasedEleCalc<celltype>::evaluate_nonlin
             compute_linearization_of_volchange_wrt_disp<celltype>(
                 dDetDefGrad_dDisp, jacobian_mapping, kinematictype);
 
-        std::vector<double> fluidmultiphase_phiAtGP =
+        std::vector<double> fluidmultiphase_phi_at_gp =
             compute_fluid_multiphase_primary_variables_at_gp<celltype>(fluidmultiphase_ephi,
                 solidporo_fluid_properties.number_of_fluid_dofs_per_node_, shape_functions);
 
         double solidpressure = compute_sol_pressure_at_gp<celltype>(
             solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_,
-            fluidmultiphase_phiAtGP, porofluidmat);
+            fluidmultiphase_phi_at_gp, porofluidmat);
         // derivative of press w.r.t. displacements (only in case of volfracs)
         Core::LinAlg::Matrix<1, num_dof_per_ele_> dSolidpressure_dDisp(
             Core::LinAlg::Initialization::zero);
 
         if (hasvolfracs)
         {
-          if (type_volfrac_closingrelation ==
-              Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_homogenized_vasculature_tumor)
+          if (type_volfrac_closingrelation == Mat::PAR::PoroFluidPressureBased::ClosingRelation::
+                                                  evolutionequation_homogenized_vasculature_tumor)
           {
             Core::LinAlg::Matrix<1, num_dof_per_ele_> dPorosity_dDisp;
             double porosity = 0.0;
@@ -134,16 +134,16 @@ void Discret::Elements::SolidPoroPressureBasedEleCalc<celltype>::evaluate_nonlin
             solidpressure = recalculate_sol_pressure_at_gp(fluidpress, porosity,
                 solidporo_fluid_properties.number_of_fluid_dofs_per_node_,
                 solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_,
-                solidporo_fluid_properties.number_of_volfracs_, fluidmultiphase_phiAtGP);
+                solidporo_fluid_properties.number_of_volfracs_, fluidmultiphase_phi_at_gp);
 
             recalculate_linearization_of_solpress_wrt_disp<celltype>(fluidpress, porosity,
                 solidporo_fluid_properties.number_of_fluid_dofs_per_node_,
                 solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_,
-                solidporo_fluid_properties.number_of_volfracs_, fluidmultiphase_phiAtGP,
+                solidporo_fluid_properties.number_of_volfracs_, fluidmultiphase_phi_at_gp,
                 dPorosity_dDisp, dSolidpressure_dDisp);
           }
           else if (type_volfrac_closingrelation ==
-                   Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_blood_lung)
+                   Mat::PAR::PoroFluidPressureBased::ClosingRelation::evolutionequation_blood_lung)
           {
             Core::LinAlg::Matrix<1, num_dof_per_ele_> dPorosity_dDisp(
                 Core::LinAlg::Initialization::zero);
@@ -159,12 +159,12 @@ void Discret::Elements::SolidPoroPressureBasedEleCalc<celltype>::evaluate_nonlin
 
             solidpressure = recalculate_sol_pressure_at_gp(fluidpress, porosity,
                 solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_,
-                fluidmultiphase_phiAtGP, spatial_material_mapping.determinant_deformation_gradient_,
-                porofluidmat);
+                fluidmultiphase_phi_at_gp,
+                spatial_material_mapping.determinant_deformation_gradient_, porofluidmat);
 
             recalculate_linearization_of_solpress_wrt_disp<celltype>(fluidpress, porosity,
                 solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_,
-                fluidmultiphase_phiAtGP, dSolidpressure_dDisp,
+                fluidmultiphase_phi_at_gp, dSolidpressure_dDisp,
                 spatial_material_mapping.determinant_deformation_gradient_, porofluidmat,
                 dPorosity_dDetDefGrad, dDetDefGrad_dDisp);
           }
@@ -259,36 +259,36 @@ void Discret::Elements::SolidPoroPressureBasedEleCalc<
         const double volchange = compute_volume_change<celltype>(nodal_coordinates.displacements,
             spatial_material_mapping, jacobian_mapping, ele, kinematictype);
 
-        std::vector<double> fluidmultiphase_phiAtGP =
+        std::vector<double> fluidmultiphase_phi_at_gp =
             compute_fluid_multiphase_primary_variables_at_gp<celltype>(fluidmultiphase_ephi,
                 solidporo_fluid_properties.number_of_fluid_dofs_per_node_, shape_functions);
 
         std::vector<double> solidpressurederiv =
-            compute_solid_pressure_deriv<celltype>(porofluidmat, fluidmultiphase_phiAtGP,
+            compute_solid_pressure_deriv<celltype>(porofluidmat, fluidmultiphase_phi_at_gp,
                 solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_);
 
         if (hasvolfracs)
         {
           double solidpressure = compute_sol_pressure_at_gp<celltype>(
               solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_,
-              fluidmultiphase_phiAtGP, porofluidmat);
+              fluidmultiphase_phi_at_gp, porofluidmat);
           double porosity =
               compute_porosity<celltype>(porostructmat, params, solidpressure, volchange, gp);
 
 
-          if (type_volfrac_closingrelation ==
-              Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_homogenized_vasculature_tumor)
+          if (type_volfrac_closingrelation == Mat::PAR::PoroFluidPressureBased::ClosingRelation::
+                                                  evolutionequation_homogenized_vasculature_tumor)
           {
-            recalculate_sol_pressure_deriv(fluidmultiphase_phiAtGP,
+            recalculate_sol_pressure_deriv(fluidmultiphase_phi_at_gp,
                 solidporo_fluid_properties.number_of_fluid_dofs_per_node_,
                 solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_,
                 solidporo_fluid_properties.number_of_volfracs_, solidpressure, porosity,
                 solidpressurederiv);
           }
           else if (type_volfrac_closingrelation ==
-                   Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_blood_lung)
+                   Mat::PAR::PoroFluidPressureBased::ClosingRelation::evolutionequation_blood_lung)
           {
-            recalculate_sol_pressure_deriv(fluidmultiphase_phiAtGP,
+            recalculate_sol_pressure_deriv(fluidmultiphase_phi_at_gp,
                 solidporo_fluid_properties.number_of_fluid_dofs_per_node_,
                 solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_,
                 solidporo_fluid_properties.number_of_volfracs_, solidpressure, porosity,

@@ -203,6 +203,14 @@ double PoroPressureBased::ResultTest::result_node(
             .saturation())[phinpmap.lid(porofluid_algorithm_.discretization()->dof(0, node, k))];
   }
 
+  else if (quantity == "volfrac_blood_lung")
+    result = (*porofluid_algorithm_.volfrac_blood_lung())[phinpmap.lid(
+        porofluid_algorithm_.discretization()->dof(0, node, 0))];
+
+  else if (quantity == "det_def_grad")
+    result = (*porofluid_algorithm_
+            .det_def_grad())[phinpmap.lid(porofluid_algorithm_.discretization()->dof(0, node, 0))];
+
   // catch unknown quantity strings
   else
     FOUR_C_THROW("Quantity '{}' not supported in result test!", quantity);

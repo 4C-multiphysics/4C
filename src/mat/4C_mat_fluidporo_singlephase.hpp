@@ -195,15 +195,15 @@ namespace Mat
 
     namespace PoroFluidPressureBased
     {
-      enum ClosingRelation
+      enum class ClosingRelation
       {
-        cr_undefined,
-        cr_evolutionequation_homogenized_vasculature_tumor,  //! closing the system of equations
-                                                             //! through an evolution equation for
-                                                             //! the vasculatur in the tumor
-                                                             //! framework
-        cr_evolutionequation_blood_lung,  //! closing the system of equations through an evolution
-                                          //! equation for the vasculature in the lungs
+        undefined,
+        evolutionequation_homogenized_vasculature_tumor,  //! closing the system of equations
+                                                          //! through an evolution equation for
+                                                          //! the vasculatur in the tumor
+                                                          //! framework
+        evolutionequation_blood_lung,  //! closing the system of equations through an evolution
+                                       //! equation for the vasculature in the lungs
       };
     }
 
@@ -638,103 +638,69 @@ namespace Mat
   class FluidPoroVolFracPressureBloodLung : public FluidPoroSinglePhaseBase
   {
    public:
-    /// construct empty material object
+    //! construct empty material object
     FluidPoroVolFracPressureBloodLung();
 
-    /// construct the material object given material parameters
+    //! construct the material object given material parameters
     explicit FluidPoroVolFracPressureBloodLung(Mat::PAR::FluidPoroVolFracPressureBloodLung* params);
 
-    //! @name Packing and Unpacking
 
-    /*!
-     \brief Return unique ParObject id
-
-     every class implementing ParObject needs a unique id defined at the
-     top of parobject.H (this file) and should return it in this method.
-     */
     int unique_par_object_id() const override
     {
       return FluidPoroVolFracPressureBloodLungType::instance().unique_par_object_id();
     }
 
-    /*!
-     \brief Pack this class so it can be communicated
-
-     Resizes the vector data and stores all information of a class in it.
-     The first information to be stored in data has to be the
-     unique parobject id delivered by unique_par_object_id() which will then
-     identify the exact class on the receiving processor.
-
-     \param data (in/out): char vector to store class information
-     */
     void pack(Core::Communication::PackBuffer& data) const override;
 
-    /*!
-     \brief Unpack data from a char vector into this class
-
-     The vector data contains all information to rebuild the
-     exact copy of an instance of a class on a different processor.
-     The first entry in data has to be an integer which is the unique
-     parobject id defined at the top of this file and delivered by
-     unique_par_object_id().
-
-     \param data (in) : vector storing all data to be unpacked into this
-     instance.
-     */
     void unpack(Core::Communication::UnpackBuffer& buffer) override;
 
     //@}
 
-    /// initialize
     void initialize() override;
 
-    /// material type
     Core::Materials::MaterialType material_type() const override
     {
       return Core::Materials::m_fluidporo_volfrac_pressure_blood_lung;
     }
 
-    /// return copy of this material object
     std::shared_ptr<Core::Mat::Material> clone() const override
     {
       return std::make_shared<FluidPoroVolFracPressureBloodLung>(*this);
     }
 
-    /// Return quick accessible material parameter data
     Core::Mat::PAR::Parameter* parameter() const override { return params_; }
 
-    /// return minimum volume fraction
     double density() const override { return params_->density_; }
 
-    /// return permeability
+    //! return permeability
     double permeability() const { return params_->permeability_; }
 
-    // check for constant viscosity
+    //! check for constant viscosity
     bool has_constant_viscosity() const { return params_->viscositylaw_->has_constant_viscosity(); }
 
-    /// return viscosity
+    //! return viscosity
     double viscosity(const double abspressgrad) const
     {
       return params_->viscositylaw_->get_viscosity(abspressgrad);
     }
 
-    /// return derivative of viscosity w.r.t. to absolute value of pressure gradient
+    //! return derivative of viscosity w.r.t. to absolute value of pressure gradient
     double viscosity_deriv(const double abspressgrad) const
     {
       return params_->viscositylaw_->get_deriv_of_viscosity_wrt_abs_press_grad(abspressgrad);
     }
 
-    /// return minimum volume fraction
+    //! return initial volume fraction (usually end-expiratory state)
     double initial_volfrac() const { return params_->initial_volfrac_; }
 
-    /// return minimum volume fraction
+    //! return scaling parameter for deformation dependence of the volume fraction
     double scaling_parameter_deformation() const { return params_->scaling_parameter_deformation_; }
 
-    /// return minimum volume fraction
+    //! return scaling parameter for pressure dependence of the volume fraction
     double scaling_parameter_pressure() const { return params_->scaling_parameter_pressure_; }
 
    private:
-    /// my material parameters
+    //! my material parameters
     Mat::PAR::FluidPoroVolFracPressureBloodLung* params_;
   };
 

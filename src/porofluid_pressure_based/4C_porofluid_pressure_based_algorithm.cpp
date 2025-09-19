@@ -644,9 +644,8 @@ void PoroPressureBased::PorofluidAlgorithm::collect_runtime_output_data()
   if (output_solidpress_)
   {
     // convert dof-based vector into node-based multi-vector for postprocessing
-    std::shared_ptr<Core::LinAlg::MultiVector<double>> solidpressure_multi =
-        PoroPressureBased::convert_dof_vector_to_node_based_multi_vector(
-            *discret_, *solidpressure_, nds_solidpressure_, 1);
+    auto solidpressure_multi = PoroPressureBased::convert_dof_vector_to_node_based_multi_vector(
+        *discret_, *solidpressure_, nds_solidpressure_, 1);
 
     visualization_writer_->append_result_data_vector_with_context(
         *solidpressure_multi, Core::IO::OutputEntity::node, {"solidpressure"});
@@ -660,9 +659,8 @@ void PoroPressureBased::PorofluidAlgorithm::collect_runtime_output_data()
     if (dispnp == nullptr) FOUR_C_THROW("Cannot extract displacement field from discretization");
 
     // convert dof-based vector into node-based multi-vector for postprocessing
-    std::shared_ptr<Core::LinAlg::MultiVector<double>> dispnp_multi =
-        PoroPressureBased::convert_dof_vector_to_node_based_multi_vector(
-            *discret_, *dispnp, nds_disp_, nsd_);
+    auto dispnp_multi = PoroPressureBased::convert_dof_vector_to_node_based_multi_vector(
+        *discret_, *dispnp, nds_disp_, nsd_);
 
     std::vector<std::optional<std::string>> context(nsd_, "ale-displacement");
     visualization_writer_->append_result_data_vector_with_context(
@@ -729,9 +727,8 @@ void PoroPressureBased::PorofluidAlgorithm::collect_runtime_output_data()
   if (output_porosity_)
   {
     // convert dof-based vector into node-based multi-vector for postprocessing
-    std::shared_ptr<Core::LinAlg::MultiVector<double>> porosity_multi =
-        PoroPressureBased::convert_dof_vector_to_node_based_multi_vector(
-            *discret_, *porosity_, nds_solidpressure_, 1);
+    auto porosity_multi = PoroPressureBased::convert_dof_vector_to_node_based_multi_vector(
+        *discret_, *porosity_, nds_solidpressure_, 1);
 
     visualization_writer_->append_result_data_vector_with_context(
         *porosity_multi, Core::IO::OutputEntity::node, {"porosity"});
@@ -741,9 +738,8 @@ void PoroPressureBased::PorofluidAlgorithm::collect_runtime_output_data()
   if (output_det_def_grad_)
   {
     //! convert dof-based vector into node-based multi-vector for postprocessing
-    std::shared_ptr<Core::LinAlg::MultiVector<double>> det_def_grad_multi =
-        PoroPressureBased::convert_dof_vector_to_node_based_multi_vector(
-            *discret_, *det_def_grad_, nds_solidpressure_, 1);
+    auto det_def_grad_multi = PoroPressureBased::convert_dof_vector_to_node_based_multi_vector(
+        *discret_, *det_def_grad_, nds_solidpressure_, 1);
 
     visualization_writer_->append_result_data_vector_with_context(
         *det_def_grad_multi, Core::IO::OutputEntity::node, {"det_def_grad"});
@@ -753,7 +749,7 @@ void PoroPressureBased::PorofluidAlgorithm::collect_runtime_output_data()
   if (output_volfrac_blood_lung_)
   {
     //! convert dof-based vector into node-based multi-vector for postprocessing
-    std::shared_ptr<Core::LinAlg::MultiVector<double>> volfrac_blood_lung_multi =
+    auto volfrac_blood_lung_multi =
         PoroPressureBased::convert_dof_vector_to_node_based_multi_vector(
             *discret_, *volfrac_blood_lung_, nds_solidpressure_, 1);
 

@@ -28,7 +28,7 @@ Mat::PAR::FluidPoroMultiPhase::FluidPoroMultiPhase(const Core::Mat::PAR::Paramet
       permeability_(matdata.parameters.get<double>("PERMEABILITY")),
       numfluidphases_(matdata.parameters.get<int>("NUMFLUIDPHASES_IN_MULTIPHASEPORESPACE")),
       numvolfrac_(-1),
-      closing_relation_volfrac_(Mat::PAR::PoroFluidPressureBased::cr_undefined),
+      closing_relation_volfrac_(Mat::PAR::PoroFluidPressureBased::ClosingRelation::undefined),
       dof2pres_(nullptr),
       constraintphaseID_(-1),
       isinit_(false)
@@ -59,20 +59,21 @@ void Mat::PAR::FluidPoroMultiPhase::initialize()
   // check which type of volume fraction we have: so far it is only possible to have volume
   // fractions with closing relation "blood_lung" or "homogenized_vasculature_tumor"
   // It is not possible to have both volume fractions in the same problem so far.
-  if ((int)matids_.size() > numfluidphases_)
+  if (static_cast<int>(matids_.size()) > numfluidphases_)
   {
     const int volfracmatid = (matids_)[numfluidphases_];
     std::shared_ptr<Core::Mat::Material> volfracmat = material_by_id(volfracmatid);
     if (volfracmat->material_type() == Core::Materials::m_fluidporo_volfrac_pressure_blood_lung)
     {
-      closing_relation_volfrac_ = Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_blood_lung;
-      numvolfrac_ = (int)(((int)matids_.size() - numfluidphases_));
+      closing_relation_volfrac_ =
+          Mat::PAR::PoroFluidPressureBased::ClosingRelation::evolutionequation_blood_lung;
+      numvolfrac_ = static_cast<int>(matids_.size()) - numfluidphases_;
     }
     else if (volfracmat->material_type() == Core::Materials::m_fluidporo_singlevolfrac)
     {
-      closing_relation_volfrac_ =
-          Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_homogenized_vasculature_tumor;
-      numvolfrac_ = (int)(((int)matids_.size() - numfluidphases_) / 2);
+      closing_relation_volfrac_ = Mat::PAR::PoroFluidPressureBased::ClosingRelation::
+          evolutionequation_homogenized_vasculature_tumor;
+      numvolfrac_ = (static_cast<int>(matids_.size()) - numfluidphases_) / 2;
     }
     else
     {
@@ -87,10 +88,10 @@ void Mat::PAR::FluidPoroMultiPhase::initialize()
   if (numvolfrac_)
   {
     if (closing_relation_volfrac_ ==
-        Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_blood_lung)
+        Mat::PAR::PoroFluidPressureBased::ClosingRelation::evolutionequation_blood_lung)
     {
       // safety check
-      if ((int)matids_.size() != (int)(numvolfrac_ + numfluidphases_))
+      if (static_cast<int>(matids_.size()) != (int)(numvolfrac_ + numfluidphases_))
         FOUR_C_THROW(
             "You have chosen {} materials, {} fluidphases and {} volume fractions, check your "
             "input "
@@ -103,14 +104,14 @@ void Mat::PAR::FluidPoroMultiPhase::initialize()
             "MAT_FluidPoroSinglePhase \n"
             "      1 volume fractions: materials have to be MAT_FluidPoroVolFracPressureBloodLung "
             "\n",
-            (int)matids_.size(), numfluidphases_,
-            (double)(((double)matids_.size() - (double)numfluidphases_)));
+            static_cast<int>(matids_.size()), numfluidphases_,
+            static_cast<int>(matids_.size()) - numfluidphases_);
     }
-    else if (closing_relation_volfrac_ ==
-             Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_homogenized_vasculature_tumor)
+    else if (closing_relation_volfrac_ == Mat::PAR::PoroFluidPressureBased::ClosingRelation::
+                                              evolutionequation_homogenized_vasculature_tumor)
     {
       // safety check
-      if ((int)matids_.size() != (int)(numvolfrac_ * 2 + numfluidphases_))
+      if (static_cast<int>(matids_.size()) != (numvolfrac_ * 2 + numfluidphases_))
         FOUR_C_THROW(
             "You have chosen {} materials, {} fluidphases and {} volume fractions, check your "
             "input "
@@ -125,8 +126,8 @@ void Mat::PAR::FluidPoroMultiPhase::initialize()
             "MAT_FluidPoroSinglePhase \n"
             "      2 volume fractions: materials have to be MAT_FluidPoroSingleVolFrac \n"
             "      2 volume fraction pressures: materials have to be MAT_FluidPoroVolFracPressure ",
-            (int)matids_.size(), numfluidphases_,
-            (double)(((double)matids_.size() - (double)numfluidphases_) / 2.0));
+            static_cast<int>(matids_.size()), numfluidphases_,
+            (static_cast<int>(matids_.size()) - numfluidphases_) / 2);
     }
     else
     {
@@ -135,7 +136,7 @@ void Mat::PAR::FluidPoroMultiPhase::initialize()
   }
 
 
-  for (int iphase = 0; iphase < (int)matids_.size(); iphase++)
+  for (int iphase = 0; iphase < static_cast<int>(matids_.size()); iphase++)
   {
     // get the single phase material by its ID
     const int matid = matids_[iphase];
@@ -177,7 +178,7 @@ void Mat::PAR::FluidPoroMultiPhase::initialize()
     else if (iphase < numfluidphases_ + numvolfrac_)
     {
       if (closing_relation_volfrac_ ==
-          Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_blood_lung)
+          Mat::PAR::PoroFluidPressureBased::ClosingRelation::evolutionequation_blood_lung)
       {
         // safety check
         if (singlemat->material_type() != Core::Materials::m_fluidporo_volfrac_pressure_blood_lung)
@@ -192,10 +193,10 @@ void Mat::PAR::FluidPoroMultiPhase::initialize()
               "with: 4 fluid phases in multiphase pore space: materials have to be "
               "MAT_FluidPoroSinglePhase \n"
               "     1 volume fractions: materials have to be MAT_FluidPoroVolFracPressureBloodLung",
-              numfluidphases_, (int)matids_.size() - numfluidphases_, iphase + 1);
+              numfluidphases_, static_cast<int>(matids_.size()) - numfluidphases_, iphase + 1);
       }
-      else if (closing_relation_volfrac_ ==
-               Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_homogenized_vasculature_tumor)
+      else if (closing_relation_volfrac_ == Mat::PAR::PoroFluidPressureBased::ClosingRelation::
+                                                evolutionequation_homogenized_vasculature_tumor)
       {
         // safety check
         if (singlemat->material_type() != Core::Materials::m_fluidporo_singlevolfrac)
@@ -213,7 +214,7 @@ void Mat::PAR::FluidPoroMultiPhase::initialize()
               "      2 volume fractions: materials have to be MAT_FluidPoroSingleVolFrac \n"
               "      2 volume fraction pressures: materials have to be "
               "MAT_FluidPoroVolFracPressure ",
-              numfluidphases_, (int)matids_.size() - numfluidphases_, iphase + 1);
+              numfluidphases_, static_cast<int>(matids_.size()) - numfluidphases_, iphase + 1);
       }
       else
       {
@@ -223,8 +224,8 @@ void Mat::PAR::FluidPoroMultiPhase::initialize()
     // volume fraction pressures at [numfluidphases-1+numvolfrac...numfluidphases-1+2*numvolfrac]
     else if (iphase < numfluidphases_ + 2 * numvolfrac_)
     {
-      if (closing_relation_volfrac_ ==
-          Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_homogenized_vasculature_tumor)
+      if (closing_relation_volfrac_ == Mat::PAR::PoroFluidPressureBased::ClosingRelation::
+                                           evolutionequation_homogenized_vasculature_tumor)
       {
         // safety check
         if (singlemat->material_type() != Core::Materials::m_fluidporo_volfracpressure)
@@ -242,7 +243,7 @@ void Mat::PAR::FluidPoroMultiPhase::initialize()
               "      2 volume fractions: materials have to be MAT_FluidPoroSingleVolFrac \n"
               "      2 volume fraction pressures: materials have to be "
               "MAT_FluidPoroVolFracPressure ",
-              numfluidphases_, (int)matids_.size() - numfluidphases_, iphase + 1);
+              numfluidphases_, static_cast<int>(matids_.size()) - numfluidphases_, iphase + 1);
       }
     }
     else

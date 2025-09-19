@@ -681,7 +681,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det);
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -769,7 +769,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -857,7 +857,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -945,7 +945,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -1034,7 +1034,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -1122,7 +1122,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -1210,7 +1210,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -1310,7 +1310,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -1412,7 +1412,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -1500,7 +1500,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -1603,7 +1603,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -1693,7 +1693,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -1781,7 +1781,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -1872,7 +1872,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -1960,7 +1960,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -2054,7 +2054,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -2149,7 +2149,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -2237,7 +2237,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -2328,7 +2328,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -2426,7 +2426,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -2515,7 +2515,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -2600,7 +2600,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override {};
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -2689,7 +2689,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override {};
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -2787,7 +2787,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -2823,9 +2823,7 @@ namespace Discret
       fluid equations (instationary terms) into the element matrix for volume fraction with closing
       relation "blood_lung"
 
-      This class implements the term $( w, \frac{-\sum^volfrac \phi_volfrac) }{K_s} \frac{\partial
-      p^s}{\partial t}
-                                          -\sum^volfrac \frac{\partial\phi_volfrac) }{\partial t})
+      This class implements the term $( w, -\frac{\partial volfrac) }{\partial t})
       */
       template <int nsd, int nen>
       class EvaluatorVolFracBloodLungAddInstatTerms : public EvaluatorBase<nsd, nen>
@@ -2891,7 +2889,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -2907,7 +2905,8 @@ namespace Discret
             double fac            //!< domain-integration factor times time-integration factor
             ) override;
 
-        //! get transient term for rhs and OD
+        //! get transient term for rhs and Off-diagobal terms (- \frac{\partial
+        //! phi_volfrac}{\partial t})
         double get_rhs(int curphase,  //!< index of current phase
             int phasetoadd,           //!< index of current phase
             int numdofpernode,        //!< total number of DOFs/phases
@@ -2927,9 +2926,7 @@ namespace Discret
       fluid equations (instationary terms) scaled with the saturation into the element matrix for
       volume fraction with closing relation "blood_lung"
 
-      This class implements the term $( w, S* (\frac{-\sum^volfrac \phi_volfrac) }{K_s}
-      \frac{\partial p^s}{\partial t}
-                                          -\sum^volfrac \frac{\partial\phi_volfrac) }{\partial t}))
+      This class implements the term $( w, S* (-\frac{\partial volfrac) }{\partial t}))
       */
       template <int nsd, int nen>
       class EvaluatorVolFracBloodLungAddInstatTermsSat
@@ -2996,7 +2993,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -3089,7 +3086,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -3112,9 +3109,9 @@ namespace Discret
       /*!
       \brief class for evaluation of additional term in fluid equation introduced by volume
       fractions with closing relation "blood_lung":
-             - divergence of the (mesh) velocity field times sum of volume fraction
+             - divergence of the (mesh) velocity field times volume fraction (blood lung)
 
-      This class implements the term \f$(w, -\sum^volfrac \phi_volfrac \nabla \cdot v^s )\f$.
+      This class implements the term \f$(w, - volfrac \nabla \cdot v^s )\f$.
               */
       template <int nsd, int nen>
       class EvaluatorVolFracBloodLungAddDivVelTerm
@@ -3182,7 +3179,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -3208,7 +3205,7 @@ namespace Discret
         - divergence of the (mesh) velocity field times sum of volume fraction scaled with
         saturation
 
-        This class implements the term \f$(w, S* -\sum^volfrac \phi_volfrac \nabla \cdot v^s )\f$.
+        This class implements the term \f$(w, S* (- volfrac \nabla \cdot v^s) )\f$.
         */
       template <int nsd, int nen>
       class EvaluatorVolFracBloodLungAddDivVelTermSat
@@ -3275,7 +3272,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -3371,7 +3368,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -3466,7 +3463,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -3557,7 +3554,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -3581,7 +3578,7 @@ namespace Discret
       \brief class for evaluation of instationary term for volume fractions closing relation
       "blood_lung"
 
-      This class implements the term \f$( w, rho \frac{\partial volfrac^i}{\partial t} )\f$.
+      This class implements the term \f$( w, \frac{\partial volfrac}{\partial t} )\f$.
       It is assembled into the equation for volume fractions and for volume fraction pressures
       */
       template <int nsd, int nen>
@@ -3648,7 +3645,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -3739,7 +3736,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -3763,7 +3760,7 @@ namespace Discret
       \brief class for evaluation of divergence of the (mesh) velocity field for volume fractions
       with closing relation "blood_lung"
 
-      This class implements the term \f$(w, rho volfrac \nabla \cdot v^s )\f$.
+      This class implements the term \f$(w, volfrac \nabla \cdot v^s )\f$.
       It is assembled into the equation for volume fractions and for volume fraction pressures
       */
       template <int nsd, int nen>
@@ -3830,7 +3827,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -3920,7 +3917,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -4010,7 +4007,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -4100,7 +4097,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -4190,7 +4187,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -4214,7 +4211,8 @@ namespace Discret
       \brief class for evaluation of diffusive volfrac pressure term into the element matrix for
       volume fraction with closing relation "blood_lung"
 
-      This class implements the term \f$( \nabla w, k/\mu \nabla volfrac_pressure )\f$.
+      This class implements the term \f$( \nabla w, permeability/viscosity \nabla volfrac_pressure
+      )\f$.
               */
       template <int nsd, int nen>
       class EvaluatorVolFracBloodLungPressureDiff : public EvaluatorBase<nsd, nen>
@@ -4280,7 +4278,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -4371,7 +4369,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions
@@ -4395,7 +4393,7 @@ namespace Discret
       \brief class for evaluation of reactive term of volume fraction pressures
              into the element matrix for volume fraction with closing relation "blood_lung"
 
-      This class implements the term $(  w, reac )$.
+      This class implements the term $(  w, reac/rho )$.
               */
       template <int nsd, int nen>
       class EvaluatorVolFracBloodLungPressureReac : public EvaluatorBase<nsd, nen>
@@ -4461,7 +4459,7 @@ namespace Discret
             double fac,           //!< domain-integration factor times time-integration factor
             double det) override;
 
-        //! evaluate off-diagonal coupling matrix with structure
+        //! evaluate off-diagonal coupling matrix with scatra
         void evaluate_matrix_od_scatra_and_assemble(
             std::vector<Core::LinAlg::SerialDenseMatrix*>& elemat,  //!< element matrix to be filled
             const Core::LinAlg::Matrix<nen, 1>& funct,              //! array for shape functions

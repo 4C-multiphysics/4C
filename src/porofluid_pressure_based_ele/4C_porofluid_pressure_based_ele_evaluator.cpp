@@ -17,7 +17,6 @@
 FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*
- | factory method                                           vuong 08/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 std::shared_ptr<Discret::Elements::PoroFluidEvaluator::EvaluatorInterface<nsd, nen>>
@@ -590,7 +589,6 @@ Discret::Elements::PoroFluidEvaluator::EvaluatorInterface<nsd, nen>::create_eval
 }
 
 /*-----------------------------------------------------------------------------------*
- | linearization of a term scaled with saturation after fluid dofs  kremheller 03/18 |
  *-----------------------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorBase<nsd, nen>::saturation_linearization_fluid(
@@ -616,7 +614,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorBase<nsd, nen>::saturation_
   }
 }
 /*-----------------------------------------------------------------------------------*
- | linearization of a term scaled with porosity after fluid dofs    kremheller 03/18 |
  *-----------------------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorBase<nsd, nen>::porosity_linearization_fluid(
@@ -643,8 +640,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorBase<nsd, nen>::porosity_li
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure                 |
- | of a term scaled with div (v^s)                     kremheller 03/18 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorBase<nsd, nen>::calc_div_vel_od_mesh(
@@ -766,8 +761,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorBase<nsd, nen>::calc_div_ve
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure                 |
- | (Fac = Jacobian determinant)                        kremheller 03/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorBase<nsd, nen>::calc_lin_fac_od_mesh(
@@ -800,8 +793,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorBase<nsd, nen>::calc_lin_fa
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure                 |
- | (diffusive term)                                    kremheller 03/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorBase<nsd, nen>::calc_diff_od_mesh(
@@ -989,7 +980,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorBase<nsd, nen>::calc_diff_o
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                                   vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorConv<nsd, nen>::evaluate_matrix_and_assemble(
@@ -1015,7 +1005,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorConv<nsd, nen>::evaluate_ma
   */
   const double prefac = timefacfac;
 
-  static Core::LinAlg::Matrix<nen, 1> conv;
+  Core::LinAlg::Matrix<nen, 1> conv;
   // convective part in convective form: rho*u_x*N,x+ rho*u_y*N,y
   conv.multiply_tn(derxy, *variablemanager.ConVelnp());
 
@@ -1035,7 +1025,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorConv<nsd, nen>::evaluate_ma
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                      vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorConv<nsd, nen>::evaluate_vector_and_assemble(
@@ -1066,7 +1055,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorConv<nsd, nen>::evaluate_ve
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 03/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorConv<nsd,
@@ -1083,7 +1071,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorConv<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 06/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorConv<nsd,
@@ -1102,7 +1089,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorConv<nsd,
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                                   vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorDivVel<nsd, nen>::evaluate_matrix_and_assemble(
@@ -1117,7 +1103,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDivVel<nsd, nen>::evaluate_
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                      vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorDivVel<nsd, nen>::evaluate_vector_and_assemble(
@@ -1142,7 +1127,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDivVel<nsd, nen>::evaluate_
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 03/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorDivVel<nsd,
@@ -1158,7 +1142,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDivVel<nsd,
   // get matrix to fill
   Core::LinAlg::SerialDenseMatrix& mymat = *elemat[0];
 
-  static Core::LinAlg::Matrix<nsd, nsd> gridvelderiv(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, nsd> gridvelderiv(Core::LinAlg::Initialization::zero);
   gridvelderiv.multiply_nt(*(variablemanager.e_con_velnp()), deriv);
 
   // OD mesh - div vel term
@@ -1167,7 +1151,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDivVel<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 06/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorDivVel<nsd,
@@ -1186,7 +1169,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDivVel<nsd,
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                                   vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorSatDivVel<nsd,
@@ -1217,7 +1199,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorSatDivVel<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                      vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorSatDivVel<nsd,
@@ -1236,7 +1217,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorSatDivVel<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 03/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorSatDivVel<nsd,
@@ -1256,7 +1236,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorSatDivVel<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 06/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorSatDivVel<nsd,
@@ -1275,7 +1254,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorSatDivVel<nsd,
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                             kremheller 06/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorBiotStab<nsd,
@@ -1290,7 +1268,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorBiotStab<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                 kremheller 06/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorBiotStab<nsd,
@@ -1305,7 +1282,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorBiotStab<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 06/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorBiotStab<nsd,
@@ -1322,7 +1298,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorBiotStab<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 06/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorBiotStab<nsd,
@@ -1340,9 +1315,8 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorBiotStab<nsd,
 /*----------------------------------------------------------------------*
  * **********************************************************************
  *----------------------------------------------------------------------*/
-
 /*----------------------------------------------------------------------*
- | evaluate element matrix                                   vuong 09/16 |
+
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd, nen>::evaluate_matrix_and_assemble(
@@ -1364,7 +1338,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd, nen>::evaluate_ma
     const std::vector<Core::LinAlg::Matrix<nsd, 1>>& gradphi = *variablemanager.grad_phinp();
 
     // current pressure gradient
-    static Core::LinAlg::Matrix<nsd, 1> gradpres(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, 1> gradpres(Core::LinAlg::Initialization::zero);
     gradpres.clear();
 
     // compute the pressure gradient from the phi gradients
@@ -1376,17 +1350,16 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd, nen>::evaluate_ma
     abspressgrad = sqrt(abspressgrad);
 
     // permeability tensor
-    static Core::LinAlg::Matrix<nsd, nsd> permeabilitytensor(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, nsd> permeabilitytensor(Core::LinAlg::Initialization::zero);
     phasemanager.permeability_tensor(curphase, permeabilitytensor);
 
-    static Core::LinAlg::Matrix<nsd, nen> diffflux(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, nen> diffflux(Core::LinAlg::Initialization::zero);
     diffflux.multiply(permeabilitytensor, derxy);
     diffflux.scale(phasemanager.rel_permeability(curphase) /
                    phasemanager.dyn_viscosity(curphase, abspressgrad));
 
     // helper variable for linearization
-    static Core::LinAlg::Matrix<nsd, 1> diffflux_relpermeability(
-        Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, 1> diffflux_relpermeability(Core::LinAlg::Initialization::zero);
 
     if (not phasemanager.has_constant_rel_permeability(curphase))
     {
@@ -1430,14 +1403,13 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd, nen>::evaluate_ma
     if (not phasemanager.has_constant_dyn_viscosity(curphase))
     {
       // derivative of abspressgrad w.r.t. pressure gradient
-      static Core::LinAlg::Matrix<nsd, 1> dabspressgraddpresgradp(
-          Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd, 1> dabspressgraddpresgradp(Core::LinAlg::Initialization::zero);
       dabspressgraddpresgradp.put_scalar(0.0);
       // avoid division by zero
       if (abspressgrad > 1.0e-12)
         for (int i = 0; i < nsd; i++) dabspressgraddpresgradp(i) = gradpres(i) / abspressgrad;
 
-      static Core::LinAlg::Matrix<nsd, 1> diffflux2(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd, 1> diffflux2(Core::LinAlg::Initialization::zero);
       diffflux2.multiply(permeabilitytensor, gradpres);
       // d (1/visc) / d abspressgrad = -1.0 * visc^(-2) * d visc / d abspressgrad
       diffflux2.scale(-1.0 * phasemanager.rel_permeability(curphase) /
@@ -1471,7 +1443,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd, nen>::evaluate_ma
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                      vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd, nen>::evaluate_vector_and_assemble(
@@ -1490,7 +1461,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd, nen>::evaluate_ve
   const std::vector<Core::LinAlg::Matrix<nsd, 1>>& gradphi = *variablemanager.grad_phinp();
 
   // current pressure gradient
-  static Core::LinAlg::Matrix<nsd, 1> gradpres(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, 1> gradpres(Core::LinAlg::Initialization::zero);
   gradpres.clear();
 
   // compute the pressure gradient from the phi gradients
@@ -1502,12 +1473,12 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd, nen>::evaluate_ve
   abspressgrad = sqrt(abspressgrad);
 
   // diffusion tensor
-  static Core::LinAlg::Matrix<nsd, nsd> difftensor(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, nsd> difftensor(Core::LinAlg::Initialization::zero);
   phasemanager.permeability_tensor(curphase, difftensor);
   difftensor.scale(
       phasemanager.rel_permeability(curphase) / phasemanager.dyn_viscosity(curphase, abspressgrad));
 
-  static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
   diffflux.multiply(difftensor, gradpres);
 
   for (int vi = 0; vi < nen; ++vi)
@@ -1522,7 +1493,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd, nen>::evaluate_ve
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 03/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd,
@@ -1543,7 +1513,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd,
   const std::vector<Core::LinAlg::Matrix<nsd, 1>>& gradphi = *variablemanager.grad_phinp();
 
   // current pressure gradient
-  static Core::LinAlg::Matrix<nsd, 1> gradpres(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, 1> gradpres(Core::LinAlg::Initialization::zero);
   gradpres.clear();
 
   // compute the pressure gradient from the phi gradients
@@ -1555,28 +1525,28 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd,
   abspressgrad = sqrt(abspressgrad);
 
   // diffusion tensor
-  static Core::LinAlg::Matrix<nsd, nsd> difftensor(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, nsd> difftensor(Core::LinAlg::Initialization::zero);
   phasemanager.permeability_tensor(curphase, difftensor);
   difftensor.scale(
       phasemanager.rel_permeability(curphase) / phasemanager.dyn_viscosity(curphase, abspressgrad));
 
   // TODO: anisotropic difftensor and
   //       non-constant viscosity (because of pressure gradient, probably not really necessary)
-  static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
   diffflux.multiply(difftensor, gradpres);
 
   // diffusive pre-factor for linearization
   const double v = difftensor(0, 0) * timefacfac / det;
 
   // gradient of pressure w.r.t. reference coordinates
-  static Core::LinAlg::Matrix<nsd, 1> refgradpres(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, 1> refgradpres(Core::LinAlg::Initialization::zero);
   refgradpres.clear();
 
   // gradient of phi w.r.t. reference coordinates
-  std::vector<Core::LinAlg::Matrix<nsd, 1>> refgradphi(numfluidphases,
-      Core::LinAlg::Matrix<nsd, 1>(
-          Core::LinAlg::Initialization::zero));  // static Core::LinAlg::Matrix<nsd,1>
-                                                 // refgradphi;
+  std::vector<Core::LinAlg::Matrix<nsd, 1>> refgradphi(
+      numfluidphases, Core::LinAlg::Matrix<nsd, 1>(
+                          Core::LinAlg::Initialization::zero));  // Core::LinAlg::Matrix<nsd,1>
+                                                                 // refgradphi;
   for (int idof = 0; idof < numfluidphases; ++idof) refgradphi[idof].multiply(xjm, gradphi[idof]);
 
   // compute the pressure gradient from the phi gradients
@@ -1589,7 +1559,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 06/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd,
@@ -1608,7 +1577,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDiff<nsd,
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                                   vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorReac<nsd, nen>::evaluate_matrix_and_assemble(
@@ -1652,7 +1620,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorReac<nsd, nen>::evaluate_ma
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                      vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorReac<nsd, nen>::evaluate_vector_and_assemble(
@@ -1682,7 +1649,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorReac<nsd, nen>::evaluate_ve
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 03/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorReac<nsd,
@@ -1725,7 +1691,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorReac<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 06/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorReac<nsd,
@@ -1769,7 +1734,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorReac<nsd,
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                                   vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorMassPressure<nsd,
@@ -1876,7 +1840,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassPressure<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                      vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorMassPressure<nsd,
@@ -1909,7 +1872,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassPressure<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 03/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorMassPressure<nsd,
@@ -1950,7 +1912,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassPressure<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 06/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorMassPressure<nsd,
@@ -1966,7 +1927,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassPressure<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate transient term at GP                       kremheller 03/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 double Discret::Elements::PoroFluidEvaluator::EvaluatorMassPressure<nsd, nen>::get_rhs_trans(
@@ -2009,7 +1969,6 @@ double Discret::Elements::PoroFluidEvaluator::EvaluatorMassPressure<nsd, nen>::g
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                                   vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressure<nsd,
@@ -2152,7 +2111,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressure<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                      vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressure<nsd,
@@ -2185,7 +2143,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressure<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 03/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressure<nsd,
@@ -2226,7 +2183,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressure<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 06/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressure<nsd,
@@ -2242,7 +2198,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressure<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate transient term at GP                       kremheller 03/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 double Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressure<nsd, nen>::get_rhs_trans(
@@ -2284,7 +2239,6 @@ double Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressure<nsd, ne
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                                   vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressureSat<nsd,
@@ -2342,7 +2296,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressureSat<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                      vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressureSat<nsd,
@@ -2361,7 +2314,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressureSat<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 03/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressureSat<nsd,
@@ -2381,7 +2333,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressureSat<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 06/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressureSat<nsd,
@@ -2400,7 +2351,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSolidPressureSat<nsd,
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                                   vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSaturation<nsd,
@@ -2518,7 +2468,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSaturation<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                      vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSaturation<nsd,
@@ -2548,7 +2497,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSaturation<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 03/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSaturation<nsd,
@@ -2586,7 +2534,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSaturation<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 06/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSaturation<nsd,
@@ -2602,7 +2549,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorMassSaturation<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate transient term at GP                       kremheller 03/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 double Discret::Elements::PoroFluidEvaluator::EvaluatorMassSaturation<nsd, nen>::get_rhs_trans(
@@ -2640,7 +2586,6 @@ double Discret::Elements::PoroFluidEvaluator::EvaluatorMassSaturation<nsd, nen>:
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                                   vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -2656,7 +2601,6 @@ void Discret::Elements::PoroFluidEvaluator::
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                      vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -2731,7 +2675,6 @@ void Discret::Elements::PoroFluidEvaluator::
 };
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 03/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -2749,7 +2692,6 @@ void Discret::Elements::PoroFluidEvaluator::
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 06/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -2870,7 +2812,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPressureAndSaturationBloodL
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                                   vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorSolidPressure<nsd,
@@ -2885,7 +2826,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorSolidPressure<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                      vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorSolidPressure<nsd,
@@ -2910,7 +2850,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorSolidPressure<nsd,
 };
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 03/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorSolidPressure<nsd,
@@ -2946,7 +2885,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorSolidPressure<nsd,
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                             kremheller 03/18 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -2962,7 +2900,6 @@ void Discret::Elements::PoroFluidEvaluator::
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                 kremheller 03/18 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -2999,7 +2936,6 @@ void Discret::Elements::PoroFluidEvaluator::
 };
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 03/18 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -3017,7 +2953,6 @@ void Discret::Elements::PoroFluidEvaluator::
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 06/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -3119,7 +3054,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorValidVolFracPressuresBloodL
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                             kremheller 04/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorPorosity<nsd,
@@ -3134,7 +3068,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPorosity<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                 kremheller 04/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorPorosity<nsd,
@@ -3159,7 +3092,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPorosity<nsd,
 };
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 04/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorPorosity<nsd,
@@ -3176,7 +3108,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPorosity<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 06/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorPorosity<nsd,
@@ -3339,7 +3270,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolfracBloodLung<nsd,
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                             kremheller 03/19 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorDomainIntegrals<nsd,
@@ -3449,7 +3379,6 @@ Discret::Elements::PoroFluidEvaluator::EvaluatorDomainIntegrals<nsd, nen>::funct
 };
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 03/19 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorDomainIntegrals<nsd,
@@ -3466,7 +3395,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDomainIntegrals<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 03/19 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorDomainIntegrals<nsd,
@@ -3485,7 +3413,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorDomainIntegrals<nsd,
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                                   vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::ReconstructFluxLinearization<nsd,
@@ -3510,7 +3437,6 @@ void Discret::Elements::PoroFluidEvaluator::ReconstructFluxLinearization<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                      vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::ReconstructFluxLinearization<nsd,
@@ -3525,7 +3451,6 @@ void Discret::Elements::PoroFluidEvaluator::ReconstructFluxLinearization<nsd,
 };
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 03/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::ReconstructFluxLinearization<nsd,
@@ -3542,7 +3467,6 @@ void Discret::Elements::PoroFluidEvaluator::ReconstructFluxLinearization<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 06/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::ReconstructFluxLinearization<nsd,
@@ -3561,7 +3485,6 @@ void Discret::Elements::PoroFluidEvaluator::ReconstructFluxLinearization<nsd,
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                                   vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::ReconstructFluxRHS<nsd,
@@ -3598,7 +3521,7 @@ void Discret::Elements::PoroFluidEvaluator::ReconstructFluxRHS<nsd,
       phasemanager.rel_permeability(curphase) / phasemanager.dyn_viscosity(curphase, abspressgrad));
 
   // diffusive flux
-  static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
   diffflux.multiply(-1.0, difftensor, gradpres);
 
   // Compute element vectors. For L2-Projection
@@ -3612,7 +3535,6 @@ void Discret::Elements::PoroFluidEvaluator::ReconstructFluxRHS<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                      vuong 09/16 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::ReconstructFluxRHS<nsd,
@@ -3627,7 +3549,6 @@ void Discret::Elements::PoroFluidEvaluator::ReconstructFluxRHS<nsd,
 };
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 03/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::ReconstructFluxRHS<nsd,
@@ -3644,7 +3565,6 @@ void Discret::Elements::PoroFluidEvaluator::ReconstructFluxRHS<nsd,
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 06/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::ReconstructFluxRHS<nsd,
@@ -3711,7 +3631,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPhaseVelocitiesHomogenizedV
         diffusion_tensor.scale(phasemanager.rel_permeability(curphase) /
                                phasemanager.dyn_viscosity(curphase, pressure_gradient.norm2()));
 
-        static Core::LinAlg::Matrix<nsd, 1> diffusive_velocity(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nsd, 1> diffusive_velocity(Core::LinAlg::Initialization::zero);
         diffusive_velocity.multiply(
             -1.0 / phase_volume_fraction, diffusion_tensor, pressure_gradient);
 
@@ -3749,7 +3669,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPhaseVelocitiesHomogenizedV
         diffusion_tensor.scale(1.0 / phasemanager.dyn_viscosity_vol_frac_pressure(
                                          i_volfrac_pressure, pressure_gradient.norm2()));
 
-        static Core::LinAlg::Matrix<nsd, 1> diffusive_velocity(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nsd, 1> diffusive_velocity(Core::LinAlg::Initialization::zero);
         diffusive_velocity.multiply(
             -1.0 / phase_volume_fraction, diffusion_tensor, pressure_gradient);
 
@@ -3812,7 +3732,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPhaseVelocitiesBloodLung<ns
         diffusion_tensor.scale(phasemanager.rel_permeability(curphase) /
                                phasemanager.dyn_viscosity(curphase, pressure_gradient.norm2()));
 
-        static Core::LinAlg::Matrix<nsd, 1> diffusive_velocity(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nsd, 1> diffusive_velocity(Core::LinAlg::Initialization::zero);
         diffusive_velocity.multiply(
             -1.0 / phase_volume_fraction, diffusion_tensor, pressure_gradient);
 
@@ -3843,7 +3763,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPhaseVelocitiesBloodLung<ns
         diffusion_tensor.scale(1.0 / phasemanager.dyn_viscosity_vol_frac_pressure_blood_lung(
                                          i_volfrac_pressure, pressure_gradient.norm2()));
 
-        static Core::LinAlg::Matrix<nsd, 1> diffusive_velocity(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nsd, 1> diffusive_velocity(Core::LinAlg::Initialization::zero);
         diffusive_velocity.multiply(
             -1.0 / phase_volume_fraction, diffusion_tensor, pressure_gradient);
 
@@ -3859,7 +3779,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorPhaseVelocitiesBloodLung<ns
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                             kremheller 09/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -4018,7 +3937,6 @@ void Discret::Elements::PoroFluidEvaluator::
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                 kremheller 09/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -4049,7 +3967,6 @@ void Discret::Elements::PoroFluidEvaluator::
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 09/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -4075,7 +3992,6 @@ void Discret::Elements::PoroFluidEvaluator::
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 09/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -4092,7 +4008,6 @@ void Discret::Elements::PoroFluidEvaluator::
 }
 
 /*----------------------------------------------------------------------*
- | evaluate rhs term at GP                             kremheller 09/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 double Discret::Elements::PoroFluidEvaluator::
@@ -4285,7 +4200,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddInstatTe
   double dpBdt = phidt[numfluidphases];
   double ratio_pApB = phi[0] / phi[numfluidphases];
 
-  static Core::LinAlg::Matrix<nsd, nsd> gridvelderiv(Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<nsd, nsd> gridvelderiv(Core::LinAlg::Initialization::zero);
   gridvelderiv.multiply_nt(*(variablemanager.e_con_velnp()), deriv);
 
   double scalingfacor = phasemanager.initial_volfrac() *
@@ -4412,7 +4327,7 @@ Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddInstatTerms<n
     const PoroFluidManager::VariableManagerInterface<nsd, nen>& variablemanager, double rhsfac,
     double fac)
 {
-  // - \frac{\partial phi_volfrac}{\partial t}
+  // - \frac{\partial volfrac}{\partial t}
   double divvel = variablemanager.div_con_velnp();
 
   const int numfluidphases = phasemanager.num_fluid_phases();
@@ -4512,7 +4427,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddInstatTe
     const int numfluidphases = phasemanager.num_fluid_phases();
     // get matrix to fill
     Core::LinAlg::SerialDenseMatrix& mymat = *elemat[0];
-
+    Core::LinAlg::Matrix<nsd, nsd> gridvelderiv;
     //----------------------------------------------------------------
     // linearization of saturation w.r.t. dof
     //----------------------------------------------------------------
@@ -4587,7 +4502,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddInstatTe
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                             kremheller 09/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -4633,7 +4547,6 @@ void Discret::Elements::PoroFluidEvaluator::
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                 kremheller 09/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -4659,7 +4572,6 @@ void Discret::Elements::PoroFluidEvaluator::
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 09/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -4688,7 +4600,6 @@ void Discret::Elements::PoroFluidEvaluator::
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 09/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -4925,7 +4836,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungAddDivVelTe
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                             kremheller 09/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -4966,7 +4876,6 @@ void Discret::Elements::PoroFluidEvaluator::
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                 kremheller 09/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -4986,7 +4895,6 @@ void Discret::Elements::PoroFluidEvaluator::
 };
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 09/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -5008,7 +4916,6 @@ void Discret::Elements::PoroFluidEvaluator::
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 09/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -5028,7 +4935,6 @@ void Discret::Elements::PoroFluidEvaluator::
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                             kremheller 09/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -5063,7 +4969,6 @@ void Discret::Elements::PoroFluidEvaluator::
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                 kremheller 09/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -5083,7 +4988,6 @@ void Discret::Elements::PoroFluidEvaluator::
 };
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 09/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -5105,7 +5009,6 @@ void Discret::Elements::PoroFluidEvaluator::
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 09/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::
@@ -5125,7 +5028,6 @@ void Discret::Elements::PoroFluidEvaluator::
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                             kremheller 08/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorInstat<nsd,
@@ -5169,7 +5071,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                 kremheller 08/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorInstat<nsd,
@@ -5212,7 +5113,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 };
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 08/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorInstat<nsd,
@@ -5340,7 +5240,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungInstat<nsd,
 
     // currently only one volfrac blood ung material possible
     int ivolfrac = numfluidphases;
-    // - \frac{\partial phi_volfrac}{\partial t}
+    // - \frac{\partial volfrac}{\partial t}
     const double vtrans = EvaluatorVolFracBloodLungAddInstatTerms<nsd, nen>::get_rhs(
         curphase, phasetoadd, numdofpernode, phasemanager, variablemanager, rhsfac, fac);
 
@@ -5406,7 +5306,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungInstat<nsd,
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                             kremheller 08/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorDivVel<nsd,
@@ -5451,7 +5350,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                 kremheller 08/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorDivVel<nsd,
@@ -5490,7 +5388,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 };
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 08/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorDivVel<nsd,
@@ -5635,7 +5532,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 08/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorDivVel<nsd,
@@ -5790,7 +5686,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungDivVel<nsd,
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                             kremheller 08/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorDiff<nsd,
@@ -5817,7 +5712,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
       Core::LinAlg::Matrix<nsd, nsd> difftensor(Core::LinAlg::Initialization::zero);
       phasemanager.diff_tensor_vol_frac(ivolfrac - numfluidphases, difftensor);
 
-      static Core::LinAlg::Matrix<nsd, nen> diffflux(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd, nen> diffflux(Core::LinAlg::Initialization::zero);
       diffflux.multiply(difftensor, derxy);
 
       // diffusive term
@@ -5839,7 +5734,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                 kremheller 08/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorDiff<nsd,
@@ -5865,7 +5759,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
     Core::LinAlg::Matrix<nsd, nsd> difftensor(Core::LinAlg::Initialization::zero);
     phasemanager.diff_tensor_vol_frac(ivolfrac - numfluidphases, difftensor);
 
-    static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
     diffflux.multiply(difftensor, gradphi[ivolfrac]);
 
     for (int vi = 0; vi < nen; ++vi)
@@ -5881,7 +5775,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 };
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 08/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorDiff<nsd,
@@ -5909,7 +5802,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
     Core::LinAlg::Matrix<nsd, nsd> difftensor(Core::LinAlg::Initialization::zero);
     phasemanager.diff_tensor_vol_frac(ivolfrac - numfluidphases, difftensor);
 
-    static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
     diffflux.multiply(difftensor, gradphi[ivolfrac]);
 
     // TODO: anisotropic difftensor
@@ -5926,7 +5819,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 08/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorDiff<nsd,
@@ -5945,7 +5837,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                             kremheller 08/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorReac<nsd,
@@ -5998,7 +5889,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                 kremheller 08/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorReac<nsd,
@@ -6035,7 +5925,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 };
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 08/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorReac<nsd,
@@ -6088,7 +5977,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 08/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorReac<nsd,
@@ -6139,7 +6027,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                             kremheller 08/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorAddFlux<nsd,
@@ -6179,7 +6066,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
             for (int i = 0; i < nsd; i++)
               difftensoraddflux(i, i) = phasemanager.scalar_diff(ivolfrac - numfluidphases, iscal);
 
-            static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
+            Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
             diffflux.multiply(difftensoraddflux, gradscalarnp[iscal]);
 
             for (int vi = 0; vi < nen; ++vi)
@@ -6269,7 +6156,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                 kremheller 08/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorAddFlux<nsd,
@@ -6325,7 +6211,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
           else
             FOUR_C_THROW("AddScalarDependentFlux only possible for species in fluid or solid!");
 
-          static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
           diffflux.multiply(difftensoraddflux, gradscalarnp[iscal]);
           for (int vi = 0; vi < nen; ++vi)
           {
@@ -6343,7 +6229,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 };
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 08/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorAddFlux<nsd,
@@ -6382,7 +6267,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
           for (int i = 0; i < nsd; i++)
             difftensoraddflux(i, i) = phasemanager.scalar_diff(ivolfrac - numfluidphases, iscal);
 
-          static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
           // haptotaxis: scale with volfrac * (1 - porosity - sumaddvolfrac)
           if (phasemanager.scalar_to_phase(iscal).species_type ==
               Mat::ScaTraMatMultiPoro::SpeciesType::species_in_solid)
@@ -6445,7 +6330,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 
           if (phasemanager.porosity_depends_on_struct())
           {
-            static Core::LinAlg::Matrix<nsd, 1> diffflux2(Core::LinAlg::Initialization::zero);
+            Core::LinAlg::Matrix<nsd, 1> diffflux2(Core::LinAlg::Initialization::zero);
 
             // haptotaxis
             if (phasemanager.scalar_to_phase(iscal).species_type ==
@@ -6494,7 +6379,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 08/17 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorAddFlux<nsd,
@@ -6543,7 +6427,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
           else
             FOUR_C_THROW("AddScalarDependentFlux only possible for species in fluid or solid!");
 
-          static Core::LinAlg::Matrix<nsd, nen> diffflux(Core::LinAlg::Initialization::zero);
+          Core::LinAlg::Matrix<nsd, nen> diffflux(Core::LinAlg::Initialization::zero);
           diffflux.multiply(difftensoraddflux, derxy);
 
           // diffusive term
@@ -6576,7 +6460,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
                 -1.0 /
                 (phasemanager.omega_half(ivolfrac - numfluidphases, iscal) + scalars[iscal]));
 
-            static Core::LinAlg::Matrix<nsd, 1> diffflux2(Core::LinAlg::Initialization::zero);
+            Core::LinAlg::Matrix<nsd, 1> diffflux2(Core::LinAlg::Initialization::zero);
             diffflux2.multiply(difftensoraddflux, gradscalarnp[iscal]);
 
             for (int vi = 0; vi < nen; ++vi)
@@ -6603,7 +6487,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                             kremheller 02/18 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorPressureDiff<
@@ -6641,7 +6524,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
             1.0 / phasemanager.dyn_viscosity_vol_frac_pressure(
                       ivolfracpress - numfluidphases - numvolfrac, -1.0));  // TODO: change -1.0
 
-        static Core::LinAlg::Matrix<nsd, nen> diffflux(Core::LinAlg::Initialization::zero);
+        Core::LinAlg::Matrix<nsd, nen> diffflux(Core::LinAlg::Initialization::zero);
         diffflux.multiply(permeabilitytensorvolfracpress, derxy);
 
         // diffusive term
@@ -6669,7 +6552,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                 kremheller 02/18 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorPressureDiff<
@@ -6711,7 +6593,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
           1.0 / phasemanager.dyn_viscosity_vol_frac_pressure(
                     ivolfracpress - numfluidphases - numvolfrac, -1.0));
 
-      static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
       diffflux.multiply(permeabilitytensorvolfracpress, gradphi[ivolfracpress]);
 
       for (int vi = 0; vi < nen; ++vi)
@@ -6728,7 +6610,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 };
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 02/18 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorPressureDiff<
@@ -6767,7 +6648,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
           1.0 / phasemanager.dyn_viscosity_vol_frac_pressure(
                     ivolfracpress - numfluidphases - numvolfrac, -1.0));
 
-      static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
       diffflux.multiply(permeabilitytensorvolfracpress, gradphi[ivolfracpress]);
 
       // TODO: anisotropic difftensor
@@ -6785,7 +6666,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 02/18 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorPressureDiff<
@@ -6838,7 +6718,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungPressureDif
           1.0 / phasemanager.dyn_viscosity_vol_frac_pressure_blood_lung(
                     ivolfracpress - numfluidphases, -1.0));  // TODO: change -1.0
 
-      static Core::LinAlg::Matrix<nsd, nen> diffflux(Core::LinAlg::Initialization::zero);
+      Core::LinAlg::Matrix<nsd, nen> diffflux(Core::LinAlg::Initialization::zero);
       diffflux.multiply(permeabilitytensorvolfracpress, derxy);
 
       // diffusive term
@@ -6904,7 +6784,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungPressureDif
                   ivolfracpress - numfluidphases, -1.0));
 
 
-    static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
     diffflux.multiply(permeabilitytensorvolfracpress, gradphi[ivolfracpress]);
 
     for (int vi = 0; vi < nen; ++vi)
@@ -6956,7 +6836,7 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungPressureDif
         1.0 / phasemanager.dyn_viscosity_vol_frac_pressure_blood_lung(
                   ivolfracpress - numfluidphases, -1.0));
 
-    static Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
+    Core::LinAlg::Matrix<nsd, 1> diffflux(Core::LinAlg::Initialization::zero);
     diffflux.multiply(permeabilitytensorvolfracpress, gradphi[ivolfracpress]);
 
     // TODO: anisotropic difftensor
@@ -6992,7 +6872,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracBloodLungPressureDif
  * **********************************************************************
  *----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*
- | evaluate element matrix                             kremheller 02/18 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorPressureReac<
@@ -7050,7 +6929,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 }
 
 /*----------------------------------------------------------------------*
- | evaluate RHS vector                                 kremheller 02/18 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorPressureReac<
@@ -7093,7 +6971,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 };
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with structure kremheller 02/18 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorPressureReac<
@@ -7152,7 +7029,6 @@ void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatu
 }
 
 /*----------------------------------------------------------------------*
- | evaluate off-diagonal coupling matrix with scatra   kremheller 02/18 |
  *----------------------------------------------------------------------*/
 template <int nsd, int nen>
 void Discret::Elements::PoroFluidEvaluator::EvaluatorVolFracHomogenizedVasculatureTumorPressureReac<

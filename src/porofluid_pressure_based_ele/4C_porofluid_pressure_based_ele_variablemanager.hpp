@@ -168,7 +168,8 @@ namespace Discret
               numdofpernode_(numdofpernode),
               isextracted_(false),
               isevaluated_(false),
-              volfrac_closing_relation_(Mat::PAR::PoroFluidPressureBased::cr_undefined) {};
+              volfrac_closing_relation_(
+                  Mat::PAR::PoroFluidPressureBased::ClosingRelation::undefined) {};
 
         //! check if evaluate_gp_variables has been called
         void check_is_evaluated() const override
@@ -271,7 +272,7 @@ namespace Discret
         bool isevaluated_;
         //! type of volume fractioin closing relation
         Mat::PAR::PoroFluidPressureBased::ClosingRelation volfrac_closing_relation_{
-            Mat::PAR::PoroFluidPressureBased::cr_undefined};
+            Mat::PAR::PoroFluidPressureBased::ClosingRelation::undefined};
       };
 
 

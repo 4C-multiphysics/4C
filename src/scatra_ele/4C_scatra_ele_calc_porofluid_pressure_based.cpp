@@ -1865,10 +1865,10 @@ void Discret::Elements::ScaTraEleInternalVariableManagerPorofluidPressureBased<n
       [&]()
       {
         if (number_of_fluid_dofs == number_of_fluid_phases + number_of_volume_fractions)
-          return Mat::PAR::PoroFluidPressureBased::ClosingRelation::cr_evolutionequation_blood_lung;
+          return Mat::PAR::PoroFluidPressureBased::ClosingRelation::evolutionequation_blood_lung;
         else if (number_of_fluid_dofs == number_of_fluid_phases + 2 * number_of_volume_fractions)
           return Mat::PAR::PoroFluidPressureBased::ClosingRelation::
-              cr_evolutionequation_homogenized_vasculature_tumor;
+              evolutionequation_homogenized_vasculature_tumor;
         else
           FOUR_C_THROW("Internal error!");
       });
@@ -1938,7 +1938,7 @@ void Discret::Elements::ScaTraEleInternalVariableManagerPorofluidPressureBased<n
       ++volume_fraction_id)
   {
     if (closing_relation ==
-        Mat::PAR::PoroFluidPressureBased::ClosingRelation::cr_evolutionequation_blood_lung)
+        Mat::PAR::PoroFluidPressureBased::ClosingRelation::evolutionequation_blood_lung)
     {
       // current pressure gradient
       pressure_gradient_[volume_fraction_id].update(

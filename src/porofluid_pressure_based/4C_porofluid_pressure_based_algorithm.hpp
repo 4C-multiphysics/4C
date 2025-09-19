@@ -283,6 +283,15 @@ namespace PoroPressureBased
       return phase_velocities_;
     }
 
+    //! return volfac_blood_lung at time n+1
+    std::shared_ptr<Core::LinAlg::Vector<double>> volfrac_blood_lung() const
+    {
+      return volfrac_blood_lung_;
+    }
+
+    //! return determinant of deformation gradient at time n+1
+    std::shared_ptr<Core::LinAlg::Vector<double>> det_def_grad() const { return det_def_grad_; }
+
     //! return number of dof set associated with solid pressure
     int get_dof_set_number_of_solid_pressure() const override { return nds_solidpressure_; };
 

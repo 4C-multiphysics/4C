@@ -568,27 +568,27 @@ namespace Discret
       );
 
       //! Compute Solid-pressure derivative w.r.t. primary variable at GP
-      void compute_sol_pressure_deriv(const std::vector<double>& phiAtGP,  //!<< primary variable
+      void compute_sol_pressure_deriv(const std::vector<double>& phi_at_gp,  //!<< primary variable
           const int numfluidphases,             //!<< number of fluid phases
           std::vector<double>& solidpressderiv  //!<< solid pressure derivative at GP
       );
 
       //! Compute solid pressure at GP
       double compute_sol_pressure_at_gp(
-          const int totalnumdofpernode,       //!<< total number of multiphase dofs
-          const int numfluidphases,           //!<< number of fluid phases
-          const std::vector<double>& phiAtGP  //!<< primary variable
+          const int totalnumdofpernode,         //!<< total number of multiphase dofs
+          const int numfluidphases,             //!<< number of fluid phases
+          const std::vector<double>& phi_at_gp  //!<< primary variable
       );
 
       //! recalculate solid pressure at GP in case of volfracs
       double recalculate_sol_pressure_at_gp(double press, const double porosity,
           const int totalnumdofpernode, const int numfluidphases, const int numvolfrac,
-          const std::vector<double>& phiAtGP,
+          const std::vector<double>& phi_at_gp,
           const Mat::PAR::PoroFluidPressureBased::ClosingRelation type_volfrac_closing_relation,
           const double J);
 
       //! recalculate solid pressure derivative in case of volfracs
-      void recalculate_sol_pressure_deriv(const std::vector<double>& phiAtGP,
+      void recalculate_sol_pressure_deriv(const std::vector<double>& phi_at_gp,
           const int totalnumdofpernode, const int numfluidphases, const int numvolfrac,
           const double press, const double porosity, std::vector<double>& solidpressderiv,
           const double J,
@@ -599,7 +599,7 @@ namespace Discret
           const std::vector<double>& ephi,                   //!<< primary variable at node
           const int totalnumdofpernode,                      //!<< total number of multiphase dofs
           const Core::LinAlg::Matrix<numnod_, 1>& shapefct,  //!<< shapefct
-          std::vector<double>& phiAtGP                       //!<< primary variable at GP
+          std::vector<double>& phi_at_gp                     //!<< primary variable at GP
       );
 
       //! Compute linearizaton of solid press w.r.t. displacements
@@ -607,7 +607,7 @@ namespace Discret
       //! Jacobian of deformation gradient
       void compute_linearization_of_sol_press_wrt_disp(const double fluidpress,
           const double porosity, const int totalnumdofpernode, const int numfluidphases,
-          const int numvolfrac, const std::vector<double>& phiAtGP,
+          const int numvolfrac, const std::vector<double>& phi_at_gp,
           const Core::LinAlg::Matrix<1, numdof_>& dphi_dus,
           Core::LinAlg::Matrix<1, numdof_>& dps_dus, const double J, const double dporosity_dJ,
           const Core::LinAlg::Matrix<1, numdof_>& dJ_dus,

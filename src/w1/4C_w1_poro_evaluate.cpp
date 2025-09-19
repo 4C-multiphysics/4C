@@ -742,15 +742,15 @@ Discret::Elements::Wall1Poro<distype>::get_volfrac_closing_relation_type(
   if (solidporo_fluid_properties.number_of_fluid_dofs_per_node_ ==
       solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_ +
           solidporo_fluid_properties.number_of_volfracs_)
-    return Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_blood_lung;
+    return Mat::PAR::PoroFluidPressureBased::ClosingRelation::evolutionequation_blood_lung;
   else if (solidporo_fluid_properties.number_of_fluid_dofs_per_node_ ==
            solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_ +
                solidporo_fluid_properties.number_of_volfracs_ * 2)
-    return Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_homogenized_vasculature_tumor;
+    return Mat::PAR::PoroFluidPressureBased::ClosingRelation::
+        evolutionequation_homogenized_vasculature_tumor;
   else
   {
     FOUR_C_THROW("The Number of volume fractions is not correct in the solid evaluator!");
-    return Mat::PAR::PoroFluidPressureBased::cr_undefined;
   }
 }
 
@@ -810,7 +810,7 @@ void Discret::Elements::Wall1Poro<distype>::gauss_point_loop_pressure_based(
   const bool hasvolfracs =
       (solidporo_fluid_properties.number_of_fluid_dofs_per_node_ >
           solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_);
-  std::vector<double> phiAtGP(solidporo_fluid_properties.number_of_fluid_dofs_per_node_);
+  std::vector<double> phi_at_gp(solidporo_fluid_properties.number_of_fluid_dofs_per_node_);
 
 
   for (int gp = 0; gp < numgpt_; ++gp)
@@ -849,10 +849,10 @@ void Discret::Elements::Wall1Poro<distype>::gauss_point_loop_pressure_based(
     //----------------------------------------------------
     // pressure at integration point
     compute_primary_variable_at_gp(
-        ephi, solidporo_fluid_properties.number_of_fluid_dofs_per_node_, shapefct, phiAtGP);
+        ephi, solidporo_fluid_properties.number_of_fluid_dofs_per_node_, shapefct, phi_at_gp);
     double press =
         compute_sol_pressure_at_gp(solidporo_fluid_properties.number_of_fluid_dofs_per_node_,
-            solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_, phiAtGP);
+            solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_, phi_at_gp);
     // recalculate for the case of volume fractions
     if (hasvolfracs)
     {
@@ -867,11 +867,12 @@ void Discret::Elements::Wall1Poro<distype>::gauss_point_loop_pressure_based(
       press = recalculate_sol_pressure_at_gp(fluidpress, porosity,
           solidporo_fluid_properties.number_of_fluid_dofs_per_node_,
           solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_,
-          solidporo_fluid_properties.number_of_volfracs_, phiAtGP, type_volfrac_closingrelation, J);
+          solidporo_fluid_properties.number_of_volfracs_, phi_at_gp, type_volfrac_closingrelation,
+          J);
       compute_linearization_of_sol_press_wrt_disp(fluidpress, porosity,
           solidporo_fluid_properties.number_of_fluid_dofs_per_node_,
           solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_,
-          solidporo_fluid_properties.number_of_volfracs_, phiAtGP, dporosity_dus, dps_dus, J,
+          solidporo_fluid_properties.number_of_volfracs_, phi_at_gp, dporosity_dus, dps_dus, J,
           dporosity_dJ, dJ_dus, type_volfrac_closingrelation);
     }
 
@@ -1476,7 +1477,7 @@ void Discret::Elements::Wall1Poro<distype>::gauss_point_loop_od_pressure_based(
   const bool hasvolfracs =
       (solidporo_fluid_properties.number_of_fluid_dofs_per_node_ >
           solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_);
-  std::vector<double> phiAtGP(solidporo_fluid_properties.number_of_fluid_dofs_per_node_);
+  std::vector<double> phi_at_gp(solidporo_fluid_properties.number_of_fluid_dofs_per_node_);
   std::vector<double> solpressderiv(solidporo_fluid_properties.number_of_fluid_dofs_per_node_);
 
 
@@ -1510,8 +1511,8 @@ void Discret::Elements::Wall1Poro<distype>::gauss_point_loop_od_pressure_based(
 
     // compute derivative of solid pressure w.r.t primary variable phi at node
     compute_primary_variable_at_gp(
-        ephi, solidporo_fluid_properties.number_of_fluid_dofs_per_node_, shapefct, phiAtGP);
-    compute_sol_pressure_deriv(phiAtGP,
+        ephi, solidporo_fluid_properties.number_of_fluid_dofs_per_node_, shapefct, phi_at_gp);
+    compute_sol_pressure_deriv(phi_at_gp,
         solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_, solpressderiv);
     // in case of volume fractions --> recalculate
     if (hasvolfracs)
@@ -1519,14 +1520,14 @@ void Discret::Elements::Wall1Poro<distype>::gauss_point_loop_od_pressure_based(
       double dphi_dp = 0.0;
       double porosity = 0.0;
 
-      double press =
-          compute_sol_pressure_at_gp(solidporo_fluid_properties.number_of_fluid_dofs_per_node_,
-              solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_, phiAtGP);
+      double press = compute_sol_pressure_at_gp(
+          solidporo_fluid_properties.number_of_fluid_dofs_per_node_,
+          solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_, phi_at_gp);
 
       compute_porosity_and_linearization_od(
           params, press, volchange, gp, shapefct, nullptr, porosity, dphi_dp);
 
-      recalculate_sol_pressure_deriv(phiAtGP,
+      recalculate_sol_pressure_deriv(phi_at_gp,
           solidporo_fluid_properties.number_of_fluid_dofs_per_node_,
           solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_,
           solidporo_fluid_properties.number_of_volfracs_, press, porosity, solpressderiv, J,
@@ -2240,7 +2241,7 @@ void Discret::Elements::Wall1Poro<distype>::compute_porosity_and_linearization_o
 
 template <Core::FE::CellType distype>
 void Discret::Elements::Wall1Poro<distype>::compute_sol_pressure_deriv(
-    const std::vector<double>& phiAtGP, const int numfluidphases,
+    const std::vector<double>& phi_at_gp, const int numfluidphases,
     std::vector<double>& solidpressderiv)
 {
   // zero out everything
@@ -2253,7 +2254,7 @@ void Discret::Elements::Wall1Poro<distype>::compute_sol_pressure_deriv(
   Core::LinAlg::SerialDenseMatrix helpderiv(numfluidphases, numfluidphases, true);
   Core::LinAlg::SerialDenseMatrix satderiv(numfluidphases, numfluidphases, true);
   Core::LinAlg::SerialDenseMatrix pressderiv(numfluidphases, numfluidphases, true);
-  std::vector<double> fluidphi(phiAtGP.data(), phiAtGP.data() + numfluidphases);
+  std::vector<double> fluidphi(phi_at_gp.data(), phi_at_gp.data() + numfluidphases);
 
   // evaluate the pressures
   fluidmulti_mat_->evaluate_gen_pressure(genpress, fluidphi);
@@ -2298,23 +2299,23 @@ void Discret::Elements::Wall1Poro<distype>::compute_sol_pressure_deriv(
 template <Core::FE::CellType distype>
 void Discret::Elements::Wall1Poro<distype>::compute_linearization_of_sol_press_wrt_disp(
     const double fluidpress, const double porosity, const int totalnumdofpernode,
-    const int numfluidphases, const int numvolfrac, const std::vector<double>& phiAtGP,
+    const int numfluidphases, const int numvolfrac, const std::vector<double>& phi_at_gp,
     const Core::LinAlg::Matrix<1, numdof_>& dphi_dus, Core::LinAlg::Matrix<1, numdof_>& dps_dus,
     const double J, const double dporosity_dJ, const Core::LinAlg::Matrix<1, numdof_>& dJ_dus,
     const Mat::PAR::PoroFluidPressureBased::ClosingRelation type_volfrac_closing_relation)
 {
-  if (type_volfrac_closing_relation ==
-      Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_homogenized_vasculature_tumor)
+  if (type_volfrac_closing_relation == Mat::PAR::PoroFluidPressureBased::ClosingRelation::
+                                           evolutionequation_homogenized_vasculature_tumor)
   {
     // get volume fraction primary variables
     std::vector<double> volfracphi(
-        phiAtGP.data() + numfluidphases, phiAtGP.data() + numfluidphases + numvolfrac);
+        phi_at_gp.data() + numfluidphases, phi_at_gp.data() + numfluidphases + numvolfrac);
     double sumaddvolfrac = 0.0;
     for (int ivolfrac = 0; ivolfrac < numvolfrac; ivolfrac++) sumaddvolfrac += volfracphi[ivolfrac];
 
     // get volume fraction pressure at [numfluidphases+numvolfrac...totalnumdofpernode-1]
     std::vector<double> volfracpressure(
-        phiAtGP.data() + numfluidphases + numvolfrac, phiAtGP.data() + totalnumdofpernode);
+        phi_at_gp.data() + numfluidphases + numvolfrac, phi_at_gp.data() + totalnumdofpernode);
 
     // p_s = (porosity - sumaddvolfrac)/porosity * fluidpress
     //       + 1.0 / porosity sum_i=1^numvolfrac (volfrac_i*pressure_i)
@@ -2329,18 +2330,18 @@ void Discret::Elements::Wall1Poro<distype>::compute_linearization_of_sol_press_w
     dps_dus.update(dps_dphi, dphi_dus);
   }
   else if (type_volfrac_closing_relation ==
-           Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_blood_lung)
+           Mat::PAR::PoroFluidPressureBased::ClosingRelation::evolutionequation_blood_lung)
   {
     // get volfrac pressures at [numfluidphases] so far only one volfrac pressure with closing
     // relation for blood lung is possible
-    const double volfracpressure = phiAtGP[numfluidphases];
+    const double volfracpressure = phi_at_gp[numfluidphases];
 
     // so far only one volfrac with closing relation for blood lung is possible
     const double volfrac = std::invoke(
         [&]()
         {
           // pressure of air (always first phase in multiphase porespace)
-          if (phiAtGP[0] / volfracpressure <= 1.0)
+          if (phi_at_gp[0] / volfracpressure <= 1.0)
           {
             return (PoroPressureBased::ElementUtils::
                         get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
@@ -2361,7 +2362,7 @@ void Discret::Elements::Wall1Poro<distype>::compute_linearization_of_sol_press_w
                                get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
                                    *fluidmulti_mat_, numfluidphases)
                                    .scaling_parameter_deformation()) *
-                    pow((phiAtGP[0] / volfracpressure),
+                    pow((phi_at_gp[0] / volfracpressure),
                         PoroPressureBased::ElementUtils::
                             get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
                                 *fluidmulti_mat_, numfluidphases)
@@ -2369,14 +2370,10 @@ void Discret::Elements::Wall1Poro<distype>::compute_linearization_of_sol_press_w
           }
         });
 
-    // p_s = (porosity - sumaddvolfrac)/porosity * fluidpress
-    //       + 1.0 / porosity * volfrac *  volfracpressure
-    // d (p_s) / d porosity = + volfrac/porosity/porosity * fluidpress
-
     const double dvolfrac_dDetDefGrad = std::invoke(
         [&]()
         {
-          if ((phiAtGP[0] / volfracpressure) <= 1.0)
+          if ((phi_at_gp[0] / volfracpressure) <= 1.0)
           {
             return (PoroPressureBased::ElementUtils::
                         get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
@@ -2408,7 +2405,7 @@ void Discret::Elements::Wall1Poro<distype>::compute_linearization_of_sol_press_w
                                        *fluidmulti_mat_, numfluidphases)
                                        .scaling_parameter_deformation() -
                                1.0)) *
-                   pow(phiAtGP[0] / volfracpressure,
+                   pow(phi_at_gp[0] / volfracpressure,
                        PoroPressureBased::ElementUtils::
                            get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
                                *fluidmulti_mat_, numfluidphases)
@@ -2419,10 +2416,10 @@ void Discret::Elements::Wall1Poro<distype>::compute_linearization_of_sol_press_w
     double dvolfrac_multiphaseporespace_dDetDefGrad = dporosity_dJ - dvolfrac_dDetDefGrad;
 
     double dps_dDetDefGrad =
-        dvolfrac_multiphaseporespace_dDetDefGrad * pow(porosity, -1.0) * fluidpress +
-        (porosity - volfrac) * (-1.0 * pow(porosity, -2.0) * dporosity_dJ) * fluidpress +
+        dvolfrac_multiphaseporespace_dDetDefGrad * 1.0 / porosity * fluidpress +
+        (porosity - volfrac) * (-1.0 * 1.0 / (porosity * porosity) * dporosity_dJ) * fluidpress +
         dvolfrac_dDetDefGrad * volfracpressure * 1.0 / porosity +
-        volfrac * (1.0 * pow(porosity, -2.0) * dporosity_dJ) * volfracpressure;
+        volfrac * (1.0 * 1.0 / (porosity * porosity) * dporosity_dJ) * volfracpressure;
 
     // d (p_s) / d u_s = d (p_s) / d J * d J / d u_s
     dps_dus.update(dps_dDetDefGrad, dJ_dus);
@@ -2438,17 +2435,17 @@ void Discret::Elements::Wall1Poro<distype>::compute_linearization_of_sol_press_w
  *----------------------------------------------------------------------*/
 template <Core::FE::CellType distype>
 void Discret::Elements::Wall1Poro<distype>::recalculate_sol_pressure_deriv(
-    const std::vector<double>& phiAtGP, const int totalnumdofpernode, const int numfluidphases,
+    const std::vector<double>& phi_at_gp, const int totalnumdofpernode, const int numfluidphases,
     const int numvolfrac, const double press, const double porosity,
     std::vector<double>& solidpressderiv, const double J,
     Mat::PAR::PoroFluidPressureBased::ClosingRelation type_volfrac_closing_relation)
 {
-  if (type_volfrac_closing_relation ==
-      Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_homogenized_vasculature_tumor)
+  if (type_volfrac_closing_relation == Mat::PAR::PoroFluidPressureBased::ClosingRelation::
+                                           evolutionequation_homogenized_vasculature_tumor)
   {
     // get volume fraction primary variables
     std::vector<double> volfracphi(
-        phiAtGP.data() + numfluidphases, phiAtGP.data() + numfluidphases + numvolfrac);
+        phi_at_gp.data() + numfluidphases, phi_at_gp.data() + numfluidphases + numvolfrac);
     double sumaddvolfrac = 0.0;
     for (int ivolfrac = 0; ivolfrac < numvolfrac; ivolfrac++) sumaddvolfrac += volfracphi[ivolfrac];
 
@@ -2461,7 +2458,7 @@ void Discret::Elements::Wall1Poro<distype>::recalculate_sol_pressure_deriv(
 
     // get volfrac pressures at [numfluidphases+numvolfrac...totalnumdofpernode-1]
     std::vector<double> volfracpressure(
-        phiAtGP.data() + numfluidphases + numvolfrac, phiAtGP.data() + totalnumdofpernode);
+        phi_at_gp.data() + numfluidphases + numvolfrac, phi_at_gp.data() + totalnumdofpernode);
 
 
     for (int ivolfrac = 0; ivolfrac < numvolfrac; ivolfrac++)
@@ -2474,16 +2471,16 @@ void Discret::Elements::Wall1Poro<distype>::recalculate_sol_pressure_deriv(
     }
   }
   else if (type_volfrac_closing_relation ==
-           Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_blood_lung)
+           Mat::PAR::PoroFluidPressureBased::ClosingRelation::evolutionequation_blood_lung)
   {
-    double volfracpressure = phiAtGP[numfluidphases];
+    double volfracpressure = phi_at_gp[numfluidphases];
 
     // get volume fraction (only one possible in closing relation blood lung)
     const double volfrac = std::invoke(
         [&]()
         {
           // pressure of air (always first phase in multiphase porespace)
-          if ((phiAtGP[0] / volfracpressure) <= 1.0)
+          if ((phi_at_gp[0] / volfracpressure) <= 1.0)
           {
             return (PoroPressureBased::ElementUtils::
                         get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
@@ -2504,7 +2501,7 @@ void Discret::Elements::Wall1Poro<distype>::recalculate_sol_pressure_deriv(
                                get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
                                    *fluidmulti_mat_, numfluidphases)
                                    .scaling_parameter_deformation()) *
-                    pow((phiAtGP[0] / volfracpressure),
+                    pow((phi_at_gp[0] / volfracpressure),
                         PoroPressureBased::ElementUtils::
                             get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
                                 *fluidmulti_mat_, numfluidphases)
@@ -2519,7 +2516,7 @@ void Discret::Elements::Wall1Poro<distype>::recalculate_sol_pressure_deriv(
     // scale original fluid press deriv with (porosity - sumaddvolfrac)/porosity
     for (int iphase = 0; iphase < numfluidphases; iphase++) solidpressderiv[iphase] *= scale;
 
-    if (phiAtGP[0] < volfracpressure)
+    if (phi_at_gp[0] < volfracpressure)
     {
       // d p_s / d volfracpress = + volfracphi/porosity
       solidpressderiv[numfluidphases] = volfrac / porosity;
@@ -2530,7 +2527,7 @@ void Discret::Elements::Wall1Poro<distype>::recalculate_sol_pressure_deriv(
       std::vector<double> genpress(numfluidphases, 0.0);
       std::vector<double> saturation(numfluidphases, 0.0);
       std::vector<double> fluidpressure_multiphase_porespace(numfluidphases, 0.0);
-      std::vector<double> fluidphi(&phiAtGP[0], &phiAtGP[numfluidphases]);
+      std::vector<double> fluidphi(&phi_at_gp[0], &phi_at_gp[numfluidphases]);
 
       // evaluate the pressures
       fluidmulti_mat_->evaluate_gen_pressure(genpress, fluidphi);
@@ -2556,7 +2553,7 @@ void Discret::Elements::Wall1Poro<distype>::recalculate_sol_pressure_deriv(
                   get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
                       *fluidmulti_mat_, numfluidphases)
                       .scaling_parameter_pressure()) *
-          pow(phiAtGP[0] / volfracpressure,
+          pow(phi_at_gp[0] / volfracpressure,
               PoroPressureBased::ElementUtils::
                       get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
                           *fluidmulti_mat_, numfluidphases)
@@ -2566,11 +2563,11 @@ void Discret::Elements::Wall1Poro<distype>::recalculate_sol_pressure_deriv(
 
 
 
-      double dinverseporosity_dpA = (-1.0) * pow(porosity, -2.0) * dvolfrac_dpA;
+      double dinverseporosity_dpA = (-1.0) * 1.0 / (porosity * porosity) * dvolfrac_dpA;
       solidpressderiv[0] +=
-          (saturation[0] * (porosity - volfrac) * phiAtGP[0] + volfracpressure * volfrac) *
+          (saturation[0] * (porosity - volfrac) * phi_at_gp[0] + volfracpressure * volfrac) *
               dinverseporosity_dpA +
-          volfracpressure * pow(porosity, -1.0) * dvolfrac_dpA;
+          volfracpressure * 1.0 / porosity * dvolfrac_dpA;
       // solid pressure with fluid phases multiphase porespace = sum (S_i*p_i)
       const double solidpressure_in_multiphase_porespace = std::inner_product(
           saturation.begin(), saturation.end(), fluidpressure_multiphase_porespace.begin(), 0.0);
@@ -2588,20 +2585,20 @@ void Discret::Elements::Wall1Poro<distype>::recalculate_sol_pressure_deriv(
                   get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
                       *fluidmulti_mat_, numfluidphases)
                       .scaling_parameter_pressure()) *
-          pow(phiAtGP[0] / volfracpressure,
+          pow(phi_at_gp[0] / volfracpressure,
               PoroPressureBased::ElementUtils::
                       get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
                           *fluidmulti_mat_, numfluidphases)
                           .scaling_parameter_pressure() -
                   1.0) *
-          phiAtGP[0] * pow(volfracpressure, -2.0);
+          phi_at_gp[0] * 1.0 / (volfracpressure * volfracpressure);
 
       // d p_s / d volfracpress = + volfracphi/porosity
       solidpressderiv[numfluidphases] =
-          (-1.0) * (porosity - volfrac) * pow(porosity, -2.0) * dvolfrac_dvolfracpressure *
+          (-1.0) * (porosity - volfrac) * 1.0 / (porosity * porosity) * dvolfrac_dvolfracpressure *
               solidpressure_in_multiphase_porespace +
-          volfrac / porosity + pow(porosity, -1.0) * dvolfrac_dvolfracpressure -
-          volfrac * pow(porosity, -2.0) * dvolfrac_dvolfracpressure;
+          volfrac / porosity + 1.0 / porosity * dvolfrac_dvolfracpressure -
+          volfrac * 1.0 / (porosity * porosity) * dvolfrac_dvolfracpressure;
     }
   }
   else
@@ -2612,13 +2609,13 @@ void Discret::Elements::Wall1Poro<distype>::recalculate_sol_pressure_deriv(
 
 template <Core::FE::CellType distype>
 double Discret::Elements::Wall1Poro<distype>::compute_sol_pressure_at_gp(
-    const int totalnumdofpernode, const int numfluidphases, const std::vector<double>& phiAtGP)
+    const int totalnumdofpernode, const int numfluidphases, const std::vector<double>& phi_at_gp)
 {
   // initialize auxiliary variables
   std::vector<double> genpress(numfluidphases, 0.0);
   std::vector<double> sat(numfluidphases, 0.0);
   std::vector<double> press(numfluidphases, 0.0);
-  std::vector<double> fluidphi(phiAtGP.data(), phiAtGP.data() + numfluidphases);
+  std::vector<double> fluidphi(phi_at_gp.data(), phi_at_gp.data() + numfluidphases);
 
   // evaluate the pressures
   fluidmulti_mat_->evaluate_gen_pressure(genpress, fluidphi);
@@ -2638,16 +2635,16 @@ double Discret::Elements::Wall1Poro<distype>::compute_sol_pressure_at_gp(
 template <Core::FE::CellType distype>
 double Discret::Elements::Wall1Poro<distype>::recalculate_sol_pressure_at_gp(double press,
     const double porosity, const int totalnumdofpernode, const int numfluidphases,
-    const int numvolfrac, const std::vector<double>& phiAtGP,
+    const int numvolfrac, const std::vector<double>& phi_at_gp,
     const Mat::PAR::PoroFluidPressureBased::ClosingRelation type_volfrac_closing_relation,
     const double J)
 {
-  if (type_volfrac_closing_relation ==
-      Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_homogenized_vasculature_tumor)
+  if (type_volfrac_closing_relation == Mat::PAR::PoroFluidPressureBased::ClosingRelation::
+                                           evolutionequation_homogenized_vasculature_tumor)
   {
     // get volume fraction primary variables at [numfluidphases-1...numfluidphase-1+numvolfrac]
     std::vector<double> volfracphi(
-        phiAtGP.data() + numfluidphases, phiAtGP.data() + numfluidphases + numvolfrac);
+        phi_at_gp.data() + numfluidphases, phi_at_gp.data() + numfluidphases + numvolfrac);
     double sumaddvolfrac = 0.0;
     for (int ivolfrac = 0; ivolfrac < numvolfrac; ivolfrac++) sumaddvolfrac += volfracphi[ivolfrac];
 
@@ -2658,7 +2655,7 @@ double Discret::Elements::Wall1Poro<distype>::recalculate_sol_pressure_at_gp(dou
 
     // get volfrac pressures at [numfluidphases+numvolfrac...totalnumdofpernode-1]
     std::vector<double> volfracpressure(
-        phiAtGP.data() + numfluidphases + numvolfrac, phiAtGP.data() + totalnumdofpernode);
+        phi_at_gp.data() + numfluidphases + numvolfrac, phi_at_gp.data() + totalnumdofpernode);
 
     // second part
     for (int ivolfrac = 0; ivolfrac < numvolfrac; ivolfrac++)
@@ -2669,11 +2666,11 @@ double Discret::Elements::Wall1Poro<distype>::recalculate_sol_pressure_at_gp(dou
     //       equivalent
   }
   else if (type_volfrac_closing_relation ==
-           Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_blood_lung)
+           Mat::PAR::PoroFluidPressureBased::ClosingRelation::evolutionequation_blood_lung)
   {
     // get volfrac pressures at [numfluidphases] so far only one volfrac pressure with closing
     // relation for blood lung is possible
-    double volfracpressure = phiAtGP[numfluidphases];
+    double volfracpressure = phi_at_gp[numfluidphases];
 
 
     // so far only one volfrac with closing relation for blood lung is possible
@@ -2681,7 +2678,7 @@ double Discret::Elements::Wall1Poro<distype>::recalculate_sol_pressure_at_gp(dou
         [&]()
         {
           // pressure of air (always first phase in multiphase porespace)
-          if (phiAtGP[0] / volfracpressure <= 1.0)
+          if (phi_at_gp[0] / volfracpressure <= 1.0)
           {
             return (PoroPressureBased::ElementUtils::
                         get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
@@ -2702,7 +2699,7 @@ double Discret::Elements::Wall1Poro<distype>::recalculate_sol_pressure_at_gp(dou
                                get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
                                    *fluidmulti_mat_, numfluidphases)
                                    .scaling_parameter_deformation()) *
-                    pow((phiAtGP[0] / volfracpressure),
+                    pow((phi_at_gp[0] / volfracpressure),
                         PoroPressureBased::ElementUtils::
                             get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
                                 *fluidmulti_mat_, numfluidphases)
@@ -2734,16 +2731,16 @@ double Discret::Elements::Wall1Poro<distype>::recalculate_sol_pressure_at_gp(dou
 template <Core::FE::CellType distype>
 void Discret::Elements::Wall1Poro<distype>::compute_primary_variable_at_gp(
     const std::vector<double>& ephi, const int totalnumdofpernode,
-    const Core::LinAlg::Matrix<numnod_, 1>& shapefct, std::vector<double>& phiAtGP)
+    const Core::LinAlg::Matrix<numnod_, 1>& shapefct, std::vector<double>& phi_at_gp)
 {
   // zero out everything
-  std::fill(phiAtGP.begin(), phiAtGP.end(), 0.0);
+  std::fill(phi_at_gp.begin(), phi_at_gp.end(), 0.0);
   // compute phi at GP = phi * shapefunction
   for (int i = 0; i < numnod_; i++)
   {
     for (int j = 0; j < totalnumdofpernode; j++)
     {
-      phiAtGP[j] += shapefct(i) * ephi[i * totalnumdofpernode + j];
+      phi_at_gp[j] += shapefct(i) * ephi[i * totalnumdofpernode + j];
     }
   }
 }

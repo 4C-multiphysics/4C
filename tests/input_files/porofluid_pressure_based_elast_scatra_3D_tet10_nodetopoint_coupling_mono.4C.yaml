@@ -105,7 +105,7 @@ MATERIALS:
       DENSITYLAWID: 122
       DENSITY: 1e-09
       RELPERMEABILITYLAWID: 125
-      VISCOSITYLAWID: 124
+      VISCOSITY_LAW_ID: 124
       DOFTYPEID: 121
   - MAT: 121
     MAT_FluidPoroSinglePhaseDofPressure:
@@ -129,7 +129,7 @@ MATERIALS:
   - MAT: 14
     MAT_FluidPoroVolFracPressure:
       PERMEABILITY: 0.00015
-      VISCOSITYLAWID: 141
+      VISCOSITY_LAW_ID: 141
   - MAT: 141
     MAT_FluidPoroViscosityLawConstant:
       VALUE: 4e-06
