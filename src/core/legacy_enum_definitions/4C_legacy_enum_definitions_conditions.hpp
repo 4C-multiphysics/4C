@@ -140,6 +140,7 @@ namespace Core::Conditions
     ReinitializationTaylorGalerkin,
     FlowRateThroughLine_2D,
     FlowRateThroughSurface_3D,
+    LineModeKrylovProjection,
     SurfaceModeKrylovProjection,
     VolumeModeKrylovProjection,
     ArtJunctionCond,
