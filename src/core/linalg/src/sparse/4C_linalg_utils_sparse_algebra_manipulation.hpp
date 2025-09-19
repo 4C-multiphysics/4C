@@ -423,6 +423,21 @@ namespace Core::LinAlg
       const Core::LinAlg::SparseMatrix& inmat, const Core::LinAlg::Map& newrowmap,
       const Core::LinAlg::Map& newdomainmap);
 
+  /**
+   * @brief Constructs a sparse matrix from a given MultiVector.
+   *
+   * This function creates a @p Core::LinAlg::SparseMatrix using the provided multivector,
+   * range map, and an optional domain map. The multivector contains the data to be
+   * represented in sparse matrix form. The rangemap defines the mapping of rows,
+   * while the domainmap (if provided) defines the mapping of columns.
+   *
+   * @param multivect The multivector containing the data to be converted into a sparse matrix.
+   * @param rangemap The map specifying the row mapping for the sparse matrix.
+   * @param domainmap Optional map specifying the column mapping for the sparse matrix.
+   * @return Core::LinAlg::SparseMatrix The constructed sparse matrix.
+   */
+  Core::LinAlg::SparseMatrix make_sparse_matrix(const Core::LinAlg::MultiVector<double>& multivect,
+      const Core::LinAlg::Map& rangemap, const std::optional<Core::LinAlg::Map>& domainmap);
 
 }  // namespace Core::LinAlg
 

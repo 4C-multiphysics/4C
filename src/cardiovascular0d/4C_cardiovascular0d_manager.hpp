@@ -12,6 +12,7 @@
 
 #include "4C_inpar_cardiovascular0d.hpp"
 #include "4C_inpar_structure.hpp"
+#include "4C_linalg_sparse_pod.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
@@ -65,8 +66,7 @@ namespace Utils
             strparams,  ///<  parameterlist from structural time integration algorithm
         Teuchos::ParameterList cv0dparams,  ///<  parameterlist from cardiovascular0d
         Core::LinAlg::Solver& solver,       ///< Solver to solve linear subproblem in iteration
-        std::shared_ptr<FourC::Cardiovascular0D::ProperOrthogonalDecomposition>
-            mor  ///< model order reduction
+        std::shared_ptr<Core::LinAlg::ProperOrthogonalDecomposition> mor  ///< model order reduction
     );
 
     /*!
@@ -423,8 +423,7 @@ namespace Utils
     Teuchos::ParameterList cv0dparams_;  ///< 0D cardiovascular input parameters
     Inpar::Solid::IntegrationStrategy
         intstrat_;  ///< structural time-integration strategy (old vs. standard)
-    std::shared_ptr<FourC::Cardiovascular0D::ProperOrthogonalDecomposition>
-        mor_;        ///< model order reduction
+    std::shared_ptr<Core::LinAlg::ProperOrthogonalDecomposition> mor_;  ///< model order reduction
     bool have_mor_;  ///< model order reduction is used
 
   };  // class
