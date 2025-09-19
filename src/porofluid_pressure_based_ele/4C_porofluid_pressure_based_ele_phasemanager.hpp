@@ -12,6 +12,7 @@
 
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
+#include "4C_mat_fluidporo_singlephase.hpp"
 #include "4C_mat_scatra_multiporo.hpp"
 #include "4C_porofluid_pressure_based_ele_action.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -85,7 +86,7 @@ namespace Discret
         static std::shared_ptr<Discret::Elements::PoroFluidManager::PhaseManagerInterface>
         create_phase_manager(const Discret::Elements::PoroFluidMultiPhaseEleParameter& para,
             int nsd, Core::Materials::MaterialType mattype, const PoroPressureBased::Action& action,
-            int totalnumdofpernode, int numfluidphases);
+            int totalnumdofpernode, int numfluidphases, int numvolfrac);
 
         //! factory method
         static std::shared_ptr<Discret::Elements::PoroFluidManager::PhaseManagerInterface>
@@ -283,12 +284,28 @@ namespace Discret
         //! get dynamic viscosity of volume fraction pressure
         virtual double dyn_viscosity_vol_frac_pressure(const Core::Mat::Material& material,
             int volfracpressnum, double abspressgrad) const = 0;
+        //! get dynamic viscosity of volume fraction (matnum is the material number of the
+        //! porofluid-material on the current element) default is set to zero, if called from a
+        //! porofluidmultiphase-element otherwise it has to be explicitly passed from the caller
+        virtual double dyn_viscosity_vol_frac_pressure_blood_lung(
+            int volfracpressnum, double abspressgrad, int matnum = 0) const = 0;
+        //! get dynamic viscosity of volume fraction pressure
+        virtual double dyn_viscosity_vol_frac_pressure_blood_lung(
+            const Core::Mat::Material& material, int volfracpressnum,
+            double abspressgrad) const = 0;
         //! get derivative of dynamic viscosity of volume fraction pressure
         virtual double dyn_viscosity_deriv_vol_frac_pressure(
             int volfracpressnum, double abspressgrad) const = 0;
         //! get derivative dynamic viscosity of volume fraction pressure
         virtual double dyn_viscosity_deriv_vol_frac_pressure(const Core::Mat::Material& material,
             int volfracpressnum, double abspressgrad) const = 0;
+        //! get derivative of dynamic viscosity of volume fraction pressure
+        virtual double dyn_viscosity_deriv_vol_frac_pressure_blood_lung(
+            int volfracpressnum, double abspressgrad) const = 0;
+        //! get derivative dynamic viscosity of volume fraction pressure
+        virtual double dyn_viscosity_deriv_vol_frac_pressure_blood_lung(
+            const Core::Mat::Material& material, int volfracpressnum,
+            double abspressgrad) const = 0;
 
         //! get the diffusion tensor
         virtual void diff_tensor_vol_frac(
@@ -329,6 +346,16 @@ namespace Discret
         //       Continuous and discrete mathematical models of tumor-induced angiogenesis
         virtual double omega_half(int volfracnum, int iscal) const = 0;
 
+        // initial volume fraction (usually at end-expiration)
+        virtual double initial_volfrac() const = 0;
+
+        // parameter determining the deformation dependence
+        virtual double volfrac_blood_lung_parameter_deformation_dependence() const = 0;
+
+        // parameter determining the pressure dependence
+        virtual double volfrac_blood_lung_parameter_pressure_dependence() const = 0;
+
+
         //@}
       };
 
@@ -347,7 +374,7 @@ namespace Discret
       {
        public:
         //! constructor
-        explicit PhaseManagerCore(int totalnumdofpernode, int numfluidphases);
+        explicit PhaseManagerCore(int totalnumdofpernode, int numfluidphases, int numvolfrac);
 
         //! copy constructor
         PhaseManagerCore(const PhaseManagerCore& old);
@@ -664,6 +691,24 @@ namespace Discret
           FOUR_C_THROW("Dynamic Viscosity (VolFracPressure) not available for this phase manager!");
           return 0.0;
         };
+        //! get relative diffusivity of volume fraction pressure
+        double dyn_viscosity_vol_frac_pressure_blood_lung(
+            int volfracpressnum, double abspressgrad, int matnum = 0) const override
+        {
+          FOUR_C_THROW(
+              "Dynamic Viscosity (VolFracPressure in the lungs) not available for this phase "
+              "manager!");
+          return 0.0;
+        };
+        //! get dynamic viscosity of volume fraction pressure
+        double dyn_viscosity_vol_frac_pressure_blood_lung(const Core::Mat::Material& material,
+            int volfracpressnum, double abspressgrad) const override
+        {
+          FOUR_C_THROW(
+              "Dynamic Viscosity (VolFracPressure in the lungs) not available for this phase "
+              "manager!");
+          return 0.0;
+        };
         //! get derivative of dynamic viscosity of volume fraction pressure
         double dyn_viscosity_deriv_vol_frac_pressure(
             int volfracpressnum, double abspressgrad) const override
@@ -675,6 +720,24 @@ namespace Discret
         };
         //! get derivative dynamic viscosity of volume fraction pressure
         double dyn_viscosity_deriv_vol_frac_pressure(const Core::Mat::Material& material,
+            int volfracpressnum, double abspressgrad) const override
+        {
+          FOUR_C_THROW(
+              "Derivative of dynamic Viscosity (VolFracPressure) not available for this phase "
+              "manager!");
+          return 0.0;
+        };
+        //! get derivative of dynamic viscosity of volume fraction pressure
+        double dyn_viscosity_deriv_vol_frac_pressure_blood_lung(
+            int volfracpressnum, double abspressgrad) const override
+        {
+          FOUR_C_THROW(
+              "Derivative of dynamic Viscosity (VolFracPressure) not available for this phase "
+              "manager!");
+          return 0.0;
+        };
+        //! get derivative dynamic viscosity of volume fraction pressure
+        double dyn_viscosity_deriv_vol_frac_pressure_blood_lung(const Core::Mat::Material& material,
             int volfracpressnum, double abspressgrad) const override
         {
           FOUR_C_THROW(
@@ -777,6 +840,17 @@ namespace Discret
           return null_map;
         };
 
+        // initial volume fraction (usually at end-expiration)
+        [[nodiscard]] double initial_volfrac() const override;
+
+        // parameter determining the deformation dependence
+        double volfrac_blood_lung_parameter_deformation_dependence() const override;
+
+
+        // parameter determining the pressure dependence
+        double volfrac_blood_lung_parameter_pressure_dependence() const override;
+
+
        private:
         //! total number of dofs per node (numfluidphases + numvolfrac)
         const int totalnumdofpernode_;
@@ -818,6 +892,13 @@ namespace Discret
 
         //! flag of Setup was called
         bool issetup_;
+        //! get initial volfrac value in case the material has closing relation for blood in lung
+        //! active
+        double initialvolfrac_ = 0.0;
+
+        double volfrac_deformationbased_scaling_parameter_deformation_ = 0.0;
+
+        double volfrac_deformationbased_scaling_parameter_pressure_ = 0.0;
       };
 
       /*----------------------------------------------------------------------*
@@ -1147,6 +1228,20 @@ namespace Discret
           return phasemanager_->dyn_viscosity_vol_frac_pressure(
               material, volfracpressnum, abspressgrad);
         };
+        //! get dynamic viscosity of volume fraction pressure
+        double dyn_viscosity_vol_frac_pressure_blood_lung(
+            int volfracpressnum, double abspressgrad, int matnum = 0) const override
+        {
+          return phasemanager_->dyn_viscosity_vol_frac_pressure_blood_lung(
+              volfracpressnum, abspressgrad, matnum = 0);
+        };
+        //! get dynamic viscosity of volume fraction pressure
+        double dyn_viscosity_vol_frac_pressure_blood_lung(const Core::Mat::Material& material,
+            int volfracpressnum, double abspressgrad) const override
+        {
+          return phasemanager_->dyn_viscosity_vol_frac_pressure_blood_lung(
+              material, volfracpressnum, abspressgrad);
+        };
         //! get derivative of dynamic viscosity of volume fraction pressure
         double dyn_viscosity_deriv_vol_frac_pressure(
             int volfracpressnum, double abspressgrad) const override
@@ -1159,6 +1254,20 @@ namespace Discret
             int volfracpressnum, double abspressgrad) const override
         {
           return phasemanager_->dyn_viscosity_deriv_vol_frac_pressure(
+              material, volfracpressnum, abspressgrad);
+        };
+        //! get derivative of dynamic viscosity of volume fraction pressure
+        double dyn_viscosity_deriv_vol_frac_pressure_blood_lung(
+            int volfracpressnum, double abspressgrad) const override
+        {
+          return phasemanager_->dyn_viscosity_deriv_vol_frac_pressure_blood_lung(
+              volfracpressnum, abspressgrad);
+        };
+        //! get derivative dynamic viscosity of volume fraction pressure
+        double dyn_viscosity_deriv_vol_frac_pressure_blood_lung(const Core::Mat::Material& material,
+            int volfracpressnum, double abspressgrad) const override
+        {
+          return phasemanager_->dyn_viscosity_deriv_vol_frac_pressure_blood_lung(
               material, volfracpressnum, abspressgrad);
         };
 
@@ -1236,6 +1345,24 @@ namespace Discret
         {
           return phasemanager_->omega_half(volfracnum, iscal);
         };
+
+        // initial volume fraction (usually at end-expiration)
+        [[nodiscard]] double initial_volfrac() const override
+        {
+          return phasemanager_->initial_volfrac();
+        }
+
+        // parameter determining the deformation dependence
+        [[nodiscard]] double volfrac_blood_lung_parameter_deformation_dependence() const override
+        {
+          return phasemanager_->volfrac_blood_lung_parameter_deformation_dependence();
+        }
+
+        // parameter determining the pressure dependence
+        [[nodiscard]] double volfrac_blood_lung_parameter_pressure_dependence() const override
+        {
+          return phasemanager_->volfrac_blood_lung_parameter_pressure_dependence();
+        }
 
         //@}
 
@@ -1535,12 +1662,28 @@ namespace Discret
         //! get dynamic viscosity of volume fraction pressure
         double dyn_viscosity_vol_frac_pressure(const Core::Mat::Material& material,
             int volfracpressnum, double abspressgrad) const override;
+        //! get dynamic viscosity of volume fraction (matnum is the material number of the
+        //! porofluid-material on the current element) default is set to zero, if called from a
+        //! porofluidmultiphase-element otherwise it has to be explicitly passed from the caller
+        double dyn_viscosity_vol_frac_pressure_blood_lung(
+            int volfracpressnum, double abspressgrad, int matnum = 0) const override;
+        //! get dynamic viscosity of volume fraction pressure
+        double dyn_viscosity_vol_frac_pressure_blood_lung(const Core::Mat::Material& material,
+            int volfracpressnum, double abspressgrad) const override;
         //! get derivative of dynamic viscosity of volume fraction pressure
         double dyn_viscosity_deriv_vol_frac_pressure(
             int volfracpressnum, double abspressgrad) const override;
         //! get derivative dynamic viscosity of volume fraction pressure
         double dyn_viscosity_deriv_vol_frac_pressure(const Core::Mat::Material& material,
             int volfracpressnum, double abspressgrad) const override;
+        //! get derivative of dynamic viscosity of volume fraction pressure
+        double dyn_viscosity_deriv_vol_frac_pressure_blood_lung(
+            int volfracpressnum, double abspressgrad) const override;
+        //! get derivative dynamic viscosity of volume fraction pressure
+        double dyn_viscosity_deriv_vol_frac_pressure_blood_lung(const Core::Mat::Material& material,
+            int volfracpressnum, double abspressgrad) const override;
+
+
 
         //@}
 

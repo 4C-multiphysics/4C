@@ -27,7 +27,9 @@
 #include "4C_linalg_vector.hpp"
 #include "4C_mat_fluidporo.hpp"
 #include "4C_mat_fluidporo_multiphase.hpp"
+#include "4C_mat_fluidporo_singlephase.hpp"
 #include "4C_mat_structporo.hpp"
+#include "4C_porofluid_pressure_based_ele_calc_utils.hpp"
 #include "4C_solid_3D_ele_calc_lib.hpp"
 #include "4C_solid_poro_3D_ele_properties.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -41,6 +43,56 @@
 #include <ranges>
 
 FOUR_C_NAMESPACE_OPEN
+
+namespace
+{
+  /**
+   * Calculates the volume fraction based on the closing relation (given in material)
+   * @param fluidmultiphase_phiAtGP (in): fluid in multiphase porespace primary variables at gauss
+   * point
+   * @param volfracpressure (in): pressure of additional porous network
+   * @param determinant_deformation_gradient (in): determinant of deformation gradient
+   * @param porofluidmat (in): fluid material
+   * @param numfluidphases (in): number of fluid phases in multiphase porespace
+   * @return: volume fraction of additional porous network
+   */
+  double calculate_volfrac_from_closing_relation_blood_lung(
+      const std::vector<double>& fluidmultiphase_phiAtGP, const double volfracpressure,
+      const double determinant_deformation_gradient, const Mat::FluidPoroMultiPhase& porofluidmat,
+      const int numfluidphases)
+  {
+    // pressure of air (always first phase in multiphase porespace)
+    if (fluidmultiphase_phiAtGP[0] / volfracpressure <= 1.0)
+    {
+      return PoroPressureBased::ElementUtils::
+                 get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                     porofluidmat, numfluidphases)
+                     .initial_volfrac() *
+             pow(determinant_deformation_gradient,
+                 PoroPressureBased::ElementUtils::
+                     get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                         porofluidmat, numfluidphases)
+                         .scaling_parameter_deformation());
+    }
+    else
+    {
+      return PoroPressureBased::ElementUtils::
+                 get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                     porofluidmat, numfluidphases)
+                     .initial_volfrac() *
+             pow(determinant_deformation_gradient,
+                 PoroPressureBased::ElementUtils::
+                     get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                         porofluidmat, numfluidphases)
+                         .scaling_parameter_deformation()) *
+             pow((fluidmultiphase_phiAtGP[0] / volfracpressure),
+                 PoroPressureBased::ElementUtils::
+                     get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                         porofluidmat, numfluidphases)
+                         .scaling_parameter_pressure());
+    }
+  }
+}  // namespace
 
 namespace Discret::Elements::Internal
 {
@@ -164,6 +216,55 @@ namespace Discret::Elements
     Core::LinAlg::SerialDenseMatrix* K_porosity_displacement = nullptr;
     Core::LinAlg::SerialDenseMatrix* K_porosity_porosity = nullptr;
   };
+
+  /*!
+   * @brief Fluid phases general properties
+   *
+   */
+  struct SolidPoroFluidProperties
+  {
+    int number_of_fluid_dofs_per_node_{};
+    int number_of_fluid_phases_in_multiphase_porespace_{};
+    int number_of_volfracs_{};
+  };
+
+
+  /*!
+   * @brief Set fluid phases general properties from material
+   *
+   */
+  inline SolidPoroFluidProperties evaluate_porofluid_properties(
+      const Mat::FluidPoroMultiPhase& porofluidmat)
+  {
+    SolidPoroFluidProperties solidporo_fluid_properties;
+    solidporo_fluid_properties.number_of_fluid_dofs_per_node_ = porofluidmat.num_mat();
+    solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_ =
+        porofluidmat.num_fluid_phases();
+    solidporo_fluid_properties.number_of_volfracs_ = porofluidmat.num_vol_frac();
+    return solidporo_fluid_properties;
+  }
+
+  /*!
+   * @brief Check what closing relation is set in the volfrac material dependent on the number of
+   * dofs, fluidphases and volfracs
+   *
+   */
+  inline Mat::PAR::PoroFluidPressureBased::ClosingRelation get_volfrac_closing_relation_type(
+      const SolidPoroFluidProperties solidporo_fluid_properties)
+  {
+    if (solidporo_fluid_properties.number_of_fluid_dofs_per_node_ ==
+        solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_ +
+            solidporo_fluid_properties.number_of_volfracs_)
+      return Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_blood_lung;
+    else if (solidporo_fluid_properties.number_of_fluid_dofs_per_node_ ==
+             solidporo_fluid_properties.number_of_fluid_phases_in_multiphase_porespace_ +
+                 solidporo_fluid_properties.number_of_volfracs_ * 2)
+      return Mat::PAR::PoroFluidPressureBased::cr_evolutionequation_homogenized_vasculature_tumor;
+    else
+    {
+      FOUR_C_THROW("The Number of volume fractions is not correct in the solid evaluator!");
+    }
+  }
 
   inline SolidPoroPrimaryVariables<PorosityFormulation::from_material_law>
   extract_solid_poro_primary_variables(const Core::FE::Discretization& discretization,
@@ -442,7 +543,7 @@ namespace Discret::Elements
    * @param gp (in): Gauss point
    * @param volchange (in): volume change
    * @param porosity (in/out): porosity (volfrac of multiphase porspace + volfracs of additional
-   *  @param ddet_defgrd_ddisp (in): derivative of determinan of deformation gradient w.r.t. the
+   *  @param ddet_defgrd_ddisp (in): derivative of determinant of deformation gradient w.r.t. the
    * displacements
    * @param dPorosity_dDisp (in/out): derivative of porosity w.r.t. the displacements
    */
@@ -464,6 +565,43 @@ namespace Discret::Elements
     );
 
     dPorosity_dDisp.update(dphi_dJ, ddet_defgrd_ddisp);
+  }
+
+  /*!
+   * @brief Calculate porosity depending on poro law given in input file and derivatives of
+   * multiphase fluid primary variables w.r.t. the displacements
+   *
+   * @tparam celltype: Cell type
+   * @param porostructmat (in) : material of skeleton (solid phase of porous domain)
+   * @param params (in) : List of additional parameter to pass quantities from the time integrator
+   * to the material
+   * @param solidpressure (in): solid pressure
+   * @param gp (in): Gauss point
+   * @param volchange (in): volume change
+   * @param porosity (in/out): porosity (volfrac of multiphase porspace + volfracs of additional
+   *  @param ddet_defgrd_ddisp (in): derivative of determinant of deformation gradient w.r.t. the
+   * displacements
+   * @param dPorosity_dDisp (in/out): derivative of porosity w.r.t. the displacements
+   * * @param dPorosity_dDetDefGrad (in/out): derivative of porosity w.r.t. the determinant of the
+   * deformation gradient
+   */
+  template <Core::FE::CellType celltype>
+  inline void compute_porosity_and_linearization(Mat::StructPoro& porostructmat,
+      Teuchos::ParameterList& params, const double solidpressure, const int gp,
+      const double volchange, double& porosity,
+      const Core::LinAlg::Matrix<1, Internal::num_dof_per_ele<celltype>>& ddet_defgrd_ddisp,
+      Core::LinAlg::Matrix<1, Internal::num_dof_per_ele<celltype>>& dPorosity_dDisp,
+      double& dPorosity_dDetDefGrad)
+  {
+    porostructmat.compute_porosity(params, solidpressure, volchange, gp, porosity,
+        nullptr,  // dphi_dp not needed
+        &dPorosity_dDetDefGrad,
+        nullptr,  // dphi_dJdp not needed
+        nullptr,  // dphi_dJJ not needed
+        nullptr   // dphi_dpp not needed
+    );
+
+    dPorosity_dDisp.update(dPorosity_dDetDefGrad, ddet_defgrd_ddisp);
   }
 
 
@@ -776,6 +914,103 @@ namespace Discret::Elements
   }
 
   /*!
+   * @brief Recalculate derivative of solidpressure w.r.t. the displacements in case of volfracs
+   *
+   * @tparam celltype: Cell type
+   * @param fluidpress (in) : solid pressure contribution coming from the multiphase fluid S_i*p_i
+   * @param porosity (in) : porosity = volumefraction in multiphase porespace + volfracs from
+   * additional porous networks
+   * @param numfluidphases (in): number of fluidphases in multiphase porespace
+   * @param fluidmultiphase_phiAtGP (in): fluid multiphase primary variables at GP
+   * @param dsolidpressure_ddisp (in/out): derivative of solidpressure w.r.t. the displacements
+   * @param determinant_deformation_gradient (in): determinant of deformation gradient
+   * @param porofluidmat (in): fluid material
+   * @param dPorosity_dDetDefGrad (in): derivative of porosity w.r.t. determinant of derformation
+   * gradient
+   * @param dDetDefGrad_dDisp (in): derivative of determinant of derformation w.r.t. displacements
+   */
+  template <Core::FE::CellType celltype>
+  inline void recalculate_linearization_of_solpress_wrt_disp(const double fluidpress,
+      const double porosity, const int numfluidphases,
+      const std::vector<double>& fluidmultiphase_phiAtGP,
+      Core::LinAlg::Matrix<1, Internal::num_dim<celltype> * Internal::num_nodes<celltype>>&
+          dsolidpressure_ddisp,
+      const double determinant_deformation_gradient, const Mat::FluidPoroMultiPhase& porofluidmat,
+      const double dPorosity_dDetDefGrad,
+      const Core::LinAlg::Matrix<1, Internal::num_dof_per_ele<celltype>>& dDetDefGrad_dDisp)
+  {
+    // get volfrac pressures at [numfluidphases] so far only one volfrac pressure with closing
+    // relation for blood lung is possible
+    const double volfracpressure = fluidmultiphase_phiAtGP[numfluidphases];
+
+    // so far only one volfrac with closing relation for blood lung is possible
+    const double volfrac =
+        calculate_volfrac_from_closing_relation_blood_lung(fluidmultiphase_phiAtGP, volfracpressure,
+            determinant_deformation_gradient, porofluidmat, numfluidphases);
+
+    // p_s = (porosity - sumaddvolfrac)/porosity * fluidpress
+    //       + 1.0 / porosity * volfrac *  volfracpressure
+    // d (p_s) / d porosity = + volfrac/porosity/porosity * fluidpress
+
+    const double dvolfrac_dDetDefGrad = std::invoke(
+        [&]()
+        {
+          if ((fluidmultiphase_phiAtGP[0] / volfracpressure) <= 1.0)
+          {
+            return (PoroPressureBased::ElementUtils::
+                        get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                            porofluidmat, numfluidphases)
+                            .scaling_parameter_deformation() *
+                    PoroPressureBased::ElementUtils::
+                        get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                            porofluidmat, numfluidphases)
+                            .initial_volfrac() *
+                    pow(determinant_deformation_gradient,
+                        PoroPressureBased::ElementUtils::
+                                get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                                    porofluidmat, numfluidphases)
+                                    .scaling_parameter_deformation() -
+                            1.0));
+          }
+          else
+          {
+            return (PoroPressureBased::ElementUtils::
+                           get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                               porofluidmat, numfluidphases)
+                               .scaling_parameter_deformation() *
+                       PoroPressureBased::ElementUtils::
+                           get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                               porofluidmat, numfluidphases)
+                               .initial_volfrac() *
+                       pow(determinant_deformation_gradient,
+                           PoroPressureBased::ElementUtils::
+                                   get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                                       porofluidmat, numfluidphases)
+                                       .scaling_parameter_deformation() -
+                               1.0)) *
+                   pow(fluidmultiphase_phiAtGP[0] / volfracpressure,
+                       PoroPressureBased::ElementUtils::
+                           get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                               porofluidmat, numfluidphases)
+                               .scaling_parameter_pressure());
+          }
+        });
+
+    double dvolfrac_multiphaseporespace_dDetDefGrad = dPorosity_dDetDefGrad - dvolfrac_dDetDefGrad;
+
+    double dps_dDetDefGrad =
+        dvolfrac_multiphaseporespace_dDetDefGrad * pow(porosity, -1.0) * fluidpress +
+        (porosity - volfrac) * (-1.0 * pow(porosity, -2.0) * dPorosity_dDetDefGrad) * fluidpress +
+        dvolfrac_dDetDefGrad * volfracpressure * 1.0 / porosity +
+        volfrac * (1.0 * pow(porosity, -2.0) * dPorosity_dDetDefGrad) * volfracpressure;
+
+    // d (p_s) / d u_s = d (p_s) / d J * d J / d u_s
+    dsolidpressure_ddisp.update(dps_dDetDefGrad, dDetDefGrad_dDisp);
+  }
+
+
+
+  /*!
    * @brief Recalculate solidpressure in case of volfracs
    *
    * @param press (in) : current solid pressure
@@ -814,6 +1049,48 @@ namespace Discret::Elements
     // note: in recalculate_solid_pressure in porofluid_phasemanager calculation is performed a bit
     //       differently since we already pass porosity = porosity - sumaddvolfrac, but result is
     //       equivalent
+
+    return press;
+  }
+
+  /*!
+   * @brief Recalculate solidpressure in case of volfracs
+   *
+   * @param press (in) : current solid pressure
+   * @param porosity (in) : porosity = volumefraction in multiphase porespace + volfracs from
+   * additional porous networks
+   * @param numfluidphases (in): number of fluidphases in multiphase porespace
+   * @param fluidmultiphase_phiAtGP (in): fluid multiphase primary variables at GP
+   * @param determinant_deformation_gradient (in): determinant of deformation gradient
+   * @param porofluidmat (in): fluid material
+   * @return solid pressure
+   */
+  inline double recalculate_sol_pressure_at_gp(double press, const double porosity,
+      const int numfluidphases, const std::vector<double>& fluidmultiphase_phiAtGP,
+      const double determinant_deformation_gradient, const Mat::FluidPoroMultiPhase& porofluidmat)
+  {
+    // get volfrac pressures at [numfluidphases] so far only one volfrac pressure with closing
+    // relation for blood lung is possible
+    double volfracpressure = fluidmultiphase_phiAtGP[numfluidphases];
+
+
+    // so far only one volfrac with closing relation for blood lung is possible
+    const double volfrac =
+        calculate_volfrac_from_closing_relation_blood_lung(fluidmultiphase_phiAtGP, volfracpressure,
+            determinant_deformation_gradient, porofluidmat, numfluidphases);
+
+    // p_s = (porosity - sumaddvolfrac)/porosity * fluidpress
+    //      + 1.0 / porosity * volfrac * volfrac_pressure
+    // first part
+    press *= (porosity - volfrac) / porosity;
+
+    // second part
+    press += volfrac / porosity * volfracpressure;
+
+    // note: in recalculate_solid_pressure in porofluid_phasemanager calculation is performed a
+    // bit
+    //       differently since we already pass porosity = porosity - sumaddvolfrac, but result
+    //       is equivalent
 
     return press;
   }
@@ -2029,6 +2306,127 @@ namespace Discret::Elements
       solidpressurederiv[ivolfrac + numfluidphases + numvolfrac] = volfracphi[ivolfrac] / porosity;
     }
   }
+
+  /*!
+   * @brief Recalculates solid pressure derivative in case of volfracs
+   *
+   * @param fluidmultiphase_phiAtGP (in) : fluid multiphase primary variables at GP
+   * @param nummultifluiddofpernode (in) : number of fluid multiphase dofs per node
+   * @param: numfluidphases (in): number of fluidphases in multiphase porespace
+   * @param: numvolfrac (in): number of volfracs from additionalporous networks
+   * @param: solidpressure (in): solidpressue
+   * @param: porosity (in): porosity = volumefraction in multiphase porespace + volfracs from
+   * additional porous networks
+   * @param: solidpressurederiv (in/out): derivative of solidpressure w.r.t. fluid multiphase
+   * primary variables and volfracs
+   */
+  inline void recalculate_sol_pressure_deriv(const std::vector<double>& fluidmultiphase_phiAtGP,
+      const int nummultifluiddofpernode, const int numfluidphases, const int numvolfrac,
+      const double solidpressure, const double porosity, std::vector<double>& solidpressurederiv,
+      const Mat::FluidPoroMultiPhase& porofluidmat, const double determinant_deformation_gradient)
+  {
+    // get volfrac pressures (only one possible in closing relation blood lung)
+    double volfracpressure = fluidmultiphase_phiAtGP[numfluidphases];
+
+    // get volume fraction (only one possible in closing relation blood lung)
+    const double volfrac =
+        calculate_volfrac_from_closing_relation_blood_lung(fluidmultiphase_phiAtGP, volfracpressure,
+            determinant_deformation_gradient, porofluidmat, numfluidphases);
+
+    // p_s = (porosity - sumaddvolfrac)/porosity * fluidpress
+    //      + 1.0 / porosity volfrac * volfracpressure
+    const double scale = (porosity - volfrac) / porosity;
+
+    // scale original fluid press deriv with (porosity - sumaddvolfrac)/porosity
+    for (int iphase = 0; iphase < numfluidphases; iphase++) solidpressurederiv[iphase] *= scale;
+
+
+    if (fluidmultiphase_phiAtGP[0] < volfracpressure)
+    {
+      // d p_s / d volfracpress = + volfracphi/porosity
+      solidpressurederiv[numfluidphases] = volfrac / porosity;
+    }
+    else
+    {
+      // initialize auxiliary variables
+      std::vector<double> genpress(numfluidphases, 0.0);
+      std::vector<double> saturation(numfluidphases, 0.0);
+      std::vector<double> press(numfluidphases, 0.0);
+      std::vector<double> fluidphi(
+          &fluidmultiphase_phiAtGP[0], &fluidmultiphase_phiAtGP[numfluidphases]);
+
+      // evaluate the pressures
+      porofluidmat.evaluate_gen_pressure(genpress, fluidphi);
+      // transform generalized pressures to true pressure values
+      porofluidmat.transform_gen_pres_to_true_pres(genpress, press);
+      // explicit evaluation of saturation
+      porofluidmat.evaluate_saturation(saturation, fluidphi, press);
+
+
+      // recalculate derivative for phase air ( air is always the first phse in multiphase porespace
+      double dvolfrac_dpA =
+          PoroPressureBased::ElementUtils::
+              get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                  porofluidmat, numfluidphases)
+                  .initial_volfrac() *
+          pow(determinant_deformation_gradient,
+              PoroPressureBased::ElementUtils::
+                  get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                      porofluidmat, numfluidphases)
+                      .scaling_parameter_deformation()) *
+          (PoroPressureBased::ElementUtils::
+                  get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                      porofluidmat, numfluidphases)
+                      .scaling_parameter_pressure()) *
+          pow(fluidmultiphase_phiAtGP[0] / volfracpressure,
+              PoroPressureBased::ElementUtils::
+                      get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                          porofluidmat, numfluidphases)
+                          .scaling_parameter_pressure() -
+                  1.0) *
+          1.0 / volfracpressure;
+
+      double dinverseporosity_dpA = (-1.0) * pow(porosity, -2.0) * dvolfrac_dpA;
+      solidpressurederiv[0] += (saturation[0] * (porosity - volfrac) * fluidmultiphase_phiAtGP[0] +
+                                   volfracpressure * volfrac) *
+                                   dinverseporosity_dpA +
+                               volfracpressure * pow(porosity, -1.0) * dvolfrac_dpA;
+      // solid pressure with fluid phases multiphase porespace = sum (S_i*p_i)
+      const double solidpressure_in_multiphase_porespace =
+          std::inner_product(saturation.begin(), saturation.end(), press.begin(), 0.0);
+      double dvolfrac_dvolfracpressure =
+          PoroPressureBased::ElementUtils::
+              get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                  porofluidmat, numfluidphases)
+                  .initial_volfrac() *
+          pow(determinant_deformation_gradient,
+              PoroPressureBased::ElementUtils::
+                  get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                      porofluidmat, numfluidphases)
+                      .scaling_parameter_deformation()) *
+          (-1.0) *
+          (PoroPressureBased::ElementUtils::
+                  get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                      porofluidmat, numfluidphases)
+                      .scaling_parameter_pressure()) *
+          pow(fluidmultiphase_phiAtGP[0] / volfracpressure,
+              PoroPressureBased::ElementUtils::
+                      get_single_vol_frac_pressure_blood_lung_mat_from_multi_material(
+                          porofluidmat, numfluidphases)
+                          .scaling_parameter_pressure() -
+                  1.0) *
+          fluidmultiphase_phiAtGP[0] * pow(volfracpressure, -2.0);
+
+      // d p_s / d volfracpress = + volfracphi/porosity
+      solidpressurederiv[numfluidphases] =
+          (-1.0) * (porosity - volfrac) * pow(porosity, -2.0) * dvolfrac_dvolfracpressure *
+              solidpressure_in_multiphase_porespace +
+          volfrac / porosity + pow(porosity, -1.0) * dvolfrac_dvolfracpressure -
+          volfrac * pow(porosity, -2.0) * dvolfrac_dvolfracpressure;
+    }
+  }
+
+
 
   template <Core::FE::CellType celltype>
   struct CauchyGreenAndInverse

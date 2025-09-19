@@ -368,6 +368,7 @@ void PoroPressureBased::PorofluidElastScatraBaseAlgorithm::
     const int num_volfrac = porofluid_mat.num_vol_frac();
     const int num_fluid_materials = porofluid_mat.num_mat();
 
+
     // this is only necessary if we have volume fractions present
     // TODO: this works only if we have the same number of phases in every element
     if (num_fluid_materials == num_fluid_phases) return;
@@ -411,22 +412,34 @@ void PoroPressureBased::PorofluidElastScatraBaseAlgorithm::
           else if (single_material->material_type() ==
                    Core::Materials::m_scatra_in_volfrac_porofluid_pressure_based)
           {
-            const std::shared_ptr<const Mat::ScatraMatMultiPoroVolFrac>& scatra_volfrac_material =
-                std::dynamic_pointer_cast<const Mat::ScatraMatMultiPoroVolFrac>(single_material);
-
-            const int scalar_to_phase_id = scatra_volfrac_material->phase_id();
-            // if not already in original dirich map     &&   if it is not a valid volume fraction
-            // species dof identified with < 1
-            if (scatra_algo()->scatra_field()->dirich_maps()->cond_map()->lid(scatra_dofs[idof]) ==
-                    -1 &&
-                (int)(*valid_volfracspec_dofs)[porofluid_elast_algo()
-                        ->porofluid_algo()
-                        ->discretization()
-                        ->dof_row_map()
-                        ->lid(porofluid_dofs[scalar_to_phase_id + num_volfrac])] < 1)
+            if (num_fluid_materials == num_fluid_phases + 2 * num_volfrac)
             {
-              dirichlet_dofs.push_back(scatra_dofs[idof]);
-              scatra_algo()->scatra_field()->phinp()->replace_global_value(scatra_dofs[idof], 0.0);
+              const std::shared_ptr<const Mat::ScatraMatMultiPoroVolFrac>& scatra_volfrac_material =
+                  std::dynamic_pointer_cast<const Mat::ScatraMatMultiPoroVolFrac>(single_material);
+
+              const int scalar_to_phase_id = scatra_volfrac_material->phase_id();
+              // if not already in original dirich map     &&   if it is not a valid volume fraction
+              // species dof identified with < 1
+              if (scatra_algo()->scatra_field()->dirich_maps()->cond_map()->lid(
+                      scatra_dofs[idof]) == -1 &&
+                  (int)(*valid_volfracspec_dofs)[porofluid_elast_algo()
+                          ->porofluid_algo()
+                          ->discretization()
+                          ->dof_row_map()
+                          ->lid(porofluid_dofs[scalar_to_phase_id + num_volfrac])] < 1)
+              {
+                dirichlet_dofs.push_back(scatra_dofs[idof]);
+                scatra_algo()->scatra_field()->phinp()->replace_global_value(
+                    scatra_dofs[idof], 0.0);
+              }
+            }
+            else if (num_fluid_materials == num_fluid_phases + num_volfrac)
+            {
+              // do nothing in volfrac with closing relation blood lung, all species are valid dofs
+            }
+            else
+            {
+              FOUR_C_THROW("Internal error!");
             }
           }
           else

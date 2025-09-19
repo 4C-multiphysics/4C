@@ -125,6 +125,13 @@ std::vector<Core::IO::InputSpec> PoroPressureBased::valid_parameters_porofluid()
                   parameter<bool>("phase_velocities",
                       {.description = "Flag if output of phase velocities should be calculated",
                           .default_value = true}),
+                  parameter<bool>("volfrac_blood_lung",
+                      {.description = "Flag if output of volfrac blood lung should be calculated",
+                          .default_value = false}),
+                  parameter<bool>("determinant_of_deformation_gradient",
+                      {.description = "Flag if output of determinant_of_deformation_gradient "
+                                      "should be calculated",
+                          .default_value = false}),
               },
               {.required = false}),
 
