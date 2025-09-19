@@ -12,6 +12,7 @@
 
 #include "4C_fem_general_cell_type_traits.hpp"
 #include "4C_io_input_parameter_container.hpp"
+#include "4C_linalg_symmetric_tensor.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <cstddef>
@@ -44,18 +45,48 @@ namespace Core::IO::MeshInput
   std::string describe(VerbosityLevel level);
 
 
+  template <unsigned dim>
   class CellBlock;
   struct PointSet;
 
   using InternalIdType = int;
   using ExternalIdType = int;
 
+
+  /*!
+   * @brief These are the supported field data (scalars, vectors, symmetric tensors and tensors)
+   * with scalar types int and double.
+   */
+  template <unsigned dim>
+  using EligibleFieldTypes = std::variant<int, double, Core::LinAlg::Tensor<int, dim>,
+      Core::LinAlg::Tensor<double, dim>, Core::LinAlg::SymmetricTensor<int, dim, dim>,
+      Core::LinAlg::SymmetricTensor<double, dim, dim>, Core::LinAlg::Tensor<int, dim, dim>,
+      Core::LinAlg::Tensor<double, dim, dim>>;
+
+  namespace Internal
+  {
+    template <typename T>
+    struct EligibleFieldVariantTypeHelper;
+
+    template <typename... Types>
+    struct EligibleFieldVariantTypeHelper<std::variant<Types...>>
+    {
+      using type = std::variant<std::vector<Types>...>;
+    };
+  }  // namespace Internal
+
+  /*!
+   * @brief A variant holding a std::vector of all supported field data types
+   */
+  template <unsigned dim>
+  using FieldDataVariantType =
+      Internal::EligibleFieldVariantTypeHelper<EligibleFieldTypes<dim>>::type;
+
   /*!
    * @brief An intermediate representation of finite element meshes
    *
    * 4C will read meshes into this basic representation of the mesh and generate its internal
    * Discretization from it.
-   *
    */
   template <unsigned dim>
   struct Mesh
@@ -65,9 +96,14 @@ namespace Core::IO::MeshInput
      */
     std::vector<std::array<double, dim>> points{};
 
+    /**
+     * Point data associated with each point in the mesh.
+     */
+    std::unordered_map<std::string, FieldDataVariantType<dim>> point_data{};
+
     /*!
-     * @brief Some mesh formats provide an ID for points in the mesh. If available, these IDs are
-     * stored in this vector.
+     * @brief Some mesh formats provide an ID for points in the mesh. If available, these IDs
+     * are stored in this vector.
      */
     std::optional<std::vector<ExternalIdType>> external_ids;
 
@@ -79,7 +115,7 @@ namespace Core::IO::MeshInput
      * cell-block is required to have the same cell-type. 4C can solve different equations on each
      * block.
      */
-    std::map<ExternalIdType, CellBlock> cell_blocks{};
+    std::map<ExternalIdType, CellBlock<dim>> cell_blocks{};
 
     /**
      * The points in the mesh. The keys are the point-set IDs, and the values are the point-sets.
@@ -90,6 +126,7 @@ namespace Core::IO::MeshInput
   /**
    * A cell-block. This encodes a collection of cells of the same type.
    */
+  template <unsigned dim>
   class CellBlock
   {
    public:
@@ -109,6 +146,11 @@ namespace Core::IO::MeshInput
      * @note Not every file formats provides std::string-names for cell blocks.
      */
     std::optional<std::string> name{};
+
+    /**
+     * Cell data associated with each cell in the block.
+     */
+    std::unordered_map<std::string, FieldDataVariantType<dim>> cell_data{};
 
     /**
      * Optional specific data for the cell block.
@@ -203,7 +245,8 @@ namespace Core::IO::MeshInput
    * Print a summary of the cell block to the given output stream (details according to @p verbose
    * )
    */
-  void print(const CellBlock& block, std::ostream& os, VerbosityLevel verbose);
+  template <unsigned dim>
+  void print(const CellBlock<dim>& block, std::ostream& os, VerbosityLevel verbose);
 
   /*!
    * Print a summary of the point set to the given output stream (details according to @p verbose

@@ -199,7 +199,7 @@ Core::IO::MeshInput::Mesh<3> Core::IO::Exodus::read_exodus_file(
       CHECK_EXODUS_CALL(
           ex_get_conn(exo_handle, EX_ELEM_BLOCK, ebids[i], allconn.data(), nullptr, nullptr));
 
-      MeshInput::CellBlock cell_block(cell_type_from_exodus_string(ele_type));
+      MeshInput::CellBlock<3> cell_block(cell_type_from_exodus_string(ele_type));
       cell_block.external_ids_ = std::vector<int>{};
       cell_block.reserve(num_el_in_blk);
       cell_block.name = mychar;
