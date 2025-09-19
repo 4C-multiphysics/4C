@@ -845,7 +845,7 @@ void Mortar::Element::get_nodal_coords_old(
 
     coord(0, i) = mymrtrnode->x()[0] + mymrtrnode->uold()[0];
     coord(1, i) = mymrtrnode->x()[1] + mymrtrnode->uold()[1];
-    coord(2, i) = mymrtrnode->x()[2] + mymrtrnode->uold()[2];
+    if (n_dim() == 3) coord(2, i) = mymrtrnode->x()[2] + mymrtrnode->uold()[2];
   }
 }
 

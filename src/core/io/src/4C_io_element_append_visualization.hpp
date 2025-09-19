@@ -41,11 +41,11 @@ namespace Core::IO
     cell_types.push_back(vtk_cell_info.first);
 
     // Add each node to the output.
-    const Core::Nodes::Node* const* nodes = ele.nodes();
+    auto nodes = ele.node_range();
 
-    for (int inode = 0; inode < ele.num_node(); ++inode)
+    for (auto node : numbering | std::views::transform([&](int i) { return nodes[i]; }))
       for (unsigned int idim = 0; idim < num_spatial_dimensions; ++idim)
-        point_coordinates.push_back(nodes[numbering[inode]]->x()[idim]);
+        point_coordinates.push_back(node.x()[idim]);
 
     // Return the number of added points.
     return ele.num_node();

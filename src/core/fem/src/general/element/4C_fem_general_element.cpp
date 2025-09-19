@@ -623,6 +623,20 @@ int Core::Elements::Element::num_face() const
 }
 
 
+Core::FE::IteratorRange<Core::FE::DiscretizationIterator<Core::FE::NodeRef>>
+Core::Elements::Element::node_range()
+{
+  return FE::ElementRef(discretization_, lid_).nodes();
+}
+
+
+Core::FE::IteratorRange<Core::FE::DiscretizationIterator<Core::FE::ConstNodeRef>>
+Core::Elements::Element::node_range() const
+{
+  return FE::ConstElementRef(discretization_, lid_).nodes();
+}
+
+
 /*----------------------------------------------------------------------*
  |  set faces (public)                                 kronbichler 05/13|
  *----------------------------------------------------------------------*/

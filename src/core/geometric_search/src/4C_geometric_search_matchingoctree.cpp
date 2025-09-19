@@ -729,7 +729,9 @@ void Core::GeometricSearch::NodeMatchingOctree::calc_point_coordinate(
 
   const int dim = 3;
 
-  for (int idim = 0; idim < dim; idim++) coord[idim] = actnode->x()[idim];
+  const auto x = actnode->x();
+  for (size_t idim = 0; idim < x.size(); idim++) coord[idim] = x[idim];
+  for (size_t idim = x.size(); idim < dim; idim++) coord[idim] = 0.0;
 }  // NodeMatchingOctree::calc_point_coordinate
 
 /*----------------------------------------------------------------------*/
@@ -743,7 +745,10 @@ void Core::GeometricSearch::NodeMatchingOctree::calc_point_coordinate(
 
   const int dim = 3;
 
-  for (int idim = 0; idim < dim; idim++) coord[idim] = actnode->x()[idim];
+  const auto x = actnode->x();
+  for (size_t idim = 0; idim < x.size(); idim++) coord[idim] = x[idim];
+  for (size_t idim = x.size(); idim < dim; idim++) coord[idim] = 0.0;
+
 }  // NodeMatchingOctree::calc_point_coordinate
 
 /*----------------------------------------------------------------------*/
@@ -826,13 +831,15 @@ void Core::GeometricSearch::ElementMatchingOctree::calc_point_coordinate(
 {
   Core::Elements::Element* actele = dis->g_element(id);
 
-  const int numnode = actele->num_node();
   const int dim = 3;
 
   for (int idim = 0; idim < dim; idim++) coord[idim] = 0.0;
 
-  for (int node = 0; node < numnode; node++)
-    for (int idim = 0; idim < dim; idim++) coord[idim] += (actele->nodes())[node]->x()[idim];
+  for (auto node : actele->node_range())
+  {
+    const auto x = node.x();
+    for (size_t idim = 0; idim < x.size(); idim++) coord[idim] += x[idim];
+  }
 }  // ElementMatchingOctree::calc_point_coordinate
 
 /*----------------------------------------------------------------------*/
@@ -846,13 +853,15 @@ void Core::GeometricSearch::ElementMatchingOctree::calc_point_coordinate(
   Core::Nodes::Node** nodes = actele->nodes();
   if (nodes == nullptr) FOUR_C_THROW("could not get pointer to nodes");
 
-  const int numnode = actele->num_node();
   const int dim = 3;
 
   for (int idim = 0; idim < dim; idim++) coord[idim] = 0.0;
 
-  for (int node = 0; node < numnode; node++)
-    for (int idim = 0; idim < dim; idim++) coord[idim] += (nodes[node]->x())[idim];
+  for (auto node : actele->node_range())
+  {
+    const auto x = node.x();
+    for (size_t idim = 0; idim < x.size(); idim++) coord[idim] += x[idim];
+  }
 }  // ElementMatchingOctree::calc_point_coordinate
 
 /*----------------------------------------------------------------------*/
@@ -959,7 +968,9 @@ void Core::GeometricSearch::OctreeNodalElement::calc_point_coordinate(
 
   const int dim = 3;
 
-  for (int idim = 0; idim < dim; idim++) coord[idim] = actnode->x()[idim];
+  const auto x = actnode->x();
+  for (size_t idim = 0; idim < x.size(); idim++) coord[idim] = x[idim];
+  for (size_t idim = x.size(); idim < dim; idim++) coord[idim] = 0.0;
 }  // OctreeNodalElement::calc_point_coordinate
 
 /*----------------------------------------------------------------------*/
@@ -992,13 +1003,15 @@ void Core::GeometricSearch::OctreeElementElement::calc_point_coordinate(
 {
   Core::Elements::Element* actele = dis->g_element(id);
 
-  const int numnode = actele->num_node();
   const int dim = 3;
 
   for (int idim = 0; idim < dim; idim++) coord[idim] = 0.0;
 
-  for (int node = 0; node < numnode; node++)
-    for (int idim = 0; idim < dim; idim++) coord[idim] += (actele->nodes())[node]->x()[idim];
+  for (auto node : actele->node_range())
+  {
+    const auto x = node.x();
+    for (size_t idim = 0; idim < x.size(); idim++) coord[idim] += x[idim];
+  }
 }  // OctreeElementElement::calc_point_coordinate
 
 /*----------------------------------------------------------------------*/

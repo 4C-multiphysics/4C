@@ -376,6 +376,22 @@ namespace
     const int myrank = Core::Communication::my_mpi_rank(input.get_comm());
     if (myrank > 0) return;
 
+    const auto sanitize_node_coordinates = [](int id, size_t dim, std::vector<double>& coords)
+    {
+      for (auto i = coords.size() - 1; i >= dim; --i)
+      {
+        if (std::abs(coords[i]) != 0)
+        {
+          FOUR_C_THROW(
+              "Node {} has a non-zero coordinate {} in direction {} but discretization "
+              "is {}D!",
+              id, coords[i], i, dim);
+        }
+      }
+
+      coords.resize(dim);
+    };
+
     int line_count = 0;
     for (const auto& node_line : input.in_section_rank_0_only(node_section_name))
     {
@@ -387,7 +403,7 @@ namespace
       {
         int nodeid = parser.read<int>() - 1;
         parser.consume("COORD");
-        auto coords = parser.read<std::array<double, 3>>();
+        auto coords = parser.read<std::vector<double>>(3);
 
         max_node_id = std::max(max_node_id, nodeid) + 1;
         std::vector<std::shared_ptr<Core::FE::Discretization>> dis =
@@ -395,6 +411,8 @@ namespace
 
         for (const auto& di : dis)
         {
+          const size_t dim = di->n_dim();
+          sanitize_node_coordinates(nodeid, dim, coords);
           di->add_node(coords, nodeid, nullptr);
         }
       }
@@ -403,7 +421,7 @@ namespace
       {
         int cpid = parser.read<int>() - 1;
         parser.consume("COORD");
-        auto coords = parser.read<std::array<double, 3>>();
+        auto coords = parser.read<std::vector<double>>(3);
         double weight = parser.read<double>();
 
         max_node_id = std::max(max_node_id, cpid) + 1;
@@ -415,6 +433,7 @@ namespace
 
         for (auto& dis : diss)
         {
+          sanitize_node_coordinates(cpid, dis->n_dim(), coords);
           // create node/control point and add to discretization
           std::shared_ptr<Core::FE::Nurbs::ControlPoint> node =
               std::make_shared<Core::FE::Nurbs::ControlPoint>(cpid, coords, weight, myrank);
@@ -439,7 +458,7 @@ namespace
 
         int nodeid = parser.read<int>() - 1;
         parser.consume("COORD");
-        auto coords = parser.read<std::array<double, 3>>();
+        auto coords = parser.read<std::vector<double>>(3);
         max_node_id = std::max(max_node_id, nodeid) + 1;
 
         while (!parser.at_end())
@@ -480,6 +499,7 @@ namespace
             find_dis_node(element_readers, nodeid);
         for (auto& dis : discretizations)
         {
+          sanitize_node_coordinates(nodeid, dis->n_dim(), coords);
           auto node = std::make_shared<Core::Nodes::FiberNode>(
               nodeid, coords, cosyDirections, fibers, angles, myrank);
           dis->add_node(coords, nodeid, node);

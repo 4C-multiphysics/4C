@@ -37,8 +37,11 @@ namespace Core::FE
     {
       // for rigid body rotations compute nodal center of the discretization
       std::array<double, 3> x0send = {0.0, 0.0, 0.0};
-      for (int i = 0; i < dis.num_my_row_nodes(); ++i)
-        for (int j = 0; j < 3; ++j) x0send[j] += dis.l_row_node(i)->x()[j];
+      for (auto node : dis.my_row_node_range())
+      {
+        auto x = node.x();
+        for (size_t j = 0; j < x.size(); ++j) x0send[j] += x[j];
+      }
 
       std::array<double, 3> x0;
       Core::Communication::sum_all(x0send.data(), x0.data(), 3, dis.get_comm());

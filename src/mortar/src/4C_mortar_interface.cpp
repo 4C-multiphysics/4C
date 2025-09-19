@@ -2043,7 +2043,9 @@ void Mortar::Interface::set_state(
         if (mydisp.size() < 3) mydisp.resize(3);
 
         // set current configuration
-        for (int j = 0; j < 3; ++j) node->xspatial()[j] = node->x()[j] + mydisp[j];
+        auto x = node->x();
+        for (size_t j = 0; j < x.size(); ++j) node->xspatial()[j] = x[j] + mydisp[j];
+        for (size_t j = x.size(); j < 3; ++j) node->xspatial()[j] = 0.0;
       }
 
       // compute element areas

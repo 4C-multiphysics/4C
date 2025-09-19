@@ -34,8 +34,6 @@ Core::Communication::ParObject* Core::Nodes::NodeType::create(
 Core::Nodes::Node::Node(const int id, std::span<const double> coords, const int owner)
     : ParObject(), id_(id), lid_(-1), owner_(owner), x_(coords.begin(), coords.end())
 {
-  FOUR_C_ASSERT(
-      x_.size() == 3, "Node coordinates vector has size {}, but should have size 3", x_.size());
 }
 
 

@@ -333,11 +333,12 @@ void CONTACT::Interface::set_cn_ct_values(const int& iter)
 
     pos1[0] = dynamic_cast<Node*>(cele->nodes()[0])->x()[0];
     pos1[1] = dynamic_cast<Node*>(cele->nodes()[0])->x()[1];
-    pos1[2] = dynamic_cast<Node*>(cele->nodes()[0])->x()[2];
+
+    if (dim_ == 3) pos1[2] = dynamic_cast<Node*>(cele->nodes()[0])->x()[2];
 
     pos2[0] = dynamic_cast<Node*>(cele->nodes()[1])->x()[0];
     pos2[1] = dynamic_cast<Node*>(cele->nodes()[1])->x()[1];
-    pos2[2] = dynamic_cast<Node*>(cele->nodes()[1])->x()[2];
+    if (dim_ == 3) pos2[2] = dynamic_cast<Node*>(cele->nodes()[1])->x()[2];
 
     vec[0] = pos1[0] - pos2[0];
     vec[1] = pos1[1] - pos2[1];
@@ -4202,10 +4203,10 @@ double CONTACT::Interface::compute_cpp_normal_2d(const Mortar::Node& mrtrnode,
     std::array<double, 3> Posnp = {0.0, 0.0, 0.0};
     Posn[0] = mrtrnode.x()[0] + mrtrnode.uold()[0];
     Posn[1] = mrtrnode.x()[1] + mrtrnode.uold()[1];
-    Posn[2] = mrtrnode.x()[2] + mrtrnode.uold()[2];
+    if (dim_ == 3) Posn[2] = mrtrnode.x()[2] + mrtrnode.uold()[2];
     Posnp[0] = mrtrnode.xspatial()[0];
     Posnp[1] = mrtrnode.xspatial()[1];
-    Posnp[2] = mrtrnode.xspatial()[2];
+    if (dim_ == 3) Posnp[2] = mrtrnode.xspatial()[2];
 
     vect[0] = Posnp[0] - Posn[0];
     vect[1] = Posnp[1] - Posn[1];
@@ -4391,10 +4392,10 @@ double CONTACT::Interface::compute_cpp_normal_3d(Mortar::Node& mrtrnode,
 
   Posn[0] = mrtrnode.x()[0] + mrtrnode.uold()[0];
   Posn[1] = mrtrnode.x()[1] + mrtrnode.uold()[1];
-  Posn[2] = mrtrnode.x()[2] + mrtrnode.uold()[2];
+  if (dim_ == 3) Posn[2] = mrtrnode.x()[2] + mrtrnode.uold()[2];
   Posnp[0] = mrtrnode.xspatial()[0];
   Posnp[1] = mrtrnode.xspatial()[1];
-  Posnp[2] = mrtrnode.xspatial()[2];
+  if (dim_ == 3) Posnp[2] = mrtrnode.xspatial()[2];
 
   vect[0] = Posnp[0] - Posn[0];
   vect[1] = Posnp[1] - Posn[1];
