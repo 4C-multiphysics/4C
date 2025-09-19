@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fourc_metadata"
+version = "0.0.1"
+description = "Common utilities to work on the 4C code base"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+[project.scripts]
+create-schema-files = "four_c_metadata.json_schema:cli"
+validate-test-files = "four_c_metadata.validate_test_input_files:cli"
