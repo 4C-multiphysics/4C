@@ -509,7 +509,7 @@ void CONTACT::MtAbstractStrategy::mesh_initialization(
       Mortar::Node* mtnode = dynamic_cast<Mortar::Node*>(node);
 
       // new nodal position and problem dimension
-      std::vector<double> Xnew(3, 0.0);
+      std::vector<double> Xnew(n_dim(), 0.0);
 
       //******************************************************************
       // compute new nodal position

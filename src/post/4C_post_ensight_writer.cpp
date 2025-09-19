@@ -2324,8 +2324,6 @@ void EnsightWriter::write_coordinates_for_polynomial_shapefunctions(std::ofstrea
   // distributed among all procs
   std::shared_ptr<Core::LinAlg::MultiVector<double>> nodecoords;
 
-  const int NSD = 3;  // number of space dimensions
-
   const Core::LinAlg::Map* nodemap = dis.node_row_map();
   const int numnp = nodemap->num_my_elements();
   nodecoords = std::make_shared<Core::LinAlg::MultiVector<double>>(*nodemap, 3);
@@ -2335,10 +2333,10 @@ void EnsightWriter::write_coordinates_for_polynomial_shapefunctions(std::ofstrea
   {
     int gid = nodemap->gid(inode);
     const Core::Nodes::Node* actnode = dis.g_node(gid);
-    for (int isd = 0; isd < NSD; ++isd)
+    auto x = actnode->x();
+    for (size_t isd = 0; isd < x.size(); ++isd)
     {
-      double val = ((actnode->x())[isd]);
-      nodecoords->ReplaceMyValue(inode, isd, val);
+      nodecoords->ReplaceMyValue(inode, isd, x[isd]);
     }
   }
 

@@ -107,6 +107,13 @@ Mortar::Node::Node(int id, std::span<const double> coords, const int owner,
     xspatial()[i] = x()[i];
     dbcdofs_[i] = false;
   }
+  // For 2D problems, initialize the unused third coordinate to zero
+  for (std::size_t i = coords.size(); i < 3; ++i)
+  {
+    uold()[i] = 0.0;
+    xspatial()[i] = 0.0;
+    dbcdofs_[i] = false;
+  }
 }
 
 
