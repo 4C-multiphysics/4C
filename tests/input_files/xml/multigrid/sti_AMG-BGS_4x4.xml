@@ -1,0 +1,356 @@
+<ParameterList name="MueLu">
+  <!-- Configuration of the Xpetra operator (fine level) -->
+  <!-- Factory collection -->
+  <ParameterList name="Factories">
+    <!-- sub block factories -->
+    <!-- BLOCK 1 (for submatrix A_{00}) -->
+    <ParameterList name="mySubBlockAFactory1">
+      <Parameter name="factory" type="string" value="SubBlockAFactory"/>
+      <Parameter name="block row" type="int" value="0"/>
+      <Parameter name="block col" type="int" value="0"/>
+    </ParameterList>
+    <ParameterList name="myAmalgFact1">
+      <Parameter name="factory" type="string" value="AmalgamationFactory"/>
+    </ParameterList>
+    <ParameterList name="myCoalesceDropFact1">
+      <Parameter name="factory" type="string" value="CoalesceDropFactory"/>
+      <Parameter name="lightweight wrap" type="bool" value="true"/>
+      <Parameter name="aggregation: drop tol" type="double" value="0.00"/>
+      <Parameter name="UnAmalgamationInfo" type="string" value="myAmalgFact1"/>
+    </ParameterList>
+    <ParameterList name="myAggFact1">
+      <Parameter name="factory" type="string" value="UncoupledAggregationFactory"/>
+      <Parameter name="Graph" type="string" value="myCoalesceDropFact1"/>
+      <Parameter name="DofsPerNode" type="string" value="myCoalesceDropFact1"/>
+      <Parameter name="aggregation: max selected neighbors" type="int" value="0"/>
+    </ParameterList>
+    <ParameterList name="myCoarseMap1">
+      <Parameter name="factory" type="string" value="CoarseMapFactory"/>
+      <Parameter name="Aggregates" type="string" value="myAggFact1"/>
+    </ParameterList>
+    <ParameterList name="myTentativePFact1">
+      <Parameter name="factory" type="string" value="TentativePFactory"/>
+      <Parameter name="A" type="string" value="mySubBlockAFactory1"/>
+      <Parameter name="Aggregates" type="string" value="myAggFact1"/>
+      <Parameter name="CoarseMap" type="string" value="myCoarseMap1"/>
+      <Parameter name="UnAmalgamationInfo" type="string" value="myAmalgFact1"/>
+    </ParameterList>
+    <ParameterList name="mySAPFact1">
+      <Parameter name="factory" type="string" value="SaPFactory"/>
+      <Parameter name="A" type="string" value="mySubBlockAFactory1"/>
+      <Parameter name="P" type="string" value="myTentativePFact1"/>
+      <Parameter name="sa: damping factor" type="double" value="1.33333"/>
+    </ParameterList>
+    <ParameterList name="myNspFact1">
+      <Parameter name="factory" type="string" value="NullspaceFactory"/>
+      <Parameter name="Fine level nullspace" type="string" value="Nullspace1"/>
+      <Parameter name="Nullspace1" type="string" value="myTentativePFact1"/>
+    </ParameterList>
+    <!-- BLOCK 2 (for submatrix A_{11}) -->
+    <ParameterList name="mySubBlockAFactory2">
+      <Parameter name="factory" type="string" value="SubBlockAFactory"/>
+      <Parameter name="block row" type="int" value="1"/>
+      <Parameter name="block col" type="int" value="1"/>
+    </ParameterList>
+    <ParameterList name="myAmalgFact2">
+      <Parameter name="factory" type="string" value="AmalgamationFactory"/>
+    </ParameterList>
+    <ParameterList name="myCoalesceDropFact2">
+      <Parameter name="factory" type="string" value="CoalesceDropFactory"/>
+      <Parameter name="lightweight wrap" type="bool" value="true"/>
+      <Parameter name="aggregation: drop tol" type="double" value="0.00"/>
+      <Parameter name="UnAmalgamationInfo" type="string" value="myAmalgFact2"/>
+    </ParameterList>
+    <ParameterList name="myAggFact2">
+      <Parameter name="factory" type="string" value="UncoupledAggregationFactory"/>
+      <Parameter name="Graph" type="string" value="myCoalesceDropFact2"/>
+      <Parameter name="DofsPerNode" type="string" value="myCoalesceDropFact2"/>
+      <Parameter name="aggregation: max selected neighbors" type="int" value="0"/>
+    </ParameterList>
+    <ParameterList name="myCoarseMap2">
+      <Parameter name="factory" type="string" value="BlockedCoarseMapFactory"/>
+      <Parameter name="Aggregates" type="string" value="myAggFact2"/>
+      <Parameter name="CoarseMap" type="string" value="myCoarseMap1"/>
+    </ParameterList>
+    <ParameterList name="myTentativePFact2">
+      <Parameter name="factory" type="string" value="TentativePFactory"/>
+      <Parameter name="A" type="string" value="mySubBlockAFactory2"/>
+      <Parameter name="Aggregates" type="string" value="myAggFact2"/>
+      <Parameter name="CoarseMap" type="string" value="myCoarseMap2"/>
+      <Parameter name="UnAmalgamationInfo" type="string" value="myAmalgFact2"/>
+    </ParameterList>
+    <ParameterList name="mySAPFact2">
+      <Parameter name="factory" type="string" value="SaPFactory"/>
+      <Parameter name="A" type="string" value="mySubBlockAFactory2"/>
+      <Parameter name="P" type="string" value="myTentativePFact2"/>
+      <Parameter name="sa: damping factor" type="double" value="1.33333"/>
+    </ParameterList>
+    <ParameterList name="myNspFact2">
+      <Parameter name="factory" type="string" value="NullspaceFactory"/>
+      <Parameter name="Fine level nullspace" type="string" value="Nullspace2"/>
+      <Parameter name="Nullspace2" type="string" value="myTentativePFact2"/>
+    </ParameterList>
+    <!-- BLOCK 3 (for submatrix A_{22}) -->
+    <ParameterList name="mySubBlockAFactory3">
+      <Parameter name="factory" type="string" value="SubBlockAFactory"/>
+      <Parameter name="block row" type="int" value="2"/>
+      <Parameter name="block col" type="int" value="2"/>
+    </ParameterList>
+    <ParameterList name="myAmalgFact3">
+      <Parameter name="factory" type="string" value="AmalgamationFactory"/>
+    </ParameterList>
+    <ParameterList name="myCoalesceDropFact3">
+      <Parameter name="factory" type="string" value="CoalesceDropFactory"/>
+      <Parameter name="lightweight wrap" type="bool" value="true"/>
+      <Parameter name="UnAmalgamationInfo" type="string" value="myAmalgFact3"/>
+      <Parameter name="aggregation: drop tol" type="double" value="0.00"/>
+    </ParameterList>
+    <ParameterList name="myAggFact3">
+      <Parameter name="factory" type="string" value="UncoupledAggregationFactory"/>
+      <Parameter name="Graph" type="string" value="myCoalesceDropFact3"/>
+      <Parameter name="DofsPerNode" type="string" value="myCoalesceDropFact3"/>
+      <Parameter name="aggregation: max selected neighbors" type="int" value="0"/>
+    </ParameterList>
+    <ParameterList name="myCoarseMap3">
+      <Parameter name="factory" type="string" value="BlockedCoarseMapFactory"/>
+      <Parameter name="Aggregates" type="string" value="myAggFact3"/>
+      <Parameter name="CoarseMap" type="string" value="myCoarseMap2"/>
+    </ParameterList>
+    <ParameterList name="myTentativePFact3">
+      <Parameter name="factory" type="string" value="TentativePFactory"/>
+      <Parameter name="A" type="string" value="mySubBlockAFactory3"/>
+      <Parameter name="Aggregates" type="string" value="myAggFact3"/>
+      <Parameter name="CoarseMap" type="string" value="myCoarseMap3"/>
+      <Parameter name="UnAmalgamationInfo" type="string" value="myAmalgFact3"/>
+    </ParameterList>
+    <ParameterList name="mySAPFact3">
+      <Parameter name="factory" type="string" value="SaPFactory"/>
+      <Parameter name="A" type="string" value="mySubBlockAFactory3"/>
+      <Parameter name="P" type="string" value="myTentativePFact3"/>
+      <Parameter name="sa: damping factor" type="double" value="1.33333"/>
+    </ParameterList>
+    <ParameterList name="myNspFact3">
+      <Parameter name="factory" type="string" value="NullspaceFactory"/>
+      <Parameter name="Fine level nullspace" type="string" value="Nullspace3"/>
+      <Parameter name="Nullspace3" type="string" value="myTentativePFact3"/>
+    </ParameterList>
+    <!-- BLOCK 4 (for submatrix A_{33}) -->
+    <ParameterList name="mySubBlockAFactory4">
+      <Parameter name="factory" type="string" value="SubBlockAFactory"/>
+      <Parameter name="block row" type="int" value="3"/>
+      <Parameter name="block col" type="int" value="3"/>
+    </ParameterList>
+    <ParameterList name="myAmalgFact4">
+      <Parameter name="factory" type="string" value="AmalgamationFactory"/>
+    </ParameterList>
+    <ParameterList name="myCoalesceDropFact4">
+      <Parameter name="factory" type="string" value="CoalesceDropFactory"/>
+      <Parameter name="lightweight wrap" type="bool" value="true"/>
+      <Parameter name="UnAmalgamationInfo" type="string" value="myAmalgFact4"/>
+      <Parameter name="aggregation: drop tol" type="double" value="0.00"/>
+    </ParameterList>
+    <ParameterList name="myAggFact4">
+      <Parameter name="factory" type="string" value="UncoupledAggregationFactory"/>
+      <Parameter name="Graph" type="string" value="myCoalesceDropFact4"/>
+      <Parameter name="DofsPerNode" type="string" value="myCoalesceDropFact4"/>
+      <Parameter name="aggregation: max selected neighbors" type="int" value="0"/>
+    </ParameterList>
+    <ParameterList name="myCoarseMap4">
+      <Parameter name="factory" type="string" value="BlockedCoarseMapFactory"/>
+      <Parameter name="Aggregates" type="string" value="myAggFact4"/>
+      <Parameter name="CoarseMap" type="string" value="myCoarseMap3"/>
+    </ParameterList>
+    <ParameterList name="myTentativePFact4">
+      <Parameter name="factory" type="string" value="TentativePFactory"/>
+      <Parameter name="A" type="string" value="mySubBlockAFactory4"/>
+      <Parameter name="Aggregates" type="string" value="myAggFact4"/>
+      <Parameter name="CoarseMap" type="string" value="myCoarseMap4"/>
+      <Parameter name="UnAmalgamationInfo" type="string" value="myAmalgFact4"/>
+    </ParameterList>
+    <ParameterList name="mySAPFact4">
+      <Parameter name="factory" type="string" value="SaPFactory"/>
+      <Parameter name="A" type="string" value="mySubBlockAFactory4"/>
+      <Parameter name="P" type="string" value="myTentativePFact4"/>
+      <Parameter name="sa: damping factor" type="double" value="1.33333"/>
+    </ParameterList>
+    <ParameterList name="myNspFact4">
+      <Parameter name="factory" type="string" value="NullspaceFactory"/>
+      <Parameter name="Fine level nullspace" type="string" value="Nullspace4"/>
+      <Parameter name="Nullspace4" type="string" value="myTentativePFact4"/>
+    </ParameterList>
+    <!-- FACTORY MANAGERS -->
+    <!-- Multigrid setup for scatra block (A_{00}) -->
+    <ParameterList name="myFirstGroup">
+      <Parameter name="group" type="string" value="FactoryManager"/>
+      <Parameter name="A" type="string" value="mySubBlockAFactory1"/>
+      <Parameter name="P" type="string" value="mySAPFact1"/>
+      <Parameter name="Aggregates" type="string" value="myAggFact1"/>
+      <Parameter name="Nullspace" type="string" value="myNspFact1"/>
+      <Parameter name="CoarseMap" type="string" value="myCoarseMap1"/>
+      <Parameter name="Graph" type="string" value="myCoalesceDropFact1"/>
+    </ParameterList>
+    <!-- Multigrid setup for scatra block (A_{11}) -->
+    <ParameterList name="mySecondGroup">
+      <Parameter name="group" type="string" value="FactoryManager"/>
+      <Parameter name="A" type="string" value="mySubBlockAFactory2"/>
+      <Parameter name="P" type="string" value="mySAPFact2"/>
+      <Parameter name="Aggregates" type="string" value="myAggFact2"/>
+      <Parameter name="Nullspace" type="string" value="myNspFact2"/>
+      <Parameter name="CoarseMap" type="string" value="myCoarseMap2"/>
+      <Parameter name="Graph" type="string" value="myCoalesceDropFact2"/>
+    </ParameterList>
+    <!-- Multigrid setup for scatra block (A_{22}) -->
+    <ParameterList name="myThirdGroup">
+      <Parameter name="group" type="string" value="FactoryManager"/>
+      <Parameter name="A" type="string" value="mySubBlockAFactory3"/>
+      <Parameter name="P" type="string" value="mySAPFact3"/>
+      <Parameter name="Aggregates" type="string" value="myAggFact3"/>
+      <Parameter name="Nullspace" type="string" value="myNspFact3"/>
+      <Parameter name="CoarseMap" type="string" value="myCoarseMap3"/>
+      <Parameter name="Graph" type="string" value="myCoalesceDropFact3"/>
+    </ParameterList>
+    <!-- Multigrid setup for thermo block (A_{33}) -->
+    <ParameterList name="myFourthGroup">
+      <Parameter name="group" type="string" value="FactoryManager"/>
+      <Parameter name="A" type="string" value="mySubBlockAFactory4"/>
+      <Parameter name="P" type="string" value="mySAPFact4"/>
+      <Parameter name="Aggregates" type="string" value="myAggFact4"/>
+      <Parameter name="Nullspace" type="string" value="myNspFact4"/>
+      <Parameter name="CoarseMap" type="string" value="myCoarseMap4"/>
+      <Parameter name="Graph" type="string" value="myCoalesceDropFact4"/>
+    </ParameterList>
+    <!-- BLOCK TRANSFER operators -->
+    <!-- define block prolongation operator using above blocks -->
+    <ParameterList name="myBlockedPFact">
+      <Parameter name="factory" type="string" value="BlockedPFactory"/>
+      <!-- factory manager for block 1 -->
+      <ParameterList name="block1">
+        <Parameter name="block id" type="int" value="0"/>
+        <Parameter name="group" type="string" value="myFirstGroup"/>
+      </ParameterList>
+      <!-- factory manager for block 2 -->
+      <ParameterList name="block2">
+        <Parameter name="block id" type="int" value="1"/>
+        <Parameter name="group" type="string" value="mySecondGroup"/>
+      </ParameterList>
+      <!-- factory manager for block 3 -->
+      <ParameterList name="block3">
+        <Parameter name="block id" type="int" value="2"/>
+        <Parameter name="group" type="string" value="myThirdGroup"/>
+      </ParameterList>
+      <!-- factory manager for block 4 -->
+      <ParameterList name="block4">
+        <Parameter name="block id" type="int" value="3"/>
+        <Parameter name="group" type="string" value="myFourthGroup"/>
+      </ParameterList>
+    </ParameterList>
+    <!-- define block restriction operator using above blocks -->
+    <ParameterList name="myBlockedRFact">
+      <Parameter name="factory" type="string" value="GenericRFactory"/>
+      <Parameter name="P" type="string" value="myBlockedPFact"/>
+    </ParameterList>
+    <ParameterList name="myBlockedRAPFact">
+      <Parameter name="factory" type="string" value="BlockedRAPFactory"/>
+      <Parameter name="P" type="string" value="myBlockedPFact"/>
+      <Parameter name="R" type="string" value="myBlockedRFact"/>
+    </ParameterList>
+    <!-- BLOCK SMOOTHERS -->
+    <ParameterList name="mySmooFact1">
+      <Parameter name="factory" type="string" value="TrilinosSmoother"/>
+      <Parameter name="type" type="string" value="RILUK"/>
+      <ParameterList name="ParameterList">
+        <Parameter name="schwarz: overlap level" type="int" value="0"/>
+        <Parameter name="schwarz: combine mode" type="string" value="Zero"/>
+        <Parameter name="schwarz: use reordering" type="bool" value="false"/>
+        <Parameter name="fact: iluk level-of-fill" type="int" value="4"/>
+        <Parameter name="fact: absolute threshold" type="double" value="0."/>
+        <Parameter name="fact: relative threshold" type="double" value="1."/>
+        <Parameter name="fact: relax value" type="double" value="0."/>
+      </ParameterList>
+    </ParameterList>
+    <ParameterList name="mySmooFact2">
+      <Parameter name="factory" type="string" value="TrilinosSmoother"/>
+      <Parameter name="type" type="string" value="RILUK"/>
+      <ParameterList name="ParameterList">
+        <Parameter name="schwarz: overlap level" type="int" value="0"/>
+        <Parameter name="schwarz: combine mode" type="string" value="Zero"/>
+        <Parameter name="schwarz: use reordering" type="bool" value="false"/>
+        <Parameter name="fact: iluk level-of-fill" type="int" value="4"/>
+        <Parameter name="fact: absolute threshold" type="double" value="0."/>
+        <Parameter name="fact: relative threshold" type="double" value="1."/>
+        <Parameter name="fact: relax value" type="double" value="0."/>
+      </ParameterList>
+    </ParameterList>
+    <ParameterList name="mySmooFact3">
+      <Parameter name="factory" type="string" value="TrilinosSmoother"/>
+      <Parameter name="type" type="string" value="RILUK"/>
+      <ParameterList name="ParameterList">
+        <Parameter name="schwarz: overlap level" type="int" value="0"/>
+        <Parameter name="schwarz: combine mode" type="string" value="Zero"/>
+        <Parameter name="schwarz: use reordering" type="bool" value="false"/>
+        <Parameter name="fact: iluk level-of-fill" type="int" value="4"/>
+        <Parameter name="fact: absolute threshold" type="double" value="0."/>
+        <Parameter name="fact: relative threshold" type="double" value="1."/>
+        <Parameter name="fact: relax value" type="double" value="0."/>
+      </ParameterList>
+    </ParameterList>
+    <ParameterList name="mySmooFact4">
+      <Parameter name="factory" type="string" value="TrilinosSmoother"/>
+      <Parameter name="type" type="string" value="RILUK"/>
+      <ParameterList name="ParameterList">
+        <Parameter name="schwarz: overlap level" type="int" value="0"/>
+        <Parameter name="schwarz: combine mode" type="string" value="Zero"/>
+        <Parameter name="schwarz: use reordering" type="bool" value="false"/>
+        <Parameter name="fact: iluk level-of-fill" type="int" value="4"/>
+        <Parameter name="fact: absolute threshold" type="double" value="0."/>
+        <Parameter name="fact: relative threshold" type="double" value="1."/>
+        <Parameter name="fact: relax value" type="double" value="0."/>
+      </ParameterList>
+    </ParameterList>
+    <!-- Use BGS: -->
+    <ParameterList name="myBlockSmoother">
+      <Parameter name="factory" type="string" value="BlockedGaussSeidelSmoother"/>
+      <Parameter name="Sweeps" type="int" value="3"/>
+      <Parameter name="Damping factor" type="double" value="0.8"/>
+      <!-- factory manager for block 1 -->
+      <ParameterList name="block1">
+        <Parameter name="A" type="string" value="mySubBlockAFactory1"/>
+        <Parameter name="Smoother" type="string" value="mySmooFact1"/>
+      </ParameterList>
+      <!-- factory manager for block 2 -->
+      <ParameterList name="block2">
+        <Parameter name="A" type="string" value="mySubBlockAFactory2"/>
+        <Parameter name="Smoother" type="string" value="mySmooFact2"/>
+      </ParameterList>
+      <!-- factory manager for block 3 -->
+      <ParameterList name="block3">
+        <Parameter name="A" type="string" value="mySubBlockAFactory3"/>
+        <Parameter name="Smoother" type="string" value="mySmooFact3"/>
+      </ParameterList>
+      <!-- factory manager for block 4 -->
+      <ParameterList name="block4">
+        <Parameter name="A" type="string" value="mySubBlockAFactory4"/>
+        <Parameter name="Smoother" type="string" value="mySmooFact4"/>
+      </ParameterList>
+    </ParameterList>
+    <ParameterList name="myBlockDirectSolver">
+      <Parameter name="factory" type="string" value="BlockedDirectSolver"/>
+      <Parameter name="type" type="string" value="Umfpack"/>
+    </ParameterList>
+  </ParameterList>
+  <!-- end Factories -->
+  <!-- Definition of the multigrid preconditioner -->
+  <ParameterList name="Hierarchy">
+    <Parameter name="max levels" type="int" value="3"/>
+    <Parameter name="coarse: max size" type="int" value="1000"/>
+    <Parameter name="verbosity" type="string" value="None"/>
+    <ParameterList name="AllLevel">
+      <Parameter name="startLevel" type="int" value="0"/>
+      <Parameter name="Smoother" type="string" value="myBlockSmoother"/>
+      <Parameter name="CoarseSolver" type="string" value="myBlockDirectSolver"/>
+      <Parameter name="P" type="string" value="myBlockedPFact"/>
+      <Parameter name="R" type="string" value="myBlockedRFact"/>
+      <Parameter name="A" type="string" value="myBlockedRAPFact"/>
+    </ParameterList>
+  </ParameterList>
+</ParameterList><!-- end "MueLu" -->
