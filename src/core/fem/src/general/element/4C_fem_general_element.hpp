@@ -12,6 +12,7 @@
 #include "4C_config.hpp"
 
 #include "4C_comm_parobject.hpp"
+#include "4C_fem_discretization_iterator.hpp"
 #include "4C_fem_general_cell_type.hpp"
 #include "4C_fem_general_cell_type_traits.hpp"
 #include "4C_fem_general_elements_paramsinterface.hpp"
@@ -48,6 +49,8 @@ namespace Core::FE::MeshFree
 
 namespace Core::FE
 {
+  class ConstNodeRef;
+  class NodeRef;
   class Discretization;
   class DiscretizationHDG;
 }  // namespace Core::FE
@@ -331,6 +334,17 @@ namespace Core::Elements
       else
         return nullptr;
     }
+
+    /**
+     * Return the nodes of this element as a range of NodeRef objects.
+     */
+    [[nodiscard]] FE::IteratorRange<FE::DiscretizationIterator<FE::NodeRef>> node_range();
+
+    /**
+     * Return the nodes of this element as a range of NodeRef objects.
+     */
+    [[nodiscard]] FE::IteratorRange<FE::DiscretizationIterator<FE::ConstNodeRef>> node_range()
+        const;
 
     /*!
     \brief Get vector of std::shared_ptrs to the lines of this element
