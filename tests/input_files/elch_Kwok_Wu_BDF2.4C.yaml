@@ -74,7 +74,7 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 131
       QUANTITY: "flux_domain_1_z"
-      VALUE: -7.27829823139921e-10
+      VALUE: -7.27826132213672719e-10
       TOLERANCE: 3e-15
   - SCATRA:
       DIS: "scatra"
@@ -110,7 +110,7 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 307
       QUANTITY: "phi3"
-      VALUE: -3.165541881955614e-10
+      VALUE: -3.22402342783420290e-10
       TOLERANCE: 2.8e-12
 DESIGN POINT DIRICH CONDITIONS:
   - E: 1

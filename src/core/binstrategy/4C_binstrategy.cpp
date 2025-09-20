@@ -816,18 +816,13 @@ void Core::Binstrategy::BinningStrategy::distribute_bins_recurs_coord_bisection(
 {
   // create a parameter list for partitioner
   Teuchos::ParameterList params;
-  params.set("Partitioning Method", "RCB");
-
-  // set low-level partitioning parameters (see Zoltan Users' Guide:
-  // http://www.cs.sandia.gov/zoltan)
-  Teuchos::ParameterList& sublist = params.sublist("Zoltan");
-
-  // debug level (see http://www.cs.sandia.gov/zoltan/ug_html/ug_param.html)
-  sublist.set("DEBUG_LEVEL", "0");
-
-  // recursive coordinate bisection (see http://www.cs.sandia.gov/zoltan/ug_html/ug_alg_rcb.html)
-  sublist.set("RCB_OUTPUT_LEVEL", "0");
-  sublist.set("RCB_RECTILINEAR_BLOCKS", "1");
+  params.set("algorithm", "zoltan");
+  params.set("debug_level", "no_status");
+  Teuchos::ParameterList& zparams = params.sublist("zoltan_parameters", false);
+  zparams.set("LB_METHOD", "RCB");
+  zparams.set("DEBUG_LEVEL", "0");
+  zparams.set("RCB_OUTPUT_LEVEL", "0");
+  zparams.set("RCB_RECTILINEAR_BLOCKS", "1");
 
   std::tie(bincenters, binweights) =
       Core::Rebalance::rebalance_coordinates(*bincenters, params, *binweights);
@@ -1227,12 +1222,13 @@ Core::Binstrategy::BinningStrategy::weighted_distribution_of_bins_to_procs(
   bingraph->optimize_storage();
 
   Teuchos::ParameterList paramlist;
-  paramlist.set("PARTITIONING METHOD", "GRAPH");
-  Teuchos::ParameterList& sublist = paramlist.sublist("Zoltan");
+  paramlist.set("algorithm", "zoltan");
+  Teuchos::ParameterList& zparams = paramlist.sublist("zoltan_parameters", false);
+  zparams.set("LB_METHOD", "GRAPH");
   if (repartition)
-    sublist.set("LB_APPROACH", "REPARTITION");
+    paramlist.set("partitioning_approach", "repartition");
   else
-    sublist.set("LB_APPROACH", "PARTITION");
+    paramlist.set("partitioning_approach", "partition");
 
   auto balanced_bingraph = Core::Rebalance::rebalance_graph(*bingraph, paramlist, vweights);
 
