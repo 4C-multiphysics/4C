@@ -14,6 +14,7 @@ This script compares two files with a tolerance.
 import os
 import sys
 import numpy as np
+import yaml
 import argparse
 
 
@@ -65,6 +66,85 @@ def read_csv(path):
     return np.array(data)
 
 
+def compare_nested_dicts_or_lists(
+    obj,
+    reference_obj,
+    rtol,
+    atol,
+) -> bool:
+    """Recursively compare two nested dictionaries or lists.
+
+    In case objects are not within the provided tolerance an `AssertionError` is raised.
+
+    Args:
+        obj: Object for comparison
+        reference_obj: Reference object
+        rtol: The relative tolerance parameter for numpy.isclose
+        atol: The absolute tolerance parameter for numpy.isclose
+
+    Returns:
+        True if the dictionaries are equal
+    """
+
+    # Ensures the types are the same
+    if not type(obj) is type(reference_obj):
+        if not isinstance(obj, (float, int)) or not isinstance(
+            reference_obj, (float, int)
+        ):
+            raise AssertionError(
+                f"Object is of type {type(obj)}, but the reference is of type {type(reference_obj)}"
+            )
+
+    # Objects are numerics
+    if isinstance(obj, (float, int)):
+        if not np.isclose(obj, reference_obj, rtol, atol):
+            raise AssertionError(
+                f"The numerics are not close:\n\nobj = {obj}\n\nreference_obj = {reference_obj}"
+            )
+        return True
+
+    # Object are dicts
+    if isinstance(obj, dict):
+        # ^ is the symmetric difference operator, i.e. union of the sets without the intersection
+        if missing_keys := set(obj.keys()) ^ set(reference_obj.keys()):
+            raise AssertionError(
+                f"The following keys could not be found in both dicts {missing_keys}:"
+                f"\nobj: {obj}\n\nreference_obj:{reference_obj}"
+            )
+        for key in obj:
+            compare_nested_dicts_or_lists(
+                obj[key],
+                reference_obj[key],
+                rtol,
+                atol,
+            )
+        return True
+
+    # Objects are lists
+    if isinstance(obj, list):
+        if len(obj) != len(reference_obj):
+            raise AssertionError(
+                f"The list lengths differ (got {len(obj)} and {len(reference_obj)}).\nobj "
+                f"{obj}\n\nreference_obj:{reference_obj}"
+            )
+        for obj_item, reference_obj_item in zip(obj, reference_obj):
+            compare_nested_dicts_or_lists(
+                obj_item,
+                reference_obj_item,
+                rtol,
+                atol,
+            )
+        return True
+
+    # Otherwise compare the objects directly
+    if obj != reference_obj:
+        raise AssertionError(
+            f"The objects are not equal:\n\nobj = {obj}\n\nreference_obj = {reference_obj}"
+        )
+
+    return True
+
+
 if __name__ == "__main__":
     """
     Execution part of script.
@@ -84,12 +164,37 @@ if __name__ == "__main__":
     r_tol = args.r_tol
     a_tol = args.a_tol
 
-    # Load each file as a real array.
-    data_a = read_csv(file_a)
-    data_b = read_csv(file_b)
+    _, file_ending_a = os.path.splitext(file_a)
+    _, file_ending_b = os.path.splitext(file_b)
 
-    # Compare the data values.
-    if np.allclose(data_a, data_b, rtol=r_tol, atol=a_tol):
-        print("CSV comparison successful!")
+    if file_ending_a != file_ending_b:
+        raise ValueError(
+            "You are trying to compare files with different file endings: {} and {}.".format(
+                file_ending_a, file_ending_b
+            )
+        )
+
+    if file_ending_a == ".csv":
+        # Load each file as a real array.
+        data_a = read_csv(file_a)
+        data_b = read_csv(file_b)
+
+        # Compare the data values.
+        if np.allclose(data_a, data_b, rtol=r_tol, atol=a_tol):
+            print("CSV comparison successful!")
+        else:
+            raise ValueError("CSV comparison failed!")
+
+    elif file_ending_a == ".yaml":
+        data_a = []
+        data_b = []
+        with open(file_a, "r") as f:
+            data_a = yaml.safe_load(f)
+
+        with open(file_b, "r") as f:
+            data_b = yaml.safe_load(f)
+
+        compare_nested_dicts_or_lists(data_a, data_b, r_tol, a_tol)
+
     else:
-        raise ValueError("CSV comparison failed!")
+        raise ValueError("File ending not recognized!")

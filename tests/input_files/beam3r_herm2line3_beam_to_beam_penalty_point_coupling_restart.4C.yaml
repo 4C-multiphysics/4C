@@ -6,8 +6,8 @@ TITLE:
   - "The beams are deformed with dirichlet conditions in radial direction."
 IO/MONITOR STRUCTURE DBC:
   INTERVAL_STEPS: 1
-  PRECISION_FILE: 10
-  WRITE_HEADER: true
+  WRITE_CONDITION_INFORMATION: true
+  FILE_TYPE: yaml
 BEAM INTERACTION:
   REPARTITIONSTRATEGY: "Everydt"
 BEAM CONTACT:

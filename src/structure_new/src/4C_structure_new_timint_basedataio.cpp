@@ -100,9 +100,8 @@ void Solid::TimeInt::BaseDataIO::init(const Teuchos::ParameterList& ioparams,
     writesurfactant_ = ioparams.get<bool>("STRUCT_SURFACTANT");
 
     // build params container for monitoring reaction forces
-    params_monitor_dbc_ = std::make_shared<ParamsMonitorDBC>();
-    params_monitor_dbc_->init(ioparams.sublist("MONITOR STRUCTURE DBC"));
-    params_monitor_dbc_->setup();
+    params_monitor_dbc_ =
+        std::make_shared<ParamsMonitorDBC>(ioparams.sublist("MONITOR STRUCTURE DBC"));
 
     // check whether VTK output at runtime is desired
     if (ioparams.sublist("RUNTIME VTK OUTPUT").get<int>("INTERVAL_STEPS") != -1)

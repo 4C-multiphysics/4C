@@ -4,6 +4,7 @@ TITLE:
   - "The results of the Dirichlet boundary condition monitor are compared."
 IO/MONITOR STRUCTURE DBC:
   INTERVAL_STEPS: 1
+  FILE_TYPE: csv
 IO/RUNTIME VTK OUTPUT:
   INTERVAL_STEPS: 1
 IO/RUNTIME VTK OUTPUT/STRUCTURE:

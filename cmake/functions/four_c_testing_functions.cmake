@@ -127,8 +127,8 @@ endfunction()
 # Run simulation with input file
 # Usage in tests/lists_of_tests.cmake:
 #            "four_c_test(<input_file> optional: NP <> RESTART_STEP <> TIMEOUT <> OMP_THREADS <> LABEL <>
-#                                                CSV_COMPARISON_RESULT_FILE <> CSV_COMPARISON_REFERENCE_FILE <>
-#                                                CSV_COMPARISON_TOL_R <> CSV_COMPARISON_TOL_A <>)"
+#                                                CSV_YAML_COMPARISON_RESULT_FILE <> CSV_YAML_COMPARISON_REFERENCE_FILE <>
+#                                                CSV_YAML_COMPARISON_TOL_R <> CSV_YAML_COMPARISON_TOL_A <>)"
 
 # TEST_FILE:              must equal the name of an input file in directory tests/input_files
 #                         If two files are provided the second input file is restarted based on the results of the first input file.
@@ -140,10 +140,10 @@ endfunction()
 # TIMEOUT:                        Manually defined duration for test timeout; defaults to global timeout if not specified
 # OMP_THREADS:                    Number of OpenMP threads per processor the test should use; defaults to deactivated
 # LABELS:                         Add labels to the test
-# CSV_COMPARISON_RESULT_FILE:     Arbitrary .csv result files to be compared (see `utilites/diff_with_tolerance.py`)
-# CSV_COMPARISON_REFERENCE_FILE:  Reference files to compare with
-# CSV_COMPARISON_TOL_R:           Relative tolerances for comparison
-# CSV_COMPARISON_TOL_A:           Absolute tolerances for comparison
+# CSV_YAML_COMPARISON_RESULT_FILE:     Arbitrary .csv result files to be compared (see `utilites/diff_with_tolerance.py`)
+# CSV_YAML_COMPARISON_REFERENCE_FILE:  Reference files to compare with
+# CSV_YAML_COMPARISON_TOL_R:           Relative tolerances for comparison
+# CSV_YAML_COMPARISON_TOL_A:           Absolute tolerances for comparison
 # REQUIRED_DEPENDENCIES:          Any required external dependencies. The test will be skipped if the dependencies are not met.
 
 function(four_c_test)
@@ -154,10 +154,10 @@ function(four_c_test)
       TEST_FILE
       NP
       LABELS
-      CSV_COMPARISON_RESULT_FILE
-      CSV_COMPARISON_REFERENCE_FILE
-      CSV_COMPARISON_TOL_R
-      CSV_COMPARISON_TOL_A
+      CSV_YAML_COMPARISON_RESULT_FILE
+      CSV_YAML_COMPARISON_REFERENCE_FILE
+      CSV_YAML_COMPARISON_TOL_R
+      CSV_YAML_COMPARISON_TOL_A
       REQUIRED_DEPENDENCIES
       )
   cmake_parse_arguments(
@@ -197,20 +197,20 @@ function(four_c_test)
     set(_parsed_LABELS "")
   endif()
 
-  if(NOT DEFINED _parsed_CSV_COMPARISON_RESULT_FILE)
-    set(_parsed_CSV_COMPARISON_RESULT_FILE "")
+  if(NOT DEFINED _parsed_CSV_YAML_COMPARISON_RESULT_FILE)
+    set(_parsed_CSV_YAML_COMPARISON_RESULT_FILE "")
   endif()
 
-  if(NOT DEFINED _parsed_CSV_COMPARISON_REFERENCE_FILE)
-    set(_parsed_CSV_COMPARISON_REFERENCE_FILE "")
+  if(NOT DEFINED _parsed_CSV_YAML_COMPARISON_REFERENCE_FILE)
+    set(_parsed_CSV_YAML_COMPARISON_REFERENCE_FILE "")
   endif()
 
-  if(NOT DEFINED _parsed_CSV_COMPARISON_TOL_R)
-    set(_parsed_CSV_COMPARISON_TOL_R "")
+  if(NOT DEFINED _parsed_CSV_YAML_COMPARISON_TOL_R)
+    set(_parsed_CSV_YAML_COMPARISON_TOL_R "")
   endif()
 
-  if(NOT DEFINED _parsed_CSV_COMPARISON_TOL_A)
-    set(_parsed_CSV_COMPARISON_TOL_A "")
+  if(NOT DEFINED _parsed_CSV_YAML_COMPARISON_TOL_A)
+    set(_parsed_CSV_YAML_COMPARISON_TOL_A "")
   endif()
 
   list(LENGTH _parsed_TEST_FILE num_TEST_FILE)
@@ -240,13 +240,13 @@ function(four_c_test)
   endforeach()
 
   # check that same number of files and tolerances are provided for arbitrary .csv comparison
-  list(LENGTH _parsed_CSV_COMPARISON_RESULT_FILE num_CSV_COMPARISON_RESULT_FILE)
-  list(LENGTH _parsed_CSV_COMPARISON_REFERENCE_FILE num_CSV_COMPARISON_REFERENCE_FILE)
-  list(LENGTH _parsed_CSV_COMPARISON_TOL_R num_CSV_COMPARISON_TOL_R)
-  list(LENGTH _parsed_CSV_COMPARISON_TOL_A num_CSV_COMPARISON_TOL_A)
-  if(NOT num_CSV_COMPARISON_RESULT_FILE EQUAL num_CSV_COMPARISON_REFERENCE_FILE
-     OR NOT num_CSV_COMPARISON_RESULT_FILE EQUAL num_CSV_COMPARISON_TOL_R
-     OR NOT num_CSV_COMPARISON_RESULT_FILE EQUAL num_CSV_COMPARISON_TOL_A
+  list(LENGTH _parsed_CSV_YAML_COMPARISON_RESULT_FILE num_CSV_YAML_COMPARISON_RESULT_FILE)
+  list(LENGTH _parsed_CSV_YAML_COMPARISON_REFERENCE_FILE num_CSV_YAML_COMPARISON_REFERENCE_FILE)
+  list(LENGTH _parsed_CSV_YAML_COMPARISON_TOL_R num_CSV_YAML_COMPARISON_TOL_R)
+  list(LENGTH _parsed_CSV_YAML_COMPARISON_TOL_A num_CSV_YAML_COMPARISON_TOL_A)
+  if(NOT num_CSV_YAML_COMPARISON_RESULT_FILE EQUAL num_CSV_YAML_COMPARISON_REFERENCE_FILE
+     OR NOT num_CSV_YAML_COMPARISON_RESULT_FILE EQUAL num_CSV_YAML_COMPARISON_TOL_R
+     OR NOT num_CSV_YAML_COMPARISON_RESULT_FILE EQUAL num_CSV_YAML_COMPARISON_TOL_A
      )
     message(
       FATAL_ERROR
@@ -255,8 +255,8 @@ function(four_c_test)
   endif()
 
   # check if .csv reference files exists
-  set(csv_comparison_reference_file "")
-  foreach(string IN LISTS _parsed_CSV_COMPARISON_REFERENCE_FILE)
+  set(CSV_YAML_COMPARISON_REFERENCE_FILE "")
+  foreach(string IN LISTS _parsed_CSV_YAML_COMPARISON_REFERENCE_FILE)
     set(file_name "${PROJECT_SOURCE_DIR}/tests/input_files/${string}")
     if(NOT EXISTS ${file_name})
       message(
@@ -264,7 +264,7 @@ function(four_c_test)
           "Reference file ${file_name} for arbitrary .csv result comparison does not exist!"
         )
     endif()
-    list(APPEND csv_comparison_reference_file ${file_name})
+    list(APPEND CSV_YAML_COMPARISON_REFERENCE_FILE ${file_name})
   endforeach()
 
   if(DEFINED _parsed_REQUIRED_DEPENDENCIES)
@@ -410,7 +410,7 @@ function(four_c_test)
   endif()
 
   # csv comparison
-  if(NOT _parsed_CSV_COMPARISON_RESULT_FILE STREQUAL "")
+  if(NOT _parsed_CSV_YAML_COMPARISON_RESULT_FILE STREQUAL "")
 
     # loop over all csv comparisons
     foreach(
@@ -420,10 +420,10 @@ function(four_c_test)
       tol_a
       IN
       ZIP_LISTS
-      _parsed_CSV_COMPARISON_RESULT_FILE
-      _parsed_CSV_COMPARISON_REFERENCE_FILE
-      _parsed_CSV_COMPARISON_TOL_R
-      _parsed_CSV_COMPARISON_TOL_A
+      _parsed_CSV_YAML_COMPARISON_RESULT_FILE
+      _parsed_CSV_YAML_COMPARISON_REFERENCE_FILE
+      _parsed_CSV_YAML_COMPARISON_TOL_R
+      _parsed_CSV_YAML_COMPARISON_TOL_A
       )
       set(name_of_csv_comparison_test "${name_of_test}-csv_comparison-${result_file}")
       if(FOUR_C_WITH_PYTHON)
