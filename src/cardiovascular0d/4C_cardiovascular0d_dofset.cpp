@@ -7,7 +7,7 @@
 
 #include "4C_cardiovascular0d_dofset.hpp"
 
-#include "4C_cardiovascular0d_mor_pod.hpp"
+#include "4C_linalg_sparse_pod.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -38,7 +38,7 @@ void Utils::Cardiovascular0DDofSet::reset()
  *----------------------------------------------------------------------*/
 int Utils::Cardiovascular0DDofSet::assign_degrees_of_freedom(
     const std::shared_ptr<Core::FE::Discretization> dis, const int ndofs, const int start,
-    const std::shared_ptr<FourC::Cardiovascular0D::ProperOrthogonalDecomposition> mor)
+    const std::shared_ptr<Core::LinAlg::ProperOrthogonalDecomposition> mor)
 {
   // A definite offset is currently not supported.
   if (start != 0) FOUR_C_THROW("right now user specified dof offsets are not supported");
@@ -66,7 +66,7 @@ int Utils::Cardiovascular0DDofSet::assign_degrees_of_freedom(
   // (In case of POD-MOR, the highest GID will be projmatrix->NumVectors()-1 because indexing starts
   // from 0. Therefore, there is no need to add anything.)
   int count;
-  if (mor == nullptr or not mor->have_mor())
+  if (mor == nullptr)
     count = max_gid_in_list(dis->get_comm()) + 1;
   else
     count = mor->get_red_dim();
