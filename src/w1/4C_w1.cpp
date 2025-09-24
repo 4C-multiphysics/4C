@@ -60,7 +60,7 @@ void Discret::Elements::Wall1Type::nodal_block_information(
 }
 
 Core::LinAlg::SerialDenseMatrix Discret::Elements::Wall1Type::compute_null_space(
-    Core::Nodes::Node& node, const double* x0, int const numdof, int const dimnsp)
+    Core::Nodes::Node& node, const double* x0)
 {
   return compute_solid_null_space<2>(node.x(), x0);
 }

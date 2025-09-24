@@ -62,7 +62,7 @@ void Discret::Elements::Torsion3Type::nodal_block_information(
 }
 
 Core::LinAlg::SerialDenseMatrix Discret::Elements::Torsion3Type::compute_null_space(
-    Core::Nodes::Node& node, const double* x0, const int numdof, const int dimnsp)
+    Core::Nodes::Node& node, const double* x0)
 {
   return compute_solid_null_space<3>(node.x(), x0);
 }

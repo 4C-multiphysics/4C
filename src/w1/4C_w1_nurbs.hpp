@@ -42,7 +42,7 @@ namespace Discret
             Core::Elements::Element* dwele, int& numdf, int& dimns) override;
 
         Core::LinAlg::SerialDenseMatrix compute_null_space(
-            Core::Nodes::Node& node, const double* x0, const int numdof, const int dimnsp) override;
+            Core::Nodes::Node& node, const double* x0) override;
 
        private:
         static Wall1NurbsType instance_;
