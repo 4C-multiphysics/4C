@@ -143,9 +143,11 @@ void Discret::Elements::SolidType::nodal_block_information(
 }
 
 Core::LinAlg::SerialDenseMatrix Discret::Elements::SolidType::compute_null_space(
-    Core::Nodes::Node& node, const double* x0, const int numdof, const int dimnsp)
+    Core::Nodes::Node& node, const double* x0)
 {
-  switch (numdof)
+  const int spatial_dimension = node.n_dim();
+
+  switch (spatial_dimension)
   {
     case 3:
       return compute_solid_null_space<3>(node.x(), x0);
@@ -154,7 +156,7 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::SolidType::compute_null_space
     default:
       FOUR_C_THROW(
           "The null space computation of a solid element of dimension {} is not yet implemented",
-          numdof);
+          spatial_dimension);
   }
 }
 

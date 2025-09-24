@@ -90,35 +90,12 @@ void Discret::Elements::Beam3rType::nodal_block_information(
 /*------------------------------------------------------------------------------------------------*
  *------------------------------------------------------------------------------------------------*/
 Core::LinAlg::SerialDenseMatrix Discret::Elements::Beam3rType::compute_null_space(
-    Core::Nodes::Node& node, const double* x0, const int numdof, const int dimnsp)
+    Core::Nodes::Node& node, const double* x0)
 {
   // getting pointer at current element
   const auto* beam3r =
       dynamic_cast<const Discret::Elements::Beam3r*>(node.adjacent_elements()[0].user_element());
   if (!beam3r) FOUR_C_THROW("Cannot cast current element to type Beam3r.");
-
-  if (beam3r->is_centerline_node(node))
-  {
-    if (numdof != 9)
-      FOUR_C_THROW(
-          "The computation of the Simo-Reissner beam nullspace in three dimensions requires nine "
-          "DOFs per centerline node, however the current node carries {} DOFs.",
-          numdof);
-  }
-  else
-  {
-    if (numdof != 3)
-      FOUR_C_THROW(
-          "The computation of the Simo-Reissner beam nullspace in three dimensions requires three "
-          "DOFs per node, however the current node carries {} DOFs.",
-          numdof);
-  }
-
-  if (dimnsp != 6)
-    FOUR_C_THROW(
-        "The computation of the Simo-Reissner beam nullspace in three dimensions requires six "
-        "nullspace vectors per node, however the current node carries {} vectors.",
-        dimnsp);
 
   constexpr std::size_t spacedim = 3;
 
@@ -163,9 +140,10 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::Beam3rType::compute_null_spac
   rotTangTwo.cross_product(e2, tangent);
   rotTangThree.cross_product(e3, tangent);
 
-  Core::LinAlg::SerialDenseMatrix nullspace(numdof, dimnsp);
   if (beam3r->is_centerline_node(node))
   {
+    Core::LinAlg::SerialDenseMatrix nullspace(9, 6);
+
     // x-modes
     nullspace(0, 0) = 1.0;
     nullspace(0, 1) = 0.0;
@@ -229,9 +207,13 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::Beam3rType::compute_null_spac
     nullspace(8, 3) = rotTangOne(2);
     nullspace(8, 4) = rotTangTwo(2);
     nullspace(8, 5) = rotTangThree(2);
+
+    return nullspace;
   }
   else
   {
+    Core::LinAlg::SerialDenseMatrix nullspace(3, 6);
+
     // rotx-modes
     nullspace(0, 0) = 0.0;
     nullspace(0, 1) = 0.0;
@@ -253,9 +235,9 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::Beam3rType::compute_null_spac
     nullspace(2, 3) = 0.0;
     nullspace(2, 4) = 0.0;
     nullspace(2, 5) = 1.0;
-  }
 
-  return nullspace;
+    return nullspace;
+  }
 }
 
 /*------------------------------------------------------------------------------------------------*

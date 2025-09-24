@@ -97,7 +97,7 @@ namespace Core::FE
 
         Core::LinAlg::SerialDenseMatrix nodalNullspace =
             adjacent_elements[0].user_element()->element_type().compute_null_space(
-                *actnode, x0.data(), localLength, dimns);
+                *actnode, x0.data());
 
         for (int dim = 0; dim < dimns; ++dim)
         {

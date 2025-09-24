@@ -36,7 +36,7 @@ namespace Discret
     {
      public:
       Core::LinAlg::SerialDenseMatrix compute_null_space(
-          Core::Nodes::Node& node, const double* x0, const int numdof, const int dimnsp) override;
+          Core::Nodes::Node& node, const double* x0) override;
 
       Core::Communication::ParObject* create(Core::Communication::UnpackBuffer& buffer) override;
 

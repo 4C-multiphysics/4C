@@ -58,7 +58,7 @@ void Discret::Elements::ConstraintElement3Type::nodal_block_information(
 }
 
 Core::LinAlg::SerialDenseMatrix Discret::Elements::ConstraintElement3Type::compute_null_space(
-    Core::Nodes::Node& node, const double* x0, const int numdof, const int dimnsp)
+    Core::Nodes::Node& node, const double* x0)
 {
   Core::LinAlg::SerialDenseMatrix nullspace;
   FOUR_C_THROW("method ComputeNullSpace not implemented!");

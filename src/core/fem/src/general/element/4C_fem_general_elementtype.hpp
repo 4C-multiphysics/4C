@@ -85,7 +85,7 @@ namespace Core::Elements
 
     /// do the null space computation
     virtual Core::LinAlg::SerialDenseMatrix compute_null_space(
-        Core::Nodes::Node& node, const double* x0, const int numdof, const int dimnsp) = 0;
+        Core::Nodes::Node& node, const double* x0) = 0;
   };
 
 }  // namespace Core::Elements

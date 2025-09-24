@@ -51,7 +51,7 @@ namespace Discret
       void nodal_block_information(Core::Elements::Element* dwele, int& numdf, int& dimns) override;
 
       Core::LinAlg::SerialDenseMatrix compute_null_space(
-          Core::Nodes::Node& node, const double* x0, int const numdof, int const dimnsp) override;
+          Core::Nodes::Node& node, const double* x0) override;
 
       void setup_element_definition(
           std::map<std::string, std::map<Core::FE::CellType, Core::IO::InputSpec>>& definitions)

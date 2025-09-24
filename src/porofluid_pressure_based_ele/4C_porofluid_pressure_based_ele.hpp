@@ -44,7 +44,7 @@ namespace Discret
 
       /// do the null space computation
       Core::LinAlg::SerialDenseMatrix compute_null_space(
-          Core::Nodes::Node& node, const double* x0, const int numdof, const int dimnsp) override;
+          Core::Nodes::Node& node, const double* x0) override;
 
       /// setup the input file input line definitions for this type of element
       void setup_element_definition(
@@ -325,7 +325,7 @@ namespace Discret
       }
 
       Core::LinAlg::SerialDenseMatrix compute_null_space(
-          Core::Nodes::Node& node, const double* x0, const int numdof, const int dimnsp) override
+          Core::Nodes::Node& node, const double* x0) override
       {
         Core::LinAlg::SerialDenseMatrix nullspace;
         FOUR_C_THROW("method ComputeNullSpace not implemented");

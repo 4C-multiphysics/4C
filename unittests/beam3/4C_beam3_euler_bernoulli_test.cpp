@@ -84,11 +84,8 @@ namespace
       nullspace_ref(4, 4) = -0.912870929175277;
       nullspace_ref(5, 3) = 0.866666666666667;
 
-      int numdof, dimnsp;
-
-      testele_->element_type().nodal_block_information(testele_.get(), numdof, dimnsp);
       Core::LinAlg::SerialDenseMatrix nullspace = testele_->element_type().compute_null_space(
-          *testele_->nodes()[0], std::vector{0.0, 0.0, 0.0}.data(), numdof, dimnsp);
+          *testele_->nodes()[0], std::vector{0.0, 0.0, 0.0}.data());
 
       FOUR_C_EXPECT_NEAR(nullspace, nullspace_ref, testTolerance);
     }
@@ -106,11 +103,8 @@ namespace
       nullspace_ref(4, 4) = -0.912870929175277;
       nullspace_ref(5, 3) = 0.866666666666667;
 
-      int numdof, dimnsp;
-
-      testele_->element_type().nodal_block_information(testele_.get(), numdof, dimnsp);
       Core::LinAlg::SerialDenseMatrix nullspace = testele_->element_type().compute_null_space(
-          *testele_->nodes()[0], std::vector{-0.05, 0.05, 0.3}.data(), numdof, dimnsp);
+          *testele_->nodes()[0], std::vector{-0.05, 0.05, 0.3}.data());
 
       FOUR_C_EXPECT_NEAR(nullspace, nullspace_ref, testTolerance);
     }

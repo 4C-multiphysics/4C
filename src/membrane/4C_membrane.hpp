@@ -516,7 +516,7 @@ namespace Discret
       }
 
       Core::LinAlg::SerialDenseMatrix compute_null_space(
-          Core::Nodes::Node& node, const double* x0, const int numdof, const int dimnsp) override
+          Core::Nodes::Node& node, const double* x0) override
       {
         Core::LinAlg::SerialDenseMatrix nullspace;
         FOUR_C_THROW("method ComputeNullSpace not implemented!");
@@ -544,7 +544,7 @@ namespace Discret
       }
 
       Core::LinAlg::SerialDenseMatrix compute_null_space(
-          Core::Nodes::Node& node, const double* x0, const int numdof, const int dimnsp) override
+          Core::Nodes::Node& node, const double* x0) override
       {
         Core::LinAlg::SerialDenseMatrix nullspace;
         FOUR_C_THROW("method ComputeNullSpace not implemented!");

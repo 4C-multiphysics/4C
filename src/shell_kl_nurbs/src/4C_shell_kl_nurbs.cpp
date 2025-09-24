@@ -80,7 +80,7 @@ void Discret::Elements::KirchhoffLoveShellNurbsType::nodal_block_information(
  *
  */
 Core::LinAlg::SerialDenseMatrix Discret::Elements::KirchhoffLoveShellNurbsType::compute_null_space(
-    Core::Nodes::Node& node, const double* x0, int const numdof, int const dimnsp)
+    Core::Nodes::Node& node, const double* x0)
 {
   FOUR_C_THROW("ComputeNullSpace not implemented");
 }

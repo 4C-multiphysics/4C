@@ -49,7 +49,7 @@ namespace Discret
       void nodal_block_information(Core::Elements::Element* dwele, int& numdf, int& dimns) override;
 
       Core::LinAlg::SerialDenseMatrix compute_null_space(
-          Core::Nodes::Node& node, const double* x0, const int numdof, const int dimnsp) override;
+          Core::Nodes::Node& node, const double* x0) override;
 
       void setup_element_definition(
           std::map<std::string, std::map<Core::FE::CellType, Core::IO::InputSpec>>& definitions)
@@ -272,7 +272,7 @@ namespace Discret
       }
 
       Core::LinAlg::SerialDenseMatrix compute_null_space(
-          Core::Nodes::Node& node, const double* x0, const int numdof, const int dimnsp) override
+          Core::Nodes::Node& node, const double* x0) override
       {
         Core::LinAlg::SerialDenseMatrix nullspace;
         FOUR_C_THROW("method ComputeNullSpace not implemented for element type bele3!");

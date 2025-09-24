@@ -161,7 +161,7 @@ int Discret::Elements::Shell7pScatraType::initialize(Core::FE::Discretization& d
 
 
 Core::LinAlg::SerialDenseMatrix Discret::Elements::Shell7pScatraType::compute_null_space(
-    Core::Nodes::Node& node, const double* x0, const int numdof, const int dimnsp)
+    Core::Nodes::Node& node, const double* x0)
 {
   auto* shell =
       dynamic_cast<Discret::Elements::Shell7pScatra*>(node.adjacent_elements()[0].user_element());
