@@ -42,22 +42,18 @@ namespace Core::IO
 
   struct InputFieldRegistry
   {
-    using InitFunction = std::function<void(const Core::LinAlg::Map&)>;
-    struct Data
+    using InitFunction =
+        std::function<void(const std::filesystem::path&, const std::string&, const MPI_Comm&)>;
+    using RedistributeFunction = std::function<void(const Core::LinAlg::Map&)>;
+    struct SetupFunctions
     {
-      //! The file from which the field is read.
-      std::filesystem::path source_file;
-      //! The key under which the field is stored in the source file.
-      std::string key_in_source_file;
-      //! The name of the discretization to which this field belongs.
-      std::string discretization_name;
-
       //! Functions to initialize the field with data from the discretization.
       //! These are type-erased but we know the InputField they operate on, so they can be
       //! unregistered again.
       std::unordered_map<void*, InitFunction> init_functions;
+      std::unordered_map<void*, RedistributeFunction> redistribute_functions;
     };
-    std::unordered_map<std::string, Data> fields;
+    std::unordered_map<std::string, SetupFunctions> fields;
 
     /**
      * @brief Register a reference to a field with the given @p ref_name. Repeated calls with the
@@ -72,7 +68,8 @@ namespace Core::IO
      * @note There should not be any need to call this function directly, as it is used by the
      * InputField internally.
      */
-    void attach_input_field(InputFieldReference ref, InitFunction init, void* field_ptr);
+    void attach_input_field(InputFieldReference ref, InitFunction init,
+        RedistributeFunction redistribute, void* field_ptr);
 
     /**
      * Detach an InputField from a reference @p ref. This will remove the @p field_ptr from the
@@ -132,13 +129,15 @@ namespace Core::IO
     /**
      * Construct an InputField that refers to a centrally registered field. The necessary @p ref
      * may be obtained by calling the InputFieldRegistry::register_field_reference() function.
-     * The resulting InputField will not be usable until the `set_up()` function is called with
-     * the desired target map. When using the global input field registry and 4C's standard main
-     * function this is done automatically.
+     * The resulting InputField will not be usable until the reference is set up and redistributed
+     * with the desired target map. When using the global input field registry and 4C's standard
+     * main function this is done automatically.
      */
     explicit InputField(InputFieldReference ref) : ref_(ref)
     {
-      ref.registry->attach_input_field(ref, std::bind_front(&InputField::set_up, this), this);
+      ref.registry->attach_input_field(ref,
+          std::bind_front(&InputField::initialize_from_file, this),
+          std::bind_front(&InputField::redistribute, this), this);
     }
 
     /**
@@ -153,10 +152,10 @@ namespace Core::IO
     /** @} */
 
     /**
-     * Set up the InputField such that its data is distributed to the given @p target_map.
+     * Redistribute the InputField such that its data is distributed to the given @p target_map.
      * This is a collective operation and must be called on all ranks.
      */
-    void set_up(const Core::LinAlg::Map& target_map);
+    void redistribute(const Core::LinAlg::Map& target_map);
 
     /**
      * Access the value of the field for the given @p element index. The @p element_id
@@ -219,6 +218,25 @@ namespace Core::IO
       map = std::move(new_map);
     }
 
+    /*!
+     * @brief Initialize the InputField from a file.
+     *
+     * @note The data is only read on rank 0. It relies on calling redistribute() later to
+     * distribute the data to their respective ranks.
+     */
+    void initialize_from_file(
+        const std::filesystem::path& source_file, const std::string& key, const MPI_Comm& comm)
+    {
+      auto& map = data_.template emplace<std::unordered_map<IndexType, T>>();
+      if (Core::Communication::my_mpi_rank(comm) == 0)
+      {
+        // Read data on rank 0 and redistribute later
+        IO::read_value_from_yaml(source_file, key, map);
+
+        make_index_zero_based(map);
+      }
+    }
+
     StorageType data_;
 
     //! Reference to the input field registry, if this InputField is a field reference.
@@ -241,7 +259,9 @@ namespace Core::IO
     // If this InputField is a reference, we need to reattach it to the registry.
     if (ref_.registry)
     {
-      ref_.registry->attach_input_field(ref_, std::bind_front(&InputField::set_up, this), this);
+      ref_.registry->attach_input_field(ref_,
+          std::bind_front(&InputField::initialize_from_file, this),
+          std::bind_front(&InputField::redistribute, this), this);
     }
   }
 
@@ -253,7 +273,9 @@ namespace Core::IO
     // If this InputField is a reference, we need to reattach it to the registry.
     if (ref_.registry)
     {
-      ref_.registry->attach_input_field(ref_, std::bind_front(&InputField::set_up, this), this);
+      ref_.registry->attach_input_field(ref_,
+          std::bind_front(&InputField::initialize_from_file, this),
+          std::bind_front(&InputField::redistribute, this), this);
     }
     return *this;
   }
@@ -266,7 +288,9 @@ namespace Core::IO
     if (ref_.registry)
     {
       ref_.registry->detach_input_field(ref_, &other);
-      ref_.registry->attach_input_field(ref_, std::bind_front(&InputField::set_up, this), this);
+      ref_.registry->attach_input_field(ref_,
+          std::bind_front(&InputField::initialize_from_file, this),
+          std::bind_front(&InputField::redistribute, this), this);
     }
   }
 
@@ -280,38 +304,30 @@ namespace Core::IO
     if (ref_.registry)
     {
       ref_.registry->detach_input_field(ref_, &other);
-      ref_.registry->attach_input_field(ref_, std::bind_front(&InputField::set_up, this), this);
+      ref_.registry->attach_input_field(ref_,
+          std::bind_front(&InputField::initialize_from_file, this),
+          std::bind_front(&InputField::redistribute, this), this);
     }
     return *this;
   }
 
 
   template <typename T>
-  void InputField<T>::set_up(const Core::LinAlg::Map& target_map)
+  void InputField<T>::redistribute(const Core::LinAlg::Map& target_map)
   {
-    auto& map = data_.template emplace<std::unordered_map<IndexType, T>>();
+    FOUR_C_ASSERT((std::holds_alternative<std::unordered_map<IndexType, T>>(data_)),
+        "Internal error: We expect that this input field internally holds a map!");
+    auto& map = std::get<std::unordered_map<IndexType, T>>(data_);
+
+    // Generate the source map from the stored map
+    std::vector<int> local_indices;
+    local_indices.reserve(map.size());
+    for (const auto& [index, _] : map)
+    {
+      local_indices.push_back(index);
+    }
 
     MPI_Comm comm = target_map.get_comm();
-
-    if (Core::Communication::my_mpi_rank(comm) == 0)
-    {
-      const auto& data = ref_.registry->fields[ref_.ref_name];
-      const std::filesystem::path source_file = data.source_file;
-      IO::read_value_from_yaml(source_file, data.key_in_source_file, map);
-    }
-
-    make_index_zero_based(map);
-
-    // The source map has all indices on rank 0, all other ranks are empty.
-    std::vector<int> local_indices;
-    if (Core::Communication::my_mpi_rank(comm) == 0)
-    {
-      local_indices.reserve(map.size());
-      for (const auto& [index, _] : map)
-      {
-        local_indices.push_back(index);
-      }
-    }
     Core::LinAlg::Map source_map(-1, local_indices.size(), local_indices.data(), 0, comm);
     Communication::Exporter exporter(source_map, target_map, comm);
     exporter.do_export(map);

@@ -24,7 +24,7 @@ Core::IO::InputFieldReference Core::IO::InputFieldRegistry::register_field_refer
 
 
 void Core::IO::InputFieldRegistry::attach_input_field(
-    InputFieldReference ref, InitFunction init, void* field_ptr)
+    InputFieldReference ref, InitFunction init, RedistributeFunction redistribute, void* field_ptr)
 {
   FOUR_C_ASSERT(ref.registry == this,
       "Internal error: InputFieldReference does not refer to this InputFieldRegistry.");
@@ -32,7 +32,9 @@ void Core::IO::InputFieldRegistry::attach_input_field(
   FOUR_C_ASSERT(fields.contains(ref.ref_name),
       "Internal error: Input field '{}' is not registered.", ref.ref_name);
 
-  fields[ref.ref_name].init_functions[field_ptr] = std::move(init);
+  SetupFunctions& field_ref_data = fields[ref.ref_name];
+  field_ref_data.init_functions[field_ptr] = std::move(init);
+  field_ref_data.redistribute_functions[field_ptr] = std::move(redistribute);
 }
 
 
@@ -48,6 +50,12 @@ void Core::IO::InputFieldRegistry::detach_input_field(InputFieldReference ref, v
   FOUR_C_ASSERT(init_functions.contains(field_ptr),
       "Input field '{}' does not have an init function for the given field pointer.", ref.ref_name);
   init_functions.erase(field_ptr);
+
+  auto& redistribute_functions = fields[ref.ref_name].redistribute_functions;
+  FOUR_C_ASSERT(redistribute_functions.contains(field_ptr),
+      "Input field '{}' does not have a redistribute function for the given field pointer.",
+      ref.ref_name);
+  redistribute_functions.erase(field_ptr);
 }
 
 
