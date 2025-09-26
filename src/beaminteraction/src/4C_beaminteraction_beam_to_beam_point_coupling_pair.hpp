@@ -168,9 +168,12 @@ namespace BeamInteraction
     /**
      * \brief Evaluate the positional coupling terms based on general cross-section kinematics.
      */
-    static std::tuple<Core::LinAlg::Matrix<3, 1>, Core::LinAlg::Matrix<3, 12>,
-        Core::LinAlg::Matrix<12, 3>>
-    evaluate_positional_coupling(const std::array<Core::LinAlg::Matrix<3, 1>, 2>& r);
+    std::tuple<Core::LinAlg::Matrix<3, 1>, Core::LinAlg::Matrix<3, 12>, Core::LinAlg::Matrix<12, 3>,
+        std::array<Core::LinAlg::Matrix<3, 3, double>, 2>>
+    evaluate_positional_coupling(const std::array<Core::LinAlg::Matrix<3, 1>, 2>& r_ref,
+        const std::array<Core::LinAlg::Matrix<3, 1>, 2>& r,
+        const std::array<Core::LinAlg::Matrix<4, 1, double>, 2>& cross_section_quaternion_ref,
+        const std::array<Core::LinAlg::Matrix<4, 1, scalar_type_rot>, 2>& cross_section_quaternion);
 
     /**
      * \brief Evaluate the rotational coupling terms based on general cross-section kinematics.

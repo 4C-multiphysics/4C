@@ -202,8 +202,9 @@ void BeamInteraction::BeamToBeamPointCouplingPair<Beam>::evaluate_and_assemble(
   }
 
   // Positional coupling terms
-  const auto [constraint_position, constraint_position_lin_kinematic,
-      residuum_position_lin_lambda] = evaluate_positional_coupling(r);
+  const auto [constraint_position, constraint_position_lin_kinematic, residuum_position_lin_lambda,
+      evaluation_data_position] = evaluate_positional_coupling(r_ref, r,
+      cross_section_quaternion_ref, cross_section_quaternion);
 
   // Rotational coupling terms
   const auto [constraint_rotation, constraint_rotation_lin_kinematic, residuum_rotation_lin_lambda,
@@ -224,6 +225,21 @@ void BeamInteraction::BeamToBeamPointCouplingPair<Beam>::evaluate_and_assemble(
   Core::LinAlg::Matrix<12, 12> stiffness_position;
   stiffness_position.multiply_nn(residuum_position_lin_lambda, constraint_position_lin_kinematic);
   stiffness_position.scale(penalty_parameter_pos_);
+  for (unsigned int i_beam = 0; i_beam < 2; i_beam++)
+  {
+    Core::LinAlg::Matrix<3, 3, double> skew_lambda;
+    Core::LargeRotations::computespin(skew_lambda, lambda_position);
+    Core::LinAlg::Matrix<3, 3> temp_matrix;
+    temp_matrix.multiply_nn(skew_lambda, evaluation_data_position[i_beam]);
+    for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
+    {
+      for (unsigned int j_dir = 0; j_dir < 3; j_dir++)
+      {
+        stiffness_position(i_dir + 3 + 6 * i_beam, j_dir + 3 + 6 * i_beam) -=
+            temp_matrix(i_dir, j_dir);
+      }
+    }
+  }
   stiffness += stiffness_position;
 
   // Penalty regularization rotations
@@ -285,20 +301,30 @@ void BeamInteraction::BeamToBeamPointCouplingPair<Beam>::evaluate_and_assemble(
  *
  */
 template <typename Beam>
-std::tuple<Core::LinAlg::Matrix<3, 1>, Core::LinAlg::Matrix<3, 12>, Core::LinAlg::Matrix<12, 3>>
+std::tuple<Core::LinAlg::Matrix<3, 1>, Core::LinAlg::Matrix<3, 12>, Core::LinAlg::Matrix<12, 3>,
+    std::array<Core::LinAlg::Matrix<3, 3, double>, 2>>
 BeamInteraction::BeamToBeamPointCouplingPair<Beam>::evaluate_positional_coupling(
-    const std::array<Core::LinAlg::Matrix<3, 1>, 2>& r)
+    const std::array<Core::LinAlg::Matrix<3, 1>, 2>& r_ref,
+    const std::array<Core::LinAlg::Matrix<3, 1>, 2>& r,
+    const std::array<Core::LinAlg::Matrix<4, 1, double>, 2>& cross_section_quaternion_ref,
+    const std::array<Core::LinAlg::Matrix<4, 1, scalar_type_rot>, 2>& cross_section_quaternion)
 {
   // Coupling vectors and matrices
   Core::LinAlg::Matrix<3, 1> constraint_position(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<3, 12> constraint_position_lin_kinematic(Core::LinAlg::Initialization::zero);
   Core::LinAlg::Matrix<12, 3> residuum_position_lin_lambda(Core::LinAlg::Initialization::zero);
+  std::array<Core::LinAlg::Matrix<3, 3, double>, 2> evaluation_data_position;
 
-  // Constraint
+  // Note: If the two points are not at the same position in the reference configuration, then even
+  // for the positional coupling terms there will be contributions to the rotational equilibrium,
+  // i.e., moments. To keep things simple, we first evaluate the terms that will affect the
+  // positional DOFs and then we compute the terms that will affect the rotational DOFs.
+
+  // Constraint (pure positional terms)
   constraint_position = r[1];
   constraint_position -= r[0];
 
-  // Linearizations
+  // Linearizations (pure positional terms)
   for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
   {
     constraint_position_lin_kinematic(i_dir, i_dir) = -1.0;
@@ -308,7 +334,60 @@ BeamInteraction::BeamToBeamPointCouplingPair<Beam>::evaluate_positional_coupling
     residuum_position_lin_lambda(6 + i_dir, i_dir) = 1.0;
   }
 
-  return {constraint_position, constraint_position_lin_kinematic, residuum_position_lin_lambda};
+  // Terms arising due to non matching points in the reference configurtaion.
+  {
+    // Evaluate reference offset in the material and spatial frames.
+    Core::LinAlg::Matrix<3, 1, double> director_21_ref_spatial = r_ref[1];
+    director_21_ref_spatial -= r_ref[0];
+    std::array<Core::LinAlg::Matrix<3, 1, double>, 2> director_21_ref_material;
+    for (unsigned int i_beam = 0; i_beam < 2; i_beam++)
+    {
+      Core::LinAlg::Matrix<3, 3, double> rotation_matrix;
+      Core::LargeRotations::quaterniontotriad(
+          cross_section_quaternion_ref[i_beam], rotation_matrix);
+      director_21_ref_material[i_beam].multiply_tn(rotation_matrix, director_21_ref_spatial);
+    }
+
+    // Add to constraint vector.
+    // We add a half of the reference offset vector in each frame of the two beams. By doing it this
+    // way, we obtain a coupling formulation invariant to the ordering of the cross-sections in this
+    // pair.
+    std::array<Core::LinAlg::Matrix<3, 1, double>, 2> director_21_spatial_half;
+    for (unsigned int i_beam = 0; i_beam < 2; i_beam++)
+    {
+      Core::LinAlg::Matrix<3, 3, double> rotation_matrix;
+      Core::LargeRotations::quaterniontotriad(
+          Core::FADUtils::cast_to_double(cross_section_quaternion[i_beam]), rotation_matrix);
+      director_21_spatial_half[i_beam].multiply_nn(
+          rotation_matrix, director_21_ref_material[i_beam]);
+      director_21_spatial_half[i_beam].scale(0.5);
+      constraint_position -= director_21_spatial_half[i_beam];
+    }
+
+    // Add the linearizations of the previous constraint terms.
+    for (unsigned int i_beam = 0; i_beam < 2; i_beam++)
+    {
+      Core::LinAlg::Matrix<3, 3, double> skew_director_21_spatial_half;
+      Core::LargeRotations::computespin(
+          skew_director_21_spatial_half, director_21_spatial_half[i_beam]);
+      evaluation_data_position[i_beam] = skew_director_21_spatial_half;
+
+      for (unsigned int i_dir = 0; i_dir < 3; i_dir++)
+      {
+        for (unsigned int j_dir = 0; j_dir < 3; j_dir++)
+        {
+          constraint_position_lin_kinematic(i_dir, j_dir + 3 + 6 * i_beam) +=
+              skew_director_21_spatial_half(i_dir, j_dir);
+
+          residuum_position_lin_lambda(j_dir + 3 + 6 * i_beam, i_dir) -=
+              skew_director_21_spatial_half(j_dir, i_dir);
+        }
+      }
+    }
+  }
+
+  return {constraint_position, constraint_position_lin_kinematic, residuum_position_lin_lambda,
+      evaluation_data_position};
 }
 
 /**
