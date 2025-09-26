@@ -671,6 +671,7 @@ namespace Core::IO
       constant,
       from_file,
       field_reference,
+      from_mesh,
     };
 
     template <typename T>
@@ -696,6 +697,15 @@ namespace Core::IO
               {
                 T data = in.get<T>("constant");
                 auto field = IO::InputField<T>(data);
+                return store(out, std::move(field));
+                break;
+              }
+              case InputFieldType::from_mesh:
+              {
+                const auto& array_name = in.get<std::string>("from_mesh");
+                MeshDataReference ref =
+                    global_mesh_data_input_field_registry().register_field_reference(array_name);
+                auto field = IO::InputField<T>(ref);
                 return store(out, std::move(field));
                 break;
               }
@@ -2687,6 +2697,8 @@ Core::IO::InputSpec Core::IO::InputSpecBuilders::input_field(
           parameter<T>("constant", {.description = "Constant value for the field."}),
           parameter<std::filesystem::path>(
               "from_file", {.description = "Path to a file containing the input field data."}),
+          parameter<std::string>("from_mesh",
+              {.description = "Refer to a field defined in the input mesh by a name."}),
           parameter<std::string>(
               "field_reference", {.description = "Refer to a globally defined field by a name."}),
       },

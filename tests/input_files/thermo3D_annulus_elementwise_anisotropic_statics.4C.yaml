@@ -37,8 +37,10 @@ MATERIALS:
 fields:
   - name: spatially_varying_conductivity
     discretization: "thermo"
-    file: conductivity_input_field.json
-    key: "CONDUCT"
+    source:
+      separate_file:
+        file: conductivity_input_field.json
+        key: "CONDUCT"
 
 FUNCT1:
   - COMPONENT: 0
