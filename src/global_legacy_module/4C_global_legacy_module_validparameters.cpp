@@ -50,6 +50,7 @@
 #include "4C_inpar_wear.hpp"
 #include "4C_inpar_xfem.hpp"
 #include "4C_io_gridgenerator.hpp"
+#include "4C_io_input_field.hpp"
 #include "4C_io_input_file_utils.hpp"
 #include "4C_io_input_spec_builders.hpp"
 #include "4C_io_mesh.hpp"
@@ -216,21 +217,56 @@ std::vector<Core::IO::InputSpec> Global::valid_parameters()
     add_knotvector_section(specs, field);
   }
 
+  const auto describe = [](Core::IO::FieldDataBasis basis) -> std::string
+  {
+    switch (basis)
+    {
+      case Core::IO::FieldDataBasis::cells:
+        return "Field data is defined on the cells";
+      default:
+        FOUR_C_THROW("Unknown FieldDataBasis enum value");
+    }
+  };
+
   specs.push_back(list("fields",
-      all_of({
-          parameter<std::string>("name",
-              {.description =
-                      "Name of the field. This is used to refer to the field in other places. "
-                      "It is recommended to choose a descriptive name. The name must be unique "
-                      "across all fields."}),
+      all_of({parameter<std::string>("name",
+                  {.description =
+                          "Name of the field. This is used to refer to the field in other places. "
+                          "It is recommended to choose a descriptive name. The name must be unique "
+                          "across all fields."}),
           parameter<std::string>("discretization",
               {.description = "Name of the discretization to which this field belongs."}),
-          parameter<std::filesystem::path>(
-              "file", {.description = "(Relative) path to the file containing the field data."}),
-          parameter<std::optional<std::string>>("key",
-              {.description = "The key under which the field data is stored in the file. "
-                              "If not specified, the key is assumed to be equal to the name."}),
-      }),
+          selection<Core::IO::InputFieldSource>("source",
+              {
+                  group("separate_file",
+                      {all_of({
+                          parameter<std::filesystem::path>(
+                              "file", {.description = "(Relative) path to the file containing "
+                                                      "the field data."}),
+                          parameter<std::optional<std::string>>("key",
+                              {.description =
+                                      "The key under which the field data is stored in the "
+                                      "file. "
+                                      "If not specified, the key is assumed to be equal to the "
+                                      "name."}),
+                      })},
+                      {.description = "Read the field data from a separate json file."}),
+                  group("from_mesh",
+                      {all_of({
+                          parameter<Core::IO::FieldDataBasis>("basis",
+                              {.description = "The basis on which the field data is defined.",
+                                  .enum_value_description = describe}),
+                          parameter<std::optional<std::string>>("key",
+                              {.description =
+                                      "The key under which the field data is stored in the "
+                                      "mesh. "
+                                      "If not specified, the key is assumed to be equal to the "
+                                      "name."}),
+                      })},
+                      {.description = "Read the field data from the mesh file."}),
+              },
+              {.description = "Source of the input field data.",
+                  .store_selector = in_container<Core::IO::InputFieldSource>("source")})}),
       {
           .description = "Define a field that can be used in the simulation. "
                          "You can refer to a field by its name in other places.",

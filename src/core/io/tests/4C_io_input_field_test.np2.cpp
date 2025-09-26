@@ -57,7 +57,10 @@ namespace
 
           // This needs to be done by some global input post-processing step.
           // The information can come from a section that defines all the fields.
-          data.init_functions.begin()->second(input_field_file, "CONDUCT", MPI_COMM_WORLD);
+          if (Core::Communication::my_mpi_rank(MPI_COMM_WORLD) == 0)
+          {
+            data.init_functions.begin()->second(input_field_file, "CONDUCT");
+          }
 
           auto& redistribute_function = data.redistribute_functions.begin()->second;
 
