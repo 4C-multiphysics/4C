@@ -194,6 +194,19 @@ void Core::LinearSolver::MueLuPreconditioner::setup(Core::LinAlg::SparseOperator
           Teuchos::rcp_dynamic_cast<const Xpetra::Map<LO, GO, NO>>(x_slave_dof_map, true));
     }
 
+    if (muelulist_.sublist("Belos Parameters").isParameter("Interface DualNodeID to PrimalNodeID"))
+    {
+      Teuchos::RCP<std::map<LO, LO>> dual2primal_map =
+          muelulist_.sublist("Belos Parameters")
+              .get<Teuchos::RCP<std::map<LO, LO>>>("Interface DualNodeID to PrimalNodeID");
+
+      if (dual2primal_map.is_null())
+        FOUR_C_THROW("'Interface DualNodeID to PrimalNodeID' map is not available!");
+
+      H_->GetLevel(0)->Set("DualNodeID2PrimalNodeID",
+          Teuchos::rcp_dynamic_cast<std::map<int, int>>(dual2primal_map, true));
+    }
+
     mueLuFactory.SetupHierarchy(*H_);
     P_ = Teuchos::make_rcp<MueLu::EpetraOperator>(H_);
   }
