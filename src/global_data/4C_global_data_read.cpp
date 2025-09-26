@@ -1472,7 +1472,7 @@ namespace
     {
       if (const auto* external_mesh = mesh_reader.get_external_mesh_on_rank_zero(); external_mesh)
       {
-        const auto& node_sets_from_mesh = external_mesh->point_sets;
+        const auto& node_sets_from_mesh = external_mesh->point_sets();
         for (const auto& [id, node_set] : node_sets_from_mesh)
         {
           const auto& set = node_set.point_ids;
@@ -1498,7 +1498,7 @@ namespace
     {
       if (const auto* external_mesh = mesh_reader.get_external_mesh_on_rank_zero(); external_mesh)
       {
-        for (const auto& [id, eb] : external_mesh->cell_blocks)
+        for (const auto& [id, eb] : external_mesh->cell_blocks())
         {
           std::set<int> nodes;
           for (const auto& cell : eb.cells())

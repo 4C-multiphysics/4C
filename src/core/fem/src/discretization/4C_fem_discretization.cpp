@@ -115,7 +115,7 @@ void Core::FE::Discretization::fill_from_mesh(
     Core::Elements::ElementDefinition element_definition;
 
     unsigned ele_count = 0;
-    for (const auto& [eb_id, eb] : mesh.cell_blocks)
+    for (const auto& [eb_id, eb] : mesh.cell_blocks())
     {
       // Remove this once we support pure geometry meshes without user elements
       if (!eb.specific_data) continue;
@@ -147,7 +147,7 @@ void Core::FE::Discretization::fill_from_mesh(
     // Now add all the nodes to the discretization on rank 0. They are distributed later during
     // the rebalancing process.
     int id = 0;
-    for (const auto& point : mesh.points)
+    for (const auto& point : mesh.points())
     {
       // Discard additional coordinates but only if they are zero.
       for (auto i = point.size() - 1; i >= n_dim_; --i)

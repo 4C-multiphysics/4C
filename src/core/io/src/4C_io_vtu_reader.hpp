@@ -30,9 +30,9 @@ namespace Core::IO::VTU
    *    only contain elements of the same cell-type.
    *
    * @param vtu_file (in) : Path to the file
-   * @return Core::IO::MeshInput::Mesh
+   * @return Core::IO::MeshInput::RawMesh
    */
-  Core::IO::MeshInput::Mesh<3> read_vtu_file(const std::filesystem::path& vtu_file);
+  Core::IO::MeshInput::RawMesh<3> read_vtu_file(const std::filesystem::path& vtu_file);
 }  // namespace Core::IO::VTU
 
 FOUR_C_NAMESPACE_CLOSE

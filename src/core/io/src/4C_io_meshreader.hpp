@@ -29,7 +29,7 @@ namespace Core::IO
   namespace MeshInput
   {
     template <unsigned dim>
-    struct Mesh;
+    class Mesh;
   }
 
   namespace Internal

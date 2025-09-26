@@ -47,7 +47,7 @@ namespace Core::Utils
     /**
      * Construct non-owning view on @p ptr.
      */
-    OwnerOrView(T* ptr) : obj_(ptr, [](T*) {}) {}
+    explicit OwnerOrView(T* ptr) : obj_(ptr, [](T*) {}) {}
 
     /**
      * Const-propagating dereference operator.
@@ -68,6 +68,14 @@ namespace Core::Utils
      * Non-const pointer operator.
      */
     T* operator->() { return obj_.get(); }
+
+    /**
+     * Get the raw pointer to the object.
+     *
+     * @note This function does not propagate constness and instead follows the constness of the
+     * type T. This is consistent with std::unique_ptr<T>::get().
+     */
+    T* get() const { return obj_.get(); }
 
    private:
     /**

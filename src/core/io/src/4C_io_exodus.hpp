@@ -18,7 +18,7 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace Core::IO::Exodus
 {
-  MeshInput::Mesh<3> read_exodus_file(const std::filesystem::path& exodus_file);
+  MeshInput::RawMesh<3> read_exodus_file(const std::filesystem::path& exodus_file);
 }  // namespace Core::IO::Exodus
 
 FOUR_C_NAMESPACE_CLOSE

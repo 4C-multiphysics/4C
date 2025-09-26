@@ -338,12 +338,12 @@ namespace
   }
 }  // namespace
 
-Core::IO::MeshInput::Mesh<3> Core::IO::VTU::read_vtu_file(const std::filesystem::path& vtu_file)
+Core::IO::MeshInput::RawMesh<3> Core::IO::VTU::read_vtu_file(const std::filesystem::path& vtu_file)
 {
   FOUR_C_ASSERT_ALWAYS(
       std::filesystem::exists(vtu_file), "File {} does not exist.", vtu_file.string());
 
-  Core::IO::MeshInput::Mesh<3> mesh{};
+  Core::IO::MeshInput::RawMesh<3> mesh{};
 
   // Read the VTU file
   vtkSmartPointer<vtkXMLUnstructuredGridReader> reader =
@@ -445,11 +445,12 @@ Core::IO::MeshInput::Mesh<3> Core::IO::VTU::read_vtu_file(const std::filesystem:
     }
   }
 
+  MeshInput::assert_valid(mesh);
   return mesh;
 }
 
 #else
-Core::IO::MeshInput::Mesh<3> Core::IO::VTU::read_vtu_file(const std::filesystem::path& vtu_file)
+Core::IO::MeshInput::RawMesh<3> Core::IO::VTU::read_vtu_file(const std::filesystem::path& vtu_file)
 {
   FOUR_C_THROW(
       "You have to enable VTK to support vtu mesh file input. Reconfigure 4C with the CMake option "

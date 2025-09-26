@@ -23,7 +23,7 @@ namespace
   using namespace FourC;
 
   template <Core::FE::CellType celltype, unsigned dim>
-  double evaluate_jacobian_determinant(Core::IO::MeshInput::Mesh<3>& mesh,
+  double evaluate_jacobian_determinant(Core::IO::MeshInput::RawMesh<3>& mesh,
       std::span<const int> connectivities, const Core::LinAlg::Tensor<double, dim>& xi)
   {
     Core::Elements::ElementNodes<celltype, dim> element_nodes;
@@ -48,7 +48,7 @@ namespace
     GTEST_SKIP() << "Skipping test: 4C vtu-input requires VTK support";
 #endif
     constexpr auto celltype = Core::FE::CellType::hex8;
-    Core::IO::MeshInput::Mesh<3> mesh =
+    Core::IO::MeshInput::RawMesh<3> mesh =
         Core::IO::VTU::read_vtu_file(TESTING::get_support_file_path("test_files/vtu/hex8.vtu"));
 
     EXPECT_EQ(mesh.cell_blocks.size(), 2);
@@ -71,7 +71,7 @@ namespace
 #ifndef FOUR_C_WITH_VTK
     GTEST_SKIP() << "Skipping test: 4C vtu-input requires VTK support";
 #endif
-    Core::IO::MeshInput::Mesh<3> mesh = Core::IO::VTU::read_vtu_file(
+    Core::IO::MeshInput::RawMesh<3> mesh = Core::IO::VTU::read_vtu_file(
         TESTING::get_support_file_path("test_files/vtu/hex8_point_data.vtu"));
 
     ASSERT_EQ(mesh.points.size(), 16);
@@ -184,7 +184,7 @@ namespace
 #ifndef FOUR_C_WITH_VTK
     GTEST_SKIP() << "Skipping test: 4C vtu-input requires VTK support";
 #endif
-    Core::IO::MeshInput::Mesh<3> mesh = Core::IO::VTU::read_vtu_file(
+    Core::IO::MeshInput::RawMesh<3> mesh = Core::IO::VTU::read_vtu_file(
         TESTING::get_support_file_path("test_files/vtu/hex8_cell_data.vtu"));
 
     ASSERT_EQ(mesh.cell_blocks.size(), 2);
@@ -294,7 +294,7 @@ namespace
     GTEST_SKIP() << "Skipping test: 4C vtu-input requires VTK support";
 #endif
     constexpr auto celltype = Core::FE::CellType::hex20;
-    Core::IO::MeshInput::Mesh<3> mesh =
+    Core::IO::MeshInput::RawMesh<3> mesh =
         Core::IO::VTU::read_vtu_file(TESTING::get_support_file_path("test_files/vtu/hex20.vtu"));
 
     EXPECT_EQ(mesh.cell_blocks.size(), 2);
@@ -318,7 +318,7 @@ namespace
     GTEST_SKIP() << "Skipping test: 4C vtu-input requires VTK support";
 #endif
     constexpr auto celltype = Core::FE::CellType::hex27;
-    Core::IO::MeshInput::Mesh<3> mesh =
+    Core::IO::MeshInput::RawMesh<3> mesh =
         Core::IO::VTU::read_vtu_file(TESTING::get_support_file_path("test_files/vtu/hex27.vtu"));
 
     EXPECT_EQ(mesh.cell_blocks.size(), 2);
@@ -343,7 +343,7 @@ namespace
     GTEST_SKIP() << "Skipping test: 4C vtu-input requires VTK support";
 #endif
     constexpr auto celltype = Core::FE::CellType::tet4;
-    Core::IO::MeshInput::Mesh<3> mesh =
+    Core::IO::MeshInput::RawMesh<3> mesh =
         Core::IO::VTU::read_vtu_file(TESTING::get_support_file_path("test_files/vtu/tet4.vtu"));
 
     EXPECT_EQ(mesh.cell_blocks.size(), 1);
@@ -375,7 +375,7 @@ namespace
     GTEST_SKIP() << "Skipping test: 4C vtu-input requires VTK support";
 #endif
     constexpr auto celltype = Core::FE::CellType::tet10;
-    Core::IO::MeshInput::Mesh<3> mesh =
+    Core::IO::MeshInput::RawMesh<3> mesh =
         Core::IO::VTU::read_vtu_file(TESTING::get_support_file_path("test_files/vtu/tet10.vtu"));
 
     EXPECT_EQ(mesh.cell_blocks.size(), 1);
@@ -408,7 +408,7 @@ namespace
     GTEST_SKIP() << "Skipping test: 4C vtu-input requires VTK support";
 #endif
     constexpr auto celltype = Core::FE::CellType::wedge6;
-    Core::IO::MeshInput::Mesh<3> mesh =
+    Core::IO::MeshInput::RawMesh<3> mesh =
         Core::IO::VTU::read_vtu_file(TESTING::get_support_file_path("test_files/vtu/wedge6.vtu"));
 
     EXPECT_EQ(mesh.cell_blocks.size(), 1);
@@ -431,7 +431,7 @@ namespace
     GTEST_SKIP() << "Skipping test: 4C vtu-input requires VTK support";
 #endif
     constexpr auto celltype = Core::FE::CellType::wedge15;
-    Core::IO::MeshInput::Mesh<3> mesh =
+    Core::IO::MeshInput::RawMesh<3> mesh =
         Core::IO::VTU::read_vtu_file(TESTING::get_support_file_path("test_files/vtu/wedge15.vtu"));
 
     EXPECT_EQ(mesh.cell_blocks.size(), 1);
@@ -454,7 +454,7 @@ namespace
     GTEST_SKIP() << "Skipping test: 4C vtu-input requires VTK support";
 #endif
     constexpr auto celltype = Core::FE::CellType::pyramid5;
-    Core::IO::MeshInput::Mesh<3> mesh =
+    Core::IO::MeshInput::RawMesh<3> mesh =
         Core::IO::VTU::read_vtu_file(TESTING::get_support_file_path("test_files/vtu/pyramid5.vtu"));
 
     EXPECT_EQ(mesh.cell_blocks.size(), 1);

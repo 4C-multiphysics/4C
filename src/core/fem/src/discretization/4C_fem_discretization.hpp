@@ -80,7 +80,7 @@ namespace Core::IO
   namespace MeshInput
   {
     template <unsigned dim>
-    struct Mesh;
+    class Mesh;
   }  // namespace MeshInput
 
   class DiscretizationWriter;
