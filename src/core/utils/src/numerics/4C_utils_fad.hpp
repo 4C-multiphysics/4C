@@ -266,6 +266,105 @@ namespace Core::FADUtils
     static double apply(const int n, const int i, const double x) { return x; }
   };
 
+  /**
+   * \brief Get the depth of a possibly nested FAD scalar type.
+   */
+  template <class ScalarType>
+  constexpr std::size_t get_nested_fad_type_depth()
+  {
+    if constexpr (Sacado::IsADType<ScalarType>::value)
+    {
+      using Inner = typename Sacado::ValueType<ScalarType>::type;
+      return 1 + get_nested_fad_type_depth<Inner>();
+    }
+    else
+    {
+      return 0;
+    }
+  }
+
+  /**
+   * \brief Store the information needed to remap the indices of FAD derivatives.
+   */
+  struct RemapInformation
+  {
+    //! Map the local IDs of the incoming FAD type to the local IDs of the outgoing type.
+    std::vector<int> old_local_id_to_new_local_id_;
+
+    //! New derivative space length for this level. This is needed to correctly initialize the
+    //! remapped variables.
+    int n_dependent_variables_;
+  };
+
+  namespace Internal
+  {
+    /**
+     * \brief Internal implementation to convert a FAD variable to a different ordering of the
+     * dependent indices.
+     */
+    template <class ScalarTypeOut, class ScalarTypeIn>
+    ScalarTypeOut remap_fad_ordering_internal(
+        const ScalarTypeIn& x_in, const std::vector<RemapInformation>& plan, std::size_t level)
+    {
+      if constexpr (!Sacado::IsADType<ScalarTypeOut>::value &&
+                    !Sacado::IsADType<ScalarTypeIn>::value)
+      {
+        // We are at the end, simply return the value
+        return x_in;
+      }
+      else if constexpr (Sacado::IsADType<ScalarTypeOut>::value &&
+                         Sacado::IsADType<ScalarTypeIn>::value)
+      {
+        using ScalarTypeOutInner = typename Sacado::ValueType<ScalarTypeOut>::type;
+        const auto& current_plan = plan[level];
+
+        // Remap the value
+        const ScalarTypeOutInner out_inner_val =
+            remap_fad_ordering_internal<ScalarTypeOutInner>(x_in.val(), plan, level + 1);
+
+        // Construct the out variable
+        const int number_of_incoming_dependent_variables = x_in.size();
+        if (number_of_incoming_dependent_variables == 0)
+        {
+          return ScalarTypeOut(out_inner_val);
+        }
+        else
+        {
+          ScalarTypeOut x_out(current_plan.n_dependent_variables_, out_inner_val);
+
+          // Remap the derivatives
+          for (int i_local_old = 0; i_local_old < x_in.size(); i_local_old++)
+          {
+            const int i_local_new = current_plan.old_local_id_to_new_local_id_[i_local_old];
+            x_out.fastAccessDx(i_local_new) = remap_fad_ordering_internal<ScalarTypeOutInner>(
+                x_in.fastAccessDx(i_local_old), plan, level + 1);
+          }
+
+          return x_out;
+        }
+      }
+      else
+      {
+        static_assert(false,
+            "ScalarTypeOut and ScalarTypeIn must both be AD types (same nesting pattern) at each "
+            "level");
+      }
+    }
+  }  // namespace Internal
+
+  /**
+   * @brief Convert a FAD variable to a different ordering of the dependent indices.
+   * @param x_in The input variable where we want to remapp the indices of the dependent variables,
+   * i.e., the derivatives.
+   * @param remapping This structure defines how the remapping is done.
+   */
+  template <class ScalarTypeOut, class ScalarTypeIn>
+  ScalarTypeOut remap_fad_ordering(const ScalarTypeIn& x_in, const RemapInformation& remapping)
+  {
+    return Internal::remap_fad_ordering_internal<ScalarTypeOut>(x_in,
+        std::vector<RemapInformation>{get_nested_fad_type_depth<ScalarTypeOut>(), remapping}, 0);
+  }
+
 }  // namespace Core::FADUtils
 
 FOUR_C_NAMESPACE_CLOSE
