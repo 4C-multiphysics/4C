@@ -32,7 +32,7 @@ import matplotlib as mpl
 from scipy.spatial import ConvexHull
 import numpy as np
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-from element import defineElements
+from four_c_documentation.element import defineElements
 from pathlib import Path, PurePath
 from sys import argv, exit
 import argparse

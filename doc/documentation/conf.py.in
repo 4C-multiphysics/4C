@@ -6,16 +6,11 @@
 
 # -- Path setup --------------------------------------------------------------
 
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
 import sys
 import os
-# sys.path.append(os.path.abspath('.../site-packages/sphinx/ext'))
 # Include our own python helper modules
-sys.path.append('@PROJECT_SOURCE_DIR@/doc/documentation/python')
-import plot
-import include_yaml
+import four_c_documentation.plot
+import four_c_documentation.include_yaml
 
 
 

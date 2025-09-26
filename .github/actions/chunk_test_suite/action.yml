@@ -46,8 +46,8 @@ runs:
         ctest --show-only=json-v1 --test-dir $BUILD_DIRECTORY > 4C_ctest_suite_summary.json
         python -m venv venv
         . venv/bin/activate
-        pip install junitparser==3.2.0
-        TEST_CHUNKS=`python .github/actions/chunk_test_suite/chunk_test_suite.py -c $NUMBER_OF_CHUNKS $JUNIT_REPORT_FLAG 4C_ctest_suite_summary.json`
+        pip install -e /utilities/four_c_python[build]
+        TEST_CHUNKS=`chunk-test-suite -c $NUMBER_OF_CHUNKS $JUNIT_REPORT_FLAG 4C_ctest_suite_summary.json`
         echo "Test chunks: $TEST_CHUNKS"
         echo "chunk_array=$TEST_CHUNKS" >> $GITHUB_OUTPUT
       env:

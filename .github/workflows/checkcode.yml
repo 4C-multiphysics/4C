@@ -44,11 +44,13 @@ jobs:
           build-directory: ${{ github.workspace }}/../clang-tidy-build
       - name: Run Clang-tidy on codebase
         run: |
+          ./utilities/set_up_dev_env.sh
+          source ./utilities/python-venv/bin/activate
           cd $GITHUB_WORKSPACE/../clang-tidy-build
           mkdir -p clang-tidy-issues
           ESCAPED_PROJECT_DIR=$(echo "${GITHUB_WORKSPACE}" | sed 's/\//\\\//g')
-          python ${GITHUB_WORKSPACE}/utilities/clang_tidy/filter_config.py ${GITHUB_WORKSPACE}/.clang-tidy .clang-tidy-filtered
-          run-clang-tidy -j `nproc` -config-file .clang-tidy-filtered -use-color -p . -export-fixes ./clang-tidy-issues/ -header-filter "${ESCAPED_PROJECT_DIR}\/.*" 2>&1 | python ${GITHUB_WORKSPACE}/utilities/clang_tidy/filter_output.py
+          clang-tidy-filter-config ${GITHUB_WORKSPACE}/.clang-tidy .clang-tidy-filtered
+          run-clang-tidy -j `nproc` -config-file .clang-tidy-filtered -use-color -p . -export-fixes ./clang-tidy-issues/ -header-filter "${ESCAPED_PROJECT_DIR}\/.*" 2>&1 | clang-tidy-filter-output
 
   verify-headers:
     runs-on: ubuntu-latest
