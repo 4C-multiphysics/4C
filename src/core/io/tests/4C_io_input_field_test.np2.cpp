@@ -53,18 +53,20 @@ namespace
       {
         if (ref_name == "conduct_ref_name")
         {
-          EXPECT_FALSE(data.init_functions.empty());
+          EXPECT_FALSE(data.redistribute_functions.empty());
 
           // This needs to be done by some global input post-processing step.
           // The information can come from a section that defines all the fields.
-          data.key_in_source_file = "CONDUCT";
-          data.source_file = input_field_file;
+          if (Core::Communication::my_mpi_rank(MPI_COMM_WORLD) == 0)
+          {
+            data.init_functions.begin()->second(input_field_file, "CONDUCT");
+          }
 
-          auto& init_function = data.init_functions.begin()->second;
+          auto& redistribute_function = data.redistribute_functions.begin()->second;
 
           ASSERT_EQ(Core::Communication::num_mpi_ranks(MPI_COMM_WORLD), 2);
           Core::LinAlg::Map target_map(4, 2, 0, MPI_COMM_WORLD);
-          init_function(target_map);
+          redistribute_function(target_map);
         }
       }
 

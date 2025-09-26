@@ -96,7 +96,7 @@ void setup_global_problem(Core::IO::InputFile& input_file, const CommandlineArgu
   // and add it to the (derived) nurbs discretization
   Global::read_knots(*problem, input_file);
 
-  Global::read_fields(*problem, input_file);
+  Global::read_fields(*problem, input_file, *mesh_reader);
 }
 
 double walltime_in_seconds()

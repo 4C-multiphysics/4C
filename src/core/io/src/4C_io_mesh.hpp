@@ -13,8 +13,10 @@
 #include "4C_fem_general_cell_type_traits.hpp"
 #include "4C_io_input_parameter_container.hpp"
 #include "4C_linalg_symmetric_tensor.hpp"
+#include "4C_utils_demangle.hpp"
 #include "4C_utils_exceptions.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <map>
 #include <ranges>
@@ -261,6 +263,55 @@ namespace Core::IO::MeshInput
    * )
    */
   void print(const PointSet& point_set, std::ostream& os, VerbosityLevel verbose);
+
+
+  /*!
+   * @brief Reads in a map with value_type @p T from the element data of the given @p mesh.
+   *
+   * @throws if the element data is not found in at least one of the element blocks or if the type
+   * of the element data is not implicitly convertible to the expected type.
+   */
+  template <typename IndexType, typename T, unsigned dim>
+    requires(std::is_integral_v<IndexType>)
+  void read_value_from_element_data(
+      const Mesh<dim>& mesh, const std::string& key, std::unordered_map<IndexType, T>& value)
+  {
+    unsigned ele_id = 0;
+    for (const auto& [block_id, block] : mesh.cell_blocks)
+    {
+      // This block is not part of any physics, hence ignore it
+      if (!block.specific_data) continue;
+
+      FOUR_C_ASSERT_ALWAYS(block.cell_data.contains(key),
+          "The element block {} does not contain element data with the name '{}'.", block_id, key);
+
+      if (!block.cell_data.contains(key)) continue;
+
+      const FieldDataVariantType<dim>& data = block.cell_data.at(key);
+
+      std::visit(
+          [&](const auto& data)
+          {
+            using Type = std::decay_t<decltype(data)>::value_type;
+            if constexpr (!std::is_convertible_v<Type, T>)
+            {
+              FOUR_C_THROW(
+                  "Element data with name '{}' has type '{}' which is not convertible to "
+                  "the target type '{}'.",
+                  key, Core::Utils::try_demangle(typeid(Type).name()),
+                  Core::Utils::try_demangle(typeid(T).name()));
+            }
+            else
+            {
+              for (const auto& v : data)
+              {
+                value[ele_id++] = static_cast<T>(v);
+              }
+            }
+          },
+          data);
+    }
+  }
 }  // namespace Core::IO::MeshInput
 
 FOUR_C_NAMESPACE_CLOSE

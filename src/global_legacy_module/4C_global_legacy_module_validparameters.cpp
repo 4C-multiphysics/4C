@@ -217,20 +217,39 @@ std::vector<Core::IO::InputSpec> Global::valid_parameters()
   }
 
   specs.push_back(list("fields",
-      all_of({
-          parameter<std::string>("name",
-              {.description =
-                      "Name of the field. This is used to refer to the field in other places. "
-                      "It is recommended to choose a descriptive name. The name must be unique "
-                      "across all fields."}),
+      all_of({parameter<std::string>("name",
+                  {.description =
+                          "Name of the field. This is used to refer to the field in other places. "
+                          "It is recommended to choose a descriptive name. The name must be unique "
+                          "across all fields."}),
           parameter<std::string>("discretization",
               {.description = "Name of the discretization to which this field belongs."}),
-          parameter<std::filesystem::path>(
-              "file", {.description = "(Relative) path to the file containing the field data."}),
-          parameter<std::optional<std::string>>("key",
-              {.description = "The key under which the field data is stored in the file. "
-                              "If not specified, the key is assumed to be equal to the name."}),
-      }),
+          selection<Core::IO::InputFieldSource>("source",
+              {
+                  group("separate_file",
+                      {all_of({
+                          parameter<std::filesystem::path>(
+                              "file", {.description = "(Relative) path to the file containing "
+                                                      "the field data."}),
+                          parameter<std::optional<std::string>>("key",
+                              {.description =
+                                      "The key under which the field data is stored in the "
+                                      "file. "
+                                      "If not specified, the key is assumed to be equal to the "
+                                      "name."}),
+                      })}),
+                  group("from_mesh",
+                      {all_of({
+                          parameter<std::optional<std::string>>("key",
+                              {.description =
+                                      "The key under which the field data is stored in the "
+                                      "mesh. "
+                                      "If not specified, the key is assumed to be equal to the "
+                                      "name."}),
+                      })}),
+              },
+              {.description = "Source of the input field data.",
+                  .store_selector = in_container<Core::IO::InputFieldSource>("source")})}),
       {
           .description = "Define a field that can be used in the simulation. "
                          "You can refer to a field by its name in other places.",
