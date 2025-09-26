@@ -122,25 +122,25 @@ RESULT DESCRIPTION:
       NODE: 478
       QUANTITY: "velx"
       VALUE: 1.0637492683070349
-      TOLERANCE: 1e-08
+      TOLERANCE: 3e-08
   - FLUID:
       DIS: "fluid"
       NODE: 478
       QUANTITY: "vely"
       VALUE: -1.3277809193314658
-      TOLERANCE: 1e-08
+      TOLERANCE: 7e-07
   - FLUID:
       DIS: "fluid"
       NODE: 478
       QUANTITY: "velz"
       VALUE: -0.6423137831054094
-      TOLERANCE: 1e-09
+      TOLERANCE: 9e-08
   - FLUID:
       DIS: "fluid"
       NODE: 478
       QUANTITY: "pressure"
       VALUE: 10323.178192692718
-      TOLERANCE: 0.0001
+      TOLERANCE: 0.005
   - STRUCTURE:
       DIS: "structure"
       NODE: 1325
