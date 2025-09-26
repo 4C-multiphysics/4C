@@ -37,7 +37,7 @@ std::string Core::IO::MeshInput::describe(VerbosityLevel level)
 }
 
 template <unsigned dim>
-void Core::IO::MeshInput::assert_valid(const Mesh<dim>& mesh)
+void Core::IO::MeshInput::assert_valid(const RawMesh<dim>& mesh)
 {
   FOUR_C_ASSERT_ALWAYS(!mesh.points.empty(), "The mesh has no points.");
 
@@ -118,39 +118,37 @@ void Core::IO::MeshInput::print(const Mesh<dim>& mesh, std::ostream& os, Verbosi
 {
   if (verbose >= VerbosityLevel::summary)
   {
-    auto num_elements = std::accumulate(mesh.cell_blocks.begin(), mesh.cell_blocks.end(), 0,
+    auto num_elements = std::accumulate(mesh.cell_blocks().begin(), mesh.cell_blocks().end(), 0,
         [](int sum, const auto& block) { return sum + block.second.size(); });
 
-    os << "Mesh consists of " << mesh.points.size() << " points and " << num_elements
-       << " cells organized in " << mesh.cell_blocks.size() << " cell-blocks and "
-       << mesh.point_sets.size() << " point-sets.\n\n";
+    os << "Mesh consists of " << mesh.points().size() << " points and " << num_elements
+       << " cells organized in " << mesh.cell_blocks().size() << " cell-blocks and "
+       << mesh.point_sets().size() << " point-sets.\n\n";
   }
   if (verbose >= VerbosityLevel::detailed_summary)
   {
     if (verbose == VerbosityLevel::full)
     {
-      std::size_t i = 0;
-      for (const auto& point : mesh.points)
+      for (const auto& point : mesh.points_with_data())
       {
-        if (mesh.external_ids.has_value())
+        if (point.external_id() != invalid_external_id)
         {
-          os << "  " << mesh.external_ids->at(i) << ": [";
+          os << "  " << point.external_id() << ": [";
         }
         else
         {
           os << "  [";
         }
-        for (const auto& coord : point)
+        for (const auto& coord : point.coordinate())
         {
           os << std::format("{:10.6g},", coord);
         }
         os << "]\n";
-        i++;
       }
       os << "\n";
     }
     os << "cell-blocks:\n";
-    for (const auto& [id, cell_block] : mesh.cell_blocks)
+    for (const auto& [id, cell_block] : mesh.cell_blocks())
     {
       os << "  cell-block " << id;
       if (cell_block.name.has_value()) os << " (" << *cell_block.name << ")";
@@ -160,7 +158,7 @@ void Core::IO::MeshInput::print(const Mesh<dim>& mesh, std::ostream& os, Verbosi
     os << "\n";
 
     os << "point-sets:\n";
-    for (const auto& [ps_id, ps] : mesh.point_sets)
+    for (const auto& [ps_id, ps] : mesh.point_sets())
     {
       os << "  point-set " << ps_id;
       if (ps.name.has_value()) os << " (" << *ps.name << ")";
@@ -218,7 +216,7 @@ void Core::IO::MeshInput::print(const PointSet& point_set, std::ostream& os, Ver
   os << "\n";
 }
 
-template void Core::IO::MeshInput::assert_valid(const Mesh<3>& mesh);
+template void Core::IO::MeshInput::assert_valid(const RawMesh<3>& mesh);
 template void Core::IO::MeshInput::print(
     const Mesh<3>& mesh, std::ostream& os, VerbosityLevel verbose);
 template void Core::IO::MeshInput::print(

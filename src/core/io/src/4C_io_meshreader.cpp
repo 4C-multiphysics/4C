@@ -570,7 +570,7 @@ namespace
       auto& mesh = *mesh_reader.mesh_on_rank_zero;
 
       // Clean up specific data
-      std::ranges::for_each(mesh.cell_blocks, [](auto& eb) { eb.second.specific_data.reset(); });
+      std::ranges::for_each(mesh.cell_blocks(), [](auto& eb) { eb.second.specific_data.reset(); });
 
       Core::IO::InputParameterContainer data;
       input.match_section(mesh_reader.section_name, data);
@@ -581,7 +581,7 @@ namespace
       Core::Elements::ElementDefinition element_definition;
 
       std::vector<int> skipped_blocks;
-      for (auto& [eb_id, eb] : mesh.cell_blocks)
+      for (auto& [eb_id, eb] : mesh.cell_blocks())
       {
         // Look into the input file to find out which elements we need to assign to this block.
         const int eb_id_copy = eb_id;  // work around compiler warning in clang18
@@ -758,7 +758,6 @@ void Core::IO::MeshReader::read_and_partition()
               "Unsupported mesh file format {}. Currently supported are '.e', '.exo', and '.exii'.",
               this_file_path.extension().string());
         }
-        MeshInput::assert_valid(*mesh);
         MeshInput::print(*mesh, std::cout, verbosity);
       }
       mesh_reader->mesh_on_rank_zero = mesh;

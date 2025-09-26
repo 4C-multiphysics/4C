@@ -17,7 +17,7 @@ namespace
 
   TEST(Exodus, MeshCubeHex)
   {
-    Core::IO::MeshInput::Mesh mesh = Core::IO::Exodus::read_exodus_file(
+    Core::IO::MeshInput::RawMesh mesh = Core::IO::Exodus::read_exodus_file(
         TESTING::get_support_file_path("test_files/exodus/cube.exo"));
 
     EXPECT_EQ(mesh.cell_blocks.size(), 2);
@@ -55,6 +55,20 @@ namespace
     EXPECT_EQ(*mesh.point_sets.at(1).name, "node_set_top");
 
     std::stringstream ss;
-    Core::IO::MeshInput::print(mesh, ss, Core::IO::MeshInput::VerbosityLevel::full);
+    Core::IO::MeshInput::print(Core::IO::MeshInput::Mesh<3>::create_view(mesh), ss,
+        Core::IO::MeshInput::VerbosityLevel::full);
+  }
+
+  TEST(Exodus, MeshFiltering)
+  {
+    Core::IO::MeshInput::RawMesh raw_mesh = Core::IO::Exodus::read_exodus_file(
+        TESTING::get_support_file_path("test_files/exodus/cube.exo"));
+
+    Core::IO::MeshInput::Mesh mesh(std::move(raw_mesh));
+    EXPECT_EQ(mesh.cell_blocks().size(), 2);
+
+    auto filtered_mesh = mesh.filter_by_cell_block_ids({1});
+
+    EXPECT_EQ(filtered_mesh.cell_blocks().size(), 1);
   }
 }  // namespace

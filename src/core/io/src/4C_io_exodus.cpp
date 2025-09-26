@@ -125,10 +125,10 @@ namespace
 
 
 
-Core::IO::MeshInput::Mesh<3> Core::IO::Exodus::read_exodus_file(
+Core::IO::MeshInput::RawMesh<3> Core::IO::Exodus::read_exodus_file(
     const std::filesystem::path& exodus_file)
 {
-  Core::IO::MeshInput::Mesh<3> mesh{};
+  Core::IO::MeshInput::RawMesh<3> mesh{};
 
   int CPU_word_size, IO_word_size;
   float exoversion;               /* version of exodus */
@@ -259,6 +259,7 @@ Core::IO::MeshInput::Mesh<3> Core::IO::Exodus::read_exodus_file(
 
   CHECK_EXODUS_CALL(ex_close(exo_handle));
 
+  MeshInput::assert_valid(mesh);
   return mesh;
 }
 
