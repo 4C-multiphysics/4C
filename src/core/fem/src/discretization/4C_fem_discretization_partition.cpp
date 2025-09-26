@@ -92,80 +92,81 @@ void Core::FE::Discretization::proc_zero_distribute_elements_to_all(
 {
   const int myrank = Core::Communication::my_mpi_rank(get_comm());
 
-  // proc 0 looks for elements that are to be send to other procs
-  int size = (int)gidlist.size();
-  std::vector<int> pidlist(size);  // gids on proc 0
-  int err = target.remote_id_list(size, gidlist.data(), pidlist.data(), nullptr);
-  if (err < 0) FOUR_C_THROW("Core::LinAlg::Map::RemoteIDList returned err={}", err);
+  const size_t n_elements_to_distribute = gidlist.size();
+  std::vector<int> target_process(n_elements_to_distribute);
+  int err = target.remote_id_list(
+      n_elements_to_distribute, gidlist.data(), target_process.data(), nullptr);
 
-  std::map<int, std::vector<char>> sendmap;  // proc to send a set of elements to
-  if (!myrank)
+  if (err < 0) FOUR_C_THROW("Core::LinAlg::Map::remoted_id_list() returned err={}", err);
+
+  // Raw data that is to be sent to other processors
+  std::map<int, std::vector<char>> sendmap;
+  if (myrank == 0)
   {
-    std::map<int, Core::Communication::PackBuffer> sendpb;  // proc to send a set of elements to
-    for (int i = 0; i < size; ++i)
+    std::map<int, Core::Communication::PackBuffer> pack_buffers;
+    for (size_t i = 0; i < n_elements_to_distribute; ++i)
     {
-      if (pidlist[i] == myrank or pidlist[i] < 0) continue;  // do not send to myself
+      if (target_process[i] == myrank or target_process[i] < 0) continue;  // do not send to myself
+
       Core::Elements::Element* actele = g_element(gidlist[i]);
       if (!actele) FOUR_C_THROW("Cannot find global element {}", gidlist[i]);
-      actele->pack(sendpb[pidlist[i]]);
+      actele->pack(pack_buffers[target_process[i]]);
       element_.erase(actele->id());
     }
-    for (std::map<int, Core::Communication::PackBuffer>::iterator fool = sendpb.begin();
-        fool != sendpb.end(); ++fool)
-      swap(sendmap[fool->first], fool->second());
+    for (auto& [pid, pack_buffer] : pack_buffers) swap(sendmap[pid], pack_buffer());
   }
 
   // tell everybody who is to receive something
   std::vector<int> receivers;
-
   receivers.reserve(sendmap.size());
-  for (auto& fool : sendmap) receivers.push_back(fool.first);
 
-  size = (int)receivers.size();
-  Core::Communication::broadcast(&size, 1, 0, get_comm());
-  if (myrank != 0) receivers.resize(size);
-  Core::Communication::broadcast(receivers.data(), size, 0, get_comm());
-  int foundme = -1;
-  if (myrank != 0)
-    for (int i = 0; i < size; ++i)
-      if (receivers[i] == myrank)
+  for (const auto& pid : sendmap | std::views::keys) receivers.push_back(pid);
+
+  size_t n_destination_processes = receivers.size();
+  Core::Communication::broadcast(n_destination_processes, 0, get_comm());
+  if (myrank != 0) receivers.resize(n_destination_processes);
+  Core::Communication::broadcast(receivers.data(), n_destination_processes, 0, get_comm());
+
+  const int this_process_receives_index = std::invoke(
+      [&]()
       {
-        foundme = i;
-        break;
-      }
+        if (myrank != 0)
+        {
+          size_t index = std::distance(receivers.begin(), std::ranges::find(receivers, myrank));
+          if (index < receivers.size()) return static_cast<int>(index);
+        }
+        return -1;
+      });
 
   // proc 0 sends out messages
-  int tag = 0;
   Core::Communication::Exporter exporter(get_comm());
-  std::vector<MPI_Request> request(size);
+  std::vector<MPI_Request> request(n_destination_processes);
   if (!myrank)
   {
-    for (std::map<int, std::vector<char>>::iterator fool = sendmap.begin(); fool != sendmap.end();
-        ++fool)
+    size_t tag = 0;
+    for (auto& [pid, data] : sendmap)
     {
-      exporter.i_send(
-          0, fool->first, fool->second.data(), (int)fool->second.size(), tag, request[tag]);
+      exporter.i_send(0, pid, data.data(), (int)data.size(), tag, request[tag]);
       tag++;
     }
-    if (tag != size) FOUR_C_THROW("Number of messages is mixed up");
-    // do not delete sendmap until Wait has returned!
+    if (tag != n_destination_processes) FOUR_C_THROW("Number of messages is mixed up");
   }
 
   // all other procs listen to message and put element into dis
-  if (foundme != -1)
+  if (this_process_receives_index != -1)
   {
     std::vector<char> recvdata;
     int length = 0;
     int source = -1;
     int tag = -1;
     exporter.receive_any(source, tag, recvdata, length);
-    if (source != 0 || tag != foundme) FOUR_C_THROW("Messages got mixed up");
+    if (source != 0 || tag != this_process_receives_index) FOUR_C_THROW("Messages got mixed up");
     // Put received elements into discretization
     Communication::UnpackBuffer buffer(recvdata);
     while (!buffer.at_end())
     {
       Core::Communication::ParObject* object = Core::Communication::factory(buffer);
-      Core::Elements::Element* ele = dynamic_cast<Core::Elements::Element*>(object);
+      auto* ele = dynamic_cast<Core::Elements::Element*>(object);
       if (!ele) FOUR_C_THROW("Received object is not an element");
       ele->set_owner(myrank);
       std::shared_ptr<Core::Elements::Element> rcpele(ele);
@@ -175,7 +176,7 @@ void Core::FE::Discretization::proc_zero_distribute_elements_to_all(
 
   // wait for all communication to finish
   if (!myrank)
-    for (int i = 0; i < size; ++i) exporter.wait(request[i]);
+    for (size_t i = 0; i < n_destination_processes; ++i) exporter.wait(request[i]);
 
   Core::Communication::barrier(get_comm());  // I feel better this way ;-)
   reset();
@@ -272,11 +273,10 @@ std::shared_ptr<Core::LinAlg::Graph> Core::FE::Discretization::build_node_graph(
   // if a proc stores the appropriate ghosted elements, the resulting
   // graph will be the correct and complete graph of the distributed
   // discretization even if nodes are not ghosted.
-  std::map<int, std::shared_ptr<Core::Elements::Element>>::const_iterator curr;
-  for (curr = element_.begin(); curr != element_.end(); ++curr)
+  for (const auto& val : element_ | std::views::values)
   {
-    const int nnode = curr->second->num_node();
-    const int* nodeids = curr->second->node_ids();
+    const int nnode = val->num_node();
+    const int* nodeids = val->node_ids();
     for (int row = 0; row < nnode; ++row)
     {
       const int rownode = nodeids[row];
@@ -597,9 +597,7 @@ void Core::FE::Discretization::extended_ghosting(const Core::LinAlg::Map& elecol
       have_pbc = true;
       // fill content of pbcmap int std::map<int, std::set<int> > in preparation for gather_all
       std::map<int, std::vector<int>>* tmp = pbcdofset->get_coupled_nodes();
-      for (std::map<int, std::vector<int>>::const_iterator it = tmp->begin(); it != tmp->end();
-          ++it)
-        pbcmap[it->first].insert(it->second.begin(), it->second.end());
+      for (auto& [gid, nodes] : *tmp) pbcmap[gid].insert(nodes.begin(), nodes.end());
 
       // it is assumed that, if one pbc set is available, all other potential dofsets hold the same
       // layout

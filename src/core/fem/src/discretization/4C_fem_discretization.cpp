@@ -348,7 +348,7 @@ bool Core::FE::Discretization::have_global_element(const int gid) const
  *----------------------------------------------------------------------*/
 Core::Elements::Element* Core::FE::Discretization::g_element(const int gid) const
 {
-  std::map<int, std::shared_ptr<Core::Elements::Element>>::const_iterator curr = element_.find(gid);
+  auto curr = element_.find(gid);
   FOUR_C_ASSERT(
       curr != element_.end(), "Element with global id gid={} not stored on this proc!", gid);
   return curr->second.get();
