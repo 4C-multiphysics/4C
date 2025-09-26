@@ -223,35 +223,35 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 12
       QUANTITY: "dispx"
-      VALUE: 4.73872681225444223e-02
+      VALUE: -1.10481415590852020e-01
       TOLERANCE: 1e-10
   - STRUCTURE:
       DIS: "structure"
       NODE: 12
       QUANTITY: "dispy"
-      VALUE: -2.83110071720808043e-01
+      VALUE: -4.14631431812410245e-01
       TOLERANCE: 1e-10
   - STRUCTURE:
       DIS: "structure"
       NODE: 12
       QUANTITY: "dispz"
-      VALUE: -1.21617658103077351e-05
+      VALUE: 4.97769981841661479e-05
       TOLERANCE: 1e-10
   - STRUCTURE:
       DIS: "structure"
       NODE: 16
       QUANTITY: "dispx"
-      VALUE: 1.55126107535701219e-01
+      VALUE: 1.55124490592303925e-02
       TOLERANCE: 1e-10
   - STRUCTURE:
       DIS: "structure"
       NODE: 16
       QUANTITY: "dispy"
-      VALUE: -8.82213325017293937e-02
+      VALUE: -2.09478462402946014e-01
       TOLERANCE: 1e-10
   - STRUCTURE:
       DIS: "structure"
       NODE: 16
       QUANTITY: "dispz"
-      VALUE: -1.18657800658584848e-06
+      VALUE: -9.39473890298559182e-04
       TOLERANCE: 1e-10
