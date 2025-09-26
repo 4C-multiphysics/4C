@@ -1585,6 +1585,17 @@ void Global::read_conditions(
       {
         case Core::Conditions::EntityType::legacy_id:
         {
+          if (dnode_fenode.size() == 0 && dline_fenode.size() == 0 && dsurf_fenode.size() == 0 &&
+              dvol_fenode.size() == 0)
+          {
+            FOUR_C_THROW(
+                "{} condition {} uses legacy_id entity type but no legacy entities were defined in "
+                "the input file.\n"
+                "This is probably because the geometry is handled in an external file.\n"
+                "If this is the case, you must specify a specific entity type (node_set_id or "
+                "element_block_id).\n",
+                condition_definition.name(), entity_id);
+          }
           switch (condition->g_type())
           {
             case Core::Conditions::geometry_type_point:
@@ -1592,7 +1603,8 @@ void Global::read_conditions(
               {
                 FOUR_C_THROW(
                     "DPoint {} not in range [0:{}[\n"
-                    "DPoint condition on non existent DPoint?",
+                    "DPoint condition on non existent DPoint?"
+                    "Could not read set from entity type.",
                     entity_id, dnode_fenode.size());
               }
               condition->set_nodes(dnode_fenode[entity_id]);
@@ -1602,7 +1614,8 @@ void Global::read_conditions(
               {
                 FOUR_C_THROW(
                     "DLine {} not in range [0:{}[\n"
-                    "DLine condition on non existent DLine?",
+                    "DLine condition on non existent DLine?"
+                    "Could not read set from entity type.",
                     entity_id, dline_fenode.size());
               }
               condition->set_nodes(dline_fenode[entity_id]);
@@ -1612,7 +1625,8 @@ void Global::read_conditions(
               {
                 FOUR_C_THROW(
                     "DSurface {} not in range [0:{}[\n"
-                    "DSurface condition on non existent DSurface?",
+                    "DSurface condition on non existent DSurface?"
+                    "Could not read set from entity type.",
                     entity_id, dsurf_fenode.size());
               }
               condition->set_nodes(dsurf_fenode[entity_id]);
