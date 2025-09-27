@@ -372,7 +372,7 @@ void CONTACT::Beam3cmanager::evaluate(Core::LinAlg::SparseMatrix& stiffmatrix,
     Core::IO::cout(Core::IO::debug)
         << "      Evaluate Contact Pairs: " << t_end << " seconds. " << Core::IO::endl;
   double sumproc_evaluationtime = 0.0;
-  Core::Communication::sum_all(&t_end, &sumproc_evaluationtime, 1, get_comm());
+  sumproc_evaluationtime = Core::Communication::sum_all(t_end, get_comm());
   contactevaluationtime_ += sumproc_evaluationtime;
   t_start = Teuchos::Time::wallTime();
 
@@ -578,7 +578,7 @@ void CONTACT::Beam3cmanager::init_beam_contact_discret()
     // note that elements in ele1/ele2 already are in column (overlapping) map
     int lsize = (int)currele.size();
     int gsize = 0;
-    Core::Communication::sum_all(&lsize, &gsize, 1, get_comm());
+    gsize = Core::Communication::sum_all(lsize, get_comm());
 
     for (const auto& ele : currele | std::views::values)
     {
@@ -654,7 +654,7 @@ void CONTACT::Beam3cmanager::init_beam_contact_discret()
     // note that elements in ele1/ele2 already are in column (overlapping) map
     int lsize = (int)currele.size();
     int gsize = 0;
-    Core::Communication::sum_all(&lsize, &gsize, 1, get_comm());
+    gsize = Core::Communication::sum_all(lsize, get_comm());
 
     for (const auto& ele : currele | std::views::values)
     {
@@ -1293,7 +1293,7 @@ void CONTACT::Beam3cmanager::fill_contact_pairs_vectors(
   int numpairs = 0;
   int numpairsthisproc = pairs_.size();
 
-  Core::Communication::sum_all(&numpairsthisproc, &numpairs, 1, pdiscret_.get_comm());
+  numpairs = Core::Communication::sum_all(numpairsthisproc, pdiscret_.get_comm());
 
   if (Core::Communication::my_mpi_rank(pdiscret_.get_comm()) == 0)
     Core::IO::cout(Core::IO::standard)
@@ -1304,7 +1304,7 @@ void CONTACT::Beam3cmanager::fill_contact_pairs_vectors(
     numpairs = 0;
     numpairsthisproc = btsolpairs_.size();
 
-    Core::Communication::sum_all(&numpairsthisproc, &numpairs, 1, pdiscret_.get_comm());
+    numpairs = Core::Communication::sum_all(numpairsthisproc, pdiscret_.get_comm());
 
     if (Core::Communication::my_mpi_rank(pdiscret_.get_comm()) == 0)
       Core::IO::cout(Core::IO::standard)
@@ -2013,7 +2013,7 @@ void CONTACT::Beam3cmanager::update_constr_norm()
   maxallrelgap = Core::Communication::max_all(maxrelgap, get_comm());
   minallrelgap = Core::Communication::min_all(minrelgap, get_comm());
 
-  Core::Communication::sum_all(&proclocal_penaltyenergy, &totpenaltyenergy_, 1, get_comm());
+  totpenaltyenergy_ = Core::Communication::sum_all(proclocal_penaltyenergy, get_comm());
 
   // So far, we have determined the extrema of the current time step. Now, we want to determine the
   // extrema of the total simulation:
@@ -2279,11 +2279,10 @@ void CONTACT::Beam3cmanager::console_output()
     sumpro_maxcpgap = Core::Communication::max_all(maxcpgap, get_comm());
     sumpro_maxgpgap = Core::Communication::max_all(maxgpgap, get_comm());
     sumpro_maxepgap = Core::Communication::max_all(maxepgap, get_comm());
-    Core::Communication::sum_all(&numperpc, &sumpro_numperpc, 1, get_comm());
-    Core::Communication::sum_all(&numparc, &sumpro_numparc, 1, get_comm());
-    Core::Communication::sum_all(&numepc, &sumpro_numepc, 1, get_comm());
-    Core::Communication::sum_all(
-        &numperpc_transitions, &sumpro_numperpc_transitions, 1, get_comm());
+    sumpro_numperpc = Core::Communication::sum_all(numperpc, get_comm());
+    sumpro_numparc = Core::Communication::sum_all(numparc, get_comm());
+    sumpro_numepc = Core::Communication::sum_all(numepc, get_comm());
+    sumpro_numperpc_transitions = Core::Communication::sum_all(numperpc_transitions, get_comm());
 
 #ifdef PRINTNUMCONTACTSFILE
     if (Core::Communication::my_mpi_rank(Comm()) == 0)

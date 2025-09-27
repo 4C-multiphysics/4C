@@ -124,8 +124,7 @@ void XFEM::XFluidTimeInt::set_and_print_status(const bool screenout)
   }
 
   // reduce and sum over all procs
-  Core::Communication::sum_all(
-      cpu_methods.data(), glob_methods.data(), nummethods, dis_->get_comm());
+  glob_methods = Core::Communication::sum_all(cpu_methods, dis_->get_comm());
 
   if (screenout)
   {

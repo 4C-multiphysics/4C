@@ -712,8 +712,7 @@ EnsightWriter::NumElePerDisType EnsightWriter::get_num_ele_per_dis_type(
 
   // form the global sum
   std::vector<int> globalnumeleperdistype(numeledistypes);
-  Core::Communication::sum_all(
-      myNumElePerDisType.data(), globalnumeleperdistype.data(), numeledistypes, (dis.get_comm()));
+  globalnumeleperdistype = Core::Communication::sum_all(myNumElePerDisType, (dis.get_comm()));
 
   // create return argument containing the global element numbers per distype
   NumElePerDisType globalNumElePerDisType;

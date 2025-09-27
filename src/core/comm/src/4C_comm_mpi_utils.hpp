@@ -11,10 +11,16 @@
 #include "4C_config.hpp"
 
 #include "4C_comm_pack_helpers.hpp"
+#include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_linalg_serialdensematrix.hpp"
+#include "4C_linalg_serialdensevector.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <Epetra_Comm.h>
 #include <mpi.h>
+#include <Teuchos_Array.hpp>
+#include <Teuchos_SerialDenseMatrix.hpp>
+#include <Teuchos_SerialDenseVector.hpp>
 
 #include <array>
 #include <cstddef>
@@ -116,12 +122,47 @@ namespace Core::Communication
   void broadcast(T& value, int root, MPI_Comm comm);
 
   /**
-   * Compute the sum of all values in the array @p partial on all MPI ranks and store the result in
-   * @p global. The arrays @p partial and @p global are assumed to have @p count elements. The
-   * result is distributed to all ranks.
+   * Return the sum of all @p partial values across all MPI ranks.
+   * The result is distributed to all ranks.
    */
   template <IsNativeMpiType T>
-  void sum_all(T* partial, T* global, int count, MPI_Comm comm);
+  T sum_all(const T& partial, MPI_Comm comm);
+
+  /**
+   * Return the element-wise sum of all @p partial values across all MPI ranks.
+   * The result is distributed to all ranks.
+   */
+  template <IsNativeMpiType T, unsigned long size>
+  std::array<T, size> sum_all(const std::array<T, size>& partial, MPI_Comm comm);
+
+  /**
+   * Return the element-wise sum of all @p partial values across all MPI ranks.
+   * The result is distributed to all ranks.
+   */
+  template <IsNativeMpiType T>
+  std::vector<T> sum_all(const std::vector<T>& partial, MPI_Comm comm);
+
+  /**
+   * Return the element-wise sum of all @p partial values across all MPI ranks.
+   * The result is distributed to all ranks.
+   */
+  inline Core::LinAlg::SerialDenseVector sum_all(
+      const Core::LinAlg::SerialDenseVector& partial, MPI_Comm comm);
+
+  /**
+   * Return the element-wise sum of all @p partial values across all MPI ranks.
+   * The result is distributed to all ranks.
+   */
+  template <unsigned int rows, unsigned int columns>
+  LinAlg::Matrix<rows, columns> sum_all(
+      const LinAlg::Matrix<rows, columns>& partial, MPI_Comm comm);
+
+  /**
+   * Return the element-wise sum of all @p partial values across all MPI ranks.
+   * The result is distributed to all ranks.
+   */
+  template <IsNativeMpiType T>
+  Teuchos::Array<T> sum_all(const Teuchos::Array<T>& partial, MPI_Comm comm);
 
   /**
    * Return the maximum of value of @p partial across all MPI ranks.
@@ -329,10 +370,60 @@ void Core::Communication::broadcast(T& value, int root, MPI_Comm comm)
 }
 
 template <Core::Communication::IsNativeMpiType T>
-void Core::Communication::sum_all(T* partial, T* global, int count, MPI_Comm comm)
+T Core::Communication::sum_all(const T& partial, MPI_Comm comm)
 {
-  MPI_Allreduce(partial, global, count, Internal::to_mpi_type<T>(), MPI_SUM, comm);
+  T global{};
+  MPI_Allreduce(&partial, &global, 1, Internal::to_mpi_type<T>(), MPI_SUM, comm);
+  return global;
 }
+
+template <Core::Communication::IsNativeMpiType T, long unsigned size>
+std::array<T, size> Core::Communication::sum_all(const std::array<T, size>& partial, MPI_Comm comm)
+{
+  std::array<T, size> global{};
+  MPI_Allreduce(
+      partial.data(), global.data(), partial.size(), Internal::to_mpi_type<T>(), MPI_SUM, comm);
+  return global;
+}
+
+template <Core::Communication::IsNativeMpiType T>
+std::vector<T> Core::Communication::sum_all(const std::vector<T>& partial, MPI_Comm comm)
+{
+  std::vector<T> global(partial.size());
+  MPI_Allreduce(
+      partial.data(), global.data(), partial.size(), Internal::to_mpi_type<T>(), MPI_SUM, comm);
+  return global;
+}
+
+Core::LinAlg::SerialDenseVector Core::Communication::sum_all(
+    const Core::LinAlg::SerialDenseVector& partial, MPI_Comm comm)
+{
+  Core::LinAlg::SerialDenseVector global(partial.length());
+  MPI_Allreduce(partial.values(), global.values(), partial.length(),
+      Internal::to_mpi_type<double>(), MPI_SUM, comm);
+  return global;
+}
+
+template <unsigned int rows, unsigned int columns>
+Core::LinAlg::Matrix<rows, columns> Core::Communication::sum_all(
+    const Core::LinAlg::Matrix<rows, columns>& partial, MPI_Comm comm)
+{
+  Core::LinAlg::Matrix<rows, columns> global;
+  // We can treat the matrix as a contiguous array with size numRows()*numCols().
+  MPI_Allreduce(partial.values(), global.values(), rows * columns, Internal::to_mpi_type<double>(),
+      MPI_SUM, comm);
+  return global;
+}
+
+template <Core::Communication::IsNativeMpiType T>
+Teuchos::Array<T> Core::Communication::sum_all(const Teuchos::Array<T>& partial, MPI_Comm comm)
+{
+  Teuchos::Array<T> global(partial.length());
+  MPI_Allreduce(
+      partial.data(), global.data(), partial.length(), Internal::to_mpi_type<T>(), MPI_SUM, comm);
+  return global;
+}
+
 
 template <Core::Communication::IsNativeMpiType T>
 T Core::Communication::max_all(const T& partial, MPI_Comm comm)

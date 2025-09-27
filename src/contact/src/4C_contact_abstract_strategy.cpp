@@ -1242,13 +1242,13 @@ void CONTACT::AbstractStrategy::update_parallel_distribution_status(const double
   {
     // find out how many close slave elements in total
     int totrowele = 0;
-    Core::Communication::sum_all(&numcrowele[i], &totrowele, 1, get_comm());
+    totrowele = Core::Communication::sum_all(numcrowele[i], get_comm());
 
     // find out how many procs have work on this interface
     int lhascrowele = 0;
     int ghascrowele = 0;
     if (numcrowele[i] > 0) lhascrowele = 1;
-    Core::Communication::sum_all(&lhascrowele, &ghascrowele, 1, get_comm());
+    ghascrowele = Core::Communication::sum_all(lhascrowele, get_comm());
 
     // minimum number of elements per proc
     int minele = params().sublist("PARALLEL REDISTRIBUTION").get<int>("MIN_ELEPROC");
@@ -1275,7 +1275,7 @@ void CONTACT::AbstractStrategy::update_parallel_distribution_status(const double
   // obtain global info on element unbalance
   int geleunbalance = 0;
   int leleunbalance = (int)(eleunbalance);
-  Core::Communication::sum_all(&leleunbalance, &geleunbalance, 1, get_comm());
+  geleunbalance = Core::Communication::sum_all(leleunbalance, get_comm());
   if (geleunbalance > 0)
     data().unbalance_element_factors().push_back(1);
   else
@@ -2449,12 +2449,12 @@ void CONTACT::AbstractStrategy::print_active_set() const
   }
 
   // sum among all processors
-  Core::Communication::sum_all(&activenodes, &gactivenodes, 1, get_comm());
-  Core::Communication::sum_all(&inactivenodes, &ginactivenodes, 1, get_comm());
-  Core::Communication::sum_all(&slipnodes, &gslipnodes, 1, get_comm());
-  Core::Communication::sum_all(&edgenodes, &gedgenodes, 1, get_comm());
-  Core::Communication::sum_all(&cornernodes, &gcornernodes, 1, get_comm());
-  Core::Communication::sum_all(&surfacenodes, &gsurfacenodes, 1, get_comm());
+  gactivenodes = Core::Communication::sum_all(activenodes, get_comm());
+  ginactivenodes = Core::Communication::sum_all(inactivenodes, get_comm());
+  gslipnodes = Core::Communication::sum_all(slipnodes, get_comm());
+  gedgenodes = Core::Communication::sum_all(edgenodes, get_comm());
+  gcornernodes = Core::Communication::sum_all(cornernodes, get_comm());
+  gsurfacenodes = Core::Communication::sum_all(surfacenodes, get_comm());
 
   // print active set information
   if (Core::Communication::my_mpi_rank(get_comm()) == 0)

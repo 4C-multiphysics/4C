@@ -2071,12 +2071,10 @@ void FLD::XFluid::compute_error_norms(Core::LinAlg::SerialDenseVector& glob_dom_
   //--------------------------------------------------------
   // reduce and sum over all procs
   for (int i = 0; i < num_dom_norms; ++i) (glob_dom_norms)(i) = 0.0;
-  Core::Communication::sum_all(
-      cpu_dom_norms.values(), glob_dom_norms.values(), num_dom_norms, discret_->get_comm());
+  glob_dom_norms = Core::Communication::sum_all(cpu_dom_norms, discret_->get_comm());
 
   for (int i = 0; i < num_interf_norms; ++i) (glob_interf_norms)(i) = 0.0;
-  Core::Communication::sum_all(cpu_interf_norms.values(), glob_interf_norms.values(),
-      num_interf_norms, discret_->get_comm());
+  glob_interf_norms = Core::Communication::sum_all(cpu_interf_norms, discret_->get_comm());
 
 
   //--------------------------------------------------------
@@ -4016,10 +4014,10 @@ void FLD::XFluid::x_timint_get_reconstruct_status(
   int glob_timint_ghost_penalty = 0;
   int glob_timint_semi_lagrangean = 0;
 
-  Core::Communication::sum_all(
-      &proc_timint_ghost_penalty, &glob_timint_ghost_penalty, 1, discret_->get_comm());
-  Core::Communication::sum_all(
-      &proc_timint_semi_lagrangean, &glob_timint_semi_lagrangean, 1, discret_->get_comm());
+  glob_timint_ghost_penalty =
+      Core::Communication::sum_all(proc_timint_ghost_penalty, discret_->get_comm());
+  glob_timint_semi_lagrangean =
+      Core::Communication::sum_all(proc_timint_semi_lagrangean, discret_->get_comm());
 
 
   //------------------------------------------------------------------------------------

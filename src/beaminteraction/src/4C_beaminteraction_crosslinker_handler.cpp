@@ -239,8 +239,8 @@ BeamInteraction::BeamCrosslinkerHandler::fill_linker_into_bins_remote_id_list(
 
   // ---- prepare receiving procs -----
   std::vector<int> summedtargets(numproc, 0);
-  Core::Communication::sum_all(
-      targetprocs.data(), summedtargets.data(), numproc, binstrategy_->bin_discret()->get_comm());
+  summedtargets =
+      Core::Communication::sum_all(targetprocs, binstrategy_->bin_discret()->get_comm());
 
   // ---- send ----
   Core::Communication::Exporter exporter(binstrategy_->bin_discret()->get_comm());
@@ -367,8 +367,8 @@ BeamInteraction::BeamCrosslinkerHandler::fill_linker_into_bins_using_ghosting(
   // -----------------------------------------------------------------------
   // ---- prepare receiving procs -----
   std::vector<int> summedtargets(numproc, 0);
-  Core::Communication::sum_all(
-      targetprocs.data(), summedtargets.data(), numproc, binstrategy_->bin_discret()->get_comm());
+  summedtargets =
+      Core::Communication::sum_all(targetprocs, binstrategy_->bin_discret()->get_comm());
 
   // ---- receive -----
   receive_linker_and_fill_them_in_bins(summedtargets[myrank_], exporter, homelesslinker);

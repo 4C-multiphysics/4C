@@ -62,8 +62,8 @@ void Coupling::Adapter::Coupling::setup_condition_coupling(
   int localslavecount = static_cast<int>(slavenodes.size());
   int slavecount;
 
-  Core::Communication::sum_all(&localmastercount, &mastercount, 1, masterdis.get_comm());
-  Core::Communication::sum_all(&localslavecount, &slavecount, 1, slavedis.get_comm());
+  mastercount = Core::Communication::sum_all(localmastercount, masterdis.get_comm());
+  slavecount = Core::Communication::sum_all(localslavecount, slavedis.get_comm());
 
   if (mastercount != slavecount)
     FOUR_C_THROW("got {} master nodes but {} slave nodes for coupling", mastercount, slavecount);

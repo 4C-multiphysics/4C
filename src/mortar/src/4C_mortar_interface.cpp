@@ -389,29 +389,20 @@ void Mortar::Interface::print_parallel_distribution() const
       my_s_ghostele[myrank] = selerowmap_->num_global_elements() - my_s_elements[myrank];
     }
 
-    Core::Communication::sum_all(my_n_nodes.data(), n_nodes.data(), numproc, discret().get_comm());
-    Core::Communication::sum_all(
-        my_n_ghostnodes.data(), n_ghostnodes.data(), numproc, discret().get_comm());
-    Core::Communication::sum_all(
-        my_n_elements.data(), n_elements.data(), numproc, discret().get_comm());
-    Core::Communication::sum_all(
-        my_n_ghostele.data(), n_ghostele.data(), numproc, discret().get_comm());
+    n_nodes = Core::Communication::sum_all(my_n_nodes, discret().get_comm());
+    n_ghostnodes = Core::Communication::sum_all(my_n_ghostnodes, discret().get_comm());
+    n_elements = Core::Communication::sum_all(my_n_elements, discret().get_comm());
+    n_ghostele = Core::Communication::sum_all(my_n_ghostele, discret().get_comm());
 
-    Core::Communication::sum_all(my_s_nodes.data(), s_nodes.data(), numproc, discret().get_comm());
-    Core::Communication::sum_all(
-        my_s_ghostnodes.data(), s_ghostnodes.data(), numproc, discret().get_comm());
-    Core::Communication::sum_all(
-        my_s_elements.data(), s_elements.data(), numproc, discret().get_comm());
-    Core::Communication::sum_all(
-        my_s_ghostele.data(), s_ghostele.data(), numproc, discret().get_comm());
+    s_nodes = Core::Communication::sum_all(my_s_nodes, discret().get_comm());
+    s_ghostnodes = Core::Communication::sum_all(my_s_ghostnodes, discret().get_comm());
+    s_elements = Core::Communication::sum_all(my_s_elements, discret().get_comm());
+    s_ghostele = Core::Communication::sum_all(my_s_ghostele, discret().get_comm());
 
-    Core::Communication::sum_all(my_m_nodes.data(), m_nodes.data(), numproc, discret().get_comm());
-    Core::Communication::sum_all(
-        my_m_ghostnodes.data(), m_ghostnodes.data(), numproc, discret().get_comm());
-    Core::Communication::sum_all(
-        my_m_elements.data(), m_elements.data(), numproc, discret().get_comm());
-    Core::Communication::sum_all(
-        my_m_ghostele.data(), m_ghostele.data(), numproc, discret().get_comm());
+    m_nodes = Core::Communication::sum_all(my_m_nodes, discret().get_comm());
+    m_ghostnodes = Core::Communication::sum_all(my_m_ghostnodes, discret().get_comm());
+    m_elements = Core::Communication::sum_all(my_m_elements, discret().get_comm());
+    m_ghostele = Core::Communication::sum_all(my_m_ghostele, discret().get_comm());
 
     if (myrank == 0)
     {
@@ -626,7 +617,7 @@ void Mortar::Interface::communicate_quad_slave_status_among_all_procs()
 {
   int localstatus = static_cast<int>(quadslave_);
   int globalstatus = 0;
-  Core::Communication::sum_all(&localstatus, &globalstatus, 1, get_comm());
+  globalstatus = Core::Communication::sum_all(localstatus, get_comm());
   quadslave_ = static_cast<bool>(globalstatus);
 }
 
@@ -1872,8 +1863,7 @@ std::shared_ptr<Core::LinAlg::Map> Mortar::Interface::update_lag_mult_sets(
   std::vector<int> localnumlmdof(Core::Communication::num_mpi_ranks(get_comm()));
   std::vector<int> globalnumlmdof(Core::Communication::num_mpi_ranks(get_comm()));
   localnumlmdof[Core::Communication::my_mpi_rank(get_comm())] = ref_map.num_my_elements();
-  Core::Communication::sum_all(localnumlmdof.data(), globalnumlmdof.data(),
-      Core::Communication::num_mpi_ranks(get_comm()), get_comm());
+  globalnumlmdof = Core::Communication::sum_all(localnumlmdof, get_comm());
 
   // compute offset for LM dof initialization for all procs
   int offset = 0;

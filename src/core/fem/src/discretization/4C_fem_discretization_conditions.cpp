@@ -80,7 +80,7 @@ void Core::FE::Discretization::boundary_conditions_geometry()
       // determine the global number of created elements associated with
       // the active condition
       int count;
-      Core::Communication::sum_all(&localcount, &count, 1, get_comm());
+      count = Core::Communication::sum_all(localcount, get_comm());
 
       if (numele.find(name) == numele.end())
       {
@@ -137,7 +137,7 @@ void Core::FE::Discretization::assign_global_ids(MPI_Comm comm,
   // communicate elements to processor 0
 
   int mysize = sendblock.size();
-  Core::Communication::sum_all(&mysize, &size, 1, comm);
+  size = Core::Communication::sum_all(mysize, comm);
   int mypos = Core::LinAlg::find_my_pos(sendblock.size(), comm);
 
   std::vector<int> send(size);
@@ -145,7 +145,7 @@ void Core::FE::Discretization::assign_global_ids(MPI_Comm comm,
   std::ranges::copy(sendblock, send.data() + mypos);
   sendblock.clear();
   std::vector<int> recv(size);
-  Core::Communication::sum_all(send.data(), recv.data(), size, comm);
+  recv = Core::Communication::sum_all(send, comm);
 
   send.clear();
 

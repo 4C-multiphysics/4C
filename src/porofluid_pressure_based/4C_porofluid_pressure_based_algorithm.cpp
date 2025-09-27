@@ -2362,7 +2362,7 @@ void PoroPressureBased::PorofluidAlgorithm::fd_check()
 
   // communicate tracking variables
   int counterglobal(0);
-  Core::Communication::sum_all(&counter, &counterglobal, 1, discret_->get_comm());
+  counterglobal = Core::Communication::sum_all(counter, discret_->get_comm());
   double maxabserrglobal(0.);
   maxabserrglobal = Core::Communication::max_all(maxabserr, discret_->get_comm());
   double maxrelerrglobal(0.);

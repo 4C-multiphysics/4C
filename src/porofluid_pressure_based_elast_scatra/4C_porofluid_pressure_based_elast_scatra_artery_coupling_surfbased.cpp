@@ -92,8 +92,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm:
           my_gp_vector[igp] = static_cast<int>(((*gp_vector)(igp))[my_lid]);
 
       // communicate to all via summation
-      Core::Communication::sum_all(
-          my_gp_vector.data(), sum_gp_vectors.data(), num_gp_per_artery_ele, get_comm());
+      sum_gp_vectors = Core::Communication::sum_all(my_gp_vector, get_comm());
 
       // This is ok for now, either the GID does not exist or the entire element protrudes.
       // Inform user and continue
@@ -141,14 +140,14 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm:
     num_gp = num_gp + coupled_ele_pair->num_gp();
   }
   // safety check
-  Core::Communication::sum_all(&num_gp, &total_num_gp, 1, get_comm());
+  total_num_gp = Core::Communication::sum_all(num_gp, get_comm());
   if (num_gp_desired != total_num_gp - duplicates)
     FOUR_C_THROW("It seems as if some GPs could not be projected");
 
   // output
   int total_num_active_pairs = 0;
   int num_active_pairs = static_cast<int>(coupled_ele_pairs_.size());
-  Core::Communication::sum_all(&num_active_pairs, &total_num_active_pairs, 1, get_comm());
+  total_num_active_pairs = Core::Communication::sum_all(num_active_pairs, get_comm());
   if (homogenized_dis_->name() == "porofluid" && my_mpi_rank_ == 0)
     std::cout << "Only " << total_num_active_pairs
               << " Artery-to-PoroMultiphaseScatra coupling pairs are active" << '\n';

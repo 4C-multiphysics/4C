@@ -253,7 +253,7 @@ bool Solid::ModelEvaluator::Generic::eval_error_check() const
   // --- check for local errors on each proc and communicate the information ---
   int lerr = (ok ? 0 : 1);
   int gerr = 0;
-  Core::Communication::sum_all(&lerr, &gerr, 1, gstate_ptr_->get_comm());
+  gerr = Core::Communication::sum_all(lerr, gstate_ptr_->get_comm());
   return (gerr == 0);
 }
 

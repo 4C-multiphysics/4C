@@ -33,7 +33,7 @@ void PARTICLEENGINE::COMMUNICATION::immediate_recv_blocking_send(
 
   for (const auto& p : sdata) targetprocs[p.first] = 1;
 
-  Core::Communication::sum_all(targetprocs.data(), summedtargets.data(), numproc, comm);
+  summedtargets = Core::Communication::sum_all(targetprocs, comm);
 
   // number of processors this processor receives data from
   int const numrecvfromprocs = summedtargets[myrank];

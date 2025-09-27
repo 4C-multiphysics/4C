@@ -4750,7 +4750,7 @@ void CONTACT::LagrangeStrategy::update_active_set()
   // broadcast convergence status among processors
   int convcheck = 0;
   int localcheck = activesetconv_;
-  Core::Communication::sum_all(&localcheck, &convcheck, 1, get_comm());
+  convcheck = Core::Communication::sum_all(localcheck, get_comm());
 
   // active set is only converged, if converged on all procs
   // if not, increase no. of active set steps too
@@ -4949,7 +4949,7 @@ void CONTACT::LagrangeStrategy::update_active_set_semi_smooth(const bool firstSt
   // broadcast convergence status among processors
   int convcheck = 0;
   int localcheck = activesetconv_;
-  Core::Communication::sum_all(&localcheck, &convcheck, 1, get_comm());
+  convcheck = Core::Communication::sum_all(localcheck, get_comm());
 
   // active set is only converged, if converged on all procs
   // if not, increase no. of active set steps too

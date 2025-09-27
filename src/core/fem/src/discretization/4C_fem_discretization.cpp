@@ -401,8 +401,8 @@ void Core::FE::Discretization::print(std::ostream& os) const
     for (ecurr = element_.begin(); ecurr != element_.end(); ++ecurr)
       if (ecurr->second->owner() == Core::Communication::my_mpi_rank(get_comm())) nummyele++;
 
-    Core::Communication::sum_all(&nummynodes, &numglobalnodes, 1, get_comm());
-    Core::Communication::sum_all(&nummyele, &numglobalelements, 1, get_comm());
+    numglobalnodes = Core::Communication::sum_all(nummynodes, get_comm());
+    numglobalelements = Core::Communication::sum_all(nummyele, get_comm());
   }
 
   // print head

@@ -6965,7 +6965,7 @@ void CONTACT::Interface::evaluate_tangent_norm(double& cnormtan)
 
   // get cnorm from all procs
   double sumcnormtanallprocs = 0.0;
-  Core::Communication::sum_all(&cnormtan, &sumcnormtanallprocs, 1, get_comm());
+  sumcnormtanallprocs = Core::Communication::sum_all(cnormtan, get_comm());
   cnormtan = sumcnormtanallprocs;
 }
 
@@ -7375,8 +7375,8 @@ bool CONTACT::Interface::split_active_dofs()
 
   // communicate countN and countT among procs
   int gcountN, gcountT;
-  Core::Communication::sum_all(&countN, &gcountN, 1, get_comm());
-  Core::Communication::sum_all(&countT, &gcountT, 1, get_comm());
+  gcountN = Core::Communication::sum_all(countN, get_comm());
+  gcountT = Core::Communication::sum_all(countT, get_comm());
 
   // check global dimensions
   if ((gcountN + gcountT) != activedofs_->num_global_elements())
@@ -7439,7 +7439,7 @@ bool CONTACT::Interface::split_active_dofs()
 
   // communicate countslipT among procs
   int gcountslipT;
-  Core::Communication::sum_all(&countslipT, &gcountslipT, 1, get_comm());
+  gcountslipT = Core::Communication::sum_all(countslipT, get_comm());
 
   // create Tslipmap objects
   slipt_ = std::make_shared<Core::LinAlg::Map>(

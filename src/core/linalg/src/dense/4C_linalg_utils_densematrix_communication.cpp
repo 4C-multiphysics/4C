@@ -24,7 +24,7 @@ int Core::LinAlg::find_my_pos(int nummyelements, MPI_Comm comm)
   std::vector<int> rnum(numproc);
   snum[myrank] = nummyelements;
 
-  Core::Communication::sum_all(snum.data(), rnum.data(), numproc, comm);
+  rnum = Core::Communication::sum_all(snum, comm);
 
   return std::accumulate(rnum.data(), rnum.data() + myrank, 0);
 }
@@ -37,14 +37,14 @@ void Core::LinAlg::allreduce_vector(
   // communicate size
   int localsize = static_cast<int>(src.size());
   int globalsize;
-  Core::Communication::sum_all(&localsize, &globalsize, 1, comm);
+  globalsize = Core::Communication::sum_all(localsize, comm);
 
   // communicate values
   int pos = find_my_pos(localsize, comm);
   std::vector<int> sendglobal(globalsize, 0);
   dest.resize(globalsize);
   std::copy(src.begin(), src.end(), sendglobal.data() + pos);
-  Core::Communication::sum_all(sendglobal.data(), dest.data(), globalsize, comm);
+  dest = Core::Communication::sum_all(sendglobal, comm);
 
   // sort & unique
   std::sort(dest.begin(), dest.end());
@@ -64,8 +64,7 @@ void Core::LinAlg::allreduce_e_map(std::vector<int>& rredundant, const Core::Lin
   std::copy(gids, gids + emap.num_my_elements(), sredundant.data() + mynodepos);
 
   rredundant.resize(emap.num_global_elements());
-  Core::Communication::sum_all(
-      sredundant.data(), rredundant.data(), emap.num_global_elements(), emap.get_comm());
+  rredundant = Core::Communication::sum_all(sredundant, emap.get_comm());
 }
 
 /*----------------------------------------------------------------------*/

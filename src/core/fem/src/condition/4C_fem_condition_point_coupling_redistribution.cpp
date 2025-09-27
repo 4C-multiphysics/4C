@@ -190,8 +190,8 @@ void redistribute(const std::vector<int>& rank_to_hold_condition,
         }
 
         // print information
-        Core::Communication::sum_all(&myerase, &numerase, 1, discret.get_comm());
-        Core::Communication::sum_all(&myadd, &numadd, 1, discret.get_comm());
+        numerase = Core::Communication::sum_all(myerase, discret.get_comm());
+        numadd = Core::Communication::sum_all(myadd, discret.get_comm());
         if (myrank == 0)
         {
           std::cout << "Erased " << numerase << " nodes in total from row node list.\n";
@@ -203,7 +203,7 @@ void redistribute(const std::vector<int>& rank_to_hold_condition,
           int myn = static_cast<int>(row_node_set.size());
           int gn = 0;
 
-          Core::Communication::sum_all(&myn, &gn, 1, discret.get_comm());
+          gn = Core::Communication::sum_all(myn, discret.get_comm());
           FOUR_C_ASSERT_ALWAYS(gn == discret.num_global_nodes(),
               "Unmatching numbers of nodes before and after call Redistribution. Nodemap "
               "constructor will crash.\n");

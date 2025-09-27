@@ -506,7 +506,7 @@ void Core::FE::Discretization::evaluate_scalars(
 
   // reduce
   for (int i = 0; i < numscalars; ++i) (scalars)(i) = 0.0;
-  Core::Communication::sum_all(cpuscalars.values(), scalars.values(), numscalars, get_comm());
+  scalars = Core::Communication::sum_all(cpuscalars, get_comm());
 }  // Core::FE::Discretization::EvaluateScalars
 
 
@@ -591,7 +591,7 @@ void Core::FE::Discretization::evaluate_scalars(
   }  // loop over conditions
 
   // communicate results across all processors
-  Core::Communication::sum_all(cpuscalars.values(), scalars.values(), numscalars, get_comm());
+  scalars = Core::Communication::sum_all(cpuscalars, get_comm());
 }  // Core::FE::Discretization::EvaluateScalars
 
 

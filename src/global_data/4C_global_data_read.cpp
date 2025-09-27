@@ -963,7 +963,7 @@ void Global::read_micro_fields(Global::Problem& problem, const std::filesystem::
 
   // find out how many procs have micro material
   int nummicromat = 0;
-  Core::Communication::sum_all(&foundmicromat, &nummicromat, 1, lcomm);
+  nummicromat = Core::Communication::sum_all(foundmicromat, lcomm);
   // broadcast number of procs that have micro material
   Core::Communication::broadcast(&nummicromat, 1, 0, gcomm);
 
@@ -1670,7 +1670,7 @@ void Global::read_conditions(
           if (foundit) break;
         }
         int found = 0;
-        Core::Communication::sum_all(&foundit, &found, 1, dis->get_comm());
+        found = Core::Communication::sum_all(foundit, dis->get_comm());
         if (found)
         {
           // Insert a copy since we might insert the same condition in many discretizations.

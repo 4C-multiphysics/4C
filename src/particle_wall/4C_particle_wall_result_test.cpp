@@ -52,7 +52,7 @@ void PARTICLEWALL::WallResultTest::test_node(
 
   int havenode(walldiscretization_->have_global_node(node));
   int havenodeonanyproc(0);
-  Core::Communication::sum_all(&havenode, &havenodeonanyproc, 1, walldiscretization_->get_comm());
+  havenodeonanyproc = Core::Communication::sum_all(havenode, walldiscretization_->get_comm());
 
   // safety check
   if (not havenodeonanyproc)

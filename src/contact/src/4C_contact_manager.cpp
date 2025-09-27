@@ -468,7 +468,7 @@ CONTACT::Manager::Manager(Core::FE::Discretization& discret, double alphaf)
       // note that elements in ele1/ele2 already are in column (overlapping) map
       int lsize = (int)currele.size();
       int gsize = 0;
-      Core::Communication::sum_all(&lsize, &gsize, 1, get_comm());
+      gsize = Core::Communication::sum_all(lsize, get_comm());
 
       for (const auto& ele : currele | std::views::values)
       {

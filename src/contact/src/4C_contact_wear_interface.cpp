@@ -3401,7 +3401,7 @@ bool Wear::WearInterface::build_active_set(bool init)
 
       // TODO: not nice... alternative to sumall?
       int invglobal = 0;
-      Core::Communication::sum_all(&inv, &invglobal, 1, get_comm());
+      invglobal = Core::Communication::sum_all(inv, get_comm());
       Core::Communication::barrier(get_comm());
 
       if (cnode->owner() == Core::Communication::my_mpi_rank(get_comm()) && invglobal > 0)
@@ -4073,7 +4073,7 @@ void Wear::WearInterface::split_slave_dofs()
 
   // communicate countN and countT among procs
   int gcountN;
-  Core::Communication::sum_all(&countN, &gcountN, 1, get_comm());
+  gcountN = Core::Communication::sum_all(countN, get_comm());
 
   // check global dimensions
   if ((gcountN) != snoderowmap_->num_global_elements())
@@ -4130,7 +4130,7 @@ void Wear::WearInterface::split_master_dofs()
 
   // communicate countN and countT among procs
   int gcountN;
-  Core::Communication::sum_all(&countN, &gcountN, 1, get_comm());
+  gcountN = Core::Communication::sum_all(countN, get_comm());
 
   // check global dimensions
   if ((gcountN) != mnoderowmap_->num_global_elements())
@@ -4195,8 +4195,7 @@ void Wear::WearInterface::update_w_sets(int offset_if, int maxdofwear, bool both
   std::vector<int> globalnumlmdof(Core::Communication::num_mpi_ranks(get_comm()));
   localnumwdof[Core::Communication::my_mpi_rank(get_comm())] =
       (int)((sdofrowmap_->num_my_elements()) / n_dim());
-  Core::Communication::sum_all(localnumwdof.data(), globalnumlmdof.data(),
-      Core::Communication::num_mpi_ranks(get_comm()), get_comm());
+  globalnumlmdof = Core::Communication::sum_all(localnumwdof, get_comm());
 
   // compute offset for LM dof initialization for all procs
   int offset = 0;
@@ -4228,8 +4227,7 @@ void Wear::WearInterface::update_w_sets(int offset_if, int maxdofwear, bool both
     std::vector<int> globalnumlmdof(Core::Communication::num_mpi_ranks(get_comm()));
     localnumwdof[Core::Communication::my_mpi_rank(get_comm())] =
         (int)((mdofrowmap_->num_my_elements()) / n_dim());
-    Core::Communication::sum_all(localnumwdof.data(), globalnumlmdof.data(),
-        Core::Communication::num_mpi_ranks(get_comm()), get_comm());
+    globalnumlmdof = Core::Communication::sum_all(localnumwdof, get_comm());
 
     // compute offset for LM dof initialization for all procs
     int offset = 0;

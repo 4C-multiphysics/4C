@@ -525,7 +525,7 @@ void FLD::TurbulenceStatisticsPh::do_time_sample(
       }
       int countnodesonallprocs = 0;
 
-      Core::Communication::sum_all(&countnodes, &countnodesonallprocs, 1, discret_->get_comm());
+      countnodesonallprocs = Core::Communication::sum_all(countnodes, discret_->get_comm());
 
       // reduce by 1 due to periodic boundary condition
       countnodesonallprocs -= 1;
@@ -570,7 +570,7 @@ void FLD::TurbulenceStatisticsPh::do_time_sample(
       }
       int countnodesonallprocs = 0;
 
-      Core::Communication::sum_all(&countnodes, &countnodesonallprocs, 1, discret_->get_comm());
+      countnodesonallprocs = Core::Communication::sum_all(countnodes, discret_->get_comm());
 
       // reduce by 1 due to periodic boundary condition
       countnodesonallprocs -= 1;
@@ -615,7 +615,7 @@ void FLD::TurbulenceStatisticsPh::do_time_sample(
       }
       int countnodesonallprocs = 0;
 
-      Core::Communication::sum_all(&countnodes, &countnodesonallprocs, 1, discret_->get_comm());
+      countnodesonallprocs = Core::Communication::sum_all(countnodes, discret_->get_comm());
 
       // reduce by 1 due to periodic boundary condition
       countnodesonallprocs -= 1;
@@ -674,7 +674,7 @@ void FLD::TurbulenceStatisticsPh::do_time_sample(
     }
     int countnodesonallprocs = 0;
 
-    Core::Communication::sum_all(&countnodes, &countnodesonallprocs, 1, discret_->get_comm());
+    countnodesonallprocs = Core::Communication::sum_all(countnodes, discret_->get_comm());
 
     // reduce by 1 due to periodic boundary condition
     countnodesonallprocs -= 1;
@@ -750,7 +750,7 @@ void FLD::TurbulenceStatisticsPh::do_time_sample(
 
       int countnodesonallprocs = 0;
 
-      Core::Communication::sum_all(&countnodes, &countnodesonallprocs, 1, discret_->get_comm());
+      countnodesonallprocs = Core::Communication::sum_all(countnodes, discret_->get_comm());
 
       // reduce by 1 due to periodic boundary condition
       countnodesonallprocs -= 1;
@@ -788,17 +788,17 @@ void FLD::TurbulenceStatisticsPh::do_time_sample(
         {
           locuv += ((velnp)[rr - 1] * (*toggleu_)[rr - 1]) * ((velnp)[rr] * (*togglev_)[rr]);
         }
-        Core::Communication::sum_all(&locuv, &uv, 1, discret_->get_comm());
+        uv = Core::Communication::sum_all(locuv, discret_->get_comm());
         for (int rr = 2; rr < velnp.local_length(); ++rr)
         {
           locuw += ((velnp)[rr - 2] * (*toggleu_)[rr - 2]) * ((velnp)[rr] * (*togglew_)[rr]);
         }
-        Core::Communication::sum_all(&locuw, &uw, 1, discret_->get_comm());
+        uw = Core::Communication::sum_all(locuw, discret_->get_comm());
         for (int rr = 2; rr < velnp.local_length(); ++rr)
         {
           locvw += ((velnp)[rr - 1] * (*togglev_)[rr - 1]) * ((velnp)[rr] * (*togglew_)[rr]);
         }
-        Core::Communication::sum_all(&locvw, &vw, 1, discret_->get_comm());
+        vw = Core::Communication::sum_all(locvw, discret_->get_comm());
 
         //----------------------------------------------------------------------
         // calculate spatial means on this line

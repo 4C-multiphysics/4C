@@ -1664,7 +1664,7 @@ void Solid::ModelEvaluator::Structure::determine_strain_energy(
   {
     double my_int_energy = eval_data().get_energy_data(Solid::internal_energy);
     double gsum = 0.0;
-    Core::Communication::sum_all(&my_int_energy, &gsum, 1, discret().get_comm());
+    gsum = Core::Communication::sum_all(my_int_energy, discret().get_comm());
 
     eval_data().set_value_for_energy_type(gsum, Solid::internal_energy);
   }

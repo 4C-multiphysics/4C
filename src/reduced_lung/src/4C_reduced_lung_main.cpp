@@ -373,11 +373,11 @@ namespace ReducedLung
     {
       int n_total_airways, n_total_terminal_units, n_total_connections, n_total_bifurcations,
           n_total_boundary_conditions;
-      Core::Communication::sum_all(&n_airways, &n_total_airways, 1, comm);
-      Core::Communication::sum_all(&n_terminal_units, &n_total_terminal_units, 1, comm);
-      Core::Communication::sum_all(&n_connections, &n_total_connections, 1, comm);
-      Core::Communication::sum_all(&n_bifurcations, &n_total_bifurcations, 1, comm);
-      Core::Communication::sum_all(&n_boundary_conditions, &n_total_boundary_conditions, 1, comm);
+      n_total_airways = Core::Communication::sum_all(n_airways, comm);
+      n_total_terminal_units = Core::Communication::sum_all(n_terminal_units, comm);
+      n_total_connections = Core::Communication::sum_all(n_connections, comm);
+      n_total_bifurcations = Core::Communication::sum_all(n_bifurcations, comm);
+      n_total_boundary_conditions = Core::Communication::sum_all(n_boundary_conditions, comm);
       if (Core::Communication::my_mpi_rank(comm) == 0)
       {
         // clang-format off

@@ -2671,8 +2671,7 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
                 localnumlmdof[mypid] = interfacemaps_->map(1)->num_my_elements();
               else
                 localnumlmdof[mypid] = interfacemaps_->map(2)->num_my_elements();
-              Core::Communication::sum_all(
-                  localnumlmdof.data(), globalnumlmdof.data(), numproc, comm);
+              globalnumlmdof = Core::Communication::sum_all(localnumlmdof, comm);
 
               // for each processor, determine offset of minimum Lagrange multiplier dof GID w.r.t.
               // maximum standard dof GID
@@ -4132,8 +4131,8 @@ void ScaTra::MeshtyingStrategyS2I::fd_check(
 
   // communicate tracking variables
   int counterglobal(0);
-  Core::Communication::sum_all(
-      &counter, &counterglobal, 1, scatratimint_->discretization()->get_comm());
+  counterglobal =
+      Core::Communication::sum_all(counter, scatratimint_->discretization()->get_comm());
   double maxabserrglobal(0.);
   maxabserrglobal =
       Core::Communication::max_all(maxabserr, scatratimint_->discretization()->get_comm());

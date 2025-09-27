@@ -216,7 +216,7 @@ void FPSI::InterfaceUtils::setup_local_interface_facing_element_map(
   ///////////////////////////////////////////////////////////////////////////////////
   int slavegeomsize = slavegeom.size();
   int globalslavegeomsize;
-  Core::Communication::sum_all(&slavegeomsize, &globalslavegeomsize, 1, mastercomm);
+  globalslavegeomsize = Core::Communication::sum_all(slavegeomsize, mastercomm);
 
   // do for every slave interface element
   for (curr = slavegeom.begin(); curr != slavegeom.end(); ++curr)
@@ -431,7 +431,7 @@ void FPSI::InterfaceUtils::setup_local_interface_facing_element_map(
   int mymatchedelements = interfacefacingelementmap.size();
   int globalmatchedelements = 0;
 
-  Core::Communication::sum_all(&mymatchedelements, &globalmatchedelements, 1, mastercomm);
+  globalmatchedelements = Core::Communication::sum_all(mymatchedelements, mastercomm);
 
   if (Core::Communication::my_mpi_rank(mastercomm) == 0)
     std::cout << "Could match " << globalmatchedelements << " " << slavedis.name()
@@ -474,7 +474,7 @@ void FPSI::InterfaceUtils::redistribute_interface(Core::FE::Discretization& mast
   int globalmapsize;
   std::vector<int> mapsizearray(Core::Communication::num_mpi_ranks(comm));
   Core::Communication::gather_all(&mymapsize, mapsizearray.data(), 1, comm);
-  Core::Communication::sum_all(&mymapsize, &globalmapsize, 1, comm);
+  globalmapsize = Core::Communication::sum_all(mymapsize, comm);
 
   int counter = 0;
   for (int proc = 0; proc < Core::Communication::num_mpi_ranks(comm); ++proc)
@@ -551,7 +551,7 @@ void FPSI::InterfaceUtils::redistribute_interface(Core::FE::Discretization& mast
       }
 
       int globalsize;
-      Core::Communication::sum_all(&myglobalelementsize, &globalsize, 1, comm);
+      globalsize = Core::Communication::sum_all(myglobalelementsize, comm);
       Core::LinAlg::Map newelecolmap(
           globalsize, myglobalelementsize, myglobalelements.data(), 0, comm);
 

@@ -574,7 +574,7 @@ void ScaTra::TimIntHDG::set_initial_field(
       }
 
       double globerror = 0;
-      Core::Communication::sum_all(&error, &globerror, 1, discret_->get_comm());
+      globerror = Core::Communication::sum_all(error, discret_->get_comm());
       if (Core::Communication::my_mpi_rank(discret_->get_comm()) == 0)
         std::cout << "Error project when setting face twice: " << globerror << std::endl;
 
@@ -1147,7 +1147,7 @@ void ScaTra::TimIntHDG::adapt_degree()
   }
 
   int degchangeall;
-  Core::Communication::sum_all(&degchange, &degchangeall, 1, discret_->get_comm());
+  degchangeall = Core::Communication::sum_all(degchange, discret_->get_comm());
 
   if (!degchangeall) return;
 

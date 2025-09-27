@@ -504,7 +504,7 @@ void FLD::Utils::FluidCouplingWrapperBase::apply_boundary_conditions(
 
     // update the variable on all of the processors
     double par_var = 0.0;
-    Core::Communication::sum_all(&var, &par_var, 1, discret_3d_->get_comm());
+    par_var = Core::Communication::sum_all(var, discret_3d_->get_comm());
     (*map_red_dnp_)[VariableWithId.str()] = par_var;
 
     // Apply the boundary condition to the outlets
@@ -891,7 +891,7 @@ double FLD::Utils::FluidCouplingBc::area(double& density, double& viscosity, int
 
   // get total area in parallel case
   double pararea = 0.0;
-  Core::Communication::sum_all(&actarea, &pararea, 1, discret_3d_->get_comm());
+  pararea = Core::Communication::sum_all(actarea, discret_3d_->get_comm());
 
   if (myrank_ == 0)
   {
@@ -953,7 +953,7 @@ double FLD::Utils::FluidCouplingBc::flow_rate_calculation(double time, double dt
   }
 
   double flowrate = 0.0;
-  Core::Communication::sum_all(&local_flowrate, &flowrate, 1, dofrowmap->get_comm());
+  flowrate = Core::Communication::sum_all(local_flowrate, dofrowmap->get_comm());
 
   return flowrate;
 }  // FluidImplicitTimeInt::flow_rate_calculation
@@ -1007,7 +1007,7 @@ double FLD::Utils::FluidCouplingBc::pressure_calculation(double time, double dta
 
   // get total flowrate in parallel case
   double parpressure = 0.0;
-  Core::Communication::sum_all(&actpressure, &parpressure, 1, discret_3d_->get_comm());
+  parpressure = Core::Communication::sum_all(actpressure, discret_3d_->get_comm());
 
   return parpressure;
 }  // FluidImplicitTimeInt::pressure_calculation

@@ -272,7 +272,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
   // output
   int total_numactive_pairs = 0;
   num_active_pairs = static_cast<int>(coupled_ele_pairs_.size());
-  Core::Communication::sum_all(&num_active_pairs, &total_numactive_pairs, 1, get_comm());
+  total_numactive_pairs = Core::Communication::sum_all(num_active_pairs, get_comm());
   if (my_mpi_rank_ == 0)
   {
     std::cout << "\nFound " << total_numactive_pairs
@@ -366,7 +366,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
   // output
   int total_num_active_pairs = 0;
   num_active_pairs = static_cast<int>(coupled_ele_pairs_.size());
-  Core::Communication::sum_all(&num_active_pairs, &total_num_active_pairs, 1, get_comm());
+  total_num_active_pairs = Core::Communication::sum_all(num_active_pairs, get_comm());
   if (my_mpi_rank_ == 0)
   {
     std::cout << "\nFound " << total_num_active_pairs
@@ -402,7 +402,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNonConformingAlgorithm
 
   // sum over all procs.
   int sum_has_variable_diameter = 0;
-  Core::Communication::sum_all(&has_variable_diameter, &sum_has_variable_diameter, 1, get_comm());
+  sum_has_variable_diameter = Core::Communication::sum_all(has_variable_diameter, get_comm());
   // if one has a variable diameter, set the flag to true
   if (sum_has_variable_diameter > 0) has_variable_diameter_ = true;
 }

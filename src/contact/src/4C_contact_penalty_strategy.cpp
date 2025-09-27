@@ -195,8 +195,8 @@ void CONTACT::PenaltyStrategy::evaluate_contact(
   int localcontact = isincontact;
   int localchange = activesetchange;
 
-  Core::Communication::sum_all(&localcontact, &globalcontact, 1, get_comm());
-  Core::Communication::sum_all(&localchange, &globalchange, 1, get_comm());
+  globalcontact = Core::Communication::sum_all(localcontact, get_comm());
+  globalchange = Core::Communication::sum_all(localchange, get_comm());
 
   if (globalcontact >= 1)
   {
@@ -787,8 +787,8 @@ void CONTACT::PenaltyStrategy::assemble()
   int localcontact = isincontact;
   int localchange = activesetchange;
 
-  Core::Communication::sum_all(&localcontact, &globalcontact, 1, get_comm());
-  Core::Communication::sum_all(&localchange, &globalchange, 1, get_comm());
+  globalcontact = Core::Communication::sum_all(localcontact, get_comm());
+  globalchange = Core::Communication::sum_all(localchange, get_comm());
 
   if (globalcontact >= 1)
   {

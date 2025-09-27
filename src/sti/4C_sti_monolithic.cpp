@@ -487,7 +487,7 @@ void STI::Monolithic::fd_check()
 
   // communicate tracking variables
   int counterglobal(0);
-  Core::Communication::sum_all(&counter, &counterglobal, 1, get_comm());
+  counterglobal = Core::Communication::sum_all(counter, get_comm());
   double maxabserrglobal(0.);
   maxabserrglobal = Core::Communication::max_all(maxabserr, get_comm());
   double maxrelerrglobal(0.);

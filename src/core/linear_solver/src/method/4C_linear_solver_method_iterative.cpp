@@ -187,7 +187,7 @@ int Core::LinearSolver::IterativeSolver::solve()
     int my_error = 0;
     if (ret != Belos::Converged) my_error = 1;
     int glob_error = 0;
-    Core::Communication::sum_all(&my_error, &glob_error, 1, comm_);
+    glob_error = Core::Communication::sum_all(my_error, comm_);
 
     if (glob_error > 0)
     {
@@ -259,7 +259,7 @@ bool Core::LinearSolver::IterativeSolver::allow_reuse_preconditioner(
   int nProc = Core::Communication::num_mpi_ranks(comm_);
   int lAllowReuse = bAllowReuse == true ? 1 : 0;
   int gAllowReuse = 0;
-  Core::Communication::sum_all(&lAllowReuse, &gAllowReuse, 1, comm_);
+  gAllowReuse = Core::Communication::sum_all(lAllowReuse, comm_);
 
   return gAllowReuse == nProc;
 }

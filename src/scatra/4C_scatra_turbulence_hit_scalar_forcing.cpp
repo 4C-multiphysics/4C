@@ -334,11 +334,7 @@ namespace ScaTra
       (local_phi)[pos] = (*phinp_)[lid];
     }
 
-    // get values from all processors
-    // number of nodes without slave nodes
-    const int countallnodes = nummodes_ * nummodes_ * nummodes_;
-    Core::Communication::sum_all(
-        local_phi.data(), global_phi.data(), countallnodes, discret_->get_comm());
+    global_phi = Core::Communication::sum_all(local_phi, discret_->get_comm());
 
     //----------------------------------------
     // fast Fourier transformation using FFTW
@@ -677,11 +673,7 @@ namespace ScaTra
         }
       }
 
-      // get values form all processors
-      // number of nodes without slave nodes
-      const int countallnodes = nummodes_ * nummodes_ * nummodes_;
-      Core::Communication::sum_all(
-          local_phi.data(), global_phi.data(), countallnodes, discret_->get_comm());
+      global_phi = Core::Communication::sum_all(local_phi, discret_->get_comm());
 
       //----------------------------------------
       // fast Fourier transformation using FFTW

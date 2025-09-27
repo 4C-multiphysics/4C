@@ -271,13 +271,13 @@ MultiScale::MicroStatic::MicroStatic(const int microdisnum, const double V0)
   discret_->clear_state();
 
   // compute volume of all elements
-  Core::Communication::sum_all(
-      &my_micro_discretization_volume, &initial_volume_, 1, discret_->get_comm());
+  initial_volume_ =
+      Core::Communication::sum_all(my_micro_discretization_volume, discret_->get_comm());
 
   // compute density of all elements
   double micro_discretization_density_integration = 0.0;
-  Core::Communication::sum_all(&my_micro_discretization_density_integration,
-      &micro_discretization_density_integration, 1, discret_->get_comm());
+  micro_discretization_density_integration = Core::Communication::sum_all(
+      my_micro_discretization_density_integration, discret_->get_comm());
 
   density_ = micro_discretization_density_integration / initial_volume_;
 
@@ -1067,7 +1067,7 @@ void MultiScale::MicroStatic::static_homogenization(Core::LinAlg::Matrix<6, 1>* 
       P(i, j) /= initial_volume_;
       // sum P(i,j) over the microdis
       double sum = 0.0;
-      Core::Communication::sum_all(&(P(i, j)), &sum, 1, discret_->get_comm());
+      sum = Core::Communication::sum_all((P(i, j)), discret_->get_comm());
       P(i, j) = sum;
     }
   }
@@ -1196,7 +1196,7 @@ void MultiScale::MicroStatic::static_homogenization(Core::LinAlg::Matrix<6, 1>* 
 
     // sum result of matrix-matrix product over procs
     std::vector<double> sum(81, 0.0);
-    Core::Communication::sum_all(val.data(), sum.data(), 81, discret_->get_comm());
+    sum = Core::Communication::sum_all(val, discret_->get_comm());
 
     if (Core::Communication::my_mpi_rank(discret_->get_comm()) == 0)
     {

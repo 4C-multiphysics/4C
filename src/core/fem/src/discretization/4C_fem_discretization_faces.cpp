@@ -68,7 +68,7 @@ void Core::FE::DiscretizationFaces::create_internal_faces_extension(const bool v
   {
     int summyfaces = facerowptr_.size();
     int summall = 0;
-    Core::Communication::sum_all(&summyfaces, &summall, 1, comm_);
+    summall = Core::Communication::sum_all(summyfaces, comm_);
 
     if (Core::Communication::my_mpi_rank(comm_) == 0)
       std::cout << "number of created faces:   " << summall << "\n" << std::endl;
@@ -1065,7 +1065,7 @@ void Core::FE::DiscretizationFaces::print_faces(std::ostream& os) const
     for (ecurr = faces_.begin(); ecurr != faces_.end(); ++ecurr)
       if (ecurr->second->owner() == Core::Communication::my_mpi_rank(get_comm())) nummyfaces++;
 
-    Core::Communication::sum_all(&nummyfaces, &numglobalfaces, 1, get_comm());
+    numglobalfaces = Core::Communication::sum_all(nummyfaces, get_comm());
   }
 
   // print head

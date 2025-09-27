@@ -58,9 +58,9 @@ void ScaTra::LevelSet::Intersection::capture_zero_level_set(const Core::LinAlg::
   get_zero_level_set(phi, scatradis, elementBoundaryIntCells);
 
   // collect contributions from all procs and store in respective variables
-  Core::Communication::sum_all(&volume_plus(), &volumedomainplus, 1, scatradis.get_comm());
-  Core::Communication::sum_all(&volume_minus(), &volumedomainminus, 1, scatradis.get_comm());
-  Core::Communication::sum_all(&surface(), &zerosurface, 1, scatradis.get_comm());
+  volumedomainplus = Core::Communication::sum_all(volume_plus(), scatradis.get_comm());
+  volumedomainminus = Core::Communication::sum_all(volume_minus(), scatradis.get_comm());
+  zerosurface = Core::Communication::sum_all(surface(), scatradis.get_comm());
 
   // export also interface to all procs
   export_interface(elementBoundaryIntCells, scatradis.get_comm());

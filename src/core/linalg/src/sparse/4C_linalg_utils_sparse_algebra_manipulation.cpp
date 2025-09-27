@@ -608,7 +608,7 @@ std::shared_ptr<Core::LinAlg::Map> Core::LinAlg::split_map(
   }
   myaugids.resize(count);
   int gcount;
-  Core::Communication::sum_all(&count, &gcount, 1, Comm);
+  gcount = Core::Communication::sum_all(count, Comm);
   std::shared_ptr<Core::LinAlg::Map> Aunknown =
       std::make_shared<Core::LinAlg::Map>(gcount, count, myaugids.data(), 0, Comm);
 

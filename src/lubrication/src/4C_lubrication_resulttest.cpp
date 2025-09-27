@@ -43,7 +43,7 @@ void Lubrication::ResultTest::test_node(
 
   int havenode(dis_->have_global_node(node));
   int isnodeofanybody(0);
-  Core::Communication::sum_all(&havenode, &isnodeofanybody, 1, dis_->get_comm());
+  isnodeofanybody = Core::Communication::sum_all(havenode, dis_->get_comm());
 
   if (isnodeofanybody == 0)
   {

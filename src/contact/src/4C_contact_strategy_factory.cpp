@@ -1048,7 +1048,7 @@ void CONTACT::STRATEGY::Factory::build_interfaces(const Teuchos::ParameterList& 
         if (fool->second->owner() == Core::Communication::my_mpi_rank(get_comm())) ++lsize;
 
       int gsize = 0;
-      Core::Communication::sum_all(&lsize, &gsize, 1, get_comm());
+      gsize = Core::Communication::sum_all(lsize, get_comm());
 
       bool nurbs = false;
       if (currele.size() > 0) nurbs = Core::FE::is_nurbs_celltype(currele.begin()->second->shape());
@@ -1234,7 +1234,7 @@ int CONTACT::STRATEGY::Factory::identify_full_subset(const Core::LinAlg::Map& ma
   int lfullsubmap = static_cast<int>(is_fullsubmap);
   int gfullsubmap = 0;
 
-  Core::Communication::sum_all(&lfullsubmap, &gfullsubmap, 1, get_comm());
+  gfullsubmap = Core::Communication::sum_all(lfullsubmap, get_comm());
 
   return (gfullsubmap == Core::Communication::num_mpi_ranks(get_comm()) ? sub_id : -1);
 }

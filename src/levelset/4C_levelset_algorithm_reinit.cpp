@@ -267,8 +267,8 @@ bool ScaTra::LevelSetAlgorithm::convergence_check_reinit()
     // communicate sums
     double global_sum = 0.0;
     int global_num_nodes = 0;
-    Core::Communication::sum_all(&local_sum, &global_sum, 1, discret_->get_comm());
-    Core::Communication::sum_all(&local_num_nodes, &global_num_nodes, 1, discret_->get_comm());
+    global_sum = Core::Communication::sum_all(local_sum, discret_->get_comm());
+    global_num_nodes = Core::Communication::sum_all(local_num_nodes, discret_->get_comm());
 
     // compute current error in band
     const double err = global_sum / ((double)global_num_nodes);
@@ -640,8 +640,7 @@ void ScaTra::LevelSetAlgorithm::reinit_geo(
       }
     }
 
-    Core::Communication::sum_all(
-        nodecoords.data(), allnodecoords.data(), (int)nodecoords.size(), discret_->get_comm());
+    allnodecoords = Core::Communication::sum_all(nodecoords, discret_->get_comm());
   }
 
   //================================================================

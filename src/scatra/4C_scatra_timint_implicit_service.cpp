@@ -439,10 +439,9 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> ScaTra::ScaTraTimIntImpl::cal
 
     // care for the parallel case
     std::vector<double> parnormfluxintegral(num_dof_per_node());
-    Core::Communication::sum_all(normfluxintegral.data(), parnormfluxintegral.data(),
-        num_dof_per_node(), discret_->get_comm());
+    parnormfluxintegral = Core::Communication::sum_all(normfluxintegral, discret_->get_comm());
     double parboundaryint = 0.0;
-    Core::Communication::sum_all(&boundaryint, &parboundaryint, 1, discret_->get_comm());
+    parboundaryint = Core::Communication::sum_all(boundaryint, discret_->get_comm());
 
     for (int idof = 0; idof < num_dof_per_node(); ++idof)
     {
@@ -1215,8 +1214,7 @@ void ScaTra::ScaTraTimIntImpl::output_integr_reac(const int num) const
     // global integral of reaction terms
     std::vector<double> intreacterm(num_scal(), 0.0);
     for (int k = 0; k < num_scal(); ++k)
-      Core::Communication::sum_all(
-          &((*myreacnp)[k]), &intreacterm[k], 1, phinp_->get_map().get_comm());
+      intreacterm[k] = Core::Communication::sum_all(((*myreacnp)[k]), phinp_->get_map().get_comm());
 
     // print out values
     if (myrank_ == 0)
@@ -1497,8 +1495,8 @@ void ScaTra::ScaTraTimIntImpl::recompute_mean_csgs_b()
     }
 
     // gather contibutions of all procs
-    Core::Communication::sum_all(&local_sumCai, &global_sumCai, 1, discret_->get_comm());
-    Core::Communication::sum_all(&local_sumVol, &global_sumVol, 1, discret_->get_comm());
+    global_sumCai = Core::Communication::sum_all(local_sumCai, discret_->get_comm());
+    global_sumVol = Core::Communication::sum_all(local_sumVol, discret_->get_comm());
 
     // calculate mean Cai
     meanCai = global_sumCai / global_sumVol;
@@ -1931,7 +1929,7 @@ void ScaTra::ScaTraTimIntImpl::fd_check()
 
   // communicate tracking variables
   int counterglobal(0);
-  Core::Communication::sum_all(&counter, &counterglobal, 1, discret_->get_comm());
+  counterglobal = Core::Communication::sum_all(counter, discret_->get_comm());
   double maxabserrglobal(0.);
   maxabserrglobal = Core::Communication::max_all(maxabserr, discret_->get_comm());
   double maxrelerrglobal(0.);

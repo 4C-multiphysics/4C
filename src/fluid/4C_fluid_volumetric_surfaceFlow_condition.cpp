@@ -376,9 +376,9 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::center_of_mass_calculation(
     double par_n_val = 0.0;
 
     // Summ all of the local processor values in one values
-    Core::Communication::sum_all(&act_val, &par_val, 1, discret_->get_comm());
-    Core::Communication::sum_all(&act_n_val, &par_n_val, 1, discret_->get_comm());
-    Core::Communication::sum_all(&act_area, &par_area, 1, discret_->get_comm());
+    par_val = Core::Communication::sum_all(act_val, discret_->get_comm());
+    par_n_val = Core::Communication::sum_all(act_n_val, discret_->get_comm());
+    par_area = Core::Communication::sum_all(act_area, discret_->get_comm());
 
     // finally evaluate the actual center of mass and average normal
     (*coords)[i] = par_val / par_area;
@@ -495,7 +495,7 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::eval_local_normalized_radii(
       double par_val = 0.0;
 
       // Summ all of the local processor values in one values
-      Core::Communication::sum_all(&act_val, &par_val, 1, discret_->get_comm());
+      par_val = Core::Communication::sum_all(act_val, discret_->get_comm());
 
       // set the coordinate of the nodes on the local processor
       (it->second)[i] = par_val;
@@ -1347,7 +1347,7 @@ double FLD::Utils::FluidVolumetricSurfaceFlowBc::flow_rate_calculation(
   }
 
   double flowrate = 0.0;
-  Core::Communication::sum_all(&local_flowrate, &flowrate, 1, dofrowmap->get_comm());
+  flowrate = Core::Communication::sum_all(local_flowrate, dofrowmap->get_comm());
 
   return flowrate;
 
@@ -1600,7 +1600,7 @@ double FLD::Utils::FluidVolumetricSurfaceFlowBc::area(
 
   // get total area in parallel case
   double pararea = 0.0;
-  Core::Communication::sum_all(&actarea, &pararea, 1, discret_->get_comm());
+  pararea = Core::Communication::sum_all(actarea, discret_->get_comm());
 
   if (myrank_ == 0)
   {

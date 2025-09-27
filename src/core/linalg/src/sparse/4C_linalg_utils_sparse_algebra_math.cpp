@@ -447,7 +447,7 @@ Core::LinAlg::SparseMatrix Core::LinAlg::multiply_multi_vector_multi_vector(
     if (prod[i] != 0.0) numnonzero++;
 
   int glob_numnonzero = 0;
-  Core::Communication::sum_all(&numnonzero, &glob_numnonzero, 1, prod.get_comm());
+  glob_numnonzero = Core::Communication::sum_all(numnonzero, prod.get_comm());
 
   Core::LinAlg::Map mv1map(mv1.get_map().num_global_elements(), mv1.get_map().num_my_elements(),
       mv1.get_map().my_global_elements(), 0, mv1.get_map().get_comm());

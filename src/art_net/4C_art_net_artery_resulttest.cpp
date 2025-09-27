@@ -50,7 +50,7 @@ void Arteries::ArteryResultTest::test_node(
 
   int havenode(dis_->have_global_node(node));
   int isnodeofanybody(0);
-  Core::Communication::sum_all(&havenode, &isnodeofanybody, 1, dis_->get_comm());
+  isnodeofanybody = Core::Communication::sum_all(havenode, dis_->get_comm());
 
   if (isnodeofanybody == 0)
   {
@@ -105,7 +105,7 @@ void Arteries::ArteryResultTest::test_element(
 
   int haveelement(dis_->have_global_element(element));
   int iselementofanybody(0);
-  Core::Communication::sum_all(&haveelement, &iselementofanybody, 1, dis_->get_comm());
+  iselementofanybody = Core::Communication::sum_all(haveelement, dis_->get_comm());
 
   if (iselementofanybody == 0)
   {

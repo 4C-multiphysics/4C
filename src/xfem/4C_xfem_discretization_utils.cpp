@@ -454,7 +454,7 @@ XFEM::Utils::XFEMDiscretizationBuilder::split_condition(const Core::Conditions::
     if (nodecolset.find(ngid) != nodecolset.end()) lcount++;
   }
 
-  Core::Communication::sum_all(&lcount, &gcount, 1, comm);
+  gcount = Core::Communication::sum_all(lcount, comm);
   // return a nullptr pointer, if there is nothing to copy
   if (gcount == 0) return nullptr;
 

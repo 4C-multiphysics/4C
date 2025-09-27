@@ -286,7 +286,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
   // output
   int total_num_active_pairs = 0;
   int num_active_pairs = static_cast<int>(coupled_ele_pairs_.size());
-  Core::Communication::sum_all(&num_active_pairs, &total_num_active_pairs, 1, get_comm());
+  total_num_active_pairs = Core::Communication::sum_all(num_active_pairs, get_comm());
   if (my_mpi_rank_ == 0)
   {
     std::cout << "Only " << total_num_active_pairs
@@ -490,8 +490,8 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
 
   // user output
   double blood_vessel_volume_all_procs = 0.0;
-  Core::Communication::sum_all(
-      &total_blood_vessel_volume, &blood_vessel_volume_all_procs, 1, get_comm());
+  blood_vessel_volume_all_procs =
+      Core::Communication::sum_all(total_blood_vessel_volume, get_comm());
   if (my_mpi_rank_ == 0)
   {
     std::cout << "\n<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>" << '\n';

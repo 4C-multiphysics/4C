@@ -580,7 +580,7 @@ bool FLD::XFluidFluid::x_timint_project_from_embedded_discretization(
 
   int numfailed = 0;
   int my_numfailed = projection_nodeToDof.size();
-  Core::Communication::sum_all(&my_numfailed, &numfailed, 1, discret_->get_comm());
+  numfailed = Core::Communication::sum_all(my_numfailed, discret_->get_comm());
 
   return numfailed == 0;
 
@@ -853,8 +853,8 @@ std::shared_ptr<std::vector<double>> FLD::XFluidFluid::evaluate_error_compared_t
   // reduce and sum over all procs
 
   for (int i = 0; i < num_dom_norms; ++i) (*glob_dom_norms_emb)(i) = 0.0;
-  Core::Communication::sum_all(cpu_dom_norms_emb.values(), glob_dom_norms_emb->values(),
-      num_dom_norms, mc_xff_->get_cond_dis()->get_comm());
+  *glob_dom_norms_emb =
+      Core::Communication::sum_all(cpu_dom_norms_emb, mc_xff_->get_cond_dis()->get_comm());
 
   // standard domain errors bg-dis
   double dom_bg_err_vel_L2 =

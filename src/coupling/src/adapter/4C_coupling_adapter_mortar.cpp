@@ -395,7 +395,7 @@ void Coupling::Adapter::CouplingMortar::setup_interface(
   if (masterdis.get() != slavedis.get())
   {
     int nummastermtreles = masterelements.size();
-    Core::Communication::sum_all(&nummastermtreles, &eleoffset, 1, comm);
+    eleoffset = Core::Communication::sum_all(nummastermtreles, comm);
   }
 
   if (slidingale == true) eleoffset = masterdis->element_row_map()->max_all_gid() + 1;
@@ -827,7 +827,7 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
     // communicate new position Xnew to all procs
     // (we can use SumAll here, as Xnew will be zero on all processors
     // except for the owner processor of the current node)
-    Core::Communication::sum_all(Xnew.data(), Xnewglobal.data(), 3, comm);
+    Xnewglobal = Core::Communication::sum_all(Xnew, comm);
 
     // const_cast to force modified X() into mtnode
     // const_cast to force modified xspatial() into mtnode

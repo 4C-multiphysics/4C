@@ -34,11 +34,10 @@ void Core::Rebalance::print_parallel_distribution(const Core::FE::Discretization
     my_n_elements[myrank] = dis.num_my_row_elements();
     my_n_ghostele[myrank] = dis.num_my_col_elements() - my_n_elements[myrank];
 
-    Core::Communication::sum_all(my_n_nodes.data(), n_nodes.data(), numproc, dis.get_comm());
-    Core::Communication::sum_all(
-        my_n_ghostnodes.data(), n_ghostnodes.data(), numproc, dis.get_comm());
-    Core::Communication::sum_all(my_n_elements.data(), n_elements.data(), numproc, dis.get_comm());
-    Core::Communication::sum_all(my_n_ghostele.data(), n_ghostele.data(), numproc, dis.get_comm());
+    n_nodes = Core::Communication::sum_all(my_n_nodes, dis.get_comm());
+    n_ghostnodes = Core::Communication::sum_all(my_n_ghostnodes, dis.get_comm());
+    n_elements = Core::Communication::sum_all(my_n_elements, dis.get_comm());
+    n_ghostele = Core::Communication::sum_all(my_n_ghostele, dis.get_comm());
 
     if (myrank == 0)
     {

@@ -278,8 +278,8 @@ void FLD::DynSmagFilter::apply_filter_for_dynamic_computation_of_prt(
         modelparams->get<std::shared_ptr<std::vector<double>>>("local_Cs_delta_sq_sum");
     std::shared_ptr<std::vector<double>> global_Cs_delta_sq_sum;
     global_Cs_delta_sq_sum = std::make_shared<std::vector<double>>(nlayer, 0.0);
-    Core::Communication::sum_all(local_Cs_delta_sq_sum->data(), global_Cs_delta_sq_sum->data(),
-        local_Cs_delta_sq_sum->size(), discret_->get_comm());
+    *global_Cs_delta_sq_sum =
+        Core::Communication::sum_all(*local_Cs_delta_sq_sum, discret_->get_comm());
     extramodelparams->set<std::shared_ptr<std::vector<double>>>(
         "global_Cs_delta_sq_sum", global_Cs_delta_sq_sum);
     extramodelparams->set<int>("numele_layer", numele_layer);
@@ -617,18 +617,18 @@ void FLD::DynSmagFilter::dyn_smag_compute_cs()
 
     for (int rr = 0; rr < numlayers; ++rr)
     {
-      Core::Communication::sum_all(
-          &(local_count_for_average[rr]), &(count_for_average[rr]), 1, discret_->get_comm());
-      Core::Communication::sum_all(
-          &(local_ele_sum_LijMij[rr]), &((*averaged_LijMij)[rr]), 1, discret_->get_comm());
-      Core::Communication::sum_all(
-          &(local_ele_sum_MijMij[rr]), &((*averaged_MijMij)[rr]), 1, discret_->get_comm());
+      (count_for_average[rr]) =
+          Core::Communication::sum_all((local_count_for_average[rr]), discret_->get_comm());
+      ((*averaged_LijMij)[rr]) =
+          Core::Communication::sum_all((local_ele_sum_LijMij[rr]), discret_->get_comm());
+      ((*averaged_MijMij)[rr]) =
+          Core::Communication::sum_all((local_ele_sum_MijMij[rr]), discret_->get_comm());
       if (physicaltype_ == Inpar::FLUID::loma)
       {
-        Core::Communication::sum_all(&(local_ele_sum_CI_numerator[rr]),
-            &((*averaged_CI_numerator)[rr]), 1, discret_->get_comm());
-        Core::Communication::sum_all(&(local_ele_sum_CI_denominator[rr]),
-            &((*averaged_CI_denominator)[rr]), 1, discret_->get_comm());
+        ((*averaged_CI_numerator)[rr]) =
+            Core::Communication::sum_all((local_ele_sum_CI_numerator[rr]), discret_->get_comm());
+        ((*averaged_CI_denominator)[rr]) =
+            Core::Communication::sum_all((local_ele_sum_CI_denominator[rr]), discret_->get_comm());
       }
     }
 
@@ -978,12 +978,12 @@ void FLD::DynSmagFilter::dyn_smag_compute_prt(
 
     for (int rr = 0; rr < numlayers; ++rr)
     {
-      Core::Communication::sum_all(
-          &(local_count_for_average[rr]), &(count_for_average[rr]), 1, scatradiscret_->get_comm());
-      Core::Communication::sum_all(
-          &(local_ele_sum_LkMk[rr]), &((*averaged_LkMk)[rr]), 1, scatradiscret_->get_comm());
-      Core::Communication::sum_all(
-          &(local_ele_sum_MkMk[rr]), &((*averaged_MkMk)[rr]), 1, scatradiscret_->get_comm());
+      (count_for_average[rr]) =
+          Core::Communication::sum_all((local_count_for_average[rr]), scatradiscret_->get_comm());
+      ((*averaged_LkMk)[rr]) =
+          Core::Communication::sum_all((local_ele_sum_LkMk[rr]), scatradiscret_->get_comm());
+      ((*averaged_MkMk)[rr]) =
+          Core::Communication::sum_all((local_ele_sum_MkMk[rr]), scatradiscret_->get_comm());
     }
 
     // do averaging

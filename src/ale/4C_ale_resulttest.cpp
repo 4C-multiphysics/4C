@@ -36,7 +36,7 @@ void ALE::AleResultTest::test_node(
 
   int havenode(aledis_->have_global_node(node));
   int isnodeofanybody(0);
-  Core::Communication::sum_all(&havenode, &isnodeofanybody, 1, aledis_->get_comm());
+  isnodeofanybody = Core::Communication::sum_all(havenode, aledis_->get_comm());
 
   if (isnodeofanybody == 0)
   {

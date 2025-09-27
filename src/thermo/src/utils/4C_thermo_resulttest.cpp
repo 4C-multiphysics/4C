@@ -40,7 +40,7 @@ void Thermo::ResultTest::test_node(
 
   int havenode(thrdisc_->have_global_node(node));
   int isnodeofanybody(0);
-  Core::Communication::sum_all(&havenode, &isnodeofanybody, 1, thrdisc_->get_comm());
+  isnodeofanybody = Core::Communication::sum_all(havenode, thrdisc_->get_comm());
 
   if (isnodeofanybody == 0)
   {

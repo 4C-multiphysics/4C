@@ -624,15 +624,15 @@ void Adapter::StructureBaseAlgorithmNew::detect_element_technologies(
   }
 
   // eas - sum over all processors
-  Core::Communication::sum_all(&iseas_local, &iseas_global, 1, actdis_->get_comm());
+  iseas_global = Core::Communication::sum_all(iseas_local, actdis_->get_comm());
   if (iseas_global > 0) eletechs.insert(Inpar::Solid::EleTech::eas);
 
   // fbar - sum over all processors
-  Core::Communication::sum_all(&isfbar_local, &isfbar_global, 1, actdis_->get_comm());
+  isfbar_global = Core::Communication::sum_all(isfbar_local, actdis_->get_comm());
   if (isfbar_global > 0) eletechs.insert(Inpar::Solid::EleTech::fbar);
 
   // rotation vector DOFs - sum over all processors
-  Core::Communication::sum_all(&isrotvec_local, &isrotvec_global, 1, actdis_->get_comm());
+  isrotvec_global = Core::Communication::sum_all(isrotvec_local, actdis_->get_comm());
   if (isrotvec_global > 0) eletechs.insert(Inpar::Solid::EleTech::rotvec);
 }
 

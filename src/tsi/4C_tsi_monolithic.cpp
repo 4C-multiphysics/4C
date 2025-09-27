@@ -2400,8 +2400,8 @@ void TSI::Monolithic::calculate_necking_tsi_results()
   double top_force_global = 0.0;
 
   // sum all nodal forces (top_force_local) in one global vector (top_force_global)
-  Core::Communication::sum_all(
-      &top_force_local, &top_force_global, 1, structure_field()->discretization()->get_comm());
+  top_force_global = Core::Communication::sum_all(
+      top_force_local, structure_field()->discretization()->get_comm());
 
   // --------------------------------------------- reaction force of whole body
   // due to symmetry only 1/8 is simulated, i.e. only 1/4 of the surface is considered
@@ -2432,8 +2432,8 @@ void TSI::Monolithic::calculate_necking_tsi_results()
   // initialise the top displacement
   double top_disp_global = 0.0;
   // sum all nodal displacements (top_disp_local) in one global vector (top_disp_global)
-  Core::Communication::sum_all(
-      &top_disp_local.at(0), &top_disp_global, 1, structure_field()->discretization()->get_comm());
+  top_disp_global = Core::Communication::sum_all(
+      top_disp_local.at(0), structure_field()->discretization()->get_comm());
 
   // ------------------------------------------------ necking radius at point A
   // necking, i.e. radial displacements in centre plane (here: xy-plane)
@@ -2467,8 +2467,8 @@ void TSI::Monolithic::calculate_necking_tsi_results()
 
   // sum necking deformations in the global variable necking_radius_global
   double necking_radius_global = 0.0;
-  Core::Communication::sum_all(&necking_radius.at(0), &necking_radius_global, 1,
-      structure_field()->discretization()->get_comm());
+  necking_radius_global = Core::Communication::sum_all(
+      necking_radius.at(0), structure_field()->discretization()->get_comm());
 
   //---------------------------------------------------------------------------
   // -------------------------------------------------- initialise TEMPERATURES
@@ -2503,8 +2503,8 @@ void TSI::Monolithic::calculate_necking_tsi_results()
   }
   // sum necking temperatures in the variable temperature_global
   double necking_temperature_global = 0.0;
-  Core::Communication::sum_all(&temperature.at(0), &necking_temperature_global, 1,
-      thermo_field()->discretization()->get_comm());
+  necking_temperature_global =
+      Core::Communication::sum_all(temperature.at(0), thermo_field()->discretization()->get_comm());
 
   // -----------------------------------------temperatures at top, i.e. point B
 
@@ -2539,8 +2539,8 @@ void TSI::Monolithic::calculate_necking_tsi_results()
 
   // sum top-temperatures in the variable top_temperature_global
   double top_temperature_global = 0.0;
-  Core::Communication::sum_all(&top_temperature_local.at(0), &top_temperature_global, 1,
-      thermo_field()->discretization()->get_comm());
+  top_temperature_global = Core::Communication::sum_all(
+      top_temperature_local.at(0), thermo_field()->discretization()->get_comm());
 
   // -------------------------------------------------- print results to screen
   std::cout.precision(7);

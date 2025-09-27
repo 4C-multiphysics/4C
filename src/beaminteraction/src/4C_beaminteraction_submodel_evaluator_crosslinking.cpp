@@ -3672,8 +3672,7 @@ void BeamInteraction::SubmodelEvaluator::Crosslinking::communicate_bin_ids(
 
   // ---- prepare receiving procs -----
   std::vector<int> summedtargets(numproc, 0);
-  Core::Communication::sum_all(
-      targetprocs.data(), summedtargets.data(), numproc, discret().get_comm());
+  summedtargets = Core::Communication::sum_all(targetprocs, discret().get_comm());
 
   // ---- receive ----- (we do not need to unpack anything)
   for (int rec = 0; rec < summedtargets[myrank]; ++rec)
@@ -3968,8 +3967,7 @@ void BeamInteraction::SubmodelEvaluator::Crosslinking::communicate_beam_link_aft
   // -----------------------------------------------------------------------
   // ---- prepare receiving procs -----
   std::vector<int> summedtargets(numproc, 0);
-  Core::Communication::sum_all(
-      targetprocs.data(), summedtargets.data(), numproc, discret_ptr()->get_comm());
+  summedtargets = Core::Communication::sum_all(targetprocs, discret_ptr()->get_comm());
 
   // myrank receive all packs that are sent to him
   for (int rec = 0; rec < summedtargets[g_state().get_my_rank()]; ++rec)
@@ -4082,8 +4080,7 @@ void BeamInteraction::SubmodelEvaluator::Crosslinking::prepare_receiving_procs(
     targetprocs[prociter->first] = 1;
   // store number of messages myrank receives
   summedtargets.resize(numproc, 0);
-  Core::Communication::sum_all(
-      targetprocs.data(), summedtargets.data(), numproc, discret().get_comm());
+  summedtargets = Core::Communication::sum_all(targetprocs, discret().get_comm());
 }
 
 /*-----------------------------------------------------------------------------*

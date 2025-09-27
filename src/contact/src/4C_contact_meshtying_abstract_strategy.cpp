@@ -366,7 +366,7 @@ void CONTACT::MtAbstractStrategy::restrict_meshtying_zone()
   int globalfounduntied = 0;
   for (int i = 0; i < (int)interface_.size(); ++i)
     interface_[i]->detect_tied_slave_nodes(localfounduntied);
-  Core::Communication::sum_all(&localfounduntied, &globalfounduntied, 1, get_comm());
+  globalfounduntied = Core::Communication::sum_all(localfounduntied, get_comm());
 
   // get out of here if the whole slave surface is tied
   if (globalfounduntied == 0) return;

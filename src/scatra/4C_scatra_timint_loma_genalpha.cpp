@@ -177,8 +177,8 @@ void ScaTra::TimIntLomaGenAlpha::compute_therm_pressure()
   // get integral values in parallel case
   double parnormvelint = 0.0;
   double parnormdifffluxint = 0.0;
-  Core::Communication::sum_all(&normvelint, &parnormvelint, 1, discret_->get_comm());
-  Core::Communication::sum_all(&normdifffluxint, &parnormdifffluxint, 1, discret_->get_comm());
+  parnormvelint = Core::Communication::sum_all(normvelint, discret_->get_comm());
+  parnormdifffluxint = Core::Communication::sum_all(normdifffluxint, discret_->get_comm());
 
   // clean up
   discret_->clear_state();

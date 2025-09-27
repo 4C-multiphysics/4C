@@ -25,6 +25,8 @@
 #include <stdio.h>
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
+#include <vector>
+
 FOUR_C_NAMESPACE_OPEN
 
 
@@ -710,10 +712,16 @@ void FLD::Utils::lift_drag(const std::shared_ptr<const Core::FE::Discretization>
       }  // end: loop over nodes
 
       // care for the fact that we are (most likely) parallel
-      Core::Communication::sum_all(
-          myforces.data(), ((*liftdragvals)[label]).data(), 3, trueresidual.get_comm());
-      Core::Communication::sum_all(
-          mymoments.data(), ((*liftdragvals)[label]).data() + 3, 3, trueresidual.get_comm());
+      std::vector<double> global_forces =
+          Core::Communication::sum_all(myforces, trueresidual.get_comm());
+      std::vector<double> global_moments =
+          Core::Communication::sum_all(mymoments, trueresidual.get_comm());
+      liftdragvals->at(label)[0] = global_forces[0];
+      liftdragvals->at(label)[1] = global_forces[1];
+      liftdragvals->at(label)[2] = global_forces[2];
+      liftdragvals->at(label)[3] = global_moments[3];
+      liftdragvals->at(label)[4] = global_moments[4];
+      liftdragvals->at(label)[5] = global_moments[5];
 
       // do the output
       if (myrank == 0)
@@ -858,7 +866,7 @@ std::map<int, double> FLD::Utils::compute_flow_rates(Core::FE::Discretization& d
     }
 
     double flowrate = 0.0;
-    Core::Communication::sum_all(&local_flowrate, &flowrate, 1, dofrowmap->get_comm());
+    flowrate = Core::Communication::sum_all(local_flowrate, dofrowmap->get_comm());
 
     // if(dofrowmap->Comm().MyPID()==0)
     // std::cout << "global flow rate = " << flowrate << "\t condition ID = " << condID <<

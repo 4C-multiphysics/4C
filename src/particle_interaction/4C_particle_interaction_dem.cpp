@@ -548,7 +548,7 @@ void ParticleInteraction::ParticleInteractionDEM::evaluate_particle_energy() con
   {
     std::vector<double> localkinenergy(1, 0.0);
     evaluate_particle_kinetic_energy(localkinenergy[0]);
-    Core::Communication::sum_all(localkinenergy.data(), kinenergy.data(), 1, comm_);
+    kinenergy = Core::Communication::sum_all(localkinenergy, comm_);
   }
 
   // evaluate particle gravitational potential energy contribution
@@ -556,7 +556,7 @@ void ParticleInteraction::ParticleInteractionDEM::evaluate_particle_energy() con
   {
     std::vector<double> localgravpotenergy(1, 0.0);
     evaluate_particle_gravitational_potential_energy(localgravpotenergy[0]);
-    Core::Communication::sum_all(localgravpotenergy.data(), gravpotenergy.data(), 1, comm_);
+    gravpotenergy = Core::Communication::sum_all(localgravpotenergy, comm_);
   }
 
   // evaluate elastic potential energy contribution
@@ -564,7 +564,7 @@ void ParticleInteraction::ParticleInteractionDEM::evaluate_particle_energy() con
   {
     std::vector<double> localelastpotenergy(1, 0.0);
     contact_->evaluate_elastic_potential_energy(localelastpotenergy[0]);
-    Core::Communication::sum_all(localelastpotenergy.data(), elastpotenergy.data(), 1, comm_);
+    elastpotenergy = Core::Communication::sum_all(localelastpotenergy, comm_);
   }
 
   // get specific runtime csv writer

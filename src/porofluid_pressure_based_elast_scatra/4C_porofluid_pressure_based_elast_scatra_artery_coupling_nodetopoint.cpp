@@ -79,7 +79,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingNodeToPointAlgorithm::
   // output
   int total_num_active_pairs = 0;
   int num_active_pairs = static_cast<int>(coupled_ele_pairs_.size());
-  Core::Communication::sum_all(&num_active_pairs, &total_num_active_pairs, 1, get_comm());
+  total_num_active_pairs = Core::Communication::sum_all(num_active_pairs, get_comm());
   if (my_mpi_rank_ == 0)
   {
     std::cout << total_num_active_pairs

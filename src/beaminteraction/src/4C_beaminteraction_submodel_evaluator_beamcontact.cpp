@@ -1095,7 +1095,7 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::create_beam_contact_elemen
   // simulation crashes if the assembly manager is not on all ranks.
   int my_direct_pairs = assembly_pairs_direct.size();
   int global_direct_pairs = 0;
-  Core::Communication::sum_all(&my_direct_pairs, &global_direct_pairs, 1, discret().get_comm());
+  global_direct_pairs = Core::Communication::sum_all(my_direct_pairs, discret().get_comm());
 
   // Create the needed assembly manager.
   if (global_direct_pairs > 0)

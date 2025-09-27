@@ -1408,8 +1408,8 @@ void BeamDiscretizationRuntimeOutputWriter::append_element_orientation_parameter
 
   // calculate length of all (linear) elements
   double global_linear_filament_length = 0;
-  Core::Communication::sum_all(&local_accumulated_ele_lengths, &global_linear_filament_length, 1,
-      discretization_->get_comm());
+  global_linear_filament_length =
+      Core::Communication::sum_all(local_accumulated_ele_lengths, discretization_->get_comm());
 
   //
   for (int unsigned i = 0; i < 3; ++i)
@@ -1417,8 +1417,8 @@ void BeamDiscretizationRuntimeOutputWriter::append_element_orientation_parameter
 
   // calculate global orientation parameter
   std::vector<double> global_orientation_parameter(3, 0.0);
-  Core::Communication::sum_all(local_orientation_parameter.data(),
-      global_orientation_parameter.data(), 3, discretization_->get_comm());
+  global_orientation_parameter =
+      Core::Communication::sum_all(local_orientation_parameter, discretization_->get_comm());
 
   // loop over my elements and collect the data about triads/base vectors
   for (unsigned int ibeamele = 0; ibeamele < num_beam_row_elements; ++ibeamele)
@@ -1521,8 +1521,7 @@ void BeamDiscretizationRuntimeOutputWriter::append_rve_crosssection_forces(
 
   std::vector<std::vector<double>> global_sum(3, std::vector<double>(3, 0.0));
   for (int dir = 0; dir < 3; ++dir)
-    Core::Communication::sum_all(
-        fint_sum[dir].data(), global_sum[dir].data(), 3, discretization_->get_comm());
+    global_sum[dir] = Core::Communication::sum_all(fint_sum[dir], discretization_->get_comm());
 
   // loop over all my elements and build force sum of myrank's cut element
   for (unsigned int ibeamele = 0; ibeamele < num_beam_row_elements; ++ibeamele)

@@ -365,8 +365,8 @@ std::vector<double> FSI::Utils::SlideAleUtils::centerdisp(
   structdis->clear_state();
 
   // Communicate to 'assemble' length and center displacements
-  Core::Communication::sum_all(&mylengthcirc, &lengthcirc, 1, comm);
-  Core::Communication::sum_all(mycenterdisp.data(), centerdisp.data(), dim, comm);
+  lengthcirc = Core::Communication::sum_all(mylengthcirc, comm);
+  centerdisp = Core::Communication::sum_all(mycenterdisp, comm);
 
   if (lengthcirc <= 1.0E-6) FOUR_C_THROW("Zero interface length!");
 
@@ -619,7 +619,7 @@ void FSI::Utils::SlideAleUtils::redundant_elements(
     int globsum = 0;
     int partsum = (vstruslideleids.size());
 
-    Core::Communication::sum_all(&partsum, &globsum, 1, comm);
+    globsum = Core::Communication::sum_all(partsum, comm);
     // map with ele ids
     Core::LinAlg::Map mstruslideleids(
         globsum, vstruslideleids.size(), vstruslideleids.data(), 0, comm);
@@ -735,8 +735,8 @@ void FSI::Utils::SlideAleUtils::rotation(
     }  // end of ele loop
 
     // Communicate to 'assemble' length and center displacements
-    Core::Communication::sum_all(&mylengthcirc, &lengthcirc, 1, comm);
-    Core::Communication::sum_all(&myrotation, &rotation, 1, comm);
+    lengthcirc = Core::Communication::sum_all(mylengthcirc, comm);
+    rotation = Core::Communication::sum_all(myrotation, comm);
 
     if (lengthcirc >= 1.0E-6)
     {

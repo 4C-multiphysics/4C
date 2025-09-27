@@ -59,7 +59,7 @@ MonWriter::MonWriter(PostProblem& problem, std::string& infieldtype,
   {
     int localnodeowner = (int)nodeowner_;
     int numnodeowner = 0;
-    Core::Communication::sum_all(&localnodeowner, &numnodeowner, 1, (problem.get_comm()));
+    numnodeowner = Core::Communication::sum_all(localnodeowner, (problem.get_comm()));
     if ((myrank_ == 0) and (numnodeowner == 0)) FOUR_C_THROW("Could not find node {}", node);
     if ((myrank_ == 0) and (numnodeowner > 1))
       FOUR_C_THROW("Found more than one owner of node {}: {}", node, numnodeowner);

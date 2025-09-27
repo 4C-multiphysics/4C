@@ -1538,8 +1538,7 @@ void ScaTra::ScaTraTimIntElch::evaluate_cell_voltage()
         }
 
         // communicate electrode potential
-        Core::Communication::sum_all(
-            &potential, &electrodevoltage_[condid], 1, discret_->get_comm());
+        electrodevoltage_[condid] = Core::Communication::sum_all(potential, discret_->get_comm());
       }
 
     }  // loop over conditions

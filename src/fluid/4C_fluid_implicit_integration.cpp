@@ -1458,7 +1458,7 @@ void FLD::FluidImplicitTimeInt::apply_nonlinear_boundary_conditions()
 
       // sum up global flow rate over all processors and set to global value
       double flowrate = 0.0;
-      Core::Communication::sum_all(&local_flowrate, &flowrate, 1, dofrowmap->get_comm());
+      flowrate = Core::Communication::sum_all(local_flowrate, dofrowmap->get_comm());
 
       // set current flow rate
       flowratenp_[fdpcondid] = flowrate;
@@ -1506,7 +1506,7 @@ void FLD::FluidImplicitTimeInt::apply_nonlinear_boundary_conditions()
 
       // sum up global surface area over all processors
       double area = 0.0;
-      Core::Communication::sum_all(&localarea, &area, 1, discret_->get_comm());
+      area = Core::Communication::sum_all(localarea, discret_->get_comm());
 
       // clear state
       discret_->clear_state();
@@ -1531,7 +1531,7 @@ void FLD::FluidImplicitTimeInt::apply_nonlinear_boundary_conditions()
 
       // sum up global pressure integral over all processors
       double pressint = 0.0;
-      Core::Communication::sum_all(&localpressint, &pressint, 1, discret_->get_comm());
+      pressint = Core::Communication::sum_all(localpressint, discret_->get_comm());
 
       // clear state
       discret_->clear_state();
@@ -2782,12 +2782,12 @@ void FLD::FluidImplicitTimeInt::ale_update(std::string condName)
 
         // Sum variables over all processors to obtain global value
         double globalSumVelnpDotNodeTangent = 0.0;
-        Core::Communication::sum_all(
-            &localSumVelnpDotNodeTangent, &globalSumVelnpDotNodeTangent, 1, dofrowmap->get_comm());
+        globalSumVelnpDotNodeTangent =
+            Core::Communication::sum_all(localSumVelnpDotNodeTangent, dofrowmap->get_comm());
 
         int globalNumOfCondNodes = 0;
-        Core::Communication::sum_all(
-            &localNumOfCondNodes, &globalNumOfCondNodes, 1, dofrowmap->get_comm());
+        globalNumOfCondNodes =
+            Core::Communication::sum_all(localNumOfCondNodes, dofrowmap->get_comm());
 
         // Finalize calculation of mean tangent velocity
         double lambda = 0.0;
@@ -6051,8 +6051,8 @@ void FLD::FluidImplicitTimeInt::recompute_mean_csgs_b()
     discret_->clear_state();
 
     // gather contributions of all procs
-    Core::Communication::sum_all(&local_sumCai, &global_sumCai, 1, discret_->get_comm());
-    Core::Communication::sum_all(&local_sumVol, &global_sumVol, 1, discret_->get_comm());
+    global_sumCai = Core::Communication::sum_all(local_sumCai, discret_->get_comm());
+    global_sumVol = Core::Communication::sum_all(local_sumVol, discret_->get_comm());
 
     // calculate mean Cai
     meanCai = global_sumCai / global_sumVol;

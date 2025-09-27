@@ -209,7 +209,7 @@ void FSI::FSIResultTest::test_node(
 
   int havenode(slavedisc_->have_global_node(node));
   int isnodeofanybody(0);
-  Core::Communication::sum_all(&havenode, &isnodeofanybody, 1, slavedisc_->get_comm());
+  isnodeofanybody = Core::Communication::sum_all(havenode, slavedisc_->get_comm());
 
   if (isnodeofanybody == 0)
   {

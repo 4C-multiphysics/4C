@@ -45,7 +45,7 @@ namespace Core::FE
     }
 
     std::array<double, 3> x0;
-    Core::Communication::sum_all(x0send.data(), x0.data(), 3, dis.get_comm());
+    x0 = Core::Communication::sum_all(x0send, dis.get_comm());
 
     for (int i = 0; i < 3; ++i) x0[i] /= dis.num_global_nodes();
 

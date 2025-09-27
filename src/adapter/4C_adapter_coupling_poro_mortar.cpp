@@ -94,20 +94,6 @@ void Adapter::CouplingPoroMortar::add_mortar_elements(
   // get problem dimension (2D or 3D) and create (Mortar::Interface)
   const int dim = Global::Problem::instance()->n_dim();
 
-  // We need to determine an element offset to start the numbering of the slave
-  // mortar elements AFTER the master mortar elements in order to ensure unique
-  // eleIDs in the interface discretization. The element offset equals the
-  // overall number of master mortar elements (which is not equal to the number
-  // of elements in the field that is chosen as master side).
-  //
-  // If masterdis==slavedis, the element numbering is right without offset
-  int eleoffset = 0;
-  if (masterdis.get() != slavedis.get())
-  {
-    int nummastermtreles = masterelements.size();
-    Core::Communication::sum_all(&nummastermtreles, &eleoffset, 1, comm_);
-  }
-
   // feeding master elements to the interface
   std::map<int, std::shared_ptr<Core::Elements::Element>>::const_iterator elemiter;
   for (elemiter = masterelements.begin(); elemiter != masterelements.end(); ++elemiter)

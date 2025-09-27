@@ -271,7 +271,7 @@ void Cardiovascular0D::ProperOrthogonalDecomposition::read_pod_basis_vectors_fro
   std::vector<int> localnumbers(numproc, 0);
   std::vector<int> globalnumbers(numproc, 0);
   localnumbers[mypid] = mymap->num_my_elements();
-  Core::Communication::sum_all(localnumbers.data(), globalnumbers.data(), numproc, comm);
+  globalnumbers = Core::Communication::sum_all(localnumbers, comm);
 
   int factor(0);
   for (int i = 0; i < mypid; i++) factor += globalnumbers[i];

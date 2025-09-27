@@ -311,7 +311,7 @@ void FLD::Utils::FluidImpedanceBc::flow_rate_calculation(const int condid)
   }
 
   double flowrate = 0.0;
-  Core::Communication::sum_all(&local_flowrate, &flowrate, 1, dofrowmap->get_comm());
+  flowrate = Core::Communication::sum_all(local_flowrate, dofrowmap->get_comm());
 
   q_np_ = flowrate;
 
@@ -596,7 +596,7 @@ double FLD::Utils::FluidImpedanceBc::area(const int condid)
 
   // get total area in parallel case
   double pararea = 0.0;
-  Core::Communication::sum_all(&actarea, &pararea, 1, discret_->get_comm());
+  pararea = Core::Communication::sum_all(actarea, discret_->get_comm());
 
   //  if (myrank_ == 0)
   //    std::cout << "Impedance condition Id: " << condid << ", Area: " << pararea << std::endl;

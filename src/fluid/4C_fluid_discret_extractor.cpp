@@ -303,8 +303,7 @@ FLD::FluidDiscretExtractor::FluidDiscretExtractor(std::shared_ptr<Core::FE::Disc
           }
 
           // combine marked nodes of all procs
-          Core::Communication::sum_all(
-              mytoggle.data(), toggle.data(), toggle.size(), childdiscret_->get_comm());
+          toggle = Core::Communication::sum_all(mytoggle, childdiscret_->get_comm());
 
           // and add nodes to the list of child nodes that will get the condition
           for (unsigned rr = 0; rr < candidates->size(); ++rr)
@@ -465,14 +464,10 @@ FLD::FluidDiscretExtractor::FluidDiscretExtractor(std::shared_ptr<Core::FE::Disc
           childdiscret_->num_my_col_elements() - childdiscret_->num_my_row_elements();
       my_n_dof[myrank] = childdiscret_->dof_row_map()->num_my_elements();
 
-      Core::Communication::sum_all(
-          my_n_nodes.data(), n_nodes.data(), numproc, childdiscret_->get_comm());
-      Core::Communication::sum_all(
-          my_n_elements.data(), n_elements.data(), numproc, childdiscret_->get_comm());
-      Core::Communication::sum_all(
-          my_n_ghostele.data(), n_ghostele.data(), numproc, childdiscret_->get_comm());
-      Core::Communication::sum_all(
-          my_n_dof.data(), n_dof.data(), numproc, childdiscret_->get_comm());
+      n_nodes = Core::Communication::sum_all(my_n_nodes, childdiscret_->get_comm());
+      n_elements = Core::Communication::sum_all(my_n_elements, childdiscret_->get_comm());
+      n_ghostele = Core::Communication::sum_all(my_n_ghostele, childdiscret_->get_comm());
+      n_dof = Core::Communication::sum_all(my_n_dof, childdiscret_->get_comm());
 
       if (Core::Communication::my_mpi_rank(childdiscret_->get_comm()) == 0)
       {

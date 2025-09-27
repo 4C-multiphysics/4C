@@ -38,8 +38,8 @@ void ScaTra::ScaTraResultTest::test_node(
 
   int havenode(scatratimint_->discretization()->have_global_node(node));
   int isnodeofanybody(0);
-  Core::Communication::sum_all(
-      &havenode, &isnodeofanybody, 1, scatratimint_->discretization()->get_comm());
+  isnodeofanybody =
+      Core::Communication::sum_all(havenode, scatratimint_->discretization()->get_comm());
 
   if (isnodeofanybody == 0)
   {
