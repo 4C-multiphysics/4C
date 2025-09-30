@@ -175,3 +175,10 @@ repos:
         language: system
         entry: ./utilities/code_checks/commit-msg
         stages: [commit-msg]
+
+      - id: check-python-files
+        name: Check python files
+        description: "Check that all python files are located within utilities/four_c_python"
+        language: python
+        types: [python]
+        entry: utilities/python-venv/bin/check-python-files
