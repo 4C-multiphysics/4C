@@ -1963,6 +1963,7 @@ four_c_test(TEST_FILE xfsi_push_1D_2nd_order.4C.yaml)
 
 # Tests requiring VTK
 four_c_test(TEST_FILE solid_vtu_input.4C.yaml NP 2 RESTART_STEP 5 REQUIRED_DEPENDENCIES VTK)
+four_c_test(TEST_FILE solid_vtu_field_input.4C.yaml NP 2 RESTART_STEP 5 REQUIRED_DEPENDENCIES VTK)
 
 # Tests requiring ArborX
 four_c_test(TEST_FILE beam3eb_static_beam_to_solid_volume_meshtying_beam_to_beam_contact_boundingvolume.4C.yaml NP 1 REQUIRED_DEPENDENCIES ArborX)

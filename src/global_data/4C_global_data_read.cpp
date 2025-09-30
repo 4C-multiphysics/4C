@@ -9,6 +9,7 @@
 
 #include "4C_global_data_read.hpp"
 
+#include "4C_comm_mpi_utils.hpp"
 #include "4C_comm_utils.hpp"
 #include "4C_contact_constitutivelaw_bundle.hpp"
 #include "4C_contact_constitutivelaw_valid_laws.hpp"
@@ -24,6 +25,7 @@
 #include "4C_global_legacy_module_validparameters.hpp"
 #include "4C_io.hpp"
 #include "4C_io_exodus.hpp"
+#include "4C_io_input_field.hpp"
 #include "4C_io_input_file.hpp"
 #include "4C_io_input_file_utils.hpp"
 #include "4C_io_input_spec_builders.hpp"
@@ -37,6 +39,7 @@
 #include "4C_particle_engine_particlereader.hpp"
 #include "4C_rebalance_graph_based.hpp"
 #include "4C_utils_enum.hpp"
+#include "4C_utils_exceptions.hpp"
 #include "4C_xfem_discretization.hpp"
 #include "4C_xfem_discretization_utils.hpp"
 
@@ -1769,9 +1772,12 @@ void Global::read_particles(Global::Problem& problem, Core::IO::InputFile& input
 }
 
 
-void Global::read_fields(Global::Problem& problem, Core::IO::InputFile& input)
+void Global::read_fields(
+    Global::Problem& problem, Core::IO::InputFile& input, const Core::IO::MeshReader& mesh_reader)
 {
   Core::IO::InputFieldRegistry& field_registry = Core::IO::global_input_field_registry();
+  Core::IO::MeshDataInputFieldRegistry& mesh_data_registry =
+      Core::IO::global_mesh_data_input_field_registry();
 
   Core::IO::InputParameterContainer fields;
   input.match_section("fields", fields);
@@ -1781,52 +1787,106 @@ void Global::read_fields(Global::Problem& problem, Core::IO::InputFile& input)
 
   // Read the information for the fields, warn if we read a field that is not registered and thus
   // never used.
+  std::set<std::string> defined_field_names{};
   for (const auto& field_entry : field_entries)
   {
-    const std::string& field = field_entry.get<std::string>("name");
-    const std::string& discretization_name = field_entry.get<std::string>("discretization");
-    const std::filesystem::path& file_path = field_entry.get<std::filesystem::path>("file");
-    auto key = field_entry.get<std::optional<std::string>>("key");
-    if (!key) key = field;
+    const auto& field = field_entry.get<std::string>("name");
+    const auto& discretization_name = field_entry.get<std::string>("discretization");
+    const auto& source = field_entry.group("source").get<Core::IO::InputFieldSource>("source");
 
-    auto it = field_registry.fields.find(field);
-    if (it == field_registry.fields.end())
-    {
-      Core::IO::cout << "WARNING: Field '" << field
-                     << "' defined but never referenced in input file.\n";
-      continue;
-    }
-    it->second.source_file = file_path;
-    it->second.key_in_source_file = *key;
-    it->second.discretization_name = discretization_name;
-  }
+    defined_field_names.emplace(field);
 
-  // Now initialize all fields that are registered in the input file.
-  // If a field does not have sufficient data at this point, this is an error.
-  for (const auto& [field_name, field_data] : field_registry.fields)
-  {
-    if (field_data.discretization_name.empty())
+    if (source == Core::IO::InputFieldSource::separate_file)
     {
-      FOUR_C_THROW(
-          "You refer to a field '{}' but it was never defined in the top-level 'fields' section. "
-          "Add an entry in the top-level 'fields' section.",
-          field_name);
-    }
-    // Get the discretization if possible
-    auto discretization = problem.get_dis(field_data.discretization_name);
+      const auto& separate_file_input = field_entry.group("source").group("separate_file");
+      const auto& file_path = separate_file_input.get<std::filesystem::path>("file");
+      auto key = separate_file_input.get<std::optional<std::string>>("key");
+      if (!key) key = field;
 
-    if (field_data.discretization_name == discretization->name())
-    {
-      // Work around Clang OMP issues with structured bindings
-      const auto& field_data_ref = field_data;
+      auto it = field_registry.fields.find(field);
+      if (it == field_registry.fields.end())
+      {
+        Core::IO::cout << "WARNING: Field '" << field
+                       << "' defined but never referenced in input file.\n";
+        continue;
+      }
+      auto& field_data = it->second;
+
+      // Get the discretization
+      auto discretization = problem.get_dis(discretization_name);
+
+      // initialize the fields using this reference (only on rank 0)
+      if (Core::Communication::my_mpi_rank(discretization->get_comm()) == 0)
+      {
+        for (auto& function : field_data.init_functions | std::views::values)
+        {
+          function(file_path, *key);
+        }
+      }
+
+      // Attach a callback to redistribute the field once the dofs are assigned.
       discretization->callbacks().post_assign_dofs.add(
-          [&field_data_ref](const Core::FE::Discretization& dis)
+          [&field_data](const Core::FE::Discretization& dis)
           {
+            // Redistribute the field once we assigned the dofs
             const auto& target_map = *dis.element_col_map();
-            for (const auto& fn : field_data_ref.init_functions | std::views::values)
+            for (const auto& fn : field_data.redistribute_functions | std::views::values)
               fn(target_map);
           });
     }
+    else if (source == Core::IO::InputFieldSource::from_mesh)
+    {
+      const auto& mesh_input = field_entry.group("source").group("from_mesh");
+
+      auto key = mesh_input.get<std::optional<std::string>>("key");
+      if (!key) key = field;
+
+      auto it = mesh_data_registry.fields.find(field);
+      if (it == mesh_data_registry.fields.end())
+      {
+        Core::IO::cout << "WARNING: Field '" << field
+                       << "' defined but never referenced in input file.\n";
+        continue;
+      }
+      auto& field_data = it->second;
+
+      // Get the discretization
+      auto discretization = problem.get_dis(discretization_name);
+      const Core::IO::MeshInput::Mesh<3>* mesh = mesh_reader.get_external_mesh_on_rank_zero();
+
+      // initialize the fields using this reference (only on rank 0)
+      if (Core::Communication::my_mpi_rank(discretization->get_comm()) == 0)
+      {
+        FOUR_C_ASSERT_ALWAYS(mesh,
+            "Cannot read field '{}': Field data from mesh requires reading the mesh from an "
+            "external mesh. No external mesh found for discretization '{}'",
+            field, discretization_name);
+        for (auto& function : field_data.init_functions | std::views::values)
+        {
+          function(*mesh, *key);
+        }
+      }
+
+      // Attach a callback to redistribute the field once the dofs are assigned.
+      discretization->callbacks().post_assign_dofs.add(
+          [&field_data](const Core::FE::Discretization& dis)
+          {
+            // Redistribute the field once we assigned the dofs
+            const auto& target_map = *dis.element_col_map();
+            for (const auto& fn : field_data.redistribute_functions | std::views::values)
+              fn(target_map);
+          });
+    }
+  }
+
+  // Now check whether all fields that are referenced in the input file were actually defined in the
+  // fields section.
+  for (const auto& field_name : field_registry.fields | std::views::keys)
+  {
+    FOUR_C_ASSERT_ALWAYS(defined_field_names.contains(field_name),
+        "You refer to a field '{}' but it was never defined in the top-level 'fields' section. "
+        "Add an entry in the top-level 'fields' section.",
+        field_name);
   }
 }
 

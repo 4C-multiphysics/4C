@@ -1,0 +1,137 @@
+TITLE:
+  - "VTU field data input for solid mechanics"
+PROBLEM TYPE:
+  PROBLEMTYPE: "Structure"
+IO:
+  OUTPUT_SPRING: true
+  STRUCT_STRESS: "Cauchy"
+  STRUCT_STRAIN: "GL"
+  VERBOSITY: "Standard"
+IO/RUNTIME VTK OUTPUT:
+  INTERVAL_STEPS: 5
+  OUTPUT_DATA_FORMAT: ascii
+IO/RUNTIME VTK OUTPUT/STRUCTURE:
+  OUTPUT_STRUCTURE: true
+  DISPLACEMENT: true
+  STRESS_STRAIN: true
+  GAUSS_POINT_DATA_OUTPUT_TYPE: element_center
+SOLVER 1:
+  SOLVER: "Superlu"
+  NAME: "Structure_Solver"
+STRUCTURAL DYNAMIC:
+  INT_STRATEGY: "Standard"
+  DYNAMICTYPE: "Statics"
+  PRESTRESSTIME: 100
+  TIMESTEP: 1
+  NUMSTEP: 10
+  MAXTIME: 10
+  TOLDISP: 1e-09
+  TOLRES: 1e-09
+  LOADLIN: true
+  LINEAR_SOLVER: 1
+STRUCT NOX/Printing:
+  Inner Iteration: false
+  Outer Iteration StatusTest: false
+MATERIALS:
+  - MAT: 1
+    MAT_ElastHyper:
+      NUMMAT: 2
+      MATIDS: [11, 12]
+      DENS: 1
+  - MAT: 11
+    ELAST_IsoNeoHooke:
+      MUE:
+        from_mesh: mue
+  - MAT: 12
+    ELAST_VolSussmanBathe:
+      KAPPA: 1000
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "(1+0.2*y+0.4*z)*0.1*t"
+DESIGN SURF ROBIN SPRING DASHPOT CONDITIONS:
+  - E: 1
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    STIFF: [100, 100, 100]
+    TIMEFUNCTSTIFF: [0, 0, 0]
+    VISCO: [0, 0, 0]
+    TIMEFUNCTVISCO: [0, 0, 0]
+    DISPLOFFSET: [-1, 0, 0]
+    TIMEFUNCTDISPLOFFSET: [0, 0, 0]
+    FUNCTNONLINSTIFF: [0, 0, 0]
+    DIRECTION: "xyz"
+DESIGN SURF NEUMANN CONDITIONS:
+  - E: 2
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 6
+    ONOFF: [1, 0, 0, 0, 0, 0]
+    VAL: [150, 0, 0, 0, 0, 0]
+    FUNCT: [1, 0, 0, 0, 0, 0]
+RESULT DESCRIPTION:
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispx"
+      VALUE: 1.83833200010596287e+00
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispy"
+      VALUE: 1.06471263754973539e-01
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 5
+      QUANTITY: "dispz"
+      VALUE: 1.06424917025383134e-01
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 50
+      QUANTITY: "dispx"
+      VALUE: 2.15797026368162648e+00
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 50
+      QUANTITY: "dispy"
+      VALUE: -7.41976000732035845e-02
+      TOLERANCE: 1e-08
+  - STRUCTURE:
+      DIS: "structure"
+      NODE: 50
+      QUANTITY: "dispz"
+      VALUE: 7.25397149647254436e-02
+      TOLERANCE: 1e-08
+STRUCTURE GEOMETRY:
+  SHOW_INFO: "summary"
+  ELEMENT_BLOCKS:
+    - ID: 1
+      SOLID:
+        HEX8:
+          MAT: 1
+          KINEM: nonlinear
+    - ID: 2
+      SOLID:
+        HEX8:
+          MAT: 1
+          KINEM: nonlinear
+    - ID: 3
+      SOLID:
+        TET10:
+          MAT: 1
+          KINEM: nonlinear
+    - ID: 4
+      SOLID:
+        TET10:
+          MAT: 1
+          KINEM: nonlinear
+  FILE: solid_vtu_field_input.vtu
+fields:
+  - name: mue
+    discretization: "structure"
+    source:
+      from_mesh:
+        basis: "cells"
