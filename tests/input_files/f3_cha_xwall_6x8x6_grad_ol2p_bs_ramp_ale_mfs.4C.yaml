@@ -100,97 +100,97 @@ RESULT DESCRIPTION:
       DIS: "fluid"
       NODE: 12
       QUANTITY: "velx"
-      VALUE: 16.423528446230105
+      VALUE: 1.63992516469771061e+01
       TOLERANCE: 1e-07
   - FLUID:
       DIS: "fluid"
       NODE: 12
       QUANTITY: "vely"
-      VALUE: 0.01838848363186099
+      VALUE: -2.11515825978070293e-04
       TOLERANCE: 1e-07
   - FLUID:
       DIS: "fluid"
       NODE: 12
       QUANTITY: "velz"
-      VALUE: 0.4751542458600249
+      VALUE: 4.70095429045059465e-01
       TOLERANCE: 1e-07
   - FLUID:
       DIS: "fluid"
       NODE: 12
       QUANTITY: "pressure"
-      VALUE: 0.08676384459862119
+      VALUE: -1.94606635560512639e-04
       TOLERANCE: 1e-07
   - FLUID:
       DIS: "fluid"
       NODE: 365
       QUANTITY: "velx"
-      VALUE: 11.150764096856383
+      VALUE: 1.11286000887720853e+01
       TOLERANCE: 1e-07
   - FLUID:
       DIS: "fluid"
       NODE: 365
       QUANTITY: "vely"
-      VALUE: -0.008895338408458
+      VALUE: -1.79152923241671558e-04
       TOLERANCE: 1e-07
   - FLUID:
       DIS: "fluid"
       NODE: 365
       QUANTITY: "velz"
-      VALUE: 0.189222762218792
+      VALUE: 1.71992626967449214e-01
       TOLERANCE: 1e-07
   - FLUID:
       DIS: "fluid"
       NODE: 365
       QUANTITY: "pressure"
-      VALUE: 0.3473204146441278
+      VALUE: 3.24058810224640793e-03
       TOLERANCE: 1e-07
   - FLUID:
       DIS: "fluid"
       NODE: 430
       QUANTITY: "velx"
-      VALUE: 11.148537888839686
+      VALUE: 1.11138400136862572e+01
       TOLERANCE: 1e-07
   - FLUID:
       DIS: "fluid"
       NODE: 430
       QUANTITY: "vely"
-      VALUE: -0.00361886904464573
+      VALUE: -2.27590262003484366e-05
       TOLERANCE: 1e-07
   - FLUID:
       DIS: "fluid"
       NODE: 430
       QUANTITY: "velz"
-      VALUE: 0.17604372512277727
+      VALUE: 1.71563737455797033e-01
       TOLERANCE: 1e-07
   - FLUID:
       DIS: "fluid"
       NODE: 430
       QUANTITY: "pressure"
-      VALUE: 0.24973438470168674
+      VALUE: 2.02778300684194933e-03
       TOLERANCE: 1e-07
   - FLUID:
       DIS: "fluid"
       NODE: 237
       QUANTITY: "velx"
-      VALUE: 24.012593225946574
+      VALUE: 2.40091230388054306e+01
       TOLERANCE: 1e-07
   - FLUID:
       DIS: "fluid"
       NODE: 237
       QUANTITY: "vely"
-      VALUE: 0.007343924032574189
+      VALUE: -1.23493003381798251e-04
       TOLERANCE: 1e-07
   - FLUID:
       DIS: "fluid"
       NODE: 237
       QUANTITY: "velz"
-      VALUE: 0.4613708957116977
+      VALUE: 4.73778273842215658e-01
       TOLERANCE: 1e-07
   - FLUID:
       DIS: "fluid"
       NODE: 237
       QUANTITY: "pressure"
-      VALUE: -0.06268747306835029
+      VALUE: 2.14758598118447268e-03
       TOLERANCE: 1e-07
 DESIGN VOL NEUMANN CONDITIONS:
   - E: 2

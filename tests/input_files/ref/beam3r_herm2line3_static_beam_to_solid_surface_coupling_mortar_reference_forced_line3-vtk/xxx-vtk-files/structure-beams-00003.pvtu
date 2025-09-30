@@ -1,0 +1,36 @@
+<?xml version="1.0" ?> 
+<!-- 
+# vtk DataFile Version 3.0
+-->
+<VTKFile type="PUnstructuredGrid" version="0.1" byte_order="LittleEndian">
+  <PUnstructuredGrid GhostLevel="0">
+    <PPoints>
+      <PDataArray type="Float64" NumberOfComponents="3"/>
+    </PPoints>
+    <PPointData>
+      <PDataArray type="Float64" Name="base_vector_1" NumberOfComponents="3" format="ascii"/>
+      <PDataArray type="Float64" Name="base_vector_2" NumberOfComponents="3" format="ascii"/>
+      <PDataArray type="Float64" Name="base_vector_3" NumberOfComponents="3" format="ascii"/>
+      <PDataArray type="Float64" Name="displacement" NumberOfComponents="3" format="ascii"/>
+    </PPointData>
+    <PCellData>
+      <PDataArray type="Float64" Name="axial_strain_GPs" NumberOfComponents="3" format="ascii"/>
+      <PDataArray type="Float64" Name="cross_section_radius" format="ascii"/>
+      <PDataArray type="Float64" Name="curvature_2_GPs" NumberOfComponents="3" format="ascii"/>
+      <PDataArray type="Float64" Name="curvature_3_GPs" NumberOfComponents="3" format="ascii"/>
+      <PDataArray type="Float64" Name="element_owner" format="ascii"/>
+      <PDataArray type="Float64" Name="material_axial_force_GPs" NumberOfComponents="3" format="ascii"/>
+      <PDataArray type="Float64" Name="material_bending_moment_2_GPs" NumberOfComponents="3" format="ascii"/>
+      <PDataArray type="Float64" Name="material_bending_moment_3_GPs" NumberOfComponents="3" format="ascii"/>
+      <PDataArray type="Float64" Name="material_shear_force_2_GPs" NumberOfComponents="3" format="ascii"/>
+      <PDataArray type="Float64" Name="material_shear_force_3_GPs" NumberOfComponents="3" format="ascii"/>
+      <PDataArray type="Float64" Name="material_torque_GPs" NumberOfComponents="3" format="ascii"/>
+      <PDataArray type="Float64" Name="shear_strain_2_GPs" NumberOfComponents="3" format="ascii"/>
+      <PDataArray type="Float64" Name="shear_strain_3_GPs" NumberOfComponents="3" format="ascii"/>
+      <PDataArray type="Float64" Name="twist_GPs" NumberOfComponents="3" format="ascii"/>
+    </PCellData>
+    <Piece Source="structure-beams-00003-0.vtu"/>
+    <Piece Source="structure-beams-00003-1.vtu"/>
+    <Piece Source="structure-beams-00003-2.vtu"/>
+  </PUnstructuredGrid>
+</VTKFile>

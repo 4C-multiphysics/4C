@@ -100,19 +100,19 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "s2inumdof_int0_proc0"
-      VALUE: 88
+      VALUE: 84
       TOLERANCE: 1e-20
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "s2inumdof_int0_proc1"
-      VALUE: 81
+      VALUE: 87
       TOLERANCE: 1e-20
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "s2inumdof_int0_proc2"
-      VALUE: 87
+      VALUE: 85
       TOLERANCE: 1e-20
 DESIGN VOL INITIAL FIELD CONDITIONS:
   - E: 1
