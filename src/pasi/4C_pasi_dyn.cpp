@@ -11,7 +11,7 @@
 #include "4C_comm_utils.hpp"
 #include "4C_fem_discretization.hpp"
 #include "4C_global_data.hpp"
-#include "4C_inpar_pasi.hpp"
+#include "4C_pasi_input.hpp"
 #include "4C_pasi_partitioned_onewaycoup.hpp"
 #include "4C_pasi_partitioned_twowaycoup.hpp"
 #include "4C_pasi_utils.hpp"
@@ -47,27 +47,27 @@ void pasi_dyn()
 
   // get type of partitioned coupling
   const auto coupling =
-      Teuchos::getIntegralValue<Inpar::PaSI::PartitionedCouplingType>(params, "COUPLING");
+      Teuchos::getIntegralValue<PaSI::PartitionedCouplingType>(params, "COUPLING");
 
   // query algorithm
   switch (coupling)
   {
-    case Inpar::PaSI::partitioned_onewaycoup:
+    case PaSI::partitioned_onewaycoup:
     {
       algo = std::make_shared<PaSI::PasiPartOneWayCoup>(comm, params);
       break;
     }
-    case Inpar::PaSI::partitioned_twowaycoup:
+    case PaSI::partitioned_twowaycoup:
     {
       algo = std::make_shared<PaSI::PasiPartTwoWayCoup>(comm, params);
       break;
     }
-    case Inpar::PaSI::partitioned_twowaycoup_disprelax:
+    case PaSI::partitioned_twowaycoup_disprelax:
     {
       algo = std::make_shared<PaSI::PasiPartTwoWayCoupDispRelax>(comm, params);
       break;
     }
-    case Inpar::PaSI::partitioned_twowaycoup_disprelaxaitken:
+    case PaSI::partitioned_twowaycoup_disprelaxaitken:
     {
       algo = std::make_shared<PaSI::PasiPartTwoWayCoupDispRelaxAitken>(comm, params);
       break;

@@ -55,8 +55,8 @@ void ParticleInteraction::SPHInterfaceViscosity::init()
   // safety check
   if (trans_d_t_intvisc_ > 0.0)
   {
-    if (Teuchos::getIntegralValue<Inpar::PARTICLE::TemperatureEvaluationScheme>(
-            params_sph_, "TEMPERATUREEVALUATION") == Inpar::PARTICLE::NoTemperatureEvaluation)
+    if (Teuchos::getIntegralValue<PARTICLE::TemperatureEvaluationScheme>(
+            params_sph_, "TEMPERATUREEVALUATION") == PARTICLE::NoTemperatureEvaluation)
       FOUR_C_THROW("temperature evaluation needed for linear transition of interface viscosity!");
   }
 }

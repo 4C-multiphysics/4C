@@ -13,9 +13,9 @@
  *---------------------------------------------------------------------------*/
 #include "4C_config.hpp"
 
-#include "4C_inpar_particle.hpp"
 #include "4C_particle_engine_enums.hpp"
 #include "4C_particle_engine_typedefs.hpp"
+#include "4C_particle_input.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
 FOUR_C_NAMESPACE_OPEN

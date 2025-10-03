@@ -18,8 +18,8 @@ FOUR_C_NAMESPACE_OPEN
  | definitions                                                               |
  *---------------------------------------------------------------------------*/
 ParticleInteraction::SPHKernelBase::SPHKernelBase(const Teuchos::ParameterList& params)
-    : kernelspacedim_(Teuchos::getIntegralValue<Inpar::PARTICLE::KernelSpaceDimension>(
-          params, "KERNEL_SPACE_DIM"))
+    : kernelspacedim_(
+          Teuchos::getIntegralValue<PARTICLE::KernelSpaceDimension>(params, "KERNEL_SPACE_DIM"))
 {
   // empty constructor
 }
@@ -38,17 +38,17 @@ void ParticleInteraction::SPHKernelBase::kernel_space_dimension(int& dim) const
 {
   switch (kernelspacedim_)
   {
-    case Inpar::PARTICLE::Kernel1D:
+    case PARTICLE::Kernel1D:
     {
       dim = 1;
       break;
     }
-    case Inpar::PARTICLE::Kernel2D:
+    case PARTICLE::Kernel2D:
     {
       dim = 2;
       break;
     }
-    case Inpar::PARTICLE::Kernel3D:
+    case PARTICLE::Kernel3D:
     {
       dim = 3;
       break;
@@ -83,17 +83,17 @@ double ParticleInteraction::SPHKernelCubicSpline::normalization_constant(const d
 {
   switch (kernelspacedim_)
   {
-    case Inpar::PARTICLE::Kernel1D:
+    case PARTICLE::Kernel1D:
     {
       // (2.0 / 3.0) * inv_h
       return 0.6666666666666666 * inv_h;
     }
-    case Inpar::PARTICLE::Kernel2D:
+    case PARTICLE::Kernel2D:
     {
       // (10.0 / 7.0) * std::numbers::inv_pi * inv_h * inv_h
       return 0.4547284088339866 * Utils::pow<2>(inv_h);
     }
-    case Inpar::PARTICLE::Kernel3D:
+    case PARTICLE::Kernel3D:
     {
       return std::numbers::inv_pi * Utils::pow<3>(inv_h);
     }
@@ -171,17 +171,17 @@ double ParticleInteraction::SPHKernelQuinticSpline::normalization_constant(
 {
   switch (kernelspacedim_)
   {
-    case Inpar::PARTICLE::Kernel1D:
+    case PARTICLE::Kernel1D:
     {
       // (inv_h / 120.0)
       return 0.0083333333333333 * inv_h;
     }
-    case Inpar::PARTICLE::Kernel2D:
+    case PARTICLE::Kernel2D:
     {
       // (7.0 / 478.0) * std::numbers::inv_pi * inv_h * inv_h
       return 0.0046614418478797 * Utils::pow<2>(inv_h);
     }
-    case Inpar::PARTICLE::Kernel3D:
+    case PARTICLE::Kernel3D:
     {
       // (3.0 / 359.0) * std::numbers::inv_pi * inv_h * inv_h * inv_h
       return 0.0026599711937364 * Utils::pow<3>(inv_h);

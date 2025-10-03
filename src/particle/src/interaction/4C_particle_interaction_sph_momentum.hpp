@@ -13,9 +13,9 @@
  *---------------------------------------------------------------------------*/
 #include "4C_config.hpp"
 
-#include "4C_inpar_particle.hpp"
 #include "4C_particle_engine_enums.hpp"
 #include "4C_particle_engine_typedefs.hpp"
+#include "4C_particle_input.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -152,10 +152,10 @@ namespace ParticleInteraction
     std::unique_ptr<ParticleInteraction::SPHArtificialViscosity> artificialviscosity_;
 
     //! type of boundary particle interaction
-    Inpar::PARTICLE::BoundaryParticleInteraction boundaryparticleinteraction_;
+    PARTICLE::BoundaryParticleInteraction boundaryparticleinteraction_;
 
     //! type of transport velocity formulation
-    Inpar::PARTICLE::TransportVelocityFormulation transportvelocityformulation_;
+    PARTICLE::TransportVelocityFormulation transportvelocityformulation_;
 
     //! pointer to fluid material of particle types
     std::vector<const Mat::PAR::ParticleMaterialSPHFluid*> fluidmaterial_;

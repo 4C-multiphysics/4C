@@ -7,7 +7,7 @@
 
 #include "4C_particle_interaction_sph_equationofstate_bundle.hpp"
 
-#include "4C_inpar_particle.hpp"
+#include "4C_particle_input.hpp"
 #include "4C_particle_interaction_material_handler.hpp"
 #include "4C_particle_interaction_sph_equationofstate.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -30,8 +30,8 @@ void ParticleInteraction::SPHEquationOfStateBundle::init(
     ParticleInteraction::MaterialHandler& particlematerial)
 {
   // get type of smoothed particle hydrodynamics equation of state
-  auto equationofstatetype = Teuchos::getIntegralValue<Inpar::PARTICLE::EquationOfStateType>(
-      params_sph_, "EQUATIONOFSTATE");
+  auto equationofstatetype =
+      Teuchos::getIntegralValue<PARTICLE::EquationOfStateType>(params_sph_, "EQUATIONOFSTATE");
 
   // determine size of vector indexed by particle types
   const int typevectorsize = *(--particlematerial.get_particle_types().end()) + 1;
@@ -56,7 +56,7 @@ void ParticleInteraction::SPHEquationOfStateBundle::init(
     // create equation of state handler
     switch (equationofstatetype)
     {
-      case Inpar::PARTICLE::GenTait:
+      case PARTICLE::GenTait:
       {
         const double speedofsound = material->speed_of_sound();
         const double refdensfac = material->refDensFac_;
@@ -68,7 +68,7 @@ void ParticleInteraction::SPHEquationOfStateBundle::init(
                     speedofsound, refdensfac, exponent));
         break;
       }
-      case Inpar::PARTICLE::IdealGas:
+      case PARTICLE::IdealGas:
       {
         const double speedofsound = material->speed_of_sound();
 

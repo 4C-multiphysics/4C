@@ -177,23 +177,23 @@ void ParticleInteraction::SPHTemperature::init_heat_source_handler()
 {
   // get type of heat source
   auto heatsourcetype =
-      Teuchos::getIntegralValue<Inpar::PARTICLE::HeatSourceType>(params_sph_, "HEATSOURCETYPE");
+      Teuchos::getIntegralValue<PARTICLE::HeatSourceType>(params_sph_, "HEATSOURCETYPE");
 
   // create heat source handler
   switch (heatsourcetype)
   {
-    case Inpar::PARTICLE::NoHeatSource:
+    case PARTICLE::NoHeatSource:
     {
       heatsource_ = std::unique_ptr<ParticleInteraction::SPHHeatSourceBase>(nullptr);
       break;
     }
-    case Inpar::PARTICLE::VolumeHeatSource:
+    case PARTICLE::VolumeHeatSource:
     {
       heatsource_ = std::unique_ptr<ParticleInteraction::SPHHeatSourceVolume>(
           new ParticleInteraction::SPHHeatSourceVolume(params_sph_));
       break;
     }
-    case Inpar::PARTICLE::SurfaceHeatSource:
+    case PARTICLE::SurfaceHeatSource:
     {
       heatsource_ = std::unique_ptr<ParticleInteraction::SPHHeatSourceSurface>(
           new ParticleInteraction::SPHHeatSourceSurface(params_sph_));

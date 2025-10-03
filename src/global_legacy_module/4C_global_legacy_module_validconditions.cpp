@@ -23,12 +23,12 @@
 #include "4C_inpar_fsi.hpp"
 #include "4C_inpar_levelset.hpp"
 #include "4C_inpar_mortar.hpp"
-#include "4C_inpar_particle.hpp"
 #include "4C_inpar_s2i.hpp"
 #include "4C_inpar_scatra.hpp"
 #include "4C_inpar_structure.hpp"
 #include "4C_inpar_xfem.hpp"
 #include "4C_io_input_spec_builders.hpp"
+#include "4C_particle_input.hpp"
 #include "4C_porofluid_pressure_based_elast_scatra_input.hpp"
 #include "4C_red_airways_input.hpp"
 #include "4C_ssi_input.hpp"
@@ -840,7 +840,7 @@ std::vector<Core::Conditions::ConditionDefinition> Global::valid_conditions()
   Thermo::set_valid_conditions(condlist);
   SSI::set_valid_conditions(condlist);
   SSTI::set_valid_conditions(condlist);
-  Inpar::PARTICLE::set_valid_conditions(condlist);
+  PARTICLE::set_valid_conditions(condlist);
   Inpar::LevelSet::set_valid_conditions(condlist);
   BeamInteraction::Potential::set_valid_conditions(condlist);
   Constraints::set_valid_conditions(condlist);

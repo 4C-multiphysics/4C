@@ -38,8 +38,6 @@
 #include "4C_inpar_IO_runtime_vtp_output_structure.hpp"
 #include "4C_inpar_levelset.hpp"
 #include "4C_inpar_mortar.hpp"
-#include "4C_inpar_particle.hpp"
-#include "4C_inpar_pasi.hpp"
 #include "4C_inpar_plasticity.hpp"
 #include "4C_inpar_problemtype.hpp"
 #include "4C_inpar_s2i.hpp"
@@ -56,6 +54,8 @@
 #include "4C_io_pstream.hpp"
 #include "4C_linear_solver_method_input.hpp"
 #include "4C_lubrication_input.hpp"
+#include "4C_particle_input.hpp"
+#include "4C_pasi_input.hpp"
 #include "4C_poroelast_input.hpp"
 #include "4C_poroelast_scatra_input.hpp"
 #include "4C_porofluid_pressure_based_elast_input.hpp"
@@ -294,12 +294,12 @@ std::vector<Core::IO::InputSpec> Global::valid_parameters()
   push_specs(specs, Inpar::FPSI::valid_parameters());
   push_specs(specs, FBI::valid_parameters());
 
-  push_specs(specs, Inpar::PARTICLE::valid_parameters());
+  push_specs(specs, PARTICLE::valid_parameters());
 
   push_specs(specs, Inpar::Geo::valid_parameters());
   push_specs(specs, Core::Binstrategy::valid_parameters());
   push_specs(specs, Core::GeometricSearch::valid_parameters());
-  push_specs(specs, Inpar::PaSI::valid_parameters());
+  push_specs(specs, PaSI::valid_parameters());
 
   push_specs(specs, Core::Rebalance::valid_parameters());
   push_specs(specs, Core::LinearSolver::valid_parameters());

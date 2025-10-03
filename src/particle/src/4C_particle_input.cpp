@@ -5,7 +5,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "4C_inpar_particle.hpp"
+#include "4C_particle_input.hpp"
 
 #include "4C_fem_condition_definition.hpp"
 #include "4C_io_input_spec_builders.hpp"
@@ -14,7 +14,7 @@ FOUR_C_NAMESPACE_OPEN
 /*---------------------------------------------------------------------------*
  | set the particle parameters                                               |
  *---------------------------------------------------------------------------*/
-std::vector<Core::IO::InputSpec> Inpar::PARTICLE::valid_parameters()
+std::vector<Core::IO::InputSpec> PARTICLE::valid_parameters()
 {
   using namespace Core::IO::InputSpecBuilders;
   using namespace Core::IO::InputSpecBuilders::Validators;
@@ -30,21 +30,21 @@ std::vector<Core::IO::InputSpec> Inpar::PARTICLE::valid_parameters()
           // type of particle time integration
           deprecated_selection<DynamicType>("DYNAMICTYPE",
               {
-                  {"SemiImplicitEuler", Inpar::PARTICLE::dyna_semiimpliciteuler},
-                  {"VelocityVerlet", Inpar::PARTICLE::dyna_velocityverlet},
+                  {"SemiImplicitEuler", PARTICLE::dyna_semiimpliciteuler},
+                  {"VelocityVerlet", PARTICLE::dyna_velocityverlet},
               },
               {.description = "type of particle time integration",
-                  .default_value = Inpar::PARTICLE::dyna_velocityverlet}),
+                  .default_value = PARTICLE::dyna_velocityverlet}),
 
           // type of particle interaction
           deprecated_selection<InteractionType>("INTERACTION",
               {
-                  {"None", Inpar::PARTICLE::interaction_none},
-                  {"SPH", Inpar::PARTICLE::interaction_sph},
-                  {"DEM", Inpar::PARTICLE::interaction_dem},
+                  {"None", PARTICLE::interaction_none},
+                  {"SPH", PARTICLE::interaction_sph},
+                  {"DEM", PARTICLE::interaction_dem},
               },
               {.description = "type of particle interaction",
-                  .default_value = Inpar::PARTICLE::interaction_none}),
+                  .default_value = PARTICLE::interaction_none}),
 
           // output type
           parameter<int>("RESULTSEVERY",
@@ -102,7 +102,7 @@ std::vector<Core::IO::InputSpec> Inpar::PARTICLE::valid_parameters()
           // type of particle wall source
           parameter<ParticleWallSource>(
               "PARTICLE_WALL_SOURCE", {.description = "type of particle wall source",
-                                          .default_value = Inpar::PARTICLE::NoParticleWall}),
+                                          .default_value = PARTICLE::NoParticleWall}),
 
           // material id for particle wall from bounding box source
           parameter<int>("PARTICLE_WALL_MAT",
@@ -191,12 +191,12 @@ std::vector<Core::IO::InputSpec> Inpar::PARTICLE::valid_parameters()
           // type of smoothed particle hydrodynamics kernel
           parameter<KernelType>(
               "KERNEL", {.description = "type of smoothed particle hydrodynamics kernel",
-                            .default_value = Inpar::PARTICLE::CubicSpline}),
+                            .default_value = PARTICLE::CubicSpline}),
 
           // kernel space dimension number
           parameter<KernelSpaceDimension>(
               "KERNEL_SPACE_DIM", {.description = "kernel space dimension number",
-                                      .default_value = Inpar::PARTICLE::Kernel3D}),
+                                      .default_value = PARTICLE::Kernel3D}),
 
           parameter<double>("INITIALPARTICLESPACING",
               {.description = "initial spacing of particles", .default_value = 0.0}),
@@ -204,55 +204,54 @@ std::vector<Core::IO::InputSpec> Inpar::PARTICLE::valid_parameters()
           // type of smoothed particle hydrodynamics equation of state
           parameter<EquationOfStateType>("EQUATIONOFSTATE",
               {.description = "type of smoothed particle hydrodynamics equation of state",
-                  .default_value = Inpar::PARTICLE::GenTait}),
+                  .default_value = PARTICLE::GenTait}),
 
           // type of smoothed particle hydrodynamics momentum formulation
           parameter<MomentumFormulationType>("MOMENTUMFORMULATION",
               {.description = "type of smoothed particle hydrodynamics momentum formulation",
-                  .default_value = Inpar::PARTICLE::AdamiMomentumFormulation}),
+                  .default_value = PARTICLE::AdamiMomentumFormulation}),
 
           // type of density evaluation scheme
           parameter<DensityEvaluationScheme>(
               "DENSITYEVALUATION", {.description = "type of density evaluation scheme",
-                                       .default_value = Inpar::PARTICLE::DensitySummation}),
+                                       .default_value = PARTICLE::DensitySummation}),
 
           // type of density correction scheme
           parameter<DensityCorrectionScheme>(
               "DENSITYCORRECTION", {.description = "type of density correction scheme",
-                                       .default_value = Inpar::PARTICLE::NoCorrection}),
+                                       .default_value = PARTICLE::NoCorrection}),
 
           // type of boundary particle formulation
           parameter<BoundaryParticleFormulationType>("BOUNDARYPARTICLEFORMULATION",
               {.description = "type of boundary particle formulation",
-                  .default_value = Inpar::PARTICLE::NoBoundaryFormulation}),
+                  .default_value = PARTICLE::NoBoundaryFormulation}),
 
           // type of boundary particle interaction
           parameter<BoundaryParticleInteraction>("BOUNDARYPARTICLEINTERACTION",
               {.description = "type of boundary particle interaction",
-                  .default_value = Inpar::PARTICLE::NoSlipBoundaryParticle}),
+                  .default_value = PARTICLE::NoSlipBoundaryParticle}),
 
           // type of wall formulation
           parameter<WallFormulationType>(
               "WALLFORMULATION", {.description = "type of wall formulation",
-                                     .default_value = Inpar::PARTICLE::NoWallFormulation}),
+                                     .default_value = PARTICLE::NoWallFormulation}),
 
           // type of transport velocity formulation
           parameter<TransportVelocityFormulation>("TRANSPORTVELOCITYFORMULATION",
               {.description = "type of transport velocity formulation",
-                  .default_value = Inpar::PARTICLE::NoTransportVelocity}),
+                  .default_value = PARTICLE::NoTransportVelocity}),
 
           // type of temperature evaluation scheme
-          parameter<TemperatureEvaluationScheme>("TEMPERATUREEVALUATION",
-              {.description = "type of temperature evaluation scheme",
-                  .default_value = Inpar::PARTICLE::NoTemperatureEvaluation}),
+          parameter<TemperatureEvaluationScheme>(
+              "TEMPERATUREEVALUATION", {.description = "type of temperature evaluation scheme",
+                                           .default_value = PARTICLE::NoTemperatureEvaluation}),
 
           parameter<bool>("TEMPERATUREGRADIENT",
               {.description = "evaluate temperature gradient", .default_value = false}),
 
           // type of heat source
-          parameter<HeatSourceType>(
-              "HEATSOURCETYPE", {.description = "type of heat source",
-                                    .default_value = Inpar::PARTICLE::NoHeatSource}),
+          parameter<HeatSourceType>("HEATSOURCETYPE",
+              {.description = "type of heat source", .default_value = PARTICLE::NoHeatSource}),
 
           parameter<int>("HEATSOURCE_FUNCT",
               {.description = "number of function governing heat source", .default_value = -1}),
@@ -289,7 +288,7 @@ std::vector<Core::IO::InputSpec> Inpar::PARTICLE::valid_parameters()
           // type of surface tension formulation
           parameter<SurfaceTensionFormulation>(
               "SURFACETENSIONFORMULATION", {.description = "type of surface tension formulation",
-                                               .default_value = Inpar::PARTICLE::NoSurfaceTension}),
+                                               .default_value = PARTICLE::NoSurfaceTension}),
 
           parameter<int>("SURFACETENSION_RAMP_FUNCT",
               {.description = "number of function governing surface tension ramp",
@@ -372,9 +371,9 @@ std::vector<Core::IO::InputSpec> Inpar::PARTICLE::valid_parameters()
                   .default_value = 0.0}),
 
           // type of dirichlet open boundary
-          parameter<DirichletOpenBoundaryType>("DIRICHLETBOUNDARYTYPE",
-              {.description = "type of dirichlet open boundary",
-                  .default_value = Inpar::PARTICLE::NoDirichletOpenBoundary}),
+          parameter<DirichletOpenBoundaryType>(
+              "DIRICHLETBOUNDARYTYPE", {.description = "type of dirichlet open boundary",
+                                           .default_value = PARTICLE::NoDirichletOpenBoundary}),
 
           parameter<int>("DIRICHLET_FUNCT",
               {.description =
@@ -391,7 +390,7 @@ std::vector<Core::IO::InputSpec> Inpar::PARTICLE::valid_parameters()
           // type of neumann open boundary
           parameter<NeumannOpenBoundaryType>(
               "NEUMANNBOUNDARYTYPE", {.description = "type of neumann open boundary",
-                                         .default_value = Inpar::PARTICLE::NoNeumannOpenBoundary}),
+                                         .default_value = PARTICLE::NoNeumannOpenBoundary}),
 
           parameter<int>("NEUMANN_FUNCT",
               {.description =
@@ -406,18 +405,17 @@ std::vector<Core::IO::InputSpec> Inpar::PARTICLE::valid_parameters()
                                          .default_value = "0.0 0.0 0.0"}),
 
           // type of phase change
-          parameter<PhaseChangeType>(
-              "PHASECHANGETYPE", {.description = "type of phase change",
-                                     .default_value = Inpar::PARTICLE::NoPhaseChange}),
+          parameter<PhaseChangeType>("PHASECHANGETYPE",
+              {.description = "type of phase change", .default_value = PARTICLE::NoPhaseChange}),
 
           // definition of phase change
           parameter<std::string>("PHASECHANGEDEFINITION",
               {.description = "phase change definition", .default_value = "none"}),
 
           // type of rigid particle contact
-          parameter<RigidParticleContactType>("RIGIDPARTICLECONTACTTYPE",
-              {.description = "type of rigid particle contact",
-                  .default_value = Inpar::PARTICLE::NoRigidParticleContact}),
+          parameter<RigidParticleContactType>(
+              "RIGIDPARTICLECONTACTTYPE", {.description = "type of rigid particle contact",
+                                              .default_value = PARTICLE::NoRigidParticleContact}),
 
           parameter<double>("RIGIDPARTICLECONTACTSTIFF",
               {.description = "rigid particle contact stiffness", .default_value = -1.0}),
@@ -442,35 +440,35 @@ std::vector<Core::IO::InputSpec> Inpar::PARTICLE::valid_parameters()
           // type of normal contact law
           deprecated_selection<NormalContact>("NORMALCONTACTLAW",
               {
-                  {"NormalLinearSpring", Inpar::PARTICLE::NormalLinSpring},
-                  {"NormalLinearSpringDamp", Inpar::PARTICLE::NormalLinSpringDamp},
-                  {"NormalHertz", Inpar::PARTICLE::NormalHertz},
-                  {"NormalLeeHerrmann", Inpar::PARTICLE::NormalLeeHerrmann},
-                  {"NormalKuwabaraKono", Inpar::PARTICLE::NormalKuwabaraKono},
-                  {"NormalTsuji", Inpar::PARTICLE::NormalTsuji},
+                  {"NormalLinearSpring", PARTICLE::NormalLinSpring},
+                  {"NormalLinearSpringDamp", PARTICLE::NormalLinSpringDamp},
+                  {"NormalHertz", PARTICLE::NormalHertz},
+                  {"NormalLeeHerrmann", PARTICLE::NormalLeeHerrmann},
+                  {"NormalKuwabaraKono", PARTICLE::NormalKuwabaraKono},
+                  {"NormalTsuji", PARTICLE::NormalTsuji},
               },
               {.description = "normal contact law for particles",
-                  .default_value = Inpar::PARTICLE::NormalLinSpring}),
+                  .default_value = PARTICLE::NormalLinSpring}),
 
           // type of tangential contact law
           parameter<TangentialContact>(
               "TANGENTIALCONTACTLAW", {.description = "tangential contact law for particles",
-                                          .default_value = Inpar::PARTICLE::NoTangentialContact}),
+                                          .default_value = PARTICLE::NoTangentialContact}),
 
           // type of rolling contact law
           parameter<RollingContact>(
               "ROLLINGCONTACTLAW", {.description = "rolling contact law for particles",
-                                       .default_value = Inpar::PARTICLE::NoRollingContact}),
+                                       .default_value = PARTICLE::NoRollingContact}),
 
           // type of normal adhesion law
           parameter<AdhesionLaw>(
               "ADHESIONLAW", {.description = "type of adhesion law for particles",
-                                 .default_value = Inpar::PARTICLE::NoAdhesion}),
+                                 .default_value = PARTICLE::NoAdhesion}),
 
           // type of (random) surface energy distribution
           parameter<SurfaceEnergyDistribution>("ADHESION_SURFACE_ENERGY_DISTRIBUTION",
               {.description = "type of (random) surface energy distribution",
-                  .default_value = Inpar::PARTICLE::ConstantSurfaceEnergy}),
+                  .default_value = PARTICLE::ConstantSurfaceEnergy}),
 
           parameter<double>("MIN_RADIUS",
               {.description = "minimum allowed particle radius", .default_value = 0.0}),
@@ -482,7 +480,7 @@ std::vector<Core::IO::InputSpec> Inpar::PARTICLE::valid_parameters()
           // type of initial particle radius assignment
           parameter<InitialRadiusAssignment>(
               "INITIAL_RADIUS", {.description = "type of initial particle radius assignment",
-                                    .default_value = Inpar::PARTICLE::RadiusFromParticleMaterial}),
+                                    .default_value = PARTICLE::RadiusFromParticleMaterial}),
 
           parameter<std::optional<double>>("RADIUSDISTRIBUTION_SIGMA",
               {
@@ -558,8 +556,7 @@ std::vector<Core::IO::InputSpec> Inpar::PARTICLE::valid_parameters()
 /*---------------------------------------------------------------------------*
  | set the particle conditions                                               |
  *---------------------------------------------------------------------------*/
-void Inpar::PARTICLE::set_valid_conditions(
-    std::vector<Core::Conditions::ConditionDefinition>& condlist)
+void PARTICLE::set_valid_conditions(std::vector<Core::Conditions::ConditionDefinition>& condlist)
 {
   using namespace Core::IO::InputSpecBuilders;
 

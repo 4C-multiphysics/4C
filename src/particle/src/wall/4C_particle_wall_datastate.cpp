@@ -8,10 +8,10 @@
 #include "4C_particle_wall_datastate.hpp"
 
 #include "4C_fem_discretization.hpp"
-#include "4C_inpar_particle.hpp"
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_particle_input.hpp"
 
 #include <Teuchos_ParameterList.hpp>
 

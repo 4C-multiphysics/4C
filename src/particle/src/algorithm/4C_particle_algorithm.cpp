@@ -8,7 +8,6 @@
 #include "4C_particle_algorithm.hpp"
 
 #include "4C_comm_mpi_utils.hpp"
-#include "4C_inpar_particle.hpp"
 #include "4C_io.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_particle_algorithm_gravity.hpp"
@@ -22,6 +21,7 @@
 #include "4C_particle_engine_communication_utils.hpp"
 #include "4C_particle_engine_container.hpp"
 #include "4C_particle_engine_object.hpp"
+#include "4C_particle_input.hpp"
 #include "4C_particle_interaction_base.hpp"
 #include "4C_particle_interaction_dem.hpp"
 #include "4C_particle_interaction_sph.hpp"
@@ -389,24 +389,24 @@ void PARTICLEALGORITHM::ParticleAlgorithm::init_particle_engine()
 void PARTICLEALGORITHM::ParticleAlgorithm::init_particle_wall()
 {
   // get type of particle wall source
-  auto particlewallsource = Teuchos::getIntegralValue<Inpar::PARTICLE::ParticleWallSource>(
-      params_, "PARTICLE_WALL_SOURCE");
+  auto particlewallsource =
+      Teuchos::getIntegralValue<PARTICLE::ParticleWallSource>(params_, "PARTICLE_WALL_SOURCE");
 
   // create particle wall handler
   switch (particlewallsource)
   {
-    case Inpar::PARTICLE::NoParticleWall:
+    case PARTICLE::NoParticleWall:
     {
       particlewall_ = std::shared_ptr<PARTICLEWALL::WallHandlerBase>(nullptr);
       break;
     }
-    case Inpar::PARTICLE::DiscretCondition:
+    case PARTICLE::DiscretCondition:
     {
       particlewall_ =
           std::make_shared<PARTICLEWALL::WallHandlerDiscretCondition>(get_comm(), params_);
       break;
     }
-    case Inpar::PARTICLE::BoundingBox:
+    case PARTICLE::BoundingBox:
     {
       particlewall_ = std::make_shared<PARTICLEWALL::WallHandlerBoundingBox>(get_comm(), params_);
       break;
@@ -435,18 +435,18 @@ void PARTICLEALGORITHM::ParticleAlgorithm::init_particle_rigid_body()
 void PARTICLEALGORITHM::ParticleAlgorithm::init_particle_time_integration()
 {
   // get particle time integration scheme
-  auto timinttype = Teuchos::getIntegralValue<Inpar::PARTICLE::DynamicType>(params_, "DYNAMICTYPE");
+  auto timinttype = Teuchos::getIntegralValue<PARTICLE::DynamicType>(params_, "DYNAMICTYPE");
 
   // create particle time integration
   switch (timinttype)
   {
-    case Inpar::PARTICLE::dyna_semiimpliciteuler:
+    case PARTICLE::dyna_semiimpliciteuler:
     {
       particletimint_ = std::unique_ptr<PARTICLEALGORITHM::TimIntSemiImplicitEuler>(
           new PARTICLEALGORITHM::TimIntSemiImplicitEuler(params_));
       break;
     }
-    case Inpar::PARTICLE::dyna_velocityverlet:
+    case PARTICLE::dyna_velocityverlet:
     {
       particletimint_ = std::unique_ptr<PARTICLEALGORITHM::TimIntVelocityVerlet>(
           new PARTICLEALGORITHM::TimIntVelocityVerlet(params_));
@@ -467,23 +467,23 @@ void PARTICLEALGORITHM::ParticleAlgorithm::init_particle_interaction()
 {
   // get particle interaction type
   auto interactiontype =
-      Teuchos::getIntegralValue<Inpar::PARTICLE::InteractionType>(params_, "INTERACTION");
+      Teuchos::getIntegralValue<PARTICLE::InteractionType>(params_, "INTERACTION");
 
   // create particle interaction handler
   switch (interactiontype)
   {
-    case Inpar::PARTICLE::interaction_none:
+    case PARTICLE::interaction_none:
     {
       particleinteraction_ = std::unique_ptr<ParticleInteraction::ParticleInteractionBase>(nullptr);
       break;
     }
-    case Inpar::PARTICLE::interaction_sph:
+    case PARTICLE::interaction_sph:
     {
       particleinteraction_ = std::unique_ptr<ParticleInteraction::ParticleInteractionSPH>(
           new ParticleInteraction::ParticleInteractionSPH(get_comm(), params_));
       break;
     }
-    case Inpar::PARTICLE::interaction_dem:
+    case PARTICLE::interaction_dem:
     {
       particleinteraction_ = std::unique_ptr<ParticleInteraction::ParticleInteractionDEM>(
           new ParticleInteraction::ParticleInteractionDEM(get_comm(), params_));

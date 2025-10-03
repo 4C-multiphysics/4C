@@ -7,7 +7,7 @@
 
 #include "4C_particle_interaction_dem_contact_rolling.hpp"
 
-#include "4C_inpar_particle.hpp"
+#include "4C_particle_input.hpp"
 #include "4C_particle_interaction_utils.hpp"
 #include "4C_utils_exceptions.hpp"
 

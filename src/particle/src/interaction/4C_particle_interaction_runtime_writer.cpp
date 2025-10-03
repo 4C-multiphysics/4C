@@ -9,11 +9,11 @@
 
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_global_data.hpp"
-#include "4C_inpar_particle.hpp"
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
 #include "4C_io_runtime_csv_writer.hpp"
 #include "4C_io_visualization_manager.hpp"
+#include "4C_particle_input.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 

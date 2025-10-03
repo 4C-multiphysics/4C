@@ -8,7 +8,7 @@
 #include "4C_particle_interaction_dem_adhesion_surface_energy.hpp"
 
 #include "4C_global_data.hpp"
-#include "4C_inpar_particle.hpp"
+#include "4C_particle_input.hpp"
 #include "4C_utils_exceptions.hpp"
 
 FOUR_C_NAMESPACE_OPEN

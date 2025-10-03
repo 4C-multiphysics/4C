@@ -5,7 +5,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "4C_inpar_pasi.hpp"
+#include "4C_pasi_input.hpp"
 
 #include "4C_io_input_spec_builders.hpp"
 FOUR_C_NAMESPACE_OPEN
@@ -13,7 +13,7 @@ FOUR_C_NAMESPACE_OPEN
 /*---------------------------------------------------------------------------*
  | valid parameters for pasi                                             |
  *---------------------------------------------------------------------------*/
-Core::IO::InputSpec Inpar::PaSI::valid_parameters()
+Core::IO::InputSpec PaSI::valid_parameters()
 {
   using namespace Core::IO::InputSpecBuilders;
   Core::IO::InputSpec spec = group("PASI DYNAMIC",

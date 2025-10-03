@@ -13,7 +13,7 @@
  *---------------------------------------------------------------------------*/
 #include "4C_config.hpp"
 
-#include "4C_inpar_particle.hpp"
+#include "4C_particle_input.hpp"
 #include "4C_particle_interaction_base.hpp"
 
 FOUR_C_NAMESPACE_OPEN

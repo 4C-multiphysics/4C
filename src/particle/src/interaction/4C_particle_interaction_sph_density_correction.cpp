@@ -7,7 +7,7 @@
 
 #include "4C_particle_interaction_sph_density_correction.hpp"
 
-#include "4C_inpar_particle.hpp"
+#include "4C_particle_input.hpp"
 #include "4C_utils_exceptions.hpp"
 
 FOUR_C_NAMESPACE_OPEN

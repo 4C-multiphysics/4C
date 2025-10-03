@@ -38,11 +38,10 @@ FOUR_C_NAMESPACE_OPEN
  *---------------------------------------------------------------------------*/
 ParticleInteraction::SPHMomentum::SPHMomentum(const Teuchos::ParameterList& params)
     : params_sph_(params),
-      boundaryparticleinteraction_(
-          Teuchos::getIntegralValue<Inpar::PARTICLE::BoundaryParticleInteraction>(
-              params_sph_, "BOUNDARYPARTICLEINTERACTION")),
+      boundaryparticleinteraction_(Teuchos::getIntegralValue<PARTICLE::BoundaryParticleInteraction>(
+          params_sph_, "BOUNDARYPARTICLEINTERACTION")),
       transportvelocityformulation_(
-          Teuchos::getIntegralValue<Inpar::PARTICLE::TransportVelocityFormulation>(
+          Teuchos::getIntegralValue<PARTICLE::TransportVelocityFormulation>(
               params_sph_, "TRANSPORTVELOCITYFORMULATION")),
       writeparticlewallinteraction_(params_sph_.get<bool>("WRITE_PARTICLE_WALL_INTERACTION"))
 {
@@ -169,7 +168,7 @@ void ParticleInteraction::SPHMomentum::insert_particle_states_of_particle_types(
 
     // additional states for transport velocity formulation
     if (transportvelocityformulation_ !=
-        Inpar::PARTICLE::TransportVelocityFormulation::NoTransportVelocity)
+        PARTICLE::TransportVelocityFormulation::NoTransportVelocity)
       particlestates.insert(
           {PARTICLEENGINE::ModifiedVelocity, PARTICLEENGINE::ModifiedAcceleration});
   }
@@ -192,20 +191,19 @@ void ParticleInteraction::SPHMomentum::add_acceleration_contribution() const
 void ParticleInteraction::SPHMomentum::init_momentum_formulation_handler()
 {
   // get type of smoothed particle hydrodynamics momentum formulation
-  auto momentumformulationtype =
-      Teuchos::getIntegralValue<Inpar::PARTICLE::MomentumFormulationType>(
-          params_sph_, "MOMENTUMFORMULATION");
+  auto momentumformulationtype = Teuchos::getIntegralValue<PARTICLE::MomentumFormulationType>(
+      params_sph_, "MOMENTUMFORMULATION");
 
   // create momentum formulation handler
   switch (momentumformulationtype)
   {
-    case Inpar::PARTICLE::AdamiMomentumFormulation:
+    case PARTICLE::AdamiMomentumFormulation:
     {
       momentumformulation_ = std::unique_ptr<ParticleInteraction::SPHMomentumFormulationAdami>(
           new ParticleInteraction::SPHMomentumFormulationAdami());
       break;
     }
-    case Inpar::PARTICLE::MonaghanMomentumFormulation:
+    case PARTICLE::MonaghanMomentumFormulation:
     {
       momentumformulation_ = std::unique_ptr<ParticleInteraction::SPHMomentumFormulationMonaghan>(
           new ParticleInteraction::SPHMomentumFormulationMonaghan());
@@ -338,7 +336,7 @@ void ParticleInteraction::SPHMomentum::momentum_equation_particle_contribution()
 
     // apply transport velocity formulation
     if (transportvelocityformulation_ ==
-        Inpar::PARTICLE::TransportVelocityFormulation::StandardTransportVelocity)
+        PARTICLE::TransportVelocityFormulation::StandardTransportVelocity)
     {
       // evaluate background pressure (standard formulation)
       momentumformulation_->standard_background_pressure(dens_i, dens_j,
@@ -350,7 +348,7 @@ void ParticleInteraction::SPHMomentum::momentum_equation_particle_contribution()
           mod_vel_j, speccoeff_ij, speccoeff_ji, particlepair.e_ij_, acc_i, acc_j);
     }
     else if (transportvelocityformulation_ ==
-             Inpar::PARTICLE::TransportVelocityFormulation::GeneralizedTransportVelocity)
+             PARTICLE::TransportVelocityFormulation::GeneralizedTransportVelocity)
     {
       // modified first derivative of kernel
       const double mod_dWdrij =
@@ -512,7 +510,7 @@ void ParticleInteraction::SPHMomentum::momentum_equation_particle_boundary_contr
         dens_i, dens_j, press_i, press_j, speccoeff_ij, 0.0, e_ij, acc_ij, nullptr);
 
     // evaluate shear forces
-    if (boundaryparticleinteraction_ == Inpar::PARTICLE::NoSlipBoundaryParticle)
+    if (boundaryparticleinteraction_ == PARTICLE::NoSlipBoundaryParticle)
     {
       // get factor from kernel space dimension
       int kernelfac = 0;
@@ -527,7 +525,7 @@ void ParticleInteraction::SPHMomentum::momentum_equation_particle_boundary_contr
 
     // apply transport velocity formulation
     if (transportvelocityformulation_ ==
-        Inpar::PARTICLE::TransportVelocityFormulation::StandardTransportVelocity)
+        PARTICLE::TransportVelocityFormulation::StandardTransportVelocity)
     {
       // evaluate background pressure (standard formulation)
       momentumformulation_->standard_background_pressure(dens_i, dens_j,
@@ -538,7 +536,7 @@ void ParticleInteraction::SPHMomentum::momentum_equation_particle_boundary_contr
           nullptr, speccoeff_ij, 0.0, e_ij, acc_ij, nullptr);
     }
     else if (transportvelocityformulation_ ==
-             Inpar::PARTICLE::TransportVelocityFormulation::GeneralizedTransportVelocity)
+             PARTICLE::TransportVelocityFormulation::GeneralizedTransportVelocity)
     {
       // modified first derivative of kernel
       const double mod_dWdrij = kernel_->d_wdrij(absdist, kernel_->smoothing_length(rad_i[0]));
@@ -557,7 +555,7 @@ void ParticleInteraction::SPHMomentum::momentum_equation_particle_boundary_contr
     }
 
     // evaluate artificial viscosity
-    if (boundaryparticleinteraction_ == Inpar::PARTICLE::NoSlipBoundaryParticle and
+    if (boundaryparticleinteraction_ == PARTICLE::NoSlipBoundaryParticle and
         material_i->artificialViscosity_ > 0.0)
     {
       // get smoothing length
@@ -792,7 +790,7 @@ void ParticleInteraction::SPHMomentum::momentum_equation_particle_wall_contribut
             dens_i, dens_k, press_i, press_k, speccoeff_ik, 0.0, e_ik, sumk_acc_ik, nullptr);
 
         // evaluate shear forces
-        if (boundaryparticleinteraction_ == Inpar::PARTICLE::NoSlipBoundaryParticle)
+        if (boundaryparticleinteraction_ == PARTICLE::NoSlipBoundaryParticle)
         {
           // get factor from kernel space dimension
           int kernelfac = 0;
@@ -808,7 +806,7 @@ void ParticleInteraction::SPHMomentum::momentum_equation_particle_wall_contribut
 
         // apply transport velocity formulation
         if (transportvelocityformulation_ ==
-            Inpar::PARTICLE::TransportVelocityFormulation::StandardTransportVelocity)
+            PARTICLE::TransportVelocityFormulation::StandardTransportVelocity)
         {
           // evaluate background pressure (standard formulation)
           momentumformulation_->standard_background_pressure(dens_i, dens_k,
@@ -820,7 +818,7 @@ void ParticleInteraction::SPHMomentum::momentum_equation_particle_wall_contribut
               mod_vel_i, nullptr, speccoeff_ik, 0.0, e_ik, sumk_acc_ik, nullptr);
         }
         else if (transportvelocityformulation_ ==
-                 Inpar::PARTICLE::TransportVelocityFormulation::GeneralizedTransportVelocity)
+                 PARTICLE::TransportVelocityFormulation::GeneralizedTransportVelocity)
         {
           // modified first derivative of kernel
           const double mod_dWdrij = kernel_->d_wdrij(absdist, kernel_->smoothing_length(rad_i[0]));
@@ -839,7 +837,7 @@ void ParticleInteraction::SPHMomentum::momentum_equation_particle_wall_contribut
         }
 
         // evaluate artificial viscosity
-        if (boundaryparticleinteraction_ == Inpar::PARTICLE::NoSlipBoundaryParticle and
+        if (boundaryparticleinteraction_ == PARTICLE::NoSlipBoundaryParticle and
             material_i->artificialViscosity_ > 0.0)
         {
           // get smoothing length

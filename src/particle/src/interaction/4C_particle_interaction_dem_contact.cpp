@@ -107,10 +107,10 @@ void ParticleInteraction::DEMContact::setup(
   {
     // get type of normal contact law
     auto normalcontacttype =
-        Teuchos::getIntegralValue<Inpar::PARTICLE::NormalContact>(params_dem_, "NORMALCONTACTLAW");
+        Teuchos::getIntegralValue<PARTICLE::NormalContact>(params_dem_, "NORMALCONTACTLAW");
 
-    if (normalcontacttype != Inpar::PARTICLE::NormalLinSpring and
-        normalcontacttype != Inpar::PARTICLE::NormalLinSpringDamp)
+    if (normalcontacttype != PARTICLE::NormalLinSpring and
+        normalcontacttype != PARTICLE::NormalLinSpringDamp)
       FOUR_C_THROW("tangential contact law only valid with linear normal contact law!");
   }
 }
@@ -212,42 +212,42 @@ void ParticleInteraction::DEMContact::init_normal_contact_handler()
 {
   // get type of normal contact law
   auto normalcontacttype =
-      Teuchos::getIntegralValue<Inpar::PARTICLE::NormalContact>(params_dem_, "NORMALCONTACTLAW");
+      Teuchos::getIntegralValue<PARTICLE::NormalContact>(params_dem_, "NORMALCONTACTLAW");
 
   // create normal contact handler
   switch (normalcontacttype)
   {
-    case Inpar::PARTICLE::NormalLinSpring:
+    case PARTICLE::NormalLinSpring:
     {
       contactnormal_ = std::unique_ptr<ParticleInteraction::DEMContactNormalLinearSpring>(
           new ParticleInteraction::DEMContactNormalLinearSpring(params_dem_));
       break;
     }
-    case Inpar::PARTICLE::NormalLinSpringDamp:
+    case PARTICLE::NormalLinSpringDamp:
     {
       contactnormal_ = std::unique_ptr<ParticleInteraction::DEMContactNormalLinearSpringDamp>(
           new ParticleInteraction::DEMContactNormalLinearSpringDamp(params_dem_));
       break;
     }
-    case Inpar::PARTICLE::NormalHertz:
+    case PARTICLE::NormalHertz:
     {
       contactnormal_ = std::unique_ptr<ParticleInteraction::DEMContactNormalHertz>(
           new ParticleInteraction::DEMContactNormalHertz(params_dem_));
       break;
     }
-    case Inpar::PARTICLE::NormalLeeHerrmann:
+    case PARTICLE::NormalLeeHerrmann:
     {
       contactnormal_ = std::unique_ptr<ParticleInteraction::DEMContactNormalLeeHerrmann>(
           new ParticleInteraction::DEMContactNormalLeeHerrmann(params_dem_));
       break;
     }
-    case Inpar::PARTICLE::NormalKuwabaraKono:
+    case PARTICLE::NormalKuwabaraKono:
     {
       contactnormal_ = std::unique_ptr<ParticleInteraction::DEMContactNormalKuwabaraKono>(
           new ParticleInteraction::DEMContactNormalKuwabaraKono(params_dem_));
       break;
     }
-    case Inpar::PARTICLE::NormalTsuji:
+    case PARTICLE::NormalTsuji:
     {
       contactnormal_ = std::unique_ptr<ParticleInteraction::DEMContactNormalTsuji>(
           new ParticleInteraction::DEMContactNormalTsuji(params_dem_));
@@ -267,18 +267,18 @@ void ParticleInteraction::DEMContact::init_normal_contact_handler()
 void ParticleInteraction::DEMContact::init_tangential_contact_handler()
 {
   // get type of tangential contact law
-  auto tangentialcontacttype = Teuchos::getIntegralValue<Inpar::PARTICLE::TangentialContact>(
-      params_dem_, "TANGENTIALCONTACTLAW");
+  auto tangentialcontacttype =
+      Teuchos::getIntegralValue<PARTICLE::TangentialContact>(params_dem_, "TANGENTIALCONTACTLAW");
 
   // create tangential contact handler
   switch (tangentialcontacttype)
   {
-    case Inpar::PARTICLE::NoTangentialContact:
+    case PARTICLE::NoTangentialContact:
     {
       contacttangential_ = std::unique_ptr<ParticleInteraction::DEMContactTangentialBase>(nullptr);
       break;
     }
-    case Inpar::PARTICLE::TangentialLinSpringDamp:
+    case PARTICLE::TangentialLinSpringDamp:
     {
       contacttangential_ =
           std::unique_ptr<ParticleInteraction::DEMContactTangentialLinearSpringDamp>(
@@ -300,23 +300,23 @@ void ParticleInteraction::DEMContact::init_rolling_contact_handler()
 {
   // get type of rolling contact law
   auto rollingcontacttype =
-      Teuchos::getIntegralValue<Inpar::PARTICLE::RollingContact>(params_dem_, "ROLLINGCONTACTLAW");
+      Teuchos::getIntegralValue<PARTICLE::RollingContact>(params_dem_, "ROLLINGCONTACTLAW");
 
   // create rolling contact handler
   switch (rollingcontacttype)
   {
-    case Inpar::PARTICLE::NoRollingContact:
+    case PARTICLE::NoRollingContact:
     {
       contactrolling_ = std::unique_ptr<ParticleInteraction::DEMContactRollingBase>(nullptr);
       break;
     }
-    case Inpar::PARTICLE::RollingViscous:
+    case PARTICLE::RollingViscous:
     {
       contactrolling_ = std::unique_ptr<ParticleInteraction::DEMContactRollingViscous>(
           new ParticleInteraction::DEMContactRollingViscous(params_dem_));
       break;
     }
-    case Inpar::PARTICLE::RollingCoulomb:
+    case PARTICLE::RollingCoulomb:
     {
       contactrolling_ = std::unique_ptr<ParticleInteraction::DEMContactRollingCoulomb>(
           new ParticleInteraction::DEMContactRollingCoulomb(params_dem_));

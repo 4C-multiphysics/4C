@@ -80,8 +80,8 @@ void ParticleInteraction::SPHSurfaceTension::init()
 
   if (alpha_t_ != 0.0)
   {
-    if (Teuchos::getIntegralValue<Inpar::PARTICLE::TemperatureEvaluationScheme>(
-            params_sph_, "TEMPERATUREEVALUATION") == Inpar::PARTICLE::NoTemperatureEvaluation)
+    if (Teuchos::getIntegralValue<PARTICLE::TemperatureEvaluationScheme>(
+            params_sph_, "TEMPERATUREEVALUATION") == PARTICLE::NoTemperatureEvaluation)
       FOUR_C_THROW("temperature evaluation needed for temperature dependent surface tension!");
 
     if (not params_sph_.get<bool>("TEMPERATUREGRADIENT"))
@@ -92,8 +92,8 @@ void ParticleInteraction::SPHSurfaceTension::init()
   if (trans_d_t_surf_ > 0.0 or trans_d_t_mara_ > 0.0 or trans_d_t_curv_ > 0.0 or
       trans_d_t_wet_ > 0.0)
   {
-    if (Teuchos::getIntegralValue<Inpar::PARTICLE::TemperatureEvaluationScheme>(
-            params_sph_, "TEMPERATUREEVALUATION") == Inpar::PARTICLE::NoTemperatureEvaluation)
+    if (Teuchos::getIntegralValue<PARTICLE::TemperatureEvaluationScheme>(
+            params_sph_, "TEMPERATUREEVALUATION") == PARTICLE::NoTemperatureEvaluation)
       FOUR_C_THROW("temperature evaluation needed for linear transition of surface tension!");
   }
 }

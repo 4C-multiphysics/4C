@@ -39,8 +39,8 @@ ParticleInteraction::SPHHeatLossEvaporation::SPHHeatLossEvaporation(
 void ParticleInteraction::SPHHeatLossEvaporation::init()
 {
   // safety check
-  if (Teuchos::getIntegralValue<Inpar::PARTICLE::SurfaceTensionFormulation>(
-          params_sph_, "SURFACETENSIONFORMULATION") == Inpar::PARTICLE::NoSurfaceTension)
+  if (Teuchos::getIntegralValue<PARTICLE::SurfaceTensionFormulation>(
+          params_sph_, "SURFACETENSIONFORMULATION") == PARTICLE::NoSurfaceTension)
     FOUR_C_THROW("surface tension evaluation needed for evaporation induced heat loss!");
 }
 

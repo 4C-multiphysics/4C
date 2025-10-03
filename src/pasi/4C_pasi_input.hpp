@@ -5,8 +5,8 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#ifndef FOUR_C_INPAR_PASI_HPP
-#define FOUR_C_INPAR_PASI_HPP
+#ifndef FOUR_C_PASI_INPUT_HPP
+#define FOUR_C_PASI_INPUT_HPP
 
 /*---------------------------------------------------------------------------*
  | headers                                                                   |
@@ -21,25 +21,21 @@ FOUR_C_NAMESPACE_OPEN
 /*---------------------------------------------------------------------------*
  | Input parameters for particle structure interaction                       |
  *---------------------------------------------------------------------------*/
-namespace Inpar
+namespace PaSI
 {
-  namespace PaSI
+  //! type of partitioned coupling
+  enum PartitionedCouplingType
   {
-    //! type of partitioned coupling
-    enum PartitionedCouplingType
-    {
-      partitioned_onewaycoup,                 //!< one-way coupling
-      partitioned_twowaycoup,                 //!< two-way coupling
-      partitioned_twowaycoup_disprelax,       //!< two-way coupling with constant relaxation
-      partitioned_twowaycoup_disprelaxaitken  //!< two-way coupling with dynamic aitken relaxation
-    };
+    partitioned_onewaycoup,                 //!< one-way coupling
+    partitioned_twowaycoup,                 //!< two-way coupling
+    partitioned_twowaycoup_disprelax,       //!< two-way coupling with constant relaxation
+    partitioned_twowaycoup_disprelaxaitken  //!< two-way coupling with dynamic aitken relaxation
+  };
 
-    //! valid parameters for particle structure interaction
-    Core::IO::InputSpec valid_parameters();
+  //! valid parameters for particle structure interaction
+  Core::IO::InputSpec valid_parameters();
 
-  }  // namespace PaSI
-
-}  // namespace Inpar
+}  // namespace PaSI
 
 /*---------------------------------------------------------------------------*/
 FOUR_C_NAMESPACE_CLOSE

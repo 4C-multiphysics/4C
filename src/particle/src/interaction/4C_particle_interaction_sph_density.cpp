@@ -891,26 +891,25 @@ void ParticleInteraction::SPHDensityPredictCorrect::compute_density() const
 void ParticleInteraction::SPHDensityPredictCorrect::init_density_correction_handler()
 {
   // get type of density correction scheme
-  auto densitycorrectionscheme =
-      Teuchos::getIntegralValue<Inpar::PARTICLE::DensityCorrectionScheme>(
-          params_sph_, "DENSITYCORRECTION");
+  auto densitycorrectionscheme = Teuchos::getIntegralValue<PARTICLE::DensityCorrectionScheme>(
+      params_sph_, "DENSITYCORRECTION");
 
   // create density correction handler
   switch (densitycorrectionscheme)
   {
-    case Inpar::PARTICLE::InteriorCorrection:
+    case PARTICLE::InteriorCorrection:
     {
       densitycorrection_ = std::unique_ptr<ParticleInteraction::SPHDensityCorrectionInterior>(
           new ParticleInteraction::SPHDensityCorrectionInterior());
       break;
     }
-    case Inpar::PARTICLE::NormalizedCorrection:
+    case PARTICLE::NormalizedCorrection:
     {
       densitycorrection_ = std::unique_ptr<ParticleInteraction::SPHDensityCorrectionNormalized>(
           new ParticleInteraction::SPHDensityCorrectionNormalized());
       break;
     }
-    case Inpar::PARTICLE::RandlesCorrection:
+    case PARTICLE::RandlesCorrection:
     {
       densitycorrection_ = std::unique_ptr<ParticleInteraction::SPHDensityCorrectionRandles>(
           new ParticleInteraction::SPHDensityCorrectionRandles());

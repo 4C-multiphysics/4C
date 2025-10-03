@@ -102,19 +102,18 @@ void ParticleInteraction::DEMAdhesion::add_force_contribution()
 void ParticleInteraction::DEMAdhesion::init_adhesion_law_handler()
 {
   // get type of adhesion law
-  auto adhesionlaw =
-      Teuchos::getIntegralValue<Inpar::PARTICLE::AdhesionLaw>(params_dem_, "ADHESIONLAW");
+  auto adhesionlaw = Teuchos::getIntegralValue<PARTICLE::AdhesionLaw>(params_dem_, "ADHESIONLAW");
 
   // create adhesion law handler
   switch (adhesionlaw)
   {
-    case Inpar::PARTICLE::AdhesionVdWDMT:
+    case PARTICLE::AdhesionVdWDMT:
     {
       adhesionlaw_ = std::unique_ptr<ParticleInteraction::DEMAdhesionLawVdWDMT>(
           new ParticleInteraction::DEMAdhesionLawVdWDMT(params_dem_));
       break;
     }
-    case Inpar::PARTICLE::AdhesionRegDMT:
+    case PARTICLE::AdhesionRegDMT:
     {
       adhesionlaw_ = std::unique_ptr<ParticleInteraction::DEMAdhesionLawRegDMT>(
           new ParticleInteraction::DEMAdhesionLawRegDMT(params_dem_));
@@ -135,27 +134,27 @@ void ParticleInteraction::DEMAdhesion::init_adhesion_surface_energy_handler()
 {
   // get type of adhesion surface energy distribution
   auto surfaceenergydistributiontype =
-      Teuchos::getIntegralValue<Inpar::PARTICLE::SurfaceEnergyDistribution>(
+      Teuchos::getIntegralValue<PARTICLE::SurfaceEnergyDistribution>(
           params_dem_, "ADHESION_SURFACE_ENERGY_DISTRIBUTION");
 
   // create adhesion surface energy handler
   switch (surfaceenergydistributiontype)
   {
-    case Inpar::PARTICLE::ConstantSurfaceEnergy:
+    case PARTICLE::ConstantSurfaceEnergy:
     {
       adhesionsurfaceenergy_ =
           std::unique_ptr<ParticleInteraction::DEMAdhesionSurfaceEnergyConstant>(
               new ParticleInteraction::DEMAdhesionSurfaceEnergyConstant(params_dem_));
       break;
     }
-    case Inpar::PARTICLE::NormalSurfaceEnergyDistribution:
+    case PARTICLE::NormalSurfaceEnergyDistribution:
     {
       adhesionsurfaceenergy_ =
           std::unique_ptr<ParticleInteraction::DEMAdhesionSurfaceEnergyDistributionNormal>(
               new ParticleInteraction::DEMAdhesionSurfaceEnergyDistributionNormal(params_dem_));
       break;
     }
-    case Inpar::PARTICLE::LogNormalSurfaceEnergyDistribution:
+    case PARTICLE::LogNormalSurfaceEnergyDistribution:
     {
       adhesionsurfaceenergy_ =
           std::unique_ptr<ParticleInteraction::DEMAdhesionSurfaceEnergyDistributionLogNormal>(

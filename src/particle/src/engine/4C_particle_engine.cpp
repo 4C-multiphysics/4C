@@ -14,7 +14,6 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_global_data.hpp"
-#include "4C_inpar_particle.hpp"
 #include "4C_io.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_particle_algorithm_utils.hpp"
@@ -24,6 +23,7 @@
 #include "4C_particle_engine_object.hpp"
 #include "4C_particle_engine_runtime_vtp_writer.hpp"
 #include "4C_particle_engine_unique_global_id.hpp"
+#include "4C_particle_input.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_parameter_list.hpp"
 

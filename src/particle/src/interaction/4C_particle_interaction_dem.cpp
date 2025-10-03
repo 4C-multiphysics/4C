@@ -241,11 +241,10 @@ void ParticleInteraction::ParticleInteractionDEM::init_contact_handler()
 void ParticleInteraction::ParticleInteractionDEM::init_adhesion_handler()
 {
   // get type of adhesion law
-  auto adhesionlaw =
-      Teuchos::getIntegralValue<Inpar::PARTICLE::AdhesionLaw>(params_dem_, "ADHESIONLAW");
+  auto adhesionlaw = Teuchos::getIntegralValue<PARTICLE::AdhesionLaw>(params_dem_, "ADHESIONLAW");
 
   // create adhesion handler
-  if (adhesionlaw != Inpar::PARTICLE::NoAdhesion)
+  if (adhesionlaw != PARTICLE::NoAdhesion)
     adhesion_ = std::unique_ptr<ParticleInteraction::DEMAdhesion>(
         new ParticleInteraction::DEMAdhesion(params_dem_));
 
@@ -284,13 +283,13 @@ void ParticleInteraction::ParticleInteractionDEM::set_initial_radius()
     FOUR_C_THROW("minimum allowed particle radius larger than maximum allowed particle radius!");
 
   // get type of initial particle radius assignment
-  auto radiusdistributiontype = Teuchos::getIntegralValue<Inpar::PARTICLE::InitialRadiusAssignment>(
-      params_dem_, "INITIAL_RADIUS");
+  auto radiusdistributiontype =
+      Teuchos::getIntegralValue<PARTICLE::InitialRadiusAssignment>(params_dem_, "INITIAL_RADIUS");
 
   switch (radiusdistributiontype)
   {
     // particle radius from particle material
-    case Inpar::PARTICLE::RadiusFromParticleMaterial:
+    case PARTICLE::RadiusFromParticleMaterial:
     {
       // iterate over particle types
       for (const auto& type_i : particlecontainerbundle_->get_particle_types())
@@ -327,7 +326,7 @@ void ParticleInteraction::ParticleInteractionDEM::set_initial_radius()
       break;
     }
     // particle radius from particle input
-    case Inpar::PARTICLE::RadiusFromParticleInput:
+    case PARTICLE::RadiusFromParticleInput:
     {
       // note: particle radius set as read in from input file, only safety checks here
 
@@ -355,8 +354,8 @@ void ParticleInteraction::ParticleInteractionDEM::set_initial_radius()
       break;
     }
     // normal or log-normal random particle radius distribution
-    case Inpar::PARTICLE::NormalRadiusDistribution:
-    case Inpar::PARTICLE::LogNormalRadiusDistribution:
+    case PARTICLE::NormalRadiusDistribution:
+    case PARTICLE::LogNormalRadiusDistribution:
     {
       // get sigma of random particle radius distribution
       auto sigma = params_dem_.get<std::optional<double>>("RADIUSDISTRIBUTION_SIGMA");
@@ -386,7 +385,7 @@ void ParticleInteraction::ParticleInteractionDEM::set_initial_radius()
         double* radius = container->get_ptr_to_state(PARTICLEENGINE::Radius, 0);
 
         // determine mu of random particle radius distribution
-        const double mu = (radiusdistributiontype == Inpar::PARTICLE::NormalRadiusDistribution)
+        const double mu = (radiusdistributiontype == PARTICLE::NormalRadiusDistribution)
                               ? material->initRadius_
                               : std::log(material->initRadius_);
 
@@ -400,7 +399,7 @@ void ParticleInteraction::ParticleInteractionDEM::set_initial_radius()
           const double randomvalue = Global::Problem::instance()->random()->normal();
 
           // set normal or log-normal distributed random value for particle radius
-          radius[i] = (radiusdistributiontype == Inpar::PARTICLE::NormalRadiusDistribution)
+          radius[i] = (radiusdistributiontype == PARTICLE::NormalRadiusDistribution)
                           ? randomvalue
                           : std::exp(randomvalue);
 
