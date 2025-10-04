@@ -28,9 +28,30 @@ Creating meshes for |FOURC|
 
 #. Either you create the mesh in |FOURC|'s native format directly. Refer to the :ref:`tools` section
    to find tools that can help you to create |FOURC| input files.
-#. or you create a mesh file in a general binary format for finite element information, called EXODUS II, develeloped by `Sandia National Laboratories
-   <https://www.sandia.gov/files/cubit/15.8/help_manual/WebHelp/finite_element_model/exodus/exodus2_file_specification.htm>`_.
-   This can be read into |FOURC| via its input file.
+#. or you directly read the mesh from standardized mesh formats. |FOURC| supports reading vtu-files,
+   or EXODUS II.
+
+Generating ``VTU`` files
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+VTU is a standard file format for unstructured grids and is part of the VTK library. VTU files
+can be generated from various mesh formats using the Python library `meshio <https://pypi.org/project/meshio/>`_,
+or they can often be exported directly from meshing software.
+
+|FOURC| uses element blocks to assign physical fields and their properties to subsets of elements
+in the mesh. The VTU file must contain a scalar cell data array called ``block_id``, which assigns
+an integer ID to each element.
+
+.. admonition:: Warning
+
+   Each block may only contain elements of the same type (e.g., all hexahedra or all tetrahedra).
+   For mixed meshes, multiple block IDs must be defined. Multiple blocks can be assigned to the same
+   physical field in the |FOURC| input file.
+
+To define boundary conditions, |FOURC| relies on the definition of point sets. |FOURC| creates
+point sets from integer-type point data arrays named ``point_set_<id>``. A point is interpreted as
+belonging to a set if the corresponding entry in the point data array is nonzero.
+
 
 Generating ``EXODUS II`` files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
