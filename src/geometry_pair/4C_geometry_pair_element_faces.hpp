@@ -89,7 +89,7 @@ namespace GeometryPair
      * \brief Constructor.
      * @param core_element (in) Pointer to the element.
      */
-    FaceElement(const std::shared_ptr<const Core::Elements::Element>& core_element)
+    FaceElement(const Core::Elements::Element* core_element)
         : core_element_(core_element), part_of_pair_(false), patch_dof_gid_() {};
 
     /**
@@ -100,7 +100,7 @@ namespace GeometryPair
     /**
      * \brief Get the pointer to the element.
      */
-    const Core::Elements::Element* get_element() const { return core_element_.get(); }
+    const Core::Elements::Element* get_element() const { return core_element_; }
 
     /**
      * \brief Setup the object. Has to be implemented in derived class.
@@ -178,7 +178,7 @@ namespace GeometryPair
 
    protected:
     //! Pointer to the drt element.
-    std::shared_ptr<const Core::Elements::Element> core_element_;
+    const Core::Elements::Element* core_element_;
 
     //! Flag if this face element is part of a contact pair, i.e. if it has evaluate it's averaged
     //! normals.
@@ -207,7 +207,7 @@ namespace GeometryPair
     /**
      * \brief Constructor (derived).
      */
-    FaceElementTemplate(const std::shared_ptr<const Core::Elements::Element>& core_element)
+    FaceElementTemplate(const Core::Elements::Element* core_element)
         : FaceElement(core_element), n_dof_other_element_(0) {};
 
 
@@ -334,8 +334,8 @@ namespace GeometryPair
      * \brief Constructor (derived).
      * @param evaluate_current_normals (in) If the current normals should be evaluated.
      */
-    FaceElementPatchTemplate(const std::shared_ptr<const Core::Elements::Element>& core_element,
-        const bool evaluate_current_normals)
+    FaceElementPatchTemplate(
+        const Core::Elements::Element* core_element, const bool evaluate_current_normals)
         : base_class(core_element),
           connected_faces_(),
           evaluate_current_normals_(evaluate_current_normals)
@@ -417,8 +417,7 @@ namespace GeometryPair
     /**
      * \brief Constructor (derived).
      */
-    FaceElementTemplateExtendedVolume(
-        const std::shared_ptr<const Core::Elements::Element>& core_element)
+    FaceElementTemplateExtendedVolume(const Core::Elements::Element* core_element)
         : base_class(core_element),
           surface_dof_lid_map_(Core::LinAlg::Initialization::zero),
           face_to_volume_coordinate_axis_map_(Core::LinAlg::Initialization::zero),
@@ -502,9 +501,8 @@ namespace GeometryPair
    * @param surface_normal_strategy (in) strategy to be used for surface normals.
    * @return RCP to the created GEOMETRYPAIR FaceElement.
    */
-  std::shared_ptr<FaceElement> face_element_factory(
-      const std::shared_ptr<const Core::Elements::Element>& core_element, const int fad_order,
-      const GeometryPair::SurfaceNormals surface_normal_strategy);
+  std::shared_ptr<FaceElement> face_element_factory(const Core::Elements::Element* core_element,
+      const int fad_order, const GeometryPair::SurfaceNormals surface_normal_strategy);
 
 }  // namespace GeometryPair
 

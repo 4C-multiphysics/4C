@@ -314,39 +314,63 @@ void BeamInteraction::BeamInteractionConditions::create_indirect_assembly_manage
 void BeamInteraction::condition_to_element_ids(
     const Core::Conditions::Condition& condition, std::vector<int>& element_ids)
 {
-  // Loop over the elements in the condition and get the "real" element by comparing the node IDs.
+  const auto element_id_map = condition_to_element_id_map(condition);
   element_ids.clear();
-  element_ids.reserve(condition.geometry().size());
-  for (const auto& item : condition.geometry())
+  element_ids.reserve(element_id_map.size());
+  for (const auto& [key, _] : element_id_map) element_ids.push_back(key);
+}
+
+/**
+ *
+ */
+std::unordered_map<int, const Core::Elements::Element*>
+BeamInteraction::condition_to_element_id_map(const Core::Conditions::Condition& condition)
+{
+  std::unordered_map<int, const Core::Elements::Element*> element_id_map;
+
+  for (const auto& [_, element] : condition.geometry())
   {
-    size_t n_nodes = item.second->num_node();
-
-    // Create the node sets and store the node IDs from the condition element in it.
-    std::set<int> nodes_condition;
-    std::set<int> nodes_element;
-    for (size_t i = 0; i < n_nodes; i++) nodes_condition.insert(item.second->nodes()[i]->id());
-
-    // Loop over all elements connected to a node and check if the nodal IDs are the same. Use the
-    // last node, since if there are nodes connected to fewer elements, those are usually at the
-    // end of the list.
-    int local_node_id = n_nodes - 1;
-    for (auto ele : item.second->nodes()[local_node_id]->adjacent_elements())
+    if (element->is_face_element())
     {
-      if (ele.num_nodes() != n_nodes) continue;
+      // For a face element it is easy as we can directly get the parent element ID.
+      const std::shared_ptr<const Core::Elements::FaceElement> face_element =
+          std::dynamic_pointer_cast<const Core::Elements::FaceElement>(element);
+      const int parent_element_id = face_element->parent_element_id();
+      element_id_map[parent_element_id] = face_element.get();
+    }
+    else
+    {
+      const size_t n_nodes = element->num_node();
 
-      // Fill up the node ID map.
-      nodes_element.clear();
-      for (auto node : ele.nodes()) nodes_element.insert(node.global_id());
+      // Create the node sets and store the node IDs from the condition element in it.
+      std::set<int> nodes_condition;
+      std::set<int> nodes_element;
+      for (size_t i = 0; i < n_nodes; i++) nodes_condition.insert(element->nodes()[i]->id());
 
-      // Check if the maps are equal.
-      if (std::equal(nodes_condition.begin(), nodes_condition.end(), nodes_element.begin()))
-        element_ids.push_back(ele.global_id());
+      // Loop over all elements connected to a node and check if the nodal IDs are the same.
+      const size_t local_node_id = n_nodes - 1;
+      for (auto ele : element->nodes()[local_node_id]->adjacent_elements())
+      {
+        if (ele.num_nodes() != n_nodes) continue;
+
+        // Fill up the node ID map.
+        nodes_element.clear();
+        for (auto node : ele.nodes()) nodes_element.insert(node.global_id());
+
+        // Check if the maps are equal.
+        if (std::equal(nodes_condition.begin(), nodes_condition.end(), nodes_element.begin()))
+        {
+          element_id_map[ele.global_id()] = ele.user_element();
+          break;
+        }
+      }
     }
   }
 
-  // Check if all elements were found.
-  if (condition.geometry().size() != element_ids.size())
-    FOUR_C_THROW("Could not find the IDs of all elements!");
+  if (element_id_map.size() != condition.geometry().size())
+    FOUR_C_THROW("Could not create all element ID to element pointer mappings for the condition!");
+
+  return element_id_map;
 }
 
 FOUR_C_NAMESPACE_CLOSE

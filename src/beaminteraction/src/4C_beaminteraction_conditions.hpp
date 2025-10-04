@@ -279,6 +279,12 @@ namespace BeamInteraction
   void condition_to_element_ids(
       const Core::Conditions::Condition& condition, std::vector<int>& element_ids);
 
+  /**
+   * \brief Create the element ID to element pointer map.
+   */
+  std::unordered_map<int, const Core::Elements::Element*> condition_to_element_id_map(
+      const Core::Conditions::Condition& condition);
+
 }  // namespace BeamInteraction
 
 FOUR_C_NAMESPACE_CLOSE

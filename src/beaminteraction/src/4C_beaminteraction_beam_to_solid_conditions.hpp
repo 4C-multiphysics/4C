@@ -244,7 +244,7 @@ namespace BeamInteraction
 
     //! Map containing the global volume element IDs for each face element of the surface in this
     //! condition.
-    std::unordered_map<int, std::shared_ptr<const Core::Elements::Element>> surface_ids_;
+    std::unordered_map<int, const Core::Elements::Element*> surface_ids_;
   };
 
 

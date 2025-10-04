@@ -388,30 +388,7 @@ void BeamInteraction::BeamToSolidConditionSurface::build_id_sets(
   BeamToSolidCondition::build_id_sets(discretization);
 
   // Build the surface map.
-  surface_ids_.clear();
-  for (const auto& map_item : condition_other_->geometry())
-  {
-    if (!map_item.second->is_face_element())
-    {
-      // This is the case if the solid is a pure surface, which is not a face element
-      surface_ids_[map_item.second->id()] = map_item.second;
-    }
-    else
-    {
-      // This is the case if the solid element is the face of a 3D solid volume
-      const std::shared_ptr<const Core::Elements::FaceElement> face_element =
-          std::dynamic_pointer_cast<const Core::Elements::FaceElement>(map_item.second);
-      const int solid_id = face_element->parent_element_id();
-      surface_ids_[solid_id] = face_element;
-    }
-  }
-
-  // The size of the surface id set and the geometry in the conditions have to match, otherwise
-  // there are two faces connected to the same element, which is not implemented at this point.
-  if (surface_ids_.size() != condition_other_->geometry().size())
-    FOUR_C_THROW(
-        "There are multiple faces connected to one solid element in this condition. This case is "
-        "currently not implemented.");
+  surface_ids_ = condition_to_element_id_map(*condition_other_);
 }
 
 /**

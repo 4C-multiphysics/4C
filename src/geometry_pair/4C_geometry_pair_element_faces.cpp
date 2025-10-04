@@ -35,7 +35,7 @@ void GeometryPair::FaceElementTemplate<Surface, ScalarType>::setup(
   // At the moment we need to get the structure discretization at this point since the beam
   // interaction discretization is a copy - without the nurbs information
   face_reference_position_ =
-      GeometryPair::InitializeElementData<Surface, double>::initialize(this->core_element_.get());
+      GeometryPair::InitializeElementData<Surface, double>::initialize(this->core_element_);
   const Core::Nodes::Node* const* nodes = core_element_->nodes();
   for (unsigned int i_node = 0; i_node < Surface::n_nodes_; i_node++)
     for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
@@ -54,8 +54,8 @@ void GeometryPair::FaceElementTemplate<Surface, ScalarType>::set_state(
   std::vector<double> patch_displacement = Core::FE::extract_values(*displacement, patch_dof_gid_);
 
   // Create the full length FAD types.
-  face_position_ = GeometryPair::InitializeElementData<Surface, ScalarType>::initialize(
-      this->core_element_.get());
+  face_position_ =
+      GeometryPair::InitializeElementData<Surface, ScalarType>::initialize(this->core_element_);
   const unsigned int n_patch_dof = patch_dof_gid_.size();
   std::vector<ScalarType> patch_displacement_fad(n_patch_dof);
   for (unsigned int i_dof = 0; i_dof < n_patch_dof; i_dof++)
@@ -132,8 +132,7 @@ void GeometryPair::FaceElementPatchTemplate<Surface, ScalarType>::setup(
 
   // We need to get a UID for the surface element. If the surface is a face element (at the moment
   // the only supported case), we simply take the GID of the parent element.
-  const auto face_element =
-      std::dynamic_pointer_cast<const Core::Elements::FaceElement>(this->core_element_);
+  const auto* face_element = dynamic_cast<const Core::Elements::FaceElement*>(this->core_element_);
   if (face_element == nullptr)
     FOUR_C_THROW("For FaceElementPatchTemplate the surface must be a Core::Elements::FaceElement");
   const int element_uid = face_element->parent_element_id();
@@ -253,8 +252,8 @@ void GeometryPair::FaceElementPatchTemplate<Surface, ScalarType>::set_state(
       Core::FE::extract_values(*displacement, this->patch_dof_gid_);
 
   // Create the full length FAD types.
-  this->face_position_ = GeometryPair::InitializeElementData<Surface, ScalarType>::initialize(
-      this->core_element_.get());
+  this->face_position_ =
+      GeometryPair::InitializeElementData<Surface, ScalarType>::initialize(this->core_element_);
   const unsigned int n_patch_dof = this->patch_dof_gid_.size();
   std::vector<ScalarType> patch_displacement_fad(n_patch_dof);
   for (unsigned int i_dof = 0; i_dof < n_patch_dof; i_dof++)
@@ -420,8 +419,7 @@ void GeometryPair::FaceElementTemplateExtendedVolume<Surface, ScalarType, Volume
     const std::shared_ptr<const Core::FE::Discretization>& discret,
     const std::unordered_map<int, std::shared_ptr<GeometryPair::FaceElement>>& face_elements)
 {
-  const auto face_element =
-      std::dynamic_pointer_cast<const Core::Elements::FaceElement>(this->core_element_);
+  const auto* face_element = dynamic_cast<const Core::Elements::FaceElement*>(this->core_element_);
   if (face_element == nullptr)
     FOUR_C_THROW("For ExtendedVolume coupling the surface must be a Core::Elements::FaceElement");
 
@@ -658,7 +656,7 @@ void GeometryPair::FaceElementTemplateExtendedVolume<Surface, ScalarType,
  *
  */
 std::shared_ptr<GeometryPair::FaceElement> GeometryPair::face_element_factory(
-    const std::shared_ptr<const Core::Elements::Element>& core_element, const int fad_order,
+    const Core::Elements::Element* core_element, const int fad_order,
     const GeometryPair::SurfaceNormals surface_normal_strategy)
 {
   const bool is_fad = fad_order > 0;
