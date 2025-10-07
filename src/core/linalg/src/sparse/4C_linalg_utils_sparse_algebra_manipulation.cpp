@@ -294,15 +294,15 @@ std::shared_ptr<Core::LinAlg::Graph> Core::LinAlg::threshold_matrix_graph(
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 std::shared_ptr<Core::LinAlg::Graph> Core::LinAlg::enrich_matrix_graph(
-    const SparseMatrix& A, int power)
+    const SparseMatrix& A, int levels)
 {
   SparseMatrix A_copy(A, Core::LinAlg::DataAccess::Copy);
   A_copy.complete();
 
-  for (int pow = 0; pow < power - 1; pow++)
+  for (int level = 0; level < levels - 1; level++)
   {
     std::shared_ptr<SparseMatrix> A_power =
-        Core::LinAlg::matrix_multiply(A_copy, false, A, false, true);
+        Core::LinAlg::matrix_multiply(A_copy, false, A_copy, false, true);
     A_power->complete();
     A_copy = *A_power;
   }
