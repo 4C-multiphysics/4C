@@ -8,6 +8,8 @@
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 
 #include "4C_comm_exporter.hpp"
+#include "4C_io.hpp"
+#include "4C_io_pstream.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -296,6 +298,9 @@ std::shared_ptr<Core::LinAlg::Graph> Core::LinAlg::threshold_matrix_graph(
 std::shared_ptr<Core::LinAlg::Graph> Core::LinAlg::enrich_matrix_graph(
     const SparseMatrix& A, int levels)
 {
+  Core::IO::cout(Core::IO::debug) << "Number of non-zeros in initial graph: "
+                                  << A.num_global_nonzeros() << "\n";
+
   SparseMatrix A_copy(A, Core::LinAlg::DataAccess::Copy);
   A_copy.complete();
 
@@ -306,6 +311,9 @@ std::shared_ptr<Core::LinAlg::Graph> Core::LinAlg::enrich_matrix_graph(
     A_power->complete();
     A_copy = *A_power;
   }
+
+  Core::IO::cout(Core::IO::debug) << "Number of non-zeros in enriched graph: "
+                                  << A_copy.num_global_nonzeros() << "\n";
 
   return std::make_shared<Core::LinAlg::Graph>(A_copy.epetra_matrix().Graph());
 }
