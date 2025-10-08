@@ -43,7 +43,8 @@ namespace Constraints
   {
     enum class CouplingStrategy
     {
-      mortar  ///< Mortar based coupling
+      mortar,  ///< Mortar based coupling
+      nitsche  ///< Nitsche based coupling
     };
 
     /**

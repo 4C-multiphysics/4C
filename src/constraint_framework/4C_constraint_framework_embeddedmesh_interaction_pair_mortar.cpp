@@ -8,6 +8,7 @@
 #include "4C_constraint_framework_embeddedmesh_interaction_pair_mortar.hpp"
 
 #include "4C_constraint_framework_embeddedmesh_solid_to_solid_mortar_manager.hpp"
+#include "4C_constraint_framework_embeddedmesh_solid_to_solid_nitsche_manager.hpp"
 #include "4C_constraint_framework_embeddedmesh_solid_to_solid_utils.hpp"
 #include "4C_cut_boundarycell.hpp"
 #include "4C_cut_cutwizard.hpp"
@@ -344,6 +345,33 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface,
 
 template <typename Interface, typename Background, typename Mortar>
 void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface, Background,
+    Mortar>::evaluate_and_assemble_nitsche_contributions(const Core::FE::Discretization& discret,
+    const Constraints::EmbeddedMesh::SolidToSolidNitscheManager* nitsche_manager,
+    Core::LinAlg::SparseMatrix& global_penalty_interface,
+    Core::LinAlg::SparseMatrix& global_penalty_background,
+    Core::LinAlg::SparseMatrix& global_penalty_interface_background)
+{
+  // Initialize variables for local mortar matrices.
+  Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>
+      local_stiffness_penalty_interface(Core::LinAlg::Initialization::uninitialized);
+  Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>
+      local_stiffness_penalty_background(Core::LinAlg::Initialization::uninitialized);
+  Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>
+      local_stiffness_penalty_interface_background(Core::LinAlg::Initialization::uninitialized);
+
+  // Evaluate the local penalty contributions of Nitsche method
+  evaluate_penalty_contributions_nitsche(local_stiffness_penalty_interface,
+      local_stiffness_penalty_background, local_stiffness_penalty_interface_background);
+
+  // Assemble into global matrices.
+  assemble_local_nitsche_contributions<Interface, Background>(this, discret,
+      global_penalty_interface, global_penalty_background, global_penalty_interface_background,
+      local_stiffness_penalty_interface, local_stiffness_penalty_background,
+      local_stiffness_penalty_interface_background);
+}
+
+template <typename Interface, typename Background, typename Mortar>
+void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface, Background,
     Mortar>::get_projected_gauss_rule_in_cut_element(Core::IO::VisualizationData&
         cut_element_integration_points_visualization_data)
 {
@@ -593,6 +621,91 @@ double get_determinant_interface_element(
 
   return determinant_interface;
 }
+
+template <typename Interface, typename Background, typename Mortar>
+void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface, Background,
+    Mortar>::evaluate_penalty_contributions_nitsche(Core::LinAlg::Matrix<Interface::n_dof_,
+                                                        Interface::n_dof_, double>&
+                                                        local_stiffness_penalty_interface,
+    Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&
+        local_stiffness_penalty_background,
+    Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
+        local_stiffness_penalty_interface_background)
+{
+  // Initialize the local penalty matrices.
+  local_stiffness_penalty_interface.put_scalar(0.0);
+  local_stiffness_penalty_background.put_scalar(0.0);
+  local_stiffness_penalty_interface_background.put_scalar(0.0);
+
+  // Initialize variables for shape function values.
+  Core::LinAlg::Matrix<1, Interface::n_nodes_ * Interface::n_val_, double> N_interface(
+      Core::LinAlg::Initialization::zero);
+  Core::LinAlg::Matrix<1, Background::n_nodes_ * Background::n_val_, double> N_background(
+      Core::LinAlg::Initialization::zero);
+
+  // Calculate the penalty matrices.
+  // Gauss point loop
+  for (size_t it_gp = 0; it_gp < interface_integration_points_.size(); it_gp++)
+  {
+    auto& [xi_interface, xi_background, weight] = interface_integration_points_[it_gp];
+
+    double determinant_interface =
+        get_determinant_interface_element(xi_interface, this->element_1());
+
+    // Get the shape function matrices
+    N_interface.clear();
+    N_background.clear();
+
+    GeometryPair::EvaluateShapeFunction<Interface>::evaluate(
+        N_interface, xi_interface, ele1pos_.shape_function_data_);
+    GeometryPair::EvaluateShapeFunction<Background>::evaluate(
+        N_background, xi_background, ele2pos_.shape_function_data_);
+
+    // Fill in the local penalty matrix K_penalty_interface.
+    for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
+        i_interface_node++)
+      for (unsigned int i_interface_val = 0; i_interface_val < Interface::n_val_; i_interface_val++)
+        for (unsigned int j_interface_node = 0; j_interface_node < Interface::n_nodes_;
+            j_interface_node++)
+          for (unsigned int j_interface_val = 0; j_interface_val < Interface::n_val_;
+              j_interface_val++)
+            for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
+              local_stiffness_penalty_interface(
+                  i_interface_node * Interface::n_val_ * 3 + i_interface_val * 3 + i_dim,
+                  j_interface_node * Interface::n_val_ * 3 + j_interface_val * 3 + i_dim) +=
+                  N_interface(i_interface_node * Interface::n_val_ + i_interface_val) *
+                  N_interface(j_interface_node * Interface::n_val_ + j_interface_val) * weight *
+                  determinant_interface;
+
+    // Fill in the local penalty matrix K_penalty_background.
+    for (unsigned int i_solid_node = 0; i_solid_node < Background::n_nodes_; i_solid_node++)
+      for (unsigned int i_solid_val = 0; i_solid_val < Background::n_val_; i_solid_val++)
+        for (unsigned int j_solid_node = 0; j_solid_node < Background::n_nodes_; j_solid_node++)
+          for (unsigned int j_solid_val = 0; j_solid_val < Background::n_val_; j_solid_val++)
+            for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
+              local_stiffness_penalty_background(
+                  i_solid_node * Background::n_val_ * 3 + i_solid_val * 3 + i_dim,
+                  j_solid_node * Background::n_val_ * 3 + j_solid_val * 3 + i_dim) +=
+                  N_background(i_solid_node * Background::n_val_ + i_solid_val) *
+                  N_background(j_solid_node * Background::n_val_ + j_solid_val) * weight *
+                  determinant_interface;
+
+    // Fill in the local penalty matrix K_penalty_interface_background.
+    for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
+        i_interface_node++)
+      for (unsigned int i_interface_val = 0; i_interface_val < Interface::n_val_; i_interface_val++)
+        for (unsigned int i_solid_node = 0; i_solid_node < Background::n_nodes_; i_solid_node++)
+          for (unsigned int i_solid_val = 0; i_solid_val < Background::n_val_; i_solid_val++)
+            for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
+              local_stiffness_penalty_interface_background(
+                  i_interface_node * Interface::n_val_ * 3 + i_interface_val * 3 + i_dim,
+                  i_solid_node * Background::n_val_ * 3 + i_solid_val * 3 + i_dim) +=
+                  N_interface(i_interface_node * Interface::n_val_ + i_interface_val) *
+                  N_background(i_solid_node * Background::n_val_ + i_solid_val) * weight *
+                  determinant_interface;
+  }
+}
+
 
 template <typename Interface, typename Background, typename Mortar>
 void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface, Background,
