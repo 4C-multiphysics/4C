@@ -21,6 +21,7 @@ FOUR_C_NAMESPACE_OPEN
 namespace Constraints::EmbeddedMesh
 {
   class SolidToSolidMortarManager;
+  class SolidToSolidNitscheManager;
 
   template <typename Interface, typename Background, typename Mortar>
   class SurfaceToBackgroundCouplingPairMortar : public SolidInteractionPair
@@ -66,7 +67,6 @@ namespace Constraints::EmbeddedMesh
      * @param global_constraint (in/out) Global constraint vector.
      * @param global_kappa (in/out) Global scaling matrix.
      * @param global_lambda_active (in/out) Global vector with active Lagrange multipliers.
-     * @param displacement_vector (in) Global displacement vector.
      */
     void evaluate_and_assemble_mortar_contributions(const Core::FE::Discretization& discret,
         const Constraints::EmbeddedMesh::SolidToSolidMortarManager* mortar_manager,
@@ -75,6 +75,12 @@ namespace Constraints::EmbeddedMesh
         Core::LinAlg::FEVector<double>& global_constraint,
         Core::LinAlg::FEVector<double>& global_kappa,
         Core::LinAlg::FEVector<double>& global_lambda_active) override;
+
+    void evaluate_and_assemble_nitsche_contributions(const Core::FE::Discretization& discret,
+        const Constraints::EmbeddedMesh::SolidToSolidNitscheManager* nitsche_manager,
+        Core::LinAlg::SparseMatrix& global_penalty_boundarylayer,
+        Core::LinAlg::SparseMatrix& global_penalty_background,
+        Core::LinAlg::SparseMatrix& global_penalty_boundarylayer_background) override;
 
     /**
      * \brief Set the Gauss rule over the interface for element1_ and element2_.
@@ -89,12 +95,24 @@ namespace Constraints::EmbeddedMesh
 
    private:
     /**
-     * \brief Evaluate the local mortar matrices for this contact element pair.
+     * \brief Evaluate the local mortar matrices for this coupling element pair.
      */
     void evaluate_dm(Core::LinAlg::Matrix<Mortar::n_dof_, Interface::n_dof_, double>& local_D,
         Core::LinAlg::Matrix<Mortar::n_dof_, Background::n_dof_, double>& local_M,
         Core::LinAlg::Matrix<Mortar::n_dof_, 1, double>& local_kappa,
         Core::LinAlg::Matrix<Mortar::n_dof_, 1, double>& local_constraint);
+
+    /**
+     * \brief Evaluate the local penalty contributions of the Nitsche method for this coupling
+     * element pair.
+     */
+    void evaluate_penalty_contributions_nitsche(
+        Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&
+            local_stiffness_penalty_interface,
+        Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&
+            local_stiffness_penalty_background,
+        Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
+            local_stiffness_penalty_interface_background);
 
     //! Current nodal positions (and tangents) of the interface element.
     GeometryPair::ElementData<Interface, double> ele1pos_;

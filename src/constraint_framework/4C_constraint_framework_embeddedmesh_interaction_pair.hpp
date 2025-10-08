@@ -42,6 +42,7 @@ namespace GeometryPair
 namespace Constraints::EmbeddedMesh
 {
   class SolidToSolidMortarManager;
+  class SolidToSolidNitscheManager;
 
   class SolidInteractionPair
   {
@@ -125,6 +126,13 @@ namespace Constraints::EmbeddedMesh
         Core::LinAlg::FEVector<double>& global_constraint,
         Core::LinAlg::FEVector<double>& global_kappa,
         Core::LinAlg::FEVector<double>& global_lambda_active) = 0;
+
+    virtual void evaluate_and_assemble_nitsche_contributions(
+        const Core::FE::Discretization& discret,
+        const Constraints::EmbeddedMesh::SolidToSolidNitscheManager* nitsche_manager,
+        Core::LinAlg::SparseMatrix& global_penalty_interface,
+        Core::LinAlg::SparseMatrix& global_penalty_background,
+        Core::LinAlg::SparseMatrix& global_penalty_interface_background) = 0;
 
     /**
      * \brief Set the current element displacement.

@@ -397,6 +397,60 @@ void Constraints::EmbeddedMesh::get_mortar_gid(
   mortar_manager->location_vector(interaction_pair, *lambda_gid_pos);
 }
 
+template <typename Interface, typename Background>
+void Constraints::EmbeddedMesh::assemble_local_nitsche_contributions(
+    const Constraints::EmbeddedMesh::SolidInteractionPair* pair,
+    const Core::FE::Discretization& discret, Core::LinAlg::SparseMatrix& global_penalty_interface,
+    Core::LinAlg::SparseMatrix& global_penalty_background,
+    Core::LinAlg::SparseMatrix& global_penalty_interface_background,
+    const Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&
+        local_stiffness_penalty_interface,
+    const Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&
+        local_stiffness_penalty_background,
+    const Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
+        local_stiffness_penalty_interface_background)
+{
+  // Get the GIDs of the interface
+  std::vector<int> interface_row;
+  std::vector<int> dummy_1;
+  std::vector<int> dummy_2;
+
+  pair->element_1().location_vector(discret, interface_row, dummy_1, dummy_2);
+
+  // Get the GIDs of the background
+  std::vector<int> background_row;
+  dummy_1.clear();
+  dummy_2.clear();
+  pair->element_2().location_vector(discret, background_row, dummy_1, dummy_2);
+
+  // Assemble into the global matrices. All contributions here are assumed to be symmetric.
+  for (unsigned int i_interface = 0; i_interface < Interface::n_dof_; ++i_interface)
+  {
+    for (unsigned int j_interface = 0; j_interface < Interface::n_dof_; ++j_interface)
+    {
+      global_penalty_interface.fe_assemble(
+          local_stiffness_penalty_interface(i_interface, j_interface), interface_row[i_interface],
+          interface_row[j_interface]);
+    }
+    for (unsigned int i_background = 0; i_background < Background::n_dof_; ++i_background)
+    {
+      global_penalty_interface_background.fe_assemble(
+          local_stiffness_penalty_interface_background(i_interface, i_background),
+          interface_row[i_interface], background_row[i_background]);
+    }
+  }
+
+  for (unsigned int i_background = 0; i_background < Background::n_dof_; ++i_background)
+  {
+    for (unsigned int j_background = 0; j_background < Background::n_dof_; ++j_background)
+    {
+      global_penalty_background.fe_assemble(
+          local_stiffness_penalty_background(i_background, j_background),
+          background_row[i_background], background_row[j_background]);
+    }
+  }
+}
+
 template <typename Interface, typename Background, typename Mortar>
 void Constraints::EmbeddedMesh::assemble_local_mortar_contributions(
     const Constraints::EmbeddedMesh::SolidInteractionPair* pair,
@@ -523,6 +577,25 @@ namespace Constraints::EmbeddedMesh
   initialize_template_assemble_local_mortar_contributions(t_nurbs9, t_nurbs27, t_nurbs9);
   initialize_template_assemble_local_mortar_contributions(t_nurbs9, t_wedge6, t_nurbs9);
 
+#define initialize_template_assemble_local_nitsche_contributions(Interface, Background) \
+  template void assemble_local_nitsche_contributions<Interface, Background>(            \
+      const Constraints::EmbeddedMesh::SolidInteractionPair* pair,                      \
+      const Core::FE::Discretization& discret,                                          \
+      Core::LinAlg::SparseMatrix& global_penalty_interface,                             \
+      Core::LinAlg::SparseMatrix& global_penalty_background,                            \
+      Core::LinAlg::SparseMatrix& global_penalty_interface_background,                  \
+      const Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&         \
+          local_stiffness_penalty_interface,                                            \
+      const Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&       \
+          local_stiffness_penalty_background,                                           \
+      const Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&        \
+          local_stiffness_penalty_interface_background);
+
+  initialize_template_assemble_local_nitsche_contributions(t_quad4, t_hex8);
+  initialize_template_assemble_local_nitsche_contributions(t_nurbs9, t_hex8);
+  initialize_template_assemble_local_nitsche_contributions(t_quad4, t_nurbs27);
+  initialize_template_assemble_local_nitsche_contributions(t_nurbs9, t_nurbs27);
+  initialize_template_assemble_local_nitsche_contributions(t_nurbs9, t_wedge6);
 }  // namespace Constraints::EmbeddedMesh
 
 FOUR_C_NAMESPACE_CLOSE

@@ -123,9 +123,9 @@ namespace Constraints::EmbeddedMesh
    * This function assumes that the mortar contributions are symmetric, i.e. global_g_b =
    * global_fb_l^T and global_g_s = global_fs_l^T.
    *
-   * @param pair (in) The beam-to-solid pair.
+   * @param pair (in) The interface-to-solid pair.
    * @param discret (in) Discretization
-   * @param mortar_manager (in) Mortar manager for the solid-to-solid condition
+   * @param mortar_manager (in) Mortar manager for the interface-to-solid condition
    * @param global_g_bl (in/out) Constraint equations derived w.r.t the interface (from the
    * boundary layer) DOFs
    * @param global_g_bg (in/out) Constraint equations derived w.r.t the background solid DOFs
@@ -154,6 +154,38 @@ namespace Constraints::EmbeddedMesh
       const Core::LinAlg::Matrix<Mortar::n_dof_, Background::n_dof_, double>& local_M,
       const Core::LinAlg::Matrix<Mortar::n_dof_, 1, double>& local_kappa,
       const Core::LinAlg::Matrix<Mortar::n_dof_, 1, double>& local_constraint);
+
+  /**
+   * \brief Assemble local penalty contributions of the Nitsche method into
+   * the global matrices.
+   *
+   * @param pair (in) The interface-to-solid pair.
+   * @param discret (in) Discretization
+   * @param global_penalty_interface (in/out) Global penalty contributions from the interface (from
+   * the boundary layer) DOFs
+   * @param global_penalty_background (in/out) Global penalty contributions from the background
+   * solid DOFs
+   * @param global_penalty_interface_background (in/out) Global penalty contributions from the
+   * interface and background DOFs multipliers
+   * @param local_stiffness_penalty_interface (in) Local penalty contributions from the interface of
+   * the pair.
+   * @param local_stiffness_penalty_background (in) Local penalty contributions from the background
+   * of the pair.
+   * @param local_stiffness_penalty_interface_background (in) Local penalty contributions from both
+   * interface and background of the pair.
+   */
+  template <typename Interface, typename Background>
+  void assemble_local_nitsche_contributions(
+      const Constraints::EmbeddedMesh::SolidInteractionPair* pair,
+      const Core::FE::Discretization& discret, Core::LinAlg::SparseMatrix& global_penalty_interface,
+      Core::LinAlg::SparseMatrix& global_penalty_background,
+      Core::LinAlg::SparseMatrix& global_penalty_interface_background,
+      const Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&
+          local_stiffness_penalty_interface,
+      const Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&
+          local_stiffness_penalty_background,
+      const Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
+          local_stiffness_penalty_interface_background);
 
   /**
    * \brief Get the GIDs of the Lagrange multiplicator unknowns for a beam-to-solid pair.
