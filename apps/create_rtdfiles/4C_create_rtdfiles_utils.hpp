@@ -121,15 +121,6 @@ namespace RTD
    */
   void write_yaml_cell_type_information(std::ostream& yamlfile);
 
-  /*----------------------------------------------------------------------*/
-  /*!
-   * \brief Write a header of a specific level to the restructuredText stream
-   *
-   * \param[in] stream: stream for the restructuredText file
-   * \param[in] level: header level
-   * \param[in] line: The link target to be printed
-   */
-  void write_header(std::ostream& stream, unsigned level, const std::string& line);
 
   /*----------------------------------------------------------------------*/
   /*!
@@ -168,59 +159,6 @@ namespace RTD
    */
   void write_celltype_reference(std::ostream& stream);
 
-  /*!
-   *  \brief write all known material sections for readthedocs
-   *
-   *  \param[in] stream: stream for the restructuredText file
-   *  \param[in] matlist: vector containing all material definitions
-   */
-  void write_material_reference(std::ostream& stream,
-      const std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec>& materials);
-
-  /*!
-   *  \brief write all parameters of the header sections for readthedocs
-   *
-   *  \param[in] stream: stream for the restructuredText file
-   *  \param[in] list: vector containing all parameters in the current section
-   *  \param[in] parentname: name of the parent section (initially empty string)
-   */
-  void write_header_reference(
-      std::ostream& stream, const Teuchos::ParameterList& list, std::string parentname = "");
-
-  /*!
-   *  write all known condition sections including explanations (if available) to a .rst file for
-   * ReadTheDocs
-   *
-   *  @param[in] stream restructuredText file for prescribed conditions.
-   *  @param[in] condlist List of prescribed conditions to be written to that file
-   */
-  void write_conditions_reference(
-      std::ostream& stream, const std::vector<Core::Conditions::ConditionDefinition>& condlist);
-
-  /*!
-   *  write a single condition including explanations (if available) to a .rst file for
-   * ReadTheDocs
-   *
-   *  @param[in] stream restructuredText file for prescribed conditions.
-   *  @param[in] condition Single prescribed condition to be written to that file
-   */
-  void write_single_condition_read_the_docs(
-      std::ostream& stream, const Core::Conditions::ConditionDefinition& condition);
-
-  /*!
-   *  write all known contact laws including explanations (if available) to a .rst file for
-   * ReadTheDocs
-   *
-   *  @param[in] stream restructuredText file for prescribed contact law.
-   */
-  void write_contact_law_reference(std::ostream& stream, const Core::IO::InputSpec& specs);
-  /*!
-   *  write various other parameters including explanations (if available) to a .rst file for
-   * ReadTheDocs
-   *
-   *  @param[in] stream restructuredText file for functions.
-   */
-  void write_various_reference(std::ostream& stream);
   /*!
    * replace control chars with restructuredText control commands
    * at this time, only equations are considered

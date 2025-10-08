@@ -85,6 +85,7 @@ if(FOUR_C_ENABLE_DOCUMENTATION)
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_sphinx_OUT_DIR}/reference_docs/tutorials"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_sphinx_OUT_DIR}/reference_docs/analysis_guide"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_sphinx_OUT_DIR}/reference_docs/reference_images"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${_sphinx_OUT_DIR}/reference_docs/reference_guide"
     # Copy files specified above from _sphinx_TEST_INPUT_FILES
     COMMAND
       ${CMAKE_COMMAND} -E copy_if_different ${_sphinx_TEST_INPUT_FILES}

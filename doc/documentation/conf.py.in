@@ -6,12 +6,17 @@
 
 # -- Path setup --------------------------------------------------------------
 
+# If extensions (or modules to document with autodoc) are in another directory,
+# add these directories to sys.path here. If the directory is relative to the
+# documentation root, use os.path.abspath to make it absolute, like shown here.
 import sys
 import os
+# sys.path.append(os.path.abspath('.../site-packages/sphinx/ext'))
 # Include our own python helper modules
 sys.path.append('@PROJECT_SOURCE_DIR@/utilities/four_c_python/src')
 from four_c_documentation.plot import generate_figures
 from four_c_documentation.include_yaml import convert
+from four_c_documentation.make_documentation import create_markdown_documentation
 
 # -- Project information -----------------------------------------------------
 
@@ -50,7 +55,7 @@ def setup(app):
 
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ["tutorial_templates", "analysis_guide_templates"]
+templates_path = ["tutorial_templates", "analysis_guide_templates", "input_parameter_reference_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -106,10 +111,14 @@ myst_heading_anchors = 4
 #
 # mathjax extension: let sphinx load automatically
 
+# -- Create reference documentation from yaml schema file ---------------------------------
+create_markdown_documentation("@_sphinx_OUT_DIR@/reference_docs/reference_guide", "@PROJECT_SOURCE_DIR@/tests", "@PROJECT_BINARY_DIR@/4C_metadata.yaml")
+
 # -- Additional scripts to generate more fancy output -------------------------------------------------
-# Now generate the tutorial files
+# Now generate the documentation files from jinja templates
 convert("@_sphinx_SOURCE_DIR@/src/tutorial_templates", "@_sphinx_OUT_DIR@/reference_docs/tutorials", "@PROJECT_BINARY_DIR@/doc/tmp")
 convert("@_sphinx_SOURCE_DIR@/src/analysis_guide_templates", "@_sphinx_OUT_DIR@/reference_docs/analysis_guide", "@PROJECT_BINARY_DIR@/doc/tmp")
+convert("@_sphinx_SOURCE_DIR@/src/input_parameter_reference_templates", "@_sphinx_OUT_DIR@/reference_docs/reference_guide", "@PROJECT_BINARY_DIR@/doc/tmp")
 
 # Create figures for the element node and face numbers
 generate_figures("@_sphinx_OUT_DIR@/reference_docs/elementinformation.yaml",

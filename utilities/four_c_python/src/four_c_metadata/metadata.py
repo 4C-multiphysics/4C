@@ -355,6 +355,7 @@ class Enum(InputSpec):
         choices: Sequence[str],
         name: NotSetAlias[str] = NotSetString,
         description: NotSetAlias[str] = NotSetString,
+        choices_description: Sequence[str] = [],
         required: bool = True,
         noneable: bool = False,
         validator: ValidatorAlias = None,
@@ -375,10 +376,17 @@ class Enum(InputSpec):
         if check_if_set(default):
             if default not in choices:
                 raise ValueError(
-                    f"Default choice {default} is not in the valid enum choices {choices}"
+                    f"Default choice {default} is not in the valid enum choices {choices} of {name}"
                 )
         self.choices = choices
         self.default = default
+        if len(choices_description) == 0:
+            choices_description = [None] * len(choices)
+        elif len(choices_description) != len(choices):
+            raise ValueError(
+                f"Number of descriptions ({len(choices_description)}) does not match the number of number of choices ({len(choices)}) in {name}"
+            )
+        self.choices_description = choices_description
 
     @classmethod
     def from_4C_metadata(cls, data_dict: dict) -> Enum:

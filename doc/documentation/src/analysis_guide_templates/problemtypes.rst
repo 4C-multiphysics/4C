@@ -22,7 +22,7 @@ Thus, the mesh may have a particular movement, which is defined by the ``ALE_TYP
 
 **Elements and Degrees of freedom**
 
-The element types used are given in :ref:`ALE ELEMENTS<aleelements>`.
+The element types used are given in the :ref:`Spatial Discretization reference<discretization_reference>`.
 The number of degrees of freedom depends on the dimensionality of the structure (2 for 2D structures, 3 for 3D)
 
 
@@ -36,7 +36,7 @@ This problemtype considers the blood flow in networks of arteries, which are mod
 
 **Elements and Degrees of freedom**
 
-The element types used are given in :ref:`ARTERY ELEMENTS<arteryelements>` (only 1D line elements are available).
+The element types used are given in the :ref:`Spatial Discretization reference<discretization_reference>` (only 1D line elements are available).
 The number of degrees of freedom
 
 
@@ -53,7 +53,7 @@ This problemtype considers .
 
 **Elements and Degrees of freedom**
 
-The element types used are given in :ref:`TRANSPORT ELEMENTS<transportelements>`.
+The element types used are given in the :ref:`Spatial Discretization reference<discretization_reference>`.
 
 
 Fluid
@@ -65,7 +65,7 @@ This problemtype considers the flow of fluids through a domain.
 
 **Elements and Degrees of freedom**
 
-The element types used are given in :ref:`FLUID ELEMENTS<fluidelements>`.
+The element types used are given in the :ref:`Spatial Discretization reference<discretization_reference>`.
 The number of degrees of freedom depends on the dimension of the problem;
 One may have 2 or 3 degrees for the velocity plus one degree for the fluid pressure.
 
@@ -80,7 +80,7 @@ and xxx is the flow.
 
 **Elements and Degrees of freedom**
 
-The element types used are given in :ref:`TRANSPORT ELEMENTS<transportelements>`, and the domain may be 1D, 2D, or 3D.
+The element types used are given in the :ref:`Spatial Discretization reference<discretization_reference>`, and the domain may be 1D, 2D, or 3D.
 
 
 Fluid_Top_Opt
@@ -152,7 +152,7 @@ The polymer network is, similarly to the Arterial Network, a network of 1D const
 
 **Elements and Degrees of freedom**
 
-The element types are solely BEAM3R elements used, which can be found in :ref:`STRUCTURE ELEMENTS<structureelements>`.
+The element types are solely BEAM3R elements used, which can be found in the :ref:`Spatial Discretization reference<discretization_reference>`.
 
 
 
@@ -166,7 +166,7 @@ namely here 1D pipe models of human airways.
 
 **Elements and Degrees of freedom**
 
-The element types used here are 1D elements given in :ref:`REDUCED D AIRWAYS ELEMENTS<reduced d airwayselements>`.
+The element types used here are 1D elements given in the :ref:`Spatial Discretization reference<discretization_reference>`.
 
 
 Scalar_Transport
@@ -183,7 +183,7 @@ but also any other field quantity.
 Since the problemtype is scalar transport,
 the value of this scalar is the only active degree of freedom for this type.
 
-The element types used are given in :ref:`TRANSPORT ELEMENTS<transportelements>`.
+The element types used are given in the :ref:`Spatial Discretization reference<discretization_reference>`.
 
 **Results**
 
@@ -198,7 +198,7 @@ The problemtype *Structure* considers deformations and stresses in solid mechani
 
 **Elements and Degrees of freedom**
 
-The element types used are given in :ref:`STRUCTURE ELEMENTS<structureelements>`. The number of degrees of freedom depends on the element type.
+The element types used are given in the :ref:`Spatial Discretization reference<discretization_reference>`. The number of degrees of freedom depends on the element type.
 In general, all elements have displacements in spatial directions (2 or 3, depending on the dimensionality).
 In the case of C1-steady elements like beams and shells, the rotations (again 2 or 3) are added to the degrees of freedom,
 so there are up to 6 DoFs.
@@ -218,7 +218,7 @@ The problemtype *Thermo* considers heat transfer in arbitrary structures.
 
 **Elements and Degrees of freedom**
 
-The element types used are given in :ref:`THERMO ELEMENTS<thermoelements>`. There is only one degree of freedom, that is the temperature.
+The element types used are given in the :ref:`Spatial Discretization reference<discretization_reference>`. There is only one degree of freedom, that is the temperature.
 
 **Results**
 

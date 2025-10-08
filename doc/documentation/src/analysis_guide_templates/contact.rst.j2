@@ -30,11 +30,11 @@ for master/slave contact (taken from {{ input_file1}}), or
 {{ section_dump(input_file2_content, "DESIGN LINE MORTAR CONTACT CONDITIONS 2D") }}
 
 for self contact (taken from {{input_file2}}).
-There may be also further parameters attached, see also :ref:`DESIGN MORTAR CONTACT CONDITIONS 2D<designlinemortarcontactconditions2d>`.
+There may be also further parameters attached, see also :ref:`DESIGN MORTAR CONTACT CONDITIONS 2D<secdesignlinemortarcontactconditions2d>`.
 
 - 3D:
 
-  The 3D case is analogous, just the condition name is different, see see :ref:`DESIGN SURF MORTAR CONTACT CONDITIONS 3D<designsurfmortarcontactconditions3d>`.
+  The 3D case is analogous, just the condition name is different, see see :ref:`DESIGN SURF MORTAR CONTACT CONDITIONS 3D<secdesignsurfmortarcontactconditions3d>`.
 
 The further parameters are:
 
@@ -80,7 +80,7 @@ where all dirichlet boundary conditions are removed.
 
 For the second option one can tell |FOURC| that a line belongs to the symmetry plane / dirichlet boundary condition *and* the contact surface.
 This is done using the so-called mortar symmetry conditions (Note that the word *symmetry* does not mean that it must be a symmetry condition,
-it can be any any dirichlet boundary condition, even with non-zero displacement value).
+it can be any dirichlet boundary condition, even with non-zero displacement value).
 See the symmetry conditions from the example {{input_file3}}:
 
 {{ section_dump(input_file3_content, ["DESIGN LINE MORTAR SYMMETRY CONDITIONS 3D", "DESIGN POINT MORTAR SYMMETRY CONDITIONS 2D/3D"]) }}
@@ -89,7 +89,7 @@ The ONOFF value has to be set to one in the direction of the dirichlet boundary 
 If a contact surface touches two planes with dirchlet conditions,
 the ``DESIGN POINT MORTAR SYMMETRY`` has to be defined as well.
 
-**Reference:** :ref:`DESIGN MORTAR SYMMETRY CONDITIONS<designlinemortarsymmetryconditions3d>`, :ref:`DESIGN MORTAR SYMMETRY CONDITIONS 2D/3D<designpointmortarsymmetryconditions2d/3d>`.
+**Reference:** :ref:`DESIGN MORTAR SYMMETRY CONDITIONS<secdesignlinemortarsymmetryconditions3d>`, :ref:`DESIGN MORTAR SYMMETRY CONDITIONS 2D/3D<secdesignpointmortarsymmetryconditions2d_3d>`.
 
 
 Contact at edges/corners
@@ -97,7 +97,7 @@ Contact at edges/corners
 
 If an edge of a (3D) structure is involved in contact, one may define the edge separately
 (in addition to the adjacent contact surfaces, which probably may also come into contact).
-For this, the ``MORTAR EDGE CONDITIONS`` are needed, see also :ref:`DESIGN MORTAR EDGE CONDITIONS 3D<designlinemortaredgeconditions3d>`, :ref:`DESIGN MORTAR CORNER CONDITIONS 2D/3D<designpointmortarcornerconditions2d/3d>`
+For this, the ``MORTAR EDGE CONDITIONS`` are needed, see also :ref:`DESIGN MORTAR EDGE CONDITIONS 3D<secdesignlinemortaredgeconditions3d>`, :ref:`DESIGN MORTAR CORNER CONDITIONS 2D/3D<secdesignpointmortarcornerconditions2d_3d>`
 
 .. _meshtying:
 
@@ -119,4 +119,4 @@ Similar couplings can be defined in the following conditions:
 
 {{ find_sections_in_meta(meta_file_content, ".* MORTAR COUPLING CONDITION.*") }}
 
-See the reference :ref:`DESIGN MORTAR COUPLING CONDITIONS 3D<designsurfmortarcouplingconditions3d>`, :ref:`DESIGN MORTAR COUPLING CONDITIONS 2D<designlinemortarcouplingconditions2d>`, :ref:`DESIGN MORTAR MULTI-COUPLING CONDITIONS 3D<designsurfmortarmulti-couplingconditions3d>`, :ref:`DESIGN MORTAR MULTI-COUPLING CONDITIONS 2D<designlinemortarmulti-couplingconditions2d>`
+See the reference :ref:`DESIGN MORTAR COUPLING CONDITIONS 3D<secdesignsurfmortarcouplingconditions3d>`, :ref:`DESIGN MORTAR COUPLING CONDITIONS 2D<secdesignlinemortarcouplingconditions2d>`, :ref:`DESIGN MORTAR MULTI-COUPLING CONDITIONS 3D<secdesignsurfmortarmulti-couplingconditions3d>`, :ref:`DESIGN MORTAR MULTI-COUPLING CONDITIONS 2D<secdesignlinemortarmulti-couplingconditions2d>`
