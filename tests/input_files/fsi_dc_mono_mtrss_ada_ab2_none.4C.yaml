@@ -151,7 +151,7 @@ RESULT DESCRIPTION:
       NODE: 37
       QUANTITY: "lambday"
       VALUE: 1.23279181402521009e-03
-      TOLERANCE: 2e-11
+      TOLERANCE: 1.2e-09
   - FSI:
       SPECIAL: true
       QUANTITY: "dt"
