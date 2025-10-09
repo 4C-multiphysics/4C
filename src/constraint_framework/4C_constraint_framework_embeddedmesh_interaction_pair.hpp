@@ -132,7 +132,8 @@ namespace Constraints::EmbeddedMesh
         const Constraints::EmbeddedMesh::SolidToSolidNitscheManager* nitsche_manager,
         Core::LinAlg::SparseMatrix& global_penalty_interface,
         Core::LinAlg::SparseMatrix& global_penalty_background,
-        Core::LinAlg::SparseMatrix& global_penalty_interface_background) = 0;
+        Core::LinAlg::SparseMatrix& global_penalty_interface_background,
+        Core::LinAlg::FEVector<double>& global_constraint) = 0;
 
     /**
      * \brief Set the current element displacement.

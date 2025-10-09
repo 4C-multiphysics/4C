@@ -193,6 +193,9 @@ namespace Constraints::EmbeddedMesh
     //! Global contributions of the penalty term associated with both interface and background DOFs
     std::shared_ptr<Core::LinAlg::SparseMatrix> global_penalty_interface_background_ = nullptr;
 
+    //! Global constraint vector.
+    std::shared_ptr<Core::LinAlg::FEVector<double>> global_constraint_ = nullptr;
+
     //! Vector with all contact pairs to be evaluated by this mortar manager.
     std::vector<std::shared_ptr<Constraints::EmbeddedMesh::SolidInteractionPair>>
         embedded_mesh_solid_pairs_;

@@ -80,7 +80,8 @@ namespace Constraints::EmbeddedMesh
         const Constraints::EmbeddedMesh::SolidToSolidNitscheManager* nitsche_manager,
         Core::LinAlg::SparseMatrix& global_penalty_boundarylayer,
         Core::LinAlg::SparseMatrix& global_penalty_background,
-        Core::LinAlg::SparseMatrix& global_penalty_boundarylayer_background) override;
+        Core::LinAlg::SparseMatrix& global_penalty_boundarylayer_background,
+        Core::LinAlg::FEVector<double>& global_constraint) override;
 
     /**
      * \brief Set the Gauss rule over the interface for element1_ and element2_.
@@ -112,7 +113,8 @@ namespace Constraints::EmbeddedMesh
         Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&
             local_stiffness_penalty_background,
         Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
-            local_stiffness_penalty_interface_background);
+            local_stiffness_penalty_interface_background,
+        Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>& local_constraint);
 
     //! Current nodal positions (and tangents) of the interface element.
     GeometryPair::ElementData<Interface, double> ele1pos_;
