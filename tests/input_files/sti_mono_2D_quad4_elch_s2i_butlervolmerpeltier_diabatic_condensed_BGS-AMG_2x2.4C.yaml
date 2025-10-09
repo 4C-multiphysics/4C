@@ -241,7 +241,6 @@ RESULT DESCRIPTION:
   - SCATRA:
       DIS: "thermo"
       NODE: 1238
-      QUANTITY: "phi"
       VALUE: 3.00063195539322408e+02
       TOLERANCE: 3.0e-06
   - SCATRA:
