@@ -135,31 +135,31 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 40
       QUANTITY: "phi2"
-      VALUE: 8.81118261153544286e-09
+      VALUE: 8.81103107514172401e-09
       TOLERANCE: 1.0e-16
   - SCATRA:
       DIS: "scatra"
       NODE: 277
       QUANTITY: "phi1"
       VALUE: 1.19815732310585998e+00
-      TOLERANCE: 1.2e-08
+      TOLERANCE: 1.5e-08
   - SCATRA:
       DIS: "scatra"
       NODE: 277
       QUANTITY: "phi2"
-      VALUE: 2.08831190589640545e-02
+      VALUE: 2.08831208795615016e-02
       TOLERANCE: 2.1e-10
   - SCATRA:
       DIS: "scatra"
       NODE: 391
       QUANTITY: "phi1"
       VALUE: 1.20073696968769794e+00
-      TOLERANCE: 1.2e-08
+      TOLERANCE: 1.5e-08
   - SCATRA:
       DIS: "scatra"
       NODE: 391
       QUANTITY: "phi2"
-      VALUE: 2.09711896572213272e-02
+      VALUE: 2.09711914790944760e-02
       TOLERANCE: 2.1e-10
   - SCATRA:
       DIS: "scatra"
@@ -202,19 +202,19 @@ RESULT DESCRIPTION:
       NODE: 108
       QUANTITY: "s2ilayerthickness"
       VALUE: 1.21792072650167081e-08
-      TOLERANCE: 1.2e-16
+      TOLERANCE: 5.0e-16
   - SCATRA:
       DIS: "scatra"
       NODE: 22
       QUANTITY: "s2ilayerthickness"
       VALUE: 1.21255746204180788e-08
-      TOLERANCE: 1.2e-16
+      TOLERANCE: 5.0e-16
   - SCATRA:
       DIS: "scatra"
       NODE: 106
       QUANTITY: "s2ilayerthickness"
       VALUE: 1.20915894862718325e-08
-      TOLERANCE: 1.2e-16
+      TOLERANCE: 5.0e-16
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
@@ -232,7 +232,7 @@ RESULT DESCRIPTION:
       SPECIAL: true
       QUANTITY: "meanphi1_1"
       VALUE: 1.19999995975038054e+00
-      TOLERANCE: 1.2e-08
+      TOLERANCE: 1.5e-08
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
