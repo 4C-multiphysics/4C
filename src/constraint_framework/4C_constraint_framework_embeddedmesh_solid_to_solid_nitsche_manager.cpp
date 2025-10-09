@@ -13,6 +13,7 @@
 #include "4C_cut_cutwizard.hpp"
 #include "4C_io_visualization_manager.hpp"
 #include "4C_linalg_fevector.hpp"
+#include "4C_linalg_tensor.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_linalg_vector.hpp"
@@ -149,6 +150,8 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::set_global_maps()
   interface_and_background_dof_rowmap_ =
       std::make_shared<Core::LinAlg::Map>(-1, interface_and_background_dofs.size(),
           interface_and_background_dofs.data(), 0, discret_->get_comm());
+  global_constraint_ =
+      std::make_shared<Core::LinAlg::FEVector<double>>(*interface_and_background_dof_rowmap_);
 
   // Set flags for global maps.
   is_global_maps_build_ = true;
@@ -172,12 +175,13 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::evaluate_global_coup
   global_penalty_interface_->put_scalar(0.);
   global_penalty_background_->put_scalar(0.);
   global_penalty_interface_background_->put_scalar(0.);
+  global_constraint_->put_scalar(0.);
 
   for (auto& elepairptr : embedded_mesh_solid_pairs_)
   {
     elepairptr->evaluate_and_assemble_nitsche_contributions(*discret_, this,
         *global_penalty_interface_, *global_penalty_background_,
-        *global_penalty_interface_background_);
+        *global_penalty_interface_background_, *global_constraint_);
   }
 
   // scale_contributions_penalty_stiffness_matrices();
@@ -188,6 +192,9 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::evaluate_global_coup
   global_penalty_interface_background_->complete(
       *interface_and_background_dof_rowmap_, *interface_and_background_dof_rowmap_);
 
+  // Complete the global scaling vector.
+  if (0 != global_constraint_->complete()) FOUR_C_THROW("Error in GlobalAssemble!");
+
   scale_contributions_penalty_stiffness_matrices();
 }
 
@@ -195,11 +202,14 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::
     scale_contributions_penalty_stiffness_matrices() const
 {
   // Get the penalty parameters.
-  const double penalty_params = embedded_mesh_coupling_params_.constraint_penalty_parameter_;
+  const double penalty_param = embedded_mesh_coupling_params_.constraint_penalty_parameter_;
 
-  global_penalty_interface_->scale(penalty_params);
-  global_penalty_background_->scale(penalty_params);
-  global_penalty_interface_background_->scale(-penalty_params);
+  // Scale stiffness penalty contributions
+  global_penalty_interface_->scale(penalty_param);
+  global_penalty_background_->scale(penalty_param);
+  global_penalty_interface_background_->scale(-penalty_param);
+
+  global_constraint_->scale(penalty_param);
 }
 
 /**
@@ -217,17 +227,10 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::
 
   if (stiff != nullptr)
   {
-    // stiff->print(std::cout);
-    // Add contributions to the global stiffness matrix.
-    // global_penalty_interface_->print(std::cout);
-    // global_penalty_background_->print(std::cout);
-    // global_penalty_interface_background_->print(std::cout);
-
     stiff->add(*global_penalty_interface_, false, 1.0, 1.0);
     stiff->add(*global_penalty_background_, false, 1.0, 1.0);
     stiff->add(*global_penalty_interface_background_, false, 1.0, 1.0);
     stiff->add(*global_penalty_interface_background_, true, 1.0, 1.0);
-    // stiff->print(std::cout);
   }
 
   if (force != nullptr)
@@ -259,48 +262,23 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::
     linalg_error =
         global_penalty_interface_->multiply(false, *displacement, temp_force_penalty_interface);
     if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
-    // temp_force_penalty_interface.print(std::cout);
-
     linalg_error =
         global_penalty_background_->multiply(false, *displacement, temp_force_penalty_background);
     if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
-    // temp_force_penalty_background.print(std::cout);
-
     linalg_error = global_penalty_interface_background_->multiply(
         false, *displacement, temp_force_penalty_background_contribution_inter_background);
     if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
-    // temp_force_penalty_background_contribution_inter_background.print(std::cout);
     linalg_error = global_penalty_interface_background_->multiply(
         true, *displacement, temp_force_penalty_interface_contribution_inter_background);
     if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
-    // temp_force_penalty_interface_contribution_inter_background.print(std::cout);
-
 
     // Collect force contributions in a global temp
-    Core::LinAlg::Vector<double> global_temp_1(*discret_->dof_row_map());
-    Core::LinAlg::Vector<double> global_temp_2(*discret_->dof_row_map());
-    Core::LinAlg::Vector<double> global_temp_3(*discret_->dof_row_map());
-    Core::LinAlg::Vector<double> global_temp_4(*discret_->dof_row_map());
+    Core::LinAlg::Vector<double> global_temp(*discret_->dof_row_map());
+    Core::LinAlg::export_to(*global_constraint_, global_temp);
 
-    if (linalg_error != 0) FOUR_C_THROW("Error in Update");
-    Core::LinAlg::export_to(temp_force_penalty_interface, global_temp_1);
-    Core::LinAlg::export_to(temp_force_penalty_background, global_temp_2);
-    Core::LinAlg::export_to(
-        temp_force_penalty_background_contribution_inter_background, global_temp_3);
-    Core::LinAlg::export_to(
-        temp_force_penalty_interface_contribution_inter_background, global_temp_4);
-
-    // force->print(std::cout);
     // Add force contributions to global vector.
-    linalg_error = force->update(rhs_factor, global_temp_1, 1.0);
+    linalg_error = force->update(rhs_factor, global_temp, 1.0);
     if (linalg_error != 0) FOUR_C_THROW("Error in Update");
-    linalg_error = force->update(rhs_factor, global_temp_2, 1.0);
-    if (linalg_error != 0) FOUR_C_THROW("Error in Update");
-    linalg_error = force->update(rhs_factor, global_temp_3, 1.0);
-    if (linalg_error != 0) FOUR_C_THROW("Error in Update");
-    linalg_error = force->update(rhs_factor, global_temp_4, 1.0);
-    if (linalg_error != 0) FOUR_C_THROW("Error in Update");
-    // force->print(std::cout);
   }
 }
 

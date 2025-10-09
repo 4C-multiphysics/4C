@@ -403,12 +403,14 @@ void Constraints::EmbeddedMesh::assemble_local_nitsche_contributions(
     const Core::FE::Discretization& discret, Core::LinAlg::SparseMatrix& global_penalty_interface,
     Core::LinAlg::SparseMatrix& global_penalty_background,
     Core::LinAlg::SparseMatrix& global_penalty_interface_background,
+    Core::LinAlg::FEVector<double>& global_constraint,
     const Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&
         local_stiffness_penalty_interface,
     const Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&
         local_stiffness_penalty_background,
     const Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
-        local_stiffness_penalty_interface_background)
+        local_stiffness_penalty_interface_background,
+    const Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>& local_constraint)
 {
   // Get the GIDs of the interface
   std::vector<int> interface_row;
@@ -422,6 +424,12 @@ void Constraints::EmbeddedMesh::assemble_local_nitsche_contributions(
   dummy_1.clear();
   dummy_2.clear();
   pair->element_2().location_vector(discret, background_row, dummy_1, dummy_2);
+
+  // Merge GIDs from the interface and background
+  std::vector<int> interface_background_row;
+  interface_background_row.reserve(interface_row.size() + background_row.size());
+  std::merge(interface_row.begin(), interface_row.end(), background_row.begin(),
+      background_row.end(), std::back_inserter(interface_background_row));
 
   // Assemble into the global matrices. All contributions here are assumed to be symmetric.
   for (unsigned int i_interface = 0; i_interface < Interface::n_dof_; ++i_interface)
@@ -449,6 +457,10 @@ void Constraints::EmbeddedMesh::assemble_local_nitsche_contributions(
           background_row[i_background], background_row[j_background]);
     }
   }
+
+  // Assemble into the global force.
+  global_constraint.sum_into_global_values(Interface::n_dof_ + Background::n_dof_,
+      interface_background_row.data(), local_constraint.data());
 }
 
 template <typename Interface, typename Background, typename Mortar>
@@ -584,12 +596,15 @@ namespace Constraints::EmbeddedMesh
       Core::LinAlg::SparseMatrix& global_penalty_interface,                             \
       Core::LinAlg::SparseMatrix& global_penalty_background,                            \
       Core::LinAlg::SparseMatrix& global_penalty_interface_background,                  \
+      Core::LinAlg::FEVector<double>& global_constraint,                                \
       const Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&         \
           local_stiffness_penalty_interface,                                            \
       const Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&       \
           local_stiffness_penalty_background,                                           \
       const Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&        \
-          local_stiffness_penalty_interface_background);
+          local_stiffness_penalty_interface_background,                                 \
+      const Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>&    \
+          local_constraint);
 
   initialize_template_assemble_local_nitsche_contributions(t_quad4, t_hex8);
   initialize_template_assemble_local_nitsche_contributions(t_nurbs9, t_hex8);
