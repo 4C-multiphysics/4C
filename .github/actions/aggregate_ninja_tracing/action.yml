@@ -1,0 +1,37 @@
+name: Aggregate Ninja Tracing output
+description: Aggregate the ninja tracing output into a single file (and optionally remove all individual
+  files)
+inputs:
+  build-directory:
+    description: Path to the build directory
+    required: true
+  cleanup-individual-files:
+    description: Remove individual ninja tracing files after aggregation
+    required: false
+    default: "false"
+  target-file:
+    description: Path to the output file with the aggregated tracing information
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v5
+      with:
+        repository: nico/ninjatracing
+        ref: a669e3644cf22b29cbece31dbed2cfbf34e5f48e # no releases for this repo, this is a stable commit
+        path: ${{ github.workspace }}/ninjatracing
+    - shell: bash
+      name: Aggregate trace
+      run: |
+        $GITHUB_WORKSPACE/ninjatracing/ninjatracing -e $BUILD_DIRECTORY/.ninja_log > $TARGET_FILE
+      env:
+        BUILD_DIRECTORY: ${{ inputs.build-directory }}
+        BUILD_TARGETS: ${{ inputs.build-targets }}
+        TARGET_FILE: ${{ inputs.target-file }}
+    - name: Cleanup individual tracing files
+      if: ${{ inputs.cleanup-individual-files == 'true' }}
+      shell: bash
+      run: |
+        find $BUILD_DIRECTORY -name '*.cpp.json' -type f -delete
+      env:
+        BUILD_DIRECTORY: ${{ inputs.build-directory }}
