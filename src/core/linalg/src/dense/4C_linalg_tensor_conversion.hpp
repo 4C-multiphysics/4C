@@ -229,6 +229,66 @@ namespace Core::LinAlg
     Voigt::Stresses::to_strain_like(matrix, matrix);
     return matrix;
   }
+
+  namespace Internal
+  {
+    template <typename T>
+    struct NestedArrayHelper;
+
+    template <typename T, std::size_t n1, std::size_t... n>
+    struct NestedArrayHelper<Tensor<T, n1, n...>>
+    {
+      using type = std::array<typename NestedArrayHelper<Tensor<T, n...>>::type, n1>;
+    };
+
+    template <typename T, std::size_t n>
+    struct NestedArrayHelper<Tensor<T, n>>
+    {
+      using type = std::array<T, n>;
+    };
+  }  // namespace Internal
+
+  /*
+   * Convert a nested std::array to a tensor.
+   */
+  template <typename T, std::size_t... n>
+  Tensor<T, n...> make_tensor_from_nested_array(
+      const typename Internal::NestedArrayHelper<Tensor<T, n...>>::type& nested_array)
+  {
+    constexpr std::array<std::size_t, (n * ...)> index_mapping =
+        Internal::order_type_mapping<n...>();
+
+    Tensor<T, n...> tensor;
+    for (std::size_t i = 0; i < (n * ...); ++i)
+    {
+      auto view_to_first_element = [](const auto& nested_array)
+      { return static_cast<const T*>(static_cast<const void*>(&nested_array)); };
+
+      tensor.container()[index_mapping[i]] = *(view_to_first_element(nested_array) + i);
+    }
+    return tensor;
+  }
+
+  /*
+   * Convert a Tensor to a nested std::array.
+   */
+  template <typename T, std::size_t... n>
+  typename Internal::NestedArrayHelper<Tensor<T, n...>>::type make_nested_array_from_tensor(
+      const Tensor<T, n...>& tensor)
+  {
+    constexpr std::array<std::size_t, (n * ...)> index_mapping =
+        Internal::order_type_mapping<n...>();
+
+    typename Internal::NestedArrayHelper<Tensor<T, n...>>::type nested_array;
+    for (std::size_t i = 0; i < (n * ...); ++i)
+    {
+      auto view_to_first_element = [](auto& nested_array)
+      { return static_cast<T*>(static_cast<void*>(&nested_array)); };
+
+      *(view_to_first_element(nested_array) + i) = tensor.container()[index_mapping[i]];
+    }
+    return nested_array;
+  }
 }  // namespace Core::LinAlg
 
 FOUR_C_NAMESPACE_CLOSE

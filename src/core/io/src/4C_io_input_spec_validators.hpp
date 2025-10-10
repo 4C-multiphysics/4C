@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_io_input_spec_proxy_types.hpp"
 #include "4C_io_input_types.hpp"
 #include "4C_io_yaml.hpp"
 #include "4C_utils_enum.hpp"
@@ -94,6 +95,12 @@ namespace Core::IO::InputSpecBuilders::Validators
     struct GeneralizedType<std::tuple<Ts...>>
     {
       using type = std::tuple<typename GeneralizedType<Ts>::type...>;
+    };
+
+    template <ProxyTypeConcept T>
+    struct GeneralizedType<T>
+    {
+      using type = ProxyType<T>::type;
     };
 
     template <typename T>
@@ -225,6 +232,11 @@ namespace Core::IO::InputSpecBuilders::Validators
 
      private:
       ValidatorImpl<T> inner_validator_;
+    };
+
+    template <ProxyTypeConcept T>
+    class ValidatorImpl<T> : public ValidatorImpl<typename ProxyType<T>::type>
+    {
     };
 
     //! The types of numbers that we support in the input.

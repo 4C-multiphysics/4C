@@ -276,6 +276,44 @@ namespace
 
     EXPECT_DOUBLE_EQ(tensor(0, 1), 4.0);
   }
+
+  TEST(TensorConversionTest, MakeTensorFromNestedArray)
+  {
+    std::array<std::array<double, 2>, 3> nested_array = {{
+        {1.0, 2.0},
+        {3.0, 4.0},
+        {5.0, 6.0},
+    }};
+    Core::LinAlg::Tensor<double, 3, 2> tensor =
+        Core::LinAlg::make_tensor_from_nested_array<double, 3, 2>(nested_array);
+
+
+    EXPECT_DOUBLE_EQ(tensor(0, 0), 1.0);
+    EXPECT_DOUBLE_EQ(tensor(1, 0), 3.0);
+    EXPECT_DOUBLE_EQ(tensor(2, 0), 5.0);
+    EXPECT_DOUBLE_EQ(tensor(0, 1), 2.0);
+    EXPECT_DOUBLE_EQ(tensor(1, 1), 4.0);
+    EXPECT_DOUBLE_EQ(tensor(2, 1), 6.0);
+  }
+
+  TEST(TensorConversionTest, MakeNestedArrayFromTensor)
+  {
+    Core::LinAlg::Tensor<double, 3, 2> tensor = {{
+        {1.0, 2.0},
+        {3.0, 4.0},
+        {5.0, 6.0},
+    }};
+    std::array<std::array<double, 2>, 3> nested_array =
+        Core::LinAlg::make_nested_array_from_tensor(tensor);
+
+
+    EXPECT_DOUBLE_EQ(nested_array[0][0], 1.0);
+    EXPECT_DOUBLE_EQ(nested_array[1][0], 3.0);
+    EXPECT_DOUBLE_EQ(nested_array[2][0], 5.0);
+    EXPECT_DOUBLE_EQ(nested_array[0][1], 2.0);
+    EXPECT_DOUBLE_EQ(nested_array[1][1], 4.0);
+    EXPECT_DOUBLE_EQ(nested_array[2][1], 6.0);
+  }
 }  // namespace
 
 FOUR_C_NAMESPACE_CLOSE

@@ -13,6 +13,7 @@
 #include "4C_io_input_field.hpp"
 #include "4C_io_input_parameter_container.templates.hpp"
 #include "4C_io_input_spec.hpp"
+#include "4C_io_input_spec_proxy_types.hpp"
 #include "4C_io_input_spec_storage.hpp"
 #include "4C_io_input_spec_validators.hpp"
 #include "4C_io_input_types.hpp"
@@ -23,6 +24,7 @@
 #include "4C_utils_string.hpp"
 
 #include <algorithm>
+#include <concepts>
 #include <functional>
 #include <optional>
 #include <ostream>
@@ -196,6 +198,12 @@ namespace Core::IO
       std::string operator()() { return "std::optional<" + PrettyTypeName<T>{}() + ">"; }
     };
 
+    template <ProxyTypeConcept T>
+    struct PrettyTypeName<T>
+    {
+      std::string operator()() { return ProxyType<T>::pretty_name; }
+    };
+
     template <typename T>
     std::string get_pretty_type_name()
     {
@@ -323,6 +331,15 @@ namespace Core::IO
         // enough for them.
         emit_value_as_yaml(YamlNodeRef{node["noneable"], ""}, true);
         YamlTypeEmitter<T>{}(node, size);
+      }
+    };
+
+    template <ProxyTypeConcept T>
+    struct YamlTypeEmitter<T>
+    {
+      void operator()(ryml::NodeRef node, size_t* size)
+      {
+        return YamlTypeEmitter<typename ProxyType<T>::type>{}(node, size);
       }
     };
 
@@ -652,6 +669,7 @@ namespace Core::IO
 
     //! Validate if possible. Returns false only if validation was attempted and failed.
     template <typename T>
+      requires(!ProxyTypeConcept<T>)
     [[nodiscard]] bool validate_helper(
         const T& val, const std::optional<InputSpecBuilders::Validators::Validator<T>>& validator)
     {
@@ -664,6 +682,14 @@ namespace Core::IO
         const std::optional<InputSpecBuilders::Validators::Validator<T>>& validator)
     {
       return !val.has_value() || validate_helper(*val, validator);
+    }
+
+    //! Validate if possible. Returns false only if validation was attempted and failed.
+    template <ProxyTypeConcept T>
+    [[nodiscard]] bool validate_helper(
+        const T& val, const std::optional<InputSpecBuilders::Validators::Validator<T>>& validator)
+    {
+      return !validator.has_value() || (*validator)(ProxyType<T>::from_value(val));
     }
 
     enum class InputFieldType : std::uint8_t
@@ -1211,6 +1237,12 @@ namespace Core::IO
       {
         return std::ranges::all_of(
             arr, [&](const auto& val) { return this->operator()(val, size_info); });
+      }
+
+      template <ProxyTypeConcept T>
+      constexpr bool operator()(const T& value, std::size_t* size_info) const
+      {
+        return this->operator()(ProxyType<T>::from_value(value), size_info);
       }
 
       template <typename U>
