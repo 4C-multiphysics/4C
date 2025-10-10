@@ -34,6 +34,12 @@ namespace Constraints::EmbeddedMesh
     //! Shape function for the mortar Lagrange-multiplicators
     SolidToSolidMortarShapefunctions mortar_shape_function_;
 
+    //! Stabilization parameter for coupling with the Nitsche method
+    double nitsche_stabilization_param_;
+
+    //! Average weight gamma for coupling with the Nitsche method
+    double nitsche_average_weight_gamma_;
+
     //! Nodal Dof set strategy for XFEM
     Cut::NodalDofSetStrategy xfem_nodal_dof_set_strategy_ =
         Cut::NodalDofSetStrategy::NDS_Strategy_OneDofset_PerNodeAndPosition;
