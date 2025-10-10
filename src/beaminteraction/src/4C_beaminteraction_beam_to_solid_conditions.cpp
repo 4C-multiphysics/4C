@@ -9,6 +9,7 @@
 
 #include "4C_beam3_euler_bernoulli.hpp"
 #include "4C_beam3_reissner.hpp"
+#include "4C_beaminteraction_beam_to_solid_edge_contact_pair.hpp"
 #include "4C_beaminteraction_beam_to_solid_mortar_manager_contact.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_contact_pair.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_contact_pair_mortar.hpp"
@@ -37,6 +38,7 @@
 #include "4C_geometry_pair_line_to_3D_evaluation_data.hpp"
 #include "4C_geometry_pair_line_to_surface_evaluation_data.hpp"
 #include "4C_inpar_beam_to_solid.hpp"
+#include "4C_utils_exceptions.hpp"
 #include "4C_utils_std23_unreachable.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -870,6 +872,7 @@ BeamInteraction::BeamToLineCondition::BeamToLineCondition(
     : BeamToSolidCondition(condition_line, condition_other, nullptr)
 {
   condition_data_ = BeamToSolidConditionData{.is_indirect_assembly_manager = false};
+  beam_to_edge_parameters_ = beam_to_edge_parameters;
 
   // Create the geometry evaluation data for this condition.
   geometry_evaluation_data_ = std::make_shared<GeometryPair::GeometryEvaluationDataBase>();
@@ -917,8 +920,19 @@ std::shared_ptr<BeamInteraction::BeamContactPair>
 BeamInteraction::BeamToLineCondition::create_contact_pair_internal(
     const std::vector<Core::Elements::Element const*>& ele_ptrs)
 {
-  FOUR_C_THROW("IMPLEMENT PAIR");
-  return nullptr;
+  using namespace GeometryPair;
+
+  const auto* beam_element = dynamic_cast<const Discret::Elements::Beam3Base*>(ele_ptrs[0]);
+  const bool beam_is_hermite = beam_element->hermite_centerline_interpolation();
+  const auto& core_element = other_line_map_[ele_ptrs[1]->id()];
+  const auto shape = core_element->shape();
+
+  if (beam_is_hermite and shape == Core::FE::CellType::line2)
+  {
+    return std::make_shared<BeamToSolidEdgeContactPair<t_hermite, t_line2>>(
+        beam_to_edge_parameters_);
+  }
+  FOUR_C_THROW("Got unexpected element input, could not create BeamToSolidEdgeContactPair");
 }
 
 FOUR_C_NAMESPACE_CLOSE

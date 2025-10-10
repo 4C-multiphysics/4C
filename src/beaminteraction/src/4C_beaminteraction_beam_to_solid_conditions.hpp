@@ -295,6 +295,9 @@ namespace BeamInteraction
     }
 
    private:
+    //! Contact parameters for this condition.
+    std::shared_ptr<BeamToSolidEdgeContactParameters> beam_to_edge_parameters_;
+
     //! Map containing the global volume element IDs for each face element of the surface in this
     //! condition.
     std::unordered_map<int, std::shared_ptr<const Core::Elements::Element>> other_line_map_;
