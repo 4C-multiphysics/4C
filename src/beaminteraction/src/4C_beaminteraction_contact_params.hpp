@@ -23,6 +23,7 @@ namespace BeamInteraction
   class BeamToSolidSurfaceMeshtyingParams;
   class BeamToSolidSurfaceContactParams;
   class BeamContactRuntimeVisualizationOutputParams;
+  struct BeamToSolidEdgeContactParameters;
 
   /*!
    *  */
@@ -52,6 +53,9 @@ namespace BeamInteraction
 
     //! builds a new BeamContactRuntimeOutputParams object
     void build_beam_contact_runtime_output_params(double restart_time);
+
+    //! builds the beam-to-solid edge contact parameters
+    void build_beam_to_solid_edge_contact_params();
 
 
     inline std::shared_ptr<BeamInteraction::BeamToBeamContactParams> beam_to_beam_contact_params()
@@ -90,6 +94,11 @@ namespace BeamInteraction
       return beam_contact_runtime_output_params_;
     }
 
+    inline std::shared_ptr<BeamInteraction::BeamToSolidEdgeContactParameters>
+    beam_to_solid_edge_contact_params() const
+    {
+      return beam_to_solid_edge_contact_params_;
+    }
 
    private:
     //! pointer to the parameter class of beam-to-beam contact
@@ -113,6 +122,10 @@ namespace BeamInteraction
     //! pointer to the parameter class of beam contact visualization output
     std::shared_ptr<BeamInteraction::BeamContactRuntimeVisualizationOutputParams>
         beam_contact_runtime_output_params_;
+
+    //! pointer to the beam-to-solid edge contact parameters
+    std::shared_ptr<BeamInteraction::BeamToSolidEdgeContactParameters>
+        beam_to_solid_edge_contact_params_;
   };
 
 }  // namespace BeamInteraction

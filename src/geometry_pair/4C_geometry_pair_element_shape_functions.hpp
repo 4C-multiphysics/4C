@@ -100,6 +100,38 @@ namespace GeometryPair
         FOUR_C_THROW("Got unexpected element dimension {}", ElementType::element_dim_);
       }
     }
+
+    /**
+     * \brief Evaluate the 2nd derivatives of the shape functions of the element at xi.
+     *
+     * The elements considered here, i.e., Lagrangian elements don't have specific shape function
+     * data, so we allow this as an optional argument
+     *
+     * @param ddN (out) 2nd derivatives of shape functions.
+     * @param xi (in) Parameter coordinate on the element.
+     * @param shape_function_data (in) Shape function data container.
+     */
+    template <typename V, typename T, typename... NotNeededArgumentType>
+    static void evaluate_deriv2(
+        V& ddN, const T& xi, const NotNeededArgumentType&... not_needed_argument)
+    {
+      if constexpr (ElementType::element_dim_ == 1)
+      {
+        Core::FE::shape_function_1d_deriv2(ddN, xi, ElementType::discretization_);
+      }
+      else if constexpr (ElementType::element_dim_ == 2)
+      {
+        Core::FE::shape_function_2d_deriv2(ddN, xi(0), xi(1), ElementType::discretization_);
+      }
+      else if constexpr (ElementType::element_dim_ == 3)
+      {
+        Core::FE::shape_function_3d_deriv2(ddN, xi(0), xi(1), xi(2), ElementType::discretization_);
+      }
+      else
+      {
+        FOUR_C_THROW("Got unexpected element dimension {}", ElementType::element_dim_);
+      }
+    }
   };
 
   /**
@@ -135,6 +167,21 @@ namespace GeometryPair
     {
       Core::FE::shape_function_hermite_1d_deriv1(
           dN, xi, shape_function_data.ref_length_, t_hermite::discretization_);
+    }
+
+    /**
+     * \brief Evaluate the 2nd derivatives of the shape functions of the element at xi.
+     *
+     * @param ddN (out) 2nd derivatives of shape functions.
+     * @param xi (in) Parameter coordinate on the element.
+     * @param shape_function_data (in) Shape function data container.
+     */
+    template <typename V, typename T>
+    static void evaluate_deriv2(
+        V& ddN, const T& xi, const ShapeFunctionData<t_hermite>& shape_function_data)
+    {
+      Core::FE::shape_function_hermite_1d_deriv2(
+          ddN, xi, shape_function_data.ref_length_, t_hermite::discretization_);
     }
   };
 

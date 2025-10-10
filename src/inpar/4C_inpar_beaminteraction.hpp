@@ -100,7 +100,9 @@ namespace Inpar
       //! beam-to-beam penalty point coupling.
       beam_to_beam_point_coupling,
       //! Beam-to-solid surface contact.
-      beam_to_solid_surface_contact
+      beam_to_solid_surface_contact,
+      //! Beam-to-solid edge contact.
+      beam_to_solid_edge_contact
     };
 
     //! Map type std::string to enum

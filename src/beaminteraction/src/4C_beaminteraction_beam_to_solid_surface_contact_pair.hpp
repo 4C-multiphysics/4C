@@ -14,7 +14,6 @@
 #include "4C_beaminteraction_beam_to_beam_contact_defines.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_contact_pair_base.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
-#include "4C_linalg_sparsematrix.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 

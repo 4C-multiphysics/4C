@@ -9,6 +9,7 @@
 
 #include "4C_beam3_base.hpp"
 #include "4C_beamcontact_input.hpp"
+#include "4C_beaminteraction_beam_to_solid_edge_contact_params.hpp"
 #include "4C_beaminteraction_beam_to_solid_mortar_manager.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_contact_params.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_meshtying_params.hpp"
@@ -35,6 +36,7 @@
 #include "4C_geometry_pair_input.hpp"
 #include "4C_geometry_pair_line_to_3D_evaluation_data.hpp"
 #include "4C_global_data.hpp"
+#include "4C_inpar_beam_to_solid.hpp"
 #include "4C_io.hpp"
 #include "4C_io_control.hpp"
 #include "4C_io_pstream.hpp"
@@ -214,6 +216,15 @@ void BeamInteraction::SubmodelEvaluator::BeamContact::setup()
               beam_contact_params_ptr_->beam_to_solid_surface_contact_params()
                   ->get_visualization_output_params_ptr());
     }
+  }
+
+
+  // Check if beam-to-solid edge contact is present.
+  if (Global::Problem::instance()->parameters().isParameter(
+          "BEAM INTERACTION/BEAM TO SOLID EDGE CONTACT"))
+  {
+    contactelementtypes_.push_back(Core::Binstrategy::Utils::BinContentType::Solid);
+    beam_contact_params_ptr_->build_beam_to_solid_edge_contact_params();
   }
 
   // Build the container to manage beam-to-solid conditions and get all coupling conditions.

@@ -57,6 +57,7 @@ namespace BeamInteraction
     beam_to_beam_contact,
     beam_to_beam_point_coupling,
     beam_to_solid_base,
+    beam_to_solid_edge,
     beam_to_sphere_contact,
   };
 

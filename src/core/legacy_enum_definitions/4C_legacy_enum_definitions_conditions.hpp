@@ -131,6 +131,8 @@ namespace Core::Conditions
     BeamToSolidSurfaceMeshtyingSurface,
     BeamToSolidSurfaceContactLine,
     BeamToSolidSurfaceContactSurface,
+    BeamToSolidEdgeContactBeam,
+    BeamToSolidEdgeContactEdge,
     ElchBoundaryKinetics,
     ElchDomainKinetics,
     TransportNeumannInflow,

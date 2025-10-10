@@ -9,6 +9,7 @@
 
 #include "4C_beam3_euler_bernoulli.hpp"
 #include "4C_beam3_reissner.hpp"
+#include "4C_beaminteraction_beam_to_solid_edge_contact_pair.hpp"
 #include "4C_beaminteraction_beam_to_solid_mortar_manager_contact.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_contact_pair.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_contact_pair_mortar.hpp"
@@ -33,9 +34,11 @@
 #include "4C_fem_discretization.hpp"
 #include "4C_geometry_pair_element.hpp"
 #include "4C_geometry_pair_element_faces.hpp"
+#include "4C_geometry_pair_evaluation_data_base.hpp"
 #include "4C_geometry_pair_line_to_3D_evaluation_data.hpp"
 #include "4C_geometry_pair_line_to_surface_evaluation_data.hpp"
 #include "4C_inpar_beam_to_solid.hpp"
+#include "4C_utils_exceptions.hpp"
 #include "4C_utils_std23_unreachable.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -857,6 +860,79 @@ BeamInteraction::BeamToSolidConditionSurface::create_contact_pair_internal(
     }
   }
   std23::unreachable();
+}
+
+/**
+ *
+ */
+BeamInteraction::BeamToLineCondition::BeamToLineCondition(
+    const Core::Conditions::Condition& condition_line,
+    const Core::Conditions::Condition& condition_other,
+    std::shared_ptr<BeamToSolidEdgeContactParameters> beam_to_edge_parameters)
+    : BeamToSolidCondition(condition_line, condition_other, nullptr)
+{
+  condition_data_ = BeamToSolidConditionData{.is_indirect_assembly_manager = false};
+  beam_to_edge_parameters_ = beam_to_edge_parameters;
+
+  // Create the geometry evaluation data for this condition.
+  geometry_evaluation_data_ = std::make_shared<GeometryPair::GeometryEvaluationDataBase>();
+}
+
+/**
+ *
+ */
+void BeamInteraction::BeamToLineCondition::build_id_sets(
+    const std::shared_ptr<const Core::FE::Discretization>& discretization)
+{
+  // Call the parent method to build the line maps.
+  BeamToSolidCondition::build_id_sets(discretization);
+
+  // Build the other line map.
+  other_line_map_.clear();
+  for (const auto& map_item : condition_other_->geometry())
+  {
+    if (!map_item.second->is_face_element())
+    {
+      FOUR_C_THROW("The case of beam-to-beam is not yet implemented");
+    }
+    else
+    {
+      // This is the case if the line element is an edge of a solid element
+      const std::shared_ptr<const Core::Elements::FaceElement> face_element =
+          std::dynamic_pointer_cast<const Core::Elements::FaceElement>(map_item.second);
+      const int solid_id = face_element->parent_element_id();
+      other_line_map_[solid_id] = face_element;
+    }
+  }
+
+  // The size of the created map and the geometry in the condition have to match. Otherwise
+  // there are two edges connected to the same element, which is not implemented at this point.
+  if (other_line_map_.size() != condition_other_->geometry().size())
+    FOUR_C_THROW(
+        "There are multiple edges connected to one solid element in this condition. This case is "
+        "currently not implemented.");
+}
+
+/**
+ *
+ */
+std::shared_ptr<BeamInteraction::BeamContactPair>
+BeamInteraction::BeamToLineCondition::create_contact_pair_internal(
+    const std::vector<Core::Elements::Element const*>& ele_ptrs)
+{
+  using namespace GeometryPair;
+
+  const auto* beam_element = dynamic_cast<const Discret::Elements::Beam3Base*>(ele_ptrs[0]);
+  const bool beam_is_hermite = beam_element->hermite_centerline_interpolation();
+  const auto& core_element = other_line_map_[ele_ptrs[1]->id()];
+  const auto shape = core_element->shape();
+
+  if (beam_is_hermite and shape == Core::FE::CellType::line2)
+  {
+    return std::make_shared<BeamToSolidEdgeContactPair<t_hermite, t_line2>>(
+        beam_to_edge_parameters_, core_element);
+  }
+  FOUR_C_THROW("Got unexpected element input, could not create BeamToSolidEdgeContactPair");
 }
 
 FOUR_C_NAMESPACE_CLOSE

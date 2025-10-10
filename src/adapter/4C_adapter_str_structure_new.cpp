@@ -18,6 +18,7 @@
 #include "4C_beam3_kirchhoff.hpp"
 #include "4C_beam3_reissner.hpp"
 #include "4C_beamcontact_input.hpp"
+#include "4C_beaminteraction_beam_to_solid_edge_contact_params.hpp"
 #include "4C_binstrategy.hpp"
 #include "4C_contact_input.hpp"
 #include "4C_fem_condition.hpp"
@@ -549,6 +550,8 @@ void Adapter::StructureBaseAlgorithmNew::set_model_types(
           Global::Problem::instance()->beam_interaction_params().sublist(
               "BEAM TO SOLID SURFACE CONTACT"),
           "CONTACT_DISCRETIZATION") != Inpar::BeamToSolid::BeamToSolidContactDiscretization::none or
+      Global::Problem::instance()->parameters().isParameter(
+          "BEAM INTERACTION/BEAM TO SOLID EDGE CONTACT") or
       beampotconditions.size() > 0 or beampenaltycouplingconditions.size() > 0)
   {
     modeltypes.insert(Inpar::Solid::model_beaminteraction);

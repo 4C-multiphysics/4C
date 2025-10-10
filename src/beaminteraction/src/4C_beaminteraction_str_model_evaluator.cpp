@@ -9,6 +9,7 @@
 
 #include "4C_beam3_base.hpp"
 #include "4C_beamcontact_input.hpp"
+#include "4C_beaminteraction_beam_to_solid_edge_contact_params.hpp"
 #include "4C_beaminteraction_beam_to_solid_volume_meshtying_params.hpp"
 #include "4C_beaminteraction_calc_utils.hpp"
 #include "4C_beaminteraction_contact_params.hpp"
@@ -327,7 +328,9 @@ void Solid::ModelEvaluator::BeamInteraction::set_sub_model_types()
       Teuchos::getIntegralValue<Inpar::BeamToSolid::BeamToSolidContactDiscretization>(
           Global::Problem::instance()->beam_interaction_params().sublist(
               "BEAM TO SOLID SURFACE CONTACT"),
-          "CONTACT_DISCRETIZATION") != Inpar::BeamToSolid::BeamToSolidContactDiscretization::none)
+          "CONTACT_DISCRETIZATION") != Inpar::BeamToSolid::BeamToSolidContactDiscretization::none or
+      Global::Problem::instance()->parameters().isParameter(
+          "BEAM INTERACTION/BEAM TO SOLID EDGE CONTACT"))
     submodeltypes_->insert(Inpar::BeamInteraction::submodel_beamcontact);
 
   // ---------------------------------------------------------------------------

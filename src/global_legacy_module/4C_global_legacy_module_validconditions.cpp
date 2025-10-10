@@ -9,6 +9,7 @@
 
 #include "4C_ale_input.hpp"
 #include "4C_art_net_input.hpp"
+#include "4C_beaminteraction_beam_to_solid_edge_contact_params.hpp"
 #include "4C_beaminteraction_potential_input.hpp"
 #include "4C_constraint_framework_input.hpp"
 #include "4C_ehl_input.hpp"
@@ -845,6 +846,7 @@ std::vector<Core::Conditions::ConditionDefinition> Global::valid_conditions()
   BeamInteraction::Potential::set_valid_conditions(condlist);
   Constraints::set_valid_conditions(condlist);
   Inpar::BeamInteraction::set_valid_conditions(condlist);
+  BeamInteraction::set_valid_beam_to_edge_contact_conditions(condlist);
   EHL::set_valid_conditions(condlist);
   PoroPressureBased::set_valid_conditions_porofluid_elast_scatra(condlist);
 

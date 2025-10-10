@@ -8,6 +8,7 @@
 #include "4C_beaminteraction_contact_params.hpp"
 
 #include "4C_beaminteraction_beam_to_beam_contact_params.hpp"
+#include "4C_beaminteraction_beam_to_solid_edge_contact_params.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_contact_params.hpp"
 #include "4C_beaminteraction_beam_to_solid_surface_meshtying_params.hpp"
 #include "4C_beaminteraction_beam_to_solid_volume_meshtying_params.hpp"
@@ -51,6 +52,12 @@ void BeamInteraction::BeamContactParams::build_beam_contact_runtime_output_param
   beam_contact_runtime_output_params_->setup();
 }
 
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void BeamInteraction::BeamContactParams::build_beam_to_solid_edge_contact_params()
+{
+  beam_to_solid_edge_contact_params_ = initialize_validate_beam_to_edge_contact_params();
+}
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/

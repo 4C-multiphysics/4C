@@ -41,6 +41,12 @@ void Inpar::BeamToSolid::beam_to_solid_interaction_get_string(
     condition_names[0] = "BeamToSolidSurfaceContactLine";
     condition_names[1] = "BeamToSolidSurfaceContactSurface";
   }
+  else if (interaction ==
+           Inpar::BeamInteraction::BeamInteractionConditions::beam_to_solid_edge_contact)
+  {
+    condition_names[0] = "BeamToSolidEdgeContactBeam";
+    condition_names[1] = "BeamToSolidEdgeContactEdge";
+  }
   else
     FOUR_C_THROW("Got unexpected beam-to-solid interaction type.");
 }

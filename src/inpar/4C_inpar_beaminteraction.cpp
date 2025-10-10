@@ -21,7 +21,8 @@ void Inpar::BeamInteraction::beam_interaction_conditions_get_all(
       Inpar::BeamInteraction::BeamInteractionConditions::beam_to_beam_point_coupling,
       Inpar::BeamInteraction::BeamInteractionConditions::beam_to_solid_volume_meshtying,
       Inpar::BeamInteraction::BeamInteractionConditions::beam_to_solid_surface_meshtying,
-      Inpar::BeamInteraction::BeamInteractionConditions::beam_to_solid_surface_contact};
+      Inpar::BeamInteraction::BeamInteractionConditions::beam_to_solid_surface_contact,
+      Inpar::BeamInteraction::BeamInteractionConditions::beam_to_solid_edge_contact};
 }
 
 std::vector<Core::IO::InputSpec> Inpar::BeamInteraction::valid_parameters()
