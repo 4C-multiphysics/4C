@@ -28,7 +28,7 @@ section format
 
 with subsequent lines defining the region and the specific values of the
 boundary conditions. Note that some boundary condition types do not follow this general structure.
-For each particular condition, refer to the :ref:`boundary condition reference <prescribedconditionreference>`.
+For each particular condition, refer to the :ref:`reference<condition_reference>`.
 
 What follows is a list of condition entries (a dictionary) starting with the entry pair ``E: <set>``,
 where ``set`` is the number of the TOPOLOGY set defined in terms of points, lines, surfaces and volumes, respectively.
@@ -91,7 +91,7 @@ for point and volume definitions, and
 for lines and surfaces.
 
 The rotation may depend on time and/or space, that is, it can be combined with a function definition,
-see the proper definition in the :ref:`functions <functiondefinitions>` section.
+see the proper definition in the :ref:`functions <secfunctn>` section.
 
 In addition, it is possible to calculate a spatial dependence either on the original node coordinates
 or on the updated (displaced) node coordinate,
@@ -133,7 +133,7 @@ Of course, the applied Dirichlet boundary condition may depend on time and on th
 of the node. This is achieved by a function definition, after the keyword ``FUNCT``.
 The number of the function (for each component) can be specified in
 order to define a spatial or temporal dependence. The proper definition
-of functions is given in the :ref:`functions <functiondefinitions>` section.
+of functions is given in the :ref:`functions <SECfunctn>` section.
 
 
 The ``TAG`` option allows to monitor the reaction forces at the constraint
@@ -148,7 +148,7 @@ One needs also to set the corresponding IO, such as the following (taken from {{
 {{ section_dump(input_file3_content, "IO/MONITOR STRUCTURE DBC") }}
 
 This writes a csv file for each dirichlet boundary condition containing the above tag in the directory ``<output_name>_monitor_dbc/*.csv``.
-For further parameters (as, for example, the accuracy), see :ref:`SECio_monitorstructuredbc`,
+For further parameters (as, for example, the accuracy), see :ref:`IO/MONITOR STRUCTURE DBC<SECio_monitorstructuredbc>`,
 and set the right time integration strategy, :ref:`INT_STRATEGY<SECstructuraldynamic>`.
 
 Note that the TAG parameter may only be set for linear elements, not for
@@ -183,9 +183,9 @@ boundary conditions.
      # same parameters as above
 
 See the respective reference sections for
-:ref:`mechanical <designpointdirichconditions>`, :ref:`ALE <designpointaledirichconditions>`,
-:ref:`TRANSPORT <designpointtransportdirichconditions>`, :ref:`THERMO <designpointthermodirichconditions>`,
-:ref:`PORO <designpointporodirichconditions>`, :ref:`NURBS LS <designpointnurbslsdirichconditions>`.
+:ref:`mechanical <secdesignpointdirichconditions>`, :ref:`ALE <secdesignpointaledirichconditions>`,
+:ref:`TRANSPORT <secdesignpointtransportdirichconditions>`, :ref:`THERMO <secdesignpointthermodirichconditions>`,
+:ref:`PORO <secdesignpointporodirichconditions>`, :ref:`NURBS LS <secdesignpointnurbslsdirichconditions>`.
 
 Neumann Boundary Conditions
 ---------------------------
@@ -218,9 +218,9 @@ pressure or surface heat flux, accordingly.
    - E: <num>
      # same parameters as above
 
-See the respective reference sections for :ref:`mechanical <designpointneumannconditions>`,
-:ref:`MOMENT EB <designpointmomentebconditions>`, :ref:`TRANSPORT <designpointtransportneumannconditions>`,
-:ref:`THERMO <designpointthermoneumannconditions>`, :ref:`PORO <designpointporoneumannconditions>`.
+See the respective reference sections for :ref:`mechanical <secdesignpointneumannconditions>`,
+:ref:`MOMENT EB <secdesignpointmomentebconditions>`, :ref:`TRANSPORT <secdesignpointtransportneumannconditions>`,
+:ref:`THERMO <secdesignpointthermoneumannconditions>`, :ref:`PORO <secdesignpointporoneumannconditions>`.
 
 .. _springdashpotconditions:
 
@@ -277,7 +277,7 @@ The input looks like this:
    - E: <surfset>
      COUPLING: <couplingID>
 
-See also :ref:`designpointrobinspringdashpotconditions` and :ref:`designsurfrobinspringdashpotcouplingconditions`.
+See also :ref:`secdesignpointrobinspringdashpotconditions` and :ref:`secdesignsurfrobinspringdashpotcouplingconditions`.
 
 Constraint conditions
 ----------------------
@@ -318,7 +318,7 @@ Example input file where two nodes each are coupled in several point coupling co
 {{section_dump(input_file2_content, ["DESIGN POINT COUPLING CONDITIONS", "DNODE-NODE TOPOLOGY"]) }}
 
 The node couples of the given pointset have the same displacements and rotations in all directions;
-see also :ref:`designpointcouplingconditions`.
+see also :ref:`secdesignpointcouplingconditions`.
 
 
 Surface coupled to a node in a given direction
@@ -330,7 +330,7 @@ In this constraint, the whole surface is displaced the same amount as a single m
 {{ section_dump(input_file4_content, "DESIGN SURFACE NORMALDIR MULTIPNT CONSTRAINT 3D") }}
 
 There is also a penalty version, which uses a different algorithm, where one has to provide a penalty parameter.
-See also :ref:`designsurfacenormaldirmultipntconstraint3d` and :ref:`designsurfacenormaldirmultipntconstraint3dpen`.
+See also :ref:`secdesignsurfacenormaldirmultipntconstraint3d` and :ref:`secdesignsurfacenormaldirmultipntconstraint3dpen`.
 
 Node displacement relative to a given surface or line
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -342,14 +342,14 @@ An example using this constraint for a line is given in {{ input_file5 }}:
 
 {{ section_dump(input_file5_content, "DESIGN LINE MULTIPNT CONSTRAINT 2D") }}
 
-For the surface condition and a complete list of possible parameters, see :ref:`designsurfacemultipntconstraint3D` and :ref:`designlinemultipntconstraint2D`
+For the surface condition and a complete list of possible parameters, see :ref:`secdesignsurfacemultipntconstraint3D` and :ref:`secdesignlinemultipntconstraint2D`
 
 Periodic boundary conditions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 Periodic boundaries are defined as conditions, where nodes on one surface (normal to any of the cartesian coordinate directions, i.e., xy, yz, or xz),
-are bound to the respective nodes on the opposite side, see the reference :ref:`designsurfperiodicboundaryconditions`, :ref:`designlineperiodicboundaryconditions`.
+are bound to the respective nodes on the opposite side, see the reference :ref:`secdesignsurfperiodicboundaryconditions`, :ref:`secdesignlineperiodicboundaryconditions`.
 They can be defined at one or several sides of the structure.
 
 Two types of periodic boundary conditions are implemented, one is for general periodic behavior, denoted as ``PERIODIC BOUNDARY CONDITIONS``,
@@ -411,4 +411,4 @@ subject to the condition. The ``ENTITY_TYPE`` parameter is used to distinguish
 between ``node_set_id`` and ``element_block_id``.
 
 A collection of all currently implemented boundary conditions is given in the
-:ref:`Prescribed condition reference <prescribedconditionreference>`.
+:ref:`Prescribed condition reference <condition_reference>`.

@@ -22,6 +22,18 @@ def load_input_file(yaml_file):
     return data
 
 
+def add_raw_text_from_file(text_file, indent=0):
+    """Returns the dictionary of parameters for the given yaml file."""
+    with open(PATH_TO_TESTS / pathlib.Path(text_file), "r") as file:
+        input = file.readlines()
+    if indent > 0:
+        indent_string = " " * indent
+        input = "".join([indent_string + line for line in input])
+    else:
+        input = "".join(input)
+    return input
+
+
 def load_meta_data():
     """Returns a dictionary of sections and their parameters from the meta file 4C_metadata.yaml."""
     metafile_data = yaml.safe_load(
@@ -149,18 +161,19 @@ def convert(template_path, rendering_path, input_file_path):
         except jinja2.exceptions.TemplateSyntaxError as e:
             print(f"Warning: Could not read {template_file}: {e}")
             continue
-        tutorial_name = (
+        docfile_name = (
             template_file.stem if template_file.suffix == ".j2" else template_file
         )
-        tutorial_rst = target_dir / tutorial_name
-        print(f"source: {tutorial_name}, target: {tutorial_rst}")
-        tutorial_rst.write_text(
+        docfile_fullpath = target_dir / docfile_name
+        print(f"source: {docfile_name}, target: {docfile_fullpath}")
+        docfile_fullpath.write_text(
             template.render(
                 section_dump=section_dump,
                 load_input_file=load_input_file,
                 yaml_dump=yaml_dump,
                 find_sections_in_meta=find_sections_in_meta,
                 load_meta_data=load_meta_data,
+                add_raw_text_from_file=add_raw_text_from_file,
                 len=len,
             )
         )

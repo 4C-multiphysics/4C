@@ -4,8 +4,6 @@ References
 
 .. [Wall99] W.A. Wall, PhD thesis, 1999 (available under ``/lnm/literature/1999/``)
 
-.. [Reiser94] Reiser et al., 1994
-
 .. [Martin08] Robert C. Martin (2008):  Clean code: A Handbook of Agile Software Craftsmanship. Prentice Hall, p. 122f
 
 .. [strdyn:zienkiewicz91] O.C. Zienkiewicz, Y.M. Xie. A simple error estimator and adaptive time stepping procedure for dynamic analysis. Earthquake Engrg. Structural Dynamics, 20:871–887, 1991.

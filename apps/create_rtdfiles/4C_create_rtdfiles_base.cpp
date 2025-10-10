@@ -44,22 +44,9 @@ int main(int argc, char* argv[])
 
     RTD::write_cell_type_information(reference_path + "/elementinformation.yaml");
     std::cout << "Writing cell type information to yaml finished\n";
-    RTD::write_read_the_docs_header(reference_path + "/headerreference.rst");
     std::cout << "Writing headerreference.rst finished\n";
     RTD::write_read_the_docs_celltypes(reference_path + "/celltypereference.rst");
     std::cout << "Writing celltypes.rst finished\n";
-    RTD::write_read_the_docs_material(reference_path + "/materialreference.rst");
-    std::cout << "Writing materialreference.rst finished\n";
-    RTD::write_read_the_docs_condition(reference_path + "/conditionreference.rst");
-    std::cout << "Writing conditionreference.rst finished\n";
-    RTD::write_read_the_docs_various(reference_path + "/furtherreference.rst");
-    std::cout << "Writing furtherreference.rst finished\n";
-    const std::string contactconstitivedocumentationfilename =
-        reference_path + "/contactconstitutivereference.rst";
-    const std::string elementdocumentationfilename = reference_path + "/elementreference.rst";
-    /*
-     * TODO: Other files can be written as readthedocs Reference files (e.g. Element Reference)
-     */
   }
 
   MPI_Finalize();

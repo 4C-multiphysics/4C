@@ -68,6 +68,6 @@ This guide to |FOURC| is structured as follows:
    tutorials/tutorials
    analysis_guide/analysisguide
    developer_guide/developmentguide
-   input_parameter_reference/parameterreference
+   reference_guide/parameterreference
    tools/tools
    appendix/appendix

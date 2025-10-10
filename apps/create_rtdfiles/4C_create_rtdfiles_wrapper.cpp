@@ -44,43 +44,6 @@ namespace RTD
     write_yaml_cell_type_information(elementinformationfile);
   }
 
-
-  /*----------------------------------------------------------------------*/
-  /*----------------------------------------------------------------------*/
-  void write_read_the_docs_header(const std::string& headerdocumentationfilename)
-  {
-    // open ascii file for writing all header parameters
-    std::ofstream headerdocumentationfile(headerdocumentationfilename.c_str());
-    if (!headerdocumentationfile)
-      FOUR_C_THROW("failed to open file: {}", headerdocumentationfilename);
-    headerdocumentationfile << "..\n   Created using 4C version (git SHA1):\n";
-    headerdocumentationfile << "   " << VersionControl::git_hash << "\n\n";
-    headerdocumentationfile << ".. _headerparameters:\n\n";
-    headerdocumentationfile << "Header parameters\n";
-    headerdocumentationfile << "=================\n\n";
-    auto parameters = Global::valid_parameters();
-
-    for (const auto& spec : parameters)
-    {
-      std::string linktarget = spec.name();
-      std::ranges::replace(linktarget, '/', '_');
-      linktarget = Teuchos::StrUtils::removeAllSpaces(Core::Utils::to_lower(linktarget));
-
-      // write link:
-      write_linktarget(headerdocumentationfile, "SEC" + linktarget);
-      // write section header
-      write_header(headerdocumentationfile, 1, spec.name());
-
-      headerdocumentationfile << spec.name() << "\n";
-      std::stringstream ss;
-      spec.print_as_dat(ss);
-
-      // Split on newline because this is what the write_code function expects
-      std::vector<std::string> specs_list = Core::Utils::split(ss.str(), "\n");
-      write_code(headerdocumentationfile, specs_list);
-    }
-  }
-
   /*----------------------------------------------------------------------*/
   /*----------------------------------------------------------------------*/
   void write_read_the_docs_celltypes(const std::string& celltypedocumentationfilename)
@@ -93,51 +56,6 @@ namespace RTD
     celltypeocumentationfile << "   " << VersionControl::git_hash << "\n\n";
 
     write_celltype_reference(celltypeocumentationfile);
-  }
-
-  /*----------------------------------------------------------------------*/
-  /*----------------------------------------------------------------------*/
-  void write_read_the_docs_material(const std::string& materialdocumentationfilename)
-  {
-    //
-    // open ascii file for writing all material parameters
-    std::ofstream materialdocumentationfile(materialdocumentationfilename.c_str());
-    if (!materialdocumentationfile)
-      FOUR_C_THROW("failed to open file: {}", materialdocumentationfilename);
-    materialdocumentationfile << "..\n   Created using 4C version (git SHA1):\n";
-    materialdocumentationfile << "   " << VersionControl::git_hash << "\n\n";
-    write_material_reference(materialdocumentationfile, Global::valid_materials());
-  }
-
-  /*----------------------------------------------------------------------*/
-  /*----------------------------------------------------------------------*/
-  void write_read_the_docs_condition(const std::string& conditiondocumentationfilename)
-  {
-    //
-    // open ascii file for writing all constrains / conditions parameters
-    std::ofstream conditiondocumentationfile(conditiondocumentationfilename.c_str());
-    if (!conditiondocumentationfile)
-      FOUR_C_THROW("failed to open file: {}", conditiondocumentationfilename);
-    conditiondocumentationfile << "..\n   Created using 4C version (git SHA1):\n";
-    conditiondocumentationfile << "   " << VersionControl::git_hash << "\n\n";
-    write_conditions_reference(conditiondocumentationfile, Global::valid_conditions());
-
-    write_contact_law_reference(
-        conditiondocumentationfile, CONTACT::CONSTITUTIVELAW::valid_contact_constitutive_laws());
-  }
-
-  /*----------------------------------------------------------------------*/
-  /*----------------------------------------------------------------------*/
-  void write_read_the_docs_various(const std::string& variousdocumentationfilename)
-  {
-    //
-    // open ascii file for writing other (non header) parameters
-    std::ofstream variousdocumentationfile(variousdocumentationfilename.c_str());
-    if (!variousdocumentationfile)
-      FOUR_C_THROW("failed to open file: {}", variousdocumentationfilename);
-    variousdocumentationfile << "..\n   Created using 4C version (git SHA1):\n";
-    variousdocumentationfile << "   " << VersionControl::git_hash << "\n\n";
-    write_various_reference(variousdocumentationfile);
   }
 
   void print_help_message()
