@@ -33,6 +33,12 @@ Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::EmbeddedMeshConst
   auto embedded_mesh_constraint_penalty_parameter =
       constraint_parameter_list.get<double>("PENALTY_PARAM");
 
+  auto embedded_mesh_nitsche_stabilization_parameter =
+      constraint_parameter_list.get<double>("NITSCHE_STABILIZATION_PARAM");
+
+  auto embedded_mesh_nitsche_average_weight_gamma =
+      constraint_parameter_list.get<double>("NITSCHE_GAMMA_PARAM");
+
   auto embedded_mesh_parameter_list = constraint_parameter_list.sublist("EMBEDDED MESH COUPLING");
 
   auto embedded_mesh_coupling_strategy =
@@ -58,6 +64,8 @@ Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::EmbeddedMeshConst
       .constraint_enforcement_ = strategy_,
       .constraint_penalty_parameter_ = embedded_mesh_constraint_penalty_parameter,
       .mortar_shape_function_ = embedded_mesh_mortar_shape_function,
+      .nitsche_stabilization_param_ = embedded_mesh_nitsche_stabilization_parameter,
+      .nitsche_average_weight_gamma_ = embedded_mesh_nitsche_average_weight_gamma,
       .xfem_nodal_dof_set_strategy_ = nodal_dofset_strategy,
       .xfem_volume_cell_gauss_point_by_ = volume_cell_gauss_point_by,
       .xfem_bcell_gauss_point_by_ = bound_cell_gauss_point_by,

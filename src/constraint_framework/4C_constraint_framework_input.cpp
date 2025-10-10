@@ -35,14 +35,22 @@ std::vector<Core::IO::InputSpec> Constraints::valid_parameters()
   /* parameters for embedded mesh constraint submodel */
 
   spec.push_back(group("CONSTRAINT/EMBEDDED MESH COUPLING",
-      {
-          parameter<EmbeddedMesh::CouplingStrategy>("COUPLING_STRATEGY",
-              {.description = "Strategy to couple background and overlapping mesh"}),
+      {parameter<EmbeddedMesh::CouplingStrategy>("COUPLING_STRATEGY",
+           {.description = "Strategy to couple background and overlapping mesh"}),
 
           parameter<EmbeddedMesh::SolidToSolidMortarShapefunctions>("MORTAR_SHAPE_FUNCTION",
               {.description = "Shape functions that should be use in case of coupling using the "
                               "Mortar/Lagrange  Multiplier method "}),
-      },
+
+          parameter<double>("NITSCHE_STABILIZATION_PARAM",
+              {.description = "Value of the stabilization parameter for coupling based on the "
+                              "Nitsche method",
+                  .default_value = 1e5}),
+
+          parameter<double>("NITSCHE_GAMMA_PARAM",
+              {.description =
+                      "Value of the average weight gamma for coupling based on the Nitsche method",
+                  .default_value = 0.5})},
       {.required = false}));
 
   /*----------------------------------------------------------------------*/
