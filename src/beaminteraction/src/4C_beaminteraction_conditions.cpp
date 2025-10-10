@@ -136,7 +136,9 @@ void BeamInteraction::BeamInteractionConditions::set_beam_interaction_conditions
              interaction_type == Inpar::BeamInteraction::BeamInteractionConditions::
                                      beam_to_solid_surface_meshtying or
              interaction_type ==
-                 Inpar::BeamInteraction::BeamInteractionConditions::beam_to_solid_surface_contact)
+                 Inpar::BeamInteraction::BeamInteractionConditions::beam_to_solid_surface_contact or
+             interaction_type ==
+                 Inpar::BeamInteraction::BeamInteractionConditions::beam_to_solid_edge_contact)
     {
       // Add all beam-to-solid conditions.
       std::vector<std::shared_ptr<BeamInteractionConditionBase>>& interaction_vector =
@@ -152,7 +154,7 @@ void BeamInteraction::BeamInteractionConditions::set_beam_interaction_conditions
       discret.get_condition(condition_names[0], condition_line);
       discret.get_condition(condition_names[1], condition_other);
 
-      // There has to be an equal number of sections for lines and surfaces / volumes.
+      // There has to be an equal number of sections for lines and lines / surfaces / volumes.
       if (condition_line.size() != condition_other.size())
         FOUR_C_THROW("There are {} {} sections and {} {} sections. The numbers have to match!",
             condition_line.size(), condition_names[0], condition_other.size(),
@@ -187,6 +189,11 @@ void BeamInteraction::BeamInteractionConditions::set_beam_interaction_conditions
             new_condition = std::make_shared<BeamInteraction::BeamToSolidConditionSurface>(
                 *map_item.second.first, *map_item.second.second,
                 params_ptr.beam_to_solid_surface_contact_params(), false);
+          else if (interaction_type ==
+                   Inpar::BeamInteraction::BeamInteractionConditions::beam_to_solid_edge_contact)
+            new_condition =
+                std::make_shared<BeamInteraction::BeamToLineCondition>(*map_item.second.first,
+                    *map_item.second.second, params_ptr.beam_to_solid_edge_contact_params());
           else
             FOUR_C_THROW("Got unexpected interaction type.");
           interaction_vector.push_back(new_condition);

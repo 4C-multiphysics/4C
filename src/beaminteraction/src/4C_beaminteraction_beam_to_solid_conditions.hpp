@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_beaminteraction_beam_to_solid_edge_contact_params.hpp"
 #include "4C_beaminteraction_conditions.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -258,6 +259,46 @@ namespace BeamInteraction
     std::unordered_map<int, const Core::Elements::Element*> surface_ids_;
   };
 
+  /**
+   * \brief This base class represents a single beam-to-line (or edge) condition.
+   */
+  class BeamToLineCondition : public BeamToSolidCondition
+  {
+   public:
+    /**
+     * \brief Constructor (derived).
+     */
+    BeamToLineCondition(const Core::Conditions::Condition& condition_line,
+        const Core::Conditions::Condition& condition_other,
+        std::shared_ptr<BeamToSolidEdgeContactParameters> beam_to_edge_parameters);
+
+    /**
+     * \brief Build the line ID sets for this condition, e.g., beams or edges.
+     */
+    void build_id_sets(
+        const std::shared_ptr<const Core::FE::Discretization>& discretization) override;
+
+   protected:
+    /**
+     * \brief Return the created beam contact pair for this condition. (derived)
+     */
+    std::shared_ptr<BeamInteraction::BeamContactPair> create_contact_pair_internal(
+        const std::vector<Core::Elements::Element const*>& ele_ptrs) override;
+
+    /**
+     * \brief Check if a other line or edge ID is in this condition.
+     */
+    inline bool id_in_other(const int id_other) const override
+    {
+      if (other_line_map_.find(id_other) != other_line_map_.end()) return true;
+      return false;
+    }
+
+   private:
+    //! Map containing the global volume element IDs for each face element of the surface in this
+    //! condition.
+    std::unordered_map<int, std::shared_ptr<const Core::Elements::Element>> other_line_map_;
+  };
 
   /**
    * \brief Create a beam-to-solid volume pair depending on the solid volume shape.
