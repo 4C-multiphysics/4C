@@ -2016,6 +2016,7 @@ four_c_test_tutorial(TEST_FILE contact/tutorial_contact_3d.4C.yaml NP 2 COPY_FIL
 four_c_test_tutorial(TEST_FILE fluid/tutorial_fluid.4C.yaml NP 2 COPY_FILES ${PROJECT_SOURCE_DIR}/tests/tutorials/fluid/tutorial_fluid.e)
 four_c_test_tutorial(TEST_FILE fsi/tutorial_fsi_2d.4C.yaml NP 2 COPY_FILES ${PROJECT_SOURCE_DIR}/tests/tutorials/fsi/tutorial_fsi_2d.e)
 four_c_test_tutorial(TEST_FILE fsi/tutorial_fsi_3d.4C.yaml NP 2 COPY_FILES ${PROJECT_SOURCE_DIR}/tests/input_files/fsi_part_struct_solver.xml ${PROJECT_SOURCE_DIR}/tests/tutorials/fsi/tutorial_fsi_3d.e)
+four_c_test_tutorial(TEST_FILE fsi/tutorial_fsi_monolithic.4C.yaml NP 2 COPY_FILES ${PROJECT_SOURCE_DIR}/tests/tutorials/fsi/tutorial_fsi_monolithic_pw_m2.exo ${PROJECT_SOURCE_DIR}/tests/tutorials/fsi/tutorial_fsi_monolithic_gmres.xml ${PROJECT_SOURCE_DIR}/tests/tutorials/fsi/tutorial_fsi_monolithic_muelu_solid_fluid_ale.xml)
 four_c_test_tutorial(TEST_FILE solid/tutorial_solid.4C.yaml NP 2 COPY_FILES ${PROJECT_SOURCE_DIR}/tests/input_files/xml/multigrid/elasticity_template.xml ${PROJECT_SOURCE_DIR}/tests/input_files/xml/linear_solver/iterative_gmres_template.xml ${PROJECT_SOURCE_DIR}/tests/tutorials/solid/tutorial_solid_geo_coarse.e)
 # Test use case solid with Jacobi preconditioner on mesh 2 with 2 MPI ranks
 four_c_test_tutorial(TEST_FILE preconditioner/tutorial_prec_solid_jacobi.4C.yaml NP 2 COPY_FILES

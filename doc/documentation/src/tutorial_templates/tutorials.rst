@@ -25,8 +25,9 @@ If you are new to |FOURC|, we recommend to start with a tutorial that fits to yo
 
 The other tutorials are more advanced and show some of the multiphysics capabilities of |FOURC|.
 
-- FSI: Connection between fluid and solid mechanics in 2D and 3D
-  (:ref:`FSI 2D tutorial <2d_fsitutorial>`, :ref:`FSI 3D tutorial <3d_fsitutorial>`).
+- FSI: Connection between fluid and solid mechanics in 2D and 3D as well as using a monolithic approach
+  (:ref:`FSI 2D tutorial <2d_fsitutorial>`, :ref:`FSI 3D tutorial <3d_fsitutorial>`,
+  :ref:`FSI tutorial using a monolithic approach <monolithic_fsitutorial>`).
 - Battery simulation: Coupled thermal, mechanical and electrochemical simulation of a battery
   (:ref:`battery tutorial <batterytutorial>`).
 
@@ -46,5 +47,6 @@ Here is the outline of all available tutorials:
    tutorial_contact_3d
    tutorial_fsi_2d
    tutorial_fsi_3d
+   tutorial_fsi_monolithic
    tutorial_battery
    tutorial_preconditioning

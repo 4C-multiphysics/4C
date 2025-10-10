@@ -1,0 +1,126 @@
+PROBLEM TYPE:
+  PROBLEMTYPE: "Fluid_Structure_Interaction"
+PROBLEM SIZE:
+  DIM: 3
+STRUCTURAL DYNAMIC:
+  INT_STRATEGY: "Old"
+  LINEAR_SOLVER: 1
+FLUID DYNAMIC:
+  LINEAR_SOLVER: 1
+  NONLINITER: Newton
+  TIMEINTEGR: "Np_Gen_Alpha"
+  ALPHA_M: 0.5
+  ALPHA_F: 0.5
+  GAMMA: 0.5
+  GRIDVEL: BDF2
+ALE DYNAMIC:
+  ALE_TYPE: springs_material
+  LINEAR_SOLVER: 1
+FSI DYNAMIC:
+  COUPALGO: "iter_mortar_monolithicfluidsplit"
+  SECONDORDER: true
+  MAXTIME: 0.0005
+  TIMESTEP: 0.0001
+FSI DYNAMIC/MONOLITHIC SOLVER:
+  SHAPEDERIVATIVES: true
+  LINEARBLOCKSOLVER: "LinalgSolver"
+  LINEAR_SOLVER: 2
+  TOL_DIS_RES_L2: 1e-06
+  TOL_DIS_RES_INF: 1e-06
+  TOL_DIS_INC_L2: 1e-06
+  TOL_DIS_INC_INF: 1e-06
+  TOL_FSI_RES_L2: 1e-06
+  TOL_FSI_RES_INF: 1e-06
+  TOL_FSI_INC_L2: 1e-06
+  TOL_FSI_INC_INF: 1e-06
+  TOL_PRE_RES_L2: 1e-06
+  TOL_PRE_RES_INF: 1e-06
+  TOL_PRE_INC_L2: 1e-06
+  TOL_PRE_INC_INF: 1e-06
+  TOL_VEL_RES_L2: 1e-06
+  TOL_VEL_RES_INF: 1e-06
+  TOL_VEL_INC_L2: 1e-06
+  TOL_VEL_INC_INF: 1e-06
+MATERIALS:
+  - MAT: 1
+    MAT_fluid:
+      DYNVISCOSITY: 0.03
+      DENSITY: 1
+  - MAT: 2
+    MAT_Struct_StVenantKirchhoff:
+      YOUNG: 3e+6
+      NUE: 0.3
+      DENS: 1.2
+STRUCTURE GEOMETRY:
+  FILE: "tutorial_fsi_monolithic_pw_m2.exo"
+  ELEMENT_BLOCKS:
+    - ID: 1
+      SOLID:
+        HEX8:
+          MAT: 2
+          KINEM: nonlinear
+          TECH: eas_full
+FLUID GEOMETRY:
+  FILE: "tutorial_fsi_monolithic_pw_m2.exo"
+  ELEMENT_BLOCKS:
+    - ID: 2
+      FLUID:
+        HEX8:
+          MAT: 1
+          NA: ALE
+CLONING MATERIAL MAP:
+  - SRC_FIELD: "fluid"
+    SRC_MAT: 1
+    TAR_FIELD: "ale"
+    TAR_MAT: 2
+DESIGN SURF DIRICH CONDITIONS:
+  - E: 3
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0.0, 0.0, 0.0]
+    FUNCT: [null, null, null]
+DESIGN SURF ALE DIRICH CONDITIONS:
+  - E: 4
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0.0, 0.0, 0.0]
+    FUNCT: [null, null, null]
+  - E: 5
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 3
+    ONOFF: [1, 1, 1]
+    VAL: [0.0, 0.0, 0.0]
+    FUNCT: [null, null, null]
+DESIGN SURF NEUMANN CONDITIONS:
+  - E: 4
+    ENTITY_TYPE: node_set_id
+    NUMDOF: 4
+    ONOFF: [0, 0, 1, 0]
+    VAL: [0, 0, -13332, 0]
+    FUNCT: [null, null, 1, null]
+FUNCT1:
+  - COMPONENT: 0
+    SYMBOLIC_FUNCTION_OF_SPACE_TIME: "initial_pressure_pulse"
+  - VARIABLE: 0
+    NAME: "initial_pressure_pulse"
+    TYPE: "linearinterpolation"
+    NUMPOINTS: 4
+    TIMES: [0, 0.003, 0.0031, 10000]
+    VALUES: [1.0, 1.0, 0.0, 0.0]
+DESIGN FSI COUPLING SURF CONDITIONS:
+  - E: 1
+    ENTITY_TYPE: node_set_id
+    coupling_id: 1
+  - E: 2
+    ENTITY_TYPE: node_set_id
+    coupling_id: 1
+SOLVER 1:
+  SOLVER: "UMFPACK"
+SOLVER 2:
+  SOLVER: "Belos"
+  AZPREC: "MueLu"
+  AZREUSE: 10
+  SOLVER_XML_FILE: "tutorial_fsi_monolithic_gmres.xml"
+  MUELU_XML_FILE: "tutorial_fsi_monolithic_muelu_solid_fluid_ale.xml"
