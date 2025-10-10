@@ -30,12 +30,17 @@ namespace BeamInteraction
   template <typename Beam, typename Edge>
   class BeamToSolidEdgeContactPair : public BeamContactPair
   {
+   private:
+    //! FAD for evaluating the stiffness contributions
+    using scalar_type = typename Sacado::ELRFad::DFad<double>;
+
    public:
     /**
      * \brief Standard Constructor.
      */
     BeamToSolidEdgeContactPair(
-        std::shared_ptr<BeamToSolidEdgeContactParameters> beam_to_solid_edge_parameters);
+        std::shared_ptr<BeamToSolidEdgeContactParameters> beam_to_solid_edge_parameters,
+        std::shared_ptr<const Core::Elements::Element> edge_element);
 
     /**
      * \brief Setup the contact pair.
@@ -161,6 +166,9 @@ namespace BeamInteraction
    private:
     //! Parameters for this pair.
     std::shared_ptr<BeamToSolidEdgeContactParameters> beam_to_solid_edge_parameters_;
+
+    //! Pointer to the pure edge element
+    std::shared_ptr<const Core::Elements::Element> edge_element_;
   };  // namespace BeamInteraction
 }  // namespace BeamInteraction
 

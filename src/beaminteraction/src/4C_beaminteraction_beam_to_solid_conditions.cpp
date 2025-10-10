@@ -930,7 +930,7 @@ BeamInteraction::BeamToLineCondition::create_contact_pair_internal(
   if (beam_is_hermite and shape == Core::FE::CellType::line2)
   {
     return std::make_shared<BeamToSolidEdgeContactPair<t_hermite, t_line2>>(
-        beam_to_edge_parameters_);
+        beam_to_edge_parameters_, core_element);
   }
   FOUR_C_THROW("Got unexpected element input, could not create BeamToSolidEdgeContactPair");
 }
