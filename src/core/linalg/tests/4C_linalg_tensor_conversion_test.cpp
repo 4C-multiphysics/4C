@@ -9,7 +9,7 @@
 
 #include "4C_config.hpp"
 
-#include "4C_linalg_tensor_matrix_conversion.hpp"
+#include "4C_linalg_tensor_conversion.hpp"
 
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_symmetric_tensor.hpp"
@@ -21,7 +21,7 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace
 {
-  TEST(TensorMatrixConversionTest, makeTensor)
+  TEST(TensorConversionTest, makeTensor)
   {
     Core::LinAlg::Matrix<3, 2> matrix;
     matrix(0, 0) = 1.0;
@@ -40,7 +40,7 @@ namespace
     EXPECT_DOUBLE_EQ(tensor(2, 1), 6.0);
   }
 
-  TEST(TensorMatrixConversionTest, makeTensorView)
+  TEST(TensorConversionTest, makeTensorView)
   {
     Core::LinAlg::Matrix<3, 2> matrix;
     matrix(0, 0) = 1.0;
@@ -62,7 +62,7 @@ namespace
     EXPECT_DOUBLE_EQ(matrix(2, 0), 7.0);
   }
 
-  TEST(TensorMatrixConversionTest, makeConstTensorView)
+  TEST(TensorConversionTest, makeConstTensorView)
   {
     const Core::LinAlg::Matrix<3, 2> matrix = []()
     {
@@ -88,7 +88,7 @@ namespace
   }
 
 
-  TEST(TensorMatrixConversionTest, MakeSymmetricTensorFromStressLikeVoigtMatrix)
+  TEST(TensorConversionTest, MakeSymmetricTensorFromStressLikeVoigtMatrix)
   {
     Core::LinAlg::Matrix<6, 1> stress_like_voigt;
     stress_like_voigt(0, 0) = 1.0;
@@ -109,7 +109,7 @@ namespace
     EXPECT_DOUBLE_EQ(symmetric_tensor(0, 2), 6.0);
   }
 
-  TEST(TensorMatrixConversionTest, reinterpretAsTensor)
+  TEST(TensorConversionTest, reinterpretAsTensor)
   {
     Core::LinAlg::Matrix<3, 1> matrix;
     matrix(0, 0) = 1.0;
@@ -122,7 +122,7 @@ namespace
     EXPECT_DOUBLE_EQ(tensor(2), 3.0);
   }
 
-  TEST(TensorMatrixConversionTest, reinterpretAsTensorView)
+  TEST(TensorConversionTest, reinterpretAsTensorView)
   {
     const Core::LinAlg::Matrix<3, 1> matrix = []()
     {
@@ -142,7 +142,7 @@ namespace
     EXPECT_EQ(tensor.data(), matrix.data());
   }
 
-  TEST(TensorMatrixConversionTest, reinterpretAsConstTensorView)
+  TEST(TensorConversionTest, reinterpretAsConstTensorView)
   {
     Core::LinAlg::Matrix<3, 1> matrix;
     matrix(0, 0) = 1.0;
@@ -159,7 +159,7 @@ namespace
     EXPECT_DOUBLE_EQ(matrix(2, 0), 7.0);
   }
 
-  TEST(TensorMatrixConversionTest, makeMatrixView)
+  TEST(TensorConversionTest, makeMatrixView)
   {
     Core::LinAlg::Tensor<double, 3, 2> tensor = {{{1.0, 2.0}, {3.0, 4.0}, {5.0, 6.0}}};
 
@@ -175,7 +175,7 @@ namespace
     EXPECT_DOUBLE_EQ(tensor(2, 0), 7.0);
   }
 
-  TEST(TensorMatrixConversionTest, makeMatrixViewFromArray)
+  TEST(TensorConversionTest, makeMatrixViewFromArray)
   {
     std::array<Core::LinAlg::Tensor<double, 2>, 3> array_of_tensors;
     array_of_tensors[0] = {{1.0, 2.0}};
@@ -194,7 +194,7 @@ namespace
     EXPECT_DOUBLE_EQ(array_of_tensors[2](1), 7.0);
   }
 
-  TEST(TensorMatrixConversionTest, makeMatrixViewReinterpretation)
+  TEST(TensorConversionTest, makeMatrixViewReinterpretation)
   {
     Core::LinAlg::Tensor<double, 3> tensor = {{1.0, 2.0, 3.0}};
 
@@ -207,7 +207,7 @@ namespace
     EXPECT_DOUBLE_EQ(tensor(2), 7.0);
   }
 
-  TEST(TensorMatrixConversionTest, makeMatrix)
+  TEST(TensorConversionTest, makeMatrix)
   {
     Core::LinAlg::Tensor<double, 3, 2> tensor = {{{1.0, 2.0}, {3.0, 4.0}, {5.0, 6.0}}};
 
@@ -223,7 +223,7 @@ namespace
     EXPECT_DOUBLE_EQ(tensor(2, 0), 5.0);
   }
 
-  TEST(TensorMatrixConversionTest, makeMatrixReinterpretation)
+  TEST(TensorConversionTest, makeMatrixReinterpretation)
   {
     Core::LinAlg::Tensor<double, 3> tensor = {{1.0, 2.0, 3.0}};
 
@@ -236,7 +236,7 @@ namespace
     EXPECT_DOUBLE_EQ(tensor(2), 3.0);
   }
 
-  TEST(TensorMatrixConversionTest, MakeStressLikeVoigtView)
+  TEST(TensorConversionTest, MakeStressLikeVoigtView)
   {
     Core::LinAlg::SymmetricTensor<double, 3, 3> tensor =
         Core::LinAlg::assume_symmetry(Core::LinAlg::Tensor<double, 3, 3>{{
@@ -257,7 +257,7 @@ namespace
     EXPECT_DOUBLE_EQ(tensor(0, 1), 7.0);
   }
 
-  TEST(TensorMatrixConversionTest, MakeStrainLikeVoigtMatrix)
+  TEST(TensorConversionTest, MakeStrainLikeVoigtMatrix)
   {
     Core::LinAlg::SymmetricTensor<double, 3, 3> tensor =
         Core::LinAlg::assume_symmetry(Core::LinAlg::Tensor<double, 3, 3>{{
@@ -275,6 +275,44 @@ namespace
     EXPECT_DOUBLE_EQ(voigt_strain(5, 0), 12.0);
 
     EXPECT_DOUBLE_EQ(tensor(0, 1), 4.0);
+  }
+
+  TEST(TensorConversionTest, MakeTensorFromNestedArray)
+  {
+    std::array<std::array<double, 2>, 3> nested_array = {{
+        {1.0, 2.0},
+        {3.0, 4.0},
+        {5.0, 6.0},
+    }};
+    Core::LinAlg::Tensor<double, 3, 2> tensor =
+        Core::LinAlg::make_tensor_from_nested_array<double, 3, 2>(nested_array);
+
+
+    EXPECT_DOUBLE_EQ(tensor(0, 0), 1.0);
+    EXPECT_DOUBLE_EQ(tensor(1, 0), 3.0);
+    EXPECT_DOUBLE_EQ(tensor(2, 0), 5.0);
+    EXPECT_DOUBLE_EQ(tensor(0, 1), 2.0);
+    EXPECT_DOUBLE_EQ(tensor(1, 1), 4.0);
+    EXPECT_DOUBLE_EQ(tensor(2, 1), 6.0);
+  }
+
+  TEST(TensorConversionTest, MakeNestedArrayFromTensor)
+  {
+    Core::LinAlg::Tensor<double, 3, 2> tensor = {{
+        {1.0, 2.0},
+        {3.0, 4.0},
+        {5.0, 6.0},
+    }};
+    std::array<std::array<double, 2>, 3> nested_array =
+        Core::LinAlg::make_nested_array_from_tensor(tensor);
+
+
+    EXPECT_DOUBLE_EQ(nested_array[0][0], 1.0);
+    EXPECT_DOUBLE_EQ(nested_array[1][0], 3.0);
+    EXPECT_DOUBLE_EQ(nested_array[2][0], 5.0);
+    EXPECT_DOUBLE_EQ(nested_array[0][1], 2.0);
+    EXPECT_DOUBLE_EQ(nested_array[1][1], 4.0);
+    EXPECT_DOUBLE_EQ(nested_array[2][1], 6.0);
   }
 }  // namespace
 

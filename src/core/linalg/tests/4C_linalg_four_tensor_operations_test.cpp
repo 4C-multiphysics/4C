@@ -13,8 +13,8 @@
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
 #include "4C_linalg_symmetric_tensor.hpp"
 #include "4C_linalg_symmetric_tensor_eigen.hpp"
+#include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
-#include "4C_linalg_tensor_matrix_conversion.hpp"
 #include "4C_unittest_utils_assertions_test.hpp"
 
 FOUR_C_NAMESPACE_OPEN

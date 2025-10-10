@@ -18,7 +18,7 @@
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_symmetric_tensor.hpp"
 #include "4C_linalg_tensor.hpp"
-#include "4C_linalg_tensor_matrix_conversion.hpp"
+#include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_utils_densematrix_multiply.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_mat_so3_material.hpp"

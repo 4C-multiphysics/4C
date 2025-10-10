@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_io_input_spec_proxy_types.hpp"
 #include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 
@@ -159,6 +160,9 @@ namespace Core::IO
 
   template <typename T1, typename T2>
   void emit_value_as_yaml(YamlNodeRef node, const std::pair<T1, T2>& value);
+
+  template <ProxyTypeConcept T>
+  void emit_value_as_yaml(YamlNodeRef node, const T& value);
 
   /**
    * Bitmask enum indicating the status of reading a value from a yaml node.
@@ -366,6 +370,16 @@ namespace Core::IO
       }
       return status;
     }
+
+    template <ProxyTypeConcept T>
+    [[nodiscard]] YamlReadStatus read_value_from_yaml(ConstYamlNodeRef node, T& value)
+    {
+      typename ProxyType<T>::type proxy_value{};
+      auto status = read_value_from_yaml(node, proxy_value);
+
+      value = ProxyType<T>::to_value(proxy_value);
+      return status;
+    }
   }  // namespace Internal
 
   template <typename T>
@@ -499,6 +513,12 @@ void Core::IO::emit_value_as_yaml(YamlNodeRef node, const std::pair<T1, T2>& val
 
   auto second_child = node.wrap(node.node.append_child());
   emit_value_as_yaml(second_child, value.second);
+}
+
+template <Core::IO::ProxyTypeConcept T>
+void Core::IO::emit_value_as_yaml(YamlNodeRef node, const T& value)
+{
+  emit_value_as_yaml(node, ProxyType<T>::from_value(value));
 }
 
 FOUR_C_NAMESPACE_CLOSE

@@ -11,8 +11,8 @@
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_symmetric_tensor.hpp"
+#include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
-#include "4C_linalg_tensor_matrix_conversion.hpp"
 #include "4C_material_parameter_base.hpp"
 #include "4C_mixture_growth_strategy.hpp"
 

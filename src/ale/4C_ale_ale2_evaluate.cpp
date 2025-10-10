@@ -11,7 +11,7 @@
 #include "4C_fem_general_utils_fem_shapefunctions.hpp"
 #include "4C_fem_general_utils_nurbs_shapefunctions.hpp"
 #include "4C_fem_nurbs_discretization.hpp"
-#include "4C_linalg_tensor_matrix_conversion.hpp"
+#include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_utils_densematrix_multiply.hpp"
 #include "4C_mat_elasthyper.hpp"
 #include "4C_mat_so3_material.hpp"

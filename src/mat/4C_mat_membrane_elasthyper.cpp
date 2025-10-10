@@ -8,7 +8,7 @@
 #include "4C_mat_membrane_elasthyper.hpp"
 
 #include "4C_comm_pack_helpers.hpp"
-#include "4C_linalg_tensor_matrix_conversion.hpp"
+#include "4C_linalg_tensor_conversion.hpp"
 #include "4C_mat_elast_summand.hpp"
 #include "4C_mat_membrane_elasthyper_service.hpp"
 

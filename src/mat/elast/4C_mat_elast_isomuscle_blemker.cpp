@@ -11,7 +11,7 @@
 #include "4C_linalg_fixedsizematrix_generators.hpp"
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
-#include "4C_linalg_tensor_matrix_conversion.hpp"
+#include "4C_linalg_tensor_conversion.hpp"
 #include "4C_mat_elast_aniso_structuraltensor_strategy.hpp"
 #include "4C_mat_elasthyper_service.hpp"
 #include "4C_mat_muscle_utils.hpp"

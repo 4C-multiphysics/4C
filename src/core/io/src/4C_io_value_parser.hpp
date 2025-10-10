@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_io_input_spec_proxy_types.hpp"
 #include "4C_io_input_types.hpp"
 #include "4C_utils_demangle.hpp"
 #include "4C_utils_enum.hpp"
@@ -265,6 +266,15 @@ namespace Core::IO
         read_internal(value[key]);
       }
       size_info_--;
+    }
+
+    template <ProxyTypeConcept T>
+    void read_internal(T& value)
+    {
+      typename ProxyType<T>::type proxy_value{};
+      read_internal(proxy_value);
+
+      value = ProxyType<T>::to_value(proxy_value);
     }
 
     //! The data to parse from.

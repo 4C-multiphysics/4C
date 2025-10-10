@@ -17,7 +17,7 @@
 #include "4C_fem_general_utils_integration.hpp"
 #include "4C_fem_general_utils_polynomial.hpp"
 #include "4C_global_data.hpp"
-#include "4C_linalg_tensor_matrix_conversion.hpp"
+#include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_utils_densematrix_multiply.hpp"
 #include "4C_mat_list.hpp"
 #include "4C_mat_myocard.hpp"

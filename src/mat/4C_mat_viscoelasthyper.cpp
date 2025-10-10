@@ -12,7 +12,7 @@
 #include "4C_linalg_fixedsizematrix_tensor_products.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_symmetric_tensor.hpp"
-#include "4C_linalg_tensor_matrix_conversion.hpp"
+#include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_utils_densematrix_inverse.hpp"
 #include "4C_mat_elast_summand.hpp"
 #include "4C_mat_elast_visco_generalizedgenmax.hpp"

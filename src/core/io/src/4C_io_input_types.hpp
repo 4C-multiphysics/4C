@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_io_input_spec_proxy_types.hpp"
 #include "4C_utils_enum.hpp"
 
 #include <array>
@@ -102,6 +103,11 @@ namespace Core::IO
 
     template <typename T>
     struct SupportedTypeHelper<std::optional<T>> : SupportedTypeHelper<T>
+    {
+    };
+
+    template <ProxyTypeConcept T>
+    struct SupportedTypeHelper<T> : SupportedTypeHelper<typename ProxyType<T>::type>
     {
     };
 
@@ -201,6 +207,8 @@ namespace Core::IO
    * - `std::map<std::string, T>`, where `T` is one of the supported types
    * - `std::tuple<Ts...>`, where all `Ts` are one of the supported types
    * - `std::pair<T1, T2>`, where `T1` and `T2` are both one of the supported types
+   * - `Core::LinAlg::Tensor<T, ...>`, where `T` is one of the supported types
+   * - `Core::LinAlg::SymmetricTensor<T, ...>`, where `T` is one of the supported types
    */
   template <typename T>
   concept SupportedType = Internal::SupportedTypeHelper<T>::value;

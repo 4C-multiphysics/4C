@@ -8,7 +8,7 @@
 #include "4C_mixture_prestress_strategy_constant.hpp"
 
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
-#include "4C_linalg_tensor_matrix_conversion.hpp"
+#include "4C_linalg_tensor_conversion.hpp"
 #include "4C_mat_anisotropy.hpp"
 #include "4C_mat_anisotropy_coordinate_system_provider.hpp"
 #include "4C_mat_elast_isoneohooke.hpp"

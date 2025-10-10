@@ -12,7 +12,7 @@
 #include "4C_linalg_fixedsizematrix_solver.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
 #include "4C_linalg_serialdensevector.hpp"
-#include "4C_linalg_tensor_matrix_conversion.hpp"
+#include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_mat_service.hpp"

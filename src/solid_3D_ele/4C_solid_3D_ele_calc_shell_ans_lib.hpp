@@ -13,8 +13,8 @@
 #include "4C_fem_general_cell_type.hpp"
 #include "4C_fem_general_cell_type_traits.hpp"
 #include "4C_linalg_tensor.hpp"
+#include "4C_linalg_tensor_conversion.hpp"
 #include "4C_linalg_tensor_generators.hpp"
-#include "4C_linalg_tensor_matrix_conversion.hpp"
 #include "4C_mat_material_factory.hpp"
 #include "4C_solid_3D_ele_calc_lib.hpp"
 
