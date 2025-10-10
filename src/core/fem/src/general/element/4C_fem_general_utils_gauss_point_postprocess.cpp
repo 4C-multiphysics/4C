@@ -61,7 +61,7 @@ void Core::FE::assemble_nodal_element_count(
 
     if (lid != -1)
     {
-      global_count[lid] += 1;
+      global_count.get_local_values()[lid] += 1;
     }
   }
 }

@@ -114,7 +114,7 @@ int Core::DOFSets::DofSetMergedWrapper::assign_degrees_of_freedom(
       if (slavelid == -1) FOUR_C_THROW("slave gid {} was not found on this proc", slavegid);
 
       // save master gid at col lid of corresponding slave node
-      (my_master_nodegids_row_layout)[slavelid] = gid;
+      (my_master_nodegids_row_layout.get_local_values())[slavelid] = gid;
     }
   }
 
@@ -174,7 +174,7 @@ int Core::DOFSets::DofSetMergedWrapper::assign_degrees_of_freedom(
       if (slavelid == -1) FOUR_C_THROW("slave gid {} was not found on this proc", slavegid);
 
       // save master gid at col lid of corresponding slave node
-      (my_slave_nodegids_row_layout)[slavelid] = gid;
+      (my_slave_nodegids_row_layout.get_local_values())[slavelid] = gid;
     }
   }
 

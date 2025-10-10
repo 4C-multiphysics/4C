@@ -1708,7 +1708,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_nts(
 
     // extract master-side element associated with current slave-side node
     auto* const masterelement = dynamic_cast<Mortar::Element* const>(
-        idiscret.g_element(islavenodestomasterelements[inode]));
+        idiscret.g_element(islavenodestomasterelements.get_local_values()[inode]));
     if (!masterelement) FOUR_C_THROW("Invalid master-side mortar element!");
 
     // safety check
@@ -1726,10 +1726,10 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_nts(
 
     // evaluate current slave-side node
     evaluate_slave_node(idiscret, *slavenode, islavenodeslumpedareas[inode],
-        (Inpar::ScaTra::ImplType)islavenodesimpltypes[inode], *slaveelement, *masterelement,
-        la_slave, la_master, params, strategy.cell_matrix1(), strategy.cell_matrix2(),
-        strategy.cell_matrix3(), strategy.cell_matrix4(), strategy.cell_vector1(),
-        strategy.cell_vector2());
+        (Inpar::ScaTra::ImplType)islavenodesimpltypes.get_local_values()[inode], *slaveelement,
+        *masterelement, la_slave, la_master, params, strategy.cell_matrix1(),
+        strategy.cell_matrix2(), strategy.cell_matrix3(), strategy.cell_matrix4(),
+        strategy.cell_vector1(), strategy.cell_vector2());
 
     // assemble cell matrices and vectors into system matrices and vectors
     strategy.assemble_cell_matrices_and_vectors(la_slave, la_master, slavenode->owner());
@@ -1782,8 +1782,9 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_mortar_elements(const Core::LinAlg::
         la, la);  // second function argument only serves as dummy
 
     // evaluate current mortar element
-    evaluate_mortar_element(idiscret, *element, (Inpar::ScaTra::ImplType)ieleimpltypes[ielement],
-        la, params, strategy.cell_matrix1(), strategy.cell_matrix2(), strategy.cell_matrix3(),
+    evaluate_mortar_element(idiscret, *element,
+        (Inpar::ScaTra::ImplType)ieleimpltypes.get_local_values()[ielement], la, params,
+        strategy.cell_matrix1(), strategy.cell_matrix2(), strategy.cell_matrix3(),
         strategy.cell_matrix4(), strategy.cell_vector1(), strategy.cell_vector2());
 
     // assemble element matrices and vectors into system matrices and vectors
@@ -2293,12 +2294,13 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
           Core::LinAlg::Vector<int> impltypes_row(*interface.slave_row_elements());
           for (int iele = 0; iele < interface.slave_row_elements()->num_my_elements(); ++iele)
           {
-            impltypes_row[iele] = dynamic_cast<const Discret::Elements::Transport*>(
-                std::dynamic_pointer_cast<const Core::Elements::FaceElement>(
-                    kinetics_slave_cond.second->geometry().at(
-                        interface.slave_row_elements()->gid(iele)))
-                    ->parent_element())
-                                      ->impl_type();
+            impltypes_row.get_local_values()[iele] =
+                dynamic_cast<const Discret::Elements::Transport*>(
+                    std::dynamic_pointer_cast<const Core::Elements::FaceElement>(
+                        kinetics_slave_cond.second->geometry().at(
+                            interface.slave_row_elements()->gid(iele)))
+                        ->parent_element())
+                    ->impl_type();
           }
 
           // perform parallel redistribution if desired
@@ -2333,9 +2335,10 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
           {
             imortarcells_[condid][icell] =
                 std::pair<std::shared_ptr<Mortar::IntCell>, Inpar::ScaTra::ImplType>(
-                    imortarcells[icell], static_cast<Inpar::ScaTra::ImplType>(
-                                             impltypes_col[interface.slave_col_elements()->lid(
-                                                 imortarcells[icell]->get_slave_id())]));
+                    imortarcells[icell],
+                    static_cast<Inpar::ScaTra::ImplType>(
+                        impltypes_col.get_local_values()[interface.slave_col_elements()->lid(
+                            imortarcells[icell]->get_slave_id())]));
           }
         }
 
@@ -2431,22 +2434,23 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
                 FOUR_C_THROW("Invalid discretization type of master-side element!");
 
               // projected node lies inside master-side element
-              (*islavenodestomasterelements)[inode] = master_mortar_ele->id();
+              (*islavenodestomasterelements).get_local_values()[inode] = master_mortar_ele->id();
               break;
             }
 
             // safety check
-            if ((*islavenodestomasterelements)[inode] == -1)
+            if ((*islavenodestomasterelements).get_local_values()[inode] == -1)
               FOUR_C_THROW("Couldn't match slave-side node with master-side element!");
 
             // determine physical implementation type of slave-side node based on first associated
             // element
-            (*islavenodesimpltypes)[inode] = dynamic_cast<Discret::Elements::Transport*>(
-                std::dynamic_pointer_cast<Core::Elements::FaceElement>(
-                    kinetics_slave_cond.second->geometry().at(
-                        slavenode->adjacent_elements()[0].user_element()->id()))
-                    ->parent_element())
-                                                 ->impl_type();
+            (*islavenodesimpltypes).get_local_values()[inode] =
+                dynamic_cast<Discret::Elements::Transport*>(
+                    std::dynamic_pointer_cast<Core::Elements::FaceElement>(
+                        kinetics_slave_cond.second->geometry().at(
+                            slavenode->adjacent_elements()[0].user_element()->id()))
+                        ->parent_element())
+                    ->impl_type();
           }
 
           // extract slave-side elerowmap
@@ -2460,11 +2464,12 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
           for (int ielement = 0; ielement < elecolmap_slave.num_my_elements(); ++ielement)
           {
             // determine physical implementation type of current slave-side element
-            islaveelementsimpltypes[ielement] = dynamic_cast<Discret::Elements::Transport*>(
-                std::dynamic_pointer_cast<Core::Elements::FaceElement>(
-                    kinetics_slave_cond.second->geometry().at(elecolmap_slave.gid(ielement)))
-                    ->parent_element())
-                                                    ->impl_type();
+            islaveelementsimpltypes.get_local_values()[ielement] =
+                dynamic_cast<Discret::Elements::Transport*>(
+                    std::dynamic_pointer_cast<Core::Elements::FaceElement>(
+                        kinetics_slave_cond.second->geometry().at(elecolmap_slave.gid(ielement)))
+                        ->parent_element())
+                    ->impl_type();
           }
 
           // create parameter list for slave-side elements
@@ -3564,7 +3569,7 @@ void ScaTra::MeshtyingStrategyS2I::init_meshtying()
     {
       if (conditioned_node_ids.contains(inode))
         // add one degree of freedom for scatra-scatra interface layer thickness to current node
-        (*numdofpernode)[inode] = 1;
+        (*numdofpernode).get_local_values()[inode] = 1;
     }
 
     int number_dofsets = scatratimint_->get_max_dof_set_number();

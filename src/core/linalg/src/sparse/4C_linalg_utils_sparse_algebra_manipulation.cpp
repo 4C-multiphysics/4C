@@ -120,7 +120,7 @@ void Core::LinAlg::export_to(
         if (gid < 0) FOUR_C_THROW("No gid for i");
         const int lid = source.get_map().lid(gid);
         if (lid < 0) continue;
-        target[i] = source[lid];
+        target.get_local_values()[i] = source.get_local_values()[lid];
       }
       return;
     }

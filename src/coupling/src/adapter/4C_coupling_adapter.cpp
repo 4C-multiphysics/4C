@@ -372,7 +372,7 @@ void Coupling::Adapter::Coupling::finish_coupling(const Core::FE::Discretization
 
   std::shared_ptr<const Core::LinAlg::Map> permmasternodemap =
       std::make_shared<Core::LinAlg::Map>(-1, permmasternodevec->local_length(),
-          permmasternodevec->get_values(), 0, masterdis.get_comm());
+          permmasternodevec->get_local_values().data(), 0, masterdis.get_comm());
 
   if (not slavenodemap->point_same_as(*permmasternodemap))
     FOUR_C_THROW("slave and permuted master node maps do not match");
@@ -641,7 +641,7 @@ void Coupling::Adapter::Coupling::master_to_slave(
     const Core::LinAlg::Vector<int>& mv, Core::LinAlg::Vector<int>& sv) const
 {
   Core::LinAlg::Vector<int> perm(*permslavedofmap_);
-  std::copy(mv.get_values(), mv.get_values() + (mv.local_length()), perm.get_values());
+  std::ranges::copy(mv.get_local_values(), perm.get_local_values().begin());
 
   const int err = sv.export_to(perm, *slaveexport_, Insert);
   if (err) FOUR_C_THROW("Export to slave distribution returned err={}", err);
@@ -672,6 +672,7 @@ void Coupling::Adapter::Coupling::slave_to_master(
   std::copy(
       sv.get_values(), sv.get_values() + (sv.local_length() * sv.num_vectors()), perm.get_values());
 
+
   const int err = mv.export_to(perm, *masterexport_, Insert);
   if (err) FOUR_C_THROW("Export to master distribution returned err={}", err);
 }
@@ -683,7 +684,7 @@ void Coupling::Adapter::Coupling::slave_to_master(
     const Core::LinAlg::Vector<int>& sv, Core::LinAlg::Vector<int>& mv) const
 {
   Core::LinAlg::Vector<int> perm(*permmasterdofmap_);
-  std::copy(sv.get_values(), sv.get_values() + (sv.local_length()), perm.get_values());
+  std::ranges::copy(sv.get_local_values(), perm.get_local_values().begin());
 
   const int err = mv.export_to(perm, *masterexport_, Insert);
   if (err) FOUR_C_THROW("Export to master distribution returned err={}", err);

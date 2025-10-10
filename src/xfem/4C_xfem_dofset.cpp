@@ -23,7 +23,7 @@ void XFEM::XFEMDofSet::dof(
   const int lid = node->lid();
   if (lid == -1) return;
   int numdf = Core::DOFSets::DofSet::num_dof_per_node(*node);
-  const int idx = (*idxcolnodes_)[lid] + nodal_dofset_id * numdf;
+  const int idx = idxcolnodes_->get_local_values()[lid] + nodal_dofset_id * numdf;
   dofs.reserve(numdf);
   for (int i = 0; i < numdf; ++i)
   {

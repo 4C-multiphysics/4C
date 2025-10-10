@@ -112,7 +112,7 @@ namespace Core::DOFSets
     {
       int lid = node->lid();
       if (lid == -1) return 0;
-      return (*numdfcolnodes_)[lid];
+      return (numdfcolnodes_->get_local_values())[lid];
     }
 
     /// Get number of dofs for given element
@@ -122,9 +122,9 @@ namespace Core::DOFSets
       int lid = element->lid();
       if (lid == -1) return 0;
       if (element->is_face_element())
-        return (numdfcolfaces_ != nullptr) ? (*numdfcolfaces_)[lid] : 0;
+        return (numdfcolfaces_ != nullptr) ? (numdfcolfaces_->get_local_values())[lid] : 0;
       else
-        return (*numdfcolelements_)[lid];
+        return (numdfcolelements_->get_local_values())[lid];
     }
 
     /// Get the gid of a dof for given node
@@ -133,9 +133,9 @@ namespace Core::DOFSets
       int lid = node->lid();
       if (lid == -1) return -1;
       if (pccdofhandling_)
-        return dofscolnodes_->gid((*shiftcolnodes_)[lid] + dof);
+        return dofscolnodes_->gid((shiftcolnodes_->get_local_values())[lid] + dof);
       else
-        return (*idxcolnodes_)[lid] + dof;
+        return (idxcolnodes_->get_local_values())[lid] + dof;
     }
 
     /// Get the gid of a dof for given element
@@ -144,9 +144,9 @@ namespace Core::DOFSets
       int lid = element->lid();
       if (lid == -1) return -1;
       if (element->is_face_element())
-        return (idxcolfaces_ != nullptr) ? (*idxcolfaces_)[lid] + dof : -1;
+        return (idxcolfaces_ != nullptr) ? (idxcolfaces_->get_local_values())[lid] + dof : -1;
       else
-        return (*idxcolelements_)[lid] + dof;
+        return (idxcolelements_->get_local_values())[lid] + dof;
     }
 
     /// Get the gid of all dofs of a node
@@ -154,12 +154,12 @@ namespace Core::DOFSets
     {
       const int lid = node->lid();
       if (lid == -1) return std::vector<int>();
-      const int idx = (*idxcolnodes_)[lid];
-      std::vector<int> dof((*numdfcolnodes_)[lid]);
+      const int idx = (idxcolnodes_->get_local_values())[lid];
+      std::vector<int> dof((numdfcolnodes_->get_local_values())[lid]);
       for (unsigned i = 0; i < dof.size(); ++i)
       {
         if (pccdofhandling_)
-          dof[i] = dofscolnodes_->gid((*shiftcolnodes_)[lid] + i);
+          dof[i] = dofscolnodes_->gid((shiftcolnodes_->get_local_values())[lid] + i);
         else
           dof[i] = idx + i;
       }
@@ -184,9 +184,11 @@ namespace Core::DOFSets
 
       if (element->is_face_element() && idxcolfaces_ == nullptr) return std::vector<int>();
 
-      int idx = element->is_face_element() ? (*idxcolfaces_)[lid] : (*idxcolelements_)[lid];
-      std::vector<int> dof(
-          element->is_face_element() ? (*numdfcolfaces_)[lid] : (*numdfcolelements_)[lid]);
+      int idx = element->is_face_element() ? (idxcolfaces_->get_local_values())[lid]
+                                           : (idxcolelements_->get_local_values())[lid];
+      std::vector<int> dof(element->is_face_element()
+                               ? (numdfcolfaces_->get_local_values())[lid]
+                               : (numdfcolelements_->get_local_values())[lid]);
       for (unsigned i = 0; i < dof.size(); ++i) dof[i] = idx + i;
       return dof;
     }
@@ -196,12 +198,12 @@ namespace Core::DOFSets
     {
       int lid = node->lid();
       if (lid == -1) return;
-      int idx = (*idxcolnodes_)[lid];
-      int size = (*numdfcolnodes_)[lid];
+      int idx = (idxcolnodes_->get_local_values())[lid];
+      int size = (numdfcolnodes_->get_local_values())[lid];
       for (int i = 0; i < size; ++i)
       {
         if (pccdofhandling_)
-          lm.push_back(dofscolnodes_->gid((*shiftcolnodes_)[lid] + i));
+          lm.push_back(dofscolnodes_->gid((shiftcolnodes_->get_local_values())[lid] + i));
         else
           lm.push_back(idx + i);
       }
@@ -215,13 +217,13 @@ namespace Core::DOFSets
     {
       const int lid = node->lid();
       if (lid == -1) return;
-      const int idx = (*idxcolnodes_)[lid];
-      const int size = (*numdfcolnodes_)[lid];
+      const int idx = (idxcolnodes_->get_local_values())[lid];
+      const int size = (numdfcolnodes_->get_local_values())[lid];
       FOUR_C_ASSERT(lm.size() >= (startindex + size), "vector<int> lm too small");
       for (int i = 0; i < size; ++i)
       {
         if (pccdofhandling_)
-          lm[startindex + i] = dofscolnodes_->gid((*shiftcolnodes_)[lid] + i);
+          lm[startindex + i] = dofscolnodes_->gid((shiftcolnodes_->get_local_values())[lid] + i);
         else
           lm[startindex + i] = idx + i;
       }
@@ -235,8 +237,10 @@ namespace Core::DOFSets
 
       if (element->is_face_element() && idxcolfaces_ == nullptr) return;
 
-      int idx = element->is_face_element() ? (*idxcolfaces_)[lid] : (*idxcolelements_)[lid];
-      int size = element->is_face_element() ? (*numdfcolfaces_)[lid] : (*numdfcolelements_)[lid];
+      int idx = element->is_face_element() ? (idxcolfaces_->get_local_values())[lid]
+                                           : (idxcolelements_->get_local_values())[lid];
+      int size = element->is_face_element() ? (numdfcolfaces_->get_local_values())[lid]
+                                            : (numdfcolelements_->get_local_values())[lid];
       for (int i = 0; i < size; ++i) lm.push_back(idx + i);
     }
 
@@ -249,14 +253,14 @@ namespace Core::DOFSets
     {
       const int lid = node->lid();
       if (lid == -1) return;
-      const int idx = (*idxcolnodes_)[lid];
+      const int idx = (idxcolnodes_->get_local_values())[lid];
       // this method is used to setup the vector of number of dofs, so we cannot ask
       // numdfcolelements_ here as above. Instead we have to ask the node itself
       const int size = num_dof_per_node(*element, *node);
       for (int i = 0; i < size; ++i)
       {
         if (pccdofhandling_)
-          lm.push_back(dofscolnodes_->gid((*shiftcolnodes_)[lid] + i));
+          lm.push_back(dofscolnodes_->gid((shiftcolnodes_->get_local_values())[lid] + i));
         else
           lm.push_back(idx + i);
       }

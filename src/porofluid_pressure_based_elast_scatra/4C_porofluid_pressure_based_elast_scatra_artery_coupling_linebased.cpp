@@ -147,7 +147,7 @@ std::shared_ptr<Core::LinAlg::Map> PoroPressureBased::
       // incremental form as this will force the value to zero
       for (const auto& current_dof : dofs)
         rhs_artery_with_collapsed.replace_global_value(
-            current_dof, -(*phinp_art_)[dof_row_map->lid(current_dof)]);
+            current_dof, -phinp_art_->get_values()[dof_row_map->lid(current_dof)]);
     }
   }
 
@@ -686,7 +686,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
     const Core::Elements::Element* current_element = artery_dis_->l_col_element(i);
     const int ele_gid = current_element->id();
 
-    double diameter = (*artery_elements_diameters_col_)[i];
+    double diameter = artery_elements_diameters_col_->get_values()[i];
 
     // set to zero for free-hanging elements
     if (delete_free_hanging_elements_)
@@ -744,8 +744,8 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
         std::accumulate(segment_lengths.begin(), segment_lengths.end(), 0.0);
     // diam = int(diam)/length_element
     // also add the unaffected diameter --> diameter of artery elements which protrude
-    const double diameter = ((*integrated_artery_diameters_col_)[i] +
-                                (*unaffected_integrated_artery_diameters_col_)[i]) /
+    const double diameter = (integrated_artery_diameters_col_->get_values()[i] +
+                                unaffected_integrated_artery_diameters_col_->get_values()[i]) /
                             current_ele_length;
 
     artery_elements_diameters_col_->replace_local_value(i, diameter);
@@ -793,7 +793,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
   {
     // if not visited start a new connected component
     if (Core::Nodes::Node* current_node = artery_fully_overlapping_dis->l_col_node(i);
-        (*visited)[current_node->lid()] == 0)
+        visited->get_local_values()[current_node->lid()] == 0)
     {
       connected_components.push_back(std::vector<int>());
       // recursive call to depth-first search
@@ -903,14 +903,14 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::de
 {
   // mark this node visited and add it to this connected component
   const int lid = checked_nodes->get_map().lid(current_node->id());
-  (*checked_nodes)[lid] = 1;
+  (*checked_nodes).get_local_values()[lid] = 1;
   current_connected_component.push_back(current_node->id());
 
   // check all adjacent elements (edges)
   for (auto ele : current_node->adjacent_elements())
   {
     // get diameter
-    const double diameter = (*artery_ele_diameters_fully_overlapping)[ele.local_id()];
+    const double diameter = artery_ele_diameters_fully_overlapping->get_values()[ele.local_id()];
 
     // get the artery-material
     std::shared_ptr<Mat::Cnst1dArt> artery_material =
@@ -923,7 +923,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::de
     {
       for (auto node : ele.nodes())
       {
-        if ((*checked_nodes)[node.local_id()] == 0)
+        if (checked_nodes->get_local_values()[node.local_id()] == 0)
           depth_first_search(node.user_node(), checked_nodes, artery_dis_fully_overlapping,
               artery_ele_diameters_fully_overlapping, current_connected_component);
       }

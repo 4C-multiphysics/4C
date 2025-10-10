@@ -52,8 +52,8 @@ void Core::DOFSets::DofSet::print(std::ostream& os) const
         os << "-------------------------- Proc " << proc << " :\n";
       for (int i = 0; i < numdfcolelements_->local_length(); ++i)
       {
-        int numdf = (*numdfcolelements_)[i];
-        int idx = (*idxcolelements_)[i];
+        int numdf = (numdfcolelements_->get_local_values())[i];
+        int idx = (idxcolelements_->get_local_values())[i];
         os << i << ": ";
         for (int j = 0; j < numdf; ++j) os << (idx + j) << " ";
         os << "\n";
@@ -70,8 +70,8 @@ void Core::DOFSets::DofSet::print(std::ostream& os) const
         os << "-------------------------- Proc " << proc << " :\n";
       for (int i = 0; i < numdfcolnodes_->local_length(); ++i)
       {
-        int numdf = (*numdfcolnodes_)[i];
-        int idx = (*idxcolnodes_)[i];
+        int numdf = (numdfcolnodes_->get_local_values())[i];
+        int idx = (idxcolnodes_->get_local_values())[i];
 
         os << i << ": ";
         for (int j = 0; j < numdf; ++j) os << (idx + j) << " ";
@@ -89,8 +89,8 @@ void Core::DOFSets::DofSet::print(std::ostream& os) const
         os << "-------------------------- Proc " << proc << " :\n";
       for (int i = 0; i < numdfcolfaces_->local_length(); ++i)
       {
-        int numdf = (*numdfcolfaces_)[i];
-        int idx = (*idxcolfaces_)[i];
+        int numdf = (numdfcolfaces_->get_local_values())[i];
+        int idx = (idxcolfaces_->get_local_values())[i];
         os << i << ": ";
         for (int j = 0; j < numdf; ++j) os << (idx + j) << " ";
         os << "\n";
@@ -221,7 +221,7 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
     for (int i = 0; i < numrownodes; ++i)
     {
       Core::Nodes::Node* actnode = dis.l_row_node(i);
-      num_dof_rownodes[i] = num_dof_per_node(*actnode);
+      num_dof_rownodes.get_local_values()[i] = num_dof_per_node(*actnode);
     }
 
     int minnodegid = get_minimal_node_gid_if_relevant(dis);
@@ -303,18 +303,18 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
       {
         if (condition_id == -1) continue;
         // check total number of dofs and determine which dofs are to be coupled
-        if (numdofcond[condition_id] != num_dof_rownodes[i])
+        if (numdofcond[condition_id] != num_dof_rownodes.get_local_values()[i])
           FOUR_C_THROW("ERROR: Number of DoFs in coupling condition {} does not match node {}",
-              numdofcond[condition_id], num_dof_rownodes[i]);
+              numdofcond[condition_id], num_dof_rownodes.get_local_values()[i]);
         if (masterIds[condition_id] != gid) is_slave = true;
       }
 
       if (is_slave)
       {  // in case it is a slave node (in some dof): the dof is cancelled, replaced by the master
          // dof
-        int numdf = num_dof_rownodes[i];
+        int numdf = num_dof_rownodes.get_local_values()[i];
         int dof = count + (gid - minnodegid) * maxnodenumdf;
-        idxrownodes[i] = dof;
+        idxrownodes.get_local_values()[i] = dof;
         std::vector<int>& dofs = nodedofset[gid];
         dofs.reserve(numdf);
         for (int j = 0; j < numdf; ++j)
@@ -338,9 +338,9 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
       // standard treatment for non-coupling nodes and master coupling nodes
       {
         // now treat only the nodes, which are master and thus did not get the special treatment
-        int numdf = num_dof_rownodes[i];
+        int numdf = num_dof_rownodes.get_local_values()[i];
         int dof = count + (gid - minnodegid) * maxnodenumdf;
-        idxrownodes[i] = dof;
+        idxrownodes.get_local_values()[i] = dof;
         std::vector<int>& dofs = nodedofset[gid];
         dofs.reserve(numdf);
         for (int j = 0; j < numdf; ++j)
@@ -392,7 +392,8 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
           if (faces[face]->owner() == mypid)
           {
             const int mylid = facedis->face_row_map()->lid(faces[face]->id());
-            numdfrowfaces[mylid] = num_dof_per_face(*(dis.l_col_element(i)), face);
+            numdfrowfaces.get_local_values()[mylid] =
+                num_dof_per_face(*(dis.l_col_element(i)), face);
           }
       }
 
@@ -408,9 +409,9 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
           {
             const int gid = faces[face]->id();
             const int mylid = facedis->face_row_map()->lid(gid);
-            int numdf = numdfrowfaces[mylid];
+            int numdf = numdfrowfaces.get_local_values()[mylid];
             int dof = count + (gid - minfacegid) * maxfacenumdf;
-            idxrowfaces[mylid] = dof;
+            idxrowfaces.get_local_values()[mylid] = dof;
             std::vector<int>& dofs = facedofset[gid];
             // do not visit the same face more than once
             if (dofs.empty())
@@ -444,7 +445,7 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
       Core::Elements::Element* actele = dis.l_row_element(i);
       // const int gid = actele->Id();
       int numdf = num_dof_per_element(*actele);
-      numdfrowelements[i] = numdf;
+      numdfrowelements.get_local_values()[i] = numdf;
     }
 
     int minelementgid = dis.element_row_map()->min_all_gid();
@@ -455,9 +456,9 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
     {
       Core::Elements::Element* actelement = dis.l_row_element(i);
       const int gid = actelement->id();
-      int numdf = numdfrowelements[i];
+      int numdf = numdfrowelements.get_local_values()[i];
       int dof = count + (gid - minelementgid) * maxelementnumdf;
-      idxrowelements[i] = dof;
+      idxrowelements.get_local_values()[i] = dof;
       std::vector<int>& dofs = elementdofset[gid];
       dofs.reserve(numdf);
       for (int j = 0; j < numdf; ++j)
@@ -549,12 +550,13 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
   {
     if (i == 0)
     {
-      (*shiftcolnodes_)[i] = 0;
+      (*shiftcolnodes_).get_local_values()[i] = 0;
     }
     else
     {
       Core::Nodes::Node* lastnode = dis.l_col_node(i - 1);
-      (*shiftcolnodes_)[i] = (*shiftcolnodes_)[i - 1] + num_dof_per_node(*lastnode);
+      (*shiftcolnodes_).get_local_values()[i] =
+          (shiftcolnodes_->get_local_values())[i - 1] + num_dof_per_node(*lastnode);
     }
   }
   // **********************************************************************

@@ -79,7 +79,7 @@ void FLD::Utils::DbcHdgFluid::read_dirichlet_condition(const Teuchos::ParameterL
           const int lid = discret.dof_row_map(0)->lid(gid);
 
           // set toggle vector
-          info.toggle[lid] = 1;
+          info.toggle.get_local_values()[lid] = 1;
           // amend vector of DOF-IDs which are Dirichlet BCs
           if (dbcgids[set_row] != nullptr) (*dbcgids[set_row]).insert(gid);
           pressureDone = true;
@@ -117,7 +117,7 @@ void FLD::Utils::DbcHdgFluid::read_dirichlet_condition(const Teuchos::ParameterL
         if (onoff[onesetj] == 0)
         {
           // no DBC on this dof, set toggle zero
-          info.toggle[lid] = 0;
+          info.toggle.get_local_values()[lid] = 0;
           // get rid of entry in DBC map - if it exists
           if (dbcgids[set_row] != nullptr) (*dbcgids[set_row]).erase(gid);
           continue;
@@ -125,7 +125,7 @@ void FLD::Utils::DbcHdgFluid::read_dirichlet_condition(const Teuchos::ParameterL
         else  // if (onoff[onesetj]==1)
         {
           // dof has DBC, set toggle vector one
-          info.toggle[lid] = 1;
+          info.toggle.get_local_values()[lid] = 1;
           // amend vector of DOF-IDs which are dirichlet BCs
           if (dbcgids[set_row] != nullptr) (*dbcgids[set_row]).insert(gid);
         }
@@ -363,7 +363,7 @@ void FLD::Utils::DbcHdgFluid::do_dirichlet_condition(const Teuchos::ParameterLis
         int onesetj = j / dofpercomponent;
 
         // check whether dof gid is a dbc gid
-        if (toggle[lid] == 0) continue;
+        if (toggle.get_local_values()[lid] == 0) continue;
 
         std::vector<double> value(deg + 1, val[onesetj]);
 

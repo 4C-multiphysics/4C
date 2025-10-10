@@ -392,7 +392,7 @@ namespace XFEM
       const Core::LinAlg::Map* elecolmap = bg_dis_->element_col_map();
       const int lid = elecolmap->lid(back_eid);
 
-      const int lsc_idx = (*ele_lsc_coup_idx_col_)[lid];
+      const int lsc_idx = ele_lsc_coup_idx_col_->get_local_values()[lid];
 
       return lsc_idx;
     }

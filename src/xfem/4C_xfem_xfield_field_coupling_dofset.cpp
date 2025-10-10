@@ -29,7 +29,7 @@ void XFEM::XFieldField::CouplingDofSet::dof(
   const int lid = node->lid();
   if (lid == -1) return;
   const int num_dof = num_standard_dof_per_node();
-  const int idx = (*idxcolnodes_)[lid] + nodal_dofset_id * num_dof;
+  const int idx = idxcolnodes_->get_local_values()[lid] + nodal_dofset_id * num_dof;
   dofs.resize(num_dof, 0);
   for (int i = 0; i < num_dof; ++i) dofs[i] = idx + i;
 }

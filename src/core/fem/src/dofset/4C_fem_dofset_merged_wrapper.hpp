@@ -234,7 +234,7 @@ namespace Core::DOFSets
     {
       FOUR_C_ASSERT(
           slaveLid < master_nodegids_col_layout_->local_length(), "Slave node Lid out of range!");
-      int mastergid = (*master_nodegids_col_layout_)[slaveLid];
+      int mastergid = (master_nodegids_col_layout_->get_local_values())[slaveLid];
       // std::cout<<"master gid = "<<mastergid<<" <-> slave lid ="<<slaveLid<<"  size of map =
       // "<<master_nodegids_col_layout_->MyLength()<<std::endl;
       return sourcedis_->g_node(mastergid);
@@ -245,7 +245,7 @@ namespace Core::DOFSets
     {
       FOUR_C_ASSERT(
           masterLid < slave_nodegids_col_layout_->local_length(), "Master node Lid out of range!");
-      int slavegid = (*slave_nodegids_col_layout_)[masterLid];
+      int slavegid = (slave_nodegids_col_layout_->get_local_values())[masterLid];
       return sourcedis_->g_node(slavegid);
     }
 

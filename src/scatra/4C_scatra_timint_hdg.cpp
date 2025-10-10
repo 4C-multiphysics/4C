@@ -68,7 +68,7 @@ void ScaTra::TimIntHDG::setup()
   for (int iele = 0; iele < discret_->num_my_col_elements(); ++iele)
   {
     auto* hdgele = dynamic_cast<Discret::Elements::ScaTraHDG*>(discret_->l_col_element(iele));
-    (*eledofs)[iele] = hdgele->num_dof_per_element_auxiliary();
+    (*eledofs).get_local_values()[iele] = hdgele->num_dof_per_element_auxiliary();
   }
 
   // add proxy for interior degrees of freedom to scatra discretization
@@ -454,7 +454,7 @@ void ScaTra::TimIntHDG::read_restart(const int step, std::shared_ptr<Core::IO::I
   {
     auto* hdgele = dynamic_cast<Discret::Elements::ScaTraHDG*>(discret_->l_col_element(iele));
     // store the number of dofs for the element
-    (*eledofs)[iele] = hdgele->num_dof_per_element_auxiliary();
+    (*eledofs).get_local_values()[iele] = hdgele->num_dof_per_element_auxiliary();
   }
 
   // create new local dofset for the new interior element dofs with adapted element order
@@ -1183,7 +1183,7 @@ void ScaTra::TimIntHDG::adapt_degree()
     Discret::Elements::ScaTraHDG* hdgele =
         dynamic_cast<Discret::Elements::ScaTraHDG*>(discret_->l_col_element(iele));
     // store the number of dofs for the element
-    (*eledofs)[iele] = hdgele->num_dof_per_element_auxiliary();
+    (*eledofs).get_local_values()[iele] = hdgele->num_dof_per_element_auxiliary();
   }
 
   // create new local dofset for the new interior element dofs with adapted element order

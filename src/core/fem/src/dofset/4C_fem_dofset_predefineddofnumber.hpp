@@ -140,7 +140,7 @@ namespace Core::DOFSets
       if (numdofpernodenodewise_ == nullptr)
         return numdofpernode_;
       else
-        return (*numdofpernodenodewise_)[node.lid()];
+        return (numdofpernodenodewise_->get_local_values())[node.lid()];
     }
 
     /// get number of element dofs for this element
@@ -149,7 +149,7 @@ namespace Core::DOFSets
       if (numdofperelementelewise_ == nullptr)
         return numdofperelement_;
       else
-        return (*numdofperelementelewise_)[element.lid()];
+        return (numdofperelementelewise_->get_local_values())[element.lid()];
     }
 
     /// get number of element dofs for this element

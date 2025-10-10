@@ -208,7 +208,7 @@ const Core::Nodes::Node* Core::DOFSets::DofSetDefinedMappingWrapper::get_source_
       targetLid <= targetlidtosourcegidmapping_->local_length(), "Target Lid out of range!");
 
   // get the gid of the source node
-  int sourcegid = (*targetlidtosourcegidmapping_)[targetLid];
+  int sourcegid = (targetlidtosourcegidmapping_->get_local_values())[targetLid];
 
   // the target is not mapped -> return null pointer
   if (sourcegid == -1) return nullptr;

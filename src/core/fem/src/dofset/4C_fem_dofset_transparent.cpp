@@ -67,10 +67,10 @@ void Core::DOFSets::TransparentDofSet::transfer_degrees_of_freedom(
     const std::vector<int> dofs = sourcedis.dof(0, sourcenode);
 
     const int newlid = newnode->lid();
-    const int numdofs = (*numdfcolnodes_)[newlid];
+    const int numdofs = (numdfcolnodes_->get_local_values())[newlid];
     if (numdofs > 0)
     {
-      (*idxcolnodes_)[newlid] = dofs[0];
+      (idxcolnodes_->get_local_values())[newlid] = dofs[0];
       for (int idof = 0; idof < numdofs; ++idof)
       {
         dofrowset.insert(dofs[idof]);
@@ -102,14 +102,10 @@ void Core::DOFSets::TransparentDofSet::transfer_degrees_of_freedom(
     }
     const std::vector<int> dofs = sourcedis.dof(0, sourcenode);
     const int newlid = newnode->lid();
-    // const int newfirstidx = (*idxcolnodes_)[newlid];
-    const int numdofs = (*numdfcolnodes_)[newlid];
+    const int numdofs = (numdfcolnodes_->get_local_values())[newlid];
     if (numdofs > 0)
     {
-      (*idxcolnodes_)[newlid] = dofs[0];
-      //        if(numdofs!=(int)dofs.size())
-      //           FOUR_C_THROW("numdofs {}!={} for node
-      //           {}",numdofs,(int)dofs.size(),newnode->Id());
+      (idxcolnodes_->get_local_values())[newlid] = dofs[0];
 
       for (int idof = 0; idof < numdofs; ++idof)
       {
@@ -251,7 +247,7 @@ void Core::DOFSets::TransparentDofSet::parallel_transfer_degrees_of_freedom(
     const std::vector<int> dofs = gid_to_dofs[newnode->id()];
 
     const int newlid = newnode->lid();
-    const int numdofs = (*numdfcolnodes_)[newlid];
+    const int numdofs = (numdfcolnodes_->get_local_values())[newlid];
 
     if (numdofs != (int)dofs.size())
     {
@@ -264,7 +260,7 @@ void Core::DOFSets::TransparentDofSet::parallel_transfer_degrees_of_freedom(
 
     if (numdofs > 0)
     {
-      (*idxcolnodes_)[newlid] = dofs[0];
+      idxcolnodes_->get_local_values()[newlid] = dofs[0];
 
       // slave-dofs must not enter the dofrowset (if master&slave are on different procs)
       std::set<int>::iterator curr = slaveset.find(newnode->id());
@@ -299,10 +295,10 @@ void Core::DOFSets::TransparentDofSet::parallel_transfer_degrees_of_freedom(
 
     const int newlid = newnode->lid();
     // const int newfirstidx = (*idxcolnodes_)[newlid];
-    const int numdofs = (*numdfcolnodes_)[newlid];
+    const int numdofs = (numdfcolnodes_->get_local_values())[newlid];
     if (numdofs > 0)
     {
-      (*idxcolnodes_)[newlid] = dofs[0];
+      idxcolnodes_->get_local_values()[newlid] = dofs[0];
       if (numdofs != (int)dofs.size())
         FOUR_C_THROW("numdofs {}!={} for node {}", numdofs, dofs.size(), newnode->id());
 

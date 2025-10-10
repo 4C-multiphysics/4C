@@ -308,7 +308,7 @@ void Core::FE::Dbc::read_dirichlet_condition(const Teuchos::ParameterList& param
       int onesetj = j % numdf;
 
       // get the current hierarchical order this dof is currently applying to
-      const int current_order = info.hierarchy[lid];
+      const int current_order = info.hierarchy.get_local_values()[lid];
 
       if (onoff[onesetj] == 0)
       {
@@ -318,7 +318,7 @@ void Core::FE::Dbc::read_dirichlet_condition(const Teuchos::ParameterList& param
         if (hierarchical_order < current_order)
         {
           // no DBC on this dof, set toggle zero
-          info.toggle[lid] = 0;
+          info.toggle.get_local_values()[lid] = 0;
 
           // get rid of entry in row DBC map - if it exists
           if (isrow and (dbcgids[set_row])) (*dbcgids[set_row]).erase(gid);
@@ -327,7 +327,7 @@ void Core::FE::Dbc::read_dirichlet_condition(const Teuchos::ParameterList& param
           if (dbcgids[set_col]) (*dbcgids[set_col]).erase(gid);
 
           // record the current hierarchical order of the DBC dof
-          info.hierarchy[lid] = hierarchical_order;
+          info.hierarchy.get_local_values()[lid] = hierarchical_order;
         }
       }
       else  // if (onoff[onesetj]==1)
@@ -347,13 +347,13 @@ void Core::FE::Dbc::read_dirichlet_condition(const Teuchos::ParameterList& param
 
         // check: if the dof has been fixed before and the DBC set it to a different value, then an
         // inconsistency is detected.
-        if ((hierarchical_order == current_order) && (info.toggle[lid] == 1))
+        if ((hierarchical_order == current_order) && (info.toggle.get_local_values()[lid] == 1))
         {
           // get the current prescribed value of dof
           const double current_val = info.values[lid];
 
           // get the current condition that prescribed value of dof
-          const int current_cond = info.condition[lid];
+          const int current_cond = info.condition.get_local_values()[lid];
 
           // if the current condition set the dof value to other value, then we found an
           // inconsistency. The basis for this is: Overwriting should be allowed over hierarchies
@@ -391,7 +391,7 @@ void Core::FE::Dbc::read_dirichlet_condition(const Teuchos::ParameterList& param
               "This couldn't happen, except if you try to read DBC not in descending order.");
 
         // dof has DBC, set toggle vector one
-        info.toggle[lid] = 1;
+        info.toggle.get_local_values()[lid] = 1;
 
         // amend set of row DOF-IDs which are dirichlet BCs
         if (isrow and (dbcgids[set_row])) (*dbcgids[set_row]).insert(gid);
@@ -403,13 +403,14 @@ void Core::FE::Dbc::read_dirichlet_condition(const Teuchos::ParameterList& param
         }
 
         // record the lowest hierarchical order of the DBC dof
-        if (hierarchical_order < current_order) info.hierarchy[lid] = hierarchical_order;
+        if (hierarchical_order < current_order)
+          info.hierarchy.get_local_values()[lid] = hierarchical_order;
 
         // record the prescribed value of dof if it is fixed
         info.values.get_values()[lid] = value;
 
         // record the condition that assign the value
-        info.condition[lid] = cond.id();
+        info.condition.get_local_values()[lid] = cond.id();
       }
     }  // loop over nodal DOFs
   }  // loop over nodes
@@ -524,8 +525,8 @@ void Core::FE::Dbc::do_dirichlet_condition(const Teuchos::ParameterList& params,
       // check whether dof gid is a dbc gid and is prescribed only by the current condition
       const bool dbc_on_dof_is_off = (onoff[onesetj] == 0);  // dof is not DBC by current condition
       const bool dbc_toggle_is_off =
-          (toggle[lid] == 0);  // dof is not prescribed by current condition or
-                               // is unprescribed by lower hierarchy condition
+          (toggle.get_local_values()[lid] == 0);  // dof is not prescribed by current condition or
+                                                  // is unprescribed by lower hierarchy condition
       if (dbc_on_dof_is_off || dbc_toggle_is_off) continue;
 
       std::vector<double> value(deg + 1, val[onesetj]);
