@@ -4,27 +4,9 @@
 -->
 <VTKFile type="Collection" version="0.1" ByteOrder="LittleEndian">
   <Collection>
-    <DataSet timestep="0.00000000000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-000000000.pvtu"/>
-    <DataSet timestep="1.00000000000000e-08" group="" part="0" file="xxx-vtk-files/structure-beams-000000001.pvtu"/>
-    <DataSet timestep="2.00000000000000e-08" group="" part="0" file="xxx-vtk-files/structure-beams-000000002.pvtu"/>
-    <DataSet timestep="3.00000000000000e-08" group="" part="0" file="xxx-vtk-files/structure-beams-000000003.pvtu"/>
-    <DataSet timestep="4.00000000000000e-08" group="" part="0" file="xxx-vtk-files/structure-beams-000000004.pvtu"/>
-    <DataSet timestep="1.00000000000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-000010000.pvtu"/>
-    <DataSet timestep="1.00000001000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-000010001.pvtu"/>
-    <DataSet timestep="1.00000002000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-000010002.pvtu"/>
-    <DataSet timestep="1.00000003000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-000010003.pvtu"/>
-    <DataSet timestep="1.00000004000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-000010004.pvtu"/>
-    <DataSet timestep="1.00000005000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-000010005.pvtu"/>
-    <DataSet timestep="1.00000006000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-000010006.pvtu"/>
-    <DataSet timestep="1.00000007000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-000010007.pvtu"/>
-    <DataSet timestep="2.00000000000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-000020000.pvtu"/>
-    <DataSet timestep="2.00000001000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-000020001.pvtu"/>
-    <DataSet timestep="2.00000002000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-000020002.pvtu"/>
-    <DataSet timestep="2.00000003000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-000020003.pvtu"/>
-    <DataSet timestep="2.00000004000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-000020004.pvtu"/>
-    <DataSet timestep="2.00000005000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-000020005.pvtu"/>
-    <DataSet timestep="2.00000006000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-000020006.pvtu"/>
-    <DataSet timestep="2.00000007000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-000020007.pvtu"/>
-    <DataSet timestep="3.00000000000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-000030000.pvtu"/>
+    <DataSet timestep="0.00000000000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-00000.pvtu"/>
+    <DataSet timestep="1.00000000000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-00001.pvtu"/>
+    <DataSet timestep="2.00000000000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-00002.pvtu"/>
+    <DataSet timestep="3.00000000000000e+00" group="" part="0" file="xxx-vtk-files/structure-beams-00003.pvtu"/>
   </Collection>
 </VTKFile>
