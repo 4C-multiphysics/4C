@@ -68,6 +68,7 @@ class ReferenceChapter:
     pattern: list[
         str
     ]  # List of regular expressions to match section names to include in this chapter
+    description: str = ""  # Description of the chapter (filled later)
     content: str = ""  # Content of the chapter (filled later)
     has_content: bool = False  # Whether the chapter has any content (filled later)
 
@@ -127,6 +128,9 @@ def make_section_description(
     section_in_tests: dict = {},
     section_in_tutorials: dict = {},
 ):
+    if name.startswith("FUNCT"):
+        name = name.replace("<", "[").replace(">", "]")
+        description = "Functions can be used for material properties and boundary/initial conditions. More information can be found in the {ref}`Analysis guide <functiondefinitions>`"
     string = "\n## " + name
     string += (
         f"\n*Type*: {spec_type}"
@@ -595,21 +599,30 @@ def create_markdown_documentation(
             "discretization_reference",
             "discretization_reference",
             [".* DOMAIN$", ".* ELEMENTS$", ".* GEOMETRY$", ".*KNOTVECTORS$"],
+            "This is the reference containing the sections related to the spatial discretization of the problem, namely finite elements. "
+            + "Note that the definition of elements or particles one by one through ``* ELEMENTS`` or ``PARTICLES`` is not yet contained due to an old input spec layout",
         ),
         ReferenceChapter(
             "Material information",
             "materials_reference",
             "materials_reference",
             ["MATERIALS", "CLONING MATERIAL MAP"],
+            "This is the reference for all material models. "
+            + "The Cloning Material Map is also included here, as it defines the situation where mesh definitions of one physics (SRC_FIELD) are used for another physics (TARGET_FIELD) and thus need different materials.",
         ),
         ReferenceChapter(
             "Boundary and constraint conditions",
             "condition_reference",
             "condition_reference",
             ["^DESIGN ", ".*CONDITIONS$"],
+            "This is the reference for all boundary and constraint conditions.",
         ),
         ReferenceChapter(
-            "General parameters", "general_reference", "general_reference", [".*"]
+            "General parameters",
+            "general_reference",
+            "general_reference",
+            [".*"],
+            "This is the reference for all parameters that do not fit into the other categories, often called header parameters.",
         ),
     ]
 
@@ -617,6 +630,7 @@ def create_markdown_documentation(
 
     for doc in reference_documents:
         doc.content = f"({doc.linkanchor})=\n\n" + f"# {doc.title}\n\n"
+        doc.content += f"{set_missing_description(doc.description)}\n\n"
 
     for section in obj:
         for doc in reference_documents:
@@ -635,7 +649,7 @@ def create_markdown_documentation(
                     doc.filename + ".md"
                 )
                 full_reference_filepath.write_text(doc.content)
-                print(f"Wrote documentation to {doc.filename}.md")
+                print(f"Writing documentation to {doc.filename}.md finished")
                 reference_index_file.write("\n" + doc.filename)
         reference_index_file.write("\n")
 
