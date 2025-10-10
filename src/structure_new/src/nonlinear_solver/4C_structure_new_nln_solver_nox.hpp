@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_solver_nonlin_nox_linearsystem_base.hpp"
 #include "4C_structure_new_nln_solver_generic.hpp"  // base class
 
 #include <NOX_StatusTest_Generic.H>
@@ -116,7 +117,7 @@ namespace Solid
         Teuchos::RCP<NOX::Nln::Problem> problem_;
 
         //! linear system class
-        Teuchos::RCP<::NOX::Epetra::LinearSystem> linsys_;
+        Teuchos::RCP<NOX::Nln::LinearSystemBase> linsys_;
 
         //! outer status test
         Teuchos::RCP<::NOX::StatusTest::Generic> ostatus_;

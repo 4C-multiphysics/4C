@@ -16,6 +16,7 @@
 #include "4C_fsi_monolithicinterface.hpp"
 #include "4C_inpar_fsi.hpp"
 #include "4C_linalg_mapextractor.hpp"
+#include "4C_solver_nonlin_nox_linearsystem_base.hpp"
 #include "4C_timestepping_mstep.hpp"
 
 #include <NOX.H>
@@ -403,7 +404,7 @@ namespace FSI
     //@}
 
     /// setup solver for global block system
-    virtual std::shared_ptr<::NOX::Epetra::LinearSystem> create_linear_system(
+    virtual std::shared_ptr<NOX::Nln::LinearSystemBase> create_linear_system(
         Teuchos::ParameterList& nlParams, ::NOX::Epetra::Vector& noxSoln,
         std::shared_ptr<::NOX::Utils> utils) = 0;
 
@@ -1052,7 +1053,7 @@ namespace FSI
         std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase>& mat, bool structuresplit);
 
     /// setup solver for global block system
-    std::shared_ptr<::NOX::Epetra::LinearSystem> create_linear_system(
+    std::shared_ptr<NOX::Nln::LinearSystemBase> create_linear_system(
         Teuchos::ParameterList& nlParams,    ///< parameter list
         ::NOX::Epetra::Vector& noxSoln,      ///< solution vector in NOX format
         std::shared_ptr<::NOX::Utils> utils  ///< NOX utils

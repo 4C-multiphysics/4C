@@ -11,6 +11,7 @@
 #include "4C_config.hpp"
 
 #include "4C_solver_nonlin_nox_group_base.hpp"
+#include "4C_solver_nonlin_nox_linearsystem_base.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -32,7 +33,7 @@ namespace NOX
           Teuchos::ParameterList& printParams,                        ///< printing parameters
           const Teuchos::RCP<::NOX::Epetra::Interface::Required>& i,  ///< NOX interface
           const ::NOX::Epetra::Vector& x,                             ///< initial guess
-          const Teuchos::RCP<::NOX::Epetra::LinearSystem>& linSys     ///< linear system
+          const Teuchos::RCP<NOX::Nln::LinearSystemBase>& linSys      ///< linear system
       );
 
       /// fetch the known Jacobian and RHS from the field solvers

@@ -10,9 +10,10 @@
 
 #include "4C_config.hpp"
 
+#include "4C_solver_nonlin_nox_linearsystem_base.hpp"
+
 #include <NOX_Abstract_Group.H>
 #include <NOX_Epetra_Interface_Required.H>
-#include <NOX_Epetra_LinearSystem.H>
 #include <NOX_Epetra_Vector.H>
 #include <NOX_Utils.H>
 #include <Teuchos_RCP.hpp>
@@ -28,7 +29,7 @@ namespace NOX
      public:
       GroupBase(Teuchos::ParameterList& printParams,
           const Teuchos::RCP<::NOX::Epetra::Interface::Required>& i, const ::NOX::Epetra::Vector& x,
-          const Teuchos::RCP<::NOX::Epetra::LinearSystem>& linSys);
+          const Teuchos::RCP<NOX::Nln::LinearSystemBase>& linSys);
 
       GroupBase(const NOX::Nln::GroupBase& source, ::NOX::CopyType type);
 
@@ -113,10 +114,10 @@ namespace NOX
       Teuchos::RCP<::NOX::Epetra::Interface::Required> get_required_interface();
 
       //! Return the Linear System.
-      Teuchos::RCP<const ::NOX::Epetra::LinearSystem> get_linear_system() const;
+      Teuchos::RCP<const NOX::Nln::LinearSystemBase> get_linear_system() const;
 
       //! Return the Linear System.
-      Teuchos::RCP<::NOX::Epetra::LinearSystem> get_linear_system();
+      Teuchos::RCP<NOX::Nln::LinearSystemBase> get_linear_system();
 
      protected:
       //! Resets the isValid flags to false
@@ -155,7 +156,7 @@ namespace NOX
       /** @name Operators */
       //@{
       //! Pointer to Jacobian matrix
-      Teuchos::RCP<::NOX::Epetra::LinearSystem> linearSystemPtr;
+      Teuchos::RCP<NOX::Nln::LinearSystemBase> linearSystemPtr;
 
       //! Pointer to the user supplied interface functions
       Teuchos::RCP<::NOX::Epetra::Interface::Required> userInterfacePtr;

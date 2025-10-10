@@ -197,7 +197,7 @@ bool NOX::Nln::LinearSystem::apply_jacobian_block(const ::NOX::Epetra::Vector& i
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool NOX::Nln::LinearSystem::applyJacobian(
+bool NOX::Nln::LinearSystem::apply_jacobian(
     const ::NOX::Epetra::Vector& input, ::NOX::Epetra::Vector& result) const
 {
   jacobian().SetUseTranspose(false);
@@ -207,7 +207,7 @@ bool NOX::Nln::LinearSystem::applyJacobian(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool NOX::Nln::LinearSystem::applyJacobianTranspose(
+bool NOX::Nln::LinearSystem::apply_jacobian_transpose(
     const ::NOX::Epetra::Vector& input, ::NOX::Epetra::Vector& result) const
 {
   // Apply the Jacobian
@@ -237,7 +237,7 @@ void NOX::Nln::LinearSystem::complete_solution_after_solve(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool NOX::Nln::LinearSystem::applyJacobianInverse(Teuchos::ParameterList& linearSolverParams,
+bool NOX::Nln::LinearSystem::apply_jacobian_inverse(Teuchos::ParameterList& linearSolverParams,
     const ::NOX::Epetra::Vector& input, ::NOX::Epetra::Vector& result)
 {
   /* Need non-const version of the input vector
@@ -286,7 +286,8 @@ bool NOX::Nln::LinearSystem::applyJacobianInverse(Teuchos::ParameterList& linear
     // solve
     int iter = linearSolverParams.get<int>("Number of Nonlinear Iterations", -10);
     if (iter == -10)
-      throw_error("applyJacobianInverse", "\"Number of Nonlinear Iterations\" was not specified");
+      throw_error(
+          "apply_jacobian_inverse()", "\"Number of Nonlinear Iterations\" was not specified");
 
     // get the linear solver tolerance, which might have been adapted by the non-linear solver due
     // to a non-constant forcing term
@@ -314,7 +315,7 @@ bool NOX::Nln::LinearSystem::applyJacobianInverse(Teuchos::ParameterList& linear
     if (linsol_status)
     {
       if (utils_.isPrintType(::NOX::Utils::Warning))
-        utils_.out() << "NOX::Nln::LinearSystem::applyJacobianInverse -- "
+        utils_.out() << "NOX::Nln::LinearSystem::apply_jacobian_inverse() -- "
                         "linear solve failed (err = "
                      << linsol_status << ")\n";
     }
@@ -337,7 +338,7 @@ bool NOX::Nln::LinearSystem::applyJacobianInverse(Teuchos::ParameterList& linear
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool NOX::Nln::LinearSystem::computeJacobian(const ::NOX::Epetra::Vector& x)
+bool NOX::Nln::LinearSystem::compute_jacobian(const ::NOX::Epetra::Vector& x)
 {
   prePostOperatorPtr_->run_pre_compute_jacobian(
       jacobian(), Core::LinAlg::Vector<double>(x.getEpetraVector()), *this);
@@ -494,14 +495,14 @@ NOX::Nln::LinearSystem::get_jacobian_interface() const
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-Teuchos::RCP<const Epetra_Operator> NOX::Nln::LinearSystem::getJacobianOperator() const
+Teuchos::RCP<const Epetra_Operator> NOX::Nln::LinearSystem::get_jacobian_operator() const
 {
   return jacobian_ptr();
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-Teuchos::RCP<Epetra_Operator> NOX::Nln::LinearSystem::getJacobianOperator()
+Teuchos::RCP<Epetra_Operator> NOX::Nln::LinearSystem::get_jacobian_operator()
 {
   return jacobian_ptr();
 }

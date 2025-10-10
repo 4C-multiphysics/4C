@@ -58,7 +58,7 @@ void NOX::FSI::LinearSystem::reset(Teuchos::ParameterList& linearSolverParams)
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool NOX::FSI::LinearSystem::applyJacobian(
+bool NOX::FSI::LinearSystem::apply_jacobian(
     const ::NOX::Epetra::Vector& input, ::NOX::Epetra::Vector& result) const
 {
   jac_ptr_->SetUseTranspose(false);
@@ -70,7 +70,7 @@ bool NOX::FSI::LinearSystem::applyJacobian(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool NOX::FSI::LinearSystem::applyJacobianTranspose(
+bool NOX::FSI::LinearSystem::apply_jacobian_transpose(
     const ::NOX::Epetra::Vector& input, ::NOX::Epetra::Vector& result) const
 {
   jac_ptr_->SetUseTranspose(true);
@@ -83,7 +83,7 @@ bool NOX::FSI::LinearSystem::applyJacobianTranspose(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool NOX::FSI::LinearSystem::applyJacobianInverse(
+bool NOX::FSI::LinearSystem::apply_jacobian_inverse(
     Teuchos::ParameterList& p, const ::NOX::Epetra::Vector& input, ::NOX::Epetra::Vector& result)
 {
   // Zero out the delta X of the linear problem if requested by user.
@@ -128,7 +128,7 @@ bool NOX::FSI::LinearSystem::applyJacobianInverse(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-bool NOX::FSI::LinearSystem::computeJacobian(const ::NOX::Epetra::Vector& x)
+bool NOX::FSI::LinearSystem::compute_jacobian(const ::NOX::Epetra::Vector& x)
 {
   bool success = jac_interface_ptr_->computeJacobian(x.getEpetraVector(), *jac_ptr_);
   return success;
@@ -137,7 +137,7 @@ bool NOX::FSI::LinearSystem::computeJacobian(const ::NOX::Epetra::Vector& x)
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-Teuchos::RCP<const Epetra_Operator> NOX::FSI::LinearSystem::getJacobianOperator() const
+Teuchos::RCP<const Epetra_Operator> NOX::FSI::LinearSystem::get_jacobian_operator() const
 {
   return Teuchos::rcpFromRef(*jac_ptr_);
 }
@@ -145,7 +145,7 @@ Teuchos::RCP<const Epetra_Operator> NOX::FSI::LinearSystem::getJacobianOperator(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-Teuchos::RCP<Epetra_Operator> NOX::FSI::LinearSystem::getJacobianOperator()
+Teuchos::RCP<Epetra_Operator> NOX::FSI::LinearSystem::get_jacobian_operator()
 {
   return Teuchos::rcpFromRef(*jac_ptr_);
 }

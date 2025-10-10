@@ -12,6 +12,7 @@
 
 #include "4C_solver_nonlin_nox_enum_lists.hpp"
 #include "4C_solver_nonlin_nox_forward_decl.hpp"
+#include "4C_solver_nonlin_nox_linearsystem_base.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <NOX_StatusTest_Generic.H>
@@ -55,11 +56,11 @@ namespace NOX
           const Teuchos::RCP<Core::LinAlg::SparseOperator>& A);
 
       //! create the linear system for the NOX framework
-      Teuchos::RCP<::NOX::Epetra::LinearSystem> create_linear_system() const;
+      Teuchos::RCP<NOX::Nln::LinearSystemBase> create_linear_system() const;
 
       //! create a nox group
       Teuchos::RCP<::NOX::Abstract::Group> create_group(
-          const Teuchos::RCP<::NOX::Epetra::LinearSystem>& linSys) const;
+          const Teuchos::RCP<NOX::Nln::LinearSystemBase>& linSys) const;
 
       void create_outer_status_test(Teuchos::RCP<::NOX::StatusTest::Generic>& outerTests) const;
 

@@ -57,7 +57,7 @@ namespace NOX
           const Teuchos::RCP<::NOX::Epetra::Interface::Required>&
               i,                           //!< basically the NOXified user interface
           const ::NOX::Epetra::Vector& x,  //!< current solution vector
-          const Teuchos::RCP<::NOX::Epetra::LinearSystem>&
+          const Teuchos::RCP<NOX::Nln::LinearSystemBase>&
               linSys  //!< linear system, matrix and RHS etc.
       );
 

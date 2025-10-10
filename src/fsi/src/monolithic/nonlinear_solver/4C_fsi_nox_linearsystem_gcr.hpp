@@ -17,7 +17,7 @@
 #include <NOX_Common.H>
 #include <NOX_Epetra_Interface_Jacobian.H>
 #include <NOX_Epetra_Interface_Required.H>
-#include <NOX_Epetra_LinearSystem.H>
+#include <NOX_Epetra_Scaling.H>
 #include <NOX_Epetra_Vector.H>
 #include <NOX_Utils.H>
 #include <Teuchos_Time.hpp>
@@ -72,7 +72,7 @@ namespace NOX
         where \f$J\f$ is the Jacobian, \f$u\f$ is the input vector,
         and \f$v\f$ is the result vector.  Returns true if successful.
       */
-      bool applyJacobian(
+      bool apply_jacobian(
           const ::NOX::Epetra::Vector& input, ::NOX::Epetra::Vector& result) const override;
 
       /*!
@@ -85,7 +85,7 @@ namespace NOX
         vector.  Returns true if successful.
 
       */
-      bool applyJacobianTranspose(
+      bool apply_jacobian_transpose(
           const ::NOX::Epetra::Vector& input, ::NOX::Epetra::Vector& result) const override;
 
       /*!
@@ -99,17 +99,17 @@ namespace NOX
 
         The parameter list contains the linear solver options.
       */
-      bool applyJacobianInverse(Teuchos::ParameterList& params, const ::NOX::Epetra::Vector& input,
-          ::NOX::Epetra::Vector& result) override;
+      bool apply_jacobian_inverse(Teuchos::ParameterList& params,
+          const ::NOX::Epetra::Vector& input, ::NOX::Epetra::Vector& result) override;
 
       //! Evaluates the Jacobian based on the solution vector x.
-      bool computeJacobian(const ::NOX::Epetra::Vector& x) override;
+      bool compute_jacobian(const ::NOX::Epetra::Vector& x) override;
 
       //! Return Jacobian operator
-      Teuchos::RCP<const Epetra_Operator> getJacobianOperator() const override;
+      Teuchos::RCP<const Epetra_Operator> get_jacobian_operator() const override;
 
       //! Return Jacobian operator
-      Teuchos::RCP<Epetra_Operator> getJacobianOperator() override;
+      Teuchos::RCP<Epetra_Operator> get_jacobian_operator() override;
 
      protected:
       /// generalized conjugate residual solver
@@ -169,8 +169,8 @@ namespace NOX
       //! Solver" list.
       bool outputSolveDetails;
 
-      //! Zero out the initial guess for linear solves performed through applyJacobianInverse calls
-      //! (i.e. zero out the result vector before the linear solve).
+      //! Zero out the initial guess for linear solves performed through apply_jacobian_inverse()
+      //! calls (i.e. zero out the result vector before the linear solve).
       bool zeroInitialGuess;
 
       //! Stores the parameter "Compute Scaling Manually".
@@ -179,7 +179,7 @@ namespace NOX
       //! Teuchos_Time object
       Teuchos::Time timer;
 
-      //! Total time spent in applyJacobianInverse (sec.).
+      //! Total time spent in apply_jacobian_inverse() (sec.).
       mutable double timeApplyJacbianInverse;
 
       std::vector<std::shared_ptr<::NOX::Epetra::Vector>> u_;

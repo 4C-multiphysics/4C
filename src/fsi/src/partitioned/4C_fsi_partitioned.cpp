@@ -407,7 +407,7 @@ void FSI::Partitioned::timeloop(const Teuchos::RCP<::NOX::Epetra::Interface::Req
         Teuchos::rcpFromRef(soln->get_ref_of_epetra_vector()), ::NOX::Epetra::Vector::CreateView);
 
     // Create the linear system
-    Teuchos::RCP<::NOX::Epetra::LinearSystem> linSys =
+    Teuchos::RCP<NOX::Nln::LinearSystemBase> linSys =
         create_linear_system(nlParams, interface, noxSoln, *utils_);
 
     // Create the Group
@@ -488,7 +488,7 @@ void FSI::Partitioned::timeloop(const Teuchos::RCP<::NOX::Epetra::Interface::Req
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-Teuchos::RCP<::NOX::Epetra::LinearSystem> FSI::Partitioned::create_linear_system(
+Teuchos::RCP<NOX::Nln::LinearSystemBase> FSI::Partitioned::create_linear_system(
     Teuchos::ParameterList& nlParams,
     const Teuchos::RCP<::NOX::Epetra::Interface::Required>& interface,
     ::NOX::Epetra::Vector& noxSoln, ::NOX::Utils& utils)
@@ -511,7 +511,7 @@ Teuchos::RCP<::NOX::Epetra::LinearSystem> FSI::Partitioned::create_linear_system
   Teuchos::RCP<Epetra_Operator> J;
   Teuchos::RCP<Epetra_Operator> M;
 
-  Teuchos::RCP<::NOX::Epetra::LinearSystem> linSys;
+  Teuchos::RCP<NOX::Nln::LinearSystemBase> linSys;
 
   // ==================================================================
   // decide on Jacobian and preconditioner

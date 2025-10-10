@@ -35,13 +35,13 @@ NOX::Nln::LinSystem::Factory::Factory()
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-Teuchos::RCP<::NOX::Epetra::LinearSystem> NOX::Nln::LinSystem::Factory::build_linear_system(
+Teuchos::RCP<NOX::Nln::LinearSystemBase> NOX::Nln::LinSystem::Factory::build_linear_system(
     const NOX::Nln::LinSystem::LinearSystemType& linsystype, NOX::Nln::GlobalData& noxNlnGlobalData,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& jac, ::NOX::Epetra::Vector& cloneVector,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& precMat,
     const std::shared_ptr<NOX::Nln::Scaling>& scalingObject) const
 {
-  Teuchos::RCP<::NOX::Epetra::LinearSystem> linSys = Teuchos::null;
+  Teuchos::RCP<NOX::Nln::LinearSystemBase> linSys = Teuchos::null;
 
   // extract some stuff from the NOX::Nln::GlobalData object
   const NOX::Nln::LinearSystem::SolverMap& linSolvers = noxNlnGlobalData.get_linear_solvers();
@@ -127,7 +127,7 @@ Teuchos::RCP<::NOX::Epetra::LinearSystem> NOX::Nln::LinSystem::Factory::build_li
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-Teuchos::RCP<::NOX::Epetra::LinearSystem> NOX::Nln::LinSystem::build_linear_system(
+Teuchos::RCP<NOX::Nln::LinearSystemBase> NOX::Nln::LinSystem::build_linear_system(
     const NOX::Nln::LinSystem::LinearSystemType& linsystype, NOX::Nln::GlobalData& noxNlnGlobalData,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& jac, ::NOX::Epetra::Vector& cloneVector,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& precMat,

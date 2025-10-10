@@ -42,7 +42,8 @@ namespace Mortar
     eval_static_constraint_rhs, /*!< Evaluate only the contributions to the constraint rhs. The
                                    active set is not updated during the evaluation. */
     eval_run_post_apply_jacobian_inverse,       /*!< run in the end of a
-                                                   NOX::Nln::LinearSystem::applyJacobianInverse call */
+                                                   NOX::Nln::LinearSystem::apply_jacobian_inverse()
+                                                   call */
     remove_condensed_contributions_from_str_rhs /*!< remove any condensed contact contributions from
                                                    the structural rhs */
   };

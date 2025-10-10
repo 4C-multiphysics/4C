@@ -630,7 +630,7 @@ void FSI::Monolithic::time_step(
       ::NOX::Epetra::Vector::CreateView);
 
   // Create the linear system
-  std::shared_ptr<::NOX::Epetra::LinearSystem> linSys =
+  std::shared_ptr<NOX::Nln::LinearSystemBase> linSys =
       create_linear_system(nlParams, noxSoln, utils_);
 
   // Create the Group
@@ -1111,12 +1111,10 @@ void FSI::BlockMonolithic::create_system_matrix(
 
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
-std::shared_ptr<::NOX::Epetra::LinearSystem> FSI::BlockMonolithic::create_linear_system(
+std::shared_ptr<NOX::Nln::LinearSystemBase> FSI::BlockMonolithic::create_linear_system(
     Teuchos::ParameterList& nlParams, ::NOX::Epetra::Vector& noxSoln,
     std::shared_ptr<::NOX::Utils> utils)
 {
-  std::shared_ptr<::NOX::Epetra::LinearSystem> linSys;
-
   Teuchos::ParameterList& printParams = nlParams.sublist("Printing");
   Teuchos::ParameterList& dirParams = nlParams.sublist("Direction");
   Teuchos::ParameterList& newtonParams = dirParams.sublist("Newton");
@@ -1196,8 +1194,9 @@ std::shared_ptr<::NOX::Epetra::LinearSystem> FSI::BlockMonolithic::create_linear
     }
   }
 
-  linSys = std::make_shared<NOX::FSI::LinearSystem>(printParams, lsParams,
-      Core::Utils::shared_ptr_from_ref(*iJac), system_matrix(), noxSoln, solver);
+  std::shared_ptr<NOX::Nln::LinearSystemBase> linSys =
+      std::make_shared<NOX::FSI::LinearSystem>(printParams, lsParams,
+          Core::Utils::shared_ptr_from_ref(*iJac), system_matrix(), noxSoln, solver);
 
   return linSys;
 }

@@ -20,7 +20,6 @@
 #include "4C_structure_new_utils.hpp"
 
 #include <NOX_Abstract_Group.H>
-#include <NOX_Epetra_LinearSystem.H>
 #include <NOX_Epetra_Vector.H>
 #include <NOX_Solver_Generic.H>
 #include <Teuchos_RCPStdSharedPtrConversions.hpp>

@@ -110,7 +110,7 @@ namespace NOX
          */
         ///@{
         /** User defined method that will be executed at the start
-         *  of a call to NOX::Nln::LinearSystem::applyJacobianInverse().
+         *  of a call to NOX::Nln::LinearSystem::apply_jacobian_inverse().
          *
          * \param rhs    : full access to the rhs vector
          * \param jac    : full access to the jacobian
@@ -122,7 +122,7 @@ namespace NOX
         }
 
         /** User defined method that will be executed at the end
-         *  of a call to NOX::Nln::LinearSystem::applyJacobianInverse().
+         *  of a call to NOX::Nln::LinearSystem::apply_jacobian_inverse().
          *
          * \param result : full access to the result vector
          * \param rhs    : full access to the rhs vector
@@ -136,7 +136,7 @@ namespace NOX
         }
 
         /** User defined method that will be executed at the start of a call to
-         * NOX::Nln::LinearSystem::applyJacobianInverse().
+         * NOX::Nln::LinearSystem::apply_jacobian_inverse().
          *
          * \param jac    : full access to the jacobian operator
          * \param x      : read only access to the current solution point
@@ -148,7 +148,7 @@ namespace NOX
         }
 
         /** User defined method that will be executed at the end of a call to
-         * NOX::Nln::LinearSystem::applyJacobianInverse().
+         * NOX::Nln::LinearSystem::apply_jacobian_inverse().
          *
          * \param jac    : full access to the jacobian operator
          * \param x      : read only access to the current solution point

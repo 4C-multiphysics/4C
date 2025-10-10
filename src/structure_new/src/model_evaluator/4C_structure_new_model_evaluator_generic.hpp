@@ -300,7 +300,7 @@ namespace Solid
        *  */
       virtual void run_pre_solve(const ::NOX::Solver::Generic& solver) {};
 
-      /*! \brief Executed at the end of the NOX::Nln::LinearSystem::applyJacobianInverse()
+      /*! \brief Executed at the end of the NOX::Nln::LinearSystem::apply_jacobian_inverse()
        *  method
        *
        *  \note See comment in the NOX::Nln::PrePostOp::IMPLICIT::Generic class.
@@ -318,7 +318,7 @@ namespace Solid
       }
 
 
-      /*! \brief Executed at the beginning of the NOX::Nln::LinearSystem::applyJacobianInverse()
+      /*! \brief Executed at the beginning of the NOX::Nln::LinearSystem::apply_jacobian_inverse()
        *  method
        *
        *  \note See comment in the NOX::Nln::PrePostOp::IMPLICIT::Generic class.

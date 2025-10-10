@@ -111,7 +111,7 @@ bool Solid::TimeInt::NoxInterface::computeJacobian(const Epetra_Vector& x, Epetr
   if (not int_ptr_->apply_stiff(Core::LinAlg::Vector<double>(x), *jac_ptr)) return false;
 
   /* We do not consider the jacobian DBC at this point. The Dirichlet conditions
-   * are applied inside the NOX::Nln::LinearSystem::applyJacobianInverse()
+   * are applied inside the NOX::Nln::LinearSystem::apply_jacobian_inverse()
    * routine, instead. See the run_pre_apply_jacobian_inverse() implementation
    * for more information.                               hiermeier 01/15/2016 */
 
@@ -137,7 +137,7 @@ bool Solid::TimeInt::NoxInterface::compute_f_and_jacobian(
   dbc_ptr_->apply_dirichlet_to_rhs(rhs_view);
 
   /* We do not consider the jacobian DBC at this point. The Dirichlet conditions
-   * are applied inside the NOX::Nln::LinearSystem::applyJacobianInverse()
+   * are applied inside the NOX::Nln::LinearSystem::apply_jacobian_inverse()
    * routine, instead. See the run_pre_apply_jacobian_inverse() implementation
    * for more information.                               hiermeier 01/15/2016 */
 

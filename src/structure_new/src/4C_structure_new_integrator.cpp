@@ -285,7 +285,7 @@ void Solid::Integrator::compute_mass_matrix_and_init_acc()
   NOX::Nln::Solid::LinearSystem linsys(p_print, p_ls, str_linsolver, Teuchos::null, Teuchos::null,
       Teuchos::rcpFromRef(mass_matrix), nox_soln);
 
-  linsys.applyJacobianInverse(p_ls, rhs_solid->get_ref_of_epetra_vector(), nox_soln);
+  linsys.apply_jacobian_inverse(p_ls, rhs_solid->get_ref_of_epetra_vector(), nox_soln);
   nox_soln.scale(-1.0);
 
   // get the solution vector and add it into the acceleration vector

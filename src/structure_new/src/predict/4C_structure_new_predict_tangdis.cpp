@@ -193,7 +193,7 @@ void NOX::Nln::GROUP::PrePostOp::TangDis::run_post_compute_f(
   if (dbc_incr_nrm2 == 0.0) return;
 
   /* Alternatively, it's also possible to get a const pointer on the jacobian
-   * by calling grp.get_linear_system()->getJacobianOperator()... */
+   * by calling grp.get_linear_system()->get_jacobian_operator()... */
   std::shared_ptr<const Core::LinAlg::SparseMatrix> stiff_ptr =
       tang_predict_ptr_->global_state().get_jacobian_displ_block();
 

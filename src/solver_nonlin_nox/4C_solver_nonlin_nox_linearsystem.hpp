@@ -93,7 +93,7 @@ namespace NOX
       void reset_pre_post_operator(Teuchos::ParameterList& p);
 
       //! Evaluate the Jacobian
-      bool computeJacobian(const ::NOX::Epetra::Vector& x) override;
+      bool compute_jacobian(const ::NOX::Epetra::Vector& x) override;
 
       //! Evaluate the Jacobian and the right hand side based on the solution vector x at once.
       virtual bool compute_f_and_jacobian(
@@ -106,13 +106,13 @@ namespace NOX
       bool apply_jacobian_block(const ::NOX::Epetra::Vector& input,
           Teuchos::RCP<::NOX::Epetra::Vector>& result, unsigned rbid, unsigned cbid) const;
 
-      bool applyJacobian(
+      bool apply_jacobian(
           const ::NOX::Epetra::Vector& input, ::NOX::Epetra::Vector& result) const override;
 
-      bool applyJacobianTranspose(
+      bool apply_jacobian_transpose(
           const ::NOX::Epetra::Vector& input, ::NOX::Epetra::Vector& result) const override;
 
-      bool applyJacobianInverse(Teuchos::ParameterList& linearSolverParams,
+      bool apply_jacobian_inverse(Teuchos::ParameterList& linearSolverParams,
           const ::NOX::Epetra::Vector& input, ::NOX::Epetra::Vector& result) override;
 
       //! adjust the pseudo time step (using a least squares approximation)
@@ -150,10 +150,10 @@ namespace NOX
           const Core::LinAlg::Vector<double>& new_diag, unsigned diag_bid);
 
       //! Returns Jacobian Epetra_Operator pointer
-      Teuchos::RCP<const Epetra_Operator> getJacobianOperator() const override;
+      Teuchos::RCP<const Epetra_Operator> get_jacobian_operator() const override;
 
       /// return jacobian operator
-      Teuchos::RCP<Epetra_Operator> getJacobianOperator() override;
+      Teuchos::RCP<Epetra_Operator> get_jacobian_operator() override;
 
       //! Returns the operator type of the jacobian
       const enum NOX::Nln::LinSystem::OperatorType& get_jacobian_operator_type() const;
@@ -251,7 +251,7 @@ namespace NOX
       //! Teuchos::Time object
       Teuchos::Time timer_;
 
-      //! Total time spent in applyJacobianInverse (sec.).
+      //! Total time spent in apply_jacobian_inverse() (sec.).
       double timeApplyJacbianInverse_;
 
       //! residual 2-norm
@@ -261,8 +261,8 @@ namespace NOX
       //! Solver" list.
       bool outputSolveDetails_;
 
-      //! Zero out the initial guess for linear solves performed through applyJacobianInverse calls
-      //! (i.e. zero out the result vector before the linear solve).
+      //! Zero out the initial guess for linear solves performed through apply_jacobian_inverse()
+      //! calls (i.e. zero out the result vector before the linear solve).
       bool zeroInitialGuess_;
 
       //! Stores the parameter "Compute Scaling Manually".

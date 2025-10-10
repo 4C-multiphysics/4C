@@ -22,7 +22,7 @@ FOUR_C_NAMESPACE_OPEN
  *----------------------------------------------------------------------------*/
 NOX::Nln::Group::Group(Teuchos::ParameterList& printParams, Teuchos::ParameterList& grpOptionParams,
     const Teuchos::RCP<::NOX::Epetra::Interface::Required>& i, const ::NOX::Epetra::Vector& x,
-    const Teuchos::RCP<::NOX::Epetra::LinearSystem>& linSys)
+    const Teuchos::RCP<NOX::Nln::LinearSystemBase>& linSys)
     : GroupBase(printParams, i, x, linSys),
       skipUpdateX_(false),
       prePostOperatorPtr_(Teuchos::make_rcp<NOX::Nln::GROUP::PrePostOperator>(grpOptionParams))

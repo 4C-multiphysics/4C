@@ -54,26 +54,26 @@ namespace NOX::FSI
     void reset(Teuchos::ParameterList& linearSolverParams);
 
     /// Applies Jacobian to the given input vector and puts the answer in the result.
-    bool applyJacobian(
+    bool apply_jacobian(
         const ::NOX::Epetra::Vector& input, ::NOX::Epetra::Vector& result) const override;
 
     /// Applies Jacobian-Transpose to the given input vector and puts the answer in the result.
-    bool applyJacobianTranspose(
+    bool apply_jacobian_transpose(
         const ::NOX::Epetra::Vector& input, ::NOX::Epetra::Vector& result) const override;
 
     /// Applies the inverse of the Jacobian matrix to the given input vector and puts the answer
     /// in result.
-    bool applyJacobianInverse(Teuchos::ParameterList& params, const ::NOX::Epetra::Vector& input,
+    bool apply_jacobian_inverse(Teuchos::ParameterList& params, const ::NOX::Epetra::Vector& input,
         ::NOX::Epetra::Vector& result) override;
 
     /// Evaluates the Jacobian based on the solution vector x.
-    bool computeJacobian(const ::NOX::Epetra::Vector& x) override;
+    bool compute_jacobian(const ::NOX::Epetra::Vector& x) override;
 
     /// Return Jacobian operator.
-    Teuchos::RCP<const Epetra_Operator> getJacobianOperator() const override;
+    Teuchos::RCP<const Epetra_Operator> get_jacobian_operator() const override;
 
     /// Return Jacobian operator.
-    Teuchos::RCP<Epetra_Operator> getJacobianOperator() override;
+    Teuchos::RCP<Epetra_Operator> get_jacobian_operator() override;
 
    private:
     /// throw an error

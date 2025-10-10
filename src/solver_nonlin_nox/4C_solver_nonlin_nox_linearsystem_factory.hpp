@@ -12,6 +12,7 @@
 
 #include "4C_solver_nonlin_nox_enum_lists.hpp"
 #include "4C_solver_nonlin_nox_forward_decl.hpp"
+#include "4C_solver_nonlin_nox_linearsystem_base.hpp"
 
 #include <Teuchos_RCP.hpp>
 
@@ -42,7 +43,7 @@ namespace NOX
         Factory();
 
 
-        Teuchos::RCP<::NOX::Epetra::LinearSystem> build_linear_system(
+        Teuchos::RCP<NOX::Nln::LinearSystemBase> build_linear_system(
             const NOX::Nln::LinSystem::LinearSystemType& linsystype,
             NOX::Nln::GlobalData& noxNlnGlobalData,
             const Teuchos::RCP<Core::LinAlg::SparseOperator>& jac,
@@ -56,7 +57,7 @@ namespace NOX
       \relates NOX::Nln::LinearSystem::Factory
 
       */
-      Teuchos::RCP<::NOX::Epetra::LinearSystem> build_linear_system(
+      Teuchos::RCP<NOX::Nln::LinearSystemBase> build_linear_system(
           const NOX::Nln::LinSystem::LinearSystemType& linsystype,
           NOX::Nln::GlobalData& noxNlnGlobalData,
           const Teuchos::RCP<Core::LinAlg::SparseOperator>& jac, ::NOX::Epetra::Vector& cloneVector,

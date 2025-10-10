@@ -16,7 +16,7 @@ FOUR_C_NAMESPACE_OPEN
 NOX::Nln::SINGLESTEP::Group::Group(Teuchos::ParameterList& printParams,
     Teuchos::ParameterList& grpOptionParams,
     const Teuchos::RCP<::NOX::Epetra::Interface::Required>& i, const ::NOX::Epetra::Vector& x,
-    const Teuchos::RCP<::NOX::Epetra::LinearSystem>& linSys)
+    const Teuchos::RCP<NOX::Nln::LinearSystemBase>& linSys)
     : NOX::Nln::Group(printParams, grpOptionParams, i, x, linSys)
 {
 }

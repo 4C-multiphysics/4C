@@ -75,7 +75,7 @@ void NOX::Nln::Problem::initialize(const Teuchos::RCP<::NOX::Epetra::Vector>& x,
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-Teuchos::RCP<::NOX::Epetra::LinearSystem> NOX::Nln::Problem::create_linear_system() const
+Teuchos::RCP<NOX::Nln::LinearSystemBase> NOX::Nln::Problem::create_linear_system() const
 {
   check_init();
   if (not is_jacobian())
@@ -95,7 +95,7 @@ Teuchos::RCP<::NOX::Epetra::LinearSystem> NOX::Nln::Problem::create_linear_syste
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 Teuchos::RCP<::NOX::Abstract::Group> NOX::Nln::Problem::create_group(
-    const Teuchos::RCP<::NOX::Epetra::LinearSystem>& linSys) const
+    const Teuchos::RCP<NOX::Nln::LinearSystemBase>& linSys) const
 {
   check_init();
   Teuchos::RCP<::NOX::Abstract::Group> noxgrp = Teuchos::null;

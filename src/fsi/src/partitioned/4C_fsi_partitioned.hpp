@@ -14,6 +14,7 @@
 #include "4C_fsi_algorithm.hpp"
 #include "4C_io.hpp"
 #include "4C_linalg_graph.hpp"
+#include "4C_solver_nonlin_nox_linearsystem_base.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
 #include <NOX.H>
@@ -213,7 +214,7 @@ namespace FSI
 
    private:
     /// create linear solver framework
-    Teuchos::RCP<::NOX::Epetra::LinearSystem> create_linear_system(Teuchos::ParameterList& nlParams,
+    Teuchos::RCP<NOX::Nln::LinearSystemBase> create_linear_system(Teuchos::ParameterList& nlParams,
         const Teuchos::RCP<::NOX::Epetra::Interface::Required>& interface,
         ::NOX::Epetra::Vector& noxSoln, ::NOX::Utils& utils);
 

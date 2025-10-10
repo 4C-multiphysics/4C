@@ -10,8 +10,6 @@
 #include "4C_solver_nonlin_nox_aux.hpp"
 #include "4C_solver_nonlin_nox_interface_required.hpp"
 
-#include <NOX_Epetra_LinearSystem.H>
-
 FOUR_C_NAMESPACE_OPEN
 
 
@@ -20,7 +18,7 @@ FOUR_C_NAMESPACE_OPEN
 NOX::Nln::CONSTRAINT::Group::Group(Teuchos::ParameterList& printParams,
     Teuchos::ParameterList& grpOptionParams,
     const Teuchos::RCP<::NOX::Epetra::Interface::Required>& i, const ::NOX::Epetra::Vector& x,
-    const Teuchos::RCP<::NOX::Epetra::LinearSystem>& linSys,
+    const Teuchos::RCP<NOX::Nln::LinearSystemBase>& linSys,
     const NOX::Nln::CONSTRAINT::ReqInterfaceMap& iConstr)
     : NOX::Nln::Group(printParams, grpOptionParams, i, x, linSys),
       user_constraint_interfaces_(iConstr)
