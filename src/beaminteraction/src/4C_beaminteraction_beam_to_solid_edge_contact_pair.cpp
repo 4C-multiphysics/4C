@@ -14,6 +14,7 @@
 #include "4C_beaminteraction_geometry_pair_access_traits.hpp"
 #include "4C_geometry_pair_element.hpp"
 #include "4C_geometry_pair_element_evaluation_functions.hpp"
+#include "4C_geometry_pair_line_to_line.hpp"
 #include "4C_linalg_fevector.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
 #include "4C_linalg_map.hpp"
@@ -82,8 +83,18 @@ void BeamInteraction::BeamToSolidEdgeContactPair<Beam, Edge>::evaluate_and_assem
   // Closest point projection between the two curves
   scalar_type eta_beam = 0.0;
   scalar_type eta_edge = 0.0;
+  const auto projection_result =
+      GeometryPair::line_to_line_closest_point_projection(beam_pos, edge_pos, eta_beam, eta_edge);
 
-  // Evaluate the positions on the curves (maybe directly take them from the CPP)
+  if (projection_result != GeometryPair::ProjectionResult::projection_found_valid)
+  {
+    is_active_ = false;
+    return;
+  }
+
+  is_active_ = true;
+
+  // Evaluate the positions on the curves (todo: maybe directly take them from the CPP)
   Core::LinAlg::Matrix<3, 1, scalar_type> r_beam;
   GeometryPair::evaluate_position(eta_beam, beam_pos, r_beam);
   Core::LinAlg::Matrix<3, 1, scalar_type> r_edge;

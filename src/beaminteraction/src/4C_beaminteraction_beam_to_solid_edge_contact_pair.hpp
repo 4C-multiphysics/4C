@@ -96,11 +96,7 @@ namespace BeamInteraction
     /**
      * \brief This pair is always active.
      */
-    inline bool get_contact_flag() const override
-    {
-      // TODO add a flag here!
-      return true;
-    }
+    inline bool get_contact_flag() const override { return is_active_; }
 
     /**
      * \brief Get number of active contact point pairs on this element pair. Not yet implemented.
@@ -169,6 +165,9 @@ namespace BeamInteraction
 
     //! Pointer to the pure edge element
     std::shared_ptr<const Core::Elements::Element> edge_element_;
+
+    //! Flag it here is an active contact.
+    bool is_active_ = false;
   };  // namespace BeamInteraction
 }  // namespace BeamInteraction
 
