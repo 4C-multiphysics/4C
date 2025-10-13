@@ -35,10 +35,10 @@ namespace Constraints::EmbeddedMesh
     SolidToSolidMortarShapefunctions mortar_shape_function_;
 
     //! Stabilization parameter for coupling with the Nitsche method
-    double nitsche_stabilization_param_;
+    double nitsche_stabilization_param_ = 0.0;
 
     //! Average weight gamma for coupling with the Nitsche method
-    double nitsche_average_weight_gamma_;
+    double nitsche_average_weight_gamma_ = 0.0;
 
     //! Nodal Dof set strategy for XFEM
     Cut::NodalDofSetStrategy xfem_nodal_dof_set_strategy_ =

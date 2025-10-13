@@ -33,17 +33,17 @@ Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::EmbeddedMeshConst
   auto embedded_mesh_constraint_penalty_parameter =
       constraint_parameter_list.get<double>("PENALTY_PARAM");
 
-  auto embedded_mesh_nitsche_stabilization_parameter =
-      constraint_parameter_list.get<double>("NITSCHE_STABILIZATION_PARAM");
-
-  auto embedded_mesh_nitsche_average_weight_gamma =
-      constraint_parameter_list.get<double>("NITSCHE_GAMMA_PARAM");
-
   auto embedded_mesh_parameter_list = constraint_parameter_list.sublist("EMBEDDED MESH COUPLING");
 
   auto embedded_mesh_coupling_strategy =
       Teuchos::getIntegralValue<Constraints::EmbeddedMesh::CouplingStrategy>(
           embedded_mesh_parameter_list, "COUPLING_STRATEGY");
+
+  auto embedded_mesh_nitsche_stabilization_parameter =
+      embedded_mesh_parameter_list.get<double>("NITSCHE_STABILIZATION_PARAM");
+
+  auto embedded_mesh_nitsche_average_weight_gamma =
+      embedded_mesh_parameter_list.get<double>("NITSCHE_GAMMA_PARAM");
 
   auto embedded_mesh_mortar_shape_function =
       Teuchos::getIntegralValue<Constraints::EmbeddedMesh::SolidToSolidMortarShapefunctions>(
