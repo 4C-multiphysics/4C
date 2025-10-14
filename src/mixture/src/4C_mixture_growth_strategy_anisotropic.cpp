@@ -7,6 +7,7 @@
 
 #include "4C_mixture_growth_strategy_anisotropic.hpp"
 
+#include "4C_comm_pack_helpers.hpp"
 #include "4C_linalg_fixedsizematrix_generators.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_symmetric_tensor.hpp"
@@ -21,8 +22,9 @@ FOUR_C_NAMESPACE_OPEN
 Mixture::PAR::AnisotropicGrowthStrategy::AnisotropicGrowthStrategy(
     const Core::Mat::PAR::Parameter::Data& matdata)
     : Mixture::PAR::MixtureGrowthStrategy(matdata),
-      init_mode_(matdata.parameters.get<int>("INIT")),
-      fiber_id_(matdata.parameters.get<int>("FIBER_ID"))
+      growth_direction(
+          matdata.parameters.get<Core::IO::InterpolatedInputField<Core::LinAlg::Tensor<double, 3>,
+              Mat::FiberInterpolation>>("GROWTH_DIRECTION"))
 {
 }
 
@@ -34,13 +36,8 @@ Mixture::PAR::AnisotropicGrowthStrategy::create_growth_strategy()
 
 Mixture::AnisotropicGrowthStrategy::AnisotropicGrowthStrategy(
     Mixture::PAR::AnisotropicGrowthStrategy* params)
-    : params_(params),
-      anisotropy_extension_(params_->init_mode_, 0.0, false,
-          std::make_shared<Mat::Elastic::StructuralTensorStrategyStandard>(nullptr),
-          {params->fiber_id_ - 1})
+    : params_(params)
 {
-  anisotropy_extension_.register_needed_tensors(
-      Mat::FiberAnisotropyExtension<1>::STRUCTURAL_TENSOR);
 }
 
 void Mixture::AnisotropicGrowthStrategy::pack_mixture_growth_strategy(
@@ -48,7 +45,7 @@ void Mixture::AnisotropicGrowthStrategy::pack_mixture_growth_strategy(
 {
   MixtureGrowthStrategy::pack_mixture_growth_strategy(data);
 
-  anisotropy_extension_.pack_anisotropy(data);
+  Core::Communication::add_to_pack(data, structural_tensors_);
 }
 
 void Mixture::AnisotropicGrowthStrategy::unpack_mixture_growth_strategy(
@@ -56,23 +53,25 @@ void Mixture::AnisotropicGrowthStrategy::unpack_mixture_growth_strategy(
 {
   MixtureGrowthStrategy::unpack_mixture_growth_strategy(buffer);
 
-  anisotropy_extension_.unpack_anisotropy(buffer);
-}
-
-void Mixture::AnisotropicGrowthStrategy::register_anisotropy_extensions(Mat::Anisotropy& anisotropy)
-{
-  anisotropy.register_anisotropy_extension(anisotropy_extension_);
+  Core::Communication::extract_from_pack(buffer, structural_tensors_);
 }
 
 void Mixture::AnisotropicGrowthStrategy::evaluate_inverse_growth_deformation_gradient(
     Core::LinAlg::Tensor<double, 3, 3>& iFgM, const Mixture::MixtureRule& mixtureRule,
-    double currentReferenceGrowthScalar, int gp) const
+    double currentReferenceGrowthScalar, const Mat::EvaluationContext& context, int gp,
+    int eleGID) const
 {
+  if (gp >= static_cast<int>(structural_tensors_.size()))
+  {
+    Core::LinAlg::Tensor<double, 3> growth_direction =
+        params_->growth_direction.interpolate(eleGID, context.xi->as_span());
+    structural_tensors_.emplace_back(Core::LinAlg::self_dyadic(growth_direction));
+  }
   const Core::LinAlg::Matrix<3, 3> Id = Core::LinAlg::identity_matrix<3>();
 
-  iFgM = Core::LinAlg::get_full((1.0 / currentReferenceGrowthScalar - 1.0) *
-                                    anisotropy_extension_.get_structural_tensor(gp, 0) +
-                                Core::LinAlg::TensorGenerators::identity<double, 3, 3>);
+  iFgM =
+      Core::LinAlg::get_full((1.0 / currentReferenceGrowthScalar - 1.0) * structural_tensors_[gp] +
+                             Core::LinAlg::TensorGenerators::identity<double, 3, 3>);
 }
 
 void Mixture::AnisotropicGrowthStrategy::evaluate_growth_stress_cmat(

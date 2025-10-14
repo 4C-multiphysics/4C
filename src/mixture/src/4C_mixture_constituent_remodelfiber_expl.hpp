@@ -10,7 +10,9 @@
 
 #include "4C_config.hpp"
 
+#include "4C_io_input_field.hpp"
 #include "4C_mat_anisotropy_extension_default.hpp"
+#include "4C_mat_fiber_interpolation.hpp"
 #include "4C_mat_so3_material.hpp"
 #include "4C_material_parameter_base.hpp"
 #include "4C_mixture_constituent.hpp"
@@ -36,9 +38,9 @@ namespace Mixture
       /// create material instance of matching type with my parameters
       std::unique_ptr<Mixture::MixtureConstituent> create_constituent(int id) override;
 
-      const int fiber_id_;
-      const int init_;
-      const double gamma_;
+      const Core::IO::InterpolatedInputField<Core::LinAlg::Tensor<double, 3>,
+          Mat::FiberInterpolation>
+          fiber_orientation;
 
       const int fiber_material_id_;
       const Mixture::PAR::RemodelFiberMaterial<double>* fiber_material_;
@@ -69,8 +71,6 @@ namespace Mixture
     void pack_constituent(Core::Communication::PackBuffer& data) const override;
 
     void unpack_constituent(Core::Communication::UnpackBuffer& buffer) override;
-
-    void register_anisotropy_extensions(Mat::Anisotropy& anisotropy) override;
 
     void read_element(int numgp, const Discret::Elements::Fibers& fibers,
         const std::optional<Discret::Elements::CoordinateSystem>& coord_system) override;
@@ -127,8 +127,7 @@ namespace Mixture
     /// An instance of the remodel fiber
     std::vector<RemodelFiber<2>> remodel_fiber_;
 
-    /// Handler for anisotropic input
-    Mat::DefaultAnisotropyExtension<1> anisotropy_extension_;
+    std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>> structural_tensors_;
   };
 }  // namespace Mixture
 

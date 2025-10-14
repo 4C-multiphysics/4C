@@ -30,7 +30,15 @@ Mixture::PAR::IsotropicCylinderPrestressStrategy::IsotropicCylinderPrestressStra
       wall_thickness_(matdata.parameters.get<double>("WALL_THICKNESS")),
       axial_prestretch_(matdata.parameters.get<double>("AXIAL_PRESTRETCH")),
       circumferential_prestretch_(matdata.parameters.get<double>("CIRCUMFERENTIAL_PRESTRETCH")),
-      pressure_(matdata.parameters.get<double>("PRESSURE"))
+      pressure_(matdata.parameters.get<double>("PRESSURE")),
+      radial(
+          matdata.parameters.get<Core::IO::InterpolatedInputField<Core::LinAlg::Tensor<double, 3>,
+              Mat::FiberInterpolation>>("RADIAL")),
+      axial(matdata.parameters.get<Core::IO::InterpolatedInputField<Core::LinAlg::Tensor<double, 3>,
+              Mat::FiberInterpolation>>("AXIAL")),
+      circumferential(
+          matdata.parameters.get<Core::IO::InterpolatedInputField<Core::LinAlg::Tensor<double, 3>,
+              Mat::FiberInterpolation>>("CIRCUMFERENTIAL"))
 {
 }
 
@@ -100,26 +108,12 @@ void Mixture::IsotropicCylinderPrestressStrategy::evaluate_prestress(const Mixtu
   const auto& growth_remodel_rule =
       dynamic_cast<const Mixture::GrowthRemodelMixtureRule&>(mixtureRule);
 
-
-  std::shared_ptr<const Mat::CylinderCoordinateSystemProvider> cylinderCosy =
-      cosy->get_cylinder_coordinate_system();
-
-  if (!(cylinderCosy))
-  {
-    FOUR_C_THROW(
-        "No cylinder coordinate system is defined but required by the cylinder prestress "
-        "strategy!");
-  }
   FOUR_C_ASSERT(context.ref_coords,
       "Reference coordinates not set in EvaluationContext, but required for function-based "
       "mixture rule!");
   const auto& reference_coordinates = *context.ref_coords;
 
-  double r = 0;
-  for (unsigned i = 0; i < 3; ++i)
-  {
-    r += cylinderCosy->get_rad()(i) * reference_coordinates(i);
-  }
+  double r = reference_coordinates * params_->radial.interpolate(eleGID, context.xi->as_span());
 
   double initial_constituent_reference_density =
       growth_remodel_rule.get_constituent_initial_reference_mass_density(constituent);
@@ -174,9 +168,13 @@ void Mixture::IsotropicCylinderPrestressStrategy::evaluate_prestress(const Mixtu
   }
 
   // Build prestretch tensor
-  G = lamb_pre * Core::LinAlg::self_dyadic<2>(cylinderCosy->get_rad());
-  G += params_->axial_prestretch_ * Core::LinAlg::self_dyadic<2>(cylinderCosy->get_axi());
-  G += params_->circumferential_prestretch_ * Core::LinAlg::self_dyadic<2>(cylinderCosy->get_cir());
+  G = lamb_pre *
+      Core::LinAlg::self_dyadic<2>(params_->radial.interpolate(eleGID, context.xi->as_span()));
+  G += params_->axial_prestretch_ *
+       Core::LinAlg::self_dyadic<2>(params_->axial.interpolate(eleGID, context.xi->as_span()));
+  G += params_->circumferential_prestretch_ *
+       Core::LinAlg::self_dyadic<2>(
+           params_->circumferential.interpolate(eleGID, context.xi->as_span()));
 }
 
 double Mixture::IsotropicCylinderPrestressStrategy::evaluate_mue_frac(MixtureRule& mixtureRule,
@@ -185,16 +183,6 @@ double Mixture::IsotropicCylinderPrestressStrategy::evaluate_mue_frac(MixtureRul
     const Teuchos::ParameterList& params, const Mat::EvaluationContext& context, int gp,
     int eleGID) const
 {
-  std::shared_ptr<const Mat::CylinderCoordinateSystemProvider> cylinderCosy =
-      cosy->get_cylinder_coordinate_system();
-
-  if (!(cylinderCosy))
-  {
-    FOUR_C_THROW(
-        "No cylinder coordinate system is defined but required by the cylinder prestress "
-        "strategy!");
-  }
-
   Core::LinAlg::Tensor<double, 3, 3> F =
       Core::LinAlg::get_full(Core::LinAlg::TensorGenerators::identity<double, 3, 3>);
   Core::LinAlg::SymmetricTensor<double, 3, 3> E_strain{};
@@ -204,8 +192,8 @@ double Mixture::IsotropicCylinderPrestressStrategy::evaluate_mue_frac(MixtureRul
 
   mixtureRule.evaluate(F, E_strain, params, context, S_stress, cmat, gp, eleGID);
 
-  Core::LinAlg::SymmetricTensor<double, 3, 3> Acir =
-      Core::LinAlg::self_dyadic(cylinderCosy->get_cir());
+  Core::LinAlg::SymmetricTensor<double, 3, 3> Acir = Core::LinAlg::self_dyadic(
+      params_->circumferential.interpolate(eleGID, context.xi->as_span()));
 
   // This prestress strategy is only valid for G&R simulations
   const auto& growth_remodel_rule =
@@ -214,7 +202,7 @@ double Mixture::IsotropicCylinderPrestressStrategy::evaluate_mue_frac(MixtureRul
       growth_remodel_rule.get_constituent_initial_reference_mass_density(constituent);
 
   Core::LinAlg::SymmetricTensor<double, 3, 3> Smembrane;
-  membraneEvaluation.evaluate_membrane_stress(Smembrane, params, gp, eleGID);
+  membraneEvaluation.evaluate_membrane_stress(Smembrane, params, context, gp, eleGID);
   Smembrane *= initial_constituent_reference_density;
 
   double total_stress =

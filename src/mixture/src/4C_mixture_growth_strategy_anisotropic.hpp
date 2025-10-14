@@ -10,8 +10,10 @@
 
 #include "4C_config.hpp"
 
+#include "4C_io_input_field.hpp"
 #include "4C_linalg_symmetric_tensor.hpp"
 #include "4C_mat_anisotropy_extension_default.hpp"
+#include "4C_mat_fiber_interpolation.hpp"
 #include "4C_mixture_growth_strategy.hpp"
 
 FOUR_C_NAMESPACE_OPEN
@@ -29,8 +31,9 @@ namespace Mixture
 
       std::unique_ptr<Mixture::MixtureGrowthStrategy> create_growth_strategy() override;
 
-      const int init_mode_;
-      const int fiber_id_;
+      const Core::IO::InterpolatedInputField<Core::LinAlg::Tensor<double, 3>,
+          Mat::FiberInterpolation>
+          growth_direction;
 
       /// structural tensor strategy
       std::shared_ptr<Mat::Elastic::StructuralTensorStrategyBase> structural_tensor_strategy_;
@@ -53,13 +56,11 @@ namespace Mixture
 
     void unpack_mixture_growth_strategy(Core::Communication::UnpackBuffer& buffer) override;
 
-    void register_anisotropy_extensions(Mat::Anisotropy& anisotropy) override;
-
     [[nodiscard]] bool has_inelastic_growth_deformation_gradient() const override { return true; };
 
     void evaluate_inverse_growth_deformation_gradient(Core::LinAlg::Tensor<double, 3, 3>& iFgM,
         const Mixture::MixtureRule& mixtureRule, double currentReferenceGrowthScalar,
-        int gp) const override;
+        const Mat::EvaluationContext& context, int gp, int eleGID) const override;
 
     void evaluate_growth_stress_cmat(const Mixture::MixtureRule& mixtureRule,
         double currentReferenceGrowthScalar,
@@ -74,8 +75,7 @@ namespace Mixture
     ///! growth parameters as defined in the input file
     const PAR::AnisotropicGrowthStrategy* params_{};
 
-    /// Anisotropy extension that manages fibers and structural tensors
-    Mat::DefaultAnisotropyExtension<1> anisotropy_extension_;
+    mutable std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>> structural_tensors_;
   };
 }  // namespace Mixture
 
