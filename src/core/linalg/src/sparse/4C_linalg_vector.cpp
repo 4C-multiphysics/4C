@@ -278,7 +278,10 @@ Core::LinAlg::Vector<int>& Core::LinAlg::Vector<int>::operator=(Vector&& other) 
 }
 
 
-int Core::LinAlg::Vector<int>::put_value(int Value) { return vector_->PutValue(Value); }
+void Core::LinAlg::Vector<int>::put_value(int Value)
+{
+  CHECK_EPETRA_CALL(vector_->PutValue(Value));
+}
 
 int Core::LinAlg::Vector<int>::max_value() { return vector_->MaxValue(); }
 
