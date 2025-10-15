@@ -93,37 +93,27 @@ void Constraints::MPConstraint3::initialize(const double& time)
 void Constraints::MPConstraint3::initialize(
     Teuchos::ParameterList& params, std::shared_ptr<Core::LinAlg::Vector<double>> systemvector)
 {
+  std::vector<double> vals;
+  std::vector<int> gids;
+  vals.reserve(constrcond_.size());
+  gids.reserve(constrcond_.size());
+
   const double time = params.get("total time", -1.0);
-  // in case init is set to true we want to set systemvector1 to the amplitudes defined
-  // in the input file
-  // allocate vectors for amplitudes and IDs
 
-  std::vector<double> amplit(constrcond_.size());
-  std::vector<int> IDs(constrcond_.size());
-  // read data of the input files
-
-  for (unsigned int i = 0; i < constrcond_.size(); i++)
+  for (unsigned int i = 0; i < constrcond_.size(); ++i)
   {
-    const Core::Conditions::Condition& cond = *(constrcond_[i]);
+    const auto& cond = *(constrcond_[i]);
+    const int condID = cond.parameters().get<int>("ConditionID");
 
-    int condID = cond.parameters().get<int>("ConditionID");
-    if (inittimes_.find(condID)->second <= time && (!(activecons_.find(condID)->second)))
+    if (inittimes_.find(condID)->second <= time && !activecons_.find(condID)->second)
     {
-      // control absolute values
       if (absconstraint_.find(condID)->second)
       {
-        // in case of a mpcnormalcomp3d-condition amplitude is always 0
-        //        if (Type()==mpcnormalcomp3d)
-        //          amplit[i]=0.0;
-        //        else
-        //        {
-        double MPCampl = constrcond_[i]->parameters().get<double>("amplitude");
-        amplit[i] = MPCampl;
-        //        }
+        const double MPCampl = constrcond_[i]->parameters().get<double>("amplitude");
         const int mid = params.get("OffsetID", 0);
-        IDs[i] = condID - mid;
+        vals.push_back(MPCampl);
+        gids.push_back(condID - mid);
       }
-      // control relative values
       else
       {
         switch (type())
@@ -135,23 +125,25 @@ void Constraints::MPConstraint3::initialize(
           case none:
             return;
           default:
-            FOUR_C_THROW("Constraint is not an multi point constraint!");
+            FOUR_C_THROW("Constraint is not a multi point constraint!");
         }
         initialize_constraint(*constraintdis_.find(condID)->second, params, *systemvector);
       }
+
       activecons_.find(condID)->second = true;
       if (Core::Communication::my_mpi_rank(actdisc_->get_comm()) == 0)
       {
         std::cout << "Encountered a new active condition (Id = " << condID
-                  << ")  at time t = " << time << std::endl;
+                  << ") at time t = " << time << std::endl;
       }
     }
   }
 
-  if (Core::Communication::my_mpi_rank(actdisc_->get_comm()) == 0)
-    systemvector->sum_into_global_values(amplit.size(), amplit.data(), IDs.data());
-
-  return;
+  // ---- only use the filled entries ----
+  if (!vals.empty())
+  {
+    systemvector->sum_into_global_values(static_cast<int>(vals.size()), vals.data(), gids.data());
+  }
 }
 
 /*-----------------------------------------------------------------------*
