@@ -155,7 +155,7 @@ void Arteries::ArtNetExplicitTimeInt::init(const Teuchos::ParameterList& globalt
   qn_ = Core::LinAlg::create_vector(*noderowmap, true);
   on_ = Core::LinAlg::create_vector(*noderowmap, true);
   an_ = Core::LinAlg::create_vector(*noderowmap, true);
-  nodeIds_ = Core::LinAlg::create_vector(*noderowmap, true);
+  nodeIds_ = Core::LinAlg::create_vector(*dofrowmap, true);
 
   // right hand side vector and right hand side corrector
   rhs_ = Core::LinAlg::create_vector(*dofrowmap, true);
@@ -220,15 +220,15 @@ void Arteries::ArtNetExplicitTimeInt::init(const Teuchos::ParameterList& globalt
 
     if (myrank_ == (lmowner)[0])
     {
-      int gid = lm[0];
-      double val = gid;
-      nodeIds_->replace_global_values(1, &val, &gid);
+      const int gid = lm[0];
+      const double v = static_cast<double>(gid);
+      if (nodeIds_->get_map().lid(gid) >= 0) nodeIds_->replace_global_values(1, &v, &gid);
     }
-    if (myrank_ == (lmowner)[1])
+    if (myrank_ == lmowner[1])
     {
-      int gid = lm[1];
-      double val = gid;
-      nodeIds_->replace_global_values(1, &val, &gid);
+      const int gid = lm[1];
+      const double v = static_cast<double>(gid);
+      if (nodeIds_->get_map().lid(gid) >= 0) nodeIds_->replace_global_values(1, &v, &gid);
     }
   }
 

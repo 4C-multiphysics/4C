@@ -607,11 +607,27 @@ void Adapter::FluidFSI::adams_bashforth2(const Core::LinAlg::Vector<double>& vel
   const double dto = fluidimpl_->dt_previous();
 
   // Do a single Adams-Bashforth 2 step
-  velnp.update(1.0, veln, 0.0);
-  velnp.update((2.0 * current_dt * dto + current_dt * current_dt) / (2 * dto), accn,
-      -current_dt * current_dt / (2.0 * dto), accnm, 1.0);
+  const double denom = 2.0 * dto;
+  FOUR_C_ASSERT(std::abs(denom) > 0.0, "dto must be nonzero in vel update");
 
-  return;
+  const double a = (2.0 * current_dt * dto + current_dt * current_dt) / denom;
+  const double b = -(current_dt * current_dt) / denom;
+  const double c = 1.0;
+
+  // If maps differ, remap sources onto velnp's map first
+  if (!velnp.get_map().same_as(accn.get_map()) || !velnp.get_map().same_as(accnm.get_map()))
+  {
+    Core::LinAlg::Vector<double> accn_on_vel(velnp.get_map());
+    Core::LinAlg::Vector<double> accnm_on_vel(velnp.get_map());
+    Core::LinAlg::export_to(accn, accn_on_vel);
+    Core::LinAlg::export_to(accnm, accnm_on_vel);
+
+    velnp.update(a, accn_on_vel, b, accnm_on_vel, c);
+  }
+  else
+  {
+    velnp.update(a, accn, b, accnm, c);
+  }
 }
 
 /*----------------------------------------------------------------------*
