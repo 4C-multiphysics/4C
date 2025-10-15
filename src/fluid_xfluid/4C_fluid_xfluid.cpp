@@ -800,8 +800,7 @@ void FLD::XFluid::assemble_mat_and_rhs(int itnum)
     // need to export residual_col to state_->residual_ (row)
     Core::LinAlg::Vector<double> res_tmp(state_->residual_->get_map(), true);
     Core::LinAlg::Export exporter(state_->residual_col_->get_map(), res_tmp.get_map());
-    int err2 = res_tmp.export_to(*state_->residual_col_, exporter, Add);
-    if (err2) FOUR_C_THROW("Export using exporter returned err={}", err2);
+    res_tmp.export_to(*state_->residual_col_, exporter, Add);
 
     // add Neumann loads and contributions from evaluate of volume and face integrals
     state_->residual_->update(1.0, res_tmp, 1.0, *state_->neumann_loads_, 0.0);
@@ -1511,8 +1510,7 @@ void FLD::XFluid::integrate_shape_function(Teuchos::ParameterList& eleparams,
   // need to export residual_col to systemvector1 (residual_)
   Core::LinAlg::Vector<double> vec_tmp(vec.get_map(), false);
   Core::LinAlg::Export exporter(strategy.systemvector1()->get_map(), vec_tmp.get_map());
-  int err2 = vec_tmp.export_to(*strategy.systemvector1(), exporter, Add);
-  if (err2) FOUR_C_THROW("Export using exporter returned err={}", err2);
+  vec_tmp.export_to(*strategy.systemvector1(), exporter, Add);
   vec.scale(1.0, vec_tmp);
 }
 
@@ -1598,8 +1596,7 @@ void FLD::XFluid::assemble_mat_and_rhs_gradient_penalty(
   // need to export residual_col to systemvector1 (residual_)
   Core::LinAlg::Vector<double> res_tmp(residual_gp.get_map(), false);
   Core::LinAlg::Export exporter(residual_gp_col->get_map(), res_tmp.get_map());
-  int err2 = res_tmp.export_to(*residual_gp_col, exporter, Add);
-  if (err2) FOUR_C_THROW("Export using exporter returned err={}", err2);
+  res_tmp.export_to(*residual_gp_col, exporter, Add);
   residual_gp.update(1.0, res_tmp, 1.0);
 
   //-------------------------------------------------------------------------------

@@ -240,29 +240,29 @@ namespace Core::LinAlg
     }
 
     //! Imports an Epetra_DistObject using the Core::LinAlg::Import object.
-    int import(const Epetra_SrcDistObject& A, const Core::LinAlg::Import& Importer,
+    void import(const Epetra_SrcDistObject& A, const Core::LinAlg::Import& Importer,
         Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr)
     {
-      return vector_->Import(A, Importer.get_epetra_import(), CombineMode, Indexor);
+      CHECK_EPETRA_CALL(vector_->Import(A, Importer.get_epetra_import(), CombineMode, Indexor));
     }
 
     //! Imports an Epetra_DistObject using the Core::LinAlg::Export object.
-    int import(const Epetra_SrcDistObject& A, const Core::LinAlg::Export& Exporter,
+    void import(const Epetra_SrcDistObject& A, const Core::LinAlg::Export& Exporter,
         Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr)
     {
-      return vector_->Import(A, Exporter.get_epetra_export(), CombineMode, Indexor);
+      CHECK_EPETRA_CALL(vector_->Import(A, Exporter.get_epetra_export(), CombineMode, Indexor));
     }
 
-    int export_to(const Epetra_SrcDistObject& A, const Core::LinAlg::Import& Importer,
+    void export_to(const Epetra_SrcDistObject& A, const Core::LinAlg::Import& Importer,
         Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr)
     {
-      return vector_->Export(A, Importer.get_epetra_import(), CombineMode, Indexor);
+      CHECK_EPETRA_CALL(vector_->Export(A, Importer.get_epetra_import(), CombineMode, Indexor));
     }
 
-    int export_to(const Epetra_SrcDistObject& A, const Core::LinAlg::Export& Exporter,
+    void export_to(const Epetra_SrcDistObject& A, const Core::LinAlg::Export& Exporter,
         Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr)
     {
-      return vector_->Export(A, Exporter.get_epetra_export(), CombineMode, Indexor);
+      CHECK_EPETRA_CALL(vector_->Export(A, Exporter.get_epetra_export(), CombineMode, Indexor));
     }
 
     /**

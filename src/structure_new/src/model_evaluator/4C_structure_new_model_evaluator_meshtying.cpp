@@ -132,8 +132,7 @@ void Solid::ModelEvaluator::Meshtying::setup()
           Core::LinAlg::Export exporter(
               Xslavemod->get_map(), *strategy_ptr_->non_redist_slave_row_dofs());
 
-          int err = original_vec->export_to(*Xslavemod, exporter, Insert);
-          if (err) FOUR_C_THROW("Import failed with err={}", err);
+          original_vec->export_to(*Xslavemod, exporter, Insert);
 
           Xslavemod_noredist = original_vec;
         }

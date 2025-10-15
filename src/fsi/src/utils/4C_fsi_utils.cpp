@@ -270,8 +270,8 @@ void FSI::Utils::SlideAleUtils::evaluate_mortar(Core::LinAlg::Vector<double>& id
   Core::LinAlg::Import master_importer(*dofrowmap, *structdofrowmap_);
   Core::LinAlg::Import slave_importer(*dofrowmap, *fluiddofrowmap_);
 
-  if (idispms_->import(idispstruct, master_importer, Add)) FOUR_C_THROW("Import operation failed.");
-  if (idispms_->import(idispfluid, slave_importer, Add)) FOUR_C_THROW("Import operation failed.");
+  idispms_->import(idispstruct, master_importer, Add);
+  idispms_->import(idispfluid, slave_importer, Add);
 
   // new D,M,Dinv out of disp of struct and fluid side
   coupsf.evaluate(idispms_);

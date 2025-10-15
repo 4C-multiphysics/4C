@@ -536,8 +536,7 @@ void FLD::XFluidFluid::add_eos_pres_stab_to_emb_layer()
   {
     Core::LinAlg::Vector<double> res_tmp(embedded_fluid_->residual()->get_map(), true);
     Core::LinAlg::Export exporter(residual_col->get_map(), res_tmp.get_map());
-    int err = res_tmp.export_to(*residual_col, exporter, Add);
-    if (err) FOUR_C_THROW("Export using exporter returned err={}", err);
+    res_tmp.export_to(*residual_col, exporter, Add);
     embedded_fluid_->residual()->update(1.0, res_tmp, 1.0);
   }
 
