@@ -1067,10 +1067,7 @@ void CONTACT::AbstractStrategy::calc_mean_velocity_for_binning(
 
     double meanVelocity = 0.0;
 
-    int err = interfaceVelocity.mean_value(&meanVelocity);
-    if (err)
-      FOUR_C_THROW(
-          "Calculation of mean velocity for interface {} failed.", interface->discret().name());
+    interfaceVelocity.mean_value(&meanVelocity);
     meanVelocity = abs(meanVelocity);
 
     ivel_.push_back(meanVelocity);

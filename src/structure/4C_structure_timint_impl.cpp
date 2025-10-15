@@ -2200,17 +2200,16 @@ int Solid::TimIntImpl::ls_eval_merit_fct(double& merit_fct)
 #ifdef FOUR_C_ENABLE_FE_TRAPPING
   fedisableexcept(FE_OVERFLOW);
 #endif
-  int err = 0;
   // Calculate the quadratic norm of the right-hand side as merit function
   // Calculate the merit function value: (1/2) * <RHS,RHS>
   if (fresn_str_ == nullptr)
   {
-    err = fres_->dot(*fres_, &merit_fct);
+    fres_->dot(*fres_, &merit_fct);
   }
   else
   {
     merit_fct = 0.;
-    err = fresn_str_->dot(*fresn_str_, &merit_fct);
+    fresn_str_->dot(*fresn_str_, &merit_fct);
     merit_fct += cond_res_;
   }
   merit_fct *= 0.5;
@@ -2219,9 +2218,7 @@ int Solid::TimIntImpl::ls_eval_merit_fct(double& merit_fct)
 #ifdef FOUR_C_ENABLE_FE_TRAPPING
   if (fetestexcept(FE_OVERFLOW)) exceptcount = 1;
 #endif
-  int exceptsum = 0;
-  exceptsum = Core::Communication::sum_all(exceptcount, discret_->get_comm());
-  if (exceptsum != 0) return err;
+  Core::Communication::sum_all(exceptcount, discret_->get_comm());
 #ifdef FOUR_C_ENABLE_FE_TRAPPING
   feclearexcept(FE_ALL_EXCEPT);
   feenableexcept(FE_OVERFLOW);

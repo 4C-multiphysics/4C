@@ -305,15 +305,13 @@ void CONTACT::Interface::set_cn_ct_values(const int& iter)
 
   // set all nodal cn-values to the input value
   get_cn() = Core::LinAlg::create_vector(*slave_row_nodes(), true);
-  int err = get_cn()->put_scalar(cn);
-  if (err != 0) FOUR_C_THROW("cn definition failed!");
+  get_cn()->put_scalar(cn);
 
   // set all nodal ct-values to the input value
   if (friction_)
   {
     get_ct() = Core::LinAlg::create_vector(*slave_row_nodes(), true);
-    err = get_ct()->put_scalar(ct);
-    if (err != 0) FOUR_C_THROW("cn definition failed!");
+    get_ct()->put_scalar(ct);
   }
 
   // modification for edge/corner nodes

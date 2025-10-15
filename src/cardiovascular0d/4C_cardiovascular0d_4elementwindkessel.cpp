@@ -171,8 +171,7 @@ void Utils::Cardiovascular0D4ElementWindkessel::evaluate(Teuchos::ParameterList&
     {
       for (int j = 0; j < numdof_per_cond; j++)
       {
-        int err = sysvec1->sum_into_global_values(1, &df_np[j], &gindex[j]);
-        if (err) FOUR_C_THROW("SumIntoGlobalValues failed!");
+        sysvec1->sum_into_global_values(1, &df_np[j], &gindex[j]);
       }
     }
     // rhs part f_np
@@ -180,8 +179,7 @@ void Utils::Cardiovascular0D4ElementWindkessel::evaluate(Teuchos::ParameterList&
     {
       for (int j = 0; j < numdof_per_cond; j++)
       {
-        int err = sysvec2->sum_into_global_values(1, &f_np[j], &gindex[j]);
-        if (err) FOUR_C_THROW("SumIntoGlobalValues failed!");
+        sysvec2->sum_into_global_values(1, &f_np[j], &gindex[j]);
       }
     }
 
@@ -292,10 +290,9 @@ void Utils::Cardiovascular0D4ElementWindkessel::initialize(Teuchos::ParameterLis
     double q_0 = 0.;
     double s_0 = 0.;
 
-    int err1 = sysvec2->sum_into_global_values(1, &p_0, &gindex[0]);
-    int err2 = sysvec2->sum_into_global_values(1, &q_0, &gindex[1]);
-    int err3 = sysvec2->sum_into_global_values(1, &s_0, &gindex[2]);
-    if (err1 or err2 or err3) FOUR_C_THROW("SumIntoGlobalValues failed!");
+    sysvec2->sum_into_global_values(1, &p_0, &gindex[0]);
+    sysvec2->sum_into_global_values(1, &q_0, &gindex[1]);
+    sysvec2->sum_into_global_values(1, &s_0, &gindex[2]);
 
     params.set<const Core::Conditions::Condition*>("condition", cond);
 

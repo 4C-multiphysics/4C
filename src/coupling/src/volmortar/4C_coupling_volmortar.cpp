@@ -1314,11 +1314,8 @@ void Coupling::VolMortar::VolMortarCoupl::mesh_init()
     err = mmatrix_xb_->multiply(false, *mergedXa, *solMB);
     if (err != 0) FOUR_C_THROW("stop");
 
-    err = solDA->update(-1.0, *solMA, 1.0);
-    if (err != 0) FOUR_C_THROW("stop");
-
-    err = solDB->update(-1.0, *solMB, 1.0);
-    if (err != 0) FOUR_C_THROW("stop");
+    solDA->update(-1.0, *solMA, 1.0);
+    solDB->update(-1.0, *solMB, 1.0);
 
     double ra = 0.0;
     double rb = 0.0;
@@ -1342,29 +1339,24 @@ void Coupling::VolMortar::VolMortarCoupl::mesh_init()
           Core::LinAlg::create_vector(*discret1()->dof_row_map(dofseta), true);
       std::shared_ptr<Core::LinAlg::Vector<double>> DiffB =
           Core::LinAlg::create_vector(*discret2()->dof_row_map(dofsetb), true);
-      err = DiffA->update(1.0, *solDA, 0.0);
-      if (err != 0) FOUR_C_THROW("stop");
-      err = DiffA->update(-1.0, *ResoldA, 1.0);
-      if (err != 0) FOUR_C_THROW("stop");
-      err = DiffB->update(1.0, *solDB, 0.0);
-      if (err != 0) FOUR_C_THROW("stop");
-      err = DiffB->update(-1.0, *ResoldB, 1.0);
-      if (err != 0) FOUR_C_THROW("stop");
+      DiffA->update(1.0, *solDA, 0.0);
+      DiffA->update(-1.0, *ResoldA, 1.0);
+      DiffB->update(1.0, *solDB, 0.0);
+      DiffB->update(-1.0, *ResoldB, 1.0);
 
       double topa = 0.0;
-      err = DiffA->dot(*solDA, &topa);
-      if (err != 0) FOUR_C_THROW("stop");
+      DiffA->dot(*solDA, &topa);
+
       double topb = 0.0;
-      err = DiffB->dot(*solDB, &topb);
-      if (err != 0) FOUR_C_THROW("stop");
+      DiffB->dot(*solDB, &topb);
+
       double top = -(topa + topb);
 
       double downa = 0.0;
-      err = DiffA->dot(*DiffA, &downa);
-      if (err != 0) FOUR_C_THROW("stop");
+      DiffA->dot(*DiffA, &downa);
+
       double downb = 0.0;
-      err = DiffB->dot(*DiffB, &downb);
-      if (err != 0) FOUR_C_THROW("stop");
+      DiffB->dot(*DiffB, &downb);
       double down = (downa + downb);
 
       fac = top / down;
@@ -1372,11 +1364,8 @@ void Coupling::VolMortar::VolMortarCoupl::mesh_init()
       nu = nu + (nu - 1.0) * fac;
     }
 
-    err = ResoldA->update(1.0, *solDA, 0.0);
-    if (err != 0) FOUR_C_THROW("stop");
-
-    err = ResoldB->update(1.0, *solDB, 0.0);
-    if (err != 0) FOUR_C_THROW("stop");
+    ResoldA->update(1.0, *solDA, 0.0);
+    ResoldB->update(1.0, *solDB, 0.0);
     //--------------------------------------------------------------
     //--------------------------------------------------------------
     // relaxation parameter
@@ -1547,11 +1536,9 @@ void Coupling::VolMortar::VolMortarCoupl::mesh_init()
     err = mmatrix_xb_->multiply(false, *checka, *finalMB);
     if (err != 0) FOUR_C_THROW("stop");
 
-    err = finalDA->update(-1.0, *finalMA, 1.0);
-    if (err != 0) FOUR_C_THROW("stop");
+    finalDA->update(-1.0, *finalMA, 1.0);
 
-    err = finalDB->update(-1.0, *finalMB, 1.0);
-    if (err != 0) FOUR_C_THROW("stop");
+    finalDB->update(-1.0, *finalMB, 1.0);
 
     double finalra = 0.0;
     double finalrb = 0.0;
@@ -3709,7 +3696,6 @@ void Coupling::VolMortar::VolMortarCoupl::create_projection_operator()
   Core::LinAlg::SparseMatrix invd1(*d1_);
   std::shared_ptr<Core::LinAlg::Vector<double>> diag1 =
       Core::LinAlg::create_vector(*p12_dofrowmap_, true);
-  int err = 0;
 
   // extract diagonal of invd into diag
   invd1.extract_diagonal_copy(*diag1);
@@ -3719,11 +3705,10 @@ void Coupling::VolMortar::VolMortarCoupl::create_projection_operator()
     if (abs((*diag1)[i]) < 1e-12) (*diag1).get_values()[i] = 1.0;
 
   // scalar inversion of diagonal values
-  err = diag1->reciprocal(*diag1);
-  if (err > 0) FOUR_C_THROW("ERROR: Reciprocal: Zero diagonal entry!");
+  diag1->reciprocal(*diag1);
 
   // re-insert inverted diagonal into invd
-  err = invd1.replace_diagonal_values(*diag1);
+  invd1.replace_diagonal_values(*diag1);
 
   // do the multiplication P = inv(D) * M
   std::shared_ptr<Core::LinAlg::SparseMatrix> aux12 =
@@ -3744,11 +3729,10 @@ void Coupling::VolMortar::VolMortarCoupl::create_projection_operator()
     if (abs((*diag2)[i]) < 1e-12) (*diag2).get_values()[i] = 1.0;
 
   // scalar inversion of diagonal values
-  err = diag2->reciprocal(*diag2);
-  if (err > 0) FOUR_C_THROW("ERROR: Reciprocal: Zero diagonal entry!");
+  diag2->reciprocal(*diag2);
 
   // re-insert inverted diagonal into invd
-  err = invd2.replace_diagonal_values(*diag2);
+  invd2.replace_diagonal_values(*diag2);
 
   // do the multiplication P = inv(D) * M
   std::shared_ptr<Core::LinAlg::SparseMatrix> aux21 =

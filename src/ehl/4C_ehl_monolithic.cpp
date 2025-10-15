@@ -321,7 +321,7 @@ void EHL::Monolithic::evaluate(std::shared_ptr<Core::LinAlg::Vector<double>> ste
   // note: the iteration update has not been done yet
   std::shared_ptr<Core::LinAlg::Vector<double>> new_disp =
       std::make_shared<Core::LinAlg::Vector<double>>(*structure_->dispnp());
-  if (new_disp->update(1., *sx, 1.)) FOUR_C_THROW("update failed");
+  new_disp->update(1., *sx, 1.);
 
   // set interface height, velocity etc to lubrication field
   set_struct_solution(new_disp);
@@ -1313,8 +1313,8 @@ void EHL::Monolithic::scale_system(
     std::shared_ptr<Core::LinAlg::Vector<double>> sx = extractor()->extract_vector(b, 0);
     std::shared_ptr<Core::LinAlg::Vector<double>> lx = extractor()->extract_vector(b, 1);
 
-    if (sx->multiply(1.0, *srowsum_, *sx, 0.0)) FOUR_C_THROW("structure scaling failed");
-    if (lx->multiply(1.0, *lrowsum_, *lx, 0.0)) FOUR_C_THROW("lubrication scaling failed");
+    sx->multiply(1.0, *srowsum_, *sx, 0.0);
+    lx->multiply(1.0, *lrowsum_, *lx, 0.0);
 
     extractor()->insert_vector(*sx, 0, b);
     extractor()->insert_vector(*lx, 1, b);
@@ -1335,8 +1335,8 @@ void EHL::Monolithic::unscale_solution(Core::LinAlg::BlockSparseMatrixBase& mat,
     std::shared_ptr<Core::LinAlg::Vector<double>> sy = extractor()->extract_vector(x, 0);
     std::shared_ptr<Core::LinAlg::Vector<double>> ly = extractor()->extract_vector(x, 1);
 
-    if (sy->multiply(1.0, *scolsum_, *sy, 0.0)) FOUR_C_THROW("structure scaling failed");
-    if (ly->multiply(1.0, *lcolsum_, *ly, 0.0)) FOUR_C_THROW("lubrication scaling failed");
+    sy->multiply(1.0, *scolsum_, *sy, 0.0);
+    ly->multiply(1.0, *lcolsum_, *ly, 0.0);
 
     extractor()->insert_vector(*sy, 0, x);
     extractor()->insert_vector(*ly, 1, x);
@@ -1344,9 +1344,8 @@ void EHL::Monolithic::unscale_solution(Core::LinAlg::BlockSparseMatrixBase& mat,
     std::shared_ptr<Core::LinAlg::Vector<double>> sx = extractor()->extract_vector(b, 0);
     std::shared_ptr<Core::LinAlg::Vector<double>> lx = extractor()->extract_vector(b, 1);
 
-    if (sx->reciprocal_multiply(1.0, *srowsum_, *sx, 0.0)) FOUR_C_THROW("structure scaling failed");
-    if (lx->reciprocal_multiply(1.0, *lrowsum_, *lx, 0.0))
-      FOUR_C_THROW("lubrication scaling failed");
+    sx->reciprocal_multiply(1.0, *srowsum_, *sx, 0.0);
+    lx->reciprocal_multiply(1.0, *lrowsum_, *lx, 0.0);
 
     extractor()->insert_vector(*sx, 0, b);
     extractor()->insert_vector(*lx, 1, b);
@@ -1694,7 +1693,7 @@ void EHL::Monolithic::lin_couette_force_disp(
   if (slavemaptransform_->multiply(false, *mortaradapter_->nodal_gap(), height))
     FOUR_C_THROW("multiply failed");
   Core::LinAlg::Vector<double> h_inv(*mortaradapter_->slave_dof_map());
-  if (h_inv.reciprocal(height)) FOUR_C_THROW("Reciprocal failed");
+  h_inv.reciprocal(height);
 
   Core::LinAlg::Vector<double> hinv_visc(*mortaradapter_->slave_dof_map());
   hinv_visc.multiply(1., h_inv, *visc_vec_str, 0.);
@@ -1815,7 +1814,7 @@ void EHL::Monolithic::lin_couette_force_pres(
   if (slavemaptransform_->multiply(false, *mortaradapter_->nodal_gap(), height))
     FOUR_C_THROW("multiply failed");
   Core::LinAlg::Vector<double> h_inv(*mortaradapter_->slave_dof_map());
-  if (h_inv.reciprocal(height)) FOUR_C_THROW("Reciprocal failed");
+  h_inv.reciprocal(height);
   Core::LinAlg::Vector<double> hinv_relV(*mortaradapter_->slave_dof_map());
   hinv_relV.multiply(1., h_inv, *relVel, 0.);
 

@@ -949,8 +949,7 @@ void ScaTra::LevelSetAlgorithm::reinit_geo(
       if ((*phinp_)[doflid] < 0.0) eledistance.front().second = -eledistance.front().second;
     }
 
-    int err = phinp_->replace_local_value(doflid, eledistance.front().second);
-    if (err) FOUR_C_THROW("this did not work");
+    phinp_->replace_local_value(doflid, eledistance.front().second);
   }
 
   if (myrank_ == 0) std::cout << " done" << std::endl;

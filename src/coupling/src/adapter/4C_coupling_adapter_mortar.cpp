@@ -1015,8 +1015,7 @@ void Coupling::Adapter::CouplingMortar::create_p()
   }
 
   // scalar inversion of diagonal values
-  err = diag->reciprocal(*diag);
-  if (err != 0) FOUR_C_THROW("Reciprocal: Zero diagonal entry!");
+  diag->reciprocal(*diag);
 
   // re-insert inverted diagonal into invd
   err = Dinv_->replace_diagonal_values(*diag);

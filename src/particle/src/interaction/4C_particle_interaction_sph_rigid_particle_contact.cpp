@@ -333,9 +333,8 @@ void ParticleInteraction::SPHRigidParticleContactElastic::
           nodal_force[node * 3 + dim] = funct[node] * wallcontactforce[dim];
 
       // assemble nodal forces
-      const int err = walldatastate->get_force_col()->sum_into_global_values(
+      walldatastate->get_force_col()->sum_into_global_values(
           numnodes * 3, nodal_force.data(), lmele.data());
-      if (err < 0) FOUR_C_THROW("sum into Core::LinAlg::Vector<double> failed!");
     }
   }
 

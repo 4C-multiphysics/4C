@@ -196,41 +196,23 @@ namespace ReducedLung
     Core::LinAlg::Vector<double> flow_in(*element_row_map, true);
     for (const auto& airway : airways)
     {
-      [[maybe_unused]] int err = pressure_in.replace_local_value(
+      pressure_in.replace_local_value(
           airway.local_element_id, locally_relevant_dofs[airway.local_dof_ids[p_in]]);
-      FOUR_C_ASSERT(err == 0,
-          "Internal error: replace_local_value for runtime output (p_in from airways) did not "
-          "work.");
-      err = pressure_out.replace_local_value(
+      pressure_out.replace_local_value(
           airway.local_element_id, locally_relevant_dofs[airway.local_dof_ids[p_out]]);
-      FOUR_C_ASSERT(err == 0,
-          "Internal error: replace_local_value for runtime output (p_out from airways) did not "
-          "work.");
-      err = flow_in.replace_local_value(
+      flow_in.replace_local_value(
           airway.local_element_id, locally_relevant_dofs[airway.local_dof_ids[q_in]]);
-      FOUR_C_ASSERT(err == 0,
-          "Internal error: replace_local_value for runtime output (q_in from airways) did not "
-          "work.");
     }
     for (const auto& model : terminal_units.models)
     {
       for (size_t i = 0; i < model.data.number_of_elements(); i++)
       {
-        [[maybe_unused]] int err = pressure_in.replace_local_value(
+        pressure_in.replace_local_value(
             model.data.local_element_id[i], locally_relevant_dofs[model.data.lid_p1[i]]);
-        FOUR_C_ASSERT(err == 0,
-            "Internal error: replace_local_value for runtime output (p_in from terminal units) did "
-            "not work.");
-        err = pressure_out.replace_local_value(
+        pressure_out.replace_local_value(
             model.data.local_element_id[i], locally_relevant_dofs[model.data.lid_p2[i]]);
-        FOUR_C_ASSERT(err == 0,
-            "Internal error: replace_local_value for runtime output (p_out from terminal units) "
-            "did not work.");
-        err = flow_in.replace_local_value(
+        flow_in.replace_local_value(
             model.data.local_element_id[i], locally_relevant_dofs[model.data.lid_q[i]]);
-        FOUR_C_ASSERT(err == 0,
-            "Internal error: replace_local_value for runtime output (q_in from terminal units) did "
-            "not work.");
       }
     }
     visualization_writer.append_result_data_vector_with_context(

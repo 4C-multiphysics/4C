@@ -153,8 +153,7 @@ void Core::LinAlg::EquilibrationUniversal::unequilibrate_increment(
       method() == EquilibrationMethod::rowsandcolumns_full or
       method() == EquilibrationMethod::rowsandcolumns_maindiag)
   {
-    if (increment->multiply(1.0, *invcolsums_, *increment, 0.0))
-      FOUR_C_THROW("Unequilibration of global increment vector failed!");
+    increment->multiply(1.0, *invcolsums_, *increment, 0.0);
   }
 }
 
@@ -168,8 +167,7 @@ void Core::LinAlg::EquilibrationUniversal::equilibrate_rhs(
       method() == EquilibrationMethod::rows_maindiag or
       method() == EquilibrationMethod::rowsandcolumns_full or
       method() == EquilibrationMethod::rowsandcolumns_maindiag)
-    if (residual->multiply(1.0, *invrowsums_, *residual, 0.0))
-      FOUR_C_THROW("Equilibration of global residual vector failed!");
+    residual->multiply(1.0, *invrowsums_, *residual, 0.0);
 }
 
 /*----------------------------------------------------------------------*
@@ -177,8 +175,7 @@ void Core::LinAlg::EquilibrationUniversal::equilibrate_rhs(
 void Core::LinAlg::EquilibrationBlockSpecific::unequilibrate_increment(
     std::shared_ptr<Core::LinAlg::Vector<double>> increment) const
 {
-  if (increment->multiply(1.0, *invcolsums_, *increment, 0.0))
-    FOUR_C_THROW("Unequilibration of global increment vector failed!");
+  increment->multiply(1.0, *invcolsums_, *increment, 0.0);
 }
 
 /*----------------------------------------------------------------------*
@@ -186,8 +183,7 @@ void Core::LinAlg::EquilibrationBlockSpecific::unequilibrate_increment(
 void Core::LinAlg::EquilibrationBlockSpecific::equilibrate_rhs(
     std::shared_ptr<Core::LinAlg::Vector<double>> residual) const
 {
-  if (residual->multiply(1.0, *invrowsums_, *residual, 0.0))
-    FOUR_C_THROW("Equilibration of global residual vector failed!");
+  residual->multiply(1.0, *invrowsums_, *residual, 0.0);
 }
 
 /*-------------------------------------------------------------------------*
@@ -295,7 +291,7 @@ void Core::LinAlg::EquilibrationBlock::equilibrate_matrix(
         }
 
         // invert row sums
-        if (invrowsums.reciprocal(invrowsums)) FOUR_C_THROW("Vector could not be inverted!");
+        invrowsums.reciprocal(invrowsums);
 
         // take square root of inverse row sums if matrix is scaled from left and right
         if (method() == EquilibrationMethod::rowsandcolumns_full or
@@ -367,7 +363,7 @@ void Core::LinAlg::EquilibrationBlock::equilibrate_matrix(
         }
 
         // invert column sums
-        if (invcolsums->reciprocal(*invcolsums)) FOUR_C_THROW("Vector could not be inverted!");
+        invcolsums->reciprocal(*invcolsums);
 
         // take square root of inverse column sums if matrix is scaled from left and right
         if (method() == EquilibrationMethod::rowsandcolumns_full or

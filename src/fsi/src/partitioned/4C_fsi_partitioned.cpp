@@ -828,8 +828,7 @@ std::shared_ptr<Core::LinAlg::Vector<double>> FSI::Partitioned::fluid_to_struct(
         mb_fluid_field()->integrate_interface_shape();
     Core::LinAlg::Vector<double> iforce(iv->get_map());
 
-    if (iforce.reciprocal_multiply(1.0, *ishape, *iv, 0.0))
-      FOUR_C_THROW("ReciprocalMultiply failed");
+    iforce.reciprocal_multiply(1.0, *ishape, *iv, 0.0);
 
     return coupsfm_->slave_to_master(iforce);
   }

@@ -1015,8 +1015,8 @@ void FSI::MortarMonolithicFluidSplit::scale_system(
     std::shared_ptr<Core::LinAlg::Vector<double>> sx = extractor().extract_vector(b, 0);
     std::shared_ptr<Core::LinAlg::Vector<double>> ax = extractor().extract_vector(b, 2);
 
-    if (sx->multiply(1.0, *srowsum_, *sx, 0.0)) FOUR_C_THROW("structure scaling failed");
-    if (ax->multiply(1.0, *arowsum_, *ax, 0.0)) FOUR_C_THROW("ale scaling failed");
+    sx->multiply(1.0, *srowsum_, *sx, 0.0);
+    ax->multiply(1.0, *arowsum_, *ax, 0.0);
 
     extractor().insert_vector(*sx, 0, b);
     extractor().insert_vector(*ax, 2, b);
@@ -1037,8 +1037,8 @@ void FSI::MortarMonolithicFluidSplit::unscale_solution(Core::LinAlg::BlockSparse
     std::shared_ptr<Core::LinAlg::Vector<double>> sy = extractor().extract_vector(x, 0);
     std::shared_ptr<Core::LinAlg::Vector<double>> ay = extractor().extract_vector(x, 2);
 
-    if (sy->multiply(1.0, *scolsum_, *sy, 0.0)) FOUR_C_THROW("structure scaling failed");
-    if (ay->multiply(1.0, *acolsum_, *ay, 0.0)) FOUR_C_THROW("ale scaling failed");
+    sy->multiply(1.0, *scolsum_, *sy, 0.0);
+    ay->multiply(1.0, *acolsum_, *ay, 0.0);
 
     // get info about STC feature and unscale solution if necessary
     Inpar::Solid::StcScale stcalgo = structure_field()->get_stc_algo();
@@ -1053,8 +1053,8 @@ void FSI::MortarMonolithicFluidSplit::unscale_solution(Core::LinAlg::BlockSparse
     std::shared_ptr<Core::LinAlg::Vector<double>> sx = extractor().extract_vector(b, 0);
     std::shared_ptr<Core::LinAlg::Vector<double>> ax = extractor().extract_vector(b, 2);
 
-    if (sx->reciprocal_multiply(1.0, *srowsum_, *sx, 0.0)) FOUR_C_THROW("structure scaling failed");
-    if (ax->reciprocal_multiply(1.0, *arowsum_, *ax, 0.0)) FOUR_C_THROW("ale scaling failed");
+    sx->reciprocal_multiply(1.0, *srowsum_, *sx, 0.0);
+    ax->reciprocal_multiply(1.0, *arowsum_, *ax, 0.0);
 
     // get info about STC feature
     if (stcalgo != Inpar::Solid::stc_inactive)

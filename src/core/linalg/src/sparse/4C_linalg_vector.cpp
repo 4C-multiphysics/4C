@@ -88,57 +88,64 @@ Core::LinAlg::MultiVector<T>& Core::LinAlg::Vector<T>::as_multi_vector()
 
 
 template <typename T>
-int Core::LinAlg::Vector<T>::norm_1(double* Result) const
+void Core::LinAlg::Vector<T>::norm_1(double* Result) const
 {
-  return vector_->Norm1(Result);
+  CHECK_EPETRA_CALL(vector_->Norm1(Result));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::norm_2(double* Result) const
+void Core::LinAlg::Vector<T>::norm_2(double* Result) const
 {
-  return vector_->Norm2(Result);
+  CHECK_EPETRA_CALL(vector_->Norm2(Result));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::norm_inf(double* Result) const
+void Core::LinAlg::Vector<T>::norm_inf(double* Result) const
 {
-  return vector_->NormInf(Result);
+  CHECK_EPETRA_CALL(vector_->NormInf(Result));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::min_value(double* Result) const
+void Core::LinAlg::Vector<T>::min_value(double* Result) const
 {
-  return vector_->MinValue(Result);
+  CHECK_EPETRA_CALL(vector_->MinValue(Result));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::max_value(double* Result) const
+void Core::LinAlg::Vector<T>::max_value(double* Result) const
 {
-  return vector_->MaxValue(Result);
+  CHECK_EPETRA_CALL(vector_->MaxValue(Result));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::mean_value(double* Result) const
+void Core::LinAlg::Vector<T>::mean_value(double* Result) const
 {
-  return vector_->MeanValue(Result);
+  CHECK_EPETRA_CALL(vector_->MeanValue(Result));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::dot(const Epetra_MultiVector& A, double* Result) const
+void Core::LinAlg::Vector<T>::scale(double ScalarValue)
 {
-  return vector_->Dot(A, Result);
+  CHECK_EPETRA_CALL(vector_->Scale(ScalarValue));
+}
+
+
+template <typename T>
+void Core::LinAlg::Vector<T>::dot(const Epetra_MultiVector& A, double* Result) const
+{
+  CHECK_EPETRA_CALL(vector_->Dot(A, Result));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::abs(const Epetra_MultiVector& A)
+void Core::LinAlg::Vector<T>::abs(const Epetra_MultiVector& A)
 {
-  return vector_->Abs(A);
+  CHECK_EPETRA_CALL(vector_->Abs(A));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::scale(double ScalarA, const Epetra_MultiVector& A)
+void Core::LinAlg::Vector<T>::scale(double ScalarA, const Epetra_MultiVector& A)
 {
-  return vector_->Scale(ScalarA, A);
+  CHECK_EPETRA_CALL(vector_->Scale(ScalarA, A));
 }
 
 template <typename T>
@@ -156,40 +163,40 @@ int Core::LinAlg::Vector<T>::update(double ScalarA, const Epetra_MultiVector& A,
 
 
 template <typename T>
-int Core::LinAlg::Vector<T>::dot(const Vector& A, double* Result) const
+void Core::LinAlg::Vector<T>::dot(const Vector& A, double* Result) const
 {
-  return vector_->Dot(A, Result);
+  CHECK_EPETRA_CALL(vector_->Dot(A, Result));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::abs(const Vector& A)
+void Core::LinAlg::Vector<T>::abs(const Vector& A)
 {
-  return vector_->Abs(A);
+  CHECK_EPETRA_CALL(vector_->Abs(A));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::scale(double ScalarA, const Vector& A)
+void Core::LinAlg::Vector<T>::scale(double ScalarA, const Vector& A)
 {
-  return vector_->Scale(ScalarA, A);
+  CHECK_EPETRA_CALL(vector_->Scale(ScalarA, A));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::update(double ScalarA, const Vector& A, double ScalarThis)
+void Core::LinAlg::Vector<T>::update(double ScalarA, const Vector& A, double ScalarThis)
 {
-  return vector_->Update(ScalarA, A, ScalarThis);
+  CHECK_EPETRA_CALL(vector_->Update(ScalarA, A, ScalarThis));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::update(
+void Core::LinAlg::Vector<T>::update(
     double ScalarA, const Vector& A, double ScalarB, const Vector& B, double ScalarThis)
 {
-  return vector_->Update(ScalarA, A, ScalarB, B.get_ref_of_epetra_vector(), ScalarThis);
+  CHECK_EPETRA_CALL(vector_->Update(ScalarA, A, ScalarB, B.get_ref_of_epetra_vector(), ScalarThis));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::put_scalar(double ScalarConstant)
+void Core::LinAlg::Vector<T>::put_scalar(double ScalarConstant)
 {
-  return vector_->PutScalar(ScalarConstant);
+  CHECK_EPETRA_CALL(vector_->PutScalar(ScalarConstant));
 }
 
 

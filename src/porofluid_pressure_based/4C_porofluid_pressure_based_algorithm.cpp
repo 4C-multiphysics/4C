@@ -2016,8 +2016,8 @@ void PoroPressureBased::PorofluidAlgorithm::set_initial_field(
           double initialval = Global::Problem::instance()
                                   ->function_by_id<Core::Utils::FunctionOfSpaceTime>(startfuncno)
                                   .evaluate(lnode.x(), time_, k);
-          int err = phin_->replace_local_value(doflid, initialval);
-          if (err != 0) FOUR_C_THROW("dof not on proc");
+          phin_->replace_local_value(doflid, initialval);
+          ;
         }
       }
 
@@ -2247,10 +2247,7 @@ void PoroPressureBased::PorofluidAlgorithm::fd_check()
     phinp_->update(1., phinp_original, 0.);
 
     // impose perturbation
-    if (phinp_->get_map().my_gid(colgid))
-      if (phinp_->sum_into_global_value(colgid, fdcheckeps_))
-        FOUR_C_THROW(
-            "Perturbation could not be imposed on state vector for finite difference check!");
+    if (phinp_->get_map().my_gid(colgid)) phinp_->sum_into_global_value(colgid, fdcheckeps_);
 
     compute_time_derivative();
 

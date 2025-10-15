@@ -518,13 +518,12 @@ namespace FLD
       // get local dof id corresponding to the global id
       int lid = discret_->dof_row_map()->lid(dofs[0]);
       // set value
-      int err = velnp_->replace_local_value(lid, u1[pos]);
+      velnp_->replace_local_value(lid, u1[pos]);
       // analogous for remaining directions
       lid = discret_->dof_row_map()->lid(dofs[1]);
-      err = velnp_->replace_local_value(lid, u2[pos]);
+      velnp_->replace_local_value(lid, u2[pos]);
       lid = discret_->dof_row_map()->lid(dofs[2]);
-      err = velnp_->replace_local_value(lid, u3[pos]);
-      if (err > 0) FOUR_C_THROW("Could not set initial field!");
+      velnp_->replace_local_value(lid, u3[pos]);
     }
 
     // initialize veln_ as well

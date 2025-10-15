@@ -703,9 +703,7 @@ void ScaTra::ScaTraTimIntImpl::compute_density()
     const int localdofid = phiafnp()->get_map().lid(globaldofid);
     if (localdofid < 0) FOUR_C_THROW("Local dof ID not found in dof map!");
 
-    int err = densafnp_->replace_local_value(localdofid, density);
-
-    if (err) FOUR_C_THROW("Error while inserting nodal density value into global density vector!");
+    densafnp_->replace_local_value(localdofid, density);
   }
 }
 
@@ -1351,8 +1349,7 @@ void ScaTra::ScaTraTimIntImpl::avm3_scaling(Teuchos::ParameterList& eleparams)
   for (int i = 0; i < length; ++i)
   {
     sgvsqrt[i] = sqrt(sgvsqrt[i]);
-    int err = subgrdiff_->replace_local_value(i, sgvsqrt[i]);
-    if (err != 0) FOUR_C_THROW("index not found");
+    subgrdiff_->replace_local_value(i, sgvsqrt[i]);
   }
 
   // get unscaled S^T*M*S from Sep
@@ -1814,9 +1811,7 @@ void ScaTra::ScaTraTimIntImpl::fd_check()
     // impose perturbation
     if (phinp_->get_map().my_gid(colgid))
     {
-      if (phinp_->sum_into_global_value(colgid, fdcheckeps_))
-        FOUR_C_THROW(
-            "Perturbation could not be imposed on state vector for finite difference check!");
+      phinp_->sum_into_global_value(colgid, fdcheckeps_);
     }
 
     // carry perturbation over to state vectors at intermediate time stages if necessary
@@ -2188,8 +2183,7 @@ void ScaTra::ScaTraTimIntImpl::perform_aitken_relaxation(
     // compute dot product between increment of macro-scale state vector and difference between
     // current and previous increments of macro-scale state vector
     double phinp_inc_dot_phinp_inc_diff(0.);
-    if (phinp_inc_diff.dot(*phinp_inc_, &phinp_inc_dot_phinp_inc_diff))
-      FOUR_C_THROW("Couldn't compute dot product!");
+    phinp_inc_diff.dot(*phinp_inc_, &phinp_inc_dot_phinp_inc_diff);
 
     // compute Aitken relaxation factor
     if (iternum_outer_ > 1 and phinp_inc_diff_L2 > 1.e-12)

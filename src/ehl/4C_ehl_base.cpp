@@ -313,13 +313,13 @@ void EHL::Base::add_pressure_force(
   // f_slave = D^T*t
   int err = mortard->multiply(true, *stritraction, slaveiforce);
   if (err != 0) FOUR_C_THROW("error while calculating slave side interface force");
-  if (stritraction_D_->update(1., *stritraction, 1.)) FOUR_C_THROW("Update failed");
+  stritraction_D_->update(1., *stritraction, 1.);
 
   // f_master = -M^T*t
   err = mortarm->multiply(true, *stritraction, masteriforce);
   if (err != 0) FOUR_C_THROW("error while calculating master side interface force");
   masteriforce.scale(-1.0);
-  if (stritraction_M_->update(-1., *stritraction, 1.)) FOUR_C_THROW("update failed");
+  stritraction_M_->update(-1., *stritraction, 1.);
 }
 
 void EHL::Base::add_poiseuille_force(
@@ -349,17 +349,17 @@ void EHL::Base::add_poiseuille_force(
   // f_slave = D^T*t
   if (mortaradapter_->get_mortar_matrix_d()->multiply(true, poiseuille_force, slave_psl))
     FOUR_C_THROW("Multiply failed");
-  if (stritraction_D_->update(1., poiseuille_force, 1.)) FOUR_C_THROW("Update failed");
+  stritraction_D_->update(1., poiseuille_force, 1.);
 
   // f_master = +M^T*t // attention: no minus sign here: poiseuille points in same direction on
   // slave and master side
   if (mortaradapter_->get_mortar_matrix_m()->multiply(true, poiseuille_force, master_psl))
     FOUR_C_THROW("Multiply failed");
-  if (stritraction_M_->update(1., poiseuille_force, 1.)) FOUR_C_THROW("update failed");
+  stritraction_M_->update(1., poiseuille_force, 1.);
 
   // add the contribution
-  if (slaveiforce.update(1., slave_psl, 1.)) FOUR_C_THROW("Update failed");
-  if (masteriforce.update(1., master_psl, 1.)) FOUR_C_THROW("Update failed");
+  slaveiforce.update(1., slave_psl, 1.);
+  masteriforce.update(1., master_psl, 1.);
 }
 
 
@@ -372,7 +372,7 @@ void EHL::Base::add_couette_force(
   if (slavemaptransform_->multiply(false, *mortaradapter_->nodal_gap(), height))
     FOUR_C_THROW("multiply failed");
   Core::LinAlg::Vector<double> h_inv(*mortaradapter_->slave_dof_map());
-  if (h_inv.reciprocal(height)) FOUR_C_THROW("Reciprocal failed");
+  h_inv.reciprocal(height);
   Core::LinAlg::Vector<double> hinv_relV(*mortaradapter_->slave_dof_map());
   hinv_relV.multiply(1., h_inv, *relVel, 0.);
 
@@ -403,16 +403,16 @@ void EHL::Base::add_couette_force(
   // f_slave = D^T*t
   if (mortaradapter_->get_mortar_matrix_d()->multiply(true, couette_force, slave_cou))
     FOUR_C_THROW("Multiply failed");
-  if (stritraction_D_->update(1., couette_force, 1.)) FOUR_C_THROW("Update failed");
+  stritraction_D_->update(1., couette_force, 1.);
 
   // f_master = -M^T*t
   if (mortaradapter_->get_mortar_matrix_m()->multiply(true, couette_force, master_cou))
     FOUR_C_THROW("Multiply failed");
-  if (stritraction_M_->update(-1., couette_force, 1.)) FOUR_C_THROW("update failed");
+  stritraction_M_->update(-1., couette_force, 1.);
 
   // add the contribution
-  if (slaveiforce.update(1., slave_cou, 1.)) FOUR_C_THROW("Update failed");
-  if (masteriforce.update(-1., master_cou, 1.)) FOUR_C_THROW("Update failed");
+  slaveiforce.update(1., slave_cou, 1.);
+  masteriforce.update(-1., master_cou, 1.);
 }
 
 /*----------------------------------------------------------------------*

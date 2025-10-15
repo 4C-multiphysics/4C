@@ -716,8 +716,7 @@ void FS3I::BiofilmFSI::compute_interface_vectors(Core::LinAlg::Vector<double>& i
                   tangtwoforcecoef_ * tangtwoforce * unitnormal[j];
     }
 
-    int error = struiveln_->replace_global_values(numdim, Values.data(), globaldofs.data());
-    if (error > 0) FOUR_C_THROW("Could not insert values into vector struiveln_: error {}", error);
+    struiveln_->replace_global_values(numdim, Values.data(), globaldofs.data());
   }
 
   struidispnp->update(dt_bio_, *struiveln_, 0.0);

@@ -486,8 +486,7 @@ void FLD::TurbulenceStatisticsCcy::do_time_sample(Core::LinAlg::Vector<double>& 
 
     if (fullphinp != nullptr)
     {
-      int err = meanfullphinp_->update(1.0, *fullphinp, 0.0);
-      if (err) FOUR_C_THROW("Could not update meanfullphinp_");
+      meanfullphinp_->update(1.0, *fullphinp, 0.0);
     }
     else
       FOUR_C_THROW("Vector fullphinp is nullptr");

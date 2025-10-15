@@ -1060,7 +1060,6 @@ void Adapter::CouplingNonLinMortar::create_p()
   Dinv_ = std::make_shared<Core::LinAlg::SparseMatrix>(*D_);
   std::shared_ptr<Core::LinAlg::Vector<double>> diag =
       Core::LinAlg::create_vector(*slavedofrowmap_, true);
-  int err = 0;
 
   // extract diagonal of invd into diag
   Dinv_->extract_diagonal_copy(*diag);
@@ -1077,12 +1076,10 @@ void Adapter::CouplingNonLinMortar::create_p()
   }
 
   // scalar inversion of diagonal values
-  err = diag->reciprocal(*diag);
-  if (err > 0) FOUR_C_THROW("ERROR: Reciprocal: Zero diagonal entry!");
+  diag->reciprocal(*diag);
 
   // re-insert inverted diagonal into invd
-  err = Dinv_->replace_diagonal_values(*diag);
-  if (err > 0) FOUR_C_THROW("ERROR: replace_diagonal_values failed!");
+  Dinv_->replace_diagonal_values(*diag);
 
   // complete inverse D matrix
   Dinv_->complete();

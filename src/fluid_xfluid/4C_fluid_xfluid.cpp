@@ -4483,8 +4483,6 @@ void FLD::XFluid::set_initial_flow_field(
   {
     const Core::LinAlg::Map* dofrowmap = discret_->dof_row_map();
 
-    int err = 0;
-
     const int npredof = numdim_;
 
     double p;
@@ -4538,20 +4536,18 @@ void FLD::XFluid::set_initial_flow_field(
       {
         const int gid = nodedofset[nveldof];
         int lid = dofrowmap->lid(gid);
-        err += state_->velnp_->replace_local_value(lid, u[nveldof]);
-        err += state_->veln_->replace_local_value(lid, u[nveldof]);
-        err += state_->velnm_->replace_local_value(lid, u[nveldof]);
+        state_->velnp_->replace_local_value(lid, u[nveldof]);
+        state_->veln_->replace_local_value(lid, u[nveldof]);
+        state_->velnm_->replace_local_value(lid, u[nveldof]);
       }
 
       // set initial pressure
       const int gid = nodedofset[npredof];
       int lid = dofrowmap->lid(gid);
-      err += state_->velnp_->replace_local_value(lid, p);
-      err += state_->veln_->replace_local_value(lid, p);
-      err += state_->velnm_->replace_local_value(lid, p);
+      state_->velnp_->replace_local_value(lid, p);
+      state_->veln_->replace_local_value(lid, p);
+      state_->velnm_->replace_local_value(lid, p);
     }  // end loop nodes lnodeid
-
-    if (err != 0) FOUR_C_THROW("dof not on proc");
   }
   //----------------------------------------------------------------------------------------------
   // flame-vortex interaction problem: two counter-rotating vortices (2-D) moving the flame front
@@ -4707,11 +4703,11 @@ void FLD::XFluid::set_initial_flow_field(
           int lid = dofrowmap->lid(gid);
           if (idim == 3)
           {  // pressure dof
-            err += state_->velnp_->replace_local_value(lid, pres);
+            state_->velnp_->replace_local_value(lid, pres);
           }
           else
           {  // velocity dof
-            err += state_->velnp_->replace_local_value(lid, vel(idim));
+            state_->velnp_->replace_local_value(lid, vel(idim));
           }
 
           // set Dirichlet BC for ghost penalty reconstruction

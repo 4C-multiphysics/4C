@@ -3067,8 +3067,7 @@ void ScaTra::ScaTraTimIntElch::perform_aitken_relaxation(
       // compute dot product between increment of current degree of freedom and difference between
       // current and previous increments of current degree of freedom
       double phinp_inc_dot_phinp_inc_diff(0.);
-      if (phinp_inc_diff_dof->dot(*phinp_inc_dof, &phinp_inc_dot_phinp_inc_diff))
-        FOUR_C_THROW("Couldn't compute dot product!");
+      phinp_inc_diff_dof->dot(*phinp_inc_dof, &phinp_inc_dot_phinp_inc_diff);
 
       // compute Aitken relaxation factor for current degree of freedom
       if (iternum_outer_ > 1 and phinp_inc_diff_L2 > 1.e-12)

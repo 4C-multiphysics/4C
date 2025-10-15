@@ -599,8 +599,7 @@ void Arteries::ArtNetImplStationary::reconstruct_flow()
 
     actele->evaluate(p, *discret_, la, dummyMat, dummyMat, flowVec, dummyVec, dummyVec);
 
-    int err = ele_volflow_->replace_local_value(i, flowVec(0));
-    if (err != 0) FOUR_C_THROW("ReplaceMyValue failed with error code {}!", err);
+    ele_volflow_->replace_local_value(i, flowVec(0));
   }
 }
 
@@ -715,8 +714,7 @@ void Arteries::ArtNetImplStationary::set_initial_field(
           double initialval = Global::Problem::instance()
                                   ->function_by_id<Core::Utils::FunctionOfSpaceTime>(startfuncno)
                                   .evaluate(lnode.x(), time_, k);
-          int err = pressurenp_->replace_local_value(doflid, initialval);
-          if (err != 0) FOUR_C_THROW("dof not on proc");
+          pressurenp_->replace_local_value(doflid, initialval);
         }
       }
 

@@ -507,7 +507,6 @@ void PoroElast::MonolithicSplitNoPenetration::apply_fluid_coupl_matrix(
   std::shared_ptr<Core::LinAlg::Vector<double>> diag =
       Core::LinAlg::create_vector(*fluid_field()->interface()->fsi_cond_map(), true);
 
-  int err = 0;
 
   // extract diagonal of invd into diag
   invd->extract_diagonal_copy(
@@ -525,11 +524,10 @@ void PoroElast::MonolithicSplitNoPenetration::apply_fluid_coupl_matrix(
   }
 
   // scalar inversion of diagonal values
-  err = diag->reciprocal(*diag);
-  if (err > 0) FOUR_C_THROW("ERROR: Reciprocal: Zero diagonal entry!");
+  diag->reciprocal(*diag);
 
   // re-insert inverted diagonal into invd
-  err = invd->replace_diagonal_values(*diag);
+  invd->replace_diagonal_values(*diag);
   invd->complete();
   //------------------------------End of invert D
   // Matrix!-----------------------------------------------

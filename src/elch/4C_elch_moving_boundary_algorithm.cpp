@@ -365,8 +365,7 @@ void ElCh::MovingBoundaryAlgorithm::compute_interface_vectors(
       }
 
       // now insert only the first numdim entries (pressure dof is not inserted!)
-      int error = iveln_->replace_global_values(numdim, Values.data(), fluidnodedofs.data());
-      if (error > 0) FOUR_C_THROW("Could not insert values into vector iveln_: error {}", error);
+      iveln_->replace_global_values(numdim, Values.data(), fluidnodedofs.data());
     }
   }
 

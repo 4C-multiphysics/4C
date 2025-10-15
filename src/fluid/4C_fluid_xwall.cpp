@@ -465,11 +465,7 @@ void FLD::XWall::init_wall_dist()
     // now write this value in the node based vector
     if (xwallrownodemap_->my_gid(xwallgid))
     {
-      int err = walldist_->replace_global_values(1, &gdist, &xwallgid);
-      if (err > 0)
-        FOUR_C_THROW("global row not on proc");
-      else if (err < 0)
-        FOUR_C_THROW("wrong vector index");
+      walldist_->replace_global_values(1, &gdist, &xwallgid);
     }
 
     // this is the processor that knows the respective node
@@ -533,15 +529,13 @@ void FLD::XWall::init_toggle_vector()
 
       if (fullyenriched == true)
       {
-        int err = xtoggleloc_->replace_local_value(j, 1.0);
-        if (err != 0) FOUR_C_THROW("something went wrong");
+        xtoggleloc_->replace_local_value(j, 1.0);
       }
       else
       {
         if (blendingtype_ != Inpar::FLUID::ramp_function)
         {
-          int err = xtoggleloc_->replace_local_value(j, 0.7);
-          if (err != 0) FOUR_C_THROW("something went wrong");
+          xtoggleloc_->replace_local_value(j, 0.7);
         }
         count++;
       }
@@ -1000,8 +994,7 @@ void FLD::XWall::calc_tau_w(
         // also, the shape functions become singular, if tauw==0
         if (tauw < min_tauw_) tauw = min_tauw_;
         // store in vector
-        int err = newtauw.replace_global_value(gid, tauw);
-        if (err != 0) FOUR_C_THROW("something went wrong during replacemyvalue");
+        newtauw.replace_global_value(gid, tauw);
       }
     }
   }
@@ -1087,8 +1080,7 @@ void FLD::XWall::calc_tau_w(
         newtauwsc = sumnewtauw / timesfac;
 
         if (newtauwsc < min_tauw_) newtauwsc = min_tauw_;
-        int err = newtauwxwdis.replace_local_value(l, newtauwsc);
-        if (err != 0) FOUR_C_THROW("something went wrong during replacemyvalue");
+        newtauwxwdis.replace_local_value(l, newtauwsc);
       }
     }
     Core::LinAlg::export_to(newtauwxwdis, newtauw);
@@ -1353,11 +1345,10 @@ std::shared_ptr<Core::LinAlg::Vector<double>> FLD::XWall::get_output_vector(
     int firstglobaldofid = discret_->dof(xwallnode, 0);
     int firstlocaldofid = discret_->dof_row_map()->lid(firstglobaldofid);
 
-    int err = velenr->replace_local_value(firstlocaldofid, vel[firstlocaldofid + 4]);
-    err += velenr->replace_local_value(firstlocaldofid + 1, vel[firstlocaldofid + 5]);
-    err += velenr->replace_local_value(firstlocaldofid + 2, vel[firstlocaldofid + 6]);
-    err += velenr->replace_local_value(firstlocaldofid + 3, vel[firstlocaldofid + 7]);
-    if (err != 0) FOUR_C_THROW("error during replacemyvalue");
+    velenr->replace_local_value(firstlocaldofid, vel[firstlocaldofid + 4]);
+    velenr->replace_local_value(firstlocaldofid + 1, vel[firstlocaldofid + 5]);
+    velenr->replace_local_value(firstlocaldofid + 2, vel[firstlocaldofid + 6]);
+    velenr->replace_local_value(firstlocaldofid + 3, vel[firstlocaldofid + 7]);
   }
   return velenr;
 }
@@ -1579,13 +1570,9 @@ std::shared_ptr<Core::LinAlg::Vector<double>> FLD::XWall::fix_dirichlet_inflow(
               double newvalue2 = 0.5 * (res)[firstlocaldofidnewvalue + 1];
               double newvalue3 = 0.5 * (res)[firstlocaldofidnewvalue + 2];
 
-              int err = fixedtrueresidual->replace_global_values(
-                  1, &newvalue1, &firstglobaldofidtoreplace);
-              err = fixedtrueresidual->replace_global_values(
-                  1, &newvalue2, &secondglobaldofidtoreplace);
-              err = fixedtrueresidual->replace_global_values(
-                  1, &newvalue3, &thirdglobaldofidtoreplace);
-              if (err != 0) FOUR_C_THROW("something wrong");
+              fixedtrueresidual->replace_global_values(1, &newvalue1, &firstglobaldofidtoreplace);
+              fixedtrueresidual->replace_global_values(1, &newvalue2, &secondglobaldofidtoreplace);
+              fixedtrueresidual->replace_global_values(1, &newvalue3, &thirdglobaldofidtoreplace);
             }
           }
         }
@@ -1634,10 +1621,9 @@ void FLD::XWallAleFSI::update_w_dist_wale()
     int firstglobaldofid = discret_->dof(xwallnode, 0);
     int firstlocaldofid = discret_->dof_row_map()->lid(firstglobaldofid);
 
-    int err = x.replace_local_value(j, xwallnode->x()[0] + (*mydispnp_)[firstlocaldofid]);
-    err += y.replace_local_value(j, xwallnode->x()[1] + (*mydispnp_)[firstlocaldofid + 1]);
-    err += z.replace_local_value(j, xwallnode->x()[2] + (*mydispnp_)[firstlocaldofid + 2]);
-    if (err > 0) FOUR_C_THROW("something wrong");
+    x.replace_local_value(j, xwallnode->x()[0] + (*mydispnp_)[firstlocaldofid]);
+    y.replace_local_value(j, xwallnode->x()[1] + (*mydispnp_)[firstlocaldofid + 1]);
+    z.replace_local_value(j, xwallnode->x()[2] + (*mydispnp_)[firstlocaldofid + 2]);
   }
 
   Core::LinAlg::Vector<double> wdistx(*xwallrownodemap_, true);
@@ -1667,8 +1653,7 @@ void FLD::XWallAleFSI::update_w_dist_wale()
     double y = (wdisty)[j];
     double z = (wdistz)[j];
     double newwdist = sqrt(x * x + y * y + z * z);
-    int err = walldist_->replace_local_value(j, newwdist);
-    if (err > 0) FOUR_C_THROW("something wrong");
+    walldist_->replace_local_value(j, newwdist);
   }
 
   Core::LinAlg::export_to(*walldist_, *wdist_);
