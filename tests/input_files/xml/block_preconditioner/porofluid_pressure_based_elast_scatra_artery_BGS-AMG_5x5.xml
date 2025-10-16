@@ -1,13 +1,13 @@
 <ParameterList name="Teko">
   <!--
-        For poro interaction, these are the recommended settings for the block preconditioner
-        containing a block Gauss-Seidel from Teko, using MueLu as multigrid preconditioner for the single
-        field inverses.
-        -->
+                For poro interaction, these are the recommended settings for the block preconditioner
+                containing a block Gauss-Seidel from Teko, using MueLu as multigrid preconditioner for the single
+                field inverses.
+                -->
   <!-- ===========  BLOCK PRECONDITIONER ================ -->
   <!-- Definition of the block preconditioner, which has to be defined under sub-list "Preconditioner",
-             which is used by Teko. The single field inverse approximation methods have to be given under
-             sub-lists "Inverse<1..n>". -->
+                     which is used by Teko. The single field inverse approximation methods have to be given under
+                     sub-lists "Inverse<1..n>". -->
   <Parameter name="Inverse Type" type="string" value="Preconditioner"/>
   <ParameterList name="Inverse Factory Library">
     <ParameterList name="Preconditioner">
@@ -21,7 +21,19 @@
     </ParameterList>
     <!-- ===========  SINGLE FIELD PRECONDITIONER FOR STRUCTURE ================ -->
     <ParameterList name="Inverse1">
-      <Parameter name="Type" type="string" value="Ifpack"/>
+      <Parameter name="Type" type="string" value="MueLu"/>
+      <Parameter name="multigrid algorithm" type="string" value="sa"/>
+      <Parameter name="max levels" type="int" value="3"/>
+      <Parameter name="problem: symmetric" type="bool" value="false"/>
+      <Parameter name="verbosity" type="string" value="none"/>
+      <Parameter name="coarse: max size" type="int" value="7"/>
+      <Parameter name="smoother: type" type="string" value="RILUK"/>
+      <ParameterList name="smoother: params">
+        <Parameter name="fact: iluk level-of-fill" type="int" value="0"/>
+        <Parameter name="fact: absolute threshold" type="double" value="0.0"/>
+        <Parameter name="fact: relative threshold" type="double" value="1.0"/>
+        <Parameter name="fact: relax value" type="double" value="0.0"/>
+      </ParameterList>
     </ParameterList>
     <!-- ===========  SINGLE FIELD PRECONDITIONER FOR FLUID ================ -->
     <ParameterList name="Inverse2">
@@ -29,7 +41,7 @@
       <Parameter name="multigrid algorithm" type="string" value="pg"/>
       <Parameter name="max levels" type="int" value="3"/>
       <Parameter name="problem: symmetric" type="bool" value="false"/>
-      <Parameter name="verbosity" type="string" value="None"/>
+      <Parameter name="verbosity" type="string" value="none"/>
       <Parameter name="coarse: max size" type="int" value="7"/>
       <Parameter name="smoother: type" type="string" value="RILUK"/>
       <ParameterList name="smoother: params">
@@ -45,7 +57,7 @@
       <Parameter name="multigrid algorithm" type="string" value="pg"/>
       <Parameter name="max levels" type="int" value="3"/>
       <Parameter name="problem: symmetric" type="bool" value="false"/>
-      <Parameter name="verbosity" type="string" value="None"/>
+      <Parameter name="verbosity" type="string" value="none"/>
       <Parameter name="coarse: max size" type="int" value="7"/>
       <Parameter name="smoother: type" type="string" value="RILUK"/>
       <ParameterList name="smoother: params">
@@ -61,7 +73,7 @@
       <Parameter name="multigrid algorithm" type="string" value="pg"/>
       <Parameter name="max levels" type="int" value="3"/>
       <Parameter name="problem: symmetric" type="bool" value="false"/>
-      <Parameter name="verbosity" type="string" value="None"/>
+      <Parameter name="verbosity" type="string" value="none"/>
       <Parameter name="coarse: max size" type="int" value="7"/>
       <Parameter name="smoother: type" type="string" value="RILUK"/>
       <ParameterList name="smoother: params">
@@ -77,7 +89,7 @@
       <Parameter name="multigrid algorithm" type="string" value="pg"/>
       <Parameter name="max levels" type="int" value="3"/>
       <Parameter name="problem: symmetric" type="bool" value="false"/>
-      <Parameter name="verbosity" type="string" value="None"/>
+      <Parameter name="verbosity" type="string" value="none"/>
       <Parameter name="coarse: max size" type="int" value="7"/>
       <Parameter name="smoother: type" type="string" value="RILUK"/>
       <ParameterList name="smoother: params">
