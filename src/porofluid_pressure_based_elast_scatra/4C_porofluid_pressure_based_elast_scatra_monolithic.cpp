@@ -1173,7 +1173,10 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::poro_multi_phas
 
     if (not combined_dbc_map()->my_gid(i)) iter_inc->replace_global_value(i, -delta);
 
-    iter_inc->replace_global_value(i - 1, 0.0);
+    if (i - 1 >= 0 && i - 1 < dofs && iter_inc->get_map().my_gid(i - 1))
+    {
+      iter_inc->replace_global_value(i - 1, 0.0);
+    }
 
     if (i != dofs - 1) iter_inc->replace_global_value(i + 1, delta);
 
