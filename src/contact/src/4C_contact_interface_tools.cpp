@@ -21,6 +21,8 @@
 #include "4C_mortar_element.hpp"
 #include "4C_mortar_integrator.hpp"
 
+#include <fstream>
+
 FOUR_C_NAMESPACE_OPEN
 
 

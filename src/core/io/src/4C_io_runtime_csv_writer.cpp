@@ -11,7 +11,7 @@
 #include "4C_io_control.hpp"
 #include "4C_utils_exceptions.hpp"
 
-#include <iostream>
+#include <fstream>
 #include <utility>
 
 FOUR_C_NAMESPACE_OPEN

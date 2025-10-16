@@ -21,6 +21,8 @@
 #include <NOX_Solver_Generic.H>
 #include <Teuchos_ParameterList.hpp>
 
+#include <fstream>
+
 FOUR_C_NAMESPACE_OPEN
 
 NOX::FSI::AitkenRelaxation::AitkenRelaxation(

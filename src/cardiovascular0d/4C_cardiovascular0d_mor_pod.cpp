@@ -14,6 +14,7 @@
 #include "4C_linalg_utils_sparse_algebra_math.hpp"
 #include "4C_utils_string.hpp"
 
+#include <fstream>
 #include <iostream>
 
 FOUR_C_NAMESPACE_OPEN

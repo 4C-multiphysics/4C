@@ -30,6 +30,8 @@
 
 #include <Teuchos_StandardParameterEntryValidators.hpp>
 
+#include <fstream>
+
 FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*

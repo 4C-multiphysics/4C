@@ -13,6 +13,7 @@
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_io_legacy_table.hpp"
 #include "4C_io_pstream.hpp"
+#include "4C_io_yaml.hpp"
 
 #include <pwd.h>
 #include <unistd.h>
@@ -20,6 +21,7 @@
 #include <array>
 #include <ctime>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <utility>
 #include <vector>
@@ -41,6 +43,170 @@ static size_t restart_finder(const std::string& filename)
   return std::string::npos;
 }
 
+namespace Core::IO::Internal
+{
+  class ControlFileWriterImpl
+  {
+   public:
+    ControlFileWriterImpl(std::ostream& out) : out_(out)
+    {
+      tree_ = init_yaml_tree_with_exceptions();
+      current_node_id_ = tree_.rootref().id();
+      tree_.rootref() |= ryml::SEQ;
+    }
+
+    // Flush the current tree to the output stream and reset it.
+    // Ends all open groups.
+    void flush_and_reset_tree()
+    {
+      // Only write if there is anything to write. Otherwise, we get an ugly "[]" in the output.
+      if (tree_.rootref().num_children() > 0) out_ << tree_ << "\n" << std::flush;
+
+      // Clear the tree and reset the current node to the root
+      tree_.clear();
+      tree_.clear_arena();
+      current_node_id_ = tree_.rootref().id();
+      group_level = 0;
+      tree_.rootref() |= ryml::SEQ;
+    }
+
+    template <typename T>
+    void write(std::string_view key, const T& value)
+    {
+      FOUR_C_ASSERT_ALWAYS(current().is_map(), "Internal error: appending to non-map node");
+      auto node = current().append_child();
+      const auto key_str = ryml::csubstr(key.data(), key.size());
+      node << ryml::key(key_str);
+
+      emit_value_as_yaml(YamlNodeRef{node, ""}, value);
+    }
+
+    void start_group(std::string_view key)
+    {
+      ++group_level;
+
+      ryml::NodeRef outer = (current().is_seq()) ? current().append_child() : current();
+      outer |= ryml::MAP;
+
+      auto group_node = outer.append_child();
+      group_node |= ryml::MAP;
+      const auto key_str = ryml::csubstr(key.data(), key.size());
+      group_node << ryml::key(key_str);
+      current_node_id_ = group_node.id();
+    }
+
+    void end_group()
+    {
+      FOUR_C_ASSERT(group_level > 0, "Internal error: unmatched end_group()");
+      --group_level;
+      current_node_id_ = current().parent().id();
+
+      FOUR_C_ASSERT(current().num_children() > 0, "Internal error: empty group");
+
+      // Whenever we close the outermost group, flush the tree to file
+      if (group_level == 0) flush_and_reset_tree();
+    }
+
+    ryml::NodeRef current() { return ryml::NodeRef{&tree_, current_node_id_}; }
+
+    //! A temporary tree and node that can be used to build the YAML structure
+    //! The data is written to file periodically to avoid excessive memory usage
+    ryml::Tree tree_;
+    ryml::id_type current_node_id_;
+
+    //! Remember how many groups were opened.
+    size_t group_level{0};
+
+    //! output stream for the control file
+    std::ostream& out_;
+  };
+}  // namespace Core::IO::Internal
+
+
+
+Core::IO::ControlFileWriter::ControlFileWriter(bool do_write, std::ostream& stream)
+    : pimpl_(do_write ? std::make_unique<Internal::ControlFileWriterImpl>(stream) : nullptr)
+{
+}
+
+Core::IO::ControlFileWriter::~ControlFileWriter() { end_all_groups_and_flush(); }
+
+
+void Core::IO::ControlFileWriter::write_metadata_header()
+{
+  if (!pimpl_) return;
+
+  time_t time_value = std::time(nullptr);
+  auto local_time = std::localtime(&time_value);
+  std::ostringstream time_formst_stream;
+  time_formst_stream << std::put_time(local_time, "%d-%m-%Y %H-%M-%S");
+
+  std::array<char, 256> hostname;
+  struct passwd* user_entry;
+  user_entry = getpwuid(getuid());
+  gethostname(hostname.data(), 256);
+
+  start_group("metadata")
+      .write("created_by", user_entry->pw_name)
+      .write("host", hostname.data())
+      .write("time", time_formst_stream.str())
+      .write("sha", VersionControl::git_hash)
+      .write("version", FOUR_C_VERSION_FULL)
+      .end_group();
+}
+
+void Core::IO::ControlFileWriter::end_all_groups_and_flush()
+{
+  if (!pimpl_) return;
+
+  pimpl_->flush_and_reset_tree();
+}
+
+Core::IO::ControlFileWriter& Core::IO::ControlFileWriter::write(
+    std::string_view key, const std::string_view& value)
+{
+  if (!pimpl_) return *this;
+  pimpl_->write(key, value);
+  return *this;
+}
+
+Core::IO::ControlFileWriter& Core::IO::ControlFileWriter::write(std::string_view key, int value)
+{
+  if (!pimpl_) return *this;
+  pimpl_->write(key, value);
+  return *this;
+}
+
+Core::IO::ControlFileWriter& Core::IO::ControlFileWriter::write(std::string_view key, double value)
+{
+  if (!pimpl_) return *this;
+  pimpl_->write(key, value);
+  return *this;
+}
+
+Core::IO::ControlFileWriter& Core::IO::ControlFileWriter::start_group(const std::string& group_name)
+{
+  if (!pimpl_) return *this;
+  pimpl_->start_group(group_name);
+  return *this;
+}
+
+Core::IO::ControlFileWriter& Core::IO::ControlFileWriter::end_group()
+{
+  if (!pimpl_) return *this;
+  pimpl_->end_group();
+  return *this;
+}
+
+Core::IO::ControlFileWriter& Core::IO::ControlFileWriter::try_end_group()
+{
+  if (!pimpl_) return *this;
+
+  if (pimpl_->group_level > 0) return end_group();
+  return *this;
+}
+
+
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
@@ -54,7 +220,8 @@ Core::IO::OutputControl::OutputControl(MPI_Comm comm, std::string problemtype,
       myrank_(Core::Communication::my_mpi_rank(comm)),
       filename_(std::move(outputname)),
       restartname_(restartname),
-      control_file_(myrank_ == 0),
+      control_file_stream_(std::invoke([&]() { return std::ofstream(filename_ + ".control"); })),
+      control_file_(myrank_ == 0, control_file_stream_),
       filesteps_(filesteps),
       restart_step_(restart_step),
       write_binary_output_(write_binary_output)
@@ -115,11 +282,9 @@ Core::IO::OutputControl::OutputControl(MPI_Comm comm, std::string problemtype,
 
   if (write_binary_output_)
   {
-    std::stringstream name;
-    name << filename_ << ".control";
+    control_file().write_metadata_header();
 
-    control_file().open_and_write_header(name.str());
-
+    control_file().start_group("general");
     control_file().write("input_file", inputfile_);
     control_file().write("problem_type", problemtype_);
     control_file().write(
@@ -133,96 +298,9 @@ Core::IO::OutputControl::OutputControl(MPI_Comm comm, std::string problemtype,
       control_file().write(
           "restarted_run", ((pos != std::string::npos) ? outputname.substr(pos + 1) : outputname));
     }
+    control_file().end_group();
   }
 }
-
-
-
-Core::IO::ControlFile::ControlFile(bool do_write) : do_write_(do_write) {}
-
-
-void Core::IO::ControlFile::open_and_write_header(const std::string& control_file_name)
-{
-  if (!do_write_) return;
-
-  FOUR_C_ASSERT(!file_.is_open(), "Internal error: control file already opened");
-
-  file_.open(control_file_name.c_str(), std::ios_base::out);
-  if (not file_) FOUR_C_THROW("Could not open control file '{}' for writing", control_file_name);
-
-  time_t time_value;
-  time_value = time(nullptr);
-
-  std::array<char, 256> hostname;
-  struct passwd* user_entry;
-  user_entry = getpwuid(getuid());
-  gethostname(hostname.data(), 256);
-
-  file_ << "# 4C output control file\n"
-        << "# created by " << user_entry->pw_name << " on " << hostname.data() << " at "
-        << ctime(&time_value) << "# using code version (git SHA1) " << VersionControl::git_hash
-        << " \n\n";
-}
-
-Core::IO::ControlFile& Core::IO::ControlFile::write(
-    std::string_view key, const std::string_view& value)
-{
-  if (!do_write_) return *this;
-
-  file_ << indent() << key << " = \"" << value << "\"\n";
-  file_ << std::flush;
-  return *this;
-}
-
-Core::IO::ControlFile& Core::IO::ControlFile::write(std::string_view key, int value)
-{
-  if (!do_write_) return *this;
-
-  file_ << indent() << key << " = " << value << "\n";
-  file_ << std::flush;
-  return *this;
-}
-
-Core::IO::ControlFile& Core::IO::ControlFile::write(std::string_view key, double value)
-{
-  if (!do_write_) return *this;
-
-  file_ << indent() << key << " = " << std::scientific << std::setprecision(16) << value << "\n";
-  file_ << std::flush;
-  return *this;
-}
-
-Core::IO::ControlFile& Core::IO::ControlFile::start_group(const std::string& group_name)
-{
-  if (!do_write_) return *this;
-
-  file_ << indent() << group_name << ":\n";
-  indent_ += indent_increment_;
-  return *this;
-}
-
-Core::IO::ControlFile& Core::IO::ControlFile::end_group()
-{
-  if (!do_write_) return *this;
-
-  FOUR_C_ASSERT(
-      indent_ >= indent_increment_, "Internal error: end_group() is missing a start_group()");
-  indent_ -= indent_increment_;
-  // Print an extra newline after ending a group for better readability
-  file_ << "\n";
-  file_ << std::flush;
-  return *this;
-}
-
-Core::IO::ControlFile& Core::IO::ControlFile::try_end_group()
-{
-  if (!do_write_) return *this;
-
-  if (indent_ >= indent_increment_) return end_group();
-  return *this;
-}
-
-std::string Core::IO::ControlFile::indent() const { return std::string(indent_, ' '); }
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
