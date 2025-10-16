@@ -180,6 +180,14 @@ namespace Core::IO
 
     std::string file_name() const { return filename_; }
 
+    /// find control file entry to given time step
+    /*!
+      The control file entry with the given group_name those field and step match
+      my discretization and step. From that we need a backward search to find
+      the entry that links to the binary files that cover our entry.
+     */
+    void find_group(int step, const std::string& discretization_name, const char* group_name,
+        const char* filestring, MAP*& result_info, MAP*& file_info);
 
    private:
     InputControl(const InputControl&);

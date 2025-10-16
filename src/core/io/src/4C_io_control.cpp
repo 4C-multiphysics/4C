@@ -277,6 +277,74 @@ Core::IO::InputControl::~InputControl() { destroy_map(&table_); }
 
 
 
+void Core::IO::InputControl::find_group(int step, const std::string& discretization_name,
+    const char* group_name, const char* filestring, MAP*& result_info, MAP*& file_info)
+{
+  /* Iterate all symbols under the name "result" and get the one that
+   * matches the given step. Note that this iteration starts from the
+   * last result group and goes backward. */
+
+  SYMBOL* symbol = map_find_symbol(&table_, group_name);
+  while (symbol != nullptr)
+  {
+    if (symbol_is_map(symbol))
+    {
+      MAP* map;
+      symbol_get_map(symbol, &map);
+      if (map_has_string(map, "field", discretization_name.c_str()) and
+          map_has_int(map, "step", step))
+      {
+        result_info = map;
+        break;
+      }
+    }
+    symbol = symbol->next;
+  }
+  if (symbol == nullptr)
+  {
+    FOUR_C_THROW(
+        "No restart entry for discretization '{}' step {} in symbol table. "
+        "Control file corrupt?\n\nLooking for control file at: {}",
+        discretization_name, step, filename_);
+  }
+
+  /*--------------------------------------------------------------------*/
+  /* open file to read */
+
+  /* We have a symbol and its map that corresponds to the step we are
+   * interested in. Now we need to continue our search to find the
+   * step that defines the output file used for our step. */
+
+  while (symbol != nullptr)
+  {
+    if (symbol_is_map(symbol))
+    {
+      MAP* map;
+      symbol_get_map(symbol, &map);
+      if (map_has_string(map, "field", discretization_name.c_str()))
+      {
+        /*
+         * If one of these files is here the other one has to be
+         * here, too. If it's not, it's a bug in the input. */
+        if (map_symbol_count(map, filestring) > 0)
+        {
+          file_info = map;
+          break;
+        }
+      }
+    }
+    symbol = symbol->next;
+  }
+
+  /* No restart files defined? */
+  if (symbol == nullptr)
+  {
+    FOUR_C_THROW("no restart file definitions found in control file");
+  }
+}
+
+
+
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 int Core::IO::get_last_possible_restart_step(Core::IO::InputControl& inputcontrol)
