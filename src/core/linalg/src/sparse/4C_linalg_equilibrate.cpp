@@ -322,6 +322,7 @@ void Core::LinAlg::EquilibrationBlock::equilibrate_matrix(
       std::shared_ptr<Core::LinAlg::Vector<double>> invcolsums(
           std::make_shared<Core::LinAlg::Vector<double>>(
               blocksparsematrix->matrix(j, j).domain_map()));
+      invcolsums->put_scalar(0.0);
 
       // compute inverse column sums of current main diagonal matrix block
       if (method() == EquilibrationMethod::columns_maindiag or
@@ -332,6 +333,9 @@ void Core::LinAlg::EquilibrationBlock::equilibrate_matrix(
       // compute inverse column sums of current column block of global system matrix
       else
       {
+        Core::LinAlg::Vector<double> invcolsums_overlap(blocksparsematrix->matrix(j, j).col_map());
+        invcolsums_overlap.put_scalar(0.0);
+
         // loop over all row blocks of global system matrix
         for (int i = 0; i < blocksparsematrix->rows(); ++i)
         {
@@ -356,11 +360,16 @@ void Core::LinAlg::EquilibrationBlock::equilibrate_matrix(
 
               // add entries of current matrix row to column sums
               for (int ientry = 0; ientry < numentries; ++ientry)
-                invcolsums->sum_into_global_value(
-                    matrix.col_map().gid(indices[ientry]), std::abs(values[ientry]));
+              {
+                const int lid = indices[ientry];  // local in ColMap
+                invcolsums_overlap.get_values()[lid] += std::abs(values[ientry]);
+              }
             }
           }
         }
+
+        Core::LinAlg::Import importer(invcolsums->get_map(), invcolsums_overlap.get_map());
+        invcolsums->import(invcolsums_overlap, importer, Add);
 
         // invert column sums
         invcolsums->reciprocal(*invcolsums);
