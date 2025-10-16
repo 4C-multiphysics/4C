@@ -16,14 +16,6 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-// helper: detect one-to-one (unique ownership) vs. overlapped
-static inline bool is_one_to_one(const Epetra_BlockMap& m)
-{
-  int my = m.NumMyElements();
-  int sum = 0;
-  m.Comm().SumAll(&my, &sum, 1);
-  return static_cast<long long>(sum) == m.NumGlobalElements64();
-}
 
 template <typename T>
 Core::LinAlg::Vector<T>::Vector(const Map& Map, bool zeroOut)
@@ -190,39 +182,8 @@ void Core::LinAlg::Vector<T>::scale(double ScalarA, const Vector& A)
 template <typename T>
 void Core::LinAlg::Vector<T>::update(double ScalarA, const Vector& A, double ScalarThis)
 {
-  const auto& dstMap = vector_->Map();
-  const auto& srcMap = A.vector_->Map();
-
-  // Fast path: identical layout
-  if (dstMap.SameAs(srcMap))
-  {
-    CHECK_EPETRA_CALL(vector_->Update(ScalarA, *A.vector_, ScalarThis));
-    return;
-  }
-
-  // Fallback: remap A onto *this map
-  Epetra_Vector A_on_dst(dstMap);
-
-  const bool srcUnique = is_one_to_one(srcMap);
-  const bool dstUnique = is_one_to_one(dstMap);
-
-  int ierr = 0;
-  if (srcUnique && !dstUnique)
-  {
-    // owned/unique -> overlap : Import (copy/insert)
-    Epetra_Import importer(dstMap, srcMap);
-    ierr = A_on_dst.Import(*A.vector_, importer, Insert);
-  }
-  else
-  {
-    // overlap -> owned/unique (or the general case): Export with Add
-    Epetra_Export exporter(srcMap, dstMap);
-    ierr = A_on_dst.Export(*A.vector_, exporter, Add);
-  }
-  CHECK_EPETRA_CALL(ierr);
-
   // Now maps match
-  CHECK_EPETRA_CALL(vector_->Update(ScalarA, A_on_dst, ScalarThis));
+  CHECK_EPETRA_CALL(vector_->Update(ScalarA, A, ScalarThis));
 }
 
 template <typename T>
