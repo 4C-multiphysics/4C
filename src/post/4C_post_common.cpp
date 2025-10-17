@@ -131,15 +131,16 @@ PostProblem::PostProblem(Teuchos::CommandLineProcessor& CLP, int argc, char** ar
   result_group_ = std::vector<MAP*>();
   setup_filter(file, output);
 
-  ndim_ = map_read_int(&control_table_, "ndim");
+  MAP* general_data = map_read_map(&control_table_, "general");
+  ndim_ = map_read_int(general_data, "ndim");
   FOUR_C_ASSERT((ndim_ == 1) || (ndim_ == 2) || (ndim_ == 3), "illegal dimension");
 
-  const char* type = map_read_string(&control_table_, "problem_type");
+  const char* type = map_read_string(general_data, "problem_type");
   const std::string probtype(type);
   problemtype_ = Inpar::PROBLEMTYPE::string_to_problem_type(probtype);
 
   spatial_approx_ = Core::FE::string_to_shape_function_type(
-      map_read_string(&control_table_, "spatial_approximation"));
+      map_read_string(general_data, "spatial_approximation"));
 
   /*--------------------------------------------------------------------*/
   /* collect all result groups */
