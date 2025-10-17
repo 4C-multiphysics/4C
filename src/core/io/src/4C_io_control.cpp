@@ -336,7 +336,7 @@ Core::IO::InputControl::InputControl(const std::string& filename, const bool ser
   if (!serial)
     parse_control_file(&table_, name.str().c_str(), MPI_COMM_WORLD);
   else
-    parse_control_file_serial(&table_, name.str().c_str());
+    parse_control_file(&table_, name.str().c_str(), MPI_COMM_NULL);
 }
 
 /*----------------------------------------------------------------------*

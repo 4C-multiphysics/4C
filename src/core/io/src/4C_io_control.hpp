@@ -186,6 +186,11 @@ namespace Core::IO
     InputControl(const std::string& filename, MPI_Comm comm);
     ~InputControl();
 
+    InputControl(const InputControl&) = delete;
+    InputControl& operator=(const InputControl&) = delete;
+    InputControl(InputControl&&) = delete;
+    InputControl& operator=(InputControl&&) = delete;
+
     MAP* control_file() { return &table_; }
 
     std::string file_name() const { return filename_; }
@@ -200,9 +205,6 @@ namespace Core::IO
         const char* filestring, MAP*& result_info, MAP*& file_info);
 
    private:
-    InputControl(const InputControl&);
-    InputControl& operator=(const InputControl&);
-
     std::string filename_;
     MAP table_;
   };

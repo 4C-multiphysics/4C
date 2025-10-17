@@ -7,6 +7,7 @@
 
 #include "4C_io_legacy_table.hpp"
 
+#include "4C_comm_mpi_utils.hpp"
 #include "4C_io_legacy_types.hpp"
 #include "4C_io_yaml.hpp"
 #include "4C_utils_enum.hpp"
@@ -712,39 +713,6 @@ void map_prepend_symbols(MAP* map, const char* key, SYMBOL* symbol, int count)
 
 /*----------------------------------------------------------------------*/
 /*!
-  \brief Tell whether the symbol is a string.
-
-*/
-/*----------------------------------------------------------------------*/
-int symbol_is_string(const SYMBOL* symbol)
-{
-  return (symbol != nullptr) && (symbol->type == sym_string);
-}
-
-
-/*----------------------------------------------------------------------*/
-/*!
-  \brief Tell whether the symbol is an integer.
-
-*/
-/*----------------------------------------------------------------------*/
-int symbol_is_int(const SYMBOL* symbol) { return (symbol != nullptr) && (symbol->type == sym_int); }
-
-
-/*----------------------------------------------------------------------*/
-/*!
-  \brief Tell whether the symbol is a real.
-
-*/
-/*----------------------------------------------------------------------*/
-int symbol_is_real(const SYMBOL* symbol)
-{
-  return (symbol != nullptr) && (symbol->type == sym_real);
-}
-
-
-/*----------------------------------------------------------------------*/
-/*!
   \brief Tell whether the symbol is a map.
 
 */
@@ -899,499 +867,9 @@ MAP* symbol_map(const SYMBOL* symbol)
   return ret;
 }
 
-/*----------------------------------------------------------------------*/
-/*!
-  \brief The types of tokens recognized by the lexer.
 
-*/
-/*----------------------------------------------------------------------*/
-enum TokenType
-{
-  tok_none,
-  tok_done,
-  tok_name,
-  tok_string,
-  tok_int,
-  tok_real,
-  tok_colon,
-  tok_equal,
-  tok_indent,
-  tok_dedent
-};
-
-
-/*----------------------------------------------------------------------*/
-/*!
- \brief The parsers internal state
-
- Here we have the parsers internal state. It consists of the current
- token (depending on the token type these variables have different
- meanings), the file buffer with the current read position, the
- current line number and indention level. These variables are very
- internal and only used while a control file is read.
-
- */
-/*----------------------------------------------------------------------*/
-struct ParserData
-{
-  TokenType tok;
-  char* token_string;
-  int token_int;
-  double token_real;
-
-  char* file_buffer;
-  int file_size;
-
-  int pos;
-  int lineno;
-  int indent_level;
-  int indent_step;
-};
-
-
-/*----------------------------------------------------------------------*/
-/*!
-  \brief Init the data structure needed to read a file.
-
-  The file is read on processor 0 and broadcasted to the others.
-
-*/
-/*----------------------------------------------------------------------*/
-static void init_parser_data(ParserData* data, const char* filename, MPI_Comm comm)
-{
-  data->tok = tok_none;
-  data->lineno = 1;
-  data->pos = 0;
-  data->indent_level = 0;
-  data->indent_step = -1;
-
-  int myrank = 0;
-  int nprocs = 1;
-  MPI_Comm_rank(comm, &myrank);
-  MPI_Comm_size(comm, &nprocs);
-
-  /* No copy here. Valid only as long as the calling functions
-   * filename is valid. */
-  /*data->filename = filename;*/
-
-  /* We need to have the information on all processes. That's why we
-   * read the file on process 0 and broadcast it. The other way would
-   * be to use MPI IO, but then we'd have to implement a separate
-   * sequential version. */
-  if (myrank == 0)
-  {
-    int bytes_read;
-    FILE* file;
-    file = fopen(filename, "rb");
-
-    if (file == nullptr)
-    {
-      FOUR_C_THROW("cannot read file '{}'", filename);
-    }
-
-    /* find out the control file size */
-    fseek(file, 0, SEEK_END);
-    data->file_size = ftell(file);
-
-    /* read file to local buffer */
-    data->file_buffer = (char*)malloc((data->file_size + 1) * sizeof(char));
-    fseek(file, 0, SEEK_SET);
-    /*bytes_read = fread(data->file_buffer, sizeof(char), data->file_size, file);*/
-    bytes_read = fread(data->file_buffer, sizeof(char), (size_t)data->file_size, file);
-    if (bytes_read != data->file_size)
-    {
-      FOUR_C_THROW("failed to read file {}", filename);
-    }
-    /* a trailing zero helps a lot */
-    data->file_buffer[data->file_size] = '\0';
-
-    fclose(file);
-  }
-
-  if (nprocs > 1)
-  {
-    int err;
-    err = MPI_Bcast(&data->file_size, 1, MPI_INT, 0, comm);
-    if (err != 0)
-    {
-      FOUR_C_THROW("MPI_Bcast failed: {}", err);
-    }
-    if (myrank > 0)
-    {
-      data->file_buffer = (char*)malloc((data->file_size + 1) * sizeof(char));
-    }
-    err = MPI_Bcast(data->file_buffer, data->file_size + 1, MPI_CHAR, 0, comm);
-    if (err != 0)
-    {
-      FOUR_C_THROW("MPI_Bcast failed: {}", err);
-    }
-  }
-}
-
-
-/*----------------------------------------------------------------------*/
-/*!
-  \brief Clean up.
-
-*/
-/*----------------------------------------------------------------------*/
-static void destroy_parser_data(ParserData* data) { free(data->file_buffer); }
-
-/*----------------------------------------------------------------------*/
-/*!
-  \brief Get the next char.
-
-*/
-/*----------------------------------------------------------------------*/
-static int getnext(ParserData* data)
-{
-  if (data->pos < data->file_size)
-  {
-    /* ignore dos line endings */
-    if (data->file_buffer[data->pos] == '\r')
-    {
-      data->pos++;
-    }
-
-    /* Increment the counter and return the char at the old position. */
-    return data->file_buffer[data->pos++];
-  }
-  return EOF;
-}
-
-
-enum
-{
-  TABWIDTH = 8
-};
-
-
-/*----------------------------------------------------------------------*/
-/*!
-  \brief Get the next token.
-
-*/
-/*----------------------------------------------------------------------*/
-static void lexan(ParserData* data)
-{
-  int line_begin = 0;
-  int t;
-  int indention = data->indent_level;
-
-  for (;;)
-  {
-    t = getnext(data);
-    if (t == ' ')
-    {
-      /* ignore whitespaces */
-      if (line_begin)
-      {
-        indention++;
-      }
-    }
-    else if (t == '\t')
-    {
-      /* ignore whitespaces */
-      if (line_begin)
-      {
-        indention = ((indention + TABWIDTH - 1) / TABWIDTH) * TABWIDTH;
-      }
-    }
-    else if (t == '\n')
-    {
-      data->lineno++;
-      line_begin = 1;
-      indention = 0;
-    }
-    else if (t == '#')
-    {
-      for (;;)
-      {
-        t = getnext(data);
-        if (t == '\n')
-        {
-          break;
-        }
-      }
-      data->lineno++;
-      line_begin = 1;
-      indention = 0;
-    }
-    else if (t == EOF)
-    {
-      data->tok = tok_done;
-      goto end;
-    }
-    else
-    {
-      if (line_begin && (indention != data->indent_level))
-      {
-        if (data->indent_step == -1)
-        {
-          if (indention > data->indent_level)
-          {
-            FOUR_C_ASSERT(data->indent_level == 0, "non-zero intention at first line?!");
-            data->indent_step = indention;
-            data->indent_level = indention;
-            data->token_int = 1;
-            data->tok = tok_indent;
-          }
-          else
-          {
-            FOUR_C_THROW("dedent at toplevel!");
-          }
-        }
-        else
-        {
-          if (indention > data->indent_level)
-          {
-            data->tok = tok_indent;
-            FOUR_C_ASSERT(
-                (indention - data->indent_level) % data->indent_step == 0, "malformed indention");
-            data->token_int = (indention - data->indent_level) / data->indent_step;
-            data->indent_level = indention;
-          }
-          else
-          {
-            data->tok = tok_dedent;
-            FOUR_C_ASSERT(
-                (data->indent_level - indention) % data->indent_step == 0, "malformed dedention");
-            data->token_int = (data->indent_level - indention) / data->indent_step;
-            data->indent_level = indention;
-          }
-        }
-        data->pos--;
-        goto end;
-      }
-      else
-      {
-        line_begin = 0;
-
-        if ((t == '-') || isdigit(t))
-        {
-          data->token_string = &(data->file_buffer[data->pos - 1]);
-          if (t == '-')
-          {
-            t = getnext(data);
-          }
-          while (isdigit(t))
-          {
-            t = getnext(data);
-          }
-          if ((t != '.') && (t != 'E') && (t != 'e'))
-          {
-            if (t != EOF)
-            {
-              data->pos--;
-            }
-            data->token_int = atoi(data->token_string);
-            data->tok = tok_int;
-            goto end;
-          }
-          if (t == '.')
-          {
-            t = getnext(data);
-            if (isdigit(t))
-            {
-              while (isdigit(t))
-              {
-                t = getnext(data);
-              }
-            }
-            else
-            {
-              FOUR_C_THROW("no digits after point at line {}", data->lineno);
-            }
-          }
-          if ((t == 'E') || (t == 'e'))
-          {
-            t = getnext(data);
-            if ((t == '-') || (t == '+'))
-            {
-              t = getnext(data);
-            }
-            if (isdigit(t))
-            {
-              while (isdigit(t))
-              {
-                t = getnext(data);
-              }
-            }
-            else
-            {
-              FOUR_C_THROW("no digits after exponent at line {}", data->lineno);
-            }
-          }
-          if (t != EOF)
-          {
-            data->pos--;
-          }
-          data->token_real = strtod(data->token_string, nullptr);
-          data->tok = tok_real;
-          goto end;
-        }
-        else if (isalpha(t) || (t == '_'))
-        {
-          data->token_string = &(data->file_buffer[data->pos - 1]);
-          while (isalnum(t) || (t == '_'))
-          {
-            t = getnext(data);
-          }
-          if (t != EOF)
-          {
-            data->pos--;
-          }
-          data->tok = tok_name;
-          data->token_int = &(data->file_buffer[data->pos]) - data->token_string;
-          goto end;
-        }
-        else if (t == '"')
-        {
-          data->token_string = &(data->file_buffer[data->pos]);
-          t = getnext(data);
-          while (t != '"')
-          {
-            t = getnext(data);
-            if (t == EOF)
-            {
-              FOUR_C_THROW("expected closing \" on line {}", data->lineno);
-            }
-          }
-          data->tok = tok_string;
-          data->token_int = &(data->file_buffer[data->pos - 1]) - data->token_string;
-          goto end;
-        }
-        else if (t == ':')
-        {
-          data->tok = tok_colon;
-          goto end;
-        }
-        else if (t == '=')
-        {
-          data->tok = tok_equal;
-          goto end;
-        }
-        else
-        {
-          if (t >= 32)
-            FOUR_C_THROW("unexpected char '{}' at line {}", t, data->lineno);
-          else
-            FOUR_C_THROW("unexpected char '{}' at line {}", t, data->lineno);
-          data->tok = tok_none;
-          goto end;
-        }
-      }
-    }
-  }
-
-end:
-
-
-  return;
-}
-
-
-/*----------------------------------------------------------------------*/
-/*!
-  \brief The top down parser.
-
-*/
-/*----------------------------------------------------------------------*/
-static void parse_definitions(ParserData* data, MAP* dir)
-{
-  lexan(data);
-
-  while (data->tok != tok_done)
-  {
-    switch (data->tok)
-    {
-      case tok_name:
-      {
-        char* name;
-
-        /*
-         * The string is not null terminated as it's a simple pointer
-         * into the file buffer. However, we know its length so we can
-         * handle that. */
-        name = (char*)malloc((data->token_int + 1) * sizeof(char));
-        /*strncpy(name, data->token_string, data->token_int);*/
-        strncpy(name, data->token_string, (size_t)data->token_int);
-        name[data->token_int] = '\0';
-
-        lexan(data);
-        switch (data->tok)
-        {
-          case tok_colon:
-          {
-            MAP* map;
-
-            lexan(data);
-            if ((data->tok != tok_indent) || (data->token_int != 1))
-            {
-              FOUR_C_THROW("Syntaxerror at line {}: single indention expected", data->lineno);
-            }
-
-            map = new MAP;
-            init_map(map);
-            parse_definitions(data, map);
-
-            map_insert_map(dir, map, name);
-
-            if ((data->tok == tok_dedent) && (data->token_int > 0))
-            {
-              data->token_int--;
-              goto end;
-            }
-
-            break;
-          }
-          case tok_equal:
-            lexan(data);
-            switch (data->tok)
-            {
-              case tok_string:
-              {
-                char* string;
-
-                /* Again, be carefully with those pointers... */
-                string = (char*)malloc((data->token_int + 1) * sizeof(char));
-                /*strncpy(string, data->token_string, data->token_int);*/
-                strncpy(string, data->token_string, (size_t)data->token_int);
-                string[data->token_int] = '\0';
-
-                map_insert_string(dir, string, name);
-                break;
-              }
-              case tok_int:
-                map_insert_int(dir, data->token_int, name);
-                break;
-              case tok_real:
-                map_insert_real(dir, data->token_real, name);
-                break;
-              default:
-                FOUR_C_THROW("Syntaxerror at line {}: string, int or real expected", data->lineno);
-            }
-            break;
-          default:
-            FOUR_C_THROW("Syntaxerror at line {}: ':' or '=' expected", data->lineno);
-        }
-        break;
-      }
-      case tok_dedent:
-        data->token_int--;
-        goto end;
-      default:
-        FOUR_C_THROW("Syntaxerror at line {}: name expected", data->lineno);
-    }
-
-    lexan(data);
-  }
-
-end:
-  return;
-}
-
-/// Legacy table manages strings itself, so we have to give it a full copy that can be freed later
+/// Legacy table manages strings itself, so we have to give it a full copy that can be freed
+/// later
 static char* string_copy(ryml::csubstr in) { return strndup(in.data(), in.size()); }
 
 static void parse_yaml_node(ryml::ConstNodeRef node, MAP* parent)
@@ -1443,10 +921,10 @@ static void parse_yaml_node(ryml::ConstNodeRef node, MAP* parent)
   }
 }
 
-static void parse_from_yaml(ParserData* data, MAP* map)
+static void parse_from_yaml(std::string& file_content, MAP* map)
 {
   auto tree = Core::IO::init_yaml_tree_with_exceptions();
-  ryml::parse_in_place(ryml::substr(data->file_buffer, data->file_size), &tree);
+  ryml::parse_in_place(ryml::to_substr(file_content), &tree);
 
   FOUR_C_ASSERT_ALWAYS(tree.rootref().is_seq(), "Expected a top-level sequence");
   for (auto item : tree.rootref().children())
@@ -1459,60 +937,49 @@ static void parse_from_yaml(ParserData* data, MAP* map)
 }
 
 
-/*----------------------------------------------------------------------*/
-/*!
-  \brief Parse the file given by name and fill the map with this
-  file's content (serial only!)
-
-*/
-/*----------------------------------------------------------------------*/
-void parse_control_file_serial(MAP* map, const char* filename)
+static std::string read_file(const char* filename, MPI_Comm comm)
 {
-  ParserData data;
+  const int myrank = (comm != MPI_COMM_NULL) ? Core::Communication::my_mpi_rank(comm) : 0;
+  const int nprocs = (comm != MPI_COMM_NULL) ? Core::Communication::num_mpi_ranks(comm) : 0;
 
-  /*
-   * So here we are. Before the symbol table can be filled with values
-   * it has to be initialized. That is we expect to get an
-   * uninitialized (virgin) map. */
-  init_map(map);
-
-  data.tok = tok_none;
-  data.lineno = 1;
-  data.pos = 0;
-  data.indent_level = 0;
-  data.indent_step = -1;
-
-  int bytes_read;
-  FILE* file;
-  file = fopen(filename, "rb");
-
-  if (file == nullptr)
+  /* We need to have the information on all processes. That's why we
+   * read the file on process 0 and broadcast it. The other way would
+   * be to use MPI IO, but then we'd have to implement a separate
+   * sequential version. */
+  std::string file_content;
+  if (myrank == 0)
   {
-    FOUR_C_THROW("cannot read file '{}'", filename);
+    int bytes_read;
+    FILE* file;
+    file = fopen(filename, "rb");
+
+    if (file == nullptr)
+    {
+      FOUR_C_THROW("cannot read file '{}'", filename);
+    }
+
+    /* find out the control file size */
+    fseek(file, 0, SEEK_END);
+    const auto file_size = ftell(file);
+    file_content.resize(file_size);
+
+    /* read file to local buffer */
+    fseek(file, 0, SEEK_SET);
+    bytes_read = fread(file_content.data(), sizeof(char), file_size, file);
+    if (bytes_read != file_size)
+    {
+      FOUR_C_THROW("failed to read file {}", filename);
+    }
+    fclose(file);
   }
 
-  /* find out the control file size */
-  fseek(file, 0, SEEK_END);
-  data.file_size = ftell(file);
-
-  /* read file to local buffer */
-  data.file_buffer = (char*)malloc((data.file_size + 1) * sizeof(char));
-  fseek(file, 0, SEEK_SET);
-  /*bytes_read = fread(data.file_buffer, sizeof(char), data.file_size, file);*/
-  bytes_read = fread(data.file_buffer, sizeof(char), (size_t)data.file_size, file);
-  if (bytes_read != data.file_size)
+  if (nprocs > 1)
   {
-    FOUR_C_THROW("failed to read file {}", filename);
+    Core::Communication::broadcast(file_content, 0, comm);
   }
-  /* a trailing zero helps a lot */
-  data.file_buffer[data.file_size] = '\0';
 
-  fclose(file);
-
-  parse_from_yaml(&data, map);
-  destroy_parser_data(&data);
+  return file_content;
 }
-
 
 /*----------------------------------------------------------------------*/
 /*!
@@ -1523,17 +990,11 @@ void parse_control_file_serial(MAP* map, const char* filename)
 /*----------------------------------------------------------------------*/
 void parse_control_file(MAP* map, const char* filename, MPI_Comm comm)
 {
-  ParserData data;
-
-  /*
-   * So here we are. Before the symbol table can be filled with values
-   * it has to be initialized. That is we expect to get an
-   * uninitialized (virgin) map. */
   init_map(map);
 
-  init_parser_data(&data, filename, comm);
-  parse_from_yaml(&data, map);
-  destroy_parser_data(&data);
+  std::string file_content = read_file(filename, comm);
+
+  parse_from_yaml(file_content, map);
 }
 
 FOUR_C_NAMESPACE_CLOSE
