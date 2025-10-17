@@ -8,6 +8,7 @@
 #include "4C_io_legacy_table.hpp"
 
 #include "4C_io_legacy_types.hpp"
+#include "4C_io_yaml.hpp"
 #include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
 
@@ -1390,6 +1391,73 @@ end:
   return;
 }
 
+/// Legacy table manages strings itself, so we have to give it a full copy that can be freed later
+static char* string_copy(ryml::csubstr in) { return strndup(in.data(), in.size()); }
+
+static void parse_yaml_node(ryml::ConstNodeRef node, MAP* parent)
+{
+  if (node.is_map())
+  {
+    char* key = string_copy(node.key());
+
+    MAP* map = new MAP;
+    init_map(map);
+    for (auto item : node.children())
+    {
+      parse_yaml_node(item, map);
+    }
+
+    map_insert_map(parent, map, key);
+  }
+  else
+  {
+    char* key = string_copy(node.key());
+
+    if (node.is_val_dquo())
+    {
+      const auto value = node.val();
+      map_insert_string(parent, string_copy(value), key);
+      return;
+    }
+
+    if (node.has_val())
+    {
+      int int_value;
+      auto status = Core::IO::read_value_from_yaml(Core::IO::ConstYamlNodeRef{node, ""}, int_value);
+      if (status == Core::IO::YamlReadStatus::success)
+      {
+        map_insert_int(parent, int_value, key);
+        return;
+      }
+
+      double real_value;
+      status = Core::IO::read_value_from_yaml(Core::IO::ConstYamlNodeRef{node, ""}, real_value);
+      if (status == Core::IO::YamlReadStatus::success)
+      {
+        map_insert_real(parent, real_value, key);
+        return;
+      }
+    }
+
+    FOUR_C_THROW("Unsupported YAML node type for key '{}'", key);
+  }
+}
+
+static void parse_from_yaml(ParserData* data, MAP* map)
+{
+  auto tree = Core::IO::init_yaml_tree_with_exceptions();
+  ryml::parse_in_place(ryml::substr(data->file_buffer, data->file_size), &tree);
+
+  FOUR_C_ASSERT_ALWAYS(tree.rootref().is_seq(), "Expected a top-level sequence");
+  for (auto item : tree.rootref().children())
+  {
+    FOUR_C_ASSERT_ALWAYS(item.is_map(), "Expected sequence items to be maps");
+    FOUR_C_ASSERT_ALWAYS(
+        item.num_children() == 1, "Expected single key-value pairs in top-level sequence");
+    parse_yaml_node(item.child(0), map);
+  }
+}
+
 
 /*----------------------------------------------------------------------*/
 /*!
@@ -1441,7 +1509,7 @@ void parse_control_file_serial(MAP* map, const char* filename)
 
   fclose(file);
 
-  parse_definitions(&data, map);
+  parse_from_yaml(&data, map);
   destroy_parser_data(&data);
 }
 
@@ -1464,7 +1532,7 @@ void parse_control_file(MAP* map, const char* filename, MPI_Comm comm)
   init_map(map);
 
   init_parser_data(&data, filename, comm);
-  parse_definitions(&data, map);
+  parse_from_yaml(&data, map);
   destroy_parser_data(&data);
 }
 
