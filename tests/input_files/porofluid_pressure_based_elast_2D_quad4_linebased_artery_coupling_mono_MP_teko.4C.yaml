@@ -68,7 +68,7 @@ SOLVER 2:
   SOLVER: "Belos"
   AZPREC: "Teko"
   SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_porofluid_pressure_based.xml"
-  TEKO_XML_FILE: "xml/block_preconditioner/porofluid_pressure_based_elast_artery_BGS-AMG_3x3_direct.xml"
+  TEKO_XML_FILE: "xml/block_preconditioner/porofluid_pressure_based_elast_artery_BGS-AMG_3x3.xml"
   AZREUSE: 10
 MATERIALS:
   - MAT: 1

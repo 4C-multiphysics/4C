@@ -17,7 +17,7 @@ porofluid_elasticity_scatra_dynamic:
   artery_coupling_active: true
 porofluid_elasticity_scatra_dynamic/monolithic:
   nonlinear_solver:
-    linear_solver_id: 1
+    linear_solver_id: 2
 STRUCTURAL DYNAMIC:
   INT_STRATEGY: "Standard"
   DYNAMICTYPE: "OneStepTheta"
@@ -70,6 +70,13 @@ ARTERIAL DYNAMIC:
 SOLVER 1:
   SOLVER: "UMFPACK"
   NAME: "solver"
+SOLVER 2:
+  NAME: "solver"
+  SOLVER: "Belos"
+  AZPREC: "Teko"
+  SOLVER_XML_FILE: "xml/linear_solver/iterative_gmres_porofluid_pressure_based.xml"
+  TEKO_XML_FILE: "xml/block_preconditioner/porofluid_pressure_based_elast_scatra_artery_BGS-AMG_5x5.xml"
+  AZREUSE: 10
 MATERIALS:
   - MAT: 1
     MAT_FluidPoroMultiPhaseReactions:

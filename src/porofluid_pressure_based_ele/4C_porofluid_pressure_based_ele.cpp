@@ -72,6 +72,8 @@ Core::LinAlg::SerialDenseMatrix Discret::Elements::PoroFluidMultiPhaseType::comp
 {
   switch (numdof)
   {
+    case 2:
+      return FLD::compute_fluid_null_space<2>();
     case 3:
       return FLD::compute_fluid_null_space<3>();
     case 4:
