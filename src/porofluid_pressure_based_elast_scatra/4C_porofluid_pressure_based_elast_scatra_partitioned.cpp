@@ -221,7 +221,7 @@ bool PoroPressureBased::PorofluidElastScatraPartitionedAlgorithm::convergence_ch
     if (target_pressure_map.same_as(source_pressure_map))
     {
       artery_pressure_inc_np_->update(
-          1.0, *(porofluid_elast_algo()->porofluid_algo()->art_net_tim_int()->pressurenp()), 0.0);
+          1.0, *(porofluid_elast_algo()->porofluid_algo()->art_net_tim_int()->pressurenp()), -1.0);
     }
     else
     {
@@ -239,7 +239,7 @@ bool PoroPressureBased::PorofluidElastScatraPartitionedAlgorithm::convergence_ch
 
     if (target_map.same_as(source_map))
     {
-      artery_scatra_inc_np_->update(1.0, *src_vec, 0.0);
+      artery_scatra_inc_np_->update(1.0, *src_vec, -1.0);
     }
     else
     {
@@ -263,8 +263,7 @@ bool PoroPressureBased::PorofluidElastScatraPartitionedAlgorithm::convergence_ch
     porofluid_elast_algo()->porofluid_algo()->art_net_tim_int()->pressurenp()->norm_2(
         &artery_pressure_norm);
     artery_scatra_inc_np_->norm_2(&artery_scatra_inc_norm);
-    porofluid_elast_algo()->porofluid_algo()->art_net_tim_int()->pressurenp()->norm_2(
-        &artery_scatra_norm);
+    scatra_meshtying_strategy_->art_scatra_field()->phinp()->norm_2(&artery_scatra_norm);
   }
 
   // care for the case that there is (almost) zero scalar
