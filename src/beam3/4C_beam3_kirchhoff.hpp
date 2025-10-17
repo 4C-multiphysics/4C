@@ -83,6 +83,24 @@ namespace Discret
 {
   namespace Elements
   {
+    /*
+     * @brief Flag for enforcement of Kirchhoff constraint.
+     */
+    enum class Beam3KirchhoffConstraintType
+    {
+      strong,
+      weak
+    };
+
+    /*
+     * @brief Flag for type of beam parametrization.
+     */
+    enum class Beam3KirchhoffParametrizationType
+    {
+      tan,
+      rot
+    };
+
     class Beam3kType : public Core::Elements::ElementType
     {
      public:

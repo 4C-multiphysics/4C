@@ -96,29 +96,26 @@ void Discret::Elements::Beam3kType::setup_element_definition(
 
   using namespace Core::IO::InputSpecBuilders;
 
-  defs[Core::FE::CellType::line2] = all_of({
-      parameter<int>("WK"),
-      parameter<int>("ROTVEC"),
-      parameter<int>("MAT"),
-      parameter<std::vector<double>>("TRIADS", {.size = 6}),
-      parameter<bool>("USE_FAD", {.default_value = false}),
-  });
+  const std::vector<std::pair<Core::FE::CellType, int>> cell_types_with_triad_size = {
+      {Core::FE::CellType::line2, 6}, {Core::FE::CellType::line3, 9},
+      {Core::FE::CellType::line4, 12}};
 
-  defs[Core::FE::CellType::line3] = all_of({
-      parameter<int>("WK"),
-      parameter<int>("ROTVEC"),
-      parameter<int>("MAT"),
-      parameter<std::vector<double>>("TRIADS", {.size = 9}),
-      parameter<bool>("USE_FAD", {.default_value = false}),
-  });
-
-  defs[Core::FE::CellType::line4] = all_of({
-      parameter<int>("WK"),
-      parameter<int>("ROTVEC"),
-      parameter<int>("MAT"),
-      parameter<std::vector<double>>("TRIADS", {.size = 12}),
-      parameter<bool>("USE_FAD", {.default_value = false}),
-  });
+  for (const auto& [cell_type, triad_size] : cell_types_with_triad_size)
+  {
+    defs[cell_type] = all_of({
+        parameter<Beam3KirchhoffConstraintType>("CONSTRAINT",
+            {.description = "Which type of Kirchhoff constraint enforcement should be used."}),
+        parameter<Beam3KirchhoffParametrizationType>("PARAMETRIZATION",
+            {.description = "Which type of beam parametrization should be used."}),
+        parameter<int>("MAT"),
+        parameter<std::vector<double>>(
+            "TRIADS", {.description = "Nodal triad rotation vectors in reference configuration",
+                          .size = triad_size}),
+        parameter<bool>(
+            "USE_FAD", {.description = "Flag, if automatic differentiation should be used.",
+                           .default_value = false}),
+    });
+  }
 }
 
 /*----------------------------------------------------------------------*

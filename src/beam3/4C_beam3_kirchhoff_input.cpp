@@ -32,36 +32,19 @@ bool Discret::Elements::Beam3k::read_element(const std::string& eletype, const s
       "Choose MAT_BeamKirchhoffElastHyper or MAT_BeamKirchhoffElastHyper_ByModes!",
       mat_type);
 
-  int rotvec = container.get<int>("ROTVEC");
+  rotvec_ = container.get<Beam3KirchhoffParametrizationType>("PARAMETRIZATION") ==
+            Beam3KirchhoffParametrizationType::rot;
+  weakkirchhoff_ = container.get<Beam3KirchhoffConstraintType>("CONSTRAINT") ==
+                   Beam3KirchhoffConstraintType::weak;
 
-  int wk = container.get<int>("WK");
-
-  if (rotvec == 0)
-    rotvec_ = false;
-  else if (rotvec == 1)
-    rotvec_ = true;
-  else
-    FOUR_C_THROW(
-        "The variable ROTVEC can only take on the values 0 (tangent vectors as nodal DoFs) and "
-        "1 (rotation vectors as nodal DoFs)!");
-
-  if (wk == 0)
-    weakkirchhoff_ = false;
-  else if (wk == 1)
+  if (weakkirchhoff_)
   {
-    weakkirchhoff_ = true;
 #ifdef CONSISTENTSPINSK
     FOUR_C_THROW(
         "The flag CONSISTENTSPINSK is only possible for strong Kirchhoff constraint enforcement "
         "(weakkirchhoff_=false)");
 #endif
   }
-  else
-    FOUR_C_THROW(
-        "The variable WK can only take on the values 0 (Kirchhoff constraint enforced in a strong "
-        "manner) and "
-        "1 (Kirchhoff constraint enforced in a weak manner)!");
-
 
   // extract triads at element nodes in reference configuration as rotation vectors and save them as
   // quaternions at each node, respectively
