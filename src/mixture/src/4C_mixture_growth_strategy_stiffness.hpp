@@ -53,7 +53,7 @@ namespace Mixture
 
     void evaluate_inverse_growth_deformation_gradient(Core::LinAlg::Tensor<double, 3, 3>& iFgM,
         const Mixture::MixtureRule& mixtureRule, double currentReferenceGrowthScalar,
-        int gp) const override;
+        const Mat::EvaluationContext& context, int gp, int eleGID) const override;
 
     void evaluate_growth_stress_cmat(const Mixture::MixtureRule& mixtureRule,
         double currentReferenceGrowthScalar,

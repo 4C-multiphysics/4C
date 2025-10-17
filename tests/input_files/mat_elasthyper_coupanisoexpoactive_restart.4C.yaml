@@ -29,13 +29,14 @@ MATERIALS:
     MIX_GrowthStrategy_Isotropic: {}
   - MAT: 11
     MIX_Constituent_ExplicitRemodelFiber:
+      ORIENTATION:
+        constant: [1.0, 0.0, 0.0]
       FIBER_MATERIAL_ID: 110
       ENABLE_GROWTH: false
       DECAY_TIME: 100
       GROWTH_CONSTANT: 0.05
       DEPOSITION_STRETCH: 1
       INELASTIC_GROWTH: true
-      INIT: 3
   - MAT: 110
     MIX_Constituent_RemodelFiber_Material_Exponential_Active:
       K1: 10
@@ -162,18 +163,18 @@ DSURF-NODE TOPOLOGY:
   - "NODE 9 DSURFACE 2"
   - "NODE 11 DSURFACE 2"
 NODE COORDS:
-  - "FNODE 1 COORD 0.0 0.0 0.0 FIBER1 1.0 0.0 0.0"
-  - "FNODE 2 COORD 0.0 1.0 0.0 FIBER1 1.0 0.0 0.0"
-  - "FNODE 3 COORD 0.0 0.0 1.0 FIBER1 1.0 0.0 0.0"
-  - "FNODE 4 COORD 0.0 1.0 1.0 FIBER1 1.0 0.0 0.0"
-  - "FNODE 5 COORD 1.0 0.0 0.0 FIBER1 1.0 0.0 0.0"
-  - "FNODE 6 COORD 1.0 1.0 0.0 FIBER1 1.0 0.0 0.0"
-  - "FNODE 7 COORD 1.0 0.0 1.0 FIBER1 1.0 0.0 0.0"
-  - "FNODE 8 COORD 1.0 1.0 1.0 FIBER1 1.0 0.0 0.0"
-  - "FNODE 9 COORD 2.0 0.0 0.0 FIBER1 1.0 0.0 0.0"
-  - "FNODE 10 COORD 2.0 1.0 0.0 FIBER1 1.0 0.0 0.0"
-  - "FNODE 11 COORD 2.0 0.0 1.0 FIBER1 1.0 0.0 0.0"
-  - "FNODE 12 COORD 2.0 1.0 1.0 FIBER1 1.0 0.0 0.0"
+  - "NODE 1 COORD 0.0 0.0 0.0"
+  - "NODE 2 COORD 0.0 1.0 0.0"
+  - "NODE 3 COORD 0.0 0.0 1.0"
+  - "NODE 4 COORD 0.0 1.0 1.0"
+  - "NODE 5 COORD 1.0 0.0 0.0"
+  - "NODE 6 COORD 1.0 1.0 0.0"
+  - "NODE 7 COORD 1.0 0.0 1.0"
+  - "NODE 8 COORD 1.0 1.0 1.0"
+  - "NODE 9 COORD 2.0 0.0 0.0"
+  - "NODE 10 COORD 2.0 1.0 0.0"
+  - "NODE 11 COORD 2.0 0.0 1.0"
+  - "NODE 12 COORD 2.0 1.0 1.0"
 STRUCTURE ELEMENTS:
   - "1 SOLID HEX8 1 5 6 2 3 7 8 4 MAT 1 KINEM nonlinear"
   - "2 SOLID HEX8 5 9 10 6 7 11 12 8 MAT 1 KINEM nonlinear"

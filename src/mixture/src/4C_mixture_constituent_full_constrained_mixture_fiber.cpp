@@ -10,6 +10,7 @@
 #include "4C_comm_pack_helpers.hpp"
 #include "4C_comm_parobject.hpp"
 #include "4C_global_data.hpp"
+#include "4C_io_input_field.hpp"
 #include "4C_linalg_symmetric_tensor.hpp"
 #include "4C_mat_elast_aniso_structuraltensor_strategy.hpp"
 #include "4C_mat_par_bundle.hpp"
@@ -63,8 +64,9 @@ namespace
 Mixture::PAR::MixtureConstituentFullConstrainedMixtureFiber::
     MixtureConstituentFullConstrainedMixtureFiber(const Core::Mat::PAR::Parameter::Data& matdata)
     : MixtureConstituent(matdata),
-      fiber_id_(matdata.parameters.get<int>("FIBER_ID") - 1),
-      init_(matdata.parameters.get<int>("INIT")),
+      fiber_orientation(
+          matdata.parameters.get<Core::IO::InterpolatedInputField<Core::LinAlg::Tensor<double, 3>,
+              Mat::FiberInterpolation>>("ORIENTATION")),
       fiber_material_id_(matdata.parameters.get<int>("FIBER_MATERIAL_ID")),
       fiber_material_(fiber_material_factory(fiber_material_id_)),
       enable_growth_(matdata.parameters.get<bool>("ENABLE_GROWTH")),
@@ -89,15 +91,8 @@ Mixture::PAR::MixtureConstituentFullConstrainedMixtureFiber::create_constituent(
 Mixture::MixtureConstituentFullConstrainedMixtureFiber::
     MixtureConstituentFullConstrainedMixtureFiber(
         Mixture::PAR::MixtureConstituentFullConstrainedMixtureFiber* params, int id)
-    : MixtureConstituent(params, id),
-      params_(params),
-      full_constrained_mixture_fiber_(),
-      anisotropy_extension_(params_->init_, 0.0, false,
-          std::make_shared<Mat::Elastic::StructuralTensorStrategyStandard>(nullptr),
-          {params_->fiber_id_})
+    : MixtureConstituent(params, id), params_(params), full_constrained_mixture_fiber_()
 {
-  anisotropy_extension_.register_needed_tensors(
-      Mat::FiberAnisotropyExtension<1>::STRUCTURAL_TENSOR);
 }
 
 Core::Materials::MaterialType
@@ -110,12 +105,12 @@ void Mixture::MixtureConstituentFullConstrainedMixtureFiber::pack_constituent(
     Core::Communication::PackBuffer& data) const
 {
   Mixture::MixtureConstituent::pack_constituent(data);
-  anisotropy_extension_.pack_anisotropy(data);
 
   for (const FullConstrainedMixtureFiber<double>& fiber : full_constrained_mixture_fiber_)
     fiber.pack(data);
 
-  add_to_pack(data, last_lambda_f_);
+  Core::Communication::add_to_pack(data, last_lambda_f_);
+  Core::Communication::add_to_pack(data, structural_tensors_);
 }
 
 void Mixture::MixtureConstituentFullConstrainedMixtureFiber::unpack_constituent(
@@ -124,12 +119,10 @@ void Mixture::MixtureConstituentFullConstrainedMixtureFiber::unpack_constituent(
   Mixture::MixtureConstituent::unpack_constituent(buffer);
   initialize();
 
-  anisotropy_extension_.unpack_anisotropy(buffer);
-
   for (FullConstrainedMixtureFiber<double>& fiber : full_constrained_mixture_fiber_)
     fiber.unpack(buffer);
 
-  extract_from_pack(buffer, last_lambda_f_);
+  Core::Communication::extract_from_pack(buffer, last_lambda_f_);
 
   if (params_->enable_growth_)
   {
@@ -139,12 +132,8 @@ void Mixture::MixtureConstituentFullConstrainedMixtureFiber::unpack_constituent(
           last_lambda_f_[gp], full_constrained_mixture_fiber_[gp].get_last_time_in_history());
     }
   }
-}
 
-void Mixture::MixtureConstituentFullConstrainedMixtureFiber::register_anisotropy_extensions(
-    Mat::Anisotropy& anisotropy)
-{
-  anisotropy.register_anisotropy_extension(anisotropy_extension_);
+  Core::Communication::extract_from_pack(buffer, structural_tensors_);
 }
 
 void Mixture::MixtureConstituentFullConstrainedMixtureFiber::initialize()
@@ -261,7 +250,7 @@ Core::LinAlg::SymmetricTensor<double, 3, 3>
 Mixture::MixtureConstituentFullConstrainedMixtureFiber::evaluate_d_lambdafsq_dc(
     int gp, int eleGID) const
 {
-  return anisotropy_extension_.get_structural_tensor(gp, 0);
+  return structural_tensors_[gp];
 }
 
 Core::LinAlg::SymmetricTensor<double, 3, 3>
@@ -270,7 +259,7 @@ Mixture::MixtureConstituentFullConstrainedMixtureFiber::evaluate_current_p_k2(
 {
   const double fiber_pk2 = full_constrained_mixture_fiber_[gp].evaluate_current_second_pk_stress();
 
-  return fiber_pk2 * anisotropy_extension_.get_structural_tensor(gp, 0);
+  return fiber_pk2 * structural_tensors_[gp];
 }
 
 Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>
@@ -281,8 +270,7 @@ Mixture::MixtureConstituentFullConstrainedMixtureFiber::evaluate_current_cmat(
       full_constrained_mixture_fiber_[gp].evaluate_d_current_fiber_pk2_stress_d_lambda_f_sq();
 
   return 2.0 * dPK2dlambdafsq *
-         Core::LinAlg::dyadic(anisotropy_extension_.get_structural_tensor(gp, 0),
-             evaluate_d_lambdafsq_dc(gp, eleGID));
+         Core::LinAlg::dyadic(structural_tensors_[gp], evaluate_d_lambdafsq_dc(gp, eleGID));
 }
 
 void Mixture::MixtureConstituentFullConstrainedMixtureFiber::evaluate(
@@ -296,6 +284,14 @@ void Mixture::MixtureConstituentFullConstrainedMixtureFiber::evaluate(
   const double time = *context.total_time;
   FOUR_C_ASSERT(context.time_step_size, "Time step size not given in evaluation context.");
   const double delta_time = *context.time_step_size;
+
+  if (static_cast<int>(structural_tensors_.size()) < gp + 1)
+  {
+    // TODO: Move this to a setup phase
+    Core::LinAlg::Tensor<double, 3> orientation =
+        params_->fiber_orientation.interpolate(eleGID, context.xi->as_span());
+    structural_tensors_.emplace_back(Core::LinAlg::self_dyadic(orientation));
+  }
 
   Core::LinAlg::SymmetricTensor<double, 3, 3> C = evaluate_c(F);
 
@@ -349,6 +345,6 @@ double Mixture::MixtureConstituentFullConstrainedMixtureFiber::evaluate_initial_
 double Mixture::MixtureConstituentFullConstrainedMixtureFiber::evaluate_lambdaf(
     const Core::LinAlg::SymmetricTensor<double, 3, 3>& C, const int gp, const int eleGID) const
 {
-  return std::sqrt(Core::LinAlg::ddot(C, anisotropy_extension_.get_structural_tensor(gp, 0)));
+  return std::sqrt(Core::LinAlg::ddot(C, structural_tensors_[gp]));
 }
 FOUR_C_NAMESPACE_CLOSE

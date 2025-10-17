@@ -14,6 +14,7 @@
 #include "4C_io_input_spec_builders.hpp"
 #include "4C_io_input_spec_validators.hpp"
 #include "4C_mat_electrode.hpp"
+#include "4C_mat_fiber_interpolation.hpp"
 #include "4C_mat_fluidporo_singlephase.hpp"
 #include "4C_mat_micromaterial.hpp"
 #include "4C_mat_muscle_combo.hpp"
@@ -3913,26 +3914,30 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
   /*----------------------------------------------------------------------*/
   // Mixture constituent for ElastHyper toolbox with a damage process and a membrane constituent
   {
-    known_materials[Core::Materials::mix_elasthyper_elastin_membrane] =
-        group("MIX_Constituent_ElastHyper_ElastinMembrane",
-            {
-                parameter<int>("NUMMAT", {.description = "number of summands"}),
-                parameter<std::vector<int>>(
-                    "MATIDS", {.description = "list material IDs of the membrane summands",
-                                  .size = from_parameter<int>("NUMMAT")}),
-                parameter<int>("MEMBRANENUMMAT", {.description = "number of summands"}),
-                parameter<std::vector<int>>(
-                    "MEMBRANEMATIDS", {.description = "list material IDs of the membrane summands",
-                                          .size = from_parameter<int>("MEMBRANENUMMAT")}),
-                parameter<int>(
-                    "PRESTRESS_STRATEGY", {.description = "Material id of the prestress strategy "
-                                                          "(optional, by default no prestretch)",
-                                              .default_value = 0}),
-                parameter<int>("DAMAGE_FUNCT",
-                    {.description = "Reference to the function that is a gain for the "
-                                    "increase/decrease of the reference mass density."}),
-            },
-            {.description = "ElastHyper toolbox with damage and 2D membrane material"});
+    known_materials[Core::Materials::mix_elasthyper_elastin_membrane] = group(
+        "MIX_Constituent_ElastHyper_ElastinMembrane",
+        {
+            interpolated_input_field<Core::LinAlg::Tensor<double, 3>, Mat::FiberInterpolation>(
+                "MEMBRANE_NORMAL",
+                {.description =
+                        "A unit vector field pointing in the direction of the membrane normal."}),
+            parameter<int>("NUMMAT", {.description = "number of summands"}),
+            parameter<std::vector<int>>(
+                "MATIDS", {.description = "list material IDs of the membrane summands",
+                              .size = from_parameter<int>("NUMMAT")}),
+            parameter<int>("MEMBRANENUMMAT", {.description = "number of summands"}),
+            parameter<std::vector<int>>(
+                "MEMBRANEMATIDS", {.description = "list material IDs of the membrane summands",
+                                      .size = from_parameter<int>("MEMBRANENUMMAT")}),
+            parameter<int>(
+                "PRESTRESS_STRATEGY", {.description = "Material id of the prestress strategy "
+                                                      "(optional, by default no prestretch)",
+                                          .default_value = 0}),
+            parameter<int>("DAMAGE_FUNCT",
+                {.description = "Reference to the function that is a gain for the "
+                                "increase/decrease of the reference mass density."}),
+        },
+        {.description = "ElastHyper toolbox with damage and 2D membrane material"});
   }
 
   /*----------------------------------------------------------------------*/
@@ -3958,12 +3963,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
     known_materials[Core::Materials::mix_growth_strategy_anisotropic] =
         group("MIX_GrowthStrategy_Anisotropic",
             {
-                parameter<int>(
-                    "INIT", {.description = "initialization modus for growth direction alignment",
-                                .default_value = 1}),
-                parameter<int>("FIBER_ID", {.description = "Id of the fiber to point the growth "
-                                                           "direction (1 for first fiber, default)",
-                                               .default_value = 1}),
+                interpolated_input_field<Core::LinAlg::Tensor<double, 3>, Mat::FiberInterpolation>(
+                    "GROWTH_DIRECTION",
+                    {.description = "A unit vector field pointing in the direction of growth."}),
             },
             {.description = "anisotropic growth"});
   }
@@ -4020,6 +4022,13 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<double>("CIRCUMFERENTIAL_PRESTRETCH",
                 {.description = "Prestretch in circumferential direction"}),
             parameter<double>("PRESSURE", {.description = "Pressure in the inner of the cylinder"}),
+            interpolated_input_field<Core::LinAlg::Tensor<double, 3>, Mat::FiberInterpolation>(
+                "RADIAL", {.description = "A unit vector field pointing in radial direction."}),
+            interpolated_input_field<Core::LinAlg::Tensor<double, 3>, Mat::FiberInterpolation>(
+                "AXIAL", {.description = "A unit vector field pointing in axial direction."}),
+            interpolated_input_field<Core::LinAlg::Tensor<double, 3>, Mat::FiberInterpolation>(
+                "CIRCUMFERENTIAL",
+                {.description = "A unit vector field pointing in circumferential direction."}),
         },
         {.description = "Simple prestress strategy for a cylinder"});
   }
@@ -4046,7 +4055,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
     known_materials[Core::Materials::mix_full_constrained_mixture_fiber] = group(
         "MIX_Constituent_FullConstrainedMixtureFiber",
         {
-            parameter<int>("FIBER_ID", {.description = "Id of the fiber"}),
+            interpolated_input_field<Core::LinAlg::Tensor<double, 3>, Mat::FiberInterpolation>(
+                "ORIENTATION", {.description = "A unit vector field pointing in the direction of "
+                                               "the fiber in the reference configuration."}),
             parameter<int>("FIBER_MATERIAL_ID", {.description = "Id of fiber material"}),
             parameter<bool>("ENABLE_GROWTH",
                 {.description = "Switch for the growth (default true)", .default_value = true}),
@@ -4061,9 +4072,6 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 {.description =
                         "Id of the time function to scale the deposition stretch (Default: 0=None)",
                     .default_value = 0}),
-            parameter<int>("INIT",
-                {.description =
-                        "Initialization mode for fibers (1=element fibers, 3=nodal fibers)"}),
             parameter<std::string>("ADAPTIVE_HISTORY_STRATEGY",
                 {.description = "Strategy for adaptive history integration (none, model_equation, "
                                 "higher_order)",
@@ -4081,7 +4089,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
     known_materials[Core::Materials::mix_remodelfiber_expl] = group(
         "MIX_Constituent_ExplicitRemodelFiber",
         {
-            parameter<int>("FIBER_ID", {.description = "Id of the fiber", .default_value = 1}),
+            interpolated_input_field<Core::LinAlg::Tensor<double, 3>, Mat::FiberInterpolation>(
+                "ORIENTATION", {.description = "A unit vector field pointing in the direction of "
+                                               "the fiber in the reference configuration."}),
             parameter<int>("FIBER_MATERIAL_ID", {.description = "Id of fiber material"}),
             parameter<bool>("ENABLE_GROWTH",
                 {.description = "Switch for the growth (default true)", .default_value = true}),
@@ -4099,9 +4109,6 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
             parameter<bool>("INELASTIC_GROWTH",
                 {.description = "Mixture rule has inelastic growth (default false)",
                     .default_value = false}),
-            parameter<int>("INIT",
-                {.description =
-                        "Initialization mode for fibers (1=element fibers, 2=nodal fibers)"}),
             parameter<double>("GAMMA",
                 {.description = "Angle of fiber alignment in degree (default = 0.0 degrees)",
                     .default_value = 0.0}),
@@ -4115,7 +4122,9 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
     known_materials[Core::Materials::mix_remodelfiber_impl] = group(
         "MIX_Constituent_ImplicitRemodelFiber",
         {
-            parameter<int>("FIBER_ID", {.description = "Id of the fiber"}),
+            interpolated_input_field<Core::LinAlg::Tensor<double, 3>, Mat::FiberInterpolation>(
+                "ORIENTATION", {.description = "A unit vector field pointing in the direction of "
+                                               "the fiber in the reference configuration."}),
             parameter<int>("FIBER_MATERIAL_ID", {.description = "Id of fiber material"}),
             parameter<bool>("ENABLE_GROWTH",
                 {.description = "Switch for the growth (default true)", .default_value = true}),
@@ -4130,9 +4139,6 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
                 {.description =
                         "Id of the time function to scale the deposition stretch (Default: 0=None)",
                     .default_value = 0}),
-            parameter<int>("INIT",
-                {.description =
-                        "Initialization mode for fibers (1=element fibers, 2=nodal fibers)"}),
         },
         {.description = "A 1D constituent that remodels"});
   }

@@ -38,7 +38,8 @@ Mixture::StiffnessGrowthStrategy::StiffnessGrowthStrategy(
 
 void Mixture::StiffnessGrowthStrategy::evaluate_inverse_growth_deformation_gradient(
     Core::LinAlg::Tensor<double, 3, 3>& iFgM, const Mixture::MixtureRule& mixtureRule,
-    double currentReferenceGrowthScalar, int gp) const
+    double currentReferenceGrowthScalar, const Mat::EvaluationContext& context, int gp,
+    int eleGID) const
 {
   iFgM = Core::LinAlg::get_full(Core::LinAlg::TensorGenerators::identity<double, 3, 3>);
 }

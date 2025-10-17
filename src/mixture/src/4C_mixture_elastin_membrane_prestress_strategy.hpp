@@ -83,7 +83,8 @@ namespace Mixture
      * \param eleGID (in) : Global element id
      */
     virtual void evaluate_membrane_stress(Core::LinAlg::SymmetricTensor<double, 3, 3>& S,
-        const Teuchos::ParameterList& params, int gp, int eleGID) = 0;
+        const Teuchos::ParameterList& params, const Mat::EvaluationContext& context, int gp,
+        int eleGID) = 0;
   };
 }  // namespace Mixture
 FOUR_C_NAMESPACE_CLOSE
