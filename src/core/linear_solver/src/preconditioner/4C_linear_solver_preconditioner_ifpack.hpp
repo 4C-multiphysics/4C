@@ -13,6 +13,7 @@
 #include "4C_linear_solver_preconditioner_type.hpp"
 
 #include <Ifpack.h>
+#include <Thyra_LinearOpBase_decl.hpp>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -26,29 +27,25 @@ namespace Core::LinearSolver
   {
    public:
     //! Constructor (empty)
-    IFPACKPreconditioner(Teuchos::ParameterList& ifpacklist, Teuchos::ParameterList& solverlist);
+    IFPACKPreconditioner(Teuchos::ParameterList& ifpacklist);
 
     //! Setup
     void setup(Core::LinAlg::SparseOperator& matrix, const Core::LinAlg::MultiVector<double>& x,
         Core::LinAlg::MultiVector<double>& b) override;
 
     /// linear operator used for preconditioning
-    std::shared_ptr<Epetra_Operator> prec_operator() const override { return prec_; }
+    std::shared_ptr<Epetra_Operator> prec_operator() const override { return p_; }
 
    private:
     //! IFPACK parameter list
     Teuchos::ParameterList& ifpacklist_;
 
-    //! solver parameter list
-    Teuchos::ParameterList& solverlist_;
-
     //! system of equations used for preconditioning used by P_ only
-    std::shared_ptr<Epetra_RowMatrix> pmatrix_;
+    Teuchos::RCP<const Thyra::LinearOpBase<double>> pmatrix_;
 
     //! preconditioner
-    std::shared_ptr<Ifpack_Preconditioner> prec_;
-
-  };  // class IFPACKPreconditioner
+    std::shared_ptr<Epetra_Operator> p_;
+  };
 }  // namespace Core::LinearSolver
 
 FOUR_C_NAMESPACE_CLOSE
