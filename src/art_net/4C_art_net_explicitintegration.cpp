@@ -530,19 +530,20 @@ void Arteries::ArtNetExplicitTimeInt::init_save_state()
 {
   // get the discretizations DOF row map
   const Core::LinAlg::Map* dofrowmap = discret_->dof_row_map();
+  const Core::LinAlg::Map* noderowmap = discret_->node_row_map();
 
   // Volumetric Flow rate/Cross-sectional area of this step become most recent
   saved_qanp_ = Core::LinAlg::create_vector(*dofrowmap, true);
   saved_qan_ = Core::LinAlg::create_vector(*dofrowmap, true);
   saved_qanm_ = Core::LinAlg::create_vector(*dofrowmap, true);
 
-  saved_Wfnp_ = Core::LinAlg::create_vector(*dofrowmap, true);
-  saved_Wfn_ = Core::LinAlg::create_vector(*dofrowmap, true);
-  saved_Wfnm_ = Core::LinAlg::create_vector(*dofrowmap, true);
+  saved_Wfnp_ = Core::LinAlg::create_vector(*noderowmap, true);
+  saved_Wfn_ = Core::LinAlg::create_vector(*noderowmap, true);
+  saved_Wfnm_ = Core::LinAlg::create_vector(*noderowmap, true);
 
-  saved_Wbnp_ = Core::LinAlg::create_vector(*dofrowmap, true);
-  saved_Wbn_ = Core::LinAlg::create_vector(*dofrowmap, true);
-  saved_Wbnm_ = Core::LinAlg::create_vector(*dofrowmap, true);
+  saved_Wbnp_ = Core::LinAlg::create_vector(*noderowmap, true);
+  saved_Wbn_ = Core::LinAlg::create_vector(*noderowmap, true);
+  saved_Wbnm_ = Core::LinAlg::create_vector(*noderowmap, true);
 
   if (solvescatra_)
   {
@@ -567,6 +568,8 @@ void Arteries::ArtNetExplicitTimeInt::init_save_state()
  *----------------------------------------------------------------------*/
 void Arteries::ArtNetExplicitTimeInt::save_state()
 {
+  // const Core::LinAlg::Map* dofrowmap = discret_->dof_row_map();
+
   // Volumetric Flow rate/Cross-sectional area of this step become most recent
   saved_qanp_->update(1.0, *qanp_, 0.0);
   saved_qan_->update(1.0, *qan_, 0.0);
