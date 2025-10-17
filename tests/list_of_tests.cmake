@@ -835,7 +835,6 @@ four_c_test(TEST_FILE meshtying3D_sp_ost.4C.yaml NP 2)
 four_c_test(TEST_FILE meshtying3D_sp_ost_new_struct.4C.yaml NP 2)
 four_c_test(TEST_FILE meshtying3D_sp_std_braess_sarazin.4C.yaml NP 3)
 four_c_test(TEST_FILE meshtying3D_sp_std_simple.4C.yaml NP 3)
-four_c_test(TEST_FILE meshtying3D_sp_std_simple_nbinterfaceagg.4C.yaml NP 3)
 four_c_test(TEST_FILE meshtying3D_sp_std_uzawa.4C.yaml NP 3)
 four_c_test(TEST_FILE meshtying3D_structure_duallagr.4C.yaml NP 2 RESTART_STEP 8)
 four_c_test(TEST_FILE meshtying3D_structure_duallagr_binning.4C.yaml NP 3)
@@ -2000,6 +1999,14 @@ four_c_test(TEST_FILE scatra_forced_hit_mean_8x8x8.4C.yaml NP 3 RESTART_STEP 4 R
 four_c_test(TEST_FILE roughcontact2d_mirco_patchtest.4C.yaml NP 2 OMP_THREADS 2 REQUIRED_DEPENDENCIES MIRCO)
 # We disabled this test since it fails with clang. See https://github.com/4C-multiphysics/4C/issues/539
 # four_c_test(TEST_FILE roughcontact2d_mirco_varying_roughness.4C.yaml NP 2 OMP_THREADS 2 REQUIRED_DEPENDENCIES MIRCO)
+
+# Tests requiring a specific Trilinos version
+get_property(major GLOBAL PROPERTY FOUR_C_TRILINOS_INTERNAL_VERSION_MAJOR)
+get_property(minor GLOBAL PROPERTY FOUR_C_TRILINOS_INTERNAL_VERSION_MINOR)
+
+if(major GREATER_EQUAL 2025 AND minor GREATER_EQUAL 5)
+    four_c_test(TEST_FILE meshtying3D_sp_std_simple_nbinterfaceagg.4C.yaml NP 3)
+endif ()
 
 # Special test cases which do not use the standard four_c_test functionality
 
