@@ -809,7 +809,12 @@ void FLD::XFluid::assemble_mat_and_rhs(int itnum)
     // scaling to get true residual vector
     // negative sign to get forces acting on structural side
     // additional residual-scaling to remove the theta*dt-scaling
-    state_->trueresidual_->update(-1.0 * residual_scaling(), *state_->residual_, 0.0);
+    // but before we need to export the map to match the final map
+    Core::LinAlg::Vector<double> res_true_tmp(state_->trueresidual_->get_map(), true);
+    Core::LinAlg::Export exporter_true_residual(
+        state_->trueresidual_->get_map(), res_tmp.get_map());
+    res_true_tmp.export_to(*state_->residual_, exporter_true_residual, Add);
+    state_->trueresidual_->update(-1.0 * residual_scaling(), res_true_tmp, 0.0);
   }
 
   //-------------------------------------------------------------------------------

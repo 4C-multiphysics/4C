@@ -842,7 +842,20 @@ void FSI::FluidFluidMonolithicFluidSplitNoNOX::newton()
   // We need the last increment for the recovery of lambda.
   /*----------------------------------------------------------------------*/
   // Fluid
-  duiinc_->update(1.0, *extractor().extract_vector(*iterinc_, 1), 0.0);
+  auto target_map = duiinc_->get_map();
+  auto target_vct = extractor().extract_vector(*iterinc_, 1);
+  if (not target_map.same_as(target_vct->get_map()))
+  {
+    auto dst = std::make_shared<Core::LinAlg::Vector<double>>(target_map, true);
+    Core::LinAlg::Import imp(target_map, duiinc_->get_map());
+    dst->import(*duiinc_, imp, Insert);
+    duiinc_->update(1.0, *dst, 0.0);
+  }
+  else
+  {
+    duiinc_->update(1.0, *extractor().extract_vector(*iterinc_, 1), 0.0);
+  }
+
   // Structure
   std::shared_ptr<Core::LinAlg::Vector<double>> ddinc = extractor().extract_vector(*iterinc_, 0);
   ddginc_->update(1.0, *structure_field()->interface()->extract_fsi_cond_vector(*ddinc), 0.0);
