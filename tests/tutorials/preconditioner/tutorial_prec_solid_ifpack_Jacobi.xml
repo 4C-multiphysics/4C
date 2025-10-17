@@ -1,7 +1,9 @@
 <ParameterList name="Ifpack">
-  <Parameter name="Preconditioner type" type="string" value="point relaxation"/>
+  <Parameter name="Prec Type" type="string" value="point relaxation"/>
   <Parameter name="Overlap" type="int" value="0"/>
-  <Parameter name="relaxation: type" type="string" value="Jacobi"/>
-  <Parameter name="relaxation: sweeps" type="int" value="1"/>
-  <Parameter name="relaxation: damping factor" type="double" value="0.6"/>
+  <ParameterList name="Ifpack Settings">
+    <Parameter name="relaxation: type" type="string" value="Jacobi"/>
+    <Parameter name="relaxation: sweeps" type="int" value="1"/>
+    <Parameter name="relaxation: damping factor" type="double" value="0.6"/>
+  </ParameterList>
 </ParameterList>

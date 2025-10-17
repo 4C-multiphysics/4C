@@ -277,8 +277,7 @@ Core::LinearSolver::IterativeSolver::create_preconditioner(Teuchos::ParameterLis
 
   if (params().isSublist("IFPACK Parameters"))
   {
-    preconditioner = std::make_shared<Core::LinearSolver::IFPACKPreconditioner>(
-        params().sublist("IFPACK Parameters"), solverlist);
+    preconditioner = std::make_shared<Core::LinearSolver::IFPACKPreconditioner>(params());
   }
   else if (params().isSublist("MueLu Parameters"))
   {
