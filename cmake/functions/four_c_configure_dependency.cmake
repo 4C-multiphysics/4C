@@ -297,6 +297,17 @@ function(four_c_configure_dependency _package_name)
           "  >= ((major) * 1000 + (minor)))\n"
           "#define FOUR_C_${_package_name_sanitized}_HASH \"${FOUR_C_${_package_name}_GIT_HASH}\"\n"
           )
+
+        set_property(
+          GLOBAL
+          PROPERTY FOUR_C_${_package_name_sanitized}_INTERNAL_VERSION_MAJOR
+                   ${FOUR_C_${_package_name_sanitized}_INTERNAL_VERSION_MAJOR}
+          )
+        set_property(
+          GLOBAL
+          PROPERTY FOUR_C_${_package_name_sanitized}_INTERNAL_VERSION_MINOR
+                   ${FOUR_C_${_package_name_sanitized}_INTERNAL_VERSION_MINOR}
+          )
       endif()
     else()
       message(

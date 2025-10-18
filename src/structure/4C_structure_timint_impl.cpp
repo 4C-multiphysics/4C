@@ -3055,6 +3055,21 @@ void Solid::TimIntImpl::cmt_linear_solve()
         mueluParams.set<std::string>("Core::ProblemType", "contact");
       else
         mueluParams.set<std::string>("Core::ProblemType", "meshtying");
+
+      // construct the mapping of the dual node IDs to primal node IDs
+      std::shared_ptr<std::map<int, int>> dual2primal_map = std::make_shared<std::map<int, int>>();
+      const std::shared_ptr<const Core::LinAlg::Map> gs_node_row_map =
+          strategy->slave_row_nodes_ptr();
+      const Core::LinAlg::Map* solid_node_map = discretization()->node_row_map();
+      for (int dual_lid = 0; dual_lid < gs_node_row_map->num_my_elements(); dual_lid++)
+      {
+        int dual_gid = gs_node_row_map->gid(dual_lid);
+        if (discretization()->have_global_node(dual_gid))
+          (*dual2primal_map)[dual_lid] = solid_node_map->lid(dual_gid);
+      }
+      mueluParams.set<Teuchos::RCP<std::map<int, int>>>(
+          "Interface DualNodeID to PrimalNodeID", Teuchos::rcp(dual2primal_map));
+
       mueluParams.set<int>("time step", step_);
       mueluParams.set<int>("iter", iter_);
       mueluParams.set<bool>("reuse preconditioner", strategy->active_set_converged());
