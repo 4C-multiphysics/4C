@@ -1,7 +1,9 @@
 <ParameterList name="Ifpack">
-  <Parameter name="Preconditioner type" type="string" value="ILU"/>
+  <Parameter name="Prec Type" type="string" value="ILU"/>
   <Parameter name="Overlap" type="int" value="0"/>
-  <Parameter name="fact: level-of-fill" type="int" value="0"/>
-  <Parameter name="schwarz: combine mode" type="string" value="Add"/>
-  <Parameter name="schwarz: reordering type" type="string" value="rcm"/>
+  <ParameterList name="Ifpack Settings">
+    <Parameter name="fact: level-of-fill" type="int" value="0"/>
+    <Parameter name="schwarz: combine mode" type="string" value="Add"/>
+    <Parameter name="schwarz: reordering type" type="string" value="rcm"/>
+  </ParameterList>
 </ParameterList>
