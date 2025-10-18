@@ -9,8 +9,10 @@
 #include "4C_config_revision.hpp"
 
 #include "4C_comm_utils.hpp"
+#include "4C_global_data.hpp"
 #include "4C_global_full_io.hpp"
 #include "4C_global_legacy_module.hpp"
+#include "4C_io_control.hpp"
 #include "4C_io_input_file_utils.hpp"
 #include "4C_io_input_spec_builders.hpp"
 #include "4C_io_pstream.hpp"
@@ -494,4 +496,6 @@ void run(CommandlineArguments& arguments)
     Core::IO::cout << "\nTotal wall time for CALCULATION: " << std::setw(10) << std::setprecision(3)
                    << std::scientific << tc << " sec \n\n";
   }
+
+  Global::Problem::instance()->output_control_file()->control_file().end_all_groups_and_flush();
 }

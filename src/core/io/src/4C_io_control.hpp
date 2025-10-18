@@ -24,61 +24,70 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace Core::IO
 {
+  namespace Internal
+  {
+    class ControlFileWriterImpl;
+  }
+
   /**
-   * Wrap functionality related to reading and writing control files.
+   * Wrap functionality related to writing control files.
    */
-  class ControlFile
+  class ControlFileWriter
   {
    public:
     /**
-     * Initialize the control file object. If @p do_write is false, no write will be performed.
+     * Initialize the writer object. If @p do_write is false, no write will be performed.
      * This is useful for non-root MPI ranks.
      */
-    ControlFile(bool do_write);
+    ControlFileWriter(bool do_write, std::ostream& stream);
 
     /**
-     * Write the header of a control file of given name.
+     * Delete the writer object. Flush any pending writes.
      */
-    void open_and_write_header(const std::string& control_file_name);
+    ~ControlFileWriter();
+
+    ControlFileWriter& operator=(const ControlFileWriter&) = delete;
+    ControlFileWriter(const ControlFileWriter&) = delete;
+    ControlFileWriter(ControlFileWriter&&) = delete;
+    ControlFileWriter& operator=(ControlFileWriter&&) = delete;
+
+    /**
+     * Write metadata to the header.
+     */
+    void write_metadata_header();
+
+    /**
+     * End all groups and flush pending writes. This is automatically called when the last group is
+     * closed or the object is destroyed.
+     */
+    void end_all_groups_and_flush();
 
     /**
      * Write a key-value pair to the control file. The value can be a string, integer, or double.
      * The value is added to the current group with the current indentation.
      */
-    ControlFile& write(std::string_view key, const std::string_view& value);
-    ControlFile& write(std::string_view key, int value);
-    ControlFile& write(std::string_view key, double value);
+    ControlFileWriter& write(std::string_view key, const std::string_view& value);
+    ControlFileWriter& write(std::string_view key, int value);
+    ControlFileWriter& write(std::string_view key, double value);
 
     /**
      * Start a new group in the control file with increased indentation.
      */
-    ControlFile& start_group(const std::string& group_name);
+    ControlFileWriter& start_group(const std::string& group_name);
 
     /**
      * End the previously opened group in the control file and decrease indentation.
      */
-    ControlFile& end_group();
+    ControlFileWriter& end_group();
 
     /**
      * End the previously opened group if one is open. Otherwise, do nothing.
      */
-    ControlFile& try_end_group();
+    ControlFileWriter& try_end_group();
 
    private:
-    //! current indentation as string of spaces
-    std::string indent() const;
-
-    //! output stream for the control file
-    std::fstream file_;
-
-    //! flag indicating if we write to the control file
-    bool do_write_;
-
-    //! current indent (in spaces)
-    size_t indent_ = 0;
-
-    //! amount of indent (in spaces) added per level of indentation
-    constexpr static int indent_increment_ = 4;
+    //! Pointer-to-implementation to hide implementation details.
+    std::unique_ptr<Internal::ControlFileWriterImpl> pimpl_;
   };
 
   /// control class to manage a control file for output
@@ -134,7 +143,7 @@ namespace Core::IO
     std::string new_output_file_name() const { return filename_; }
 
     /// open control file
-    ControlFile& control_file() { return control_file_; }
+    ControlFileWriter& control_file() { return control_file_; }
 
     /// number of output steps per binary file
     int file_steps() const { return filesteps_; }
@@ -161,7 +170,8 @@ namespace Core::IO
     const int myrank_;
     std::string filename_;  ///< prefix of outputfiles (might contain path)
     std::string restartname_;
-    ControlFile control_file_;
+    std::ofstream control_file_stream_;
+    ControlFileWriter control_file_;
     int filesteps_;
     const int restart_step_;
     const bool write_binary_output_;
@@ -176,15 +186,25 @@ namespace Core::IO
     InputControl(const std::string& filename, MPI_Comm comm);
     ~InputControl();
 
+    InputControl(const InputControl&) = delete;
+    InputControl& operator=(const InputControl&) = delete;
+    InputControl(InputControl&&) = delete;
+    InputControl& operator=(InputControl&&) = delete;
+
     MAP* control_file() { return &table_; }
 
     std::string file_name() const { return filename_; }
 
+    /// find control file entry to given time step
+    /*!
+      The control file entry with the given group_name those field and step match
+      my discretization and step. From that we need a backward search to find
+      the entry that links to the binary files that cover our entry.
+     */
+    void find_group(int step, const std::string& discretization_name, const char* group_name,
+        const char* filestring, MAP*& result_info, MAP*& file_info);
 
    private:
-    InputControl(const InputControl&);
-    InputControl& operator=(const InputControl&);
-
     std::string filename_;
     MAP table_;
   };

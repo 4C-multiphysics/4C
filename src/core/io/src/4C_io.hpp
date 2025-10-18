@@ -164,30 +164,17 @@ namespace Core::IO
     void read_redundant_int_vector(
         std::shared_ptr<std::vector<int>>& intvec, const std::string name);
 
-   protected:
-    /// empty constructor (only used for the construction of derived classes)
-    DiscretizationReader();
-
+   private:
     /// find control file entry to given time step
-    void find_result_group(int step, MAP* file);
+    void find_result_group(int step);
 
     /// access the MPI_Comm object
     [[nodiscard]] MPI_Comm get_comm() const;
 
     MAP* restart_step_map() { return restart_step_; }
 
-   private:
     /// find control file entry to given time step
-    void find_mesh_group(int step, MAP* file);
-
-    /// find control file entry to given time step
-    /*!
-      The control file entry with the given caption those field and step match
-      my discretization and step. From that we need a backward search to find
-      the entry that links to the binary files that cover our entry.
-     */
-    void find_group(int step, MAP* file, const char* caption, const char* filestring,
-        MAP*& result_info, MAP*& file_info);
+    void find_mesh_group(int step);
 
     /// open data files.
     std::shared_ptr<HDFReader> open_files(const char* filestring, MAP* result_step);

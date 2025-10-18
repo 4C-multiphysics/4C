@@ -36,6 +36,7 @@
 #include <Teuchos_Time.hpp>
 #include <Teuchos_TimeMonitor.hpp>
 
+#include <fstream>
 #include <string>
 
 FOUR_C_NAMESPACE_OPEN

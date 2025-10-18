@@ -25,19 +25,11 @@ FOUR_C_NAMESPACE_OPEN
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-Core::IO::DiscretizationReader::DiscretizationReader() /* [PROTECTED] */
-    : dis_(nullptr), input_(nullptr), restart_step_(nullptr), reader_(nullptr), meshreader_(nullptr)
-{
-  // intentionally left blank
-}
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
 Core::IO::DiscretizationReader::DiscretizationReader(std::shared_ptr<Core::FE::Discretization> dis,
     std::shared_ptr<Core::IO::InputControl> input, int step)
     : dis_(dis), input_(input)
 {
-  find_result_group(step, input_->control_file());
+  find_result_group(step);
 }
 
 
@@ -166,7 +158,7 @@ void Core::IO::DiscretizationReader::read_mesh(int step)
   dis_->delete_nodes();
   dis_->delete_elements();
 
-  find_mesh_group(step, input_->control_file());
+  find_mesh_group(step);
 
   std::shared_ptr<std::vector<char>> nodedata = meshreader_->read_node_data(step,
       Core::Communication::num_mpi_ranks(get_comm()), Core::Communication::my_mpi_rank(get_comm()));
@@ -196,7 +188,7 @@ void Core::IO::DiscretizationReader::read_mesh(int step)
 /*----------------------------------------------------------------------*/
 void Core::IO::DiscretizationReader::read_nodes_only(int step)
 {
-  find_mesh_group(step, input_->control_file());
+  find_mesh_group(step);
 
   std::shared_ptr<std::vector<char>> nodedata = meshreader_->read_node_data(step,
       Core::Communication::num_mpi_ranks(get_comm()), Core::Communication::my_mpi_rank(get_comm()));
@@ -212,7 +204,7 @@ void Core::IO::DiscretizationReader::read_nodes_only(int step)
  *----------------------------------------------------------------------*/
 void Core::IO::DiscretizationReader::read_history_data(int step)
 {
-  find_mesh_group(step, input_->control_file());
+  find_mesh_group(step);
 
   std::shared_ptr<std::vector<char>> nodedata = meshreader_->read_node_data(step,
       Core::Communication::num_mpi_ranks(get_comm()), Core::Communication::my_mpi_rank(get_comm()));
@@ -332,84 +324,12 @@ double Core::IO::DiscretizationReader::read_double(std::string name)
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Core::IO::DiscretizationReader::find_group(int step, MAP* file, const char* caption,
-    const char* filestring, MAP*& result_info, MAP*& file_info)
-{
-  SYMBOL* symbol;
-
-  /* Iterate all symbols under the name "result" and get the one that
-   * matches the given step. Note that this iteration starts from the
-   * last result group and goes backward. */
-
-  std::string name = dis_->name();
-
-  symbol = map_find_symbol(file, caption);
-  while (symbol != nullptr)
-  {
-    if (symbol_is_map(symbol))
-    {
-      MAP* map;
-      symbol_get_map(symbol, &map);
-      if (map_has_string(map, "field", name.c_str()) and map_has_int(map, "step", step))
-      {
-        result_info = map;
-        break;
-      }
-    }
-    symbol = symbol->next;
-  }
-  if (symbol == nullptr)
-  {
-    FOUR_C_THROW(
-        "No restart entry for discretization '{}' step {} in symbol table. "
-        "Control file corrupt?\n\nLooking for control file at: {}",
-        name.c_str(), step, input_->file_name().c_str());
-  }
-
-  /*--------------------------------------------------------------------*/
-  /* open file to read */
-
-  /* We have a symbol and its map that corresponds to the step we are
-   * interested in. Now we need to continue our search to find the
-   * step that defines the output file used for our step. */
-
-  while (symbol != nullptr)
-  {
-    if (symbol_is_map(symbol))
-    {
-      MAP* map;
-      symbol_get_map(symbol, &map);
-      if (map_has_string(map, "field", name.c_str()))
-      {
-        /*
-         * If one of these files is here the other one has to be
-         * here, too. If it's not, it's a bug in the input. */
-        if (map_symbol_count(map, filestring) > 0)
-        {
-          file_info = map;
-          break;
-        }
-      }
-    }
-    symbol = symbol->next;
-  }
-
-  /* No restart files defined? */
-  if (symbol == nullptr)
-  {
-    FOUR_C_THROW("no restart file definitions found in control file");
-  }
-}
-
-
-/*----------------------------------------------------------------------*/
-/*----------------------------------------------------------------------*/
-void Core::IO::DiscretizationReader::find_result_group(int step, MAP* file)
+void Core::IO::DiscretizationReader::find_result_group(int step)
 {
   MAP* result_info = nullptr;
   MAP* file_info = nullptr;
 
-  find_group(step, file, "result", "result_file", result_info, file_info);
+  input_->find_group(step, dis_->name(), "result", "result_file", result_info, file_info);
   reader_ = open_files("result_file", file_info);
 
   restart_step_ = result_info;
@@ -421,12 +341,12 @@ MPI_Comm Core::IO::DiscretizationReader::get_comm() const { return dis_->get_com
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void Core::IO::DiscretizationReader::find_mesh_group(int step, MAP* file)
+void Core::IO::DiscretizationReader::find_mesh_group(int step)
 {
   MAP* result_info = nullptr;
   MAP* file_info = nullptr;
 
-  find_group(step, file, "field", "mesh_file", result_info, file_info);
+  input_->find_group(step, dis_->name(), "field", "mesh_file", result_info, file_info);
   meshreader_ = open_files("mesh_file", file_info);
 
   // We do not need result_info as we are interested in the mesh files only.

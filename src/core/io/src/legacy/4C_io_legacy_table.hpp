@@ -103,11 +103,6 @@ MAP* symbol_map(const SYMBOL* symbol);
 /* Read the control file given by name. Put its contents into the map. */
 void parse_control_file(MAP* map, const char* filename, MPI_Comm comm);
 
-
-/* Read the control file given by name. Put its contents into the map.
- * (serial only!)*/
-void parse_control_file_serial(MAP* map, const char* filename);
-
 FOUR_C_NAMESPACE_CLOSE
 
 #endif
