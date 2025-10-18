@@ -197,8 +197,7 @@ namespace FLD
         for (int i = 0; i < 3; ++i)
         {
           double val = ((*col_filtered_vel_)(i))[nid];
-          int err = ((velocity)(i)).replace_local_value(nid, val);
-          if (err != 0) FOUR_C_THROW("dof not on proc");
+          ((velocity)(i)).replace_local_value(nid, val);
         }
       }
       return;
@@ -214,8 +213,7 @@ namespace FLD
         for (int i = 0; i < 3; ++i)
         {
           double val = ((*col_filtered_dens_vel_)(i))[nid];
-          int err = ((densvelocity)(i)).replace_local_value(nid, val);
-          if (err != 0) FOUR_C_THROW("dof not on proc");
+          ((densvelocity)(i)).replace_local_value(nid, val);
         }
       }
       return;
@@ -229,8 +227,7 @@ namespace FLD
         for (int i = 0; i < 3; ++i)
         {
           double val = ((*col_filtered_dens_vel_temp_)(i))[nid];
-          int err = ((densvelocity)(i)).replace_local_value(nid, val);
-          if (err != 0) FOUR_C_THROW("dof not on proc");
+          ((densvelocity)(i)).replace_local_value(nid, val);
         }
       }
       return;
@@ -244,8 +241,7 @@ namespace FLD
         for (int i = 0; i < 3; ++i)
         {
           double val = ((*col_filtered_dens_rateofstrain_temp_)(i))[nid];
-          int err = ((densvelocity)(i)).replace_local_value(nid, val);
-          if (err != 0) FOUR_C_THROW("dof not on proc");
+          ((densvelocity)(i)).replace_local_value(nid, val);
         }
       }
       return;
@@ -262,8 +258,7 @@ namespace FLD
           {
             const int ij = 3 * i + j;
             double val = ((*col_filtered_reynoldsstress_)(ij))[nid];
-            int err = ((reystr)(ij)).replace_local_value(nid, val);
-            if (err != 0) FOUR_C_THROW("dof not on proc");
+            ((reystr)(ij)).replace_local_value(nid, val);
           }
         }
       }
@@ -281,8 +276,7 @@ namespace FLD
           {
             const int ij = 3 * i + j;
             double val = ((*col_filtered_modeled_subgrid_stress_)(ij))[nid];
-            int err = ((mosubstr)(ij)).replace_local_value(nid, val);
-            if (err != 0) FOUR_C_THROW("dof not on proc");
+            ((mosubstr)(ij)).replace_local_value(nid, val);
           }
         }
       }
@@ -302,8 +296,7 @@ namespace FLD
           {
             const int ij = 3 * i + j;
             double val = ((*col_filtered_strainrate_)(ij))[nid];
-            int err = ((strainr)(ij)).replace_local_value(nid, val);
-            if (err != 0) FOUR_C_THROW("dof not on proc");
+            ((strainr)(ij)).replace_local_value(nid, val);
           }
         }
       }
@@ -321,8 +314,7 @@ namespace FLD
           {
             const int ij = 3 * i + j;
             double val = ((*col_filtered_alphaij_)(ij))[nid];
-            int err = ((alphij)(ij)).replace_local_value(nid, val);
-            if (err != 0) FOUR_C_THROW("dof not on proc");
+            ((alphij)(ij)).replace_local_value(nid, val);
           }
         }
       }
@@ -339,8 +331,7 @@ namespace FLD
           {
             const int ij = 3 * i + j;
             double val = ((*col_filtered_alphaijsc_)(ij))[nid];
-            int err = ((alphijsc)(ij)).replace_local_value(nid, val);
-            if (err != 0) FOUR_C_THROW("dof not on proc");
+            ((alphijsc)(ij)).replace_local_value(nid, val);
           }
         }
       }
@@ -354,8 +345,7 @@ namespace FLD
       for (int nid = 0; nid < discret_->num_my_col_nodes(); ++nid)
       {
         double val = (*col_filtered_expression_)[nid];
-        int err = expr.replace_local_value(nid, val);
-        if (err != 0) FOUR_C_THROW("dof not on proc");
+        expr.replace_local_value(nid, val);
       }
       return;
     }
@@ -368,8 +358,7 @@ namespace FLD
       {
         {
           double val = (*col_filtered_dens_)[nid];
-          int err = dens.replace_local_value(nid, val);
-          if (err != 0) FOUR_C_THROW("dof not on proc");
+          dens.replace_local_value(nid, val);
         }
       }
       return;
@@ -382,8 +371,7 @@ namespace FLD
       {
         {
           double val = (*col_filtered_temp_)[nid];
-          int err = dens.replace_local_value(nid, val);
-          if (err != 0) FOUR_C_THROW("dof not on proc");
+          dens.replace_local_value(nid, val);
         }
       }
       return;
@@ -396,8 +384,7 @@ namespace FLD
       {
         {
           double val = (*col_filtered_dens_temp_)[nid];
-          int err = dens.replace_local_value(nid, val);
-          if (err != 0) FOUR_C_THROW("dof not on proc");
+          dens.replace_local_value(nid, val);
         }
       }
       return;
@@ -411,8 +398,7 @@ namespace FLD
       {
         {
           double val = (*col_filtered_dens_strainrate_)[nid];
-          int err = densstrainr.replace_local_value(nid, val);
-          if (err != 0) FOUR_C_THROW("dof not on proc");
+          densstrainr.replace_local_value(nid, val);
         }
       }
       return;
@@ -425,8 +411,7 @@ namespace FLD
       {
         {
           double val = (*col_filtered_alpha2_)[nid];
-          int err = alpha2.replace_local_value(nid, val);
-          if (err != 0) FOUR_C_THROW("dof not on proc");
+          alpha2.replace_local_value(nid, val);
         }
       }
       return;
@@ -442,8 +427,7 @@ namespace FLD
         for (int i = 0; i < 3; ++i)
         {
           double val = ((*col_fs_vel_)(i))[nid];
-          int err = ((velocity)(i)).replace_local_value(nid, val);
-          if (err != 0) FOUR_C_THROW("dof not on proc");
+          ((velocity)(i)).replace_local_value(nid, val);
         }
       }
       return;
@@ -537,8 +521,7 @@ namespace FLD
         for (int i = 0; i < 3; ++i)
         {
           double val = ((*col_filtered_phi_)(i))[nid];
-          int err = ((phi)(i)).replace_local_value(nid, val);
-          if (err != 0) FOUR_C_THROW("dof not on proc");
+          ((phi)(i)).replace_local_value(nid, val);
         }
       }
       return;
@@ -551,8 +534,7 @@ namespace FLD
       {
         {
           double val = (*col_filtered_phi2_)[nid];
-          int err = phi2.replace_local_value(nid, val);
-          if (err != 0) FOUR_C_THROW("dof not on proc");
+          phi2.replace_local_value(nid, val);
         }
       }
       return;
@@ -565,8 +547,7 @@ namespace FLD
       {
         {
           double val = (*col_filtered_phiexpression_)[nid];
-          int err = phiexpression.replace_local_value(nid, val);
-          if (err != 0) FOUR_C_THROW("dof not on proc");
+          phiexpression.replace_local_value(nid, val);
         }
       }
       return;

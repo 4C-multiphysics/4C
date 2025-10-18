@@ -15,6 +15,7 @@
 #include "4C_linalg_sparsematrix.hpp"
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_rebalance_binning_based.hpp"
+#include "4C_structure_new_timint_base.hpp"
 #include "4C_utils_function_of_time.hpp"
 
 #include <iostream>
@@ -94,36 +95,36 @@ void Constraints::MPConstraint3::initialize(
     Teuchos::ParameterList& params, std::shared_ptr<Core::LinAlg::Vector<double>> systemvector)
 {
   const double time = params.get("total time", -1.0);
-  // in case init is set to true we want to set systemvector1 to the amplitudes defined
-  // in the input file
-  // allocate vectors for amplitudes and IDs
+  const int mid = params.get("OffsetID", 0);
 
-  std::vector<double> amplit(constrcond_.size());
-  std::vector<int> IDs(constrcond_.size());
-  // read data of the input files
+  // Collect only valid abs entries
+  std::vector<double> vals;
+  std::vector<int> gids;
+  vals.reserve(constrcond_.size());
+  gids.reserve(constrcond_.size());
 
-  for (unsigned int i = 0; i < constrcond_.size(); i++)
+  const int myrank = Core::Communication::my_mpi_rank(actdisc_->get_comm());
+
+  for (std::size_t i = 0; i < constrcond_.size(); ++i)
   {
-    const Core::Conditions::Condition& cond = *(constrcond_[i]);
+    const auto& cond = *(constrcond_[i]);
+    const int condID = cond.parameters().get<int>("ConditionID");
 
-    int condID = cond.parameters().get<int>("ConditionID");
-    if (inittimes_.find(condID)->second <= time && (!(activecons_.find(condID)->second)))
+    // activate at/after init time and only once
+    if (inittimes_.find(condID)->second <= time && !activecons_.find(condID)->second)
     {
-      // control absolute values
       if (absconstraint_.find(condID)->second)
       {
-        // in case of a mpcnormalcomp3d-condition amplitude is always 0
-        //        if (Type()==mpcnormalcomp3d)
-        //          amplit[i]=0.0;
-        //        else
-        //        {
-        double MPCampl = constrcond_[i]->parameters().get<double>("amplitude");
-        amplit[i] = MPCampl;
-        //        }
-        const int mid = params.get("OffsetID", 0);
-        IDs[i] = condID - mid;
+        // absolute value - set a single entry (owner only)
+        const int gid = condID - mid;
+        const Core::LinAlg::Map& ownedMap = systemvector->get_map();
+        if (ownedMap.my_gid(gid))
+        {
+          const double MPCampl = constrcond_[i]->parameters().get<double>("amplitude");
+          vals.push_back(MPCampl);
+          gids.push_back(gid);
+        }
       }
-      // control relative values
       else
       {
         switch (type())
@@ -137,10 +138,15 @@ void Constraints::MPConstraint3::initialize(
           default:
             FOUR_C_THROW("Constraint is not an multi point constraint!");
         }
+
+        // Let the owner(s) assemble inside initialize_constraint (they should gate by ownership)
         initialize_constraint(*constraintdis_.find(condID)->second, params, *systemvector);
       }
+
+      // mark active locally
       activecons_.find(condID)->second = true;
-      if (Core::Communication::my_mpi_rank(actdisc_->get_comm()) == 0)
+
+      if (myrank == 0)
       {
         std::cout << "Encountered a new active condition (Id = " << condID
                   << ")  at time t = " << time << std::endl;
@@ -148,10 +154,12 @@ void Constraints::MPConstraint3::initialize(
     }
   }
 
-  if (Core::Communication::my_mpi_rank(actdisc_->get_comm()) == 0)
-    systemvector->sum_into_global_values(amplit.size(), amplit.data(), IDs.data());
-
-  return;
+  // Apply absolute amplitudes only if we actually collected some
+  // and distribute only from proc 0
+  if (myrank == 0 and !vals.empty())
+  {
+    systemvector->sum_into_global_values(static_cast<int>(gids.size()), vals.data(), gids.data());
+  }
 }
 
 /*-----------------------------------------------------------------------*

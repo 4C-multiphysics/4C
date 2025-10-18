@@ -366,10 +366,8 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
 
     // fill ghost node entries
     Core::LinAlg::Import nodeimporter(numdfcolnodes_->get_map(), num_dof_rownodes.get_map());
-    int err = numdfcolnodes_->import(num_dof_rownodes, nodeimporter, Insert);
-    if (err) FOUR_C_THROW("Import using importer returned err={}", err);
-    err = idxcolnodes_->import(idxrownodes, nodeimporter, Insert);
-    if (err) FOUR_C_THROW("Import using importer returned err={}", err);
+    numdfcolnodes_->import(num_dof_rownodes, nodeimporter, Insert);
+    idxcolnodes_->import(idxrownodes, nodeimporter, Insert);
 
     count = maxnodenumdf > 0 ? idxrownodes.max_value() + maxnodenumdf : 0;
 
@@ -426,10 +424,8 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
       }
 
       Core::LinAlg::Import faceimporter(numdfcolfaces_->get_map(), numdfrowfaces.get_map());
-      err = numdfcolfaces_->import(numdfrowfaces, faceimporter, Insert);
-      if (err) FOUR_C_THROW("Import using importer returned err={}", err);
-      err = idxcolfaces_->import(idxrowfaces, faceimporter, Insert);
-      if (err) FOUR_C_THROW("Import using importer returned err={}", err);
+      numdfcolfaces_->import(numdfrowfaces, faceimporter, Insert);
+      idxcolfaces_->import(idxrowfaces, faceimporter, Insert);
 
       count = idxrowfaces.max_value() + maxfacenumdf;
     }
@@ -468,10 +464,8 @@ int Core::DOFSets::DofSet::assign_degrees_of_freedom(
     }
 
     Core::LinAlg::Import elementimporter(numdfcolelements_->get_map(), numdfrowelements.get_map());
-    err = numdfcolelements_->import(numdfrowelements, elementimporter, Insert);
-    if (err) FOUR_C_THROW("Import using importer returned err={}", err);
-    err = idxcolelements_->import(idxrowelements, elementimporter, Insert);
-    if (err) FOUR_C_THROW("Import using importer returned err={}", err);
+    numdfcolelements_->import(numdfrowelements, elementimporter, Insert);
+    idxcolelements_->import(idxrowelements, elementimporter, Insert);
   }
 
   // Now finally we have everything in place to build the maps.

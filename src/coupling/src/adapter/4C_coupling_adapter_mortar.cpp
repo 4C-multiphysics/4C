@@ -1015,8 +1015,7 @@ void Coupling::Adapter::CouplingMortar::create_p()
   }
 
   // scalar inversion of diagonal values
-  err = diag->reciprocal(*diag);
-  if (err != 0) FOUR_C_THROW("Reciprocal: Zero diagonal entry!");
+  diag->reciprocal(*diag);
 
   // re-insert inverted diagonal into invd
   err = Dinv_->replace_diagonal_values(*diag);
@@ -1075,13 +1074,10 @@ void Coupling::Adapter::CouplingMortar::evaluate(
   Core::LinAlg::Import slaveImporter(*dofrowmap, *pslavedofrowmap_);
 
   // Import master and slave displacements into a single vector
-  int err = 0;
   std::shared_ptr<Core::LinAlg::Vector<double>> idisp_master_slave =
       Core::LinAlg::create_vector(*dofrowmap, true);
-  err = idisp_master_slave->import(*idispma, master_importer, Add);
-  if (err != 0) FOUR_C_THROW("Import failed with error code {}.", err);
-  err = idisp_master_slave->import(*idispsl, slaveImporter, Add);
-  if (err != 0) FOUR_C_THROW("Import failed with error code {}.", err);
+  idisp_master_slave->import(*idispma, master_importer, Add);
+  idisp_master_slave->import(*idispsl, slaveImporter, Add);
 
   // set new displacement state in mortar interface
   interface_->set_state(Mortar::state_new_displacement, *idisp_master_slave);

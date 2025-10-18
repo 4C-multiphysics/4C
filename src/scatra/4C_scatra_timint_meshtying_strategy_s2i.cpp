@@ -547,16 +547,11 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
           if (slavedofgid < 0) FOUR_C_THROW("Couldn't find local ID {} in map!", slavedoflid);
 
           // copy current vector entry into temporary vector
-          if (residualslave.replace_global_value(slavedofgid,
-                  (*scatratimint_->residual())[scatratimint_->dof_row_map()->lid(slavedofgid)]))
-            FOUR_C_THROW(
-                "Cannot insert residual vector entry with global ID {} into temporary vector!",
-                slavedofgid);
+          residualslave.replace_global_value(slavedofgid,
+              (*scatratimint_->residual())[scatratimint_->dof_row_map()->lid(slavedofgid)]);
 
           // zero out current vector entry
-          if (scatratimint_->residual()->replace_global_value(slavedofgid, 0.))
-            FOUR_C_THROW(
-                "Cannot insert zero into residual vector entry with global ID {}!", slavedofgid);
+          scatratimint_->residual()->replace_global_value(slavedofgid, 0.);
         }
 
         // add slave-side entries of residual vector to corresponding master-side entries to
@@ -718,10 +713,10 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
                 Core::LinAlg::Vector<double> ilmresidual(*islaveresidual_);
                 if (ilmresidual.replace_map(*extendedmaps_->map(1)))
                   FOUR_C_THROW("Couldn't replace map!");
-                if (lmresidual_->update(1., ilmresidual, 0.)) FOUR_C_THROW("Vector update failed!");
+                lmresidual_->update(1., ilmresidual, 0.);
                 if (E_->multiply(true, *lm_, ilmresidual))
                   FOUR_C_THROW("Matrix-vector multiplication failed!");
-                if (lmresidual_->update(1., ilmresidual, 1.)) FOUR_C_THROW("Vector update failed!");
+                lmresidual_->update(1., ilmresidual, 1.);
               }
               else
               {
@@ -741,10 +736,10 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
                 Core::LinAlg::Vector<double> ilmresidual(*imasterresidual_);
                 if (ilmresidual.replace_map(*extendedmaps_->map(1)))
                   FOUR_C_THROW("Couldn't replace map!");
-                if (lmresidual_->update(1., ilmresidual, 0.)) FOUR_C_THROW("Vector update failed!");
+                lmresidual_->update(1., ilmresidual, 0.);
                 if (E_->multiply(true, *lm_, ilmresidual))
                   FOUR_C_THROW("Matrix-vector multiplication failed!");
-                if (lmresidual_->update(1., ilmresidual, 1.)) FOUR_C_THROW("Vector update failed!");
+                lmresidual_->update(1., ilmresidual, 1.);
               }
 
               break;
@@ -2634,10 +2629,8 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
                 D_diag = Core::LinAlg::create_vector(*interfacemaps_->map(1));
               else
                 D_diag = Core::LinAlg::create_vector(*interfacemaps_->map(2));
-              if (D_->extract_diagonal_copy(*D_diag))
-                FOUR_C_THROW("Couldn't extract main diagonal from mortar matrix D!");
-              if (D_diag->reciprocal(*D_diag))
-                FOUR_C_THROW("Couldn't invert main diagonal entries of mortar matrix D!");
+              D_->extract_diagonal_copy(*D_diag);
+              D_diag->reciprocal(*D_diag);
 
               P_ = std::make_shared<Core::LinAlg::SparseMatrix>(*M_);
               if (P_->left_scale(*D_diag)) FOUR_C_THROW("Setup of mortar projector P failed!");
@@ -4023,10 +4016,7 @@ void ScaTra::MeshtyingStrategyS2I::fd_check(
     statenp.update(1., statenp_original, 0.);
 
     // impose perturbation
-    if (statenp.get_map().my_gid(colgid))
-      if (statenp.sum_into_global_value(colgid, fdcheckeps))
-        FOUR_C_THROW(
-            "Perturbation could not be imposed on state vector for finite difference check!");
+    if (statenp.get_map().my_gid(colgid)) statenp.sum_into_global_value(colgid, fdcheckeps);
     scatratimint_->phinp()->update(1., *extendedmaps_->extract_vector(statenp, 0), 0.);
     growthnp_->update(1., *extendedmaps_->extract_vector(statenp, 1), 0.);
 

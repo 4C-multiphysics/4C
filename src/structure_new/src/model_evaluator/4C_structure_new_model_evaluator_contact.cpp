@@ -324,7 +324,7 @@ bool Solid::ModelEvaluator::Contact::assemble_jacobian(
     else
     {
       Core::LinAlg::Vector<double> ones(global_state().block_map(type()), false);
-      err = ones.put_scalar(1.0);
+      ones.put_scalar(1.0);
       block_ptr = std::make_shared<Core::LinAlg::SparseMatrix>(ones);
       global_state().assign_model_block(jac, *block_ptr, type(), Solid::MatBlockType::lm_lm);
     }

@@ -1303,11 +1303,9 @@ void Solid::TimInt::update_step_contact_vum()
       Core::LinAlg::SparseMatrix Minv(*Mass);
       std::shared_ptr<Core::LinAlg::Vector<double>> diag =
           Core::LinAlg::create_vector(*dofmap, true);
-      int err = 0;
       Minv.extract_diagonal_copy(*diag);
-      err = diag->reciprocal(*diag);
-      if (err != 0) FOUR_C_THROW("Reciprocal: Zero diagonal entry!");
-      err = Minv.replace_diagonal_values(*diag);
+      diag->reciprocal(*diag);
+      Minv.replace_diagonal_values(*diag);
       Minv.complete(*dofmap, *dofmap);
 
       // displacement increment Dd

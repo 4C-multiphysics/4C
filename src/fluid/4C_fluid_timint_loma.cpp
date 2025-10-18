@@ -90,7 +90,6 @@ void FLD::TimIntLoma::set_loma_iter_scalar_fields(
     std::shared_ptr<Core::FE::Discretization> scatradis)
 {
   // initializations
-  int err(0);
   double value(0.0);
   std::vector<int> nodedofs;
 
@@ -129,12 +128,10 @@ void FLD::TimIntLoma::set_loma_iter_scalar_fields(
 
     // now copy the values
     value = (*scalaraf)[localscatradofid];
-    err = scaaf_->replace_local_value(localdofid, value);
-    if (err != 0) FOUR_C_THROW("error while inserting value into scaaf_");
+    scaaf_->replace_local_value(localdofid, value);
 
     value = (*scalaram)[localscatradofid];
-    err = scaam_->replace_local_value(localdofid, value);
-    if (err != 0) FOUR_C_THROW("error while inserting value into scaam_");
+    scaam_->replace_local_value(localdofid, value);
 
     if (scalardtam != nullptr)
     {
@@ -144,8 +141,7 @@ void FLD::TimIntLoma::set_loma_iter_scalar_fields(
     {
       value = 0.0;  // for safety reasons: set zeros in accam_
     }
-    err = accam_->replace_local_value(localdofid, value);
-    if (err != 0) FOUR_C_THROW("error while inserting value into accam_");
+    accam_->replace_local_value(localdofid, value);
 
     if (turbmodel_ == Inpar::FLUID::multifractal_subgrid_scales)
     {
@@ -154,8 +150,7 @@ void FLD::TimIntLoma::set_loma_iter_scalar_fields(
       else
         FOUR_C_THROW("Expected fine-scale scalar!");
 
-      err = fsscaaf_->replace_local_value(localdofid, value);
-      if (err != 0) FOUR_C_THROW("error while inserting value into fsscaaf_");
+      fsscaaf_->replace_local_value(localdofid, value);
     }
   }
 

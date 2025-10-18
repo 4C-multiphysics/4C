@@ -1519,7 +1519,6 @@ void CONTACT::LagrangeStrategyPoro::poro_mt_set_coupling_matrices()
   invd_ = std::make_shared<Core::LinAlg::SparseMatrix>(*dmatrix_);
   std::shared_ptr<Core::LinAlg::Vector<double>> diag =
       Core::LinAlg::create_vector(*gsdofrowmap_, true);
-  int err = 0;
 
   // extract diagonal of invd into diag
   invd_->extract_diagonal_copy(*diag);
@@ -1530,11 +1529,10 @@ void CONTACT::LagrangeStrategyPoro::poro_mt_set_coupling_matrices()
   //      (*diag)[i] = 1.0;
 
   // scalar inversion of diagonal values
-  err = diag->reciprocal(*diag);
-  if (err > 0) FOUR_C_THROW("ERROR: Reciprocal: Zero diagonal entry!");
+  diag->reciprocal(*diag);
 
   // re-insert inverted diagonal into invd
-  err = invd_->replace_diagonal_values(*diag);
+  invd_->replace_diagonal_values(*diag);
   // inversion end
 
   // active part of invd

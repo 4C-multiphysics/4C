@@ -312,12 +312,45 @@ void ScaTra::TimIntGenAlpha::compute_time_derivative()
   // call base class routine
   ScaTraTimIntImpl::compute_time_derivative();
 
+
+  // target map for phidtnp_
+  const auto& tgtMap = phidtnp_->get_map();
+
+  // create temp vector and importer
+  static std::unique_ptr<Core::LinAlg::Vector<double>> phinp_owned, phin_owned;
+  static std::unique_ptr<Core::LinAlg::Import> importer_phinp_, importer_phin_;
+
+  // ensure temp vectors live on the target map
+  phinp_owned = std::make_unique<Core::LinAlg::Vector<double>>(tgtMap);
+  phin_owned = std::make_unique<Core::LinAlg::Vector<double>>(tgtMap);
+
+  // reference to source vectors
+  const Core::LinAlg::Vector<double>* phinp_ref = phinp_.get();
+  const Core::LinAlg::Vector<double>* phin_ref = phin_.get();
+
+  // bring sources onto target map if needed
+  if (!phinp_->get_map().same_as(tgtMap))
+  {
+    phinp_owned->put_scalar(0.0);
+    importer_phinp_ = std::make_unique<Core::LinAlg::Import>(tgtMap, phinp_->get_map());
+    phinp_owned->import(*phinp_, *importer_phinp_, Insert);
+    phinp_ref = phinp_owned.get();
+  }
+  if (!phin_->get_map().same_as(tgtMap))
+  {
+    importer_phin_ = std::make_unique<Core::LinAlg::Import>(tgtMap, phin_->get_map());
+    phin_owned->put_scalar(0.0);
+    phin_owned->import(*phin_, *importer_phin_, Insert);
+    phin_ref = phin_owned.get();
+  }
+
+  // now do the actual update of the time step safely
   // time derivative of phi:
   // phidt(n+1) = (phi(n+1)-phi(n)) / (gamma*dt) + (1-(1/gamma))*phidt(n)
   const double fact1 = 1.0 / (gamma_ * dta_);
   const double fact2 = 1.0 - (1.0 / gamma_);
   phidtnp_->update(fact2, *phidtn_, 0.0);
-  phidtnp_->update(fact1, *phinp_, -fact1, *phin_, 1.0);
+  phidtnp_->update(fact1, *phinp_ref, -fact1, *phin_ref, 1.0);
 
   // We know the first time derivative on Dirichlet boundaries
   // so we do not need an approximation of these values!

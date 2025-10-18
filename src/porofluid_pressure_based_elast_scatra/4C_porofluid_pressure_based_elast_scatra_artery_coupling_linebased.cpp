@@ -481,8 +481,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingLineBasedAlgorithm::
     const double volfrac = volume_artery / volume_homogenized;
 
     // note: this works as the 2D/3D homogenized element of each pair is always owned by this proc
-    if (blood_vessel_volfrac_->sum_into_global_values(1, &volfrac, &homogenized_ele_gid))
-      FOUR_C_THROW("SumIntoGlobalValues failed!");
+    blood_vessel_volfrac_->sum_into_global_values(1, &volfrac, &homogenized_ele_gid);
   }
 
   // user output

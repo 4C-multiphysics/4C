@@ -460,9 +460,9 @@ void FLD::DynSmagFilter::dyn_smag_compute_cs()
     double ele_Ci_delta_sq = calc_smag_const_params.get<double>("ele_Ci_delta_sq");
     // and store it in vector
     const int id = ele->id();
-    int myerr = Cs_delta_sq.replace_global_values(1, &ele_Cs_delta_sq, &id);
-    myerr += Ci_delta_sq.replace_global_values(1, &ele_Ci_delta_sq, &id);
-    if (myerr != 0) FOUR_C_THROW("Problem");
+    Cs_delta_sq.replace_global_values(1, &ele_Cs_delta_sq, &id);
+    Ci_delta_sq.replace_global_values(1, &ele_Ci_delta_sq, &id);
+
 
     // local contributions to in plane averaging for channel flows
     if (homdir_)
@@ -844,8 +844,7 @@ void FLD::DynSmagFilter::dyn_smag_compute_prt(
     double ele_Prt = calc_turb_prandtl_params.get<double>("ele_Prt");
     // and store it in vector
     const int id = ele->id();
-    int myerr = Prt.replace_global_values(1, &ele_Prt, &id);
-    if (myerr != 0) FOUR_C_THROW("Problem");
+    Prt.replace_global_values(1, &ele_Prt, &id);
 
     // local contributions to in plane averaging for channel flows
     if (homdir_)

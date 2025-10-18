@@ -590,8 +590,7 @@ namespace ReducedLung
               airway.local_element_id, vals.size(), vals.data(), airway.local_dof_ids.data());
         }
         FOUR_C_ASSERT(err == 0, "Internal error: Airway equation assembly did not work.");
-        err = rhs.replace_local_value(airway.local_element_id, res);
-        FOUR_C_ASSERT(err == 0, "Internal error: Airway equation calculation did not work.");
+        rhs.replace_local_value(airway.local_element_id, res);
       }
 
       // Assemble terminal unit equations.
@@ -620,9 +619,7 @@ namespace ReducedLung
         FOUR_C_ASSERT(
             err == 0, "Internal error: Connection momentum balance assembly did not work.");
         res = -locally_relevant_dofs[local_dof_ids[0]] + locally_relevant_dofs[local_dof_ids[1]];
-        err = rhs.replace_local_value(conn.first_local_equation_id, res);
-        FOUR_C_ASSERT(
-            err == 0, "Internal error: Connection momentum balance calculation did not work.");
+        rhs.replace_local_value(conn.first_local_equation_id, res);
 
         // Mass balance (q_out_parent - q_in_child = 0).
         vals = {1.0, -1.0};
@@ -640,9 +637,7 @@ namespace ReducedLung
         }
         FOUR_C_ASSERT(err == 0, "Internal error: Connection mass balance assembly did not work.");
         res = -locally_relevant_dofs[local_dof_ids[0]] + locally_relevant_dofs[local_dof_ids[1]];
-        err = rhs.replace_local_value(conn.first_local_equation_id + 1, res);
-        FOUR_C_ASSERT(
-            err == 0, "Internal error: Connection mass balance calculation did not work.");
+        rhs.replace_local_value(conn.first_local_equation_id + 1, res);
       }
 
       // Assemble bifurcation equations
@@ -669,9 +664,7 @@ namespace ReducedLung
             err == 0, "Internal error: Bifurcation momentum balance assembly did not work.");
         res = -locally_relevant_dofs[local_dof_ids_mom_balance[0]] +
               locally_relevant_dofs[local_dof_ids_mom_balance[1]];
-        err = rhs.replace_local_value(bif.first_local_equation_id, res);
-        FOUR_C_ASSERT(
-            err == 0, "Internal error: Bifurcation momentum balance calculation did not work.");
+        rhs.replace_local_value(bif.first_local_equation_id, res);
 
         // Momentum balance parent - child_2 (p2_parent - p1_child_2 = 0).
         vals_mom_balance = {1.0, -1.0};
@@ -691,9 +684,7 @@ namespace ReducedLung
             err == 0, "Internal error: Bifurcation momentum balance assembly did not work.");
         res = -locally_relevant_dofs[local_dof_ids_mom_balance[0]] +
               locally_relevant_dofs[local_dof_ids_mom_balance[1]];
-        err = rhs.replace_local_value(bif.first_local_equation_id + 1, res);
-        FOUR_C_ASSERT(
-            err == 0, "Internal error: Bifurcation momentum balance calculation did not work.");
+        rhs.replace_local_value(bif.first_local_equation_id + 1, res);
 
         // Mass balance (q_out_parent - q_in_child_1 - q_in_child_1 = 0).
         vals_mass_balance = {1.0, -1.0, -1.0};
@@ -715,9 +706,7 @@ namespace ReducedLung
         res = -locally_relevant_dofs[local_dof_ids_mass_balance[0]] +
               locally_relevant_dofs[local_dof_ids_mass_balance[1]] +
               locally_relevant_dofs[local_dof_ids_mass_balance[2]];
-        err = rhs.replace_local_value(bif.first_local_equation_id + 2, res);
-        FOUR_C_ASSERT(
-            err == 0, "Internal error: Bifurcation momentum balance calculation did not work.");
+        rhs.replace_local_value(bif.first_local_equation_id + 2, res);
       }
 
       // Assemble boundary conditions (equation: dof_value - bc_value = 0).
@@ -739,8 +728,7 @@ namespace ReducedLung
         }
         FOUR_C_ASSERT(err == 0, "Internal error: Boundary condition assembly did not work.");
         res = -locally_relevant_dofs[local_dof_id] + bc_value;
-        err = rhs.replace_local_value(bc.local_equation_id, res);
-        FOUR_C_ASSERT(err == 0, "Internal error: Boundary condition evaluation did not work.");
+        rhs.replace_local_value(bc.local_equation_id, res);
       }
 
       // Fix sparsity pattern after the first assembly process.

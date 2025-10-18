@@ -1054,8 +1054,7 @@ bool FSI::MonolithicXFEM::newton()
     // step-increment
 
     fx_sum_ = std::make_shared<Core::LinAlg::Vector<double>>(*fluid_field()->dof_row_map());
-    int errfx = fx_sum_->update(1.0, *fluid_field()->velnp(), -1.0, *fluid_field()->veln(), 0.0);
-    if (errfx != 0) FOUR_C_THROW("update not successful");
+    fx_sum_->update(1.0, *fluid_field()->velnp(), -1.0, *fluid_field()->veln(), 0.0);
 
     //-------------------
     // store ALE step-increment
@@ -1064,11 +1063,8 @@ bool FSI::MonolithicXFEM::newton()
     if (have_ale())
     {
       ax_sum_ = std::make_shared<Core::LinAlg::Vector<double>>(*(extractor().map(ale_i_block_)));
-      int errax = ax_sum_->update(1.0,
-          *ale_field()->interface()->extract_other_vector(*ale_field()->dispnp()), -1.0,
-          *ale_field()->interface()->extract_other_vector(*ale_field()->dispn()), 0.0);
-
-      if (errax != 0) FOUR_C_THROW("update not successful");
+      ax_sum_->update(1.0, *ale_field()->interface()->extract_other_vector(*ale_field()->dispnp()),
+          -1.0, *ale_field()->interface()->extract_other_vector(*ale_field()->dispn()), 0.0);
     }
 
     //-------------------
@@ -2309,7 +2305,7 @@ void FSI::MonolithicXFEM::scale_system(
 
     std::shared_ptr<Core::LinAlg::Vector<double>> sx = extractor().extract_vector(b, 0);
 
-    if (sx->multiply(1.0, *srowsum_, *sx, 0.0)) FOUR_C_THROW("structure scaling failed");
+    sx->multiply(1.0, *srowsum_, *sx, 0.0);
 
     extractor().insert_vector(*sx, 0, b);
   }
@@ -2327,13 +2323,13 @@ void FSI::MonolithicXFEM::unscale_solution(Core::LinAlg::BlockSparseMatrixBase& 
   {
     std::shared_ptr<Core::LinAlg::Vector<double>> sy = extractor().extract_vector(x, 0);
 
-    if (sy->multiply(1.0, *scolsum_, *sy, 0.0)) FOUR_C_THROW("structure scaling failed");
+    sy->multiply(1.0, *scolsum_, *sy, 0.0);
 
     extractor().insert_vector(*sy, 0, x);
 
     std::shared_ptr<Core::LinAlg::Vector<double>> sx = extractor().extract_vector(b, 0);
 
-    if (sx->reciprocal_multiply(1.0, *srowsum_, *sx, 0.0)) FOUR_C_THROW("structure scaling failed");
+    sx->reciprocal_multiply(1.0, *srowsum_, *sx, 0.0);
 
     extractor().insert_vector(*sx, 0, b);
 

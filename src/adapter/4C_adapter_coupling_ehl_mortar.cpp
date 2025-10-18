@@ -302,8 +302,7 @@ void Adapter::CouplingEhlMortar::condense_contact(
   {
     Core::LinAlg::Vector<double> tmp(kss->row_map());
     Core::LinAlg::export_to(*fscn_, tmp);
-    if (rs.update(alphaf_, tmp, 1.) != 0)  // fscn already scaled with alphaf_ in update
-      FOUR_C_THROW("update went wrong");
+    rs.update(alphaf_, tmp, 1.);  // fscn already scaled with alphaf_ in update
   }
 
 
@@ -447,7 +446,7 @@ void Adapter::CouplingEhlMortar::condense_contact(
   // invert D-matrix
   Core::LinAlg::Vector<double> dDiag(*interface_->active_dofs());
   dInvA->extract_diagonal_copy(dDiag);
-  if (dDiag.reciprocal(dDiag)) FOUR_C_THROW("inversion of diagonal D matrix failed");
+  dDiag.reciprocal(dDiag);
   dInvA->replace_diagonal_values(dDiag);
 
   dummy_map1 = dummy_map2 = nullptr;
@@ -702,9 +701,9 @@ bool Adapter::CouplingEhlMortar::already_evaluated(
 {
   if (!evaluated_state_) return false;
   Core::LinAlg::Vector<double> diff(*disp);
-  if (diff.update(-1., *evaluated_state_, 1.)) FOUR_C_THROW("update failed");
+  diff.update(-1., *evaluated_state_, 1.);
   double inf_diff = -1.;
-  if (diff.norm_inf(&inf_diff)) FOUR_C_THROW("NormInf failed");
+  diff.norm_inf(&inf_diff);
   if (inf_diff < 1.e-13) return true;
 
   return false;

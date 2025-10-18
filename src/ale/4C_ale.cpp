@@ -154,8 +154,7 @@ void ALE::Ale::set_initial_displacement(const ALE::InitialDisp init, const int s
                                   ->function_by_id<Core::Utils::FunctionOfSpaceTime>(startfuncno)
                                   .evaluate(lnode.x(), 0, d);
 
-          int err = dispn_->replace_local_value(doflid, initialval);
-          if (err != 0) FOUR_C_THROW("dof not on proc");
+          dispn_->replace_local_value(doflid, initialval);
         }
       }
 

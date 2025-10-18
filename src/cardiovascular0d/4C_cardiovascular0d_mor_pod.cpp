@@ -151,8 +151,7 @@ std::shared_ptr<Core::LinAlg::Vector<double>>
 Cardiovascular0D::ProperOrthogonalDecomposition::reduce_residual(Core::LinAlg::Vector<double>& v)
 {
   Core::LinAlg::Vector<double> v_tmp(*redstructmapr_);
-  int err = v_tmp.multiply('T', 'N', 1.0, *projmatrix_, v, 0.0);
-  if (err) FOUR_C_THROW("Multiplication V^T * v failed.");
+  v_tmp.multiply('T', 'N', 1.0, *projmatrix_, v, 0.0);
 
   std::shared_ptr<Core::LinAlg::Vector<double>> v_red =
       std::make_shared<Core::LinAlg::Vector<double>>(*structmapr_);
@@ -171,8 +170,7 @@ Cardiovascular0D::ProperOrthogonalDecomposition::extend_solution(
   v_tmp.import(v_red, *structrinvimpo_, Insert, nullptr);
   std::shared_ptr<Core::LinAlg::Vector<double>> v =
       std::make_shared<Core::LinAlg::Vector<double>>(*full_model_dof_row_map_);
-  int err = v->multiply('N', 'N', 1.0, *projmatrix_, v_tmp, 0.0);
-  if (err) FOUR_C_THROW("Multiplication V * v_red failed.");
+  v->multiply('N', 'N', 1.0, *projmatrix_, v_tmp, 0.0);
 
   return v;
 }

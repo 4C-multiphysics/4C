@@ -196,8 +196,7 @@ void XFEM::XfsCouplingManager::add_coupling_rhs(std::shared_ptr<Core::LinAlg::Ve
     // scale factor for the structure system matrix w.r.t the new time step
     const double scaling_S = 1.0 / (1.0 - stiparam);  // 1/(1-alpha_F) = 1/weight^S_np
     // add Lagrange multiplier (structural forces from t^n)
-    int err = coup_rhs_sum.update(stiparam * scaling_S, *lambda_, scaling);
-    if (err) FOUR_C_THROW("Update of Nit_Struct_FSI RHS failed with errcode = {}!", err);
+    coup_rhs_sum.update(stiparam * scaling_S, *lambda_, scaling);
   }
   else
   {

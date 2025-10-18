@@ -798,8 +798,7 @@ void FLD::XFluid::assemble_mat_and_rhs(int itnum)
     // need to export residual_col to state_->residual_ (row)
     Core::LinAlg::Vector<double> res_tmp(state_->residual_->get_map(), true);
     Core::LinAlg::Export exporter(state_->residual_col_->get_map(), res_tmp.get_map());
-    int err2 = res_tmp.export_to(*state_->residual_col_, exporter, Add);
-    if (err2) FOUR_C_THROW("Export using exporter returned err={}", err2);
+    res_tmp.export_to(*state_->residual_col_, exporter, Add);
 
     // add Neumann loads and contributions from evaluate of volume and face integrals
     state_->residual_->update(1.0, res_tmp, 1.0, *state_->neumann_loads_, 0.0);
@@ -808,7 +807,12 @@ void FLD::XFluid::assemble_mat_and_rhs(int itnum)
     // scaling to get true residual vector
     // negative sign to get forces acting on structural side
     // additional residual-scaling to remove the theta*dt-scaling
-    state_->trueresidual_->update(-1.0 * residual_scaling(), *state_->residual_, 0.0);
+    // but before we need to export the map to match the final map
+    Core::LinAlg::Vector<double> res_true_tmp(state_->trueresidual_->get_map(), true);
+    Core::LinAlg::Export exporter_true_residual(
+        state_->trueresidual_->get_map(), res_tmp.get_map());
+    res_true_tmp.export_to(*state_->residual_, exporter_true_residual, Add);
+    state_->trueresidual_->update(-1.0 * residual_scaling(), res_true_tmp, 0.0);
   }
 
   //-------------------------------------------------------------------------------
@@ -1509,8 +1513,7 @@ void FLD::XFluid::integrate_shape_function(Teuchos::ParameterList& eleparams,
   // need to export residual_col to systemvector1 (residual_)
   Core::LinAlg::Vector<double> vec_tmp(vec.get_map(), false);
   Core::LinAlg::Export exporter(strategy.systemvector1()->get_map(), vec_tmp.get_map());
-  int err2 = vec_tmp.export_to(*strategy.systemvector1(), exporter, Add);
-  if (err2) FOUR_C_THROW("Export using exporter returned err={}", err2);
+  vec_tmp.export_to(*strategy.systemvector1(), exporter, Add);
   vec.scale(1.0, vec_tmp);
 }
 
@@ -1596,8 +1599,7 @@ void FLD::XFluid::assemble_mat_and_rhs_gradient_penalty(
   // need to export residual_col to systemvector1 (residual_)
   Core::LinAlg::Vector<double> res_tmp(residual_gp.get_map(), false);
   Core::LinAlg::Export exporter(residual_gp_col->get_map(), res_tmp.get_map());
-  int err2 = res_tmp.export_to(*residual_gp_col, exporter, Add);
-  if (err2) FOUR_C_THROW("Export using exporter returned err={}", err2);
+  res_tmp.export_to(*residual_gp_col, exporter, Add);
   residual_gp.update(1.0, res_tmp, 1.0);
 
   //-------------------------------------------------------------------------------
@@ -4478,8 +4480,6 @@ void FLD::XFluid::set_initial_flow_field(
   {
     const Core::LinAlg::Map* dofrowmap = discret_->dof_row_map();
 
-    int err = 0;
-
     const int npredof = numdim_;
 
     double p;
@@ -4533,20 +4533,18 @@ void FLD::XFluid::set_initial_flow_field(
       {
         const int gid = nodedofset[nveldof];
         int lid = dofrowmap->lid(gid);
-        err += state_->velnp_->replace_local_value(lid, u[nveldof]);
-        err += state_->veln_->replace_local_value(lid, u[nveldof]);
-        err += state_->velnm_->replace_local_value(lid, u[nveldof]);
+        state_->velnp_->replace_local_value(lid, u[nveldof]);
+        state_->veln_->replace_local_value(lid, u[nveldof]);
+        state_->velnm_->replace_local_value(lid, u[nveldof]);
       }
 
       // set initial pressure
       const int gid = nodedofset[npredof];
       int lid = dofrowmap->lid(gid);
-      err += state_->velnp_->replace_local_value(lid, p);
-      err += state_->veln_->replace_local_value(lid, p);
-      err += state_->velnm_->replace_local_value(lid, p);
+      state_->velnp_->replace_local_value(lid, p);
+      state_->veln_->replace_local_value(lid, p);
+      state_->velnm_->replace_local_value(lid, p);
     }  // end loop nodes lnodeid
-
-    if (err != 0) FOUR_C_THROW("dof not on proc");
   }
   //----------------------------------------------------------------------------------------------
   // flame-vortex interaction problem: two counter-rotating vortices (2-D) moving the flame front
@@ -4702,11 +4700,11 @@ void FLD::XFluid::set_initial_flow_field(
           int lid = dofrowmap->lid(gid);
           if (idim == 3)
           {  // pressure dof
-            err += state_->velnp_->replace_local_value(lid, pres);
+            state_->velnp_->replace_local_value(lid, pres);
           }
           else
           {  // velocity dof
-            err += state_->velnp_->replace_local_value(lid, vel(idim));
+            state_->velnp_->replace_local_value(lid, vel(idim));
           }
 
           // set Dirichlet BC for ghost penalty reconstruction

@@ -726,8 +726,7 @@ void Constraints::SpringDashpot::evaluate_force(Core::LinAlg::Vector<double>& fi
             const double val =
                 -nodalarea *
                 (springstiff * (gap - offsetprestr[k] - offset_) + viscosity_ * gapdt) * normal[k];
-            const int err = fint.sum_into_global_values(1, &val, &dofs[k]);
-            if (err) FOUR_C_THROW("SumIntoGlobalValues failed!");
+            fint.sum_into_global_values(1, &val, &dofs[k]);
 
             // store spring stress for output
             out_vec[k] =
@@ -849,8 +848,7 @@ void Constraints::SpringDashpot::evaluate_force_stiff(Core::LinAlg::SparseMatrix
             const double val =
                 -nodalarea *
                 (springstiff * (gap - offsetprestr[k] - offset_) + viscosity_ * gapdt) * normal[k];
-            const int err = fint.sum_into_global_values(1, &val, &dofs[k]);
-            if (err) FOUR_C_THROW("SumIntoGlobalValues failed!");
+            fint.sum_into_global_values(1, &val, &dofs[k]);
 
             // stiffness
             std::map<int, double> dgap = dgap_[node_gid];

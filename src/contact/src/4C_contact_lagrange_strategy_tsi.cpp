@@ -309,15 +309,14 @@ void CONTACT::LagrangeStrategyTsi::evaluate(
   {
     Core::LinAlg::Vector<double> tmp(*gdisprowmap_);
     Core::LinAlg::export_to(*fscn_, tmp);
-    if (rs.update(alphaf_, tmp, 1.) != 0)  // fscn already scaled with alphaf_ in update
-      FOUR_C_THROW("update went wrong");
+    rs.update(alphaf_, tmp, 1.);  // fscn already scaled with alphaf_ in update
   }
 
   if (ftcn_ != nullptr)
   {
     Core::LinAlg::Vector<double> tmp(*coupST->slave_dof_map());
     Core::LinAlg::export_to(*ftcn_, tmp);
-    if (rt.update((1. - tsi_alpha_), tmp, 1.) != 0) FOUR_C_THROW("update went wrong");
+    rt.update((1. - tsi_alpha_), tmp, 1.);
   }
 
   // map containing the inactive and non-contact structural dofs
@@ -606,7 +605,7 @@ void CONTACT::LagrangeStrategyTsi::evaluate(
   // invert D-matrix
   Core::LinAlg::Vector<double> dDiag(*gactivedofs_);
   dInvA->extract_diagonal_copy(dDiag);
-  if (dDiag.reciprocal(dDiag)) FOUR_C_THROW("inversion of diagonal D matrix failed");
+  dDiag.reciprocal(dDiag);
   dInvA->replace_diagonal_values(dDiag);
 
   // get dinv on thermal dofs
@@ -816,8 +815,7 @@ void CONTACT::Utils::add_vector(
 
   Core::LinAlg::Vector<double> tmp = Core::LinAlg::Vector<double>(dst.get_map(), true);
   Core::LinAlg::export_to(src, tmp);
-  if (dst.update(1., tmp, 1.)) FOUR_C_THROW("vector update went wrong");
-  return;
+  dst.update(1., tmp, 1.);
 }
 
 void CONTACT::LagrangeStrategyTsi::recover_coupled(

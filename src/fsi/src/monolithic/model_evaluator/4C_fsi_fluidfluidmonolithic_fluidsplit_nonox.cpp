@@ -641,17 +641,15 @@ void FSI::FluidFluidMonolithicFluidSplitNoNOX::setup_vector(Core::LinAlg::Vector
       structure_field()->interface()->insert_fsi_cond_vector(*fluid_to_struct(fcv));
 
   // Add the converted interface RHS-contributions (scaled) to the global structural RHS!
-  int err = modsv->update(1.0, sv, (1.0 - stimintparam) / (1.0 - ftimintparam) * fluidscale);
-  if (err) FOUR_C_THROW("Update of structural residual vector failed! Error code {}", err);
+  modsv->update(1.0, sv, (1.0 - stimintparam) / (1.0 - ftimintparam) * fluidscale);
 
   // Add the previous Lagrange Multiplier
   if (lambda_ != nullptr)
   {
     std::shared_ptr<Core::LinAlg::Vector<double>> lambdaglob =
         structure_field()->interface()->insert_fsi_cond_vector(*fluid_to_struct(lambda_));
-    err = modsv->update(stimintparam - ftimintparam * (1.0 - stimintparam) / (1.0 - ftimintparam),
+    modsv->update(stimintparam - ftimintparam * (1.0 - stimintparam) / (1.0 - ftimintparam),
         *lambdaglob, 1.0);
-    if (err) FOUR_C_THROW("Update of structural residual vector failed! Error code {}", err);
 
     // Insert structural contribution
     extractor().insert_vector(*modsv, 0, f);
@@ -844,7 +842,20 @@ void FSI::FluidFluidMonolithicFluidSplitNoNOX::newton()
   // We need the last increment for the recovery of lambda.
   /*----------------------------------------------------------------------*/
   // Fluid
-  duiinc_->update(1.0, *extractor().extract_vector(*iterinc_, 1), 0.0);
+  auto target_map = duiinc_->get_map();
+  auto target_vct = extractor().extract_vector(*iterinc_, 1);
+  if (not target_map.same_as(target_vct->get_map()))
+  {
+    auto dst = std::make_shared<Core::LinAlg::Vector<double>>(target_map, true);
+    Core::LinAlg::Import imp(target_map, duiinc_->get_map());
+    dst->import(*duiinc_, imp, Insert);
+    duiinc_->update(1.0, *dst, 0.0);
+  }
+  else
+  {
+    duiinc_->update(1.0, *extractor().extract_vector(*iterinc_, 1), 0.0);
+  }
+
   // Structure
   std::shared_ptr<Core::LinAlg::Vector<double>> ddinc = extractor().extract_vector(*iterinc_, 0);
   ddginc_->update(1.0, *structure_field()->interface()->extract_fsi_cond_vector(*ddinc), 0.0);

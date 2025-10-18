@@ -78,8 +78,7 @@ void CONTACT::MtLagrangeStrategy::mortar_coupling(
     if ((*diag)[i] == 0.0) (*diag).get_values()[i] = 1.0;
 
   // scalar inversion of diagonal values
-  err = diag->reciprocal(*diag);
-  if (err != 0) FOUR_C_THROW("Reciprocal: Zero diagonal entry!");
+  diag->reciprocal(*diag);
 
   // re-insert inverted diagonal into invd
   err = invd_->replace_diagonal_values(*diag);
@@ -324,8 +323,7 @@ CONTACT::MtLagrangeStrategy::mesh_initialization()
     if ((*diag)[i] == 0.0) (*diag).get_values()[i] = 1.0;
 
   // scalar inversion of diagonal values
-  err = diag->reciprocal(*diag);
-  if (err != 0) FOUR_C_THROW("Reciprocal: Zero diagonal entry!");
+  diag->reciprocal(*diag);
 
   std::shared_ptr<Core::LinAlg::Vector<double>> lmDBC =
       Core::LinAlg::create_vector(*gsdofrowmap_, true);

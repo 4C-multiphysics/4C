@@ -86,8 +86,7 @@ void ScaTra::ScaTraTimIntPoroMulti::set_l2_flux_of_multi_fluid(
 
         const double value = ((*multiflux)(curphase * nsd_ + index))[count];
 
-        int err = phaseflux->replace_local_value(lid, value);
-        if (err != 0) FOUR_C_THROW("error while inserting a value into convel");
+        phaseflux->replace_local_value(lid, value);
       }
       ++count;
     }

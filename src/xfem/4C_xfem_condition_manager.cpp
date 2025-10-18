@@ -469,8 +469,7 @@ void XFEM::ConditionManager::update_level_set_field()
 
       std::shared_ptr<Core::LinAlg::Vector<double>> tmp =
           coupling->get_level_set_field_as_node_row_vector();
-      const int err = bg_phinp_->update(1.0, *tmp, 0.0);
-      if (err) FOUR_C_THROW("update did not work - vectors based on wrong maps?");
+      bg_phinp_->update(1.0, *tmp, 0.0);
     }
     else  // apply boolean combinations for the further level-set fields
     {
@@ -566,8 +565,6 @@ void XFEM::ConditionManager::set_minimum(Core::LinAlg::Vector<double>& vec1,
     Core::LinAlg::Vector<double>& vec2, const int lsc_index_2,
     Core::LinAlg::Vector<int>& node_lsc_coup_idx)
 {
-  int err = -1;
-
   check_for_equal_maps(vec1, vec2);
 
   // loop all nodes on the processor
@@ -586,8 +583,7 @@ void XFEM::ConditionManager::set_minimum(Core::LinAlg::Vector<double>& vec1,
           lsc_index_2;  // else keep the old lsc coupling
 
     // now copy the values
-    err = vec1.replace_local_value(lnodeid, final_val);
-    if (err != 0) FOUR_C_THROW("error while inserting value into phinp_");
+    vec1.replace_local_value(lnodeid, final_val);
   }
 }
 
@@ -596,8 +592,6 @@ void XFEM::ConditionManager::set_maximum(Core::LinAlg::Vector<double>& vec1,
     Core::LinAlg::Vector<double>& vec2, const int lsc_index_2,
     Core::LinAlg::Vector<int>& node_lsc_coup_idx)
 {
-  int err = -1;
-
   check_for_equal_maps(vec1, vec2);
 
   // loop all nodes on the processor
@@ -615,8 +609,7 @@ void XFEM::ConditionManager::set_maximum(Core::LinAlg::Vector<double>& vec1,
           lsc_index_2;  // else keep the old lsc coupling
 
     // now copy the values
-    err = vec1.replace_local_value(lnodeid, final_val);
-    if (err != 0) FOUR_C_THROW("error while inserting value into phinp_");
+    vec1.replace_local_value(lnodeid, final_val);
   }
 }
 
@@ -625,8 +618,6 @@ void XFEM::ConditionManager::set_difference(Core::LinAlg::Vector<double>& vec1,
     Core::LinAlg::Vector<double>& vec2, const int lsc_index_2,
     Core::LinAlg::Vector<int>& node_lsc_coup_idx)
 {
-  int err = -1;
-
   check_for_equal_maps(vec1, vec2);
 
   // loop all nodes on the processor
@@ -644,8 +635,7 @@ void XFEM::ConditionManager::set_difference(Core::LinAlg::Vector<double>& vec1,
           lsc_index_2;  // else keep the old lsc coupling
 
     // now copy the values
-    err = vec1.replace_local_value(lnodeid, final_val);
-    if (err != 0) FOUR_C_THROW("error while inserting value into phinp_");
+    vec1.replace_local_value(lnodeid, final_val);
   }
 }
 
@@ -653,8 +643,6 @@ void XFEM::ConditionManager::set_symmetric_difference(Core::LinAlg::Vector<doubl
     Core::LinAlg::Vector<double>& vec2, const int lsc_index_2,
     Core::LinAlg::Vector<int>& node_lsc_coup_idx)
 {
-  int err = -1;
-
   check_for_equal_maps(vec1, vec2);
 
   // loop all nodes on the processor
@@ -683,8 +671,7 @@ void XFEM::ConditionManager::set_symmetric_difference(Core::LinAlg::Vector<doubl
 
 
     // now copy the values
-    err = vec1.replace_local_value(lnodeid, final_val);
-    if (err != 0) FOUR_C_THROW("error while inserting value into phinp_");
+    vec1.replace_local_value(lnodeid, final_val);
   }
 }
 

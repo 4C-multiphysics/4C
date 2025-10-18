@@ -736,11 +736,7 @@ void TSI::Partitioned::outer_iteration_loop()
           // calculate difference of current (i+1) and old (i) residual vector
           // delhist = ( r^{i+1}_{n+1} - r^i_{n+1} )
           // update history vector old increment r^i_{n+1}
-          delhist_->update(1.0, *del_, 0.0);           // r^i_{n+1}
-          delhist_->update(1.0, *dispincnp_, (-1.0));  // update r^{i+1}_{n+1}
-
-          // del_ = r^{i+1}_{n+1} = T^{i+1}_{n+1} - T^{i}_{n+1}
-          del_->update(1.0, *dispincnp_, 0.0);
+          delhist_->update(1.0, *del_, 0.0);  // r^i_{n+1}
           // den = |r^{i+1} - r^{i}|^2
           double den = 0.0;
           delhist_->norm_2(&den);

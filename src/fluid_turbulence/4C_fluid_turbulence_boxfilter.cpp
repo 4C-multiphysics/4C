@@ -507,86 +507,76 @@ void FLD::Boxfilter::apply_box_filter(
 
         // replace value by sum
         lid = noderowmap->lid(master_gid);
-        int error = patchvol.replace_local_value(lid, val);
-        if (error != 0) FOUR_C_THROW("dof not on proc");
+        patchvol.replace_local_value(lid, val);
 
         {
-          int err = 0;
-          if (density_) err += filtered_dens_->replace_local_value(lid, dens_val);
+          if (density_) filtered_dens_->replace_local_value(lid, dens_val);
           if (densstrainrate_)
-            err += filtered_dens_strainrate_->replace_local_value(lid, dens_strainrate_val);
-          if (expression_) err += filtered_expression_->replace_local_value(lid, expression_val);
-          if (alpha2_) err += filtered_alpha2_->replace_local_value(lid, alpha2_val);
-          if (err != 0) FOUR_C_THROW("dof not on proc");
+            filtered_dens_strainrate_->replace_local_value(lid, dens_strainrate_val);
+          if (expression_) filtered_expression_->replace_local_value(lid, expression_val);
+          if (alpha2_) filtered_alpha2_->replace_local_value(lid, alpha2_val);
         }
 
         for (int idim = 0; idim < numdim; ++idim)
         {
-          int err = 0;
-          if (velocity_) err += ((*filtered_vel_)(idim)).replace_local_value(lid, vel_val[idim]);
+          if (velocity_) ((*filtered_vel_)(idim)).replace_local_value(lid, vel_val[idim]);
 
           if (densvelocity_)
-            err += ((*filtered_dens_vel_)(idim)).replace_local_value(lid, dens_vel_val[idim]);
+            ((*filtered_dens_vel_)(idim)).replace_local_value(lid, dens_vel_val[idim]);
 
           for (int jdim = 0; jdim < numdim; ++jdim)
           {
             const int ij = numdim * idim + jdim;
             if (reynoldsstress_)
-              err += ((*filtered_reynoldsstress_)(ij))
-                         .replace_local_value(lid, reystress_val[idim][jdim]);
+              ((*filtered_reynoldsstress_)(ij)).replace_local_value(lid, reystress_val[idim][jdim]);
             if (modeled_subgrid_stress_)
-              err += ((*filtered_modeled_subgrid_stress_)(ij))
-                         .replace_local_value(lid, modeled_subgrid_stress_val[idim][jdim]);
+              ((*filtered_modeled_subgrid_stress_)(ij))
+                  .replace_local_value(lid, modeled_subgrid_stress_val[idim][jdim]);
             if (strainrate_)
-              err += ((*filtered_strainrate_)(ij))
-                         .replace_local_value(lid, strainrate_val[idim][jdim]);
+              ((*filtered_strainrate_)(ij)).replace_local_value(lid, strainrate_val[idim][jdim]);
             if (alphaij_)
-              err += ((*filtered_alphaij_)(ij)).replace_local_value(lid, alphaij_val[idim][jdim]);
+              ((*filtered_alphaij_)(ij)).replace_local_value(lid, alphaij_val[idim][jdim]);
           }  // end loop jdim
-          if (err != 0) FOUR_C_THROW("dof not on proc");
+
         }  // end loop idim
 
         // loop all this masters slaves
         for (auto slave_gid : slave_gids)
         {
-          int err = 0;
           lid = noderowmap->lid(slave_gid);
-          err += patchvol.replace_local_value(lid, val);
+          patchvol.replace_local_value(lid, val);
 
           {
-            int err = 0;
-            if (density_) err += filtered_dens_->replace_local_value(lid, dens_val);
+            if (density_) filtered_dens_->replace_local_value(lid, dens_val);
             if (densstrainrate_)
-              err += filtered_dens_strainrate_->replace_local_value(lid, dens_strainrate_val);
-            if (expression_) err += filtered_expression_->replace_local_value(lid, expression_val);
-            if (alpha2_) err += filtered_alpha2_->replace_local_value(lid, alpha2_val);
-            if (err != 0) FOUR_C_THROW("dof not on proc");
+              filtered_dens_strainrate_->replace_local_value(lid, dens_strainrate_val);
+            if (expression_) filtered_expression_->replace_local_value(lid, expression_val);
+            if (alpha2_) filtered_alpha2_->replace_local_value(lid, alpha2_val);
           }
 
           for (int idim = 0; idim < numdim; ++idim)
           {
-            if (velocity_) err += ((*filtered_vel_)(idim)).replace_local_value(lid, vel_val[idim]);
+            if (velocity_) ((*filtered_vel_)(idim)).replace_local_value(lid, vel_val[idim]);
 
             if (densvelocity_)
-              err += ((*filtered_dens_vel_)(idim)).replace_local_value(lid, dens_vel_val[idim]);
+              ((*filtered_dens_vel_)(idim)).replace_local_value(lid, dens_vel_val[idim]);
 
             for (int jdim = 0; jdim < numdim; ++jdim)
             {
               const int ij = numdim * idim + jdim;
               if (reynoldsstress_)
-                err += ((*filtered_reynoldsstress_)(ij))
-                           .replace_local_value(lid, reystress_val[idim][jdim]);
+                ((*filtered_reynoldsstress_)(ij))
+                    .replace_local_value(lid, reystress_val[idim][jdim]);
               if (modeled_subgrid_stress_)
-                err += ((*filtered_modeled_subgrid_stress_)(ij))
-                           .replace_local_value(lid, modeled_subgrid_stress_val[idim][jdim]);
+                ((*filtered_modeled_subgrid_stress_)(ij))
+                    .replace_local_value(lid, modeled_subgrid_stress_val[idim][jdim]);
               if (strainrate_)
-                err += ((*filtered_strainrate_)(ij))
-                           .replace_local_value(lid, strainrate_val[idim][jdim]);
+                ((*filtered_strainrate_)(ij)).replace_local_value(lid, strainrate_val[idim][jdim]);
               if (alphaij_)
-                err += ((*filtered_alphaij_)(ij)).replace_local_value(lid, alphaij_val[idim][jdim]);
+                ((*filtered_alphaij_)(ij)).replace_local_value(lid, alphaij_val[idim][jdim]);
             }  // end loop jdim
           }  // end loop idim
-          if (err != 0) FOUR_C_THROW("dof not on proc");
+
         }  // end loop slaves
       }  // end loop masters
     }
@@ -664,33 +654,33 @@ void FLD::Boxfilter::apply_box_filter(
         // we already divide by the corresponding volume of all contributing elements,
         // since we set the volume to 1.0 in the next step in order not to modify the dirichlet
         // values
-        if (density_) err += filtered_dens_->replace_local_value(lnodeid, dens);
+        if (density_) filtered_dens_->replace_local_value(lnodeid, dens);
 
         // this node is on a wall
         if (is_no_slip_node == numdim)
         {
           // Peter style
           double val = 0.0;
-          if (densstrainrate_) err += filtered_dens_strainrate_->replace_local_value(lnodeid, val);
-          if (expression_) err += filtered_expression_->replace_local_value(lnodeid, val);
-          if (alpha2_) err += filtered_alpha2_->replace_local_value(lnodeid, val);
+          if (densstrainrate_) filtered_dens_strainrate_->replace_local_value(lnodeid, val);
+          if (expression_) filtered_expression_->replace_local_value(lnodeid, val);
+          if (alpha2_) filtered_alpha2_->replace_local_value(lnodeid, val);
         }
         else
         {
           if (densstrainrate_)
           {
             double val = (*filtered_dens_strainrate_)[lnodeid] / thisvol;
-            err += filtered_dens_strainrate_->replace_local_value(lnodeid, val);
+            filtered_dens_strainrate_->replace_local_value(lnodeid, val);
           }
           if (expression_)
           {
             double val = (*filtered_expression_)[lnodeid] / thisvol;
-            err += filtered_expression_->replace_local_value(lnodeid, val);
+            filtered_expression_->replace_local_value(lnodeid, val);
           }
           if (alpha2_)
           {
             double val = (*filtered_alpha2_)[lnodeid] / thisvol;
-            err += filtered_alpha2_->replace_local_value(lnodeid, val);
+            filtered_alpha2_->replace_local_value(lnodeid, val);
           }
         }
 
@@ -703,14 +693,14 @@ void FLD::Boxfilter::apply_box_filter(
           double valvel_i = (*velocity)[lid_i];
           if (velocity_)
           {
-            err += ((*filtered_vel_)(idim)).replace_local_value(lnodeid, valvel_i);
+            ((*filtered_vel_)(idim)).replace_local_value(lnodeid, valvel_i);
           }
           // dens*reynoldsstress not in parameter list until now?
           if (densvelocity_)  //=loma
           {
             // note: for incompressible flow, this vector is rebuild in calculation of Lij and Mij
             double valdensvel_i = dens * valvel_i;
-            err += ((*filtered_dens_vel_)(idim)).replace_local_value(lnodeid, valdensvel_i);
+            ((*filtered_dens_vel_)(idim)).replace_local_value(lnodeid, valdensvel_i);
           }
 
           for (int jdim = 0; jdim < numdim; ++jdim)
@@ -725,7 +715,7 @@ void FLD::Boxfilter::apply_box_filter(
               double valvel_j = (*velocity)[lid_j];
               double valvel_ij = dens * valvel_i * valvel_j;
               // remember: density = 1.0 for pure box filter application
-              err += ((*filtered_reynoldsstress_)(ij)).replace_local_value(lnodeid, valvel_ij);
+              ((*filtered_reynoldsstress_)(ij)).replace_local_value(lnodeid, valvel_ij);
             }
 
             if (is_no_slip_node == numdim)
@@ -733,12 +723,11 @@ void FLD::Boxfilter::apply_box_filter(
               // set value to zero (original Peter style)
               double val = 0.0;
               if (modeled_subgrid_stress_)
-                err += ((*filtered_modeled_subgrid_stress_)(ij)).replace_local_value(lnodeid, val);
+                ((*filtered_modeled_subgrid_stress_)(ij)).replace_local_value(lnodeid, val);
               // remark: setting the modeled stresses equal to zero improves the estimated friction
               // Reynolds number!
-              if (strainrate_)
-                err += ((*filtered_strainrate_)(ij)).replace_local_value(lnodeid, val);
-              if (alphaij_) err += ((*filtered_alphaij_)(ij)).replace_local_value(lnodeid, val);
+              if (strainrate_) ((*filtered_strainrate_)(ij)).replace_local_value(lnodeid, val);
+              if (alphaij_) ((*filtered_alphaij_)(ij)).replace_local_value(lnodeid, val);
             }
             else
             {
@@ -749,24 +738,24 @@ void FLD::Boxfilter::apply_box_filter(
               if (modeled_subgrid_stress_)
               {
                 double val = ((((*filtered_modeled_subgrid_stress_)(ij)))[lnodeid]) / thisvol;
-                err += ((*filtered_modeled_subgrid_stress_)(ij)).replace_local_value(lnodeid, val);
+                ((*filtered_modeled_subgrid_stress_)(ij)).replace_local_value(lnodeid, val);
               }
               if (strainrate_)
               {
                 double val = ((((*filtered_strainrate_)(ij)))[lnodeid]) / thisvol;
-                err += ((*filtered_strainrate_)(ij)).replace_local_value(lnodeid, val);
+                ((*filtered_strainrate_)(ij)).replace_local_value(lnodeid, val);
               }
               if (alphaij_)
               {
                 double val = ((((*filtered_alphaij_)(ij)))[lnodeid]) / thisvol;
-                err += ((*filtered_alphaij_)(ij)).replace_local_value(lnodeid, val);
+                ((*filtered_alphaij_)(ij)).replace_local_value(lnodeid, val);
               }
             }
           }  // end loop jdim
         }  // end loop idim
 
         double volval = 1.0;
-        err += patchvol.replace_local_value(lnodeid, volval);
+        patchvol.replace_local_value(lnodeid, volval);
         if (err != 0) FOUR_C_THROW("dof/node not on proc");
       }  // is dirichlet node
     }  // end loop all nodes
@@ -782,27 +771,26 @@ void FLD::Boxfilter::apply_box_filter(
   {
     double thisvol = (patchvol)[lnodeid];
 
-    int err = 0;
     double val = 0.0;
     if (density_)
     {
       val = (*filtered_dens_)[lnodeid] / thisvol;
-      err += filtered_dens_->replace_local_value(lnodeid, val);
+      filtered_dens_->replace_local_value(lnodeid, val);
     }
     if (densstrainrate_)
     {
       val = (*filtered_dens_strainrate_)[lnodeid] / thisvol;
-      err += filtered_dens_strainrate_->replace_local_value(lnodeid, val);
+      filtered_dens_strainrate_->replace_local_value(lnodeid, val);
     }
     if (expression_)
     {
       val = (*filtered_expression_)[lnodeid] / thisvol;
-      err += filtered_expression_->replace_local_value(lnodeid, val);
+      filtered_expression_->replace_local_value(lnodeid, val);
     }
     if (alpha2_)
     {
       val = (*filtered_alpha2_)[lnodeid] / thisvol;
-      err += filtered_alpha2_->replace_local_value(lnodeid, val);
+      filtered_alpha2_->replace_local_value(lnodeid, val);
     }
 
     for (int idim = 0; idim < 3; ++idim)
@@ -810,13 +798,13 @@ void FLD::Boxfilter::apply_box_filter(
       if (velocity_)
       {
         val = ((((*filtered_vel_)(idim)))[lnodeid]) / thisvol;
-        err += ((*filtered_vel_)(idim)).replace_local_value(lnodeid, val);
+        ((*filtered_vel_)(idim)).replace_local_value(lnodeid, val);
       }
 
       if (densvelocity_)
       {
         val = ((((*filtered_dens_vel_)(idim)))[lnodeid]) / thisvol;
-        err += ((*filtered_dens_vel_)(idim)).replace_local_value(lnodeid, val);
+        ((*filtered_dens_vel_)(idim)).replace_local_value(lnodeid, val);
       }
 
       for (int jdim = 0; jdim < 3; ++jdim)
@@ -826,25 +814,25 @@ void FLD::Boxfilter::apply_box_filter(
         if (reynoldsstress_)
         {
           val = ((((*filtered_reynoldsstress_)(ij)))[lnodeid]) / thisvol;
-          err += ((*filtered_reynoldsstress_)(ij)).replace_local_value(lnodeid, val);
+          ((*filtered_reynoldsstress_)(ij)).replace_local_value(lnodeid, val);
         }
         if (modeled_subgrid_stress_)
         {
           val = ((((*filtered_modeled_subgrid_stress_)(ij)))[lnodeid]) / thisvol;
-          err += ((*filtered_modeled_subgrid_stress_)(ij)).replace_local_value(lnodeid, val);
+          ((*filtered_modeled_subgrid_stress_)(ij)).replace_local_value(lnodeid, val);
         }
         if (strainrate_)
         {
           val = ((((*filtered_strainrate_)(ij)))[lnodeid]) / thisvol;
-          err += ((*filtered_strainrate_)(ij)).replace_local_value(lnodeid, val);
+          ((*filtered_strainrate_)(ij)).replace_local_value(lnodeid, val);
         }
         if (alphaij_)
         {
           val = ((((*filtered_alphaij_)(ij)))[lnodeid]) / thisvol;
-          err += ((*filtered_alphaij_)(ij)).replace_local_value(lnodeid, val);
+          ((*filtered_alphaij_)(ij)).replace_local_value(lnodeid, val);
         }
       }  // end loop jdim
-      if (err != 0) FOUR_C_THROW("dof not on proc");
+
     }  // end loop idim
   }  // end loop nodes
 
@@ -878,8 +866,7 @@ void FLD::Boxfilter::apply_box_filter(
         // calculate fine scale velocity
         double val = vel - filteredvel;
         // calculate fine scale velocity
-        int err = ((*fs_vel_)(d)).replace_local_value(nid, val);
-        if (err != 0) FOUR_C_THROW("dof not on proc");
+        ((*fs_vel_)(d)).replace_local_value(nid, val);
       }
     }
   }
@@ -1229,75 +1216,65 @@ void FLD::Boxfilter::apply_box_filter_scatra(
 
         // replace value by sum
         lid = noderowmap->lid(master_gid);
-        int error = patchvol.replace_local_value(lid, val);
-        if (error != 0) FOUR_C_THROW("dof not on proc");
+        patchvol.replace_local_value(lid, val);
 
-        int e = 0;
-        e += filtered_dens_->replace_local_value(lid, dens_val);
-        e += filtered_dens_temp_->replace_local_value(lid, dens_temp_val);
-        e += filtered_temp_->replace_local_value(lid, temp_val);
-        if (phi2_) e += filtered_phi2_->replace_local_value(lid, phi2_val);
-        if (phiexpression_)
-          e += filtered_phiexpression_->replace_local_value(lid, phiexpression_val);
-        if (e != 0) FOUR_C_THROW("dof not on proc");
+        filtered_dens_->replace_local_value(lid, dens_val);
+        filtered_dens_temp_->replace_local_value(lid, dens_temp_val);
+        filtered_temp_->replace_local_value(lid, temp_val);
+        if (phi2_) filtered_phi2_->replace_local_value(lid, phi2_val);
+        if (phiexpression_) filtered_phiexpression_->replace_local_value(lid, phiexpression_val);
 
         for (int idim = 0; idim < numdim; ++idim)
         {
-          int err = 0;
-          err += ((*filtered_vel_)(idim)).replace_local_value(lid, vel_val[idim]);
-          err += ((*filtered_dens_vel_)(idim)).replace_local_value(lid, dens_vel_val[idim]);
-          err +=
-              ((*filtered_dens_vel_temp_)(idim)).replace_local_value(lid, dens_vel_temp_val[idim]);
-          err += ((*filtered_dens_rateofstrain_temp_)(idim))
-                     .replace_local_value(lid, dens_strain_temp_val[idim]);
-          if (phi_) err += ((*filtered_phi_)(idim)).replace_local_value(lid, phi_val[idim]);
+          ((*filtered_vel_)(idim)).replace_local_value(lid, vel_val[idim]);
+          ((*filtered_dens_vel_)(idim)).replace_local_value(lid, dens_vel_val[idim]);
+
+          ((*filtered_dens_vel_temp_)(idim)).replace_local_value(lid, dens_vel_temp_val[idim]);
+          ((*filtered_dens_rateofstrain_temp_)(idim))
+              .replace_local_value(lid, dens_strain_temp_val[idim]);
+          if (phi_) ((*filtered_phi_)(idim)).replace_local_value(lid, phi_val[idim]);
           if (alphaijsc_)
           {
             for (int jdim = 0; jdim < numdim; ++jdim)
             {
               const int ij = numdim * idim + jdim;
-              err +=
-                  ((*filtered_alphaijsc_)(ij)).replace_local_value(lid, alphaijsc_val[idim][jdim]);
+
+              ((*filtered_alphaijsc_)(ij)).replace_local_value(lid, alphaijsc_val[idim][jdim]);
             }  // end loop jdim
           }
-          if (err != 0) FOUR_C_THROW("dof not on proc");
         }
 
         // loop all this masters slaves
         for (auto slave_gid : slave_gids)
         {
-          int err = 0;
           lid = noderowmap->lid(slave_gid);
-          err += patchvol.replace_local_value(lid, val);
+          patchvol.replace_local_value(lid, val);
 
-          err += filtered_dens_->replace_local_value(lid, dens_val);
-          err += filtered_dens_temp_->replace_local_value(lid, dens_temp_val);
-          err += filtered_temp_->replace_local_value(lid, temp_val);
-          if (phi2_) err += filtered_phi2_->replace_local_value(lid, phi2_val);
-          if (phiexpression_)
-            err += filtered_phiexpression_->replace_local_value(lid, phiexpression_val);
+          filtered_dens_->replace_local_value(lid, dens_val);
+          filtered_dens_temp_->replace_local_value(lid, dens_temp_val);
+          filtered_temp_->replace_local_value(lid, temp_val);
+          if (phi2_) filtered_phi2_->replace_local_value(lid, phi2_val);
+          if (phiexpression_) filtered_phiexpression_->replace_local_value(lid, phiexpression_val);
 
           for (int idim = 0; idim < numdim; ++idim)
           {
-            err += ((*filtered_vel_)(idim)).replace_local_value(lid, vel_val[idim]);
-            err += ((*filtered_dens_vel_)(idim)).replace_local_value(lid, dens_vel_val[idim]);
-            err += ((*filtered_dens_vel_temp_)(idim))
-                       .replace_local_value(lid, dens_vel_temp_val[idim]);
-            err += ((*filtered_dens_rateofstrain_temp_)(idim))
-                       .replace_local_value(lid, dens_strain_temp_val[idim]);
-            if (phi_) err += ((*filtered_phi_)(idim)).replace_local_value(lid, phi_val[idim]);
+            ((*filtered_vel_)(idim)).replace_local_value(lid, vel_val[idim]);
+            ((*filtered_dens_vel_)(idim)).replace_local_value(lid, dens_vel_val[idim]);
+            ((*filtered_dens_vel_temp_)(idim)).replace_local_value(lid, dens_vel_temp_val[idim]);
+            ((*filtered_dens_rateofstrain_temp_)(idim))
+                .replace_local_value(lid, dens_strain_temp_val[idim]);
+            if (phi_) ((*filtered_phi_)(idim)).replace_local_value(lid, phi_val[idim]);
             if (alphaijsc_)
             {
               for (int jdim = 0; jdim < numdim; ++jdim)
               {
                 const int ij = numdim * idim + jdim;
-                err += ((*filtered_alphaijsc_)(ij))
-                           .replace_local_value(lid, alphaijsc_val[idim][jdim]);
+                ((*filtered_alphaijsc_)(ij)).replace_local_value(lid, alphaijsc_val[idim][jdim]);
               }  // end loop jdim
             }
           }
 
-          if (err != 0) FOUR_C_THROW("dof not on proc");
+
         }  // end loop slaves
       }  // end loop masters
     }
@@ -1374,33 +1351,32 @@ void FLD::Boxfilter::apply_box_filter_scatra(
           double thisvol = (patchvol)[lnodeid];
           // and density
           double dens = (*filtered_dens_)[lnodeid] / thisvol;
-          int err = 0;
-          err += filtered_dens_->replace_local_value(lnodeid, dens);
+          filtered_dens_->replace_local_value(lnodeid, dens);
 
           double temp = 0.0;
           if (is_dirichlet_node)
           {
             temp = (*scalar)[lid];
-            err += filtered_temp_->replace_local_value(lnodeid, temp);
+            filtered_temp_->replace_local_value(lnodeid, temp);
             double val = dens * temp;
-            err += filtered_dens_temp_->replace_local_value(lnodeid, val);
+            filtered_dens_temp_->replace_local_value(lnodeid, val);
             if (phi2_)
             {
               double val = 0.0;
-              err += filtered_phi2_->replace_local_value(lnodeid, val);
+              filtered_phi2_->replace_local_value(lnodeid, val);
             }
             if (phiexpression_)
             {
               double val = 0.0;
-              err += filtered_phiexpression_->replace_local_value(lnodeid, val);
+              filtered_phiexpression_->replace_local_value(lnodeid, val);
             }
           }
           else
           {
             temp = (*filtered_temp_)[lnodeid] / thisvol;
-            err += filtered_temp_->replace_local_value(lnodeid, temp);
+            filtered_temp_->replace_local_value(lnodeid, temp);
             double val = (*filtered_dens_temp_)[lnodeid] / thisvol;
-            err += filtered_dens_temp_->replace_local_value(lnodeid, val);
+            filtered_dens_temp_->replace_local_value(lnodeid, val);
           }
 
           for (int idim = 0; idim < numdim; idim++)
@@ -1411,22 +1387,22 @@ void FLD::Boxfilter::apply_box_filter_scatra(
             if (lid < 0) FOUR_C_THROW("Local ID not found in map for given global ID!");
 
             double valvel_i = (*convel)[lid];
-            err += ((*filtered_vel_)(idim)).replace_local_value(lnodeid, valvel_i);
+            ((*filtered_vel_)(idim)).replace_local_value(lnodeid, valvel_i);
 
             double valdensvel_i = dens * valvel_i;
-            err += ((*filtered_dens_vel_)(idim)).replace_local_value(lnodeid, valdensvel_i);
+            ((*filtered_dens_vel_)(idim)).replace_local_value(lnodeid, valdensvel_i);
 
             double dvtval = dens * temp * valvel_i;
-            err += ((*filtered_dens_vel_temp_)(idim)).replace_local_value(lnodeid, dvtval);
+            ((*filtered_dens_vel_temp_)(idim)).replace_local_value(lnodeid, dvtval);
 
             // Peter style
             double drtval = 0.0;
-            err += ((*filtered_dens_rateofstrain_temp_)(idim)).replace_local_value(lnodeid, drtval);
+            ((*filtered_dens_rateofstrain_temp_)(idim)).replace_local_value(lnodeid, drtval);
 
             if (phi_)
             {
               double drtval = 0.0;
-              err += ((*filtered_phi_)(idim)).replace_local_value(lnodeid, drtval);
+              ((*filtered_phi_)(idim)).replace_local_value(lnodeid, drtval);
             }
             if (alphaijsc_)
             {
@@ -1437,7 +1413,7 @@ void FLD::Boxfilter::apply_box_filter_scatra(
                 {
                   // set value to zero (original Peter style)
                   double val = 0.0;
-                  err += ((*filtered_alphaijsc_)(ij)).replace_local_value(lnodeid, val);
+                  ((*filtered_alphaijsc_)(ij)).replace_local_value(lnodeid, val);
                 }
                 else
                 {
@@ -1446,20 +1422,19 @@ void FLD::Boxfilter::apply_box_filter_scatra(
                   // since we set the volume to 1.0 in the next step in order not to modify the
                   // dirichlet values
                   double val = ((((*filtered_alphaijsc_)(ij)))[lnodeid]) / thisvol;
-                  err += ((*filtered_alphaijsc_)(ij)).replace_local_value(lnodeid, val);
+                  ((*filtered_alphaijsc_)(ij)).replace_local_value(lnodeid, val);
                 }
               }  // end loop jdim
             }
 
             // alternative: see comment in apply_box_filter() for velocity field
             // double drtval = ((*((*filtered_dens_rateofstrain_temp_)(idim)))[lnodeid])/thisvol;
-            // err +=
+            //
             // ((*filtered_dens_rateofstrain_temp_)(idim)).ReplaceMyValues(1,&drtval,&lnodeid);
           }
 
           double volval = 1.0;
-          err += patchvol.replace_local_value(lnodeid, volval);
-          if (err != 0) FOUR_C_THROW("dof/node not on proc");
+          patchvol.replace_local_value(lnodeid, volval);
         }
       }
     }
@@ -1474,39 +1449,38 @@ void FLD::Boxfilter::apply_box_filter_scatra(
   {
     double thisvol = (patchvol)[lnodeid];
 
-    int err = 0;
     double val = 0.0;
 
     val = (*filtered_temp_)[lnodeid] / thisvol;
-    err += filtered_temp_->replace_local_value(lnodeid, val);
+    filtered_temp_->replace_local_value(lnodeid, val);
     val = (*filtered_dens_)[lnodeid] / thisvol;
-    err += filtered_dens_->replace_local_value(lnodeid, val);
+    filtered_dens_->replace_local_value(lnodeid, val);
     val = (*filtered_dens_temp_)[lnodeid] / thisvol;
-    err += filtered_dens_temp_->replace_local_value(lnodeid, val);
+    filtered_dens_temp_->replace_local_value(lnodeid, val);
     if (phi2_)
     {
       val = (*filtered_phi2_)[lnodeid] / thisvol;
-      err += filtered_phi2_->replace_local_value(lnodeid, val);
+      filtered_phi2_->replace_local_value(lnodeid, val);
     }
     if (phiexpression_)
     {
       val = (*filtered_phiexpression_)[lnodeid] / thisvol;
-      err += filtered_phiexpression_->replace_local_value(lnodeid, val);
+      filtered_phiexpression_->replace_local_value(lnodeid, val);
     }
     for (int idim = 0; idim < 3; ++idim)
     {
       val = ((((*filtered_vel_)(idim)))[lnodeid]) / thisvol;
-      err += ((*filtered_vel_)(idim)).replace_local_value(lnodeid, val);
+      ((*filtered_vel_)(idim)).replace_local_value(lnodeid, val);
       val = ((((*filtered_dens_vel_)(idim)))[lnodeid]) / thisvol;
-      err += ((*filtered_dens_vel_)(idim)).replace_local_value(lnodeid, val);
+      ((*filtered_dens_vel_)(idim)).replace_local_value(lnodeid, val);
       val = ((((*filtered_dens_vel_temp_)(idim)))[lnodeid]) / thisvol;
-      err += ((*filtered_dens_vel_temp_)(idim)).replace_local_value(lnodeid, val);
+      ((*filtered_dens_vel_temp_)(idim)).replace_local_value(lnodeid, val);
       val = ((((*filtered_dens_rateofstrain_temp_)(idim)))[lnodeid]) / thisvol;
-      err += ((*filtered_dens_rateofstrain_temp_)(idim)).replace_local_value(lnodeid, val);
+      ((*filtered_dens_rateofstrain_temp_)(idim)).replace_local_value(lnodeid, val);
       if (phi_)
       {
         val = ((((*filtered_phi_)(idim)))[lnodeid]) / thisvol;
-        err += ((*filtered_phi_)(idim)).replace_local_value(lnodeid, val);
+        ((*filtered_phi_)(idim)).replace_local_value(lnodeid, val);
       }
       if (alphaijsc_)
       {
@@ -1514,11 +1488,10 @@ void FLD::Boxfilter::apply_box_filter_scatra(
         {
           const int ij = numdim * idim + jdim;
           val = ((((*filtered_alphaijsc_)(ij)))[lnodeid]) / thisvol;
-          err += ((*filtered_alphaijsc_)(ij)).replace_local_value(lnodeid, val);
+          ((*filtered_alphaijsc_)(ij)).replace_local_value(lnodeid, val);
         }  // end loop jdim
       }
     }  // end loop idim
-    if (err != 0) FOUR_C_THROW("dof not on proc");
   }  // end loop nodes
 
   // clean up

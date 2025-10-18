@@ -589,8 +589,7 @@ void Wear::LagrangeStrategyWear::condense_wear_impl_expl(
     if ((*diag)[i] == 0.0) (*diag).get_values()[i] = 1.0;
 
   // scalar inversion of diagonal values
-  err = diag->reciprocal(*diag);
-  if (err != 0) FOUR_C_THROW("Reciprocal: Zero diagonal entry!");
+  diag->reciprocal(*diag);
 
   // re-insert inverted diagonal into invd
   err = invd->replace_diagonal_values(*diag);
@@ -1597,8 +1596,7 @@ void Wear::LagrangeStrategyWear::condense_wear_discr(
     if ((*diag)[i] == 0.0) (*diag).get_values()[i] = 1.0;
 
   // scalar inversion of diagonal values
-  err = diag->reciprocal(*diag);
-  if (err != 0) FOUR_C_THROW("Reciprocal: Zero diagonal entry!");
+  diag->reciprocal(*diag);
 
   // re-insert inverted diagonal into invd
   err = invd->replace_diagonal_values(*diag);
@@ -1863,7 +1861,6 @@ void Wear::LagrangeStrategyWear::condense_wear_discr(
   /********************************************************************/
   Core::LinAlg::SparseMatrix inve(*ematrix_);
   std::shared_ptr<Core::LinAlg::Vector<double>> diage = Core::LinAlg::create_vector(*gslipn_, true);
-  int erre = 0;
 
   // extract diagonal of inve into diage
   inve.extract_diagonal_copy(*diage);
@@ -1873,11 +1870,10 @@ void Wear::LagrangeStrategyWear::condense_wear_discr(
     if ((*diage)[i] == 0.0) (*diage).get_values()[i] = 1.0;
 
   // scalar inversion of diagonal values
-  erre = diage->reciprocal(*diage);
-  if (erre > 0) FOUR_C_THROW("Reciprocal: Zero diagonal entry!");
+  diage->reciprocal(*diage);
 
   // re-insert inverted diagonal into invd
-  erre = inve.replace_diagonal_values(*diage);
+  inve.replace_diagonal_values(*diage);
 
   /********************************************************************/
   /* (b) build linedis + lintdis                                     */

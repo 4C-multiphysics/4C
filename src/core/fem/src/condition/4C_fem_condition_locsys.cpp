@@ -100,6 +100,19 @@ void Core::Conditions::LocsysManager::update(const double time,
   geo_hierarchy.emplace_back(Core::Conditions::LineLocsys);
   geo_hierarchy.emplace_back(Core::Conditions::PointLocsys);
 
+  // Ensure locsystoggle_ is on the node *row* (owned/unique) map
+  const Core::LinAlg::Map& node_row_map = *discret_.node_row_map();
+
+  if (!locsystoggle_ || !locsystoggle_->get_map().same_as(node_row_map))
+  {
+    // (Re)create on the correct map
+    locsystoggle_ = Core::LinAlg::create_vector(node_row_map, /*zero*/ true);
+  }
+
+  // Optional: sanity print once
+  FOUR_C_ASSERT(
+      locsystoggle_->get_map().same_as(node_row_map), "locsystoggle_ must use node row map");
+
   //**********************************************************************
   // read locsys conditions in given hierarchical order
   //**************************+*******************************************
@@ -229,9 +242,16 @@ void Core::Conditions::LocsysManager::update(const double time,
 
             nodalrotvectors_[nodeGID] = currotangle;
 
-            int indices = nodeGID;
-            double values = i;
-            locsystoggle_->replace_global_values(1, &values, &indices);
+            int indices = nodeGID;                  // node GID (not DOF!)
+            double value = static_cast<double>(i);  // whatever flag/value you want
+
+            const auto& vmap = locsystoggle_->get_map();
+            const int lid = vmap.lid(indices);  // -1 if not owned by this rank
+            if (lid >= 0)
+            {
+              // Global setter with global ids
+              locsystoggle_->replace_global_values(1, &value, &indices);
+            }
           }
         }
       }

@@ -909,8 +909,7 @@ void Utils::CardiovascularRespiratory0DSysPulPeriphCirculation::evaluate(
   {
     for (int j = 0; j < num_dof_; j++)
     {
-      int err = sysvec1->sum_into_global_values(1, &df_np[j], &gindex[j]);
-      if (err) FOUR_C_THROW("SumIntoGlobalValues failed!");
+      sysvec1->sum_into_global_values(1, &df_np[j], &gindex[j]);
     }
   }
   // rhs part f_np
@@ -918,8 +917,7 @@ void Utils::CardiovascularRespiratory0DSysPulPeriphCirculation::evaluate(
   {
     for (int j = 0; j < num_dof_; j++)
     {
-      int err = sysvec2->sum_into_global_values(1, &f_np[j], &gindex[j]);
-      if (err) FOUR_C_THROW("SumIntoGlobalValues failed!");
+      sysvec2->sum_into_global_values(1, &f_np[j], &gindex[j]);
     }
   }
 
@@ -9197,8 +9195,7 @@ void Utils::CardiovascularRespiratory0DSysPulPeriphCirculation::initialize(
 
   for (int j = 0; j < num_dof_; j++)
   {
-    int err = sysvec2->sum_into_global_values(1, &initvals[j], &gindex[j]);
-    if (err) FOUR_C_THROW("SumIntoGlobalValues failed!");
+    sysvec2->sum_into_global_values(1, &initvals[j], &gindex[j]);
   }
 
   //----------------------------------------------------------------------

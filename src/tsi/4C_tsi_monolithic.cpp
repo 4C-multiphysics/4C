@@ -2031,8 +2031,8 @@ void TSI::Monolithic::scale_system(
     std::shared_ptr<Core::LinAlg::Vector<double>> sx = extractor()->extract_vector(b, 0);
     std::shared_ptr<Core::LinAlg::Vector<double>> tx = extractor()->extract_vector(b, 1);
 
-    if (sx->multiply(1.0, *srowsum_, *sx, 0.0)) FOUR_C_THROW("structure scaling failed");
-    if (tx->multiply(1.0, *trowsum_, *tx, 0.0)) FOUR_C_THROW("thermo scaling failed");
+    sx->multiply(1.0, *srowsum_, *sx, 0.0);
+    tx->multiply(1.0, *trowsum_, *tx, 0.0);
 
     extractor()->insert_vector(*sx, 0, b);
     extractor()->insert_vector(*tx, 1, b);
@@ -2053,8 +2053,8 @@ void TSI::Monolithic::unscale_solution(Core::LinAlg::BlockSparseMatrixBase& mat,
     std::shared_ptr<Core::LinAlg::Vector<double>> sy = extractor()->extract_vector(x, 0);
     std::shared_ptr<Core::LinAlg::Vector<double>> ty = extractor()->extract_vector(x, 1);
 
-    if (sy->multiply(1.0, *scolsum_, *sy, 0.0)) FOUR_C_THROW("structure scaling failed");
-    if (ty->multiply(1.0, *tcolsum_, *ty, 0.0)) FOUR_C_THROW("thermo scaling failed");
+    sy->multiply(1.0, *scolsum_, *sy, 0.0);
+    ty->multiply(1.0, *tcolsum_, *ty, 0.0);
 
     extractor()->insert_vector(*sy, 0, x);
     extractor()->insert_vector(*ty, 1, x);
@@ -2062,8 +2062,8 @@ void TSI::Monolithic::unscale_solution(Core::LinAlg::BlockSparseMatrixBase& mat,
     std::shared_ptr<Core::LinAlg::Vector<double>> sx = extractor()->extract_vector(b, 0);
     std::shared_ptr<Core::LinAlg::Vector<double>> tx = extractor()->extract_vector(b, 1);
 
-    if (sx->reciprocal_multiply(1.0, *srowsum_, *sx, 0.0)) FOUR_C_THROW("structure scaling failed");
-    if (tx->reciprocal_multiply(1.0, *trowsum_, *tx, 0.0)) FOUR_C_THROW("thermo scaling failed");
+    sx->reciprocal_multiply(1.0, *srowsum_, *sx, 0.0);
+    tx->reciprocal_multiply(1.0, *trowsum_, *tx, 0.0);
 
     extractor()->insert_vector(*sx, 0, b);
     extractor()->insert_vector(*tx, 1, b);

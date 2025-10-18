@@ -439,8 +439,8 @@ void Constraints::EmbeddedMesh::SolidToSolidMortarManager::
     Core::LinAlg::export_to(background_force, global_temp);
 
     // Add force contributions to global vector.
-    linalg_error = force->update(rhs_factor, global_temp, 1.0);
-    if (linalg_error != 0) FOUR_C_THROW("Error in Update");
+    force->update(rhs_factor, global_temp, 1.0);
+    ;
   }
 }
 

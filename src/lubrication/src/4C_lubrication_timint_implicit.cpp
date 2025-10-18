@@ -274,7 +274,6 @@ void Lubrication::TimIntImpl::set_height_field_pure_lub(const int nds)
   std::shared_ptr<Core::LinAlg::Vector<double>> height =
       Core::LinAlg::create_vector(*discret_->dof_row_map(nds), true);
 
-  int err(0);
   const int heightfuncno = params_->get<int>("HFUNCNO");
   for (auto lnode : discret_->my_row_node_range())
   {
@@ -292,8 +291,7 @@ void Lubrication::TimIntImpl::set_height_field_pure_lub(const int nds)
       const int lid = height->get_map().lid(gid);
 
       if (lid < 0) FOUR_C_THROW("Local ID not found in map for given global ID!");
-      err = height->replace_local_value(lid, heightfuncvalue);
-      if (err != 0) FOUR_C_THROW("error while inserting a value into height");
+      height->replace_local_value(lid, heightfuncvalue);
     }
   }
   // provide lubrication discretization with height
@@ -314,7 +312,6 @@ void Lubrication::TimIntImpl::set_average_velocity_field_pure_lub(const int nds)
   std::shared_ptr<Core::LinAlg::Vector<double>> vel =
       Core::LinAlg::create_vector(*discret_->dof_row_map(nds), true);
 
-  int err(0);
   const int velfuncno = params_->get<int>("VELFUNCNO");
   for (auto lnode : discret_->my_row_node_range())
   {
@@ -332,8 +329,7 @@ void Lubrication::TimIntImpl::set_average_velocity_field_pure_lub(const int nds)
       const int lid = vel->get_map().lid(gid);
 
       if (lid < 0) FOUR_C_THROW("Local ID not found in map for given global ID!");
-      err = vel->replace_local_value(lid, velfuncvalue);
-      if (err != 0) FOUR_C_THROW("error while inserting a value into vel");
+      vel->replace_local_value(lid, velfuncvalue);
     }
   }
   // provide lubrication discretization with velocity

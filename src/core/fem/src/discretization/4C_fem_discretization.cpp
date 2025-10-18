@@ -654,9 +654,7 @@ void Core::FE::Discretization::set_state(
     }
 
     // transfer data
-    int err = tmp->import(state, (*stateimporter_[nds]), Insert);
-    FOUR_C_ASSERT_ALWAYS(!err,
-        "Export using importer failed for Core::LinAlg::Vector<double>: return value = {}", err);
+    tmp->import(state, (*stateimporter_[nds]), Insert);
 
     // save state
     state_[nds][name] = tmp;

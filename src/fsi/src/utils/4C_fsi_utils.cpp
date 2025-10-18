@@ -238,8 +238,7 @@ void FSI::Utils::SlideAleUtils::remeshing(Adapter::FSIStructureWrapper& structur
 
     for (int p = 0; p < dim; p++) finaldxyz[p] = idispale[fluiddofrowmap_->lid(gids[p])];
 
-    int err = iprojdispale.replace_global_values(dim, finaldxyz.data(), gids.data());
-    if (err == 1) FOUR_C_THROW("error while replacing values");
+    iprojdispale.replace_global_values(dim, finaldxyz.data(), gids.data());
   }
 
   // merge displacement values of interface nodes (struct+fluid) into idispms_ for mortar
@@ -271,8 +270,8 @@ void FSI::Utils::SlideAleUtils::evaluate_mortar(Core::LinAlg::Vector<double>& id
   Core::LinAlg::Import master_importer(*dofrowmap, *structdofrowmap_);
   Core::LinAlg::Import slave_importer(*dofrowmap, *fluiddofrowmap_);
 
-  if (idispms_->import(idispstruct, master_importer, Add)) FOUR_C_THROW("Import operation failed.");
-  if (idispms_->import(idispfluid, slave_importer, Add)) FOUR_C_THROW("Import operation failed.");
+  idispms_->import(idispstruct, master_importer, Add);
+  idispms_->import(idispfluid, slave_importer, Add);
 
   // new D,M,Dinv out of disp of struct and fluid side
   coupsf.evaluate(idispms_);
@@ -311,8 +310,7 @@ std::vector<double> FSI::Utils::SlideAleUtils::centerdisp(
   std::shared_ptr<Core::LinAlg::Vector<double>> idisptotal = structure.extract_interface_dispnp();
   std::shared_ptr<Core::LinAlg::Vector<double>> idispstep = structure.extract_interface_dispnp();
 
-  int err = idispstep->update(-1.0, *idispn, 1.0);
-  if (err != 0) FOUR_C_THROW("ERROR");
+  idispstep->update(-1.0, *idispn, 1.0);
 
   const int dim = Global::Problem::instance()->n_dim();
   // get structure and fluid discretizations  and set stated for element evaluation
@@ -564,8 +562,7 @@ void FSI::Utils::SlideAleUtils::slide_projection(
       }
 
       // store displacement into parallel vector
-      int err = iprojdispale.replace_global_values(dim, finaldxyz.data(), gids.data());
-      if (err == 1) FOUR_C_THROW("error while replacing values");
+      iprojdispale.replace_global_values(dim, finaldxyz.data(), gids.data());
     }
   }
 }

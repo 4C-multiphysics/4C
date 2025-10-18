@@ -1058,13 +1058,12 @@ namespace FLD
         // get local dof id corresponding to the global id
         int lid = discret_->dof_row_map()->lid(dofs[0]);
         // set value
-        int err = forcing_->replace_local_value(lid, f1[pos]);
+        forcing_->replace_local_value(lid, f1[pos]);
         // analogous for remaining directions
         lid = discret_->dof_row_map()->lid(dofs[1]);
-        err = forcing_->replace_local_value(lid, f2[pos]);
+        forcing_->replace_local_value(lid, f2[pos]);
         lid = discret_->dof_row_map()->lid(dofs[2]);
-        err = forcing_->replace_local_value(lid, f3[pos]);
-        if (err > 0) FOUR_C_THROW("Could not set forcing!");
+        forcing_->replace_local_value(lid, f3[pos]);
       }
     }
     else
@@ -2042,8 +2041,7 @@ namespace FLD
 
       int firstldofid = forcing_->get_map().lid(firstgdofid);
 
-      int err = forcing_->replace_local_value(firstldofid, newforce);
-      if (err != 0) FOUR_C_THROW("something went wrong during replacemyvalue");
+      forcing_->replace_local_value(firstldofid, newforce);
     }
 
     oldforce_ = newforce;

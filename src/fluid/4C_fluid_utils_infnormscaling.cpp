@@ -76,7 +76,7 @@ void FLD::Utils::FluidInfNormScaling::scale_system(
 
     std::shared_ptr<Core::LinAlg::Vector<double>> sx = velpressplitter_.extract_vector(b, 0);
 
-    if (sx->multiply(1.0, *srowsum_, *sx, 0.0)) FOUR_C_THROW("fluid scaling failed");
+    sx->multiply(1.0, *srowsum_, *sx, 0.0);
 
     velpressplitter_.insert_vector(*sx, 0, b);
 
@@ -111,7 +111,7 @@ void FLD::Utils::FluidInfNormScaling::scale_system(
 
     std::shared_ptr<Core::LinAlg::Vector<double>> px = velpressplitter_.extract_vector(b, 1);
 
-    if (px->multiply(1.0, *prowsum_, *px, 0.0)) FOUR_C_THROW("fluid scaling failed");
+    px->multiply(1.0, *prowsum_, *px, 0.0);
 
     velpressplitter_.insert_vector(*px, 1, b);
 
@@ -139,7 +139,7 @@ void FLD::Utils::FluidInfNormScaling::scale_system(
     velpressplitter_.insert_vector(*px, 1, *srowsum_);
 
     if (smat->left_scale(*srowsum_)) FOUR_C_THROW("fluid scaling failed");
-    if (b.multiply(1.0, *srowsum_, b, 0.0)) FOUR_C_THROW("fluid scaling failed");
+    b.multiply(1.0, *srowsum_, b, 0.0);
 
     smat->inv_col_sums(*scolsum_);
     if (myrank_ == 0) std::cout << "do right scaling pressure" << std::endl;
@@ -197,13 +197,13 @@ void FLD::Utils::FluidInfNormScaling::unscale_solution(
 
     std::shared_ptr<Core::LinAlg::Vector<double>> sy = velpressplitter_.extract_vector(x, 0);
 
-    if (sy->multiply(1.0, *scolsum_, *sy, 0.0)) FOUR_C_THROW("fluid scaling failed");
+    sy->multiply(1.0, *scolsum_, *sy, 0.0);
 
     velpressplitter_.insert_vector(*sy, 0, x);
 
     std::shared_ptr<Core::LinAlg::Vector<double>> sx = velpressplitter_.extract_vector(b, 0);
 
-    if (sx->reciprocal_multiply(1.0, *srowsum_, *sx, 0.0)) FOUR_C_THROW("fluid scaling failed");
+    sx->reciprocal_multiply(1.0, *srowsum_, *sx, 0.0);
 
     velpressplitter_.insert_vector(*sx, 0, b);
 
@@ -222,7 +222,7 @@ void FLD::Utils::FluidInfNormScaling::unscale_solution(
   }
   else
   {
-    if (x.multiply(1.0, *scolsum_, x, 0.0)) FOUR_C_THROW("fluid unscaling failed");
+    x.multiply(1.0, *scolsum_, x, 0.0);
 
     srowsum_->reciprocal(*srowsum_);
     scolsum_->reciprocal(*scolsum_);

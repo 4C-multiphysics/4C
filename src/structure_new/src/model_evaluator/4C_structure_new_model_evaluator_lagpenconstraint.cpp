@@ -229,11 +229,24 @@ void Solid::ModelEvaluator::LagPenConstraint::run_post_compute_x(
 {
   check_init_setup();
 
+  // build increment based on block-dof map and fill it
   Core::LinAlg::Vector<double> lagmult_incr(*get_block_dof_row_map_ptr());
-
   Core::LinAlg::export_to(dir, lagmult_incr);
 
-  constrman_->update_lagr_mult(lagmult_incr);
+
+  const auto& lm = constrman_->get_lagr_mult_vector();
+
+  // check if the maps match
+  if (!lm->get_map().same_as(lagmult_incr.get_map()))
+  {
+    Core::LinAlg::Vector<double> lagmult_incr_on_lm(lm->get_map());
+    Core::LinAlg::export_to(lagmult_incr, lagmult_incr_on_lm);
+    constrman_->update_lagr_mult(lagmult_incr_on_lm);
+  }
+  else
+  {
+    constrman_->update_lagr_mult(lagmult_incr);
+  }
 }
 
 /*----------------------------------------------------------------------*

@@ -541,8 +541,7 @@ void Utils::Cardiovascular0DSysPulCirculation::evaluate(Teuchos::ParameterList& 
   {
     for (int j = 0; j < 16; j++)
     {
-      int err = sysvec1->sum_into_global_values(1, &df_np[j], &gindex[j]);
-      if (err) FOUR_C_THROW("SumIntoGlobalValues failed!");
+      sysvec1->sum_into_global_values(1, &df_np[j], &gindex[j]);
     }
   }
   // rhs part f_np
@@ -550,8 +549,7 @@ void Utils::Cardiovascular0DSysPulCirculation::evaluate(Teuchos::ParameterList& 
   {
     for (int j = 0; j < 16; j++)
     {
-      int err = sysvec2->sum_into_global_values(1, &f_np[j], &gindex[j]);
-      if (err) FOUR_C_THROW("SumIntoGlobalValues failed!");
+      sysvec2->sum_into_global_values(1, &f_np[j], &gindex[j]);
     }
   }
 
@@ -731,25 +729,22 @@ void Utils::Cardiovascular0DSysPulCirculation::initialize(Teuchos::ParameterList
   const double p_ven_pul_0 = artvensyspulpar.get("p_ven_pul_0", 0.0);
   const double q_ven_pul_0 = artvensyspulpar.get("q_ven_pul_0", 0.0);
 
-  int err1 = sysvec2->sum_into_global_values(1, &p_at_l_0, &gindex[0]);
-  int err2 = sysvec2->sum_into_global_values(1, &q_vin_l_0, &gindex[1]);
-  int err3 = sysvec2->sum_into_global_values(1, &q_vout_l_0, &gindex[2]);
-  int err4 = sysvec2->sum_into_global_values(1, &p_v_l_0, &gindex[3]);
-  int err5 = sysvec2->sum_into_global_values(1, &p_ar_sys_0, &gindex[4]);
-  int err6 = sysvec2->sum_into_global_values(1, &q_ar_sys_0, &gindex[5]);
-  int err7 = sysvec2->sum_into_global_values(1, &p_ven_sys_0, &gindex[6]);
-  int err8 = sysvec2->sum_into_global_values(1, &q_ven_sys_0, &gindex[7]);
-  int err9 = sysvec2->sum_into_global_values(1, &p_at_r_0, &gindex[8]);
-  int err10 = sysvec2->sum_into_global_values(1, &q_vin_r_0, &gindex[9]);
-  int err11 = sysvec2->sum_into_global_values(1, &q_vout_r_0, &gindex[10]);
-  int err12 = sysvec2->sum_into_global_values(1, &p_v_r_0, &gindex[11]);
-  int err13 = sysvec2->sum_into_global_values(1, &p_ar_pul_0, &gindex[12]);
-  int err14 = sysvec2->sum_into_global_values(1, &q_ar_pul_0, &gindex[13]);
-  int err15 = sysvec2->sum_into_global_values(1, &p_ven_pul_0, &gindex[14]);
-  int err16 = sysvec2->sum_into_global_values(1, &q_ven_pul_0, &gindex[15]);
-  if (err1 or err2 or err3 or err4 or err5 or err6 or err7 or err8 or err9 or err10 or err11 or
-      err12 or err13 or err14 or err15 or err16)
-    FOUR_C_THROW("SumIntoGlobalValues failed!");
+  sysvec2->sum_into_global_values(1, &p_at_l_0, &gindex[0]);
+  sysvec2->sum_into_global_values(1, &q_vin_l_0, &gindex[1]);
+  sysvec2->sum_into_global_values(1, &q_vout_l_0, &gindex[2]);
+  sysvec2->sum_into_global_values(1, &p_v_l_0, &gindex[3]);
+  sysvec2->sum_into_global_values(1, &p_ar_sys_0, &gindex[4]);
+  sysvec2->sum_into_global_values(1, &q_ar_sys_0, &gindex[5]);
+  sysvec2->sum_into_global_values(1, &p_ven_sys_0, &gindex[6]);
+  sysvec2->sum_into_global_values(1, &q_ven_sys_0, &gindex[7]);
+  sysvec2->sum_into_global_values(1, &p_at_r_0, &gindex[8]);
+  sysvec2->sum_into_global_values(1, &q_vin_r_0, &gindex[9]);
+  sysvec2->sum_into_global_values(1, &q_vout_r_0, &gindex[10]);
+  sysvec2->sum_into_global_values(1, &p_v_r_0, &gindex[11]);
+  sysvec2->sum_into_global_values(1, &p_ar_pul_0, &gindex[12]);
+  sysvec2->sum_into_global_values(1, &q_ar_pul_0, &gindex[13]);
+  sysvec2->sum_into_global_values(1, &p_ven_pul_0, &gindex[14]);
+  sysvec2->sum_into_global_values(1, &q_ven_pul_0, &gindex[15]);
 
   //----------------------------------------------------------------------
   // loop through conditions and evaluate them if they match the criterion

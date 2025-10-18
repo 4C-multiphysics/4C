@@ -2208,10 +2208,7 @@ Core::LinearSolver::AMGNxN::SimpleSmootherFactory::approximate_inverse(
   if (method == "diagonal")
   {
     A.extract_diagonal_copy(invAVector);
-    int err = invAVector.reciprocal(invAVector);
-    if (err)
-      FOUR_C_THROW(
-          "Core::LinAlg::MultiVector<double>::Reciprocal returned {}, are we dividing by 0?", err);
+    invAVector.reciprocal(invAVector);
   }
   else if (method == "row sums" or method == "row sums diagonal blocks")
   {

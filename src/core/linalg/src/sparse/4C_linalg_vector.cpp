@@ -9,13 +9,12 @@
 
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_linalg_multi_vector.hpp"
+#include "4C_utils_epetra_exceptions.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <Epetra_Vector.h>
 
-
 FOUR_C_NAMESPACE_OPEN
-
 
 
 template <typename T>
@@ -88,57 +87,64 @@ Core::LinAlg::MultiVector<T>& Core::LinAlg::Vector<T>::as_multi_vector()
 
 
 template <typename T>
-int Core::LinAlg::Vector<T>::norm_1(double* Result) const
+void Core::LinAlg::Vector<T>::norm_1(double* Result) const
 {
-  return vector_->Norm1(Result);
+  CHECK_EPETRA_CALL(vector_->Norm1(Result));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::norm_2(double* Result) const
+void Core::LinAlg::Vector<T>::norm_2(double* Result) const
 {
-  return vector_->Norm2(Result);
+  CHECK_EPETRA_CALL(vector_->Norm2(Result));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::norm_inf(double* Result) const
+void Core::LinAlg::Vector<T>::norm_inf(double* Result) const
 {
-  return vector_->NormInf(Result);
+  CHECK_EPETRA_CALL(vector_->NormInf(Result));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::min_value(double* Result) const
+void Core::LinAlg::Vector<T>::min_value(double* Result) const
 {
-  return vector_->MinValue(Result);
+  CHECK_EPETRA_CALL(vector_->MinValue(Result));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::max_value(double* Result) const
+void Core::LinAlg::Vector<T>::max_value(double* Result) const
 {
-  return vector_->MaxValue(Result);
+  CHECK_EPETRA_CALL(vector_->MaxValue(Result));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::mean_value(double* Result) const
+void Core::LinAlg::Vector<T>::mean_value(double* Result) const
 {
-  return vector_->MeanValue(Result);
+  CHECK_EPETRA_CALL(vector_->MeanValue(Result));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::dot(const Epetra_MultiVector& A, double* Result) const
+void Core::LinAlg::Vector<T>::scale(double ScalarValue)
 {
-  return vector_->Dot(A, Result);
+  CHECK_EPETRA_CALL(vector_->Scale(ScalarValue));
+}
+
+
+template <typename T>
+void Core::LinAlg::Vector<T>::dot(const Epetra_MultiVector& A, double* Result) const
+{
+  CHECK_EPETRA_CALL(vector_->Dot(A, Result));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::abs(const Epetra_MultiVector& A)
+void Core::LinAlg::Vector<T>::abs(const Epetra_MultiVector& A)
 {
-  return vector_->Abs(A);
+  CHECK_EPETRA_CALL(vector_->Abs(A));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::scale(double ScalarA, const Epetra_MultiVector& A)
+void Core::LinAlg::Vector<T>::scale(double ScalarA, const Epetra_MultiVector& A)
 {
-  return vector_->Scale(ScalarA, A);
+  CHECK_EPETRA_CALL(vector_->Scale(ScalarA, A));
 }
 
 template <typename T>
@@ -156,40 +162,41 @@ int Core::LinAlg::Vector<T>::update(double ScalarA, const Epetra_MultiVector& A,
 
 
 template <typename T>
-int Core::LinAlg::Vector<T>::dot(const Vector& A, double* Result) const
+void Core::LinAlg::Vector<T>::dot(const Vector& A, double* Result) const
 {
-  return vector_->Dot(A, Result);
+  CHECK_EPETRA_CALL(vector_->Dot(A, Result));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::abs(const Vector& A)
+void Core::LinAlg::Vector<T>::abs(const Vector& A)
 {
-  return vector_->Abs(A);
+  CHECK_EPETRA_CALL(vector_->Abs(A));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::scale(double ScalarA, const Vector& A)
+void Core::LinAlg::Vector<T>::scale(double ScalarA, const Vector& A)
 {
-  return vector_->Scale(ScalarA, A);
+  CHECK_EPETRA_CALL(vector_->Scale(ScalarA, A));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::update(double ScalarA, const Vector& A, double ScalarThis)
+void Core::LinAlg::Vector<T>::update(double ScalarA, const Vector& A, double ScalarThis)
 {
-  return vector_->Update(ScalarA, A, ScalarThis);
+  // Now maps match
+  CHECK_EPETRA_CALL(vector_->Update(ScalarA, A, ScalarThis));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::update(
+void Core::LinAlg::Vector<T>::update(
     double ScalarA, const Vector& A, double ScalarB, const Vector& B, double ScalarThis)
 {
-  return vector_->Update(ScalarA, A, ScalarB, B.get_ref_of_epetra_vector(), ScalarThis);
+  CHECK_EPETRA_CALL(vector_->Update(ScalarA, A, ScalarB, B.get_ref_of_epetra_vector(), ScalarThis));
 }
 
 template <typename T>
-int Core::LinAlg::Vector<T>::put_scalar(double ScalarConstant)
+void Core::LinAlg::Vector<T>::put_scalar(double ScalarConstant)
 {
-  return vector_->PutScalar(ScalarConstant);
+  CHECK_EPETRA_CALL(vector_->PutScalar(ScalarConstant));
 }
 
 
@@ -201,6 +208,115 @@ int Core::LinAlg::Vector<T>::replace_map(const Map& map)
   map_.invalidate();
   auto rv = vector_->ReplaceMap(map.get_epetra_block_map());
   return rv;
+}
+
+template <typename T>
+void Core::LinAlg::Vector<T>::replace_local_value(int MyRow, double ScalarValue)
+{
+  CHECK_EPETRA_CALL(vector_->ReplaceMyValue(MyRow, 0, ScalarValue));
+}
+
+template <typename T>
+void Core::LinAlg::Vector<T>::replace_local_values(
+    int NumEntries, const double* Values, const int* Indices)
+{
+  CHECK_EPETRA_CALL(vector_->ReplaceMyValues(NumEntries, Values, Indices));
+}
+
+template <typename T>
+void Core::LinAlg::Vector<T>::replace_global_value(int GlobalRow, double ScalarValue)
+{
+  CHECK_EPETRA_CALL(vector_->ReplaceGlobalValue(GlobalRow, 0, ScalarValue));
+}
+
+template <typename T>
+void Core::LinAlg::Vector<T>::replace_global_values(
+    int NumEntries, const double* Values, const int* Indices)
+{
+  CHECK_EPETRA_CALL(vector_->ReplaceGlobalValues(NumEntries, Values, Indices));
+}
+
+template <typename T>
+void Core::LinAlg::Vector<T>::sum_into_local_value(int MyRow, double ScalarValue)
+{
+  CHECK_EPETRA_CALL(vector_->SumIntoMyValue(MyRow, 0, ScalarValue));
+}
+
+template <typename T>
+void Core::LinAlg::Vector<T>::sum_into_global_value(int GlobalRow, double ScalarValue)
+{
+  CHECK_EPETRA_CALL(vector_->SumIntoGlobalValue(GlobalRow, 0, ScalarValue));
+}
+
+template <typename T>
+void Core::LinAlg::Vector<T>::sum_into_global_values(
+    int NumEntries, const double* Values, const int* Indices)
+{
+  CHECK_EPETRA_CALL(vector_->SumIntoGlobalValues(NumEntries, Values, Indices));
+}
+
+//! Matrix-Matrix multiplication, \e this = ScalarThis*\e this + ScalarAB*A*B.
+template <typename T>
+void Core::LinAlg::Vector<T>::multiply(char TransA, char TransB, double ScalarAB,
+    const Epetra_MultiVector& A, const Epetra_MultiVector& B, double ScalarThis)
+{
+  CHECK_EPETRA_CALL(vector_->Multiply(TransA, TransB, ScalarAB, A, B, ScalarThis));
+}
+
+//! Multiply a Core::LinAlg::MultiVector<double> with another, element-by-element.
+template <typename T>
+void Core::LinAlg::Vector<T>::multiply(
+    double ScalarAB, const Epetra_MultiVector& A, const Epetra_MultiVector& B, double ScalarThis)
+{
+  CHECK_EPETRA_CALL(vector_->Multiply(ScalarAB, A, B, ScalarThis));
+}
+
+//! Puts element-wise reciprocal values of input Multi-vector in target.
+template <typename T>
+void Core::LinAlg::Vector<T>::reciprocal(const Epetra_MultiVector& A)
+{
+  CHECK_EPETRA_CALL(vector_->Reciprocal(A));
+}
+
+template <typename T>
+void Core::LinAlg::Vector<T>::reciprocal_multiply(
+    double ScalarAB, const Epetra_MultiVector& A, const Epetra_MultiVector& B, double ScalarThis)
+{
+  CHECK_EPETRA_CALL(vector_->ReciprocalMultiply(ScalarAB, A, B, ScalarThis));
+}
+
+//! Imports an Epetra_DistObject using the Core::LinAlg::Import object.
+template <typename T>
+void Core::LinAlg::Vector<T>::import(const Epetra_SrcDistObject& A,
+    const Core::LinAlg::Import& Importer, Epetra_CombineMode CombineMode,
+    const Epetra_OffsetIndex* Indexor)
+{
+  CHECK_EPETRA_CALL(vector_->Import(A, Importer.get_epetra_import(), CombineMode, Indexor));
+}
+
+//! Imports an Epetra_DistObject using the Core::LinAlg::Export object.
+template <typename T>
+void Core::LinAlg::Vector<T>::import(const Epetra_SrcDistObject& A,
+    const Core::LinAlg::Export& Exporter, Epetra_CombineMode CombineMode,
+    const Epetra_OffsetIndex* Indexor)
+{
+  CHECK_EPETRA_CALL(vector_->Import(A, Exporter.get_epetra_export(), CombineMode, Indexor));
+}
+
+template <typename T>
+void Core::LinAlg::Vector<T>::export_to(const Epetra_SrcDistObject& A,
+    const Core::LinAlg::Import& Importer, Epetra_CombineMode CombineMode,
+    const Epetra_OffsetIndex* Indexor)
+{
+  CHECK_EPETRA_CALL(vector_->Export(A, Importer.get_epetra_import(), CombineMode, Indexor));
+}
+
+template <typename T>
+void Core::LinAlg::Vector<T>::export_to(const Epetra_SrcDistObject& A,
+    const Core::LinAlg::Export& Exporter, Epetra_CombineMode CombineMode,
+    const Epetra_OffsetIndex* Indexor)
+{
+  CHECK_EPETRA_CALL(vector_->Export(A, Exporter.get_epetra_export(), CombineMode, Indexor));
 }
 
 template <typename T>
@@ -271,13 +387,46 @@ Core::LinAlg::Vector<int>& Core::LinAlg::Vector<int>::operator=(Vector&& other) 
 }
 
 
-int Core::LinAlg::Vector<int>::put_value(int Value) { return vector_->PutValue(Value); }
+void Core::LinAlg::Vector<int>::put_value(int Value)
+{
+  CHECK_EPETRA_CALL(vector_->PutValue(Value));
+}
 
 int Core::LinAlg::Vector<int>::max_value() { return vector_->MaxValue(); }
 
 int Core::LinAlg::Vector<int>::min_value() { return vector_->MinValue(); }
 
 void Core::LinAlg::Vector<int>::print(std::ostream& os) const { vector_->Print(os); }
+
+//! Imports an Epetra_DistObject using the Core::LinAlg::Import object.
+void Core::LinAlg::Vector<int>::import(const Vector& A, const Core::LinAlg::Import& Importer,
+    Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor)
+{
+  CHECK_EPETRA_CALL(
+      vector_->Import(*A.vector_, Importer.get_epetra_import(), CombineMode, Indexor));
+}
+
+//! Imports an Epetra_DistObject using the Core::LinAlg::Export object.
+void Core::LinAlg::Vector<int>::import(const Vector& A, const Core::LinAlg::Export& Exporter,
+    Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor)
+{
+  CHECK_EPETRA_CALL(
+      vector_->Import(*A.vector_, Exporter.get_epetra_export(), CombineMode, Indexor));
+}
+
+void Core::LinAlg::Vector<int>::export_to(const Vector& A, const Core::LinAlg::Import& Importer,
+    Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor)
+{
+  CHECK_EPETRA_CALL(
+      vector_->Export(*A.vector_, Importer.get_epetra_import(), CombineMode, Indexor));
+}
+
+void Core::LinAlg::Vector<int>::export_to(const Vector& A, const Core::LinAlg::Export& Exporter,
+    Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor)
+{
+  CHECK_EPETRA_CALL(
+      vector_->Export(*A.vector_, Exporter.get_epetra_export(), CombineMode, Indexor));
+}
 
 MPI_Comm Core::LinAlg::Vector<int>::get_comm() const
 {

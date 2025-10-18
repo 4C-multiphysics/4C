@@ -138,8 +138,7 @@ void FLD::TurbulentFlowAlgorithm::transfer_inflow_velocity()
   // get exporter for transfer of dofs from inflow discretization to complete fluid discretization
   Core::LinAlg::Export exporter(inflowvelnp->get_map(), velnp_->get_map());
   // export inflow velocity
-  int err = velnp_->export_to(*inflowvelnp, exporter, Insert);
-  if (err != 0) FOUR_C_THROW("Export using exporter returned err={}", err);
+  velnp_->export_to(*inflowvelnp, exporter, Insert);
 
   if (Core::Communication::my_mpi_rank(fluiddis_->get_comm()) == 0)
     std::cout << "done\n" << std::endl;
@@ -194,22 +193,17 @@ void FLD::TurbulentFlowAlgorithm::read_restart(const int restart)
   std::shared_ptr<const Core::LinAlg::Vector<double>> fluidaccn = fluidalgo_->fluid_field()->accn();
 
   // export vectors to inflow discretization
-  int err = 0;
   Core::LinAlg::Export exportvelnp(fluidvelnp->get_map(), velnp->get_map());
-  err = velnp->export_to(*fluidvelnp, exportvelnp, Insert);
-  if (err != 0) FOUR_C_THROW("Export using exporter returned err={}", err);
+  velnp->export_to(*fluidvelnp, exportvelnp, Insert);
   Core::LinAlg::Export exportveln(fluidveln->get_map(), veln->get_map());
-  err = veln->export_to(*fluidveln, exportveln, Insert);
-  if (err != 0) FOUR_C_THROW("Export using exporter returned err={}", err);
+  veln->export_to(*fluidveln, exportveln, Insert);
   Core::LinAlg::Export exportvelnm(fluidvelnm->get_map(), velnm->get_map());
-  err = velnm->export_to(*fluidvelnm, exportvelnm, Insert);
-  if (err != 0) FOUR_C_THROW("Export using exporter returned err={}", err);
+  velnm->export_to(*fluidvelnm, exportvelnm, Insert);
   Core::LinAlg::Export exportaccnp(fluidaccnp->get_map(), accnp->get_map());
-  err = accnp->export_to(*fluidaccnp, exportaccnp, Insert);
-  if (err != 0) FOUR_C_THROW("Export using exporter returned err={}", err);
+  accnp->export_to(*fluidaccnp, exportaccnp, Insert);
   Core::LinAlg::Export exportaccn(fluidaccn->get_map(), accn->get_map());
-  err = accn->export_to(*fluidaccn, exportaccn, Insert);
-  if (err != 0) FOUR_C_THROW("Export using exporter returned err={}", err);
+  accn->export_to(*fluidaccn, exportaccn, Insert);
+
 
   // set values in the inflow field
   inflowfluidalgo_->fluid_field()->set_restart(

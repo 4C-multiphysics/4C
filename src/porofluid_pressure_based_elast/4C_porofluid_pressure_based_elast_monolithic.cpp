@@ -1148,7 +1148,10 @@ void PoroPressureBased::PorofluidElastMonolithicAlgorithm::poro_fd_check()
 
     if (not combined_dbc_map()->my_gid(i)) iterinc->replace_global_value(i, -delta);
 
-    iterinc->replace_global_value(i - 1, 0.0);
+    if (i - 1 >= 0 && i - 1 < dofs && iterinc->get_map().my_gid(i - 1))
+    {
+      iterinc->replace_global_value(i - 1, 0.0);
+    }
 
     if (i != dofs - 1) iterinc->replace_global_value(i + 1, delta);
 
