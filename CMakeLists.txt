@@ -178,13 +178,7 @@ if(FOUR_C_ENABLE_ADDRESS_SANITIZER)
 endif()
 
 set(FOUR_C_EXECUTABLE_NAME 4C)
-set(FULL_TARGETS
-    post_processor
-    post_monitor
-    pre_locsys
-    create_rtd
-    cut_test
-    )
+set(FULL_TARGETS post_processor post_monitor create_rtd cut_test)
 
 add_custom_target(full DEPENDS ${FOUR_C_EXECUTABLE_NAME} ${FULL_TARGETS})
 
