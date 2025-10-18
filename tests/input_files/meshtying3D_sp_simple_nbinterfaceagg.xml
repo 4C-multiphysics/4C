@@ -24,7 +24,12 @@
       <Parameter name="tentative: calculate qr" type="bool" value="true"/>
       <Parameter name="tentative: build coarse coordinates" type="bool" value="false"/>
     </ParameterList>
-    <ParameterList name="mySAPFact1"><Parameter name="factory" type="string" value="SaPFactory"/> <Parameter name="A" type="string" value="mySubBlockAFactory1"/> <Parameter name="P" type="string" value="myTentativePFact1"/> <Parameter name="sa: damping factor" type="double" value="1.33333"/>"</ParameterList>
+    <ParameterList name="mySAPFact1">
+      <Parameter name="factory" type="string" value="SaPFactory"/>
+      <Parameter name="A" type="string" value="mySubBlockAFactory1"/>
+      <Parameter name="P" type="string" value="myTentativePFact1"/>
+      <Parameter name="sa: damping factor" type="double" value="1.33333"/>
+    </ParameterList>
     <ParameterList name="myNspFact1">
       <Parameter name="factory" type="string" value="NullspaceFactory"/>
       <Parameter name="Fine level nullspace" type="string" value="Nullspace1"/>
