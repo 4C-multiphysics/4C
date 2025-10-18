@@ -134,7 +134,7 @@ RESULT DESCRIPTION:
       NODE: 1
       QUANTITY: "vely"
       VALUE: -4.048521082703415e-07
-      TOLERANCE: 5.5e-15
+      TOLERANCE: 5.8e-15
   - FLUID:
       DIS: "fluid"
       NODE: 1

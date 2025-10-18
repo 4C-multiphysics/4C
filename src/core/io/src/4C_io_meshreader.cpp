@@ -363,8 +363,6 @@ namespace
     std::string section_name;
   };
 
-
-
   std::vector<std::shared_ptr<Core::FE::Discretization>> find_dis_node(
       const std::vector<ElementReader>& element_readers, int global_node_id)
   {

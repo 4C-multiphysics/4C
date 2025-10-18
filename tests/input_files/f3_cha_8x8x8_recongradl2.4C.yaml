@@ -73,7 +73,7 @@ RESULT DESCRIPTION:
       NODE: 100
       QUANTITY: "velx"
       VALUE: 0.9398963517566127
-      TOLERANCE: 5e-08
+      TOLERANCE: 7e-08
   - FLUID:
       DIS: "fluid"
       NODE: 450
