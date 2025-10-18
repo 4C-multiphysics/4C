@@ -61,8 +61,7 @@ Cardiovascular0D::ProperOrthogonalDecomposition::ProperOrthogonalDecomposition(
   Core::LinAlg::Import dofrowimporter(*full_model_dof_row_map_, reduced_basis->get_map());
   projmatrix_ = std::make_shared<Core::LinAlg::MultiVector<double>>(
       *full_model_dof_row_map_, reduced_basis->num_vectors(), true);
-  int err = projmatrix_->import(*reduced_basis, dofrowimporter, Insert, nullptr);
-  if (err != 0) FOUR_C_THROW("POD projection matrix could not be mapped onto the dof map");
+  projmatrix_->import(*reduced_basis, dofrowimporter, Insert, nullptr);
 
   // check row dimension
   if (projmatrix_->global_length() != full_model_dof_row_map_->num_global_elements())

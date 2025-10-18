@@ -50,15 +50,15 @@ void Core::LinAlg::export_to(
     else if (sourceunique && targetunique)
     {
       Core::LinAlg::Export exporter(source.get_map(), target.get_map());
-      int err = target.export_to(source, exporter, Insert);
-      if (err) FOUR_C_THROW("Export using exporter returned err={}", err);
+      target.export_to(source, exporter, Insert);
+
       return;
     }
     else if (sourceunique && !targetunique)
     {
       Core::LinAlg::Import importer(target.get_map(), source.get_map());
-      int err = target.import(source, importer, Insert);
-      if (err) FOUR_C_THROW("Export using importer returned err={}", err);
+      target.import(source, importer, Insert);
+
       return;
     }
     else if (!sourceunique && targetunique)

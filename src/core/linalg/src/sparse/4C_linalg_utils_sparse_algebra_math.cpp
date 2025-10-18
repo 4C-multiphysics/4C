@@ -528,9 +528,7 @@ void Core::LinAlg::multiply_multi_vectors(Core::LinAlg::MultiVector<double>& mul
   Core::LinAlg::MultiVector<double> multivect_temp(redundant_map, multivect2.num_vectors(), true);
 
   // do the multiplication: (all procs hold the full result)
-  int err =
-      multivect_temp.multiply(multivect1Trans, multivect2Trans, 1.0, multivect1, multivect2, 0.0);
-  if (err) FOUR_C_THROW("Multiplication failed.");
+  multivect_temp.multiply(multivect1Trans, multivect2Trans, 1.0, multivect1, multivect2, 0.0);
 
   // import the result to a Core::LinAlg::MultiVector<double> whose elements/rows are distributed
   // over all procs

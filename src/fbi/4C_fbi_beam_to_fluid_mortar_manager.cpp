@@ -147,7 +147,6 @@ void BeamInteraction::BeamToFluidMortarManager::setup()
         element_gid_rowmap, n_lambda_element_, true);
 
   // Fill in the entries in the node / element global id to Lagrange multiplier global id vector.
-  int error_code = 0;
   int lagrange_gid = -1;
   if (node_gid_to_lambda_gid_ != nullptr)
   {
@@ -158,8 +157,7 @@ void BeamInteraction::BeamToFluidMortarManager::setup()
         lagrange_gid = lambda_dof_rowmap_->gid(i_node * n_lambda_node_ + i_lambda);
 
         // Set the global Lagrange multiplier id for this node.
-        error_code = node_gid_to_lambda_gid_->replace_local_value(i_node, i_lambda, lagrange_gid);
-        if (error_code != 0) FOUR_C_THROW("Got error code {}!", error_code);
+        node_gid_to_lambda_gid_->replace_local_value(i_node, i_lambda, lagrange_gid);
       }
   }
   if (element_gid_to_lambda_gid_ != nullptr)
@@ -172,9 +170,7 @@ void BeamInteraction::BeamToFluidMortarManager::setup()
             n_nodes * n_lambda_node_ + i_element * n_lambda_element_ + i_lambda);
 
         // Set the global Lagrange multiplier id for this element.
-        error_code =
-            element_gid_to_lambda_gid_->replace_local_value(i_element, i_lambda, lagrange_gid);
-        if (error_code != 0) FOUR_C_THROW("Got error code {}!", error_code);
+        element_gid_to_lambda_gid_->replace_local_value(i_element, i_lambda, lagrange_gid);
       }
   }
 

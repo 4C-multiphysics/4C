@@ -187,8 +187,8 @@ void Core::LinAlg::MultiMapExtractor::extract_vector(const Core::LinAlg::MultiVe
     int block, Core::LinAlg::MultiVector<double>& partial) const
 {
   if (maps_[block] == nullptr) FOUR_C_THROW("null map at block {}", block);
-  int err = partial.import(full, *importer_[block], Insert);
-  if (err) FOUR_C_THROW("Import using importer returned err={}", err);
+
+  partial.import(full, *importer_[block], Insert);
 }
 
 
@@ -223,8 +223,8 @@ void Core::LinAlg::MultiMapExtractor::insert_vector(
     Core::LinAlg::MultiVector<double>& full) const
 {
   if (maps_[block] == nullptr) FOUR_C_THROW("null map at block {}", block);
-  int err = full.export_to(partial, *importer_[block], Insert);
-  if (err) FOUR_C_THROW("Export using importer returned err={}", err);
+
+  full.export_to(partial, *importer_[block], Insert);
 }
 
 

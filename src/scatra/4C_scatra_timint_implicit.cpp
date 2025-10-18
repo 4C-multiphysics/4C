@@ -2445,8 +2445,7 @@ void ScaTra::ScaTraTimIntImpl::update_krylov_space_projection()
       {
         Core::Nodes::Node* node = discret_->l_row_node(inode);
         std::vector<int> gdof = discret_->dof(0, node);
-        int err = c->replace_global_value(gdof[modeids[imode]], imode, 1);
-        if (err != 0) FOUR_C_THROW("error while inserting value into c");
+        c->replace_global_value(gdof[modeids[imode]], imode, 1);
       }
 
     }  // loop over modes

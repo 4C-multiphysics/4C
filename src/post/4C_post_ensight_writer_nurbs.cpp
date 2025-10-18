@@ -1362,8 +1362,7 @@ void EnsightWriter::write_coordinates_for_nurbs_shapefunctions(std::ofstream& ge
   // import my new values (proc0 gets everything, other procs empty)
   Core::LinAlg::Import proc0importer(*proc0map, *vispointmap_);
   Core::LinAlg::MultiVector<double> allnodecoords(*proc0map, 3);
-  int err = allnodecoords.import(*nodecoords, proc0importer, Insert);
-  if (err > 0) FOUR_C_THROW("Importing everything to proc 0 went wrong. Import returns {}", err);
+  allnodecoords.import(*nodecoords, proc0importer, Insert);
 
   // write the node coordinates (only proc 0)
   // ensight format requires x_1 .. x_n, y_1 .. y_n, z_1 ... z_n
@@ -2114,8 +2113,7 @@ void EnsightWriter::write_dof_result_step_for_nurbs(std::ofstream& file, const i
   // import my new values (proc0 gets everything, other procs empty)
   Core::LinAlg::Import proc0importer(*proc0map_, *vispointmap_);
   Core::LinAlg::MultiVector<double> allsols(*proc0map_, numdf);
-  int err = allsols.import(*idata, proc0importer, Insert);
-  if (err > 0) FOUR_C_THROW("Importing everything to proc 0 went wrong. Import returns {}", err);
+  allsols.import(*idata, proc0importer, Insert);
 
   // write the node results (only proc 0)
   // ensight format requires u_1 .. u_n, v_1 .. v_n, w_1 ... w_n, as for nodes
@@ -3431,11 +3429,7 @@ void EnsightWriter::write_nodal_result_step_for_nurbs(std::ofstream& file, const
 
   // create an importer and import the data
   Core::LinAlg::Import importer((coldata).get_map(), (data).get_map());
-  int imerr = (coldata).import((data), importer, Insert);
-  if (imerr)
-  {
-    FOUR_C_THROW("import failed\n");
-  }
+  coldata.import((data), importer, Insert);
 
   // loop all available elements
   for (int iele = 0; iele < elementmap->num_my_elements(); ++iele)
@@ -3514,8 +3508,7 @@ void EnsightWriter::write_nodal_result_step_for_nurbs(std::ofstream& file, const
   // import my new values (proc0 gets everything, other procs empty)
   Core::LinAlg::Import proc0importer(*proc0map_, *vispointmap_);
   Core::LinAlg::MultiVector<double> allsols(*proc0map_, numdf);
-  int err = allsols.import(*idata, proc0importer, Insert);
-  if (err > 0) FOUR_C_THROW("Importing everything to proc 0 went wrong. Import returns {}", err);
+  allsols.import(*idata, proc0importer, Insert);
 
   //---------------
   // write results

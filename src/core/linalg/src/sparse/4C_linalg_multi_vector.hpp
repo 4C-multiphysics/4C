@@ -8,12 +8,12 @@
 #ifndef FOUR_C_LINALG_MULTI_VECTOR_HPP
 #define FOUR_C_LINALG_MULTI_VECTOR_HPP
 
-
 #include "4C_config.hpp"
 
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_transfer.hpp"
 #include "4C_linalg_view.hpp"
+#include "4C_utils_epetra_exceptions.hpp"
 #include "4C_utils_owner_or_view.hpp"
 
 #include <Epetra_FEVector.h>
@@ -21,8 +21,6 @@
 #include <mpi.h>
 
 #include <memory>
-
-
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -64,46 +62,46 @@ namespace Core::LinAlg
     Epetra_MultiVector& get_epetra_multi_vector() { return *vector_; }
 
     //! Compute 1-norm of each vector
-    int norm_1(double* Result) const;
+    void norm_1(double* Result) const;
 
     //! Compute 2-norm of each vector
-    int norm_2(double* Result) const;
+    void norm_2(double* Result) const;
 
     //! Compute Inf-norm of each vector
-    int norm_inf(double* Result) const;
+    void norm_inf(double* Result) const;
 
     //! Compute minimum value of each vector
-    int min_value(double* Result) const;
+    void min_value(double* Result) const;
 
     //! Compute maximum value of each vector
-    int max_value(double* Result) const;
+    void max_value(double* Result) const;
 
     //! Compute mean (average) value of each vector
-    int mean_value(double* Result) const;
+    void mean_value(double* Result) const;
 
     //! Scale the current values of a multi-vector, \e this = ScalarValue*\e this.
-    int scale(double ScalarValue) { return vector_->Scale(ScalarValue); }
+    void scale(double ScalarValue);
 
     //! Computes dot product of each corresponding pair of vectors.
-    int dot(const MultiVector& A, double* Result) const;
+    void dot(const MultiVector& A, double* Result) const;
 
     //! Puts element-wise absolute values of input Multi-vector in target.
-    int abs(const MultiVector& A);
+    void abs(const MultiVector& A);
 
     //! Replace multi-vector values with scaled values of A, \e this = ScalarA*A.
-    int scale(double ScalarA, const MultiVector& A);
+    void scale(double ScalarA, const MultiVector& A);
 
     //! Update multi-vector values with scaled values of A, \e this = ScalarThis*\e this +
     //! ScalarA*A.
-    int update(double ScalarA, const MultiVector& A, double ScalarThis);
+    void update(double ScalarA, const MultiVector& A, double ScalarThis);
 
     //! Update multi-vector with scaled values of A and B, \e this = ScalarThis*\e this + ScalarA*A
     //! + ScalarB*B.
-    int update(double ScalarA, const MultiVector& A, double ScalarB, const MultiVector& B,
+    void update(double ScalarA, const MultiVector& A, double ScalarB, const MultiVector& B,
         double ScalarThis);
 
     //! Initialize all values in a multi-vector with const value.
-    int put_scalar(double ScalarConstant);
+    void put_scalar(double ScalarConstant);
 
     //! Returns a view of the EpetraMap as type Map for this multi-vector.
     const Map& get_map() const { return map_.sync(vector_->Map()); };
@@ -126,12 +124,8 @@ namespace Core::LinAlg
     //! Returns the global vector length of vectors in the multi-vector.
     int global_length() const { return vector_->GlobalLength(); }
 
-    int replace_local_value(int MyRow, int VectorIndex, double ScalarValue)
-    {
-      return vector_->ReplaceMyValue(MyRow, VectorIndex, ScalarValue);
-    }
-
     const double* get_values() const { return vector_->Values(); }
+
     double* get_values() { return vector_->Values(); }
 
     /**
@@ -143,93 +137,101 @@ namespace Core::LinAlg
      */
     int replace_map(const Map& map);
 
-    int replace_global_value(int GlobalRow, int VectorIndex, double ScalarValue)
+    void replace_local_value(int MyRow, int VectorIndex, double ScalarValue)
     {
-      return vector_->ReplaceGlobalValue(GlobalRow, VectorIndex, ScalarValue);
+      CHECK_EPETRA_CALL(vector_->ReplaceMyValue(MyRow, VectorIndex, ScalarValue));
     }
 
-    int replace_global_value(long long GlobalRow, int VectorIndex, double ScalarValue)
+    void replace_global_value(int GlobalRow, int VectorIndex, double ScalarValue)
     {
-      return vector_->ReplaceGlobalValue(GlobalRow, VectorIndex, ScalarValue);
+      CHECK_EPETRA_CALL(vector_->ReplaceGlobalValue(GlobalRow, VectorIndex, ScalarValue));
+    }
+
+    void replace_global_value(long long GlobalRow, int VectorIndex, double ScalarValue)
+    {
+      CHECK_EPETRA_CALL(vector_->ReplaceGlobalValue(GlobalRow, VectorIndex, ScalarValue));
     }
 
     //! Matrix-Matrix multiplication, \e this = ScalarThis*\e this + ScalarAB*A*B.
-    int multiply(char TransA, char TransB, double ScalarAB, const Epetra_MultiVector& A,
+    void multiply(char TransA, char TransB, double ScalarAB, const Epetra_MultiVector& A,
         const Epetra_MultiVector& B, double ScalarThis)
     {
-      return vector_->Multiply(TransA, TransB, ScalarAB, A, B, ScalarThis);
+      CHECK_EPETRA_CALL(vector_->Multiply(TransA, TransB, ScalarAB, A, B, ScalarThis));
     }
 
     //! Puts element-wise reciprocal values of input Multi-vector in target.
-    int reciprocal(const Epetra_MultiVector& A) { return vector_->Reciprocal(A); }
+    void reciprocal(const Epetra_MultiVector& A) { CHECK_EPETRA_CALL(vector_->Reciprocal(A)); }
 
     //! Multiply a Core::LinAlg::MultiVector<double> with another, element-by-element.
-    int multiply(double ScalarAB, const Epetra_MultiVector& A, const Epetra_MultiVector& B,
+    void multiply(double ScalarAB, const Epetra_MultiVector& A, const Epetra_MultiVector& B,
         double ScalarThis)
     {
-      return vector_->Multiply(ScalarAB, A, B, ScalarThis);
+      CHECK_EPETRA_CALL(vector_->Multiply(ScalarAB, A, B, ScalarThis));
     }
 
     //! Imports an Epetra_DistObject using the Core::LinAlg::Import object.
-    int import(const Epetra_SrcDistObject& A, const Core::LinAlg::Import& Importer,
+    void import(const Epetra_SrcDistObject& A, const Core::LinAlg::Import& Importer,
         Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr)
     {
-      return vector_->Import(A, Importer.get_epetra_import(), CombineMode, Indexor);
+      CHECK_EPETRA_CALL(vector_->Import(A, Importer.get_epetra_import(), CombineMode, Indexor));
     }
 
     //! Imports an Epetra_DistObject using the Core::LinAlg::Export object.
-    int import(const Epetra_SrcDistObject& A, const Core::LinAlg::Export& Exporter,
+    void import(const Epetra_SrcDistObject& A, const Core::LinAlg::Export& Exporter,
         Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr)
     {
-      return vector_->Import(A, Exporter.get_epetra_export(), CombineMode, Indexor);
+      CHECK_EPETRA_CALL(vector_->Import(A, Exporter.get_epetra_export(), CombineMode, Indexor));
     }
 
-    int export_to(const Epetra_SrcDistObject& A, const Core::LinAlg::Import& Importer,
+    void export_to(const Epetra_SrcDistObject& A, const Core::LinAlg::Import& Importer,
         Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr)
     {
-      return vector_->Export(A, Importer.get_epetra_import(), CombineMode, Indexor);
+      CHECK_EPETRA_CALL(vector_->Export(A, Importer.get_epetra_import(), CombineMode, Indexor));
     }
 
-    int export_to(const Epetra_SrcDistObject& A, const Core::LinAlg::Export& Exporter,
+    void export_to(const Epetra_SrcDistObject& A, const Core::LinAlg::Export& Exporter,
         Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr)
     {
-      return vector_->Export(A, Exporter.get_epetra_export(), CombineMode, Indexor);
+      CHECK_EPETRA_CALL(vector_->Export(A, Exporter.get_epetra_export(), CombineMode, Indexor));
     }
 
-    int sum_into_global_value(int GlobalRow, int VectorIndex, double ScalarValue)
+    void sum_into_global_value(int GlobalRow, int VectorIndex, double ScalarValue)
     {
-      return vector_->SumIntoGlobalValue(GlobalRow, VectorIndex, ScalarValue);
+      CHECK_EPETRA_CALL(vector_->SumIntoGlobalValue(GlobalRow, VectorIndex, ScalarValue));
     }
 
-    int sum_into_global_value(long long GlobalRow, int VectorIndex, double ScalarValue)
+    void sum_into_global_value(long long GlobalRow, int VectorIndex, double ScalarValue)
     {
-      return vector_->SumIntoGlobalValue(GlobalRow, VectorIndex, ScalarValue);
+      CHECK_EPETRA_CALL(vector_->SumIntoGlobalValue(GlobalRow, VectorIndex, ScalarValue));
     }
 
-    int reciprocal_multiply(double ScalarAB, const Epetra_MultiVector& A,
+    void reciprocal_multiply(double ScalarAB, const Epetra_MultiVector& A,
         const Epetra_MultiVector& B, double ScalarThis)
     {
-      return vector_->ReciprocalMultiply(ScalarAB, A, B, ScalarThis);
+      CHECK_EPETRA_CALL(vector_->ReciprocalMultiply(ScalarAB, A, B, ScalarThis));
     }
 
-    int sum_into_local_value(int MyRow, int VectorIndex, double ScalarValue)
+    void sum_into_local_value(int MyRow, int VectorIndex, double ScalarValue)
     {
-      return vector_->SumIntoMyValue(MyRow, VectorIndex, ScalarValue);
+      CHECK_EPETRA_CALL(vector_->SumIntoMyValue(MyRow, VectorIndex, ScalarValue));
     }
 
-
-    int sum_into_local_value(
+    void sum_into_local_value(
         int MyBlockRow, int BlockRowOffset, int VectorIndex, double ScalarValue)
     {
-      return vector_->SumIntoMyValue(MyBlockRow, BlockRowOffset, VectorIndex, ScalarValue);
+      CHECK_EPETRA_CALL(
+          vector_->SumIntoMyValue(MyBlockRow, BlockRowOffset, VectorIndex, ScalarValue));
     }
 
-    int extract_view(double*** ArrayOfPointers) const
+    void extract_view(double*** ArrayOfPointers) const
     {
-      return vector_->ExtractView(ArrayOfPointers);
+      CHECK_EPETRA_CALL(vector_->ExtractView(ArrayOfPointers));
     }
 
-    int extract_copy(double* A, int MyLDA) const { return vector_->ExtractCopy(A, MyLDA); }
+    void extract_copy(double* A, int MyLDA) const
+    {
+      CHECK_EPETRA_CALL(vector_->ExtractCopy(A, MyLDA));
+    }
 
     Core::LinAlg::Vector<double>& operator()(int i);
 

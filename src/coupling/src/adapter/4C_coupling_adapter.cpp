@@ -630,8 +630,7 @@ void Coupling::Adapter::Coupling::master_to_slave(
   std::copy(
       mv.get_values(), mv.get_values() + (mv.local_length() * mv.num_vectors()), perm.get_values());
 
-  const int err = sv.export_to(perm, *slaveexport_, Insert);
-  if (err) FOUR_C_THROW("Export to slave distribution returned err={}", err);
+  sv.export_to(perm, *slaveexport_, Insert);
 }
 
 
@@ -672,9 +671,7 @@ void Coupling::Adapter::Coupling::slave_to_master(
   std::copy(
       sv.get_values(), sv.get_values() + (sv.local_length() * sv.num_vectors()), perm.get_values());
 
-
-  const int err = mv.export_to(perm, *masterexport_, Insert);
-  if (err) FOUR_C_THROW("Export to master distribution returned err={}", err);
+  mv.export_to(perm, *masterexport_, Insert);
 }
 
 

@@ -139,8 +139,7 @@ void XFEM::XFieldField::Coupling::master_to_slave(const Core::LinAlg::MultiVecto
       std::copy(mv.get_values(), mv.get_values() + (mv.local_length() * mv.num_vectors()),
           perm.get_values());
 
-      const int err = sv.export_to(perm, *nodal_slaveexport_, Insert);
-      if (err) FOUR_C_THROW("Export to nodal slave distribution returned err={}", err);
+      sv.export_to(perm, *nodal_slaveexport_, Insert);
     }  // end: case XFEM::MultiFieldMapExtractor::map_nodes
   }  // end: switch (map_type)
 }
@@ -172,8 +171,7 @@ void XFEM::XFieldField::Coupling::slave_to_master(const Core::LinAlg::MultiVecto
       std::copy(sv.get_values(), sv.get_values() + (sv.local_length() * sv.num_vectors()),
           perm.get_values());
 
-      const int err = mv.export_to(perm, *nodal_masterexport_, Insert);
-      if (err) FOUR_C_THROW("Export to nodal master distribution returned err={}", err);
+      mv.export_to(perm, *nodal_masterexport_, Insert);
     }
   }
 }

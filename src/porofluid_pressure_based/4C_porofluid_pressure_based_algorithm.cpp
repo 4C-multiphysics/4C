@@ -684,8 +684,7 @@ void PoroPressureBased::PorofluidAlgorithm::collect_runtime_output_data()
         for (int idim = 0; idim < dim; idim++)
         {
           double value = ((*flux_)(k * dim + idim))[i];
-          int err = flux_k.replace_local_value(i, idim, value);
-          if (err != 0) FOUR_C_THROW("Detected error in ReplaceMyValue");
+          flux_k.replace_local_value(i, idim, value);
         }
       }
       std::vector<std::optional<std::string>> context(flux_k.num_vectors(), name);
@@ -710,8 +709,7 @@ void PoroPressureBased::PorofluidAlgorithm::collect_runtime_output_data()
         for (int idim = 0; idim < num_dim; idim++)
         {
           double value = ((*phase_velocities_)(k * num_dim + idim))[i];
-          int err = velocity_k.replace_local_value(i, idim, value);
-          if (err != 0) FOUR_C_THROW("Detected error in ReplaceMyValue");
+          velocity_k.replace_local_value(i, idim, value);
         }
       }
 

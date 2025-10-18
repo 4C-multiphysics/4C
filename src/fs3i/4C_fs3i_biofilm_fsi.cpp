@@ -887,9 +887,6 @@ std::shared_ptr<Core::LinAlg::Vector<double>> FS3I::BiofilmFSI::struct_to_ale(
 void FS3I::BiofilmFSI::vec_to_scatravec(Core::FE::Discretization& scatradis,
     Core::LinAlg::Vector<double>& vec, Core::LinAlg::MultiVector<double>& scatravec)
 {
-  // define error variable
-  int err(0);
-
   // loop over all local nodes of scatra discretization
   for (int lnodeid = 0; lnodeid < scatradis.num_my_row_nodes(); lnodeid++)
   {
@@ -901,16 +898,13 @@ void FS3I::BiofilmFSI::vec_to_scatravec(Core::FE::Discretization& scatradis,
       double vecval = (vec)[index + numdim * lnodeid];
 
       // insert value into node-based vector
-      err = scatravec.replace_local_value(lnodeid, index, vecval);
-
-      if (err != 0) FOUR_C_THROW("Error while inserting value into vector scatravec!");
+      scatravec.replace_local_value(lnodeid, index, vecval);
     }
 
     // for 1- and 2-D problems: set all unused vector components to zero
     for (int index = numdim; index < 3; ++index)
     {
-      err = scatravec.replace_local_value(lnodeid, index, 0.0);
-      if (err != 0) FOUR_C_THROW("Error while inserting value into vector scatravec!");
+      scatravec.replace_local_value(lnodeid, index, 0.0);
     }
   }
 

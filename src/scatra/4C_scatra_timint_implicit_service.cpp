@@ -136,8 +136,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> ScaTra::ScaTraTimIntImpl::cal
     // We do not solve a global, linear system of equations (exact L2 projection with good
     // consistency), but perform mass matrix lumping, i.e., we divide by the values of the
     // integrated shape functions
-    if (flux_projected->reciprocal_multiply(1., *integratedshapefcts, *flux, 0.))
-      FOUR_C_THROW("ReciprocalMultiply failed!");
+    flux_projected->reciprocal_multiply(1., *integratedshapefcts, *flux, 0.);
   }
 
   else
@@ -429,9 +428,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> ScaTra::ScaTraTimIntImpl::cal
             {
               auto& normalcomp = (*normals_)(idim);
               double normalveccomp = normalcomp[lnodid];
-              int err =
-                  flux->replace_global_value(dofgid, idim, (*normalfluxes)[doflid] * normalveccomp);
-              if (err != 0) FOUR_C_THROW("Detected error in ReplaceMyValue");
+              flux->replace_global_value(dofgid, idim, (*normalfluxes)[doflid] * normalveccomp);
             }
           }
         }
@@ -1176,10 +1173,9 @@ void ScaTra::ScaTraTimIntImpl::collect_output_flux_data(
         yvalue = yvalue_rot;
       }
       // insert values
-      int err = fluxk.replace_local_value(i, 0, xvalue);
-      err += fluxk.replace_local_value(i, 1, yvalue);
-      err += fluxk.replace_local_value(i, 2, zvalue);
-      if (err != 0) FOUR_C_THROW("Detected error in ReplaceMyValue");
+      fluxk.replace_local_value(i, 0, xvalue);
+      fluxk.replace_local_value(i, 1, yvalue);
+      fluxk.replace_local_value(i, 2, zvalue);
     }
     std::vector<std::optional<std::string>> context(fluxk.num_vectors(), name);
     visualization_writer_->append_result_data_vector_with_context(

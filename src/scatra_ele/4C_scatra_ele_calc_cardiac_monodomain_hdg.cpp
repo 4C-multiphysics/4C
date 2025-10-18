@@ -484,9 +484,7 @@ void Discret::Elements::ScaTraEleCalcHDGCardiacMonodomain<distype,
         {
           material_state += material->get_internal_state(k, q);
         }
-        int err =
-            material_internal_state->replace_global_value(ele->id(), k, material_state / nqpoints);
-        if (err != 0) FOUR_C_THROW("{}", err);
+        material_internal_state->replace_global_value(ele->id(), k, material_state / nqpoints);
       }
     }
 

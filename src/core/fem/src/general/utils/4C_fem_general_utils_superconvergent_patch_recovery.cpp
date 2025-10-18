@@ -132,15 +132,13 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_superconver
     {
       double val = elevector1(j);
 
-      int err = elevec_toberecovered.replace_local_value(i, j, val);
-      if (err < 0) FOUR_C_THROW("multi vector insertion failed");
+      elevec_toberecovered.replace_local_value(i, j, val);
     }
 
     // store corresponding element centroid
     for (int d = 0; d < dim; ++d)
     {
-      int err = centercoords.replace_local_value(i, d, elevector2(d));
-      if (err < 0) FOUR_C_THROW("multi vector insertion failed");
+      centercoords.replace_local_value(i, d, elevector2(d));
     }
   }  // end element loop
 

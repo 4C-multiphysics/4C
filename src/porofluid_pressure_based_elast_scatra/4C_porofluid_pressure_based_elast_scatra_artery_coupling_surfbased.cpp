@@ -120,8 +120,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm:
       {
         for (int igp = 0; igp < num_gp_per_artery_ele; igp++)
         {
-          if (int err = gp_vector->replace_local_value(my_lid, igp, sum_gp_vectors[igp]); err != 0)
-            FOUR_C_THROW("ReplaceMyValue failed with error code {}!", err);
+          gp_vector->replace_local_value(my_lid, igp, sum_gp_vectors[igp]);
         }
       }
     }
