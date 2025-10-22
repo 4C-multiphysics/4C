@@ -118,17 +118,17 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 13
       QUANTITY: "dispx"
-      VALUE: 0.006890210016448415
+      VALUE: -1.72657079714377756e-02
       TOLERANCE: 1e-10
   - STRUCTURE:
       DIS: "structure"
       NODE: 13
       QUANTITY: "dispy"
-      VALUE: -0.11085995930376047
+      VALUE: 3.30783115327164326e-02
       TOLERANCE: 1e-10
   - STRUCTURE:
       DIS: "structure"
       NODE: 13
       QUANTITY: "dispz"
-      VALUE: 0.19598589324767943
+      VALUE: -1.37942584726996109e-01
       TOLERANCE: 1e-10

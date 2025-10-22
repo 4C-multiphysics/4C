@@ -303,8 +303,8 @@ namespace TESTING
 
     const double imbalance_tol(1.1);
     Teuchos::ParameterList rebalanceParams;
-    rebalanceParams.set<std::string>("num parts", std::to_string(total_ranks));
-    rebalanceParams.set<std::string>("imbalance tol", std::to_string(imbalance_tol));
+    rebalanceParams.set<std::string>("num_global_parts", std::to_string(total_ranks));
+    rebalanceParams.set<std::string>("imbalance_tolerance", std::to_string(imbalance_tol));
 
     std::shared_ptr<Core::LinAlg::Map> col_elements;
     const auto [row_nodes, col_nodes] =

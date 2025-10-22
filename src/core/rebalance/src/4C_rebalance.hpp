@@ -30,12 +30,11 @@ namespace Core::Rebalance
 
   enum class RebalanceType
   {
-    none,                            //< no partitioning method
-    hypergraph,                      //< hypergraph based partitioning
-    recursive_coordinate_bisection,  //< recursive coordinate bisection, geometric based
-                                     // partitioning
-    monolithic  //< hypergraph based partitioning by using a global monolithic graph constructed
-                // via a global collision search
+    none,         //< no partitioning method
+    hypergraph,   //< hypergraph based partitioning
+    multijagged,  //< multijagged, geometric based partitioning
+    monolithic    //< hypergraph based partitioning by using a global monolithic graph constructed
+                  // via a global collision search
   };
 
   struct MeshPartitioningParameters

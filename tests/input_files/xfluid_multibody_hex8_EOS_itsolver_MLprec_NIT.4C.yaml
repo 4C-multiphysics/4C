@@ -44,7 +44,7 @@ XFLUID DYNAMIC/STABILIZATION:
 SOLVER 1:
   SOLVER: "Belos"
   AZPREC: "MueLu"
-  AZTOL: 1e-13
+  AZTOL: 1e-12
   AZOUTPUT: 10
   AZREUSE: 1
   MUELU_XML_FILE: "xml/multigrid/xfluid_template.xml"
