@@ -40,7 +40,8 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 template <unsigned int numnodes, unsigned int numnodalvalues>
-BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::BeamToBeamContactPair()
+BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::BeamToBeamContactPair(
+    std::shared_ptr<std::map<ElementIDKey, Core::LinAlg::Matrix<3, 1, double>>> old_cp_normals)
     : BeamContactPair(),
       r1_(0.0),
       r2_(0.0),
@@ -50,7 +51,8 @@ BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::BeamToBeamCont
       numseg1_(1),
       numseg2_(1),
       boundarynode1_(std::make_pair(0, 0)),
-      boundarynode2_(std::make_pair(0, 0))
+      boundarynode2_(std::make_pair(0, 0)),
+      old_cp_normals_(old_cp_normals)
 {
   // empty constructor
 }
@@ -349,6 +351,22 @@ bool BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate(
     }
   }
 
+  if (params()->beam_to_beam_contact_params()->use_new_gap_function())
+  {
+    // loop over every cp variable
+    for (auto& cpvariable : cpvariables_)
+    {
+      // create key and normal
+      ElementIDKey key{(element1()->id()), (element2()->id())};
+      Core::LinAlg::Matrix<3, 1, double> normal;
+      for (int i = 0; i < 3; ++i)
+        normal(i) = Core::FADUtils::cast_to_double(cpvariable->get_normal()(i));
+
+      // save normal for next iteration
+      (*old_cp_normals_)[key] = normal;
+    }
+  }
+
   // Check whether non-zero contributions are returned and hence need assembly in system variables
   // Todo avoid computation of norm here and rather use the maximum of all 'DoNotAssemble' flags
   //      which is set for each cp, gp and ep of this element pair (in evaluate_fc_contact
@@ -427,6 +445,33 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::get_activ
       std::pair<int, int> integration_ids = std::make_pair(-2, -2);
       cpvariables_.push_back(std::make_shared<BeamToBeamContactVariables<numnodes, numnodalvalues>>(
           closestpoint, leftpoint_ids, integration_ids, pp, 1.0));
+
+
+      // we now need to add the normal stored by the previous solution
+      // if new gap function should be used
+      if (params()->beam_to_beam_contact_params()->use_new_gap_function() and
+          old_cp_normals_ != nullptr)
+      {
+        if (cpvariables_.size() > 1)
+        {
+          FOUR_C_THROW(
+              "Currently the New Gap function is not supported if the number "
+              "of segments of the current beam contact "
+              "and previous contact change since only 1 normal per element pair is stored.");
+        }
+
+        auto& v = *cpvariables_.back();
+        ElementIDKey key{static_cast<int>(element1()->id()), static_cast<int>(element2()->id())};
+
+
+        auto it = old_cp_normals_->find(key);
+        if (it != old_cp_normals_->end())
+        {
+          Core::LinAlg::Matrix<3, 1, TYPE> n_ref(Core::LinAlg::Initialization::zero);
+          for (int i = 0; i < 3; ++i) n_ref(i) = static_cast<TYPE>(it->second(i));
+          v.set_old_normal(n_ref);
+        }
+      }
     }
   }
 }
@@ -2723,6 +2768,7 @@ bool BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::point_to_
       {
         jacobi = get_jacobi(element2());
       }
+      // TODO: figure out why we overwrite here the jacobi
       jacobi = get_jacobi(element2());
 
       // compute the scalar residuum
@@ -3081,7 +3127,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate_
     {
       for (unsigned int j = 0; j < 3; ++j)
       {
-        fc1(i) += N1(j, i) * normal(j) * fp * ppfac * intfac;
+        fc1(i) += variables.get_sign() * N1(j, i) * normal(j) * fp * ppfac * intfac;
       }
     }
 
@@ -3095,7 +3141,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate_
     {
       for (unsigned int j = 0; j < 3; ++j)
       {
-        fc2(i) += -N2(j, i) * normal(j) * fp * ppfac * intfac;
+        fc2(i) += -variables.get_sign() * N2(j, i) * normal(j) * fp * ppfac * intfac;
       }
     }
 #else
@@ -3324,7 +3370,8 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate_
     }
 
     // linearization of gap function which is equal to delta d
-    compute_lin_gap(delta_gap, delta_xi, delta_eta, delta_r, norm_delta_r, r1_xi, r2_xi, N1, N2);
+    compute_lin_gap(delta_gap, delta_xi, delta_eta, delta_r, norm_delta_r, r1_xi, r2_xi, N1, N2,
+        variables.get_sign());
 
     // linearization of normal vector
     compute_lin_normal(delta_n, delta_xi, delta_eta, delta_r, r1_xi, r2_xi, N1, N2);
@@ -3368,7 +3415,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate_
     {
       for (unsigned int j = 0; j < dim1 + dim2; j++)
       {
-        stiffc1(i, j) += basicstiffweightfac * N1T_normal(i) *
+        stiffc1(i, j) += basicstiffweightfac * variables.get_sign() * N1T_normal(i) *
                          (ppfac * dfp * delta_gap(j) + dppfac * fp * delta_coscontactangle(j));
       }
     }
@@ -3385,7 +3432,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate_
         {
           for (unsigned int k = 0; k < dim1 + dim2; k++)
           {
-            stiffc1(j, k) += ppfac * fp * N1(i, j) * delta_n(i, k);
+            stiffc1(j, k) += ppfac * variables.get_sign() * fp * N1(i, j) * delta_n(i, k);
           }
         }
       }
@@ -3405,7 +3452,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate_
       {
         for (unsigned int j = 0; j < dim1 + dim2; j++)
         {
-          stiffc1(i, j) += ppfac * fp * N1xiT_normal(i) * delta_xi(j);
+          stiffc1(i, j) += ppfac * variables.get_sign() * fp * N1xiT_normal(i) * delta_xi(j);
         }
       }
     }
@@ -3429,7 +3476,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate_
     {
       for (unsigned int j = 0; j < dim1 + dim2; j++)
       {
-        stiffc2(i, j) += -basicstiffweightfac * N2T_normal(i) *
+        stiffc2(i, j) += -basicstiffweightfac * variables.get_sign() * N2T_normal(i) *
                          (ppfac * dfp * delta_gap(j) + dppfac * fp * delta_coscontactangle(j));
       }
     }
@@ -3445,7 +3492,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate_
         {
           for (unsigned int k = 0; k < dim1 + dim2; k++)
           {
-            stiffc2(j, k) += -ppfac * fp * N2(i, j) * delta_n(i, k);
+            stiffc2(j, k) += -ppfac * variables.get_sign() * fp * N2(i, j) * delta_n(i, k);
           }
         }
       }
@@ -3465,7 +3512,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::evaluate_
       {
         for (unsigned int j = 0; j < dim1 + dim2; j++)
         {
-          stiffc2(i, j) += -ppfac * fp * N2xiT_normal(i) * delta_eta(j);
+          stiffc2(i, j) += -ppfac * variables.get_sign() * fp * N2xiT_normal(i) * delta_eta(j);
         }
       }
     }
@@ -4136,7 +4183,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::compute_l
     const Core::LinAlg::Matrix<3, 1, TYPE>& delta_r, const TYPE& norm_delta_r,
     const Core::LinAlg::Matrix<3, 1, TYPE>& r1_xi, const Core::LinAlg::Matrix<3, 1, TYPE>& r2_xi,
     const Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE>& N1,
-    const Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE>& N2)
+    const Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE>& N2, const double sign)
 {
   const unsigned int dim1 = 3 * numnodes * numnodalvalues;
   const unsigned int dim2 = 3 * numnodes * numnodalvalues;
@@ -4175,7 +4222,7 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::compute_l
   {
     for (unsigned int j = 0; j < dim1 + dim2; j++)
     {
-      delta_gap(j) += delta_r(i) * auxiliary_matrix1(i, j) / norm_delta_r;
+      delta_gap(j) += sign * delta_r(i) * auxiliary_matrix1(i, j) / norm_delta_r;
     }
   }
 
@@ -4814,24 +4861,56 @@ void BeamInteraction::BeamToBeamContactPair<numnodes, numnodalvalues>::compute_n
   Core::LinAlg::Matrix<3, 1, TYPE> normal(Core::LinAlg::Initialization::zero);
   normal.update(1.0 / norm_delta_r, delta_r, 0.0);
 
+  auto normal_old_ = variables->get_old_normal();
+  // Initialize normal_old_ in the first step with valid closest point projection (in this case the
+  // vector normal_old_ is zero, since no valid normal vector was available in the last time step).
+  // In case of "sliding contact", i.e. when normal_old_ has already been calculated out of the
+  // neighbor element (get_neighbor_normal_old), this is not allowed. Otherwise we would overwrite
+  // the vector normal_old_ which has already been calculated via the neighbor element. (For this
+  // reason we check with the norm of normal_old_ and not with the variable firstcall_).
+  if (Core::FADUtils::cast_to_double(Core::FADUtils::norm(Core::FADUtils::scalar_product(
+          normal_old_, normal_old_))) < std::numeric_limits<double>::epsilon())
+  {
+    for (int i = 0; i < 3; i++) normal_old_(i) = normal(i);
+  }
+
+
   TYPE gap = norm_delta_r - r1_ - r2_;
+  double sign = 1.0;
+
+  if (params()->beam_to_beam_contact_params()->use_new_gap_function())
+  {
+    if (Core::FADUtils::cast_to_double(Core::FADUtils::norm(Core::FADUtils::scalar_product(
+            normal, normal_old_))) < std::numeric_limits<double>::epsilon())
+      FOUR_C_THROW("ERROR: Rotation too large! --> Choose smaller Time step!");
+
+    gap =
+        Core::FADUtils::signum(Core::FADUtils::scalar_product(normal, normal_old_)) * norm_delta_r -
+        r1_ - r2_;
+
+    sign = Core::FADUtils::cast_to_double(
+        Core::FADUtils::signum(Core::FADUtils::scalar_product(normal, normal_old_)));
+  }
+
 
   variables->set_gap(gap);
   variables->set_normal(normal);
+  variables->set_sign(sign);
+  variables->set_old_normal(normal_old_);
   variables->set_angle(
       BeamInteraction::calc_angle(Core::FADUtils::cast_to_double<TYPE, 3, 1>(r1_xi),
           Core::FADUtils::cast_to_double<TYPE, 3, 1>(r2_xi)));
 
   // Fixme
   //  if (Core::FADUtils::cast_to_double(gap)<-MAXPENETRATIONSAFETYFAC*(R1_+R2_) and numstep_>0)
-  if (Core::FADUtils::cast_to_double(gap) < -MAXPENETRATIONSAFETYFAC * (r1_ + r2_))
+  if (Core::FADUtils::cast_to_double(gap) < -MAXPENETRATIONSAFETYFAC * (r1_ + r2_) and
+      not params()->beam_to_beam_contact_params()->use_new_gap_function())
   {
     this->print(std::cout);
     FOUR_C_THROW(
-        "Gap too small, danger of penetration. Choose smaller time step or higher penalty!");
+        "Gap too small, danger of penetration. Choose smaller time step, higher penalty value"
+        "or consider activating the enhanced gap calculation (BEAMS_NEWGAP).");
   }
-
-  return;
 }
 /*----------------------------------------------------------------------*
  |  end: Compute normal vector in contact point

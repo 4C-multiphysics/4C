@@ -97,6 +97,8 @@ namespace BeamInteraction
 
     inline bool end_point_penalty() const { return btb_endpoint_penalty_; }
 
+    inline bool use_new_gap_function() const { return btb_use_new_gap_function_; }
+
    private:
     bool isinit_;
 
@@ -144,6 +146,10 @@ namespace BeamInteraction
     //! flag indicating if the integration should take special care of physical
     //  end points of beams in order to avoid strong discontinuities
     bool btb_endpoint_penalty_;
+
+    //! flag indicating if the gap calculation should be enhanced to avoid
+    // crossing of beams with the new gap feature
+    bool btb_use_new_gap_function_;
   };
 
 }  // namespace BeamInteraction
