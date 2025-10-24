@@ -1600,7 +1600,7 @@ void Core::LinAlg::SparseMatrix::insert_global_values(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::insert_global_values(
+int Core::LinAlg::SparseMatrix::insert_global_values_error_return(
     int global_row, int num_entries, const double* values, const int* indices)
 {
   return sysmat_->InsertGlobalValues(global_row, num_entries, values, indices);
