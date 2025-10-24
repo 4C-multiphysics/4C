@@ -69,8 +69,7 @@ void Core::LinAlg::Equilibration::compute_inv_row_sums(const Core::LinAlg::Spars
     Core::LinAlg::Vector<double>& invrowsums, const EquilibrationMethod method) const
 {
   // compute inverse row sums of matrix
-  if (matrix.inv_row_sums(invrowsums))
-    FOUR_C_THROW("Inverse row sums of matrix could not be successfully computed!");
+  matrix.inv_row_sums(invrowsums);
 
   // take square root of inverse row sums if matrix is scaled from left and right
   if (method == EquilibrationMethod::rowsandcolumns_full or
@@ -86,8 +85,7 @@ void Core::LinAlg::Equilibration::compute_inv_col_sums(const Core::LinAlg::Spars
     Core::LinAlg::Vector<double>& invcolsums, const EquilibrationMethod method) const
 {
   // compute inverse column sums of matrix
-  if (matrix.inv_col_sums(invcolsums))
-    FOUR_C_THROW("Inverse column sums of matrix could not be successfully computed!");
+  matrix.inv_col_sums(invcolsums);
 
   // take square root of inverse column sums if matrix is scaled from left and right
   if (method == EquilibrationMethod::rowsandcolumns_full or
@@ -117,7 +115,7 @@ void Core::LinAlg::Equilibration::compute_inv_symmetry(
 void Core::LinAlg::Equilibration::equilibrate_matrix_rows(
     Core::LinAlg::SparseMatrix& matrix, const Core::LinAlg::Vector<double>& invrowsums) const
 {
-  if (matrix.left_scale(invrowsums)) FOUR_C_THROW("Row equilibration of matrix failed!");
+  matrix.left_scale(invrowsums);
 }
 
 /*----------------------------------------------------------------------*
@@ -125,7 +123,7 @@ void Core::LinAlg::Equilibration::equilibrate_matrix_rows(
 void Core::LinAlg::Equilibration::equilibrate_matrix_columns(
     Core::LinAlg::SparseMatrix& matrix, const Core::LinAlg::Vector<double>& invcolsums) const
 {
-  if (matrix.right_scale(invcolsums)) FOUR_C_THROW("Column equilibration of matrix failed!");
+  matrix.right_scale(invcolsums);
 }
 
 /*----------------------------------------------------------------------*
@@ -281,9 +279,7 @@ void Core::LinAlg::EquilibrationBlock::equilibrate_matrix(
               int numentries(0);
               std::vector<double> values(length, 0.);
               std::vector<int> indices(length, 0);
-              if (matrix.extract_my_row_copy(
-                      irow, length, numentries, values.data(), indices.data()))
-                FOUR_C_THROW("Cannot extract matrix row with local ID {} from matrix block!", irow);
+              matrix.extract_my_row_copy(irow, length, numentries, values.data(), indices.data());
 
               // compute and store current row sum
               double rowsum(0.);
@@ -354,9 +350,7 @@ void Core::LinAlg::EquilibrationBlock::equilibrate_matrix(
               int numentries(0);
               std::vector<double> values(length, 0.);
               std::vector<int> indices(length, 0);
-              if (matrix.extract_my_row_copy(
-                      irow, length, numentries, values.data(), indices.data()))
-                FOUR_C_THROW("Cannot extract matrix row with local ID {} from matrix block!", irow);
+              matrix.extract_my_row_copy(irow, length, numentries, values.data(), indices.data());
 
               // add entries of current matrix row to column sums
               for (int ientry = 0; ientry < numentries; ++ientry)

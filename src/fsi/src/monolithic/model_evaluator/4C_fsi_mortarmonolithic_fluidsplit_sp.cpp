@@ -982,11 +982,14 @@ void FSI::MortarMonolithicFluidSplitSaddlePoint::scale_system(
     scolsum_ = std::make_shared<Core::LinAlg::Vector<double>>(A_00.row_map(), false);
     A_00.inv_row_sums(*srowsum_);
     A_00.inv_col_sums(*scolsum_);
-    if (A_00.left_scale(*srowsum_) or A_00.right_scale(*scolsum_) or
-        mat.matrix(0, 1).left_scale(*srowsum_) or mat.matrix(0, 2).left_scale(*srowsum_) or
-        mat.matrix(0, 3).left_scale(*srowsum_) or mat.matrix(1, 0).right_scale(*scolsum_) or
-        mat.matrix(2, 0).right_scale(*scolsum_) or mat.matrix(3, 0).right_scale(*scolsum_))
-      FOUR_C_THROW("structure scaling failed");
+    A_00.left_scale(*srowsum_);
+    A_00.right_scale(*scolsum_);
+    mat.matrix(0, 1).left_scale(*srowsum_);
+    mat.matrix(0, 2).left_scale(*srowsum_);
+    mat.matrix(0, 3).left_scale(*srowsum_);
+    mat.matrix(1, 0).right_scale(*scolsum_);
+    mat.matrix(2, 0).right_scale(*scolsum_);
+    mat.matrix(3, 0).right_scale(*scolsum_);
 
     // do scaling of ale rows
     Core::LinAlg::SparseMatrix& A_22 = mat.matrix(2, 2);
@@ -994,11 +997,14 @@ void FSI::MortarMonolithicFluidSplitSaddlePoint::scale_system(
     acolsum_ = std::make_shared<Core::LinAlg::Vector<double>>(A_22.row_map(), false);
     A_22.inv_row_sums(*arowsum_);
     A_22.inv_col_sums(*acolsum_);
-    if (A_22.left_scale(*arowsum_) or A_22.right_scale(*acolsum_) or
-        mat.matrix(2, 0).left_scale(*arowsum_) or mat.matrix(2, 1).left_scale(*arowsum_) or
-        mat.matrix(2, 3).left_scale(*arowsum_) or mat.matrix(0, 2).right_scale(*acolsum_) or
-        mat.matrix(1, 2).right_scale(*acolsum_) or mat.matrix(3, 2).right_scale(*acolsum_))
-      FOUR_C_THROW("ale scaling failed");
+    A_22.left_scale(*arowsum_);
+    A_22.right_scale(*acolsum_);
+    mat.matrix(2, 0).left_scale(*arowsum_);
+    mat.matrix(2, 1).left_scale(*arowsum_);
+    mat.matrix(2, 3).left_scale(*arowsum_);
+    mat.matrix(0, 2).right_scale(*acolsum_);
+    mat.matrix(1, 2).right_scale(*acolsum_);
+    mat.matrix(3, 2).right_scale(*acolsum_);
 
     // do scaling of structure and ale rhs vectors
     std::shared_ptr<Core::LinAlg::Vector<double>> sx = extractor().extract_vector(b, 0);
@@ -1046,20 +1052,26 @@ void FSI::MortarMonolithicFluidSplitSaddlePoint::unscale_solution(
     Core::LinAlg::SparseMatrix& A_00 = mat.matrix(0, 0);
     srowsum_->reciprocal(*srowsum_);
     scolsum_->reciprocal(*scolsum_);
-    if (A_00.left_scale(*srowsum_) or A_00.right_scale(*scolsum_) or
-        mat.matrix(0, 1).left_scale(*srowsum_) or mat.matrix(0, 2).left_scale(*srowsum_) or
-        mat.matrix(0, 3).left_scale(*srowsum_) or mat.matrix(1, 0).right_scale(*scolsum_) or
-        mat.matrix(2, 0).right_scale(*scolsum_) or mat.matrix(3, 0).right_scale(*scolsum_))
-      FOUR_C_THROW("structure scaling failed");
+    A_00.left_scale(*srowsum_);
+    A_00.right_scale(*scolsum_);
+    mat.matrix(0, 1).left_scale(*srowsum_);
+    mat.matrix(0, 2).left_scale(*srowsum_);
+    mat.matrix(0, 3).left_scale(*srowsum_);
+    mat.matrix(1, 0).right_scale(*scolsum_);
+    mat.matrix(2, 0).right_scale(*scolsum_);
+    mat.matrix(3, 0).right_scale(*scolsum_);
 
     Core::LinAlg::SparseMatrix& A_22 = mat.matrix(2, 2);
     arowsum_->reciprocal(*arowsum_);
     acolsum_->reciprocal(*acolsum_);
-    if (A_22.left_scale(*arowsum_) or A_22.right_scale(*acolsum_) or
-        mat.matrix(2, 0).left_scale(*arowsum_) or mat.matrix(2, 1).left_scale(*arowsum_) or
-        mat.matrix(2, 3).left_scale(*arowsum_) or mat.matrix(0, 2).right_scale(*acolsum_) or
-        mat.matrix(1, 2).right_scale(*acolsum_) or mat.matrix(3, 2).right_scale(*acolsum_))
-      FOUR_C_THROW("ale scaling failed");
+    A_22.left_scale(*arowsum_);
+    A_22.right_scale(*acolsum_);
+    mat.matrix(2, 0).left_scale(*arowsum_);
+    mat.matrix(2, 1).left_scale(*arowsum_);
+    mat.matrix(2, 3).left_scale(*arowsum_);
+    mat.matrix(0, 2).right_scale(*acolsum_);
+    mat.matrix(1, 2).right_scale(*acolsum_);
+    mat.matrix(3, 2).right_scale(*acolsum_);
   }
 
   Core::LinAlg::Vector<double> r(b.get_map());

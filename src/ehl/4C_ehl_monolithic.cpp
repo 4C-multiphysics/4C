@@ -1297,18 +1297,20 @@ void EHL::Monolithic::scale_system(
     scolsum_ = std::make_shared<Core::LinAlg::Vector<double>>(A_00.row_map(), false);
     A_00.inv_row_sums(*srowsum_);
     A_00.inv_col_sums(*scolsum_);
-    if (A_00.left_scale(*srowsum_) or A_00.right_scale(*scolsum_) or
-        mat.matrix(0, 1).left_scale(*srowsum_) or mat.matrix(1, 0).right_scale(*scolsum_))
-      FOUR_C_THROW("structure scaling failed");
+    A_00.left_scale(*srowsum_);
+    A_00.right_scale(*scolsum_);
+    mat.matrix(0, 1).left_scale(*srowsum_);
+    mat.matrix(1, 0).right_scale(*scolsum_);
 
     Core::LinAlg::SparseMatrix& A_11 = mat.matrix(1, 1);
     lrowsum_ = std::make_shared<Core::LinAlg::Vector<double>>(A_11.row_map(), false);
     lcolsum_ = std::make_shared<Core::LinAlg::Vector<double>>(A_11.row_map(), false);
     A_11.inv_row_sums(*lrowsum_);
     A_11.inv_col_sums(*lcolsum_);
-    if (A_11.left_scale(*lrowsum_) or A_11.right_scale(*lcolsum_) or
-        mat.matrix(1, 0).left_scale(*lrowsum_) or mat.matrix(0, 1).right_scale(*lcolsum_))
-      FOUR_C_THROW("lubrication scaling failed");
+    A_11.left_scale(*lrowsum_);
+    A_11.right_scale(*lcolsum_);
+    mat.matrix(1, 0).left_scale(*lrowsum_);
+    mat.matrix(0, 1).right_scale(*lcolsum_);
 
     std::shared_ptr<Core::LinAlg::Vector<double>> sx = extractor()->extract_vector(b, 0);
     std::shared_ptr<Core::LinAlg::Vector<double>> lx = extractor()->extract_vector(b, 1);
@@ -1354,16 +1356,18 @@ void EHL::Monolithic::unscale_solution(Core::LinAlg::BlockSparseMatrixBase& mat,
     Core::LinAlg::SparseMatrix& A_00 = mat.matrix(0, 0);
     srowsum_->reciprocal(*srowsum_);
     scolsum_->reciprocal(*scolsum_);
-    if (A_00.left_scale(*srowsum_) or A_00.right_scale(*scolsum_) or
-        mat.matrix(0, 1).left_scale(*srowsum_) or mat.matrix(1, 0).right_scale(*scolsum_))
-      FOUR_C_THROW("structure scaling failed");
+    A_00.left_scale(*srowsum_);
+    A_00.right_scale(*scolsum_);
+    mat.matrix(0, 1).left_scale(*srowsum_);
+    mat.matrix(1, 0).right_scale(*scolsum_);
 
     Core::LinAlg::SparseMatrix& A_11 = mat.matrix(1, 1);
     lrowsum_->reciprocal(*lrowsum_);
     lcolsum_->reciprocal(*lcolsum_);
-    if (A_11.left_scale(*lrowsum_) or A_11.right_scale(*lcolsum_) or
-        mat.matrix(1, 0).left_scale(*lrowsum_) or mat.matrix(0, 1).right_scale(*lcolsum_))
-      FOUR_C_THROW("lubrication scaling failed");
+    A_11.left_scale(*lrowsum_);
+    A_11.right_scale(*lcolsum_);
+    mat.matrix(1, 0).left_scale(*lrowsum_);
+    mat.matrix(0, 1).right_scale(*lcolsum_);
   }
 }
 
@@ -1605,7 +1609,7 @@ void EHL::Monolithic::lin_pressure_force_disp(
   std::shared_ptr<Core::LinAlg::Vector<double>> p_exp =
       std::make_shared<Core::LinAlg::Vector<double>>(*mortaradapter_->slave_dof_map());
   p_exp = ada_strDisp_to_lubDisp_->slave_to_master(*p_full);
-  if (p_deriv_normal->left_scale(*p_exp)) FOUR_C_THROW("leftscale failed");
+  p_deriv_normal->left_scale(*p_exp);
   if (p_deriv_normal->scale(-1.)) FOUR_C_THROW("scale failed");
 
   std::shared_ptr<Core::LinAlg::SparseMatrix> tmp = Core::LinAlg::matrix_multiply(
@@ -1631,8 +1635,7 @@ void EHL::Monolithic::lin_poiseuille_force_disp(
   Core::LinAlg::export_to(*p_int, p_int_full);
 
   Core::LinAlg::Vector<double> nodal_gap(*mortaradapter_->slave_dof_map());
-  if (slavemaptransform_->multiply(false, *mortaradapter_->nodal_gap(), nodal_gap))
-    FOUR_C_THROW("multiply failed");
+  slavemaptransform_->multiply(false, *mortaradapter_->nodal_gap(), nodal_gap);
 
   Core::LinAlg::Vector<double> grad_p(*mortaradapter_->slave_dof_map());
   if (mortaradapter_->surf_grad_matrix()->Apply(p_int_full, grad_p)) FOUR_C_THROW("apply failed");
@@ -1642,14 +1645,14 @@ void EHL::Monolithic::lin_poiseuille_force_disp(
           *mortaradapter_->slave_dof_map(), 81, false, false);
 
   Core::LinAlg::SparseMatrix derivH_gradP(*mortaradapter_->nodal_gap_deriv());
-  if (derivH_gradP.left_scale(grad_p)) FOUR_C_THROW("leftscale failed");
+  derivH_gradP.left_scale(grad_p);
   deriv_Poiseuille->add(derivH_gradP, false, -.5, 1.);
 
   Core::LinAlg::Vector<double> p_int_full_col(*mortaradapter_->interface()->slave_col_dofs());
   Core::LinAlg::export_to(p_int_full, p_int_full_col);
   std::shared_ptr<Core::LinAlg::SparseMatrix> h_derivGrad_nodalP =
       mortaradapter_->assemble_surf_grad_deriv(p_int_full_col);
-  if (h_derivGrad_nodalP->left_scale(nodal_gap)) FOUR_C_THROW("leftscale failed");
+  h_derivGrad_nodalP->left_scale(nodal_gap);
   deriv_Poiseuille->add(*h_derivGrad_nodalP, false, -.5, 1.);
 
   deriv_Poiseuille->complete(*mortaradapter_->s_mdof_map(), *mortaradapter_->slave_dof_map());
@@ -1691,8 +1694,7 @@ void EHL::Monolithic::lin_couette_force_disp(
       ada_strDisp_to_lubDisp_->slave_to_master(visc_vec);
 
   Core::LinAlg::Vector<double> height(*mortaradapter_->slave_dof_map());
-  if (slavemaptransform_->multiply(false, *mortaradapter_->nodal_gap(), height))
-    FOUR_C_THROW("multiply failed");
+  slavemaptransform_->multiply(false, *mortaradapter_->nodal_gap(), height);
   Core::LinAlg::Vector<double> h_inv(*mortaradapter_->slave_dof_map());
   if (h_inv.reciprocal(height)) FOUR_C_THROW("Reciprocal failed");
 
@@ -1744,7 +1746,7 @@ void EHL::Monolithic::lin_pressure_force_pres(
   tmp->complete(
       *lubrication_->lubrication_field()->dof_row_map(0), *mortaradapter_->slave_dof_map());
 
-  if (tmp->left_scale(*mortaradapter_->normals())) FOUR_C_THROW("leftscale failed");
+  tmp->left_scale(*mortaradapter_->normals());
   if (tmp->scale(-1.)) FOUR_C_THROW("scale failed");
 
   std::shared_ptr<Core::LinAlg::SparseMatrix> a = Core::LinAlg::matrix_multiply(
@@ -1763,8 +1765,7 @@ void EHL::Monolithic::lin_poiseuille_force_pres(
     Core::LinAlg::SparseMatrix& ds_dp, Core::LinAlg::SparseMatrix& dm_dp)
 {
   Core::LinAlg::Vector<double> nodal_gap(*mortaradapter_->slave_dof_map());
-  if (slavemaptransform_->multiply(false, *mortaradapter_->nodal_gap(), nodal_gap))
-    FOUR_C_THROW("multiply failed");
+  slavemaptransform_->multiply(false, *mortaradapter_->nodal_gap(), nodal_gap);
 
   Core::LinAlg::SparseMatrix m(*mortaradapter_->surf_grad_matrix());
   m.left_scale(nodal_gap);
@@ -1812,8 +1813,7 @@ void EHL::Monolithic::lin_couette_force_pres(
   const int ndim = Global::Problem::instance()->n_dim();
   const std::shared_ptr<const Core::LinAlg::Vector<double>> relVel = mortaradapter_->rel_tang_vel();
   Core::LinAlg::Vector<double> height(*mortaradapter_->slave_dof_map());
-  if (slavemaptransform_->multiply(false, *mortaradapter_->nodal_gap(), height))
-    FOUR_C_THROW("multiply failed");
+  slavemaptransform_->multiply(false, *mortaradapter_->nodal_gap(), height);
   Core::LinAlg::Vector<double> h_inv(*mortaradapter_->slave_dof_map());
   if (h_inv.reciprocal(height)) FOUR_C_THROW("Reciprocal failed");
   Core::LinAlg::Vector<double> hinv_relV(*mortaradapter_->slave_dof_map());

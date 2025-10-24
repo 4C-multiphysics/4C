@@ -82,8 +82,7 @@ void CONTACT::MtLagrangeStrategy::mortar_coupling(
   if (err != 0) FOUR_C_THROW("Reciprocal: Zero diagonal entry!");
 
   // re-insert inverted diagonal into invd
-  err = invd_->replace_diagonal_values(*diag);
-  if (err < 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
+  invd_->replace_diagonal_values(*diag);
 
   // do the multiplication M^ = inv(D) * M
   mhatmatrix_ = Core::LinAlg::matrix_multiply(*invd_, false, *mmatrix_, false, false, false, true);
@@ -336,8 +335,7 @@ CONTACT::MtLagrangeStrategy::mesh_initialization()
   diag->update(-1., *tmp, 1.);
 
   // re-insert inverted diagonal into invd
-  err = invd_->replace_diagonal_values(*diag);
-  if (err < 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
+  invd_->replace_diagonal_values(*diag);
 
   // do the multiplication M^ = inv(D) * M
   mhatmatrix_ = Core::LinAlg::matrix_multiply(*invd_, false, *mmatrix_, false, false, false, true);
@@ -1002,7 +1000,7 @@ bool CONTACT::MtLagrangeStrategy::evaluate_force(
   {
     // add meshtying force terms
     Core::LinAlg::Vector<double> fs(*gsdofrowmap_);
-    if (dmatrix_->multiply(true, *z_, fs)) FOUR_C_THROW("multiply failed");
+    dmatrix_->multiply(true, *z_, fs);
     Core::LinAlg::Vector<double> fsexp(*problem_dofs());
     Core::LinAlg::export_to(fs, fsexp);
     f_->update(1.0, fsexp, 1.0);

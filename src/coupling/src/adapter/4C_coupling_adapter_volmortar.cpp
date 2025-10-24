@@ -228,8 +228,7 @@ Coupling::Adapter::MortarVolCoupl::apply_vector_mapping12(
 
   std::shared_ptr<Core::LinAlg::Vector<double>> mapvec =
       Core::LinAlg::create_vector(p12_->row_map(), true);
-  int err = p12_->multiply(false, vec, *mapvec);
-  if (err != 0) FOUR_C_THROW("ERROR: Matrix multiply returned error code {}", err);
+  p12_->multiply(false, vec, *mapvec);
 
   return mapvec;
 }
@@ -247,8 +246,7 @@ Coupling::Adapter::MortarVolCoupl::apply_vector_mapping21(
 
   std::shared_ptr<Core::LinAlg::Vector<double>> mapvec =
       Core::LinAlg::create_vector(p21_->row_map(), true);
-  int err = p21_->multiply(false, vec, *mapvec);
-  if (err != 0) FOUR_C_THROW("ERROR: Matrix multiply returned error code {}", err);
+  p21_->multiply(false, vec, *mapvec);
 
   return mapvec;
 }

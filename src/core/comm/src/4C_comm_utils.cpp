@@ -500,8 +500,7 @@ namespace Core::Communication
         int NumEntries;
         double* Values;
         int* Indices;
-        int err = serialCrsMatrix.extract_my_row_view(i, NumEntries, Values, Indices);
-        if (err != 0) FOUR_C_THROW("extract_my_row_view error: {}", err);
+        serialCrsMatrix.extract_my_row_view(i, NumEntries, Values, Indices);
 
         for (int j = 0; j < NumEntries; ++j)
         {

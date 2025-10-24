@@ -1534,7 +1534,7 @@ void CONTACT::LagrangeStrategyPoro::poro_mt_set_coupling_matrices()
   if (err > 0) FOUR_C_THROW("ERROR: Reciprocal: Zero diagonal entry!");
 
   // re-insert inverted diagonal into invd
-  err = invd_->replace_diagonal_values(*diag);
+  invd_->replace_diagonal_values(*diag);
   // inversion end
 
   // active part of invd

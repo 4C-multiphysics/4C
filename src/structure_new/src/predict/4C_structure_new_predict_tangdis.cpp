@@ -200,7 +200,7 @@ void NOX::Nln::GROUP::PrePostOp::TangDis::run_post_compute_f(
   if (not stiff_ptr->filled()) FOUR_C_THROW("The jacobian is not yet filled!");
 
   Core::LinAlg::Vector<double> freact_ptr(*tang_predict_ptr_->global_state().dof_row_map_view());
-  if (stiff_ptr->multiply(false, dbc_incr, freact_ptr)) FOUR_C_THROW("Multiply failed!");
+  stiff_ptr->multiply(false, dbc_incr, freact_ptr);
 
   // finally add the linear reaction forces to the current rhs
   Core::LinAlg::assemble_my_vector(1.0, F, 1.0, freact_ptr);

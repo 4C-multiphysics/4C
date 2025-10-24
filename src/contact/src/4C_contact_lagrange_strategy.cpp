@@ -343,12 +343,9 @@ void CONTACT::LagrangeStrategy::evaluate_friction(
       if (err != 0) FOUR_C_THROW("Reciprocal: Zero diagonal entry!");
 
       // re-insert inverted diagonal into invd
-      err = invdV.replace_diagonal_values(*diagV);
-      if (err < 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
-      err = invdE.replace_diagonal_values(*diagE);
-      if (err < 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
-      err = invdS.replace_diagonal_values(*diagS);
-      if (err < 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
+      invdV.replace_diagonal_values(*diagV);
+      invdE.replace_diagonal_values(*diagE);
+      invdS.replace_diagonal_values(*diagS);
 
       // 3. multiply all sub matrices
       invd = std::make_shared<Core::LinAlg::SparseMatrix>(*gsdofrowmap_, 100, true, true);
@@ -425,8 +422,7 @@ void CONTACT::LagrangeStrategy::evaluate_friction(
       diag->update(-1., *tmp, 1.);
 
       // re-insert inverted diagonal into invd
-      err = invd->replace_diagonal_values(*diag);
-      if (err < 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
+      invd->replace_diagonal_values(*diag);
     }
 
     // do the multiplication mhat = inv(D) * M
@@ -2112,12 +2108,9 @@ void CONTACT::LagrangeStrategy::evaluate_contact(
       if (err != 0) FOUR_C_THROW("Reciprocal: Zero diagonal entry!");
 
       // re-insert inverted diagonal into invd
-      err = invdV.replace_diagonal_values(*diagV);
-      if (err < 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
-      err = invdE.replace_diagonal_values(*diagE);
-      if (err < 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
-      err = invdS.replace_diagonal_values(*diagS);
-      if (err < 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
+      invdV.replace_diagonal_values(*diagV);
+      invdE.replace_diagonal_values(*diagE);
+      invdS.replace_diagonal_values(*diagS);
 
       // 3. multiply all sub matrices
       invd = std::make_shared<Core::LinAlg::SparseMatrix>(*gsdofrowmap_, 100, true, true);
@@ -2193,8 +2186,7 @@ void CONTACT::LagrangeStrategy::evaluate_contact(
       diag->update(-1., *tmp, 1.);
 
       // re-insert inverted diagonal into invd
-      err = invd->replace_diagonal_values(*diag);
-      if (err < 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
+      invd->replace_diagonal_values(*diag);
     }
 
     // do the multiplication mhat = inv(D) * M
@@ -3614,12 +3606,9 @@ void CONTACT::LagrangeStrategy::assemble_all_contact_terms_friction()
       if (err != 0) FOUR_C_THROW("Reciprocal: Zero diagonal entry!");
 
       // re-insert inverted diagonal into invd
-      err = invdV.replace_diagonal_values(*diagV);
-      if (err < 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
-      err = invdE.replace_diagonal_values(*diagE);
-      if (err < 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
-      err = invdS.replace_diagonal_values(*diagS);
-      if (err < 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
+      invdV.replace_diagonal_values(*diagV);
+      invdE.replace_diagonal_values(*diagE);
+      invdS.replace_diagonal_values(*diagS);
 
       // 3. multiply all sub matrices
       invd = std::make_shared<Core::LinAlg::SparseMatrix>(*gsdofrowmap_, 100, true, true);
@@ -3696,8 +3685,7 @@ void CONTACT::LagrangeStrategy::assemble_all_contact_terms_friction()
       diag->update(-1., *tmp, 1.);
 
       // re-insert inverted diagonal into invd
-      err = invd->replace_diagonal_values(*diag);
-      if (err < 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
+      invd->replace_diagonal_values(*diag);
     }
 
     invd_ = invd;
@@ -3876,12 +3864,9 @@ void CONTACT::LagrangeStrategy::assemble_all_contact_terms_frictionless()
       if (err != 0) FOUR_C_THROW("Reciprocal: Zero diagonal entry!");
 
       // re-insert inverted diagonal into invd
-      err = invdV.replace_diagonal_values(*diagV);
-      if (err < 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
-      err = invdE.replace_diagonal_values(*diagE);
-      if (err < 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
-      err = invdS.replace_diagonal_values(*diagS);
-      if (err < 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
+      invdV.replace_diagonal_values(*diagV);
+      invdE.replace_diagonal_values(*diagE);
+      invdS.replace_diagonal_values(*diagS);
 
       // 3. multiply all sub matrices
       invd = std::make_shared<Core::LinAlg::SparseMatrix>(*gsdofrowmap_, 100, true, true);
@@ -3957,8 +3942,7 @@ void CONTACT::LagrangeStrategy::assemble_all_contact_terms_frictionless()
       diag->update(-1., *tmp, 1.);
 
       // re-insert inverted diagonal into invd
-      err = invd->replace_diagonal_values(*diag);
-      if (err < 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
+      invd->replace_diagonal_values(*diag);
     }
 
     invd_ = invd;
@@ -6641,7 +6625,7 @@ void CONTACT::LagrangeStrategy::run_pre_apply_jacobian_inverse(
     Core::LinAlg::Vector<double> rhs_str(*problem_dofs());
     Core::LinAlg::Vector<double> rhs_str2(*problem_dofs());
     Core::LinAlg::export_to(rhs, rhs_str);
-    if (systrafo_->multiply(true, rhs_str, rhs_str2)) FOUR_C_THROW("multiply failed");
+    systrafo_->multiply(true, rhs_str, rhs_str2);
     for (int i = 0; i < rhs_str2.get_map().num_my_elements(); ++i)
       rhs.get_values()[rhs.get_map().lid(rhs_str2.get_map().gid(i))] = rhs_str2[i];
   }

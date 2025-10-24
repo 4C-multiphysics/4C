@@ -140,9 +140,7 @@ bool Coupling::Adapter::MatrixLogicalSplitAndTransform::operator()(
       }
 
       auto permsrc = std::make_shared<Core::LinAlg::SparseMatrix>(permsrcmap, 0);
-      int err = permsrc->import(src, *exporter_, Insert);
-      if (err) FOUR_C_THROW("Import failed with err={}", err);
-
+      permsrc->import(src, *exporter_, Insert);
       permsrc->complete(src.domain_map(), permsrcmap);
       esrc = permsrc;
     }
@@ -258,13 +256,11 @@ void Coupling::Adapter::MatrixLogicalSplitAndTransform::add_into_filled(
     int *IndicesA, *IndicesB;
     const int rowA = esrc.row_map().lid(logical_range_map.gid(i));
     if (rowA == -1) FOUR_C_THROW("Internal error");
-    int err = esrc.extract_my_row_view(rowA, NumEntriesA, ValuesA, IndicesA);
-    if (err != 0) FOUR_C_THROW("ExtractMyRowView error: {}", err);
+    esrc.extract_my_row_view(rowA, NumEntriesA, ValuesA, IndicesA);
 
     // identify the local row index in the destination matrix corresponding to i
     const int rowB = dstrowmap.lid(matching_dst_rows.gid(i));
-    err = edst.extract_my_row_view(rowB, NumEntriesB, ValuesB, IndicesB);
-    if (err != 0) FOUR_C_THROW("ExtractMyRowView error: {}", err);
+    edst.extract_my_row_view(rowB, NumEntriesB, ValuesB, IndicesB);
 
     // loop through the columns in source matrix and find respective place in destination
     for (int jA = 0, jB = 0; jA < NumEntriesA; ++jA)
@@ -326,9 +322,8 @@ void Coupling::Adapter::MatrixLogicalSplitAndTransform::add_into_unfilled(
     int NumEntries;
     double* Values;
     int* Indices;
-    int err = esrc.extract_my_row_view(
+    esrc.extract_my_row_view(
         esrc.row_map().lid(logical_range_map.gid(i)), NumEntries, Values, Indices);
-    if (err != 0) FOUR_C_THROW("ExtractMyRowView error: {}", err);
 
     idx.clear();
     vals.clear();
@@ -363,17 +358,16 @@ void Coupling::Adapter::MatrixLogicalSplitAndTransform::add_into_unfilled(
 
     if (edst.num_allocated_global_entries(globalRow) == 0)
     {
-      int err = edst.insert_global_values(globalRow, NumEntries, vals.data(), idx.data());
-      if (err < 0) FOUR_C_THROW("InsertGlobalValues error: {}", err);
+      edst.insert_global_values(globalRow, NumEntries, vals.data(), idx.data());
     }
     else
       for (int j = 0; j < NumEntries; ++j)
       {
         // add all values, including zeros, as we need a proper matrix graph
-        int err = edst.sum_into_global_values(globalRow, 1, &vals[j], &idx[j]);
+        int err = edst.sum_into_global_values_error_return(globalRow, 1, &vals[j], &idx[j]);
         if (err > 0)
         {
-          err = edst.insert_global_values(globalRow, 1, &vals[j], &idx[j]);
+          err = edst.insert_global_values_error_return(globalRow, 1, &vals[j], &idx[j]);
           if (err < 0) FOUR_C_THROW("InsertGlobalValues error: {}", err);
         }
         else if (err < 0)

@@ -1019,8 +1019,7 @@ void Coupling::Adapter::CouplingMortar::create_p()
   if (err != 0) FOUR_C_THROW("Reciprocal: Zero diagonal entry!");
 
   // re-insert inverted diagonal into invd
-  err = Dinv_->replace_diagonal_values(*diag);
-  if (err != 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
+  Dinv_->replace_diagonal_values(*diag);
 
   // complete inverse D matrix
   Dinv_->complete();
@@ -1269,12 +1268,12 @@ std::shared_ptr<Core::LinAlg::Vector<double>> Coupling::Adapter::CouplingMortar:
 
   Core::LinAlg::Vector<double> tmp = Core::LinAlg::Vector<double>(M_->row_map());
 
-  if (M_->multiply(false, mv, tmp)) FOUR_C_THROW("M*mv multiplication failed");
+  M_->multiply(false, mv, tmp);
 
   std::shared_ptr<Core::LinAlg::Vector<double>> sv =
       std::make_shared<Core::LinAlg::Vector<double>>(*pslavedofrowmap_);
 
-  if (Dinv_->multiply(false, tmp, *sv)) FOUR_C_THROW("D^{{-1}}*v multiplication failed");
+  Dinv_->multiply(false, tmp, *sv);
 
   return sv;
 }
@@ -1326,7 +1325,7 @@ void Coupling::Adapter::CouplingMortar::slave_to_master(
   std::copy(sv.get_values(), sv.get_values() + sv.local_length(), tmp.get_values());
 
   Core::LinAlg::Vector<double> tempm(*pmasterdofrowmap_);
-  if (M_->multiply(true, tmp, tempm)) FOUR_C_THROW("M^{{T}}*sv multiplication failed");
+  M_->multiply(true, tmp, tempm);
 
   // copy from auxiliary to physical map (needed for coupling in fluid ale algorithm)
   std::copy(tempm.get_values(), tempm.get_values() + (tempm.local_length() * tempm.num_vectors()),
@@ -1351,7 +1350,7 @@ std::shared_ptr<Core::LinAlg::Vector<double>> Coupling::Adapter::CouplingMortar:
 
   std::shared_ptr<Core::LinAlg::Vector<double>> mv =
       std::make_shared<Core::LinAlg::Vector<double>>(*pmasterdofrowmap_);
-  if (M_->multiply(true, tmp, *mv)) FOUR_C_THROW("M^{{T}}*sv multiplication failed");
+  M_->multiply(true, tmp, *mv);
 
   return mv;
 }

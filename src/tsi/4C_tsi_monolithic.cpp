@@ -2015,18 +2015,20 @@ void TSI::Monolithic::scale_system(
     scolsum_ = std::make_shared<Core::LinAlg::Vector<double>>(A_00.row_map(), false);
     A_00.inv_row_sums(*srowsum_);
     A_00.inv_col_sums(*scolsum_);
-    if (A_00.left_scale(*srowsum_) or A_00.right_scale(*scolsum_) or
-        mat.matrix(0, 1).left_scale(*srowsum_) or mat.matrix(1, 0).right_scale(*scolsum_))
-      FOUR_C_THROW("structure scaling failed");
+    A_00.left_scale(*srowsum_);
+    A_00.right_scale(*scolsum_);
+    mat.matrix(0, 1).left_scale(*srowsum_);
+    mat.matrix(1, 0).right_scale(*scolsum_);
 
     Core::LinAlg::SparseMatrix& A_11 = mat.matrix(1, 1);
     trowsum_ = std::make_shared<Core::LinAlg::Vector<double>>(A_11.row_map(), false);
     tcolsum_ = std::make_shared<Core::LinAlg::Vector<double>>(A_11.row_map(), false);
     A_11.inv_row_sums(*trowsum_);
     A_11.inv_col_sums(*tcolsum_);
-    if (A_11.left_scale(*trowsum_) or A_11.right_scale(*tcolsum_) or
-        mat.matrix(1, 0).left_scale(*trowsum_) or mat.matrix(0, 1).right_scale(*tcolsum_))
-      FOUR_C_THROW("thermo scaling failed");
+    A_11.left_scale(*trowsum_);
+    A_11.right_scale(*tcolsum_);
+    mat.matrix(1, 0).left_scale(*trowsum_);
+    mat.matrix(0, 1).right_scale(*tcolsum_);
 
     std::shared_ptr<Core::LinAlg::Vector<double>> sx = extractor()->extract_vector(b, 0);
     std::shared_ptr<Core::LinAlg::Vector<double>> tx = extractor()->extract_vector(b, 1);
@@ -2071,16 +2073,18 @@ void TSI::Monolithic::unscale_solution(Core::LinAlg::BlockSparseMatrixBase& mat,
     Core::LinAlg::SparseMatrix& A_00 = mat.matrix(0, 0);
     srowsum_->reciprocal(*srowsum_);
     scolsum_->reciprocal(*scolsum_);
-    if (A_00.left_scale(*srowsum_) or A_00.right_scale(*scolsum_) or
-        mat.matrix(0, 1).left_scale(*srowsum_) or mat.matrix(1, 0).right_scale(*scolsum_))
-      FOUR_C_THROW("structure scaling failed");
+    A_00.left_scale(*srowsum_);
+    A_00.right_scale(*scolsum_);
+    mat.matrix(0, 1).left_scale(*srowsum_);
+    mat.matrix(1, 0).right_scale(*scolsum_);
 
     Core::LinAlg::SparseMatrix& A_11 = mat.matrix(1, 1);
     trowsum_->reciprocal(*trowsum_);
     tcolsum_->reciprocal(*tcolsum_);
-    if (A_11.left_scale(*trowsum_) or A_11.right_scale(*tcolsum_) or
-        mat.matrix(1, 0).left_scale(*trowsum_) or mat.matrix(0, 1).right_scale(*tcolsum_))
-      FOUR_C_THROW("thermo scaling failed");
+    A_11.left_scale(*trowsum_);
+    A_11.right_scale(*tcolsum_);
+    mat.matrix(1, 0).left_scale(*trowsum_);
+    mat.matrix(0, 1).right_scale(*tcolsum_);
   }
 }
 

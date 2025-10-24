@@ -1300,9 +1300,8 @@ void FLD::Meshtying::analyze_matrix(Core::LinAlg::SparseMatrix& sparsematrix)
       std::vector<int> indices(maxnumentries, 0);
       std::vector<double> values(maxnumentries, 0.0);
 
-      int error = sparsematrix.extract_my_row_copy(
+      sparsematrix.extract_my_row_copy(
           i, maxnumentries, numOfNonZeros, values.data(), indices.data());
-      if (error != 0) FOUR_C_THROW("extract_my_row_copy() returned err={}", error);
 
       for (int ii = 0; ii < numOfNonZeros; ii++)
       {

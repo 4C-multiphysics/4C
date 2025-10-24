@@ -518,7 +518,7 @@ namespace Core::LinAlg
     //@{
 
     /// Returns the result of a matrix multiplied by a Core::LinAlg::Vector<double> x in y.
-    int multiply(
+    void multiply(
         bool TransA, const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& y) const;
 
     /// Returns the result of a Epetra_CrsMatrix multiplied by a Epetra_MultiVector X in Y.
@@ -526,16 +526,16 @@ namespace Core::LinAlg
         Core::LinAlg::MultiVector<double>& Y) const override;
 
     /// Scales the Epetra_CrsMatrix on the left with a Core::LinAlg::Vector<double> x.
-    int left_scale(const Core::LinAlg::Vector<double>& x);
+    void left_scale(const Core::LinAlg::Vector<double>& x);
 
     /// Scales the Epetra_CrsMatrix on the right with a Core::LinAlg::Vector<double> x.
-    int right_scale(const Core::LinAlg::Vector<double>& x);
+    void right_scale(const Core::LinAlg::Vector<double>& x);
 
     // Computes the inverse of the sum of absolute values of the rows.
-    int inv_row_sums(Core::LinAlg::Vector<double>& x) const;
+    void inv_row_sums(Core::LinAlg::Vector<double>& x) const;
 
     // Computes the inverse of the sum of absolute values of the columns.
-    int inv_col_sums(Core::LinAlg::Vector<double>& x) const;
+    void inv_col_sums(Core::LinAlg::Vector<double>& x) const;
 
     //@}
 
@@ -543,33 +543,39 @@ namespace Core::LinAlg
     //@{
 
     /// Initialize all values in the matrix with constant value.
-    int put_scalar(double ScalarConstant);
+    void put_scalar(double ScalarConstant);
 
     /// Multiply all values in the matrix by a constant value (in place: A <- ScalarConstant * A).
     int scale(double ScalarConstant) override;
 
     /// Replaces diagonal values of the matrix with those in the user-provided vector.
-    int replace_diagonal_values(const Core::LinAlg::Vector<double>& Diagonal);
+    void replace_diagonal_values(const Core::LinAlg::Vector<double>& Diagonal);
 
     /// Inserts values into a local row.
-    int insert_my_values(int my_row, int num_entries, const double* values, const int* indices);
+    void insert_my_values(int my_row, int num_entries, const double* values, const int* indices);
 
     /// Sum values into a local row.
-    int sum_into_my_values(int my_row, int num_entries, const double* values, const int* indices);
+    void sum_into_my_values(int my_row, int num_entries, const double* values, const int* indices);
 
     /// Replaces values in a local row.
-    int replace_my_values(int my_row, int num_entries, const double* values, const int* indices);
+    void replace_my_values(int my_row, int num_entries, const double* values, const int* indices);
 
     /// Replaces values in a global row.
-    int replace_global_values(
+    void replace_global_values(
         int global_row, int num_entries, const double* values, const int* indices);
 
     /// Inserts values into a global row.
-    int insert_global_values(
+    void insert_global_values(
+        int global_row, int num_entries, const double* values, const int* indices);
+
+    int insert_global_values_error_return(
         int global_row, int num_entries, const double* values, const int* indices);
 
     /// Sum values into a global row.
-    int sum_into_global_values(
+    void sum_into_global_values(
+        int global_row, int num_entries, const double* values, const int* indices);
+
+    int sum_into_global_values_error_return(
         int global_row, int num_entries, const double* values, const int* indices);
 
     //@}
@@ -578,37 +584,39 @@ namespace Core::LinAlg
     //@{
 
     /// Returns a copy of the main diagonal in a user-provided vector.
-    int extract_diagonal_copy(Core::LinAlg::Vector<double>& Diagonal) const;
+    void extract_diagonal_copy(Core::LinAlg::Vector<double>& Diagonal) const;
 
     /// Returns a copy of the values and indices of a local row.
-    int extract_my_row_copy(
+    void extract_my_row_copy(
         int my_row, int length, int& num_entries, double* values, int* indices) const;
 
     /// Returns a copy of the values and indices of a global row.
-    int extract_global_row_copy(
+    void extract_global_row_copy(
         int global_row, int length, int& num_entries, double* values, int* indices) const;
 
     /// Returns a view of the values and indices of a local row.
-    int extract_my_row_view(int my_row, int& num_entries, double*& values, int*& indices) const;
+    void extract_my_row_view(int my_row, int& num_entries, double*& values, int*& indices) const;
 
     /// Returns a view of the values and indices of a global row.
-    int extract_global_row_view(
+    void extract_global_row_view(
         int global_row, int& num_entries, double*& values, int*& indices) const;
 
     //@}
 
     /** \name Import / Export methods */
     //@{
-    int import(const SparseMatrix& A, const Core::LinAlg::Import& importer,
+    void import(const SparseMatrix& A, const Core::LinAlg::Import& importer,
         Epetra_CombineMode combine_mode)
     {
-      return sysmat_->Import(A.epetra_matrix(), importer.get_epetra_import(), combine_mode);
+      CHECK_EPETRA_CALL(
+          sysmat_->Import(A.epetra_matrix(), importer.get_epetra_import(), combine_mode));
     }
 
-    int import(const SparseMatrix& A, const Core::LinAlg::Export& exporter,
+    void import(const SparseMatrix& A, const Core::LinAlg::Export& exporter,
         Epetra_CombineMode combine_mode)
     {
-      return sysmat_->Import(A.epetra_matrix(), exporter.get_epetra_export(), combine_mode);
+      CHECK_EPETRA_CALL(
+          sysmat_->Import(A.epetra_matrix(), exporter.get_epetra_export(), combine_mode));
     }
 
     //@}

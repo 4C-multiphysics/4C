@@ -70,9 +70,10 @@ void FLD::Utils::FluidInfNormScaling::scale_system(
 
     scolsum_->put_scalar(1.0);
 
-    if (A00.left_scale(*srowsum_) or A00.right_scale(*scolsum_) or
-        mat.matrix(0, 1).left_scale(*srowsum_) or mat.matrix(1, 0).right_scale(*scolsum_))
-      FOUR_C_THROW("fluid scaling failed");
+    A00.left_scale(*srowsum_);
+    A00.right_scale(*scolsum_);
+    mat.matrix(0, 1).left_scale(*srowsum_);
+    mat.matrix(1, 0).right_scale(*scolsum_);
 
     std::shared_ptr<Core::LinAlg::Vector<double>> sx = velpressplitter_.extract_vector(b, 0);
 
@@ -106,8 +107,8 @@ void FLD::Utils::FluidInfNormScaling::scale_system(
 
     pcolsum_->put_scalar(1.0);
 
-    if (A11.left_scale(*prowsum_) or mat.matrix(1, 0).left_scale(*prowsum_))
-      FOUR_C_THROW("fluid scaling failed");
+    A11.left_scale(*prowsum_);
+    mat.matrix(1, 0).left_scale(*prowsum_);
 
     std::shared_ptr<Core::LinAlg::Vector<double>> px = velpressplitter_.extract_vector(b, 1);
 
@@ -138,7 +139,7 @@ void FLD::Utils::FluidInfNormScaling::scale_system(
     px->put_scalar(1.0);
     velpressplitter_.insert_vector(*px, 1, *srowsum_);
 
-    if (smat->left_scale(*srowsum_)) FOUR_C_THROW("fluid scaling failed");
+    smat->left_scale(*srowsum_);
     if (b.multiply(1.0, *srowsum_, b, 0.0)) FOUR_C_THROW("fluid scaling failed");
 
     smat->inv_col_sums(*scolsum_);
@@ -150,7 +151,7 @@ void FLD::Utils::FluidInfNormScaling::scale_system(
     ux->put_scalar(1.0);
     velpressplitter_.insert_vector(*ux, 0, *scolsum_);
 
-    if (smat->right_scale(*scolsum_)) FOUR_C_THROW("fluid scaling failed");
+    smat->right_scale(*scolsum_);
   }  // SparseMatrix
 
 
@@ -210,15 +211,16 @@ void FLD::Utils::FluidInfNormScaling::unscale_solution(
     Core::LinAlg::SparseMatrix& A00 = mat.matrix(0, 0);
     srowsum_->reciprocal(*srowsum_);
     scolsum_->reciprocal(*scolsum_);
-    if (A00.left_scale(*srowsum_) or A00.right_scale(*scolsum_) or
-        mat.matrix(0, 1).left_scale(*srowsum_) or mat.matrix(1, 0).right_scale(*scolsum_))
-      FOUR_C_THROW("fluid scaling failed");
+    A00.left_scale(*srowsum_);
+    A00.right_scale(*scolsum_);
+    mat.matrix(0, 1).left_scale(*srowsum_);
+    mat.matrix(1, 0).right_scale(*scolsum_);
 
     // undo left scaling of continuity equation
     Core::LinAlg::SparseMatrix& A11 = mat.matrix(1, 1);
     prowsum_->reciprocal(*prowsum_);
-    if (A11.left_scale(*prowsum_) or mat.matrix(1, 0).left_scale(*prowsum_))
-      FOUR_C_THROW("fluid scaling failed");
+    A11.left_scale(*prowsum_);
+    mat.matrix(1, 0).left_scale(*prowsum_);
   }
   else
   {

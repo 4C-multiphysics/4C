@@ -424,7 +424,7 @@ bool CONTACT::MtPenaltyStrategy::evaluate_force(
     const std::shared_ptr<const Core::LinAlg::Vector<double>> dis)
 {
   if (!force_) force_ = std::make_shared<Core::LinAlg::Vector<double>>(*problem_dofs());
-  if (stiff_->multiply(false, *dis, *force_)) FOUR_C_THROW("multiply failed");
+  stiff_->multiply(false, *dis, *force_);
 
   return true;
 }

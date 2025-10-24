@@ -1081,8 +1081,7 @@ void Adapter::CouplingNonLinMortar::create_p()
   if (err > 0) FOUR_C_THROW("ERROR: Reciprocal: Zero diagonal entry!");
 
   // re-insert inverted diagonal into invd
-  err = Dinv_->replace_diagonal_values(*diag);
-  if (err > 0) FOUR_C_THROW("ERROR: replace_diagonal_values failed!");
+  Dinv_->replace_diagonal_values(*diag);
 
   // complete inverse D matrix
   Dinv_->complete();

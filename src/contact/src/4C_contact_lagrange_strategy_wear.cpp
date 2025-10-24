@@ -593,8 +593,7 @@ void Wear::LagrangeStrategyWear::condense_wear_impl_expl(
   if (err != 0) FOUR_C_THROW("Reciprocal: Zero diagonal entry!");
 
   // re-insert inverted diagonal into invd
-  err = invd->replace_diagonal_values(*diag);
-  if (err < 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
+  invd->replace_diagonal_values(*diag);
 
   // do the multiplication mhat = inv(D) * M
   mhatmatrix_ = Core::LinAlg::matrix_multiply(*invd, false, *mmatrix_, false, false, false, true);
@@ -1601,8 +1600,7 @@ void Wear::LagrangeStrategyWear::condense_wear_discr(
   if (err != 0) FOUR_C_THROW("Reciprocal: Zero diagonal entry!");
 
   // re-insert inverted diagonal into invd
-  err = invd->replace_diagonal_values(*diag);
-  if (err < 0) FOUR_C_THROW("replace_diagonal_values() failed with error code {}.", err);
+  invd->replace_diagonal_values(*diag);
 
   // do the multiplication mhat = inv(D) * M
   mhatmatrix_ = Core::LinAlg::matrix_multiply(*invd, false, *mmatrix_, false, false, false, true);
@@ -1877,7 +1875,7 @@ void Wear::LagrangeStrategyWear::condense_wear_discr(
   if (erre > 0) FOUR_C_THROW("Reciprocal: Zero diagonal entry!");
 
   // re-insert inverted diagonal into invd
-  erre = inve.replace_diagonal_values(*diage);
+  inve.replace_diagonal_values(*diage);
 
   /********************************************************************/
   /* (b) build linedis + lintdis                                     */

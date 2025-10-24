@@ -50,10 +50,10 @@ void Core::LinAlg::assemble(Core::LinAlg::SparseMatrix& A,
 
         // Now that we do not rebuild the sparse mask in each step, we
         // are bound to assemble the whole thing. Zeros included.
-        int errone = A.sum_into_global_values(rgid, 1, &val, &cgid);
+        int errone = A.sum_into_global_values_error_return(rgid, 1, &val, &cgid);
         if (errone > 0)
         {
-          int errtwo = A.insert_global_values(rgid, 1, &val, &cgid);
+          int errtwo = A.insert_global_values_error_return(rgid, 1, &val, &cgid);
           if (errtwo < 0)
             FOUR_C_THROW(
                 "Core::LinAlg::SparseMatrix::InsertGlobalValues returned error code {}", errtwo);

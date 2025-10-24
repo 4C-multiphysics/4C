@@ -192,8 +192,7 @@ void ScaTra::MeshtyingStrategyS2I::condense_mat_and_rhs(
           // replace slave-side entries of global residual vector by projected slave-side entries
           // including interface contributions
           Core::LinAlg::Vector<double> Q_residualslave(*interfacemaps_->map(1));
-          if (Q_->multiply(true, *residualslave, Q_residualslave))
-            FOUR_C_THROW("Matrix-vector multiplication failed!");
+          Q_->multiply(true, *residualslave, Q_residualslave);
           interfacemaps_->insert_vector(Q_residualslave, 1, *scatratimint_->residual());
           interfacemaps_->add_vector(*islaveresidual_, 1, *scatratimint_->residual());
         }
@@ -207,8 +206,7 @@ void ScaTra::MeshtyingStrategyS2I::condense_mat_and_rhs(
 
         // add projected slave-side entries to master-side entries of global residual vector
         Core::LinAlg::Vector<double> P_residualslave(*interfacemaps_->map(2));
-        if (P_->multiply(true, *residualslave, P_residualslave))
-          FOUR_C_THROW("Matrix-vector multiplication failed!");
+        P_->multiply(true, *residualslave, P_residualslave);
         interfacemaps_->add_vector(P_residualslave, 2, *scatratimint_->residual());
       }
 
@@ -247,8 +245,7 @@ void ScaTra::MeshtyingStrategyS2I::condense_mat_and_rhs(
         // replace master-side entries of global residual vector by projected master-side entries
         // including interface contributions
         Core::LinAlg::Vector<double> Q_residualmaster(*interfacemaps_->map(2));
-        if (Q_->multiply(true, *residualmaster, Q_residualmaster))
-          FOUR_C_THROW("Matrix-vector multiplication failed!");
+        Q_->multiply(true, *residualmaster, Q_residualmaster);
         interfacemaps_->insert_vector(Q_residualmaster, 2, *scatratimint_->residual());
         interfacemaps_->add_vector(
             Core::LinAlg::MultiVector<double>(imasterresidual_->get_ref_of_epetra_fevector()), 2,
@@ -256,8 +253,7 @@ void ScaTra::MeshtyingStrategyS2I::condense_mat_and_rhs(
 
         // add projected master-side entries to slave-side entries of global residual vector
         Core::LinAlg::Vector<double> P_residualmaster(*interfacemaps_->map(1));
-        if (P_->multiply(true, *residualmaster, P_residualmaster))
-          FOUR_C_THROW("Matrix-vector multiplication failed!");
+        P_->multiply(true, *residualmaster, P_residualmaster);
         interfacemaps_->add_vector(P_residualmaster, 1, *scatratimint_->residual());
       }
 
@@ -410,26 +406,13 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
               // system matrix this effectively forces the slave-side degree of freedom to assume
               // the same value as the master-side degree of freedom
               const double value(-1.);
-              if (systemmatrix->insert_global_values(slavedofgid, 1, &value, &masterdofgid) < 0)
-              {
-                FOUR_C_THROW(
-                    "Cannot insert value -1. into matrix row with global ID {} and matrix column "
-                    "with global ID {}!",
-                    slavedofgid, masterdofgid);
-              }
+              systemmatrix->insert_global_values(slavedofgid, 1, &value, &masterdofgid);
 
               // insert zero into intersection of slave-side row and master-side column in temporary
               // matrix this prevents the system matrix from changing its graph when calling this
               // function again during the next Newton iteration
               const double zero(0.);
-              if (systemmatrixrowsslave.insert_global_values(slavedofgid, 1, &zero, &masterdofgid) <
-                  0)
-              {
-                FOUR_C_THROW(
-                    "Cannot insert zero into matrix row with global ID {} and matrix column with "
-                    "global ID {}!",
-                    slavedofgid, masterdofgid);
-              }
+              systemmatrixrowsslave.insert_global_values(slavedofgid, 1, &zero, &masterdofgid);
             }
 
             // finalize temporary matrix with slave-side rows of system matrix
@@ -704,14 +687,12 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
               {
                 // assemble slave-side interface contributions into global residual vector
                 Core::LinAlg::Vector<double> islaveresidual(*interfacemaps_->map(1));
-                if (D_->multiply(true, *lm_, islaveresidual))
-                  FOUR_C_THROW("Matrix-vector multiplication failed!");
+                D_->multiply(true, *lm_, islaveresidual);
                 interfacemaps_->add_vector(islaveresidual, 1, *scatratimint_->residual(), -1.);
 
                 // assemble master-side interface contributions into global residual vector
                 Core::LinAlg::Vector<double> imasterresidual(*interfacemaps_->map(2));
-                if (M_->multiply(true, *lm_, imasterresidual))
-                  FOUR_C_THROW("Matrix-vector multiplication failed!");
+                M_->multiply(true, *lm_, imasterresidual);
                 interfacemaps_->add_vector(imasterresidual, 2, *scatratimint_->residual());
 
                 // build constraint residual vector associated with Lagrange multiplier dofs
@@ -719,22 +700,19 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
                 if (ilmresidual.replace_map(*extendedmaps_->map(1)))
                   FOUR_C_THROW("Couldn't replace map!");
                 if (lmresidual_->update(1., ilmresidual, 0.)) FOUR_C_THROW("Vector update failed!");
-                if (E_->multiply(true, *lm_, ilmresidual))
-                  FOUR_C_THROW("Matrix-vector multiplication failed!");
+                E_->multiply(true, *lm_, ilmresidual);
                 if (lmresidual_->update(1., ilmresidual, 1.)) FOUR_C_THROW("Vector update failed!");
               }
               else
               {
                 // assemble slave-side interface contributions into global residual vector
                 Core::LinAlg::Vector<double> islaveresidual(*interfacemaps_->map(1));
-                if (M_->multiply(true, *lm_, islaveresidual))
-                  FOUR_C_THROW("Matrix-vector multiplication failed!");
+                M_->multiply(true, *lm_, islaveresidual);
                 interfacemaps_->add_vector(islaveresidual, 1, *scatratimint_->residual());
 
                 // assemble master-side interface contributions into global residual vector
                 Core::LinAlg::Vector<double> imasterresidual(*interfacemaps_->map(2));
-                if (D_->multiply(true, *lm_, imasterresidual))
-                  FOUR_C_THROW("Matrix-vector multiplication failed!");
+                D_->multiply(true, *lm_, imasterresidual);
                 interfacemaps_->add_vector(imasterresidual, 2, *scatratimint_->residual(), -1.);
 
                 // build constraint residual vector associated with Lagrange multiplier dofs
@@ -742,8 +720,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
                 if (ilmresidual.replace_map(*extendedmaps_->map(1)))
                   FOUR_C_THROW("Couldn't replace map!");
                 if (lmresidual_->update(1., ilmresidual, 0.)) FOUR_C_THROW("Vector update failed!");
-                if (E_->multiply(true, *lm_, ilmresidual))
-                  FOUR_C_THROW("Matrix-vector multiplication failed!");
+                E_->multiply(true, *lm_, ilmresidual);
                 if (lmresidual_->update(1., ilmresidual, 1.)) FOUR_C_THROW("Vector update failed!");
               }
 
@@ -760,8 +737,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
                     false, -1., 1.);
                 interfacemaps_->add_vector(*islaveresidual_, 1, *scatratimint_->residual());
                 Core::LinAlg::Vector<double> imasterresidual(*interfacemaps_->map(2));
-                if (P_->multiply(true, *islaveresidual_, imasterresidual))
-                  FOUR_C_THROW("Matrix-vector multiplication failed!");
+                P_->multiply(true, *islaveresidual_, imasterresidual);
                 interfacemaps_->add_vector(imasterresidual, 2, *scatratimint_->residual(), -1.);
               }
               else
@@ -2634,13 +2610,12 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
                 D_diag = Core::LinAlg::create_vector(*interfacemaps_->map(1));
               else
                 D_diag = Core::LinAlg::create_vector(*interfacemaps_->map(2));
-              if (D_->extract_diagonal_copy(*D_diag))
-                FOUR_C_THROW("Couldn't extract main diagonal from mortar matrix D!");
+              D_->extract_diagonal_copy(*D_diag);
               if (D_diag->reciprocal(*D_diag))
                 FOUR_C_THROW("Couldn't invert main diagonal entries of mortar matrix D!");
 
               P_ = std::make_shared<Core::LinAlg::SparseMatrix>(*M_);
-              if (P_->left_scale(*D_diag)) FOUR_C_THROW("Setup of mortar projector P failed!");
+              P_->left_scale(*D_diag);
 
               // free memory
               if (!slaveonly_)
@@ -2653,7 +2628,7 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
               {
                 // set up mortar projector Q
                 Q_ = std::make_shared<Core::LinAlg::SparseMatrix>(*E_);
-                if (Q_->left_scale(*D_diag)) FOUR_C_THROW("Setup of mortar projector Q failed!");
+                Q_->left_scale(*D_diag);
 
                 // free memory
                 E_ = nullptr;
@@ -3444,12 +3419,10 @@ void ScaTra::MeshtyingStrategyS2I::extract_matrix_rows(
     int numentries(0);
     std::vector<double> values(length, 0.);
     std::vector<int> indices(length, 0);
-    if (matrix.extract_global_row_copy(dofgid, length, numentries, values.data(), indices.data()))
-      FOUR_C_THROW("Cannot extract matrix row with global ID {} from source matrix!", dofgid);
+    matrix.extract_global_row_copy(dofgid, length, numentries, values.data(), indices.data());
 
     // copy current source matrix row into destination matrix
-    if (rows.insert_global_values(dofgid, numentries, values.data(), indices.data()) < 0)
-      FOUR_C_THROW("Cannot insert matrix row with global ID {} into destination matrix!", dofgid);
+    rows.insert_global_values(dofgid, numentries, values.data(), indices.data());
   }
 }
 

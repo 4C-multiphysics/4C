@@ -611,8 +611,6 @@ void BeamInteraction::BeamToSolidMortarManager::add_global_force_stiffness_penal
   auto penalty_regularization = get_penalty_regularization(is_stiff);
   const auto lambda = std::get<0>(penalty_regularization);
 
-  int linalg_error = 0;
-
   if (is_stiff)
   {
     // Penalty regularization linearized w.r.t. the constraint equations
@@ -673,10 +671,8 @@ void BeamInteraction::BeamToSolidMortarManager::add_global_force_stiffness_penal
     Core::LinAlg::Vector<double> solid_force(*solid_dof_rowmap_);
     beam_force.put_scalar(0.);
     solid_force.put_scalar(0.);
-    linalg_error = force_beam_lin_lambda_->multiply(false, *lambda, beam_force);
-    if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
-    linalg_error = force_solid_lin_lambda_->multiply(false, *lambda, solid_force);
-    if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
+    force_beam_lin_lambda_->multiply(false, *lambda, beam_force);
+    force_solid_lin_lambda_->multiply(false, *lambda, solid_force);
     Core::LinAlg::Vector<double> global_temp(*discret_->dof_row_map());
     Core::LinAlg::export_to(beam_force, global_temp);
     Core::LinAlg::export_to(solid_force, global_temp);
@@ -712,9 +708,7 @@ BeamInteraction::BeamToSolidMortarManager::get_penalty_regularization(
   // Multiply the inverted kappa matrix with the constraint equations.
   std::shared_ptr<Core::LinAlg::Vector<double>> lambda =
       std::make_shared<Core::LinAlg::Vector<double>>(*lambda_dof_rowmap_);
-  int linalg_error =
-      penalty_kappa_inv_mat.multiply(false, Core::LinAlg::Vector<double>(*constraint_), *lambda);
-  if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
+  penalty_kappa_inv_mat.multiply(false, Core::LinAlg::Vector<double>(*constraint_), *lambda);
 
   if (compute_linearization)
   {
