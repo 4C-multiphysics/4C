@@ -529,7 +529,7 @@ void PoroElast::MonolithicSplitNoPenetration::apply_fluid_coupl_matrix(
   if (err > 0) FOUR_C_THROW("ERROR: Reciprocal: Zero diagonal entry!");
 
   // re-insert inverted diagonal into invd
-  err = invd->replace_diagonal_values(*diag);
+  invd->replace_diagonal_values(*diag);
   invd->complete();
   //------------------------------End of invert D
   // Matrix!-----------------------------------------------

@@ -2302,10 +2302,10 @@ void FSI::MonolithicXFEM::scale_system(
     scolsum_ = std::make_shared<Core::LinAlg::Vector<double>>(A.row_map(), false);
     A.inv_row_sums(*srowsum_);
     A.inv_col_sums(*scolsum_);
-
-    if (A.left_scale(*srowsum_) or A.right_scale(*scolsum_) or
-        mat.matrix(0, 1).left_scale(*srowsum_) or mat.matrix(1, 0).right_scale(*scolsum_))
-      FOUR_C_THROW("structure scaling failed");
+    A.left_scale(*srowsum_);
+    A.right_scale(*scolsum_);
+    mat.matrix(0, 1).left_scale(*srowsum_);
+    mat.matrix(1, 0).right_scale(*scolsum_);
 
     std::shared_ptr<Core::LinAlg::Vector<double>> sx = extractor().extract_vector(b, 0);
 
@@ -2340,9 +2340,10 @@ void FSI::MonolithicXFEM::unscale_solution(Core::LinAlg::BlockSparseMatrixBase& 
     Core::LinAlg::SparseMatrix& A = mat.matrix(0, 0);
     srowsum_->reciprocal(*srowsum_);
     scolsum_->reciprocal(*scolsum_);
-    if (A.left_scale(*srowsum_) or A.right_scale(*scolsum_) or
-        mat.matrix(0, 1).left_scale(*srowsum_) or mat.matrix(1, 0).right_scale(*scolsum_))
-      FOUR_C_THROW("structure scaling failed");
+    A.left_scale(*srowsum_);
+    A.right_scale(*scolsum_);
+    mat.matrix(0, 1).left_scale(*srowsum_);
+    mat.matrix(1, 0).right_scale(*scolsum_);
   }
 }
 

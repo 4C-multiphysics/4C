@@ -1307,7 +1307,7 @@ void Solid::TimInt::update_step_contact_vum()
       Minv.extract_diagonal_copy(*diag);
       err = diag->reciprocal(*diag);
       if (err != 0) FOUR_C_THROW("Reciprocal: Zero diagonal entry!");
-      err = Minv.replace_diagonal_values(*diag);
+      Minv.replace_diagonal_values(*diag);
       Minv.complete(*dofmap, *dofmap);
 
       // displacement increment Dd

@@ -1122,8 +1122,7 @@ void Coupling::VolMortar::VolMortarCoupl::check_initial_residuum()
   // if(err1!=0 or err2!=0)
   //  FOUR_C_THROW("error");
 
-  int err = p21_->multiply(false, *var_A, *result_A);
-  if (err != 0) FOUR_C_THROW("error");
+  p21_->multiply(false, *var_A, *result_A);
 
   // subtract both results
   result_A->update(-1.0, *var_B, 1.0);
@@ -1297,28 +1296,20 @@ void Coupling::VolMortar::VolMortarCoupl::mesh_init()
         Core::LinAlg::create_vector(*discret1()->dof_row_map(dofseta));
 
     int err = 0;
-    err = dmatrix_xa_->multiply(false, *mergedXa, *solDA);
-    if (err != 0) FOUR_C_THROW("stop");
 
-    err = mmatrix_xa_->multiply(false, *mergedXb, *solMA);
-    if (err != 0) FOUR_C_THROW("stop");
+    dmatrix_xa_->multiply(false, *mergedXa, *solDA);
+    mmatrix_xa_->multiply(false, *mergedXb, *solMA);
 
     std::shared_ptr<Core::LinAlg::Vector<double>> solDB =
         Core::LinAlg::create_vector(*discret2()->dof_row_map(dofsetb));
     std::shared_ptr<Core::LinAlg::Vector<double>> solMB =
         Core::LinAlg::create_vector(*discret2()->dof_row_map(dofsetb));
 
-    err = dmatrix_xb_->multiply(false, *mergedXb, *solDB);
-    if (err != 0) FOUR_C_THROW("stop");
+    dmatrix_xb_->multiply(false, *mergedXb, *solDB);
+    mmatrix_xb_->multiply(false, *mergedXa, *solMB);
 
-    err = mmatrix_xb_->multiply(false, *mergedXa, *solMB);
-    if (err != 0) FOUR_C_THROW("stop");
-
-    err = solDA->update(-1.0, *solMA, 1.0);
-    if (err != 0) FOUR_C_THROW("stop");
-
-    err = solDB->update(-1.0, *solMB, 1.0);
-    if (err != 0) FOUR_C_THROW("stop");
+    solDA->update(-1.0, *solMA, 1.0);
+    solDB->update(-1.0, *solMB, 1.0);
 
     double ra = 0.0;
     double rb = 0.0;
@@ -1530,22 +1521,16 @@ void Coupling::VolMortar::VolMortarCoupl::mesh_init()
     std::shared_ptr<Core::LinAlg::Vector<double>> finalMA =
         Core::LinAlg::create_vector(*discret1()->dof_row_map(dofseta));
 
-    err = dmatrix_xa_->multiply(false, *checka, *finalDA);
-    if (err != 0) FOUR_C_THROW("stop");
-
-    err = mmatrix_xa_->multiply(false, *checkb, *finalMA);
-    if (err != 0) FOUR_C_THROW("stop");
+    dmatrix_xa_->multiply(false, *checka, *finalDA);
+    mmatrix_xa_->multiply(false, *checkb, *finalMA);
 
     std::shared_ptr<Core::LinAlg::Vector<double>> finalDB =
         Core::LinAlg::create_vector(*discret2()->dof_row_map(dofsetb));
     std::shared_ptr<Core::LinAlg::Vector<double>> finalMB =
         Core::LinAlg::create_vector(*discret2()->dof_row_map(dofsetb));
 
-    err = dmatrix_xb_->multiply(false, *checkb, *finalDB);
-    if (err != 0) FOUR_C_THROW("stop");
-
-    err = mmatrix_xb_->multiply(false, *checka, *finalMB);
-    if (err != 0) FOUR_C_THROW("stop");
+    dmatrix_xb_->multiply(false, *checkb, *finalDB);
+    mmatrix_xb_->multiply(false, *checka, *finalMB);
 
     err = finalDA->update(-1.0, *finalMA, 1.0);
     if (err != 0) FOUR_C_THROW("stop");
@@ -3723,7 +3708,7 @@ void Coupling::VolMortar::VolMortarCoupl::create_projection_operator()
   if (err > 0) FOUR_C_THROW("ERROR: Reciprocal: Zero diagonal entry!");
 
   // re-insert inverted diagonal into invd
-  err = invd1.replace_diagonal_values(*diag1);
+  invd1.replace_diagonal_values(*diag1);
 
   // do the multiplication P = inv(D) * M
   std::shared_ptr<Core::LinAlg::SparseMatrix> aux12 =
@@ -3748,7 +3733,7 @@ void Coupling::VolMortar::VolMortarCoupl::create_projection_operator()
   if (err > 0) FOUR_C_THROW("ERROR: Reciprocal: Zero diagonal entry!");
 
   // re-insert inverted diagonal into invd
-  err = invd2.replace_diagonal_values(*diag2);
+  invd2.replace_diagonal_values(*diag2);
 
   // do the multiplication P = inv(D) * M
   std::shared_ptr<Core::LinAlg::SparseMatrix> aux21 =

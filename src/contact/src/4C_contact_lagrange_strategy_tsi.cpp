@@ -980,7 +980,7 @@ void CONTACT::LagrangeStrategyTsi::update(std::shared_ptr<const Core::LinAlg::Ve
   mThermo.UseTranspose();
   tmp =
       std::make_shared<Core::LinAlg::Vector<double>>(*coupST_->master_to_slave_map(*gmdofrowmap_));
-  if (mThermo.multiply(true, *z_thermo_, *tmp) != 0) FOUR_C_THROW("multiply went wrong");
+  mThermo.multiply(true, *z_thermo_, *tmp);
   tmp->scale(-1.);
   CONTACT::Utils::add_vector(*tmp, *ftcnp_);
 
@@ -993,7 +993,7 @@ void CONTACT::LagrangeStrategyTsi::update(std::shared_ptr<const Core::LinAlg::Ve
   Core::LinAlg::Vector<double> z_act(*gactivedofs_);
   Core::LinAlg::export_to(*z_, z_act);
   tmp = std::make_shared<Core::LinAlg::Vector<double>>(*gmdofrowmap_);
-  if (m_LinDissContactLM.multiply(false, z_act, *tmp) != 0) FOUR_C_THROW("multiply went wrong");
+  m_LinDissContactLM.multiply(false, z_act, *tmp);
   Core::LinAlg::Vector<double> tmp2(*coupST_->master_dof_map());
   Core::LinAlg::export_to(*tmp, tmp2);
   std::shared_ptr<Core::LinAlg::Vector<double>> tmp3 = coupST_->master_to_slave(tmp2);

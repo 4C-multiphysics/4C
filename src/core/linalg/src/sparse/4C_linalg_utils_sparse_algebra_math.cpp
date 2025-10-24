@@ -119,15 +119,15 @@ namespace Core::LinAlg
       {
         const int Row = A.global_row_index(i);
         int NumEntries = 0;
-        int ierr = A.extract_global_row_copy(
-            Row, Values.size(), NumEntries, Values.data(), Indices.data());
-        if (ierr) FOUR_C_THROW("extract_global_row_copy() returned err={}", ierr);
+        A.extract_global_row_copy(Row, Values.size(), NumEntries, Values.data(), Indices.data());
+
         if (scalarA != 1.0)
           for (int j = 0; j < NumEntries; ++j) Values[j] *= scalarA;
         for (int j = 0; j < NumEntries; ++j)
         {
-          int err = B.sum_into_global_values(Row, 1, &Values[j], &Indices[j]);
-          if (err < 0 || err == 2) err = B.insert_global_values(Row, 1, &Values[j], &Indices[j]);
+          int err = B.sum_into_global_values_error_return(Row, 1, &Values[j], &Indices[j]);
+          if (err < 0 || err == 2)
+            err = B.insert_global_values_error_return(Row, 1, &Values[j], &Indices[j]);
           if (err < 0) FOUR_C_THROW("insert_global_values() returned err={} at row {}", err, Row);
         }
       }
@@ -196,20 +196,17 @@ void Core::LinAlg::matrix_put(const Core::LinAlg::SparseMatrix& A, const double 
   int NumEntries;
   std::vector<int> Indices(MaxNumEntries);
   std::vector<double> Values(MaxNumEntries);
-  int err;
 
   // loop rows in #tomap and replace the rows of #this->sysmat_ with provided input matrix #A
   for (int lid = 0; lid < tomap->num_my_elements(); ++lid)
   {
     const int Row = tomap->gid(lid);
     if (Row < 0) FOUR_C_THROW("DOF not found on processor.");
-    err = Aprime->extract_global_row_copy(
-        Row, MaxNumEntries, NumEntries, Values.data(), Indices.data());
-    if (err) FOUR_C_THROW("ExtractGlobalRowCopy returned err={}", err);
+    Aprime->extract_global_row_copy(Row, MaxNumEntries, NumEntries, Values.data(), Indices.data());
+
     if (scalarA != 1.0)
       for (int j = 0; j < NumEntries; ++j) Values[j] *= scalarA;
-    err = B.replace_global_values(Row, NumEntries, Values.data(), Indices.data());
-    if (err) FOUR_C_THROW("replace_global_values() failed with error code {}", err);
+    B.replace_global_values(Row, NumEntries, Values.data(), Indices.data());
   }
 }
 
@@ -502,12 +499,7 @@ Core::LinAlg::SparseMatrix Core::LinAlg::multiply_multi_vector_multi_vector(
       }
     }
 
-    int err = mat.insert_global_values(grid, indices.size(), rowvals.data(), indices.data());
-    if (err < 0)
-    {
-      FOUR_C_THROW(
-          "insertion error when trying to compute krylov projection matrix (error code: {}).", err);
-    }
+    mat.insert_global_values(grid, indices.size(), rowvals.data(), indices.data());
   }
 
   // call fill complete

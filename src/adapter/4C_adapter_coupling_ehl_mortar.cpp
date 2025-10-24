@@ -551,7 +551,7 @@ void Adapter::CouplingEhlMortar::condense_contact(
   kst_new.add(*Core::LinAlg::matrix_multiply(*dInvMa, true, *kst_a, false, false, false, true),
       false, 1., 1.);
   tmpv = std::make_shared<Core::LinAlg::Vector<double>>(*interface_->master_row_dofs());
-  if (dInvMa->multiply(true, *rsa, *tmpv)) FOUR_C_THROW("multiply failed");
+  dInvMa->multiply(true, *rsa, *tmpv);
   CONTACT::Utils::add_vector(*tmpv, *combined_RHS);
   tmpv = nullptr;
 

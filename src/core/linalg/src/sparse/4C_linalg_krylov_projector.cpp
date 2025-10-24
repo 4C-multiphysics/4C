@@ -369,10 +369,10 @@ Core::LinAlg::SparseMatrix Core::LinAlg::KrylovProjector::create_projector(
     const int grid = P.global_row_index(rr);
 
     // add identity matrix by adding 1 on diagonal entries
-    int err = P.insert_global_values(grid, 1, &one, &grid);
+    int err = P.insert_global_values_error_return(grid, 1, &one, &grid);
     if (err < 0)
     {
-      err = P.sum_into_global_values(grid, 1, &one, &grid);
+      err = P.sum_into_global_values_error_return(grid, 1, &one, &grid);
       if (err < 0)
       {
         FOUR_C_THROW("insertion error when trying to computekrylov projection matrix.");

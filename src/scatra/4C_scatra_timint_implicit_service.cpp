@@ -1338,7 +1338,6 @@ void ScaTra::ScaTraTimIntImpl::avm3_scaling(Teuchos::ParameterList& eleparams)
   TEUCHOS_FUNC_TIME_MONITOR("SCATRA:            + avm3");
 
   // some necessary definitions
-  int ierr;
   double* sgvsqrt = nullptr;
   int length = subgrdiff_->local_length();
 
@@ -1355,10 +1354,8 @@ void ScaTra::ScaTraTimIntImpl::avm3_scaling(Teuchos::ParameterList& eleparams)
   sysmat_sd_ = std::make_shared<Core::LinAlg::SparseMatrix>(*Mnsv_);
 
   // left and right scaling of normalized fine-scale subgrid-viscosity matrix
-  ierr = sysmat_sd_->left_scale(*subgrdiff_);
-  if (ierr) FOUR_C_THROW("left_scale() returned err={}", ierr);
-  ierr = sysmat_sd_->right_scale(*subgrdiff_);
-  if (ierr) FOUR_C_THROW("right_scale() returned err={}", ierr);
+  sysmat_sd_->left_scale(*subgrdiff_);
+  sysmat_sd_->right_scale(*subgrdiff_);
 
   // add the subgrid-viscosity-scaled fine-scale matrix to obtain complete matrix
   std::shared_ptr<Core::LinAlg::SparseMatrix> sysmat = system_matrix();

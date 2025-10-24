@@ -420,13 +420,9 @@ void Core::LinAlg::SparseMatrix::assemble(int eid, const std::vector<int>& lmstr
       int length;
       double* valview;
       int* indices;
-#ifdef FOUR_C_ENABLE_ASSERTIONS
-      int err =
-#endif
-          sysmat_->ExtractMyRowView(rlid, length, valview, indices);
-#ifdef FOUR_C_ENABLE_ASSERTIONS
-      if (err) FOUR_C_THROW("Epetra_CrsMatrix::ExtractMyRowView returned error code {}", err);
-#endif
+
+      CHECK_EPETRA_CALL(sysmat_->ExtractMyRowView(rlid, length, valview, indices));
+
       const int numnode = (int)lmstride.size();
       int dofcount = 0;
       int pos = 0;
@@ -478,23 +474,9 @@ void Core::LinAlg::SparseMatrix::assemble(int eid, const std::vector<int>& lmstr
         {
           for (int j = 0; j < stride; ++j)
           {
-#ifdef FOUR_C_ENABLE_ASSERTIONS
-            const int errone =
-#endif
-                sysmat_->SumIntoMyValues(rlid, 1, &A(lrow, dofcount), &localcol[dofcount]);
-#ifdef FOUR_C_ENABLE_ASSERTIONS
-            if (errone)
-            {
-              printf("Dimensions of A: %d x %d\n", A.numRows(), A.numCols());
-              for (unsigned k = 0; k < lmstride.size(); ++k)
-                printf("lmstride[%d] %d\n", k, lmstride[k]);
-              FOUR_C_THROW(
-                  "Epetra_CrsMatrix::SumIntoMyValues returned error code {}\nrlid {} localcol[{}] "
-                  "{} dofcount {} length {} stride {} j {} node {} numnode {}",
-                  errone, rlid, dofcount, localcol[dofcount], dofcount, length, stride, j, node,
-                  numnode);
-            }
-#endif
+            CHECK_EPETRA_CALL(
+                sysmat_->SumIntoMyValues(rlid, 1, &A(lrow, dofcount), &localcol[dofcount]));
+
             dofcount++;
             if (dofcount == lcoldim)
             {
@@ -610,8 +592,8 @@ void Core::LinAlg::SparseMatrix::assemble(int eid, const Core::LinAlg::SerialDen
       {
         values[lcol] = Aele(lrow, lcol);
       }
-      const int errone = sysmat_->SumIntoMyValues(rlid, lcoldim, values.data(), localcol.data());
-      if (errone) FOUR_C_THROW("Epetra_CrsMatrix::SumIntoMyValues returned error code {}", errone);
+
+      CHECK_EPETRA_CALL(sysmat_->SumIntoMyValues(rlid, lcoldim, values.data(), localcol.data()));
     }  // for (int lrow=0; lrow<ldim; ++lrow)
   }
   else
@@ -1215,14 +1197,8 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet_with_trafo(const Core::LinAlg::
         if (diagonalblock)
         {
           // extract values of trafo at the inclined dbc dof
-#ifdef FOUR_C_ENABLE_ASSERTIONS
-          int err = trafo.extract_global_row_copy(
-              row, trafomaxnumentries, trafonumentries, trafovalues.data(), trafoindices.data());
-          if (err < 0) FOUR_C_THROW("Epetra_CrsMatrix::ExtractGlobalRowCopy returned err={}", err);
-#else
           trafo.extract_global_row_copy(
               row, trafomaxnumentries, trafonumentries, trafovalues.data(), trafoindices.data());
-#endif
         }
         // if entry of dof with inclined dbc is not a diagonal block, set zero
         // at this position
@@ -1284,14 +1260,8 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet_with_trafo(const Core::LinAlg::
 
         if (diagonalblock)
         {
-#ifdef FOUR_C_ENABLE_ASSERTIONS
-          err = trafo.extract_my_row_copy(
-              i, trafomaxnumentries, trafonumentries, trafovalues.data(), trafoindices.data());
-          if (err < 0) FOUR_C_THROW("Epetra_CrsMatrix::ExtractGlobalRowCopy returned err={}", err);
-#else
           trafo.extract_my_row_copy(
               i, trafomaxnumentries, trafonumentries, trafovalues.data(), trafoindices.data());
-#endif
 
 #ifdef FOUR_C_ENABLE_ASSERTIONS
           err =
@@ -1478,10 +1448,11 @@ double Core::LinAlg::SparseMatrix::norm_frobenius() const { return sysmat_->Norm
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::multiply(
+void Core::LinAlg::SparseMatrix::multiply(
     bool TransA, const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& y) const
 {
-  return sysmat_->Multiply(TransA, x.get_ref_of_epetra_vector(), y.get_ref_of_epetra_vector());
+  CHECK_EPETRA_CALL(
+      sysmat_->Multiply(TransA, x.get_ref_of_epetra_vector(), y.get_ref_of_epetra_vector()));
 }
 
 
@@ -1496,38 +1467,38 @@ int Core::LinAlg::SparseMatrix::multiply(bool TransA, const Core::LinAlg::MultiV
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::left_scale(const Core::LinAlg::Vector<double>& x)
+void Core::LinAlg::SparseMatrix::left_scale(const Core::LinAlg::Vector<double>& x)
 {
-  return sysmat_->LeftScale(x);
+  CHECK_EPETRA_CALL(sysmat_->LeftScale(x));
 }
 
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::right_scale(const Core::LinAlg::Vector<double>& x)
+void Core::LinAlg::SparseMatrix::right_scale(const Core::LinAlg::Vector<double>& x)
 {
-  return sysmat_->RightScale(x);
+  CHECK_EPETRA_CALL(sysmat_->RightScale(x));
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::inv_row_sums(Core::LinAlg::Vector<double>& x) const
+void Core::LinAlg::SparseMatrix::inv_row_sums(Core::LinAlg::Vector<double>& x) const
 {
-  return sysmat_->InvRowSums(x);
+  CHECK_EPETRA_CALL(sysmat_->InvRowSums(x));
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::inv_col_sums(Core::LinAlg::Vector<double>& x) const
+void Core::LinAlg::SparseMatrix::inv_col_sums(Core::LinAlg::Vector<double>& x) const
 {
-  return sysmat_->InvColSums(x);
+  CHECK_EPETRA_CALL(sysmat_->InvColSums(x));
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::put_scalar(double ScalarConstant)
+void Core::LinAlg::SparseMatrix::put_scalar(double ScalarConstant)
 {
-  return sysmat_->PutScalar(ScalarConstant);
+  CHECK_EPETRA_CALL(sysmat_->PutScalar(ScalarConstant));
 }
 
 
@@ -1541,81 +1512,90 @@ int Core::LinAlg::SparseMatrix::scale(double ScalarConstant)
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::replace_diagonal_values(
+void Core::LinAlg::SparseMatrix::replace_diagonal_values(
     const Core::LinAlg::Vector<double>& Diagonal)
 {
-  return sysmat_->ReplaceDiagonalValues(Diagonal);
+  CHECK_EPETRA_CALL(sysmat_->ReplaceDiagonalValues(Diagonal));
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::extract_diagonal_copy(Core::LinAlg::Vector<double>& Diagonal) const
+void Core::LinAlg::SparseMatrix::extract_diagonal_copy(Core::LinAlg::Vector<double>& Diagonal) const
 {
-  return sysmat_->ExtractDiagonalCopy(Diagonal.get_ref_of_epetra_vector());
+  CHECK_EPETRA_CALL(sysmat_->ExtractDiagonalCopy(Diagonal.get_ref_of_epetra_vector()));
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::extract_my_row_copy(
+void Core::LinAlg::SparseMatrix::extract_my_row_copy(
     int my_row, int length, int& num_entries, double* values, int* indices) const
 {
-  return sysmat_->ExtractMyRowCopy(my_row, length, num_entries, values, indices);
+  CHECK_EPETRA_CALL(sysmat_->ExtractMyRowCopy(my_row, length, num_entries, values, indices));
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::extract_global_row_copy(
+void Core::LinAlg::SparseMatrix::extract_global_row_copy(
     int global_row, int length, int& num_entries, double* values, int* indices) const
 {
-  return sysmat_->ExtractGlobalRowCopy(global_row, length, num_entries, values, indices);
+  CHECK_EPETRA_CALL(
+      sysmat_->ExtractGlobalRowCopy(global_row, length, num_entries, values, indices));
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::extract_my_row_view(
+void Core::LinAlg::SparseMatrix::extract_my_row_view(
     int my_row, int& num_entries, double*& values, int*& indices) const
 {
-  return sysmat_->ExtractMyRowView(my_row, num_entries, values, indices);
+  CHECK_EPETRA_CALL(sysmat_->ExtractMyRowView(my_row, num_entries, values, indices));
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::extract_global_row_view(
+void Core::LinAlg::SparseMatrix::extract_global_row_view(
     int global_row, int& num_entries, double*& values, int*& indices) const
 {
-  return sysmat_->ExtractGlobalRowView(global_row, num_entries, values, indices);
+  CHECK_EPETRA_CALL(sysmat_->ExtractGlobalRowView(global_row, num_entries, values, indices));
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::insert_my_values(
+void Core::LinAlg::SparseMatrix::insert_my_values(
     int my_row, int num_entries, const double* values, const int* indices)
 {
-  return sysmat_->InsertMyValues(my_row, num_entries, values, indices);
+  CHECK_EPETRA_CALL(sysmat_->InsertMyValues(my_row, num_entries, values, indices));
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::sum_into_my_values(
+void Core::LinAlg::SparseMatrix::sum_into_my_values(
     int my_row, int num_entries, const double* values, const int* indices)
 {
-  return sysmat_->SumIntoMyValues(my_row, num_entries, values, indices);
+  CHECK_EPETRA_CALL(sysmat_->SumIntoMyValues(my_row, num_entries, values, indices));
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::replace_my_values(
+void Core::LinAlg::SparseMatrix::replace_my_values(
     int my_row, int num_entries, const double* values, const int* indices)
 {
-  return sysmat_->ReplaceMyValues(my_row, num_entries, values, indices);
+  CHECK_EPETRA_CALL(sysmat_->ReplaceMyValues(my_row, num_entries, values, indices));
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::replace_global_values(
+void Core::LinAlg::SparseMatrix::replace_global_values(
     int global_row, int num_entries, const double* values, const int* indices)
 {
-  return sysmat_->ReplaceGlobalValues(global_row, num_entries, values, indices);
+  CHECK_EPETRA_CALL(sysmat_->ReplaceGlobalValues(global_row, num_entries, values, indices));
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void Core::LinAlg::SparseMatrix::insert_global_values(
+    int global_row, int num_entries, const double* values, const int* indices)
+{
+  CHECK_EPETRA_CALL(sysmat_->InsertGlobalValues(global_row, num_entries, values, indices));
 }
 
 /*----------------------------------------------------------------------*
@@ -1628,7 +1608,15 @@ int Core::LinAlg::SparseMatrix::insert_global_values(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::sum_into_global_values(
+void Core::LinAlg::SparseMatrix::sum_into_global_values(
+    int global_row, int num_entries, const double* values, const int* indices)
+{
+  CHECK_EPETRA_CALL(sysmat_->SumIntoGlobalValues(global_row, num_entries, values, indices));
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+int Core::LinAlg::SparseMatrix::sum_into_global_values_error_return(
     int global_row, int num_entries, const double* values, const int* indices)
 {
   return sysmat_->SumIntoGlobalValues(global_row, num_entries, values, indices);
@@ -1692,7 +1680,7 @@ bool Core::LinAlg::SparseMatrix::is_dbc_applied(const Core::LinAlg::Map& dbcmap,
     int NumEntries = 0;
     double* Values = nullptr;
     int* Indices = nullptr;
-    sysmat_->ExtractMyRowView(sys_rlid, NumEntries, Values, Indices);
+    CHECK_EPETRA_CALL(sysmat_->ExtractMyRowView(sys_rlid, NumEntries, Values, Indices));
 
     std::fill(gIndices.begin(), gIndices.end(), 0.0);
     for (int c = 0; c < NumEntries; ++c) gIndices[c] = sysmat_->ColMap().GID(Indices[c]);

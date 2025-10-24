@@ -6451,13 +6451,11 @@ void CONTACT::Interface::evaluate_relative_movement(
           int row = cnode->dofs()[dim];
 
           // extract entries of this row from matrix
-          int err = dmatrixmod->extract_global_row_copy(
+          dmatrixmod->extract_global_row_copy(
               row, dmatrixmod->max_num_entries(), NumEntries, Values.data(), Indices.data());
-          if (err) FOUR_C_THROW("extract_global_row_copy() failed with error code {}", err);
 
-          int errold = doldmod->extract_global_row_copy(
+          doldmod->extract_global_row_copy(
               row, doldmod->max_num_entries(), NumEntriesOld, ValuesOld.data(), IndicesOld.data());
-          if (errold) FOUR_C_THROW("extract_global_row_copy() failed with error code {}", errold);
 
           // loop over entries of this vector
           for (int j = 0; j < NumEntries; ++j)

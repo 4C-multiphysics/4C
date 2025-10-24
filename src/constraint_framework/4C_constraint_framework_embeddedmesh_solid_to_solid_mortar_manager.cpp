@@ -428,10 +428,8 @@ void Constraints::EmbeddedMesh::SolidToSolidMortarManager::
     Core::LinAlg::Vector<double> background_force(*background_dof_rowmap_);
     boundary_layer_interface_force.put_scalar(0.);
     background_force.put_scalar(0.);
-    linalg_error = global_fbl_l_->multiply(false, *lambda, boundary_layer_interface_force);
-    if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
-    linalg_error = global_fbg_l_->multiply(false, *lambda, background_force);
-    if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
+    global_fbl_l_->multiply(false, *lambda, boundary_layer_interface_force);
+    global_fbg_l_->multiply(false, *lambda, background_force);
     Core::LinAlg::Vector<double> global_temp(*discret_->dof_row_map());
     Core::LinAlg::export_to(boundary_layer_interface_force, global_temp);
     Core::LinAlg::export_to(background_force, global_temp);
@@ -460,9 +458,7 @@ Constraints::EmbeddedMesh::SolidToSolidMortarManager::get_global_lambda() const
   // penalty parameter.
   std::shared_ptr<Core::LinAlg::Vector<double>> lambda =
       std::make_shared<Core::LinAlg::Vector<double>>(*lambda_dof_rowmap_);
-  int linalg_error = penalty_kappa_inv_mat.multiply(
-      false, Core::LinAlg::Vector<double>(*global_constraint_), *lambda);
-  if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
+  penalty_kappa_inv_mat.multiply(false, Core::LinAlg::Vector<double>(*global_constraint_), *lambda);
 
   return lambda;
 }

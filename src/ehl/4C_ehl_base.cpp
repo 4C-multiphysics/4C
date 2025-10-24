@@ -311,13 +311,11 @@ void EHL::Base::add_pressure_force(
   const std::shared_ptr<Core::LinAlg::SparseMatrix> mortarm = mortaradapter_->get_mortar_matrix_m();
 
   // f_slave = D^T*t
-  int err = mortard->multiply(true, *stritraction, slaveiforce);
-  if (err != 0) FOUR_C_THROW("error while calculating slave side interface force");
+  mortard->multiply(true, *stritraction, slaveiforce);
   if (stritraction_D_->update(1., *stritraction, 1.)) FOUR_C_THROW("Update failed");
 
   // f_master = -M^T*t
-  err = mortarm->multiply(true, *stritraction, masteriforce);
-  if (err != 0) FOUR_C_THROW("error while calculating master side interface force");
+  mortarm->multiply(true, *stritraction, masteriforce);
   masteriforce.scale(-1.0);
   if (stritraction_M_->update(-1., *stritraction, 1.)) FOUR_C_THROW("update failed");
 }
@@ -332,8 +330,7 @@ void EHL::Base::add_poiseuille_force(
   Core::LinAlg::export_to(*p_int, p_int_full);
 
   Core::LinAlg::Vector<double> nodal_gap(*mortaradapter_->slave_dof_map());
-  if (slavemaptransform_->multiply(false, *mortaradapter_->nodal_gap(), nodal_gap))
-    FOUR_C_THROW("multiply failed");
+  slavemaptransform_->multiply(false, *mortaradapter_->nodal_gap(), nodal_gap);
 
   Core::LinAlg::SparseMatrix m(*mortaradapter_->surf_grad_matrix());
 
@@ -347,14 +344,12 @@ void EHL::Base::add_poiseuille_force(
   Core::LinAlg::Vector<double> master_psl(mortaradapter_->get_mortar_matrix_m()->domain_map());
 
   // f_slave = D^T*t
-  if (mortaradapter_->get_mortar_matrix_d()->multiply(true, poiseuille_force, slave_psl))
-    FOUR_C_THROW("Multiply failed");
+  mortaradapter_->get_mortar_matrix_d()->multiply(true, poiseuille_force, slave_psl);
   if (stritraction_D_->update(1., poiseuille_force, 1.)) FOUR_C_THROW("Update failed");
 
   // f_master = +M^T*t // attention: no minus sign here: poiseuille points in same direction on
   // slave and master side
-  if (mortaradapter_->get_mortar_matrix_m()->multiply(true, poiseuille_force, master_psl))
-    FOUR_C_THROW("Multiply failed");
+  mortaradapter_->get_mortar_matrix_m()->multiply(true, poiseuille_force, master_psl);
   if (stritraction_M_->update(1., poiseuille_force, 1.)) FOUR_C_THROW("update failed");
 
   // add the contribution
@@ -369,8 +364,7 @@ void EHL::Base::add_couette_force(
   const int ndim = Global::Problem::instance()->n_dim();
   const std::shared_ptr<const Core::LinAlg::Vector<double>> relVel = mortaradapter_->rel_tang_vel();
   Core::LinAlg::Vector<double> height(*mortaradapter_->slave_dof_map());
-  if (slavemaptransform_->multiply(false, *mortaradapter_->nodal_gap(), height))
-    FOUR_C_THROW("multiply failed");
+  slavemaptransform_->multiply(false, *mortaradapter_->nodal_gap(), height);
   Core::LinAlg::Vector<double> h_inv(*mortaradapter_->slave_dof_map());
   if (h_inv.reciprocal(height)) FOUR_C_THROW("Reciprocal failed");
   Core::LinAlg::Vector<double> hinv_relV(*mortaradapter_->slave_dof_map());
@@ -401,13 +395,11 @@ void EHL::Base::add_couette_force(
   Core::LinAlg::Vector<double> slave_cou(mortaradapter_->get_mortar_matrix_d()->domain_map());
   Core::LinAlg::Vector<double> master_cou(mortaradapter_->get_mortar_matrix_m()->domain_map());
   // f_slave = D^T*t
-  if (mortaradapter_->get_mortar_matrix_d()->multiply(true, couette_force, slave_cou))
-    FOUR_C_THROW("Multiply failed");
+  mortaradapter_->get_mortar_matrix_d()->multiply(true, couette_force, slave_cou);
   if (stritraction_D_->update(1., couette_force, 1.)) FOUR_C_THROW("Update failed");
 
   // f_master = -M^T*t
-  if (mortaradapter_->get_mortar_matrix_m()->multiply(true, couette_force, master_cou))
-    FOUR_C_THROW("Multiply failed");
+  mortaradapter_->get_mortar_matrix_m()->multiply(true, couette_force, master_cou);
   if (stritraction_M_->update(-1., couette_force, 1.)) FOUR_C_THROW("update failed");
 
   // add the contribution
@@ -447,8 +439,7 @@ void EHL::Base::set_height_field()
 
   // get the weighted gap and store it in slave dof map (for each node, the scalar value is stored
   // in the 0th dof)
-  int err = slavemaptransform_->multiply(false, *mortaradapter_->nodal_gap(), *discretegap);
-  if (err != 0) FOUR_C_THROW("error while transforming map of weighted gap");
+  slavemaptransform_->multiply(false, *mortaradapter_->nodal_gap(), *discretegap);
 
   // store discrete gap in lubrication disp dof map (its the film height)
   std::shared_ptr<Core::LinAlg::Vector<double>> height =
@@ -472,8 +463,7 @@ void EHL::Base::set_height_dot()
       Core::LinAlg::create_vector(*(slaverowmapextr_->map(0)), true);
   // get the weighted heightdot and store it in slave dof map (for each node, the scalar value is
   // stored in the 0th dof)
-  int err = slavemaptransform_->multiply(false, heightdot, *discretegap);
-  if (err != 0) FOUR_C_THROW("error while transforming map of weighted gap");
+  slavemaptransform_->multiply(false, heightdot, *discretegap);
   // store discrete heightDot in lubrication disp dof map (its the film height time derivative)
   std::shared_ptr<Core::LinAlg::Vector<double>> heightdotSet =
       ada_strDisp_to_lubDisp_->master_to_slave(*discretegap);
@@ -782,8 +772,7 @@ void EHL::Base::output(bool forced_writerestart)
 
     // get the weighted gap and store it in slave dof map (for each node, the scalar value is stored
     // in the 0th dof)
-    int err = slavemaptransform_->multiply(false, *mortaradapter_->nodal_gap(), *discretegap);
-    if (err != 0) FOUR_C_THROW("error while transforming map of weighted gap");
+    slavemaptransform_->multiply(false, *mortaradapter_->nodal_gap(), *discretegap);
 
     // store discrete gap in lubrication disp dof map (its the film height)
     std::shared_ptr<Core::LinAlg::Vector<double>> height =

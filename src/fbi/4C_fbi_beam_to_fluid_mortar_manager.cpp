@@ -396,11 +396,8 @@ void BeamInteraction::BeamToFluidMortarManager::evaluate_global_dm(
   check_global_maps();
 
   // Clear the old values of D, M and kappa.
-  int linalg_error = 0;
-  linalg_error = global_d_->put_scalar(0.);
-  if (linalg_error != 0) FOUR_C_THROW("Error in PutScalar!");
-  linalg_error = global_m_->put_scalar(0.);
-  if (linalg_error != 0) FOUR_C_THROW("Error in PutScalar!");
+  global_d_->put_scalar(0.);
+  global_m_->put_scalar(0.);
   global_kappa_->put_scalar(0.);
 
   // Local mortar matrices that will be filled up by EvaluateDM.
@@ -498,8 +495,6 @@ void BeamInteraction::BeamToFluidMortarManager::add_global_force_stiffness_contr
   check_setup();
   check_global_maps();
 
-  int linalg_error = 0;
-
   // Scale D and M with kappa^-1.
   std::shared_ptr<Core::LinAlg::Vector<double>> global_kappa_inv = invert_kappa();
   Core::LinAlg::SparseMatrix kappa_inv_mat(*global_kappa_inv);
@@ -537,19 +532,16 @@ void BeamInteraction::BeamToFluidMortarManager::add_global_force_stiffness_contr
     // Set the values in the global force vector to 0.
     fluid_force->put_scalar(0.);
 
-    linalg_error = Dt_kappa_M->multiply(true, *beam_vel, fluid_temp);
-    if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
+    Dt_kappa_M->multiply(true, *beam_vel, fluid_temp);
     fluid_force->update(-1.0, fluid_temp, 1.0);
   }
 
   Core::LinAlg::Vector<double> beam_temp(*beam_dof_rowmap_);
   beam_force.put_scalar(0.);
   // Get the force acting on the beam.
-  linalg_error = Dt_kappa_D->multiply(false, *beam_vel, beam_temp);
-  if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
+  Dt_kappa_D->multiply(false, *beam_vel, beam_temp);
   beam_force.update(1.0, beam_temp, 1.0);
-  linalg_error = Dt_kappa_M->multiply(false, *fluid_vel, beam_temp);
-  if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
+  Dt_kappa_M->multiply(false, *fluid_vel, beam_temp);
   beam_force.update(-1.0, beam_temp, 1.0);
 }
 
@@ -564,6 +556,8 @@ BeamInteraction::BeamToFluidMortarManager::get_global_lambda(
   check_setup();
   check_global_maps();
 
+  int linalg_error = 0;
+
   // Get the velocity of the beams and the fluid.
   Core::LinAlg::Vector<double> beam_vel(*beam_dof_rowmap_);
   Core::LinAlg::Vector<double> fluid_vel(*fluid_dof_rowmap_);
@@ -577,12 +571,10 @@ BeamInteraction::BeamToFluidMortarManager::get_global_lambda(
   // Create a temporary vector and calculate lambda.
   Core::LinAlg::Vector<double> lambda_temp_1(*lambda_dof_rowmap_);
   Core::LinAlg::Vector<double> lambda_temp_2(*lambda_dof_rowmap_);
-  int linalg_error = global_d_->multiply(false, beam_vel, lambda_temp_2);
-  if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
+  global_d_->multiply(false, beam_vel, lambda_temp_2);
   linalg_error = lambda_temp_1.update(1.0, lambda_temp_2, 0.0);
   if (linalg_error != 0) FOUR_C_THROW("Error in Update!");
-  linalg_error = global_m_->multiply(false, fluid_vel, lambda_temp_2);
-  if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
+  global_m_->multiply(false, fluid_vel, lambda_temp_2);
   linalg_error = lambda_temp_1.update(-1.0, lambda_temp_2, 1.0);
   if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
 
@@ -590,8 +582,7 @@ BeamInteraction::BeamToFluidMortarManager::get_global_lambda(
   std::shared_ptr<Core::LinAlg::Vector<double>> global_kappa_inv = invert_kappa();
   Core::LinAlg::SparseMatrix kappa_inv_mat(*global_kappa_inv);
   kappa_inv_mat.complete();
-  linalg_error = kappa_inv_mat.multiply(false, lambda_temp_1, *lambda);
-  if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
+  kappa_inv_mat.multiply(false, lambda_temp_1, *lambda);
 
   return lambda;
 }

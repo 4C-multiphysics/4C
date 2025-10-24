@@ -1587,12 +1587,7 @@ void FLD::XFluid::assemble_mat_and_rhs_gradient_penalty(
       if (diagonalblock)
       {
         double v = 1.0;
-#ifdef FOUR_C_ENABLE_ASSERTIONS
-        int err = sysmat_gp->insert_global_values(row, 1, &v, &row);
-        if (err < 0) FOUR_C_THROW("insert_global_values returned err={}", err);
-#else
         sysmat_gp->insert_global_values(row, 1, &v, &row);
-#endif
       }
     }
   }
