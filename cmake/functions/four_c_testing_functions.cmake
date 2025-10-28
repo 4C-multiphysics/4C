@@ -68,11 +68,109 @@ function(skip_test name_of_test message)
   set_tests_properties(${name_of_test} PROPERTIES SKIP_RETURN_CODE 42)
 endfunction()
 
-# add test with options
+# Check that required dependencies are met. If not, a skip message is built up and returned in
+# the variable 'result'. If the skip message is not empty after calling this function, the test
+# should be skipped.
+function(check_required_dependencies result requirements)
+  foreach(dep IN LISTS requirements)
+    # Check if this is a dependency with version
+    if(dep MATCHES "^([^><=]+)([><=]+)([0-9\\.]+)$")
+      set(dep_name "${CMAKE_MATCH_1}")
+      set(dep_version "${CMAKE_MATCH_3}")
+      if(CMAKE_MATCH_2 STREQUAL ">=")
+        set(dep_version_constraint "VERSION_GREATER_EQUAL")
+      elseif(CMAKE_MATCH_2 STREQUAL "<=")
+        set(dep_version_constraint "VERSION_LESS_EQUAL")
+      elseif(CMAKE_MATCH_2 STREQUAL ">")
+        set(dep_version_constraint "VERSION_GREATER")
+      elseif(CMAKE_MATCH_2 STREQUAL "<")
+        set(dep_version_constraint "VERSION_LESS")
+      elseif(CMAKE_MATCH_2 STREQUAL "==")
+        set(dep_version_constraint "VERSION_EQUAL")
+      else()
+        message(
+          FATAL_ERROR "Unsupported version constraint '${CMAKE_MATCH_2}' for dependency '${dep}'"
+          )
+      endif()
+    else()
+      set(dep_name "${dep}")
+      unset(dep_version)
+      unset(dep_version_constraint)
+    endif()
+
+    four_c_sanitize_package_name(${dep_name} dep_sanitized)
+
+    # Check that we even know this dependency
+    if(NOT DEFINED "FOUR_C_WITH_${dep_sanitized}")
+      message(FATAL_ERROR "Unknown dependency ${dep_name} requested for test")
+    endif()
+
+    if(NOT FOUR_C_WITH_${dep_sanitized})
+      string(APPEND skip_message "Skipping because FOUR_C_WITH_${dep_sanitized} is not enabled.\n")
+    elseif(DEFINED dep_version)
+      if(NOT DEFINED "FOUR_C_${dep_sanitized}_INTERNAL_VERSION")
+        message(FATAL_ERROR "Requiring '${dep}' but no internal version is known for ${dep_name}")
+      endif()
+
+      set(actual_version "${FOUR_C_${dep_sanitized}_INTERNAL_VERSION}")
+      if(NOT actual_version ${dep_version_constraint} ${dep_version})
+        string(
+          APPEND
+          skip_message
+          "Skipping because ${dep_name} version ${actual_version} does not satisfy constraint ${dep}.\n"
+          )
+      endif()
+    endif()
+  endforeach()
+  set(${result}
+      "${skip_message}"
+      PARENT_SCOPE
+      )
+endfunction()
+
+# Helper to check that required arguments are provided in parsed cmake_parse_arguments
+function(assert_required_arguments prefix)
+  set(required_args ${ARGN})
+  foreach(arg IN LISTS required_args)
+    if(NOT DEFINED ${prefix}_${arg})
+      message(SEND_ERROR "Argument '${arg}' is required but not provided!")
+      set(_had_error TRUE)
+    endif()
+  endforeach()
+  if(DEFINED _had_error)
+    message(FATAL_ERROR "One or more required arguments were not provided!")
+  endif()
+endfunction()
+
+# Check whether a test with given name exists
+# Note that this will only work for tests defined through our own testing functions
+function(check_test_exists result name)
+  get_test_property(${name} _internal_INPUT_FILE _check)
+  if(_check)
+    set(${result}
+        TRUE
+        PARENT_SCOPE
+        )
+  else()
+    set(${result}
+        FALSE
+        PARENT_SCOPE
+        )
+  endif()
+endfunction()
+
+# Internal helper that adds a test to the 4C test suite. Do not call this directly.
 function(_add_test_with_options)
   set(options "")
-  set(oneValueArgs NAME_OF_TEST ADDITIONAL_FIXTURE NP TIMEOUT)
-  set(multiValueArgs TEST_COMMAND LABELS)
+  set(oneValueArgs
+      NAME_OF_TEST
+      ADDITIONAL_FIXTURE
+      NP
+      TIMEOUT
+      INPUT_FILE
+      OUTPUT_DIR
+      )
+  set(multiValueArgs TEST_COMMAND REQUIRED_DEPENDENCIES LABELS)
   cmake_parse_arguments(
     _parsed
     "${options}"
@@ -85,13 +183,7 @@ function(_add_test_with_options)
     message(FATAL_ERROR "There are unparsed arguments: ${_parsed_UNPARSED_ARGUMENTS}!")
   endif()
 
-  if(NOT DEFINED _parsed_NAME_OF_TEST)
-    message(FATAL_ERROR "Name of test is a necessary input argument!")
-  endif()
-
-  if(NOT DEFINED _parsed_TEST_COMMAND)
-    message(FATAL_ERROR "Test command is a necessary input argument!")
-  endif()
+  assert_required_arguments(_parsed NAME_OF_TEST TEST_COMMAND)
 
   if(NOT DEFINED _parsed_ADDITIONAL_FIXTURE)
     set(_parsed_ADDITIONAL_FIXTURE "")
@@ -109,7 +201,19 @@ function(_add_test_with_options)
     set(_parsed_LABELS "")
   endif()
 
-  add_test(NAME ${_parsed_NAME_OF_TEST} COMMAND bash -c "${_parsed_TEST_COMMAND}")
+  check_required_dependencies(skip_message "${_parsed_REQUIRED_DEPENDENCIES}")
+
+  if(NOT skip_message STREQUAL "")
+    # The dummy test needs to report a arbitrary error code that ctest interprets as "skipped".
+    set(dummy_command "echo \"${message}\"; exit 42")
+    # Add a dummy test that just prints the skip message instead of the real test
+    add_test(NAME ${_parsed_NAME_OF_TEST} COMMAND bash -c "${dummy_command}")
+    set_tests_properties(${_parsed_NAME_OF_TEST} PROPERTIES SKIP_RETURN_CODE 42)
+    message(VERBOSE "Skipping test ${_parsed_NAME_OF_TEST}: ${_parsed_SKIP_WITH_MESSAGE}")
+  else()
+    # Add the real test
+    add_test(NAME ${_parsed_NAME_OF_TEST} COMMAND bash -c "${_parsed_TEST_COMMAND}")
+  endif()
 
   require_fixture(${_parsed_NAME_OF_TEST} "${_parsed_ADDITIONAL_FIXTURE};test_cleanup")
   set_processors(${_parsed_NAME_OF_TEST} ${_parsed_NP})
@@ -119,47 +223,53 @@ function(_add_test_with_options)
   if(NOT ${_parsed_LABELS} STREQUAL "")
     set_label(${_parsed_NAME_OF_TEST} ${_parsed_LABELS})
   endif()
+
+  # Set a few properties that we use internally to build up more complex test chains.
+  # These properties are not used or understood by CMake itself.
+  if(DEFINED _parsed_INPUT_FILE)
+    set_tests_properties(
+      ${_parsed_NAME_OF_TEST} PROPERTIES _internal_INPUT_FILE ${_parsed_INPUT_FILE}
+      )
+  endif()
+  if(DEFINED _parsed_OUTPUT_DIR)
+    set_tests_properties(
+      ${_parsed_NAME_OF_TEST} PROPERTIES _internal_OUTPUT_DIR ${_parsed_OUTPUT_DIR}
+      )
+  endif()
 endfunction()
 
-###------------------------------------------------------------------ 4C Test
-# Run simulation with input file
-# Usage in tests/lists_of_tests.cmake:
-#            "four_c_test(<input_file> optional: NP <> RESTART_STEP <> TIMEOUT <> OMP_THREADS <> LABEL <>
-#                                                CSV_YAML_COMPARISON_RESULT_FILE <> CSV_YAML_COMPARISON_REFERENCE_FILE <>
-#                                                CSV_YAML_COMPARISON_TOL_R <> CSV_YAML_COMPARISON_TOL_A <>)"
-
-# TEST_FILE:              must equal the name of an input file in directory tests/input_files
-#                         If two files are provided the second input file is restarted based on the results of the first input file.
-
-# optional:
-# NP:                             Number of processors the test should use. Fallback to 1 if not specified.
-#                                 For two input files two NP's are required.
-# RESTART_STEP:                   Number of restart step; not defined indicates no restart
-# TIMEOUT:                        Manually defined duration for test timeout; defaults to global timeout if not specified
-# OMP_THREADS:                    Number of OpenMP threads per processor the test should use; defaults to deactivated
-# LABELS:                         Add labels to the test
-# CSV_YAML_COMPARISON_RESULT_FILE:     Arbitrary .csv result files to be compared
-# CSV_YAML_COMPARISON_REFERENCE_FILE:  Reference files to compare with
-# CSV_YAML_COMPARISON_TOL_R:           Relative tolerances for comparison
-# CSV_YAML_COMPARISON_TOL_A:           Absolute tolerances for comparison
-# REQUIRED_DEPENDENCIES:          Any required external dependencies. The test will be skipped if the dependencies are not met.
+##
+# Central function to define a 4C test based on an input file
+#
+# Use this function to define a new test in tests/lists_of_tests.cmake. You may use
+# further four_c_test_* functions to define dependent tests based on this test. In this case,
+# you can use the RETURN_AS option to store the name of the defined test in a variable for later
+# use. The other four_c_test_* functions take this information in the BASED_ON parameter.
+#
+# required parameters:
+#   TEST_FILE:                    must equal the name of an input file in directory tests/input_files
+#
+# optional parameters:
+#   NP:                           Number of processors the test should use. Fallback to 1 if not specified.
+#   TIMEOUT:                      Manually defined duration for test timeout; defaults to global timeout if not specified
+#   OMP_THREADS:                  Number of OpenMP threads per processor the test should use; defaults to no OpenMP if not specified
+#   LABELS:                       Add labels to the test
+#   REQUIRED_DEPENDENCIES:        Any required external dependencies. The test will be skipped if the dependencies are not met.
 #                                 Either a dependency, e.g. "Trilinos", or a dependency with a version constraint, e.g. "Trilinos>=2025.2".
 #                                 The supported version constraint operators are: >=, <=, >, <, ==
 #                                 If multiple dependencies are provided, all must be met for the test to run.
 #                                 Note that the version is the _internal_ version that 4C assigns to the dependency.
+#   RETURN_AS:                    A variable name that allows to add further dependent tests based on this test.
 function(four_c_test)
   set(options "")
-  set(oneValueArgs RESTART_STEP TIMEOUT OMP_THREADS)
-  set(multiValueArgs
+  set(oneValueArgs
       TEST_FILE
       NP
-      LABELS
-      CSV_YAML_COMPARISON_RESULT_FILE
-      CSV_YAML_COMPARISON_REFERENCE_FILE
-      CSV_YAML_COMPARISON_TOL_R
-      CSV_YAML_COMPARISON_TOL_A
-      REQUIRED_DEPENDENCIES
+      TIMEOUT
+      OMP_THREADS
+      RETURN_AS
       )
+  set(multiValueArgs LABELS REQUIRED_DEPENDENCIES)
   cmake_parse_arguments(
     _parsed
     "${options}"
@@ -173,201 +283,29 @@ function(four_c_test)
     message(FATAL_ERROR "There are unparsed arguments: ${_parsed_UNPARSED_ARGUMENTS}!")
   endif()
 
-  if(NOT DEFINED _parsed_TEST_FILE)
-    message(FATAL_ERROR "Test file is required for test!")
-  endif()
+  assert_required_arguments(_parsed TEST_FILE)
 
   if(NOT DEFINED _parsed_NP)
     set(_parsed_NP 1)
   endif()
-
-  if(NOT DEFINED _parsed_RESTART_STEP)
-    set(_parsed_RESTART_STEP "")
-  endif()
-
-  if(NOT DEFINED _parsed_TIMEOUT)
-    set(_parsed_TIMEOUT "")
+  if(_parsed_NP GREATER 3)
+    message(FATAL_ERROR "Number of processors must be less than or equal to 3!")
   endif()
 
   if(NOT DEFINED _parsed_OMP_THREADS)
     set(_parsed_OMP_THREADS 0)
   endif()
 
-  if(NOT DEFINED _parsed_LABELS)
-    set(_parsed_LABELS "")
-  endif()
-
-  if(NOT DEFINED _parsed_CSV_YAML_COMPARISON_RESULT_FILE)
-    set(_parsed_CSV_YAML_COMPARISON_RESULT_FILE "")
-  endif()
-
-  if(NOT DEFINED _parsed_CSV_YAML_COMPARISON_REFERENCE_FILE)
-    set(_parsed_CSV_YAML_COMPARISON_REFERENCE_FILE "")
-  endif()
-
-  if(NOT DEFINED _parsed_CSV_YAML_COMPARISON_TOL_R)
-    set(_parsed_CSV_YAML_COMPARISON_TOL_R "")
-  endif()
-
-  if(NOT DEFINED _parsed_CSV_YAML_COMPARISON_TOL_A)
-    set(_parsed_CSV_YAML_COMPARISON_TOL_A "")
-  endif()
-
-  list(LENGTH _parsed_TEST_FILE num_TEST_FILE)
-  list(LENGTH _parsed_NP num_NP)
-
-  if(num_TEST_FILE GREATER 2 OR NOT num_NP EQUAL num_TEST_FILE)
-    message(
-      FATAL_ERROR
-        "You provided more than two test files or the provided number of processors do not match your provided test files!"
-      )
-  endif()
-
-  # Assert that NP <= 3
-  foreach(_np IN LISTS _parsed_NP)
-    if(_np GREATER 3)
-      message(FATAL_ERROR "Number of processors must be less than or equal to 3!")
-    endif()
-  endforeach()
-
   # check if source files exist
-  set(source_file "")
+  set(test_file_full_path "${PROJECT_SOURCE_DIR}/tests/input_files/${_parsed_TEST_FILE}")
 
-  foreach(string IN LISTS _parsed_TEST_FILE)
-    set(file_name "${PROJECT_SOURCE_DIR}/tests/input_files/${string}")
-
-    if(NOT EXISTS ${file_name})
-      message(FATAL_ERROR "Test source file ${file_name} does not exist!")
-    endif()
-
-    list(APPEND source_file ${file_name})
-  endforeach()
-
-  # check that same number of files and tolerances are provided for arbitrary .csv comparison
-  list(LENGTH _parsed_CSV_YAML_COMPARISON_RESULT_FILE num_CSV_YAML_COMPARISON_RESULT_FILE)
-  list(LENGTH _parsed_CSV_YAML_COMPARISON_REFERENCE_FILE num_CSV_YAML_COMPARISON_REFERENCE_FILE)
-  list(LENGTH _parsed_CSV_YAML_COMPARISON_TOL_R num_CSV_YAML_COMPARISON_TOL_R)
-  list(LENGTH _parsed_CSV_YAML_COMPARISON_TOL_A num_CSV_YAML_COMPARISON_TOL_A)
-
-  if(NOT num_CSV_YAML_COMPARISON_RESULT_FILE EQUAL num_CSV_YAML_COMPARISON_REFERENCE_FILE
-     OR NOT num_CSV_YAML_COMPARISON_RESULT_FILE EQUAL num_CSV_YAML_COMPARISON_TOL_R
-     OR NOT num_CSV_YAML_COMPARISON_RESULT_FILE EQUAL num_CSV_YAML_COMPARISON_TOL_A
-     )
-    message(
-      FATAL_ERROR
-        "You must provide the same number of files and tolerances for arbitrary .csv comparison!"
-      )
+  if(NOT EXISTS ${test_file_full_path})
+    message(FATAL_ERROR "Test source file ${file_name} does not exist!")
   endif()
 
-  # check if .csv reference files exists
-  set(CSV_YAML_COMPARISON_REFERENCE_FILE "")
-
-  foreach(string IN LISTS _parsed_CSV_YAML_COMPARISON_REFERENCE_FILE)
-    set(file_name "${PROJECT_SOURCE_DIR}/tests/input_files/${string}")
-
-    if(NOT EXISTS ${file_name})
-      message(
-        FATAL_ERROR
-          "Reference file ${file_name} for arbitrary .csv result comparison does not exist!"
-        )
-    endif()
-
-    list(APPEND CSV_YAML_COMPARISON_REFERENCE_FILE ${file_name})
-  endforeach()
-
-  if(DEFINED _parsed_REQUIRED_DEPENDENCIES)
-    foreach(dep IN LISTS _parsed_REQUIRED_DEPENDENCIES)
-      # Check if this is a dependency with version
-
-      if(dep MATCHES "^([^><=]+)([><=]+)([0-9\\.]+)$")
-        set(dep_name "${CMAKE_MATCH_1}")
-        set(dep_version "${CMAKE_MATCH_3}")
-        if(CMAKE_MATCH_2 STREQUAL ">=")
-          set(dep_version_constraint "VERSION_GREATER_EQUAL")
-        elseif(CMAKE_MATCH_2 STREQUAL "<=")
-          set(dep_version_constraint "VERSION_LESS_EQUAL")
-        elseif(CMAKE_MATCH_2 STREQUAL ">")
-          set(dep_version_constraint "VERSION_GREATER")
-        elseif(CMAKE_MATCH_2 STREQUAL "<")
-          set(dep_version_constraint "VERSION_LESS")
-        elseif(CMAKE_MATCH_2 STREQUAL "==")
-          set(dep_version_constraint "VERSION_EQUAL")
-        else()
-          message(
-            FATAL_ERROR "Unsupported version constraint '${CMAKE_MATCH_2}' for dependency '${dep}'"
-            )
-        endif()
-      else()
-        set(dep_name "${dep}")
-        unset(dep_version)
-        unset(dep_version_constraint)
-      endif()
-
-      four_c_sanitize_package_name(${dep_name} dep_sanitized)
-
-      # Check that we even know this dependency
-      if(NOT DEFINED "FOUR_C_WITH_${dep_sanitized}")
-        message(FATAL_ERROR "Unknown dependency ${dep_name} requested for test")
-      endif()
-
-      if(NOT FOUR_C_WITH_${dep_sanitized})
-        string(
-          APPEND skip_message "Skipping because FOUR_C_WITH_${dep_sanitized} is not enabled.\n"
-          )
-      elseif(DEFINED dep_version)
-        if(NOT DEFINED "FOUR_C_${dep_sanitized}_INTERNAL_VERSION")
-          message(FATAL_ERROR "Requiring '${dep}' but no internal version is known for ${dep_name}")
-        endif()
-
-        set(actual_version "${FOUR_C_${dep_sanitized}_INTERNAL_VERSION}")
-        if(NOT actual_version ${dep_version_constraint} ${dep_version})
-          string(
-            APPEND
-            skip_message
-            "Skipping because ${dep_name} version ${actual_version} does not satisfy constraint ${dep}.\n"
-            )
-        endif()
-      endif()
-    endforeach()
-
-    if(NOT "${skip_message}" STREQUAL "")
-      # Note that this only adds _one_ skipped test, even though multiple dependent tests
-      # might have been created by this function.
-      skip_test(${_parsed_TEST_FILE}-p${_parsed_NP} "${skip_message}")
-      message(VERBOSE "Skipping test ${_parsed_TEST_FILE} because dependencies are not met.")
-      return()
-    endif()
-  endif()
-
-  # set base test name and directory
-  if(num_TEST_FILE EQUAL 1)
-    set(base_test_file ${source_file})
-    set(base_NP ${_parsed_NP})
-    set(name_of_test ${_parsed_TEST_FILE}-p${_parsed_NP})
-    set(test_directory ${PROJECT_BINARY_DIR}/framework_test_output/${name_of_test})
-  elseif(num_TEST_FILE EQUAL 2)
-    list(GET source_file 0 base_test_file)
-    list(GET source_file 1 restart_test_file)
-    list(GET _parsed_TEST_FILE 0 base_test)
-    list(GET _parsed_TEST_FILE 1 restart_test)
-    list(GET _parsed_NP 0 base_NP)
-    list(GET _parsed_NP 1 restart_NP)
-    set(name_of_test
-        ${base_test}-p${base_NP}_for_${restart_test}-p${restart_NP}-restart_step_${_parsed_RESTART_STEP}
-        )
-    set(test_directory ${PROJECT_BINARY_DIR}/framework_test_output/${name_of_test})
-  endif()
-
-  set(test_command
-      "mkdir -p ${test_directory} \
-                && ${MPIEXEC_EXECUTABLE} ${_mpiexec_all_args_for_testing} -np ${base_NP} $<TARGET_FILE:${FOUR_C_EXECUTABLE_NAME}> ${base_test_file} ${test_directory}/xxx"
-      )
-
-  # Optional timeout
-  if(NOT "${_parsed_TIMEOUT}" STREQUAL "")
-    # scale testtimeout with the global test timeout scale
-    math(EXPR _parsed_TIMEOUT "${FOUR_C_TEST_TIMEOUT_SCALE} * ${_parsed_TIMEOUT}")
-  endif()
+  set(base_NP ${_parsed_NP})
+  set(name_of_test ${_parsed_TEST_FILE}-p${_parsed_NP})
+  set(test_directory ${PROJECT_BINARY_DIR}/framework_test_output/${name_of_test})
 
   # Optional OpenMP threads per processor
   set(total_procs ${base_NP})
@@ -378,6 +316,25 @@ function(four_c_test)
         "export OMP_NUM_THREADS=${_parsed_OMP_THREADS} && ${test_command} && unset OMP_NUM_THREADS"
         )
     math(EXPR total_procs "${_parsed_NP}*${_parsed_OMP_THREADS}")
+  endif()
+
+  # Final test name is determined at this point, so we can set it as "return value" if requested
+  if(DEFINED _parsed_RETURN_AS)
+    set(${_parsed_RETURN_AS}
+        ${name_of_test}
+        PARENT_SCOPE
+        )
+  endif()
+
+  set(test_command
+      "mkdir -p ${test_directory} \
+                && ${MPIEXEC_EXECUTABLE} ${_mpiexec_all_args_for_testing} -np ${base_NP} $<TARGET_FILE:${FOUR_C_EXECUTABLE_NAME}> ${test_file_full_path} ${test_directory}/xxx"
+      )
+
+  # Optional timeout
+  if(DEFINED _parsed_TIMEOUT)
+    # scale testtimeout with the global test timeout scale
+    math(EXPR _parsed_TIMEOUT "${FOUR_C_TEST_TIMEOUT_SCALE} * ${_parsed_TIMEOUT}")
   endif()
 
   _add_test_with_options(
@@ -391,113 +348,214 @@ function(four_c_test)
     "${_parsed_TIMEOUT}"
     LABELS
     "${_parsed_LABELS}"
+    INPUT_FILE
+    "${test_file_full_path}"
+    OUTPUT_DIR
+    "${test_directory}"
+    REQUIRED_DEPENDENCIES
+    "${_parsed_REQUIRED_DEPENDENCIES}"
+    )
+endfunction()
+
+##
+# Define a restart test that restarts from a previous test
+#
+# required parameters:
+#   BASED_ON:                name of the base test that created the restart files
+#   RESTART_STEP:            number of the restart step to restart from
+#   SAME_FILE or TEST_FILE:  either SAME_FILE to indicate that the restart should be done from the same input file
+#                            as the base test, or TEST_FILE to indicate that a different input file should be used for the restart
+#
+# optional parameters:
+#   NP:                      number of processors the test should use. Fallback to 1 if not specified.
+#   TIMEOUT:                 manually defined duration for test timeout; defaults to global timeout if not specified
+#   OMP_THREADS:             number of OpenMP threads per processor the test should use; defaults to no OpenMP if not specified
+#   LABELS:                  Add labels to the test
+#   REQUIRED_DEPENDENCIES:   Any required external dependencies. The test will be skipped if the dependencies are not met.
+#   RETURN_AS:               A variable name that allows to add further dependent tests based on this test.
+function(four_c_test_restart)
+  set(options SAME_FILE)
+  set(oneValueArgs
+      BASED_ON
+      TEST_FILE
+      NP
+      RESTART_STEP
+      TIMEOUT
+      OMP_THREADS
+      RETURN_AS
+      )
+  set(multiValueArgs LABELS REQUIRED_DEPENDENCIES)
+  cmake_parse_arguments(
+    _parsed
+    "${options}"
+    "${oneValueArgs}"
+    "${multiValueArgs}"
+    ${ARGN}
     )
 
-  # set additional fixture for restart
-  set(additional_fixture "${name_of_test}")
+  # validate input arguments
+  if(DEFINED _parsed_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "There are unparsed arguments: ${_parsed_UNPARSED_ARGUMENTS}!")
+  endif()
 
-  # restart option
-  if(NOT _parsed_RESTART_STEP STREQUAL "" AND num_TEST_FILE EQUAL 1)
-    # restart with same input file
-    set(name_of_test "${name_of_test}-restart_from_same_input")
-    set(test_command "${test_command} restart=${_parsed_RESTART_STEP}")
-    _add_test_with_options(
-      NAME_OF_TEST
-      ${name_of_test}
-      TEST_COMMAND
-      ${test_command}
-      ADDITIONAL_FIXTURE
-      ${additional_fixture}
-      NP
-      ${total_procs}
-      TIMEOUT
-      "${_parsed_TIMEOUT}"
-      LABELS
-      "${_parsed_LABELS}"
-      )
+  assert_required_arguments(_parsed BASED_ON RESTART_STEP)
 
-    # update additional fixture for possible following post_ensight or csv comparison
-    set(additional_fixture "${name_of_test}")
+  if(NOT DEFINED _parsed_NP)
+    set(_parsed_NP 1)
+  endif()
+  if(_parsed_NP GREATER 3)
+    message(FATAL_ERROR "Number of processors must be less than or equal to 3!")
+  endif()
 
-  elseif(NOT _parsed_RESTART_STEP STREQUAL "" AND num_TEST_FILE EQUAL 2)
-    # restart with different input file
+  if(NOT DEFINED _parsed_OMP_THREADS)
+    set(_parsed_OMP_THREADS 0)
+  endif()
+
+  if(parsed_SAME_FILE AND DEFINED _parsed_TEST_FILE)
+    message(FATAL_ERROR "You cannot specify both SAME_FILE and TEST_FILE")
+  endif()
+  if(NOT _parsed_SAME_FILE AND NOT DEFINED _parsed_TEST_FILE)
+    message(FATAL_ERROR "You must specify either SAME_FILE or TEST_FILE")
+  endif()
+
+  # In case we reuse the same file as the base test, get the input file from there
+  if(_parsed_SAME_FILE)
+    set(name_of_test "${_parsed_BASED_ON}-restart_${_parsed_RESTART_STEP}-p${_parsed_NP}")
+    get_test_property(${_parsed_BASED_ON} _internal_INPUT_FILE test_file_full_path)
+    get_test_property(${_parsed_BASED_ON} _internal_OUTPUT_DIR test_directory)
+    set(restart_arguments "restart=${_parsed_RESTART_STEP}")
+  else()
+    # Restart from a different testfile
     set(name_of_test
-        ${restart_test}-p${restart_NP}_from_${base_test}-p${base_NP}-restart_step_${_parsed_RESTART_STEP}
+        "${_parsed_BASED_ON}-restart_${_parsed_RESTART_STEP}-with_${_parsed_TEST_FILE}-p${_parsed_NP}"
         )
-    set(restart_test_directory ${PROJECT_BINARY_DIR}/framework_test_output/${name_of_test})
-    set(test_command
-        "mkdir -p ${restart_test_directory} && ${MPIEXEC_EXECUTABLE} ${_mpiexec_all_args_for_testing} -np ${restart_NP} $<TARGET_FILE:${FOUR_C_EXECUTABLE_NAME}> ${restart_test_file} ${restart_test_directory}/xxx restartfrom=${test_directory}/xxx restart=${_parsed_RESTART_STEP}"
-        )
+    set(test_file_full_path "${PROJECT_SOURCE_DIR}/tests/input_files/${_parsed_TEST_FILE}")
+    set(test_directory ${PROJECT_BINARY_DIR}/framework_test_output/${name_of_test})
+    get_test_property(${_parsed_BASED_ON} _internal_OUTPUT_DIR base_directory)
+    set(restart_arguments "restartfrom=${base_directory}/xxx restart=${_parsed_RESTART_STEP}")
 
-    # Optional OpenMP threads per processor
-    set(total_procs ${restart_NP})
-
-    if(${_parsed_OMP_THREADS})
-      set(name_of_test ${name_of_test}-OMP${_parsed_OMP_THREADS})
-      set(test_command
-          "export OMP_NUM_THREADS=${_parsed_OMP_THREADS} && ${test_command} && unset OMP_NUM_THREADS"
-          )
-      math(EXPR total_procs "${_parsed_NP}*${_parsed_OMP_THREADS}")
+    if(NOT EXISTS ${test_file_full_path})
+      message(FATAL_ERROR "Test source file ${test_file_full_path} does not exist")
     endif()
-
-    _add_test_with_options(
-      NAME_OF_TEST
-      ${name_of_test}
-      TEST_COMMAND
-      ${test_command}
-      ADDITIONAL_FIXTURE
-      ${additional_fixture}
-      NP
-      ${total_procs}
-      TIMEOUT
-      "${_parsed_TIMEOUT}"
-      LABELS
-      "${_parsed_LABELS}"
-      )
-    set_run_serial(${name_of_test})
-
-    # update additional fixture for possible following post_ensight or csv comparison
-    set(additional_fixture "${name_of_test}")
   endif()
 
-  # csv comparison
-  if(NOT _parsed_CSV_YAML_COMPARISON_RESULT_FILE STREQUAL "")
-    # loop over all csv comparisons
-    foreach(
-      result_file
-      reference_file
-      tol_r
-      tol_a
-      IN
-      ZIP_LISTS
-      _parsed_CSV_YAML_COMPARISON_RESULT_FILE
-      _parsed_CSV_YAML_COMPARISON_REFERENCE_FILE
-      _parsed_CSV_YAML_COMPARISON_TOL_R
-      _parsed_CSV_YAML_COMPARISON_TOL_A
+  # Basic test command
+  set(test_command
+      "mkdir -p ${test_directory} \
+                && ${MPIEXEC_EXECUTABLE} ${_mpiexec_all_args_for_testing} -np ${_parsed_NP} $<TARGET_FILE:${FOUR_C_EXECUTABLE_NAME}> ${test_file_full_path} ${test_directory}/xxx ${restart_arguments}"
       )
-      set(name_of_csv_comparison_test "${name_of_test}-csv_comparison-${result_file}")
 
-      if(FOUR_C_WITH_PYTHON)
-        set(csv_comparison_command
-            "${FOUR_C_PYTHON_VENV_BUILD}/bin/diff-with-tolerance ${test_directory}/${result_file} ${PROJECT_SOURCE_DIR}/tests/input_files/${reference_file} ${tol_r} ${tol_a}"
-            )
-        _add_test_with_options(
-          NAME_OF_TEST
-          ${name_of_csv_comparison_test}
-          TEST_COMMAND
-          ${csv_comparison_command}
-          ADDITIONAL_FIXTURE
-          ${additional_fixture}
-          LABELS
-          "${_parsed_LABELS}"
-          )
-      else()
-        skip_test(
-          ${name_of_csv_comparison_test} "Skipping because FOUR_C_WITH_PYTHON is not enabled."
-          )
-      endif()
-    endforeach()
+  # Possibly enhanced with OpenMP
+  if(${_parsed_OMP_THREADS})
+    set(name_of_test ${name_of_test}-OMP${_parsed_OMP_THREADS})
+    set(test_command
+        "export OMP_NUM_THREADS=${_parsed_OMP_THREADS} && ${test_command} && unset OMP_NUM_THREADS"
+        )
+    math(EXPR total_procs "${_parsed_NP}*${_parsed_OMP_THREADS}")
   endif()
+
+  if(DEFINED _parsed_RETURN_AS)
+    set(${_parsed_RETURN_AS}
+        ${name_of_test}
+        PARENT_SCOPE
+        )
+  endif()
+
+  check_test_exists(_base_test_exists ${_parsed_BASED_ON})
+  if(NOT _base_test_exists)
+    message(FATAL_ERROR "Base test ${_parsed_BASED_ON} for restart does not exist.")
+  endif()
+
+  _add_test_with_options(
+    NAME_OF_TEST
+    ${name_of_test}
+    TEST_COMMAND
+    ${test_command}
+    ADDITIONAL_FIXTURE
+    ${_parsed_BASED_ON}
+    NP
+    ${total_procs}
+    TIMEOUT
+    "${_parsed_TIMEOUT}"
+    LABELS
+    "${_parsed_LABELS}"
+    INPUT_FILE
+    "${test_file_full_path}"
+    OUTPUT_DIR
+    "${test_directory}"
+    REQUIRED_DEPENDENCIES
+    "${_parsed_REQUIRED_DEPENDENCIES}"
+    )
+endfunction()
+
+##
+# Define a comparison test that compares a csv or yaml result file created by a test against
+# an expected reference file
+#
+# required parameters:
+#   BASED_ON:              name of the base test that created the result file to compare against
+#   RESULT_FILE:           name of the result file created by the base test
+#   REFERENCE_FILE:        name of the reference file to compare against (must be located in tests/input_files)
+#   TOL_R:                 relative tolerance for comparison
+#   TOL_A:                 absolute tolerance for comparison
+#
+# optional parameters:
+#   LABELS:                add labels to the test
+#   REQUIRED_DEPENDENCIES: any required external dependencies. The test will be skipped if the dependencies are not met.
+#
+function(four_c_test_add_csv_yaml_comparison)
+  set(options "")
+  set(oneValueArgs
+      BASED_ON
+      RESULT_FILE
+      REFERENCE_FILE
+      TOL_R
+      TOL_A
+      )
+  set(multiValueArgs LABELS REQUIRED_DEPENDENCIES)
+  cmake_parse_arguments(
+    _parsed
+    "${options}"
+    "${oneValueArgs}"
+    "${multiValueArgs}"
+    ${ARGN}
+    )
+
+  # validate input arguments
+  if(DEFINED _parsed_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "There are unparsed arguments: ${_parsed_UNPARSED_ARGUMENTS}!")
+  endif()
+
+  assert_required_arguments(
+    _parsed
+    BASED_ON
+    RESULT_FILE
+    REFERENCE_FILE
+    TOL_R
+    TOL_A
+    )
+
+  set(name_of_csv_comparison_test "${_parsed_BASED_ON}-csv_comparison-${_parsed_RESULT_FILE}")
+  get_test_property(${_parsed_BASED_ON} _internal_OUTPUT_DIR test_directory)
+
+  set(csv_comparison_command
+      "${FOUR_C_PYTHON_VENV_BUILD}/bin/diff-with-tolerance ${test_directory}/${_parsed_RESULT_FILE} ${PROJECT_SOURCE_DIR}/tests/input_files/${_parsed_REFERENCE_FILE} ${_parsed_TOL_R} ${_parsed_TOL_A}"
+      )
+
+  # Ensure that Python is listed as required dependency
+  list(APPEND _parsed_REQUIRED_DEPENDENCIES "Python")
+  _add_test_with_options(
+    NAME_OF_TEST
+    ${name_of_csv_comparison_test}
+    TEST_COMMAND
+    ${csv_comparison_command}
+    ADDITIONAL_FIXTURE
+    ${_parsed_BASED_ON}
+    LABELS
+    "${_parsed_LABELS}"
+    REQUIRED_DEPENDENCIES
+    "${_parsed_REQUIRED_DEPENDENCIES}"
+    )
 endfunction()
 
 ###------------------------------------------------------------------ Nested Parallelism
