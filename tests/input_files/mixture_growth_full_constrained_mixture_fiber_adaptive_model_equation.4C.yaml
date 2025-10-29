@@ -51,12 +51,12 @@ MATERIALS:
       KAPPA: 100
   - MAT: 11
     MIX_Constituent_FullConstrainedMixtureFiber:
-      FIBER_ID: 1
+      ORIENTATION:
+        constant: [1.0, 0.0, 0.0]
       FIBER_MATERIAL_ID: 110
       DECAY_TIME: 5
       GROWTH_CONSTANT: 0.01
       DEPOSITION_STRETCH: 1.1783669297169928
-      INIT: 3
       ADAPTIVE_HISTORY_STRATEGY: "model_equation"
   - MAT: 110
     MIX_Constituent_RemodelFiber_Material_Exponential:

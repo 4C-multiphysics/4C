@@ -10,7 +10,9 @@
 
 #include "4C_config.hpp"
 
-#include "4C_mat_anisotropy_extension.hpp"
+#include "4C_io_input_field.hpp"
+#include "4C_mat_fiber_interpolation.hpp"
+#include "4C_mat_so3_material.hpp"
 #include "4C_mixture_constituent_elasthyperbase.hpp"
 #include "4C_mixture_elastin_membrane_prestress_strategy.hpp"
 
@@ -29,44 +31,6 @@ namespace Mat
 namespace Mixture
 {
   class MixtureConstituentElastHyperElastinMembrane;
-
-  /*!
-   * \brief Anisotropy extension for elastin material.
-   *
-   * The anisotropy extension provides the structural tensor of the plane of the membrane, which is
-   * orthogonal to the radial direction
-   */
-  class ElastinMembraneAnisotropyExtension : public Mat::FiberAnisotropyExtension<1>
-  {
-   public:
-    /*!
-     * \brief Constructor of the new elastin anisotropy extension
-     *
-     * \param structuralTensorStrategy Structural tensor strategy to compute the structural tensors
-     */
-    explicit ElastinMembraneAnisotropyExtension(
-        const std::shared_ptr<Mat::Elastic::StructuralTensorStrategyBase>&
-            structuralTensorStrategy);
-
-    /*!
-     * \brief This method will be called when all global data is initialized. Here we need to create
-     * the membrane plane structural tensor
-     */
-    void on_global_data_initialized() override;
-
-    /*!
-     * \brief Returns the structural tensor of the membrane plane at the Gauss point
-     *
-     * \param gp (in) : Gauss point
-     * \return const Core::LinAlg::Matrix<3, 3>& Reference to the structural tensor of the membrane
-     * plane
-     */
-    const Core::LinAlg::SymmetricTensor<double, 3, 3>& get_orthogonal_structural_tensor(int gp);
-
-   private:
-    /// Holder of the internal structural tensors
-    std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>> orthogonal_structural_tensor_;
-  };
 
   namespace PAR
   {
@@ -95,6 +59,10 @@ namespace Mixture
 
       /// List of material ids of the summands
       const std::vector<int> matids_membrane_;
+
+      const Core::IO::InterpolatedInputField<Core::LinAlg::Tensor<double, 3>,
+          Mat::FiberInterpolation>
+          membrane_normal;
       /// @}
     };
   }  // namespace PAR
@@ -143,13 +111,6 @@ namespace Mixture
      * @param data (in) : vector storing all data to be unpacked into this instance.
      */
     void unpack_constituent(Core::Communication::UnpackBuffer& buffer) override;
-
-    /*!
-     * \brief Register anisotropy extensions to the global anisotropy manager
-     *
-     * \param anisotropy Reference to the global anisotropy manager
-     */
-    void register_anisotropy_extensions(Mat::Anisotropy& anisotropy) override;
 
     /*!
      * Initialize the constituent with the parameters of the input line
@@ -234,7 +195,8 @@ namespace Mixture
      * \param eleGID Global element id
      */
     void evaluate_membrane_stress(Core::LinAlg::SymmetricTensor<double, 3, 3>& S,
-        const Teuchos::ParameterList& params, int gp, int eleGID) override;
+        const Teuchos::ParameterList& params, const Mat::EvaluationContext& context, int gp,
+        int eleGID) override;
 
    protected:
     /*!
@@ -251,7 +213,8 @@ namespace Mixture
     void evaluate_stress_c_mat_membrane(const Core::LinAlg::Tensor<double, 3, 3>& F,
         const Core::LinAlg::Tensor<double, 3, 3>& iFin, const Teuchos::ParameterList& params,
         Core::LinAlg::SymmetricTensor<double, 3, 3>& S_stress,
-        Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& cmat, int gp, int eleGID) const;
+        Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>& cmat,
+        const Mat::EvaluationContext& context, int gp, int eleGID) const;
 
     /*!
      * \brief Evaluates the structural tensors of the radial and membrane plane direction in the
@@ -264,8 +227,8 @@ namespace Mixture
      * \param eleGID Global element id
      */
     void evaluate_structural_tensors_in_grown_configuration(Core::LinAlg::Matrix<3, 3>& Aradgr,
-        Core::LinAlg::Matrix<3, 3>& Aorthgr, const Core::LinAlg::Matrix<3, 3>& iFin, int gp,
-        int eleGID) const;
+        Core::LinAlg::Matrix<3, 3>& Aorthgr, const Core::LinAlg::Matrix<3, 3>& iFin,
+        const Mat::EvaluationContext& context, int gp, int eleGID) const;
 
     /*!
      * \brief Evaluate the matrix Product \[
@@ -326,7 +289,7 @@ namespace Mixture
     std::vector<std::shared_ptr<Mat::Elastic::IsoNeoHooke>> potsum_membrane_;
 
     /// Anisotropy extension holding the structural tensor of the anisotropy
-    ElastinMembraneAnisotropyExtension anisotropy_extension_;
+    mutable std::vector<Core::LinAlg::SymmetricTensor<double, 3, 3>> structural_tensor_membrane_;
   };
 
 }  // namespace Mixture
