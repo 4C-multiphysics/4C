@@ -72,113 +72,207 @@ Core::LinAlg::MultiVector<T>& Core::LinAlg::FEVector<T>::as_multi_vector()
 template <typename T>
 void Core::LinAlg::FEVector<T>::norm_1(double* Result) const
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(vector_->Norm1(Result));
+#else
+  vector_->Norm1(Result);
+#endif
 }
 
 template <typename T>
 void Core::LinAlg::FEVector<T>::norm_2(double* Result) const
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(vector_->Norm2(Result));
+#else
+  vector_->Norm2(Result);
+#endif
 }
 
 template <typename T>
 void Core::LinAlg::FEVector<T>::norm_inf(double* Result) const
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(vector_->NormInf(Result));
+#else
+  vector_->NormInf(Result);
+#endif
 }
 
 template <typename T>
 void Core::LinAlg::FEVector<T>::min_value(double* Result) const
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(vector_->MinValue(Result));
+#else
+  vector_->MinValue(Result);
+#endif
 }
 
 template <typename T>
 void Core::LinAlg::FEVector<T>::max_value(double* Result) const
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(vector_->MaxValue(Result));
+#else
+  vector_->MaxValue(Result);
+#endif
 }
 
 template <typename T>
 void Core::LinAlg::FEVector<T>::mean_value(double* Result) const
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(vector_->MeanValue(Result));
+#else
+  vector_->MeanValue(Result);
+#endif
 }
 
 template <typename T>
 void Core::LinAlg::FEVector<T>::scale(double ScalarValue)
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(vector_->Scale(ScalarValue));
+#else
+  vector_->Scale(ScalarValue);
+#endif
 }
 
 template <typename T>
 void Core::LinAlg::FEVector<T>::dot(const Epetra_MultiVector& A, double* Result) const
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(vector_->Dot(A, Result));
+#else
+  vector_->Dot(A, Result);
+#endif
 }
 
 template <typename T>
 void Core::LinAlg::FEVector<T>::abs(const Epetra_MultiVector& A)
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(vector_->Abs(A));
+#else
+  vector_->Abs(A);
+#endif
 }
 
 template <typename T>
 void Core::LinAlg::FEVector<T>::scale(double ScalarA, const Epetra_MultiVector& A)
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(vector_->Scale(ScalarA, A));
+#else
+  vector_->Scale(ScalarA, A);
+#endif
 }
 
 template <typename T>
 void Core::LinAlg::FEVector<T>::update(
     double ScalarA, const Epetra_MultiVector& A, double ScalarThis)
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(vector_->Update(ScalarA, A, ScalarThis));
+#else
+  vector_->Update(ScalarA, A, ScalarThis);
+#endif
 }
 
 template <typename T>
 void Core::LinAlg::FEVector<T>::update(double ScalarA, const Epetra_MultiVector& A, double ScalarB,
     const Epetra_MultiVector& B, double ScalarThis)
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(vector_->Update(ScalarA, A, ScalarB, B, ScalarThis));
+#else
+  vector_->Update(ScalarA, A, ScalarB, B, ScalarThis);
+#endif
 }
 
 template <typename T>
 void Core::LinAlg::FEVector<T>::dot(const FEVector& A, double* Result) const
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(vector_->Dot(A, Result));
+#else
+  vector_->Dot(A, Result);
+#endif
 }
 
 template <typename T>
 void Core::LinAlg::FEVector<T>::abs(const FEVector& A)
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(vector_->Abs(A));
+#else
+  vector_->Abs(A);
+#endif
 }
 
 template <typename T>
 void Core::LinAlg::FEVector<T>::scale(double ScalarA, const FEVector& A)
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(vector_->Scale(ScalarA, A));
+#else
+  vector_->Scale(ScalarA, A);
+#endif
 }
 
 template <typename T>
 void Core::LinAlg::FEVector<T>::update(double ScalarA, const FEVector& A, double ScalarThis)
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(vector_->Update(ScalarA, A, ScalarThis));
+#else
+  vector_->Update(ScalarA, A, ScalarThis);
+#endif
 }
 
 template <typename T>
 void Core::LinAlg::FEVector<T>::update(
     double ScalarA, const FEVector& A, double ScalarB, const FEVector& B, double ScalarThis)
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(
       vector_->Update(ScalarA, A, ScalarB, B.get_ref_of_epetra_fevector(), ScalarThis));
+#else
+  vector_->Update(ScalarA, A, ScalarB, B.get_ref_of_epetra_fevector(), ScalarThis);
+#endif
+}
+
+template <typename T>
+void Core::LinAlg::FEVector<T>::multiply(
+    double ScalarAB, const Epetra_MultiVector& A, const Epetra_MultiVector& B, double ScalarThis)
+{
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  CHECK_EPETRA_CALL(vector_->Multiply(ScalarAB, A, B, ScalarThis));
+#else
+  vector_->Multiply(ScalarAB, A, B, ScalarThis);
+#endif
+}
+
+template <typename T>
+void Core::LinAlg::FEVector<T>::reciprocal_multiply(
+    double ScalarAB, const Epetra_MultiVector& A, const Epetra_MultiVector& B, double ScalarThis)
+{
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  CHECK_EPETRA_CALL(vector_->ReciprocalMultiply(ScalarAB, A, B, ScalarThis));
+#else
+  vector_->ReciprocalMultiply(ScalarAB, A, B, ScalarThis);
+#endif
 }
 
 template <typename T>
 void Core::LinAlg::FEVector<T>::put_scalar(double ScalarConstant)
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(vector_->PutScalar(ScalarConstant));
+#else
+  vector_->PutScalar(ScalarConstant);
+#endif
 }
 
 template <typename T>
@@ -219,6 +313,131 @@ template <typename T>
 const Core::LinAlg::Map& Core::LinAlg::FEVector<T>::get_map() const
 {
   return map_.sync(vector_->Map());
+}
+
+template <typename T>
+void Core::LinAlg::FEVector<T>::import(const Epetra_SrcDistObject& A,
+    const Core::LinAlg::Import& Importer, Epetra_CombineMode CombineMode,
+    const Epetra_OffsetIndex* Indexor)
+{
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  CHECK_EPETRA_CALL(vector_->Import(A, Importer.get_epetra_import(), CombineMode, Indexor));
+#else
+  vector_->Import(A, Importer.get_epetra_import(), CombineMode, Indexor);
+#endif
+}
+
+template <typename T>
+void Core::LinAlg::FEVector<T>::import(const Epetra_SrcDistObject& A, const Epetra_Export& Exporter,
+    Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor)
+{
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  CHECK_EPETRA_CALL(vector_->Import(A, Exporter, CombineMode, Indexor));
+#else
+  vector_->Import(A, Exporter, CombineMode, Indexor);
+#endif
+}
+
+template <typename T>
+void Core::LinAlg::FEVector<T>::export_to(const Epetra_SrcDistObject& A,
+    const Core::LinAlg::Import& Importer, Epetra_CombineMode CombineMode,
+    const Epetra_OffsetIndex* Indexor)
+{
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  CHECK_EPETRA_CALL(vector_->Export(A, Importer.get_epetra_import(), CombineMode, Indexor));
+#else
+  vector_->Export(A, Importer.get_epetra_import(), CombineMode, Indexor);
+#endif
+}
+
+template <typename T>
+void Core::LinAlg::FEVector<T>::export_to(const Epetra_SrcDistObject& A,
+    const Core::LinAlg::Export& Exporter, Epetra_CombineMode CombineMode,
+    const Epetra_OffsetIndex* Indexor)
+{
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  CHECK_EPETRA_CALL(vector_->Export(A, Exporter.get_epetra_export(), CombineMode, Indexor));
+#else
+  vector_->Export(A, Exporter.get_epetra_export(), CombineMode, Indexor);
+#endif
+}
+
+template <typename T>
+void Core::LinAlg::FEVector<T>::export_to(const Epetra_SrcDistObject& A,
+    const Epetra_Export& Exporter, Epetra_CombineMode CombineMode,
+    const Epetra_OffsetIndex* Indexor)
+{
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  CHECK_EPETRA_CALL(vector_->Export(A, Exporter, CombineMode, Indexor));
+#else
+  vector_->Export(A, Exporter, CombineMode, Indexor);
+#endif
+}
+
+template <typename T>
+void Core::LinAlg::FEVector<T>::complete(Epetra_CombineMode mode, bool reuse_map_and_exporter)
+{
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  CHECK_EPETRA_CALL(vector_->GlobalAssemble(mode, reuse_map_and_exporter));
+#else
+  vector_->GlobalAssemble(mode, reuse_map_and_exporter);
+#endif
+}
+
+template <typename T>
+void Core::LinAlg::FEVector<T>::sum_into_local_value(
+    int MyRow, int FEVectorIndex, double ScalarValue)
+{
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  CHECK_EPETRA_CALL(vector_->SumIntoMyValue(MyRow, FEVectorIndex, ScalarValue));
+#else
+  vector_->SumIntoMyValue(MyRow, FEVectorIndex, ScalarValue);
+#endif
+}
+
+template <typename T>
+void Core::LinAlg::FEVector<T>::sum_into_global_value(
+    int GlobalRow, int FEVectorIndex, double ScalarValue)
+{
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  CHECK_EPETRA_CALL(vector_->SumIntoGlobalValue(GlobalRow, FEVectorIndex, ScalarValue));
+#else
+  vector_->SumIntoGlobalValue(GlobalRow, FEVectorIndex, ScalarValue);
+#endif
+}
+
+template <typename T>
+void Core::LinAlg::FEVector<T>::sum_into_global_value(
+    long long GlobalRow, int FEVectorIndex, double ScalarValue)
+{
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  CHECK_EPETRA_CALL(vector_->SumIntoGlobalValue(GlobalRow, FEVectorIndex, ScalarValue));
+#else
+  vector_->SumIntoGlobalValue(GlobalRow, FEVectorIndex, ScalarValue);
+#endif
+}
+
+template <typename T>
+void Core::LinAlg::FEVector<T>::sum_into_global_values(
+    int numIDs, const int* GIDs, const int* numValuesPerID, const double* values, int vectorIndex)
+{
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  CHECK_EPETRA_CALL(
+      vector_->SumIntoGlobalValues(numIDs, GIDs, numValuesPerID, values, vectorIndex));
+#else
+  vector_->SumIntoGlobalValues(numIDs, GIDs, numValuesPerID, values, vectorIndex);
+#endif
+}
+
+template <typename T>
+void Core::LinAlg::FEVector<T>::sum_into_global_values(
+    int numIDs, const int* GIDs, const double* values, int vectorIndex)
+{
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  CHECK_EPETRA_CALL(vector_->SumIntoGlobalValues(numIDs, GIDs, values, vectorIndex));
+#else
+  vector_->SumIntoGlobalValues(numIDs, GIDs, values, vectorIndex);
+#endif
 }
 
 // explicit instantiation

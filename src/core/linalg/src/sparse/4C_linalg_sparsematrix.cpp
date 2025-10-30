@@ -1463,14 +1463,41 @@ double Core::LinAlg::SparseMatrix::norm_one() const { return sysmat_->NormOne();
  *----------------------------------------------------------------------*/
 double Core::LinAlg::SparseMatrix::norm_frobenius() const { return sysmat_->NormFrobenius(); }
 
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void Core::LinAlg::SparseMatrix::import(
+    const SparseMatrix& A, const Core::LinAlg::Import& importer, Epetra_CombineMode combine_mode)
+{
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  CHECK_EPETRA_CALL(sysmat_->Import(A.epetra_matrix(), importer.get_epetra_import(), combine_mode));
+#else
+  sysmat_->Import(A.epetra_matrix(), importer.get_epetra_import(), combine_mode);
+#endif
+}
+
+/*----------------------------------------------------------------------*
+ *----------------------------------------------------------------------*/
+void Core::LinAlg::SparseMatrix::import(
+    const SparseMatrix& A, const Core::LinAlg::Export& exporter, Epetra_CombineMode combine_mode)
+{
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  CHECK_EPETRA_CALL(sysmat_->Import(A.epetra_matrix(), exporter.get_epetra_export(), combine_mode));
+#else
+  sysmat_->Import(A.epetra_matrix(), exporter.get_epetra_export(), combine_mode);
+#endif
+}
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Core::LinAlg::SparseMatrix::multiply(
     bool TransA, const Core::LinAlg::Vector<double>& x, Core::LinAlg::Vector<double>& y) const
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(
       sysmat_->Multiply(TransA, x.get_ref_of_epetra_vector(), y.get_ref_of_epetra_vector()));
+#else
+  sysmat_->Multiply(TransA, x.get_ref_of_epetra_vector(), y.get_ref_of_epetra_vector());
+#endif
 }
 
 
@@ -1487,7 +1514,11 @@ int Core::LinAlg::SparseMatrix::multiply(bool TransA, const Core::LinAlg::MultiV
  *----------------------------------------------------------------------*/
 void Core::LinAlg::SparseMatrix::left_scale(const Core::LinAlg::Vector<double>& x)
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(sysmat_->LeftScale(x));
+#else
+  sysmat_->LeftScale(x);
+#endif
 }
 
 
@@ -1495,21 +1526,33 @@ void Core::LinAlg::SparseMatrix::left_scale(const Core::LinAlg::Vector<double>& 
  *----------------------------------------------------------------------*/
 void Core::LinAlg::SparseMatrix::right_scale(const Core::LinAlg::Vector<double>& x)
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(sysmat_->RightScale(x));
+#else
+  sysmat_->RightScale(x);
+#endif
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Core::LinAlg::SparseMatrix::inv_row_sums(Core::LinAlg::Vector<double>& x) const
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(sysmat_->InvRowSums(x));
+#else
+  sysmat_->InvRowSums(x);
+#endif
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void Core::LinAlg::SparseMatrix::inv_col_sums(Core::LinAlg::Vector<double>& x) const
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(sysmat_->InvColSums(x));
+#else
+  sysmat_->InvColSums(x);
+#endif
 }
 
 /*----------------------------------------------------------------------*
@@ -1540,7 +1583,11 @@ int Core::LinAlg::SparseMatrix::replace_diagonal_values(
  *----------------------------------------------------------------------*/
 void Core::LinAlg::SparseMatrix::extract_diagonal_copy(Core::LinAlg::Vector<double>& Diagonal) const
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(sysmat_->ExtractDiagonalCopy(Diagonal.get_ref_of_epetra_vector()));
+#else
+  sysmat_->ExtractDiagonalCopy(Diagonal.get_ref_of_epetra_vector());
+#endif
 }
 
 /*----------------------------------------------------------------------*
@@ -1548,7 +1595,11 @@ void Core::LinAlg::SparseMatrix::extract_diagonal_copy(Core::LinAlg::Vector<doub
 void Core::LinAlg::SparseMatrix::extract_my_row_copy(
     int my_row, int length, int& num_entries, double* values, int* indices) const
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(sysmat_->ExtractMyRowCopy(my_row, length, num_entries, values, indices));
+#else
+  sysmat_->ExtractMyRowCopy(my_row, length, num_entries, values, indices);
+#endif
 }
 
 /*----------------------------------------------------------------------*
@@ -1556,8 +1607,12 @@ void Core::LinAlg::SparseMatrix::extract_my_row_copy(
 void Core::LinAlg::SparseMatrix::extract_global_row_copy(
     int global_row, int length, int& num_entries, double* values, int* indices) const
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(
       sysmat_->ExtractGlobalRowCopy(global_row, length, num_entries, values, indices));
+#else
+  sysmat_->ExtractGlobalRowCopy(global_row, length, num_entries, values, indices);
+#endif
 }
 
 /*----------------------------------------------------------------------*
@@ -1565,7 +1620,11 @@ void Core::LinAlg::SparseMatrix::extract_global_row_copy(
 void Core::LinAlg::SparseMatrix::extract_my_row_view(
     int my_row, int& num_entries, double*& values, int*& indices) const
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(sysmat_->ExtractMyRowView(my_row, num_entries, values, indices));
+#else
+  sysmat_->ExtractMyRowView(my_row, num_entries, values, indices);
+#endif
 }
 
 /*----------------------------------------------------------------------*
@@ -1573,7 +1632,11 @@ void Core::LinAlg::SparseMatrix::extract_my_row_view(
 void Core::LinAlg::SparseMatrix::extract_global_row_view(
     int global_row, int& num_entries, double*& values, int*& indices) const
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(sysmat_->ExtractGlobalRowView(global_row, num_entries, values, indices));
+#else
+  sysmat_->ExtractGlobalRowView(global_row, num_entries, values, indices);
+#endif
 }
 
 /*----------------------------------------------------------------------*
