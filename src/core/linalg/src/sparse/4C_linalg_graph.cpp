@@ -60,11 +60,19 @@ void Core::LinAlg::Graph::fill_complete()
 {
   if (graphtype_ == CRS_GRAPH)
   {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
     CHECK_EPETRA_CALL(graph_->FillComplete());
+#else
+    graph_->FillComplete();
+#endif
   }
   else if (graphtype_ == FE_GRAPH)
   {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
     CHECK_EPETRA_CALL(static_cast<Epetra_FECrsGraph*>(graph_.get())->GlobalAssemble());
+#else
+    static_cast<Epetra_FECrsGraph*>(graph_.get())->GlobalAssemble();
+#endif
   }
 }
 
@@ -72,35 +80,63 @@ void Core::LinAlg::Graph::fill_complete(const Map& domain_map, const Map& range_
 {
   if (graphtype_ == CRS_GRAPH)
   {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
     CHECK_EPETRA_CALL(
         graph_->FillComplete(domain_map.get_epetra_block_map(), range_map.get_epetra_block_map()));
+#else
+    graph_->FillComplete(domain_map.get_epetra_block_map(), range_map.get_epetra_block_map());
+#endif
   }
   else if (graphtype_ == FE_GRAPH)
   {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
     CHECK_EPETRA_CALL(static_cast<Epetra_FECrsGraph*>(graph_.get())
             ->GlobalAssemble(domain_map.get_epetra_map(), range_map.get_epetra_map()));
+#else
+    static_cast<Epetra_FECrsGraph*>(graph_.get())
+        ->GlobalAssemble(domain_map.get_epetra_map(), range_map.get_epetra_map());
+#endif
   }
 }
 
-void Core::LinAlg::Graph::optimize_storage() { CHECK_EPETRA_CALL(graph_->OptimizeStorage()); }
+void Core::LinAlg::Graph::optimize_storage()
+{
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+  CHECK_EPETRA_CALL(graph_->OptimizeStorage());
+#else
+  graph_->OptimizeStorage();
+#endif
+}
 
 void Core::LinAlg::Graph::export_to(const Epetra_SrcDistObject& A,
     const Core::LinAlg::Export& Exporter, Epetra_CombineMode CombineMode,
     const Epetra_OffsetIndex* Indexor)
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(graph_->Export(A, Exporter.get_epetra_export(), CombineMode, Indexor));
+#else
+  graph_->Export(A, Exporter.get_epetra_export(), CombineMode, Indexor);
+#endif
 }
 
 void Core::LinAlg::Graph::import_from(const Epetra_SrcDistObject& A,
     const Core::LinAlg::Import& Importer, Epetra_CombineMode CombineMode,
     const Epetra_OffsetIndex* Indexor)
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(graph_->Import(A, Importer.get_epetra_import(), CombineMode, Indexor));
+#else
+  graph_->Import(A, Importer.get_epetra_import(), CombineMode, Indexor);
+#endif
 }
 
 void Core::LinAlg::Graph::insert_global_indices(int GlobalRow, int NumIndices, int* Indices)
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(graph_->InsertGlobalIndices(GlobalRow, NumIndices, Indices));
+#else
+  graph_->InsertGlobalIndices(GlobalRow, NumIndices, Indices);
+#endif
 }
 
 void Core::LinAlg::Graph::insert_global_indices(
@@ -112,26 +148,43 @@ void Core::LinAlg::Graph::insert_global_indices(
   }
   else if (graphtype_ == FE_GRAPH)
   {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
     CHECK_EPETRA_CALL(static_cast<Epetra_FECrsGraph*>(graph_.get())
             ->InsertGlobalIndices(numRows, rows, numCols, cols));
+#else
+    static_cast<Epetra_FECrsGraph*>(graph_.get())
+        ->InsertGlobalIndices(numRows, rows, numCols, cols);
+#endif
   }
 }
 
 void Core::LinAlg::Graph::extract_local_row_view(int LocalRow, int& NumIndices, int*& Indices) const
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(graph_->ExtractMyRowView(LocalRow, NumIndices, Indices));
+#else
+  graph_->ExtractMyRowView(LocalRow, NumIndices, Indices);
+#endif
 }
 
 void Core::LinAlg::Graph::extract_global_row_view(
     int GlobalRow, int& NumIndices, int*& Indices) const
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(graph_->ExtractGlobalRowView(GlobalRow, NumIndices, Indices));
+#else
+  graph_->ExtractGlobalRowView(GlobalRow, NumIndices, Indices);
+#endif
 }
 
 void Core::LinAlg::Graph::extract_global_row_copy(
     int GlobalRow, int LenOfIndices, int& NumIndices, int* Indices) const
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(graph_->ExtractGlobalRowCopy(GlobalRow, LenOfIndices, NumIndices, Indices));
+#else
+  graph_->ExtractGlobalRowCopy(GlobalRow, LenOfIndices, NumIndices, Indices);
+#endif
 }
 
 FOUR_C_NAMESPACE_CLOSE

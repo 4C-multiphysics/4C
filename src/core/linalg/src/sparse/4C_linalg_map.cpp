@@ -130,7 +130,11 @@ Core::LinAlg::Map::Map(const Epetra_BlockMap& Source)
 
 void Core::LinAlg::Map::my_global_elements(int* MyGlobalElementList) const
 {
+#ifdef FOUR_C_ENABLE_ASSERTIONS
   CHECK_EPETRA_CALL(wrapped().MyGlobalElements(MyGlobalElementList));
+#else
+  wrapped().MyGlobalElements(MyGlobalElementList);
+#endif
 }
 
 FOUR_C_NAMESPACE_CLOSE

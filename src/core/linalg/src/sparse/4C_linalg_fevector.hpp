@@ -206,81 +206,41 @@ namespace Core::LinAlg
 
     //! Multiply a Core::LinAlg::MultiVector<double> with another, element-by-element.
     void multiply(double ScalarAB, const Epetra_MultiVector& A, const Epetra_MultiVector& B,
-        double ScalarThis)
-    {
-      CHECK_EPETRA_CALL(vector_->Multiply(ScalarAB, A, B, ScalarThis));
-    }
+        double ScalarThis);
 
     //! Imports an Epetra_DistObject using the Core::LinAlg::Import object.
     void import(const Epetra_SrcDistObject& A, const Core::LinAlg::Import& Importer,
-        Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr)
-    {
-      CHECK_EPETRA_CALL(vector_->Import(A, Importer.get_epetra_import(), CombineMode, Indexor));
-    }
+        Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr);
 
     //! Imports an Epetra_DistObject using the Epetra_Export object.
     void import(const Epetra_SrcDistObject& A, const Epetra_Export& Exporter,
-        Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr)
-    {
-      CHECK_EPETRA_CALL(vector_->Import(A, Exporter, CombineMode, Indexor));
-    }
+        Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr);
 
     void export_to(const Epetra_SrcDistObject& A, const Core::LinAlg::Import& Importer,
-        Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr)
-    {
-      CHECK_EPETRA_CALL(vector_->Export(A, Importer.get_epetra_import(), CombineMode, Indexor));
-    }
+        Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr);
 
     void export_to(const Epetra_SrcDistObject& A, const Core::LinAlg::Export& Exporter,
-        Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr)
-    {
-      CHECK_EPETRA_CALL(vector_->Export(A, Exporter.get_epetra_export(), CombineMode, Indexor));
-    }
+        Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr);
 
     void export_to(const Epetra_SrcDistObject& A, const Epetra_Export& Exporter,
-        Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr)
-    {
-      CHECK_EPETRA_CALL(vector_->Export(A, Exporter, CombineMode, Indexor));
-    }
+        Epetra_CombineMode CombineMode, const Epetra_OffsetIndex* Indexor = nullptr);
 
-    void complete(Epetra_CombineMode mode = Add, bool reuse_map_and_exporter = false)
-    {
-      CHECK_EPETRA_CALL(vector_->GlobalAssemble(mode, reuse_map_and_exporter));
-    }
+    void complete(Epetra_CombineMode mode = Add, bool reuse_map_and_exporter = false);
 
-    void sum_into_global_value(int GlobalRow, int FEVectorIndex, double ScalarValue)
-    {
-      CHECK_EPETRA_CALL(vector_->SumIntoGlobalValue(GlobalRow, FEVectorIndex, ScalarValue));
-    }
+    void sum_into_global_value(int GlobalRow, int FEVectorIndex, double ScalarValue);
 
-    void sum_into_global_value(long long GlobalRow, int FEVectorIndex, double ScalarValue)
-    {
-      CHECK_EPETRA_CALL(vector_->SumIntoGlobalValue(GlobalRow, FEVectorIndex, ScalarValue));
-    }
+    void sum_into_global_value(long long GlobalRow, int FEVectorIndex, double ScalarValue);
 
     void sum_into_global_values(int numIDs, const int* GIDs, const int* numValuesPerID,
-        const double* values, int vectorIndex = 0)
-    {
-      CHECK_EPETRA_CALL(
-          vector_->SumIntoGlobalValues(numIDs, GIDs, numValuesPerID, values, vectorIndex));
-    }
+        const double* values, int vectorIndex = 0);
 
     void sum_into_global_values(
-        int numIDs, const int* GIDs, const double* values, int vectorIndex = 0)
-    {
-      CHECK_EPETRA_CALL(vector_->SumIntoGlobalValues(numIDs, GIDs, values, vectorIndex));
-    }
+        int numIDs, const int* GIDs, const double* values, int vectorIndex = 0);
 
     void reciprocal_multiply(double ScalarAB, const Epetra_MultiVector& A,
-        const Epetra_MultiVector& B, double ScalarThis)
-    {
-      CHECK_EPETRA_CALL(vector_->ReciprocalMultiply(ScalarAB, A, B, ScalarThis));
-    }
+        const Epetra_MultiVector& B, double ScalarThis);
 
-    void sum_into_local_value(int MyRow, int FEVectorIndex, double ScalarValue)
-    {
-      CHECK_EPETRA_CALL(vector_->SumIntoMyValue(MyRow, FEVectorIndex, ScalarValue));
-    }
+    void sum_into_local_value(int MyRow, int FEVectorIndex, double ScalarValue);
 
 
     /**
