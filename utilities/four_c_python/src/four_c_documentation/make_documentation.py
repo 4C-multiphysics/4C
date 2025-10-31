@@ -401,12 +401,23 @@ def one_of_to_md(one_of: One_Of):
     open_content = len(one_of.specs) < 11
 
     names = sort_one_of_option_names(one_of)
+    used_anchors = set()
 
     for i, spec in enumerate(one_of.specs):
+        # remove html formatting for anchor
+        opt_anchor = re.sub(r"\s*, <span.*", "", names[i]).strip()
+        # ensure uniqueness of anchor
+        n = 2
+        while opt_anchor in used_anchors:
+            opt_anchor = f"{opt_anchor}-{n}"
+            n += 1
+        used_anchors.add(opt_anchor)
+
         key = "Option (" + names[i] + ")"
-        description += "\n" + make_collapsible(
-            textwrap.indent(all_of_to_md(spec, 1), " "), key, open_content
-        )
+        # add anchor for referencing
+        content = textwrap.indent(all_of_to_md(spec, 1), " ")
+        content = f"({opt_anchor})=\n\n" + content
+        description += "\n" + make_collapsible(content, key, open_content)
 
     return header, description
 
