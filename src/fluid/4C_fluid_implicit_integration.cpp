@@ -4951,7 +4951,7 @@ double FLD::FluidImplicitTimeInt::evaluate_dt_via_cfl_if_applicable()
     }
 
     const Core::LinAlg::Map* elementrowmap = discret_->element_row_map();
-    Core::LinAlg::MultiVector<double> h_u(*elementrowmap, 1, true);
+    Core::LinAlg::Vector<double> h_u(*elementrowmap, true);
 
     // optional: elementwise defined h_u may be written to standard output file (not implemented
     // yet)

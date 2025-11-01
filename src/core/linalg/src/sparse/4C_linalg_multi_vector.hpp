@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_comm_mpi_utils.hpp"
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_transfer.hpp"
 #include "4C_linalg_view.hpp"
@@ -18,7 +19,6 @@
 
 #include <Epetra_FEVector.h>
 #include <Epetra_MultiVector.h>
-#include <mpi.h>
 
 #include <memory>
 
@@ -64,12 +64,6 @@ namespace Core::LinAlg
 
     //! Compute Inf-norm of each vector
     void norm_inf(double* Result) const;
-
-    //! Compute minimum value of each vector
-    void min_value(double* Result) const;
-
-    //! Compute maximum value of each vector
-    void max_value(double* Result) const;
 
     //! Compute mean (average) value of each vector
     void mean_value(double* Result) const;
@@ -130,103 +124,45 @@ namespace Core::LinAlg
      */
     void replace_map(const Map& map);
 
-    void replace_local_value(int MyRow, int VectorIndex, double ScalarValue)
-    {
-      CHECK_EPETRA_CALL(vector_->ReplaceMyValue(MyRow, VectorIndex, ScalarValue));
-    }
+    void replace_local_value(int MyRow, int VectorIndex, double ScalarValue);
 
-    void replace_global_value(int GlobalRow, int VectorIndex, double ScalarValue)
-    {
-      CHECK_EPETRA_CALL(vector_->ReplaceGlobalValue(GlobalRow, VectorIndex, ScalarValue));
-    }
+    void replace_global_value(int GlobalRow, int VectorIndex, double ScalarValue);
 
-    void replace_global_value(long long GlobalRow, int VectorIndex, double ScalarValue)
-    {
-      CHECK_EPETRA_CALL(vector_->ReplaceGlobalValue(GlobalRow, VectorIndex, ScalarValue));
-    }
+    void replace_global_value(long long GlobalRow, int VectorIndex, double ScalarValue);
+
+    //! Multiply a Epetra_MultiVector with another, element-by-element.
+    void multiply(double ScalarAB, const MultiVector& A, const MultiVector& B, double ScalarThis);
 
     //! Matrix-Matrix multiplication, \e this = ScalarThis*\e this + ScalarAB*A*B.
     void multiply(char TransA, char TransB, double ScalarAB, const MultiVector& A,
-        const MultiVector& B, double ScalarThis)
-    {
-      CHECK_EPETRA_CALL(vector_->Multiply(TransA, TransB, ScalarAB, A.get_epetra_multi_vector(),
-          B.get_epetra_multi_vector(), ScalarThis));
-    }
+        const MultiVector& B, double ScalarThis);
 
     //! Puts element-wise reciprocal values of input Multi-vector in target.
-    void reciprocal(const Epetra_MultiVector& A) { CHECK_EPETRA_CALL(vector_->Reciprocal(A)); }
-
-    //! Multiply a Core::LinAlg::MultiVector<double> with another, element-by-element.
-    void multiply(double ScalarAB, const Epetra_MultiVector& A, const Epetra_MultiVector& B,
-        double ScalarThis)
-    {
-      CHECK_EPETRA_CALL(vector_->Multiply(ScalarAB, A, B, ScalarThis));
-    }
+    void reciprocal(const Epetra_MultiVector& A);
 
     //! Imports an Epetra_DistObject using the Core::LinAlg::Import object.
-    void import(const Epetra_SrcDistObject& A, const Core::LinAlg::Import& Importer,
-        Epetra_CombineMode CombineMode)
-    {
-      CHECK_EPETRA_CALL(vector_->Import(A, Importer.get_epetra_import(), CombineMode));
-    }
+    void import(
+        const MultiVector& A, const Core::LinAlg::Import& Importer, Epetra_CombineMode CombineMode);
 
     //! Imports an Epetra_DistObject using the Core::LinAlg::Export object.
-    void import(const Epetra_SrcDistObject& A, const Core::LinAlg::Export& Exporter,
-        Epetra_CombineMode CombineMode)
-    {
-      CHECK_EPETRA_CALL(vector_->Import(A, Exporter.get_epetra_export(), CombineMode));
-    }
+    void import(
+        const MultiVector& A, const Core::LinAlg::Export& Exporter, Epetra_CombineMode CombineMode);
 
-    void export_to(const MultiVector& A, const Core::LinAlg::Import& Importer,
-        Epetra_CombineMode CombineMode)
-    {
-      CHECK_EPETRA_CALL(vector_->Export(A.get_epetra_multi_vector(), Importer.get_epetra_import(), CombineMode));
-    }
+    void export_to(
+        const MultiVector& A, const Core::LinAlg::Import& Importer, Epetra_CombineMode CombineMode);
 
-    void export_to(const MultiVector& A, const Core::LinAlg::Export& Exporter,
-        Epetra_CombineMode CombineMode)
-    {
-      CHECK_EPETRA_CALL(vector_->Export(A.get_epetra_multi_vector(), Exporter.get_epetra_export(), CombineMode));
-    }
+    void export_to(
+        const MultiVector& A, const Core::LinAlg::Export& Exporter, Epetra_CombineMode CombineMode);
 
-    void sum_into_global_value(int GlobalRow, int VectorIndex, double ScalarValue)
-    {
-      CHECK_EPETRA_CALL(vector_->SumIntoGlobalValue(GlobalRow, VectorIndex, ScalarValue));
-    }
+    void sum_into_global_value(int GlobalRow, int VectorIndex, double ScalarValue);
 
-    void sum_into_global_value(long long GlobalRow, int VectorIndex, double ScalarValue)
-    {
-      CHECK_EPETRA_CALL(vector_->SumIntoGlobalValue(GlobalRow, VectorIndex, ScalarValue));
-    }
+    void sum_into_global_value(long long GlobalRow, int VectorIndex, double ScalarValue);
 
-    void reciprocal_multiply(double ScalarAB, const Core::LinAlg::MultiVector<double>& A,
-        const Core::LinAlg::MultiVector<double>& B, double ScalarThis)
-    {
-      CHECK_EPETRA_CALL(vector_->ReciprocalMultiply(
-          ScalarAB, A.get_epetra_multi_vector(), B.get_epetra_multi_vector(), ScalarThis));
-    }
+    void sum_into_local_value(int MyRow, int VectorIndex, double ScalarValue);
 
-    void sum_into_local_value(int MyRow, int VectorIndex, double ScalarValue)
-    {
-      CHECK_EPETRA_CALL(vector_->SumIntoMyValue(MyRow, VectorIndex, ScalarValue));
-    }
+    void extract_view(double*** ArrayOfPointers) const;
 
-    void sum_into_local_value(
-        int MyBlockRow, int BlockRowOffset, int VectorIndex, double ScalarValue)
-    {
-      CHECK_EPETRA_CALL(
-          vector_->SumIntoMyValue(MyBlockRow, BlockRowOffset, VectorIndex, ScalarValue));
-    }
-
-    void extract_view(double*** ArrayOfPointers) const
-    {
-      CHECK_EPETRA_CALL(vector_->ExtractView(ArrayOfPointers));
-    }
-
-    void extract_copy(double* A, int MyLDA) const
-    {
-      CHECK_EPETRA_CALL(vector_->ExtractCopy(A, MyLDA));
-    }
+    void extract_copy(double* A, int MyLDA) const;
 
     Core::LinAlg::Vector<double>& operator()(int i);
 
