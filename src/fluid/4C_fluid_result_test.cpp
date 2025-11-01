@@ -72,37 +72,43 @@ void FLD::FluidResultTest::test_node(
 
       std::string position = container.get<std::string>("QUANTITY");
       if (position == "velx")
-        result = (*mysol_)[velnpmap.lid(fluiddis_->dof(0, actnode, 0))];
+        result = mysol_->local_values_as_span()[velnpmap.lid(fluiddis_->dof(0, actnode, 0))];
       else if (position == "vely")
-        result = (*mysol_)[velnpmap.lid(fluiddis_->dof(0, actnode, 1))];
+        result = mysol_->local_values_as_span()[velnpmap.lid(fluiddis_->dof(0, actnode, 1))];
       else if (position == "velz")
       {
         if (numdim == 2) FOUR_C_THROW("Cannot test result for velz in 2D case.");
-        result = (*mysol_)[velnpmap.lid(fluiddis_->dof(0, actnode, 2))];
+        result = mysol_->local_values_as_span()[velnpmap.lid(fluiddis_->dof(0, actnode, 2))];
       }
       else if (position == "pressure")
       {
         if (fluiddis_->num_dof(0, actnode) < (numdim + 1))
           FOUR_C_THROW("too few dofs at node {} for pressure testing", actnode->id());
-        result = (*mysol_)[velnpmap.lid(fluiddis_->dof(0, actnode, numdim))];
+        result = mysol_->local_values_as_span()[velnpmap.lid(fluiddis_->dof(0, actnode, numdim))];
       }
       else if (position == "tractionx")
-        result = (*mytraction_)[(mytraction_->get_map()).lid(fluiddis_->dof(0, actnode, 0))];
+        result = mytraction_->local_values_as_span()[(mytraction_->get_map())
+                .lid(fluiddis_->dof(0, actnode, 0))];
       else if (position == "tractiony")
-        result = (*mytraction_)[(mytraction_->get_map()).lid(fluiddis_->dof(0, actnode, 1))];
+        result = mytraction_->local_values_as_span()[(mytraction_->get_map())
+                .lid(fluiddis_->dof(0, actnode, 1))];
       else if (position == "tractionz")
       {
         if (numdim == 2) FOUR_C_THROW("Cannot test result for tractionz in 2D case.");
-        result = (*mytraction_)[(mytraction_->get_map()).lid(fluiddis_->dof(0, actnode, 2))];
+        result = mytraction_->local_values_as_span()[(mytraction_->get_map())
+                .lid(fluiddis_->dof(0, actnode, 2))];
       }
       else if (position == "wssx")
-        result = (*mywss_)[(mywss_->get_map()).lid(fluiddis_->dof(0, actnode, 0))];
+        result =
+            mywss_->local_values_as_span()[(mywss_->get_map()).lid(fluiddis_->dof(0, actnode, 0))];
       else if (position == "wssy")
-        result = (*mywss_)[(mywss_->get_map()).lid(fluiddis_->dof(0, actnode, 1))];
+        result =
+            mywss_->local_values_as_span()[(mywss_->get_map()).lid(fluiddis_->dof(0, actnode, 1))];
       else if (position == "wssz")
       {
         if (numdim == 2) FOUR_C_THROW("Cannot test result for wssz in 2D case.");
-        result = (*mywss_)[(mywss_->get_map()).lid(fluiddis_->dof(0, actnode, 2))];
+        result =
+            mywss_->local_values_as_span()[(mywss_->get_map()).lid(fluiddis_->dof(0, actnode, 2))];
       }
       else if (position == "L2errvel")
         result = (*myerror_)[0];

@@ -907,7 +907,7 @@ void Solid::TimInt::apply_mesh_initialization(
         FOUR_C_THROW("Proc {}: Cannot find gid={} in Core::LinAlg::Vector<double>",
             Core::Communication::my_mpi_rank(gvector.get_comm()), nodedofs[i]);
 
-      nvector[i] += gvector[lid];
+      nvector[i] += gvector.local_values_as_span()[lid];
     }
 
     // set new reference position
@@ -1417,9 +1417,9 @@ void Solid::TimInt::update_step_contact_vum()
           Core::LinAlg::create_vector(*activenodemap, true);
       for (int i = 0; i < activenodemap->num_my_elements(); ++i)
       {
-        if ((*wc)[i] > 0)
+        if (wc->local_values_as_span()[i] > 0)
         {
-          (*wp).get_values()[i] = (*wc)[i];
+          (*wp).get_values()[i] = wc->local_values_as_span()[i];
           (*wn).get_values()[i] = 0;
           (*wd).get_values()[i] = 0;
           (*wt).get_values()[i] = 0;
@@ -1427,15 +1427,16 @@ void Solid::TimInt::update_step_contact_vum()
         else
         {
           (*wp).get_values()[i] = 0;
-          (*wn).get_values()[i] = (*wc)[i];
-          (*wd).get_values()[i] = pow((*b)[i], 2) / (4 * (*AD)[i]);
-          if ((*wc)[i] > (*wd)[i])
+          (*wn).get_values()[i] = wc->local_values_as_span()[i];
+          (*wd).get_values()[i] =
+              pow(b->local_values_as_span()[i], 2) / (4 * AD->local_values_as_span()[i]);
+          if (wc->local_values_as_span()[i] > wd->local_values_as_span()[i])
           {
-            (*wt).get_values()[i] = (*wc)[i];
+            (*wt).get_values()[i] = wc->local_values_as_span()[i];
           }
           else
           {
-            (*wt).get_values()[i] = (*wd)[i];
+            (*wt).get_values()[i] = wd->local_values_as_span()[i];
           }
         }
       }
@@ -1460,14 +1461,15 @@ void Solid::TimInt::update_step_contact_vum()
         wtemp1->update(C, *wn, 0.0);
         for (int i = 0; i < activenodemap->num_my_elements(); ++i)
         {
-          (*wtemp2).get_values()[i] = pow((*b)[i], 2) / (4 * (*AD)[i]);
-          if ((*wtemp1)[i] > (*wtemp2)[i])
+          (*wtemp2).get_values()[i] =
+              pow(b->local_values_as_span()[i], 2) / (4 * AD->local_values_as_span()[i]);
+          if (wtemp1->local_values_as_span()[i] > wtemp2->local_values_as_span()[i])
           {
-            (*w).get_values()[i] = (*wtemp1)[i];
+            (*w).get_values()[i] = wtemp1->local_values_as_span()[i];
           }
           else
           {
-            (*w).get_values()[i] = (1 - tolerance) * (*wtemp2)[i];
+            (*w).get_values()[i] = (1 - tolerance) * wtemp2->local_values_as_span()[i];
             std::cout << "***** WARNING: VelUpdate is not able to compensate the gain of energy****"
                       << std::endl;
           }
@@ -1491,16 +1493,24 @@ void Solid::TimInt::update_step_contact_vum()
         for (int i = 0; i < activenodemap->num_my_elements(); ++i)
         {
           (*p1).get_values()[i] =
-              (-(*b)[i] + pow(pow((*b)[i], 2) - 4 * (*AD)[i] * (*w)[i], 0.5)) / (2 * (*AD)[i]);
+              (-b->local_values_as_span()[i] +
+                  pow(pow(b->local_values_as_span()[i], 2) -
+                          4 * AD->local_values_as_span()[i] * w->local_values_as_span()[i],
+                      0.5)) /
+              (2 * AD->local_values_as_span()[i]);
 
           (*p2).get_values()[i] =
-              (-(*b)[i] - pow(pow((*b)[i], 2) - 4 * (*AD)[i] * (*w)[i], 0.5)) / (2 * (*AD)[i]);
-          if ((*w)[i] == 0)
+              (-b->local_values_as_span()[i] -
+                  pow(pow(b->local_values_as_span()[i], 2) -
+                          4 * AD->local_values_as_span()[i] * w->local_values_as_span()[i],
+                      0.5)) /
+              (2 * AD->local_values_as_span()[i]);
+          if (w->local_values_as_span()[i] == 0)
             (*p).get_values()[i] = 0;
-          else if (abs((*p1)[i]) < abs((*p2)[i]))
-            (*p).get_values()[i] = (*p1)[i];
+          else if (abs(p1->local_values_as_span()[i]) < abs(p2->local_values_as_span()[i]))
+            (*p).get_values()[i] = p1->local_values_as_span()[i];
           else
-            (*p).get_values()[i] = (*p2)[i];
+            (*p).get_values()[i] = p2->local_values_as_span()[i];
         }
       }
       else
@@ -1508,16 +1518,24 @@ void Solid::TimInt::update_step_contact_vum()
         for (int i = 0; i < activenodemap->num_my_elements(); ++i)
         {
           (*p1).get_values()[i] =
-              (-(*b)[i] + pow(pow((*b)[i], 2) - 4 * (*AD)[i] * (*w)[i], 0.5)) / (2 * (*AD)[i]);
+              (-b->local_values_as_span()[i] +
+                  pow(pow(b->local_values_as_span()[i], 2) -
+                          4 * AD->local_values_as_span()[i] * w->local_values_as_span()[i],
+                      0.5)) /
+              (2 * AD->local_values_as_span()[i]);
 
           (*p2).get_values()[i] =
-              (-(*b)[i] - pow(pow((*b)[i], 2) - 4 * (*AD)[i] * (*w)[i], 0.5)) / (2 * (*AD)[i]);
-          if ((*w)[i] == 0)
+              -b->local_values_as_span()[i] -
+              pow(pow(b->local_values_as_span()[i], 2) -
+                      4 * AD->local_values_as_span()[i] * w->local_values_as_span()[i],
+                  0.5) /
+                  (2 * AD->local_values_as_span()[i]);
+          if (w->local_values_as_span()[i] == 0)
             (*p).get_values()[i] = 0;
-          else if (((*p1)[i] > 0) == ((*b)[i] < 0))
-            (*p).get_values()[i] = (*p1)[i];
+          else if ((p1->local_values_as_span()[i] > 0) == (b->local_values_as_span()[i] < 0))
+            (*p).get_values()[i] = p1->local_values_as_span()[i];
           else
-            (*p).get_values()[i] = (*p2)[i];
+            (*p).get_values()[i] = p2->local_values_as_span()[i];
         }
       }
 
@@ -1540,10 +1558,12 @@ void Solid::TimInt::update_step_contact_vum()
         x->put_scalar(0.0);
         A->extract_global_row_view(activenodemap->gid(i), NumEntries, Values, Indices);
         x->replace_global_values(NumEntries, Values, Indices);
-        (*f).get_values()[i] = (*b)[i] * (*p)[i] + (*w)[i];
+        (*f).get_values()[i] = b->local_values_as_span()[i] * p->local_values_as_span()[i] +
+                               w->local_values_as_span()[i];
         for (int j = 0; j < activenodemap->num_my_elements(); ++j)
         {
-          (*f).get_values()[i] += (*x)[j] * (*p)[i] * (*p)[j];
+          (*f).get_values()[i] += x->local_values_as_span()[j] * p->local_values_as_span()[i] *
+                                  p->local_values_as_span()[j];
         }
       }
 
@@ -1561,16 +1581,18 @@ void Solid::TimInt::update_step_contact_vum()
         {
           if (k == i)
           {
-            dfik = (*x)[i] * (*p)[i] + (*b)[i];
+            dfik = x->local_values_as_span()[i] * p->local_values_as_span()[i] +
+                   b->local_values_as_span()[i];
             for (int j = 0; j < activenodemap->num_my_elements(); ++j)
             {
-              dfik += (*x)[j] * (*p)[j];
+              dfik += x->local_values_as_span()[j] * p->local_values_as_span()[j];
             }
             DF.assemble(dfik, activenodemap->gid(i), activenodemap->gid(k));
           }
           else
           {
-            DF.assemble((*x)[k] * (*p)[i], activenodemap->gid(i), activenodemap->gid(k));
+            DF.assemble(x->local_values_as_span()[k] * p->local_values_as_span()[i],
+                activenodemap->gid(i), activenodemap->gid(k));
           }
         }
       }
@@ -1625,16 +1647,18 @@ void Solid::TimInt::update_step_contact_vum()
           {
             if (k == i)
             {
-              dfik = (*x)[i] * (*p)[i] + (*b)[i];
+              dfik = x->local_values_as_span()[i] * p->local_values_as_span()[i] +
+                     b->local_values_as_span()[i];
               for (int j = 0; j < activenodemap->num_my_elements(); ++j)
               {
-                dfik += (*x)[j] * (*p)[j];
+                dfik += x->local_values_as_span()[j] * p->local_values_as_span()[j];
               }
               DF.assemble(dfik, activenodemap->gid(i), activenodemap->gid(k));
             }
             else
             {
-              DF.assemble((*x)[k] * (*p)[i], activenodemap->gid(i), activenodemap->gid(k));
+              DF.assemble(x->local_values_as_span()[k] * p->local_values_as_span()[i],
+                  activenodemap->gid(i), activenodemap->gid(k));
             }
           }
         }

@@ -441,7 +441,7 @@ Core::LinAlg::SparseMatrix Core::LinAlg::multiply_multi_vector_multi_vector(
   for (int i = 1; i < mv1.num_vectors(); ++i) prod.multiply(1.0, get_multi_vector(i), prod, 1.0);
   int numnonzero = 0;
   for (int i = 0; i < prod.local_length(); ++i)
-    if (prod[i] != 0.0) numnonzero++;
+    if (prod.local_values_as_span()[i] != 0.0) numnonzero++;
 
   int glob_numnonzero = 0;
   glob_numnonzero = Core::Communication::sum_all(numnonzero, prod.get_comm());
@@ -489,7 +489,7 @@ Core::LinAlg::SparseMatrix Core::LinAlg::multiply_multi_vector_multi_vector(
 
       for (int vv = 0; vv < mv1.num_vectors(); ++vv)
       {
-        sum += mv1(vv)[rr] * mv2glob(vv)[mm];
+        sum += mv1(vv).local_values_as_span()[rr] * mv2glob(vv).local_values_as_span()[mm];
       }
 
       if (sum != 0.0)

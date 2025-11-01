@@ -278,7 +278,7 @@ double Core::LinAlg::MultiMapExtractor::norm2(
   {
     int lid = fm.lid(v[i]);
     if (lid == -1) FOUR_C_THROW("maps do not match");
-    double value = full[lid];
+    double value = full.local_values_as_span()[lid];
     local_norm += value * value;
   }
 

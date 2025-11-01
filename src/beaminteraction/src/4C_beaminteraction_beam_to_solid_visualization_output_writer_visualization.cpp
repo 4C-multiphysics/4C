@@ -105,7 +105,8 @@ void BeamInteraction::BeamToSolidOutputWriterVisualization::
   std::vector<double>& data_vector =
       get_visualization_data().get_point_data<double>(data_name, 3 * num_my_gid);
   data_vector.reserve(3 * num_my_gid);
-  for (int i_lid = 0; i_lid < num_my_gid; i_lid++) data_vector.push_back((vector_extract)[i_lid]);
+  for (int i_lid = 0; i_lid < num_my_gid; i_lid++)
+    data_vector.push_back((vector_extract).local_values_as_span()[i_lid]);
 }
 
 void BeamInteraction::BeamToSolidOutputWriterVisualization::add_discretization_nodal_data(

@@ -63,9 +63,12 @@ namespace
     {
       const auto nodal_x = node.x();
       const int id = nodal_coordinates.get_map().lid(node.global_id());
-      EXPECT_DOUBLE_EQ(nodal_coordinates(0)[id], nodal_x[0]) << " at node " << node.global_id();
-      EXPECT_DOUBLE_EQ(nodal_coordinates(1)[id], nodal_x[1]) << " at node " << node.global_id();
-      EXPECT_DOUBLE_EQ(nodal_coordinates(2)[id], nodal_x[2]) << " at node " << node.global_id();
+      EXPECT_DOUBLE_EQ(nodal_coordinates(0).local_values_as_span()[id], nodal_x[0])
+          << " at node " << node.global_id();
+      EXPECT_DOUBLE_EQ(nodal_coordinates(1).local_values_as_span()[id], nodal_x[1])
+          << " at node " << node.global_id();
+      EXPECT_DOUBLE_EQ(nodal_coordinates(2).local_values_as_span()[id], nodal_x[2])
+          << " at node " << node.global_id();
     }
   }
 
@@ -85,9 +88,12 @@ namespace
         const auto nodal_x = node.x();
         const int id = nodal_coordinates.get_map().lid(node.global_id());
         if (id == -1) continue;  // node not in map
-        EXPECT_DOUBLE_EQ(nodal_coordinates(0)[id], nodal_x[0]) << " at node " << node.global_id();
-        EXPECT_DOUBLE_EQ(nodal_coordinates(1)[id], nodal_x[1]) << " at node " << node.global_id();
-        EXPECT_DOUBLE_EQ(nodal_coordinates(2)[id], nodal_x[2]) << " at node " << node.global_id();
+        EXPECT_DOUBLE_EQ(nodal_coordinates(0).local_values_as_span()[id], nodal_x[0])
+            << " at node " << node.global_id();
+        EXPECT_DOUBLE_EQ(nodal_coordinates(1).local_values_as_span()[id], nodal_x[1])
+            << " at node " << node.global_id();
+        EXPECT_DOUBLE_EQ(nodal_coordinates(2).local_values_as_span()[id], nodal_x[2])
+            << " at node " << node.global_id();
       }
     }
   }

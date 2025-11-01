@@ -187,12 +187,13 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> Core::FE::compute_nodal_l2_pr
       const int mastergid = slavemasterpair->second;
       const int masterlid = noderowmap.lid(mastergid);
       for (int j = 0; j < numvec; ++j)
-        fullnodevec->replace_local_value(i, j, (*nodevec)(j)[masterlid]);
+        fullnodevec->replace_local_value(i, j, (*nodevec)(j).local_values_as_span()[masterlid]);
     }
     else
     {
       const int lid = noderowmap.lid(nodeid);
-      for (int j = 0; j < numvec; ++j) fullnodevec->replace_local_value(i, j, (*nodevec)(j)[lid]);
+      for (int j = 0; j < numvec; ++j)
+        fullnodevec->replace_local_value(i, j, (*nodevec)(j).local_values_as_span()[lid]);
     }
   }
 

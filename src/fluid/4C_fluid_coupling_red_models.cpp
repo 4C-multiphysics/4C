@@ -949,7 +949,7 @@ double FLD::Utils::FluidCouplingBc::flow_rate_calculation(double time, double dt
   double local_flowrate = 0.0;
   for (int i = 0; i < dofrowmap->num_my_elements(); i++)
   {
-    local_flowrate += ((*flowrates)[i]);
+    local_flowrate += flowrates->local_values_as_span()[i];
   }
 
   double flowrate = 0.0;
@@ -1205,13 +1205,14 @@ void FLD::Utils::FluidCouplingBc::evaluate_dirichlet(
         {
           int lid = discret_3d_->dof_row_map()->lid(dof_gid);
 
-          double val = (velnp)[lid] * velocity_;
+          double val = (velnp).local_values_as_span()[lid] * velocity_;
           //        std::cout<<"Vel["<<gid<<"]: "<<(*velnp) [lid]<<std::endl;
-          if ((velnp)[lid] > 1.0)
+          if ((velnp).local_values_as_span()[lid] > 1.0)
           {
             FOUR_C_THROW("coupled 3D/Reduced-D must have Dirichlet BC = 1");
           }
-          std::cout << "[" << dof_gid << "]\t|" << val << "\t<-<" << (velnp)[lid] << "|\t";
+          std::cout << "[" << dof_gid << "]\t|" << val << "\t<-<"
+                    << (velnp).local_values_as_span()[lid] << "|\t";
           velnp.replace_global_values(1, &val, &dof_gid);
         }
       }

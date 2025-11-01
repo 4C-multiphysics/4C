@@ -263,8 +263,8 @@ int Discret::Elements::ArteryEleCalcLinExp<distype>::scatra_evaluate(Artery* ele
     // get element scalar transport
     int local_id = discretization.node_row_map()->lid(ele->nodes()[i]->id());
     //    escatran(i)     = (*scatran)[local_id];
-    ewfnp(i) = (*wfnp)[local_id] - (*wfo)[local_id];
-    ewbnp(i) = (*wbnp)[local_id] - (*wbo)[local_id];
+    ewfnp(i) = wfnp->local_values_as_span()[local_id] - wfo->local_values_as_span()[local_id];
+    ewbnp(i) = wbnp->local_values_as_span()[local_id] - wbo->local_values_as_span()[local_id];
     std::cout << "ewfnp(" << i << ") : " << ewfnp(i) << std::endl;
     std::cout << "ewbnp(" << i << ") : " << ewbnp(i) << std::endl;
   }
@@ -1136,9 +1136,9 @@ bool Discret::Elements::ArteryEleCalcLinExp<distype>::solve_riemann(Artery* ele,
               Core::Communication::my_mpi_rank(discretization.get_comm()));
         }
         if (TermIO == -1.0)
-          (*junc_nodal_vals)[local_id]->W_ = (*Wbnp)[local_id];
+          (*junc_nodal_vals)[local_id]->W_ = Wbnp->local_values_as_span()[local_id];
         else if (TermIO == 1.0)
-          (*junc_nodal_vals)[local_id]->W_ = (*Wfnp)[local_id];
+          (*junc_nodal_vals)[local_id]->W_ = Wfnp->local_values_as_span()[local_id];
         (*junc_nodal_vals)[local_id]->A_ = earean(i);
         (*junc_nodal_vals)[local_id]->Q_ = eqn(i);
         (*junc_nodal_vals)[local_id]->Ao_ = area0_(i);
@@ -1313,11 +1313,13 @@ void Discret::Elements::ArteryEleCalcLinExp<distype>::evaluate_terminal_bc(Arter
 
       if (TermIO == -1)
       {
-        Cparams.set<double>("backward characteristic wave speed", (*Wbnp)[local_id]);
+        Cparams.set<double>(
+            "backward characteristic wave speed", Wbnp->local_values_as_span()[local_id]);
       }
       else
       {
-        Cparams.set<double>("forward characteristic wave speed", (*Wfnp)[local_id]);
+        Cparams.set<double>(
+            "forward characteristic wave speed", Wfnp->local_values_as_span()[local_id]);
       }
       Cparams.set<double>("external pressure", pext_(i));
 
@@ -1398,7 +1400,7 @@ void Discret::Elements::ArteryEleCalcLinExp<distype>::evaluate_terminal_bc(Arter
             double val2 = Wb;
             Wbnp->replace_global_values(1, &val2, &gid);
             int local_id = discretization.node_row_map()->lid(ele->nodes()[i]->id());
-            Wf = (*Wfnp)[local_id];
+            Wf = Wfnp->local_values_as_span()[local_id];
           }
         }
 
@@ -1914,8 +1916,8 @@ void Discret::Elements::ArteryEleCalcLinExp<distype>::solve_scatra_analytically(
     // get element scalar transport
     int local_id = discretization.node_row_map()->lid(ele->nodes()[i]->id());
     //    escatran(i)     = (*scatran)[local_id];
-    ewfn(i) = (*wfn)[local_id] - (*wfo)[local_id];
-    ewbn(i) = (*wbn)[local_id] - (*wbo)[local_id];
+    ewfn(i) = wfn->local_values_as_span()[local_id] - wfo->local_values_as_span()[local_id];
+    ewbn(i) = wbn->local_values_as_span()[local_id] - wbo->local_values_as_span()[local_id];
   }
 
   // Get length of the element

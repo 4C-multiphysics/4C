@@ -2399,7 +2399,8 @@ void TSI::Monolithic::calculate_necking_tsi_results()
   // copy the structural reaction force to tension
   Core::LinAlg::export_to(*(structure_field()->freact()), *tension);
   double top_force_local = 0.0;  // local force
-  for (int i = 0; i < tension->local_length(); i++) top_force_local -= (*tension)[i];
+  for (int i = 0; i < tension->local_length(); i++)
+    top_force_local -= tension->local_values_as_span()[i];
 
   // complete force pointing in axial direction
   double top_force_global = 0.0;

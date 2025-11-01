@@ -193,7 +193,7 @@ void PostVtiWriter::write_dof_result_step(std::ofstream& file,
         const int lid = ghostedData->get_map().lid(nodedofs[d + from] + offset);
         if (lid > -1)
         {
-          solution[inpos + d] = (*ghostedData)[lid];
+          solution[inpos + d] = ghostedData->local_values_as_span()[lid];
         }
         else
         {
@@ -279,7 +279,7 @@ void PostVtiWriter::write_nodal_result_step(std::ofstream& file,
 
         if (lid > -1)
         {
-          solution[inpos + idf] = (column)[lid];
+          solution[inpos + idf] = column.local_values_as_span()[lid];
         }
         else
         {
@@ -353,7 +353,7 @@ void PostVtiWriter::write_element_result_step(std::ofstream& file,
     for (int d = 0; d < numdf; ++d)
     {
       Core::LinAlg::Vector<double> column((*importedData)(d + from));
-      solution[inpos + d] = (column)[e];
+      solution[inpos + d] = column.local_values_as_span()[e];
     }
   }
 

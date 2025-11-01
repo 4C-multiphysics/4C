@@ -72,12 +72,18 @@ void Solid::ModelEvaluator::BaseSSI::determine_stress_strain()
     const int doflid = mechanical_stress_state_np_->get_map().lid(dofgid);
     if (doflid < 0) FOUR_C_THROW("Local ID not found in vector!");
 
-    (*mechanical_stress_state_np_).get_values()[doflid] = (nodal_stresses_source(0))[nodelid];
-    (*mechanical_stress_state_np_).get_values()[doflid + 1] = (nodal_stresses_source(1))[nodelid];
-    (*mechanical_stress_state_np_).get_values()[doflid + 2] = (nodal_stresses_source(2))[nodelid];
-    (*mechanical_stress_state_np_).get_values()[doflid + 3] = (nodal_stresses_source(3))[nodelid];
-    (*mechanical_stress_state_np_).get_values()[doflid + 4] = (nodal_stresses_source(4))[nodelid];
-    (*mechanical_stress_state_np_).get_values()[doflid + 5] = (nodal_stresses_source(5))[nodelid];
+    (*mechanical_stress_state_np_).get_values()[doflid] =
+        nodal_stresses_source(0).local_values_as_span()[nodelid];
+    (*mechanical_stress_state_np_).get_values()[doflid + 1] =
+        nodal_stresses_source(1).local_values_as_span()[nodelid];
+    (*mechanical_stress_state_np_).get_values()[doflid + 2] =
+        nodal_stresses_source(2).local_values_as_span()[nodelid];
+    (*mechanical_stress_state_np_).get_values()[doflid + 3] =
+        nodal_stresses_source(3).local_values_as_span()[nodelid];
+    (*mechanical_stress_state_np_).get_values()[doflid + 4] =
+        nodal_stresses_source(4).local_values_as_span()[nodelid];
+    (*mechanical_stress_state_np_).get_values()[doflid + 5] =
+        nodal_stresses_source(5).local_values_as_span()[nodelid];
   }
 }
 

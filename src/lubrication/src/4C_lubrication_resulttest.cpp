@@ -86,7 +86,8 @@ double Lubrication::ResultTest::result_node(
   const Core::LinAlg::Map& prenpmap = mysol_->get_map();
 
   // test result value of pressure field
-  if (quantity == "pre") result = (*mysol_)[prenpmap.lid(dis_->dof(0, node, 0))];
+  if (quantity == "pre")
+    result = mysol_->local_values_as_span()[prenpmap.lid(dis_->dof(0, node, 0))];
 
   // catch unknown quantity strings
   else

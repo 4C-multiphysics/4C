@@ -525,7 +525,7 @@ void CONTACT::MtAbstractStrategy::mesh_initialization(
       {
         locindex[dof] = (Xslavemodcol.get_map()).lid(mtnode->dofs()[dof]);
         if (locindex[dof] < 0) FOUR_C_THROW("Did not find dof in map");
-        Xnew[dof] = Xslavemodcol[locindex[dof]];
+        Xnew[dof] = Xslavemodcol.local_values_as_span()[locindex[dof]];
       }
 
       // check is mesh distortion is still OK
@@ -670,17 +670,19 @@ void CONTACT::MtAbstractStrategy::store_nodal_quantities(Mortar::StrategyBase::Q
         {
           case Mortar::StrategyBase::lmcurrent:
           {
-            mtnode->mo_data().lm()[dof] = (vectorinterface)[locindex[dof]];
+            mtnode->mo_data().lm()[dof] = (vectorinterface).local_values_as_span()[locindex[dof]];
             break;
           }
           case Mortar::StrategyBase::lmold:
           {
-            mtnode->mo_data().lmold()[dof] = (vectorinterface)[locindex[dof]];
+            mtnode->mo_data().lmold()[dof] =
+                (vectorinterface).local_values_as_span()[locindex[dof]];
             break;
           }
           case Mortar::StrategyBase::lmuzawa:
           {
-            mtnode->mo_data().lmuzawa()[dof] = (vectorinterface)[locindex[dof]];
+            mtnode->mo_data().lmuzawa()[dof] =
+                (vectorinterface).local_values_as_span()[locindex[dof]];
             break;
           }
           case Mortar::StrategyBase::lmupdate:
@@ -691,7 +693,7 @@ void CONTACT::MtAbstractStrategy::store_nodal_quantities(Mortar::StrategyBase::Q
                   "Slave Node {} is active and at the same time carries D.B.C.s!", mtnode->id());
 
             // store updated LM into node
-            mtnode->mo_data().lm()[dof] = (vectorinterface)[locindex[dof]];
+            mtnode->mo_data().lm()[dof] = (vectorinterface).local_values_as_span()[locindex[dof]];
             break;
           }
           default:

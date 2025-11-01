@@ -207,7 +207,7 @@ Core::LinAlg::SparseMatrix::SparseMatrix(const Core::LinAlg::Vector<double>& dia
   for (int i = 0; i < length; ++i)
   {
     int gid = map.gid(i);
-    assemble(diag[i], gid, gid);
+    assemble(diag.local_values_as_span()[i], gid, gid);
   }
 }
 
@@ -933,7 +933,7 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet(
     for (int i = 0; i < nummyrows; ++i)
     {
       int row = sysmat_->GRID(i);
-      if (dbctoggle[i] != 1.0)
+      if (dbctoggle.local_values_as_span()[i] != 1.0)
       {
         int numentries;
 #ifdef FOUR_C_ENABLE_ASSERTIONS
@@ -976,7 +976,7 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet(
     const int nummyrows = sysmat_->NumMyRows();
     for (int i = 0; i < nummyrows; ++i)
     {
-      if (dbctoggle[i] == 1.0)
+      if (dbctoggle.local_values_as_span()[i] == 1.0)
       {
         int* indexOffset;
         int* indices;
@@ -1315,7 +1315,7 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::SparseMatrix::extract_
 
   for (int i = 0; i < nummyrows; ++i)
   {
-    if (dbct[i] == 1.0)
+    if (dbct.local_values_as_span()[i] == 1.0)
     {
       int NumEntries;
       double* Values;

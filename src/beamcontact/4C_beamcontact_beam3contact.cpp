@@ -5509,12 +5509,14 @@ void CONTACT::Beam3contact<numnodes, numnodalvalues>::fd_check(
 
     for (int i = 0; i < 2 * 3 * numnodalvalues * numnodes; i++)
     {
-      fint2_mat(i, dof) = fint2[i];
+      fint2_mat(i, dof) = fint2.local_values_as_span()[i];
 
-      if (fabs(fint2[i]) < 1.0e-10 and fabs(fint1[i]) < 1.0e-10)
+      if (fabs(fint2.local_values_as_span()[i]) < 1.0e-10 and
+          fabs(fint1.local_values_as_span()[i]) < 1.0e-10)
         stiffmatrix_fd(i, dof) = 999999999999;
       else
-        stiffmatrix_fd(i, dof) = -(fint2[i] - fint1[i]) / delta;
+        stiffmatrix_fd(i, dof) =
+            -(fint2.local_values_as_span()[i] - fint1.local_values_as_span()[i]) / delta;
     }
 
     // restore original displacements
@@ -5532,7 +5534,7 @@ void CONTACT::Beam3contact<numnodes, numnodalvalues>::fd_check(
     {
       std::cout << "row: " << i << "   "
                 << "col: " << j << "   " << stiffmatrix_fd(i, j) << "   fint2: " << fint2_mat(i, j)
-                << "   fint1: " << fint1[i] << std::endl;
+                << "   fint1: " << fint1.local_values_as_span()[i] << std::endl;
     }
   }
 

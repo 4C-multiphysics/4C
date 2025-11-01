@@ -924,7 +924,8 @@ void CONTACT::LagrangeStrategyTsi::store_nodal_quantities(
           Node* cnode = dynamic_cast<Node*>(node);
 
           cnode->tsi_data().thermo_lm() =
-              (*vectorinterface)[(vectorinterface->get_map()).lid(cnode->dofs()[0])];
+              (*vectorinterface)
+                  .local_values_as_span()[(vectorinterface->get_map()).lid(cnode->dofs()[0])];
         }
       }
       break;

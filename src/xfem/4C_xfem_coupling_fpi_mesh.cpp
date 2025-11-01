@@ -762,7 +762,7 @@ void XFEM::MeshCouplingFPI::lift_drag(const int step, const double time) const
       for (int isd = 0; isd < nsd; ++isd)
       {
         // [// minus to get correct sign of lift and drag (force acting on the body) ]
-        c(isd) += (*iforcecol)[dofcolmap->lid(dof[isd])];
+        c(isd) += iforcecol->local_values_as_span()[dofcolmap->lid(dof[isd])];
       }
     }
 
@@ -942,7 +942,7 @@ double XFEM::MeshCouplingFPI::compute_jacobianand_pressure(
             xrefe(idof, inode) = x[idof];
 
             if (lid != -1)
-              xcurr(idof, inode) = xrefe(idof, inode) + fulldispnp_->operator[](lid);
+              xcurr(idof, inode) = xrefe(idof, inode) + fulldispnp_->local_values_as_span()[(lid)];
             else
               FOUR_C_THROW("Local ID for dispnp not found (lid = -1)!");
           }
@@ -950,7 +950,7 @@ double XFEM::MeshCouplingFPI::compute_jacobianand_pressure(
               get_cond_dis()->dof(0, coupl_ele->nodes()[inode], 2)));
 
           if (lidp != -1)
-            pres += fullpres_->operator[](lidp) * pfunc_loc(inode);
+            pres += fullpres_->local_values_as_span()[(lidp)] * pfunc_loc(inode);
           else
             FOUR_C_THROW("Local ID for pressure not found (lid = -1)!");
         }

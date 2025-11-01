@@ -1231,8 +1231,8 @@ void PoroElast::Monolithic::apply_fluid_coupl_matrix(
 
     if (i == column_number)
     {
-      std::cout << "rhs_: " << (rhs_copy)[row_number] << std::endl;
-      std::cout << "rhs_old: " << (rhs_old)[row_number] << std::endl;
+      std::cout << "rhs_: " << rhs_copy.local_values_as_span()[row_number] << std::endl;
+      std::cout << "rhs_old: " << rhs_old.local_values_as_span()[row_number] << std::endl;
     }
 
     rhs_copy.update(-1.0, rhs_old, 1.0);
@@ -1241,7 +1241,7 @@ void PoroElast::Monolithic::apply_fluid_coupl_matrix(
     int* index = &i;
     for (int j = 0; j < dofs; ++j)
     {
-      double value = (rhs_copy)[j];
+      double value = rhs_copy.local_values_as_span()[j];
       stiff_approx.insert_global_values(j, 1, &value, index);
 
       if ((j == row_number) and (i == column_number))
@@ -1264,7 +1264,7 @@ void PoroElast::Monolithic::apply_fluid_coupl_matrix(
         structure_field()->velnp()->print(std::cout);
 
         std::cout << "stiff_apprx(" << row_number << "," << column_number
-                  << "): " << (rhs_copy)[row_number] << std::endl;
+                  << "): " << rhs_copy.local_values_as_span()[row_number] << std::endl;
 
         std::cout << "value(" << row_number << "," << column_number << "): " << value << std::endl;
         std::cout << "\n******************" << row_number + 1 << ". Row End!!***************"

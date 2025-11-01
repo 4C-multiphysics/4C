@@ -84,7 +84,7 @@ void ScaTra::ScaTraTimIntPoroMulti::set_l2_flux_of_multi_fluid(
         const int lid = phaseflux->get_map().lid(gid);
         if (lid < 0) FOUR_C_THROW("Local ID not found in map for given global ID!");
 
-        const double value = ((*multiflux)(curphase * nsd_ + index))[count];
+        const double value = ((*multiflux)(curphase * nsd_ + index)).local_values_as_span()[count];
 
         phaseflux->replace_local_value(lid, value);
       }
@@ -195,7 +195,7 @@ void ScaTra::ScaTraTimIntPoroMulti::collect_runtime_output_data()
           const int lidoxydof = discret_->dof_row_map()->lid(myoxydof);
           if (lidoxydof < 0) FOUR_C_THROW("Couldn't extract local ID of oxygen dof!");
           // compute CaO2
-          const double CaO2 = (*phinp_)[lidoxydof] * rho_bl / rho_oxy;
+          const double CaO2 = phinp_->local_values_as_span()[lidoxydof] * rho_bl / rho_oxy;
           // compute Pb
           PoroPressureBased::get_oxy_partial_pressure_from_concentration<double>(
               Pb, CaO2, CaO2_max, Pb50, n, alpha_eff);

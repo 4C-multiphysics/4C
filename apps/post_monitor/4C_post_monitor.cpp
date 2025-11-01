@@ -536,7 +536,7 @@ void FluidMonWriter::write_result(
   {
     const int lid = velmap.lid(gdof[i] + offset2);
     outfile << std::right << std::setw(20) << std::setprecision(10) << std::scientific
-            << (*resvec)[lid];
+            << resvec->local_values_as_span()[lid];
   }
   outfile << "\n";
 }
@@ -588,7 +588,7 @@ void RedAirwayMonWriter::write_result(
   for (unsigned i = 0; i < gdof.size(); ++i)
   {
     const int lid = pmap.lid(gdof[i]);
-    outfile << std::right << std::setw(20) << (*resvec)[lid];
+    outfile << std::right << std::setw(20) << resvec->local_values_as_span()[lid];
   }
   outfile << "\n";
 }
@@ -684,7 +684,8 @@ void StructMonWriter::write_result(
   {
     const int lid = dispmap.lid(gdof[i] + offset2);
     if (lid == -1) FOUR_C_THROW("illegal gid {} at {}!", gdof[i], i);
-    outfile << std::right << std::setw(16) << std::scientific << (*resvec)[lid];
+    outfile << std::right << std::setw(16) << std::scientific
+            << resvec->local_values_as_span()[lid];
   }
 
   // pressure
@@ -702,7 +703,8 @@ void StructMonWriter::write_result(
       const unsigned i = (unsigned)dim;
       const int lid = pressmap.lid(gdof[i] + offset2);
       if (lid == -1) FOUR_C_THROW("illegal gid {} at {}!", gdof[i], i);
-      outfile << std::right << std::setw(16) << std::scientific << (*resvec)[lid];
+      outfile << std::right << std::setw(16) << std::scientific
+              << resvec->local_values_as_span()[lid];
     }
   }
 
@@ -841,7 +843,8 @@ void StructMonWriter::write_str_result(std::ofstream& outfile, PostField*& field
     outfile << std::right << std::setw(10) << result.step();
     outfile << std::right << std::setw(16) << std::scientific << result.time();
     for (int i = 0; i < 6; i++)
-      outfile << std::right << std::setw(16) << std::scientific << nodal_stress(i)[node];
+      outfile << std::right << std::setw(16) << std::scientific
+              << nodal_stress(i).local_values_as_span()[node];
     outfile << std::endl;
   }
 
@@ -904,7 +907,8 @@ void AleMonWriter::write_result(
   for (unsigned i = 0; i < gdof.size() - 1; ++i)
   {
     const int lid = dispmap.lid(gdof[i] + offset2);
-    outfile << std::right << std::setw(16) << std::scientific << (*resvec)[lid];
+    outfile << std::right << std::setw(16) << std::scientific
+            << resvec->local_values_as_span()[lid];
   }
   outfile << "\n";
 }
@@ -979,7 +983,8 @@ void FsiFluidMonWriter::write_result(
   for (unsigned i = 0; i < gdof.size() - 1; ++i)
   {
     const int lid = dispmap.lid(gdof[i] + offset2);
-    outfile << std::right << std::setw(16) << std::scientific << (*resvec)[lid];
+    outfile << std::right << std::setw(16) << std::scientific
+            << resvec->local_values_as_span()[lid];
   }
 
 
@@ -994,7 +999,8 @@ void FsiFluidMonWriter::write_result(
   for (unsigned i = 0; i < gdof.size(); ++i)
   {
     const int lid = velmap.lid(gdof[i] + offset2);
-    outfile << std::right << std::setw(16) << std::scientific << (*resvec)[lid];
+    outfile << std::right << std::setw(16) << std::scientific
+            << resvec->local_values_as_span()[lid];
   }
 
   // check if fsilambda is available
@@ -1011,7 +1017,8 @@ void FsiFluidMonWriter::write_result(
     for (unsigned i = 0; i < gdof.size() - 1; ++i)
     {
       const int lid = lambdamap.lid(gdof[i] + offset2);
-      outfile << std::right << std::setw(16) << std::scientific << (*resvec)[lid];
+      outfile << std::right << std::setw(16) << std::scientific
+              << resvec->local_values_as_span()[lid];
     }
   }
   else
@@ -1112,7 +1119,8 @@ void FsiStructMonWriter::write_result(
   {
     const int lid = dispmap.lid(gdof[i] + offset2);
     if (lid == -1) FOUR_C_THROW("illegal gid {} at {}!", gdof[i], i);
-    outfile << std::right << std::setw(16) << std::scientific << (*resvec)[lid];
+    outfile << std::right << std::setw(16) << std::scientific
+            << resvec->local_values_as_span()[lid];
   }
 
   MAP* dummydir;
@@ -1131,7 +1139,8 @@ void FsiStructMonWriter::write_result(
       const unsigned i = (unsigned)dim;
       const int lid = pressmap.lid(gdof[i] + offset2);
       if (lid == -1) FOUR_C_THROW("illegal gid {} at {}!", gdof[i], i);
-      outfile << std::right << std::setw(16) << std::scientific << (*resvec)[lid];
+      outfile << std::right << std::setw(16) << std::scientific
+              << resvec->local_values_as_span()[lid];
     }
   }
   else
@@ -1153,7 +1162,8 @@ void FsiStructMonWriter::write_result(
     {
       const int lid = lambdamap.lid(gdof[i] + offset2);
       if (lid == -1) FOUR_C_THROW("illegal gid {} at {}!", gdof[i], i);
-      outfile << std::right << std::setw(16) << std::scientific << (*resvec)[lid];
+      outfile << std::right << std::setw(16) << std::scientific
+              << resvec->local_values_as_span()[lid];
     }
   }
   else
@@ -1252,7 +1262,7 @@ void ScatraMonWriter::write_result(
   {
     const int lid = dispmap.lid(gdof[i] + offset2);
     outfile << std::right << std::setw(20) << std::setprecision(10) << std::scientific
-            << (*resvec)[lid];
+            << resvec->local_values_as_span()[lid];
   }
   outfile << "\n";
 }
@@ -1311,7 +1321,8 @@ void ThermoMonWriter::write_result(
   {
     const int lid = dispmap.lid(gdof[i] + offset2);
     if (lid == -1) FOUR_C_THROW("illegal gid {} at {}!", gdof[i], i);
-    outfile << std::right << std::setw(16) << std::scientific << (*resvec)[lid];
+    outfile << std::right << std::setw(16) << std::scientific
+            << resvec->local_values_as_span()[lid];
   }
 
   // temperature rate
@@ -1328,7 +1339,8 @@ void ThermoMonWriter::write_result(
   {
     const int lid = ratemap.lid(gdof[i] + offset2);
     if (lid == -1) FOUR_C_THROW("illegal gid {} at {}!", gdof[i], i);
-    outfile << std::right << std::setw(16) << std::scientific << (*resvec)[lid];
+    outfile << std::right << std::setw(16) << std::scientific
+            << resvec->local_values_as_span()[lid];
   }
 
   outfile << "\n";
@@ -1458,20 +1470,20 @@ void ThermoMonWriter::write_thermo_result(std::ofstream& outfile, PostField*& fi
     if (dim == 3)
     {
       if (lnodedofs.size() < numdofpernode) FOUR_C_THROW("Too few DOFs at node of interest");
-      nodal_heatfluxes.push_back((*heatfluxx)[lnodedofs[0]] / adjele);
-      nodal_heatfluxes.push_back((*heatfluxy)[lnodedofs[0]] / adjele);
-      nodal_heatfluxes.push_back((*heatfluxz)[lnodedofs[0]] / adjele);
+      nodal_heatfluxes.push_back(heatfluxx->local_values_as_span()[lnodedofs[0]] / adjele);
+      nodal_heatfluxes.push_back(heatfluxy->local_values_as_span()[lnodedofs[0]] / adjele);
+      nodal_heatfluxes.push_back(heatfluxz->local_values_as_span()[lnodedofs[0]] / adjele);
     }
     else if (dim == 2)
     {
       if (lnodedofs.size() < numdofpernode) FOUR_C_THROW("Too few DOFs at node of interest");
-      nodal_heatfluxes.push_back((*heatfluxx)[lnodedofs[0]] / adjele);
-      nodal_heatfluxes.push_back((*heatfluxy)[lnodedofs[0]] / adjele);
+      nodal_heatfluxes.push_back(heatfluxx->local_values_as_span()[lnodedofs[0]] / adjele);
+      nodal_heatfluxes.push_back(heatfluxy->local_values_as_span()[lnodedofs[0]] / adjele);
     }
     else if (dim == 1)
     {
       if (lnodedofs.size() < numdofpernode) FOUR_C_THROW("Too few DOFs at node of interest");
-      nodal_heatfluxes.push_back((*heatfluxx)[lnodedofs[0]] / adjele);
+      nodal_heatfluxes.push_back(heatfluxx->local_values_as_span()[lnodedofs[0]] / adjele);
     }
     else
     {
@@ -1593,21 +1605,21 @@ void PoroFluidMultiMonWriter::write_result(
   {
     const int lid = phimap.lid(gdof[i] + offset2);
     outfile << std::right << std::setw(20) << std::setprecision(10) << std::scientific
-            << (*resvec)[lid];
+            << resvec->local_values_as_span()[lid];
   }
   // do output for saturations
   for (unsigned i = 0; i < gdof.size(); ++i)
   {
     const int lid = satmap.lid(gdof[i] + offset2);
     outfile << std::right << std::setw(20) << std::setprecision(10) << std::scientific
-            << (*resvec_sat)[lid];
+            << resvec_sat->local_values_as_span()[lid];
   }
   // do output for pressures
   for (unsigned i = 0; i < gdof.size(); ++i)
   {
     const int lid = pressmap.lid(gdof[i] + offset2);
     outfile << std::right << std::setw(20) << std::setprecision(10) << std::scientific
-            << (*resvec_press)[lid];
+            << resvec_press->local_values_as_span()[lid];
   }
   outfile << "\n";
 }

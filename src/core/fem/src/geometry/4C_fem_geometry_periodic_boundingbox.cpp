@@ -683,7 +683,8 @@ Core::LinAlg::Matrix<3, 1> Core::Geo::MeshFree::BoundingBox::current_position_of
     std::vector<int> dofnode = boxdiscret_->dof(node_i);
 
     for (int dim = 0; dim < 3; ++dim)
-      x(dim) = node_i->x()[dim] + (*disn_col_)[disn_col_->get_map().lid(dofnode[dim])];
+      x(dim) = node_i->x()[dim] +
+               disn_col_->local_values_as_span()[disn_col_->get_map().lid(dofnode[dim])];
   }
   else
   {

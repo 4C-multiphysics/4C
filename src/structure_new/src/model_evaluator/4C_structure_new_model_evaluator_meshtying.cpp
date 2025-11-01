@@ -440,7 +440,7 @@ void Solid::ModelEvaluator::Meshtying::apply_mesh_initialization(
         FOUR_C_THROW("ERROR: Proc {}: Cannot find gid={} in Core::LinAlg::Vector<double>",
             Core::Communication::my_mpi_rank(gvector.get_comm()), nodedofs[i]);
 
-      nvector[i] += gvector[lid];
+      nvector[i] += gvector.local_values_as_span()[lid];
     }
 
     // set new reference position

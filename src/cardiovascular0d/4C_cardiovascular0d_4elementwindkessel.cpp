@@ -112,12 +112,12 @@ void Utils::Cardiovascular0D4ElementWindkessel::evaluate(Teuchos::ParameterList&
     if (assvec1 or assvec2 or assvec4 or assvec5)
     {
       // extract values of dof vector at t_{n+1}
-      p_np = (*sysvec4)[numdof_per_cond * condID + 0];
-      q_np = (*sysvec4)[numdof_per_cond * condID + 1];
-      s_np = (*sysvec4)[numdof_per_cond * condID + 2];
+      p_np = (*sysvec4).local_values_as_span()[numdof_per_cond * condID + 0];
+      q_np = (*sysvec4).local_values_as_span()[numdof_per_cond * condID + 1];
+      s_np = (*sysvec4).local_values_as_span()[numdof_per_cond * condID + 2];
 
       // volume at t_{n+1}
-      V_np = (*sysvec5)[numdof_per_cond * condID];
+      V_np = (*sysvec5).local_values_as_span()[numdof_per_cond * condID];
 
       df_np[0] = C * p_np + L * C * s_np;
       df_np[1] = V_np;

@@ -480,21 +480,21 @@ namespace FLD
         if (forcing_type_ == Inpar::FLUID::linear_compensation_from_intermediate_spectrum or
             (forcing_type_ == Inpar::FLUID::fixed_power_input and (not is_genalpha_)))
         {
-          (local_u1)[pos] = (*velnp_)[lid];
+          (local_u1)[pos] = velnp_->local_values_as_span()[lid];
           // analogously for remaining directions
           lid = discret_->dof_row_map()->lid(dofs[1]);
-          (local_u2)[pos] = (*velnp_)[lid];
+          (local_u2)[pos] = velnp_->local_values_as_span()[lid];
           lid = discret_->dof_row_map()->lid(dofs[2]);
-          (local_u3)[pos] = (*velnp_)[lid];
+          (local_u3)[pos] = velnp_->local_values_as_span()[lid];
         }
         else
         {
-          (local_u1)[pos] = (*velaf_)[lid];
+          (local_u1)[pos] = velaf_->local_values_as_span()[lid];
           // analogously for remaining directions
           lid = discret_->dof_row_map()->lid(dofs[1]);
-          (local_u2)[pos] = (*velaf_)[lid];
+          (local_u2)[pos] = velaf_->local_values_as_span()[lid];
           lid = discret_->dof_row_map()->lid(dofs[2]);
-          (local_u3)[pos] = (*velaf_)[lid];
+          (local_u3)[pos] = velaf_->local_values_as_span()[lid];
         }
       }
 
@@ -900,21 +900,21 @@ namespace FLD
         // set value
         if (not is_genalpha_)
         {
-          (local_u1)[pos] = (*velnp_)[lid];
+          (local_u1)[pos] = velnp_->local_values_as_span()[lid];
           // analogously for remaining directions
           lid = discret_->dof_row_map()->lid(dofs[1]);
-          (local_u2)[pos] = (*velnp_)[lid];
+          (local_u2)[pos] = velnp_->local_values_as_span()[lid];
           lid = discret_->dof_row_map()->lid(dofs[2]);
-          (local_u3)[pos] = (*velnp_)[lid];
+          (local_u3)[pos] = velnp_->local_values_as_span()[lid];
         }
         else
         {
-          (local_u1)[pos] = (*velaf_)[lid];
+          (local_u1)[pos] = velaf_->local_values_as_span()[lid];
           // analogously for remaining directions
           lid = discret_->dof_row_map()->lid(dofs[1]);
-          (local_u2)[pos] = (*velaf_)[lid];
+          (local_u2)[pos] = velaf_->local_values_as_span()[lid];
           lid = discret_->dof_row_map()->lid(dofs[2]);
-          (local_u3)[pos] = (*velaf_)[lid];
+          (local_u3)[pos] = velaf_->local_values_as_span()[lid];
         }
       }
 
@@ -2000,7 +2000,7 @@ namespace FLD
     // take into account negative mass flux at the inflow
     for (int i = 0; i < discret_->element_row_map()->num_my_elements(); ++i)
     {
-      double locflow = ((massflvec)(0))[i];
+      double locflow = (massflvec)(0).local_values_as_span()[i];
       if (locflow < -1.0e-9)
       {
         ((massflvec)(0)).get_values()[i] = 0.0;

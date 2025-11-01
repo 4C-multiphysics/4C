@@ -1435,7 +1435,7 @@ void FLD::TurbulenceStatisticsCha::do_time_sample(
         double local_inc = 0.0;
         for (int rr = 0; rr < (*toggleu_).local_length(); ++rr)
         {
-          local_inc += (*toggleu_)[rr] * (*toggleu_)[rr];
+          local_inc += toggleu_->local_values_as_span()[rr] * toggleu_->local_values_as_span()[rr];
         }
         inc = Core::Communication::sum_all(local_inc, discret_->get_comm());
 
@@ -1447,7 +1447,7 @@ void FLD::TurbulenceStatisticsCha::do_time_sample(
         local_inc = 0.0;
         for (int rr = 0; rr < force.local_length(); ++rr)
         {
-          local_inc += (force)[rr] * (*toggleu_)[rr];
+          local_inc += force.local_values_as_span()[rr] * toggleu_->local_values_as_span()[rr];
         }
         inc = Core::Communication::sum_all(local_inc, discret_->get_comm());
         sumforceu_ += inc;
@@ -1455,7 +1455,7 @@ void FLD::TurbulenceStatisticsCha::do_time_sample(
         local_inc = 0.0;
         for (int rr = 0; rr < force.local_length(); ++rr)
         {
-          local_inc += (force)[rr] * (*togglev_)[rr];
+          local_inc += force.local_values_as_span()[rr] * togglev_->local_values_as_span()[rr];
         }
         inc = Core::Communication::sum_all(local_inc, discret_->get_comm());
         sumforcev_ += inc;
@@ -1464,7 +1464,7 @@ void FLD::TurbulenceStatisticsCha::do_time_sample(
         local_inc = 0.0;
         for (int rr = 0; rr < force.local_length(); ++rr)
         {
-          local_inc += (force)[rr] * (*togglew_)[rr];
+          local_inc += force.local_values_as_span()[rr] * togglew_->local_values_as_span()[rr];
         }
         inc = Core::Communication::sum_all(local_inc, discret_->get_comm());
         sumforcew_ += inc;
@@ -2569,7 +2569,8 @@ void FLD::TurbulenceStatisticsCha::evaluate_pointwise_mean_values_in_planes()
         double local_inc = 0.0;
         for (int rr = 0; rr < meanvelnp_->local_length(); ++rr)
         {
-          local_inc += (*meanvelnp_)[rr] * (*toggleu_)[rr];
+          local_inc +=
+              meanvelnp_->local_values_as_span()[rr] * toggleu_->local_values_as_span()[rr];
         }
         inc = Core::Communication::sum_all(local_inc, discret_->get_comm());
         (*pointsumu_)[planenum] += inc / countnodesinplaneonallprocs;
@@ -2577,7 +2578,8 @@ void FLD::TurbulenceStatisticsCha::evaluate_pointwise_mean_values_in_planes()
         local_inc = 0.0;
         for (int rr = 0; rr < meanvelnp_->local_length(); ++rr)
         {
-          local_inc += (*meanvelnp_)[rr] * (*togglev_)[rr];
+          local_inc +=
+              meanvelnp_->local_values_as_span()[rr] * togglev_->local_values_as_span()[rr];
         }
         inc = Core::Communication::sum_all(local_inc, discret_->get_comm());
         (*pointsumv_)[planenum] += inc / countnodesinplaneonallprocs;
@@ -2585,7 +2587,8 @@ void FLD::TurbulenceStatisticsCha::evaluate_pointwise_mean_values_in_planes()
         local_inc = 0.0;
         for (int rr = 0; rr < meanvelnp_->local_length(); ++rr)
         {
-          local_inc += (*meanvelnp_)[rr] * (*togglew_)[rr];
+          local_inc +=
+              meanvelnp_->local_values_as_span()[rr] * togglew_->local_values_as_span()[rr];
         }
         inc = Core::Communication::sum_all(local_inc, discret_->get_comm());
         (*pointsumw_)[planenum] += inc / countnodesinplaneonallprocs;
@@ -2593,7 +2596,8 @@ void FLD::TurbulenceStatisticsCha::evaluate_pointwise_mean_values_in_planes()
         local_inc = 0.0;
         for (int rr = 0; rr < meanvelnp_->local_length(); ++rr)
         {
-          local_inc += (*meanvelnp_)[rr] * (*togglep_)[rr];
+          local_inc +=
+              meanvelnp_->local_values_as_span()[rr] * togglep_->local_values_as_span()[rr];
         }
         inc = Core::Communication::sum_all(local_inc, discret_->get_comm());
         (*pointsump_)[planenum] += inc / countnodesinplaneonallprocs;
@@ -2604,7 +2608,8 @@ void FLD::TurbulenceStatisticsCha::evaluate_pointwise_mean_values_in_planes()
         local_inc = 0.0;
         for (int rr = 0; rr < pointsquaredvelnp_->local_length(); ++rr)
         {
-          local_inc += (*pointsquaredvelnp_)[rr] * (*toggleu_)[rr];
+          local_inc +=
+              pointsquaredvelnp_->local_values_as_span()[rr] * toggleu_->local_values_as_span()[rr];
         }
         inc = Core::Communication::sum_all(local_inc, discret_->get_comm());
         (*pointsumsqu_)[planenum] += inc / countnodesinplaneonallprocs;
@@ -2612,7 +2617,8 @@ void FLD::TurbulenceStatisticsCha::evaluate_pointwise_mean_values_in_planes()
         local_inc = 0.0;
         for (int rr = 0; rr < pointsquaredvelnp_->local_length(); ++rr)
         {
-          local_inc += (*pointsquaredvelnp_)[rr] * (*togglev_)[rr];
+          local_inc +=
+              pointsquaredvelnp_->local_values_as_span()[rr] * togglev_->local_values_as_span()[rr];
         }
         inc = Core::Communication::sum_all(local_inc, discret_->get_comm());
         (*pointsumsqv_)[planenum] += inc / countnodesinplaneonallprocs;
@@ -2620,7 +2626,8 @@ void FLD::TurbulenceStatisticsCha::evaluate_pointwise_mean_values_in_planes()
         local_inc = 0.0;
         for (int rr = 0; rr < pointsquaredvelnp_->local_length(); ++rr)
         {
-          local_inc += (*pointsquaredvelnp_)[rr] * (*togglew_)[rr];
+          local_inc +=
+              pointsquaredvelnp_->local_values_as_span()[rr] * togglew_->local_values_as_span()[rr];
         }
         inc = Core::Communication::sum_all(local_inc, discret_->get_comm());
         (*pointsumsqw_)[planenum] += inc / countnodesinplaneonallprocs;
@@ -2628,7 +2635,8 @@ void FLD::TurbulenceStatisticsCha::evaluate_pointwise_mean_values_in_planes()
         local_inc = 0.0;
         for (int rr = 0; rr < pointsquaredvelnp_->local_length(); ++rr)
         {
-          local_inc += (*pointsquaredvelnp_)[rr] * (*togglep_)[rr];
+          local_inc +=
+              pointsquaredvelnp_->local_values_as_span()[rr] * togglep_->local_values_as_span()[rr];
         }
         inc = Core::Communication::sum_all(local_inc, discret_->get_comm());
         (*pointsumsqp_)[planenum] += inc / countnodesinplaneonallprocs;

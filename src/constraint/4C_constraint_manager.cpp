@@ -376,7 +376,8 @@ void Constraints::ConstrManager::update_lagr_mult(double factor)
       if (constrmap_->lid(int(i - offset_id_)) != -1)
       {
         std::cout << "Multiplier for Volume Constraint: " << volconID.at(i) << ":  "
-                  << (*lagr_mult_vec_)[constrmap_->lid(int(i - offset_id_))] << '\n';
+                  << (*lagr_mult_vec_).local_values_as_span()[constrmap_->lid(int(i - offset_id_))]
+                  << '\n';
       }
     }
   }
@@ -463,12 +464,16 @@ void Constraints::ConstrManager::print_monitor_values() const
     if ((*monitortypes_).get_values()[i] == 1.0)
     {
       printf("%2d (volume): %10.5e (%5.2f%% of initial value)\n", i + min_monitor_id_,
-          abs((*monitorvalues_)[i]), ((*monitorvalues_)[i]) * 100 / ((*initialmonvalues_)[i]));
+          abs((*monitorvalues_).local_values_as_span()[i]),
+          ((*monitorvalues_).local_values_as_span()[i]) * 100 /
+              ((*initialmonvalues_).local_values_as_span()[i]));
     }
-    else if ((*monitortypes_)[i] == 2.0)
+    else if ((*monitortypes_).local_values_as_span()[i] == 2.0)
     {
       printf("%2d   (area): %10.5e (%5.2f%% of initial value)\n", i + min_monitor_id_,
-          abs((*monitorvalues_)[i]), ((*monitorvalues_)[i]) * 100 / ((*initialmonvalues_)[i]));
+          abs((*monitorvalues_).local_values_as_span()[i]),
+          ((*monitorvalues_).local_values_as_span()[i]) * 100 /
+              ((*initialmonvalues_).local_values_as_span()[i]));
     }
   }
 }
@@ -489,7 +494,8 @@ void Constraints::ConstrManager::build_moni_type()
   Core::LinAlg::export_to(dummymondist, dummymonredundant);
   for (int i = 0; i < dummymonredundant.local_length(); i++)
   {
-    if ((dummymonredundant)[i] != 0.0) (*monitortypes_).get_values()[i] = 1.0;
+    if ((dummymonredundant).local_values_as_span()[i] != 0.0)
+      (*monitortypes_).get_values()[i] = 1.0;
   }
 
   // do the area in 3D
@@ -502,7 +508,8 @@ void Constraints::ConstrManager::build_moni_type()
   Core::LinAlg::export_to(dummymondist, dummymonredundant);
   for (int i = 0; i < dummymonredundant.local_length(); i++)
   {
-    if ((dummymonredundant)[i] != 0.0) (*monitortypes_).get_values()[i] = 2.0;
+    if ((dummymonredundant).local_values_as_span()[i] != 0.0)
+      (*monitortypes_).get_values()[i] = 2.0;
   }
 
   // do the area in 2D
@@ -515,7 +522,8 @@ void Constraints::ConstrManager::build_moni_type()
   Core::LinAlg::export_to(dummymondist, dummymonredundant);
   for (int i = 0; i < dummymonredundant.local_length(); i++)
   {
-    if ((dummymonredundant)[i] != 0.0) (*monitortypes_).get_values()[i] = 3.0;
+    if ((dummymonredundant).local_values_as_span()[i] != 0.0)
+      (*monitortypes_).get_values()[i] = 3.0;
   }
 }
 

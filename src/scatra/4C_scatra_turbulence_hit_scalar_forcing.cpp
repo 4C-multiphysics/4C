@@ -331,7 +331,7 @@ namespace ScaTra
       int lid = discret_->dof_row_map()->lid(dofs[0]);
       // set value
       // since we are interested at E at n+1, we use phi at n+1 also for gen-alpha
-      (local_phi)[pos] = (*phinp_)[lid];
+      (local_phi)[pos] = phinp_->local_values_as_span()[lid];
     }
 
     global_phi = Core::Communication::sum_all(local_phi, discret_->get_comm());
@@ -665,11 +665,11 @@ namespace ScaTra
         // set value
         if (not is_genalpha_)
         {
-          (local_phi)[pos] = (*phinp_)[lid];
+          (local_phi)[pos] = phinp_->local_values_as_span()[lid];
         }
         else
         {
-          (local_phi)[pos] = (*phiaf_)[lid];
+          (local_phi)[pos] = phiaf_->local_values_as_span()[lid];
         }
       }
 

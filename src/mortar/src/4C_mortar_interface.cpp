@@ -4128,7 +4128,7 @@ void Mortar::Interface::detect_tied_slave_nodes(int& founduntied)
     auto* mrtrnode = dynamic_cast<Node*>(node);
 
     // check if this node is untied
-    if ((coltied)[i] == 1.0) mrtrnode->set_tied_slave() = false;
+    if (coltied.local_values_as_span()[i] == 1.0) mrtrnode->set_tied_slave() = false;
   }
 }
 

@@ -187,8 +187,8 @@ int Discret::Elements::FluidEleCalcLoma<distype>::evaluate_od(Discret::Elements:
         params.sublist("TURBULENCE MODEL")
             .get<std::shared_ptr<Core::LinAlg::Vector<double>>>("col_Ci_delta_sq");
     const int id = ele->lid();
-    CsDeltaSq = (*ele_CsDeltaSq)[id];
-    CiDeltaSq = (*ele_CiDeltaSq)[id];
+    CsDeltaSq = ele_CsDeltaSq->local_values_as_span()[id];
+    CiDeltaSq = ele_CiDeltaSq->local_values_as_span()[id];
   }
 
   // set element id

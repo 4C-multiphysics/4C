@@ -472,10 +472,12 @@ void Utils::Cardiovascular0DManager::check_periodic()  // not yet thoroughly tes
   for (int j = 0; j < num_cardiovascular0_did_; j++)
   {
     //    if(j<34 or j>53) // exclude oscillatory lung dofs
-    vals.push_back(fabs(
-        ((cv0ddof_T_NP_red)[j] - (cv0ddof_T_N_red)[j]) / fmax(1.0, fabs((cv0ddof_T_N_red)[j]))));
+    vals.push_back(fabs(((cv0ddof_T_NP_red).local_values_as_span()[j] -
+                            (cv0ddof_T_N_red).local_values_as_span()[j]) /
+                        fmax(1.0, fabs((cv0ddof_T_N_red).local_values_as_span()[j]))));
     //      vals.push_back( fabs(
-    //      ((*cv0ddof_T_NP_red)[j]-(*cv0ddof_T_N_red)[j])/fabs((*cv0ddof_T_N_red)[j]) ) );
+    //      ((*cv0ddof_T_NP_red).local_values_as_[j]-(*cv0ddof_T_N_red).local_values_as_[j])/fabs((*cv0ddof_T_N_red).local_values_as_[j])
+    //      ) );
   }
 
   cycle_error_ = *std::max_element(vals.begin(), vals.end());
@@ -598,9 +600,9 @@ void Utils::Cardiovascular0DManager::evaluate_neumann_cardiovascular0_d_coupling
     const Core::Conditions::Condition* coupcond = cardvasc0dstructcoupcond[i];
     std::vector<double> newval(6, 0.0);
     if (cardvasc0d_4elementwindkessel_->have_cardiovascular0_d())
-      newval[0] = -(actpres)[3 * id_strcoupcond];
+      newval[0] = -(actpres).local_values_as_span()[3 * id_strcoupcond];
     if (cardvasc0d_arterialproxdist_->have_cardiovascular0_d())
-      newval[0] = -(actpres)[4 * id_strcoupcond];
+      newval[0] = -(actpres).local_values_as_span()[4 * id_strcoupcond];
 
     if (cardvasc0d_syspulcirculation_->have_cardiovascular0_d())
     {
@@ -617,10 +619,10 @@ void Utils::Cardiovascular0DManager::evaluate_neumann_cardiovascular0_d_coupling
               cardvasc0d_syspulcirculation_->get_cardiovascular0_d_condition()[j]
                   ->parameters()
                   .get<std::string>("TYPE");
-          if (conditiontype == "ventricle_left") newval[0] = -(actpres)[3];
-          if (conditiontype == "ventricle_right") newval[0] = -(actpres)[11];
-          if (conditiontype == "atrium_left") newval[0] = -(actpres)[0];
-          if (conditiontype == "atrium_right") newval[0] = -(actpres)[8];
+          if (conditiontype == "ventricle_left") newval[0] = -(actpres).local_values_as_span()[3];
+          if (conditiontype == "ventricle_right") newval[0] = -(actpres).local_values_as_span()[11];
+          if (conditiontype == "atrium_left") newval[0] = -(actpres).local_values_as_span()[0];
+          if (conditiontype == "atrium_right") newval[0] = -(actpres).local_values_as_span()[8];
           if (conditiontype == "dummy") newval[0] = 0.;
         }
       }
@@ -642,10 +644,10 @@ void Utils::Cardiovascular0DManager::evaluate_neumann_cardiovascular0_d_coupling
               cardvascrespir0d_syspulperiphcirculation_->get_cardiovascular0_d_condition()[j]
                   ->parameters()
                   .get<std::string>("TYPE");
-          if (conditiontype == "ventricle_left") newval[0] = -(actpres)[3];
-          if (conditiontype == "ventricle_right") newval[0] = -(actpres)[27];
-          if (conditiontype == "atrium_left") newval[0] = -(actpres)[0];
-          if (conditiontype == "atrium_right") newval[0] = -(actpres)[24];
+          if (conditiontype == "ventricle_left") newval[0] = -(actpres).local_values_as_span()[3];
+          if (conditiontype == "ventricle_right") newval[0] = -(actpres).local_values_as_span()[27];
+          if (conditiontype == "atrium_left") newval[0] = -(actpres).local_values_as_span()[0];
+          if (conditiontype == "atrium_right") newval[0] = -(actpres).local_values_as_span()[24];
           if (conditiontype == "dummy") newval[0] = 0.;
         }
       }
@@ -725,168 +727,176 @@ void Utils::Cardiovascular0DManager::print_pres_flux(bool init) const
       if (cardvasc0d_4elementwindkessel_->have_cardiovascular0_d())
       {
         printf("Cardiovascular0D output id%2d:\n", current_id_[i]);
-        printf("%2d p: %10.16e \n", current_id_[i], (cv0ddof_m_red)[3 * i]);
-        printf("%2d V: %10.16e \n", current_id_[i], (v_m_red)[3 * i]);
+        printf("%2d p: %10.16e \n", current_id_[i], (cv0ddof_m_red).local_values_as_span()[3 * i]);
+        printf("%2d V: %10.16e \n", current_id_[i], (v_m_red).local_values_as_span()[3 * i]);
       }
       if (cardvasc0d_arterialproxdist_->have_cardiovascular0_d())
       {
         printf("Cardiovascular0D output id%2d:\n", current_id_[i]);
-        printf("%2d p_v: %10.16e \n", current_id_[i], (cv0ddof_m_red)[4 * i]);
-        printf("%2d p_ar_prox: %10.16e \n", current_id_[i], (cv0ddof_m_red)[4 * i + 1]);
-        printf("%2d q_ar_prox: %10.16e \n", current_id_[i], (cv0ddof_m_red)[4 * i + 2]);
-        printf("%2d p_ar_dist: %10.16e \n", current_id_[i], (cv0ddof_m_red)[4 * i + 3]);
-        printf("%2d V_v: %10.16e \n", current_id_[i], (v_m_red)[4 * i]);
+        printf(
+            "%2d p_v: %10.16e \n", current_id_[i], (cv0ddof_m_red).local_values_as_span()[4 * i]);
+        printf("%2d p_ar_prox: %10.16e \n", current_id_[i],
+            (cv0ddof_m_red).local_values_as_span()[4 * i + 1]);
+        printf("%2d q_ar_prox: %10.16e \n", current_id_[i],
+            (cv0ddof_m_red).local_values_as_span()[4 * i + 2]);
+        printf("%2d p_ar_dist: %10.16e \n", current_id_[i],
+            (cv0ddof_m_red).local_values_as_span()[4 * i + 3]);
+        printf("%2d V_v: %10.16e \n", current_id_[i], (v_m_red).local_values_as_span()[4 * i]);
         if (enhanced_output_ and !(init))
         {
-          printf("%2d dp_v/dt: %10.16e \n", current_id_[i], (dcv0ddof_m_red)[4 * i]);
-          printf("%2d dp_ar_prox/dt: %10.16e \n", current_id_[i], (dcv0ddof_m_red)[4 * i + 1]);
-          printf("%2d dq_ar_prox/dt: %10.16e \n", current_id_[i], (dcv0ddof_m_red)[4 * i + 2]);
-          printf("%2d dp_ar_dist/dt: %10.16e \n", current_id_[i], (dcv0ddof_m_red)[4 * i + 3]);
+          printf("%2d dp_v/dt: %10.16e \n", current_id_[i],
+              (dcv0ddof_m_red).local_values_as_span()[4 * i]);
+          printf("%2d dp_ar_prox/dt: %10.16e \n", current_id_[i],
+              (dcv0ddof_m_red).local_values_as_span()[4 * i + 1]);
+          printf("%2d dq_ar_prox/dt: %10.16e \n", current_id_[i],
+              (dcv0ddof_m_red).local_values_as_span()[4 * i + 2]);
+          printf("%2d dp_ar_dist/dt: %10.16e \n", current_id_[i],
+              (dcv0ddof_m_red).local_values_as_span()[4 * i + 3]);
         }
       }
     }
 
     if (cardvasc0d_syspulcirculation_->have_cardiovascular0_d())
     {
-      printf("p_at_l: %10.16e \n", (cv0ddof_m_red)[0]);
-      printf("q_vin_l: %10.16e \n", (cv0ddof_m_red)[1]);
-      printf("q_vout_l: %10.16e \n", (cv0ddof_m_red)[2]);
-      printf("p_v_l: %10.16e \n", (cv0ddof_m_red)[3]);
-      printf("p_ar_sys: %10.16e \n", (cv0ddof_m_red)[4]);
-      printf("q_ar_sys: %10.16e \n", (cv0ddof_m_red)[5]);
-      printf("p_ven_sys: %10.16e \n", (cv0ddof_m_red)[6]);
-      printf("q_ven_sys: %10.16e \n", (cv0ddof_m_red)[7]);
-      printf("p_at_r: %10.16e \n", (cv0ddof_m_red)[8]);
-      printf("q_vin_r: %10.16e \n", (cv0ddof_m_red)[9]);
-      printf("q_vout_r: %10.16e \n", (cv0ddof_m_red)[10]);
-      printf("p_v_r: %10.16e \n", (cv0ddof_m_red)[11]);
-      printf("p_ar_pul: %10.16e \n", (cv0ddof_m_red)[12]);
-      printf("q_ar_pul: %10.16e \n", (cv0ddof_m_red)[13]);
-      printf("p_ven_pul: %10.16e \n", (cv0ddof_m_red)[14]);
-      printf("q_ven_pul: %10.16e \n", (cv0ddof_m_red)[15]);
+      printf("p_at_l: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[0]);
+      printf("q_vin_l: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[1]);
+      printf("q_vout_l: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[2]);
+      printf("p_v_l: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[3]);
+      printf("p_ar_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[4]);
+      printf("q_ar_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[5]);
+      printf("p_ven_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[6]);
+      printf("q_ven_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[7]);
+      printf("p_at_r: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[8]);
+      printf("q_vin_r: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[9]);
+      printf("q_vout_r: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[10]);
+      printf("p_v_r: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[11]);
+      printf("p_ar_pul: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[12]);
+      printf("q_ar_pul: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[13]);
+      printf("p_ven_pul: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[14]);
+      printf("q_ven_pul: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[15]);
       // print volumes (no state variables)
-      printf("V_at_l: %10.16e \n", (v_m_red)[0]);
-      printf("V_v_l: %10.16e \n", (v_m_red)[2]);
-      printf("V_ar_sys: %10.16e \n", (v_m_red)[4]);
-      printf("V_ven_sys: %10.16e \n", (v_m_red)[6]);
-      printf("V_at_r: %10.16e \n", (v_m_red)[8]);
-      printf("V_v_r: %10.16e \n", (v_m_red)[10]);
-      printf("V_ar_pul: %10.16e \n", (v_m_red)[12]);
-      printf("V_ven_pul: %10.16e \n", (v_m_red)[14]);
+      printf("V_at_l: %10.16e \n", (v_m_red).local_values_as_span()[0]);
+      printf("V_v_l: %10.16e \n", (v_m_red).local_values_as_span()[2]);
+      printf("V_ar_sys: %10.16e \n", (v_m_red).local_values_as_span()[4]);
+      printf("V_ven_sys: %10.16e \n", (v_m_red).local_values_as_span()[6]);
+      printf("V_at_r: %10.16e \n", (v_m_red).local_values_as_span()[8]);
+      printf("V_v_r: %10.16e \n", (v_m_red).local_values_as_span()[10]);
+      printf("V_ar_pul: %10.16e \n", (v_m_red).local_values_as_span()[12]);
+      printf("V_ven_pul: %10.16e \n", (v_m_red).local_values_as_span()[14]);
     }
 
     if (cardvascrespir0d_syspulperiphcirculation_->have_cardiovascular0_d())
     {
-      printf("p_at_l: %10.16e \n", (cv0ddof_m_red)[0]);
-      printf("q_vin_l: %10.16e \n", (cv0ddof_m_red)[1]);
-      printf("q_vout_l: %10.16e \n", (cv0ddof_m_red)[2]);
-      printf("p_v_l: %10.16e \n", (cv0ddof_m_red)[3]);
-      printf("p_ar_sys: %10.16e \n", (cv0ddof_m_red)[4]);
-      printf("q_ar_sys: %10.16e \n", (cv0ddof_m_red)[5]);
-      printf("p_arperi_sys: %10.16e \n", (cv0ddof_m_red)[6]);
-      printf("q_arspl_sys: %10.16e \n", (cv0ddof_m_red)[7]);
-      printf("q_arespl_sys: %10.16e \n", (cv0ddof_m_red)[8]);
-      printf("q_armsc_sys: %10.16e \n", (cv0ddof_m_red)[9]);
-      printf("q_arcer_sys: %10.16e \n", (cv0ddof_m_red)[10]);
-      printf("q_arcor_sys: %10.16e \n", (cv0ddof_m_red)[11]);
-      printf("p_venspl_sys: %10.16e \n", (cv0ddof_m_red)[12]);
-      printf("q_venspl_sys: %10.16e \n", (cv0ddof_m_red)[13]);
-      printf("p_venespl_sys: %10.16e \n", (cv0ddof_m_red)[14]);
-      printf("q_venespl_sys: %10.16e \n", (cv0ddof_m_red)[15]);
-      printf("p_venmsc_sys: %10.16e \n", (cv0ddof_m_red)[16]);
-      printf("q_venmsc_sys: %10.16e \n", (cv0ddof_m_red)[17]);
-      printf("p_vencer_sys: %10.16e \n", (cv0ddof_m_red)[18]);
-      printf("q_vencer_sys: %10.16e \n", (cv0ddof_m_red)[19]);
-      printf("p_vencor_sys: %10.16e \n", (cv0ddof_m_red)[20]);
-      printf("q_vencor_sys: %10.16e \n", (cv0ddof_m_red)[21]);
-      printf("p_ven_sys: %10.16e \n", (cv0ddof_m_red)[22]);
-      printf("q_ven_sys: %10.16e \n", (cv0ddof_m_red)[23]);
-      printf("p_at_r: %10.16e \n", (cv0ddof_m_red)[24]);
-      printf("q_vin_r: %10.16e \n", (cv0ddof_m_red)[25]);
-      printf("q_vout_r: %10.16e \n", (cv0ddof_m_red)[26]);
-      printf("p_v_r: %10.16e \n", (cv0ddof_m_red)[27]);
-      printf("p_ar_pul: %10.16e \n", (cv0ddof_m_red)[28]);
-      printf("q_ar_pul: %10.16e \n", (cv0ddof_m_red)[29]);
-      printf("p_cap_pul: %10.16e \n", (cv0ddof_m_red)[30]);
-      printf("q_cap_pul: %10.16e \n", (cv0ddof_m_red)[31]);
-      printf("p_ven_pul: %10.16e \n", (cv0ddof_m_red)[32]);
-      printf("q_ven_pul: %10.16e \n", (cv0ddof_m_red)[33]);
+      printf("p_at_l: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[0]);
+      printf("q_vin_l: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[1]);
+      printf("q_vout_l: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[2]);
+      printf("p_v_l: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[3]);
+      printf("p_ar_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[4]);
+      printf("q_ar_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[5]);
+      printf("p_arperi_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[6]);
+      printf("q_arspl_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[7]);
+      printf("q_arespl_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[8]);
+      printf("q_armsc_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[9]);
+      printf("q_arcer_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[10]);
+      printf("q_arcor_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[11]);
+      printf("p_venspl_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[12]);
+      printf("q_venspl_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[13]);
+      printf("p_venespl_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[14]);
+      printf("q_venespl_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[15]);
+      printf("p_venmsc_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[16]);
+      printf("q_venmsc_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[17]);
+      printf("p_vencer_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[18]);
+      printf("q_vencer_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[19]);
+      printf("p_vencor_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[20]);
+      printf("q_vencor_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[21]);
+      printf("p_ven_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[22]);
+      printf("q_ven_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[23]);
+      printf("p_at_r: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[24]);
+      printf("q_vin_r: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[25]);
+      printf("q_vout_r: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[26]);
+      printf("p_v_r: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[27]);
+      printf("p_ar_pul: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[28]);
+      printf("q_ar_pul: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[29]);
+      printf("p_cap_pul: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[30]);
+      printf("q_cap_pul: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[31]);
+      printf("p_ven_pul: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[32]);
+      printf("q_ven_pul: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[33]);
       // print volumes (no state variables)
-      printf("V_at_l: %10.16e \n", (v_m_red)[0]);
-      printf("V_v_l: %10.16e \n", (v_m_red)[2]);
-      printf("V_ar_sys: %10.16e \n", (v_m_red)[4]);
-      printf("V_arperi_sys: %10.16e \n", (v_m_red)[6]);
-      printf("V_venspl_sys: %10.16e \n", (v_m_red)[12]);
-      printf("V_venespl_sys: %10.16e \n", (v_m_red)[14]);
-      printf("V_venmsc_sys: %10.16e \n", (v_m_red)[16]);
-      printf("V_vencer_sys: %10.16e \n", (v_m_red)[18]);
-      printf("V_vencor_sys: %10.16e \n", (v_m_red)[20]);
-      printf("V_ven_sys: %10.16e \n", (v_m_red)[22]);
-      printf("V_at_r: %10.16e \n", (v_m_red)[24]);
-      printf("V_v_r: %10.16e \n", (v_m_red)[26]);
-      printf("V_ar_pul: %10.16e \n", (v_m_red)[28]);
-      printf("V_cap_pul: %10.16e \n", (v_m_red)[30]);
-      printf("V_ven_pul: %10.16e \n", (v_m_red)[32]);
+      printf("V_at_l: %10.16e \n", (v_m_red).local_values_as_span()[0]);
+      printf("V_v_l: %10.16e \n", (v_m_red).local_values_as_span()[2]);
+      printf("V_ar_sys: %10.16e \n", (v_m_red).local_values_as_span()[4]);
+      printf("V_arperi_sys: %10.16e \n", (v_m_red).local_values_as_span()[6]);
+      printf("V_venspl_sys: %10.16e \n", (v_m_red).local_values_as_span()[12]);
+      printf("V_venespl_sys: %10.16e \n", (v_m_red).local_values_as_span()[14]);
+      printf("V_venmsc_sys: %10.16e \n", (v_m_red).local_values_as_span()[16]);
+      printf("V_vencer_sys: %10.16e \n", (v_m_red).local_values_as_span()[18]);
+      printf("V_vencor_sys: %10.16e \n", (v_m_red).local_values_as_span()[20]);
+      printf("V_ven_sys: %10.16e \n", (v_m_red).local_values_as_span()[22]);
+      printf("V_at_r: %10.16e \n", (v_m_red).local_values_as_span()[24]);
+      printf("V_v_r: %10.16e \n", (v_m_red).local_values_as_span()[26]);
+      printf("V_ar_pul: %10.16e \n", (v_m_red).local_values_as_span()[28]);
+      printf("V_cap_pul: %10.16e \n", (v_m_red).local_values_as_span()[30]);
+      printf("V_ven_pul: %10.16e \n", (v_m_red).local_values_as_span()[32]);
 
       if (cardvasc0d_model_->get_respiratory_model())
       {
         // 0D lung
-        printf("V_alv: %10.16e \n", (cv0ddof_m_red)[34]);
-        printf("q_alv: %10.16e \n", (cv0ddof_m_red)[35]);
-        printf("p_alv: %10.16e \n", (cv0ddof_m_red)[36]);
-        printf("fCO2_alv: %10.16e \n", (cv0ddof_m_red)[37]);
-        printf("fO2_alv: %10.16e \n", (cv0ddof_m_red)[38]);
+        printf("V_alv: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[34]);
+        printf("q_alv: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[35]);
+        printf("p_alv: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[36]);
+        printf("fCO2_alv: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[37]);
+        printf("fO2_alv: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[38]);
         // (auxiliary) incoming systemic capillary fluxes
-        printf("q_arspl_sys_in: %10.16e \n", (cv0ddof_m_red)[39]);
-        printf("q_arespl_sys_in: %10.16e \n", (cv0ddof_m_red)[40]);
-        printf("q_armsc_sys_in: %10.16e \n", (cv0ddof_m_red)[41]);
-        printf("q_arcer_sys_in: %10.16e \n", (cv0ddof_m_red)[42]);
-        printf("q_arcor_sys_in: %10.16e \n", (cv0ddof_m_red)[43]);
+        printf("q_arspl_sys_in: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[39]);
+        printf("q_arespl_sys_in: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[40]);
+        printf("q_armsc_sys_in: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[41]);
+        printf("q_arcer_sys_in: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[42]);
+        printf("q_arcor_sys_in: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[43]);
         // the partial pressures
-        printf("ppCO2_at_r: %10.16e \n", (cv0ddof_m_red)[44]);
-        printf("ppO2_at_r: %10.16e \n", (cv0ddof_m_red)[45]);
-        printf("ppCO2_v_r: %10.16e \n", (cv0ddof_m_red)[46]);
-        printf("ppO2_v_r: %10.16e \n", (cv0ddof_m_red)[47]);
-        printf("ppCO2_ar_pul: %10.16e \n", (cv0ddof_m_red)[48]);
-        printf("ppO2_ar_pul: %10.16e \n", (cv0ddof_m_red)[49]);
-        printf("ppCO2_cap_pul: %10.16e \n", (cv0ddof_m_red)[50]);
-        printf("ppO2_cap_pul: %10.16e \n", (cv0ddof_m_red)[51]);
-        printf("ppCO2_ven_pul: %10.16e \n", (cv0ddof_m_red)[52]);
-        printf("ppO2_ven_pul: %10.16e \n", (cv0ddof_m_red)[53]);
-        printf("ppCO2_at_l: %10.16e \n", (cv0ddof_m_red)[54]);
-        printf("ppO2_at_l: %10.16e \n", (cv0ddof_m_red)[55]);
-        printf("ppCO2_v_l: %10.16e \n", (cv0ddof_m_red)[56]);
-        printf("ppO2_v_l: %10.16e \n", (cv0ddof_m_red)[57]);
-        printf("ppCO2_ar_sys: %10.16e \n", (cv0ddof_m_red)[58]);
-        printf("ppO2_ar_sys: %10.16e \n", (cv0ddof_m_red)[59]);
-        printf("ppCO2_arspl_sys: %10.16e \n", (cv0ddof_m_red)[60]);
-        printf("ppO2_arspl_sys: %10.16e \n", (cv0ddof_m_red)[61]);
-        printf("ppCO2_arespl_sys: %10.16e \n", (cv0ddof_m_red)[62]);
-        printf("ppO2_arespl_sys: %10.16e \n", (cv0ddof_m_red)[63]);
-        printf("ppCO2_armsc_sys: %10.16e \n", (cv0ddof_m_red)[64]);
-        printf("ppO2_armsc_sys: %10.16e \n", (cv0ddof_m_red)[65]);
-        printf("ppCO2_arcer_sys: %10.16e \n", (cv0ddof_m_red)[66]);
-        printf("ppO2_arcer_sys: %10.16e \n", (cv0ddof_m_red)[67]);
-        printf("ppCO2_arcor_sys: %10.16e \n", (cv0ddof_m_red)[68]);
-        printf("ppO2_arcor_sys: %10.16e \n", (cv0ddof_m_red)[69]);
-        printf("ppCO2_venspl_sys: %10.16e \n", (cv0ddof_m_red)[70]);
-        printf("ppO2_venspl_sys: %10.16e \n", (cv0ddof_m_red)[71]);
-        printf("ppCO2_venespl_sys: %10.16e \n", (cv0ddof_m_red)[72]);
-        printf("ppO2_venespl_sys: %10.16e \n", (cv0ddof_m_red)[73]);
-        printf("ppCO2_venmsc_sys: %10.16e \n", (cv0ddof_m_red)[74]);
-        printf("ppO2_venmsc_sys: %10.16e \n", (cv0ddof_m_red)[75]);
-        printf("ppCO2_vencer_sys: %10.16e \n", (cv0ddof_m_red)[76]);
-        printf("ppO2_vencer_sys: %10.16e \n", (cv0ddof_m_red)[77]);
-        printf("ppCO2_vencor_sys: %10.16e \n", (cv0ddof_m_red)[78]);
-        printf("ppO2_vencor_sys: %10.16e \n", (cv0ddof_m_red)[79]);
-        printf("ppCO2_ven_sys: %10.16e \n", (cv0ddof_m_red)[80]);
-        printf("ppO2_ven_sys: %10.16e \n", (cv0ddof_m_red)[81]);
+        printf("ppCO2_at_r: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[44]);
+        printf("ppO2_at_r: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[45]);
+        printf("ppCO2_v_r: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[46]);
+        printf("ppO2_v_r: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[47]);
+        printf("ppCO2_ar_pul: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[48]);
+        printf("ppO2_ar_pul: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[49]);
+        printf("ppCO2_cap_pul: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[50]);
+        printf("ppO2_cap_pul: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[51]);
+        printf("ppCO2_ven_pul: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[52]);
+        printf("ppO2_ven_pul: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[53]);
+        printf("ppCO2_at_l: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[54]);
+        printf("ppO2_at_l: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[55]);
+        printf("ppCO2_v_l: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[56]);
+        printf("ppO2_v_l: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[57]);
+        printf("ppCO2_ar_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[58]);
+        printf("ppO2_ar_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[59]);
+        printf("ppCO2_arspl_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[60]);
+        printf("ppO2_arspl_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[61]);
+        printf("ppCO2_arespl_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[62]);
+        printf("ppO2_arespl_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[63]);
+        printf("ppCO2_armsc_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[64]);
+        printf("ppO2_armsc_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[65]);
+        printf("ppCO2_arcer_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[66]);
+        printf("ppO2_arcer_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[67]);
+        printf("ppCO2_arcor_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[68]);
+        printf("ppO2_arcor_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[69]);
+        printf("ppCO2_venspl_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[70]);
+        printf("ppO2_venspl_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[71]);
+        printf("ppCO2_venespl_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[72]);
+        printf("ppO2_venespl_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[73]);
+        printf("ppCO2_venmsc_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[74]);
+        printf("ppO2_venmsc_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[75]);
+        printf("ppCO2_vencer_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[76]);
+        printf("ppO2_vencer_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[77]);
+        printf("ppCO2_vencor_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[78]);
+        printf("ppO2_vencor_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[79]);
+        printf("ppCO2_ven_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[80]);
+        printf("ppO2_ven_sys: %10.16e \n", (cv0ddof_m_red).local_values_as_span()[81]);
 
         if (enhanced_output_)
         {
           // oxygen saturations (no state variables - stored in volume vector for convenience!)
-          printf("SO2_ar_pul: %10.16e \n", (v_m_red)[49]);
-          printf("SO2_ar_sys: %10.16e \n", (v_m_red)[59]);
+          printf("SO2_ar_pul: %10.16e \n", (v_m_red).local_values_as_span()[49]);
+          printf("SO2_ar_sys: %10.16e \n", (v_m_red).local_values_as_span()[59]);
         }
       }
     }

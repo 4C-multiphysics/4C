@@ -37,7 +37,7 @@ namespace Core::FE
         FOUR_C_ASSERT_ALWAYS(local_id >= 0,
             "Proc {}: Cannot find gid={} in Core::LinAlg::Vector<double>",
             Core::Communication::my_mpi_rank(global.get_comm()), global_id);
-        return global[local_id];
+        return global.local_values_as_span()[local_id];
       };
     }
   }  // namespace Internal
@@ -114,7 +114,7 @@ namespace Core::FE
       // loop over multi vector columns (numcol=1 for Core::LinAlg::Vector<double>)
       for (int col = 0; col < numcol; col++)
       {
-        local[col + (numcol * i)] = global(col)[lid];
+        local[col + (numcol * i)] = global(col).local_values_as_span()[lid];
       }
     }
 
@@ -149,7 +149,7 @@ namespace Core::FE
         // store current dof in local matrix vector consisting of ndof matrices of size nnode x 1,
         // where nnode denotes the number of element nodes and ndof denotes the number of degrees
         // of freedom per element node.
-        local[idof](inode, 0) = global[lid];
+        local[idof](inode, 0) = global.local_values_as_span()[lid];
       }
     }
   }
@@ -179,7 +179,7 @@ namespace Core::FE
 
         // store current dof in local matrix, which is filled column-wise with the dofs listed in
         // the lm vector
-        local(irow, icol) = global[lid];
+        local(irow, icol) = global.local_values_as_span()[lid];
       }
     }
   }
@@ -231,7 +231,7 @@ namespace Core::FE
         if (lid < 0)
           FOUR_C_THROW("Proc {}: Cannot find gid={} in Core::LinAlg::Vector<double>",
               Core::Communication::my_mpi_rank((global).get_comm()), nodegid);
-        localmatrix(i, j) = global(i)[lid];
+        localmatrix(i, j) = global(i).local_values_as_span()[lid];
       }
     }
   }
@@ -263,7 +263,7 @@ namespace Core::FE
       // loop over multi vector columns (numcol=1 for Core::LinAlg::Vector<double>)
       for (int col = 0; col < numcol; col++)
       {
-        local((col + (numcol * i)), 0) = global(col)[lid];
+        local((col + (numcol * i)), 0) = global(col).local_values_as_span()[lid];
       }
     }
   }

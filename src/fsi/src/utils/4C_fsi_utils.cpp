@@ -236,7 +236,8 @@ void FSI::Utils::SlideAleUtils::remeshing(Adapter::FSIStructureWrapper& structur
     // current coord of ale node = ref coord + ifluid_
     std::vector<double> finaldxyz(dim);
 
-    for (int p = 0; p < dim; p++) finaldxyz[p] = idispale[fluiddofrowmap_->lid(gids[p])];
+    for (int p = 0; p < dim; p++)
+      finaldxyz[p] = idispale.local_values_as_span()[fluiddofrowmap_->lid(gids[p])];
 
     iprojdispale.replace_global_values(dim, finaldxyz.data(), gids.data());
   }
@@ -502,7 +503,8 @@ void FSI::Utils::SlideAleUtils::slide_projection(
       {
         // current coord of ale node = ref + centerdispincr + history
         for (int p = 0; p < dim; p++)
-          alenodecurr(p, 0) = (node->x()[p]) + centerdisp_v[p] + 1.0 * (*iprojhist_)[(lids[p])];
+          alenodecurr(p, 0) = (node->x()[p]) + centerdisp_v[p] +
+                              1.0 * iprojhist_->local_values_as_span()[(lids[p])];
       }
       else if (aletype_ == Inpar::FSI::ALEprojection_ref)
       {
@@ -515,8 +517,9 @@ void FSI::Utils::SlideAleUtils::slide_projection(
         // current coord of ale node = ref + centerdisp
         for (int p = 0; p < dim; p++)
         {
-          alenodecurr(p, 0) = node->x()[p] + (idispale)[(lids[p])] -
-                              1.0 * rotrat[mnit->first] * (*frotfull)[(lids[p])];
+          alenodecurr(p, 0) =
+              node->x()[p] + idispale.local_values_as_span()[(lids[p])] -
+              1.0 * rotrat[mnit->first] * frotfull->local_values_as_span()[(lids[p])];
         }
       }
       else

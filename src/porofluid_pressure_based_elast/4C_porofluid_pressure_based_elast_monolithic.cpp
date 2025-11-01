@@ -1110,8 +1110,8 @@ void PoroPressureBased::PorofluidElastMonolithicAlgorithm::poro_fd_check()
 
     if (i == spaltenr)
     {
-      std::cout << "rhs_: " << (rhs_copy)[zeilennr] << std::endl;
-      std::cout << "rhs_old: " << (rhs_old)[zeilennr] << std::endl;
+      std::cout << "rhs_: " << rhs_copy.local_values_as_span()[zeilennr] << std::endl;
+      std::cout << "rhs_old: " << rhs_old.local_values_as_span()[zeilennr] << std::endl;
     }
     // rhs_copy = ( rhs_disturb - rhs_old ) . (-1)/delta with rhs_copy==rhs_disturb
     rhs_copy.update(-1.0, rhs_old, 1.0);
@@ -1120,13 +1120,14 @@ void PoroPressureBased::PorofluidElastMonolithicAlgorithm::poro_fd_check()
     if (i == spaltenr)
     {
       std::cout << "( rhs_disturb - rhs_old )               "
-                << (rhs_copy)[zeilennr] * (-1.0) * delta << std::endl;
-      std::cout << "( rhs_disturb - rhs_old ) . (-1)/delta: " << (rhs_copy)[zeilennr] << std::endl;
+                << rhs_copy.local_values_as_span()[zeilennr] * (-1.0) * delta << std::endl;
+      std::cout << "( rhs_disturb - rhs_old ) . (-1)/delta: "
+                << rhs_copy.local_values_as_span()[zeilennr] << std::endl;
     }
     int* index = &i;
     for (int j = 0; j < dofs; ++j)
     {
-      double value = (rhs_copy)[j];
+      double value = rhs_copy.local_values_as_span()[j];
       stiff_approx.insert_global_values(j, 1, &value, index);
 
       if ((j == zeilennr) and (i == spaltenr))

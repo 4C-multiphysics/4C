@@ -195,10 +195,10 @@ void ScaTra::MeshtyingStrategyS2IElch::evaluate_point_coupling()
 
     // extract electrode-side and electrolyte-side values at coupling point
     auto phinp = scatratimint_->phinp();
-    const double ed_conc = (*phinp)[ed_conc_lid];
-    const double ed_pot = (*phinp)[ed_pot_lid];
-    const double el_conc = (*phinp)[el_conc_lid];
-    const double el_pot = (*phinp)[el_pot_lid];
+    const double ed_conc = phinp->local_values_as_span()[ed_conc_lid];
+    const double ed_pot = phinp->local_values_as_span()[ed_pot_lid];
+    const double el_conc = phinp->local_values_as_span()[el_conc_lid];
+    const double el_pot = phinp->local_values_as_span()[el_pot_lid];
 
     // compute matrix and vector contributions according to kinetic model for current point coupling
     // condition
@@ -442,16 +442,20 @@ void ScaTra::MeshtyingStrategyS2IElch::update() const
                       "Couldn't extract local ID of scatra-scatra interface layer thickness!");
 
                 // extract slave-side electric potential associated with current node
-                const double slavepot = (*scatratimint_->phiafnp())[doflid_scatra + 1];
+                const double slavepot =
+                    scatratimint_->phiafnp()->local_values_as_span()[doflid_scatra + 1];
 
                 // extract master-side lithium concentration associated with current node
-                const double masterphi = (*imasterphi_on_slave_side_np_)[doflid_scatra];
+                const double masterphi =
+                    imasterphi_on_slave_side_np_->local_values_as_span()[doflid_scatra];
 
                 // extract master-side electric potential associated with current node
-                const double masterpot = (*imasterphi_on_slave_side_np_)[doflid_scatra + 1];
+                const double masterpot =
+                    imasterphi_on_slave_side_np_->local_values_as_span()[doflid_scatra + 1];
 
                 // compute interface layer resistance associated with current node
-                const double resistance = (*growthn_)[doflid_growth] * conductivity_inverse;
+                const double resistance =
+                    growthn_->local_values_as_span()[doflid_growth] * conductivity_inverse;
 
                 // check existence of interface layer and set Heaviside value accordingly
                 const unsigned heaviside(resistance > 0. ? 1 : 0);

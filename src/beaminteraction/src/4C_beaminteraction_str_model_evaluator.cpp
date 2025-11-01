@@ -1056,7 +1056,8 @@ bool Solid::ModelEvaluator::BeamInteraction::check_if_beam_discret_redistributio
       // disp)
       doflid[dim] = dis_at_last_redistr_->get_map().lid(dofnode[dim]);
       (dis_increment).get_values()[doflid[dim]] =
-          (*global_state().get_dis_np())[doflid[dim]] - (*dis_at_last_redistr_)[doflid[dim]];
+          (*global_state().get_dis_np()).local_values_as_span()[doflid[dim]] -
+          (*dis_at_last_redistr_).local_values_as_span()[doflid[dim]];
     }
   }
 

@@ -333,7 +333,7 @@ int Discret::Elements::FluidEleCalcHDG<distype>::compute_error(Discret::Elements
   for (unsigned int i = 0; i < localDofs.size(); ++i)
   {
     const int lid = matrix_state->get_map().lid(localDofs[i]);
-    vecValues[i] = (*matrix_state)[lid];
+    vecValues[i] = matrix_state->local_values_as_span()[lid];
   }
 
   // analytic solution
@@ -703,7 +703,7 @@ int Discret::Elements::FluidEleCalcHDG<distype>::interpolate_solution_to_nodes(
     // Finding the local id of the current "localDofs"
     const int lid = matrix_state->get_map().lid(localDofs[i]);
     // Saving the value of the "localDofs[i]" in the "solvalues" vector
-    solvalues[i] = (*matrix_state)[lid];
+    solvalues[i] = matrix_state->local_values_as_span()[lid];
   }
 
   elevec1.putScalar(0.0);
@@ -772,7 +772,7 @@ int Discret::Elements::FluidEleCalcHDG<distype>::interpolate_solution_to_nodes(
   for (unsigned int i = 0; i < solvalues.size(); ++i)
   {
     const int lid = matrix_state->get_map().lid(localDofs[i]);
-    solvalues[i] = (*matrix_state)[lid];
+    solvalues[i] = matrix_state->local_values_as_span()[lid];
   }
 
   Core::LinAlg::SerialDenseVector fvalues(shapesface_->nfdofs_);
@@ -892,7 +892,7 @@ int Discret::Elements::FluidEleCalcHDG<distype>::interpolate_solution_for_hit(
   for (unsigned int i = 0; i < solvalues.size(); ++i)
   {
     const int lid = matrix_state->get_map().lid(localDofs[i]);
-    solvalues[i] = (*matrix_state)[lid];
+    solvalues[i] = matrix_state->local_values_as_span()[lid];
   }
 
   for (unsigned int i = 0; i < numsamppoints * numsamppoints * numsamppoints; ++i)

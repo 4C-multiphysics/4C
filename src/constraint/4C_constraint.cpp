@@ -263,7 +263,7 @@ void Constraints::Constraint::evaluate_constraint(Teuchos::ParameterList& params
       // Get the current lagrange multiplier value for this condition
       const std::shared_ptr<Core::LinAlg::Vector<double>> lagramul =
           params.get<std::shared_ptr<Core::LinAlg::Vector<double>>>("LagrMultVector");
-      const double lagraval = (*lagramul)[lindex];
+      const double lagraval = lagramul->local_values_as_span()[lindex];
 
       // elements might need condition
       params.set<const Core::Conditions::Condition*>("condition", cond);

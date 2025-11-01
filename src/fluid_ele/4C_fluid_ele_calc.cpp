@@ -515,8 +515,8 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::evaluate(Discret::Element
         params.sublist("TURBULENCE MODEL")
             .get<std::shared_ptr<Core::LinAlg::Vector<double>>>("col_Ci_delta_sq");
     const int id = ele->lid();
-    CsDeltaSq = (*ele_CsDeltaSq)[id];
-    CiDeltaSq = (*ele_CiDeltaSq)[id];
+    CsDeltaSq = ele_CsDeltaSq->local_values_as_span()[id];
+    CiDeltaSq = ele_CiDeltaSq->local_values_as_span()[id];
   }
   // identify elements of inflow section
   inflow_element(ele);
@@ -7235,8 +7235,8 @@ int Discret::Elements::FluidEleCalc<distype, enrtype>::calc_dissipation(Fluid* e
         params.sublist("TURBULENCE MODEL")
             .get<std::shared_ptr<Core::LinAlg::Vector<double>>>("col_Ci_delta_sq");
     const int id = ele->lid();
-    CsDeltaSq = (*ele_CsDeltaSq)[id];
-    CiDeltaSq = (*ele_CiDeltaSq)[id];
+    CsDeltaSq = ele_CsDeltaSq->local_values_as_span()[id];
+    CiDeltaSq = ele_CiDeltaSq->local_values_as_span()[id];
   }
   get_turbulence_params(turbmodelparams, Cs_delta_sq, Ci_delta_sq, smaglayer, CsDeltaSq, CiDeltaSq);
 

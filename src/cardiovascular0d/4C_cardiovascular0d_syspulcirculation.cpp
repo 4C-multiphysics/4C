@@ -296,29 +296,29 @@ void Utils::Cardiovascular0DSysPulCirculation::evaluate(Teuchos::ParameterList& 
   if (assvec1 or assvec2 or assvec4 or assvec5)
   {
     // extract values of dof vector at t_{n+1}
-    p_at_l_np = (*sysvec4)[0];
-    q_vin_l_np = (*sysvec4)[1];
-    q_vout_l_np = (*sysvec4)[2];
-    p_v_l_np = (*sysvec4)[3];
-    p_ar_sys_np = (*sysvec4)[4];
-    q_ar_sys_np = (*sysvec4)[5];
-    p_ven_sys_np = (*sysvec4)[6];
-    q_ven_sys_np = (*sysvec4)[7];
-    p_at_r_np = (*sysvec4)[8];
-    q_vin_r_np = (*sysvec4)[9];
-    q_vout_r_np = (*sysvec4)[10];
-    p_v_r_np = (*sysvec4)[11];
-    p_ar_pul_np = (*sysvec4)[12];
-    q_ar_pul_np = (*sysvec4)[13];
-    p_ven_pul_np = (*sysvec4)[14];
-    q_ven_pul_np = (*sysvec4)[15];
+    p_at_l_np = sysvec4->local_values_as_span()[0];
+    q_vin_l_np = sysvec4->local_values_as_span()[1];
+    q_vout_l_np = sysvec4->local_values_as_span()[2];
+    p_v_l_np = sysvec4->local_values_as_span()[3];
+    p_ar_sys_np = sysvec4->local_values_as_span()[4];
+    q_ar_sys_np = sysvec4->local_values_as_span()[5];
+    p_ven_sys_np = sysvec4->local_values_as_span()[6];
+    q_ven_sys_np = sysvec4->local_values_as_span()[7];
+    p_at_r_np = sysvec4->local_values_as_span()[8];
+    q_vin_r_np = sysvec4->local_values_as_span()[9];
+    q_vout_r_np = sysvec4->local_values_as_span()[10];
+    p_v_r_np = sysvec4->local_values_as_span()[11];
+    p_ar_pul_np = sysvec4->local_values_as_span()[12];
+    q_ar_pul_np = sysvec4->local_values_as_span()[13];
+    p_ven_pul_np = sysvec4->local_values_as_span()[14];
+    q_ven_pul_np = sysvec4->local_values_as_span()[15];
 
     // 3D ventricular volume at t_{n+1}
-    V_v_l_np = (*sysvec5)[2];
-    V_v_r_np = (*sysvec5)[10];
+    V_v_l_np = (*sysvec5).local_values_as_span()[2];
+    V_v_r_np = (*sysvec5).local_values_as_span()[10];
     // 3D atrial volume at t_{n+1}
-    V_at_l_np = (*sysvec5)[0];
-    V_at_r_np = (*sysvec5)[8];
+    V_at_l_np = (*sysvec5).local_values_as_span()[0];
+    V_at_r_np = (*sysvec5).local_values_as_span()[8];
 
     switch (atrium_model_)
     {
@@ -556,17 +556,17 @@ void Utils::Cardiovascular0DSysPulCirculation::evaluate(Teuchos::ParameterList& 
   // set vector of compartment volumes - only for post-processing purposes!
   if (assvec4 and assvec5)
   {
-    p_at_l_np = (*sysvec4)[0];
-    q_vout_l_np = (*sysvec4)[2];
-    p_v_l_np = (*sysvec4)[3];
-    p_ar_sys_np = (*sysvec4)[4];
-    p_ven_sys_np = (*sysvec4)[6];
+    p_at_l_np = sysvec4->local_values_as_span()[0];
+    q_vout_l_np = sysvec4->local_values_as_span()[2];
+    p_v_l_np = sysvec4->local_values_as_span()[3];
+    p_ar_sys_np = sysvec4->local_values_as_span()[4];
+    p_ven_sys_np = sysvec4->local_values_as_span()[6];
 
-    p_at_r_np = (*sysvec4)[8];
-    q_vout_r_np = (*sysvec4)[10];
-    p_v_r_np = (*sysvec4)[11];
-    p_ar_pul_np = (*sysvec4)[12];
-    p_ven_pul_np = (*sysvec4)[14];
+    p_at_r_np = sysvec4->local_values_as_span()[8];
+    q_vout_r_np = sysvec4->local_values_as_span()[10];
+    p_v_r_np = sysvec4->local_values_as_span()[11];
+    p_ar_pul_np = sysvec4->local_values_as_span()[12];
+    p_ven_pul_np = sysvec4->local_values_as_span()[14];
 
     if (atrium_model_ == Inpar::Cardiovascular0D::atr_elastance_0d or
         atrium_model_ == Inpar::Cardiovascular0D::atr_prescribed)

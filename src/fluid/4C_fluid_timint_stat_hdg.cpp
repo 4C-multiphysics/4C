@@ -161,7 +161,8 @@ void FLD::TimIntStationaryHDG::clear_state_assemble_mat_and_rhs()
     const Core::LinAlg::Vector<double>& intvelnpGhosted = *discret_->get_state(1, "intvelnp");
     for (int i = 0; i < intvelnp_->local_length(); ++i)
       (*intvelnp_).get_values()[i] =
-          intvelnpGhosted[intvelnpGhosted.get_map().lid(intvelnp_->get_map().gid(i))];
+          intvelnpGhosted
+              .local_values_as_span()[intvelnpGhosted.get_map().lid(intvelnp_->get_map().gid(i))];
   }
   first_assembly_ = false;
   FluidImplicitTimeInt::clear_state_assemble_mat_and_rhs();
@@ -200,7 +201,8 @@ void FLD::TimIntStationaryHDG::set_initial_flow_field(
       const int lid = dofrowmap->lid(la[0].lm_[i]);
       if (lid >= 0)
       {
-        if ((*velnp_)[lid] != 0) error += std::abs((*velnp_)[lid] - elevec1(i));
+        if (velnp_->local_values_as_span()[lid] != 0)
+          error += std::abs(velnp_->local_values_as_span()[lid] - elevec1(i));
         (*velnp_).get_values()[lid] = elevec1(i);
         (*veln_).get_values()[lid] = elevec1(i);
         (*velnm_).get_values()[lid] = elevec1(i);

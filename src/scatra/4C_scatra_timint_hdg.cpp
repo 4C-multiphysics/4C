@@ -862,7 +862,8 @@ void ScaTra::TimIntHDG::fd_check()
       // finite difference suggestion (first divide by epsilon and then subtract for better
       // conditioning)
       for (int j = 0; j < phinp_->local_length(); ++j)
-        (*fdvec).get_values()[j] = -(*systemvector1)[j] / eps + (residualVec)[j] / eps;
+        (*fdvec).get_values()[j] = -systemvector1->local_values_as_span()[j] / eps +
+                                   residualVec.local_values_as_span()[j] / eps;
 
       for (int rowlid = 0; rowlid < discret_->dof_row_map()->num_my_elements(); ++rowlid)
       {
@@ -888,12 +889,12 @@ void ScaTra::TimIntHDG::fd_check()
         }
 
         // absolute and relative errors in first comparison
-        const double abserr1 = entry - (*fdvec)[rowlid];
+        const double abserr1 = entry - fdvec->local_values_as_span()[rowlid];
         double relerr1 = 0;
         if (abs(entry) > 1.e-17)
           relerr1 = abserr1 / abs(entry);
-        else if (abs((*fdvec)[rowlid]) > 1.e-17)
-          relerr1 = abserr1 / abs((*fdvec)[rowlid]);
+        else if (abs(fdvec->local_values_as_span()[rowlid]) > 1.e-17)
+          relerr1 = abserr1 / abs(fdvec->local_values_as_span()[rowlid]);
         // store max abs and rel error
         if (abs(abserr1) > maxabserr) maxabserr = abs(abserr1);
         if (abs(relerr1) > maxrelerr) maxrelerr = abs(relerr1);

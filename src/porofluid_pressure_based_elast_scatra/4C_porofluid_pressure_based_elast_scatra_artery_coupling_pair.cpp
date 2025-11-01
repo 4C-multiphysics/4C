@@ -676,7 +676,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
         gp_coords_artery_[gp_id] = eta;
         gp_coords_homogenized_[gp_id] = local_coordinate;
         // the projection is valid and GP is so far unclaimed by another pair
-        if (projection_valid && ((gauss_point_vector)(gp_id))[my_lid] < 0.5)
+        if (projection_valid && (gauss_point_vector)(gp_id).local_values_as_span()[my_lid] < 0.5)
         {
           is_active_ = true;
           // include jacobian
@@ -833,7 +833,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingPair<dis_type_artery,
   {
     if (gp_weights_[igp] > 1e-12)
     {
-      const double scale = 1.0 / ((*gp_vector)(igp))[my_lid];
+      const double scale = 1.0 / (*gp_vector)(igp).local_values_as_span()[my_lid];
       gp_coords_artery[current_gp] = gp_coords_artery_[igp];
       gp_coords_homogenized[current_gp] = gp_coords_homogenized_[igp];
       gp_weights[current_gp] = gp_weights_[igp] * scale;

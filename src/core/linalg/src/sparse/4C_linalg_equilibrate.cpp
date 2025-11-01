@@ -75,7 +75,7 @@ void Core::LinAlg::Equilibration::compute_inv_row_sums(const Core::LinAlg::Spars
   if (method == EquilibrationMethod::rowsandcolumns_full or
       method == EquilibrationMethod::rowsandcolumns_maindiag)
     for (int i = 0; i < invrowsums.local_length(); ++i)
-      (invrowsums).get_values()[i] = std::sqrt((invrowsums)[i]);
+      (invrowsums).get_values()[i] = std::sqrt((invrowsums).local_values_as_span()[i]);
 }
 
 
@@ -91,7 +91,7 @@ void Core::LinAlg::Equilibration::compute_inv_col_sums(const Core::LinAlg::Spars
   if (method == EquilibrationMethod::rowsandcolumns_full or
       method == EquilibrationMethod::rowsandcolumns_maindiag)
     for (int i = 0; i < invcolsums.local_length(); ++i)
-      (invcolsums).get_values()[i] = std::sqrt((invcolsums)[i]);
+      (invcolsums).get_values()[i] = std::sqrt((invcolsums).local_values_as_span()[i]);
 }
 
 /*-------------------------------------------------------------------------------*
@@ -105,7 +105,7 @@ void Core::LinAlg::Equilibration::compute_inv_symmetry(
 
   for (int my_row = 0; my_row < diag->get_map().num_my_elements(); ++my_row)
   {
-    (invsymmetry).get_values()[my_row] = 1.0 / std::sqrt((*diag)[my_row]);
+    (invsymmetry).get_values()[my_row] = 1.0 / std::sqrt(diag->local_values_as_span()[my_row]);
   }
 }
 
@@ -293,7 +293,7 @@ void Core::LinAlg::EquilibrationBlock::equilibrate_matrix(
         if (method() == EquilibrationMethod::rowsandcolumns_full or
             method() == EquilibrationMethod::rowsandcolumns_maindiag)
           for (int j = 0; j < invrowsums.local_length(); ++j)
-            (invrowsums).get_values()[j] = std::sqrt((invrowsums)[j]);
+            (invrowsums).get_values()[j] = std::sqrt((invrowsums).local_values_as_span()[j]);
       }
 
       // perform row equilibration of matrix blocks in current row block of global system
@@ -370,7 +370,7 @@ void Core::LinAlg::EquilibrationBlock::equilibrate_matrix(
         if (method() == EquilibrationMethod::rowsandcolumns_full or
             method() == EquilibrationMethod::rowsandcolumns_maindiag)
           for (int i = 0; i < invcolsums->local_length(); ++i)
-            (*invcolsums).get_values()[i] = std::sqrt((*invcolsums)[i]);
+            (*invcolsums).get_values()[i] = std::sqrt(invcolsums->local_values_as_span()[i]);
       }
 
       // perform column equilibration of matrix blocks in current column block of global

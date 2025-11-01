@@ -206,14 +206,15 @@ void Constraints::ConstraintPenalty::evaluate_constraint(Teuchos::ParameterList&
                        .evaluate(time);
       }
 
-      double diff = (curvefac * (*initerror_)[condID - 1] - (*acterror_)[condID - 1]);
+      double diff = (curvefac * (*initerror_).local_values_as_span()[condID - 1] -
+                     (*acterror_).local_values_as_span()[condID - 1]);
 
       // take care when calling this evaluate function separately (evaluate force / evaluate
       // force+stiff)
       if (assemblemat1) (*lagrvalues_).get_values()[condID - 1] += rho_[condID] * diff;
       if (assemblevec1 and !(assemblemat1))
         (*lagrvalues_force_).get_values()[condID - 1] =
-            (*lagrvalues_)[condID - 1] + rho_[condID] * diff;
+            (*lagrvalues_).local_values_as_span()[condID - 1] + rho_[condID] * diff;
 
       // elements might need condition
       params.set<const Core::Conditions::Condition*>("condition", cond);
@@ -265,7 +266,7 @@ void Constraints::ConstraintPenalty::evaluate_constraint(Teuchos::ParameterList&
         if (assemblemat1)
         {
           elematrix1.scale(scStiff * penalties_[condID]);
-          elematrix2.scale((*lagrvalues_)[condID - 1] * scStiff);
+          elematrix2.scale((*lagrvalues_).local_values_as_span()[condID - 1] * scStiff);
           systemmatrix1->assemble(eid, lmstride, elematrix1, lm, lmowner);
           systemmatrix1->assemble(eid, lmstride, elematrix2, lm, lmowner);
         }
@@ -273,11 +274,12 @@ void Constraints::ConstraintPenalty::evaluate_constraint(Teuchos::ParameterList&
         if (assemblevec1)
         {
           elevector1.scale(penalties_[condID] * diff);
-          //          elevector2.Scale((*lagrvalues_)[condID-1]);
+          //          elevector2.Scale((*lagrvalues_).local_values_as_span()[condID-1]);
           // take care when calling this evaluate function separately (evaluate force / evaluate
           // force+stiff)
-          if (!assemblemat1) elevector2.scale((*lagrvalues_force_)[condID - 1]);
-          if (assemblemat1) elevector2.scale((*lagrvalues_)[condID - 1]);
+          if (!assemblemat1)
+            elevector2.scale((*lagrvalues_force_).local_values_as_span()[condID - 1]);
+          if (assemblemat1) elevector2.scale((*lagrvalues_).local_values_as_span()[condID - 1]);
           Core::LinAlg::assemble(*systemvector1, elevector1, lm, lmowner);
           Core::LinAlg::assemble(*systemvector1, elevector2, lm, lmowner);
         }

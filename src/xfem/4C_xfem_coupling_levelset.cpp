@@ -496,7 +496,8 @@ bool XFEM::LevelSetCoupling::set_level_set_field(const double time)
           auto& itemp = (*gradphinp_smoothed_rownode)(ivec);
           for (int jlength = 0; jlength < itemp.local_length(); jlength++)
           {
-            gradphinp_smoothed_node_->replace_local_value(jlength, ivec, itemp[jlength]);
+            gradphinp_smoothed_node_->replace_local_value(
+                jlength, ivec, itemp.local_values_as_span()[jlength]);
           }
         }
         // Bring dof_row_map to DofColMap layout (Attention: name is node but lives on dof)

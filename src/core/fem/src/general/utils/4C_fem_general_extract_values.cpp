@@ -30,7 +30,7 @@ void Core::FE::extract_my_values(const Core::LinAlg::Vector<double>& global,
     if (lid < 0)
       FOUR_C_THROW("Proc {}: Cannot find gid={} in Core::LinAlg::Vector<double>",
           Core::Communication::my_mpi_rank(global.get_comm()), lm[i]);
-    local[i] = global[lid];
+    local[i] = global.local_values_as_span()[lid];
   }
   return;
 }
@@ -57,7 +57,7 @@ void Core::FE::extract_my_node_based_values(const Core::Elements::Element* ele,
     // loop over multi vector columns (numcol=1 for Core::LinAlg::Vector<double>)
     for (int col = 0; col < numcol; col++)
     {
-      local[col + (numcol * i)] = global(col)[lid];
+      local[col + (numcol * i)] = global(col).local_values_as_span()[lid];
     }
   }
   return;
@@ -86,7 +86,7 @@ void Core::FE::extract_my_node_based_values(const Core::Elements::Element* ele,
       if (lid < 0)
         FOUR_C_THROW("Proc {}: Cannot find gid={} in Core::LinAlg::MultiVector<double>",
             Core::Communication::my_mpi_rank(global.get_comm()), nodegid);
-      local(i + (nsd * j)) = global(i)[lid];
+      local(i + (nsd * j)) = global(i).local_values_as_span()[lid];
     }
   }
   return;

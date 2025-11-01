@@ -132,9 +132,6 @@ namespace Core::LinAlg
     //! Initialize all values in a multi-vector with const value.
     void put_scalar(double ScalarConstant);
 
-    //! Element access function
-    double operator[](int const index) const { return (*vector_)[index]; }
-
     //! Returns the address of the Core::LinAlg::Map for this multi-vector.
     const Map& get_map() const;
 

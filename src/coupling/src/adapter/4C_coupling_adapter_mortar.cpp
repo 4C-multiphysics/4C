@@ -559,7 +559,7 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
 
       for (int k = 0; k < dim; ++k)
       {
-        val[k] += (*idisp)[(idisp->get_map()).lid(gdofs[k])];
+        val[k] += idisp->local_values_as_span()[(idisp->get_map()).lid(gdofs[k])];
       }
     }
 
@@ -598,7 +598,7 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
 
       for (int k = 0; k < dim; ++k)
       {
-        val[k] += (*idisp)[(idisp->get_map()).lid(gdofs[k])];
+        val[k] += idisp->local_values_as_span()[(idisp->get_map()).lid(gdofs[k])];
       }
     }
 
@@ -698,7 +698,7 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
       // add ALE displacements, if required
       if (idisp != nullptr)
         (*Xmaster).get_values()[(Xmaster->get_map()).lid(dof)] +=
-            (*idisp)[(idisp->get_map()).lid(dof)];
+            idisp->local_values_as_span()[(idisp->get_map()).lid(dof)];
     }
   }
 
@@ -795,10 +795,11 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
         {
           locindex[k] = (Xslavemodcol.get_map()).lid(mtnode->dofs()[k]);
           if (locindex[k] < 0) FOUR_C_THROW("Did not find dof in map");
-          Xnew[k] = Xslavemodcol[locindex[k]];
+          Xnew[k] = Xslavemodcol.local_values_as_span()[locindex[k]];
           Xold[k] = mtnode->x()[k];
           if (idisp != nullptr)
-            Xold[k] += (*idisp)[(idisp->get_map()).lid(interface_->discret().dof(node)[k])];
+            Xold[k] += idisp->local_values_as_span()[(idisp->get_map())
+                    .lid(interface_->discret().dof(node)[k])];
         }
 
         // check is mesh distortion is still OK
@@ -893,7 +894,7 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
 
       for (int k = 0; k < dim; ++k)
       {
-        val[k] += (*idisp)[(idisp->get_map()).lid(gdofs[k])];
+        val[k] += idisp->local_values_as_span()[(idisp->get_map()).lid(gdofs[k])];
       }
     }
 
@@ -929,7 +930,7 @@ void Coupling::Adapter::CouplingMortar::mesh_relocation(Core::FE::Discretization
 
       for (int k = 0; k < dim; ++k)
       {
-        val[k] += (*idisp)[(idisp->get_map()).lid(gdofs[k])];
+        val[k] += idisp->local_values_as_span()[(idisp->get_map()).lid(gdofs[k])];
       }
     }
 
@@ -1006,9 +1007,10 @@ void Coupling::Adapter::CouplingMortar::create_p()
   // set zero diagonal values to dummy 1.0
   for (int i = 0; i < diag->local_length(); ++i)
   {
-    if (abs((*diag)[i]) < 1e-12)
+    if (abs(diag->local_values_as_span()[i]) < 1e-12)
     {
-      std::cout << "WARNING: Diagonal entry of D matrix (value = " << (*diag)[i]
+      std::cout << "WARNING: Diagonal entry of D matrix (value = "
+                << diag->local_values_as_span()[i]
                 << ") is skipped because it is less than 1e-12!!!" << std::endl;
       (*diag).get_values()[i] = 1.0;
     }
@@ -1214,7 +1216,7 @@ void Coupling::Adapter::CouplingMortar::evaluate_with_mesh_relocation(
 
   // set zero diagonal values to dummy 1.0
   for (int i = 0; i < diag->local_length(); ++i)
-    if ((*diag)[i] == 0.0) (*diag).get_values()[i] = 1.0;
+    if ((*diag).local_values_as_span()[i] == 0.0) (*diag).get_values()[i] = 1.0;
 
   // scalar inversion of diagonal values
   diag->reciprocal(*diag);

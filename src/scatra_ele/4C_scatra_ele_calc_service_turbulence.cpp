@@ -1439,7 +1439,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::calc_dissipation(
     std::shared_ptr<Core::LinAlg::Vector<double>> ele_prt =
         turbulencelist.get<std::shared_ptr<Core::LinAlg::Vector<double>>>("col_ele_Prt");
     const int id = ele->lid();
-    tpn_ = (*ele_prt)[id];
+    tpn_ = ele_prt->local_values_as_span()[id];
 
     int dummy = 0;
     // when no averaging was done, we just keep the calculated (clipped) value

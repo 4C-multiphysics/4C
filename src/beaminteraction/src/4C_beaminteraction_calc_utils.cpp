@@ -145,7 +145,7 @@ namespace BeamInteraction
         for (int dim = 0; dim < 3; ++dim)
         {
           doflid[dim] = dis.get_map().lid(dofnode[dim]);
-          d(dim) = (dis)[doflid[dim]];
+          d(dim) = (dis).local_values_as_span()[doflid[dim]];
           X(dim) = node->x()[dim];
         }
         // shift

@@ -252,7 +252,7 @@ void FLD::TransferTurbulentInflowCondition::transfer(
         {
           int lid = dofrowmap->lid(masterdofs[rr]);
 
-          (mymasters_vel[rr]).push_back(((*veln)[lid]) * curvefac);
+          (mymasters_vel[rr]).push_back(veln->local_values_as_span()[lid] * curvefac);
         }
       }
       else
@@ -755,7 +755,7 @@ void FLD::TransferTurbulentInflowConditionXW::transfer(
         {
           int lid = dofrowmap->lid(masterdofs[rr]);
 
-          (mymasters_vel[rr]).push_back(((*veln)[lid]) * curvefac);
+          (mymasters_vel[rr]).push_back(veln->local_values_as_span()[lid] * curvefac);
         }
 
         // in xwall, we have another virtual node right after this node
@@ -765,7 +765,7 @@ void FLD::TransferTurbulentInflowConditionXW::transfer(
           {
             int lid = dofrowmap->lid(masterdofs[rr]);
 
-            (mymasters_vel[rr - 1]).push_back(((*veln)[lid]) * curvefac);
+            (mymasters_vel[rr - 1]).push_back(veln->local_values_as_span()[lid] * curvefac);
           }
         }
         else
@@ -963,7 +963,7 @@ void FLD::TransferTurbulentInflowConditionNodal::transfer(
 
         // and the 7th value is filled with the wall shear stress
         int lnodeid = dis_->node_row_map()->lid(gid);
-        (mymasters_vec[0]).push_back((*invec)[lnodeid]);
+        (mymasters_vec[0]).push_back(invec->local_values_as_span()[lnodeid]);
       }
       else
       {

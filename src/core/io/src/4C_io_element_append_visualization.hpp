@@ -214,7 +214,7 @@ namespace Core::IO
         {
           const int lid =
               result_data_dofbased.get_map().lid(nodedofs[idof + read_result_data_from_dofindex]);
-          vtu_point_result_data.push_back((result_data_dofbased)[lid]);
+          vtu_point_result_data.push_back((result_data_dofbased).local_values_as_span()[lid]);
         }
         else
         {
@@ -254,7 +254,7 @@ namespace Core::IO
         const auto& column = (result_data_nodebased)(component_i);
 
         if (lid > -1)
-          point_result_data.push_back(column[lid]);
+          point_result_data.push_back(column.local_values_as_span()[lid]);
         else
           FOUR_C_THROW("received illegal node local id: {}", lid);
       }

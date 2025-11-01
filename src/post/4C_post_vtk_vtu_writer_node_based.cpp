@@ -280,7 +280,8 @@ void PostVtuWriterNode::write_dof_result_step(std::ofstream& file,
         vecmap.num_global_elements(), vecmap.num_my_elements(), gids.data(), 0, vecmap.get_comm());
     std::shared_ptr<Core::LinAlg::Vector<double>> dofvec =
         Core::LinAlg::create_vector(rowmap, false);
-    for (int i = 0; i < vecmap.num_my_elements(); ++i) (*dofvec).get_values()[i] = (*data)[i];
+    for (int i = 0; i < vecmap.num_my_elements(); ++i)
+      (*dofvec).get_values()[i] = data->local_values_as_span()[i];
 
     ghostedData = Core::LinAlg::create_vector(*colmap, true);
     Core::LinAlg::export_to(*dofvec, *ghostedData);
@@ -307,7 +308,7 @@ void PostVtuWriterNode::write_dof_result_step(std::ofstream& file,
     {
       const int lid = ghostedData->get_map().lid(nodedofs[d + from]);
       if (lid > -1)
-        solution.push_back((*ghostedData)[lid]);
+        solution.push_back(ghostedData->local_values_as_span()[lid]);
       else
       {
         if (fillzeros)
@@ -389,7 +390,7 @@ void PostVtuWriterNode::write_nodal_result_step(std::ofstream& file,
     for (int idf = 0; idf < numdf; ++idf)
     {
       Core::LinAlg::Vector<double> column((*ghostedData)(idf));
-      solution.push_back((column)[i]);
+      solution.push_back(column.local_values_as_span()[i]);
     }
     for (int d = numdf; d < ncomponents; ++d) solution.push_back(0.);
   }  // loop over all nodes

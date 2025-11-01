@@ -88,19 +88,19 @@ void FLD::XFluidResultTest::test_node(const Core::IO::InputParameterContainer& c
       std::string position = container.get<std::string>("QUANTITY");
       if (position == "velx")
       {
-        result = (velnp)[velnpmap.lid(discret.dof(0, actnode, 0))];
+        result = velnp.local_values_as_span()[velnpmap.lid(discret.dof(0, actnode, 0))];
       }
       else if (position == "vely")
       {
-        result = (velnp)[velnpmap.lid(discret.dof(0, actnode, 1))];
+        result = velnp.local_values_as_span()[velnpmap.lid(discret.dof(0, actnode, 1))];
       }
       else if (position == "velz")
       {
-        result = (velnp)[velnpmap.lid(discret.dof(0, actnode, 2))];
+        result = velnp.local_values_as_span()[velnpmap.lid(discret.dof(0, actnode, 2))];
       }
       else if (position == "pressure")
       {
-        result = (velnp)[velnpmap.lid(discret.dof(0, actnode, 3))];
+        result = velnp.local_values_as_span()[velnpmap.lid(discret.dof(0, actnode, 3))];
       }
       else
       {

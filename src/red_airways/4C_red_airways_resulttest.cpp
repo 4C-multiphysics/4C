@@ -68,15 +68,15 @@ void Airway::RedAirwayResultTest::test_node(
       // test result value of single scalar field
       if (position == "pressure")
       {
-        result = (*mynodesol_pressure_)[nodemap.lid(dis_->dof(actnode, 0))];
+        result = mynodesol_pressure_->local_values_as_span()[nodemap.lid(dis_->dof(actnode, 0))];
       }
       else if (position == "flow_in")
       {
-        result = (*mynodesol_flow_in_)[nodemap.lid(dis_->dof(actnode, 0))];
+        result = mynodesol_flow_in_->local_values_as_span()[nodemap.lid(dis_->dof(actnode, 0))];
       }
       else if (position == "flow_out")
       {
-        result = (*mynodesol_flow_out_)[nodemap.lid(dis_->dof(actnode, 0))];
+        result = mynodesol_flow_out_->local_values_as_span()[nodemap.lid(dis_->dof(actnode, 0))];
       }
       // test result values for a system of scalars
       else
@@ -128,23 +128,25 @@ void Airway::RedAirwayResultTest::test_element(
       std::string position = container.get<std::string>("QUANTITY");
       if (position == "pressure_external")
       {
-        result = (*myelemsol_pressure_external_)[elementmap.lid(actelement->id())];
+        result =
+            myelemsol_pressure_external_->local_values_as_span()[elementmap.lid(actelement->id())];
       }
       else if (position == "acini_volume")
       {
-        result = (*myelemsol_acinivol_)[elementmap.lid(actelement->id())];
+        result = myelemsol_acinivol_->local_values_as_span()[elementmap.lid(actelement->id())];
       }
       else if (position == "airway_volume")
       {
-        result = (*myelemsol_airwayvol_)[elementmap.lid(actelement->id())];
+        result = myelemsol_airwayvol_->local_values_as_span()[elementmap.lid(actelement->id())];
       }
       else if (position == "opening_status")
       {
-        result = (*myelemsol_open_)[elementmap.lid(actelement->id())];
+        result = myelemsol_open_->local_values_as_span()[elementmap.lid(actelement->id())];
       }
       else if (position == "opening_trajectory")
       {
-        result = (*myelemsol_opening_trajectory_)[elementmap.lid(actelement->id())];
+        result =
+            myelemsol_opening_trajectory_->local_values_as_span()[elementmap.lid(actelement->id())];
       }
       else
       {

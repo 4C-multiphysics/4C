@@ -1067,7 +1067,7 @@ void Adapter::CouplingNonLinMortar::create_p()
   // set zero diagonal values to dummy 1.0
   for (int i = 0; i < diag->local_length(); ++i)
   {
-    if (abs((*diag)[i]) < 1e-12)
+    if (abs(diag->local_values_as_span()[i]) < 1e-12)
     {
       std::cout << "WARNING: Diagonal entry of D matrix is skipped because it is less than 1e-12!!!"
                 << std::endl;

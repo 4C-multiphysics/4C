@@ -108,27 +108,28 @@ void MultiScale::MicroStatic::convert_mat(const Core::LinAlg::MultiVector<double
     {
       for (int k = 0; k < 4; ++k)
       {
-        cmat(i, j) += ((cmatpf(cmatpfIndex2[j + k * 6][0]))[cmatpfIndex1[i + k * 6][0]] -
-                          S(StressIndex[i + k * 6][j])) *
-                          F_inv(FinvIndex1[k][i], 0) * F_inv(FinvIndex2[k][j], 0) +
-                      (cmatpf(cmatpfIndex2[j + k * 6][1]))[cmatpfIndex1[i + k * 6][0]] *
-                          F_inv(FinvIndex1[k][i], 0) * F_inv(FinvIndex2[k][j], 1) +
-                      (cmatpf(cmatpfIndex2[j + k * 6][2]))[cmatpfIndex1[i + k * 6][0]] *
-                          F_inv(FinvIndex1[k][i], 0) * F_inv(FinvIndex2[k][j], 2) +
-                      (cmatpf(cmatpfIndex2[j + k * 6][0]))[cmatpfIndex1[i + k * 6][1]] *
-                          F_inv(FinvIndex1[k][i], 1) * F_inv(FinvIndex2[k][j], 0) +
-                      ((cmatpf(cmatpfIndex2[j + k * 6][1]))[cmatpfIndex1[i + k * 6][1]] -
-                          S(StressIndex[i + k * 6][j])) *
-                          F_inv(FinvIndex1[k][i], 1) * F_inv(FinvIndex2[k][j], 1) +
-                      (cmatpf(cmatpfIndex2[j + k * 6][2]))[cmatpfIndex1[i + k * 6][1]] *
-                          F_inv(FinvIndex1[k][i], 1) * F_inv(FinvIndex2[k][j], 2) +
-                      (cmatpf(cmatpfIndex2[j + k * 6][0]))[cmatpfIndex1[i + k * 6][2]] *
-                          F_inv(FinvIndex1[k][i], 2) * F_inv(FinvIndex2[k][j], 0) +
-                      (cmatpf(cmatpfIndex2[j + k * 6][1]))[cmatpfIndex1[i + k * 6][2]] *
-                          F_inv(FinvIndex1[k][i], 2) * F_inv(FinvIndex2[k][j], 1) +
-                      ((cmatpf(cmatpfIndex2[j + k * 6][2]))[cmatpfIndex1[i + k * 6][2]] -
-                          S(StressIndex[i + k * 6][j])) *
-                          F_inv(FinvIndex1[k][i], 2) * F_inv(FinvIndex2[k][j], 2);
+        cmat(i, j) +=
+            (cmatpf(cmatpfIndex2[j + k * 6][0]).local_values_as_span()[cmatpfIndex1[i + k * 6][0]] -
+                S(StressIndex[i + k * 6][j])) *
+                F_inv(FinvIndex1[k][i], 0) * F_inv(FinvIndex2[k][j], 0) +
+            cmatpf(cmatpfIndex2[j + k * 6][1]).local_values_as_span()[cmatpfIndex1[i + k * 6][0]] *
+                F_inv(FinvIndex1[k][i], 0) * F_inv(FinvIndex2[k][j], 1) +
+            cmatpf(cmatpfIndex2[j + k * 6][2]).local_values_as_span()[cmatpfIndex1[i + k * 6][0]] *
+                F_inv(FinvIndex1[k][i], 0) * F_inv(FinvIndex2[k][j], 2) +
+            cmatpf(cmatpfIndex2[j + k * 6][0]).local_values_as_span()[cmatpfIndex1[i + k * 6][1]] *
+                F_inv(FinvIndex1[k][i], 1) * F_inv(FinvIndex2[k][j], 0) +
+            (cmatpf(cmatpfIndex2[j + k * 6][1]).local_values_as_span()[cmatpfIndex1[i + k * 6][1]] -
+                S(StressIndex[i + k * 6][j])) *
+                F_inv(FinvIndex1[k][i], 1) * F_inv(FinvIndex2[k][j], 1) +
+            cmatpf(cmatpfIndex2[j + k * 6][2]).local_values_as_span()[cmatpfIndex1[i + k * 6][1]] *
+                F_inv(FinvIndex1[k][i], 1) * F_inv(FinvIndex2[k][j], 2) +
+            cmatpf(cmatpfIndex2[j + k * 6][0]).local_values_as_span()[cmatpfIndex1[i + k * 6][2]] *
+                F_inv(FinvIndex1[k][i], 2) * F_inv(FinvIndex2[k][j], 0) +
+            cmatpf(cmatpfIndex2[j + k * 6][1]).local_values_as_span()[cmatpfIndex1[i + k * 6][2]] *
+                F_inv(FinvIndex1[k][i], 2) * F_inv(FinvIndex2[k][j], 1) +
+            (cmatpf(cmatpfIndex2[j + k * 6][2]).local_values_as_span()[cmatpfIndex1[i + k * 6][2]] -
+                S(StressIndex[i + k * 6][j])) *
+                F_inv(FinvIndex1[k][i], 2) * F_inv(FinvIndex2[k][j], 2);
       }
     }
   }

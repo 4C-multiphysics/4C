@@ -786,17 +786,20 @@ void FLD::TurbulenceStatisticsPh::do_time_sample(
         double locvw = 0.0;
         for (int rr = 1; rr < velnp.local_length(); ++rr)
         {
-          locuv += ((velnp)[rr - 1] * (*toggleu_)[rr - 1]) * ((velnp)[rr] * (*togglev_)[rr]);
+          locuv += velnp.local_values_as_span()[rr - 1] * toggleu_->local_values_as_span()[rr - 1] *
+                   velnp.local_values_as_span()[rr] * togglev_->local_values_as_span()[rr];
         }
         uv = Core::Communication::sum_all(locuv, discret_->get_comm());
         for (int rr = 2; rr < velnp.local_length(); ++rr)
         {
-          locuw += ((velnp)[rr - 2] * (*toggleu_)[rr - 2]) * ((velnp)[rr] * (*togglew_)[rr]);
+          locuw += velnp.local_values_as_span()[rr - 2] * toggleu_->local_values_as_span()[rr - 2] *
+                   velnp.local_values_as_span()[rr] * togglew_->local_values_as_span()[rr];
         }
         uw = Core::Communication::sum_all(locuw, discret_->get_comm());
         for (int rr = 2; rr < velnp.local_length(); ++rr)
         {
-          locvw += ((velnp)[rr - 1] * (*togglev_)[rr - 1]) * ((velnp)[rr] * (*togglew_)[rr]);
+          locvw += velnp.local_values_as_span()[rr - 1] * togglev_->local_values_as_span()[rr - 1] *
+                   velnp.local_values_as_span()[rr] * togglew_->local_values_as_span()[rr];
         }
         vw = Core::Communication::sum_all(locvw, discret_->get_comm());
 

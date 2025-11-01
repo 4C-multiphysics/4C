@@ -112,7 +112,7 @@ void FLD::XFluidOutputService::output(int step, double time, bool write_restart_
       {
         // std::cout << dofrowmap->LID(gdofs[idof]) << std::endl;
         (*outvec_fluid_).get_values()[dofrowmap->lid(gdofs_original[idof])] =
-            (*state.velnp_)[xdofrowmap->lid(gdofs_current[idof])];
+            state.velnp_->local_values_as_span()[xdofrowmap->lid(gdofs_current[idof])];
       }
     }
     else if (gdofs_current.size() % gdofs_original.size() == 0)  // multiple dofsets
@@ -150,7 +150,7 @@ void FLD::XFluidOutputService::output(int step, double time, bool write_restart_
       for (std::size_t idof = 0; idof < numdof; ++idof)
       {
         (*outvec_fluid_).get_values()[dofrowmap->lid(gdofs_original[idof])] =
-            (*state.velnp_)[xdofrowmap->lid(gdofs_current[offset + idof])];
+            state.velnp_->local_values_as_span()[xdofrowmap->lid(gdofs_current[offset + idof])];
       }
 
 

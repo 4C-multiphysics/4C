@@ -406,7 +406,7 @@ void FLD::XFluidFluid::assemble_mat_and_rhs(int itnum  ///< iteration number
       if (embedded_fluid_->residual()->get_map().my_gid(rhsgid))
         (*embedded_fluid_->residual())
             .get_values()[embedded_fluid_->residual()->get_map().lid(rhsgid)] +=
-            (*coup_state->rhC_s_)[coup_state->rhC_s_->get_map().lid(rhsgid)];
+            coup_state->rhC_s_->local_values_as_span()[coup_state->rhC_s_->get_map().lid(rhsgid)];
       else
         FOUR_C_THROW("Interface dof {} does not belong to embedded discretization!", rhsgid);
     }

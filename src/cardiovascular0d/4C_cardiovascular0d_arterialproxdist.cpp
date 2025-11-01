@@ -145,13 +145,13 @@ void Utils::Cardiovascular0DArterialProxDist::evaluate(Teuchos::ParameterList& p
     if (assvec1 or assvec2 or assvec4 or assvec5)
     {
       // extract values of dof vector at t_{n+1}
-      p_v_np = (*sysvec4)[numdof_per_cond * condID + 0];
-      p_arp_np = (*sysvec4)[numdof_per_cond * condID + 1];
-      q_arp_np = (*sysvec4)[numdof_per_cond * condID + 2];
-      p_ard_np = (*sysvec4)[numdof_per_cond * condID + 3];
+      p_v_np = (*sysvec4).local_values_as_span()[numdof_per_cond * condID + 0];
+      p_arp_np = (*sysvec4).local_values_as_span()[numdof_per_cond * condID + 1];
+      q_arp_np = (*sysvec4).local_values_as_span()[numdof_per_cond * condID + 2];
+      p_ard_np = (*sysvec4).local_values_as_span()[numdof_per_cond * condID + 3];
 
       // ventricular volume at t_{n+1}
-      V_v_np = (*sysvec5)[numdof_per_cond * condID];
+      V_v_np = (*sysvec5).local_values_as_span()[numdof_per_cond * condID];
 
       // atrial pressure at t_{n+1}
       p_at_np = p_at_fac * curvefac_np;

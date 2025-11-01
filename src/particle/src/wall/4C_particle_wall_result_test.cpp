@@ -103,7 +103,7 @@ void Particle::WallResultTest::test_node(
           if (lid < 0)
             FOUR_C_THROW("You tried to test {} on nonexistent dof {} on node {}", quantity, idx,
                 actnode->id());
-          actresult += (*disp)[lid];
+          actresult += disp->local_values_as_span()[lid];
         }
       }
     }
@@ -130,7 +130,7 @@ void Particle::WallResultTest::test_node(
         if (lid < 0)
           FOUR_C_THROW("You tried to test {} on nonexistent dof {} on node {}", quantity, idx,
               actnode->id());
-        actresult = (*disp)[lid];
+        actresult = disp->local_values_as_span()[lid];
       }
     }
     else

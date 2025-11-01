@@ -602,7 +602,7 @@ double Solid::MonitorDbc::get_reaction_moment(Core::LinAlg::Matrix<DIM, 1>& rmom
         if (lid < 0)
           FOUR_C_THROW("Proc {}: Cannot find gid={} in Core::LinAlg::Vector<double>",
               Core::Communication::my_mpi_rank(complete_freact.get_comm()), node_gid[i]);
-        node_reaction_force(i) = complete_freact[lid];
+        node_reaction_force(i) = complete_freact.local_values_as_span()[lid];
       }
     }
 

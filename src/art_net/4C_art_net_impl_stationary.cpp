@@ -670,7 +670,7 @@ void Arteries::ArtNetImplStationary::read_restart(int step, bool coupledTo3D)
         std::dynamic_pointer_cast<Mat::Cnst1dArt>(actele->material());
     if (arterymat == nullptr) FOUR_C_THROW("cast to artery material failed");
 
-    const double diam = 2.0 * (*ele_radius_col)[i];
+    const double diam = 2.0 * ele_radius_col->local_values_as_span()[i];
 
     // reset (if element is collapsed in previous step, set to zero)
     arterymat->set_diam_previous_time_step(diam);

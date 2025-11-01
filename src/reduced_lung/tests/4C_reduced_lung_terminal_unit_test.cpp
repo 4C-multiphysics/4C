@@ -50,7 +50,7 @@ namespace
       jac.extract_my_row_view(i, n_entries, jac_vals, col_indices);
 
       ASSERT_EQ(col_indices[jac_col], dof_lids[i]);
-      EXPECT_NEAR(jac_vals[jac_col], fd_derivative[i], eps)
+      EXPECT_NEAR(jac_vals[jac_col], fd_derivative.local_values_as_span()[i], eps)
           << "Mismatch at row " << i << ", col " << jac_col;
     }
   }

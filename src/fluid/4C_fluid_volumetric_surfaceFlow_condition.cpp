@@ -1086,7 +1086,7 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::velocities(Core::FE::Discretizati
         // loop over the dof of a map
         // eval the velocity of a dof
         double velocity = 0.0;
-        double r = (local_radii)[cond_noderowmap.lid(gid)];
+        double r = local_radii.local_values_as_span()[cond_noderowmap.lid(gid)];
 
         //------------------------------------------------------------
         // Check for the velocity profile type
@@ -1108,7 +1108,7 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::velocities(Core::FE::Discretizati
         // else check for Womersley type
         else if (flowType == "WOMERSLEY")
         {
-          double R = (border_radii)[cond_noderowmap.lid(gid)];
+          double R = border_radii.local_values_as_span()[cond_noderowmap.lid(gid)];
 
           // first calculate the parabolic profile of the 0th
           // harmonics
@@ -1263,7 +1263,7 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::correct_flow_rate(
     for (int lid = 0; lid < correction_velnp->local_length(); lid++)
     {
       int gid = correction_velnp->get_map().gid(lid);
-      correction = correction_factor * (*correction_velnp)[lid];
+      correction = correction_factor * correction_velnp->local_values_as_span()[lid];
 
       int bc_lid = cond_velocities_->get_map().lid(gid);
       (*cond_velocities_).get_values()[bc_lid] += correction;
@@ -1277,7 +1277,7 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::correct_flow_rate(
     for (int lid = 0; lid < correction_velnp->local_length(); lid++)
     {
       int gid = correction_velnp->get_map().gid(lid);
-      correction = correction_factor * (*correction_velnp)[lid];
+      correction = correction_factor * correction_velnp->local_values_as_span()[lid];
 
       int bc_lid = cond_velocities_->get_map().lid(gid);
       (*cond_velocities_).get_values()[bc_lid] = correction;
@@ -1295,7 +1295,7 @@ void FLD::Utils::FluidVolumetricSurfaceFlowBc::set_velocities(
   for (int lid = 0; lid < cond_velocities_->local_length(); lid++)
   {
     int gid = cond_velocities_->get_map().gid(lid);
-    double val = (*cond_velocities_)[lid];
+    double val = cond_velocities_->local_values_as_span()[lid];
 
     velocities.replace_global_values(1, &val, &gid);
   }
@@ -1343,7 +1343,7 @@ double FLD::Utils::FluidVolumetricSurfaceFlowBc::flow_rate_calculation(
   double local_flowrate = 0.0;
   for (int i = 0; i < dofrowmap->num_my_elements(); i++)
   {
-    local_flowrate += ((*flowrates)[i]);
+    local_flowrate += (flowrates->local_values_as_span()[i]);
   }
 
   double flowrate = 0.0;

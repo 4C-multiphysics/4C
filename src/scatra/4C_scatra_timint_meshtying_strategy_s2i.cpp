@@ -544,7 +544,8 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_meshtying()
 
           // copy current vector entry into temporary vector
           residualslave.replace_global_value(slavedofgid,
-              (*scatratimint_->residual())[scatratimint_->dof_row_map()->lid(slavedofgid)]);
+              scatratimint_->residual()
+                  ->local_values_as_span()[scatratimint_->dof_row_map()->lid(slavedofgid)]);
 
           // zero out current vector entry
           scatratimint_->residual()->replace_global_value(slavedofgid, 0.);
@@ -1706,7 +1707,7 @@ void ScaTra::MeshtyingStrategyS2I::evaluate_nts(
     strategy.init_cell_matrices_and_vectors(la_slave, la_master);
 
     // evaluate current slave-side node
-    evaluate_slave_node(idiscret, *slavenode, islavenodeslumpedareas[inode],
+    evaluate_slave_node(idiscret, *slavenode, islavenodeslumpedareas.local_values_as_span()[inode],
         (Inpar::ScaTra::ImplType)islavenodesimpltypes.get_local_values()[inode], *slaveelement,
         *masterelement, la_slave, la_master, params, strategy.cell_matrix1(),
         strategy.cell_matrix2(), strategy.cell_matrix3(), strategy.cell_matrix4(),
@@ -2482,7 +2483,7 @@ void ScaTra::MeshtyingStrategyS2I::setup_meshtying()
           for (int inode = 0; inode < noderowmap_slave.num_my_elements(); ++inode)
           {
             (*islavenodeslumpedareas).get_values()[inode] =
-                (*islavenodeslumpedareas_dofvector)[dofrowmap_slave.lid(
+                islavenodeslumpedareas_dofvector->local_values_as_span()[dofrowmap_slave.lid(
                     idiscret.dof(idiscret.g_node(noderowmap_slave.gid(inode)), 0))];
           }
         }
@@ -3313,7 +3314,7 @@ void ScaTra::MeshtyingStrategyS2I::collect_output_data() const
 
           // copy thickness variable into target state vector of discrete scatra-scatra interface
           // layer thicknesses
-          (intlayerthickness).get_values()[nodelid] = growth[doflid_growth];
+          (intlayerthickness).get_values()[nodelid] = growth.local_values_as_span()[doflid_growth];
         }  // nodes owned by current processor
       }  // nodes stored by current processor
     }  // loop over all nodes
@@ -4049,8 +4050,8 @@ void ScaTra::MeshtyingStrategyS2I::fd_check(
       }
 
       // finite difference suggestion (first divide by epsilon and then add for better conditioning)
-      const double fdval =
-          -(extendedresidual)[rowlid] / fdcheckeps + rhs_original[rowlid] / fdcheckeps;
+      const double fdval = -extendedresidual.local_values_as_span()[rowlid] / fdcheckeps +
+                           rhs_original.local_values_as_span()[rowlid] / fdcheckeps;
 
       // absolute and relative errors in first comparison
       const double abserr1 = entry - fdval;
@@ -4078,10 +4079,10 @@ void ScaTra::MeshtyingStrategyS2I::fd_check(
       else
       {
         // left-hand side in second comparison
-        const double left = entry - rhs_original[rowlid] / fdcheckeps;
+        const double left = entry - rhs_original.local_values_as_span()[rowlid] / fdcheckeps;
 
         // right-hand side in second comparison
-        const double right = -(extendedresidual)[rowlid] / fdcheckeps;
+        const double right = -extendedresidual.local_values_as_span()[rowlid] / fdcheckeps;
 
         // absolute and relative errors in second comparison
         const double abserr2 = left - right;

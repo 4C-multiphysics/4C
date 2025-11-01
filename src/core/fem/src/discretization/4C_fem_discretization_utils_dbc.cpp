@@ -350,7 +350,7 @@ void Core::FE::Dbc::read_dirichlet_condition(const Teuchos::ParameterList& param
         if ((hierarchical_order == current_order) && (info.toggle.get_local_values()[lid] == 1))
         {
           // get the current prescribed value of dof
-          const double current_val = info.values[lid];
+          const double current_val = info.values.local_values_as_span()[lid];
 
           // get the current condition that prescribed value of dof
           const int current_cond = info.condition.get_local_values()[lid];

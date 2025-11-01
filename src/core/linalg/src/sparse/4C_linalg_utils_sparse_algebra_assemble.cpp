@@ -107,7 +107,8 @@ void Core::LinAlg::assemble_my_vector(double scalar_target, Core::LinAlg::Vector
           sgid, Core::Communication::my_mpi_rank(target.get_comm()));
 
     // update the vector row
-    target.get_values()[tlid] = scalar_target * target[tlid] + scalar_source * source[slid];
+    target.get_values()[tlid] = scalar_target * target.local_values_as_span()[tlid] +
+                                scalar_source * source.local_values_as_span()[slid];
   }
 }
 
@@ -131,10 +132,10 @@ void Core::LinAlg::apply_dirichlet_to_system(Core::LinAlg::Vector<double>& x,
   const int mylength = dbcval.local_length();
   for (int i = 0; i < mylength; ++i)
   {
-    if (dbctoggle[i] == 1.0)
+    if (dbctoggle.local_values_as_span()[i] == 1.0)
     {
-      x.get_values()[i] = dbcval[i];
-      b.get_values()[i] = dbcval[i];
+      x.get_values()[i] = dbcval.local_values_as_span()[i];
+      b.get_values()[i] = dbcval.local_values_as_span()[i];
     }
   }
 }
@@ -164,8 +165,8 @@ void Core::LinAlg::apply_dirichlet_to_system(Core::LinAlg::Vector<double>& x,
     int xlid = xmap.lid(gid);
     if (xlid < 0) FOUR_C_THROW("illegal Dirichlet map");
 
-    x.get_values()[xlid] = dbcval[dbcvlid];
-    b.get_values()[xlid] = dbcval[dbcvlid];
+    x.get_values()[xlid] = dbcval.local_values_as_span()[dbcvlid];
+    b.get_values()[xlid] = dbcval.local_values_as_span()[dbcvlid];
   }
 }
 
@@ -193,7 +194,7 @@ void Core::LinAlg::apply_dirichlet_to_system(Core::LinAlg::Vector<double>& b,
       if (dbcvlid < 0)
         FOUR_C_THROW("illegal Dirichlet map");
       else
-        b.get_values()[blid] = dbcval[dbcvlid];
+        b.get_values()[blid] = dbcval.local_values_as_span()[dbcvlid];
     }
   }
 }
@@ -248,13 +249,14 @@ std::shared_ptr<Core::LinAlg::MapExtractor> Core::LinAlg::convert_dirichlet_togg
   for (int i = 0; i < mylength; ++i)
   {
     const int gid = fullgids[i];
-    const int compo = (int)round((dbctoggle)[i]);
+    const int compo = (int)round((dbctoggle).local_values_as_span()[i]);
     if (compo == 0)
       freegids.push_back(gid);
     else if (compo == 1)
       dbcgids.push_back(gid);
     else
-      FOUR_C_THROW("Unexpected component {}. It is neither 1.0 nor 0.0.", (dbctoggle)[i]);
+      FOUR_C_THROW("Unexpected component {}. It is neither 1.0 nor 0.0.",
+          (dbctoggle).local_values_as_span()[i]);
   }
   // build map of Dirichlet DOFs
   std::shared_ptr<Core::LinAlg::Map> dbcmap = nullptr;

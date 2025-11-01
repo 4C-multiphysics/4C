@@ -127,15 +127,15 @@ void FLD::TimIntLoma::set_loma_iter_scalar_fields(
     if (localdofid < 0) FOUR_C_THROW("localdofid not found in map for given globaldofid");
 
     // now copy the values
-    value = (*scalaraf)[localscatradofid];
+    value = scalaraf->local_values_as_span()[localscatradofid];
     scaaf_->replace_local_value(localdofid, value);
 
-    value = (*scalaram)[localscatradofid];
+    value = scalaram->local_values_as_span()[localscatradofid];
     scaam_->replace_local_value(localdofid, value);
 
     if (scalardtam != nullptr)
     {
-      value = (*scalardtam)[localscatradofid];
+      value = scalardtam->local_values_as_span()[localscatradofid];
     }
     else
     {
@@ -146,7 +146,7 @@ void FLD::TimIntLoma::set_loma_iter_scalar_fields(
     if (turbmodel_ == Inpar::FLUID::multifractal_subgrid_scales)
     {
       if (fsscalaraf != nullptr)
-        value = (*fsscalaraf)[localscatradofid];
+        value = fsscalaraf->local_values_as_span()[localscatradofid];
       else
         FOUR_C_THROW("Expected fine-scale scalar!");
 

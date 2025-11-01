@@ -444,49 +444,49 @@ void Utils::CardiovascularRespiratory0DSysPulPeriphCirculation::evaluate(
   if (assvec1 and assvec2 and assvec4 and assvec5)
   {
     // extract values of dof vector at t_{n+1}
-    p_at_l_np = (*sysvec4)[0];
-    q_vin_l_np = (*sysvec4)[1];
-    q_vout_l_np = (*sysvec4)[2];
-    p_v_l_np = (*sysvec4)[3];
-    p_ar_sys_np = (*sysvec4)[4];
-    q_ar_sys_np = (*sysvec4)[5];
+    p_at_l_np = sysvec4->local_values_as_span()[0];
+    q_vin_l_np = sysvec4->local_values_as_span()[1];
+    q_vout_l_np = sysvec4->local_values_as_span()[2];
+    p_v_l_np = sysvec4->local_values_as_span()[3];
+    p_ar_sys_np = sysvec4->local_values_as_span()[4];
+    q_ar_sys_np = sysvec4->local_values_as_span()[5];
 
-    p_arperi_sys_np = (*sysvec4)[6];
-    q_arspl_sys_np = (*sysvec4)[7];
-    q_arespl_sys_np = (*sysvec4)[8];
-    q_armsc_sys_np = (*sysvec4)[9];
-    q_arcer_sys_np = (*sysvec4)[10];
-    q_arcor_sys_np = (*sysvec4)[11];
-    p_venspl_sys_np = (*sysvec4)[12];
-    q_venspl_sys_np = (*sysvec4)[13];
-    p_venespl_sys_np = (*sysvec4)[14];
-    q_venespl_sys_np = (*sysvec4)[15];
-    p_venmsc_sys_np = (*sysvec4)[16];
-    q_venmsc_sys_np = (*sysvec4)[17];
-    p_vencer_sys_np = (*sysvec4)[18];
-    q_vencer_sys_np = (*sysvec4)[19];
-    p_vencor_sys_np = (*sysvec4)[20];
-    q_vencor_sys_np = (*sysvec4)[21];
+    p_arperi_sys_np = sysvec4->local_values_as_span()[6];
+    q_arspl_sys_np = sysvec4->local_values_as_span()[7];
+    q_arespl_sys_np = sysvec4->local_values_as_span()[8];
+    q_armsc_sys_np = sysvec4->local_values_as_span()[9];
+    q_arcer_sys_np = sysvec4->local_values_as_span()[10];
+    q_arcor_sys_np = sysvec4->local_values_as_span()[11];
+    p_venspl_sys_np = sysvec4->local_values_as_span()[12];
+    q_venspl_sys_np = sysvec4->local_values_as_span()[13];
+    p_venespl_sys_np = sysvec4->local_values_as_span()[14];
+    q_venespl_sys_np = sysvec4->local_values_as_span()[15];
+    p_venmsc_sys_np = sysvec4->local_values_as_span()[16];
+    q_venmsc_sys_np = sysvec4->local_values_as_span()[17];
+    p_vencer_sys_np = sysvec4->local_values_as_span()[18];
+    q_vencer_sys_np = sysvec4->local_values_as_span()[19];
+    p_vencor_sys_np = sysvec4->local_values_as_span()[20];
+    q_vencor_sys_np = sysvec4->local_values_as_span()[21];
 
-    p_ven_sys_np = (*sysvec4)[22];
-    q_ven_sys_np = (*sysvec4)[23];
-    p_at_r_np = (*sysvec4)[24];
-    q_vin_r_np = (*sysvec4)[25];
-    q_vout_r_np = (*sysvec4)[26];
-    p_v_r_np = (*sysvec4)[27];
-    p_ar_pul_np = (*sysvec4)[28];
-    q_ar_pul_np = (*sysvec4)[29];
-    p_cap_pul_np = (*sysvec4)[30];
-    q_cap_pul_np = (*sysvec4)[31];
-    p_ven_pul_np = (*sysvec4)[32];
-    q_ven_pul_np = (*sysvec4)[33];
+    p_ven_sys_np = sysvec4->local_values_as_span()[22];
+    q_ven_sys_np = sysvec4->local_values_as_span()[23];
+    p_at_r_np = sysvec4->local_values_as_span()[24];
+    q_vin_r_np = sysvec4->local_values_as_span()[25];
+    q_vout_r_np = sysvec4->local_values_as_span()[26];
+    p_v_r_np = sysvec4->local_values_as_span()[27];
+    p_ar_pul_np = sysvec4->local_values_as_span()[28];
+    q_ar_pul_np = sysvec4->local_values_as_span()[29];
+    p_cap_pul_np = sysvec4->local_values_as_span()[30];
+    q_cap_pul_np = sysvec4->local_values_as_span()[31];
+    p_ven_pul_np = sysvec4->local_values_as_span()[32];
+    q_ven_pul_np = sysvec4->local_values_as_span()[33];
 
     // 3D ventricular volume at t_{n+1}
-    V_v_l_np = (*sysvec5)[2];
-    V_v_r_np = (*sysvec5)[26];
+    V_v_l_np = sysvec5->local_values_as_span()[2];
+    V_v_r_np = sysvec5->local_values_as_span()[26];
     // 3D atrial volume at t_{n+1}
-    V_at_l_np = (*sysvec5)[0];
-    V_at_r_np = (*sysvec5)[24];
+    V_at_l_np = sysvec5->local_values_as_span()[0];
+    V_at_r_np = sysvec5->local_values_as_span()[24];
 
     switch (atrium_model_)
     {
@@ -1105,105 +1105,105 @@ void Utils::CardiovascularRespiratory0DSysPulPeriphCirculation::evaluate_respira
               .evaluate(tim);
 
   // extract values of dof vector at t_{n+1}
-  const double p_at_l_np = (*dofvec)[0];
-  const double q_vin_l_np = (*dofvec)[1];
-  const double q_vout_l_np = (*dofvec)[2];
-  const double p_v_l_np = (*dofvec)[3];
-  const double p_ar_sys_np = (*dofvec)[4];
-  //  const double q_ar_sys_np = (*dofvec)[5];
+  const double p_at_l_np = dofvec->local_values_as_span()[0];
+  const double q_vin_l_np = dofvec->local_values_as_span()[1];
+  const double q_vout_l_np = dofvec->local_values_as_span()[2];
+  const double p_v_l_np = dofvec->local_values_as_span()[3];
+  const double p_ar_sys_np = dofvec->local_values_as_span()[4];
+  //  const double q_ar_sys_np = dofvec->local_values_as_span()[5];
 
-  const double p_arperi_sys_np = (*dofvec)[6];
-  const double q_arspl_sys_np = (*dofvec)[7];
-  const double q_arespl_sys_np = (*dofvec)[8];
-  const double q_armsc_sys_np = (*dofvec)[9];
-  const double q_arcer_sys_np = (*dofvec)[10];
-  const double q_arcor_sys_np = (*dofvec)[11];
-  const double p_venspl_sys_np = (*dofvec)[12];
-  const double q_venspl_sys_np = (*dofvec)[13];
-  const double p_venespl_sys_np = (*dofvec)[14];
-  const double q_venespl_sys_np = (*dofvec)[15];
-  const double p_venmsc_sys_np = (*dofvec)[16];
-  const double q_venmsc_sys_np = (*dofvec)[17];
-  const double p_vencer_sys_np = (*dofvec)[18];
-  const double q_vencer_sys_np = (*dofvec)[19];
-  const double p_vencor_sys_np = (*dofvec)[20];
-  const double q_vencor_sys_np = (*dofvec)[21];
+  const double p_arperi_sys_np = dofvec->local_values_as_span()[6];
+  const double q_arspl_sys_np = dofvec->local_values_as_span()[7];
+  const double q_arespl_sys_np = dofvec->local_values_as_span()[8];
+  const double q_armsc_sys_np = dofvec->local_values_as_span()[9];
+  const double q_arcer_sys_np = dofvec->local_values_as_span()[10];
+  const double q_arcor_sys_np = dofvec->local_values_as_span()[11];
+  const double p_venspl_sys_np = dofvec->local_values_as_span()[12];
+  const double q_venspl_sys_np = dofvec->local_values_as_span()[13];
+  const double p_venespl_sys_np = dofvec->local_values_as_span()[14];
+  const double q_venespl_sys_np = dofvec->local_values_as_span()[15];
+  const double p_venmsc_sys_np = dofvec->local_values_as_span()[16];
+  const double q_venmsc_sys_np = dofvec->local_values_as_span()[17];
+  const double p_vencer_sys_np = dofvec->local_values_as_span()[18];
+  const double q_vencer_sys_np = dofvec->local_values_as_span()[19];
+  const double p_vencor_sys_np = dofvec->local_values_as_span()[20];
+  const double q_vencor_sys_np = dofvec->local_values_as_span()[21];
 
-  const double p_ven_sys_np = (*dofvec)[22];
-  const double q_ven_sys_np = (*dofvec)[23];
-  const double p_at_r_np = (*dofvec)[24];
-  const double q_vin_r_np = (*dofvec)[25];
-  const double q_vout_r_np = (*dofvec)[26];
-  const double p_v_r_np = (*dofvec)[27];
-  const double p_ar_pul_np = (*dofvec)[28];
-  const double q_ar_pul_np = (*dofvec)[29];
-  const double p_cap_pul_np = (*dofvec)[30];
-  const double q_cap_pul_np = (*dofvec)[31];
-  const double p_ven_pul_np = (*dofvec)[32];
-  const double q_ven_pul_np = (*dofvec)[33];
+  const double p_ven_sys_np = dofvec->local_values_as_span()[22];
+  const double q_ven_sys_np = dofvec->local_values_as_span()[23];
+  const double p_at_r_np = dofvec->local_values_as_span()[24];
+  const double q_vin_r_np = dofvec->local_values_as_span()[25];
+  const double q_vout_r_np = dofvec->local_values_as_span()[26];
+  const double p_v_r_np = dofvec->local_values_as_span()[27];
+  const double p_ar_pul_np = dofvec->local_values_as_span()[28];
+  const double q_ar_pul_np = dofvec->local_values_as_span()[29];
+  const double p_cap_pul_np = dofvec->local_values_as_span()[30];
+  const double q_cap_pul_np = dofvec->local_values_as_span()[31];
+  const double p_ven_pul_np = dofvec->local_values_as_span()[32];
+  const double q_ven_pul_np = dofvec->local_values_as_span()[33];
 
-  const double V_alv_np = (*dofvec)[34];
-  const double q_alv_np = (*dofvec)[35];
-  const double p_alv_np = (*dofvec)[36];
-  const double fCO2_alv_np = (*dofvec)[37];
-  const double fO2_alv_np = (*dofvec)[38];
+  const double V_alv_np = dofvec->local_values_as_span()[34];
+  const double q_alv_np = dofvec->local_values_as_span()[35];
+  const double p_alv_np = dofvec->local_values_as_span()[36];
+  const double fCO2_alv_np = dofvec->local_values_as_span()[37];
+  const double fO2_alv_np = dofvec->local_values_as_span()[38];
 
-  const double q_arspl_sys_in_np = (*dofvec)[39];
-  const double q_arespl_sys_in_np = (*dofvec)[40];
-  const double q_armsc_sys_in_np = (*dofvec)[41];
-  const double q_arcer_sys_in_np = (*dofvec)[42];
-  const double q_arcor_sys_in_np = (*dofvec)[43];
+  const double q_arspl_sys_in_np = dofvec->local_values_as_span()[39];
+  const double q_arespl_sys_in_np = dofvec->local_values_as_span()[40];
+  const double q_armsc_sys_in_np = dofvec->local_values_as_span()[41];
+  const double q_arcer_sys_in_np = dofvec->local_values_as_span()[42];
+  const double q_arcor_sys_in_np = dofvec->local_values_as_span()[43];
 
-  const double ppCO2_at_r_np = (*dofvec)[44];
-  const double ppO2_at_r_np = (*dofvec)[45];
-  const double ppCO2_v_r_np = (*dofvec)[46];
-  const double ppO2_v_r_np = (*dofvec)[47];
-  const double ppCO2_ar_pul_np = (*dofvec)[48];
-  const double ppO2_ar_pul_np = (*dofvec)[49];
+  const double ppCO2_at_r_np = dofvec->local_values_as_span()[44];
+  const double ppO2_at_r_np = dofvec->local_values_as_span()[45];
+  const double ppCO2_v_r_np = dofvec->local_values_as_span()[46];
+  const double ppO2_v_r_np = dofvec->local_values_as_span()[47];
+  const double ppCO2_ar_pul_np = dofvec->local_values_as_span()[48];
+  const double ppO2_ar_pul_np = dofvec->local_values_as_span()[49];
   // gas partial pressures at pulmonary capillaries
-  const double ppCO2_cap_pul_np = (*dofvec)[50];
-  const double ppO2_cap_pul_np = (*dofvec)[51];
+  const double ppCO2_cap_pul_np = dofvec->local_values_as_span()[50];
+  const double ppO2_cap_pul_np = dofvec->local_values_as_span()[51];
 
-  const double ppCO2_ven_pul_np = (*dofvec)[52];
-  const double ppO2_ven_pul_np = (*dofvec)[53];
-  const double ppCO2_at_l_np = (*dofvec)[54];
-  const double ppO2_at_l_np = (*dofvec)[55];
-  const double ppCO2_v_l_np = (*dofvec)[56];
-  const double ppO2_v_l_np = (*dofvec)[57];
-  const double ppCO2_ar_sys_np = (*dofvec)[58];
-  const double ppO2_ar_sys_np = (*dofvec)[59];
+  const double ppCO2_ven_pul_np = dofvec->local_values_as_span()[52];
+  const double ppO2_ven_pul_np = dofvec->local_values_as_span()[53];
+  const double ppCO2_at_l_np = dofvec->local_values_as_span()[54];
+  const double ppO2_at_l_np = dofvec->local_values_as_span()[55];
+  const double ppCO2_v_l_np = dofvec->local_values_as_span()[56];
+  const double ppO2_v_l_np = dofvec->local_values_as_span()[57];
+  const double ppCO2_ar_sys_np = dofvec->local_values_as_span()[58];
+  const double ppO2_ar_sys_np = dofvec->local_values_as_span()[59];
 
   // gas partial pressures at systemic capillaries
-  const double ppCO2_arspl_sys_np = (*dofvec)[60];
-  const double ppO2_arspl_sys_np = (*dofvec)[61];
-  const double ppCO2_arespl_sys_np = (*dofvec)[62];
-  const double ppO2_arespl_sys_np = (*dofvec)[63];
-  const double ppCO2_armsc_sys_np = (*dofvec)[64];
-  const double ppO2_armsc_sys_np = (*dofvec)[65];
-  const double ppCO2_arcer_sys_np = (*dofvec)[66];
-  const double ppO2_arcer_sys_np = (*dofvec)[67];
-  const double ppCO2_arcor_sys_np = (*dofvec)[68];
-  const double ppO2_arcor_sys_np = (*dofvec)[69];
+  const double ppCO2_arspl_sys_np = dofvec->local_values_as_span()[60];
+  const double ppO2_arspl_sys_np = dofvec->local_values_as_span()[61];
+  const double ppCO2_arespl_sys_np = dofvec->local_values_as_span()[62];
+  const double ppO2_arespl_sys_np = dofvec->local_values_as_span()[63];
+  const double ppCO2_armsc_sys_np = dofvec->local_values_as_span()[64];
+  const double ppO2_armsc_sys_np = dofvec->local_values_as_span()[65];
+  const double ppCO2_arcer_sys_np = dofvec->local_values_as_span()[66];
+  const double ppO2_arcer_sys_np = dofvec->local_values_as_span()[67];
+  const double ppCO2_arcor_sys_np = dofvec->local_values_as_span()[68];
+  const double ppO2_arcor_sys_np = dofvec->local_values_as_span()[69];
 
-  const double ppCO2_venspl_sys_np = (*dofvec)[70];
-  const double ppO2_venspl_sys_np = (*dofvec)[71];
-  const double ppCO2_venespl_sys_np = (*dofvec)[72];
-  const double ppO2_venespl_sys_np = (*dofvec)[73];
-  const double ppCO2_venmsc_sys_np = (*dofvec)[74];
-  const double ppO2_venmsc_sys_np = (*dofvec)[75];
-  const double ppCO2_vencer_sys_np = (*dofvec)[76];
-  const double ppO2_vencer_sys_np = (*dofvec)[77];
-  const double ppCO2_vencor_sys_np = (*dofvec)[78];
-  const double ppO2_vencor_sys_np = (*dofvec)[79];
-  const double ppCO2_ven_sys_np = (*dofvec)[80];
-  const double ppO2_ven_sys_np = (*dofvec)[81];
+  const double ppCO2_venspl_sys_np = dofvec->local_values_as_span()[70];
+  const double ppO2_venspl_sys_np = dofvec->local_values_as_span()[71];
+  const double ppCO2_venespl_sys_np = dofvec->local_values_as_span()[72];
+  const double ppO2_venespl_sys_np = dofvec->local_values_as_span()[73];
+  const double ppCO2_venmsc_sys_np = dofvec->local_values_as_span()[74];
+  const double ppO2_venmsc_sys_np = dofvec->local_values_as_span()[75];
+  const double ppCO2_vencer_sys_np = dofvec->local_values_as_span()[76];
+  const double ppO2_vencer_sys_np = dofvec->local_values_as_span()[77];
+  const double ppCO2_vencor_sys_np = dofvec->local_values_as_span()[78];
+  const double ppO2_vencor_sys_np = dofvec->local_values_as_span()[79];
+  const double ppCO2_ven_sys_np = dofvec->local_values_as_span()[80];
+  const double ppO2_ven_sys_np = dofvec->local_values_as_span()[81];
 
 
   // volumes at t_{n+1} - for transport and dissociation models
-  const double V_at_l_np = (*volvec)[0];
-  const double V_v_l_np = (*volvec)[2];
-  const double V_at_r_np = (*volvec)[24];
-  const double V_v_r_np = (*volvec)[26];
+  const double V_at_l_np = volvec->local_values_as_span()[0];
+  const double V_v_l_np = volvec->local_values_as_span()[2];
+  const double V_at_r_np = volvec->local_values_as_span()[24];
+  const double V_v_r_np = volvec->local_values_as_span()[26];
   // systemic arterial compartment volume
   const double V_ar_sys_np = c_ar_sys_ * (p_ar_sys_np - z_ar_sys_ * q_vout_l_np) + v_ar_sys_u_;
   // systemic peripheral arterial compartment volume

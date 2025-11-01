@@ -228,7 +228,7 @@ class Beam3ContactOctTree
         if ((int)stdvector[j].size() < vector.num_vectors())
           FOUR_C_THROW("stdvector[{}].size() = {} is larger than vector.NumVectors() = {}", j,
               (int)stdvector[j].size(), vector.num_vectors());
-        stdvector[j][i] = vector(i)[j];
+        stdvector[j][i] = vector(i).local_values_as_span()[j];
       }
     }
   }

@@ -710,7 +710,8 @@ void Solid::ModelEvaluator::BrownianDyn::generate_gaussian_random_numbers()
                     << std::endl;
           (*randomnumbersrow)(j).get_values()[i] = maxrandforcefac * standarddeviation + meanvalue;
         }
-        else if ((*randomnumbersrow)(j)[i] < -maxrandforcefac * standarddeviation + meanvalue)
+        else if ((*randomnumbersrow)(j).local_values_as_span()[i] <
+                 -maxrandforcefac * standarddeviation + meanvalue)
         {
           std::cout << "warning: stochastic force restricted according to MAXRANDFORCE"
                        " this should not happen to often"

@@ -126,8 +126,8 @@ void FS3I::FS3IBase::check_interface_dirichlet_bc()
     int gid = slavedis->dof_row_map()->gid(i);
     if (slavemap->my_gid(gid))  // in this case, the current dof is part of the interface
     {
-      if ((*test_slaveifdirich)[slavemap->lid(gid)] == 1.0 and
-          (slaveifdirich)[slavemap->lid(gid)] != 1.0)
+      if (test_slaveifdirich->local_values_as_span()[slavemap->lid(gid)] == 1.0 and
+          slaveifdirich.local_values_as_span()[slavemap->lid(gid)] != 1.0)
       {
         FOUR_C_THROW("Dirichlet boundary conditions not matching at the interface");
       }
@@ -139,8 +139,8 @@ void FS3I::FS3IBase::check_interface_dirichlet_bc()
     int gid = masterdis->dof_row_map()->gid(i);
     if (mastermap->my_gid(gid))  // in this case, the current dof is part of the interface
     {
-      if ((*test_masterifdirich)[mastermap->lid(gid)] == 1.0 and
-          (masterifdirich)[mastermap->lid(gid)] != 1.0)
+      if (test_masterifdirich->local_values_as_span()[mastermap->lid(gid)] == 1.0 and
+          masterifdirich.local_values_as_span()[mastermap->lid(gid)] != 1.0)
       {
         FOUR_C_THROW("Dirichlet boundary conditions not matching at the interface");
       }
@@ -553,8 +553,8 @@ std::shared_ptr<Core::LinAlg::Vector<double>> FS3I::FS3IBase::calc_membrane_conc
     // here the unweighted average is uses. One could also use a logarithmic average...
     (*temp).get_values()[i] =
         0.5 *
-        ((*temp)[i] +
-            (*scatrafield1_phi2np)
+        (temp->local_values_as_span()[i] +
+            scatrafield1_phi2np->local_values_as_span()
                 [i]);  // log. average:
                        // ((*temp)[i]-(*scatrafield1_phi2n)[i])/log(((*temp)[i])/((*scatrafield1_phi2n)[i]));
                        // linear approach: 0.5*((*temp)[i]+(*scatrafield1_phi2n)[i]);

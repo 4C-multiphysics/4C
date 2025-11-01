@@ -68,7 +68,7 @@ void Thermo::ResultTest::test_node(
         if (position == "temp")
         {
           unknownpos = false;
-          result = (*temp_)[tempmap.lid(thrdisc_->dof(0, actnode, 0))];
+          result = temp_->local_values_as_span()[tempmap.lid(thrdisc_->dof(0, actnode, 0))];
         }
       }
 
@@ -80,7 +80,7 @@ void Thermo::ResultTest::test_node(
         if (position == "rate")
         {
           unknownpos = false;
-          result = (*rate_)[ratemap.lid(thrdisc_->dof(0, actnode, 0))];
+          result = rate_->local_values_as_span()[ratemap.lid(thrdisc_->dof(0, actnode, 0))];
         }
       }
 
@@ -92,7 +92,7 @@ void Thermo::ResultTest::test_node(
         if (position == "flux")
         {
           unknownpos = false;
-          result = (*flux_)[fluxmap.lid(thrdisc_->dof(0, actnode, 0))];
+          result = flux_->local_values_as_span()[fluxmap.lid(thrdisc_->dof(0, actnode, 0))];
         }
       }
 

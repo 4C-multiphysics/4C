@@ -196,23 +196,23 @@ namespace ReducedLung
     Core::LinAlg::Vector<double> flow_in(*element_row_map, true);
     for (const auto& airway : airways)
     {
-      pressure_in.replace_local_value(
-          airway.local_element_id, locally_relevant_dofs[airway.local_dof_ids[p_in]]);
-      pressure_out.replace_local_value(
-          airway.local_element_id, locally_relevant_dofs[airway.local_dof_ids[p_out]]);
-      flow_in.replace_local_value(
-          airway.local_element_id, locally_relevant_dofs[airway.local_dof_ids[q_in]]);
+      pressure_in.replace_local_value(airway.local_element_id,
+          locally_relevant_dofs.local_values_as_span()[airway.local_dof_ids[p_in]]);
+      pressure_out.replace_local_value(airway.local_element_id,
+          locally_relevant_dofs.local_values_as_span()[airway.local_dof_ids[p_out]]);
+      flow_in.replace_local_value(airway.local_element_id,
+          locally_relevant_dofs.local_values_as_span()[airway.local_dof_ids[q_in]]);
     }
     for (const auto& model : terminal_units.models)
     {
       for (size_t i = 0; i < model.data.number_of_elements(); i++)
       {
-        pressure_in.replace_local_value(
-            model.data.local_element_id[i], locally_relevant_dofs[model.data.lid_p1[i]]);
-        pressure_out.replace_local_value(
-            model.data.local_element_id[i], locally_relevant_dofs[model.data.lid_p2[i]]);
-        flow_in.replace_local_value(
-            model.data.local_element_id[i], locally_relevant_dofs[model.data.lid_q[i]]);
+        pressure_in.replace_local_value(model.data.local_element_id[i],
+            locally_relevant_dofs.local_values_as_span()[model.data.lid_p1[i]]);
+        pressure_out.replace_local_value(model.data.local_element_id[i],
+            locally_relevant_dofs.local_values_as_span()[model.data.lid_p2[i]]);
+        flow_in.replace_local_value(model.data.local_element_id[i],
+            locally_relevant_dofs.local_values_as_span()[model.data.lid_q[i]]);
       }
     }
     visualization_writer.append_result_data_vector_with_context(

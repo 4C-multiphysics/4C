@@ -429,7 +429,8 @@ void CONTACT::Beam3cmanager::shift_dis_map(
   {
     int btsolcontact_gid = (*bt_sol_discret().dof_row_map()).gid(i);
     int problem_gid = dofoffsetmap_[btsolcontact_gid];
-    double disp = disrow[(*problem_discret().dof_row_map()).lid(problem_gid)];
+    double disp =
+        disrow.local_values_as_span()[(*problem_discret().dof_row_map()).lid(problem_gid)];
     discrow.replace_global_value(btsolcontact_gid, disp);
   }
   Core::LinAlg::export_to(discrow, disccol);
@@ -824,9 +825,12 @@ void CONTACT::Beam3cmanager::set_current_positions(
 
     // nodal positions
     Core::LinAlg::Matrix<3, 1> currpos;
-    currpos(0) = node->x()[0] + disccol[bt_sol_discret().dof_col_map()->lid(dofnode[0])];
-    currpos(1) = node->x()[1] + disccol[bt_sol_discret().dof_col_map()->lid(dofnode[1])];
-    currpos(2) = node->x()[2] + disccol[bt_sol_discret().dof_col_map()->lid(dofnode[2])];
+    currpos(0) = node->x()[0] +
+                 disccol.local_values_as_span()[bt_sol_discret().dof_col_map()->lid(dofnode[0])];
+    currpos(1) = node->x()[1] +
+                 disccol.local_values_as_span()[bt_sol_discret().dof_col_map()->lid(dofnode[1])];
+    currpos(2) = node->x()[2] +
+                 disccol.local_values_as_span()[bt_sol_discret().dof_col_map()->lid(dofnode[2])];
 
     // store into currentpositions
     currentpositions[node->id()] = currpos;
@@ -880,11 +884,14 @@ void CONTACT::Beam3cmanager::set_state(std::map<int, Core::LinAlg::Matrix<3, 1>>
           const Discret::Elements::Beam3eb* ele = dynamic_cast<const Discret::Elements::Beam3eb*>(
               node->adjacent_elements()[0].user_element());
           currtan(0) =
-              ((ele->tref())[i])(0) + disccol[bt_sol_discret().dof_col_map()->lid(dofnode[3])];
+              ((ele->tref())[i])(0) +
+              disccol.local_values_as_span()[bt_sol_discret().dof_col_map()->lid(dofnode[3])];
           currtan(1) =
-              ((ele->tref())[i])(1) + disccol[bt_sol_discret().dof_col_map()->lid(dofnode[4])];
+              ((ele->tref())[i])(1) +
+              disccol.local_values_as_span()[bt_sol_discret().dof_col_map()->lid(dofnode[4])];
           currtan(2) =
-              ((ele->tref())[i])(2) + disccol[bt_sol_discret().dof_col_map()->lid(dofnode[5])];
+              ((ele->tref())[i])(2) +
+              disccol.local_values_as_span()[bt_sol_discret().dof_col_map()->lid(dofnode[5])];
         }
         else if (node->adjacent_elements()[0].user_element()->nodes()[i]->id() == node->id() and
                  node->adjacent_elements()[0].user_element()->element_type() ==
@@ -893,11 +900,14 @@ void CONTACT::Beam3cmanager::set_state(std::map<int, Core::LinAlg::Matrix<3, 1>>
           const Discret::Elements::Beam3k* ele = dynamic_cast<const Discret::Elements::Beam3k*>(
               node->adjacent_elements()[0].user_element());
           currtan(0) =
-              ((ele->tref())[i])(0) + disccol[bt_sol_discret().dof_col_map()->lid(dofnode[3])];
+              ((ele->tref())[i])(0) +
+              disccol.local_values_as_span()[bt_sol_discret().dof_col_map()->lid(dofnode[3])];
           currtan(1) =
-              ((ele->tref())[i])(1) + disccol[bt_sol_discret().dof_col_map()->lid(dofnode[4])];
+              ((ele->tref())[i])(1) +
+              disccol.local_values_as_span()[bt_sol_discret().dof_col_map()->lid(dofnode[4])];
           currtan(2) =
-              ((ele->tref())[i])(2) + disccol[bt_sol_discret().dof_col_map()->lid(dofnode[5])];
+              ((ele->tref())[i])(2) +
+              disccol.local_values_as_span()[bt_sol_discret().dof_col_map()->lid(dofnode[5])];
         }
         else if (node->adjacent_elements()[0].user_element()->nodes()[i]->id() == node->id() and
                  node->adjacent_elements()[0].user_element()->element_type() ==
@@ -906,11 +916,14 @@ void CONTACT::Beam3cmanager::set_state(std::map<int, Core::LinAlg::Matrix<3, 1>>
           const Discret::Elements::Beam3r* ele = dynamic_cast<const Discret::Elements::Beam3r*>(
               node->adjacent_elements()[0].user_element());
           currtan(0) =
-              ((ele->tref())[i])(0) + disccol[bt_sol_discret().dof_col_map()->lid(dofnode[6])];
+              ((ele->tref())[i])(0) +
+              disccol.local_values_as_span()[bt_sol_discret().dof_col_map()->lid(dofnode[6])];
           currtan(1) =
-              ((ele->tref())[i])(1) + disccol[bt_sol_discret().dof_col_map()->lid(dofnode[7])];
+              ((ele->tref())[i])(1) +
+              disccol.local_values_as_span()[bt_sol_discret().dof_col_map()->lid(dofnode[7])];
           currtan(2) =
-              ((ele->tref())[i])(2) + disccol[bt_sol_discret().dof_col_map()->lid(dofnode[8])];
+              ((ele->tref())[i])(2) +
+              disccol.local_values_as_span()[bt_sol_discret().dof_col_map()->lid(dofnode[8])];
         }
       }
       // store into currenttangents

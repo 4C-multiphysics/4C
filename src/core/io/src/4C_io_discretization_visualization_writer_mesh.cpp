@@ -48,7 +48,8 @@ namespace Core::IO
       // copy each dof value of node
       for (int idof = 0; idof < number_of_dofs_per_node; ++idof)
         (*multi)(idof).local_values_as_span()[inode] =
-            input_vector[vectormap.lid(dis.dof(number_of_dofset, node, idof))];
+            input_vector
+                .local_values_as_span()[vectormap.lid(dis.dof(number_of_dofset, node, idof))];
     }
 
     return multi;
@@ -393,7 +394,7 @@ namespace Core::IO
       {
         const auto& column = result_data_elementbased(icpe);
 
-        cell_result_data.push_back(column[iele]);
+        cell_result_data.push_back(column.local_values_as_span()[iele]);
       }
 
       ++cellcounter;

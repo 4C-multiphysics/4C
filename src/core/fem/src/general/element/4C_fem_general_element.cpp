@@ -786,7 +786,7 @@ Core::GeometricSearch::BoundingVolume Core::Elements::Element::get_bounding_volu
       const int lid = result_data_dofbased.get_map().lid(nodedofs[i_dir]);
 
       if (lid > -1)
-        point(i_dir) = node->x()[i_dir] + result_data_dofbased[lid];
+        point(i_dir) = node->x()[i_dir] + result_data_dofbased.local_values_as_span()[lid];
       else
         FOUR_C_THROW("received illegal dof local id: {}", lid);
     }

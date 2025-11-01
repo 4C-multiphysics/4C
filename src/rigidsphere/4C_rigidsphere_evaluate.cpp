@@ -401,7 +401,7 @@ void Discret::Elements::Rigidsphere::calc_stochastic_force(
   {
     for (unsigned int k = 0; k < 3; ++k)
     {
-      (*force)(k) -= sqrt(gamma) * (*randomnumbers)(k)[lid()];
+      (*force)(k) -= sqrt(gamma) * (*randomnumbers)(k).local_values_as_span()[lid()];
     }
   }
 

@@ -55,7 +55,7 @@ namespace Mat
         if (matparams_[parametername]->global_length() == 1)
         {
           // we have a global value hence we directly return the first entry
-          return (*matparams_[parametername])[0];
+          return matparams_[parametername]->local_values_as_span()[0];
         }
         // If someone calls this functions without a valid EleID and we have element based values
         // throw error
@@ -68,7 +68,8 @@ namespace Mat
         else
         {
           // calculate LID here, instead of before each call
-          return (*matparams_[parametername])[matparams_[parametername]->get_map().lid(EleId)];
+          return matparams_[parametername]
+              ->local_values_as_span()[matparams_[parametername]->get_map().lid(EleId)];
         }
       }
 

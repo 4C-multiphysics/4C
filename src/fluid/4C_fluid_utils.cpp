@@ -245,12 +245,13 @@ std::shared_ptr<Core::LinAlg::Vector<double>> FLD::Utils::StressManager::calc_st
   // compute traction values at specified nodes; otherwise do not touch the zero values
   for (int i = 0; i < integratedshapefunc->local_length(); i++)
   {
-    if ((*integratedshapefunc)[i] != 0.0)
+    if (integratedshapefunc->local_values_as_span()[i] != 0.0)
     {
       // overwrite integratedshapefunc values with the calculated traction coefficients,
       // which are reconstructed out of the nodal forces (trueresidual_) using the
       // same shape functions on the boundary as for velocity and pressure.
-      (*integratedshapefunc).get_values()[i] = (trueresidual)[i] / (*integratedshapefunc)[i];
+      (*integratedshapefunc).get_values()[i] =
+          trueresidual.local_values_as_span()[i] / integratedshapefunc->local_values_as_span()[i];
     }
   }
 
@@ -330,7 +331,7 @@ std::shared_ptr<Core::LinAlg::Vector<double>> FLD::Utils::StressManager::calc_wa
     double L = 0.0;
     for (int j = 0; j < numdim_; j++)
     {
-      L += ((*ndnorm0)[i + j]) * ((*ndnorm0)[i + j]);
+      L += (ndnorm0->local_values_as_span()[i + j]) * (ndnorm0->local_values_as_span()[i + j]);
     }
     L = sqrt(L);
 
@@ -359,13 +360,13 @@ std::shared_ptr<Core::LinAlg::Vector<double>> FLD::Utils::StressManager::calc_wa
     double normal_stress = 0.0;
     for (int j = 0; j < numdim_; j++)
     {
-      normal_stress += (*wss)[i + j] * (*ndnorm0)[i + j];
+      normal_stress += wss->local_values_as_span()[i + j] * ndnorm0->local_values_as_span()[i + j];
     }
 
     // subtract the normal stresses from traction
     for (int j = 0; j < numdim_; j++)
     {
-      (*wss).get_values()[i + j] -= normal_stress * (*ndnorm0)[i + j];
+      (*wss).get_values()[i + j] -= normal_stress * ndnorm0->local_values_as_span()[i + j];
     }
   }
 
@@ -656,8 +657,8 @@ void FLD::Utils::lift_drag(const std::shared_ptr<const Core::FE::Discretization>
         Core::LinAlg::Matrix<3, 1> actforces(Core::LinAlg::Initialization::zero);
         for (int idim = 0; idim < ndim; idim++)
         {
-          actforces(idim, 0) = (trueresidual)[rowdofmap.lid(dof[idim])];
-          myforces[idim] += (trueresidual)[rowdofmap.lid(dof[idim])];
+          actforces(idim, 0) = trueresidual.local_values_as_span()[rowdofmap.lid(dof[idim])];
+          myforces[idim] += trueresidual.local_values_as_span()[rowdofmap.lid(dof[idim])];
         }
         // z-component remains zero for ndim=2
 
@@ -673,7 +674,7 @@ void FLD::Utils::lift_drag(const std::shared_ptr<const Core::FE::Discretization>
           if (dispnp == nullptr) FOUR_C_THROW("Displacement expected for ale fluid!");
           for (int idim = 0; idim < ndim; idim++)
           {
-            distances(idim, 0) += (*dispnp)[rowdofmap.lid(dof[idim])];
+            distances(idim, 0) += dispnp->local_values_as_span()[rowdofmap.lid(dof[idim])];
           }
         }
 
@@ -862,7 +863,7 @@ std::map<int, double> FLD::Utils::compute_flow_rates(Core::FE::Discretization& d
     double local_flowrate = 0.0;
     for (int i = 0; i < dofrowmap->num_my_elements(); i++)
     {
-      local_flowrate += ((*flowrates)[i]);
+      local_flowrate += (flowrates->local_values_as_span()[i]);
     }
 
     double flowrate = 0.0;

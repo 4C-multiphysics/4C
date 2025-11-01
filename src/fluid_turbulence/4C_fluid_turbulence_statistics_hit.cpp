@@ -415,12 +415,12 @@ namespace FLD
       // get local dof id corresponding to the global id
       int lid = discret_->dof_row_map()->lid(dofs[0]);
       // set value
-      (local_u1)[pos] = (*velnp)[lid];
+      (local_u1)[pos] = velnp->local_values_as_span()[lid];
       // analogously for remaining directions
       lid = discret_->dof_row_map()->lid(dofs[1]);
-      (local_u2)[pos] = (*velnp)[lid];
+      (local_u2)[pos] = velnp->local_values_as_span()[lid];
       lid = discret_->dof_row_map()->lid(dofs[2]);
-      (local_u3)[pos] = (*velnp)[lid];
+      (local_u3)[pos] = velnp->local_values_as_span()[lid];
     }
 
     // get values form all processors
@@ -765,12 +765,12 @@ namespace FLD
       // get local dof id corresponding to the global id
       int lid = discret_->dof_row_map()->lid(dofs[0]);
       // set value
-      (local_u1)[pos] = (*velnp)[lid];
+      (local_u1)[pos] = velnp->local_values_as_span()[lid];
       // analogously for remaining directions
       lid = discret_->dof_row_map()->lid(dofs[1]);
-      (local_u2)[pos] = (*velnp)[lid];
+      (local_u2)[pos] = velnp->local_values_as_span()[lid];
       lid = discret_->dof_row_map()->lid(dofs[2]);
-      (local_u3)[pos] = (*velnp)[lid];
+      (local_u3)[pos] = velnp->local_values_as_span()[lid];
     }
 
     // set also solution of scalar field
@@ -816,7 +816,7 @@ namespace FLD
       // get local dof id corresponding to the global id
       int lid = scatradiscret_->dof_row_map()->lid(dofs[0]);
       // set value
-      (local_phi)[pos] = (*phinp)[lid];
+      (local_phi)[pos] = phinp->local_values_as_span()[lid];
     }
 
     // get values form all processors

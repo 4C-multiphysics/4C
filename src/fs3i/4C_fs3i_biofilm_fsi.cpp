@@ -482,7 +482,7 @@ void FS3I::BiofilmFSI::inner_timeloop()
 
         //        int lnodeid=lnode->LID();
 
-        double lambdai = (*lambdafull)[lid];
+        double lambdai = lambdafull->local_values_as_span()[lid];
         int lnodeid = noderowmap->lid(lnode->id());
         (lambdanode)(index).replace_local_value(lnodeid, lambdai);
       }
@@ -509,7 +509,7 @@ void FS3I::BiofilmFSI::inner_timeloop()
       for (int i = 0; i < numdim; ++i)
       {
         doflids[i] = strudis->dof_row_map()->lid(strunodedofs[i]);
-        unitnormal[i] = (*nodalnormals)[doflids[i]];
+        unitnormal[i] = nodalnormals->local_values_as_span()[doflids[i]];
         temp += unitnormal[i] * unitnormal[i];
       }
       double unitnormalabsval = sqrt(temp);
@@ -577,13 +577,13 @@ void FS3I::BiofilmFSI::inner_timeloop()
       double temptangtractwo = 0.0;
       for (int index = 0; index < numdim; ++index)
       {
-        double fluxcomp = (*strufluxn)(index)[lnodeid];
+        double fluxcomp = (*strufluxn)(index).local_values_as_span()[lnodeid];
         tempflux += fluxcomp * unitnormal[index];
         // for the calculation of the growth and erosion both the tangential and the normal
         // components of the forces acting on the interface are important.
         // Since probably they will have a different effect on the biofilm growth,
         // they are calculated separately and different coefficients can be used.
-        double traccomp = lambdanode(index)[lnodeid];
+        double traccomp = lambdanode(index).local_values_as_span()[lnodeid];
         tempnormtrac += traccomp * unitnormal[index];
         temptangtracone += traccomp * unittangentone[index];
         temptangtractwo += traccomp * unittangenttwo[index];
@@ -621,10 +621,14 @@ void FS3I::BiofilmFSI::inner_timeloop()
       int gnodeid = condnodemap->gid(i);
       int lnodeid = strudis->node_row_map()->lid(gnodeid);
 
-      (*norminflux_).get_values()[lnodeid] = normtempinflux_[lnodeid] / step_fsi_;
-      (*normtraction_).get_values()[lnodeid] = normtemptraction_[lnodeid] / step_fsi_;
-      (*tangtractionone_).get_values()[lnodeid] = tangtemptractionone_[lnodeid] / step_fsi_;
-      (*tangtractiontwo_).get_values()[lnodeid] = tangtemptractiontwo_[lnodeid] / step_fsi_;
+      (*norminflux_).get_values()[lnodeid] =
+          normtempinflux_.local_values_as_span()[lnodeid] / step_fsi_;
+      (*normtraction_).get_values()[lnodeid] =
+          normtemptraction_.local_values_as_span()[lnodeid] / step_fsi_;
+      (*tangtractionone_).get_values()[lnodeid] =
+          tangtemptractionone_.local_values_as_span()[lnodeid] / step_fsi_;
+      (*tangtractiontwo_).get_values()[lnodeid] =
+          tangtemptractiontwo_.local_values_as_span()[lnodeid] / step_fsi_;
     }
   }
 
@@ -680,7 +684,8 @@ void FS3I::BiofilmFSI::compute_interface_vectors(Core::LinAlg::Vector<double>& i
     double temp = 0.;
     for (int j = 0; j < numdim; ++j)
     {
-      unitnormal[j] = (*nodalnormals)[strudis->dof_row_map()->lid(globaldofs[j])];
+      unitnormal[j] =
+          nodalnormals->local_values_as_span()[strudis->dof_row_map()->lid(globaldofs[j])];
       temp += unitnormal[j] * unitnormal[j];
     }
     double unitnormalabsval = sqrt(temp);
@@ -894,7 +899,7 @@ void FS3I::BiofilmFSI::vec_to_scatravec(Core::FE::Discretization& scatradis,
 
     for (int index = 0; index < numdim; ++index)
     {
-      double vecval = (vec)[index + numdim * lnodeid];
+      double vecval = vec.local_values_as_span()[index + numdim * lnodeid];
 
       // insert value into node-based vector
       scatravec.replace_local_value(lnodeid, index, vecval);

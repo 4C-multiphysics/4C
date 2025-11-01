@@ -1271,8 +1271,8 @@ void PoroElastScaTra::PoroScatraMono::fd_check()
 
     if (i == spaltenr)
     {
-      std::cout << "rhs_: " << (rhs_copy)[zeilennr] << std::endl;
-      std::cout << "rhs_old: " << (rhs_old)[zeilennr] << std::endl;
+      std::cout << "rhs_: " << rhs_copy.local_values_as_span()[zeilennr] << std::endl;
+      std::cout << "rhs_old: " << rhs_old.local_values_as_span()[zeilennr] << std::endl;
     }
 
     rhs_copy.update(-1.0, rhs_old, 1.0);
@@ -1281,7 +1281,7 @@ void PoroElastScaTra::PoroScatraMono::fd_check()
     int* index = &i;
     for (int j = 0; j < dofs; ++j)
     {
-      double value = (rhs_copy)[j];
+      double value = rhs_copy.local_values_as_span()[j];
       stiff_approx.insert_global_values(j, 1, &value, index);
 
       if ((j == zeilennr) and (i == spaltenr))

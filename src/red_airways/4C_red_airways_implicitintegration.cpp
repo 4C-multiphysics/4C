@@ -267,17 +267,18 @@ Airway::RedAirwayImplicitTimeInt::RedAirwayImplicitTimeInt(
 
   for (int i = 0; i < radii_->local_length(); i++)
   {
-    if ((*radii_in)[i] == 0.0)
+    if ((radii_in->local_values_as_span()[i]) == 0.0)
     {
-      (*radii_).get_values()[i] = (*radii_out)[i];
+      (*radii_).get_values()[i] = radii_out->local_values_as_span()[i];
     }
-    else if ((*radii_out)[i] == 0.0)
+    else if (radii_out->local_values_as_span()[i] == 0.0)
     {
-      (*radii_).get_values()[i] = (*radii_in)[i];
+      (*radii_).get_values()[i] = radii_in->local_values_as_span()[i];
     }
     else
     {
-      (*radii_).get_values()[i] = 0.5 * ((*radii_in)[i] + (*radii_out)[i]);
+      (*radii_).get_values()[i] =
+          0.5 * (radii_in->local_values_as_span()[i] + radii_out->local_values_as_span()[i]);
     }
   }
 
@@ -321,7 +322,8 @@ Airway::RedAirwayImplicitTimeInt::RedAirwayImplicitTimeInt(
   for (int j = 0; j < (discret_->num_my_col_elements()); j++)
   {
     // check if element is an airway
-    if (((*generations_)[j] != -1) and ((*generations_)[j] != -2))
+    if ((generations_->local_values_as_span()[j] != -1) and
+        (generations_->local_values_as_span()[j] != -2))
     {
       int GID = discret_->element_col_map()->gid(j);  // global element ID
       const Core::Elements::ElementType& ele_type = discret_->g_element(GID)->element_type();
@@ -404,7 +406,7 @@ void Airway::RedAirwayImplicitTimeInt::compute_vol0_for_pre_stress()
   for (int i = 0; i < (discret_->num_my_col_elements()); i++)
   {
     // check if element is an acinus
-    if ((*generations_)[i] == -1)
+    if ((generations_->local_values_as_span()[i]) == -1)
     {
       int GID = discret_->element_col_map()->gid(i);  // global element ID
 

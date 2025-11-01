@@ -1631,7 +1631,7 @@ void FPSI::Monolithic::fpsifd_check()
     for (int j_loc = 0; j_loc < dofs; ++j_loc)  // loop over rows
     {
       int j = dof_row_map()->gid(j_loc);
-      double value = (rhs_copy)[j_loc];
+      double value = rhs_copy.local_values_as_span()[j_loc];
       stiff_approx.insert_global_values(j, 1, &value, index);
     }  // j-loop (rows)
 

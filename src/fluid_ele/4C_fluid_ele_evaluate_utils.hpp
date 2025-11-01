@@ -1348,16 +1348,17 @@ namespace FLD
 
       for (int dimi = 0; dimi < 3; ++dimi)
       {
-        evel_hat(dimi, nn) = ((col_filtered_vel)(dimi))[lid];
+        evel_hat(dimi, nn) = (col_filtered_vel)(dimi).local_values_as_span()[lid];
 
         for (int dimj = 0; dimj < 3; ++dimj)
         {
           int index = 3 * dimi + dimj;
 
-          ereynoldsstress_hat(index, nn) = (((col_filtered_reynoldsstress)(index)))[lid];
+          ereynoldsstress_hat(index, nn) =
+              (col_filtered_reynoldsstress)(index).local_values_as_span()[lid];
 
           efiltered_modeled_subgrid_stress_hat(index, nn) =
-              (((col_filtered_modeled_subgrid_stress)(index)))[lid];
+              (col_filtered_modeled_subgrid_stress)(index).local_values_as_span()[lid];
         }
       }
     }
@@ -1368,12 +1369,12 @@ namespace FLD
       {
         int lid = (ele->nodes()[nn])->lid();
 
-        edens_hat(0, nn) = (*col_filtered_dens)[lid];
-        edensstrainrate_hat(0, nn) = (*col_filtered_dens_strainrate)[lid];
+        edens_hat(0, nn) = col_filtered_dens->local_values_as_span()[lid];
+        edensstrainrate_hat(0, nn) = col_filtered_dens_strainrate->local_values_as_span()[lid];
 
         for (int dimi = 0; dimi < 3; ++dimi)
         {
-          edensvel_hat(dimi, nn) = (((*col_filtered_dens_vel)(dimi)))[lid];
+          edensvel_hat(dimi, nn) = (*col_filtered_dens_vel)(dimi).local_values_as_span()[lid];
         }
       }
     }
@@ -1821,9 +1822,9 @@ namespace FLD
         {
           int index = 3 * dimi + dimj;
 
-          estrainrate_hat(index, nn) = (((col_filtered_strainrate)(index)))[lid];
+          estrainrate_hat(index, nn) = (col_filtered_strainrate)(index).local_values_as_span()[lid];
 
-          ealphaij_hat(index, nn) = (((col_filtered_alphaij)(index)))[lid];
+          ealphaij_hat(index, nn) = (col_filtered_alphaij)(index).local_values_as_span()[lid];
         }
       }
     }
@@ -1832,8 +1833,8 @@ namespace FLD
     {
       int lid = (ele->nodes()[nn])->lid();
 
-      eexpression_hat(0, nn) = (col_filtered_expression)[lid];
-      ealpha2_hat(0, nn) = (col_filtered_alpha2)[lid];
+      eexpression_hat(0, nn) = col_filtered_expression.local_values_as_span()[lid];
+      ealpha2_hat(0, nn) = col_filtered_alpha2.local_values_as_span()[lid];
     }
 
     // number of spatial dimensions is always 3

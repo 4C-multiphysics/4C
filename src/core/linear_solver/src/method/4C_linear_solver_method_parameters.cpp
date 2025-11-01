@@ -150,7 +150,7 @@ void Core::LinearSolver::Parameters::fix_null_space(std::string field,
       int gid = newmap.gid(j);
       int olid = oldmap.lid(gid);
       if (olid == -1) continue;
-      nullspaceDataNew.get_values()[j] = nullspaceData[olid];
+      nullspaceDataNew.get_values()[j] = nullspaceData.local_values_as_span()[olid];
     }
   }
 

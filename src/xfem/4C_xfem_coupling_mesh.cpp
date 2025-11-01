@@ -812,9 +812,9 @@ void XFEM::MeshCouplingBC::compute_interface_velocity_from_displacement(
     int gid = nodedofset[dof];
     int lid = idispnp_->get_map().lid(gid);
 
-    const double dispnp = (*idispnp_)[lid];
-    const double dispn = (*idispn_)[lid];
-    const double veln = (*iveln_)[lid];
+    const double dispnp = idispnp_->local_values_as_span()[lid];
+    const double dispn = idispn_->local_values_as_span()[lid];
+    const double veln = iveln_->local_values_as_span()[lid];
 
     final_values[dof] =
         1.0 / (thetaiface * dt) * (dispnp - dispn) - (1.0 - thetaiface) / thetaiface * veln;
@@ -1916,7 +1916,7 @@ void XFEM::MeshCouplingFSI::lift_drag(const int step, const double time) const
       for (int isd = 0; isd < nsd; ++isd)
       {
         // [// minus to get correct sign of lift and drag (force acting on the body) ]
-        c(isd) += (*iforcecol)[dofcolmap->lid(dof[isd])];
+        c(isd) += iforcecol->local_values_as_span()[dofcolmap->lid(dof[isd])];
       }
     }
 

@@ -257,9 +257,10 @@ bool ScaTra::LevelSetAlgorithm::convergence_check_reinit()
 
     for (int inode = 0; inode < discret_->num_my_row_nodes(); inode++)
     {
-      if (std::abs((*phin_)[inode]) < reinitbandwidth_)
+      if (std::abs(phin_->local_values_as_span()[inode]) < reinitbandwidth_)
       {
-        local_sum += std::abs((*phinp_)[inode] - (*phin_)[inode]);
+        local_sum +=
+            std::abs(phinp_->local_values_as_span()[inode] - phin_->local_values_as_span()[inode]);
         local_num_nodes += 1;
       }
     }
@@ -409,7 +410,7 @@ void ScaTra::LevelSetAlgorithm::calc_node_based_reinit_vel()
     for (int lnodeid = 0; lnodeid < discret_->num_my_row_nodes(); lnodeid++)
     {
       // store velocity in reinitialization velocity
-      const double val = (*velcomp)[lnodeid];
+      const double val = velcomp->local_values_as_span()[lnodeid];
       (*nb_grad_val_)(idim).replace_local_value(lnodeid, val);
     }
   }
@@ -865,7 +866,7 @@ void ScaTra::LevelSetAlgorithm::reinit_geo(
               if (fabs(patchdist) < fabs(mindist))
               {
                 // if G-value at the node is negative, the minimal distance has to be negative
-                if ((*phinp_)[doflid] < 0.0)
+                if (phinp_->local_values_as_span()[doflid] < 0.0)
                   mindist = -patchdist;
                 else
                   mindist = patchdist;
@@ -882,7 +883,7 @@ void ScaTra::LevelSetAlgorithm::reinit_geo(
             if (fabs(edgedist) < fabs(mindist))
             {
               // if G-value at the node is negative, the minimal distance has to be negative
-              if ((*phinp_)[doflid] < 0.0)
+              if (phinp_->local_values_as_span()[doflid] < 0.0)
                 mindist = -edgedist;
               else
                 mindist = edgedist;
@@ -898,7 +899,7 @@ void ScaTra::LevelSetAlgorithm::reinit_geo(
             if (fabs(vertexdist) < fabs(mindist))
             {
               // if G-value at the node is negative, the minimal distance has to be negative
-              if ((*phinp_)[doflid] < 0.0)
+              if (phinp_->local_values_as_span()[doflid] < 0.0)
                 mindist = -vertexdist;
               else
                 mindist = vertexdist;
@@ -946,7 +947,8 @@ void ScaTra::LevelSetAlgorithm::reinit_geo(
     else
     {
       // correct the sign of estimated distance
-      if ((*phinp_)[doflid] < 0.0) eledistance.front().second = -eledistance.front().second;
+      if (phinp_->local_values_as_span()[doflid] < 0.0)
+        eledistance.front().second = -eledistance.front().second;
     }
 
     phinp_->replace_local_value(doflid, eledistance.front().second);

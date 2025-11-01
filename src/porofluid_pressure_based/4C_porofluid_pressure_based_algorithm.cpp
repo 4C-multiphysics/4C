@@ -683,7 +683,7 @@ void PoroPressureBased::PorofluidAlgorithm::collect_runtime_output_data()
         // get value for each component of flux vector
         for (int idim = 0; idim < dim; idim++)
         {
-          double value = ((*flux_)(k * dim + idim))[i];
+          double value = (*flux_)(k * dim + idim).local_values_as_span()[i];
           flux_k.replace_local_value(i, idim, value);
         }
       }
@@ -708,7 +708,7 @@ void PoroPressureBased::PorofluidAlgorithm::collect_runtime_output_data()
       {
         for (int idim = 0; idim < num_dim; idim++)
         {
-          double value = ((*phase_velocities_)(k * num_dim + idim))[i];
+          double value = (*phase_velocities_)(k * num_dim + idim).local_values_as_span()[i];
           velocity_k.replace_local_value(i, idim, value);
         }
       }
@@ -1016,7 +1016,8 @@ void PoroPressureBased::PorofluidAlgorithm::apply_additional_dbc_for_vol_frac_pr
           // if not already in original dirich map     &&   if it is not a valid volume fraction
           // pressure dof identified with < 1
           if (dbcmaps_->cond_map()->lid(dofs[idof]) == -1 &&
-              (int)(*valid_volfracpress_dofs_)[discret_->dof_row_map()->lid(dofs[idof])] < 1)
+              (int)valid_volfracpress_dofs_
+                      ->local_values_as_span()[discret_->dof_row_map()->lid(dofs[idof])] < 1)
             if (not(std::find(mydirichdofs.begin(), mydirichdofs.end(), dofs[idof]) !=
                     mydirichdofs.end()))
             {
@@ -1446,8 +1447,8 @@ void PoroPressureBased::PorofluidAlgorithm::reconstruct_pressures_and_saturation
     // evaluations
     for (int i = 0; i < discret_->dof_row_map()->num_my_elements(); i++)
     {
-      pressure_->get_values()[i] *= 1.0 / (*counter)[i];
-      saturation_->get_values()[i] *= 1.0 / (*counter)[i];
+      pressure_->get_values()[i] *= 1.0 / counter->local_values_as_span()[i];
+      saturation_->get_values()[i] *= 1.0 / counter->local_values_as_span()[i];
     }
   }
 
@@ -1490,7 +1491,7 @@ void PoroPressureBased::PorofluidAlgorithm::reconstruct_solid_pressures()
   // evaluations
   for (int i = 0; i < discret_->dof_row_map(nds_solidpressure_)->num_my_elements(); i++)
   {
-    (*solidpressure_).get_values()[i] *= 1.0 / (*counter)[i];
+    (*solidpressure_).get_values()[i] *= 1.0 / counter->local_values_as_span()[i];
   }
 }
 
@@ -1571,7 +1572,7 @@ void PoroPressureBased::PorofluidAlgorithm::reconstruct_porosity()
   // evaluations
   for (int i = 0; i < discret_->dof_row_map(nds_solidpressure_)->num_my_elements(); i++)
   {
-    porosity_->get_values()[i] *= 1.0 / (*counter)[i];
+    porosity_->get_values()[i] *= 1.0 / counter->local_values_as_span()[i];
   }
 }
 
@@ -1612,7 +1613,7 @@ void PoroPressureBased::PorofluidAlgorithm::reconstruct_volfrac_blood_lung()
   // evaluations
   for (int i = 0; i < discret_->dof_row_map(nds_solidpressure_)->num_my_elements(); i++)
   {
-    volfrac_blood_lung_->get_values()[i] *= 1.0 / (*counter)[i];
+    volfrac_blood_lung_->get_values()[i] *= 1.0 / counter->local_values_as_span()[i];
   }
 }
 
@@ -1655,7 +1656,7 @@ void PoroPressureBased::PorofluidAlgorithm::reconstruct_determinant_of_derformat
   // evaluations
   for (int i = 0; i < discret_->dof_row_map(nds_solidpressure_)->num_my_elements(); i++)
   {
-    det_def_grad_->get_values()[i] *= 1.0 / (*counter)[i];
+    det_def_grad_->get_values()[i] *= 1.0 / counter->local_values_as_span()[i];
   }
 }
 
@@ -2287,8 +2288,8 @@ void PoroPressureBased::PorofluidAlgorithm::fd_check()
       }
 
       // finite difference suggestion (first divide by epsilon and then add for better conditioning)
-      const double fdval =
-          -(*residual_)[rowlid] / fdcheckeps_ + (rhs_original)[rowlid] / fdcheckeps_;
+      const double fdval = -residual_->local_values_as_span()[rowlid] / fdcheckeps_ +
+                           rhs_original.local_values_as_span()[rowlid] / fdcheckeps_;
 
       // confirm accuracy of first comparison
       if (abs(fdval) > 1.e-17 and abs(fdval) < 1.e-15)
@@ -2319,10 +2320,10 @@ void PoroPressureBased::PorofluidAlgorithm::fd_check()
       else
       {
         // left-hand side in second comparison
-        const double left = entry - (rhs_original)[rowlid] / fdcheckeps_;
+        const double left = entry - rhs_original.local_values_as_span()[rowlid] / fdcheckeps_;
 
         // right-hand side in second comparison
-        const double right = -(*residual_)[rowlid] / fdcheckeps_;
+        const double right = -residual_->local_values_as_span()[rowlid] / fdcheckeps_;
 
         // confirm accuracy of second comparison
         if (abs(right) > 1.e-17 and abs(right) < 1.e-15)

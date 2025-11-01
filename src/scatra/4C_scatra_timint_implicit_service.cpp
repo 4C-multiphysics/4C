@@ -348,8 +348,8 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> ScaTra::ScaTraTimIntImpl::cal
 
       // compute normal boundary fluxes
       for (int idof = 0; idof < dofrowmap.num_my_elements(); ++idof)
-        (*normalfluxes).get_values()[idof] =
-            (*trueresidual_boundary)[idof] / (*integratedshapefunc)[idof];
+        (*normalfluxes).get_values()[idof] = trueresidual_boundary->local_values_as_span()[idof] /
+                                             integratedshapefunc->local_values_as_span()[idof];
 
       // get value of boundary integral on this processor
       boundaryint = params.get<double>("area");
@@ -411,7 +411,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> ScaTra::ScaTraTimIntImpl::cal
           const int doflid = dofrowmap.lid(dofgid);
 
           // compute integral value for every degree of freedom
-          normfluxintegral[idof] += (*trueresidual_boundary)[doflid];
+          normfluxintegral[idof] += trueresidual_boundary->local_values_as_span()[doflid];
 
           // care for the slave nodes of rotationally symm. periodic boundary conditions
           double rotangle(0.0);
@@ -427,8 +427,9 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> ScaTra::ScaTraTimIntImpl::cal
             for (int idim = 0; idim < 3; idim++)
             {
               auto& normalcomp = (*normals_)(idim);
-              double normalveccomp = normalcomp[lnodid];
-              flux->replace_global_value(dofgid, idim, (*normalfluxes)[doflid] * normalveccomp);
+              double normalveccomp = normalcomp.local_values_as_span()[lnodid];
+              flux->replace_global_value(
+                  dofgid, idim, normalfluxes->local_values_as_span()[doflid] * normalveccomp);
             }
           }
         }
@@ -689,7 +690,7 @@ void ScaTra::ScaTraTimIntImpl::compute_density()
       if (localdofid < 0) FOUR_C_THROW("Local dof ID not found in dof map!");
 
       // add contribution of scalar k to nodal density value
-      density += densific_[k] * ((*(phiafnp()))[localdofid] - c0_[k]);
+      density += densific_[k] * ((*phiafnp()).local_values_as_span()[localdofid] - c0_[k]);
     }
 
     // insert nodal density value into global density vector
@@ -848,9 +849,12 @@ void ScaTra::ScaTraTimIntImpl::add_flux_approx_to_parameter_list(Teuchos::Parame
     {
       Core::Nodes::Node* actnode = discret_->l_row_node(i);
       int dofgid = discret_->dof(0, actnode, k);
-      fluxk.replace_local_value(i, 0, ((*flux)(0))[(flux->get_map()).lid(dofgid)]);
-      fluxk.replace_local_value(i, 1, ((*flux)(1))[(flux->get_map()).lid(dofgid)]);
-      fluxk.replace_local_value(i, 2, ((*flux)(2))[(flux->get_map()).lid(dofgid)]);
+      fluxk.replace_local_value(
+          i, 0, ((*flux)(0)).local_values_as_span()[(flux->get_map()).lid(dofgid)]);
+      fluxk.replace_local_value(
+          i, 1, ((*flux)(1)).local_values_as_span()[(flux->get_map()).lid(dofgid)]);
+      fluxk.replace_local_value(
+          i, 2, ((*flux)(2)).local_values_as_span()[(flux->get_map()).lid(dofgid)]);
     }
 
     auto tmp = std::make_shared<Core::LinAlg::MultiVector<double>>(
@@ -890,9 +894,9 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> ScaTra::ScaTraTimIntImpl::com
   auto& zcomp = (*normal)(2);
   for (int i = 0; i < numrownodes; ++i)
   {
-    double x = xcomp[i];
-    double y = ycomp[i];
-    double z = zcomp[i];
+    double x = xcomp.local_values_as_span()[i];
+    double y = ycomp.local_values_as_span()[i];
+    double z = zcomp.local_values_as_span()[i];
     double norm = sqrt(x * x + y * y + z * z);
     // form the unit normal vector
     if (norm > 1e-15)
@@ -1156,9 +1160,9 @@ void ScaTra::ScaTraTimIntImpl::collect_output_flux_data(
       Core::Nodes::Node* actnode = discret_->l_row_node(i);
       int dofgid = discret_->dof(0, actnode, writefluxid - 1);
       // get value for each component of flux vector
-      double xvalue = ((*flux)(0))[(flux->get_map()).lid(dofgid)];
-      double yvalue = ((*flux)(1))[(flux->get_map()).lid(dofgid)];
-      double zvalue = ((*flux)(2))[(flux->get_map()).lid(dofgid)];
+      double xvalue = (*flux)(0).local_values_as_span()[(flux->get_map()).lid(dofgid)];
+      double yvalue = (*flux)(1).local_values_as_span()[(flux->get_map()).lid(dofgid)];
+      double zvalue = (*flux)(2).local_values_as_span()[(flux->get_map()).lid(dofgid)];
       // care for the slave nodes of rotationally symm. periodic boundary conditions
       double rotangle(0.0);  // already converted to radians
       bool havetorotate = FLD::is_slave_node_of_rot_sym_pbc(*discret_, actnode, rotangle);
@@ -1849,8 +1853,8 @@ void ScaTra::ScaTraTimIntImpl::fd_check()
       }
 
       // finite difference suggestion (first divide by epsilon and then add for better conditioning)
-      const double fdval =
-          -(*residual_)[rowlid] / fdcheckeps_ + (rhs_original)[rowlid] / fdcheckeps_;
+      const double fdval = -residual_->local_values_as_span()[rowlid] / fdcheckeps_ +
+                           rhs_original.local_values_as_span()[rowlid] / fdcheckeps_;
 
       // confirm accuracy of first comparison
       if (abs(fdval) > 1.e-17 and abs(fdval) < 1.e-15)
@@ -1881,10 +1885,10 @@ void ScaTra::ScaTraTimIntImpl::fd_check()
       else
       {
         // left-hand side in second comparison
-        const double left = entry - (rhs_original)[rowlid] / fdcheckeps_;
+        const double left = entry - rhs_original.local_values_as_span()[rowlid] / fdcheckeps_;
 
         // right-hand side in second comparison
-        const double right = -(*residual_)[rowlid] / fdcheckeps_;
+        const double right = -residual_->local_values_as_span()[rowlid] / fdcheckeps_;
 
         // confirm accuracy of second comparison
         if (abs(right) > 1.e-17 and abs(right) < 1.e-15)

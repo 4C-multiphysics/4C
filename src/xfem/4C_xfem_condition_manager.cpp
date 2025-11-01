@@ -570,8 +570,8 @@ void XFEM::ConditionManager::set_minimum(Core::LinAlg::Vector<double>& vec1,
   // loop all nodes on the processor
   for (int lnodeid = 0; lnodeid < bg_dis_->num_my_row_nodes(); lnodeid++)
   {
-    double val1 = (vec1)[lnodeid];
-    double val2 = (vec2)[lnodeid];
+    double val1 = vec1.local_values_as_span()[lnodeid];
+    double val2 = vec2.local_values_as_span()[lnodeid];
 
 
     // std::min(val1, val2);
@@ -597,8 +597,8 @@ void XFEM::ConditionManager::set_maximum(Core::LinAlg::Vector<double>& vec1,
   // loop all nodes on the processor
   for (int lnodeid = 0; lnodeid < bg_dis_->num_my_row_nodes(); lnodeid++)
   {
-    double val1 = (vec1)[lnodeid];
-    double val2 = (vec2)[lnodeid];
+    double val1 = vec1.local_values_as_span()[lnodeid];
+    double val2 = vec2.local_values_as_span()[lnodeid];
 
     // std::max(val1, val2);
     int arg = -1;
@@ -623,8 +623,8 @@ void XFEM::ConditionManager::set_difference(Core::LinAlg::Vector<double>& vec1,
   // loop all nodes on the processor
   for (int lnodeid = 0; lnodeid < bg_dis_->num_my_row_nodes(); lnodeid++)
   {
-    double val1 = (vec1)[lnodeid];
-    double val2 = (vec2)[lnodeid];
+    double val1 = vec1.local_values_as_span()[lnodeid];
+    double val2 = vec2.local_values_as_span()[lnodeid];
 
     // std::max(val1, -val2);
     int arg = -1;
@@ -648,8 +648,8 @@ void XFEM::ConditionManager::set_symmetric_difference(Core::LinAlg::Vector<doubl
   // loop all nodes on the processor
   for (int lnodeid = 0; lnodeid < bg_dis_->num_my_row_nodes(); lnodeid++)
   {
-    double val1 = (vec1)[lnodeid];
-    double val2 = (vec2)[lnodeid];
+    double val1 = vec1.local_values_as_span()[lnodeid];
+    double val2 = vec2.local_values_as_span()[lnodeid];
 
     int arg_tmp1 = -1;
     int arg_tmp2 = -1;

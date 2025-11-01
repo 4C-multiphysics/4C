@@ -254,7 +254,7 @@ void TSI::Algorithm::output(bool forced_writerestart)
 
 
           // get value of corresponding displacement component
-          double disp = (*dummy)[slid];
+          double disp = dummy->local_values_as_span()[slid];
           // insert velocity value into node-based vector
           dispnp_->replace_local_value(lnodeid, index, disp);
         }
@@ -300,7 +300,7 @@ void TSI::Algorithm::output(bool forced_writerestart)
         const int slid = structure_field()->discretization()->dof_row_map(1)->lid(sgid);
 
         // get value of corresponding displacement component
-        double temp = (*dummy1)[slid];
+        double temp = dummy1->local_values_as_span()[slid];
         // insert velocity value into node-based vector
         tempnp_->replace_local_value(lnodeid, 0, temp);
       }  // for lnodid
@@ -351,7 +351,7 @@ void TSI::Algorithm::output_deformation_in_thermo(
       const int slid = structdofrowmap->lid(sgid);
 
       // get value of corresponding displacement component
-      double disp = (*dispnp)[slid];
+      double disp = dispnp->local_values_as_span()[slid];
       // insert velocity value into node-based vector
       dispnp_->replace_local_value(lnodeid, index, disp);
     }

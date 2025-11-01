@@ -58,15 +58,15 @@ void ALE::AleResultTest::test_node(
       std::string position = container.get<std::string>("QUANTITY");
       if (position == "dispx")
       {
-        result = (*dispnp_)[dispnpmap.lid(aledis_->dof(actnode, 0))];
+        result = dispnp_->local_values_as_span()[dispnpmap.lid(aledis_->dof(actnode, 0))];
       }
       else if (position == "dispy")
       {
-        result = (*dispnp_)[dispnpmap.lid(aledis_->dof(actnode, 1))];
+        result = dispnp_->local_values_as_span()[dispnpmap.lid(aledis_->dof(actnode, 1))];
       }
       else if (position == "dispz")
       {
-        result = (*dispnp_)[dispnpmap.lid(aledis_->dof(actnode, 2))];
+        result = dispnp_->local_values_as_span()[dispnpmap.lid(aledis_->dof(actnode, 2))];
       }
       else
       {

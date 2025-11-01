@@ -455,7 +455,8 @@ namespace ReducedLung
               four_element_maxwell.viscosity_eta_m[i] /
               (four_element_maxwell.elasticity_E_m[i] * dt +
                   four_element_maxwell.viscosity_eta_m[i]) /
-              data.reference_volume_v0[i] * locally_relevant_dofs[data.lid_q[i]];
+              data.reference_volume_v0[i] *
+              locally_relevant_dofs.local_values_as_span()[data.lid_q[i]];
         }
       };
     }

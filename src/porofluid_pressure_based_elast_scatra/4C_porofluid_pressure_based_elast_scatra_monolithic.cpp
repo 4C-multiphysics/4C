@@ -1150,8 +1150,8 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::poro_multi_phas
 
     if (i == column_id)
     {
-      std::cout << "rhs_: " << (rhs_copy)[row_id] << std::endl;
-      std::cout << "rhs_old: " << (rhs_old)[row_id] << std::endl;
+      std::cout << "rhs_: " << rhs_copy.local_values_as_span()[row_id] << std::endl;
+      std::cout << "rhs_old: " << rhs_old.local_values_as_span()[row_id] << std::endl;
     }
 
     rhs_copy.update(-1.0, rhs_old, 1.0);
@@ -1160,7 +1160,7 @@ void PoroPressureBased::PorofluidElastScatraMonolithicAlgorithm::poro_multi_phas
     int* index = &i;
     for (int j = 0; j < dofs; ++j)
     {
-      double value = (rhs_copy)[j];
+      double value = rhs_copy.local_values_as_span()[j];
       stiff_approx.insert_global_values(j, 1, &value, index);
 
       if ((j == row_id) and (i == column_id))

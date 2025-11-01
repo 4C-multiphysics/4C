@@ -1030,7 +1030,7 @@ bool BeamInteraction::SubmodelEvaluator::Crosslinking::pre_update_step_element(b
     for (int dim = 0; dim < 3; ++dim)
     {
       doflid[dim] = dis_at_last_redistr_->get_map().lid(dofnode[dim]);
-      d(dim) = (*dis_at_last_redistr_)[doflid[dim]];
+      d(dim) = (*dis_at_last_redistr_).local_values_as_span()[doflid[dim]];
       (*linker_disnp_).get_values()[doflid[dim]] = ref(dim) = node->x()[dim];
     }
     // unshift

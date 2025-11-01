@@ -369,7 +369,7 @@ void Discret::Elements::ScaTraEleCalc<distype, probdim>::extract_turbulence_appr
     std::shared_ptr<Core::LinAlg::Vector<double>> ele_prt =
         turbulencelist.get<std::shared_ptr<Core::LinAlg::Vector<double>>>("col_ele_Prt");
     const int id = ele->lid();
-    tpn_ = (*ele_prt)[id];
+    tpn_ = ele_prt->local_values_as_span()[id];
 
     // when no averaging was done, we just keep the calculated (clipped) value
     if (turbparams_->cs_av())

@@ -52,7 +52,7 @@ void Core::Geo::update_reference_config_with_disp(
       FOUR_C_ASSERT(lid >= 0, "Proc {}: Cannot find gid={} in Core::LinAlg::Vector<double>",
           Core::Communication::my_mpi_rank(coldisp.get_comm()), globaldofs[i]);
 
-      nvector[i] = (coldisp)[lid];
+      nvector[i] = (coldisp).local_values_as_span()[lid];
     }
 
     mynode.user_node()->change_pos(nvector);

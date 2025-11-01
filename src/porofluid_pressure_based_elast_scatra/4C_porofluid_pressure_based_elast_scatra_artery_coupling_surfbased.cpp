@@ -89,7 +89,7 @@ void PoroPressureBased::PorofluidElastScatraArteryCouplingSurfaceBasedAlgorithm:
       // else get the GP vector
       else
         for (int igp = 0; igp < num_gp_per_artery_ele; igp++)
-          my_gp_vector[igp] = static_cast<int>(((*gp_vector)(igp))[my_lid]);
+          my_gp_vector[igp] = static_cast<int>((*gp_vector)(igp).local_values_as_span()[my_lid]);
 
       // communicate to all via summation
       sum_gp_vectors = Core::Communication::sum_all(my_gp_vector, get_comm());

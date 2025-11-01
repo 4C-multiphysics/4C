@@ -57,7 +57,7 @@ void FS3I::BioFilm::Utils::scatra_change_config(Core::FE::Discretization& scatra
       if (lid < 0)
         FOUR_C_THROW("Proc {}: Cannot find gid={} in Core::LinAlg::Vector<double>",
             Core::Communication::my_mpi_rank(gvector.get_comm()), nodedofs[i]);
-      nvector[i] += gvector[lid];
+      nvector[i] += gvector.local_values_as_span()[lid];
     }
 
     mynode->change_pos(nvector);

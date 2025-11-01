@@ -553,8 +553,8 @@ void Constraints::SpringDashpot::evaluate_robin(std::shared_ptr<Core::LinAlg::Sp
           const int dof_gid = dofs_gid[dof];
           const int dof_lid = actdisc_->dof_row_map()->lid(dof_gid);
 
-          const double dof_disp = (*disp)[dof_lid];
-          const double dof_vel = (velo)[dof_lid];
+          const double dof_disp = disp->local_values_as_span()[dof_lid];
+          const double dof_vel = (velo).local_values_as_span()[dof_lid];
 
           // compute stiffness, viscosity, and initial offset from functions
           const double dof_stiffness =
@@ -589,7 +589,8 @@ void Constraints::SpringDashpot::evaluate_robin(std::shared_ptr<Core::LinAlg::Sp
           }
           else
           {
-            std::array<double, 3> displ = {(*disp)[0], (*disp)[1], (*disp)[2]};
+            std::array<double, 3> displ = {disp->local_values_as_span()[0],
+                disp->local_values_as_span()[1], (*disp).local_values_as_span()[2]};
             force_disp = Global::Problem::instance()
                              ->function_by_id<Core::Utils::FunctionOfSpaceTime>(
                                  (numfuncnonlinstiff)[dof] - 1)
@@ -980,9 +981,9 @@ void Constraints::SpringDashpot::set_restart_old(Core::LinAlg::MultiVector<doubl
           if (lid >= 0)
           {
             // copy all components of spring offset length vector
-            (i.second)[0] = ((vec)(0))[lid];
-            (i.second)[1] = ((vec)(1))[lid];
-            (i.second)[2] = ((vec)(2))[lid];
+            (i.second)[0] = ((vec)(0)).local_values_as_span()[lid];
+            (i.second)[1] = ((vec)(1)).local_values_as_span()[lid];
+            (i.second)[2] = ((vec)(2)).local_values_as_span()[lid];
           }
         }
       }

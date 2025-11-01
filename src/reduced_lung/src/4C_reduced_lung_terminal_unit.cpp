@@ -21,7 +21,7 @@ namespace ReducedLung
     {
       linear_elastic_model.elastic_pressure_p_el[i] =
           linear_elastic_model.elasticity_E[i] *
-          ((data.volume_v[i] + dt * locally_relevant_dofs[data.lid_q[i]]) /
+          ((data.volume_v[i] + dt * locally_relevant_dofs.local_values_as_span()[data.lid_q[i]]) /
                   data.reference_volume_v0[i] -
               1);
     }
@@ -34,8 +34,9 @@ namespace ReducedLung
   {
     for (size_t i = 0; i < data.number_of_elements(); i++)
     {
-      double v0_over_vi = data.reference_volume_v0[i] /
-                          (data.volume_v[i] + dt * locally_relevant_dofs[data.lid_q[i]]);
+      double v0_over_vi =
+          data.reference_volume_v0[i] /
+          (data.volume_v[i] + dt * locally_relevant_dofs.local_values_as_span()[data.lid_q[i]]);
       ogden_hyperelastic_model.elastic_pressure_p_el[i] =
           ogden_hyperelastic_model.bulk_modulus_kappa[i] /
           ogden_hyperelastic_model.nonlinear_stiffening_beta[i] * v0_over_vi *
@@ -52,9 +53,11 @@ namespace ReducedLung
     for (size_t i = 0; i < data.number_of_elements(); i++)
     {
       double negative_kelvin_voigt_residual =
-          -1 * (locally_relevant_dofs[data.lid_p1[i]] - locally_relevant_dofs[data.lid_p2[i]] -
+          -1 * (locally_relevant_dofs.local_values_as_span()[data.lid_p1[i]] -
+                   locally_relevant_dofs.local_values_as_span()[data.lid_p2[i]] -
                    elastic_pressure_p_el[i] -
-                   kelvin_voigt_model.viscosity_eta[i] * locally_relevant_dofs[data.lid_q[i]] /
+                   kelvin_voigt_model.viscosity_eta[i] *
+                       locally_relevant_dofs.local_values_as_span()[data.lid_q[i]] /
                        data.reference_volume_v0[i]);
       target.replace_local_value(data.local_row_id[i], negative_kelvin_voigt_residual);
     }
@@ -68,14 +71,16 @@ namespace ReducedLung
     for (size_t i = 0; i < data.number_of_elements(); i++)
     {
       double negative_four_element_maxwell_residual =
-          -1 * (locally_relevant_dofs[data.lid_p1[i]] - locally_relevant_dofs[data.lid_p2[i]] -
+          -1 * (locally_relevant_dofs.local_values_as_span()[data.lid_p1[i]] -
+                   locally_relevant_dofs.local_values_as_span()[data.lid_p2[i]] -
                    elastic_pressure_p_el[i] -
                    (four_element_maxwell_model.viscosity_eta[i] +
                        (four_element_maxwell_model.elasticity_E_m[i] * dt *
                            four_element_maxwell_model.viscosity_eta_m[i]) /
                            (four_element_maxwell_model.elasticity_E_m[i] * dt +
                                four_element_maxwell_model.viscosity_eta_m[i])) /
-                       data.reference_volume_v0[i] * locally_relevant_dofs[data.lid_q[i]] -
+                       data.reference_volume_v0[i] *
+                       locally_relevant_dofs.local_values_as_span()[data.lid_q[i]] -
                    four_element_maxwell_model.viscosity_eta_m[i] /
                        (four_element_maxwell_model.elasticity_E_m[i] * dt +
                            four_element_maxwell_model.viscosity_eta_m[i]) *
@@ -101,8 +106,9 @@ namespace ReducedLung
   {
     for (size_t i = 0; i < data.number_of_elements(); i++)
     {
-      double v0_over_vi = data.reference_volume_v0[i] /
-                          (data.volume_v[i] + dt * locally_relevant_dofs[data.lid_q[i]]);
+      double v0_over_vi =
+          data.reference_volume_v0[i] /
+          (data.volume_v[i] + dt * locally_relevant_dofs.local_values_as_span()[data.lid_q[i]]);
       ogden_hyperelastic_model.elastic_pressure_grad_dp_el[i] =
           ogden_hyperelastic_model.bulk_modulus_kappa[i] * dt /
           (ogden_hyperelastic_model.nonlinear_stiffening_beta[i] * data.reference_volume_v0[i]) *
@@ -215,7 +221,8 @@ namespace ReducedLung
       // Update volume
       for (size_t i = 0; i < model.data.number_of_elements(); i++)
       {
-        model.data.volume_v[i] += locally_relevant_dofs[model.data.lid_q[i]] * dt;
+        model.data.volume_v[i] +=
+            locally_relevant_dofs.local_values_as_span()[model.data.lid_q[i]] * dt;
       }
       // Model specific updates
       model.internal_state_updater(model.data, locally_relevant_dofs, dt);

@@ -2124,7 +2124,7 @@ void Discret::Elements::Beam3eb::evaluate_stochastic_forces(
     for (unsigned int idim = 0; idim < ndim; idim++)
     {
 #ifndef BEAM3EBCONSTSTOCHFORCE
-      randnumvec(idim) = (*randomforces)(gp * randompergauss + idim)[lid()];
+      randnumvec(idim) = (*randomforces)(gp * randompergauss + idim).local_values_as_span()[lid()];
 #else
       randnumvec(idim) = (*randomforces)[idim][LID()];
 #endif

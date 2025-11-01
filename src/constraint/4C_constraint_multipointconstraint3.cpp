@@ -410,7 +410,7 @@ void Constraints::MPConstraint3::evaluate_constraint(std::shared_ptr<Core::FE::D
       // Get the current lagrange multiplier value for this condition
       const std::shared_ptr<Core::LinAlg::Vector<double>> lagramul =
           params.get<std::shared_ptr<Core::LinAlg::Vector<double>>>("LagrMultVector");
-      const double lagraval = (*lagramul)[lindex];
+      const double lagraval = (*lagramul).local_values_as_span()[lindex];
 
       // get element location vector, dirichlet flags and ownerships
       std::vector<int> lm;

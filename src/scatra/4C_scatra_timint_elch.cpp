@@ -1534,7 +1534,7 @@ void ScaTra::ScaTraTimIntElch::evaluate_cell_voltage()
             FOUR_C_THROW("Cannot extract degree of freedom with global ID {}!", *dofs.rbegin());
 
           // extract electrode potential
-          potential = (*phinp_)[lid];
+          potential = phinp_->local_values_as_span()[lid];
         }
 
         // communicate electrode potential
@@ -2814,7 +2814,7 @@ void ScaTra::ScaTraTimIntElch::check_concentration_values(Core::LinAlg::Vector<d
     for (int k = 0; k < num_scal(); k++)
     {
       const int lid = discret_->dof_row_map()->lid(dofs[k]);
-      if (((vec)[lid]) < 1e-13)
+      if (((vec).local_values_as_span()[lid]) < 1e-13)
       {
         numfound[k]++;
         if (makepositive) ((vec).get_values()[lid]) = 1e-13;

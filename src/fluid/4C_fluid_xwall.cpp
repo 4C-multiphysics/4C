@@ -984,9 +984,9 @@ void FLD::XWall::calc_tau_w(
         int firstlocaldofid = wss->get_map().lid(firstglobaldofid);
 
         if (firstlocaldofid < 0) FOUR_C_THROW("localdofid not found in map for given globaldofid");
-        double forcex = (*wss)[firstlocaldofid];
-        double forcey = (*wss)[firstlocaldofid + 1];
-        double forcez = (*wss)[firstlocaldofid + 2];
+        double forcex = wss->local_values_as_span()[firstlocaldofid];
+        double forcey = wss->local_values_as_span()[firstlocaldofid + 1];
+        double forcez = wss->local_values_as_span()[firstlocaldofid + 2];
 
         double tauw = sqrt(forcex * forcex + forcey * forcey + forcez * forcez);
 
@@ -1071,8 +1071,8 @@ void FLD::XWall::calc_tau_w(
     // scale with times:
     for (int l = 0; l < (xwdiscret_->node_row_map())->num_my_elements(); l++)
     {
-      double sumnewtauw = (newtauwxwdis)[l];
-      double timesfac = (timesvec)[l];
+      double sumnewtauw = newtauwxwdis.local_values_as_span()[l];
+      double timesfac = timesvec.local_values_as_span()[l];
       double newtauwsc = 1.0;
       // we only have to do something, if we assembled at least once the same value
       if (timesfac > 0.5)
@@ -1345,10 +1345,13 @@ std::shared_ptr<Core::LinAlg::Vector<double>> FLD::XWall::get_output_vector(
     int firstglobaldofid = discret_->dof(xwallnode, 0);
     int firstlocaldofid = discret_->dof_row_map()->lid(firstglobaldofid);
 
-    velenr->replace_local_value(firstlocaldofid, vel[firstlocaldofid + 4]);
-    velenr->replace_local_value(firstlocaldofid + 1, vel[firstlocaldofid + 5]);
-    velenr->replace_local_value(firstlocaldofid + 2, vel[firstlocaldofid + 6]);
-    velenr->replace_local_value(firstlocaldofid + 3, vel[firstlocaldofid + 7]);
+    velenr->replace_local_value(firstlocaldofid, vel.local_values_as_span()[firstlocaldofid + 4]);
+    velenr->replace_local_value(
+        firstlocaldofid + 1, vel.local_values_as_span()[firstlocaldofid + 5]);
+    velenr->replace_local_value(
+        firstlocaldofid + 2, vel.local_values_as_span()[firstlocaldofid + 6]);
+    velenr->replace_local_value(
+        firstlocaldofid + 3, vel.local_values_as_span()[firstlocaldofid + 7]);
   }
   return velenr;
 }
@@ -1401,8 +1404,8 @@ void FLD::XWall::overwrite_transferred_values()
           const std::string& mytoggle = (*cond)->parameters().get<std::string>("toggle");
           if (mytoggle == "slave")
           {
-            inctauwtmp.replace_local_value(i, (*oldinctauw_)[i]);
-            tauwtmp.replace_local_value(i, (*oldtauw_)[i]);
+            inctauwtmp.replace_local_value(i, oldinctauw_->local_values_as_span()[i]);
+            tauwtmp.replace_local_value(i, oldtauw_->local_values_as_span()[i]);
           }
         }
       }
@@ -1566,9 +1569,9 @@ std::shared_ptr<Core::LinAlg::Vector<double>> FLD::XWall::fix_dirichlet_inflow(
 
               int firstlocaldofidnewvalue = discret_->dof_col_map()->lid(firstglobaldofidnewvalue);
               // half because the area is half on a boundary node compared to an inner node
-              double newvalue1 = 0.5 * (res)[firstlocaldofidnewvalue];
-              double newvalue2 = 0.5 * (res)[firstlocaldofidnewvalue + 1];
-              double newvalue3 = 0.5 * (res)[firstlocaldofidnewvalue + 2];
+              double newvalue1 = 0.5 * res.local_values_as_span()[firstlocaldofidnewvalue];
+              double newvalue2 = 0.5 * res.local_values_as_span()[firstlocaldofidnewvalue + 1];
+              double newvalue3 = 0.5 * res.local_values_as_span()[firstlocaldofidnewvalue + 2];
 
               fixedtrueresidual->replace_global_values(1, &newvalue1, &firstglobaldofidtoreplace);
               fixedtrueresidual->replace_global_values(1, &newvalue2, &secondglobaldofidtoreplace);
@@ -1621,9 +1624,12 @@ void FLD::XWallAleFSI::update_w_dist_wale()
     int firstglobaldofid = discret_->dof(xwallnode, 0);
     int firstlocaldofid = discret_->dof_row_map()->lid(firstglobaldofid);
 
-    x.replace_local_value(j, xwallnode->x()[0] + (*mydispnp_)[firstlocaldofid]);
-    y.replace_local_value(j, xwallnode->x()[1] + (*mydispnp_)[firstlocaldofid + 1]);
-    z.replace_local_value(j, xwallnode->x()[2] + (*mydispnp_)[firstlocaldofid + 2]);
+    x.replace_local_value(
+        j, xwallnode->x()[0] + mydispnp_->local_values_as_span()[firstlocaldofid]);
+    y.replace_local_value(
+        j, xwallnode->x()[1] + mydispnp_->local_values_as_span()[firstlocaldofid + 1]);
+    z.replace_local_value(
+        j, xwallnode->x()[2] + mydispnp_->local_values_as_span()[firstlocaldofid + 2]);
   }
 
   Core::LinAlg::Vector<double> wdistx(*xwallrownodemap_, true);
@@ -1649,9 +1655,9 @@ void FLD::XWallAleFSI::update_w_dist_wale()
       FOUR_C_THROW("not on proc");
     Core::Nodes::Node* xwallnode = discret_->g_node(xwallgid);
     if (!xwallnode) FOUR_C_THROW("Cannot find node");
-    double x = (wdistx)[j];
-    double y = (wdisty)[j];
-    double z = (wdistz)[j];
+    double x = wdistx.local_values_as_span()[j];
+    double y = wdisty.local_values_as_span()[j];
+    double z = wdistz.local_values_as_span()[j];
     double newwdist = sqrt(x * x + y * y + z * z);
     walldist_->replace_local_value(j, newwdist);
   }

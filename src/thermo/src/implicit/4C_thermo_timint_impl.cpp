@@ -105,7 +105,7 @@ Thermo::TimIntImpl::TimIntImpl(const Teuchos::ParameterList& ioparams,
       {
         const int global_element_id = ele.global_id();
         const int local_element_id = element_material.get_map().lid(global_element_id);
-        nodal_material = nodal_material + element_material[local_element_id];
+        nodal_material = nodal_material + element_material.local_values_as_span()[local_element_id];
       }
 
       const int num_elements = node.adjacent_elements().size();

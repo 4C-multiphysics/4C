@@ -266,7 +266,7 @@ void Coupling::Adapter::MatrixLogicalSplitAndTransform::add_into_filled(
     for (int jA = 0, jB = 0; jA < NumEntriesA; ++jA)
     {
       // skip entries belonging to a different block of the logical block matrix
-      if (selector[IndicesA[jA]] == 0.) continue;
+      if (selector.local_values_as_span()[IndicesA[jA]] == 0.) continue;
 
       const int col = lidvector_[IndicesA[jA]];
       if (col == -1)
@@ -331,7 +331,7 @@ void Coupling::Adapter::MatrixLogicalSplitAndTransform::add_into_unfilled(
     for (int j = 0; j < NumEntries; ++j)
     {
       // skip entries belonging to a different block of the logical block matrix
-      if (selector[Indices[j]] == 0.) continue;
+      if (selector.local_values_as_span()[Indices[j]] == 0.) continue;
 
       int gid = srccolmap.gid(Indices[j]);
       std::map<int, int>::const_iterator iter = gidmap_.find(gid);

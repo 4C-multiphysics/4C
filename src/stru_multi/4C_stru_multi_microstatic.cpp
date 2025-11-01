@@ -1054,7 +1054,8 @@ void MultiScale::MicroStatic::static_homogenization(Core::LinAlg::Matrix<6, 1>* 
     {
       for (int n = 0; n < np_ / 3; ++n)
       {
-        P(i, j) += (*freactn_)[n * 3 + i] * (*material_coords_boundary_nodes_)[n * 3 + j];
+        P(i, j) += freactn_->local_values_as_span()[n * 3 + i] *
+                   material_coords_boundary_nodes_->local_values_as_span()[n * 3 + j];
       }
       P(i, j) /= initial_volume_;
       // sum P(i,j) over the microdis
@@ -1180,7 +1181,8 @@ void MultiScale::MicroStatic::static_homogenization(Core::LinAlg::Matrix<6, 1>* 
       {
         for (int k = 0; k < d_matrix_->local_length(); k++)
         {
-          val[i * d_matrix_rows + j] += (((*d_matrix_)(i))[k]) * ((fexp(j))[k]);
+          val[i * d_matrix_rows + j] +=
+              (*d_matrix_)(i).local_values_as_span()[k] * fexp(j).local_values_as_span()[k];
         }
       }
     }

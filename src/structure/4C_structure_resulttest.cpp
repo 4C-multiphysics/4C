@@ -87,7 +87,7 @@ void StruResultTest::test_node(
           if (lid < 0)
             FOUR_C_THROW("You tried to test {} on nonexistent dof {} on node {}", position, idx,
                 actnode->id());
-          result = (*dis_)[lid];
+          result = dis_->local_values_as_span()[lid];
         }
       }
 
@@ -110,7 +110,7 @@ void StruResultTest::test_node(
           if (lid < 0)
             FOUR_C_THROW("You tried to test {} on nonexistent dof {} on node {}", position, idx,
                 actnode->id());
-          result = (*vel_)[lid];
+          result = vel_->local_values_as_span()[lid];
         }
       }
 
@@ -133,7 +133,7 @@ void StruResultTest::test_node(
           if (lid < 0)
             FOUR_C_THROW("You tried to test {} on nonexistent dof {} on node {}", position, idx,
                 actnode->id());
-          result = (*acc_)[lid];
+          result = acc_->local_values_as_span()[lid];
         }
       }
 

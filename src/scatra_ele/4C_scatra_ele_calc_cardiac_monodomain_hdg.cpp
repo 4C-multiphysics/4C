@@ -523,7 +523,8 @@ void Discret::Elements::ScaTraEleCalcHDGCardiacMonodomain<distype,
         {
           auto material_internal_state_component =
               Core::Utils::shared_ptr_from_ref((*material_internal_state)(k * nqpoints + q));
-          material->set_internal_state(k, (*material_internal_state_component)[ele->id()], q);
+          material->set_internal_state(
+              k, material_internal_state_component->local_values_as_span()[ele->id()], q);
         }
       }
     }

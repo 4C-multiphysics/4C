@@ -156,7 +156,7 @@ namespace Constraints
     double get_error(int i  ///< ID of constraint of interest
     ) const
     {
-      return (*constrainterr_)[i];
+      return (*constrainterr_).local_values_as_span()[i];
     }
 
     /// return vector of differences between prescribed and actual values
@@ -180,7 +180,7 @@ namespace Constraints
     double get_lagr_mult(int i  ///< ID of constraint of interest
     ) const
     {
-      return (*lagr_mult_vec_)[i];
+      return (*lagr_mult_vec_).local_values_as_span()[i];
     };
 
     /*!
@@ -230,7 +230,7 @@ namespace Constraints
     double get_curr_value(int i  ///< ID of constraint of interest
     ) const
     {
-      return (*actvalues_)[i];
+      return (*actvalues_).local_values_as_span()[i];
     };
 
     /*!

@@ -43,7 +43,7 @@ void Core::LinAlg::export_to(
           const int lid = source.get_map().lid(gid);
           if (lid < 0) continue;
           // FOUR_C_THROW("No source for target");
-          target(k).get_values()[i] = source(k)[lid];
+          target(k).get_values()[i] = source(k).local_values_as_span()[lid];
         }
       return;
     }
@@ -76,7 +76,7 @@ void Core::LinAlg::export_to(
               "Export of non-unique source failed. Source data not available on target proc");
 
         for (int k = 0; k < source.num_vectors(); ++k)
-          target(k).get_values()[targetlid] = source(k)[sourcelid];
+          target(k).get_values()[targetlid] = source(k).local_values_as_span()[sourcelid];
       }
       return;
     }
@@ -422,13 +422,13 @@ void Core::LinAlg::split_matrix2x2(
       const int gcid = ASparse.col_map().gid(cindices[j]);
       FOUR_C_ASSERT(cindices[j] < selector.local_length(), "Internal error");
       // column is in A*1
-      if (selector[cindices[j]] == 0.)
+      if (selector.local_values_as_span()[cindices[j]] == 0.)
       {
         gcindices1[count1] = gcid;
         gvalues1[count1++] = values[j];
       }
       // column is in A*2
-      else if (selector[cindices[j]] == 1.)
+      else if (selector.local_values_as_span()[cindices[j]] == 1.)
       {
         gcindices2[count2] = gcid;
         gvalues2[count2++] = values[j];
@@ -511,7 +511,7 @@ void Core::LinAlg::split_matrixmxn(
       const int collid = indices[j];
       if (collid >= selector.local_length()) FOUR_C_THROW("Invalid local column ID {}!", collid);
 
-      const int blockid = static_cast<int>(selector[collid]);
+      const int blockid = static_cast<int>(selector.local_values_as_span()[collid]);
       colgids[blockid][counters[blockid]] = ASparse.col_map().gid(collid);
       rowvalues[blockid][counters[blockid]++] = values[j];
     }

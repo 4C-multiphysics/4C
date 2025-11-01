@@ -1447,7 +1447,7 @@ void FLD::FluidImplicitTimeInt::apply_nonlinear_boundary_conditions()
       double local_flowrate = 0.0;
       for (int i = 0; i < dofrowmap->num_my_elements(); i++)
       {
-        local_flowrate += ((*flowrates)[i]);
+        local_flowrate += (flowrates->local_values_as_span()[i]);
       }
 
       // sum up global flow rate over all processors and set to global value
@@ -2554,7 +2554,7 @@ void FLD::FluidImplicitTimeInt::ale_update(std::string condName)
         // Calculate new ale velocities
         for (int i = 0; i < numdim_; i++)
         {
-          (*gridv).get_values()[dofsLocalInd[i]] = (*velnp)[dofsLocalInd[i]];
+          (*gridv).get_values()[dofsLocalInd[i]] = velnp->local_values_as_span()[dofsLocalInd[i]];
         }
       }
     }
@@ -2622,7 +2622,7 @@ void FLD::FluidImplicitTimeInt::ale_update(std::string condName)
 
           for (int i = 0; i < numdim_; ++i)
           {
-            currPos[i] = refPos[i] + (*dispnp)[dofsLocalInd[i]];
+            currPos[i] = refPos[i] + dispnp->local_values_as_span()[dofsLocalInd[i]];
           }
 
           // Calculate node normal components
@@ -2652,14 +2652,15 @@ void FLD::FluidImplicitTimeInt::ale_update(std::string condName)
         // Calculate length of node normal
         double lengthNodeNormal = 0.0;
         for (int i = 0; i < numdim_; i++)
-          lengthNodeNormal += (*nodeNormals)[dofsLocalInd[i]] * (*nodeNormals)[dofsLocalInd[i]];
+          lengthNodeNormal += nodeNormals->local_values_as_span()[dofsLocalInd[i]] *
+                              nodeNormals->local_values_as_span()[dofsLocalInd[i]];
         lengthNodeNormal = sqrt(lengthNodeNormal);
 
         // Normalize vector
         for (int i = 0; i < numdim_; i++)
         {
           (*nodeNormals).get_values()[dofsLocalInd[i]] =
-              (1.0 / lengthNodeNormal) * (*nodeNormals)[dofsLocalInd[i]];
+              (1.0 / lengthNodeNormal) * nodeNormals->local_values_as_span()[dofsLocalInd[i]];
         }
 
         // Calculate normalized tangent vectors, which are orthogonal to
@@ -2669,38 +2670,41 @@ void FLD::FluidImplicitTimeInt::ale_update(std::string condName)
         // and to e_z.
         if (numdim_ == 3)
         {
-          double lengthNodeTangent =
-              sqrt((*nodeNormals)[dofsLocalInd[0]] * (*nodeNormals)[dofsLocalInd[0]] +
-                   (*nodeNormals)[dofsLocalInd[2]] * (*nodeNormals)[dofsLocalInd[2]]);
+          double lengthNodeTangent = sqrt(nodeNormals->local_values_as_span()[dofsLocalInd[0]] *
+                                              nodeNormals->local_values_as_span()[dofsLocalInd[0]] +
+                                          nodeNormals->local_values_as_span()[dofsLocalInd[2]] *
+                                              nodeNormals->local_values_as_span()[dofsLocalInd[2]]);
           if (lengthNodeTangent > 0.1)
           {  // Tangent vector orthogonal to normal and e_y
             (*nodeTangents).get_values()[dofsLocalInd[0]] =
-                -(*nodeNormals)[dofsLocalInd[2]] / lengthNodeTangent;
+                -nodeNormals->local_values_as_span()[dofsLocalInd[2]] / lengthNodeTangent;
             (*nodeTangents).get_values()[dofsLocalInd[1]] = 0.0;
             (*nodeTangents).get_values()[dofsLocalInd[2]] =
-                (*nodeNormals)[dofsLocalInd[0]] / lengthNodeTangent;
+                nodeNormals->local_values_as_span()[dofsLocalInd[0]] / lengthNodeTangent;
           }
           else
           {  // Tangent vector orthogonal to normal and e_z
-            lengthNodeTangent =
-                sqrt((*nodeNormals)[dofsLocalInd[0]] * (*nodeNormals)[dofsLocalInd[0]] +
-                     (*nodeNormals)[dofsLocalInd[1]] * (*nodeNormals)[dofsLocalInd[1]]);
+            lengthNodeTangent = sqrt(nodeNormals->local_values_as_span()[dofsLocalInd[0]] *
+                                         nodeNormals->local_values_as_span()[dofsLocalInd[0]] +
+                                     nodeNormals->local_values_as_span()[dofsLocalInd[1]] *
+                                         nodeNormals->local_values_as_span()[dofsLocalInd[1]]);
             (*nodeTangents).get_values()[dofsLocalInd[0]] =
-                -(*nodeNormals)[dofsLocalInd[1]] / lengthNodeTangent;
+                -nodeNormals->local_values_as_span()[dofsLocalInd[1]] / lengthNodeTangent;
             (*nodeTangents).get_values()[dofsLocalInd[1]] =
-                (*nodeNormals)[dofsLocalInd[0]] / lengthNodeTangent;
+                nodeNormals->local_values_as_span()[dofsLocalInd[0]] / lengthNodeTangent;
             (*nodeTangents).get_values()[dofsLocalInd[2]] = 0.0;
           }
         }
         else if (numdim_ == 2)
         {
-          double lengthNodeTangent =
-              sqrt((*nodeNormals)[dofsLocalInd[0]] * (*nodeNormals)[dofsLocalInd[0]] +
-                   (*nodeNormals)[dofsLocalInd[1]] * (*nodeNormals)[dofsLocalInd[1]]);
+          double lengthNodeTangent = sqrt(nodeNormals->local_values_as_span()[dofsLocalInd[0]] *
+                                              nodeNormals->local_values_as_span()[dofsLocalInd[0]] +
+                                          nodeNormals->local_values_as_span()[dofsLocalInd[1]] *
+                                              nodeNormals->local_values_as_span()[dofsLocalInd[1]]);
           (*nodeTangents).get_values()[dofsLocalInd[0]] =
-              (*nodeNormals)[dofsLocalInd[1]] / lengthNodeTangent;
+              nodeNormals->local_values_as_span()[dofsLocalInd[1]] / lengthNodeTangent;
           (*nodeTangents).get_values()[dofsLocalInd[1]] =
-              -(*nodeNormals)[dofsLocalInd[0]] / lengthNodeTangent;
+              -nodeNormals->local_values_as_span()[dofsLocalInd[0]] / lengthNodeTangent;
           (*nodeTangents).get_values()[dofsLocalInd[2]] = 0.0;
         }
         else
@@ -2724,7 +2728,8 @@ void FLD::FluidImplicitTimeInt::ale_update(std::string condName)
           double velnpDotNodeNormal = 0.0;
           for (int i = 0; i < numdim_; i++)
           {
-            velnpDotNodeNormal += (*nodeNormals)[dofsLocalInd[i]] * (*velnp)[dofsLocalInd[i]];
+            velnpDotNodeNormal += nodeNormals->local_values_as_span()[dofsLocalInd[i]] *
+                                  velnp->local_values_as_span()[dofsLocalInd[i]];
           }
 
           // Calculate ale velocities
@@ -2734,7 +2739,7 @@ void FLD::FluidImplicitTimeInt::ale_update(std::string condName)
             // (velnp*nodeNormals / nodeNormals_z), the other entries are zero
             if (i == numdim_ - 1)
               (*gridv).get_values()[dofsLocalInd[i]] =
-                  velnpDotNodeNormal / (*nodeNormals)[dofsLocalInd[i]];
+                  velnpDotNodeNormal / nodeNormals->local_values_as_span()[dofsLocalInd[i]];
             else
               (*gridv).get_values()[dofsLocalInd[i]] = 0.0;
           }
@@ -2764,7 +2769,8 @@ void FLD::FluidImplicitTimeInt::ale_update(std::string condName)
           double velnpDotNodeTangent = 0.0;
           for (int i = 0; i < numdim_; i++)
           {
-            velnpDotNodeTangent += (*nodeTangents)[dofsLocalInd[i]] * (*velnp)[dofsLocalInd[i]];
+            velnpDotNodeTangent += nodeTangents->local_values_as_span()[dofsLocalInd[i]] *
+                                   velnp->local_values_as_span()[dofsLocalInd[i]];
           }
 
           localSumVelnpDotNodeTangent += velnpDotNodeTangent;
@@ -2795,7 +2801,8 @@ void FLD::FluidImplicitTimeInt::ale_update(std::string condName)
           double velnpDotNodeNormal = 0.0;
           for (int i = 0; i < numdim_; i++)
           {
-            velnpDotNodeNormal += (*nodeNormals)[dofsLocalInd[i]] * (*velnp)[dofsLocalInd[i]];
+            velnpDotNodeNormal += nodeNormals->local_values_as_span()[dofsLocalInd[i]] *
+                                  velnp->local_values_as_span()[dofsLocalInd[i]];
           }
 
           // Setup matrix A and vector b for grid velocity calculation.
@@ -2805,12 +2812,12 @@ void FLD::FluidImplicitTimeInt::ale_update(std::string condName)
           // with u_g and u_f being the grid and fluid velocity, resp.,
           // n the normal and t the tangent vector.
           Core::LinAlg::Matrix<2, 3> A(Core::LinAlg::Initialization::zero);
-          A(0, 0) = (*nodeNormals)[dofsLocalInd[0]];
-          A(0, 1) = (*nodeNormals)[dofsLocalInd[1]];
-          A(0, 2) = (*nodeNormals)[dofsLocalInd[2]];
-          A(1, 0) = (*nodeTangents)[dofsLocalInd[0]];
-          A(1, 1) = (*nodeTangents)[dofsLocalInd[1]];
-          A(1, 2) = (*nodeTangents)[dofsLocalInd[2]];
+          A(0, 0) = nodeNormals->local_values_as_span()[dofsLocalInd[0]];
+          A(0, 1) = nodeNormals->local_values_as_span()[dofsLocalInd[1]];
+          A(0, 2) = nodeNormals->local_values_as_span()[dofsLocalInd[2]];
+          A(1, 0) = nodeTangents->local_values_as_span()[dofsLocalInd[0]];
+          A(1, 1) = nodeTangents->local_values_as_span()[dofsLocalInd[1]];
+          A(1, 2) = nodeTangents->local_values_as_span()[dofsLocalInd[2]];
 
           Core::LinAlg::Matrix<2, 1> b(Core::LinAlg::Initialization::zero);
           b(0, 0) = velnpDotNodeNormal;
@@ -2820,8 +2827,8 @@ void FLD::FluidImplicitTimeInt::ale_update(std::string condName)
           }
           else if (coupling == "meantangentialvelocityscaled")
           {
-            double scalingFactor =
-                sqrt((*nodeNormals)[dofsLocalInd[0]] * (*nodeNormals)[dofsLocalInd[0]]);
+            double scalingFactor = sqrt(nodeNormals->local_values_as_span()[dofsLocalInd[0]] *
+                                        nodeNormals->local_values_as_span()[dofsLocalInd[0]]);
             b(1, 0) = lambda * scalingValue * scalingFactor;
           }
 
@@ -2872,7 +2879,7 @@ void FLD::FluidImplicitTimeInt::ale_update(std::string condName)
           double lengthCurrPos = 0.0;
           for (int i = 0; i < numdim_; ++i)
           {
-            currPos[i] = refPos[i] + (*dispnp)[dofsLocalInd[i]];
+            currPos[i] = refPos[i] + dispnp->local_values_as_span()[dofsLocalInd[i]];
             lengthCurrPos += currPos[i] * currPos[i];
           }
           lengthCurrPos = sqrt(lengthCurrPos);
@@ -2889,9 +2896,10 @@ void FLD::FluidImplicitTimeInt::ale_update(std::string condName)
           const double cosPhi = cos(phi);
 
           // Calculate dot product between velnp and e_theta
-          double velnpDotETheta = cosTheta * cosPhi * (*velnp)[dofsLocalInd[0]] +
-                                  cosTheta * sinPhi * (*velnp)[dofsLocalInd[1]] +
-                                  -sinTheta * (*velnp)[dofsLocalInd[2]];
+          double velnpDotETheta =
+              cosTheta * cosPhi * velnp->local_values_as_span()[dofsLocalInd[0]] +
+              cosTheta * sinPhi * velnp->local_values_as_span()[dofsLocalInd[1]] +
+              -sinTheta * velnp->local_values_as_span()[dofsLocalInd[2]];
 
           // Setup matrix A and vector b for grid velocity calculation.
           // The following three equations are used:
@@ -4207,7 +4215,7 @@ void FLD::FluidImplicitTimeInt::set_initial_flow_field(
           int gid = nodedofset[index];
           int lid = dofrowmap->lid(gid);
 
-          thisvel = (*velnp_)[lid];
+          thisvel = velnp_->local_values_as_span()[lid];
           if (mybmvel * mybmvel < thisvel * thisvel) mybmvel = thisvel;
         }
       }
@@ -4543,15 +4551,15 @@ void FLD::FluidImplicitTimeInt::set_iter_scalar_fields(
       if (localdofid < 0) FOUR_C_THROW("localdofid not found in map for given globaldofid");
 
       // now copy the values
-      value = (*scalaraf)[localscatradofid];
+      value = scalaraf->local_values_as_span()[localscatradofid];
       scaaf_->replace_local_value(localdofid, value);
 
-      value = (*scalaram)[localscatradofid];
+      value = scalaram->local_values_as_span()[localscatradofid];
       scaam_->replace_local_value(localdofid, value);
 
       if (scalardtam != nullptr)
       {
-        value = (*scalardtam)[localscatradofid];
+        value = scalardtam->local_values_as_span()[localscatradofid];
       }
       else
       {
@@ -4580,15 +4588,15 @@ void FLD::FluidImplicitTimeInt::set_iter_scalar_fields(
       if (localdofid < 0) FOUR_C_THROW("localdofid not found in map for given globaldofid");
 
       // now copy the values
-      value = (*scalaraf)[localdofid];
+      value = scalaraf->local_values_as_span()[localdofid];
       scaaf_->replace_local_value(localdofid, value);
 
-      value = (*scalaram)[localdofid];
+      value = scalaram->local_values_as_span()[localdofid];
       scaam_->replace_local_value(localdofid, value);
 
       if (scalardtam != nullptr)
       {
-        value = (*scalardtam)[localdofid];
+        value = scalardtam->local_values_as_span()[localdofid];
       }
       else
       {
@@ -4649,7 +4657,7 @@ void FLD::FluidImplicitTimeInt::set_scalar_fields(
     const int localdofid = scaam_->get_map().lid(globaldofid);
     if (localdofid < 0) FOUR_C_THROW("localdofid not found in map for given globaldofid");
 
-    value = (*scalarnp)[localscatradofid];
+    value = scalarnp->local_values_as_span()[localscatradofid];
     scaaf_->replace_local_value(localdofid, value);
 
     //--------------------------------------------------------------------------
@@ -4657,7 +4665,7 @@ void FLD::FluidImplicitTimeInt::set_scalar_fields(
     //--------------------------------------------------------------------------
     if (scatraresidual != nullptr)
     {
-      value = (*scatraresidual)[localscatradofid];
+      value = scatraresidual->local_values_as_span()[localscatradofid];
       trueresidual_->replace_local_value(localdofid, value);
     }
   }

@@ -288,11 +288,11 @@ void Core::Conditions::LocsysManager::update(const double time,
     if (!node) FOUR_C_THROW("Cannot find node with gid %", nodeGID);
     std::vector<int> dofs = discret().dof(0, node);
     int numdof = (int)dofs.size();
-    int locsysindex = (int)(*locsystoggle_)[i];
+    int locsysindex = (int)locsystoggle_->local_values_as_span()[i];
 
     // skip nodes whose dofs have already been processed
     for (int rr = 0; rr < numdof; ++rr)
-      if ((*already_processed)[dofrowmap->lid(dofs[rr])] > 1e-9) continue;
+      if (already_processed->local_values_as_span()[dofrowmap->lid(dofs[rr])] > 1e-9) continue;
 
     // unity matrix for non-locsys node
     if (locsysindex < 0)
@@ -636,7 +636,7 @@ void Core::Conditions::LocsysManager::calc_rotation_vector_for_normal_system(
     for (int jdim = 0; jdim < dim_; jdim++)
     {
       const int localId = massConsistentNodeNormals->get_map().lid(nodeGIDs[jdim]);
-      nodeNormal(jdim, 0) = (*massConsistentNodeNormals)[localId];
+      nodeNormal(jdim, 0) = massConsistentNodeNormals->local_values_as_span()[localId];
       length += nodeNormal(jdim, 0) * nodeNormal(jdim, 0);
     }
     length = sqrt(length);

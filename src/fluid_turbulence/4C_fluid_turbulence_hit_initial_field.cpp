@@ -1251,9 +1251,9 @@ namespace FLD
           // the initial field is not continuous but the projection results in jumps at element
           // boundaries the question is, which value should be used for the traces I am here just
           // using the average of both elements
-          if ((*velnp_)[lid] != 0)
+          if (velnp_->local_values_as_span()[lid] != 0)
           {
-            double tmp = (*velnp_)[lid];
+            double tmp = velnp_->local_values_as_span()[lid];
             (*velnp_).get_values()[lid] = 0.5 * (tmp + elevec3(i));
           }
           else

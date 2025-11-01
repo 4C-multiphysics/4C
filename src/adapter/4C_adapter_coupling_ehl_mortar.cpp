@@ -642,7 +642,8 @@ void Adapter::CouplingEhlMortar::recover_coupled(std::shared_ptr<Core::LinAlg::V
   {
     CONTACT::Node* cnode = dynamic_cast<CONTACT::Node*>(interface_->discret().l_row_node(i));
     for (int dof = 0; dof < interface_->n_dim(); ++dof)
-      cnode->mo_data().lm()[dof] = z_->operator[](z_->get_map().lid(cnode->dofs()[dof]));
+      cnode->mo_data().lm()[dof] =
+          z_->local_values_as_span()[(z_->get_map().lid(cnode->dofs()[dof]))];
   }
 
   return;
@@ -1034,7 +1035,7 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Adapter::CouplingEhlMortar::assemble
       {
         const int lid = x.get_map().lid(q->first);
         if (lid < 0) FOUR_C_THROW("not my gid");
-        const double x_val = x.operator[](lid);
+        const double x_val = x.local_values_as_span()[lid];
         for (int d = 0; d < interface()->n_dim(); ++d)
         {
           const double val = x_val * q->second(d) / dval;
@@ -1057,7 +1058,7 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Adapter::CouplingEhlMortar::assemble
             const int x_gid = q->first;
             const int x_lid = x.get_map().lid(x_gid);
             if (x_lid < 0) FOUR_C_THROW("not my gid");
-            double x_val = x.operator[](x_lid);
+            double x_val = x.local_values_as_span()[x_lid];
             const double val = -x_val * q->second(d) / (dval * dval) * p->second;
             SurfGradDeriv->assemble(val, row, col);
           }
@@ -1161,11 +1162,11 @@ void Adapter::CouplingEhlMortar::read_restart(Core::IO::DiscretizationReader& re
   {
     CONTACT::FriNode* cnode = dynamic_cast<CONTACT::FriNode*>(interface_->discret().l_row_node(i));
     if (!cnode) FOUR_C_THROW("cast failed");
-    cnode->active() = active_toggle->operator[](i);
-    cnode->fri_data().slip() = slip_toggle->operator[](i);
-    cnode->data().active_old() = active_old_toggle->operator[](i);
+    cnode->active() = active_toggle->local_values_as_span()[i];
+    cnode->fri_data().slip() = slip_toggle->local_values_as_span()[i];
+    cnode->data().active_old() = active_old_toggle->local_values_as_span()[i];
     for (int d = 0; d < interface_->n_dim(); ++d)
-      cnode->mo_data().lm()[d] = z_->operator[](z_->get_map().lid(cnode->dofs()[d]));
+      cnode->mo_data().lm()[d] = z_->local_values_as_span()[z_->get_map().lid(cnode->dofs()[d])];
   }
 }
 

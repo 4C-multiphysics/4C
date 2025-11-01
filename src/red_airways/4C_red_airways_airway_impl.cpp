@@ -630,19 +630,19 @@ int Discret::Elements::AirwayImpl<distype>::evaluate(RedAirway* ele, Teuchos::Pa
   double e_acin_e_vn;
 
   // split area and volumetric flow rate, insert into element arrays
-  e_acin_e_vnp = (*evaluation_data.acinar_vnp)[ele->lid()];
-  e_acin_e_vn = (*evaluation_data.acinar_vn)[ele->lid()];
+  e_acin_e_vnp = evaluation_data.acinar_vnp->local_values_as_span()[ele->lid()];
+  e_acin_e_vn = evaluation_data.acinar_vn->local_values_as_span()[ele->lid()];
 
   // get the volumetric flow rate from the previous time step
   Discret::ReducedLung::ElemParams elem_params;
-  elem_params.qout_np = (*evaluation_data.qout_np)[ele->lid()];
-  elem_params.qout_n = (*evaluation_data.qout_n)[ele->lid()];
-  elem_params.qout_nm = (*evaluation_data.qout_nm)[ele->lid()];
-  elem_params.qin_np = (*evaluation_data.qin_np)[ele->lid()];
-  elem_params.qin_n = (*evaluation_data.qin_n)[ele->lid()];
-  elem_params.qin_nm = (*evaluation_data.qin_nm)[ele->lid()];
-  elem_params.volnp = (*evaluation_data.elemVolumenp)[ele->lid()];
-  elem_params.voln = (*evaluation_data.elemVolumen)[ele->lid()];
+  elem_params.qout_np = evaluation_data.qout_np->local_values_as_span()[ele->lid()];
+  elem_params.qout_n = evaluation_data.qout_n->local_values_as_span()[ele->lid()];
+  elem_params.qout_nm = evaluation_data.qout_nm->local_values_as_span()[ele->lid()];
+  elem_params.qin_np = evaluation_data.qin_np->local_values_as_span()[ele->lid()];
+  elem_params.qin_n = evaluation_data.qin_n->local_values_as_span()[ele->lid()];
+  elem_params.qin_nm = evaluation_data.qin_nm->local_values_as_span()[ele->lid()];
+  elem_params.volnp = evaluation_data.elemVolumenp->local_values_as_span()[ele->lid()];
+  elem_params.voln = evaluation_data.elemVolumen->local_values_as_span()[ele->lid()];
 
   elem_params.acin_vnp = e_acin_e_vnp;
   elem_params.acin_vn = e_acin_e_vn;
@@ -655,8 +655,8 @@ int Discret::Elements::AirwayImpl<distype>::evaluate(RedAirway* ele, Teuchos::Pa
   if (evaluation_data.compute_awacinter)
   {
     compute_pext(ele, *on, *pnp, params);
-    elem_params.p_extn = (*evaluation_data.p_extn)[ele->lid()];
-    elem_params.p_extnp = (*evaluation_data.p_extnp)[ele->lid()];
+    elem_params.p_extn = evaluation_data.p_extn->local_values_as_span()[ele->lid()];
+    elem_params.p_extnp = evaluation_data.p_extnp->local_values_as_span()[ele->lid()];
   }
 
   // Routine for open/collapsed decision
@@ -664,7 +664,7 @@ int Discret::Elements::AirwayImpl<distype>::evaluate(RedAirway* ele, Teuchos::Pa
   if (airwayColl == 1)
   {
     evaluate_collapse(ele, epnp, params, dt);
-    elem_params.open = (*evaluation_data.open)[ele->lid()];
+    elem_params.open = evaluation_data.open->local_values_as_span()[ele->lid()];
   }
 
   // ---------------------------------------------------------------------
@@ -768,9 +768,9 @@ void Discret::Elements::AirwayImpl<distype>::evaluate_collapse(
   const double Pcrit_o = airway_params.p_crit_open;
   const double Pcrit_c = airway_params.p_crit_close;
 
-  double xnp = (*evaluation_data.x_np)[ele->lid()];
-  double xn = (*evaluation_data.x_n)[ele->lid()];
-  double opennp = (*evaluation_data.open)[ele->lid()];
+  double xnp = evaluation_data.x_np->local_values_as_span()[ele->lid()];
+  double xn = evaluation_data.x_n->local_values_as_span()[ele->lid()];
+  double opennp = evaluation_data.open->local_values_as_span()[ele->lid()];
 
   // as decisive quantity the pressure value at the first node of the airway element is chosen;
   // using the mean pressure of the airway element caused convergence problems
@@ -824,11 +824,11 @@ void Discret::Elements::AirwayImpl<distype>::compute_pext(RedAirway* ele,
       Discret::ReducedLung::EvaluationData::get();
 
   // get node-Id of nearest acinus
-  int node_id = (*evaluation_data.airway_acinus_dep)[ele->lid()];
+  int node_id = evaluation_data.airway_acinus_dep->local_values_as_span()[ele->lid()];
 
   // Set pextn and pextnp
-  double pextnp = (pnp)[node_id];
-  double pextn = (on)[node_id];
+  double pextnp = pnp.local_values_as_span()[node_id];
+  double pextn = on.local_values_as_span()[node_id];
 
 
   int gid = ele->id();
@@ -874,8 +874,8 @@ void Discret::Elements::AirwayImpl<distype>::evaluate_terminal_bc(RedAirway* ele
   }
 
   Core::LinAlg::SerialDenseVector eqn(2);
-  eqn(0) = (*evaluation_data.qin_n)[ele->lid()];
-  eqn(1) = (*evaluation_data.qout_n)[ele->lid()];
+  eqn(0) = evaluation_data.qin_n->local_values_as_span()[ele->lid()];
+  eqn(1) = evaluation_data.qout_n->local_values_as_span()[ele->lid()];
   // ---------------------------------------------------------------------------------
   // Resolve the BCs
   // ---------------------------------------------------------------------------------
@@ -1194,23 +1194,23 @@ void Discret::Elements::AirwayImpl<distype>::calc_flow_rates(RedAirway* ele,
   for (int i = 0; i < elemVecdim; ++i)
   {
     // split area and volumetric flow rate, insert into element arrays
-    e_acin_vnp = (*evaluation_data.acinar_vnp)[ele->lid()];
-    e_acin_vn = (*evaluation_data.acinar_vn)[ele->lid()];
+    e_acin_vnp = evaluation_data.acinar_vnp->local_values_as_span()[ele->lid()];
+    e_acin_vn = evaluation_data.acinar_vn->local_values_as_span()[ele->lid()];
   }
 
 
   // get the volumetric flow rate from the previous time step
   Discret::ReducedLung::ElemParams elem_params;
-  elem_params.qout_np = (*evaluation_data.qout_np)[ele->lid()];
-  elem_params.qout_n = (*evaluation_data.qout_n)[ele->lid()];
-  elem_params.qout_nm = (*evaluation_data.qout_nm)[ele->lid()];
-  elem_params.qin_np = (*evaluation_data.qin_np)[ele->lid()];
-  elem_params.qin_n = (*evaluation_data.qin_n)[ele->lid()];
-  elem_params.qin_nm = (*evaluation_data.qin_nm)[ele->lid()];
+  elem_params.qout_np = evaluation_data.qout_np->local_values_as_span()[ele->lid()];
+  elem_params.qout_n = evaluation_data.qout_n->local_values_as_span()[ele->lid()];
+  elem_params.qout_nm = evaluation_data.qout_nm->local_values_as_span()[ele->lid()];
+  elem_params.qin_np = evaluation_data.qin_np->local_values_as_span()[ele->lid()];
+  elem_params.qin_n = evaluation_data.qin_n->local_values_as_span()[ele->lid()];
+  elem_params.qin_nm = evaluation_data.qin_nm->local_values_as_span()[ele->lid()];
 
   // TODO same volume is used is this correct?
-  elem_params.volnp = (*evaluation_data.elemVolumenp)[ele->lid()];
-  elem_params.voln = (*evaluation_data.elemVolumenp)[ele->lid()];
+  elem_params.volnp = evaluation_data.elemVolumenp->local_values_as_span()[ele->lid()];
+  elem_params.voln = evaluation_data.elemVolumenp->local_values_as_span()[ele->lid()];
 
   elem_params.acin_vnp = e_acin_vnp;
   elem_params.acin_vn = e_acin_vn;
@@ -1219,12 +1219,12 @@ void Discret::Elements::AirwayImpl<distype>::calc_flow_rates(RedAirway* ele,
   elem_params.lungVolume_n = 0.0;
   elem_params.lungVolume_nm = 0.0;
 
-  elem_params.x_np = (*evaluation_data.x_np)[ele->lid()];
-  elem_params.x_n = (*evaluation_data.x_n)[ele->lid()];
-  elem_params.open = (*evaluation_data.open)[ele->lid()];
+  elem_params.x_np = evaluation_data.x_np->local_values_as_span()[ele->lid()];
+  elem_params.x_n = evaluation_data.x_n->local_values_as_span()[ele->lid()];
+  elem_params.open = evaluation_data.open->local_values_as_span()[ele->lid()];
 
-  elem_params.p_extn = (*evaluation_data.p_extn)[ele->lid()];
-  elem_params.p_extnp = (*evaluation_data.p_extnp)[ele->lid()];
+  elem_params.p_extn = evaluation_data.p_extn->local_values_as_span()[ele->lid()];
+  elem_params.p_extnp = evaluation_data.p_extnp->local_values_as_span()[ele->lid()];
 
   Core::LinAlg::SerialDenseMatrix system_matrix(elemVecdim, elemVecdim, true);
   Core::LinAlg::SerialDenseVector rhs(elemVecdim);
@@ -1262,10 +1262,10 @@ void Discret::Elements::AirwayImpl<distype>::calc_elem_volume(RedAirway* ele,
   const auto airway_params = ele->get_airway_params();
 
   // extract all essential element variables from their corresponding variables
-  double qinnp = (*evaluation_data.qin_np)[ele->lid()];
-  double qoutnp = (*evaluation_data.qout_np)[ele->lid()];
-  double eVolumen = (*evaluation_data.elemVolumen)[ele->lid()];
-  double eVolumenp = (*evaluation_data.elemVolumenp)[ele->lid()];
+  double qinnp = evaluation_data.qin_np->local_values_as_span()[ele->lid()];
+  double qoutnp = evaluation_data.qout_np->local_values_as_span()[ele->lid()];
+  double eVolumen = evaluation_data.elemVolumen->local_values_as_span()[ele->lid()];
+  double eVolumenp = evaluation_data.elemVolumenp->local_values_as_span()[ele->lid()];
 
   // get time-step size
   const double dt = evaluation_data.dt;

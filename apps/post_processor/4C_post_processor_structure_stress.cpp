@@ -355,15 +355,15 @@ struct WriteNodalEigenStressStep : public SpecialFieldInterface
         Core::LinAlg::SerialDenseMatrix eigenvec(3, 3);
         Core::LinAlg::SerialDenseVector eigenval(3);
 
-        eigenvec(0, 0) = ((nodal_stress(0)))[i];
-        eigenvec(0, 1) = ((nodal_stress(3)))[i];
-        eigenvec(0, 2) = ((nodal_stress(5)))[i];
+        eigenvec(0, 0) = nodal_stress(0).local_values_as_span()[i];
+        eigenvec(0, 1) = nodal_stress(3).local_values_as_span()[i];
+        eigenvec(0, 2) = nodal_stress(5).local_values_as_span()[i];
         eigenvec(1, 0) = eigenvec(0, 1);
-        eigenvec(1, 1) = ((nodal_stress(1)))[i];
-        eigenvec(1, 2) = ((nodal_stress(4)))[i];
+        eigenvec(1, 1) = nodal_stress(1).local_values_as_span()[i];
+        eigenvec(1, 2) = nodal_stress(4).local_values_as_span()[i];
         eigenvec(2, 0) = eigenvec(0, 2);
         eigenvec(2, 1) = eigenvec(1, 2);
-        eigenvec(2, 2) = ((nodal_stress(2)))[i];
+        eigenvec(2, 2) = nodal_stress(2).local_values_as_span()[i];
 
         Core::LinAlg::symmetric_eigen_problem(eigenvec, eigenval, true);
 
@@ -383,10 +383,10 @@ struct WriteNodalEigenStressStep : public SpecialFieldInterface
         Core::LinAlg::SerialDenseMatrix eigenvec(2, 2);
         Core::LinAlg::SerialDenseVector eigenval(2);
 
-        eigenvec(0, 0) = ((nodal_stress(0)))[i];
-        eigenvec(0, 1) = ((nodal_stress(3)))[i];
+        eigenvec(0, 0) = nodal_stress(0).local_values_as_span()[i];
+        eigenvec(0, 1) = nodal_stress(3).local_values_as_span()[i];
         eigenvec(1, 0) = eigenvec(0, 1);
-        eigenvec(1, 1) = ((nodal_stress(1)))[i];
+        eigenvec(1, 1) = nodal_stress(1).local_values_as_span()[i];
 
         Core::LinAlg::symmetric_eigen_problem(eigenvec, eigenval, true);
 
@@ -501,10 +501,10 @@ struct WriteElementCenterEigenStressStep : public SpecialFieldInterface
         Core::LinAlg::SerialDenseMatrix eigenvec(2, 2);
         Core::LinAlg::SerialDenseVector eigenval(2);
 
-        eigenvec(0, 0) = ((element_stress(0)))[i];
-        eigenvec(0, 1) = ((element_stress(3)))[i];
+        eigenvec(0, 0) = element_stress(0).local_values_as_span()[i];
+        eigenvec(0, 1) = element_stress(3).local_values_as_span()[i];
         eigenvec(1, 0) = eigenvec(0, 1);
-        eigenvec(1, 1) = ((element_stress(1)))[i];
+        eigenvec(1, 1) = element_stress(1).local_values_as_span()[i];
 
         Core::LinAlg::symmetric_eigen_problem(eigenvec, eigenval, true);
 

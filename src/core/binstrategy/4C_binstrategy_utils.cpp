@@ -259,7 +259,7 @@ namespace Core::Binstrategy::Utils
             "each proc does (usually) not own all nodes of its row elements ");
       for (size_t dim = 0; dim < x.size(); ++dim)
       {
-        currpos[dim] = x[dim] + (*disnp)[lid + dim];
+        currpos[dim] = x[dim] + disnp->local_values_as_span()[lid + dim];
       }
       for (size_t dim = x.size(); dim < 3; ++dim) currpos[dim] = 0.0;
     }

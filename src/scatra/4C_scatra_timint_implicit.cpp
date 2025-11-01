@@ -1804,7 +1804,7 @@ void ScaTra::ScaTraTimIntImpl::collect_runtime_output_data()
     auto micro_conc_multi = Core::LinAlg::MultiVector<double>(*discret_->node_row_map(), 1, true);
 
     for (int inode = 0; inode < discret_->num_my_row_nodes(); ++inode)
-      (micro_conc_multi)(0).get_values()[inode] = (*phinp_micro_)[inode];
+      (micro_conc_multi)(0).get_values()[inode] = phinp_micro_->local_values_as_span()[inode];
 
     visualization_writer_->append_result_data_vector_with_context(
         micro_conc_multi, Core::IO::OutputEntity::node, {"micro_conc"});
@@ -3362,7 +3362,7 @@ void ScaTra::ScaTraTimIntImpl::evaluate_macro_micro_coupling()
                 FOUR_C_THROW("Number of permeabilities does not match number of scalars!");
 
               // compute and store micro-scale coupling flux
-              q_ = (*permeabilities)[0] * ((*phinp_)[lid] - phinp_macro_[0]);
+              q_ = (*permeabilities)[0] * (phinp_->local_values_as_span()[lid] - phinp_macro_[0]);
 
               // compute and store derivative of micro-scale coupling flux w.r.t. macro-scale state
               // variable
@@ -3440,7 +3440,7 @@ void ScaTra::ScaTraTimIntImpl::evaluate_macro_micro_coupling()
 
               // extract electrode-side and electrolyte-side concentration values at multi-scale
               // coupling point
-              const double conc_ed = (*phinp_)[lid];
+              const double conc_ed = phinp_->local_values_as_span()[lid];
               const double conc_el = phinp_macro_[0];
 
               // evaluate overall integration factors
@@ -3809,7 +3809,7 @@ void ScaTra::ScaTraTimIntImpl::calc_mean_micro_concentration()
       // only if owned by this proc
       if (dof_lid_micro != -1 and dof_lid_macro != -1)
       {
-        const double macro_value = (*phinp_)[dof_lid_macro];
+        const double macro_value = phinp_->local_values_as_span()[dof_lid_macro];
         // Sum, because afterwards it is divided by the number of adjacent nodes
         phinp_micro_->sum_into_local_value(dof_lid_micro, macro_value);
       }
@@ -3832,7 +3832,7 @@ void ScaTra::ScaTraTimIntImpl::calc_mean_micro_concentration()
     // only if this dof is part of the phinp_micro_ vector/map
     if (dof_lid != -1)
     {
-      const double old_value = (*phinp_micro_)[dof_lid];
+      const double old_value = phinp_micro_->local_values_as_span()[dof_lid];
       const int num_elements = node->num_element();
       const double new_value = old_value / static_cast<double>(num_elements);
       phinp_micro_->replace_local_value(dof_lid, new_value);
@@ -3907,7 +3907,7 @@ void ScaTra::ScaTraTimIntImpl::calc_mean_micro_concentration()
     const int lid = phinp_micro_->get_map().lid(hybrid_dof);
     if (lid != -1)
     {
-      const double value = (*phinp_micro_)[lid];
+      const double value = phinp_micro_->local_values_as_span()[lid];
       const double corrected_value = 2.0 * value;
       phinp_micro_->replace_local_value(lid, corrected_value);
     }

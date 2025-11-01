@@ -575,7 +575,7 @@ void Lubrication::TimIntImpl::add_cavitation_penalty()
   const double penalty_param = params_->get<double>("PENALTY_CAVITATION");
   for (int i = 0; i < dof_row_map()->num_my_elements(); ++i)
   {
-    const double pressure = prenp()->operator[](i);
+    const double pressure = prenp()->local_values_as_span()[i];
     if (pressure >= 0.) continue;
 
     const int gid = dof_row_map()->gid(i);
@@ -992,7 +992,8 @@ void Lubrication::TimIntImpl::output_state()
       Core::Nodes::Node* node = discret_->l_row_node(inode);
       for (int idim = 0; idim < nsd_; ++idim)
         (dispnp_multi)(idim).get_values()[discret_->node_row_map()->lid(node->id())] =
-            (*dispnp)[dispnp->get_map().lid(discret_->dof(nds_disp_, node, idim))];
+            dispnp->local_values_as_span()[dispnp->get_map().lid(
+                discret_->dof(nds_disp_, node, idim))];
     }
 
     output_->write_multi_vector("dispnp", dispnp_multi, Core::IO::nodevector);

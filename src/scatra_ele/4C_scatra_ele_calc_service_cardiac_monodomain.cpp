@@ -141,7 +141,8 @@ int Discret::Elements::ScaTraEleCalcCardiacMonodomain<distype, probdim>::evaluat
           std::shared_ptr<Mat::Myocard> material =
               std::dynamic_pointer_cast<Mat::Myocard>(ele->material());
           int k = params.get<int>("k");
-          material->set_internal_state(k, (*material_internal_state_component)[ele->id()]);
+          material->set_internal_state(
+              k, material_internal_state_component->local_values_as_span()[ele->id()]);
         }
       }
     }

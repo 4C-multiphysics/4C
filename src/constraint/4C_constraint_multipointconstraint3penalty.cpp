@@ -417,7 +417,8 @@ void Constraints::MPConstraint3Penalty::evaluate_constraint(
                        .evaluate(time);
       }
 
-      double diff = (curvefac * (*initerror_)[eid] - (*acterror_)[eid]);
+      double diff = (curvefac * (*initerror_).local_values_as_span()[eid] -
+                     (*acterror_).local_values_as_span()[eid]);
       elematrix1.scale(diff);
       for (int i = 0; i < eledim; i++)
         for (int j = 0; j < eledim; j++) elematrix1(i, j) += elevector1(i) * elevector1(j);

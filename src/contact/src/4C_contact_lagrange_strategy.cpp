@@ -328,11 +328,11 @@ void CONTACT::LagrangeStrategy::evaluate_friction(
 
       // set zero diagonal values to dummy 1.0
       for (int i = 0; i < diagV->local_length(); ++i)
-        if (abs((*diagV)[i]) < 1e-12) (*diagV).get_values()[i] = 1.0;
+        if (abs((*diagV).get_values()[i]) < 1e-12) (*diagV).get_values()[i] = 1.0;
       for (int i = 0; i < diagE->local_length(); ++i)
-        if (abs((*diagE)[i]) < 1e-12) (*diagE).get_values()[i] = 1.0;
+        if (abs((*diagE).get_values()[i]) < 1e-12) (*diagE).get_values()[i] = 1.0;
       for (int i = 0; i < diagS->local_length(); ++i)
-        if (abs((*diagS)[i]) < 1e-12) (*diagS).get_values()[i] = 1.0;
+        if (abs((*diagS).get_values()[i]) < 1e-12) (*diagS).get_values()[i] = 1.0;
 
       // scalar inversion of diagonal values
       diagV->reciprocal(*diagV);
@@ -407,7 +407,7 @@ void CONTACT::LagrangeStrategy::evaluate_friction(
 
       // set zero diagonal values to dummy 1.0
       for (int i = 0; i < diag->local_length(); ++i)
-        if ((*diag)[i] == 0.0) (*diag).get_values()[i] = 1.0;
+        if (diag->local_values_as_span()[i] == 0.0) (*diag).get_values()[i] = 1.0;
 
       // scalar inversion of diagonal values
       diag->reciprocal(*diag);
@@ -2090,11 +2090,11 @@ void CONTACT::LagrangeStrategy::evaluate_contact(
 
       // set zero diagonal values to dummy 1.0
       for (int i = 0; i < diagV->local_length(); ++i)
-        if (abs((*diagV)[i]) < 1e-12) (*diagV).get_values()[i] = 1.0;
+        if (abs((*diagV).get_values()[i]) < 1e-12) (*diagV).get_values()[i] = 1.0;
       for (int i = 0; i < diagE->local_length(); ++i)
-        if (abs((*diagE)[i]) < 1e-12) (*diagE).get_values()[i] = 1.0;
+        if (abs((*diagE).get_values()[i]) < 1e-12) (*diagE).get_values()[i] = 1.0;
       for (int i = 0; i < diagS->local_length(); ++i)
-        if (abs((*diagS)[i]) < 1e-12) (*diagS).get_values()[i] = 1.0;
+        if (abs((*diagS).get_values()[i]) < 1e-12) (*diagS).get_values()[i] = 1.0;
 
       // scalar inversion of diagonal values
       diagV->reciprocal(*diagV);
@@ -2168,7 +2168,7 @@ void CONTACT::LagrangeStrategy::evaluate_contact(
 
       // set zero diagonal values to dummy 1.0
       for (int i = 0; i < diag->local_length(); ++i)
-        if ((*diag)[i] == 0.0) (*diag).get_values()[i] = 1.0;
+        if (diag->local_values_as_span()[i] == 0.0) (*diag).get_values()[i] = 1.0;
 
       // scalar inversion of diagonal values
       diag->reciprocal(*diag);
@@ -3590,11 +3590,11 @@ void CONTACT::LagrangeStrategy::assemble_all_contact_terms_friction()
 
       // set zero diagonal values to dummy 1.0
       for (int i = 0; i < diagV->local_length(); ++i)
-        if (abs((*diagV)[i]) < 1e-12) (*diagV).get_values()[i] = 1.0;
+        if (abs((*diagV).get_values()[i]) < 1e-12) (*diagV).get_values()[i] = 1.0;
       for (int i = 0; i < diagE->local_length(); ++i)
-        if (abs((*diagE)[i]) < 1e-12) (*diagE).get_values()[i] = 1.0;
+        if (abs((*diagE).get_values()[i]) < 1e-12) (*diagE).get_values()[i] = 1.0;
       for (int i = 0; i < diagS->local_length(); ++i)
-        if (abs((*diagS)[i]) < 1e-12) (*diagS).get_values()[i] = 1.0;
+        if (abs((*diagS).get_values()[i]) < 1e-12) (*diagS).get_values()[i] = 1.0;
 
       // scalar inversion of diagonal values
       diagV->reciprocal(*diagV);
@@ -3669,7 +3669,7 @@ void CONTACT::LagrangeStrategy::assemble_all_contact_terms_friction()
 
       // set zero diagonal values to dummy 1.0
       for (int i = 0; i < diag->local_length(); ++i)
-        if ((*diag)[i] == 0.0) (*diag).get_values()[i] = 1.0;
+        if (diag->local_values_as_span()[i] == 0.0) (*diag).get_values()[i] = 1.0;
 
       // scalar inversion of diagonal values
       diag->reciprocal(*diag);
@@ -3848,11 +3848,11 @@ void CONTACT::LagrangeStrategy::assemble_all_contact_terms_frictionless()
 
       // set zero diagonal values to dummy 1.0
       for (int i = 0; i < diagV->local_length(); ++i)
-        if (abs((*diagV)[i]) < 1e-12) (*diagV).get_values()[i] = 1.0;
+        if (abs((*diagV).get_values()[i]) < 1e-12) (*diagV).get_values()[i] = 1.0;
       for (int i = 0; i < diagE->local_length(); ++i)
-        if (abs((*diagE)[i]) < 1e-12) (*diagE).get_values()[i] = 1.0;
+        if (abs((*diagE).get_values()[i]) < 1e-12) (*diagE).get_values()[i] = 1.0;
       for (int i = 0; i < diagS->local_length(); ++i)
-        if (abs((*diagS)[i]) < 1e-12) (*diagS).get_values()[i] = 1.0;
+        if (abs((*diagS).get_values()[i]) < 1e-12) (*diagS).get_values()[i] = 1.0;
 
       // scalar inversion of diagonal values
       diagV->reciprocal(*diagV);
@@ -3926,7 +3926,7 @@ void CONTACT::LagrangeStrategy::assemble_all_contact_terms_frictionless()
 
       // set zero diagonal values to dummy 1.0
       for (int i = 0; i < diag->local_length(); ++i)
-        if ((*diag)[i] == 0.0) (*diag).get_values()[i] = 1.0;
+        if (diag->local_values_as_span()[i] == 0.0) (*diag).get_values()[i] = 1.0;
 
       // scalar inversion of diagonal values
       diag->reciprocal(*diag);
@@ -4591,7 +4591,7 @@ void CONTACT::LagrangeStrategy::update_active_set()
       Node* cnode = dynamic_cast<Node*>(node);
 
       // compute weighted gap
-      double wgap = (*wgap_)[wgap_->get_map().lid(gid)];
+      double wgap = wgap_->local_values_as_span()[wgap_->get_map().lid(gid)];
 
       // compute normal part of Lagrange multiplier
       double nz = 0.0;
@@ -4657,7 +4657,7 @@ void CONTACT::LagrangeStrategy::update_active_set()
           {
             FriNode* frinode = dynamic_cast<FriNode*>(cnode);
             const Core::LinAlg::Vector<double>& ct_ref = interface_[i]->ct_ref();
-            double ct = ct_ref[ct_ref.get_map().lid(frinode->id())];
+            double ct = ct_ref.local_values_as_span()[ct_ref.get_map().lid(frinode->id())];
 
             // CAREFUL: friction bound is now interface-local (popp 08/2012)
             double frbound = interface_[i]->interface_params().get<double>("FRBOUND");
@@ -4695,7 +4695,7 @@ void CONTACT::LagrangeStrategy::update_active_set()
           {
             FriNode* frinode = dynamic_cast<FriNode*>(cnode);
             const Core::LinAlg::Vector<double>& ct_ref = interface_[i]->ct_ref();
-            double ct = ct_ref[ct_ref.get_map().lid(frinode->id())];
+            double ct = ct_ref.local_values_as_span()[ct_ref.get_map().lid(frinode->id())];
 
             // CAREFUL: friction coefficient is now interface-local (popp 08/2012)
             double frcoeff = interface_[i]->interface_params().get<double>("FRCOEFF");
@@ -6628,7 +6628,8 @@ void CONTACT::LagrangeStrategy::run_pre_apply_jacobian_inverse(
     Core::LinAlg::export_to(rhs, rhs_str);
     systrafo_->multiply(true, rhs_str, rhs_str2);
     for (int i = 0; i < rhs_str2.get_map().num_my_elements(); ++i)
-      rhs.get_values()[rhs.get_map().lid(rhs_str2.get_map().gid(i))] = rhs_str2[i];
+      rhs.get_values()[rhs.get_map().lid(rhs_str2.get_map().gid(i))] =
+          rhs_str2.local_values_as_span()[i];
   }
 
 

@@ -172,17 +172,17 @@ int Discret::Elements::AcinusImpl<distype>::evaluate(RedAcinus* ele, Teuchos::Pa
   double e_acin_e_vn;
 
   // Split area and volumetric flow rate, insert into element arrays
-  e_acin_e_vnp = (*evaluation_data.acinar_vnp)[ele->lid()];
-  e_acin_e_vn = (*evaluation_data.acinar_vn)[ele->lid()];
+  e_acin_e_vnp = evaluation_data.acinar_vnp->local_values_as_span()[ele->lid()];
+  e_acin_e_vn = evaluation_data.acinar_vn->local_values_as_span()[ele->lid()];
 
   // Get the volumetric flow rate from the previous time step
   Discret::ReducedLung::ElemParams elem_params;
-  elem_params.qout_np = (*evaluation_data.qout_np)[ele->lid()];
-  elem_params.qout_n = (*evaluation_data.qout_n)[ele->lid()];
-  elem_params.qout_nm = (*evaluation_data.qout_nm)[ele->lid()];
-  elem_params.qin_np = (*evaluation_data.qin_np)[ele->lid()];
-  elem_params.qin_n = (*evaluation_data.qin_n)[ele->lid()];
-  elem_params.qin_nm = (*evaluation_data.qin_nm)[ele->lid()];
+  elem_params.qout_np = evaluation_data.qout_np->local_values_as_span()[ele->lid()];
+  elem_params.qout_n = evaluation_data.qout_n->local_values_as_span()[ele->lid()];
+  elem_params.qout_nm = evaluation_data.qout_nm->local_values_as_span()[ele->lid()];
+  elem_params.qin_np = evaluation_data.qin_np->local_values_as_span()[ele->lid()];
+  elem_params.qin_n = evaluation_data.qin_n->local_values_as_span()[ele->lid()];
+  elem_params.qin_nm = evaluation_data.qin_nm->local_values_as_span()[ele->lid()];
 
   elem_params.acin_vnp = e_acin_e_vnp;
   elem_params.acin_vn = e_acin_e_vn;
@@ -724,18 +724,18 @@ void Discret::Elements::AcinusImpl<distype>::calc_flow_rates(RedAcinus* ele,
   for (int i = 0; i < elemVecdim; ++i)
   {
     // Split area and volumetric flow rate, insert into element arrays
-    e_acin_vnp = (*evaluation_data.acinar_vnp)[ele->lid()];
-    e_acin_vn = (*evaluation_data.acinar_vn)[ele->lid()];
+    e_acin_vnp = evaluation_data.acinar_vnp->local_values_as_span()[ele->lid()];
+    e_acin_vn = evaluation_data.acinar_vn->local_values_as_span()[ele->lid()];
   }
 
   // Get the volumetric flow rate from the previous time step
   Discret::ReducedLung::ElemParams elem_params;
-  elem_params.qout_np = (*evaluation_data.qout_np)[ele->lid()];
-  elem_params.qout_n = (*evaluation_data.qout_n)[ele->lid()];
-  elem_params.qout_nm = (*evaluation_data.qout_nm)[ele->lid()];
-  elem_params.qin_np = (*evaluation_data.qin_np)[ele->lid()];
-  elem_params.qin_n = (*evaluation_data.qin_n)[ele->lid()];
-  elem_params.qin_nm = (*evaluation_data.qin_nm)[ele->lid()];
+  elem_params.qout_np = evaluation_data.qout_np->local_values_as_span()[ele->lid()];
+  elem_params.qout_n = evaluation_data.qout_n->local_values_as_span()[ele->lid()];
+  elem_params.qout_nm = evaluation_data.qout_nm->local_values_as_span()[ele->lid()];
+  elem_params.qin_np = evaluation_data.qin_np->local_values_as_span()[ele->lid()];
+  elem_params.qin_n = evaluation_data.qin_n->local_values_as_span()[ele->lid()];
+  elem_params.qin_nm = evaluation_data.qin_nm->local_values_as_span()[ele->lid()];
 
   elem_params.acin_vnp = e_acin_vnp;
   elem_params.acin_vn = e_acin_vn;
@@ -746,7 +746,7 @@ void Discret::Elements::AcinusImpl<distype>::calc_flow_rates(RedAcinus* ele,
   // Call routine for calculating element matrix and right hand side
   sysmat<distype>(ele, epnp, epn, epnm, system_matrix, rhs, *material, elem_params, time, dt);
 
-  double qn = (*evaluation_data.qin_n)[ele->lid()];
+  double qn = evaluation_data.qin_n->local_values_as_span()[ele->lid()];
   double qnp = -1.0 * (system_matrix(0, 0) * epnp(0) + system_matrix(0, 1) * epnp(1) - rhs(0));
 
   int gid = ele->id();
@@ -782,7 +782,7 @@ void Discret::Elements::AcinusImpl<distype>::calc_elem_volume(RedAcinus* ele,
       Discret::ReducedLung::EvaluationData::get();
 
   // Get acinus size
-  double evolnp = (*evaluation_data.elemVolumenp)[ele->lid()];
+  double evolnp = evaluation_data.elemVolumenp->local_values_as_span()[ele->lid()];
 
   // Get element global ID
   int gid = ele->id();

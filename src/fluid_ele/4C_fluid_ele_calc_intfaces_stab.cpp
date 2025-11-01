@@ -689,7 +689,7 @@ int Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
   {
     int lid = velaf->get_map().lid(patchlm[i]);
     if (lid == -1) FOUR_C_THROW("Cannot find degree of freedom on this proc");
-    patch_velaf[i] = (*velaf)[lid];
+    patch_velaf[i] = velaf->local_values_as_span()[lid];
   }
 
 
@@ -722,7 +722,7 @@ int Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
     {
       int lid = velnp->get_map().lid(patchlm[i]);
       if (lid == -1) FOUR_C_THROW("Cannot find degree of freedom on this proc");
-      patch_velnp[i] = (*velnp)[lid];
+      patch_velnp[i] = velnp->local_values_as_span()[lid];
     }
 
     // get velnp for master element
@@ -777,11 +777,11 @@ int Discret::Elements::FluidInternalSurfaceStab<distype, pdistype,
     {
       int lid_1 = dispnp->get_map().lid(patchlm[i]);
       if (lid_1 == -1) FOUR_C_THROW("Cannot find degree of freedom on this proc");
-      patch_dispnp[i] = (*dispnp)[lid_1];
+      patch_dispnp[i] = dispnp->local_values_as_span()[lid_1];
 
       int lid_2 = gridv->get_map().lid(patchlm[i]);
       if (lid_2 == -1) FOUR_C_THROW("Cannot find degree of freedom on this proc");
-      patch_gridv[i] = (*gridv)[lid_2];
+      patch_gridv[i] = gridv->local_values_as_span()[lid_2];
     }
 
     // get dispnp for surface element

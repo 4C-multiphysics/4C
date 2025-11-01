@@ -1637,7 +1637,7 @@ void EnsightWriter::write_dof_result_step(std::ofstream& file, PostResult& resul
             else
             {
               // the standard case
-              write(file, static_cast<float>((proc0data)[lid]));
+              write(file, static_cast<float>(proc0data.local_values_as_span()[lid]));
             }
           }
           else
@@ -1756,7 +1756,7 @@ void EnsightWriter::write_nodal_result_step(std::ofstream& file,
         for (int inode = 0; inode < finalnumnode;
             inode++)  // inode == lid of node because we use proc0map_
         {
-          write(file, static_cast<float>((column)[inode]));
+          write(file, static_cast<float>(column.local_values_as_span()[inode]));
         }
       }
     }  // if (myrank_==0)
@@ -1894,7 +1894,7 @@ void EnsightWriter::write_element_dof_result_step(std::ofstream& file, PostResul
           int lid = finaldatamap.lid(actdofgid);
           if (lid > -1)
           {
-            write(file, static_cast<float>((proc0data)[lid]));
+            write(file, static_cast<float>(proc0data.local_values_as_span()[lid]));
           }
           else
             FOUR_C_THROW("received illegal dof local id: {}", lid);
@@ -2034,7 +2034,8 @@ void EnsightWriter::write_element_result_step(std::ofstream& file,
           int lid = finaldatamap.lid(gid);
           if (lid > -1)
           {
-            for (int i = 0; i < numsubele; ++i) write(file, static_cast<float>((datacolumn)[lid]));
+            for (int i = 0; i < numsubele; ++i)
+              write(file, static_cast<float>(datacolumn.local_values_as_span()[lid]));
           }
           else
             FOUR_C_THROW("received illegal dof local id: {}", lid);

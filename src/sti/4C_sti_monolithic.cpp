@@ -419,8 +419,9 @@ void STI::Monolithic::fd_check()
       }
 
       // finite difference suggestion (first divide by epsilon and then add for better conditioning)
-      const double fdval = -(*residual_)[rowlid] / scatra_field()->fd_check_eps() +
-                           (rhs_original)[rowlid] / scatra_field()->fd_check_eps();
+      const double fdval =
+          -residual_->local_values_as_span()[rowlid] / scatra_field()->fd_check_eps() +
+          rhs_original.local_values_as_span()[rowlid] / scatra_field()->fd_check_eps();
 
       // confirm accuracy of first comparison
       if (abs(fdval) > 1.e-17 and abs(fdval) < 1.e-15)
@@ -451,10 +452,12 @@ void STI::Monolithic::fd_check()
       else
       {
         // left-hand side in second comparison
-        const double left = entry - (rhs_original)[rowlid] / scatra_field()->fd_check_eps();
+        const double left =
+            entry - rhs_original.local_values_as_span()[rowlid] / scatra_field()->fd_check_eps();
 
         // right-hand side in second comparison
-        const double right = -(*residual_)[rowlid] / scatra_field()->fd_check_eps();
+        const double right =
+            -residual_->local_values_as_span()[rowlid] / scatra_field()->fd_check_eps();
 
         // confirm accuracy of second comparison
         if (abs(right) > 1.e-17 and abs(right) < 1.e-15)
@@ -694,7 +697,7 @@ void STI::Monolithic::output_vector_to_file(
 
       // check output omission tolerance
       for (j = 0; j < fullvector.num_vectors(); ++j)
-        if (std::abs(fullvector(j)[lid]) > tolerance) break;
+        if (std::abs(fullvector(j).local_values_as_span()[lid]) > tolerance) break;
 
       // perform output if applicable
       if (j < fullvector.num_vectors())
@@ -705,7 +708,7 @@ void STI::Monolithic::output_vector_to_file(
         // loop over all subvectors
         for (j = 0; j < fullvector.num_vectors(); ++j)
           // write current vector component to file
-          file << "," << fullvector(j)[lid];
+          file << "," << fullvector(j).local_values_as_span()[lid];
 
         // output line break
         file << std::endl;

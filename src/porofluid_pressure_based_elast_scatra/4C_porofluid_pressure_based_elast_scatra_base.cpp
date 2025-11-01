@@ -422,7 +422,7 @@ void PoroPressureBased::PorofluidElastScatraBaseAlgorithm::
               // species dof identified with < 1
               if (scatra_algo()->scatra_field()->dirich_maps()->cond_map()->lid(
                       scatra_dofs[idof]) == -1 &&
-                  (int)(*valid_volfracspec_dofs)[porofluid_elast_algo()
+                  (int)valid_volfracspec_dofs->local_values_as_span()[porofluid_elast_algo()
                           ->porofluid_algo()
                           ->discretization()
                           ->dof_row_map()

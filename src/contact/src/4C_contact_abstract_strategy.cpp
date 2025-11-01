@@ -1017,7 +1017,7 @@ void CONTACT::AbstractStrategy::update_global_self_contact_state()
     const int* oldgids = zincr_->get_map().my_global_elements();
     for (int i = 0; i < zincr_->get_map().num_my_elements(); ++i)
     {
-      if (std::abs((*zincr_)[i]) > std::numeric_limits<double>::epsilon())
+      if (std::abs(zincr_->local_values_as_span()[i]) > std::numeric_limits<double>::epsilon())
       {
         const int new_lid = gsdofrowmap_->lid(oldgids[i]);
         if (new_lid == -1)
@@ -1025,7 +1025,7 @@ void CONTACT::AbstractStrategy::update_global_self_contact_state()
               "Self contact: The Lagrange multiplier increment vector "
               "could not be transferred consistently.");
         else
-          (*tmp_ptr).get_values()[new_lid] = (*zincr_)[i];
+          (*tmp_ptr).get_values()[new_lid] = zincr_->local_values_as_span()[i];
       }
     }
     zincr_ = std::make_shared<Core::LinAlg::Vector<double>>(*tmp_ptr);
@@ -1036,7 +1036,7 @@ void CONTACT::AbstractStrategy::update_global_self_contact_state()
     const int* oldgids = z_->get_map().my_global_elements();
     for (int i = 0; i < z_->get_map().num_my_elements(); ++i)
     {
-      if (std::abs((*z_)[i]) > std::numeric_limits<double>::epsilon())
+      if (std::abs(z_->local_values_as_span()[i]) > std::numeric_limits<double>::epsilon())
       {
         const int new_lid = gsdofrowmap_->lid(oldgids[i]);
         if (new_lid == -1)
@@ -1044,7 +1044,7 @@ void CONTACT::AbstractStrategy::update_global_self_contact_state()
               "Self contact: The Lagrange multiplier vector "
               "could not be transferred consistently.");
         else
-          (*tmp_ptr).get_values()[new_lid] = (*z_)[i];
+          (*tmp_ptr).get_values()[new_lid] = z_->local_values_as_span()[i];
       }
     }
     z_ = tmp_ptr;
@@ -1630,17 +1630,18 @@ void CONTACT::AbstractStrategy::store_nodal_quantities(Mortar::StrategyBase::Qua
         {
           case Mortar::StrategyBase::lmcurrent:
           {
-            cnode->mo_data().lm()[dof] = (*vectorinterface)[locindex[dof]];
+            cnode->mo_data().lm()[dof] = vectorinterface->local_values_as_span()[locindex[dof]];
             break;
           }
           case Mortar::StrategyBase::lmold:
           {
-            cnode->mo_data().lmold()[dof] = (*vectorinterface)[locindex[dof]];
+            cnode->mo_data().lmold()[dof] = vectorinterface->local_values_as_span()[locindex[dof]];
             break;
           }
           case Mortar::StrategyBase::lmuzawa:
           {
-            cnode->mo_data().lmuzawa()[dof] = (*vectorinterface)[locindex[dof]];
+            cnode->mo_data().lmuzawa()[dof] =
+                vectorinterface->local_values_as_span()[locindex[dof]];
             break;
           }
           case Mortar::StrategyBase::lmupdate:
@@ -1652,7 +1653,7 @@ void CONTACT::AbstractStrategy::store_nodal_quantities(Mortar::StrategyBase::Qua
 #endif  // #ifndef CONTACTPSEUDO2D
 
             // store updated LM into node
-            cnode->mo_data().lm()[dof] = (*vectorinterface)[locindex[dof]];
+            cnode->mo_data().lm()[dof] = vectorinterface->local_values_as_span()[locindex[dof]];
             break;
           }
           case Mortar::StrategyBase::activeold:
@@ -2004,7 +2005,7 @@ void CONTACT::AbstractStrategy::do_read_restart(Core::IO::DiscretizationReader& 
       int gid = (interfaces()[i]->slave_row_nodes())->gid(j);
       int dof = (activetoggle->get_map()).lid(gid);
 
-      if ((*activetoggle)[dof] == 1)
+      if (activetoggle->local_values_as_span()[dof] == 1)
       {
         Core::Nodes::Node* node = interfaces()[i]->discret().g_node(gid);
         if (!node) FOUR_C_THROW("Cannot find node with gid %", gid);
@@ -2016,7 +2017,7 @@ void CONTACT::AbstractStrategy::do_read_restart(Core::IO::DiscretizationReader& 
         if (friction_)
         {
           // set value stick / slip in cnode
-          if ((*sliptoggle)[dof] == 1)
+          if (sliptoggle->local_values_as_span()[dof] == 1)
             dynamic_cast<CONTACT::FriNode*>(cnode)->fri_data().slip() = true;
         }
       }

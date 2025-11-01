@@ -82,7 +82,7 @@ namespace Core::IO
     point_result_data.reserve(result_data_dofbased.local_length());
 
     for (int lid = 0; lid < result_data_dofbased.local_length(); ++lid)
-      point_result_data.push_back((result_data_dofbased)[lid]);
+      point_result_data.push_back((result_data_dofbased).local_values_as_span()[lid]);
 
     visualization_manager_->get_visualization_data().set_point_data_vector<double>(
         resultname, point_result_data, result_num_dofs_per_node);
@@ -119,7 +119,7 @@ namespace Core::IO
       for (unsigned int idf = 0; idf < result_num_components_per_node; ++idf)
       {
         auto& column = (result_data_nodebased)(idf);
-        point_result_data.push_back(column[lid]);
+        point_result_data.push_back(column.local_values_as_span()[lid]);
       }
     }
 

@@ -210,9 +210,9 @@ std::vector<int> Beam3ContactOctTree::in_which_octant_lies(const int& thisBBoxID
   octants.clear();
   int bboxcolid = searchdis_.element_col_map()->lid(thisBBoxID);
   int i = 0;
-  while ((*bbox2octant_)(i)[bboxcolid] >= 0.0)
+  while ((*bbox2octant_)(i).local_values_as_span()[bboxcolid] >= 0.0)
   {
-    octants.push_back((int)(*bbox2octant_)(i)[bboxcolid]);
+    octants.push_back((int)(*bbox2octant_)(i).local_values_as_span()[bboxcolid]);
     i++;
   }
   return octants;
@@ -278,11 +278,11 @@ bool Beam3ContactOctTree::intersect_b_boxes_with(
         for (int i = 0; i < bboxesinoctants_->num_vectors(); i++)
         {
           // take only values of existing bounding boxes and not the filler values (-9)
-          if ((int)(*bboxesinoctants_)(i)[octants[ibox][oct]] > -0.9)
+          if ((int)(*bboxesinoctants_)(i).local_values_as_span()[octants[ibox][oct]] > -0.9)
           {
             // get the second bounding box ID
             std::vector<int> bboxinoct(2, -1);
-            bboxinoct[0] = (int)(*bboxesinoctants_)(i)[octants[ibox][oct]];
+            bboxinoct[0] = (int)(*bboxesinoctants_)(i).local_values_as_span()[octants[ibox][oct]];
             /*check for adjacent nodes: if there are adjacent nodes, then, of course, there
              * the intersection test will turn out positive. We skip those cases.*/
             // note: bounding box IDs are equal to element GIDs
@@ -390,8 +390,9 @@ void Beam3ContactOctTree::octree_output(
       for (int u = 0; u < allbboxes_->local_length(); u++)
       {
         for (int v = 0; v < allbboxes_->num_vectors(); v++)
-          out << std::scientific << std::setprecision(10) << (*allbboxes_)(v)[u] << " ";
-        out << (*diameter_)[u] << '\n';
+          out << std::scientific << std::setprecision(10)
+              << (*allbboxes_)(v).local_values_as_span()[u] << " ";
+        out << diameter_->local_values_as_span()[u] << '\n';
       }
     }
   }
@@ -642,7 +643,8 @@ void Beam3ContactOctTree::create_aabb(Core::LinAlg::SerialDenseMatrix& coord, co
     if (fabs(coord(i, 1) - coord(i, 0)) > maxedgelength)
       maxedgelength = fabs(coord(i, 1) - coord(i, 0));
   // Check for edgelength of AABB
-  if (maxedgelength < (*diameter_)[elecolid]) maxedgelength = (*diameter_)[elecolid];
+  if (maxedgelength < diameter_->local_values_as_span()[elecolid])
+    maxedgelength = diameter_->local_values_as_span()[elecolid];
 
   // Calculate limits of AABB
   // first bounding box
@@ -763,22 +765,22 @@ void Beam3ContactOctTree::create_cobb(Core::LinAlg::SerialDenseMatrix& coord, co
         }
         // (node) position 1
         (*allbboxes_)(6 * shift + dof).get_values()[elecolid] =
-            (*allbboxes_)(dof)[elecolid] + periodicshift;
+            (*allbboxes_)(dof).local_values_as_span()[elecolid] + periodicshift;
         // (node) position 2
         (*allbboxes_)(6 * shift + dof + 3).get_values()[elecolid] =
-            (*allbboxes_)(dof + 3)[elecolid] + periodicshift;
+            (*allbboxes_)(dof + 3).local_values_as_span()[elecolid] + periodicshift;
 
         // unshifted DOFs
         // (node) position 1
         (*allbboxes_)(6 * shift + ((dof + 1) % 3)).get_values()[elecolid] =
-            (*allbboxes_)((dof + 1) % 3)[elecolid];
+            (*allbboxes_)((dof + 1) % 3).local_values_as_span()[elecolid];
         (*allbboxes_)(6 * shift + ((dof + 2) % 3)).get_values()[elecolid] =
-            (*allbboxes_)((dof + 2) % 3)[elecolid];
+            (*allbboxes_)((dof + 2) % 3).local_values_as_span()[elecolid];
         // (node) position 2
         (*allbboxes_)(6 * shift + ((dof + 1) % 3) + 3).get_values()[elecolid] =
-            (*allbboxes_)((dof + 1) % 3 + 3)[elecolid];
+            (*allbboxes_)((dof + 1) % 3 + 3).local_values_as_span()[elecolid];
         (*allbboxes_)(6 * shift + ((dof + 2) % 3) + 3).get_values()[elecolid] =
-            (*allbboxes_)((dof + 2) % 3 + 3)[elecolid];
+            (*allbboxes_)((dof + 2) % 3 + 3).local_values_as_span()[elecolid];
       }
     }
     // fill all latter entries  except for the last one (->ID) with bogus values (in case of
@@ -839,7 +841,7 @@ void Beam3ContactOctTree::create_spbb(Core::LinAlg::SerialDenseMatrix& coord, co
   }
   else if (BeamInteraction::Utils::is_rigid_sphere_element(*element))
   {
-    diameter = (*diameter_)[elecolid];
+    diameter = diameter_->local_values_as_span()[elecolid];
   }
   else
   {
@@ -871,32 +873,34 @@ void Beam3ContactOctTree::create_spbb(Core::LinAlg::SerialDenseMatrix& coord, co
     {
       for (int pos = 0; pos < coord.numCols(); pos++)
       {
-        if (coord(dof, pos) >= (*periodlength_)[dof] - 0.5 * (*diameter_)[elecolid] ||
-            coord(dof, pos) <= 0.5 * (*diameter_)[elecolid])
+        if (coord(dof, pos) >=
+                (*periodlength_)[dof] - 0.5 * diameter_->local_values_as_span()[elecolid] ||
+            coord(dof, pos) <= 0.5 * diameter_->local_values_as_span()[elecolid])
         {
           shift++;
           // shift downwards
-          if (coord(dof, pos) >= (*periodlength_)[dof] - 0.5 * (*diameter_)[elecolid])
+          if (coord(dof, pos) >=
+              (*periodlength_)[dof] - 0.5 * diameter_->local_values_as_span()[elecolid])
           {
             (*allbboxes_)(3 * shift + dof).get_values()[elecolid] =
-                (*allbboxes_)(dof)[elecolid] - (*periodlength_)[dof];
+                (*allbboxes_)(dof).local_values_as_span()[elecolid] - (*periodlength_)[dof];
             (*allbboxes_)(3 * shift + (dof + 1) % 3).get_values()[elecolid] =
-                (*allbboxes_)((dof + 1) % 3)[elecolid];
+                (*allbboxes_)((dof + 1) % 3).local_values_as_span()[elecolid];
             (*allbboxes_)(3 * shift + (dof + 2) % 3).get_values()[elecolid] =
-                (*allbboxes_)((dof + 2) % 3)[elecolid];
+                (*allbboxes_)((dof + 2) % 3).local_values_as_span()[elecolid];
             // no need to check the second position if pos==0
             periodicbbox = true;
             break;
           }
           // shift upwards
-          else if (coord(dof, pos) <= 0.5 * (*diameter_)[elecolid])
+          else if (coord(dof, pos) <= 0.5 * diameter_->local_values_as_span()[elecolid])
           {
             (*allbboxes_)(3 * shift + dof).get_values()[elecolid] =
-                (*allbboxes_)(dof)[elecolid] + (*periodlength_)[dof];
+                (*allbboxes_)(dof).local_values_as_span()[elecolid] + (*periodlength_)[dof];
             (*allbboxes_)(3 * shift + (dof + 1) % 3).get_values()[elecolid] =
-                (*allbboxes_)((dof + 1) % 3)[elecolid];
+                (*allbboxes_)((dof + 1) % 3).local_values_as_span()[elecolid];
             (*allbboxes_)(3 * shift + (dof + 2) % 3).get_values()[elecolid] =
-                (*allbboxes_)((dof + 2) % 3)[elecolid];
+                (*allbboxes_)((dof + 2) % 3).local_values_as_span()[elecolid];
             // no need to check the second position if pos==0
             periodicbbox = true;
             break;
@@ -1110,7 +1114,7 @@ void Beam3ContactOctTree::locate_box(std::vector<std::vector<double>>& allbboxes
     {
       int lid =
           searchdis_.element_col_map()->lid((int)allbboxesstdvec[i][allbboxesstdvec[i].size() - 1]);
-      if (periodic_bc_) numshifts = (*numshifts_)[lid];
+      if (periodic_bc_) numshifts = numshifts_->local_values_as_span()[lid];
 
       for (int shift = 0; shift < numshifts + 1; shift++)
       {
@@ -1219,13 +1223,13 @@ Core::LinAlg::Matrix<6, 1> Beam3ContactOctTree::get_root_box()
   int numshifts = 0;
   for (int i = 0; i < allbboxes_->local_length(); i++)
   {
-    if (periodic_bc_) numshifts = (int)(*numshifts_)[i];
+    if (periodic_bc_) numshifts = (int)numshifts_->local_values_as_span()[i];
     for (int j = 0; j < entriesperbbox * numshifts + entriesperbbox; j++)
     {
-      if ((*allbboxes_)(j)[i] < lim(0))  // mins
-        lim(0) = (*allbboxes_)(j)[i];
-      if ((*allbboxes_)(j)[i] > lim(1))  // maxes
-        lim(1) = (*allbboxes_)(j)[i];
+      if ((*allbboxes_)(j).local_values_as_span()[i] < lim(0))  // mins
+        lim(0) = (*allbboxes_)(j).local_values_as_span()[i];
+      if ((*allbboxes_)(j).local_values_as_span()[i] > lim(1))  // maxes
+        lim(1) = (*allbboxes_)(j).local_values_as_span()[i];
     }
   }
   lim(2) = lim(0);
@@ -1319,9 +1323,9 @@ bool Beam3ContactOctTree::cobb_is_in_this_octant(Core::LinAlg::Matrix<3, 1>& oct
   // increase the radius of the box in order to have some additional buffer volume.
   double boxradius = 0.0;
   if (additiveextrusion_)
-    boxradius = extrusionvalue + 0.5 * (*diameter_)[lid];
+    boxradius = extrusionvalue + 0.5 * diameter_->local_values_as_span()[lid];
   else
-    boxradius = 0.5 * extrusionvalue * (*diameter_)[lid];
+    boxradius = 0.5 * extrusionvalue * diameter_->local_values_as_span()[lid];
 
   // criterion I: distance
   // check for both bounding box end points
@@ -1426,9 +1430,9 @@ bool Beam3ContactOctTree::spbb_is_in_this_octant(Core::LinAlg::Matrix<3, 1>& oct
     Core::LinAlg::Matrix<3, 1>& newedgelength, std::vector<double>& bboxcoords, int& lid,
     int& shift)
 {
-  double maxdistx = 0.5 * (newedgelength(0) + (*diameter_)[lid]);
-  double maxdisty = 0.5 * (newedgelength(1) + (*diameter_)[lid]);
-  double maxdistz = 0.5 * (newedgelength(2) + (*diameter_)[lid]);
+  double maxdistx = 0.5 * (newedgelength(0) + diameter_->local_values_as_span()[lid]);
+  double maxdisty = 0.5 * (newedgelength(1) + diameter_->local_values_as_span()[lid]);
+  double maxdistz = 0.5 * (newedgelength(2) + diameter_->local_values_as_span()[lid]);
 
   double distx = fabs(octcenter(0) - bboxcoords[3 * shift]);
   double disty = fabs(octcenter(1) - bboxcoords[3 * shift + 1]);
@@ -1463,11 +1467,11 @@ void Beam3ContactOctTree::bounding_box_intersection(
     {
       // first box ID
       std::vector<int> bboxIDs(2, 0);
-      bboxIDs[0] = (int)(*bboxesinoctants_)(j)[i];
+      bboxIDs[0] = (int)(*bboxesinoctants_)(j).local_values_as_span()[i];
       // for-loop second box
       for (int k = j + 1; k < bboxesinoctants_->num_vectors(); k++)
       {
-        bboxIDs[1] = (int)(*bboxesinoctants_)(k)[i];
+        bboxIDs[1] = (int)(*bboxesinoctants_)(k).local_values_as_span()[i];
 
         // exclude element pairs sharing one node
         // contact flag
@@ -1596,8 +1600,8 @@ bool Beam3ContactOctTree::intersection_aabb(
 
   if (periodic_bc_)
   {
-    I = (int)(*numshifts_)[entry1];
-    J = (int)(*numshifts_)[entry2];
+    I = (int)numshifts_->local_values_as_span()[entry1];
+    J = (int)numshifts_->local_values_as_span()[entry2];
   }
   // note: n shifts means n+1 segments
   for (int i = 0; i < I + 1; i++)
@@ -1605,19 +1609,19 @@ bool Beam3ContactOctTree::intersection_aabb(
     for (int j = 0; j < J + 1; j++)
     {
       // intersection Test
-      a_xmin = (*allbboxes_)(i * 6)[entry1];
-      a_xmax = (*allbboxes_)(i * 6 + 1)[entry1];
-      a_ymin = (*allbboxes_)(i * 6 + 2)[entry1];
-      a_ymax = (*allbboxes_)(i * 6 + 3)[entry1];
-      a_zmin = (*allbboxes_)(i * 6 + 4)[entry1];
-      a_zmax = (*allbboxes_)(i * 6 + 5)[entry1];
+      a_xmin = (*allbboxes_)(i * 6).local_values_as_span()[entry1];
+      a_xmax = (*allbboxes_)(i * 6 + 1).local_values_as_span()[entry1];
+      a_ymin = (*allbboxes_)(i * 6 + 2).local_values_as_span()[entry1];
+      a_ymax = (*allbboxes_)(i * 6 + 3).local_values_as_span()[entry1];
+      a_zmin = (*allbboxes_)(i * 6 + 4).local_values_as_span()[entry1];
+      a_zmax = (*allbboxes_)(i * 6 + 5).local_values_as_span()[entry1];
 
-      b_xmin = (*allbboxes_)(j * 6)[entry2];
-      b_xmax = (*allbboxes_)(j * 6 + 1)[entry2];
-      b_ymin = (*allbboxes_)(j * 6 + 2)[entry2];
-      b_ymax = (*allbboxes_)(j * 6 + 3)[entry2];
-      b_zmin = (*allbboxes_)(j * 6 + 4)[entry2];
-      b_zmax = (*allbboxes_)(j * 6 + 5)[entry2];
+      b_xmin = (*allbboxes_)(j * 6).local_values_as_span()[entry2];
+      b_xmax = (*allbboxes_)(j * 6 + 1).local_values_as_span()[entry2];
+      b_ymin = (*allbboxes_)(j * 6 + 2).local_values_as_span()[entry2];
+      b_ymax = (*allbboxes_)(j * 6 + 3).local_values_as_span()[entry2];
+      b_zmin = (*allbboxes_)(j * 6 + 4).local_values_as_span()[entry2];
+      b_zmax = (*allbboxes_)(j * 6 + 5).local_values_as_span()[entry2];
 
       // if intersection exists, return true
       if (!((a_xmin >= b_xmax || b_xmin >= a_xmax) || (a_ymin >= b_ymax || b_ymin >= a_ymax) ||
@@ -1654,8 +1658,8 @@ bool Beam3ContactOctTree::intersection_cobb(
   // now)
   double bbox0diameter = 0.0;
   double bbox1diameter = 0.0;
-  bbox0diameter = (*diameter_)[bboxid0];
-  bbox1diameter = (*diameter_)[bboxid1];
+  bbox0diameter = diameter_->local_values_as_span()[bboxid0];
+  bbox1diameter = diameter_->local_values_as_span()[bboxid1];
 
   double radiusextrusion = extrusionvalue_->at(1);
   if (additiveextrusion_)
@@ -1684,8 +1688,8 @@ bool Beam3ContactOctTree::intersection_cobb(
 
   if (periodic_bc_)
   {
-    numshifts_bbox0 = (int)(*numshifts_)[bboxid0];
-    numshifts_bbox1 = (int)(*numshifts_)[bboxid1];
+    numshifts_bbox0 = (int)numshifts_->local_values_as_span()[bboxid0];
+    numshifts_bbox1 = (int)numshifts_->local_values_as_span()[bboxid1];
   }
 
   //  if(numshifts_bbox0>0 || numshifts_bbox1>0)
@@ -1701,11 +1705,11 @@ bool Beam3ContactOctTree::intersection_cobb(
       for (int k = 0; k < (int)r1_a.num_rows(); k++)
       {
         // first bbox
-        r1_a(k) = (*allbboxes_)(6 * i + k)[bboxid0];
-        r1_b(k) = (*allbboxes_)(6 * i + k + 3)[bboxid0];
+        r1_a(k) = (*allbboxes_)(6 * i + k).local_values_as_span()[bboxid0];
+        r1_b(k) = (*allbboxes_)(6 * i + k + 3).local_values_as_span()[bboxid0];
         // second bbox
-        r2_a(k) = (*allbboxes_)(6 * j + k)[bboxid1];
-        r2_b(k) = (*allbboxes_)(6 * j + k + 3)[bboxid1];
+        r2_a(k) = (*allbboxes_)(6 * j + k).local_values_as_span()[bboxid1];
+        r2_b(k) = (*allbboxes_)(6 * j + k + 3).local_values_as_span()[bboxid1];
       }
 
       //      double t_02 = Teuchos::Time::wallTime();
@@ -1767,8 +1771,8 @@ bool Beam3ContactOctTree::intersection_spbb(
 
   if (periodic_bc_)
   {
-    numshifts_bbox0 = (*numshifts_)[bboxid0];
-    numshifts_bbox1 = (*numshifts_)[bboxid1];
+    numshifts_bbox0 = numshifts_->local_values_as_span()[bboxid0];
+    numshifts_bbox1 = numshifts_->local_values_as_span()[bboxid1];
   }
 
   for (int i = 0; i < numshifts_bbox0 + 1; i++)
@@ -1776,15 +1780,21 @@ bool Beam3ContactOctTree::intersection_spbb(
     for (int j = 0; j < numshifts_bbox1 + 1; j++)
     {
       // calculate distance between sphere centers
-      double centerdist = sqrt(((*allbboxes_)(0)[bboxid0] - (*allbboxes_)(0)[bboxid1]) *
-                                   ((*allbboxes_)(0)[bboxid0] - (*allbboxes_)(0)[bboxid1]) +
-                               ((*allbboxes_)(1)[bboxid0] - (*allbboxes_)(1)[bboxid1]) *
-                                   ((*allbboxes_)(1)[bboxid0] - (*allbboxes_)(1)[bboxid1]) +
-                               ((*allbboxes_)(2)[bboxid0] - (*allbboxes_)(2)[bboxid1]) *
-                                   ((*allbboxes_)(2)[bboxid0] - (*allbboxes_)(2)[bboxid1]));
+      double centerdist = sqrt(((*allbboxes_)(0).local_values_as_span()[bboxid0] -
+                                   (*allbboxes_)(0).local_values_as_span()[bboxid1]) *
+                                   ((*allbboxes_)(0).local_values_as_span()[bboxid0] -
+                                       (*allbboxes_)(0).local_values_as_span()[bboxid1]) +
+                               ((*allbboxes_)(1).local_values_as_span()[bboxid0] -
+                                   (*allbboxes_)(1).local_values_as_span()[bboxid1]) *
+                                   ((*allbboxes_)(1).local_values_as_span()[bboxid0] -
+                                       (*allbboxes_)(1).local_values_as_span()[bboxid1]) +
+                               ((*allbboxes_)(2).local_values_as_span()[bboxid0] -
+                                   (*allbboxes_)(2).local_values_as_span()[bboxid1]) *
+                                   ((*allbboxes_)(2).local_values_as_span()[bboxid0] -
+                                       (*allbboxes_)(2).local_values_as_span()[bboxid1]));
 
-      double bboxradius0 = 0.5 * (*diameter_)[bboxid0];
-      double bboxradius1 = 0.5 * (*diameter_)[bboxid1];
+      double bboxradius0 = 0.5 * diameter_->local_values_as_span()[bboxid0];
+      double bboxradius1 = 0.5 * diameter_->local_values_as_span()[bboxid1];
 
       // intersect spheres
       if (centerdist <= bboxradius0 + bboxradius1) return true;  // spheres have overlapping volumes

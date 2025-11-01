@@ -879,7 +879,8 @@ void ScaTra::ScaTraTimIntElchSCL::scale_micro_problem()
       lid_micro < macro_micro_coupling_adapter_->slave_dof_map()->num_my_elements(); ++lid_micro)
   {
     const int gid_micro = macro_micro_coupling_adapter_->slave_dof_map()->gid(lid_micro);
-    my_nodal_size_micro.insert(std::make_pair(gid_micro, (*nodal_size_micro)[lid_micro]));
+    my_nodal_size_micro.insert(
+        std::make_pair(gid_micro, nodal_size_micro->local_values_as_span()[lid_micro]));
   }
 
   const auto glob_nodal_size_micro =

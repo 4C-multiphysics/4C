@@ -1984,8 +1984,8 @@ void EnsightWriter::write_dof_result_step_for_nurbs(std::ofstream& file, const i
       {
         for (int rr = 0; rr < dim; ++rr)
         {
-          my_data[dim * inode + rr] =
-              (coldata)[(coldata).get_map().lid(lm[inode * (dim + 1) + rr] + offset)];
+          my_data[dim * inode + rr] = coldata.local_values_as_span()[(coldata).get_map().lid(
+              lm[inode * (dim + 1) + rr] + offset)];
         }
       }
     }
@@ -1998,7 +1998,8 @@ void EnsightWriter::write_dof_result_step_for_nurbs(std::ofstream& file, const i
         for (int rr = 0; rr < dim; ++rr)
         {
           my_data[dim * inode + rr] =
-              (coldata)[(coldata).get_map().lid(lm[inode * dim + rr] + offset)];
+              coldata
+                  .local_values_as_span()[(coldata).get_map().lid(lm[inode * dim + rr] + offset)];
         }
       }
     }
@@ -2009,8 +2010,8 @@ void EnsightWriter::write_dof_result_step_for_nurbs(std::ofstream& file, const i
       for (int inode = 0; inode < numnp; ++inode)
       {
         // offset should be equal to dim for pressure case!
-        my_data[inode] =
-            (coldata)[(coldata).get_map().lid(lm[inode * (dim + 1) + dim] + offset - dim)];
+        my_data[inode] = coldata.local_values_as_span()[(coldata).get_map().lid(
+            lm[inode * (dim + 1) + dim] + offset - dim)];
       }
     }
     else if (name == "averaged_scalar_field")
@@ -2020,7 +2021,8 @@ void EnsightWriter::write_dof_result_step_for_nurbs(std::ofstream& file, const i
       for (int inode = 0; inode < numnp; ++inode)
       {
         // offset should be equal to dim for pressure case!
-        my_data[inode] = (coldata)[(coldata).get_map().lid(lm[inode * (dim + 1) + dim] + offset)];
+        my_data[inode] = coldata.local_values_as_span()[(coldata).get_map().lid(
+            lm[inode * (dim + 1) + dim] + offset)];
       }
     }
     else if ((name == "phi") or (name == "averaged_phi"))
@@ -2032,9 +2034,10 @@ void EnsightWriter::write_dof_result_step_for_nurbs(std::ofstream& file, const i
         Core::Nodes::Node* n = nurbsdis->l_row_node(inode);
         int numdofpernode = actele->num_dof_per_node(*n);
         if (numdofpernode == 1)  // one passive scalar (Scalar_Transport problem)
-          my_data[inode] = (coldata)[(coldata).get_map().lid(lm[inode * numdofpernode] + offset)];
+          my_data[inode] = coldata.local_values_as_span()[(coldata).get_map().lid(
+              lm[inode * numdofpernode] + offset)];
         else  // result for electric potential (ELCH problem)
-          my_data[inode] = (coldata)[(coldata).get_map().lid(
+          my_data[inode] = coldata.local_values_as_span()[(coldata).get_map().lid(
               lm[inode * numdofpernode + (numdofpernode - 1)] + offset)];
       }
     }
@@ -2059,7 +2062,8 @@ void EnsightWriter::write_dof_result_step_for_nurbs(std::ofstream& file, const i
       {
         Core::Nodes::Node* n = nurbsdis->l_row_node(inode);
         int numdofpernode = actele->num_dof_per_node(*n);
-        my_data[inode] = (coldata)[(coldata).get_map().lid(lm[inode * numdofpernode + k] + offset)];
+        my_data[inode] = coldata.local_values_as_span()[(coldata).get_map().lid(
+            lm[inode * numdofpernode + k] + offset)];
       }
     }
     else if (name == "normalflux")
@@ -2070,7 +2074,8 @@ void EnsightWriter::write_dof_result_step_for_nurbs(std::ofstream& file, const i
       {
         // Core::Nodes::Node* n = nurbsdis->lRowNode(inode);
         int numdofpernode = 1;  // actele->NumDofPerNode(*n);
-        my_data[inode] = (coldata)[(coldata).get_map().lid(lm[inode * numdofpernode] + offset)];
+        my_data[inode] = coldata.local_values_as_span()[(coldata).get_map().lid(
+            lm[inode * numdofpernode] + offset)];
       }
     }
     //---------------------------------------------------
@@ -2088,14 +2093,16 @@ void EnsightWriter::write_dof_result_step_for_nurbs(std::ofstream& file, const i
         for (int rr = 0; rr < dim; ++rr)
         {
           my_data[dim * inode + rr] =
-              (coldata)[(coldata).get_map().lid(lm[inode * dim + rr] + offset)];
+              coldata
+                  .local_values_as_span()[(coldata).get_map().lid(lm[inode * dim + rr] + offset)];
         }
       }
     }
     else if (name == "temperature")
     {
       for (int inode = 0; inode < numnp; ++inode)
-        my_data[inode] = (coldata)[(coldata).get_map().lid(lm[inode] + offset)];
+        my_data[inode] =
+            coldata.local_values_as_span()[(coldata).get_map().lid(lm[inode] + offset)];
     }
     else
     {
@@ -3492,7 +3499,8 @@ void EnsightWriter::write_nodal_result_step_for_nurbs(std::ofstream& file, const
       for (int rr = 0; rr < numdf; ++rr)
       {
         // value of nodemap-based column rr
-        my_data[numdf * inode + rr] = (((coldata)(rr)))[(coldata).get_map().lid(nodeids[inode])];
+        my_data[numdf * inode + rr] =
+            (coldata)(rr).local_values_as_span()[(coldata).get_map().lid(nodeids[inode])];
       }
     }
 
@@ -3522,7 +3530,7 @@ void EnsightWriter::write_nodal_result_step_for_nurbs(std::ofstream& file, const
           inode++)  // inode == lid of node because we use proc0map_
       {
         //        Write(file, static_cast<float>(idf));
-        write(file, static_cast<float>((column)[inode]));
+        write(file, static_cast<float>(column.local_values_as_span()[inode]));
       }
     }
   }  // if (myrank_==0)

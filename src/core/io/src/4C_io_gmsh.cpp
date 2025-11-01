@@ -177,7 +177,7 @@ void Core::IO::Gmsh::scalar_element_field_to_gmsh(const Core::FE::Discretization
     // write node coordinates to Gmsh stream
     coordinates_to_stream(xyze, distype, s);
 
-    double eleval = (scalarfield_ele_row)[iele];
+    double eleval = (scalarfield_ele_row).local_values_as_span()[iele];
 
     // constant value for all nodes
     Core::LinAlg::SerialDenseVector myscalarfield(ele->num_node());
