@@ -97,32 +97,32 @@ void Core::LinAlg::MultiVector<T>::scale(double ScalarValue)
 template <typename T>
 void Core::LinAlg::MultiVector<T>::dot(const MultiVector& A, double* Result) const
 {
-  CHECK_EPETRA_CALL(vector_->Dot(A, Result));
+  CHECK_EPETRA_CALL(vector_->Dot(A.get_epetra_multi_vector(), Result));
 }
 
 template <typename T>
 void Core::LinAlg::MultiVector<T>::abs(const MultiVector& A)
 {
-  CHECK_EPETRA_CALL(vector_->Abs(A));
+  CHECK_EPETRA_CALL(vector_->Abs(*A.vector_));
 }
 
 template <typename T>
 void Core::LinAlg::MultiVector<T>::scale(double ScalarA, const MultiVector& A)
 {
-  CHECK_EPETRA_CALL(vector_->Scale(ScalarA, A));
+  CHECK_EPETRA_CALL(vector_->Scale(ScalarA, *A.vector_));
 }
 
 template <typename T>
 void Core::LinAlg::MultiVector<T>::update(double ScalarA, const MultiVector& A, double ScalarThis)
 {
-  CHECK_EPETRA_CALL(vector_->Update(ScalarA, A, ScalarThis));
+  CHECK_EPETRA_CALL(vector_->Update(ScalarA, *A.vector_, ScalarThis));
 }
 
 template <typename T>
 void Core::LinAlg::MultiVector<T>::update(
     double ScalarA, const MultiVector& A, double ScalarB, const MultiVector& B, double ScalarThis)
 {
-  CHECK_EPETRA_CALL(vector_->Update(ScalarA, A, ScalarB, *B.vector_, ScalarThis));
+  CHECK_EPETRA_CALL(vector_->Update(ScalarA, *A.vector_, ScalarB, *B.vector_, ScalarThis));
 }
 
 template <typename T>

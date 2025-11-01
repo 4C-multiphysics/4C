@@ -196,7 +196,7 @@ void Core::LinearSolver::AMGNxN::MueluAMGWrapper::apply(const Core::LinAlg::Mult
 {
   if (InitialGuessIsZero)
     Y.put_scalar(0.0);  // TODO Remove when you are sure that ApplyInverse will zero out Y.
-  p_->ApplyInverse(X, Y);
+  p_->ApplyInverse(X.get_epetra_multi_vector(), Y.get_epetra_multi_vector());
 }
 
 

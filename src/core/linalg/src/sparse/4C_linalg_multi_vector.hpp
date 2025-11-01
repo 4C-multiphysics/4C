@@ -52,11 +52,6 @@ namespace Core::LinAlg
 
     ~MultiVector() = default;
 
-    // (Implicit) conversions: they all return references, never copies
-    operator Epetra_MultiVector&() { return *vector_; }
-
-    operator const Epetra_MultiVector&() const { return *vector_; }
-
     const Epetra_MultiVector& get_epetra_multi_vector() const { return *vector_; }
 
     Epetra_MultiVector& get_epetra_multi_vector() { return *vector_; }
@@ -151,10 +146,11 @@ namespace Core::LinAlg
     }
 
     //! Matrix-Matrix multiplication, \e this = ScalarThis*\e this + ScalarAB*A*B.
-    void multiply(char TransA, char TransB, double ScalarAB, const Epetra_MultiVector& A,
-        const Epetra_MultiVector& B, double ScalarThis)
+    void multiply(char TransA, char TransB, double ScalarAB, const MultiVector& A,
+        const MultiVector& B, double ScalarThis)
     {
-      CHECK_EPETRA_CALL(vector_->Multiply(TransA, TransB, ScalarAB, A, B, ScalarThis));
+      CHECK_EPETRA_CALL(vector_->Multiply(TransA, TransB, ScalarAB, A.get_epetra_multi_vector(),
+          B.get_epetra_multi_vector(), ScalarThis));
     }
 
     //! Puts element-wise reciprocal values of input Multi-vector in target.
@@ -181,16 +177,16 @@ namespace Core::LinAlg
       CHECK_EPETRA_CALL(vector_->Import(A, Exporter.get_epetra_export(), CombineMode));
     }
 
-    void export_to(const Epetra_SrcDistObject& A, const Core::LinAlg::Import& Importer,
+    void export_to(const MultiVector& A, const Core::LinAlg::Import& Importer,
         Epetra_CombineMode CombineMode)
     {
-      CHECK_EPETRA_CALL(vector_->Export(A, Importer.get_epetra_import(), CombineMode));
+      CHECK_EPETRA_CALL(vector_->Export(A.get_epetra_multi_vector(), Importer.get_epetra_import(), CombineMode));
     }
 
-    void export_to(const Epetra_SrcDistObject& A, const Core::LinAlg::Export& Exporter,
+    void export_to(const MultiVector& A, const Core::LinAlg::Export& Exporter,
         Epetra_CombineMode CombineMode)
     {
-      CHECK_EPETRA_CALL(vector_->Export(A, Exporter.get_epetra_export(), CombineMode));
+      CHECK_EPETRA_CALL(vector_->Export(A.get_epetra_multi_vector(), Exporter.get_epetra_export(), CombineMode));
     }
 
     void sum_into_global_value(int GlobalRow, int VectorIndex, double ScalarValue)
@@ -203,10 +199,11 @@ namespace Core::LinAlg
       CHECK_EPETRA_CALL(vector_->SumIntoGlobalValue(GlobalRow, VectorIndex, ScalarValue));
     }
 
-    void reciprocal_multiply(double ScalarAB, const Epetra_MultiVector& A,
-        const Epetra_MultiVector& B, double ScalarThis)
+    void reciprocal_multiply(double ScalarAB, const Core::LinAlg::MultiVector<double>& A,
+        const Core::LinAlg::MultiVector<double>& B, double ScalarThis)
     {
-      CHECK_EPETRA_CALL(vector_->ReciprocalMultiply(ScalarAB, A, B, ScalarThis));
+      CHECK_EPETRA_CALL(vector_->ReciprocalMultiply(
+          ScalarAB, A.get_epetra_multi_vector(), B.get_epetra_multi_vector(), ScalarThis));
     }
 
     void sum_into_local_value(int MyRow, int VectorIndex, double ScalarValue)

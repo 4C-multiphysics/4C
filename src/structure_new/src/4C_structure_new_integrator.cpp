@@ -288,7 +288,7 @@ void Solid::Integrator::compute_mass_matrix_and_init_acc()
   nox_soln.scale(-1.0);
 
   // get the solution vector and add it into the acceleration vector
-  accnp_ptr->update(1.0, nox_soln.getEpetraVector(), 1.0);
+  accnp_ptr->update(1.0, nox_soln.get_linalg_vector(), 1.0);
 
   // re-build the entire initial right-hand-side with correct accelerations
   model_eval().apply_initial_force(*disnp_ptr, rhs_full);

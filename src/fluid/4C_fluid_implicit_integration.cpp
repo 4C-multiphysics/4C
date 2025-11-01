@@ -2249,7 +2249,7 @@ void FLD::FluidImplicitTimeInt::check_matrix_nullspace()
 
     Core::LinAlg::Vector<double> result(c->get_map(), false);
 
-    sysmat_->Apply(*c, result);
+    sysmat_->Apply(c->get_epetra_multi_vector(), result);
 
     double norm = 1e9;
 

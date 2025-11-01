@@ -90,8 +90,9 @@ namespace
     new_map = std::make_shared<Core::LinAlg::Map>(NumGlobalElements, 2, comm);
 
     // replace the map based on the epetra vector
-    EXPECT_EQ(
-        static_cast<Epetra_MultiVector&>(vector).ReplaceMap(new_map->get_epetra_block_map()), 0);
+    EXPECT_EQ(static_cast<Epetra_MultiVector&>(vector.get_epetra_multi_vector())
+                  .ReplaceMap(new_map->get_epetra_block_map()),
+        0);
 
     // compare result with our map wrapper
     EXPECT_TRUE(vector.get_map().same_as(*new_map));
