@@ -112,8 +112,10 @@ Core::Rebalance::rebalance_coordinates(const Core::LinAlg::MultiVector<double>& 
 
   Isorropia::Epetra::Redistributor rd(part);
 
-  return {std::make_shared<Core::LinAlg::MultiVector<double>>(*rd.redistribute(initialCoordinates)),
-      std::make_shared<Core::LinAlg::MultiVector<double>>(*rd.redistribute(initialWeights))};
+  return {std::make_shared<Core::LinAlg::MultiVector<double>>(
+              *rd.redistribute(initialCoordinates.get_epetra_multi_vector())),
+      std::make_shared<Core::LinAlg::MultiVector<double>>(
+          *rd.redistribute(initialWeights.get_epetra_multi_vector()))};
 }
 
 /*----------------------------------------------------------------------*/

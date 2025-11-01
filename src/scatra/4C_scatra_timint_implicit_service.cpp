@@ -136,7 +136,10 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> ScaTra::ScaTraTimIntImpl::cal
     // We do not solve a global, linear system of equations (exact L2 projection with good
     // consistency), but perform mass matrix lumping, i.e., we divide by the values of the
     // integrated shape functions
-    flux_projected->reciprocal_multiply(1., *integratedshapefcts, *flux, 0.);
+    // allocate a temp with same map/shape as *flux
+    Core::LinAlg::MultiVector<double> inv_flux(flux->get_map(), flux->num_vectors());
+    inv_flux.reciprocal(flux->get_epetra_multi_vector());
+    flux_projected->multiply(1.0, integratedshapefcts->as_multi_vector(), inv_flux, 0.0);
   }
 
   else

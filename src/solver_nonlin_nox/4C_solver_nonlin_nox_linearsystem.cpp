@@ -429,7 +429,7 @@ void NOX::Nln::LinearSystem::adjust_pseudo_time_step(double& delta, const double
   vec_2.scale(stepSizeInv);
   vec_1->update(1.0, vec_2, 1.0);
   /* evaluate the second vector:              d^{T} V                   */
-  vec_2.multiply(1.0, scalingDiagOp, dir.getEpetraVector(), 0.0);
+  vec_2.multiply(1.0, scalingDiagOp, dir.get_linalg_vector(), 0.0);
 
   // finally evaluate the scalar product
   double numerator = 0.0;

@@ -233,7 +233,7 @@ int Core::LinAlg::BlockSparseMatrixBase::Apply(
         std::shared_ptr<Core::LinAlg::MultiVector<double>> colx =
             domainmaps_.extract_vector(Core::LinAlg::MultiVector<double>(X), cblock);
         const Core::LinAlg::SparseMatrix& bmat = matrix(rblock, cblock);
-        int err = bmat.Apply(*colx, *rowy);
+        int err = bmat.Apply(colx->get_epetra_multi_vector(), rowy->get_epetra_multi_vector());
         if (err != 0)
           FOUR_C_THROW(
               "failed to apply vector to matrix block ({},{}): err={}", rblock, cblock, err);
@@ -256,7 +256,7 @@ int Core::LinAlg::BlockSparseMatrixBase::Apply(
         std::shared_ptr<Core::LinAlg::MultiVector<double>> colx =
             domainmaps_.extract_vector(Core::LinAlg::MultiVector<double>(X), cblock);
         const Core::LinAlg::SparseMatrix& bmat = matrix(cblock, rblock);
-        int err = bmat.Apply(*colx, *rowy);
+        int err = bmat.Apply(colx->get_epetra_multi_vector(), rowy->get_epetra_multi_vector());
         if (err != 0) FOUR_C_THROW("failed to apply vector to matrix: err={}", err);
         rowresult->update(1.0, *rowy, 1.0);
       }
@@ -346,7 +346,7 @@ int Core::LinAlg::BlockSparseMatrixBase::multiply(bool TransA,
     const Core::LinAlg::MultiVector<double>& X, Core::LinAlg::MultiVector<double>& Y) const
 {
   if (TransA) FOUR_C_THROW("transpose multiply not implemented for BlockSparseMatrix");
-  return Apply(X, Y);
+  return Apply(X.get_epetra_multi_vector(), Y.get_epetra_multi_vector());
 }
 
 

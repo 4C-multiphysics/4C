@@ -1480,7 +1480,7 @@ void Core::LinAlg::SparseMatrix::multiply(
 int Core::LinAlg::SparseMatrix::multiply(bool TransA, const Core::LinAlg::MultiVector<double>& X,
     Core::LinAlg::MultiVector<double>& Y) const
 {
-  return sysmat_->Multiply(TransA, X, Y);
+  return sysmat_->Multiply(TransA, X.get_epetra_multi_vector(), Y.get_epetra_multi_vector());
 }
 
 

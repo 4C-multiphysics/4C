@@ -951,7 +951,7 @@ void NOX::Nln::GROUP::PrePostOp::PseudoTransient::run_post_compute_f(
   Teuchos::RCP<NOX::Nln::Vector> fUpdate = eval_pseudo_transient_f_update(grp);
 
   // add the transient part
-  F.update(1.0, fUpdate->getEpetraVector(), 1.0);
+  F.update(1.0, fUpdate->get_linalg_vector(), 1.0);
 
   // set the flag
   is_pseudo_transient_residual_ = true;
@@ -980,7 +980,7 @@ void NOX::Nln::GROUP::PrePostOp::PseudoTransient::run_pre_compute_f(
   Teuchos::RCP<NOX::Nln::Vector> fUpdate = eval_pseudo_transient_f_update(grp);
 
   // subtract the transient part
-  F.update(-1.0, fUpdate->getEpetraVector(), 1.0);
+  F.update(-1.0, fUpdate->get_linalg_vector(), 1.0);
 
   // set flag
   is_pseudo_transient_residual_ = false;
