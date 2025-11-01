@@ -48,7 +48,7 @@ SSI CONTROL:
   MAXTIME: 0.5
   TIMESTEP: 0.1
   SCATRA_FROM_RESTART_FILE: true
-  SCATRA_FILENAME: "framework_test_output/solidscatra_electromecha_1wc_myocardMV_ActiveStress_tet4_1.4C.yaml-p3_for_solidscatra_electromecha_1wc_myocardMV_ActiveStress_tet4_2.4C.yaml-p3-restart_step_0/xxx"
+  SCATRA_FILENAME: "framework_test_output/solidscatra_electromecha_1wc_myocardMV_ActiveStress_tet4_1.4C.yaml-p3/xxx"
   COUPALGO: ssi_OneWay_ScatraToSolid
   SCATRATIMINTTYPE: "Cardiac_Monodomain"
 SSI CONTROL/PARTITIONED:
