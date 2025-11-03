@@ -812,8 +812,6 @@ namespace Solid
       /// write restart information
       void output_restart(bool& datawritten);
 
-      /// add restart information to output state
-      void add_restart_to_output_state();
 
       /** \brief set the number of nonlinear iterations of the last time step
        *

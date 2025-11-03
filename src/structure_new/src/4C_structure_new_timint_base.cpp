@@ -501,12 +501,6 @@ void Solid::TimeInt::Base::output_step(bool forced_writerestart)
     if (dataio_->should_write_restart_for_step(dataglobalstate_->get_step_n()) or
         dataglobalstate_->get_step_n() == Global::Problem::instance()->restart())
       return;
-    // if state already exists, add restart information
-    if (dataio_->write_results_for_this_step(dataglobalstate_->get_step_n()))
-    {
-      add_restart_to_output_state();
-      return;
-    }
   }
 
   /* This flag indicates whether some form of output has already been written in the current time
@@ -662,32 +656,6 @@ void Solid::TimeInt::Base::output_restart(bool& datawritten)
   /* Add the restart information of the different time integrators and model
    * evaluators. */
   int_ptr_->write_restart(*output_ptr);
-
-  // info dedicated to user's eyes staring at standard out
-  if ((dataglobalstate_->get_my_rank() == 0) and (dataio_->get_print2_screen_every_n_step() > 0) and
-      (step_old() % dataio_->get_print2_screen_every_n_step() == 0))
-  {
-    Core::IO::cout << "====== Restart for field 'Structure' written in step "
-                   << dataglobalstate_->get_step_n() << Core::IO::endl;
-  }
-}
-
-/*----------------------------------------------------------------------------*
- *----------------------------------------------------------------------------*/
-void Solid::TimeInt::Base::add_restart_to_output_state()
-{
-  std::shared_ptr<Core::IO::DiscretizationWriter> output_ptr = dataio_->get_output_ptr();
-
-  // output of velocity and acceleration
-  output_ptr->write_vector("velocity", dataglobalstate_->get_vel_n());
-  output_ptr->write_vector("acceleration", dataglobalstate_->get_acc_n());
-
-  /* Add the restart information of the different time integrators and model
-   * evaluators. */
-  int_ptr_->write_restart(*output_ptr, true);
-
-  // finally add the missing mesh information, order is important here
-  output_ptr->write_mesh(data_global_state().get_step_n(), data_global_state().get_time_n());
 
   // info dedicated to user's eyes staring at standard out
   if ((dataglobalstate_->get_my_rank() == 0) and (dataio_->get_print2_screen_every_n_step() > 0) and
