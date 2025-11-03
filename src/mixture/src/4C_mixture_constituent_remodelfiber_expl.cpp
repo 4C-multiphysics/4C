@@ -7,6 +7,7 @@
 
 #include "4C_mixture_constituent_remodelfiber_expl.hpp"
 
+#include "4C_comm_pack_helpers.hpp"
 #include "4C_global_data.hpp"
 #include "4C_linalg_fixedsizematrix_voigt_notation.hpp"
 #include "4C_linalg_serialdensematrix.hpp"
@@ -46,9 +47,9 @@ namespace
 Mixture::PAR::MixtureConstituentRemodelFiberExpl::MixtureConstituentRemodelFiberExpl(
     const Core::Mat::PAR::Parameter::Data& matdata)
     : MixtureConstituent(matdata),
-      fiber_id_(matdata.parameters.get<int>("FIBER_ID") - 1),
-      init_(matdata.parameters.get<int>("INIT")),
-      gamma_(matdata.parameters.get<double>("GAMMA")),
+      fiber_orientation(
+          matdata.parameters.get<Core::IO::InterpolatedInputField<Core::LinAlg::Tensor<double, 3>,
+              Mat::FiberInterpolation>>("ORIENTATION")),
       fiber_material_id_(matdata.parameters.get<int>("FIBER_MATERIAL_ID")),
       fiber_material_(fiber_material_factory(fiber_material_id_)),
       enable_growth_(matdata.parameters.get<bool>("ENABLE_GROWTH")),
@@ -69,15 +70,8 @@ Mixture::PAR::MixtureConstituentRemodelFiberExpl::create_constituent(int id)
 
 Mixture::MixtureConstituentRemodelFiberExpl::MixtureConstituentRemodelFiberExpl(
     Mixture::PAR::MixtureConstituentRemodelFiberExpl* params, int id)
-    : MixtureConstituent(params, id),
-      params_(params),
-      remodel_fiber_(),
-      anisotropy_extension_(params_->init_, params_->gamma_, false,
-          std::make_shared<Mat::Elastic::StructuralTensorStrategyStandard>(nullptr),
-          {params_->fiber_id_})
+    : MixtureConstituent(params, id), params_(params), remodel_fiber_()
 {
-  anisotropy_extension_.register_needed_tensors(
-      Mat::FiberAnisotropyExtension<1>::STRUCTURAL_TENSOR);
 }
 
 Core::Materials::MaterialType Mixture::MixtureConstituentRemodelFiberExpl::material_type() const
@@ -89,9 +83,10 @@ void Mixture::MixtureConstituentRemodelFiberExpl::pack_constituent(
     Core::Communication::PackBuffer& data) const
 {
   Mixture::MixtureConstituent::pack_constituent(data);
-  anisotropy_extension_.pack_anisotropy(data);
 
   for (const RemodelFiber<2>& fiber : remodel_fiber_) fiber.pack(data);
+
+  Core::Communication::add_to_pack(data, structural_tensors_);
 }
 
 void Mixture::MixtureConstituentRemodelFiberExpl::unpack_constituent(
@@ -100,14 +95,9 @@ void Mixture::MixtureConstituentRemodelFiberExpl::unpack_constituent(
   Mixture::MixtureConstituent::unpack_constituent(buffer);
   initialize();
 
-  anisotropy_extension_.unpack_anisotropy(buffer);
   for (RemodelFiber<2>& fiber : remodel_fiber_) fiber.unpack(buffer);
-}
 
-void Mixture::MixtureConstituentRemodelFiberExpl::register_anisotropy_extensions(
-    Mat::Anisotropy& anisotropy)
-{
-  anisotropy.register_anisotropy_extension(anisotropy_extension_);
+  Core::Communication::extract_from_pack(buffer, structural_tensors_);
 }
 
 void Mixture::MixtureConstituentRemodelFiberExpl::initialize()
@@ -250,7 +240,7 @@ Mixture::MixtureConstituentRemodelFiberExpl::evaluate_current_p_k2(int gp, int e
 {
   const double fiber_pk2 = remodel_fiber_[gp].evaluate_current_fiber_pk2_stress();
 
-  return fiber_pk2 * anisotropy_extension_.get_structural_tensor(gp, 0);
+  return fiber_pk2 * structural_tensors_[gp];
 }
 
 Core::LinAlg::SymmetricTensor<double, 3, 3, 3, 3>
@@ -261,8 +251,7 @@ Mixture::MixtureConstituentRemodelFiberExpl::evaluate_current_cmat(
       remodel_fiber_[gp].evaluate_d_current_fiber_pk2_stress_d_lambda_f_sq();
 
   return 2.0 * dPK2dlambdafsq *
-         Core::LinAlg::dyadic(anisotropy_extension_.get_structural_tensor(gp, 0),
-             anisotropy_extension_.get_structural_tensor(gp, 0));
+         Core::LinAlg::dyadic(structural_tensors_[gp], structural_tensors_[gp]);
 }
 
 void Mixture::MixtureConstituentRemodelFiberExpl::evaluate(
@@ -279,6 +268,14 @@ void Mixture::MixtureConstituentRemodelFiberExpl::evaluate(
         "method is only called if there is none. Probably, you are using a mixture rule without "
         "inelastic growth. You have to set INELASTIC_GROWTH to false or use a different growth "
         "rule.");
+  }
+
+  if (static_cast<int>(structural_tensors_.size()) < gp + 1)
+  {
+    // TODO: Move this to a setup phase
+    Core::LinAlg::Tensor<double, 3> orientation =
+        params_->fiber_orientation.interpolate(eleGID, context.xi->as_span());
+    structural_tensors_.emplace_back(Core::LinAlg::self_dyadic(orientation));
   }
 
   Core::LinAlg::SymmetricTensor<double, 3, 3> C = evaluate_c(F);
@@ -303,6 +300,14 @@ void Mixture::MixtureConstituentRemodelFiberExpl::evaluate_elastic_part(
         "method is only called if there is one. Probably, you are using a mixture rule with "
         "inelastic growth. You have to set INELASTIC_GROWTH to true or use a different growth "
         "rule.");
+  }
+
+  if (static_cast<int>(structural_tensors_.size()) < gp + 1)
+  {
+    // TODO: Move this to a setup phase
+    Core::LinAlg::Tensor<double, 3> orientation =
+        params_->fiber_orientation.interpolate(eleGID, context.xi->as_span());
+    structural_tensors_.emplace_back(Core::LinAlg::self_dyadic(orientation));
   }
 
   Core::LinAlg::SymmetricTensor<double, 3, 3> C = evaluate_c(FM);
@@ -346,13 +351,12 @@ void Mixture::MixtureConstituentRemodelFiberExpl::update_homeostatic_values(
 double Mixture::MixtureConstituentRemodelFiberExpl::evaluate_lambdaf(
     const Core::LinAlg::SymmetricTensor<double, 3, 3>& C, const int gp, const int eleGID) const
 {
-  return std::sqrt(Core::LinAlg::ddot(C, anisotropy_extension_.get_structural_tensor(gp, 0)));
+  return std::sqrt(Core::LinAlg::ddot(C, structural_tensors_[gp]));
 }
 
 double Mixture::MixtureConstituentRemodelFiberExpl::evaluate_lambda_ext(
     const Core::LinAlg::Tensor<double, 3, 3>& iFext, const int gp, const int eleGID) const
 {
-  return 1.0 / std::sqrt(Core::LinAlg::ddot(
-                   evaluatei_cext(iFext), anisotropy_extension_.get_structural_tensor(gp, 0)));
+  return 1.0 / std::sqrt(Core::LinAlg::ddot(evaluatei_cext(iFext), structural_tensors_[gp]));
 }
 FOUR_C_NAMESPACE_CLOSE

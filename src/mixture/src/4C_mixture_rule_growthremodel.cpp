@@ -102,7 +102,7 @@ void Mixture::GrowthRemodelMixtureRule::update(Core::LinAlg::Tensor<double, 3, 3
     // Evaluate inverse growth deformation gradient
     Core::LinAlg::Tensor<double, 3, 3> iFg;
     growth_strategy_->evaluate_inverse_growth_deformation_gradient(
-        iFg, *this, compute_current_reference_growth_scalar(gp), gp);
+        iFg, *this, compute_current_reference_growth_scalar(gp), context, gp, eleGID);
 
     for (const auto& constituent : constituents())
     {
@@ -125,7 +125,7 @@ void Mixture::GrowthRemodelMixtureRule::evaluate(const Core::LinAlg::Tensor<doub
     const double currentReferenceGrowthScalar = compute_current_reference_growth_scalar(gp);
 
     growth_strategy_->evaluate_inverse_growth_deformation_gradient(
-        iF_gM, *this, currentReferenceGrowthScalar, gp);
+        iF_gM, *this, currentReferenceGrowthScalar, context, gp, eleGID);
   }
 
   // define temporary matrices

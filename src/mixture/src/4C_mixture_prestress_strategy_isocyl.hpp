@@ -10,7 +10,8 @@
 
 #include "4C_config.hpp"
 
-#include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_io_input_field.hpp"
+#include "4C_mat_fiber_interpolation.hpp"
 #include "4C_mat_so3_material.hpp"
 #include "4C_mixture_elastin_membrane_prestress_strategy.hpp"
 #include "4C_mixture_prestress_strategy.hpp"
@@ -48,6 +49,16 @@ namespace Mixture
       const double axial_prestretch_;
       const double circumferential_prestretch_;
       const double pressure_;
+
+      const Core::IO::InterpolatedInputField<Core::LinAlg::Tensor<double, 3>,
+          Mat::FiberInterpolation>
+          radial;
+      const Core::IO::InterpolatedInputField<Core::LinAlg::Tensor<double, 3>,
+          Mat::FiberInterpolation>
+          axial;
+      const Core::IO::InterpolatedInputField<Core::LinAlg::Tensor<double, 3>,
+          Mat::FiberInterpolation>
+          circumferential;
       /// @}
     };
   }  // namespace PAR
