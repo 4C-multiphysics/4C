@@ -428,6 +428,10 @@ int main(int argc, char* argv[])
         Core::Communication::barrier(arguments.comms.global_comm());
       }
 
+      // Calling MPI_Abort will terminate all processes in the communicator without cleaning
+      // up singletons etc. So we finalize the singleton registry here to ensure proper cleanup.
+      Core::Utils::SingletonOwnerRegistry::finalize();
+
       MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 #endif
