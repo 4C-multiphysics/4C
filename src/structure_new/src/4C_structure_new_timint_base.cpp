@@ -17,6 +17,7 @@
 #include "4C_io_control.hpp"
 #include "4C_io_gmsh.hpp"
 #include "4C_io_pstream.hpp"
+#include "4C_legacy_enum_definitions_problem_type.hpp"
 #include "4C_linalg_map.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_structure_new_dbc.hpp"
@@ -662,7 +663,13 @@ void Solid::TimeInt::Base::output_restart(bool& datawritten)
   /* Add the restart information of the different time integrators and model
    * evaluators. */
   int_ptr_->write_restart(*output_ptr);
-
+  // For pure structure problems, all results should be written now,
+  // hence close the control file group to force flushing.
+  // only try closing group, as no group was opened for non-binary output
+  if (Global::Problem::instance()->get_problem_type() == Core::ProblemType::structure)
+  {
+    output_ptr->output().control_file().try_end_group();
+  }
   // info dedicated to user's eyes staring at standard out
   if ((dataglobalstate_->get_my_rank() == 0) and (dataio_->get_print2_screen_every_n_step() > 0) and
       (step_old() % dataio_->get_print2_screen_every_n_step() == 0))
