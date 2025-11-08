@@ -13,7 +13,9 @@
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_mathoperations.hpp"
 
+#include <numbers>
 #include <ostream>
+#include <span>
 
 FOUR_C_NAMESPACE_OPEN
 

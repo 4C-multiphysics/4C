@@ -20,6 +20,8 @@
 #include <Epetra_Vector.h>
 
 #include <memory>
+#include <numbers>
+#include <span>
 
 FOUR_C_NAMESPACE_OPEN
 

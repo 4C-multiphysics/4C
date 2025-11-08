@@ -235,19 +235,20 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   T norm_dist = 0.0;                                                       // = |r1-r2|
 
   // evaluate charge densities from DLINE charge condition specified in input file
-  double q1 = linechargeconds_[0]->parameters().get<double>("VAL");
-  double q2 = linechargeconds_[1]->parameters().get<double>("VAL");
+  double q1 = linechargeconds_[0]->parameters().template get<double>("VAL");
+  double q2 = linechargeconds_[1]->parameters().template get<double>("VAL");
 
   // evaluate function in time if specified in line charge conditions
   // TODO allow for functions in space, i.e. varying charge along beam centerline
-  auto function_number = linechargeconds_[0]->parameters().get<std::optional<int>>("FUNCT");
+  auto function_number =
+      linechargeconds_[0]->parameters().template get<std::optional<int>>("FUNCT");
 
   if (function_number.has_value() && function_number.value() > 0)
     q1 *= Global::Problem::instance()
               ->function_by_id<Core::Utils::FunctionOfTime>(function_number.value())
               .evaluate(time_);
 
-  function_number = linechargeconds_[1]->parameters().get<std::optional<int>>("FUNCT");
+  function_number = linechargeconds_[1]->parameters().template get<std::optional<int>>("FUNCT");
 
   if (function_number.has_value() && function_number.value() > 0)
     q2 *= Global::Problem::instance()
@@ -620,19 +621,20 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
   T gap_regularized = 0.0;  // modified gap if a regularization of the force law is applied
 
   // evaluate charge/particle densities from DLINE charge condition specified in input file
-  double q1 = linechargeconds_[0]->parameters().get<double>("VAL");
-  double q2 = linechargeconds_[1]->parameters().get<double>("VAL");
+  double q1 = linechargeconds_[0]->parameters().template get<double>("VAL");
+  double q2 = linechargeconds_[1]->parameters().template get<double>("VAL");
 
   // evaluate function in time if specified in line charge conditions
   // TODO allow for functions in space, i.e. varying charge along beam centerline
-  auto function_number = linechargeconds_[0]->parameters().get<std::optional<int>>("FUNCT");
+  auto function_number =
+      linechargeconds_[0]->parameters().template get<std::optional<int>>("FUNCT");
 
   if (function_number.has_value() && function_number.value() > 0)
     q1 *= Global::Problem::instance()
               ->function_by_id<Core::Utils::FunctionOfTime>(function_number.value())
               .evaluate(time_);
 
-  function_number = linechargeconds_[1]->parameters().get<std::optional<int>>("FUNCT");
+  function_number = linechargeconds_[1]->parameters().template get<std::optional<int>>("FUNCT");
 
   if (function_number.has_value() && function_number.value() > 0)
     q2 *= Global::Problem::instance()
@@ -1231,19 +1233,20 @@ void BeamInteraction::BeamToBeamPotentialPair<numnodes, numnodalvalues, T>::
       Core::LinAlg::Initialization::zero);
 
   // evaluate charge/particle densities from DLINE charge condition specified in input file
-  double rho1 = linechargeconds_[0]->parameters().get<double>("VAL");
-  double rho2 = linechargeconds_[1]->parameters().get<double>("VAL");
+  double rho1 = linechargeconds_[0]->parameters().template get<double>("VAL");
+  double rho2 = linechargeconds_[1]->parameters().template get<double>("VAL");
 
   // evaluate function in time if specified in line charge conditions
   // TODO allow for functions in space, i.e. varying charge along beam centerline
-  auto function_number = linechargeconds_[0]->parameters().get<std::optional<int>>("FUNCT");
+  auto function_number =
+      linechargeconds_[0]->parameters().template get<std::optional<int>>("FUNCT");
 
   if (function_number.has_value() && function_number.value() > 0)
     rho1 *= Global::Problem::instance()
                 ->function_by_id<Core::Utils::FunctionOfTime>(function_number.value())
                 .evaluate(time_);
 
-  function_number = linechargeconds_[1]->parameters().get<std::optional<int>>("FUNCT");
+  function_number = linechargeconds_[1]->parameters().template get<std::optional<int>>("FUNCT");
 
   if (function_number.has_value() && function_number.value() > 0)
     rho2 *= Global::Problem::instance()

@@ -241,22 +241,22 @@ void BeamInteraction::BeamToSpherePotentialPair<numnodes,
   get_shape_functions(N1_i, N1_i_xi, gausspoints);
 
   // evaluate charge density from DLINE charge condition specified in input file
-  double q1 = chargeconds_[0]->parameters().get<double>("VAL");
+  double q1 = chargeconds_[0]->parameters().template get<double>("VAL");
 
   // read charge of rigid sphere; note: this is NOT a charge density but the total charge of the
   // sphere!!!
-  double q2 = chargeconds_[1]->parameters().get<double>("VAL");
+  double q2 = chargeconds_[1]->parameters().template get<double>("VAL");
 
   // evaluate function in time if specified in line charge conditions
   // TODO allow for functions in space, i.e. varying charge along beam centerline
-  auto function_number = chargeconds_[0]->parameters().get<std::optional<int>>("FUNCT");
+  auto function_number = chargeconds_[0]->parameters().template get<std::optional<int>>("FUNCT");
 
   if (function_number.has_value() && function_number.value() > 0)
     q1 *= Global::Problem::instance()
               ->function_by_id<Core::Utils::FunctionOfTime>(function_number.value())
               .evaluate(time_);
 
-  function_number = chargeconds_[1]->parameters().get<std::optional<int>>("FUNCT");
+  function_number = chargeconds_[1]->parameters().template get<std::optional<int>>("FUNCT");
 
   if (function_number.has_value() and function_number.value() > 0)
     q2 *= Global::Problem::instance()

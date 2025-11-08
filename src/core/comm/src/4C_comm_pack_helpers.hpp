@@ -34,8 +34,6 @@ namespace Core::Communication
     template <class T>
     using is_enum_class =
         std::integral_constant<bool, !std::is_convertible<T, int>::value && std::is_enum<T>::value>;
-
-
   }
 
 
@@ -117,7 +115,14 @@ namespace Core::Communication
     // If T is trivially copyable, we can just copy the bytes. Otherwise, recursively call the
     // pack function for every element. Note that vector<bool> is a special case, as it does not
     // provide the data() method.
-    if constexpr (std::is_trivially_copyable_v<T> && !std::is_same_v<T, bool>)
+#ifdef __APPLE__
+    if constexpr (std::is_same_v<T, bool>)
+    {
+      for (bool b : stuff) add_to_pack(data, b);
+    }
+    else
+#endif
+        if constexpr (std::is_trivially_copyable_v<T> && !std::is_same_v<T, bool>)
     {
       add_to_pack(data, stuff.data(), numele * sizeof(T));
     }

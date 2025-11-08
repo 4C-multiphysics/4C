@@ -18,6 +18,7 @@
 #include <Sacado.hpp>
 
 FOUR_C_NAMESPACE_OPEN
+
 using FAD = Sacado::Fad::DFad<double>;
 
 namespace Solid

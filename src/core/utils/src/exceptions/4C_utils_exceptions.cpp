@@ -11,6 +11,9 @@
 
 #ifdef FOUR_C_WITH_BACKTRACE
 #define BOOST_STACKTRACE_USE_BACKTRACE
+#if defined(__APPLE__)
+#define BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED
+#endif
 #endif
 
 #include <boost/stacktrace.hpp>
