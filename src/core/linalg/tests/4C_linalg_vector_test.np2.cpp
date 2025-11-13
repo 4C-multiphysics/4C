@@ -270,7 +270,7 @@ namespace
     {
       const auto put_scalar = [](Core::LinAlg::MultiVector<double>& v, double s)
       { v.put_scalar(s); };
-      Core::LinAlg::View view_mv2((Epetra_MultiVector&)mv2);
+      Core::LinAlg::View view_mv2(mv2.get_epetra_multi_vector());
       put_scalar(view_mv2, 4.0);
     }
     EXPECT_EQ(means_multi_vector(mv), (std::vector{1., 4., 1.}));

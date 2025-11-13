@@ -157,7 +157,7 @@ void Core::LinearSolver::AMGNxN::BlockedMatrix::apply(
       Teuchos::RCP<Core::LinAlg::MultiVector<double>> Xj = in.get_vector(j);
       if (get_matrix(i, j) == Teuchos::null) FOUR_C_THROW("Have you set all the blocks?");
 
-      get_matrix(i, j)->Apply(*Xj, Yitmp);
+      get_matrix(i, j)->Apply(Xj->get_epetra_multi_vector(), Yitmp.get_epetra_multi_vector());
       Yi->update(1.0, Yitmp, 1.0);
     }
   }
@@ -294,7 +294,7 @@ void Core::LinearSolver::AMGNxN::DiagonalBlockedMatrix::apply(
 
     Teuchos::RCP<Core::LinAlg::MultiVector<double>> Yi = out.get_vector(i);
     Teuchos::RCP<Core::LinAlg::MultiVector<double>> Xi = in.get_vector(i);
-    get_matrix(i, i)->Apply(*Xi, *Yi);
+    get_matrix(i, i)->Apply(Xi->get_epetra_multi_vector(), Yi->get_epetra_multi_vector());
   }
 
 

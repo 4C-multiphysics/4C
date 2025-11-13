@@ -2249,7 +2249,7 @@ void FLD::FluidImplicitTimeInt::check_matrix_nullspace()
 
     Core::LinAlg::Vector<double> result(c->get_map(), false);
 
-    sysmat_->Apply(*c, result);
+    sysmat_->Apply(c->get_epetra_multi_vector(), result);
 
     double norm = 1e9;
 
@@ -4959,7 +4959,7 @@ double FLD::FluidImplicitTimeInt::evaluate_dt_via_cfl_if_applicable()
     }
 
     const Core::LinAlg::Map* elementrowmap = discret_->element_row_map();
-    Core::LinAlg::MultiVector<double> h_u(*elementrowmap, 1, true);
+    Core::LinAlg::Vector<double> h_u(*elementrowmap, true);
 
     // optional: elementwise defined h_u may be written to standard output file (not implemented
     // yet)

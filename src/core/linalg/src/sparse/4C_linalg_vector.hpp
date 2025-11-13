@@ -83,7 +83,7 @@ namespace Core::LinAlg
 
     //! Update multi-vector values with scaled values of A, \e this = ScalarThis*\e this +
     //! ScalarA*A.
-    void update(double ScalarA, const Epetra_MultiVector& A, double ScalarThis);
+    void update(double ScalarA, const Core::LinAlg::MultiVector<double>& A, double ScalarThis);
 
     //! Update multi-vector with scaled values of A and B, \e this = ScalarThis*\e this + ScalarA*A
     //! + ScalarB*B.
@@ -190,12 +190,13 @@ namespace Core::LinAlg
     void sum_into_global_values(int NumEntries, const double* Values, const int* Indices);
 
     //! Matrix-Matrix multiplication, \e this = ScalarThis*\e this + ScalarAB*A*B.
-    void multiply(char TransA, char TransB, double ScalarAB, const Epetra_MultiVector& A,
-        const Epetra_MultiVector& B, double ScalarThis);
+    void multiply(char TransA, char TransB, double ScalarAB,
+        const Core::LinAlg::MultiVector<double>& A, const Core::LinAlg::MultiVector<double>& B,
+        double ScalarThis);
 
     //! Multiply a Core::LinAlg::MultiVector<double> with another, element-by-element.
-    void multiply(double ScalarAB, const Epetra_MultiVector& A, const Epetra_MultiVector& B,
-        double ScalarThis);
+    void multiply(double ScalarAB, const Core::LinAlg::MultiVector<double>& A,
+        const Core::LinAlg::MultiVector<double>& B, double ScalarThis);
 
     //! Puts element-wise reciprocal values of input Multi-vector in target.
     void reciprocal(const Epetra_MultiVector& A);

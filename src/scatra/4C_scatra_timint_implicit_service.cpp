@@ -119,7 +119,7 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> ScaTra::ScaTraTimIntImpl::cal
   if (calcflux_domain_lumped_)
   {
     // vector for integrated shape functions
-    std::shared_ptr<Core::LinAlg::Vector<double>> integratedshapefcts =
+    std::shared_ptr<Core::LinAlg::Vector<double>> integrated_shape_functions =
         Core::LinAlg::create_vector(dofrowmap);
 
     // overwrite action for elements
@@ -130,13 +130,43 @@ std::shared_ptr<Core::LinAlg::MultiVector<double>> ScaTra::ScaTraTimIntImpl::cal
     auto dofids = std::make_shared<Core::LinAlg::IntSerialDenseVector>(num_dof_per_node());
     dofids->putScalar(1);  // integrate shape functions for all dofs
     params.set("dofids", dofids);
-    discret_->evaluate(params, nullptr, nullptr, integratedshapefcts, nullptr, nullptr);
+    discret_->evaluate(params, nullptr, nullptr, integrated_shape_functions, nullptr, nullptr);
 
     // insert values into final flux vector for visualization
     // We do not solve a global, linear system of equations (exact L2 projection with good
     // consistency), but perform mass matrix lumping, i.e., we divide by the values of the
     // integrated shape functions
-    flux_projected->reciprocal_multiply(1., *integratedshapefcts, *flux, 0.);
+
+    // the mass matrix lumping was previously conducted via the
+    // ReciprocalMultiply. This realized a Hadamard product of two MultiVectors:
+    // this = ScalarThis * this + ScalarAB * B / A (Important: element-wise)
+
+    // start by creating the inverse
+    Core::LinAlg::MultiVector<double> inverse_of_integrated_shape_functions(
+        integrated_shape_functions->get_map(), 1, true);
+    {
+      const double* values = integrated_shape_functions->as_multi_vector().get_values();
+
+      // perform a zero-safe reciprocal of the local vector
+      for (int i = 0; i < integrated_shape_functions->local_length(); ++i)
+        inverse_of_integrated_shape_functions.get_values()[i] =
+            (std::abs(values[i]) > std::numeric_limits<double>::epsilon())
+                ? (1.0 / values[i])
+                : std::numeric_limits<double>::max();
+    }
+
+    // Broadcast inverse_of_integrated_shape_functions across column to match the flux
+    Core::LinAlg::MultiVector<double> inverse_of_integrated_shape_functions_bcast(
+        inverse_of_integrated_shape_functions.get_map(), flux->num_vectors(), false);
+    for (int j = 0; j < flux->num_vectors(); ++j)
+    {
+      // copy column 0 into j-th column
+      inverse_of_integrated_shape_functions_bcast(j).update(
+          1.0, inverse_of_integrated_shape_functions(0), 0.0);
+    }
+
+    // now apply the elementwise-multiplication
+    flux_projected->multiply(1.0, *flux, inverse_of_integrated_shape_functions_bcast, 0.0);
   }
 
   else
@@ -1971,7 +2001,9 @@ void ScaTra::ScaTraTimIntImpl::evaluate_error_compared_to_analytical_sol()
       {
         const int errorfunctnumber = params_->get<int>("CALCERRORNO");
         if (errorfunctnumber < 1)
-          FOUR_C_THROW("invalid value of parameter CALCERRORNO for error function evaluation!");
+          FOUR_C_THROW(
+              "Invalid value of parameter CALCERRORNO for error "
+              "function evaluation!");
 
         eleparams.set<int>("error function number", errorfunctnumber);
       }

@@ -149,9 +149,10 @@ void Core::LinAlg::Vector<T>::scale(double ScalarA, const Epetra_MultiVector& A)
 }
 
 template <typename T>
-void Core::LinAlg::Vector<T>::update(double ScalarA, const Epetra_MultiVector& A, double ScalarThis)
+void Core::LinAlg::Vector<T>::update(
+    double ScalarA, const Core::LinAlg::MultiVector<double>& A, double ScalarThis)
 {
-  CHECK_EPETRA_CALL(vector_->Update(ScalarA, A, ScalarThis));
+  CHECK_EPETRA_CALL(vector_->Update(ScalarA, A.get_epetra_multi_vector(), ScalarThis));
 }
 
 template <typename T>
@@ -265,16 +266,19 @@ void Core::LinAlg::Vector<T>::sum_into_global_values(
 
 template <typename T>
 void Core::LinAlg::Vector<T>::multiply(char TransA, char TransB, double ScalarAB,
-    const Epetra_MultiVector& A, const Epetra_MultiVector& B, double ScalarThis)
+    const Core::LinAlg::MultiVector<double>& A, const Core::LinAlg::MultiVector<double>& B,
+    double ScalarThis)
 {
-  CHECK_EPETRA_CALL(vector_->Multiply(TransA, TransB, ScalarAB, A, B, ScalarThis));
+  CHECK_EPETRA_CALL(vector_->Multiply(TransA, TransB, ScalarAB, A.get_epetra_multi_vector(),
+      B.get_epetra_multi_vector(), ScalarThis));
 }
 
 template <typename T>
-void Core::LinAlg::Vector<T>::multiply(
-    double ScalarAB, const Epetra_MultiVector& A, const Epetra_MultiVector& B, double ScalarThis)
+void Core::LinAlg::Vector<T>::multiply(double ScalarAB, const Core::LinAlg::MultiVector<double>& A,
+    const Core::LinAlg::MultiVector<double>& B, double ScalarThis)
 {
-  CHECK_EPETRA_CALL(vector_->Multiply(ScalarAB, A, B, ScalarThis));
+  CHECK_EPETRA_CALL(vector_->Multiply(
+      ScalarAB, A.get_epetra_multi_vector(), B.get_epetra_multi_vector(), ScalarThis));
 }
 
 template <typename T>

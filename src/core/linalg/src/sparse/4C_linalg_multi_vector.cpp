@@ -70,17 +70,6 @@ void Core::LinAlg::MultiVector<T>::norm_inf(double* Result) const
   CHECK_EPETRA_CALL(vector_->NormInf(Result));
 }
 
-template <typename T>
-void Core::LinAlg::MultiVector<T>::min_value(double* Result) const
-{
-  CHECK_EPETRA_CALL(vector_->MinValue(Result));
-}
-
-template <typename T>
-void Core::LinAlg::MultiVector<T>::max_value(double* Result) const
-{
-  CHECK_EPETRA_CALL(vector_->MaxValue(Result));
-}
 
 template <typename T>
 void Core::LinAlg::MultiVector<T>::mean_value(double* Result) const
@@ -97,38 +86,45 @@ void Core::LinAlg::MultiVector<T>::scale(double ScalarValue)
 template <typename T>
 void Core::LinAlg::MultiVector<T>::dot(const MultiVector& A, double* Result) const
 {
-  CHECK_EPETRA_CALL(vector_->Dot(A, Result));
+  CHECK_EPETRA_CALL(vector_->Dot(A.get_epetra_multi_vector(), Result));
 }
 
 template <typename T>
 void Core::LinAlg::MultiVector<T>::abs(const MultiVector& A)
 {
-  CHECK_EPETRA_CALL(vector_->Abs(A));
+  CHECK_EPETRA_CALL(vector_->Abs(A.get_epetra_multi_vector()));
 }
 
 template <typename T>
 void Core::LinAlg::MultiVector<T>::scale(double ScalarA, const MultiVector& A)
 {
-  CHECK_EPETRA_CALL(vector_->Scale(ScalarA, A));
+  CHECK_EPETRA_CALL(vector_->Scale(ScalarA, A.get_epetra_multi_vector()));
 }
 
 template <typename T>
 void Core::LinAlg::MultiVector<T>::update(double ScalarA, const MultiVector& A, double ScalarThis)
 {
-  CHECK_EPETRA_CALL(vector_->Update(ScalarA, A, ScalarThis));
+  CHECK_EPETRA_CALL(vector_->Update(ScalarA, A.get_epetra_multi_vector(), ScalarThis));
 }
 
 template <typename T>
 void Core::LinAlg::MultiVector<T>::update(
     double ScalarA, const MultiVector& A, double ScalarB, const MultiVector& B, double ScalarThis)
 {
-  CHECK_EPETRA_CALL(vector_->Update(ScalarA, A, ScalarB, *B.vector_, ScalarThis));
+  CHECK_EPETRA_CALL(
+      vector_->Update(ScalarA, A.get_epetra_multi_vector(), ScalarB, *B.vector_, ScalarThis));
 }
 
 template <typename T>
 void Core::LinAlg::MultiVector<T>::put_scalar(double ScalarConstant)
 {
   CHECK_EPETRA_CALL(vector_->PutScalar(ScalarConstant));
+}
+
+template <typename T>
+MPI_Comm Core::LinAlg::MultiVector<T>::get_comm() const
+{
+  return Core::Communication::unpack_epetra_comm(vector_->Comm());
 }
 
 template <typename T>
@@ -139,10 +135,115 @@ void Core::LinAlg::MultiVector<T>::replace_map(const Core::LinAlg::Map& map)
 }
 
 template <typename T>
-MPI_Comm Core::LinAlg::MultiVector<T>::get_comm() const
+void Core::LinAlg::MultiVector<T>::replace_local_value(
+    int MyRow, int VectorIndex, double ScalarValue)
 {
-  return Core::Communication::unpack_epetra_comm(vector_->Comm());
+  CHECK_EPETRA_CALL(vector_->ReplaceMyValue(MyRow, VectorIndex, ScalarValue));
 }
+
+template <typename T>
+void Core::LinAlg::MultiVector<T>::replace_global_value(
+    int GlobalRow, int VectorIndex, double ScalarValue)
+{
+  CHECK_EPETRA_CALL(vector_->ReplaceGlobalValue(GlobalRow, VectorIndex, ScalarValue));
+}
+
+template <typename T>
+void Core::LinAlg::MultiVector<T>::replace_global_value(
+    long long GlobalRow, int VectorIndex, double ScalarValue)
+{
+  CHECK_EPETRA_CALL(vector_->ReplaceGlobalValue(GlobalRow, VectorIndex, ScalarValue));
+}
+
+template <typename T>
+void Core::LinAlg::MultiVector<T>::multiply(
+    double ScalarAB, const MultiVector& A, const MultiVector& B, double ScalarThis)
+{
+  CHECK_EPETRA_CALL(vector_->Multiply(
+      ScalarAB, A.get_epetra_multi_vector(), B.get_epetra_multi_vector(), ScalarThis));
+}
+
+template <typename T>
+void Core::LinAlg::MultiVector<T>::multiply(char TransA, char TransB, double ScalarAB,
+    const MultiVector& A, const MultiVector& B, double ScalarThis)
+{
+  CHECK_EPETRA_CALL(vector_->Multiply(TransA, TransB, ScalarAB, A.get_epetra_multi_vector(),
+      B.get_epetra_multi_vector(), ScalarThis));
+}
+
+template <typename T>
+void Core::LinAlg::MultiVector<T>::reciprocal(const Epetra_MultiVector& A)
+{
+  CHECK_EPETRA_CALL(vector_->Reciprocal(A));
+}
+
+template <typename T>
+void Core::LinAlg::MultiVector<T>::import(
+    const MultiVector& A, const Core::LinAlg::Import& Importer, Epetra_CombineMode CombineMode)
+{
+  CHECK_EPETRA_CALL(
+      vector_->Import(A.get_epetra_multi_vector(), Importer.get_epetra_import(), CombineMode));
+}
+
+template <typename T>
+void Core::LinAlg::MultiVector<T>::import(
+    const MultiVector& A, const Core::LinAlg::Export& Exporter, Epetra_CombineMode CombineMode)
+{
+  CHECK_EPETRA_CALL(
+      vector_->Import(A.get_epetra_multi_vector(), Exporter.get_epetra_export(), CombineMode));
+}
+
+template <typename T>
+void Core::LinAlg::MultiVector<T>::export_to(
+    const MultiVector& A, const Core::LinAlg::Import& Importer, Epetra_CombineMode CombineMode)
+{
+  CHECK_EPETRA_CALL(
+      vector_->Export(A.get_epetra_multi_vector(), Importer.get_epetra_import(), CombineMode));
+}
+
+template <typename T>
+void Core::LinAlg::MultiVector<T>::export_to(
+    const MultiVector& A, const Core::LinAlg::Export& Exporter, Epetra_CombineMode CombineMode)
+{
+  CHECK_EPETRA_CALL(
+      vector_->Export(A.get_epetra_multi_vector(), Exporter.get_epetra_export(), CombineMode));
+}
+
+template <typename T>
+void Core::LinAlg::MultiVector<T>::sum_into_global_value(
+    int GlobalRow, int VectorIndex, double ScalarValue)
+{
+  CHECK_EPETRA_CALL(vector_->SumIntoGlobalValue(GlobalRow, VectorIndex, ScalarValue));
+}
+
+template <typename T>
+void Core::LinAlg::MultiVector<T>::sum_into_global_value(
+    long long GlobalRow, int VectorIndex, double ScalarValue)
+{
+  CHECK_EPETRA_CALL(vector_->SumIntoGlobalValue(GlobalRow, VectorIndex, ScalarValue));
+}
+
+template <typename T>
+void Core::LinAlg::MultiVector<T>::sum_into_local_value(
+    int MyRow, int VectorIndex, double ScalarValue)
+{
+  CHECK_EPETRA_CALL(vector_->SumIntoMyValue(MyRow, VectorIndex, ScalarValue));
+}
+
+
+template <typename T>
+void Core::LinAlg::MultiVector<T>::extract_view(double*** ArrayOfPointers) const
+{
+  CHECK_EPETRA_CALL(vector_->ExtractView(ArrayOfPointers));
+}
+
+template <typename T>
+void Core::LinAlg::MultiVector<T>::extract_copy(double* A, int MyLDA) const
+{
+  CHECK_EPETRA_CALL(vector_->ExtractCopy(A, MyLDA));
+}
+
+
 
 template <typename T>
 Core::LinAlg::Vector<double>& Core::LinAlg::MultiVector<T>::operator()(int i)
