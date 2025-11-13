@@ -91,14 +91,35 @@ namespace BeamInteraction
     TYPE get_gap() const { return gap_; };
 
     /*!
-    \brief Set gap
+    \brief Set normal
     */
     void set_normal(Core::LinAlg::Matrix<3, 1, TYPE> normal) { normal_ = normal; };
 
     /*!
-    \brief Get gap
+    \brief Set old normal
+    */
+    void set_old_normal(Core::LinAlg::Matrix<3, 1, TYPE> old_normal) { old_normal_ = old_normal; };
+
+    /*!
+    \brief Set sign
+    */
+    void set_sign(double sign) { sign_ = sign; };
+
+    /*!
+    \brief Get sign
+    */
+    double get_sign() const { return sign_; };
+
+
+    /*!
+    \brief Get normal
     */
     Core::LinAlg::Matrix<3, 1, TYPE> get_normal() const { return normal_; };
+
+    /*!
+    \brief Get previous normal
+    */
+    Core::LinAlg::Matrix<3, 1, TYPE> get_old_normal() const { return old_normal_; };
 
     /*!
     \brief Get penalty parameter
@@ -225,8 +246,14 @@ namespace BeamInteraction
     // gap function
     TYPE gap_;
 
+    // sign of gap
+    double sign_;
+
     // normal vector
     Core::LinAlg::Matrix<3, 1, TYPE> normal_;
+
+    // normal previous vector
+    Core::LinAlg::Matrix<3, 1, TYPE> old_normal_;
 
     // penalty parameter
     double pp_;

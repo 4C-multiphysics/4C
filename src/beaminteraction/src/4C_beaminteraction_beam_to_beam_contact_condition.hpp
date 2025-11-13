@@ -10,6 +10,7 @@
 
 #include "4C_config.hpp"
 
+#include "4C_beaminteraction_beam_to_beam_contact_pair.hpp"
 #include "4C_beaminteraction_conditions.hpp"
 #include "4C_fem_general_element.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -63,6 +64,8 @@ namespace BeamInteraction
     std::shared_ptr<BeamInteraction::BeamContactPair> create_contact_pair(
         const std::vector<Core::Elements::Element const*>& ele_ptrs) override;
 
+    void setup(const std::shared_ptr<const Core::FE::Discretization>& discret) override;
+
    protected:
     /**
      * \brief Check if a ID is in a condition.
@@ -81,6 +84,10 @@ namespace BeamInteraction
 
     //! Set containing the other line element IDs.
     std::set<int> other_line_ids_;
+
+    //! Create container which stores the local cp normals of previous iteration
+    // with each element pair
+    std::shared_ptr<std::map<ElementIDKey, Core::LinAlg::Matrix<3, 1, double>>> old_cp_normals_;
   };
 }  // namespace BeamInteraction
 

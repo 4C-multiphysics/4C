@@ -43,7 +43,7 @@ std::vector<Core::IO::InputSpec> BeamContact::valid_parameters()
 
           parameter<bool>(
               "BEAMS_NEWGAP", {.description = "choose between original or enhanced gapfunction",
-                                  .default_value = false}),
+                                  .default_value = true}),
 
           parameter<bool>("BEAMS_SEGCON",
               {.description = "choose between beam contact with and without subsegment generation",

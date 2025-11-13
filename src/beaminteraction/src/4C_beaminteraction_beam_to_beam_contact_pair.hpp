@@ -36,6 +36,18 @@ namespace Core::LinAlg
 
 namespace BeamInteraction
 {
+
+  // create a key based on two element IDs
+  struct ElementIDKey
+  {
+    int ele1, ele2;
+    bool operator<(const ElementIDKey& o) const noexcept
+    {
+      return std::tie(ele1, ele2) < std::tie(o.ele1, o.ele2);
+    }
+  };
+
+
   template <unsigned int numnodes, unsigned int numnodalvalues>
   class BeamToBeamContactVariables;
 
@@ -54,7 +66,8 @@ namespace BeamInteraction
     /*!
     \brief Standard Constructor
     */
-    BeamToBeamContactPair();
+    BeamToBeamContactPair(
+        std::shared_ptr<std::map<ElementIDKey, Core::LinAlg::Matrix<3, 1, double>>>);
 
 
 
@@ -201,6 +214,9 @@ namespace BeamInteraction
     //! Variables stored at the end points of the endpoint-contact algorithm
     std::vector<std::shared_ptr<BeamToBeamContactVariables<numnodes, numnodalvalues>>> epvariables_;
 
+    //! A pointer to a map which contains the normals of the previous state needed for enhanced (new
+    //! gap) estimation
+    std::shared_ptr<std::map<ElementIDKey, Core::LinAlg::Matrix<3, 1, double>>> old_cp_normals_;
     //@}
 
     //! @name Private evaluation methods
@@ -440,7 +456,7 @@ namespace BeamInteraction
         const Core::LinAlg::Matrix<3, 1, TYPE>& r1_xi,
         const Core::LinAlg::Matrix<3, 1, TYPE>& r2_xi,
         const Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE>& N1,
-        const Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE>& N2);
+        const Core::LinAlg::Matrix<3, 3 * numnodes * numnodalvalues, TYPE>& N2, const double sign);
 
     /*!
     \brief Compute linearization of cosine of contact angle
