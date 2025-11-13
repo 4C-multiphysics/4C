@@ -28,7 +28,7 @@ namespace NOX
         //! Standard constructor
         Group(Teuchos::ParameterList& printParams,  //!< printing parameters
             Teuchos::ParameterList& grpOptionParams,
-            const Teuchos::RCP<::NOX::Epetra::Interface::Required>&
+            const std::shared_ptr<NOX::Nln::Interface::RequiredBase>
                 i,                      //!< basically the NOXified time integrator
             const NOX::Nln::Vector& x,  //!< current solution vector
             const Teuchos::RCP<NOX::Nln::LinearSystemBase>&

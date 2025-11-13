@@ -347,7 +347,7 @@ void fsi_immersed_drt()
     fsi->post_setup();
   }
 
-  fsi->timeloop(Teuchos::rcpFromRef(*fsi));
+  fsi->timeloop(fsi);
 
   // create result tests for single fields
   Global::Problem::instance()->add_field_test(fsi->mb_fluid_field()->create_field_test());
@@ -663,7 +663,7 @@ void fsi_ale_drt()
         fsi->post_setup();
       }
 
-      fsi->timeloop(Teuchos::rcpFromRef(*fsi));
+      fsi->timeloop(fsi);
 
       // create result tests for single fields
       Global::Problem::instance()->add_field_test(fsi->mb_fluid_field()->create_field_test());
@@ -819,7 +819,7 @@ void xfsi_drt()
         fsi->post_setup();
       }
 
-      fsi->timeloop(Teuchos::rcpFromRef(*fsi));
+      fsi->timeloop(fsi);
 
       Global::Problem::instance()->add_field_test(fsi->mb_fluid_field()->create_field_test());
       Global::Problem::instance()->add_field_test(fsi->structure_field()->create_field_test());

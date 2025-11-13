@@ -14,7 +14,6 @@
 #include "4C_solver_nonlin_nox_forward_decl.hpp"
 
 #include <NOX_Epetra_Interface_Jacobian.H>  // base class
-#include <NOX_Epetra_Interface_Required.H>
 #include <Teuchos_RCPDecl.hpp>
 
 FOUR_C_NAMESPACE_OPEN

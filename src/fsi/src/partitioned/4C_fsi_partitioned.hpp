@@ -14,12 +14,12 @@
 #include "4C_fsi_algorithm.hpp"
 #include "4C_io.hpp"
 #include "4C_linalg_graph.hpp"
+#include "4C_solver_nonlin_nox_interface_required_base.hpp"
 #include "4C_solver_nonlin_nox_linearsystem_base.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
 #include <NOX.H>
 #include <NOX_Epetra.H>
-#include <NOX_Epetra_Interface_Required.H>
 
 #include <memory>
 
@@ -80,7 +80,7 @@ namespace FSI
    * output() to finish the current step, save the result and write the
    * files.
    */
-  class Partitioned : public Algorithm, public ::NOX::Epetra::Interface::Required
+  class Partitioned : public Algorithm, public NOX::Nln::Interface::RequiredBase
   {
    public:
     /*! \brief Constructor
@@ -96,7 +96,7 @@ namespace FSI
      *
      * @param interface Our interface to NOX
      */
-    virtual void timeloop(const Teuchos::RCP<::NOX::Epetra::Interface::Required>& interface);
+    virtual void timeloop(const std::shared_ptr<NOX::Nln::Interface::RequiredBase> interface);
 
     /// compute FSI interface residual S^{-1}(F(d)) - d
     bool computeF(const Epetra_Vector& x, Epetra_Vector& F, const FillType fillFlag) override;
@@ -215,7 +215,7 @@ namespace FSI
    private:
     /// create linear solver framework
     Teuchos::RCP<NOX::Nln::LinearSystemBase> create_linear_system(Teuchos::ParameterList& nlParams,
-        const Teuchos::RCP<::NOX::Epetra::Interface::Required>& interface,
+        const std::shared_ptr<NOX::Nln::Interface::RequiredBase> interface,
         NOX::Nln::Vector& noxSoln, ::NOX::Utils& utils);
 
     /// create convergence tests including testing framework

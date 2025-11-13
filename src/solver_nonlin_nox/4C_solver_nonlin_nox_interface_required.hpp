@@ -11,10 +11,10 @@
 #include "4C_config.hpp"
 
 #include "4C_solver_nonlin_nox_enum_lists.hpp"
+#include "4C_solver_nonlin_nox_interface_required_base.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <NOX_Abstract_Vector.H>
-#include <NOX_Epetra_Interface_Required.H>  // base class
 
 #include <set>
 #include <vector>
@@ -35,7 +35,7 @@ namespace NOX
   {
     namespace Interface
     {
-      class Required : public virtual ::NOX::Epetra::Interface::Required
+      class Required : public RequiredBase
       {
        public:
         //! Constructor

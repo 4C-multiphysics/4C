@@ -25,7 +25,7 @@ FOUR_C_NAMESPACE_OPEN
  *----------------------------------------------------------------------*/
 NOX::Nln::CONTACT::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
     Teuchos::ParameterList& linearSolverParams, const SolverMap& solvers,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> iReq,
     const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
     const NOX::Nln::CONSTRAINT::ReqInterfaceMap& iConstr,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& J,
@@ -45,7 +45,7 @@ NOX::Nln::CONTACT::LinearSystem::LinearSystem(Teuchos::ParameterList& printParam
  *----------------------------------------------------------------------*/
 NOX::Nln::CONTACT::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
     Teuchos::ParameterList& linearSolverParams, const SolverMap& solvers,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> iReq,
     const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
     const NOX::Nln::CONSTRAINT::ReqInterfaceMap& iConstr,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& J,
@@ -80,9 +80,10 @@ Core::LinAlg::SolverParams NOX::Nln::CONTACT::LinearSystem::set_solver_options(
   if (isAdaptiveControl)
   {
     // dynamic cast of the required/rhs interface
-    Teuchos::RCP<NOX::Nln::Interface::Required> iNlnReq =
-        Teuchos::rcp_dynamic_cast<NOX::Nln::Interface::Required>(reqInterfacePtr_);
-    if (iNlnReq.is_null()) throw_error("setSolverOptions", "required interface cast failed");
+    const auto iNlnReq = std::dynamic_pointer_cast<NOX::Nln::Interface::Required>(reqInterfacePtr_);
+    FOUR_C_ASSERT(iNlnReq,
+        "NOX::Nln::CONTACT::LinearSystem::set_solver_options(): required interface cast "
+        "failed");
 
     double worst = iNlnReq->calc_ref_norm_force();
     // This value has to be specified in the PrePostOperator object of

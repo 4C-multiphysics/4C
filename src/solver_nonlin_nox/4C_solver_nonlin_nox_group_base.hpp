@@ -14,7 +14,6 @@
 #include "4C_solver_nonlin_nox_vector.hpp"
 
 #include <NOX_Abstract_Group.H>
-#include <NOX_Epetra_Interface_Required.H>
 #include <NOX_Utils.H>
 #include <Teuchos_RCP.hpp>
 
@@ -24,11 +23,17 @@ namespace NOX
 {
   namespace Nln
   {
+    // Forward declaration
+    namespace Interface
+    {
+      class RequiredBase;
+    }
+
     class GroupBase : public ::NOX::Abstract::Group
     {
      public:
       GroupBase(Teuchos::ParameterList& printParams,
-          const Teuchos::RCP<::NOX::Epetra::Interface::Required>& i, const NOX::Nln::Vector& x,
+          const std::shared_ptr<NOX::Nln::Interface::RequiredBase> i, const NOX::Nln::Vector& x,
           const Teuchos::RCP<NOX::Nln::LinearSystemBase>& linSys);
 
       GroupBase(const NOX::Nln::GroupBase& source, ::NOX::CopyType type);
@@ -119,7 +124,7 @@ namespace NOX
       //@}
 
       //! Return the user interface object.
-      Teuchos::RCP<::NOX::Epetra::Interface::Required> get_required_interface();
+      std::shared_ptr<NOX::Nln::Interface::RequiredBase> get_required_interface();
 
       //! Return the Linear System.
       Teuchos::RCP<const NOX::Nln::LinearSystemBase> get_linear_system() const;
@@ -167,7 +172,7 @@ namespace NOX
       Teuchos::RCP<NOX::Nln::LinearSystemBase> linearSystemPtr;
 
       //! Pointer to the user supplied interface functions
-      Teuchos::RCP<::NOX::Epetra::Interface::Required> userInterfacePtr;
+      std::shared_ptr<NOX::Nln::Interface::RequiredBase> userInterfacePtr;
       //@}
 
       // Linear solver stats

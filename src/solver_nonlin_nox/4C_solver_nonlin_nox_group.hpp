@@ -54,7 +54,7 @@ namespace NOX
       //! Standard Constructor
       Group(Teuchos::ParameterList& printParams,    //!< printing parameters
           Teuchos::ParameterList& grpOptionParams,  //!< group option parameters
-          const Teuchos::RCP<::NOX::Epetra::Interface::Required>&
+          const std::shared_ptr<NOX::Nln::Interface::RequiredBase>
               i,                      //!< basically the NOXified user interface
           const NOX::Nln::Vector& x,  //!< current solution vector
           const Teuchos::RCP<NOX::Nln::LinearSystemBase>&
@@ -105,7 +105,7 @@ namespace NOX
       bool isJacobian() const override;
 
       //! returns the nox_nln_interface_required pointer
-      Teuchos::RCP<const NOX::Nln::Interface::Required> get_nln_req_interface_ptr() const;
+      std::shared_ptr<const NOX::Nln::Interface::Required> get_nln_req_interface_ptr() const;
 
       //! returns the primary rhs norms
       virtual Teuchos::RCP<const std::vector<double>> get_rhs_norms(

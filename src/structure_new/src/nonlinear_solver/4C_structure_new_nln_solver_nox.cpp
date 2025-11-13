@@ -35,13 +35,12 @@ Solid::Nln::SOLVER::Nox::Nox(const Teuchos::ParameterList& default_params,
     const std::shared_ptr<const Solid::TimeInt::Base>& timint)
     : Generic(gstate, sdyn, noxinterface, integr, timint), default_params_(default_params)
 {
-  /* Set ::NOX::Epetra::Interface::Required
+  /* Set NOX::Nln::Interface::RequiredBase
    * This interface is necessary for the evaluation of basic things
    * which are evaluated outside of the non-linear solver, but
    * are always necessary. A simple example is the right-hand-side
    * F. (see computeF) */
-  const Teuchos::RCP<::NOX::Epetra::Interface::Required> ireq =
-      Teuchos::rcpFromRef(*nox_interface_ptr());
+  const auto ireq = nox_interface_ptr();
 
   /* Set ::NOX::Epetra::Interface::Jacobian
    * This interface is necessary for the evaluation of the jacobian

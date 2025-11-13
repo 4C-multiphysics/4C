@@ -7,6 +7,7 @@
 
 #include "4C_solver_nonlin_nox_group_base.hpp"
 
+#include "4C_solver_nonlin_nox_interface_required_base.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <NOX_SolverStats.hpp>
@@ -15,7 +16,7 @@
 FOUR_C_NAMESPACE_OPEN
 
 NOX::Nln::GroupBase::GroupBase(Teuchos::ParameterList& printParams,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Required>& i, const NOX::Nln::Vector& x,
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> i, const NOX::Nln::Vector& x,
     const Teuchos::RCP<NOX::Nln::LinearSystemBase>& linSys)
     : utils(printParams),
       xVector(x, ::NOX::DeepCopy),
@@ -275,7 +276,7 @@ double NOX::Nln::GroupBase::getNormF() const
   return RHSVector.norm();
 }
 
-Teuchos::RCP<::NOX::Epetra::Interface::Required> NOX::Nln::GroupBase::get_required_interface()
+std::shared_ptr<NOX::Nln::Interface::RequiredBase> NOX::Nln::GroupBase::get_required_interface()
 {
   return userInterfacePtr;
 }

@@ -189,7 +189,7 @@ void FSI::DirichletNeumannVel::output()
 /*----------------------------------------------------------------------*/
 
 void FSI::DirichletNeumannVel::timeloop(
-    const Teuchos::RCP<::NOX::Epetra::Interface::Required>& interface)
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> interface)
 {
   constraint_manager_->setup(structure_field(), mb_fluid_field());
   if (get_kinematic_coupling()) constraint_manager_->prepare_fluid_solve();

@@ -423,7 +423,7 @@ void FSI::Monolithic::setup_system()
 
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
-void FSI::Monolithic::timeloop(const std::shared_ptr<::NOX::Epetra::Interface::Required>& interface)
+void FSI::Monolithic::timeloop(const std::shared_ptr<NOX::Nln::Interface::RequiredBase> interface)
 {
   const Teuchos::ParameterList& fsidyn = Global::Problem::instance()->fsi_dynamic_params();
   const bool timeadapton = fsidyn.sublist("TIMEADAPTIVITY").get<bool>("TIMEADAPTON");
@@ -446,7 +446,7 @@ void FSI::Monolithic::timeloop(const std::shared_ptr<::NOX::Epetra::Interface::R
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
 void FSI::Monolithic::timeloop_const_dt(
-    const std::shared_ptr<::NOX::Epetra::Interface::Required>& interface)
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> interface)
 {
   prepare_timeloop();
 
@@ -534,8 +534,7 @@ void FSI::Monolithic::prepare_timeloop()
 
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
-void FSI::Monolithic::time_step(
-    const std::shared_ptr<::NOX::Epetra::Interface::Required>& interface)
+void FSI::Monolithic::time_step(const std::shared_ptr<NOX::Nln::Interface::RequiredBase> interface)
 {
   TEUCHOS_FUNC_TIME_MONITOR("FSI::Monolithic::TimeStep");
 
@@ -636,7 +635,7 @@ void FSI::Monolithic::time_step(
 
   // Create the Group
   Teuchos::RCP<NOX::FSI::Group> grp = Teuchos::make_rcp<NOX::FSI::Group>(
-      *this, printParams, Teuchos::rcpFromRef(*interface), noxSoln, Teuchos::rcpFromRef(*linSys));
+      *this, printParams, interface, noxSoln, Teuchos::rcpFromRef(*linSys));
 
   // Convergence Tests
   Teuchos::RCP<::NOX::StatusTest::Combo> combo = create_status_test(nlParams, grp);

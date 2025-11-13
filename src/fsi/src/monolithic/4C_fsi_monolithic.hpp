@@ -16,6 +16,7 @@
 #include "4C_fsi_monolithicinterface.hpp"
 #include "4C_inpar_fsi.hpp"
 #include "4C_linalg_mapextractor.hpp"
+#include "4C_solver_nonlin_nox_interface_required_base.hpp"
 #include "4C_solver_nonlin_nox_linearsystem_base.hpp"
 #include "4C_timestepping_mstep.hpp"
 
@@ -283,7 +284,7 @@ namespace FSI
    */
   class Monolithic : public MonolithicBase,
                      public MonolithicInterface,
-                     public ::NOX::Epetra::Interface::Required,
+                     public NOX::Nln::Interface::RequiredBase,
                      public ::NOX::Epetra::Interface::Jacobian,
                      public ::NOX::Direction::UserDefinedFactory
   {
@@ -313,12 +314,12 @@ namespace FSI
     void prepare_timeloop();
 
     //! outer level FSI time loop
-    void timeloop(const std::shared_ptr<::NOX::Epetra::Interface::Required>& interface);
+    void timeloop(const std::shared_ptr<NOX::Nln::Interface::RequiredBase> interface);
 
     //! do new time step
     //!
     //! return error code that indicates whether the nonlinear solver converged or not
-    virtual void time_step(const std::shared_ptr<::NOX::Epetra::Interface::Required>& interface);
+    virtual void time_step(const std::shared_ptr<NOX::Nln::Interface::RequiredBase> interface);
 
     //! take current results for converged and save for next time step
     void update() override;
@@ -710,7 +711,7 @@ namespace FSI
     //@{
 
     //! FSI time loop with constant time step size
-    void timeloop_const_dt(const std::shared_ptr<::NOX::Epetra::Interface::Required>& interface);
+    void timeloop_const_dt(const std::shared_ptr<NOX::Nln::Interface::RequiredBase> interface);
 
     /*! \brief FSI time loop with adaptive time step size
      *
@@ -730,7 +731,7 @@ namespace FSI
      * Finite Elements in Analysis and Design, 141:55-69, 2018,
      * https://doi.org/10.1016/j.finel.2017.12.002
      */
-    void timeloop_ada_dt(const std::shared_ptr<::NOX::Epetra::Interface::Required>& interface);
+    void timeloop_ada_dt(const std::shared_ptr<NOX::Nln::Interface::RequiredBase> interface);
 
     //@}
 

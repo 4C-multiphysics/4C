@@ -18,7 +18,6 @@
 
 #include <NOX_Abstract_Group.H>
 #include <NOX_Abstract_Vector.H>
-#include <NOX_Epetra_Interface_Required.H>
 
 #include <functional>
 #include <iostream>

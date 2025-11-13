@@ -10,13 +10,13 @@
 
 #include "4C_config.hpp"
 
+#include "4C_solver_nonlin_nox_interface_required_base.hpp"
 #include "4C_solver_nonlin_nox_linearsystem_base.hpp"
 #include "4C_solver_nonlin_nox_scaling.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
 #include <NOX_Common.H>
 #include <NOX_Epetra_Interface_Jacobian.H>
-#include <NOX_Epetra_Interface_Required.H>
 #include <NOX_Epetra_Scaling.H>
 #include <NOX_Utils.H>
 #include <Teuchos_Time.hpp>
@@ -55,7 +55,7 @@ namespace NOX
       //! Constructor with a user supplied Jacobian Operator.
       LinearSystemGCR(Teuchos::ParameterList& printParams,
           Teuchos::ParameterList& linearSolverParams,
-          const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
+          const std::shared_ptr<NOX::Nln::Interface::RequiredBase> iReq,
           const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
           const Teuchos::RCP<Epetra_Operator>& J, const NOX::Nln::Vector& cloneVector,
           const Teuchos::RCP<::NOX::Epetra::Scaling> scalingObject = Teuchos::null);

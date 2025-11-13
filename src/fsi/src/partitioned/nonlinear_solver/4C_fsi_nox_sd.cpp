@@ -12,12 +12,12 @@
 #include "4C_io_control.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_solver_nonlin_nox_group.hpp"
+#include "4C_solver_nonlin_nox_interface_required_base.hpp"
 #include "4C_solver_nonlin_nox_vector.hpp"
 
 #include <NOX_Abstract_Group.H>
 #include <NOX_Abstract_Vector.H>
 #include <NOX_Common.H>
-#include <NOX_Epetra_Interface_Required.H>
 #include <NOX_GlobalData.H>
 #include <NOX_Solver_Generic.H>
 #include <NOX_Utils.H>
@@ -106,7 +106,7 @@ bool NOX::FSI::SDRelaxation::compute(::NOX::Abstract::Group& newgrp, double& ste
 
 
 ::NOX::Abstract::Vector& NOX::FSI::SDRelaxation::compute_directional_derivative(
-    const ::NOX::Abstract::Vector& dir, ::NOX::Epetra::Interface::Required& interface)
+    const ::NOX::Abstract::Vector& dir, NOX::Nln::Interface::RequiredBase& interface)
 {
   // Allocate space for vecPtr and grpPtr if necessary
   if (!(vec_ptr_)) vec_ptr_ = dir.clone(::NOX::ShapeCopy);

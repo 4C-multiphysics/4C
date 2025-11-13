@@ -13,7 +13,6 @@
 #include "4C_utils_shared_ptr_from_ref.hpp"
 
 #include <NOX_Abstract_Group.H>
-#include <NOX_Epetra_Interface_Required.H>
 #include <NOX_Utils.H>
 
 #include <iostream>
@@ -22,7 +21,7 @@ FOUR_C_NAMESPACE_OPEN
 
 
 NOX::FSI::FSIMatrixFree::FSIMatrixFree(Teuchos::ParameterList& printParams,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Required>& i, const NOX::Nln::Vector& x)
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> i, const NOX::Nln::Vector& x)
     : label("FSI-Matrix-Free"),
       interface(i),
       currentX(x),

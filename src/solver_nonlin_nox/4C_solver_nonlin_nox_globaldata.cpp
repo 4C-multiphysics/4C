@@ -13,6 +13,7 @@
 #include "4C_linear_solver_method_linalg.hpp"
 #include "4C_solver_nonlin_nox_aux.hpp"
 #include "4C_solver_nonlin_nox_direction_factory.hpp"
+#include "4C_solver_nonlin_nox_interface_required_base.hpp"
 #include "4C_solver_nonlin_nox_linearsystem.hpp"
 #include "4C_solver_nonlin_nox_meritfunction_factory.hpp"
 #include "4C_solver_nonlin_nox_scaling.hpp"
@@ -20,7 +21,6 @@
 #include "4C_utils_exceptions.hpp"
 
 #include <NOX_Epetra_Interface_Jacobian.H>
-#include <NOX_Epetra_Interface_Required.H>
 #include <NOX_Utils.H>
 #include <Teuchos_ParameterList.hpp>
 #include <Teuchos_XMLParameterListCoreHelpers.hpp>
@@ -34,7 +34,7 @@ FOUR_C_NAMESPACE_OPEN
  *----------------------------------------------------------------------------*/
 NOX::Nln::GlobalData::GlobalData(MPI_Comm comm, Teuchos::ParameterList& noxParams,
     const NOX::Nln::LinearSystem::SolverMap& linSolvers,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> iReq,
     const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
     const NOX::Nln::OptimizationProblemType& type,
     const NOX::Nln::CONSTRAINT::ReqInterfaceMap& iConstr,
@@ -62,7 +62,7 @@ NOX::Nln::GlobalData::GlobalData(MPI_Comm comm, Teuchos::ParameterList& noxParam
  *----------------------------------------------------------------------------*/
 NOX::Nln::GlobalData::GlobalData(MPI_Comm comm, Teuchos::ParameterList& noxParams,
     const NOX::Nln::LinearSystem::SolverMap& linSolvers,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> iReq,
     const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
     const OptimizationProblemType& type, const NOX::Nln::CONSTRAINT::ReqInterfaceMap& iConstr)
     : comm_(comm),
@@ -85,7 +85,7 @@ NOX::Nln::GlobalData::GlobalData(MPI_Comm comm, Teuchos::ParameterList& noxParam
  *----------------------------------------------------------------------------*/
 NOX::Nln::GlobalData::GlobalData(MPI_Comm comm, Teuchos::ParameterList& noxParams,
     const NOX::Nln::LinearSystem::SolverMap& linSolvers,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> iReq,
     const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac)
     : comm_(comm),
       nlnparams_(Teuchos::rcpFromRef(noxParams)),
@@ -347,10 +347,9 @@ const NOX::Nln::LinearSystem::SolverMap& NOX::Nln::GlobalData::get_linear_solver
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-Teuchos::RCP<::NOX::Epetra::Interface::Required> NOX::Nln::GlobalData::get_required_interface()
+std::shared_ptr<NOX::Nln::Interface::RequiredBase> NOX::Nln::GlobalData::get_required_interface()
 {
-  if (i_req_ptr_.is_null())
-    FOUR_C_THROW("Required interface pointer iReqPtr_ was not initialized!");
+  FOUR_C_ASSERT(i_req_ptr_, "Required interface pointer iReqPtr_ was not initialized!");
 
   return i_req_ptr_;
 }

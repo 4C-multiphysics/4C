@@ -21,7 +21,7 @@ FOUR_C_NAMESPACE_OPEN
 NOX::Nln::Solid::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
     Teuchos::ParameterList& linearSolverParams,
     const std::map<NOX::Nln::SolutionType, Teuchos::RCP<Core::LinAlg::Solver>>& solvers,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> iReq,
     const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& J,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& M, const NOX::Nln::Vector& cloneVector,
@@ -37,7 +37,7 @@ NOX::Nln::Solid::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
 NOX::Nln::Solid::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
     Teuchos::ParameterList& linearSolverParams,
     const std::map<NOX::Nln::SolutionType, Teuchos::RCP<Core::LinAlg::Solver>>& solvers,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> iReq,
     const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& J,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& M, const NOX::Nln::Vector& cloneVector)
@@ -52,7 +52,7 @@ NOX::Nln::Solid::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
 NOX::Nln::Solid::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
     Teuchos::ParameterList& linearSolverParams,
     const std::map<NOX::Nln::SolutionType, Teuchos::RCP<Core::LinAlg::Solver>>& solvers,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> iReq,
     const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& J, const NOX::Nln::Vector& cloneVector,
     const std::shared_ptr<NOX::Nln::Scaling> scalingObject)
@@ -67,7 +67,7 @@ NOX::Nln::Solid::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
 NOX::Nln::Solid::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
     Teuchos::ParameterList& linearSolverParams,
     const std::map<NOX::Nln::SolutionType, Teuchos::RCP<Core::LinAlg::Solver>>& solvers,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> iReq,
     const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& J, const NOX::Nln::Vector& cloneVector)
     : NOX::Nln::LinearSystem(printParams, linearSolverParams, solvers, iReq, iJac, J, cloneVector)
@@ -87,8 +87,10 @@ Core::LinAlg::SolverParams NOX::Nln::Solid::LinearSystem::set_solver_options(
   if (isAdaptiveControl)
   {
     // dynamic cast of the required/rhs interface
-    Teuchos::RCP<NOX::Nln::Interface::Required> iNlnReq =
-        Teuchos::rcp_dynamic_cast<NOX::Nln::Interface::Required>(reqInterfacePtr_, true);
+    const auto iNlnReq = std::dynamic_pointer_cast<NOX::Nln::Interface::Required>(reqInterfacePtr_);
+    FOUR_C_ASSERT(iNlnReq,
+        "NOX::Nln::Solid::LinearSystem::set_solver_options(): required interface cast "
+        "failed");
 
     solver_params.nonlin_tolerance = p.get<double>("Wanted Tolerance");
     solver_params.nonlin_residual = iNlnReq->calc_ref_norm_force();

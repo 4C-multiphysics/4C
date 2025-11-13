@@ -28,7 +28,7 @@ namespace NOX
         //! Standard constructor with full functionality.
         LinearSystem(Teuchos::ParameterList& printParams,
             Teuchos::ParameterList& linearSolverParams, const SolverMap& solvers,
-            const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
+            const std::shared_ptr<NOX::Nln::Interface::RequiredBase> iReq,
             const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
             const NOX::Nln::CONSTRAINT::ReqInterfaceMap& iConstr,
             const Teuchos::RCP<Core::LinAlg::SparseOperator>& J,
@@ -40,7 +40,7 @@ namespace NOX
         //! Constructor without scaling object
         LinearSystem(Teuchos::ParameterList& printParams,
             Teuchos::ParameterList& linearSolverParams, const SolverMap& solvers,
-            const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
+            const std::shared_ptr<NOX::Nln::Interface::RequiredBase> iReq,
             const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
             const NOX::Nln::CONSTRAINT::ReqInterfaceMap& iConstr,
             const Teuchos::RCP<Core::LinAlg::SparseOperator>& J,

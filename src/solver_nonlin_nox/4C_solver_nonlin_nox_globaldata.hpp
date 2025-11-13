@@ -30,6 +30,10 @@ namespace NOX
 {
   namespace Nln
   {
+    namespace Interface
+    {
+      class RequiredBase;
+    }  // namespace Interface
     namespace CONSTRAINT
     {
       namespace Interface
@@ -49,7 +53,7 @@ namespace NOX
        *  inclusive scaling object */
       GlobalData(MPI_Comm comm, Teuchos::ParameterList& noxParams,
           const std::map<NOX::Nln::SolutionType, Teuchos::RCP<Core::LinAlg::Solver>>& linSolvers,
-          const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
+          const std::shared_ptr<NOX::Nln::Interface::RequiredBase> iReq,
           const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
           const OptimizationProblemType& type, const NOX::Nln::CONSTRAINT::ReqInterfaceMap& iConstr,
           const NOX::Nln::CONSTRAINT::PrecInterfaceMap& iConstrPrec,
@@ -60,7 +64,7 @@ namespace NOX
        * without any pre-conditioner interfaces */
       GlobalData(MPI_Comm comm, Teuchos::ParameterList& noxParams,
           const std::map<NOX::Nln::SolutionType, Teuchos::RCP<Core::LinAlg::Solver>>& linSolvers,
-          const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
+          const std::shared_ptr<NOX::Nln::Interface::RequiredBase> iReq,
           const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
           const OptimizationProblemType& type,
           const NOX::Nln::CONSTRAINT::ReqInterfaceMap& iConstr);
@@ -70,7 +74,7 @@ namespace NOX
        *  without a pre-conditioner interface */
       GlobalData(MPI_Comm comm, Teuchos::ParameterList& noxParams,
           const std::map<NOX::Nln::SolutionType, Teuchos::RCP<Core::LinAlg::Solver>>& linSolvers,
-          const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
+          const std::shared_ptr<NOX::Nln::Interface::RequiredBase> iReq,
           const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac);
 
       //! destructor
@@ -102,7 +106,7 @@ namespace NOX
       get_linear_solvers();
 
       //! return the user-defined required interface
-      Teuchos::RCP<::NOX::Epetra::Interface::Required> get_required_interface();
+      std::shared_ptr<NOX::Nln::Interface::RequiredBase> get_required_interface();
 
       //! return the user-defined jacobian interface
       Teuchos::RCP<::NOX::Epetra::Interface::Jacobian> get_jacobian_interface();
@@ -148,7 +152,7 @@ namespace NOX
       const std::map<NOX::Nln::SolutionType, Teuchos::RCP<Core::LinAlg::Solver>> lin_solvers_;
 
       /// required interface pointer
-      Teuchos::RCP<::NOX::Epetra::Interface::Required> i_req_ptr_;
+      std::shared_ptr<NOX::Nln::Interface::RequiredBase> i_req_ptr_;
 
       /// jacobian interface pointer
       Teuchos::RCP<::NOX::Epetra::Interface::Jacobian> i_jac_ptr_;

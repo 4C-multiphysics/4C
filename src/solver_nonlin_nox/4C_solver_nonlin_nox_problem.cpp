@@ -23,7 +23,6 @@
 #include "4C_solver_nonlin_nox_singlestep_group.hpp"
 #include "4C_solver_nonlin_nox_vector.hpp"
 
-#include <NOX_Epetra_Interface_Required.H>
 #include <NOX_StatusTest_Generic.H>
 #include <Teuchos_ParameterList.hpp>
 
@@ -100,8 +99,7 @@ Teuchos::RCP<::NOX::Abstract::Group> NOX::Nln::Problem::create_group(
   Teuchos::RCP<::NOX::Abstract::Group> noxgrp = Teuchos::null;
 
   Teuchos::ParameterList& params = nox_global_data_->get_nln_parameter_list();
-  const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq =
-      nox_global_data_->get_required_interface();
+  const auto iReq = nox_global_data_->get_required_interface();
   const std::string nlnSolver = params.get<std::string>("Nonlinear Solver", "");
   if (nox_global_data_->is_constrained())
   {

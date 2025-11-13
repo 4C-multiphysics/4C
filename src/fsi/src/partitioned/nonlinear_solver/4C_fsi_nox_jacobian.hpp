@@ -10,12 +10,12 @@
 
 #include "4C_config.hpp"
 
+#include "4C_solver_nonlin_nox_interface_required_base.hpp"
 #include "4C_solver_nonlin_nox_vector.hpp"
 
 #include <Epetra_Operator.h>
 #include <NOX_Abstract_Group.H>
 #include <NOX_Epetra_Interface_Jacobian.H>
-#include <NOX_Epetra_Interface_Required.H>
 #include <NOX_Utils.H>
 
 #include <memory>
@@ -43,7 +43,7 @@ namespace NOX
         The vector \c x is used to clone the solution vector.
       */
       FSIMatrixFree(Teuchos::ParameterList& printParams,
-          const Teuchos::RCP<::NOX::Epetra::Interface::Required>& i, const NOX::Nln::Vector& x);
+          const std::shared_ptr<NOX::Nln::Interface::RequiredBase> i, const NOX::Nln::Vector& x);
 
 
       //! If set true, transpose of this operator will be applied.
@@ -108,7 +108,7 @@ namespace NOX
       bool computeJacobian(const Epetra_Vector& x, Epetra_Operator& Jac) override;
 
       //! Clone a ::NOX::Abstract::Group derived object and use the computeF() method of that group
-      //! for the perturbation instead of the ::NOX::Epetra::Interface::Required::computeF() method.
+      //! for the perturbation instead of the NOX::Nln::Interface::RequiredBase::computeF() method.
       //! This is required for LOCAL to get the operators correct during homotopy.
       void set_group_for_compute_f(const ::NOX::Abstract::Group& group);
 
@@ -117,7 +117,7 @@ namespace NOX
       std::string label;
 
       //! User provided interface function
-      Teuchos::RCP<::NOX::Epetra::Interface::Required> interface;
+      std::shared_ptr<NOX::Nln::Interface::RequiredBase> interface;
 
       //! The current solution vector
       NOX::Nln::Vector currentX;

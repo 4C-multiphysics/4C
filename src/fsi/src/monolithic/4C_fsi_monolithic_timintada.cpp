@@ -178,7 +178,7 @@ void FSI::Monolithic::init_tim_int_ada(const Teuchos::ParameterList& fsidyn)
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
 void FSI::Monolithic::timeloop_ada_dt(
-    const std::shared_ptr<::NOX::Epetra::Interface::Required>& interface)
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> interface)
 {
   /*--------------------------------------------------------------------------*/
   /* Initialize some parameters                                               */

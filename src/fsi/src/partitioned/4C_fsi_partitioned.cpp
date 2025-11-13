@@ -335,7 +335,7 @@ void FSI::Partitioned::set_default_parameters(
 
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
-void FSI::Partitioned::timeloop(const Teuchos::RCP<::NOX::Epetra::Interface::Required>& interface)
+void FSI::Partitioned::timeloop(const std::shared_ptr<NOX::Nln::Interface::RequiredBase> interface)
 {
   const Teuchos::ParameterList& fsidyn = Global::Problem::instance()->fsi_dynamic_params();
 
@@ -491,7 +491,7 @@ void FSI::Partitioned::timeloop(const Teuchos::RCP<::NOX::Epetra::Interface::Req
 /*----------------------------------------------------------------------*/
 Teuchos::RCP<NOX::Nln::LinearSystemBase> FSI::Partitioned::create_linear_system(
     Teuchos::ParameterList& nlParams,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Required>& interface, NOX::Nln::Vector& noxSoln,
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> interface, NOX::Nln::Vector& noxSoln,
     ::NOX::Utils& utils)
 {
   Teuchos::ParameterList& printParams = nlParams.sublist("Printing");
@@ -523,6 +523,8 @@ Teuchos::RCP<NOX::Nln::LinearSystemBase> FSI::Partitioned::create_linear_system(
   const std::string jacobian = nlParams.get("Jacobian", "None");
   std::string preconditioner = nlParams.get("Preconditioner", "None");
 
+  auto epetra_rcp_interface = Teuchos::rcpFromRef(*interface);
+
   // Special FSI based matrix free method
   if (jacobian == "FSI Matrix Free")
   {
@@ -552,7 +554,7 @@ Teuchos::RCP<NOX::Nln::LinearSystemBase> FSI::Partitioned::create_linear_system(
     // must set a rather low tolerance for the linear solver.
 
     MF = Teuchos::make_rcp<::NOX::Epetra::MatrixFree>(
-        printParams, interface, noxSoln, kelleyPerturbation);
+        printParams, epetra_rcp_interface, noxSoln, kelleyPerturbation);
     MF->setLambda(lambda);
     iJac = MF;
     J = MF;
@@ -583,8 +585,8 @@ Teuchos::RCP<NOX::Nln::LinearSystemBase> FSI::Partitioned::create_linear_system(
     else
       FOUR_C_THROW("unsupported difference type '{}'", dt);
 
-    FD = Teuchos::make_rcp<::NOX::Epetra::FiniteDifference>(printParams, interface, noxSoln,
-        Teuchos::rcpFromRef(raw_graph_->get_epetra_crs_graph()), beta, alpha);
+    FD = Teuchos::make_rcp<::NOX::Epetra::FiniteDifference>(printParams, epetra_rcp_interface,
+        noxSoln, Teuchos::rcpFromRef(raw_graph_->get_epetra_crs_graph()), beta, alpha);
     FD->setDifferenceMethod(dtype);
 
     iJac = FD;

@@ -10,7 +10,6 @@
 
 #include "4C_config.hpp"
 
-#include <NOX_Epetra_Interface_Required.H>
 #include <NOX_GlobalData.H>
 #include <NOX_LineSearch_Generic.H>
 #include <NOX_LineSearch_UserDefinedFactory.H>
@@ -21,6 +20,12 @@ FOUR_C_NAMESPACE_OPEN
 
 namespace NOX
 {
+  // Forward declaration
+  namespace Nln::Interface
+  {
+    class RequiredBase;
+  }
+
   namespace FSI
   {
     //! Use NonlinearCG linesearch
@@ -114,7 +119,7 @@ namespace NOX
      private:
       //! Method for computing directional derivatives numerically
       ::NOX::Abstract::Vector& compute_directional_derivative(
-          const ::NOX::Abstract::Vector& dir, ::NOX::Epetra::Interface::Required& interface);
+          const ::NOX::Abstract::Vector& dir, NOX::Nln::Interface::RequiredBase& interface);
 
       //! Printing utilities
       Teuchos::RCP<::NOX::Utils> utils_;

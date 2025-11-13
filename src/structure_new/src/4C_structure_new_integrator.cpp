@@ -281,7 +281,7 @@ void Solid::Integrator::compute_mass_matrix_and_init_acc()
   // ToDo Get the actual tolerance value
   p_ls.set<double>("Wanted Tolerance", 1.0e-6);
 
-  NOX::Nln::Solid::LinearSystem linsys(p_print, p_ls, str_linsolver, Teuchos::null, Teuchos::null,
+  NOX::Nln::Solid::LinearSystem linsys(p_print, p_ls, str_linsolver, nullptr, Teuchos::null,
       Teuchos::rcpFromRef(mass_matrix), nox_soln);
 
   linsys.apply_jacobian_inverse(p_ls, *rhs_solid, nox_soln);

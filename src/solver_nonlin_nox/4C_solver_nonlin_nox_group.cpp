@@ -21,7 +21,7 @@ FOUR_C_NAMESPACE_OPEN
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
 NOX::Nln::Group::Group(Teuchos::ParameterList& printParams, Teuchos::ParameterList& grpOptionParams,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Required>& i, const NOX::Nln::Vector& x,
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> i, const NOX::Nln::Vector& x,
     const Teuchos::RCP<NOX::Nln::LinearSystemBase>& linSys)
     : GroupBase(printParams, i, x, linSys),
       skipUpdateX_(false),
@@ -209,14 +209,13 @@ void NOX::Nln::Group::set_skip_update_x(bool skipUpdateX) { skipUpdateX_ = skipU
 
 /*----------------------------------------------------------------------------*
  *----------------------------------------------------------------------------*/
-Teuchos::RCP<const NOX::Nln::Interface::Required> NOX::Nln::Group::get_nln_req_interface_ptr() const
+std::shared_ptr<const NOX::Nln::Interface::Required> NOX::Nln::Group::get_nln_req_interface_ptr()
+    const
 {
-  Teuchos::RCP<NOX::Nln::Interface::Required> userInterfaceNlnPtr =
-      Teuchos::rcp_dynamic_cast<NOX::Nln::Interface::Required>(userInterfacePtr);
-
-  if (userInterfaceNlnPtr.is_null())
-    throw_error("get_nln_req_interface_ptr",
-        "Dynamic cast of the userInterfacePtr to NOX::Nln::Interface::Required failed!");
+  const auto userInterfaceNlnPtr =
+      std::dynamic_pointer_cast<NOX::Nln::Interface::Required>(userInterfacePtr);
+  FOUR_C_ASSERT(userInterfaceNlnPtr,
+      "NOX::Nln::Group::get_nln_req_interface_ptr(): required interface cast failed");
 
   return userInterfaceNlnPtr;
 }
@@ -456,7 +455,7 @@ void NOX::Nln::Group::adjust_pseudo_time_step(double& delta, const double& stepS
  *----------------------------------------------------------------------------*/
 Teuchos::RCP<Core::LinAlg::SparseMatrix> NOX::Nln::Group::get_contributions_from_element_level()
 {
-  return Teuchos::rcp_dynamic_cast<NOX::Nln::Interface::Jacobian>(userInterfacePtr)
+  return std::dynamic_pointer_cast<NOX::Nln::Interface::Jacobian>(userInterfacePtr)
       ->calc_jacobian_contributions_from_element_level_for_ptc();
 }
 

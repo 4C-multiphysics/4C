@@ -36,7 +36,7 @@ FOUR_C_NAMESPACE_OPEN
 NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
     Teuchos::ParameterList& linearSolverParams,
     const std::map<NOX::Nln::SolutionType, Teuchos::RCP<Core::LinAlg::Solver>>& solvers,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> iReq,
     const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& jacobian_op,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& preconditioner,
@@ -62,7 +62,7 @@ NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
 NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
     Teuchos::ParameterList& linearSolverParams,
     const std::map<NOX::Nln::SolutionType, Teuchos::RCP<Core::LinAlg::Solver>>& solvers,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> iReq,
     const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& jacobian_op,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& preconditioner,
@@ -88,7 +88,7 @@ NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
 NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
     Teuchos::ParameterList& linearSolverParams,
     const std::map<NOX::Nln::SolutionType, Teuchos::RCP<Core::LinAlg::Solver>>& solvers,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> iReq,
     const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& jacobian_op,
     const NOX::Nln::Vector& cloneVector, const std::shared_ptr<NOX::Nln::Scaling> scalingObject)
@@ -113,7 +113,7 @@ NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
 NOX::Nln::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
     Teuchos::ParameterList& linearSolverParams,
     const std::map<NOX::Nln::SolutionType, Teuchos::RCP<Core::LinAlg::Solver>>& solvers,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> iReq,
     const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
     const Teuchos::RCP<Core::LinAlg::SparseOperator>& jacobian_op,
     const NOX::Nln::Vector& cloneVector)
@@ -461,7 +461,7 @@ void NOX::Nln::LinearSystem::throw_error(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-Teuchos::RCP<const ::NOX::Epetra::Interface::Required>
+std::shared_ptr<const NOX::Nln::Interface::RequiredBase>
 NOX::Nln::LinearSystem::get_required_interface() const
 {
   return reqInterfacePtr_;

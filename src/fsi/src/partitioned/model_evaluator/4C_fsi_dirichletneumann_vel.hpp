@@ -58,7 +58,7 @@ namespace FSI
      *
      *  \param[in] interface Our interface to NOX
      */
-    void timeloop(const Teuchos::RCP<::NOX::Epetra::Interface::Required>& interface) override;
+    void timeloop(const std::shared_ptr<NOX::Nln::Interface::RequiredBase> interface) override;
 
     /** \brief Here we decide which type of coupling we are going to use
      *

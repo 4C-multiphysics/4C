@@ -21,7 +21,6 @@
 #include "4C_utils_exceptions.hpp"
 
 #include <NOX_Epetra_Interface_Jacobian.H>
-#include <NOX_Epetra_Interface_Required.H>
 #include <Teuchos_ParameterList.hpp>
 
 FOUR_C_NAMESPACE_OPEN
@@ -45,8 +44,7 @@ Teuchos::RCP<NOX::Nln::LinearSystemBase> NOX::Nln::LinSystem::Factory::build_lin
 
   // extract some stuff from the NOX::Nln::GlobalData object
   const NOX::Nln::LinearSystem::SolverMap& linSolvers = noxNlnGlobalData.get_linear_solvers();
-  const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq =
-      noxNlnGlobalData.get_required_interface();
+  const auto iReq = noxNlnGlobalData.get_required_interface();
   const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac =
       noxNlnGlobalData.get_jacobian_interface();
 

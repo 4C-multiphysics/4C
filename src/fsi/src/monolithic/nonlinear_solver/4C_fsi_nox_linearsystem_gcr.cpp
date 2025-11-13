@@ -27,7 +27,7 @@ FOUR_C_NAMESPACE_OPEN
 
 NOX::FSI::LinearSystemGCR::LinearSystemGCR(Teuchos::ParameterList& printParams,
     Teuchos::ParameterList& linearSolverParams,
-    const Teuchos::RCP<::NOX::Epetra::Interface::Required>& iReq,
+    const std::shared_ptr<NOX::Nln::Interface::RequiredBase> iReq,
     const Teuchos::RCP<::NOX::Epetra::Interface::Jacobian>& iJac,
     const Teuchos::RCP<Epetra_Operator>& jacobian, const NOX::Nln::Vector& cloneVector,
     const Teuchos::RCP<::NOX::Epetra::Scaling> s)

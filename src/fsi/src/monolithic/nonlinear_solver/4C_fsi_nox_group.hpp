@@ -29,11 +29,11 @@ namespace NOX
     class Group : public NOX::Nln::GroupBase
     {
      public:
-      Group(FourC::FSI::MonolithicInterface& mfsi,                    ///< monolithic FSI interface
-          Teuchos::ParameterList& printParams,                        ///< printing parameters
-          const Teuchos::RCP<::NOX::Epetra::Interface::Required>& i,  ///< NOX interface
-          const NOX::Nln::Vector& x,                                  ///< initial guess
-          const Teuchos::RCP<NOX::Nln::LinearSystemBase>& linSys      ///< linear system
+      Group(FourC::FSI::MonolithicInterface& mfsi,                     ///< monolithic FSI interface
+          Teuchos::ParameterList& printParams,                         ///< printing parameters
+          const std::shared_ptr<NOX::Nln::Interface::RequiredBase> i,  ///< NOX interface
+          const NOX::Nln::Vector& x,                                   ///< initial guess
+          const Teuchos::RCP<NOX::Nln::LinearSystemBase>& linSys       ///< linear system
       );
 
       /// fetch the known Jacobian and RHS from the field solvers
