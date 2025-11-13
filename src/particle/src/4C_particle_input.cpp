@@ -468,7 +468,7 @@ std::vector<Core::IO::InputSpec> Particle::valid_parameters()
           // type of (random) surface energy distribution
           parameter<SurfaceEnergyDistribution>("ADHESION_SURFACE_ENERGY_DISTRIBUTION",
               {.description = "type of (random) surface energy distribution",
-                  .default_value = Particle::ConstantSurfaceEnergy}),
+                  .default_value = SurfaceEnergyDistribution::Constant}),
 
           parameter<double>("MIN_RADIUS",
               {.description = "minimum allowed particle radius", .default_value = 0.0}),
@@ -538,13 +538,13 @@ std::vector<Core::IO::InputSpec> Particle::valid_parameters()
           parameter<double>("ADHESION_SURFACE_ENERGY",
               {.description = "adhesion surface energy for the calculation of the pull-out force",
                   .default_value = -1.0}),
-          parameter<double>("ADHESION_SURFACE_ENERGY_DISTRIBUTION_VAR",
-              {.description = "variance of adhesion surface energy distribution",
+          parameter<double>("ADHESION_SURFACE_ENERGY_DISTRIBUTION_STDDEV",
+              {.description = "standard deviation of adhesion surface energy distribution",
                   .default_value = -1.0}),
 
           parameter<double>("ADHESION_SURFACE_ENERGY_DISTRIBUTION_CUTOFF_FACTOR",
-              {.description =
-                      "adhesion surface energy distribution limited by multiple of variance",
+              {.description = "adhesion surface energy distribution limited by multiple of "
+                              "standard deviation",
                   .default_value = -1.0}),
           parameter<double>("ADHESION_SURFACE_ENERGY_FACTOR",
               {.description = "factor to calculate minimum adhesion surface energy",

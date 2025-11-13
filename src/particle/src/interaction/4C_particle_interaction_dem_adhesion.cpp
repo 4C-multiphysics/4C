@@ -29,15 +29,30 @@
 
 FOUR_C_NAMESPACE_OPEN
 
-/*---------------------------------------------------------------------------*
- | definitions                                                               |
- *---------------------------------------------------------------------------*/
+void Particle::verify_params_adhesion(const DEMAdhesionParams& params)
+{
+  if (not(params.surface_energy > 0.0)) FOUR_C_THROW("non-positive adhesion surface energy!");
+
+  if (params.adhesion_distance < 0.0) FOUR_C_THROW("negative adhesion distance!");
+
+  verify_params_adhesion_surface_energy_distribution(params.surface_energy_distribution_params);
+}
+
+
 Particle::DEMAdhesion::DEMAdhesion(const Teuchos::ParameterList& params)
     : params_dem_(params),
-      adhesion_distance_(params_dem_.get<double>("ADHESION_DISTANCE")),
+      adhesion_params_{.surface_energy = params_dem_.get<double>("ADHESION_SURFACE_ENERGY"),
+          .surface_energy_distribution_params{
+              .type = Teuchos::getIntegralValue<Particle::SurfaceEnergyDistribution>(
+                  params_dem_, "ADHESION_SURFACE_ENERGY_DISTRIBUTION"),
+              .standard_deviation =
+                  params_dem_.get<double>("ADHESION_SURFACE_ENERGY_DISTRIBUTION_STDDEV"),
+              .cutoff_factor =
+                  params_dem_.get<double>("ADHESION_SURFACE_ENERGY_DISTRIBUTION_CUTOFF_FACTOR")},
+          .adhesion_distance = params_dem_.get<double>("ADHESION_DISTANCE")},
       writeparticlewallinteraction_(params_dem_.get<bool>("WRITE_PARTICLE_WALL_INTERACTION"))
 {
-  // empty constructor
+  verify_params_adhesion(adhesion_params_);
 }
 
 Particle::DEMAdhesion::~DEMAdhesion() = default;
@@ -46,9 +61,6 @@ void Particle::DEMAdhesion::init()
 {
   // init adhesion law handler
   init_adhesion_law_handler();
-
-  // init adhesion surface energy handler
-  init_adhesion_surface_energy_handler();
 }
 
 void Particle::DEMAdhesion::setup(
@@ -81,12 +93,6 @@ void Particle::DEMAdhesion::setup(
 
   // setup adhesion law handler
   adhesionlaw_->setup(k_normal);
-
-  // setup adhesion surface energy handler
-  adhesionsurfaceenergy_->setup();
-
-  // safety check
-  if (adhesion_distance_ < 0.0) FOUR_C_THROW("negative adhesion distance!");
 }
 
 void Particle::DEMAdhesion::add_force_contribution()
@@ -129,47 +135,6 @@ void Particle::DEMAdhesion::init_adhesion_law_handler()
   adhesionlaw_->init();
 }
 
-void Particle::DEMAdhesion::init_adhesion_surface_energy_handler()
-{
-  // get type of adhesion surface energy distribution
-  auto surfaceenergydistributiontype =
-      Teuchos::getIntegralValue<Particle::SurfaceEnergyDistribution>(
-          params_dem_, "ADHESION_SURFACE_ENERGY_DISTRIBUTION");
-
-  // create adhesion surface energy handler
-  switch (surfaceenergydistributiontype)
-  {
-    case Particle::ConstantSurfaceEnergy:
-    {
-      adhesionsurfaceenergy_ = std::unique_ptr<Particle::DEMAdhesionSurfaceEnergyConstant>(
-          new Particle::DEMAdhesionSurfaceEnergyConstant(params_dem_));
-      break;
-    }
-    case Particle::NormalSurfaceEnergyDistribution:
-    {
-      adhesionsurfaceenergy_ =
-          std::unique_ptr<Particle::DEMAdhesionSurfaceEnergyDistributionNormal>(
-              new Particle::DEMAdhesionSurfaceEnergyDistributionNormal(params_dem_));
-      break;
-    }
-    case Particle::LogNormalSurfaceEnergyDistribution:
-    {
-      adhesionsurfaceenergy_ =
-          std::unique_ptr<Particle::DEMAdhesionSurfaceEnergyDistributionLogNormal>(
-              new Particle::DEMAdhesionSurfaceEnergyDistributionLogNormal(params_dem_));
-      break;
-    }
-    default:
-    {
-      FOUR_C_THROW("unknown adhesion surface energy distribution type!");
-      break;
-    }
-  }
-
-  // init adhesion surface energy handler
-  adhesionsurfaceenergy_->init();
-}
-
 void Particle::DEMAdhesion::setup_particle_interaction_writer()
 {
   // register specific runtime output writer
@@ -184,9 +149,6 @@ void Particle::DEMAdhesion::evaluate_particle_adhesion()
   // get reference to particle adhesion history pair data
   DEMHistoryPairAdhesionData& adhesionhistorydata =
       historypairs_->get_ref_to_particle_adhesion_history_data();
-
-  // adhesion surface energy
-  const double surface_energy = params_dem_.get<double>("ADHESION_SURFACE_ENERGY");
 
   // iterate over particle pairs
   for (const auto& particlepair : neighborpairs_->get_ref_to_particle_pair_adhesion_data())
@@ -245,8 +207,8 @@ void Particle::DEMAdhesion::evaluate_particle_adhesion()
 
     // calculate adhesion surface energy
     if (not(adhesionhistory_ij.surface_energy_ > 0.0))
-      adhesionsurfaceenergy_->adhesion_surface_energy(
-          surface_energy, adhesionhistory_ij.surface_energy_);
+      adhesionhistory_ij.surface_energy_ = dem_adhesion_surface_energy(
+          adhesion_params_.surface_energy_distribution_params, adhesion_params_.surface_energy);
 
     // calculate adhesion force
     adhesionlaw_->adhesion_force(particlepair.gap_, adhesionhistory_ij.surface_energy_, r_eff,
@@ -363,7 +325,7 @@ void Particle::DEMAdhesion::evaluate_particle_wall_adhesion()
     }
 
     // adhesion surface energy
-    double surface_energy = 0.0;
+    double surface_energy_wall = 0.0;
 
     // get material parameters of wall element
     {
@@ -374,11 +336,11 @@ void Particle::DEMAdhesion::evaluate_particle_wall_adhesion()
         FOUR_C_THROW("cast to Mat::ParticleWallMaterialDEM failed!");
 
       // get adhesion surface energy
-      surface_energy = particlewallmaterial->adhesion_surface_energy();
+      surface_energy_wall = particlewallmaterial->adhesion_surface_energy();
     }
 
     // no evaluation of adhesion contribution
-    if (not(surface_energy > 0.0)) continue;
+    if (not(surface_energy_wall > 0.0)) continue;
 
     // velocity of wall contact point j
     double vel_j[3] = {0.0, 0.0, 0.0};
@@ -414,8 +376,8 @@ void Particle::DEMAdhesion::evaluate_particle_wall_adhesion()
 
     // calculate adhesion surface energy
     if (not(adhesionhistory_ij.surface_energy_ > 0.0))
-      adhesionsurfaceenergy_->adhesion_surface_energy(
-          surface_energy, adhesionhistory_ij.surface_energy_);
+      adhesionhistory_ij.surface_energy_ = dem_adhesion_surface_energy(
+          adhesion_params_.surface_energy_distribution_params, surface_energy_wall);
 
     // calculate adhesion force
     adhesionlaw_->adhesion_force(particlewallpair.gap_, adhesionhistory_ij.surface_energy_,

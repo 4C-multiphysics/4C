@@ -13,41 +13,40 @@
  *---------------------------------------------------------------------------*/
 #include "4C_config.hpp"
 
-#include "4C_particle_engine_enums.hpp"
 #include "4C_particle_engine_typedefs.hpp"
-#include "4C_particle_input.hpp"
+#include "4C_particle_interaction_dem_adhesion_surface_energy.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
 FOUR_C_NAMESPACE_OPEN
 
-/*---------------------------------------------------------------------------*
- | forward declarations                                                      |
- *---------------------------------------------------------------------------*/
 namespace Particle
 {
+
   class ParticleEngineInterface;
   class ParticleContainerBundle;
-}  // namespace Particle
-
-namespace Particle
-{
   class WallHandlerInterface;
-}
-
-namespace Particle
-{
   class InteractionWriter;
   class DEMNeighborPairs;
   class DEMHistoryPairs;
   class DEMAdhesionLawBase;
-  class DEMAdhesionSurfaceEnergyBase;
-}  // namespace Particle
 
-/*---------------------------------------------------------------------------*
- | class declarations                                                        |
- *---------------------------------------------------------------------------*/
-namespace Particle
-{
+  /*!
+   * Parameters necessary to calculate the adhesive forces in DEM.
+   */
+  struct DEMAdhesionParams
+  {
+    double surface_energy;  //!< the mean surface energy of the particles
+    DEMAdhesionSurfaceEnergyDistributionParams
+        surface_energy_distribution_params;  //!< Parameters for the surface energy distribution
+    double adhesion_distance;                //!< Distance to which adhesive forces are evaluated
+  };
+
+  /*!
+   * Verifies that the parameters are valid and throws an exception otherwise.
+   */
+  void verify_params_adhesion(const DEMAdhesionParams& params);
+
+
   class DEMAdhesion final
   {
    public:
@@ -74,7 +73,7 @@ namespace Particle
         const std::shared_ptr<Particle::DEMHistoryPairs> historypairs, const double& k_normal);
 
     //! get adhesion distance
-    inline double get_adhesion_distance() const { return adhesion_distance_; };
+    inline double get_adhesion_distance() const { return adhesion_params_.adhesion_distance; };
 
     //! add adhesion contribution to force field
     void add_force_contribution();
@@ -82,9 +81,6 @@ namespace Particle
    private:
     //! init adhesion law handler
     void init_adhesion_law_handler();
-
-    //! init adhesion surface energy handler
-    void init_adhesion_surface_energy_handler();
 
     //! setup particle interaction writer
     void setup_particle_interaction_writer();
@@ -119,11 +115,8 @@ namespace Particle
     //! adhesion law handler
     std::unique_ptr<Particle::DEMAdhesionLawBase> adhesionlaw_;
 
-    //! adhesion surface energy handler
-    std::unique_ptr<Particle::DEMAdhesionSurfaceEnergyBase> adhesionsurfaceenergy_;
-
-    //! adhesion distance
-    const double adhesion_distance_;
+    //! Parameters for the adhesion calculation
+    const DEMAdhesionParams adhesion_params_;
 
     //! write particle-wall interaction output
     const bool writeparticlewallinteraction_;

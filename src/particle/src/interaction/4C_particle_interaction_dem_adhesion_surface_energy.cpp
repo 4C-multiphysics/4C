@@ -11,107 +11,62 @@
 #include "4C_particle_input.hpp"
 #include "4C_utils_exceptions.hpp"
 
+#include <algorithm>
+
 FOUR_C_NAMESPACE_OPEN
 
-/*---------------------------------------------------------------------------*
- | definitions                                                               |
- *---------------------------------------------------------------------------*/
-Particle::DEMAdhesionSurfaceEnergyBase::DEMAdhesionSurfaceEnergyBase(
-    const Teuchos::ParameterList& params)
-    : params_dem_(params)
+namespace
 {
-  // empty constructor
+
+  double surface_energy_from_normal_distribution(
+      const Particle::DEMAdhesionSurfaceEnergyDistributionParams& params,
+      double mean_surface_energy)
+  {
+    Global::Problem::instance()->random()->set_mean_stddev(
+        mean_surface_energy, params.standard_deviation);
+    double surface_energy = Global::Problem::instance()->random()->normal();
+
+    // Adjust surface energy to allowed bounds
+    const double adhesion_surface_energy_min =
+        std::min(0.0, surface_energy - params.cutoff_factor * params.standard_deviation);
+    const double adhesion_surface_energy_max =
+        surface_energy + params.cutoff_factor * params.standard_deviation;
+
+    return std::clamp(surface_energy, adhesion_surface_energy_min, adhesion_surface_energy_max);
+  }
+}  // namespace
+
+void Particle::verify_params_adhesion_surface_energy_distribution(
+    const DEMAdhesionSurfaceEnergyDistributionParams& params)
+{
+  if (params.type == SurfaceEnergyDistribution::Normal)
+  {
+    if (params.standard_deviation < 0.0)
+      FOUR_C_THROW("negative standard deviation for adhesion surface energy distribution!");
+    if (params.cutoff_factor < 0.0)
+      FOUR_C_THROW("negative cutoff factor of adhesion surface energy!");
+  }
 }
 
-void Particle::DEMAdhesionSurfaceEnergyBase::init()
+double Particle::dem_adhesion_surface_energy(
+    const DEMAdhesionSurfaceEnergyDistributionParams& params, double mean_surface_energy)
 {
-  // nothing to do
-}
-
-void Particle::DEMAdhesionSurfaceEnergyBase::setup()
-{
-  // safety check
-  if (not(params_dem_.get<double>("ADHESION_SURFACE_ENERGY") > 0.0))
-    FOUR_C_THROW("non-positive adhesion surface energy!");
-}
-
-Particle::DEMAdhesionSurfaceEnergyConstant::DEMAdhesionSurfaceEnergyConstant(
-    const Teuchos::ParameterList& params)
-    : Particle::DEMAdhesionSurfaceEnergyBase(params)
-{
-  // empty constructor
-}
-
-Particle::DEMAdhesionSurfaceEnergyDistributionBase::DEMAdhesionSurfaceEnergyDistributionBase(
-    const Teuchos::ParameterList& params)
-    : Particle::DEMAdhesionSurfaceEnergyBase(params),
-      variance_(params_dem_.get<double>("ADHESION_SURFACE_ENERGY_DISTRIBUTION_VAR")),
-      cutofffactor_(params_dem_.get<double>("ADHESION_SURFACE_ENERGY_DISTRIBUTION_CUTOFF_FACTOR"))
-{
-  // empty constructor
-}
-
-void Particle::DEMAdhesionSurfaceEnergyDistributionBase::setup()
-{
-  // call base class setup
-  DEMAdhesionSurfaceEnergyBase::setup();
-
-  // safety checks
-  if (variance_ < 0.0) FOUR_C_THROW("negative variance for adhesion surface energy distribution!");
-  if (cutofffactor_ < 0.0) FOUR_C_THROW("negative cutoff factor of adhesion surface energy!");
-}
-
-void Particle::DEMAdhesionSurfaceEnergyDistributionBase::adjust_surface_energy_to_allowed_bounds(
-    const double& mean_surface_energy, double& surface_energy) const
-{
-  const double adhesion_surface_energy_min =
-      std::min(0.0, mean_surface_energy - cutofffactor_ * variance_);
-  const double adhesion_surface_energy_max = mean_surface_energy + cutofffactor_ * variance_;
-
-  if (surface_energy > adhesion_surface_energy_max)
-    surface_energy = adhesion_surface_energy_max;
-  else if (surface_energy < adhesion_surface_energy_min)
-    surface_energy = adhesion_surface_energy_min;
-}
-
-Particle::DEMAdhesionSurfaceEnergyDistributionNormal::DEMAdhesionSurfaceEnergyDistributionNormal(
-    const Teuchos::ParameterList& params)
-    : Particle::DEMAdhesionSurfaceEnergyDistributionBase(params)
-{
-  // empty constructor
-}
-
-void Particle::DEMAdhesionSurfaceEnergyDistributionNormal::adhesion_surface_energy(
-    const double& mean_surface_energy, double& surface_energy) const
-{
-  // initialize random number generator
-  Global::Problem::instance()->random()->set_mean_stddev(mean_surface_energy, variance_);
-
-  // set normal distributed random value for surface energy
-  surface_energy = Global::Problem::instance()->random()->normal();
-
-  // adjust surface energy to allowed bounds
-  adjust_surface_energy_to_allowed_bounds(mean_surface_energy, surface_energy);
-}
-
-Particle::DEMAdhesionSurfaceEnergyDistributionLogNormal::
-    DEMAdhesionSurfaceEnergyDistributionLogNormal(const Teuchos::ParameterList& params)
-    : Particle::DEMAdhesionSurfaceEnergyDistributionBase(params)
-{
-  // empty constructor
-}
-
-void Particle::DEMAdhesionSurfaceEnergyDistributionLogNormal::adhesion_surface_energy(
-    const double& mean_surface_energy, double& surface_energy) const
-{
-  // initialize random number generator
-  Global::Problem::instance()->random()->set_mean_stddev(std::log(mean_surface_energy), variance_);
-
-  // set log-normal distributed random value for surface energy
-  surface_energy = std::exp(Global::Problem::instance()->random()->normal());
-
-  // adjust surface energy to allowed bounds
-  adjust_surface_energy_to_allowed_bounds(mean_surface_energy, surface_energy);
+  switch (params.type)
+  {
+    case SurfaceEnergyDistribution::Constant:
+    {
+      return mean_surface_energy;
+    }
+    case SurfaceEnergyDistribution::Normal:
+    {
+      return surface_energy_from_normal_distribution(params, mean_surface_energy);
+    }
+    default:
+    {
+      FOUR_C_THROW("unknown adhesion surface energy distribution type!");
+      break;
+    }
+  }
 }
 
 FOUR_C_NAMESPACE_CLOSE
