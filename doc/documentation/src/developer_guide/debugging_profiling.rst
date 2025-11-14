@@ -183,7 +183,7 @@ In addition to the usual |FOURC| output, ``valgrind`` writes output for each mpi
       Follow the steps as described below::
 
         mpirun -np <numProcs> <someBaseDir>/<4C-execdir>/4C <inputfile> <output>
-        mpirun -np <numProcs> valgrind --tool=callgrind <someBaseDir>/<4C-execdir>/4C <inputfile> <output> restart=<restartStep>
+        mpirun -np <numProcs> valgrind --tool=callgrind <someBaseDir>/<4C-execdir>/4C <inputfile> <output> --restart=<restartStep>
 
 Examine results with ``kcachegrind``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

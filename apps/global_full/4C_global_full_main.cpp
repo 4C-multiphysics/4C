@@ -11,12 +11,13 @@
 #include "4C_comm_utils.hpp"
 #include "4C_global_full_io.hpp"
 #include "4C_global_legacy_module.hpp"
+#include "4C_io_command_line_helpers.hpp"
 #include "4C_io_input_file_utils.hpp"
-#include "4C_io_input_spec_builders.hpp"
 #include "4C_io_pstream.hpp"
 #include "4C_utils_exceptions.hpp"
 #include "4C_utils_singleton_owner.hpp"
 
+#include <CLI/CLI.hpp>
 #include <Kokkos_Core.hpp>
 #include <unistd.h>
 
@@ -33,72 +34,22 @@ using namespace FourC;
 
 namespace
 {
-  void print_help_message()
+  // Custom CLI11 formatter to add extra spacing between options
+  class SpacedFormatter : public CLI::Formatter
   {
-    std::cout
-        << "NAME\n"
-        << "\t"
-        << "4C - simulate just about anything\n"
-        << "\n"
-        << "SYNOPSIS\n"
-        << "\t"
-        << "4C [-h | --help] [-p | --parameters] [-d | --datfile] [-ngroup=<x>] \\ "
-           "\n"
-           "\t\t[-glayout=a,b,c,...] [-nptype=<parallelism_type>] \\ \n"
-        << "\t\t<input_name> <output_name> [restart=<y>] [restartfrom=restart_file_name] \\ \n"
-           "\t\t[ <input_name0> <output_name0> [restart=<y>] [restartfrom=restart_file_name] ... "
-           "] \\ \n"
-           "\t\t[--interactive]\n"
-        << "\n"
-        << "DESCRIPTION\n"
-        << "\tThe am besten simulation tool in the world.\n"
-        << "\n"
-        << "OPTIONS\n"
-        << "\t--help or -h\n"
-        << "\t\tPrint this message.\n"
-        << "\n"
-        << "\t--parameters or -p\n"
-        << "\t\tDumps information about the parameters for consumption by additional tools.\n"
-        << "\n"
-        << "\t-ngroup=<x>\n"
-        << "\t\tSpecify the number of groups for nested parallelism. (default: 1)\n"
-        << "\n"
-        << "\t-glayout=<a>,<b>,<c>,...\n"
-        << "\t\tSpecify the number of processors per group. \n"
-           "\t\tArgument \"-ngroup\" is mandatory and must be preceding. \n"
-           "\t\t(default: equal distribution)\n"
-        << "\n"
-        << "\t-nptype=<parallelism_type>\n"
-        << "\t\tAvailable options: \"separateInputFiles\" and \"everyGroupReadInputFile\"; \n"
-           "\t\tMust be set if \"-ngroup\" > 1.\n"
-        << "\t\t\"diffgroupx\" can be used to compare results from separate but parallel 4C "
-           "runs; \n"
-           "\t\tx must be 0 and 1 for the respective run\n"
-        << "\n"
-        << "\t<input_name>\n"
-        << "\t\tName of the input file, including the suffix\n"
-        << "\n"
-        << "\t<output_name>\n"
-        << "\t\tPrefix of your output files.\n"
-        << "\n"
-        << "\trestart=<y>\n"
-        << "\t\tRestart the simulation from step <y>. \n"
-           "\t\tIt always refers to the previously defined <input_name> and <output_name>. \n"
-           "\t\t(default: 0 or from <input_name>)\n"
-           "\t\tIf y=last_possible, it will restart from the last restart step defined in the "
-           "control file.\n"
-        << "\n"
-        << "\trestartfrom=<restart_file_name>\n"
-        << "\t\tRestart the simulation from the files prefixed with <restart_file_name>. \n"
-           "\t\t(default: <output_name>)\n"
-        << "\n"
-        << "\t--interactive\n"
-        << "\t\t4C waits at the beginning for keyboard input. \n"
-           "\t\tHelpful for parallel debugging when attaching to a single job. \n"
-           "\t\tMust be specified at the end in the command line.\n"
-        << "\n";
-  }
+   public:
+    SpacedFormatter() : Formatter() {}
 
+    std::string make_option(const CLI::Option* opt, bool in_sub) const override
+    {
+      std::string s = Formatter::make_option(opt, in_sub);
+      if (!s.empty() && s.back() == '\n')
+        s += '\n';
+      else
+        s += "\n\n";
+      return s;
+    }
+  };
   /** Collect and print data on memory high water mark of this run
    *
    * 1. Ask the operating system for memory usage.
@@ -256,10 +207,234 @@ namespace
 
 }  // namespace
 
+CommandlineArguments parse_command_line(int argc, char** argv)
+{
+  CLI::App cli_app{"4C - Multiphysics \nComprehensive Computational Community Code"};
+  cli_app.formatter(std::make_shared<SpacedFormatter>());
+  CommandlineArguments arguments;
+  cli_app.add_flag("-p,--parameters", arguments.parameters,
+      "Dumps information about the parameters for consumption by additional tools.");
+  cli_app.add_flag("-i,--interactive", arguments.interactive,
+      "4C waits at the beginning for keyboard input. "
+      "Helpful for parallel debugging when attaching to a single job.");
+  cli_app
+      .add_option("--ngroup", arguments.n_groups,
+          "Specify the number of groups for nested parallelism. (default: 1)")
+      ->check(CLI::PositiveNumber);
+  cli_app
+      .add_option(
+          "--glayout",
+          [&arguments](const std::vector<std::string>& tokens) -> bool
+          {
+            if (tokens.empty()) return false;
+            arguments.group_layout.clear();
+
+            for (const auto& tok : tokens)
+            {
+              std::stringstream ss(tok);
+              std::string part;
+              while (std::getline(ss, part, ','))
+              {
+                if (part.empty()) continue;
+                try
+                {
+                  size_t pos = 0;
+                  int val = std::stoi(part, &pos);
+                  if (pos != part.size() || val <= 0)
+                  {
+                    throw CLI::ValidationError("glayout", "Entries must be positive integers.");
+                  }
+                  arguments.group_layout.push_back(val);
+                }
+                catch (const std::invalid_argument&)
+                {
+                  throw CLI::ValidationError("glayout", "Entries must be positive integers.");
+                }
+                catch (const std::out_of_range&)
+                {
+                  throw CLI::ValidationError("glayout", "glayout entry out of range.");
+                }
+              }
+            }
+            return true;
+          },
+          "Specify the number of processors per group. Comma-separated list without spaces, e.g. "
+          "--glayout=<a>,<b>.\n"
+          "Argument --ngroup is mandatory if a glayout is provided. (default: equal distribution)")
+      ->allow_extra_args(false);
+  cli_app.add_option(
+      "--nptype",
+      [&arguments](const std::vector<std::string>& tokens) -> bool
+      {
+        if (tokens.empty()) return false;
+        const std::string& input = tokens.front();
+        if (input == "separateInputFiles")
+        {
+          arguments.nptype = Core::Communication::NestedParallelismType::separate_input_files;
+          return true;
+        }
+        else if (input == "everyGroupReadInputFile")
+        {
+          arguments.nptype =
+              Core::Communication::NestedParallelismType::every_group_read_input_file;
+          return true;
+        }
+        else if (input == "nestedMultiscale")
+        {
+          arguments.nptype = Core::Communication::NestedParallelismType::nested_multiscale;
+          return true;
+        }
+        else if (input.rfind("diffgroup", 0) == 0)
+        {
+          // Expect exactly an integer suffix after "diffgroup", and only allow 0 or 1
+          const std::string suffix = input.substr(9);
+          if (suffix.empty())
+          {
+            throw CLI::ValidationError(
+                "nptype", "Missing suffix for 'diffgroup'; expected 'diffgroup0' or 'diffgroup1'.");
+          }
+          for (char c : suffix)
+          {
+            if (!std::isdigit(static_cast<unsigned char>(c)))
+            {
+              throw CLI::ValidationError(
+                  "nptype", "Invalid diffgroup suffix; expected integer after 'diffgroup'.");
+            }
+          }
+          int val = std::stoi(suffix);
+          if (val != 0 && val != 1)
+          {
+            throw CLI::ValidationError("nptype", "Only diffgroup0 and diffgroup1 are allowed.");
+          }
+          arguments.nptype = Core::Communication::NestedParallelismType::no_nested_parallelism;
+          arguments.diffgroup = val;
+          return true;
+        }
+        else
+        {
+          throw CLI::ValidationError("nptype",
+              "Only 'everyGroupReadInputFile', 'separateInputFiles', 'nestedMultiscale', and "
+              "'diffgroupx' are available for nptype.");
+        }
+      },
+      "Specify nested parallelism type: "
+      "separateInputFiles|everyGroupReadInputFile|\nnestedMultiscale|diffgroup<N> \n"
+      "Must be set if --ngroup > 1. \n"
+      "'diffgroupx' can be used to compare results from separate but parallel 4C runs; "
+      "x must be 0 and 1 for the respective run");
+  cli_app.add_option(
+      "--restart",
+      [&arguments](const std::vector<std::string>& tokens) -> bool
+      {
+        if (tokens.empty()) return false;
+        for (const auto& tok : tokens)
+        {
+          std::string s = tok;
+          // allow comma-separated lists in a single token (e.g. "--restart=3,4")
+          std::stringstream ss(s);
+          std::string part;
+          while (std::getline(ss, part, ','))
+          {
+            if (part.empty()) continue;
+            if (part == "last_possible")
+            {
+              arguments.restart_per_group.push_back(-1);  // legacy sentinel for last_possible
+              continue;
+            }
+            try
+            {
+              size_t pos = 0;
+              int val = std::stoi(part, &pos);
+              if (pos != part.size() || val < 0)
+              {
+                throw CLI::ValidationError(
+                    "restart", "Restart step must be a non-negative integer or 'last_possible'.");
+              }
+              arguments.restart_per_group.push_back(val);
+            }
+            catch (const std::invalid_argument&)
+            {
+              throw CLI::ValidationError(
+                  "restart", "Restart step must be a non-negative integer or 'last_possible'.");
+            }
+            catch (const std::out_of_range&)
+            {
+              throw CLI::ValidationError("restart", "Restart step out of range.");
+            }
+          }
+        }
+        return true;
+      },
+      "Restart the simulation from step <y>. Accepts a non-negative integer or 'last_possible'.\n"
+      "If nested parallelism with separate input files is used, each group can have a different "
+      "restart step defined as a comma-separated list, e.g., --restart=<a>,<b>.");
+  cli_app.add_option(
+      "--restartfrom",
+      [&arguments](const std::vector<std::string>& tokens) -> bool
+      {
+        if (tokens.empty()) return false;
+        for (const auto& tok : tokens)
+        {
+          std::stringstream ss(tok);
+          std::string part;
+          while (std::getline(ss, part, ','))
+          {
+            if (part.empty()) continue;
+            arguments.restart_identifier_per_group.push_back(part);
+          }
+        }
+        return true;
+      },
+      "Restart the simulation from the files prefixed with <restart_file_name>.\n If nested "
+      "parallelism with separate input files is used, each group can have a different file prefix "
+      "defined as a comma-separated list.");
+  std::string primary_input;
+  std::string primary_output;
+  cli_app.add_option("input", primary_input, "Name of the input file, including the suffix");
+  cli_app.add_option("output", primary_output, "Prefix of your output files.");
+
+  std::vector<std::string> io_pairs;
+  cli_app
+      .add_option("io_pairs", io_pairs,
+          "More pairs of simulation <input> and <output> names. Only necessary when using nested "
+          "parallelism with multiple groups and separate input files.")
+      ->expected(-1);
+
+
+  std::vector<std::string> raw_args;
+  raw_args.reserve(argc);
+  for (int i = 1; i < argc; ++i) raw_args.emplace_back(argv[i]);
+
+  LegacyCliOptions legacy_options = {.single_dash_legacy_names = {"ngroup", "glayout", "nptype"},
+      .nodash_legacy_names = {"restart", "restartfrom"}};
+  std::vector<std::string> sanitized_args = adapt_legacy_cli_arguments(raw_args, legacy_options);
+
+  // Reversed order required when parsing std::vector<string> with CLI11
+  std::reverse(sanitized_args.begin(), sanitized_args.end());
+  try
+  {
+    cli_app.parse(sanitized_args);
+  }
+  catch (const CLI::ParseError& e)
+  {
+    std::exit(cli_app.exit(e));
+  }
+
+  if (!arguments.parameters)
+  {
+    if (primary_input.empty() || primary_output.empty())
+    {
+      FOUR_C_THROW("Please provide both <input> and <output> arguments.");
+    }
+  }
+  arguments.io_pairs = build_io_pairs(io_pairs, primary_input, primary_output);
+  validate_argument_cross_compatibility(arguments);
+  return arguments;
+}
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 void entrypoint_switch();
-void run(CommandlineArguments& arguments);
+void run(CommandlineArguments& cli_args, Core::Communication::Communicators& communicators);
 
 /**
  * @brief The main function of the central 4C executable.
@@ -287,26 +462,23 @@ int main(int argc, char* argv[])
   // Initialize our own singleton registry to ensure we clean up all singletons properly.
   Core::Utils::SingletonOwnerRegistry::ScopeGuard singleton_owner_guard{};
 
-  Core::Communication::Communicators communicators =
-      Core::Communication::create_comm(std::vector<std::string>(argv, argv + argc));
+  auto arguments = parse_command_line(argc, argv);
 
-  CommandlineArguments arguments{
-      .argc = argc,
-      .argv = argv,
-      .input_file_name = "",
-      .output_file_identifier = "",
-      .restart_file_identifier = "",
-      .restart_step = 0,
-      .comms = communicators,
+  Core::Communication::CommConfig config{
+      .ngroup = arguments.n_groups,
+      .group_layout = arguments.group_layout,
+      .np_type = arguments.nptype,
+      .diffgroup = arguments.diffgroup,
   };
+  Core::Communication::Communicators communicators = Core::Communication::create_comm(config);
 
-  if (strcmp(argv[argc - 1], "--interactive") == 0)
+  if (arguments.interactive)
   {
     char hostname[256];
     gethostname(hostname, sizeof(hostname));
     printf("Global rank %d with PID %d on %s is ready for attach\n",
-        Core::Communication::my_mpi_rank(arguments.comms.global_comm()), getpid(), hostname);
-    if (Core::Communication::my_mpi_rank(arguments.comms.global_comm()) == 0)
+        Core::Communication::my_mpi_rank(communicators.global_comm()), getpid(), hostname);
+    if (Core::Communication::my_mpi_rank(communicators.global_comm()) == 0)
     {
       printf("\n** Enter a character to continue > \n");
       fflush(stdout);
@@ -318,20 +490,11 @@ int main(int argc, char* argv[])
     }
   }
 
-  Core::Communication::barrier(arguments.comms.global_comm());
+  Core::Communication::barrier(communicators.global_comm());
 
-  if ((argc == 2) && ((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0)))
+  if (arguments.parameters)
   {
-    if (Core::Communication::my_mpi_rank(arguments.comms.local_comm()) == 0)
-    {
-      printf("\n\n");
-      print_help_message();
-      printf("\n\n");
-    }
-  }
-  else if ((argc == 2) && ((strcmp(argv[1], "-p") == 0) || (strcmp(argv[1], "--parameters") == 0)))
-  {
-    if (Core::Communication::my_mpi_rank(arguments.comms.local_comm()) == 0)
+    if (Core::Communication::my_mpi_rank(communicators.local_comm()) == 0)
     {
       ryml::Tree tree = Core::IO::init_yaml_tree_with_exceptions();
       ryml::NodeRef root = tree.rootref();
@@ -342,7 +505,7 @@ int main(int argc, char* argv[])
       emit_general_metadata(root_ref);
 
       // Write the user input defined for various physics module.
-      Core::IO::InputFile input_file = setup_input_file(arguments.comms.local_comm());
+      Core::IO::InputFile input_file = setup_input_file(communicators.local_comm());
       input_file.emit_metadata(root_ref);
 
       // Finally, dump everything.
@@ -351,7 +514,7 @@ int main(int argc, char* argv[])
   }
   else
   {
-    if (Core::Communication::my_mpi_rank(arguments.comms.global_comm()) == 0)
+    if (Core::Communication::my_mpi_rank(communicators.global_comm()) == 0)
     {
       constexpr int box_width = 54;
 
@@ -378,7 +541,7 @@ int main(int argc, char* argv[])
 
       std::cout << "Trilinos Version: " << FOUR_C_TRILINOS_HASH << " (git SHA1)\n";
       std::cout << "Total number of MPI ranks: "
-                << Core::Communication::num_mpi_ranks(arguments.comms.global_comm()) << '\n';
+                << Core::Communication::num_mpi_ranks(communicators.global_comm()) << '\n';
     }
 
     /* Here we turn the NaN and INF numbers off. No need to calculate
@@ -411,21 +574,18 @@ int main(int argc, char* argv[])
 #else
     try
     {
-      run(arguments);
+      run(arguments, communicators);
     }
     catch (Core::Exception& err)
     {
       char line[] = "=========================================================================\n";
-      std::cout << "\n\n"
-                << line << err.what_with_stacktrace() << "\n"
-                << line << "\n"
-                << std::endl;
+      std::cout << "\n\n" << line << err.what_with_stacktrace() << "\n" << line << "\n" << '\n';
 
-      if (arguments.comms.num_groups() > 1)
+      if (communicators.num_groups() > 1)
       {
         printf("Global processor %d has thrown an error and is waiting for the remaining procs\n\n",
-            Core::Communication::my_mpi_rank(arguments.comms.global_comm()));
-        Core::Communication::barrier(arguments.comms.global_comm());
+            Core::Communication::my_mpi_rank(communicators.global_comm()));
+        Core::Communication::barrier(communicators.global_comm());
       }
 
       MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
@@ -433,21 +593,21 @@ int main(int argc, char* argv[])
 #endif
     /*----------------------------------------------------------------------*/
 
-    get_memory_high_water_mark(arguments.comms.global_comm());
+    get_memory_high_water_mark(communicators.global_comm());
 
-    Core::Communication::barrier(arguments.comms.local_comm());
-    if (arguments.comms.num_groups() > 1)
+    Core::Communication::barrier(communicators.local_comm());
+    if (communicators.num_groups() > 1)
     {
       printf("Global processor %d with local rank %d finished normally\n",
-          Core::Communication::my_mpi_rank(arguments.comms.global_comm()),
-          Core::Communication::my_mpi_rank(arguments.comms.local_comm()));
-      Core::Communication::barrier(arguments.comms.global_comm());
+          Core::Communication::my_mpi_rank(communicators.global_comm()),
+          Core::Communication::my_mpi_rank(communicators.local_comm()));
+      Core::Communication::barrier(communicators.global_comm());
     }
     else
     {
-      Core::Communication::barrier(arguments.comms.global_comm());
+      Core::Communication::barrier(communicators.global_comm());
       printf("processor %d finished normally\n",
-          Core::Communication::my_mpi_rank(arguments.comms.local_comm()));
+          Core::Communication::my_mpi_rank(communicators.local_comm()));
     }
   }
 
@@ -455,27 +615,27 @@ int main(int argc, char* argv[])
   return (0);
 }
 
-void run(CommandlineArguments& arguments)
+void run(CommandlineArguments& cli_args, Core::Communication::Communicators& communicators)
 {
-  parse_commandline_arguments(arguments);
+  update_io_identifiers(cli_args, communicators.group_id());
 
   /* input phase, input of all information */
   global_legacy_module_callbacks().RegisterParObjectTypes();
   double t0 = walltime_in_seconds();
 
   // and now the actual reading
-  Core::IO::InputFile input_file = setup_input_file(arguments.comms.local_comm());
-  input_file.read(arguments.input_file_name);
-  setup_global_problem(input_file, arguments);
+  Core::IO::InputFile input_file = setup_input_file(communicators.local_comm());
+  input_file.read(cli_args.input_file_name);
+  setup_global_problem(input_file, cli_args, communicators);
 
   // we wait till all procs are here. Otherwise a hang up might occur where
   // one proc ended with FOUR_C_THROW but other procs were not finished and waited...
   // we also want to have the printing above being finished.
-  Core::Communication::barrier(arguments.comms.local_comm());
+  Core::Communication::barrier(communicators.local_comm());
 
 
   const double ti = walltime_in_seconds() - t0;
-  if (Core::Communication::my_mpi_rank(arguments.comms.global_comm()) == 0)
+  if (Core::Communication::my_mpi_rank(communicators.global_comm()) == 0)
   {
     Core::IO::cout << "\nTotal wall time for INPUT:       " << std::setw(10) << std::setprecision(3)
                    << std::scientific << ti << " sec \n\n";
@@ -486,10 +646,10 @@ void run(CommandlineArguments& arguments)
 
   entrypoint_switch();
 
-  write_timemonitor(arguments.comms.local_comm());
+  write_timemonitor(communicators.local_comm());
 
   const double tc = walltime_in_seconds() - t0;
-  if (Core::Communication::my_mpi_rank(arguments.comms.global_comm()) == 0)
+  if (Core::Communication::my_mpi_rank(communicators.global_comm()) == 0)
   {
     Core::IO::cout << "\nTotal wall time for CALCULATION: " << std::setw(10) << std::setprecision(3)
                    << std::scientific << tc << " sec \n\n";
