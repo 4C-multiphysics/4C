@@ -55,10 +55,10 @@ given on the command line:
 
 ::
 
-   ./4C <restart_input_file> <output_basename> [restartfrom=<restart_filename>] restart=<step>
+   ./4C <restart_input_file> <output_basename> [--restartfrom=<restart_filename>] --restart=<step>
 
 Here, one has to provide the step, at which the restart is started from the previous simulation.
-If the parameter ``restartfrom`` is given, the initial configuration is read from this file,
+If the parameter ``--restartfrom`` is given, the initial configuration is read from this file,
 otherwise it is read from ``<output_basename>``. In the latter case the filename of the new output is the same with an appended number, e.g., ``outfile-1``.
 Note that the value for ``step`` must be given in the file ``<output_basename>.control`` in one of the step lines: ``step = <step>``.
 
