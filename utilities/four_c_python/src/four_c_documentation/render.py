@@ -6,7 +6,8 @@
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
 from dataclasses import dataclass
-import yaml
+from ruamel.yaml import YAML
+from four_c_common_utils.io import load_yaml
 import pathlib
 import shutil
 import jinja2
@@ -32,7 +33,8 @@ class Context:
 
 def load_input_file(context: Context, yaml_file):
     """Returns the dictionary of parameters for the given yaml file."""
-    data = yaml.safe_load((context.input_file_path / yaml_file).read_text())
+    # load input files with ruamel.yaml to preserve comments
+    data = YAML(typ="safe").load((context.input_file_path / yaml_file).read_text())
     return data
 
 
@@ -50,9 +52,7 @@ def add_raw_text_from_file(context: Context, text_file, indent=0):
 
 def load_meta_data(context: Context):
     """Returns a dictionary of sections and their parameters from the meta file 4C_metadata.yaml."""
-    metafile_data = yaml.safe_load(
-        (context.input_file_path / ("../../4C_metadata.yaml")).read_text()
-    )
+    metafile_data = load_yaml(context.input_file_path / ("../../4C_metadata.yaml"))
     sections = [section["name"] for section in metafile_data["sections"]["specs"]]
     sections += metafile_data["legacy_string_sections"]
 
@@ -63,15 +63,16 @@ def yaml_dump(context: Context, data):
     """Returns a string of the yaml file in the given filetype.
     As of now I can return markdown and restructuredText code blocks.
     """
+    yaml = YAML(typ=["safe", "string"])
     if context.filetype == "rst":
         rststring = ""
-        yaml_data = yaml.safe_dump(data, sort_keys=False).split("\n")
+        yaml_data = yaml.dump_to_string(data).split("\n")
         for line in yaml_data:
             rststring += "    " + line + "\n"
         rststring += "\n"
         return ".. code-block:: yaml\n\n" + rststring + "\n"
     elif context.filetype == "md":
-        return "```yaml\n" + yaml.safe_dump(data, sort_keys=False) + "```\n"
+        return "```yaml\n" + yaml.dump_to_string(data) + "\n```\n"
     else:
         raise TypeError(
             f"Filetype {context.filetype} for yaml_dump cannot be recognized yet."

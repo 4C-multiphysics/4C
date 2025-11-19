@@ -13,5 +13,6 @@ nbsphinx
 scipy
 sphinx-multibuild
 sphinx-rtd-theme
-pyyaml
+ruamel.yaml
+ruamel.yaml.string
 pyvista[jupyter]
