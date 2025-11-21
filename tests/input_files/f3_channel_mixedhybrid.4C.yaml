@@ -44,7 +44,7 @@ FLUID DYNAMIC/TURBULENCE MODEL:
 SOLVER 1:
   SOLVER: "Belos"
   IFPACK_XML_FILE: "xml/preconditioner/ifpack.xml"
-  AZTOL: 1e-8
+  AZTOL: 1e-12
   AZREUSE: 5
   AZSUB: 40
   NAME: "Fluid_Solver"
