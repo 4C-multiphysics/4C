@@ -27,6 +27,7 @@ BeamInteraction::BeamToBeamContactVariables<numnodes, numnodalvalues>::BeamToBea
       intids_(intids),
       jacobi_(jacobi),
       gap_(0.0),
+      sign_(1.0),
       normal_(Core::LinAlg::Matrix<3, 1, TYPE>(Core::LinAlg::Initialization::zero)),
       pp_(pp),
       ppfac_(0.0),

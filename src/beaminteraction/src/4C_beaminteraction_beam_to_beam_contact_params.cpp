@@ -34,7 +34,8 @@ BeamInteraction::BeamToBeamContactParams::BeamToBeamContactParams()
       segangle_(-1.0),
       num_integration_intervals_(0),
       btb_basicstiff_gap_(-1.0),
-      btb_endpoint_penalty_(false)
+      btb_endpoint_penalty_(false),
+      btb_use_new_gap_function_(true)
 {
   // empty constructor
 }
@@ -156,8 +157,8 @@ void BeamInteraction::BeamToBeamContactParams::init()
   /****************************************************************************/
   // safety checks for currently unsupported parameter settings
   /****************************************************************************/
-  if (beam_contact_params_list.get<bool>("BEAMS_NEWGAP"))
-    FOUR_C_THROW("BEAMS_NEWGAP currently not supported!");
+  // if (beam_contact_params_list.get<bool>("BEAMS_NEWGAP"))
+  btb_use_new_gap_function_ = beam_contact_params_list.get<bool>("BEAMS_NEWGAP");
 
   /****************************************************************************/
   // for the time being only allow all-angle-beam contact formulation ...
@@ -191,10 +192,6 @@ void BeamInteraction::BeamToBeamContactParams::init()
       beam_contact_params_list.get<double>("BEAMS_DAMPREGPARAM2") != -1000.0)
     FOUR_C_THROW("BEAMS_DAMPING currently not supported!");
 
-  /****************************************************************************/
-  if (beam_contact_params_list.get<double>("BEAMS_MAXDISISCALEFAC") != -1.0 or
-      beam_contact_params_list.get<double>("BEAMS_MAXDELTADISSCALEFAC") != -1.0)
-    FOUR_C_THROW("BEAMS_MAXDISISCALEFAC and BEAMS_MAXDELTADISSCALEFAC currently not supported!");
 
   /****************************************************************************/
   if (btb_basicstiff_gap_ != -1.0) FOUR_C_THROW("BEAMS_BASICSTIFFGAP currently not supported!");
