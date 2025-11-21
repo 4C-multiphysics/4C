@@ -9,6 +9,7 @@
 
 #include "4C_fem_geometry_intersection_math.hpp"
 #include "4C_linalg_sparsematrix.hpp"
+#include "4C_linalg_sparseoperator.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_vector.hpp"
 #include "4C_solver_nonlin_nox_aux.hpp"

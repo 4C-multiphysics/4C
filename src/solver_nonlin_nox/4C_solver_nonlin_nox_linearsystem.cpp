@@ -195,7 +195,7 @@ bool NOX::Nln::LinearSystem::apply_jacobian_block(const NOX::Nln::Vector& input,
 bool NOX::Nln::LinearSystem::apply_jacobian(
     const NOX::Nln::Vector& input, NOX::Nln::Vector& result) const
 {
-  jacobian().SetUseTranspose(false);
+  jacobian().epetra_operator().SetUseTranspose(false);
   int status = jacobian().Apply(input.get_linalg_vector(), result.get_linalg_vector());
   return (status == 0);
 }
@@ -206,9 +206,9 @@ bool NOX::Nln::LinearSystem::apply_jacobian_transpose(
     const NOX::Nln::Vector& input, NOX::Nln::Vector& result) const
 {
   // Apply the Jacobian
-  jacobian().SetUseTranspose(true);
+  jacobian().epetra_operator().SetUseTranspose(true);
   int status = jacobian().Apply(input.get_linalg_vector(), result.get_linalg_vector());
-  jacobian().SetUseTranspose(false);
+  jacobian().epetra_operator().SetUseTranspose(false);
 
   return (status == 0);
 }
@@ -335,7 +335,8 @@ bool NOX::Nln::LinearSystem::apply_jacobian_inverse(Teuchos::ParameterList& line
 bool NOX::Nln::LinearSystem::compute_jacobian(const NOX::Nln::Vector& x)
 {
   prePostOperatorPtr_->run_pre_compute_jacobian(jacobian(), x.get_linalg_vector(), *this);
-  const bool success = jacInterfacePtr_->computeJacobian(x.get_linalg_vector(), jacobian());
+  const bool success =
+      jacInterfacePtr_->computeJacobian(x.get_linalg_vector(), jacobian().epetra_operator());
   prePostOperatorPtr_->run_post_compute_jacobian(jacobian(), x.get_linalg_vector(), *this);
 
   return success;
@@ -351,7 +352,8 @@ bool NOX::Nln::LinearSystem::compute_f_and_jacobian(
 
   const bool success =
       Teuchos::rcp_dynamic_cast<NOX::Nln::Interface::Jacobian>(jacInterfacePtr_, true)
-          ->compute_f_and_jacobian(x.get_linalg_vector(), rhs.get_linalg_vector(), jacobian());
+          ->compute_f_and_jacobian(
+              x.get_linalg_vector(), rhs.get_linalg_vector(), jacobian().epetra_operator());
 
   prePostOperatorPtr_->run_post_compute_f_and_jacobian(
       rhs.get_linalg_vector(), jacobian(), x.get_linalg_vector(), *this);
@@ -369,8 +371,8 @@ bool NOX::Nln::LinearSystem::compute_correction_system(const CorrectionType type
 
   const bool success =
       Teuchos::rcp_dynamic_cast<NOX::Nln::Interface::Jacobian>(jacInterfacePtr_, true)
-          ->compute_correction_system(
-              type, grp, x.get_linalg_vector(), rhs.get_linalg_vector(), jacobian());
+          ->compute_correction_system(type, grp, x.get_linalg_vector(), rhs.get_linalg_vector(),
+              jacobian().epetra_operator());
 
   prePostOperatorPtr_->run_post_compute_f_and_jacobian(
       rhs.get_linalg_vector(), jacobian(), x.get_linalg_vector(), *this);
@@ -478,14 +480,14 @@ NOX::Nln::LinearSystem::get_jacobian_interface() const
  *----------------------------------------------------------------------*/
 Teuchos::RCP<const Epetra_Operator> NOX::Nln::LinearSystem::get_jacobian_operator() const
 {
-  return jacobian_ptr();
+  return Teuchos::rcpFromRef(jac_ptr_->epetra_operator());
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
 Teuchos::RCP<Epetra_Operator> NOX::Nln::LinearSystem::get_jacobian_operator()
 {
-  return jacobian_ptr();
+  return Teuchos::rcpFromRef(jac_ptr_->epetra_operator());
 }
 
 /*----------------------------------------------------------------------*
@@ -582,7 +584,7 @@ double NOX::Nln::LinearSystem::compute_serial_condition_number_of_jacobian(
     const LinSystem::ConditionNumber condnum_type) const
 {
   if (Core::Communication::num_mpi_ranks(
-          Core::Communication::unpack_epetra_comm(jacobian().Comm())) > 1)
+          Core::Communication::unpack_epetra_comm(jacobian().epetra_operator().Comm())) > 1)
     FOUR_C_THROW("Currently only one processor is supported!");
 
   Core::LinAlg::SerialDenseMatrix dense_jac;

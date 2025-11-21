@@ -48,8 +48,7 @@ void Core::LinearSolver::TekoPreconditioner::setup(Core::LinAlg::SparseOperator&
   auto xmlFileName = tekolist_.sublist("Teko Parameters").get<std::string>("TEKO_XML_FILE");
 
   Teuchos::ParameterList tekoParams;
-  auto comm = Core::Communication::to_teuchos_comm<int>(
-      Core::Communication::unpack_epetra_comm(matrix.Comm()));
+  auto comm = Core::Communication::to_teuchos_comm<int>(matrix.domain_map().get_comm());
   Teuchos::updateParametersFromXmlFileAndBroadcast(xmlFileName, Teuchos::Ptr(&tekoParams), *comm);
 
   auto A = std::dynamic_pointer_cast<Core::LinAlg::BlockSparseMatrixBase>(

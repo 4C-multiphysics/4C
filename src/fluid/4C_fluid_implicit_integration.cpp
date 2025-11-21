@@ -1906,7 +1906,7 @@ void FLD::FluidImplicitTimeInt::evaluate_fluid_edge_based(
   if (systemmatrix1 != nullptr)
   {
     sysmat_linalg = std::make_shared<Core::LinAlg::SparseMatrix>(
-        systemmatrix1->OperatorRangeMap(), 256, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
+        systemmatrix1->range_map(), 256, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
   }
   else
     FOUR_C_THROW("sysmat is nullptr!");
@@ -2251,7 +2251,7 @@ void FLD::FluidImplicitTimeInt::check_matrix_nullspace()
 
     Core::LinAlg::Vector<double> result(c->get_map(), false);
 
-    sysmat_->Apply(c->get_epetra_multi_vector(), result);
+    sysmat_->Apply(c->get_epetra_multi_vector(), result.get_ref_of_epetra_vector());
 
     double norm = 1e9;
 
@@ -6344,8 +6344,8 @@ void FLD::FluidImplicitTimeInt::write_output_kinetic_energy()
 
   // compute kinetic energy
   double energy = 0.0;
-  Core::LinAlg::Vector<double> mtimesu(massmat_->OperatorRangeMap(), true);
-  massmat_->Apply(*velnp_, mtimesu);
+  Core::LinAlg::Vector<double> mtimesu(massmat_->range_map(), true);
+  massmat_->Apply(velnp_->get_ref_of_epetra_vector(), mtimesu.get_ref_of_epetra_vector());
   velnp_->dot(mtimesu, &energy);
   energy *= 0.5;
 

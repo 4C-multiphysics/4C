@@ -1398,6 +1398,17 @@ int Core::LinAlg::SparseMatrix::Apply(const Epetra_MultiVector& X, Epetra_MultiV
   return sysmat_->Apply(X, Y);
 }
 
+int Core::LinAlg::SparseMatrix::Apply(
+    const Core::LinAlg::MultiVector<double>& X, Core::LinAlg::MultiVector<double>& Y) const
+{
+  return sysmat_->Apply(X.get_epetra_multi_vector(), Y.get_epetra_multi_vector());
+}
+
+int Core::LinAlg::SparseMatrix::Apply(
+    const Core::LinAlg::Vector<double>& X, Core::LinAlg::Vector<double>& Y) const
+{
+  return sysmat_->Apply(X.get_ref_of_epetra_vector(), Y.get_ref_of_epetra_vector());
+}
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/

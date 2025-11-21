@@ -64,12 +64,14 @@ NOX::Nln::LinSystem::OperatorType NOX::Nln::Aux::get_operator_type(
       const Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>*>(&op);
   if (testOperator != nullptr) return NOX::Nln::LinSystem::LinalgBlockSparseMatrix;
 
-  // Is it a LINALG_SparseMatrix?
-  testOperator = dynamic_cast<const Core::LinAlg::SparseMatrix*>(&op);
-  if (testOperator != nullptr) return NOX::Nln::LinSystem::LinalgSparseMatrix;
+  // TODO: Potential error here? - could probably fixed with usage of enum types.
+  //  Is it a LINALG_SparseMatrix
+  // testOperator = dynamic_cast<const Core::LinAlg::SparseMatrix*>(&op.epetra_operator());
+  // if (testOperator != nullptr)
+  return NOX::Nln::LinSystem::LinalgSparseMatrix;
 
   // Otherwise it must be a LINALG_SparseOperator
-  return NOX::Nln::LinSystem::LinalgSparseOperator;
+  // return NOX::Nln::LinSystem::LinalgSparseOperator;
 }
 
 /*----------------------------------------------------------------------------*
