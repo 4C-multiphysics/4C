@@ -228,7 +228,7 @@ namespace CONTACT
     \param[in] fd  Displacement dof r.h.s. (upper block)
     \param[in] sold Displacement dof solution increment
     \param[in] dbcmaps Map extractor to apply Dirichlet boundary conditions
-    \param[out] blockMat Epetra_Operator containing the 2x2 block sparse matrix object
+    \param[out] blockMat Core::LinAlg::SparseOperator containing the 2x2 block sparse matrix object
     \param[out] blocksol Core::LinAlg::Vector<double> for merged solution vector
     \param[out] blockrhs Core::LinAlg::Vector<double> for merged right hand side vector
 

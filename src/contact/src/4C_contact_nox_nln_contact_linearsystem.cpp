@@ -350,7 +350,6 @@ void NOX::Nln::CONTACT::LinearSystem::LinearSubProblem::extract_active_blocks(
     linsys_.apply_diagonal_inverse(block_mat(*it, *it), lhs, rhs);
 
   // build remaining active linear problem
-  const unsigned num_remaining_row_col = keep_row_col_index.size();
   const unsigned num_skip_row_col = skip_row_col_index.size();
 
   // nothing to skip, use the given linear problem
@@ -365,47 +364,16 @@ void NOX::Nln::CONTACT::LinearSystem::LinearSubProblem::extract_active_blocks(
       break;
   }
 
-  switch (num_remaining_row_col)
-  {
-    case 0:
-    {
-      FOUR_C_THROW(
-          "You are trying to solve a pure diagonal matrix. This is currently not"
-          "supported, but feel free to extend the functionality.");
-    }
-    case 1:
-    {
-      const unsigned rc_id = keep_row_col_index[0];
-      p_jac_ = Teuchos::rcpFromRef(block_mat(rc_id, rc_id));
+  const unsigned rc_id = keep_row_col_index[0];
+  p_jac_ = Teuchos::rcpFromRef(block_mat(rc_id, rc_id));
 
-      Teuchos::RCP<Core::LinAlg::SparseMatrix> active_sparse_mat =
-          Teuchos::rcp_dynamic_cast<Core::LinAlg::SparseMatrix>(p_jac_, true);
+  Teuchos::RCP<Core::LinAlg::SparseMatrix> active_sparse_mat =
+      Teuchos::rcp_dynamic_cast<Core::LinAlg::SparseMatrix>(p_jac_, true);
 
-      p_rhs_ = Teuchos::rcp(
-          Core::LinAlg::extract_my_vector(rhs, active_sparse_mat->range_map()).release());
-      p_lhs_ = Teuchos::rcp(
-          Core::LinAlg::extract_my_vector(lhs, active_sparse_mat->domain_map()).release());
-
-      break;
-    }
-    default:
-    {
-      p_jac_ = Teuchos::rcp(
-          block_mat.clone(Core::LinAlg::DataAccess::Share, keep_row_col_index, keep_row_col_index)
-              .release());
-      p_jac_->complete();
-
-      Teuchos::RCP<Core::LinAlg::BlockSparseMatrixBase> active_block_mat =
-          Teuchos::rcp_dynamic_cast<Core::LinAlg::BlockSparseMatrixBase>(p_jac_, true);
-
-      p_rhs_ = Teuchos::rcp(
-          Core::LinAlg::extract_my_vector(rhs, active_block_mat->full_range_map()).release());
-      p_lhs_ = Teuchos::rcp(
-          Core::LinAlg::extract_my_vector(lhs, active_block_mat->full_domain_map()).release());
-
-      break;
-    }
-  }
+  p_rhs_ =
+      Teuchos::rcp(Core::LinAlg::extract_my_vector(rhs, active_sparse_mat->range_map()).release());
+  p_lhs_ =
+      Teuchos::rcp(Core::LinAlg::extract_my_vector(lhs, active_sparse_mat->domain_map()).release());
 }
 
 /*----------------------------------------------------------------------------*

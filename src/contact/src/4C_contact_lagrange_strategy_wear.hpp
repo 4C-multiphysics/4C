@@ -90,7 +90,8 @@ namespace Wear
     \param fd (in): the displacement dof r.h.s. (upper block)
     \param sold (in): the displacement dof solution increment
     \param dirichtoggle (in): toggle vector for dirichlet conditions
-    \param blockMat (out): Epetra_Operator containing the 2x2 block sparse matrix object
+    \param blockMat (out): Core::LinAlg::SparseOperator containing the 2x2 block sparse matrix
+    object
     \param mergedsol (out): Core::LinAlg::Vector<double> for merged solution vector
     \param mergedrhs (out): Core::LinAlg::Vector<double> for merged right hand side vector
     */
