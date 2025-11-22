@@ -27,7 +27,7 @@ namespace Core::LinAlg
     implemented in terms of the matrix blocks.
 
    */
-  class BlockSparseMatrixBase : public SparseOperator
+  class BlockSparseMatrixBase : public SparseOperator, public Epetra_Operator
   {
    public:
     /// constructor
@@ -120,6 +120,12 @@ namespace Core::LinAlg
 
     /// number of column blocks
     int cols() const { return domainmaps_.num_maps(); }
+
+    const Core::LinAlg::Map& range_map() const
+    {
+      FOUR_C_THROW("you need to specify which map you want. do not call this function.");
+      return *rangemaps_.map(0);
+    }
 
     /// range map for given row block
     const Core::LinAlg::Map& range_map(int r) const { return *rangemaps_.map(r); }
@@ -276,6 +282,9 @@ namespace Core::LinAlg
   class BlockSparseMatrix : public BlockSparseMatrixBase, public Strategy
   {
    public:
+    virtual Epetra_Operator& epetra_operator() { return this->epetra_operator(); };
+
+
     BlockSparseMatrix(const MultiMapExtractor& domainmaps, const MultiMapExtractor& rangemaps,
         int npr = 81, bool explicitdirichlet = true, bool savegraph = false);
 
