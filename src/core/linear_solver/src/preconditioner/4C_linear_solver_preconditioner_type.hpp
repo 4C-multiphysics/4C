@@ -14,6 +14,7 @@
 #include "4C_linalg_vector.hpp"
 
 #include <Epetra_Operator.h>
+#include <Thyra_EpetraLinearOp.hpp>
 
 #include <memory>
 
@@ -42,6 +43,8 @@ namespace Core::LinearSolver
     /// Setup preconditioner with a given linear system.
     virtual void setup(
         Core::LinAlg::SparseOperator& matrix, Core::LinAlg::MultiVector<double>& b) = 0;
+
+    virtual Teuchos::RCP<const Thyra::LinearOpBase<double>> thyra_operator() const = 0;
 
     /// linear operator used for preconditioning
     virtual std::shared_ptr<Epetra_Operator> prec_operator() const = 0;

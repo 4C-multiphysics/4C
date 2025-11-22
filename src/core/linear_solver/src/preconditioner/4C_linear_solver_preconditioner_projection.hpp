@@ -34,6 +34,11 @@ namespace Core::LinearSolver
     /// linear operator used for preconditioning
     std::shared_ptr<Epetra_Operator> prec_operator() const override { return p_; }
 
+    Teuchos::RCP<const Thyra::LinearOpBase<double>> thyra_operator() const override
+    {
+      FOUR_C_THROW("One should not end up here.");
+    }
+
    private:
     std::shared_ptr<PreconditionerTypeBase> preconditioner_;
 
@@ -41,6 +46,8 @@ namespace Core::LinearSolver
     std::shared_ptr<Core::LinAlg::LinearSystemProjector> projector_;
 
     std::shared_ptr<Epetra_Operator> p_;
+
+    Teuchos::RCP<const Thyra::LinearOpBase<double>> p_thyra_;
   };
 }  // namespace Core::LinearSolver
 
