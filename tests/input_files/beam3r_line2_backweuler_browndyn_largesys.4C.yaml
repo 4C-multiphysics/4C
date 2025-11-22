@@ -40,6 +40,7 @@ SOLVER 1:
   IFPACK_XML_FILE: "beam_ifpack.xml"
   AZTOL: 0.001
   NAME: "Structure_Solver"
+  AZREUSE: 10
 STRUCT NOX/Printing:
   Inner Iteration: false
   Outer Iteration StatusTest: false

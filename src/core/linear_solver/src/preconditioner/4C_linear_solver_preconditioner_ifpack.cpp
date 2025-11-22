@@ -11,15 +11,17 @@
 #include "4C_linalg_blocksparsematrix.hpp"
 #include "4C_utils_exceptions.hpp"
 
+#include <Stratimikos_LinearSolverBuilder_decl.hpp>
+#include <Teko_EpetraInverseOpWrapper.hpp>
 #include <Teuchos_XMLParameterListHelpers.hpp>
+#include <Thyra_EpetraLinearOp.hpp>
 
 FOUR_C_NAMESPACE_OPEN
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-Core::LinearSolver::IFPACKPreconditioner::IFPACKPreconditioner(
-    Teuchos::ParameterList& ifpacklist, Teuchos::ParameterList& solverlist)
-    : ifpacklist_(ifpacklist), solverlist_(solverlist)
+Core::LinearSolver::IFPACKPreconditioner::IFPACKPreconditioner(Teuchos::ParameterList& ifpacklist)
+    : ifpacklist_(ifpacklist)
 {
 }
 
@@ -31,50 +33,47 @@ void Core::LinearSolver::IFPACKPreconditioner::setup(Core::LinAlg::SparseOperato
   auto A_crs = std::dynamic_pointer_cast<Core::LinAlg::SparseMatrix>(
       Core::Utils::shared_ptr_from_ref(matrix));
 
-  if (A_crs == nullptr)
-  {
-    auto* A = dynamic_cast<Core::LinAlg::BlockSparseMatrixBase*>(&matrix);
+  if (!A_crs)
+    FOUR_C_THROW("The Ifpack based preconditioners are only available for plain sparse matrices!");
 
-    std::cout << "\n WARNING: IFPACK preconditioner is merging matrix, this is very expensive! \n";
-    pmatrix_ = std::make_shared<Epetra_CrsMatrix>(A->merge()->epetra_matrix());
-  }
-  else
-  {
-    pmatrix_ = std::make_shared<Epetra_CrsMatrix>(A_crs->epetra_matrix());
-  }
+  auto comm = Core::Communication::unpack_epetra_comm(A_crs->Comm());
 
-  std::string prectype;
-  int overlap = 0;
+  pmatrix_ = Thyra::epetraLinearOp(Teuchos::make_rcp<Epetra_CrsMatrix>(A_crs->epetra_matrix()));
+
   Teuchos::ParameterList ifpack_params;
 
-  if (ifpacklist_.isParameter("IFPACK_XML_FILE"))
+  if (ifpacklist_.sublist("IFPACK Parameters").isParameter("IFPACK_XML_FILE"))
   {
-    const std::string xmlFileName = ifpacklist_.get<std::string>("IFPACK_XML_FILE");
+    const std::string xmlFileName =
+        ifpacklist_.sublist("IFPACK Parameters").get<std::string>("IFPACK_XML_FILE");
 
-    auto comm = Core::Communication::to_teuchos_comm<int>(
-        Core::Communication::unpack_epetra_comm(pmatrix_->Comm()));
-
-    Teuchos::updateParametersFromXmlFileAndBroadcast(
-        xmlFileName, Teuchos::Ptr(&ifpack_params), *comm);
-
-    prectype = ifpack_params.get<std::string>("Preconditioner type");
-    overlap = ifpack_params.get<int>("Overlap");
+    Teuchos::updateParametersFromXmlFileAndBroadcast(xmlFileName, Teuchos::Ptr(&ifpack_params),
+        *Core::Communication::to_teuchos_comm<int>(comm));
   }
   else
   {
-    prectype = solverlist_.get("Preconditioner Type", "ILU");
-    ifpack_params = ifpacklist_;
+    ifpack_params.set("Prec Type", "ILU");
   }
 
-  Ifpack Factory;
-  prec_ = std::shared_ptr<Ifpack_Preconditioner>(Factory.Create(prectype, pmatrix_.get(), overlap));
+  // setup preconditioner builder and enable relevant packages
+  Stratimikos::LinearSolverBuilder<double> builder;
 
-  if (!prec_) FOUR_C_THROW("Creation of IFPACK preconditioner of type '{}' failed.", prectype);
+  // get preconditioner parameter list
+  Teuchos::RCP<Teuchos::ParameterList> stratimikos_params =
+      Teuchos::make_rcp<Teuchos::ParameterList>(*builder.getValidParameters());
+  Teuchos::ParameterList& ifpack_list =
+      stratimikos_params->sublist("Preconditioner Types").sublist("Ifpack");
+  ifpack_list.setParameters(ifpack_params);
+  builder.setParameterList(stratimikos_params);
 
-  prec_->SetParameters(ifpack_params);
-  prec_->Initialize();
-  prec_->Compute();
+  // construct preconditioning operator
+  Teuchos::RCP<Thyra::PreconditionerFactoryBase<double>> precFactory =
+      builder.createPreconditioningStrategy("Ifpack");
+  Teuchos::RCP<Thyra::PreconditionerBase<double>> prec =
+      Thyra::prec<double>(*precFactory, pmatrix_);
+  auto inverseOp = prec->getUnspecifiedPrecOp();
+
+  p_ = std::make_shared<Teko::Epetra::EpetraInverseOpWrapper>(inverseOp);
 }
-
 
 FOUR_C_NAMESPACE_CLOSE
