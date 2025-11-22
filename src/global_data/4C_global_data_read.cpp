@@ -907,7 +907,7 @@ void Global::read_micro_fields(Global::Problem& problem, const std::filesystem::
   if (macro_dis_name == "structure")
   {
     // do weighted repartitioning to obtain new row/column maps
-    const Teuchos::ParameterList rebalanceParams;
+    Teuchos::ParameterList rebalanceParams;
     std::shared_ptr<const Core::LinAlg::Graph> nodeGraph = macro_dis->build_node_graph();
     const auto& [nodeWeights, edgeWeights] = Core::Rebalance::build_weights(*macro_dis);
     const auto& [rownodes, colnodes] =

@@ -47,7 +47,7 @@ namespace
     EXPECT_EQ(false, empty_graph.filled());
 
     Teuchos::ParameterList rebalance_params;
-    rebalance_params.set("partitioning method", "hypergraph");
+    rebalance_params.set("algorithm", "phg");
 
     EXPECT_ANY_THROW(Core::Rebalance::rebalance_graph(empty_graph, rebalance_params));
   }
@@ -99,7 +99,7 @@ namespace
     graph.optimize_storage();
 
     Teuchos::ParameterList rebalance_params;
-    rebalance_params.set("partitioning method", "hypergraph");
+    rebalance_params.set("algorithm", "phg");
 
     auto rebalanced_graph = Core::Rebalance::rebalance_graph(graph, rebalance_params);
 
