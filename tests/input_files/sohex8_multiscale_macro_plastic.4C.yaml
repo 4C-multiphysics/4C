@@ -4,12 +4,12 @@ TITLE:
   - corresponding file name. The micro file (here sohex8_multiscale_micro_plastic.mat.4C.yaml)
   - is expected in the same directory.
   - The test case can either run as usual:
-  - 'mpirun -np 2 ./4C /path/to/sohex8_multiscale_macro_plastic.4C.yaml output_name'
+  - "mpirun -np 2 ./4C /path/to/sohex8_multiscale_macro_plastic.4C.yaml output_name"
   - or in nested parallelism mode via:
-  - 'mpirun -np 5 ./4C -nptype=separateInputFiles -ngroup=2 -glayout=2,3 /path/to/sohex8_multiscale_macro_plastic.4C.yaml
-    output_name /path/to/sohex8_multiscale_npsupport.4C.yaml dummy_output_name'
-  - The nested mode command uses 2 procs (see 1st argument in -glayout) to
-  - solve the macro scale and 3 procs (see 2nd argument in -glayout) to support
+  - "mpirun -np 5 ./4C --nptype=separateInputFiles --ngroup=2 --glayout=2,3 /path/to/sohex8_multiscale_macro_plastic.4C.yaml
+    output_name /path/to/sohex8_multiscale_npsupport.4C.yaml dummy_output_name"
+  - The nested mode command uses 2 procs (see 1st argument in --glayout) to
+  - solve the macro scale and 3 procs (see 2nd argument in --glayout) to support
   - while solving the microscale. The sum of the two proc numbers must
   - correspond to the argument -np 5 of mpirun. The additional input file
   - (sohex8_multiscale_npsupport.4C.yaml) for the supporting procs does not have

@@ -11,26 +11,10 @@
 #include "4C_config.hpp"
 
 #include "4C_comm_utils.hpp"
+#include "4C_io_command_line_helpers.hpp"
 #include "4C_io_input_file.hpp"
 
 FOUR_C_NAMESPACE_OPEN
-
-/**
- * Gather some arguments from the command line and store them in a struct. This should be
- * changed to a proper parser
- */
-struct CommandlineArguments
-{
-  int argc;
-  char** argv;
-
-  std::string input_file_name;
-  std::string output_file_identifier;
-  std::string restart_file_identifier;
-  int restart_step = 0;
-
-  Core::Communication::Communicators comms;
-};
 
 /**
  * \brief Initializes the input file for reading.
@@ -52,29 +36,14 @@ void emit_general_metadata(const Core::IO::YamlNodeRef& root_ref);
  * \brief Sets up the Global::Problem instance and puts all the parameters from the input file
  * there.
  */
-void setup_global_problem(Core::IO::InputFile& input_file, const CommandlineArguments& arguments);
-
+void setup_global_problem(Core::IO::InputFile& input_file, const CommandlineArguments& arguments,
+    Core::Communication::Communicators& communicators);
 /**
  * \brief Returns the wall time in seconds.
  */
 double walltime_in_seconds();
 
-/**
- * \brief Parses command line arguments and sets input, output, and restart file identifiers.
- */
-void parse_commandline_arguments(CommandlineArguments& arguments);
 
-/**
- * \brief Parses input and output files from command line arguments.
- */
-std::vector<std::string> parse_input_output_files(const int argc, char** argv, const int my_rank);
-
-/**
- * \brief Parses the restart definition from command line arguments.
- */
-void parse_restart_definition(const std::vector<std::string>& inout, int in_out_args,
-    std::string& restart_file_identifier, const std::string& outfile_identifier, int restart_group,
-    CommandlineArguments& arguments);
 
 /**
  * \brief Writes the Teuchos::TimeMonitor information to std::cout

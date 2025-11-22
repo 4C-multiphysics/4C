@@ -13,6 +13,7 @@
 #include "4C_linalg_transfer.hpp"
 #include "4C_linalg_utils_densematrix_communication.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_utils_exceptions.hpp"
 
 #include <iomanip>
 #include <sstream>
@@ -26,7 +27,7 @@ namespace Core::Communication
   /*----------------------------------------------------------------------*
    | create communicator                                      ghamm 02/12 |
    *----------------------------------------------------------------------*/
-  Communicators create_comm(std::vector<std::string> argv)
+  Communicators create_comm(CommConfig& config)
   {
     // for coupled simulations: color = 1 for 4C and color = 0 for other programs
     // so far: either nested parallelism within 4C or coupling with further
@@ -37,199 +38,84 @@ namespace Core::Communication
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     int color = 0;
-    int ngroup = 1;
-    NestedParallelismType npType = NestedParallelismType::no_nested_parallelism;
-
-    // parse command line and separate configuration arguments
-    std::vector<std::string> conf;
-    for (std::size_t i = 1; i < argv.size(); i++)
+    if (config.ngroup > 1)
     {
-      std::string temp = argv[i];
-      if (temp.substr(0, 1) == "-")
+      if (config.group_layout.size() == 0)
       {
-        conf.push_back(argv[i]);
-      }
-    }
-
-    // grouplayout will be filled accordingly to the user given input
-    std::vector<int> grouplayout;
-    bool ngroupisset = false;
-    bool nptypeisset = false;
-    for (std::size_t i = 0; i < conf.size(); i++)
-    {
-      // fill std::string with current argument
-      std::string argument(conf[i]);
-      //----------------------------------------------------------------
-      // determine number of groups and the proc distribution
-      //----------------------------------------------------------------
-      if (argument.substr(0, 8) == "-ngroup=")
-      {
-        ngroupisset = true;
-        ngroup = atoi(argument.substr(8, std::string::npos).c_str());
-
-        // read out argument after ngroup=
-        std::string glayout;
-        if (i + 1 < conf.size())
-          glayout = conf[i + 1];
-        else
-          glayout = "dummy";
-
-        // case with given group layout
-        if (glayout.substr(0, 9) == "-glayout=")
+        if (myrank == (size - 1))  // myrank == 0 is eventually not within 4C (i.e. coupling to
+                                   // external codes)
         {
-          glayout = glayout.substr(9, std::string::npos).c_str();
-
-          std::istringstream layout(glayout);
-          int sumprocs = 0;
-
-          while (layout)
-          {
-            std::string s;
-            if (!getline(layout, s, ',')) break;
-            grouplayout.push_back(atoi(s.c_str()));
-            sumprocs += atoi(s.c_str());
-          }
-
-          // final check whether a correct group layout is specified
-          if (ngroup != int(grouplayout.size()) or size != sumprocs or ngroup < 1)
-          {
-            if (myrank == (size - 1))  // myrank == 0 is eventually not within 4C (i.e. coupling
-                                       // to external codes)
-            {
-              printf(
-                  "\n\nNumber of procs (%d) and number of groups (%d) does not match given group "
-                  "layout! \n",
-                  size, ngroup);
-              printf("Example mpirun -np 4 ./4C -ngroup=2 -glayout=1,3 \n");
-              printf("Try again!\n");
-            }
-            MPI_Finalize();
-            exit(EXIT_FAILURE);
-          }
+          printf(
+              "\n\n\nINFO: Group layout is not specified. Default is equal size of the "
+              "groups.\n");
         }
-        // case without given group layout
-        else
+        if ((size % config.ngroup) != 0)
         {
-          if (myrank == (size - 1))  // myrank == 0 is eventually not within 4C (i.e. coupling to
-                                     // external codes)
+          if (myrank == (size - 1))
           {
             printf(
-                "\n\n\nINFO: Group layout is not specified. Default is equal size of the "
-                "groups.\n");
-          }
-          if ((size % ngroup) != 0)
-          {
-            if (myrank == (size - 1))
-            {
-              printf(
-                  "\n\nNumber of processors (%d) cannot be divided by the number of groups (%d)!\n",
-                  size, ngroup);
-              printf("Try again!\n");
-            }
-            MPI_Finalize();
-            exit(EXIT_FAILURE);
-          }
-
-          // equal size of the groups
-          for (int k = 0; k < ngroup; k++)
-          {
-            grouplayout.push_back(size / ngroup);
-          }
-        }
-
-        // the color is specified: procs are distributed to the groups with increasing global rank
-        color = -1;
-        int gsum = 0;
-        do
-        {
-          color++;
-          gsum += grouplayout[color];
-        } while (gsum <= myrank);
-
-#ifdef FOUR_C_ENABLE_ASSERTIONS
-        std::cout << "Nested parallelism layout: Global rank: " << myrank
-                  << " is in group: " << color << std::endl;
-#endif
-
-      }  // end if (argument.substr( 0, 8 ) == "-ngroup=")
-
-      //----------------------------------------------------------------
-      // nested parallelism type
-      //----------------------------------------------------------------
-      else if (argument.substr(0, 8) == "-nptype=")
-      {
-        nptypeisset = true;
-        argument = argument.substr(8, std::string::npos).c_str();
-        if (argument == "everyGroupReadInputFile")
-          npType = NestedParallelismType::every_group_read_input_file;
-        else if (argument == "separateInputFiles")
-          npType = NestedParallelismType::separate_input_files;
-        else if (argument == "nestedMultiscale")
-        {
-          npType = NestedParallelismType::separate_input_files;
-          // the color is specified: only two groups and group one (macro problem) is distributed
-          // over all processors
-          color = -1;
-          if (myrank % (int)(size / grouplayout[0]) == 0 and
-              myrank < (grouplayout[0] * (int)(size / grouplayout[0])))
-            color = 0;
-          else
-            color = 1;
-        }
-        else if (argument.substr(0, 9) == "diffgroup")
-        {
-          npType = NestedParallelismType::no_nested_parallelism;
-          ngroup = 2;
-          color = atoi(argument.substr(9, std::string::npos).c_str());
-        }
-        else
-        {
-          if (myrank == (size - 1))  // myrank == 0 is eventually not within 4C (i.e. coupling to
-                                     // external codes)
-          {
-            printf(
-                "\n\nOnly everyGroupReadInputFile and separateInputFiles is available for "
-                "nptype=  \n\n");
+                "\n\nNumber of processors (%d) cannot be divided by the number of groups (%d)!\n",
+                size, config.ngroup);
             printf("Try again!\n");
           }
           MPI_Finalize();
           exit(EXIT_FAILURE);
         }
+
+        // equal size of the groups
+        for (int k = 0; k < config.ngroup; k++)
+        {
+          config.group_layout.push_back(size / config.ngroup);
+        }
       }
 
-      //----------------------------------------------------------------
-      // check for valid arguments that can be used in 4C.cpp
-      //----------------------------------------------------------------
-      else if ((argument.substr(0, 9) != "-glayout=") and (argument.substr(0, 2) != "-v") and
-               (argument.substr(0, 2) != "-h") and (argument.substr(0, 6) != "--help") and
-               (argument.substr(0, 2) != "-p") and (argument.substr(0, 12) != "--parameters") and
-               (argument.substr(0, 2) != "-d") and (argument.substr(0, 9) != "--datfile") and
-               (argument.substr(0, 13) != "--interactive"))
+      int sum_layout = 0;
+      for (size_t k = 0; k < config.group_layout.size(); k++)
       {
-        printf(
-            "\n\n You have specified an argument ( %s ) for 4C starting with a \"-\" that is not "
-            "valid!\n",
-            argument.c_str());
-        printf("Please refer to ./4C --help and try again!\n");
+        sum_layout += config.group_layout[k];
+      }
+      if (sum_layout != size)
+      {
+        if (myrank == (size - 1))
+        {
+          printf("Error: Group layout sum (%d) does not equal total MPI ranks (%d).\n", sum_layout,
+              size);
+        }
         MPI_Finalize();
         exit(EXIT_FAILURE);
       }
 
-    }  // end for(int i=0; i<int(conf.size()); i++)
-
-
-    if ((int(conf.size()) > 1) and (ngroupisset == false or nptypeisset == false))
-    {
-      if (myrank ==
-          (size - 1))  // myrank == 0 is eventually not within 4C (i.e. coupling to external codes)
+      // the color is specified: procs are distributed to the groups with increasing global rank
+      color = -1;
+      int gsum = 0;
+      do
       {
-        printf(
-            "\n\nAt least -nptype= and -ngroup= must be specified for nested parallelism. -glayout "
-            "is optional (behind -ngroup).  \n\n");
-        printf("Try again!\n");
-      }
-      MPI_Finalize();
-      exit(EXIT_FAILURE);
+        color++;
+        gsum += config.group_layout[color];
+      } while (gsum <= myrank);
+
+#ifdef FOUR_C_ENABLE_ASSERTIONS
+      std::cout << "Nested parallelism layout: Global rank: " << myrank << " is in group: " << color
+                << std::endl;
+#endif
+    }
+
+    if (config.np_type == NestedParallelismType::nested_multiscale)
+    {
+      // the color is specified: only two groups and group one (macro problem) is distributed
+      // over all processors
+      color = -1;
+      if (myrank % (int)(size / config.group_layout[0]) == 0 and
+          myrank < (config.group_layout[0] * (int)(size / config.group_layout[0])))
+        color = 0;
+      else
+        color = 1;
+    }
+    else if (config.np_type == NestedParallelismType::no_nested_parallelism &&
+             config.diffgroup != -1)
+    {
+      config.ngroup = 2;
+      color = config.diffgroup;
     }
 
     // do the splitting of the communicator
@@ -239,7 +125,7 @@ namespace Core::Communication
     // the global communicator is created
     MPI_Comm gcomm;
 
-    if (ngroup == 1)
+    if (config.ngroup == 1)
     {
       gcomm = lcomm;
     }
@@ -267,10 +153,10 @@ namespace Core::Communication
     }
 
     // nested parallelism group is created
-    Communicators communicators(color, ngroup, lpidgpid, lcomm, gcomm, npType);
+    Communicators communicators(color, config.ngroup, lpidgpid, lcomm, gcomm, config.np_type);
 
     // info for the nested parallelism user
-    if (Core::Communication::my_mpi_rank(lcomm) == 0 && ngroup > 1)
+    if (Core::Communication::my_mpi_rank(lcomm) == 0 && config.ngroup > 1)
       printf("Nested parallelism layout: Group %d has %d processors.\n ", color,
           Core::Communication::num_mpi_ranks(lcomm));
     fflush(stdout);
