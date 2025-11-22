@@ -14,24 +14,22 @@
 #include "4C_linear_solver_preconditioner_muelu.hpp"
 #include "4C_linear_solver_preconditioner_projection.hpp"
 #include "4C_linear_solver_preconditioner_teko.hpp"
+#include "4C_linear_solver_thyra_utils.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <BelosBiCGStabSolMgr.hpp>
 #include <BelosBlockCGSolMgr.hpp>
 #include <BelosBlockGmresSolMgr.hpp>
 #include <BelosEpetraAdapter.hpp>
-#include <BelosLinearProblem.hpp>
 #include <BelosPseudoBlockCGSolMgr.hpp>
 #include <BelosPseudoBlockGmresSolMgr.hpp>
+#include <BelosThyraAdapter.hpp>
 #include <Teuchos_RCPDecl.hpp>
 #include <Teuchos_RCPStdSharedPtrConversions.hpp>
 #include <Teuchos_TimeMonitor.hpp>
 #include <Teuchos_XMLParameterListHelpers.hpp>
 
 FOUR_C_NAMESPACE_OPEN
-
-using BelosVectorType = Epetra_MultiVector;
-using BelosMatrixType = Epetra_Operator;
 
 //----------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------
@@ -89,14 +87,20 @@ int Core::LinearSolver::IterativeSolver::solve(Core::LinAlg::MultiVector<double>
 {
   Teuchos::ParameterList& belist = params().sublist("Belos Parameters");
 
-  auto problem = Teuchos::make_rcp<Belos::LinearProblem<double, BelosVectorType, BelosMatrixType>>(
-      Teuchos::rcpFromRef(a_->epetra_operator()), Teuchos::rcpFromRef(x.get_epetra_multi_vector()),
-      Teuchos::rcpFromRef(b_->get_epetra_multi_vector()));
+  using MV = Thyra::MultiVectorBase<double>;
+  using OP = Thyra::LinearOpBase<double>;
+  using belos_problem = Belos::LinearProblem<double, MV, OP>;
+
+  auto a = Utils::create_thyra_linear_op(*a_, LinAlg::DataAccess::Share);
+  auto solution = Utils::create_thyra_multi_vector(x, a->range());
+  auto b = Utils::create_thyra_multi_vector(*b_, a->domain());
+
+  auto problem = Teuchos::make_rcp<belos_problem>(a, solution, b);
 
   if (preconditioner_ != nullptr)
   {
-    auto belosPrec =
-        Teuchos::make_rcp<Belos::EpetraPrecOp>(Teuchos::rcp(preconditioner_->prec_operator()));
+    // TODO: Preconditioner seems to work not that properly (Blocked MueLu and Krylov Projection)
+    auto belosPrec = preconditioner_->thyra_operator();
     problem->setRightPrec(belosPrec);
   }
 
@@ -104,7 +108,7 @@ int Core::LinearSolver::IterativeSolver::solve(Core::LinAlg::MultiVector<double>
   if (set == false)
     FOUR_C_THROW("Core::LinearSolver::BelosSolver: Iterative solver failed to set up correctly.");
 
-  std::shared_ptr<Belos::SolverManager<double, BelosVectorType, BelosMatrixType>> newSolver;
+  std::shared_ptr<Belos::SolverManager<double, MV, OP>> newSolver;
 
   if (belist.isParameter("SOLVER_XML_FILE"))
   {
@@ -123,8 +127,7 @@ int Core::LinearSolver::IterativeSolver::solve(Core::LinAlg::MultiVector<double>
       }
 
       newSolver =
-          std::make_shared<Belos::PseudoBlockGmresSolMgr<double, BelosVectorType, BelosMatrixType>>(
-              problem, belosSolverList);
+          std::make_shared<Belos::PseudoBlockGmresSolMgr<double, MV, OP>>(problem, belosSolverList);
     }
     else if (belosParams.isSublist("CG"))
     {
@@ -135,8 +138,7 @@ int Core::LinearSolver::IterativeSolver::solve(Core::LinAlg::MultiVector<double>
       }
 
       newSolver =
-          std::make_shared<Belos::PseudoBlockCGSolMgr<double, BelosVectorType, BelosMatrixType>>(
-              problem, belosSolverList);
+          std::make_shared<Belos::PseudoBlockCGSolMgr<double, MV, OP>>(problem, belosSolverList);
     }
     else if (belosParams.isSublist("BiCGSTAB"))
     {
@@ -146,8 +148,7 @@ int Core::LinearSolver::IterativeSolver::solve(Core::LinAlg::MultiVector<double>
         belosSolverList->set("Convergence Tolerance", belist.get<double>("Convergence Tolerance"));
       }
 
-      newSolver = std::make_shared<Belos::BiCGStabSolMgr<double, BelosVectorType, BelosMatrixType>>(
-          problem, belosSolverList);
+      newSolver = std::make_shared<Belos::BiCGStabSolMgr<double, MV, OP>>(problem, belosSolverList);
     }
     else
       FOUR_C_THROW("Core::LinearSolver::BelosSolver: Unknown iterative solver solver type chosen.");
@@ -161,14 +162,13 @@ int Core::LinearSolver::IterativeSolver::solve(Core::LinAlg::MultiVector<double>
 
     std::string solverType = belist.get<std::string>("Solver Type");
     if (solverType == "GMRES")
-      newSolver =
-          std::make_shared<Belos::BlockGmresSolMgr<double, BelosVectorType, BelosMatrixType>>(
-              problem, Teuchos::rcpFromRef(belist));
+      newSolver = std::make_shared<Belos::BlockGmresSolMgr<double, MV, OP>>(
+          problem, Teuchos::rcpFromRef(belist));
     else if (solverType == "CG")
-      newSolver = std::make_shared<Belos::BlockCGSolMgr<double, BelosVectorType, BelosMatrixType>>(
+      newSolver = std::make_shared<Belos::BlockCGSolMgr<double, MV, OP>>(
           problem, Teuchos::rcpFromRef(belist));
     else if (solverType == "BiCGSTAB")
-      newSolver = std::make_shared<Belos::BiCGStabSolMgr<double, BelosVectorType, BelosMatrixType>>(
+      newSolver = std::make_shared<Belos::BiCGStabSolMgr<double, MV, OP>>(
           problem, Teuchos::rcpFromRef(belist));
     else
       FOUR_C_THROW("Core::LinearSolver::BelosSolver: Unknown iterative solver solver type chosen.");
@@ -203,6 +203,8 @@ int Core::LinearSolver::IterativeSolver::solve(Core::LinAlg::MultiVector<double>
       }
     }
   }
+
+  x = *Utils::get_linalg_multi_vector_from_thyra(a_->domain_map(), solution);
 
   return 0;
 }

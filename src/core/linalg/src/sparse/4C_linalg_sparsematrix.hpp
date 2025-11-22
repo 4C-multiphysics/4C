@@ -18,6 +18,7 @@
 
 #include <Epetra_CrsMatrix.h>
 #include <Epetra_FECrsMatrix.h>
+#include <Thyra_EpetraLinearOp.hpp>
 
 
 FOUR_C_NAMESPACE_OPEN

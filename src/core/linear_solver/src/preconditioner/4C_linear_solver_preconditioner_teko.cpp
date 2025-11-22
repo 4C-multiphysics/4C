@@ -147,9 +147,9 @@ void Core::LinearSolver::TekoPreconditioner::setup(
       builder.createPreconditioningStrategy("Teko");
   Teuchos::RCP<Thyra::PreconditionerBase<double>> prec =
       Thyra::prec<double>(*precFactory, pmatrix_);
-  Teko::LinearOp inverseOp = prec->getUnspecifiedPrecOp();
+  p_thyra_ = prec->getUnspecifiedPrecOp();
 
-  p_ = std::make_shared<Teko::Epetra::EpetraInverseOpWrapper>(inverseOp);
+  p_ = std::make_shared<Teko::Epetra::EpetraInverseOpWrapper>(p_thyra_);
 }
 
 //----------------------------------------------------------------------------------

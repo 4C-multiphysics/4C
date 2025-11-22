@@ -22,6 +22,9 @@
 #include <Teko_EpetraInverseOpWrapper.hpp>
 #include <Teuchos_ParameterList.hpp>
 #include <Teuchos_RCPStdSharedPtrConversions.hpp>
+#include <Thyra_XpetraLinearOp_decl.hpp>
+#include <Xpetra_BlockedCrsMatrix.hpp>
+#include <Xpetra_CrsMatrix.hpp>
 #include <Xpetra_EpetraCrsMatrix.hpp>
 #include <Xpetra_EpetraMap.hpp>
 #include <Xpetra_EpetraMultiVector.hpp>
@@ -116,9 +119,9 @@ void Core::LinearSolver::MueLuPreconditioner::setup(
         builder.createPreconditioningStrategy("MueLu");
     Teuchos::RCP<Thyra::PreconditionerBase<double>> prec =
         Thyra::prec<double>(*precFactory, pmatrix_);
-    auto inverseOp = prec->getUnspecifiedPrecOp();
-
-    p_ = std::make_shared<Teko::Epetra::EpetraInverseOpWrapper>(inverseOp);
+    p_thyra_ = prec->getUnspecifiedPrecOp();
+    
+    p_ = std::make_shared<Teko::Epetra::EpetraInverseOpWrapper>(p_thyra_);
   }
   else
   {

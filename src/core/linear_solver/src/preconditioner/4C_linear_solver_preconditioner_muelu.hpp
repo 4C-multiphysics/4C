@@ -61,6 +61,11 @@ namespace Core::LinearSolver
     //! linear operator used for preconditioning
     std::shared_ptr<Epetra_Operator> prec_operator() const final { return p_; }
 
+    Teuchos::RCP<const Thyra::LinearOpBase<double>> thyra_operator() const override
+    {
+      return p_thyra_;
+    }
+
    private:
     //! system of equations used for preconditioning used by P_ only
     Teuchos::RCP<const Thyra::LinearOpBase<double>> pmatrix_;
@@ -71,6 +76,8 @@ namespace Core::LinearSolver
 
     //! preconditioner
     std::shared_ptr<Epetra_Operator> p_;
+
+    Teuchos::RCP<const Thyra::LinearOpBase<double>> p_thyra_;
 
     //! MueLu hierarchy
     Teuchos::RCP<MueLu::Hierarchy<Scalar, LocalOrdinal, GlobalOrdinal, Node>> H_;
