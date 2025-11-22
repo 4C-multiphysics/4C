@@ -3172,7 +3172,8 @@ void CONTACT::LagrangeStrategy::build_saddle_point_system(
     blockMat =
         std::make_shared<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(
             *dommapext, *rowmapext, 81, false, false);
-    // blockMat is declared as an Epetra_Operator, so we need to cast it to an actual block matrix
+    // blockMat is declared as an Core::LinAlg::Operator, so we need to cast it to an actual block
+    // matrix
     std::shared_ptr<Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>> mat =
         std::dynamic_pointer_cast<
             Core::LinAlg::BlockSparseMatrix<Core::LinAlg::DefaultBlockMatrixStrategy>>(blockMat);

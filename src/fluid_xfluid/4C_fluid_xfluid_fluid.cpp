@@ -280,15 +280,14 @@ std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> FLD::XFluidFluid::block_sys
   // Get the fluid-fluid system matrix as sparse matrix
   std::shared_ptr<Core::LinAlg::SparseMatrix> sparsesysmat = system_matrix();
 
-  // F_{II}, F_{I\Gamma}, F_{\GammaI}, F_{\Gamma\Gamma}
-  std::shared_ptr<Core::LinAlg::SparseMatrix> fii, fig, fgi, fgg;
-  // Split sparse system matrix into blocks according to the given maps
-  Core::LinAlg::split_matrix2x2(
-      sparsesysmat, innermap, condmap, innermap, condmap, fii, fig, fgi, fgg);
-  // create a new block matrix out of the 4 blocks
-  std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> blockmat =
-      Core::LinAlg::block_matrix2x2(*fii, *fig, *fgi, *fgg);
+  std::vector<std::shared_ptr<const Core::LinAlg::Map>> sub_maps(2);
+  sub_maps[0] = innermap;
+  sub_maps[1] = condmap;
+  const auto map_extractor = Core::LinAlg::MultiMapExtractor(sparsesysmat->domain_map(), sub_maps);
 
+  auto blockmat = Core::LinAlg::split_matrix<Core::LinAlg::DefaultBlockMatrixStrategy>(
+      *sparsesysmat, map_extractor, map_extractor);
+  blockmat->complete();
   if (blockmat == nullptr) FOUR_C_THROW("Creation of fluid-fluid block matrix failed.");
 
   return blockmat;

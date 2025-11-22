@@ -13,6 +13,9 @@
 #include "4C_comm_mpi_utils.hpp"
 #include "4C_linalg_sparsematrix.hpp"
 
+#include <Thyra_DefaultBlockedLinearOp_decl.hpp>
+#include <Thyra_PhysicallyBlockedLinearOpBase.hpp>
+
 FOUR_C_NAMESPACE_OPEN
 
 namespace Core::LinAlg
@@ -46,13 +49,6 @@ namespace Core::LinAlg
 
     /// make a copy of me
     virtual std::unique_ptr<BlockSparseMatrixBase> clone(DataAccess access) = 0;
-
-    /// setup of block preconditioners
-    /*!
-      This method can be implemented by subclasses that implement
-      ApplyInverse() to execute a block preconditioner on the matrix.
-     */
-    virtual void setup_preconditioner() {}
 
     /// Merge block matrix into a SparseMatrix
     std::shared_ptr<SparseMatrix> merge(bool explicitdirichlet = true) const;
@@ -151,6 +147,38 @@ namespace Core::LinAlg
 
     //@}
 
+    //! \brief return the internal Epetra_Operator
+    Epetra_Operator& epetra_operator() override { return *this; }
+
+    Teuchos::RCP<const Thyra::LinearOpBase<double>> thyra_operator(
+        LinAlg::DataAccess access) override
+    {
+      auto block_matrix = Thyra::defaultBlockedLinearOp<double>();
+
+      block_matrix->beginBlockFill(rows(), cols());
+      for (int row = 0; row < rows(); row++)
+      {
+        for (int col = 0; col < cols(); col++)
+        {
+          Teuchos::RCP<Epetra_CrsMatrix> A_crs;
+
+          if (access == LinAlg::DataAccess::Copy)
+          {
+            A_crs = Teuchos::make_rcp<Epetra_CrsMatrix>(matrix(row, col).epetra_matrix());
+          }
+          else
+          {
+            A_crs = Teuchos::rcpFromRef(matrix(row, col).epetra_matrix());
+          }
+
+          block_matrix->setBlock(row, col, Thyra::epetraLinearOp(A_crs));
+        }
+      }
+      block_matrix->endBlockFill();
+
+      return block_matrix;
+    }
+
     /** \name Attribute set methods */
     //@{
 
@@ -225,11 +253,6 @@ namespace Core::LinAlg
     /// access to range map extractor in derived classes
     const MultiMapExtractor& range_extractor() const { return rangemaps_; }
 
-   protected:
-    /// extract a partial map extractor from the full map extractor
-    void get_partial_extractor(const MultiMapExtractor& full_extractor,
-        const std::vector<unsigned>& block_ids, MultiMapExtractor& partial_extractor) const;
-
    private:
     /// the full domain map together with all partial domain maps
     MultiMapExtractor domainmaps_;
@@ -284,18 +307,6 @@ namespace Core::LinAlg
     /** Do not forget to call Complete() after cloning, even if you
      *  use Core::LinAlg::DataAccess::Share! */
     std::unique_ptr<BlockSparseMatrixBase> clone(DataAccess access) override;
-
-    /// clone only a part of the block sparse matrix
-    /** Do not forget to call Complete() after cloning, even if you
-     *  use Core::LinAlg::DataAccess::Share!
-     *
-     *  \param[in] access : consider copy or view of block matrices
-     *  \param[in] row_block_ids : ID's of the row blocks to clone
-     *  \param[in] col_block_ids : ID's of the column blocks to clone
-     *
-     *  */
-    std::unique_ptr<Core::LinAlg::BlockSparseMatrixBase> clone(DataAccess access,
-        const std::vector<unsigned>& row_block_ids, const std::vector<unsigned>& col_block_ids);
 
     /// just a dummy that switches from strided assembly to standard assembly
     void assemble(int eid, const std::vector<int>& lmstride,
@@ -401,9 +412,6 @@ namespace Core::LinAlg
   //////////////////////////////////
   /// helper functions
 
-  std::shared_ptr<BlockSparseMatrix<DefaultBlockMatrixStrategy>> block_matrix2x2(
-      SparseMatrix& A00, SparseMatrix& A01, SparseMatrix& A10, SparseMatrix& A11);
-
   //! Cast matrix of type SparseOperator to BlockSparseMatrixBase and check in debug mode if cast
   //! was successful
   std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase>
@@ -476,34 +484,6 @@ Core::LinAlg::BlockSparseMatrix<Strategy>::clone(DataAccess access,
   return bsm;
 }
 
-/*----------------------------------------------------------------------*
- *----------------------------------------------------------------------*/
-template <class Strategy>
-std::unique_ptr<Core::LinAlg::BlockSparseMatrixBase>
-Core::LinAlg::BlockSparseMatrix<Strategy>::clone(DataAccess access,
-    const std::vector<unsigned>& row_block_ids, const std::vector<unsigned>& col_block_ids)
-{
-  if (std::lower_bound(row_block_ids.begin(), row_block_ids.end(), static_cast<unsigned>(rows())) !=
-      row_block_ids.end())
-    FOUR_C_THROW("The partial row block ids exceed the maximal possible id!");
-
-  if (std::lower_bound(col_block_ids.begin(), col_block_ids.end(), static_cast<unsigned>(cols())) !=
-      col_block_ids.end())
-    FOUR_C_THROW("The partial column block ids exceed the maximal possible id!");
-
-  if (row_block_ids.size() == 0 or col_block_ids.size() == 0)
-    FOUR_C_THROW("The provided row/col block id vector has a length of zero!");
-
-  // extract domain extractors
-  MultiMapExtractor p_domain_extractor;
-  this->get_partial_extractor(domain_extractor(), col_block_ids, p_domain_extractor);
-
-  // extract range extractors
-  MultiMapExtractor p_range_extractor;
-  this->get_partial_extractor(range_extractor(), row_block_ids, p_range_extractor);
-
-  return clone(access, row_block_ids, col_block_ids, p_domain_extractor, p_range_extractor);
-}
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/

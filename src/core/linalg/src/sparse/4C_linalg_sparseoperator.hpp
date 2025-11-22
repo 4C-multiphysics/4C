@@ -16,6 +16,7 @@
 #include "4C_utils_shared_ptr_from_ref.hpp"
 
 #include <Epetra_Operator.h>
+#include <Thyra_LinearOpBase_decl.hpp>
 
 #include <memory>
 #include <vector>
@@ -81,7 +82,10 @@ namespace Core::LinAlg
       \warning Only low level solver routines are interested in the internal
       Epetra_Operator.
      */
-    virtual Epetra_Operator& epetra_operator() { return *this; }
+    virtual Epetra_Operator& epetra_operator() = 0;
+
+    virtual Teuchos::RCP<const Thyra::LinearOpBase<double>> thyra_operator(
+        LinAlg::DataAccess access) = 0;
 
     /// set matrix to zero
     virtual void zero() = 0;
