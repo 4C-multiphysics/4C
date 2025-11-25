@@ -26,7 +26,7 @@ NOX::FSI::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
     std::shared_ptr<Core::LinAlg::Solver> solver, const std::shared_ptr<NOX::Nln::Scaling> s)
     : utils_(printParams),
       jac_interface_ptr_(iJac),
-      jac_ptr_(J),
+      // jac_ptr_(Teuchos::rcp:_(J->epetra_operator())),
       operator_(J),
       scaling_(s),
       callcount_(0),
@@ -34,7 +34,8 @@ NOX::FSI::LinearSystem::LinearSystem(Teuchos::ParameterList& printParams,
       timer_("", true)
 {
   tmp_vector_ptr_ = std::make_shared<NOX::Nln::Vector>(cloneVector);
-
+  // TODO: Potential error here?
+  jac_ptr_ = std::shared_ptr<Epetra_Operator>(J, &J->epetra_operator());
   reset(linearSolverParams);
 }
 

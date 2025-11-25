@@ -340,7 +340,7 @@ namespace Core::LinAlg
     //@{
 
     /// Returns a character string describing the operator.
-    const char* Label() const override;
+    const char* Label() const;
 
     //@}
 
@@ -375,7 +375,7 @@ namespace Core::LinAlg
 
     \note This method is here for performance reasons.
    */
-    Epetra_Operator& epetra_operator() override { return *sysmat_; }
+    Epetra_Operator& epetra_operator() { return *sysmat_; }
 
     /// return the internal Epetra matrix as Epetra_Operator
     const Epetra_Operator& epetra_operator() const { return *sysmat_; }
@@ -392,7 +392,7 @@ namespace Core::LinAlg
     //@{
 
     /// If set true, transpose of this operator will be applied.
-    int SetUseTranspose(bool UseTranspose) override;
+    int SetUseTranspose(bool UseTranspose);
 
     //@}
 
@@ -424,13 +424,18 @@ namespace Core::LinAlg
     //@{
 
     /// Returns the result of a Epetra_Operator applied to a Epetra_MultiVector X in Y.
-    int Apply(const Epetra_MultiVector& X, Epetra_MultiVector& Y) const override;
+    int Apply(const Epetra_MultiVector& X, Epetra_MultiVector& Y) const;
+
+    int Apply(
+        const Core::LinAlg::MultiVector<double>& X, Core::LinAlg::MultiVector<double>& Y) const;
+
+    int Apply(const Core::LinAlg::Vector<double>& X, Core::LinAlg::Vector<double>& Y) const;
 
     /// Returns the result of a Epetra_Operator inverse applied to an Epetra_MultiVector X in Y.
-    int ApplyInverse(const Epetra_MultiVector& X, Epetra_MultiVector& Y) const override;
+    int ApplyInverse(const Epetra_MultiVector& X, Epetra_MultiVector& Y) const;
 
     /// Returns the infinity norm of the global matrix.
-    double NormInf() const override;
+    double NormInf() const;
 
     /// Returns the one norm of the global matrix.
     double norm_one() const;
@@ -500,19 +505,19 @@ namespace Core::LinAlg
 
 
     /// Returns the current UseTranspose setting.
-    bool UseTranspose() const override;
+    bool UseTranspose() const;
 
     /// Returns true if the this object can provide an approximate Inf-norm, false otherwise.
-    bool HasNormInf() const override;
+    bool HasNormInf() const;
 
     /// Returns a pointer to the Epetra_Comm communicator associated with this operator.
-    const Epetra_Comm& Comm() const override;
+    const Epetra_Comm& Comm() const;
 
     /// Returns the Epetra_Map object associated with the domain of this operator.
-    const Epetra_Map& OperatorDomainMap() const override;
+    const Epetra_Map& OperatorDomainMap() const;
 
     /// Returns the Epetra_Map object associated with the range of this operator.
-    const Epetra_Map& OperatorRangeMap() const override;
+    const Epetra_Map& OperatorRangeMap() const;
 
     //@}
 

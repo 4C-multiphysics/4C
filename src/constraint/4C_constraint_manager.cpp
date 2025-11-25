@@ -288,11 +288,7 @@ void Constraints::ConstrManager::evaluate_force_stiff(const double time,
   constrainterr_->update(scConMat, *referencevalues_, -1.0 * scConMat, *actvalues_, 0.0);
   actdisc_->clear_state();
   // finalize the constraint matrix
-  std::string label(constr_matrix_->Label());
-  if (label == "Core::LinAlg::BlockSparseMatrixBase")
-    constr_matrix_->complete();
-  else
-    constr_matrix_->complete(*constrmap_, *dofrowmap);
+  constr_matrix_->complete(*constrmap_, *dofrowmap);
 }
 
 /*----------------------------------------------------------------------*

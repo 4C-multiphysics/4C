@@ -533,7 +533,7 @@ void STI::Monolithic::output_matrix_to_file(
   if (!sparseoperator->filled()) FOUR_C_THROW("Sparse operator must be filled for output!");
 
   // extract communicator
-  MPI_Comm comm = Core::Communication::unpack_epetra_comm(sparseoperator->Comm());
+  MPI_Comm comm = sparseoperator->range_map().get_comm();
 
   // determine whether sparse matrix or block sparse matrix should be output
   const auto sparsematrix =
