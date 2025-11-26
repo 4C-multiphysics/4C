@@ -9,12 +9,12 @@
 
 #include "4C_comm_utils.hpp"
 #include "4C_linalg_blocksparsematrix.hpp"
+#include "4C_linear_solver_thyra_utils.hpp"
 #include "4C_utils_exceptions.hpp"
 
 #include <Stratimikos_LinearSolverBuilder_decl.hpp>
 #include <Teko_EpetraInverseOpWrapper.hpp>
 #include <Teuchos_XMLParameterListHelpers.hpp>
-#include <Thyra_EpetraLinearOp.hpp>
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -38,7 +38,7 @@ void Core::LinearSolver::IFPACKPreconditioner::setup(Core::LinAlg::SparseOperato
 
   auto comm = Core::Communication::unpack_epetra_comm(A_crs->Comm());
 
-  pmatrix_ = Thyra::epetraLinearOp(Teuchos::make_rcp<Epetra_CrsMatrix>(A_crs->epetra_matrix()));
+  pmatrix_ = Utils::create_thyra_linear_op(*A_crs, LinAlg::DataAccess::Copy);
 
   Teuchos::ParameterList ifpack_params;
 
