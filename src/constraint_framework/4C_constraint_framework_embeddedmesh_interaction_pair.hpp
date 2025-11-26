@@ -15,6 +15,7 @@
 #include "4C_io_visualization_data.hpp"
 #include "4C_linalg_fevector.hpp"
 #include "4C_linalg_fixedsizematrix.hpp"
+#include "4C_solid_3D_ele.hpp"
 #include "4C_utils_parameter_list.fwd.hpp"
 
 #include <memory>
@@ -67,12 +68,12 @@ namespace Constraints::EmbeddedMesh
     /*!
     \brief Get first element
     */
-    const Core::Elements::Element& element_1() const { return *element1_.get(); };
+    Core::Elements::Element& element_1() const { return *element1_.get(); };
 
     /*!
     \brief Get second element
     */
-    const Core::Elements::Element& element_2() const { return *element2_; };
+    Core::Elements::Element& element_2() const { return *element2_; };
 
     /*!
     \brief Get the number of segments
@@ -133,6 +134,10 @@ namespace Constraints::EmbeddedMesh
         Core::LinAlg::SparseMatrix& global_penalty_interface,
         Core::LinAlg::SparseMatrix& global_penalty_background,
         Core::LinAlg::SparseMatrix& global_penalty_interface_background,
+        Core::LinAlg::SparseMatrix& global_virtual_disp_interface_stress_interface,
+        Core::LinAlg::SparseMatrix& global_virtual_disp_interface_stress_background,
+        Core::LinAlg::SparseMatrix& global_virtual_disp_background_stress_interface,
+        Core::LinAlg::SparseMatrix& global_virtual_disp_background_stress_background,
         Core::LinAlg::FEVector<double>& global_constraint) = 0;
 
     /**
@@ -163,10 +168,10 @@ namespace Constraints::EmbeddedMesh
    private:
     //! @name member variables
     //! first element of interacting pair
-    const std::shared_ptr<Core::Elements::Element> element1_;
+    std::shared_ptr<Core::Elements::Element> element1_;
 
     //! second element of interacting pair
-    const Core::Elements::Element* element2_;
+    Core::Elements::Element* element2_;
 
     //! pointer to the cutwizard
     std::shared_ptr<Cut::CutWizard> cutwizard_ptr_ = nullptr;

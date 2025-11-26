@@ -193,6 +193,22 @@ namespace Constraints::EmbeddedMesh
     //! Global contributions of the penalty term associated with both interface and background DOFs
     std::shared_ptr<Core::LinAlg::SparseMatrix> global_penalty_interface_background_ = nullptr;
 
+    //! Global contributions of the stresses associated with the interface DOFs (maybe call it
+    //! global_stress_contribution_to_stiff_interface_interface_?)
+    std::shared_ptr<Core::LinAlg::SparseMatrix> global_virtual_disp_interface_stress_interface_ =
+        nullptr;
+
+    //! Global contributions ...
+    std::shared_ptr<Core::LinAlg::SparseMatrix> global_virtual_disp_interface_stress_background_ =
+        nullptr;
+
+    //! Global contributions ...
+    std::shared_ptr<Core::LinAlg::SparseMatrix> global_virtual_disp_background_stress_interface_ =
+        nullptr;
+
+    std::shared_ptr<Core::LinAlg::SparseMatrix> global_virtual_disp_background_stress_background_ =
+        nullptr;
+
     //! Global constraint vector.
     std::shared_ptr<Core::LinAlg::FEVector<double>> global_constraint_ = nullptr;
 

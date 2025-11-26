@@ -96,7 +96,7 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::setup(
   // Create the maps for interface and background DOFs.
   set_global_maps();
 
-  // Create the global coupling matrices.
+  // Create the global coupling matrices related to the penalty contributions.
   global_penalty_interface_ = std::make_shared<Core::LinAlg::SparseMatrix>(
       *interface_dof_rowmap_, 100, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
   global_penalty_background_ = std::make_shared<Core::LinAlg::SparseMatrix>(
@@ -104,6 +104,22 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::setup(
   global_penalty_interface_background_ =
       std::make_shared<Core::LinAlg::SparseMatrix>(*interface_and_background_dof_rowmap_, 100, true,
           true, Core::LinAlg::SparseMatrix::FE_MATRIX);
+
+  // Create the global coupling matrices related to the stress contributions.
+  global_virtual_disp_interface_stress_interface_ = std::make_shared<Core::LinAlg::SparseMatrix>(
+      *interface_dof_rowmap_, 100, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
+  global_virtual_disp_interface_stress_background_ =
+      std::make_shared<Core::LinAlg::SparseMatrix>(*interface_and_background_dof_rowmap_, 100, true,
+          true, Core::LinAlg::SparseMatrix::FE_MATRIX);
+  global_virtual_disp_background_stress_interface_ =
+      std::make_shared<Core::LinAlg::SparseMatrix>(*interface_and_background_dof_rowmap_, 100, true,
+          true, Core::LinAlg::SparseMatrix::FE_MATRIX);
+  global_virtual_disp_background_stress_background_ = std::make_shared<Core::LinAlg::SparseMatrix>(
+      *background_dof_rowmap_, 100, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
+
+  // Create the global constraint contributions to the force.
+  global_constraint_ =
+      std::make_shared<Core::LinAlg::FEVector<double>>(*interface_and_background_dof_rowmap_);
 
   // Set flag for successful setup.
   is_setup_ = true;
@@ -150,8 +166,6 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::set_global_maps()
   interface_and_background_dof_rowmap_ =
       std::make_shared<Core::LinAlg::Map>(-1, interface_and_background_dofs.size(),
           interface_and_background_dofs.data(), 0, discret_->get_comm());
-  global_constraint_ =
-      std::make_shared<Core::LinAlg::FEVector<double>>(*interface_and_background_dof_rowmap_);
 
   // Set flags for global maps.
   is_global_maps_build_ = true;
@@ -175,13 +189,22 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::evaluate_global_coup
   global_penalty_interface_->put_scalar(0.);
   global_penalty_background_->put_scalar(0.);
   global_penalty_interface_background_->put_scalar(0.);
+
+  global_virtual_disp_interface_stress_interface_->put_scalar(0.);
+  global_virtual_disp_interface_stress_background_->put_scalar(0.);
+  global_virtual_disp_background_stress_interface_->put_scalar(0.);
+  global_virtual_disp_background_stress_background_->put_scalar(0.);
+
   global_constraint_->put_scalar(0.);
 
   for (auto& elepairptr : embedded_mesh_solid_pairs_)
   {
     elepairptr->evaluate_and_assemble_nitsche_contributions(*discret_, this,
         *global_penalty_interface_, *global_penalty_background_,
-        *global_penalty_interface_background_, *global_constraint_);
+        *global_penalty_interface_background_, *global_virtual_disp_interface_stress_interface_,
+        *global_virtual_disp_interface_stress_background_,
+        *global_virtual_disp_background_stress_interface_,
+        *global_virtual_disp_background_stress_background_, *global_constraint_);
   }
 
   // scale_contributions_penalty_stiffness_matrices();
@@ -193,7 +216,7 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::evaluate_global_coup
       *interface_and_background_dof_rowmap_, *interface_and_background_dof_rowmap_);
 
   // Complete the global scaling vector.
-  if (0 != global_constraint_->complete()) FOUR_C_THROW("Error in GlobalAssemble!");
+  global_constraint_->complete();
 
   scale_contributions_penalty_stiffness_matrices();
 }
@@ -222,8 +245,6 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::
 {
   check_setup();
   check_global_maps();
-
-  int linalg_error = 0;
 
   if (stiff != nullptr)
   {
@@ -259,26 +280,19 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::
 
     // Multiply global penalty contributions with the displacement to obtain the penalty forces on
     // the interface and background
-    linalg_error =
-        global_penalty_interface_->multiply(false, *displacement, temp_force_penalty_interface);
-    if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
-    linalg_error =
-        global_penalty_background_->multiply(false, *displacement, temp_force_penalty_background);
-    if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
-    linalg_error = global_penalty_interface_background_->multiply(
+    global_penalty_interface_->multiply(false, *displacement, temp_force_penalty_interface);
+    global_penalty_background_->multiply(false, *displacement, temp_force_penalty_background);
+    global_penalty_interface_background_->multiply(
         false, *displacement, temp_force_penalty_background_contribution_inter_background);
-    if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
-    linalg_error = global_penalty_interface_background_->multiply(
+    global_penalty_interface_background_->multiply(
         true, *displacement, temp_force_penalty_interface_contribution_inter_background);
-    if (linalg_error != 0) FOUR_C_THROW("Error in Multiply!");
 
     // Collect force contributions in a global temp
     Core::LinAlg::Vector<double> global_temp(*discret_->dof_row_map());
     Core::LinAlg::export_to(*global_constraint_, global_temp);
 
     // Add force contributions to global vector.
-    linalg_error = force->update(rhs_factor, global_temp, 1.0);
-    if (linalg_error != 0) FOUR_C_THROW("Error in Update");
+    force->update(rhs_factor, global_temp, 1.0);
   }
 }
 
