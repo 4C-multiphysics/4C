@@ -81,6 +81,10 @@ namespace Constraints::EmbeddedMesh
         Core::LinAlg::SparseMatrix& global_penalty_boundarylayer,
         Core::LinAlg::SparseMatrix& global_penalty_background,
         Core::LinAlg::SparseMatrix& global_penalty_boundarylayer_background,
+        Core::LinAlg::SparseMatrix& global_virtual_disp_interface_stress_interface,
+        Core::LinAlg::SparseMatrix& global_virtual_disp_interface_stress_background,
+        Core::LinAlg::SparseMatrix& global_virtual_disp_background_stress_interface,
+        Core::LinAlg::SparseMatrix& global_virtual_disp_background_stress_background,
         Core::LinAlg::FEVector<double>& global_constraint) override;
 
     /**
@@ -116,6 +120,20 @@ namespace Constraints::EmbeddedMesh
             local_stiffness_penalty_interface_background,
         Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>& local_constraint);
 
+    void evaluate_stress_contributions_nitsche(const Core::FE::Discretization& discret,
+        Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&
+            local_stiffness_disp_interface_stress_interface,
+        Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_,
+            Interface::n_dof_ + Background::n_dof_, double>&
+            local_stiffness_disp_interface_stress_background,
+        Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_,
+            Interface::n_dof_ + Background::n_dof_, double>&
+            local_stiffness_disp_background_stress_interface,
+        Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&
+            local_stiffness_disp_background_stress_background,
+        Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>&
+            local_constraint_stresses);
+
     //! Current nodal positions (and tangents) of the interface element.
     GeometryPair::ElementData<Interface, double> ele1pos_;
 
@@ -124,6 +142,9 @@ namespace Constraints::EmbeddedMesh
 
     //! Displacements of the interface element.
     GeometryPair::ElementData<Interface, double> ele1dis_;
+
+    //! Displacements of the parent element of the interface element
+    std::vector<double> ele1_parent_dis_;
 
     //! Displacements of the background element.
     GeometryPair::ElementData<Background, double> ele2dis_;
