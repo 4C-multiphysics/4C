@@ -190,11 +190,14 @@ namespace Discret::Elements
      * @param dir (in) : Direction of the Cauchy stress
      * @param linearizations (in/out) : A struct containing the needed linearizations (which might
      * are null)
+     * @param discret (in) : Discretization of this element
      * @return double (out) : The scalar Cauchy stress value
      */
     double get_normal_cauchy_stress_at_xi(const std::vector<double>& disp,
         const Core::LinAlg::Tensor<double, 3>& xi, const Core::LinAlg::Tensor<double, 3>& n,
-        const Core::LinAlg::Tensor<double, 3>& dir, CauchyNDirLinearizations<3>& linearizations);
+        const Core::LinAlg::Tensor<double, 3>& dir, CauchyNDirLinearizations<3>& linearizations,
+        std::optional<std::reference_wrapper<const Core::FE::Discretization>> discret =
+            std::nullopt);
 
     void for_each_gauss_point(Core::FE::Discretization& discretization, std::vector<int>& lm,
         const std::function<void(Mat::So3Material&, double integration_factor, int gp)>& integrator)

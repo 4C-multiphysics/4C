@@ -312,10 +312,11 @@ int Discret::Elements::Solid::evaluate_neumann(Teuchos::ParameterList& params,
 
 double Discret::Elements::Solid::get_normal_cauchy_stress_at_xi(const std::vector<double>& disp,
     const Core::LinAlg::Tensor<double, 3>& xi, const Core::LinAlg::Tensor<double, 3>& n,
-    const Core::LinAlg::Tensor<double, 3>& dir, CauchyNDirLinearizations<3>& linearizations)
+    const Core::LinAlg::Tensor<double, 3>& dir, CauchyNDirLinearizations<3>& linearizations,
+    std::optional<std::reference_wrapper<const Core::FE::Discretization>> discretization)
 {
-  return Discret::Elements::get_normal_cauchy_stress_at_xi(
-      solid_calc_variant_, *this, *solid_material(), disp, xi, n, dir, linearizations);
+  return Discret::Elements::get_normal_cauchy_stress_at_xi(solid_calc_variant_, *this,
+      *solid_material(), disp, xi, n, dir, linearizations, discretization);
 }
 
 FOUR_C_NAMESPACE_CLOSE
