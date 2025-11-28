@@ -612,6 +612,12 @@ namespace Inpar
           "Robin Spring Dashpot", Core::Conditions::RobinSpringDashpot, true,
           Core::Conditions::geometry_type_surface);
 
+
+      Core::Conditions::ConditionDefinition robinspringdashpotline(
+          "DESIGN LINE ROBIN SPRING DASHPOT CONDITIONS", "RobinSpringDashpot",
+          "Robin Spring Dashpot", Core::Conditions::RobinSpringDashpot, true,
+          Core::Conditions::geometry_type_line);
+
       Core::Conditions::ConditionDefinition robinspringdashpotpoint(
           "DESIGN POINT ROBIN SPRING DASHPOT CONDITIONS", "RobinSpringDashpot",
           "Robin Spring Dashpot", Core::Conditions::RobinSpringDashpot, true,
@@ -644,6 +650,7 @@ namespace Inpar
       };
 
       make_robin_spring_dashpot(robinspringdashpotsurf);
+      make_robin_spring_dashpot(robinspringdashpotline);
       make_robin_spring_dashpot(robinspringdashpotpoint);
 
       /*--------------------------------------------------------------------*/

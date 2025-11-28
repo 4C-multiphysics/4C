@@ -25,6 +25,9 @@
 #include "4C_linalg_utils_sparse_algebra_assemble.hpp"
 #include "4C_linalg_utils_sparse_algebra_create.hpp"
 #include "4C_linalg_utils_sparse_algebra_manipulation.hpp"
+#include "4C_shell7p_ele.hpp"
+#include "4C_shell7p_ele_scatra.hpp"
+#include "4C_shell7p_line.hpp"
 #include "4C_truss3.hpp"
 #include "4C_utils_enum.hpp"
 #include "4C_utils_exceptions.hpp"
@@ -44,6 +47,9 @@ namespace
       Core::FE::CelltypeSequence<Core::FE::CellType::quad4, Core::FE::CellType::quad8,
           Core::FE::CellType::quad9, Core::FE::CellType::tri3, Core::FE::CellType::tri6>;
 
+  using supported_linetypes =
+      Core::FE::CelltypeSequence<Core::FE::CellType::line2, Core::FE::CellType::line3>;
+
   double scale_by_optional_function(double baseline_value, int num_func, double total_time)
   {
     return num_func ? Global::Problem::instance()
@@ -58,18 +64,21 @@ namespace
     { t(delta_displacement, velocity) } -> std::convertible_to<std::tuple<double, double, double>>;
   };
 
-  template <SpringDashpotEvaluable SpringDashpot, Core::FE::CellType celltype, unsigned int dim>
+  template <SpringDashpotEvaluable SpringDashpot, Core::FE::CellType celltype,
+      unsigned int num_dof_per_node, unsigned int dim>
   void add_robin_spring_dashpot_contribution_xyz(const Core::Elements::Element& surface_element,
       const Core::Elements::ElementNodes<celltype, dim> element_nodes,
-      const Core::LinAlg::Matrix<dim, Core::FE::num_nodes(celltype)>& displacements,
-      const Core::LinAlg::Matrix<dim, Core::FE::num_nodes(celltype)>& displacement_offset,
+      const Core::LinAlg::Matrix<num_dof_per_node, Core::FE::num_nodes(celltype)>& displacements,
+      const Core::LinAlg::Matrix<num_dof_per_node, Core::FE::num_nodes(celltype)>&
+          displacement_offset,
       const std::vector<double>& constant_offset,
-      const Core::LinAlg::Matrix<dim, Core::FE::num_nodes(celltype)>& velocity,
+      const Core::LinAlg::Matrix<num_dof_per_node, Core::FE::num_nodes(celltype)>& velocity,
       const std::vector<SpringDashpot>& spring_dashpot_evaluator, const double time_factor,
       const Core::FE::GaussIntegration& gauss_integration, const std::vector<bool>& onoff,
-      std::optional<Core::LinAlg::Matrix<dim * Core::FE::num_nodes(celltype), 1>>& residual_vector,
-      std::optional<Core::LinAlg::Matrix<dim * Core::FE::num_nodes(celltype),
-          dim * Core::FE::num_nodes(celltype)>>& stiffness_matrix)
+      std::optional<Core::LinAlg::Matrix<num_dof_per_node * Core::FE::num_nodes(celltype), 1>>&
+          residual_vector,
+      std::optional<Core::LinAlg::Matrix<num_dof_per_node * Core::FE::num_nodes(celltype),
+          num_dof_per_node * Core::FE::num_nodes(celltype)>>& stiffness_matrix)
   {
     Core::Elements::for_each_gauss_point<celltype>(element_nodes, gauss_integration,
         [&](const Core::LinAlg::Tensor<double, Core::FE::dim<celltype>>& xi,
@@ -77,13 +86,13 @@ namespace
             const Core::Elements::JacobianMapping<celltype, dim>& jacobian_mapping,
             double integration_factor, int gp)
         {
-          Core::LinAlg::Matrix<dim, 1> displacement_at_gp;
+          Core::LinAlg::Matrix<num_dof_per_node, 1> displacement_at_gp;
           displacement_at_gp.multiply_nn(displacements, shape_functions.values);
 
-          Core::LinAlg::Matrix<dim, 1> offset_at_gp;
+          Core::LinAlg::Matrix<num_dof_per_node, 1> offset_at_gp;
           offset_at_gp.multiply_nn(displacement_offset, shape_functions.values);
 
-          Core::LinAlg::Matrix<dim, 1> velocity_at_gp;
+          Core::LinAlg::Matrix<num_dof_per_node, 1> velocity_at_gp;
           velocity_at_gp.multiply_nn(velocity, shape_functions.values);
 
           for (unsigned axis_direction = 0; axis_direction < dim; ++axis_direction)
@@ -103,7 +112,7 @@ namespace
             if (residual_vector)
             {
               for (int node = 0; node < Core::FE::num_nodes(celltype); ++node)
-                residual_vector.value()(node * dim + axis_direction) +=
+                residual_vector.value()(node * num_dof_per_node + axis_direction) +=
                     shape_functions.values(node) * force * integration_factor;
             }
 
@@ -114,7 +123,8 @@ namespace
               {
                 for (int j = 0; j < Core::FE::num_nodes(celltype); ++j)
                 {
-                  (*stiffness_matrix)(i* dim + axis_direction, j * dim + axis_direction) +=
+                  (*stiffness_matrix)(i* num_dof_per_node + axis_direction,
+                      j * num_dof_per_node + axis_direction) +=
                       shape_functions.values(i) * shape_functions.values(j) *
                       (force_deriv_disp + force_deriv_vel * time_factor) * integration_factor;
                 }
@@ -142,19 +152,21 @@ namespace
     return normal;
   }
 
-  template <SpringDashpotEvaluable SpringDashpot, Core::FE::CellType celltype, unsigned int dim>
-  void add_robin_spring_dashpot_contribution_ref_normal(
-      const Core::Elements::Element& surface_element,
+  template <SpringDashpotEvaluable SpringDashpot, Core::FE::CellType celltype,
+      unsigned int num_dof_per_node, unsigned int dim>
+  void add_robin_spring_dashpot_contribution_ref_normal(const Core::Elements::Element& element,
       const Core::Elements::ElementNodes<celltype, dim> element_nodes,
-      const Core::LinAlg::Matrix<dim, Core::FE::num_nodes(celltype)>& displacements,
-      const Core::LinAlg::Matrix<dim, Core::FE::num_nodes(celltype)>& displacement_offset,
+      const Core::LinAlg::Matrix<num_dof_per_node, Core::FE::num_nodes(celltype)>& displacements,
+      const Core::LinAlg::Matrix<num_dof_per_node, Core::FE::num_nodes(celltype)>&
+          displacement_offset,
       double constant_offset,
-      const Core::LinAlg::Matrix<dim, Core::FE::num_nodes(celltype)>& velocity,
+      const Core::LinAlg::Matrix<num_dof_per_node, Core::FE::num_nodes(celltype)>& velocity,
       const SpringDashpot& spring_dashpot_evaluator, const double time_factor,
       const Core::FE::GaussIntegration& gauss_integration,
-      std::optional<Core::LinAlg::Matrix<dim * Core::FE::num_nodes(celltype), 1>>& residual_vector,
-      std::optional<Core::LinAlg::Matrix<dim * Core::FE::num_nodes(celltype),
-          dim * Core::FE::num_nodes(celltype)>>& stiffness_matrix)
+      std::optional<Core::LinAlg::Matrix<num_dof_per_node * Core::FE::num_nodes(celltype), 1>>&
+          residual_vector,
+      std::optional<Core::LinAlg::Matrix<num_dof_per_node * Core::FE::num_nodes(celltype),
+          num_dof_per_node * Core::FE::num_nodes(celltype)>>& stiffness_matrix)
   {
     // compute nodal normals of the element
     Core::Elements::for_each_gauss_point<celltype>(element_nodes, gauss_integration,
@@ -163,16 +175,32 @@ namespace
             const Core::Elements::JacobianMapping<celltype, dim>& jacobian_mapping,
             double integration_factor, int gp)
         {
-          Core::LinAlg::Matrix<dim, 1> displacement_at_gp;
+          Core::LinAlg::Matrix<num_dof_per_node, 1> displacement_at_gp;
           displacement_at_gp.multiply_nn(displacements, shape_functions.values);
 
-          Core::LinAlg::Matrix<dim, 1> offset_at_gp;
+          Core::LinAlg::Matrix<num_dof_per_node, 1> offset_at_gp;
           offset_at_gp.multiply_nn(displacement_offset, shape_functions.values);
 
-          Core::LinAlg::Matrix<dim, 1> velocity_at_gp;
+          Core::LinAlg::Matrix<num_dof_per_node, 1> velocity_at_gp;
           velocity_at_gp.multiply_nn(velocity, shape_functions.values);
 
-          Core::LinAlg::Matrix<dim, 1> normal_at_gp = get_normal<celltype>(jacobian_mapping);
+          Core::LinAlg::Matrix<dim, 1> normal = get_normal<celltype>(jacobian_mapping);
+
+          Core::LinAlg::Matrix<num_dof_per_node, 1> normal_at_gp(
+              Core::LinAlg::Initialization::zero);
+
+          // For shell7p elements, copy the normal vector twice (for translations of
+          // displacements and director vector)
+          if (element.element_type() == Discret::Elements::Shell7pType::instance() ||
+              element.element_type() == Discret::Elements::Shell7pScatraType::instance())
+          {
+            std::copy_n(normal.data(), 3, normal_at_gp.data());
+            std::copy_n(normal.data(), 3, normal_at_gp.data() + 3);
+          }
+          else
+          {
+            std::copy_n(normal.data(), dim, normal_at_gp.data());
+          }
 
           double displacement_ref_normal = displacement_at_gp.dot(normal_at_gp);
           double offset_ref_normal = offset_at_gp.dot(normal_at_gp);
@@ -188,7 +216,7 @@ namespace
             {
               for (int node = 0; node < Core::FE::num_nodes(celltype); ++node)
               {
-                residual_vector.value()(node * dim + axis_direction) +=
+                residual_vector.value()(node * num_dof_per_node + axis_direction) +=
                     shape_functions.values(node) * force * normal_at_gp(axis_direction) *
                     integration_factor;
               }
@@ -206,7 +234,8 @@ namespace
                 {
                   for (int j = 0; j < Core::FE::num_nodes(celltype); ++j)
                   {
-                    (*stiffness_matrix)(i* dim + axis_direction1, j * dim + axis_direction2) +=
+                    (*stiffness_matrix)(i* num_dof_per_node + axis_direction1,
+                        j * num_dof_per_node + axis_direction2) +=
                         shape_functions.values(i) * shape_functions.values(j) *
                         (force_deriv_disp + force_deriv_vel * time_factor) *
                         normal_at_gp(axis_direction1) * normal_at_gp(axis_direction2) *
@@ -215,6 +244,207 @@ namespace
                 }
               }
             }
+          }
+        });
+  }
+
+  std::vector<std::function<std::tuple<double, double, double>(double, double)>>
+  create_spring_dashpot_evaluators(const std::vector<bool>& onoff_bool,
+      const std::vector<double>& dashpotvisc, const std::vector<int>& numfuncvisco,
+      const std::vector<int>& numfuncnonlinstiff, const std::vector<double>& springstiff,
+      const std::vector<int>& numfuncstiff, double total_time)
+  {
+    FOUR_C_ASSERT_ALWAYS(onoff_bool.size() <= 3, "Number of dofs should not be larger than 3");
+
+    std::vector<std::function<std::tuple<double, double, double>(double, double)>>
+        spring_dashpot_evaluators(onoff_bool.size());
+
+    for (std::size_t i = 0; i < onoff_bool.size(); ++i)
+    {
+      if (!onoff_bool[i]) continue;
+
+      const double dashpot_viscosity =
+          scale_by_optional_function(dashpotvisc[i], numfuncvisco[i], total_time);
+
+      if (numfuncnonlinstiff[i] > 0)
+      {
+        const auto& nonlinear_spring =
+            Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfSpaceTime>(
+                numfuncnonlinstiff[i]);
+
+        spring_dashpot_evaluators[i] = [=, &nonlinear_spring](double delta_displacement,
+                                           double velocity) -> std::tuple<double, double, double>
+        {
+          std::array<double, 3> displ = {std::numeric_limits<double>::infinity(),
+              std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()};
+          displ[i] = delta_displacement;
+
+          const double force =
+              nonlinear_spring.evaluate(displ, total_time, 0) + dashpot_viscosity * velocity;
+
+          const double force_derivative_wrt_displ =
+              nonlinear_spring.evaluate_spatial_derivative(displ, total_time, 0)[i];
+
+          return {force, force_derivative_wrt_displ, dashpot_viscosity};
+        };
+      }
+      else
+      {
+        const double spring_stiffness =
+            scale_by_optional_function(springstiff[i], numfuncstiff[i], total_time);
+
+        spring_dashpot_evaluators[i] = [=](double delta_displacement,
+                                           double velocity) -> std::tuple<double, double, double>
+        {
+          const double force = spring_stiffness * delta_displacement + dashpot_viscosity * velocity;
+          return {force, spring_stiffness, dashpot_viscosity};
+        };
+      }
+    }
+
+    return spring_dashpot_evaluators;
+  }
+
+  template <unsigned int num_dof_per_node, unsigned int num_dim, typename DirectionT>
+  void evaluate_robin_surface_element(const std::shared_ptr<Core::Elements::Element>& element,
+      Core::FE::Discretization* actdisc, const std::vector<double>& displacements,
+      const std::vector<double>& displacement_offset, const std::vector<double>& velocities,
+      const std::vector<double>& scaled_constant_offset,
+      const std::vector<std::function<std::tuple<double, double, double>(double, double)>>&
+          spring_dashpot_evaluators,
+      double time_fac, const std::vector<bool>& onoff_bool, Core::LinAlg::SerialDenseVector& res,
+      Core::LinAlg::SerialDenseMatrix& elestiff, bool assvec, bool assmat, DirectionT direction)
+  {
+    Core::FE::cell_type_switch<supported_celltypes>(element->shape(),
+        [&](auto celltype_t)
+        {
+          constexpr Core::FE::CellType celltype = celltype_t();
+          const Core::Elements::ElementNodes<celltype, num_dim> element_nodes =
+              Core::Elements::evaluate_element_nodes<celltype, num_dim>(*actdisc, *element);
+
+          std::optional<Core::LinAlg::Matrix<num_dof_per_node * Core::FE::num_nodes(celltype), 1>>
+              residual_vector;
+          if (assvec)
+          {
+            residual_vector.emplace(res.values(), true);
+            residual_vector.value().clear();
+          }
+
+          std::optional<Core::LinAlg::Matrix<num_dof_per_node * Core::FE::num_nodes(celltype),
+              num_dof_per_node * Core::FE::num_nodes(celltype)>>
+              stiffness_matrix;
+          if (assmat)
+          {
+            stiffness_matrix.emplace(elestiff.values(), true);
+            (*stiffness_matrix).clear();
+          }
+
+          const Core::LinAlg::Matrix<num_dof_per_node, Core::FE::num_nodes(celltype)>
+              ele_displacements =
+                  Core::FE::get_element_dof_matrix<celltype, num_dof_per_node>(displacements);
+
+          const Core::LinAlg::Matrix<num_dof_per_node, Core::FE::num_nodes(celltype)> nodal_offset =
+              Core::FE::get_element_dof_matrix<celltype, num_dof_per_node>(displacement_offset);
+
+          const Core::LinAlg::Matrix<num_dof_per_node, Core::FE::num_nodes(celltype)>
+              velocity_matrix =
+                  Core::FE::get_element_dof_matrix<celltype, num_dof_per_node>(velocities);
+
+          Core::FE::GaussIntegration gauss_integration =
+              Core::FE::create_gauss_integration<celltype>(
+                  Discret::Elements::DisTypeToOptGaussRule<celltype>::rule);
+
+          if (direction == DirectionT::xyz)
+          {
+            FOUR_C_ASSERT_ALWAYS(onoff_bool.size() == 3,
+                "Number of given functions must be 3 when using the xyz-direction of the Robin "
+                "Spring-Dashpot BC!");
+
+            add_robin_spring_dashpot_contribution_xyz(*element, element_nodes, ele_displacements,
+                nodal_offset, scaled_constant_offset, velocity_matrix, spring_dashpot_evaluators,
+                time_fac, gauss_integration, onoff_bool, residual_vector, stiffness_matrix);
+          }
+          else if (direction == DirectionT::refsurfnormal)
+          {
+            FOUR_C_ASSERT_ALWAYS(onoff_bool.size() == 1,
+                "Number of given functions must be 1 when using the reference surface normal "
+                "of the Robin Spring-Dashpot BC!");
+
+            add_robin_spring_dashpot_contribution_ref_normal(*element, element_nodes,
+                ele_displacements, nodal_offset, scaled_constant_offset[0], velocity_matrix,
+                spring_dashpot_evaluators[0], time_fac, gauss_integration, residual_vector,
+                stiffness_matrix);
+          }
+          else
+          {
+            FOUR_C_THROW("Robin surface direction type {} not implemented!", direction);
+          }
+        });
+  }
+
+  template <unsigned int num_dof_per_node, unsigned int num_dim, typename DirectionT>
+  void evaluate_robin_line_element(const std::shared_ptr<Core::Elements::Element>& element,
+      Core::FE::Discretization* actdisc, const std::vector<double>& displacements,
+      const std::vector<double>& displacement_offset, const std::vector<double>& velocities,
+      const std::vector<double>& scaled_constant_offset,
+      const std::vector<std::function<std::tuple<double, double, double>(double, double)>>&
+          spring_dashpot_evaluators,
+      double time_fac, const std::vector<bool>& onoff_bool, Core::LinAlg::SerialDenseVector& res,
+      Core::LinAlg::SerialDenseMatrix& elestiff, bool assvec, bool assmat, DirectionT direction)
+  {
+    Core::FE::cell_type_switch<supported_linetypes>(element->shape(),
+        [&](auto celltype_t)
+        {
+          constexpr Core::FE::CellType celltype = celltype_t();
+          const Core::Elements::ElementNodes<celltype, num_dim> element_nodes =
+              Core::Elements::evaluate_element_nodes<celltype, num_dim>(*actdisc, *element);
+
+          std::optional<Core::LinAlg::Matrix<num_dof_per_node * Core::FE::num_nodes(celltype), 1>>
+              residual_vector;
+          if (assvec)
+          {
+            residual_vector.emplace(res.values(), true);
+            residual_vector.value().clear();
+          }
+
+          std::optional<Core::LinAlg::Matrix<num_dof_per_node * Core::FE::num_nodes(celltype),
+              num_dof_per_node * Core::FE::num_nodes(celltype)>>
+              stiffness_matrix;
+          if (assmat)
+          {
+            stiffness_matrix.emplace(elestiff.values(), true);
+            (*stiffness_matrix).clear();
+          }
+
+          const Core::LinAlg::Matrix<num_dof_per_node, Core::FE::num_nodes(celltype)>
+              ele_displacements =
+                  Core::FE::get_element_dof_matrix<celltype, num_dof_per_node>(displacements);
+
+          const Core::LinAlg::Matrix<num_dof_per_node, Core::FE::num_nodes(celltype)> nodal_offset =
+              Core::FE::get_element_dof_matrix<celltype, num_dof_per_node>(displacement_offset);
+
+          const Core::LinAlg::Matrix<num_dof_per_node, Core::FE::num_nodes(celltype)>
+              velocity_matrix =
+                  Core::FE::get_element_dof_matrix<celltype, num_dof_per_node>(velocities);
+
+          Core::FE::GaussIntegration gauss_integration =
+              Core::FE::create_gauss_integration<celltype>(
+                  Discret::Elements::DisTypeToOptGaussRule<celltype>::rule);
+
+          if (direction == DirectionT::xyz)
+          {
+            FOUR_C_ASSERT_ALWAYS(onoff_bool.size() == 3,
+                "Number of given functions must be 3 when using the xyz-direction of the Robin "
+                "Spring-Dashpot BC!");
+
+            add_robin_spring_dashpot_contribution_xyz(*element, element_nodes, ele_displacements,
+                nodal_offset, scaled_constant_offset, velocity_matrix, spring_dashpot_evaluators,
+                time_fac, gauss_integration, onoff_bool, residual_vector, stiffness_matrix);
+          }
+          else
+          {
+            FOUR_C_THROW(
+                "Only xyz-direction is supported for line spring dashpot conditions currently!");
           }
         });
   }
@@ -341,6 +571,10 @@ void Constraints::SpringDashpot::evaluate_robin(std::shared_ptr<Core::LinAlg::Sp
     {
       const std::map<int, std::shared_ptr<Core::Elements::Element>>& geom = spring_->geometry();
 
+      // Build spring-dashpot evaluator functions once per geometry
+      auto spring_dashpot_evaluators = create_spring_dashpot_evaluators(onoff_bool, dashpotvisc,
+          numfuncvisco, numfuncnonlinstiff, springstiff, numfuncstiff, total_time);
+
       // no check for empty geometry here since in parallel computations
       // can exist processors which do not own a portion of the elements belonging
       // to the condition geometry
@@ -355,56 +589,6 @@ void Constraints::SpringDashpot::evaluate_robin(std::shared_ptr<Core::LinAlg::Sp
 
         // Functions that evaluate the spring-dashpot force
         FOUR_C_ASSERT_ALWAYS(onoff.size() <= 3, "Number of dofs should not be larger than 3");
-        std::vector<std::function<std::tuple<double, double, double>(double, double)>>
-            spring_dashpot_evaluators(onoff.size());
-        for (std::size_t i = 0; i < onoff.size(); ++i)
-        {
-          if (!onoff_bool[i]) continue;
-
-          const double dashpot_viscosity =
-              scale_by_optional_function(dashpotvisc[i], numfuncvisco[i], total_time);
-
-          if (numfuncnonlinstiff[i] > 0)
-          {
-            // function is nonlinear
-            const auto& nonlinear_spring =
-                Global::Problem::instance()->function_by_id<Core::Utils::FunctionOfSpaceTime>(
-                    numfuncnonlinstiff[i]);
-
-            spring_dashpot_evaluators[i] =
-                [=, &nonlinear_spring](double delta_displacement,
-                    double velocity) -> std::tuple<double, double, double>
-            {
-              std::array<double, 3> displ = {std::numeric_limits<double>::infinity(),
-                  std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()};
-              displ[i] = delta_displacement;
-
-              const double force =
-                  nonlinear_spring.evaluate(displ, total_time, 0) + dashpot_viscosity * velocity;
-
-              const double force_derivative_wrt_displ =
-                  nonlinear_spring.evaluate_spatial_derivative(displ, total_time, 0)[i];
-
-              return {force, force_derivative_wrt_displ, dashpot_viscosity};
-            };
-          }
-          else
-          {
-            // function is linear but might depend on time
-            const double spring_stiffness =
-                scale_by_optional_function(springstiff[i], numfuncstiff[i], total_time);
-
-            spring_dashpot_evaluators[i] =
-                [=](double delta_displacement,
-                    double velocity) -> std::tuple<double, double, double>
-            {
-              const double force =
-                  spring_stiffness * delta_displacement + dashpot_viscosity * velocity;
-
-              return {force, spring_stiffness, dashpot_viscosity};
-            };
-          }
-        }
 
         // extract velocity
         std::vector<double> velocities = Core::FE::extract_values(velo_with_ghosted, lm);
@@ -413,104 +597,152 @@ void Constraints::SpringDashpot::evaluate_robin(std::shared_ptr<Core::LinAlg::Sp
 
         std::vector<double> displacement_offset = Core::FE::extract_values(offset_with_ghosted, lm);
 
+        Core::LinAlg::SerialDenseMatrix elestiff;
+        Core::LinAlg::SerialDenseVector res;
+        res.size(lm.size());
+        elestiff.shape(lm.size(), lm.size());
+
+        std::vector<double> scaled_constant_offset(onoff.size());
+        for (unsigned axis_direction = 0; axis_direction < onoff.size(); ++axis_direction)
+        {
+          scaled_constant_offset[axis_direction] = scale_by_optional_function(
+              constant_offset[axis_direction], numfuncdisploffset[axis_direction], total_time);
+        }
+
+        // check if element is either Shell7p or Shell7pScatra
+        bool is_shell7p_element =
+            (curr.second->element_type() == Discret::Elements::Shell7pType::instance()) ||
+            (curr.second->element_type() == Discret::Elements::Shell7pScatraType::instance());
+
+        if (is_shell7p_element)
+        {
+          // shell7p elements: 6 dofs per node, 3 spatial dimensions
+          const int numdim = 3;
+          const int numdf = 6;
+
+          evaluate_robin_surface_element<numdf, numdim>(curr.second, actdisc_.get(), displacements,
+              displacement_offset, velocities, scaled_constant_offset, spring_dashpot_evaluators,
+              time_fac, onoff_bool, res, elestiff, assvec, assmat, direction);
+
+          if (assvec) Core::LinAlg::assemble(*fint, res, lm, lmowner);
+          if (assmat) stiff->assemble(curr.second->id(), lmstride, elestiff, lm, lmowner);
+
+          // save spring stress for postprocessing
+          std::vector<double> stress(numdim, 0.0);
+
+          for (int node = 0; node < curr.second->num_node(); ++node)
+          {
+            for (int dim = 0; dim < numdim; dim++) stress[dim] = res[node * numdf + dim];
+            springstress_.insert(
+                std::pair<int, std::vector<double>>(curr.second->node_ids()[node], stress));
+          }
+        }
+        else
+        {
+          // other element types: 3 dofs per node, 3 spatial dimensions
+          const int numdim = 3;
+          const int numdf = 3;
+
+          evaluate_robin_surface_element<numdf, numdim>(curr.second, actdisc_.get(), displacements,
+              displacement_offset, velocities, scaled_constant_offset, spring_dashpot_evaluators,
+              time_fac, onoff_bool, res, elestiff, assvec, assmat, direction);
+
+          if (assvec) Core::LinAlg::assemble(*fint, res, lm, lmowner);
+          if (assmat) stiff->assemble(curr.second->id(), lmstride, elestiff, lm, lmowner);
+
+          // save spring stress for postprocessing
+          std::vector<double> stress(numdim, 0.0);
+
+          for (int node = 0; node < curr.second->num_node(); ++node)
+          {
+            for (int dim = 0; dim < numdim; dim++) stress[dim] = res[node * numdf + dim];
+            springstress_.insert(
+                std::pair<int, std::vector<double>>(curr.second->node_ids()[node], stress));
+          }
+        }
+      } /* end of loop over geometry */
+      break;
+    }
+    case Core::Conditions::geometry_type_line:
+    {
+      const std::map<int, std::shared_ptr<Core::Elements::Element>>& geom = spring_->geometry();
+
+      // Build spring-dashpot evaluator functions once per geometry
+      auto spring_dashpot_evaluators = create_spring_dashpot_evaluators(onoff_bool, dashpotvisc,
+          numfuncvisco, numfuncnonlinstiff, springstiff, numfuncstiff, total_time);
+
+      for (auto& curr : geom)
+      {
+        // get element location vector and ownerships
+        std::vector<int> lm;
+        std::vector<int> lmowner;
+        std::vector<int> lmstride;
+
+        curr.second->location_vector(*actdisc_, lm, lmowner, lmstride);
+
+        // extract velocity
+        std::vector<double> velocities = Core::FE::extract_values(velo_with_ghosted, lm);
+        std::vector<double> displacements = Core::FE::extract_values(disp_with_ghosted, lm);
+        std::vector<double> displacement_offset = Core::FE::extract_values(offset_with_ghosted, lm);
 
         Core::LinAlg::SerialDenseMatrix elestiff;
         Core::LinAlg::SerialDenseVector res;
         res.size(lm.size());
         elestiff.shape(lm.size(), lm.size());
 
-        Core::FE::cell_type_switch<supported_celltypes>(curr.second->shape(),
-            [&](auto celltype_t)
-            {
-              constexpr Core::FE::CellType celltype = celltype_t();
-              constexpr int num_dof_per_node = 3;
-              const Core::Elements::ElementNodes<celltype, num_dof_per_node> element_nodes =
-                  Core::Elements::evaluate_element_nodes<celltype, num_dof_per_node>(
-                      *actdisc_, *curr.second);
-
-              std::optional<
-                  Core::LinAlg::Matrix<num_dof_per_node * Core::FE::num_nodes(celltype), 1>>
-                  residual_vector;
-              if (assvec)
-              {
-                residual_vector.emplace(res.values(), true);
-                residual_vector.value().clear();
-              }
-
-              std::optional<Core::LinAlg::Matrix<num_dof_per_node * Core::FE::num_nodes(celltype),
-                  num_dof_per_node * Core::FE::num_nodes(celltype)>>
-                  stiffness_matrix;
-              if (assmat)
-              {
-                stiffness_matrix.emplace(elestiff.values(), true);
-                (*stiffness_matrix).clear();
-              }
-              const Core::LinAlg::Matrix<num_dof_per_node, Core::FE::num_nodes(celltype)>
-                  ele_displacements =
-                      Core::FE::get_element_dof_matrix<celltype, num_dof_per_node>(displacements);
-
-              const Core::LinAlg::Matrix<num_dof_per_node, Core::FE::num_nodes(celltype)>
-                  nodal_offset = Core::FE::get_element_dof_matrix<celltype, num_dof_per_node>(
-                      displacement_offset);
-
-              std::vector<double> scaled_constant_offset(onoff.size());
-              for (unsigned axis_direction = 0; axis_direction < onoff.size(); ++axis_direction)
-              {
-                scaled_constant_offset[axis_direction] =
-                    scale_by_optional_function(constant_offset[axis_direction],
-                        numfuncdisploffset[axis_direction], total_time);
-              }
-
-
-              Core::LinAlg::Matrix<num_dof_per_node, Core::FE::num_nodes(celltype)>
-                  velocity_matrix =
-                      Core::FE::get_element_dof_matrix<celltype, num_dof_per_node>(velocities);
-
-              Core::FE::GaussIntegration gauss_integration =
-                  Core::FE::create_gauss_integration<celltype>(
-                      Discret::Elements::DisTypeToOptGaussRule<celltype>::rule);
-
-              if (direction == RobinSpringDashpotType::xyz)
-              {
-                FOUR_C_ASSERT_ALWAYS(onoff.size() == 3,
-                    "Number of given functions must be 3 when using the xyz-direction of the Robin "
-                    "Spring-Dashpot BC!");
-
-                add_robin_spring_dashpot_contribution_xyz(*curr.second, element_nodes,
-                    ele_displacements, nodal_offset, scaled_constant_offset, velocity_matrix,
-                    spring_dashpot_evaluators, time_fac, gauss_integration, onoff_bool,
-                    residual_vector, stiffness_matrix);
-              }
-              else if (direction == RobinSpringDashpotType::refsurfnormal)
-              {
-                FOUR_C_ASSERT_ALWAYS(onoff.size() == 1,
-                    "Number of given functions must be 1 when using the reference surface normal "
-                    "of the Robin Spring-Dashpot BC!");
-
-                add_robin_spring_dashpot_contribution_ref_normal(*curr.second, element_nodes,
-                    ele_displacements, nodal_offset, scaled_constant_offset[0], velocity_matrix,
-                    spring_dashpot_evaluators[0], time_fac, gauss_integration, residual_vector,
-                    stiffness_matrix);
-              }
-              else
-              {
-                FOUR_C_THROW("Robin surface direction type {} not implemented!", direction);
-              }
-            });
-
-        if (assvec) Core::LinAlg::assemble(*fint, res, lm, lmowner);
-        if (assmat) stiff->assemble(curr.second->id(), lmstride, elestiff, lm, lmowner);
-
-        // save spring stress for postprocessing
-        const int numdim = 3;
-        const int numdf = 3;
-        std::vector<double> stress(numdim, 0.0);
-
-        for (int node = 0; node < curr.second->num_node(); ++node)
+        std::vector<double> scaled_constant_offset(onoff.size());
+        for (unsigned axis_direction = 0; axis_direction < onoff.size(); ++axis_direction)
         {
-          for (int dim = 0; dim < numdim; dim++) stress[dim] = res[node * numdf + dim];
-          springstress_.insert(
-              std::pair<int, std::vector<double>>(curr.second->node_ids()[node], stress));
+          scaled_constant_offset[axis_direction] = scale_by_optional_function(
+              constant_offset[axis_direction], numfuncdisploffset[axis_direction], total_time);
+        }
+
+        // detect shell7p line elements (6 DOFs) or treat as generic 3-DOF line
+        if (curr.second->element_type() == Discret::Elements::Shell7pLineType::instance())
+        {
+          // shell7p line: 6 dofs per node
+          const int numdim = 3;
+          const int numdf = 6;
+
+          evaluate_robin_line_element<numdf, numdim>(curr.second, actdisc_.get(), displacements,
+              displacement_offset, velocities, scaled_constant_offset, spring_dashpot_evaluators,
+              time_fac, onoff_bool, res, elestiff, assvec, assmat, direction);
+
+          if (assvec) Core::LinAlg::assemble(*fint, res, lm, lmowner);
+          if (assmat) stiff->assemble(curr.second->id(), lmstride, elestiff, lm, lmowner);
+
+          // save spring stress for postprocessing
+          std::vector<double> stress(numdim, 0.0);
+
+          for (int node = 0; node < curr.second->num_node(); ++node)
+          {
+            for (int dim = 0; dim < numdim; dim++) stress[dim] = res[node * numdf + dim];
+            springstress_.insert(
+                std::pair<int, std::vector<double>>(curr.second->node_ids()[node], stress));
+          }
+        }
+        else
+        {
+          // generic line element: 3 dofs per node
+          const int numdim = 3;
+          const int numdf = 3;
+
+          evaluate_robin_line_element<numdf, numdim>(curr.second, actdisc_.get(), displacements,
+              displacement_offset, velocities, scaled_constant_offset, spring_dashpot_evaluators,
+              time_fac, onoff_bool, res, elestiff, assvec, assmat, direction);
+
+          if (assvec) Core::LinAlg::assemble(*fint, res, lm, lmowner);
+          if (assmat) stiff->assemble(curr.second->id(), lmstride, elestiff, lm, lmowner);
+
+          // save spring stress for postprocessing
+          std::vector<double> stress(numdim, 0.0);
+
+          for (int node = 0; node < curr.second->num_node(); ++node)
+          {
+            for (int dim = 0; dim < numdim; dim++) stress[dim] = res[node * numdf + dim];
+            springstress_.insert(
+                std::pair<int, std::vector<double>>(curr.second->node_ids()[node], stress));
+          }
         }
       } /* end of loop over geometry */
       break;
@@ -1244,7 +1476,7 @@ void Constraints::SpringDashpot::initialize_prestr_offset()
       int numdof = actdisc_->num_dof(0, node);
       std::vector<int> dofs = actdisc_->dof(0, node);
 
-      FOUR_C_ASSERT(numdof == 3, "Only implemented for 3 DoFs per node.");
+      FOUR_C_ASSERT((numdof == 3 || numdof == 6), "Only implemented for 3 or 6 DoFs per node.");
 
       std::vector<double> temp(numdof, 0.0);
 
