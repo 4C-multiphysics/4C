@@ -901,9 +901,9 @@ void CONTACT::Interface::redistribute()
       Core::Rebalance::build_graph(*idiscret_, slaveCloseRowEles);
 
   Teuchos::ParameterList slaveCloseRebalanceParams;
-  slaveCloseRebalanceParams.set<std::string>("num parts", std::to_string(scproc));
-  slaveCloseRebalanceParams.set<std::string>("imbalance tol", std::to_string(imbalance_tol));
-  slaveCloseRebalanceParams.set("partitioning method", "graph");
+  slaveCloseRebalanceParams.set<std::string>("num_global_parts", std::to_string(scproc));
+  slaveCloseRebalanceParams.set<std::string>("imbalance_tolerance", std::to_string(imbalance_tol));
+  slaveCloseRebalanceParams.set<std::string>("algorithm", "parmetis");
 
   const auto& [slaveCloseRowNodes, slaveCloseColNodes] =
       Core::Rebalance::rebalance_node_maps(*slaveCloseNodeGraph, slaveCloseRebalanceParams);
@@ -929,9 +929,10 @@ void CONTACT::Interface::redistribute()
       Core::Rebalance::build_graph(*idiscret_, slaveNonCloseRowEles);
 
   Teuchos::ParameterList slaveNonCloseRebalanceParams;
-  slaveNonCloseRebalanceParams.set<std::string>("num parts", std::to_string(sncproc));
-  slaveNonCloseRebalanceParams.set<std::string>("imbalance tol", std::to_string(imbalance_tol));
-  slaveNonCloseRebalanceParams.set("partitioning method", "graph");
+  slaveNonCloseRebalanceParams.set<std::string>("num_global_parts", std::to_string(sncproc));
+  slaveNonCloseRebalanceParams.set<std::string>(
+      "imbalance_tolerance", std::to_string(imbalance_tol));
+  slaveNonCloseRebalanceParams.set<std::string>("algorithm", "parmetis");
 
   const auto& [slaveNonCloseRowNodes, snccolnodes] =
       Core::Rebalance::rebalance_node_maps(*slaveNonCloseNodeGraph, slaveNonCloseRebalanceParams);

@@ -133,35 +133,35 @@ namespace
 
     if (Core::Communication::my_mpi_rank(comm_) == 0)
     {
-      EXPECT_NEAR(nodePosition[0], -0.3, 1e-14);
-      EXPECT_NEAR(nodePosition[1], 3.5, 1e-14);
-      EXPECT_NEAR(nodePosition[2], 2.0, 1e-14);
+      EXPECT_NEAR(nodePosition[0], 1.1, 1e-14);
+      EXPECT_NEAR(nodePosition[1], -0.35, 1e-14);
+      EXPECT_NEAR(nodePosition[2], -0.5, 1e-14);
       EXPECT_EQ(testdis_->num_my_row_nodes(), 352);
-      EXPECT_EQ(testdis_->num_my_row_elements(), 511);
-      EXPECT_EQ(testdis_->num_my_col_nodes(), 467);
-      EXPECT_EQ(testdis_->num_my_col_elements(), 596);
-      EXPECT_EQ(lastNode->id(), 4859);
+      EXPECT_EQ(testdis_->num_my_row_elements(), 437);
+      EXPECT_EQ(testdis_->num_my_col_nodes(), 424);
+      EXPECT_EQ(testdis_->num_my_col_elements(), 537);
+      EXPECT_EQ(lastNode->id(), 2399);
     }
     else if (Core::Communication::my_mpi_rank(comm_) == 1)
     {
-      EXPECT_NEAR(nodePosition[0], 2.5, 1e-14);
-      EXPECT_NEAR(nodePosition[1], 0.75, 1e-14);
-      EXPECT_NEAR(nodePosition[2], 2.0, 1e-14);
-      EXPECT_EQ(testdis_->num_my_row_nodes(), 335);
-      EXPECT_EQ(testdis_->num_my_row_elements(), 519);
-      EXPECT_EQ(testdis_->num_my_col_nodes(), 465);
-      EXPECT_EQ(testdis_->num_my_col_elements(), 590);
-      EXPECT_EQ(lastNode->id(), 4757);
+      EXPECT_NEAR(nodePosition[0], -0.3, 1e-14);
+      EXPECT_NEAR(nodePosition[1], 1.85, 1e-14);
+      EXPECT_NEAR(nodePosition[2], 4.5, 1e-14);
+      EXPECT_EQ(testdis_->num_my_row_nodes(), 352);
+      EXPECT_EQ(testdis_->num_my_row_elements(), 516);
+      EXPECT_EQ(testdis_->num_my_col_nodes(), 459);
+      EXPECT_EQ(testdis_->num_my_col_elements(), 583);
+      EXPECT_EQ(lastNode->id(), 7103);
     }
     else if (Core::Communication::my_mpi_rank(comm_) == 2)
     {
       EXPECT_NEAR(nodePosition[0], 2.5, 1e-14);
       EXPECT_NEAR(nodePosition[1], 3.5, 1e-14);
       EXPECT_NEAR(nodePosition[2], 4.5, 1e-14);
-      EXPECT_EQ(testdis_->num_my_row_nodes(), 369);
-      EXPECT_EQ(testdis_->num_my_row_elements(), 470);
-      EXPECT_EQ(testdis_->num_my_col_nodes(), 456);
-      EXPECT_EQ(testdis_->num_my_col_elements(), 570);
+      EXPECT_EQ(testdis_->num_my_row_nodes(), 352);
+      EXPECT_EQ(testdis_->num_my_row_elements(), 547);
+      EXPECT_EQ(testdis_->num_my_col_nodes(), 487);
+      EXPECT_EQ(testdis_->num_my_col_elements(), 621);
       EXPECT_EQ(lastNode->id(), 7177);
     }
   }
