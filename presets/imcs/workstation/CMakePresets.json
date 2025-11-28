@@ -12,7 +12,7 @@
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_C_COMPILER_LAUNCHER": "ccache",
         "CMAKE_CXX_FLAGS": "-msse3",
-        "FOUR_C_TRILINOS_ROOT": "/imcs/public/compsim/packages/trilinos/2025.5/install",
+        "FOUR_C_TRILINOS_ROOT": "/imcs/public/compsim/packages/trilinos/2025.6/install",
         "FOUR_C_DOXYGEN_USE_LOCAL_MATHJAX": "ON",
         "FOUR_C_DOXYGEN_LOCAL_MATHJAX_BASEPATH": "/imcs/public/compsim/opt/mathjax-2.7.9",
         "FOUR_C_ENABLE_DOXYGEN": "ON",

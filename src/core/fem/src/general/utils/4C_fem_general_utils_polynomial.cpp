@@ -10,13 +10,8 @@
 #include "4C_fem_general_utils_integration.hpp"
 #include "4C_utils_singleton_owner.hpp"
 
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 2)
 #include <Intrepid2_PointTools.hpp>
 #include <Kokkos_DynRankView.hpp>
-#else
-#include <Intrepid_FieldContainer.hpp>
-#include <Intrepid_PointTools.hpp>
-#endif
 #include <Shards_CellTopology.hpp>
 
 FOUR_C_NAMESPACE_OPEN
@@ -596,21 +591,13 @@ namespace Core::FE
     }
     else
     {
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 2)
       Kokkos::DynRankView<double, Kokkos::HostSpace> wb_points("fekete_points", size(degree), 2);
-#else
-      Intrepid::FieldContainer<double> wb_points(size(degree), 2);
-#endif
 
       //  CellTopologyData
       shards::CellTopology myTri(shards::getCellTopologyData<shards::Triangle<3>>());
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 2)
       Intrepid2::PointTools::getLattice(
           wb_points, myTri, degree, 0, Intrepid2::POINTTYPE_WARPBLEND);
-#else
-      Intrepid::PointTools::getLattice<double, Intrepid::FieldContainer<double>>(
-          wb_points, myTri, degree, 0, Intrepid::POINTTYPE_WARPBLEND);
-#endif
+
       for (unsigned int i = 0; i < size(degree); ++i)
         for (int j = 0; j < 2; ++j) fekete_points_(j, i) = wb_points(i, j);
     }
@@ -642,21 +629,12 @@ namespace Core::FE
     }
     else
     {
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 2)
       Kokkos::DynRankView<double, Kokkos::HostSpace> wb_points("fekete_points", size(degree), 3);
-#else
-      Intrepid::FieldContainer<double> wb_points(size(degree), 3);
-#endif
 
       //  CellTopologyData
       shards::CellTopology myTet(shards::getCellTopologyData<shards::Tetrahedron<4>>());
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 2)
       Intrepid2::PointTools::getLattice(
           wb_points, myTet, degree, 0, Intrepid2::POINTTYPE_WARPBLEND);
-#else
-      Intrepid::PointTools::getLattice<double, Intrepid::FieldContainer<double>>(
-          wb_points, myTet, degree, 0, Intrepid::POINTTYPE_WARPBLEND);
-#endif
 
       for (unsigned int i = 0; i < size(degree); ++i)
         for (int j = 0; j < 3; ++j) fekete_points_(j, i) = wb_points(i, j);

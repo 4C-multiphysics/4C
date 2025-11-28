@@ -116,7 +116,7 @@ namespace Discret
       int project_material_field_all(const Core::Elements::Element* ele);
 
       //! project material field for Tet elements, because quadrature not working for higher order
-      //! polynomials with Intrepid
+      //! polynomials
       int project_material_field_tet(const Core::Elements::Element* ele);
 
       /*!

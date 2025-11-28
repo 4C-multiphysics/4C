@@ -7,13 +7,7 @@
 
 #include "4C_fem_general_utils_gausspoints.hpp"
 
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 2)
 #include <Intrepid2_DefaultCubatureFactory.hpp>
-#else
-#include <Intrepid_Cubature.hpp>
-#include <Intrepid_DefaultCubatureFactory.hpp>
-#include <Intrepid_FieldContainer.hpp>
-#endif
 #include <Shards_BasicTopologies.hpp>
 #include <Shards_CellTopology.hpp>
 
@@ -23,22 +17,11 @@ namespace Core::FE
 {
   namespace
   {
-    void fill_pyramid5(
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 2)
-        Kokkos::DynRankView<double, Kokkos::HostSpace>& cub_points,
-        Kokkos::DynRankView<double, Kokkos::HostSpace>& cub_weights
-#else
-        Intrepid::FieldContainer<double>& cub_points, Intrepid::FieldContainer<double>& cub_weights
-#endif
-    )
+    void fill_pyramid5(Kokkos::DynRankView<double, Kokkos::HostSpace>& cub_points,
+        Kokkos::DynRankView<double, Kokkos::HostSpace>& cub_weights)
     {
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 2)
       Kokkos::resize(cub_points, 8, 3);
       Kokkos::resize(cub_weights, 8);
-#else
-      cub_points.resize(8, 3);
-      cub_weights.resize(8);
-#endif
 
       cub_points(0, 0) = -0.26318405556971;
       cub_points(1, 0) = -0.50661630334979;
@@ -75,21 +58,16 @@ namespace Core::FE
       cub_weights(7) = 0.23254745125351;
     }
 
-    /// wrapper to intrepid gauss point implementation
+    /// wrapper to Intrepid2 gauss point implementation
     class IntrepidGaussPoints : public GaussPoints
     {
      public:
       explicit IntrepidGaussPoints(const shards::CellTopology& cell_topology, int cub_degree)
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 2)
           : cub_points_("cubature_points", 1, 1),
             cub_weights_("cubature_weights", 1),
-#else
-          : cub_points_(1, 1),
-            cub_weights_(1),
-#endif
             cell_topology_(cell_topology)
       {
-        // Special case that Intrepid does not support
+        // Special case that Intrepid2 does not support
         if (cell_topology ==
             shards::CellTopology(shards::getCellTopologyData<shards::Pyramid<5>>()))
         {
@@ -100,48 +78,23 @@ namespace Core::FE
         // retrieve spatial dimension
         const int space_dim = cell_topology_.getDimension();
 
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 2)
         Teuchos::RCP<Intrepid2::Cubature<Kokkos::HostSpace, double, double>> myCub =
             Intrepid2::DefaultCubatureFactory::create<Kokkos::HostSpace>(
                 cell_topology_, cub_degree);
-#else
-        Intrepid::DefaultCubatureFactory<double> cubFactory;
-        Teuchos::RCP<Intrepid::Cubature<double>> myCub =
-            cubFactory.create(cell_topology_, cub_degree);
-#endif
 
         // retrieve number of cubature points
         int num_cub_points = myCub->getNumPoints();
 
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 2)
         Kokkos::resize(cub_points_, num_cub_points, space_dim);
         Kokkos::resize(cub_weights_, num_cub_points);
-#else
-        cub_points_.resize(num_cub_points, space_dim);
-        cub_weights_.resize(num_cub_points);
-#endif
 
         // retrieve cubature points and weights
         myCub->getCubature(cub_points_, cub_weights_);
       }
 
-      int num_points() const override
-      {
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 2)
-        return cub_points_.extent(0);
-#else
-        return cub_points_.dimension(0);
-#endif
-      }
+      int num_points() const override { return cub_points_.extent(0); }
 
-      int num_dimension() const override
-      {
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 2)
-        return cub_points_.extent(1);
-#else
-        return cub_points_.dimension(1);
-#endif
-      }
+      int num_dimension() const override { return cub_points_.extent(1); }
 
       const double* point(int point) const override { return &cub_points_(point, 0); }
 
@@ -159,13 +112,8 @@ namespace Core::FE
       }
 
      private:
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 2)
       Kokkos::DynRankView<double, Kokkos::HostSpace> cub_points_;
       Kokkos::DynRankView<double, Kokkos::HostSpace> cub_weights_;
-#else
-      Intrepid::FieldContainer<double> cub_points_;
-      Intrepid::FieldContainer<double> cub_weights_;
-#endif
 
       shards::CellTopology cell_topology_;
     };

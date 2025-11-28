@@ -18,7 +18,7 @@ External dependencies
 
 - git
 - C++ compiler with C++20 compatibility (e.g. gcc 13, clang 18)
-- MPI installation
+- MPI
 - CMake
 - Ninja
 
@@ -41,11 +41,18 @@ Graph and domain partitioner:
 
 Miscellaneous:
 
-- Qhull (recommended version: 2012.1, :download:`install script </qhull/install.sh>`
-- CLN (recommended version: 1.3.4),
+- :ref:`ArborX <arborx>` (optional)
+- Backtrace
+- Boost
+- CLN
+- dealii (optional)
 - FFTW
 - HDF5
-- ArborX (optional)
+- magic_enum
+- :ref:`MIRCO <mirco>` (optional)
+- Qhull
+- ryml
+- zlib
 
 Build information
 ~~~~~~~~~~~~~~~~~
@@ -70,10 +77,14 @@ On Linux based systems the package can be installed using ``sudo apt install lib
 |FOURC| uses SuperLUDist indirectly via the Trilinos package Amesos/Amesos2 for directly solving linear systems of equations in distributed memory fashion.
 See the `superLU repository <https://github.com/xiaoyeli/superlu_dist>`_ for details and downloads.
 
+.. _arborx:
+
 **ArborX**
 
 ArborX can be used as optional dependency inside |FOURC| for utilizing it's tree-based search algorithms.
 See the `ArborX repository <https://github.com/arborx/ArborX>`_ for details and downloads.
+
+Building |FOURC| with ArborX enabled automatically fetches the repository during the configure stage and later builds the library as dependency.
 
 .. _trilinos:
 
@@ -82,7 +93,16 @@ See the `ArborX repository <https://github.com/arborx/ArborX>`_ for details and 
 This external dependency can be downloaded from the `Trilinos Github repository <https://github.com/trilinos/Trilinos>`_ .
 Currently supported versions are listed in ``<4C_sourceDir>/dependencies/supported_version/Trilinos.txt``. An older supported version will be supported for at least six months after its introduction. Afterwards, the version may be dropped at any time.
 
-.. note:: As 4C is still depending on Epetra based Trilinos code, the last official update will for now happen with the last available Trilinos hash still supporting Epetra (currently expected for mid of November).
+.. note:: As 4C is still depending on Epetra based Trilinos code, the last officially supported version is release 16.2.0.
+
+.. _mirco:
+
+**MIRCO**
+
+MIRCO can be used as optional dependency inside |FOURC| to be used for linear elastic frictionless normal contact between a rigid rough indentor and an elastic half-space.
+See the `MIRCO repository <https://github.com/imcs-compsim/MIRCO>`_ for details and downloads.
+
+Building |FOURC| with MIRCO enabled automatically fetches the repository during the configure stage and later builds the library as dependency.
 
 .. _4Cinstallation:
 

@@ -61,6 +61,7 @@ RUN apt-get update && apt-get install -y \
       clang-tidy \
       clang-tools \
       libomp-dev \
+      libvtk9-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Create directory for dependencies

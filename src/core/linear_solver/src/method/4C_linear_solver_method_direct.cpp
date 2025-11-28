@@ -12,14 +12,6 @@
 
 #include <memory>
 
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 3)
-#else
-#include <Amesos_Klu.h>
-#include <Amesos_Superludist.h>
-#include <Amesos_Umfpack.h>
-#include <Epetra_LinearProblem.h>
-#endif
-
 FOUR_C_NAMESPACE_OPEN
 
 //----------------------------------------------------------------------------------
@@ -27,11 +19,6 @@ FOUR_C_NAMESPACE_OPEN
 Core::LinearSolver::DirectSolver::DirectSolver(std::string solvertype)
     : solvertype_(solvertype), factored_(false), solver_(nullptr), projector_(nullptr)
 {
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 3)
-#else
-  reindexer_ = nullptr;
-  linear_problem_ = std::make_shared<Epetra_LinearProblem>();
-#endif
 }
 
 //----------------------------------------------------------------------------------
@@ -74,67 +61,40 @@ void Core::LinearSolver::DirectSolver::setup(std::shared_ptr<Core::LinAlg::Spars
   b_ = b;
   a_ = crsA;
 
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 3)
-#else
-  linear_problem_->SetRHS(&b_->get_epetra_multi_vector());
-  linear_problem_->SetLHS(&x_->get_epetra_multi_vector());
-  linear_problem_->SetOperator(&a_->epetra_matrix());
-
-  if (reindexer_ and not(reset or refactor)) reindexer_->fwd();
-#endif
-
   // 3. create linear solver
   if (reset or refactor or not is_factored())
   {
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 3)
     std::string solver_type;
     Teuchos::ParameterList params("Amesos2");
-#else
-    reindexer_ = std::make_shared<EpetraExt::LinearProblem_Reindex2>(nullptr);
-#endif
 
     if (solvertype_ == "umfpack")
     {
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 3)
       solver_type = "Umfpack";
       auto& umfpack_params = params.sublist(solver_type);
       umfpack_params.set("IsContiguous", false, "Are GIDs Contiguous");
-#else
-      solver_ = std::make_shared<Amesos_Umfpack>((*reindexer_)(*linear_problem_));
-#endif
     }
     else if (solvertype_ == "superlu")
     {
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 3)
       solver_type = "SuperLU_DIST";
       auto& superludist_params = params.sublist(solver_type);
       superludist_params.set("Equil", true, "Whether to equilibrate the system before solve");
       superludist_params.set("RowPerm", "LargeDiag_MC64", "Row ordering");
       superludist_params.set("ReplaceTinyPivot", true, "Replace tiny pivot");
       superludist_params.set("IsContiguous", false, "Are GIDs Contiguous");
-#else
-      solver_ = std::make_shared<Amesos_Superludist>((*reindexer_)(*linear_problem_));
-#endif
     }
     else
     {
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 3)
       solver_type = "KLU2";
       auto& klu_params = params.sublist(solver_type);
       klu_params.set("IsContiguous", false, "Are GIDs Contiguous");
-#else
-      solver_ = std::make_shared<Amesos_Klu>((*reindexer_)(*linear_problem_));
-#endif
     }
 
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 3)
     solver_ = Amesos2::create<Epetra_CrsMatrix, Epetra_MultiVector>(solver_type,
         Teuchos::rcpFromRef(a_->epetra_matrix()),
         Teuchos::rcpFromRef(x_->get_epetra_multi_vector()),
         Teuchos::rcpFromRef(b_->get_epetra_multi_vector()));
 
     solver_->setParameters(Teuchos::make_rcp<Teuchos::ParameterList>(std::move(params)));
-#endif
 
     factored_ = false;
   }
@@ -146,21 +106,13 @@ int Core::LinearSolver::DirectSolver::solve()
 {
   if (not is_factored())
   {
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 3)
     solver_->symbolicFactorization();
     solver_->numericFactorization();
-#else
-    solver_->SymbolicFactorization();
-    solver_->NumericFactorization();
-#endif
+
     factored_ = true;
   }
 
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 3)
   solver_->solve();
-#else
-  solver_->Solve();
-#endif
 
   if (projector_ != nullptr)
   {

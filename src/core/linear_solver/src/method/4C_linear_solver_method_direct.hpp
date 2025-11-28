@@ -14,12 +14,7 @@
 #include "4C_linear_solver_method.hpp"
 #include "4C_linear_solver_method_projector.hpp"
 
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 3)
 #include <Amesos2.hpp>
-#else
-#include <Amesos_BaseSolver.h>
-#include <EpetraExt_Reindex_LinearProblem2.h>
-#endif
 
 FOUR_C_NAMESPACE_OPEN
 
@@ -29,7 +24,6 @@ namespace Core::LinearSolver
   class DirectSolver : public SolverTypeBase
   {
    public:
-    //! Constructor
     explicit DirectSolver(std::string solvertype);
 
     /*! \brief Setup the solver object
@@ -46,7 +40,6 @@ namespace Core::LinearSolver
         std::shared_ptr<Core::LinAlg::MultiVector<double>> b, const bool refactor, const bool reset,
         std::shared_ptr<Core::LinAlg::LinearSystemProjector> projector = nullptr) override;
 
-    //! Actual call to the underlying amesos solver
     int solve() override;
 
     bool is_factored() { return factored_; }
@@ -67,19 +60,8 @@ namespace Core::LinearSolver
     //! system of equations
     std::shared_ptr<Core::LinAlg::SparseMatrix> a_;
 
-#if FOUR_C_TRILINOS_INTERNAL_VERSION_GE(2025, 3)
     //! an abstract Amesos2 solver that can be any of the concrete implementations
     Teuchos::RCP<Amesos2::Solver<Epetra_CrsMatrix, Epetra_MultiVector>> solver_;
-#else
-    //! a linear problem wrapper class used by Trilinos and for scaling of the system
-    std::shared_ptr<Epetra_LinearProblem> linear_problem_;
-
-    //! an abstract amesos solver that can be any of the amesos concrete implementations
-    std::shared_ptr<Amesos_BaseSolver> solver_;
-
-    //! reindex linear problem for amesos
-    std::shared_ptr<EpetraExt::LinearProblem_Reindex2> reindexer_;
-#endif
 
     /*! \brief A projector applied before solving the linear systems
      *
