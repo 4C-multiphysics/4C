@@ -722,7 +722,29 @@ void BeamInteraction::BeamToSolidMortarManager::assemble_force(
   auto constraint_rhs_map = Core::LinAlg::Vector<double>(f.get_map());
   Core::LinAlg::export_to(*constraint_, constraint_rhs_map);
 
+  auto lambda = get_global_lambda();
+  auto lambda_update_rhs_map = Core::LinAlg::Vector<double>(f.get_map());
+
+  // obtain the matrix blocks of the rhs of the lambda incremental scheme
+  auto force_solid_lin_lambda_times_lambda = Core::LinAlg::Vector<double>(f.get_map());
+  auto force_beam_lin_lambda_times_lambda = Core::LinAlg::Vector<double>(f.get_map());
+  force_solid_lin_lambda_->Apply(*lambda, force_solid_lin_lambda_times_lambda);
+  force_beam_lin_lambda_->Apply(*lambda, force_beam_lin_lambda_times_lambda);
+
   f.update(1., constraint_rhs_map, 1.);
+  f.update(-1., force_solid_lin_lambda_times_lambda, 1.);
+  f.update(-1., force_beam_lin_lambda_times_lambda, 1.);
+
+  if (parameters_.lagrange_formulation ==
+      Inpar::BeamToSolid::BeamToSolidLagrangeFormulation::regularized)
+  {
+    const double penalty_translation = parameters_.penalty_parameter_translational;
+    auto kappa_times_lambda = Core::LinAlg::Vector<double>(kappa_->get_map());
+    kappa_times_lambda.multiply(1.0, *kappa_, *lambda, 1.0);
+    Core::LinAlg::Vector<double> kappa_times_lambda_on_f(f.get_map());
+    Core::LinAlg::export_to(kappa_times_lambda, kappa_times_lambda_on_f);
+    f.update(-1.0 / penalty_translation, kappa_times_lambda_on_f, 1.);
+  }
 }
 
 /**

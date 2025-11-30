@@ -893,7 +893,6 @@ void Solid::ModelEvaluator::BeamInteraction::run_pre_compute_x(
     const Core::LinAlg::Vector<double>& xold, Core::LinAlg::Vector<double>& dir_mutable,
     const NOX::Nln::Group& curr_grp)
 {
-  if (have_lagrange_dofs()) Core::LinAlg::export_to(dir_mutable, *ia_state_ptr_->get_lambda());
 }
 
 /*----------------------------------------------------------------------------*
