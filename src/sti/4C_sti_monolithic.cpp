@@ -570,7 +570,8 @@ void STI::Monolithic::output_matrix_to_file(
   Core::LinAlg::SparseMatrix crsmatrix(fullrowmap, 0);
   if (sparsematrix != nullptr)
   {
-    crsmatrix.import(*sparsematrix, Core::LinAlg::Import(fullrowmap, rowmap), Insert);
+    crsmatrix.import(
+        *sparsematrix, Core::LinAlg::Import(fullrowmap, rowmap), Core::LinAlg::CombineMode::insert);
   }
   else
   {
@@ -579,7 +580,8 @@ void STI::Monolithic::output_matrix_to_file(
       for (int j = 0; j < blocksparsematrix->cols(); ++j)
       {
         crsmatrix.import(blocksparsematrix->matrix(i, j),
-            Core::LinAlg::Import(fullrowmap, blocksparsematrix->range_map(i)), Insert);
+            Core::LinAlg::Import(fullrowmap, blocksparsematrix->range_map(i)),
+            Core::LinAlg::CombineMode::insert);
       }
     }
   }

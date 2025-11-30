@@ -1036,8 +1036,7 @@ void SSI::ManifoldMeshTyingStrategySparse::apply_meshtying_to_manifold_matrix(
         {
           const int rowlid_slave = ssi_manifold_sparse->row_map().lid(dofgid_slave);
           if (rowlid_slave < 0) FOUR_C_THROW("Global ID not found!");
-          if (ssi_manifold_sparse->replace_my_values(rowlid_slave, 1, &one, &rowlid_slave))
-            FOUR_C_THROW("replace_my_values() failed!");
+          ssi_manifold_sparse->replace_my_values(rowlid_slave, 1, &one, &rowlid_slave);
         }
 
         // apply pseudo Dirichlet conditions to unfilled matrix, i.e., to global row and column
@@ -1116,9 +1115,8 @@ void SSI::ManifoldMeshTyingStrategyBlock::apply_meshtying_to_manifold_matrix(
                 const int rowlid_slave =
                     ssi_manifold_block->matrix(row, row).row_map().lid(dofgid_slave);
                 if (rowlid_slave < 0) FOUR_C_THROW("Global ID not found!");
-                if (ssi_manifold_block->matrix(row, row).replace_my_values(
-                        rowlid_slave, 1, &one, &rowlid_slave))
-                  FOUR_C_THROW("ReplaceMyValues failed!");
+                ssi_manifold_block->matrix(row, row).replace_my_values(
+                    rowlid_slave, 1, &one, &rowlid_slave);
               }
 
               // apply pseudo Dirichlet conditions to unfilled matrix, i.e., to global row and

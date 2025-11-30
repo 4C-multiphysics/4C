@@ -195,7 +195,6 @@ void Core::LinAlg::matrix_put(const Core::LinAlg::SparseMatrix& A, const double 
   int NumEntries;
   std::vector<int> Indices(MaxNumEntries);
   std::vector<double> Values(MaxNumEntries);
-  int err;
 
   // loop rows in #tomap and replace the rows of #this->sysmat_ with provided input matrix #A
   for (int lid = 0; lid < tomap->num_my_elements(); ++lid)
@@ -206,8 +205,7 @@ void Core::LinAlg::matrix_put(const Core::LinAlg::SparseMatrix& A, const double 
 
     if (scalarA != 1.0)
       for (int j = 0; j < NumEntries; ++j) Values[j] *= scalarA;
-    err = B.replace_global_values(Row, NumEntries, Values.data(), Indices.data());
-    if (err) FOUR_C_THROW("replace_global_values() failed with error code {}", err);
+    B.replace_global_values(Row, NumEntries, Values.data(), Indices.data());
   }
 }
 

@@ -398,11 +398,8 @@ void BeamInteraction::BeamToFluidMortarManager::evaluate_global_dm(
   check_global_maps();
 
   // Clear the old values of D, M and kappa.
-  int linalg_error = 0;
-  linalg_error = global_d_->put_scalar(0.);
-  if (linalg_error != 0) FOUR_C_THROW("Error in PutScalar!");
-  linalg_error = global_m_->put_scalar(0.);
-  if (linalg_error != 0) FOUR_C_THROW("Error in PutScalar!");
+  global_d_->put_scalar(0.);
+  global_m_->put_scalar(0.);
   global_kappa_->put_scalar(0.);
 
   // Local mortar matrices that will be filled up by EvaluateDM.

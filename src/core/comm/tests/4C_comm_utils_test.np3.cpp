@@ -245,10 +245,12 @@ namespace
   TEST_F(SetupCompareParallelMatricesTest, NegativeTestCompareMatrices)
   {
     // disturb one value on each proc which leads to a failure of the comparison
-    const int myLastLid[1] = {matrix_->row_map().num_my_elements() - 1};
-    const double value[1] = {static_cast<double>(myLastLid[0])};
+    auto* my_gids = matrix_->row_map().my_global_elements();
+    const int my_last_lid =
+        matrix_->row_map().lid(my_gids[matrix_->row_map().num_my_elements() - 1]);
+    const double value = my_last_lid;
 
-    matrix_->insert_my_values(myLastLid[0], 1, &value[0], &myLastLid[0]);
+    matrix_->replace_my_values(my_last_lid, 1, &value, &my_last_lid);
 
     matrix_->complete({.enforce_complete = true, .optimize_data_storage = false});
 

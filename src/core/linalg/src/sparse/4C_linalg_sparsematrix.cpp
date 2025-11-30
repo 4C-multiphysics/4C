@@ -33,23 +33,6 @@ Core::LinAlg::SparseMatrix::SparseMatrix(std::shared_ptr<Core::LinAlg::Graph> cr
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-Core::LinAlg::SparseMatrix::SparseMatrix(const Epetra_Map& rowmap, const int npr,
-    bool explicitdirichlet, bool savegraph, MatrixType matrixtype)
-    : graph_(nullptr),
-      dbcmaps_(nullptr),
-      explicitdirichlet_(explicitdirichlet),
-      savegraph_(savegraph),
-      matrixtype_(matrixtype)
-{
-  if (!rowmap.UniqueGIDs()) FOUR_C_THROW("Row map is not unique");
-
-  if (matrixtype_ == CRS_MATRIX)
-    sysmat_ = std::make_shared<Epetra_CrsMatrix>(::Copy, rowmap, npr, false);
-  else if (matrixtype_ == FE_MATRIX)
-    sysmat_ = std::make_shared<Epetra_FECrsMatrix>(::Copy, rowmap, npr, false);
-  else
-    FOUR_C_THROW("matrix type is not correct");
-}
 Core::LinAlg::SparseMatrix::SparseMatrix(const Core::LinAlg::Map& rowmap, const int npr,
     bool explicitdirichlet, bool savegraph, MatrixType matrixtype)
     : graph_(nullptr),
@@ -149,7 +132,7 @@ Core::LinAlg::SparseMatrix::SparseMatrix(std::shared_ptr<Epetra_CrsMatrix> matri
       FOUR_C_THROW("matrix type is not correct");
   }
 
-  if (sysmat_->Filled() and savegraph_)
+  if (filled() and savegraph_)
   {
     graph_ = std::make_shared<Core::LinAlg::Graph>(sysmat_->Graph());
   }
@@ -201,8 +184,6 @@ Core::LinAlg::SparseMatrix::SparseMatrix(const Core::LinAlg::Vector<double>& dia
         ::Copy, map.get_epetra_map(), map.get_epetra_map(), 1, false);
   else
     FOUR_C_THROW("matrix type is not correct");
-
-  // sysmat_->fill_complete();
 
   for (int i = 0; i < length; ++i)
   {
@@ -289,14 +270,12 @@ void Core::LinAlg::SparseMatrix::zero()
   if (graph_ == nullptr)
   {
     if (filled() && !explicitdirichlet_)
-      sysmat_->PutScalar(0.);
+      put_scalar(0.);
     else
       reset();
   }
   else
   {
-    const Core::LinAlg::Map domainmap = Map(sysmat_->DomainMap());
-    const Core::LinAlg::Map rangemap = Map(sysmat_->RangeMap());
     // Remove old matrix before creating a new one so we do not have old and
     // new matrix in memory at the same time!
     sysmat_ = nullptr;
@@ -307,7 +286,7 @@ void Core::LinAlg::SparseMatrix::zero()
     else
       FOUR_C_THROW("matrix type is not correct");
 
-    sysmat_->FillComplete(domainmap.get_epetra_map(), rangemap.get_epetra_map());
+    complete(domain_map(), range_map());
   }
 }
 
@@ -316,7 +295,7 @@ void Core::LinAlg::SparseMatrix::zero()
  *----------------------------------------------------------------------*/
 void Core::LinAlg::SparseMatrix::reset()
 {
-  const Core::LinAlg::Map rowmap = Map(sysmat_->RowMap());
+  const Core::LinAlg::Map rowmap = row_map();
   std::vector<int> numentries(rowmap.num_my_elements());
 
   Core::LinAlg::Graph graph(sysmat_->Graph());
@@ -370,12 +349,12 @@ void Core::LinAlg::SparseMatrix::assemble(int eid, const std::vector<int>& lmstr
 
   const int myrank =
       Core::Communication::my_mpi_rank(Core::Communication::unpack_epetra_comm(sysmat_->Comm()));
-  const Core::LinAlg::Map& rowmap = Map(sysmat_->RowMap());
-  const Core::LinAlg::Map& colmap = Map(sysmat_->ColMap());
+  const Core::LinAlg::Map& rowmap = row_map();
+  const Core::LinAlg::Map& colmap = col_map();
 
   //-----------------------------------------------------------------------------------
   auto& A = (Core::LinAlg::SerialDenseMatrix&)Aele;
-  if (sysmat_->Filled())  // assembly in local indices
+  if (filled())  // assembly in local indices
   {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
     // There is the case of nodes without dofs (XFEM).
@@ -421,13 +400,8 @@ void Core::LinAlg::SparseMatrix::assemble(int eid, const std::vector<int>& lmstr
       int length;
       double* valview;
       int* indices;
-#ifdef FOUR_C_ENABLE_ASSERTIONS
-      int err =
-#endif
-          sysmat_->ExtractMyRowView(rlid, length, valview, indices);
-#ifdef FOUR_C_ENABLE_ASSERTIONS
-      if (err) FOUR_C_THROW("Epetra_CrsMatrix::ExtractMyRowView returned error code {}", err);
-#endif
+      extract_my_row_view(rlid, length, valview, indices);
+
       const int numnode = (int)lmstride.size();
       int dofcount = 0;
       int pos = 0;
@@ -560,10 +534,10 @@ void Core::LinAlg::SparseMatrix::assemble(int eid, const Core::LinAlg::SerialDen
 
   const int myrank =
       Core::Communication::my_mpi_rank(Core::Communication::unpack_epetra_comm(sysmat_->Comm()));
-  const Core::LinAlg::Map& rowmap = Map(sysmat_->RowMap());
-  const Core::LinAlg::Map& colmap = Map(sysmat_->ColMap());
+  const Core::LinAlg::Map& rowmap = row_map();
+  const Core::LinAlg::Map& colmap = col_map();
 
-  if (sysmat_->Filled())
+  if (filled())
   {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
     // There is the case of nodes without dofs (XFEM).
@@ -611,9 +585,8 @@ void Core::LinAlg::SparseMatrix::assemble(int eid, const Core::LinAlg::SerialDen
       {
         values[lcol] = Aele(lrow, lcol);
       }
-      const int errone = sysmat_->SumIntoMyValues(rlid, lcoldim, values.data(), localcol.data());
-      if (errone) FOUR_C_THROW("Epetra_CrsMatrix::SumIntoMyValues returned error code {}", errone);
-    }  // for (int lrow=0; lrow<ldim; ++lrow)
+      sum_into_my_values(rlid, lcoldim, values.data(), localcol.data());
+    }
   }
   else
   {
@@ -781,14 +754,13 @@ void Core::LinAlg::SparseMatrix::complete(OptionsMatrixComplete options_matrix_c
   if (matrixtype_ == FE_MATRIX)
   {
     // false indicates here that fill_complete() is not called within GlobalAssemble()
-    int err = (std::dynamic_pointer_cast<Epetra_FECrsMatrix>(sysmat_))->GlobalAssemble(false);
-    if (err) FOUR_C_THROW("Epetra_FECrsMatrix::GlobalAssemble() returned err={}", err);
+    ASSERT_EPETRA_CALL(
+        std::dynamic_pointer_cast<Epetra_FECrsMatrix>(sysmat_)->GlobalAssemble(false));
   }
 
-  if (sysmat_->Filled() and not options_matrix_complete.enforce_complete) return;
+  if (filled() and not options_matrix_complete.enforce_complete) return;
 
-  int err = sysmat_->FillComplete(options_matrix_complete.optimize_data_storage);
-  if (err) FOUR_C_THROW("Epetra_CrsMatrix::fill_complete(domain,range) returned err={}", err);
+  ASSERT_EPETRA_CALL(sysmat_->FillComplete(options_matrix_complete.optimize_data_storage));
 
   // keep mask for further use
   if (savegraph_ and graph_ == nullptr)
@@ -809,21 +781,18 @@ void Core::LinAlg::SparseMatrix::complete(const Core::LinAlg::Map& domainmap,
   if (matrixtype_ == FE_MATRIX)
   {
     // false indicates here that fill_complete() is not called within GlobalAssemble()
-    int err = (std::dynamic_pointer_cast<Epetra_FECrsMatrix>(sysmat_))
-                  ->GlobalAssemble(domainmap.get_epetra_map(), rangemap.get_epetra_map(), false);
-    if (err) FOUR_C_THROW("Epetra_FECrsMatrix::GlobalAssemble() returned err={}", err);
+    ASSERT_EPETRA_CALL(std::dynamic_pointer_cast<Epetra_FECrsMatrix>(sysmat_)->GlobalAssemble(
+        domainmap.get_epetra_map(), rangemap.get_epetra_map(), false));
   }
 
-  if (sysmat_->Filled() and not options_matrix_complete.enforce_complete) return;
+  if (filled() and not options_matrix_complete.enforce_complete) return;
 
-  int err = 1;
-  if (options_matrix_complete.enforce_complete and sysmat_->Filled())
-    err = sysmat_->ExpertStaticFillComplete(domainmap.get_epetra_map(), rangemap.get_epetra_map());
+  if (options_matrix_complete.enforce_complete and filled())
+    ASSERT_EPETRA_CALL(
+        sysmat_->ExpertStaticFillComplete(domainmap.get_epetra_map(), rangemap.get_epetra_map()));
   else
-    err = sysmat_->FillComplete(domainmap.get_epetra_map(), rangemap.get_epetra_map(),
-        options_matrix_complete.optimize_data_storage);
-
-  if (err) FOUR_C_THROW("Epetra_CrsMatrix::fill_complete(domain,range) returned err={}", err);
+    ASSERT_EPETRA_CALL(sysmat_->FillComplete(domainmap.get_epetra_map(), rangemap.get_epetra_map(),
+        options_matrix_complete.optimize_data_storage));
 
   // keep mask for further use
   if (savegraph_ and graph_ == nullptr)
@@ -848,8 +817,8 @@ void Core::LinAlg::SparseMatrix::un_complete()
     nonzeros[i] = graph.num_local_indices(i);
   }
 
-  const Core::LinAlg::Map& rowmap = Map(sysmat_->RowMap());
-  const Core::LinAlg::Map& colmap = Map(sysmat_->ColMap());
+  const Core::LinAlg::Map& rowmap = row_map();
+  const Core::LinAlg::Map& colmap = col_map();
   int elements = rowmap.num_my_elements();
 
   std::shared_ptr<Epetra_CrsMatrix> mat = nullptr;
@@ -870,8 +839,8 @@ void Core::LinAlg::SparseMatrix::un_complete()
     int* Indices;
     // if matrix is filled, global assembly was called already and all nonlocal values are
     // distributed
-    int err = sysmat_->ExtractMyRowView(i, NumEntries, Values, Indices);
-    if (err) FOUR_C_THROW("ExtractMyRowView err={}", err);
+    extract_my_row_view(i, NumEntries, Values, Indices);
+
     std::vector<int> idx(NumEntries);
     for (int c = 0; c < NumEntries; ++c)
     {
@@ -879,7 +848,7 @@ void Core::LinAlg::SparseMatrix::un_complete()
       FOUR_C_ASSERT(idx[c] != -1, "illegal gid");
     }
     int rowgid = rowmap.gid(i);
-    err = mat->InsertGlobalValues(rowgid, NumEntries, Values, idx.data());
+    int err = mat->InsertGlobalValues(rowgid, NumEntries, Values, idx.data());
     if (err) FOUR_C_THROW("InsertGlobalValues err={}", err);
   }
   sysmat_ = mat;
@@ -914,9 +883,9 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet(
     }
 
     // allocate a new matrix and copy all rows that are not dirichlet
-    const Core::LinAlg::Map& rowmap = Map(sysmat_->RowMap());
-    const int nummyrows = sysmat_->NumMyRows();
-    const int maxnumentries = sysmat_->MaxNumEntries();
+    const Core::LinAlg::Map& rowmap = row_map();
+    const int nummyrows = num_my_rows();
+    const int maxnumentries = max_num_entries();
 
     std::shared_ptr<Epetra_CrsMatrix> Anew = nullptr;
     if (matrixtype_ == CRS_MATRIX)
@@ -932,7 +901,7 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet(
     std::vector<double> values(maxnumentries, 0.0);
     for (int i = 0; i < nummyrows; ++i)
     {
-      int row = sysmat_->GRID(i);
+      int row = global_row_index(i);
       if (dbctoggle.local_values_as_span()[i] != 1.0)
       {
         int numentries;
@@ -973,7 +942,7 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet(
   }
   else
   {
-    const int nummyrows = sysmat_->NumMyRows();
+    const int nummyrows = num_my_rows();
     for (int i = 0; i < nummyrows; ++i)
     {
       if (dbctoggle.local_values_as_span()[i] == 1.0)
@@ -993,12 +962,7 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet(
         if (diagonalblock)
         {
           double one = 1.0;
-#ifdef FOUR_C_ENABLE_ASSERTIONS
-          int err = sysmat_->SumIntoMyValues(i, 1, &one, &i);
-          if (err < 0) FOUR_C_THROW("Epetra_CrsMatrix::SumIntoMyValues returned err={}", err);
-#else
-          sysmat_->SumIntoMyValues(i, 1, &one, &i);
-#endif
+          sum_into_my_values(i, 1, &one, &i);
         }
       }
     }
@@ -1049,9 +1013,9 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet(
     }
 
     // allocate a new matrix and copy all rows that are not dirichlet
-    const Core::LinAlg::Map& rowmap = Map(sysmat_->RowMap());
-    const int nummyrows = sysmat_->NumMyRows();
-    const int maxnumentries = sysmat_->MaxNumEntries();
+    const Core::LinAlg::Map& rowmap = row_map();
+    const int nummyrows = num_my_rows();
+    const int maxnumentries = max_num_entries();
 
     // std::shared_ptr<Epetra_CrsMatrix> Anew = Teuchos::rcp(new
     // Epetra_CrsMatrix(Copy,rowmap,maxnumentries,false));
@@ -1070,7 +1034,7 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet(
     std::vector<double> values(maxnumentries, 0.0);
     for (int i = 0; i < nummyrows; ++i)
     {
-      int row = sysmat_->GRID(i);
+      int row = global_row_index(i);
       if (not dbctoggle.my_gid(row))
       {
         int numentries;
@@ -1105,17 +1069,17 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet(
         }
       }
     }
-    Core::LinAlg::Map rangemap = Map(sysmat_->RangeMap());
-    Core::LinAlg::Map domainmap = Map(sysmat_->DomainMap());
+    Core::LinAlg::Map rangemap = range_map();
+    Core::LinAlg::Map domainmap = domain_map();
     sysmat_ = Anew;
     complete(domainmap, rangemap);
   }
   else
   {
-    const int nummyrows = sysmat_->NumMyRows();
+    const int nummyrows = num_my_rows();
     for (int i = 0; i < nummyrows; ++i)
     {
-      int row = sysmat_->GRID(i);
+      int row = global_row_index(i);
       if (dbctoggle.my_gid(row))
       {
         int* indexOffset;
@@ -1133,12 +1097,7 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet(
         if (diagonalblock)
         {
           double one = 1.0;
-#ifdef FOUR_C_ENABLE_ASSERTIONS
-          err = sysmat_->SumIntoMyValues(i, 1, &one, &i);
-          if (err < 0) FOUR_C_THROW("Epetra_CrsMatrix::SumIntoMyValues returned err={}", err);
-#else
-          sysmat_->SumIntoMyValues(i, 1, &one, &i);
-#endif
+          sum_into_my_values(i, 1, &one, &i);
         }
       }
     }
@@ -1171,10 +1130,10 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet_with_trafo(const Core::LinAlg::
     }
 
     // allocate a new matrix and copy all rows that are not dirichlet
-    const Core::LinAlg::Map& rowmap = Map(sysmat_->RowMap());
-    const Core::LinAlg::Map& colmap = Map(sysmat_->ColMap());
-    const int nummyrows = sysmat_->NumMyRows();
-    const int maxnumentries = sysmat_->MaxNumEntries();
+    const Core::LinAlg::Map& rowmap = row_map();
+    const Core::LinAlg::Map& colmap = col_map();
+    const int nummyrows = num_my_rows();
+    const int maxnumentries = max_num_entries();
 
     // prepare working arrays for extracting rows in trafo matrix
     const int trafomaxnumentries = trafo.max_num_entries();
@@ -1190,7 +1149,7 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet_with_trafo(const Core::LinAlg::
     std::vector<double> values(maxnumentries, 0.0);
     for (int i = 0; i < nummyrows; ++i)
     {
-      int row = sysmat_->GRID(i);
+      int row = global_row_index(i);
       if (not dbctoggle.my_gid(row))  // dof is not a Dirichlet dof
       {
         int numentries;
@@ -1252,7 +1211,7 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet_with_trafo(const Core::LinAlg::
   }
   else
   {
-    const int nummyrows = sysmat_->NumMyRows();
+    const int nummyrows = num_my_rows();
 
     // prepare working arrays for extracting rows in trafo matrix
     const int trafomaxnumentries = trafo.max_num_entries();
@@ -1262,7 +1221,7 @@ void Core::LinAlg::SparseMatrix::apply_dirichlet_with_trafo(const Core::LinAlg::
 
     for (int i = 0; i < nummyrows; ++i)
     {
-      int row = sysmat_->GRID(i);
+      int row = global_row_index(i);
       if (dbctoggle.my_gid(row))
       {
         int* indexOffset;
@@ -1305,9 +1264,9 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::SparseMatrix::extract_
   std::shared_ptr<SparseMatrix> dl = std::make_shared<SparseMatrix>(
       row_map(), max_num_entries(), explicit_dirichlet(), save_graph());
 
-  const Core::LinAlg::Map& rowmap = Map(sysmat_->RowMap());
-  const Core::LinAlg::Map& colmap = Map(sysmat_->ColMap());
-  const int nummyrows = sysmat_->NumMyRows();
+  const Core::LinAlg::Map& rowmap = row_map();
+  const Core::LinAlg::Map& colmap = col_map();
+  const int nummyrows = num_my_rows();
 
   const Core::LinAlg::Vector<double>& dbct = dbctoggle;
 
@@ -1321,16 +1280,15 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::SparseMatrix::extract_
       double* Values;
       int* Indices;
 
-      int err = sysmat_->ExtractMyRowView(i, NumEntries, Values, Indices);
-      if (err) FOUR_C_THROW("ExtractMyRowView: err={}", err);
+      extract_my_row_view(i, NumEntries, Values, Indices);
       for (int j = 0; j < NumEntries; ++j) idx[j] = colmap.gid(Indices[j]);
 
-      err = dl->sysmat_->InsertGlobalValues(rowmap.gid(i), NumEntries, Values, idx.data());
+      int err = dl->sysmat_->InsertGlobalValues(rowmap.gid(i), NumEntries, Values, idx.data());
       if (err) FOUR_C_THROW("InsertGlobalValues: err={}", err);
     }
   }
 
-  dl->complete(Map(sysmat_->DomainMap()), range_map());
+  dl->complete(domain_map(), range_map());
   return dl;
 }
 
@@ -1346,9 +1304,8 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::SparseMatrix::extract_
   std::shared_ptr<SparseMatrix> dl = std::make_shared<SparseMatrix>(
       row_map(), max_num_entries(), explicit_dirichlet(), save_graph());
 
-  const Core::LinAlg::Map& rowmap = Map(sysmat_->RowMap());
-  const Core::LinAlg::Map& colmap = Map(sysmat_->ColMap());
-  // const int nummyrows      = sysmat_->NumMyRows();
+  const Core::LinAlg::Map& rowmap = row_map();
+  const Core::LinAlg::Map& colmap = col_map();
 
   std::vector<int> idx(max_num_entries());
 
@@ -1365,15 +1322,14 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Core::LinAlg::SparseMatrix::extract_
     double* Values;
     int* Indices;
 
-    int err = sysmat_->ExtractMyRowView(lid, NumEntries, Values, Indices);
-    if (err) FOUR_C_THROW("ExtractMyRowView: err={}", err);
+    extract_my_row_view(lid, NumEntries, Values, Indices);
     for (int j = 0; j < NumEntries; ++j) idx[j] = colmap.gid(Indices[j]);
 
-    err = dl->sysmat_->InsertGlobalValues(gid, NumEntries, Values, idx.data());
+    int err = dl->sysmat_->InsertGlobalValues(gid, NumEntries, Values, idx.data());
     if (err) FOUR_C_THROW("InsertGlobalValues: err={}", err);
   }
 
-  dl->complete(Map(sysmat_->DomainMap()), range_map());
+  dl->complete(domain_map(), range_map());
   return dl;
 }
 
@@ -1514,9 +1470,9 @@ void Core::LinAlg::SparseMatrix::inv_col_sums(Core::LinAlg::Vector<double>& x) c
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::put_scalar(double ScalarConstant)
+void Core::LinAlg::SparseMatrix::put_scalar(double ScalarConstant)
 {
-  return sysmat_->PutScalar(ScalarConstant);
+  ASSERT_EPETRA_CALL(sysmat_->PutScalar(ScalarConstant));
 }
 
 
@@ -1533,6 +1489,8 @@ int Core::LinAlg::SparseMatrix::scale(double ScalarConstant)
 int Core::LinAlg::SparseMatrix::replace_diagonal_values(
     const Core::LinAlg::Vector<double>& Diagonal)
 {
+  // For now, we cant add ASSERT_EPETRA_CALL() here, as Epetra internally handles the error flag
+  // inconsistently.
   return sysmat_->ReplaceDiagonalValues(Diagonal);
 }
 
@@ -1578,34 +1536,34 @@ void Core::LinAlg::SparseMatrix::extract_global_row_view(
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::insert_my_values(
+void Core::LinAlg::SparseMatrix::insert_my_values(
     int my_row, int num_entries, const double* values, const int* indices)
 {
-  return sysmat_->InsertMyValues(my_row, num_entries, values, indices);
+  ASSERT_EPETRA_CALL(sysmat_->InsertMyValues(my_row, num_entries, values, indices));
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::sum_into_my_values(
+void Core::LinAlg::SparseMatrix::sum_into_my_values(
     int my_row, int num_entries, const double* values, const int* indices)
 {
-  return sysmat_->SumIntoMyValues(my_row, num_entries, values, indices);
+  ASSERT_EPETRA_CALL(sysmat_->SumIntoMyValues(my_row, num_entries, values, indices));
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::replace_my_values(
+void Core::LinAlg::SparseMatrix::replace_my_values(
     int my_row, int num_entries, const double* values, const int* indices)
 {
-  return sysmat_->ReplaceMyValues(my_row, num_entries, values, indices);
+  ASSERT_EPETRA_CALL(sysmat_->ReplaceMyValues(my_row, num_entries, values, indices));
 }
 
 /*----------------------------------------------------------------------*
  *----------------------------------------------------------------------*/
-int Core::LinAlg::SparseMatrix::replace_global_values(
+void Core::LinAlg::SparseMatrix::replace_global_values(
     int global_row, int num_entries, const double* values, const int* indices)
 {
-  return sysmat_->ReplaceGlobalValues(global_row, num_entries, values, indices);
+  ASSERT_EPETRA_CALL(sysmat_->ReplaceGlobalValues(global_row, num_entries, values, indices));
 }
 
 /*----------------------------------------------------------------------*
@@ -1666,7 +1624,7 @@ bool Core::LinAlg::SparseMatrix::is_dbc_applied(const Core::LinAlg::Map& dbcmap,
   const int numdbcrows = dbcmap.num_my_elements();
   const int* dbcrows = dbcmap.my_global_elements();
 
-  std::vector<int> gIndices(sysmat_->MaxNumEntries(), 0);
+  std::vector<int> gIndices(max_num_entries(), 0);
   std::vector<int> gtIndices((trafo ? trafo->max_num_entries() : 0), 0);
 
   bool isdbc = true;
@@ -1674,7 +1632,7 @@ bool Core::LinAlg::SparseMatrix::is_dbc_applied(const Core::LinAlg::Map& dbcmap,
   for (int i = 0; i < numdbcrows; ++i)
   {
     const int row = dbcrows[i];
-    const int sys_rlid = sysmat_->RowMap().LID(row);
+    const int sys_rlid = row_map().lid(row);
 
     // this can happen for blocks of a BlockSparseMatrix
     if (sys_rlid == -1) continue;
@@ -1682,10 +1640,10 @@ bool Core::LinAlg::SparseMatrix::is_dbc_applied(const Core::LinAlg::Map& dbcmap,
     int NumEntries = 0;
     double* Values = nullptr;
     int* Indices = nullptr;
-    sysmat_->ExtractMyRowView(sys_rlid, NumEntries, Values, Indices);
+    extract_my_row_view(sys_rlid, NumEntries, Values, Indices);
 
     std::fill(gIndices.begin(), gIndices.end(), 0.0);
-    for (int c = 0; c < NumEntries; ++c) gIndices[c] = sysmat_->ColMap().GID(Indices[c]);
+    for (int c = 0; c < NumEntries; ++c) gIndices[c] = col_map().gid(Indices[c]);
 
     // handle a diagonal block
     if (diagonalblock)

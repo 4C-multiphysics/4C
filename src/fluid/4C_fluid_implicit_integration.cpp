@@ -1906,7 +1906,7 @@ void FLD::FluidImplicitTimeInt::evaluate_fluid_edge_based(
   if (systemmatrix1 != nullptr)
   {
     sysmat_linalg = std::make_shared<Core::LinAlg::SparseMatrix>(
-        systemmatrix1->OperatorRangeMap(), 256, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
+        systemmatrix1->domain_map(), 256, true, false, Core::LinAlg::SparseMatrix::FE_MATRIX);
   }
   else
     FOUR_C_THROW("sysmat is nullptr!");

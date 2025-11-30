@@ -583,15 +583,14 @@ namespace ReducedLung
             airway.local_airway_id);
         if (!sysmat.filled())
         {
-          err = sysmat.insert_my_values(
+          sysmat.insert_my_values(
               airway.local_element_id, vals.size(), vals.data(), airway.local_dof_ids.data());
         }
         else
         {
-          err = sysmat.replace_my_values(
+          sysmat.replace_my_values(
               airway.local_element_id, vals.size(), vals.data(), airway.local_dof_ids.data());
         }
-        FOUR_C_ASSERT(err == 0, "Internal error: Airway equation assembly did not work.");
         rhs.replace_local_value(airway.local_element_id, res);
       }
 
@@ -610,16 +609,14 @@ namespace ReducedLung
             conn.local_dof_ids[Connection::p_in_child]};
         if (!sysmat.filled())
         {
-          err = sysmat.insert_my_values(
+          sysmat.insert_my_values(
               conn.first_local_equation_id, vals.size(), vals.data(), local_dof_ids.data());
         }
         else
         {
-          err = sysmat.replace_my_values(
+          sysmat.replace_my_values(
               conn.first_local_equation_id, vals.size(), vals.data(), local_dof_ids.data());
         }
-        FOUR_C_ASSERT(
-            err == 0, "Internal error: Connection momentum balance assembly did not work.");
         res = -locally_relevant_dofs.local_values_as_span()[local_dof_ids[0]] +
               locally_relevant_dofs.local_values_as_span()[local_dof_ids[1]];
         rhs.replace_local_value(conn.first_local_equation_id, res);
@@ -630,15 +627,14 @@ namespace ReducedLung
             conn.local_dof_ids[Connection::q_in_child]};
         if (!sysmat.filled())
         {
-          err = sysmat.insert_my_values(
+          sysmat.insert_my_values(
               conn.first_local_equation_id + 1, vals.size(), vals.data(), local_dof_ids.data());
         }
         else
         {
-          err = sysmat.replace_my_values(
+          sysmat.replace_my_values(
               conn.first_local_equation_id + 1, vals.size(), vals.data(), local_dof_ids.data());
         }
-        FOUR_C_ASSERT(err == 0, "Internal error: Connection mass balance assembly did not work.");
         res = -locally_relevant_dofs.local_values_as_span()[local_dof_ids[0]] +
               locally_relevant_dofs.local_values_as_span()[local_dof_ids[1]];
         rhs.replace_local_value(conn.first_local_equation_id + 1, res);
@@ -656,16 +652,14 @@ namespace ReducedLung
             bif.local_dof_ids[Bifurcation::p_in_child_1]};
         if (!sysmat.filled())
         {
-          err = sysmat.insert_my_values(bif.first_local_equation_id, vals_mom_balance.size(),
+          sysmat.insert_my_values(bif.first_local_equation_id, vals_mom_balance.size(),
               vals_mom_balance.data(), local_dof_ids_mom_balance.data());
         }
         else
         {
-          err = sysmat.replace_my_values(bif.first_local_equation_id, vals_mom_balance.size(),
+          sysmat.replace_my_values(bif.first_local_equation_id, vals_mom_balance.size(),
               vals_mom_balance.data(), local_dof_ids_mom_balance.data());
         }
-        FOUR_C_ASSERT(
-            err == 0, "Internal error: Bifurcation momentum balance assembly did not work.");
         res = -locally_relevant_dofs.local_values_as_span()[local_dof_ids_mom_balance[0]] +
               locally_relevant_dofs.local_values_as_span()[local_dof_ids_mom_balance[1]];
         rhs.replace_local_value(bif.first_local_equation_id, res);
@@ -676,16 +670,14 @@ namespace ReducedLung
             bif.local_dof_ids[Bifurcation::p_in_child_2]};
         if (!sysmat.filled())
         {
-          err = sysmat.insert_my_values(bif.first_local_equation_id + 1, vals_mom_balance.size(),
+          sysmat.insert_my_values(bif.first_local_equation_id + 1, vals_mom_balance.size(),
               vals_mom_balance.data(), local_dof_ids_mom_balance.data());
         }
         else
         {
-          err = sysmat.replace_my_values(bif.first_local_equation_id + 1, vals_mom_balance.size(),
+          sysmat.replace_my_values(bif.first_local_equation_id + 1, vals_mom_balance.size(),
               vals_mom_balance.data(), local_dof_ids_mom_balance.data());
         }
-        FOUR_C_ASSERT(
-            err == 0, "Internal error: Bifurcation momentum balance assembly did not work.");
         res = -locally_relevant_dofs.local_values_as_span()[local_dof_ids_mom_balance[0]] +
               locally_relevant_dofs.local_values_as_span()[local_dof_ids_mom_balance[1]];
         rhs.replace_local_value(bif.first_local_equation_id + 1, res);
@@ -698,15 +690,14 @@ namespace ReducedLung
             bif.local_dof_ids[Bifurcation::q_in_child_2]};
         if (!sysmat.filled())
         {
-          err = sysmat.insert_my_values(bif.first_local_equation_id + 2, vals_mass_balance.size(),
+          sysmat.insert_my_values(bif.first_local_equation_id + 2, vals_mass_balance.size(),
               vals_mass_balance.data(), local_dof_ids_mass_balance.data());
         }
         else
         {
-          err = sysmat.replace_my_values(bif.first_local_equation_id + 2, vals_mass_balance.size(),
+          sysmat.replace_my_values(bif.first_local_equation_id + 2, vals_mass_balance.size(),
               vals_mass_balance.data(), local_dof_ids_mass_balance.data());
         }
-        FOUR_C_ASSERT(err == 0, "Internal error: Bifurcation mass balance assembly did not work.");
         res = -locally_relevant_dofs.local_values_as_span()[local_dof_ids_mass_balance[0]] +
               locally_relevant_dofs.local_values_as_span()[local_dof_ids_mass_balance[1]] +
               locally_relevant_dofs.local_values_as_span()[local_dof_ids_mass_balance[2]];
@@ -724,13 +715,12 @@ namespace ReducedLung
         int local_dof_id = bc.local_dof_id;
         if (!sysmat.filled())
         {
-          err = sysmat.insert_my_values(bc.local_equation_id, 1, &val, &local_dof_id);
+          sysmat.insert_my_values(bc.local_equation_id, 1, &val, &local_dof_id);
         }
         else
         {
-          err = sysmat.replace_my_values(bc.local_equation_id, 1, &val, &local_dof_id);
+          sysmat.replace_my_values(bc.local_equation_id, 1, &val, &local_dof_id);
         }
-        FOUR_C_ASSERT(err == 0, "Internal error: Boundary condition assembly did not work.");
         res = -locally_relevant_dofs.local_values_as_span()[local_dof_id] + bc_value;
         rhs.replace_local_value(bc.local_equation_id, res);
       }

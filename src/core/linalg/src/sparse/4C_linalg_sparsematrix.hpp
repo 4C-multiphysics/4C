@@ -109,10 +109,6 @@ namespace Core::LinAlg
     SparseMatrix(const Core::LinAlg::Map& rowmap, std::vector<int>& numentries,
         bool explicitdirichlet = true, bool savegraph = false, MatrixType matrixtype = CRS_MATRIX);
 
-    // TODO remove Epetra_Map here
-    SparseMatrix(const Epetra_Map& rowmap, const int npr, bool explicitdirichlet = true,
-        bool savegraph = false, MatrixType matrixtype = CRS_MATRIX);
-
     /// construction of sparse matrix
     /*!
        Makes either a deep copy of the Epetra_CrsMatrix or Epetra_FECrsMatrix.
@@ -484,18 +480,17 @@ namespace Core::LinAlg
     /// this local row.
     int global_row_index(int local_row_index) const { return sysmat_->GRID(local_row_index); }
 
-    /// Returns the Epetra_Map object associated with the rows of this matrix.
+    /// Returns the Core::LinAlg::Map object associated with the rows of this matrix.
     const Core::LinAlg::Map& row_map() const { return row_map_.sync(sysmat_->RowMap()); }
 
-    /// Returns the  Epetra_Mapobject that describes the set of column-indices that appear in
+    /// Returns the Core::LinAlg::Map object that describes the set of column-indices that appear in
     /// each processor's locally owned matrix rows.
     const Core::LinAlg::Map& col_map() const { return column_map_.sync(sysmat_->ColMap()); }
 
-    /// Returns the Epetra_Map object associated with the domain of this matrix operator.
+    /// Returns the Core::LinAlg::Map object associated with the domain of this matrix operator.
     const Map& domain_map() const override { return domain_map_.sync(sysmat_->DomainMap()); }
 
-
-    /// Returns the Epetra_Map object associated with the range of this matrix operator.
+    /// Returns the Core::LinAlg::Map object associated with the range of this matrix operator.
     const Core::LinAlg::Map& range_map() const { return range_map_.sync(sysmat_->RangeMap()); }
 
 
@@ -527,10 +522,10 @@ namespace Core::LinAlg
     int multiply(bool TransA, const Core::LinAlg::MultiVector<double>& X,
         Core::LinAlg::MultiVector<double>& Y) const override;
 
-    /// Scales the Epetra_CrsMatrix on the left with a Core::LinAlg::Vector<double> x.
+    /// Scales the Core::LinAlg::SparseMatrix on the left with a Core::LinAlg::Vector<double> x.
     void left_scale(const Core::LinAlg::Vector<double>& x);
 
-    /// Scales the Epetra_CrsMatrix on the right with a Core::LinAlg::Vector<double> x.
+    /// Scales the Core::LinAlg::SparseMatrix on the right with a Core::LinAlg::Vector<double> x.
     void right_scale(const Core::LinAlg::Vector<double>& x);
 
     // Computes the inverse of the sum of absolute values of the rows.
@@ -545,7 +540,7 @@ namespace Core::LinAlg
     //@{
 
     /// Initialize all values in the matrix with constant value.
-    int put_scalar(double ScalarConstant);
+    void put_scalar(double ScalarConstant);
 
     /// Multiply all values in the matrix by a constant value (in place: A <- ScalarConstant * A).
     int scale(double ScalarConstant) override;
@@ -554,16 +549,16 @@ namespace Core::LinAlg
     int replace_diagonal_values(const Core::LinAlg::Vector<double>& Diagonal);
 
     /// Inserts values into a local row.
-    int insert_my_values(int my_row, int num_entries, const double* values, const int* indices);
+    void insert_my_values(int my_row, int num_entries, const double* values, const int* indices);
 
     /// Sum values into a local row.
-    int sum_into_my_values(int my_row, int num_entries, const double* values, const int* indices);
+    void sum_into_my_values(int my_row, int num_entries, const double* values, const int* indices);
 
     /// Replaces values in a local row.
-    int replace_my_values(int my_row, int num_entries, const double* values, const int* indices);
+    void replace_my_values(int my_row, int num_entries, const double* values, const int* indices);
 
     /// Replaces values in a global row.
-    int replace_global_values(
+    void replace_global_values(
         int global_row, int num_entries, const double* values, const int* indices);
 
     /// Inserts values into a global row.
@@ -602,17 +597,17 @@ namespace Core::LinAlg
     /** \name Import / Export methods */
     //@{
     void import(const SparseMatrix& A, const Core::LinAlg::Import& importer,
-        Epetra_CombineMode combine_mode)
+        Core::LinAlg::CombineMode combine_mode)
     {
-      ASSERT_EPETRA_CALL(
-          sysmat_->Import(A.epetra_matrix(), importer.get_epetra_import(), combine_mode));
+      ASSERT_EPETRA_CALL(sysmat_->Import(A.epetra_matrix(), importer.get_epetra_import(),
+          Core::LinAlg::to_epetra_combine_mode(combine_mode)));
     }
 
     void import(const SparseMatrix& A, const Core::LinAlg::Export& exporter,
-        Epetra_CombineMode combine_mode)
+        Core::LinAlg::CombineMode combine_mode)
     {
-      ASSERT_EPETRA_CALL(
-          sysmat_->Import(A.epetra_matrix(), exporter.get_epetra_export(), combine_mode));
+      ASSERT_EPETRA_CALL(sysmat_->Import(A.epetra_matrix(), exporter.get_epetra_export(),
+          Core::LinAlg::to_epetra_combine_mode(combine_mode)));
     }
 
     //@}

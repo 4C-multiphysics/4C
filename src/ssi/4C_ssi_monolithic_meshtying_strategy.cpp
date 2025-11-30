@@ -420,8 +420,7 @@ void SSI::MeshtyingStrategyBase::finalize_meshtying_structure_matrix(
     {
       const int rowlid_slave = ssi_structure_matrix.row_map().lid(dofgid_slave);
       if (rowlid_slave < 0) FOUR_C_THROW("Global ID not found!");
-      if (ssi_structure_matrix.replace_my_values(rowlid_slave, 1, &one, &rowlid_slave))
-        FOUR_C_THROW("replace_my_values failed!");
+      ssi_structure_matrix.replace_my_values(rowlid_slave, 1, &one, &rowlid_slave);
     }
 
     // apply pseudo Dirichlet conditions to unfilled matrix, i.e., to global row and column indices

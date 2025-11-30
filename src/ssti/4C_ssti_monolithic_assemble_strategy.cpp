@@ -1166,8 +1166,7 @@ void SSTI::AssembleStrategyBase::apply_meshtying_sys_mat(
     {
       const int rowlid_slave = systemmatrix_structure.row_map().lid(dofgid_slave);
       if (rowlid_slave < 0) FOUR_C_THROW("Global ID not found!");
-      if (systemmatrix_structure.replace_my_values(rowlid_slave, 1, &one, &rowlid_slave))
-        FOUR_C_THROW("ReplaceMyValues failed!");
+      systemmatrix_structure.replace_my_values(rowlid_slave, 1, &one, &rowlid_slave);
     }
 
     // apply pseudo Dirichlet conditions to unfilled matrix, i.e., to global row and

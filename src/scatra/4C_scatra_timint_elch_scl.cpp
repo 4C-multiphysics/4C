@@ -1016,8 +1016,7 @@ void ScaTra::ScaTraTimIntElchSCL::assemble_and_apply_mesh_tying()
     {
       const int rowlid_slave = micromatrix.row_map().lid(dofgid_slave);
       if (rowlid_slave < 0) FOUR_C_THROW("Global ID not found!");
-      if (micromatrix.replace_my_values(rowlid_slave, 1, &one, &rowlid_slave))
-        FOUR_C_THROW("ReplaceMyValues failed!");
+      micromatrix.replace_my_values(rowlid_slave, 1, &one, &rowlid_slave);
     }
 
     // apply pseudo Dirichlet conditions to unfilled matrix, i.e., to global row and column

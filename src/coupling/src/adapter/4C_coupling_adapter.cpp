@@ -762,7 +762,7 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Coupling::Adapter::Coupling::master_
   // OK. You cannot use the same exporter for different matrices. So we
   // recreate one all the time... This has to be optimized later on.
   Core::LinAlg::Export exporter(*permmasterdofmap_, *masterdofmap_);
-  permsm->import(sm, exporter, Insert);
+  permsm->import(sm, exporter, Core::LinAlg::CombineMode::insert);
   permsm->complete(sm.domain_map(), *permmasterdofmap_);
 
   return permsm;
@@ -785,7 +785,7 @@ std::shared_ptr<Core::LinAlg::SparseMatrix> Coupling::Adapter::Coupling::slave_t
   // OK. You cannot use the same exporter for different matrices. So we
   // recreate one all the time... This has to be optimized later on.
   Core::LinAlg::Export exporter(*permslavedofmap_, *slavedofmap_);
-  permsm->import(sm, exporter, Insert);
+  permsm->import(sm, exporter, Core::LinAlg::CombineMode::insert);
   permsm->complete(sm.domain_map(), *permslavedofmap_);
 
   return permsm;
@@ -841,7 +841,7 @@ void Coupling::Adapter::Coupling::setup_coupling_matrices(const Core::LinAlg::Ma
   auto tmp = std::make_shared<Core::LinAlg::SparseMatrix>(slavedomainmap, 1);
 
   Core::LinAlg::Import exporter(slavedomainmap, *perm_slave_dof_map());
-  tmp->import(*matsm_trans_, exporter, Insert);
+  tmp->import(*matsm_trans_, exporter, Core::LinAlg::CombineMode::insert);
   tmp->complete(shiftedmastermap, slavedomainmap);
   matsm_trans_ = tmp;
 }

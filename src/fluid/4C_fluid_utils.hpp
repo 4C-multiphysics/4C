@@ -155,7 +155,6 @@ namespace FLD
             if (rlid0 < 0) FOUR_C_THROW("Sparse matrix A does not have global row {}", rgid);
             if (rlid1 < 0) FOUR_C_THROW("Sparse matrix A does not have global row {}", rgid);
 #endif
-            int errone = 0;
             // separate the values of the current row
             nodespassed = 0;
             for (int lcol = 0; lcol < lcoldim; ++lcol)
@@ -177,21 +176,15 @@ namespace FLD
             // now assemble
             if (rowblock == 0)
             {  // rowblock 0
-              errone = matrix00_.sum_into_my_values(
+              matrix00_.sum_into_my_values(
                   rlid0, nnode * numdim_, values0.data(), localcol00.data());
-              if (errone) FOUR_C_THROW("sum_into_my_values() returned error code {}", errone);
-              errone =
-                  matrix01_.sum_into_my_values(rlid1, nnode, values1.data(), localcol01.data());
-              if (errone) FOUR_C_THROW("sum_into_my_values() returned error code {}", errone);
+              matrix01_.sum_into_my_values(rlid1, nnode, values1.data(), localcol01.data());
             }
             else
             {  // rowblock 1
-              errone = matrix10_.sum_into_my_values(
+              matrix10_.sum_into_my_values(
                   rlid0, nnode * numdim_, values0.data(), localcol10.data());
-              if (errone) FOUR_C_THROW("sum_into_my_values() returned error code {}", errone);
-              errone =
-                  matrix11_.sum_into_my_values(rlid1, nnode, values1.data(), localcol11.data());
-              if (errone) FOUR_C_THROW("sum_into_my_values() returned error code {}", errone);
+              matrix11_.sum_into_my_values(rlid1, nnode, values1.data(), localcol11.data());
             }
           }  // for (int lrow=0; lrow<ldim; ++lrow)
         }

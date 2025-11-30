@@ -124,7 +124,6 @@ namespace ReducedLung
       const KelvinVoigt& kelvin_voigt_model, TerminalUnitData& data,
       const std::vector<double>& elastic_pressure_grad_dp_el)
   {
-    [[maybe_unused]] int err;
     if (!target.filled())
     {
       for (size_t i = 0; i < data.number_of_elements(); i++)
@@ -133,10 +132,7 @@ namespace ReducedLung
         std::array<double, 3> values{1.0, -1.0,
             -elastic_pressure_grad_dp_el[i] -
                 kelvin_voigt_model.viscosity_eta[i] / data.reference_volume_v0[i]};
-        err =
-            target.insert_my_values(data.local_row_id[i], 3, values.data(), column_indices.data());
-        FOUR_C_ASSERT(
-            err == 0, "Internal error: Terminal Unit kelvin-voigt equation assembly did not work.");
+        target.insert_my_values(data.local_row_id[i], 3, values.data(), column_indices.data());
       }
     }
     else
@@ -145,9 +141,7 @@ namespace ReducedLung
       {
         double grad_q = -elastic_pressure_grad_dp_el[i] -
                         kelvin_voigt_model.viscosity_eta[i] / data.reference_volume_v0[i];
-        err = target.replace_my_values(data.local_row_id[i], 1, &grad_q, &data.lid_q[i]);
-        FOUR_C_ASSERT(
-            err == 0, "Internal error: Terminal Unit kelvin-voigt equation assembly did not work.");
+        target.replace_my_values(data.local_row_id[i], 1, &grad_q, &data.lid_q[i]);
       }
     }
   }
@@ -156,7 +150,6 @@ namespace ReducedLung
       const FourElementMaxwell& four_element_maxwell_model, TerminalUnitData& data,
       const std::vector<double>& elastic_pressure_grad_dp_el, double dt)
   {
-    [[maybe_unused]] int err;
     if (!target.filled())
     {
       for (size_t i = 0; i < data.number_of_elements(); i++)
@@ -170,10 +163,7 @@ namespace ReducedLung
                         (four_element_maxwell_model.elasticity_E_m[i] * dt +
                             four_element_maxwell_model.viscosity_eta_m[i])) /
                     data.reference_volume_v0[i]};
-        err =
-            target.insert_my_values(data.local_row_id[i], 3, values.data(), column_indices.data());
-        FOUR_C_ASSERT(err == 0,
-            "Internal error: Terminal Unit four-element maxwell equation assembly did not work.");
+        target.insert_my_values(data.local_row_id[i], 3, values.data(), column_indices.data());
       }
     }
     else
@@ -187,9 +177,7 @@ namespace ReducedLung
                                 (four_element_maxwell_model.elasticity_E_m[i] * dt +
                                     four_element_maxwell_model.viscosity_eta_m[i])) /
                             data.reference_volume_v0[i];
-        err = target.replace_my_values(data.local_row_id[i], 1, &grad_q, &data.lid_q[i]);
-        FOUR_C_ASSERT(err == 0,
-            "Internal error: Terminal Unit four-element maxwell equation assembly did not work.");
+        target.replace_my_values(data.local_row_id[i], 1, &grad_q, &data.lid_q[i]);
       }
     }
   }
