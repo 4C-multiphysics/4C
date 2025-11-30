@@ -1,5 +1,12 @@
 List of major features that were removed from 4C, including date and revision where code was removed
 
+Old beam contact framework
+- Removal of the old beam contact framework
+- reasons: last unported feature of enhanced gap function was implemented in the new beam interaction
+           framework
+- removed in commit 7cb4a73a502055997a2ff7c587cf0649d15389dd
+- removed by David Rudlstorfer
+
 Guarded code in beam3, beamcontact and beaminteraction
 - While cleaning up Core::LinAlg::MultiMapExtractor, some guarded code was found related to untested functions. The
   code was guarded by the flags:

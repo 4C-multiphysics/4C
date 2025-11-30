@@ -248,9 +248,6 @@ void Solid::TimIntStatics::evaluate_force_stiff_residual(Teuchos::ParameterList&
   //    K_{Teffdyn} = K_{T}
   // i.e. do nothing here
 
-  // apply forces and stiffness due to beam contact
-  apply_force_stiff_beam_contact(*stiff_, *fres_, *disn_, predict);
-
   // apply forces and stiffness due to contact / meshtying
   apply_force_stiff_contact_meshtying(stiff_, fres_, disn_, predict);
 
@@ -399,9 +396,6 @@ void Solid::TimIntStatics::update_step_state()
 
   // update contact / meshtying
   update_step_contact_meshtying();
-
-  // update beam contact
-  update_step_beam_contact();
 
   // update new external force
   //    F_{ext;n} := F_{ext;n+1}

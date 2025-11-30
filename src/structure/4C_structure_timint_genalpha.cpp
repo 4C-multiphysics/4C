@@ -479,10 +479,6 @@ void Solid::TimIntGenAlpha::evaluate_force_stiff_residual(Teuchos::ParameterList
     build_res_stiff_nl_mass_rot(*fres_, *fextn_, *fintn_, *finertn_, *stiff_, *mass_);
   }
 
-  // apply forces and stiffness due to beam contact ----> TR-like
-  // F_{c;n+1-alpha_f} := (1.-alphaf) * F_{c;n+1} + alpha_f * F_{c;n}
-  apply_force_stiff_beam_contact(*stiff_, *fres_, *disn_, predict);
-
   // apply forces and stiffness due to contact / meshtying ----> TR-like
   // F_{c;n+1-alpha_f} := (1.-alphaf) * F_{c;n+1} + alpha_f * F_{c;n}
   apply_force_stiff_contact_meshtying(stiff_, fres_, disn_, predict);
@@ -765,9 +761,6 @@ void Solid::TimIntGenAlpha::update_step_state()
 
   // update contact / meshtying
   update_step_contact_meshtying();
-
-  // update beam contact
-  update_step_beam_contact();
 }
 
 /*----------------------------------------------------------------------*/
