@@ -78,6 +78,7 @@ _add_dependency_to_config(ryml)
 _add_dependency_to_config(magic_enum)
 _add_dependency_to_config(ZLIB)
 _add_dependency_to_config(pybind11)
+_add_dependency_to_config(CLI11)
 
 # install the Find modules
 install(

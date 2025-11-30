@@ -24,10 +24,13 @@ namespace
   Core::Communication::Communicators mock_up_communicators()
   {
     // mock up for command line to create communicators
-    std::vector<std::string> argv{
-        "dummyEntryInputFile", "-nptype=separateInputFiles", "-ngroup=2", "-glayout=1,2"};
+    Core::Communication::CommConfig config = {
+        .ngroup = 2,
+        .group_layout = {1, 2},
+        .np_type = Core::Communication::NestedParallelismType::separate_input_files,
+    };
 
-    return Core::Communication::create_comm(argv);
+    return Core::Communication::create_comm(config);
   };
 
   /**

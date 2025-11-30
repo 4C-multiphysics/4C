@@ -380,8 +380,9 @@ namespace
     {
       Global::Problem* problem = Global::Problem::instance();
 
+      Core::Communication::CommConfig config;
       // create default communicators
-      Core::Communication::Communicators communicators = Core::Communication::create_comm({});
+      Core::Communication::Communicators communicators = Core::Communication::create_comm(config);
       problem->set_communicators(communicators);
       MPI_Comm comm = communicators.global_comm();
 

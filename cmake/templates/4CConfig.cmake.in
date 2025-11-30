@@ -82,6 +82,10 @@ if(FOUR_C_WITH_MAGIC_ENUM)
   find_package(magic_enum CONFIG HINTS ${FOUR_C_MAGIC_ENUM_ROOT})
 endif()
 
+if(FOUR_C_WITH_CLI11)
+  find_package(CLI11 CONFIG HINTS ${FOUR_C_CLI11_ROOT})
+endif()
+
 if(FOUR_C_WITH_PYBIND11)
   find_package(pybind11 CONFIG HINTS ${FOUR_C_PYBIND11_ROOT})
 endif()
