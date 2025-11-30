@@ -173,7 +173,8 @@ template <Core::FE::CellType celltype,
 static void evaluate_force_stiff(benchmark::State& state)
 {
   Core::Utils::SingletonOwnerRegistry::ScopeGuard guard;
-  Global::Problem::instance()->set_communicators(Core::Communication::create_comm({}));
+  Core::Communication::CommConfig config;
+  Global::Problem::instance()->set_communicators(Core::Communication::create_comm(config));
   setup_material_in_global_problem();
 
   auto dis = make_discretization<celltype>(ele_tech, kinem_type);

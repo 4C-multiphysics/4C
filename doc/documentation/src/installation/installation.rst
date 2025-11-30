@@ -389,8 +389,8 @@ They have to be placed in .vscode/launch.json in the configurations-list.
         "args": [
             "/path/to/inputfile",
             "<4C-problemdir>/xxxx"
-            "restart=1",
-            "restartfrom=<4C-problemdir>/xxx"
+            "--restart=1",
+            "--restartfrom=<4C-problemdir>/xxx"
         ],
         "cwd": "<4C-problemdir>",
         "setupCommands": [

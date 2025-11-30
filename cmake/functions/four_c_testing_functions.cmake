@@ -422,7 +422,7 @@ function(four_c_test_restart)
     set(name_of_test "${_parsed_BASED_ON}-restart_${_parsed_RESTART_STEP}-p${_parsed_NP}")
     get_test_property(${_parsed_BASED_ON} _internal_INPUT_FILE test_file_full_path)
     get_test_property(${_parsed_BASED_ON} _internal_OUTPUT_DIR test_directory)
-    set(restart_arguments "restart=${_parsed_RESTART_STEP}")
+    set(restart_arguments "--restart=${_parsed_RESTART_STEP}")
   else()
     # Restart from a different testfile
     set(name_of_test
@@ -431,7 +431,7 @@ function(four_c_test_restart)
     set(test_file_full_path "${PROJECT_SOURCE_DIR}/tests/input_files/${_parsed_TEST_FILE}")
     set(test_directory ${PROJECT_BINARY_DIR}/framework_test_output/${name_of_test})
     get_test_property(${_parsed_BASED_ON} _internal_OUTPUT_DIR base_directory)
-    set(restart_arguments "restartfrom=${base_directory}/xxx restart=${_parsed_RESTART_STEP}")
+    set(restart_arguments "--restartfrom=${base_directory}/xxx --restart=${_parsed_RESTART_STEP}")
 
     if(NOT EXISTS ${test_file_full_path})
       message(FATAL_ERROR "Test source file ${test_file_full_path} does not exist")
@@ -570,7 +570,7 @@ function(four_c_test_nested_parallelism name_of_input_file_1 name_of_input_file_
     NAME ${name_of_input_file_1}-nestedPar
     COMMAND
       bash -c
-      "mkdir -p ${test_directory} &&  ${MPIEXEC_EXECUTABLE} ${_mpiexec_all_args_for_testing} -np 3 $<TARGET_FILE:${FOUR_C_EXECUTABLE_NAME}> -ngroup=2 -glayout=1,2 -nptype=separateInputFiles ${PROJECT_SOURCE_DIR}/tests/input_files/${name_of_input_file_1} ${test_directory}/xxx ${PROJECT_SOURCE_DIR}/tests/input_files/${name_of_input_file_2} ${test_directory}/xxxAdditional"
+      "mkdir -p ${test_directory} &&  ${MPIEXEC_EXECUTABLE} ${_mpiexec_all_args_for_testing} -np 3 $<TARGET_FILE:${FOUR_C_EXECUTABLE_NAME}> --ngroup=2 --glayout=1,2 --nptype=separateInputFiles ${PROJECT_SOURCE_DIR}/tests/input_files/${name_of_input_file_1} ${test_directory}/xxx ${PROJECT_SOURCE_DIR}/tests/input_files/${name_of_input_file_2} ${test_directory}/xxxAdditional"
     )
 
   require_fixture(${name_of_input_file_1}-nestedPar test_cleanup)
@@ -583,7 +583,7 @@ function(four_c_test_nested_parallelism name_of_input_file_1 name_of_input_file_
       NAME ${name_of_input_file_1}-nestedPar-restart
       COMMAND
         bash -c
-        "${MPIEXEC_EXECUTABLE} ${_mpiexec_all_args_for_testing} -np 3 $<TARGET_FILE:${FOUR_C_EXECUTABLE_NAME}> -ngroup=2 -glayout=1,2 -nptype=separateInputFiles ${PROJECT_SOURCE_DIR}/tests/input_files/${name_of_input_file_1} ${test_directory}/xxx restart=${restart_step} ${PROJECT_SOURCE_DIR}/tests/input_files/${name_of_input_file_2} ${test_directory}/xxxAdditional restart=${restart_step}"
+        "${MPIEXEC_EXECUTABLE} ${_mpiexec_all_args_for_testing} -np 3 $<TARGET_FILE:${FOUR_C_EXECUTABLE_NAME}> --ngroup=2 --glayout=1,2 --nptype=separateInputFiles ${PROJECT_SOURCE_DIR}/tests/input_files/${name_of_input_file_1} ${test_directory}/xxx ${PROJECT_SOURCE_DIR}/tests/input_files/${name_of_input_file_2} ${test_directory}/xxxAdditional --restart=${restart_step},${restart_step}"
       )
 
     require_fixture(
