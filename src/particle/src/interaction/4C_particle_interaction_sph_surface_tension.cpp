@@ -37,7 +37,7 @@ Particle::SPHSurfaceTension::SPHSurfaceTension(const Teuchos::ParameterList& par
       liquidtype_(Particle::Phase1),
       gastype_(Particle::Phase2),
       fluidtypes_({liquidtype_, gastype_}),
-      boundarytypes_({Particle::BoundaryPhase, Particle::RigidPhase}),
+      boundarytypes_({Particle::BoundaryPhase, Particle::RigidPhase, Particle::PDPhase}),
       time_(0.0),
       timerampfct_(params.get<int>("SURFACETENSION_RAMP_FUNCT")),
       alpha0_(params_sph_.get<double>("SURFACETENSIONCOEFFICIENT")),

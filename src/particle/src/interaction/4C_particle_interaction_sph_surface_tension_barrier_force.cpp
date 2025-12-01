@@ -25,7 +25,7 @@ Particle::SPHBarrierForce::SPHBarrierForce(const Teuchos::ParameterList& params)
       liquidtype_(Particle::Phase1),
       gastype_(Particle::Phase2),
       fluidtypes_({liquidtype_, gastype_}),
-      boundarytypes_({Particle::BoundaryPhase, Particle::RigidPhase}),
+      boundarytypes_({Particle::BoundaryPhase, Particle::RigidPhase, Particle::PDPhase}),
       dist_(params_sph_.get<double>("BARRIER_FORCE_DISTANCE")),
       cr_(params_sph_.get<double>("BARRIER_FORCE_TEMPSCALE")),
       trans_ref_temp_(params_sph_.get<double>("TRANS_REF_TEMPERATURE")),

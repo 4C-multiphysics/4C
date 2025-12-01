@@ -50,7 +50,7 @@ Particle::SPHMomentum::SPHMomentum(const Teuchos::ParameterList& params)
           {Particle::Phase1, Particle::Phase2, Particle::DirichletPhase, Particle::NeumannPhase}),
       intfluidtypes_({Particle::Phase1, Particle::Phase2, Particle::NeumannPhase}),
       purefluidtypes_({Particle::Phase1, Particle::Phase2}),
-      boundarytypes_({Particle::BoundaryPhase, Particle::RigidPhase})
+      boundarytypes_({Particle::BoundaryPhase, Particle::RigidPhase, Particle::PDPhase})
 {
   init_momentum_formulation_handler();
 

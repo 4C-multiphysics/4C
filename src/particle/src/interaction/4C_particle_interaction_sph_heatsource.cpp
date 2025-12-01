@@ -60,7 +60,7 @@ void Particle::SPHHeatSourceBase::setup(
 
   // set of potential absorbing particle types
   std::set<Particle::TypeEnum> potentialabsorbingtypes = {
-      Particle::Phase1, Particle::Phase2, Particle::RigidPhase};
+      Particle::Phase1, Particle::Phase2, Particle::RigidPhase, Particle::PDPhase};
 
   // iterate over particle types
   for (const auto& type_i : particlecontainerbundle_->get_particle_types())

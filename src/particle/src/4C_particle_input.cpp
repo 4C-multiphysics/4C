@@ -121,7 +121,9 @@ std::vector<Core::IO::InputSpec> Particle::valid_parameters()
 
           parameter<double>("RIGID_BODY_PHASECHANGE_RADIUS",
               {.description = "search radius for neighboring rigid bodies in case of phase change",
-                  .default_value = -1.0})},
+                  .default_value = -1.0}),
+          parameter<bool>("PD_BODY_INTERACTION",
+              {.description = "consider peridynamic body interaction", .default_value = false})},
       {.required = false}));
   /*-------------------------------------------------------------------------*
  | control parameters for initial/boundary conditions |
@@ -375,10 +377,9 @@ std::vector<Core::IO::InputSpec> Particle::valid_parameters()
               "DIRICHLETBOUNDARYTYPE", {.description = "type of dirichlet open boundary",
                                            .default_value = Particle::NoDirichletOpenBoundary}),
 
-          parameter<int>("DIRICHLET_FUNCT",
-              {.description =
-                      "number of function governing velocity condition on dirichlet open boundary",
-                  .default_value = -1}),
+          parameter<int>("DIRICHLET_FUNCT", {.description = "number of function governing velocity "
+                                                            "condition on dirichlet open boundary",
+                                                .default_value = -1}),
 
           parameter<std::string>("DIRICHLET_OUTWARD_NORMAL",
               {.description = "direction of outward normal on dirichlet open boundary",
@@ -549,6 +550,35 @@ std::vector<Core::IO::InputSpec> Particle::valid_parameters()
           parameter<double>("ADHESION_SURFACE_ENERGY_FACTOR",
               {.description = "factor to calculate minimum adhesion surface energy",
                   .default_value = 1.0})},
+      {.required = false}));
+
+  /*-------------------------------------------------------------------------*
+   | peridynamics (PD) specific control parameters                           |
+   *-------------------------------------------------------------------------*/
+  specs.push_back(group("PARTICLE DYNAMIC/PD",
+      {
+
+          // compact support in peridynamics
+          parameter<double>(
+              "INTERACTION_HORIZON", {.description = "peridynamic horizon", .default_value = 0.0}),
+
+          // the spatial grid spacing of the peridynamic grid
+          parameter<double>("PERIDYNAMIC_GRID_SPACING",
+              {.description = "peridynamic grid spacing", .default_value = 0.0}),
+
+          // type of normal contact law
+          deprecated_selection<NormalContact>("NORMALCONTACTLAW",
+              {
+                  {"NormalLinearSpring", Particle::NormalLinSpring},
+                  {"NormalLinearSpringDamp", Particle::NormalLinSpringDamp},
+              },
+              {.description = "normal contact law for particles between peridynamic bodies",
+                  .default_value = Particle::NormalLinSpring}),
+
+          parameter<double>(
+              "NORMAL_STIFF", {.description = "normal contact stiffness", .default_value = 0.0}),
+          parameter<double>("NORMAL_DAMP",
+              {.description = "normal contact damping parameter", .default_value = 0.0})},
       {.required = false}));
   return specs;
 }

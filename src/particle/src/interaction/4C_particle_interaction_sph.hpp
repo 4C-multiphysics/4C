@@ -23,6 +23,7 @@ FOUR_C_NAMESPACE_OPEN
  *---------------------------------------------------------------------------*/
 namespace Particle
 {
+  class PDNeighborPairs;
   class SPHBoundaryParticleBase;
   class SPHDensityBase;
   class SPHEquationOfStateBundle;
@@ -30,6 +31,7 @@ namespace Particle
   class SPHMomentum;
   class SPHNeighborPairs;
   class SPHOpenBoundaryBase;
+  class SPHPeridynamic;
   class SPHPhaseChangeBase;
   class SPHPressure;
   class SPHRigidParticleContactBase;
@@ -154,6 +156,9 @@ namespace Particle
     //! init rigid particle contact handler
     void init_rigid_particle_contact_handler();
 
+    //! init peridynamic interaction handler
+    void init_peridynamic_interaction_handler();
+
     //! smoothed particle hydrodynamics specific parameter list
     const Teuchos::ParameterList& params_sph_;
 
@@ -165,6 +170,9 @@ namespace Particle
 
     //! neighbor pair handler
     std::shared_ptr<Particle::SPHNeighborPairs> neighborpairs_;
+
+    //! neighbor pair handler for peridynamic phase particles
+    std::shared_ptr<Particle::PDNeighborPairs> neighborpairs_solid_type_;
 
     //! density handler
     std::unique_ptr<Particle::SPHDensityBase> density_;
@@ -198,6 +206,9 @@ namespace Particle
 
     //! rigid particle contact handler
     std::unique_ptr<Particle::SPHRigidParticleContactBase> rigidparticlecontact_;
+
+    //! peridynamic handler
+    std::unique_ptr<Particle::SPHPeridynamic> peridynamics_;
   };
 
 }  // namespace Particle
