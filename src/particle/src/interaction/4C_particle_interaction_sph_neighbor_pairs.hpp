@@ -26,17 +26,9 @@ namespace Particle
 {
   class ParticleEngineInterface;
   class ParticleContainerBundle;
-}  // namespace Particle
-
-namespace Particle
-{
   class WallHandlerInterface;
-}
-
-namespace Particle
-{
   class SPHKernelBase;
-}
+}  // namespace Particle
 
 /*---------------------------------------------------------------------------*
  | type definitions                                                          |

@@ -60,8 +60,10 @@ void Particle::TimInt::setup(
   // set of particle types being excluded from time integration
   std::set<Particle::TypeEnum> typesexludedfromtimeintegration;
 
-  // boundary and rigid particles are not integrated in time
-  typesexludedfromtimeintegration.insert({Particle::BoundaryPhase, Particle::RigidPhase});
+  // boundary particles are never integrated in time
+  typesexludedfromtimeintegration.insert({Particle::BoundaryPhase});
+  // rigidbody body handler takes care of time integration on its own
+  if (particlerigidbodyinterface_) typesexludedfromtimeintegration.insert({Particle::RigidPhase});
 
   if (dirichletboundarycondition_)
   {

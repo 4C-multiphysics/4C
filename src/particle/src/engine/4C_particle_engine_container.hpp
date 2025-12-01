@@ -326,7 +326,7 @@ namespace Particle
     inline void clear_state(ParticleState state)
     {
 #ifdef FOUR_C_ENABLE_ASSERTIONS
-      if (not storedstates_.count(state))
+      if (not storedstates_.contains(state))
         FOUR_C_THROW("particle state '{}' not stored in container!", enum_to_state_name(state));
 #endif
 

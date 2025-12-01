@@ -8,9 +8,11 @@
 #include "4C_particle_interaction_sph.hpp"
 
 #include "4C_io_pstream.hpp"
+#include "4C_mat_particle_pd.hpp"
 #include "4C_particle_engine_container.hpp"
 #include "4C_particle_engine_interface.hpp"
 #include "4C_particle_interaction_material_handler.hpp"
+#include "4C_particle_interaction_pd_neighbor_pairs.hpp"
 #include "4C_particle_interaction_sph_boundary_particle.hpp"
 #include "4C_particle_interaction_sph_density.hpp"
 #include "4C_particle_interaction_sph_equationofstate.hpp"
@@ -19,6 +21,7 @@
 #include "4C_particle_interaction_sph_momentum.hpp"
 #include "4C_particle_interaction_sph_neighbor_pairs.hpp"
 #include "4C_particle_interaction_sph_open_boundary.hpp"
+#include "4C_particle_interaction_sph_peridynamic.hpp"
 #include "4C_particle_interaction_sph_phase_change.hpp"
 #include "4C_particle_interaction_sph_pressure.hpp"
 #include "4C_particle_interaction_sph_rigid_particle_contact.hpp"
@@ -91,6 +94,9 @@ void Particle::ParticleInteractionSPH::initialize_members()
   // init rigid particle contact handler
   init_rigid_particle_contact_handler();
 
+  // init peridynamic interaction handler
+  init_peridynamic_interaction_handler();
+
   // safety check
   if (surfacetension_ and virtualwallparticle_)
     FOUR_C_THROW("surface tension formulation with wall interaction not implemented!");
@@ -105,6 +111,10 @@ void Particle::ParticleInteractionSPH::setup(
 
   // setup neighbor pair handler
   neighborpairs_->setup(particleengineinterface, particlewallinterface, kernel_);
+
+  // setup neighbor pair handler for boundary/rigid phases
+  if (peridynamics_)
+    neighborpairs_solid_type_->setup(particleengineinterface, particlewallinterface);
 
   // setup density handler
   density_->setup(particleengineinterface, particlewallinterface, kernel_, particlematerial_,
@@ -152,6 +162,9 @@ void Particle::ParticleInteractionSPH::setup(
     rigidparticlecontact_->setup(
         particleengineinterface, particlewallinterface, particleinteractionwriter_, neighborpairs_);
 
+  // setup peridynamic handler
+  if (peridynamics_) peridynamics_->setup(particleengineinterface, particlematerial_);
+
   // short screen output
   if ((dirichletopenboundary_ or neumannopenboundary_) and
       particleengineinterface_->have_periodic_boundary_conditions())
@@ -166,6 +179,9 @@ void Particle::ParticleInteractionSPH::write_restart() const
 {
   // call base class function
   ParticleInteractionBase::write_restart();
+
+  // call peridynamic specific function
+  if (peridynamics_) neighborpairs_solid_type_->write_restart();
 }
 
 void Particle::ParticleInteractionSPH::read_restart(
@@ -173,6 +189,9 @@ void Particle::ParticleInteractionSPH::read_restart(
 {
   // call base class function
   ParticleInteractionBase::read_restart(reader);
+
+  // call peridynamic specific function
+  if (peridynamics_) neighborpairs_solid_type_->read_restart(reader);
 }
 
 void Particle::ParticleInteractionSPH::insert_particle_states_of_particle_types(
@@ -219,6 +238,9 @@ void Particle::ParticleInteractionSPH::insert_particle_states_of_particle_types(
   // additional states for surface tension formulation
   if (surfacetension_)
     surfacetension_->insert_particle_states_of_particle_types(particlestatestotypes);
+
+  // states for peridynamic interaction
+  if (peridynamics_) peridynamics_->insert_particle_states_of_particle_types(particlestatestotypes);
 }
 
 void Particle::ParticleInteractionSPH::set_initial_states()
@@ -320,6 +342,35 @@ void Particle::ParticleInteractionSPH::set_initial_states()
       // set initial temperature for all particles of current type
       container->set_state(inittemperature, Particle::Temperature);
     }
+
+    // set initial state for peridynamics
+    if (peridynamics_ && type_i == Particle::RigidPhase)
+    {
+      // set particle reference position
+      container->update_state(0.0, Particle::ReferencePosition, 1.0, Particle::Position);
+
+      // get material for current particle type
+      const Mat::PAR::ParticleMaterialPD* material =
+          dynamic_cast<const Mat::PAR::ParticleMaterialPD*>(
+              particlematerial_->get_ptr_to_particle_mat_parameter(type_i));
+
+      // get Young's module of the material
+      std::vector<double> young(1);
+      young[0] = material->young_;
+
+      // set Young's modulus for all particles of current type
+      container->set_state(young, Particle::Young);
+
+      // get Young's module of the material
+      std::vector<double> stretch(1);
+      stretch[0] = material->critical_stretch_;
+
+      // set Young's modulus for all particles of current type
+      container->set_state(stretch, Particle::CriticalStretch);
+
+      // initialize peridynamic bond list once at the beginning of the simulation
+      peridynamics_->init_peridynamic_bondlist();
+    }
   }
 }
 
@@ -340,6 +391,7 @@ void Particle::ParticleInteractionSPH::evaluate_interactions()
 
   // evaluate particle neighbor pairs
   neighborpairs_->evaluate_neighbor_pairs();
+  if (peridynamics_) neighborpairs_solid_type_->evaluate_neighbor_pairs();
 
   // init relative positions of virtual particles
   if (virtualwallparticle_)
@@ -377,6 +429,9 @@ void Particle::ParticleInteractionSPH::evaluate_interactions()
 
   // add rigid particle contact contribution to force field
   if (rigidparticlecontact_) rigidparticlecontact_->add_force_contribution();
+
+  // add peridynamic interaction contributions to the force field
+  if (peridynamics_) peridynamics_->add_acceleration_contribution();
 }
 
 void Particle::ParticleInteractionSPH::post_evaluate_time_step(
@@ -394,6 +449,9 @@ void Particle::ParticleInteractionSPH::post_evaluate_time_step(
 
   // evaluate phase change
   if (phasechange_) phasechange_->evaluate_phase_change(particlesfromphasetophase);
+
+  // evaluate peridynamic damage
+  if (peridynamics_) peridynamics_->damage_evaluation();
 }
 
 double Particle::ParticleInteractionSPH::max_interaction_distance() const
@@ -408,7 +466,11 @@ void Particle::ParticleInteractionSPH::distribute_interaction_history() const
 
 void Particle::ParticleInteractionSPH::communicate_interaction_history() const
 {
-  // nothing to do
+  if (peridynamics_)
+  {
+    neighborpairs_solid_type_->communicate_bond_list(
+        particleengineinterface_->get_communicated_particle_targets());
+  }
 }
 
 void Particle::ParticleInteractionSPH::set_current_time(const double currenttime)
@@ -474,6 +536,13 @@ void Particle::ParticleInteractionSPH::init_neighbor_pair_handler()
 {
   // create neighbor pair handler
   neighborpairs_ = std::make_shared<Particle::SPHNeighborPairs>();
+
+  // is PD body interaction included
+  if (params_.get<bool>("PD_BODY_INTERACTION"))
+  {
+    // create neighbor pair handler
+    neighborpairs_solid_type_ = std::make_shared<Particle::PDNeighborPairs>(comm_);
+  }
 }
 
 void Particle::ParticleInteractionSPH::init_density_handler()
@@ -764,6 +833,19 @@ void Particle::ParticleInteractionSPH::init_rigid_particle_contact_handler()
       FOUR_C_THROW("unknown rigid particle contact type!");
       break;
     }
+  }
+}
+
+void Particle::ParticleInteractionSPH::init_peridynamic_interaction_handler()
+{
+  // existence of peridynamic body interactions
+  if (params_.get<bool>("PD_BODY_INTERACTION"))
+  {
+    // initialize peridynamic handler
+    peridynamics_ = std::make_unique<Particle::SPHPeridynamic>(params_);
+
+    // init peridynamic handler
+    peridynamics_->init(neighborpairs_solid_type_);
   }
 }
 

@@ -3861,6 +3861,18 @@ std::unordered_map<Core::Materials::MaterialType, Core::IO::InputSpec> Global::v
         {.description = "particle wall material for DEM"});
   }
 
+  // particle material pd
+  {
+    known_materials[Core::Materials::m_particle_pd] = group("MAT_ParticlePD",
+        {
+            parameter<double>("INITRADIUS", {.description = "initial radius"}),
+            parameter<double>("INITDENSITY", {.description = "mass density"}),
+            parameter<double>("YOUNG", {.description = "Young's modulus"}),
+            parameter<double>("CRITICAL_STRETCH", {.description = "critical stretch"}),
+        },
+        {.description = "particle material for PD"});
+  }
+
   /*----------------------------------------------------------------------*/
   // General mixture models (used for prestretching and for homogenized constrained mixture models)
   {
