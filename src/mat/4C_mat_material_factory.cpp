@@ -109,6 +109,7 @@
 #include "4C_mat_newtonianfluid.hpp"
 #include "4C_mat_par_bundle.hpp"
 #include "4C_mat_particle_dem.hpp"
+#include "4C_mat_particle_pd.hpp"
 #include "4C_mat_particle_sph_boundary.hpp"
 #include "4C_mat_particle_sph_fluid.hpp"
 #include "4C_mat_particle_wall_dem.hpp"
@@ -995,6 +996,10 @@ std::unique_ptr<Core::Mat::PAR::Parameter> Mat::make_parameter(
     case Core::Materials::m_particle_wall_dem:
     {
       return make_parameter_impl<Mat::PAR::ParticleWallMaterialDEM>(id, type, input_data);
+    }
+    case Core::Materials::m_particle_pd:
+    {
+      return make_parameter_impl<Mat::PAR::ParticleMaterialPD>(id, type, input_data);
     }
     case Core::Materials::m_superelast:
     {
