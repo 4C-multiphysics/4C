@@ -119,91 +119,91 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 40
       QUANTITY: "phi1"
-      VALUE: 8.253996026970537
+      VALUE: 8.25296661092517425e+00
       TOLERANCE: 8.3e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 40
       QUANTITY: "phi2"
-      VALUE: -7.105760192825455e-08
+      VALUE: -7.14348175936271082e-08
       TOLERANCE: 1e-16
   - SCATRA:
       DIS: "scatra"
       NODE: 277
       QUANTITY: "phi1"
-      VALUE: 1.2001345010099567
+      VALUE: 1.20014107198621489e+00
       TOLERANCE: 1.2e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 277
       QUANTITY: "phi2"
-      VALUE: -0.09967909396280397
+      VALUE: -9.96856506241906304e-02
       TOLERANCE: 1e-10
   - SCATRA:
       DIS: "scatra"
       NODE: 391
       QUANTITY: "phi1"
-      VALUE: 1.1999563668457973
+      VALUE: 1.19996227076906758e+00
       TOLERANCE: 1.2e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 391
       QUANTITY: "phi2"
-      VALUE: -0.09968621890868595
+      VALUE: -9.96928028733433530e-02
       TOLERANCE: 1e-10
   - SCATRA:
       DIS: "scatra"
       NODE: 452
       QUANTITY: "phi1"
-      VALUE: 12.647578361190495
+      VALUE: 1.26483404520149261e+01
       TOLERANCE: 1.3e-08
   - SCATRA:
       DIS: "scatra"
       NODE: 452
       QUANTITY: "phi2"
-      VALUE: 3.770328187418144
+      VALUE: 3.77028605033560504e+00
       TOLERANCE: 3.8e-09
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "soc1"
-      VALUE: 0.9444453431258195
+      VALUE: 9.44429863318030915e-01
       TOLERANCE: 9.4e-10
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "soc2"
-      VALUE: 0.9583639979414553
+      VALUE: 9.58353474220247414e-01
       TOLERANCE: 9.6e-10
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "c-rate1"
-      VALUE: -10.000110496874395
+      VALUE: -1.00324820456902302e+01
       TOLERANCE: 1e-06
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "c-rate2"
-      VALUE: -7.494515909014734
+      VALUE: -7.51808782123637531e+00
       TOLERANCE: 7.5e-07
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "cellvoltage"
-      VALUE: 3.7703272487862627
+      VALUE: 3.77028511205057226e+00
       TOLERANCE: 3.8e-09
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "numiterlastnewton"
-      VALUE: 4
+      VALUE: 3
       TOLERANCE: 1e-16
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "numiterlastsolve"
-      VALUE: 36
+      VALUE: 10
       TOLERANCE: 1e-16
 DESIGN SURF NEUMANN CONDITIONS:
   - E: 6
