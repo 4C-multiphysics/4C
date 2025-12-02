@@ -359,31 +359,31 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 4
       QUANTITY: "phi1"
-      VALUE: 3.65053754629629097e+01
+      VALUE: 3.65054010958037054e+01
       TOLERANCE: 3.7e-07
   - SCATRA:
       DIS: "scatra"
       NODE: 4
       QUANTITY: "phi2"
-      VALUE: 6.85348944241727983e-03
+      VALUE: 6.85349116701834682e-03
       TOLERANCE: 6.9e-11
   - STRUCTURE:
       DIS: "structure"
       NODE: 4
       QUANTITY: "dispx"
-      VALUE: -3.06912386947469945e-08
+      VALUE: -3.06912608171346663e-08
       TOLERANCE: 3.1e-16
   - STRUCTURE:
       DIS: "structure"
       NODE: 4
       QUANTITY: "dispy"
-      VALUE: -1.99929822149893233e-10
+      VALUE: -1.99929965096122679e-10
       TOLERANCE: 1.0e-16
   - STRUCTURE:
       DIS: "structure"
       NODE: 4
       QUANTITY: "dispz"
-      VALUE: 5.21228747295206647e-10
+      VALUE: 5.21229116790241414e-10
       TOLERANCE: 1.0e-16
   - SCATRA:
       DIS: "thermo"
@@ -407,19 +407,19 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 634
       QUANTITY: "dispx"
-      VALUE: -5.85806061750326819e-08
+      VALUE: -5.85806484066342936e-08
       TOLERANCE: 5.9e-16
   - STRUCTURE:
       DIS: "structure"
       NODE: 634
       QUANTITY: "dispy"
-      VALUE: -1.83181253858118874e-10
+      VALUE: -1.83181395785904628e-10
       TOLERANCE: 1.0e-16
   - STRUCTURE:
       DIS: "structure"
       NODE: 634
       QUANTITY: "dispz"
-      VALUE: 2.58915688440568041e-10
+      VALUE: 2.58915870289603303e-10
       TOLERANCE: 1.0e-16
   - SCATRA:
       DIS: "thermo"
@@ -443,7 +443,7 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 767
       QUANTITY: "dispx"
-      VALUE: -7.83725658898547641e-09
+      VALUE: -7.83726231520099078e-09
       TOLERANCE: 1.0e-16
   - STRUCTURE:
       DIS: "structure"
@@ -455,7 +455,7 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 767
       QUANTITY: "dispz"
-      VALUE: -2.02428241414476604e-09
+      VALUE: -2.02428394051246211e-09
       TOLERANCE: 1.0e-16
   - SCATRA:
       DIS: "thermo"
@@ -467,7 +467,7 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "soc1"
-      VALUE: 5.58743670562467315e-04
+      VALUE: 5.58744074417275634e-04
       TOLERANCE: 5.6e-12
   - SCATRA:
       DIS: "scatra"
@@ -478,7 +478,7 @@ RESULT DESCRIPTION:
   - SSTI:
       SPECIAL: true
       QUANTITY: "numiterlastnonlinearsolve"
-      VALUE: 5
+      VALUE: 4
       TOLERANCE: 1.0e-16
 DESIGN SURF TRANSPORT NEUMANN CONDITIONS:
   - E: 12
