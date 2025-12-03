@@ -76,12 +76,12 @@ namespace BeamInteraction
 
     inline double beam_to_beam_function_id_for_point_penalty() const
     {
-      return btb_function_id_for_point_penalty;
+      return btb_function_id_for_point_penalty_;
     }
 
     inline double beam_to_beam_function_id_for_line_penalty() const
     {
-      return btb_function_id_for_line_penalty;
+      return btb_function_id_for_line_penalty_;
     }
 
 
@@ -132,13 +132,13 @@ namespace BeamInteraction
     double btb_point_penalty_param_;
 
     //! function id for the beam-to-beam point penalty evaluated from a function
-    int btb_function_id_for_point_penalty;
+    int btb_function_id_for_point_penalty_;
 
     //! beam-to-beam line penalty parameter
     double btb_line_penalty_param_;
 
     //! function id for beam-to-beam line penalty parameter
-    int btb_function_id_for_line_penalty;
+    int btb_function_id_for_line_penalty_;
 
     //! shifting angles [radians] for point contact (near perpendicular configurations) fade
     double btb_perp_shifting_angle1_;
