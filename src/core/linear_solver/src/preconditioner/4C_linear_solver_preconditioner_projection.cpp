@@ -40,8 +40,8 @@ void Core::LinearSolver::ProjectionPreconditioner::setup(
   // actual preconditioner is called first and the projection is done
   // afterwards.
 
-  p_thyra_ = Teuchos::make_rcp<Core::LinearSolver::LinalgPrecondOperator>(
-      preconditioner_->thyra_operator(), true, projector_);
+  p_ = Teuchos::make_rcp<Core::LinearSolver::LinalgPrecondOperator>(
+      preconditioner_->prec_operator(), true, projector_);
 }
 
 

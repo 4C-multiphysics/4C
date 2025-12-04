@@ -39,9 +39,7 @@ namespace Core::LinearSolver
     virtual void setup(std::shared_ptr<Core::LinAlg::BlockSparseMatrixBase> A);
 
     /// linear operator used for preconditioning
-    std::shared_ptr<Epetra_Operator> prec_operator() const override;
-
-    Teuchos::RCP<const Thyra::LinearOpBase<double>> thyra_operator() const override
+    Teuchos::RCP<const Thyra::LinearOpBase<double>> prec_operator() const override
     {
       FOUR_C_THROW("One should not end up here.");
     }

@@ -99,8 +99,8 @@ int Core::LinearSolver::IterativeSolver::solve(Core::LinAlg::MultiVector<double>
 
   if (preconditioner_ != nullptr)
   {
-    // TODO: Preconditioner seems to work not that properly (Blocked MueLu and Krylov Projection)
-    auto belosPrec = preconditioner_->thyra_operator();
+    // TODO: Preconditioner seems to work not that properly (Blocked MueLu)
+    auto belosPrec = preconditioner_->prec_operator();
     problem->setRightPrec(belosPrec);
   }
 

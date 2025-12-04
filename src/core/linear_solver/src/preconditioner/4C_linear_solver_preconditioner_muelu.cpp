@@ -119,9 +119,7 @@ void Core::LinearSolver::MueLuPreconditioner::setup(
         builder.createPreconditioningStrategy("MueLu");
     Teuchos::RCP<Thyra::PreconditionerBase<double>> prec =
         Thyra::prec<double>(*precFactory, pmatrix_);
-    p_thyra_ = prec->getUnspecifiedPrecOp();
-    
-    p_ = std::make_shared<Teko::Epetra::EpetraInverseOpWrapper>(p_thyra_);
+    p_ = prec->getUnspecifiedPrecOp();
   }
   else
   {
@@ -222,7 +220,7 @@ void Core::LinearSolver::MueLuPreconditioner::setup(
     }
 
     mueLuFactory.SetupHierarchy(*H_);
-    p_ = std::make_shared<MueLu::EpetraOperator>(H_);
+    // p_ = std::make_shared<MueLu::EpetraOperator>(H_);
   }
 }
 
