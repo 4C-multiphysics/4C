@@ -32,12 +32,7 @@ namespace Core::LinearSolver
     void setup(Core::LinAlg::SparseOperator& matrix, Core::LinAlg::MultiVector<double>& b) override;
 
     /// linear operator used for preconditioning
-    std::shared_ptr<Epetra_Operator> prec_operator() const override { return p_; }
-
-    Teuchos::RCP<const Thyra::LinearOpBase<double>> thyra_operator() const override
-    {
-      return p_thyra_;
-    }
+    Teuchos::RCP<const Thyra::LinearOpBase<double>> prec_operator() const override { return p_; }
 
    private:
     std::shared_ptr<PreconditionerTypeBase> preconditioner_;
@@ -45,9 +40,7 @@ namespace Core::LinearSolver
     /// projector object that does the actual work
     std::shared_ptr<Core::LinAlg::LinearSystemProjector> projector_;
 
-    std::shared_ptr<Epetra_Operator> p_;
-
-    Teuchos::RCP<const Thyra::LinearOpBase<double>> p_thyra_;
+    Teuchos::RCP<const Thyra::LinearOpBase<double>> p_;
   };
 
   /*!
