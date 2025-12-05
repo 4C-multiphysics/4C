@@ -62,6 +62,10 @@ std::shared_ptr<Core::LinAlg::Graph> Core::Rebalance::rebalance_graph(
 {
   TEUCHOS_FUNC_TIME_MONITOR("Rebalance::rebalance_graph");
 
+  rebalanceParams.set("debug_level", "no_status");
+  Teuchos::ParameterList& zparams = rebalanceParams.sublist("zoltan_parameters", false);
+  zparams.set("debug_level", "0");
+
   if (!initialGraph.filled()) FOUR_C_THROW("Graph to be rebalanced is not completed yet!");
 
   using GraphAdapter = Zoltan2::XpetraCrsGraphAdapter<Epetra_CrsGraph, Epetra_MultiVector>;
@@ -129,6 +133,10 @@ Core::Rebalance::rebalance_coordinates(const Core::LinAlg::MultiVector<double>& 
     const Core::LinAlg::MultiVector<double>& initialWeights)
 {
   TEUCHOS_FUNC_TIME_MONITOR("Rebalance::rebalance_coordinates");
+
+  rebalanceParams.set("debug_level", "no_status");
+  Teuchos::ParameterList& zparams = rebalanceParams.sublist("zoltan_parameters", false);
+  zparams.set("debug_level", "0");
 
   using VectorAdapter = Zoltan2::XpetraMultiVectorAdapter<Epetra_MultiVector>;
 
