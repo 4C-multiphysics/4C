@@ -235,7 +235,7 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 10
       QUANTITY: "phi2"
-      VALUE: -7.57877643887606216e-09
+      VALUE: -7.57877698616674888e-09
       TOLERANCE: 1.0e-16
   - SCATRA:
       DIS: "scatra"
@@ -354,7 +354,7 @@ RESULT DESCRIPTION:
   - SSI:
       SPECIAL: true
       QUANTITY: "numiterlastlinearsolve"
-      VALUE: 39
+      VALUE: 36
       TOLERANCE: 1.0e-16
   - SSI:
       SPECIAL: true

@@ -176,7 +176,7 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 40
       QUANTITY: "phi2"
-      VALUE: -7.11975713773337415e-08
+      VALUE: -7.11293298769760287e-08
       TOLERANCE: 7.1e-15
   - SCATRA:
       DIS: "thermo"
@@ -336,7 +336,7 @@ RESULT DESCRIPTION:
   - STI:
       SPECIAL: true
       QUANTITY: "numiterlastlinearsolve"
-      VALUE: 31
+      VALUE: 57
       TOLERANCE: 1.0e-16
 DESIGN SURF NEUMANN CONDITIONS:
   - E: 6

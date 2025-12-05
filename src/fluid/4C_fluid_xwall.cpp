@@ -637,7 +637,7 @@ void FLD::XWall::setup_x_wall_dis()
 
     Teuchos::ParameterList rebalanceParams;
     rebalanceParams.set<std::string>(
-        "num parts", std::to_string(Core::Communication::num_mpi_ranks(comm)));
+        "num_global_parts", std::to_string(Core::Communication::num_mpi_ranks(comm)));
 
     const auto& [rownodes, colnodes] =
         Core::Rebalance::rebalance_node_maps(*nodegraph, rebalanceParams);

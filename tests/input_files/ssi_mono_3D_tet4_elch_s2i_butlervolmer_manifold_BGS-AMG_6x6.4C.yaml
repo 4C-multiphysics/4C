@@ -241,13 +241,13 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 10
       QUANTITY: "phi1"
-      VALUE: 1.03665205431324647e+01
+      VALUE: 1.03664441584827767e+01
       TOLERANCE: 1.0e-07
   - SCATRA:
       DIS: "scatra"
       NODE: 10
       QUANTITY: "phi2"
-      VALUE: -7.57876495984511681e-09
+      VALUE: -7.57874691189898314e-09
       TOLERANCE: 1.0e-16
   - SCATRA:
       DIS: "scatra"
@@ -259,7 +259,7 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 140
       QUANTITY: "phi2"
-      VALUE: -8.58129601904073225e-02
+      VALUE: -8.58135896846450585e-02
       TOLERANCE: 8.6e-10
   - SCATRA:
       DIS: "scatra"
@@ -271,25 +271,25 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 160
       QUANTITY: "phi2"
-      VALUE: -8.58126487585977177e-02
+      VALUE: -8.58132782673823591e-02
       TOLERANCE: 8.6e-10
   - SCATRA:
       DIS: "scatra"
       NODE: 200
       QUANTITY: "phi1"
-      VALUE: 1.10842911493693226e+01
+      VALUE: 1.10843099085660644e+01
       TOLERANCE: 1.1e-07
   - SCATRA:
       DIS: "scatra"
       NODE: 200
       QUANTITY: "phi2"
-      VALUE: 3.85931985282860168e+00
+      VALUE: 3.85931915133288328e+00
       TOLERANCE: 3.9e-08
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "soc1"
-      VALUE: 9.79159190301871263e-01
+      VALUE: 9.79155380604996961e-01
       TOLERANCE: 9.8e-09
   - SCATRA:
       DIS: "scatra"
@@ -301,79 +301,79 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "c-rate1"
-      VALUE: -1.92153436025849067e+00
+      VALUE: -1.91871661076360756e+00
       TOLERANCE: 1.9e-06
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "c-rate2"
-      VALUE: -1.50663499803935896e-01
+      VALUE: -1.51645044103901616e-01
       TOLERANCE: 1.5e-07
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "cellvoltage"
-      VALUE: 3.85931977128313264e+00
+      VALUE: 3.85931906979170103e+00
       TOLERANCE: 3.9e-08
   - STRUCTURE:
       DIS: "structure"
       NODE: 140
       QUANTITY: "dispx"
-      VALUE: -2.18440819224949511e-05
+      VALUE: -2.18440737109758501e-05
       TOLERANCE: 2.2e-13
   - STRUCTURE:
       DIS: "structure"
       NODE: 160
       QUANTITY: "dispx"
-      VALUE: -2.28908111884392194e-06
+      VALUE: -2.28908880416940179e-06
       TOLERANCE: 2.3e-14
   - SCATRA:
       DIS: "scatra_manifold"
       NODE: 26
       QUANTITY: "phi1"
-      VALUE: 1.49512858777005797e+00
+      VALUE: 1.49512874438201759e+00
       TOLERANCE: 1.5e-08
   - SCATRA:
       DIS: "scatra_manifold"
       NODE: 26
       QUANTITY: "phi2"
-      VALUE: -4.29063572980677502e-02
+      VALUE: -4.29066720447329603e-02
       TOLERANCE: 4.3e-10
   - SCATRA:
       DIS: "scatra_manifold"
       NODE: 45
       QUANTITY: "phi1"
-      VALUE: 1.50780676035710637e+00
+      VALUE: 1.50781124353835105e+00
       TOLERANCE: 1.5e-08
   - SCATRA:
       DIS: "scatra_manifold"
       NODE: 45
       QUANTITY: "phi2"
-      VALUE: -4.29063572980715596e-02
+      VALUE: -4.29066720447367766e-02
       TOLERANCE: 4.3e-10
   - SCATRA:
       DIS: "scatra_manifold"
       NODE: 190
       QUANTITY: "phi1"
-      VALUE: 3.00308428753742351e+00
+      VALUE: 3.00308362163702247e+00
       TOLERANCE: 3.0e-08
   - SCATRA:
       DIS: "scatra_manifold"
       NODE: 190
       QUANTITY: "phi2"
-      VALUE: 1.88675346878627592e+00
+      VALUE: 1.88675280465717488e+00
       TOLERANCE: 1.9e-08
   - SCATRA:
       DIS: "scatra_manifold"
       NODE: 208
       QUANTITY: "phi1"
-      VALUE: 3.00571480215927034e+00
+      VALUE: 3.00571529942410542e+00
       TOLERANCE: 3.0e-08
   - SCATRA:
       DIS: "scatra_manifold"
       NODE: 208
       QUANTITY: "phi2"
-      VALUE: 1.88675346878629990e+00
+      VALUE: 1.88675280465719331e+00
       TOLERANCE: 1.9e-08
   - SSI:
       SPECIAL: true
@@ -383,7 +383,7 @@ RESULT DESCRIPTION:
   - SSI:
       SPECIAL: true
       QUANTITY: "numiterlastnonlinearsolve"
-      VALUE: 7
+      VALUE: 5
       TOLERANCE: 1.0e-16
 DESIGN SURF TRANSPORT NEUMANN CONDITIONS:
   - E: 6

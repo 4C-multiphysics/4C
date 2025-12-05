@@ -1188,7 +1188,7 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
   auto node_weights = std::make_shared<Core::LinAlg::Vector<double>>(*node_row_map, true);
   {
     // set default node weights
-    node_weights->put_scalar(1.0);
+    node_weights->put_scalar(10.0);
 
     // apply weight of special elements
     for (int node_lid = 0; node_lid < node_row_map->num_my_elements(); ++node_lid)
@@ -1309,7 +1309,7 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
   // 3. set graph edge weights
   auto edge_weights = std::make_shared<Core::LinAlg::SparseMatrix>(graph_rowmap, 15);
   {
-    // set standard value of edge weight to 1.0
+    // set standard value of edge weight to 10.0
     for (int i = 0; i < node_graph.num_local_rows(); ++i)
     {
       const int grow = node_graph.row_map().gid(i);
@@ -1336,27 +1336,20 @@ void Core::Conditions::PeriodicBoundaryConditions::balance_load()
         // we do not want to partition between master and slave nodes
         std::vector<int> master_gid(1, master->id());
         std::vector<int> slave_gid(1, slave->id());
-        // add 99 to the initial value of 1.0 to set costs to 100
-        std::vector<double> value(1, 99.0);
+        // set cost of strong edges to 100.0
+        std::vector<double> value(1, 100.0);
 
         edge_weights->insert_global_values(master->id(), 1, value.data(), slave_gid.data());
         edge_weights->insert_global_values(slave->id(), 1, value.data(), master_gid.data());
       }
     }
   }
-  // TODO: Bug?
-  // Here we fill a data structure, which should be completed at some point, but in doing so we
-  // end up with an error in Zoltan ...
-  // edge_weights->complete();
+  edge_weights->complete();
 
   // 4. setup partitioner and redistribute
-  // TODO: Why does this only work for all tests with ParMETIS?
   Teuchos::ParameterList paramlist;
-  paramlist.set("PARTITIONING METHOD", "GRAPH");
-  Teuchos::ParameterList& sublist = paramlist.sublist("Zoltan");
-  sublist.set("LB_METHOD", "GRAPH");
-  sublist.set("GRAPH_PACKAGE", "ParMETIS");
-  sublist.set("LB_APPROACH", "PARTITION");
+  paramlist.set("algorithm", "parmetis");
+  paramlist.set("partitioning_approach", "repartition");
 
   auto newnodegraph =
       Core::Rebalance::rebalance_graph(node_graph, paramlist, node_weights, edge_weights);

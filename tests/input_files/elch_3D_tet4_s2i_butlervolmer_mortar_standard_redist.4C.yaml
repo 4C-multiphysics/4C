@@ -267,25 +267,25 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "s2inumdof_int0_proc1"
-      VALUE: 56
+      VALUE: 60
       TOLERANCE: 1e-20
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "s2inumdof_int0_proc2"
-      VALUE: 58
+      VALUE: 54
       TOLERANCE: 1e-20
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "s2inumdof_int1_proc0"
-      VALUE: 56
+      VALUE: 54
       TOLERANCE: 1e-20
   - SCATRA:
       DIS: "scatra"
       SPECIAL: true
       QUANTITY: "s2inumdof_int1_proc1"
-      VALUE: 52
+      VALUE: 54
       TOLERANCE: 1e-20
   - SCATRA:
       DIS: "scatra"
