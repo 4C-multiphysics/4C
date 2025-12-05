@@ -134,7 +134,7 @@ Core::Rebalance::rebalance_coordinates(const Core::LinAlg::MultiVector<double>& 
 
   std::vector<const double*> weights(initialWeights.num_vectors());
   for (int weight_num = 0; weight_num < initialWeights.num_vectors(); weight_num++)
-    weights[weight_num] = initialWeights(weight_num).get_values();
+    weights[weight_num] = initialWeights.get_vector(weight_num).get_values();
 
   std::vector<int> stride(initialWeights.num_vectors(), initialWeights.num_vectors());
 
