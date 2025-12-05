@@ -256,7 +256,7 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 16
       QUANTITY: "dispy"
-      VALUE: 8.182155249772994e-06
+      VALUE: 8.18215400782480417e-06
       TOLERANCE: 8.2e-13
   - STRUCTURE:
       DIS: "structure"

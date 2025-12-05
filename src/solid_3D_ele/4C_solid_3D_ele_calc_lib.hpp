@@ -588,28 +588,12 @@ namespace Discret::Elements
       const JacobianMapping<celltype>& jacobian_mapping,
       const ElementNodes<celltype>& element_nodes, const double scale_defgrd = 1.0)
   {
-    Core::LinAlg::Tensor<double, 3, 3> defgrd;
-    if constexpr (celltype == Core::FE::CellType::hex8)
-    {
-      // For some reason, some contact tests with hex8 discretization don't like the computation
-      // of the deformation gradient based on the nodal displacements. They only converge if the
-      // deformation gradient is computed based on the current coordinates. Similarly, there are
-      // ssi and ssti tests with an tet4 discretization that only converge when using the
-      // displacements. Until we found the problem, we compute the deformation gradient based on
-      // the current coordinates (F=(X+u)^T  dN/dX^T) for hex8 and based on the displacement (F=I
-      // + u^T dN/dX^T) for the other celltypes.
-      Core::LinAlg::make_matrix_view(defgrd).multiply_nt(scale_defgrd,
-          element_nodes.current_coordinates,
-          Core::LinAlg::make_matrix_view(jacobian_mapping.N_XYZ));
-    }
-    else
-    {
-      defgrd = Core::LinAlg::get_full(Core::LinAlg::TensorGenerators::identity<double,
-          Core::FE::dim<celltype>, Core::FE::dim<celltype>>);
+    Core::LinAlg::Tensor<double, 3, 3> defgrd =
+        Core::LinAlg::get_full(Core::LinAlg::TensorGenerators::identity<double,
+            Core::FE::dim<celltype>, Core::FE::dim<celltype>>);
 
-      Core::LinAlg::make_matrix_view(defgrd).multiply_nt(scale_defgrd, element_nodes.displacements,
-          Core::LinAlg::make_matrix_view(jacobian_mapping.N_XYZ), scale_defgrd);
-    }
+    Core::LinAlg::make_matrix_view(defgrd).multiply_nt(scale_defgrd, element_nodes.displacements,
+        Core::LinAlg::make_matrix_view(jacobian_mapping.N_XYZ), scale_defgrd);
 
     return defgrd;
   }

@@ -85,7 +85,7 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 63
       QUANTITY: "dispx"
-      VALUE: 0.008420912416
+      VALUE: 0.0084258
       TOLERANCE: 1e-06
   - STRUCTURE:
       DIS: "structure"
@@ -103,7 +103,7 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 482
       QUANTITY: "dispz"
-      VALUE: 0.1227285112
+      VALUE: 0.122726423053
       TOLERANCE: 1e-06
 DESIGN SURF NEUMANN CONDITIONS:
   - E: 3

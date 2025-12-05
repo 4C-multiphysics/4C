@@ -262,7 +262,7 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 75
       QUANTITY: "dispz"
-      VALUE: -6.31906156294097782e-10
+      VALUE: -6.31906812148107503e-10
       TOLERANCE: 1.0e-16
   - SCATRA:
       DIS: "scatra"
@@ -280,7 +280,7 @@ RESULT DESCRIPTION:
       DIS: "scatra_manifold"
       NODE: 34
       QUANTITY: "phi1"
-      VALUE: 7.71344880226249963e+00
+      VALUE: 7.71349196017558469e+00
       TOLERANCE: 7.7e-08
   - SCATRA:
       DIS: "scatra_manifold"
@@ -292,7 +292,7 @@ RESULT DESCRIPTION:
       DIS: "scatra_manifold"
       NODE: 83
       QUANTITY: "phi1"
-      VALUE: 1.07859458696746309e+01
+      VALUE: 1.07860970702509036e+01
       TOLERANCE: 1.1e-07
   - SCATRA:
       DIS: "scatra_manifold"

@@ -247,13 +247,13 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 10
       QUANTITY: "dispx"
-      VALUE: 1.0129416791508832e-06
+      VALUE: 1.01362930429360462e-06
       TOLERANCE: 1e-14
   - STRUCTURE:
       DIS: "structure"
       NODE: 20
       QUANTITY: "dispx"
-      VALUE: 1.309571750662535e-05
+      VALUE: 1.30963434976330911e-05
       TOLERANCE: 1.3e-13
   - STRUCTURE:
       DIS: "structure"
@@ -271,13 +271,13 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 30
       QUANTITY: "dispx"
-      VALUE: 4.9334627050555914e-05
+      VALUE: 4.93352623311586145e-05
       TOLERANCE: 4.9e-13
   - SCATRA:
       DIS: "scatra"
       NODE: 5
       QUANTITY: "phi1"
-      VALUE: 16.571967594263132
+      VALUE: 16.5719622495137955
       TOLERANCE: 1.7e-07
   - SCATRA:
       DIS: "scatra"
@@ -289,13 +289,13 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 25
       QUANTITY: "phi1"
-      VALUE: 9659.368808061889
+      VALUE: 9659.36993172946131
       TOLERANCE: 9.7e-05
   - SCATRA:
       DIS: "thermo"
       NODE: 8
       QUANTITY: "phi"
-      VALUE: 299.8565635502057
+      VALUE: 299.856570322356276
       TOLERANCE: 3e-06
   - SCATRA:
       DIS: "thermo"

@@ -202,25 +202,25 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 2
       QUANTITY: "phi1"
-      VALUE: 1.01546947954327553e+01
+      VALUE: 1.01546783557392253e+01
       TOLERANCE: 1.0e-07
   - SCATRA:
       DIS: "scatra"
       NODE: 11
       QUANTITY: "phi1"
-      VALUE: 7.27210379019138742e+00
+      VALUE: 7.27213701765251574e+00
       TOLERANCE: 7.3e-08
   - SCATRA:
       DIS: "scatra"
       NODE: 14
       QUANTITY: "phi1"
-      VALUE: 1.17240647072279058e+00
+      VALUE: 1.17240655474706368e+00
       TOLERANCE: 1.2e-08
   - SCATRA:
       DIS: "scatra"
       NODE: 26
       QUANTITY: "phi1"
-      VALUE: 1.36664650177737723e+01
+      VALUE: 1.36664479126340197e+01
       TOLERANCE: 1.4e-07
   - SCATRA:
       DIS: "scatra"
@@ -232,7 +232,7 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 34
       QUANTITY: "phi1"
-      VALUE: 1.07873225418828671e+01
+      VALUE: 1.07873008395220555e+01
       TOLERANCE: 1.1e-07
   - SCATRA:
       DIS: "scatra"

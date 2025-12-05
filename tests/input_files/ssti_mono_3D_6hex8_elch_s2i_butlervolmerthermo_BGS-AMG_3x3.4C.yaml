@@ -272,7 +272,7 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 15
       QUANTITY: "phi2"
-      VALUE: 1.18959726357723811e-01
+      VALUE: 1.18959728393076988e-01
       TOLERANCE: 1.2e-09
   - SCATRA:
       DIS: "scatra"

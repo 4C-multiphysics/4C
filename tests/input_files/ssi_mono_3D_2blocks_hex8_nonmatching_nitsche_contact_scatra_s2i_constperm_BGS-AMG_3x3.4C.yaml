@@ -110,55 +110,55 @@ RESULT DESCRIPTION:
       DIS: "scatra"
       NODE: 12
       QUANTITY: "phi"
-      VALUE: 2.27315381456712456e-01
+      VALUE: 2.25104165765579567e-01
       TOLERANCE: 2.3e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 41
       QUANTITY: "phi"
-      VALUE: 2.29153575354551053e-01
+      VALUE: 2.27072463929818141e-01
       TOLERANCE: 2.3e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 54
       QUANTITY: "phi"
-      VALUE: 2.31183895094938724e-01
+      VALUE: 2.29747694812708181e-01
       TOLERANCE: 2.3e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 57
       QUANTITY: "phi"
-      VALUE: 2.31720227471790330e-01
+      VALUE: 2.30083428656435440e-01
       TOLERANCE: 2.3e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 74
       QUANTITY: "phi"
-      VALUE: 8.21432589895827237e-01
+      VALUE: 8.22853587641283690e-01
       TOLERANCE: 8.2e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 81
       QUANTITY: "phi"
-      VALUE: 8.20530969063466786e-01
+      VALUE: 8.22425356851290146e-01
       TOLERANCE: 8.2e-09
   - SCATRA:
       DIS: "scatra"
       NODE: 89
       QUANTITY: "phi"
-      VALUE: 8.26361403666966199e-01
+      VALUE: 8.28627349554265535e-01
       TOLERANCE: 8.3e-09
   - STRUCTURE:
       DIS: "structure"
       NODE: 54
       QUANTITY: "dispx"
-      VALUE: -4.91334685772380209e-02
+      VALUE: -4.91355238143931367e-02
       TOLERANCE: 4.9e-10
   - STRUCTURE:
       DIS: "structure"
       NODE: 74
       QUANTITY: "dispx"
-      VALUE: -4.90983231011848653e-02
+      VALUE: -4.91003234620722220e-02
       TOLERANCE: 4.9e-10
   - SSI:
       SPECIAL: true

@@ -98,7 +98,7 @@ RESULT DESCRIPTION:
       DIS: "structure"
       NODE: 226
       QUANTITY: "dispz"
-      VALUE: 8.0088764
+      VALUE: 8.0082124
       TOLERANCE: 1e-06
 DESIGN SURF DIRICH CONDITIONS:
   - E: 1
