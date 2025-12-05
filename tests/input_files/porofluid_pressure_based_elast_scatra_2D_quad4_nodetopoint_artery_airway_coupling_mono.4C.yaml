@@ -7,7 +7,7 @@ PROBLEM SIZE:
 PROBLEM TYPE:
   PROBLEMTYPE: "porofluid_pressure_based_elasticity_scatra"
 IO/RUNTIME VTK OUTPUT:
-  OUTPUT_DATA_FORMAT: ascii
+  OUTPUT_DATA_FORMAT: binary
 porofluid_elasticity_scatra_dynamic:
   total_simulation_time: 2.5
   time_integration:
