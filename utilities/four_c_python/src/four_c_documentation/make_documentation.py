@@ -58,6 +58,7 @@ from four_c_metadata.not_set import check_if_set
 DESCRIPTION_MISSING = '<span style="color:grey">*no description yet*</span>'
 TOO_MANY_TESTS_TO_SHOW = 200
 TESTS_TO_SHOW_IF_TOO_MANY = 20
+USED_ANCHORS = set()
 
 
 # Data class to store which sections belong to which chapter (and thus to which file)
@@ -72,6 +73,48 @@ class ReferenceChapter:
     description: str = ""  # Description of the chapter (filled later)
     content: str = ""  # Content of the chapter (filled later)
     has_content: bool = False  # Whether the chapter has any content (filled later)
+
+
+def sanitize_anchor(text: str):
+    """
+    Sanitize a string so it is safe and consistent to use as an explicit MyST anchor.
+
+    - Strip trailing HTML (e.g. ", <span ...>").
+    - Remove '<' and '>'.
+    - Remove whitespace.
+    - Replace '/' with '_'.
+    """
+    # cut off HTML decoration like ", <span style=...>"
+    text = re.sub(r"\s*, <span.*", "", text).strip()
+    text = text.replace("<", "").replace(">", "")
+    text = text.replace(" ", "")
+    text = text.replace("/", "_")
+    return text
+
+
+def make_anchor_base(option_name: str, path_prefix: str | None):
+    """
+    Build the base anchor from an option name and an optional hierarchical prefix.
+    """
+    base = sanitize_anchor(option_name)
+    if path_prefix:
+        base = f"{path_prefix}_{base}"
+    return base
+
+
+def make_unique_anchor(base: str):
+    if base not in USED_ANCHORS:
+        USED_ANCHORS.add(base)
+        return base
+
+    n = 2
+    candidate = f"{base}-{n}"
+    while candidate in USED_ANCHORS:
+        n += 1
+        candidate = f"{base}-{n}"
+
+    USED_ANCHORS.add(candidate)
+    return candidate
 
 
 def make_collapsible(content, summary=None, open_content=None):
@@ -247,7 +290,9 @@ def primitive_to_md(primitive: Primitive, make_description=make_spec_description
     )
 
 
-def vector_or_map_to_md(entry: Vector | Map, make_description=make_spec_description):
+def vector_or_map_to_md(
+    entry: Vector | Map, make_description=make_spec_description, path_prefix: str = ""
+):
     type_description = type_or_none(value_type_flatter(entry), entry)
 
     header_properties = {"size": flatten_size_vector(entry), "required": entry.required}
@@ -260,7 +305,9 @@ def vector_or_map_to_md(entry: Vector | Map, make_description=make_spec_descript
     collapsible_properties = None
     if not isinstance(entry.value_type, Primitive):
         collapsible_properties = {
-            "Value type": all_of_to_md(All_Of([entry.value_type]))
+            "Value type": all_of_to_md(
+                All_Of([entry.value_type]), path_prefix=path_prefix
+            )
         }
 
     return make_description(
@@ -272,7 +319,9 @@ def vector_or_map_to_md(entry: Vector | Map, make_description=make_spec_descript
     )
 
 
-def tuple_to_md(tuple_entry: Tuple, make_description=make_spec_description):
+def tuple_to_md(
+    tuple_entry: Tuple, make_description=make_spec_description, path_prefix: str = ""
+):
     type_description = type_or_none(value_type_flatter(tuple_entry), tuple_entry)
 
     header_properties = {"required": tuple_entry.required}
@@ -282,7 +331,9 @@ def tuple_to_md(tuple_entry: Tuple, make_description=make_spec_description):
         header_properties["default"] = none_to_null(tuple_entry.default)
 
     collapsible_properties = {
-        "Entries": all_of_to_md(All_Of(tuple_entry.value_types), indent=1)
+        "Entries": all_of_to_md(
+            All_Of(tuple_entry.value_types), indent=1, path_prefix=path_prefix
+        )
     }
 
     return make_description(
@@ -320,12 +371,16 @@ def enum_to_md(enum: Enum, make_description=make_spec_description):
     )
 
 
-def group_to_md(group: Group, make_description=make_spec_description):
+def group_to_md(
+    group: Group, make_description=make_spec_description, path_prefix: str = ""
+):
     type_description = type_or_none(group.spec_type, group)
 
     collapsible_properties = {}
     if len(group.spec) > 0:
-        collapsible_properties = {"Contains": all_of_to_md(group.spec, indent=1)}
+        collapsible_properties = {
+            "Contains": all_of_to_md(group.spec, indent=1, path_prefix=path_prefix)
+        }
 
     header_properties = validator_to_header_argument(group.validator)
     return make_description(
@@ -337,7 +392,9 @@ def group_to_md(group: Group, make_description=make_spec_description):
     )
 
 
-def list_to_md(list_entry: List, make_description=make_spec_description):
+def list_to_md(
+    list_entry: List, make_description=make_spec_description, path_prefix: str = ""
+):
     type_description = type_or_none(list_entry.spec_type, list_entry)
 
     header_properties = {}
@@ -351,18 +408,22 @@ def list_to_md(list_entry: List, make_description=make_spec_description):
         header_properties,
         list_entry.description,
         collapsible_properties={
-            "Each element contains": all_of_to_md(list_entry.spec, indent=1)
+            "Each element contains": all_of_to_md(
+                list_entry.spec, indent=1, path_prefix=path_prefix
+            )
         },
     )
 
 
-def selection_to_md(selection: Selection, make_description=make_spec_description):
+def selection_to_md(
+    selection: Selection, make_description=make_spec_description, path_prefix: str = ""
+):
     type_description = type_or_none(selection.spec_type, selection)
 
     choices = ""
     for choice, choice_spec in selection.choices.items():
         choices += "\n\n" + " " + f"- *{choice}*:\n\n"
-        choices += all_of_to_md(choice_spec, indent=3)
+        choices += all_of_to_md(choice_spec, indent=3, path_prefix=path_prefix)
 
     return make_description(
         selection.name,
@@ -391,22 +452,31 @@ def sort_one_of_option_names(one_of: One_Of) -> list:
     return [", ".join(l) for l in options]
 
 
-def one_of_to_md(one_of: One_Of):
+def one_of_to_md(one_of: One_Of, path_prefix: str = ""):
     header = "*One of*"
 
     description = ""
     if check_if_set(one_of.description):
-        description += "\n" + description + "\n"
+        description += "\n" + one_of.description + "\n"
 
     open_content = len(one_of.specs) < 11
 
     names = sort_one_of_option_names(one_of)
 
     for i, spec in enumerate(one_of.specs):
+        anchor_base = make_anchor_base(names[i], path_prefix)
+        opt_anchor = make_unique_anchor(anchor_base)
+
         key = "Option (" + names[i] + ")"
-        description += "\n" + make_collapsible(
-            textwrap.indent(all_of_to_md(spec, 1), " "), key, open_content
+
+        # Handle nested One Of
+        nested_prefix = anchor_base
+        content = textwrap.indent(
+            all_of_to_md(spec, indent=1, path_prefix=nested_prefix),
+            " ",
         )
+        content = f"({opt_anchor})=\n\n" + content
+        description += "\n" + make_collapsible(content, key, open_content)
 
     return header, description
 
@@ -450,7 +520,7 @@ def validator_to_header_argument(validator):
             raise ValueError(f"Unknown validator {validator}")
 
 
-def all_of_to_md(all_of: All_Of, indent=0):
+def all_of_to_md(all_of: All_Of, indent=0, path_prefix: str = ""):
     entries = ""
     for entry in all_of:
         string_entry = None
@@ -459,19 +529,31 @@ def all_of_to_md(all_of: All_Of, indent=0):
             case Primitive():
                 string_entry, description_entry = primitive_to_md(entry)
             case Vector() | Map():
-                string_entry, description_entry = vector_or_map_to_md(entry)
+                string_entry, description_entry = vector_or_map_to_md(
+                    entry, path_prefix=path_prefix
+                )
             case Tuple():
-                string_entry, description_entry = tuple_to_md(entry)
+                string_entry, description_entry = tuple_to_md(
+                    entry, path_prefix=path_prefix
+                )
             case Enum():
                 string_entry, description_entry = enum_to_md(entry)
             case Group():
-                string_entry, description_entry = group_to_md(entry)
+                string_entry, description_entry = group_to_md(
+                    entry, path_prefix=path_prefix
+                )
             case List():
-                string_entry, description_entry = list_to_md(entry)
+                string_entry, description_entry = list_to_md(
+                    entry, path_prefix=path_prefix
+                )
             case Selection():
-                string_entry, description_entry = selection_to_md(entry)
+                string_entry, description_entry = selection_to_md(
+                    entry, path_prefix=path_prefix
+                )
             case One_Of():
-                string_entry, description_entry = one_of_to_md(entry)
+                string_entry, description_entry = one_of_to_md(
+                    entry, path_prefix=path_prefix
+                )
             case _:
                 raise ValueError(type(entry))
 
@@ -487,12 +569,10 @@ def all_of_to_md(all_of: All_Of, indent=0):
 
 
 def create_section_markdown(section, section_in_tests, section_in_tutorials):
-    # link anchor
-    replacements = [(" ", ""), ("/", "_"), ("<", ""), (">", "")]
-    section_link_anchor = "sec" + section.name.lower()
-    for old, new in replacements:
-        section_link_anchor = section_link_anchor.replace(old, new)
+    section_link_anchor = "sec" + sanitize_anchor(section.name.lower())
     string_entry = "\n(" + section_link_anchor + ")=\n\n"
+
+    section_prefix = sanitize_anchor(section.name.upper())
 
     create_section = partial(
         make_section_description,
@@ -504,19 +584,30 @@ def create_section_markdown(section, section_in_tests, section_in_tutorials):
         case Primitive():
             string_entry += primitive_to_md(section, create_section)
         case Vector() | Map():
-            string_entry += vector_or_map_to_md(section, create_section)
+            string_entry += vector_or_map_to_md(
+                section, create_section, path_prefix=section_prefix
+            )
         case Tuple():
-            string_entry += tuple_to_md(section, create_section)
+            string_entry += tuple_to_md(
+                section, create_section, path_prefix=section_prefix
+            )
         case Enum():
             string_entry += enum_to_md(section, create_section)
         case Group():
-            string_entry += group_to_md(section, create_section)
+            string_entry += group_to_md(
+                section, create_section, path_prefix=section_prefix
+            )
         case List():
-            string_entry += list_to_md(section, create_section)
+            string_entry += list_to_md(
+                section, create_section, path_prefix=section_prefix
+            )
         case Selection():
-            string_entry += selection_to_md(section, create_section)
+            string_entry += selection_to_md(
+                section, create_section, path_prefix=section_prefix
+            )
         case One_Of():
-            string_entry += one_of_to_md(section, create_section)
+            header, description = one_of_to_md(section, path_prefix=section_prefix)
+            string_entry += header + "\n" + description + "\n"
         case _:
             raise ValueError(type(section))
     return string_entry + "\n\n"

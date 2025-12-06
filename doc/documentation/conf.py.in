@@ -104,6 +104,7 @@ html_theme_options = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 # Since up to now, we don't have these, it's not needed. Uncomment if necessary.
 html_static_path = ["@PROJECT_BINARY_DIR@/doc/tmp/_static", "@_sphinx_OUT_DIR@/reference_docs/_static"]
+html_js_files = ['open_details_on_link.js']
 html_css_files = ['html_extensions.css']
 #
 # for finding headers as internal link targets, we have to set the variable myst_heading_anchors
