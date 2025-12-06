@@ -82,6 +82,10 @@ void Particle::DEMNeighborPairs::evaluate_particle_pairs()
     int particle_j;
     std::tie(type_j, status_j, particle_j) = potentialneighbors.second;
 
+    if ((type_i != Particle::RigidPhase and type_i != Particle::BoundaryPhase) or
+        (type_j != Particle::RigidPhase and type_j != Particle::BoundaryPhase))
+      continue;
+
     // get corresponding particle containers
     Particle::ParticleContainer* container_i =
         particlecontainerbundle_->get_specific_container(type_i, status_i);
@@ -130,6 +134,9 @@ void Particle::DEMNeighborPairs::evaluate_particle_pairs()
 
       // set gap between particles
       particlepair.gap_ = gap;
+
+      // set absolute distance between particles
+      particlepair.absdist_ = absdist;
 
       // versor from particle i to j
       ParticleUtils::vec_set_scale(particlepair.e_ji_, (1.0 / absdist), r_ji);

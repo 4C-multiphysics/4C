@@ -120,6 +120,9 @@ namespace Particle
     //! write interaction runtime output
     virtual void write_interaction_runtime_output(const int step, const double time);
 
+    //! build the peridynamic bond list
+    virtual void build_peridynamic_relation() {};
+
    protected:
     //! maximum particle radius (on this processor)
     virtual double max_particle_radius() const;

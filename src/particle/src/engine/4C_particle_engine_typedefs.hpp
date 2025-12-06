@@ -76,6 +76,14 @@ namespace Particle
   using LocalIndexTupleShrdPtr = std::shared_ptr<LocalIndexTuple>;
 
   /*!
+   * \brief local and global index tuple of a particle
+   *
+   * Local and global index tuple of a particle consisting of particle type enum, particle status
+   * enum, and local index of particle in container and global index.
+   */
+  using LocalGlobalIndexTuple = std::tuple<ParticleType, ParticleStatus, int, int>;
+
+  /*!
    * \brief relate particles to corresponding bins being located in
    *
    * Relate all particles (consisting of particle type enum and index of particle in container) to
