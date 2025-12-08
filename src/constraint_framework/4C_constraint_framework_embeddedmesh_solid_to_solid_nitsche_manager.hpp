@@ -101,9 +101,10 @@ namespace Constraints::EmbeddedMesh
     void collect_output_integration_points();
 
     /**
-     * \brief Scale penalty contributions from the Nitsche method with the penalty parameter
+     * \brief Scale contributions from the Nitsche method with the penalty parameter and weighting
+     * average parameter
      */
-    void scale_contributions_penalty_stiffness_matrices() const;
+    void scale_contributions_nitsche_stiffness_matrices() const;
 
     /**
      * \brief Get the communicator associated to the mortar manager

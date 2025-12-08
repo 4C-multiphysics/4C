@@ -35,7 +35,7 @@ namespace Constraints::EmbeddedMesh
     SolidToSolidMortarShapefunctions mortar_shape_function_;
 
     //! Stabilization parameter for coupling with the Nitsche method
-    double nitsche_stabilization_param_ = 0.0;
+    double nitsche_penalty_param_ = 0.0;
 
     //! Average weight gamma for coupling with the Nitsche method
     double nitsche_average_weight_gamma_ = 0.0;
