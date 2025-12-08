@@ -180,6 +180,10 @@ namespace Constraints::EmbeddedMesh
       const Core::FE::Discretization& discret, Core::LinAlg::SparseMatrix& global_penalty_interface,
       Core::LinAlg::SparseMatrix& global_penalty_background,
       Core::LinAlg::SparseMatrix& global_penalty_interface_background,
+      Core::LinAlg::SparseMatrix& global_disp_interface_stress_interface,
+      Core::LinAlg::SparseMatrix& global_disp_interface_stress_background,
+      Core::LinAlg::SparseMatrix& global_disp_background_stress_interface,
+      Core::LinAlg::SparseMatrix& global_disp_background_stress_background,
       Core::LinAlg::FEVector<double>& global_constraint,
       const Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&
           local_stiffness_penalty_interface,
@@ -187,8 +191,18 @@ namespace Constraints::EmbeddedMesh
           local_stiffness_penalty_background,
       const Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
           local_stiffness_penalty_interface_background,
+      const Core::LinAlg::Matrix<Interface::n_dof_, Interface::n_dof_, double>&
+          local_stiffness_disp_interface_stress_interface,
+      const Core::LinAlg::Matrix<Interface::n_dof_, Background::n_dof_, double>&
+          local_stiffness_disp_interface_stress_background,
+      const Core::LinAlg::Matrix<Background::n_dof_, Interface::n_dof_, double>&
+          local_stiffness_disp_background_stress_interface,
+      const Core::LinAlg::Matrix<Background::n_dof_, Background::n_dof_, double>&
+          local_stiffness_disp_background_stress_background,
       const Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>&
-          local_constraint);
+          local_constraint_penalty,
+      const Core::LinAlg::Matrix<Interface::n_dof_ + Background::n_dof_, 1, double>&
+          local_constraint_stresses);
 
   /**
    * \brief Get the GIDs of the Lagrange multiplicator unknowns for a beam-to-solid pair.

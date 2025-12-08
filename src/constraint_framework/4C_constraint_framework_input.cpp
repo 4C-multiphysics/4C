@@ -42,7 +42,7 @@ std::vector<Core::IO::InputSpec> Constraints::valid_parameters()
               {.description = "Shape functions that should be use in case of coupling using the "
                               "Mortar/Lagrange  Multiplier method "}),
 
-          parameter<double>("NITSCHE_STABILIZATION_PARAM",
+          parameter<double>("NITSCHE_PENALTY_PARAM",
               {.description = "Value of the stabilization parameter for coupling based on the "
                               "Nitsche method",
                   .default_value = 1e5}),

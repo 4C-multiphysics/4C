@@ -105,7 +105,7 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::setup(
       std::make_shared<Core::LinAlg::SparseMatrix>(*interface_and_background_dof_rowmap_, 100, true,
           true, Core::LinAlg::SparseMatrix::FE_MATRIX);
 
-  // Create the global coupling matrices related to the stress contributions.
+  // Create the global coupling matrices related to the Nitsche stress contributions.
   global_virtual_disp_interface_stress_interface_ = std::make_shared<Core::LinAlg::SparseMatrix>(
       *interface_dof_rowmap_, 100, true, true, Core::LinAlg::SparseMatrix::FE_MATRIX);
   global_virtual_disp_interface_stress_background_ =
@@ -204,35 +204,52 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::evaluate_global_coup
         *global_penalty_interface_background_, *global_virtual_disp_interface_stress_interface_,
         *global_virtual_disp_interface_stress_background_,
         *global_virtual_disp_background_stress_interface_,
-        *global_virtual_disp_background_stress_background_, *global_constraint_);
+        *global_virtual_disp_background_stress_background_, *global_constraint_,
+        embedded_mesh_coupling_params_.nitsche_penalty_param_,
+        embedded_mesh_coupling_params_.nitsche_average_weight_gamma_);
   }
 
-  // scale_contributions_penalty_stiffness_matrices();
-
-  // Complete the global mortar matrices.
+  // Complete the global matrices.
   global_penalty_interface_->complete(*interface_dof_rowmap_, *interface_dof_rowmap_);
   global_penalty_background_->complete(*background_dof_rowmap_, *background_dof_rowmap_);
   global_penalty_interface_background_->complete(
       *interface_and_background_dof_rowmap_, *interface_and_background_dof_rowmap_);
 
-  // Complete the global scaling vector.
+  global_virtual_disp_interface_stress_interface_->complete(
+      *interface_dof_rowmap_, *interface_dof_rowmap_);
+  global_virtual_disp_interface_stress_background_->complete(
+      *interface_and_background_dof_rowmap_, *interface_and_background_dof_rowmap_);
+  global_virtual_disp_background_stress_interface_->complete(
+      *interface_and_background_dof_rowmap_, *interface_and_background_dof_rowmap_);
+  global_virtual_disp_background_stress_background_->complete(
+      *background_dof_rowmap_, *background_dof_rowmap_);
+
+  // Complete the global vector.
   global_constraint_->complete();
 
-  scale_contributions_penalty_stiffness_matrices();
+  // Scale the global contributions of the Nitsche stiffness matrices
+  scale_contributions_nitsche_stiffness_matrices();
 }
 
 void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::
-    scale_contributions_penalty_stiffness_matrices() const
+    scale_contributions_nitsche_stiffness_matrices() const
 {
-  // Get the penalty parameters.
-  const double penalty_param = embedded_mesh_coupling_params_.constraint_penalty_parameter_;
+  // Get the penalty parameter.
+  const double penalty_param = embedded_mesh_coupling_params_.nitsche_penalty_param_;
 
-  // Scale stiffness penalty contributions
+  // Scale penalty contributions
   global_penalty_interface_->scale(penalty_param);
   global_penalty_background_->scale(penalty_param);
   global_penalty_interface_background_->scale(-penalty_param);
 
-  global_constraint_->scale(penalty_param);
+  // Get the average weight parameter.
+  const double average_weight_gamma = embedded_mesh_coupling_params_.nitsche_average_weight_gamma_;
+
+  // Scale stress contributions
+  global_virtual_disp_interface_stress_interface_->scale(-average_weight_gamma);
+  global_virtual_disp_interface_stress_background_->scale(-(1.0 - average_weight_gamma));
+  global_virtual_disp_background_stress_interface_->scale(average_weight_gamma);
+  global_virtual_disp_background_stress_background_->scale(1.0 - average_weight_gamma);
 }
 
 /**
@@ -252,6 +269,11 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::
     stiff->add(*global_penalty_background_, false, 1.0, 1.0);
     stiff->add(*global_penalty_interface_background_, false, 1.0, 1.0);
     stiff->add(*global_penalty_interface_background_, true, 1.0, 1.0);
+
+    stiff->add(*global_virtual_disp_interface_stress_interface_, false, 1.0, 1.0);
+    stiff->add(*global_virtual_disp_interface_stress_background_, false, 1.0, 1.0);
+    stiff->add(*global_virtual_disp_background_stress_interface_, false, 1.0, 1.0);
+    stiff->add(*global_virtual_disp_background_stress_background_, false, 1.0, 1.0);
   }
 
   if (force != nullptr)
@@ -259,33 +281,6 @@ void Constraints::EmbeddedMesh::SolidToSolidNitscheManager::
     // Factor for right hand side (forces). 1 corresponds to forces being added to
     // the right hand side, -1 to the left hand side.
     const double rhs_factor = 1.0;
-
-    // Add penalty contributions of Nitsche method
-    auto displacement = data_state.get_dis_np().get();
-
-    // Initialize vectors to store penalty contributions to interface and background
-    Core::LinAlg::Vector<double> temp_force_penalty_interface(*interface_dof_rowmap_);
-
-    Core::LinAlg::Vector<double> temp_force_penalty_background(*background_dof_rowmap_);
-
-    Core::LinAlg::Vector<double> temp_force_penalty_interface_contribution_inter_background(
-        *interface_and_background_dof_rowmap_);
-    Core::LinAlg::Vector<double> temp_force_penalty_background_contribution_inter_background(
-        *interface_and_background_dof_rowmap_);
-
-    temp_force_penalty_interface.put_scalar(0.);
-    temp_force_penalty_background.put_scalar(0.);
-    temp_force_penalty_interface_contribution_inter_background.put_scalar(0.);
-    temp_force_penalty_background_contribution_inter_background.put_scalar(0.);
-
-    // Multiply global penalty contributions with the displacement to obtain the penalty forces on
-    // the interface and background
-    global_penalty_interface_->multiply(false, *displacement, temp_force_penalty_interface);
-    global_penalty_background_->multiply(false, *displacement, temp_force_penalty_background);
-    global_penalty_interface_background_->multiply(
-        false, *displacement, temp_force_penalty_background_contribution_inter_background);
-    global_penalty_interface_background_->multiply(
-        true, *displacement, temp_force_penalty_interface_contribution_inter_background);
 
     // Collect force contributions in a global temp
     Core::LinAlg::Vector<double> global_temp(*discret_->dof_row_map());

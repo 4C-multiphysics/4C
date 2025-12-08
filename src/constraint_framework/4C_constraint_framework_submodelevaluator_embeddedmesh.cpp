@@ -39,8 +39,8 @@ Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::EmbeddedMeshConst
       Teuchos::getIntegralValue<Constraints::EmbeddedMesh::CouplingStrategy>(
           embedded_mesh_parameter_list, "COUPLING_STRATEGY");
 
-  auto embedded_mesh_nitsche_stabilization_parameter =
-      embedded_mesh_parameter_list.get<double>("NITSCHE_STABILIZATION_PARAM");
+  auto embedded_mesh_nitsche_penalty_parameter =
+      embedded_mesh_parameter_list.get<double>("NITSCHE_PENALTY_PARAM");
 
   auto embedded_mesh_nitsche_average_weight_gamma =
       embedded_mesh_parameter_list.get<double>("NITSCHE_GAMMA_PARAM");
@@ -64,7 +64,7 @@ Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::EmbeddedMeshConst
       .constraint_enforcement_ = strategy_,
       .constraint_penalty_parameter_ = embedded_mesh_constraint_penalty_parameter,
       .mortar_shape_function_ = embedded_mesh_mortar_shape_function,
-      .nitsche_stabilization_param_ = embedded_mesh_nitsche_stabilization_parameter,
+      .nitsche_penalty_param_ = embedded_mesh_nitsche_penalty_parameter,
       .nitsche_average_weight_gamma_ = embedded_mesh_nitsche_average_weight_gamma,
       .xfem_nodal_dof_set_strategy_ = nodal_dofset_strategy,
       .xfem_volume_cell_gauss_point_by_ = volume_cell_gauss_point_by,
