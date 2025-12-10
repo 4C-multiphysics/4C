@@ -35,6 +35,7 @@ namespace Constraints
   /// type of employed constraint enforcement strategy
   enum class EnforcementStrategy
   {
+    none,     ///< default
     penalty,  ///< Penalty based constraint enforcement
     lagrange  ///< Lagrange Multiplier based constraint enforcement
   };
@@ -43,8 +44,9 @@ namespace Constraints
   {
     enum class CouplingStrategy
     {
-      mortar,  ///< Mortar based coupling
-      nitsche  ///< Nitsche based coupling
+      undefined,  ///< default
+      mortar,     ///< Mortar based coupling
+      nitsche     ///< Nitsche based coupling
     };
 
     /**
@@ -53,10 +55,10 @@ namespace Constraints
      */
     enum class SolidToSolidMortarShapefunctions
     {
-
-      quad4,  ///< Linear Lagrange elements
-      quad9,  ///< Quadratic Lagrange elements
-      nurbs9  ///< Quadratic NURBS elements
+      undefined,  ///< default
+      quad4,      ///< Linear Lagrange elements
+      quad9,      ///< Quadratic Lagrange elements
+      nurbs9      ///< Quadratic NURBS elements
     };
   }  // namespace EmbeddedMesh
 

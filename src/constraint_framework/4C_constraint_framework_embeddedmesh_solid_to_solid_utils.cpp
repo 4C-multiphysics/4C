@@ -354,6 +354,11 @@ void Constraints::EmbeddedMesh::mortar_shape_functions_to_number_of_lagrange_val
       n_lambda_node = 1 * 3;
       return;
     }
+    case Constraints::EmbeddedMesh::SolidToSolidMortarShapefunctions::undefined:
+    {
+      FOUR_C_THROW("Undefined Mortar shape functions.");
+      return;
+    }
     default:
       FOUR_C_THROW("Mortar shape function not implemented!");
   }

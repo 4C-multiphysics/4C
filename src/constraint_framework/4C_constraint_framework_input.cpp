@@ -25,7 +25,11 @@ std::vector<Core::IO::InputSpec> Constraints::valid_parameters()
 
   spec.push_back(group("CONSTRAINT",
       {parameter<EnforcementStrategy>(
-           "CONSTRAINT_ENFORCEMENT", {.description = "Type of constraint enforcement"}),
+           "CONSTRAINT_ENFORCEMENT", {.description = "Type of constraint enforcement",
+                                         .default_value = EnforcementStrategy::none}),
+
+          parameter<int>(
+              "NUMSTEP", {.description = "max number of time steps", .default_value = 41}),
 
           parameter<double>("PENALTY_PARAM",
               {.description = "Value of the penalty parameter", .default_value = 1e5})},
@@ -36,11 +40,13 @@ std::vector<Core::IO::InputSpec> Constraints::valid_parameters()
 
   spec.push_back(group("CONSTRAINT/EMBEDDED MESH COUPLING",
       {parameter<EmbeddedMesh::CouplingStrategy>("COUPLING_STRATEGY",
-           {.description = "Strategy to couple background and overlapping mesh"}),
+           {.description = "Strategy to couple background and overlapping mesh",
+               .default_value = EmbeddedMesh::CouplingStrategy::undefined}),
 
           parameter<EmbeddedMesh::SolidToSolidMortarShapefunctions>("MORTAR_SHAPE_FUNCTION",
               {.description = "Shape functions that should be use in case of coupling using the "
-                              "Mortar/Lagrange  Multiplier method "}),
+                              "Mortar/Lagrange  Multiplier method ",
+                  .default_value = EmbeddedMesh::SolidToSolidMortarShapefunctions::undefined}),
 
           parameter<double>("NITSCHE_PENALTY_PARAM",
               {.description = "Value of the stabilization parameter for coupling based on the "
