@@ -56,6 +56,10 @@ namespace Constraints::SubmodelEvaluator
       // Nothing implemented
     }
 
+    /*! Perform basic checks of the input conditions and parameters
+     */
+    void check_input();
+
     //! derived
     void runtime_output_step_state(std::pair<double, int> output_time_and_step) override;
 

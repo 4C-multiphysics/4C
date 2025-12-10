@@ -73,6 +73,9 @@ Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::EmbeddedMeshConst
       .cut_screen_output_ = cut_screen_output,
       .cut_params_ = cut_parameter_list};
 
+  // Do basic checks of the embedded mesh parameters
+  check_input();
+
   // Initialize visualization manager
   auto visualization_manager = std::make_shared<Core::IO::VisualizationManager>(
       Core::IO::visualization_parameters_factory(
@@ -92,6 +95,33 @@ Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::EmbeddedMeshConst
   {
     nitsche_manager_ = std::make_shared<Constraints::EmbeddedMesh::SolidToSolidNitscheManager>(
         discret_ptr, dispnp, embedded_mesh_coupling_params_, visualization_manager);
+  }
+}
+
+/*----------------------------------------------------------------------------*
+ *----------------------------------------------------------------------------*/
+void Constraints::SubmodelEvaluator::EmbeddedMeshConstraintManager::check_input()
+{
+  // Check the coupling strategy
+  switch (embedded_mesh_coupling_params_.coupling_strategy_)
+  {
+    case Constraints::EmbeddedMesh::CouplingStrategy::mortar:
+    {
+      FOUR_C_ASSERT(embedded_mesh_coupling_params_.constraint_enforcement_ ==
+                        Constraints::EnforcementStrategy::penalty,
+          "The following implementation for embedded mesh coupling based on the mortar method is "
+          "implemented only for a penalty constraint enforcement. ");
+      break;
+    }
+    case Constraints::EmbeddedMesh::CouplingStrategy::nitsche:
+    {
+      break;
+    }
+    case Constraints::EmbeddedMesh::CouplingStrategy::undefined:
+    {
+      FOUR_C_THROW("Define a constraint strategy for the evaluation of embedded mesh coupling.");
+      break;
+    }
   }
 }
 
