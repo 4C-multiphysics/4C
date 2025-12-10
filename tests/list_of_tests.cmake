@@ -1127,6 +1127,7 @@ four_c_test(TEST_FILE mixture_prestress_arc_tet10.4C.yaml NP 2 RETURN_AS current
 four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 5 REQUIRED_DEPENDENCIES VTK)
 four_c_test(TEST_FILE mixture_prestress_arc_tet4.4C.yaml NP 2 RETURN_AS current REQUIRED_DEPENDENCIES VTK)
 four_c_test_restart(BASED_ON ${current} SAME_FILE NP 2 RESTART_STEP 5 REQUIRED_DEPENDENCIES VTK)
+four_c_test(TEST_FILE mixture_prestress_constant_field.4C.yaml NP 2 RETURN_AS current REQUIRED_DEPENDENCIES VTK)
 four_c_test(TEST_FILE mixture_prestress_cube.4C.yaml NP 1 RETURN_AS current)
 four_c_test_restart(BASED_ON ${current} TEST_FILE mixture_prestress_cube_restart_from_prestress.4C.yaml NP 1 RESTART_STEP 41)
 four_c_test_restart(BASED_ON ${current} SAME_FILE NP 1 RESTART_STEP 5)
