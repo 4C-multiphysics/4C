@@ -466,6 +466,14 @@ void Constraints::EmbeddedMesh::assemble_local_nitsche_contributions(
       global_disp_interface_stress_background.fe_assemble(
           local_stiffness_disp_interface_stress_background(i_interface, i_background),
           interface_row[i_interface], background_row[i_background]);
+    }
+  }
+
+
+  for (unsigned int i_background = 0; i_background < Background::n_dof_; ++i_background)
+  {
+    for (unsigned int i_interface = 0; i_interface < Interface::n_dof_; ++i_interface)
+    {
       global_disp_background_stress_interface.fe_assemble(
           local_stiffness_disp_background_stress_interface(i_background, i_interface),
           background_row[i_background], interface_row[i_interface]);

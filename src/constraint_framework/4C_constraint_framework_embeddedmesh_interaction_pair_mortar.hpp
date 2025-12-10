@@ -135,11 +135,17 @@ namespace Constraints::EmbeddedMesh
             local_constraint_stresses,
         double& nitsche_average_weight_gamma);
 
-    //! Current nodal positions (and tangents) of the interface element.
+    //! Initial nodal positions (and tangents) of the interface element.
     GeometryPair::ElementData<Interface, double> ele1pos_;
 
-    //! Current nodal positions (and tangents) of the background element.
+    //! Initial nodal positions (and tangents) of the background element.
     GeometryPair::ElementData<Background, double> ele2pos_;
+
+    //! Current nodal positions (and tangents) of the interface element.
+    GeometryPair::ElementData<Interface, double> ele1pos_current_;
+
+    //! Current nodal positions (and tangents) of the background element.
+    GeometryPair::ElementData<Background, double> ele2pos_current_;
 
     //! Displacements of the interface element.
     GeometryPair::ElementData<Interface, double> ele1dis_;

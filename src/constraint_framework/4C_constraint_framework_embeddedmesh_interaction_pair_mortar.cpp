@@ -73,6 +73,11 @@ Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface, Back
   ele2pos_ =
       GeometryPair::InitializeElementData<Background, double>::initialize(&this->element_2());
 
+  ele1pos_current_ =
+      GeometryPair::InitializeElementData<Interface, double>::initialize(&this->element_1());
+  ele2pos_current_ =
+      GeometryPair::InitializeElementData<Background, double>::initialize(&this->element_2());
+
   ele1dis_ = GeometryPair::InitializeElementData<Interface, double>::initialize(&this->element_1());
   ele2dis_ =
       GeometryPair::InitializeElementData<Background, double>::initialize(&this->element_2());
@@ -183,22 +188,36 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface,
   Constraints::EmbeddedMesh::get_current_element_displacement(
       discret, face_element->parent_element(), displacement_vector, ele1_parent_dis_);
 
-  // Get the initial positions of the first element
+  // Set the displacements and current position of the first element
   for (int node_ele1 = 0; node_ele1 < element_1().num_point(); node_ele1++)
   {
     // nodal displacements
     ele1dis_.element_position_(0 + 3 * node_ele1) = interface_dofvec_timestep[0 + 3 * node_ele1];
     ele1dis_.element_position_(1 + 3 * node_ele1) = interface_dofvec_timestep[1 + 3 * node_ele1];
     ele1dis_.element_position_(2 + 3 * node_ele1) = interface_dofvec_timestep[2 + 3 * node_ele1];
+
+    ele1pos_current_.element_position_(0 + 3 * node_ele1) =
+        element_1().nodes()[node_ele1]->x()[0] + interface_dofvec_timestep[0 + 3 * node_ele1];
+    ele1pos_current_.element_position_(1 + 3 * node_ele1) =
+        element_1().nodes()[node_ele1]->x()[1] + interface_dofvec_timestep[1 + 3 * node_ele1];
+    ele1pos_current_.element_position_(2 + 3 * node_ele1) =
+        element_1().nodes()[node_ele1]->x()[2] + interface_dofvec_timestep[2 + 3 * node_ele1];
   }
 
-  // Get the initial positions of the second element
+  // Set the displacements and current position of the second element
   for (int node_ele2 = 0; node_ele2 < element_2().num_point(); node_ele2++)
   {
     // nodal displacements
     ele2dis_.element_position_(0 + 3 * node_ele2) = background_dofvec_timestep[0 + 3 * node_ele2];
     ele2dis_.element_position_(1 + 3 * node_ele2) = background_dofvec_timestep[1 + 3 * node_ele2];
     ele2dis_.element_position_(2 + 3 * node_ele2) = background_dofvec_timestep[2 + 3 * node_ele2];
+
+    ele2pos_current_.element_position_(0 + 3 * node_ele2) =
+        element_2().nodes()[node_ele2]->x()[0] + background_dofvec_timestep[0 + 3 * node_ele2];
+    ele2pos_current_.element_position_(1 + 3 * node_ele2) =
+        element_2().nodes()[node_ele2]->x()[1] + background_dofvec_timestep[1 + 3 * node_ele2];
+    ele2pos_current_.element_position_(2 + 3 * node_ele2) =
+        element_2().nodes()[node_ele2]->x()[2] + background_dofvec_timestep[2 + 3 * node_ele2];
   }
 }
 
@@ -753,20 +772,6 @@ void evaluate_cauchy_stress_tensor_at_xi(const Core::FE::Discretization& discret
   {
     FOUR_C_THROW("Unsupported solid element type");
   }
-
-  // std::cout << "displacement element : ";
-  // for (long unsigned int i = 0 ; i < ele_displacement.size() ; i++)
-  // {
-  //   std::cout << ele_displacement[i] << ", ";
-  // }
-  // std::cout << "\n" ;
-  //
-
-  std::cout << "normal vector: \n";
-  normal_vector.print(std::cout);
-
-  std::cout << "traction vector: \n";
-  traction_vector.print(std::cout);
 }
 
 template <typename Interface, typename Background, typename Mortar>
@@ -821,9 +826,9 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface,
     GeometryPair::EvaluateShapeFunction<Background>::evaluate(
         N_background, xi_background, ele2pos_.shape_function_data_);
 
-    // Obtain the normal of the interface at xi
+    // Obtain the normal in the current configuration of the interface at xi
     Core::LinAlg::Matrix<3, 1, double> normal_interface;
-    GeometryPair::evaluate_face_normal<Interface>(xi_interface, ele1pos_, normal_interface);
+    GeometryPair::evaluate_face_normal<Interface>(xi_interface, ele1pos_current_, normal_interface);
 
     // To evaluate the Cauchy stresses in the parent element of the face element, we need to obtain
     // the corresponding coordinates of the Gauss points of the face element projected into its
@@ -847,42 +852,17 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface,
     std::vector<Core::LinAlg::SerialDenseMatrix> d_cauchyndir_dd_interface(3);
     std::vector<Core::LinAlg::SerialDenseMatrix> d_cauchyndir_dd_background(3);
 
-    std::cout << "...Xi of interface - solid: " << xi_interface_in_solid(0) << ", "
-              << xi_interface_in_solid(1) << ", " << xi_interface_in_solid(2) << std::endl;
     evaluate_cauchy_stress_tensor_at_xi(discret, ele1_parent_dis_, *face_element->parent_element(),
         xi_interface_in_solid, normal_interface, traction_vector_interface,
         d_cauchyndir_dd_interface);
-
-
-    // std::cout << "...Cauchy forces at interface" << std::endl;
-    // std::cout << traction_vector_interface(0) << ", " << traction_vector_interface(1) << ", " <<
-    // traction_vector_interface(2) << std::endl;
-
-    // std::cout << "d_cauchyndir_dd_interface: " << std::endl;
-    // std::cout << "direction 0: " << d_cauchyndir_dd_interface[0] << std::endl;
-    // std::cout << "direction 1: " << d_cauchyndir_dd_interface[1] << std::endl;
-    // std::cout << "direction 2: " << d_cauchyndir_dd_interface[2] << std::endl;
-
 
     // obtain the displacements of the background elements
     std::vector<double> background_displacement;
     for (unsigned int i_n_dof = 0; i_n_dof < Background::n_dof_; i_n_dof++)
       background_displacement.push_back(ele2dis_.element_position_(i_n_dof));
 
-    // std::cout << "---Xi of background: " << xi_background(0) << ", " << xi_background(1) << ", "
-    // << xi_background(2) << std::endl;
     evaluate_cauchy_stress_tensor_at_xi(discret, background_displacement, element_2(),
         xi_background, normal_interface, traction_vector_background, d_cauchyndir_dd_background);
-
-
-    // std::cout << "---Cauchy stress at background" << std::endl;
-    // std::cout << traction_vector_background(0) << ", " << traction_vector_background(1) << ", "
-    // << traction_vector_background(2) << std::endl;
-
-    // std::cout << "d_cauchyndir_dd_interface: " << std::endl;
-    // std::cout << "direction 0: " << d_cauchyndir_dd_background[0] << std::endl;
-    // std::cout << "direction 1: " << d_cauchyndir_dd_background[1] << std::endl;
-    // std::cout << "direction 2: " << d_cauchyndir_dd_background[2] << std::endl;
 
     // As the calculations of the Cauchy stresses are done in the parent element of the face
     // element, we need the locations of the dofs of the interface in its parent element.
@@ -902,94 +882,65 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface,
       interface_solid_index[lm_parent_interface[i]] = i;
     }
 
-    std::vector<int> dofs_interaface_locations;
-    dofs_interaface_locations.reserve(Interface::n_nodes_ * Interface::n_val_);
+    std::vector<int> dofs_interface_locations;
+    dofs_interface_locations.reserve(Interface::n_dof_);
 
     for (int dof : lm_interface)
     {
       auto it = interface_solid_index.find(dof);
       if (it != interface_solid_index.end())
       {
-        dofs_interaface_locations.push_back(it->second);
+        dofs_interface_locations.push_back(it->second);
       }
     }
-
-    std::cout << "Val for interface : " << Interface::n_val_
-              << ", Val for Background : " << Background::n_val_ << std::endl;
 
     // Fill in the local matrix K_nitsche_disp_interface_stress_interface.
     for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
         i_interface_node++)
-      for (unsigned int i_interface_val = 0; i_interface_val < Interface::n_val_; i_interface_val++)
-        for (unsigned int j_interface_node = 0; j_interface_node < Interface::n_nodes_;
-            j_interface_node++)
-          for (unsigned int j_interface_val = 0; j_interface_val < Interface::n_val_;
-              j_interface_val++)
-            for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-              local_stiffness_disp_interface_stress_interface(
-                  i_interface_node * Interface::n_val_ * 3 + i_interface_val * 3 + i_dim,
-                  j_interface_node * Interface::n_val_ * 3 + j_interface_val * 3 + i_dim) +=
-                  N_interface(i_interface_node * Interface::n_val_ + i_interface_val) *
-                  d_cauchyndir_dd_interface[i_dim](
-                      dofs_interaface_locations[j_interface_node * Interface::n_val_ +
-                                                j_interface_val],
-                      0) *
-                  weight * determinant_interface;
+      for (unsigned int j_interface_node = 0; j_interface_node < Interface::n_nodes_;
+          j_interface_node++)
+        for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
+          local_stiffness_disp_interface_stress_interface(
+              i_interface_node * 3 + i_dim, j_interface_node * 3 + i_dim) +=
+              N_interface(i_interface_node) *
+              d_cauchyndir_dd_interface[i_dim](dofs_interface_locations[j_interface_node], 0) *
+              weight * determinant_interface;
 
     // Fill in the local matrix K_nitsche_disp_interface_stress_background.
     for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
         i_interface_node++)
-      for (unsigned int i_interface_val = 0; i_interface_val < Interface::n_val_; i_interface_val++)
-        for (unsigned int j_background_node = 0; j_background_node < Background::n_nodes_;
-            j_background_node++)
-          for (unsigned int j_background_val = 0; j_background_val < Background::n_val_;
-              j_background_val++)
-            for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-              local_stiffness_disp_interface_stress_background(
-                  i_interface_node * Interface::n_val_ * 3 + i_interface_val * 3 + i_dim,
-                  j_background_node * Background::n_val_ * 3 + j_background_val * 3 + i_dim) +=
-                  N_interface(i_interface_node * Interface::n_val_ + i_interface_val) *
-                  d_cauchyndir_dd_background[i_dim](
-                      j_background_node * Background::n_val_ + j_background_val, 0) *
-                  weight * determinant_interface;
+      for (unsigned int j_background_node = 0; j_background_node < Background::n_nodes_;
+          j_background_node++)
+        for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
+          local_stiffness_disp_interface_stress_background(
+              i_interface_node * 3 + i_dim, j_background_node * 3 + i_dim) +=
+              N_interface(i_interface_node) *
+              d_cauchyndir_dd_background[i_dim](j_background_node, 0) * weight *
+              determinant_interface;
 
     // Fill in the local matrix K_nitsche_disp_background_stress_interface.
     for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;
         i_background_node++)
-      for (unsigned int i_background_val = 0; i_background_val < Background::n_val_;
-          i_background_val++)
-        for (unsigned int j_interface_node = 0; j_interface_node < Interface::n_nodes_;
-            j_interface_node++)
-          for (unsigned int j_interface_val = 0; j_interface_val < Interface::n_val_;
-              j_interface_val++)
-            for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-              local_stiffness_disp_background_stress_interface(
-                  i_background_node * Background::n_val_ * 3 + i_background_val * 3 + i_dim,
-                  j_interface_node * Interface::n_val_ * 3 + j_interface_val * 3 + i_dim) +=
-                  N_background(i_background_node * Background::n_val_ + i_background_val) *
-                  d_cauchyndir_dd_interface[i_dim](
-                      dofs_interaface_locations[j_interface_node * Interface::n_val_ +
-                                                j_interface_val],
-                      0) *
-                  weight * determinant_interface;
+      for (unsigned int j_interface_node = 0; j_interface_node < Interface::n_nodes_;
+          j_interface_node++)
+        for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
+          local_stiffness_disp_background_stress_interface(
+              i_background_node * 3 + i_dim, j_interface_node * 3 + i_dim) +=
+              N_background(i_background_node) *
+              d_cauchyndir_dd_interface[i_dim](dofs_interface_locations[j_interface_node], 0) *
+              weight * determinant_interface;
 
     // Fill in the local matrix K_nitsche_disp_background_stress_background.
     for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;
         i_background_node++)
-      for (unsigned int i_background_val = 0; i_background_val < Background::n_val_;
-          i_background_val++)
-        for (unsigned int j_background_node = 0; j_background_node < Background::n_nodes_;
-            j_background_node++)
-          for (unsigned int j_background_val = 0; j_background_val < Background::n_val_;
-              j_background_val++)
-            for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-              local_stiffness_disp_background_stress_background(
-                  i_background_node * Background::n_val_ * 3 + i_background_val * 3 + i_dim,
-                  j_background_node * Background::n_val_ * 3 + j_background_val * 3 + i_dim) +=
-                  N_background(i_background_node * Background::n_val_ + i_background_val) *
-                  d_cauchyndir_dd_background[i_dim](
-                      j_background_node * Background::n_val_ + j_background_val, 0) *
-                  weight * determinant_interface;
+      for (unsigned int j_background_node = 0; j_background_node < Background::n_nodes_;
+          j_background_node++)
+        for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
+          local_stiffness_disp_background_stress_background(
+              i_background_node * 3 + i_dim, j_background_node * 3 + i_dim) +=
+              N_background(i_background_node) *
+              d_cauchyndir_dd_background[i_dim](j_background_node, 0) * weight *
+              determinant_interface;
 
     // Add the local constraint contributions of Nitsche contributions
     for (unsigned int i_interface_node = 0; i_interface_node < Interface::n_nodes_;
@@ -998,15 +949,15 @@ void Constraints::EmbeddedMesh::SurfaceToBackgroundCouplingPairMortar<Interface,
         local_constraint_stresses(i_interface_node * 3 + i_dim) -=
             (nitsche_average_weight_gamma * traction_vector_interface(i_dim) +
                 (1.0 - nitsche_average_weight_gamma) * traction_vector_background(i_dim)) *
-            N_interface(i_interface_node);
+            N_interface(i_interface_node) * weight * determinant_interface;
 
     for (unsigned int i_background_node = 0; i_background_node < Background::n_nodes_;
         i_background_node++)
       for (unsigned int i_dim = 0; i_dim < 3; i_dim++)
-        local_constraint_stresses(i_background_node * 3 + i_dim) +=
+        local_constraint_stresses(Interface::n_dof_ + i_background_node * 3 + i_dim) +=
             (nitsche_average_weight_gamma * traction_vector_interface(i_dim) +
                 (1.0 - nitsche_average_weight_gamma) * traction_vector_background(i_dim)) *
-            N_background(i_background_node);
+            N_background(i_background_node) * weight * determinant_interface;
   }
 }
 
