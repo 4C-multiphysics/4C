@@ -11,6 +11,7 @@
 #include "4C_config.hpp"
 
 #include <algorithm>
+#include <complex>
 #include <concepts>
 #include <functional>
 #include <type_traits>
@@ -133,9 +134,24 @@ namespace Core::FADUtils
     template <typename Operation, typename... Ts>
     struct ScalarOperationResultType;
 
+    template <typename T>
+    struct IsComplexArithmetic : std::false_type
+    {
+    };
+
+    template <typename T>
+      requires(std::is_arithmetic_v<T>)
+    struct IsComplexArithmetic<std::complex<T>> : std::true_type
+    {
+    };
+
+    template <typename T>
+    constexpr bool is_arithmetic_or_complex_v =
+        std::is_arithmetic_v<T> || IsComplexArithmetic<T>::value;
+
     // standard arithmetic types
     template <typename Operation, typename... Ts>
-      requires(std::is_arithmetic_v<Ts> && ...)
+      requires(is_arithmetic_or_complex_v<Ts> && ...)
     struct ScalarOperationResultType<Operation, Ts...>
     {
       using type = decltype(OperationDeducer<Operation>::apply(std::declval<Ts>()...));
