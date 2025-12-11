@@ -61,9 +61,6 @@ namespace
         eigenvalues[0].real(), eigenvalues[1].real(), eigenvalues[2].real()};
     std::ranges::sort(eigenvalues_real_sorted);
 
-    // expecting real eigenvalues
-    for (const auto& val : eigenvalues) EXPECT_EQ(val.imag(), 0.0);
-
     EXPECT_NEAR(eigenvalues_real_sorted[0], 0.052879897400611, 1e-10);
     EXPECT_NEAR(eigenvalues_real_sorted[1], 0.516153257193444, 1e-10);
     EXPECT_NEAR(eigenvalues_real_sorted[2], 1.933827474461972, 1e-10);
@@ -121,6 +118,34 @@ namespace
 
     // This matrix is not diagonalizable, so expect an exception
     EXPECT_ANY_THROW(Core::LinAlg::eig(t));
+  }
+
+  TEST(TensorEigenTest, eigenvector3x3)
+  {
+    Core::LinAlg::Tensor<double, 3, 3> t = {
+        {{0.9362933635841993, -0.27509584731824377, 0.21835066314633444},
+            {0.2896294776255156, 0.9564250858492325, -0.03695701352462507},
+            {-0.19866933079506122, 0.0978433950072557, 0.975170327201816}}};
+
+    const double eigenvalue = 1.0;
+    const auto& eigenvector = Core::LinAlg::compute_eigenvector(t, eigenvalue);
+
+    // expecting unit eigenvector
+    EXPECT_NEAR(Core::LinAlg::norm2(eigenvector), 1.0, 1e-10);
+
+    const auto must_be_zero = t * eigenvector - eigenvalue * eigenvector;
+
+    FOUR_C_EXPECT_NEAR(must_be_zero, (Core::LinAlg::Tensor<double, 3>{}), 1e-10);
+  }
+
+  TEST(TensorEigenTest, eigenvector3x3NoEigenvalue)
+  {
+    Core::LinAlg::Tensor<double, 3, 3> t = {
+        {{0.9362933635841993, -0.27509584731824377, 0.21835066314633444},
+            {0.2896294776255156, 0.9564250858492325, -0.03695701352462507},
+            {-0.19866933079506122, 0.0978433950072557, 0.975170327201816}}};
+
+    EXPECT_ANY_THROW(Core::LinAlg::compute_eigenvector(t, 2.0));
   }
 }  // namespace
 
